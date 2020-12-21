@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DBAAC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Dec 2020 02:35:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31CEAC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Dec 2020 02:36:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 450EE22B47
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Dec 2020 02:35:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E30FA22D3E
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Dec 2020 02:36:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727107AbgLUCfE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 20 Dec 2020 21:35:04 -0500
-Received: from mailout3.samsung.com ([203.254.224.33]:17830 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727036AbgLUCfD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2020 21:35:03 -0500
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20201221023421epoutp03fe32c879e94faf400aae283ad336a7e1~SmqeO72Qx2276022760epoutp03I
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Dec 2020 02:34:21 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20201221023421epoutp03fe32c879e94faf400aae283ad336a7e1~SmqeO72Qx2276022760epoutp03I
+        id S1727458AbgLUCfx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Dec 2020 21:35:53 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:16089 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727335AbgLUCfx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2020 21:35:53 -0500
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20201221023509epoutp04071e40b890ec18260d16f221a00d5599~SmrLHhvsm0580405804epoutp04L
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Dec 2020 02:35:09 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20201221023509epoutp04071e40b890ec18260d16f221a00d5599~SmrLHhvsm0580405804epoutp04L
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1608518061;
-        bh=fp4gOiOqykL1GaKNYZ64zOTsAI/FgsMnXVzzo7HTXGM=;
+        s=mail20170921; t=1608518109;
+        bh=+hrrCcXeklB4D+Y+GCTWQ60S2HVCtiSEjuw4QOKK0SM=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=HH9GbKtlrpQpZ3ni46AsKS/sLD3VI9VIGeDMcBw/XjZExuj2gbylFj4iJzKKUVpsd
-         hocLgd9yqYN/hI+K5TbN6N2rSSpDkL6cPmnlrNjcws4FDThdzUXCulHx66ldYYxrg4
-         Y6IIpNUt3v57lRZ+sKw2+fjercS/9sVWzm0cjlnk=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20201221023413epcas2p2b762a4709dca3e78daefd59426cabb44~SmqXN_8Mg1103811038epcas2p2w;
-        Mon, 21 Dec 2020 02:34:13 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.40.189]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4Czk7S2m18zMqYkn; Mon, 21 Dec
-        2020 02:34:12 +0000 (GMT)
-X-AuditID: b6c32a47-b81ff7000000148e-7a-5fe009a3cc90
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        83.1F.05262.3A900EF5; Mon, 21 Dec 2020 11:34:11 +0900 (KST)
+        b=RqDl351igWDlns5M4rZzfQj9sm5rTwgOgvY86L46YEgjn52uK0mCD9qUqbp5v6BEz
+         BGhtyma4CJvb06S5Y+b8gpbG9uXP1uLRrgN++MXsdg72CjP7q2gR1vZcy5gcW2VW3p
+         OQEMwDP4/Va12Vbgbqz3NhRBzhxtD7qMBJgIuhnk=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20201221023508epcas2p4f23eafdc0fe8c216c33c54e44917072a~SmrKIrBV42096020960epcas2p4L;
+        Mon, 21 Dec 2020 02:35:08 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.40.187]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4Czk8V6SWVz4x9QB; Mon, 21 Dec
+        2020 02:35:06 +0000 (GMT)
+X-AuditID: b6c32a48-4f9ff7000000cd1f-31-5fe009da7803
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        6D.A6.52511.AD900EF5; Mon, 21 Dec 2020 11:35:06 +0900 (KST)
 Mime-Version: 1.0
 Subject: RE: Re: [PATCH v16 1/3] scsi: ufs: Introduce HPB feature
 Reply-To: daejun7.park@samsung.com
 Sender: Daejun Park <daejun7.park@samsung.com>
 From:   Daejun Park <daejun7.park@samsung.com>
 To:     Greg KH <gregkh@linuxfoundation.org>,
-        Avri Altman <Avri.Altman@wdc.com>
-CC:     Daejun Park <daejun7.park@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>
+CC:     "avri.altman@wdc.com" <avri.altman@wdc.com>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
         "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
@@ -67,85 +67,74 @@ CC:     Daejun Park <daejun7.park@samsung.com>,
         SEUNGUK SHIN <seunguk.shin@samsung.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <X934OOlXSf5up8Rd@kroah.com>
+In-Reply-To: <X93XuJ4lsQbBgnU+@kroah.com>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20201221023407epcms2p1e5aaaff4fffcee73a0ecf422b078e888@epcms2p1>
-Date:   Mon, 21 Dec 2020 11:34:07 +0900
-X-CMS-MailID: 20201221023407epcms2p1e5aaaff4fffcee73a0ecf422b078e888
+Message-ID: <20201221023506epcms2p68be86df197976d1da2775f93709659c6@epcms2p6>
+Date:   Mon, 21 Dec 2020 11:35:06 +0900
+X-CMS-MailID: 20201221023506epcms2p68be86df197976d1da2775f93709659c6
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA12Te1BUZRjG5zvncM4uzTKHa1/gBB0nE+O22NJHSOpotg40MZFTY2PrGTjD
-        YntzL2ZbTIwk0BJIQwmzQ4ggWCuyAS6sIC6wiFQwqFTgCgIzUBBBSJgSSu0F0um/3zzzvu/z
-        vN+Fh/uNksG8TIWWUytYGUN6E832cFFkNX9cEvPPFW/UMPqbFxqvaCZRe24vhWaWfyKR/dY8
-        hU4uLONo0VzrhWa6wpFp/C2UU20mUXl/NoYKT1hIVDXcjKHB1nISFQxZSXT26iqGbl3wRjWW
-        mwB9WlpHoKrTbcSOAPHgj0niwaJCTHzROEqJi6s6gNj2VR0l/uQ7GyG+M+UgxEUXTED8Z+PT
-        4ryOAizFe79sm5Rj0zl1GKdIU6ZnKjISmaRUyS6JKC5GGCmMRy8yYQpWziUyu5NTIvdkypzL
-        MWFHWJnOKaWwGg0T/fI2tVKn5cKkSo02keFU6TKVUKiK0rByjU6REZWmlL8kjImJFTkrD8qk
-        3ZOHVKX8o3/dGCKywTxpAHwepF+A7UVf4wbgzfOjrQBOOxaAAfB4AtoXPrT6u2r86Z2wcWqJ
-        crEfzUDzdSPl0aOgY6IOuJikI2Bp75hbD6CT4MhIKeGaidM1JDSX3KU8ZgJYljdFeDgEtpy1
-        uJv5dDgs+sHg5dE3w/u1hbiHA+HNc3PUOv/Rcwp4OAAev92/VuMLx5fb1vSnYE/bAubhj6Fl
-        5G/gCgHpzwC0X3SsGUTDn/Mb3CEE9GuwfnDK3UDQz0LLvb61obudQwfcjNOhsGWuHHcdCu4M
-        am6NdiGkN8JuB7G+VnbDCvV/xmkfmG9/+J9urZhci7YJ1i+bsWKw0fjopI2PeRkfeVUC3ASC
-        OJVGnsFpYlVbH7/bRuB+51tetYKyuYWoLoDxQBeAPJwJEMQFj0n8BOnsB3pOrZSodTJO0wVE
-        zi0/x4MD05TOj6LQSoSi2Li4mHgREsXFIuZJwb5viiR+dAar5d7jOBWnXu/DePzgbCxi+NLe
-        X1njm6cWj+lXA1mt/HxEb9bWynPxOtOdDFvJck/lM4z5yEzZiuHqge7ekdP6JemQOqu2YEgd
-        MrmJent2Kneg9LDSt2929nd7t34xVT89cfJ86IMA/Y6xpvkz+fsPDVMmyeXZps1e49L4eOpo
-        8nNaReH0vuJXbvvcb2sKufZ69fY68zud8rwN35oOt6wm5D+4zOTYW7WE7YYjuuTMhtyPnvfx
-        T+74Aj5RjB2LhTVBCSfKdobf+77/feuHxEqjVTd03CK/lPDlLseS9Jft4EBW58G+6/Xvhtua
-        bEF7r/kvNKRor+QY5ir2THTy7lJe8+0rqfwQqXJgPiKPq30jtI8hNFJWuAVXa9h/AfEup7Vw
-        BAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDJsWRmVeSWpSXmKPExsWy7bCmme4tzgfxBuub9S023n3FavFg3jY2
+        i71tJ9gtXv68ymZx+PY7dotpH34yW3xav4zV4uUhTYtVD8ItmhevZ7OYc7aByaK3fyubxaIb
+        25gsLu+aw2bRfX0Hm8Xy4/+YLG5v4bJYuvUmo0Xn9DUsFosW7mZxEPG4fMXb43JfL5PHzll3
+        2T0mLDrA6LF/7hp2j5aT+1k8Pj69xeLRt2UVo8fnTXIe7Qe6mQK4onJsMlITU1KLFFLzkvNT
+        MvPSbZW8g+Od403NDAx1DS0tzJUU8hJzU22VXHwCdN0yc4CeU1IoS8wpBQoFJBYXK+nb2RTl
+        l5akKmTkF5fYKqUWpOQUGBoW6BUn5haX5qXrJefnWhkaGBiZAlUm5GTc3nGDpaCdtWJP6yOm
+        BsZPzF2MHBwSAiYSJxeZdTFycQgJ7GCUmDVvFjtInFdAUOLvDuEuRk4OYQFHiU1Pv7CD2EIC
+        ShLrL85ih4jrSdx6uIYRxGYT0JGYfuI+WKuIQJDE5WkGICOZBVaxSexYuRSsXkKAV2JG+1MW
+        CFtaYvvyrWC9nAKaEl+3XmCCiGtI/FjWywxhi0rcXP2WHcZ+f2w+I4QtItF67yxUjaDEg5+7
+        oeKSEsd2f4CaUy+x9c4vRpAjJAR6GCUO77zFCpHQl7jWsRHsCF4BX4nuh4/ZQGwWAVWJLXM2
+        QC1zkfiw+RtYPbOAvMT2t3PAYcUMdOj6XfqQYFOWOHKLBeatho2/2dHZzAJ8Eh2H/8LFd8x7
+        AnWamsS6n+uZJjAqz0IE9Cwku2Yh7FrAyLyKUSy1oDg3PbXYqMAEOWo3MYKTuZbHDsbZbz/o
+        HWJk4mA8xCjBwawkwmsmdT9eiDclsbIqtSg/vqg0J7X4EKMp0JcTmaVEk/OB+SSvJN7Q1MjM
+        zMDS1MLUzMhCSZw3dGVfvJBAemJJanZqakFqEUwfEwenVAOTv1zUtcwNa9WZp9k2PGzt23rw
+        QY5W+7MZh7evrOCZsPAf18Jl/+eE3Eqz03VakPHWUmIG9+zqP3/+zY487sKR5GkVIzbByTai
+        wLzF0rL9YYLj//TbgUXK3Wr1R8rvegbmH9jkdWUeI+fGPt5HBsF1C/b6pZ07wXvvULHrOr1p
+        m6YVbzFucg29qrN65ek834lFzlFpOxwmx9z9Z7snwedoaejF6F0eockrP079OE3McPX63h/c
+        J4vy7SzlKyziyvZGfj8+6dYXrnCB3VlTUyXfPWiSUshUm1/QNvn16hWTbrlKruENZM2v3KEe
+        Wa+dUl8UzHA4cm6G3tbDrr+SH5YnaljcOCUaJX+iNcqP/54SS3FGoqEWc1FxIgA+Vsh6bwQA
+        AA==
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20201219091802epcms2p2c86f7ae2e81aa015702572a8ef180dae
-References: <X934OOlXSf5up8Rd@kroah.com>
+References: <X93XuJ4lsQbBgnU+@kroah.com>
         <20201219091802epcms2p2c86f7ae2e81aa015702572a8ef180dae@epcms2p2>
         <20201219091847epcms2p7afeebd03c47eed0b65f89375a881233e@epcms2p7>
-        <X93XuJ4lsQbBgnU+@kroah.com>
-        <DM6PR04MB6575AC2A541FCAAB60E581FBFCC20@DM6PR04MB6575.namprd04.prod.outlook.com>
-        <CGME20201219091802epcms2p2c86f7ae2e81aa015702572a8ef180dae@epcms2p1>
+        <CGME20201219091802epcms2p2c86f7ae2e81aa015702572a8ef180dae@epcms2p6>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Greg, Avri
+Hi Greg,
 
-> On Sat, Dec 19, 2020 at 12:48:31PM +0000, Avri Altman wrote:
-> > > 
-> > > 
-> > > On Sat, Dec 19, 2020 at 06:18:47PM +0900, Daejun Park wrote:
-> > > > +static int ufshpb_get_state(struct ufshpb_lu *hpb)
-> > > > +{
-> > > > +     return atomic_read(&hpb->hpb_state);
-> > > > +}
-> > > > +
-> > > > +static void ufshpb_set_state(struct ufshpb_lu *hpb, int state)
-> > > > +{
-> > > > +     atomic_set(&hpb->hpb_state, state);
-> > > > +}
-> > > 
-> > > You have a lock for the state, and yet the state is an atomic variable
-> > > and you do not use the lock here at all.  You don't use the lock at all
-> > > infact...
-> > > 
-> > > So either the lock needs to be dropped, or you need to use the lock and
-> > > make the state a normal variable please.
-> > hpb_state_lock is mainly protecting the list of active regions.
-> > Just grep  lh_lru_rgn in patch 2/3.
+> > +static void ufshpb_hpb_lu_prepared(struct ufs_hba *hba)
+> > +{
+> > +	struct ufshpb_lu *hpb;
+> > +	struct scsi_device *sdev;
+> > +	bool init_success;
+> > +
+> > +	init_success = !ufshpb_check_hpb_reset_query(hba);
+> > +
+> > +	shost_for_each_device(sdev, hba->host) {
+> > +		hpb = sdev->hostdata;
+> > +		if (!hpb)
+> > +			continue;
+> > +
+> > +		if (init_success) {
+> > +			dev_info(hba->dev, "set state to present\n");
 > 
-> Then why is the lock added in this patch if it is not used here?
+> Why be noisy?  Why does userspace need to see this all the time,
+> shouldn't only errors be printing something?
 
-I think it comes from that the name of the lock and related comment is
-different from the actual usage.
-I will modify the name and related comments, and introduce the lock to the
-patch 2/3.
+I will remove needless dev_info printings in this patch.
 
 Thanks,
 Daejun
