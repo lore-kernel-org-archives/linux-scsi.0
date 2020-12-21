@@ -2,338 +2,239 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9C04C433E6
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Dec 2020 07:53:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42B12C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Dec 2020 08:39:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D52222CAF
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Dec 2020 07:53:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CCE022C7E
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Dec 2020 08:39:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726260AbgLUHwu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Dec 2020 02:52:50 -0500
-Received: from alexa-out-tai-02.qualcomm.com ([103.229.16.227]:21325 "EHLO
-        alexa-out-tai-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726200AbgLUHwu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Dec 2020 02:52:50 -0500
-Received: from ironmsg02-tai.qualcomm.com ([10.249.140.7])
-  by alexa-out-tai-02.qualcomm.com with ESMTP; 21 Dec 2020 15:52:06 +0800
-X-QCInternal: smtphost
-Received: from cbsp-sh-gv.ap.qualcomm.com (HELO cbsp-sh-gv.qualcomm.com) ([10.231.249.68])
-  by ironmsg02-tai.qualcomm.com with ESMTP; 21 Dec 2020 15:51:34 +0800
-Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
-        id 8217E2993; Mon, 21 Dec 2020 15:51:33 +0800 (CST)
-From:   Ziqi Chen <ziqichen@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        cang@codeaurora.org, hongwus@codeaurora.org, rnayak@codeaurora.org,
-        vinholikatti@gmail.com, jejb@linux.vnet.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        ziqichen@codeaurora.org, kwmad.kim@samsung.com,
-        stanley.chu@mediatek.com
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Satya Tangirala <satyat@google.com>,
-        linux-mediatek@lists.infradead.org (moderated list:UNIVERSAL FLASH
-        STORAGE HOST CONTROLLER DRIVER...),
-        linux-kernel@vger.kernel.org (open list),
-        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support)
-Subject: [PATCH RFC v3 1/1] scsi: ufs: Fix ufs power down/on specs violation
-Date:   Mon, 21 Dec 2020 15:51:24 +0800
-Message-Id: <1608537091-78575-1-git-send-email-ziqichen@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        id S1728411AbgLUIj1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Dec 2020 03:39:27 -0500
+Received: from mailout3.samsung.com ([203.254.224.33]:16425 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726848AbgLUIj0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2020 03:39:26 -0500
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20201221083842epoutp0382a6b8cf0787192a3939f61be485691a~SrolwkabV2774727747epoutp03X
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Dec 2020 08:38:42 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20201221083842epoutp0382a6b8cf0787192a3939f61be485691a~SrolwkabV2774727747epoutp03X
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1608539922;
+        bh=USdRd/SSXNTP7fB2I4fEhLeRaKAdtgq9jwCYfL9mn4w=;
+        h=Subject:Reply-To:From:To:CC:Date:References:From;
+        b=XPcWW3UcS0VYPQSog1tO3PRS4bSoVh9JpfwqqYcpR3hbOw56wt4Y3RZiolPHRQU9Y
+         CjRIh6dt81apEyEjZivmfEmFSRVEkLhPXnFAy36L5ha5pu8PH9bIFNNji8NNIVN/Zr
+         9TXU1Sdh9hiXtDy5TKnIsXW1MxlZdTW+nkpiqNcA=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20201221083841epcas2p1f74397dbaae7144da431d89eb107667d~SrolGkLU_2088320883epcas2p1R;
+        Mon, 21 Dec 2020 08:38:41 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.40.184]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4CztCy2blvz4x9Q7; Mon, 21 Dec
+        2020 08:38:38 +0000 (GMT)
+X-AuditID: b6c32a48-50fff7000000cd1f-a9-5fe05f0ee15c
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        B3.BA.52511.E0F50EF5; Mon, 21 Dec 2020 17:38:38 +0900 (KST)
+Mime-Version: 1.0
+Subject: [PATCH v17 0/3] scsi: ufs: Add Host Performance Booster Support
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Greg KH <gregkh@linuxfoundation.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20201221083837epcms2p4989308d3a20500027482279d92668839@epcms2p4>
+Date:   Mon, 21 Dec 2020 17:38:37 +0900
+X-CMS-MailID: 20201221083837epcms2p4989308d3a20500027482279d92668839
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDJsWRmVeSWpSXmKPExsWy7bCmuS5f/IN4g/7FQhYb775itXgwbxub
+        xd62E+wWL39eZbM4fPsdu8W0Dz+ZLT6tX8Zq8fKQpsWqB+EWzYvXs1nMOdvAZNHbv5XNYtGN
+        bUwWl3fNYbPovr6DzWL58X9MFre3cFks3XqT0aJz+hoWi0ULd7M4iHhcvuLtcbmvl8lj56y7
+        7B4TFh1g9Ng/dw27R8vJ/SweH5/eYvHo27KK0ePzJjmP9gPdTAFcUTk2GamJKalFCql5yfkp
+        mXnptkrewfHO8aZmBoa6hpYW5koKeYm5qbZKLj4Bum6ZOUDPKSmUJeaUAoUCEouLlfTtbIry
+        S0tSFTLyi0tslVILUnIKDA0L9IoTc4tL89L1kvNzrQwNDIxMgSoTcjIWPD7KUvBKqeLFjnss
+        DYxLpLsYOTkkBEwkbt67wdTFyMUhJLCDUeLjx072LkYODl4BQYm/O4RBTGEBD4mln+RAyoUE
+        lCTWX5zFDmILC+hJ3Hq4hhHEZhPQkZh+4j47yBgRgVYWibOHprCAOMwCX5kkPj2fzQSxjFdi
+        RvtTFghbWmL78q2MELaGxI9lvcwQtqjEzdVv2WHs98fmQ9WISLTeOwtVIyjx4OduqLikxLHd
+        H6Dm10tsvfOLEWSxhEAPo8ThnbdYIRL6Etc6NoIt5hXwlVg2ezcLyGcsAqoS7dcrIUpcJP4/
+        WQBWziwgL7H97RxmkBJmAU2J9bv0QUwJAWWJI7dYYD5p2PibHZ3NLMAn0XH4L1x8x7wnUJep
+        Saz7uZ4JYoyMxK15jBMYlWYhwnkWkrWzENYuYGRexSiWWlCcm55abFRgghy1mxjByVzLYwfj
+        7Lcf9A4xMnEwHmKU4GBWEuE1k7ofL8SbklhZlVqUH19UmpNafIjRFOjficxSosn5wHySVxJv
+        aGpkZmZgaWphamZkoSTOW2TwIF5IID2xJDU7NbUgtQimj4mDU6qBqYVnwZnQLzdX9JidljkV
+        Ely9ZeerLn/WYyq1FdZCMkZ+E28cbCvW161JeXX+x2+pVEaHWW4LDt97y9JaXnc8OYfzv+zn
+        RT/tLxwW6xBg+nT+e8ISk/AJ81xv7Q/MFIvhDDV7voZtY+m9/+fcZn5fvevlXs7MWW8CWoJf
+        f/nxSu9gFNPhvcss02e2iP9trhE6KxtwX1/UZNeSI5YMbaWttbJLy/ns7v/8Gve5LNv5+jFj
+        xkmpilrPfkf/e1W65X/quSa1SY8+Bp68pPPjZcLiy6+P6rteM5pYFemtW3b1gcuhns3X8ufs
+        qMt23yG1m3NV7AEm840qKdv1+NPYj2+11FwYtzLtnEbzD9dYRubz55RYijMSDbWYi4oTARq0
+        /CBvBAAA
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20201221083837epcms2p4989308d3a20500027482279d92668839
+References: <CGME20201221083837epcms2p4989308d3a20500027482279d92668839@epcms2p4>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As per specs, e.g, JESD220E chapter 7.2, while powering
-off/on the ufs device, RST_N signal and REF_CLK signal
-should be between VSS(Ground) and VCCQ/VCCQ2.
+Changelog:
 
-To flexibly control device reset line, re-name the function
-ufschd_vops_device_reset(sturct ufs_hba *hba) to ufshcd_
-vops_toggle_device_reset(sturct ufs_hba *hba, bool down). The
-new parameter "bool down" is used to separate device reset
-line pulling down from pulling up.
+v16 -> v17
+1. Rename hpb_state_lock to rgn_state_lock and move it to corresponding
+patch.
+2. Remove redundant information messages.
 
-Cc: Kiwoong Kim <kwmad.kim@samsung.com>
-Cc: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Ziqi Chen <ziqichen@codeaurora.org>
----
- drivers/scsi/ufs/ufs-mediatek.c | 27 +++++++++-----------------
- drivers/scsi/ufs/ufs-qcom.c     | 22 ++++++++++-----------
- drivers/scsi/ufs/ufshcd.c       | 43 ++++++++++++++++++++++++++++++-----------
- drivers/scsi/ufs/ufshcd.h       | 10 +++++-----
- 4 files changed, 56 insertions(+), 46 deletions(-)
+v15 -> v16
+1. Add missed sysfs ABI documentation.
 
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index 80618af..bff2c42 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -841,27 +841,18 @@ static int ufs_mtk_link_startup_notify(struct ufs_hba *hba,
- 	return ret;
- }
- 
--static int ufs_mtk_device_reset(struct ufs_hba *hba)
-+static int ufs_mtk_toggle_device_reset(struct ufs_hba *hba, bool down)
- {
- 	struct arm_smccc_res res;
- 
--	ufs_mtk_device_reset_ctrl(0, res);
--
--	/*
--	 * The reset signal is active low. UFS devices shall detect
--	 * more than or equal to 1us of positive or negative RST_n
--	 * pulse width.
--	 *
--	 * To be on safe side, keep the reset low for at least 10us.
--	 */
--	usleep_range(10, 15);
--
--	ufs_mtk_device_reset_ctrl(1, res);
--
--	/* Some devices may need time to respond to rst_n */
--	usleep_range(10000, 15000);
-+	if (down) {
-+		ufs_mtk_device_reset_ctrl(0, res);
-+	} else {
-+		ufs_mtk_device_reset_ctrl(1, res);
- 
--	dev_info(hba->dev, "device reset done\n");
-+		/* Some devices may need time to respond to rst_n */
-+		usleep_range(10000, 15000);
-+	}
- 
- 	return 0;
- }
-@@ -1052,7 +1043,7 @@ static const struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
- 	.suspend             = ufs_mtk_suspend,
- 	.resume              = ufs_mtk_resume,
- 	.dbg_register_dump   = ufs_mtk_dbg_register_dump,
--	.device_reset        = ufs_mtk_device_reset,
-+	.toggle_device_reset        = ufs_mtk_toggle_device_reset,
- 	.event_notify        = ufs_mtk_event_notify,
- };
- 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 2206b1e..c2ccaa5 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1404,12 +1404,13 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
- }
- 
- /**
-- * ufs_qcom_device_reset() - toggle the (optional) device reset line
-+ * ufs_qcom_toggle_device_reset() - toggle the (optional) device reset line
-  * @hba: per-adapter instance
-+ * @down: pull down or pull up device reset line
-  *
-  * Toggles the (optional) reset line to reset the attached device.
-  */
--static int ufs_qcom_device_reset(struct ufs_hba *hba)
-+static int ufs_qcom_toggle_device_reset(struct ufs_hba *hba, bool down)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 
-@@ -1417,15 +1418,12 @@ static int ufs_qcom_device_reset(struct ufs_hba *hba)
- 	if (!host->device_reset)
- 		return -EOPNOTSUPP;
- 
--	/*
--	 * The UFS device shall detect reset pulses of 1us, sleep for 10us to
--	 * be on the safe side.
--	 */
--	gpiod_set_value_cansleep(host->device_reset, 1);
--	usleep_range(10, 15);
--
--	gpiod_set_value_cansleep(host->device_reset, 0);
--	usleep_range(10, 15);
-+	if (down) {
-+		gpiod_set_value_cansleep(host->device_reset, 1);
-+	} else {
-+		gpiod_set_value_cansleep(host->device_reset, 0);
-+		usleep_range(10, 15);
-+	}
- 
- 	return 0;
- }
-@@ -1473,7 +1471,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
- 	.suspend		= ufs_qcom_suspend,
- 	.resume			= ufs_qcom_resume,
- 	.dbg_register_dump	= ufs_qcom_dump_dbg_regs,
--	.device_reset		= ufs_qcom_device_reset,
-+	.toggle_device_reset		= ufs_qcom_toggle_device_reset,
- 	.config_scaling_param = ufs_qcom_config_scaling_param,
- 	.program_key		= ufs_qcom_ice_program_key,
- };
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e221add..2ee905f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -585,7 +585,20 @@ static void ufshcd_device_reset(struct ufs_hba *hba)
- {
- 	int err;
- 
--	err = ufshcd_vops_device_reset(hba);
-+	err = ufshcd_vops_toggle_device_reset(hba, true);
-+	if (err) {
-+		dev_err(hba->dev, "device reset pulling down failure: %d\n", err);
-+		return;
-+	}
-+
-+	/*
-+	 * The reset signal is active low. The UFS device
-+	 * shall detect reset pulses of 1us, sleep for at
-+	 * least 10us to be on the safe side.
-+	 */
-+	usleep_range(10, 15);
-+
-+	err = ufshcd_vops_toggle_device_reset(hba, false);
- 
- 	if (!err) {
- 		ufshcd_set_ufs_dev_active(hba);
-@@ -593,7 +606,11 @@ static void ufshcd_device_reset(struct ufs_hba *hba)
- 			hba->wb_enabled = false;
- 			hba->wb_buf_flush_enabled = false;
- 		}
-+		dev_info(hba->dev, "device reset done\n");
-+	} else {
-+		dev_err(hba->dev, "device reset pulling up failure: %d\n", err);
- 	}
-+
- 	if (err != -EOPNOTSUPP)
- 		ufshcd_update_evt_hist(hba, UFS_EVT_DEV_RESET, err);
- }
-@@ -8686,8 +8703,6 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	if (ret)
- 		goto set_dev_active;
- 
--	ufshcd_vreg_set_lpm(hba);
--
- disable_clks:
- 	/*
- 	 * Call vendor specific suspend callback. As these callbacks may access
-@@ -8703,6 +8718,9 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	 */
- 	ufshcd_disable_irq(hba);
- 
-+	if (ufshcd_is_link_off(hba))
-+		ufshcd_vops_toggle_device_reset(hba, true);
-+
- 	ufshcd_setup_clocks(hba, false);
- 
- 	if (ufshcd_is_clkgating_allowed(hba)) {
-@@ -8711,6 +8729,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 					hba->clk_gating.state);
- 	}
- 
-+	ufshcd_vreg_set_lpm(hba);
-+
- 	/* Put the host controller in low power mode if possible */
- 	ufshcd_hba_vreg_set_lpm(hba);
- 	goto out;
-@@ -8778,18 +8798,19 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	old_link_state = hba->uic_link_state;
- 
- 	ufshcd_hba_vreg_set_hpm(hba);
-+
-+	ret = ufshcd_vreg_set_hpm(hba);
-+	if (ret)
-+		goto out;
-+
- 	/* Make sure clocks are enabled before accessing controller */
- 	ret = ufshcd_setup_clocks(hba, true);
- 	if (ret)
--		goto out;
-+		goto disable_vreg;
- 
- 	/* enable the host irq as host controller would be active soon */
- 	ufshcd_enable_irq(hba);
- 
--	ret = ufshcd_vreg_set_hpm(hba);
--	if (ret)
--		goto disable_irq_and_vops_clks;
--
- 	/*
- 	 * Call vendor specific resume callback. As these callbacks may access
- 	 * vendor specific host controller register space call them when the
-@@ -8797,7 +8818,7 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	 */
- 	ret = ufshcd_vops_resume(hba, pm_op);
- 	if (ret)
--		goto disable_vreg;
-+		goto disable_irq_and_vops_clks;
- 
- 	/* For DeepSleep, the only supported option is to have the link off */
- 	WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && !ufshcd_is_link_off(hba));
-@@ -8864,8 +8885,6 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	ufshcd_link_state_transition(hba, old_link_state, 0);
- vendor_suspend:
- 	ufshcd_vops_suspend(hba, pm_op);
--disable_vreg:
--	ufshcd_vreg_set_lpm(hba);
- disable_irq_and_vops_clks:
- 	ufshcd_disable_irq(hba);
- 	if (hba->clk_scaling.is_allowed)
-@@ -8876,6 +8895,8 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		trace_ufshcd_clk_gating(dev_name(hba->dev),
- 					hba->clk_gating.state);
- 	}
-+disable_vreg:
-+	ufshcd_vreg_set_lpm(hba);
- out:
- 	hba->pm_op_in_progress = 0;
- 	if (ret)
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 9bb5f0e..dccc3eb 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -319,7 +319,7 @@ struct ufs_pwr_mode_info {
-  * @resume: called during host controller PM callback
-  * @dbg_register_dump: used to dump controller debug information
-  * @phy_initialization: used to initialize phys
-- * @device_reset: called to issue a reset pulse on the UFS device
-+ * @toggle_device_reset: called to change logic level of reset gpio on the UFS device
-  * @program_key: program or evict an inline encryption key
-  * @event_notify: called to notify important events
-  */
-@@ -350,7 +350,7 @@ struct ufs_hba_variant_ops {
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- 	void	(*dbg_register_dump)(struct ufs_hba *hba);
- 	int	(*phy_initialization)(struct ufs_hba *);
--	int	(*device_reset)(struct ufs_hba *hba);
-+	int	(*toggle_device_reset)(struct ufs_hba *hba, bool down);
- 	void	(*config_scaling_param)(struct ufs_hba *hba,
- 					struct devfreq_dev_profile *profile,
- 					void *data);
-@@ -1216,10 +1216,10 @@ static inline void ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
- 		hba->vops->dbg_register_dump(hba);
- }
- 
--static inline int ufshcd_vops_device_reset(struct ufs_hba *hba)
-+static inline int ufshcd_vops_toggle_device_reset(struct ufs_hba *hba, bool down)
- {
--	if (hba->vops && hba->vops->device_reset)
--		return hba->vops->device_reset(hba);
-+	if (hba->vops && hba->vops->toggle_device_reset)
-+		return hba->vops->toggle_device_reset(hba, down);
- 
- 	return -EOPNOTSUPP;
- }
+v14 -> v15
+1. Remove duplicated sysfs ABI entries in documentation.
+2. Add experiment result of HPB performance testing with iozone.
+
+v13 -> v14
+1. Cleanup codes by commentted in Greg's review.
+2. Add documentation for sysfs entries (from Greg's review).
+3. Add experiment result of HPB performance testing.
+
+v12 -> v13
+1. Cleanup codes by comments from Can Guo.
+2. Add HPB related descriptor/flag/attributes in sysfs.
+3. Change base commit from 5.10/scsi-queue to 5.11/scsi-queue.
+
+v11 -> v12
+1. Fixed to return error value when HPB fails to initialize pinned active 
+region.
+2. Fixed to disable HPB feature if HPB fails to allocate essential memory
+and workqueue.
+3. Fixed to change proper sub-region state when region is already evicted.
+
+v10 -> v11
+Add a newline at end the last line on Kconfig file.
+
+v9 -> v10
+1. Fixed 64-bit division error
+2. Fixed problems commentted in Bart's review.
+
+v8 -> v9
+1. Change sysfs initialization.
+2. Change reading descriptor during HPB initialization
+3. Fixed problems commentted in Bart's review.
+4. Change base commit from 5.9/scsi-queue to 5.10/scsi-queue.
+
+v7 -> v8
+Remove wrongly added tags.
+
+v6 -> v7
+1. Remove UFS feature layer.
+2. Cleanup for sparse error.
+
+v5 -> v6
+Change base commit to b53293fa662e28ae0cdd40828dc641c09f133405
+
+v4 -> v5
+Delete unused macro define.
+
+v3 -> v4
+1. Cleanup.
+
+v2 -> v3
+1. Add checking input module parameter value.
+2. Change base commit from 5.8/scsi-queue to 5.9/scsi-queue.
+3. Cleanup for unused variables and label.
+
+v1 -> v2
+1. Change the full boilerplate text to SPDX style.
+2. Adopt dynamic allocation for sub-region data structure.
+3. Cleanup.
+
+NAND flash memory-based storage devices use Flash Translation Layer (FTL)
+to translate logical addresses of I/O requests to corresponding flash
+memory addresses. Mobile storage devices typically have RAM with
+constrained size, thus lack in memory to keep the whole mapping table.
+Therefore, mapping tables are partially retrieved from NAND flash on
+demand, causing random-read performance degradation.
+
+To improve random read performance, JESD220-3 (HPB v1.0) proposes HPB
+(Host Performance Booster) which uses host system memory as a cache for the
+FTL mapping table. By using HPB, FTL data can be read from host memory
+faster than from NAND flash memory. 
+
+The current version only supports the DCM (device control mode).
+This patch consists of 3 parts to support HPB feature.
+
+1) HPB probe and initialization process
+2) READ -> HPB READ using cached map information
+3) L2P (logical to physical) map management
+
+In the HPB probe and init process, the device information of the UFS is
+queried. After checking supported features, the data structure for the HPB
+is initialized according to the device information.
+
+A read I/O in the active sub-region where the map is cached is changed to
+HPB READ by the HPB.
+
+The HPB manages the L2P map using information received from the
+device. For active sub-region, the HPB caches through ufshpb_map
+request. For the in-active region, the HPB discards the L2P map.
+When a write I/O occurs in an active sub-region area, associated dirty
+bitmap checked as dirty for preventing stale read.
+
+HPB is shown to have a performance improvement of 58 - 67% for random read
+workload. [1]
+
+[1]:
+https://www.usenix.org/conference/hotstorage17/program/presentation/jeong
+
+Daejun Park (3):
+  scsi: ufs: Introduce HPB feature
+  scsi: ufs: L2P map management for HPB read
+  scsi: ufs: Prepare HPB read for cached sub-region
+
+ Documentation/ABI/testing/sysfs-driver-ufs |   71 +
+ drivers/scsi/ufs/Kconfig                   |    9 +
+ drivers/scsi/ufs/Makefile                  |    1 +
+ drivers/scsi/ufs/ufs-sysfs.c               |   18 +
+ drivers/scsi/ufs/ufs.h                     |   49 +
+ drivers/scsi/ufs/ufshcd.c                  |   53 +
+ drivers/scsi/ufs/ufshcd.h                  |   23 +-
+ drivers/scsi/ufs/ufshpb.c                  | 1753 ++++++++++++++++++++
+ drivers/scsi/ufs/ufshpb.h                  |  231 +++
+ 9 files changed, 2207 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/scsi/ufs/ufshpb.c
+ create mode 100644 drivers/scsi/ufs/ufshpb.h
+
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.25.1
 
