@@ -2,154 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B636AC3526C
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Dec 2020 22:03:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABE8FC433E9
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Dec 2020 01:31:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73D6C22D02
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Dec 2020 22:03:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8386722C7B
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Dec 2020 01:31:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727236AbgLTWDY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 20 Dec 2020 17:03:24 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:5550 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726507AbgLTWDY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2020 17:03:24 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1608501803; x=1640037803;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=NsP9KppwOP6Xw5BYDHKTLYODrOXpsDVxJ/C0AEMkesg=;
-  b=dP5y1k2TupFlZRwvaHFnXxSRcIuMKM5gDG4TfegG66V9Yh7BzgPHjaxB
-   jfB9OjXT6CVrQNNUXAY8nUyFxdtzGz/etmCL8W+KtB0BNa39Mam7PkOjX
-   jmysp9x64rcLlwJbc55BH3w0Lk5OMwE37BI67q+2ndpOZqIHQDPuGEEQh
-   AUFdPUEp0WlHumFHHtjKAxI5WMLPz5hEQOA98BUkuy+Osd0iXryryWoYz
-   QwdTVfB5Ie4ixQ0vj90MURP2yJsWODR8zWXXL5S2VwSZJZYqMN0TZYX/4
-   c5fDt7/maNtF4wXE/jQuwQCfMv28pUAspwEQyo/TPonb9n5w0NcwoRBYG
-   g==;
-IronPort-SDR: fCrvGApBrkxsTXtoSGptxDbljUwegJNbW3UkU0oHO2MYEV8ZYTmgLN20CZolgbc3YtBSguxBg+
- AsIrPqCUS7Rq71mR1+ycwBt0j06dMFyvTosv6vnNKLzqLMmEVb9DR0Fv0iw5KelPrsrGJoDsIe
- yxESbCS/5YvjbVGKk3l6miX+h0rzWqvQEOpdSlvDM/nwVZx0KFPMikBD/dbBr0ntdihrClmJnj
- aJJ+RVDiDw2La5KPOdK1qE6sxgoROiQ/VIhXXyoh6srW7NoCmYu71SYO3uVVMM76dZUOitDL4X
- ap4=
-X-IronPort-AV: E=Sophos;i="5.78,435,1599494400"; 
-   d="scan'208";a="155646190"
-Received: from mail-dm6nam10lp2102.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.102])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Dec 2020 06:02:17 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Bd1agXO7xXeUfi4LWFBNHT0U0GTXZ3I8ZliZo31GfS4srpgqQhiNpZVeYZ0tT4DfSDyweHMCIl/Z1TaWl2DRKTB2T5Raaaa6QJUpPfZZ1Y30DFx6FFlP5laDBJJwBxkTOcuJnLuUgdz0XX7yh9qVouT1IjLsdvWOukSRjFmylJJbexw1dVb5dTTSBB4WJrbMcD9kDHfPZMlINmY4Ws+e1ar+aZQ+AhuEE7HKM0GZOmDRRqc0IACUfNcZcx1X+iy7JiZ0gQNLIZoFBB+cp3eNqrSlw9niG1o/Btv5DEO4254bvNZwssEOWpyzcET4TZv481LwzCD5EPTsvJKXkOzoQw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rsSepHIzlQmO5vlGfgH+O9XU1q3cYDrF4tQvNcSJiNs=;
- b=ALyO15VnB2+T0Z4zuYPg5csD33UeaMdDAdKfunDMou5WkmK3NNDn1cA0O1tKdyNFS7sNhZt1pitkqM5kX2hEM8O5Hy+V8QjWxH2B2lMYcNU2Lm/1IhoQNksgDBxVyoagmosn0reuo5ME55oKUkYTORSrsOf3VOmFNAL4ieMLwiJvrKiRi/fS8CfC0vlIU/nXbkcZqEv/+tVJgifiD+Z95buSko5V+S77I/cKBPpA1tRDpAYXegFGHFiTYf86ExwzzssPLfnC6T13ZCWNRvHO1kAGfhefmBSMwdJyoSuHkZERcMlcri875J7ShcqYbVgqsshrmG9PahoGiCZSG1+E6A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rsSepHIzlQmO5vlGfgH+O9XU1q3cYDrF4tQvNcSJiNs=;
- b=Z+b5Xm2+wMOruJx3mKjAgONSVgbH0nrzz+ZSQ5ANuziaXJhAYZebFMG/syFObzermjQuKg6gMWJICoaF0kFeU2Hce/cSUu14tm4uTILt6lBZ00HH4cc5B+MoWNtDMraOELvBlyFsltVakrBQRQYCFWkD0Td6dNvYtPUO3/2R/Gg=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB4154.namprd04.prod.outlook.com (2603:10b6:5:9a::11) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3676.25; Sun, 20 Dec 2020 22:02:15 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::a564:c676:b866:34f6]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::a564:c676:b866:34f6%9]) with mapi id 15.20.3676.033; Sun, 20 Dec 2020
- 22:02:15 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>
-CC:     "cang@codeaurora.org" <cang@codeaurora.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
-Subject: RE: [PATCH] scsi: ufs: fix livelock of ufshcd_clear_ua_wluns
-Thread-Topic: [PATCH] scsi: ufs: fix livelock of ufshcd_clear_ua_wluns
-Thread-Index: AQHW1O5Lq9Xt0bukCk2VnSNzzSWPAqoAjHbQ
-Date:   Sun, 20 Dec 2020 22:02:15 +0000
-Message-ID: <DM6PR04MB6575B8729A62E6FB9F19930CFCC10@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20201218033131.2624065-1-jaegeuk@kernel.org>
-In-Reply-To: <20201218033131.2624065-1-jaegeuk@kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [77.138.4.172]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: c35baa68-0b7e-40c1-a6b0-08d8a532e955
-x-ms-traffictypediagnostic: DM6PR04MB4154:
-x-microsoft-antispam-prvs: <DM6PR04MB41543FE6BD031E495FF7330DFCC10@DM6PR04MB4154.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:4941;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: WW0UvhcUWjXeHsHjjhQOUGEftMcD9m/RUHjfQ0CwFusf+vlOq7yynfwHiNwSZfM5wVCoEovuTSyVAPAcA9qSh1m/b5o7SLT5LxXbAzbJ/Wa7jjCdeg0yOKT81OGc21cDSZCN8Fezs6VuQOWy65YfUj5ozZDEwMPT0dOft8XQhX6WWBI9E8xJ36/pWmsls+qYuTUhWpqvYY7MJPS4Yo6Vl2XVnshUYKDFpwSYR6hGbRkED7yBq43GQjP6YF1znaWbPp3VPcp4eJmnu+bACI9orpUqdfzN2L/0siVtmiRuJ/7zicalqToSpr9KO8cfWL2MP7aqAtqfUrFegmZWB1PyfTK3jnqQ9jSELcC79YlmUCCVDItn4gI//GRM/LhlbngYvlTNUFmGV7wQaXU+ZHxEDw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(39850400004)(376002)(366004)(136003)(396003)(76116006)(2906002)(5660300002)(4326008)(55016002)(86362001)(83380400001)(71200400001)(4744005)(9686003)(6506007)(33656002)(478600001)(316002)(8936002)(8676002)(54906003)(186003)(26005)(110136005)(66556008)(66446008)(66476007)(66946007)(64756008)(52536014)(7696005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?CEpd1nb4KsrxrgipDZJ6XW2NBstLDK88koookGvR5/Qeien+do8NUAsdoPP3?=
- =?us-ascii?Q?8pw69M/mwI/Pq3h/3O2uoTXuevGTpuDyba1Hsag5bSQ4okGotfSpsbFAD/4I?=
- =?us-ascii?Q?BMv41G/Lk6tFGeWXPDozJbw+HOYvK+v0WjYQZApBKKJNnBlYHrJ19a5co9tW?=
- =?us-ascii?Q?K8E1BHp/0/ZR7bt/xanbIH+oXkGGkE24LML+x3huW1QK08d0S7yndFM13j3t?=
- =?us-ascii?Q?g32QUbI1+zxoSwAr7/sdsyOb0dKeK2FRuyr7fhXSyjqJWwfSRulqCqh143nx?=
- =?us-ascii?Q?/4VtHqYLB/7kcNqaLgHhuYgpbvag7Xcg8lDJYo4U1vaSTlrw24BIqjv20ox8?=
- =?us-ascii?Q?J6ZNWOF/HOL0/m0hIO8BYP+nshKLXSROZOGotwIt2UxhfpJY2hlCgcqh7Rzs?=
- =?us-ascii?Q?c9FTwXrCnMFTi+XW+IJVXEAKo5Szsgi9wX9zEmQZmxr3Zhu5t4+HBi/XYVgd?=
- =?us-ascii?Q?KQb8AAKxdmiBkngmWSrQ0CM2xcX8pNCw3g5H7F3HFJNAKiGboiyio8VBmkry?=
- =?us-ascii?Q?jI9BSMdzKu/jArh3VDswe348gldimh10xw2N88sOnYJuRDcs/NlUSIiQDqIc?=
- =?us-ascii?Q?G3VkgmQdZpTbTdo9ZjD7bhQWXnwrlW3MSCxPGc+LYW39SsqGJSM3PPBnaLjL?=
- =?us-ascii?Q?R1Et28P6hjUjyt66W2r9WWTaLo1ADezx204EYHfAPzr1PxYw7CJgVODpSpj1?=
- =?us-ascii?Q?tcwGmGXsO7CiO5Spmetr5iaN+LvBy0e7VdoV7EjLfyFfxL2zMYJ5pu6Xm5jQ?=
- =?us-ascii?Q?ezbh/Y6GSBMaSER+NdYF8ZSJAE//FPdSt9wd0q9YRwMAZ0EI9Rs+jEbXvOM8?=
- =?us-ascii?Q?aG81LoMjliq9fRS1/HfSbHg7xK9ZpUyw/h4Rto0bMR91o/51x5JfrDHUsH3P?=
- =?us-ascii?Q?7CIswXXjv3FmWb2SPmwY+kcpVLEyGMgrHeqlJsC0L6Gujz/S+ZeTPI3cKs8+?=
- =?us-ascii?Q?i3x4Dn/xiPC75Y2wqYR/qg9WiQaqgev0DI0N0KElcQo=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c35baa68-0b7e-40c1-a6b0-08d8a532e955
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Dec 2020 22:02:15.3701
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: zm+JquOuUB8DjEifZ1Y6lkn4GdecRhKbvsSQHW/lu7LkBre/9in6XnbZlUihXMLXZ5ycyPiihI7qrLyizEGYwQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB4154
+        id S1727378AbgLUBbl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Dec 2020 20:31:41 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:30034 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726146AbgLUBbi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2020 20:31:38 -0500
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20201221013055epoutp044b7c0f936b5b3c3d7da328d9373690c3~SlzFkNDIM1554115541epoutp04F
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Dec 2020 01:30:55 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20201221013055epoutp044b7c0f936b5b3c3d7da328d9373690c3~SlzFkNDIM1554115541epoutp04F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1608514255;
+        bh=YBx4FRQN8FFEpVmEak7+buh0GvhBRpidJQdKl3sdqzE=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=rMb68lI0WrmHdDDDTZlp34DYR61SLILcDvcnbthytzrPhOMwYVkf0O5rXO9pEH9nK
+         iqstScgubJCLG3BDFNXNOInAR4Urv9xhiqmbj9sT4p8S9guCNASEt9OuNoOtljxudR
+         GKI4XuTmfOamD2v4Tzt6kraYeG732gwJ/00icsXQ=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20201221013054epcas2p29981b5ed261162c0579d4728d8a79f52~SlzEWZJkP2122621226epcas2p2Z;
+        Mon, 21 Dec 2020 01:30:54 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.40.191]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4CzhkM3gV9zMqYkY; Mon, 21 Dec
+        2020 01:30:51 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        F9.89.52511.BCAFFDF5; Mon, 21 Dec 2020 10:30:51 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20201221013050epcas2p49a93492e623f0c213abc039b3b8a3922~SlzA1j0Vc3222732227epcas2p4t;
+        Mon, 21 Dec 2020 01:30:50 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20201221013050epsmtrp205e37f1761108b6f16859091c5d06cca~SlzAz_flv2868528685epsmtrp2U;
+        Mon, 21 Dec 2020 01:30:50 +0000 (GMT)
+X-AuditID: b6c32a48-4f9ff7000000cd1f-5d-5fdffacb3339
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        5E.9A.13470.ACAFFDF5; Mon, 21 Dec 2020 10:30:50 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20201221013049epsmtip29afa98794946aa3d9159ed8f24fb60a5~SlzAmw3y82311123111epsmtip2p;
+        Mon, 21 Dec 2020 01:30:49 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
+        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v2] ufs: relocate flush of exceptional event
+Date:   Mon, 21 Dec 2020 10:19:59 +0900
+Message-Id: <1608513599-129229-1-git-send-email-kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupgk+LIzCtJLcpLzFFi42LZdljTTPf0r/vxBhu+s1o8mLeNzWJv2wl2
+        i5c/r7JZHHzYyWLxdekzVotpH34yW3xav4zV4tff9ewWqxc/YLFYdGMbk8XNLUdZLLqv72Cz
+        WH78H5NF190bjBZL/71lceD3uHzF2+NyXy+Tx4RFBxg9vq/vYPP4+PQWi0ffllWMHp83yXm0
+        H+hmCuCIyrHJSE1MSS1SSM1Lzk/JzEu3VfIOjneONzUzMNQ1tLQwV1LIS8xNtVVy8QnQdcvM
+        ATpeSaEsMacUKBSQWFyspG9nU5RfWpKqkJFfXGKrlFqQklNgaFigV5yYW1yal66XnJ9rZWhg
+        YGQKVJmQk9H04RVrQTd3xev1kxgbGFs4uxg5OSQETCTW71vK1sXIxSEksINRYtGnPSwQzidG
+        iTMHfzJBON8YJQ7POs0O03Lj5CFGiMReRonlL09DtfxglOj+8osJpIpNQFPi6c2pYO0iAmeY
+        JK61nmUFSTALqEvsmnACrEhYwEai68U7sDiLgKrEteOtYHFeATeJD0ufsEGsk5O4ea6TGWSQ
+        hEAjh8Sfnd+hEi4SW+5OY4KwhSVeHd8CdZ+UxOd3e6Fq6iX2TW1ghWjuYZR4uu8fI0TCWGLW
+        s3YgmwPoIk2J9bv0QUwJAWWJI7dYIO7kk+g4/JcdIswr0dEmBNGoLPFr0mSoIZISM2/egdrq
+        IfFvyRqwV4QEYiUurFjBNIFRdhbC/AWMjKsYxVILinPTU4uNCkyQo2kTIzhJannsYJz99oPe
+        IUYmDsZDjBIczEoivGZS9+OFeFMSK6tSi/Lji0pzUosPMZoCw2sis5Rocj4wTeeVxBuaGpmZ
+        GViaWpiaGVkoifOGruyLFxJITyxJzU5NLUgtgulj4uCUamCKefj304VUjg8iPocSemeuD63c
+        /EW0YUNaAIfd7FXW/H/XKDFxvg5ZbMq56/T1n5fMA2X+pOd90zjhsPOi+8KPyUXWn+UXdwWf
+        3GsVt2vdYvvJ326/dz1YO+Ncu8avP52MrultFSx5b8tlW5o2VTi51x9I2HVRrTtkyYbzU2f4
+        3ipgPbt0oezS7ihv3v3BC5Vs5nI2JRpE2NtXqXxYvfLrcqfdt+oSdhVLrgxWOnJwU6jgk7Nn
+        9z3Zsd/u4eGLHtXF1cvO+Z4Q5kj9vU7Je7lt8vo7XlX+H/dnLdZWmulnmKZy6VnCAcc5vGyz
+        mP+86lvWOvu1fYBE9JqqE6LXkpt/2XQpZh6Ly5sRl8sue+iuEktxRqKhFnNRcSIA+7qhCBsE
+        AAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGLMWRmVeSWpSXmKPExsWy7bCSvO6pX/fjDc58YLN4MG8bm8XethPs
+        Fi9/XmWzOPiwk8Xi69JnrBbTPvxktvi0fhmrxa+/69ktVi9+wGKx6MY2JoubW46yWHRf38Fm
+        sfz4PyaLrrs3GC2W/nvL4sDvcfmKt8flvl4mjwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNo
+        P9DNFMARxWWTkpqTWZZapG+XwJXR9OEVa0E3d8Xr9ZMYGxhbOLsYOTkkBEwkbpw8xNjFyMUh
+        JLCbUWLV5C52iISkxImdzxkhbGGJ+y1HWCGKvjFKrH/5iQUkwSagKfH05lQmkISIwD0miUsT
+        5jKDJJgF1CV2TTjBBGILC9hIdL14xwpiswioSlw73goW5xVwk/iw9AkbxAY5iZvnOpknMPIs
+        YGRYxSiZWlCcm55bbFhgmJdarlecmFtcmpeul5yfu4kRHLRamjsYt6/6oHeIkYmD8RCjBAez
+        kgivmdT9eCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8F7pOxgsJpCeWpGanphakFsFkmTg4pRqY
+        GLpe2H6TDPbYanon7tEH3Ql7txpfl7PVbtm+3th+em4upxtzOKuHfeKTVevfdlRZzBO7u2L3
+        h6BfO0rKjN8pcPKo9ffwp5hvimM93Sdv8Fpybrt35baqvzOY76hsUr+9cGZrf9LJ0PjNRgtm
+        r8nJurbEZUe3/c+6xCdzBJpiKnKuMSSb3oqZqf2w5cYPxhXvW/R+3y2/y5i/w6arYm9x7+/g
+        6c4zZqkeWXy8uXHzn+6tZaXf+Z+fuMtr/Y2tW+acxgEjvZ2T5BeoS68t4u52CWDj2bW25Rzr
+        M16LrLB9QmuUZHZdX/f9THTWg71stiHLjz/1c+jm+3TBnD/5/dp1pzVnq3NOaXb7yvH9xQkj
+        JZbijERDLeai4kQARb3yJskCAAA=
+X-CMS-MailID: 20201221013050epcas2p49a93492e623f0c213abc039b3b8a3922
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20201221013050epcas2p49a93492e623f0c213abc039b3b8a3922
+References: <CGME20201221013050epcas2p49a93492e623f0c213abc039b3b8a3922@epcas2p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi J,
-=20
->=20
-> When gate_work/ungate_work gets an error during hibern8_enter or exit,
->  ufshcd_err_handler()
->    ufshcd_scsi_block_requests()
->    ufshcd_reset_and_restore()
->      ufshcd_clear_ua_wluns() -> stuck
->    ufshcd_scsi_unblock_requests()
->=20
-> In order to avoid it, ufshcd_clear_ua_wluns() can be called per recovery
-> flows
-> such as suspend/resume, link_recovery, and error_handler.
-Not sure that suspend/resume are UAC events?
-=20
-Also the 'fixes' tag is missing.
+v1 -> v2: modify prefix and addded tags
 
-Thanks,
-Avri
+I found one case as follows and the current flush
+location doesn't guarantee disabling BKOPS in the
+case of requsting device power off.
+1) The exceptional event handler is queued.
+2) ufs suspend starts with a request of device power off
+3) BKOPS is disabled in ufs suspend
+4) The queued work for the handler is done and BKOPS
+is enabled again.
+
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Reviewed-by: Can Guo <cang@codeaurora.org>
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 92d433d..414025c 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8608,6 +8608,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 			ufshcd_wb_need_flush(hba));
+ 	}
+ 
++	flush_work(&hba->eeh_work);
++
+ 	if (req_dev_pwr_mode != hba->curr_dev_pwr_mode) {
+ 		if ((ufshcd_is_runtime_pm(pm_op) && !hba->auto_bkops_enabled) ||
+ 		    !ufshcd_is_runtime_pm(pm_op)) {
+@@ -8622,8 +8624,6 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		}
+ 	}
+ 
+-	flush_work(&hba->eeh_work);
+-
+ 	/*
+ 	 * In the case of DeepSleep, the device is expected to remain powered
+ 	 * with the link off, so do not check for bkops.
+-- 
+2.7.4
+
