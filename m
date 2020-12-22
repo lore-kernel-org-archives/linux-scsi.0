@@ -5,122 +5,174 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C5D0C43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A968FC4361A
 	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 07:07:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6734A23133
+	by mail.kernel.org (Postfix) with ESMTP id 9162F23130
 	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 07:07:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726328AbgLVHG7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726330AbgLVHG7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 22 Dec 2020 02:06:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56376 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726320AbgLVHG7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 02:06:59 -0500
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F931C061282
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Dec 2020 23:06:06 -0800 (PST)
-Received: by mail-pg1-x534.google.com with SMTP id n10so7792350pgl.10
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Dec 2020 23:06:06 -0800 (PST)
+        with ESMTP id S1726317AbgLVHG6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 02:06:58 -0500
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99409C0619D9
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Dec 2020 23:05:57 -0800 (PST)
+Received: by mail-pj1-x102c.google.com with SMTP id v1so829780pjr.2
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Dec 2020 23:05:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=+U2V77PUx8lTVBmL49agBc/nNKEIL1Ai7U/N4giYvzA=;
-        b=G32oyyEy7Fh9nXd3tHTLVZSQSbkYhS8jeFEpKDgGF+KoCg0HM4PHVq0CjizvVUNncm
-         O7npRhgfswEE2sNHIxQ7yhTZPJYKx7zHSAI5lqj/XK3Px6o+4Lq4T6iTs1OtjHJGoe8N
-         cHKxzjJ6tBHysu1Tz7jOY7tO4ZGNZeOTTHhKQ=
+        bh=ZSpRhTERQijECkK/5+Ql1TcUfiS//HI/sJpcVAbuq+g=;
+        b=WOjgBuCtb6V8vydEqRGORb5VRZIxZ0WomHDk/H7tYg3tJrsx7bjBLn2CgFYILDKaSr
+         FXahZN2opl8ky98Zn4IoyEX5T1Ywh5Z1rquumkBd4WOOTd5AKfxr3nVh2oNTf4plW9C+
+         OBSoNGVmWPJPoiBQuLxShw0OjLrfKKazd3Swc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :in-reply-to:references;
-        bh=+U2V77PUx8lTVBmL49agBc/nNKEIL1Ai7U/N4giYvzA=;
-        b=ohLAbV5I3PbHo6Iu50VyH2XkFqwVOXqfemEHZFyXKrzVg5tPT2X8urHWdB+tr2Ji9n
-         gjiV+SOX9kTitICgTiz9Zril3uv2eFqiQGVH3TRTfn9/X9VQz6ki3nvBlds9IWOIvz+H
-         /P/wcTzKWu0kZdC0K+WBFu6uzQPEXkjxxd6KrOnEincPwxyPFVXmP632+rPIawc7O/vb
-         vKX+NCQv5h97BniudjipB4XyCRdfxpRoH8VnhN7PATknEsnQotLCtWMIKhYZUDgYFHWR
-         m7B6cp/Ss2DIBiyGMNsaA2ZX6Qm4PTQYQawebpVCigU/ZvxLB22OuwSvSL+E0/NdrP8z
-         TqbA==
+        bh=ZSpRhTERQijECkK/5+Ql1TcUfiS//HI/sJpcVAbuq+g=;
+        b=WDbsCEHaEjbWi18TwesjCZTn0KvphFQy2+KCOP7g92hxDenXdR5svz2F5+ChUtlmiP
+         xBBQ6gLu5R9XSkTn7MioYqrtHSLoKOJN/o/hi5bcLtaY+E2lohdiWQoEsBkW46Yq/ttM
+         JDQqmn8W/NunUm3hWIlCPDWpOzisaCBPVPzvdftXV5aZbUbMC8P6uJSJvJtjaJ3otKQc
+         Emy4npwbJhz8oAeC0937czZEP357hB9i+PzMqi6LxLuCOBgH1Xp4ckId6GV5JZmhYmwZ
+         sjAtsot5OPLZXG5eg95ZCVrZRHnh9ZRJdGFhGcK0blIiptiPmekesqzAeka8KfLPkaZV
+         wiRg==
 MIME-Version: 1.0
-X-Gm-Message-State: AOAM532gMVVnSH26D2q33+PeeWSqwwXXAtNZHbF3LnW+wXsB/ylB2TDD
-        EQSx0b7yIg+oiu8GX28QIStjd4p/2edmSMkio77bsN/HfHDSNlJcT5FvzqTaQLafy8wzPLL6TCx
-        M54JffRPBnbPKE3jxfk4gYvg=
-X-Google-Smtp-Source: ABdhPJxJEgb9LzJO+hRw4mGVcGGwoFoOxJgQk4UwAWCeFOvckG9kVk1kDDYqo9BPM08mkBGYApLONw==
-X-Received: by 2002:a62:ddcd:0:b029:1a6:99ff:a75e with SMTP id w196-20020a62ddcd0000b02901a699ffa75emr18696477pff.42.1608620766073;
-        Mon, 21 Dec 2020 23:06:06 -0800 (PST)
+X-Gm-Message-State: AOAM531gB0pNoUql8zlkkyqnQu361hbhMLGJNawf400kONEpALPCmLTr
+        AZg07aAsPITQEbrzXQ6wUYNVaTnS4CAbhT4Zb+TVLrMspMRRFcL6bcXxVjhk+ou9MWR7VwVdOit
+        4CVNI1tq86Qaf
+X-Google-Smtp-Source: ABdhPJxtEuRNLtVeHUhKz59CxIZq+x/70eZ/Y2zGhM8VOuYD2F4WyuHy20A7Lzkpf15VWlaRX2+ucA==
+X-Received: by 2002:a17:90a:8985:: with SMTP id v5mr20378406pjn.27.1608620756981;
+        Mon, 21 Dec 2020 23:05:56 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id t9sm12466082pgh.41.2020.12.21.23.06.01
+        by smtp.gmail.com with ESMTPSA id t9sm12466082pgh.41.2020.12.21.23.05.52
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 21 Dec 2020 23:06:05 -0800 (PST)
+        Mon, 21 Dec 2020 23:05:56 -0800 (PST)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         tj@kernel.org, linux-nvme@lists.infradead.org, hare@suse.de
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
-        pbonzini@redhat.com, Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH v6 16/16] scsi: Made changes in Kconfig to select BLK_CGROUP_FC_APPID
-Date:   Tue, 22 Dec 2020 05:41:58 +0530
-Message-Id: <1608595918-21954-17-git-send-email-muneendra.kumar@broadcom.com>
+        pbonzini@redhat.com,
+        Gaurav Srivastava <gaurav.srivastava@broadcom.com>
+Subject: [PATCH v6 14/16] lpfc: vmid: Adding qfpa and vmid timeout check in worker thread
+Date:   Tue, 22 Dec 2020 05:41:56 +0530
+Message-Id: <1608595918-21954-15-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1608595918-21954-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1608595918-21954-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000005ce95805b7083553"
+        boundary="000000000000d2badd05b7083482"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000005ce95805b7083553
+--000000000000d2badd05b7083482
 Content-Type: text/plain; charset="US-ASCII"
 
-Added a new config FC_APPID to select BLK_CGROUP_FC_APPID
-which Enable support to track FC io Traffic.
+From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
+
+This patch add the periodic check for issuing of qfpa command and vmid
+timeout in the worker thread. The inactivity timeout check is added via
+the timer function.
 
 Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
+Signed-off-by: Gaurav Srivastava  <gaurav.srivastava@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 
 ---
 v6:
-Modified the Kconfig comments
+Added Forward declarations and removed unused variable
 
 v5:
 No change
 
 v4:
-Addressed the error reported by kernel test robot
+No change
 
 v3:
-New patch
----
- drivers/scsi/Kconfig | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+No change
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 701b61ec76ee..7b41fc3cb7f0 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -235,6 +235,19 @@ config SCSI_FC_ATTRS
- 	  each attached FiberChannel device to sysfs, say Y.
- 	  Otherwise, say N.
+v2:
+Ported the patch on top of 5.10/scsi-queue
+---
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 43 ++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
+
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index ed2d65cfd3e3..46dad0780368 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -73,6 +73,7 @@ static void lpfc_unregister_fcfi_cmpl(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ static int lpfc_fcf_inuse(struct lpfc_hba *);
+ static void lpfc_mbx_cmpl_read_sparam(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ static void lpfc_check_inactive_vmid(struct lpfc_hba *phba);
++static void lpfc_check_vmid_qfpa_issue(struct lpfc_hba *phba);
  
-+config FC_APPID
-+	bool "Enable support to track FC io Traffic"
-+	depends on BLOCK && BLK_CGROUP
-+	depends on SCSI
-+	select BLK_CGROUP_FC_APPID
-+	default y
-+	help
-+	  If you say Y here, it enables the support to track
-+	  FC I/O traffic over fabric. It enables the Fabric and the
-+	  storage targets to identify, monitor, and handle FC traffic
-+	  based on VM tags by inserting application specific
-+	  identification into the FC frame.
+ /* The source of a terminate rport I/O is either a dev_loss_tmo
+  * event or a call to fc_remove_host.  While the rport should be
+@@ -429,6 +430,32 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
+ 	return fcf_inuse;
+ }
+ 
++static void lpfc_check_vmid_qfpa_issue(struct lpfc_hba *phba)
++{
++	struct lpfc_vport *vport;
++	struct lpfc_vport **vports;
++	int i;
 +
- config SCSI_ISCSI_ATTRS
- 	tristate "iSCSI Transport Attributes"
- 	depends on SCSI && NET
++	vports = lpfc_create_vport_work_array(phba);
++	if (!vports)
++		return;
++
++	for (i = 0; i <= phba->max_vports; i++) {
++		if ((!vports[i]) && (i == 0))
++			vport = phba->pport;
++		else
++			vport = vports[i];
++		if (!vport)
++			break;
++
++		if (vport->vmid_flag & LPFC_VMID_ISSUE_QFPA) {
++			lpfc_issue_els_qfpa(vport);
++			vport->vmid_flag &= ~LPFC_VMID_ISSUE_QFPA;
++		}
++	}
++	lpfc_destroy_vport_work_array(phba, vports);
++}
++
+ /**
+  * lpfc_sli4_post_dev_loss_tmo_handler - SLI4 post devloss timeout handler
+  * @phba: Pointer to hba context object.
+@@ -749,6 +776,22 @@ lpfc_work_done(struct lpfc_hba *phba)
+ 	if (ha_copy & HA_LATT)
+ 		lpfc_handle_latt(phba);
+ 
++	/* Handle VMID Events */
++	if (lpfc_is_vmid_enabled(phba)) {
++		if (phba->pport->work_port_events &
++		    WORKER_CHECK_VMID_ISSUE_QFPA) {
++			lpfc_check_vmid_qfpa_issue(phba);
++			phba->pport->work_port_events &=
++				~WORKER_CHECK_VMID_ISSUE_QFPA;
++		}
++		if (phba->pport->work_port_events &
++		    WORKER_CHECK_INACTIVE_VMID) {
++			lpfc_check_inactive_vmid(phba);
++			phba->pport->work_port_events &=
++			    ~WORKER_CHECK_INACTIVE_VMID;
++		}
++	}
++
+ 	/* Process SLI4 events */
+ 	if (phba->pci_dev_grp == LPFC_PCI_DEV_OC) {
+ 		if (phba->hba_flag & HBA_RRQ_ACTIVE)
 -- 
 2.26.2
 
@@ -138,7 +190,7 @@ this e-mail is strictly prohibited. If you received this e-mail in error,
 please return the e-mail to the sender, delete it from your computer, and 
 destroy any printed copy of it.
 
---0000000000005ce95805b7083553
+--000000000000d2badd05b7083482
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -209,13 +261,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCAki2DKMnhgcuOO7ofORh6jUZL454KjXKcMFxVM08k5dTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEyMjIwNzA2MDZaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCBQ8lBad+B4PrIZA/kJFAGsYqkvga9Uaq7abGTA9gotQjAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEyMjIwNzA1NTdaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAjLN/+Vt01ZSmBXgo
-7nkTPuNpayP/w5uwSyvkRQj0SiMpwKFTq8HqMO0+diBHqEVdg2l+5YSKEQI9hk1cPuTF1+T9bNi9
-s1J9/8So9snwTkIZwvwc4H7usBhQG+fMrP0abz2Lx/IbZHcyTmlh8JZ4osi0LgzaviKbbj+A8U31
-+09EtsksshY7FQV65Q+ic9r+sqNQvd+T9jFdAqkWjVde71vyvZl8JqoSPnR46tDKS/0VZOfdNHVn
-J/3udJkIHSDunNgP5KXGEzZx1HoY93FI06aYrKIUJwkKcfNm7j0DIVzdCdqHN25fpGyLPcAGBW9O
-zGvHaFQF/ZKYg/jYpqluqA==
---0000000000005ce95805b7083553--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAgToYKpQDayc41p0e
+fduTgFaGClkMP1VFRBfUp/49lUlFD5Jqktitb40WLjVVV8BUyU+3Mn407/ujlSeljj4JeB8STP4J
+50khpsUG1ozaO5F2z1AzvEdvG9rfHqUAWXTMTGFCbUbSiEnsUbCZ+i3liI4IRP2QRIpCZxfkobLv
+HqoOP64JsB1Rnezpn/UiYABG8C6aVZU04BD1jY6WVG3CqvDSHMEWM3mjKZnnIgzeEFG2qkgZyAFu
+KRos6eU/gyqqYJOcHM1zV5Ywdghpok8vWn8reLZ1NiCeQd172dSDp0/AB7Wsuy6n15HI65yMALhI
++P4ULdp1jmPi9wUpXknfTw==
+--000000000000d2badd05b7083482--
