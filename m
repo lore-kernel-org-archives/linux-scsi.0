@@ -2,120 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0FA8C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 14:16:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15583C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 17:07:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70C652311D
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 14:16:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEFCB23137
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 17:07:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727199AbgLVOPw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 09:15:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37458 "EHLO
+        id S1727406AbgLVRHm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 12:07:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726802AbgLVOPv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 09:15:51 -0500
+        with ESMTP id S1726889AbgLVRHm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 12:07:42 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B92EC0613D3;
-        Tue, 22 Dec 2020 06:15:11 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CDD3C0613D3;
+        Tue, 22 Dec 2020 09:07:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=IGeyzIyslymkVZrOh/vnAkBCRf5syQaFMRZEQvrriys=; b=p9GqVWfb1C0KSz9SZ5xoF5rfSz
-        rz++tDusxtSVuHNwTrRvLHlkXdWgKSF87T+mHUcLcSiXoMl+eqyzba+9gm3Tc0+YzXhKIzKvzBUz1
-        aL8g89CCgdjrRJ4J5WqlP6+8BR+y9eXBMRKR5XwNS2ua40rm7i9p5L/xlBVro3ZQ6OxaDrx/eMioJ
-        IPcnOGrhse9KpwbBREggJMmpVDW17ZRkqbEf1RvumXBgWIMxYKMdl/ntzaBjIzhWzxqY+S38GZ4Jt
-        ry9S+EQFO47DLJ9SMIPFrS5gFwxWREoRUjX2wUka0kuRN2NhFTlBKUFTiDUxleHJdLef89fFNXw7l
-        DWVzm12Q==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kriRR-0004QG-41; Tue, 22 Dec 2020 14:15:09 +0000
-Date:   Tue, 22 Dec 2020 14:15:09 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Pavel Begunkov <asml.silence@gmail.com>
-Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Ming Lei <ming.lei@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
-        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH v1 6/6] block/iomap: don't copy bvec for direct IO
-Message-ID: <20201222141509.GF13079@infradead.org>
-References: <cover.1607976425.git.asml.silence@gmail.com>
- <498b34d746627e874740d8315b2924880c46dbc3.1607976425.git.asml.silence@gmail.com>
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=28dBPJLT+UeFhB76QkjVxwba0elN7ioWbZEoNuAnC98=; b=hiuWrGsAEgxIiypyZOih+2UOn1
+        0caGea3w+uR6dT/kLxnD1jPVV9+J1pUS+nj1KDJWZ7WStyPloKua7r17l/1UaNAHuuwtHidaWLo5T
+        jb2tBCyPNxkCeyB+ILbNZJkM5tngWsdSPPxiYLzpjGsMPOZHSRH8wXX3QiD8gELFYDzqIKfHBm3Dq
+        10HbgqHH0yJC/qtVObVVcEG44W1WQIb4lYzIUHFjIljXU2BccKuVMC+CBvU7tu0k4qk+NDfVaFUsS
+        IvU4w58jjC41/UomW7WKc6ldhc5205jwCvpRPN++u98EOYfmkVlJ+PVGIAgNX3F/FWO+nJHYq9tPs
+        9vNm62jw==;
+Received: from [2601:1c0:6280:3f0::64ea]
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1krl7Z-00081h-Nu; Tue, 22 Dec 2020 17:06:49 +0000
+Subject: Re: [PATCH v6 02/16] blkcg: Added a app identifier support for blkcg
+To:     Muneendra <muneendra.kumar@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        tj@kernel.org, linux-nvme@lists.infradead.org, hare@suse.de
+Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
+        pbonzini@redhat.com
+References: <1608595918-21954-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1608595918-21954-3-git-send-email-muneendra.kumar@broadcom.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <17bda03c-4eb4-2803-2274-1b7a8f122c32@infradead.org>
+Date:   Tue, 22 Dec 2020 09:06:44 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <498b34d746627e874740d8315b2924880c46dbc3.1607976425.git.asml.silence@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <1608595918-21954-3-git-send-email-muneendra.kumar@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Dec 15, 2020 at 12:20:25AM +0000, Pavel Begunkov wrote:
-> The block layer spends quite a while in blkdev_direct_IO() to copy and
-> initialise bio's bvec. However, if we've already got a bvec in the input
-> iterator it might be reused in some cases, i.e. when new
-> ITER_BVEC_FLAG_FIXED flag is set. Simple tests show considerable
-> performance boost, and it also reduces memory footprint.
-> 
-> Suggested-by: Matthew Wilcox <willy@infradead.org>
-> Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
+On 12/21/20 4:11 PM, Muneendra wrote:
 > ---
->  Documentation/filesystems/porting.rst |  9 ++++
->  block/bio.c                           | 64 +++++++++++----------------
->  include/linux/bio.h                   |  3 ++
->  3 files changed, 38 insertions(+), 38 deletions(-)
+>  block/Kconfig              |  9 ++++++
+>  include/linux/blk-cgroup.h | 56 ++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 65 insertions(+)
 > 
-> diff --git a/Documentation/filesystems/porting.rst b/Documentation/filesystems/porting.rst
-> index 867036aa90b8..47a622879952 100644
-> --- a/Documentation/filesystems/porting.rst
-> +++ b/Documentation/filesystems/porting.rst
-> @@ -865,3 +865,12 @@ no matter what.  Everything is handled by the caller.
+> diff --git a/block/Kconfig b/block/Kconfig
+> index a2297edfdde8..2ba6c27880e6 100644
+> --- a/block/Kconfig
+> +++ b/block/Kconfig
+> @@ -144,6 +144,15 @@ config BLK_CGROUP_IOLATENCY
 >  
->  clone_private_mount() returns a longterm mount now, so the proper destructor of
->  its result is kern_unmount() or kern_unmount_array().
-> +
-> +---
-> +
-> +**mandatory**
-> +
-> +For bvec based itererators bio_iov_iter_get_pages() now doesn't copy bvecs but
-> +uses the one provided. Anyone issuing kiocb-I/O should ensure that the bvec and
-> +page references stay until I/O has completed, i.e. until ->ki_complete() has
-> +been called or returned with non -EIOCBQUEUED code.
-> diff --git a/block/bio.c b/block/bio.c
-> index 3192358c411f..f8229be24562 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -960,25 +960,16 @@ void bio_release_pages(struct bio *bio, bool mark_dirty)
->  }
->  EXPORT_SYMBOL_GPL(bio_release_pages);
+>  	Note, this is an experimental interface and could be changed someday.
 >  
-> +static int bio_iov_bvec_set(struct bio *bio, struct iov_iter *iter)
->  {
-> +	WARN_ON_ONCE(BVEC_POOL_IDX(bio) != 0);
-> +	bio->bi_vcnt = iter->nr_segs;
-> +	bio->bi_max_vecs = iter->nr_segs;
-> +	bio->bi_io_vec = (struct bio_vec *)iter->bvec;
-> +	bio->bi_iter.bi_bvec_done = iter->iov_offset;
-> +	bio->bi_iter.bi_size = iter->count;
+> +config BLK_CGROUP_FC_APPID
+> +	bool "Enable support to track FC io Traffic across cgroup applications"
 
-Nit: I find an empty liner after WARN_ON_ONCE that assert the caller
-state very helpful when reading the code.
+	                                 IO  {or I/O}
 
->  static inline int bio_iov_vecs_to_alloc(struct iov_iter *iter, int max_segs)
->  {
-> +	/* reuse iter->bvec */
+> +	depends on BLK_CGROUP=y
+> +	help
+> +	  Enabling this option enables the support to track FC io traffic across
 
-Maybe add a ", see bio_iov_bvec_set for details" here?
+	                                                       I/O
+
+> +	  cgroup applications. It enables the Fabric and the storage targets to
+> +	  identify, monitor, and handle FC traffic based on vm tags by inserting
+
+	                                                    VM
+
+> +	  application specific identification into the FC frame.
+> +
+>  config BLK_CGROUP_IOCOST
+>  	bool "Enable support for cost model based cgroup IO controller"
+>  	depends on BLK_CGROUP=y
+
+
+-- 
+~Randy
+
