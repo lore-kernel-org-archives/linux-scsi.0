@@ -2,141 +2,143 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A09D9C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 17:39:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16BC5C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 18:16:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68A6722D73
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 17:39:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0F0E224F4
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 18:16:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727387AbgLVRjl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 12:39:41 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:15320 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727084AbgLVRjl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Dec 2020 12:39:41 -0500
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0BMHMY9l144137;
-        Tue, 22 Dec 2020 12:38:51 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=mzxAJ2qdjDobwjZYtIc9FAiKEaQborbGTrAtKji3Sl4=;
- b=kaF4LqkXSahyPn3BiKIoRWHfIqFMBHf5gtGGlrAcsepsLNhhZ5USsLMdBnHl6WhdUR2L
- qmnz1TY/0qEdNLKUaR5RtCcMyYFjM/+tEjTMJwsS9Jm+QTYl7HZwSR/WAhJR58+oqRzM
- Vg1cdniVcl9hl2jO4OljplJd/Reyh67Q9ym3vfXX6gegTL5UYhSGEioRFvcMBIU6l7Kv
- Kt5+PD2GZ3x+VGQEUEBxCuwybpGJfCV4LlN6noasMdOzpNgL0JecTpzlQEVUl9NocPcV
- xSJDFBFe8oU2mjwpv5YHqF9hLeSGfX5bcN/96uGtoWgfxE7gzvG9tYyVDkDWyqSA4Ary og== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 35kn510aeg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 22 Dec 2020 12:38:51 -0500
-Received: from m0098394.ppops.net (m0098394.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 0BMHOeBK155030;
-        Tue, 22 Dec 2020 12:38:51 -0500
-Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 35kn510ae9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 22 Dec 2020 12:38:50 -0500
-Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
-        by ppma03wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0BMHSRDu029108;
-        Tue, 22 Dec 2020 17:38:49 GMT
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-        by ppma03wdc.us.ibm.com with ESMTP id 35kdqy2wym-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 22 Dec 2020 17:38:49 +0000
-Received: from b03ledav003.gho.boulder.ibm.com (b03ledav003.gho.boulder.ibm.com [9.17.130.234])
-        by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0BMHcmrX28770794
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Dec 2020 17:38:49 GMT
-Received: from b03ledav003.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D32E96A05A;
-        Tue, 22 Dec 2020 17:38:48 +0000 (GMT)
-Received: from b03ledav003.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 4C13B6A057;
-        Tue, 22 Dec 2020 17:38:47 +0000 (GMT)
-Received: from oc6857751186.ibm.com (unknown [9.160.78.58])
-        by b03ledav003.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Tue, 22 Dec 2020 17:38:47 +0000 (GMT)
-Subject: Re: [PATCH 3/3] ibmvfc: use correlation token to tag commands
-To:     Nathan Chancellor <natechancellor@gmail.com>
-Cc:     james.bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org, brking@linux.ibm.com,
-        clang-built-linux@googlegroups.com
-References: <20201117185031.129939-1-tyreld@linux.ibm.com>
- <20201117185031.129939-3-tyreld@linux.ibm.com>
- <20201222062403.GA2190683@ubuntu-m3-large-x86>
-From:   Tyrel Datwyler <tyreld@linux.ibm.com>
-Message-ID: <b71fcc6f-bb07-f02d-8e1e-79fe4f5802dc@linux.ibm.com>
-Date:   Tue, 22 Dec 2020 09:38:46 -0800
+        id S1727988AbgLVSQI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 13:16:08 -0500
+Received: from mail-pl1-f173.google.com ([209.85.214.173]:35062 "EHLO
+        mail-pl1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727094AbgLVSQH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 13:16:07 -0500
+Received: by mail-pl1-f173.google.com with SMTP id g3so7843728plp.2
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 10:15:52 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=REyEQabJNHHO2Qk6g2HEBmyiWDdDVQSMXyx+WFX6tzA=;
+        b=npvjF6gsgQ7RAGsntjcZCTB1TngH3Htae2DpcxhF29ZO23jQbqI5vRf9KDyL5EJ3Qd
+         RK6oc3RS22geGv0zQX8DGkQqH7AdhpYIK95oqwnda9ql/0sLqDCR/YG1mUBCjNWFNgJI
+         fldjhAiCEeD2LhypraehMIFE9B9g3S+noDHmMWzkP98llTkDVehK1XPH/bjVlSEaS+aE
+         M0zUHjT/n9t9Ul0XOv2wigDYakzyVtoeXDulZDeWIjeSi/a8GhsuZ5tkLWG5uPW14LoK
+         /JZfMvYSOpUrKCQhpPUg3X7QYahNmBr21xGuVpIrpf987v65PEoeSi+huGTzYfAB38kK
+         Kfog==
+X-Gm-Message-State: AOAM531ys+zBEfCp5GQG6DheyT0qeIGC7Osqv3fbjBLQ7rXwPW4YkWfB
+        Awtkao4XnZSPnn+ANEjLOMs=
+X-Google-Smtp-Source: ABdhPJyen6unsUBjUdUJDeyNppIZC/eCIARIg3QQVoXIeQ4JPsou3POn8D1jRg+tHMt4/26wKcQkBw==
+X-Received: by 2002:a17:902:7e85:b029:da:726a:3a4f with SMTP id z5-20020a1709027e85b02900da726a3a4fmr1200880pla.65.1608660926936;
+        Tue, 22 Dec 2020 10:15:26 -0800 (PST)
+Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id i7sm21349139pfc.50.2020.12.22.10.15.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 22 Dec 2020 10:15:25 -0800 (PST)
+Subject: Re: [PATCH 01/24] mpi3mr: add mpi30 Rev-R headers and Kconfig
+To:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        linux-scsi@vger.kernel.org
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        steve.hagan@broadcom.com, peter.rivera@broadcom.com,
+        mpi3mr-linuxdrv.pdl@broadcom.com, sathya.prakash@broadcom.com
+References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
+ <20201222101156.98308-2-kashyap.desai@broadcom.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <514fce24-b522-463d-4ebf-2a68afcc3bb4@acm.org>
+Date:   Tue, 22 Dec 2020 10:15:23 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.0
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-In-Reply-To: <20201222062403.GA2190683@ubuntu-m3-large-x86>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20201222101156.98308-2-kashyap.desai@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2020-12-22_09:2020-12-21,2020-12-22 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- lowpriorityscore=0 bulkscore=0 impostorscore=0 priorityscore=1501
- spamscore=0 mlxscore=0 suspectscore=0 malwarescore=0 clxscore=1011
- adultscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012220126
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/21/20 10:24 PM, Nathan Chancellor wrote:
-> On Tue, Nov 17, 2020 at 12:50:31PM -0600, Tyrel Datwyler wrote:
->> The vfcFrame correlation field is 64bit handle that is intended to trace
->> I/O operations through both the client stack and VIOS stack when the
->> underlying physical FC adapter supports tagging.
->>
->> Tag vfcFrames with the associated ibmvfc_event pointer handle.
->>
->> Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
->> ---
->>  drivers/scsi/ibmvscsi/ibmvfc.c | 4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
->> index 0cab4b852b48..3922441a117d 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
->> @@ -1693,6 +1693,8 @@ static int ibmvfc_queuecommand_lck(struct scsi_cmnd *cmnd,
->>  		vfc_cmd->iu.pri_task_attr = IBMVFC_SIMPLE_TASK;
->>  	}
->>  
->> +	vfc_cmd->correlation = cpu_to_be64(evt);
->> +
->>  	if (likely(!(rc = ibmvfc_map_sg_data(cmnd, evt, vfc_cmd, vhost->dev))))
->>  		return ibmvfc_send_event(evt, vhost, 0);
->>  
->> @@ -2370,6 +2372,8 @@ static int ibmvfc_abort_task_set(struct scsi_device *sdev)
->>  		tmf->iu.tmf_flags = IBMVFC_ABORT_TASK_SET;
->>  		evt->sync_iu = &rsp_iu;
->>  
->> +		tmf->correlation = cpu_to_be64(evt);
->> +
->>  		init_completion(&evt->comp);
->>  		rsp_rc = ibmvfc_send_event(evt, vhost, default_timeout);
->>  	}
->> -- 
->> 2.27.0
->>
-> 
-> This patch introduces a clang warning, is this intentional behavior?
+On 12/22/20 2:11 AM, Kashyap Desai wrote:
+> diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_type.h b/drivers/scsi/mpi3mr/mpi/mpi30_type.h
+> new file mode 100644
+> index 000000000000..5de35e7a660f
+> --- /dev/null
+> +++ b/drivers/scsi/mpi3mr/mpi/mpi30_type.h
+> @@ -0,0 +1,89 @@
+> +/* SPDX-License-Identifier: GPL-2.0-or-later */
+> +/*
+> + *  Copyright 2016-2020 Broadcom Inc. All rights reserved.
+> + *
+> + *           Name: mpi30_type.h
+> + *    Description: MPI basic type definitions
+> + *  Creation Date: 10/07/2016
+> + *        Version: 03.00.00
+> + */
+> +#ifndef MPI30_TYPE_H
+> +#define MPI30_TYPE_H     1
+> +
+> +/*****************************************************************************
+> + * Define MPI3_POINTER if it has not already been defined. By default        *
+> + * MPI3_POINTER is defined to be a near pointer. MPI3_POINTER can be defined *
+> + * as a far pointer by defining MPI3_POINTER as "far *" before this header   *
+> + * file is included.                                                         *
+> + ****************************************************************************/
+> +#ifndef MPI3_POINTER
+> +#define MPI3_POINTER    *
+> +#endif  /* MPI3_POINTER */
 
-Nope, I just missed the required cast. I've got a fixes patch queued up. I just
-haven't sent it yet.
+Near and far pointers are concepts that come from 16-bit Intel
+architectures. I think that these concepts are not relevant in the Linux
+kernel. Hence please remove the MPI3_POINTER macro and use '*' directly.
 
--Tyrel
+> +typedef u8 U8;
+> +typedef __le16 U16;
+> +typedef __le32 U32;
+> +typedef __le64 U64 __aligned(4);
 
+Typedefs like the above reduce source code readability significantly.
+Please remove these typedefs and use __le16 etc. directly.
+
+> +typedef U8 * PU8;
+> +typedef U16 * PU16;
+> +typedef U32 * PU32;
+> +typedef U64 * PU64;
+
+Same comment for the above typedefs.
+
+> +typedef struct _S64struct {
+> +    U32         Low;
+> +    S32         High;
+> +} S64struct;
+> +
+> +typedef struct _U64struct {
+> +    U32         Low;
+> +    U32         High;
+> +} U64struct;
+
+Please use upper_32_bits() and lower_32_bits() and remove the above
+structure definitions.
+
+> +typedef S8 * PS8;
+> +typedef U8 * PU8;
+> +typedef S16 * PS16;
+> +typedef U16 * PU16;
+> +typedef S32         *PS32;
+> +typedef U32         *PU32;
+> +typedef S64 * PS64;
+> +typedef U64 * PU64;
+> +typedef S64struct * PS64struct;
+> +typedef U64struct * PU64struct;
+
+Please remove these typedefs too. Additionally, please follow the Linux
+kernel coding style (only a space at the left of '*' but not at the right).
+
+Thanks,
+
+Bart.
