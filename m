@@ -2,52 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14CC2C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 02:35:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6395FC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 03:08:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D507822B2B
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 02:35:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12B5022B43
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 03:08:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725826AbgLVCfq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Dec 2020 21:35:46 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:52402 "EHLO
+        id S1725964AbgLVDIu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Dec 2020 22:08:50 -0500
+Received: from m43-15.mailgun.net ([69.72.43.15]:58538 "EHLO
         m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725783AbgLVCfq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2020 21:35:46 -0500
+        with ESMTP id S1725961AbgLVDIu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2020 22:08:50 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608604522; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1608606503; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=CHpIhMzOtQbW4N+N39VZiE7Y1kcQt9qy2HD3pD2pry8=;
- b=sw2j35yCMWHFzy2MWZbS8+qB3tY58O4NuFEgCAcBgMVOjMAPS4XzqNr6GyY0gAXyDqBPWMLE
- q3bEhd2O2/YDyUbJuW/hOLQpkxeVtQu37+3f18ZY8y1ww0OBPwB9dhBdPVsIXS6iBaKfN5Hu
- XPqLMXbaiTZvFQzHE4SEkhRTjyw=
+ MIME-Version: Sender; bh=rLWrVGstSGeoKUf8cCu4DRDk5efRyFV2x8muCSfaVgU=;
+ b=GYiy9dvuzkQ8Jf0IDW1myLhcOhoOZ0ot0FhVS6vtEWc30VhWuB/bBGYudsbRZi4xeI72kPtc
+ SIZC9L20+Q7J4ZL/wa0jjTn+eqDD5dexjB66FWm1W9tkquebNKt8gWywGknuzRiPJ+sPcw18
+ 2RM1NGsAgvI/ZslvTwNKEhKbxHg=
 X-Mailgun-Sending-Ip: 69.72.43.15
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 5fe15b4dda4719818875700d (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 22 Dec 2020 02:34:53
+ smtp-out-n10.prod.us-east-1.postgun.com with SMTP id
+ 5fe1630e3ac69bd6b8e750c0 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 22 Dec 2020 03:07:58
  GMT
 Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 19C31C43463; Tue, 22 Dec 2020 02:34:53 +0000 (UTC)
+        id 8F56AC43465; Tue, 22 Dec 2020 03:07:57 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2DA84C433C6;
-        Tue, 22 Dec 2020 02:34:52 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id ADB04C433C6;
+        Tue, 22 Dec 2020 03:07:55 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Tue, 22 Dec 2020 10:34:52 +0800
+Date:   Tue, 22 Dec 2020 11:07:55 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Kiwoong Kim <kwmad.kim@samsung.com>
 Cc:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
@@ -56,12 +56,12 @@ Cc:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
         asutoshd@codeaurora.org, bvanassche@acm.org,
         grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
         sh425.lee@samsung.com, bhoon95.kim@samsung.com
-Subject: Re: [PATCH v3 1/2] ufs: add a vops to configure block parameter
-In-Reply-To: <dad43ff87d34cea599e35eed46762f87f4af939d.1608603608.git.kwmad.kim@samsung.com>
+Subject: Re: [PATCH v3 2/2] ufs: ufs-exynos: set dma_alignment to 4095
+In-Reply-To: <f79683fc5df0341047269fc73907e81109862abf.1608603608.git.kwmad.kim@samsung.com>
 References: <cover.1608603608.git.kwmad.kim@samsung.com>
- <CGME20201222023238epcas2p14c4beca3db4c11e98cde7e7c037fd4b5@epcas2p1.samsung.com>
- <dad43ff87d34cea599e35eed46762f87f4af939d.1608603608.git.kwmad.kim@samsung.com>
-Message-ID: <fce7ae4a097f73c74c4908ebdff98883@codeaurora.org>
+ <CGME20201222023244epcas2p2cb8f4f0b0b41a0eeb0207cd1b12ddd8c@epcas2p2.samsung.com>
+ <f79683fc5df0341047269fc73907e81109862abf.1608603608.git.kwmad.kim@samsung.com>
+Message-ID: <0cc3dc22424d2052c0cdde8b80aa237b@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
@@ -69,55 +69,92 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-12-22 10:21, Kiwoong Kim wrote:
-> There could be some cases to set block paramters
-> per host, because of its own dma structure or whatever.
+> Exynos requires one scatterlist entry for smaller than
+> page size, i.e. 4KB. For the cases of dispatching commands
+> with more than one scatterlist entry and under 4KB size,
+> Exynos behaves as follows:
 > 
+> Given that a command to read something
+> from device is dispatched with two scatterlist entries that
+> are named AAA and BBB. After dispatching, host builds two PRDT
+> entries and during transmission, device sends just one DATA IN
+> because device doesn't care on host dma.
+
+If my understanding is correct, above is same to all hosts, only
+below part is Exynos's behavior. Please correct me if I am wrong.
+
+> The host then tranfers
+> the whole data from start address of the area named AAA.
+> In consequebnce, the area that follows AAA would be corrupted.
+
+In consequence
+
+> 
+>     |<------------->|
+>     +-------+------------         +-------+
+>     +  AAA  + (corrupted)   ...   +  BBB  +
+>     +-------+------------         +-------+
+> 
+
+AFAIK, queue->dma_alignment is only used in the case of direct-io,
+i.e. in blk_rq_map_user/kern(), which are mainly used in IOCTL.
+If a request's buffer len and/or buffer start addr is not aligned
+with queue->dma_alignment, bio.c will make a bounce bio such that
+the request get a new buffer which starts on a new page. After the
+bounce bio is ended, the data in the bound bio will be copied to the
+initial buffer.
+
+So in this fix, you are making sure the AAA and BBB are all mapped to
+one bounce bio and stay in one bi_vec, so when we do map_sg they come
+in one sglist, please correct me if I am wrong.
+
+If my understanding is correct, what is the real use case here -
+why/how user starts a request which can generate more than one
+sglists whose sizes are all under 4KB? I am just curious.
+
+Thanks,
+
+Can Guo.
+
 > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 2 ++
->  drivers/scsi/ufs/ufshcd.h | 8 ++++++++
->  2 files changed, 10 insertions(+)
+>  drivers/scsi/ufs/ufs-exynos.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 92d433d..5f89b0e 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -4758,6 +4758,8 @@ static int ufshcd_slave_configure(struct
-> scsi_device *sdev)
+> diff --git a/drivers/scsi/ufs/ufs-exynos.c 
+> b/drivers/scsi/ufs/ufs-exynos.c
+> index a8770ff..8635d9d 100644
+> --- a/drivers/scsi/ufs/ufs-exynos.c
+> +++ b/drivers/scsi/ufs/ufs-exynos.c
+> @@ -14,6 +14,7 @@
+>  #include <linux/of_address.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/blkdev.h>
 > 
->  	ufshcd_crypto_setup_rq_keyslot_manager(hba, q);
-> 
-> +	ufshcd_vops_slave_configure(hba, sdev);
-> +
+>  #include "ufshcd.h"
+>  #include "ufshcd-pltfrm.h"
+> @@ -1193,6 +1194,13 @@ static int exynos_ufs_resume(struct ufs_hba
+> *hba, enum ufs_pm_op pm_op)
 >  	return 0;
 >  }
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 61344c4..4bf4fed 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -329,6 +329,7 @@ struct ufs_hba_variant_ops {
->  					void *data);
->  	int	(*program_key)(struct ufs_hba *hba,
->  			       const union ufs_crypto_cfg_entry *cfg, int slot);
-> +	void	(*slave_configure)(struct scsi_device *sdev);
->  };
-> 
->  /* clock gating state  */
-> @@ -1228,6 +1229,13 @@ static inline void
-> ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
->  		hba->vops->config_scaling_param(hba, profile, data);
->  }
-> 
-> +static inline void ufshcd_vops_slave_configure(struct ufs_hba *hba,
-> +						    struct scsi_device *sdev)
+> +static void exynos_ufs_slave_configure(struct scsi_device *sdev)
 > +{
-> +	if (hba->vops && hba->vops->slave_configure)
-> +		hba->vops->slave_configure(sdev);
+> +	struct request_queue *q = sdev->request_queue;
+> +
+> +	blk_queue_update_dma_alignment(q, PAGE_SIZE - 1);
 > +}
 > +
->  extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+>  static struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
+>  	.name				= "exynos_ufs",
+>  	.init				= exynos_ufs_init,
+> @@ -1204,6 +1212,7 @@ static struct ufs_hba_variant_ops 
+> ufs_hba_exynos_ops = {
+>  	.hibern8_notify			= exynos_ufs_hibern8_notify,
+>  	.suspend			= exynos_ufs_suspend,
+>  	.resume				= exynos_ufs_resume,
+> +	.slave_configure		= exynos_ufs_slave_configure,
+>  };
 > 
->  /*
-
-Reviewed-by: Can Guo <cang@codeaurora.org>
+>  static int exynos_ufs_probe(struct platform_device *pdev)
