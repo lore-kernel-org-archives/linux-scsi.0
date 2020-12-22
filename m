@@ -5,56 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D40DC433E6
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:13:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04A96C433E6
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:13:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 264682310D
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:13:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A62CC2310D
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:13:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726260AbgLVKNi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 05:13:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56800 "EHLO
+        id S1726285AbgLVKNn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 05:13:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726108AbgLVKNh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 05:13:37 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37B98C061257
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:12:41 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id lb18so1067805pjb.5
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:12:41 -0800 (PST)
+        with ESMTP id S1725907AbgLVKNm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 05:13:42 -0500
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6AA0C0611CD
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:02 -0800 (PST)
+Received: by mail-pj1-x102b.google.com with SMTP id l23so1103835pjg.1
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=4+wgapSUgK/5JDvs5Qwmh3OOJy4SOZlrjLJCZCFjQFU=;
-        b=aCI50JB53H0+PJmbt1NfRqKyOpRwVQURtF+adAFregjWpssklnr66oOp1vHQXYqQkJ
-         6UOw+2nSvdMRhc8EtoKkbmAuLavzlF3NiIi8B8EwTcRJ2Q9eZtHZkKaVmeguB3VvxAj3
-         ysFGf/o1hV2heSvxo3JsQq/nvqZIupehKbmC4=
+        bh=qzkbuJZi7L8fSpBLRMw6L7Q+r3KygVjPgJDxAKBRqPs=;
+        b=YA2jbFWGxllLbYP6Nxki0lLY6ZDcB9Xz+ysmF2fOPubGkQM8NcRdr4cMmVRlzGZciY
+         F4gyR3aFmWJwJB9UYTMqMH8LCdistNbGjtlA8HieVgz1+ROFUHi44moa0X8s/5cPP3K0
+         HvUTNOEQmoJ2Kg4C/2u0fvEn9qHGhHDorjgYw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:from:to:cc:subject:date:message-id
          :in-reply-to:references;
-        bh=4+wgapSUgK/5JDvs5Qwmh3OOJy4SOZlrjLJCZCFjQFU=;
-        b=qfabC8BFhmSHXHrXs/OL/cb/5GCCNKfrzRI5pz8RUFnoKUEp0S0NvgpCv1/lIxYYo4
-         11beEjEP55HwDfkkwqkjkHN4CHk/8itocEr8vnRUg3S8juZE6UzgPo6DkPrxkKXwt1Ek
-         kgUlW2G9gt67HFL0/NgPGA4mNqrRMsp6jTz6kykdOwUiV6+F+vtrRVI8LK3b2FPXxUrm
-         qxxoQDQ1IHL0zhVGco3by5AErt92WBK8GiXyP+qFfGLtqycIan7teX/EL0kbWSQj/5YU
-         nldPVJTYuUDUgj0MnZcy3iZOSLwATSGm6rhjAHqiuybTmnBaL0JvH8X55l8GUWZ1sPME
-         dsIQ==
-X-Gm-Message-State: AOAM532ZZPIG5SRGVODkTPGGAMNO1EXlhTzgfGnlhUunfdnySU2eyhx5
-        TOQFBad5nfLOFN035NWVl4f0ewOeS9EGqV/8up6IqaejhRvjRPR7KIDdjDTcr1Nwmi+mmjsAQjr
-        wIuDsGhdt6lqEE4SCgTVB9lQq9rnTIh0+fW/uQkxBfRBi3ate+D3LEOj1+96rfPTjlCbZ0GZTGD
-        +dOBVQlHlG
+        bh=qzkbuJZi7L8fSpBLRMw6L7Q+r3KygVjPgJDxAKBRqPs=;
+        b=FAM7efgMVNg/x5gNGmXurZrsBPbkRpltS/KrbqnaMw+FIVDOzSXQbiWeymLXbSI1NN
+         dRXgLUBVWndF98DFyXOdLvn/lFvBd+3eXZyj6MGg6zSjYHlXU3HaVz0o7evu/X1Ywhcq
+         YYySddqpGZXxqXSaGzh3UF0hySzC/BgJQ3MUPjvtxiS4NRuqoyPsR/IJVTJKuMr+Cklv
+         LSSx6RSADMmGOVFN7xb8buKlqWbOkRxsYdsNboFrsbd0XI2rykNhteToRixmOnZDT1hI
+         dZZD19sw7RfaUww44Le4ABLhJu7OERfJAEHtX+CvX2q1IrpFo1ZXSVtn7m2vT+yDSImc
+         Zh3A==
+X-Gm-Message-State: AOAM531pBV0SbqT0g8wS4JdlOmYU3rsbRcqIknYLjjs5LptsBZ18vuOb
+        vvacq1HKaVisrXE6Z0N667n+slTLCisCiQ3Hz9HYCDFWQt19ZLfYHsnaWCvBVbp1FMtk3Y+LUJC
+        buE+nIp2JPIwRml5RKrbJPhZOpcIsZkcQ7whLkyyEt75kd7TblYpsRr6qNsxH91HbFnyLlVyDne
+        rsIvAB0JVp
 MIME-Version: 1.0
-X-Google-Smtp-Source: ABdhPJxvQcSxc6MMDcQ8gyeZDf4RdR75cQZ+nn2vZXzqonMLDN0vLB3BA+6mwrRJISkwQz21iexkMA==
-X-Received: by 2002:a17:90b:197:: with SMTP id t23mr21206550pjs.26.1608631960226;
-        Tue, 22 Dec 2020 02:12:40 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJx2J2cnU9F9zPV8JTGVpDceGlOoNkvme51U998ip6kGXhQ31dj8goPf8ShUc3vYAVN7WHaGCQ==
+X-Received: by 2002:a17:90a:764f:: with SMTP id s15mr20842066pjl.98.1608631981960;
+        Tue, 22 Dec 2020 02:13:01 -0800 (PST)
 Received: from drv-bst-rhel8.static.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id p16sm19148624pju.47.2020.12.22.02.12.37
+        by smtp.gmail.com with ESMTPSA id p16sm19148624pju.47.2020.12.22.02.12.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Dec 2020 02:12:39 -0800 (PST)
+        Tue, 22 Dec 2020 02:13:01 -0800 (PST)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -62,317 +62,111 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: [PATCH 07/24] mpi3mr: add support of event handling pcie devices part-2
-Date:   Tue, 22 Dec 2020 15:41:39 +0530
-Message-Id: <20201222101156.98308-8-kashyap.desai@broadcom.com>
+Subject: [PATCH 14/24] mpi3mr: add change queue depth support
+Date:   Tue, 22 Dec 2020 15:41:46 +0530
+Message-Id: <20201222101156.98308-15-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20201222101156.98308-1-kashyap.desai@broadcom.com>
 References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000098076405b70ad082"
+        boundary="000000000000e2918605b70ad145"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000098076405b70ad082
+--000000000000e2918605b70ad145
 Content-Type: text/plain; charset="US-ASCII"
-
-Firmware can report various MPI Events.
-Support for certain Events (as listed below) are enabled in the driver
-and their processing in driver is covered in this patch.
-
-MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST
-MPI3_EVENT_PCIE_ENUMERATION
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Cc: sathya.prakash@broadcom.com
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c |   2 +
- drivers/scsi/mpi3mr/mpi3mr_os.c | 202 ++++++++++++++++++++++++++++++++
- 2 files changed, 204 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr.h    |  3 +++
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 35 ++++++++++++++++++++++++++++++++-
+ 2 files changed, 37 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index c3933c9b73fc..c70c75fdac5c 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2735,6 +2735,8 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST);
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DISCOVERY);
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_ENUMERATION);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index a677a4b57a2c..74b6b4b6e322 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -141,6 +141,9 @@ extern struct list_head mrioc_list;
+ /* Command retry count definitions */
+ #define MPI3MR_DEV_RMHS_RETRY_COUNT 3
  
- 	retval = mpi3mr_issue_event_notification(mrioc);
- 	if (retval) {
++/* Default target device queue depth */
++#define MPI3MR_DEFAULT_SDEV_QD	32
++
+ /* SGE Flag definition */
+ #define MPI3MR_SGEFLAGS_SYSTEM_SIMPLE_END_OF_LIST \
+ 	(MPI3_SGE_FLAGS_ELEMENT_TYPE_SIMPLE | MPI3_SGE_FLAGS_DLAS_SYSTEM | \
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index e0ca657bfff5..5be25fbe0e5b 100644
+index 80de597f8ccf..6f19e5392433 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -566,6 +566,40 @@ static int mpi3mr_report_tgtdev_to_host(struct mpi3mr_ioc *mrioc,
+@@ -648,6 +648,34 @@ static int mpi3mr_report_tgtdev_to_host(struct mpi3mr_ioc *mrioc,
  	return retval;
  }
  
 +/**
-+ * mpi3mr_update_sdev - Update SCSI device information
++ * mpi3mr_change_queue_depth- Change QD callback handler
 + * @sdev: SCSI device reference
-+ * @data: target device reference
++ * @q_depth: Queue depth
 + *
-+ * This is an iterator function called for each SCSI device in a
-+ * target to update the target specific information into each
-+ * SCSI device.
++ * Validate and limit QD and call scsi_change_queue_depth.
 + *
-+ * Return: Nothing.
++ * Return: return value of scsi_change_queue_depth
 + */
-+static void
-+mpi3mr_update_sdev(struct scsi_device *sdev, void *data)
++static int mpi3mr_change_queue_depth(struct scsi_device *sdev,
++	int q_depth)
 +{
-+	struct mpi3mr_tgt_dev *tgtdev;
++	struct scsi_target *starget = scsi_target(sdev);
++	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
++	int retval = 0;
 +
-+	tgtdev = (struct mpi3mr_tgt_dev *) data;
-+	if (!tgtdev)
-+		return;
++	if (!sdev->tagged_supported)
++		q_depth = 1;
++	if (q_depth > shost->can_queue)
++		q_depth = shost->can_queue;
++	else if (!q_depth)
++		q_depth = MPI3MR_DEFAULT_SDEV_QD;
++	retval = scsi_change_queue_depth(sdev, q_depth);
 +
-+	switch (tgtdev->dev_type) {
-+	case MPI3_DEVICE_DEVFORM_PCIE:
-+		/*The block layer hw sector size = 512*/
-+		blk_queue_max_hw_sectors(sdev->request_queue,
-+		    tgtdev->dev_spec.pcie_inf.mdts / 512);
-+		blk_queue_virt_boundary(sdev->request_queue,
-+		    ((1 << tgtdev->dev_spec.pcie_inf.pgsz) - 1));
-+
-+		break;
-+	default:
-+		break;
-+	}
++	return retval;
 +}
 +
- /**
-  * mpi3mr_rfresh_tgtdevs - Refresh target device exposure
-  * @mrioc: Adapter instance reference
-@@ -654,6 +688,33 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
- 			tgtdev->is_hidden = 1;
- 		break;
- 	}
-+	case MPI3_DEVICE_DEVFORM_PCIE:
-+	{
-+		Mpi3Device0PcieFormat_t *pcieinf =
-+		    &dev_pg0->DeviceSpecific.PcieFormat;
-+		u16 dev_info = le16_to_cpu(pcieinf->DeviceInfo);
 +
-+		tgtdev->dev_spec.pcie_inf.capb =
-+		    le32_to_cpu(pcieinf->Capabilities);
-+		tgtdev->dev_spec.pcie_inf.mdts = MPI3MR_DEFAULT_MDTS;
-+		/* 2^12 = 4096 */
-+		tgtdev->dev_spec.pcie_inf.pgsz = 12;
-+		if (dev_pg0->AccessStatus == MPI3_DEVICE0_ASTATUS_NO_ERRORS) {
-+			tgtdev->dev_spec.pcie_inf.mdts =
-+			    le32_to_cpu(pcieinf->MaximumDataTransferSize);
-+			tgtdev->dev_spec.pcie_inf.pgsz = pcieinf->PageSize;
-+			tgtdev->dev_spec.pcie_inf.reset_to =
-+			    pcieinf->ControllerResetTO;
-+			tgtdev->dev_spec.pcie_inf.abort_to =
-+			    pcieinf->NVMeAbortTO;
-+		}
-+		if (tgtdev->dev_spec.pcie_inf.mdts > (1024 * 1024))
-+			tgtdev->dev_spec.pcie_inf.mdts = (1024 * 1024);
-+		if ((dev_info & MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_MASK) !=
-+		    MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_NVME_DEVICE)
-+			tgtdev->is_hidden = 1;
-+		break;
-+	}
- 	case MPI3_DEVICE_DEVFORM_VD:
- 	{
- 		Mpi3Device0VdFormat_t *vdinf =
-@@ -768,6 +829,9 @@ static void mpi3mr_devinfochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 		mpi3mr_report_tgtdev_to_host(mrioc, perst_id);
- 	if (tgtdev->is_hidden && tgtdev->host_exposed)
- 		mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
-+	if (!tgtdev->is_hidden && tgtdev->host_exposed && tgtdev->starget)
-+		starget_for_each_device(tgtdev->starget, (void *) tgtdev,
-+		    mpi3mr_update_sdev);
- out:
- 	if (tgtdev)
- 		mpi3mr_tgtdev_put(tgtdev);
-@@ -821,6 +885,54 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 	}
- }
+ /**
+  * mpi3mr_update_sdev - Update SCSI device information
+  * @sdev: SCSI device reference
+@@ -668,6 +696,7 @@ mpi3mr_update_sdev(struct scsi_device *sdev, void *data)
+ 	if (!tgtdev)
+ 		return;
  
-+/**
-+ * mpi3mr_pcietopochg_evt_bh - PCIeTopologyChange evt bottomhalf
-+ * @mrioc: Adapter instance reference
-+ * @fwevt: Firmware event reference
-+ *
-+ * Prints information about the PCIe topology change event and
-+ * for "not responding" event code, removes the device from the
-+ * upper layers.
-+ *
-+ * Return: Nothing.
-+ */
-+static void mpi3mr_pcietopochg_evt_bh(struct mpi3mr_ioc *mrioc,
-+	struct mpi3mr_fwevt *fwevt)
-+{
-+	Mpi3EventDataPcieTopologyChangeList_t *event_data =
-+	    (Mpi3EventDataPcieTopologyChangeList_t *)fwevt->event_data;
-+	int i;
-+	u16 handle;
-+	u8 reason_code;
-+	struct mpi3mr_tgt_dev *tgtdev = NULL;
-+
-+	for (i = 0; i < event_data->NumEntries; i++) {
-+		handle =
-+		    le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
-+		if (!handle)
-+			continue;
-+		tgtdev = mpi3mr_get_tgtdev_by_handle(mrioc, handle);
-+		if (!tgtdev)
-+			continue;
-+
-+		reason_code = event_data->PortEntry[i].PortStatus;
-+
-+		switch (reason_code) {
-+		case MPI3_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
-+			if (tgtdev->host_exposed)
-+				mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
-+			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
-+			mpi3mr_tgtdev_put(tgtdev);
-+			break;
-+		default:
-+			break;
-+		}
-+		if (tgtdev)
-+			mpi3mr_tgtdev_put(tgtdev);
-+	}
-+}
-+
-+
- /**
-  * mpi3mr_fwevt_bh - Firmware event bottomhalf handler
-  * @mrioc: Adapter instance reference
-@@ -868,6 +980,11 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
- 		mpi3mr_sastopochg_evt_bh(mrioc, fwevt);
- 		break;
- 	}
-+	case MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
-+	{
-+		mpi3mr_pcietopochg_evt_bh(mrioc, fwevt);
-+		break;
-+	}
- 	default:
- 		break;
- 	}
-@@ -1174,6 +1291,72 @@ static void mpi3mr_dev_rmhs_send_tm(struct mpi3mr_ioc *mrioc, u16 handle,
- 	clear_bit(cmd_idx, mrioc->devrem_bitmap);
- }
- 
-+/**
-+ * mpi3mr_pcietopochg_evt_th - PCIETopologyChange evt tophalf
-+ * @mrioc: Adapter instance reference
-+ * @event_reply: Event data
-+ *
-+ * Checks for the reason code and based on that either block I/O
-+ * to device, or unblock I/O to the device, or start the device
-+ * removal handshake with reason as remove with the firmware for
-+ * PCIe devices.
-+ *
-+ * Return: Nothing
-+ */
-+static void mpi3mr_pcietopochg_evt_th(struct mpi3mr_ioc *mrioc,
-+	Mpi3EventNotificationReply_t *event_reply)
-+{
-+	Mpi3EventDataPcieTopologyChangeList_t *topo_evt =
-+	    (Mpi3EventDataPcieTopologyChangeList_t *) event_reply->EventData;
-+	int i;
-+	u16 handle;
-+	u8 reason_code;
-+	struct mpi3mr_tgt_dev *tgtdev = NULL;
-+	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data = NULL;
-+
-+	for (i = 0; i < topo_evt->NumEntries; i++) {
-+		handle = le16_to_cpu(topo_evt->PortEntry[i].AttachedDevHandle);
-+		if (!handle)
-+			continue;
-+		reason_code = topo_evt->PortEntry[i].PortStatus;
-+		scsi_tgt_priv_data =  NULL;
-+		tgtdev = mpi3mr_get_tgtdev_by_handle(mrioc, handle);
-+		if (tgtdev && tgtdev->starget && tgtdev->starget->hostdata)
-+			scsi_tgt_priv_data = (struct mpi3mr_stgt_priv_data *)
-+			    tgtdev->starget->hostdata;
-+		switch (reason_code) {
-+		case MPI3_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
-+			if (scsi_tgt_priv_data) {
-+				scsi_tgt_priv_data->dev_removed = 1;
-+				scsi_tgt_priv_data->dev_removedelay = 0;
-+				atomic_set(&scsi_tgt_priv_data->block_io, 0);
-+			}
-+			mpi3mr_dev_rmhs_send_tm(mrioc, handle, NULL,
-+			    MPI3_CTRL_OP_REMOVE_DEVICE);
-+			break;
-+		case MPI3_EVENT_PCIE_TOPO_PS_DELAY_NOT_RESPONDING:
-+			if (scsi_tgt_priv_data) {
-+				scsi_tgt_priv_data->dev_removedelay = 1;
-+				atomic_inc(&scsi_tgt_priv_data->block_io);
-+			}
-+			break;
-+		case MPI3_EVENT_PCIE_TOPO_PS_RESPONDING:
-+			if (scsi_tgt_priv_data &&
-+			    scsi_tgt_priv_data->dev_removedelay) {
-+				scsi_tgt_priv_data->dev_removedelay = 0;
-+				atomic_dec_if_positive
-+				    (&scsi_tgt_priv_data->block_io);
-+			}
-+			break;
-+		case MPI3_EVENT_PCIE_TOPO_PS_PORT_CHANGED:
-+		default:
-+			break;
-+		}
-+		if (tgtdev)
-+			mpi3mr_tgtdev_put(tgtdev);
-+	}
-+}
-+
- /**
-  * mpi3mr_sastopochg_evt_th - SASTopologyChange evt tophalf
-  * @mrioc: Adapter instance reference
-@@ -1369,6 +1552,12 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
- 		mpi3mr_sastopochg_evt_th(mrioc, event_reply);
- 		break;
- 	}
-+	case MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
-+	{
-+		process_evt_bh = 1;
-+		mpi3mr_pcietopochg_evt_th(mrioc, event_reply);
-+		break;
-+	}
- 	case MPI3_EVENT_DEVICE_INFO_CHANGED:
- 	{
- 		process_evt_bh = 1;
-@@ -1377,6 +1566,7 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
- 	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
- 	case MPI3_EVENT_SAS_DISCOVERY:
- 	case MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR:
-+	case MPI3_EVENT_PCIE_ENUMERATION:
- 		break;
- 	default:
- 		ioc_info(mrioc, "%s :Event 0x%02x is not handled\n",
-@@ -1963,6 +2153,18 @@ static int mpi3mr_slave_configure(struct scsi_device *sdev)
- 	if (!tgt_dev)
++	mpi3mr_change_queue_depth(sdev, tgtdev->q_depth);
+ 	switch (tgtdev->dev_type) {
+ 	case MPI3_DEVICE_DEVFORM_PCIE:
+ 		/*The block layer hw sector size = 512*/
+@@ -2729,9 +2758,12 @@ static int mpi3mr_slave_configure(struct scsi_device *sdev)
+ 	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
+ 	tgt_dev = __mpi3mr_get_tgtdev_by_perst_id(mrioc, starget->id);
+ 	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
+-	if (!tgt_dev)
++	if (!tgt_dev) {
++		mpi3mr_change_queue_depth(sdev, MPI3MR_DEFAULT_SDEV_QD);
  		return retval;
- 
-+	switch (tgt_dev->dev_type) {
-+	case MPI3_DEVICE_DEVFORM_PCIE:
-+		/*The block layer hw sector size = 512*/
-+		blk_queue_max_hw_sectors(sdev->request_queue,
-+		    tgt_dev->dev_spec.pcie_inf.mdts / 512);
-+		blk_queue_virt_boundary(sdev->request_queue,
-+		    ((1 << tgt_dev->dev_spec.pcie_inf.pgsz) - 1));
-+		break;
-+	default:
-+		break;
 +	}
-+
- 	mpi3mr_tgtdev_put(tgt_dev);
  
- 	return retval;
++	mpi3mr_change_queue_depth(sdev, tgt_dev->q_depth);
+ 	switch (tgt_dev->dev_type) {
+ 	case MPI3_DEVICE_DEVFORM_PCIE:
+ 		/*The block layer hw sector size = 512*/
+@@ -2971,6 +3003,7 @@ static struct scsi_host_template mpi3mr_driver_template = {
+ 	.slave_destroy			= mpi3mr_slave_destroy,
+ 	.scan_finished			= mpi3mr_scan_finished,
+ 	.scan_start			= mpi3mr_scan_start,
++	.change_queue_depth		= mpi3mr_change_queue_depth,
+ 	.eh_abort_handler		= mpi3mr_eh_abort,
+ 	.eh_device_reset_handler	= mpi3mr_eh_dev_reset,
+ 	.eh_target_reset_handler	= mpi3mr_eh_target_reset,
 -- 
 2.18.1
 
@@ -390,7 +184,7 @@ this e-mail is strictly prohibited. If you received this e-mail in error,
 please return the e-mail to the sender, delete it from your computer, and 
 destroy any printed copy of it.
 
---00000000000098076405b70ad082
+--000000000000e2918605b70ad145
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -460,14 +254,14 @@ pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
 M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
 1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
 IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
-RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg69m+hV+F
-oWBhapFeZthHfwKiENPuO7nPpoMgdifgi68wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMjAxMjIyMTAxMjQwWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgrtno7iqq
+728L2a/aPXCuKjfW2St0F0gWPyxOIywSZ8swGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjAxMjIyMTAxMzAyWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
 BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
-9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBABPk36sZcVZPe3kcIKo9aHfa/D9F
-K5p5nTbNK2kMjy2FcTNve6FlX1e7si7qH/XLSVt1I5Jtfyxh3MNy71/1WNZYmKaY1lxgruvFiau2
-h8q0lpqMlb6Wx3iz1vDsCf6FRa99cu3TVfvmPhdWyvJFqhKhl+yZE3s59D+AGD+vWFQ+oDBBGp76
-OFpmt0FYiycW3+d5ABr24bIMApKkTTpBWgsmHTe7Vzz+3CdFpWCk+kzGNZH8oR05objDhsW92lfE
-puHqcmaxR3Jont+1LKtSnK/EqcaPYcrwUBIIT3qVlNGMyE6bgqiGhe3ehGO3ilfCha4mXD5WAhn2
-7ivxSw4tWNk=
---00000000000098076405b70ad082--
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAJzW1JGkAS5XSHO9INosv3RRAjfb
+f5TI9jo7t9eTqT6/yaydDLfGFsM8r+648rZoUQjpszt8XNrPgZPhKaiMkCNAud+Jxz+crYgv2vl3
+PLXHiMjmxzdE6zugB+NVc40uPNvnAJUVINdn060D3AWzpADP+TzgqI3k30Rauwq4oXe4oB5xNISZ
+eT9YqSlBL7EtEHAZ6v0rA5waaFuRNZ3uiaeU4054RNkBkJ1A/jDX+GUoWi+rLFcXpmQTbdT99KhI
+44PbShHFBLBCs12oQlfkaPZm20bPzwIJTY62DA6uKg1QwIsMU+7c8SQPcEiCBuyBXtUCaxk6QxCh
+3OCRXrtpGHI=
+--000000000000e2918605b70ad145--
