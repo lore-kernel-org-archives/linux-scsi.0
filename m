@@ -5,56 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2458EC433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 955D2C43381
 	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:14:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D92AF2311D
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:14:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 637182333B
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:14:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726504AbgLVKOI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 05:14:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56896 "EHLO
+        id S1726491AbgLVKOT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 05:14:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726371AbgLVKOI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 05:14:08 -0500
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C80ECC061793
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:05 -0800 (PST)
-Received: by mail-pg1-x530.google.com with SMTP id z21so8082283pgj.4
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:05 -0800 (PST)
+        with ESMTP id S1726012AbgLVKOS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 05:14:18 -0500
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14E21C0611E4
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:24 -0800 (PST)
+Received: by mail-pg1-x52a.google.com with SMTP id n7so8089252pgg.2
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=opHhvQyD6tZmvgygkmZqlQIR/78J/tQHD586Bbko5U0=;
-        b=TF085mjqDvXTkS8O+L+afjAhsMgg7WwBIkEAR86A6/42PsxOZOKYBqv8+8WYvOoM58
-         oachiVhTenmcQ4G5BgGut3aOkTem4aEA1T+V97IRz/F8wGe0pzvQ7Sazonx1wYL8g7pU
-         tNleEBPXENh06+UWeP5meyAfzlBZk7mRrwLXo=
+        bh=CQM4z1JCwWMOteoSG4b+eSVvicpAQIKTc9cye891ym0=;
+        b=fooAvLqny7DkzdLm3o7smMKFi550C80rBMIDFzlVUqtMVahn4DoqcTObd7f3dmZOJl
+         e398+Tm5DGAciI9HGuYNu+4/zOG3lRmYtx7NjmerFrW0NM4+nsOqOZ/bnKSGAiOw6gPb
+         BTAfsJKhmmInoos2i+5rIFNWXY1ZQekPBPtvo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:from:to:cc:subject:date:message-id
          :in-reply-to:references;
-        bh=opHhvQyD6tZmvgygkmZqlQIR/78J/tQHD586Bbko5U0=;
-        b=mRZYtl3qj9UHPBvTeqtC1DlgM1tjubqp1elB1HZ5gJSN2GqzBMGbL5F6Jtj6xY1Fn5
-         t3mFLiaBTGcptsC6m/tPRVG++QZEiM6Lxt/ILlK8mw5QYE+Gtf8TTdrQnY2KicBdZnDO
-         6DP0RC3i+7tPRTYUHq3NAkI2ATd/Im3pKclDgd/tneBfOEKSBhyBJXWN04MPG6kkjbtV
-         FzneetQGJYbOeuEILUteQXrZ8DJ4ISPsnaKVAX2pneuAHhYaRVMmatwhUKo/dIcLFqzn
-         g1qiZalRPSF8eBZYt3D7jjRMO6WbXscqwFT6wZG7T/yXznNZdZxGIUDMu6qeP+/o5FtC
-         k7lw==
-X-Gm-Message-State: AOAM531bGtZql5c8rH5HkBS3k5nPCfhTcVgKBx3JZb12NzAu1pZNpyg/
-        NF3ceNLgu9cWRJQkohPyVXKzi8RRcrjLJqyOqOSJkC5+iuKI5WwdlRE0dijNYFVaL6YGXH1YqGZ
-        l8PG4OFd4JlotdgexkrZ8ELBohOSFw6Ngv9SG+rQMJlkJ04lUDncWg1C4/vVJAhNVVuA6+QUwa+
-        QjsgrajYgt
+        bh=CQM4z1JCwWMOteoSG4b+eSVvicpAQIKTc9cye891ym0=;
+        b=ipE4GrwocM5LCzcYvEfk6PnfeTSUm4nzz92AM/wLBpnymEnsBTtXlTkAVwuZexw7Sm
+         aiZs6YTIUyYTLrPmZCKf48yHkKH9YbZOAozcS5PxjFDfT7VsM8t7gDmRBzLsPBUtLXeF
+         uPzA3/OP2PYmZrDxZrvwPrR2JGgj/mfL+b1QCCLHJ6Av/UeilA6JbvdzqbpPXUphkJsX
+         YBtftvfMQ/DHGRO3kyCAgSXk36HtkjitLUmYzacvnKOQtwX65TrMChXEjG/+yMf7c3Wi
+         w/EcHJ1kzTGyiAC06W+o9oisW/+bh8GD6EbHTz9dmWNTYApxfitETbwCGvyNe0WCE3QM
+         mKlA==
+X-Gm-Message-State: AOAM531iwPaDkzoGDqxzYM+ARfaR1Lm451FFKqJGJ2l4Ae7xH7TgZ2xJ
+        X4xXZRG83SeAWc6z90fJ9+ZpF+Npc15s2cz8DvVI/QUdDe+yE7YWWANUQFfVQxSqldL7Gd2aDim
+        k7QA8697iOVs5EcXa3zVDJjYMqYgcO04b/cMwf4FePQNb3rWgVlm1uAXflj3adAfyCtX6yRkqoA
+        /lbqROwuvT
 MIME-Version: 1.0
-X-Google-Smtp-Source: ABdhPJx3bIp1UK4xG/GcS0t+/I0VbUUbwcRC3Kcy4lAKs/370b9TTG5TJGPLR1cYQpqruH3lxpTCTQ==
-X-Received: by 2002:a63:6207:: with SMTP id w7mr19335717pgb.164.1608631984954;
-        Tue, 22 Dec 2020 02:13:04 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyqLkT1D1hVu1hsANtHYkRyQk7kTO2aKX1KN5GSFyCVsRBSxamzvTHfVhOxI0wDco1/qgETTA==
+X-Received: by 2002:a63:ca51:: with SMTP id o17mr68455pgi.314.1608632003218;
+        Tue, 22 Dec 2020 02:13:23 -0800 (PST)
 Received: from drv-bst-rhel8.static.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id p16sm19148624pju.47.2020.12.22.02.13.02
+        by smtp.gmail.com with ESMTPSA id p16sm19148624pju.47.2020.12.22.02.13.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Dec 2020 02:13:04 -0800 (PST)
+        Tue, 22 Dec 2020 02:13:22 -0800 (PST)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -62,73 +62,130 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: [PATCH 15/24] mpi3mr: allow certain commands during pci-remove hook
-Date:   Tue, 22 Dec 2020 15:41:47 +0530
-Message-Id: <20201222101156.98308-16-kashyap.desai@broadcom.com>
+Subject: [PATCH 21/24] mpi3mr: add support of PM suspend and resume
+Date:   Tue, 22 Dec 2020 15:41:53 +0530
+Message-Id: <20201222101156.98308-22-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20201222101156.98308-1-kashyap.desai@broadcom.com>
 References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000010516d05b70ad221"
+        boundary="00000000000026d0aa05b70ad3bb"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000010516d05b70ad221
+--00000000000026d0aa05b70ad3bb
 Content-Type: text/plain; charset="US-ASCII"
-
-This patch allows SSU and Sync Cache commands to be sent to the controller
-instead of driver returning DID_NO_CONNECT during driver unload to flush
-any cached data from the drive.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Cc: sathya.prakash@broadcom.com
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 85 +++++++++++++++++++++++++++++++++
+ 1 file changed, 85 insertions(+)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 6f19e5392433..07a7b1efbc4f 100644
+index 1708aca1a5cd..ac47eed74705 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2865,6 +2865,27 @@ static int mpi3mr_target_alloc(struct scsi_target *starget)
- 	return retval;
+@@ -3480,6 +3480,87 @@ static void mpi3mr_shutdown(struct pci_dev *pdev)
+ 
  }
  
-+
++#ifdef CONFIG_PM
 +/**
-+ * mpi3mr_allow_scmd_to_fw - Command is allowed during shutdown
-+ * @scmd: SCSI Command reference
++ * mpi3mr_suspend - PCI power management suspend callback
++ * @pdev: PCI device instance
++ * @state: New power state
 + *
-+ * Checks whether a CDB is allowed during shutdown or not.
++ * Change the power state to the given value and cleanup the IOC
++ * by issuing MUR and shutdown notification
 + *
-+ * Return: TRUE for allowed commands, FALSE otherwise.
++ * Return: 0 always.
 + */
-+
-+inline bool mpi3mr_allow_scmd_to_fw(struct scsi_cmnd *scmd)
++static int mpi3mr_suspend(struct pci_dev *pdev, pm_message_t state)
 +{
-+	switch (scmd->cmnd[0]) {
-+	case SYNCHRONIZE_CACHE:
-+	case START_STOP:
-+		return true;
-+	default:
-+		return false;
-+	}
++	struct Scsi_Host *shost = pci_get_drvdata(pdev);
++	struct mpi3mr_ioc *mrioc;
++	pci_power_t device_state;
++
++	if (!shost)
++		return 0;
++
++	mrioc = shost_priv(shost);
++	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
++		ssleep(1);
++	mrioc->stop_drv_processing = 1;
++	mpi3mr_cleanup_fwevt_list(mrioc);
++	scsi_block_requests(shost);
++	mpi3mr_stop_watchdog(mrioc);
++	mpi3mr_cleanup_ioc(mrioc, 1);
++
++	device_state = pci_choose_state(pdev, state);
++	ioc_info(mrioc, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
++	    pdev, pci_name(pdev), device_state);
++	pci_save_state(pdev);
++	pci_set_power_state(pdev, device_state);
++	mpi3mr_cleanup_resources(mrioc);
++
++	return 0;
 +}
 +
- /**
-  * mpi3mr_qcmd - I/O request despatcher
-  * @shost: SCSI Host reference
-@@ -2900,7 +2921,8 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
- 		goto out;
- 	}
++/**
++ * mpi3mr_resume - PCI power management resume callback
++ * @pdev: PCI device instance
++ *
++ * Restore the power state to D0 and reinitialize the controller
++ * and resume I/O operations to the target devices
++ *
++ * Return: 0 on success, non-zero on failure
++ */
++static int mpi3mr_resume(struct pci_dev *pdev)
++{
++	struct Scsi_Host *shost = pci_get_drvdata(pdev);
++	struct mpi3mr_ioc *mrioc;
++	pci_power_t device_state = pdev->current_state;
++	int r;
++
++	mrioc = shost_priv(shost);
++
++	ioc_info(mrioc, "pdev=0x%p, slot=%s, previous operating state [D%d]\n",
++	    pdev, pci_name(pdev), device_state);
++	pci_set_power_state(pdev, PCI_D0);
++	pci_enable_wake(pdev, PCI_D0, 0);
++	pci_restore_state(pdev);
++	mrioc->pdev = pdev;
++	mrioc->cpu_count = num_online_cpus();
++	r = mpi3mr_setup_resources(mrioc);
++	if (r) {
++		ioc_info(mrioc, "%s: Setup resoruces failed[%d]\n",
++		    __func__, r);
++		return r;
++	}
++
++	mrioc->stop_drv_processing = 0;
++	mpi3mr_init_ioc(mrioc, 1);
++	scsi_unblock_requests(shost);
++	mpi3mr_start_watchdog(mrioc);
++
++	return 0;
++}
++#endif
++
++
+ static const struct pci_device_id mpi3mr_pci_id_table[] = {
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_LSI_LOGIC, 0x00A5,
+@@ -3495,6 +3576,10 @@ static struct pci_driver mpi3mr_pci_driver = {
+ 	.probe = mpi3mr_probe,
+ 	.remove = mpi3mr_remove,
+ 	.shutdown = mpi3mr_shutdown,
++#ifdef CONFIG_PM
++	.suspend = mpi3mr_suspend,
++	.resume = mpi3mr_resume,
++#endif
+ };
  
--	if (mrioc->stop_drv_processing) {
-+	if (mrioc->stop_drv_processing &&
-+	    !(mpi3mr_allow_scmd_to_fw(scmd))) {
- 		scmd->result = DID_NO_CONNECT << 16;
- 		scmd->scsi_done(scmd);
- 		goto out;
+ static int __init mpi3mr_init(void)
 -- 
 2.18.1
 
@@ -146,7 +203,7 @@ this e-mail is strictly prohibited. If you received this e-mail in error,
 please return the e-mail to the sender, delete it from your computer, and 
 destroy any printed copy of it.
 
---00000000000010516d05b70ad221
+--00000000000026d0aa05b70ad3bb
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -216,14 +273,14 @@ pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
 M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
 1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
 IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
-RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgD579aqQO
-/soRuWbZCM89wWsDeTSdvPIXsd7p59qiZgwwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMjAxMjIyMTAxMzA1WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgMA991Phh
+LnwoomhtQDOc+llYsoiLSRHCst8nsNzBUMgwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjAxMjIyMTAxMzIzWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
 BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
-9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBABSDRi63MLEk63h2nv/aTKf1dCKn
-1NjghN1hc+UoNLl59d6jWNKsuPB0MfdcSIp7sNNejl4uaiXDJ8ykYKfKpXpugFVTGGXoEgvj6Gtm
-5d+C2raDQ6EPemzZdHOR9/7pQKiCBKOFjnHLtNzfeWF4Yzrq58fIk6W8YroCweeA+r+RFhNvpMqf
-sBviRKeBTiy+sW9hDFyWne7pW5RUcP/Onim811L8o5cDXycLxlYKa4DKLD3EwduaZY72M1NGAcyO
-+NibOTgZiftXNVlG20LoMz2iPgkQHgLA1risklJylVpWK9owDKM6no+qT70k9ObP5MbRZ9UIVPOd
-gKkDdIdyJCU=
---00000000000010516d05b70ad221--
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAIHxIk2wjDY13ZqmU80G5xx6pSCG
+ZhPBafFv7u0Q2iF1maNDqZkkrE6B9i8jYhiE4b0UCwFX2OQd9SXR0+m578bjegenQfhsDHfmlCcK
+95CrulP073MqY9Z2g3WLlWEyUpNPEOMOoa+QB1lr27Q0hqZCvM1Smv1Rc1t6v3PYs0WwKq9QwEwJ
+mS7TARh7tk/c1FOqgmWeQhP1mqHC+grYFlAn92bh3tK6uhWX7T9iHRikiQ0q06QT+4hO3FV3Nxi6
+kbpks14b7thdcrMlzigW8hj60TaQ7QkOSf+nrs/A387eQxo1/gxVY6cC3r4ZSrg8HMQGDsUxnviq
+4/eULPvRKJw=
+--00000000000026d0aa05b70ad3bb--
