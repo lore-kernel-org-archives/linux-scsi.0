@@ -2,450 +2,207 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B5ECC433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 03:10:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D67AC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 03:18:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 12A2922CB2
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 03:10:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E9ED22B43
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 03:18:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726024AbgLVDJq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Dec 2020 22:09:46 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:19798 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725875AbgLVDJm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2020 22:09:42 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608606563; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=vIAb1LwEm+iR1WDesAh3a2cfgFP4QxK5MvgshXOhptA=;
- b=rTjIjCxCYMnjSMg94Ola/zgPvqo5dh7pZhWP+aCY9QM6K1niMbEAdKcRMQkO+Dg5e70VfxXA
- 0RigKBDxU6eLE9TryQoDj3hmXdz7aoqX5xOrqHHMfaaz5VGmi48Cyyh+NF5LIJppxyKZKF6r
- 4KrB3EZUfDAc96uxaQIJrctbWQY=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n08.prod.us-west-2.postgun.com with SMTP id
- 5fe16347cfe5dd67db248838 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 22 Dec 2020 03:08:55
- GMT
-Sender: ziqichen=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 6129FC43466; Tue, 22 Dec 2020 03:08:55 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: ziqichen)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 06088C433CA;
-        Tue, 22 Dec 2020 03:08:52 +0000 (UTC)
+        id S1725783AbgLVDSe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Dec 2020 22:18:34 -0500
+Received: from mailout3.samsung.com ([203.254.224.33]:64798 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725780AbgLVDSe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2020 22:18:34 -0500
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20201222031750epoutp03394bea3502d770845f4d8a679506223a~S65uNAX3H2480424804epoutp03E
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 03:17:50 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20201222031750epoutp03394bea3502d770845f4d8a679506223a~S65uNAX3H2480424804epoutp03E
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1608607070;
+        bh=joO3hEwrDODguFpbbuJPH3Z+7IFab39yZFFcXqCg8PU=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=GGKaekHpZIb1dR8hQs3RAyq6t9egOMHr11mJviqrySxqStceHKZ6UzyY3ruUoFk0X
+         l4KSCI13aatDIbt3/mK4tKP/q+gSEPQFhJe/bdR80fOG2QrLVInTMzVSyvunA7qY4v
+         00e716vlOcnJ8lpZDCQJpcDv4NrAqXfETZGGxkd8=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20201222031749epcas2p1a33b8e5512bbe566ae212aa3080f614c~S65tkNYPP0916909169epcas2p18;
+        Tue, 22 Dec 2020 03:17:49 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.40.182]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4D0M3H2kxlzMqYkj; Tue, 22 Dec
+        2020 03:17:47 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        F5.18.52511.B5561EF5; Tue, 22 Dec 2020 12:17:47 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20201222031746epcas2p35feabf17ce16b89cfe657c6b2f2157c6~S65rE0Nkh0878008780epcas2p3y;
+        Tue, 22 Dec 2020 03:17:46 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20201222031746epsmtrp1dd70906b5b0a32516c38e796f9b0c496~S65rEBOZx1266212662epsmtrp1g;
+        Tue, 22 Dec 2020 03:17:46 +0000 (GMT)
+X-AuditID: b6c32a48-4f9ff7000000cd1f-45-5fe1655be83a
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        9A.9A.08745.A5561EF5; Tue, 22 Dec 2020 12:17:46 +0900 (KST)
+Received: from KORCO011456 (unknown [12.36.185.54]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20201222031746epsmtip1e34053f4935a58054ffb31fb6475165e~S65qzKNi00423804238epsmtip1K;
+        Tue, 22 Dec 2020 03:17:46 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Can Guo'" <cang@codeaurora.org>
+Cc:     <linux-scsi@vger.kernel.org>, <alim.akhtar@samsung.com>,
+        <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
+        <asutoshd@codeaurora.org>, <bvanassche@acm.org>,
+        <grant.jung@samsung.com>, <sc.suh@samsung.com>,
+        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>,
+        <bhoon95.kim@samsung.com>
+In-Reply-To: <0cc3dc22424d2052c0cdde8b80aa237b@codeaurora.org>
+Subject: RE: [PATCH v3 2/2] ufs: ufs-exynos: set dma_alignment to 4095
+Date:   Tue, 22 Dec 2020 12:17:46 +0900
+Message-ID: <000101d6d811$052b0f40$0f812dc0$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 22 Dec 2020 11:08:52 +0800
-From:   ziqichen@codeaurora.org
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        cang@codeaurora.org, hongwus@codeaurora.org, rnayak@codeaurora.org,
-        vinholikatti@gmail.com, jejb@linux.vnet.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        kwmad.kim@samsung.com, stanley.chu@mediatek.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Andy Gross <agross@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Satya Tangirala <satyat@google.com>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH RFC v3 1/1] scsi: ufs: Fix ufs power down/on specs
- violation
-In-Reply-To: <X+DsWM+/h75doajo@builder.lan>
-References: <1608537091-78575-1-git-send-email-ziqichen@codeaurora.org>
- <X+DsWM+/h75doajo@builder.lan>
-Message-ID: <34212690167dbcde23a9ff347b3578ad@codeaurora.org>
-X-Sender: ziqichen@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQKBb/35OrXWyvcQ6ZNTC/HczCQ1gAHXDzBJAhlr/PICIcv5Gqh8rgcw
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrFJsWRmVeSWpSXmKPExsWy7bCmqW506sN4g48rhS0ezNvGZrG37QS7
+        xcufV9ksDj7sZLH4uvQZq8W0Dz+ZLT6tX8Zq8evvenaL1YsfsFgsurGNyaL7+g42i+XH/zFZ
+        dN29wWix9N9bFgc+j8tXvD0u9/UyeUxYdIDR4/v6DjaPj09vsXj0bVnF6PF5k5xH+4FupgCO
+        qBybjNTElNQihdS85PyUzLx0WyXv4HjneFMzA0NdQ0sLcyWFvMTcVFslF58AXbfMHKC7lRTK
+        EnNKgUIBicXFSvp2NkX5pSWpChn5xSW2SqkFKTkFhoYFesWJucWleel6yfm5VoYGBkamQJUJ
+        ORnXHv5gKniiVPF5wQKWBsabcl2MnBwSAiYSOzpfsXQxcnEICexglFiwbx87hPOJUeJk1xEo
+        5zOjxJQ3IBmIli9PvzJDJHYxSpy/uhOq6gWjxIt1d5lBqtgEtCWmPdzNCmKLCKhKvGs9zwZS
+        xCxwkUniUkMv2ChOATuJn18+s4DYwgJuEi1fnjCB2CxADStn3AWzeQUsJb5OP8ECYQtKnJz5
+        BMxmFjCQeH9uPjOErS2xbOFrZojzFCR+Pl0GtJgDaLGbxJHVNRAlIhKzO9ugSh5wSEybXgNS
+        IiHgItHaag0RFpZ4dXwL1JNSEi/726Dseol9UxtYQc6XEOhhlHi67x8jRMJYYtazdkaIOcoS
+        R25BXcYn0XH4LztEmFeio00IolpZ4tekyVCdkhIzb95hn8CoNAvJX7OQ/DULyV+zkDywgJFl
+        FaNYakFxbnpqsVGBCXJsb2IEJ2otjx2Ms99+0DvEyMTBeIhRgoNZSYTXTOp+vBBvSmJlVWpR
+        fnxRaU5q8SFGU2BQT2SWEk3OB+aKvJJ4Q1MjMzMDS1MLUzMjCyVx3iKDB/FCAumJJanZqakF
+        qUUwfUwcnFINTCqBIrkrdrz2dgxcvKA1MoalNeH9EtPsd5dX1a6d69grP+vRY+V/z4/s1hO9
+        tj5/7tyvVmkS+kfWsCq+uz3R/8CCm1yi3WxdsXmtdffCkjOjzonm+sem3TV3zvRykg/dMKVc
+        h+/29Ad/a36lslScrzxiunVReNq9Sx/9wva1Whzf8ajm78PHLxrLN809t//qnN3cB1j8jzBx
+        1J//KNlZlvXyW9ys+wsuN2TtPBK7RXTZ121cllxPeBP5YnM/XtbdutOk73zf/z3+e2fa/Fos
+        v77j99THcaack7cVMa9jv3A/Pe5Ax6f5m5/InN/JFljbsIsrgNXXPrl+effeW+pB9ewmfjLy
+        0yIuT5a+ldIjoqrEUpyRaKjFXFScCABmyr35XQQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrCIsWRmVeSWpSXmKPExsWy7bCSnG5U6sN4g3t9uhYP5m1js9jbdoLd
+        4uXPq2wWBx92slh8XfqM1WLah5/MFp/WL2O1+PV3PbvF6sUPWCwW3djGZNF9fQebxfLj/5gs
+        uu7eYLRY+u8tiwOfx+Ur3h6X+3qZPCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBH
+        FJdNSmpOZllqkb5dAlfG8wuT2AvuyFQsP/2JpYHxmFgXIyeHhICJxJenX5lBbCGBHYwSPZPr
+        IeKSEid2PmeEsIUl7rccYe1i5AKqecYocWD5MhaQBJuAtsS0h7tZQWwRAVWJd63n2UCKmAUe
+        MkksnHyDDaKjh0ni6LOfbCBVnAJ2Ej+/fAbrFhZwk2j58oQJxGYB6l454y6YzStgKfF1+gkW
+        CFtQ4uTMJ2A2s4CRxLlD+9kgbG2JZQtfM0OcpyDx8+kyoCs4gK5wkziyugaiRERidmcb8wRG
+        4VlIJs1CMmkWkkmzkLQsYGRZxSiZWlCcm55bbFhglJdarlecmFtcmpeul5yfu4kRHLFaWjsY
+        96z6oHeIkYmD8RCjBAezkgivmdT9eCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8F7pOxgsJpCeW
+        pGanphakFsFkmTg4pRqYdOqNPXYFlWneOPjZQKDc/xrLs8mb5aYeypzEuolBPU3djKl35Sfx
+        s9vtpyTsnPnpZHqd1KPrDFNv2PPsltCf9ufMyl06UgKGOTavpKpTJKcEFoS2/9vkuv/FMpc/
+        Jx9LOK2etkxxBeMSQaWYuIUOV/wNa+zDrzaUeyZc7Gmudoj9FmijGn5fe8bpsvvGBRuuuKl7
+        +9sUTGhLlWU5vN5p277dU2KLy+6Jn58Qc/KV0V+W76mtakbzpnNtSN/0c9txjwUi4R09hx2O
+        fp33tiHY+9zGfCXDTr6NclO2ax+8eOWQ4LlCIW7FR+GX1jcu2t5W/umUd2iW8dPT6ZL57HF3
+        l0a//v46tyhyzlUu7tMxSizFGYmGWsxFxYkAyUnsg0cDAAA=
+X-CMS-MailID: 20201222031746epcas2p35feabf17ce16b89cfe657c6b2f2157c6
+X-Msg-Generator: CA
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20201222023244epcas2p2cb8f4f0b0b41a0eeb0207cd1b12ddd8c
+References: <cover.1608603608.git.kwmad.kim@samsung.com>
+        <CGME20201222023244epcas2p2cb8f4f0b0b41a0eeb0207cd1b12ddd8c@epcas2p2.samsung.com>
+        <f79683fc5df0341047269fc73907e81109862abf.1608603608.git.kwmad.kim@samsung.com>
+        <0cc3dc22424d2052c0cdde8b80aa237b@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-22 02:41, Bjorn Andersson wrote:
-> On Mon 21 Dec 01:51 CST 2020, Ziqi Chen wrote:
-> 
->> As per specs, e.g, JESD220E chapter 7.2, while powering
->> off/on the ufs device, RST_N signal and REF_CLK signal
->> should be between VSS(Ground) and VCCQ/VCCQ2.
->> 
->> To flexibly control device reset line, re-name the function
->> ufschd_vops_device_reset(sturct ufs_hba *hba) to ufshcd_
->> vops_toggle_device_reset(sturct ufs_hba *hba, bool down). The
->> new parameter "bool down" is used to separate device reset
->> line pulling down from pulling up.
->> 
->> Cc: Kiwoong Kim <kwmad.kim@samsung.com>
->> Cc: Stanley Chu <stanley.chu@mediatek.com>
->> Signed-off-by: Ziqi Chen <ziqichen@codeaurora.org>
->> ---
->>  drivers/scsi/ufs/ufs-mediatek.c | 27 +++++++++-----------------
->>  drivers/scsi/ufs/ufs-qcom.c     | 22 ++++++++++-----------
->>  drivers/scsi/ufs/ufshcd.c       | 43 
->> ++++++++++++++++++++++++++++++-----------
->>  drivers/scsi/ufs/ufshcd.h       | 10 +++++-----
->>  4 files changed, 56 insertions(+), 46 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufs-mediatek.c 
->> b/drivers/scsi/ufs/ufs-mediatek.c
->> index 80618af..bff2c42 100644
->> --- a/drivers/scsi/ufs/ufs-mediatek.c
->> +++ b/drivers/scsi/ufs/ufs-mediatek.c
->> @@ -841,27 +841,18 @@ static int ufs_mtk_link_startup_notify(struct 
->> ufs_hba *hba,
->>  	return ret;
->>  }
->> 
->> -static int ufs_mtk_device_reset(struct ufs_hba *hba)
->> +static int ufs_mtk_toggle_device_reset(struct ufs_hba *hba, bool 
->> down)
->>  {
->>  	struct arm_smccc_res res;
->> 
->> -	ufs_mtk_device_reset_ctrl(0, res);
->> -
->> -	/*
->> -	 * The reset signal is active low. UFS devices shall detect
->> -	 * more than or equal to 1us of positive or negative RST_n
->> -	 * pulse width.
->> -	 *
->> -	 * To be on safe side, keep the reset low for at least 10us.
->> -	 */
->> -	usleep_range(10, 15);
->> -
->> -	ufs_mtk_device_reset_ctrl(1, res);
->> -
->> -	/* Some devices may need time to respond to rst_n */
->> -	usleep_range(10000, 15000);
->> +	if (down) {
->> +		ufs_mtk_device_reset_ctrl(0, res);
->> +	} else {
->> +		ufs_mtk_device_reset_ctrl(1, res);
->> 
->> -	dev_info(hba->dev, "device reset done\n");
->> +		/* Some devices may need time to respond to rst_n */
->> +		usleep_range(10000, 15000);
->> +	}
->> 
->>  	return 0;
->>  }
->> @@ -1052,7 +1043,7 @@ static const struct ufs_hba_variant_ops 
->> ufs_hba_mtk_vops = {
->>  	.suspend             = ufs_mtk_suspend,
->>  	.resume              = ufs_mtk_resume,
->>  	.dbg_register_dump   = ufs_mtk_dbg_register_dump,
->> -	.device_reset        = ufs_mtk_device_reset,
->> +	.toggle_device_reset        = ufs_mtk_toggle_device_reset,
->>  	.event_notify        = ufs_mtk_event_notify,
->>  };
->> 
->> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
->> index 2206b1e..c2ccaa5 100644
->> --- a/drivers/scsi/ufs/ufs-qcom.c
->> +++ b/drivers/scsi/ufs/ufs-qcom.c
->> @@ -1404,12 +1404,13 @@ static void ufs_qcom_dump_dbg_regs(struct 
->> ufs_hba *hba)
->>  }
->> 
->>  /**
->> - * ufs_qcom_device_reset() - toggle the (optional) device reset line
->> + * ufs_qcom_toggle_device_reset() - toggle the (optional) device 
->> reset line
->>   * @hba: per-adapter instance
->> + * @down: pull down or pull up device reset line
->>   *
->>   * Toggles the (optional) reset line to reset the attached device.
->>   */
->> -static int ufs_qcom_device_reset(struct ufs_hba *hba)
->> +static int ufs_qcom_toggle_device_reset(struct ufs_hba *hba, bool 
->> down)
->>  {
->>  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->> 
->> @@ -1417,15 +1418,12 @@ static int ufs_qcom_device_reset(struct 
->> ufs_hba *hba)
->>  	if (!host->device_reset)
->>  		return -EOPNOTSUPP;
->> 
->> -	/*
->> -	 * The UFS device shall detect reset pulses of 1us, sleep for 10us 
->> to
->> -	 * be on the safe side.
->> -	 */
->> -	gpiod_set_value_cansleep(host->device_reset, 1);
->> -	usleep_range(10, 15);
->> -
->> -	gpiod_set_value_cansleep(host->device_reset, 0);
->> -	usleep_range(10, 15);
->> +	if (down) {
->> +		gpiod_set_value_cansleep(host->device_reset, 1);
->> +	} else {
->> +		gpiod_set_value_cansleep(host->device_reset, 0);
->> +		usleep_range(10, 15);
-> 
-> The comment above describes that the reset pulse should be 10uS, so the
-> only reason I can see for the sleep here would be for devices to come
-> back up after the reset pulse - i.e. what Mediatek believes needs
-> 10-15mS.
-> 
-> As such, I would like you to move this sleep out to the caller and then
-> turns this snippet into just:
-> 
-> 	gpiod_set_value_cansleep(host->device_reset, down);
-> 
-> I don't see a problem using Mediatek's reasoning and sleep values in 
-> the
-> common case.
+> On 2020-12-22 10:21, Kiwoong Kim wrote:
+> > Exynos requires one scatterlist entry for smaller than page size, i.e.
+> > 4KB. For the cases of dispatching commands with more than one
+> > scatterlist entry and under 4KB size, Exynos behaves as follows:
+> >
+> > Given that a command to read something from device is dispatched with
+> > two scatterlist entries that are named AAA and BBB. After dispatching,
+> > host builds two PRDT entries and during transmission, device sends
+> > just one DATA IN because device doesn't care on host dma.
+>=20
+> If my understanding is correct, above is same to all hosts, only below
+> part is Exynos's behavior. Please correct me if I am wrong.
+You're correct.
 
-Understood. It would better to move this sleep (10-15ms)out to the 
-caller and
-simplify this function.
-
-> 
->> +	}
->> 
->>  	return 0;
->>  }
->> @@ -1473,7 +1471,7 @@ static const struct ufs_hba_variant_ops 
->> ufs_hba_qcom_vops = {
->>  	.suspend		= ufs_qcom_suspend,
->>  	.resume			= ufs_qcom_resume,
->>  	.dbg_register_dump	= ufs_qcom_dump_dbg_regs,
->> -	.device_reset		= ufs_qcom_device_reset,
->> +	.toggle_device_reset		= ufs_qcom_toggle_device_reset,
->>  	.config_scaling_param = ufs_qcom_config_scaling_param,
->>  	.program_key		= ufs_qcom_ice_program_key,
->>  };
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index e221add..2ee905f 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -585,7 +585,20 @@ static void ufshcd_device_reset(struct ufs_hba 
->> *hba)
->>  {
->>  	int err;
->> 
->> -	err = ufshcd_vops_device_reset(hba);
->> +	err = ufshcd_vops_toggle_device_reset(hba, true);
->> +	if (err) {
->> +		dev_err(hba->dev, "device reset pulling down failure: %d\n", err);
-> 
-> "asserting device reset failed"
-
-Agree, thanks.
-
-> 
->> +		return;
->> +	}
->> +
->> +	/*
->> +	 * The reset signal is active low. The UFS device
->> +	 * shall detect reset pulses of 1us, sleep for at
->> +	 * least 10us to be on the safe side.
->> +	 */
->> +	usleep_range(10, 15);
->> +
->> +	err = ufshcd_vops_toggle_device_reset(hba, false);
->> 
->>  	if (!err) {
->>  		ufshcd_set_ufs_dev_active(hba);
->> @@ -593,7 +606,11 @@ static void ufshcd_device_reset(struct ufs_hba 
->> *hba)
->>  			hba->wb_enabled = false;
->>  			hba->wb_buf_flush_enabled = false;
->>  		}
->> +		dev_info(hba->dev, "device reset done\n");
-> 
-> Please use dev_dbg(), as this is only interesting to us when we're
-> actually debugging UFS related issues.
-
-Agree, thanks.
-
-> 
->> +	} else {
->> +		dev_err(hba->dev, "device reset pulling up failure: %d\n", err);
-> 
-> "deasserting device reset failed"
-
-Agree, thanks.
-
-> 
->>  	}
->> +
->>  	if (err != -EOPNOTSUPP)
->>  		ufshcd_update_evt_hist(hba, UFS_EVT_DEV_RESET, err);
->>  }
->> @@ -8686,8 +8703,6 @@ static int ufshcd_suspend(struct ufs_hba *hba, 
->> enum ufs_pm_op pm_op)
->>  	if (ret)
->>  		goto set_dev_active;
->> 
->> -	ufshcd_vreg_set_lpm(hba);
->> -
->>  disable_clks:
->>  	/*
->>  	 * Call vendor specific suspend callback. As these callbacks may 
->> access
->> @@ -8703,6 +8718,9 @@ static int ufshcd_suspend(struct ufs_hba *hba, 
->> enum ufs_pm_op pm_op)
->>  	 */
->>  	ufshcd_disable_irq(hba);
->> 
->> +	if (ufshcd_is_link_off(hba))
->> +		ufshcd_vops_toggle_device_reset(hba, true);
->> +
->>  	ufshcd_setup_clocks(hba, false);
->> 
->>  	if (ufshcd_is_clkgating_allowed(hba)) {
->> @@ -8711,6 +8729,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, 
->> enum ufs_pm_op pm_op)
->>  					hba->clk_gating.state);
->>  	}
->> 
->> +	ufshcd_vreg_set_lpm(hba);
->> +
->>  	/* Put the host controller in low power mode if possible */
->>  	ufshcd_hba_vreg_set_lpm(hba);
->>  	goto out;
->> @@ -8778,18 +8798,19 @@ static int ufshcd_resume(struct ufs_hba *hba, 
->> enum ufs_pm_op pm_op)
->>  	old_link_state = hba->uic_link_state;
->> 
->>  	ufshcd_hba_vreg_set_hpm(hba);
->> +
->> +	ret = ufshcd_vreg_set_hpm(hba);
->> +	if (ret)
->> +		goto out;
->> +
->>  	/* Make sure clocks are enabled before accessing controller */
->>  	ret = ufshcd_setup_clocks(hba, true);
->>  	if (ret)
->> -		goto out;
->> +		goto disable_vreg;
->> 
->>  	/* enable the host irq as host controller would be active soon */
->>  	ufshcd_enable_irq(hba);
->> 
->> -	ret = ufshcd_vreg_set_hpm(hba);
->> -	if (ret)
->> -		goto disable_irq_and_vops_clks;
->> -
->>  	/*
->>  	 * Call vendor specific resume callback. As these callbacks may 
->> access
->>  	 * vendor specific host controller register space call them when the
->> @@ -8797,7 +8818,7 @@ static int ufshcd_resume(struct ufs_hba *hba, 
->> enum ufs_pm_op pm_op)
->>  	 */
->>  	ret = ufshcd_vops_resume(hba, pm_op);
->>  	if (ret)
->> -		goto disable_vreg;
->> +		goto disable_irq_and_vops_clks;
->> 
->>  	/* For DeepSleep, the only supported option is to have the link off 
->> */
->>  	WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && 
->> !ufshcd_is_link_off(hba));
->> @@ -8864,8 +8885,6 @@ static int ufshcd_resume(struct ufs_hba *hba, 
->> enum ufs_pm_op pm_op)
->>  	ufshcd_link_state_transition(hba, old_link_state, 0);
->>  vendor_suspend:
->>  	ufshcd_vops_suspend(hba, pm_op);
->> -disable_vreg:
->> -	ufshcd_vreg_set_lpm(hba);
->>  disable_irq_and_vops_clks:
->>  	ufshcd_disable_irq(hba);
->>  	if (hba->clk_scaling.is_allowed)
->> @@ -8876,6 +8895,8 @@ static int ufshcd_resume(struct ufs_hba *hba, 
->> enum ufs_pm_op pm_op)
->>  		trace_ufshcd_clk_gating(dev_name(hba->dev),
->>  					hba->clk_gating.state);
->>  	}
->> +disable_vreg:
->> +	ufshcd_vreg_set_lpm(hba);
->>  out:
->>  	hba->pm_op_in_progress = 0;
->>  	if (ret)
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index 9bb5f0e..dccc3eb 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -319,7 +319,7 @@ struct ufs_pwr_mode_info {
->>   * @resume: called during host controller PM callback
->>   * @dbg_register_dump: used to dump controller debug information
->>   * @phy_initialization: used to initialize phys
->> - * @device_reset: called to issue a reset pulse on the UFS device
->> + * @toggle_device_reset: called to change logic level of reset gpio 
->> on the UFS device
->>   * @program_key: program or evict an inline encryption key
->>   * @event_notify: called to notify important events
->>   */
->> @@ -350,7 +350,7 @@ struct ufs_hba_variant_ops {
->>  	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
->>  	void	(*dbg_register_dump)(struct ufs_hba *hba);
->>  	int	(*phy_initialization)(struct ufs_hba *);
->> -	int	(*device_reset)(struct ufs_hba *hba);
->> +	int	(*toggle_device_reset)(struct ufs_hba *hba, bool down);
-> 
-> I don't think "toggle" adds any value to the understanding of what this
-> function is expected to do, so I would prefer that you just keep it
-> "device_reset".
-> 
-> I also would prefer that you replace "down" with "asserted" - as this
-> avoids questions about active high/low etc from the API.
-> 
+>=20
+> > The host then tranfers
+> > the whole data from start address of the area named AAA.
+> > In consequebnce, the area that follows AAA would be corrupted.
+>=20
+> In consequence
+>=20
+> >
+> >     =7C<------------->=7C
+> >     +-------+------------         +-------+
+> >     +  AAA  + (corrupted)   ...   +  BBB  +
+> >     +-------+------------         +-------+
+> >
+>=20
+> AFAIK, queue->dma_alignment is only used in the case of direct-io, i.e. i=
+n
+> blk_rq_map_user/kern(), which are mainly used in IOCTL.
+> If a request's buffer len and/or buffer start addr is not aligned with
+> queue->dma_alignment, bio.c will make a bounce bio such that the request
+> get a new buffer which starts on a new page. After the bounce bio is
+ended,
+> the data in the bound bio will be copied to the initial buffer.
+>=20
+> So in this fix, you are making sure the AAA and BBB are all mapped to one
+> bounce bio and stay in one bi_vec, so when we do map_sg they come in one
+> sglist, please correct me if I am wrong.
+>=20
+> If my understanding is correct, what is the real use case here - why/how
+> user starts a request which can generate more than one sglists whose size=
+s
+> are all under 4KB? I am just curious.
+>=20
 > Thanks,
-> Bjorn
+>=20
+> Can Guo.=20
 
-Agree, thanks.
-
-Best Regards,
-Ziqi
-
-
-> 
->>  	void	(*config_scaling_param)(struct ufs_hba *hba,
->>  					struct devfreq_dev_profile *profile,
->>  					void *data);
->> @@ -1216,10 +1216,10 @@ static inline void 
->> ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
->>  		hba->vops->dbg_register_dump(hba);
->>  }
->> 
->> -static inline int ufshcd_vops_device_reset(struct ufs_hba *hba)
->> +static inline int ufshcd_vops_toggle_device_reset(struct ufs_hba 
->> *hba, bool down)
->>  {
->> -	if (hba->vops && hba->vops->device_reset)
->> -		return hba->vops->device_reset(hba);
->> +	if (hba->vops && hba->vops->toggle_device_reset)
->> +		return hba->vops->toggle_device_reset(hba, down);
->> 
->>  	return -EOPNOTSUPP;
->>  }
->> --
->> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora 
->> Forum,
->> a Linux Foundation Collaborative Project
->> 
+You nearly exactly got what I=92m=20thinking.=0D=0AAnd=20I=20think=20there=
+=20could=20be=20various=20cases=20making=20those=20situations,=0D=0Awhich=
+=20are=20definitely=20up=20to=20user=20programs.=20That=20is=20the=20case=
+=20using=0D=0Adifferent=20memory=20areas=20to=20contain=20something.=0D=0A=
+=0D=0AThanks.=0D=0AKiwoong=20Kim=0D=0A>=20=0D=0A>=20>=20Signed-off-by:=20Ki=
+woong=20Kim=20<kwmad.kim=40samsung.com>=0D=0A>=20>=20---=0D=0A>=20>=20=20dr=
+ivers/scsi/ufs/ufs-exynos.c=20=7C=209=20+++++++++=0D=0A>=20>=20=201=20file=
+=20changed,=209=20insertions(+)=0D=0A>=20>=0D=0A>=20>=20diff=20--git=20a/dr=
+ivers/scsi/ufs/ufs-exynos.c=0D=0A>=20>=20b/drivers/scsi/ufs/ufs-exynos.c=20=
+index=20a8770ff..8635d9d=20100644=0D=0A>=20>=20---=20a/drivers/scsi/ufs/ufs=
+-exynos.c=0D=0A>=20>=20+++=20b/drivers/scsi/ufs/ufs-exynos.c=0D=0A>=20>=20=
+=40=40=20-14,6=20+14,7=20=40=40=0D=0A>=20>=20=20=23include=20<linux/of_addr=
+ess.h>=0D=0A>=20>=20=20=23include=20<linux/phy/phy.h>=0D=0A>=20>=20=20=23in=
+clude=20<linux/platform_device.h>=0D=0A>=20>=20+=23include=20<linux/blkdev.=
+h>=0D=0A>=20>=0D=0A>=20>=20=20=23include=20=22ufshcd.h=22=0D=0A>=20>=20=20=
+=23include=20=22ufshcd-pltfrm.h=22=0D=0A>=20>=20=40=40=20-1193,6=20+1194,13=
+=20=40=40=20static=20int=20exynos_ufs_resume(struct=20ufs_hba=0D=0A>=20>=20=
+*hba,=20enum=20ufs_pm_op=20pm_op)=0D=0A>=20>=20=20=09return=200;=0D=0A>=20>=
+=20=20=7D=0D=0A>=20>=0D=0A>=20>=20+static=20void=20exynos_ufs_slave_configu=
+re(struct=20scsi_device=20*sdev)=20=7B=0D=0A>=20>=20+=09struct=20request_qu=
+eue=20*q=20=3D=20sdev->request_queue;=0D=0A>=20>=20+=0D=0A>=20>=20+=09blk_q=
+ueue_update_dma_alignment(q,=20PAGE_SIZE=20-=201);=20=7D=0D=0A>=20>=20+=0D=
+=0A>=20>=20=20static=20struct=20ufs_hba_variant_ops=20ufs_hba_exynos_ops=20=
+=3D=20=7B=0D=0A>=20>=20=20=09.name=09=09=09=09=3D=20=22exynos_ufs=22,=0D=0A=
+>=20>=20=20=09.init=09=09=09=09=3D=20exynos_ufs_init,=0D=0A>=20>=20=40=40=
+=20-1204,6=20+1212,7=20=40=40=20static=20struct=20ufs_hba_variant_ops=0D=0A=
+>=20>=20ufs_hba_exynos_ops=20=3D=20=7B=0D=0A>=20>=20=20=09.hibern8_notify=
+=09=09=09=3D=20exynos_ufs_hibern8_notify,=0D=0A>=20>=20=20=09.suspend=09=09=
+=09=3D=20exynos_ufs_suspend,=0D=0A>=20>=20=20=09.resume=09=09=09=09=3D=20ex=
+ynos_ufs_resume,=0D=0A>=20>=20+=09.slave_configure=09=09=3D=20exynos_ufs_sl=
+ave_configure,=0D=0A>=20>=20=20=7D;=0D=0A>=20>=0D=0A>=20>=20=20static=20int=
+=20exynos_ufs_probe(struct=20platform_device=20*pdev)=0D=0A=0D=0A
