@@ -5,56 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C906C433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2621C4332D
 	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:14:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 109AD23159
+	by mail.kernel.org (Postfix) with ESMTP id 8D7EC2311D
 	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:14:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726508AbgLVKOJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 05:14:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56898 "EHLO
+        id S1726012AbgLVKOX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 05:14:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726491AbgLVKOI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 05:14:08 -0500
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 196F6C0617A6
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:12 -0800 (PST)
-Received: by mail-pl1-x62e.google.com with SMTP id j1so7203419pld.3
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:12 -0800 (PST)
+        with ESMTP id S1725931AbgLVKOX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 05:14:23 -0500
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A2F4C061282
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:30 -0800 (PST)
+Received: by mail-pj1-x1031.google.com with SMTP id lb18so1068929pjb.5
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=lYUMeUyOwDdIF4uxTHEIj67s6zZwFJTjfnqhBWtL5QU=;
-        b=EYE+v1C7yIhbL2qViLREeWb/RycZZm278rdmCj37EluZbFgUyixH8lZrhEJmwnWNrr
-         CdGQwiYrJ9xc8rRUnv2ovgz7pPnmXPtDXeji2Y5fhhkBvpiht8VOdUjT6Xs9W1sFEjyc
-         wTgkmMriyb06PWuB1NRh38DgLwWkfRrb1YU/4=
+        bh=op9q/KuhO3CAtLgGnNie25+8nuvHQFPCshirjpqOF7s=;
+        b=ax+VjiIhPZ1zgZ7rrDgACYR0aijN0/QCfbCLsnH/o/xr8+nQ+KTzjsdaaV2ION/VMI
+         q7CcIR4py7C8YKQfnOs9y4Ffi6qkglwwt7Nwc2atiVMw9qFD3wUGvbT/7U6nZdyKDqv2
+         KcEm5EUk9Fby3fImUX+4KuKio7J599kXRQNg0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:from:to:cc:subject:date:message-id
          :in-reply-to:references;
-        bh=lYUMeUyOwDdIF4uxTHEIj67s6zZwFJTjfnqhBWtL5QU=;
-        b=Mb6wfX7BbgzghqrDfvDS4dKyBv4wEQwbt/YwgsFOkmr1dXepZtJuZpq6lLQB9W0yDD
-         nYf15cbNsXELm2JCz8wyp8oyyB7jD4A6M4SyhYnhlO8uzC1wfG5Kjlljh7cfummr9a04
-         Yf4Yxlr7QSgGWnQVJiyij6yG7yKAriE3BI4f/LqoMGTPVSjFul/WKAuo063+aqdXWsu4
-         9vWqZyRLC1zYsT95SPK3x5xg3l/UmjI+apWQ1UA2OeXOSt8SwmIrgwxWG4TdAkkIxRDF
-         rVuDkLPuqXVnTu/+Z9FVkHpzAm7uCFIloAfbIlBd4CdBOO6z0/l1orUEezS1ASX/CsdP
-         P9uQ==
-X-Gm-Message-State: AOAM532EMUVV1qYqw54CjdrC/AswOFMLKIjQv7X7oIonmhhUlcjUbBwc
-        1h8rblz9uCSKbdiVyK8NPbOUkCdxubkplsi0HoiBegkE1hj7Q8pZ5VLLcsEBNdnHzwZrOfAm+ek
-        X+pesFRfb4+UO+gUqCYiFFKB7UwVLP0wq7lThLMifNmeK9WKaL9l+/dfWyCTbQ5w1zg48OJyz+Z
-        3MkoBQoem4
+        bh=op9q/KuhO3CAtLgGnNie25+8nuvHQFPCshirjpqOF7s=;
+        b=qn6Ouay1Qa7LMxlHGZ87nXHLQZulCJ+JqtODKCx7oQ6KIeJPrrTCwswwG03zQb1KHg
+         V4bwsIU6EvGM1JkJ39+V+4NHcipgtrdTJCQMk+HpTT4wtR+RpgOokuTm6ej/4AY8YsVD
+         210J8JNEczz6XdJbw5v0KGZ08WLt1GhiQMlnmWaG/inQ3ySF93EMUEQJIG8FSpPfVuSV
+         bLpMsr4cgG7heHsGJl4BnFuEiZR5GrTp9Cbwleg18QZNNKlzkOX8Y1T2BQQ+Zg4TFWPe
+         WQSdAnThqXJBuvxh9wQVpwjGKbGQzXK0uqtc5u1GTmgIsrBi5wfrz/FtmIZF12Yi8XnR
+         VGqw==
+X-Gm-Message-State: AOAM5304CDbyqC8tccMHW33g7zmRJ2EG9qiVbVsAoJRYCiUWHOBKhoKp
+        tMXvkRZ0sYr8jiYsNMCD4rvls2mmAzmVWKZSez1PAMKTpenNjj0TGDD21gdbtyXjkmmJVxlMXi+
+        NpK7/ZotgYhDknqvOraZxFBvzFMsoDvSMLD3i9pWdNNqBi2C39mbk+QlMCly41u0/37YkeDeits
+        xiiWWc+qXr
 MIME-Version: 1.0
-X-Google-Smtp-Source: ABdhPJzkB+DLQr4Cp12fLTQtsbgPGNAs7XNzCZiRMHUp2ATnzFOL5QlcKFd+aq7+rydQ2II97vhGgg==
-X-Received: by 2002:a17:90b:2317:: with SMTP id mt23mr21673783pjb.2.1608631991106;
-        Tue, 22 Dec 2020 02:13:11 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJzc6BoGrsG/rL9ybLNiemgshycfBQpja5XkwvjANwxqjw5+Ph1YRQnW2Nz6iDgdLCM2JxLo/A==
+X-Received: by 2002:a17:90b:943:: with SMTP id dw3mr20911887pjb.97.1608632009172;
+        Tue, 22 Dec 2020 02:13:29 -0800 (PST)
 Received: from drv-bst-rhel8.static.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id p16sm19148624pju.47.2020.12.22.02.13.08
+        by smtp.gmail.com with ESMTPSA id p16sm19148624pju.47.2020.12.22.02.13.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Dec 2020 02:13:10 -0800 (PST)
+        Tue, 22 Dec 2020 02:13:28 -0800 (PST)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -62,259 +62,535 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: [PATCH 17/24] mpi3mr: add support of threaded isr
-Date:   Tue, 22 Dec 2020 15:41:49 +0530
-Message-Id: <20201222101156.98308-18-kashyap.desai@broadcom.com>
+Subject: [PATCH 23/24] mpi3mr: add eedp dif dix support
+Date:   Tue, 22 Dec 2020 15:41:55 +0530
+Message-Id: <20201222101156.98308-24-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20201222101156.98308-1-kashyap.desai@broadcom.com>
 References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000006da2a205b70ad210"
+        boundary="0000000000008246d605b70ad32e"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000006da2a205b70ad210
+--0000000000008246d605b70ad32e
 Content-Type: text/plain; charset="US-ASCII"
-
-Register driver for threaded interrupt.
-
-By default, driver will attempt io completion from interrupt context
-(primary handler). Since driver tracks per reply queue outstanding ios,
-it will schedule threaded ISR if there are any outstanding IOs expected
-on that particular reply queue. Threaded ISR (secondary handler) will loop
-for IO completion as long as there are outstanding IOs
-(speculative method using same per reply queue outstanding counter)
-or it has completed some X amount of commands (something like budget).
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Cc: sathya.prakash@broadcom.com
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    | 12 ++++++
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 75 +++++++++++++++++++++++++++++++--
- 2 files changed, 84 insertions(+), 3 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    |  18 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |   7 +
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 303 +++++++++++++++++++++++++++++++-
+ 3 files changed, 321 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 74b6b4b6e322..41a8689b46c9 100644
+index f0ead83dc16c..acc5649bed5f 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -144,6 +144,10 @@ extern struct list_head mrioc_list;
+@@ -118,6 +118,7 @@ extern struct list_head mrioc_list;
+ #define MPI3MR_SENSEBUF_SZ	256
+ #define MPI3MR_SENSEBUF_FACTOR	3
+ #define MPI3MR_CHAINBUF_FACTOR	3
++#define MPI3MR_CHAINBUFDIX_FACTOR	2
+ 
+ /* Invalid target device handle */
+ #define MPI3MR_INVALID_DEV_HANDLE	0xFFFF
+@@ -145,6 +146,15 @@ extern struct list_head mrioc_list;
  /* Default target device queue depth */
  #define MPI3MR_DEFAULT_SDEV_QD	32
  
-+/* Definitions for Threaded IRQ poll*/
-+#define MPI3MR_IRQ_POLL_SLEEP			2
-+#define MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT		8
++/* Definitions for the sector size for EEDP */
++#define MPI3_SECTOR_SIZE_512_BYTE	(512)
++#define MPI3_SECTOR_SIZE_520_BYTE	(520)
++#define MPI3_SECTOR_SIZE_4080_BYTE	(4080)
++#define MPI3_SECTOR_SIZE_4088_BYTE	(4088)
++#define MPI3_SECTOR_SIZE_4096_BYTE	(4096)
++#define MPI3_SECTOR_SIZE_4104_BYTE	(4104)
++#define MPI3_SECTOR_SIZE_4160_BYTE	(4160)
 +
- /* SGE Flag definition */
- #define MPI3MR_SGEFLAGS_SYSTEM_SIMPLE_END_OF_LIST \
- 	(MPI3_SGE_FLAGS_ELEMENT_TYPE_SIMPLE | MPI3_SGE_FLAGS_DLAS_SYSTEM | \
-@@ -295,6 +299,9 @@ struct op_req_qinfo {
-  * @q_segment_list: Segment list base virtual address
-  * @q_segment_list_dma: Segment list base DMA address
-  * @ephase: Expected phased identifier for the reply queue
-+ * @pend_ios: Number of IOs pending in HW for this queue
-+ * @enable_irq_poll: Flag to indicate polling is enabled
-+ * @in_use: Queue is handled by poll/ISR
+ /* Definitions for Threaded IRQ poll*/
+ #define MPI3MR_IRQ_POLL_SLEEP			2
+ #define MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT		8
+@@ -559,17 +569,21 @@ struct chain_element {
+  *
+  * @host_tag: Host tag specific to operational queue
+  * @in_lld_scope: Command in LLD scope or not
++ * @meta_sg_valid: DIX command with meta data SGL or not
+  * @scmd: SCSI Command pointer
+- * @req_q_idx: Operational request queue index
++ * @req_q_idx: Operational request queue undex
+  * @chain_idx: Chain frame index
++ * @meta_chain_idx: Chain frame index of meta data SGL
+  * @mpi3mr_scsiio_req: MPI SCSI IO request
   */
- struct op_reply_qinfo {
- 	u16 ci;
-@@ -306,6 +313,9 @@ struct op_reply_qinfo {
- 	void *q_segment_list;
- 	dma_addr_t q_segment_list_dma;
- 	u8 ephase;
-+	atomic_t pend_ios;
-+	bool enable_irq_poll;
-+	atomic_t in_use;
+-struct scmd_priv {
++struct scmd_priv{
+ 	u16 host_tag;
+ 	u8 in_lld_scope;
++	u8 meta_sg_valid;
+ 	struct scsi_cmnd *scmd;
+ 	u16 req_q_idx;
+ 	int chain_idx;
++	int meta_chain_idx;
+ 	u8 mpi3mr_scsiio_req[MPI3MR_ADMIN_REQ_FRAME_SZ];
  };
  
- /**
-@@ -559,6 +569,7 @@ struct scmd_priv {
-  * @shost: Scsi_Host pointer
-  * @id: Controller ID
-  * @cpu_count: Number of online CPUs
-+ * @irqpoll_sleep: usleep unit used in threaded isr irqpoll
-  * @name: Controller ASCII name
-  * @driver_name: Driver ASCII name
-  * @sysif_regs: System interface registers virtual address
-@@ -660,6 +671,7 @@ struct mpi3mr_ioc {
- 	u8 id;
- 	int cpu_count;
- 	bool enable_segqueue;
-+	u32 irqpoll_sleep;
- 
- 	char name[MPI3MR_NAME_LENGTH];
- 	char driver_name[MPI3MR_NAME_LENGTH];
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index ba4bfcc17809..4c4e21fb4ef3 100644
+index b27e44f78544..8ce715b139f2 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -346,12 +346,16 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+@@ -8,6 +8,7 @@
+  */
  
- 	reply_qidx = op_reply_q->qid - 1;
+ #include "mpi3mr.h"
++extern int prot_mask;
  
-+	if (!atomic_add_unless(&op_reply_q->in_use, 1, 1))
-+		return 0;
+ #if defined(writeq) && defined(CONFIG_64BIT)
+ static inline void mpi3mr_writeq(__u64 b, volatile void __iomem *addr)
+@@ -2759,6 +2760,12 @@ static int mpi3mr_alloc_chain_bufs(struct mpi3mr_ioc *mrioc)
+ 
+ 	num_chains = mrioc->max_host_ios/MPI3MR_CHAINBUF_FACTOR;
+ 
++	if (prot_mask & (SHOST_DIX_TYPE0_PROTECTION
++	    | SHOST_DIX_TYPE1_PROTECTION
++	    | SHOST_DIX_TYPE2_PROTECTION
++	    | SHOST_DIX_TYPE3_PROTECTION))
++		num_chains += (num_chains / MPI3MR_CHAINBUFDIX_FACTOR);
 +
- 	exp_phase = op_reply_q->ephase;
- 	reply_ci = op_reply_q->ci;
+ 	mrioc->chain_buf_count = num_chains;
+ 	sz = sizeof(struct chain_element) * num_chains;
+ 	mrioc->chain_sgl_list = kzalloc(sz, GFP_KERNEL);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 57d9df6662f9..425659e8f7b4 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -21,6 +21,13 @@ MODULE_LICENSE(MPI3MR_DRIVER_LICENSE);
+ MODULE_VERSION(MPI3MR_DRIVER_VERSION);
  
- 	reply_desc = mpi3mr_get_reply_desc(op_reply_q, reply_ci);
- 	if ((le16_to_cpu(reply_desc->ReplyFlags) &
- 	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase) {
-+		atomic_dec(&op_reply_q->in_use);
+ /* Module parameters*/
++int prot_mask = -1;
++module_param(prot_mask, int, 0);
++MODULE_PARM_DESC(prot_mask, "Host protection capabilities mask, def=0x07");
++
++int prot_guard_mask = 3;
++module_param(prot_guard_mask, int, 0);
++MODULE_PARM_DESC(prot_guard_mask, " Host protection guard mask, def=3");
+ int logging_level;
+ module_param(logging_level, int, 0);
+ MODULE_PARM_DESC(logging_level,
+@@ -59,7 +66,9 @@ static u16 mpi3mr_host_tag_for_scmd(struct mpi3mr_ioc *mrioc,
+ 	priv->scmd = scmd;
+ 	priv->in_lld_scope = 1;
+ 	priv->req_q_idx = hw_queue;
++	priv->meta_chain_idx = -1;
+ 	priv->chain_idx = -1;
++	priv->meta_sg_valid = 0;
+ 	return priv->host_tag;
+ }
+ 
+@@ -119,10 +128,15 @@ static void mpi3mr_clear_scmd_priv(struct mpi3mr_ioc *mrioc,
+ 	priv->req_q_idx = 0xFFFF;
+ 	priv->scmd = NULL;
+ 	priv->in_lld_scope = 0;
++	priv->meta_sg_valid = 0;
+ 	if (priv->chain_idx >= 0) {
+ 		clear_bit(priv->chain_idx, mrioc->chain_bitmap);
+ 		priv->chain_idx = -1;
+ 	}
++	if (priv->meta_chain_idx >= 0) {
++		clear_bit(priv->meta_chain_idx, mrioc->chain_bitmap);
++		priv->meta_chain_idx = -1;
++	}
+ }
+ 
+ static void mpi3mr_dev_rmhs_send_tm(struct mpi3mr_ioc *mrioc, u16 handle,
+@@ -388,6 +402,9 @@ static bool mpi3mr_flush_scmd(struct request *rq,
+ 		if (!priv->in_lld_scope)
+ 			goto out;
+ 
++		if (priv->meta_sg_valid)
++			dma_unmap_sg(&mrioc->pdev->dev, scsi_prot_sglist(scmd),
++			    scsi_prot_sg_count(scmd), scmd->sc_data_direction);
+ 		mpi3mr_clear_scmd_priv(mrioc, scmd);
+ 		scsi_dma_unmap(scmd);
+ 		scmd->result = DID_RESET << 16;
+@@ -790,6 +807,7 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ {
+ 	u16 flags = 0;
+ 	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data;
++	u8 prot_mask = 0;
+ 
+ 	tgtdev->perst_id = le16_to_cpu(dev_pg0->PersistentID);
+ 	tgtdev->dev_handle = le16_to_cpu(dev_pg0->DevHandle);
+@@ -854,6 +872,15 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ 		if ((dev_info & MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_MASK) !=
+ 		    MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_NVME_DEVICE)
+ 			tgtdev->is_hidden = 1;
++		if (mrioc->shost)
++			prot_mask = scsi_host_get_prot(mrioc->shost);
++		if (prot_mask & SHOST_DIX_TYPE0_PROTECTION) {
++			scsi_host_set_prot(mrioc->shost, prot_mask & 0x77);
++			ioc_info(mrioc,
++			    "%s : Disabling DIX0 prot capability\n", __func__);
++			ioc_info(mrioc,
++			    "because HBA does not support DIX0 operation on NVME drives\n");
++		}
+ 		break;
+ 	}
+ 	case MPI3_DEVICE_DEVFORM_VD:
+@@ -1771,6 +1798,195 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 
+ }
+ 
++/**
++ * mpi3mr_setup_eedp - Setup EEDP information in MPI3 SCSI IO
++ * @mrioc: Adapter instance reference
++ * @scmd: SCSI command reference
++ * @scsiio_req: MPI3 SCSI IO request
++ *
++ * Identifies the protection information flags from the SCSI
++ * command and set appropriate flags in the MPI3 SCSI IO
++ * request.
++ *
++ * Return: Nothing
++ */
++static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
++	struct scsi_cmnd *scmd, Mpi3SCSIIORequest_t *scsiio_req)
++{
++	u16 eedp_flags = 0;
++	unsigned char prot_op = scsi_get_prot_op(scmd);
++	unsigned char prot_type = scsi_get_prot_type(scmd);
++
++	switch (prot_op) {
++	case SCSI_PROT_NORMAL:
++		return;
++	case SCSI_PROT_READ_STRIP:
++		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK_REMOVE;
++		break;
++	case SCSI_PROT_WRITE_INSERT:
++		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_INSERT;
++		break;
++	case SCSI_PROT_READ_INSERT:
++		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_INSERT;
++		scsiio_req->MsgFlags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
++		break;
++	case SCSI_PROT_WRITE_STRIP:
++		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK_REMOVE;
++		scsiio_req->MsgFlags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
++		break;
++	case SCSI_PROT_READ_PASS:
++		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK |
++		    MPI3_EEDPFLAGS_CHK_REF_TAG | MPI3_EEDPFLAGS_CHK_APP_TAG |
++		    MPI3_EEDPFLAGS_CHK_GUARD;
++		scsiio_req->MsgFlags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
++		break;
++	case SCSI_PROT_WRITE_PASS:
++		if (scsi_host_get_guard(scmd->device->host)
++		    & SHOST_DIX_GUARD_IP) {
++			eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK_REGEN |
++			    MPI3_EEDPFLAGS_CHK_APP_TAG |
++			    MPI3_EEDPFLAGS_CHK_GUARD |
++			    MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
++			scsiio_req->SGL[0].Eedp.ApplicationTagTranslationMask
++			    = 0xffff;
++		} else {
++			eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK |
++			    MPI3_EEDPFLAGS_CHK_REF_TAG |
++			    MPI3_EEDPFLAGS_CHK_APP_TAG |
++			    MPI3_EEDPFLAGS_CHK_GUARD;
++		}
++		scsiio_req->MsgFlags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
++		break;
++	default:
++		return;
++	}
++
++	if (scsi_host_get_guard(scmd->device->host) & SHOST_DIX_GUARD_IP)
++		eedp_flags |= MPI3_EEDPFLAGS_HOST_GUARD_IP_CHKSUM;
++
++	switch (prot_type) {
++	case SCSI_PROT_DIF_TYPE0:
++		eedp_flags |= MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
++		scsiio_req->CDB.EEDP32.PrimaryReferenceTag =
++		    cpu_to_be32(t10_pi_ref_tag(scmd->request));
++		break;
++	case SCSI_PROT_DIF_TYPE1:
++	case SCSI_PROT_DIF_TYPE2:
++		eedp_flags |= MPI3_EEDPFLAGS_INCR_PRI_REF_TAG |
++		    MPI3_EEDPFLAGS_ESC_MODE_APPTAG_DISABLE |
++		    MPI3_EEDPFLAGS_CHK_GUARD;
++		scsiio_req->CDB.EEDP32.PrimaryReferenceTag =
++		    cpu_to_be32(t10_pi_ref_tag(scmd->request));
++		break;
++	case SCSI_PROT_DIF_TYPE3:
++		eedp_flags |= MPI3_EEDPFLAGS_CHK_GUARD |
++		    MPI3_EEDPFLAGS_ESC_MODE_APPTAG_DISABLE;
++		break;
++
++	default:
++		scsiio_req->MsgFlags &= ~(MPI3_SCSIIO_MSGFLAGS_METASGL_VALID);
++		return;
++	}
++
++	switch (scmd->device->sector_size) {
++	case MPI3_SECTOR_SIZE_512_BYTE:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_512;
++		break;
++	case MPI3_SECTOR_SIZE_520_BYTE:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_520;
++		break;
++	case MPI3_SECTOR_SIZE_4080_BYTE:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_4080;
++		break;
++	case MPI3_SECTOR_SIZE_4088_BYTE:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_4088;
++		break;
++	case MPI3_SECTOR_SIZE_4096_BYTE:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_4096;
++		break;
++	case MPI3_SECTOR_SIZE_4104_BYTE:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_4104;
++		break;
++	case MPI3_SECTOR_SIZE_4160_BYTE:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_4160;
++		break;
++	default:
++		break;
++	}
++
++	scsiio_req->SGL[0].Eedp.EEDPFlags = cpu_to_le16(eedp_flags);
++	scsiio_req->SGL[0].Eedp.Flags = MPI3_SGE_FLAGS_ELEMENT_TYPE_EXTENDED;
++}
++
++
++
++/**
++ * mpi3mr_build_sense_buffer - Map sense information
++ * @desc: Sense type
++ * @buf: Sense buffer to populate
++ * @key: Sense key
++ * @asc: Additional sense code
++ * @ascq: Additional sense code qualifier
++ *
++ * Maps the given sense information into either descriptor or
++ * fixed format sense data.
++ *
++ * Return: Nothing
++ */
++static inline void mpi3mr_build_sense_buffer(int desc, u8 *buf, u8 key,
++	u8 asc, u8 ascq)
++{
++	if (desc) {
++		buf[0] = 0x72;	/* descriptor, current */
++		buf[1] = key;
++		buf[2] = asc;
++		buf[3] = ascq;
++		buf[7] = 0;
++	} else {
++		buf[0] = 0x70;	/* fixed, current */
++		buf[2] = key;
++		buf[7] = 0xa;
++		buf[12] = asc;
++		buf[13] = ascq;
++	}
++}
++
++/**
++ * mpi3mr_map_eedp_error - Map EEDP errors from IOC status
++ * @scmd: SCSI command reference
++ * @ioc_status: Status of MPI3 request
++ *
++ * Maps the EEDP error status of the SCSI IO request to sense
++ * data.
++ *
++ * Return: Nothing
++ */
++static void mpi3mr_map_eedp_error(struct scsi_cmnd *scmd,
++	u16 ioc_status)
++{
++	u8 ascq = 0;
++
++	switch (ioc_status) {
++	case MPI3_IOCSTATUS_EEDP_GUARD_ERROR:
++		ascq = 0x01;
++		break;
++	case MPI3_IOCSTATUS_EEDP_APP_TAG_ERROR:
++		ascq = 0x02;
++		break;
++	case MPI3_IOCSTATUS_EEDP_REF_TAG_ERROR:
++		ascq = 0x03;
++		break;
++	default:
++		ascq = 0x00;
++		break;
++	}
++
++	mpi3mr_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
++	    0x10, ascq);
++	scmd->result = DRIVER_SENSE << 24 | (DID_ABORT << 16) |
++	    SAM_STAT_CHECK_CONDITION;
++}
++
+ /**
+  * mpi3mr_process_op_reply_desc - reply descriptor handler
+  * @mrioc: Adapter instance reference
+@@ -1933,6 +2149,11 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
+ 		else if (scsi_state & MPI3_SCSI_STATE_TERMINATED)
+ 			scmd->result = DID_RESET << 16;
+ 		break;
++	case MPI3_IOCSTATUS_EEDP_GUARD_ERROR:
++	case MPI3_IOCSTATUS_EEDP_REF_TAG_ERROR:
++	case MPI3_IOCSTATUS_EEDP_APP_TAG_ERROR:
++		mpi3mr_map_eedp_error(scmd, ioc_status);
++		break;
+ 	case MPI3_IOCSTATUS_SCSI_PROTOCOL_ERROR:
+ 	case MPI3_IOCSTATUS_INVALID_FUNCTION:
+ 	case MPI3_IOCSTATUS_INVALID_SGL:
+@@ -1968,6 +2189,10 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
+ 		}
+ 	}
+ out_success:
++	if (priv->meta_sg_valid) {
++		dma_unmap_sg(&mrioc->pdev->dev, scsi_prot_sglist(scmd),
++		    scsi_prot_sg_count(scmd), scmd->sc_data_direction);
++	}
+ 	mpi3mr_clear_scmd_priv(mrioc, scmd);
+ 	scsi_dma_unmap(scmd);
+ 	scmd->scsi_done(scmd);
+@@ -2031,6 +2256,8 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 	u8 last_chain_sgl_flags;
+ 	struct chain_element *chain_req;
+ 	struct scmd_priv *priv = NULL;
++	u32 meta_sg = le32_to_cpu(scsiio_req->Flags) &
++	    MPI3_SCSIIO_FLAGS_DMAOPERATION_HOST_PI;
+ 
+ 	priv = scsi_cmd_priv(scmd);
+ 
+@@ -2041,15 +2268,27 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 	last_chain_sgl_flags = MPI3_SGE_FLAGS_ELEMENT_TYPE_LAST_CHAIN |
+ 	    MPI3_SGE_FLAGS_DLAS_SYSTEM;
+ 
+-	sg_local = &scsiio_req->SGL;
++	if (meta_sg)
++		sg_local = &scsiio_req->SGL[MPI3_SCSIIO_METASGL_INDEX];
++	else
++		sg_local = &scsiio_req->SGL;
+ 
+-	if (!scsiio_req->DataLength) {
++	if (!scsiio_req->DataLength && !meta_sg) {
+ 		mpi3mr_build_zero_len_sge(sg_local);
  		return 0;
  	}
  
-@@ -364,6 +368,7 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+-	sg_scmd = scsi_sglist(scmd);
+-	sges_left = scsi_dma_map(scmd);
++	if (meta_sg) {
++		sg_scmd = scsi_prot_sglist(scmd);
++		sges_left = dma_map_sg(&mrioc->pdev->dev,
++		    scsi_prot_sglist(scmd),
++		    scsi_prot_sg_count(scmd),
++		    scmd->sc_data_direction);
++		priv->meta_sg_valid = 1; /* To unmap meta sg DMA */
++	} else {
++		sg_scmd = scsi_sglist(scmd);
++		sges_left = scsi_dma_map(scmd);
++	}
  
- 		mpi3mr_process_op_reply_desc(mrioc, reply_desc, &reply_dma,
- 		    reply_qidx);
-+		atomic_dec(&op_reply_q->pend_ios);
- 		if (reply_dma)
- 			mpi3mr_repost_reply_buf(mrioc, reply_dma);
- 		num_op_reply++;
-@@ -378,6 +383,14 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
- 		if ((le16_to_cpu(reply_desc->ReplyFlags) &
- 		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase)
- 			break;
-+		/*
-+		 * Exit completion loop to avoid CPU lockup
-+		 * Ensure remaining completion happens from threaded ISR.
-+		 */
-+		if (num_op_reply > mrioc->max_host_ios) {
-+			intr_info->op_reply_q->enable_irq_poll = true;
-+			break;
-+		}
+ 	if (sges_left < 0) {
+ 		sdev_printk(KERN_ERR, scmd->device,
+@@ -2067,6 +2306,22 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 	sges_in_segment = (mrioc->facts.op_req_sz -
+ 	    offsetof(Mpi3SCSIIORequest_t, SGL))/sizeof(Mpi3SGESimple_t);
  
- 	} while (1);
- 
-@@ -386,6 +399,7 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
- 	    &mrioc->sysif_regs->OperQueueIndexes[reply_qidx].ConsumerIndex);
- 	op_reply_q->ci = reply_ci;
- 	op_reply_q->ephase = exp_phase;
-+	atomic_dec(&op_reply_q->in_use);
- 
- 	return num_op_reply;
- }
-@@ -395,7 +409,7 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
- 	struct mpi3mr_intr_info *intr_info = privdata;
- 	struct mpi3mr_ioc *mrioc;
- 	u16 midx;
--	u32 num_admin_replies = 0;
-+	u32 num_admin_replies = 0, num_op_reply = 0;
- 
- 	if (!intr_info)
- 		return IRQ_NONE;
-@@ -409,8 +423,10 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
- 
- 	if (!midx)
- 		num_admin_replies = mpi3mr_process_admin_reply_q(mrioc);
-+	if (intr_info->op_reply_q)
-+		num_op_reply = mpi3mr_process_op_reply_q(mrioc, intr_info);
- 
--	if (num_admin_replies)
-+	if (num_admin_replies || num_op_reply)
- 		return IRQ_HANDLED;
- 	else
- 		return IRQ_NONE;
-@@ -431,7 +447,20 @@ static irqreturn_t mpi3mr_isr(int irq, void *privdata)
- 	/* Call primary ISR routine */
- 	ret = mpi3mr_isr_primary(irq, privdata);
- 
--	return ret;
-+	/*
-+	 * If more IOs are expected, schedule IRQ polling thread.
-+	 * Otherwise exit from ISR.
-+	 */
-+	if (!intr_info->op_reply_q)
-+		return ret;
++	if (scsiio_req->SGL[0].Eedp.Flags ==
++	    MPI3_SGE_FLAGS_ELEMENT_TYPE_EXTENDED && !meta_sg) {
++		sg_local += sizeof(Mpi3SGEUnion_t);
++		sges_in_segment--;
++		/* Reserve 1st segment (scsiio_req->SGL[0]) for eedp */
++	}
 +
-+	if (!intr_info->op_reply_q->enable_irq_poll ||
-+	    !atomic_read(&intr_info->op_reply_q->pend_ios))
-+		return ret;
++	if (scsiio_req->MsgFlags ==
++	    MPI3_SCSIIO_MSGFLAGS_METASGL_VALID && !meta_sg) {
++		sges_in_segment--;
++		/* Reserve last segment (scsiio_req->SGL[3]) for meta sg */
++	}
 +
-+	disable_irq_nosync(pci_irq_vector(mrioc->pdev, midx));
++	if (meta_sg)
++		sges_in_segment = 1;
 +
-+	return IRQ_WAKE_THREAD;
+ 	if (sges_left <= sges_in_segment)
+ 		goto fill_in_last_segment;
+ 
+@@ -2084,7 +2339,10 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 	if (chain_idx < 0)
+ 		return -1;
+ 	chain_req = &mrioc->chain_sgl_list[chain_idx];
+-	priv->chain_idx = chain_idx;
++	if (meta_sg)
++		priv->meta_chain_idx = chain_idx;
++	else
++		priv->chain_idx = chain_idx;
+ 
+ 	chain = chain_req->addr;
+ 	chain_dma = chain_req->dma_addr;
+@@ -2134,6 +2392,13 @@ static int mpi3mr_build_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 	if (ret)
+ 		return ret;
+ 
++	if (scsiio_req->MsgFlags == MPI3_SCSIIO_MSGFLAGS_METASGL_VALID) {
++		/* There is a valid meta sg */
++		scsiio_req->Flags |=
++		    cpu_to_le32(MPI3_SCSIIO_FLAGS_DMAOPERATION_HOST_PI);
++		ret = mpi3mr_prepare_sg_scmd(mrioc, scmd, scsiio_req);
++	}
++
+ 	return ret;
  }
  
- /**
-@@ -446,6 +475,36 @@ static irqreturn_t mpi3mr_isr(int irq, void *privdata)
-  */
- static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
- {
-+	struct mpi3mr_intr_info *intr_info = privdata;
-+	struct mpi3mr_ioc *mrioc;
-+	u16 midx;
-+	u32 num_admin_replies = 0, num_op_reply = 0;
-+
-+	if (!intr_info || !intr_info->op_reply_q)
-+		return IRQ_NONE;
-+
-+	mrioc = intr_info->mrioc;
-+	midx = intr_info->msix_index;
-+
-+	/* Poll for pending IOs completions */
-+	do {
-+		if (!mrioc->intr_enabled)
-+			break;
-+
-+		if (!midx)
-+			num_admin_replies = mpi3mr_process_admin_reply_q(mrioc);
-+		if (intr_info->op_reply_q)
-+			num_op_reply +=
-+			    mpi3mr_process_op_reply_q(mrioc, intr_info);
-+
-+		usleep_range(mrioc->irqpoll_sleep, 10 * mrioc->irqpoll_sleep);
-+
-+	} while (atomic_read(&intr_info->op_reply_q->pend_ios) &&
-+	    (num_op_reply < mrioc->max_host_ios));
-+
-+	intr_info->op_reply_q->enable_irq_poll = false;
-+	enable_irq(pci_irq_vector(mrioc->pdev, midx));
-+
- 	return IRQ_HANDLED;
- }
+@@ -3200,6 +3465,8 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 	scsiio_req->Function = MPI3_FUNCTION_SCSI_IO;
+ 	scsiio_req->HostTag = cpu_to_le16(host_tag);
  
-@@ -1161,6 +1220,9 @@ static int mpi3mr_create_op_reply_q(struct mpi3mr_ioc *mrioc, u16 qidx)
- 	op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD;
- 	op_reply_q->ci = 0;
- 	op_reply_q->ephase = 1;
-+	atomic_set(&op_reply_q->pend_ios, 0);
-+	atomic_set(&op_reply_q->in_use, 0);
-+	op_reply_q->enable_irq_poll = false;
- 
- 	if (!op_reply_q->q_segments) {
- 		retval = mpi3mr_alloc_op_reply_q_segments(mrioc, qidx);
-@@ -1482,6 +1544,10 @@ int mpi3mr_op_request_post(struct mpi3mr_ioc *mrioc,
- 		pi = 0;
- 	op_req_q->pi = pi;
- 
-+	if (atomic_inc_return(&mrioc->op_reply_qinfo[reply_qidx].pend_ios)
-+	    > MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT)
-+		mrioc->op_reply_qinfo[reply_qidx].enable_irq_poll = true;
++	mpi3mr_setup_eedp(mrioc, scmd, scsiio_req);
 +
- 	writel(op_req_q->pi,
- 	    &mrioc->sysif_regs->OperQueueIndexes[reply_qidx].ProducerIndex);
+ 	memcpy(scsiio_req->CDB.CDB32, scmd->cmnd, scmd->cmd_len);
+ 	scsiio_req->DataLength = cpu_to_le32(scsi_bufflen(scmd));
+ 	scsiio_req->DevHandle = cpu_to_le16(dev_handle);
+@@ -3425,6 +3692,32 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	shost->max_channel = 1;
+ 	shost->max_id = 0xFFFFFFFF;
  
-@@ -2783,6 +2849,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 	u32 ioc_status, ioc_config, i;
- 	Mpi3IOCFactsData_t facts_data;
- 
-+	mrioc->irqpoll_sleep = MPI3MR_IRQ_POLL_SLEEP;
- 	mrioc->change_count = 0;
- 	if (!re_init) {
- 		mrioc->cpu_count = num_online_cpus();
-@@ -3068,6 +3135,8 @@ static void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
- 		mrioc->op_reply_qinfo[i].ci = 0;
- 		mrioc->op_reply_qinfo[i].num_replies = 0;
- 		mrioc->op_reply_qinfo[i].ephase = 0;
-+		atomic_set(&mrioc->op_reply_qinfo[i].pend_ios, 0);
-+		atomic_set(&mrioc->op_reply_qinfo[i].in_use, 0);
- 		mpi3mr_memset_op_reply_q_buffers(mrioc, i);
- 
- 		mrioc->req_qinfo[i].ci = 0;
++	if (prot_mask >= 0)
++		scsi_host_set_prot(shost, prot_mask);
++	else {
++		prot_mask = SHOST_DIF_TYPE1_PROTECTION
++		    | SHOST_DIF_TYPE2_PROTECTION
++		    | SHOST_DIF_TYPE3_PROTECTION;
++		scsi_host_set_prot(shost, prot_mask);
++
++	}
++
++	ioc_info(mrioc,
++	    "%s :host protection capabilities enabled %s%s%s%s%s%s%s\n",
++	    __func__,
++	    (prot_mask & SHOST_DIF_TYPE1_PROTECTION) ? " DIF1" : "",
++	    (prot_mask & SHOST_DIF_TYPE2_PROTECTION) ? " DIF2" : "",
++	    (prot_mask & SHOST_DIF_TYPE3_PROTECTION) ? " DIF3" : "",
++	    (prot_mask & SHOST_DIX_TYPE0_PROTECTION) ? " DIX0" : "",
++	    (prot_mask & SHOST_DIX_TYPE1_PROTECTION) ? " DIX1" : "",
++	    (prot_mask & SHOST_DIX_TYPE2_PROTECTION) ? " DIX2" : "",
++	    (prot_mask & SHOST_DIX_TYPE3_PROTECTION) ? " DIX3" : "");
++
++	if (prot_guard_mask)
++		scsi_host_set_guard(shost, (prot_guard_mask & 3));
++	else
++		scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
++
+ 	snprintf(mrioc->fwevt_worker_name, sizeof(mrioc->fwevt_worker_name),
+ 	    "%s%d_fwevt_wrkr", mrioc->driver_name, mrioc->id);
+ 	mrioc->fwevt_worker_thread = alloc_ordered_workqueue(
 -- 
 2.18.1
 
@@ -332,7 +608,7 @@ this e-mail is strictly prohibited. If you received this e-mail in error,
 please return the e-mail to the sender, delete it from your computer, and 
 destroy any printed copy of it.
 
---0000000000006da2a205b70ad210
+--0000000000008246d605b70ad32e
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -402,14 +678,14 @@ pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
 M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
 1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
 IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
-RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgCVQBOHFn
-RH3POQIFDpAf4bYp+bBZrb/y7NivuKnSwhwwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMjAxMjIyMTAxMzExWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgTBz1/7O+
+OJobZTDpfcgWoDyExo9u+l9qjuaj/nogbCIwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjAxMjIyMTAxMzI5WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
 BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
-9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAKR/vlqA40k+bCE2IMmvGHb7NBhp
-Re1GgH3EUyEVyCEGTyqAaNxXdUgKpMAadAnBmNosEhuXGuuavAyUZH9trQSwGaC5DHv3Hk+BM2W0
-2EiSq2YzaZIXXP3Sv0r0X9rx7kuzF3EIZ3fkaPejzfWHlAUEv0YtLvAwWXQIxVd7fvS1X/GsnsZ7
-qUwor9m1SHSSWbL4dZqNm0er9u1P3Bw6ktBfRcBcNsBGpnwqpxJG/J19ElsTxS/sKV7xds9WT85L
-gxZYvV8+9+sNpsz4nsj38XwpT/NjV/RXfwx1Ekpnm9RxHvkzRIBF0citv4TyREMEKuayzHEs7hxj
-B+UpguJGN5Y=
---0000000000006da2a205b70ad210--
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAKvmbjKUK0a398i1QCjcV83jteb3
+eh+2oslBYDFg7Fokvox4H4i3f7RGY+YfIBIFQAuEzCuCF63chrhNjJTOmLLbu5ZCClV0bhcI+FuI
+dG4703MUu96ipxHLrmVkPAOYwxhKZeK0x95LJHrd+t1JVcjln8n+FYHIztFffiSKFsLRpoVVP4Ga
+sjp0fCX2CiubYHGBBnEmU3mbnS/pmTbTwZKF6emPvm1i4ogaKqtGJnXH56cUs2MHENiDBVKgSALi
+wEvzRJufhOOX0BhJKK9UXhfanJLAUDuHnvcBefYPYh/I6oFok5OPydN3tmIO6300TFB+hL404QG+
+KAp6lsJqQNM=
+--0000000000008246d605b70ad32e--
