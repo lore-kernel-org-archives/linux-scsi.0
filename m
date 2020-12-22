@@ -5,56 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6377DC433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:13:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20986C433E9
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:13:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 164692310D
+	by mail.kernel.org (Postfix) with ESMTP id C57B52310D
 	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:13:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726288AbgLVKNn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 05:13:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56770 "EHLO
+        id S1726296AbgLVKNo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 05:13:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
         with ESMTP id S1726108AbgLVKNn (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 05:13:43 -0500
-Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E66ADC06179C
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:08 -0800 (PST)
-Received: by mail-pg1-x536.google.com with SMTP id z21so8082379pgj.4
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:13:08 -0800 (PST)
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A7C5C0611C5
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:12:44 -0800 (PST)
+Received: by mail-pf1-x42a.google.com with SMTP id x126so8191389pfc.7
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:12:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=hSFuTn4c87Zp1tlZj/IOFhsdE2XdxzRXMSEk2Co6yxY=;
-        b=VAakUyiAoIIzrdXh0nr3Iv5+jL8ZVaIyJDdIu29oxLnUcC8L82XXBzL8SnbMXa5Uwu
-         nsQJfb0umzGWdL04JovnqMYbfnDIrY4vcggUCVXq8913/hXl9Xdwofmni6v0y7nask9T
-         EyK+/OVXI9szMqaZI7GrqqF9mqtm6MUd79Yfc=
+        bh=2RONE9y+uxltJlujg/fWWZv12wPgedJ1DHm234rEqII=;
+        b=UBuFCGYMrcsj26sNbY0Y4+vfyqc5F9jHEKywXFQchUxk960V06w1kjxw31SjUk/6Gl
+         2MGzhA/+S8fQSyu+1EuirtlUyKD1LlcbUz9Ru8/T6L7N8kPyEFwhrqHxOGRuKBVgpo6l
+         QfB66hTjT6lZqzV1TQnSHvg49AFybCK3ixy68=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:from:to:cc:subject:date:message-id
          :in-reply-to:references;
-        bh=hSFuTn4c87Zp1tlZj/IOFhsdE2XdxzRXMSEk2Co6yxY=;
-        b=dXEeMLXPuV4y1vqdzk1NbykuUfNdVqooU4knRNr7SLdfX8HRRflRdzGLF0ch5Fgf2R
-         lWCW9MaBArFFRMLYZm9EyiBSP6DhmyHIrCl1gzuW7UZ9y9IXJ7weq2ZAc7fEX7f7Y3bz
-         1Yh3HkJAn9+VxYDdCQm1mq/ETurf1jIroE9/sukMGGlepEoMpNJKlu0wkRH9dIJ6O4+7
-         lRzNV3Dj6vt18dsBfACogUa3JHwU2Ph9fcjHFYRVobton6RvI24x7dWNIu7mKV/s3JsV
-         TzhIVElNDgPAOvJme+q3N998+Z1pi24tMN5uD0xD2l1dnmf6JOUkbilFZX/Atgus2sBZ
-         OLVw==
-X-Gm-Message-State: AOAM532+Twjc76hBB1vN07vFskTd/gKHyQom+iAdU8gsucZkYCS8zsRI
-        O4hHoCCJZkyqAyWAcDQulJmBQ2aJtjaFBGiLRTwLDfvH3V73WRQN45AHX2og2C4C9kCsx5BppK4
-        pux7IovgmEMxRWswNySsniGi7AG/7iXmxbxB2ESgmcl5t5Gc0WSEISSKSvbh8yWj4R/si3Wo8BX
-        IKCAALsWGJ
+        bh=2RONE9y+uxltJlujg/fWWZv12wPgedJ1DHm234rEqII=;
+        b=CJtZo37G5j5FMrI6dlAikX7retdM0hJLYIP7+uGXlNdp5RJA68yKwBzyg09RRjIsRY
+         GvZAjSSc0BS9zL4m0RJC1pIzKm0omfOab7zknEpZl3GjIeZbK51orvyu23DwnMtMmlqg
+         qyhKMJq/QHR4bku3K++G0a2cJZmV7SuWC2uCeI7/1Me0OFrFPhMzQqn6+uZ/Q6T1PTPF
+         TwauGmXuZiBBQH6M1CCkA05Aw+vv+pZPZiI8vOPLqtQcl820MWeWsUZi+ifJ9yCjBXfF
+         v+aylb0+fJC2r2mYNrUnpkx8bdFmd8rN4yY41hmHr7lSzW7XBpjGpEIqC8Svh+doDrvr
+         A+NQ==
+X-Gm-Message-State: AOAM532Q7GyLMycnzKmJibf7D6dxHMjFNNtfO1gJ3IZalmLb73AY+ye+
+        9mpTi24nTdAfhcTgCpu9eIOGd36s9fLmiOMBWbPyrLEad7wayTyorZkmDjdbkJQ636Tr7V245Eq
+        B4iAnlPaTyO+4DSdXMactkugmEzS6LgwpDw8UKqMxOhTxP6pezyhGZLEtJSTfe+1/avqkaHcT+6
+        CpfzVcHQPd
 MIME-Version: 1.0
-X-Google-Smtp-Source: ABdhPJx9ydENXooi6qrljDeWmobQ4alFvT5KN7AvOE/enGw9oIObCJV7cf2AH4Sdp083FIgospMInQ==
-X-Received: by 2002:a63:c00e:: with SMTP id h14mr16187937pgg.108.1608631988049;
-        Tue, 22 Dec 2020 02:13:08 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJw1xdUHQ3qwMZDfISTIzjtSwn8qmW6wDeb4CrbSqn1kvwjVnjAJMDlaM5b9L/W6NlkWgHRl+g==
+X-Received: by 2002:a62:1a47:0:b029:19b:c093:2766 with SMTP id a68-20020a621a470000b029019bc0932766mr19505720pfa.10.1608631963223;
+        Tue, 22 Dec 2020 02:12:43 -0800 (PST)
 Received: from drv-bst-rhel8.static.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id p16sm19148624pju.47.2020.12.22.02.13.05
+        by smtp.gmail.com with ESMTPSA id p16sm19148624pju.47.2020.12.22.02.12.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Dec 2020 02:13:07 -0800 (PST)
+        Tue, 22 Dec 2020 02:12:42 -0800 (PST)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -62,148 +62,110 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: [PATCH 16/24] mpi3mr: hardware workaround for UNMAP commands to nvme drives
-Date:   Tue, 22 Dec 2020 15:41:48 +0530
-Message-Id: <20201222101156.98308-17-kashyap.desai@broadcom.com>
+Subject: [PATCH 08/24] mpi3mr: add support of event handling part-3
+Date:   Tue, 22 Dec 2020 15:41:40 +0530
+Message-Id: <20201222101156.98308-9-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20201222101156.98308-1-kashyap.desai@broadcom.com>
 References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000003fbd0705b70ad22d"
+        boundary="000000000000c5629805b70ad024"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000003fbd0705b70ad22d
+--000000000000c5629805b70ad024
 Content-Type: text/plain; charset="US-ASCII"
 
-The controller hardware can not handle certain unmap commands for NVMe
-drives, this patch adds support in the driver to check those commands and
-handle as appropriate.
+Firmware can report various MPI Events.
+Support for certain Events (as listed below) are enabled in the driver
+and their processing in driver is covered in this patch.
+
+MPI3_EVENT_SAS_BROADCAST_PRIMITIVE
+MPI3_EVENT_CABLE_MGMT
+MPI3_EVENT_ENERGY_PACK_CHANGE
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Cc: sathya.prakash@broadcom.com
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 99 +++++++++++++++++++++++++++++++++
- 1 file changed, 99 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |  3 +++
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 37 +++++++++++++++++++++++++++++++++
+ 2 files changed, 40 insertions(+)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index c70c75fdac5c..de2de39c719e 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -2735,8 +2735,11 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST);
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DISCOVERY);
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR);
++	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_BROADCAST_PRIMITIVE);
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST);
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_ENUMERATION);
++	mpi3mr_unmask_events(mrioc, MPI3_EVENT_CABLE_MGMT);
++	mpi3mr_unmask_events(mrioc, MPI3_EVENT_ENERGY_PACK_CHANGE);
+ 
+ 	retval = mpi3mr_issue_event_notification(mrioc);
+ 	if (retval) {
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 07a7b1efbc4f..742cf45d4878 100644
+index 5be25fbe0e5b..9999d4c9be05 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2865,6 +2865,100 @@ static int mpi3mr_target_alloc(struct scsi_target *starget)
- 	return retval;
+@@ -1500,6 +1500,36 @@ static void mpi3mr_devstatuschg_evt_th(struct mpi3mr_ioc *mrioc,
+ 
  }
  
 +/**
-+ * mpi3mr_check_return_unmap - Whether an unmap is allowed
++ * mpi3mr_energypackchg_evt_th - Energy pack change evt tophalf
 + * @mrioc: Adapter instance reference
-+ * @scmd: SCSI Command reference
++ * @event_reply: Event data
 + *
-+ * The controller hardware cannot handle certain unmap commands
-+ * for NVMe drives, this routine checks those and return true
-+ * and completes the SCSI command with proper status and sense
-+ * data.
++ * Identifies the new shutdown timeout value and update.
 + *
-+ * Return: TRUE for not  allowed unmap, FALSE otherwise.
++ * Return: Nothing
 + */
-+static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
-+	struct scsi_cmnd *scmd)
++static void mpi3mr_energypackchg_evt_th(struct mpi3mr_ioc *mrioc,
++	Mpi3EventNotificationReply_t *event_reply)
 +{
-+	unsigned char *buf;
-+	u16 param_len, desc_len;
++	Mpi3EventDataEnergyPackChange_t *evtdata =
++	    (Mpi3EventDataEnergyPackChange_t *)event_reply->EventData;
++	u16 shutdown_timeout = le16_to_cpu(evtdata->ShutdownTimeout);
 +
-+	param_len = get_unaligned_be16(scmd->cmnd + 7);
-+
-+	if (!param_len) {
++	if (shutdown_timeout <= 0) {
 +		ioc_warn(mrioc,
-+		    "%s: CDB received with zero parameter length\n",
-+		    __func__);
-+		scsi_print_command(scmd);
-+		scmd->result = DID_OK << 16;
-+		scmd->scsi_done(scmd);
-+		return true;
++		    "%s :Invalid Shutdown Timeout received = %d\n",
++		    __func__, shutdown_timeout);
++		return;
 +	}
 +
-+	if (param_len < 24) {
-+		ioc_warn(mrioc,
-+		    "%s: CDB received with invalid param_len: %d\n",
-+		    __func__, param_len);
-+		scsi_print_command(scmd);
-+		scmd->result = (DRIVER_SENSE << 24) |
-+		    SAM_STAT_CHECK_CONDITION;
-+		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
-+		    0x1A, 0);
-+		scmd->scsi_done(scmd);
-+		return true;
-+	}
-+	if (param_len != scsi_bufflen(scmd)) {
-+		ioc_warn(mrioc,
-+		    "%s: CDB received with param_len: %d bufflen: %d\n",
-+		    __func__, param_len, scsi_bufflen(scmd));
-+		scsi_print_command(scmd);
-+		scmd->result = (DRIVER_SENSE << 24) |
-+		    SAM_STAT_CHECK_CONDITION;
-+		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
-+		    0x1A, 0);
-+		scmd->scsi_done(scmd);
-+		return true;
-+	}
-+	buf = kzalloc(scsi_bufflen(scmd), GFP_ATOMIC);
-+	if (!buf) {
-+		scsi_print_command(scmd);
-+		scmd->result = (DRIVER_SENSE << 24) |
-+		    SAM_STAT_CHECK_CONDITION;
-+		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
-+		    0x55, 0x03);
-+		scmd->scsi_done(scmd);
-+		return true;
-+	}
-+	scsi_sg_copy_to_buffer(scmd, buf, scsi_bufflen(scmd));
-+	desc_len = get_unaligned_be16(&buf[2]);
-+
-+	if (desc_len < 16) {
-+		ioc_warn(mrioc,
-+		    "%s: Invalid descriptor length in param list: %d\n",
-+		    __func__, desc_len);
-+		scsi_print_command(scmd);
-+		scmd->result = (DRIVER_SENSE << 24) |
-+		    SAM_STAT_CHECK_CONDITION;
-+		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
-+		    0x26, 0);
-+		scmd->scsi_done(scmd);
-+		kfree(buf);
-+		return true;
-+	}
-+
-+	if (param_len > (desc_len + 8)) {
-+		scsi_print_command(scmd);
-+		ioc_warn(mrioc,
-+		    "%s: Truncating param_len(%d) to desc_len+8(%d)\n",
-+		    __func__, param_len, (desc_len + 8));
-+		param_len = desc_len + 8;
-+		put_unaligned_be16(param_len, scmd->cmnd+7);
-+		scsi_print_command(scmd);
-+	}
-+
-+	kfree(buf);
-+	return false;
++	ioc_info(mrioc,
++	    "%s :Previous Shutdown Timeout Value = %d New Shutdown Timeout Value = %d\n",
++	    __func__, mrioc->facts.shutdown_timeout, shutdown_timeout);
++	mrioc->facts.shutdown_timeout = shutdown_timeout;
 +}
- 
- /**
-  * mpi3mr_allow_scmd_to_fw - Command is allowed during shutdown
-@@ -2957,6 +3051,11 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
- 		goto out;
- 	}
- 
-+	if ((scmd->cmnd[0] == UNMAP) &&
-+	    (stgt_priv_data->dev_type == MPI3_DEVICE_DEVFORM_PCIE) &&
-+	    mpi3mr_check_return_unmap(mrioc, scmd))
-+		goto out;
 +
- 	host_tag = mpi3mr_host_tag_for_scmd(mrioc, scmd);
- 	if (host_tag == MPI3MR_HOSTTAG_INVALID) {
- 		scmd->result = DID_ERROR << 16;
++
+ /**
+  * mpi3mr_os_handle_events - Firmware event handler
+  * @mrioc: Adapter instance reference
+@@ -1563,9 +1593,16 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 		process_evt_bh = 1;
+ 		break;
+ 	}
++	case MPI3_EVENT_ENERGY_PACK_CHANGE:
++	{
++		mpi3mr_energypackchg_evt_th(mrioc, event_reply);
++		break;
++	}
+ 	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
+ 	case MPI3_EVENT_SAS_DISCOVERY:
++	case MPI3_EVENT_CABLE_MGMT:
+ 	case MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR:
++	case MPI3_EVENT_SAS_BROADCAST_PRIMITIVE:
+ 	case MPI3_EVENT_PCIE_ENUMERATION:
+ 		break;
+ 	default:
 -- 
 2.18.1
 
@@ -221,7 +183,7 @@ this e-mail is strictly prohibited. If you received this e-mail in error,
 please return the e-mail to the sender, delete it from your computer, and 
 destroy any printed copy of it.
 
---0000000000003fbd0705b70ad22d
+--000000000000c5629805b70ad024
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -291,14 +253,14 @@ pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
 M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
 1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
 IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
-RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgT7E3MoqS
-FjuynMQPLK6al4YivfdzBqYmIYA23iY6JFkwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMjAxMjIyMTAxMzA4WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQginFY1XYm
+rFRYnyZ4F4uBIcGkF8j7qRbzY8BflgCcs6swGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjAxMjIyMTAxMjQzWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
 BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
-9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAFe6BrD5MtZZmPOqWJwJd/jBtEIv
-4yfR7FN4452AJBO7rlBGxTwqV8Zd78oV4oWDXdAlT2k9FhuM2zCiMl/+IV6pme/agoUOPbGba9Gj
-ehdIohtp8jBXyRydB6P5SOpKlSCb2oJNabZOficKCdfTRGCVRx8hFqDC9MAqNPjmfHFTopkQa36d
-6WqAuVENm6/nxvZqNJUpZ3ZheF/1/Q5Ky59rfF3V41TemQFlLuh93UbHizvqdgwFlk96nNJ3MMUZ
-Ut386ELoRLTMVh83nbWY1SlBJozlEBwXn1p40eL8lz1bX75Hb4F09czCn+9foefkPbQ41GbEgp80
-mlugdPqAz4M=
---0000000000003fbd0705b70ad22d--
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBALa0kL5eowz6/KIa571tZhmc378R
+A3VGVOuR33pQEUlJX9JEvG6vw/oDWL7wbiCC8zzlB+OvtDhjRrxiYWp8Eg7nP+jbiz/eEbRbzgUo
+PDygxBktpNBKZpk8uc4QvaZck/PhCANTJVXf+WmE6ziZ2AfoFFqbQ0MGgJCEvnmzIGHy7zf6Z0Zy
+q3YwYUDV4JcWMm1gzmEDLkbB0H/0ck7/83nPJ/EUVldZ0J75XYMxQ5uZNeSGs/2hAVTVppp3qgze
+XYNmp92emgZnrbEPoGYtDeTH+CEv9IBvZV5t+C9LpKzdd4VTnBhB70rcvbMNU/XMUuin2br5+kkN
+1f15zCfxTDI=
+--000000000000c5629805b70ad024--
