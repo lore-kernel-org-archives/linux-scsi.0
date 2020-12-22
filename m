@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08D39C433E6
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BADEFC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:13:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7F322310D
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:13:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CB8F2310D
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 10:13:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726329AbgLVKNr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 05:13:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56832 "EHLO
+        id S1726340AbgLVKNt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 05:13:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726316AbgLVKNr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 05:13:47 -0500
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3E7BC0611CB
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:12:53 -0800 (PST)
-Received: by mail-pf1-x432.google.com with SMTP id d2so8190271pfq.5
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:12:53 -0800 (PST)
+        with ESMTP id S1726316AbgLVKNt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 05:13:49 -0500
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E94EC0611CC
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:12:56 -0800 (PST)
+Received: by mail-pj1-x1034.google.com with SMTP id iq13so1070316pjb.3
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2020 02:12:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=5T0scFpIPt8lokGW6oEnqV/V1SJh3l6GKU/AG/F/ghE=;
-        b=ga1i2hkdm6c0c+Olz5pfsc5df9jJSXGYLv5P9xNeTonu2JIny7NwLzCVtXLOIXesNl
-         cS0fbkBchR+3VqrNK9ghTr1BPl+6xVBlZjzneBTNlGx4f/GnFIvl2dQZ7z3PPOUnZ8OM
-         WVs4bUxTKQQUN6wqMV78uH8BNKpqZCncb7ejg=
+        bh=oqjCRVRhTd07AAe3AjPYo4TYB8xHyAF97592c2J624E=;
+        b=KqTyzpLlhJBM9F2jFFO7PZGRzYOXCBOr2TzhRp4NsYYYsnLJonT/EsZAeBBqZtN7Az
+         8holHwexlD3XJF34M/Xjgi7w38tm9HLDxFn1/E5p9rfIgERAxrGLdhO+HlYJMYP6cckW
+         gb3LGUAimhfd3HKhpJcGMq7fStDIsfZjHYjm4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:from:to:cc:subject:date:message-id
          :in-reply-to:references;
-        bh=5T0scFpIPt8lokGW6oEnqV/V1SJh3l6GKU/AG/F/ghE=;
-        b=AkncL+zvWrQZW1V6jIoggWCosdgCgA4l/lvg+XUfC0UtpAie+sV8brA5JQBmaD1ue9
-         8C0RantWMe62ongZK+H21UyEo4inQ3KnZQeEprgMxDVpaMNxLMWFWViZn6m5sEZSQdZR
-         rxsMvd+xZdTKnXVhDqOooDCWypAtuWpJ7ehOxTJ1HfLwhi7Pi847WapJB71VhuYPtFvz
-         bcEQv1B2UbmIwzPqJeIJWzT0AVimvck8o6swCpkOVBrxCA5Ud5t/V5LZO7/6dfgppuci
-         dH/46bdmaU/6qA3FvmQeoJ2tOFINw7WRbU74FUbPjUabrkif8eCXVCa3XXKhSPWRKTqj
-         ilkw==
-X-Gm-Message-State: AOAM532dei6XmBAGe1gJGVH/HVnuzPXh3OQ4E3T7b0qiNfEcMjS/JGlm
-        1GuMrMBhJ/Snd1yYg48/BZyu8Ag/b1A7IMT1vLmvZreEJVsSgBU6CfZaCTebIqEDTNIaGFzKrvF
-        u7AKbPJH8PSGdTwJzesLwxgScFb9F9u/u7VcwfJatCoQ7YXfDQKvUn8RfGASKqwN5ctiakWGKcO
-        +tRqEnc57E
+        bh=oqjCRVRhTd07AAe3AjPYo4TYB8xHyAF97592c2J624E=;
+        b=SM0QoAtARy+sYeGx7M01mu/Yu9IkS6Az9pRUCMc9/yWWYa4QYuzKeXWbunUX2YcHeX
+         iVgiccZIxTJ08ErvfHoDfcG92a7zuyD4Ltpyy6CWx2uMBUicIhXAcHhNFnhctdPGzDMP
+         ebO0sc91mCnykcTa0NKU15vFbjc0k8VCAHS6XevFP6QwiE4hutroEc5Fk6nyCoh0UFk7
+         0oQJiEmu7c8QYKLdcKqhD7wBbS08NeDES2T57lTqGR89/9ZL9Ykogk6mPi2acoHMyNWC
+         CLP+5uJy3sFfyYy8JrkVywMaq/8u56yzN2/7parWA4lTDOEK9IqHlCTzrOMREMhqwUQV
+         Pwtg==
+X-Gm-Message-State: AOAM530sVATlXF914/TQaS8iqo3OLilOukOot0PtzhTLbLPdYQDghntG
+        olD7D/aDFI97L22REfxi3X9ro0yl66/X4gDdghW2zHyUtEkqUct+tkic/DZ/goz2luT+qbelTQB
+        42W93WdVbpWjYsvWyKKybMgZ8hFUf7jpNm9umybMSGc5Oe/zLV6YewnZ0f23FaGaLR0SnKjku3G
+        wcmG221Jd6
 MIME-Version: 1.0
-X-Google-Smtp-Source: ABdhPJz6oVlYpqxZebNzkUuEirgxHDfiNCpXTwOQd2H2ik8VE9/ca3Jq+mVmPTBOXZ3OVlDVv7RhaQ==
-X-Received: by 2002:a05:6a00:2382:b029:198:15a2:aaf9 with SMTP id f2-20020a056a002382b029019815a2aaf9mr19177943pfc.39.1608631972689;
-        Tue, 22 Dec 2020 02:12:52 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJzeWQ0Pj4QVbqX2+inZk+zL7184AkGOwlZmB0CSxFdTgJBvFhAZYczMTh4GSaj4UwlIrE2lnA==
+X-Received: by 2002:a17:90a:fa8e:: with SMTP id cu14mr21656704pjb.140.1608631975790;
+        Tue, 22 Dec 2020 02:12:55 -0800 (PST)
 Received: from drv-bst-rhel8.static.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id p16sm19148624pju.47.2020.12.22.02.12.49
+        by smtp.gmail.com with ESMTPSA id p16sm19148624pju.47.2020.12.22.02.12.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Dec 2020 02:12:52 -0800 (PST)
+        Tue, 22 Dec 2020 02:12:55 -0800 (PST)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -62,108 +62,85 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: [PATCH 11/24] mpi3mr: print ioc info for debugging
-Date:   Tue, 22 Dec 2020 15:41:43 +0530
-Message-Id: <20201222101156.98308-12-kashyap.desai@broadcom.com>
+Subject: [PATCH 12/24] mpi3mr: add bios_param shost template hook
+Date:   Tue, 22 Dec 2020 15:41:44 +0530
+Message-Id: <20201222101156.98308-13-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20201222101156.98308-1-kashyap.desai@broadcom.com>
 References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000054ecfd05b70ad190"
+        boundary="00000000000084957005b70ad1b5"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000054ecfd05b70ad190
+--00000000000084957005b70ad1b5
 Content-Type: text/plain; charset="US-ASCII"
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Cc: sathya.prakash@broadcom.com
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 63 +++++++++++++++++++++++++++++++++
- 1 file changed, 63 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 40 +++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 10ff287e78db..aad0a2bd06b9 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2540,6 +2540,68 @@ int mpi3mr_issue_port_enable(struct mpi3mr_ioc *mrioc, u8 async)
- 	return retval;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 4d94352a4d48..7e0eacf45d84 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -2078,6 +2078,45 @@ static int mpi3mr_build_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 	return ret;
  }
  
 +/**
-+ * mpi3mr_print_ioc_info - Display controller information
-+ * @mrioc: Adapter instance reference
++ * mpi3mr_bios_param - BIOS param callback
++ * @sdev: SCSI device reference
++ * @bdev: Block device reference
++ * @capacity: Capacity in logical sectors
++ * @params: Parameter array
 + *
-+ * Display controller personalit, capability, supported
-+ * protocols etc.
++ * Just the parameters with heads/secots/cylinders.
 + *
-+ * Return: Nothing
++ * Return: 0 always
 + */
-+static void
-+mpi3mr_print_ioc_info(struct mpi3mr_ioc *mrioc)
++static int mpi3mr_bios_param(struct scsi_device *sdev,
++	struct block_device *bdev, sector_t capacity, int params[])
 +{
-+	int i = 0;
-+	char personality[16];
-+	struct mpi3mr_compimg_ver *fwver = &mrioc->facts.fw_ver;
++	int heads;
++	int sectors;
++	sector_t cylinders;
++	ulong dummy;
 +
-+	switch (mrioc->facts.personality) {
-+	case MPI3_IOCFACTS_FLAGS_PERSONALITY_EHBA:
-+		strcpy(personality, "Enhanced HBA");
-+		break;
-+	case MPI3_IOCFACTS_FLAGS_PERSONALITY_RAID_DDR:
-+		strcpy(personality, "RAID");
-+		break;
-+	default:
-+		strcpy(personality, "Unknown");
-+		break;
++	heads = 64;
++	sectors = 32;
++
++	dummy = heads * sectors;
++	cylinders = capacity;
++	sector_div(cylinders, dummy);
++
++	if ((ulong)capacity >= 0x200000) {
++		heads = 255;
++		sectors = 63;
++		dummy = heads * sectors;
++		cylinders = capacity;
++		sector_div(cylinders, dummy);
 +	}
 +
-+	ioc_info(mrioc, "Running in %s Personality", personality);
-+
-+	ioc_info(mrioc, "FW Version(%d.%d.%d.%d.%d.%d)\n",
-+	fwver->gen_major, fwver->gen_minor, fwver->ph_major,
-+	    fwver->ph_minor, fwver->cust_id, fwver->build_num);
-+
-+	ioc_info(mrioc, "Protocol=(");
-+
-+	if (mrioc->facts.protocol_flags &
-+	    MPI3_IOCFACTS_PROTOCOL_SCSI_INITIATOR) {
-+		pr_cont("Initiator");
-+		i++;
-+	}
-+
-+	if (mrioc->facts.protocol_flags &
-+	    MPI3_IOCFACTS_PROTOCOL_SCSI_TARGET) {
-+		pr_cont("%sTarget", i ? "," : "");
-+		i++;
-+	}
-+
-+	if (mrioc->facts.protocol_flags &
-+	    MPI3_IOCFACTS_PROTOCOL_NVME) {
-+		pr_cont("%sNVMe attachment", i ? "," : "");
-+		i++;
-+	}
-+	pr_cont("), ");
-+	pr_cont("Capabilities=(");
-+
-+	if (mrioc->facts.ioc_capabilities &
-+	    MPI3_IOCFACTS_CAPABILITY_RAID_CAPABLE)
-+		pr_cont("RAID");
-+
-+	pr_cont(")\n");
++	params[0] = heads;
++	params[1] = sectors;
++	params[2] = cylinders;
++	return 0;
 +}
  
  /**
-  * mpi3mr_cleanup_resources - Free PCI resources
-@@ -2798,6 +2860,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 		}
- 
- 	}
-+	mpi3mr_print_ioc_info(mrioc);
- 
- 	retval = mpi3mr_alloc_reply_sense_bufs(mrioc);
- 	if (retval) {
+  * mpi3mr_map_queues - Map queues callback handler
+@@ -2511,6 +2550,7 @@ static struct scsi_host_template mpi3mr_driver_template = {
+ 	.slave_destroy			= mpi3mr_slave_destroy,
+ 	.scan_finished			= mpi3mr_scan_finished,
+ 	.scan_start			= mpi3mr_scan_start,
++	.bios_param			= mpi3mr_bios_param,
+ 	.map_queues			= mpi3mr_map_queues,
+ 	.no_write_same			= 1,
+ 	.can_queue			= 1,
 -- 
 2.18.1
 
@@ -181,7 +158,7 @@ this e-mail is strictly prohibited. If you received this e-mail in error,
 please return the e-mail to the sender, delete it from your computer, and 
 destroy any printed copy of it.
 
---00000000000054ecfd05b70ad190
+--00000000000084957005b70ad1b5
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -251,14 +228,14 @@ pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
 M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
 1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
 IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
-RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgISOEdL0i
-zIBpCxuSZSQ9GSiEWzcQKY/31XZ69WE2b7YwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMjAxMjIyMTAxMjUzWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgU5w8mzHO
+H4aSbOyeiX+fLUMh76k5N1IoGbOiePnf0qUwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjAxMjIyMTAxMjU2WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
 BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
-9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAGmJTg7qmXTsg3cVtexVpA+GDLku
-iivD/HsAN6Y36Tsi5B8zx9LRRjoXGlfDjjAugWqyNaTAxQgG9n1bx/IXeXZesgEY4t2yZ/82JOtq
-/Z/2yruguV7ZidlwfYz3N1PkSj8eiFdqS64Mh6hB0MIQOTJYt4tFOLQ2fpR+UAflA47txHUHyVHQ
-znu/IQWJrFoYdjD79IKA6G8FfAHGXgyCisfJv9xNI2AXawvfd02Nb+BhbO6H6c0w0VlT48g1/Hk1
-23wLKH8ICRvZDTTN2np2jFOx9v8gkKlJFKY+6WFNLpnbR3bZz07/iIzS2OuRu2jy8PUOPuC47nPm
-m+bTmKt0q88=
---00000000000054ecfd05b70ad190--
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBALTky/Jgre8ALRYmsJtKItc+xMt3
+VFx5CQf/oAmCcktCI+rRY0coN2SYNl7ZYf767ygRZCy94opsQrotRqzB2pTL9owCGrD+MTwGc2Jk
+rQoyxWt0cLhyhSWh6NiGRX7cbxoTumbA8ShuUkGZPDW/LNuvIQEy2XJzfOyyXLvdstelcAgbAhkn
+wzBaWrGwuUHxZ1lQx+3d/MFUjvecRTs22HF/5LC/5Mt1TdHSmCsb0WWfMaComgL+IsUipYCBjNjZ
+ikAkTJPPQ6IbtK+VDR3MHFO1iOHVc8fm3Ylx2QY24WLWnmBqvJRGKMe8u+hyD5HMbtpGFAO9CsCg
+aWw+kgMIR58=
+--00000000000084957005b70ad1b5--
