@@ -4,33 +4,33 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC07BC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 758A4C433DB
 	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 07:30:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D6B723130
+	by mail.kernel.org (Postfix) with ESMTP id 3AABC2312D
 	for <linux-scsi@archiver.kernel.org>; Tue, 22 Dec 2020 07:30:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725968AbgLVHaM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 02:30:12 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:36462 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725300AbgLVHaM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 02:30:12 -0500
-X-UUID: 3cd5a51e5e004709a699f80155db19ba-20201222
-X-UUID: 3cd5a51e5e004709a699f80155db19ba-20201222
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        id S1726024AbgLVHaO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 02:30:14 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:57734 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725963AbgLVHaO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 02:30:14 -0500
+X-UUID: cc362717037d4846bfb8da71e925e41f-20201222
+X-UUID: cc362717037d4846bfb8da71e925e41f-20201222
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
         (envelope-from <stanley.chu@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1625368443; Tue, 22 Dec 2020 15:29:35 +0800
+        with ESMTP id 1011360788; Tue, 22 Dec 2020 15:29:29 +0800
 Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 22 Dec 2020 15:29:06 +0800
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 22 Dec 2020 15:29:27 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 22 Dec 2020 15:29:06 +0800
+ Transport; Tue, 22 Dec 2020 15:29:27 +0800
 From:   Stanley Chu <stanley.chu@mediatek.com>
 To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
         <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
@@ -44,54 +44,38 @@ CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
         <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
         <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
         <alice.chao@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v2 2/2] scsi: ufs: Relax the condition of UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
-Date:   Tue, 22 Dec 2020 15:29:05 +0800
-Message-ID: <20201222072905.32221-3-stanley.chu@mediatek.com>
+Subject: [PATCH v1] scsi: ufs-mediatek: Enable UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
+Date:   Tue, 22 Dec 2020 15:29:28 +0800
+Message-ID: <20201222072928.32328-1-stanley.chu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20201222072905.32221-1-stanley.chu@mediatek.com>
-References: <20201222072905.32221-1-stanley.chu@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: B65B4F093546E7E92EDC095DD3E21509A34147389610B64C8343A39BD48121D02000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL is aimed to skip enabling
-fWriteBoosterBufferFlushEn while WriteBooster is initializing.
-Therefore it is better to apply the checking during WriteBooster
-initialization only.
+Flush during hibern8 is sufficient on MediaTek platforms, thus
+enable UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL to skip enabling
+fWriteBoosterBufferFlush during WriteBooster initialization.
 
 Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufs-mediatek.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9d61dc3eb842..e50b19925236 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -289,7 +289,8 @@ static inline void ufshcd_wb_config(struct ufs_hba *hba)
- 	if (ret)
- 		dev_err(hba->dev, "%s: En WB flush during H8: failed: %d\n",
- 			__func__, ret);
--	ufshcd_wb_toggle_flush(hba, true);
-+	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
-+		ufshcd_wb_toggle_flush(hba, true);
- }
+diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+index 80618af7c872..c55202b92a43 100644
+--- a/drivers/scsi/ufs/ufs-mediatek.c
++++ b/drivers/scsi/ufs/ufs-mediatek.c
+@@ -661,6 +661,7 @@ static int ufs_mtk_init(struct ufs_hba *hba)
  
- static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
-@@ -5401,9 +5402,6 @@ static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
+ 	/* Enable WriteBooster */
+ 	hba->caps |= UFSHCD_CAP_WB_EN;
++	hba->quirks |= UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
+ 	hba->vps->wb_flush_threshold = UFS_WB_BUF_REMAIN_PERCENT(80);
  
- static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
- {
--	if (hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL)
--		return;
--
- 	if (enable)
- 		ufshcd_wb_buf_flush_enable(hba);
- 	else
+ 	if (host->caps & UFS_MTK_CAP_DISABLE_AH8)
 -- 
 2.18.0
 
