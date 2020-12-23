@@ -4,43 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5957AC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:10:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCDE4C432C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:11:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 273BD207B1
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:10:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C111B225AB
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:11:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731754AbgLWDJn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 22:09:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46404 "EHLO mail.kernel.org"
+        id S1727854AbgLWCSL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 21:18:11 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45510 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728156AbgLWCSe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:18:34 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0FA962333E;
-        Wed, 23 Dec 2020 02:17:03 +0000 (UTC)
+        id S1727030AbgLWCSK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:18:10 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 92A932333D;
+        Wed, 23 Dec 2020 02:17:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608689824;
-        bh=jgDMhoTyoK1/RUr17XYy22VC/nKPC37Of8t6WeoISOs=;
+        s=k20201202; t=1608689829;
+        bh=441Ly3jKeMars1Eyk5XUUK2SNskEoJgEGc2ZJYLjMnM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nqG+dsfC9Ofl2+ljQCSngOy93WDGawdcuGKhoX7l98EnpRUQj5eyc+zBuYPUbeMYq
-         smrVP12l4EmTSNUndHkmTnePLhtiXxUJMQDoLlwWeDAXOZhZPW9wiW4aA8jMQ9VuMA
-         xd0XDvJGExoZUakHyLltf7E5h0jFk04SJN77tJClODV/XSM64GfwJ/mj4kOb5lq69g
-         vZJWifh44iEaPwO2dKWEpbtPDG5lkvzmgAYxG+T1LNhCztdJ+IpHBNEKofBKjd1gLQ
-         giorogI4//ZYgvVhgVJyXvNhvpmoTEPyrLBQlnaqru+JNLx8QeWhXWJBHMV4x5a9a/
-         jPQG+9FvKSAuw==
+        b=JGfdtNom299M6i/emwakvrtdp07OjmG0Y40qNwUvnaGLPf1ZXM4sfwlSUrqopXf98
+         pFymBZ2lnB0sMutiUhZkvNWYSTV1g8yOpvlt70tN8sQUUulQA0GQ/SGD/RBoSJFyyD
+         7wjr5BFqmHJ+NEVddoPOLaLLYZXGxxbo++AQ0nsYs87Q5F13ciZNratqXNFAu7EOHW
+         HXG8A9/UsjzZlAlPCOu2UXlvhskh7frV4pPra//iiCMYIiKfKcSSP8JD4AGfPyrIGu
+         dUFkowVCCCHiS4Gs2wkoYTUQ1qO12qCJqJI0br8rPp9c/er+C8fIzaFfatmdxuBvfs
+         GM24sUv1YHd1Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
+Cc:     akshatzen <akshatzen@google.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        Viswas G <Viswas.G@microchip.com>,
+        Ruksar Devadi <Ruksar.devadi@microchip.com>,
+        Radha Ramachandran <radha@google.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 029/217] scsi: target: Fix cmd_count ref leak
-Date:   Tue, 22 Dec 2020 21:13:18 -0500
-Message-Id: <20201223021626.2790791-29-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 032/217] scsi: pm80xx: Avoid busywait in FW ready check
+Date:   Tue, 22 Dec 2020 21:13:21 -0500
+Message-Id: <20201223021626.2790791-32-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223021626.2790791-1-sashal@kernel.org>
 References: <20201223021626.2790791-1-sashal@kernel.org>
@@ -52,43 +54,116 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michael.christie@oracle.com>
+From: akshatzen <akshatzen@google.com>
 
-[ Upstream commit 02dd4914b0bcb8fd8f8cad9817f5715a17466261 ]
+[ Upstream commit 48cd6b38eb4f2874f091c4776ea1c26e7e4f967e ]
 
-percpu_ref_init sets the refcount to 1 and percpu_ref_kill drops it.
-Drivers like iSCSI and loop do not call target_sess_cmd_list_set_waiting
-during session shutdown, though, so they have been calling percpu_ref_exit
-with a refcount still taken and leaking the cmd_counts memory.
+In function check_fw_ready() we busy wait using udelay. The CPU is not
+released and we see need_resched failures.
 
-Link: https://lore.kernel.org/r/1604257174-4524-3-git-send-email-michael.christie@oracle.com
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Busy waiting is not necessary since we are in process context and we can
+sleep instead. Replace udelay with msleep of 20 ms intervals while waiting
+for firmware to become ready.
+
+It has been verified that check_fw_ready is not being used in interrupt
+context anywhere, hence it is safe to make this change.
+
+Link: https://lore.kernel.org/r/20201102165528.26510-4-Viswas.G@microchip.com.com
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Signed-off-by: akshatzen <akshatzen@google.com>
+Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
+Signed-off-by: Radha Ramachandran <radha@google.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_transport.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 21 +++++++++++----------
+ drivers/scsi/pm8001/pm80xx_hwi.h |  6 ++++++
+ 2 files changed, 17 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index ff26ab0a5f600..d47619a5d172e 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -238,6 +238,14 @@ EXPORT_SYMBOL(transport_init_session);
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 1ba93fb76093b..24a4f6b9e79d3 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -1042,6 +1042,7 @@ static int mpi_init_check(struct pm8001_hba_info *pm8001_ha)
  
- void transport_uninit_session(struct se_session *se_sess)
- {
-+	/*
-+	 * Drivers like iscsi and loop do not call
-+	 * target_sess_cmd_list_set_waiting during session shutdown so we
-+	 * have to drop the ref taken at init time here.
-+	 */
-+	if (!se_sess->sess_tearing_down)
-+		percpu_ref_put(&se_sess->cmd_count);
+ /**
+  * check_fw_ready - The LLDD check if the FW is ready, if not, return error.
++ * This function sleeps hence it must not be used in atomic context.
+  * @pm8001_ha: our hba card information
+  */
+ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
+@@ -1052,16 +1053,16 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
+ 	int ret = 0;
+ 
+ 	/* reset / PCIe ready */
+-	max_wait_time = max_wait_count = 100 * 1000;	/* 100 milli sec */
++	max_wait_time = max_wait_count = 5;	/* 100 milli sec */
+ 	do {
+-		udelay(1);
++		msleep(FW_READY_INTERVAL);
+ 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+ 	} while ((value == 0xFFFFFFFF) && (--max_wait_count));
+ 
+ 	/* check ila status */
+-	max_wait_time = max_wait_count = 1000 * 1000;	/* 1000 milli sec */
++	max_wait_time = max_wait_count = 50;	/* 1000 milli sec */
+ 	do {
+-		udelay(1);
++		msleep(FW_READY_INTERVAL);
+ 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+ 	} while (((value & SCRATCH_PAD_ILA_READY) !=
+ 			SCRATCH_PAD_ILA_READY) && (--max_wait_count));
+@@ -1074,9 +1075,9 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
+ 	}
+ 
+ 	/* check RAAE status */
+-	max_wait_time = max_wait_count = 1800 * 1000;	/* 1800 milli sec */
++	max_wait_time = max_wait_count = 90;	/* 1800 milli sec */
+ 	do {
+-		udelay(1);
++		msleep(FW_READY_INTERVAL);
+ 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+ 	} while (((value & SCRATCH_PAD_RAAE_READY) !=
+ 				SCRATCH_PAD_RAAE_READY) && (--max_wait_count));
+@@ -1089,9 +1090,9 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
+ 	}
+ 
+ 	/* check iop0 status */
+-	max_wait_time = max_wait_count = 600 * 1000;	/* 600 milli sec */
++	max_wait_time = max_wait_count = 30;	/* 600 milli sec */
+ 	do {
+-		udelay(1);
++		msleep(FW_READY_INTERVAL);
+ 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+ 	} while (((value & SCRATCH_PAD_IOP0_READY) != SCRATCH_PAD_IOP0_READY) &&
+ 			(--max_wait_count));
+@@ -1107,9 +1108,9 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
+ 	if ((pm8001_ha->chip_id != chip_8008) &&
+ 			(pm8001_ha->chip_id != chip_8009)) {
+ 		/* 200 milli sec */
+-		max_wait_time = max_wait_count = 200 * 1000;
++		max_wait_time = max_wait_count = 10;
+ 		do {
+-			udelay(1);
++			msleep(FW_READY_INTERVAL);
+ 			value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+ 		} while (((value & SCRATCH_PAD_IOP1_READY) !=
+ 				SCRATCH_PAD_IOP1_READY) && (--max_wait_count));
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+index 701951a0f715b..ec48bc276de63 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -1639,3 +1639,9 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
+ 
+ #define MEMBASE_II_SHIFT_REGISTER       0x1010
+ #endif
 +
- 	percpu_ref_exit(&se_sess->cmd_count);
- }
- 
++/**
++ * As we know sleep (1~20) ms may result in sleep longer than ~20 ms, hence we
++ * choose 20 ms interval.
++ */
++#define FW_READY_INTERVAL	20
 -- 
 2.27.0
 
