@@ -7,45 +7,42 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73467C43381
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:52:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 139BBC432C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:01:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4377D20578
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:52:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E88D8206F6
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:01:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729345AbgLWCwd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:52:33 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49898 "EHLO mail.kernel.org"
+        id S1728800AbgLWCTx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 21:19:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46354 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729331AbgLWCV0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:21:26 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ADEFD229C5;
-        Wed, 23 Dec 2020 02:21:09 +0000 (UTC)
+        id S1728792AbgLWCTw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:19:52 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DDDDF22D57;
+        Wed, 23 Dec 2020 02:19:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690070;
-        bh=se1pOaJz7hghBuATtGKNr3y3v/Y5Q9MkY1gfRIFKVME=;
+        s=k20201202; t=1608689969;
+        bh=Im+LAXDPFddxeDvhkRC+9JfDjYX3yDxIEwOJUvcqXYo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vJdTt9br5bDw+LcOqZpWBASrAEzIU1uc29ZtHPWuY379qXmsEBDhy7HXA8VbbzrVg
-         WQ6Qe90uMU+ugTnbsplO6PtRwo3m8c9V/6cnxM3Wn5ZIBgjgrbrkGARefWKmljZ0Yq
-         exx/8L6ti4uYqX1MwgiNAlVzwAbXpwd8cMn+TM8YP0Y/qfU3i2ltrPnmXnVUBZ8e7X
-         dw082CVld5/LCB91vm+MxKXEAKKLng6sTxmFzkkR7jU04CtFi7UsGcnyaxuqsfNC6T
-         eZCKI9+XcUgY9Dsw3k6omRCds42JXP223B+Etw6vIjuPabO2JxeJ3iRH8pN1i8KCdp
-         kuJDPmRWiMj6w==
+        b=fH8S9SR08JhZGbZgvaY1He2IgfPU8Oz10Xtw7YdmUeMGcResoF8W3Ta9A9rGNJdSB
+         X+DIl2e/OSLSxlaJAHEaZqn/WGKT+oZ5W+CQgjPgmygr7aJ7WtRXAwuyoIgtjWfdgQ
+         QajDlgpGMg0IwkaOF2KkchJJORGuEIOafUrui7I2eNOTBe+HP3Dde9fxixUhingPPu
+         cWLvf/1bugQM3XQZgYNq1Qi5pJwSpth/UCr0LWjAWDPLLUTcIjUqHy5Ccxk6kuRcgz
+         DkD5fp8Gj8e8Q9kVXKDGEtGXkNTeTlNZe++Sbbe13IDURl+4CCnLHnOgnKpx2v8Vv7
+         Q+1mpG16q0YBg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     akshatzen <akshatzen@google.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        Viswas G <Viswas.G@microchip.com>,
-        Ruksar Devadi <Ruksar.devadi@microchip.com>,
-        Radha Ramachandran <radha@google.com>,
+Cc:     Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 05/87] scsi: pm80xx: Avoid busywait in FW ready check
-Date:   Tue, 22 Dec 2020 21:19:41 -0500
-Message-Id: <20201223022103.2792705-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 059/130] scsi: atari_scsi: Fix race condition between .queuecommand and EH
+Date:   Tue, 22 Dec 2020 21:17:02 -0500
+Message-Id: <20201223021813.2791612-59-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201223022103.2792705-1-sashal@kernel.org>
-References: <20201223022103.2792705-1-sashal@kernel.org>
+In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
+References: <20201223021813.2791612-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,116 +51,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: akshatzen <akshatzen@google.com>
+From: Finn Thain <fthain@telegraphics.com.au>
 
-[ Upstream commit 48cd6b38eb4f2874f091c4776ea1c26e7e4f967e ]
+[ Upstream commit 03fe6a640a05c5dc04b6bcdddfb981d015e84ed4 ]
 
-In function check_fw_ready() we busy wait using udelay. The CPU is not
-released and we see need_resched failures.
+It is possible that bus_reset_cleanup() or .eh_abort_handler could be
+invoked during NCR5380_queuecommand(). If that takes place before the new
+command is enqueued and after the ST-DMA "lock" has been acquired, the
+ST-DMA "lock" will be released again. This will result in a lost DMA
+interrupt and a command timeout. Fix this by excluding EH and interrupt
+handlers while the new command is enqueued.
 
-Busy waiting is not necessary since we are in process context and we can
-sleep instead. Replace udelay with msleep of 20 ms intervals while waiting
-for firmware to become ready.
-
-It has been verified that check_fw_ready is not being used in interrupt
-context anywhere, hence it is safe to make this change.
-
-Link: https://lore.kernel.org/r/20201102165528.26510-4-Viswas.G@microchip.com.com
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
-Signed-off-by: akshatzen <akshatzen@google.com>
-Signed-off-by: Viswas G <Viswas.G@microchip.com>
-Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
-Signed-off-by: Radha Ramachandran <radha@google.com>
+Link: https://lore.kernel.org/r/af25163257796b50bb99d4ede4025cea55787b8f.1605847196.git.fthain@telegraphics.com.au
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c | 21 +++++++++++----------
- drivers/scsi/pm8001/pm80xx_hwi.h |  6 ++++++
- 2 files changed, 17 insertions(+), 10 deletions(-)
+ drivers/scsi/NCR5380.c    |  9 ++++++---
+ drivers/scsi/atari_scsi.c | 10 +++-------
+ 2 files changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index c63b5db435c59..6b22e6c10e0e4 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -703,6 +703,7 @@ static int mpi_init_check(struct pm8001_hba_info *pm8001_ha)
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index d4401c768a0c7..5db10a16a743a 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -567,11 +567,14 @@ static int NCR5380_queue_command(struct Scsi_Host *instance,
  
- /**
-  * check_fw_ready - The LLDD check if the FW is ready, if not, return error.
-+ * This function sleeps hence it must not be used in atomic context.
-  * @pm8001_ha: our hba card information
-  */
- static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
-@@ -713,16 +714,16 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
- 	int ret = 0;
+ 	cmd->result = 0;
  
- 	/* reset / PCIe ready */
--	max_wait_time = max_wait_count = 100 * 1000;	/* 100 milli sec */
-+	max_wait_time = max_wait_count = 5;	/* 100 milli sec */
- 	do {
--		udelay(1);
-+		msleep(FW_READY_INTERVAL);
- 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
- 	} while ((value == 0xFFFFFFFF) && (--max_wait_count));
+-	if (!NCR5380_acquire_dma_irq(instance))
+-		return SCSI_MLQUEUE_HOST_BUSY;
+-
+ 	spin_lock_irqsave(&hostdata->lock, flags);
  
- 	/* check ila status */
--	max_wait_time = max_wait_count = 1000 * 1000;	/* 1000 milli sec */
-+	max_wait_time = max_wait_count = 50;	/* 1000 milli sec */
- 	do {
--		udelay(1);
-+		msleep(FW_READY_INTERVAL);
- 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
- 	} while (((value & SCRATCH_PAD_ILA_READY) !=
- 			SCRATCH_PAD_ILA_READY) && (--max_wait_count));
-@@ -735,9 +736,9 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
- 	}
- 
- 	/* check RAAE status */
--	max_wait_time = max_wait_count = 1800 * 1000;	/* 1800 milli sec */
-+	max_wait_time = max_wait_count = 90;	/* 1800 milli sec */
- 	do {
--		udelay(1);
-+		msleep(FW_READY_INTERVAL);
- 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
- 	} while (((value & SCRATCH_PAD_RAAE_READY) !=
- 				SCRATCH_PAD_RAAE_READY) && (--max_wait_count));
-@@ -750,9 +751,9 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
- 	}
- 
- 	/* check iop0 status */
--	max_wait_time = max_wait_count = 600 * 1000;	/* 600 milli sec */
-+	max_wait_time = max_wait_count = 30;	/* 600 milli sec */
- 	do {
--		udelay(1);
-+		msleep(FW_READY_INTERVAL);
- 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
- 	} while (((value & SCRATCH_PAD_IOP0_READY) != SCRATCH_PAD_IOP0_READY) &&
- 			(--max_wait_count));
-@@ -768,9 +769,9 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
- 	if ((pm8001_ha->chip_id != chip_8008) &&
- 			(pm8001_ha->chip_id != chip_8009)) {
- 		/* 200 milli sec */
--		max_wait_time = max_wait_count = 200 * 1000;
-+		max_wait_time = max_wait_count = 10;
- 		do {
--			udelay(1);
-+			msleep(FW_READY_INTERVAL);
- 			value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
- 		} while (((value & SCRATCH_PAD_IOP1_READY) !=
- 				SCRATCH_PAD_IOP1_READY) && (--max_wait_count));
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index bbe1747234ff0..56022a59c08b3 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -1634,3 +1634,9 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
- 
- #define MEMBASE_II_SHIFT_REGISTER       0x1010
- #endif
++	if (!NCR5380_acquire_dma_irq(instance)) {
++		spin_unlock_irqrestore(&hostdata->lock, flags);
 +
-+/**
-+ * As we know sleep (1~20) ms may result in sleep longer than ~20 ms, hence we
-+ * choose 20 ms interval.
-+ */
-+#define FW_READY_INTERVAL	20
++		return SCSI_MLQUEUE_HOST_BUSY;
++	}
++
+ 	/*
+ 	 * Insert the cmd into the issue queue. Note that REQUEST SENSE
+ 	 * commands are added to the head of the queue since any command will
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index a82b63a666356..95d7a35860836 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -376,15 +376,11 @@ static int falcon_get_lock(struct Scsi_Host *instance)
+ 	if (IS_A_TT())
+ 		return 1;
+ 
+-	if (stdma_is_locked_by(scsi_falcon_intr) &&
+-	    instance->hostt->can_queue > 1)
++	if (stdma_is_locked_by(scsi_falcon_intr))
+ 		return 1;
+ 
+-	if (in_interrupt())
+-		return stdma_try_lock(scsi_falcon_intr, instance);
+-
+-	stdma_lock(scsi_falcon_intr, instance);
+-	return 1;
++	/* stdma_lock() may sleep which means it can't be used here */
++	return stdma_try_lock(scsi_falcon_intr, instance);
+ }
+ 
+ #ifndef MODULE
 -- 
 2.27.0
 
