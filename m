@@ -2,175 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82EBCC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:13:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5951CC43381
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 04:14:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42208207AA
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:13:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36F0522525
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 04:14:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727838AbgLWCSL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:18:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45492 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727824AbgLWCSK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:18:10 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 608992313C;
-        Wed, 23 Dec 2020 02:17:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608689826;
-        bh=+wkRle9EHla4awRchFfBzMkC54Y8O1Bl7VLbVn+JToE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qD7BQFPdtlTd6ya1eDE6P1MqZFVJz0Vh6OvvdQfHmPWzUM2mdNFx3Tp4X6Q49ZVcg
-         e0YuQTYqNSyEdisq8IDrxoXt/mYR9IKfaL8MCaL2zSM04URavuGhbqCm56NqMIvCBC
-         lYI+peqFwuF4yFn2ScCiFHxGHWMfbrTeXuGbxOUm13CJTpOklY4k6IZ4kxzkctQMvy
-         vReGPsnZoZYDdxZ3VmK7mpAFvfGLicOcclrFZHumUKHyCdW4Iwdjxrcla6i7hrHHby
-         RHitoIlkHN1YknEvEgvSsK9HTC9ZmhEKPV7PKlASoovWhnryhUyegjtYkXhC9LN2QO
-         jhBREOCtYLdig==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     peter chang <dpf@google.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        Viswas G <Viswas.G@microchip.com>,
-        Ruksar Devadi <Ruksar.devadi@microchip.com>,
-        Radha Ramachandran <radha@google.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 030/217] scsi: pm80xx: Make mpi_build_cmd locking consistent
-Date:   Tue, 22 Dec 2020 21:13:19 -0500
-Message-Id: <20201223021626.2790791-30-sashal@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201223021626.2790791-1-sashal@kernel.org>
-References: <20201223021626.2790791-1-sashal@kernel.org>
+        id S1727745AbgLWEOi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 23:14:38 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:41775 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725938AbgLWEOh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 23:14:37 -0500
+X-UUID: 8dab2403f75446648550ca3dd365504c-20201223
+X-UUID: 8dab2403f75446648550ca3dd365504c-20201223
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1605213780; Wed, 23 Dec 2020 12:13:54 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 23 Dec 2020 12:13:45 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 23 Dec 2020 12:13:45 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>, <robh+dt@kernel.org>,
+        <devicetree@vger.kernel.org>
+CC:     <matthias.bgg@gmail.com>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <alice.chao@mediatek.com>, <hanks.chen@mediatek.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1 1/2] arm64: configs: Support Universal Flash Storage on MediaTek platforms
+Date:   Wed, 23 Dec 2020 12:13:44 +0800
+Message-ID: <20201223041345.24864-2-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20201223041345.24864-1-stanley.chu@mediatek.com>
+References: <20201223041345.24864-1-stanley.chu@mediatek.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: peter chang <dpf@google.com>
+Support UFS on MediaTek platforms by enabling CONFIG_SCSI_UFS_MEDIATEK.
 
-[ Upstream commit 7640e1eb8c5de33dafa6c68fd4389214ff9ec1f9 ]
-
-Driver submits all internal requests (like abort_task, event acknowledgment
-etc.) through inbound queue 0. While submitting those, driver does not
-acquire any lock and this may lead to a race when there is an I/O request
-coming in on CPU0 and submitted through inbound queue 0.  To avoid this,
-lock acquisition has been moved to pm8001_mpi_build_cmd().  All command
-submission will go through this path.
-
-Link: https://lore.kernel.org/r/20201102165528.26510-2-Viswas.G@microchip.com.com
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
-Signed-off-by: peter chang <dpf@google.com>
-Signed-off-by: Viswas G <Viswas.G@microchip.com>
-Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
-Signed-off-by: Radha Ramachandran <radha@google.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Reviewed-by: Hanks Chen <hanks.chen@mediatek.com>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c | 21 +++++++++++++++------
- drivers/scsi/pm8001/pm80xx_hwi.c |  8 --------
- 2 files changed, 15 insertions(+), 14 deletions(-)
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 2b7b2954ec31a..597d7a096a972 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1356,12 +1356,19 @@ int pm8001_mpi_build_cmd(struct pm8001_hba_info *pm8001_ha,
- {
- 	u32 Header = 0, hpriority = 0, bc = 1, category = 0x02;
- 	void *pMessage;
--
--	if (pm8001_mpi_msg_free_get(circularQ, pm8001_ha->iomb_size,
--		&pMessage) < 0) {
-+	unsigned long flags;
-+	int q_index = circularQ - pm8001_ha->inbnd_q_tbl;
-+	int rv = -1;
-+
-+	WARN_ON(q_index >= PM8001_MAX_INB_NUM);
-+	spin_lock_irqsave(&circularQ->iq_lock, flags);
-+	rv = pm8001_mpi_msg_free_get(circularQ, pm8001_ha->iomb_size,
-+			&pMessage);
-+	if (rv < 0) {
- 		PM8001_IO_DBG(pm8001_ha,
--			pm8001_printk("No free mpi buffer\n"));
--		return -ENOMEM;
-+			      pm8001_printk("No free mpi buffer\n"));
-+		rv = -ENOMEM;
-+		goto done;
- 	}
- 
- 	if (nb > (pm8001_ha->iomb_size - sizeof(struct mpi_msg_hdr)))
-@@ -1384,7 +1391,9 @@ int pm8001_mpi_build_cmd(struct pm8001_hba_info *pm8001_ha,
- 		pm8001_printk("INB Q %x OPCODE:%x , UPDATED PI=%d CI=%d\n",
- 			responseQueue, opCode, circularQ->producer_idx,
- 			circularQ->consumer_index));
--	return 0;
-+done:
-+	spin_unlock_irqrestore(&circularQ->iq_lock, flags);
-+	return rv;
- }
- 
- u32 pm8001_mpi_msg_free_set(struct pm8001_hba_info *pm8001_ha, void *pMsg,
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 7593f248afb2c..5fe50e0effcd5 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -4281,7 +4281,6 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
- 	char *preq_dma_addr = NULL;
- 	__le64 tmp_addr;
- 	u32 i, length;
--	unsigned long flags;
- 
- 	memset(&smp_cmd, 0, sizeof(smp_cmd));
- 	/*
-@@ -4377,10 +4376,8 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
- 
- 	build_smp_cmd(pm8001_dev->device_id, smp_cmd.tag,
- 				&smp_cmd, pm8001_ha->smp_exp_mode, length);
--	spin_lock_irqsave(&circularQ->iq_lock, flags);
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &smp_cmd,
- 			sizeof(smp_cmd), 0);
--	spin_unlock_irqrestore(&circularQ->iq_lock, flags);
- 	if (rc)
- 		goto err_out_2;
- 	return 0;
-@@ -4444,7 +4441,6 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
- 	u64 phys_addr, start_addr, end_addr;
- 	u32 end_addr_high, end_addr_low;
- 	struct inbound_queue_table *circularQ;
--	unsigned long flags;
- 	u32 q_index, cpu_id;
- 	u32 opc = OPC_INB_SSPINIIOSTART;
- 	memset(&ssp_cmd, 0, sizeof(ssp_cmd));
-@@ -4582,10 +4578,8 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
- 			ssp_cmd.esgl = 0;
- 		}
- 	}
--	spin_lock_irqsave(&circularQ->iq_lock, flags);
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc,
- 			&ssp_cmd, sizeof(ssp_cmd), q_index);
--	spin_unlock_irqrestore(&circularQ->iq_lock, flags);
- 	return ret;
- }
- 
-@@ -4819,10 +4813,8 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 			}
- 		}
- 	}
--	spin_lock_irqsave(&circularQ->iq_lock, flags);
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc,
- 			&sata_cmd, sizeof(sata_cmd), q_index);
--	spin_unlock_irqrestore(&circularQ->iq_lock, flags);
- 	return ret;
- }
- 
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 838301650a79..89ab646e0a1e 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -282,6 +282,7 @@ CONFIG_MEGARAID_SAS=y
+ CONFIG_SCSI_MPT3SAS=m
+ CONFIG_SCSI_UFSHCD=y
+ CONFIG_SCSI_UFSHCD_PLATFORM=y
++CONFIG_SCSI_UFS_MEDIATEK=m
+ CONFIG_SCSI_UFS_QCOM=m
+ CONFIG_SCSI_UFS_HISI=y
+ CONFIG_ATA=y
 -- 
-2.27.0
+2.18.0
 
