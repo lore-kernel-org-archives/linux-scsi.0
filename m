@@ -2,91 +2,364 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 280A9C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 09:34:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A1E4C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 12:18:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF2FB20855
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 09:34:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 037322246B
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 12:18:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728220AbgLWJeL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Dec 2020 04:34:11 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:50962 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727823AbgLWJeL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 04:34:11 -0500
-X-UUID: b6f541f005474e5abe27c413f415f52c-20201223
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=FCTr7Meo/1gfNbE3HTrp4APnGU2TY3DudOiD1TClv6w=;
-        b=HXqQPQP6amc9CvIp1zGwUIyLapW+Lk0dIi35u+l8PQOsZUHkywDIFwN/6uNR7w/gy/pSe3LV/PF7vX1dXCL5Gsbfd8DN6RKB2/Lje7a7Ehqlc8dRHnsAphrhRDb36bm9CkWwmAYKD5itneSWtj1yqP9md5LiW/NBxaDYdvaqcNg=;
-X-UUID: b6f541f005474e5abe27c413f415f52c-20201223
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1221856157; Wed, 23 Dec 2020 17:33:26 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 23 Dec 2020 17:33:17 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 23 Dec 2020 17:33:18 +0800
-Message-ID: <1608715998.14045.8.camel@mtkswgap22>
-Subject: Re: [PATCH RFC v4 1/1] scsi: ufs: Fix ufs power down/on specs
- violation
-From:   Stanley Chu <stanley.chu@mediatek.com>
+        id S1728394AbgLWMSY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Dec 2020 07:18:24 -0500
+Received: from so254-31.mailgun.net ([198.61.254.31]:52135 "EHLO
+        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726530AbgLWMSX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 07:18:23 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1608725877; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=1KTK9or5xKlLwp6/3i+0Z3wDLsS0tFkJkzTfKBY0x10=;
+ b=p5iRpOIUIystwe8oLcIlfU+kNtveCON/ZIxkD1P2cUTc/9QqlBvtKzamD2s9e3klWj8exnDv
+ wUcY+xq4FEqtC2QRzno4UsnK9kbFSFSjHeCDMbDYIMfALoHSSrTHNGzoSpCO8hk1FjUhN9BD
+ zC/Mua5BOstRIfKW09tu4Vk7ED0=
+X-Mailgun-Sending-Ip: 198.61.254.31
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 5fe3355bda47198188f3c028 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Dec 2020 12:17:31
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 8C7A4C433CA; Wed, 23 Dec 2020 12:17:31 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 029D0C433C6;
+        Wed, 23 Dec 2020 12:17:26 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 23 Dec 2020 20:17:26 +0800
+From:   Can Guo <cang@codeaurora.org>
 To:     Ziqi Chen <ziqichen@codeaurora.org>
-CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
-        <cang@codeaurora.org>, <hongwus@codeaurora.org>,
-        <rnayak@codeaurora.org>, <vinholikatti@gmail.com>,
-        <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>,
-        <saravanak@google.com>, <salyzyn@google.com>,
-        <kwmad.kim@samsung.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        vinholikatti@gmail.com, jejb@linux.vnet.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        kwmad.kim@samsung.com, stanley.chu@mediatek.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Andy Gross <agross@kernel.org>,
-        "Bjorn Andersson" <bjorn.andersson@linaro.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
         Matthias Brugger <matthias.bgg@gmail.com>,
         Bean Huo <beanhuo@micron.com>,
         Bart Van Assche <bvanassche@acm.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        "Satya Tangirala" <satyat@google.com>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>
-Date:   Wed, 23 Dec 2020 17:33:18 +0800
+        Satya Tangirala <satyat@google.com>,
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH RFC v4 1/1] scsi: ufs: Fix ufs power down/on specs
+ violation
 In-Reply-To: <1608644981-46267-1-git-send-email-ziqichen@codeaurora.org>
 References: <1608644981-46267-1-git-send-email-ziqichen@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-MIME-Version: 1.0
-X-TM-SNTS-SMTP: 2E82613DAED4FA8FF2D640B8A13FCC1CB8454CFBFE82D18528678A7423E615532000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Message-ID: <2c355b51a35c7d7da6dd1ce995a4615a@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDIwLTEyLTIyIGF0IDIxOjQ5ICswODAwLCBaaXFpIENoZW4gd3JvdGU6DQo+IEFz
-IHBlciBzcGVjcywgZS5nLCBKRVNEMjIwRSBjaGFwdGVyIDcuMiwgd2hpbGUgcG93ZXJpbmcNCj4g
-b2ZmL29uIHRoZSB1ZnMgZGV2aWNlLCBSU1RfTiBzaWduYWwgYW5kIFJFRl9DTEsgc2lnbmFsDQo+
-IHNob3VsZCBiZSBiZXR3ZWVuIFZTUyhHcm91bmQpIGFuZCBWQ0NRL1ZDQ1EyLg0KPiANCj4gVG8g
-ZmxleGlibHkgY29udHJvbCBkZXZpY2UgcmVzZXQgbGluZSwgcmVmYWN0b3IgdGhlIGZ1bmN0aW9u
-DQo+IHVmc2NoZF92b3BzX2RldmljZV9yZXNldChzdHVyY3QgdWZzX2hiYSAqaGJhKSB0byB1ZnNo
-Y2RfDQo+IHZvcHNfZGV2aWNlX3Jlc2V0KHN0dXJjdCB1ZnNfaGJhICpoYmEsIGJvb2wgYXNzZXJ0
-ZWQpLiBUaGUNCj4gbmV3IHBhcmFtZXRlciAiYm9vbCBhc3NlcnRlZCIgaXMgdXNlZCB0byBzZXBh
-cmF0ZSBkZXZpY2UgcmVzZXQNCj4gbGluZSBwdWxsaW5nIGRvd24gZnJvbSBwdWxsaW5nIHVwLg0K
-PiANCj4gQ2M6IEtpd29vbmcgS2ltIDxrd21hZC5raW1Ac2Ftc3VuZy5jb20+DQo+IENjOiBTdGFu
-bGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBaaXFp
-IENoZW4gPHppcWljaGVuQGNvZGVhdXJvcmEub3JnPg0KDQpUaGFua3MgZm9yIHRoaXMgZml4IGlu
-Y2x1ZGluZyB1ZnMtbWVkaWF0ZWsgY2hhbmdlIGFzIHdlbGwuDQoNClJldmlld2VkLWJ5OiBTdGFu
-bGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KVGVzdGVkLWJ5OiBTdGFubGV5IENo
-dSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KDQoNCg0K
+On 2020-12-22 21:49, Ziqi Chen wrote:
+> As per specs, e.g, JESD220E chapter 7.2, while powering
+> off/on the ufs device, RST_N signal and REF_CLK signal
+> should be between VSS(Ground) and VCCQ/VCCQ2.
+> 
+> To flexibly control device reset line, refactor the function
+> ufschd_vops_device_reset(sturct ufs_hba *hba) to ufshcd_
+> vops_device_reset(sturct ufs_hba *hba, bool asserted). The
+> new parameter "bool asserted" is used to separate device reset
+> line pulling down from pulling up.
+> 
+> Cc: Kiwoong Kim <kwmad.kim@samsung.com>
+> Cc: Stanley Chu <stanley.chu@mediatek.com>
+> Signed-off-by: Ziqi Chen <ziqichen@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufs-mediatek.c | 32 ++++++++++++++++----------------
+>  drivers/scsi/ufs/ufs-qcom.c     | 24 +++++++++++++++---------
+>  drivers/scsi/ufs/ufshcd.c       | 36 
+> +++++++++++++++++++++++++-----------
+>  drivers/scsi/ufs/ufshcd.h       |  8 ++++----
+>  4 files changed, 60 insertions(+), 40 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufs-mediatek.c 
+> b/drivers/scsi/ufs/ufs-mediatek.c
+> index 80618af..072f4db 100644
+> --- a/drivers/scsi/ufs/ufs-mediatek.c
+> +++ b/drivers/scsi/ufs/ufs-mediatek.c
+> @@ -841,27 +841,27 @@ static int ufs_mtk_link_startup_notify(struct
+> ufs_hba *hba,
+>  	return ret;
+>  }
+> 
+> -static int ufs_mtk_device_reset(struct ufs_hba *hba)
+> +static int ufs_mtk_device_reset(struct ufs_hba *hba, bool asserted)
+>  {
+>  	struct arm_smccc_res res;
+> 
+> -	ufs_mtk_device_reset_ctrl(0, res);
+> +	if (asserted) {
+> +		ufs_mtk_device_reset_ctrl(0, res);
+> 
+> -	/*
+> -	 * The reset signal is active low. UFS devices shall detect
+> -	 * more than or equal to 1us of positive or negative RST_n
+> -	 * pulse width.
+> -	 *
+> -	 * To be on safe side, keep the reset low for at least 10us.
+> -	 */
+> -	usleep_range(10, 15);
+> -
+> -	ufs_mtk_device_reset_ctrl(1, res);
+> -
+> -	/* Some devices may need time to respond to rst_n */
+> -	usleep_range(10000, 15000);
+> +		/*
+> +		 * The reset signal is active low. UFS devices shall detect
+> +		 * more than or equal to 1us of positive or negative RST_n
+> +		 * pulse width.
+> +		 *
+> +		 * To be on safe side, keep the reset low for at least 10us.
+> +		 */
+> +		usleep_range(10, 15);
+> +	} else {
+> +		ufs_mtk_device_reset_ctrl(1, res);
+> 
+> -	dev_info(hba->dev, "device reset done\n");
+> +		/* Some devices may need time to respond to rst_n */
+> +		usleep_range(10000, 15000);
+> +	}
+> 
+>  	return 0;
+>  }
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 2206b1e..fed10e5 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -1406,10 +1406,11 @@ static void ufs_qcom_dump_dbg_regs(struct 
+> ufs_hba *hba)
+>  /**
+>   * ufs_qcom_device_reset() - toggle the (optional) device reset line
+>   * @hba: per-adapter instance
+> + * @asserted: assert or deassert device reset line
+>   *
+>   * Toggles the (optional) reset line to reset the attached device.
+>   */
+> -static int ufs_qcom_device_reset(struct ufs_hba *hba)
+> +static int ufs_qcom_device_reset(struct ufs_hba *hba, bool asserted)
+>  {
+>  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> 
+> @@ -1417,15 +1418,20 @@ static int ufs_qcom_device_reset(struct ufs_hba 
+> *hba)
+>  	if (!host->device_reset)
+>  		return -EOPNOTSUPP;
+> 
+> -	/*
+> -	 * The UFS device shall detect reset pulses of 1us, sleep for 10us to
+> -	 * be on the safe side.
+> -	 */
+> -	gpiod_set_value_cansleep(host->device_reset, 1);
+> -	usleep_range(10, 15);
+> +	if (asserted) {
+> +		gpiod_set_value_cansleep(host->device_reset, 1);
+> 
+> -	gpiod_set_value_cansleep(host->device_reset, 0);
+> -	usleep_range(10, 15);
+> +		/*
+> +		 * The UFS device shall detect reset pulses of 1us, sleep for 10us 
+> to
+> +		 * be on the safe side.
+> +		 */
+> +		usleep_range(10, 15);
+> +	} else {
+> +		gpiod_set_value_cansleep(host->device_reset, 0);
+> +
+> +		 /* Some devices may need time to respond to rst_n */
+> +		usleep_range(10, 15);
+> +	}
+> 
+>  	return 0;
+>  }
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index e221add..f2daac2 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -585,7 +585,13 @@ static void ufshcd_device_reset(struct ufs_hba 
+> *hba)
+>  {
+>  	int err;
+> 
+> -	err = ufshcd_vops_device_reset(hba);
+> +	err = ufshcd_vops_device_reset(hba, true);
+> +	if (err) {
+> +		dev_err(hba->dev, "asserting device reset failed: %d\n", err);
+> +		return;
+> +	}
+> +
+> +	err = ufshcd_vops_device_reset(hba, false);
+> 
+>  	if (!err) {
+>  		ufshcd_set_ufs_dev_active(hba);
+> @@ -593,7 +599,11 @@ static void ufshcd_device_reset(struct ufs_hba 
+> *hba)
+>  			hba->wb_enabled = false;
+>  			hba->wb_buf_flush_enabled = false;
+>  		}
+> +		dev_dbg(hba->dev, "device reset done\n");
+> +	} else {
+> +		dev_err(hba->dev, "deasserting device reset failed: %d\n", err);
+>  	}
+> +
+>  	if (err != -EOPNOTSUPP)
+>  		ufshcd_update_evt_hist(hba, UFS_EVT_DEV_RESET, err);
+>  }
+> @@ -8686,8 +8696,6 @@ static int ufshcd_suspend(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  	if (ret)
+>  		goto set_dev_active;
+> 
+> -	ufshcd_vreg_set_lpm(hba);
+> -
+>  disable_clks:
+>  	/*
+>  	 * Call vendor specific suspend callback. As these callbacks may 
+> access
+> @@ -8703,6 +8711,9 @@ static int ufshcd_suspend(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  	 */
+>  	ufshcd_disable_irq(hba);
+> 
+> +	if (ufshcd_is_link_off(hba))
+> +		ufshcd_vops_device_reset(hba, true);
+> +
+>  	ufshcd_setup_clocks(hba, false);
+> 
+>  	if (ufshcd_is_clkgating_allowed(hba)) {
+> @@ -8711,6 +8722,8 @@ static int ufshcd_suspend(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  					hba->clk_gating.state);
+>  	}
+> 
+> +	ufshcd_vreg_set_lpm(hba);
+> +
+>  	/* Put the host controller in low power mode if possible */
+>  	ufshcd_hba_vreg_set_lpm(hba);
+>  	goto out;
+> @@ -8778,18 +8791,19 @@ static int ufshcd_resume(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  	old_link_state = hba->uic_link_state;
+> 
+>  	ufshcd_hba_vreg_set_hpm(hba);
+> +
+> +	ret = ufshcd_vreg_set_hpm(hba);
+> +	if (ret)
+> +		goto out;
+> +
+>  	/* Make sure clocks are enabled before accessing controller */
+>  	ret = ufshcd_setup_clocks(hba, true);
+>  	if (ret)
+> -		goto out;
+> +		goto disable_vreg;
+> 
+>  	/* enable the host irq as host controller would be active soon */
+>  	ufshcd_enable_irq(hba);
+> 
+> -	ret = ufshcd_vreg_set_hpm(hba);
+> -	if (ret)
+> -		goto disable_irq_and_vops_clks;
+> -
+>  	/*
+>  	 * Call vendor specific resume callback. As these callbacks may 
+> access
+>  	 * vendor specific host controller register space call them when the
+> @@ -8797,7 +8811,7 @@ static int ufshcd_resume(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  	 */
+>  	ret = ufshcd_vops_resume(hba, pm_op);
+>  	if (ret)
+> -		goto disable_vreg;
+> +		goto disable_irq_and_vops_clks;
+> 
+>  	/* For DeepSleep, the only supported option is to have the link off 
+> */
+>  	WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && 
+> !ufshcd_is_link_off(hba));
+> @@ -8864,8 +8878,6 @@ static int ufshcd_resume(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  	ufshcd_link_state_transition(hba, old_link_state, 0);
+>  vendor_suspend:
+>  	ufshcd_vops_suspend(hba, pm_op);
+> -disable_vreg:
+> -	ufshcd_vreg_set_lpm(hba);
+>  disable_irq_and_vops_clks:
+>  	ufshcd_disable_irq(hba);
+>  	if (hba->clk_scaling.is_allowed)
+> @@ -8876,6 +8888,8 @@ static int ufshcd_resume(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  		trace_ufshcd_clk_gating(dev_name(hba->dev),
+>  					hba->clk_gating.state);
+>  	}
+> +disable_vreg:
+> +	ufshcd_vreg_set_lpm(hba);
+>  out:
+>  	hba->pm_op_in_progress = 0;
+>  	if (ret)
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 9bb5f0e..d5fbaba 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -319,7 +319,7 @@ struct ufs_pwr_mode_info {
+>   * @resume: called during host controller PM callback
+>   * @dbg_register_dump: used to dump controller debug information
+>   * @phy_initialization: used to initialize phys
+> - * @device_reset: called to issue a reset pulse on the UFS device
+> + * @device_reset: called to assert or deassert device reset line
+>   * @program_key: program or evict an inline encryption key
+>   * @event_notify: called to notify important events
+>   */
+> @@ -350,7 +350,7 @@ struct ufs_hba_variant_ops {
+>  	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+>  	void	(*dbg_register_dump)(struct ufs_hba *hba);
+>  	int	(*phy_initialization)(struct ufs_hba *);
+> -	int	(*device_reset)(struct ufs_hba *hba);
+> +	int	(*device_reset)(struct ufs_hba *hba, bool asserted);
+>  	void	(*config_scaling_param)(struct ufs_hba *hba,
+>  					struct devfreq_dev_profile *profile,
+>  					void *data);
+> @@ -1216,10 +1216,10 @@ static inline void
+> ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
+>  		hba->vops->dbg_register_dump(hba);
+>  }
+> 
+> -static inline int ufshcd_vops_device_reset(struct ufs_hba *hba)
+> +static inline int ufshcd_vops_device_reset(struct ufs_hba *hba, bool 
+> asserted)
+>  {
+>  	if (hba->vops && hba->vops->device_reset)
+> -		return hba->vops->device_reset(hba);
+> +		return hba->vops->device_reset(hba, asserted);
+> 
+>  	return -EOPNOTSUPP;
+>  }
 
+Reviewed-by: Can Guo <cang@codeaurora.org>
