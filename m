@@ -7,46 +7,42 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73ACAC433E6
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:18:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56AA3C43219
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:25:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5160823355
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:18:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 313F222273
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:25:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727917AbgLWCSR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:18:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45508 "EHLO mail.kernel.org"
+        id S1730497AbgLWCZ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 21:25:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55796 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727828AbgLWCSL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:18:11 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8C951221E5;
-        Wed, 23 Dec 2020 02:17:11 +0000 (UTC)
+        id S1730491AbgLWCZ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:25:26 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3A62C22525;
+        Wed, 23 Dec 2020 02:24:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608689832;
-        bh=yYA+MGHW/+TtHZWGYi2rBWDMZ0naSYSzdR8S3kuTsrE=;
+        s=k20201202; t=1608690286;
+        bh=KUEnrIs0D42/+C4dmqdpOYzNx6TIP+q1Cl9AJKQgwbI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Zx88YomxhB5Kw3zBAtaWmBB89/MDI996ICvSEIdBZOwjXIC0HGzfMjdtAY1NMb85g
-         igmGvEjO97wKIMgFBJ65iDmEeZaJoch8Kb08niOkvZPLHSNvBmTwrVaIGO4f+VtFG2
-         8jbWOA83UvJy0r7wWUkCBusH+todr5v/fwfPRzdAXehUYXWYu7W7BT5NS/AwA4Youz
-         1Nsysa+Gr/bEj9+Ro3L6ZpnL9ZD+qdykaulDcEvuwdLSzgaRoOU0ekbZnHIMzz6E4h
-         0C3tNJZVqC8VN3zNpjDGbIERrTMqJQNXp7SfpGS8No0gTfT/VuEUpcU/8IJwoehvcY
-         Tx1i+DMNRe/3Q==
+        b=lbZpYtW+KMJUCO3zKscfmgoSmb/ReicFGvlO2N9dcUXYjlmT2VgGPkjucxGwyGq7F
+         bWikXON6PfRchWZmv5cmyAPQCzsdm3TcGkS7L00jKphznVtEWzD5lFhDl4z0bWveLK
+         8+rqe8PhOtLhDFkf+cqzowiwBbMk+uU+qnLAoAvtqmBjQAevHhMU2MbpDd1pocWqeT
+         cKZeDMn4bTmmpyjtIaCNoJOfCknidgvjHZDpLqZkuyLmk2CVTxhDjWlq1y5cxaXv+L
+         W2es4kO/lcN9BgVCfFDcI9Y0/awNtgrjGPfThaDeCK0ScBhtZumoGIYdR2g51HK0KE
+         TRddBVwtVqLuA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Adrian Hunter <adrian.hunter@intel.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+Cc:     Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.10 034/217] scsi: ufs: Allow an error return value from ->device_reset()
-Date:   Tue, 22 Dec 2020 21:13:23 -0500
-Message-Id: <20201223021626.2790791-34-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 24/48] scsi: atari_scsi: Fix race condition between .queuecommand and EH
+Date:   Tue, 22 Dec 2020 21:23:52 -0500
+Message-Id: <20201223022417.2794032-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201223021626.2790791-1-sashal@kernel.org>
-References: <20201223021626.2790791-1-sashal@kernel.org>
+In-Reply-To: <20201223022417.2794032-1-sashal@kernel.org>
+References: <20201223022417.2794032-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,111 +51,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Adrian Hunter <adrian.hunter@intel.com>
+From: Finn Thain <fthain@telegraphics.com.au>
 
-[ Upstream commit 151f1b664ffbb847c7fbbce5a5b8580f1b9b1d98 ]
+[ Upstream commit 03fe6a640a05c5dc04b6bcdddfb981d015e84ed4 ]
 
-It is simpler for drivers to provide a ->device_reset() callback
-irrespective of whether the GPIO, or firmware interface necessary to do the
-reset, is discovered during probe.
+It is possible that bus_reset_cleanup() or .eh_abort_handler could be
+invoked during NCR5380_queuecommand(). If that takes place before the new
+command is enqueued and after the ST-DMA "lock" has been acquired, the
+ST-DMA "lock" will be released again. This will result in a lost DMA
+interrupt and a command timeout. Fix this by excluding EH and interrupt
+handlers while the new command is enqueued.
 
-Change ->device_reset() to return an error code.  Drivers that provide the
-callback, but do not do the reset operation should return -EOPNOTSUPP.
-
-Link: https://lore.kernel.org/r/20201103141403.2142-3-adrian.hunter@intel.com
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Bean huo <beanhuo@micron.com>
-Reviewed-by: Can Guo <cang@codeaurora.org>
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Link: https://lore.kernel.org/r/af25163257796b50bb99d4ede4025cea55787b8f.1605847196.git.fthain@telegraphics.com.au
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufs-mediatek.c |  4 +++-
- drivers/scsi/ufs/ufs-qcom.c     |  6 ++++--
- drivers/scsi/ufs/ufshcd.h       | 11 +++++++----
- 3 files changed, 14 insertions(+), 7 deletions(-)
+ drivers/scsi/NCR5380.c    |  9 ++++++---
+ drivers/scsi/atari_scsi.c | 10 +++-------
+ 2 files changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index 8df73bc2f8cb2..914a827a93ee8 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -743,7 +743,7 @@ static int ufs_mtk_link_startup_notify(struct ufs_hba *hba,
- 	return ret;
- }
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 27270631c70c2..c689b0e8ce4c9 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -659,11 +659,14 @@ static int NCR5380_queue_command(struct Scsi_Host *instance,
  
--static void ufs_mtk_device_reset(struct ufs_hba *hba)
-+static int ufs_mtk_device_reset(struct ufs_hba *hba)
- {
- 	struct arm_smccc_res res;
+ 	cmd->result = 0;
  
-@@ -764,6 +764,8 @@ static void ufs_mtk_device_reset(struct ufs_hba *hba)
- 	usleep_range(10000, 15000);
+-	if (!NCR5380_acquire_dma_irq(instance))
+-		return SCSI_MLQUEUE_HOST_BUSY;
+-
+ 	spin_lock_irqsave(&hostdata->lock, flags);
  
- 	dev_info(hba->dev, "device reset done\n");
++	if (!NCR5380_acquire_dma_irq(instance)) {
++		spin_unlock_irqrestore(&hostdata->lock, flags);
 +
-+	return 0;
- }
- 
- static int ufs_mtk_link_set_hpm(struct ufs_hba *hba)
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index f9d6ef3565407..a244c8ae1b4eb 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1421,13 +1421,13 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
-  *
-  * Toggles the (optional) reset line to reset the attached device.
-  */
--static void ufs_qcom_device_reset(struct ufs_hba *hba)
-+static int ufs_qcom_device_reset(struct ufs_hba *hba)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 
- 	/* reset gpio is optional */
- 	if (!host->device_reset)
--		return;
-+		return -EOPNOTSUPP;
- 
++		return SCSI_MLQUEUE_HOST_BUSY;
++	}
++
  	/*
- 	 * The UFS device shall detect reset pulses of 1us, sleep for 10us to
-@@ -1438,6 +1438,8 @@ static void ufs_qcom_device_reset(struct ufs_hba *hba)
+ 	 * Insert the cmd into the issue queue. Note that REQUEST SENSE
+ 	 * commands are added to the head of the queue since any command will
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index 9dc4b689f94b0..de06ce9f18810 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -411,15 +411,11 @@ static int falcon_get_lock(struct Scsi_Host *instance)
+ 	if (IS_A_TT())
+ 		return 1;
  
- 	gpiod_set_value_cansleep(host->device_reset, 0);
- 	usleep_range(10, 15);
-+
-+	return 0;
+-	if (stdma_is_locked_by(scsi_falcon_intr) &&
+-	    instance->hostt->can_queue > 1)
++	if (stdma_is_locked_by(scsi_falcon_intr))
+ 		return 1;
+ 
+-	if (in_interrupt())
+-		return stdma_try_lock(scsi_falcon_intr, instance);
+-
+-	stdma_lock(scsi_falcon_intr, instance);
+-	return 1;
++	/* stdma_lock() may sleep which means it can't be used here */
++	return stdma_try_lock(scsi_falcon_intr, instance);
  }
  
- #if IS_ENABLED(CONFIG_DEVFREQ_GOV_SIMPLE_ONDEMAND)
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index e0f00a42371c5..de97971e2d865 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -318,7 +318,7 @@ struct ufs_hba_variant_ops {
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- 	void	(*dbg_register_dump)(struct ufs_hba *hba);
- 	int	(*phy_initialization)(struct ufs_hba *);
--	void	(*device_reset)(struct ufs_hba *hba);
-+	int	(*device_reset)(struct ufs_hba *hba);
- 	void	(*config_scaling_param)(struct ufs_hba *hba,
- 					struct devfreq_dev_profile *profile,
- 					void *data);
-@@ -1181,9 +1181,12 @@ static inline void ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
- static inline void ufshcd_vops_device_reset(struct ufs_hba *hba)
- {
- 	if (hba->vops && hba->vops->device_reset) {
--		hba->vops->device_reset(hba);
--		ufshcd_set_ufs_dev_active(hba);
--		ufshcd_update_reg_hist(&hba->ufs_stats.dev_reset, 0);
-+		int err = hba->vops->device_reset(hba);
-+
-+		if (!err)
-+			ufshcd_set_ufs_dev_active(hba);
-+		if (err != -EOPNOTSUPP)
-+			ufshcd_update_reg_hist(&hba->ufs_stats.dev_reset, err);
- 	}
- }
- 
+ #ifndef MODULE
 -- 
 2.27.0
 
