@@ -2,364 +2,161 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A1E4C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 12:18:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B9AEC43381
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 12:57:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 037322246B
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 12:18:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D107E2247F
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 12:57:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728394AbgLWMSY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Dec 2020 07:18:24 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:52135 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726530AbgLWMSX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 07:18:23 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608725877; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=1KTK9or5xKlLwp6/3i+0Z3wDLsS0tFkJkzTfKBY0x10=;
- b=p5iRpOIUIystwe8oLcIlfU+kNtveCON/ZIxkD1P2cUTc/9QqlBvtKzamD2s9e3klWj8exnDv
- wUcY+xq4FEqtC2QRzno4UsnK9kbFSFSjHeCDMbDYIMfALoHSSrTHNGzoSpCO8hk1FjUhN9BD
- zC/Mua5BOstRIfKW09tu4Vk7ED0=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 5fe3355bda47198188f3c028 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Dec 2020 12:17:31
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 8C7A4C433CA; Wed, 23 Dec 2020 12:17:31 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 029D0C433C6;
-        Wed, 23 Dec 2020 12:17:26 +0000 (UTC)
+        id S1728656AbgLWM5H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Dec 2020 07:57:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48988 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728516AbgLWM5F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 07:57:05 -0500
+Received: from mail-wr1-x42e.google.com (mail-wr1-x42e.google.com [IPv6:2a00:1450:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50784C061793;
+        Wed, 23 Dec 2020 04:56:25 -0800 (PST)
+Received: by mail-wr1-x42e.google.com with SMTP id d26so18506505wrb.12;
+        Wed, 23 Dec 2020 04:56:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:cc:references:from:autocrypt:subject:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=V8yuZe/XKO2JAJAcMHgWSJTvwfutI16LmYdfxTFjPYU=;
+        b=CT2PWH6HL+1/JNMbdoDfgZQu4hleqhfQEH/3Koaq2aoU7FkUWXNDL/iMJ/QAnFlDG6
+         k7ol75IPDjndCuqNk9cJiqnVenXR4/cdFbhXWcQM2bwzhGRDKqOFCzYN8sKVChecNW2/
+         8SIPMgATznDFVBuD9TNGevdiobiauf5OmxRXJw0ilUhqe9xJjkXNGF3yVcv3qHKGfgtv
+         vx9KQiOQ/KrfwjcZTkcd5+phk8JDekky/cxpyiUm6H6Fb0bkFUWzOtGQCnBuLWvxjiDo
+         vB2HCpOKEEIRsfMs2bGpDMLZahEl2tlun1qm2BWQ9BKlNXwuR7rfpFyNtELV2UiONlz9
+         i+Yw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:references:from:autocrypt:subject
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=V8yuZe/XKO2JAJAcMHgWSJTvwfutI16LmYdfxTFjPYU=;
+        b=cwGnE6zMqgJ0uPpYoULr9WIHsJU3Dawa4r6fIz7cFhnJ76+4GHxk797frOs7GtJBGs
+         YgCbwhVg261KKJZ2ozcdpP8UK+FGFaCoYyyaW5msSWdFOu6IP4dAzxWaHuzLAakYd0o4
+         CzQ3lSQr75IIxU0s/zI0t35mhRDrclhew/7bE0XDk5vy7shdXmNoKWtH6XQBcUAV4MR/
+         /wgD7kPYkwtYtKf6KJgWVK8Zacm5mzORDUys8bW6EEN5ckZ3F6DGGGbNVC9ptlGj+7hR
+         YtSVuZ4NR32kOIjrXsuAUFa3SzV7nrFRql9jsanZX9CVp7x9ckqJxTwT0P37SEnJgxsq
+         sRHA==
+X-Gm-Message-State: AOAM531dcV3UUxfEDczxeOnnhDf7ag14GaxZeLI6FwWwC0JkgulVytYl
+        bUdAHKMb6O++iVFdvPKvlCm5z2CwSW1t6+F9
+X-Google-Smtp-Source: ABdhPJxWN+ccQniO8c/aQCmYGhKmAtpIj8N5tDRJBhD62JqXgH3Ykk1ZsTy87LQFlHRm4SqDhTtiBw==
+X-Received: by 2002:adf:9506:: with SMTP id 6mr29080023wrs.172.1608728182837;
+        Wed, 23 Dec 2020 04:56:22 -0800 (PST)
+Received: from [192.168.8.148] ([85.255.233.85])
+        by smtp.gmail.com with ESMTPSA id x17sm34973694wro.40.2020.12.23.04.56.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Dec 2020 04:56:22 -0800 (PST)
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Matthew Wilcox <willy@infradead.org>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+References: <cover.1607976425.git.asml.silence@gmail.com>
+ <20201215014114.GA1777020@T590>
+ <103235c1-e7d0-0b55-65d0-013d1a09304e@gmail.com>
+ <20201215120357.GA1798021@T590>
+ <e755fec3-4181-1414-0603-02e1a1f4e9eb@gmail.com>
+ <20201222141112.GE13079@infradead.org>
+From:   Pavel Begunkov <asml.silence@gmail.com>
+Autocrypt: addr=asml.silence@gmail.com; prefer-encrypt=mutual; keydata=
+ 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 bA==
+Subject: Re: [PATCH v1 0/6] no-copy bvec
+Message-ID: <933030f0-e428-18fd-4668-68db4f14b976@gmail.com>
+Date:   Wed, 23 Dec 2020 12:52:59 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 23 Dec 2020 20:17:26 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Ziqi Chen <ziqichen@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        vinholikatti@gmail.com, jejb@linux.vnet.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        kwmad.kim@samsung.com, stanley.chu@mediatek.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Satya Tangirala <satyat@google.com>,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH RFC v4 1/1] scsi: ufs: Fix ufs power down/on specs
- violation
-In-Reply-To: <1608644981-46267-1-git-send-email-ziqichen@codeaurora.org>
-References: <1608644981-46267-1-git-send-email-ziqichen@codeaurora.org>
-Message-ID: <2c355b51a35c7d7da6dd1ce995a4615a@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+In-Reply-To: <20201222141112.GE13079@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-22 21:49, Ziqi Chen wrote:
-> As per specs, e.g, JESD220E chapter 7.2, while powering
-> off/on the ufs device, RST_N signal and REF_CLK signal
-> should be between VSS(Ground) and VCCQ/VCCQ2.
+On 22/12/2020 14:11, Christoph Hellwig wrote:
+> On Tue, Dec 15, 2020 at 02:05:35PM +0000, Pavel Begunkov wrote:
+>>> You may find clue from the following link:
+>>>
+>>> https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg2262077.html
+>>
+>> Thanks for the link!
+>>
+>> Al, you mentioned "Zero-length segments are not disallowed", do you have
+>> a strong opinion on that? Apart from already diverged behaviour from the
+>> block layer and getting in the way of this series, without it we'd also be
+>> able to remove some extra ifs, e.g. in iterate_bvec()
 > 
-> To flexibly control device reset line, refactor the function
-> ufschd_vops_device_reset(sturct ufs_hba *hba) to ufshcd_
-> vops_device_reset(sturct ufs_hba *hba, bool asserted). The
-> new parameter "bool asserted" is used to separate device reset
-> line pulling down from pulling up.
-> 
-> Cc: Kiwoong Kim <kwmad.kim@samsung.com>
-> Cc: Stanley Chu <stanley.chu@mediatek.com>
-> Signed-off-by: Ziqi Chen <ziqichen@codeaurora.org>
-> ---
->  drivers/scsi/ufs/ufs-mediatek.c | 32 ++++++++++++++++----------------
->  drivers/scsi/ufs/ufs-qcom.c     | 24 +++++++++++++++---------
->  drivers/scsi/ufs/ufshcd.c       | 36 
-> +++++++++++++++++++++++++-----------
->  drivers/scsi/ufs/ufshcd.h       |  8 ++++----
->  4 files changed, 60 insertions(+), 40 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-mediatek.c 
-> b/drivers/scsi/ufs/ufs-mediatek.c
-> index 80618af..072f4db 100644
-> --- a/drivers/scsi/ufs/ufs-mediatek.c
-> +++ b/drivers/scsi/ufs/ufs-mediatek.c
-> @@ -841,27 +841,27 @@ static int ufs_mtk_link_startup_notify(struct
-> ufs_hba *hba,
->  	return ret;
->  }
-> 
-> -static int ufs_mtk_device_reset(struct ufs_hba *hba)
-> +static int ufs_mtk_device_reset(struct ufs_hba *hba, bool asserted)
->  {
->  	struct arm_smccc_res res;
-> 
-> -	ufs_mtk_device_reset_ctrl(0, res);
-> +	if (asserted) {
-> +		ufs_mtk_device_reset_ctrl(0, res);
-> 
-> -	/*
-> -	 * The reset signal is active low. UFS devices shall detect
-> -	 * more than or equal to 1us of positive or negative RST_n
-> -	 * pulse width.
-> -	 *
-> -	 * To be on safe side, keep the reset low for at least 10us.
-> -	 */
-> -	usleep_range(10, 15);
-> -
-> -	ufs_mtk_device_reset_ctrl(1, res);
-> -
-> -	/* Some devices may need time to respond to rst_n */
-> -	usleep_range(10000, 15000);
-> +		/*
-> +		 * The reset signal is active low. UFS devices shall detect
-> +		 * more than or equal to 1us of positive or negative RST_n
-> +		 * pulse width.
-> +		 *
-> +		 * To be on safe side, keep the reset low for at least 10us.
-> +		 */
-> +		usleep_range(10, 15);
-> +	} else {
-> +		ufs_mtk_device_reset_ctrl(1, res);
-> 
-> -	dev_info(hba->dev, "device reset done\n");
-> +		/* Some devices may need time to respond to rst_n */
-> +		usleep_range(10000, 15000);
-> +	}
-> 
->  	return 0;
->  }
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 2206b1e..fed10e5 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -1406,10 +1406,11 @@ static void ufs_qcom_dump_dbg_regs(struct 
-> ufs_hba *hba)
->  /**
->   * ufs_qcom_device_reset() - toggle the (optional) device reset line
->   * @hba: per-adapter instance
-> + * @asserted: assert or deassert device reset line
->   *
->   * Toggles the (optional) reset line to reset the attached device.
->   */
-> -static int ufs_qcom_device_reset(struct ufs_hba *hba)
-> +static int ufs_qcom_device_reset(struct ufs_hba *hba, bool asserted)
->  {
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> 
-> @@ -1417,15 +1418,20 @@ static int ufs_qcom_device_reset(struct ufs_hba 
-> *hba)
->  	if (!host->device_reset)
->  		return -EOPNOTSUPP;
-> 
-> -	/*
-> -	 * The UFS device shall detect reset pulses of 1us, sleep for 10us to
-> -	 * be on the safe side.
-> -	 */
-> -	gpiod_set_value_cansleep(host->device_reset, 1);
-> -	usleep_range(10, 15);
-> +	if (asserted) {
-> +		gpiod_set_value_cansleep(host->device_reset, 1);
-> 
-> -	gpiod_set_value_cansleep(host->device_reset, 0);
-> -	usleep_range(10, 15);
-> +		/*
-> +		 * The UFS device shall detect reset pulses of 1us, sleep for 10us 
-> to
-> +		 * be on the safe side.
-> +		 */
-> +		usleep_range(10, 15);
-> +	} else {
-> +		gpiod_set_value_cansleep(host->device_reset, 0);
-> +
-> +		 /* Some devices may need time to respond to rst_n */
-> +		usleep_range(10, 15);
-> +	}
-> 
->  	return 0;
->  }
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index e221add..f2daac2 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -585,7 +585,13 @@ static void ufshcd_device_reset(struct ufs_hba 
-> *hba)
->  {
->  	int err;
-> 
-> -	err = ufshcd_vops_device_reset(hba);
-> +	err = ufshcd_vops_device_reset(hba, true);
-> +	if (err) {
-> +		dev_err(hba->dev, "asserting device reset failed: %d\n", err);
-> +		return;
-> +	}
-> +
-> +	err = ufshcd_vops_device_reset(hba, false);
-> 
->  	if (!err) {
->  		ufshcd_set_ufs_dev_active(hba);
-> @@ -593,7 +599,11 @@ static void ufshcd_device_reset(struct ufs_hba 
-> *hba)
->  			hba->wb_enabled = false;
->  			hba->wb_buf_flush_enabled = false;
->  		}
-> +		dev_dbg(hba->dev, "device reset done\n");
-> +	} else {
-> +		dev_err(hba->dev, "deasserting device reset failed: %d\n", err);
->  	}
-> +
->  	if (err != -EOPNOTSUPP)
->  		ufshcd_update_evt_hist(hba, UFS_EVT_DEV_RESET, err);
->  }
-> @@ -8686,8 +8696,6 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	if (ret)
->  		goto set_dev_active;
-> 
-> -	ufshcd_vreg_set_lpm(hba);
-> -
->  disable_clks:
->  	/*
->  	 * Call vendor specific suspend callback. As these callbacks may 
-> access
-> @@ -8703,6 +8711,9 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	 */
->  	ufshcd_disable_irq(hba);
-> 
-> +	if (ufshcd_is_link_off(hba))
-> +		ufshcd_vops_device_reset(hba, true);
-> +
->  	ufshcd_setup_clocks(hba, false);
-> 
->  	if (ufshcd_is_clkgating_allowed(hba)) {
-> @@ -8711,6 +8722,8 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  					hba->clk_gating.state);
->  	}
-> 
-> +	ufshcd_vreg_set_lpm(hba);
-> +
->  	/* Put the host controller in low power mode if possible */
->  	ufshcd_hba_vreg_set_lpm(hba);
->  	goto out;
-> @@ -8778,18 +8791,19 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	old_link_state = hba->uic_link_state;
-> 
->  	ufshcd_hba_vreg_set_hpm(hba);
-> +
-> +	ret = ufshcd_vreg_set_hpm(hba);
-> +	if (ret)
-> +		goto out;
-> +
->  	/* Make sure clocks are enabled before accessing controller */
->  	ret = ufshcd_setup_clocks(hba, true);
->  	if (ret)
-> -		goto out;
-> +		goto disable_vreg;
-> 
->  	/* enable the host irq as host controller would be active soon */
->  	ufshcd_enable_irq(hba);
-> 
-> -	ret = ufshcd_vreg_set_hpm(hba);
-> -	if (ret)
-> -		goto disable_irq_and_vops_clks;
-> -
->  	/*
->  	 * Call vendor specific resume callback. As these callbacks may 
-> access
->  	 * vendor specific host controller register space call them when the
-> @@ -8797,7 +8811,7 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	 */
->  	ret = ufshcd_vops_resume(hba, pm_op);
->  	if (ret)
-> -		goto disable_vreg;
-> +		goto disable_irq_and_vops_clks;
-> 
->  	/* For DeepSleep, the only supported option is to have the link off 
-> */
->  	WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && 
-> !ufshcd_is_link_off(hba));
-> @@ -8864,8 +8878,6 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	ufshcd_link_state_transition(hba, old_link_state, 0);
->  vendor_suspend:
->  	ufshcd_vops_suspend(hba, pm_op);
-> -disable_vreg:
-> -	ufshcd_vreg_set_lpm(hba);
->  disable_irq_and_vops_clks:
->  	ufshcd_disable_irq(hba);
->  	if (hba->clk_scaling.is_allowed)
-> @@ -8876,6 +8888,8 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  		trace_ufshcd_clk_gating(dev_name(hba->dev),
->  					hba->clk_gating.state);
->  	}
-> +disable_vreg:
-> +	ufshcd_vreg_set_lpm(hba);
->  out:
->  	hba->pm_op_in_progress = 0;
->  	if (ret)
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 9bb5f0e..d5fbaba 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -319,7 +319,7 @@ struct ufs_pwr_mode_info {
->   * @resume: called during host controller PM callback
->   * @dbg_register_dump: used to dump controller debug information
->   * @phy_initialization: used to initialize phys
-> - * @device_reset: called to issue a reset pulse on the UFS device
-> + * @device_reset: called to assert or deassert device reset line
->   * @program_key: program or evict an inline encryption key
->   * @event_notify: called to notify important events
->   */
-> @@ -350,7 +350,7 @@ struct ufs_hba_variant_ops {
->  	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
->  	void	(*dbg_register_dump)(struct ufs_hba *hba);
->  	int	(*phy_initialization)(struct ufs_hba *);
-> -	int	(*device_reset)(struct ufs_hba *hba);
-> +	int	(*device_reset)(struct ufs_hba *hba, bool asserted);
->  	void	(*config_scaling_param)(struct ufs_hba *hba,
->  					struct devfreq_dev_profile *profile,
->  					void *data);
-> @@ -1216,10 +1216,10 @@ static inline void
-> ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
->  		hba->vops->dbg_register_dump(hba);
->  }
-> 
-> -static inline int ufshcd_vops_device_reset(struct ufs_hba *hba)
-> +static inline int ufshcd_vops_device_reset(struct ufs_hba *hba, bool 
-> asserted)
->  {
->  	if (hba->vops && hba->vops->device_reset)
-> -		return hba->vops->device_reset(hba);
-> +		return hba->vops->device_reset(hba, asserted);
-> 
->  	return -EOPNOTSUPP;
->  }
+> I'd prefer not to support zero-length ITER_BVEC and catching them
+> early, as the block layer can't deal with them either.  From a quick
+> look at iter_file_splice_write it should be pretty trivial to fix there,
+> although we'll need to audit other callers as well (even if I don't
+> expect them to submit this degenerate case).
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
+Can scatterlist have 0-len entries? Those are directly translated into
+bvecs, e.g. in nvme/target/io-cmd-file.c and target/target_core_file.c.
+I've audited most of others by this moment, they're fine.
+
+Thanks for other nits, they will go into next version.
+
+-- 
+Pavel Begunkov
