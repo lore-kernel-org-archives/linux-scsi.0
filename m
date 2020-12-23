@@ -7,73 +7,88 @@ X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 106B7C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 08:31:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F0D4C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 08:36:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9CE120E65
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 08:31:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5187222248
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 08:36:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727882AbgLWIba (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Dec 2020 03:31:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36476 "EHLO
+        id S1728284AbgLWIf7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Dec 2020 03:35:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727744AbgLWIb3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 03:31:29 -0500
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A3D1C0613D6;
-        Wed, 23 Dec 2020 00:30:49 -0800 (PST)
-Received: by mail-ej1-x62b.google.com with SMTP id d17so21716077ejy.9;
-        Wed, 23 Dec 2020 00:30:49 -0800 (PST)
+        with ESMTP id S1727744AbgLWIf7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 03:35:59 -0500
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C67B9C0613D6;
+        Wed, 23 Dec 2020 00:35:18 -0800 (PST)
+Received: by mail-ed1-x530.google.com with SMTP id cw27so15479351edb.5;
+        Wed, 23 Dec 2020 00:35:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=message-id:subject:from:to:cc:date:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=WtYexIyhlM9lX5mngNLqPuHefdFfD3uM5BTMUld2bcc=;
-        b=mbm1QT+KJePLw8j1NViPPEgVFnTlG7QHzCjaH7cwaw43zHsBrPnl26NsYuV4/KO1OP
-         egsSIGsRl3XMEoeUknuGThQUGGfeNBEM5TV3q8qxz2raRAuTpXeTVikfkLO6ENSPo1gQ
-         uzae7pCWLIPOlJhXb3G0Jq/dIze7etT3TJA/31lETWgoM4XtLt+oQo5tUemzwZMwqjef
-         hZbu/oJtzcu042/eFqQP9EHrWHCt/Hrdd6iR+njuK1qWmOJkp3HfhEhqDEAPYkHZ35Ia
-         e07qNGM1YIkT5APV+tBEovpopeh6XAXkH40nW9hjrLhawC/mfNvZOM16PtPLqLqrtj8C
-         AwGQ==
+        bh=Eduj66RiVco+AT7g2a8p+pCQPzg2FWtlxEHzfdMi00s=;
+        b=coPa26v03zKgNgMIpiXDgDAK86vnk2bCSzrIPk0VFBbiiJMDzyM1vB1vPnXVKNiao7
+         rWGdceLVaZI1n581fdliq/J9m3IFMegzOh8pJ1qJMeT20oNPD8LrK0Bv5YgpVgN5uFmL
+         tUXa4P4bkMWsn0asdt17IMNHhLRUz9kjrkwbFqdTj6JGkamIzNcgep43s8GaziH5/Avl
+         rKsKHQgNt0k0dlR6pgsysNNLq5SkKf886D/XZoeBx/xp/boxJYKKQGaRow2a5+2e21yq
+         S/x7aBW6U51fSsyo3w4O32R/aISR/4fysdF0Cdz3uUjHXPgVAPLWTTsMHkGPDYoMURkE
+         zqvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=WtYexIyhlM9lX5mngNLqPuHefdFfD3uM5BTMUld2bcc=;
-        b=fM6VuafHop/nN3uu02KgRk+icPeUfTsd+SDU6rc0oy5jyjJNiSlq299P76rdEkXQB2
-         eZdEx+wnlS2wB+prRjTbSp4d7dxDGcM7djpD9cXhPMm6c/otnY9Gw4+2LiqC4EAugmgU
-         zjGWNKW9pUsyHvP4o8iLEsxyGElsZmzWvTo8XXw2brkQ8Oh+0zIUbaDOe5tN3H0nNeyF
-         RdoaT+GMUUf26wlT2phlG9Aa3VX842ZPUr8scQBIEd3m35kdrn15vWSccnQnqcp3IV/q
-         jxOMR7SH6/T5eIWSEeYDkCopO5Lt534P6RdWPxKvCP7W8UoK9VIruaIJiRiukdSawSSs
-         D1yw==
-X-Gm-Message-State: AOAM530O2p1kvbTdezTtapZxBWEPCQNUPVW5CWNacrScPNmAkEs9c6dH
-        Ob5FQN8esVekfHczHDGDTVSQmwEJdE0Wpg==
-X-Google-Smtp-Source: ABdhPJwSZF6ixpvIm6gsX+1JFIH9IVgJTuAunOdpXPZ3Ar3yfbWZsburaMs7OJyDN85/PkMfeo9MHw==
-X-Received: by 2002:a17:906:55d0:: with SMTP id z16mr22986625ejp.466.1608712248053;
-        Wed, 23 Dec 2020 00:30:48 -0800 (PST)
+        bh=Eduj66RiVco+AT7g2a8p+pCQPzg2FWtlxEHzfdMi00s=;
+        b=Pn6ERDfPS2kuEnc+pQRC1AmI8uZDAkurcEI4oizXFlElX2L8AcXFuyyckbgLnhi49v
+         3TPPOxnZ/ZRPlgpPaZ7wpVAl/K81J58gZGRo1Zg40H/Pmi0ZhxWDTvqkj+wEDeFrVs5I
+         Erzw9FzmIAFefnmZunR3JTGqaVHVN9jBTV6EogpN0AxJ3nDyrhU7F2sLyrv88AvMiJHl
+         tCPWv3bK1ceX5pNqApabnXGm6okhlqFU+rktk/wmbSc9Z4DH7jrKX0DQIJVYI2wIP6PP
+         YaY6Hd66IJuuxIRL7b0Xj7oXCsKxw1nYYpeCCeEecmHO1m/jLMKPZ0o6Ygmhx2yQSJZ8
+         crew==
+X-Gm-Message-State: AOAM531wttnMrijCwQilLtWJ5mCUVVYg16NwR8fbZKOh2GmbcJ3qr5jQ
+        fGv5+xa9qMsjyxOy8EZ2RjU=
+X-Google-Smtp-Source: ABdhPJxgaqcz1/WGEx69Zgz5v3P94ZQkqyNKYnW4yoWdAxdZPuP9oYZy3mZfQkQD8FpuutRaDS1FaA==
+X-Received: by 2002:a50:f61b:: with SMTP id c27mr23642613edn.61.1608712517605;
+        Wed, 23 Dec 2020 00:35:17 -0800 (PST)
 Received: from ubuntu-laptop (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.googlemail.com with ESMTPSA id d6sm11161702ejy.114.2020.12.23.00.30.47
+        by smtp.googlemail.com with ESMTPSA id ga11sm11349518ejb.34.2020.12.23.00.35.16
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 23 Dec 2020 00:30:47 -0800 (PST)
-Message-ID: <729eb3500cd89cdad13414f9f867f9f69848712e.camel@gmail.com>
-Subject: Re: [PATCH v5 1/7] scsi: ufs: Add "wb_on" sysfs node to control WB
- on/off
+        Wed, 23 Dec 2020 00:35:17 -0800 (PST)
+Message-ID: <8804b780b55f8dc0739e10a246d02cafcb00ab03.camel@gmail.com>
+Subject: Re: [PATCH v1] scsi: ufs-mediatek: Enable
+ UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
 From:   Bean Huo <huobean@gmail.com>
-To:     Can Guo <cang@codeaurora.org>
-Cc:     Stanley Chu <stanley.chu@mediatek.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
-        tomas.winkler@intel.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Wed, 23 Dec 2020 09:30:46 +0100
-In-Reply-To: <862483add1462510b809aee6d3678435@codeaurora.org>
-References: <20201215230519.15158-1-huobean@gmail.com>
-         <20201215230519.15158-2-huobean@gmail.com>
-         <1608617307.14045.3.camel@mtkswgap22>
-         <a01cdd4ff6afd2a9166741caed3c2b3d@codeaurora.org>
-         <eb4cd8f151c43e5754bb7725bce3e8ee34a49b51.camel@gmail.com>
-         <28211d08700d1e4876a9aea342e8fcb79534cd2c.camel@gmail.com>
-         <862483add1462510b809aee6d3678435@codeaurora.org>
+To:     Avri Altman <Avri.Altman@wdc.com>, Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+        "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
+        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
+        "cc.chou@mediatek.com" <cc.chou@mediatek.com>,
+        "jiajie.hao@mediatek.com" <jiajie.hao@mediatek.com>,
+        "alice.chao@mediatek.com" <alice.chao@mediatek.com>
+Date:   Wed, 23 Dec 2020 09:35:15 +0100
+In-Reply-To: <DM6PR04MB657598535F633F59A1DB1F22FCDE0@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20201222072928.32328-1-stanley.chu@mediatek.com>
+         <c862866ec97516a7ffb891e5de3d132d@codeaurora.org>
+         <1608697172.14045.5.camel@mtkswgap22>
+         <c83d34ca8b0338526f6440f1c4ee43dd@codeaurora.org>
+         <DM6PR04MB657598535F633F59A1DB1F22FCDE0@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 Mime-Version: 1.0
@@ -82,15 +97,23 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2020-12-23 at 09:31 +0800, Can Guo wrote:
-> First of all, this check is not helping at all, during 
-> ufshcd_shutdown(),
-> both the link and dev can be active for a moment, so this check is
-> not
-> helping the race condition.
+On Wed, 2020-12-23 at 07:47 +0000, Avri Altman wrote:
+> > > could change the way it does: Keep manual flush disabled by
+> > > default and
+> > > remove this quirk.
+> 
+> Ack on that.
+> I never understood why it was needed in the first place.
+> Maybe just remove it, and allow to perform explicit flush from sysfs.
+> 
+> Thanks,
+> Avr
 
-yes, This checkup doesn't fix race, it is to address your remove of
-sysfs nodes in the ufshcd_shutdown().
+Avri
+I agree with you.
+I don't understand why setting that at the begginnning, also assign
+this feature the contrller to make desicion.
 
 Bean
+
 
