@@ -7,42 +7,45 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56AA3C43219
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:25:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA663C4160E
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:28:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 313F222273
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:25:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6A5722257
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:28:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730497AbgLWCZ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:25:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55796 "EHLO mail.kernel.org"
+        id S1730664AbgLWC0L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 21:26:11 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56322 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730491AbgLWCZ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:25:26 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3A62C22525;
-        Wed, 23 Dec 2020 02:24:45 +0000 (UTC)
+        id S1730740AbgLWC0F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:26:05 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 63ADF225AA;
+        Wed, 23 Dec 2020 02:25:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690286;
-        bh=KUEnrIs0D42/+C4dmqdpOYzNx6TIP+q1Cl9AJKQgwbI=;
+        s=k20201202; t=1608690324;
+        bh=G0pW6Tne4uGsBAfSZb1u5v6PfwpQsXrFxJQ4jzEB380=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lbZpYtW+KMJUCO3zKscfmgoSmb/ReicFGvlO2N9dcUXYjlmT2VgGPkjucxGwyGq7F
-         bWikXON6PfRchWZmv5cmyAPQCzsdm3TcGkS7L00jKphznVtEWzD5lFhDl4z0bWveLK
-         8+rqe8PhOtLhDFkf+cqzowiwBbMk+uU+qnLAoAvtqmBjQAevHhMU2MbpDd1pocWqeT
-         cKZeDMn4bTmmpyjtIaCNoJOfCknidgvjHZDpLqZkuyLmk2CVTxhDjWlq1y5cxaXv+L
-         W2es4kO/lcN9BgVCfFDcI9Y0/awNtgrjGPfThaDeCK0ScBhtZumoGIYdR2g51HK0KE
-         TRddBVwtVqLuA==
+        b=cmk9UbrchzqnUN/JDmPc1JKrDtcmtO2JlmNpJ69znNqvM5qT8gMpaDG9URftCuLd+
+         Jgv3tG+vs9Y44B5BgXqFQz5HmuDKLhUuZU6/y0hrxekwqmCi2ionANAsjjQ1LJik0d
+         QaSqaDI37PmgdobsnIyYdYprqg1lviyc/6/4F7ty+Na671sKTEFs4P7GQKjxF0mA0C
+         gjm6guen8CZnH9bv0RyGreK2CFy/bjSzXwDrFrF7MPAi2D+m0u52dO9VZP7BqDkxqO
+         2Tyn3mdF3SAClEzH5al8ZxucCJi9tIb85hjmqkBh3igMmJrYIOw3soB8qGZrAnZztb
+         2eulm82oIVWwA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
+Cc:     yuuzheng <yuuzheng@google.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        Viswas G <Viswas.G@microchip.com>,
+        Ruksar Devadi <Ruksar.devadi@microchip.com>,
+        Radha Ramachandran <radha@google.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 24/48] scsi: atari_scsi: Fix race condition between .queuecommand and EH
-Date:   Tue, 22 Dec 2020 21:23:52 -0500
-Message-Id: <20201223022417.2794032-24-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 05/38] scsi: pm80xx: Fix pm8001_mpi_get_nvmd_resp() race condition
+Date:   Tue, 22 Dec 2020 21:24:43 -0500
+Message-Id: <20201223022516.2794471-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201223022417.2794032-1-sashal@kernel.org>
-References: <20201223022417.2794032-1-sashal@kernel.org>
+In-Reply-To: <20201223022516.2794471-1-sashal@kernel.org>
+References: <20201223022516.2794471-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -51,73 +54,54 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Finn Thain <fthain@telegraphics.com.au>
+From: yuuzheng <yuuzheng@google.com>
 
-[ Upstream commit 03fe6a640a05c5dc04b6bcdddfb981d015e84ed4 ]
+[ Upstream commit 1f889b58716a5f5e3e4fe0e6742c1a4472f29ac1 ]
 
-It is possible that bus_reset_cleanup() or .eh_abort_handler could be
-invoked during NCR5380_queuecommand(). If that takes place before the new
-command is enqueued and after the ST-DMA "lock" has been acquired, the
-ST-DMA "lock" will be released again. This will result in a lost DMA
-interrupt and a command timeout. Fix this by excluding EH and interrupt
-handlers while the new command is enqueued.
+A use-after-free or null-pointer error occurs when the 251-byte response
+data is copied from IOMB buffer to response message buffer in function
+pm8001_mpi_get_nvmd_resp().
 
-Link: https://lore.kernel.org/r/af25163257796b50bb99d4ede4025cea55787b8f.1605847196.git.fthain@telegraphics.com.au
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
-Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+After sending the command get_nvmd_data(), the caller begins to sleep by
+calling wait_for_complete() and waits for the wake-up from calling
+complete() in pm8001_mpi_get_nvmd_resp(). Due to unexpected events (e.g.,
+interrupt), if response buffer gets freed before memcpy(), a use-after-free
+error will occur. To fix this, the complete() should be called after
+memcpy().
+
+Link: https://lore.kernel.org/r/20201102165528.26510-5-Viswas.G@microchip.com.com
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Signed-off-by: yuuzheng <yuuzheng@google.com>
+Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
+Signed-off-by: Radha Ramachandran <radha@google.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/NCR5380.c    |  9 ++++++---
- drivers/scsi/atari_scsi.c | 10 +++-------
- 2 files changed, 9 insertions(+), 10 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 27270631c70c2..c689b0e8ce4c9 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -659,11 +659,14 @@ static int NCR5380_queue_command(struct Scsi_Host *instance,
- 
- 	cmd->result = 0;
- 
--	if (!NCR5380_acquire_dma_irq(instance))
--		return SCSI_MLQUEUE_HOST_BUSY;
--
- 	spin_lock_irqsave(&hostdata->lock, flags);
- 
-+	if (!NCR5380_acquire_dma_irq(instance)) {
-+		spin_unlock_irqrestore(&hostdata->lock, flags);
-+
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
-+
- 	/*
- 	 * Insert the cmd into the issue queue. Note that REQUEST SENSE
- 	 * commands are added to the head of the queue since any command will
-diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index 9dc4b689f94b0..de06ce9f18810 100644
---- a/drivers/scsi/atari_scsi.c
-+++ b/drivers/scsi/atari_scsi.c
-@@ -411,15 +411,11 @@ static int falcon_get_lock(struct Scsi_Host *instance)
- 	if (IS_A_TT())
- 		return 1;
- 
--	if (stdma_is_locked_by(scsi_falcon_intr) &&
--	    instance->hostt->can_queue > 1)
-+	if (stdma_is_locked_by(scsi_falcon_intr))
- 		return 1;
- 
--	if (in_interrupt())
--		return stdma_try_lock(scsi_falcon_intr, instance);
--
--	stdma_lock(scsi_falcon_intr, instance);
--	return 1;
-+	/* stdma_lock() may sleep which means it can't be used here */
-+	return stdma_try_lock(scsi_falcon_intr, instance);
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index b3490b4a046a2..d431efb300b6f 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -3196,10 +3196,15 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		pm8001_ha->memoryMap.region[NVMD].virt_ptr,
+ 		fw_control_context->len);
+ 	kfree(ccb->fw_control_context);
++	/* To avoid race condition, complete should be
++	 * called after the message is copied to
++	 * fw_control_context->usrAddr
++	 */
++	complete(pm8001_ha->nvmd_completion);
++	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("Set nvm data complete!\n"));
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+ 	pm8001_tag_free(pm8001_ha, tag);
+-	complete(pm8001_ha->nvmd_completion);
  }
  
- #ifndef MODULE
+ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
 -- 
 2.27.0
 
