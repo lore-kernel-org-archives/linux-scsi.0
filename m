@@ -7,26 +7,26 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B97F0C43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85AECC433DB
 	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 07:14:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DC102158C
+	by mail.kernel.org (Postfix) with ESMTP id 4A4532151B
 	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 07:14:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727671AbgLWHNs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Dec 2020 02:13:48 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:36140 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727321AbgLWHNr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 02:13:47 -0500
-X-UUID: 0cf6b4e2b1174220bf4884c80335b8f0-20201223
-X-UUID: 0cf6b4e2b1174220bf4884c80335b8f0-20201223
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
+        id S1727741AbgLWHNt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Dec 2020 02:13:49 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:55942 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727338AbgLWHNt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 02:13:49 -0500
+X-UUID: d0e66fb2314149519e6d18e548e4a2f3-20201223
+X-UUID: d0e66fb2314149519e6d18e548e4a2f3-20201223
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
         (envelope-from <stanley.chu@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1796655251; Wed, 23 Dec 2020 15:13:03 +0800
+        with ESMTP id 1526241365; Wed, 23 Dec 2020 15:13:02 +0800
 Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
  15.0.1497.2; Wed, 23 Dec 2020 15:13:00 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
@@ -44,40 +44,81 @@ CC:     <linux-mediatek@lists.infradead.org>,
         <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
         <alice.chao@mediatek.com>, <hanks.chen@mediatek.com>,
         Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v2 1/2] arm64: configs: Support Universal Flash Storage on MediaTek platforms
-Date:   Wed, 23 Dec 2020 15:12:58 +0800
-Message-ID: <20201223071259.764-2-stanley.chu@mediatek.com>
+Subject: [PATCH v2 2/2] arm64: dts: mt6779: Support ufshci and ufsphy
+Date:   Wed, 23 Dec 2020 15:12:59 +0800
+Message-ID: <20201223071259.764-3-stanley.chu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20201223071259.764-1-stanley.chu@mediatek.com>
 References: <20201223071259.764-1-stanley.chu@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: 8821E271F46FA31117F644FDE799B7BE71F88632990D9F0697C808D1A10C901A2000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Support UFS on MediaTek platforms by enabling CONFIG_SCSI_UFS_MEDIATEK.
+Support UFS on MT6779 platforms by adding ufshci and ufsphy
+nodes in dts file.
 
 Reviewed-by: Hanks Chen <hanks.chen@mediatek.com>
 Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 ---
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
+ arch/arm64/boot/dts/mediatek/mt6779.dtsi | 36 +++++++++++++++++++++++-
+ 1 file changed, 35 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 17a2df6a263e..e92f42a43bfa 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -277,6 +277,7 @@ CONFIG_SCSI_MPT3SAS=m
- CONFIG_SCSI_UFSHCD=y
- CONFIG_SCSI_UFSHCD_PLATFORM=y
- CONFIG_SCSI_UFS_QCOM=m
-+CONFIG_SCSI_UFS_MEDIATEK=m
- CONFIG_SCSI_UFS_HISI=y
- CONFIG_ATA=y
- CONFIG_SATA_AHCI=y
+diff --git a/arch/arm64/boot/dts/mediatek/mt6779.dtsi b/arch/arm64/boot/dts/mediatek/mt6779.dtsi
+index 370f309d32de..6eaf230bb0d1 100644
+--- a/arch/arm64/boot/dts/mediatek/mt6779.dtsi
++++ b/arch/arm64/boot/dts/mediatek/mt6779.dtsi
+@@ -225,6 +225,41 @@
+ 			#clock-cells = <1>;
+ 		};
+ 
++		ufshci: ufshci@11270000 {
++			compatible = "mediatek,mt8183-ufshci";
++			reg = <0 0x11270000 0 0x2300>;
++			interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_LOW>;
++			phys = <&ufsphy>;
++
++			clocks = <&infracfg_ao CLK_INFRA_UFS>,
++				 <&infracfg_ao CLK_INFRA_UFS_TICK>,
++				 <&infracfg_ao CLK_INFRA_UFS_AXI>,
++				 <&infracfg_ao CLK_INFRA_UNIPRO_TICK>,
++				 <&infracfg_ao CLK_INFRA_UNIPRO_MBIST>,
++				 <&topckgen CLK_TOP_FAES_UFSFDE>,
++				 <&infracfg_ao CLK_INFRA_AES_UFSFDE>,
++				 <&infracfg_ao CLK_INFRA_AES_BCLK>;
++			clock-names = "ufs", "ufs_tick", "ufs_axi",
++				      "unipro_tick", "unipro_mbist",
++				      "aes_top", "aes_infra", "aes_bclk";
++			freq-table-hz = <0 0>, <0 0>, <0 0>,
++					<0 0>, <0 0>, <0 0>,
++					<0 0>, <0 0>;
++
++			mediatek,ufs-disable-ah8;
++			mediatek,ufs-support-va09;
++		};
++
++		ufsphy: phy@11fa0000 {
++			compatible = "mediatek,mt8183-ufsphy";
++			reg = <0 0x11fa0000 0 0xc000>;
++			#phy-cells = <0>;
++
++			clocks = <&infracfg_ao CLK_INFRA_UNIPRO_SCK>,
++				 <&infracfg_ao CLK_INFRA_UFS_MP_SAP_BCLK>;
++			clock-names = "unipro", "mp";
++		};
++
+ 		mfgcfg: clock-controller@13fbf000 {
+ 			compatible = "mediatek,mt6779-mfgcfg", "syscon";
+ 			reg = <0 0x13fbf000 0 0x1000>;
+@@ -266,6 +301,5 @@
+ 			reg = <0 0x1b000000 0 0x1000>;
+ 			#clock-cells = <1>;
+ 		};
+-
+ 	};
+ };
 -- 
 2.18.0
 
