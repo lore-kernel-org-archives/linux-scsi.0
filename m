@@ -7,41 +7,42 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 187E9C4361B
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:02:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3E40C432C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:05:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6F1020729
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:02:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B88C20757
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 03:05:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728721AbgLWCTk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:19:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46368 "EHLO mail.kernel.org"
+        id S1729162AbgLWDFB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 22:05:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45448 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728709AbgLWCTj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:19:39 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 24A8F221E5;
-        Wed, 23 Dec 2020 02:19:06 +0000 (UTC)
+        id S1728537AbgLWCTN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:19:13 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C691C2333F;
+        Wed, 23 Dec 2020 02:18:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608689947;
-        bh=oN6i6DkJk0tmVHeJHuoWla/0hXVtAXfsO5gKAAjyamY=;
+        s=k20201202; t=1608689911;
+        bh=g9l/AVySqwUOgWXIZKwBBCsFwLsc0+LsVZFHye0PciE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XO+0Cq8QgMz62DVJTy4BzXwkqeV/8lYWRna7S6I4W8DiJBqmkJt1TGf8mnbee0NXi
-         XEiJF+jRc4IPPBUmzkdQyV5JwPtkZZC2cjcsZA4ErBl4J+DqBzLPHdR/vDT2NwGmo2
-         hnHP7mocfLKaPP8pExkNUigRZ67HzzIxl/ntha4TffgGYBg/GUvw2zFSnvfK9+wOM0
-         4AnUcpn15Qis7IoZIZRcgNfDIvjBAiyaGR12kfVO/NbX5tAni8JXkxuYxao1SYB/cC
-         PEiMZ9n1oBiZNW883hzYZk1A55oQVM7Im9gm8QwmGATPxR0nDla66G5JFtc8dMOapX
-         mMyZm6V3wt4pg==
+        b=dKj3aOBUJfs9Wr5kmzbySkToutv/qNQKM1gzr3mozg0pM3FWsw3DXAl4pCUrTMQ48
+         wsyXsaumHdqdJRoFHVGm2fHzASmHshhrmkhlOr3E/CpkdxrbSSo1ZaE/nVLQZCLUcv
+         wZCKXLZ9k3rVTcKSW3NKEu8Z5myDPWvWBvMO4HMm/le30EBRU639ZgOqJ8vx61h6QT
+         uLgd/Kk7IbMKt3L7diEEYjqZuWENmLPffi+ukL+Cys42MzrbRjNFnnpiMpe2xzWojy
+         t0vV1oUuAxKkA77D8yV1/F34yMRRxFpoxsCfiQEFGUKQptBIbOpxQ7u+wl4URWWDbT
+         9kY+avh4aeW8w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Don Brace <don.brace@microchip.com>,
-        Scott Benesh <scott.benesh@microchip.com>,
-        Scott Teel <scott.teel@microchip.com>,
+Cc:     yuuzheng <yuuzheng@google.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        Viswas G <Viswas.G@microchip.com>,
+        Ruksar Devadi <Ruksar.devadi@microchip.com>,
+        Radha Ramachandran <radha@google.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, storagedev@microchip.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 041/130] scsi: smartpqi: Correct driver removal with HBA disks
-Date:   Tue, 22 Dec 2020 21:16:44 -0500
-Message-Id: <20201223021813.2791612-41-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 013/130] scsi: pm80xx: Fix pm8001_mpi_get_nvmd_resp() race condition
+Date:   Tue, 22 Dec 2020 21:16:16 -0500
+Message-Id: <20201223021813.2791612-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
 References: <20201223021813.2791612-1-sashal@kernel.org>
@@ -53,62 +54,54 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Don Brace <don.brace@microchip.com>
+From: yuuzheng <yuuzheng@google.com>
 
-[ Upstream commit 1bdf6e9343877030640336d93da08321719bca43 ]
+[ Upstream commit 1f889b58716a5f5e3e4fe0e6742c1a4472f29ac1 ]
 
-Correct rmmod hangs when using HBA disks with write cache enabled.
+A use-after-free or null-pointer error occurs when the 251-byte response
+data is copied from IOMB buffer to response message buffer in function
+pm8001_mpi_get_nvmd_resp().
 
-Do not set controller flag "in_shutdown" during rmmod. SCSI SYNCHRONIZE
-CACHE(10) and SCSI SYNCHRONIZE CACHE(16) requests were blocked with
-SCSI_MLQUEUE_HOST_BUSY.
+After sending the command get_nvmd_data(), the caller begins to sleep by
+calling wait_for_complete() and waits for the wake-up from calling
+complete() in pm8001_mpi_get_nvmd_resp(). Due to unexpected events (e.g.,
+interrupt), if response buffer gets freed before memcpy(), a use-after-free
+error will occur. To fix this, the complete() should be called after
+memcpy().
 
-Link: https://lore.kernel.org/r/160512627928.2359.10698615071827614781.stgit@brunhilda
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
+Link: https://lore.kernel.org/r/20201102165528.26510-5-Viswas.G@microchip.com.com
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Signed-off-by: yuuzheng <yuuzheng@google.com>
+Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
+Signed-off-by: Radha Ramachandran <radha@google.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 093ed5d1eef20..d80cb2a6e11a2 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -330,10 +330,9 @@ static inline void pqi_device_remove_start(struct pqi_scsi_dev *device)
- 	device->in_remove = true;
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index f8e11f672d1e2..f6d4a7578c80f 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -3232,10 +3232,15 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		pm8001_ha->memoryMap.region[NVMD].virt_ptr,
+ 		fw_control_context->len);
+ 	kfree(ccb->fw_control_context);
++	/* To avoid race condition, complete should be
++	 * called after the message is copied to
++	 * fw_control_context->usrAddr
++	 */
++	complete(pm8001_ha->nvmd_completion);
++	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("Set nvm data complete!\n"));
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+ 	pm8001_tag_free(pm8001_ha, tag);
+-	complete(pm8001_ha->nvmd_completion);
  }
  
--static inline bool pqi_device_in_remove(struct pqi_ctrl_info *ctrl_info,
--					struct pqi_scsi_dev *device)
-+static inline bool pqi_device_in_remove(struct pqi_scsi_dev *device)
- {
--	return device->in_remove && !ctrl_info->in_shutdown;
-+	return device->in_remove;
- }
- 
- static inline void pqi_ctrl_shutdown_start(struct pqi_ctrl_info *ctrl_info)
-@@ -5368,8 +5367,7 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost,
- 
- 	atomic_inc(&device->scsi_cmds_outstanding);
- 
--	if (pqi_ctrl_offline(ctrl_info) || pqi_device_in_remove(ctrl_info,
--								device)) {
-+	if (pqi_ctrl_offline(ctrl_info) || pqi_device_in_remove(device)) {
- 		set_host_byte(scmd, DID_NO_CONNECT);
- 		pqi_scsi_done(scmd);
- 		return 0;
-@@ -7951,8 +7949,6 @@ static void pqi_pci_remove(struct pci_dev *pci_dev)
- 	if (!ctrl_info)
- 		return;
- 
--	ctrl_info->in_shutdown = true;
--
- 	pqi_remove_ctrl(ctrl_info);
- }
- 
+ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
 -- 
 2.27.0
 
