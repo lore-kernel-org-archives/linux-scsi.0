@@ -2,123 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B46EDC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 04:42:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B97F0C43381
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 07:14:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F029216FD
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 04:42:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DC102158C
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 07:14:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726894AbgLWEl7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 23:41:59 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:63447 "EHLO
-        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726802AbgLWEl7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 23:41:59 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608698499; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=qLARzNaefrjwPVPDeA1xStKL6aHUM5wgUliEp6OdikY=;
- b=Ec26IlaLr0qu48fP89NdNQdEfvORVZN4YG5qI+ax1cwqDHGzMtA94CvpNTKGDnRDs7VFopOW
- CO+qwd+htzsHQpGS0jooJGxzxD3lDDqkW8LgNi1zyeHVwvHFxTc1FlF4iKfe7BWpBhEZ+Uc2
- VeWUsSG6GmfHh3wdZ9ZHIF2FMbY=
-X-Mailgun-Sending-Ip: 69.72.43.15
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
- 5fe2ca656d011aad66249205 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Dec 2020 04:41:09
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B529EC43465; Wed, 23 Dec 2020 04:41:09 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8A4C5C433C6;
-        Wed, 23 Dec 2020 04:41:08 +0000 (UTC)
+        id S1727671AbgLWHNs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Dec 2020 02:13:48 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:36140 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727321AbgLWHNr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 02:13:47 -0500
+X-UUID: 0cf6b4e2b1174220bf4884c80335b8f0-20201223
+X-UUID: 0cf6b4e2b1174220bf4884c80335b8f0-20201223
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1796655251; Wed, 23 Dec 2020 15:13:03 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 23 Dec 2020 15:13:00 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 23 Dec 2020 15:13:00 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>, <matthias.bgg@gmail.com>,
+        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
+CC:     <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <alice.chao@mediatek.com>, <hanks.chen@mediatek.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v2 1/2] arm64: configs: Support Universal Flash Storage on MediaTek platforms
+Date:   Wed, 23 Dec 2020 15:12:58 +0800
+Message-ID: <20201223071259.764-2-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20201223071259.764-1-stanley.chu@mediatek.com>
+References: <20201223071259.764-1-stanley.chu@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 23 Dec 2020 12:41:08 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        beanhuo@micron.com, asutoshd@codeaurora.org,
-        matthias.bgg@gmail.com, bvanassche@acm.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
-        chaotian.jing@mediatek.com, cc.chou@mediatek.com,
-        jiajie.hao@mediatek.com, alice.chao@mediatek.com
-Subject: Re: [PATCH v1] scsi: ufs-mediatek: Enable
- UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
-In-Reply-To: <1608697172.14045.5.camel@mtkswgap22>
-References: <20201222072928.32328-1-stanley.chu@mediatek.com>
- <c862866ec97516a7ffb891e5de3d132d@codeaurora.org>
- <1608697172.14045.5.camel@mtkswgap22>
-Message-ID: <c83d34ca8b0338526f6440f1c4ee43dd@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 8821E271F46FA31117F644FDE799B7BE71F88632990D9F0697C808D1A10C901A2000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-23 12:19, Stanley Chu wrote:
-> Hi Can,
-> 
-> On Tue, 2020-12-22 at 19:34 +0800, Can Guo wrote:
->> On 2020-12-22 15:29, Stanley Chu wrote:
->> > Flush during hibern8 is sufficient on MediaTek platforms, thus
->> > enable UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL to skip enabling
->> > fWriteBoosterBufferFlush during WriteBooster initialization.
->> >
->> > Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
->> > ---
->> >  drivers/scsi/ufs/ufs-mediatek.c | 1 +
->> >  1 file changed, 1 insertion(+)
->> >
->> > diff --git a/drivers/scsi/ufs/ufs-mediatek.c
->> > b/drivers/scsi/ufs/ufs-mediatek.c
->> > index 80618af7c872..c55202b92a43 100644
->> > --- a/drivers/scsi/ufs/ufs-mediatek.c
->> > +++ b/drivers/scsi/ufs/ufs-mediatek.c
->> > @@ -661,6 +661,7 @@ static int ufs_mtk_init(struct ufs_hba *hba)
->> >
->> >  	/* Enable WriteBooster */
->> >  	hba->caps |= UFSHCD_CAP_WB_EN;
->> > +	hba->quirks |= UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
->> >  	hba->vps->wb_flush_threshold = UFS_WB_BUF_REMAIN_PERCENT(80);
->> >
->> >  	if (host->caps & UFS_MTK_CAP_DISABLE_AH8)
->> 
->> I guess we need it too...
-> 
-> AHHA, if you decide to add this in your platform too later, maybe we
-> could change the way it does: Keep manual flush disabled by default and
-> remove this quirk.
-> 
+Support UFS on MediaTek platforms by enabling CONFIG_SCSI_UFS_MEDIATEK.
 
-Yeah... I will get back with an answer later.
+Reviewed-by: Hanks Chen <hanks.chen@mediatek.com>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 17a2df6a263e..e92f42a43bfa 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -277,6 +277,7 @@ CONFIG_SCSI_MPT3SAS=m
+ CONFIG_SCSI_UFSHCD=y
+ CONFIG_SCSI_UFSHCD_PLATFORM=y
+ CONFIG_SCSI_UFS_QCOM=m
++CONFIG_SCSI_UFS_MEDIATEK=m
+ CONFIG_SCSI_UFS_HISI=y
+ CONFIG_ATA=y
+ CONFIG_SATA_AHCI=y
+-- 
+2.18.0
 
-Can Guo.
-
-> Thanks,
-> Stanley Chu
->> 
->> Change LGTM.
->> 
->> Regards,
->> 
->> Can Guo.
