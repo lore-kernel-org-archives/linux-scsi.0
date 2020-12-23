@@ -2,78 +2,75 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2978C433E6
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 14:16:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56D0CC433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 15:52:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D1932333E
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 14:16:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20EAC23384
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 15:52:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729204AbgLWOP3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Dec 2020 09:15:29 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:9477 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728650AbgLWOP0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 09:15:26 -0500
-Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4D1FZ55M7vzhvTy;
-        Wed, 23 Dec 2020 22:14:05 +0800 (CST)
-Received: from ubuntu.network (10.175.138.68) by
- DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
- 14.3.498.0; Wed, 23 Dec 2020 22:14:29 +0800
-From:   Zheng Yongjun <zhengyongjun3@huawei.com>
-To:     <kashyap.desai@broadcom.com>, <sumit.saxena@broadcom.com>,
-        <shivasharan.srikanteshwara@broadcom.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <megaraidlinux.pdl@broadcom.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Zheng Yongjun <zhengyongjun3@huawei.com>
-Subject: [PATCH -next] scsi: megaraid: Use DEFINE_SPINLOCK() for spinlock
-Date:   Wed, 23 Dec 2020 22:15:05 +0800
-Message-ID: <20201223141505.1123-1-zhengyongjun3@huawei.com>
-X-Mailer: git-send-email 2.22.0
+        id S1729046AbgLWPwb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Dec 2020 10:52:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47656 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726390AbgLWPwa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 10:52:30 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B2CFC06179C;
+        Wed, 23 Dec 2020 07:51:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=DvH0NyUD3VzfHuiFkeAq1PYtCpt4Xs2NiwNXDYcFb5E=; b=r5Av1aYEpmlsqfXcI87HZwooYp
+        hNoYZTPHlzpf8R3PngDBkeUYyekmPZHjSvP+5Y3t/QDQeOb7PjtU60bOreHBspxZd8YUySWfx6LXs
+        Jc2J9cL/2SNWMnDDg0JGyL1dbeq6bwFLoAYSIkWYQpYYDrcyBWd1k7ay5dhh6Ajknf6vcfWMobB4M
+        d7YDf4C3uW5cb8WAsCp1mdzQnIS5cXmqbZK92BQ+Gkc1Nn7tDAmwqTDjrN+pMSjzMJ8ia/7RQBNPY
+        TuwEJMOQDeNP7zK1fBQ2omM4imubJcd/XoiZyc13i9XFXRjtUoP5Advk/4h1hgU32RFuK0kJecodo
+        rkLAE63g==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1ks6QT-0001ad-OM; Wed, 23 Dec 2020 15:51:45 +0000
+Date:   Wed, 23 Dec 2020 15:51:45 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Pavel Begunkov <asml.silence@gmail.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Matthew Wilcox <willy@infradead.org>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: Re: [PATCH v1 0/6] no-copy bvec
+Message-ID: <20201223155145.GA5902@infradead.org>
+References: <cover.1607976425.git.asml.silence@gmail.com>
+ <20201215014114.GA1777020@T590>
+ <103235c1-e7d0-0b55-65d0-013d1a09304e@gmail.com>
+ <20201215120357.GA1798021@T590>
+ <e755fec3-4181-1414-0603-02e1a1f4e9eb@gmail.com>
+ <20201222141112.GE13079@infradead.org>
+ <933030f0-e428-18fd-4668-68db4f14b976@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.138.68]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <933030f0-e428-18fd-4668-68db4f14b976@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-spinlock can be initialized automatically with DEFINE_SPINLOCK()
-rather than explicitly calling spin_lock_init().
+On Wed, Dec 23, 2020 at 12:52:59PM +0000, Pavel Begunkov wrote:
+> Can scatterlist have 0-len entries? Those are directly translated into
+> bvecs, e.g. in nvme/target/io-cmd-file.c and target/target_core_file.c.
+> I've audited most of others by this moment, they're fine.
 
-Signed-off-by: Zheng Yongjun <zhengyongjun3@huawei.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index e158d3d62056..206089507b9f 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -199,7 +199,7 @@ static bool support_nvme_encapsulation;
- static bool support_pci_lane_margining;
- 
- /* define lock for aen poll */
--static spinlock_t poll_aen_lock;
-+static DEFINE_SPINLOCK(poll_aen_lock);
- 
- extern struct dentry *megasas_debugfs_root;
- 
-@@ -8875,8 +8875,6 @@ static int __init megasas_init(void)
- 	 */
- 	pr_info("megasas: %s\n", MEGASAS_VERSION);
- 
--	spin_lock_init(&poll_aen_lock);
--
- 	support_poll_for_event = 2;
- 	support_device_change = 1;
- 	support_nvme_encapsulation = true;
--- 
-2.22.0
-
+For block layer SGLs we should never see them, and for nvme neither.
+I think the same is true for the SCSI target code, but please double
+check.
