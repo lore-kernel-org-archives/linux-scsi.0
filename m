@@ -2,125 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A4A6C4360C
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:47:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9B4EC43219
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:48:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4494B22D73
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:47:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0F902256F
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Dec 2020 02:48:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730976AbgLWCq5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:46:57 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:55064 "EHLO
-        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729691AbgLWCWb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2020 21:22:31 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608690126; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=qxXxIQFDgNqs7K4WCzNIbU7cKbT7cPDQvy88szv1zbg=;
- b=xjo9OeL3Je9D2crUQU6MGpkc95ERoiTZHHuljcYUebBx4A0Xl5hrzD9hGrihUNgQutRnBQ7f
- VeDuo7L90pKgw6fDMcceak4yfSsMLe9emrtibGzVGSG3wrczrugajHWlwC3SnjL2USq922mP
- XJ1P7lEju97g2nxP8QR5c8dH5/k=
-X-Mailgun-Sending-Ip: 69.72.43.15
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n08.prod.us-west-2.postgun.com with SMTP id
- 5fe2a9b2cfe5dd67db29238a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Dec 2020 02:21:38
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7500CC5515F; Wed, 23 Dec 2020 02:21:38 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A0A6CC48B1D;
-        Wed, 23 Dec 2020 02:21:36 +0000 (UTC)
+        id S1730258AbgLWCsg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Dec 2020 21:48:36 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50890 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729560AbgLWCWJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:22:09 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 77169229C5;
+        Wed, 23 Dec 2020 02:21:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1608690111;
+        bh=A//1FcQ0hG5Dy2GXj2HyetJnjQgebC+vhG8uDwqR5DQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=KYUIzaVsBx09aXkzAMDCOjg2ZyZQxXYvSCiIrVFiwR1qG8LodVWC0u68i32tf1fqH
+         Jig3zc0LSj/XVMroI/ovx9NBgYUK3DpZxeJSfLMgkxtujVB3zqJrL4R63yLwclAD72
+         gx8nU66oa1W3SU6uwE8xKOZaH/Vjpj+K8V41iv1OGJFm+I14l8BgrrDpHpm1YBHYcI
+         rNoTwEC+pqCGc5tDHZjsb49cNHqxJl5RRWeRowdR56udJd19VLibMCAoICiqLjXacj
+         r2SE1cjtEtigILFto06HbbwD8n6yRAeIpMnSULel8c5CUChELfql33I/UUjH7ow0cC
+         2iseFbASpHvsQ==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 39/87] scsi: atari_scsi: Fix race condition between .queuecommand and EH
+Date:   Tue, 22 Dec 2020 21:20:15 -0500
+Message-Id: <20201223022103.2792705-39-sashal@kernel.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201223022103.2792705-1-sashal@kernel.org>
+References: <20201223022103.2792705-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 23 Dec 2020 10:21:36 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Kiwoong Kim <kwmad.kim@samsung.com>
-Cc:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        asutoshd@codeaurora.org, bvanassche@acm.org,
-        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, bhoon95.kim@samsung.com
-Subject: Re: [PATCH v4 1/2] ufs: add a vops to configure block parameter
-In-Reply-To: <d937b2a64d597ce969ad3e36419f9814e5e202ae.1608689016.git.kwmad.kim@samsung.com>
-References: <cover.1608689016.git.kwmad.kim@samsung.com>
- <CGME20201223021601epcas2p1311bd2ee57014e3b536de5a5ca286f85@epcas2p1.samsung.com>
- <d937b2a64d597ce969ad3e36419f9814e5e202ae.1608689016.git.kwmad.kim@samsung.com>
-Message-ID: <b179a682b82118f09919db886ff71eb5@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-23 10:05, Kiwoong Kim wrote:
-> There could be some cases to set block parameters
-> per host, because of its own dma structure or whatever.
-> 
-> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+From: Finn Thain <fthain@telegraphics.com.au>
 
-You missed my reviewed-by tag... Again, here it is
+[ Upstream commit 03fe6a640a05c5dc04b6bcdddfb981d015e84ed4 ]
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
+It is possible that bus_reset_cleanup() or .eh_abort_handler could be
+invoked during NCR5380_queuecommand(). If that takes place before the new
+command is enqueued and after the ST-DMA "lock" has been acquired, the
+ST-DMA "lock" will be released again. This will result in a lost DMA
+interrupt and a command timeout. Fix this by excluding EH and interrupt
+handlers while the new command is enqueued.
 
-> ---
->  drivers/scsi/ufs/ufshcd.c | 2 ++
->  drivers/scsi/ufs/ufshcd.h | 8 ++++++++
->  2 files changed, 10 insertions(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 92d433d..5f89b0e 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -4758,6 +4758,8 @@ static int ufshcd_slave_configure(struct
-> scsi_device *sdev)
-> 
->  	ufshcd_crypto_setup_rq_keyslot_manager(hba, q);
-> 
-> +	ufshcd_vops_slave_configure(hba, sdev);
-> +
->  	return 0;
->  }
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 61344c4..4bf4fed 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -329,6 +329,7 @@ struct ufs_hba_variant_ops {
->  					void *data);
->  	int	(*program_key)(struct ufs_hba *hba,
->  			       const union ufs_crypto_cfg_entry *cfg, int slot);
-> +	void	(*slave_configure)(struct scsi_device *sdev);
->  };
-> 
->  /* clock gating state  */
-> @@ -1228,6 +1229,13 @@ static inline void
-> ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
->  		hba->vops->config_scaling_param(hba, profile, data);
->  }
-> 
-> +static inline void ufshcd_vops_slave_configure(struct ufs_hba *hba,
-> +						    struct scsi_device *sdev)
-> +{
-> +	if (hba->vops && hba->vops->slave_configure)
-> +		hba->vops->slave_configure(sdev);
-> +}
-> +
->  extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
-> 
->  /*
+Link: https://lore.kernel.org/r/af25163257796b50bb99d4ede4025cea55787b8f.1605847196.git.fthain@telegraphics.com.au
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/NCR5380.c    |  9 ++++++---
+ drivers/scsi/atari_scsi.c | 10 +++-------
+ 2 files changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 95a3e3bf2b431..7907694013fc1 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -559,11 +559,14 @@ static int NCR5380_queue_command(struct Scsi_Host *instance,
+ 
+ 	cmd->result = 0;
+ 
+-	if (!NCR5380_acquire_dma_irq(instance))
+-		return SCSI_MLQUEUE_HOST_BUSY;
+-
+ 	spin_lock_irqsave(&hostdata->lock, flags);
+ 
++	if (!NCR5380_acquire_dma_irq(instance)) {
++		spin_unlock_irqrestore(&hostdata->lock, flags);
++
++		return SCSI_MLQUEUE_HOST_BUSY;
++	}
++
+ 	/*
+ 	 * Insert the cmd into the issue queue. Note that REQUEST SENSE
+ 	 * commands are added to the head of the queue since any command will
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index 764c46d7333e6..42f11c8815a7f 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -376,15 +376,11 @@ static int falcon_get_lock(struct Scsi_Host *instance)
+ 	if (IS_A_TT())
+ 		return 1;
+ 
+-	if (stdma_is_locked_by(scsi_falcon_intr) &&
+-	    instance->hostt->can_queue > 1)
++	if (stdma_is_locked_by(scsi_falcon_intr))
+ 		return 1;
+ 
+-	if (in_interrupt())
+-		return stdma_try_lock(scsi_falcon_intr, instance);
+-
+-	stdma_lock(scsi_falcon_intr, instance);
+-	return 1;
++	/* stdma_lock() may sleep which means it can't be used here */
++	return stdma_try_lock(scsi_falcon_intr, instance);
+ }
+ 
+ #ifndef MODULE
+-- 
+2.27.0
+
