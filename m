@@ -2,216 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDCDFC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Dec 2020 17:21:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB46C4332B
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Dec 2020 17:31:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6EF922512
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Dec 2020 17:21:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D668022512
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Dec 2020 17:31:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728700AbgLXRVI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Dec 2020 12:21:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55770 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727144AbgLXRVH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Dec 2020 12:21:07 -0500
-Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A91EC061757;
-        Thu, 24 Dec 2020 09:20:27 -0800 (PST)
-Received: by mail-ej1-x62f.google.com with SMTP id b9so4084265ejy.0;
-        Thu, 24 Dec 2020 09:20:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=GGGzCG6IsBMm3fKDl4elkBUls6e2qJh6NDI+c/9UOVg=;
-        b=A84eQ8uVK969jiJpPK8vMzc/Lqjy5tRqL3zSTKKnNfLXXRbLO49oKzNcIsl5NvxqkZ
-         /yy2sLywselg8mHHlONdYTQocLy5wRinuSfyYjX7/a+f6Ch1wfXUYGMpjsaLOIBCU187
-         pnGKVoAYsTZgBo27GPBbhqPe12PdgAVsU6d0V9OTEFpz5k4DKFB2QHukyQcP9Mkk8554
-         a2y/kvrPoPHSZV4vw0tBXm5vjZXy+uFrGE9NlmovHSgEsyJO5wpvXlZv92tbfgLxeUtO
-         dN/by6puRFDD3UD+xw5DFdNCrcxMbjk3j59b8py6SIAHGvChuk/Yf865Mc4gurCGNLoz
-         qaMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=GGGzCG6IsBMm3fKDl4elkBUls6e2qJh6NDI+c/9UOVg=;
-        b=H9h5Zk+UFGMqxiybUN+Xxmx1cvzNbj481zcGg40O/gpH1YuIV829VT1X8MYS6L6K3f
-         MmnRxEswZlbXgMf2J4cBoysijiy0iZMBuG0gGA1Qpxloy35KnyvXDSamBqUb6CWQ5Lis
-         y45PtEpI5FRj+2Hbz1IlZ2M2uK9AqwwU/sAbM7rZnI2ayN6Vzndv3PpPjnkFmm1EHNUH
-         dwrvdNzQTugvd/LefpraRiSWeay/CapTQEqHC4NBx6nE20vGHKz3MRxGgfO9RaLYLIlj
-         EirXirX3/0plPOjWFkRUk2LBVz8b4nHt7d5D6tA1Ze78g0t4rPzAnu7DQOHMX9kpid5l
-         f/1g==
-X-Gm-Message-State: AOAM533bEyfVzzk/BUXBMAMDQYHoGyPrnfjryntD//9HJ9HMQgwb7Yom
-        AODWHYK+G7ZQws5QFJ6Ancw=
-X-Google-Smtp-Source: ABdhPJxwfqpAyB2nBZn54mlMWSjbeK9ir7qV1+u+LZm+giSvrDBMjS2wmfYoMIQt+zwAMfeqFTVAhw==
-X-Received: by 2002:a17:907:105e:: with SMTP id oy30mr28636567ejb.495.1608830425752;
-        Thu, 24 Dec 2020 09:20:25 -0800 (PST)
-Received: from localhost.localdomain (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.gmail.com with ESMTPSA id m5sm12874446eja.11.2020.12.24.09.20.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Dec 2020 09:20:25 -0800 (PST)
-From:   Bean Huo <huobean@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        rjw@rjwysocki.net
-Subject: [PATCH v2 1/3] scsi: ufs: Replace sprintf and snprintf with sysfs_emit
-Date:   Thu, 24 Dec 2020 18:20:08 +0100
-Message-Id: <20201224172010.10701-2-huobean@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201224172010.10701-1-huobean@gmail.com>
-References: <20201224172010.10701-1-huobean@gmail.com>
+        id S1728718AbgLXRbA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Dec 2020 12:31:00 -0500
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:37900 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726839AbgLXRbA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Dec 2020 12:31:00 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 97C271280937;
+        Thu, 24 Dec 2020 09:30:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1608831019;
+        bh=ZrDKMysEKyRnhYwGjS71SXXWaighP0ldoE8CWdohIrg=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=r8mNX+IrqMNTTr696CzKuwaS+Sq91rTomLLBTI6H2DQdIAq2hg33Y7UH5jb+Go3cI
+         tb6nDGo60ZPDH/51WQjOHUSL6ZxKTbUHp+YB5IXye5R/Z2sAeuMEGaBDZTuMX5elLc
+         TByeaVv9dfWCLAVPKYUK4GoJKGCinejD2LtKCi08=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id h3bvsEulAG7l; Thu, 24 Dec 2020 09:30:19 -0800 (PST)
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:600:8280:66d1::c447])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 8B4791280936;
+        Thu, 24 Dec 2020 09:30:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1608831019;
+        bh=ZrDKMysEKyRnhYwGjS71SXXWaighP0ldoE8CWdohIrg=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=r8mNX+IrqMNTTr696CzKuwaS+Sq91rTomLLBTI6H2DQdIAq2hg33Y7UH5jb+Go3cI
+         tb6nDGo60ZPDH/51WQjOHUSL6ZxKTbUHp+YB5IXye5R/Z2sAeuMEGaBDZTuMX5elLc
+         TByeaVv9dfWCLAVPKYUK4GoJKGCinejD2LtKCi08=
+Message-ID: <bdd002f433928dd545d336a982516afa4e095d49.camel@HansenPartnership.com>
+Subject: Re: [PATCH v1 0/6] no-copy bvec
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     dgilbert@interlog.com, Christoph Hellwig <hch@infradead.org>,
+        Pavel Begunkov <asml.silence@gmail.com>
+Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Matthew Wilcox <willy@infradead.org>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+Date:   Thu, 24 Dec 2020 09:30:17 -0800
+In-Reply-To: <8abc56c2-4db8-5ee3-ab2d-8960d0eeeb0d@interlog.com>
+References: <cover.1607976425.git.asml.silence@gmail.com>
+         <20201215014114.GA1777020@T590>
+         <103235c1-e7d0-0b55-65d0-013d1a09304e@gmail.com>
+         <20201215120357.GA1798021@T590>
+         <e755fec3-4181-1414-0603-02e1a1f4e9eb@gmail.com>
+         <20201222141112.GE13079@infradead.org>
+         <933030f0-e428-18fd-4668-68db4f14b976@gmail.com>
+         <20201223155145.GA5902@infradead.org>
+         <f06ece44a86eb9c8ef07bbd9f6f53342366b7751.camel@HansenPartnership.com>
+         <8abc56c2-4db8-5ee3-ab2d-8960d0eeeb0d@interlog.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+On Wed, 2020-12-23 at 15:23 -0500, Douglas Gilbert wrote:
+> On 2020-12-23 11:04 a.m., James Bottomley wrote:
+> > On Wed, 2020-12-23 at 15:51 +0000, Christoph Hellwig wrote:
+> > > On Wed, Dec 23, 2020 at 12:52:59PM +0000, Pavel Begunkov wrote:
+> > > > Can scatterlist have 0-len entries? Those are directly
+> > > > translated into bvecs, e.g. in nvme/target/io-cmd-file.c and
+> > > > target/target_core_file.c. I've audited most of others by this
+> > > > moment, they're fine.
+> > > 
+> > > For block layer SGLs we should never see them, and for nvme
+> > > neither. I think the same is true for the SCSI target code, but
+> > > please double check.
+> > 
+> > Right, no-one ever wants to see a 0-len scatter list entry.  The
+> > reason is that every driver uses the sgl to program the device DMA
+> > engine in the way NVME does.  a 0 length sgl would be a dangerous
+> > corner case: some DMA engines would ignore it and others would go
+> > haywire, so if we ever let a 0 length list down into the driver,
+> > they'd have to understand the corner case behaviour of their DMA
+> > engine and filter it accordingly, which is why we disallow them in
+> > the upper levels, since they're effective nops anyway.
+> 
+> When using scatter gather lists at the far end (i.e. on the storage
+> device) the T10 examples (WRITE SCATTERED and POPULATE TOKEN in SBC-
+> 4) explicitly allow the "number of logical blocks" in their sgl_s to
+> be zero and state that it is _not_ to be considered an error.
 
-sprintf and snprintf may cause output defect in sysfs content, it is
-better to use new added sysfs_emit function which knows the size of the
-temporary buffer.
+But that's pretty irrelevant.  The scatterlists that block has been
+constructing to drive DMA engines pre-date SCSI's addition of SGLs by
+decades (all SCSI commands before the object commands use a linear
+buffer which is implemented in the HBA engine as a scatterlist but not
+described by the SCSI standard as one).
 
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/scsi/ufs/ufs-sysfs.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+So the answer to the question should the block layer emit zero length
+sgl elements is "no" because they can confuse some DMA engines.
 
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 08e72b7eef6a..0e1438485133 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -67,7 +67,7 @@ static ssize_t rpm_lvl_show(struct device *dev,
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
+If there's a more theoretical question of whether the target driver in
+adding commands it doesn't yet support should inject zero length SGL
+elements into block because SCSI allows it, the answer is still "no"
+because we don't want block to have SGLs that may confuse other DMA
+engines.  There's lots of daft corner cases in the SCSI standard we
+don't implement and a nop for SGL elements seems to be one of the more
+hare brained because it adds no useful feature and merely causes
+compatibility issues.
+
+James
  
--	return sprintf(buf, "%d\n", hba->rpm_lvl);
-+	return sysfs_emit(buf, "%d\n", hba->rpm_lvl);
- }
- 
- static ssize_t rpm_lvl_store(struct device *dev,
-@@ -81,7 +81,7 @@ static ssize_t rpm_target_dev_state_show(struct device *dev,
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 
--	return sprintf(buf, "%s\n", ufschd_ufs_dev_pwr_mode_to_string(
-+	return sysfs_emit(buf, "%s\n", ufschd_ufs_dev_pwr_mode_to_string(
- 			ufs_pm_lvl_states[hba->rpm_lvl].dev_state));
- }
- 
-@@ -90,7 +90,7 @@ static ssize_t rpm_target_link_state_show(struct device *dev,
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 
--	return sprintf(buf, "%s\n", ufschd_uic_link_state_to_string(
-+	return sysfs_emit(buf, "%s\n", ufschd_uic_link_state_to_string(
- 			ufs_pm_lvl_states[hba->rpm_lvl].link_state));
- }
- 
-@@ -99,7 +99,7 @@ static ssize_t spm_lvl_show(struct device *dev,
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 
--	return sprintf(buf, "%d\n", hba->spm_lvl);
-+	return sysfs_emit(buf, "%d\n", hba->spm_lvl);
- }
- 
- static ssize_t spm_lvl_store(struct device *dev,
-@@ -113,7 +113,7 @@ static ssize_t spm_target_dev_state_show(struct device *dev,
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 
--	return sprintf(buf, "%s\n", ufschd_ufs_dev_pwr_mode_to_string(
-+	return sysfs_emit(buf, "%s\n", ufschd_ufs_dev_pwr_mode_to_string(
- 				ufs_pm_lvl_states[hba->spm_lvl].dev_state));
- }
- 
-@@ -122,7 +122,7 @@ static ssize_t spm_target_link_state_show(struct device *dev,
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 
--	return sprintf(buf, "%s\n", ufschd_uic_link_state_to_string(
-+	return sysfs_emit(buf, "%s\n", ufschd_uic_link_state_to_string(
- 				ufs_pm_lvl_states[hba->spm_lvl].link_state));
- }
- 
-@@ -165,7 +165,7 @@ static ssize_t auto_hibern8_show(struct device *dev,
- 	ufshcd_release(hba);
- 	pm_runtime_put_sync(hba->dev);
- 
--	return scnprintf(buf, PAGE_SIZE, "%d\n", ufshcd_ahit_to_us(ahit));
-+	return sysfs_emit(buf, "%d\n", ufshcd_ahit_to_us(ahit));
- }
- 
- static ssize_t auto_hibern8_store(struct device *dev,
-@@ -233,18 +233,18 @@ static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
- 		return -EINVAL;
- 	switch (param_size) {
- 	case 1:
--		ret = sprintf(sysfs_buf, "0x%02X\n", *desc_buf);
-+		ret = sysfs_emit(sysfs_buf, "0x%02X\n", *desc_buf);
- 		break;
- 	case 2:
--		ret = sprintf(sysfs_buf, "0x%04X\n",
-+		ret = sysfs_emit(sysfs_buf, "0x%04X\n",
- 			get_unaligned_be16(desc_buf));
- 		break;
- 	case 4:
--		ret = sprintf(sysfs_buf, "0x%08X\n",
-+		ret = sysfs_emit(sysfs_buf, "0x%08X\n",
- 			get_unaligned_be32(desc_buf));
- 		break;
- 	case 8:
--		ret = sprintf(sysfs_buf, "0x%016llX\n",
-+		ret = sysfs_emit(sysfs_buf, "0x%016llX\n",
- 			get_unaligned_be64(desc_buf));
- 		break;
- 	}
-@@ -609,7 +609,7 @@ static ssize_t _name##_show(struct device *dev,				\
- 				      SD_ASCII_STD);			\
- 	if (ret < 0)							\
- 		goto out;						\
--	ret = snprintf(buf, PAGE_SIZE, "%s\n", desc_buf);		\
-+	ret = sysfs_emit(buf, "%s\n", desc_buf);		\
- out:									\
- 	pm_runtime_put_sync(hba->dev);					\
- 	kfree(desc_buf);						\
-@@ -659,7 +659,7 @@ static ssize_t _name##_show(struct device *dev,				\
- 	pm_runtime_put_sync(hba->dev);					\
- 	if (ret)							\
- 		return -EINVAL;						\
--	return sprintf(buf, "%s\n", flag ? "true" : "false"); \
-+	return sysfs_emit(buf, "%s\n", flag ? "true" : "false");	\
- }									\
- static DEVICE_ATTR_RO(_name)
- 
-@@ -717,7 +717,7 @@ static ssize_t _name##_show(struct device *dev,				\
- 	pm_runtime_put_sync(hba->dev);					\
- 	if (ret)							\
- 		return -EINVAL;						\
--	return sprintf(buf, "0x%08X\n", value);				\
-+	return sysfs_emit(buf, "0x%08X\n", value);			\
- }									\
- static DEVICE_ATTR_RO(_name)
- 
-@@ -856,7 +856,7 @@ static ssize_t dyn_cap_needed_attribute_show(struct device *dev,
- 	pm_runtime_put_sync(hba->dev);
- 	if (ret)
- 		return -EINVAL;
--	return sprintf(buf, "0x%08X\n", value);
-+	return sysfs_emit(buf, "0x%08X\n", value);
- }
- static DEVICE_ATTR_RO(dyn_cap_needed_attribute);
- 
--- 
-2.17.1
 
