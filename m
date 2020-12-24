@@ -2,135 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D53B2C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Dec 2020 02:22:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3177C43381
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Dec 2020 06:42:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9878D2256F
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Dec 2020 02:22:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83742227BF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Dec 2020 06:42:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728744AbgLXCWB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Dec 2020 21:22:01 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:39630 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728595AbgLXCWB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2020 21:22:01 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608776500; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=S8nLSphtgRIthcWd+DqYiMxGoyZFuv5gfG0AMVjl8Ic=;
- b=sDHq1HLzrnCg4rjPXkdsdNCfj2wIcHy9NG9+2G/cOCizT0cSWK7q4V7VppCcuIbXAy8HfnzQ
- RydBEnGJAiZcJz297u5oxIT5nV04gtii2uWPGV6VlljsG/IqzTc73IjmILGr+PiXOa3R4ENJ
- QuxgjU5/B+vEjvtm1L7RbpKAa/8=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 5fe3fb17120d248bb548277e (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Dec 2020 02:21:11
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 998BBC43461; Thu, 24 Dec 2020 02:21:10 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1B8B6C433C6;
-        Thu, 24 Dec 2020 02:21:09 +0000 (UTC)
+        id S1726958AbgLXGmJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Dec 2020 01:42:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42510 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725613AbgLXGmI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Dec 2020 01:42:08 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69174C061794;
+        Wed, 23 Dec 2020 22:41:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=hgZ+lZNP3B/K9Oj/s5udXyrBDVF5xZJ71bYP1nixZdo=; b=hzjxM2aGVedqOqTPaeLJKWYuY4
+        xkqiFVFpQKWkgqEySPTCLiSvWvcEJrgRLsJBOnrS0QZdfm4dsSOXZeO0PNLab6ggKCBq1lw6nS3kW
+        Y3WaTFZ3ODCAIHwpPam/g5eYytVyG9hqXEC7GPEvByE+eg/g0kafrqgdDkSIVH2HW9VYEuJ8mRIkc
+        w8qFJdvjTIWFM9bOal30Yib0rTy3vrCUR/hyI4lFqoeN/ROgowBMVqDPpJTNzgpcOcabaesZubCUI
+        HkInEHpdkOK6FMxwC/PdZmtaPCsBloa68FjEumpKaKfc+q+vT15CVF5bXkEMkQSnUvd4YD+3SEbZo
+        nG0RhV+w==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1ksKJL-0000uK-Pw; Thu, 24 Dec 2020 06:41:19 +0000
+Date:   Thu, 24 Dec 2020 06:41:19 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Pavel Begunkov <asml.silence@gmail.com>
+Cc:     dgilbert@interlog.com,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Matthew Wilcox <willy@infradead.org>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: Re: [PATCH v1 0/6] no-copy bvec
+Message-ID: <20201224064119.GA3048@infradead.org>
+References: <20201215014114.GA1777020@T590>
+ <103235c1-e7d0-0b55-65d0-013d1a09304e@gmail.com>
+ <20201215120357.GA1798021@T590>
+ <e755fec3-4181-1414-0603-02e1a1f4e9eb@gmail.com>
+ <20201222141112.GE13079@infradead.org>
+ <933030f0-e428-18fd-4668-68db4f14b976@gmail.com>
+ <20201223155145.GA5902@infradead.org>
+ <f06ece44a86eb9c8ef07bbd9f6f53342366b7751.camel@HansenPartnership.com>
+ <8abc56c2-4db8-5ee3-ab2d-8960d0eeeb0d@interlog.com>
+ <f5cb6ac2-1c59-33be-de8f-e86c8528fbec@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 24 Dec 2020 10:21:09 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        beanhuo@micron.com, asutoshd@codeaurora.org,
-        matthias.bgg@gmail.com, bvanassche@acm.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
-        chaotian.jing@mediatek.com, cc.chou@mediatek.com,
-        jiajie.hao@mediatek.com, alice.chao@mediatek.com
-Subject: Re: [PATCH v1] scsi: ufs-mediatek: Enable
- UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
-In-Reply-To: <c83d34ca8b0338526f6440f1c4ee43dd@codeaurora.org>
-References: <20201222072928.32328-1-stanley.chu@mediatek.com>
- <c862866ec97516a7ffb891e5de3d132d@codeaurora.org>
- <1608697172.14045.5.camel@mtkswgap22>
- <c83d34ca8b0338526f6440f1c4ee43dd@codeaurora.org>
-Message-ID: <ff8efda608e6f95737a675ee03fa3ca2@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f5cb6ac2-1c59-33be-de8f-e86c8528fbec@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-23 12:41, Can Guo wrote:
-> On 2020-12-23 12:19, Stanley Chu wrote:
->> Hi Can,
->> 
->> On Tue, 2020-12-22 at 19:34 +0800, Can Guo wrote:
->>> On 2020-12-22 15:29, Stanley Chu wrote:
->>> > Flush during hibern8 is sufficient on MediaTek platforms, thus
->>> > enable UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL to skip enabling
->>> > fWriteBoosterBufferFlush during WriteBooster initialization.
->>> >
->>> > Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
->>> > ---
->>> >  drivers/scsi/ufs/ufs-mediatek.c | 1 +
->>> >  1 file changed, 1 insertion(+)
->>> >
->>> > diff --git a/drivers/scsi/ufs/ufs-mediatek.c
->>> > b/drivers/scsi/ufs/ufs-mediatek.c
->>> > index 80618af7c872..c55202b92a43 100644
->>> > --- a/drivers/scsi/ufs/ufs-mediatek.c
->>> > +++ b/drivers/scsi/ufs/ufs-mediatek.c
->>> > @@ -661,6 +661,7 @@ static int ufs_mtk_init(struct ufs_hba *hba)
->>> >
->>> >  	/* Enable WriteBooster */
->>> >  	hba->caps |= UFSHCD_CAP_WB_EN;
->>> > +	hba->quirks |= UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
->>> >  	hba->vps->wb_flush_threshold = UFS_WB_BUF_REMAIN_PERCENT(80);
->>> >
->>> >  	if (host->caps & UFS_MTK_CAP_DISABLE_AH8)
->>> 
->>> I guess we need it too...
->> 
->> AHHA, if you decide to add this in your platform too later, maybe we
->> could change the way it does: Keep manual flush disabled by default 
->> and
->> remove this quirk.
->> 
+On Wed, Dec 23, 2020 at 08:32:45PM +0000, Pavel Begunkov wrote:
+> On 23/12/2020 20:23, Douglas Gilbert wrote:
+> > On 2020-12-23 11:04 a.m., James Bottomley wrote:
+> >> On Wed, 2020-12-23 at 15:51 +0000, Christoph Hellwig wrote:
+> >>> On Wed, Dec 23, 2020 at 12:52:59PM +0000, Pavel Begunkov wrote:
+> >>>> Can scatterlist have 0-len entries? Those are directly translated
+> >>>> into bvecs, e.g. in nvme/target/io-cmd-file.c and
+> >>>> target/target_core_file.c. I've audited most of others by this
+> >>>> moment, they're fine.
+> >>>
+> >>> For block layer SGLs we should never see them, and for nvme neither.
+> >>> I think the same is true for the SCSI target code, but please double
+> >>> check.
+> >>
+> >> Right, no-one ever wants to see a 0-len scatter list entry.?? The reason
+> >> is that every driver uses the sgl to program the device DMA engine in
+> >> the way NVME does.?? a 0 length sgl would be a dangerous corner case:
+> >> some DMA engines would ignore it and others would go haywire, so if we
+> >> ever let a 0 length list down into the driver, they'd have to
+> >> understand the corner case behaviour of their DMA engine and filter it
+> >> accordingly, which is why we disallow them in the upper levels, since
+> >> they're effective nops anyway.
+> > 
+> > When using scatter gather lists at the far end (i.e. on the storage device)
+> > the T10 examples (WRITE SCATTERED and POPULATE TOKEN in SBC-4) explicitly
+> > allow the "number of logical blocks" in their sgl_s to be zero and state
+> > that it is _not_ to be considered an error.
 > 
-> Yeah... I will get back with an answer later.
+> It's fine for my case unless it leaks them out of device driver to the
+> net/block layer/etc. Is it?
 
-Hi Stanley,
-
-Do you see any substantial benefit of having fWriteBoosterBufferFlushEn 
-disabled?
-
-Thanks,
-Can Guo.
-
-> 
-> Thanks,
-> 
-> Can Guo.
-> 
->> Thanks,
->> Stanley Chu
->>> 
->>> Change LGTM.
->>> 
->>> Regards,
->>> 
->>> Can Guo.
+None of the SCSI Command mentions above are supported by Linux,
+nevermind mapped to struct scatterlist.
