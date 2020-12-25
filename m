@@ -2,129 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB46C4332B
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Dec 2020 17:31:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85118C433DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Dec 2020 08:45:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D668022512
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Dec 2020 17:31:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 494C2230FF
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Dec 2020 08:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728718AbgLXRbA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Dec 2020 12:31:00 -0500
-Received: from bedivere.hansenpartnership.com ([96.44.175.130]:37900 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726839AbgLXRbA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Dec 2020 12:31:00 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 97C271280937;
-        Thu, 24 Dec 2020 09:30:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1608831019;
-        bh=ZrDKMysEKyRnhYwGjS71SXXWaighP0ldoE8CWdohIrg=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=r8mNX+IrqMNTTr696CzKuwaS+Sq91rTomLLBTI6H2DQdIAq2hg33Y7UH5jb+Go3cI
-         tb6nDGo60ZPDH/51WQjOHUSL6ZxKTbUHp+YB5IXye5R/Z2sAeuMEGaBDZTuMX5elLc
-         TByeaVv9dfWCLAVPKYUK4GoJKGCinejD2LtKCi08=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id h3bvsEulAG7l; Thu, 24 Dec 2020 09:30:19 -0800 (PST)
-Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:600:8280:66d1::c447])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 8B4791280936;
-        Thu, 24 Dec 2020 09:30:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1608831019;
-        bh=ZrDKMysEKyRnhYwGjS71SXXWaighP0ldoE8CWdohIrg=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=r8mNX+IrqMNTTr696CzKuwaS+Sq91rTomLLBTI6H2DQdIAq2hg33Y7UH5jb+Go3cI
-         tb6nDGo60ZPDH/51WQjOHUSL6ZxKTbUHp+YB5IXye5R/Z2sAeuMEGaBDZTuMX5elLc
-         TByeaVv9dfWCLAVPKYUK4GoJKGCinejD2LtKCi08=
-Message-ID: <bdd002f433928dd545d336a982516afa4e095d49.camel@HansenPartnership.com>
-Subject: Re: [PATCH v1 0/6] no-copy bvec
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     dgilbert@interlog.com, Christoph Hellwig <hch@infradead.org>,
-        Pavel Begunkov <asml.silence@gmail.com>
-Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>,
-        Matthew Wilcox <willy@infradead.org>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
-        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
-Date:   Thu, 24 Dec 2020 09:30:17 -0800
-In-Reply-To: <8abc56c2-4db8-5ee3-ab2d-8960d0eeeb0d@interlog.com>
-References: <cover.1607976425.git.asml.silence@gmail.com>
-         <20201215014114.GA1777020@T590>
-         <103235c1-e7d0-0b55-65d0-013d1a09304e@gmail.com>
-         <20201215120357.GA1798021@T590>
-         <e755fec3-4181-1414-0603-02e1a1f4e9eb@gmail.com>
-         <20201222141112.GE13079@infradead.org>
-         <933030f0-e428-18fd-4668-68db4f14b976@gmail.com>
-         <20201223155145.GA5902@infradead.org>
-         <f06ece44a86eb9c8ef07bbd9f6f53342366b7751.camel@HansenPartnership.com>
-         <8abc56c2-4db8-5ee3-ab2d-8960d0eeeb0d@interlog.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1726198AbgLYIpF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Dec 2020 03:45:05 -0500
+Received: from mail.zju.edu.cn ([61.164.42.155]:43554 "EHLO zju.edu.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726023AbgLYIpF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Dec 2020 03:45:05 -0500
+X-Greylist: delayed 513 seconds by postgrey-1.27 at vger.kernel.org; Fri, 25 Dec 2020 03:45:04 EST
+Received: from localhost.localdomain (unknown [10.192.85.18])
+        by mail-app3 (Coremail) with SMTP id cC_KCgBHSQxJpOVfUMgHAA--.32869S4;
+        Fri, 25 Dec 2020 16:35:25 +0800 (CST)
+From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
+To:     dinghao.liu@zju.edu.cn, kjlu@umn.edu
+Cc:     Satish Kharat <satishkh@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: fnic: Fix memleak in vnic_dev_init_devcmd2
+Date:   Fri, 25 Dec 2020 16:35:20 +0800
+Message-Id: <20201225083520.22015-1-dinghao.liu@zju.edu.cn>
+X-Mailer: git-send-email 2.17.1
+X-CM-TRANSID: cC_KCgBHSQxJpOVfUMgHAA--.32869S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7WF15Wr17uFW3tw45CFWktFb_yoW8XF4xpF
+        yfKa4rAFyxJ3WUXr4UJa1ru3W5uayxAa48WrWjg39rXFy3CFyktF18try3XrWkXr97AF4x
+        ZFn8A3WI9F1DKw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUka1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
+        w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
+        IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJr0_GcWl84ACjcxK6I8E
+        87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
+        8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
+        Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
+        xGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vIr41l42xK82IY6x8ErcxF
+        aVAv8VW8uw4UJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr
+        4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxG
+        rwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8Jw
+        CI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY
+        6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgYEBlZdtRrnPgADs4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2020-12-23 at 15:23 -0500, Douglas Gilbert wrote:
-> On 2020-12-23 11:04 a.m., James Bottomley wrote:
-> > On Wed, 2020-12-23 at 15:51 +0000, Christoph Hellwig wrote:
-> > > On Wed, Dec 23, 2020 at 12:52:59PM +0000, Pavel Begunkov wrote:
-> > > > Can scatterlist have 0-len entries? Those are directly
-> > > > translated into bvecs, e.g. in nvme/target/io-cmd-file.c and
-> > > > target/target_core_file.c. I've audited most of others by this
-> > > > moment, they're fine.
-> > > 
-> > > For block layer SGLs we should never see them, and for nvme
-> > > neither. I think the same is true for the SCSI target code, but
-> > > please double check.
-> > 
-> > Right, no-one ever wants to see a 0-len scatter list entry.  The
-> > reason is that every driver uses the sgl to program the device DMA
-> > engine in the way NVME does.  a 0 length sgl would be a dangerous
-> > corner case: some DMA engines would ignore it and others would go
-> > haywire, so if we ever let a 0 length list down into the driver,
-> > they'd have to understand the corner case behaviour of their DMA
-> > engine and filter it accordingly, which is why we disallow them in
-> > the upper levels, since they're effective nops anyway.
-> 
-> When using scatter gather lists at the far end (i.e. on the storage
-> device) the T10 examples (WRITE SCATTERED and POPULATE TOKEN in SBC-
-> 4) explicitly allow the "number of logical blocks" in their sgl_s to
-> be zero and state that it is _not_ to be considered an error.
+When ioread32() returns 0xFFFFFFFF, we should execute
+cleanup functions like other error handling paths before
+returning.
 
-But that's pretty irrelevant.  The scatterlists that block has been
-constructing to drive DMA engines pre-date SCSI's addition of SGLs by
-decades (all SCSI commands before the object commands use a linear
-buffer which is implemented in the HBA engine as a scatterlist but not
-described by the SCSI standard as one).
+Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+---
+ drivers/scsi/fnic/vnic_dev.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-So the answer to the question should the block layer emit zero length
-sgl elements is "no" because they can confuse some DMA engines.
-
-If there's a more theoretical question of whether the target driver in
-adding commands it doesn't yet support should inject zero length SGL
-elements into block because SCSI allows it, the answer is still "no"
-because we don't want block to have SGLs that may confuse other DMA
-engines.  There's lots of daft corner cases in the SCSI standard we
-don't implement and a nop for SGL elements seems to be one of the more
-hare brained because it adds no useful feature and merely causes
-compatibility issues.
-
-James
+diff --git a/drivers/scsi/fnic/vnic_dev.c b/drivers/scsi/fnic/vnic_dev.c
+index a2beee6e09f0..5988c300cc82 100644
+--- a/drivers/scsi/fnic/vnic_dev.c
++++ b/drivers/scsi/fnic/vnic_dev.c
+@@ -444,7 +444,8 @@ static int vnic_dev_init_devcmd2(struct vnic_dev *vdev)
+ 	fetch_index = ioread32(&vdev->devcmd2->wq.ctrl->fetch_index);
+ 	if (fetch_index == 0xFFFFFFFF) { /* check for hardware gone  */
+ 		pr_err("error in devcmd2 init");
+-		return -ENODEV;
++		err = -ENODEV;
++		goto err_free_wq;
+ 	}
  
+ 	/*
+@@ -460,7 +461,7 @@ static int vnic_dev_init_devcmd2(struct vnic_dev *vdev)
+ 	err = vnic_dev_alloc_desc_ring(vdev, &vdev->devcmd2->results_ring,
+ 			DEVCMD2_RING_SIZE, DEVCMD2_DESC_SIZE);
+ 	if (err)
+-		goto err_free_wq;
++		goto err_disable_wq;
+ 
+ 	vdev->devcmd2->result =
+ 		(struct devcmd2_result *) vdev->devcmd2->results_ring.descs;
+@@ -481,8 +482,9 @@ static int vnic_dev_init_devcmd2(struct vnic_dev *vdev)
+ 
+ err_free_desc_ring:
+ 	vnic_dev_free_desc_ring(vdev, &vdev->devcmd2->results_ring);
+-err_free_wq:
++err_disable_wq:
+ 	vnic_wq_disable(&vdev->devcmd2->wq);
++err_free_wq:
+ 	vnic_wq_free(&vdev->devcmd2->wq);
+ err_free_devcmd2:
+ 	kfree(vdev->devcmd2);
+-- 
+2.17.1
 
