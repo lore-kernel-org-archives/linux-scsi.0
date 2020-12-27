@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CE44C433DB
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Dec 2020 13:16:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85914C433E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Dec 2020 13:52:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 25D722250F
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Dec 2020 13:16:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27E71207E8
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Dec 2020 13:52:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726148AbgL0NQI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Dec 2020 08:16:08 -0500
-Received: from mga04.intel.com ([192.55.52.120]:17568 "EHLO mga04.intel.com"
+        id S1726117AbgL0NwJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Dec 2020 08:52:09 -0500
+Received: from mga03.intel.com ([134.134.136.65]:26474 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726103AbgL0NQI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 27 Dec 2020 08:16:08 -0500
-IronPort-SDR: qCFt3PRibUXWXZ4sKSAXzWDbLlToNTBbpBT9y39WZM2Q/8avbY5zBxEQOtuol3bTDKUbHC+SjZ
- vFd3LowimTDw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9846"; a="173729678"
+        id S1726089AbgL0NwI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 27 Dec 2020 08:52:08 -0500
+IronPort-SDR: E7Jw5R3MSPSUg26JN9ZAob/QO1yjMFAMs7Z2ZyFwnPkAOEE+c4/6Gl0cr4OQNwAReA/CWUH/LC
+ Mqsf4QFNkCFA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9846"; a="176403734"
 X-IronPort-AV: E=Sophos;i="5.78,452,1599548400"; 
-   d="gz'50?scan'50,208,50";a="173729678"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2020 05:15:24 -0800
-IronPort-SDR: iEVZ8PkCKcrNyUz48VwPCINR3gus9J60AE2vECdQlWrkgGahAvsNDaR/Uc65v87VvgT38ydvC/
- 7TtaWk84hoUA==
+   d="gz'50?scan'50,208,50";a="176403734"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2020 05:51:24 -0800
+IronPort-SDR: suQdvq2qv8w5dA5hcbTQICcjcQ7lOaOuAvU+Ow5nqvorZuLZPvUolH3GzdiQRsUuNsipU6ldRg
+ 1qJKdmdt2mOw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.78,452,1599548400"; 
-   d="gz'50?scan'50,208,50";a="358245027"
+   d="gz'50?scan'50,208,50";a="343448290"
 Received: from lkp-server02.sh.intel.com (HELO 4242b19f17ef) ([10.239.97.151])
-  by orsmga002.jf.intel.com with ESMTP; 27 Dec 2020 05:15:20 -0800
+  by orsmga003.jf.intel.com with ESMTP; 27 Dec 2020 05:51:21 -0800
 Received: from kbuild by 4242b19f17ef with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1ktVtH-0002Oo-MG; Sun, 27 Dec 2020 13:15:19 +0000
-Date:   Sun, 27 Dec 2020 21:14:49 +0800
+        id 1ktWS8-0002PC-Ek; Sun, 27 Dec 2020 13:51:20 +0000
+Date:   Sun, 27 Dec 2020 21:51:16 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Kashyap Desai <kashyap.desai@broadcom.com>,
         linux-scsi@vger.kernel.org
@@ -45,20 +45,20 @@ Cc:     kbuild-all@lists.01.org, jejb@linux.ibm.com,
         peter.rivera@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: Re: [PATCH 06/24] mpi3mr: add support of event handling part-1
-Message-ID: <202012272151.xYcx9E4D-lkp@intel.com>
-References: <20201222101156.98308-7-kashyap.desai@broadcom.com>
+Subject: Re: [PATCH 17/24] mpi3mr: add support of threaded isr
+Message-ID: <202012272112.ZXvREaJO-lkp@intel.com>
+References: <20201222101156.98308-18-kashyap.desai@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="45Z9DzgjV8m4Oswq"
+Content-Type: multipart/mixed; boundary="Q68bSM7Ycu6FN28Q"
 Content-Disposition: inline
-In-Reply-To: <20201222101156.98308-7-kashyap.desai@broadcom.com>
+In-Reply-To: <20201222101156.98308-18-kashyap.desai@broadcom.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---45Z9DzgjV8m4Oswq
+--Q68bSM7Ycu6FN28Q
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -79,10 +79,10 @@ compiler: powerpc64-linux-gcc (GCC) 9.3.0
 reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
         chmod +x ~/bin/make.cross
-        # https://github.com/0day-ci/linux/commit/f353c97f9e813b38c4546df7698017174df5a559
+        # https://github.com/0day-ci/linux/commit/877f4e22deefcac84c14ed953f360f8131e02d14
         git remote add linux-review https://github.com/0day-ci/linux
         git fetch --no-tags linux-review Kashyap-Desai/Introducing-mpi3mr-driver/20201222-181732
-        git checkout f353c97f9e813b38c4546df7698017174df5a559
+        git checkout 877f4e22deefcac84c14ed953f360f8131e02d14
         # save the attached .config to linux build tree
         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-9.3.0 make.cross ARCH=powerpc 
 
@@ -91,242 +91,71 @@ Reported-by: kernel test robot <lkp@intel.com>
 
 All warnings (new ones prefixed by >>):
 
-   drivers/scsi/mpi3mr/mpi3mr_os.c:281:6: warning: no previous prototype for 'mpi3mr_cleanup_fwevt_list' [-Wmissing-prototypes]
-     281 | void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc)
-         |      ^~~~~~~~~~~~~~~~~~~~~~~~~
->> drivers/scsi/mpi3mr/mpi3mr_os.c:412:24: warning: no previous prototype for 'mpi3mr_get_tgtdev_by_handle' [-Wmissing-prototypes]
-     412 | struct mpi3mr_tgt_dev *mpi3mr_get_tgtdev_by_handle(
-         |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~
->> drivers/scsi/mpi3mr/mpi3mr_os.c:460:24: warning: no previous prototype for 'mpi3mr_get_tgtdev_by_perst_id' [-Wmissing-prototypes]
-     460 | struct mpi3mr_tgt_dev *mpi3mr_get_tgtdev_by_perst_id(
-         |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/mpi3mr/mpi3mr_os.c:580:6: warning: no previous prototype for 'mpi3mr_rfresh_tgtdevs' [-Wmissing-prototypes]
-     580 | void mpi3mr_rfresh_tgtdevs(struct mpi3mr_ioc *mrioc)
-         |      ^~~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/mpi3mr/mpi3mr_os.c: In function 'mpi3mr_devstatuschg_evt_bh':
->> drivers/scsi/mpi3mr/mpi3mr_os.c:689:32: warning: variable 'scsi_tgt_priv_data' set but not used [-Wunused-but-set-variable]
-     689 |  struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data = NULL;
-         |                                ^~~~~~~~~~~~~~~~~~
-   drivers/scsi/mpi3mr/mpi3mr_os.c: At top level:
-   drivers/scsi/mpi3mr/mpi3mr_os.c:952:6: warning: no previous prototype for 'mpi3mr_flush_delayed_rmhs_list' [-Wmissing-prototypes]
-     952 | void mpi3mr_flush_delayed_rmhs_list(struct mpi3mr_ioc *mrioc)
-         |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/mpi3mr/mpi3mr_fw.c: In function 'mpi3mr_isr_poll':
+>> drivers/scsi/mpi3mr/mpi3mr_fw.c:481:6: warning: variable 'num_admin_replies' set but not used [-Wunused-but-set-variable]
+     481 |  u32 num_admin_replies = 0, num_op_reply = 0;
+         |      ^~~~~~~~~~~~~~~~~
 
 
-vim +/mpi3mr_get_tgtdev_by_handle +412 drivers/scsi/mpi3mr/mpi3mr_os.c
+vim +/num_admin_replies +481 drivers/scsi/mpi3mr/mpi3mr_fw.c
 
-   271	
-   272	/**
-   273	 * mpi3mr_cleanup_fwevt_list - Cleanup firmware event list
-   274	 * @mrioc: Adapter instance reference
-   275	 *
-   276	 * Flush all pending firmware events from the firmware event
-   277	 * list.
-   278	 *
-   279	 * Return: Nothing.
-   280	 */
- > 281	void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc)
-   282	{
-   283		struct mpi3mr_fwevt *fwevt = NULL;
-   284	
-   285		if ((list_empty(&mrioc->fwevt_list) && !mrioc->current_event) ||
-   286		    !mrioc->fwevt_worker_thread || in_interrupt())
-   287			return;
-   288	
-   289		while ((fwevt = mpi3mr_dequeue_fwevt(mrioc)) ||
-   290		    (fwevt = mrioc->current_event)) {
-   291			/*
-   292			 * Wait on the fwevt to complete. If this returns 1, then
-   293			 * the event was never executed, and we need a put for the
-   294			 * reference the work had on the fwevt.
-   295			 *
-   296			 * If it did execute, we wait for it to finish, and the put will
-   297			 * happen from mpi3mr_process_fwevt()
-   298			 */
-   299			if (cancel_work_sync(&fwevt->work)) {
-   300				/*
-   301				 * Put fwevt reference count after
-   302				 * dequeuing it from worker queue
-   303				 */
-   304				mpi3mr_fwevt_put(fwevt);
-   305				/*
-   306				 * Put fwevt reference count to neutralize
-   307				 * kref_init increment
-   308				 */
-   309				mpi3mr_fwevt_put(fwevt);
-   310			}
-   311		}
-   312	}
-   313	
-   314	/**
-   315	 * mpi3mr_alloc_tgtdev - target device allocator
-   316	 *
-   317	 * Allocate target device instance and initialize the reference
-   318	 * count
-   319	 *
-   320	 * Return: target device instance.
-   321	 */
-   322	static struct mpi3mr_tgt_dev *mpi3mr_alloc_tgtdev(void)
-   323	{
-   324		struct mpi3mr_tgt_dev *tgtdev;
-   325	
-   326		tgtdev = kzalloc(sizeof(*tgtdev), GFP_ATOMIC);
-   327		if (!tgtdev)
-   328			return NULL;
-   329		kref_init(&tgtdev->ref_count);
-   330		return tgtdev;
-   331	}
-   332	
-   333	/**
-   334	 * mpi3mr_tgtdev_add_to_list -Add tgtdevice to the list
-   335	 * @mrioc: Adapter instance reference
-   336	 * @tgtdev: Target device
-   337	 *
-   338	 * Add the target device to the target device list
-   339	 *
-   340	 * Return: Nothing.
-   341	 */
-   342	static void mpi3mr_tgtdev_add_to_list(struct mpi3mr_ioc *mrioc,
-   343		struct mpi3mr_tgt_dev *tgtdev)
-   344	{
-   345		unsigned long flags;
-   346	
-   347		spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-   348		mpi3mr_tgtdev_get(tgtdev);
-   349		INIT_LIST_HEAD(&tgtdev->list);
-   350		list_add_tail(&tgtdev->list, &mrioc->tgtdev_list);
-   351		spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-   352	}
-   353	
-   354	/**
-   355	 * mpi3mr_tgtdev_del_from_list -Delete tgtdevice from the list
-   356	 * @mrioc: Adapter instance reference
-   357	 * @tgtdev: Target device
-   358	 *
-   359	 * Remove the target device from the target device list
-   360	 *
-   361	 * Return: Nothing.
-   362	 */
-   363	static void mpi3mr_tgtdev_del_from_list(struct mpi3mr_ioc *mrioc,
-   364		struct mpi3mr_tgt_dev *tgtdev)
-   365	{
-   366		unsigned long flags;
-   367	
-   368		spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-   369		if (!list_empty(&tgtdev->list)) {
-   370			list_del_init(&tgtdev->list);
-   371			mpi3mr_tgtdev_put(tgtdev);
-   372		}
-   373		spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-   374	}
-   375	
-   376	/**
-   377	 * __mpi3mr_get_tgtdev_by_handle -Get tgtdev from device handle
-   378	 * @mrioc: Adapter instance reference
-   379	 * @handle: Device handle
-   380	 *
-   381	 * Accessor to retrieve target device from the device handle.
-   382	 * Non Lock version
-   383	 *
-   384	 * Return: Target device reference.
-   385	 */
-   386	static struct mpi3mr_tgt_dev  *__mpi3mr_get_tgtdev_by_handle(
-   387		struct mpi3mr_ioc *mrioc, u16 handle)
-   388	{
-   389		struct mpi3mr_tgt_dev *tgtdev;
-   390	
-   391		assert_spin_locked(&mrioc->tgtdev_lock);
-   392		list_for_each_entry(tgtdev, &mrioc->tgtdev_list, list)
-   393			if (tgtdev->dev_handle == handle)
-   394				goto found_tgtdev;
-   395		return NULL;
-   396	
-   397	found_tgtdev:
-   398		mpi3mr_tgtdev_get(tgtdev);
-   399		return tgtdev;
-   400	}
-   401	
-   402	/**
-   403	 * mpi3mr_get_tgtdev_by_handle -Get tgtdev from device handle
-   404	 * @mrioc: Adapter instance reference
-   405	 * @handle: Device handle
-   406	 *
-   407	 * Accessor to retrieve target device from the device handle.
-   408	 * Lock version
-   409	 *
-   410	 * Return: Target device reference.
-   411	 */
- > 412	struct mpi3mr_tgt_dev *mpi3mr_get_tgtdev_by_handle(
-   413		struct mpi3mr_ioc *mrioc, u16 handle)
-   414	{
-   415		struct mpi3mr_tgt_dev *tgtdev;
-   416		unsigned long flags;
-   417	
-   418		spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-   419		tgtdev = __mpi3mr_get_tgtdev_by_handle(mrioc, handle);
-   420		spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-   421		return tgtdev;
-   422	}
-   423	
-   424	/**
-   425	 * __mpi3mr_get_tgtdev_by_perst_id -Get tgtdev from persist ID
-   426	 * @mrioc: Adapter instance reference
-   427	 * @persist_id: Persistent ID
-   428	 *
-   429	 * Accessor to retrieve target device from the Persistent ID.
-   430	 * Non Lock version
-   431	 *
-   432	 * Return: Target device reference.
-   433	 */
-   434	static struct mpi3mr_tgt_dev  *__mpi3mr_get_tgtdev_by_perst_id(
-   435		struct mpi3mr_ioc *mrioc, u16 persist_id)
-   436	{
-   437		struct mpi3mr_tgt_dev *tgtdev;
-   438	
-   439		assert_spin_locked(&mrioc->tgtdev_lock);
-   440		list_for_each_entry(tgtdev, &mrioc->tgtdev_list, list)
-   441			if (tgtdev->perst_id == persist_id)
-   442				goto found_tgtdev;
-   443		return NULL;
-   444	
-   445	found_tgtdev:
-   446		mpi3mr_tgtdev_get(tgtdev);
-   447		return tgtdev;
-   448	}
-   449	
-   450	/**
-   451	 * mpi3mr_get_tgtdev_by_perst_id -Get tgtdev from persistent ID
-   452	 * @mrioc: Adapter instance reference
-   453	 * @persist_id: Persistent ID
-   454	 *
-   455	 * Accessor to retrieve target device from the Persistent ID.
-   456	 * Lock version
-   457	 *
-   458	 * Return: Target device reference.
-   459	 */
- > 460	struct mpi3mr_tgt_dev *mpi3mr_get_tgtdev_by_perst_id(
-   461		struct mpi3mr_ioc *mrioc, u16 persist_id)
-   462	{
-   463		struct mpi3mr_tgt_dev *tgtdev;
-   464		unsigned long flags;
    465	
-   466		spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-   467		tgtdev = __mpi3mr_get_tgtdev_by_perst_id(mrioc, persist_id);
-   468		spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-   469		return tgtdev;
-   470	}
-   471	
+   466	/**
+   467	 * mpi3mr_isr_poll - Reply queue polling routine
+   468	 * @irq: IRQ
+   469	 * @privdata: Interrupt info
+   470	 *
+   471	 * poll for pending I/O completions in a loop until pending I/Os
+   472	 * present or controller queue depth I/Os are processed.
+   473	 *
+   474	 * Return: IRQ_NONE or IRQ_HANDLED
+   475	 */
+   476	static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
+   477	{
+   478		struct mpi3mr_intr_info *intr_info = privdata;
+   479		struct mpi3mr_ioc *mrioc;
+   480		u16 midx;
+ > 481		u32 num_admin_replies = 0, num_op_reply = 0;
+   482	
+   483		if (!intr_info || !intr_info->op_reply_q)
+   484			return IRQ_NONE;
+   485	
+   486		mrioc = intr_info->mrioc;
+   487		midx = intr_info->msix_index;
+   488	
+   489		/* Poll for pending IOs completions */
+   490		do {
+   491			if (!mrioc->intr_enabled)
+   492				break;
+   493	
+   494			if (!midx)
+   495				num_admin_replies = mpi3mr_process_admin_reply_q(mrioc);
+   496			if (intr_info->op_reply_q)
+   497				num_op_reply +=
+   498				    mpi3mr_process_op_reply_q(mrioc, intr_info);
+   499	
+   500			usleep_range(mrioc->irqpoll_sleep, 10 * mrioc->irqpoll_sleep);
+   501	
+   502		} while (atomic_read(&intr_info->op_reply_q->pend_ios) &&
+   503		    (num_op_reply < mrioc->max_host_ios));
+   504	
+   505		intr_info->op_reply_q->enable_irq_poll = false;
+   506		enable_irq(pci_irq_vector(mrioc->pdev, midx));
+   507	
+   508		return IRQ_HANDLED;
+   509	}
+   510	
 
 ---
 0-DAY CI Kernel Test Service, Intel Corporation
 https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
 
---45Z9DzgjV8m4Oswq
+--Q68bSM7Ycu6FN28Q
 Content-Type: application/gzip
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICLSA6F8AAy5jb25maWcAlDxZc9s40u/zK1SZl92HzPqKJ6ktPYAkSGFEEjQASpZfWI6j
+H4sICCiK6F8AAy5jb25maWcAlDxZc9s40u/zK1SZl92HzPqKJ6ktPYAkSGFEEjQASpZfWI6j
 ZFzr2Pl87DfZX7/dAI8GCDnZVM0k7AYaV6Nv6Ndffl2wl+eHr9fPtzfXd3ffF1/29/vH6+f9
 p8Xn27v9PxeZXNTSLHgmzG/QuLy9f/nrH98e/n//+O1m8e6346Pfjt4+3hwv1vvH+/3dIn24
 /3z75QUo3D7c//LrL6msc1F0adptuNJC1p3hl2b5pqdwfvb2Dim+/XJzs/hbkaZ/X3z47fS3
@@ -1654,4 +1483,4 @@ TEIWsGqmkdwkDJ93UzC2F14CMWeQEyCpJWQaQh/PnCGkXQprcxPeGpcgHAio54nSTFzYmQPo
 PzlIhHJZ+1G8iU+cyR9nHnSbycVDO/EquS9WSCu11c7u2I5bL26Mom/PdaRk9O5UhHpZxM/9
 PypqICBSnQQA
 
---45Z9DzgjV8m4Oswq--
+--Q68bSM7Ycu6FN28Q--
