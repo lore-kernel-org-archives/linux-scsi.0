@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88E85C43603
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Dec 2020 16:24:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D424FC4332B
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Dec 2020 16:38:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CC2C22B2A
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Dec 2020 16:24:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7570223E8
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Dec 2020 16:38:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729491AbgL1NLb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Dec 2020 08:11:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39212 "EHLO mail.kernel.org"
+        id S1730478AbgL1Qii (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Dec 2020 11:38:38 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57222 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731698AbgL1NLT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Dec 2020 08:11:19 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8687B208D5;
-        Mon, 28 Dec 2020 13:10:38 +0000 (UTC)
+        id S1729746AbgL1NBP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Dec 2020 08:01:15 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7DE0E207C9;
+        Mon, 28 Dec 2020 13:00:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1609161039;
+        s=korg; t=1609160459;
         bh=DzQVrDmpBv/nzWuap9GEoQhzLuYOWJZ/LoOP4HLkE0s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SYzc8OCa1etYTR+OO/wRUUXpNn+cvn1vJmfDeoa4cZ5cduGD1PNIol1ZaVfVTAbca
-         eHAFlOFabcT4gkgik2lEXjMtf16U7NVps9WsvCawHxltQU1inLU1FfB+DGrq2Nzgoc
-         X7FxBROFFDQZFjrw8t/EeTzBX1ZFH0aZBL5ae7qU=
+        b=tsCOnj/B72NzYPjRf4VvyJbQPoBbJIDrVQMZYT3qVNUzkAiL6Zeyztbka8U+Tc1XR
+         Oej7iq3D9b5So0gN9bc08GMa3CiG+VfJ2GZ0E4sl+bpYFiV9J0wlw2eCeaZsMvZHtG
+         l4+0yJcZIwyRUI9JmD05fCgb673okO8/kzFmn8tQ=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -39,12 +39,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Randy Dunlap <rdunlap@infradead.org>,
         Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 4.14 039/242] scsi: bnx2i: Requires MMU
-Date:   Mon, 28 Dec 2020 13:47:24 +0100
-Message-Id: <20201228124906.594643809@linuxfoundation.org>
+Subject: [PATCH 4.9 028/175] scsi: bnx2i: Requires MMU
+Date:   Mon, 28 Dec 2020 13:48:01 +0100
+Message-Id: <20201228124854.620731202@linuxfoundation.org>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201228124904.654293249@linuxfoundation.org>
-References: <20201228124904.654293249@linuxfoundation.org>
+In-Reply-To: <20201228124853.216621466@linuxfoundation.org>
+References: <20201228124853.216621466@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
