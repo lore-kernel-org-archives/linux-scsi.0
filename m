@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9312DC433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9717C4332B
 	for <linux-scsi@archiver.kernel.org>; Mon, 28 Dec 2020 23:51:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D7E322262
+	by mail.kernel.org (Postfix) with ESMTP id BCACC223C8
 	for <linux-scsi@archiver.kernel.org>; Mon, 28 Dec 2020 23:51:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730342AbgL1Xur (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Dec 2020 18:50:47 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:59720 "EHLO smtp.infotech.no"
+        id S1730378AbgL1Xuw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Dec 2020 18:50:52 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:59760 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730302AbgL1Xur (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Dec 2020 18:50:47 -0500
+        id S1730359AbgL1Xuv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Dec 2020 18:50:51 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 5768320426F;
-        Tue, 29 Dec 2020 00:50:04 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id D4C05204238;
+        Tue, 29 Dec 2020 00:50:08 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id NabGG3TkQnQp; Tue, 29 Dec 2020 00:50:01 +0100 (CET)
+        with ESMTP id yOsrXQPjSrST; Tue, 29 Dec 2020 00:50:07 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 0B29A204237;
-        Tue, 29 Dec 2020 00:49:59 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id 423E4204237;
+        Tue, 29 Dec 2020 00:50:05 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         target-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com,
         bostroesser@gmail.com, bvanassche@acm.org, ddiss@suse.de
-Subject: [PATCH v5 1/4] sgl_alloc_order: remove 4 GiB limit, sgl_free() warning
-Date:   Mon, 28 Dec 2020 18:49:52 -0500
-Message-Id: <20201228234955.190858-2-dgilbert@interlog.com>
+Subject: [PATCH v5 4/4] scatterlist: add sgl_memset()
+Date:   Mon, 28 Dec 2020 18:49:55 -0500
+Message-Id: <20201228234955.190858-5-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201228234955.190858-1-dgilbert@interlog.com>
 References: <20201228234955.190858-1-dgilbert@interlog.com>
@@ -47,89 +47,115 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch fixes a check done by sgl_alloc_order() before it starts
-any allocations. The comment in the original said: "Check for integer
-overflow" but the check itself contained an integer overflow! The
-right hand side (rhs) of the expression in the condition is resolved
-as u32 so it could not exceed UINT32_MAX (4 GiB) which means 'length'
-could not exceed that value. If that was the intention then the
-comment above it could be dropped and the condition rewritten more
-clearly as:
-     if (length > UINT32_MAX) <<failure path >>;
+The existing sg_zero_buffer() function is a bit restrictive. For
+example protection information (PI) blocks are usually initialized
+to 0xff bytes. As its name suggests sgl_memset() is modelled on
+memset(). One difference is the type of the val argument which is
+u8 rather than int. Plus it returns the number of bytes (over)written.
 
-Get around the integer overflow problem in the rhs of the original
-check by taking ilog2() of both sides.
-
-This function may be used to replace vmalloc(unsigned long) for a
-large allocation (e.g. a ramdisk). vmalloc has no limit at 4 GiB so
-it seems unreasonable that:
-    sgl_alloc_order(unsigned long long length, ....)
-does. sgl_s made with sgl_alloc_order() have equally sized segments
-placed in a scatter gather array. That allows O(1) navigation around
-a big sgl using some simple integer arithmetic.
-
-Revise some of this function's description to more accurately reflect
-what this function is doing.
-
-An earlier patch fixed a memory leak in sg_alloc_order() due to the
-misuse of sgl_free(). Take the opportunity to put a one line comment
-above sgl_free()'s declaration warning that it is not suitable when
-order > 0 .
+Change implementation of sg_zero_buffer() to call this new function.
 
 Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- include/linux/scatterlist.h |  1 +
- lib/scatterlist.c           | 14 ++++++++------
- 2 files changed, 9 insertions(+), 6 deletions(-)
+ include/linux/scatterlist.h |  3 ++
+ lib/scatterlist.c           | 65 +++++++++++++++++++++++++------------
+ 2 files changed, 48 insertions(+), 20 deletions(-)
 
 diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index 6f70572b2938..8adff41f7cfa 100644
+index 71be65f9ebb5..70d3f1f73df1 100644
 --- a/include/linux/scatterlist.h
 +++ b/include/linux/scatterlist.h
-@@ -302,6 +302,7 @@ struct scatterlist *sgl_alloc(unsigned long long length, gfp_t gfp,
- 			      unsigned int *nent_p);
- void sgl_free_n_order(struct scatterlist *sgl, int nents, int order);
- void sgl_free_order(struct scatterlist *sgl, int order);
-+/* Only use sgl_free() when order is 0 */
- void sgl_free(struct scatterlist *sgl);
- #endif /* CONFIG_SGL_ALLOC */
+@@ -333,6 +333,9 @@ bool sgl_compare_sgl_idx(struct scatterlist *x_sgl, unsigned int x_nents, off_t
+ 			 struct scatterlist *y_sgl, unsigned int y_nents, off_t y_skip,
+ 			 size_t n_bytes, size_t *miscompare_idx);
  
++size_t sgl_memset(struct scatterlist *sgl, unsigned int nents, off_t skip,
++		  u8 val, size_t n_bytes);
++
+ /*
+  * Maximum number of entries that will be allocated in one piece, if
+  * a list larger than this is required then chaining will be utilized.
 diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index a59778946404..4986545beef9 100644
+index 9332365e7eb6..f06614a880c8 100644
 --- a/lib/scatterlist.c
 +++ b/lib/scatterlist.c
-@@ -554,13 +554,15 @@ EXPORT_SYMBOL(sg_alloc_table_from_pages);
- #ifdef CONFIG_SGL_ALLOC
+@@ -1038,26 +1038,7 @@ EXPORT_SYMBOL(sg_pcopy_to_buffer);
+ size_t sg_zero_buffer(struct scatterlist *sgl, unsigned int nents,
+ 		       size_t buflen, off_t skip)
+ {
+-	unsigned int offset = 0;
+-	struct sg_mapping_iter miter;
+-	unsigned int sg_flags = SG_MITER_ATOMIC | SG_MITER_TO_SG;
+-
+-	sg_miter_start(&miter, sgl, nents, sg_flags);
+-
+-	if (!sg_miter_skip(&miter, skip))
+-		return false;
+-
+-	while (offset < buflen && sg_miter_next(&miter)) {
+-		unsigned int len;
+-
+-		len = min(miter.length, buflen - offset);
+-		memset(miter.addr, 0, len);
+-
+-		offset += len;
+-	}
+-
+-	sg_miter_stop(&miter);
+-	return offset;
++	return sgl_memset(sgl, nents, skip, 0, buflen);
+ }
+ EXPORT_SYMBOL(sg_zero_buffer);
  
- /**
-- * sgl_alloc_order - allocate a scatterlist and its pages
-+ * sgl_alloc_order - allocate a scatterlist with equally sized elements
-  * @length: Length in bytes of the scatterlist. Must be at least one
-- * @order: Second argument for alloc_pages()
-+ * @order: Second argument for alloc_pages(). Each sgl element size will
-+ *	   be (PAGE_SIZE*2^order) bytes
-  * @chainable: Whether or not to allocate an extra element in the scatterlist
-- *	for scatterlist chaining purposes
-+ *	       for scatterlist chaining purposes
-  * @gfp: Memory allocation flags
-- * @nent_p: [out] Number of entries in the scatterlist that have pages
-+ * @nent_p: [out] Number of entries in the scatterlist that have pages.
-+ *		  Ignored if NULL is given.
-  *
-  * Returns: A pointer to an initialized scatterlist or %NULL upon failure.
-  */
-@@ -574,8 +576,8 @@ struct scatterlist *sgl_alloc_order(unsigned long long length,
- 	u32 elem_len;
- 
- 	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
--	/* Check for integer overflow */
--	if (length > (nent << (PAGE_SHIFT + order)))
-+	/* Integer overflow if:  length > nent*2^(PAGE_SHIFT+order) */
-+	if (ilog2(length) > ilog2(nent) + PAGE_SHIFT + order)
- 		return NULL;
- 	nalloc = nent;
- 	if (chainable) {
+@@ -1243,3 +1224,47 @@ bool sgl_compare_sgl(struct scatterlist *x_sgl, unsigned int x_nents, off_t x_sk
+ 	return sgl_compare_sgl_idx(x_sgl, x_nents, x_skip, y_sgl, y_nents, y_skip, n_bytes, NULL);
+ }
+ EXPORT_SYMBOL(sgl_compare_sgl);
++
++/**
++ * sgl_memset - set byte 'val' up to n_bytes times on SG list
++ * @sgl:		 The SG list
++ * @nents:		 Number of SG entries in sgl
++ * @skip:		 Number of bytes to skip before starting
++ * @val:		 byte value to write to sgl
++ * @n_bytes:		 The (maximum) number of bytes to modify
++ *
++ * Returns:
++ *   The number of bytes written.
++ *
++ * Notes:
++ *   Stops writing if either sgl or n_bytes is exhausted. If n_bytes is
++ *   set SIZE_MAX then val will be written to each byte until the end
++ *   of sgl.
++ *
++ *   The notes in sgl_copy_sgl() about large sgl_s _applies here as well.
++ *
++ **/
++size_t sgl_memset(struct scatterlist *sgl, unsigned int nents, off_t skip,
++		  u8 val, size_t n_bytes)
++{
++	size_t offset = 0;
++	size_t len;
++	struct sg_mapping_iter miter;
++
++	if (n_bytes == 0)
++		return 0;
++	sg_miter_start(&miter, sgl, nents, SG_MITER_ATOMIC | SG_MITER_TO_SG);
++	if (!sg_miter_skip(&miter, skip))
++		goto fini;
++
++	while ((offset < n_bytes) && sg_miter_next(&miter)) {
++		len = min(miter.length, n_bytes - offset);
++		memset(miter.addr, val, len);
++		offset += len;
++	}
++fini:
++	sg_miter_stop(&miter);
++	return offset;
++}
++EXPORT_SYMBOL(sgl_memset);
++
 -- 
 2.25.1
 
