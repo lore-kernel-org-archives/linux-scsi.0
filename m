@@ -2,104 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38FCFC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Dec 2020 12:05:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02866C43333
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Dec 2020 13:24:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE67220739
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Dec 2020 12:05:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C783D22A84
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Dec 2020 13:24:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727664AbgL1MF0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Dec 2020 07:05:26 -0500
-Received: from labrats.qualcomm.com ([199.106.110.90]:12867 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727482AbgL1MFY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Dec 2020 07:05:24 -0500
-IronPort-SDR: 0k5lsHhbcHw79ZwaIYH96GoUtAwxRqbuVSlzHzYawAZE+1cuIk0sYM0FblPPBctdFdv9SwJX0a
- I1kYsgWEzZ0y340UEemolZ+FgGbT8Dt7JSZPfWFHSha1gNlONeIepUf6YGdDWzT9aSPWed+qfC
- LPuqTlddjYiWf05w0QK6xTOd64dpXKas+WOD4SsGTqPHKRWY8WGlZGAldqdNjIOYJ5cbp1oggV
- hCzcPUBkb5EtcQ2aLRfs602fCMTd/NKAexzbKDpfrm5qeiPA797PPnSxB+sVb68/vz9btuSkC5
- /ps=
-X-IronPort-AV: E=Sophos;i="5.78,455,1599548400"; 
-   d="scan'208";a="29452600"
-Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
-  by labrats.qualcomm.com with ESMTP; 28 Dec 2020 04:04:44 -0800
-X-QCInternal: smtphost
-Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg05-sd.qualcomm.com with ESMTP; 28 Dec 2020 04:04:43 -0800
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id EC2AC2188E; Mon, 28 Dec 2020 04:04:43 -0800 (PST)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        id S2388670AbgL1NYL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Dec 2020 08:24:11 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52718 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388637AbgL1NYK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Dec 2020 08:24:10 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C14CA22AAD;
+        Mon, 28 Dec 2020 13:23:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1609161810;
+        bh=DzQVrDmpBv/nzWuap9GEoQhzLuYOWJZ/LoOP4HLkE0s=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=FWOiSa9cdM/AZRLgV0e8+krBKk93tSs+cq/8mc/FikT3j4O7A4v1Y6l8GxngXeX6o
+         g/ZcOlAKSkGidR0tbjYrtl1X5YlvP1y23kUr35YdmTfQsEhJERyjPBhy9B29nYYrO+
+         /AFTBc7JWVVDtsUnAbcSFO+1PS21Wz0qjIMv6Z/k=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] scsi: ufs: Correct the lun used in eh_device_reset_handler() callback
-Date:   Mon, 28 Dec 2020 04:04:36 -0800
-Message-Id: <1609157080-26283-1-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Randy Dunlap <rdunlap@infradead.org>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 4.19 059/346] scsi: bnx2i: Requires MMU
+Date:   Mon, 28 Dec 2020 13:46:18 +0100
+Message-Id: <20201228124922.648498092@linuxfoundation.org>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201228124919.745526410@linuxfoundation.org>
+References: <20201228124919.745526410@linuxfoundation.org>
+User-Agent: quilt/0.66
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Users can initiate resets to specific SCSI device/target/host through
-IOCTL. When this happens, the SCSI cmd passed to eh_device/target/host
-_reset_handler() callbacks is initialized with a request whose tag is -1.
-So, in this case, it is not right for eh_device_reset_handler() callback
-to count on the lun get from hba->lrb[-1]. Fix it by getting lun from the
-SCSI device associated with the SCSI cmd.
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
+[ Upstream commit 2d586494c4a001312650f0b919d534e429dd1e09 ]
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 98093a5..d577cda 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6604,19 +6604,16 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
- {
- 	struct Scsi_Host *host;
- 	struct ufs_hba *hba;
--	unsigned int tag;
- 	u32 pos;
- 	int err;
--	u8 resp = 0xF;
--	struct ufshcd_lrb *lrbp;
-+	u8 resp = 0xF, lun;
- 	unsigned long flags;
- 
- 	host = cmd->device->host;
- 	hba = shost_priv(host);
--	tag = cmd->request->tag;
- 
--	lrbp = &hba->lrb[tag];
--	err = ufshcd_issue_tm_cmd(hba, lrbp->lun, 0, UFS_LOGICAL_RESET, &resp);
-+	lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
-+	err = ufshcd_issue_tm_cmd(hba, lun, 0, UFS_LOGICAL_RESET, &resp);
- 	if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
- 		if (!err)
- 			err = resp;
-@@ -6625,7 +6622,7 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
- 
- 	/* clear the commands that were pending for corresponding LUN */
- 	for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs) {
--		if (hba->lrb[pos].lun == lrbp->lun) {
-+		if (hba->lrb[pos].lun == lun) {
- 			err = ufshcd_clear_cmd(hba, pos);
- 			if (err)
- 				break;
+The SCSI_BNX2_ISCSI kconfig symbol selects CNIC and CNIC selects UIO, which
+depends on MMU.
+
+Since 'select' does not follow dependency chains, add the same MMU
+dependency to SCSI_BNX2_ISCSI.
+
+Quietens this kconfig warning:
+
+WARNING: unmet direct dependencies detected for CNIC
+  Depends on [n]: NETDEVICES [=y] && ETHERNET [=y] && NET_VENDOR_BROADCOM [=y] && PCI [=y] && (IPV6 [=m] || IPV6 [=m]=n) && MMU [=n]
+  Selected by [m]:
+  - SCSI_BNX2_ISCSI [=m] && SCSI_LOWLEVEL [=y] && SCSI [=y] && NET [=y] && PCI [=y] && (IPV6 [=m] || IPV6 [=m]=n)
+
+Link: https://lore.kernel.org/r/20201129070916.3919-1-rdunlap@infradead.org
+Fixes: cf4e6363859d ("[SCSI] bnx2i: Add bnx2i iSCSI driver.")
+Cc: linux-scsi@vger.kernel.org
+Cc: Nilesh Javali <njavali@marvell.com>
+Cc: Manish Rangankar <mrangankar@marvell.com>
+Cc: GR-QLogic-Storage-Upstream@marvell.com
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/bnx2i/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/bnx2i/Kconfig b/drivers/scsi/bnx2i/Kconfig
+index ba30ff86d5818..b27a3738d940c 100644
+--- a/drivers/scsi/bnx2i/Kconfig
++++ b/drivers/scsi/bnx2i/Kconfig
+@@ -3,6 +3,7 @@ config SCSI_BNX2_ISCSI
+ 	depends on NET
+ 	depends on PCI
+ 	depends on (IPV6 || IPV6=n)
++	depends on MMU
+ 	select SCSI_ISCSI_ATTRS
+ 	select NETDEVICES
+ 	select ETHERNET
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.27.0
+
+
 
