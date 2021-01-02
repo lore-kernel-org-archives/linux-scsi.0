@@ -2,232 +2,144 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1778EC4161F
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Jan 2021 15:23:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CEA2C433E0
+	for <linux-scsi@archiver.kernel.org>; Sat,  2 Jan 2021 22:31:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E0220224D2
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Jan 2021 15:23:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DCCF207A1
+	for <linux-scsi@archiver.kernel.org>; Sat,  2 Jan 2021 22:31:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727187AbhABPW6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 Jan 2021 10:22:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47606 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727044AbhABPWq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2021 10:22:46 -0500
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C95BC0617A1;
-        Sat,  2 Jan 2021 07:21:34 -0800 (PST)
-Received: by mail-wm1-x32c.google.com with SMTP id g185so13756370wmf.3;
-        Sat, 02 Jan 2021 07:21:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=3l7dQjIvN+V+hEfZaCkzKb+BBnG/zeqm2g1H963d/fU=;
-        b=hKs4d/TU2wMEjpAXrytigQChKkUEsSDMoqcebeDllsKjoNG/spLXHO3ytny4jEZjuZ
-         NcLxLnXZKDqEH9Uj2glbOUxlmtYSXcbYEEbzmRPtNysnmvxO4yeCEfgncm951hEtOUZ1
-         hzlJX09+eupyD4mtHblxJyOVZVwMKlcxcxD9nbw8GLsoh0Xym5yPfV9pg84AivjTPr3M
-         a/yRyBwqMg6H/mJJ7/smc9rug0a80eRO6vJufbqg30jGrxcEEzL17qwrBGvdMV3jX7RK
-         bzucefWdFbQBUZa9GTb4HqOHSwqVZBOZ4y+ECy+X8wyJr0JlAbTMarl7wqY4+bShvhwm
-         eYZA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=3l7dQjIvN+V+hEfZaCkzKb+BBnG/zeqm2g1H963d/fU=;
-        b=PhV45bzipliA8mXI/XqaQM6i22c87cathRqUyufcW3oIkqu55WKM8UugZbhVq/k5rJ
-         qMLgLA+Ux+bUTojEAIyeAzNIr4H5Wc0VbiO8vDex39Vkv8oZzLhP5Hq4W3GU72b3cS7m
-         guXI9528lhEacJQSWGwjs36YVrah1L6cXK1/ltT1g6aLpODNGRpsaCYsq2HbRz006GIL
-         +I6ZqLvH3kZYWuz5xFl9sQfaHWHxc6g8vrqRvuBHIb65s3wPWyjgceAFR2sa4ib9NaSb
-         NdBf1Xelty81sxIkmivCHDUHAqg4mPSBmlwcOFjrkSbE5oQzKS4YZGuCggDKYgd8L94R
-         Zm1w==
-X-Gm-Message-State: AOAM530CBfJoevVAQqaN5+mtT6MvmEehDRy6n/thOO0ffJZ1zS7ZEJ77
-        W2qyCEXMHcFeeGpODNXlMDa1aGNu3MlnDg==
-X-Google-Smtp-Source: ABdhPJwGhnMFbzLGsmTiJIkT4AO1maR288iVD0rGXhF6tvzkOS5GoZ/R3t3iUBUVe2FW5oIam/JQSg==
-X-Received: by 2002:a1c:43c6:: with SMTP id q189mr19936956wma.7.1609600893086;
-        Sat, 02 Jan 2021 07:21:33 -0800 (PST)
-Received: from localhost.localdomain ([85.255.236.0])
-        by smtp.gmail.com with ESMTPSA id h13sm78671243wrm.28.2021.01.02.07.21.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 02 Jan 2021 07:21:32 -0800 (PST)
-From:   Pavel Begunkov <asml.silence@gmail.com>
-To:     linux-block@vger.kernel.org
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Ming Lei <ming.lei@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
-        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: [PATCH v2 7/7] bio: don't copy bvec for direct IO
-Date:   Sat,  2 Jan 2021 15:17:39 +0000
-Message-Id: <29ed343fa15eb4139f8ab9104d3f9b16fe025dfd.1609461359.git.asml.silence@gmail.com>
-X-Mailer: git-send-email 2.24.0
-In-Reply-To: <cover.1609461359.git.asml.silence@gmail.com>
-References: <cover.1609461359.git.asml.silence@gmail.com>
+        id S1726802AbhABWbh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 2 Jan 2021 17:31:37 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:49106 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726673AbhABWbg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2021 17:31:36 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 102MUrPo057361;
+        Sat, 2 Jan 2021 22:30:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=CEAaNsIqzlnePH2aCjdw+slJGvweo2T/l2PR/bvFR3M=;
+ b=ke7SJv6BCOza8Ou1dGbPaoGmLxVcZX2oL/3U8zuPZ9q2RxnOuSrzHos3v5IoTQQXrTv6
+ obRplIxphw7l/goTnBE4D0djJtMvIEB1KVNkHZjXUXF4AgitqlIeinwS7sy/P829kQu0
+ a03pCVKsoiUcsKcsxd9lT/rVOxzd9+OiHsSzrl/jJu2rfZxGMY3FOFds15lhXm6glwwx
+ TOCRJtGMCRuz3fKPxzYbNuicxuT3IkKfx+qS6wOgnQvrEga9VDLTpuFK7rA706xH7DSw
+ XWr5WO7f9br9xx5XaJlRn5vMe9/bZOZzPgEJXnb7GdlYENWozrFtiYAuBjzKitwDXD2M bQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2130.oracle.com with ESMTP id 35tebah0ca-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sat, 02 Jan 2021 22:30:53 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 102MRMoT153553;
+        Sat, 2 Jan 2021 22:30:52 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 35tfbmkfcr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 02 Jan 2021 22:30:52 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 102MUpCG001491;
+        Sat, 2 Jan 2021 22:30:51 GMT
+Received: from [20.15.0.204] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 02 Jan 2021 14:30:51 -0800
+Subject: Re: [PATCH 3/7] tcm qlaxx: move sess cmd list/lock to driver
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Mike Christie <michael.christie@oracle.com>,
+        himanshu.madhani@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc:     Nilesh Javali <njavali@marvell.com>
+References: <1603666998-8086-1-git-send-email-michael.christie@oracle.com>
+ <1603666998-8086-4-git-send-email-michael.christie@oracle.com>
+ <8d94c626-78e4-ed8c-d077-4add314f789c@acm.org>
+From:   Mike Christie <michael.chritie@oracle.com>
+Message-ID: <96d27c3f-6b0a-58b6-bf8a-69a18a9a85fa@oracle.com>
+Date:   Sat, 2 Jan 2021 16:30:50 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <8d94c626-78e4-ed8c-d077-4add314f789c@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9852 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
+ mlxlogscore=999 mlxscore=0 suspectscore=0 bulkscore=0 phishscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101020142
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9852 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
+ priorityscore=1501 spamscore=0 mlxscore=0 clxscore=1011 bulkscore=0
+ lowpriorityscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101020143
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The block layer spends quite a while in blkdev_direct_IO() to copy and
-initialise bio's bvec. However, if we've already got a bvec in the input
-iterator it might be reused in some cases, i.e. when new
-ITER_BVEC_FLAG_FIXED flag is set. Simple tests show considerable
-performance boost, and it also reduces memory footprint.
+On 12/31/20 10:45 PM, Bart Van Assche wrote:
+> On 10/25/20 4:03 PM, Mike Christie wrote:
+>> @@ -617,25 +629,20 @@ static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, u64 lun,
+>>  static struct qla_tgt_cmd *tcm_qla2xxx_find_cmd_by_tag(struct fc_port *sess,
+>>      uint64_t tag)
+>>  {
+>> -	struct qla_tgt_cmd *cmd = NULL;
+>> -	struct se_cmd *secmd;
+>> +	struct qla_tgt_cmd *cmd;
+>>  	unsigned long flags;
+>>  
+>>  	if (!sess->se_sess)
+>>  		return NULL;
+>>  
+>> -	spin_lock_irqsave(&sess->se_sess->sess_cmd_lock, flags);
+>> -	list_for_each_entry(secmd, &sess->se_sess->sess_cmd_list, se_cmd_list) {
+>> -		/* skip task management functions, including tmr->task_cmd */
+>> -		if (secmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
+>> -			continue;
+>> -
+>> -		if (secmd->tag == tag) {
+>> -			cmd = container_of(secmd, struct qla_tgt_cmd, se_cmd);
+>> -			break;
+>> -		}
+>> +	spin_lock_irqsave(&sess->sess_cmd_lock, flags);
+>> +	list_for_each_entry(cmd, &sess->sess_cmd_list, sess_cmd_list) {
+>> +		if (cmd->se_cmd.tag == tag)
+>> +			goto done;
+>>  	}
+>> -	spin_unlock_irqrestore(&sess->se_sess->sess_cmd_lock, flags);
+>> +	cmd = NULL;
+>> +done:
+>> +	spin_unlock_irqrestore(&sess->sess_cmd_lock, flags);
+>>  
+>>  	return cmd;
+>>  }
+> 
+> Hi Mike,
+> 
+> Although this behavior has not been introduced by your patch: what prevents
+> that the command found by tcm_qla2xxx_find_cmd_by_tag() disappears after
+> sess_cmd_lock has been unlocked and before the caller uses the qla_tgt_cmd 
+> pointer? As you may know the corresponding code in SCST increments the SCSI
 
-Suggested-by: Matthew Wilcox <willy@infradead.org>
-Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
----
- Documentation/filesystems/porting.rst |  9 ++++
- block/bio.c                           | 67 ++++++++++++---------------
- include/linux/bio.h                   |  5 +-
- 3 files changed, 42 insertions(+), 39 deletions(-)
+Nothing.
 
-diff --git a/Documentation/filesystems/porting.rst b/Documentation/filesystems/porting.rst
-index c722d94f29ea..1f8cf8e10b34 100644
---- a/Documentation/filesystems/porting.rst
-+++ b/Documentation/filesystems/porting.rst
-@@ -872,3 +872,12 @@ its result is kern_unmount() or kern_unmount_array().
- 
- zero-length bvec segments are disallowed, they must be filtered out before
- passed on to an iterator.
-+
-+---
-+
-+**mandatory**
-+
-+For bvec based itererators bio_iov_iter_get_pages() now doesn't copy bvecs but
-+uses the one provided. Anyone issuing kiocb-I/O should ensure that the bvec and
-+page references stay until I/O has completed, i.e. until ->ki_complete() has
-+been called or returned with non -EIOCBQUEUED code.
-diff --git a/block/bio.c b/block/bio.c
-index 9f26984af643..6f031a04b59a 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -960,21 +960,17 @@ void bio_release_pages(struct bio *bio, bool mark_dirty)
- }
- EXPORT_SYMBOL_GPL(bio_release_pages);
- 
--static int __bio_iov_bvec_add_pages(struct bio *bio, struct iov_iter *iter)
-+static int bio_iov_bvec_set(struct bio *bio, struct iov_iter *iter)
- {
--	const struct bio_vec *bv = iter->bvec;
--	unsigned int len;
--	size_t size;
--
--	if (WARN_ON_ONCE(iter->iov_offset > bv->bv_len))
--		return -EINVAL;
--
--	len = min_t(size_t, bv->bv_len - iter->iov_offset, iter->count);
--	size = bio_add_page(bio, bv->bv_page, len,
--				bv->bv_offset + iter->iov_offset);
--	if (unlikely(size != len))
--		return -EINVAL;
--	iov_iter_advance(iter, size);
-+	WARN_ON_ONCE(BVEC_POOL_IDX(bio) != 0);
-+
-+	bio->bi_vcnt = iter->nr_segs;
-+	bio->bi_max_vecs = iter->nr_segs;
-+	bio->bi_io_vec = (struct bio_vec *)iter->bvec;
-+	bio->bi_iter.bi_bvec_done = iter->iov_offset;
-+	bio->bi_iter.bi_size = iter->count;
-+
-+	iov_iter_advance(iter, iter->count);
- 	return 0;
- }
- 
-@@ -1088,12 +1084,12 @@ static int __bio_iov_append_get_pages(struct bio *bio, struct iov_iter *iter)
-  * This takes either an iterator pointing to user memory, or one pointing to
-  * kernel pages (BVEC iterator). If we're adding user pages, we pin them and
-  * map them into the kernel. On IO completion, the caller should put those
-- * pages. If we're adding kernel pages, and the caller told us it's safe to
-- * do so, we just have to add the pages to the bio directly. We don't grab an
-- * extra reference to those pages (the user should already have that), and we
-- * don't put the page on IO completion. The caller needs to check if the bio is
-- * flagged BIO_NO_PAGE_REF on IO completion. If it isn't, then pages should be
-- * released.
-+ * pages. For bvec based iterators bio_iov_iter_get_pages() uses the provided
-+ * bvecs rather than copying them. Hence anyone issuing kiocb based IO needs
-+ * to ensure the bvecs and pages stay referenced until the submitted I/O is
-+ * completed by a call to ->ki_complete() or returns with an error other than
-+ * -EIOCBQUEUED. The caller needs to check if the bio is flagged BIO_NO_PAGE_REF
-+ * on IO completion. If it isn't, then pages should be released.
-  *
-  * The function tries, but does not guarantee, to pin as many pages as
-  * fit into the bio, or are requested in @iter, whatever is smaller. If
-@@ -1105,27 +1101,22 @@ static int __bio_iov_append_get_pages(struct bio *bio, struct iov_iter *iter)
-  */
- int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
- {
--	const bool is_bvec = iov_iter_is_bvec(iter);
--	int ret;
--
--	if (WARN_ON_ONCE(bio->bi_vcnt))
--		return -EINVAL;
-+	int ret = 0;
- 
--	do {
--		if (bio_op(bio) == REQ_OP_ZONE_APPEND) {
--			if (WARN_ON_ONCE(is_bvec))
--				return -EINVAL;
--			ret = __bio_iov_append_get_pages(bio, iter);
--		} else {
--			if (is_bvec)
--				ret = __bio_iov_bvec_add_pages(bio, iter);
-+	if (iov_iter_is_bvec(iter)) {
-+		if (WARN_ON_ONCE(bio_op(bio) == REQ_OP_ZONE_APPEND))
-+			return -EINVAL;
-+		bio_iov_bvec_set(bio, iter);
-+		bio_set_flag(bio, BIO_NO_PAGE_REF);
-+		return 0;
-+	} else {
-+		do {
-+			if (bio_op(bio) == REQ_OP_ZONE_APPEND)
-+				ret = __bio_iov_append_get_pages(bio, iter);
- 			else
- 				ret = __bio_iov_iter_get_pages(bio, iter);
--		}
--	} while (!ret && iov_iter_count(iter) && !bio_full(bio, 0));
--
--	if (is_bvec)
--		bio_set_flag(bio, BIO_NO_PAGE_REF);
-+		} while (!ret && iov_iter_count(iter) && !bio_full(bio, 0));
-+	}
- 
- 	/* don't account direct I/O as memory stall */
- 	bio_clear_flag(bio, BIO_WORKINGSET);
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index d8f9077c43ef..1d30572a8c53 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -444,10 +444,13 @@ static inline void bio_wouldblock_error(struct bio *bio)
- 
- /*
-  * Calculate number of bvec segments that should be allocated to fit data
-- * pointed by @iter.
-+ * pointed by @iter. If @iter is backed by bvec it's going to be reused
-+ * instead of allocating a new one.
-  */
- static inline int bio_iov_vecs_to_alloc(struct iov_iter *iter, int max_segs)
- {
-+	if (iov_iter_is_bvec(iter))
-+		return 0;
- 	return iov_iter_npages(iter, max_segs);
- }
- 
--- 
-2.24.0
+> command reference count before unlocking the lock that protects the command
+> list. See also the __scst_find_cmd_by_tag() call in scst_mgmt_cmd_init().
+> 
 
+I'll send a patch for that when I get the aborted task crash fixed up. I
+didn't send fixes for existing bugs in the driver like them for this patchset.
+It got a little crazy. For example for the aborted task issue, I reverted the
+patch that made the eh async I mentioned a while back. That fixes the crash,
+but then there was a hang. So I thought I'll just convert it to the async eh
+patch since either way I have to fix the driver. Himanshu was helping me figure
+out how to support it, but it's not trivial.
+
+
+
+ 
