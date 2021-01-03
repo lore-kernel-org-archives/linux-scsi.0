@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBAC0C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00231C433E9
 	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 00:18:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7486207CD
+	by mail.kernel.org (Postfix) with ESMTP id BF0A6207AC
 	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 00:18:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726894AbhACASN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726904AbhACASN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sat, 2 Jan 2021 19:18:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47110 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726873AbhACASM (ORCPT
+        with ESMTP id S1726885AbhACASM (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2021 19:18:12 -0500
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77D6DC06179E
-        for <linux-scsi@vger.kernel.org>; Sat,  2 Jan 2021 16:17:07 -0800 (PST)
-Received: by mail-pj1-x102c.google.com with SMTP id iq13so7685056pjb.3
-        for <linux-scsi@vger.kernel.org>; Sat, 02 Jan 2021 16:17:07 -0800 (PST)
+Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DCC6C06179F
+        for <linux-scsi@vger.kernel.org>; Sat,  2 Jan 2021 16:17:10 -0800 (PST)
+Received: by mail-pg1-x529.google.com with SMTP id n7so16438172pgg.2
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Jan 2021 16:17:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=xcWlHSzISTzHimq9m8us/OZQ3dcrHRgpNzn9MODjlJM=;
-        b=iowWBwUcf1TzOLOE73wGHh9FHmWOiAQygXleGWGvlza9ECevL/Gmkn/ungMv5QRAyz
-         BtKvEa8QzH+M8gCm0NcsVZz8kaFyEJUEoDaIWpphy7wkl7Pw2jnwYVZ76ii94Lf0Tckr
-         s7hOtae9yQfQkwtoj+kowd7i2fqFn25K3wvqMNYoeUiw4gkzRUYTTLPzsGFwGU+2eaGD
-         BFldqIbPAPpluixMAOReW3UqrDgDZ3f4r5NsRSuAVFgSyNLpNnxcaeCuuNqN0R9PE4Nc
-         zLuhMwijXj47xqTkRP+01WWsLTx/BPMX0xY/jrRYsqL+aU+0kIsawmdvXfrmQFL77rIv
-         m8lw==
+        bh=0D1Gwjz41+JH9PKar85Amcm233dowW4fJ/NDvSbiA0w=;
+        b=HPHBPtqOyYGNx5oIcyhbyqbs2Xj3PFeLMDfKPqgSRxjmHl0oRI0y0R8d/hsP1AWRvS
+         EqPsuZ9pHAYqhQglXgjDx9gzWOUPw+1THh4U2IBhgRhM5yuv7u2Mquq09LtIhTiNRDP0
+         pHE99wvbKUhciMF03kgERmJckgLmHrycZow15AZxSGRXheATXZ5Ctc92U1YaHAF1xfd5
+         LMfIvrAUP1+9/UJydBU4nmJyT6/HIcPY9NkHuy7aG2ym6KjBImVB9rLOfG8vD4ZZuUpY
+         Osw2/0r8nJHjhAmGStPmIY3qVezK1oCYI2QT4zavGvVFBcJQYbHAJ7zZExf4cieqGng4
+         gSYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=xcWlHSzISTzHimq9m8us/OZQ3dcrHRgpNzn9MODjlJM=;
-        b=kEJgRCeFJe7zzza7mquDJhkjBqOeHOismuQjEbryTA0+QVib9+DosdBa9U62q9DIO0
-         QlnoyPkyQbQaMhoio9qUzWIiT5j1BBxcEbEfVippR8zzWF7d8QS70I10/HWb4n8JvK14
-         JeHuROmdprIZGQ8A7aPOyNxT50KFtDzSbQSKfDJEK9KqDYHXrduYm+Mr1z37HE9JDLsn
-         3MqjaCHUt9R9+c662vtLxdojbCDx3SHr0eqM7OpaUVD6oOtC7Av7q6S4/l2GeQj6wAJH
-         TJXVlzDR4gVFKa3ibpVLc2iKgAQ088S9cQt4CZKG3GZaBnEvSwJM1UqNgFYC56diOSLt
-         E4RQ==
-X-Gm-Message-State: AOAM5328h4hqcV+kZAWJyzTGmiVzQt+wL48nSSvaMfqJlLMH4ixg4g/r
-        +Q6R1b4US+Sd8rf7d6Q+RQ1s3j7chgM=
-X-Google-Smtp-Source: ABdhPJyVt6xcktCH7r5Jn8og0jaO1uLzxso9M+cB0VkoJ3GDbmXlmXAss7tstF/4DaCq9yGfhWfGgg==
-X-Received: by 2002:a17:90a:ce0c:: with SMTP id f12mr24077713pju.89.1609633026904;
-        Sat, 02 Jan 2021 16:17:06 -0800 (PST)
+        bh=0D1Gwjz41+JH9PKar85Amcm233dowW4fJ/NDvSbiA0w=;
+        b=Z4ala7+a0SNB2UM19OXuU0mn1Mqid3sV6Oohe2sHtXQgw69qXhauBa4VspxZ6G5Qo0
+         xY12u+7bvXa9NAYha1nVH+sv/gSizf2SmHUs7sxv9pQ9lsWLYucxEO7CbzFdM2wdHNlz
+         gb/Gcrjh3qoEKOJ41uIONj8c81Ga+8jVpFpQG9fSxYBDoKri2dafuqACD5zGCRYkeyPn
+         neMGQhoQi4iddHoHDiEALag1H2pYcbVWBJCDF8Vp8b35llvlnsvVfXI9KjZYXzPElnsi
+         on+udO1UsvB1OiLc08uvay6mOhwkqQrCA2le4D0h7UH1hZaZsxsq746gsKXhRSMCnT6E
+         GOYQ==
+X-Gm-Message-State: AOAM531RMYk9LAKoTOIH1I5myEoPge7+uwSNXcvry55nw1UYc+MK9zqw
+        Zxt0wjePmp0KIJPe5nXg4VNSFRYP4WQ=
+X-Google-Smtp-Source: ABdhPJx8Jd3+uHDuDr2HPX1UfZ4f4ljmgebo0uRIVxtXSPRjKb/atA5K3uRI4jtgEdU66NxxJ6WmDA==
+X-Received: by 2002:a63:c444:: with SMTP id m4mr64936345pgg.420.1609633029564;
+        Sat, 02 Jan 2021 16:17:09 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id q12sm55671867pgj.24.2021.01.02.16.17.04
+        by smtp.gmail.com with ESMTPSA id q12sm55671867pgj.24.2021.01.02.16.17.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 02 Jan 2021 16:17:06 -0800 (PST)
+        Sat, 02 Jan 2021 16:17:09 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 07/15] lpfc: Prevent duplicate requests to unregister with cpuhp framework
-Date:   Sat,  2 Jan 2021 16:16:31 -0800
-Message-Id: <20210103001639.1995-8-jsmart2021@gmail.com>
+Subject: [PATCH 08/15] lpfc: Fix error log messages being logged following scsi task mgnt
+Date:   Sat,  2 Jan 2021 16:16:32 -0800
+Message-Id: <20210103001639.1995-9-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210103001639.1995-1-jsmart2021@gmail.com>
 References: <20210103001639.1995-1-jsmart2021@gmail.com>
@@ -72,39 +72,93 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the lpfc offline routine, called for various reasons such as
-sysfs attribute, driver unload, or port error, the driver is calling
-__lpfc_cpuhp_remove() to destroy the hot plug data. Unfortunately, if
-the port then attempts to come back online, such as after the port error,
-the cpuhp elements are no longer valid.
+A successful task mgmt command is logging errors, making it look like
+problems were encountered.  This is due to log messages for the
+device/target and bus reset handlers having the LOG_TRACE_EVENT flag set.
 
-Fix by only calling the cpuhp removal if the adapter is in the process
-of unloading and the port will not be restarted.
+Fix by adjusting the event flag such that the call to the logging routine
+only receives a LOG_TRACE_EVENT if a prior call actually failed.
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 593b175702eb..af926768bcae 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -3602,7 +3602,11 @@ lpfc_offline(struct lpfc_hba *phba)
- 			spin_unlock_irq(shost->host_lock);
- 		}
- 	lpfc_destroy_vport_work_array(phba, vports);
--	__lpfc_cpuhp_remove(phba);
-+	/* If OFFLINE flag is clear (i.e. unloading), cpuhp removal is handled
-+	 * in hba_unset
-+	 */
-+	if (phba->pport->fc_flag & FC_OFFLINE_MODE)
-+		__lpfc_cpuhp_remove(phba);
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 3b989f720937..78f34b1af980 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -5849,6 +5849,7 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
+ 	uint64_t lun_id = cmnd->device->lun;
+ 	struct lpfc_scsi_event_header scsi_event;
+ 	int status;
++	u32 logit = LOG_FCP;
  
- 	if (phba->cfg_xri_rebalancing)
- 		lpfc_destroy_multixri_pools(phba);
+ 	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
+ 	if (!rdata || !rdata->pnode) {
+@@ -5880,8 +5881,10 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
+ 
+ 	status = lpfc_send_taskmgmt(vport, cmnd, tgt_id, lun_id,
+ 						FCP_LUN_RESET);
++	if (status != SUCCESS)
++		logit =  LOG_TRACE_EVENT;
+ 
+-	lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
++	lpfc_printf_vlog(vport, KERN_ERR, logit,
+ 			 "0713 SCSI layer issued Device Reset (%d, %llu) "
+ 			 "return x%x\n", tgt_id, lun_id, status);
+ 
+@@ -5920,6 +5923,7 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
+ 	uint64_t lun_id = cmnd->device->lun;
+ 	struct lpfc_scsi_event_header scsi_event;
+ 	int status;
++	u32 logit = LOG_FCP;
+ 
+ 	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
+ 	if (!rdata || !rdata->pnode) {
+@@ -5959,8 +5963,10 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
+ 
+ 	status = lpfc_send_taskmgmt(vport, cmnd, tgt_id, lun_id,
+ 					FCP_TARGET_RESET);
++	if (status != SUCCESS)
++		logit =  LOG_TRACE_EVENT;
+ 
+-	lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
++	lpfc_printf_vlog(vport, KERN_ERR, logit,
+ 			 "0723 SCSI layer issued Target Reset (%d, %llu) "
+ 			 "return x%x\n", tgt_id, lun_id, status);
+ 
+@@ -5996,6 +6002,7 @@ lpfc_bus_reset_handler(struct scsi_cmnd *cmnd)
+ 	struct lpfc_scsi_event_header scsi_event;
+ 	int match;
+ 	int ret = SUCCESS, status, i;
++	u32 logit = LOG_FCP;
+ 
+ 	scsi_event.event_type = FC_REG_SCSI_EVENT;
+ 	scsi_event.subcategory = LPFC_EVENT_BUSRESET;
+@@ -6056,8 +6063,10 @@ lpfc_bus_reset_handler(struct scsi_cmnd *cmnd)
+ 	status = lpfc_reset_flush_io_context(vport, 0, 0, LPFC_CTX_HOST);
+ 	if (status != SUCCESS)
+ 		ret = FAILED;
++	if (ret == FAILED)
++		logit =  LOG_TRACE_EVENT;
+ 
+-	lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
++	lpfc_printf_vlog(vport, KERN_ERR, logit,
+ 			 "0714 SCSI layer issued Bus Reset Data: x%x\n", ret);
+ 	return ret;
+ }
+@@ -6086,7 +6095,7 @@ lpfc_host_reset_handler(struct scsi_cmnd *cmnd)
+ 	struct lpfc_hba *phba = vport->phba;
+ 	int rc, ret = SUCCESS;
+ 
+-	lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
++	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+ 			 "3172 SCSI layer issued Host Reset Data:\n");
+ 
+ 	lpfc_offline_prep(phba, LPFC_MBX_WAIT);
 -- 
 2.26.2
 
