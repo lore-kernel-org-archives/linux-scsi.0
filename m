@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16DD0C43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30884C4332D
 	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 00:18:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E173E207AA
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 00:18:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AF29206CA
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 00:18:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726919AbhACASQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 Jan 2021 19:18:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47118 "EHLO
+        id S1726929AbhACASS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 2 Jan 2021 19:18:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726885AbhACASP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2021 19:18:15 -0500
+        with ESMTP id S1726908AbhACASR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2021 19:18:17 -0500
 Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A68C7C0617A0
-        for <linux-scsi@vger.kernel.org>; Sat,  2 Jan 2021 16:17:12 -0800 (PST)
-Received: by mail-pf1-x42a.google.com with SMTP id c79so14153106pfc.2
-        for <linux-scsi@vger.kernel.org>; Sat, 02 Jan 2021 16:17:12 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9A49C0617A2
+        for <linux-scsi@vger.kernel.org>; Sat,  2 Jan 2021 16:17:17 -0800 (PST)
+Received: by mail-pf1-x42a.google.com with SMTP id d2so14150334pfq.5
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Jan 2021 16:17:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=ChNI7Nh7LdTn+Mg7J4ELQadAqoqOXgUCYbQxrsAyz4Y=;
-        b=BkRqOHBN5iWqR1wyh4wy74SwpxXRoA6R845hveEW/8CyUpo76d5w7k9NKyMnpWRioN
-         2jtYglP21tmQHfyZoeUuygJBoOfYdwMqePBG1YYUx3EAWbIp/TP/8iUE5fBuXqztApWL
-         JbziUgl5KYruWBduAMGneFV+kzyRPM1UGZMoN4W3Ukq0nAxRcB3MelXijyMWWE3xM7Gd
-         01zslYQAizJpa9ld1RdXqfXz+uYvbliyg1R9f/7o+vmET2iJLcWovN71RQDHlsMmjijZ
-         N00p3mjGdndomfaFLOY3/Xe7tKCFAj9/YjYW7cR3iiswEadpd4FJR9OU4Fpc3XC1ynHV
-         eUgg==
+        bh=372YtE8g/LlFqtHbGA+4Uprj5mZWcvkwKFbxQ3ClOLY=;
+        b=BNJWslCDZhLU+FkgYlccUn7MIkHaD7U7yabm5Y1hwJSyC1SDiflrYgkkL/yxtpTdFO
+         SYXZ4Evrmgj+2EX0nat9Y24isJbXi1lRiFjvqkq4vaIto5EshsqzJBgMcaxk7GmJAwWM
+         +ItEVIb3UGnKcMB0y8EmE0NfftsN010l0WvX0yxVLJt3XUpjiCHNjKCj4bUBDibk7WEv
+         QLr4jDFU9zvRve0tzkYs+qXtpZFDlwLkiOZ+HMnLN2J3gDuKRcf3vbP/tJkN0uHC0oDG
+         UAdhWPCQxCe1mar8mhg3/8ZlAppbjY9bypyKQo6LhxtWukWxPHl8Bp+KqJ8PdPHGvGfs
+         sl6Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ChNI7Nh7LdTn+Mg7J4ELQadAqoqOXgUCYbQxrsAyz4Y=;
-        b=FXaEdmFjPMIwiwu5SbTqgyd93TJVaMGjy6csWCa4p5MQ77GP5u68KK3+w5wiVFRtah
-         SAxyO9dE281XX1TnJXY6vv4CUSPLIFbkKxj3sFULIYCKFJqLy1bu2sqhdFbL1y5ZgY8j
-         nqxiTPCVO9Rn6JmgNg7OIltpnG+WX04r0f7tbZOzq4oJRrS/GvpPAj+tmrgrGK92v+gJ
-         lL3IyARtRd3loDehnFnlvjBsPa7I444fmRafX0hKG040k11ncgy/AbWFCQaZvtG4nl1D
-         klTLNGp4Qmvc1gczKCLGD2KUoOPxSkARkcx/UtqYDbjwkHpMUXrHm/5lhTXmK/AebEGz
-         yNzg==
-X-Gm-Message-State: AOAM5311wMgmR7WJMTRm4RUl3wats6QnK8+b88yCT4KbWqFbIQVYOp6r
-        L9K4QeojAlVG6YZj01wNPnQQOIlikkM=
-X-Google-Smtp-Source: ABdhPJwixdnLaKym1ippJvtmHu+1PfkaVvwNcnePLuShA5EOoO7WmhmHEl0d+AKWg5pq5nFDCqoGKw==
-X-Received: by 2002:a63:5805:: with SMTP id m5mr37815556pgb.352.1609633032162;
-        Sat, 02 Jan 2021 16:17:12 -0800 (PST)
+        bh=372YtE8g/LlFqtHbGA+4Uprj5mZWcvkwKFbxQ3ClOLY=;
+        b=OZccxve11tVHL8ClTmYeHWRxGv+miHwhz+4IHJwUTjBdqYivjGUQpygJUd47+KmRX8
+         hkNLmDt/JtUus5MfXutEx5Kfxvb6Zdyr4ftJvdK26myhv652Ps5AKqivP4/fW8OLV9HX
+         XOu8IBiKMfzxmC+0BQXi3sE4XV0uGgD3k97x22iXJYyrHSR807GssbdKP89H+6mJ7bON
+         aFtvYURhTeAC+/tsFxReudWMVk+44uYBfw5k/DmNXkd5EYeoWXHOG0zUSnHEx86XwLun
+         QXL7gFxtrE1CLr1nGM3zKMJtz0FR9VjDicnTOS00OSrhxkBeacJi0+FCD86KprJQV26s
+         Chrw==
+X-Gm-Message-State: AOAM5316Vve7HgKGZS8dS+N91mQgzH9lzXfWatdCoQ515yPdPICbm6cJ
+        4DHq9CO0HWBEsikR/Pf/ssv0zEWZEZY=
+X-Google-Smtp-Source: ABdhPJymn0IISqyNBbyj8xEy/PHKRvViCy2BwysjmjcW1IK7v1R7JmTm+tepvd3og/yPZ/k6EwP9+Q==
+X-Received: by 2002:aa7:81d6:0:b029:19e:2987:7465 with SMTP id c22-20020aa781d60000b029019e29877465mr60968753pfn.29.1609633037375;
+        Sat, 02 Jan 2021 16:17:17 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id q12sm55671867pgj.24.2021.01.02.16.17.09
+        by smtp.gmail.com with ESMTPSA id q12sm55671867pgj.24.2021.01.02.16.17.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 02 Jan 2021 16:17:11 -0800 (PST)
+        Sat, 02 Jan 2021 16:17:17 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 09/15] lpfc: Fix target reset failing
-Date:   Sat,  2 Jan 2021 16:16:33 -0800
-Message-Id: <20210103001639.1995-10-jsmart2021@gmail.com>
+Subject: [PATCH 11/15] lpfc: Fix vport create logging
+Date:   Sat,  2 Jan 2021 16:16:35 -0800
+Message-Id: <20210103001639.1995-12-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210103001639.1995-1-jsmart2021@gmail.com>
 References: <20210103001639.1995-1-jsmart2021@gmail.com>
@@ -72,145 +72,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Target reset is failed by the target as an invalid command.
+When with testing with large numbers of npiv vports and link bounces,
+the driver is flooding the messages file, even with log_verbose = 0.
 
-The Target Reset TMF has been obsoleted in T10 for a while, but continues
-to be used. On (newer) devices, the TMF is rejected causing the reset
-handler to escalate to adapter resets.
+The new LOG_TRACE_EVENT messages are still generating events to the
+messages files.
 
-Fix by having Target Reset TMF rejections be translated into a LOGO and
-re-PLOGI with the target device. This provides the same semantic action
-(although, if the device also supports nvme traffic, it will terminate
-nvme traffic as well - but it's still recoverable).
+Fix by converting the vport create msg from LOG_TRACE_EVENT to
+LOG_VPORT.
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_disc.h |  3 +++
- drivers/scsi/lpfc/lpfc_els.c  |  7 +++++++
- drivers/scsi/lpfc/lpfc_scsi.c | 38 +++++++++++++++++++++++++++++++++--
- 3 files changed, 46 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_vport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
-index ea07afcb750a..4cea61b63fdf 100644
---- a/drivers/scsi/lpfc/lpfc_disc.h
-+++ b/drivers/scsi/lpfc/lpfc_disc.h
-@@ -135,14 +135,17 @@ struct lpfc_nodelist {
- 	struct lpfc_scsicmd_bkt *lat_data;	/* Latency data */
- 	uint32_t fc4_prli_sent;
- 	uint32_t fc4_xpt_flags;
-+	uint32_t upcall_flags;
- #define NLP_WAIT_FOR_UNREG    0x1
- #define SCSI_XPT_REGD         0x2
- #define NVME_XPT_REGD         0x4
-+#define NLP_WAIT_FOR_LOGO     0x2
+diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+index a99fdfba7d27..ccf7b6cd0bd8 100644
+--- a/drivers/scsi/lpfc/lpfc_vport.c
++++ b/drivers/scsi/lpfc/lpfc_vport.c
+@@ -478,7 +478,7 @@ lpfc_vport_create(struct fc_vport *fc_vport, bool disable)
+ 	rc = VPORT_OK;
  
- 
- 	uint32_t nvme_fb_size; /* NVME target's supported byte cnt */
- #define NVME_FB_BIT_SHIFT 9    /* PRLI Rsp first burst in 512B units. */
- 	uint32_t nlp_defer_did;
-+	wait_queue_head_t *logo_waitq;
- };
- 
- struct lpfc_node_rrq {
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index e099caa04535..c944f220406e 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2817,6 +2817,7 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	IOCB_t *irsp;
- 	unsigned long flags;
- 	uint32_t skip_recovery = 0;
-+	int wake_up_waiter = 0;
- 
- 	/* we pass cmdiocb to state machine which needs rspiocb as well */
- 	cmdiocb->context_un.rsp_iocb = rspiocb;
-@@ -2824,6 +2825,10 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	irsp = &(rspiocb->iocb);
- 	spin_lock_irq(&ndlp->lock);
- 	ndlp->nlp_flag &= ~NLP_LOGO_SND;
-+	if (ndlp->upcall_flags & NLP_WAIT_FOR_LOGO) {
-+		wake_up_waiter = 1;
-+		ndlp->upcall_flags &= ~NLP_WAIT_FOR_LOGO;
-+	}
- 	spin_unlock_irq(&ndlp->lock);
- 
- 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
-@@ -2889,6 +2894,8 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	 * Initiator, we are assuming the NPortID is not going to change.
- 	 */
- 
-+	if (wake_up_waiter && ndlp->logo_waitq)
-+		wake_up(ndlp->logo_waitq);
- 	/*
- 	 * If the node is a target, the handling attempts to recover the port.
- 	 * For any other port type, the rpi is unregistered as an implicit
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 78f34b1af980..4ee890de556b 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -5924,6 +5924,8 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 	struct lpfc_scsi_event_header scsi_event;
- 	int status;
- 	u32 logit = LOG_FCP;
-+	unsigned long flags;
-+	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(waitq);
- 
- 	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
- 	if (!rdata || !rdata->pnode) {
-@@ -5942,10 +5944,10 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
- 			"0722 Target Reset rport failure: rdata x%px\n", rdata);
- 		if (pnode) {
--			spin_lock_irq(&pnode->lock);
-+			spin_lock_irqsave(&pnode->lock, flags);
- 			pnode->nlp_flag &= ~NLP_NPR_ADISC;
- 			pnode->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
--			spin_unlock_irq(&pnode->lock);
-+			spin_unlock_irqrestore(&pnode->lock, flags);
- 		}
- 		lpfc_reset_flush_io_context(vport, tgt_id, lun_id,
- 					  LPFC_CTX_TGT);
-@@ -5965,6 +5967,38 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 					FCP_TARGET_RESET);
- 	if (status != SUCCESS)
- 		logit =  LOG_TRACE_EVENT;
-+	spin_lock_irqsave(&pnode->lock, flags);
-+	if (status != SUCCESS &&
-+	    (!(pnode->upcall_flags & NLP_WAIT_FOR_LOGO)) &&
-+	     !pnode->logo_waitq) {
-+		pnode->logo_waitq = &waitq;
-+		pnode->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
-+		pnode->nlp_flag |= NLP_ISSUE_LOGO;
-+		pnode->upcall_flags |= NLP_WAIT_FOR_LOGO;
-+		spin_unlock_irqrestore(&pnode->lock, flags);
-+		lpfc_unreg_rpi(vport, pnode);
-+		wait_event_timeout(waitq,
-+				   (!(pnode->upcall_flags & NLP_WAIT_FOR_LOGO)),
-+				    msecs_to_jiffies(vport->cfg_devloss_tmo *
-+				    1000));
-+
-+		if (pnode->upcall_flags & NLP_WAIT_FOR_LOGO) {
-+			lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
-+				"0725 SCSI layer TGTRST failed & LOGO TMO "
-+				" (%d, %llu) return x%x\n", tgt_id,
-+				 lun_id, status);
-+			spin_lock_irqsave(&pnode->lock, flags);
-+			pnode->upcall_flags &= ~NLP_WAIT_FOR_LOGO;
-+		} else {
-+			spin_lock_irqsave(&pnode->lock, flags);
-+		}
-+		pnode->logo_waitq = NULL;
-+		spin_unlock_irqrestore(&pnode->lock, flags);
-+		status = SUCCESS;
-+	} else {
-+		status = FAILED;
-+		spin_unlock_irqrestore(&pnode->lock, flags);
-+	}
- 
- 	lpfc_printf_vlog(vport, KERN_ERR, logit,
- 			 "0723 SCSI layer issued Target Reset (%d, %llu) "
+ out:
+-	lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
++	lpfc_printf_vlog(vport, KERN_ERR, LOG_VPORT,
+ 			 "1825 Vport Created.\n");
+ 	lpfc_host_attrib_init(lpfc_shost_from_vport(vport));
+ error_out:
 -- 
 2.26.2
 
