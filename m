@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E11DC433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76F36C433E9
 	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 00:17:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E124207A5
+	by mail.kernel.org (Postfix) with ESMTP id 46B5E207AF
 	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 00:17:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726861AbhACARh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 Jan 2021 19:17:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47010 "EHLO
+        id S1726846AbhACARf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 2 Jan 2021 19:17:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726687AbhACARh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2021 19:17:37 -0500
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10A13C0613D3
-        for <linux-scsi@vger.kernel.org>; Sat,  2 Jan 2021 16:16:57 -0800 (PST)
-Received: by mail-pg1-x534.google.com with SMTP id c132so5099639pga.3
-        for <linux-scsi@vger.kernel.org>; Sat, 02 Jan 2021 16:16:57 -0800 (PST)
+        with ESMTP id S1726687AbhACARe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2021 19:17:34 -0500
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96DC3C0613CF
+        for <linux-scsi@vger.kernel.org>; Sat,  2 Jan 2021 16:16:54 -0800 (PST)
+Received: by mail-pf1-x434.google.com with SMTP id d2so14150078pfq.5
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Jan 2021 16:16:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=bF+LLoISezu6HwbNRhKJS34/2RQL1+vrdsMuFtElc6c=;
-        b=iYb2XfCqP66WqqsG/Y7WSG5J6UarIjaNR1B83rEVidZaM6KSVohtCXPhPOzHuO7dFI
-         FMDqTWn1p7axxOKMmjEWP/YKoTSfUNI1k4lODPTHDF+LYRBXV84KL0RtNQ/egWCHzlNx
-         YwqKb/i8E/L4peslWCWlC+8EGVtnFqHIdOQGbhtcIIYVBh04CWUg2ncMamEgeZskWJd4
-         6HNZ/3nKW+6CKOWCBipg3+SXurX/xmnlquiNJubeXlf9mo/kDy/aE2xiOePWyJuQ9cgO
-         WoUWmZSRnmJlS/BKSPmRfQ0QFmUZzPTowslN0geUDqVbMjWs5vxH4cUqSwBDyTRpM//u
-         aIOw==
+        bh=T5LrTJTp4nEpZV9RVTThS89YsVXbEXL2stXCB+IhZgM=;
+        b=Jc+fE49pu5nfJoJc7wcu/PWmM27eOEzrGqkGYWn6h3p5bw7Q809Xi0Qsdcf+4OLFC4
+         x58MLfJre80Q+eaHuYa1yfBO7Zgc5jK9xcPmbdqC322mXFn+UW+lS8o7EcgecSJ7zqSi
+         AaJVCHTI/5KFFjq5Kxo/vIfn5jTtbM9/RzHvQ1cB/D4VJJgV5aeLsL+/omQ63Iv9dFR8
+         B/7BJ8S37icR6QLYZ11+Uc6L4XolV9I8HBJi3A65Di/FlDCP++zQmAP+zlw0PtTrmn/U
+         trkxVqxPtPonh9D1S/xCaJz2fCMj0AeXqAjt5RyM9y9h5MUSM5b/nncMtqlSIf4GfdfN
+         cn5g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=bF+LLoISezu6HwbNRhKJS34/2RQL1+vrdsMuFtElc6c=;
-        b=My+tsDBbcaGq36Pr9Np1dQn5SeXR0XTmDiwwSKBBy1XSeqDP880LDSVReYQLNUS3/8
-         9p0lv8eGmgyH/ysGGxlhJibQ8mkc9YguRk0wOt2S4Cj/UCH/Pf6kyauu4OkmCReyq8oO
-         IuHCORb13mmP4fzvKgGbZBpIn5YywFZm7BXR2c1hsAS/eHny8xSVH4TsvcAwp5jwOynG
-         H8dQqmOm2Lf2kC3UtM7nVu/A9JHedHjzGRRb2gMut0mLN2xS8UjUJO+X5eRgO/Tln7mn
-         ySYjY3HO5CwaJZEo9yAuQsj5i/fiz1hK7pil3SpIR50evo3NJT53aidjeZFOrd6CYSOX
-         GGyg==
-X-Gm-Message-State: AOAM533hj9bt37kYV9ZsnNTLvUZGfXa4357NR39urV008XBfWaAaAttM
-        dBBnmeIafVwP8++bQx1VyjJSRc49jBM=
-X-Google-Smtp-Source: ABdhPJxkJvsBoWvjJhTRXMRgFBat+OI8JuH7CvQe6XrL5mrhDBNwJjZ5jpmf2qkRwuqLi4pv6SbJSw==
-X-Received: by 2002:a62:543:0:b029:19e:5627:1c4d with SMTP id 64-20020a6205430000b029019e56271c4dmr39026000pff.31.1609633016568;
-        Sat, 02 Jan 2021 16:16:56 -0800 (PST)
+        bh=T5LrTJTp4nEpZV9RVTThS89YsVXbEXL2stXCB+IhZgM=;
+        b=cPIIei1UNWmsZNcgwKexKqp2hGA0/K0szEJ8d5CrxJ90NvHofkluik/MnSlLi7gyuh
+         vSY+QFZzJy686rMNMOrtvfjVAeuaoB9TgZK0PbqkMQOlPw5rENwuu45nspPX14yF/9Sm
+         4TcEOy0ALbGuVlP+DrUCuBZWsGY5PfDshmSe8xdSTz50CQQ4HmKnUzEzMPGXwg3pkHvr
+         hQmsdfyQZdOe2eTl+B0IemGcc68bSr8ko/11WuHU/IcFf0Cfdi+J0T4iweiiPkidgHWW
+         hEsENwWQaahH44tZAM9h93S2CSdoiK0w0P807qAt21SBxhwgxLEQYAwgGQBAdqH/Mrwa
+         KgVQ==
+X-Gm-Message-State: AOAM5318E13wYDsEmMcVluHIQ0xfPN1CBMIO3DEhuajHx/W4hlK3sBpg
+        Zt4wxhYqOZGZ5DLSQTprFe0/mn5kvQY=
+X-Google-Smtp-Source: ABdhPJwUqggVU1MVJSiddEvALAT+8YT9l7p9ZKC459TQa8r94ZH/csTzH9JZ5A7DdSxPnfhCbHFZLQ==
+X-Received: by 2002:aa7:9ab7:0:b029:19d:ac89:39aa with SMTP id x23-20020aa79ab70000b029019dac8939aamr61504846pfi.10.1609633013935;
+        Sat, 02 Jan 2021 16:16:53 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id q12sm55671867pgj.24.2021.01.02.16.16.54
+        by smtp.gmail.com with ESMTPSA id q12sm55671867pgj.24.2021.01.02.16.16.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 02 Jan 2021 16:16:56 -0800 (PST)
+        Sat, 02 Jan 2021 16:16:53 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 03/15] lpfc: Refresh ndlp when a new PRLI is received in the PRLI issue state
-Date:   Sat,  2 Jan 2021 16:16:27 -0800
-Message-Id: <20210103001639.1995-4-jsmart2021@gmail.com>
+Subject: [PATCH 02/15] lpfc: Fix auto sli_mode and its effect on CONFIG_PORT for SLI3
+Date:   Sat,  2 Jan 2021 16:16:26 -0800
+Message-Id: <20210103001639.1995-3-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210103001639.1995-1-jsmart2021@gmail.com>
 References: <20210103001639.1995-1-jsmart2021@gmail.com>
@@ -72,60 +72,175 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Testing with target ports coming and going, the driver eventually reached
-a state where it no longer discovered the target. When the driver has
-issued a PRLI and receives a PRLI from the target, it is not proper
-updating the node's initiator/target role flags. Thus, when a subsequent
-RSCN is received for a target loss, the driver mis-identifies the target
-as an initiator and does not initiate lun scanning.
+A very long time ago, there was a feature: auto sli mode. It gave the
+user the ability to auto select the SLI mode (SLI2 or SLI3) to run the
+port in, or even force SLI2 mode if configured.  Because of the
+convoluted logic, the CONFIG_PORT mbox command ends up being called 2 or
+3 times. It should have been called only once.  Additionally, the driver
+no longer supports SLI-2, so only SLI-3 mode should be allowed.
 
-Fix by always refreshing the ndlp with the latest PRLI state information
-whenever a PRLI is processed.  Also clear the ndlp flags when processing
-a PLOGI so that there is no carry over through a re-login.
+The following changes were made:
+- Force module parameter to SLI3 only.
+- Rip out redundant CONFIG_PORT mbox commands.
+- Force CONFIG_PORT mbox command to be in beginning of enable ISR routine.
+- Added changes for offline to online behavior
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/scsi/lpfc/lpfc.h      |  1 +
+ drivers/scsi/lpfc/lpfc_attr.c |  7 ++----
+ drivers/scsi/lpfc/lpfc_init.c | 20 ++++++++-------
+ drivers/scsi/lpfc/lpfc_sli.c  | 46 +++++++++--------------------------
+ 4 files changed, 26 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 1ac855640fc5..4961a8a55844 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -471,6 +471,15 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		 */
- 		if (!(ndlp->nlp_type & NLP_FABRIC) &&
- 		    !(phba->nvmet_support)) {
-+			/* Clear ndlp info, since follow up PRLI may have
-+			 * updated ndlp information
-+			 */
-+			ndlp->nlp_type &= ~(NLP_FCP_TARGET | NLP_FCP_INITIATOR);
-+			ndlp->nlp_type &= ~(NLP_NVME_TARGET | NLP_NVME_INITIATOR);
-+			ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
-+			ndlp->nlp_nvme_info &= ~NLP_NVME_NSLER;
-+			ndlp->nlp_flag &= ~NLP_FIRSTBURST;
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index a54c8da30273..7875552c07d3 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -779,6 +779,7 @@ struct lpfc_hba {
+ 					 */
+ #define HBA_FLOGI_ISSUED	0x100000 /* FLOGI was issued */
+ #define HBA_DEFER_FLOGI		0x800000 /* Defer FLOGI till read_sparm cmpl */
++#define HBA_NEEDS_CFG_PORT	0x2000000 /* SLI3 - needs a CONFIG_PORT mbox */
+ 
+ 	uint32_t fcp_ring_in_use; /* When polling test if intr-hndlr active*/
+ 	struct lpfc_dmabuf slim2p;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 4528166dee36..f8bb6a4f780c 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -3441,11 +3441,8 @@ unsigned long lpfc_no_hba_reset[MAX_HBAS_NO_RESET] = {
+ module_param_array(lpfc_no_hba_reset, ulong, &lpfc_no_hba_reset_cnt, 0444);
+ MODULE_PARM_DESC(lpfc_no_hba_reset, "WWPN of HBAs that should not be reset");
+ 
+-LPFC_ATTR(sli_mode, 0, 0, 3,
+-	"SLI mode selector:"
+-	" 0 - auto (SLI-3 if supported),"
+-	" 2 - select SLI-2 even on SLI-3 capable HBAs,"
+-	" 3 - select SLI-3");
++LPFC_ATTR(sli_mode, 3, 3, 3,
++	"SLI mode selector: 3 - select SLI-3");
+ 
+ LPFC_ATTR_R(enable_npiv, 1, 0, 1,
+ 	"Enable NPIV functionality");
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index ac67f420ec26..1f0a62ecfad8 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -10728,17 +10728,19 @@ lpfc_sli_enable_intr(struct lpfc_hba *phba, uint32_t cfg_mode)
+ 	uint32_t intr_mode = LPFC_INTR_ERROR;
+ 	int retval;
+ 
++	/* Need to issue conf_port mbox cmd before conf_msi mbox cmd */
++	retval = lpfc_sli_config_port(phba, LPFC_SLI_REV3);
++	if (retval)
++		return intr_mode;
++	phba->hba_flag &= ~HBA_NEEDS_CFG_PORT;
 +
- 			lpfc_els_rsp_acc(vport, ELS_CMD_PLOGI, cmdiocb,
- 					 ndlp, NULL);
- 			return 1;
-@@ -499,6 +508,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	ndlp->nlp_type &= ~(NLP_FCP_TARGET | NLP_FCP_INITIATOR);
- 	ndlp->nlp_type &= ~(NLP_NVME_TARGET | NLP_NVME_INITIATOR);
- 	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
-+	ndlp->nlp_nvme_info &= ~NLP_NVME_NSLER;
- 	ndlp->nlp_flag &= ~NLP_FIRSTBURST;
+ 	if (cfg_mode == 2) {
+-		/* Need to issue conf_port mbox cmd before conf_msi mbox cmd */
+-		retval = lpfc_sli_config_port(phba, LPFC_SLI_REV3);
++		/* Now, try to enable MSI-X interrupt mode */
++		retval = lpfc_sli_enable_msix(phba);
+ 		if (!retval) {
+-			/* Now, try to enable MSI-X interrupt mode */
+-			retval = lpfc_sli_enable_msix(phba);
+-			if (!retval) {
+-				/* Indicate initialization to MSI-X mode */
+-				phba->intr_type = MSIX;
+-				intr_mode = 2;
+-			}
++			/* Indicate initialization to MSI-X mode */
++			phba->intr_type = MSIX;
++			intr_mode = 2;
+ 		}
+ 	}
  
- 	login_mbox = NULL;
-@@ -2107,6 +2117,7 @@ lpfc_rcv_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 95caad764fb7..735fa1d484eb 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4359,6 +4359,8 @@ lpfc_sli_brdready_s3(struct lpfc_hba *phba, uint32_t mask)
+ 	if (lpfc_readl(phba->HSregaddr, &status))
+ 		return 1;
  
- 	if (!lpfc_rcv_prli_support_check(vport, ndlp, cmdiocb))
- 		return ndlp->nlp_state;
-+	lpfc_rcv_prli(vport, ndlp, cmdiocb);
- 	lpfc_els_rsp_prli_acc(vport, cmdiocb, ndlp);
- 	return ndlp->nlp_state;
- }
++	phba->hba_flag |= HBA_NEEDS_CFG_PORT;
++
+ 	/*
+ 	 * Check status register every 100ms for 5 retries, then every
+ 	 * 500ms for 5, then every 2.5 sec for 5, then reset board and
+@@ -4687,6 +4689,7 @@ lpfc_sli_brdreset(struct lpfc_hba *phba)
+ 	/* perform board reset */
+ 	phba->fc_eventTag = 0;
+ 	phba->link_events = 0;
++	phba->hba_flag |= HBA_NEEDS_CFG_PORT;
+ 	if (phba->pport) {
+ 		phba->pport->fc_myDID = 0;
+ 		phba->pport->fc_prevDID = 0;
+@@ -5020,6 +5023,8 @@ lpfc_sli_chipset_init(struct lpfc_hba *phba)
+ 		return -EIO;
+ 	}
+ 
++	phba->hba_flag |= HBA_NEEDS_CFG_PORT;
++
+ 	/* Clear all interrupt enable conditions */
+ 	writel(0, phba->HCregaddr);
+ 	readl(phba->HCregaddr); /* flush */
+@@ -5316,45 +5321,18 @@ int
+ lpfc_sli_hba_setup(struct lpfc_hba *phba)
+ {
+ 	uint32_t rc;
+-	int  mode = 3, i;
++	int  i;
+ 	int longs;
+ 
+-	switch (phba->cfg_sli_mode) {
+-	case 2:
+-		if (phba->cfg_enable_npiv) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+-				"1824 NPIV enabled: Override sli_mode "
+-				"parameter (%d) to auto (0).\n",
+-				phba->cfg_sli_mode);
+-			break;
+-		}
+-		mode = 2;
+-		break;
+-	case 0:
+-	case 3:
+-		break;
+-	default:
+-		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+-				"1819 Unrecognized sli_mode parameter: %d.\n",
+-				phba->cfg_sli_mode);
+-
+-		break;
++	/* Enable ISR already does config_port because of config_msi mbx */
++	if (phba->hba_flag & HBA_NEEDS_CFG_PORT) {
++		rc = lpfc_sli_config_port(phba, LPFC_SLI_REV3);
++		if (rc)
++			return -EIO;
++		phba->hba_flag &= ~HBA_NEEDS_CFG_PORT;
+ 	}
+ 	phba->fcp_embed_io = 0;	/* SLI4 FC support only */
+ 
+-	rc = lpfc_sli_config_port(phba, mode);
+-
+-	if (rc && phba->cfg_sli_mode == 3)
+-		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+-				"1820 Unable to select SLI-3.  "
+-				"Not supported by adapter.\n");
+-	if (rc && mode != 2)
+-		rc = lpfc_sli_config_port(phba, 2);
+-	else if (rc && mode == 2)
+-		rc = lpfc_sli_config_port(phba, 3);
+-	if (rc)
+-		goto lpfc_sli_hba_setup_error;
+-
+ 	/* Enable PCIe device Advanced Error Reporting (AER) if configured */
+ 	if (phba->cfg_aer_support == 1 && !(phba->hba_flag & HBA_AER_ENABLED)) {
+ 		rc = pci_enable_pcie_error_reporting(phba->pcidev);
 -- 
 2.26.2
 
