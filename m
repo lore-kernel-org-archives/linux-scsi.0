@@ -8,61 +8,62 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DB0AC433E0
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 17:13:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44F20C43381
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 17:13:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 296F920936
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 17:13:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C8D320936
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 17:13:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727672AbhACRNT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Jan 2021 12:13:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60716 "EHLO
+        id S1727679AbhACRNV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Jan 2021 12:13:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727660AbhACRNS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jan 2021 12:13:18 -0500
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB226C0617A2
-        for <linux-scsi@vger.kernel.org>; Sun,  3 Jan 2021 09:12:22 -0800 (PST)
-Received: by mail-pf1-x42e.google.com with SMTP id 11so14907010pfu.4
-        for <linux-scsi@vger.kernel.org>; Sun, 03 Jan 2021 09:12:22 -0800 (PST)
+        with ESMTP id S1727660AbhACRNU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jan 2021 12:13:20 -0500
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 876ABC061573
+        for <linux-scsi@vger.kernel.org>; Sun,  3 Jan 2021 09:12:29 -0800 (PST)
+Received: by mail-pf1-x436.google.com with SMTP id a188so2236848pfa.11
+        for <linux-scsi@vger.kernel.org>; Sun, 03 Jan 2021 09:12:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=o+MHHhARJa2W6ZI7/4j0jU5Z+9aFV+cVRSFOZdXokTI=;
-        b=hboI531VnT4HhUIE3Sj/x0VFl1yVDUFJdFebrUuPEjD0pa7w+559x92Ljw+QmIkhuy
-         VxW26yEnvsmnfzeY3PgBcIt+X0ukmT05mUSWu1wdnZihotP1XQM/vjJ1yrCYkX6bBCcB
-         Lkbw+fEkSr5HKi3vWM/jtURTt4br5aoor+jF/uuVtW1PfczoItd8gWg2ebwGbos3QHyb
-         vGAZ9jh95CtTc6v7rgxVn5FL4U47cgm0nwPFYKUTEti5uG6vEMZAPWfqucdOaJLPbpTA
-         0H1Jr7DLdqIy9oLhjmuBnipnOkzbgsrvBOA/ERkzDIXHXzc3AnupmzkCJDmzF9creFKz
-         TzZA==
+        bh=0Pb9ka6qLPE8i+ZLqu8NT0bBMIZ9wSty37SF4N9BK1g=;
+        b=SFq36IUPraBPVeZGjU84EhlV4/JgJ4jWacv908LZJUVO4O6OO4c/GKkfgPZ1+urtuo
+         xHBIm7UuAEHoum0kR1nG731Zcuy+hu6XGJpnTyYUSaD1if5BtrrCTOUpPgrZH4Jock2/
+         h42tCsFIjyMhhn3YvOJ0oP5Qv1xUb/L+krHftRyxC/oQGt6FfSrIHWjb0Ih4M2UOwYcA
+         WjggtxcaKJ1ar4P2CYFR9acclZKLNcE95cKOzLZApPStQpYpnbpwj6YeiGl3J7CLgiIB
+         L/AnMgi2fChhcTIcVBcA93UGH06AVdKLbWVWrRU6nah2rz4yrPhsfQsuB1RUNX37R3qh
+         ZiYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=o+MHHhARJa2W6ZI7/4j0jU5Z+9aFV+cVRSFOZdXokTI=;
-        b=rI4Afx9ldML0O8guU4cUgB6MFgdtLBSNHr6MROtkNfSaWRmBisGhS3YF91o8qQcDeo
-         Sq1eJB0NdvsVagqCi5UKvVPHxJouYOMR0/azRXs7wYVhGX6ENGlt2wTQY41Dp/H48U3/
-         7hMG1OL8Fl/sBZGUf4a26tobyonXVMqiE15Hkcv2E8K+Mp/hv8ltVNeTzizzG1HRT1ho
-         PSX+VUHBZG1MB5QTM4IYYCr/VCTJMD5ZRWQ4w4UBHirWHLrTv2TWsav/g8zszy0ZatCs
-         iPXAmlUyreue3qLGs0hD5jrDL2AErHqbjxY8tSTeOmrZOcPbSxdjTwvIXgJA2UvOBueq
-         9Gqw==
-X-Gm-Message-State: AOAM5324xaq2I+zxvByjPhkst1ZbeNGg4sk1zYqpuVA57z4SgAPXCC4K
-        OuVITd/YmaIsnxFt9HAi0pjgEQrzVzU=
-X-Google-Smtp-Source: ABdhPJw9MMfCG4HglMHRueduukjDF7sCX+OoxYPVKBzhT4NS8jD020OkZNayuFfF7cpRWOeNugeoBA==
-X-Received: by 2002:a63:3549:: with SMTP id c70mr56586676pga.361.1609693941945;
-        Sun, 03 Jan 2021 09:12:21 -0800 (PST)
+        bh=0Pb9ka6qLPE8i+ZLqu8NT0bBMIZ9wSty37SF4N9BK1g=;
+        b=uVEUSB1xLn6jUsCyrDKwK1/ACrIY7ESly6PNBltgCKtyaRqvsB8cP3+25R+K54ihiK
+         c3EY5QNFLy/fidW4y6LQg4NTeqov6QpBD1POP9X72Ojl3PzA14yx9604Ex/NDLq1mCto
+         k/aSU5cEQYlMXoyyOkLtd/SpOKHbRS8A16PFiQdYZzP1rhnCJ+7g5nn8ksdSSnk6M7Xd
+         gUN2f6rORaWu3QOMUS8bhp9sV2yEPSN0H2GgIG+HfRiTvATbQmOJmdAXReuElwSwgAzL
+         M6Fwu+DEq5TWhviPloWT45Aap52CM9iXqHmVfOR2e5iuCMN9dRPecDIFmJiFDu2j9iXL
+         xKFw==
+X-Gm-Message-State: AOAM533kQM9/oq1DiA2B+L1hXdniDZIhrxeVgz6MNa5FyO7AqmxZotYX
+        lYehoD9L80wCY+K6GRCBc/7K7b2cuIQ=
+X-Google-Smtp-Source: ABdhPJwLUA/T8q+c2HW6fztIXWLIIIeUD2giMCgLl//9MHw3mX73hYWu0MLSpaQFmmuXyeo4nGaTLQ==
+X-Received: by 2002:a63:7402:: with SMTP id p2mr29273746pgc.101.1609693948368;
+        Sun, 03 Jan 2021 09:12:28 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id m4sm33145151pgv.16.2021.01.03.09.12.19
+        by smtp.gmail.com with ESMTPSA id m4sm33145151pgv.16.2021.01.03.09.12.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Jan 2021 09:12:21 -0800 (PST)
+        Sun, 03 Jan 2021 09:12:27 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>
-Subject: [PATCH v5 11/31] elx: libefc: SLI and FC PORT state machine interfaces
-Date:   Sun,  3 Jan 2021 09:11:14 -0800
-Message-Id: <20210103171134.39878-12-jsmart2021@gmail.com>
+        Ram Vegesna <ram.vegesna@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v5 13/31] elx: libefc: Fabric node state machine interfaces
+Date:   Sun,  3 Jan 2021 09:11:16 -0800
+Message-Id: <20210103171134.39878-14-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210103171134.39878-1-jsmart2021@gmail.com>
 References: <20210103171134.39878-1-jsmart2021@gmail.com>
@@ -76,25 +77,34 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 This patch continues the libefc library population.
 
 This patch adds library interface definitions for:
-- SLI and FC port (aka n_port_id) registration, allocation and
-  deallocation.
+- Fabric node initialization and logins.
+- Name/Directory Services node.
+- Fabric Controller node to process rscn events.
+
+These are all interactions with remote ports that correspond
+to well-known fabric entities
 
 Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
----
- drivers/scsi/elx/libefc/efc_nport.c | 794 ++++++++++++++++++++++++++++
- drivers/scsi/elx/libefc/efc_nport.h |  50 ++
- 2 files changed, 844 insertions(+)
- create mode 100644 drivers/scsi/elx/libefc/efc_nport.c
- create mode 100644 drivers/scsi/elx/libefc/efc_nport.h
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-diff --git a/drivers/scsi/elx/libefc/efc_nport.c b/drivers/scsi/elx/libefc/efc_nport.c
+---
+v5:
+ Replace nport_list with xarray lookup related changes.
+---
+ drivers/scsi/elx/libefc/efc_fabric.c | 1565 ++++++++++++++++++++++++++
+ drivers/scsi/elx/libefc/efc_fabric.h |  116 ++
+ 2 files changed, 1681 insertions(+)
+ create mode 100644 drivers/scsi/elx/libefc/efc_fabric.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_fabric.h
+
+diff --git a/drivers/scsi/elx/libefc/efc_fabric.c b/drivers/scsi/elx/libefc/efc_fabric.c
 new file mode 100644
-index 000000000000..fad42cd8a108
+index 000000000000..37ae8b685f1a
 --- /dev/null
-+++ b/drivers/scsi/elx/libefc/efc_nport.c
-@@ -0,0 +1,794 @@
++++ b/drivers/scsi/elx/libefc/efc_fabric.c
+@@ -0,0 +1,1565 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
@@ -102,849 +112,1686 @@ index 000000000000..fad42cd8a108
 + */
 +
 +/*
-+ * NPORT
-+ *
-+ * Port object for physical port and NPIV ports.
++ * This file implements remote node state machines for:
++ * - Fabric logins.
++ * - Fabric controller events.
++ * - Name/directory services interaction.
++ * - Point-to-point logins.
 + */
 +
 +/*
-+ * NPORT REFERENCE COUNTING
-+ *
-+ * A nport reference should be taken when:
-+ * - an nport is allocated
-+ * - a vport populates associated nport
-+ * - a remote node is allocated
-+ * - a unsolicited frame is processed
-+ * The reference should be dropped when:
-+ * - the unsolicited frame processesing is done
-+ * - the remote node is removed
-+ * - the vport is removed
-+ * - the nport is removed
++ * fabric_sm Node State Machine: Fabric States
++ * ns_sm Node State Machine: Name/Directory Services States
++ * p2p_sm Node State Machine: Point-to-Point Node States
 + */
 +
 +#include "efc.h"
 +
-+int
-+efc_nport_cb(void *arg, int event, void *data)
++static void
++efc_fabric_initiate_shutdown(struct efc_node *node)
 +{
-+	struct efc *efc = arg;
-+	struct efc_nport *nport = data;
-+	unsigned long flags = 0;
++	struct efc *efc = node->efc;
 +
-+	efc_log_debug(efc, "nport event: %s\n", efc_sm_event_name(event));
++	WRITE_ONCE(node->els_io_enabled, false);
 +
-+	spin_lock_irqsave(&efc->lock, flags);
-+	efc_sm_post_event(&nport->sm, event, NULL);
-+	spin_unlock_irqrestore(&efc->lock, flags);
++	if (node->attached) {
++		int rc;
 +
-+	return EFC_SUCCESS;
-+}
-+
-+static struct efc_nport *
-+efc_nport_find_wwn(struct efc_domain *domain, uint64_t wwnn, uint64_t wwpn)
-+{
-+	struct efc_nport *nport = NULL;
-+
-+	/* Find a nport, given the WWNN and WWPN */
-+	list_for_each_entry(nport, &domain->nport_list, list_entry) {
-+		if (nport->wwnn == wwnn && nport->wwpn == wwpn)
-+			return nport;
++		/* issue hw node free; don't care if succeeds right away
++		 * or sometime later, will check node->attached later in
++		 * shutdown process
++		 */
++		rc = efc_cmd_node_detach(efc, &node->rnode);
++		if (rc != EFC_HW_RTN_SUCCESS &&
++		    rc != EFC_HW_RTN_SUCCESS_SYNC) {
++			node_printf(node, "Failed freeing HW node, rc=%d\n",
++				    rc);
++		}
 +	}
-+	return NULL;
++	/*
++	 * node has either been detached or is in the process of being detached,
++	 * call common node's initiate cleanup function
++	 */
++	efc_node_initiate_cleanup(node);
 +}
 +
 +static void
-+_efc_nport_free(struct kref *arg)
++__efc_fabric_common(const char *funcname, struct efc_sm_ctx *ctx,
++		    enum efc_sm_event evt, void *arg)
 +{
-+	struct efc_nport *nport = container_of(arg, struct efc_nport, ref);
++	struct efc_node *node = NULL;
 +
-+	kfree(nport);
-+}
++	node = ctx->app;
 +
-+struct efc_nport *
-+efc_nport_alloc(struct efc_domain *domain, uint64_t wwpn, uint64_t wwnn,
-+		u32 fc_id, bool enable_ini, bool enable_tgt)
-+{
-+	struct efc_nport *nport;
++	switch (evt) {
++	case EFC_EVT_DOMAIN_ATTACH_OK:
++		break;
++	case EFC_EVT_SHUTDOWN:
++		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
++		efc_fabric_initiate_shutdown(node);
++		break;
 +
-+	if (domain->efc->enable_ini)
-+		enable_ini = 0;
-+
-+	/* Return a failure if this nport has already been allocated */
-+	if ((wwpn != 0) || (wwnn != 0)) {
-+		nport = efc_nport_find_wwn(domain, wwnn, wwpn);
-+		if (nport) {
-+			efc_log_err(domain->efc,
-+				"Err: NPORT %016llX %016llX already allocated\n",
-+				wwnn, wwpn);
-+			return NULL;
-+		}
++	default:
++		/* call default event handler common to all nodes */
++		__efc_node_common(funcname, ctx, evt, arg);
 +	}
-+
-+	nport = kzalloc(sizeof(*nport), GFP_ATOMIC);
-+	if (!nport)
-+		return nport;
-+
-+	/* initialize refcount */
-+	kref_init(&nport->ref);
-+	nport->release = _efc_nport_free;
-+
-+	nport->efc = domain->efc;
-+	snprintf(nport->display_name, sizeof(nport->display_name), "------");
-+	nport->domain = domain;
-+	xa_init(&nport->lookup);
-+	nport->instance_index = domain->nport_count++;
-+	nport->sm.app = nport;
-+	nport->enable_ini = enable_ini;
-+	nport->enable_tgt = enable_tgt;
-+	nport->enable_rscn = (nport->enable_ini ||
-+			(nport->enable_tgt && enable_target_rscn(nport->efc)));
-+
-+	/* Copy service parameters from domain */
-+	memcpy(nport->service_params, domain->service_params,
-+		sizeof(struct fc_els_flogi));
-+
-+	/* Update requested fc_id */
-+	nport->fc_id = fc_id;
-+
-+	/* Update the nport's service parameters for the new wwn's */
-+	nport->wwpn = wwpn;
-+	nport->wwnn = wwnn;
-+	snprintf(nport->wwnn_str, sizeof(nport->wwnn_str), "%016llX",
-+			(unsigned long long)wwnn);
-+
-+	/*
-+	 * if this is the "first" nport of the domain,
-+	 * then make it the "phys" nport
-+	 */
-+	if (list_empty(&domain->nport_list))
-+		domain->nport = nport;
-+
-+	INIT_LIST_HEAD(&nport->list_entry);
-+	list_add_tail(&nport->list_entry, &domain->nport_list);
-+
-+	kref_get(&domain->ref);
-+
-+	efc_log_debug(domain->efc, "New Nport [%s]\n", nport->display_name);
-+
-+	return nport;
 +}
 +
 +void
-+efc_nport_free(struct efc_nport *nport)
++__efc_fabric_init(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
++		  void *arg)
 +{
-+	struct efc_domain *domain;
++	struct efc_node *node = ctx->app;
++	struct efc *efc = node->efc;
 +
-+	if (!nport)
-+		return;
++	efc_node_evt_set(ctx, evt, __func__);
 +
-+	domain = nport->domain;
-+	efc_log_debug(domain->efc, "[%s] free nport\n", nport->display_name);
-+	list_del(&nport->list_entry);
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_REENTER:
++		efc_log_debug(efc, ">>> reenter !!\n");
++		fallthrough;
++
++	case EFC_EVT_ENTER:
++		/* send FLOGI */
++		efc_send_flogi(node);
++		efc_node_transition(node, __efc_fabric_flogi_wait_rsp, NULL);
++		break;
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++efc_fabric_set_topology(struct efc_node *node,
++			enum efc_nport_topology topology)
++{
++	node->nport->topology = topology;
++}
++
++void
++efc_fabric_notify_topology(struct efc_node *node)
++{
++	struct efc_node *tmp_node;
++	enum efc_nport_topology topology = node->nport->topology;
++	unsigned long index;
++
 +	/*
-+	 * if this is the physical nport,
-+	 * then clear it out of the domain
++	 * now loop through the nodes in the nport
++	 * and send topology notification
 +	 */
-+	if (nport == domain->nport)
-+		domain->nport = NULL;
-+
-+	xa_destroy(&nport->lookup);
-+	xa_erase(&domain->lookup, nport->fc_id);
-+
-+	if (list_empty(&domain->nport_list))
-+		efc_domain_post_event(domain, EFC_EVT_ALL_CHILD_NODES_FREE,
-+				      NULL);
-+
-+	kref_put(&domain->ref, domain->release);
-+	kref_put(&nport->ref, nport->release);
-+
-+}
-+
-+struct efc_nport *
-+efc_nport_find(struct efc_domain *domain, u32 d_id)
-+{
-+	struct efc_nport *nport;
-+
-+	/* Find a nport object, given an FC_ID */
-+	nport = xa_load(&domain->lookup, d_id);
-+	if (!nport || !kref_get_unless_zero(&nport->ref))
-+		return NULL;
-+
-+	return nport;
-+}
-+
-+int
-+efc_nport_attach(struct efc_nport *nport, u32 fc_id)
-+{
-+	int rc;
-+	struct efc_node *node;
-+	struct efc *efc = nport->efc;
-+	unsigned long index;
-+
-+	/* Set our lookup */
-+	rc = xa_err(xa_store(&nport->domain->lookup, fc_id, nport, GFP_ATOMIC));
-+	if (rc) {
-+		efc_log_err(efc, "Sport lookup store failed: %d\n", rc);
-+		return rc;
-+	}
-+
-+	/* Update our display_name */
-+	efc_node_fcid_display(fc_id, nport->display_name,
-+			      sizeof(nport->display_name));
-+
-+	xa_for_each(&nport->lookup, index, node) {
-+		efc_node_update_display_name(node);
-+	}
-+
-+	efc_log_debug(nport->efc, "[%s] attach nport: fc_id x%06x\n",
-+		      nport->display_name, fc_id);
-+
-+	/* Register a nport, given an FC_ID */
-+	rc = efc_cmd_nport_attach(efc, nport, fc_id);
-+	if (rc != EFC_HW_RTN_SUCCESS) {
-+		efc_log_err(nport->efc,
-+			    "efc_hw_port_attach failed: %d\n", rc);
-+		return EFC_FAIL;
-+	}
-+	return EFC_SUCCESS;
-+}
-+
-+static void
-+efc_nport_shutdown(struct efc_nport *nport)
-+{
-+	struct efc *efc = nport->efc;
-+	struct efc_node *node;
-+	unsigned long index;
-+
-+	xa_for_each(&nport->lookup, index, node) {
-+		if (!(node->rnode.fc_id == FC_FID_FLOGI && nport->is_vport)) {
-+			efc_node_post_event(node, EFC_EVT_SHUTDOWN, NULL);
-+			continue;
++	xa_for_each(&node->nport->lookup, index, tmp_node) {
++		if (tmp_node != node) {
++			efc_node_post_event(tmp_node,
++					    EFC_EVT_NPORT_TOPOLOGY_NOTIFY,
++					    (void *)topology);
 +		}
-+
-+		/*
-+		 * If this is a vport, logout of the fabric
-+		 * controller so that it deletes the vport
-+		 * on the switch.
-+		 */
-+		/* if link is down, don't send logo */
-+		if (efc->link_status == EFC_LINK_STATUS_DOWN) {
-+			efc_node_post_event(node, EFC_EVT_SHUTDOWN, NULL);
-+			continue;
-+		}
-+
-+		efc_log_debug(efc, "[%s] nport shutdown vport, send logo\n",
-+					node->display_name);
-+
-+		if (!efc_send_logo(node)) {
-+			/* sent LOGO, wait for response */
-+			efc_node_transition(node, __efc_d_wait_logo_rsp, NULL);
-+			continue;
-+		}
-+
-+		/*
-+		 * failed to send LOGO,
-+		 * go ahead and cleanup node anyways
-+		 */
-+		node_printf(node, "Failed to send LOGO\n");
-+		efc_node_post_event(node, EFC_EVT_SHUTDOWN_EXPLICIT_LOGO, NULL);
 +	}
 +}
 +
-+static void
-+efc_vport_link_down(struct efc_nport *nport)
++static bool efc_rnode_is_nport(struct fc_els_flogi *rsp)
 +{
-+	struct efc *efc = nport->efc;
-+	struct efc_vport_spec *vport;
++	return !(ntohs(rsp->fl_csp.sp_features) & FC_SP_FT_FPORT);
++}
 +
-+	/* Clear the nport reference in the vport specification */
-+	list_for_each_entry(vport, &efc->vport_list, list_entry) {
-+		if (vport->nport == nport) {
-+			kref_put(&nport->ref, nport->release);
-+			vport->nport = NULL;
++void
++__efc_fabric_flogi_wait_rsp(struct efc_sm_ctx *ctx,
++			    enum efc_sm_event evt, void *arg)
++{
++	struct efc_node_cb *cbdata = arg;
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_SRRS_ELS_REQ_OK: {
++		if (efc_node_check_els_req(ctx, evt, arg, ELS_FLOGI,
++					   __efc_fabric_common, __func__)) {
++			return;
++		}
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++
++		memcpy(node->nport->domain->flogi_service_params,
++		       cbdata->els_rsp.virt,
++		       sizeof(struct fc_els_flogi));
++
++		/* Check to see if the fabric is an F_PORT or and N_PORT */
++		if (!efc_rnode_is_nport(cbdata->els_rsp.virt)) {
++			/* sm: if not nport / efc_domain_attach */
++			/* ext_status has the fc_id, attach domain */
++			efc_fabric_set_topology(node, EFC_NPORT_TOPO_FABRIC);
++			efc_fabric_notify_topology(node);
++			WARN_ON(node->nport->domain->attached);
++			efc_domain_attach(node->nport->domain,
++					  cbdata->ext_status);
++			efc_node_transition(node,
++					    __efc_fabric_wait_domain_attach,
++					    NULL);
 +			break;
 +		}
++
++		/*  sm: if nport and p2p_winner / efc_domain_attach */
++		efc_fabric_set_topology(node, EFC_NPORT_TOPO_P2P);
++		if (efc_p2p_setup(node->nport)) {
++			node_printf(node,
++				    "p2p setup failed, shutting down node\n");
++			node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
++			efc_fabric_initiate_shutdown(node);
++			break;
++		}
++
++		if (node->nport->p2p_winner) {
++			efc_node_transition(node,
++					    __efc_p2p_wait_domain_attach,
++					     NULL);
++			if (node->nport->domain->attached &&
++			    !node->nport->domain->domain_notify_pend) {
++				/*
++				 * already attached,
++				 * just send ATTACH_OK
++				 */
++				node_printf(node,
++					    "p2p winner, domain already attached\n");
++				efc_node_post_event(node,
++						    EFC_EVT_DOMAIN_ATTACH_OK,
++						    NULL);
++			}
++		} else {
++			/*
++			 * peer is p2p winner;
++			 * PLOGI will be received on the
++			 * remote SID=1 node;
++			 * this node has served its purpose
++			 */
++			node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
++			efc_fabric_initiate_shutdown(node);
++		}
++
++		break;
++	}
++
++	case EFC_EVT_ELS_REQ_ABORTED:
++	case EFC_EVT_SRRS_ELS_REQ_RJT:
++	case EFC_EVT_SRRS_ELS_REQ_FAIL: {
++		struct efc_nport *nport = node->nport;
++		/*
++		 * with these errors, we have no recovery,
++		 * so shutdown the nport, leave the link
++		 * up and the domain ready
++		 */
++		if (efc_node_check_els_req(ctx, evt, arg, ELS_FLOGI,
++					   __efc_fabric_common, __func__)) {
++			return;
++		}
++		node_printf(node,
++			    "FLOGI failed evt=%s, shutting down nport [%s]\n",
++			    efc_sm_event_name(evt), nport->display_name);
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		efc_sm_post_event(&nport->sm, EFC_EVT_SHUTDOWN, NULL);
++		break;
++	}
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
 +	}
 +}
 +
-+static void
-+__efc_nport_common(const char *funcname, struct efc_sm_ctx *ctx,
-+		   enum efc_sm_event evt, void *arg)
++void
++__efc_vport_fabric_init(struct efc_sm_ctx *ctx,
++			enum efc_sm_event evt, void *arg)
 +{
-+	struct efc_nport *nport = ctx->app;
-+	struct efc_domain *domain = nport->domain;
-+	struct efc *efc = nport->efc;
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
 +
 +	switch (evt) {
 +	case EFC_EVT_ENTER:
-+	case EFC_EVT_REENTER:
-+	case EFC_EVT_EXIT:
-+	case EFC_EVT_ALL_CHILD_NODES_FREE:
++		/* sm: / send FDISC */
++		efc_send_fdisc(node);
++		efc_node_transition(node, __efc_fabric_fdisc_wait_rsp, NULL);
 +		break;
-+	case EFC_EVT_NPORT_ATTACH_OK:
-+			efc_sm_transition(ctx, __efc_nport_attached, NULL);
-+		break;
-+	case EFC_EVT_SHUTDOWN:
-+		/* Flag this nport as shutting down */
-+		nport->shutting_down = true;
 +
-+		if (nport->is_vport)
-+			efc_vport_link_down(nport);
-+
-+		if (xa_empty(&nport->lookup)) {
-+			/* Remove the nport from the domain's lookup table */
-+			xa_erase(&domain->lookup, nport->fc_id);
-+			efc_sm_transition(ctx, __efc_nport_wait_port_free,
-+					  NULL);
-+			if (efc_cmd_nport_free(efc, nport)) {
-+				efc_log_debug(nport->efc,
-+					     "efc_hw_port_free failed\n");
-+				/* Not much we can do, free the nport anyways */
-+				efc_nport_free(nport);
-+			}
-+		} else {
-+			/* sm: node list is not empty / shutdown nodes */
-+			efc_sm_transition(ctx,
-+					  __efc_nport_wait_shutdown, NULL);
-+			efc_nport_shutdown(nport);
-+		}
-+		break;
 +	default:
-+		efc_log_debug(nport->efc, "[%s] %-20s %-20s not handled\n",
-+			     nport->display_name, funcname,
-+			     efc_sm_event_name(evt));
++		__efc_fabric_common(__func__, ctx, evt, arg);
 +	}
 +}
 +
 +void
-+__efc_nport_allocated(struct efc_sm_ctx *ctx,
-+		      enum efc_sm_event evt, void *arg)
-+{
-+	struct efc_nport *nport = ctx->app;
-+	struct efc_domain *domain = nport->domain;
-+
-+	nport_sm_trace(nport);
-+
-+	switch (evt) {
-+	/* the physical nport is attached */
-+	case EFC_EVT_NPORT_ATTACH_OK:
-+		WARN_ON(nport != domain->nport);
-+		efc_sm_transition(ctx, __efc_nport_attached, NULL);
-+		break;
-+
-+	case EFC_EVT_NPORT_ALLOC_OK:
-+		/* ignore */
-+		break;
-+	default:
-+		__efc_nport_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_nport_vport_init(struct efc_sm_ctx *ctx,
-+		       enum efc_sm_event evt, void *arg)
-+{
-+	struct efc_nport *nport = ctx->app;
-+	struct efc *efc = nport->efc;
-+
-+	nport_sm_trace(nport);
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER: {
-+		__be64 be_wwpn = cpu_to_be64(nport->wwpn);
-+
-+		if (nport->wwpn == 0)
-+			efc_log_debug(efc, "vport: letting f/w select WWN\n");
-+
-+		if (nport->fc_id != U32_MAX) {
-+			efc_log_debug(efc, "vport: hard coding port id: %x\n",
-+				      nport->fc_id);
-+		}
-+
-+		efc_sm_transition(ctx, __efc_nport_vport_wait_alloc, NULL);
-+		/* If wwpn is zero, then we'll let the f/w */
-+		if (efc_cmd_nport_alloc(efc, nport, nport->domain,
-+					  nport->wwpn == 0 ? NULL :
-+					  (uint8_t *)&be_wwpn)) {
-+			efc_log_err(efc, "Can't allocate port\n");
-+			break;
-+		}
-+
-+		break;
-+	}
-+	default:
-+		__efc_nport_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_nport_vport_wait_alloc(struct efc_sm_ctx *ctx,
-+			     enum efc_sm_event evt, void *arg)
-+{
-+	struct efc_nport *nport = ctx->app;
-+	struct efc *efc = nport->efc;
-+
-+	nport_sm_trace(nport);
-+
-+	switch (evt) {
-+	case EFC_EVT_NPORT_ALLOC_OK: {
-+		struct fc_els_flogi *sp;
-+
-+		sp = (struct fc_els_flogi *)nport->service_params;
-+		/*
-+		 * If we let f/w assign wwn's,
-+		 * then nport wwn's with those returned by hw
-+		 */
-+		if (nport->wwnn == 0) {
-+			nport->wwnn = be64_to_cpu(nport->sli_wwnn);
-+			nport->wwpn = be64_to_cpu(nport->sli_wwpn);
-+			snprintf(nport->wwnn_str, sizeof(nport->wwnn_str),
-+				 "%016llX", nport->wwpn);
-+		}
-+
-+		/* Update the nport's service parameters */
-+		sp->fl_wwpn = cpu_to_be64(nport->wwpn);
-+		sp->fl_wwnn = cpu_to_be64(nport->wwnn);
-+
-+		/*
-+		 * if nport->fc_id is uninitialized,
-+		 * then request that the fabric node use FDISC
-+		 * to find an fc_id.
-+		 * Otherwise we're restoring vports, or we're in
-+		 * fabric emulation mode, so attach the fc_id
-+		 */
-+		if (nport->fc_id == U32_MAX) {
-+			struct efc_node *fabric;
-+
-+			fabric = efc_node_alloc(nport, FC_FID_FLOGI, false,
-+						false);
-+			if (!fabric) {
-+				efc_log_err(efc, "efc_node_alloc() failed\n");
-+				return;
-+			}
-+			efc_node_transition(fabric, __efc_vport_fabric_init,
-+					    NULL);
-+		} else {
-+			snprintf(nport->wwnn_str, sizeof(nport->wwnn_str),
-+				 "%016llX", nport->wwpn);
-+			efc_nport_attach(nport, nport->fc_id);
-+		}
-+		efc_sm_transition(ctx, __efc_nport_vport_allocated, NULL);
-+		break;
-+	}
-+	default:
-+		__efc_nport_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_nport_vport_allocated(struct efc_sm_ctx *ctx,
++__efc_fabric_fdisc_wait_rsp(struct efc_sm_ctx *ctx,
 +			    enum efc_sm_event evt, void *arg)
 +{
-+	struct efc_nport *nport = ctx->app;
-+	struct efc *efc = nport->efc;
++	struct efc_node_cb *cbdata = arg;
++	struct efc_node *node = ctx->app;
 +
-+	nport_sm_trace(nport);
++	efc_node_evt_set(ctx, evt, __func__);
 +
-+	/*
-+	 * This state is entered after the nport is allocated;
-+	 * it then waits for a fabric node
-+	 * FDISC to complete, which requests a nport attach.
-+	 * The nport attach complete is handled in this state.
-+	 */
-+	switch (evt) {
-+	case EFC_EVT_NPORT_ATTACH_OK: {
-+		struct efc_node *node;
-+
-+		/* Find our fabric node, and forward this event */
-+		node = efc_node_find(nport, FC_FID_FLOGI);
-+		if (!node) {
-+			efc_log_debug(efc, "can't find node %06x\n",
-+				     FC_FID_FLOGI);
-+			break;
-+		}
-+		/* sm: / forward nport attach to fabric node */
-+		efc_node_post_event(node, evt, NULL);
-+		efc_sm_transition(ctx, __efc_nport_attached, NULL);
-+		break;
-+	}
-+	default:
-+		__efc_nport_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+static void
-+efc_vport_update_spec(struct efc_nport *nport)
-+{
-+	struct efc *efc = nport->efc;
-+	struct efc_vport_spec *vport;
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&efc->vport_lock, flags);
-+	list_for_each_entry(vport, &efc->vport_list, list_entry) {
-+		if (vport->nport == nport) {
-+			vport->wwnn = nport->wwnn;
-+			vport->wwpn = nport->wwpn;
-+			vport->tgt_data = nport->tgt_data;
-+			vport->ini_data = nport->ini_data;
-+			break;
-+		}
-+	}
-+	spin_unlock_irqrestore(&efc->vport_lock, flags);
-+}
-+
-+void
-+__efc_nport_attached(struct efc_sm_ctx *ctx,
-+		     enum efc_sm_event evt, void *arg)
-+{
-+	struct efc_nport *nport = ctx->app;
-+	struct efc *efc = nport->efc;
-+
-+	nport_sm_trace(nport);
++	node_sm_trace();
 +
 +	switch (evt) {
-+	case EFC_EVT_ENTER: {
-+		struct efc_node *node;
-+		unsigned long index;
-+
-+		efc_log_debug(efc,
-+			      "[%s] NPORT attached WWPN %016llX WWNN %016llX\n",
-+			      nport->display_name,
-+			      nport->wwpn, nport->wwnn);
-+
-+		xa_for_each(&nport->lookup, index, node) {
-+			efc_node_update_display_name(node);
++	case EFC_EVT_SRRS_ELS_REQ_OK: {
++		/* fc_id is in ext_status */
++		if (efc_node_check_els_req(ctx, evt, arg, ELS_FDISC,
++					   __efc_fabric_common, __func__)) {
++			return;
 +		}
 +
-+		nport->tgt_id = nport->fc_id;
-+
-+		efc->tt.new_nport(efc, nport);
-+
-+		/*
-+		 * Update the vport (if its not the physical nport)
-+		 * parameters
-+		 */
-+		if (nport->is_vport)
-+			efc_vport_update_spec(nport);
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		/* sm: / efc_nport_attach */
++		efc_nport_attach(node->nport, cbdata->ext_status);
++		efc_node_transition(node, __efc_fabric_wait_domain_attach,
++				    NULL);
 +		break;
 +	}
 +
-+	case EFC_EVT_EXIT:
-+		efc_log_debug(efc,
-+			      "[%s] NPORT deattached WWPN %016llX WWNN %016llX\n",
-+			      nport->display_name,
-+			      nport->wwpn, nport->wwnn);
-+
-+		efc->tt.del_nport(efc, nport);
-+		break;
-+	default:
-+		__efc_nport_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+
-+void
-+__efc_nport_wait_shutdown(struct efc_sm_ctx *ctx,
-+			  enum efc_sm_event evt, void *arg)
-+{
-+	struct efc_nport *nport = ctx->app;
-+	struct efc_domain *domain = nport->domain;
-+	struct efc *efc = nport->efc;
-+
-+	nport_sm_trace(nport);
-+
-+	switch (evt) {
-+	case EFC_EVT_NPORT_ALLOC_OK:
-+	case EFC_EVT_NPORT_ALLOC_FAIL:
-+	case EFC_EVT_NPORT_ATTACH_OK:
-+	case EFC_EVT_NPORT_ATTACH_FAIL:
-+		/* ignore these events - just wait for the all free event */
-+		break;
-+
-+	case EFC_EVT_ALL_CHILD_NODES_FREE: {
-+		/*
-+		 * Remove the nport from the domain's
-+		 * sparse vector lookup table
-+		 */
-+		xa_erase(&domain->lookup, nport->fc_id);
-+		efc_sm_transition(ctx, __efc_nport_wait_port_free, NULL);
-+		if (efc_cmd_nport_free(efc, nport)) {
-+			efc_log_err(nport->efc, "efc_hw_port_free failed\n");
-+			/* Not much we can do, free the nport anyways */
-+			efc_nport_free(nport);
++	case EFC_EVT_SRRS_ELS_REQ_RJT:
++	case EFC_EVT_SRRS_ELS_REQ_FAIL: {
++		if (efc_node_check_els_req(ctx, evt, arg, ELS_FDISC,
++					   __efc_fabric_common, __func__)) {
++			return;
 +		}
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		efc_log_err(node->efc, "FDISC failed, shutting down nport\n");
++		/* sm: / shutdown nport */
++		efc_sm_post_event(&node->nport->sm, EFC_EVT_SHUTDOWN, NULL);
 +		break;
 +	}
++
 +	default:
-+		__efc_nport_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_nport_wait_port_free(struct efc_sm_ctx *ctx,
-+			   enum efc_sm_event evt, void *arg)
-+{
-+	struct efc_nport *nport = ctx->app;
-+
-+	nport_sm_trace(nport);
-+
-+	switch (evt) {
-+	case EFC_EVT_NPORT_ATTACH_OK:
-+		/* Ignore as we are waiting for the free CB */
-+		break;
-+	case EFC_EVT_NPORT_FREE_OK: {
-+		/* All done, free myself */
-+		efc_nport_free(nport);
-+		break;
-+	}
-+	default:
-+		__efc_nport_common(__func__, ctx, evt, arg);
++		__efc_fabric_common(__func__, ctx, evt, arg);
 +	}
 +}
 +
 +static int
-+efc_vport_nport_alloc(struct efc_domain *domain, struct efc_vport_spec *vport)
++efc_start_ns_node(struct efc_nport *nport)
 +{
-+	struct efc_nport *nport;
++	struct efc_node *ns;
 +
-+	lockdep_assert_held(&domain->efc->lock);
-+
-+	nport = efc_nport_alloc(domain, vport->wwpn, vport->wwnn, vport->fc_id,
-+				vport->enable_ini, vport->enable_tgt);
-+	vport->nport = nport;
-+	if (!nport)
-+		return EFC_FAIL;
-+
-+	kref_get(&nport->ref);
-+	nport->is_vport = true;
-+	nport->tgt_data = vport->tgt_data;
-+	nport->ini_data = vport->ini_data;
-+
-+	efc_sm_transition(&nport->sm, __efc_nport_vport_init, NULL);
-+
++	/* Instantiate a name services node */
++	ns = efc_node_find(nport, FC_FID_DIR_SERV);
++	if (!ns) {
++		ns = efc_node_alloc(nport, FC_FID_DIR_SERV, false, false);
++		if (!ns)
++			return EFC_FAIL;
++	}
++	/*
++	 * for found ns, should we be transitioning from here?
++	 * breaks transition only
++	 *  1. from within state machine or
++	 *  2. if after alloc
++	 */
++	if (ns->efc->nodedb_mask & EFC_NODEDB_PAUSE_NAMESERVER)
++		efc_node_pause(ns, __efc_ns_init);
++	else
++		efc_node_transition(ns, __efc_ns_init, NULL);
 +	return EFC_SUCCESS;
 +}
 +
-+int
-+efc_vport_start(struct efc_domain *domain)
++static int
++efc_start_fabctl_node(struct efc_nport *nport)
 +{
-+	struct efc *efc = domain->efc;
-+	struct efc_vport_spec *vport;
-+	struct efc_vport_spec *next;
-+	int rc = EFC_SUCCESS;
-+	unsigned long flags = 0;
++	struct efc_node *fabctl;
 +
-+	/* Use the vport spec to find the associated vports and start them */
-+	spin_lock_irqsave(&efc->vport_lock, flags);
-+	list_for_each_entry_safe(vport, next, &efc->vport_list, list_entry) {
-+		if (!vport->nport) {
-+			if (efc_vport_nport_alloc(domain, vport))
-+				rc = EFC_FAIL;
-+		}
++	fabctl = efc_node_find(nport, FC_FID_FCTRL);
++	if (!fabctl) {
++		fabctl = efc_node_alloc(nport, FC_FID_FCTRL,
++					false, false);
++		if (!fabctl)
++			return EFC_FAIL;
 +	}
-+	spin_unlock_irqrestore(&efc->vport_lock, flags);
-+
-+	return rc;
-+}
-+
-+int
-+efc_nport_vport_new(struct efc_domain *domain, uint64_t wwpn, uint64_t wwnn,
-+		    u32 fc_id, bool ini, bool tgt, void *tgt_data,
-+		    void *ini_data)
-+{
-+	struct efc *efc = domain->efc;
-+	struct efc_vport_spec *vport;
-+	int rc = EFC_SUCCESS;
-+	unsigned long flags = 0;
-+
-+	if (ini && domain->efc->enable_ini == 0) {
-+		efc_log_debug(efc,
-+			     "driver initiator functionality not enabled\n");
-+		return EFC_FAIL;
-+	}
-+
-+	if (tgt && domain->efc->enable_tgt == 0) {
-+		efc_log_debug(efc,
-+			     "driver target functionality not enabled\n");
-+		return EFC_FAIL;
-+	}
-+
 +	/*
-+	 * Create a vport spec if we need to recreate
-+	 * this vport after a link up event
++	 * for found ns, should we be transitioning from here?
++	 * breaks transition only
++	 *  1. from within state machine or
++	 *  2. if after alloc
 +	 */
-+	vport = efc_vport_create_spec(domain->efc, wwnn, wwpn, fc_id, ini, tgt,
-+					tgt_data, ini_data);
-+	if (!vport) {
-+		efc_log_err(efc, "failed to create vport object entry\n");
-+		return EFC_FAIL;
-+	}
-+
-+	spin_lock_irqsave(&efc->lock, flags);
-+	rc = efc_vport_nport_alloc(domain, vport);
-+	spin_unlock_irqrestore(&efc->lock, flags);
-+
-+	return rc;
-+}
-+
-+int
-+efc_nport_vport_del(struct efc *efc, struct efc_domain *domain,
-+		    u64 wwpn, uint64_t wwnn)
-+{
-+	struct efc_nport *nport;
-+	int found = 0;
-+	struct efc_vport_spec *vport;
-+	struct efc_vport_spec *next;
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&efc->vport_lock, flags);
-+	/* walk the efc_vport_list and remove from there */
-+	list_for_each_entry_safe(vport, next, &efc->vport_list, list_entry) {
-+		if (vport->wwpn == wwpn && vport->wwnn == wwnn) {
-+			list_del(&vport->list_entry);
-+			kfree(vport);
-+			break;
-+		}
-+	}
-+	spin_unlock_irqrestore(&efc->vport_lock, flags);
-+
-+	if (!domain) {
-+		/* No domain means no nport to look for */
-+		return EFC_SUCCESS;
-+	}
-+
-+	spin_lock_irqsave(&efc->lock, flags);
-+	list_for_each_entry(nport, &domain->nport_list, list_entry) {
-+		if (nport->wwpn == wwpn && nport->wwnn == wwnn) {
-+			found = 1;
-+			break;
-+		}
-+	}
-+
-+	if (found) {
-+		kref_put(&nport->ref, nport->release);
-+		/* Shutdown this NPORT */
-+		efc_sm_post_event(&nport->sm, EFC_EVT_SHUTDOWN, NULL);
-+	}
-+	spin_unlock_irqrestore(&efc->lock, flags);
++	efc_node_transition(fabctl, __efc_fabctl_init, NULL);
 +	return EFC_SUCCESS;
 +}
 +
 +void
-+efc_vport_del_all(struct efc *efc)
++__efc_fabric_wait_domain_attach(struct efc_sm_ctx *ctx,
++				enum efc_sm_event evt, void *arg)
 +{
-+	struct efc_vport_spec *vport;
-+	struct efc_vport_spec *next;
-+	unsigned long flags = 0;
++	struct efc_node *node = ctx->app;
 +
-+	spin_lock_irqsave(&efc->vport_lock, flags);
-+	list_for_each_entry_safe(vport, next, &efc->vport_list, list_entry) {
-+		list_del(&vport->list_entry);
-+		kfree(vport);
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		efc_node_hold_frames(node);
++		break;
++
++	case EFC_EVT_EXIT:
++		efc_node_accept_frames(node);
++		break;
++	case EFC_EVT_DOMAIN_ATTACH_OK:
++	case EFC_EVT_NPORT_ATTACH_OK: {
++		int rc;
++
++		rc = efc_start_ns_node(node->nport);
++		if (rc)
++			return;
++
++		/* sm: if enable_ini / start fabctl node */
++		/* Instantiate the fabric controller (sends SCR) */
++		if (node->nport->enable_rscn) {
++			rc = efc_start_fabctl_node(node->nport);
++			if (rc)
++				return;
++		}
++		efc_node_transition(node, __efc_fabric_idle, NULL);
++		break;
 +	}
-+	spin_unlock_irqrestore(&efc->vport_lock, flags);
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
 +}
 +
-+struct efc_vport_spec *
-+efc_vport_create_spec(struct efc *efc, uint64_t wwnn, uint64_t wwpn,
-+		      u32 fc_id, bool enable_ini,
-+		      bool enable_tgt, void *tgt_data, void *ini_data)
++void
++__efc_fabric_idle(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
++		  void *arg)
 +{
-+	struct efc_vport_spec *vport;
-+	unsigned long flags = 0;
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_DOMAIN_ATTACH_OK:
++		break;
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_ns_init(struct efc_sm_ctx *ctx, enum efc_sm_event evt, void *arg)
++{
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		/* sm: / send PLOGI */
++		efc_send_plogi(node);
++		efc_node_transition(node, __efc_ns_plogi_wait_rsp, NULL);
++		break;
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_ns_plogi_wait_rsp(struct efc_sm_ctx *ctx,
++			enum efc_sm_event evt, void *arg)
++{
++	struct efc_node_cb *cbdata = arg;
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_SRRS_ELS_REQ_OK: {
++		int rc;
++
++		/* Save service parameters */
++		if (efc_node_check_els_req(ctx, evt, arg, ELS_PLOGI,
++					   __efc_fabric_common, __func__)) {
++			return;
++		}
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		/* sm: / save sparams, efc_node_attach */
++		efc_node_save_sparms(node, cbdata->els_rsp.virt);
++		rc = efc_node_attach(node);
++		efc_node_transition(node, __efc_ns_wait_node_attach, NULL);
++		if (rc == EFC_HW_RTN_SUCCESS_SYNC)
++			efc_node_post_event(node, EFC_EVT_NODE_ATTACH_OK,
++					    NULL);
++		break;
++	}
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_ns_wait_node_attach(struct efc_sm_ctx *ctx,
++			  enum efc_sm_event evt, void *arg)
++{
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		efc_node_hold_frames(node);
++		break;
++
++	case EFC_EVT_EXIT:
++		efc_node_accept_frames(node);
++		break;
++
++	case EFC_EVT_NODE_ATTACH_OK:
++		node->attached = true;
++		/* sm: / send RFTID */
++		efc_ns_send_rftid(node);
++		efc_node_transition(node, __efc_ns_rftid_wait_rsp, NULL);
++		break;
++
++	case EFC_EVT_NODE_ATTACH_FAIL:
++		/* node attach failed, shutdown the node */
++		node->attached = false;
++		node_printf(node, "Node attach failed\n");
++		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
++		efc_fabric_initiate_shutdown(node);
++		break;
++
++	case EFC_EVT_SHUTDOWN:
++		node_printf(node, "Shutdown event received\n");
++		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
++		efc_node_transition(node,
++				    __efc_fabric_wait_attach_evt_shutdown,
++				     NULL);
++		break;
 +
 +	/*
-+	 * walk the efc_vport_list and return failure
-+	 * if a valid(vport with non zero WWPN and WWNN) vport entry
-+	 * is already created
++	 * if receive RSCN just ignore,
++	 * we haven't sent GID_PT yet (ACC sent by fabctl node)
 +	 */
-+	spin_lock_irqsave(&efc->vport_lock, flags);
-+	list_for_each_entry(vport, &efc->vport_list, list_entry) {
-+		if ((wwpn && vport->wwpn == wwpn) &&
-+		    (wwnn && vport->wwnn == wwnn)) {
-+			efc_log_err(efc,
-+				"Failed: VPORT %016llX %016llX already allocated\n",
-+				wwnn, wwpn);
-+			spin_unlock_irqrestore(&efc->vport_lock, flags);
-+			return NULL;
++	case EFC_EVT_RSCN_RCVD:
++		break;
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_fabric_wait_attach_evt_shutdown(struct efc_sm_ctx *ctx,
++				      enum efc_sm_event evt, void *arg)
++{
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		efc_node_hold_frames(node);
++		break;
++
++	case EFC_EVT_EXIT:
++		efc_node_accept_frames(node);
++		break;
++
++	/* wait for any of these attach events and then shutdown */
++	case EFC_EVT_NODE_ATTACH_OK:
++		node->attached = true;
++		node_printf(node, "Attach evt=%s, proceed to shutdown\n",
++			    efc_sm_event_name(evt));
++		efc_fabric_initiate_shutdown(node);
++		break;
++
++	case EFC_EVT_NODE_ATTACH_FAIL:
++		node->attached = false;
++		node_printf(node, "Attach evt=%s, proceed to shutdown\n",
++			    efc_sm_event_name(evt));
++		efc_fabric_initiate_shutdown(node);
++		break;
++
++	/* ignore shutdown event as we're already in shutdown path */
++	case EFC_EVT_SHUTDOWN:
++		node_printf(node, "Shutdown event received\n");
++		break;
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_ns_rftid_wait_rsp(struct efc_sm_ctx *ctx,
++			enum efc_sm_event evt, void *arg)
++{
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_SRRS_ELS_REQ_OK:
++		if (efc_node_check_ns_req(ctx, evt, arg, FC_NS_RFT_ID,
++					  __efc_fabric_common, __func__)) {
++			return;
++		}
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		/* sm: / send RFFID */
++		efc_ns_send_rffid(node);
++		efc_node_transition(node, __efc_ns_rffid_wait_rsp, NULL);
++		break;
++
++	/*
++	 * if receive RSCN just ignore,
++	 * we haven't sent GID_PT yet (ACC sent by fabctl node)
++	 */
++	case EFC_EVT_RSCN_RCVD:
++		break;
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_ns_rffid_wait_rsp(struct efc_sm_ctx *ctx,
++			enum efc_sm_event evt, void *arg)
++{
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	/*
++	 * Waits for an RFFID response event;
++	 * if rscn enabled, a GIDPT name services request is issued.
++	 */
++	switch (evt) {
++	case EFC_EVT_SRRS_ELS_REQ_OK:	{
++		if (efc_node_check_ns_req(ctx, evt, arg, FC_NS_RFF_ID,
++					  __efc_fabric_common, __func__)) {
++			return;
++		}
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		if (node->nport->enable_rscn) {
++			/* sm: if enable_rscn / send GIDPT */
++			efc_ns_send_gidpt(node);
++
++			efc_node_transition(node, __efc_ns_gidpt_wait_rsp,
++					    NULL);
++		} else {
++			/* if 'T' only, we're done, go to idle */
++			efc_node_transition(node, __efc_ns_idle, NULL);
++		}
++		break;
++	}
++	/*
++	 * if receive RSCN just ignore,
++	 * we haven't sent GID_PT yet (ACC sent by fabctl node)
++	 */
++	case EFC_EVT_RSCN_RCVD:
++		break;
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++static int
++efc_process_gidpt_payload(struct efc_node *node,
++			  void *data, u32 gidpt_len)
++{
++	u32 i, j;
++	struct efc_node *newnode;
++	struct efc_nport *nport = node->nport;
++	struct efc *efc = node->efc;
++	u32 port_id = 0, port_count, plist_count;
++	struct efc_node *n;
++	struct efc_node **active_nodes;
++	int residual;
++	struct {
++		struct fc_ct_hdr hdr;
++		struct fc_gid_pn_resp pn_rsp;
++	} *rsp;
++	struct fc_gid_pn_resp *gidpt;
++	unsigned long index;
++
++	rsp = data;
++	gidpt = &rsp->pn_rsp;
++	residual = be16_to_cpu(rsp->hdr.ct_mr_size);
++
++	if (residual != 0)
++		efc_log_debug(node->efc, "residual is %u words\n", residual);
++
++	if (be16_to_cpu(rsp->hdr.ct_cmd) == FC_FS_RJT) {
++		node_printf(node,
++			    "GIDPT request failed: rsn x%x rsn_expl x%x\n",
++			    rsp->hdr.ct_reason, rsp->hdr.ct_explan);
++		return EFC_FAIL;
++	}
++
++	plist_count = (gidpt_len - sizeof(struct fc_ct_hdr)) / sizeof(*gidpt);
++
++	/* Count the number of nodes */
++	port_count = 0;
++	xa_for_each(&nport->lookup, index, n) {
++		port_count++;
++	}
++
++	/* Allocate a buffer for all nodes */
++	active_nodes = kzalloc(port_count * sizeof(*active_nodes), GFP_ATOMIC);
++	if (!active_nodes) {
++		node_printf(node, "efc_malloc failed\n");
++		return EFC_FAIL;
++	}
++
++	/* Fill buffer with fc_id of active nodes */
++	i = 0;
++	xa_for_each(&nport->lookup, index, n) {
++		port_id = n->rnode.fc_id;
++		switch (port_id) {
++		case FC_FID_FLOGI:
++		case FC_FID_FCTRL:
++		case FC_FID_DIR_SERV:
++			break;
++		default:
++			if (port_id != FC_FID_DOM_MGR)
++				active_nodes[i++] = n;
++			break;
 +		}
 +	}
 +
-+	vport = kzalloc(sizeof(*vport), GFP_ATOMIC);
-+	if (!vport) {
-+		spin_unlock_irqrestore(&efc->vport_lock, flags);
-+		return NULL;
++	/* update the active nodes buffer */
++	for (i = 0; i < plist_count; i++) {
++		hton24(gidpt[i].fp_fid, port_id);
++
++		for (j = 0; j < port_count; j++) {
++			if (active_nodes[j] &&
++			    port_id == active_nodes[j]->rnode.fc_id) {
++				active_nodes[j] = NULL;
++			}
++		}
++
++		if (gidpt[i].fp_resvd & FC_NS_FID_LAST)
++			break;
 +	}
 +
-+	vport->wwnn = wwnn;
-+	vport->wwpn = wwpn;
-+	vport->fc_id = fc_id;
-+	vport->enable_tgt = enable_tgt;
-+	vport->enable_ini = enable_ini;
-+	vport->tgt_data = tgt_data;
-+	vport->ini_data = ini_data;
++	/* Those remaining in the active_nodes[] are now gone ! */
++	for (i = 0; i < port_count; i++) {
++		/*
++		 * if we're an initiator and the remote node
++		 * is a target, then post the node missing event.
++		 * if we're target and we have enabled
++		 * target RSCN, then post the node missing event.
++		 */
++		if (!active_nodes[i])
++			continue;
 +
-+	INIT_LIST_HEAD(&vport->list_entry);
-+	list_add_tail(&vport->list_entry, &efc->vport_list);
-+	spin_unlock_irqrestore(&efc->vport_lock, flags);
-+	return vport;
++		if ((node->nport->enable_ini && active_nodes[i]->targ) ||
++		    (node->nport->enable_tgt && enable_target_rscn(efc))) {
++			efc_node_post_event(active_nodes[i],
++					    EFC_EVT_NODE_MISSING, NULL);
++		} else {
++			node_printf(node,
++				    "GID_PT: skipping non-tgt port_id x%06x\n",
++				    active_nodes[i]->rnode.fc_id);
++		}
++	}
++	kfree(active_nodes);
++
++	for (i = 0; i < plist_count; i++) {
++		hton24(gidpt[i].fp_fid, port_id);
++
++		/* Don't create node for ourselves */
++		if (port_id == node->rnode.nport->fc_id) {
++			if (gidpt[i].fp_resvd & FC_NS_FID_LAST)
++				break;
++			continue;
++		}
++
++		newnode = efc_node_find(nport, port_id);
++		if (!newnode) {
++			if (!node->nport->enable_ini)
++				continue;
++
++			newnode = efc_node_alloc(nport, port_id, false, false);
++			if (!newnode) {
++				efc_log_err(efc, "efc_node_alloc() failed\n");
++				return EFC_FAIL;
++			}
++			/*
++			 * send PLOGI automatically
++			 * if initiator
++			 */
++			efc_node_init_device(newnode, true);
++		}
++
++		if (node->nport->enable_ini && newnode->targ) {
++			efc_node_post_event(newnode, EFC_EVT_NODE_REFOUND,
++					    NULL);
++		}
++
++		if (gidpt[i].fp_resvd & FC_NS_FID_LAST)
++			break;
++	}
++	return EFC_SUCCESS;
 +}
-diff --git a/drivers/scsi/elx/libefc/efc_nport.h b/drivers/scsi/elx/libefc/efc_nport.h
++
++void
++__efc_ns_gidpt_wait_rsp(struct efc_sm_ctx *ctx,
++			enum efc_sm_event evt, void *arg)
++{
++	struct efc_node_cb *cbdata = arg;
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++	/*
++	 * Wait for a GIDPT response from the name server. Process the FC_IDs
++	 * that are reported by creating new remote ports, as needed.
++	 */
++
++	switch (evt) {
++	case EFC_EVT_SRRS_ELS_REQ_OK:	{
++		if (efc_node_check_ns_req(ctx, evt, arg, FC_NS_GID_PT,
++					  __efc_fabric_common, __func__)) {
++			return;
++		}
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		/* sm: / process GIDPT payload */
++		efc_process_gidpt_payload(node, cbdata->els_rsp.virt,
++					  cbdata->els_rsp.len);
++		efc_node_transition(node, __efc_ns_idle, NULL);
++		break;
++	}
++
++	case EFC_EVT_SRRS_ELS_REQ_FAIL:	{
++		/* not much we can do; will retry with the next RSCN */
++		node_printf(node, "GID_PT failed to complete\n");
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		efc_node_transition(node, __efc_ns_idle, NULL);
++		break;
++	}
++
++	/* if receive RSCN here, queue up another discovery processing */
++	case EFC_EVT_RSCN_RCVD: {
++		node_printf(node, "RSCN received during GID_PT processing\n");
++		node->rscn_pending = true;
++		break;
++	}
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_ns_idle(struct efc_sm_ctx *ctx, enum efc_sm_event evt, void *arg)
++{
++	struct efc_node *node = ctx->app;
++	struct efc *efc = node->efc;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	/*
++	 * Wait for RSCN received events (posted from the fabric controller)
++	 * and restart the GIDPT name services query and processing.
++	 */
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		if (!node->rscn_pending)
++			break;
++
++		node_printf(node, "RSCN pending, restart discovery\n");
++		node->rscn_pending = false;
++		fallthrough;
++
++	case EFC_EVT_RSCN_RCVD: {
++		/* sm: / send GIDPT */
++		/*
++		 * If target RSCN processing is enabled,
++		 * and this is target only (not initiator),
++		 * and tgt_rscn_delay is non-zero,
++		 * then we delay issuing the GID_PT
++		 */
++		if (efc->tgt_rscn_delay_msec != 0 &&
++		    !node->nport->enable_ini && node->nport->enable_tgt &&
++		    enable_target_rscn(efc)) {
++			efc_node_transition(node, __efc_ns_gidpt_delay, NULL);
++		} else {
++			efc_ns_send_gidpt(node);
++			efc_node_transition(node, __efc_ns_gidpt_wait_rsp,
++					    NULL);
++		}
++		break;
++	}
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++static void
++gidpt_delay_timer_cb(struct timer_list *t)
++{
++	struct efc_node *node = from_timer(node, t, gidpt_delay_timer);
++
++	del_timer(&node->gidpt_delay_timer);
++
++	efc_node_post_event(node, EFC_EVT_GIDPT_DELAY_EXPIRED, NULL);
++}
++
++void
++__efc_ns_gidpt_delay(struct efc_sm_ctx *ctx,
++		     enum efc_sm_event evt, void *arg)
++{
++	struct efc_node *node = ctx->app;
++	struct efc *efc = node->efc;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER: {
++		u64 delay_msec, tmp;
++
++		/*
++		 * Compute the delay time.
++		 * Set to tgt_rscn_delay, if the time since last GIDPT
++		 * is less than tgt_rscn_period, then use tgt_rscn_period.
++		 */
++		delay_msec = efc->tgt_rscn_delay_msec;
++		tmp = jiffies_to_msecs(jiffies) - node->time_last_gidpt_msec;
++		if (tmp < efc->tgt_rscn_period_msec)
++			delay_msec = efc->tgt_rscn_period_msec;
++
++		timer_setup(&node->gidpt_delay_timer, &gidpt_delay_timer_cb,
++			    0);
++		mod_timer(&node->gidpt_delay_timer,
++			  jiffies + msecs_to_jiffies(delay_msec));
++
++		break;
++	}
++
++	case EFC_EVT_GIDPT_DELAY_EXPIRED:
++		node->time_last_gidpt_msec = jiffies_to_msecs(jiffies);
++
++		efc_ns_send_gidpt(node);
++		efc_node_transition(node, __efc_ns_gidpt_wait_rsp, NULL);
++		break;
++
++	case EFC_EVT_RSCN_RCVD: {
++		efc_log_debug(efc,
++			      "RSCN received while in GIDPT delay - no action\n");
++		break;
++	}
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_fabctl_init(struct efc_sm_ctx *ctx,
++		  enum efc_sm_event evt, void *arg)
++{
++	struct efc_node *node = ctx->app;
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		/* no need to login to fabric controller, just send SCR */
++		efc_send_scr(node);
++		efc_node_transition(node, __efc_fabctl_wait_scr_rsp, NULL);
++		break;
++
++	case EFC_EVT_NODE_ATTACH_OK:
++		node->attached = true;
++		break;
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_fabctl_wait_scr_rsp(struct efc_sm_ctx *ctx,
++			  enum efc_sm_event evt, void *arg)
++{
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	/*
++	 * Fabric controller node state machine:
++	 * Wait for an SCR response from the fabric controller.
++	 */
++	switch (evt) {
++	case EFC_EVT_SRRS_ELS_REQ_OK:
++		if (efc_node_check_els_req(ctx, evt, arg, ELS_SCR,
++					   __efc_fabric_common, __func__)) {
++			return;
++		}
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		efc_node_transition(node, __efc_fabctl_ready, NULL);
++		break;
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++static void
++efc_process_rscn(struct efc_node *node, struct efc_node_cb *cbdata)
++{
++	struct efc *efc = node->efc;
++	struct efc_nport *nport = node->nport;
++	struct efc_node *ns;
++
++	/* Forward this event to the name-services node */
++	ns = efc_node_find(nport, FC_FID_DIR_SERV);
++	if (ns)
++		efc_node_post_event(ns, EFC_EVT_RSCN_RCVD, cbdata);
++	else
++		efc_log_warn(efc, "can't find name server node\n");
++}
++
++void
++__efc_fabctl_ready(struct efc_sm_ctx *ctx,
++		   enum efc_sm_event evt, void *arg)
++{
++	struct efc_node_cb *cbdata = arg;
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	/*
++	 * Fabric controller node state machine: Ready.
++	 * In this state, the fabric controller sends a RSCN, which is received
++	 * by this node and is forwarded to the name services node object; and
++	 * the RSCN LS_ACC is sent.
++	 */
++	switch (evt) {
++	case EFC_EVT_RSCN_RCVD: {
++		struct fc_frame_header *hdr = cbdata->header->dma.virt;
++
++		/*
++		 * sm: / process RSCN (forward to name services node),
++		 * send LS_ACC
++		 */
++		efc_process_rscn(node, cbdata);
++		efc_send_ls_acc(node, be16_to_cpu(hdr->fh_ox_id));
++		efc_node_transition(node, __efc_fabctl_wait_ls_acc_cmpl,
++				    NULL);
++		break;
++	}
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_fabctl_wait_ls_acc_cmpl(struct efc_sm_ctx *ctx,
++			      enum efc_sm_event evt, void *arg)
++{
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		efc_node_hold_frames(node);
++		break;
++
++	case EFC_EVT_EXIT:
++		efc_node_accept_frames(node);
++		break;
++
++	case EFC_EVT_SRRS_ELS_CMPL_OK:
++		WARN_ON(!node->els_cmpl_cnt);
++		node->els_cmpl_cnt--;
++		efc_node_transition(node, __efc_fabctl_ready, NULL);
++		break;
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++static uint64_t
++efc_get_wwpn(struct fc_els_flogi *sp)
++{
++	return be64_to_cpu(sp->fl_wwnn);
++}
++
++static int
++efc_rnode_is_winner(struct efc_nport *nport)
++{
++	struct fc_els_flogi *remote_sp;
++	u64 remote_wwpn;
++	u64 local_wwpn = nport->wwpn;
++	u64 wwn_bump = 0;
++
++	remote_sp = (struct fc_els_flogi *)nport->domain->flogi_service_params;
++	remote_wwpn = efc_get_wwpn(remote_sp);
++
++	local_wwpn ^= wwn_bump;
++
++	efc_log_debug(nport->efc, "r: %llx\n",
++		      be64_to_cpu(remote_sp->fl_wwpn));
++	efc_log_debug(nport->efc, "l: %llx\n", local_wwpn);
++
++	if (remote_wwpn == local_wwpn) {
++		efc_log_warn(nport->efc,
++			     "WWPN of remote node [%08x %08x] matches local WWPN\n",
++			     (u32)(local_wwpn >> 32ll),
++			     (u32)local_wwpn);
++		return -1;
++	}
++
++	return (remote_wwpn > local_wwpn);
++}
++
++void
++__efc_p2p_wait_domain_attach(struct efc_sm_ctx *ctx,
++			     enum efc_sm_event evt, void *arg)
++{
++	struct efc_node *node = ctx->app;
++	struct efc *efc = node->efc;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		efc_node_hold_frames(node);
++		break;
++
++	case EFC_EVT_EXIT:
++		efc_node_accept_frames(node);
++		break;
++
++	case EFC_EVT_DOMAIN_ATTACH_OK: {
++		struct efc_nport *nport = node->nport;
++		struct efc_node *rnode;
++
++		/*
++		 * this transient node (SID=0 (recv'd FLOGI)
++		 * or DID=fabric (sent FLOGI))
++		 * is the p2p winner, will use a separate node
++		 * to send PLOGI to peer
++		 */
++		WARN_ON(!node->nport->p2p_winner);
++
++		rnode = efc_node_find(nport, node->nport->p2p_remote_port_id);
++		if (rnode) {
++			/*
++			 * the "other" transient p2p node has
++			 * already kicked off the
++			 * new node from which PLOGI is sent
++			 */
++			node_printf(node,
++				    "Node with fc_id x%x already exists\n",
++				    rnode->rnode.fc_id);
++		} else {
++			/*
++			 * create new node (SID=1, DID=2)
++			 * from which to send PLOGI
++			 */
++			rnode = efc_node_alloc(nport,
++					       nport->p2p_remote_port_id,
++						false, false);
++			if (!rnode) {
++				efc_log_err(efc, "node alloc failed\n");
++				return;
++			}
++
++			efc_fabric_notify_topology(node);
++			/* sm: / allocate p2p remote node */
++			efc_node_transition(rnode, __efc_p2p_rnode_init,
++					    NULL);
++		}
++
++		/*
++		 * the transient node (SID=0 or DID=fabric)
++		 * has served its purpose
++		 */
++		if (node->rnode.fc_id == 0) {
++			/*
++			 * if this is the SID=0 node,
++			 * move to the init state in case peer
++			 * has restarted FLOGI discovery and FLOGI is pending
++			 */
++			/* don't send PLOGI on efc_d_init entry */
++			efc_node_init_device(node, false);
++		} else {
++			/*
++			 * if this is the DID=fabric node
++			 * (we initiated FLOGI), shut it down
++			 */
++			node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
++			efc_fabric_initiate_shutdown(node);
++		}
++		break;
++	}
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_p2p_rnode_init(struct efc_sm_ctx *ctx,
++		     enum efc_sm_event evt, void *arg)
++{
++	struct efc_node_cb *cbdata = arg;
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		/* sm: / send PLOGI */
++		efc_send_plogi(node);
++		efc_node_transition(node, __efc_p2p_wait_plogi_rsp, NULL);
++		break;
++
++	case EFC_EVT_ABTS_RCVD:
++		/* sm: send BA_ACC */
++		efc_send_bls_acc(node, cbdata->header->dma.virt);
++
++		break;
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_p2p_wait_flogi_acc_cmpl(struct efc_sm_ctx *ctx,
++			      enum efc_sm_event evt, void *arg)
++{
++	struct efc_node_cb *cbdata = arg;
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		efc_node_hold_frames(node);
++		break;
++
++	case EFC_EVT_EXIT:
++		efc_node_accept_frames(node);
++		break;
++
++	case EFC_EVT_SRRS_ELS_CMPL_OK:
++		WARN_ON(!node->els_cmpl_cnt);
++		node->els_cmpl_cnt--;
++
++		/* sm: if p2p_winner / domain_attach */
++		if (node->nport->p2p_winner) {
++			efc_node_transition(node,
++					    __efc_p2p_wait_domain_attach,
++					NULL);
++			if (!node->nport->domain->attached) {
++				node_printf(node, "Domain not attached\n");
++				efc_domain_attach(node->nport->domain,
++						  node->nport->p2p_port_id);
++			} else {
++				node_printf(node, "Domain already attached\n");
++				efc_node_post_event(node,
++						    EFC_EVT_DOMAIN_ATTACH_OK,
++						    NULL);
++			}
++		} else {
++			/* this node has served its purpose;
++			 * we'll expect a PLOGI on a separate
++			 * node (remote SID=0x1); return this node
++			 * to init state in case peer
++			 * restarts discovery -- it may already
++			 * have (pending frames may exist).
++			 */
++			/* don't send PLOGI on efc_d_init entry */
++			efc_node_init_device(node, false);
++		}
++		break;
++
++	case EFC_EVT_SRRS_ELS_CMPL_FAIL:
++		/*
++		 * LS_ACC failed, possibly due to link down;
++		 * shutdown node and wait
++		 * for FLOGI discovery to restart
++		 */
++		node_printf(node, "FLOGI LS_ACC failed, shutting down\n");
++		WARN_ON(!node->els_cmpl_cnt);
++		node->els_cmpl_cnt--;
++		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
++		efc_fabric_initiate_shutdown(node);
++		break;
++
++	case EFC_EVT_ABTS_RCVD: {
++		/* sm: / send BA_ACC */
++		efc_send_bls_acc(node, cbdata->header->dma.virt);
++		break;
++	}
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_p2p_wait_plogi_rsp(struct efc_sm_ctx *ctx,
++			 enum efc_sm_event evt, void *arg)
++{
++	struct efc_node_cb *cbdata = arg;
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_SRRS_ELS_REQ_OK: {
++		int rc;
++
++		if (efc_node_check_els_req(ctx, evt, arg, ELS_PLOGI,
++					   __efc_fabric_common, __func__)) {
++			return;
++		}
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		/* sm: / save sparams, efc_node_attach */
++		efc_node_save_sparms(node, cbdata->els_rsp.virt);
++		rc = efc_node_attach(node);
++		efc_node_transition(node, __efc_p2p_wait_node_attach, NULL);
++		if (rc == EFC_HW_RTN_SUCCESS_SYNC)
++			efc_node_post_event(node, EFC_EVT_NODE_ATTACH_OK,
++					    NULL);
++		break;
++	}
++	case EFC_EVT_SRRS_ELS_REQ_FAIL: {
++		if (efc_node_check_els_req(ctx, evt, arg, ELS_PLOGI,
++					   __efc_fabric_common, __func__)) {
++			return;
++		}
++		node_printf(node, "PLOGI failed, shutting down\n");
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
++		efc_fabric_initiate_shutdown(node);
++		break;
++	}
++
++	case EFC_EVT_PLOGI_RCVD: {
++		struct fc_frame_header *hdr = cbdata->header->dma.virt;
++		/* if we're in external loopback mode, just send LS_ACC */
++		if (node->efc->external_loopback) {
++			efc_send_plogi_acc(node, be16_to_cpu(hdr->fh_ox_id));
++		} else {
++			/*
++			 * if this isn't external loopback,
++			 * pass to default handler
++			 */
++			__efc_fabric_common(__func__, ctx, evt, arg);
++		}
++		break;
++	}
++	case EFC_EVT_PRLI_RCVD:
++		/* I, or I+T */
++		/* sent PLOGI and before completion was seen, received the
++		 * PRLI from the remote node (WCQEs and RCQEs come in on
++		 * different queues and order of processing cannot be assumed)
++		 * Save OXID so PRLI can be sent after the attach and continue
++		 * to wait for PLOGI response
++		 */
++		efc_process_prli_payload(node, cbdata->payload->dma.virt);
++		efc_send_ls_acc_after_attach(node,
++					     cbdata->header->dma.virt,
++					     EFC_NODE_SEND_LS_ACC_PRLI);
++		efc_node_transition(node, __efc_p2p_wait_plogi_rsp_recvd_prli,
++				    NULL);
++		break;
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_p2p_wait_plogi_rsp_recvd_prli(struct efc_sm_ctx *ctx,
++				    enum efc_sm_event evt, void *arg)
++{
++	struct efc_node_cb *cbdata = arg;
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		/*
++		 * Since we've received a PRLI, we have a port login and will
++		 * just need to wait for the PLOGI response to do the node
++		 * attach and then we can send the LS_ACC for the PRLI. If,
++		 * during this time, we receive FCP_CMNDs (which is possible
++		 * since we've already sent a PRLI and our peer may have
++		 * accepted).
++		 * At this time, we are not waiting on any other unsolicited
++		 * frames to continue with the login process. Thus, it will not
++		 * hurt to hold frames here.
++		 */
++		efc_node_hold_frames(node);
++		break;
++
++	case EFC_EVT_EXIT:
++		efc_node_accept_frames(node);
++		break;
++
++	case EFC_EVT_SRRS_ELS_REQ_OK: {	/* PLOGI response received */
++		int rc;
++
++		/* Completion from PLOGI sent */
++		if (efc_node_check_els_req(ctx, evt, arg, ELS_PLOGI,
++					   __efc_fabric_common, __func__)) {
++			return;
++		}
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		/* sm: / save sparams, efc_node_attach */
++		efc_node_save_sparms(node, cbdata->els_rsp.virt);
++		rc = efc_node_attach(node);
++		efc_node_transition(node, __efc_p2p_wait_node_attach, NULL);
++		if (rc == EFC_HW_RTN_SUCCESS_SYNC)
++			efc_node_post_event(node, EFC_EVT_NODE_ATTACH_OK,
++					    NULL);
++		break;
++	}
++	case EFC_EVT_SRRS_ELS_REQ_FAIL:	/* PLOGI response received */
++	case EFC_EVT_SRRS_ELS_REQ_RJT:
++		/* PLOGI failed, shutdown the node */
++		if (efc_node_check_els_req(ctx, evt, arg, ELS_PLOGI,
++					   __efc_fabric_common, __func__)) {
++			return;
++		}
++		WARN_ON(!node->els_req_cnt);
++		node->els_req_cnt--;
++		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
++		efc_fabric_initiate_shutdown(node);
++		break;
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++void
++__efc_p2p_wait_node_attach(struct efc_sm_ctx *ctx,
++			   enum efc_sm_event evt, void *arg)
++{
++	struct efc_node_cb *cbdata = arg;
++	struct efc_node *node = ctx->app;
++
++	efc_node_evt_set(ctx, evt, __func__);
++
++	node_sm_trace();
++
++	switch (evt) {
++	case EFC_EVT_ENTER:
++		efc_node_hold_frames(node);
++		break;
++
++	case EFC_EVT_EXIT:
++		efc_node_accept_frames(node);
++		break;
++
++	case EFC_EVT_NODE_ATTACH_OK:
++		node->attached = true;
++		switch (node->send_ls_acc) {
++		case EFC_NODE_SEND_LS_ACC_PRLI: {
++			efc_d_send_prli_rsp(node->ls_acc_io,
++					    node->ls_acc_oxid);
++			node->send_ls_acc = EFC_NODE_SEND_LS_ACC_NONE;
++			node->ls_acc_io = NULL;
++			break;
++		}
++		case EFC_NODE_SEND_LS_ACC_PLOGI: /* Can't happen in P2P */
++		case EFC_NODE_SEND_LS_ACC_NONE:
++		default:
++			/* Normal case for I */
++			/* sm: send_plogi_acc is not set / send PLOGI acc */
++			efc_node_transition(node, __efc_d_port_logged_in,
++					    NULL);
++			break;
++		}
++		break;
++
++	case EFC_EVT_NODE_ATTACH_FAIL:
++		/* node attach failed, shutdown the node */
++		node->attached = false;
++		node_printf(node, "Node attach failed\n");
++		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
++		efc_fabric_initiate_shutdown(node);
++		break;
++
++	case EFC_EVT_SHUTDOWN:
++		node_printf(node, "%s received\n", efc_sm_event_name(evt));
++		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
++		efc_node_transition(node,
++				    __efc_fabric_wait_attach_evt_shutdown,
++				     NULL);
++		break;
++	case EFC_EVT_PRLI_RCVD:
++		node_printf(node, "%s: PRLI received before node is attached\n",
++			    efc_sm_event_name(evt));
++		efc_process_prli_payload(node, cbdata->payload->dma.virt);
++		efc_send_ls_acc_after_attach(node,
++					     cbdata->header->dma.virt,
++				EFC_NODE_SEND_LS_ACC_PRLI);
++		break;
++
++	default:
++		__efc_fabric_common(__func__, ctx, evt, arg);
++	}
++}
++
++int
++efc_p2p_setup(struct efc_nport *nport)
++{
++	struct efc *efc = nport->efc;
++	int rnode_winner;
++
++	rnode_winner = efc_rnode_is_winner(nport);
++
++	/* set nport flags to indicate p2p "winner" */
++	if (rnode_winner == 1) {
++		nport->p2p_remote_port_id = 0;
++		nport->p2p_port_id = 0;
++		nport->p2p_winner = false;
++	} else if (rnode_winner == 0) {
++		nport->p2p_remote_port_id = 2;
++		nport->p2p_port_id = 1;
++		nport->p2p_winner = true;
++	} else {
++		/* no winner; only okay if external loopback enabled */
++		if (nport->efc->external_loopback) {
++			/*
++			 * External loopback mode enabled;
++			 * local nport and remote node
++			 * will be registered with an NPortID = 1;
++			 */
++			efc_log_debug(efc,
++				      "External loopback mode enabled\n");
++			nport->p2p_remote_port_id = 1;
++			nport->p2p_port_id = 1;
++			nport->p2p_winner = true;
++		} else {
++			efc_log_warn(efc,
++				     "failed to determine p2p winner\n");
++			return rnode_winner;
++		}
++	}
++	return EFC_SUCCESS;
++}
+diff --git a/drivers/scsi/elx/libefc/efc_fabric.h b/drivers/scsi/elx/libefc/efc_fabric.h
 new file mode 100644
-index 000000000000..b575ea205bbf
+index 000000000000..b0947ae6fdca
 --- /dev/null
-+++ b/drivers/scsi/elx/libefc/efc_nport.h
-@@ -0,0 +1,50 @@
++++ b/drivers/scsi/elx/libefc/efc_fabric.h
+@@ -0,0 +1,116 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
 + * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
 + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
 + */
 +
-+/**
-+ * EFC FC port (NPORT) exported declarations
-+ *
++/*
++ * Declarations for the interface exported by efc_fabric
 + */
 +
-+#ifndef __EFC_NPORT_H__
-+#define __EFC_NPORT_H__
-+
-+struct efc_nport *
-+efc_nport_find(struct efc_domain *domain, u32 d_id);
-+struct efc_nport *
-+efc_nport_alloc(struct efc_domain *domain, uint64_t wwpn, uint64_t wwnn,
-+		u32 fc_id, bool enable_ini, bool enable_tgt);
-+void
-+efc_nport_free(struct efc_nport *nport);
-+int
-+efc_nport_attach(struct efc_nport *nport, u32 fc_id);
++#ifndef __EFCT_FABRIC_H__
++#define __EFCT_FABRIC_H__
++#include "scsi/fc/fc_els.h"
++#include "scsi/fc/fc_fs.h"
++#include "scsi/fc/fc_ns.h"
 +
 +void
-+__efc_nport_allocated(struct efc_sm_ctx *ctx,
-+		      enum efc_sm_event evt, void *arg);
++__efc_fabric_init(struct efc_sm_ctx *ctx,
++		  enum efc_sm_event evt, void *arg);
 +void
-+__efc_nport_wait_shutdown(struct efc_sm_ctx *ctx,
-+			  enum efc_sm_event evt, void *arg);
-+void
-+__efc_nport_wait_port_free(struct efc_sm_ctx *ctx,
-+			   enum efc_sm_event evt, void *arg);
-+void
-+__efc_nport_vport_init(struct efc_sm_ctx *ctx,
-+		       enum efc_sm_event evt, void *arg);
-+void
-+__efc_nport_vport_wait_alloc(struct efc_sm_ctx *ctx,
-+			     enum efc_sm_event evt, void *arg);
-+void
-+__efc_nport_vport_allocated(struct efc_sm_ctx *ctx,
++__efc_fabric_flogi_wait_rsp(struct efc_sm_ctx *ctx,
 +			    enum efc_sm_event evt, void *arg);
 +void
-+__efc_nport_attached(struct efc_sm_ctx *ctx,
++__efc_fabric_domain_attach_wait(struct efc_sm_ctx *ctx,
++				enum efc_sm_event evt, void *arg);
++void
++__efc_fabric_wait_domain_attach(struct efc_sm_ctx *ctx,
++				enum efc_sm_event evt, void *arg);
++
++void
++__efc_vport_fabric_init(struct efc_sm_ctx *ctx,
++			enum efc_sm_event evt, void *arg);
++void
++__efc_fabric_fdisc_wait_rsp(struct efc_sm_ctx *ctx,
++			    enum efc_sm_event evt, void *arg);
++void
++__efc_fabric_wait_nport_attach(struct efc_sm_ctx *ctx,
++			       enum efc_sm_event evt, void *arg);
++
++void
++__efc_ns_init(struct efc_sm_ctx *ctx, enum efc_sm_event evt, void *arg);
++void
++__efc_ns_plogi_wait_rsp(struct efc_sm_ctx *ctx,
++			enum efc_sm_event evt, void *arg);
++void
++__efc_ns_rftid_wait_rsp(struct efc_sm_ctx *ctx,
++			enum efc_sm_event evt, void *arg);
++void
++__efc_ns_rffid_wait_rsp(struct efc_sm_ctx *ctx,
++			enum efc_sm_event evt, void *arg);
++void
++__efc_ns_wait_node_attach(struct efc_sm_ctx *ctx,
++			  enum efc_sm_event evt, void *arg);
++void
++__efc_fabric_wait_attach_evt_shutdown(struct efc_sm_ctx *ctx,
++				      enum efc_sm_event evt, void *arg);
++void
++__efc_ns_logo_wait_rsp(struct efc_sm_ctx *ctx,
++		       enum efc_sm_event, void *arg);
++void
++__efc_ns_gidpt_wait_rsp(struct efc_sm_ctx *ctx,
++			enum efc_sm_event evt, void *arg);
++void
++__efc_ns_idle(struct efc_sm_ctx *ctx, enum efc_sm_event evt, void *arg);
++void
++__efc_ns_gidpt_delay(struct efc_sm_ctx *ctx,
 +		     enum efc_sm_event evt, void *arg);
++void
++__efc_fabctl_init(struct efc_sm_ctx *ctx,
++		  enum efc_sm_event evt, void *arg);
++void
++__efc_fabctl_wait_node_attach(struct efc_sm_ctx *ctx,
++			      enum efc_sm_event evt, void *arg);
++void
++__efc_fabctl_wait_scr_rsp(struct efc_sm_ctx *ctx,
++			  enum efc_sm_event evt, void *arg);
++void
++__efc_fabctl_ready(struct efc_sm_ctx *ctx,
++		   enum efc_sm_event evt, void *arg);
++void
++__efc_fabctl_wait_ls_acc_cmpl(struct efc_sm_ctx *ctx,
++			      enum efc_sm_event evt, void *arg);
++void
++__efc_fabric_idle(struct efc_sm_ctx *ctx,
++		  enum efc_sm_event evt, void *arg);
++
++void
++__efc_p2p_rnode_init(struct efc_sm_ctx *ctx,
++		     enum efc_sm_event evt, void *arg);
++void
++__efc_p2p_domain_attach_wait(struct efc_sm_ctx *ctx,
++			     enum efc_sm_event evt, void *arg);
++void
++__efc_p2p_wait_flogi_acc_cmpl(struct efc_sm_ctx *ctx,
++			      enum efc_sm_event evt, void *arg);
++void
++__efc_p2p_wait_plogi_rsp(struct efc_sm_ctx *ctx,
++			 enum efc_sm_event evt, void *arg);
++void
++__efc_p2p_wait_plogi_rsp_recvd_prli(struct efc_sm_ctx *ctx,
++				    enum efc_sm_event evt, void *arg);
++void
++__efc_p2p_wait_domain_attach(struct efc_sm_ctx *ctx,
++			     enum efc_sm_event evt, void *arg);
++void
++__efc_p2p_wait_node_attach(struct efc_sm_ctx *ctx,
++			   enum efc_sm_event evt, void *arg);
 +
 +int
-+efc_vport_start(struct efc_domain *domain);
++efc_p2p_setup(struct efc_nport *nport);
++void
++efc_fabric_set_topology(struct efc_node *node,
++			enum efc_nport_topology topology);
++void efc_fabric_notify_topology(struct efc_node *node);
 +
-+#endif /* __EFC_NPORT_H__ */
++#endif /* __EFCT_FABRIC_H__ */
 -- 
 2.26.2
 
