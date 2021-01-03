@@ -2,616 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A3FC433E9
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 17:14:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D624C433DB
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 18:43:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE32620936
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 17:14:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 282F62080D
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 18:43:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727569AbhACROG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Jan 2021 12:14:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60834 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727785AbhACRN5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jan 2021 12:13:57 -0500
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20181C0617B1
-        for <linux-scsi@vger.kernel.org>; Sun,  3 Jan 2021 09:13:00 -0800 (PST)
-Received: by mail-pg1-x52c.google.com with SMTP id c132so5914462pga.3
-        for <linux-scsi@vger.kernel.org>; Sun, 03 Jan 2021 09:13:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=8dbDkVgURNzxwp2zmCkEgxPLVlGFK1WM+aAWncHt/PA=;
-        b=EBw8IWbENUtXN4KUhKUokLp8CcQtocgNKL92sQr+EEqHFiD3zcanTH5D7mDWW+hJDx
-         yp/z4OLtb8wFUpb4fqFbPtqvaPhzWC66VeOnEQTtkbaOGT+it45wGC6DydF1jXyuPD3P
-         mD68DeltFuQn3GH2YhitKCvjrhccMgUpwbUMZD+HvR6zvSUvWjqPw8WJ1Tlfty2Qf5ew
-         v/3hhGtauIHbKbR3g3yR34UhCadT2WgLeLswaHNhCU2z7qzKkEoLvCMGA7sLGss+yVx2
-         kVLgIoeB6ByTx80d2E+Nj5A8vTAk86Vf2ByZHvdTWO4nJaoud0eKw5gcyJ8FIN4RbCne
-         88WQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=8dbDkVgURNzxwp2zmCkEgxPLVlGFK1WM+aAWncHt/PA=;
-        b=RT20+7qEDOi3IA4XlY7P/g9phVH6smiaXm9iZ5ppPrBKiZNOXKWaickHqiMi9Zs/fv
-         VL/t1rZVAlSk8LrxYMBNwlq+9jk3XW2yylugbiFLUYsh5zSMVL22NzuTSXXToHTdt0u3
-         /MiI3b9c9LH7s+rUlOJg+oFFjr++lCIZfvCgy/eQVuTSDNsJePkubTGp4qrln+73xAJK
-         edZlTe1ozI7ddpjdi9WOtHoucaSktqmBIa9/dQnIO1BvTnqxBohaA5trRSmrmEjK7yLx
-         yRdKdJ5HjYPq5trGEDAAmykqAxozgjTHe/4FIrqI0vDa4qaGrRs8+4gETOjuJR2/NOit
-         1fIg==
-X-Gm-Message-State: AOAM532NvKB7QFm2b44SuvAkLXaxeaUUtcCskkaO09zx826PgmKX0L6i
-        GgzhbWiKy/BqjDxzNhRvy0+Xv6xXuT0=
-X-Google-Smtp-Source: ABdhPJzWuj4P0TJzIGnOjR1ZJwewqRCWXkPG2yyVrKXzPrF4eE3JL5w0FUrHkhNf2NFT3O+GFSIi9g==
-X-Received: by 2002:a63:1047:: with SMTP id 7mr60702842pgq.292.1609693979297;
-        Sun, 03 Jan 2021 09:12:59 -0800 (PST)
-Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id m4sm33145151pgv.16.2021.01.03.09.12.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Jan 2021 09:12:58 -0800 (PST)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v5 23/31] elx: efct: Unsolicited FC frame processing routines
-Date:   Sun,  3 Jan 2021 09:11:26 -0800
-Message-Id: <20210103171134.39878-24-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20210103171134.39878-1-jsmart2021@gmail.com>
-References: <20210103171134.39878-1-jsmart2021@gmail.com>
+        id S1726713AbhACSnC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Jan 2021 13:43:02 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44658 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725840AbhACSnB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 3 Jan 2021 13:43:01 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 19024208BA;
+        Sun,  3 Jan 2021 18:42:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1609699341;
+        bh=4L3XgyChKQ8IA35uR9qT1OHieu31sVWBj36FeIrPlhU=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=YwP80aSk51+7d6ywizEVBMGLHZYoeMfrCE2SkNILF+Hd3a9R0nYnxeiR1/SRQ3LNG
+         r2ZF6DXSlAVuI/2oWdZ2FmZNgCAALinA7yKd7scTEABfA4IJD7aI/cYxwn9G619rR2
+         6id1kkXdowiKOf3vT6aSIY02o4s4Svn+yeMINJS3bqj3aiQqRvA086IcuogS5hxoMo
+         h04pVTy+6ZOSrcklt1O24vtxPee2HbmUwFfQ15NQcZ56Yatw7RgHnm7CwvazjgOrG2
+         U7lDZrmQd50NfPbzAZ+ajhS/VjOgOxODquf+tLmyzrlt0SE0NWXrPn1jT+xwnhuA0l
+         rr8Z6wiQ7K6/w==
+Received: by mail-ot1-f44.google.com with SMTP id d20so24143124otl.3;
+        Sun, 03 Jan 2021 10:42:21 -0800 (PST)
+X-Gm-Message-State: AOAM532e9tn3uDJZ0c0FYvNiIDf6d/lL7TyVOdGqdDnQf1wZZC653MRR
+        xPCd1T81qlvgh7pHCeaK2dwRyh0dCit1UcFUCPM=
+X-Google-Smtp-Source: ABdhPJxoV0UHMV47rUjuK1A4YEE7xzMJg5iB8e95Fqv6lVNwHEqau83xxT/Pw7Wf1dw7KEBlht/oVwC3UULWMCMl+TQ=
+X-Received: by 2002:a9d:7a4b:: with SMTP id z11mr50452343otm.305.1609699340461;
+ Sun, 03 Jan 2021 10:42:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20210103140132.3866665-1-arnd@kernel.org> <75ecb62269cf425164d0fb6f2717d1d0136f43cd.camel@linux.ibm.com>
+In-Reply-To: <75ecb62269cf425164d0fb6f2717d1d0136f43cd.camel@linux.ibm.com>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Sun, 3 Jan 2021 19:42:04 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a0hexuwV4VCNOWjANT8xswGbifKfOATwrwi=_1+wjSpMw@mail.gmail.com>
+Message-ID: <CAK8P3a0hexuwV4VCNOWjANT8xswGbifKfOATwrwi=_1+wjSpMw@mail.gmail.com>
+Subject: Re: [PATCH] cxgb4: fix TLS dependencies again
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc:     Karen Xie <kxie@chelsio.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Tom Seewald <tseewald@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Masahiro Yamada <masahiroy@kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch continues the efct driver population.
+On Sun, Jan 3, 2021 at 5:51 PM James Bottomley <jejb@linux.ibm.com> wrote:
+> On Sun, 2021-01-03 at 15:01 +0100, Arnd Bergmann wrote:
+> > From: Arnd Bergmann <arnd@arndb.de>
+> >
+> > A previous patch tried to avoid a build failure, but missed one case
+> > that Kconfig warns about:
+> >
+> > WARNING: unmet direct dependencies detected for CHELSIO_T4
+> >   Depends on [m]: NETDEVICES [=y] && ETHERNET [=y] &&
+> > NET_VENDOR_CHELSIO [=y] && PCI [=y] && (IPV6 [=y] || IPV6 [=y]=n) &&
+> > (TLS [=m] || TLS [=m]=n)
+> >   Selected by [y]:
+> >   - SCSI_CXGB4_ISCSI [=y] && SCSI_LOWLEVEL [=y] && SCSI [=y] && PCI
+> > [=y] && INET [=y] && (IPV6 [=y] || IPV6 [=y]=n) && ETHERNET [=y]
+> > x86_64-linux-ld: drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.o: in
+> > function `cxgb_select_queue':
+> > cxgb4_main.c:(.text+0xf5df): undefined reference to
+> > `tls_validate_xmit_skb'
+> >
+> > When any of the dependencies of CHELSIO_T4 are not met, then
+> > SCSI_CXGB4_ISCSI must not 'select' it either.
+> >
+> > Fix it by mirroring the network driver dependencies on the iscsi
+> > driver. A more invasive but also more reliable alternative would
+> > be to use 'depends on CHELSIO_T4' instead.
+> >
+> > Fixes: 659fbdcf2f14 ("cxgb4: Fix build failure when CONFIG_TLS=m")
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > ---
+> >  drivers/scsi/cxgbi/cxgb4i/Kconfig | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/scsi/cxgbi/cxgb4i/Kconfig
+> > b/drivers/scsi/cxgbi/cxgb4i/Kconfig
+> > index 8b0deece9758..2af88a55fbca 100644
+> > --- a/drivers/scsi/cxgbi/cxgb4i/Kconfig
+> > +++ b/drivers/scsi/cxgbi/cxgb4i/Kconfig
+> > @@ -1,7 +1,7 @@
+> >  # SPDX-License-Identifier: GPL-2.0-only
+> >  config SCSI_CXGB4_ISCSI
+> >       tristate "Chelsio T4 iSCSI support"
+> > -     depends on PCI && INET && (IPV6 || IPV6=n)
+> > +     depends on PCI && INET && (IPV6 || IPV6=n) && (TLS || TLS=n)
+> >       depends on THERMAL || !THERMAL
+> >       depends on ETHERNET
+> >       depends on TLS || TLS=n
+>
+> I thought all separated depends statements were the equivalent of && in
+> a single statement.  If so, how does repeating TLS || TLS=n twice fix
+> the problem?  This sounds more like we have some sort of bug in our
+> Kconfig apparatus.
 
-This patch adds driver definitions for:
-Routines to handle unsolicited FC frames.
+No, just a mistake on my end. I had tried v5.10-rc1 to make sure the
+patch was still required, but then rebased on top of torvalds/master
+(close to -rc2) before sending it out, and this contains Randy's version
+of the same patch, cb5253198f10 ("scsi: cxgb4i: Fix TLS dependency").
 
-Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
-Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/elx/efct/efct_unsol.c | 493 +++++++++++++++++++++++++++++
- drivers/scsi/elx/efct/efct_unsol.h |  17 +
- 2 files changed, 510 insertions(+)
- create mode 100644 drivers/scsi/elx/efct/efct_unsol.c
- create mode 100644 drivers/scsi/elx/efct/efct_unsol.h
-
-diff --git a/drivers/scsi/elx/efct/efct_unsol.c b/drivers/scsi/elx/efct/efct_unsol.c
-new file mode 100644
-index 000000000000..a11a6a0e238b
---- /dev/null
-+++ b/drivers/scsi/elx/efct/efct_unsol.c
-@@ -0,0 +1,493 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
-+ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
-+ */
-+
-+#include "efct_driver.h"
-+#include "efct_unsol.h"
-+
-+#define frame_printf(efct, hdr, fmt, ...) \
-+	do { \
-+		char s_id_text[16]; \
-+		efc_node_fcid_display(ntoh24((hdr)->fh_s_id), \
-+			s_id_text, sizeof(s_id_text)); \
-+		efc_log_debug(efct, "[%06x.%s] %02x/%04x/%04x: " fmt, \
-+			ntoh24((hdr)->fh_d_id), s_id_text, \
-+			(hdr)->fh_r_ctl, be16_to_cpu((hdr)->fh_ox_id), \
-+			be16_to_cpu((hdr)->fh_rx_id), ##__VA_ARGS__); \
-+	} while (0)
-+
-+static struct efct_node *
-+efct_node_find(struct efct *efct, u32 port_id, u32 node_id)
-+{
-+	struct efct_node *node;
-+	u64 id = (u64) port_id << 32 | node_id;
-+
-+	/*
-+	 * During node shutdown, Lookup will be removed first,
-+	 * before announcing to backend. So, no new IOs will be allowed
-+	 */
-+	/* Find a target node, given s_id and d_id */
-+	node = xa_load(&efct->lookup, id);
-+	if (node)
-+		kref_get(&node->ref);
-+
-+	return node;
-+}
-+
-+static int
-+efct_dispatch_frame(struct efct *efct, struct efc_hw_sequence *seq)
-+{
-+	struct efct_node *node;
-+	struct fc_frame_header *hdr;
-+	u32 s_id, d_id;
-+
-+	hdr = seq->header->dma.virt;
-+
-+	/* extract the s_id and d_id */
-+	s_id = ntoh24(hdr->fh_s_id);
-+	d_id = ntoh24(hdr->fh_d_id);
-+
-+	if (!(hdr->fh_type == FC_TYPE_FCP || hdr->fh_type == FC_TYPE_BLS))
-+		return EFC_FAIL;
-+
-+	if (hdr->fh_type == FC_TYPE_FCP) {
-+		node = efct_node_find(efct, d_id, s_id);
-+		if (!node) {
-+			efc_log_err(efct,
-+				    "Node not found, drop cmd d_id:%x s_id:%x\n",
-+				    d_id, s_id);
-+			efct_hw_sequence_free(&efct->hw, seq);
-+			return EFC_SUCCESS;
-+		}
-+
-+		efct_dispatch_fcp_cmd(node, seq);
-+	} else {
-+		node = efct_node_find(efct, d_id, s_id);
-+		if (!node) {
-+			efc_log_err(efct, "Node not found, d_id:%x s_id:%x\n",
-+				    d_id, s_id);
-+			return EFC_FAIL;
-+		}
-+
-+		efc_log_err(efct, "Received ABTS for Node:%p\n", node);
-+		efct_node_recv_abts_frame(node, seq);
-+	}
-+
-+	kref_put(&node->ref, node->release);
-+	efct_hw_sequence_free(&efct->hw, seq);
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+efct_unsolicited_cb(void *arg, struct efc_hw_sequence *seq)
-+{
-+	struct efct *efct = arg;
-+
-+	/* Process FCP command */
-+	if (!efct_dispatch_frame(efct, seq))
-+		return EFC_SUCCESS;
-+
-+	/* Forward frame to discovery lib */
-+	efc_dispatch_frame(efct->efcport, seq);
-+	return EFC_SUCCESS;
-+}
-+
-+static int
-+efct_fc_tmf_rejected_cb(struct efct_io *io,
-+			enum efct_scsi_io_status scsi_status,
-+			u32 flags, void *arg)
-+{
-+	efct_scsi_io_free(io);
-+	return EFC_SUCCESS;
-+}
-+
-+static void
-+efct_dispatch_unsol_tmf(struct efct_io *io, u8 tm_flags, u32 lun)
-+{
-+	u32 i;
-+	struct {
-+		u32 mask;
-+		enum efct_scsi_tmf_cmd cmd;
-+	} tmflist[] = {
-+	{FCP_TMF_ABT_TASK_SET, EFCT_SCSI_TMF_ABORT_TASK_SET},
-+	{FCP_TMF_CLR_TASK_SET, EFCT_SCSI_TMF_CLEAR_TASK_SET},
-+	{FCP_TMF_LUN_RESET, EFCT_SCSI_TMF_LOGICAL_UNIT_RESET},
-+	{FCP_TMF_TGT_RESET, EFCT_SCSI_TMF_TARGET_RESET},
-+	{FCP_TMF_CLR_ACA, EFCT_SCSI_TMF_CLEAR_ACA} };
-+
-+	io->exp_xfer_len = 0;
-+
-+	for (i = 0; i < ARRAY_SIZE(tmflist); i++) {
-+		if (tmflist[i].mask & tm_flags) {
-+			io->tmf_cmd = tmflist[i].cmd;
-+			efct_scsi_recv_tmf(io, lun, tmflist[i].cmd, NULL, 0);
-+			break;
-+		}
-+	}
-+	if (i == ARRAY_SIZE(tmflist)) {
-+		/* Not handled */
-+		efc_log_err(io->node->efct, "TMF x%x rejected\n", tm_flags);
-+		efct_scsi_send_tmf_resp(io, EFCT_SCSI_TMF_FUNCTION_REJECTED,
-+					NULL, efct_fc_tmf_rejected_cb, NULL);
-+	}
-+}
-+
-+static int
-+efct_validate_fcp_cmd(struct efct *efct, struct efc_hw_sequence *seq)
-+{
-+	/*
-+	 * If we received less than FCP_CMND_IU bytes, assume that the frame is
-+	 * corrupted in some way and drop it.
-+	 * This was seen when jamming the FCTL
-+	 * fill bytes field.
-+	 */
-+	if (seq->payload->dma.len < sizeof(struct fcp_cmnd)) {
-+		struct fc_frame_header	*fchdr = seq->header->dma.virt;
-+
-+		efc_log_debug(efct,
-+			"drop ox_id %04x with payload (%zd) less than (%zd)\n",
-+				    be16_to_cpu(fchdr->fh_ox_id),
-+				    seq->payload->dma.len,
-+				    sizeof(struct fcp_cmnd));
-+		return EFC_FAIL;
-+	}
-+	return EFC_SUCCESS;
-+}
-+
-+static void
-+efct_populate_io_fcp_cmd(struct efct_io *io, struct fcp_cmnd *cmnd,
-+			 struct fc_frame_header *fchdr, bool sit)
-+{
-+	io->init_task_tag = be16_to_cpu(fchdr->fh_ox_id);
-+	/* note, tgt_task_tag, hw_tag  set when HW io is allocated */
-+	io->exp_xfer_len = be32_to_cpu(cmnd->fc_dl);
-+	io->transferred = 0;
-+
-+	/* The upper 7 bits of CS_CTL is the frame priority thru the SAN.
-+	 * Our assertion here is, the priority given to a frame containing
-+	 * the FCP cmd should be the priority given to ALL frames contained
-+	 * in that IO. Thus we need to save the incoming CS_CTL here.
-+	 */
-+	if (ntoh24(fchdr->fh_f_ctl) & FC_FC_RES_B17)
-+		io->cs_ctl = fchdr->fh_cs_ctl;
-+	else
-+		io->cs_ctl = 0;
-+
-+	io->seq_init = sit;
-+}
-+
-+static u32
-+efct_get_flags_fcp_cmd(struct fcp_cmnd *cmnd)
-+{
-+	u32 flags = 0;
-+
-+	switch (cmnd->fc_pri_ta & FCP_PTA_MASK) {
-+	case FCP_PTA_SIMPLE:
-+		flags |= EFCT_SCSI_CMD_SIMPLE;
-+		break;
-+	case FCP_PTA_HEADQ:
-+		flags |= EFCT_SCSI_CMD_HEAD_OF_QUEUE;
-+		break;
-+	case FCP_PTA_ORDERED:
-+		flags |= EFCT_SCSI_CMD_ORDERED;
-+		break;
-+	case FCP_PTA_ACA:
-+		flags |= EFCT_SCSI_CMD_ACA;
-+		break;
-+	}
-+	if (cmnd->fc_flags & FCP_CFL_WRDATA)
-+		flags |= EFCT_SCSI_CMD_DIR_IN;
-+	if (cmnd->fc_flags & FCP_CFL_RDDATA)
-+		flags |= EFCT_SCSI_CMD_DIR_OUT;
-+
-+	return flags;
-+}
-+
-+static void
-+efct_sframe_common_send_cb(void *arg, u8 *cqe, int status)
-+{
-+	struct efct_hw_send_frame_context *ctx = arg;
-+	struct efct_hw *hw = ctx->hw;
-+
-+	/* Free WQ completion callback */
-+	efct_hw_reqtag_free(hw, ctx->wqcb);
-+
-+	/* Free sequence */
-+	efct_hw_sequence_free(hw, ctx->seq);
-+}
-+
-+static int
-+efct_sframe_common_send(struct efct_node *node,
-+			struct efc_hw_sequence *seq,
-+			enum fc_rctl r_ctl, u32 f_ctl,
-+			u8 type, void *payload, u32 payload_len)
-+{
-+	struct efct *efct = node->efct;
-+	struct efct_hw *hw = &efct->hw;
-+	enum efct_hw_rtn rc = 0;
-+	struct fc_frame_header *req_hdr = seq->header->dma.virt;
-+	struct fc_frame_header hdr;
-+	struct efct_hw_send_frame_context *ctx;
-+
-+	u32 heap_size = seq->payload->dma.size;
-+	uintptr_t heap_phys_base = seq->payload->dma.phys;
-+	u8 *heap_virt_base = seq->payload->dma.virt;
-+	u32 heap_offset = 0;
-+
-+	/* Build the FC header reusing the RQ header DMA buffer */
-+	memset(&hdr, 0, sizeof(hdr));
-+	hdr.fh_r_ctl = r_ctl;
-+	/* send it back to whomever sent it to us */
-+	memcpy(hdr.fh_d_id, req_hdr->fh_s_id, sizeof(hdr.fh_d_id));
-+	memcpy(hdr.fh_s_id, req_hdr->fh_d_id, sizeof(hdr.fh_s_id));
-+	hdr.fh_type = type;
-+	hton24(hdr.fh_f_ctl, f_ctl);
-+	hdr.fh_ox_id = req_hdr->fh_ox_id;
-+	hdr.fh_rx_id = req_hdr->fh_rx_id;
-+	hdr.fh_cs_ctl = 0;
-+	hdr.fh_df_ctl = 0;
-+	hdr.fh_seq_cnt = 0;
-+	hdr.fh_parm_offset = 0;
-+
-+	/*
-+	 * send_frame_seq_id is an atomic, we just let it increment,
-+	 * while storing only the low 8 bits to hdr->seq_id
-+	 */
-+	hdr.fh_seq_id = (u8)atomic_add_return(1, &hw->send_frame_seq_id);
-+	hdr.fh_seq_id--;
-+
-+	/* Allocate and fill in the send frame request context */
-+	ctx = (void *)(heap_virt_base + heap_offset);
-+	heap_offset += sizeof(*ctx);
-+	if (heap_offset > heap_size) {
-+		efc_log_err(efct, "Fill send frame failed offset %d size %d\n",
-+				heap_offset, heap_size);
-+		return EFC_FAIL;
-+	}
-+
-+	memset(ctx, 0, sizeof(*ctx));
-+
-+	/* Save sequence */
-+	ctx->seq = seq;
-+
-+	/* Allocate a response payload DMA buffer from the heap */
-+	ctx->payload.phys = heap_phys_base + heap_offset;
-+	ctx->payload.virt = heap_virt_base + heap_offset;
-+	ctx->payload.size = payload_len;
-+	ctx->payload.len = payload_len;
-+	heap_offset += payload_len;
-+	if (heap_offset > heap_size) {
-+		efc_log_err(efct, "Fill send frame failed offset %d size %d\n",
-+				heap_offset, heap_size);
-+		return EFC_FAIL;
-+	}
-+
-+	/* Copy the payload in */
-+	memcpy(ctx->payload.virt, payload, payload_len);
-+
-+	/* Send */
-+	rc = efct_hw_send_frame(&efct->hw, (void *)&hdr, FC_SOF_N3,
-+				FC_EOF_T, &ctx->payload, ctx,
-+				efct_sframe_common_send_cb, ctx);
-+	if (rc)
-+		efc_log_debug(efct, "efct_hw_send_frame failed: %d\n", rc);
-+
-+	return rc;
-+}
-+
-+static int
-+efct_sframe_send_fcp_rsp(struct efct_node *node, struct efc_hw_sequence *seq,
-+			 void *rsp, u32 rsp_len)
-+{
-+	return efct_sframe_common_send(node, seq, FC_RCTL_DD_CMD_STATUS,
-+				      FC_FC_EX_CTX |
-+				      FC_FC_LAST_SEQ |
-+				      FC_FC_END_SEQ |
-+				      FC_FC_SEQ_INIT,
-+				      FC_TYPE_FCP,
-+				      rsp, rsp_len);
-+}
-+
-+static int
-+efct_sframe_send_task_set_full_or_busy(struct efct_node *node,
-+				       struct efc_hw_sequence *seq)
-+{
-+	struct fcp_resp_with_ext fcprsp;
-+	struct fcp_cmnd *fcpcmd = seq->payload->dma.virt;
-+	int rc = 0;
-+	unsigned long flags = 0;
-+	struct efct *efct = node->efct;
-+
-+	/* construct task set full or busy response */
-+	memset(&fcprsp, 0, sizeof(fcprsp));
-+	spin_lock_irqsave(&node->active_ios_lock, flags);
-+	fcprsp.resp.fr_status = list_empty(&node->active_ios) ?
-+				SAM_STAT_BUSY : SAM_STAT_TASK_SET_FULL;
-+	spin_unlock_irqrestore(&node->active_ios_lock, flags);
-+	*((u32 *)&fcprsp.ext.fr_resid) = be32_to_cpu(fcpcmd->fc_dl);
-+
-+	/* send it using send_frame */
-+	rc = efct_sframe_send_fcp_rsp(node, seq, &fcprsp, sizeof(fcprsp));
-+	if (rc)
-+		efc_log_debug(efct, "efct_sframe_send_fcp_rsp failed %d\n", rc);
-+
-+	return rc;
-+}
-+
-+int
-+efct_dispatch_fcp_cmd(struct efct_node *node, struct efc_hw_sequence *seq)
-+{
-+	struct efct *efct = node->efct;
-+	struct fc_frame_header *fchdr = seq->header->dma.virt;
-+	struct fcp_cmnd	*cmnd = NULL;
-+	struct efct_io *io = NULL;
-+	u32 lun = U32_MAX;
-+
-+	if (!seq->payload) {
-+		efc_log_err(efct, "Sequence payload is NULL.\n");
-+		return EFC_FAIL;
-+	}
-+
-+	cmnd = seq->payload->dma.virt;
-+
-+	/* perform FCP_CMND validation check(s) */
-+	if (efct_validate_fcp_cmd(efct, seq))
-+		return EFC_FAIL;
-+
-+	lun = scsilun_to_int(&cmnd->fc_lun);
-+	if (lun == U32_MAX)
-+		return EFC_FAIL;
-+
-+	io = efct_scsi_io_alloc(node);
-+	if (!io) {
-+		int rc;
-+
-+		/* Use SEND_FRAME to send task set full or busy */
-+		rc = efct_sframe_send_task_set_full_or_busy(node, seq);
-+		if (rc)
-+			efc_log_err(efct, "Failed to send busy task: %d\n", rc);
-+
-+		return rc;
-+	}
-+
-+	io->hw_priv = seq->hw_priv;
-+
-+	io->app_id = 0;
-+
-+	/* RQ pair, if we got here, SIT=1 */
-+	efct_populate_io_fcp_cmd(io, cmnd, fchdr, true);
-+
-+	if (cmnd->fc_tm_flags) {
-+		efct_dispatch_unsol_tmf(io, cmnd->fc_tm_flags, lun);
-+	} else {
-+		u32 flags = efct_get_flags_fcp_cmd(cmnd);
-+
-+		if (cmnd->fc_flags & FCP_CFL_LEN_MASK) {
-+			efc_log_err(efct, "Additional CDB not supported\n");
-+			return EFC_FAIL;
-+		}
-+		/*
-+		 * Can return failure for things like task set full and UAs,
-+		 * no need to treat as a dropped frame if rc != 0
-+		 */
-+		efct_scsi_recv_cmd(io, lun, cmnd->fc_cdb,
-+				   sizeof(cmnd->fc_cdb), flags);
-+	}
-+
-+	return EFC_SUCCESS;
-+}
-+
-+static int
-+efct_process_abts(struct efct_io *io, struct fc_frame_header *hdr)
-+{
-+	struct efct_node *node = io->node;
-+	struct efct *efct = io->efct;
-+	u16 ox_id = be16_to_cpu(hdr->fh_ox_id);
-+	u16 rx_id = be16_to_cpu(hdr->fh_rx_id);
-+	struct efct_io *abortio;
-+
-+	/* Find IO and attempt to take a reference on it */
-+	abortio = efct_io_find_tgt_io(efct, node, ox_id, rx_id);
-+
-+	if (abortio) {
-+		/* Got a reference on the IO. Hold it until backend
-+		 * is notified below
-+		 */
-+		efc_log_info(node->efct, "Abort ox_id [%04x] rx_id [%04x]\n",
-+			     ox_id, rx_id);
-+
-+		/*
-+		 * Save the ox_id for the ABTS as the init_task_tag in our
-+		 * manufactured
-+		 * TMF IO object
-+		 */
-+		io->display_name = "abts";
-+		io->init_task_tag = ox_id;
-+		/* don't set tgt_task_tag, don't want to confuse with XRI */
-+
-+		/*
-+		 * Save the rx_id from the ABTS as it is
-+		 * needed for the BLS response,
-+		 * regardless of the IO context's rx_id
-+		 */
-+		io->abort_rx_id = rx_id;
-+
-+		/* Call target server command abort */
-+		io->tmf_cmd = EFCT_SCSI_TMF_ABORT_TASK;
-+		efct_scsi_recv_tmf(io, abortio->tgt_io.lun,
-+				   EFCT_SCSI_TMF_ABORT_TASK, abortio, 0);
-+
-+		/*
-+		 * Backend will have taken an additional
-+		 * reference on the IO if needed;
-+		 * done with current reference.
-+		 */
-+		kref_put(&abortio->ref, abortio->release);
-+	} else {
-+		/*
-+		 * Either IO was not found or it has been
-+		 * freed between finding it
-+		 * and attempting to get the reference,
-+		 */
-+		efc_log_info(node->efct, "Abort: ox_id [%04x], IO not found\n",
-+			     ox_id);
-+
-+		/* Send a BA_RJT */
-+		efct_bls_send_rjt(io, hdr);
-+	}
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+efct_node_recv_abts_frame(struct efct_node *node, struct efc_hw_sequence *seq)
-+{
-+	struct efct *efct = node->efct;
-+	struct fc_frame_header *hdr = seq->header->dma.virt;
-+	struct efct_io *io = NULL;
-+
-+	node->abort_cnt++;
-+	io = efct_scsi_io_alloc(node);
-+	if (io) {
-+		io->hw_priv = seq->hw_priv;
-+		/* If we got this far, SIT=1 */
-+		io->seq_init = 1;
-+
-+		/* fill out generic fields */
-+		io->efct = efct;
-+		io->node = node;
-+		io->cmd_tgt = true;
-+
-+		efct_process_abts(io, seq->header->dma.virt);
-+	} else {
-+		efc_log_err(efct,
-+			    "SCSI IO allocation failed for ABTS received ");
-+		efc_log_err(efct, "s_id %06x d_id %06x ox_id %04x rx_id %04x\n",
-+			    ntoh24(hdr->fh_s_id), ntoh24(hdr->fh_d_id),
-+			    be16_to_cpu(hdr->fh_ox_id),
-+			    be16_to_cpu(hdr->fh_rx_id));
-+	}
-+
-+	return EFC_SUCCESS;
-+}
-diff --git a/drivers/scsi/elx/efct/efct_unsol.h b/drivers/scsi/elx/efct/efct_unsol.h
-new file mode 100644
-index 000000000000..16d1e3ba1833
---- /dev/null
-+++ b/drivers/scsi/elx/efct/efct_unsol.h
-@@ -0,0 +1,17 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
-+ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
-+ */
-+
-+#if !defined(__OSC_UNSOL_H__)
-+#define __OSC_UNSOL_H__
-+
-+int
-+efct_unsolicited_cb(void *arg, struct efc_hw_sequence *seq);
-+int
-+efct_dispatch_fcp_cmd(struct efct_node *node, struct efc_hw_sequence *seq);
-+int
-+efct_node_recv_abts_frame(struct efct_node *node, struct efc_hw_sequence *seq);
-+
-+#endif /* __OSC_UNSOL_H__ */
--- 
-2.26.2
-
+       Arnd
