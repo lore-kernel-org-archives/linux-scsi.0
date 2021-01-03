@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 642D7C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7EF3C43381
 	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 00:17:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D297207AA
+	by mail.kernel.org (Postfix) with ESMTP id 80B21207AF
 	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 00:17:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726837AbhACARc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 Jan 2021 19:17:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46994 "EHLO
+        id S1726867AbhACARk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 2 Jan 2021 19:17:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726687AbhACARc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2021 19:17:32 -0500
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C996EC0613C1
-        for <linux-scsi@vger.kernel.org>; Sat,  2 Jan 2021 16:16:51 -0800 (PST)
-Received: by mail-pj1-x1032.google.com with SMTP id iq13so7684888pjb.3
-        for <linux-scsi@vger.kernel.org>; Sat, 02 Jan 2021 16:16:51 -0800 (PST)
+        with ESMTP id S1726687AbhACARj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2021 19:17:39 -0500
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2E7AC0613ED
+        for <linux-scsi@vger.kernel.org>; Sat,  2 Jan 2021 16:16:59 -0800 (PST)
+Received: by mail-pf1-x42a.google.com with SMTP id x126so14127588pfc.7
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Jan 2021 16:16:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=JgjUe5w4slwLjxbuMZGbJaaBWik0mmAnLfFJ73jPLKI=;
-        b=FBNCoNFMwklCmvxSfy5O1CiVPsRzHf1xOvQHTPyAeuEUAuCMGbgvKDYWO2vBOJcbgf
-         GEALpNtiK2ZsqwNAHoyzssJ16DF3z6cMuSOrn10GMfY42LsQyTi0GfJgL2DmFLUqLeTE
-         ekB54ppuCsii3M2li3nhghXREuEYfbJSxv5VPMKArhdkJthBuUPENG5C445F2sODw9Yi
-         wbFdRfo4GiWKI0Db+ZEcYEkwfHy80v2QjkHlqjkyfqpVe37vcRFvmqiEh9nceOUUyq5x
-         Om5gtQ8eEliSF8EGCQarYUeA6Fg+U5dSTHOfvoyxGAiDUvxOVtlr5VReWybNh9+GIEjd
-         gxxQ==
+        bh=40pkSVkO1WphbD7eLFzPojnso1FJsOAkJZIPi3zF87E=;
+        b=eDgxbuvERAn95yVe/NKWuvvtQJB12yWz0tV6cx85JesCCOF26qwrw6KVFzBjrIuhXh
+         KN2WxATc52LNmY8MwIES62IPtmkhrmGPZbVwkcHcxOtOuJEyoXuft4y9KNEjYI+m6e5h
+         37py9DJ8l5YJg5EjZ0rbnKfFlx8E3ncwvUPmTepcxYZmvQ597e8CXocDxicfyJZ/csSO
+         SyCep0UD1gj2MFavFTeiPIMWrTdv+fsjwjIH42gS5Y+HOjh0f5dGk2T0DU8dhGMbR4DM
+         euS81tTjTKpZJ9UHOqt1zMqH9oTihqh0YJDj036g9O20/JHahvFqEIKxeFzTQXw6QFUK
+         EGbg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=JgjUe5w4slwLjxbuMZGbJaaBWik0mmAnLfFJ73jPLKI=;
-        b=oddnoE111RgQhiSUz/boVjDGDV+XnLq4mK7TAqnBoQaz63FY5cjSGqdpOhjgx7DrSc
-         KUsqi6UUXBJd/gFDSm4QvZzJpMx/KrPTuuR2kwTiuJyx//Q+e4m24laNI+2zRzwdhypS
-         hYBrWbnJIN9T8bKHbKyJ3K+EkGHWiByKEpwOm6VOUvRZLt4ZtSEm2tICDoBYophe0Gih
-         iFAts+4syK1Uvf650Qhqny26ugOExsrEwq9ppzy8n5ec9O6x4ac+WBnLqmGHgeeKCs/W
-         a+qR7iYKM5+o9H8sq/eJVnDQe2F5AofTnPQJ3WSO6PIRQtyC9EPRdXIv2VslpGAnZ6ZF
-         p2Tw==
-X-Gm-Message-State: AOAM530XtgnceDpmbgKQuAYXo9c4dRd/fSpKd2If/SBuzru+frjIx5PO
-        3UIx5DIsQk7FqnPoFAE8pN6pIskG68A=
-X-Google-Smtp-Source: ABdhPJzxjkNrhJfqXkK6BdSnmxAjCIS2sMTmXrY580pjkyTSOw/aFpFnXFQy/PuZ9al0eIj/Brv1dw==
-X-Received: by 2002:a17:902:ee0b:b029:db:c808:ccef with SMTP id z11-20020a170902ee0bb02900dbc808ccefmr66724239plb.85.1609633011236;
-        Sat, 02 Jan 2021 16:16:51 -0800 (PST)
+        bh=40pkSVkO1WphbD7eLFzPojnso1FJsOAkJZIPi3zF87E=;
+        b=eWnF0NNc2bAjhRXMuosnJ8kS8GYxZ+6AyVdzz3b5LRExfdjfo8kUQalDtD5UfzhvjW
+         mMMr4Qzn6u+RVzMAL/plKWdYSTwY+o2J7JZBrxNved5pzj3zVrN8UxjQ5mCv3kssQ8w4
+         uN3z3l/foI/He7mPP5pyzxri1JSenB5IJncxRmsOcNNp9MxAk3iLZVTqWhZ8mMfMLkq2
+         pHsx5yTzy5LSpEXYyBHyLKDnG4YsWluUNCmpwUPQkVMDr3C7FTxjkUIj0FDyi2JZ7X8L
+         5lbFsAAAb72vNMNSL8i0G6N3h0IL8zuI3idBnXeIDS3IE9NZwjAwylgwLcsm0zrfijz5
+         jMaw==
+X-Gm-Message-State: AOAM532878Czl4dQLYfNKh7P76E7kITdDff6m9aaUKeEQrHT5fDzaesB
+        IuXd5WoHNXbNb3ypkuyA/VUHlWMsU8Q=
+X-Google-Smtp-Source: ABdhPJwjsDPoQrxpWSIvIhqneHyB7ZgPuf+OZ72wJn8eAOnJIYNrcdXEzMuDgnQW4xZnQuoHWxwufA==
+X-Received: by 2002:a05:6a00:230d:b029:18b:9cb:dead with SMTP id h13-20020a056a00230db029018b09cbdeadmr59893290pfh.24.1609633019154;
+        Sat, 02 Jan 2021 16:16:59 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id q12sm55671867pgj.24.2021.01.02.16.16.48
+        by smtp.gmail.com with ESMTPSA id q12sm55671867pgj.24.2021.01.02.16.16.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 02 Jan 2021 16:16:50 -0800 (PST)
+        Sat, 02 Jan 2021 16:16:58 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 01/15] lpfc: Fix PLOGI S_ID of 0 on pt2pt config
-Date:   Sat,  2 Jan 2021 16:16:25 -0800
-Message-Id: <20210103001639.1995-2-jsmart2021@gmail.com>
+Subject: [PATCH 04/15] lpfc: Fix crash when a fabric node is released prematurely.
+Date:   Sat,  2 Jan 2021 16:16:28 -0800
+Message-Id: <20210103001639.1995-5-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210103001639.1995-1-jsmart2021@gmail.com>
 References: <20210103001639.1995-1-jsmart2021@gmail.com>
@@ -72,79 +72,100 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Under some pt2pt situations, the other end of the link may issue a LOGO
-after successfully completing PLOGI and assigning addresses to the port.
-Thus the driver may attempt a new PLOGI to re-create the login, but the
-LOGO handling cleared the address back to 0. Once this happens, the other
-end, which may be address 0, gets all confused and this cannot be
-resolved without an administrative action to bounce the link.
+The driver's management of the fabric controller (aka pseudo-scsi
+initiator) node in SLI3 mode is causing this crash. The crash occurs
+because of a node reference imbalance that frees the fabric controller
+node while devloss is outstanding from the SCSI transport.  This is
+triggered by an odd behavior where the switch reacts to a rejected RDP
+request with a PLOGI and nothing else, not even a LOGO.  The driver
+ACKS the PLOGI and after successfully registering the RPI, incorrectly
+registers the fabric controller node because it has the NLP_FC4_FCP
+flag still set from the fabric controller PRLI.  If a LIP is issued,
+the driver attempts to cleanup on Link Up and ends up executing too
+many puts.
 
-Fix by assuming that address assignment only occurs on the 1st PLOGI
-after link up, and regardless of login state, the address assignment
-sticks.  The FC standards aren't particularly clear in this situation
-(it only describes initial PLOGI), but there is nothing that contradicts
-this and behaviors on the devices tested appears to conform to the
-understanding.
-
-Thus, don't reset the port address to 0 as part of LOGO handling. Port
-addresses will only reset on link down.
+Fix by detecting the fabric node type and clearing out the nodes internal
+flags that triggered a SCSI transport registration and subsequence
+dev_loss event.  The driver cannot count on any persistence from
+fabric controller nodes.
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 31 +++++--------------------------
- 1 file changed, 5 insertions(+), 26 deletions(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c   | 18 +++++++++++++-----
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  8 +++++++-
+ 2 files changed, 20 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 96c087b8b474..e099caa04535 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2815,7 +2815,6 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	struct lpfc_nodelist *ndlp = (struct lpfc_nodelist *) cmdiocb->context1;
- 	struct lpfc_vport *vport = ndlp->vport;
- 	IOCB_t *irsp;
--	struct lpfcMboxq *mbox;
- 	unsigned long flags;
- 	uint32_t skip_recovery = 0;
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 2b6b5fc671fe..bcb5bf7e19dc 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -73,6 +73,16 @@ static void lpfc_unregister_fcfi_cmpl(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ static int lpfc_fcf_inuse(struct lpfc_hba *);
+ static void lpfc_mbx_cmpl_read_sparam(struct lpfc_hba *, LPFC_MBOXQ_t *);
  
-@@ -2884,31 +2883,11 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	lpfc_els_free_iocb(phba, cmdiocb);
- 	lpfc_nlp_put(ndlp);
++static int
++lpfc_valid_xpt_node(struct lpfc_nodelist *ndlp)
++{
++	if (ndlp->nlp_fc4_type ||
++	    ndlp->nlp_DID == Fabric_DID ||
++	    ndlp->nlp_DID == NameServer_DID ||
++	    ndlp->nlp_DID == FDMI_DID)
++		return 1;
++	return 0;
++}
+ /* The source of a terminate rport I/O is either a dev_loss_tmo
+  * event or a call to fc_remove_host.  While the rport should be
+  * valid during these downcalls, the transport can call twice
+@@ -4318,7 +4328,8 @@ lpfc_nlp_state_cleanup(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	/* FCP and NVME Transport interface */
+ 	if ((old_state == NLP_STE_MAPPED_NODE ||
+ 	     old_state == NLP_STE_UNMAPPED_NODE)) {
+-		if (ndlp->rport) {
++		if (ndlp->rport &&
++		    lpfc_valid_xpt_node(ndlp)) {
+ 			vport->phba->nport_event_cnt++;
+ 			lpfc_unregister_remote_port(ndlp);
+ 		}
+@@ -4340,10 +4351,7 @@ lpfc_nlp_state_cleanup(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
  
--	/* If we are in pt2pt mode, we could rcv new S_ID on PLOGI */
--	if ((vport->fc_flag & FC_PT2PT) &&
--		!(vport->fc_flag & FC_PT2PT_PLOGI)) {
--		phba->pport->fc_myDID = 0;
--
--		if ((vport->cfg_enable_fc4_type == LPFC_ENABLE_BOTH) ||
--		    (vport->cfg_enable_fc4_type == LPFC_ENABLE_NVME)) {
--			if (phba->nvmet_support)
--				lpfc_nvmet_update_targetport(phba);
--			else
--				lpfc_nvme_update_localport(phba->pport);
--		}
--
--		mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
--		if (mbox) {
--			lpfc_config_link(phba, mbox);
--			mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
--			mbox->vport = vport;
--			if (lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT) ==
--				MBX_NOT_FINISHED) {
--				mempool_free(mbox, phba->mbox_mem_pool);
--				skip_recovery = 1;
--			}
--		}
--	}
-+	/* At this point, the LOGO processing is complete. NOTE: For a
-+	 * pt2pt topology, we are assuming the NPortID will only change
-+	 * on link up processing. For a LOGO / PLOGI initiated by the
-+	 * Initiator, we are assuming the NPortID is not going to change.
-+	 */
- 
- 	/*
- 	 * If the node is a target, the handling attempts to recover the port.
+ 	if (new_state ==  NLP_STE_MAPPED_NODE ||
+ 	    new_state == NLP_STE_UNMAPPED_NODE) {
+-		if (ndlp->nlp_fc4_type ||
+-		    ndlp->nlp_DID == Fabric_DID ||
+-		    ndlp->nlp_DID == NameServer_DID ||
+-		    ndlp->nlp_DID == FDMI_DID) {
++		if (lpfc_valid_xpt_node(ndlp)) {
+ 			vport->phba->nport_event_cnt++;
+ 			/*
+ 			 * Tell the fc transport about the port, if we haven't
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 4961a8a55844..0d0d2ca1a5d8 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -1021,7 +1021,12 @@ lpfc_rcv_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 			ndlp->nlp_fc4_type |= NLP_FC4_NVME;
+ 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
+ 		}
+-		if (npr->prliType == PRLI_FCP_TYPE)
++
++		/* Fabric Controllers send FCP PRLI as an initiator but should
++		 * not get recognized as FCP type and registered with transport.
++		 */
++		if (npr->prliType == PRLI_FCP_TYPE &&
++		    !(ndlp->nlp_type & NLP_FABRIC))
+ 			ndlp->nlp_fc4_type |= NLP_FC4_FCP;
+ 	}
+ 	if (rport) {
+@@ -2044,6 +2049,7 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
+ 		 * must complete PRLI.
+ 		 */
+ 		if (ndlp->nlp_type & NLP_FABRIC) {
++			ndlp->nlp_fc4_type &= ~NLP_FC4_FCP;
+ 			ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
+ 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
+ 		}
 -- 
 2.26.2
 
