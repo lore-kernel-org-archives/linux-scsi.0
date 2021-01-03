@@ -2,144 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CEA2C433E0
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Jan 2021 22:31:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51907C433DB
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 00:17:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1DCCF207A1
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Jan 2021 22:31:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 159AE207A5
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 00:17:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726802AbhABWbh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 Jan 2021 17:31:37 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:49106 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726673AbhABWbg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2021 17:31:36 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 102MUrPo057361;
-        Sat, 2 Jan 2021 22:30:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=CEAaNsIqzlnePH2aCjdw+slJGvweo2T/l2PR/bvFR3M=;
- b=ke7SJv6BCOza8Ou1dGbPaoGmLxVcZX2oL/3U8zuPZ9q2RxnOuSrzHos3v5IoTQQXrTv6
- obRplIxphw7l/goTnBE4D0djJtMvIEB1KVNkHZjXUXF4AgitqlIeinwS7sy/P829kQu0
- a03pCVKsoiUcsKcsxd9lT/rVOxzd9+OiHsSzrl/jJu2rfZxGMY3FOFds15lhXm6glwwx
- TOCRJtGMCRuz3fKPxzYbNuicxuT3IkKfx+qS6wOgnQvrEga9VDLTpuFK7rA706xH7DSw
- XWr5WO7f9br9xx5XaJlRn5vMe9/bZOZzPgEJXnb7GdlYENWozrFtiYAuBjzKitwDXD2M bQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 35tebah0ca-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 02 Jan 2021 22:30:53 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 102MRMoT153553;
-        Sat, 2 Jan 2021 22:30:52 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 35tfbmkfcr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 02 Jan 2021 22:30:52 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 102MUpCG001491;
-        Sat, 2 Jan 2021 22:30:51 GMT
-Received: from [20.15.0.204] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 02 Jan 2021 14:30:51 -0800
-Subject: Re: [PATCH 3/7] tcm qlaxx: move sess cmd list/lock to driver
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Mike Christie <michael.christie@oracle.com>,
-        himanshu.madhani@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc:     Nilesh Javali <njavali@marvell.com>
-References: <1603666998-8086-1-git-send-email-michael.christie@oracle.com>
- <1603666998-8086-4-git-send-email-michael.christie@oracle.com>
- <8d94c626-78e4-ed8c-d077-4add314f789c@acm.org>
-From:   Mike Christie <michael.chritie@oracle.com>
-Message-ID: <96d27c3f-6b0a-58b6-bf8a-69a18a9a85fa@oracle.com>
-Date:   Sat, 2 Jan 2021 16:30:50 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726825AbhACARa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 2 Jan 2021 19:17:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46988 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726687AbhACAR3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2021 19:17:29 -0500
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3111EC061573
+        for <linux-scsi@vger.kernel.org>; Sat,  2 Jan 2021 16:16:49 -0800 (PST)
+Received: by mail-pl1-x634.google.com with SMTP id j1so12543135pld.3
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Jan 2021 16:16:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dUKPz+4QMVkDe4xyjWEfJ1b+qZJGTxkH3ug+qHHAsCY=;
+        b=rULD3egc0oraoDO1iu3ZZYBKk301nfQKCU5Mvu4uD4yLwIxNZeT0yL4QxVWHMiTz4h
+         9qvitevPpHMYkeemyn3jbOD7+Y0XebCEordUoBR/KqxBHh2UbMHXeWp4r6SYyx+hM9Nj
+         UEfHG7i9wPX5hQcal86N2w/7ud+dyg+cedMoXFWG+HRF+8vslY5YTbou6+Gr/aCIVbyf
+         A4HX2dm/xbnEVQiUdCxqPHsL68C8kVSWioJGGnbwELjPpWjN3zoQqZzcGULxkIgmvjXV
+         GrNBwKx3L8plyCMZDoIykxSxlKcqs8G6xZnVizAkw6lnWxS/29SvxDzS0/iMD9j1QblV
+         kC/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dUKPz+4QMVkDe4xyjWEfJ1b+qZJGTxkH3ug+qHHAsCY=;
+        b=PjyoF/YeHg8cQuzmtGnhihg7jwtTairkhMbMwLq79l1trEvVvskBDtyte+FOHcgheL
+         jgqJ4lbUzmN6uPc1zHHrRY0NcGd0oFByQ6GPZMwaLoO5/iSYFrXbExDu+9a88WVbjG+5
+         LqRpO1vqL7hYiBclaWcbOONp5aXN/YE5bi/AWeRqb6GO9x/CCbuyyTwXsKOzrmt1TD/z
+         MQDu6hVNs0/1H10IqUxUTvRkGq3nfZS1fCQWwI4/oeY6d0c+tOshA1IpDQnqnRJyxEGZ
+         uXzQiCav/7+9ZakVeISfO+CXHXeVbTx3wT73HEvG0RCBjRlyUjMAa5FMN33zp1yGOw3G
+         X8Wg==
+X-Gm-Message-State: AOAM532DWEmJIA9Vpwb2AC00jy1cz4dhxwW/3TxZSysNkhmTZudqMc8K
+        P8S824yQPJLj8ZCetHzkC5vxJpNvvgg=
+X-Google-Smtp-Source: ABdhPJzB8VU7mASeWImbMxBRcGPiaFYSk7xgfaZ+4XehVOL6LX+DVpUVlxbjYBHKEbJV8tGk8i8acQ==
+X-Received: by 2002:a17:902:502:b029:db:fa52:c19 with SMTP id 2-20020a1709020502b02900dbfa520c19mr41491267plf.70.1609633008581;
+        Sat, 02 Jan 2021 16:16:48 -0800 (PST)
+Received: from localhost.localdomain ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id q12sm55671867pgj.24.2021.01.02.16.16.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 02 Jan 2021 16:16:48 -0800 (PST)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>
+Subject: [PATCH 00/15] lpfc: Update lpfc to revision 12.8.0.7
+Date:   Sat,  2 Jan 2021 16:16:24 -0800
+Message-Id: <20210103001639.1995-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <8d94c626-78e4-ed8c-d077-4add314f789c@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9852 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- mlxlogscore=999 mlxscore=0 suspectscore=0 bulkscore=0 phishscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101020142
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9852 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
- priorityscore=1501 spamscore=0 mlxscore=0 clxscore=1011 bulkscore=0
- lowpriorityscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101020143
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/31/20 10:45 PM, Bart Van Assche wrote:
-> On 10/25/20 4:03 PM, Mike Christie wrote:
->> @@ -617,25 +629,20 @@ static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, u64 lun,
->>  static struct qla_tgt_cmd *tcm_qla2xxx_find_cmd_by_tag(struct fc_port *sess,
->>      uint64_t tag)
->>  {
->> -	struct qla_tgt_cmd *cmd = NULL;
->> -	struct se_cmd *secmd;
->> +	struct qla_tgt_cmd *cmd;
->>  	unsigned long flags;
->>  
->>  	if (!sess->se_sess)
->>  		return NULL;
->>  
->> -	spin_lock_irqsave(&sess->se_sess->sess_cmd_lock, flags);
->> -	list_for_each_entry(secmd, &sess->se_sess->sess_cmd_list, se_cmd_list) {
->> -		/* skip task management functions, including tmr->task_cmd */
->> -		if (secmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
->> -			continue;
->> -
->> -		if (secmd->tag == tag) {
->> -			cmd = container_of(secmd, struct qla_tgt_cmd, se_cmd);
->> -			break;
->> -		}
->> +	spin_lock_irqsave(&sess->sess_cmd_lock, flags);
->> +	list_for_each_entry(cmd, &sess->sess_cmd_list, sess_cmd_list) {
->> +		if (cmd->se_cmd.tag == tag)
->> +			goto done;
->>  	}
->> -	spin_unlock_irqrestore(&sess->se_sess->sess_cmd_lock, flags);
->> +	cmd = NULL;
->> +done:
->> +	spin_unlock_irqrestore(&sess->sess_cmd_lock, flags);
->>  
->>  	return cmd;
->>  }
-> 
-> Hi Mike,
-> 
-> Although this behavior has not been introduced by your patch: what prevents
-> that the command found by tcm_qla2xxx_find_cmd_by_tag() disappears after
-> sess_cmd_lock has been unlocked and before the caller uses the qla_tgt_cmd 
-> pointer? As you may know the corresponding code in SCST increments the SCSI
+Update lpfc to revision 12.8.0.7
 
-Nothing.
+This patch set contains fixes and a cleanup of trace logging.
 
-> command reference count before unlocking the lock that protects the command
-> list. See also the __scst_find_cmd_by_tag() call in scst_mgmt_cmd_init().
-> 
+The patches were cut against Martin's 5.11/scsi-queue tree
 
-I'll send a patch for that when I get the aborted task crash fixed up. I
-didn't send fixes for existing bugs in the driver like them for this patchset.
-It got a little crazy. For example for the aborted task issue, I reverted the
-patch that made the eh async I mentioned a while back. That fixes the crash,
-but then there was a hang. So I thought I'll just convert it to the async eh
-patch since either way I have to fix the driver. Himanshu was helping me figure
-out how to support it, but it's not trivial.
+James Smart (15):
+  lpfc: Fix PLOGI S_ID of 0 on pt2pt config
+  lpfc: Fix auto sli_mode and its effect on CONFIG_PORT for SLI3
+  lpfc: Refresh ndlp when a new PRLI is received in the PRLI issue state
+  lpfc: Fix crash when a fabric node is released prematurely.
+  lpfc: Use the nvme-fc transport supplied timeout for LS requests
+  lpfc: Fix FW reset action if IOs are outstanding
+  lpfc: Prevent duplicate requests to unregister with cpuhp framework
+  lpfc: Fix error log messages being logged following scsi task mgnt
+  lpfc: Fix target reset failing
+  lpfc: Fix NVME recovery after mailbox timeout
+  lpfc: Fix vport create logging
+  lpfc: Fix crash when nvmet transport calls host_release
+  lpfc: Implement health checking when aborting io
+  lpfc: Enhancements to LOG_TRACE_EVENT for better readability
+  lpfc: Update lpfc version to 12.8.0.7
 
+ drivers/scsi/lpfc/lpfc.h           |   4 +-
+ drivers/scsi/lpfc/lpfc_attr.c      |   9 +-
+ drivers/scsi/lpfc/lpfc_crtn.h      |   6 +-
+ drivers/scsi/lpfc/lpfc_disc.h      |  15 +-
+ drivers/scsi/lpfc/lpfc_els.c       |  47 +++---
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  21 ++-
+ drivers/scsi/lpfc/lpfc_init.c      | 241 +++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  21 ++-
+ drivers/scsi/lpfc/lpfc_nvme.c      |  45 +++---
+ drivers/scsi/lpfc/lpfc_nvmet.c     |  33 +++-
+ drivers/scsi/lpfc/lpfc_scsi.c      |  58 ++++++-
+ drivers/scsi/lpfc/lpfc_sli.c       | 141 +++++++++++------
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ drivers/scsi/lpfc/lpfc_vport.c     |   2 +-
+ 14 files changed, 436 insertions(+), 209 deletions(-)
 
+-- 
+2.26.2
 
- 
