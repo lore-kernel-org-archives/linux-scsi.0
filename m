@@ -2,1270 +2,361 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CB8AC433E9
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 17:13:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F369C433E0
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 17:13:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0661D20936
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 17:13:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01BAF20936
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jan 2021 17:13:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727635AbhACRNJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Jan 2021 12:13:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60680 "EHLO
+        id S1727645AbhACRNN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Jan 2021 12:13:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727617AbhACRNH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jan 2021 12:13:07 -0500
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68EE2C061795
-        for <linux-scsi@vger.kernel.org>; Sun,  3 Jan 2021 09:12:06 -0800 (PST)
-Received: by mail-pg1-x52c.google.com with SMTP id g15so17227617pgu.9
-        for <linux-scsi@vger.kernel.org>; Sun, 03 Jan 2021 09:12:06 -0800 (PST)
+        with ESMTP id S1727637AbhACRNK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jan 2021 12:13:10 -0500
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CD4FC06179F
+        for <linux-scsi@vger.kernel.org>; Sun,  3 Jan 2021 09:12:13 -0800 (PST)
+Received: by mail-pj1-x1036.google.com with SMTP id l23so8923327pjg.1
+        for <linux-scsi@vger.kernel.org>; Sun, 03 Jan 2021 09:12:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=1b0KvrrI8JYD8yYI1JHwCmFCPg8ECw+G7nH1lOJ+V3M=;
-        b=Gn/LzMKQrx5xRoNtoGnMl29cNpxIp4RcydDYVZxdSWvGp6afVOo7xTmhcBSboQUCiA
-         b3HJQsIWWpk6JA0YEQztwG7U21PJ3nFC45EZ8UCcmpnWQmlAJ3be2bk0+n5oYDQwdMem
-         nyf4Fn07NI4LgNqnVIj+FQdEGgA2WCYpqlLXLmJHINW7tR4yXdi072TKKrvkpa75oLCs
-         FjY/1sdrpAsvqNEIY8SY5T3JaU+h1MjeaA2N4vkZzzjOLzgllW3n0xKEKLJKfyPbapd1
-         rMBf9aMfO0SFvCtm+5TT4CgIMXVmgK4JYFK6PsOpk9Jt6bK+I5zNfMPSLMzWNWpmOPJ+
-         0bgw==
+        bh=K4Cf3PKgRRlNl8jh3XjcvB5sF7GWafxkwPQ91gY1DWw=;
+        b=X3JIxRaCwLC9NVR+PfDnX0J2yd0D45x2QtO8E2vtcwdADN4OcRHM5HfvW8vGcbNUY2
+         5Go3QJgE0NHLahDqFPI5Qbcx/Busqh0WF1CsuofXrHFtjC61jGsxdQsiuZCD9K5Mv96d
+         Vpt3PKh2LYy1bnkITYeqIYN++nfTw1V/BB1TDZf+oPASMoGksMMSzs8C8yV0Or7I72uz
+         XVfxVJjwDd+J3bKEAdU+u3B7EYEy29eytxKFwQfgWzNwbGDhdhvYWO7wpALShiuGm8cX
+         Aemp1IXxODg3kVQSSPzWbl1iUJ481aee27+hVPVN8l3J6S+b4vVUxir/hsVgz7jo90Ss
+         ds6Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=1b0KvrrI8JYD8yYI1JHwCmFCPg8ECw+G7nH1lOJ+V3M=;
-        b=oxP7FMtSo4GtUzd60YUDsDCZTC3C4hHabSdD6W6TjC8Y8Mxy58m7u/iUmpGZcUpbVx
-         SV1QVyoYoxYuzow4IIDsFvpHfFOi7BtyMKquHhowu0lijMyz/dPRbNyj19A20+b8rJYI
-         R/TbmREZROj614thZiA+XYJl/U+5LOPdLGeoI3AM0HWYSF7stBR/my29F/gfIRxlE3SE
-         uYMsSWGL1YiVfO1k0X+sg0OITNX2IIEjywDoTQ04EvYzvZBlVquHHhlwPVPKn4lo3bzz
-         sBQQX0rIIizz3M522B0WJn7GAqLzYadcnPJCpMpVRUWMt3aOPoZ0iFkRmkI47LC2Lu1w
-         1Rww==
-X-Gm-Message-State: AOAM530cDz7gM07GyQo3BuQuPnjANcyfVAl/aBa55iSl1jFfZpnpl3qy
-        65t+f7EX6B6nCnBWpNf8RPb8AfBKwsU=
-X-Google-Smtp-Source: ABdhPJwcDL/QOU+c6DAOOZNDRaJnTd3Zw8KiXLXpUszY5G1EoMPxbcYlHzs8XlswhfiPDq231LL/vA==
-X-Received: by 2002:aa7:8583:0:b029:1a9:39bc:ed3b with SMTP id w3-20020aa785830000b02901a939bced3bmr41370572pfn.48.1609693925400;
-        Sun, 03 Jan 2021 09:12:05 -0800 (PST)
+        bh=K4Cf3PKgRRlNl8jh3XjcvB5sF7GWafxkwPQ91gY1DWw=;
+        b=gFvjeWrMFqiP6gF48WTsl6jdktYKvdbUpjwjc2cBVExPZVYrKGqLRpvqWea9K0RTbD
+         Wm2rbCzDZgsASV7bJA5R9OKaWaf2EqBHrOKkHazlO2noAbEdEQ6z323OFcyAZLo47+7Y
+         VUoaofWyu41JUDbGPR+jWrQPOa7/I+rZAGi9evO1Q026cbUYI2KL0Ni0xJmuFgV3akbO
+         k123GN7sGY20/y6XjlYjXOUAvNBlgLd4Dr5tSuBF05ruJ5hE+PTXfBjAIijFj0wapYKL
+         UDl6ChCwnjKr328TxJ2sTKKiUdSxuBsbVgseWR6xtVdNgMGvvNxuAhptOxStlTH/nK3k
+         8MSA==
+X-Gm-Message-State: AOAM531h3hDTAQX/jEmGRKnYVPtCNYJOcSjama64n1pHoT2BY5RLyYYH
+        LKHplVByaroDlJRiT3E+Gr9uU9VwDps=
+X-Google-Smtp-Source: ABdhPJxjMlYCNwGow8qcsGmsQbgat3B+eZAmgvbl5UWAikH6JhwJ/NlDe50BsCyq8B2yBBQwc6fCcQ==
+X-Received: by 2002:a17:902:d385:b029:da:c6e4:5cab with SMTP id e5-20020a170902d385b02900dac6e45cabmr68725696pld.7.1609693932635;
+        Sun, 03 Jan 2021 09:12:12 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id m4sm33145151pgv.16.2021.01.03.09.12.02
+        by smtp.gmail.com with ESMTPSA id m4sm33145151pgv.16.2021.01.03.09.12.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Jan 2021 09:12:05 -0800 (PST)
+        Sun, 03 Jan 2021 09:12:12 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Ram Vegesna <ram.vegesna@broadcom.com>,
         Hannes Reinecke <hare@suse.de>, Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH v5 06/31] elx: libefc_sli: bmbx routines and SLI config commands
-Date:   Sun,  3 Jan 2021 09:11:09 -0800
-Message-Id: <20210103171134.39878-7-jsmart2021@gmail.com>
+Subject: [PATCH v5 08/31] elx: libefc: Generic state machine framework
+Date:   Sun,  3 Jan 2021 09:11:11 -0800
+Message-Id: <20210103171134.39878-9-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210103171134.39878-1-jsmart2021@gmail.com>
 References: <20210103171134.39878-1-jsmart2021@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch continues the libefc_sli SLI-4 library population.
+This patch starts the population of the libefc library.
+The library will contain common tasks usable by a target or initiator
+driver. The library will also contain a FC discovery state machine
+interface.
 
-This patch adds routines to create mailbox commands used during
-adapter initialization and adds APIs to issue mailbox commands to the
-adapter through the bootstrap mailbox register.
+This patch creates the library directory and adds definitions
+for the discovery state machine interface.
 
 Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Daniel Wagner <dwagner@suse.de>
-
 ---
-v5:
- Changed argument list for sli_cmd_reg_fcfi/ sli_cmd_reg_fcfi_mrq
----
- drivers/scsi/elx/libefc_sli/sli4.c | 1166 ++++++++++++++++++++++++++++
- 1 file changed, 1166 insertions(+)
+ drivers/scsi/elx/libefc/efc_sm.c |  54 +++++++++
+ drivers/scsi/elx/libefc/efc_sm.h | 197 +++++++++++++++++++++++++++++++
+ 2 files changed, 251 insertions(+)
+ create mode 100644 drivers/scsi/elx/libefc/efc_sm.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_sm.h
 
-diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
-index 32ca7e3075b6..1a56cdf9f398 100644
---- a/drivers/scsi/elx/libefc_sli/sli4.c
-+++ b/drivers/scsi/elx/libefc_sli/sli4.c
-@@ -2882,3 +2882,1169 @@ sli_fc_rqe_rqid_and_index(struct sli4 *sli4, u8 *cqe, u16 *rq_id, u32 *index)
- 
- 	return rc;
- }
+diff --git a/drivers/scsi/elx/libefc/efc_sm.c b/drivers/scsi/elx/libefc/efc_sm.c
+new file mode 100644
+index 000000000000..252399c19293
+--- /dev/null
++++ b/drivers/scsi/elx/libefc/efc_sm.c
+@@ -0,0 +1,54 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
++ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
++ */
 +
-+static int
-+sli_bmbx_wait(struct sli4 *sli4, u32 msec)
-+{
-+	u32 val;
-+	unsigned long end;
++/*
++ * Generic state machine framework.
++ */
++#include "efc.h"
++#include "efc_sm.h"
 +
-+	/* Wait for the bootstrap mailbox to report "ready" */
-+	end = jiffies + msecs_to_jiffies(msec);
-+	do {
-+		val = readl(sli4->reg[0] + SLI4_BMBX_REG);
-+		if (val & SLI4_BMBX_RDY)
-+			return EFC_SUCCESS;
-+
-+		usleep_range(1000, 2000);
-+	} while (time_before(jiffies, end));
-+
-+	return EFC_FAIL;
-+}
-+
-+static int
-+sli_bmbx_write(struct sli4 *sli4)
-+{
-+	u32 val;
-+
-+	/* write buffer location to bootstrap mailbox register */
-+	val = sli_bmbx_write_hi(sli4->bmbx.phys);
-+	writel(val, (sli4->reg[0] + SLI4_BMBX_REG));
-+
-+	if (sli_bmbx_wait(sli4, SLI4_BMBX_DELAY_US)) {
-+		efc_log_crit(sli4, "BMBX WRITE_HI failed\n");
-+		return EFC_FAIL;
-+	}
-+	val = sli_bmbx_write_lo(sli4->bmbx.phys);
-+	writel(val, (sli4->reg[0] + SLI4_BMBX_REG));
-+
-+	/* wait for SLI Port to set ready bit */
-+	return sli_bmbx_wait(sli4, SLI4_BMBX_TIMEOUT_MSEC);
-+}
-+
++/**
++ * efc_sm_post_event() - Post an event to a context.
++ *
++ * @ctx: State machine context
++ * @evt: Event to post
++ * @data: Event-specific data (if any)
++ */
 +int
-+sli_bmbx_command(struct sli4 *sli4)
++efc_sm_post_event(struct efc_sm_ctx *ctx,
++		  enum efc_sm_event evt, void *data)
 +{
-+	void *cqe = (u8 *)sli4->bmbx.virt + SLI4_BMBX_SIZE;
-+
-+	if (sli_fw_error_status(sli4) > 0) {
-+		efc_log_crit(sli4, "Chip is in an error state -Mailbox command rejected");
-+		efc_log_crit(sli4, " status=%#x error1=%#x error2=%#x\n",
-+			sli_reg_read_status(sli4),
-+			sli_reg_read_err1(sli4),
-+			sli_reg_read_err2(sli4));
-+		return EFC_FAIL;
-+	}
-+
-+	/* Submit a command to the bootstrap mailbox and check the status */
-+	if (sli_bmbx_write(sli4)) {
-+		efc_log_crit(sli4, "bmbx write fail phys=%pad reg=%#x\n",
-+			&sli4->bmbx.phys, readl(sli4->reg[0] + SLI4_BMBX_REG));
-+		return EFC_FAIL;
-+	}
-+
-+	/* check completion queue entry status */
-+	if (le32_to_cpu(((struct sli4_mcqe *)cqe)->dw3_flags) &
-+	    SLI4_MCQE_VALID) {
-+		return sli_cqe_mq(sli4, cqe);
-+	}
-+	efc_log_crit(sli4, "invalid or wrong type\n");
-+	return EFC_FAIL;
-+}
-+
-+int
-+sli_cmd_config_link(struct sli4 *sli4, void *buf)
-+{
-+	struct sli4_cmd_config_link *config_link = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	config_link->hdr.command = SLI4_MBX_CMD_CONFIG_LINK;
-+
-+	/* Port interprets zero in a field as "use default value" */
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_down_link(struct sli4 *sli4, void *buf)
-+{
-+	struct sli4_mbox_command_header *hdr = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	hdr->command = SLI4_MBX_CMD_DOWN_LINK;
-+
-+	/* Port interprets zero in a field as "use default value" */
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_dump_type4(struct sli4 *sli4, void *buf, u16 wki)
-+{
-+	struct sli4_cmd_dump4 *cmd = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	cmd->hdr.command = SLI4_MBX_CMD_DUMP;
-+	cmd->type_dword = cpu_to_le32(0x4);
-+	cmd->wki_selection = cpu_to_le16(wki);
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_common_read_transceiver_data(struct sli4 *sli4, void *buf, u32 page_num,
-+				     struct efc_dma *dma)
-+{
-+	struct sli4_rqst_cmn_read_transceiver_data *req = NULL;
-+	u32 psize;
-+
-+	if (!dma)
-+		psize = SLI4_CFG_PYLD_LENGTH(cmn_read_transceiver_data);
-+	else
-+		psize = dma->size;
-+
-+	req = sli_config_cmd_init(sli4, buf, psize, dma);
-+	if (!req)
++	if (!ctx->current_state)
 +		return EFC_FAIL;
 +
-+	sli_cmd_fill_hdr(&req->hdr, SLI4_CMN_READ_TRANS_DATA,
-+			 SLI4_SUBSYSTEM_COMMON, CMD_V0,
-+			 SLI4_RQST_PYLD_LEN(cmn_read_transceiver_data));
-+
-+	req->page_number = cpu_to_le32(page_num);
-+	req->port = cpu_to_le32(sli4->port_number);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_read_link_stats(struct sli4 *sli4, void *buf, u8 req_ext_counters,
-+			u8 clear_overflow_flags,
-+			u8 clear_all_counters)
-+{
-+	struct sli4_cmd_read_link_stats *cmd = buf;
-+	u32 flags;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	cmd->hdr.command = SLI4_MBX_CMD_READ_LNK_STAT;
-+
-+	flags = 0;
-+	if (req_ext_counters)
-+		flags |= SLI4_READ_LNKSTAT_REC;
-+	if (clear_all_counters)
-+		flags |= SLI4_READ_LNKSTAT_CLRC;
-+	if (clear_overflow_flags)
-+		flags |= SLI4_READ_LNKSTAT_CLOF;
-+
-+	cmd->dw1_flags = cpu_to_le32(flags);
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_read_status(struct sli4 *sli4, void *buf, u8 clear_counters)
-+{
-+	struct sli4_cmd_read_status *cmd = buf;
-+	u32 flags = 0;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	cmd->hdr.command = SLI4_MBX_CMD_READ_STATUS;
-+	if (clear_counters)
-+		flags |= SLI4_READSTATUS_CLEAR_COUNTERS;
-+	else
-+		flags &= ~SLI4_READSTATUS_CLEAR_COUNTERS;
-+
-+	cmd->dw1_flags = cpu_to_le32(flags);
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_init_link(struct sli4 *sli4, void *buf, u32 speed, u8 reset_alpa)
-+{
-+	struct sli4_cmd_init_link *init_link = buf;
-+	u32 flags = 0;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	init_link->hdr.command = SLI4_MBX_CMD_INIT_LINK;
-+
-+	init_link->sel_reset_al_pa_dword =
-+				cpu_to_le32(reset_alpa);
-+	flags &= ~SLI4_INIT_LINK_F_LOOPBACK;
-+
-+	init_link->link_speed_sel_code = cpu_to_le32(speed);
-+	switch (speed) {
-+	case SLI4_LINK_SPEED_1G:
-+	case SLI4_LINK_SPEED_2G:
-+	case SLI4_LINK_SPEED_4G:
-+	case SLI4_LINK_SPEED_8G:
-+	case SLI4_LINK_SPEED_16G:
-+	case SLI4_LINK_SPEED_32G:
-+	case SLI4_LINK_SPEED_64G:
-+		flags |= SLI4_INIT_LINK_F_FIXED_SPEED;
-+		break;
-+	case SLI4_LINK_SPEED_10G:
-+		efc_log_info(sli4, "unsupported FC speed %d\n", speed);
-+		init_link->flags0 = cpu_to_le32(flags);
-+		return EFC_FAIL;
-+	}
-+
-+	switch (sli4->topology) {
-+	case SLI4_READ_CFG_TOPO_FC:
-+		/* Attempt P2P but failover to FC-AL */
-+		flags |= SLI4_INIT_LINK_F_FAIL_OVER;
-+		flags |= SLI4_INIT_LINK_F_P2P_FAIL_OVER;
-+		break;
-+	case SLI4_READ_CFG_TOPO_FC_AL:
-+		flags |= SLI4_INIT_LINK_F_FCAL_ONLY;
-+		if (speed == SLI4_LINK_SPEED_16G ||
-+		    speed == SLI4_LINK_SPEED_32G) {
-+			efc_log_info(sli4, "unsupported FC-AL speed %d\n",
-+				     speed);
-+			init_link->flags0 = cpu_to_le32(flags);
-+			return EFC_FAIL;
-+		}
-+		break;
-+	case SLI4_READ_CFG_TOPO_NON_FC_AL:
-+		flags |= SLI4_INIT_LINK_F_P2P_ONLY;
-+		break;
-+	default:
-+
-+		efc_log_info(sli4, "unsupported topology %#x\n",
-+			sli4->topology);
-+
-+		init_link->flags0 = cpu_to_le32(flags);
-+		return EFC_FAIL;
-+	}
-+
-+	flags &= ~SLI4_INIT_LINK_F_UNFAIR;
-+	flags &= ~SLI4_INIT_LINK_F_NO_LIRP;
-+	flags &= ~SLI4_INIT_LINK_F_LOOP_VALID_CHK;
-+	flags &= ~SLI4_INIT_LINK_F_NO_LISA;
-+	flags &= ~SLI4_INIT_LINK_F_PICK_HI_ALPA;
-+	init_link->flags0 = cpu_to_le32(flags);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_init_vfi(struct sli4 *sli4, void *buf, u16 vfi, u16 fcfi, u16 vpi)
-+{
-+	struct sli4_cmd_init_vfi *init_vfi = buf;
-+	u16 flags = 0;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	init_vfi->hdr.command = SLI4_MBX_CMD_INIT_VFI;
-+	init_vfi->vfi = cpu_to_le16(vfi);
-+	init_vfi->fcfi = cpu_to_le16(fcfi);
-+
-+	/*
-+	 * If the VPI is valid, initialize it at the same time as
-+	 * the VFI
-+	 */
-+	if (vpi != U16_MAX) {
-+		flags |= SLI4_INIT_VFI_FLAG_VP;
-+		init_vfi->flags0_word = cpu_to_le16(flags);
-+		init_vfi->vpi = cpu_to_le16(vpi);
-+	}
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_init_vpi(struct sli4 *sli4, void *buf, u16 vpi, u16 vfi)
-+{
-+	struct sli4_cmd_init_vpi *init_vpi = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	init_vpi->hdr.command = SLI4_MBX_CMD_INIT_VPI;
-+	init_vpi->vpi = cpu_to_le16(vpi);
-+	init_vpi->vfi = cpu_to_le16(vfi);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_post_xri(struct sli4 *sli4, void *buf, u16 xri_base, u16 xri_count)
-+{
-+	struct sli4_cmd_post_xri *post_xri = buf;
-+	u16 xri_count_flags = 0;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	post_xri->hdr.command = SLI4_MBX_CMD_POST_XRI;
-+	post_xri->xri_base = cpu_to_le16(xri_base);
-+	xri_count_flags = xri_count & SLI4_POST_XRI_COUNT;
-+	xri_count_flags |= SLI4_POST_XRI_FLAG_ENX;
-+	xri_count_flags |= SLI4_POST_XRI_FLAG_VAL;
-+	post_xri->xri_count_flags = cpu_to_le16(xri_count_flags);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_release_xri(struct sli4 *sli4, void *buf, u8 num_xri)
-+{
-+	struct sli4_cmd_release_xri *release_xri = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	release_xri->hdr.command = SLI4_MBX_CMD_RELEASE_XRI;
-+	release_xri->xri_count_word = cpu_to_le16(num_xri &
-+					SLI4_RELEASE_XRI_COUNT);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+static int
-+sli_cmd_read_config(struct sli4 *sli4, void *buf)
-+{
-+	struct sli4_cmd_read_config *read_config = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	read_config->hdr.command = SLI4_MBX_CMD_READ_CONFIG;
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_read_nvparms(struct sli4 *sli4, void *buf)
-+{
-+	struct sli4_cmd_read_nvparms *read_nvparms = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	read_nvparms->hdr.command = SLI4_MBX_CMD_READ_NVPARMS;
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_write_nvparms(struct sli4 *sli4, void *buf, u8 *wwpn, u8 *wwnn,
-+			u8 hard_alpa, u32 preferred_d_id)
-+{
-+	struct sli4_cmd_write_nvparms *write_nvparms = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	write_nvparms->hdr.command = SLI4_MBX_CMD_WRITE_NVPARMS;
-+	memcpy(write_nvparms->wwpn, wwpn, 8);
-+	memcpy(write_nvparms->wwnn, wwnn, 8);
-+
-+	write_nvparms->hard_alpa_d_id =
-+			cpu_to_le32((preferred_d_id << 8) | hard_alpa);
-+	return EFC_SUCCESS;
-+}
-+
-+static int
-+sli_cmd_read_rev(struct sli4 *sli4, void *buf, struct efc_dma *vpd)
-+{
-+	struct sli4_cmd_read_rev *read_rev = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	read_rev->hdr.command = SLI4_MBX_CMD_READ_REV;
-+
-+	if (vpd && vpd->size) {
-+		read_rev->flags0_word |= cpu_to_le16(SLI4_READ_REV_FLAG_VPD);
-+
-+		read_rev->available_length_dword =
-+			cpu_to_le32(vpd->size &
-+				    SLI4_READ_REV_AVAILABLE_LENGTH);
-+
-+		read_rev->hostbuf.low =
-+				cpu_to_le32(lower_32_bits(vpd->phys));
-+		read_rev->hostbuf.high =
-+				cpu_to_le32(upper_32_bits(vpd->phys));
-+	}
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_read_sparm64(struct sli4 *sli4, void *buf, struct efc_dma *dma, u16 vpi)
-+{
-+	struct sli4_cmd_read_sparm64 *read_sparm64 = buf;
-+
-+	if (vpi == U16_MAX) {
-+		efc_log_err(sli4, "special VPI not supported!!!\n");
-+		return EFC_FAIL;
-+	}
-+
-+	if (!dma || !dma->phys) {
-+		efc_log_err(sli4, "bad DMA buffer\n");
-+		return EFC_FAIL;
-+	}
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	read_sparm64->hdr.command = SLI4_MBX_CMD_READ_SPARM64;
-+
-+	read_sparm64->bde_64.bde_type_buflen =
-+			cpu_to_le32((SLI4_BDE_TYPE_VAL(64)) |
-+				    (dma->size & SLI4_BDE_LEN_MASK));
-+	read_sparm64->bde_64.u.data.low =
-+			cpu_to_le32(lower_32_bits(dma->phys));
-+	read_sparm64->bde_64.u.data.high =
-+			cpu_to_le32(upper_32_bits(dma->phys));
-+
-+	read_sparm64->vpi = cpu_to_le16(vpi);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_read_topology(struct sli4 *sli4, void *buf, struct efc_dma *dma)
-+{
-+	struct sli4_cmd_read_topology *read_topo = buf;
-+
-+	if (!dma || !dma->size)
-+		return EFC_FAIL;
-+
-+	if (dma->size < SLI4_MIN_LOOP_MAP_BYTES) {
-+		efc_log_err(sli4, "loop map buffer too small %zx\n", dma->size);
-+		return EFC_FAIL;
-+	}
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	read_topo->hdr.command = SLI4_MBX_CMD_READ_TOPOLOGY;
-+
-+	memset(dma->virt, 0, dma->size);
-+
-+	read_topo->bde_loop_map.bde_type_buflen =
-+					cpu_to_le32((SLI4_BDE_TYPE_VAL(64)) |
-+					(dma->size & SLI4_BDE_LEN_MASK));
-+	read_topo->bde_loop_map.u.data.low  =
-+				cpu_to_le32(lower_32_bits(dma->phys));
-+	read_topo->bde_loop_map.u.data.high =
-+				cpu_to_le32(upper_32_bits(dma->phys));
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_reg_fcfi(struct sli4 *sli4, void *buf, u16 index,
-+		 struct sli4_cmd_rq_cfg *rq_cfg)
-+{
-+	struct sli4_cmd_reg_fcfi *reg_fcfi = buf;
-+	u32 i;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	reg_fcfi->hdr.command = SLI4_MBX_CMD_REG_FCFI;
-+
-+	reg_fcfi->fcf_index = cpu_to_le16(index);
-+
-+	for (i = 0; i < SLI4_CMD_REG_FCFI_NUM_RQ_CFG; i++) {
-+		switch (i) {
-+		case 0:
-+			reg_fcfi->rqid0 = rq_cfg[0].rq_id;
-+			break;
-+		case 1:
-+			reg_fcfi->rqid1 = rq_cfg[1].rq_id;
-+			break;
-+		case 2:
-+			reg_fcfi->rqid2 = rq_cfg[2].rq_id;
-+			break;
-+		case 3:
-+			reg_fcfi->rqid3 = rq_cfg[3].rq_id;
-+			break;
-+		}
-+		reg_fcfi->rq_cfg[i].r_ctl_mask = rq_cfg[i].r_ctl_mask;
-+		reg_fcfi->rq_cfg[i].r_ctl_match = rq_cfg[i].r_ctl_match;
-+		reg_fcfi->rq_cfg[i].type_mask = rq_cfg[i].type_mask;
-+		reg_fcfi->rq_cfg[i].type_match = rq_cfg[i].type_match;
-+	}
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_reg_fcfi_mrq(struct sli4 *sli4, void *buf, u8 mode, u16 fcf_index,
-+		     u8 rq_selection_policy, u8 mrq_bit_mask, u16 num_mrqs,
-+		     struct sli4_cmd_rq_cfg *rq_cfg)
-+{
-+	struct sli4_cmd_reg_fcfi_mrq *reg_fcfi_mrq = buf;
-+	u32 i;
-+	u32 mrq_flags = 0;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	reg_fcfi_mrq->hdr.command = SLI4_MBX_CMD_REG_FCFI_MRQ;
-+	if (mode == SLI4_CMD_REG_FCFI_SET_FCFI_MODE) {
-+		reg_fcfi_mrq->fcf_index = cpu_to_le16(fcf_index);
-+		goto done;
-+	}
-+
-+	reg_fcfi_mrq->dw8_vlan = cpu_to_le32(SLI4_REGFCFI_MRQ_MODE);
-+
-+	for (i = 0; i < SLI4_CMD_REG_FCFI_NUM_RQ_CFG; i++) {
-+		reg_fcfi_mrq->rq_cfg[i].r_ctl_mask = rq_cfg[i].r_ctl_mask;
-+		reg_fcfi_mrq->rq_cfg[i].r_ctl_match = rq_cfg[i].r_ctl_match;
-+		reg_fcfi_mrq->rq_cfg[i].type_mask = rq_cfg[i].type_mask;
-+		reg_fcfi_mrq->rq_cfg[i].type_match = rq_cfg[i].type_match;
-+
-+		switch (i) {
-+		case 3:
-+			reg_fcfi_mrq->rqid3 = rq_cfg[i].rq_id;
-+			break;
-+		case 2:
-+			reg_fcfi_mrq->rqid2 = rq_cfg[i].rq_id;
-+			break;
-+		case 1:
-+			reg_fcfi_mrq->rqid1 = rq_cfg[i].rq_id;
-+			break;
-+		case 0:
-+			reg_fcfi_mrq->rqid0 = rq_cfg[i].rq_id;
-+			break;
-+		}
-+	}
-+
-+	mrq_flags = num_mrqs & SLI4_REGFCFI_MRQ_MASK_NUM_PAIRS;
-+	mrq_flags |= (mrq_bit_mask << 8);
-+	mrq_flags |= (rq_selection_policy << 12);
-+	reg_fcfi_mrq->dw9_mrqflags = cpu_to_le32(mrq_flags);
-+done:
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_reg_rpi(struct sli4 *sli4, void *buf, u32 rpi, u32 vpi, u32 fc_id,
-+		struct efc_dma *dma, u8 update, u8 enable_t10_pi)
-+{
-+	struct sli4_cmd_reg_rpi *reg_rpi = buf;
-+	u32 rportid_flags = 0;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	reg_rpi->hdr.command = SLI4_MBX_CMD_REG_RPI;
-+
-+	reg_rpi->rpi = cpu_to_le16(rpi);
-+
-+	rportid_flags = fc_id & SLI4_REGRPI_REMOTE_N_PORTID;
-+
-+	if (update)
-+		rportid_flags |= SLI4_REGRPI_UPD;
-+	else
-+		rportid_flags &= ~SLI4_REGRPI_UPD;
-+
-+	if (enable_t10_pi)
-+		rportid_flags |= SLI4_REGRPI_ETOW;
-+	else
-+		rportid_flags &= ~SLI4_REGRPI_ETOW;
-+
-+	reg_rpi->dw2_rportid_flags = cpu_to_le32(rportid_flags);
-+
-+	reg_rpi->bde_64.bde_type_buflen =
-+		cpu_to_le32((SLI4_BDE_TYPE_VAL(64)) |
-+			    (SLI4_REG_RPI_BUF_LEN & SLI4_BDE_LEN_MASK));
-+	reg_rpi->bde_64.u.data.low  =
-+		cpu_to_le32(lower_32_bits(dma->phys));
-+	reg_rpi->bde_64.u.data.high =
-+		cpu_to_le32(upper_32_bits(dma->phys));
-+
-+	reg_rpi->vpi = cpu_to_le16(vpi);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_reg_vfi(struct sli4 *sli4, void *buf, size_t size,
-+		u16 vfi, u16 fcfi, struct efc_dma dma,
-+		u16 vpi, __be64 sli_wwpn, u32 fc_id)
-+{
-+	struct sli4_cmd_reg_vfi *reg_vfi = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	reg_vfi->hdr.command = SLI4_MBX_CMD_REG_VFI;
-+
-+	reg_vfi->vfi = cpu_to_le16(vfi);
-+
-+	reg_vfi->fcfi = cpu_to_le16(fcfi);
-+
-+	reg_vfi->sparm.bde_type_buflen =
-+		cpu_to_le32((SLI4_BDE_TYPE_VAL(64)) |
-+			    (SLI4_REG_RPI_BUF_LEN & SLI4_BDE_LEN_MASK));
-+	reg_vfi->sparm.u.data.low  =
-+		cpu_to_le32(lower_32_bits(dma.phys));
-+	reg_vfi->sparm.u.data.high =
-+		cpu_to_le32(upper_32_bits(dma.phys));
-+
-+	reg_vfi->e_d_tov = cpu_to_le32(sli4->e_d_tov);
-+	reg_vfi->r_a_tov = cpu_to_le32(sli4->r_a_tov);
-+
-+	reg_vfi->dw0w1_flags |= cpu_to_le16(SLI4_REGVFI_VP);
-+	reg_vfi->vpi = cpu_to_le16(vpi);
-+	memcpy(reg_vfi->wwpn, &sli_wwpn, sizeof(reg_vfi->wwpn));
-+	reg_vfi->dw10_lportid_flags = cpu_to_le32(fc_id);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_reg_vpi(struct sli4 *sli4, void *buf, u32 fc_id, __be64 sli_wwpn,
-+		u16 vpi, u16 vfi, bool update)
-+{
-+	struct sli4_cmd_reg_vpi *reg_vpi = buf;
-+	u32 flags = 0;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	reg_vpi->hdr.command = SLI4_MBX_CMD_REG_VPI;
-+
-+	flags = (fc_id & SLI4_REGVPI_LOCAL_N_PORTID);
-+	if (update)
-+		flags |= SLI4_REGVPI_UPD;
-+	else
-+		flags &= ~SLI4_REGVPI_UPD;
-+
-+	reg_vpi->dw2_lportid_flags = cpu_to_le32(flags);
-+	memcpy(reg_vpi->wwpn, &sli_wwpn, sizeof(reg_vpi->wwpn));
-+	reg_vpi->vpi = cpu_to_le16(vpi);
-+	reg_vpi->vfi = cpu_to_le16(vfi);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+static int
-+sli_cmd_request_features(struct sli4 *sli4, void *buf, u32 features_mask,
-+			 bool query)
-+{
-+	struct sli4_cmd_request_features *req_features = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	req_features->hdr.command = SLI4_MBX_CMD_RQST_FEATURES;
-+
-+	if (query)
-+		req_features->dw1_qry = cpu_to_le32(SLI4_REQFEAT_QRY);
-+
-+	req_features->cmd = cpu_to_le32(features_mask);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_unreg_fcfi(struct sli4 *sli4, void *buf, u16 indicator)
-+{
-+	struct sli4_cmd_unreg_fcfi *unreg_fcfi = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	unreg_fcfi->hdr.command = SLI4_MBX_CMD_UNREG_FCFI;
-+	unreg_fcfi->fcfi = cpu_to_le16(indicator);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_unreg_rpi(struct sli4 *sli4, void *buf, u16 indicator,
-+		  enum sli4_resource which, u32 fc_id)
-+{
-+	struct sli4_cmd_unreg_rpi *unreg_rpi = buf;
-+	u32 flags = 0;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	unreg_rpi->hdr.command = SLI4_MBX_CMD_UNREG_RPI;
-+	switch (which) {
-+	case SLI4_RSRC_RPI:
-+		flags |= SLI4_UNREG_RPI_II_RPI;
-+		if (fc_id == U32_MAX)
-+			break;
-+
-+		flags |= SLI4_UNREG_RPI_DP;
-+		unreg_rpi->dw2_dest_n_portid =
-+			cpu_to_le32(fc_id & SLI4_UNREG_RPI_DEST_N_PORTID_MASK);
-+		break;
-+	case SLI4_RSRC_VPI:
-+		flags |= SLI4_UNREG_RPI_II_VPI;
-+		break;
-+	case SLI4_RSRC_VFI:
-+		flags |= SLI4_UNREG_RPI_II_VFI;
-+		break;
-+	case SLI4_RSRC_FCFI:
-+		flags |= SLI4_UNREG_RPI_II_FCFI;
-+		break;
-+	default:
-+		efc_log_info(sli4, "unknown type %#x\n", which);
-+		return EFC_FAIL;
-+	}
-+
-+	unreg_rpi->dw1w1_flags = cpu_to_le16(flags);
-+	unreg_rpi->index = cpu_to_le16(indicator);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_unreg_vfi(struct sli4 *sli4, void *buf, u16 index, u32 which)
-+{
-+	struct sli4_cmd_unreg_vfi *unreg_vfi = buf;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	unreg_vfi->hdr.command = SLI4_MBX_CMD_UNREG_VFI;
-+	switch (which) {
-+	case SLI4_UNREG_TYPE_DOMAIN:
-+		unreg_vfi->index = cpu_to_le16(index);
-+		break;
-+	case SLI4_UNREG_TYPE_FCF:
-+		unreg_vfi->index = cpu_to_le16(index);
-+		break;
-+	case SLI4_UNREG_TYPE_ALL:
-+		unreg_vfi->index = cpu_to_le16(U32_MAX);
-+		break;
-+	default:
-+		return EFC_FAIL;
-+	}
-+
-+	if (which != SLI4_UNREG_TYPE_DOMAIN)
-+		unreg_vfi->dw2_flags = cpu_to_le16(SLI4_UNREG_VFI_II_FCFI);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_unreg_vpi(struct sli4 *sli4, void *buf, u16 indicator, u32 which)
-+{
-+	struct sli4_cmd_unreg_vpi *unreg_vpi = buf;
-+	u32 flags = 0;
-+
-+	memset(buf, 0, SLI4_BMBX_SIZE);
-+
-+	unreg_vpi->hdr.command = SLI4_MBX_CMD_UNREG_VPI;
-+	unreg_vpi->index = cpu_to_le16(indicator);
-+	switch (which) {
-+	case SLI4_UNREG_TYPE_PORT:
-+		flags |= SLI4_UNREG_VPI_II_VPI;
-+		break;
-+	case SLI4_UNREG_TYPE_DOMAIN:
-+		flags |= SLI4_UNREG_VPI_II_VFI;
-+		break;
-+	case SLI4_UNREG_TYPE_FCF:
-+		flags |= SLI4_UNREG_VPI_II_FCFI;
-+		break;
-+	case SLI4_UNREG_TYPE_ALL:
-+		/* override indicator */
-+		unreg_vpi->index = cpu_to_le16(U32_MAX);
-+		flags |= SLI4_UNREG_VPI_II_FCFI;
-+		break;
-+	default:
-+		return EFC_FAIL;
-+	}
-+
-+	unreg_vpi->dw2w0_flags = cpu_to_le16(flags);
-+	return EFC_SUCCESS;
-+}
-+
-+static int
-+sli_cmd_common_modify_eq_delay(struct sli4 *sli4, void *buf,
-+			       struct sli4_queue *q, int num_q, u32 shift,
-+			       u32 delay_mult)
-+{
-+	struct sli4_rqst_cmn_modify_eq_delay *req = NULL;
-+	int i;
-+
-+	req = sli_config_cmd_init(sli4, buf,
-+			SLI4_CFG_PYLD_LENGTH(cmn_modify_eq_delay), NULL);
-+	if (!req)
-+		return EFC_FAIL;
-+
-+	sli_cmd_fill_hdr(&req->hdr, SLI4_CMN_MODIFY_EQ_DELAY,
-+			 SLI4_SUBSYSTEM_COMMON, CMD_V0,
-+			 SLI4_RQST_PYLD_LEN(cmn_modify_eq_delay));
-+	req->num_eq = cpu_to_le32(num_q);
-+
-+	for (i = 0; i < num_q; i++) {
-+		req->eq_delay_record[i].eq_id = cpu_to_le32(q[i].id);
-+		req->eq_delay_record[i].phase = cpu_to_le32(shift);
-+		req->eq_delay_record[i].delay_multiplier =
-+			cpu_to_le32(delay_mult);
-+	}
-+
++	ctx->current_state(ctx, evt, data);
 +	return EFC_SUCCESS;
 +}
 +
 +void
-+sli4_cmd_lowlevel_set_watchdog(struct sli4 *sli4, void *buf,
-+			       size_t size, u16 timeout)
++efc_sm_transition(struct efc_sm_ctx *ctx,
++		  void (*state)(struct efc_sm_ctx *,
++				 enum efc_sm_event, void *), void *data)
++
 +{
-+	struct sli4_rqst_lowlevel_set_watchdog *req = NULL;
-+
-+	req = sli_config_cmd_init(sli4, buf,
-+			SLI4_CFG_PYLD_LENGTH(lowlevel_set_watchdog), NULL);
-+	if (!req)
-+		return;
-+
-+	sli_cmd_fill_hdr(&req->hdr, SLI4_OPC_LOWLEVEL_SET_WATCHDOG,
-+			 SLI4_SUBSYSTEM_LOWLEVEL, CMD_V0,
-+			 SLI4_RQST_PYLD_LEN(lowlevel_set_watchdog));
-+	req->watchdog_timeout = cpu_to_le16(timeout);
-+}
-+
-+static int
-+sli_cmd_common_get_cntl_attributes(struct sli4 *sli4, void *buf,
-+				   struct efc_dma *dma)
-+{
-+	struct sli4_rqst_hdr *hdr = NULL;
-+
-+	hdr = sli_config_cmd_init(sli4, buf, SLI4_RQST_CMDSZ(hdr), dma);
-+	if (!hdr)
-+		return EFC_FAIL;
-+
-+	hdr->opcode = SLI4_CMN_GET_CNTL_ATTRIBUTES;
-+	hdr->subsystem = SLI4_SUBSYSTEM_COMMON;
-+	hdr->request_length = cpu_to_le32(dma->size);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+static int
-+sli_cmd_common_get_cntl_addl_attributes(struct sli4 *sli4, void *buf,
-+					struct efc_dma *dma)
-+{
-+	struct sli4_rqst_hdr *hdr = NULL;
-+
-+	hdr = sli_config_cmd_init(sli4, buf, SLI4_RQST_CMDSZ(hdr), dma);
-+	if (!hdr)
-+		return EFC_FAIL;
-+
-+	hdr->opcode = SLI4_CMN_GET_CNTL_ADDL_ATTRS;
-+	hdr->subsystem = SLI4_SUBSYSTEM_COMMON;
-+	hdr->request_length = cpu_to_le32(dma->size);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_common_nop(struct sli4 *sli4, void *buf, uint64_t context)
-+{
-+	struct sli4_rqst_cmn_nop *nop = NULL;
-+
-+	nop = sli_config_cmd_init(sli4, buf, SLI4_CFG_PYLD_LENGTH(cmn_nop),
-+				  NULL);
-+	if (!nop)
-+		return EFC_FAIL;
-+
-+	sli_cmd_fill_hdr(&nop->hdr, SLI4_CMN_NOP, SLI4_SUBSYSTEM_COMMON,
-+			 CMD_V0, SLI4_RQST_PYLD_LEN(cmn_nop));
-+
-+	memcpy(&nop->context, &context, sizeof(context));
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_common_get_resource_extent_info(struct sli4 *sli4, void *buf, u16 rtype)
-+{
-+	struct sli4_rqst_cmn_get_resource_extent_info *ext = NULL;
-+
-+	ext = sli_config_cmd_init(sli4, buf,
-+			SLI4_RQST_CMDSZ(cmn_get_resource_extent_info), NULL);
-+	if (!ext)
-+		return EFC_FAIL;
-+
-+	sli_cmd_fill_hdr(&ext->hdr, SLI4_CMN_GET_RSC_EXTENT_INFO,
-+			 SLI4_SUBSYSTEM_COMMON, CMD_V0,
-+			 SLI4_RQST_PYLD_LEN(cmn_get_resource_extent_info));
-+
-+	ext->resource_type = cpu_to_le16(rtype);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_common_get_sli4_parameters(struct sli4 *sli4, void *buf)
-+{
-+	struct sli4_rqst_hdr *hdr = NULL;
-+
-+	hdr = sli_config_cmd_init(sli4, buf,
-+			SLI4_CFG_PYLD_LENGTH(cmn_get_sli4_params), NULL);
-+	if (!hdr)
-+		return EFC_FAIL;
-+
-+	hdr->opcode = SLI4_CMN_GET_SLI4_PARAMS;
-+	hdr->subsystem = SLI4_SUBSYSTEM_COMMON;
-+	hdr->request_length = SLI4_RQST_PYLD_LEN(cmn_get_sli4_params);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+static int
-+sli_cmd_common_get_port_name(struct sli4 *sli4, void *buf)
-+{
-+	struct sli4_rqst_cmn_get_port_name *pname;
-+
-+	pname = sli_config_cmd_init(sli4, buf,
-+			SLI4_CFG_PYLD_LENGTH(cmn_get_port_name), NULL);
-+	if (!pname)
-+		return EFC_FAIL;
-+
-+	sli_cmd_fill_hdr(&pname->hdr, SLI4_CMN_GET_PORT_NAME,
-+			 SLI4_SUBSYSTEM_COMMON, CMD_V1,
-+			 SLI4_RQST_PYLD_LEN(cmn_get_port_name));
-+
-+	/* Set the port type value (ethernet=0, FC=1) for V1 commands */
-+	pname->port_type = SLI4_PORT_TYPE_FC;
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_common_write_object(struct sli4 *sli4, void *buf, u16 noc,
-+			    u16 eof, u32 desired_write_length,
-+			    u32 offset, char *obj_name,
-+			    struct efc_dma *dma)
-+{
-+	struct sli4_rqst_cmn_write_object *wr_obj = NULL;
-+	struct sli4_bde *bde;
-+	u32 dwflags = 0;
-+
-+	wr_obj = sli_config_cmd_init(sli4, buf,
-+			SLI4_RQST_CMDSZ(cmn_write_object) + sizeof(*bde), NULL);
-+	if (!wr_obj)
-+		return EFC_FAIL;
-+
-+	sli_cmd_fill_hdr(&wr_obj->hdr, SLI4_CMN_WRITE_OBJECT,
-+		SLI4_SUBSYSTEM_COMMON, CMD_V0,
-+		SLI4_RQST_PYLD_LEN_VAR(cmn_write_object, sizeof(*bde)));
-+
-+	if (noc)
-+		dwflags |= SLI4_RQ_DES_WRITE_LEN_NOC;
-+	if (eof)
-+		dwflags |= SLI4_RQ_DES_WRITE_LEN_EOF;
-+	dwflags |= (desired_write_length & SLI4_RQ_DES_WRITE_LEN);
-+
-+	wr_obj->desired_write_len_dword = cpu_to_le32(dwflags);
-+
-+	wr_obj->write_offset = cpu_to_le32(offset);
-+	strncpy(wr_obj->object_name, obj_name, sizeof(wr_obj->object_name) - 1);
-+	wr_obj->host_buffer_descriptor_count = cpu_to_le32(1);
-+
-+	bde = (struct sli4_bde *)wr_obj->host_buffer_descriptor;
-+
-+	/* Setup to transfer xfer_size bytes to device */
-+	bde->bde_type_buflen =
-+		cpu_to_le32((SLI4_BDE_TYPE_VAL(64)) |
-+			    (desired_write_length & SLI4_BDE_LEN_MASK));
-+	bde->u.data.low = cpu_to_le32(lower_32_bits(dma->phys));
-+	bde->u.data.high = cpu_to_le32(upper_32_bits(dma->phys));
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_common_delete_object(struct sli4 *sli4, void *buf, char *obj_name)
-+{
-+	struct sli4_rqst_cmn_delete_object *req = NULL;
-+
-+	req = sli_config_cmd_init(sli4, buf,
-+				  SLI4_RQST_CMDSZ(cmn_delete_object), NULL);
-+	if (!req)
-+		return EFC_FAIL;
-+
-+	sli_cmd_fill_hdr(&req->hdr, SLI4_CMN_DELETE_OBJECT,
-+			 SLI4_SUBSYSTEM_COMMON, CMD_V0,
-+			 SLI4_RQST_PYLD_LEN(cmn_delete_object));
-+
-+	strncpy(req->object_name, obj_name, sizeof(req->object_name) - 1);
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_common_read_object(struct sli4 *sli4, void *buf, u32 desired_read_len,
-+			   u32 offset, char *obj_name, struct efc_dma *dma)
-+{
-+	struct sli4_rqst_cmn_read_object *rd_obj = NULL;
-+	struct sli4_bde *bde;
-+
-+	rd_obj = sli_config_cmd_init(sli4, buf,
-+			SLI4_RQST_CMDSZ(cmn_read_object) + sizeof(*bde), NULL);
-+	if (!rd_obj)
-+		return EFC_FAIL;
-+
-+	sli_cmd_fill_hdr(&rd_obj->hdr, SLI4_CMN_READ_OBJECT,
-+		SLI4_SUBSYSTEM_COMMON, CMD_V0,
-+		SLI4_RQST_PYLD_LEN_VAR(cmn_read_object, sizeof(*bde)));
-+	rd_obj->desired_read_length_dword =
-+		cpu_to_le32(desired_read_len & SLI4_REQ_DESIRE_READLEN);
-+
-+	rd_obj->read_offset = cpu_to_le32(offset);
-+	strncpy(rd_obj->object_name, obj_name, sizeof(rd_obj->object_name) - 1);
-+	rd_obj->host_buffer_descriptor_count = cpu_to_le32(1);
-+
-+	bde = (struct sli4_bde *)rd_obj->host_buffer_descriptor;
-+
-+	/* Setup to transfer xfer_size bytes to device */
-+	bde->bde_type_buflen =
-+		cpu_to_le32((SLI4_BDE_TYPE_VAL(64)) |
-+			    (desired_read_len & SLI4_BDE_LEN_MASK));
-+	if (dma) {
-+		bde->u.data.low = cpu_to_le32(lower_32_bits(dma->phys));
-+		bde->u.data.high = cpu_to_le32(upper_32_bits(dma->phys));
++	if (ctx->current_state == state) {
++		efc_sm_post_event(ctx, EFC_EVT_REENTER, data);
 +	} else {
-+		bde->u.data.low = 0;
-+		bde->u.data.high = 0;
++		efc_sm_post_event(ctx, EFC_EVT_EXIT, data);
++		ctx->current_state = state;
++		efc_sm_post_event(ctx, EFC_EVT_ENTER, data);
 +	}
++}
 +
-+	return EFC_SUCCESS;
++static char *event_name[] = EFC_SM_EVENT_NAME;
++
++const char *efc_sm_event_name(enum efc_sm_event evt)
++{
++	if (evt > EFC_EVT_LAST)
++		return "unknown";
++
++	return event_name[evt];
++}
+diff --git a/drivers/scsi/elx/libefc/efc_sm.h b/drivers/scsi/elx/libefc/efc_sm.h
+new file mode 100644
+index 000000000000..e28835e7717d
+--- /dev/null
++++ b/drivers/scsi/elx/libefc/efc_sm.h
+@@ -0,0 +1,197 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
++ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
++ *
++ */
++
++/**
++ * Generic state machine framework declarations.
++ */
++
++#ifndef _EFC_SM_H
++#define _EFC_SM_H
++
++struct efc_sm_ctx;
++
++/* State Machine events */
++enum efc_sm_event {
++	/* Common Events */
++	EFC_EVT_ENTER,
++	EFC_EVT_REENTER,
++	EFC_EVT_EXIT,
++	EFC_EVT_SHUTDOWN,
++	EFC_EVT_ALL_CHILD_NODES_FREE,
++	EFC_EVT_RESUME,
++	EFC_EVT_TIMER_EXPIRED,
++
++	/* Domain Events */
++	EFC_EVT_RESPONSE,
++	EFC_EVT_ERROR,
++
++	EFC_EVT_DOMAIN_FOUND,
++	EFC_EVT_DOMAIN_ALLOC_OK,
++	EFC_EVT_DOMAIN_ALLOC_FAIL,
++	EFC_EVT_DOMAIN_REQ_ATTACH,
++	EFC_EVT_DOMAIN_ATTACH_OK,
++	EFC_EVT_DOMAIN_ATTACH_FAIL,
++	EFC_EVT_DOMAIN_LOST,
++	EFC_EVT_DOMAIN_FREE_OK,
++	EFC_EVT_DOMAIN_FREE_FAIL,
++	EFC_EVT_HW_DOMAIN_REQ_ATTACH,
++	EFC_EVT_HW_DOMAIN_REQ_FREE,
++
++	/* Sport Events */
++	EFC_EVT_NPORT_ALLOC_OK,
++	EFC_EVT_NPORT_ALLOC_FAIL,
++	EFC_EVT_NPORT_ATTACH_OK,
++	EFC_EVT_NPORT_ATTACH_FAIL,
++	EFC_EVT_NPORT_FREE_OK,
++	EFC_EVT_NPORT_FREE_FAIL,
++	EFC_EVT_NPORT_TOPOLOGY_NOTIFY,
++	EFC_EVT_HW_PORT_ALLOC_OK,
++	EFC_EVT_HW_PORT_ALLOC_FAIL,
++	EFC_EVT_HW_PORT_ATTACH_OK,
++	EFC_EVT_HW_PORT_REQ_ATTACH,
++	EFC_EVT_HW_PORT_REQ_FREE,
++	EFC_EVT_HW_PORT_FREE_OK,
++
++	/* Login Events */
++	EFC_EVT_SRRS_ELS_REQ_OK,
++	EFC_EVT_SRRS_ELS_CMPL_OK,
++	EFC_EVT_SRRS_ELS_REQ_FAIL,
++	EFC_EVT_SRRS_ELS_CMPL_FAIL,
++	EFC_EVT_SRRS_ELS_REQ_RJT,
++	EFC_EVT_NODE_ATTACH_OK,
++	EFC_EVT_NODE_ATTACH_FAIL,
++	EFC_EVT_NODE_FREE_OK,
++	EFC_EVT_NODE_FREE_FAIL,
++	EFC_EVT_ELS_FRAME,
++	EFC_EVT_ELS_REQ_TIMEOUT,
++	EFC_EVT_ELS_REQ_ABORTED,
++	/* request an ELS IO be aborted */
++	EFC_EVT_ABORT_ELS,
++	/* ELS abort process complete */
++	EFC_EVT_ELS_ABORT_CMPL,
++
++	EFC_EVT_ABTS_RCVD,
++
++	/* node is not in the GID_PT payload */
++	EFC_EVT_NODE_MISSING,
++	/* node is allocated and in the GID_PT payload */
++	EFC_EVT_NODE_REFOUND,
++	/* node shutting down due to PLOGI recvd (implicit logo) */
++	EFC_EVT_SHUTDOWN_IMPLICIT_LOGO,
++	/* node shutting down due to LOGO recvd/sent (explicit logo) */
++	EFC_EVT_SHUTDOWN_EXPLICIT_LOGO,
++
++	EFC_EVT_PLOGI_RCVD,
++	EFC_EVT_FLOGI_RCVD,
++	EFC_EVT_LOGO_RCVD,
++	EFC_EVT_PRLI_RCVD,
++	EFC_EVT_PRLO_RCVD,
++	EFC_EVT_PDISC_RCVD,
++	EFC_EVT_FDISC_RCVD,
++	EFC_EVT_ADISC_RCVD,
++	EFC_EVT_RSCN_RCVD,
++	EFC_EVT_SCR_RCVD,
++	EFC_EVT_ELS_RCVD,
++
++	EFC_EVT_FCP_CMD_RCVD,
++
++	EFC_EVT_GIDPT_DELAY_EXPIRED,
++
++	/* SCSI Target Server events */
++	EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY,
++	EFC_EVT_NODE_DEL_INI_COMPLETE,
++	EFC_EVT_NODE_DEL_TGT_COMPLETE,
++	EFC_EVT_NODE_SESS_REG_OK,
++	EFC_EVT_NODE_SESS_REG_FAIL,
++
++	/* Must be last */
++	EFC_EVT_LAST
++};
++
++/* State Machine event name lookup array */
++#define EFC_SM_EVENT_NAME {						\
++	[EFC_EVT_ENTER]			= "EFC_EVT_ENTER",		\
++	[EFC_EVT_REENTER]		= "EFC_EVT_REENTER",		\
++	[EFC_EVT_EXIT]			= "EFC_EVT_EXIT",		\
++	[EFC_EVT_SHUTDOWN]		= "EFC_EVT_SHUTDOWN",		\
++	[EFC_EVT_ALL_CHILD_NODES_FREE]	= "EFC_EVT_ALL_CHILD_NODES_FREE",\
++	[EFC_EVT_RESUME]		= "EFC_EVT_RESUME",		\
++	[EFC_EVT_TIMER_EXPIRED]		= "EFC_EVT_TIMER_EXPIRED",	\
++	[EFC_EVT_RESPONSE]		= "EFC_EVT_RESPONSE",		\
++	[EFC_EVT_ERROR]			= "EFC_EVT_ERROR",		\
++	[EFC_EVT_DOMAIN_FOUND]		= "EFC_EVT_DOMAIN_FOUND",	\
++	[EFC_EVT_DOMAIN_ALLOC_OK]	= "EFC_EVT_DOMAIN_ALLOC_OK",	\
++	[EFC_EVT_DOMAIN_ALLOC_FAIL]	= "EFC_EVT_DOMAIN_ALLOC_FAIL",	\
++	[EFC_EVT_DOMAIN_REQ_ATTACH]	= "EFC_EVT_DOMAIN_REQ_ATTACH",	\
++	[EFC_EVT_DOMAIN_ATTACH_OK]	= "EFC_EVT_DOMAIN_ATTACH_OK",	\
++	[EFC_EVT_DOMAIN_ATTACH_FAIL]	= "EFC_EVT_DOMAIN_ATTACH_FAIL",	\
++	[EFC_EVT_DOMAIN_LOST]		= "EFC_EVT_DOMAIN_LOST",	\
++	[EFC_EVT_DOMAIN_FREE_OK]	= "EFC_EVT_DOMAIN_FREE_OK",	\
++	[EFC_EVT_DOMAIN_FREE_FAIL]	= "EFC_EVT_DOMAIN_FREE_FAIL",	\
++	[EFC_EVT_HW_DOMAIN_REQ_ATTACH]	= "EFC_EVT_HW_DOMAIN_REQ_ATTACH",\
++	[EFC_EVT_HW_DOMAIN_REQ_FREE]	= "EFC_EVT_HW_DOMAIN_REQ_FREE",	\
++	[EFC_EVT_NPORT_ALLOC_OK]	= "EFC_EVT_NPORT_ALLOC_OK",	\
++	[EFC_EVT_NPORT_ALLOC_FAIL]	= "EFC_EVT_NPORT_ALLOC_FAIL",	\
++	[EFC_EVT_NPORT_ATTACH_OK]	= "EFC_EVT_NPORT_ATTACH_OK",	\
++	[EFC_EVT_NPORT_ATTACH_FAIL]	= "EFC_EVT_NPORT_ATTACH_FAIL",	\
++	[EFC_EVT_NPORT_FREE_OK]		= "EFC_EVT_NPORT_FREE_OK",	\
++	[EFC_EVT_NPORT_FREE_FAIL]	= "EFC_EVT_NPORT_FREE_FAIL",	\
++	[EFC_EVT_NPORT_TOPOLOGY_NOTIFY]	= "EFC_EVT_NPORT_TOPOLOGY_NOTIFY",\
++	[EFC_EVT_HW_PORT_ALLOC_OK]	= "EFC_EVT_HW_PORT_ALLOC_OK",	\
++	[EFC_EVT_HW_PORT_ALLOC_FAIL]	= "EFC_EVT_HW_PORT_ALLOC_FAIL",	\
++	[EFC_EVT_HW_PORT_ATTACH_OK]	= "EFC_EVT_HW_PORT_ATTACH_OK",	\
++	[EFC_EVT_HW_PORT_REQ_ATTACH]	= "EFC_EVT_HW_PORT_REQ_ATTACH",	\
++	[EFC_EVT_HW_PORT_REQ_FREE]	= "EFC_EVT_HW_PORT_REQ_FREE",	\
++	[EFC_EVT_HW_PORT_FREE_OK]	= "EFC_EVT_HW_PORT_FREE_OK",	\
++	[EFC_EVT_SRRS_ELS_REQ_OK]	= "EFC_EVT_SRRS_ELS_REQ_OK",	\
++	[EFC_EVT_SRRS_ELS_CMPL_OK]	= "EFC_EVT_SRRS_ELS_CMPL_OK",	\
++	[EFC_EVT_SRRS_ELS_REQ_FAIL]	= "EFC_EVT_SRRS_ELS_REQ_FAIL",	\
++	[EFC_EVT_SRRS_ELS_CMPL_FAIL]	= "EFC_EVT_SRRS_ELS_CMPL_FAIL",	\
++	[EFC_EVT_SRRS_ELS_REQ_RJT]	= "EFC_EVT_SRRS_ELS_REQ_RJT",	\
++	[EFC_EVT_NODE_ATTACH_OK]	= "EFC_EVT_NODE_ATTACH_OK",	\
++	[EFC_EVT_NODE_ATTACH_FAIL]	= "EFC_EVT_NODE_ATTACH_FAIL",	\
++	[EFC_EVT_NODE_FREE_OK]		= "EFC_EVT_NODE_FREE_OK",	\
++	[EFC_EVT_NODE_FREE_FAIL]	= "EFC_EVT_NODE_FREE_FAIL",	\
++	[EFC_EVT_ELS_FRAME]		= "EFC_EVT_ELS_FRAME",		\
++	[EFC_EVT_ELS_REQ_TIMEOUT]	= "EFC_EVT_ELS_REQ_TIMEOUT",	\
++	[EFC_EVT_ELS_REQ_ABORTED]	= "EFC_EVT_ELS_REQ_ABORTED",	\
++	[EFC_EVT_ABORT_ELS]		= "EFC_EVT_ABORT_ELS",		\
++	[EFC_EVT_ELS_ABORT_CMPL]	= "EFC_EVT_ELS_ABORT_CMPL",	\
++	[EFC_EVT_ABTS_RCVD]		= "EFC_EVT_ABTS_RCVD",		\
++	[EFC_EVT_NODE_MISSING]		= "EFC_EVT_NODE_MISSING",	\
++	[EFC_EVT_NODE_REFOUND]		= "EFC_EVT_NODE_REFOUND",	\
++	[EFC_EVT_SHUTDOWN_IMPLICIT_LOGO] = "EFC_EVT_SHUTDOWN_IMPLICIT_LOGO",\
++	[EFC_EVT_SHUTDOWN_EXPLICIT_LOGO] = "EFC_EVT_SHUTDOWN_EXPLICIT_LOGO",\
++	[EFC_EVT_PLOGI_RCVD]		= "EFC_EVT_PLOGI_RCVD",		\
++	[EFC_EVT_FLOGI_RCVD]		= "EFC_EVT_FLOGI_RCVD",		\
++	[EFC_EVT_LOGO_RCVD]		= "EFC_EVT_LOGO_RCVD",		\
++	[EFC_EVT_PRLI_RCVD]		= "EFC_EVT_PRLI_RCVD",		\
++	[EFC_EVT_PRLO_RCVD]		= "EFC_EVT_PRLO_RCVD",		\
++	[EFC_EVT_PDISC_RCVD]		= "EFC_EVT_PDISC_RCVD",		\
++	[EFC_EVT_FDISC_RCVD]		= "EFC_EVT_FDISC_RCVD",		\
++	[EFC_EVT_ADISC_RCVD]		= "EFC_EVT_ADISC_RCVD",		\
++	[EFC_EVT_RSCN_RCVD]		= "EFC_EVT_RSCN_RCVD",		\
++	[EFC_EVT_SCR_RCVD]		= "EFC_EVT_SCR_RCVD",		\
++	[EFC_EVT_ELS_RCVD]		= "EFC_EVT_ELS_RCVD",		\
++	[EFC_EVT_FCP_CMD_RCVD]		= "EFC_EVT_FCP_CMD_RCVD",	\
++	[EFC_EVT_NODE_DEL_INI_COMPLETE]	= "EFC_EVT_NODE_DEL_INI_COMPLETE",\
++	[EFC_EVT_NODE_DEL_TGT_COMPLETE]	= "EFC_EVT_NODE_DEL_TGT_COMPLETE",\
++	[EFC_EVT_LAST]			= "EFC_EVT_LAST",		\
 +}
 +
 +int
-+sli_cmd_dmtf_exec_clp_cmd(struct sli4 *sli4, void *buf, struct efc_dma *cmd,
-+			  struct efc_dma *resp)
-+{
-+	struct sli4_rqst_dmtf_exec_clp_cmd *clp_cmd = NULL;
++efc_sm_post_event(struct efc_sm_ctx *ctx,
++		  enum efc_sm_event evt, void *data);
++void
++efc_sm_transition(struct efc_sm_ctx *ctx,
++		  void (*state)(struct efc_sm_ctx *ctx,
++				 enum efc_sm_event evt, void *arg),
++		  void *data);
++void efc_sm_disable(struct efc_sm_ctx *ctx);
++const char *efc_sm_event_name(enum efc_sm_event evt);
 +
-+	clp_cmd = sli_config_cmd_init(sli4, buf,
-+				SLI4_RQST_CMDSZ(dmtf_exec_clp_cmd), NULL);
-+	if (!clp_cmd)
-+		return EFC_FAIL;
-+
-+	sli_cmd_fill_hdr(&clp_cmd->hdr, DMTF_EXEC_CLP_CMD, SLI4_SUBSYSTEM_DMTF,
-+			 CMD_V0, SLI4_RQST_PYLD_LEN(dmtf_exec_clp_cmd));
-+
-+	clp_cmd->cmd_buf_length = cpu_to_le32(cmd->size);
-+	clp_cmd->cmd_buf_addr_low =  cpu_to_le32(lower_32_bits(cmd->phys));
-+	clp_cmd->cmd_buf_addr_high =  cpu_to_le32(upper_32_bits(cmd->phys));
-+	clp_cmd->resp_buf_length = cpu_to_le32(resp->size);
-+	clp_cmd->resp_buf_addr_low =  cpu_to_le32(lower_32_bits(resp->phys));
-+	clp_cmd->resp_buf_addr_high =  cpu_to_le32(upper_32_bits(resp->phys));
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_common_set_dump_location(struct sli4 *sli4, void *buf, bool query,
-+				 bool is_buffer_list,
-+				 struct efc_dma *buffer, u8 fdb)
-+{
-+	struct sli4_rqst_cmn_set_dump_location *set_dump_loc = NULL;
-+	u32 buffer_length_flag = 0;
-+
-+	set_dump_loc = sli_config_cmd_init(sli4, buf,
-+				SLI4_RQST_CMDSZ(cmn_set_dump_location), NULL);
-+	if (!set_dump_loc)
-+		return EFC_FAIL;
-+
-+	sli_cmd_fill_hdr(&set_dump_loc->hdr, SLI4_CMN_SET_DUMP_LOCATION,
-+			 SLI4_SUBSYSTEM_COMMON, CMD_V0,
-+			 SLI4_RQST_PYLD_LEN(cmn_set_dump_location));
-+
-+	if (is_buffer_list)
-+		buffer_length_flag |= SLI4_CMN_SET_DUMP_BLP;
-+
-+	if (query)
-+		buffer_length_flag |= SLI4_CMN_SET_DUMP_QRY;
-+
-+	if (fdb)
-+		buffer_length_flag |= SLI4_CMN_SET_DUMP_FDB;
-+
-+	if (buffer) {
-+		set_dump_loc->buf_addr_low =
-+			cpu_to_le32(lower_32_bits(buffer->phys));
-+		set_dump_loc->buf_addr_high =
-+			cpu_to_le32(upper_32_bits(buffer->phys));
-+
-+		buffer_length_flag |=
-+			buffer->len & SLI4_CMN_SET_DUMP_BUFFER_LEN;
-+	} else {
-+		set_dump_loc->buf_addr_low = 0;
-+		set_dump_loc->buf_addr_high = 0;
-+		set_dump_loc->buffer_length_dword = 0;
-+	}
-+	set_dump_loc->buffer_length_dword = cpu_to_le32(buffer_length_flag);
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cmd_common_set_features(struct sli4 *sli4, void *buf, u32 feature,
-+			    u32 param_len, void *parameter)
-+{
-+	struct sli4_rqst_cmn_set_features *cmd = NULL;
-+
-+	cmd = sli_config_cmd_init(sli4, buf,
-+				  SLI4_RQST_CMDSZ(cmn_set_features), NULL);
-+	if (!cmd)
-+		return EFC_FAIL;
-+
-+	sli_cmd_fill_hdr(&cmd->hdr, SLI4_CMN_SET_FEATURES,
-+			 SLI4_SUBSYSTEM_COMMON, CMD_V0,
-+			 SLI4_RQST_PYLD_LEN(cmn_set_features));
-+
-+	cmd->feature = cpu_to_le32(feature);
-+	cmd->param_len = cpu_to_le32(param_len);
-+	memcpy(cmd->params, parameter, param_len);
-+
-+	return EFC_SUCCESS;
-+}
-+
-+int
-+sli_cqe_mq(struct sli4 *sli4, void *buf)
-+{
-+	struct sli4_mcqe *mcqe = buf;
-+	u32 dwflags = le32_to_cpu(mcqe->dw3_flags);
-+	/*
-+	 * Firmware can split mbx completions into two MCQEs: first with only
-+	 * the "consumed" bit set and a second with the "complete" bit set.
-+	 * Thus, ignore MCQE unless "complete" is set.
-+	 */
-+	if (!(dwflags & SLI4_MCQE_COMPLETED))
-+		return SLI4_MCQE_STATUS_NOT_COMPLETED;
-+
-+	if (le16_to_cpu(mcqe->completion_status)) {
-+		efc_log_info(sli4, "status(st=%#x ext=%#x con=%d cmp=%d ae=%d val=%d)\n",
-+			le16_to_cpu(mcqe->completion_status),
-+			      le16_to_cpu(mcqe->extended_status),
-+			      (dwflags & SLI4_MCQE_CONSUMED),
-+			      (dwflags & SLI4_MCQE_COMPLETED),
-+			      (dwflags & SLI4_MCQE_AE),
-+			      (dwflags & SLI4_MCQE_VALID));
-+	}
-+
-+	return le16_to_cpu(mcqe->completion_status);
-+}
-+
-+int
-+sli_cqe_async(struct sli4 *sli4, void *buf)
-+{
-+	struct sli4_acqe *acqe = buf;
-+	int rc = EFC_FAIL;
-+
-+	if (!buf) {
-+		efc_log_err(sli4, "bad parameter sli4=%p buf=%p\n", sli4, buf);
-+		return EFC_FAIL;
-+	}
-+
-+	switch (acqe->event_code) {
-+	case SLI4_ACQE_EVENT_CODE_LINK_STATE:
-+		efc_log_info(sli4, "Unsupported by FC link, evt code:%#x\n",
-+			     acqe->event_code);
-+		break;
-+	case SLI4_ACQE_EVENT_CODE_GRP_5:
-+		efc_log_info(sli4, "ACQE GRP5\n");
-+		break;
-+	case SLI4_ACQE_EVENT_CODE_SLI_PORT_EVENT:
-+		efc_log_info(sli4, "ACQE SLI Port, type=0x%x, data1,2=0x%08x,0x%08x\n",
-+			acqe->event_type,
-+			le32_to_cpu(acqe->event_data[0]),
-+			le32_to_cpu(acqe->event_data[1]));
-+		break;
-+	case SLI4_ACQE_EVENT_CODE_FC_LINK_EVENT:
-+		rc = sli_fc_process_link_attention(sli4, buf);
-+		break;
-+	default:
-+		efc_log_info(sli4, "ACQE unknown=%#x\n",
-+			acqe->event_code);
-+	}
-+
-+	return rc;
-+}
++#endif /* ! _EFC_SM_H */
 -- 
 2.26.2
 
