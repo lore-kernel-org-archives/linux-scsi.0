@@ -2,283 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B529C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 22:25:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B366C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 22:26:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13EEF2251E
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 22:25:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A0162251E
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 22:26:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726256AbhADWZQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 17:25:16 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:32408 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726074AbhADWZO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 17:25:14 -0500
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 104MJ3OP025436;
-        Mon, 4 Jan 2021 17:24:26 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=/Yp10RyM//OGreXTa1xi/YsoDt+1g/GYthpRZ6iOldE=;
- b=MSqwNRG3XQuUsySAsc/8Zd0NnGTt7/T8Y3AScq6ZSkhiv0Ph2sxkxoBpW9DqGkYf9ro7
- aKjzQrj0KxC5k64mSJag3/8LhwJubd0kriO8FtSCMxPop45lPJqciIlmlJ7pZmJ9gDm+
- TuX9lFvsBtak98CS9Bl9N706VjFRSHpv8SiDeW+8V1+/ZbW7huxbsuEmZQNz5eX1lkAe
- /zsPKrTN2RBIIiGazsvFl0YKoti9WrHaq8u5QN2Qm3hpUnCnAQXR+HB3FV06tVrklS31
- 8vnwpH6fiapytoqI4RX5vHgL3CkeitEggy9jxs9QAomGQQeTX4RBtxHGqOaNAMhqazQC XA== 
-Received: from ppma02wdc.us.ibm.com (aa.5b.37a9.ip4.static.sl-reverse.com [169.55.91.170])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 35vbq58204-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 04 Jan 2021 17:24:26 -0500
-Received: from pps.filterd (ppma02wdc.us.ibm.com [127.0.0.1])
-        by ppma02wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 104MHok4004753;
-        Mon, 4 Jan 2021 22:24:26 GMT
-Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
-        by ppma02wdc.us.ibm.com with ESMTP id 35tgf8scwf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 04 Jan 2021 22:24:25 +0000
-Received: from b03ledav001.gho.boulder.ibm.com (b03ledav001.gho.boulder.ibm.com [9.17.130.232])
-        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 104MOOqK20775408
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 4 Jan 2021 22:24:24 GMT
-Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B7D026E04C;
-        Mon,  4 Jan 2021 22:24:24 +0000 (GMT)
-Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6DA9B6E059;
-        Mon,  4 Jan 2021 22:24:24 +0000 (GMT)
-Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
-        by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Mon,  4 Jan 2021 22:24:24 +0000 (GMT)
-From:   Tyrel Datwyler <tyreld@linux.ibm.com>
-To:     james.bottomley@hansenpartnership.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH v2 4/5] ibmvfc: complete commands outside the host/queue lock
-Date:   Mon,  4 Jan 2021 16:24:22 -0600
-Message-Id: <20210104222422.981457-1-tyreld@linux.ibm.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201218231916.279833-5-tyreld@linux.ibm.com>
-References: <20201218231916.279833-5-tyreld@linux.ibm.com>
+        id S1726680AbhADWZ5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 17:25:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46518 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726289AbhADWZ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 Jan 2021 17:25:57 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6850822522;
+        Mon,  4 Jan 2021 22:25:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1609799116;
+        bh=Moh1Im9+alXtJJK1YOL7K6rqnZB2FhHs23YlgDF6keU=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=dIu7OlXTpr40Bd3Y1w4HFmWQiZG32R8yHx66zUYLCVMFon6hcTpiLC9UrL0NXrbyQ
+         OXINU/zPk1KxO5uPCbWtsws3hAi3GCrbzdFuPY52Prn3lqBYY2v6vwi5ZDMItZ2AzZ
+         Yn7hfxFROn7TVC8foTgohNzaOUkprRlte4PrZo4GrZZTJkzWUeM5IqNsjZXtRGOtd4
+         AJkGoEnP6Oful8hRotrqetvfSKGKOIACtuV0MHd/+yhNoHjY8k/Y6Y+56PfjWbEzUa
+         tTo1PSshm0FIgFcxY7waGbMQLxBJXcaqTJsf5Ziz5cki0Rzlq3LjztUNHadz+XHHrS
+         OxMCoy0U2l70w==
+Received: by mail-oo1-f44.google.com with SMTP id x23so6655732oop.1;
+        Mon, 04 Jan 2021 14:25:16 -0800 (PST)
+X-Gm-Message-State: AOAM531HbdXubHCDLwBSu3i7RQxAEpDhdnPAkGcDBGWWUBwhmPiVLXcN
+        Kjpjs6+jXAGhWvM8ALmvYO/oIm8K3LmC2x99JV0=
+X-Google-Smtp-Source: ABdhPJzU7lxA3RMtpM1O2RkpS8lnhhhv7nbKAojeMrdvGNK4FnPfTaCRqXG+DdKLY1S/2NMem6TUSzDvIvx/Y3Hcsgg=
+X-Received: by 2002:a4a:2cc9:: with SMTP id o192mr49383360ooo.66.1609799115782;
+ Mon, 04 Jan 2021 14:25:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2021-01-04_14:2021-01-04,2021-01-04 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
- lowpriorityscore=0 spamscore=0 priorityscore=1501 clxscore=1015
- mlxlogscore=999 bulkscore=0 malwarescore=0 mlxscore=0 phishscore=0
- suspectscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2009150000 definitions=main-2101040130
+References: <20200908213715.3553098-1-arnd@arndb.de> <20200908213715.3553098-2-arnd@arndb.de>
+ <20201231001553.GB16945@home.linuxace.com> <CAK8P3a0_WORgd4Wvd3n+59oR=-rrESwg_MgpDJN4xPo_e6ir5Q@mail.gmail.com>
+ <20210104174826.GA76610@home.linuxace.com>
+In-Reply-To: <20210104174826.GA76610@home.linuxace.com>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Mon, 4 Jan 2021 23:24:59 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a0FUL2FpF1Av47CK-9G3R9QdT3ihhA93gsFvfLVO3kC+Q@mail.gmail.com>
+Message-ID: <CAK8P3a0FUL2FpF1Av47CK-9G3R9QdT3ihhA93gsFvfLVO3kC+Q@mail.gmail.com>
+Subject: Re: [PATCH 2/3] scsi: megaraid_sas: check user-provided offsets
+To:     Phil Oester <kernel@linuxace.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "# 3.4.x" <stable@vger.kernel.org>,
+        Anand Lodnoor <anand.lodnoor@broadcom.com>,
+        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>, megaraidlinux.pdl@broadcom.com,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Drain the command queue and place all commands on a completion list.
-Perform command completion on that list outside the host/queue locks.
-Further, move purged command compeletions outside the host_lock as well.
+On Mon, Jan 4, 2021 at 6:48 PM Phil Oester <kernel@linuxace.com> wrote:
+>
+> On Sun, Jan 03, 2021 at 05:26:29PM +0100, Arnd Bergmann wrote:
+> > Thank you for the report and bisecting the issue, and sorry this broke
+> > your system!
+> >
+> > Fortunately, the patch is fairly small, so there are only a limited number
+> > of things that could go wrong. I haven't tried to analyze that message,
+> > but I have two ideas:
+> >
+> > a) The added ioc->sense_off check gets triggered and the code relies
+> >   on the data being written outside of the structure
+> >
+> > b) the address actually needs to always be written as a 64-bit value
+> >     regardless of the instance->consistent_mask_64bit flag, as the
+> >    driver did before. This looked like it was done in error.
+> >
+> > Can you try the patch below instead of the revert and see if that
+> > resolves the regression, and if it triggers the warning message I
+> > add?
+>
+> Thanks Arnd, I tried your patch and it resolves the regression.  It does not
+> trigger the warning message you added.
 
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
----
+Ok, thanks for testing! That would mean the range check is correct,
+but the sense pointer must indeed be treated as a 64-bit entity
+regardless of instance->consistent_mask_64bit, or at least the
+upper 32 bit must be zero when the flag is unset, rather than
+the recycled previous value.
 
-Changes in v2:
-* Changed ibmvfc_locked_done to static fixing no-prototype warning
+I'll send a proper fix shortly, it would be nice if you could give it
+another spin, but the behavior should be the same as this patch.
 
- drivers/scsi/ibmvscsi/ibmvfc.c | 58 ++++++++++++++++++++++++++--------
- drivers/scsi/ibmvscsi/ibmvfc.h |  3 +-
- 2 files changed, 47 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 69a6401ca504..f680f96d5d06 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -894,7 +894,7 @@ static void ibmvfc_scsi_eh_done(struct ibmvfc_event *evt)
-  * @purge_list:		list head of failed commands
-  *
-  * This function runs completions on commands to fail as a result of a
-- * host reset or platform migration. Caller must hold host_lock.
-+ * host reset or platform migration.
-  **/
- static void ibmvfc_complete_purge(struct list_head *purge_list)
- {
-@@ -1407,6 +1407,23 @@ static struct ibmvfc_event *ibmvfc_get_event(struct ibmvfc_queue *queue)
- 	return evt;
- }
- 
-+/**
-+ * ibmvfc_locked_done - Calls evt completion with host_lock held
-+ * @evt:	ibmvfc evt to complete
-+ *
-+ * All non-scsi command completion callbacks have the expectation that the
-+ * host_lock is held. This callback is used by ibmvfc_init_event to wrap a
-+ * MAD evt with the host_lock.
-+ **/
-+static void ibmvfc_locked_done(struct ibmvfc_event *evt)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(evt->vhost->host->host_lock, flags);
-+	evt->_done(evt);
-+	spin_unlock_irqrestore(evt->vhost->host->host_lock, flags);
-+}
-+
- /**
-  * ibmvfc_init_event - Initialize fields in an event struct that are always
-  *				required.
-@@ -1419,9 +1436,14 @@ static void ibmvfc_init_event(struct ibmvfc_event *evt,
- {
- 	evt->cmnd = NULL;
- 	evt->sync_iu = NULL;
--	evt->crq.format = format;
--	evt->done = done;
- 	evt->eh_comp = NULL;
-+	evt->crq.format = format;
-+	if (format == IBMVFC_CMD_FORMAT)
-+		evt->done = done;
-+	else {
-+		evt->_done = done;
-+		evt->done = ibmvfc_locked_done;
-+	}
- }
- 
- /**
-@@ -1640,7 +1662,9 @@ static void ibmvfc_relogin(struct scsi_device *sdev)
- 	struct ibmvfc_host *vhost = shost_priv(sdev->host);
- 	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
- 	struct ibmvfc_target *tgt;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(vhost->host->host_lock, flags);
- 	list_for_each_entry(tgt, &vhost->targets, queue) {
- 		if (rport == tgt->rport) {
- 			ibmvfc_del_tgt(tgt);
-@@ -1649,6 +1673,7 @@ static void ibmvfc_relogin(struct scsi_device *sdev)
- 	}
- 
- 	ibmvfc_reinit_host(vhost);
-+	spin_unlock_irqrestore(vhost->host->host_lock, flags);
- }
- 
- /**
-@@ -2901,7 +2926,8 @@ static void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
-  * @vhost:	ibmvfc host struct
-  *
-  **/
--static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost)
-+static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost,
-+			      struct list_head *evt_doneq)
- {
- 	long rc;
- 	struct ibmvfc_event *evt = (struct ibmvfc_event *)be64_to_cpu(crq->ioba);
-@@ -2972,12 +2998,9 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost)
- 		return;
- 	}
- 
--	del_timer(&evt->timer);
- 	spin_lock(&evt->queue->l_lock);
--	list_del(&evt->queue_list);
-+	list_move_tail(&evt->queue_list, evt_doneq);
- 	spin_unlock(&evt->queue->l_lock);
--	ibmvfc_trc_end(evt);
--	evt->done(evt);
- }
- 
- /**
-@@ -3364,8 +3387,10 @@ static void ibmvfc_tasklet(void *data)
- 	struct vio_dev *vdev = to_vio_dev(vhost->dev);
- 	struct ibmvfc_crq *crq;
- 	struct ibmvfc_async_crq *async;
-+	struct ibmvfc_event *evt, *temp;
- 	unsigned long flags;
- 	int done = 0;
-+	LIST_HEAD(evt_doneq);
- 
- 	spin_lock_irqsave(vhost->host->host_lock, flags);
- 	spin_lock(vhost->crq.q_lock);
-@@ -3379,7 +3404,7 @@ static void ibmvfc_tasklet(void *data)
- 
- 		/* Pull all the valid messages off the CRQ */
- 		while ((crq = ibmvfc_next_crq(vhost)) != NULL) {
--			ibmvfc_handle_crq(crq, vhost);
-+			ibmvfc_handle_crq(crq, vhost, &evt_doneq);
- 			crq->valid = 0;
- 			wmb();
- 		}
-@@ -3392,7 +3417,7 @@ static void ibmvfc_tasklet(void *data)
- 			wmb();
- 		} else if ((crq = ibmvfc_next_crq(vhost)) != NULL) {
- 			vio_disable_interrupts(vdev);
--			ibmvfc_handle_crq(crq, vhost);
-+			ibmvfc_handle_crq(crq, vhost, &evt_doneq);
- 			crq->valid = 0;
- 			wmb();
- 		} else
-@@ -3401,6 +3426,13 @@ static void ibmvfc_tasklet(void *data)
- 
- 	spin_unlock(vhost->crq.q_lock);
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+
-+	list_for_each_entry_safe(evt, temp, &evt_doneq, queue_list) {
-+		del_timer(&evt->timer);
-+		list_del(&evt->queue_list);
-+		ibmvfc_trc_end(evt);
-+		evt->done(evt);
-+	}
- }
- 
- /**
-@@ -4790,8 +4822,8 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
- 	case IBMVFC_HOST_ACTION_RESET:
- 		vhost->action = IBMVFC_HOST_ACTION_TGT_DEL;
- 		list_splice_init(&vhost->purge, &purge);
--		ibmvfc_complete_purge(&purge);
- 		spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+		ibmvfc_complete_purge(&purge);
- 		rc = ibmvfc_reset_crq(vhost);
- 		spin_lock_irqsave(vhost->host->host_lock, flags);
- 		if (rc == H_CLOSED)
-@@ -4805,8 +4837,8 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
- 	case IBMVFC_HOST_ACTION_REENABLE:
- 		vhost->action = IBMVFC_HOST_ACTION_TGT_DEL;
- 		list_splice_init(&vhost->purge, &purge);
--		ibmvfc_complete_purge(&purge);
- 		spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+		ibmvfc_complete_purge(&purge);
- 		rc = ibmvfc_reenable_crq_queue(vhost);
- 		spin_lock_irqsave(vhost->host->host_lock, flags);
- 		if (rc || (rc = ibmvfc_send_crq_init(vhost))) {
-@@ -5369,8 +5401,8 @@ static int ibmvfc_remove(struct vio_dev *vdev)
- 	spin_lock_irqsave(vhost->host->host_lock, flags);
- 	ibmvfc_purge_requests(vhost, DID_ERROR);
- 	list_splice_init(&vhost->purge, &purge);
--	ibmvfc_complete_purge(&purge);
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+	ibmvfc_complete_purge(&purge);
- 	ibmvfc_free_event_pool(vhost, &vhost->crq);
- 
- 	ibmvfc_free_mem(vhost);
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-index faf5b50d65b9..632e977449c5 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.h
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-@@ -733,7 +733,8 @@ struct ibmvfc_event {
- 	struct scsi_cmnd *cmnd;
- 	atomic_t free;
- 	union ibmvfc_iu *xfer_iu;
--	void (*done) (struct ibmvfc_event *);
-+	void (*done)(struct ibmvfc_event *evt);
-+	void (*_done)(struct ibmvfc_event *evt);
- 	struct ibmvfc_crq crq;
- 	union ibmvfc_iu iu;
- 	union ibmvfc_iu *sync_iu;
--- 
-2.27.0
-
+       Arnd
