@@ -2,94 +2,164 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92A55C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 09:16:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BC68C43381
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 10:48:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4FA0921D93
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 09:16:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7577E224F9
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 10:48:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726333AbhADJQ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 04:16:27 -0500
-Received: from mga06.intel.com ([134.134.136.31]:20029 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726029AbhADJQ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Jan 2021 04:16:27 -0500
-IronPort-SDR: zHbpo+yy1yx8S6yMJ23uwwiK4ahoATJ+NWZJCmS/wpugeI9ewfnZTHCfXKc2rfrzLlmPPZ7cbT
- 2kwp6SGDBFZA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9853"; a="238480473"
-X-IronPort-AV: E=Sophos;i="5.78,473,1599548400"; 
-   d="scan'208";a="238480473"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jan 2021 01:15:45 -0800
-IronPort-SDR: b7X9+Jo+qFrJ1FgbRx9pH3NHIwGowsTxAjKIdaJ0mMTFSovdQ5+zqmk7fLyfZbmcMG0sDkIDUa
- T5szOEwBfyDg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.78,473,1599548400"; 
-   d="scan'208";a="349833423"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.94]) ([10.237.72.94])
-  by fmsmga008.fm.intel.com with ESMTP; 04 Jan 2021 01:15:37 -0800
-Subject: Re: [PATCH RFC v4 1/1] scsi: ufs: Fix ufs power down/on specs
- violation
-To:     Ziqi Chen <ziqichen@codeaurora.org>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, cang@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        vinholikatti@gmail.com, jejb@linux.vnet.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        kwmad.kim@samsung.com, stanley.chu@mediatek.com
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>
-References: <1608644981-46267-1-git-send-email-ziqichen@codeaurora.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <e8980753-fa48-7862-e5ce-0d756d5d97a6@intel.com>
-Date:   Mon, 4 Jan 2021 11:15:23 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1726948AbhADKsl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 05:48:41 -0500
+Received: from mailout3.samsung.com ([203.254.224.33]:55488 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726929AbhADKsk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 05:48:40 -0500
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210104104757epoutp03d4996269d2841b4c5f515935b841b908~XAbcE02DF0087500875epoutp03B
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Jan 2021 10:47:57 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210104104757epoutp03d4996269d2841b4c5f515935b841b908~XAbcE02DF0087500875epoutp03B
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1609757277;
+        bh=se1iOPEZbpJwXQhd0pgbmujHr0vCQMYue/1sZVmCAt8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=P0Yw5KzH19Zu3gXh+13AhhgSH6DKdnZnQxLlovu2paw8APiR94L+Rp4Msec0wFOFZ
+         IBXlqYK1FQORfnJDAGYbOLLI1+apqzdBS6dx9c9lCF7mx8nZL3RKV6429GsPlKNevf
+         GEgl38tRErGCxpJXcVaK8WyLW2wmTyyhhk5E4GUs=
+Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20210104104756epcas5p2463d7073352e6e05c863a2e0fa5e6c3e~XAbbZzIUP1369413694epcas5p2K;
+        Mon,  4 Jan 2021 10:47:56 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        54.EB.15682.C52F2FF5; Mon,  4 Jan 2021 19:47:56 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+        20210104104245epcas5p26ed395efbf74e78a4e44048a6d7d6ba7~XAW5TGqSH1410114101epcas5p2B;
+        Mon,  4 Jan 2021 10:42:45 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20210104104245epsmtrp26734063a694e2facc96f3b410277c463~XAW5L3Al02765227652epsmtrp2a;
+        Mon,  4 Jan 2021 10:42:45 +0000 (GMT)
+X-AuditID: b6c32a49-8bfff70000013d42-ee-5ff2f25c2282
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E8.49.13470.421F2FF5; Mon,  4 Jan 2021 19:42:44 +0900 (KST)
+Received: from localhost.localdomain (unknown [107.110.206.5]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20210104104241epsmtip117c7fe2b1a2f9988eaeba82911994104~XAW2Q7Njl1453914539epsmtip1b;
+        Mon,  4 Jan 2021 10:42:41 +0000 (GMT)
+From:   SelvaKumar S <selvakuma.s1@samsung.com>
+To:     linux-nvme@lists.infradead.org
+Cc:     kbusch@kernel.org, axboe@kernel.dk, damien.lemoal@wdc.com,
+        Johannes.Thumshirn@wdc.com, hch@lst.de, sagi@grimberg.me,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        bvanassche@acm.org, mpatocka@redhat.com, hare@suse.de,
+        dm-devel@redhat.com, snitzer@redhat.com, selvajove@gmail.com,
+        nj.shetty@samsung.com, joshi.k@samsung.com,
+        javier.gonz@samsung.com, SelvaKumar S <selvakuma.s1@samsung.com>
+Subject: [RFC PATCH v4 1/3] block: export bio_map_kern()
+Date:   Mon,  4 Jan 2021 16:11:57 +0530
+Message-Id: <20210104104159.74236-2-selvakuma.s1@samsung.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210104104159.74236-1-selvakuma.s1@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <1608644981-46267-1-git-send-email-ziqichen@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SfUxTVxjGc+69vb0tKbsWMo7dB9Aom5DyETc9Wza3xLndxX/MMrO5oKzC
+        DcWVj7QwUDZlgiJVCzYOpaJgZYpFC9auVrTLUgQFQxBaKOLAGgvJrNgKzAkIDHpr5n/P+z7P
+        e37nPTkULi4jJVRWTj6rypErpaSQsLateleWOjGRlrzvVDRqGq4kUXVgGkf7yp9hyP7kBA9d
+        N+gwdL6pHUMP/5rkoznNCIbaF8ZJpHMMAGQfSkDO1loS1Z0d5aODbhuJzt2cx9CRA/0Yss7W
+        4ch11IAjk89PII/fzUe+550k2n/pH/Dp64zTtZG5qh/mMz0jlwjG2V3AmI0VJHO5YQ9z7W4J
+        yTwdHSIY/x/9JKO1GAFz+XYxM2l+myn/8yC2SfSd8KMMVpn1I6tKWve9UOE/PsDPqwovap9q
+        wUpAV5gGCChIvwc7DvmABggpMX0NwIaxoVAxAeBJU3WoeAbgea2F93KkaspJcIYdwKML0yRX
+        TAKor19yBBRJy+BAgzmoI2kpnGveG5zA6bs47JuZ4C8ZETSC023a4LEEvRLWLpTiS1pEfwxv
+        /XIM53DRsKbv32BeQK+Dut4RHpdZBjtrvEEAvpgp/f0EvgSAdKUAuuc1obt+Bp2BbsDpCPjo
+        poXPaQmcfGInOV0IxyqqMU6XAKj1F3L6E9h7fW6xTy0CVsHm1iSu/Rb8tcuEcdxweHjWGxoV
+        QdspbzAO6TjYdWUN134TBtpaQyQGGi6OhR7rCIBlY2aiCsToX1lH/8o6+v/J9QA3guVsnjo7
+        k1W/n5eSwxYmquXZ6oKczMT03GwzCH7U+C9tYNgTSHQAjAIOAClcGikquhNIE4sy5Dt3sarc
+        NFWBklU7wBsUIY0S2ZI9aWI6U57P/sCyeazqpYtRAkkJFrE5Zvy1M8Tgtx483bet+N5WWYbV
+        FnflflR0pCRMMZVrsmlelO7t9/y02rsz8/nf2kaXtskY/dvatalK4eeuD6KKzxXFpLu6hsYt
+        j4+fnEp8VEd2bGml989b6kt1CYbtFO0ji3vmktjRGzyJ9fYunTN2ueVxVqxq5mf4UNe4w9zL
+        +3Bw02ysOHmwOX91U0vGA3G57FDkmZGvuosku+35nTVr/CJlXP0txwWrJ15m2DaTsv2GwtRR
+        G9GyQ+7s2ZNt++a0uW5LWGPhF4qY9cr1XrbiqnTD7gP37pStVPRprA+OJbj7X6Su6D1bHc5W
+        VjVI4y5u2NgpdT995/DXCfeNulwpoVbIU+JxlVr+H94mhXkXBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrKIsWRmVeSWpSXmKPExsWy7bCSnK7Kx0/xBj1XTCxW3+1ns5j24Sez
+        RWv7NyaLve9ms1rsWTSJyWLl6qNMFo/vfGa3+Nt1j8ni6P+3bBaTDl1jtNh7S9vi8q45bBbz
+        lz1lt+i+voPNYvnxf0wWEzuuMlls+z2f2eLKlEXMFutev2exePD+OrvF6x8n2SzaNn5ldBDz
+        uHzF22PnrLvsHufvbWTxuHy21GPTqk42j81L6j1232xg8/j49BaLx/t9V9k8+rasYvTYfLra
+        4/MmOY/2A91MAbxRXDYpqTmZZalF+nYJXBnvZ1xjL5jAV3H0ywamBsZT3F2MnBwSAiYSE75c
+        Zuli5OIQEtjNKDH19zMmiISMxNq7nWwQtrDEyn/P2SGKPjJK3Fx8GizBJqArcW3JJhYQW0RA
+        SeLv+iawScwCn5kl5u9qA0sIC1hI/DzcxwpiswioSsz538wMYvMK2EqcaJzODLFBXmLmpe/s
+        IDangJ3EpIv3gOo5gLbZSixqFYYoF5Q4OfMJ2EhmoPLmrbOZJzAKzEKSmoUktYCRaRWjZGpB
+        cW56brFhgWFearlecWJucWleul5yfu4mRnDMamnuYNy+6oPeIUYmDsZDjBIczEoivBUXPsQL
+        8aYkVlalFuXHF5XmpBYfYpTmYFES573QdTJeSCA9sSQ1OzW1ILUIJsvEwSnVwHT5W7mz2e6T
+        ky+knWLJuV+ldKnq7tzyTrsFaS+E89Tyly+M1mUW2DIj5EtfoULmiZA3B7/WOgU5sXUZ3e/v
+        /3vDjHFqpn9a+t6eZ1MqwxTjSycwrhGLOLmf9Rszm5HmrlhrQct7i39+PsVx8+k075Kcn7w7
+        PwoZyjvUT7vtffRwq8GBpxJHnb5+4Ln01vq9I7PubNWNbgu2/FixmWHHyr/22Sd396W+3JB+
+        3WLJinfntlUE+nH7zrRw5Gd46Xj9+ERuN8tf7Qsj9nxMnzfr5irZL+dmpUe6iMpMDCrKyHxl
+        v8TyzZ6U1uKoCZ1aujXrlN99cDyi7tQ6LSNpdyPX1j/fRfVMDCoOSV87tG7t5HAlluKMREMt
+        5qLiRADXL7wrSAMAAA==
+X-CMS-MailID: 20210104104245epcas5p26ed395efbf74e78a4e44048a6d7d6ba7
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20210104104245epcas5p26ed395efbf74e78a4e44048a6d7d6ba7
+References: <20210104104159.74236-1-selvakuma.s1@samsung.com>
+        <CGME20210104104245epcas5p26ed395efbf74e78a4e44048a6d7d6ba7@epcas5p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 22/12/20 3:49 pm, Ziqi Chen wrote:
-> As per specs, e.g, JESD220E chapter 7.2, while powering
-> off/on the ufs device, RST_N signal and REF_CLK signal
-> should be between VSS(Ground) and VCCQ/VCCQ2.
-> 
-> To flexibly control device reset line, refactor the function
-> ufschd_vops_device_reset(sturct ufs_hba *hba) to ufshcd_
-> vops_device_reset(sturct ufs_hba *hba, bool asserted). The
-> new parameter "bool asserted" is used to separate device reset
-> line pulling down from pulling up.
+Export bio_map_kern() so that copy offload emulation can use
+it to add vmalloced memory to bio.
 
-This patch assumes the power is controlled by voltage regulators, but for us
-it is controlled by firmware (ACPI), so it is not correct to change RST_n
-for all host controllers as you are doing.
+Signed-off-by: SelvaKumar S <selvakuma.s1@samsung.com>
+---
+ block/blk-map.c        | 3 ++-
+ include/linux/blkdev.h | 2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-Also we might need to use a firmware interface for device reset, in which
-case the 'asserted' value doe not make sense.
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 21630dccac62..50d61475bb68 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -378,7 +378,7 @@ static void bio_map_kern_endio(struct bio *bio)
+  *	Map the kernel address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+-static struct bio *bio_map_kern(struct request_queue *q, void *data,
++struct bio *bio_map_kern(struct request_queue *q, void *data,
+ 		unsigned int len, gfp_t gfp_mask)
+ {
+ 	unsigned long kaddr = (unsigned long)data;
+@@ -428,6 +428,7 @@ static struct bio *bio_map_kern(struct request_queue *q, void *data,
+ 	bio->bi_end_io = bio_map_kern_endio;
+ 	return bio;
+ }
++EXPORT_SYMBOL(bio_map_kern);
+ 
+ static void bio_copy_kern_endio(struct bio *bio)
+ {
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 070de09425ad..81f9e7bec16c 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -936,6 +936,8 @@ extern int blk_rq_map_user(struct request_queue *, struct request *,
+ 			   struct rq_map_data *, void __user *, unsigned long,
+ 			   gfp_t);
+ extern int blk_rq_unmap_user(struct bio *);
++extern struct bio *bio_map_kern(struct request_queue *q, void *data,
++				unsigned int len, gfp_t gfp_mask);
+ extern int blk_rq_map_kern(struct request_queue *, struct request *, void *, unsigned int, gfp_t);
+ extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
+ 			       struct rq_map_data *, const struct iov_iter *,
+-- 
+2.25.1
 
-Can we leave the device reset callback alone, and instead introduce a new
-variant operation for setting RST_n to match voltage regulator power changes?
