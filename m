@@ -2,96 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBFF9C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 16:18:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD387C433E9
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 16:20:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F341221F1
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 16:18:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0EE620578
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 16:20:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728016AbhADQSm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 11:18:42 -0500
-Received: from mx2.suse.de ([195.135.220.15]:43994 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727986AbhADQSl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Jan 2021 11:18:41 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 0A7B4ADD6;
-        Mon,  4 Jan 2021 16:18:00 +0000 (UTC)
-Date:   Mon, 4 Jan 2021 17:17:59 +0100
-From:   Daniel Wagner <dwagner@suse.de>
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, Ram Vegesna <ram.vegesna@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v5 14/31] elx: libefc: FC node ELS and state handling
-Message-ID: <20210104161759.hxnhiyhyzos5pr2i@beryllium.lan>
-References: <20210103171134.39878-1-jsmart2021@gmail.com>
- <20210103171134.39878-15-jsmart2021@gmail.com>
+        id S1728083AbhADQUE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 11:20:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48518 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728314AbhADQSF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 11:18:05 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 196B0C061574;
+        Mon,  4 Jan 2021 08:17:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=lnGlZ07Br4iRlx3cevTIbdW4ub6R6dieT0l2rpJ6lwI=; b=tSSZE3lQD79SAw8vs/wFUAst7H
+        O8JnawGM5RJ95pzH6VVKUk5k/G6vG2uvRkxUb4BrwOmdDgtrnK8dNeAYrGrTdLH9cP+IuPNBM3cnR
+        28sZSFUYzCYPrxI2ICJmlVxdNm1ZDu+LQdG/wzRNoEoV4UeQ/Bi7myY4XRTqGHyawqxRO5rbhvtdo
+        QLEfCz880D7kiNBodvZqjfMCm27sTho9JnenONQ3rmEsC4+1E9j1LwAiZ/n8SLo2YjygUQWNFykUS
+        df3uHHIM+TUoLvtjY0AsX9OmjMudZ0m7KjDgemglOb2X0xpYprEGOj4pECSwL4ziQQxl1/CM+UIln
+        f2D7oESA==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1kwSXk-000HuD-Qz; Mon, 04 Jan 2021 16:17:17 +0000
+Date:   Mon, 4 Jan 2021 16:17:16 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Pavel Begunkov <asml.silence@gmail.com>
+Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: Re: [PATCH v2 1/7] splice: don't generate zero-len segement bvecs
+Message-ID: <20210104161716.GA68600@infradead.org>
+References: <cover.1609461359.git.asml.silence@gmail.com>
+ <ca14f80bf5156d83b38f543be2b9434a571474c9.1609461359.git.asml.silence@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210103171134.39878-15-jsmart2021@gmail.com>
+In-Reply-To: <ca14f80bf5156d83b38f543be2b9434a571474c9.1609461359.git.asml.silence@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Jan 03, 2021 at 09:11:17AM -0800, James Smart wrote:
-> This patch continues the libefc library population.
+On Sat, Jan 02, 2021 at 03:17:33PM +0000, Pavel Begunkov wrote:
+> iter_file_splice_write() may spawn bvec segments with zero-length. In
+> preparation for prohibiting them, filter out by hand at splice level.
 > 
-> This patch adds library interface definitions for:
-> - FC node PRLI handling and state management
-> 
-> Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
-> Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
-> Signed-off-by: James Smart <jsmart2021@gmail.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
-
+> Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
 > ---
-> v5:
->  Topology naming changes.
+>  fs/splice.c | 9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/splice.c b/fs/splice.c
+> index 866d5c2367b2..7299330c3270 100644
+> --- a/fs/splice.c
+> +++ b/fs/splice.c
+> @@ -644,7 +644,6 @@ iter_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
+>  		ret = splice_from_pipe_next(pipe, &sd);
+>  		if (ret <= 0)
+>  			break;
+> -
 
+Spurious empty line removal..
 
-BTW, I've just grepped for TOPO and found
+> +			if (!this_len)
+> +				continue;
 
-libefc_sli/sli4.h:      SLI4_READTOPO_ATTEN_TYPE        = 0xff,
-libefc_sli/sli4.h:      SLI4_READTOPO_FLAG_IL           = 0x100,
-libefc_sli/sli4.h:      SLI4_READTOPO_FLAG_PB_RECVD     = 0x200,
-libefc_sli/sli4.h:      SLI4_READTOPO_LINKSTATE_RECV    = 0x3,
-libefc_sli/sli4.h:      SLI4_READTOPO_LINKSTATE_TRANS   = 0xc,
-libefc_sli/sli4.h:      SLI4_READTOPO_LINKSTATE_MACHINE = 0xf0,
-libefc_sli/sli4.h:      SLI4_READTOPO_LINKSTATE_SPEED   = 0xff00,
-libefc_sli/sli4.h:      SLI4_READTOPO_LINKSTATE_TF      = 0x40000000,
-libefc_sli/sli4.h:      SLI4_READTOPO_LINKSTATE_LU      = 0x80000000,
-libefc_sli/sli4.h:      SLI4_READTOPO_SCN_BBSCN         = 0xf,
-libefc_sli/sli4.h:      SLI4_READTOPO_SCN_CBBSCN        = 0xf0,
-libefc_sli/sli4.h:      SLI4_READTOPO_R_T_TOV           = 0x1ff,
-libefc_sli/sli4.h:      SLI4_READTOPO_AL_TOV            = 0xf000,
-libefc_sli/sli4.h:      SLI4_READTOPO_PB_FLAG           = 0x80,
-libefc_sli/sli4.h:      SLI4_READTOPO_INIT_N_PORTID     = 0xffffff,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_LINK_UP      = 0x1,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_LINK_DOWN,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_LINK_NO_ALPA,
-libefc_sli/sli4.h:      SLI4_READ_TOPO_UNKNOWN          = 0x0,
-libefc_sli/sli4.h:      SLI4_READ_TOPO_NON_FC_AL,
-libefc_sli/sli4.h:      SLI4_READ_TOPO_FC_AL,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_SPEED_NONE   = 0x00,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_SPEED_1G     = 0x04,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_SPEED_2G     = 0x08,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_SPEED_4G     = 0x10,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_SPEED_8G     = 0x20,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_SPEED_10G    = 0x40,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_SPEED_16G    = 0x80,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_SPEED_32G    = 0x90,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_SPEED_64G    = 0xa0,
-libefc_sli/sli4.h:      SLI4_READ_TOPOLOGY_SPEED_128G   = 0xb0,
+Maybe throw in a comment on why we skip empty segments here?
 
-It's a bit confusing the SLI4_READTOPO vs SLI4_READ_TOPOLOGY_* vs
-SLI4_READ_TOPO_* naming. But I don't have any idea to make it a bit more
-readable.
+Otherwise looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
