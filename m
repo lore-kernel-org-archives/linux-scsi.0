@@ -2,101 +2,134 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B366C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 22:26:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D616DC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 22:51:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A0162251E
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 22:26:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A54CC2072E
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 22:51:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726680AbhADWZ5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 17:25:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46518 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726289AbhADWZ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Jan 2021 17:25:57 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6850822522;
-        Mon,  4 Jan 2021 22:25:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609799116;
-        bh=Moh1Im9+alXtJJK1YOL7K6rqnZB2FhHs23YlgDF6keU=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=dIu7OlXTpr40Bd3Y1w4HFmWQiZG32R8yHx66zUYLCVMFon6hcTpiLC9UrL0NXrbyQ
-         OXINU/zPk1KxO5uPCbWtsws3hAi3GCrbzdFuPY52Prn3lqBYY2v6vwi5ZDMItZ2AzZ
-         Yn7hfxFROn7TVC8foTgohNzaOUkprRlte4PrZo4GrZZTJkzWUeM5IqNsjZXtRGOtd4
-         AJkGoEnP6Oful8hRotrqetvfSKGKOIACtuV0MHd/+yhNoHjY8k/Y6Y+56PfjWbEzUa
-         tTo1PSshm0FIgFcxY7waGbMQLxBJXcaqTJsf5Ziz5cki0Rzlq3LjztUNHadz+XHHrS
-         OxMCoy0U2l70w==
-Received: by mail-oo1-f44.google.com with SMTP id x23so6655732oop.1;
-        Mon, 04 Jan 2021 14:25:16 -0800 (PST)
-X-Gm-Message-State: AOAM531HbdXubHCDLwBSu3i7RQxAEpDhdnPAkGcDBGWWUBwhmPiVLXcN
-        Kjpjs6+jXAGhWvM8ALmvYO/oIm8K3LmC2x99JV0=
-X-Google-Smtp-Source: ABdhPJzU7lxA3RMtpM1O2RkpS8lnhhhv7nbKAojeMrdvGNK4FnPfTaCRqXG+DdKLY1S/2NMem6TUSzDvIvx/Y3Hcsgg=
-X-Received: by 2002:a4a:2cc9:: with SMTP id o192mr49383360ooo.66.1609799115782;
- Mon, 04 Jan 2021 14:25:15 -0800 (PST)
+        id S1726258AbhADWvC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 17:51:02 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:58732 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726098AbhADWvC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 17:51:02 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 8F2BB282AD;
+        Mon,  4 Jan 2021 17:50:15 -0500 (EST)
+Date:   Tue, 5 Jan 2021 09:50:14 +1100 (AEDT)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     Bart Van Assche <bvanassche@acm.org>
+cc:     Chris Boot <bootc@boo.tc>, linuxppc-dev@lists.ozlabs.org,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net,
+        linux-kernel@vger.kernel.org, Chuhong Yuan <hslester96@gmail.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Nicholas Bellinger <nab@linux-iscsi.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] scsi: target/sbp: remove firewire SBP target driver
+In-Reply-To: <e3b5ce6a-0152-01b8-89d2-80bcdb9c1c57@acm.org>
+Message-ID: <alpine.LNX.2.23.453.2101050840010.6@nippy.intranet>
+References: <01020172acd3d10f-3964f076-a820-43fc-9494-3f3946e9b7b5-000000@eu-west-1.amazonses.com> <alpine.LNX.2.22.394.2006140934520.15@nippy.intranet> <7ad14946-5c25-fc49-1e48-72d37a607832@boo.tc> <alpine.LNX.2.22.394.2006150919110.8@nippy.intranet>
+ <8da0c285-d707-a3d2-063e-472af5cc560f@boo.tc> <alpine.LNX.2.22.394.2006161929380.8@nippy.intranet> <8cbab988-fba7-8e27-7faf-9f7aa36ca235@acm.org> <alpine.LNX.2.22.394.2006171104540.11@nippy.intranet> <e3b5ce6a-0152-01b8-89d2-80bcdb9c1c57@acm.org>
 MIME-Version: 1.0
-References: <20200908213715.3553098-1-arnd@arndb.de> <20200908213715.3553098-2-arnd@arndb.de>
- <20201231001553.GB16945@home.linuxace.com> <CAK8P3a0_WORgd4Wvd3n+59oR=-rrESwg_MgpDJN4xPo_e6ir5Q@mail.gmail.com>
- <20210104174826.GA76610@home.linuxace.com>
-In-Reply-To: <20210104174826.GA76610@home.linuxace.com>
-From:   Arnd Bergmann <arnd@kernel.org>
-Date:   Mon, 4 Jan 2021 23:24:59 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a0FUL2FpF1Av47CK-9G3R9QdT3ihhA93gsFvfLVO3kC+Q@mail.gmail.com>
-Message-ID: <CAK8P3a0FUL2FpF1Av47CK-9G3R9QdT3ihhA93gsFvfLVO3kC+Q@mail.gmail.com>
-Subject: Re: [PATCH 2/3] scsi: megaraid_sas: check user-provided offsets
-To:     Phil Oester <kernel@linuxace.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "# 3.4.x" <stable@vger.kernel.org>,
-        Anand Lodnoor <anand.lodnoor@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>, megaraidlinux.pdl@broadcom.com,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jan 4, 2021 at 6:48 PM Phil Oester <kernel@linuxace.com> wrote:
->
-> On Sun, Jan 03, 2021 at 05:26:29PM +0100, Arnd Bergmann wrote:
-> > Thank you for the report and bisecting the issue, and sorry this broke
-> > your system!
-> >
-> > Fortunately, the patch is fairly small, so there are only a limited number
-> > of things that could go wrong. I haven't tried to analyze that message,
-> > but I have two ideas:
-> >
-> > a) The added ioc->sense_off check gets triggered and the code relies
-> >   on the data being written outside of the structure
-> >
-> > b) the address actually needs to always be written as a 64-bit value
-> >     regardless of the instance->consistent_mask_64bit flag, as the
-> >    driver did before. This looked like it was done in error.
-> >
-> > Can you try the patch below instead of the revert and see if that
-> > resolves the regression, and if it triggers the warning message I
-> > add?
->
-> Thanks Arnd, I tried your patch and it resolves the regression.  It does not
-> trigger the warning message you added.
+On Mon, 4 Jan 2021, Bart Van Assche wrote:
 
-Ok, thanks for testing! That would mean the range check is correct,
-but the sense pointer must indeed be treated as a 64-bit entity
-regardless of instance->consistent_mask_64bit, or at least the
-upper 32 bit must be zero when the flag is unset, rather than
-the recycled previous value.
+> On 6/16/20 7:07 PM, Finn Thain wrote:
+> > On Tue, 16 Jun 2020, Bart Van Assche wrote:
+> >> As far as I know the sbp driver only has had one user ever and that 
+> >> user is no longer user the sbp driver.
+> > 
+> > So, you estimate the userbase at zero. Can you give a confidence 
+> > level? Actual measurement is hard because when end users encounter 
+> > breakage, they look for quick workarounds before they undertake post 
+> > mortem, log collection, bug reporting, mailing list discussions, 
+> > analysis etc.
+> 
+> (replying to an e-mail from six months ago)
+> 
+> Hi Finn,
+> 
+> I am confident that my estimate is an accurate estimate since I have not 
+> seen any sbp support requests, sbp bug reports nor any sbp bug fixes 
+> since the sbp target driver has been accepted upstream.
+> 
 
-I'll send a proper fix shortly, it would be nice if you could give it
-another spin, but the behavior should be the same as this patch.
+That suggests to me that the code that you're hoping to remove 1) has no 
+bugs, or 2) has no reported bugs, or 3) has no users at present.
 
-       Arnd
+I am confident that your evidence does not support your conclusion (i.e. 
+the code will never be used again).
+
+Sometimes, users only appear after the unreported bugs get fixed. I've 
+seen it happen.
+
+> > Here's a different question: "Why remove it from the kernel tree?"
+> > 
+> > If maintaining this code is a burden, is it not the kind of tax that 
+> > all developers/users pay to all developers/users? Does this driver 
+> > impose an unreasonably high burden for some reason?
+> 
+> Yes. If anyone wants to change the interface between SCSI target core 
+> and SCSI target drivers, all target drivers, including the sbp and FCoE 
+> target driver have to be retested.
+
+I'm unaware of such an obligation. API changes happen often. When they do, 
+we see good test coverage of commercially viable hardware, some 
+best-effort testing of common hardware, and some perfunctory build 
+testing.
+
+But that is missing the point, which was about a particular driver, not 
+about development process. You have not shown how the target API is 
+special, to support your claim that this driver imposes an unreasonable 
+burden.
+
+In the interests of making forward progress in this discussion, shall we 
+discuss the kind of SCSI Target API changes that you anticipate?
+
+> In other words, keeping unused target drivers inside the kernel tree 
+> involves a significant maintenance burden for anyone who wants to modify 
+> the interface between the SCSI target core and SCSI target drivers.
+> 
+
+Keeping _any_ driver in the kernel involves a maintenance burden. There 
+are two good ways to address that.
+
+Firstly, by improving the development process. For example, an API change 
+is mostly mechanical work that lends itself to automated refactoring.
+Secondly, by involving all interested parties, so that the burden is 
+shared.
+
+Of course, there are other ways. E.g. "don't ship code when doing so won't 
+turn a profit". That, by the way, was the policy that gave us 10 billion 
+Android devices (or more) that don't function with a mainline kernel.
+
+> Additionally, there is a good alternative available for the sbp driver. 
+> Every system I know of that is equipped with a Firewire port also has an 
+> Ethernet port. So users who want to provide SCSI target functionality on 
+> such systems can use any SCSI transport protocol that is compatible with 
+> Ethernet (iSCSI, iSER over soft-RoCE, SRP over soft-RoCE, ...).
+> 
+
+Ethernet is not always an alternative. That was already discussed in this 
+thread. But let's assume for a moment that you can migrate any and all 
+users of this driver over to an ethernet driver.
+
+Why would the maintainers of that ethernet driver and its API accept that 
+plan, if adding users would extend their maintenance and testing 
+obligations? Do you think those maintainers should pay the "kind of tax 
+that all developers/users pay to all developers/users?"
+
+> Thanks,
+> 
+> Bart.
+> 
