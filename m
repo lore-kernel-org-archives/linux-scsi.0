@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A475C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 18:04:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEED8C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 18:04:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68E70207BC
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 18:04:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A355720784
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 18:04:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727634AbhADSET (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 13:04:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36828 "EHLO
+        id S1727764AbhADSEW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 13:04:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727749AbhADSET (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 13:04:19 -0500
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86495C0617A4
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Jan 2021 10:03:22 -0800 (PST)
-Received: by mail-pg1-x530.google.com with SMTP id p18so19522469pgm.11
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Jan 2021 10:03:22 -0800 (PST)
+        with ESMTP id S1727762AbhADSEV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 13:04:21 -0500
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2424C0617A6
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Jan 2021 10:03:27 -0800 (PST)
+Received: by mail-pj1-x102f.google.com with SMTP id f14so57941pju.4
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Jan 2021 10:03:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=mQxjJrkT7pqr41naEEEomdkw940egPTaC50Th7l7eqY=;
-        b=Ay2XcPudQEZH7ePMIsd4bSw6dycdgYzW9DLPK5ywvCV/0iORtEXu7RBJJmh1wo7YKl
-         yKJSazZvb8VhgSGhR4yRajfM0jKeD2VnNL2nSshKlj0sXQZBySG55ug5lTzlQ1ZI00cu
-         HSogeRUpCmNzjwX6UhjpWn1jqhxmo/qYaKHsJFHdIHAxibVOD8zzeUq5wy41GITmcWe2
-         zhiQGv00zQ3SQKJvGgpA9RpJWjFDBJ8pDzh+JW3Tb2gQWG/u5gR6b1g8yjvULbHXVx6O
-         h9IKJDEmLywFEklGxcsxP8b1Av4OqV8BSmZj4gFwTj4azxfqos6UcP61idHNhwWJ9DFn
-         o7kw==
+        bh=qPdELg+OjQVtOy3duOch0ZFOqM5IHxny4qn9DDoNPCo=;
+        b=pqE9qsLkBFdQhnqCcJ55QD4jb+sCQTuBuw7ARhsHv4HR76qnt+FqjEMSIDcsqOJ1dr
+         DqsRH64CPgAgWSz8LOwSsA87OQ9BK0xFrCo/i9U3CPnQHuFbSCufxJeIBmmbCgJTR9Oq
+         qVIkB0eoZUEgHJP9mksdAc5RgTpcS4xsvh15eiODGk0o+JZJg2VyE0DFbh5jyovO8GB6
+         Zr9Hnam6tT7eQDLXdQeKtw9LjeT/nez0vxKQWii/yV6jvcqy7Dwtkj68PAfuRI07RZmT
+         RHm3H5Fm9iMRf9G/C/0cjTi5wutquulY1DON+GT2s96TL4TPFHw4vhQjCCHKnzZiCs6N
+         0EiA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=mQxjJrkT7pqr41naEEEomdkw940egPTaC50Th7l7eqY=;
-        b=jBKm0dD9SYgSwj7L8soUYD8fPKdPpHQXspWga3mBP0RmOjuc5+ZYL8IZ5IYzUgYWhK
-         btNsHpzZbWJedQqaL38NAzxa99Dvcce+u9gM9GGEsY7MduTu0sC4lbWwMLE80dRUeEvx
-         CnVvby7DPygf4QJ5eLj/3+kV1Tq3g+PP/51ret0KgHZ4PHSJJp/v/eubYJYxEyyslJaf
-         lq9qnrlcGCqYbiOKbdxtFgEaRnouK80GeK9EESHgt7wzcfsFhKMw24vowcqev8KAKMPf
-         Q/3kYFT5zEG5wANO5cllGLpVatrSc7bTtBCE1xqq9afAmg9xbAf5bAledLWl0kfc8OMd
-         UDzA==
-X-Gm-Message-State: AOAM530xSJyo2ZkwULmZA+qcHr8b/noXjvO62SLfTIMHImhrFLwBj/bd
-        k6dW/KxSgZ7SqQ0P9z873+HEM/8i0WQ=
-X-Google-Smtp-Source: ABdhPJxpzb1bkhrm1YCWjVyieiJrfeJNRpXsRDEUcch7UxA2xjuk2zxhuPjzc/fRPt6n7yA4Qv0v7g==
-X-Received: by 2002:a63:4851:: with SMTP id x17mr53885814pgk.451.1609783401882;
-        Mon, 04 Jan 2021 10:03:21 -0800 (PST)
+        bh=qPdELg+OjQVtOy3duOch0ZFOqM5IHxny4qn9DDoNPCo=;
+        b=crwreNGx/IePqkVjbg1jPNrf7y6UihoYydV2aqC5HbBOW18dl+8BrxyLeYt6HLP38P
+         9yxk0eHA82ZTnTVl8jgV22dkEnoW07DKnSC1dQDEAZFiiaE9/HCHJj5b+UCtNMfGjhvw
+         hbpz6/ATWTC8JLLgLmmb9BlSH3nfgSzTnijMbudO1DzNg7OrUApnSyt91qIzeTsoSEyl
+         w5lKiRggD4SanlUnIkoV0Vc23uaoWb2HBt7UDIPL8TmmeQwXLGShPpxvRLNuJWImyhue
+         Vjri7AX8QKC/nXhaUTa/g62MEIFwl2/+W8lSH3FpniiymTNgavavfhw2q0W2Wqc9OKiA
+         MaoQ==
+X-Gm-Message-State: AOAM530XH29o1rh1Zz7u9hILkxyegTt3hL44dV6xywMuBRqjdkx7H6zj
+        h5yrg7Seix+idTor7eUHfQW4r+20mZ8=
+X-Google-Smtp-Source: ABdhPJxUT/rosTT0yyNSdHB5gCHOwcFkO1MFxKBu80aSZYn47xUgjInaLeNk9h76clxEvs/zs+OLng==
+X-Received: by 2002:a17:902:d34a:b029:da:861e:ecd8 with SMTP id l10-20020a170902d34ab02900da861eecd8mr66480355plk.45.1609783407353;
+        Mon, 04 Jan 2021 10:03:27 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id q23sm57570885pfg.18.2021.01.04.10.03.19
+        by smtp.gmail.com with ESMTPSA id q23sm57570885pfg.18.2021.01.04.10.03.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Jan 2021 10:03:21 -0800 (PST)
+        Mon, 04 Jan 2021 10:03:26 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH v2 12/15] lpfc: Fix crash when nvmet transport calls host_release
-Date:   Mon,  4 Jan 2021 10:02:37 -0800
-Message-Id: <20210104180240.46824-13-jsmart2021@gmail.com>
+Subject: [PATCH v2 14/15] lpfc: Enhancements to LOG_TRACE_EVENT for better readability
+Date:   Mon,  4 Jan 2021 10:02:39 -0800
+Message-Id: <20210104180240.46824-15-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210104180240.46824-1-jsmart2021@gmail.com>
 References: <20210104180240.46824-1-jsmart2021@gmail.com>
@@ -72,179 +72,107 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When lpfc is running in NVMET mode and supports the NVME-1 addendum
-changes, a LIP on a bound NVME Initiator or lipping the lpfc NVMET's
-link resulted in an Oops in lpfc_nvmet_host_release.
+While testing recent discovery node rework, several items were seen
+that could be done better with respect to the new trace event logic.
 
-The fix requires lpfc NVMET to maintain an additional reference on any
-node structure that acts as the hosthandle for the NVMET transport.
-This reference get is a one-time addition, is taken prior to the upcall
-of an unsolicited LS_REQ, and is released when the NVMET transport releases
-the hosthandle during the host_release downcall.
+1) in the following msg:
+      kernel: lpfc 0000:44:00.0: start 35 end 35 cnt 0
+   If cnt is zero in the 1st message, there is no reason to display the
+   1st message, which is just giving start/end positioning.
+
+   Fix by not displaying message if cnt is 0.
+
+2) If the driver is loaded with module log verbosity off, and later a
+   single NPIV host instance verbosity is enabled via sysfs, it enables
+   messages on all instances. This is due to the trace log verbosity
+   checks (lpfc_dmp_dbg) looking at the phba only. It should look at the
+   phba and the vport.
+
+   Fix by enabling a check on both phba and vport.
+
+3) in the following messages:
+       2904 Firmware Dump Image Present on Adapter
+       2887 Reset Needed: Attempting Port Recovery...
+   These messages are not necessary for the trace event log, which is
+   primarily for discovery.
+
+   Fix by changing log level on these 2 messages to LOG_SLI.
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_disc.h  | 16 ++++++++++------
- drivers/scsi/lpfc/lpfc_nvmet.c | 33 ++++++++++++++++++++++++++++-----
- drivers/scsi/lpfc/lpfc_sli.c   | 29 +++++++++++++++++++++++++----
- 3 files changed, 63 insertions(+), 15 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 20 +++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_sli.c  |  2 +-
+ 2 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
-index 4cea61b63fdf..8ce13ef3cac3 100644
---- a/drivers/scsi/lpfc/lpfc_disc.h
-+++ b/drivers/scsi/lpfc/lpfc_disc.h
-@@ -77,6 +77,13 @@ struct lpfc_node_rrqs {
- 	unsigned long xri_bitmap[XRI_BITMAP_ULONGS];
- };
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index dbd7e40f67f9..71f340dd4fbd 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -1865,7 +1865,7 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
  
-+enum lpfc_fc4_xpt_flags {
-+	NLP_WAIT_FOR_UNREG = 0x1,
-+	SCSI_XPT_REGD      = 0x2,
-+	NVME_XPT_REGD      = 0x4,
-+	NLP_XPT_HAS_HH     = 0x8,
-+};
-+
- struct lpfc_nodelist {
- 	struct list_head nlp_listp;
- 	struct lpfc_name nlp_portname;
-@@ -134,13 +141,10 @@ struct lpfc_nodelist {
- 	unsigned long *active_rrqs_xri_bitmap;
- 	struct lpfc_scsicmd_bkt *lat_data;	/* Latency data */
- 	uint32_t fc4_prli_sent;
--	uint32_t fc4_xpt_flags;
--	uint32_t upcall_flags;
--#define NLP_WAIT_FOR_UNREG    0x1
--#define SCSI_XPT_REGD         0x2
--#define NVME_XPT_REGD         0x4
--#define NLP_WAIT_FOR_LOGO     0x2
-+	u32 upcall_flags;
-+#define	NLP_WAIT_FOR_LOGO 0x2
+ 	/* need reset: attempt for port recovery */
+ 	if (en_rn_msg)
+-		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 				"2887 Reset Needed: Attempting Port "
+ 				"Recovery...\n");
  
-+	enum lpfc_fc4_xpt_flags fc4_xpt_flags;
+@@ -14177,15 +14177,32 @@ void lpfc_dmp_dbg(struct lpfc_hba *phba)
+ 	int i;
+ 	int j = 0;
+ 	unsigned long rem_nsec;
++	struct lpfc_vport **vports;
  
- 	uint32_t nvme_fb_size; /* NVME target's supported byte cnt */
- #define NVME_FB_BIT_SHIFT 9    /* PRLI Rsp first burst in 512B units. */
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index a71df8788fff..bb2a4a0d1295 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1367,17 +1367,22 @@ static void
- lpfc_nvmet_host_release(void *hosthandle)
- {
- 	struct lpfc_nodelist *ndlp = hosthandle;
--	struct lpfc_hba *phba = NULL;
-+	struct lpfc_hba *phba = ndlp->phba;
- 	struct lpfc_nvmet_tgtport *tgtp;
- 
--	phba = ndlp->phba;
- 	if (!phba->targetport || !phba->targetport->private)
++	/* Don't dump messages if we explicitly set log_verbose for the
++	 * physical port or any vport.
++	 */
+ 	if (phba->cfg_log_verbose)
  		return;
  
- 	lpfc_printf_log(phba, KERN_ERR, LOG_NVME,
--			"6202 NVMET XPT releasing hosthandle x%px\n",
--			hosthandle);
-+			"6202 NVMET XPT releasing hosthandle x%px "
-+			"DID x%x xflags x%x refcnt %d\n",
-+			hosthandle, ndlp->nlp_DID, ndlp->fc4_xpt_flags,
-+			kref_read(&ndlp->kref));
- 	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
-+	spin_lock_irq(&ndlp->lock);
-+	ndlp->fc4_xpt_flags &= ~NLP_XPT_HAS_HH;
-+	spin_unlock_irq(&ndlp->lock);
-+	lpfc_nlp_put(ndlp);
- 	atomic_set(&tgtp->state, 0);
- }
- 
-@@ -3644,15 +3649,33 @@ lpfc_nvme_unsol_ls_issue_abort(struct lpfc_hba *phba,
- void
- lpfc_nvmet_invalidate_host(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
- {
-+	u32 ndlp_has_hh;
- 	struct lpfc_nvmet_tgtport *tgtp;
- 
--	lpfc_printf_log(phba, KERN_INFO, LOG_NVME | LOG_NVME_ABTS,
-+	lpfc_printf_log(phba, KERN_INFO,
-+			LOG_NVME | LOG_NVME_ABTS | LOG_NVME_DISC,
- 			"6203 Invalidating hosthandle x%px\n",
- 			ndlp);
- 
- 	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
- 	atomic_set(&tgtp->state, LPFC_NVMET_INV_HOST_ACTIVE);
- 
-+	spin_lock_irq(&ndlp->lock);
-+	ndlp_has_hh = ndlp->fc4_xpt_flags & NLP_XPT_HAS_HH;
-+	spin_unlock_irq(&ndlp->lock);
-+
-+	/* Do not invalidate any nodes that do not have a hosthandle.
-+	 * The host_release callbk will cause a node reference
-+	 * count imbalance and a crash.
-+	 */
-+	if (!ndlp_has_hh) {
-+		lpfc_printf_log(phba, KERN_INFO,
-+				LOG_NVME | LOG_NVME_ABTS | LOG_NVME_DISC,
-+				"6204 Skip invalidate on node x%px DID x%x\n",
-+				ndlp, ndlp->nlp_DID);
-+		return;
++	vports = lpfc_create_vport_work_array(phba);
++	if (vports != NULL) {
++		for (i = 0; i <= phba->max_vpi && vports[i] != NULL; i++) {
++			if (vports[i]->cfg_log_verbose) {
++				lpfc_destroy_vport_work_array(phba, vports);
++				return;
++			}
++		}
 +	}
++	lpfc_destroy_vport_work_array(phba, vports);
 +
- #if (IS_ENABLED(CONFIG_NVME_TARGET_FC))
- 	/* Need to get the nvmet_fc_target_port pointer here.*/
- 	nvmet_fc_invalidate_host(phba->targetport, ndlp);
+ 	if (atomic_cmpxchg(&phba->dbg_log_dmping, 0, 1) != 0)
+ 		return;
+ 
+ 	start_idx = (unsigned int)atomic_read(&phba->dbg_log_idx) % DBG_LOG_SZ;
+ 	dbg_cnt = (unsigned int)atomic_read(&phba->dbg_log_cnt);
++	if (!dbg_cnt)
++		goto out;
+ 	temp_idx = start_idx;
+ 	if (dbg_cnt >= DBG_LOG_SZ) {
+ 		dbg_cnt = DBG_LOG_SZ;
+@@ -14215,6 +14232,7 @@ void lpfc_dmp_dbg(struct lpfc_hba *phba)
+ 			 rem_nsec / 1000,
+ 			 phba->dbg_log[temp_idx].log);
+ 	}
++out:
+ 	atomic_set(&phba->dbg_log_cnt, 0);
+ 	atomic_set(&phba->dbg_log_dmping, 0);
+ }
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index dedea5de7d78..176706aaebf5 100644
+index d51d86959bbc..fa1a714a78f0 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -3011,23 +3011,44 @@ lpfc_nvme_unsol_ls_handler(struct lpfc_hba *phba, struct lpfc_iocbq *piocb)
- 	axchg->payload = nvmebuf->dbuf.virt;
- 	INIT_LIST_HEAD(&axchg->list);
+@@ -7491,7 +7491,7 @@ static void lpfc_sli4_dip(struct lpfc_hba *phba)
+ 			return;
  
--	if (phba->nvmet_support)
-+	if (phba->nvmet_support) {
- 		ret = lpfc_nvmet_handle_lsreq(phba, axchg);
--	else
-+		spin_lock_irq(&ndlp->lock);
-+		if (!ret && !(ndlp->fc4_xpt_flags & NLP_XPT_HAS_HH)) {
-+			ndlp->fc4_xpt_flags |= NLP_XPT_HAS_HH;
-+			spin_unlock_irq(&ndlp->lock);
-+
-+			/* This reference is a single occurrence to hold the
-+			 * node valid until the nvmet transport calls
-+			 * host_release.
-+			 */
-+			if (!lpfc_nlp_get(ndlp))
-+				goto out_fail;
-+
-+			lpfc_printf_log(phba, KERN_ERR, LOG_NODE,
-+					"6206 NVMET unsol ls_req ndlp %p "
-+					"DID x%x xflags x%x refcnt %d\n",
-+					ndlp, ndlp->nlp_DID,
-+					ndlp->fc4_xpt_flags,
-+					kref_read(&ndlp->kref));
-+		} else {
-+			spin_unlock_irq(&ndlp->lock);
-+		}
-+	} else {
- 		ret = lpfc_nvme_handle_lsreq(phba, axchg);
-+	}
- 
- 	/* if zero, LS was successfully handled. If non-zero, LS not handled */
- 	if (!ret)
- 		return;
- 
-+out_fail:
- 	lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
- 			"6155 Drop NVME LS from DID %06X: SID %06X OXID x%X "
- 			"NVMe%s handler failed %d\n",
- 			did, sid, oxid,
- 			(phba->nvmet_support) ? "T" : "I", ret);
- 
--out_fail:
--
- 	/* recycle receive buffer */
- 	lpfc_in_buf_free(phba, &nvmebuf->dbuf);
- 
+ 		if (bf_get(lpfc_sliport_status_dip, &reg_data))
+-			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
++			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 					"2904 Firmware Dump Image Present"
+ 					" on Adapter");
+ 	}
 -- 
 2.26.2
 
