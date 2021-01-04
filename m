@@ -2,66 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B5EDC433E9
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 16:22:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80FE5C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 16:35:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26F602245C
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 16:22:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43E5F2245C
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 16:35:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728048AbhADQW3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 11:22:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49190 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727886AbhADQW2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 11:22:28 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77E90C061574;
-        Mon,  4 Jan 2021 08:21:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=c0jpPOEqnvAg3akTI36JpIt9xU
-        3Ekb+xZLKcCXAuP6aX6X9X8OGfhEZ17fGCaGMIef9SYWHAdGFc3uo+vlM9b1aXhF2iUKc3eoM/+dB
-        IQGe6jvfoR/G8XoGFUMvlRk4jRdegFaYaE6jx2RsUzv3k6nJKLUfpQHggy8F8pB0AZd+3mRagBkmm
-        m3WCbGkk0X4L0vgPqIe18hM7QT3VbjVhhWEDpUWZER/+kUzQkuZsCNMWKvmvJtTLy6zB8vkGFhGvM
-        MziqpdCXp1G/luzbgryf1rW4esI1mIB1/QXusWuiHmvToORh0ubs8CpGH8homiD0Ul2EDf3i99GBY
-        fTjSWP2g==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1kwSbF-000I7h-7f; Mon, 04 Jan 2021 16:20:54 +0000
-Date:   Mon, 4 Jan 2021 16:20:53 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Pavel Begunkov <asml.silence@gmail.com>
-Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Ming Lei <ming.lei@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
-        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH v2 7/7] bio: don't copy bvec for direct IO
-Message-ID: <20210104162053.GC68600@infradead.org>
-References: <cover.1609461359.git.asml.silence@gmail.com>
- <29ed343fa15eb4139f8ab9104d3f9b16fe025dfd.1609461359.git.asml.silence@gmail.com>
+        id S1727496AbhADQfU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 11:35:20 -0500
+Received: from mx2.suse.de ([195.135.220.15]:53570 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727471AbhADQfU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 Jan 2021 11:35:20 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 7EFE9ADD6;
+        Mon,  4 Jan 2021 16:34:39 +0000 (UTC)
+Date:   Mon, 4 Jan 2021 17:34:39 +0100
+From:   Daniel Wagner <dwagner@suse.de>
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, Ram Vegesna <ram.vegesna@broadcom.com>
+Subject: Re: [PATCH v5 15/31] elx: libefc: Extended link Service IO handling
+Message-ID: <20210104163439.vgeklc4uzezwvp3t@beryllium.lan>
+References: <20210103171134.39878-1-jsmart2021@gmail.com>
+ <20210103171134.39878-16-jsmart2021@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <29ed343fa15eb4139f8ab9104d3f9b16fe025dfd.1609461359.git.asml.silence@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20210103171134.39878-16-jsmart2021@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks good,
+Hi James,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+On Sun, Jan 03, 2021 at 09:11:18AM -0800, James Smart wrote:
+> +void efc_disc_io_complete(struct efc_disc_io *io, u32 len, u32 status,
+> +			  u32 ext_status)
+> +{
+> +	struct efc_els_io_req *els =
+> +				container_of(io, struct efc_els_io_req, io);
+> +
+> +	WARN_ON(!els->cb);
+
+
+Could this be a filling up the logs? Maybe the the once version of it
+would be enough.
+
+> +
+> +	((efc_hw_srrs_cb_t) els->cb) (els, len, status, ext_status);
+> +}
+
+[...]
+
+> +int
+> +efc_send_plogi(struct efc_node *node)
+> +{
+> +	struct efc_els_io_req *els;
+> +	struct efc *efc = node->efc;
+> +	struct fc_els_flogi  *plogi;
+> +
+> +	node_els_trace();
+> +
+> +	els = efc_els_io_alloc(node, sizeof(*plogi));
+> +	if (!els) {
+> +		efc_log_err(efc, "IO alloc failed\n");
+> +		return EFC_FAIL;
+> +	}
+> +	els->display_name = "plogi";
+> +
+> +	/* Build PLOGI request */
+> +	plogi = els->io.req.virt;
+> +
+> +	memcpy(plogi, node->nport->service_params, sizeof(*plogi));
+> +
+> +	plogi->fl_cmd = ELS_PLOGI;
+> +	memset(plogi->_fl_resvd, 0, sizeof(plogi->_fl_resvd));
+> +
+> +	efc_els_send_req(node, els, EFC_DISC_IO_ELS_REQ);
+> +
+> +	return EFC_SUCCESS;
+
+Just wondering it would be a good idea to efc_els_send_req() return a
+error status and use it here. At least efc_els_send_req() can fail.
+
+The same comment is true for the rest of the file. There are a bunch
+more of those send functions with the 'fire and forget' semantic.
+
+Thanks,
+Daniel
