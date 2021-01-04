@@ -2,134 +2,174 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D616DC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 22:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB78C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 23:33:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A54CC2072E
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 22:51:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E99492253D
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jan 2021 23:33:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726258AbhADWvC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 17:51:02 -0500
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:58732 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726098AbhADWvC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 17:51:02 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 8F2BB282AD;
-        Mon,  4 Jan 2021 17:50:15 -0500 (EST)
-Date:   Tue, 5 Jan 2021 09:50:14 +1100 (AEDT)
-From:   Finn Thain <fthain@telegraphics.com.au>
-To:     Bart Van Assche <bvanassche@acm.org>
-cc:     Chris Boot <bootc@boo.tc>, linuxppc-dev@lists.ozlabs.org,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net,
-        linux-kernel@vger.kernel.org, Chuhong Yuan <hslester96@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Nicholas Bellinger <nab@linux-iscsi.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] scsi: target/sbp: remove firewire SBP target driver
-In-Reply-To: <e3b5ce6a-0152-01b8-89d2-80bcdb9c1c57@acm.org>
-Message-ID: <alpine.LNX.2.23.453.2101050840010.6@nippy.intranet>
-References: <01020172acd3d10f-3964f076-a820-43fc-9494-3f3946e9b7b5-000000@eu-west-1.amazonses.com> <alpine.LNX.2.22.394.2006140934520.15@nippy.intranet> <7ad14946-5c25-fc49-1e48-72d37a607832@boo.tc> <alpine.LNX.2.22.394.2006150919110.8@nippy.intranet>
- <8da0c285-d707-a3d2-063e-472af5cc560f@boo.tc> <alpine.LNX.2.22.394.2006161929380.8@nippy.intranet> <8cbab988-fba7-8e27-7faf-9f7aa36ca235@acm.org> <alpine.LNX.2.22.394.2006171104540.11@nippy.intranet> <e3b5ce6a-0152-01b8-89d2-80bcdb9c1c57@acm.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        id S1727487AbhADXdU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 18:33:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59030 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727199AbhADXdT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 18:33:19 -0500
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B84EC061574;
+        Mon,  4 Jan 2021 15:32:39 -0800 (PST)
+Received: by mail-ed1-x533.google.com with SMTP id u19so29190614edx.2;
+        Mon, 04 Jan 2021 15:32:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=pP3+G4ybPLsu21sUvB7IcM2g/XFhBwo1FBDDSyOqWVk=;
+        b=gkiMwOx7WmqzAkBH7BIFxMD2baoJZ0d6UWXubGjQMvO13HoKMiR9S8qkuPORZhHVRS
+         bjMLzwqSIQeR3iiiLexlszXwVdE2RwF6BfsQPYhXKrqRz7D7B4nt0cEL4c46C4Ezg+hy
+         0z13kzHLxUdR5opz9eUbtZjaPn8gp0QbJRLy+Pivd/85DWoIyLqu9YGCrvtGU93QCXLg
+         WNfnPsw9+EnI93hbe1urVHTFfPbhrmtwKEGXCvYDJRqaMXOJ+v63B/lzQqW6LXYf9Mk+
+         FJ4eE1h7yG80EO4VKEbknIx7T7FDlvGQgsAZCeN6BVuc7E58ZNvFV1Qg2bJO8IcrbnF4
+         IS6g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=pP3+G4ybPLsu21sUvB7IcM2g/XFhBwo1FBDDSyOqWVk=;
+        b=Mjk8mQA9CiTKISYbCdvtCGBNWm0409rkkzgR2WDHkD1s7qlkUxHufooFYm/I4Aij4M
+         jhwI7gRy/72la2vjcvUqUuHaFwvaxchKWXUdq2Wn/GC0FStzTaG5oirZvkq01jz7eAIR
+         ZmewAo6ikO/6YyujmXKMBFjAZgad+5N2xlpHWosryYJg4aBIBiIFoWjjsRCMLvjW9tXi
+         M1wIi3l0W/5CtBQpGgJytKJPAvmTQ/yoKEKBv0sp5+o06YREPkiDa0F1fk8VUl2HX+ej
+         TfxFzZYiRcVBwUajvHSnhRcd3p0lc4749IL+ZeqjK+JfINbsVCScXt6e+M/brDUADN80
+         5wHQ==
+X-Gm-Message-State: AOAM532FEliDCBP53W5/1OJbnznZkOV4XTtcXJT8W6/TmjxVdk1tqgEh
+        UdZCDVXU+ey4Qr1Cly9620mmK+fZKMjI/w==
+X-Google-Smtp-Source: ABdhPJykjk2lzJz+Mt2kEPPSwNBNknISXNNEgo6QZp1+5piD0eWg7ZzxDDaesaDQfqdwt/3K/l5/bg==
+X-Received: by 2002:aa7:d1c2:: with SMTP id g2mr73854418edp.8.1609792770463;
+        Mon, 04 Jan 2021 12:39:30 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bfcff.dynamic.kabel-deutschland.de. [95.91.252.255])
+        by smtp.googlemail.com with ESMTPSA id o13sm43801344edr.94.2021.01.04.12.39.29
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 04 Jan 2021 12:39:29 -0800 (PST)
+Message-ID: <2335e241133fe128bd3c3d70da5360b8326bb76e.camel@gmail.com>
+Subject: Re: [PATCH v3 0/6] Several changes for the UPIU trace
+From:   Bean Huo <huobean@gmail.com>
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "rostedt@goodmis.org" <rostedt@goodmis.org>,
+        "joe@perches.com" <joe@perches.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date:   Mon, 04 Jan 2021 21:39:28 +0100
+In-Reply-To: <d1286d29aca18c004c66924a46c70f2d03562769.camel@gmail.com>
+References: <20201214202014.13835-1-huobean@gmail.com>
+         <DM6PR04MB657559FA01C44B411BBDBDBCFCC70@DM6PR04MB6575.namprd04.prod.outlook.com>
+         <01a4472065034527d57b0866750eb4ecc79b6a83.camel@gmail.com>
+         <d1286d29aca18c004c66924a46c70f2d03562769.camel@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 4 Jan 2021, Bart Van Assche wrote:
-
-> On 6/16/20 7:07 PM, Finn Thain wrote:
-> > On Tue, 16 Jun 2020, Bart Van Assche wrote:
-> >> As far as I know the sbp driver only has had one user ever and that 
-> >> user is no longer user the sbp driver.
+On Tue, 2020-12-15 at 23:18 +0100, Bean Huo wrote:
+> On Mon, 2020-12-14 at 23:37 +0100, Bean Huo wrote:
+> > > And another log generated sometime during 2021 after your change
+> > > is
+> > > merged:
+> > > "send" <request upiu>
+> > > "complete" < ****response upiu ****>
+> > > 
+> > > The current parser won't be able to differentiate between those
+> > > logs.
+> > > Just change the prefix strings to be "send_req" and
+> > > "complete_rsp",
+> > > or something,
+> > > so the parsing tools that support the new format will be able to
+> > > differentiate it from the old one.
 > > 
-> > So, you estimate the userbase at zero. Can you give a confidence 
-> > level? Actual measurement is hard because when end users encounter 
-> > breakage, they look for quick workarounds before they undertake post 
-> > mortem, log collection, bug reporting, mailing list discussions, 
-> > analysis etc.
-> 
-> (replying to an e-mail from six months ago)
-> 
-> Hi Finn,
-> 
-> I am confident that my estimate is an accurate estimate since I have not 
-> seen any sbp support requests, sbp bug reports nor any sbp bug fixes 
-> since the sbp target driver has been accepted upstream.
-> 
-
-That suggests to me that the code that you're hoping to remove 1) has no 
-bugs, or 2) has no reported bugs, or 3) has no users at present.
-
-I am confident that your evidence does not support your conclusion (i.e. 
-the code will never be used again).
-
-Sometimes, users only appear after the unreported bugs get fixed. I've 
-seen it happen.
-
-> > Here's a different question: "Why remove it from the kernel tree?"
+> > Avri,
+> > I still don't understand, this change doesn't break you current
+> > parser.
+> > if you still trace "send", "complete", "CDB", "query_send/complte",
+> > they are still there, doesn't change. I suggest you just run on
+> > your
+> > system. see if there is conflict.
 > > 
-> > If maintaining this code is a burden, is it not the kind of tax that 
-> > all developers/users pay to all developers/users? Does this driver 
-> > impose an unreasonably high burden for some reason?
+> > Regarding your suggestion:
+> > This is not problem now, we just change this definition.
+> > 
+> > do you mean just "send" and "complete" or all?
+> > 
+> > #define
+> > UFS_CMD_TRACE_STRINGS                                  
+> > \              
+> >           
+> >         EM(UFS_CMD_SEND,        "send_req")                        
+> > \  
+> >                                   
+> >         EM(UFS_CMD_COMP,        "complete_rsp")                    
+> > \  
+> > 
+> > below also need add "req" and "rsp"?
+> > 
+> >                                   
+> >         EM(UFS_DEV_COMP,        "dev_complete_rsp")                
+> > \  
+> >                                   
+> >         EM(UFS_QUERY_SEND,      "query_send")                  
+> > \      
+> >                               
+> >         EM(UFS_QUERY_COMP,      "query_complete")              
+> > \      
+> >                               
+> >         EM(UFS_QUERY_ERR,       "query_complete_err")          
+> > \      
+> >                               
+> >         EM(UFS_TM_SEND,         "tm_send")                     
+> > \      
+> >                               
+> >         EM(UFS_TM_COMP,         "tm_complete")                 
+> > \      
+> >                               
+> >         EM(UFS_TM_ERR,          "tm_complete_err") 
 > 
-> Yes. If anyone wants to change the interface between SCSI target core 
-> and SCSI target drivers, all target drivers, including the sbp and FCoE 
-> target driver have to be retested.
-
-I'm unaware of such an obligation. API changes happen often. When they do, 
-we see good test coverage of commercially viable hardware, some 
-best-effort testing of common hardware, and some perfunctory build 
-testing.
-
-But that is missing the point, which was about a particular driver, not 
-about development process. You have not shown how the target API is 
-special, to support your claim that this driver imposes an unreasonable 
-burden.
-
-In the interests of making forward progress in this discussion, shall we 
-discuss the kind of SCSI Target API changes that you anticipate?
-
-> In other words, keeping unused target drivers inside the kernel tree 
-> involves a significant maintenance burden for anyone who wants to modify 
-> the interface between the SCSI target core and SCSI target drivers.
 > 
-
-Keeping _any_ driver in the kernel involves a maintenance burden. There 
-are two good ways to address that.
-
-Firstly, by improving the development process. For example, an API change 
-is mostly mechanical work that lends itself to automated refactoring.
-Secondly, by involving all interested parties, so that the burden is 
-shared.
-
-Of course, there are other ways. E.g. "don't ship code when doing so won't 
-turn a profit". That, by the way, was the policy that gave us 10 billion 
-Android devices (or more) that don't function with a mainline kernel.
-
-> Additionally, there is a good alternative available for the sbp driver. 
-> Every system I know of that is equipped with a Firewire port also has an 
-> Ethernet port. So users who want to provide SCSI target functionality on 
-> such systems can use any SCSI transport protocol that is compatible with 
-> Ethernet (iSCSI, iSER over soft-RoCE, SRP over soft-RoCE, ...).
+> Hi Avri
 > 
-
-Ethernet is not always an alternative. That was already discussed in this 
-thread. But let's assume for a moment that you can migrate any and all 
-users of this driver over to an ethernet driver.
-
-Why would the maintainers of that ethernet driver and its API accept that 
-plan, if adding users would extend their maintenance and testing 
-obligations? Do you think those maintainers should pay the "kind of tax 
-that all developers/users pay to all developers/users?"
-
+> I am waiting for your answer. How can I change these strings to back-
+> compatible with your tool? Tt seems only you use these strings.
+> 
 > Thanks,
+> Bean
 > 
-> Bart.
-> 
+
+
+Hi Avri
+Before sending next version, double confirm with your.  I think you
+just need change:
+
+"send" to "send_req" 
+"complete" to "complete_rsp"
+                           
+
+Bean
+
+
+
+
+
