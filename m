@@ -5,57 +5,57 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0D8BC43219
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 19:02:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15717C4161F
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 19:02:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C02422D6E
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 19:02:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3E8F22D04
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 19:02:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730801AbhAETCJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Jan 2021 14:02:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43278 "EHLO
+        id S1730833AbhAETC1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Jan 2021 14:02:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730733AbhAETCH (ORCPT
+        with ESMTP id S1725838AbhAETCH (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 14:02:07 -0500
-Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22212C0617A5;
-        Tue,  5 Jan 2021 11:00:59 -0800 (PST)
-Received: by mail-ej1-x62c.google.com with SMTP id q22so1906708eja.2;
-        Tue, 05 Jan 2021 11:00:59 -0800 (PST)
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25E13C0617A2;
+        Tue,  5 Jan 2021 11:00:53 -0800 (PST)
+Received: by mail-ej1-x636.google.com with SMTP id w1so1758613ejf.11;
+        Tue, 05 Jan 2021 11:00:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=pumKytNb6HfM0fji93xr5G/BhQEYT7JsjEW2ZBlR5iU=;
-        b=JEckJaQsFgR2VLSNLG5i7z0+KlnFs83ZYxvR0iQpvNPQVQcSticPBwdGCbSF9D1XDP
-         faMVx76guT6YBo+oghMniuv45XGzCI9kOXx34jKAUzWzgH3l2lWQ8qRYGB6JP12yfGdf
-         PXk1Uyi+mFeT3ptjmyVyAmzEG8s03OO8PMaQEcI5fSbhi+CZdoBgQozSyOlIBYee4ka/
-         TuQC8hW7oOtFk41zzRi7d5iy1v8jOvtmUcz3y0ARCtdpxBwKE5wnx5JZLZIicLXqTBHJ
-         Aqa1KrvCJBQmuvF7CwMtnx1arxBqIA8R27l2ApWKEoYhQLef8w9qWcrMbb+cWzRe4dls
-         E77Q==
+        bh=VqKUbghIDfYrfb3O7qIi6ZxV/2bVKA7+VXpaNALoN60=;
+        b=o72EV0y5XH6HchkYJqkf18+T0vm0Uz19QPiFec6UrE0bJV5bAouj5tUFThd+IbUeaH
+         yUe448KhNG1blJQxDZTQOSx3bw/rjUuPJafSLUnhGcVcmX+vwhSeVoHv6FFJBmfUSV+u
+         a+CFVILyASpZpXFmOVMNnfqc28/9V6Dagm/1/RVHEVBz9ZLAMbGJ2DgFzJCl+FaHemvK
+         1GjY//UjxbnawtELZ84EsOXDBNfazICZGH71XgnOA+CXCFm1CTMHQfQ9UV70yrAuXfPB
+         oS/PFIl8l1oqOkgmzlk+HI19tTlFGLDsv257e3gWMIM1kgKEOxMeY7CZjnCo1NcYYmKo
+         gsYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=pumKytNb6HfM0fji93xr5G/BhQEYT7JsjEW2ZBlR5iU=;
-        b=ihVIQGBykCeYFC4LDic7xfQ7ebN7NNGOI3pf6+NsCyNm1GWWxNYOi/qsf56ytEFjDE
-         jScEIeZlmwktxfXx+iVfgH0VixxiDedd7bRgU49xkOTjJxuulBkdg5qS2KvZzKtUvMlU
-         CBXnc1c7M8IWcmT2EueMaSa5jQ0hRq1Skm9KCTlPCPQP7A9HnW33nvlV6+8v/sXiH+NO
-         7VP1lMvd1GbBAYQxin8dRJE1NXIy080mLBTOBwaXGtW9fB5nvoje+nqRwd9fNpgJpUxu
-         IEY41GxFgqRuRh7e5ypF+Vjc/AYxTbbda/1MFhqcfMPWl2nB5KTzvhKnaoWxnZnZ670m
-         aXvg==
-X-Gm-Message-State: AOAM531J2qZQAynWxNTn42JmEvSijqi26/cEOfloB2N63UR7SagY5+dT
-        YjWQlxUct51eoVhxicaiGw0=
-X-Google-Smtp-Source: ABdhPJz+1ICzC5RVM3oZs0oQoaJmiaftG0zPzA6tae5qdGfc+GpxdTiRp0F9FQexln0n4DdvvvIthg==
-X-Received: by 2002:a17:907:d10:: with SMTP id gn16mr478354ejc.496.1609873257847;
-        Tue, 05 Jan 2021 11:00:57 -0800 (PST)
+        bh=VqKUbghIDfYrfb3O7qIi6ZxV/2bVKA7+VXpaNALoN60=;
+        b=M1hutG4tPrb4hRVKgwJ0Eg1RUHkNyiR0cC4WrgZI4iiC7Swpc7K1yq8N5SifqP1ZLu
+         hqiO1N+HWterCDoTORwQ3FCeHH2y5RvBz9KZxbhbD8bsV0urLW5RtKpGDszsYFsd7z5K
+         kfw6zsx5MxJRqCIPzPnVZCI4GAyXxl7itZ79+snsCX2aiw2Du8ryKcVn7BDt7uEsQESg
+         9V2pIvLcrkMUyRed6IIc6pCQWeyv0TAC0rptoraJZJjYiyw2WQuoGbekEcH48AQQtGWa
+         oD1vM9vuhziETvh7C6AmYmH7jpTgX/1yuVp+i5fbv8az0V5zMTjH/4YfCpvgOlHn2yuB
+         roJg==
+X-Gm-Message-State: AOAM531RutI4t0UBg4w1Xo31Gt+X70Mhk2pFxwDCIyMnGftIZ5/6JPeB
+        SCtV2mABQMJQtisH1TP5JQQ=
+X-Google-Smtp-Source: ABdhPJz1wURDbCR0bNBYRS2W9HuLCgl2tOQ8FkzBLbjCThN+VIxGm1iq/S2lOXku8roTHNgJI/WFnQ==
+X-Received: by 2002:a17:906:f0cc:: with SMTP id dk12mr488324ejb.480.1609873251916;
+        Tue, 05 Jan 2021 11:00:51 -0800 (PST)
 Received: from localhost.localdomain (5-12-227-87.residential.rdsnet.ro. [5.12.227.87])
-        by smtp.gmail.com with ESMTPSA id z13sm205084edq.48.2021.01.05.11.00.56
+        by smtp.gmail.com with ESMTPSA id z13sm205084edq.48.2021.01.05.11.00.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Jan 2021 11:00:57 -0800 (PST)
+        Tue, 05 Jan 2021 11:00:51 -0800 (PST)
 From:   Vladimir Oltean <olteanv@gmail.com>
 To:     "David S . Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
@@ -86,9 +86,9 @@ Cc:     netdev@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
         intel-wired-lan@lists.osuosl.org, linux-parisc@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
         dev@openvswitch.org
-Subject: [RFC PATCH v2 net-next 07/12] parisc/led: hold the netdev lists lock when retrieving device statistics
-Date:   Tue,  5 Jan 2021 20:58:57 +0200
-Message-Id: <20210105185902.3922928-8-olteanv@gmail.com>
+Subject: [RFC PATCH v2 net-next 04/12] net: sysfs: don't hold dev_base_lock while retrieving device statistics
+Date:   Tue,  5 Jan 2021 20:58:54 +0200
+Message-Id: <20210105185902.3922928-5-olteanv@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210105185902.3922928-1-olteanv@gmail.com>
 References: <20210105185902.3922928-1-olteanv@gmail.com>
@@ -103,74 +103,45 @@ From: Vladimir Oltean <vladimir.oltean@nxp.com>
 In the effort of making .ndo_get_stats64 be able to sleep, we need to
 ensure the callers of dev_get_stats do not use atomic context.
 
-The LED driver for HP-PARISC workstations uses a workqueue to
-periodically check for updates in network interface statistics, and
-flicker when those have changed (i.e. there has been activity on the
-line). Ignoring the fact that this driver is completely duplicating
-drivers/leds/trigger/ledtrig-netdev.c, there is an even bigger problem.
-Now, the dev_get_stats call can sleep, and iterating through the list of
-network interfaces still needs to ensure the integrity of list of
-network interfaces. So that leaves us only one locking option given the
-current design of the network stack, and that is the netns mutex.
+I need to preface this by saying that I have no idea why netstat_show
+takes the dev_base_lock rwlock. Two things can be observed:
+(a) it does not appear to be due to dev_isalive requiring it for some
+    reason, because broadcast_show() also calls dev_isalive() and has
+    had no problem existing since the beginning of git.
+(b) the dev_get_stats function definitely does not need dev_base_lock
+    protection either. In fact, holding the dev_base_lock is the entire
+    problem here, because we want to make dev_get_stats sleepable, and
+    holding a rwlock gives us atomic context.
 
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Helge Deller <deller@gmx.de>
-Cc: linux-parisc@vger.kernel.org
+So since no protection seems to be necessary, just run unlocked while
+retrieving the /sys/class/net/eth0/statistics/* values.
+
+Cc: Christian Brauner <christian.brauner@ubuntu.com>
+Cc: Eric Dumazet <edumazet@google.com>
 Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
 ---
- drivers/parisc/led.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+ net/core/net-sysfs.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/parisc/led.c b/drivers/parisc/led.c
-index 3cada632a4be..c8c6b2301dc9 100644
---- a/drivers/parisc/led.c
-+++ b/drivers/parisc/led.c
-@@ -38,7 +38,6 @@
- #include <linux/ctype.h>
- #include <linux/blkdev.h>
- #include <linux/workqueue.h>
--#include <linux/rcupdate.h>
- #include <asm/io.h>
- #include <asm/processor.h>
- #include <asm/hardware.h>
-@@ -355,25 +354,29 @@ static __inline__ int led_get_net_activity(void)
- 	int retval;
+diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
+index 999b70c59761..0782a476b424 100644
+--- a/net/core/net-sysfs.c
++++ b/net/core/net-sysfs.c
+@@ -585,14 +585,13 @@ static ssize_t netstat_show(const struct device *d,
+ 	WARN_ON(offset > sizeof(struct rtnl_link_stats64) ||
+ 		offset % sizeof(u64) != 0);
  
- 	rx_total = tx_total = 0;
--	
--	/* we are running as a workqueue task, so we can use an RCU lookup */
--	rcu_read_lock();
--	for_each_netdev_rcu(&init_net, dev) {
-+
-+	/* we are running as a workqueue task, so we can sleep */
-+	netif_lists_lock(&init_net);
-+
-+	for_each_netdev(&init_net, dev) {
-+		struct in_device *in_dev = in_dev_get(dev);
- 		const struct rtnl_link_stats64 *stats;
+-	read_lock(&dev_base_lock);
+ 	if (dev_isalive(dev)) {
  		struct rtnl_link_stats64 temp;
--		struct in_device *in_dev = __in_dev_get_rcu(dev);
+ 		const struct rtnl_link_stats64 *stats = dev_get_stats(dev, &temp);
  
--		if (!in_dev || !in_dev->ifa_list)
-+		if (!in_dev || !in_dev->ifa_list ||
-+		    ipv4_is_loopback(in_dev->ifa_list->ifa_local)) {
-+			in_dev_put(in_dev);
- 			continue;
-+		}
- 
--		if (ipv4_is_loopback(in_dev->ifa_list->ifa_local))
--			continue;
-+		in_dev_put(in_dev);
- 
- 		stats = dev_get_stats(dev, &temp);
- 		rx_total += stats->rx_packets;
- 		tx_total += stats->tx_packets;
+ 		ret = sprintf(buf, fmt_u64, *(u64 *)(((u8 *)stats) + offset));
  	}
--	rcu_read_unlock();
+-	read_unlock(&dev_base_lock);
 +
-+	netif_lists_unlock(&init_net);
- 
- 	retval = 0;
+ 	return ret;
+ }
  
 -- 
 2.25.1
