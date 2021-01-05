@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9685C433E9
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 10:42:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 415A0C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 10:42:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4E15227C3
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 10:42:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FAA122525
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 10:42:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728220AbhAEKlz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Jan 2021 05:41:55 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:18974 "EHLO
+        id S1728671AbhAEKmT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Jan 2021 05:42:19 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34922 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728006AbhAEKlz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 05:41:55 -0500
+        by vger.kernel.org with ESMTP id S1728483AbhAEKmT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 05:42:19 -0500
 Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 105AemNk014395
-        for <linux-scsi@vger.kernel.org>; Tue, 5 Jan 2021 02:41:14 -0800
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 105AejnB014345
+        for <linux-scsi@vger.kernel.org>; Tue, 5 Jan 2021 02:41:38 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=BvGPA9oq+j6/fRmLkVAavSsMr4ZCtVGYLkZ9WzhXaRg=;
- b=LPTuvcNg7F8s3/pfAQQ927TVDg6XZxqaNj5evtGzWnRIBSS+DpajNZrIwYbV9Hd4vf0O
- /qrk+Yc9od7EJinOeJvG4NO1S8IT8vLPtiS/ZgUaOa+5BxJ+VINbiTam2DMTHCK56Vb8
- Y4dkjZbcAN/USOviLdzhEVN8syeGrbg8LgwKCjmwLVrxRgZs+rlzGoI17rSNzmWBbr8f
- EiYe7p9rmKjnXIeZRyJbSMD15do0GbpPIodMxgr6RMZH0iG7v8sA5comfSwX46YFwuEZ
- IXDs1BlYP8D68os7wdX+mOSAEtL7fKPkIBaQcyF9Op8GI/y7gfF5QxKa/8XwTIViUCVo iw== 
+ content-type; s=pfpt0220; bh=SVCamUmyuMJXs8DGP9uuPh/p+GCCMnhDEIaJ+ar1g1o=;
+ b=Qnck0ghYb+9RrcUASP8kUNqIToUvRBo/++9VhkS5MwrjRpXqes4nkYQb4Fkun7UReBAn
+ o8w9LMntWgJveDHGF/W0q81VkyuDjoDX3t/5i5K2VOmWs6qbUIGHaCh53yb8REiN5F1f
+ 4KHy8mfxV+946MfdEEJ9CQjZ8S0HwtWcwUGdlRWb3y9TOW54FfCkPR7avJYN1OptWU/H
+ vlmReJokZrEBFjugnG6Kw87b7YXvNXr1ciF7COnCQOfzxdvrDeyGwm7WJs1B1UU7D+Z3
+ bS6S24oFLAI4vX7CZuBNBHVppMFMiRpiTaihPU21CnyJxqblFMoBCZOqcjbCFUZQtWyC dw== 
 Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 35tq2ue6yj-1
+        by mx0a-0016f401.pphosted.com with ESMTP id 35tq2ue710-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Jan 2021 02:41:14 -0800
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by DC5-EXCH01.marvell.com
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Jan 2021 02:41:38 -0800
+Received: from SC-EXCH02.marvell.com (10.93.176.82) by DC5-EXCH01.marvell.com
  (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 5 Jan
- 2021 02:41:13 -0800
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 5 Jan
- 2021 02:41:12 -0800
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 5 Jan 2021 02:41:12 -0800
+ 2021 02:41:37 -0800
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 5 Jan
+ 2021 02:41:36 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 5 Jan 2021 02:41:36 -0800
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 727493F703F;
-        Tue,  5 Jan 2021 02:41:12 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id 912E73F703F;
+        Tue,  5 Jan 2021 02:41:36 -0800 (PST)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 105AfCEq025215;
-        Tue, 5 Jan 2021 02:41:12 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 105Afa9T025219;
+        Tue, 5 Jan 2021 02:41:36 -0800
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 105AfCMR025213;
-        Tue, 5 Jan 2021 02:41:12 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 105AfaZ3025218;
+        Tue, 5 Jan 2021 02:41:36 -0800
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v3 5/7] qla2xxx: Fix mailbox Ch erroneous error
-Date:   Tue, 5 Jan 2021 02:38:45 -0800
-Message-ID: <20210105103847.25041-6-njavali@marvell.com>
+Subject: [PATCH v3 6/7] qla2xxx: Enable NVME CONF (BIT_7) when enabling SLER
+Date:   Tue, 5 Jan 2021 02:38:46 -0800
+Message-ID: <20210105103847.25041-7-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20210105103847.25041-1-njavali@marvell.com>
 References: <20210105103847.25041-1-njavali@marvell.com>
@@ -70,48 +70,29 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+From: Saurav Kashyap <skashyap@marvell.com>
 
-Mailbox Ch/dump ram extend expects mb register 10 to be
-set. If not set/clear, firmware can pick up garbage from previous
-invocation of this mailbox. Example: mctp dump can set mb10.
-On subsequent flash read which use mailbox cmd Ch, mb10 can
-retain previous value.
+Enable NVME confirmation bit in PRLI.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c | 1 +
- drivers/scsi/qla2xxx/qla_mbx.c | 3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_iocb.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index bb7431912d41..144a893e7335 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -202,6 +202,7 @@ qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, __be32 *ram,
- 		wrt_reg_word(&reg->mailbox0, MBC_DUMP_RISC_RAM_EXTENDED);
- 		wrt_reg_word(&reg->mailbox1, LSW(addr));
- 		wrt_reg_word(&reg->mailbox8, MSW(addr));
-+		wrt_reg_word(&reg->mailbox10, 0);
- 
- 		wrt_reg_word(&reg->mailbox2, MSW(LSD(dump_dma)));
- 		wrt_reg_word(&reg->mailbox3, LSW(LSD(dump_dma)));
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 629af6fe8c55..06c99963b2c9 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -4291,7 +4291,8 @@ qla2x00_dump_ram(scsi_qla_host_t *vha, dma_addr_t req_dma, uint32_t addr,
- 	if (MSW(addr) || IS_FWI2_CAPABLE(vha->hw)) {
- 		mcp->mb[0] = MBC_DUMP_RISC_RAM_EXTENDED;
- 		mcp->mb[8] = MSW(addr);
--		mcp->out_mb = MBX_8|MBX_0;
-+		mcp->mb[10] = 0;
-+		mcp->out_mb = MBX_10|MBX_8|MBX_0;
- 	} else {
- 		mcp->mb[0] = MBC_DUMP_RISC_RAM;
- 		mcp->out_mb = MBX_0;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index e27359b294d3..8b41cbaf8535 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2378,6 +2378,8 @@ qla24xx_prli_iocb(srb_t *sp, struct logio_entry_24xx *logio)
+ 			logio->io_parameter[0] =
+ 				cpu_to_le32(NVME_PRLI_SP_FIRST_BURST);
+ 		if (sp->vha->flags.nvme2_enabled) {
++			/* Set service parameter BIT_7 for NVME CONF support */
++			logio->io_parameter[0] |= NVME_PRLI_SP_CONF;
+ 			/* Set service parameter BIT_8 for SLER support */
+ 			logio->io_parameter[0] |=
+ 				cpu_to_le32(NVME_PRLI_SP_SLER);
 -- 
 2.19.0.rc0
 
