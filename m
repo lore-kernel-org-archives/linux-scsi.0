@@ -2,116 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 669C1C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:08:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24C3BC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:10:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C0612073C
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:08:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E106622581
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:10:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727284AbhAEBIO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 20:08:14 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:16975 "EHLO
+        id S1728092AbhAEBK3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 20:10:29 -0500
+Received: from so254-31.mailgun.net ([198.61.254.31]:47393 "EHLO
         so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727148AbhAEBIO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 20:08:14 -0500
+        with ESMTP id S1727437AbhAEBK2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 20:10:28 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1609808873; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1609809008; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=IUb+uoL2QPaHR3+XZA+O6oy7Xj6ruPwUwYDS5AvtzhE=;
- b=Xg2Mf9TzScKYj+4d5E0UzG5+s4K1fdChJ36ZOGti/HDM011Zqq5kdAQmg3DK9M0N7n2tt7vJ
- ud4kVkl4dLa13xjsjt4Azj6KSnpmiRpnX3sYCWoTrKM5+OJ8pVeWKCYNJJnsMdp4t2PnQPFG
- +grzk8oz0CpJflG/r7UUSa+a/i4=
+ MIME-Version: Sender; bh=sgPqe4pqEk3ZwVRnrFktXNaNAtez93ZtoXUbpTZWFE4=;
+ b=bCsHzS4xoeiDENF0LERMWJPkO9rbSkEjPah+ZER21ulPFf0+2bGnoHxiw5msXocl1oUkQ1l6
+ gmyzg+VPSM8hUTlvaNP/cshtVuddUfWMQRWw1I2TkXlv2/alzwjI2zbFFba7y6JDaZs3ZGUB
+ q4QqNyo0SKzu4xGDUhfnIXmq4e8=
 X-Mailgun-Sending-Ip: 198.61.254.31
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
  smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 5ff3bbce584481b01ba287e4 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 05 Jan 2021 01:07:26
+ 5ff3bc6f584481b01ba496ce (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 05 Jan 2021 01:10:07
  GMT
 Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4D690C4323B; Tue,  5 Jan 2021 01:07:25 +0000 (UTC)
+        id A72CFC43468; Tue,  5 Jan 2021 01:10:06 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6007AC4346E;
-        Tue,  5 Jan 2021 01:07:24 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8143FC433C6;
+        Tue,  5 Jan 2021 01:10:05 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Tue, 05 Jan 2021 09:07:24 +0800
+Date:   Tue, 05 Jan 2021 09:10:05 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Bean Huo <huobean@gmail.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        rjw@rjwysocki.net, Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Nitin Rawat <nitirawa@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] scsi: ufs: Protect PM ops and err_handler from user
- access through sysfs
-In-Reply-To: <80a15afab8024d0b61d312b57585c9322ac91958.camel@gmail.com>
-References: <1609595975-12219-1-git-send-email-cang@codeaurora.org>
- <1609595975-12219-3-git-send-email-cang@codeaurora.org>
- <80a15afab8024d0b61d312b57585c9322ac91958.camel@gmail.com>
-Message-ID: <7d49c1dfc3f648c484076f3c3a7f4e1e@codeaurora.org>
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        rjw@rjwysocki.net
+Subject: Re: [PATCH v2 3/3] scsi: ufs: Let resume callback return -EBUSY after
+ ufshcd_shutdown
+In-Reply-To: <20201224172010.10701-4-huobean@gmail.com>
+References: <20201224172010.10701-1-huobean@gmail.com>
+ <20201224172010.10701-4-huobean@gmail.com>
+Message-ID: <bf5b8bc409af22f32c4fc5f5de769058@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-01-05 04:05, Bean Huo wrote:
-> On Sat, 2021-01-02 at 05:59 -0800, Can Guo wrote:
->> + * @shutting_down: flag to check if shutdown has been invoked
+On 2020-12-25 01:20, Bean Huo wrote:
+> From: Bean Huo <beanhuo@micron.com>
 > 
-> I am not much sure if this flag is need, since once PM going in
-> shutdown path, what will be returnded by pm_runtime_get_sync()?
+> After ufshcd_shutdown(), both UFS device and UFS LINk are powered off,
+> return '0' will mislead the upper PM layer since the device has not 
+> been
+> successfully resumed yet. This will let pm_runtime_get_sync() caller
+> mistakenly believe the device/LINK has been resumed, which leads to
+> request processing timeout that was en-queued later.
 > 
-> If pm_runtime_get_sync() will fail, just check its return.
-> 
+> To fix this, let ufshcd_system/runtimie_resume() return -EBUSY in case 
+> of
+> hba->is_powered == false.
 
-That depends. During/after shutdown, for UFS's case only,
+This change won't work as you expect...
+
+During/after shutdown, for UFS's case only,
 pm_runtime_get_sync(hba->dev) will most likely return 0,
 because it is already RUNTIME_ACTIVE, pm_runtime_get_sync()
-will directly return 0... meaning you cannot count on it.
+will directly return 0... meaning your change won't even be
+exercised.
 
 Check Stanley's change -
 https://lore.kernel.org/patchwork/patch/1341389/
 
 Can Guo.
 
-> Hi Rafael
-> would you please help us confirm this?
 > 
-> thanks,
-> Bean
+> Signed-off-by: Bean Huo <beanhuo@micron.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 12 ++++++++----
+>  1 file changed, 8 insertions(+), 4 deletions(-)
 > 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index e221add25a7e..e1bcac51c01f 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -8950,14 +8950,16 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+>  		return -EINVAL;
+>  	}
 > 
->> + * @host_sem: semaphore used to serialize concurrent contexts
->>   * @eh_wq: Workqueue that eh_work works on
->>   * @eh_work: Worker to handle UFS errors that require s/w attention
->>   * @eeh_work: Worker to handle exception events
->> @@ -751,7 +753,8 @@ struct ufs_hba {
->>         u32 intr_mask;
->>         u16 ee_ctrl_mask;
->>         bool is_powered;
->> -       struct semaphore eh_sem;
->> +       bool shutting_down;
->> +       struct semaphore host_sem;
+> -	if (!hba->is_powered || pm_runtime_suspended(hba->dev))
+> +	if (!hba->is_powered || pm_runtime_suspended(hba->dev)) {
+>  		/*
+>  		 * Let the runtime resume take care of resuming
+>  		 * if runtime suspended.
+>  		 */
+> +		ret = -EBUSY;
+>  		goto out;
+> -	else
+> +	} else {
+>  		ret = ufshcd_resume(hba, UFS_SYSTEM_PM);
+> +	}
+>  out:
+>  	trace_ufshcd_system_resume(dev_name(hba->dev), ret,
+>  		ktime_to_us(ktime_sub(ktime_get(), start)),
+> @@ -9026,10 +9028,12 @@ int ufshcd_runtime_resume(struct ufs_hba *hba)
+>  	if (!hba)
+>  		return -EINVAL;
+> 
+> -	if (!hba->is_powered)
+> +	if (!hba->is_powered) {
+> +		ret = -EBUSY;
+>  		goto out;
+> -	else
+> +	} else {
+>  		ret = ufshcd_resume(hba, UFS_RUNTIME_PM);
+> +	}
+>  out:
+>  	trace_ufshcd_runtime_resume(dev_name(hba->dev), ret,
+>  		ktime_to_us(ktime_sub(ktime_get(), start)),
