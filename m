@@ -7,38 +7,40 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E00DC43333
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:00:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0737C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:00:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC9B122B2C
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:00:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 921E0229EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:00:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727937AbhAEBAD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 20:00:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38772 "EHLO mail.kernel.org"
+        id S1727649AbhAEBAA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 20:00:00 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38744 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727905AbhAEBAC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Jan 2021 20:00:02 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4125F22582;
-        Tue,  5 Jan 2021 00:59:21 +0000 (UTC)
+        id S1726518AbhAEA77 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 Jan 2021 19:59:59 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4ED992256F;
+        Tue,  5 Jan 2021 00:59:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609808361;
-        bh=jCNVPeOnIUB1NtbTFC3Anj//bhI87IHO9E0tIhWQgbI=;
+        s=k20201202; t=1609808359;
+        bh=KS5gmCZ6EzJVi1yQawSh86bpDzZj0sa0Ft49c6zGkvE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tbIzuCxzOh90GmIykFypUaD3GhYA3pb71PPIE2imtXFedA1h89pveCuadqbP5o3p1
-         oKL+GijahQarX32uAKIEs+Oe5ojDTAADuNJSyMxq/s4aAXXYyO8ctXBC5aN3VJK/LY
-         yL04uQzSAkL+FMtchTbyNqF7ZeEJm0E09rroOPar/NLZY9n1ztFQCqHzwYmxZ3ZZal
-         RZZrmQdmhA9efSEObmO6dpZJto30oaCNnn1sus/J0qiNY176WvoZrx7daXjkQUFcHu
-         NzKQFI8qokIUOUqAE//GWQ4cxnUPf9fuUTv9DWSstZcvmpTzWXvJLfs15HYRxhQUD0
-         whjLS9zPZR8AA==
+        b=iKY1IGTNXgizkZxPfqeSpmbvLhg/pRDvt9xr+N08cHVW+x0J7rVQan/9sTEC3gNMz
+         Q3q4fLkyBjDMvx4L1bJWAzw0Z6y/wRKWlfcdPhzSIBbm/99gxBy4Nrwj/O5x/QZDL7
+         LVECIpnY7b6ObYRZkFPyPFhfaDRPfgF3JI91aQnNZPyUUtPbVDiM1lNJZMdN4uN474
+         zHJ+rNuQpPkRnYB4GeI2XBeb35VOj0rHblMw2YDjGiSv+HTpQ4cXC7GQWLEoew4Qtu
+         WbNARxKZmuQpVqgOa6AX5Iam6lcsIKhS6yKbMvSCpBVdwA8O5ERqFOtmUPFIJl0Q7X
+         bfPm8DZ0Rt1ng==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Adrian Hunter <adrian.hunter@intel.com>,
+Cc:     Bean Huo <beanhuo@micron.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 04/17] scsi: ufs-pci: Fix restore from S4 for Intel controllers
-Date:   Mon,  4 Jan 2021 19:59:02 -0500
-Message-Id: <20210105005915.3954208-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 02/17] scsi: ufs: Fix wrong print message in dev_err()
+Date:   Mon,  4 Jan 2021 19:59:00 -0500
+Message-Id: <20210105005915.3954208-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210105005915.3954208-1-sashal@kernel.org>
 References: <20210105005915.3954208-1-sashal@kernel.org>
@@ -50,79 +52,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Adrian Hunter <adrian.hunter@intel.com>
+From: Bean Huo <beanhuo@micron.com>
 
-[ Upstream commit c763729a10e538d997744317cf4a1c4f25266066 ]
+[ Upstream commit 1fa0570002e3f66db9b58c32c60de4183b857a19 ]
 
-Currently, ufshcd-pci is the only UFS driver with support for
-suspend-to-disk PM callbacks (i.e. freeze/thaw/restore/poweroff). These
-callbacks are set by the macro SET_SYSTEM_SLEEP_PM_OPS to the same
-functions as system suspend/resume. That will work with spm_lvl 5 because
-spm_lvl 5 will result in a full restore for the ->restore() callback.  In
-the absence of a full restore, the host controller registers will have
-values set up by the restore kernel (the kernel that boots and loads the
-restore image) which are not necessarily the same. However it turns out,
-the only registers that sometimes need restore are the base address
-registers. This has gone un-noticed because, depending on IOMMU settings,
-the kernel can end up allocating the same addresses every time.
+Change dev_err() print message from "dme-reset" to "dme_enable" in function
+ufshcd_dme_enable().
 
-For Intel controllers, an spm_lvl other than 5 can be used, so to support
-S4 (suspend-to-disk) with spm_lvl other than 5, restore the base address
-registers.
-
-Link: https://lore.kernel.org/r/20201207083120.26732-2-adrian.hunter@intel.com
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Link: https://lore.kernel.org/r/20201207190137.6858-3-huobean@gmail.com
+Acked-by: Alim Akhtar <alim.akhtar@samsung.com>
+Acked-by: Avri Altman <avri.altman@wdc.com>
+Signed-off-by: Bean Huo <beanhuo@micron.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd-pci.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index df3a564c3e334..360c25f1f061a 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -163,6 +163,24 @@ static void ufs_intel_common_exit(struct ufs_hba *hba)
- 	intel_ltr_hide(hba->dev);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 911aba3e7675c..d7e9c4bc80478 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3620,7 +3620,7 @@ static int ufshcd_dme_enable(struct ufs_hba *hba)
+ 	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+ 	if (ret)
+ 		dev_err(hba->dev,
+-			"dme-reset: error code %d\n", ret);
++			"dme-enable: error code %d\n", ret);
+ 
+ 	return ret;
  }
- 
-+static int ufs_intel_resume(struct ufs_hba *hba, enum ufs_pm_op op)
-+{
-+	/*
-+	 * To support S4 (suspend-to-disk) with spm_lvl other than 5, the base
-+	 * address registers must be restored because the restore kernel can
-+	 * have used different addresses.
-+	 */
-+	ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
-+		      REG_UTP_TRANSFER_REQ_LIST_BASE_L);
-+	ufshcd_writel(hba, upper_32_bits(hba->utrdl_dma_addr),
-+		      REG_UTP_TRANSFER_REQ_LIST_BASE_H);
-+	ufshcd_writel(hba, lower_32_bits(hba->utmrdl_dma_addr),
-+		      REG_UTP_TASK_REQ_LIST_BASE_L);
-+	ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
-+		      REG_UTP_TASK_REQ_LIST_BASE_H);
-+	return 0;
-+}
-+
- static int ufs_intel_ehl_init(struct ufs_hba *hba)
- {
- 	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
-@@ -174,6 +192,7 @@ static struct ufs_hba_variant_ops ufs_intel_cnl_hba_vops = {
- 	.init			= ufs_intel_common_init,
- 	.exit			= ufs_intel_common_exit,
- 	.link_startup_notify	= ufs_intel_link_startup_notify,
-+	.resume			= ufs_intel_resume,
- };
- 
- static struct ufs_hba_variant_ops ufs_intel_ehl_hba_vops = {
-@@ -181,6 +200,7 @@ static struct ufs_hba_variant_ops ufs_intel_ehl_hba_vops = {
- 	.init			= ufs_intel_ehl_init,
- 	.exit			= ufs_intel_common_exit,
- 	.link_startup_notify	= ufs_intel_link_startup_notify,
-+	.resume			= ufs_intel_resume,
- };
- 
- #ifdef CONFIG_PM_SLEEP
 -- 
 2.27.0
 
