@@ -2,149 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2995AC433E9
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 10:27:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9440C433E9
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 10:39:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D783A2250E
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 10:27:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CA952251F
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 10:39:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728990AbhAEK0x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Jan 2021 05:26:53 -0500
-Received: from wnew2-smtp.messagingengine.com ([64.147.123.27]:50733 "EHLO
-        wnew2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728012AbhAEK0x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 05:26:53 -0500
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailnew.west.internal (Postfix) with ESMTP id CAFD17EA;
-        Tue,  5 Jan 2021 05:25:45 -0500 (EST)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute4.internal (MEProxy); Tue, 05 Jan 2021 05:25:47 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=
-        date:from:to:cc:subject:message-id:references:mime-version
-        :content-type:in-reply-to; s=fm2; bh=ubUqM9i9NxTd2MW29CzycCTtGoQ
-        nFRTNu4DW5sQ9V8A=; b=OCFhiGu5aW97oVEbzS8aV8mAAzlb/BNdtdj49bBheMg
-        awlpDSfq1nfENTTwj2lxU9tNvz7lbWZMhLW+k0Vz3HsWIvMm7oc7fJQrxY9hqylZ
-        Ek6hFu6k89RwdXWF94DG3ZLwrKaNoVMy/Ac0G/jFM1Cu6xgSsD1fbVxjNu5xM+w5
-        NhDvxvesHs782bzIOy9tGi2Blbjbtmw+z7Ms6u6JSyMWaJMORvZzTU9cYhha0a57
-        ALc6OvMJxfVCrZfVLNOSoO2DJZ7HDb5OPCtMVECYNPBTZvgHi8ermGcnhRiIH571
-        d1hbznT7pnNUFrMx1JI7Um/xbNI7/g1wq8+ThabAFAg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=ubUqM9
-        i9NxTd2MW29CzycCTtGoQnFRTNu4DW5sQ9V8A=; b=MUdo9PJFX2nLiJifQkGr+z
-        jjPHkYbzoyTsSIUKVo5VtPmGAw0RVOSArAoNa61jrxC5PfchEPZ0Gw0d14oox7fd
-        SQt56NEFdsGpoWTrmnH2h40x0vO9X8DIkg4q+KAryT3foCLKS5mdsBFPVudD11F7
-        17SqMOp6yU41iNyToPgqiLI2u7A3OL+ti6OJWQdgYqfLfnT0g4H77ED7rJc4QJoS
-        RCaij++jejvqpWQWe+1yeI2Jj7bLlLQVKO84eGwRY9PvKTuRDm8vOImjW2D5GEzh
-        57eD1RBzNiJk8tb5Jx4DLd0pD0rsJAZ4p2dT006QgEq/k+5qugAz+fTLiemZw5BQ
-        ==
-X-ME-Sender: <xms:qD70X4kmLYpX0d6tWU4glr3OCffBkGENjOcQzjUp6Nv0p4jWDTAoHw>
-    <xme:qD70X32aGgL1HHM5424EAj4h7x9IIrkQ6wcoL_flzVjAbdbIi6eMM5e63fsG3UH2n
-    LMLJd4Q_uNeOQ>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrvdefhedgudegucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvffukfhfgggtuggjsehttdertddttddvnecuhfhrohhmpefirhgvghcu
-    mffjuceoghhrvghgsehkrhhorghhrdgtohhmqeenucggtffrrghtthgvrhhnpeevueehje
-    fgfffgiedvudekvdektdelleelgefhleejieeugeegveeuuddukedvteenucfkphepkeef
-    rdekiedrjeegrdeigeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrih
-    hlfhhrohhmpehgrhgvgheskhhrohgrhhdrtghomh
-X-ME-Proxy: <xmx:qD70X2ptvJQyydMcSwu696vvOhcnIoIXOe5-f0vkRgs_Q0LuGeQcAw>
-    <xmx:qD70X0k-I60T6E4rixSvjVMJ04uuWY0pJrsy4dIkMSPvfh9kxY-T9Q>
-    <xmx:qD70X23fhleG0yiGoBaxaTIcdRk2avJ6cphFsaxoYAGOP-41SFa2ag>
-    <xmx:qT70XwNfGMLgfSnj6QF--Gt0yIOKlxdDc-zV4hdntxNU5AtY9ynY-oegUPQ>
-Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 99ACA24005C;
-        Tue,  5 Jan 2021 05:25:43 -0500 (EST)
-Date:   Tue, 5 Jan 2021 11:27:08 +0100
-From:   Greg KH <greg@kroah.com>
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] scsi: ufs-qcom: Add one sysfs node to monitor
- performance
-Message-ID: <X/Q+/MSk1d2SW3lA@kroah.com>
-References: <1609816552-16442-1-git-send-email-cang@codeaurora.org>
- <1609816552-16442-3-git-send-email-cang@codeaurora.org>
+        id S1728660AbhAEKjz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Jan 2021 05:39:55 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57678 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728006AbhAEKjz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 05:39:55 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 105Aa8LF014013
+        for <linux-scsi@vger.kernel.org>; Tue, 5 Jan 2021 02:39:14 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=QUvJ7q4NdBL90desMVmRKDjOS5XBhsvbXnyVKbb27zE=;
+ b=UxzFIltPn814yr3/8ZwtIKkX53tX9ibF4cmYuX+LOkMeBz+dGNEA1CPdpXpmGYyuCdN4
+ RzQpdb7fPuGgSd3ZvBETMA+0uMyS5eSQJK/KZm2rC9cG4ymyvFQ5/zqT1aILdxDbMXzb
+ zmozZxt0opU+/bBPwipI9QyRMUog7pY6QTucRCmuQhxuoZhK5TDhJVQM2VC190qM5NPU
+ 14KtUSkW5x+QK60Hru+LdbVtCE1+hR7KTy8Qbk+FbDVxNpQCVxrIQ9ry9WALhV09yRLe
+ UOczJUDz5sAoheEbjZtYaoseywQ5m/s+RL8J6kl/qBPFVQ/xyM7XZS4YpbYz4yNsG/v1 vA== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 35ts7rnwkg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Jan 2021 02:39:14 -0800
+Received: from SC-EXCH02.marvell.com (10.93.176.82) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 5 Jan
+ 2021 02:39:12 -0800
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 5 Jan
+ 2021 02:39:11 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 5 Jan 2021 02:39:12 -0800
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id B46CE3F703F;
+        Tue,  5 Jan 2021 02:39:11 -0800 (PST)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 105AdBUN025076;
+        Tue, 5 Jan 2021 02:39:11 -0800
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 105AdBLA025075;
+        Tue, 5 Jan 2021 02:39:11 -0800
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH v3 0/7] qla2xxx driver enhancements
+Date:   Tue, 5 Jan 2021 02:38:40 -0800
+Message-ID: <20210105103847.25041-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1609816552-16442-3-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
+ definitions=2021-01-05_01:2021-01-05,2021-01-05 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Oops, forgot the big problem that I noticed:
+Martin,
 
-On Mon, Jan 04, 2021 at 07:15:51PM -0800, Can Guo wrote:
-> +static ssize_t monitor_show(struct device *dev, struct device_attribute *attr,
-> +			    char *buf)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +	struct ufs_qcom_perf_monitor *mon = &host->monitor;
-> +	unsigned long nr_sec_rd, nr_sec_wr, busy_us_rd, busy_us_wr;
-> +	unsigned long lat_max_rd, lat_min_rd, lat_sum_rd, lat_avg_rd, nr_req_rd;
-> +	unsigned long lat_max_wr, lat_min_wr, lat_sum_wr, lat_avg_wr, nr_req_wr;
-> +	bool is_enabled;
-> +
-> +	/*
-> +	 * Don't lock the host lock since user needs to cat the entry very
-> +	 * frequently during performance test, otherwise it may impact the
-> +	 * performance.
-> +	 */
-> +	is_enabled = mon->enabled;
-> +	if (!is_enabled)
-> +		goto print_usage;
-> +
-> +	nr_sec_rd = mon->nr_sec_rw[READ];
-> +	nr_sec_wr = mon->nr_sec_rw[WRITE];
-> +	busy_us_rd = ktime_to_us(mon->total_busy[READ]);
-> +	busy_us_wr = ktime_to_us(mon->total_busy[WRITE]);
-> +
-> +	nr_req_rd = mon->nr_req[READ];
-> +	lat_max_rd = ktime_to_us(mon->lat_max[READ]);
-> +	lat_min_rd = ktime_to_us(mon->lat_min[READ]);
-> +	lat_sum_rd = ktime_to_us(mon->lat_sum[READ]);
-> +	lat_avg_rd = lat_sum_rd / nr_req_rd;
-> +
-> +	nr_req_wr = mon->nr_req[WRITE];
-> +	lat_max_wr = ktime_to_us(mon->lat_max[WRITE]);
-> +	lat_min_wr = ktime_to_us(mon->lat_min[WRITE]);
-> +	lat_sum_wr = ktime_to_us(mon->lat_sum[WRITE]);
-> +	lat_avg_wr = lat_sum_wr / nr_req_wr;
-> +
-> +	return scnprintf(buf, PAGE_SIZE, "Read %lu %s %lu us, %lu %s max %lu | min %lu | avg %lu | sum %lu\nWrite %lu %s %lu us, %lu %s max %lu | min %lu | avg %lu | sum %lu\n",
-> +		 nr_sec_rd, "sectors (in 512 bytes) in ", busy_us_rd,
-> +		 nr_req_rd, "read reqs completed, latencies in us: ",
-> +		 lat_max_rd, lat_min_rd, lat_avg_rd, lat_sum_rd,
-> +		 nr_sec_wr, "sectors (in 512 bytes) in ", busy_us_wr,
-> +		 nr_req_wr, "write reqs completed, latencies in us: ",
-> +		 lat_max_wr, lat_min_wr, lat_avg_wr, lat_sum_wr);
+Please apply the qla2xxx driver enhancements to the scsi tree at your
+earliest convenience.
 
-sysfs is one-value-per-file, not
-throw-everything-in-one-file-and-hope-userspace-can-parse-it.
+v3:
+Add complete fix for the warning reported by kernel test robot.
 
-This is not acceptable at all.  Why not just use debugfs for stats like
-this?
+v2:
+Fix warning reported by kernel test robot.
 
-Also, use sysfs_emit() for any new sysfs files please.
 
-thanks,
+Bikash Hazarika (1):
+  qla2xxx: Wait for ABTS response on I/O timeouts for NVMe
 
-greg k-h
+Nilesh Javali (1):
+  qla2xxx: Update version to 10.02.00.105-k
+
+Quinn Tran (1):
+  qla2xxx: Fix mailbox Ch erroneous error
+
+Saurav Kashyap (4):
+  qla2xxx: Implementation to get and manage host, target stats and
+    initiator port
+  qla2xxx: Add error counters to debugfs node
+  qla2xxx: Move some messages from debug to normal log level
+  qla2xxx: Enable NVME CONF (BIT_7) when enabling SLER
+
+ drivers/scsi/qla2xxx/qla_attr.c    |   9 +
+ drivers/scsi/qla2xxx/qla_bsg.c     | 342 +++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_bsg.h     |   5 +
+ drivers/scsi/qla2xxx/qla_dbg.c     |   1 +
+ drivers/scsi/qla2xxx/qla_def.h     |  83 +++++++
+ drivers/scsi/qla2xxx/qla_dfs.c     |  28 +++
+ drivers/scsi/qla2xxx/qla_fw.h      |  27 ++-
+ drivers/scsi/qla2xxx/qla_gbl.h     |  29 +++
+ drivers/scsi/qla2xxx/qla_gs.c      |   1 +
+ drivers/scsi/qla2xxx/qla_init.c    | 230 ++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_iocb.c    |   8 +
+ drivers/scsi/qla2xxx/qla_isr.c     |  82 ++++---
+ drivers/scsi/qla2xxx/qla_mbx.c     |  18 +-
+ drivers/scsi/qla2xxx/qla_nvme.c    |  90 +++++++-
+ drivers/scsi/qla2xxx/qla_os.c      |  25 +++
+ drivers/scsi/qla2xxx/qla_version.h |   4 +-
+ 16 files changed, 942 insertions(+), 40 deletions(-)
+
+
+base-commit: be1b500212541a70006887bae558ff834d7365d0
+-- 
+2.19.0.rc0
+
