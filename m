@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C59CFC433E6
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 19:02:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 048DCC07EBC
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 19:02:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A6B122D58
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 19:02:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C088722D04
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 19:02:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730857AbhAETCb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Jan 2021 14:02:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43354 "EHLO
+        id S1730878AbhAETCk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Jan 2021 14:02:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730730AbhAETCa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 14:02:30 -0500
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 914C4C061574;
-        Tue,  5 Jan 2021 11:01:10 -0800 (PST)
-Received: by mail-ej1-x62e.google.com with SMTP id jx16so1776266ejb.10;
-        Tue, 05 Jan 2021 11:01:10 -0800 (PST)
+        with ESMTP id S1730718AbhAETCG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 14:02:06 -0500
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5853AC06179F;
+        Tue,  5 Jan 2021 11:00:49 -0800 (PST)
+Received: by mail-ed1-x533.google.com with SMTP id y24so1833525edt.10;
+        Tue, 05 Jan 2021 11:00:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=2Xkt1oCIrxKaf3It3JKv+vsp1Hey/NBy/qFeY9d8DZc=;
-        b=Gt5QFu6I7aHo+8GOPj5R6UBnaDhbCplrfdTcdydwynZSIxhp9WE4gV3mh7aGBMhvd/
-         2rSp5iOOh6nP27UsPfrjVeanyWIu7s1MfI/Sj7qYZizz3AsC8CTZ46nLPYgajUFzTdnL
-         vcl31dKkTWMrIK3J8VFuZl0La4iCfKMMOcjSNTKaMokKfC3PC+/Wk5fnlzmJyUmCW2Ak
-         Wz71qxVmVISS6e5HCu1t8G9zRraBu0jxxVzCbv6fdiGMern9MRd2d3L/y/bgN0w9R1ft
-         SlO9N3Av0p/8zNw//Ah3Vmsfx35/2SKI8FB7cYchKY9eQBtOP21dvYqJq7ic4+BeuxJj
-         +FWg==
+        bh=RJ8dUowMPq3ju2B2o3YV26hFEb1pomATUmoxAPlTqus=;
+        b=GO7hev4U0YJdcgEsK88J9bkR8g3/S6oOiXXivS8BAO4XXMadjuyWthyEQaJfLTQU8H
+         1DtCrBIJpgmhfZHYYpCpCbObm1o8+Q3w0br77uRKGySHd+NErjtbo8nUJ9uTBaikj/xm
+         ha+1zPYpGxf7Q24YsQkP6ajnLAhmnT33sqAZMipWWhHzaxoZ4NrGUpqHBX/6Mfda7CA9
+         v2zWxCC3JjJjZFOhV570Qiuul7gfegHhSSn1kYhfygu72yKpW9xu3WnYUJmU8oBXb8QL
+         5E43oPwO2ZORacZGW+gxBLzBPjyGXgjmmI9/8/JlN+Aw3OF8hOCq/UXbkw60orAEk1ry
+         Sf8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=2Xkt1oCIrxKaf3It3JKv+vsp1Hey/NBy/qFeY9d8DZc=;
-        b=bYeYVirHrNjC5BH/xSWNjRsE5cC7tzdSH7rZYNcR9WckLla9mv/v3CytoQyWF6DrA0
-         Xq50FqnQez2rvtk5CYrn7eepFOva4imwaAESln1KxbDiQ/WvGihEqrgzHGIwfGVF1HJr
-         /s5M/2jqbKzfW6qOra0rFBskEXofKUfuOiuAEPrBTj0D+YWtcPm+1tn8qeMAonWPk6Go
-         7THInYcCnAhNKfx4HudcwZ6qz7pgiM76DxI0u0tpeFP2DBpucHdfU57+Fq4V4Y/QnBAS
-         5XBkeEKFdZ6NqQ5+lBUUZtZVVZQSehpvlzISQqhjx/CqUQVfxWEIHvNSZL4KubjKJBgv
-         vHjg==
-X-Gm-Message-State: AOAM533TbjBF4j4OeRhiTR5iLFjI/xS64/PqnnMWCFgIq8VVQwIvjisq
-        4rqgY21pcapXzXh71BzIV44=
-X-Google-Smtp-Source: ABdhPJwJ20qomfS5nkztFWDy2mx/AXJKC58XuuP1SWp95xUhRb4sibo0a7Ho4ddPX1swb2PGZfDcEQ==
-X-Received: by 2002:a17:906:81d6:: with SMTP id e22mr490266ejx.476.1609873269304;
-        Tue, 05 Jan 2021 11:01:09 -0800 (PST)
+        bh=RJ8dUowMPq3ju2B2o3YV26hFEb1pomATUmoxAPlTqus=;
+        b=YKE9GK9EjToIeEGDOTzt4I/pApo21DCBxB53EB1P72VU2pfrdwfjJXtMlNpQzs8dnZ
+         GeR94gxfiNY23sZfIvRa4itgE92+hMkQD88+r8AdmUwNU00FHbG0V/ugEsa9f0OjSEjL
+         ctQgr/7To3yd1T1cvPf3HigNg4+1OgqEz6rGUMyAAnQOuIkPn6WTJJMF32tTk0j2fpjk
+         +p3fYOi+Ylc0vZDNmBeaXGUmJuOKYvjjzz7awyezxHCf+ZPKTPisOVHpcF3chyJstHHT
+         SgEvhabvryCe3ffdGyKiPL7+tY1/8/H4i8wU6k/sgxJajxVqSFL70gHb0CtIUkrVaxqE
+         tk+Q==
+X-Gm-Message-State: AOAM532qG3WXudTEjpmYXYIw7C9qYP9aSoubNp3Egar9z7Jfkwy/JLYT
+        eOpRCSHeJwPqd2CA6OjEGVM=
+X-Google-Smtp-Source: ABdhPJzWjpEMpRNRloZq9Mto5vPvzjgXXIC9uZYEM/t0Vlmggp+gh9m7BU6tGVHsrf+F/rfiXtSgog==
+X-Received: by 2002:a05:6402:1692:: with SMTP id a18mr1145030edv.321.1609873248090;
+        Tue, 05 Jan 2021 11:00:48 -0800 (PST)
 Received: from localhost.localdomain (5-12-227-87.residential.rdsnet.ro. [5.12.227.87])
-        by smtp.gmail.com with ESMTPSA id z13sm205084edq.48.2021.01.05.11.01.07
+        by smtp.gmail.com with ESMTPSA id z13sm205084edq.48.2021.01.05.11.00.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Jan 2021 11:01:08 -0800 (PST)
+        Tue, 05 Jan 2021 11:00:47 -0800 (PST)
 From:   Vladimir Oltean <olteanv@gmail.com>
 To:     "David S . Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
@@ -86,9 +86,9 @@ Cc:     netdev@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
         intel-wired-lan@lists.osuosl.org, linux-parisc@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
         dev@openvswitch.org
-Subject: [RFC PATCH v2 net-next 12/12] net: remove obsolete comments about ndo_get_stats64 context from eth drivers
-Date:   Tue,  5 Jan 2021 20:59:02 +0200
-Message-Id: <20210105185902.3922928-13-olteanv@gmail.com>
+Subject: [RFC PATCH v2 net-next 02/12] net: introduce a mutex for the netns interface lists
+Date:   Tue,  5 Jan 2021 20:58:52 +0200
+Message-Id: <20210105185902.3922928-3-olteanv@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210105185902.3922928-1-olteanv@gmail.com>
 References: <20210105185902.3922928-1-olteanv@gmail.com>
@@ -100,66 +100,200 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Vladimir Oltean <vladimir.oltean@nxp.com>
 
-Now that we have a good summary in Documentation/networking/netdevices.rst,
-these comments serve no purpose and are actually distracting/confusing.
+Currently, any writer that wants to alter the lists of network
+interfaces (either the plain list net->dev_base_head, or the hash tables
+net->dev_index_head and net->dev_name_head) can keep other writers at
+bay using the RTNL mutex.
+
+However, the RTNL mutex has become a very contended resource over the
+years, so there is a movement to do finer grained locking.
+
+This patch adds one more way for writers to the network interface lists
+to serialize themselves. We assume that all writers to the network
+interface lists are easily identifiable because the write side of
+dev_base_lock also needs to be held (note that some instances of that
+were deliberately skipped, since they only dealt with protecting the
+operational state of the netdev).
+
+Holding the RTNL mutex is now optional for new code that alters the
+lists, since all relevant writers were made to also hold the new lock.
 
 Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
 ---
- drivers/net/ethernet/cisco/enic/enic_main.c | 1 -
- drivers/net/ethernet/nvidia/forcedeth.c     | 2 --
- drivers/net/ethernet/sfc/efx_common.c       | 1 -
- drivers/net/ethernet/sfc/falcon/efx.c       | 1 -
- 4 files changed, 5 deletions(-)
+ include/linux/netdevice.h   | 10 +++++++++
+ include/net/net_namespace.h |  6 +++++
+ net/core/dev.c              | 44 +++++++++++++++++++++++++------------
+ 3 files changed, 46 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/ethernet/cisco/enic/enic_main.c b/drivers/net/ethernet/cisco/enic/enic_main.c
-index fb269d587b74..7425f94f9091 100644
---- a/drivers/net/ethernet/cisco/enic/enic_main.c
-+++ b/drivers/net/ethernet/cisco/enic/enic_main.c
-@@ -870,7 +870,6 @@ static netdev_tx_t enic_hard_start_xmit(struct sk_buff *skb,
- 	return NETDEV_TX_OK;
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 7bf167993c05..199b3be2cce4 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -4393,6 +4393,16 @@ static inline void netif_addr_unlock_bh(struct net_device *dev)
+ 	spin_unlock_bh(&dev->addr_list_lock);
  }
  
--/* dev_base_lock rwlock held, nominally process context */
- static void enic_get_stats(struct net_device *netdev,
- 			   struct rtnl_link_stats64 *net_stats)
- {
-diff --git a/drivers/net/ethernet/nvidia/forcedeth.c b/drivers/net/ethernet/nvidia/forcedeth.c
-index 8724d6a9ed02..8fa254dc64e9 100644
---- a/drivers/net/ethernet/nvidia/forcedeth.c
-+++ b/drivers/net/ethernet/nvidia/forcedeth.c
-@@ -1761,8 +1761,6 @@ static void nv_get_stats(int cpu, struct fe_priv *np,
++static inline void netif_lists_lock(struct net *net)
++{
++	mutex_lock(&net->netif_lists_lock);
++}
++
++static inline void netif_lists_unlock(struct net *net)
++{
++	mutex_unlock(&net->netif_lists_lock);
++}
++
  /*
-  * nv_get_stats64: dev->ndo_get_stats64 function
-  * Get latest stats value from the nic.
-- * Called with read_lock(&dev_base_lock) held for read -
-- * only synchronized against unregister_netdevice.
+  * dev_addrs walker. Should be used only for read access. Call with
+  * rcu_read_lock held.
+diff --git a/include/net/net_namespace.h b/include/net/net_namespace.h
+index 29567875f428..cac64c3c7ce0 100644
+--- a/include/net/net_namespace.h
++++ b/include/net/net_namespace.h
+@@ -183,6 +183,12 @@ struct net {
+ 	struct sock		*crypto_nlsk;
+ #endif
+ 	struct sock		*diag_nlsk;
++
++	/* Serializes writers to @dev_base_head, @dev_name_head and
++	 * @dev_index_head. It does _not_ protect the netif adjacency lists
++	 * (struct net_device::adj_list).
++	 */
++	struct mutex		netif_lists_lock;
+ } __randomize_layout;
+ 
+ #include <linux/seq_file_net.h>
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 2aa613d22318..1bd41cc91f71 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -175,13 +175,16 @@ static struct napi_struct *napi_by_id(unsigned int napi_id);
+  *
+  * Pure readers should hold rcu_read_lock() which should protect them against
+  * concurrent changes to the interface lists made by the writers. Pure writers
+- * must serialize by holding the RTNL mutex while they loop through the list
+- * and make changes to it.
++ * must serialize by holding the @net->netif_lists_lock mutex while they loop
++ * through the list and make changes to it.
++ *
++ * It is possible to hold the RTNL mutex for serializing the writers too, but
++ * this should be avoided in new code due to lock contention.
+  *
+  * It is also possible to hold the global rwlock_t @dev_base_lock for
+  * protection (holding its read side as an alternative to rcu_read_lock, and
+- * its write side as an alternative to the RTNL mutex), however this should not
+- * be done in new code, since it is deprecated and pending removal.
++ * its write side as an alternative to @net->netif_lists_lock), however this
++ * should not be done in new code, since it is deprecated and pending removal.
+  *
+  * One other role of @dev_base_lock is to protect against changes in the
+  * operational state of a network interface.
+@@ -360,12 +363,14 @@ static void list_netdevice(struct net_device *dev)
+ 
+ 	ASSERT_RTNL();
+ 
++	netif_lists_lock(net);
+ 	write_lock_bh(&dev_base_lock);
+ 	list_add_tail_rcu(&dev->dev_list, &net->dev_base_head);
+ 	netdev_name_node_add(net, dev->name_node);
+ 	hlist_add_head_rcu(&dev->index_hlist,
+ 			   dev_index_hash(net, dev->ifindex));
+ 	write_unlock_bh(&dev_base_lock);
++	netif_lists_unlock(net);
+ 
+ 	dev_base_seq_inc(net);
+ }
+@@ -375,16 +380,20 @@ static void list_netdevice(struct net_device *dev)
   */
- static void
- nv_get_stats64(struct net_device *dev, struct rtnl_link_stats64 *storage)
-diff --git a/drivers/net/ethernet/sfc/efx_common.c b/drivers/net/ethernet/sfc/efx_common.c
-index de797e1ac5a9..4d8047b35fb2 100644
---- a/drivers/net/ethernet/sfc/efx_common.c
-+++ b/drivers/net/ethernet/sfc/efx_common.c
-@@ -596,7 +596,6 @@ void efx_stop_all(struct efx_nic *efx)
- 	efx_stop_datapath(efx);
+ static void unlist_netdevice(struct net_device *dev)
+ {
++	struct net *net = dev_net(dev);
++
+ 	ASSERT_RTNL();
+ 
+ 	/* Unlink dev from the device chain */
++	netif_lists_lock(net);
+ 	write_lock_bh(&dev_base_lock);
+ 	list_del_rcu(&dev->dev_list);
+ 	netdev_name_node_del(dev->name_node);
+ 	hlist_del_rcu(&dev->index_hlist);
+ 	write_unlock_bh(&dev_base_lock);
++	netif_lists_unlock(net);
+ 
+-	dev_base_seq_inc(dev_net(dev));
++	dev_base_seq_inc(net);
  }
  
--/* Context: process, dev_base_lock or RTNL held, non-blocking. */
- void efx_net_stats(struct net_device *net_dev, struct rtnl_link_stats64 *stats)
+ /*
+@@ -850,11 +859,11 @@ EXPORT_SYMBOL_GPL(dev_fill_metadata_dst);
+  *	@net: the applicable net namespace
+  *	@name: name to find
+  *
+- *	Find an interface by name. Must be called under RTNL semaphore
+- *	or @dev_base_lock. If the name is found a pointer to the device
+- *	is returned. If the name is not found then %NULL is returned. The
+- *	reference counters are not incremented so the caller must be
+- *	careful with locks.
++ *	Find an interface by name. Must be called under RTNL semaphore,
++ *	@net->netif_lists_lock or @dev_base_lock. If the name is found,
++ *	a pointer to the device is returned. If the name is not found then
++ *	%NULL is returned. The reference counters are not incremented so the
++ *	caller must be careful with locks.
+  */
+ 
+ struct net_device *__dev_get_by_name(struct net *net, const char *name)
+@@ -920,8 +929,8 @@ EXPORT_SYMBOL(dev_get_by_name);
+  *	Search for an interface by index. Returns %NULL if the device
+  *	is not found or a pointer to the device. The device has not
+  *	had its reference counter increased so the caller must be careful
+- *	about locking. The caller must hold either the RTNL semaphore
+- *	or @dev_base_lock.
++ *	about locking. The caller must hold either the RTNL semaphore,
++ *	@net->netif_lists_lock or @dev_base_lock.
+  */
+ 
+ struct net_device *__dev_get_by_index(struct net *net, int ifindex)
+@@ -1330,15 +1339,19 @@ int dev_change_name(struct net_device *dev, const char *newname)
+ 
+ 	netdev_adjacent_rename_links(dev, oldname);
+ 
++	netif_lists_lock(net);
+ 	write_lock_bh(&dev_base_lock);
+ 	netdev_name_node_del(dev->name_node);
+ 	write_unlock_bh(&dev_base_lock);
++	netif_lists_unlock(net);
+ 
+ 	synchronize_rcu();
+ 
++	netif_lists_lock(net);
+ 	write_lock_bh(&dev_base_lock);
+ 	netdev_name_node_add(net, dev->name_node);
+ 	write_unlock_bh(&dev_base_lock);
++	netif_lists_unlock(net);
+ 
+ 	ret = call_netdevice_notifiers(NETDEV_CHANGENAME, dev);
+ 	ret = notifier_to_errno(ret);
+@@ -9397,8 +9410,9 @@ int dev_change_xdp_fd(struct net_device *dev, struct netlink_ext_ack *extack,
+  *	@net: the applicable net namespace
+  *
+  *	Returns a suitable unique value for a new device interface
+- *	number.  The caller must hold the rtnl semaphore or the
+- *	dev_base_lock to be sure it remains unique.
++ *	number.
++ *	The caller must hold the rtnl semaphore, @net->netif_lists_lock or the
++ *	@dev_base_lock to be sure it remains unique.
+  */
+ static int dev_new_index(struct net *net)
  {
- 	struct efx_nic *efx = netdev_priv(net_dev);
-diff --git a/drivers/net/ethernet/sfc/falcon/efx.c b/drivers/net/ethernet/sfc/falcon/efx.c
-index f8979991970e..6db2b6583dec 100644
---- a/drivers/net/ethernet/sfc/falcon/efx.c
-+++ b/drivers/net/ethernet/sfc/falcon/efx.c
-@@ -2096,7 +2096,6 @@ int ef4_net_stop(struct net_device *net_dev)
+@@ -10981,6 +10995,8 @@ static int __net_init netdev_init(struct net *net)
+ 	if (net->dev_index_head == NULL)
+ 		goto err_idx;
+ 
++	mutex_init(&net->netif_lists_lock);
++
+ 	RAW_INIT_NOTIFIER_HEAD(&net->netdev_chain);
+ 
  	return 0;
- }
- 
--/* Context: process, dev_base_lock or RTNL held, non-blocking. */
- static void ef4_net_stats(struct net_device *net_dev,
- 			  struct rtnl_link_stats64 *stats)
- {
 -- 
 2.25.1
 
