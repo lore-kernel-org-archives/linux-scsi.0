@@ -2,103 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55FD1C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:49:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27460C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:53:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2BE232226A
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:49:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB3A52226A
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:53:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727776AbhAEBsu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 20:48:50 -0500
-Received: from mail-pg1-f170.google.com ([209.85.215.170]:37962 "EHLO
-        mail-pg1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727511AbhAEBsu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 20:48:50 -0500
-Received: by mail-pg1-f170.google.com with SMTP id e2so20276664pgi.5;
-        Mon, 04 Jan 2021 17:48:34 -0800 (PST)
+        id S1727098AbhAEBx2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 20:53:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52592 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727094AbhAEBx1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2021 20:53:27 -0500
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A186BC061793
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Jan 2021 17:52:47 -0800 (PST)
+Received: by mail-pj1-x102f.google.com with SMTP id w1so590440pjc.0
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Jan 2021 17:52:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linuxace-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=oFbLdoDKlV2DoBSMEKkI9BqNF/yDCzO5kaHKHUnEGzQ=;
+        b=KE58ixwpUuhPmxfROBNwYruo1WekGVPqRDE1bGjz+LBJ5qswwR/TCNHivExdjPPowB
+         z9AnzMBay4wVn2njzyCHUPGLcBGOl89iqClBW8XKxTn7imG+1/G1yBjQGDFhw/d7oBnC
+         DlOCsXypkjP6IJ3Dxoxiq53ZPzRSWE1ok90auzesi0M7YuzhNH92pkzVSaiYeOTKSFpp
+         prEDWH8IAq7HAbUBYTIg5AyrU6AXK+3liLiT5WO5RTU4jyv4qZc0ggI43GF9SFdXYNpn
+         jY6skiUKyanoKLSutKvokdcO1h0RlHSb/FEwSUIgBShQHhyXebQptZ/uVFfJZpJEDzGE
+         fk0A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=iUVK5navqb95pupmgd9YzX87VeG3u/6V7I7N2PejYtg=;
-        b=onWKYqFZHqCjJ6rKdtU+eY/1dWf79scDQwOR5rBBKS5RtgjthOjkPDnZx1NsyD2AeH
-         0MsAXbmNj6N3vUvCT+xnDEoSCLtn4YqXhduPJetgMnt+UECp74vn3l3kWGP9ylBzDsOg
-         S12gbmHit5E9Aa2FAuWP1HUOXfQAt+8FtQjodjHvbkjobAEovEPVt3UiMm0R5nptrH3h
-         pzGgE98S/syFlmNMk5hZzanCvAE8Z3br7pj4nBwDJI25RDE/aTZJ86KCPl+0agtXhNWS
-         Mo3JhZUHebxIAet4Q9zn8MRqXI/8gjn4+T5TuaeHnPIeTodwq0/Jw/OQ4E4UH0pZJUEJ
-         xgtA==
-X-Gm-Message-State: AOAM532UyNf5rALmy1E+lUEWnZZFUJlUx/SqE6GuufJpw/m+QLIC8zm4
-        rO326kHeKI79Q4PNk8G2lVI=
-X-Google-Smtp-Source: ABdhPJwzgRX+RGhlnQaIjfArrJuHlMKAMOxe4eTbuOyxNFW7vMhZmvmjR2h5swJDzjjpRU13PM4MEw==
-X-Received: by 2002:a63:5d7:: with SMTP id 206mr75322598pgf.384.1609811289105;
-        Mon, 04 Jan 2021 17:48:09 -0800 (PST)
-Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id i7sm56827951pfc.50.2021.01.04.17.48.07
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 04 Jan 2021 17:48:08 -0800 (PST)
-Subject: Re: [PATCH] scsi: target/sbp: remove firewire SBP target driver
-To:     Finn Thain <fthain@telegraphics.com.au>
-Cc:     Chris Boot <bootc@boo.tc>, linuxppc-dev@lists.ozlabs.org,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net,
-        linux-kernel@vger.kernel.org, Chuhong Yuan <hslester96@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Nicholas Bellinger <nab@linux-iscsi.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>
-References: <01020172acd3d10f-3964f076-a820-43fc-9494-3f3946e9b7b5-000000@eu-west-1.amazonses.com>
- <alpine.LNX.2.22.394.2006140934520.15@nippy.intranet>
- <7ad14946-5c25-fc49-1e48-72d37a607832@boo.tc>
- <alpine.LNX.2.22.394.2006150919110.8@nippy.intranet>
- <8da0c285-d707-a3d2-063e-472af5cc560f@boo.tc>
- <alpine.LNX.2.22.394.2006161929380.8@nippy.intranet>
- <8cbab988-fba7-8e27-7faf-9f7aa36ca235@acm.org>
- <alpine.LNX.2.22.394.2006171104540.11@nippy.intranet>
- <e3b5ce6a-0152-01b8-89d2-80bcdb9c1c57@acm.org>
- <alpine.LNX.2.23.453.2101050840010.6@nippy.intranet>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <9103b316-8848-2350-7c0d-b742c8d8c83c@acm.org>
-Date:   Mon, 4 Jan 2021 17:48:06 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=oFbLdoDKlV2DoBSMEKkI9BqNF/yDCzO5kaHKHUnEGzQ=;
+        b=ufhV6vVT/q+VcJ9tYwTYHXCRjrGwS4i5fbqEwszq3++2Xyty8ZiqiZsM1tFUHHm4dy
+         EeNWKnlNpEZ+tNIujPLcV9f2fiQvjzlV4gQK7eB8qpvQAIFgESZGGSVq1ZvlKoNxQzP6
+         ca2kt1+4i+kJe7Q1DdOIzRdFMa1s2LDFQfkNFi2syguy9gNB91uqch0kpXZ42vJ+fYKH
+         RoBGr+eF92bhEBq+peDKRX21BrshRY7uvw7Oc23q0Ze0mwpCvjQr38kWf5oiD4fSvvy7
+         stSGbFsaVgUR/og8pacRppYPwVmh+yL+CLxQedkB7+El2VFDr9sgweTz72moM0XHgkW8
+         qemA==
+X-Gm-Message-State: AOAM532yPbpkvUMaYKuHlIjigt1if5XuN2rR9L/B29eyhThwwkziIsBr
+        J8FpMmouHNmlPJrLmS2Iz5Hezw==
+X-Google-Smtp-Source: ABdhPJzNhhRd/XNM36hWGuOm/eZXsJCDr1fRicuouXS0NfpRKHnmdI2w86Kp1PIvabTXedqSZGD/AA==
+X-Received: by 2002:a17:90b:4a81:: with SMTP id lp1mr1735742pjb.55.1609811567117;
+        Mon, 04 Jan 2021 17:52:47 -0800 (PST)
+Received: from home.linuxace.com (cpe-23-243-7-246.socal.res.rr.com. [23.243.7.246])
+        by smtp.gmail.com with ESMTPSA id w6sm41423240pfq.208.2021.01.04.17.52.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Jan 2021 17:52:46 -0800 (PST)
+Date:   Mon, 4 Jan 2021 17:52:43 -0800
+From:   Phil Oester <kernel@linuxace.com>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        Anand Lodnoor <anand.lodnoor@broadcom.com>,
+        Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: megaraid_sas: Fix MEGASAS_IOC_FIRMWARE regression
+Message-ID: <20210105015243.GA80882@home.linuxace.com>
+References: <20210104234137.438275-1-arnd@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.23.453.2101050840010.6@nippy.intranet>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210104234137.438275-1-arnd@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/4/21 2:50 PM, Finn Thain wrote:
-> On Mon, 4 Jan 2021, Bart Van Assche wrote:
->> Additionally, there is a good alternative available for the sbp driver. 
->> Every system I know of that is equipped with a Firewire port also has an 
->> Ethernet port. So users who want to provide SCSI target functionality on 
->> such systems can use any SCSI transport protocol that is compatible with 
->> Ethernet (iSCSI, iSER over soft-RoCE, SRP over soft-RoCE, ...).
+On Tue, Jan 05, 2021 at 12:41:04AM +0100, Arnd Bergmann wrote:
+> Phil Oester reported that a fix for a possible buffer overrun that I
+> sent caused a regression that manifests in this output:
 > 
-> Ethernet is not always an alternative. That was already discussed in this 
-> thread. But let's assume for a moment that you can migrate any and all 
-> users of this driver over to an ethernet driver.
+>  Event Message: A PCI parity error was detected on a component at bus 0 device 5 function 0.
+>  Severity: Critical
+>  Message ID: PCI1308
 > 
-> Why would the maintainers of that Ethernet driver and its API accept that 
-> plan, if adding users would extend their maintenance and testing 
-> obligations? Do you think those maintainers should pay the "kind of tax 
-> that all developers/users pay to all developers/users?"
+> The original code tried to handle the sense data pointer differently
+> when using 32-bit 64-bit DMA addressing, which would lead to a 32-bit
+> dma_addr_t value of 0x11223344 to get stored
+> 
+> 32-bit kernel:       44 33 22 11 ?? ?? ?? ??
+> 64-bit LE kernel:    44 33 22 11 00 00 00 00
+> 64-bit BE kernel:    00 00 00 00 44 33 22 11
+> 
+> or a 64-bit dma_addr_t value of 0x1122334455667788 to get stored as
+> 
+> 32-bit kernel:       88 77 66 55 ?? ?? ?? ??
+> 64-bit kernel:       88 77 66 55 44 33 22 11
+> 
+> In my patch, I tried to ensure that the same value is used on both
+> 32-bit and 64-bit kernels, and picked what seemed to be the most sensible
+> combination, storing 32-bit addresses in the first four bytes (as 32-bit
+> kernels already did), and 64-bit addresses in eight consecutive bytes
+> (as 64-bit kernels already did), but evidently this was incorrect.
+> 
+> Always storing the dma_addr_t pointer as 64-bit little-endian,
+> i.e. initializing the second four bytes to zero in case of 32-bit
+> addressing, apparently solved the problem for Phil, and is consistent
+> with what all 64-bit little-endian machines did before.
+> 
+> I also checked in the history that in previous versions of the code,
+> the pointer was always in the first four bytes without padding, and that
+> previous attempts to fix 64-bit user space, big-endian architectures
+> and 64-bit DMA were clearly flawed and seem to have introduced made
+> this worse.
+> 
+> Reported-by: Phil Oester <kernel@linuxace.com>
+> Fixes: 381d34e376e3 ("scsi: megaraid_sas: Check user-provided offsets")
+> Fixes: 107a60dd71b5 ("scsi: megaraid_sas: Add support for 64bit consistent DMA")
+> Fixes: 94cd65ddf4d7 ("[SCSI] megaraid_sas: addded support for big endian architecture")
+> Fixes: 7b2519afa1ab ("[SCSI] megaraid_sas: fix 64 bit sense pointer truncation")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Hi Finn,
+This solves the issue on our Dell servers, thanks Arnd.
 
-I cannot speak in the name of the iSCSI over TCP/IP or iSER driver
-maintainers. But since I maintain the SRP initiator and target kernel
-drivers myself, I can state that I would be happy to help SBP target users
-(if that driver has any users today) to switch from SCSI over Firewire to
-SCSI over SRP over RoCE or even NVMEoF over TCP.
-
-Thanks,
-
-Bart.
+Phil
