@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3D03C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 13:34:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8226C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 13:36:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E9C3229C5
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 13:34:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 761F522AAB
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 13:36:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729683AbhAENeX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Jan 2021 08:34:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48108 "EHLO
+        id S1729638AbhAENf4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Jan 2021 08:35:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726597AbhAENeX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 08:34:23 -0500
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6E79C061795
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Jan 2021 05:33:42 -0800 (PST)
-Received: by mail-ej1-x630.google.com with SMTP id b9so41242067ejy.0
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Jan 2021 05:33:42 -0800 (PST)
+        with ESMTP id S1726707AbhAENf4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 08:35:56 -0500
+Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72777C061574
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Jan 2021 05:35:15 -0800 (PST)
+Received: by mail-ej1-x631.google.com with SMTP id q22so41264069eja.2
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Jan 2021 05:35:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cloud.ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=iIkVLx83G41CWRKC0CLW06TbH7oAaNkFqT99VAPH524=;
-        b=iYxL0Nf9SE7lyCVhYHiUpDtJCjYWKP4Sxsy0sxyAo2XdrFxKkuttTPGB7cVQF4ukoi
-         iVCqButSMpr+8AQNcLWaQyt8OrcIeDEX/iY5wnEJKaQVVG6mXdqoveZioSIimEv1Z4r8
-         Peke5HEHMqhUCBvkBhAOHsAcKxBwrJ5IiFnW+NzOsvlXk7Q76xGfi1NgBJ2QSKvby1CN
-         8AQfpGcrZ7px4XpbYjKnIPtLZoCKi/csZ6FzxwHxn23OiiR1I0Bw1yt34dKAdnZyc7yQ
-         5nV0UM+DUIUwHZc3h1wVniJyXfwkomPTEnBWFbOB3ANKNZ4VFB2eqTWcTFE0D16iF8Jj
-         bMZA==
+        bh=YD2742TSVKiiYvW97DifzpV5YysGe+uwtt2M1aP/QnU=;
+        b=EqXosLkYt2gKz6CwW8mSHlAOz3HvdAkNmcX725PCxUNeTy/sGOFBVSZgnxIbAVM8U+
+         UZ9MKMGPxrddZ+VzXjHpPCkJaflXtt1hLli+I2bw24EtbR5TaYO0kBiIwKBr7HJ2xFFi
+         BpAVKJjawv4lhZUGy/Or/tlvd3EZ88ic/XSIFrEyhqL5zHT637kaZvftZk/wljZGKM8X
+         P9Hc/0KfJk5AZATDHYArvnskox1CeDrIOQJreHaO3ywLam5JHidUsEIN/DJbXNbe27z9
+         wuH6JyFnfwEXpH+uCMY8cyQoxDK3/RwXLo87ebhp/LNv6KivRV+/aUXCXelapdAqFqaC
+         jqPw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=iIkVLx83G41CWRKC0CLW06TbH7oAaNkFqT99VAPH524=;
-        b=L0jwjkiVfxvftbFcLIB2UvXy7JkS1hXvFfKfZtV+Lrw3ABTr7RaHxQk9CcGoKGM4MA
-         1u84DpkZG2KwuWAhwTl5sb5+IBYtZXi8V2bgqOYbV0v5DFuzO/j79vrPTcBTkSs/lnpC
-         Vm5UHv6By7b21KVCr6zB9wyJUkqkGrLalSPh6FyXoR8rRG0rypownaQIFOYhBTh5Gfew
-         d5TJKifhG6JrraZxNU57HzCV7wOhB2yypPA2We+n0LZ/5S3dval6bdj6iIHTavtjzWi9
-         vuDmxwXgKodMii6IHgNd+UeLQ85A42bNXKVkB5o0f4f12iwvTyBVkxRBKwOFceOAqTPn
-         pZ+w==
-X-Gm-Message-State: AOAM531pGFIFBpTrYJn0xW41ip6HJWmTxnYTUc+VvdNRtkwbDH/bYs/X
-        mXeud6XcUZSuKzk5ZWS4I9Vp/5avSTFZ0dFBXqwrAQ==
-X-Google-Smtp-Source: ABdhPJx8R0GgG+WZA0Uu5zjRHa9c+vOSz3G+mJBOehdEmxvOv4uLc3CVQD+NjV7aWSCtPabgpK0UgJPefTKF4SOVTqE=
-X-Received: by 2002:a17:906:4756:: with SMTP id j22mr31702969ejs.353.1609853621566;
- Tue, 05 Jan 2021 05:33:41 -0800 (PST)
+        bh=YD2742TSVKiiYvW97DifzpV5YysGe+uwtt2M1aP/QnU=;
+        b=UNyTLPWgCR+/yaPhksQX2qhvrA+Zc8kfLDuJko+r4QNQoEe2VO3Hi4uX+pEQtw8qja
+         Qg3RQIO6/P66WHdTL6Dj3uDymWhRslwnMmbIGklrmTdmgyQwciEKgOUCdO5BdmedeWlV
+         LSyTsTR48lxYLQBwyYf13AqCx6y7Rglmi6huFk5rlMhAUBWKbC/uV66BlWWWS/cVqiij
+         0Up0SgkKzUf3KViTA1UQiEwgJ35r8oL3yYbK+XhuRFaL28XBUP1yx2frkAsLa7wIvfSP
+         Qgbvkkv0HCfaXLp7BWaDBGkQPv0RmwgaNd7QoAt87sF6g+YZnDYXL/PBJHrKuDU3GEI3
+         zofA==
+X-Gm-Message-State: AOAM531AndxatSguKvJ/s6iNtHLuqVTUelmn4fQnYbHhbesGL+TQLxfc
+        MM3YHnZpHPrGdBto1JuRBFYguOBHWkrJzF8hriW5aw==
+X-Google-Smtp-Source: ABdhPJyPbz0q2h0xYS9sWMoVOIe32V1X4afpnjIO4Z4dI7QlfugIQhrc1fqJYjsx+qJaSJSagFHQGsT0HpVnhUH7MLk=
+X-Received: by 2002:a17:906:3101:: with SMTP id 1mr59088388ejx.115.1609853714227;
+ Tue, 05 Jan 2021 05:35:14 -0800 (PST)
 MIME-Version: 1.0
-References: <20201230045743.14694-1-Viswas.G@microchip.com.com> <20201230045743.14694-8-Viswas.G@microchip.com.com>
-In-Reply-To: <20201230045743.14694-8-Viswas.G@microchip.com.com>
+References: <20201230045743.14694-1-Viswas.G@microchip.com.com> <20201230045743.14694-9-Viswas.G@microchip.com.com>
+In-Reply-To: <20201230045743.14694-9-Viswas.G@microchip.com.com>
 From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Tue, 5 Jan 2021 14:33:31 +0100
-Message-ID: <CAMGffEkL4XyRZTQYGhm50svB6FBs7oG9oP87bKqGk85aTcfmPQ@mail.gmail.com>
-Subject: Re: [PATCH 7/8] pm80xx: Log SATA IOMB completion status on failure.
+Date:   Tue, 5 Jan 2021 14:35:03 +0100
+Message-ID: <CAMGffEkqt++GavWyyxDHdvJjU5A4Tr+H2GZLOabga7e6kmsGQg@mail.gmail.com>
+Subject: Re: [PATCH 8/8] pm80xx: Add sysfs attribute for ioc health
 To:     Viswas G <Viswas.G@microchip.com.com>
 Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
         Vasanthalakshmi.Tharmarajan@microchip.com,
@@ -74,20 +74,29 @@ On Wed, Dec 30, 2020 at 5:48 AM Viswas G <Viswas.G@microchip.com.com> wrote:
 >
 > From: Vishakha Channapattan <vishakhavc@google.com>
 >
-> Added a log message in sata completion path to log the status of failed
-> command. If the status does not match any expected status, another
-> message will be logged.
+> A new sysfs variable 'health' is being introduced that tells if the
+> controller is alive by indicating controller ticks. If on subsequent
+> run we see the ticks changing that indicates that controller is not
+> dead.
 >
-> On IO failure with known status, log message will be
->
-> [ 1712.951735] pm80xx0:: mpi_sata_completion 2269: IO failed device_id
-> 16385 status 0x1 tag XX
->
-> If the firmware returns unexpected status, log message of the following
-> format will be logged -
->
-> [ 1712.951735] pm80xx0:: mpi_sata_completion XXXX: Unknown status
-> device_id XXXXX status 0xX tag XX
+> Tested: Using 'health' sysfs variable we can see ticks incrementing
+> mvae14:~# cat  /sys/class/scsi_host/host*/health
+> MPI-S= MPI is successfully initialized   HMI_ERR=0
+> MSGUTCNT = 0x00000169 IOPTCNT=0x0000016a IOP1TCNT=0x0000016a
+> MPI-S= MPI is successfully initialized   HMI_ERR=0
+> MSGUTCNT = 0x0000014d IOPTCNT=0x0000014d IOP1TCNT=0x0000014d
+> MPI-S= MPI is successfully initialized   HMI_ERR=0
+> MSGUTCNT = 0x00000149 IOPTCNT=0x00000149 IOP1TCNT=0x00000149
+> mvae14:~#
+> mvae14:~#
+> mvae14:~#
+> mvae14:~# cat  /sys/class/scsi_host/host*/health
+> MPI-S= MPI is successfully initialized   HMI_ERR=0
+> MSGUTCNT = 0x0000016c IOPTCNT=0x0000016c IOP1TCNT=0x0000016c
+> MPI-S= MPI is successfully initialized   HMI_ERR=0
+> MSGUTCNT = 0x0000014f IOPTCNT=0x0000014f IOP1TCNT=0x0000014f
+> MPI-S= MPI is successfully initialized   HMI_ERR=0
+> MSGUTCNT = 0x0000014b IOPTCNT=0x0000014b IOP1TCNT=0x0000014b
 >
 > Signed-off-by: Vishakha Channapattan <vishakhavc@google.com>
 > Signed-off-by: Viswas G <Viswas.G@microchip.com>
@@ -97,40 +106,76 @@ On Wed, Dec 30, 2020 at 5:48 AM Viswas G <Viswas.G@microchip.com.com> wrote:
 Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 Thx
 > ---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 13 ++++++++-----
->  1 file changed, 8 insertions(+), 5 deletions(-)
+>  drivers/scsi/pm8001/pm8001_ctl.c | 42 ++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 42 insertions(+)
 >
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index df679e36954a..e7fef42b4f6c 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -2437,10 +2437,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->                 return;
->         }
+> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+> index 12035baf0997..f46f341132fb 100644
+> --- a/drivers/scsi/pm8001/pm8001_ctl.c
+> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
+> @@ -41,6 +41,7 @@
+>  #include <linux/slab.h>
+>  #include "pm8001_sas.h"
+>  #include "pm8001_ctl.h"
+> +#include "pm8001_chips.h"
 >
-> -       if (unlikely(status))
-> -               pm8001_dbg(pm8001_ha, IOERR,
-> -                          "status:0x%x, tag:0x%x, task::0x%p\n",
-> -                          status, tag, t);
-> +       if (status != IO_SUCCESS) {
-> +               pm8001_dbg(pm8001_ha, FAIL,
-> +                       "IO failed device_id %u status 0x%x tag %d\n",
-> +                       pm8001_dev->device_id, status, tag);
-> +       }
+>  /* scsi host attributes */
 >
->         /* Print sas address of IO failed device */
->         if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
-> @@ -2762,7 +2763,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->                         atomic_dec(&pm8001_dev->running_req);
->                 break;
->         default:
-> -               pm8001_dbg(pm8001_ha, DEVIO, "Unknown status 0x%x\n", status);
-> +               pm8001_dbg(pm8001_ha, DEVIO,
-> +                               "Unknown status device_id %u status 0x%x tag %d\n",
-> +                       pm8001_dev->device_id, status, tag);
->                 /* not allowed case. Therefore, return failed status */
->                 ts->resp = SAS_TASK_COMPLETE;
->                 ts->stat = SAS_DEV_NO_RESPONSE;
+> @@ -886,6 +887,46 @@ static ssize_t pm8001_show_update_fw(struct device *cdev,
+>
+>  static DEVICE_ATTR(update_fw, S_IRUGO|S_IWUSR|S_IWGRP,
+>         pm8001_show_update_fw, pm8001_store_update_fw);
+> +
+> +/**
+> + * pm8001_ctl_health_show - controller health check
+> + * @cdev: pointer to embedded class device
+> + * @buf: the buffer returned
+> + *
+> + * A sysfs 'read-only' shost attribute.
+> + */
+> +
+> +char mpiStateText[][80] = {
+> +       "MPI is not initialized",
+> +       "MPI is successfully initialized",
+> +       "MPI termination is in progress",
+> +       "MPI initialization failed with error in [31:16]"
+> +};
+> +
+> +static ssize_t ctl_health_show(struct device *cdev,
+> +               struct device_attribute *attr, char *buf)
+> +{
+> +       struct Scsi_Host *shost = class_to_shost(cdev);
+> +       struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+> +       struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
+> +       unsigned int mpiDW0 = 0;
+> +       unsigned int raaeCnt = 0;
+> +       unsigned int iop0Cnt = 0;
+> +       unsigned int iop1Cnt = 0;
+> +       int c;
+> +
+> +       pm8001_dbg(pm8001_ha, IOCTL, "%s\n", __func__);
+> +       mpiDW0 = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 0);
+> +       raaeCnt = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 12);
+> +       iop0Cnt = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 16);
+> +       iop1Cnt = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 20);
+> +       c = sprintf(buf, "MPI-S=%s\t HMI_ERR=%x\nMSGUTCNT=0x%08x IOPTCNT=0x%08x IOP1TCNT=0x%08x\n",
+> +                       mpiStateText[mpiDW0 & 0x0003], ((mpiDW0 & 0xff00) >> 16),
+> +                       raaeCnt, iop0Cnt, iop1Cnt);
+> +       return c;
+> +}
+> +static DEVICE_ATTR_RO(ctl_health);
+> +
+>  struct device_attribute *pm8001_host_attrs[] = {
+>         &dev_attr_interface_rev,
+>         &dev_attr_controller_fatal_error,
+> @@ -909,6 +950,7 @@ struct device_attribute *pm8001_host_attrs[] = {
+>         &dev_attr_ob_log,
+>         &dev_attr_ila_version,
+>         &dev_attr_inc_fw_ver,
+> +       &dev_attr_ctl_health,
+>         NULL,
+>  };
+>
 > --
 > 2.16.3
 >
