@@ -7,47 +7,53 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08FD5C433E6
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:00:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 372B3C43219
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:03:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CCB5922573
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:00:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E268422573
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:03:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727899AbhAEBAC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 20:00:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38758 "EHLO mail.kernel.org"
+        id S1728796AbhAEBDG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 20:03:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40002 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726518AbhAEBAB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Jan 2021 20:00:01 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 97AF622581;
-        Tue,  5 Jan 2021 00:59:19 +0000 (UTC)
+        id S1728462AbhAEBBY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 Jan 2021 20:01:24 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0866522583;
+        Tue,  5 Jan 2021 01:00:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609808360;
-        bh=p9/ot+8cguDCXR5x0/upe/u3QXAAv78RzEbKzbOalkY=;
+        s=k20201202; t=1609808407;
+        bh=YLGxne2Z27dnFk+C+c83Jkj5l1wv4USSGsKiDZy/V94=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=svheP+Tyk14UERaRZr5m5f8EgIKooDiM3f/1QjdqTZ71wMXiwjJTww/Ed3dAzlpih
-         Yvu2CNN382yrF2twrjy8PvntLMBcYJ56g6OBAJZYaHgwGRZ9t8Vcvrq8usI7pTjFaS
-         Zsl/dsVnoKCFXshPmEqg253oOOiGcFfdpP4OzeIrkAf2hxeVxPWpyCBpK8dt1ubRYN
-         o/zNpOr7nnq0bV7SUQcvG6K13LT29pbfs+FQg3l6eWJSro1mTX4R2bkrejOsfnphpC
-         VhZl7MrMjiWwEhAamZDZyYYSCVJzfHOYasWEPE97C3YSpA6u+um+JtpmVYbelX10NW
-         h1icjcjHqNHDQ==
+        b=rtgX/E8rl7B41WyCPhDhrOMF8/AziVzysW2r2TmS/1Ye2yLo6HAxPXa04gfbnVFMr
+         0o/3C4rOGx+9IDhVSucz6Gumg/bShOxkULOOIsOLJjNnq+2TwiAZGi1cVcXVsoveJi
+         wWAwO1PULqeKUdgJRtF5oWp165WGcvSq7rxDwAoHQtNmb2xuNDr3GjpKkdmfp8G0mm
+         m9TngrBj+7joHcN7LU5ww+8+c3B8yyE1PsKx3i/P5EtOU2/43rQwp74ofBv9nAolP6
+         odkIu4j6VcsmvSH7iSir/qqHHjYxYYvq+oHSS5x/rr06rvOEkUH/gmzqAy7b5Yu6fL
+         m81yiygclR28Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Randall Huang <huangrandall@google.com>,
-        kernel test robot <lkp@intel.com>,
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Woody Suwalski <terraluna977@gmail.com>,
+        Can Guo <cang@codeaurora.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Leo Liou <leoliou@google.com>,
-        Jaegeuk Kim <jaegeuk@google.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Stan Johnson <userm57@yahoo.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Hannes Reinecke <hare@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.10 03/17] scsi: ufs: Clear UAC for RPMB after ufshcd resets
-Date:   Mon,  4 Jan 2021 19:59:01 -0500
-Message-Id: <20210105005915.3954208-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 5/8] scsi: scsi_transport_spi: Set RQF_PM for domain validation commands
+Date:   Mon,  4 Jan 2021 19:59:56 -0500
+Message-Id: <20210105005959.3954510-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210105005915.3954208-1-sashal@kernel.org>
-References: <20210105005915.3954208-1-sashal@kernel.org>
+In-Reply-To: <20210105005959.3954510-1-sashal@kernel.org>
+References: <20210105005959.3954510-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,71 +62,106 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Randall Huang <huangrandall@google.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 1918651f2d7e8d58c9b7c49755c61e41ed655009 ]
+[ Upstream commit cfefd9f8240a7b9fdd96fcd54cb029870b6d8d88 ]
 
-If RPMB is not provisioned, we may see RPMB failure after UFS
-suspend/resume.  Inject request_sense to clear uac in ufshcd reset flow.
+Disable runtime power management during domain validation. Since a later
+patch removes RQF_PREEMPT, set RQF_PM for domain validation commands such
+that these are executed in the quiesced SCSI device state.
 
-Link: https://lore.kernel.org/r/20201201041402.3860525-1-jaegeuk@kernel.org
-Reported-by: kernel test robot <lkp@intel.com>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Randall Huang <huangrandall@google.com>
-Signed-off-by: Leo Liou <leoliou@google.com>
-Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+Link: https://lore.kernel.org/r/20201209052951.16136-6-bvanassche@acm.org
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Woody Suwalski <terraluna977@gmail.com>
+Cc: Can Guo <cang@codeaurora.org>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Stan Johnson <userm57@yahoo.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jens Axboe <axboe@kernel.dk>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ drivers/scsi/scsi_transport_spi.c | 27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d7e9c4bc80478..ec7005bcf61d8 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -220,6 +220,7 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba);
- static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd);
- static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
- static void ufshcd_hba_exit(struct ufs_hba *hba);
-+static int ufshcd_clear_ua_wluns(struct ufs_hba *hba);
- static int ufshcd_probe_hba(struct ufs_hba *hba, bool async);
- static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 				 bool skip_ref_clk);
-@@ -6842,7 +6843,8 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 69213842e63e0..efb9c3d902133 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -130,12 +130,16 @@ static int spi_execute(struct scsi_device *sdev, const void *cmd,
+ 		sshdr = &sshdr_tmp;
  
- 	/* Establish the link again and restore the device */
- 	err = ufshcd_probe_hba(hba, false);
--
-+	if (!err)
-+		ufshcd_clear_ua_wluns(hba);
- out:
- 	if (err)
- 		dev_err(hba->dev, "%s: Host init failed %d\n", __func__, err);
-@@ -8274,13 +8276,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 	 * handling context.
+ 	for(i = 0; i < DV_RETRIES; i++) {
++		/*
++		 * The purpose of the RQF_PM flag below is to bypass the
++		 * SDEV_QUIESCE state.
++		 */
+ 		result = scsi_execute(sdev, cmd, dir, buffer, bufflen, sense,
+ 				      sshdr, DV_TIMEOUT, /* retries */ 1,
+ 				      REQ_FAILFAST_DEV |
+ 				      REQ_FAILFAST_TRANSPORT |
+ 				      REQ_FAILFAST_DRIVER,
+-				      0, NULL);
++				      RQF_PM, NULL);
+ 		if (driver_byte(result) != DRIVER_SENSE ||
+ 		    sshdr->sense_key != UNIT_ATTENTION)
+ 			break;
+@@ -1018,23 +1022,26 @@ spi_dv_device(struct scsi_device *sdev)
  	 */
- 	hba->host->eh_noresume = 1;
--	if (hba->wlun_dev_clr_ua) {
--		ret = ufshcd_send_request_sense(hba, sdp);
--		if (ret)
--			goto out;
--		/* Unit attention condition is cleared now */
--		hba->wlun_dev_clr_ua = false;
--	}
-+	ufshcd_clear_ua_wluns(hba);
+ 	lock_system_sleep();
  
- 	cmd[4] = pwr_mode << 4;
- 
-@@ -8301,7 +8297,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 
- 	if (!ret)
- 		hba->curr_dev_pwr_mode = pwr_mode;
--out:
++	if (scsi_autopm_get_device(sdev))
++		goto unlock_system_sleep;
 +
- 	scsi_device_put(sdp);
- 	hba->host->eh_noresume = 0;
- 	return ret;
+ 	if (unlikely(spi_dv_in_progress(starget)))
+-		goto unlock;
++		goto put_autopm;
+ 
+ 	if (unlikely(scsi_device_get(sdev)))
+-		goto unlock;
++		goto put_autopm;
+ 
+ 	spi_dv_in_progress(starget) = 1;
+ 
+ 	buffer = kzalloc(len, GFP_KERNEL);
+ 
+ 	if (unlikely(!buffer))
+-		goto out_put;
++		goto put_sdev;
+ 
+ 	/* We need to verify that the actual device will quiesce; the
+ 	 * later target quiesce is just a nice to have */
+ 	if (unlikely(scsi_device_quiesce(sdev)))
+-		goto out_free;
++		goto free_buffer;
+ 
+ 	scsi_target_quiesce(starget);
+ 
+@@ -1054,12 +1061,16 @@ spi_dv_device(struct scsi_device *sdev)
+ 
+ 	spi_initial_dv(starget) = 1;
+ 
+- out_free:
++free_buffer:
+ 	kfree(buffer);
+- out_put:
++
++put_sdev:
+ 	spi_dv_in_progress(starget) = 0;
+ 	scsi_device_put(sdev);
+-unlock:
++put_autopm:
++	scsi_autopm_put_device(sdev);
++
++unlock_system_sleep:
+ 	unlock_system_sleep();
+ }
+ EXPORT_SYMBOL(spi_dv_device);
 -- 
 2.27.0
 
