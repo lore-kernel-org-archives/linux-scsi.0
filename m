@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 372B3C43219
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:03:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B64CBC43332
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:03:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E268422573
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:03:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83D8722573
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 01:03:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728796AbhAEBDG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jan 2021 20:03:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40002 "EHLO mail.kernel.org"
+        id S1728802AbhAEBDH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jan 2021 20:03:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39968 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728462AbhAEBBY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Jan 2021 20:01:24 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0866522583;
-        Tue,  5 Jan 2021 01:00:05 +0000 (UTC)
+        id S1728442AbhAEBBW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 Jan 2021 20:01:22 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DACFE22AAB;
+        Tue,  5 Jan 2021 00:59:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609808407;
-        bh=YLGxne2Z27dnFk+C+c83Jkj5l1wv4USSGsKiDZy/V94=;
+        s=k20201202; t=1609808394;
+        bh=xoTRx8qQQtnSaYwMqIVpCPfEi1lceBrcYZvQ/URSaLI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rtgX/E8rl7B41WyCPhDhrOMF8/AziVzysW2r2TmS/1Ye2yLo6HAxPXa04gfbnVFMr
-         0o/3C4rOGx+9IDhVSucz6Gumg/bShOxkULOOIsOLJjNnq+2TwiAZGi1cVcXVsoveJi
-         wWAwO1PULqeKUdgJRtF5oWp165WGcvSq7rxDwAoHQtNmb2xuNDr3GjpKkdmfp8G0mm
-         m9TngrBj+7joHcN7LU5ww+8+c3B8yyE1PsKx3i/P5EtOU2/43rQwp74ofBv9nAolP6
-         odkIu4j6VcsmvSH7iSir/qqHHjYxYYvq+oHSS5x/rr06rvOEkUH/gmzqAy7b5Yu6fL
-         m81yiygclR28Q==
+        b=IlXY3JQdrlEV3+AZu/Mo1dXOoEMqSH6nfLZi/L2rd7qjGUlv4GpkPIV8EzpMlVLO9
+         DoH2uIRa3D+9daeJ3R2bhyctpRZ2s9Haaj+YRpWFM64a2uZL2D/T7rZZAmelUi9oJK
+         NDKiWxPpFpcytfwcljRQoM4NquWw7HlQ/16l1x8YVhVozpWMg1bymm5BNEezQd3mHD
+         B92Cf2FSjGVeVhRgVFwYH1DH+spfha/jVtCPux8LO528Xw26GIglfc5XQpbV1y/4UW
+         RpnQkQfJgyem0o3K4yAMOv2FqCk6wjPMKkm63LYDUstSGqxuzBE2kTHOIL5eRBa7Tj
+         n8O0+UmJZQ+Og==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bart Van Assche <bvanassche@acm.org>,
@@ -48,12 +48,12 @@ Cc:     Bart Van Assche <bvanassche@acm.org>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.19 5/8] scsi: scsi_transport_spi: Set RQF_PM for domain validation commands
-Date:   Mon,  4 Jan 2021 19:59:56 -0500
-Message-Id: <20210105005959.3954510-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 5/8] scsi: scsi_transport_spi: Set RQF_PM for domain validation commands
+Date:   Mon,  4 Jan 2021 19:59:42 -0500
+Message-Id: <20210105005946.3954395-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210105005959.3954510-1-sashal@kernel.org>
-References: <20210105005959.3954510-1-sashal@kernel.org>
+In-Reply-To: <20210105005946.3954395-1-sashal@kernel.org>
+References: <20210105005946.3954395-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -90,10 +90,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 19 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index 69213842e63e0..efb9c3d902133 100644
+index f3d5b1bbd5aa7..c37dd15d16d24 100644
 --- a/drivers/scsi/scsi_transport_spi.c
 +++ b/drivers/scsi/scsi_transport_spi.c
-@@ -130,12 +130,16 @@ static int spi_execute(struct scsi_device *sdev, const void *cmd,
+@@ -117,12 +117,16 @@ static int spi_execute(struct scsi_device *sdev, const void *cmd,
  		sshdr = &sshdr_tmp;
  
  	for(i = 0; i < DV_RETRIES; i++) {
@@ -111,7 +111,7 @@ index 69213842e63e0..efb9c3d902133 100644
  		if (driver_byte(result) != DRIVER_SENSE ||
  		    sshdr->sense_key != UNIT_ATTENTION)
  			break;
-@@ -1018,23 +1022,26 @@ spi_dv_device(struct scsi_device *sdev)
+@@ -1005,23 +1009,26 @@ spi_dv_device(struct scsi_device *sdev)
  	 */
  	lock_system_sleep();
  
@@ -142,7 +142,7 @@ index 69213842e63e0..efb9c3d902133 100644
  
  	scsi_target_quiesce(starget);
  
-@@ -1054,12 +1061,16 @@ spi_dv_device(struct scsi_device *sdev)
+@@ -1041,12 +1048,16 @@ spi_dv_device(struct scsi_device *sdev)
  
  	spi_initial_dv(starget) = 1;
  
