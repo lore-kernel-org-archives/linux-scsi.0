@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC648C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 13:32:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3D03C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 13:34:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8200D229C5
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 13:32:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E9C3229C5
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 13:34:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727338AbhAENcm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Jan 2021 08:32:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47846 "EHLO
+        id S1729683AbhAENeX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Jan 2021 08:34:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726059AbhAENcm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 08:32:42 -0500
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9279C061574
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Jan 2021 05:32:01 -0800 (PST)
-Received: by mail-ed1-x52d.google.com with SMTP id i24so31061427edj.8
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Jan 2021 05:32:01 -0800 (PST)
+        with ESMTP id S1726597AbhAENeX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 08:34:23 -0500
+Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6E79C061795
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Jan 2021 05:33:42 -0800 (PST)
+Received: by mail-ej1-x630.google.com with SMTP id b9so41242067ejy.0
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Jan 2021 05:33:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cloud.ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=/kuRXwHt3t/IuMQmsoMS+DdaWtUFkDKvRFkTnt4xUTs=;
-        b=htiFNScV0yszoBumpUPMEGdjDo4ga9oAVPMEP8fzPMsFmJw6uJcDEWBPMewuzJYzBM
-         0W0Xd6qGNxJvRDmK6urTeCmNWojJMsLWagsm+Mh/wrwafLXQD+83b+CAmOw6sOt4EgK+
-         1rL1CXQU/IpPfzI0vK5UZtozzl+BYU3BBdYfQtXuZoAdeZohgohjyPGlfi5GaBaNR0tc
-         nkLhTxHU+7a7HPfeNNbmaExSwzYuxup+Vpk9KqL3+NL7TaJft5WmH0mea+nPi9NaSO1T
-         5hK6SeYKi3C0Md/EOdOAY/0a1eVFgpZcDK89Lwhjb9UbmblLo9iRce9TY9UdwkqONFNQ
-         3pXw==
+        bh=iIkVLx83G41CWRKC0CLW06TbH7oAaNkFqT99VAPH524=;
+        b=iYxL0Nf9SE7lyCVhYHiUpDtJCjYWKP4Sxsy0sxyAo2XdrFxKkuttTPGB7cVQF4ukoi
+         iVCqButSMpr+8AQNcLWaQyt8OrcIeDEX/iY5wnEJKaQVVG6mXdqoveZioSIimEv1Z4r8
+         Peke5HEHMqhUCBvkBhAOHsAcKxBwrJ5IiFnW+NzOsvlXk7Q76xGfi1NgBJ2QSKvby1CN
+         8AQfpGcrZ7px4XpbYjKnIPtLZoCKi/csZ6FzxwHxn23OiiR1I0Bw1yt34dKAdnZyc7yQ
+         5nV0UM+DUIUwHZc3h1wVniJyXfwkomPTEnBWFbOB3ANKNZ4VFB2eqTWcTFE0D16iF8Jj
+         bMZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=/kuRXwHt3t/IuMQmsoMS+DdaWtUFkDKvRFkTnt4xUTs=;
-        b=jF5iOrszf4kHtleuLlfRhMQ3FuXPBBY8QzNLXfjSzqIrDy9n/ghg02iL9X+DRRARwH
-         G4ro/Y6BplQlXfhCjoNNkK4hb5VbYmBbtPG0D33RwHtfndKaA1hYUQxkn+OU5WebC17I
-         Z8WggxTVZntCP81DwGFyG8/6fpeG7r0PAbxQfg9o7X6QdzVwBpqm1F06fbTk32jrjwod
-         6f/okU7AcytGjLNOCb+7xFoLTJvvrUr4A2V//nr06+bh7M6dHl2KXyXIW2UItdAgUeX8
-         bZNLHjvpgMqVnWNao716h5t81UxRtHyjKIw/kTkocXomMI3w4rjVwGSpyNILoUSCP3FE
-         tF1w==
-X-Gm-Message-State: AOAM532pl569MS4UoIK5JsChMSePXcN+2NTkzA9dsxX7TqiQySnIeXx7
-        VdvQfzuD/A+RLMJeykYjYKgXZlFq9aHf8vY7tCVIEg==
-X-Google-Smtp-Source: ABdhPJzY5JmgSHO1T3PksghjM9eavpGd7W7UFUNpo6+rxeVO4DH66qcyhrcx9Km/7O2GayflMOfPBUmwDTBINwkpDZQ=
-X-Received: by 2002:a05:6402:22b4:: with SMTP id cx20mr75564459edb.262.1609853520498;
- Tue, 05 Jan 2021 05:32:00 -0800 (PST)
+        bh=iIkVLx83G41CWRKC0CLW06TbH7oAaNkFqT99VAPH524=;
+        b=L0jwjkiVfxvftbFcLIB2UvXy7JkS1hXvFfKfZtV+Lrw3ABTr7RaHxQk9CcGoKGM4MA
+         1u84DpkZG2KwuWAhwTl5sb5+IBYtZXi8V2bgqOYbV0v5DFuzO/j79vrPTcBTkSs/lnpC
+         Vm5UHv6By7b21KVCr6zB9wyJUkqkGrLalSPh6FyXoR8rRG0rypownaQIFOYhBTh5Gfew
+         d5TJKifhG6JrraZxNU57HzCV7wOhB2yypPA2We+n0LZ/5S3dval6bdj6iIHTavtjzWi9
+         vuDmxwXgKodMii6IHgNd+UeLQ85A42bNXKVkB5o0f4f12iwvTyBVkxRBKwOFceOAqTPn
+         pZ+w==
+X-Gm-Message-State: AOAM531pGFIFBpTrYJn0xW41ip6HJWmTxnYTUc+VvdNRtkwbDH/bYs/X
+        mXeud6XcUZSuKzk5ZWS4I9Vp/5avSTFZ0dFBXqwrAQ==
+X-Google-Smtp-Source: ABdhPJx8R0GgG+WZA0Uu5zjRHa9c+vOSz3G+mJBOehdEmxvOv4uLc3CVQD+NjV7aWSCtPabgpK0UgJPefTKF4SOVTqE=
+X-Received: by 2002:a17:906:4756:: with SMTP id j22mr31702969ejs.353.1609853621566;
+ Tue, 05 Jan 2021 05:33:41 -0800 (PST)
 MIME-Version: 1.0
-References: <20201230045743.14694-1-Viswas.G@microchip.com.com> <20201230045743.14694-7-Viswas.G@microchip.com.com>
-In-Reply-To: <20201230045743.14694-7-Viswas.G@microchip.com.com>
+References: <20201230045743.14694-1-Viswas.G@microchip.com.com> <20201230045743.14694-8-Viswas.G@microchip.com.com>
+In-Reply-To: <20201230045743.14694-8-Viswas.G@microchip.com.com>
 From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Tue, 5 Jan 2021 14:31:49 +0100
-Message-ID: <CAMGffE=06PW7Fc9EC_KxUW5aFk30oicFVZ8MbUC6p=k73KBF7A@mail.gmail.com>
-Subject: Re: [PATCH 6/8] pm80xx: Simultaneous poll for all FW readiness.
+Date:   Tue, 5 Jan 2021 14:33:31 +0100
+Message-ID: <CAMGffEkL4XyRZTQYGhm50svB6FBs7oG9oP87bKqGk85aTcfmPQ@mail.gmail.com>
+Subject: Re: [PATCH 7/8] pm80xx: Log SATA IOMB completion status on failure.
 To:     Viswas G <Viswas.G@microchip.com.com>
 Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
         Vasanthalakshmi.Tharmarajan@microchip.com,
@@ -70,22 +70,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 30, 2020 at 5:47 AM Viswas G <Viswas.G@microchip.com.com> wrote:
+On Wed, Dec 30, 2020 at 5:48 AM Viswas G <Viswas.G@microchip.com.com> wrote:
 >
-> From: Bhavesh Jashnani <bjashnani@google.com>
+> From: Vishakha Channapattan <vishakhavc@google.com>
 >
-> In check_fw_ready() we first wait for ILA to come up and then we
-> wait for RAAE to come up and IOPs and so on. This is a sequential check.
-> Because of this ILA image seems to be not ready in the allocated time
-> and so the driver marks it as "not ready" and then move on to other FW
-> images. But ILA does become ready eventually, but is not checked again.
-> In this way driver concludes that FW is not ready, when it actually is.
+> Added a log message in sata completion path to log the status of failed
+> command. If the status does not match any expected status, another
+> message will be logged.
 >
-> Fix: Instead of sequentially polling each image, we keep polling for all
-> images to be ready. The timeout for the polling has been set to the sum
-> of what was used for each individual image.
+> On IO failure with known status, log message will be
 >
-> Signed-off-by: Bhavesh Jashnani <bjashnani@google.com>
+> [ 1712.951735] pm80xx0:: mpi_sata_completion 2269: IO failed device_id
+> 16385 status 0x1 tag XX
+>
+> If the firmware returns unexpected status, log message of the following
+> format will be logged -
+>
+> [ 1712.951735] pm80xx0:: mpi_sata_completion XXXX: Unknown status
+> device_id XXXXX status 0xX tag XX
+>
+> Signed-off-by: Vishakha Channapattan <vishakhavc@google.com>
 > Signed-off-by: Viswas G <Viswas.G@microchip.com>
 > Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
 > Signed-off-by: Ashokkumar N <Ashokkumar.N@microchip.com>
@@ -93,114 +97,40 @@ On Wed, Dec 30, 2020 at 5:47 AM Viswas G <Viswas.G@microchip.com.com> wrote:
 Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 Thx
 > ---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 80 ++++++++++++----------------------------
->  1 file changed, 23 insertions(+), 57 deletions(-)
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 13 ++++++++-----
+>  1 file changed, 8 insertions(+), 5 deletions(-)
 >
 > diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 407c0cf6ab5f..df679e36954a 100644
+> index df679e36954a..e7fef42b4f6c 100644
 > --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 > +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -1043,6 +1043,7 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
->         u32 value;
->         u32 max_wait_count;
->         u32 max_wait_time;
-> +       u32 expected_mask;
->         int ret = 0;
->
->         /* reset / PCIe ready */
-> @@ -1052,70 +1053,35 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
->                 value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
->         } while ((value == 0xFFFFFFFF) && (--max_wait_count));
->
-> -       /* check ila status */
-> -       max_wait_time = max_wait_count = 50;    /* 1000 milli sec */
-> -       do {
-> -               msleep(FW_READY_INTERVAL);
-> -               value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
-> -       } while (((value & SCRATCH_PAD_ILA_READY) !=
-> -                       SCRATCH_PAD_ILA_READY) && (--max_wait_count));
-> -       if (!max_wait_count)
-> -               ret = -1;
-> -       else {
-> -               pm8001_dbg(pm8001_ha, MSG,
-> -                          " ila ready status in %d millisec\n",
-> -                          (max_wait_time - max_wait_count));
-> -       }
-> -
-> -       /* check RAAE status */
-> -       max_wait_time = max_wait_count = 90;    /* 1800 milli sec */
-> -       do {
-> -               msleep(FW_READY_INTERVAL);
-> -               value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
-> -       } while (((value & SCRATCH_PAD_RAAE_READY) !=
-> -                               SCRATCH_PAD_RAAE_READY) && (--max_wait_count));
-> -       if (!max_wait_count)
-> -               ret = -1;
-> -       else {
-> -               pm8001_dbg(pm8001_ha, MSG,
-> -                          " raae ready status in %d millisec\n",
-> -                          (max_wait_time - max_wait_count));
-> +       /* check ila, RAAE and iops status */
-> +       if ((pm8001_ha->chip_id != chip_8008) &&
-> +                       (pm8001_ha->chip_id != chip_8009)) {
-> +               max_wait_time = max_wait_count = 180;   /* 3600 milli sec */
-> +               expected_mask = SCRATCH_PAD_ILA_READY |
-> +                       SCRATCH_PAD_RAAE_READY |
-> +                       SCRATCH_PAD_IOP0_READY |
-> +                       SCRATCH_PAD_IOP1_READY;
-> +       } else {
-> +               max_wait_time = max_wait_count = 170;   /* 3400 milli sec */
-> +               expected_mask = SCRATCH_PAD_ILA_READY |
-> +                       SCRATCH_PAD_RAAE_READY |
-> +                       SCRATCH_PAD_IOP0_READY;
+> @@ -2437,10 +2437,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>                 return;
 >         }
-> -
-> -       /* check iop0 status */
-> -       max_wait_time = max_wait_count = 30;    /* 600 milli sec */
->         do {
->                 msleep(FW_READY_INTERVAL);
->                 value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
-> -       } while (((value & SCRATCH_PAD_IOP0_READY) != SCRATCH_PAD_IOP0_READY) &&
-> -                       (--max_wait_count));
-> -       if (!max_wait_count)
-> +       } while (((value & expected_mask) !=
-> +                                expected_mask) && (--max_wait_count));
-> +       if (!max_wait_count) {
-> +               pm8001_dbg(pm8001_ha, INIT,
-> +               "At least one FW component failed to load within %d millisec: Scratchpad1: 0x%x\n",
-> +                       max_wait_time * FW_READY_INTERVAL, value);
->                 ret = -1;
-> -       else {
-> +       } else {
->                 pm8001_dbg(pm8001_ha, MSG,
-> -                          " iop0 ready status in %d millisec\n",
-> -                          (max_wait_time - max_wait_count));
-> +                       "All FW components ready by %d ms\n",
-> +                       (max_wait_time - max_wait_count) * FW_READY_INTERVAL);
->         }
-> -
-> -       /* check iop1 status only for 16 port controllers */
-> -       if ((pm8001_ha->chip_id != chip_8008) &&
-> -                       (pm8001_ha->chip_id != chip_8009)) {
-> -               /* 200 milli sec */
-> -               max_wait_time = max_wait_count = 10;
-> -               do {
-> -                       msleep(FW_READY_INTERVAL);
-> -                       value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
-> -               } while (((value & SCRATCH_PAD_IOP1_READY) !=
-> -                               SCRATCH_PAD_IOP1_READY) && (--max_wait_count));
-> -               if (!max_wait_count)
-> -                       ret = -1;
-> -               else {
-> -                       pm8001_dbg(pm8001_ha, MSG,
-> -                                  "iop1 ready status in %d millisec\n",
-> -                                  (max_wait_time - max_wait_count));
-> -               }
-> -       }
-> -
->         return ret;
->  }
 >
+> -       if (unlikely(status))
+> -               pm8001_dbg(pm8001_ha, IOERR,
+> -                          "status:0x%x, tag:0x%x, task::0x%p\n",
+> -                          status, tag, t);
+> +       if (status != IO_SUCCESS) {
+> +               pm8001_dbg(pm8001_ha, FAIL,
+> +                       "IO failed device_id %u status 0x%x tag %d\n",
+> +                       pm8001_dev->device_id, status, tag);
+> +       }
+>
+>         /* Print sas address of IO failed device */
+>         if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
+> @@ -2762,7 +2763,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>                         atomic_dec(&pm8001_dev->running_req);
+>                 break;
+>         default:
+> -               pm8001_dbg(pm8001_ha, DEVIO, "Unknown status 0x%x\n", status);
+> +               pm8001_dbg(pm8001_ha, DEVIO,
+> +                               "Unknown status device_id %u status 0x%x tag %d\n",
+> +                       pm8001_dev->device_id, status, tag);
+>                 /* not allowed case. Therefore, return failed status */
+>                 ts->resp = SAS_TASK_COMPLETE;
+>                 ts->stat = SAS_DEV_NO_RESPONSE;
 > --
 > 2.16.3
 >
