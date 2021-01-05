@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E275BC07520
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C59CFC433E6
 	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 19:02:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBBD222D57
+	by mail.kernel.org (Postfix) with ESMTP id 9A6B122D58
 	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 19:02:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730840AbhAETC2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Jan 2021 14:02:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43276 "EHLO
+        id S1730857AbhAETCb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Jan 2021 14:02:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43354 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730730AbhAETCH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 14:02:07 -0500
-Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E4CFC0617A4;
-        Tue,  5 Jan 2021 11:00:57 -0800 (PST)
-Received: by mail-ed1-x531.google.com with SMTP id u19so1925574edx.2;
-        Tue, 05 Jan 2021 11:00:57 -0800 (PST)
+        with ESMTP id S1730730AbhAETCa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 14:02:30 -0500
+Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 914C4C061574;
+        Tue,  5 Jan 2021 11:01:10 -0800 (PST)
+Received: by mail-ej1-x62e.google.com with SMTP id jx16so1776266ejb.10;
+        Tue, 05 Jan 2021 11:01:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=eVeK9xT+cQg4LNXHEMfEbDRIq/x+/jlGFuxcqUdAXkk=;
-        b=jcC1h1LA3LIffEisBnCLmI474BqldfIodx219oNGc+tt7jVCAeTtqKvTzzBz9wGywY
-         xLXZnkXKRb4tJyGv2FSzJHQe3VCsEwbeyxT8AM+ZiOvrAmuwX60JfOgfKjjpTrCSdR17
-         31gEckmvlt5ym/S4IPYsGKaPpRfbE8UmicBunfKEp+VmZp+4a4khM6JGxjI3Hp6mfIJ8
-         SBgCA6Ud37X2fK6DaSkslK97YsA56gd1r+QXOt2owRbKPq8OTBsc1SvCxnroBUNP6LFZ
-         KYUhIkh6CgrLu0+wPKq4g6GQqq79w3dVBQd9zkObnAhpZI5YaBcR4QNJ4qwqV8rd68uY
-         AMGg==
+        bh=2Xkt1oCIrxKaf3It3JKv+vsp1Hey/NBy/qFeY9d8DZc=;
+        b=Gt5QFu6I7aHo+8GOPj5R6UBnaDhbCplrfdTcdydwynZSIxhp9WE4gV3mh7aGBMhvd/
+         2rSp5iOOh6nP27UsPfrjVeanyWIu7s1MfI/Sj7qYZizz3AsC8CTZ46nLPYgajUFzTdnL
+         vcl31dKkTWMrIK3J8VFuZl0La4iCfKMMOcjSNTKaMokKfC3PC+/Wk5fnlzmJyUmCW2Ak
+         Wz71qxVmVISS6e5HCu1t8G9zRraBu0jxxVzCbv6fdiGMern9MRd2d3L/y/bgN0w9R1ft
+         SlO9N3Av0p/8zNw//Ah3Vmsfx35/2SKI8FB7cYchKY9eQBtOP21dvYqJq7ic4+BeuxJj
+         +FWg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=eVeK9xT+cQg4LNXHEMfEbDRIq/x+/jlGFuxcqUdAXkk=;
-        b=H7y3w1G2Hv2h0mbmS8OdpZ0Ftp1U5mc65bZQ26l5x+G8WS791HiJKU9lDCopa3SP+D
-         7hzk4x/bqkAZIdwwr1BA05NDSNTiFBjKN93CPFA6vJ4u81N6JmAJxBFkOWRuGefsvUiY
-         O/qbGr9l5FipHShAWvw2xTXs7G6l3k8S96SJAUoWaCs3QXQW0Boy54m0fMhA0pidZwfq
-         ZH/Oe8SwGv38u+BqizTuyVVmH1wWSK7VvzjCuIGhGsmd25nuT0uDScw6gC0HcumKWWKS
-         UWqiEAJrqShXqc6ljOo7U+FKzosCURBpkXYpg73g3fJCeFaqQFMMWerI5Dg7VdbH8rgu
-         Lmrg==
-X-Gm-Message-State: AOAM530P2kp/jg9mRC+2sJZL5Qvbki3w44vR6wNNLdOiyI+QK9GB7fp9
-        W/Iuu/i7HfVGy6LwGviIONM=
-X-Google-Smtp-Source: ABdhPJywzGOkFcZAVkyk8PQ8M2oMIBob7kn/MLt8bOAZoMi0V7lOOqZiCgYYmkEvgxwjnb5ltoYSHw==
-X-Received: by 2002:aa7:dd17:: with SMTP id i23mr1249282edv.14.1609873255865;
-        Tue, 05 Jan 2021 11:00:55 -0800 (PST)
+        bh=2Xkt1oCIrxKaf3It3JKv+vsp1Hey/NBy/qFeY9d8DZc=;
+        b=bYeYVirHrNjC5BH/xSWNjRsE5cC7tzdSH7rZYNcR9WckLla9mv/v3CytoQyWF6DrA0
+         Xq50FqnQez2rvtk5CYrn7eepFOva4imwaAESln1KxbDiQ/WvGihEqrgzHGIwfGVF1HJr
+         /s5M/2jqbKzfW6qOra0rFBskEXofKUfuOiuAEPrBTj0D+YWtcPm+1tn8qeMAonWPk6Go
+         7THInYcCnAhNKfx4HudcwZ6qz7pgiM76DxI0u0tpeFP2DBpucHdfU57+Fq4V4Y/QnBAS
+         5XBkeEKFdZ6NqQ5+lBUUZtZVVZQSehpvlzISQqhjx/CqUQVfxWEIHvNSZL4KubjKJBgv
+         vHjg==
+X-Gm-Message-State: AOAM533TbjBF4j4OeRhiTR5iLFjI/xS64/PqnnMWCFgIq8VVQwIvjisq
+        4rqgY21pcapXzXh71BzIV44=
+X-Google-Smtp-Source: ABdhPJwJ20qomfS5nkztFWDy2mx/AXJKC58XuuP1SWp95xUhRb4sibo0a7Ho4ddPX1swb2PGZfDcEQ==
+X-Received: by 2002:a17:906:81d6:: with SMTP id e22mr490266ejx.476.1609873269304;
+        Tue, 05 Jan 2021 11:01:09 -0800 (PST)
 Received: from localhost.localdomain (5-12-227-87.residential.rdsnet.ro. [5.12.227.87])
-        by smtp.gmail.com with ESMTPSA id z13sm205084edq.48.2021.01.05.11.00.53
+        by smtp.gmail.com with ESMTPSA id z13sm205084edq.48.2021.01.05.11.01.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Jan 2021 11:00:55 -0800 (PST)
+        Tue, 05 Jan 2021 11:01:08 -0800 (PST)
 From:   Vladimir Oltean <olteanv@gmail.com>
 To:     "David S . Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
@@ -86,9 +86,9 @@ Cc:     netdev@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
         intel-wired-lan@lists.osuosl.org, linux-parisc@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
         dev@openvswitch.org
-Subject: [RFC PATCH v2 net-next 06/12] parisc/led: reindent the code that gathers device statistics
-Date:   Tue,  5 Jan 2021 20:58:56 +0200
-Message-Id: <20210105185902.3922928-7-olteanv@gmail.com>
+Subject: [RFC PATCH v2 net-next 12/12] net: remove obsolete comments about ndo_get_stats64 context from eth drivers
+Date:   Tue,  5 Jan 2021 20:59:02 +0200
+Message-Id: <20210105185902.3922928-13-olteanv@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210105185902.3922928-1-olteanv@gmail.com>
 References: <20210105185902.3922928-1-olteanv@gmail.com>
@@ -100,51 +100,66 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Vladimir Oltean <vladimir.oltean@nxp.com>
 
-The standard in the Linux kernel is to use one tab character per
-indentation level.
+Now that we have a good summary in Documentation/networking/netdevices.rst,
+these comments serve no purpose and are actually distracting/confusing.
 
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Helge Deller <deller@gmx.de>
-Cc: linux-parisc@vger.kernel.org
 Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
 ---
- drivers/parisc/led.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+ drivers/net/ethernet/cisco/enic/enic_main.c | 1 -
+ drivers/net/ethernet/nvidia/forcedeth.c     | 2 --
+ drivers/net/ethernet/sfc/efx_common.c       | 1 -
+ drivers/net/ethernet/sfc/falcon/efx.c       | 1 -
+ 4 files changed, 5 deletions(-)
 
-diff --git a/drivers/parisc/led.c b/drivers/parisc/led.c
-index 36c6613f7a36..3cada632a4be 100644
---- a/drivers/parisc/led.c
-+++ b/drivers/parisc/led.c
-@@ -359,16 +359,19 @@ static __inline__ int led_get_net_activity(void)
- 	/* we are running as a workqueue task, so we can use an RCU lookup */
- 	rcu_read_lock();
- 	for_each_netdev_rcu(&init_net, dev) {
--	    const struct rtnl_link_stats64 *stats;
--	    struct rtnl_link_stats64 temp;
--	    struct in_device *in_dev = __in_dev_get_rcu(dev);
--	    if (!in_dev || !in_dev->ifa_list)
--		continue;
--	    if (ipv4_is_loopback(in_dev->ifa_list->ifa_local))
--		continue;
--	    stats = dev_get_stats(dev, &temp);
--	    rx_total += stats->rx_packets;
--	    tx_total += stats->tx_packets;
-+		const struct rtnl_link_stats64 *stats;
-+		struct rtnl_link_stats64 temp;
-+		struct in_device *in_dev = __in_dev_get_rcu(dev);
-+
-+		if (!in_dev || !in_dev->ifa_list)
-+			continue;
-+
-+		if (ipv4_is_loopback(in_dev->ifa_list->ifa_local))
-+			continue;
-+
-+		stats = dev_get_stats(dev, &temp);
-+		rx_total += stats->rx_packets;
-+		tx_total += stats->tx_packets;
- 	}
- 	rcu_read_unlock();
+diff --git a/drivers/net/ethernet/cisco/enic/enic_main.c b/drivers/net/ethernet/cisco/enic/enic_main.c
+index fb269d587b74..7425f94f9091 100644
+--- a/drivers/net/ethernet/cisco/enic/enic_main.c
++++ b/drivers/net/ethernet/cisco/enic/enic_main.c
+@@ -870,7 +870,6 @@ static netdev_tx_t enic_hard_start_xmit(struct sk_buff *skb,
+ 	return NETDEV_TX_OK;
+ }
  
+-/* dev_base_lock rwlock held, nominally process context */
+ static void enic_get_stats(struct net_device *netdev,
+ 			   struct rtnl_link_stats64 *net_stats)
+ {
+diff --git a/drivers/net/ethernet/nvidia/forcedeth.c b/drivers/net/ethernet/nvidia/forcedeth.c
+index 8724d6a9ed02..8fa254dc64e9 100644
+--- a/drivers/net/ethernet/nvidia/forcedeth.c
++++ b/drivers/net/ethernet/nvidia/forcedeth.c
+@@ -1761,8 +1761,6 @@ static void nv_get_stats(int cpu, struct fe_priv *np,
+ /*
+  * nv_get_stats64: dev->ndo_get_stats64 function
+  * Get latest stats value from the nic.
+- * Called with read_lock(&dev_base_lock) held for read -
+- * only synchronized against unregister_netdevice.
+  */
+ static void
+ nv_get_stats64(struct net_device *dev, struct rtnl_link_stats64 *storage)
+diff --git a/drivers/net/ethernet/sfc/efx_common.c b/drivers/net/ethernet/sfc/efx_common.c
+index de797e1ac5a9..4d8047b35fb2 100644
+--- a/drivers/net/ethernet/sfc/efx_common.c
++++ b/drivers/net/ethernet/sfc/efx_common.c
+@@ -596,7 +596,6 @@ void efx_stop_all(struct efx_nic *efx)
+ 	efx_stop_datapath(efx);
+ }
+ 
+-/* Context: process, dev_base_lock or RTNL held, non-blocking. */
+ void efx_net_stats(struct net_device *net_dev, struct rtnl_link_stats64 *stats)
+ {
+ 	struct efx_nic *efx = netdev_priv(net_dev);
+diff --git a/drivers/net/ethernet/sfc/falcon/efx.c b/drivers/net/ethernet/sfc/falcon/efx.c
+index f8979991970e..6db2b6583dec 100644
+--- a/drivers/net/ethernet/sfc/falcon/efx.c
++++ b/drivers/net/ethernet/sfc/falcon/efx.c
+@@ -2096,7 +2096,6 @@ int ef4_net_stop(struct net_device *net_dev)
+ 	return 0;
+ }
+ 
+-/* Context: process, dev_base_lock or RTNL held, non-blocking. */
+ static void ef4_net_stats(struct net_device *net_dev,
+ 			  struct rtnl_link_stats64 *stats)
+ {
 -- 
 2.25.1
 
