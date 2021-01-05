@@ -2,59 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1858BC433DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 11:36:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B96CC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 11:36:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B3BDB229CA
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 11:36:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1270122AAA
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 11:36:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727226AbhAELgC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Jan 2021 06:36:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57814 "EHLO
+        id S1727705AbhAELgV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Jan 2021 06:36:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729529AbhAELfm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 06:35:42 -0500
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01985C061794;
-        Tue,  5 Jan 2021 03:35:02 -0800 (PST)
-Received: by mail-ej1-x630.google.com with SMTP id lt17so40781086ejb.3;
-        Tue, 05 Jan 2021 03:35:01 -0800 (PST)
+        with ESMTP id S1727464AbhAELgU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 06:36:20 -0500
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6054C06179A;
+        Tue,  5 Jan 2021 03:35:06 -0800 (PST)
+Received: by mail-ej1-x636.google.com with SMTP id n26so40764256eju.6;
+        Tue, 05 Jan 2021 03:35:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=zAve0h42Kexq4ViJloINYZNQ2O2w9ogGHjXf0XBmUrk=;
-        b=moav0DzwPJ92ba15OEG/wmrU0zIYVzys6mFAhU966VEloAbJrz/OBo/2sHcgtd1DUS
-         SDFSAYltsl8U8fkdoJK2xWnH+Ij1UUQ9nEciznvpW+0JyrBoQ+kU6+Fyp5S0zpVsjzUL
-         TJtGIVnkc4Yl4cgkAgeFWsIrYywbDgB6GSwnX/tyMKbaT3h78dALJgnhjxbe0f/u8Dk2
-         PHejwo08dP+SUXJX6sSMEAaH5OCoitYiywuGo8WOFYofAbQ77OEtMne+7ms5JFPSAgvF
-         xjFiPadpNBl4ZivnFxLSL27hjdioL805obG/U+b9CmB5XqLsWU9IlJC0shUhUm1owqzy
-         MQQw==
+        bh=QsQ8cgVNV6Ccy3Hjl/4rCw6U/yBCmG9PQRHC4wbZ0sQ=;
+        b=r1HFfTQVOFjBuHWrjuqu+Lzn21SMtsBQjhBK7q3WhEuCa4u7BWLZaQ3KbTpoPWLTuL
+         JpfVgA1Sb3dxPawh9zM2VXcjb7TbwzJygoZ1MFwAIcDluWYxJSALhQUzpY+ALGyNj7if
+         DBMXFAsQx62dRDojGsWJzXKA+QhH9pVY6G0pdUpfIGOceswEIctkXqft2CrwJG63hxUN
+         1dSuLS0GnxE9Ph4xqHliKsYwb7phbcfU2LkGO2Nt1hia+gbQKINQIAx2Yf8axqqf6PJP
+         TpEaXuoip9UJp26wLb4e+g3uv6+xyRfknu/l7+WOpbmeKaKfC+DBGRMjSNU1bRCFV938
+         BCkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=zAve0h42Kexq4ViJloINYZNQ2O2w9ogGHjXf0XBmUrk=;
-        b=qkutlrSvtsbKmzt+P3EGp98JzjxGQzfCGHTsioksFfu4Lorfra0n4UBtRV5wUfICcf
-         REFXBm7fqlOk2qboOx56DCLEWVDmkcQgSWO2K3a4mUSs4M145+ePR5SdExovUyYZpzQ/
-         cLXFXRxZ1RiaWFDKGwkhYEBGiqME2Su1RPEVfoLH1IEodZtyPp/RogDQYcXjltEoZ0o3
-         RuCl+VPe8DlTQwkA9jd9vaBI+ss5940r4b47yL/I4Y0m/YT1U5x4WR3MYpOlxLkMNDL+
-         GQ4y0pN3tJISUij/kaPgAmAon9O7owFI9SUrxYfYGLJ+oDMLXy2Oy3SboEvgFBRTtBWj
-         I3QA==
-X-Gm-Message-State: AOAM530xQ+pE8lvdZlh8pi0LMpSi+q0D1PbLCQQapFXEsxph5oDx0/f/
-        OEsxMwCsPUc06sXCO77LukE=
-X-Google-Smtp-Source: ABdhPJyXgRxEdcvcgtD3eBHeLqz5/OCVsjfwZKiAGKfm2RPwWQ6phYCkjIplgbKYtosNrroLhFPqYg==
-X-Received: by 2002:a17:906:4705:: with SMTP id y5mr69462022ejq.112.1609846500727;
-        Tue, 05 Jan 2021 03:35:00 -0800 (PST)
+        bh=QsQ8cgVNV6Ccy3Hjl/4rCw6U/yBCmG9PQRHC4wbZ0sQ=;
+        b=CbBctwvPKsXK8vJo/v9htCPkIIeuGcH3qNdjlIfi69Zzn/0+ZX3hfzxFxJnrtw2Fjs
+         XG9oS2K6kRAHHibSmZS9RoSyi3+bXjEyxT09zU/lgKvoeD3dZ9aI7U0ZvO0EJ16n7DwN
+         7DBt/rxdGa0AfkAiHQH3/QZuCnuqbHxtooy9RCbzsbnIKHLKFcQH2sUPu5h7vaEOFrE8
+         D+zNCupL8rwiDuUWrx0xATMrsRR88DNVyRm56zyMh7qrrLqpF0f9VH9/hSibLawJAc2W
+         hfC4dc2aGtiLYlyDAj2jjUTlYYQfUUJP/HU5X0AlHyA+d96qGQEtm5QTHYcQa/kcqDAn
+         J21w==
+X-Gm-Message-State: AOAM5302ei11v1XkXPnHyLHBloKFstHkHCc/6p6dF8QZYNp2SqGQjxyU
+        85G8vKZ4D4XmpKVxJAbql5E=
+X-Google-Smtp-Source: ABdhPJxEpH+SeXE2P+WlR2KJAUWYXSxNHqAB0H/h776V7B9g8/6x/tU0iokV8XWssL/3vExMaOTI8A==
+X-Received: by 2002:a17:907:204b:: with SMTP id pg11mr72356728ejb.192.1609846505539;
+        Tue, 05 Jan 2021 03:35:05 -0800 (PST)
 Received: from localhost.localdomain (ip5f5bfcff.dynamic.kabel-deutschland.de. [95.91.252.255])
-        by smtp.gmail.com with ESMTPSA id n17sm24640772ejh.49.2021.01.05.03.34.59
+        by smtp.gmail.com with ESMTPSA id n17sm24640772ejh.49.2021.01.05.03.35.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Jan 2021 03:35:00 -0800 (PST)
+        Tue, 05 Jan 2021 03:35:04 -0800 (PST)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -62,9 +62,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org, rostedt@goodmis.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 2/6] scsi: ufs: Use __print_symbolic() for UFS trace string print
-Date:   Tue,  5 Jan 2021 12:34:42 +0100
-Message-Id: <20210105113446.16027-3-huobean@gmail.com>
+Subject: [PATCH v4 6/6] scsi: ufs: Make UPIU trace easier differentiate among CDB, OSF, and TM
+Date:   Tue,  5 Jan 2021 12:34:46 +0100
+Message-Id: <20210105113446.16027-7-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210105113446.16027-1-huobean@gmail.com>
 References: <20210105113446.16027-1-huobean@gmail.com>
@@ -74,399 +74,143 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-__print_symbolic() is designed for exporting the print formatting table
-to userspace and allows parsing tool, such as trace-cmd and perf, to analyze
-trace log according to this print formatting table, meanwhile, by using
-__print_symbolic()s, save space in the trace ring buffer.
-
-original print format:
-
-print fmt: "%s: %s: HDR:%s, CDB:%s", __get_str(str), __get_str(dev_name),
-            __print_hex(REC->hdr, sizeof(REC->hdr)),
-            __print_hex(REC->tsf, sizeof(REC->tsf))
-
-after this change:
-
-print fmt: "%s: %s: HDR:%s, CDB:%s",
-      print_symbolic(REC->str_t, {0, "send"},
-                                 {1, "complete"},
-                                 {2, "dev_complete"},
-                                 {3, "query_send"},
-                                 {4, "query_complete"},
-                                 {5, "query_complete_err"},
-                                 {6, "tm_send"},
-                                 {7, "tm_complete"},
-                                 {8, "tm_complete_err"}),
-      __get_str(dev_name), __print_hex(REC->hdr, sizeof(REC->hdr)),
-      __print_hex(REC->tsf, sizeof(REC->tsf))
-
-Note: This patch just converts current __get_str(str) to __print_symbolic(),
-      the original tracing log will not be affected by this change, so it
-      doesn't break what current parsers expect.
+Transaction Specific Fields (TSF) in the UPIU package could be CDB
+(SCSI/UFS Command Descriptor Block), OSF (Opcode Specific Field), and
+TM I/O parameter (Task Management Input/Output Parameter). But, currently,
+we take all of these as CDB  in the UPIU trace. Thus makes user confuse
+among CDB, OSF, and TM message. So fix it with this patch.
 
 Acked-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufs.h     | 10 +++++++
- drivers/scsi/ufs/ufshcd.c  | 48 ++++++++++++++++-----------------
- include/trace/events/ufs.h | 54 ++++++++++++++++++++++++--------------
- 3 files changed, 69 insertions(+), 43 deletions(-)
+ drivers/scsi/ufs/ufs.h     |  7 +++++++
+ drivers/scsi/ufs/ufshcd.c  |  9 +++++----
+ include/trace/events/ufs.h | 18 +++++++++++++++---
+ 3 files changed, 27 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 14dfda735adf..ba24b504f85a 100644
+index ba24b504f85a..50f46f3bc8a2 100644
 --- a/drivers/scsi/ufs/ufs.h
 +++ b/drivers/scsi/ufs/ufs.h
-@@ -545,6 +545,16 @@ struct ufs_dev_info {
- 	u8 b_presrv_uspc_en;
+@@ -554,6 +554,13 @@ enum ufs_trace_str_t {
+ 	UFS_TM_SEND, UFS_TM_COMP, UFS_TM_ERR
  };
  
 +/*
-+ * This enum is used in string mapping in include/trace/events/ufs.h.
++ * Transaction Specific Fields (TSF) type in the UPIU package, this enum is
++ * used in include/trace/events/ufs.h for UFS command trace.
 + */
-+enum ufs_trace_str_t {
-+	UFS_CMD_SEND, UFS_CMD_COMP, UFS_DEV_COMP,
-+	UFS_QUERY_SEND, UFS_QUERY_COMP, UFS_QUERY_ERR,
-+	UFS_TM_SEND, UFS_TM_COMP, UFS_TM_ERR
++enum ufs_trace_tsf_t {
++	UFS_TSF_CDB, UFS_TSF_OSF, UFS_TSF_TM_INPUT, UFS_TSF_TM_OUTPUT
 +};
-+
-+
+ 
  /**
   * ufs_is_valid_unit_desc_lun - checks if the given LUN has a unit descriptor
-  * @dev_info: pointer of instance of struct ufs_dev_info
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 82ad31781bc9..c68afd356abb 100644
+index 4df17005e398..3be555e5410f 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -305,53 +305,53 @@ static void ufshcd_scsi_block_requests(struct ufs_hba *hba)
- }
+@@ -312,7 +312,8 @@ static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+ 	if (!trace_ufshcd_upiu_enabled())
+ 		return;
  
- static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
--		const char *str)
-+				      enum ufs_trace_str_t str_t)
- {
- 	struct utp_upiu_req *rq = hba->lrb[tag].ucd_req_ptr;
- 
--	trace_ufshcd_upiu(dev_name(hba->dev), str, &rq->header, &rq->sc.cdb);
-+	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq->header, &rq->sc.cdb);
+-	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq->header, &rq->sc.cdb);
++	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq->header, &rq->sc.cdb,
++			  UFS_TSF_CDB);
  }
  
  static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba, unsigned int tag,
--		const char *str)
-+					enum ufs_trace_str_t str_t)
- {
- 	struct utp_upiu_req *rq = hba->lrb[tag].ucd_req_ptr;
+@@ -329,7 +330,7 @@ static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+ 		rq_rsp = (struct utp_upiu_req *)hba->lrb[tag].ucd_rsp_ptr;
  
--	trace_ufshcd_upiu(dev_name(hba->dev), str, &rq->header, &rq->qr);
-+	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq->header, &rq->qr);
+ 	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq_rsp->header,
+-			  &rq_rsp->qr);
++			  &rq_rsp->qr, UFS_TSF_OSF);
  }
  
  static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
--		const char *str)
-+				     enum ufs_trace_str_t str_t)
- {
- 	int off = (int)tag - hba->nutrs;
- 	struct utp_task_req_desc *descp = &hba->utmrdl_base_addr[off];
+@@ -343,10 +344,10 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
  
--	trace_ufshcd_upiu(dev_name(hba->dev), str, &descp->req_header,
-+	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &descp->req_header,
- 			&descp->input_param1);
+ 	if (str_t == UFS_TM_SEND)
+ 		trace_ufshcd_upiu(dev_name(hba->dev), str_t, &descp->req_header,
+-				  &descp->input_param1);
++				  &descp->input_param1, UFS_TSF_TM_INPUT);
+ 	else
+ 		trace_ufshcd_upiu(dev_name(hba->dev), str_t, &descp->rsp_header,
+-				  &descp->output_param1);
++				  &descp->output_param1, UFS_TSF_TM_OUTPUT);
  }
  
  static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
- 					 struct uic_command *ucmd,
--					 const char *str)
-+					 enum ufs_trace_str_t str_t)
- {
- 	u32 cmd;
- 
- 	if (!trace_ufshcd_uic_command_enabled())
- 		return;
- 
--	if (!strcmp(str, "send"))
-+	if (str_t == UFS_CMD_SEND)
- 		cmd = ucmd->command;
- 	else
- 		cmd = ufshcd_readl(hba, REG_UIC_COMMAND);
- 
--	trace_ufshcd_uic_command(dev_name(hba->dev), str, cmd,
-+	trace_ufshcd_uic_command(dev_name(hba->dev), str_t, cmd,
- 				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_1),
- 				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_2),
- 				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3));
- }
- 
--static void ufshcd_add_command_trace(struct ufs_hba *hba,
--		unsigned int tag, const char *str)
-+static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
-+				     enum ufs_trace_str_t str_t)
- {
- 	sector_t lba = -1;
- 	u8 opcode = 0, group_id = 0;
-@@ -363,13 +363,13 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba,
- 	if (!trace_ufshcd_command_enabled()) {
- 		/* trace UPIU W/O tracing command */
- 		if (cmd)
--			ufshcd_add_cmd_upiu_trace(hba, tag, str);
-+			ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
- 		return;
- 	}
- 
- 	if (cmd) { /* data phase exists */
- 		/* trace UPIU also */
--		ufshcd_add_cmd_upiu_trace(hba, tag, str);
-+		ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
- 		opcode = cmd->cmnd[0];
- 		if ((opcode == READ_10) || (opcode == WRITE_10)) {
- 			/*
-@@ -392,7 +392,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba,
- 
- 	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
- 	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--	trace_ufshcd_command(dev_name(hba->dev), str, tag,
-+	trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
- 			doorbell, transfer_len, intr, lba, opcode, group_id);
- }
- 
-@@ -2001,7 +2001,7 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
- 	lrbp->issue_time_stamp = ktime_get();
- 	lrbp->compl_time_stamp = ktime_set(0, 0);
- 	ufshcd_vops_setup_xfer_req(hba, task_tag, (lrbp->cmd ? true : false));
--	ufshcd_add_command_trace(hba, task_tag, "send");
-+	ufshcd_add_command_trace(hba, task_tag, UFS_CMD_SEND);
- 	ufshcd_clk_scaling_start_busy(hba);
- 	__set_bit(task_tag, &hba->outstanding_reqs);
- 	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-@@ -2137,7 +2137,7 @@ ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
- 	ufshcd_writel(hba, uic_cmd->argument2, REG_UIC_COMMAND_ARG_2);
- 	ufshcd_writel(hba, uic_cmd->argument3, REG_UIC_COMMAND_ARG_3);
- 
--	ufshcd_add_uic_command_trace(hba, uic_cmd, "send");
-+	ufshcd_add_uic_command_trace(hba, uic_cmd, UFS_CMD_SEND);
- 
- 	/* Write UIC Cmd */
- 	ufshcd_writel(hba, uic_cmd->command & COMMAND_OPCODE_MASK,
-@@ -2856,7 +2856,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 
- 	hba->dev_cmd.complete = &wait;
- 
--	ufshcd_add_query_upiu_trace(hba, tag, "query_send");
-+	ufshcd_add_query_upiu_trace(hba, tag, UFS_QUERY_SEND);
- 	/* Make sure descriptors are ready before ringing the doorbell */
- 	wmb();
- 	spin_lock_irqsave(hba->host->host_lock, flags);
-@@ -2867,7 +2867,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 
- out:
- 	ufshcd_add_query_upiu_trace(hba, tag,
--			err ? "query_complete_err" : "query_complete");
-+			err ? UFS_QUERY_ERR : UFS_QUERY_COMP);
- 
- out_put_tag:
- 	blk_put_request(req);
-@@ -5028,7 +5028,7 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- 
- 	if (retval == IRQ_HANDLED)
- 		ufshcd_add_uic_command_trace(hba, hba->active_uic_cmd,
--					     "complete");
-+					     UFS_CMD_COMP);
- 	return retval;
- }
- 
-@@ -5052,7 +5052,7 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
- 		lrbp->compl_time_stamp = ktime_get();
- 		cmd = lrbp->cmd;
- 		if (cmd) {
--			ufshcd_add_command_trace(hba, index, "complete");
-+			ufshcd_add_command_trace(hba, index, UFS_CMD_COMP);
- 			result = ufshcd_transfer_rsp_status(hba, lrbp);
- 			scsi_dma_unmap(cmd);
- 			cmd->result = result;
-@@ -5066,7 +5066,7 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
- 			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
- 			if (hba->dev_cmd.complete) {
- 				ufshcd_add_command_trace(hba, index,
--						"dev_complete");
-+							 UFS_DEV_COMP);
- 				complete(hba->dev_cmd.complete);
- 				update_scaling = true;
- 			}
-@@ -6369,7 +6369,7 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 
- 	spin_unlock_irqrestore(host->host_lock, flags);
- 
--	ufshcd_add_tm_upiu_trace(hba, task_tag, "tm_send");
-+	ufshcd_add_tm_upiu_trace(hba, task_tag, UFS_TM_SEND);
- 
- 	/* wait until the task management command is completed */
- 	err = wait_for_completion_io_timeout(&wait,
-@@ -6380,7 +6380,7 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 		 * use-after-free.
- 		 */
- 		req->end_io_data = NULL;
--		ufshcd_add_tm_upiu_trace(hba, task_tag, "tm_complete_err");
-+		ufshcd_add_tm_upiu_trace(hba, task_tag, UFS_TM_ERR);
- 		dev_err(hba->dev, "%s: task management cmd 0x%.2x timed-out\n",
- 				__func__, tm_function);
- 		if (ufshcd_clear_tm_cmd(hba, free_slot))
-@@ -6391,7 +6391,7 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 		err = 0;
- 		memcpy(treq, hba->utmrdl_base_addr + free_slot, sizeof(*treq));
- 
--		ufshcd_add_tm_upiu_trace(hba, task_tag, "tm_complete");
-+		ufshcd_add_tm_upiu_trace(hba, task_tag, UFS_TM_COMP);
- 	}
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
 diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-index fa755394bc0f..7613a5cd14de 100644
+index 7613a5cd14de..e151477d645c 100644
 --- a/include/trace/events/ufs.h
 +++ b/include/trace/events/ufs.h
-@@ -37,6 +37,17 @@
- 	EM(REQ_CLKS_OFF,		"REQ_CLKS_OFF")		\
- 	EMe(REQ_CLKS_ON,		"REQ_CLKS_ON")
+@@ -48,6 +48,12 @@
+ 	EM(UFS_TM_COMP,		"tm_complete")			\
+ 	EMe(UFS_TM_ERR,		"tm_complete_err")
  
-+#define UFS_CMD_TRACE_STRINGS					\
-+	EM(UFS_CMD_SEND,	"send_req")			\
-+	EM(UFS_CMD_COMP,	"complete_rsp")			\
-+	EM(UFS_DEV_COMP,	"dev_complete")			\
-+	EM(UFS_QUERY_SEND,	"query_send")			\
-+	EM(UFS_QUERY_COMP,	"query_complete")		\
-+	EM(UFS_QUERY_ERR,	"query_complete_err")		\
-+	EM(UFS_TM_SEND,		"tm_send")			\
-+	EM(UFS_TM_COMP,		"tm_complete")			\
-+	EMe(UFS_TM_ERR,		"tm_complete_err")
++#define UFS_CMD_TRACE_TSF_TYPES					\
++	EM(UFS_TSF_CDB,		"CDB")		                \
++	EM(UFS_TSF_OSF,		"OSF")		                \
++	EM(UFS_TSF_TM_INPUT,	"TM_INPUT")                     \
++	EMe(UFS_TSF_TM_OUTPUT,	"TM_OUTPUT")
 +
  /* Enums require being exported to userspace, for user tool parsing */
  #undef EM
  #undef EMe
-@@ -46,6 +57,7 @@
- UFS_LINK_STATES;
+@@ -58,6 +64,7 @@ UFS_LINK_STATES;
  UFS_PWR_MODES;
  UFSCHD_CLK_GATING_STATES;
-+UFS_CMD_TRACE_STRINGS
+ UFS_CMD_TRACE_STRINGS
++UFS_CMD_TRACE_TSF_TYPES
  
  /*
   * Now redefine the EM() and EMe() macros to map the enums to the strings
-@@ -56,6 +68,9 @@ UFSCHD_CLK_GATING_STATES;
- #define EM(a, b)	{a, b},
- #define EMe(a, b)	{a, b}
+@@ -70,6 +77,8 @@ UFS_CMD_TRACE_STRINGS
  
-+#define show_ufs_cmd_trace_str(str_t)	\
-+				__print_symbolic(str_t, UFS_CMD_TRACE_STRINGS)
-+
+ #define show_ufs_cmd_trace_str(str_t)	\
+ 				__print_symbolic(str_t, UFS_CMD_TRACE_STRINGS)
++#define show_ufs_cmd_trace_tsf(tsf)	\
++				__print_symbolic(tsf, UFS_CMD_TRACE_TSF_TYPES)
+ 
  TRACE_EVENT(ufshcd_clk_gating,
  
- 	TP_PROTO(const char *dev_name, int state),
-@@ -223,16 +238,16 @@ DEFINE_EVENT(ufshcd_template, ufshcd_init,
- 	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
- 
- TRACE_EVENT(ufshcd_command,
--	TP_PROTO(const char *dev_name, const char *str, unsigned int tag,
--			u32 doorbell, int transfer_len, u32 intr, u64 lba,
--			u8 opcode, u8 group_id),
-+	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t,
-+		 unsigned int tag, u32 doorbell, int transfer_len, u32 intr,
-+		 u64 lba, u8 opcode, u8 group_id),
- 
--	TP_ARGS(dev_name, str, tag, doorbell, transfer_len,
-+	TP_ARGS(dev_name, str_t, tag, doorbell, transfer_len,
- 				intr, lba, opcode, group_id),
- 
- 	TP_STRUCT__entry(
- 		__string(dev_name, dev_name)
--		__string(str, str)
-+		__field(enum ufs_trace_str_t, str_t)
- 		__field(unsigned int, tag)
- 		__field(u32, doorbell)
- 		__field(int, transfer_len)
-@@ -244,7 +259,7 @@ TRACE_EVENT(ufshcd_command,
- 
- 	TP_fast_assign(
- 		__assign_str(dev_name, dev_name);
--		__assign_str(str, str);
-+		__entry->str_t = str_t;
- 		__entry->tag = tag;
- 		__entry->doorbell = doorbell;
- 		__entry->transfer_len = transfer_len;
-@@ -256,22 +271,22 @@ TRACE_EVENT(ufshcd_command,
- 
- 	TP_printk(
- 		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x",
--		__get_str(str), __get_str(dev_name), __entry->tag,
--		__entry->doorbell, __entry->transfer_len,
-+		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
-+		__entry->tag, __entry->doorbell, __entry->transfer_len,
- 		__entry->intr, __entry->lba, (u32)__entry->opcode,
- 		str_opcode(__entry->opcode), (u32)__entry->group_id
- 	)
- );
- 
- TRACE_EVENT(ufshcd_uic_command,
--	TP_PROTO(const char *dev_name, const char *str, u32 cmd,
-+	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t, u32 cmd,
- 		 u32 arg1, u32 arg2, u32 arg3),
- 
--	TP_ARGS(dev_name, str, cmd, arg1, arg2, arg3),
-+	TP_ARGS(dev_name, str_t, cmd, arg1, arg2, arg3),
- 
- 	TP_STRUCT__entry(
- 		__string(dev_name, dev_name)
--		__string(str, str)
-+		__field(enum ufs_trace_str_t, str_t)
- 		__field(u32, cmd)
- 		__field(u32, arg1)
- 		__field(u32, arg2)
-@@ -280,7 +295,7 @@ TRACE_EVENT(ufshcd_uic_command,
- 
- 	TP_fast_assign(
- 		__assign_str(dev_name, dev_name);
--		__assign_str(str, str);
-+		__entry->str_t = str_t;
- 		__entry->cmd = cmd;
- 		__entry->arg1 = arg1;
- 		__entry->arg2 = arg2;
-@@ -289,33 +304,34 @@ TRACE_EVENT(ufshcd_uic_command,
- 
- 	TP_printk(
- 		"%s: %s: cmd: 0x%x, arg1: 0x%x, arg2: 0x%x, arg3: 0x%x",
--		__get_str(str), __get_str(dev_name), __entry->cmd,
--		__entry->arg1, __entry->arg2, __entry->arg3
-+		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
-+		__entry->cmd, __entry->arg1, __entry->arg2, __entry->arg3
- 	)
- );
+@@ -311,15 +320,16 @@ TRACE_EVENT(ufshcd_uic_command,
  
  TRACE_EVENT(ufshcd_upiu,
--	TP_PROTO(const char *dev_name, const char *str, void *hdr, void *tsf),
-+	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t, void *hdr,
-+		 void *tsf),
+ 	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t, void *hdr,
+-		 void *tsf),
++		 void *tsf, enum ufs_trace_tsf_t tsf_t),
  
--	TP_ARGS(dev_name, str, hdr, tsf),
-+	TP_ARGS(dev_name, str_t, hdr, tsf),
+-	TP_ARGS(dev_name, str_t, hdr, tsf),
++	TP_ARGS(dev_name, str_t, hdr, tsf, tsf_t),
  
  	TP_STRUCT__entry(
  		__string(dev_name, dev_name)
--		__string(str, str)
-+		__field(enum ufs_trace_str_t, str_t)
+ 		__field(enum ufs_trace_str_t, str_t)
  		__array(unsigned char, hdr, 12)
  		__array(unsigned char, tsf, 16)
++		__field(enum ufs_trace_tsf_t, tsf_t)
  	),
  
  	TP_fast_assign(
- 		__assign_str(dev_name, dev_name);
--		__assign_str(str, str);
-+		__entry->str_t = str_t;
+@@ -327,12 +337,14 @@ TRACE_EVENT(ufshcd_upiu,
+ 		__entry->str_t = str_t;
  		memcpy(__entry->hdr, hdr, sizeof(__entry->hdr));
  		memcpy(__entry->tsf, tsf, sizeof(__entry->tsf));
++		__entry->tsf_t = tsf_t;
  	),
  
  	TP_printk(
- 		"%s: %s: HDR:%s, CDB:%s",
--		__get_str(str), __get_str(dev_name),
-+		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
+-		"%s: %s: HDR:%s, CDB:%s",
++		"%s: %s: HDR:%s, %s:%s",
+ 		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
  		__print_hex(__entry->hdr, sizeof(__entry->hdr)),
++		show_ufs_cmd_trace_tsf(__entry->tsf_t),
  		__print_hex(__entry->tsf, sizeof(__entry->tsf))
  	)
+ );
 -- 
 2.17.1
 
