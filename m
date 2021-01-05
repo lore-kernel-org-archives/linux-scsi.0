@@ -2,180 +2,265 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8226C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 13:36:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D6B6C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 14:24:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 761F522AAB
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 13:36:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70FD022AB0
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jan 2021 14:24:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729638AbhAENf4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Jan 2021 08:35:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48346 "EHLO
+        id S1727376AbhAEOXo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Jan 2021 09:23:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726707AbhAENf4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 08:35:56 -0500
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72777C061574
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Jan 2021 05:35:15 -0800 (PST)
-Received: by mail-ej1-x631.google.com with SMTP id q22so41264069eja.2
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Jan 2021 05:35:15 -0800 (PST)
+        with ESMTP id S1726600AbhAEOXn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 09:23:43 -0500
+Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 482BBC061574;
+        Tue,  5 Jan 2021 06:23:03 -0800 (PST)
+Received: by mail-ej1-x629.google.com with SMTP id ga15so9284516ejb.4;
+        Tue, 05 Jan 2021 06:23:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
+        d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=YD2742TSVKiiYvW97DifzpV5YysGe+uwtt2M1aP/QnU=;
-        b=EqXosLkYt2gKz6CwW8mSHlAOz3HvdAkNmcX725PCxUNeTy/sGOFBVSZgnxIbAVM8U+
-         UZ9MKMGPxrddZ+VzXjHpPCkJaflXtt1hLli+I2bw24EtbR5TaYO0kBiIwKBr7HJ2xFFi
-         BpAVKJjawv4lhZUGy/Or/tlvd3EZ88ic/XSIFrEyhqL5zHT637kaZvftZk/wljZGKM8X
-         P9Hc/0KfJk5AZATDHYArvnskox1CeDrIOQJreHaO3ywLam5JHidUsEIN/DJbXNbe27z9
-         wuH6JyFnfwEXpH+uCMY8cyQoxDK3/RwXLo87ebhp/LNv6KivRV+/aUXCXelapdAqFqaC
-         jqPw==
+         :cc:content-transfer-encoding;
+        bh=j1NvKmtJGKiFDjjXKZ0rVwy5v3Z3i/GAMZvpNKKRLfc=;
+        b=M65TtKlKHGtX8mX+g+91fAHKCph41gARK7tY21v1oWRfOglc1+76okSjorE6vtFjMx
+         JJbVrreafdRsihFtWoQGrxaLull4FcSN/9QzVSNHuujlY44q+OxDDxkKdAM1QqMibP0n
+         Pk6wBiWKF9Ss8SUk3mC+r4uoQTFT3T9wuN5mMezTf6gMhehl8AX51wQMFk07WoHUBSuY
+         VOzA7W/vIx0lbkqw9RcwNVYhqWZryiE2gDiKn5bICDNMb2EuBEk6Jh7EJxenAlVDegp2
+         E5VQLDbhdXKMkXaCv7yoWgmO6MIVVkXzQiWe8eXaV88qIR2L7UUwO6E1t+V9DFExVU9d
+         HbhQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=YD2742TSVKiiYvW97DifzpV5YysGe+uwtt2M1aP/QnU=;
-        b=UNyTLPWgCR+/yaPhksQX2qhvrA+Zc8kfLDuJko+r4QNQoEe2VO3Hi4uX+pEQtw8qja
-         Qg3RQIO6/P66WHdTL6Dj3uDymWhRslwnMmbIGklrmTdmgyQwciEKgOUCdO5BdmedeWlV
-         LSyTsTR48lxYLQBwyYf13AqCx6y7Rglmi6huFk5rlMhAUBWKbC/uV66BlWWWS/cVqiij
-         0Up0SgkKzUf3KViTA1UQiEwgJ35r8oL3yYbK+XhuRFaL28XBUP1yx2frkAsLa7wIvfSP
-         Qgbvkkv0HCfaXLp7BWaDBGkQPv0RmwgaNd7QoAt87sF6g+YZnDYXL/PBJHrKuDU3GEI3
-         zofA==
-X-Gm-Message-State: AOAM531AndxatSguKvJ/s6iNtHLuqVTUelmn4fQnYbHhbesGL+TQLxfc
-        MM3YHnZpHPrGdBto1JuRBFYguOBHWkrJzF8hriW5aw==
-X-Google-Smtp-Source: ABdhPJyPbz0q2h0xYS9sWMoVOIe32V1X4afpnjIO4Z4dI7QlfugIQhrc1fqJYjsx+qJaSJSagFHQGsT0HpVnhUH7MLk=
-X-Received: by 2002:a17:906:3101:: with SMTP id 1mr59088388ejx.115.1609853714227;
- Tue, 05 Jan 2021 05:35:14 -0800 (PST)
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=j1NvKmtJGKiFDjjXKZ0rVwy5v3Z3i/GAMZvpNKKRLfc=;
+        b=Mu7MGNxNxBT3nnkIexpzYCORuRRqU/XnBtXp+irEBEjqCqzUlXz4ky1QG64cQ/XbsT
+         y6U+fcrq37SfpdBNBmz0cAI7+D0lnmrRiJbuPa2tMJ6lHxxrj148WM/X3KcgjwVMQ6Se
+         PV9/5Sd3jeZ8E1LoNqBms7OeZGSXzK3IdbYR9KdZO02DM6Qr9e2CKQHTbwxr7iIPyGhr
+         EYKq+2kMaDNpAQMBCNeam8ec9uaBbvy7XHA8Mcxmofw77jTLSnzHQgXJQgm4i2IRndrF
+         qJInquACddL/JLQAs9sNQ+WISShNv3IWYvMh6EeKcvCjHl0V9A52GfIxKGM3oXQCl2XM
+         +wyQ==
+X-Gm-Message-State: AOAM532fnFrLK5gBIDZ17nkYJ0+WAYtB4dnTIZ4lbiHPcVMD05ahsgqk
+        ptRgcgC0l32bsG7S9Emc7RCgTqox8Ww7QqnEymE=
+X-Google-Smtp-Source: ABdhPJwnxRqHv2aMqHMbFt0kXTvzZaOUW+aFB6JjMi14SNUWLSvVqm2hXOLS8N/UvGELnDV/oZP5zanvNoGhzXZMTZI=
+X-Received: by 2002:a17:907:271c:: with SMTP id w28mr70922796ejk.140.1609856581820;
+ Tue, 05 Jan 2021 06:23:01 -0800 (PST)
 MIME-Version: 1.0
-References: <20201230045743.14694-1-Viswas.G@microchip.com.com> <20201230045743.14694-9-Viswas.G@microchip.com.com>
-In-Reply-To: <20201230045743.14694-9-Viswas.G@microchip.com.com>
-From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Tue, 5 Jan 2021 14:35:03 +0100
-Message-ID: <CAMGffEkqt++GavWyyxDHdvJjU5A4Tr+H2GZLOabga7e6kmsGQg@mail.gmail.com>
-Subject: Re: [PATCH 8/8] pm80xx: Add sysfs attribute for ioc health
-To:     Viswas G <Viswas.G@microchip.com.com>
-Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
-        Vasanthalakshmi.Tharmarajan@microchip.com,
-        Viswas G <Viswas.G@microchip.com>, Ruksar.devadi@microchip.com,
-        yuuzheng@google.com, vishakhavc@google.com,
-        Radha Ramachandran <radha@google.com>, akshatzen@google.com,
-        bjashnani@google.com
+References: <20210104104159.74236-1-selvakuma.s1@samsung.com>
+ <CGME20210104104249epcas5p458d1b5c39b5acfad4e7786eca5dd5c49@epcas5p4.samsung.com>
+ <20210104104159.74236-3-selvakuma.s1@samsung.com> <BL0PR04MB651402CFA75F72826AC8EE1CE7D20@BL0PR04MB6514.namprd04.prod.outlook.com>
+ <20210104190254.GB6919@magnolia>
+In-Reply-To: <20210104190254.GB6919@magnolia>
+From:   Selva Jove <selvajove@gmail.com>
+Date:   Tue, 5 Jan 2021 19:52:48 +0530
+Message-ID: <CAHqX9vYCRpX9FSCEaf2+xbYkB-zm7wRTmUka9zGs4D1T6nZb_A@mail.gmail.com>
+Subject: Re: [dm-devel] [RFC PATCH v4 2/3] block: add simple copy support
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        SelvaKumar S <selvakuma.s1@samsung.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "sagi@grimberg.me" <sagi@grimberg.me>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "nj.shetty@samsung.com" <nj.shetty@samsung.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "mpatocka@redhat.com" <mpatocka@redhat.com>,
+        "joshi.k@samsung.com" <joshi.k@samsung.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "kbusch@kernel.org" <kbusch@kernel.org>,
+        "javier.gonz@samsung.com" <javier.gonz@samsung.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "bvanassche@acm.org" <bvanassche@acm.org>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 30, 2020 at 5:48 AM Viswas G <Viswas.G@microchip.com.com> wrote:
+Hi Darrick,
+
+
+On Tue, Jan 5, 2021 at 12:33 AM Darrick J. Wong <darrick.wong@oracle.com> w=
+rote:
 >
-> From: Vishakha Channapattan <vishakhavc@google.com>
+> SelvaKumar S: This didn't show up on dm-devel, sorry for the OT reply...
 >
-> A new sysfs variable 'health' is being introduced that tells if the
-> controller is alive by indicating controller ticks. If on subsequent
-> run we see the ticks changing that indicates that controller is not
-> dead.
+> On Mon, Jan 04, 2021 at 12:47:11PM +0000, Damien Le Moal wrote:
+> > On 2021/01/04 19:48, SelvaKumar S wrote:
+> > > Add new BLKCOPY ioctl that offloads copying of one or more sources
+> > > ranges to a destination in the device. Accepts copy_ranges that conta=
+ins
+> > > destination, no of sources and pointer to the array of source
+> > > ranges. Each range_entry contains start and length of source
+> > > ranges (in bytes).
+> > >
+> > > Introduce REQ_OP_COPY, a no-merge copy offload operation. Create
+> > > bio with control information as payload and submit to the device.
+> > > REQ_OP_COPY(19) is a write op and takes zone_write_lock when submitte=
+d
+> > > to zoned device.
+> > >
+> > > If the device doesn't support copy or copy offload is disabled, then
+> > > copy is emulated by allocating memory of total copy size. The source
+> > > ranges are read into memory by chaining bio for each source ranges an=
+d
+> > > submitting them async and the last bio waits for completion. After da=
+ta
+> > > is read, it is written to the destination.
+> > >
+> > > bio_map_kern() is used to allocate bio and add pages of copy buffer t=
+o
+> > > bio. As bio->bi_private and bio->bi_end_io is needed for chaining the
+> > > bio and over written, invalidate_kernel_vmap_range() for read is call=
+ed
+> > > in the caller.
+> > >
+> > > Introduce queue limits for simple copy and other helper functions.
+> > > Add device limits as sysfs entries.
+> > >     - copy_offload
+> > >     - max_copy_sectors
+> > >     - max_copy_ranges_sectors
+> > >     - max_copy_nr_ranges
+> > >
+> > > copy_offload(=3D 0) is disabled by default.
+> > > max_copy_sectors =3D 0 indicates the device doesn't support native co=
+py.
+> > >
+> > > Native copy offload is not supported for stacked devices and is done =
+via
+> > > copy emulation.
+> > >
+> > > Signed-off-by: SelvaKumar S <selvakuma.s1@samsung.com>
+> > > Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
+> > > Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+> > > Signed-off-by: Javier Gonz=C3=A1lez <javier.gonz@samsung.com>
+> > > ---
+> > >  block/blk-core.c          |  94 ++++++++++++++--
+> > >  block/blk-lib.c           | 223 ++++++++++++++++++++++++++++++++++++=
+++
+> > >  block/blk-merge.c         |   2 +
+> > >  block/blk-settings.c      |  10 ++
+> > >  block/blk-sysfs.c         |  50 +++++++++
+> > >  block/blk-zoned.c         |   1 +
+> > >  block/bounce.c            |   1 +
+> > >  block/ioctl.c             |  43 ++++++++
+> > >  include/linux/bio.h       |   1 +
+> > >  include/linux/blk_types.h |  15 +++
+> > >  include/linux/blkdev.h    |  13 +++
+> > >  include/uapi/linux/fs.h   |  13 +++
 >
-> Tested: Using 'health' sysfs variable we can see ticks incrementing
-> mvae14:~# cat  /sys/class/scsi_host/host*/health
-> MPI-S= MPI is successfully initialized   HMI_ERR=0
-> MSGUTCNT = 0x00000169 IOPTCNT=0x0000016a IOP1TCNT=0x0000016a
-> MPI-S= MPI is successfully initialized   HMI_ERR=0
-> MSGUTCNT = 0x0000014d IOPTCNT=0x0000014d IOP1TCNT=0x0000014d
-> MPI-S= MPI is successfully initialized   HMI_ERR=0
-> MSGUTCNT = 0x00000149 IOPTCNT=0x00000149 IOP1TCNT=0x00000149
-> mvae14:~#
-> mvae14:~#
-> mvae14:~#
-> mvae14:~# cat  /sys/class/scsi_host/host*/health
-> MPI-S= MPI is successfully initialized   HMI_ERR=0
-> MSGUTCNT = 0x0000016c IOPTCNT=0x0000016c IOP1TCNT=0x0000016c
-> MPI-S= MPI is successfully initialized   HMI_ERR=0
-> MSGUTCNT = 0x0000014f IOPTCNT=0x0000014f IOP1TCNT=0x0000014f
-> MPI-S= MPI is successfully initialized   HMI_ERR=0
-> MSGUTCNT = 0x0000014b IOPTCNT=0x0000014b IOP1TCNT=0x0000014b
+> This series should also be cc'd to linux-api since you're adding a new
+> userspace api.
 >
-> Signed-off-by: Vishakha Channapattan <vishakhavc@google.com>
-> Signed-off-by: Viswas G <Viswas.G@microchip.com>
-> Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
-> Signed-off-by: Ashokkumar N <Ashokkumar.N@microchip.com>
-> Signed-off-by: Radha Ramachandran <radha@google.com>
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
-Thx
-> ---
->  drivers/scsi/pm8001/pm8001_ctl.c | 42 ++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 42 insertions(+)
+
+Sure. Will cc linux-api
+
 >
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index 12035baf0997..f46f341132fb 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -41,6 +41,7 @@
->  #include <linux/slab.h>
->  #include "pm8001_sas.h"
->  #include "pm8001_ctl.h"
-> +#include "pm8001_chips.h"
+> Alternately, save yourself the trouble of passing userspace API review
+> by hooking this up to the existing copy_file_range call in the vfs.  /me
+> hopes you sent blktests to check the operation of this thing, since none
+> of the original patches made it to this list.
 >
->  /* scsi host attributes */
+
+As the initial version had only source bdev, copy_file_rage call was not
+viable. With this version, we have two bdev for source and destination.
+I'll relook at that. Sure. Will add a new blktests for simple copy.
+
 >
-> @@ -886,6 +887,46 @@ static ssize_t pm8001_show_update_fw(struct device *cdev,
+> If you really /do/ need a new kernel call for this, then please send in
+> a manpage documenting the fields of struct range_entry and copy_range,
+> and how users are supposed to use this.
 >
->  static DEVICE_ATTR(update_fw, S_IRUGO|S_IWUSR|S_IWGRP,
->         pm8001_show_update_fw, pm8001_store_update_fw);
-> +
-> +/**
-> + * pm8001_ctl_health_show - controller health check
-> + * @cdev: pointer to embedded class device
-> + * @buf: the buffer returned
-> + *
-> + * A sysfs 'read-only' shost attribute.
-> + */
-> +
-> +char mpiStateText[][80] = {
-> +       "MPI is not initialized",
-> +       "MPI is successfully initialized",
-> +       "MPI termination is in progress",
-> +       "MPI initialization failed with error in [31:16]"
-> +};
-> +
-> +static ssize_t ctl_health_show(struct device *cdev,
-> +               struct device_attribute *attr, char *buf)
-> +{
-> +       struct Scsi_Host *shost = class_to_shost(cdev);
-> +       struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +       struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +       unsigned int mpiDW0 = 0;
-> +       unsigned int raaeCnt = 0;
-> +       unsigned int iop0Cnt = 0;
-> +       unsigned int iop1Cnt = 0;
-> +       int c;
-> +
-> +       pm8001_dbg(pm8001_ha, IOCTL, "%s\n", __func__);
-> +       mpiDW0 = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 0);
-> +       raaeCnt = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 12);
-> +       iop0Cnt = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 16);
-> +       iop1Cnt = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 20);
-> +       c = sprintf(buf, "MPI-S=%s\t HMI_ERR=%x\nMSGUTCNT=0x%08x IOPTCNT=0x%08x IOP1TCNT=0x%08x\n",
-> +                       mpiStateText[mpiDW0 & 0x0003], ((mpiDW0 & 0xff00) >> 16),
-> +                       raaeCnt, iop0Cnt, iop1Cnt);
-> +       return c;
-> +}
-> +static DEVICE_ATTR_RO(ctl_health);
-> +
->  struct device_attribute *pm8001_host_attrs[] = {
->         &dev_attr_interface_rev,
->         &dev_attr_controller_fatal_error,
-> @@ -909,6 +950,7 @@ struct device_attribute *pm8001_host_attrs[] = {
->         &dev_attr_ob_log,
->         &dev_attr_ila_version,
->         &dev_attr_inc_fw_ver,
-> +       &dev_attr_ctl_health,
->         NULL,
->  };
+
+Sure. Will send a manpage documentation once the plumbing is concrete.
+
+> <now jumping to the ioctl definition because Damien already reviewed the
+> plumbing...>
 >
-> --
-> 2.16.3
+> > > diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> > > index f44eb0a04afd..5cadb176317a 100644
+> > > --- a/include/uapi/linux/fs.h
+> > > +++ b/include/uapi/linux/fs.h
+> > > @@ -64,6 +64,18 @@ struct fstrim_range {
+> > >     __u64 minlen;
+> > >  };
+> > >
+> > > +struct range_entry {
+> > > +   __u64 src;
 >
+> Is this an offset?  Or the fd of an open bdev?
+
+This is the source offset.
+
+>
+> > > +   __u64 len;
+> > > +};
+> > > +
+> > > +struct copy_range {
+> > > +   __u64 dest;
+> > > +   __u64 nr_range;
+> > > +   __u64 range_list;
+>
+> Hm, I think this is a pointer?  Why not just put the range_entry array
+> at the end of struct copy_range?
+>
+
+As the size of the range_entry array can change dynamically depending on
+nr_range, it was difficult to do copy_from_user() on copy_range structure i=
+n the
+ioctl. So I decided to keep that as a pointer to range_entry array
+instead of keeping
+array at the end.
+
+> > > +   __u64 rsvd;
+>
+> Also needs a flags argument so we don't have to add BLKCOPY2 in like 3
+> months.
+>
+
+'rsvd' field is kept to support future copies. Will rename it.
+
+> --D
+>
+> > > +};
+> > > +
+> > >  /* extent-same (dedupe) ioctls; these MUST match the btrfs ioctl def=
+initions */
+> > >  #define FILE_DEDUPE_RANGE_SAME             0
+> > >  #define FILE_DEDUPE_RANGE_DIFFERS  1
+> > > @@ -184,6 +196,7 @@ struct fsxattr {
+> > >  #define BLKSECDISCARD _IO(0x12,125)
+> > >  #define BLKROTATIONAL _IO(0x12,126)
+> > >  #define BLKZEROOUT _IO(0x12,127)
+> > > +#define BLKCOPY _IOWR(0x12, 128, struct copy_range)
+> > >  /*
+> > >   * A jump here: 130-131 are reserved for zoned block devices
+> > >   * (see uapi/linux/blkzoned.h)
+> > >
+> >
+> >
+> > --
+> > Damien Le Moal
+> > Western Digital Research
+> >
+> >
+> >
+> > --
+> > dm-devel mailing list
+> > dm-devel@redhat.com
+> > https://www.redhat.com/mailman/listinfo/dm-devel
+> >
+
+Thanks,
+Selva
