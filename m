@@ -2,96 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52E38C433E9
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 05:06:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA8B5C433DB
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 09:04:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1475D22CAF
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 05:06:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7002A2310A
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 09:04:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726109AbhAFFGI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jan 2021 00:06:08 -0500
-Received: from labrats.qualcomm.com ([199.106.110.90]:12537 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725788AbhAFFGI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 00:06:08 -0500
-IronPort-SDR: y8JUEaQc1rQCL3+7rCWKK9GYBHItmixqeMcATQBxIhUwWuLAWTSdijCya1VWRse3wPkoOXI/DZ
- VJod85nS+MFN7sMukTyUbNwfwM/Amm8eOyYDmsRMFx8iFzpOD1rhNm15ddT79lmOYqw52c/atF
- wnfJMlkIXECRkGqMsSIUgvzFje8ZWdc/n7pZziXCOQdRvY0kI+89/2qV0Pc8EKPoVBoxFxBWpk
- SGwHleeAfY0BR6TpQgMyN7pOl63LGhCtv3u8v7gpp6cO37lO3EhJ8LSjvpl0hWQSRCl/JAxjjJ
- +9Q=
-X-IronPort-AV: E=Sophos;i="5.78,479,1599548400"; 
-   d="scan'208";a="29494651"
-Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
-  by labrats.qualcomm.com with ESMTP; 05 Jan 2021 21:05:08 -0800
-X-QCInternal: smtphost
-Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg03-sd.qualcomm.com with ESMTP; 05 Jan 2021 21:05:07 -0800
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 2011D218E2; Tue,  5 Jan 2021 21:05:08 -0800 (PST)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support),
-        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support)
-Subject: [PATCH v9 3/3] scsi: ufs: Revert "Make sure clk scaling happens only when HBA is runtime ACTIVE"
-Date:   Tue,  5 Jan 2021 21:04:45 -0800
-Message-Id: <1609909486-21053-4-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1609909486-21053-1-git-send-email-cang@codeaurora.org>
-References: <1609909486-21053-1-git-send-email-cang@codeaurora.org>
+        id S1726295AbhAFJEr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jan 2021 04:04:47 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2294 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726109AbhAFJEr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 04:04:47 -0500
+Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4D9jyj53ZZz67QNd;
+        Wed,  6 Jan 2021 17:01:17 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Wed, 6 Jan 2021 10:04:05 +0100
+Received: from [10.47.11.12] (10.47.11.12) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 6 Jan 2021
+ 09:04:04 +0000
+Subject: Re: [PATCH 0/2] hisi_sas: Expose hw queues for v2 hw and remove
+ unused code
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     <jejb@linux.ibm.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@openeuler.org>,
+        <maz@kernel.org>, <kashyap.desai@broadcom.com>
+References: <1609763622-34119-1-git-send-email-john.garry@huawei.com>
+ <yq11reyg0uc.fsf@ca-mkp.ca.oracle.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <db3d73ac-f2e3-7230-00d4-68fdad10252e@huawei.com>
+Date:   Wed, 6 Jan 2021 09:03:02 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <yq11reyg0uc.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.11.12]
+X-ClientProxiedBy: lhreml715-chm.china.huawei.com (10.201.108.66) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit 73cc291c27024 ("Make sure clk scaling happens only when HBA is
-runtime ACTIVE") is no longer needed since commit f7a42540928a8 ("scsi:
-ufs: Protect some contexts from unexpected clock scaling") is a more
-mature fix to protect UFS LLD stability from clock scaling invoked through
-sysfs nodes by users.
+On 06/01/2021 04:18, Martin K. Petersen wrote:
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Can Guo <cang@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 7 -------
- 1 file changed, 7 deletions(-)
+Hi Martin,
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d239370..c4dbeec 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1338,15 +1338,8 @@ static int ufshcd_devfreq_target(struct device *dev,
- 	}
- 	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
- 
--	pm_runtime_get_noresume(hba->dev);
--	if (!pm_runtime_active(hba->dev)) {
--		pm_runtime_put_noidle(hba->dev);
--		ret = -EAGAIN;
--		goto out;
--	}
- 	start = ktime_get();
- 	ret = ufshcd_devfreq_scale(hba, scale_up);
--	pm_runtime_put(hba->dev);
- 
- 	trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
- 		(scale_up ? "up" : "down"),
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+> 
+>> Patch "scsi: hisi_sas: Expose HW queues for v2 hw" was not merged for
+>> v5.11, so resending for v5.12.
+> Any changes to it? 5.11/postmerge is sitting in my fixes branch.
+
+No change. I just did not see that patch in Linus' master branch or your 
+git, so assumed that I would just need to resend for 5.12. And now I see 
+it in 5.11/postmerge
+
+Thanks,
+John
 
