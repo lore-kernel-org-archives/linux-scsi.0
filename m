@@ -2,73 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0F51C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 04:03:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E91C433E6
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 04:09:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CB6522D50
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 04:03:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34F1822DD3
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 04:09:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725792AbhAFEDi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Jan 2021 23:03:38 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:25638 "EHLO
-        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725730AbhAFEDi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 23:03:38 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1609905798; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=RdpOU6YwKd5+NTVSRuzfiKNUmXCbAKy7uXiBCene2Os=;
- b=YqK2/NDLHLh5yiLSesK0bCCWs+8ITMyOoSMfFzentP3M+6L3fQkcCalG5D3iRHzbnIqfYAPd
- jmcwE2CgWfvJqNu3h7EQTVjre8+SFnlCxHKhAyvNb0cZ0U+FuHLlEn4L3O1jDRG2lP0Vya/6
- h5w7xv6MqryzSHJoPE/Si+1s8Q8=
-X-Mailgun-Sending-Ip: 69.72.43.15
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 5ff5366c3d849691149b12e8 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 06 Jan 2021 04:02:52
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E2375C433CA; Wed,  6 Jan 2021 04:02:51 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7DECCC433CA;
-        Wed,  6 Jan 2021 04:02:51 +0000 (UTC)
+        id S1725948AbhAFEJO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Jan 2021 23:09:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44962 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725808AbhAFEJN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2021 23:09:13 -0500
+Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1231::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82D65C06134C;
+        Tue,  5 Jan 2021 20:08:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=QmLa+cOqR50EfOgT1iDBdhgkPcXU0BbBKqzGFV1+yh0=; b=iqTu3tJUwi8MhGfkmMPILJ2hPK
+        G3XfewN8EVwkzzX47bOtxA6MOlq2W7b8lID2UIABuciFIIUcSiCXrIsEOpVE+9U658kTgCm1CKy74
+        qa4LHW1sOKLDJ8JK58yDDTdPVCGhVtSNDzAZcCU8/6v1ICEHeGGilG4uqfg2/Nl/gHFTVrFUBQjCY
+        QWeWD9caaa4MPsqburQ+KWkbeedNRu00fy8RrNCt8R3kczMJ5hpCZHoBL5GWrybp3os9nBu9UT48Q
+        d+7F1Kbc5nfWlxQdD22Frp40UShCaSTGZQkmSCUkLmq89BWbwrNLfA5fKq1zfSd4nxC2hiHJBtwnn
+        Rwzq/kKQ==;
+Received: from [2601:1c0:6280:3f0::64ea] (helo=smtpauth.infradead.org)
+        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kx07Y-0006DE-GN; Wed, 06 Jan 2021 04:08:29 +0000
+From:   Randy Dunlap <rdunlap@infradead.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        kernel test robot <lkp@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: ufs: ufshcd-pltfrm depends on HAS_IOMEM
+Date:   Tue,  5 Jan 2021 20:08:22 -0800
+Message-Id: <20210106040822.933-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 06 Jan 2021 12:02:51 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com
-Subject: Re: [PATCH v8 0/3] Three changes related with UFS clock scaling
-In-Reply-To: <yq1im8ag4z6.fsf@ca-mkp.ca.oracle.com>
-References: <1609327777-20520-1-git-send-email-cang@codeaurora.org>
- <yq1im8ag4z6.fsf@ca-mkp.ca.oracle.com>
-Message-ID: <fc7d7fdc0e2b726065ab65aa29e1fa10@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-01-06 10:45, Martin K. Petersen wrote:
-> Can,
-> 
->> This series is made based on 5.10/scsi-fixes branch.
-> 
-> Please rebase on top of 5.12/scsi-queue and resubmit. Thanks!
+Building ufshcd-pltfrm.c on arch/s390/ has a linker error since
+S390 does not support IOMEM, so add a dependency on HAS_IOMEM.
 
-Sure Martin.
+s390-linux-ld: drivers/scsi/ufs/ufshcd-pltfrm.o: in function `ufshcd_pltfrm_init':
+ufshcd-pltfrm.c:(.text+0x38e): undefined reference to `devm_platform_ioremap_resource'
+
+where that devm_ function is inside an #ifdef CONFIG_HAS_IOMEM/#endif block.
+
+Fixes: 03b1781aa978 ("[SCSI] ufs: Add Platform glue driver for ufshcd")
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Reported-by: kernel test robot <lkp@intel.com>
+Link: lore.kernel.org/r/202101031125.ZEFCUiKi-lkp@intel.com
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Avri Altman <avri.altman@wdc.com>
+Cc: linux-scsi@vger.kernel.org
+---
+This not a COMPILE_TEST build. The 0day bot was reporting tons of
+S390 build errors for iomem-related function usage, so now S390 does
+not allow COMPILE_TEST, and any iomem-related build errors on S390
+should be fixed AFAIK.
+
+ drivers/scsi/ufs/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
+
+--- lnx-511-rc2.orig/drivers/scsi/ufs/Kconfig
++++ lnx-511-rc2/drivers/scsi/ufs/Kconfig
+@@ -72,6 +72,7 @@ config SCSI_UFS_DWC_TC_PCI
+ config SCSI_UFSHCD_PLATFORM
+ 	tristate "Platform bus based UFS Controller support"
+ 	depends on SCSI_UFSHCD
++	depends on HAS_IOMEM
+ 	help
+ 	This selects the UFS host controller support. Select this if
+ 	you have an UFS controller on Platform bus.
