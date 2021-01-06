@@ -2,104 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFF49C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 17:19:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4830C433E9
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 19:36:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B615C23106
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 17:19:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99BCA2312A
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jan 2021 19:36:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728041AbhAFRTe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jan 2021 12:19:34 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:1216 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727187AbhAFRTd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 12:19:33 -0500
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 106H3ar6109758;
-        Wed, 6 Jan 2021 12:18:39 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=M/SBYHXcgvsk1w6Hu6jpEFpQcPfShH2iy/FzNLOSEP0=;
- b=egK7x/IlF/700xzdthFHC3bFAhleg+ciY6KGJ3phHMJXTlM2yU0nuRl2YtA2bXXn+gJK
- +g/eR/wCvUk+hFYl4mRTPg/E66ZKI6SFKaHDsgzqvo082Q5gCZD0aJU13ctjV2D9uGhk
- pxyVtkR+gFVIICsNr2YnTxWlBGwMCrW9bDXGcCu6Rm0vTFa9q4tjyK9NWaI7kkJJaHt3
- /dPg0tKhOMsp37keQO0XcvEpfdOZ4zMAymITgpiDlVrKawv56FPx5iTjAUccrlDrf90W
- rfEtRXo+ksmZfZYHf0JfP20xWILXVidjZWLaSS08knWEQTDCwGVJK3MeMmgbGTKqew97 zQ== 
-Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 35wgk41rwu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 06 Jan 2021 12:18:39 -0500
-Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
-        by ppma03wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 106H2t8Y002359;
-        Wed, 6 Jan 2021 17:18:37 GMT
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-        by ppma03wdc.us.ibm.com with ESMTP id 35tgf96cgp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 06 Jan 2021 17:18:37 +0000
-Received: from b01ledav006.gho.pok.ibm.com (b01ledav006.gho.pok.ibm.com [9.57.199.111])
-        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 106HIbgW21103012
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 6 Jan 2021 17:18:37 GMT
-Received: from b01ledav006.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 40797AC05F;
-        Wed,  6 Jan 2021 17:18:37 +0000 (GMT)
-Received: from b01ledav006.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2B285AC05E;
-        Wed,  6 Jan 2021 17:18:36 +0000 (GMT)
-Received: from oc6857751186.ibm.com (unknown [9.160.27.90])
-        by b01ledav006.gho.pok.ibm.com (Postfix) with ESMTP;
-        Wed,  6 Jan 2021 17:18:35 +0000 (GMT)
-Subject: Re: [PATCH v2 4/5] ibmvfc: complete commands outside the host/queue
- lock
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        brking@linux.ibm.com, Brian King <brking@linux.vnet.ibm.com>
-References: <20201218231916.279833-5-tyreld@linux.ibm.com>
- <20210104222422.981457-1-tyreld@linux.ibm.com>
- <yq1v9caekxl.fsf@ca-mkp.ca.oracle.com>
-From:   Tyrel Datwyler <tyreld@linux.ibm.com>
-Message-ID: <861462bb-7688-f32d-1613-e1a13928abbe@linux.ibm.com>
-Date:   Wed, 6 Jan 2021 09:18:35 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.0
+        id S1727157AbhAFTg0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jan 2021 14:36:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43388 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727127AbhAFTgZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 6 Jan 2021 14:36:25 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EDB252312C;
+        Wed,  6 Jan 2021 19:35:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1609961745;
+        bh=Sg6PHuBnrD/N1YEvncinjBd0H+xRihqqKourTu1UvQc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=O4AR86dArQmMhdipsEsc/LHz65PVMw7vDY5eFFnsbL4GLthP77U77hqV0KRJBLSxf
+         7rPvQugxBiiCQ5K4js4++OHfwOrAMhN8h4bpN498D7uh8YXLjeuFFi8O379t08cAO2
+         SAS3yqOvz/PkcEFDfNuSttHAfUOy692mKgx1p0l0mlygjAQ8/3uyHUqDfr1jTucjF8
+         +qjFdczxrI+wemKcnO5UOoKrWlIzNIZNaq62k0ZRG1nr9b68Jn6wJlFjNPY6BxlcRI
+         RBNHy4Dz9jCSIe9IKc6LceFmUn8hhGS5LBsbFBy3C4vJ4ftQhJ4OXBlS7Dury/j9zx
+         cCOaW5fkMWXRQ==
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     cang@codeaurora.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        bvanassche@acm.org, martin.petersen@oracle.com,
+        stanley.chu@mediatek.com, Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: [PATCH 1/2] scsi: ufs: fix livelock of ufshcd_clear_ua_wluns
+Date:   Wed,  6 Jan 2021 11:35:36 -0800
+Message-Id: <20210106193537.3347681-1-jaegeuk@kernel.org>
+X-Mailer: git-send-email 2.29.2.729.g45daf8777d-goog
 MIME-Version: 1.0
-In-Reply-To: <yq1v9caekxl.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2021-01-06_10:2021-01-06,2021-01-06 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 phishscore=0
- mlxscore=0 impostorscore=0 mlxlogscore=999 priorityscore=1501 bulkscore=0
- lowpriorityscore=0 suspectscore=0 malwarescore=0 clxscore=1015 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101060101
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/5/21 8:42 PM, Martin K. Petersen wrote:
-> 
-> Tyrel,
-> 
->> Drain the command queue and place all commands on a completion list.
->> Perform command completion on that list outside the host/queue locks.
->> Further, move purged command compeletions outside the host_lock as well.
-> 
-> Please resubmit entire series instead of amending individual patches.
-> 
-> thanks!
-> 
+When gate_work/ungate_work gets an error during hibern8_enter or exit,
+ ufshcd_err_handler()
+   ufshcd_scsi_block_requests()
+   ufshcd_reset_and_restore()
+     ufshcd_clear_ua_wluns() -> stuck
+   ufshcd_scsi_unblock_requests()
 
-No problem. I wasn't sure since it was simply adding a "static" keyword. I'll
-send a v2 out today.
+In order to avoid it, ufshcd_clear_ua_wluns() can be called per recovery flows
+such as suspend/resume, link_recovery, and error_handler.
 
--Tyrel
+Fixes: 1918651f2d7e ("scsi: ufs: Clear UAC for RPMB after ufshcd resets")
+Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index bedb822a40a3..1678cec08b51 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3996,6 +3996,8 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
+ 	if (ret)
+ 		dev_err(hba->dev, "%s: link recovery failed, err %d",
+ 			__func__, ret);
++	else
++		ufshcd_clear_ua_wluns(hba);
+ 
+ 	return ret;
+ }
+@@ -6003,6 +6005,9 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	ufshcd_scsi_unblock_requests(hba);
+ 	ufshcd_err_handling_unprepare(hba);
+ 	up(&hba->eh_sem);
++
++	if (!err && needs_reset)
++		ufshcd_clear_ua_wluns(hba);
+ }
+ 
+ /**
+@@ -6940,14 +6945,11 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+ 	ufshcd_set_clk_freq(hba, true);
+ 
+ 	err = ufshcd_hba_enable(hba);
+-	if (err)
+-		goto out;
+ 
+ 	/* Establish the link again and restore the device */
+-	err = ufshcd_probe_hba(hba, false);
+ 	if (!err)
+-		ufshcd_clear_ua_wluns(hba);
+-out:
++		err = ufshcd_probe_hba(hba, false);
++
+ 	if (err)
+ 		dev_err(hba->dev, "%s: Host init failed %d\n", __func__, err);
+ 	ufshcd_update_evt_hist(hba, UFS_EVT_HOST_RESET, (u32)err);
+@@ -8777,6 +8779,7 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		ufshcd_resume_clkscaling(hba);
+ 	hba->clk_gating.is_suspended = false;
+ 	hba->dev_info.b_rpm_dev_flush_capable = false;
++	ufshcd_clear_ua_wluns(hba);
+ 	ufshcd_release(hba);
+ out:
+ 	if (hba->dev_info.b_rpm_dev_flush_capable) {
+@@ -8887,6 +8890,8 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
+ 	}
+ 
++	ufshcd_clear_ua_wluns(hba);
++
+ 	/* Schedule clock gating in case of no access to UFS device yet */
+ 	ufshcd_release(hba);
+ 
+-- 
+2.29.2.729.g45daf8777d-goog
+
