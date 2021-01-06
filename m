@@ -8,39 +8,39 @@ X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E950AC433E6
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 04:54:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F722C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 04:54:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6E1822EBF
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 04:54:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A7C822EBF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 04:54:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727305AbhAGEyX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jan 2021 23:54:23 -0500
-Received: from relay.smtp-ext.broadcom.com ([192.19.221.30]:52052 "EHLO
+        id S1727251AbhAGEyY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jan 2021 23:54:24 -0500
+Received: from relay.smtp-ext.broadcom.com ([192.19.221.30]:52070 "EHLO
         relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726883AbhAGEyW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 23:54:22 -0500
+        by vger.kernel.org with ESMTP id S1727287AbhAGEyX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 23:54:23 -0500
 Received: from localhost.localdomain (unknown [10.157.2.20])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by relay.smtp-ext.broadcom.com (Postfix) with ESMTPS id 874042E5EE;
-        Wed,  6 Jan 2021 20:53:19 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 874042E5EE
+        by relay.smtp-ext.broadcom.com (Postfix) with ESMTPS id 3B9BC361CF;
+        Wed,  6 Jan 2021 20:53:20 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 3B9BC361CF
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
         s=dkimrelay; t=1609995200;
-        bh=3YgHGFl18felZ83kME842i5SM4PeeI4/YnHCFSMqkJw=;
+        bh=FQfo3BoSonNirsa5eAI/CKA7TFAH1Gqfs8iY9T+MT4s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CmivVvUAD+Wy8eaomDVbXCVbY5SB6sW+zB+oBM6Dy5FOXOf1TSTOegdgAk3BxMa/u
-         urN8hSebE/6Ltr2PFoYQHaKAZTaNQAMMkyHEZh26asX1jtpA7tEVi5SsOrhAjYDmWn
-         WRh73OAY9zn450bTwr3p5He054zUTVCv386Zub8Q=
+        b=AckvWiQwzMp1FRU2nNLuPd3vnFQbEIwjiioaoslWwC/N432+Cbm8Vny/3SvmUA0Ip
+         hOfi33bSckRuhfXwS/M3NTUrzBFN1XkMQRc0FD9oahPevtjVqqbVCcu9bwiG+eb7Pf
+         dVeBraBcH7Tc6hXAulx5jyxuuFIytigWa3YouLWg=
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         tj@kernel.org, linux-nvme@lists.infradead.org, hare@suse.de
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH v7 01/16] cgroup: Added cgroup_get_from_id
-Date:   Thu,  7 Jan 2021 03:30:15 +0530
-Message-Id: <1609970430-19084-2-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [PATCH v7 02/16] blkcg: Added a app identifier support for blkcg
+Date:   Thu,  7 Jan 2021 03:30:16 +0530
+Message-Id: <1609970430-19084-3-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1609970430-19084-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1609970430-19084-1-git-send-email-muneendra.kumar@broadcom.com>
@@ -48,109 +48,157 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Added a new function cgroup_get_from_id  to retrieve the cgroup
-associated with cgroup id.
-Exported the same as this can be used by blk-cgorup.c
+This Patch added a unique application identifier i.e
+fc_app_id  member in blkcg which allows identification of traffic
+sources at an individual cgroup based Applications
+(ex:virtual machine (VM))level in both host and
+fabric infrastructure.
 
-Added function declaration of cgroup_get_from_id in cgorup.h
+Added a new function blkcg_get_fc_appid to
+grab the app identifier associated with a bio.
 
-This patch also exported the function cgroup_get_e_css
-as this is getting used in blk-cgroup.h
+Added a new function blkcg_set_fc_appid to
+set the app identifier in a blkcgrp associated with cgroup id
+
+Added a new config BLK_CGROUP_FC_APPID and moved the changes
+under this config
 
 Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 
 ---
 v7:
-No change
+Modified the Kconfig file
 
 v6:
-No change
+Modified the Kconfig file as per standard specified
+in Documentation/process/coding-style.rst
 
 v5:
-renamed the function cgroup_get_from_kernfs_id to
-cgroup_get_from_id
+Renamed the arguments appropriatley
+Renamed APPID_LEN  to FC_APPID_LEN
+Moved the input validation at the begining of the function
+Modified the comments
 
 v4:
 No change
 
 v3:
-Exported the cgroup_get_e_css
+Renamed the functions and app_id to more specific
+
+Addressed the reference leaks in blkcg_set_app_identifier
+
+Added a new config BLK_CGROUP_FC_APPID and moved the changes
+under this config
+
+Added blkcg_get_fc_appid,blkcg_set_fc_appid as inline functions
 
 v2:
-New patch
+renamed app_identifier to app_id
+removed the  sysfs interface blkio.app_identifie under
 ---
- include/linux/cgroup.h |  6 ++++++
- kernel/cgroup/cgroup.c | 26 ++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+)
+ block/Kconfig              |  9 ++++++
+ include/linux/blk-cgroup.h | 56 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 65 insertions(+)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 618838c48313..da31b14db198 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -696,6 +696,7 @@ static inline void cgroup_kthread_ready(void)
- }
+diff --git a/block/Kconfig b/block/Kconfig
+index a2297edfdde8..03886d105301 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -144,6 +144,15 @@ config BLK_CGROUP_IOLATENCY
  
- void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen);
-+struct cgroup *cgroup_get_from_id(u64 id);
- #else /* !CONFIG_CGROUPS */
+ 	Note, this is an experimental interface and could be changed someday.
  
- struct cgroup_subsys_state;
-@@ -743,6 +744,11 @@ static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
- 
- static inline void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen)
- {}
++config BLK_CGROUP_FC_APPID
++	bool "Enable support to track FC I/O Traffic across cgroup applications"
++	depends on BLK_CGROUP=y
++	help
++	  Enabling this option enables the support to track FC I/O traffic across
++	  cgroup applications. It enables the Fabric and the storage targets to
++	  identify, monitor, and handle FC traffic based on VM tags by inserting
++	  application specific identification into the FC frame.
 +
-+static struct cgroup *cgroup_get_from_id(u64 id)
+ config BLK_CGROUP_IOCOST
+ 	bool "Enable support for cost model based cgroup IO controller"
+ 	depends on BLK_CGROUP=y
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index c8fc9792ac77..216ca0d5eda7 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -30,6 +30,8 @@
+ 
+ /* Max limits for throttle policy */
+ #define THROTL_IOPS_MAX		UINT_MAX
++#define FC_APPID_LEN              129
++
+ 
+ #ifdef CONFIG_BLK_CGROUP
+ 
+@@ -55,6 +57,9 @@ struct blkcg {
+ 	struct blkcg_policy_data	*cpd[BLKCG_MAX_POLS];
+ 
+ 	struct list_head		all_blkcgs_node;
++#ifdef CONFIG_BLK_CGROUP_FC_APPID
++	char                            fc_app_id[FC_APPID_LEN];
++#endif
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	struct list_head		cgwb_list;
+ #endif
+@@ -660,4 +665,55 @@ static inline void blk_cgroup_bio_start(struct bio *bio) { }
+ 
+ #endif	/* CONFIG_BLOCK */
+ #endif	/* CONFIG_BLK_CGROUP */
++
++#ifdef CONFIG_BLK_CGROUP_FC_APPID
++/*
++ * Sets the fc_app_id field associted to blkcg
++ * @app_id: application identifier
++ * @cgrp_id: cgroup id
++ * @app_id_len: size of application identifier
++ */
++static inline int blkcg_set_fc_appid(char *app_id, u64 cgrp_id, size_t app_id_len)
 +{
++	struct cgroup *cgrp;
++	struct cgroup_subsys_state *css;
++	struct blkcg *blkcg;
++	int ret  = 0;
++
++	if (app_id_len > FC_APPID_LEN)
++		return -EINVAL;
++
++	cgrp = cgroup_get_from_id(cgrp_id);
++	if (!cgrp)
++		return -ENOENT;
++	css = cgroup_get_e_css(cgrp, &io_cgrp_subsys);
++	if (!css) {
++		ret = -ENOENT;
++		goto out_cgrp_put;
++	}
++	blkcg = css_to_blkcg(css);
++	strlcpy(blkcg->fc_app_id, app_id, app_id_len);
++	css_put(css);
++out_cgrp_put:
++	cgroup_put(cgrp);
++	return ret;
++}
++
++/**
++ * blkcg_get_fc_appid - get the fc app identifier associated with a bio
++ * @bio: target bio
++ *
++ * On success it returns the fc_app_id on failure it returns NULL
++ */
++static inline char *blkcg_get_fc_appid(struct bio *bio)
++{
++	if (bio && bio->bi_blkg &&
++		(bio->bi_blkg->blkcg->fc_app_id[0] != '\0'))
++		return bio->bi_blkg->blkcg->fc_app_id;
 +	return NULL;
 +}
- #endif /* !CONFIG_CGROUPS */
- 
- #ifdef CONFIG_CGROUPS
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index e41c21819ba0..34ebfbeba098 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -580,6 +580,7 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgrp,
- 	rcu_read_unlock();
- 	return css;
- }
-+EXPORT_SYMBOL_GPL(cgroup_get_e_css);
- 
- static void cgroup_get_live(struct cgroup *cgrp)
- {
-@@ -5805,6 +5806,31 @@ void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen)
- 	kernfs_put(kn);
- }
- 
-+/*
-+ * cgroup_get_from_id : get the cgroup associated with cgroup id
-+ * @id: cgroup id
-+ * On success it returns the cgrp on failure it returns NULL
-+ */
-+struct cgroup *cgroup_get_from_id(u64 id)
-+{
-+	struct kernfs_node *kn;
-+	struct cgroup *cgrp = NULL;
-+
-+	mutex_lock(&cgroup_mutex);
-+	kn = kernfs_find_and_get_node_by_id(cgrp_dfl_root.kf_root, id);
-+	if (!kn)
-+		goto out_unlock;
-+
-+	cgrp = kn->priv;
-+	if (cgroup_is_dead(cgrp) || !cgroup_tryget(cgrp))
-+		cgrp = NULL;
-+	kernfs_put(kn);
-+out_unlock:
-+	mutex_unlock(&cgroup_mutex);
-+	return cgrp;
-+}
-+EXPORT_SYMBOL_GPL(cgroup_get_from_id);
-+
- /*
-  * proc_cgroup_show()
-  *  - Print task's cgroup paths into seq_file, one line for each hierarchy
++#else
++static inline int blkcg_set_fc_appid(char *buf, u64 id, size_t len) { return -EINVAL; }
++static inline char *blkcg_get_fc_appid(struct bio *bio) { return NULL; }
++#endif /*CONFIG_BLK_CGROUP_FC_APPID*/
+ #endif	/* _BLK_CGROUP_H */
 -- 
 2.26.2
 
