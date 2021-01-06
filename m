@@ -2,137 +2,161 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7974C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 01:24:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5B42C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 04:52:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58AED2312A
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 01:24:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84C6D22EBF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 04:52:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726249AbhAGBYf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jan 2021 20:24:35 -0500
-Received: from mailout4.samsung.com ([203.254.224.34]:62644 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726272AbhAGBYf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 20:24:35 -0500
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210107012352epoutp0453d0ed4b7d81b81826fdbf683ea28047~Xzqyqt41y1650516505epoutp04b
-        for <linux-scsi@vger.kernel.org>; Thu,  7 Jan 2021 01:23:52 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210107012352epoutp0453d0ed4b7d81b81826fdbf683ea28047~Xzqyqt41y1650516505epoutp04b
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1609982632;
-        bh=lZQr/BNAVc2zPCCDVpvZSEEd7+/C8Ub6qxHC3FLZMSk=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=KOycJRT5KoKCflTgowFTA61pjUQTgnllsrsbzGAnoOGNKJYwLtLgwip57iZMHt0ef
-         SiXuy73wQ/SYtTlCAdVpwXw44CjXrDMwg4DiLom8qy+CvUkSlT2oB75A9pf31yCUQq
-         hyYH2LupfKodP3V/laTRUAyhEkgEesS1/eniZ9kg=
-Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-        20210107012352epcas5p18d38c0faac64c151f2d10b93260fa91e~XzqydAx482216122161epcas5p1m;
-        Thu,  7 Jan 2021 01:23:52 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        5E.1D.33964.8A266FF5; Thu,  7 Jan 2021 10:23:52 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-        20210107012352epcas5p28217298cc4e6cf7787aff1472d618726~XzqyGkTCA1106611066epcas5p24;
-        Thu,  7 Jan 2021 01:23:52 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20210107012352epsmtrp24726259c6b740963d579e384c7278e7c~XzqyFzS8Q3004530045epsmtrp2D;
-        Thu,  7 Jan 2021 01:23:52 +0000 (GMT)
-X-AuditID: b6c32a4b-eb7ff700000184ac-83-5ff662a8d1c1
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        2C.9F.08745.7A266FF5; Thu,  7 Jan 2021 10:23:52 +0900 (KST)
-Received: from alimakhtar02 (unknown [107.122.12.5]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20210107012351epsmtip1c0debdb305ba4238bed6831a3d1ebfd0~XzqxEcmI82381423814epsmtip1Q;
-        Thu,  7 Jan 2021 01:23:50 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Randy Dunlap'" <rdunlap@infradead.org>,
-        <linux-kernel@vger.kernel.org>
-Cc:     "'Avri Altman'" <avri.altman@wdc.com>,
-        <linux-scsi@vger.kernel.org>,
-        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        "'Martin K. Petersen'" <martin.petersen@oracle.com>
-In-Reply-To: <20210106205554.18082-1-rdunlap@infradead.org>
-Subject: RE: [PATCH -next] scsi: ufs: fix all Kconfig help text indentation
-Date:   Thu, 7 Jan 2021 06:53:49 +0530
-Message-ID: <052001d6e493$c1fb0fb0$45f12f10$@samsung.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQG3tqYHXragKCNirWnPT3uZrpIbEgIXg0mOqkj9U9A=
-Content-Language: en-in
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprBKsWRmVeSWpSXmKPExsWy7bCmpu6KpG/xBp1bZC1e/rzKZrHoxjYm
-        i8u75rBZdF/fwWax/Pg/Jou3d6azOLB5bF6h5TFh0QFGj49Pb7F4fN4k59F+oJspgDWKyyYl
-        NSezLLVI3y6BK6P7snpBO3vFrj0zWRsYG9m6GDk5JARMJA7d+cjUxcjFISSwm1Hi6r11bBDO
-        J0aJQ2sus0M4nxklPs9YzwzTsuLHHKiWXUCJJXNYIZyXjBJT3k8CG8wmoCuxY3EbmC0i4CPx
-        +vQxRpAiZoH1jBJHV/9lB0lwClhLTNrxA6xIWMBb4sLT42BxFgEViR371zKC2LwClhIftyxj
-        gbAFJU7OfAJmMwvIS2x/OwfqJAWJn0+XsUIss5LonDGBFaJGXOLozx6oml4OiUMzzSBsF4kN
-        15qh4sISr45vYYewpSQ+v9sLdA8HkJ0t0bPLGCJcI7F03jEWCNte4sCVOSwgJcwCmhLrd+lD
-        bOKT6P39hAmik1eio00IolpVovndVahOaYmJ3d2sELaHxPmzL5kmMCrOQvLXLCR/zUJy/yyE
-        ZQsYWVYxSqYWFOempxabFhjnpZbrFSfmFpfmpesl5+duYgQnHi3vHYyPHnzQO8TIxMF4iFGC
-        g1lJhNfi2Jd4Id6UxMqq1KL8+KLSnNTiQ4zSHCxK4rw7DB7ECwmkJ5akZqemFqQWwWSZODil
-        GpisM7bIBjIqehvm6v7uYL12RDAoID3r8d8FvjMK5011lbmsecHiW8LDqkXrFRXP2u7a0DxT
-        tblWPyHl/Z1z71Qk2SayS4ZIutxyfWWu3Olsy/ah8Jil5/9bhQcUQxYZ7XNLD1M7P8s3L7Nq
-        wZ8z/6WyzyspvFHd5/Jsj2XLq3ds+x983uP0MPmMCoNmzdcOd/M226U/TwbtdpDOWht6oacs
-        scDX5fac1NK6tNc/jVqWz/v9k+dAcaRA7oHD3/L7ej6LzNyy1CgiyM5gzntv3/Za2Vsh1kH3
-        1u6IE9t3YT7DhJ35Gdfjd5sEx9/rySzI0Nx+mNNh+oU91gFzn/2wisv1PdK4smrfy9scvdM1
-        uJRYijMSDbWYi4oTAbOxeeyrAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrNLMWRmVeSWpSXmKPExsWy7bCSnO6KpG/xBrveMlm8/HmVzWLRjW1M
-        Fpd3zWGz6L6+g81i+fF/TBZv70xncWDz2LxCy2PCogOMHh+f3mLx+LxJzqP9QDdTAGsUl01K
-        ak5mWWqRvl0CV0b3ZfWCdvaKXXtmsjYwNrJ1MXJySAiYSKz4MYepi5GLQ0hgB6PErva/UAlp
-        iesbJ7BD2MISK/89B7OFBJ4zSjyblAJiswnoSuxY3AZWLyLgJ7H73BE2kEHMAhsZJabNuMYO
-        MbWHUeLJzUdg3ZwC1hKTdvwA6xAW8Ja48PQ4WJxFQEVix/61jCA2r4ClxMcty1ggbEGJkzOf
-        ANkcQFP1JNo2gpUwC8hLbH87hxniOAWJn0+XsUIcYSXROWMCK0SNuMTRnz3MExiFZyGZNAth
-        0iwkk2Yh6VjAyLKKUTK1oDg3PbfYsMAoL7Vcrzgxt7g0L10vOT93EyM4frS0djDuWfVB7xAj
-        EwfjIUYJDmYlEV6LY1/ihXhTEiurUovy44tKc1KLDzFKc7AoifNe6DoZLySQnliSmp2aWpBa
-        BJNl4uCUamCS/r8tf7J5PctVs9uFQs0azQ+1t/EeWc+pz8E3nduAtfFPR+DTud4nMu51SL7u
-        6Ju6INHy178Xb/jXeNuevrXpzKo7dtVrxHbvWPnCNuzSmokxR9ydZwcHmZee/+xxjHXRRo9w
-        IdeurI2cvrNvnJo5ZXqIU3Hf9NfeYndf17MXvSwV7snQSlybOiex+LZX4NVPIpfXZ31kmFOk
-        9Gax0cun+QwBrbI7Tq2+p/JT1+9ia9B7FfkFE9uLywxmyb4I/CbBXHS39XHJ1rMTCrJDpSI3
-        bTjOsKz96ur3SrZ3/89OkDqWmyGnb8/pM61etfLlvf7ZVz8Lln+olLX+pHXypdedqXc7VIyl
-        FZJFDMIf1V9QYinOSDTUYi4qTgQA/aTJgg4DAAA=
-X-CMS-MailID: 20210107012352epcas5p28217298cc4e6cf7787aff1472d618726
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20210106205857epcas5p31c8d9aee87cb459ef431b8e8c965bdfe
-References: <CGME20210106205857epcas5p31c8d9aee87cb459ef431b8e8c965bdfe@epcas5p3.samsung.com>
-        <20210106205554.18082-1-rdunlap@infradead.org>
+        id S1727051AbhAGEwa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jan 2021 23:52:30 -0500
+Received: from relay.smtp-ext.broadcom.com ([192.19.221.30]:51646 "EHLO
+        relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727031AbhAGEw3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 23:52:29 -0500
+Received: from localhost.localdomain (unknown [10.157.2.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay.smtp-ext.broadcom.com (Postfix) with ESMTPS id 51FEF3888C;
+        Wed,  6 Jan 2021 20:41:57 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 51FEF3888C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1609994517;
+        bh=wvCrJiGXb8xcRuctcsV00alA53+DUTCUvU9ftBgop/Q=;
+        h=From:To:Cc:Subject:Date:From;
+        b=aoggN94GeNmKNsgBgMKT+Crztl1hOBlXgHHkta8k0msP7E3LiqtgUyLfM4rXRBFGi
+         XuCoIlJ9x8zM3nZUOxOt4tdClIEOUFhAqMynx6J7vQDT9OqpdGCDvWLAzA7VFxSHBW
+         tYb3qGPPmlJprENjeeU5FRME860HZzQHorTDokNk=
+From:   Muneendra <muneendra.kumar@broadcom.com>
+To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        michael.christie@oracle.com, hare@suse.de
+Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
+        Muneendra <muneendra.kumar@broadcom.com>
+Subject: [PATCH v8 0/5] scsi: Support to handle Intermittent errors
+Date:   Thu,  7 Jan 2021 03:19:03 +0530
+Message-Id: <1609969748-17684-1-git-send-email-muneendra.kumar@broadcom.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Randy,
+This patch adds a support to prevent retries of all the
+io's after an abort succeeds on a particular device when transport
+connectivity to the device is encountering intermittent errors.
 
-> -----Original Message-----
-> From: Randy Dunlap <rdunlap@infradead.org>
-> Sent: 07 January 2021 02:26
-> To: linux-kernel@vger.kernel.org
-> Cc: Randy Dunlap <rdunlap@infradead.org>; Alim Akhtar
-> <alim.akhtar@samsung.com>; Avri Altman <avri.altman@wdc.com>; linux-
-> scsi@vger.kernel.org; James E.J. Bottomley <jejb@linux.ibm.com>; Martin K.
-> Petersen <martin.petersen@oracle.com>
-> Subject: [PATCH -next] scsi: ufs: fix all Kconfig help text indentation
-> 
-> Use consistent and expected indentation for all Kconfig text.
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc: Alim Akhtar <alim.akhtar@samsung.com>
-> Cc: Avri Altman <avri.altman@wdc.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> ---
+Intermittent connectivity is a condition that can be detected by transport
+fabric notifications. A service can monitor the ELS notifications and
+take action on all the outstanding io's of a scsi device at that instant.
 
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+This feature is intended to be used when the device is part of a multipath
+environment. When the service detects the poor connectivity, the multipath
+path can be placed in a marginal path group and ignored further io
+operations.
 
+After placing a path in the marginal path group,the daemon sets the
+port_state to Marginal which sets bit in scmd->state for all the
+io's on that particular device with the new sysfs interface
+provided in this patch.This prevent retries of all the
+io's if an io hits a scsi timeout which inturn issues an abort.
+On Abort succeeds on a marginal path the io will be immediately retried on
+another active path.On abort fails then the things escalates to existing
+target reset sg interface recovery process.
+
+Below is the interface provided to set the port state to Marginal
+and Online.
+echo "Marginal" >> /sys/class/fc_remote_ports/rport-X\:Y-Z/port_state
+echo "Online" >> /sys/class/fc_remote_ports/rport-X\:Y-Z/port_state
+
+
+The patches were cut against  5.11-rc2
+
+---
+v8:
+Rebase the patches on top of 5.11-rc2
+
+v7:
+
+Added New routine in scsi_host_template to decide if a cmd is
+retryable instead of checking the same using  SCMD_NORETRIES_ABORT
+bit as the cmd retry part can be checked by validating the port state.
+
+Removed the changes related to SCMD_NORETRIES_ABORT bit.
+
+Added a new function fc_eh_should_retry_cmd to check whether the cmd
+should be retried based on the rport state.
+
+Reoreder the patch
+
+The patches were cut against  5.11/scsi-queue tree
+
+
+v6:
+Reordered the patches to make patch ordering and more logical.
+
+v5:
+Added the DID_TRANSPORT_MARGINAL case to scsi_decide_disposition
+
+Made changes to clear the SCMD_NORETRIES_ABORT bit if the port_state
+has changed from marginal to online due to port_delete and port_add
+as we need the normal cmd retry behaviour while we are calling the
+eh handlers.
+
+Made changes in fc_scsi_scan_rport as we are checking FC_PORTSTATE_ONLINE
+instead of FC_PORTSTATE_ONLINE and FC_PORTSTATE_MARGINAL
+
+
+v4:
+Made changes in fc_eh_timed_out callout to set the SCMD_NORETRIES_ABORT if port
+state is marginal 
+
+With this change, we  removed the code  to loop over running commands
+and fc_remote_port_chkready changes to set the SCMD_NORETRIES_ABORT 
+
+Removed the scsi_cmd argument for fc_remote_port_chkready
+and reverted back the patches that addressed this change(argument)
+
+Removed unnecessary comments
+Handle the return of errors on failure.
+
+v3:
+Removed the port_state from starget attributes.
+Enabled the store functionality for port_state under remote port
+Added a new argument to scsi_cmd  to fc_remote_port_chkready
+Used the existing scsi command iterators scsi_host_busy_iter.
+Rearranged the patches
+Added new patches to add new argument for fc_remote_port_chkready
+
+v2:
+Added new error code DID_TRANSPORT_MARGINAL to handle marginal errors.
+Added a new rport_state FC_PORTSTATE_MARGINAL and also added a new
+sysfs interface port_state to set the port_state to marginal.
+Added the support in lpfc to handle the marginal state.
+
+
+*** BLURB HERE ***
+
+Muneendra (5):
+  scsi: Added a new error code DID_TRANSPORT_MARGINAL in scsi.h
+  scsi: No retries on abort success
+  scsi_transport_fc: Added a new rport state FC_PORTSTATE_MARGINAL
+  scsi_transport_fc: Added store fucntionality to set the rport
+    port_state using sysfs
+  scsi:lpfc: Added support for eh_should_retry_cmd
+
+ drivers/scsi/lpfc/lpfc_scsi.c    |   1 +
+ drivers/scsi/scsi_error.c        |  23 +++++-
+ drivers/scsi/scsi_lib.c          |   1 +
+ drivers/scsi/scsi_transport_fc.c | 118 ++++++++++++++++++++++++++-----
+ include/scsi/scsi.h              |   1 +
+ include/scsi/scsi_host.h         |   6 ++
+ include/scsi/scsi_transport_fc.h |   4 +-
+ 7 files changed, 133 insertions(+), 21 deletions(-)
+
+-- 
+2.26.2
 
