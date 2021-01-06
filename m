@@ -2,257 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD01AC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 04:54:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B8D3C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 04:54:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9CB2D22EBF
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 04:54:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7007022EBF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 04:54:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727285AbhAGEyH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jan 2021 23:54:07 -0500
-Received: from relay.smtp-ext.broadcom.com ([192.19.221.30]:51864 "EHLO
+        id S1727296AbhAGEyW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jan 2021 23:54:22 -0500
+Received: from relay.smtp-ext.broadcom.com ([192.19.221.30]:52026 "EHLO
         relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726792AbhAGEyG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 23:54:06 -0500
+        by vger.kernel.org with ESMTP id S1726792AbhAGEyW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 23:54:22 -0500
 Received: from localhost.localdomain (unknown [10.157.2.20])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by relay.smtp-ext.broadcom.com (Postfix) with ESMTPS id C2CE182D05;
-        Wed,  6 Jan 2021 20:53:25 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com C2CE182D05
+        by relay.smtp-ext.broadcom.com (Postfix) with ESMTPS id CD6F23888C;
+        Wed,  6 Jan 2021 20:53:18 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com CD6F23888C
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1609995206;
-        bh=YxAC2zas7cVbvfJrxByndQEpVchX5Sk+o2+hA06DQnM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EMuWuPpenFKxRe6+U511r1MqKAT2KRI67b/Pn/5WXxu/QLMRCDo4WsValxcvW8jUk
-         9rBJdpzERbqqmCjLqpS+wAwCAystbKgyRtUeJIqozBegjHTZX6yOHyBZqcqRsWTiQn
-         rBsPMoaeVLsar3kfOxrpMSdGNeHv7k32ovOWKDhg=
+        s=dkimrelay; t=1609995199;
+        bh=f/2I+FLZjC0fqYnR3obg3qRmBz5qh2SymcdHUZZffN8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=C5N3x28uKK2SQkyCThDksWxhZ1QuQQ2hI9Swgn1yY6cs6EGJDtj+Gc3brV2aYZLm5
+         oX7mrqbDUODZAh0pbW1scG7lxEG7GipE8RNpKEW04KPHjroJFdWRGIxJHo2DHxe4Nm
+         VbHiQbRjGyvp8h5EgHaOoEshAdQAcpq1qVUawwEo=
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         tj@kernel.org, linux-nvme@lists.infradead.org, hare@suse.de
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
-        Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-Subject: [PATCH v7 10/16] lpfc: vmid: Functions to manage vmids
-Date:   Thu,  7 Jan 2021 03:30:24 +0530
-Message-Id: <1609970430-19084-11-git-send-email-muneendra.kumar@broadcom.com>
+        Muneendra <muneendra.kumar@broadcom.com>
+Subject: [PATCH v7 00/16] blkcg:Support to track FC storage blk io traffic
+Date:   Thu,  7 Jan 2021 03:30:14 +0530
+Message-Id: <1609970430-19084-1-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1609970430-19084-1-git-send-email-muneendra.kumar@broadcom.com>
-References: <1609970430-19084-1-git-send-email-muneendra.kumar@broadcom.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
+This Patch added a unique application identifier i.e
+app_id  knob to  blkcg which allows identification of traffic
+sources at an individual cgroup based Applications
+(ex:virtual machine (VM))level in both host and
+fabric infrastructure.
 
-This patch contains the routines to save, retrieve and remove the vmids
-from the data structure. A hash table is used to save the vmids and
-the corresponding UUIDs associated with the application/VMs.
+Added a new sysfs attribute appid_store to set the application identfier
+in  the blkcg associted with cgroup id
+/sys/class/fc/fc_udev_device/*
+With this new interface the user can set the application identfier
+in  the blkcg associted with cgroup id.
 
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Gaurav Srivastava  <gaurav.srivastava@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+This capability can be utilized by multiple block transport infrastructure
+like fc,iscsi,roce.
 
----
+Existing FC fabric will use this feature and the description of
+the use case is below.
+
+Various virtualization technologies used in Fibre Channel
+SAN deployments have created the opportunity to identify
+and associate traffic with specific virtualized applications.
+The concepts behind the T11 Application Services standard is
+to provide the general mechanisms needed to identify
+virtualized services.
+It enables the Fabric and the storage targets to
+identify, monitor, and handle FC traffic
+based on vm tags by inserting application specific identification
+into the FC frame.
+
+The patches were cut against  5.11/scsi-queue tree
+
 v7:
-No change
+Modified the Kconfig comments
 
 v6:
-Added Forward declarations and functions to static
+Addressed the issues reported by kernel test robot
+Modified the Kconfig files as per standard
 
 v5:
-Changed Return code to non-numeric/Symbol
+Renamed the function cgroup_get_from_kernfs_id to
+cgroup_get_from_id.
+
+Moved the input validation at the beginning of the function in 
+Renamed the arguments appropriatley.
+
+Changed Return code to non-numeric/SymbolChanged Return code
+to non-numeric/Symbol
+
+Modified the comments.
 
 v4:
-No change
+Addressed the error reported by  kernel test robot
 
 v3:
-No change
+removed RFC.
 
-v2:
-Ported the patch on top of 5.10/scsi-queue
----
- drivers/scsi/lpfc/lpfc_scsi.c | 148 ++++++++++++++++++++++++++++++++++
- 1 file changed, 148 insertions(+)
+Renamed the functions and app_id to more specific
+Addressed the reference leaks in blkcg_set_app_identifier
+Added a new config BLK_CGROUP_FC_APPID and made changes to 
+select the same under SCSI_FC_ATTRS
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index b79b6f03cdb6..53baee21e0f9 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -28,6 +28,7 @@
- #include <asm/unaligned.h>
- #include <linux/t10-pi.h>
- #include <linux/crc-t10dif.h>
-+#include <linux/blk-cgroup.h>
- #include <net/checksum.h>
- 
- #include <scsi/scsi.h>
-@@ -86,6 +87,14 @@ static void
- lpfc_release_scsi_buf_s3(struct lpfc_hba *phba, struct lpfc_io_buf *psb);
- static int
- lpfc_prot_group_type(struct lpfc_hba *phba, struct scsi_cmnd *sc);
-+static int
-+lpfc_put_vmid_in_hashtable(struct lpfc_vport *vport, u32 hash,
-+			   struct lpfc_vmid *vmp);
-+static void lpfc_vmid_update_entry(struct lpfc_vport *vport, struct scsi_cmnd
-+				   *cmd, struct lpfc_vmid *vmp,
-+				   union lpfc_vmid_io_tag *tag);
-+static void lpfc_vmid_assign_cs_ctl(struct lpfc_vport *vport,
-+				    struct lpfc_vmid *vmid);
- 
- static inline unsigned
- lpfc_cmd_blksize(struct scsi_cmnd *sc)
-@@ -5131,6 +5140,145 @@ void lpfc_poll_timeout(struct timer_list *t)
- 	}
- }
- 
-+/*
-+ * lpfc_get_vmid_from_hastable - search the UUID in the hash table
-+ * @vport: The virtual port for which this call is being executed.
-+ * @hash: calculated hash value
-+ * @buf: uuid associated with the VE
-+ * Returns the vmid entry associated with the UUID
-+ * Make sure to acquire the appropriate lock before invoking this routine.
-+ */
-+struct lpfc_vmid *lpfc_get_vmid_from_hastable(struct lpfc_vport *vport,
-+					      u32 hash, u8 *buf)
-+{
-+	struct lpfc_vmid *vmp;
-+	u16 count = 0;
-+
-+	while (count < LPFC_VMID_HASH_SIZE) {
-+		vmp = vport->hash_table[hash];
-+		if (vmp) {
-+			if (strncmp(&vmp->host_vmid[0], buf, 16) == 0)
-+				return vmp;
-+		} else {
-+			return NULL;
-+		}
-+		/* search the next available slot and continue till entry */
-+		/* is found */
-+		count++;
-+		hash++;
-+
-+		/* or the end is reached */
-+		if (hash == LPFC_VMID_HASH_SIZE)
-+			hash = 0;
-+	}
-+	return NULL;
-+}
-+
-+/*
-+ * lpfc_put_vmid_from_hastable - put the VMID in the hash table
-+ * @vport: The virtual port for which this call is being executed.
-+ * @hash - calculated hash value
-+ * @vmp: Pointer to a VMID entry representing a VM sending IO
-+ *
-+ * This routine will insert the newly acquired vmid entity in the hash table.
-+ * Make sure to acquire the appropriate lock before invoking this routine.
-+ */
-+static int
-+lpfc_put_vmid_in_hashtable(struct lpfc_vport *vport, u32 hash,
-+			   struct lpfc_vmid *vmp)
-+{
-+	int count = 0;
-+
-+	while (count < LPFC_VMID_HASH_SIZE) {
-+		if (!vport->hash_table[hash]) {
-+			vport->hash_table[hash] = vmp;
-+			vmp->hash_index = hash;
-+			return FAILURE;
-+		}
-+		/* if the slot is already occupied, a collision has occurred. */
-+		/* Store in the next available slot */
-+		count++;
-+		hash++;
-+		/* table is full */
-+		if (hash == LPFC_VMID_HASH_SIZE)
-+			hash = 0;
-+	}
-+	return 0;
-+}
-+
-+/*
-+ * lpfc_vmid_hash_fn- creates a hash value of the UUID
-+ * @uuid: uuid associated with the VE
-+ * @len: length of the UUID
-+ * Returns the calculated hash value
-+ */
-+int lpfc_vmid_hash_fn(char *vmid, int len)
-+{
-+	int c;
-+	int hash = 0;
-+
-+	if (len == 0)
-+		return 0;
-+	while (len--) {
-+		c = *vmid++;
-+		if (c >= 'A' && c <= 'Z')
-+			c += 'a' - 'A';
-+
-+		hash = (hash + (c << LPFC_VMID_HASH_SHIFT) +
-+			(c >> LPFC_VMID_HASH_SHIFT)) * 19;
-+	}
-+
-+	return hash & LPFC_VMID_HASH_MASK;
-+}
-+
-+/*
-+ * lpfc_vmid_update_entry - update the vmid entry in the hash table
-+ * @vport: The virtual port for which this call is being executed.
-+ * @cmd: address of scsi cmmd descriptor
-+ * @vmp: Pointer to a VMID entry representing a VM sending IO
-+ * @tag: VMID tag
-+ */
-+static void lpfc_vmid_update_entry(struct lpfc_vport *vport, struct scsi_cmnd
-+				   *cmd, struct lpfc_vmid *vmp,
-+				   union lpfc_vmid_io_tag *tag)
-+{
-+	u64 *lta;
-+
-+	if (vport->vmid_priority_tagging)
-+		tag->cs_ctl_vmid = vmp->un.cs_ctl_vmid;
-+	else
-+		tag->app_id = vmp->un.app_id;
-+
-+	if (cmd->sc_data_direction == DMA_TO_DEVICE)
-+		vmp->io_wr_cnt++;
-+	else
-+		vmp->io_rd_cnt++;
-+
-+	/* update the last access timestamp in the table */
-+	lta = per_cpu_ptr(vmp->last_io_time, raw_smp_processor_id());
-+	*lta = jiffies;
-+}
-+
-+static void lpfc_vmid_assign_cs_ctl(struct lpfc_vport *vport,
-+				    struct lpfc_vmid *vmid)
-+{
-+	u32 hash;
-+	struct lpfc_vmid *pvmid;
-+
-+	if (vport->port_type == LPFC_PHYSICAL_PORT) {
-+		vmid->un.cs_ctl_vmid = lpfc_vmid_get_cs_ctl(vport);
-+	} else {
-+		hash = lpfc_vmid_hash_fn(vmid->host_vmid, vmid->vmid_len);
-+		pvmid =
-+		    lpfc_get_vmid_from_hastable(vport->phba->pport, hash,
-+						vmid->host_vmid);
-+		if (!pvmid)
-+			vmid->un.cs_ctl_vmid = pvmid->un.cs_ctl_vmid;
-+		else
-+			vmid->un.cs_ctl_vmid = lpfc_vmid_get_cs_ctl(vport);
-+	}
-+}
-+
- /**
-  * lpfc_queuecommand - scsi_host_template queuecommand entry point
-  * @shost: kernel scsi host pointer.
+V2:
+renamed app_identifier to app_id.
+removed the  sysfs interface blkio.app_identifie under
+/sys/fs/cgroup/blkio
+Ported the patch on top of 5.10/scsi-queue.
+Removed redundant code due to changes since last submit.
+Added a fix for issuing QFPA command.
+
+
+
+Gaurav Srivastava (12):
+  lpfc: vmid: Add the datastructure for supporting VMID in lpfc
+  lpfc: vmid: Supplementary data structures for vmid and APIs
+  lpfc: vmid: Forward declarations for APIs
+  lpfc: vmid: VMID params initialization
+  lpfc: vmid: Add support for vmid in mailbox command, does vmid
+    resource allocation and vmid cleanup
+  lpfc: vmid: Implements ELS commands for appid patch
+  lpfc: vmid: Functions to manage vmids
+  lpfc: vmid: Implements CT commands for appid.
+  lpfc: vmid: Appends the vmid in the wqe before sending
+  lpfc: vmid: Timeout implementation for vmid
+  lpfc: vmid: Adding qfpa and vmid timeout check in worker thread
+  lpfc: vmid: Introducing vmid in io path.
+
+Muneendra (4):
+  cgroup: Added cgroup_get_from_id
+  blkcg: Added a app identifier support for blkcg
+  nvme: Added a newsysfs attribute appid_store
+  scsi: Made changes in Kconfig to select BLK_CGROUP_FC_APPID
+
+ block/Kconfig                    |   9 +
+ drivers/nvme/host/fc.c           |  73 +++++-
+ drivers/scsi/Kconfig             |  13 ++
+ drivers/scsi/lpfc/lpfc.h         | 121 ++++++++++
+ drivers/scsi/lpfc/lpfc_attr.c    |  47 ++++
+ drivers/scsi/lpfc/lpfc_crtn.h    |  11 +
+ drivers/scsi/lpfc/lpfc_ct.c      | 252 +++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_disc.h    |   1 +
+ drivers/scsi/lpfc/lpfc_els.c     | 369 ++++++++++++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 153 +++++++++++++
+ drivers/scsi/lpfc/lpfc_hw.h      | 124 ++++++++++-
+ drivers/scsi/lpfc/lpfc_hw4.h     |  12 +
+ drivers/scsi/lpfc/lpfc_init.c    | 109 +++++++++
+ drivers/scsi/lpfc/lpfc_mbox.c    |   6 +
+ drivers/scsi/lpfc/lpfc_scsi.c    | 334 ++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_sli.c     |  65 +++++-
+ drivers/scsi/lpfc/lpfc_sli.h     |   8 +
+ include/linux/blk-cgroup.h       |  56 +++++
+ include/linux/cgroup.h           |   6 +
+ kernel/cgroup/cgroup.c           |  26 +++
+ 20 files changed, 1782 insertions(+), 13 deletions(-)
+
 -- 
 2.26.2
 
