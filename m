@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A764C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 06:51:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CD81C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 06:52:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C42922E00
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 06:51:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E54822EBF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 06:52:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726381AbhAGGvs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jan 2021 01:51:48 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52530 "EHLO mail.kernel.org"
+        id S1726051AbhAGGwY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jan 2021 01:52:24 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52574 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725893AbhAGGvr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 Jan 2021 01:51:47 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 41B8122E00;
-        Thu,  7 Jan 2021 06:51:06 +0000 (UTC)
+        id S1725893AbhAGGwY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 Jan 2021 01:52:24 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 50A7322EBF;
+        Thu,  7 Jan 2021 06:51:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610002266;
-        bh=YaDpg+eHj314ji06DzIC9dWK/fl5zkfbM6BL9kqoBlM=;
+        s=k20201202; t=1610002302;
+        bh=Y64ePLCDHwe1BoP47gwh21GRRCogT/hK+w+Y/EXhoq0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Q+3NZgFZDfSxw1d9XazAN8giaFrFZ2r4XSa9/4MBDVFFUgSTDpWgYix8miSB0/Blh
-         lcWLYblOFGzxFmtiqBvPN3Un9PkIEBAJY7/GhIe64LCBwRiV8X4iI66rcYHOnKw7ZC
-         ZX6nd/OCoSWx+TsoGIs/Cgi9u8AVR5drZYLccvex5gPPPson/F+HOBbwtiVkonGgki
-         OJltGQvdWAtnnB5Wcd5Chla2ObYrSBIGvMfIiqGqF8nogiEsS2k57r+pXd79XPLQnx
-         jkBpvGeB55lPYz71xZ+6P/KLZIdJSmow1DNsYyaIXOoJTfj9O5/V9wc9vu3Obp6RUH
-         rWqhAuIThIJvg==
-Date:   Wed, 6 Jan 2021 22:51:04 -0800
+        b=RkaOws/Ge1JIQh69o39mriyiqO4eQYJJiX0rOfFegr8wKqxDhUo013yJvbUrfdsF3
+         yhjBdKQIgY4D+gg24YBfi//v358AUZbiW60v+WhEXmF3BVIxxjvI51X4DYI5b2QZkd
+         8IWc1SIS/2ZQIgygQA7IbrklFgAnBKFLo36nAcfmq3drSw1zp16zD91o0jOdrRIjpf
+         WG18RzOp8DUOHDqUp7ndnbSSJ2/kUd2HttLOZV3ooEcgHB2DyXlWpwD1NW8pT+8TMo
+         wwUImsjsG1lSpNHcVJssWlBrrYuXAUpLF/zXD3o/5AO1QtbS7vE0XAp2dT9/uPk/Ux
+         jsrtoE87nrLCQ==
+Date:   Wed, 6 Jan 2021 22:51:40 -0800
 From:   Jaegeuk Kim <jaegeuk@kernel.org>
 To:     Can Guo <cang@codeaurora.org>
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -39,19 +39,21 @@ Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         avri.altman@wdc.com, bvanassche@acm.org,
         martin.petersen@oracle.com, stanley.chu@mediatek.com
 Subject: Re: [PATCH v3 2/2] scsi: ufs: handle LINERESET with correct tm_cmd
-Message-ID: <X/avWNrpOzWMj6xY@google.com>
+Message-ID: <X/avfLOx3aVWQyuy@google.com>
 References: <20210106214109.44041-1-jaegeuk@kernel.org>
  <20210106214109.44041-3-jaegeuk@kernel.org>
- <163fae07a94933230e0432e2ca584040@codeaurora.org>
+ <96a159d6b64fce18ee63a12a6acde2a2@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <163fae07a94933230e0432e2ca584040@codeaurora.org>
+In-Reply-To: <96a159d6b64fce18ee63a12a6acde2a2@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 01/07, Can Guo wrote:
+> Hi Jaegeuk,
+> 
 > On 2021-01-07 05:41, Jaegeuk Kim wrote:
 > > From: Jaegeuk Kim <jaegeuk@google.com>
 > > 
@@ -68,12 +70,6 @@ On 01/07, Can Guo wrote:
 > > 
 > > __ufshcd_issue_tm_cmd: task management cmd 0x80 timed-out
 > > 
-> 
-> Would you mind add a Fixes tag?
-
-Ok.
-
-> 
 > > Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
 > > ---
 > >  drivers/scsi/ufs/ufshcd.c | 36 ++++++++++++++++++++++++++++++++----
@@ -99,6 +95,18 @@ Ok.
 > >  	 */
 > >  	if (hba->saved_uic_err & UFSHCD_UIC_PA_GENERIC_ERROR) {
 > > +		ktime_t start = ktime_get();
+> 
+> I don't see the connection btw line-reset and following tmf cmd.
+> My point is that line-reset is not the only non-fatal error which
+> leads us to the following tmf cmd. So the wait should be outside
+> of this check - just put it right before clearing outstanding reqs.
+
+Ok. Let me move it in v4.
+
+> 
+> Thanks,
+> Can Guo.
+> 
 > > +
 > >  		hba->saved_uic_err &= ~UFSHCD_UIC_PA_GENERIC_ERROR;
 > >  		if (!hba->saved_uic_err)
@@ -152,17 +160,6 @@ Ok.
 > > -	req = blk_get_request(q, REQ_OP_DRV_OUT, BLK_MQ_REQ_RESERVED);
 > > +	req = blk_get_request(q, REQ_OP_DRV_OUT, BLK_MQ_REQ_RESERVED |
 > > +						BLK_MQ_REQ_NOWAIT);
-> 
-> Sorry that I didn't pay much attention to this part of code before.
-> May I know why must we use the BLK_MQ_REQ_RESERVED flag?
-
-What I understood is the reserved tag is used when aborting outstanding
-IOs when all the 32 tags were used.
-
-> 
-> Thanks,
-> Can Guo.
-> 
 > > +	if (IS_ERR(req))
 > > +		return PTR_ERR(req);
 > > +
@@ -175,22 +172,6 @@ IOs when all the 32 tags were used.
 > >  	hba->tmf_tag_set = (struct blk_mq_tag_set) {
 > >  		.nr_hw_queues	= 1,
 > > +		.reserved_tags	= 1,
-> 
-> If we give reserved_tags as 1 and always ask for a tm requst with
-> BLK_MQ_REQ_RESERVED flag set, then the tag shall only be allocated
-> from the reserved sbitmap_queue, whose depth is set to 1 here.
-> UFS supports tm queue depth as 8, but here is allowing only one tm
-> req at a time. Why? Please correct me if my understanding is wrong.
-
-I couldn't find tm can be issued in parallel, so thought it was issued
-one at a time. If we set 8, then we can use 24 for IOs, IIUC.
-
-Please correct me as well. I'm still trying to understand the flow.
-
-> 
-> Thanks,
-> Can Guo.
-> 
 > >  		.queue_depth	= hba->nutmrs,
 > >  		.ops		= &ufshcd_tmf_ops,
 > >  		.flags		= BLK_MQ_F_NO_SCHED,
