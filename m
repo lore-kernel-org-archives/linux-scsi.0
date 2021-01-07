@@ -2,323 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52CFBC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 07:31:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16908C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 07:41:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A8AC23120
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 07:31:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C573F23123
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 07:41:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726154AbhAGHbx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jan 2021 02:31:53 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:63723 "EHLO
-        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725763AbhAGHbx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2021 02:31:53 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1610004693; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=x/yiieojroUHanD+mCHk3HhQPK0ILY3njJMlrd08eJc=;
- b=xEB0jQs5PKfDRxcn/ChkjiTB0ATqB7+IGeA3yhzPJ2xVxoSOft78+CbA7x4fWuRg0zEfvpKa
- jsy9RdGzNnnOcJpBJA6GjG2s9xrqyA0ZgDLhuyOR8IaEyicYCMFLrGSCNz+C0Iqcm+pOj7KR
- 5zcrJoBqB8P59/I8JrfQ0Zp6jeE=
-X-Mailgun-Sending-Ip: 69.72.43.15
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n08.prod.us-west-2.postgun.com with SMTP id
- 5ff6b8b0b95fc593268ffece (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 07 Jan 2021 07:30:56
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A810BC43465; Thu,  7 Jan 2021 07:30:56 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E6B20C433C6;
-        Thu,  7 Jan 2021 07:30:54 +0000 (UTC)
+        id S1726013AbhAGHlM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jan 2021 02:41:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56216 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725306AbhAGHlM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 Jan 2021 02:41:12 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3F3042311A;
+        Thu,  7 Jan 2021 07:40:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610005231;
+        bh=sdq6syVaDrNYq3YLoMTwQn2crIXyKwGokuzzAZriVNE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Penxc7aXySvgQKe1F0THm1NffrsT3AOmVDktRMhiSG2OjZeMycVNT0qWD7IYHZC5g
+         m3uEe0raFphJ8Ie+vbcu5PTq2K0/5KTnhEVNiLiDk7v8KWVq/fQ66NZYDhKwCCoMc0
+         BRNfBy0wDjz+TJfu94ygCz4L6zhV6X9SoTqnRM6RvWubwb8GNl7ZSx/rVNvZsrK50l
+         72J8t9Nen0nqbmeTFByBA+keeGiP4mKTyoe3fhCz1RWFrQ0jzqj3WSPYO5QRKJFtMR
+         E5EcwKyb80AnHV4HdF28iq96Fa2UF31ND2fZnf0vq50I/TEKb12dZqM0BVXn/3Jyuq
+         IQ6yutJZBt/Iw==
+Date:   Wed, 6 Jan 2021 23:40:29 -0800
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     Can Guo <cang@codeaurora.org>
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, bvanassche@acm.org,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com
+Subject: Re: [PATCH v3 1/2] scsi: ufs: fix livelock of ufshcd_clear_ua_wluns
+Message-ID: <X/a67YjcNgfJAGcc@google.com>
+References: <20210106214109.44041-1-jaegeuk@kernel.org>
+ <20210106214109.44041-2-jaegeuk@kernel.org>
+ <fc4cb27df8bd6b2c1037d82e4b5d3860@codeaurora.org>
+ <X/awxP3m1VG3b+bX@google.com>
+ <c47ca5307e67de386aa3e99256b837e4@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 07 Jan 2021 15:30:54 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Adrian Hunter <adrian.hunter@intel.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Subject: Re: [PATCH V4] scsi: ufs-debugfs: Add error counters
-In-Reply-To: <20210107072538.21782-1-adrian.hunter@intel.com>
-References: <20210107072538.21782-1-adrian.hunter@intel.com>
-Message-ID: <3f4533e698b0ca68ca5fae9606bec0d2@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c47ca5307e67de386aa3e99256b837e4@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-01-07 15:25, Adrian Hunter wrote:
-> People testing have a need to know how many errors might be occurring
-> over time. Add error counters and expose them via debugfs.
+On 01/07, Can Guo wrote:
+> On 2021-01-07 14:57, Jaegeuk Kim wrote:
+> > On 01/07, Can Guo wrote:
+> > > On 2021-01-07 05:41, Jaegeuk Kim wrote:
+> > > > When gate_work/ungate_work gets an error during hibern8_enter or exit,
+> > > >  ufshcd_err_handler()
+> > > >    ufshcd_scsi_block_requests()
+> > > >    ufshcd_reset_and_restore()
+> > > >      ufshcd_clear_ua_wluns() -> stuck
+> > > >    ufshcd_scsi_unblock_requests()
+> > > >
+> > > > In order to avoid it, ufshcd_clear_ua_wluns() can be called per recovery
+> > > > flows
+> > > > such as suspend/resume, link_recovery, and error_handler.
+> > > >
+> > > > Fixes: 1918651f2d7e ("scsi: ufs: Clear UAC for RPMB after ufshcd
+> > > > resets")
+> > > > Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+> > > > ---
+> > > >  drivers/scsi/ufs/ufshcd.c | 15 ++++++++++-----
+> > > >  1 file changed, 10 insertions(+), 5 deletions(-)
+> > > >
+> > > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > > > index bedb822a40a3..1678cec08b51 100644
+> > > > --- a/drivers/scsi/ufs/ufshcd.c
+> > > > +++ b/drivers/scsi/ufs/ufshcd.c
+> > > > @@ -3996,6 +3996,8 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
+> > > >  	if (ret)
+> > > >  		dev_err(hba->dev, "%s: link recovery failed, err %d",
+> > > >  			__func__, ret);
+> > > > +	else
+> > > > +		ufshcd_clear_ua_wluns(hba);
+> > > 
+> > > Can we put it right after ufshcd_scsi_add_wlus() in ufshcd_add_lus()?
+> > 
+> > May I ask the reason? We'll call it after ufshcd_add_lus() later tho.
+> > 
 > 
-> A module initcall is used to create a debugfs root directory for
-> ufshcd-related items. In the case that modules are built-in, then
-> initialization is done in link order, so move ufshcd-core to the top of
-> the Makefile.
-> 
-> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-> Reviewed-by: Avri Altman <avri.altman@wdc.com>
-> Reviewed-by: Bean Huo <beanhuo@micron.com>
+> I think the code will be more readable - we do all the LU related
+> stuffs in one func, just nit-picking though. I found this because
+> I am planning to move the devfreq init codes out of ufshcd_add_lus()
+> due to it is inappropriate to init devfreq in there by its naming,
+> but it might be a good place for ufshcd_clear_ua_wluns().
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
+Ok, that looks good to me. Thanks.
 
-> ---
 > 
+> Thanks,
+> Can Guo.
 > 
-> Changes in V4:
-> 	Added Reviewed-by: Bean Huo <beanhuo@micron.com>
-> 
-> Changes in V3:
-> 	Fixed link order to ensure correct initcall ordering when
-> 	modules are built-in.
-> 	Amended commit message accordingly.
-> 
-> Changes in V2:
-> 	Add missing '#include "ufs-debugfs.h"' in ufs-debugfs.c
-> 	Reported-by: kernel test robot <lkp@intel.com>
-> 
-> 
->  drivers/scsi/ufs/Makefile      | 13 +++++---
->  drivers/scsi/ufs/ufs-debugfs.c | 56 ++++++++++++++++++++++++++++++++++
->  drivers/scsi/ufs/ufs-debugfs.h | 22 +++++++++++++
->  drivers/scsi/ufs/ufshcd.c      | 19 ++++++++++++
->  drivers/scsi/ufs/ufshcd.h      |  5 +++
->  5 files changed, 111 insertions(+), 4 deletions(-)
->  create mode 100644 drivers/scsi/ufs/ufs-debugfs.c
->  create mode 100644 drivers/scsi/ufs/ufs-debugfs.h
-> 
-> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-> index 4679af1b564e..06f3a3fe4a44 100644
-> --- a/drivers/scsi/ufs/Makefile
-> +++ b/drivers/scsi/ufs/Makefile
-> @@ -1,5 +1,14 @@
->  # SPDX-License-Identifier: GPL-2.0
->  # UFSHCD makefile
-> +
-> +# The link order is important here. ufshcd-core must initialize
-> +# before vendor drivers.
-> +obj-$(CONFIG_SCSI_UFSHCD)		+= ufshcd-core.o
-> +ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
-> +ufshcd-core-$(CONFIG_DEBUG_FS)		+= ufs-debugfs.o
-> +ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
-> +ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO)	+= ufshcd-crypto.o
-> +
->  obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o
-> tc-dwc-g210.o
->  obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o
-> ufshcd-dwc.o tc-dwc-g210.o
->  obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
-> @@ -7,10 +16,6 @@ obj-$(CONFIG_SCSI_UFS_QCOM) += ufs_qcom.o
->  ufs_qcom-y += ufs-qcom.o
->  ufs_qcom-$(CONFIG_SCSI_UFS_CRYPTO) += ufs-qcom-ice.o
->  obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
-> -obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
-> -ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
-> -ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
-> -ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO) += ufshcd-crypto.o
->  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
->  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
->  obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
-> diff --git a/drivers/scsi/ufs/ufs-debugfs.c 
-> b/drivers/scsi/ufs/ufs-debugfs.c
-> new file mode 100644
-> index 000000000000..dee98dc72d29
-> --- /dev/null
-> +++ b/drivers/scsi/ufs/ufs-debugfs.c
-> @@ -0,0 +1,56 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +// Copyright (C) 2020 Intel Corporation
-> +
-> +#include <linux/debugfs.h>
-> +
-> +#include "ufs-debugfs.h"
-> +#include "ufshcd.h"
-> +
-> +static struct dentry *ufs_debugfs_root;
-> +
-> +void __init ufs_debugfs_init(void)
-> +{
-> +	ufs_debugfs_root = debugfs_create_dir("ufshcd", NULL);
-> +}
-> +
-> +void __exit ufs_debugfs_exit(void)
-> +{
-> +	debugfs_remove_recursive(ufs_debugfs_root);
-> +}
-> +
-> +static int ufs_debugfs_stats_show(struct seq_file *s, void *data)
-> +{
-> +	struct ufs_hba *hba = s->private;
-> +	struct ufs_event_hist *e = hba->ufs_stats.event;
-> +
-> +#define PRT(fmt, typ) \
-> +	seq_printf(s, fmt, e[UFS_EVT_ ## typ].cnt)
-> +
-> +	PRT("PHY Adapter Layer errors (except LINERESET): %llu\n", PA_ERR);
-> +	PRT("Data Link Layer errors: %llu\n", DL_ERR);
-> +	PRT("Network Layer errors: %llu\n", NL_ERR);
-> +	PRT("Transport Layer errors: %llu\n", TL_ERR);
-> +	PRT("Generic DME errors: %llu\n", DME_ERR);
-> +	PRT("Auto-hibernate errors: %llu\n", AUTO_HIBERN8_ERR);
-> +	PRT("IS Fatal errors (CEFES, SBFES, HCFES, DFES): %llu\n", 
-> FATAL_ERR);
-> +	PRT("DME Link Startup errors: %llu\n", LINK_STARTUP_FAIL);
-> +	PRT("PM Resume errors: %llu\n", RESUME_ERR);
-> +	PRT("PM Suspend errors : %llu\n", SUSPEND_ERR);
-> +	PRT("Logical Unit Resets: %llu\n", DEV_RESET);
-> +	PRT("Host Resets: %llu\n", HOST_RESET);
-> +	PRT("SCSI command aborts: %llu\n", ABORT);
-> +#undef PRT
-> +	return 0;
-> +}
-> +DEFINE_SHOW_ATTRIBUTE(ufs_debugfs_stats);
-> +
-> +void ufs_debugfs_hba_init(struct ufs_hba *hba)
-> +{
-> +	hba->debugfs_root = debugfs_create_dir(dev_name(hba->dev), 
-> ufs_debugfs_root);
-> +	debugfs_create_file("stats", 0400, hba->debugfs_root, hba,
-> &ufs_debugfs_stats_fops);
-> +}
-> +
-> +void ufs_debugfs_hba_exit(struct ufs_hba *hba)
-> +{
-> +	debugfs_remove_recursive(hba->debugfs_root);
-> +}
-> diff --git a/drivers/scsi/ufs/ufs-debugfs.h 
-> b/drivers/scsi/ufs/ufs-debugfs.h
-> new file mode 100644
-> index 000000000000..f35b39c4b4f5
-> --- /dev/null
-> +++ b/drivers/scsi/ufs/ufs-debugfs.h
-> @@ -0,0 +1,22 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +/* Copyright (C) 2020 Intel Corporation
-> + */
-> +
-> +#ifndef __UFS_DEBUGFS_H__
-> +#define __UFS_DEBUGFS_H__
-> +
-> +struct ufs_hba;
-> +
-> +#ifdef CONFIG_DEBUG_FS
-> +void __init ufs_debugfs_init(void);
-> +void __exit ufs_debugfs_exit(void);
-> +void ufs_debugfs_hba_init(struct ufs_hba *hba);
-> +void ufs_debugfs_hba_exit(struct ufs_hba *hba);
-> +#else
-> +static inline void ufs_debugfs_init(void) {}
-> +static inline void ufs_debugfs_exit(void) {}
-> +static inline void ufs_debugfs_hba_init(struct ufs_hba *hba) {}
-> +static inline void ufs_debugfs_hba_exit(struct ufs_hba *hba) {}
-> +#endif
-> +
-> +#endif
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index bedb822a40a3..47ea0afa3a35 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -20,6 +20,7 @@
->  #include "ufs_quirks.h"
->  #include "unipro.h"
->  #include "ufs-sysfs.h"
-> +#include "ufs-debugfs.h"
->  #include "ufs_bsg.h"
->  #include "ufshcd-crypto.h"
->  #include <asm/unaligned.h>
-> @@ -4543,6 +4544,7 @@ void ufshcd_update_evt_hist(struct ufs_hba *hba,
-> u32 id, u32 val)
->  	e = &hba->ufs_stats.event[id];
->  	e->val[e->pos] = val;
->  	e->tstamp[e->pos] = ktime_get();
-> +	e->cnt += 1;
->  	e->pos = (e->pos + 1) % UFS_EVENT_HIST_LENGTH;
-> 
->  	ufshcd_vops_event_notify(hba, id, &val);
-> @@ -8331,6 +8333,8 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
->  	if (err)
->  		goto out_disable_vreg;
-> 
-> +	ufs_debugfs_hba_init(hba);
-> +
->  	hba->is_powered = true;
->  	goto out;
-> 
-> @@ -8347,6 +8351,7 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
->  static void ufshcd_hba_exit(struct ufs_hba *hba)
->  {
->  	if (hba->is_powered) {
-> +		ufs_debugfs_hba_exit(hba);
->  		ufshcd_variant_hba_exit(hba);
->  		ufshcd_setup_vreg(hba, false);
->  		ufshcd_suspend_clkscaling(hba);
-> @@ -9434,6 +9439,20 @@ int ufshcd_init(struct ufs_hba *hba, void
-> __iomem *mmio_base, unsigned int irq)
->  }
->  EXPORT_SYMBOL_GPL(ufshcd_init);
-> 
-> +static int __init ufshcd_core_init(void)
-> +{
-> +	ufs_debugfs_init();
-> +	return 0;
-> +}
-> +
-> +static void __exit ufshcd_core_exit(void)
-> +{
-> +	ufs_debugfs_exit();
-> +}
-> +
-> +module_init(ufshcd_core_init);
-> +module_exit(ufshcd_core_exit);
-> +
->  MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
->  MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
->  MODULE_DESCRIPTION("Generic UFS host controller driver Core");
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 85f9d0fbfbd9..3f7db69ebc82 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -445,11 +445,13 @@ struct ufs_clk_scaling {
->   * @pos: index to indicate cyclic buffer position
->   * @reg: cyclic buffer for registers value
->   * @tstamp: cyclic buffer for time stamp
-> + * @cnt: error counter
->   */
->  struct ufs_event_hist {
->  	int pos;
->  	u32 val[UFS_EVENT_HIST_LENGTH];
->  	ktime_t tstamp[UFS_EVENT_HIST_LENGTH];
-> +	unsigned long long cnt;
->  };
-> 
->  /**
-> @@ -823,6 +825,9 @@ struct ufs_hba {
->  	u32 crypto_cfg_register;
->  	struct blk_keyslot_manager ksm;
->  #endif
-> +#ifdef CONFIG_DEBUG_FS
-> +	struct dentry *debugfs_root;
-> +#endif
->  };
-> 
->  /* Returns true if clocks can be gated. Otherwise false */
+> > > 
+> > > Thanks,
+> > > Can Guo.
+> > > 
+> > > >
+> > > >  	return ret;
+> > > >  }
+> > > > @@ -6003,6 +6005,9 @@ static void ufshcd_err_handler(struct work_struct
+> > > > *work)
+> > > >  	ufshcd_scsi_unblock_requests(hba);
+> > > >  	ufshcd_err_handling_unprepare(hba);
+> > > >  	up(&hba->eh_sem);
+> > > > +
+> > > > +	if (!err && needs_reset)
+> > > > +		ufshcd_clear_ua_wluns(hba);
+> > > >  }
+> > > >
+> > > >  /**
+> > > > @@ -6940,14 +6945,11 @@ static int
+> > > > ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+> > > >  	ufshcd_set_clk_freq(hba, true);
+> > > >
+> > > >  	err = ufshcd_hba_enable(hba);
+> > > > -	if (err)
+> > > > -		goto out;
+> > > >
+> > > >  	/* Establish the link again and restore the device */
+> > > > -	err = ufshcd_probe_hba(hba, false);
+> > > >  	if (!err)
+> > > > -		ufshcd_clear_ua_wluns(hba);
+> > > > -out:
+> > > > +		err = ufshcd_probe_hba(hba, false);
+> > > > +
+> > > >  	if (err)
+> > > >  		dev_err(hba->dev, "%s: Host init failed %d\n", __func__, err);
+> > > >  	ufshcd_update_evt_hist(hba, UFS_EVT_HOST_RESET, (u32)err);
+> > > > @@ -8777,6 +8779,7 @@ static int ufshcd_suspend(struct ufs_hba *hba,
+> > > > enum ufs_pm_op pm_op)
+> > > >  		ufshcd_resume_clkscaling(hba);
+> > > >  	hba->clk_gating.is_suspended = false;
+> > > >  	hba->dev_info.b_rpm_dev_flush_capable = false;
+> > > > +	ufshcd_clear_ua_wluns(hba);
+> > > >  	ufshcd_release(hba);
+> > > >  out:
+> > > >  	if (hba->dev_info.b_rpm_dev_flush_capable) {
+> > > > @@ -8887,6 +8890,8 @@ static int ufshcd_resume(struct ufs_hba *hba,
+> > > > enum ufs_pm_op pm_op)
+> > > >  		cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
+> > > >  	}
+> > > >
+> > > > +	ufshcd_clear_ua_wluns(hba);
+> > > > +
+> > > >  	/* Schedule clock gating in case of no access to UFS device yet */
+> > > >  	ufshcd_release(hba);
