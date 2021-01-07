@@ -2,223 +2,412 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78D3CC433E6
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 18:56:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DE95C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 22:59:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 354AB235DD
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 18:56:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD20C235FA
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 22:59:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729206AbhAGS4D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jan 2021 13:56:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40216 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726326AbhAGS4C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 Jan 2021 13:56:02 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9C0E223428;
-        Thu,  7 Jan 2021 18:55:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610045721;
-        bh=4Y+zYG7GtFTHzLhMXO9T2m3GcbuSvFUk/1zbJfLgwSE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HKLcQCJ4/lM6fCRf5mI/ev1NXaJ5HZkj4wL4xitnVLd3o9/Cx0Aa2y2tEy7yNc0NN
-         8WhQwRLXr1/+ueWTOpUzCyY7g9GkxZOppQDjHtwNwHdReTTxX/qjJveZ3/mD2KSRpG
-         pxI8rVhMH57xjvSKq5E8amM9D0KfKy2ntTN/kQFewdf/8WmOt9l0liHXJWdLgRWE/k
-         v88/8K+q9D1rJvUayLg6NyX/AclDHIG4LVgfko+UUUI0LvG/jga3Kv+NYN+//KUzs0
-         Hs+MtjmELbKt9I3hbEsV3O3bbxhjzBwAnx3Bbwxz7jAVlf6sE7THkGicyGFozUjXsH
-         4ecKbYqorKfTg==
-Date:   Thu, 7 Jan 2021 10:55:20 -0800
-From:   Jaegeuk Kim <jaegeuk@kernel.org>
-To:     Can Guo <cang@codeaurora.org>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bvanassche@acm.org,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com
-Subject: Re: [PATCH v4 2/2] scsi: ufs: handle LINERESET with correct tm_cmd
-Message-ID: <X/dZGOvZ23S6rK+0@google.com>
-References: <20210107074710.549309-1-jaegeuk@kernel.org>
- <20210107074710.549309-3-jaegeuk@kernel.org>
- <03a47a3f49914230653bea777e2ee550@codeaurora.org>
- <X/bBX6t31BOfRG/i@google.com>
- <abce95b0eb219fb6dee50f925e8fdb36@codeaurora.org>
- <X/bKZDxl1HeelB1a@google.com>
- <3e2245953c143b55d512d46a16ed8a2c@codeaurora.org>
+        id S1727842AbhAGW7v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jan 2021 17:59:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51770 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727107AbhAGW7u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2021 17:59:50 -0500
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99F02C0612F4
+        for <linux-scsi@vger.kernel.org>; Thu,  7 Jan 2021 14:59:10 -0800 (PST)
+Received: by mail-pg1-x52c.google.com with SMTP id q7so4429059pgm.5
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Jan 2021 14:59:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=u8nhUFtITD2wQ1umqScpLr47GSuitOlTgzC/kpN+dJg=;
+        b=KXPQiztjeRGuAbsJV6Znb+CvM/t4/elxDbEJvvCPv+Nf2QA0RZsy1fxV2lbouqpjV1
+         +9AO+brEhxJhT+zfBYGG5/8HPJ6tulRP3GGItiWBQt3ICykM6MgtoU1iTB0SnqoQ/5Hl
+         lTe62CKPnYmFzk/kIfwao3Rp0R4VvP78JLljTa0XVXD4h040RQxZeNPvEv0mm5qktgXF
+         Faz5Uzk/Jl0zVwe1zPMtIlFvZG5gqD5yrMGaWyzdX15knAnQtgBAWY2sFIkCqHQl6oCj
+         ZuZc7Z4QM5+8PhTsp2SV7rWqOq1K+QlVRrAOEB3kZ+oJvb2q/O8nMlxpMbUsOSphfcCD
+         VIVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=u8nhUFtITD2wQ1umqScpLr47GSuitOlTgzC/kpN+dJg=;
+        b=b+DhjnMdasUt5SyqZ0CmdmzKSVIy3eKDQIelalLMxeSiIyXIHeAhjGb2++nLpVvPyE
+         tN52UT33TtOAbMVQZTk4aEzIsLmrkBxX64Nxue1WHyO/ThxjTMSHEIEHwvvqpf/MUM3m
+         YNXm+L6jVZrwFhcrMsdQ0DIHxXkMwTKzB9BjeZwhxQIbyQYeY+BzoOU4EBGfVF0WvHoF
+         2hKcwTKsU1OdlOzkNLSpsu9SSif9CsspwtwlZjKZ2uH5K+IscufD1iWNGK9uMAsrXEZt
+         Yhr31AvBwuF9AjL3DEXQERxLmWR68J7TKIgnNiJey8IgpdYVBLZuit4kiQMKM3dWs8ug
+         Oweg==
+X-Gm-Message-State: AOAM530TyzaOaK86n4erODeIIuuD7Qn1aCnlCN7b41P5Epb36O4Bd9OR
+        gKhohIVncPW0iV24v9Ngu5zWaFCxo3dFuQ==
+X-Google-Smtp-Source: ABdhPJxPAKI6g+elCr4WvQHhe7Za3/GwXs0G/oQijy8xEE9TInwciFkow+Byc9Ss5hRAeLnF98LfVA==
+X-Received: by 2002:a62:1749:0:b029:19d:960c:1bb8 with SMTP id 70-20020a6217490000b029019d960c1bb8mr4174369pfx.63.1610060349796;
+        Thu, 07 Jan 2021 14:59:09 -0800 (PST)
+Received: from localhost.localdomain ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id l197sm6881405pfd.97.2021.01.07.14.59.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Jan 2021 14:59:09 -0800 (PST)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>
+Subject: [PATCH v7 00/31] [NEW] efct: Broadcom (Emulex) FC Target driver
+Date:   Thu,  7 Jan 2021 14:58:34 -0800
+Message-Id: <20210107225905.18186-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3e2245953c143b55d512d46a16ed8a2c@codeaurora.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 01/07, Can Guo wrote:
-> On 2021-01-07 16:46, Jaegeuk Kim wrote:
-> > On 01/07, Can Guo wrote:
-> > > On 2021-01-07 16:07, Jaegeuk Kim wrote:
-> > > > On 01/07, Can Guo wrote:
-> > > > > On 2021-01-07 15:47, Jaegeuk Kim wrote:
-> > > > > > From: Jaegeuk Kim <jaegeuk@google.com>
-> > > > > >
-> > > > > > This fixes a warning caused by wrong reserve tag usage in
-> > > > > > __ufshcd_issue_tm_cmd.
-> > > > > >
-> > > > > > WARNING: CPU: 7 PID: 7 at block/blk-core.c:630 blk_get_request+0x68/0x70
-> > > > > > WARNING: CPU: 4 PID: 157 at block/blk-mq-tag.c:82
-> > > > > > blk_mq_get_tag+0x438/0x46c
-> > > > > >
-> > > > > > And, in ufshcd_err_handler(), we can avoid to send tm_cmd before
-> > > > > > aborting
-> > > > > > outstanding commands by waiting a bit for IO completion like this.
-> > > > > >
-> > > > > > __ufshcd_issue_tm_cmd: task management cmd 0x80 timed-out
-> > > > > >
-> > > > > > Fixes: 69a6c269c097 ("scsi: ufs: Use blk_{get,put}_request() to
-> > > > > > allocate and free TMFs")
-> > > > > > Fixes: 2355b66ed20c ("scsi: ufs: Handle LINERESET indication in err
-> > > > > > handler")
-> > > > >
-> > > > > Hi Jaegeuk,
-> > > > >
-> > > > > Sorry, what is wrong with commit 2355b66ed20c? Clearing pending I/O
-> > > > > reqs is a general procedure for handling all non-fatal errors.
-> > > >
-> > > > Without waiting IOs, I hit the below timeout all the time from
-> > > > LINERESET, which
-> > > > causes UFS stuck permanently, as mentioned in the description.
-> > > >
-> > > > "__ufshcd_issue_tm_cmd: task management cmd 0x80 timed-out"
-> > > 
-> > > In that case, ufshcd_try_to_abort_task(), the caller of
-> > > __ufshcd_issue_tm_cmd(),
-> > > should return -ETIMEOUT, then err_handler would jump to do a full
-> > > reset,
-> > > then bail.
-> > > I am not sure what gets UFS stuck permanently. Could you please
-> > > share the
-> > > callstack
-> > > if possible? I really want to know what is happening. Thanks.
-> > 
-> > I can't share all the log tho, it entered full reset. While printing out
-> > whole registers, the device was hard reset. Thanks,
-> 
-> Hi Jaegeuk,
-> 
-> Entering full reset is expected in this case, which is why I am saying
-> line-reset handling logic should not be penalized. I think we need to
-> find out what caused the hard reset but not just adding a delay before
-> clearing pending reqs, because let's say 3 sec expires and you hit the
-> same tm req timeout (maybe with a lower possibility), you may still end
-> up same at the hard reset. You don't need to share all the log, just the
-> last call stacks before hard reset. Is it a QCOM's platform used in your
-> case? Can you check the log/dump if NoC error happened?
+This patch set is a request to incorporate the new Broadcom
+(Emulex) FC target driver, efct, into the kernel source tree.
 
-Hi Can,
+The driver source has been Announced a couple of times, the last
+version on 1/06/2021. The driver has been hosted on gitlab for
+review has had contributions from the community.
+  gitlab (git@gitlab.com:jsmart/efct-Emulex_FC_Target.git)
 
-I figured out it is caused by verbose kernel logs printed in terminal.
-I posted v5, so could you please review it?
+The driver integrates into the source tree at the (new) drivers/scsi/elx
+subdirectory.
 
-Thanks,
+The driver consists of the following components:
+- A libefc_sli subdirectory: This subdirectory contains a library that
+  encapsulates common definitions and routines for an Emulex SLI-4
+  adapter.
+- A libefc subdirectory: This subdirectory contains a library of
+  common routines. Of major import is a number of routines that
+  implement a FC Discovery engine for target mode.
+- An efct subdirectory: This subdirectory contains the efct target
+  mode device driver. The driver utilizes the above librarys and
+  plugs into the SCSI LIO interfaces. The driver is SCSI only at
+  this time.
 
-> 
-> Thanks.
-> Can Guo.
-> 
-> > 
-> > > 
-> > > Regards,
-> > > Can Guo.
-> > > 
-> > > >
-> > > > >
-> > > > > Thanks,
-> > > > > Can Guo.
-> > > > >
-> > > > > > Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
-> > > > > > ---
-> > > > > >  drivers/scsi/ufs/ufshcd.c | 35 +++++++++++++++++++++++++++++++----
-> > > > > >  1 file changed, 31 insertions(+), 4 deletions(-)
-> > > > > >
-> > > > > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > > > > > index e6e7bdf99cd7..340dd5e515dd 100644
-> > > > > > --- a/drivers/scsi/ufs/ufshcd.c
-> > > > > > +++ b/drivers/scsi/ufs/ufshcd.c
-> > > > > > @@ -44,6 +44,9 @@
-> > > > > >  /* Query request timeout */
-> > > > > >  #define QUERY_REQ_TIMEOUT 1500 /* 1.5 seconds */
-> > > > > >
-> > > > > > +/* LINERESET TIME OUT */
-> > > > > > +#define LINERESET_IO_TIMEOUT_MS			(30000) /* 30 sec */
-> > > > > > +
-> > > > > >  /* Task management command timeout */
-> > > > > >  #define TM_CMD_TIMEOUT	100 /* msecs */
-> > > > > >
-> > > > > > @@ -5826,6 +5829,7 @@ static void ufshcd_err_handler(struct work_struct
-> > > > > > *work)
-> > > > > >  	int err = 0, pmc_err;
-> > > > > >  	int tag;
-> > > > > >  	bool needs_reset = false, needs_restore = false;
-> > > > > > +	ktime_t start;
-> > > > > >
-> > > > > >  	hba = container_of(work, struct ufs_hba, eh_work);
-> > > > > >
-> > > > > > @@ -5911,6 +5915,22 @@ static void ufshcd_err_handler(struct work_struct
-> > > > > > *work)
-> > > > > >  	}
-> > > > > >
-> > > > > >  	hba->silence_err_logs = true;
-> > > > > > +
-> > > > > > +	/* Wait for IO completion for non-fatal errors to avoid aborting IOs
-> > > > > > */
-> > > > > > +	start = ktime_get();
-> > > > > > +	while (hba->outstanding_reqs) {
-> > > > > > +		ufshcd_complete_requests(hba);
-> > > > > > +		spin_unlock_irqrestore(hba->host->host_lock, flags);
-> > > > > > +		schedule();
-> > > > > > +		spin_lock_irqsave(hba->host->host_lock, flags);
-> > > > > > +		if (ktime_to_ms(ktime_sub(ktime_get(), start)) >
-> > > > > > +						LINERESET_IO_TIMEOUT_MS) {
-> > > > > > +			dev_err(hba->dev, "%s: timeout, outstanding=0x%lx\n",
-> > > > > > +					__func__, hba->outstanding_reqs);
-> > > > > > +			break;
-> > > > > > +		}
-> > > > > > +	}
-> > > > > > +
-> > > > > >  	/* release lock as clear command might sleep */
-> > > > > >  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> > > > > >  	/* Clear pending transfer requests */
-> > > > > > @@ -6302,9 +6322,13 @@ static irqreturn_t ufshcd_intr(int irq, void
-> > > > > > *__hba)
-> > > > > >  		intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
-> > > > > >  	}
-> > > > > >
-> > > > > > -	if (enabled_intr_status && retval == IRQ_NONE) {
-> > > > > > -		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x\n",
-> > > > > > -					__func__, intr_status);
-> > > > > > +	if (enabled_intr_status && retval == IRQ_NONE &&
-> > > > > > +				!ufshcd_eh_in_progress(hba)) {
-> > > > > > +		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x (0x%08x,
-> > > > > > 0x%08x)\n",
-> > > > > > +					__func__,
-> > > > > > +					intr_status,
-> > > > > > +					hba->ufs_stats.last_intr_status,
-> > > > > > +					enabled_intr_status);
-> > > > > >  		ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
-> > > > > >  	}
-> > > > > >
-> > > > > > @@ -6348,7 +6372,10 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba
-> > > > > > *hba,
-> > > > > >  	 * Even though we use wait_event() which sleeps indefinitely,
-> > > > > >  	 * the maximum wait time is bounded by %TM_CMD_TIMEOUT.
-> > > > > >  	 */
-> > > > > > -	req = blk_get_request(q, REQ_OP_DRV_OUT, BLK_MQ_REQ_RESERVED);
-> > > > > > +	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
-> > > > > > +	if (IS_ERR(req))
-> > > > > > +		return PTR_ERR(req);
-> > > > > > +
-> > > > > >  	req->end_io_data = &wait;
-> > > > > >  	free_slot = req->tag;
-> > > > > >  	WARN_ON_ONCE(free_slot < 0 || free_slot >= hba->nutmrs);
+The patches populate the libraries and device driver and can only
+be compiled as a complete set.
+
+This driver is completely independent from the lpfc device driver
+and there is no overlap on PCI ID's.
+
+The patches have been cut against the 5.11/scsi-queue branch.
+
+Thank you to those that have contributed to the driver in the past.
+
+Review comments welcome!
+
+-- james
+
+Note: cpu offline/online support will be added at a later time
+
+V7 modifications:
+ Change els functions to return status from efc_els_send_rsp()
+ Fix return codes in efct_hw_config_mrq()
+ Ensure an EFC_XXX status value is returned (not numerical constants)
+ Style: break declaration assignment into declaration and later value
+   assignment.
+
+V6 modifications:
+  Refactor for better indentation and reduced else's
+  Refactor to use structure elements directly and avoid local vars
+  Slight update to node_sm_trace macro
+  convert efc_nport_cb() to not return a value
+  moved libefc/efc_lib.c to libefc/efclib.c
+  Reword comment in efc_node_handle_explicit_logo()
+  efc_disc_io_complete(): update WARN_ON to WARN_ON_ONCE
+  Change els send functions to return status from efc_els_send_req()
+  Ensure an EFC_XXX status value is returned (not numerical constants)
+  Dynamically allocate wq_cpu_array rather than fixed size array
+  Fix return variables to have same type as routine
+  Ensure an EFCT_HW_XXX status value is returned (not numerical constants)
+  Kernel doc format changes for efct_io structure.
+  Cleanup of meaningless comments in efct_scsi_cmd_resp declaration
+  in hw rtns: Replace EFC_FAIL status with EFCT_HW_XXX status values
+  add kfree to efct_hw_teardown()
+
+V5 modifications:
+  Copyright for 2021 year change.
+  Fixed kernel test robot reported warnings.
+  Changed BMBX_WRITE defines to static inline functions.
+  Common naming for topology defines.
+  Remove efc_log_test.
+  Topology naming changes.
+  Indentation change.
+  Changed argument list for sli_cmd_reg_fcfi/ sli_cmd_reg_fcfi_mrq 
+  Added Mempool for ELS ios.
+  Remove EFC_HW_NODE_XXX and EFC_HW_NPORT_XXX events.
+  Use EFC_EVT_XXX events directly for port and node callbacks.
+  Remove node_list from nport and use xarray lookup.
+  Use WRITE_ONCE/READ_ONCE for els_io_enabled flag.
+  Replace nport_list with xarray lookup related changes.
+  Topology naming changes.
+  ELS IO mempool changes.
+  EFC_EVT_XXX name changes.
+  Replace global efct_devices array with linked list.
+  Add support for FC speed 64G and 128G
+  Use list_del_int() when needed.
+
+V4 modifications:
+  Copyright year change.
+  Fixed cppcheck tool reported warnings.
+  Ran pahole tool, fixed padding for most of the structures. 
+  Support for Multiple RQs and EQs.
+  New user driver node structure to avoid lock contension in IO path.
+  libefc_sli:
+    Add target-devel@vger.kernel.org in MAINTAINERS
+    Changed doorbell defines to inline functions
+    Code cleanup: Indentation, code simplification, unnecessary brackets
+    Added SLI4_ prefix to missing defines
+    Moved driver specific structures to the end of the file.
+    Page size calculation changes
+    Reduce function parameters for WQE filling functions
+    Changed wait functions to use usleep_range and time_before apis
+    Removed size input for all the cmds as its fixed to SLI4_BMBX_SIZE.
+    Changed all SLI mbox routines to memset using SLI_BMBX_SIZE.
+    All WQE helper routines to use sli->wqe_size for memset.
+  libefc:
+    Remove the " EFC_SM_EVENT_START" id and define SM events serially.
+    Moved hold frames and pending frames handling to library.
+    Added efc locking notes.
+    Added kref to domain, nport and node objects.
+    Renamed efc_sli_port object to efc_nport
+    Reworked on APIs and libefc_function_template.
+    Moved ELS handling to Library
+    Moved registering discovery objects to library.
+    Added issue_mbox_rqst, send_els, send_bls template functions.
+    Changes to use new function template
+    Get Domain Ref count when a new nport is added
+    Release domain ref when nport is freed.
+    Renamed efc_sport.[ch] to efc_nport.[ch]
+    Add kref support for Nport structure.
+    Upon received PRLI, wait for LIO session registation before sending
+      the PRLI response.
+    Changes to call new els functions.
+    Move all state machine functions return value from void * to void.
+    Replace fall through commnet with fallthrough statement.
+    New patch added ELS handling to libefc library.
+    New els_io_req for discovery io object.
+    New patch cmds to register VFI, VPI and RPI.
+    Removed all hw related template calls and added issue_mbox_rqst
+       template call.
+    Consolidate all the discovery related mbox related cmds in discovery
+       library.
+    Replaced allocation of command buffer for mailbox with stack variable.
+  efct driver:
+    New library Template registration and associated functions
+    Muti-RQ support, configure mrq.
+    Configure filter to send all ELS traffic to one RQ and remaining IOs
+       to all RQs.
+    CPU based WQ scaling.
+    Allocate loop map during initialization
+    Remove redundant includes in efc_driver.h
+    Remove els entries from scsi io object as discovery object handles it.
+    Changed unsol frame handling. 
+    Lookup for efct target node based on d_id and s_id.
+    Rework IO path to not look up discovery object every time.
+    Changes to reduce function params for efct_hw_io_send
+    Changes to create efct_node(user driver specific node) and store
+       lookup id.
+    Removed debugfs interface.
+    Reduced the argument list for WQE filling routines.
+
+
+V3 modifications:
+  Changed anonymous enums to named enums
+  Split gaint enums into multiple enums
+  Use defines to spell out _MASK values directly
+  Changed multiple #defines to named enums and a few vice versa cases
+    for consistency
+  Added Link Speed support for up to 128G
+  Removed efc_assert define. Replaced with WARN_ON.
+  Returned defined return values EFC_SUCCESS & EFC_FAIL
+  Added return values for routines returning more than those 2 values
+  Reduction of calling arguments in various routines.
+  Expanded dump type and status handling
+  Fixed locking in discovery handling routines.
+  Fixed line formatting length and indentation issues.
+  Removed code that was not used.
+  Removed Sparse Vector APIs and structures. Use xarray api instead.
+  Changed node pool creation. Use mempool and allocate dma memory when
+    required
+  Bug Fix: Send LS_RJT for non FCP PRLIs
+  Removed Queue topology string and parsing routines and rework queue
+    creation. Adapter configuration is implicitly known by the driver
+  Used request_threaded_irq instead of using our thread
+  Reworked efct_device_attach function to use if statements and gotos
+  Changed efct_fw_reset, removed accessing other port
+  Convert to used pci_alloc_irq_vectors api
+  Removed proc interface.
+  Changed assertion log messages.
+  Unified log message using cmd_name
+  Removed DIF related code which is not used
+  Removed SCSI get property
+  Incorporated LIO interface review comments
+  Reworked xxx_reg_vpi/vfi routines
+  Use SPDX license in elx/Makefile
+  Many more small changes.
+  
+V2 modifications:
+ Contains the following modifications based on prior review comments:
+  Indentation/Alignment/Spacing changes
+  Comments: format cleanup; removed obvious or unnecessary comments;
+    Added comments for clarity.
+  Headers use #ifndef comparing for prior inclusion
+  Cleanup structure names (remove _s suffix)
+  Encapsulate use of macro arguments
+  Refactor to remove static function declarations for static local routines
+  Removed unused variables
+  Fix SLI4_INTF_VALID_MASK for 32bits
+  Ensure no BIT() use
+  Use __ffs() in page count macro
+  Reorg to move field defines out of structure definition
+  Commonize command building routines to reduce duplication
+  LIO interface:
+    Removed scsi initiator includes
+    Cleaned up interface defines
+    Removed lio WWN version attribute.
+    Expanded macros within logging macros
+    Cleaned up lio state setting macro
+    Remove __force use
+    Modularized session debugfs code so can be easily replaced.
+    Cleaned up abort task handling. Return after initiating.
+    Modularized where possible to reduce duplication
+    Convert from kthread to workqueue use
+    Remove unused macros
+  Add missing TARGET_CORE build attribute
+  Fix kbuild test robot warnings
+
+  Comments not addressed:
+    Use of __packed: not believed necessary
+    Session debugfs code remains. There is not yet a common lio
+      mechanism to replace with.
+
+
+
+James Smart (31):
+  elx: libefc_sli: SLI-4 register offsets and field definitions
+  elx: libefc_sli: SLI Descriptors and Queue entries
+  elx: libefc_sli: Data structures and defines for mbox commands
+  elx: libefc_sli: queue create/destroy/parse routines
+  elx: libefc_sli: Populate and post different WQEs
+  elx: libefc_sli: bmbx routines and SLI config commands
+  elx: libefc_sli: APIs to setup SLI library
+  elx: libefc: Generic state machine framework
+  elx: libefc: Emulex FC discovery library APIs and definitions
+  elx: libefc: FC Domain state machine interfaces
+  elx: libefc: SLI and FC PORT state machine interfaces
+  elx: libefc: Remote node state machine interfaces
+  elx: libefc: Fabric node state machine interfaces
+  elx: libefc: FC node ELS and state handling
+  elx: libefc: Extended link Service IO handling
+  elx: libefc: Register discovery objects with hardware
+  elx: efct: Data structures and defines for hw operations
+  elx: efct: Driver initialization routines
+  elx: efct: Hardware queues creation and deletion
+  elx: efct: RQ buffer, memory pool allocation and deallocation APIs
+  elx: efct: Hardware IO and SGL initialization
+  elx: efct: Hardware queues processing
+  elx: efct: Unsolicited FC frame processing routines
+  elx: efct: SCSI IO handling routines
+  elx: efct: LIO backend interface routines
+  elx: efct: Hardware IO submission routines
+  elx: efct: link and host statistics
+  elx: efct: xport and hardware teardown routines
+  elx: efct: scsi_transport_fc host interface support
+  elx: efct: Add Makefile and Kconfig for efct driver
+  elx: efct: Tie into kernel Kconfig and build process
+
+ MAINTAINERS                            |    9 +
+ drivers/scsi/Kconfig                   |    2 +
+ drivers/scsi/Makefile                  |    1 +
+ drivers/scsi/elx/Kconfig               |    9 +
+ drivers/scsi/elx/Makefile              |   18 +
+ drivers/scsi/elx/efct/efct_driver.c    |  789 ++++
+ drivers/scsi/elx/efct/efct_driver.h    |  109 +
+ drivers/scsi/elx/efct/efct_hw.c        | 3637 +++++++++++++++++
+ drivers/scsi/elx/efct/efct_hw.h        |  782 ++++
+ drivers/scsi/elx/efct/efct_hw_queues.c |  679 ++++
+ drivers/scsi/elx/efct/efct_io.c        |  191 +
+ drivers/scsi/elx/efct/efct_io.h        |  174 +
+ drivers/scsi/elx/efct/efct_lio.c       | 1689 ++++++++
+ drivers/scsi/elx/efct/efct_lio.h       |  189 +
+ drivers/scsi/elx/efct/efct_scsi.c      | 1164 ++++++
+ drivers/scsi/elx/efct/efct_scsi.h      |  207 +
+ drivers/scsi/elx/efct/efct_unsol.c     |  493 +++
+ drivers/scsi/elx/efct/efct_unsol.h     |   17 +
+ drivers/scsi/elx/efct/efct_xport.c     | 1280 ++++++
+ drivers/scsi/elx/efct/efct_xport.h     |  186 +
+ drivers/scsi/elx/include/efc_common.h  |   41 +
+ drivers/scsi/elx/libefc/efc.h          |   69 +
+ drivers/scsi/elx/libefc/efc_cmds.c     |  855 ++++
+ drivers/scsi/elx/libefc/efc_cmds.h     |   35 +
+ drivers/scsi/elx/libefc/efc_device.c   | 1600 ++++++++
+ drivers/scsi/elx/libefc/efc_device.h   |   72 +
+ drivers/scsi/elx/libefc/efc_domain.c   | 1093 +++++
+ drivers/scsi/elx/libefc/efc_domain.h   |   54 +
+ drivers/scsi/elx/libefc/efc_els.c      | 1099 +++++
+ drivers/scsi/elx/libefc/efc_els.h      |  107 +
+ drivers/scsi/elx/libefc/efc_fabric.c   | 1565 +++++++
+ drivers/scsi/elx/libefc/efc_fabric.h   |  116 +
+ drivers/scsi/elx/libefc/efc_node.c     | 1102 +++++
+ drivers/scsi/elx/libefc/efc_node.h     |  191 +
+ drivers/scsi/elx/libefc/efc_nport.c    |  792 ++++
+ drivers/scsi/elx/libefc/efc_nport.h    |   50 +
+ drivers/scsi/elx/libefc/efc_sm.c       |   54 +
+ drivers/scsi/elx/libefc/efc_sm.h       |  197 +
+ drivers/scsi/elx/libefc/efclib.c       |   81 +
+ drivers/scsi/elx/libefc/efclib.h       |  601 +++
+ drivers/scsi/elx/libefc_sli/sli4.c     | 5169 ++++++++++++++++++++++++
+ drivers/scsi/elx/libefc_sli/sli4.h     | 4115 +++++++++++++++++++
+ 42 files changed, 30683 insertions(+)
+ create mode 100644 drivers/scsi/elx/Kconfig
+ create mode 100644 drivers/scsi/elx/Makefile
+ create mode 100644 drivers/scsi/elx/efct/efct_driver.c
+ create mode 100644 drivers/scsi/elx/efct/efct_driver.h
+ create mode 100644 drivers/scsi/elx/efct/efct_hw.c
+ create mode 100644 drivers/scsi/elx/efct/efct_hw.h
+ create mode 100644 drivers/scsi/elx/efct/efct_hw_queues.c
+ create mode 100644 drivers/scsi/elx/efct/efct_io.c
+ create mode 100644 drivers/scsi/elx/efct/efct_io.h
+ create mode 100644 drivers/scsi/elx/efct/efct_lio.c
+ create mode 100644 drivers/scsi/elx/efct/efct_lio.h
+ create mode 100644 drivers/scsi/elx/efct/efct_scsi.c
+ create mode 100644 drivers/scsi/elx/efct/efct_scsi.h
+ create mode 100644 drivers/scsi/elx/efct/efct_unsol.c
+ create mode 100644 drivers/scsi/elx/efct/efct_unsol.h
+ create mode 100644 drivers/scsi/elx/efct/efct_xport.c
+ create mode 100644 drivers/scsi/elx/efct/efct_xport.h
+ create mode 100644 drivers/scsi/elx/include/efc_common.h
+ create mode 100644 drivers/scsi/elx/libefc/efc.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_cmds.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_cmds.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_device.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_device.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_domain.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_domain.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_els.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_els.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_fabric.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_fabric.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_node.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_node.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_nport.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_nport.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_sm.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_sm.h
+ create mode 100644 drivers/scsi/elx/libefc/efclib.c
+ create mode 100644 drivers/scsi/elx/libefc/efclib.h
+ create mode 100644 drivers/scsi/elx/libefc_sli/sli4.c
+ create mode 100644 drivers/scsi/elx/libefc_sli/sli4.h
+
+-- 
+2.26.2
+
