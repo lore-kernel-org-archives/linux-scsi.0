@@ -4,61 +4,62 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84481C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 07:59:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D974DC433E6
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 08:03:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F76923133
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 07:59:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 881782312F
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 08:03:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726635AbhAGH7n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jan 2021 02:59:43 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:24798 "EHLO
-        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725900AbhAGH7m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2021 02:59:42 -0500
+        id S1726682AbhAGIDd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jan 2021 03:03:33 -0500
+Received: from so254-31.mailgun.net ([198.61.254.31]:57513 "EHLO
+        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726171AbhAGIDd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2021 03:03:33 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1610006358; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1610006590; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=eh6lfW3uqL1HP4IpqRvI2Eu6DOlhF/emSRVcj3uzQpU=;
- b=aLRUgeazeZGLlPqNJsDWrTsU+p8B6SB0KVHQ84JZ8Q/Jc5ATj7Pber4GPDpKa5Zkea6aeTl3
- T6lWcLLh924D81lXShsjmphRWvG7h+hECI5LoYrN/c3ovkx4YA9390N9+7i8CGUPEV7IveRN
- Z/GCmjC17rSZVUwHEoa72dvJAFM=
-X-Mailgun-Sending-Ip: 69.72.43.15
+ MIME-Version: Sender; bh=XlEY8yxgI8delZYCWoEHjc5wuL1+0bXAptPyM1VtN6U=;
+ b=A1RJnHbvSm8rAsZi16k7W8WmrZDl8Ch87ibwnoLN67SuIkzNl2MRNyJ0Ofp4oogiYlk84AcL
+ 7OxxZKTZmISfaEt/4GDLMgiS10e43SIYkJ1YUPzwvXNhPdzoKFBCaCymL39TN4Y/43mjdej6
+ vY1Qbzf45b4oAUaRNbLSjNwJGZc=
+X-Mailgun-Sending-Ip: 198.61.254.31
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5ff6bf3bb95fc593269b1f1c (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 07 Jan 2021 07:58:51
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 5ff6c023fc3778927e21b7a9 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 07 Jan 2021 08:02:43
  GMT
 Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 2D90FC43463; Thu,  7 Jan 2021 07:58:51 +0000 (UTC)
+        id 95101C43465; Thu,  7 Jan 2021 08:02:43 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 42940C433C6;
-        Thu,  7 Jan 2021 07:58:50 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A459DC433CA;
+        Thu,  7 Jan 2021 08:02:42 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Thu, 07 Jan 2021 15:58:50 +0800
+Date:   Thu, 07 Jan 2021 16:02:42 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Jaegeuk Kim <jaegeuk@kernel.org>
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, alim.akhtar@samsung.com,
         avri.altman@wdc.com, bvanassche@acm.org,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com
-Subject: Re: [PATCH v4 1/2] scsi: ufs: fix livelock of ufshcd_clear_ua_wluns
-In-Reply-To: <20210107074710.549309-2-jaegeuk@kernel.org>
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        Jaegeuk Kim <jaegeuk@google.com>
+Subject: Re: [PATCH v4 2/2] scsi: ufs: handle LINERESET with correct tm_cmd
+In-Reply-To: <20210107074710.549309-3-jaegeuk@kernel.org>
 References: <20210107074710.549309-1-jaegeuk@kernel.org>
- <20210107074710.549309-2-jaegeuk@kernel.org>
-Message-ID: <123c250afa715fb100ee7a482f6a15d8@codeaurora.org>
+ <20210107074710.549309-3-jaegeuk@kernel.org>
+Message-ID: <03a47a3f49914230653bea777e2ee550@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
@@ -66,102 +67,117 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2021-01-07 15:47, Jaegeuk Kim wrote:
-> When gate_work/ungate_work gets an error during hibern8_enter or exit,
->  ufshcd_err_handler()
->    ufshcd_scsi_block_requests()
->    ufshcd_reset_and_restore()
->      ufshcd_clear_ua_wluns() -> stuck
->    ufshcd_scsi_unblock_requests()
+> From: Jaegeuk Kim <jaegeuk@google.com>
 > 
-> In order to avoid it, ufshcd_clear_ua_wluns() can be called per 
-> recovery flows
-> such as suspend/resume, link_recovery, and error_handler.
+> This fixes a warning caused by wrong reserve tag usage in 
+> __ufshcd_issue_tm_cmd.
 > 
-> Fixes: 1918651f2d7e ("scsi: ufs: Clear UAC for RPMB after ufshcd 
-> resets")
+> WARNING: CPU: 7 PID: 7 at block/blk-core.c:630 
+> blk_get_request+0x68/0x70
+> WARNING: CPU: 4 PID: 157 at block/blk-mq-tag.c:82 
+> blk_mq_get_tag+0x438/0x46c
+> 
+> And, in ufshcd_err_handler(), we can avoid to send tm_cmd before 
+> aborting
+> outstanding commands by waiting a bit for IO completion like this.
+> 
+> __ufshcd_issue_tm_cmd: task management cmd 0x80 timed-out
+> 
+> Fixes: 69a6c269c097 ("scsi: ufs: Use blk_{get,put}_request() to
+> allocate and free TMFs")
+> Fixes: 2355b66ed20c ("scsi: ufs: Handle LINERESET indication in err 
+> handler")
+
+Hi Jaegeuk,
+
+Sorry, what is wrong with commit 2355b66ed20c? Clearing pending I/O
+reqs is a general procedure for handling all non-fatal errors.
+
+Thanks,
+Can Guo.
+
 > Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 19 ++++++++++++-------
->  1 file changed, 12 insertions(+), 7 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 35 +++++++++++++++++++++++++++++++----
+>  1 file changed, 31 insertions(+), 4 deletions(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index bedb822a40a3..e6e7bdf99cd7 100644
+> index e6e7bdf99cd7..340dd5e515dd 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -3996,6 +3996,8 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
->  	if (ret)
->  		dev_err(hba->dev, "%s: link recovery failed, err %d",
->  			__func__, ret);
-> +	else
-> +		ufshcd_clear_ua_wluns(hba);
+> @@ -44,6 +44,9 @@
+>  /* Query request timeout */
+>  #define QUERY_REQ_TIMEOUT 1500 /* 1.5 seconds */
 > 
->  	return ret;
->  }
-> @@ -6003,6 +6005,9 @@ static void ufshcd_err_handler(struct work_struct 
+> +/* LINERESET TIME OUT */
+> +#define LINERESET_IO_TIMEOUT_MS			(30000) /* 30 sec */
+> +
+>  /* Task management command timeout */
+>  #define TM_CMD_TIMEOUT	100 /* msecs */
+> 
+> @@ -5826,6 +5829,7 @@ static void ufshcd_err_handler(struct work_struct 
 > *work)
->  	ufshcd_scsi_unblock_requests(hba);
->  	ufshcd_err_handling_unprepare(hba);
->  	up(&hba->eh_sem);
-> +
-> +	if (!err && needs_reset)
-> +		ufshcd_clear_ua_wluns(hba);
->  }
+>  	int err = 0, pmc_err;
+>  	int tag;
+>  	bool needs_reset = false, needs_restore = false;
+> +	ktime_t start;
 > 
->  /**
-> @@ -6940,14 +6945,11 @@ static int
-> ufshcd_host_reset_and_restore(struct ufs_hba *hba)
->  	ufshcd_set_clk_freq(hba, true);
+>  	hba = container_of(work, struct ufs_hba, eh_work);
 > 
->  	err = ufshcd_hba_enable(hba);
-> -	if (err)
-> -		goto out;
-> 
->  	/* Establish the link again and restore the device */
-> -	err = ufshcd_probe_hba(hba, false);
->  	if (!err)
-> -		ufshcd_clear_ua_wluns(hba);
-> -out:
-> +		err = ufshcd_probe_hba(hba, false);
-> +
->  	if (err)
->  		dev_err(hba->dev, "%s: Host init failed %d\n", __func__, err);
->  	ufshcd_update_evt_hist(hba, UFS_EVT_HOST_RESET, (u32)err);
-> @@ -7718,6 +7720,8 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
->  	if (ret)
->  		goto out;
-> 
-> +	ufshcd_clear_ua_wluns(hba);
-> +
->  	/* Initialize devfreq after UFS device is detected */
->  	if (ufshcd_is_clkscaling_supported(hba)) {
->  		memcpy(&hba->clk_scaling.saved_pwr_info.info,
-> @@ -7919,8 +7923,6 @@ static void ufshcd_async_scan(void *data,
-> async_cookie_t cookie)
->  		pm_runtime_put_sync(hba->dev);
->  		ufshcd_exit_clk_scaling(hba);
->  		ufshcd_hba_exit(hba);
-> -	} else {
-> -		ufshcd_clear_ua_wluns(hba);
->  	}
->  }
-> 
-> @@ -8777,6 +8779,7 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  		ufshcd_resume_clkscaling(hba);
->  	hba->clk_gating.is_suspended = false;
->  	hba->dev_info.b_rpm_dev_flush_capable = false;
-> +	ufshcd_clear_ua_wluns(hba);
->  	ufshcd_release(hba);
->  out:
->  	if (hba->dev_info.b_rpm_dev_flush_capable) {
-> @@ -8887,6 +8890,8 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  		cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
+> @@ -5911,6 +5915,22 @@ static void ufshcd_err_handler(struct 
+> work_struct *work)
 >  	}
 > 
-> +	ufshcd_clear_ua_wluns(hba);
+>  	hba->silence_err_logs = true;
 > +
->  	/* Schedule clock gating in case of no access to UFS device yet */
->  	ufshcd_release(hba);
-
-Reviewed-by: Can Guo <cang@codeaurora.org>
+> +	/* Wait for IO completion for non-fatal errors to avoid aborting IOs 
+> */
+> +	start = ktime_get();
+> +	while (hba->outstanding_reqs) {
+> +		ufshcd_complete_requests(hba);
+> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +		schedule();
+> +		spin_lock_irqsave(hba->host->host_lock, flags);
+> +		if (ktime_to_ms(ktime_sub(ktime_get(), start)) >
+> +						LINERESET_IO_TIMEOUT_MS) {
+> +			dev_err(hba->dev, "%s: timeout, outstanding=0x%lx\n",
+> +					__func__, hba->outstanding_reqs);
+> +			break;
+> +		}
+> +	}
+> +
+>  	/* release lock as clear command might sleep */
+>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>  	/* Clear pending transfer requests */
+> @@ -6302,9 +6322,13 @@ static irqreturn_t ufshcd_intr(int irq, void 
+> *__hba)
+>  		intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+>  	}
+> 
+> -	if (enabled_intr_status && retval == IRQ_NONE) {
+> -		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x\n",
+> -					__func__, intr_status);
+> +	if (enabled_intr_status && retval == IRQ_NONE &&
+> +				!ufshcd_eh_in_progress(hba)) {
+> +		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x (0x%08x, 
+> 0x%08x)\n",
+> +					__func__,
+> +					intr_status,
+> +					hba->ufs_stats.last_intr_status,
+> +					enabled_intr_status);
+>  		ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
+>  	}
+> 
+> @@ -6348,7 +6372,10 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba 
+> *hba,
+>  	 * Even though we use wait_event() which sleeps indefinitely,
+>  	 * the maximum wait time is bounded by %TM_CMD_TIMEOUT.
+>  	 */
+> -	req = blk_get_request(q, REQ_OP_DRV_OUT, BLK_MQ_REQ_RESERVED);
+> +	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
+> +	if (IS_ERR(req))
+> +		return PTR_ERR(req);
+> +
+>  	req->end_io_data = &wait;
+>  	free_slot = req->tag;
+>  	WARN_ON_ONCE(free_slot < 0 || free_slot >= hba->nutmrs);
