@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0628C4332D
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 23:00:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73B0DC433E6
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 23:00:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B634A235FF
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 23:00:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BB3C235FC
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 23:00:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728849AbhAGXAu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jan 2021 18:00:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51900 "EHLO
+        id S1728813AbhAGXAt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jan 2021 18:00:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728425AbhAGXAt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2021 18:00:49 -0500
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1164C0612AB
-        for <linux-scsi@vger.kernel.org>; Thu,  7 Jan 2021 14:59:34 -0800 (PST)
-Received: by mail-pj1-x102c.google.com with SMTP id j13so5050867pjz.3
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Jan 2021 14:59:34 -0800 (PST)
+        with ESMTP id S1728425AbhAGXAs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2021 18:00:48 -0500
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53C6CC0612A5
+        for <linux-scsi@vger.kernel.org>; Thu,  7 Jan 2021 14:59:30 -0800 (PST)
+Received: by mail-pj1-x1035.google.com with SMTP id w1so4679346pjc.0
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Jan 2021 14:59:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=+5z3jfmfD/61VedoO4uuPeWZIfp6E+0YwASOjWtstxc=;
-        b=jDTInvoASDQpNweEl6/nddwgwTSlGkZyDWYkQk0B9czOgwOFGO/iBV+ARdBU2cQD+2
-         39yFB2o6DpsSYNc8LFS8Pu9lOpJOtzG2E8hE8xuiM89LUcqMR7/nIZLT5tz7fJT7wMaw
-         y1tnKk7C8cIHBqvdwOEfNcDYjkvT7xU7OEOZKfTOjoPrcw69spBo3jNWOlmdmFLTMqlu
-         yEB+izm3X9rELKmtsENtzXKS5QANEwwMogL4USdJZNpaRo3enUieVRfy/aJdZHxLEaqd
-         HgkdbugBw1IFaMDfbParROI0/PJyqCfFLghCQ3saeLsXcTZelYZh1D+0JbDHdDygnqB+
-         6HLw==
+        bh=l3yElRNQ9/m8FSGyRpVj1Qodzb2nx+JhL0vL97klPHU=;
+        b=uuKUcM/5zQrrLdfmuVEFAicwNLG8JivF9wn2+D42cKepXoa8WvGSBsjStyPsY6hR6t
+         zVSnsI5MzNFuwIuYNqym+FeDgsUKU8BVSiH9unXEzkM7xWPIhP3wTKR1bdK6pkO3LLQi
+         5w9NKaaekneqtM9MZkfWJGwXyEPNaMiOSev8CWlojGBfu01+g3lzXfiFU86EebZ7EFOt
+         2bRFeyXr8WJqT6ldKzOyZ7QtiWnprlL9yPInCKcIdfzyId9jCW4nFiwZ2JOkD80n59Gr
+         0PsvXiM1kJZwAEISuJHdwLj6Smus/nFl7YF40CqX6SM4knnQ9+2XVWuDY3qUG8G5RIOJ
+         L3mA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=+5z3jfmfD/61VedoO4uuPeWZIfp6E+0YwASOjWtstxc=;
-        b=d2ckLWtrw3AQzR/TjM40gfVnbbHwuriiddaCu6NAUv4WrH/csopMIiad7u52h4I7Og
-         r4snB6K63lCOLsFFEb5cHClQRweGKFXxfEWEa7eQCjjK8MXb1JLWwiE7cc9i+UtdK/Da
-         xYJKuQL9rnDwCu4zqR5mfWO4rSD5OD4xNIwFFLcO7cxC9vjAC802CeNSrfTMGgI20q37
-         FVZ99B3ejjanQVINpFJ+sOpCu0yCurTunl/t51rG9fZ8yX6yVH6K71bNLyB7DySQ7KnN
-         Y6rRokWzRAKVc1iYkPAfEYKB2OaiXEkGQE5d7p8IHEkmGSGdy/2HS1wGuWDFK2RHCjER
-         uRPQ==
-X-Gm-Message-State: AOAM532hOb0b4segpusQgjKgFCKfl4nw/abngnZlUFWryzuFFPLMpz/U
-        GpoBw1vN4FfwTTiYK940PMUueGTHcL4R1g==
-X-Google-Smtp-Source: ABdhPJw6WT4jmrpbqujuka1CT/fGTw1rrFGqN9R7KJK8dFp2hZK4VdEqy1ZDGJoCS7Ul+P6ByXaxlQ==
-X-Received: by 2002:a17:902:c38b:b029:db:fa4b:5d31 with SMTP id g11-20020a170902c38bb02900dbfa4b5d31mr4083478plg.5.1610060373870;
-        Thu, 07 Jan 2021 14:59:33 -0800 (PST)
+        bh=l3yElRNQ9/m8FSGyRpVj1Qodzb2nx+JhL0vL97klPHU=;
+        b=VqkCaK/KcaoBy87j94rE01ObojJk+/ofYSIyvhRhXKnmXWJr7R/FpmbMPTt7xowMxF
+         19ao9Ff8x9/UGe31TDQkRAfEdtJ8Dy2+K4m360mhxRtSi+hYEpJIkvWvhNeO4bO9dDVf
+         nQEM2sFqQDpechy+V8wMpYp8U0nyOW2J9BsEkpOWuMRcyikM1vPDu29+cOZZrjeoK0xX
+         vZkZpbSZUUywrrMus31/eSUPElic9Hb0JTqzPlTvmIkV2s/TgRblmILWVfe1V3NnLUl7
+         deIItIfDihyQvFdmkyLNVmMT+LT68F7oeHHCTPpO+yoPTmrBv67fz8uTM89BWHqj0mkA
+         UmxQ==
+X-Gm-Message-State: AOAM532GUIMfGQg3VGSn+D3Eutrmga5wekQLB5bv733eSZKyfW5HqNCN
+        CPsen6b/q+yMpkbUXEyddZ5fV/t6z/OQmg==
+X-Google-Smtp-Source: ABdhPJx8JF45D8CR7E8/MLFHof8x/8Fi8QpN7L7W7e9RbzBTCWXZia8XycAjEwWrIhMyzRbC0D8H1A==
+X-Received: by 2002:a17:902:694c:b029:db:d939:1061 with SMTP id k12-20020a170902694cb02900dbd9391061mr1000984plt.80.1610060369281;
+        Thu, 07 Jan 2021 14:59:29 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id l197sm6881405pfd.97.2021.01.07.14.59.32
+        by smtp.gmail.com with ESMTPSA id l197sm6881405pfd.97.2021.01.07.14.59.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Jan 2021 14:59:32 -0800 (PST)
+        Thu, 07 Jan 2021 14:59:28 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Ram Vegesna <ram.vegesna@broadcom.com>,
         Hannes Reinecke <hare@suse.de>, Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH v7 23/31] elx: efct: Unsolicited FC frame processing routines
-Date:   Thu,  7 Jan 2021 14:58:57 -0800
-Message-Id: <20210107225905.18186-24-jsmart2021@gmail.com>
+Subject: [PATCH v7 19/31] elx: efct: Hardware queues creation and deletion
+Date:   Thu,  7 Jan 2021 14:58:53 -0800
+Message-Id: <20210107225905.18186-20-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210107225905.18186-1-jsmart2021@gmail.com>
 References: <20210107225905.18186-1-jsmart2021@gmail.com>
@@ -77,7 +77,7 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 This patch continues the efct driver population.
 
 This patch adds driver definitions for:
-Routines to handle unsolicited FC frames.
+Routines for queue creation, deletion, and configuration.
 
 Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
@@ -85,18 +85,32 @@ Signed-off-by: James Smart <jsmart2021@gmail.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Daniel Wagner <dwagner@suse.de>
 ---
- drivers/scsi/elx/efct/efct_unsol.c | 493 +++++++++++++++++++++++++++++
- drivers/scsi/elx/efct/efct_unsol.h |  17 +
- 2 files changed, 510 insertions(+)
- create mode 100644 drivers/scsi/elx/efct/efct_unsol.c
- create mode 100644 drivers/scsi/elx/efct/efct_unsol.h
+ drivers/scsi/elx/efct/efct_hw.h        |   4 +
+ drivers/scsi/elx/efct/efct_hw_queues.c | 679 +++++++++++++++++++++++++
+ 2 files changed, 683 insertions(+)
+ create mode 100644 drivers/scsi/elx/efct/efct_hw_queues.c
 
-diff --git a/drivers/scsi/elx/efct/efct_unsol.c b/drivers/scsi/elx/efct/efct_unsol.c
+diff --git a/drivers/scsi/elx/efct/efct_hw.h b/drivers/scsi/elx/efct/efct_hw.h
+index 44f248356d42..39cfe6658783 100644
+--- a/drivers/scsi/elx/efct/efct_hw.h
++++ b/drivers/scsi/elx/efct/efct_hw.h
+@@ -610,6 +610,10 @@ efct_hw_setup(struct efct_hw *hw, void *os, struct pci_dev *pdev);
+ enum efct_hw_rtn efct_hw_init(struct efct_hw *hw);
+ enum efct_hw_rtn
+ efct_hw_parse_filter(struct efct_hw *hw, void *value);
++enum efct_hw_rtn
++efct_hw_init_queues(struct efct_hw *hw);
++int
++efct_hw_map_wq_cpu(struct efct_hw *hw);
+ uint64_t
+ efct_get_wwnn(struct efct_hw *hw);
+ uint64_t
+diff --git a/drivers/scsi/elx/efct/efct_hw_queues.c b/drivers/scsi/elx/efct/efct_hw_queues.c
 new file mode 100644
-index 000000000000..a11a6a0e238b
+index 000000000000..cefe56ba4a56
 --- /dev/null
-+++ b/drivers/scsi/elx/efct/efct_unsol.c
-@@ -0,0 +1,493 @@
++++ b/drivers/scsi/elx/efct/efct_hw_queues.c
+@@ -0,0 +1,679 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
@@ -104,515 +118,678 @@ index 000000000000..a11a6a0e238b
 + */
 +
 +#include "efct_driver.h"
++#include "efct_hw.h"
 +#include "efct_unsol.h"
 +
-+#define frame_printf(efct, hdr, fmt, ...) \
-+	do { \
-+		char s_id_text[16]; \
-+		efc_node_fcid_display(ntoh24((hdr)->fh_s_id), \
-+			s_id_text, sizeof(s_id_text)); \
-+		efc_log_debug(efct, "[%06x.%s] %02x/%04x/%04x: " fmt, \
-+			ntoh24((hdr)->fh_d_id), s_id_text, \
-+			(hdr)->fh_r_ctl, be16_to_cpu((hdr)->fh_ox_id), \
-+			be16_to_cpu((hdr)->fh_rx_id), ##__VA_ARGS__); \
-+	} while (0)
-+
-+static struct efct_node *
-+efct_node_find(struct efct *efct, u32 port_id, u32 node_id)
++enum efct_hw_rtn
++efct_hw_init_queues(struct efct_hw *hw)
 +{
-+	struct efct_node *node;
-+	u64 id = (u64) port_id << 32 | node_id;
++	struct hw_eq *eq = NULL;
++	struct hw_cq *cq = NULL;
++	struct hw_wq *wq = NULL;
++	struct hw_mq *mq = NULL;
 +
-+	/*
-+	 * During node shutdown, Lookup will be removed first,
-+	 * before announcing to backend. So, no new IOs will be allowed
-+	 */
-+	/* Find a target node, given s_id and d_id */
-+	node = xa_load(&efct->lookup, id);
-+	if (node)
-+		kref_get(&node->ref);
++	struct hw_eq *eqs[EFCT_HW_MAX_NUM_EQ];
++	struct hw_cq *cqs[EFCT_HW_MAX_NUM_EQ];
++	struct hw_rq *rqs[EFCT_HW_MAX_NUM_EQ];
++	u32 i = 0, j;
 +
-+	return node;
-+}
++	hw->eq_count = 0;
++	hw->cq_count = 0;
++	hw->mq_count = 0;
++	hw->wq_count = 0;
++	hw->rq_count = 0;
++	hw->hw_rq_count = 0;
++	INIT_LIST_HEAD(&hw->eq_list);
 +
-+static int
-+efct_dispatch_frame(struct efct *efct, struct efc_hw_sequence *seq)
-+{
-+	struct efct_node *node;
-+	struct fc_frame_header *hdr;
-+	u32 s_id, d_id;
-+
-+	hdr = seq->header->dma.virt;
-+
-+	/* extract the s_id and d_id */
-+	s_id = ntoh24(hdr->fh_s_id);
-+	d_id = ntoh24(hdr->fh_d_id);
-+
-+	if (!(hdr->fh_type == FC_TYPE_FCP || hdr->fh_type == FC_TYPE_BLS))
-+		return EFC_FAIL;
-+
-+	if (hdr->fh_type == FC_TYPE_FCP) {
-+		node = efct_node_find(efct, d_id, s_id);
-+		if (!node) {
-+			efc_log_err(efct,
-+				    "Node not found, drop cmd d_id:%x s_id:%x\n",
-+				    d_id, s_id);
-+			efct_hw_sequence_free(&efct->hw, seq);
-+			return EFC_SUCCESS;
++	for (i = 0; i < hw->config.n_eq; i++) {
++		/* Create EQ */
++		eq = efct_hw_new_eq(hw, EFCT_HW_EQ_DEPTH);
++		if (!eq) {
++			efct_hw_queue_teardown(hw);
++			return EFCT_HW_RTN_NO_MEMORY;
 +		}
 +
-+		efct_dispatch_fcp_cmd(node, seq);
-+	} else {
-+		node = efct_node_find(efct, d_id, s_id);
-+		if (!node) {
-+			efc_log_err(efct, "Node not found, d_id:%x s_id:%x\n",
-+				    d_id, s_id);
-+			return EFC_FAIL;
++		eqs[i] = eq;
++
++		/* Create one MQ */
++		if (!i) {
++			cq = efct_hw_new_cq(eq,
++					    hw->num_qentries[SLI4_QTYPE_CQ]);
++			if (!cq) {
++				efct_hw_queue_teardown(hw);
++				return EFCT_HW_RTN_NO_MEMORY;
++			}
++
++			mq = efct_hw_new_mq(cq, EFCT_HW_MQ_DEPTH);
++			if (!mq) {
++				efct_hw_queue_teardown(hw);
++				return EFCT_HW_RTN_NO_MEMORY;
++			}
 +		}
 +
-+		efc_log_err(efct, "Received ABTS for Node:%p\n", node);
-+		efct_node_recv_abts_frame(node, seq);
++		/* Create WQ */
++		cq = efct_hw_new_cq(eq, hw->num_qentries[SLI4_QTYPE_CQ]);
++		if (!cq) {
++			efct_hw_queue_teardown(hw);
++			return EFCT_HW_RTN_NO_MEMORY;
++		}
++
++		wq = efct_hw_new_wq(cq, hw->num_qentries[SLI4_QTYPE_WQ]);
++		if (!wq) {
++			efct_hw_queue_teardown(hw);
++			return EFCT_HW_RTN_NO_MEMORY;
++		}
 +	}
 +
-+	kref_put(&node->ref, node->release);
-+	efct_hw_sequence_free(&efct->hw, seq);
-+	return EFC_SUCCESS;
++	/* Create CQ set */
++	if (efct_hw_new_cq_set(eqs, cqs, i, hw->num_qentries[SLI4_QTYPE_CQ])) {
++		efct_hw_queue_teardown(hw);
++		return EFCT_HW_RTN_ERROR;
++	}
++
++	/* Create RQ set */
++	if (efct_hw_new_rq_set(cqs, rqs, i, EFCT_HW_RQ_ENTRIES_DEF)) {
++		efct_hw_queue_teardown(hw);
++		return EFCT_HW_RTN_ERROR;
++	}
++
++	for (j = 0; j < i ; j++) {
++		rqs[j]->filter_mask = 0;
++		rqs[j]->is_mrq = true;
++		rqs[j]->base_mrq_id = rqs[0]->hdr->id;
++	}
++
++	hw->hw_mrq_count = i;
++
++	return EFCT_HW_RTN_SUCCESS;
 +}
 +
 +int
-+efct_unsolicited_cb(void *arg, struct efc_hw_sequence *seq)
++efct_hw_map_wq_cpu(struct efct_hw *hw)
 +{
-+	struct efct *efct = arg;
++	struct efct *efct = hw->os;
++	u32 cpu = 0, i;
 +
-+	/* Process FCP command */
-+	if (!efct_dispatch_frame(efct, seq))
-+		return EFC_SUCCESS;
++	/* Init cpu_map array */
++	hw->wq_cpu_array = kcalloc(num_possible_cpus(), sizeof(void *),
++				   GFP_KERNEL);
++	if (!hw->wq_cpu_array)
++		return EFC_FAIL;
 +
-+	/* Forward frame to discovery lib */
-+	efc_dispatch_frame(efct->efcport, seq);
++	for (i = 0; i < hw->config.n_eq; i++) {
++		const struct cpumask *maskp;
++
++		/* Get a CPU mask for all CPUs affinitized to this vector */
++		maskp = pci_irq_get_affinity(efct->pci, i);
++		if (!maskp) {
++			efc_log_debug(efct, "maskp null for vector:%d\n", i);
++			continue;
++		}
++
++		/* Loop through all CPUs associated with vector idx */
++		for_each_cpu_and(cpu, maskp, cpu_present_mask) {
++			efc_log_debug(efct, "CPU:%d irq vector:%d\n", cpu, i);
++			hw->wq_cpu_array[cpu] = hw->hw_wq[i];
++		}
++	}
++
 +	return EFC_SUCCESS;
 +}
 +
-+static int
-+efct_fc_tmf_rejected_cb(struct efct_io *io,
-+			enum efct_scsi_io_status scsi_status,
-+			u32 flags, void *arg)
++struct hw_eq *
++efct_hw_new_eq(struct efct_hw *hw, u32 entry_count)
 +{
-+	efct_scsi_io_free(io);
-+	return EFC_SUCCESS;
++	struct hw_eq *eq = kzalloc(sizeof(*eq), GFP_KERNEL);
++
++	if (!eq)
++		return NULL;
++
++	eq->type = SLI4_QTYPE_EQ;
++	eq->hw = hw;
++	eq->entry_count = entry_count;
++	eq->instance = hw->eq_count++;
++	eq->queue = &hw->eq[eq->instance];
++	INIT_LIST_HEAD(&eq->cq_list);
++
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_EQ, eq->queue,	entry_count,
++				NULL)) {
++		efc_log_err(hw->os, "EQ[%d] alloc failure\n", eq->instance);
++		kfree(eq);
++		return NULL;
++	}
++
++	sli_eq_modify_delay(&hw->sli, eq->queue, 1, 0, 8);
++	hw->hw_eq[eq->instance] = eq;
++	INIT_LIST_HEAD(&eq->list_entry);
++	list_add_tail(&eq->list_entry, &hw->eq_list);
++	efc_log_debug(hw->os, "create eq[%2d] id %3d len %4d\n", eq->instance,
++				eq->queue->id, eq->entry_count);
++	return eq;
 +}
 +
-+static void
-+efct_dispatch_unsol_tmf(struct efct_io *io, u8 tm_flags, u32 lun)
++struct hw_cq *
++efct_hw_new_cq(struct hw_eq *eq, u32 entry_count)
++{
++	struct efct_hw *hw = eq->hw;
++	struct hw_cq *cq = kzalloc(sizeof(*cq), GFP_KERNEL);
++
++	if (!cq)
++		return NULL;
++
++	cq->eq = eq;
++	cq->type = SLI4_QTYPE_CQ;
++	cq->instance = eq->hw->cq_count++;
++	cq->entry_count = entry_count;
++	cq->queue = &hw->cq[cq->instance];
++
++	INIT_LIST_HEAD(&cq->q_list);
++
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_CQ, cq->queue,
++				cq->entry_count, eq->queue)) {
++		efc_log_err(hw->os, "CQ[%d] allocation failure len=%d\n",
++				    eq->instance, eq->entry_count);
++		kfree(cq);
++		return NULL;
++	}
++
++	hw->hw_cq[cq->instance] = cq;
++	INIT_LIST_HEAD(&cq->list_entry);
++	list_add_tail(&cq->list_entry, &eq->cq_list);
++	efc_log_debug(hw->os, "create cq[%2d] id %3d len %4d\n", cq->instance,
++				cq->queue->id, cq->entry_count);
++	return cq;
++}
++
++u32
++efct_hw_new_cq_set(struct hw_eq *eqs[], struct hw_cq *cqs[],
++		   u32 num_cqs, u32 entry_count)
 +{
 +	u32 i;
-+	struct {
-+		u32 mask;
-+		enum efct_scsi_tmf_cmd cmd;
-+	} tmflist[] = {
-+	{FCP_TMF_ABT_TASK_SET, EFCT_SCSI_TMF_ABORT_TASK_SET},
-+	{FCP_TMF_CLR_TASK_SET, EFCT_SCSI_TMF_CLEAR_TASK_SET},
-+	{FCP_TMF_LUN_RESET, EFCT_SCSI_TMF_LOGICAL_UNIT_RESET},
-+	{FCP_TMF_TGT_RESET, EFCT_SCSI_TMF_TARGET_RESET},
-+	{FCP_TMF_CLR_ACA, EFCT_SCSI_TMF_CLEAR_ACA} };
++	struct efct_hw *hw = eqs[0]->hw;
++	struct sli4 *sli4 = &hw->sli;
++	struct hw_cq *cq = NULL;
++	struct sli4_queue *qs[SLI4_MAX_CQ_SET_COUNT];
++	struct sli4_queue *assefct[SLI4_MAX_CQ_SET_COUNT];
 +
-+	io->exp_xfer_len = 0;
++	/* Initialise CQS pointers to NULL */
++	for (i = 0; i < num_cqs; i++)
++		cqs[i] = NULL;
 +
-+	for (i = 0; i < ARRAY_SIZE(tmflist); i++) {
-+		if (tmflist[i].mask & tm_flags) {
-+			io->tmf_cmd = tmflist[i].cmd;
-+			efct_scsi_recv_tmf(io, lun, tmflist[i].cmd, NULL, 0);
++	for (i = 0; i < num_cqs; i++) {
++		cq = kzalloc(sizeof(*cq), GFP_KERNEL);
++		if (!cq)
++			goto error;
++
++		cqs[i]          = cq;
++		cq->eq          = eqs[i];
++		cq->type        = SLI4_QTYPE_CQ;
++		cq->instance    = hw->cq_count++;
++		cq->entry_count = entry_count;
++		cq->queue       = &hw->cq[cq->instance];
++		qs[i]           = cq->queue;
++		assefct[i]       = eqs[i]->queue;
++		INIT_LIST_HEAD(&cq->q_list);
++	}
++
++	if (sli_cq_alloc_set(sli4, qs, num_cqs, entry_count, assefct)) {
++		efc_log_err(hw->os, "Failed to create CQ Set.\n");
++		goto error;
++	}
++
++	for (i = 0; i < num_cqs; i++) {
++		hw->hw_cq[cqs[i]->instance] = cqs[i];
++		INIT_LIST_HEAD(&cqs[i]->list_entry);
++		list_add_tail(&cqs[i]->list_entry, &cqs[i]->eq->cq_list);
++	}
++
++	return EFC_SUCCESS;
++
++error:
++	for (i = 0; i < num_cqs; i++) {
++		kfree(cqs[i]);
++		cqs[i] = NULL;
++	}
++	return EFC_FAIL;
++}
++
++struct hw_mq *
++efct_hw_new_mq(struct hw_cq *cq, u32 entry_count)
++{
++	struct efct_hw *hw = cq->eq->hw;
++	struct hw_mq *mq = kzalloc(sizeof(*mq), GFP_KERNEL);
++
++	if (!mq)
++		return NULL;
++
++	mq->cq = cq;
++	mq->type = SLI4_QTYPE_MQ;
++	mq->instance = cq->eq->hw->mq_count++;
++	mq->entry_count = entry_count;
++	mq->entry_size = EFCT_HW_MQ_DEPTH;
++	mq->queue = &hw->mq[mq->instance];
++
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_MQ, mq->queue, mq->entry_size,
++			    cq->queue)) {
++		efc_log_err(hw->os, "MQ allocation failure\n");
++		kfree(mq);
++		return NULL;
++	}
++
++	hw->hw_mq[mq->instance] = mq;
++	INIT_LIST_HEAD(&mq->list_entry);
++	list_add_tail(&mq->list_entry, &cq->q_list);
++	efc_log_debug(hw->os, "create mq[%2d] id %3d len %4d\n", mq->instance,
++				mq->queue->id, mq->entry_count);
++	return mq;
++}
++
++struct hw_wq *
++efct_hw_new_wq(struct hw_cq *cq, u32 entry_count)
++{
++	struct efct_hw *hw = cq->eq->hw;
++	struct hw_wq *wq = kzalloc(sizeof(*wq), GFP_KERNEL);
++
++	if (!wq)
++		return NULL;
++
++	wq->hw = cq->eq->hw;
++	wq->cq = cq;
++	wq->type = SLI4_QTYPE_WQ;
++	wq->instance = cq->eq->hw->wq_count++;
++	wq->entry_count = entry_count;
++	wq->queue = &hw->wq[wq->instance];
++	wq->wqec_set_count = EFCT_HW_WQEC_SET_COUNT;
++	wq->wqec_count = wq->wqec_set_count;
++	wq->free_count = wq->entry_count - 1;
++	INIT_LIST_HEAD(&wq->pending_list);
++
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_WQ, wq->queue,
++				    wq->entry_count, cq->queue)) {
++		efc_log_err(hw->os, "WQ allocation failure\n");
++		kfree(wq);
++		return NULL;
++	}
++
++	hw->hw_wq[wq->instance] = wq;
++	INIT_LIST_HEAD(&wq->list_entry);
++	list_add_tail(&wq->list_entry, &cq->q_list);
++	efc_log_debug(hw->os, "create wq[%2d] id %3d len %4d cls %d\n",
++		wq->instance, wq->queue->id, wq->entry_count, wq->class);
++	return wq;
++}
++
++u32
++efct_hw_new_rq_set(struct hw_cq *cqs[], struct hw_rq *rqs[],
++		   u32 num_rq_pairs, u32 entry_count)
++{
++	struct efct_hw *hw = cqs[0]->eq->hw;
++	struct hw_rq *rq = NULL;
++	struct sli4_queue *qs[SLI4_MAX_RQ_SET_COUNT * 2] = { NULL };
++	u32 i, q_count, size;
++
++	/* Initialise RQS pointers */
++	for (i = 0; i < num_rq_pairs; i++)
++		rqs[i] = NULL;
++
++	/*
++	 * Allocate an RQ object SET, where each element in set
++	 * encapsulates 2 SLI queues (for rq pair)
++	 */
++	for (i = 0, q_count = 0; i < num_rq_pairs; i++, q_count += 2) {
++		rq = kzalloc(sizeof(*rq), GFP_KERNEL);
++		if (!rq)
++			goto error;
++
++		rqs[i] = rq;
++		rq->instance = hw->hw_rq_count++;
++		rq->cq = cqs[i];
++		rq->type = SLI4_QTYPE_RQ;
++		rq->entry_count = entry_count;
++
++		/* Header RQ */
++		rq->hdr = &hw->rq[hw->rq_count];
++		rq->hdr_entry_size = EFCT_HW_RQ_HEADER_SIZE;
++		hw->hw_rq_lookup[hw->rq_count] = rq->instance;
++		hw->rq_count++;
++		qs[q_count] = rq->hdr;
++
++		/* Data RQ */
++		rq->data = &hw->rq[hw->rq_count];
++		rq->data_entry_size = hw->config.rq_default_buffer_size;
++		hw->hw_rq_lookup[hw->rq_count] = rq->instance;
++		hw->rq_count++;
++		qs[q_count + 1] = rq->data;
++
++		rq->rq_tracker = NULL;
++	}
++
++	if (sli_fc_rq_set_alloc(&hw->sli, num_rq_pairs, qs,
++				cqs[0]->queue->id,
++			    rqs[0]->entry_count,
++			    rqs[0]->hdr_entry_size,
++			    rqs[0]->data_entry_size)) {
++		efc_log_err(hw->os, "RQ Set alloc failure for base CQ=%d\n",
++			    cqs[0]->queue->id);
++		goto error;
++	}
++
++	for (i = 0; i < num_rq_pairs; i++) {
++		hw->hw_rq[rqs[i]->instance] = rqs[i];
++		INIT_LIST_HEAD(&rqs[i]->list_entry);
++		list_add_tail(&rqs[i]->list_entry, &cqs[i]->q_list);
++		size = sizeof(struct efc_hw_sequence *) * rqs[i]->entry_count;
++		rqs[i]->rq_tracker = kzalloc(size, GFP_KERNEL);
++		if (!rqs[i]->rq_tracker)
++			goto error;
++	}
++
++	return EFC_SUCCESS;
++
++error:
++	for (i = 0; i < num_rq_pairs; i++) {
++		if (rqs[i]) {
++			kfree(rqs[i]->rq_tracker);
++			kfree(rqs[i]);
++		}
++	}
++
++	return EFC_FAIL;
++}
++
++void
++efct_hw_del_eq(struct hw_eq *eq)
++{
++	struct hw_cq *cq;
++	struct hw_cq *cq_next;
++
++	if (!eq)
++		return;
++
++	list_for_each_entry_safe(cq, cq_next, &eq->cq_list, list_entry)
++		efct_hw_del_cq(cq);
++	list_del(&eq->list_entry);
++	eq->hw->hw_eq[eq->instance] = NULL;
++	kfree(eq);
++}
++
++void
++efct_hw_del_cq(struct hw_cq *cq)
++{
++	struct hw_q *q;
++	struct hw_q *q_next;
++
++	if (!cq)
++		return;
++
++	list_for_each_entry_safe(q, q_next, &cq->q_list, list_entry) {
++		switch (q->type) {
++		case SLI4_QTYPE_MQ:
++			efct_hw_del_mq((struct hw_mq *)q);
++			break;
++		case SLI4_QTYPE_WQ:
++			efct_hw_del_wq((struct hw_wq *)q);
++			break;
++		case SLI4_QTYPE_RQ:
++			efct_hw_del_rq((struct hw_rq *)q);
++			break;
++		default:
 +			break;
 +		}
 +	}
-+	if (i == ARRAY_SIZE(tmflist)) {
-+		/* Not handled */
-+		efc_log_err(io->node->efct, "TMF x%x rejected\n", tm_flags);
-+		efct_scsi_send_tmf_resp(io, EFCT_SCSI_TMF_FUNCTION_REJECTED,
-+					NULL, efct_fc_tmf_rejected_cb, NULL);
-+	}
++	list_del(&cq->list_entry);
++	cq->eq->hw->hw_cq[cq->instance] = NULL;
++	kfree(cq);
 +}
 +
-+static int
-+efct_validate_fcp_cmd(struct efct *efct, struct efc_hw_sequence *seq)
++void
++efct_hw_del_mq(struct hw_mq *mq)
 +{
-+	/*
-+	 * If we received less than FCP_CMND_IU bytes, assume that the frame is
-+	 * corrupted in some way and drop it.
-+	 * This was seen when jamming the FCTL
-+	 * fill bytes field.
-+	 */
-+	if (seq->payload->dma.len < sizeof(struct fcp_cmnd)) {
-+		struct fc_frame_header	*fchdr = seq->header->dma.virt;
++	if (!mq)
++		return;
 +
-+		efc_log_debug(efct,
-+			"drop ox_id %04x with payload (%zd) less than (%zd)\n",
-+				    be16_to_cpu(fchdr->fh_ox_id),
-+				    seq->payload->dma.len,
-+				    sizeof(struct fcp_cmnd));
-+		return EFC_FAIL;
-+	}
-+	return EFC_SUCCESS;
++	list_del(&mq->list_entry);
++	mq->cq->eq->hw->hw_mq[mq->instance] = NULL;
++	kfree(mq);
 +}
 +
-+static void
-+efct_populate_io_fcp_cmd(struct efct_io *io, struct fcp_cmnd *cmnd,
-+			 struct fc_frame_header *fchdr, bool sit)
++void
++efct_hw_del_wq(struct hw_wq *wq)
 +{
-+	io->init_task_tag = be16_to_cpu(fchdr->fh_ox_id);
-+	/* note, tgt_task_tag, hw_tag  set when HW io is allocated */
-+	io->exp_xfer_len = be32_to_cpu(cmnd->fc_dl);
-+	io->transferred = 0;
++	if (!wq)
++		return;
 +
-+	/* The upper 7 bits of CS_CTL is the frame priority thru the SAN.
-+	 * Our assertion here is, the priority given to a frame containing
-+	 * the FCP cmd should be the priority given to ALL frames contained
-+	 * in that IO. Thus we need to save the incoming CS_CTL here.
-+	 */
-+	if (ntoh24(fchdr->fh_f_ctl) & FC_FC_RES_B17)
-+		io->cs_ctl = fchdr->fh_cs_ctl;
-+	else
-+		io->cs_ctl = 0;
-+
-+	io->seq_init = sit;
++	list_del(&wq->list_entry);
++	wq->cq->eq->hw->hw_wq[wq->instance] = NULL;
++	kfree(wq);
 +}
 +
-+static u32
-+efct_get_flags_fcp_cmd(struct fcp_cmnd *cmnd)
++void
++efct_hw_del_rq(struct hw_rq *rq)
 +{
-+	u32 flags = 0;
++	struct efct_hw *hw = NULL;
 +
-+	switch (cmnd->fc_pri_ta & FCP_PTA_MASK) {
-+	case FCP_PTA_SIMPLE:
-+		flags |= EFCT_SCSI_CMD_SIMPLE;
-+		break;
-+	case FCP_PTA_HEADQ:
-+		flags |= EFCT_SCSI_CMD_HEAD_OF_QUEUE;
-+		break;
-+	case FCP_PTA_ORDERED:
-+		flags |= EFCT_SCSI_CMD_ORDERED;
-+		break;
-+	case FCP_PTA_ACA:
-+		flags |= EFCT_SCSI_CMD_ACA;
-+		break;
-+	}
-+	if (cmnd->fc_flags & FCP_CFL_WRDATA)
-+		flags |= EFCT_SCSI_CMD_DIR_IN;
-+	if (cmnd->fc_flags & FCP_CFL_RDDATA)
-+		flags |= EFCT_SCSI_CMD_DIR_OUT;
-+
-+	return flags;
++	if (!rq)
++		return;
++	/* Free RQ tracker */
++	kfree(rq->rq_tracker);
++	rq->rq_tracker = NULL;
++	list_del(&rq->list_entry);
++	hw = rq->cq->eq->hw;
++	hw->hw_rq[rq->instance] = NULL;
++	kfree(rq);
 +}
 +
-+static void
-+efct_sframe_common_send_cb(void *arg, u8 *cqe, int status)
++void
++efct_hw_queue_teardown(struct efct_hw *hw)
 +{
-+	struct efct_hw_send_frame_context *ctx = arg;
-+	struct efct_hw *hw = ctx->hw;
++	struct hw_eq *eq;
++	struct hw_eq *eq_next;
 +
-+	/* Free WQ completion callback */
-+	efct_hw_reqtag_free(hw, ctx->wqcb);
++	if (!hw->eq_list.next)
++		return;
 +
-+	/* Free sequence */
-+	efct_hw_sequence_free(hw, ctx->seq);
++	list_for_each_entry_safe(eq, eq_next, &hw->eq_list, list_entry)
++		efct_hw_del_eq(eq);
 +}
 +
-+static int
-+efct_sframe_common_send(struct efct_node *node,
-+			struct efc_hw_sequence *seq,
-+			enum fc_rctl r_ctl, u32 f_ctl,
-+			u8 type, void *payload, u32 payload_len)
++static inline int
++efct_hw_rqpair_find(struct efct_hw *hw, u16 rq_id)
 +{
-+	struct efct *efct = node->efct;
-+	struct efct_hw *hw = &efct->hw;
-+	enum efct_hw_rtn rc = 0;
-+	struct fc_frame_header *req_hdr = seq->header->dma.virt;
-+	struct fc_frame_header hdr;
-+	struct efct_hw_send_frame_context *ctx;
-+
-+	u32 heap_size = seq->payload->dma.size;
-+	uintptr_t heap_phys_base = seq->payload->dma.phys;
-+	u8 *heap_virt_base = seq->payload->dma.virt;
-+	u32 heap_offset = 0;
-+
-+	/* Build the FC header reusing the RQ header DMA buffer */
-+	memset(&hdr, 0, sizeof(hdr));
-+	hdr.fh_r_ctl = r_ctl;
-+	/* send it back to whomever sent it to us */
-+	memcpy(hdr.fh_d_id, req_hdr->fh_s_id, sizeof(hdr.fh_d_id));
-+	memcpy(hdr.fh_s_id, req_hdr->fh_d_id, sizeof(hdr.fh_s_id));
-+	hdr.fh_type = type;
-+	hton24(hdr.fh_f_ctl, f_ctl);
-+	hdr.fh_ox_id = req_hdr->fh_ox_id;
-+	hdr.fh_rx_id = req_hdr->fh_rx_id;
-+	hdr.fh_cs_ctl = 0;
-+	hdr.fh_df_ctl = 0;
-+	hdr.fh_seq_cnt = 0;
-+	hdr.fh_parm_offset = 0;
-+
-+	/*
-+	 * send_frame_seq_id is an atomic, we just let it increment,
-+	 * while storing only the low 8 bits to hdr->seq_id
-+	 */
-+	hdr.fh_seq_id = (u8)atomic_add_return(1, &hw->send_frame_seq_id);
-+	hdr.fh_seq_id--;
-+
-+	/* Allocate and fill in the send frame request context */
-+	ctx = (void *)(heap_virt_base + heap_offset);
-+	heap_offset += sizeof(*ctx);
-+	if (heap_offset > heap_size) {
-+		efc_log_err(efct, "Fill send frame failed offset %d size %d\n",
-+				heap_offset, heap_size);
-+		return EFC_FAIL;
-+	}
-+
-+	memset(ctx, 0, sizeof(*ctx));
-+
-+	/* Save sequence */
-+	ctx->seq = seq;
-+
-+	/* Allocate a response payload DMA buffer from the heap */
-+	ctx->payload.phys = heap_phys_base + heap_offset;
-+	ctx->payload.virt = heap_virt_base + heap_offset;
-+	ctx->payload.size = payload_len;
-+	ctx->payload.len = payload_len;
-+	heap_offset += payload_len;
-+	if (heap_offset > heap_size) {
-+		efc_log_err(efct, "Fill send frame failed offset %d size %d\n",
-+				heap_offset, heap_size);
-+		return EFC_FAIL;
-+	}
-+
-+	/* Copy the payload in */
-+	memcpy(ctx->payload.virt, payload, payload_len);
-+
-+	/* Send */
-+	rc = efct_hw_send_frame(&efct->hw, (void *)&hdr, FC_SOF_N3,
-+				FC_EOF_T, &ctx->payload, ctx,
-+				efct_sframe_common_send_cb, ctx);
-+	if (rc)
-+		efc_log_debug(efct, "efct_hw_send_frame failed: %d\n", rc);
-+
-+	return rc;
++	return efct_hw_queue_hash_find(hw->rq_hash, rq_id);
 +}
 +
-+static int
-+efct_sframe_send_fcp_rsp(struct efct_node *node, struct efc_hw_sequence *seq,
-+			 void *rsp, u32 rsp_len)
++static struct efc_hw_sequence *
++efct_hw_rqpair_get(struct efct_hw *hw, u16 rqindex, u16 bufindex)
 +{
-+	return efct_sframe_common_send(node, seq, FC_RCTL_DD_CMD_STATUS,
-+				      FC_FC_EX_CTX |
-+				      FC_FC_LAST_SEQ |
-+				      FC_FC_END_SEQ |
-+				      FC_FC_SEQ_INIT,
-+				      FC_TYPE_FCP,
-+				      rsp, rsp_len);
-+}
-+
-+static int
-+efct_sframe_send_task_set_full_or_busy(struct efct_node *node,
-+				       struct efc_hw_sequence *seq)
-+{
-+	struct fcp_resp_with_ext fcprsp;
-+	struct fcp_cmnd *fcpcmd = seq->payload->dma.virt;
-+	int rc = 0;
++	struct sli4_queue *rq_hdr = &hw->rq[rqindex];
++	struct efc_hw_sequence *seq = NULL;
++	struct hw_rq *rq = hw->hw_rq[hw->hw_rq_lookup[rqindex]];
 +	unsigned long flags = 0;
-+	struct efct *efct = node->efct;
 +
-+	/* construct task set full or busy response */
-+	memset(&fcprsp, 0, sizeof(fcprsp));
-+	spin_lock_irqsave(&node->active_ios_lock, flags);
-+	fcprsp.resp.fr_status = list_empty(&node->active_ios) ?
-+				SAM_STAT_BUSY : SAM_STAT_TASK_SET_FULL;
-+	spin_unlock_irqrestore(&node->active_ios_lock, flags);
-+	*((u32 *)&fcprsp.ext.fr_resid) = be32_to_cpu(fcpcmd->fc_dl);
++	if (bufindex >= rq_hdr->length) {
++		efc_log_err(hw->os,
++				"RQidx %d bufidx %d exceed ring len %d for id %d\n",
++				rqindex, bufindex, rq_hdr->length, rq_hdr->id);
++		return NULL;
++	}
 +
-+	/* send it using send_frame */
-+	rc = efct_sframe_send_fcp_rsp(node, seq, &fcprsp, sizeof(fcprsp));
-+	if (rc)
-+		efc_log_debug(efct, "efct_sframe_send_fcp_rsp failed %d\n", rc);
++	/* rq_hdr lock also covers rqindex+1 queue */
++	spin_lock_irqsave(&rq_hdr->lock, flags);
 +
-+	return rc;
++	seq = rq->rq_tracker[bufindex];
++	rq->rq_tracker[bufindex] = NULL;
++
++	if (!seq) {
++		efc_log_err(hw->os,
++			     "RQbuf NULL, rqidx %d, bufidx %d, cur q idx = %d\n",
++			     rqindex, bufindex, rq_hdr->index);
++	}
++
++	spin_unlock_irqrestore(&rq_hdr->lock, flags);
++	return seq;
 +}
 +
 +int
-+efct_dispatch_fcp_cmd(struct efct_node *node, struct efc_hw_sequence *seq)
++efct_hw_rqpair_process_rq(struct efct_hw *hw, struct hw_cq *cq,
++			  u8 *cqe)
 +{
-+	struct efct *efct = node->efct;
-+	struct fc_frame_header *fchdr = seq->header->dma.virt;
-+	struct fcp_cmnd	*cmnd = NULL;
-+	struct efct_io *io = NULL;
-+	u32 lun = U32_MAX;
++	u16 rq_id;
++	u32 index;
++	int rqindex;
++	int rq_status;
++	u32 h_len;
++	u32 p_len;
++	struct efc_hw_sequence *seq;
++	struct hw_rq *rq;
 +
-+	if (!seq->payload) {
-+		efc_log_err(efct, "Sequence payload is NULL.\n");
-+		return EFC_FAIL;
-+	}
++	rq_status = sli_fc_rqe_rqid_and_index(&hw->sli, cqe,
++					      &rq_id, &index);
++	if (rq_status != 0) {
++		switch (rq_status) {
++		case SLI4_FC_ASYNC_RQ_BUF_LEN_EXCEEDED:
++		case SLI4_FC_ASYNC_RQ_DMA_FAILURE:
++			/* just get RQ buffer then return to chip */
++			rqindex = efct_hw_rqpair_find(hw, rq_id);
++			if (rqindex < 0) {
++				efc_log_debug(hw->os,
++					      "status=%#x: lookup fail id=%#x\n",
++					     rq_status, rq_id);
++				break;
++			}
 +
-+	cmnd = seq->payload->dma.virt;
++			/* get RQ buffer */
++			seq = efct_hw_rqpair_get(hw, rqindex, index);
 +
-+	/* perform FCP_CMND validation check(s) */
-+	if (efct_validate_fcp_cmd(efct, seq))
-+		return EFC_FAIL;
-+
-+	lun = scsilun_to_int(&cmnd->fc_lun);
-+	if (lun == U32_MAX)
-+		return EFC_FAIL;
-+
-+	io = efct_scsi_io_alloc(node);
-+	if (!io) {
-+		int rc;
-+
-+		/* Use SEND_FRAME to send task set full or busy */
-+		rc = efct_sframe_send_task_set_full_or_busy(node, seq);
-+		if (rc)
-+			efc_log_err(efct, "Failed to send busy task: %d\n", rc);
-+
-+		return rc;
-+	}
-+
-+	io->hw_priv = seq->hw_priv;
-+
-+	io->app_id = 0;
-+
-+	/* RQ pair, if we got here, SIT=1 */
-+	efct_populate_io_fcp_cmd(io, cmnd, fchdr, true);
-+
-+	if (cmnd->fc_tm_flags) {
-+		efct_dispatch_unsol_tmf(io, cmnd->fc_tm_flags, lun);
-+	} else {
-+		u32 flags = efct_get_flags_fcp_cmd(cmnd);
-+
-+		if (cmnd->fc_flags & FCP_CFL_LEN_MASK) {
-+			efc_log_err(efct, "Additional CDB not supported\n");
-+			return EFC_FAIL;
++			/* return to chip */
++			if (efct_hw_rqpair_sequence_free(hw, seq)) {
++				efc_log_debug(hw->os,
++					      "status=%#x,fail rtrn buf to RQ\n",
++					     rq_status);
++				break;
++			}
++			break;
++		case SLI4_FC_ASYNC_RQ_INSUFF_BUF_NEEDED:
++		case SLI4_FC_ASYNC_RQ_INSUFF_BUF_FRM_DISC:
++			/*
++			 * since RQ buffers were not consumed, cannot return
++			 * them to chip
++			 */
++			efc_log_debug(hw->os, "Warning: RCQE status=%#x,\n",
++				       rq_status);
++			fallthrough;
++		default:
++			break;
 +		}
-+		/*
-+		 * Can return failure for things like task set full and UAs,
-+		 * no need to treat as a dropped frame if rc != 0
-+		 */
-+		efct_scsi_recv_cmd(io, lun, cmnd->fc_cdb,
-+				   sizeof(cmnd->fc_cdb), flags);
++		return EFC_FAIL;
 +	}
++
++	rqindex = efct_hw_rqpair_find(hw, rq_id);
++	if (rqindex < 0) {
++		efc_log_debug(hw->os, "Error: rq_id lookup failed for id=%#x\n",
++			      rq_id);
++		return EFC_FAIL;
++	}
++
++	rq = hw->hw_rq[hw->hw_rq_lookup[rqindex]];
++	rq->use_count++;
++
++	seq = efct_hw_rqpair_get(hw, rqindex, index);
++	if (WARN_ON(!seq))
++		return EFC_FAIL;
++
++	seq->hw = hw;
++	seq->auto_xrdy = 0;
++	seq->out_of_xris = 0;
++
++	sli_fc_rqe_length(&hw->sli, cqe, &h_len, &p_len);
++	seq->header->dma.len = h_len;
++	seq->payload->dma.len = p_len;
++	seq->fcfi = sli_fc_rqe_fcfi(&hw->sli, cqe);
++	seq->hw_priv = cq->eq;
++
++	efct_unsolicited_cb(hw->os, seq);
 +
 +	return EFC_SUCCESS;
 +}
 +
 +static int
-+efct_process_abts(struct efct_io *io, struct fc_frame_header *hdr)
++efct_hw_rqpair_put(struct efct_hw *hw, struct efc_hw_sequence *seq)
 +{
-+	struct efct_node *node = io->node;
-+	struct efct *efct = io->efct;
-+	u16 ox_id = be16_to_cpu(hdr->fh_ox_id);
-+	u16 rx_id = be16_to_cpu(hdr->fh_rx_id);
-+	struct efct_io *abortio;
++	struct sli4_queue *rq_hdr = &hw->rq[seq->header->rqindex];
++	struct sli4_queue *rq_payload = &hw->rq[seq->payload->rqindex];
++	u32 hw_rq_index = hw->hw_rq_lookup[seq->header->rqindex];
++	struct hw_rq *rq = hw->hw_rq[hw_rq_index];
++	u32 phys_hdr[2];
++	u32 phys_payload[2];
++	int qindex_hdr;
++	int qindex_payload;
++	unsigned long flags = 0;
 +
-+	/* Find IO and attempt to take a reference on it */
-+	abortio = efct_io_find_tgt_io(efct, node, ox_id, rx_id);
++	/* Update the RQ verification lookup tables */
++	phys_hdr[0] = upper_32_bits(seq->header->dma.phys);
++	phys_hdr[1] = lower_32_bits(seq->header->dma.phys);
++	phys_payload[0] = upper_32_bits(seq->payload->dma.phys);
++	phys_payload[1] = lower_32_bits(seq->payload->dma.phys);
 +
-+	if (abortio) {
-+		/* Got a reference on the IO. Hold it until backend
-+		 * is notified below
-+		 */
-+		efc_log_info(node->efct, "Abort ox_id [%04x] rx_id [%04x]\n",
-+			     ox_id, rx_id);
++	/* rq_hdr lock also covers payload / header->rqindex+1 queue */
++	spin_lock_irqsave(&rq_hdr->lock, flags);
 +
-+		/*
-+		 * Save the ox_id for the ABTS as the init_task_tag in our
-+		 * manufactured
-+		 * TMF IO object
-+		 */
-+		io->display_name = "abts";
-+		io->init_task_tag = ox_id;
-+		/* don't set tgt_task_tag, don't want to confuse with XRI */
-+
-+		/*
-+		 * Save the rx_id from the ABTS as it is
-+		 * needed for the BLS response,
-+		 * regardless of the IO context's rx_id
-+		 */
-+		io->abort_rx_id = rx_id;
-+
-+		/* Call target server command abort */
-+		io->tmf_cmd = EFCT_SCSI_TMF_ABORT_TASK;
-+		efct_scsi_recv_tmf(io, abortio->tgt_io.lun,
-+				   EFCT_SCSI_TMF_ABORT_TASK, abortio, 0);
-+
-+		/*
-+		 * Backend will have taken an additional
-+		 * reference on the IO if needed;
-+		 * done with current reference.
-+		 */
-+		kref_put(&abortio->ref, abortio->release);
-+	} else {
-+		/*
-+		 * Either IO was not found or it has been
-+		 * freed between finding it
-+		 * and attempting to get the reference,
-+		 */
-+		efc_log_info(node->efct, "Abort: ox_id [%04x], IO not found\n",
-+			     ox_id);
-+
-+		/* Send a BA_RJT */
-+		efct_bls_send_rjt(io, hdr);
++	/*
++	 * Note: The header must be posted last for buffer pair mode because
++	 *       posting on the header queue posts the payload queue as well.
++	 *       We do not ring the payload queue independently in RQ pair mode.
++	 */
++	qindex_payload = sli_rq_write(&hw->sli, rq_payload,
++				      (void *)phys_payload);
++	qindex_hdr = sli_rq_write(&hw->sli, rq_hdr, (void *)phys_hdr);
++	if (qindex_hdr < 0 ||
++	    qindex_payload < 0) {
++		efc_log_err(hw->os, "RQ_ID=%#x write failed\n", rq_hdr->id);
++		spin_unlock_irqrestore(&rq_hdr->lock, flags);
++		return EFCT_HW_RTN_ERROR;
 +	}
-+	return EFC_SUCCESS;
++
++	/* ensure the indexes are the same */
++	WARN_ON(qindex_hdr != qindex_payload);
++
++	/* Update the lookup table */
++	if (!rq->rq_tracker[qindex_hdr]) {
++		rq->rq_tracker[qindex_hdr] = seq;
++	} else {
++		efc_log_debug(hw->os,
++			      "expected rq_tracker[%d][%d] buffer to be NULL\n",
++			      hw_rq_index, qindex_hdr);
++	}
++
++	spin_unlock_irqrestore(&rq_hdr->lock, flags);
++	return EFCT_HW_RTN_SUCCESS;
++}
++
++enum efct_hw_rtn
++efct_hw_rqpair_sequence_free(struct efct_hw *hw, struct efc_hw_sequence *seq)
++{
++	enum efct_hw_rtn rc = EFCT_HW_RTN_SUCCESS;
++
++	/*
++	 * Post the data buffer first. Because in RQ pair mode, ringing the
++	 * doorbell of the header ring will post the data buffer as well.
++	 */
++	if (efct_hw_rqpair_put(hw, seq)) {
++		efc_log_err(hw->os, "error writing buffers\n");
++		return EFCT_HW_RTN_ERROR;
++	}
++
++	return rc;
 +}
 +
 +int
-+efct_node_recv_abts_frame(struct efct_node *node, struct efc_hw_sequence *seq)
++efct_efc_hw_sequence_free(struct efc *efc, struct efc_hw_sequence *seq)
 +{
-+	struct efct *efct = node->efct;
-+	struct fc_frame_header *hdr = seq->header->dma.virt;
-+	struct efct_io *io = NULL;
++	struct efct *efct = efc->base;
 +
-+	node->abort_cnt++;
-+	io = efct_scsi_io_alloc(node);
-+	if (io) {
-+		io->hw_priv = seq->hw_priv;
-+		/* If we got this far, SIT=1 */
-+		io->seq_init = 1;
-+
-+		/* fill out generic fields */
-+		io->efct = efct;
-+		io->node = node;
-+		io->cmd_tgt = true;
-+
-+		efct_process_abts(io, seq->header->dma.virt);
-+	} else {
-+		efc_log_err(efct,
-+			    "SCSI IO allocation failed for ABTS received ");
-+		efc_log_err(efct, "s_id %06x d_id %06x ox_id %04x rx_id %04x\n",
-+			    ntoh24(hdr->fh_s_id), ntoh24(hdr->fh_d_id),
-+			    be16_to_cpu(hdr->fh_ox_id),
-+			    be16_to_cpu(hdr->fh_rx_id));
-+	}
-+
-+	return EFC_SUCCESS;
++	return efct_hw_rqpair_sequence_free(&efct->hw, seq);
 +}
-diff --git a/drivers/scsi/elx/efct/efct_unsol.h b/drivers/scsi/elx/efct/efct_unsol.h
-new file mode 100644
-index 000000000000..16d1e3ba1833
---- /dev/null
-+++ b/drivers/scsi/elx/efct/efct_unsol.h
-@@ -0,0 +1,17 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
-+ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
-+ */
-+
-+#if !defined(__OSC_UNSOL_H__)
-+#define __OSC_UNSOL_H__
-+
-+int
-+efct_unsolicited_cb(void *arg, struct efc_hw_sequence *seq);
-+int
-+efct_dispatch_fcp_cmd(struct efct_node *node, struct efc_hw_sequence *seq);
-+int
-+efct_node_recv_abts_frame(struct efct_node *node, struct efc_hw_sequence *seq);
-+
-+#endif /* __OSC_UNSOL_H__ */
 -- 
 2.26.2
 
