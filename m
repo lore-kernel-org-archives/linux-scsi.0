@@ -5,65 +5,65 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AF17C4332D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DB69C4332E
 	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 00:52:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE35023123
+	by mail.kernel.org (Postfix) with ESMTP id 0550923118
 	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 00:52:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726495AbhAGAv7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726504AbhAGAv7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 6 Jan 2021 19:51:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41530 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726452AbhAGAv6 (ORCPT
+        with ESMTP id S1726477AbhAGAv6 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 19:51:58 -0500
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92BA8C0612FB
-        for <linux-scsi@vger.kernel.org>; Wed,  6 Jan 2021 16:50:42 -0800 (PST)
-Received: by mail-pl1-x62d.google.com with SMTP id g3so2488374plp.2
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Jan 2021 16:50:42 -0800 (PST)
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91ADBC0612EF
+        for <linux-scsi@vger.kernel.org>; Wed,  6 Jan 2021 16:50:44 -0800 (PST)
+Received: by mail-pj1-x1029.google.com with SMTP id l23so2593547pjg.1
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Jan 2021 16:50:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=K4Cf3PKgRRlNl8jh3XjcvB5sF7GWafxkwPQ91gY1DWw=;
-        b=KXpDC3yFFf8RDbg/FXkoIv8IkxyrKuVgsmmvef0yUZTIhn7oR6h1FF+SaVs1jCO06P
-         ZnOewF/5hhYNnGTiwdz0XbDLvaqU6VODgAOyQoKsgxMUGnkhU7nEEvkaO+1kWmzqGKw5
-         xAEnrR79LqGzU5qgoNu7nP+HIVqmtCyDexft1ubrTmcYQ6s8eTeNnwfiFjVo1z76ckKS
-         t7iGJNDVOBJ8UXmkEE8BcD5sRF+gDi5fyQbhYEXZ8aQB8ixb3l/EBLodb1wh8ytMWyhR
-         B78D7x0UfbbwNuM4in9WHNHP5O1GQkU0e/u5MtVc/2838N3myk+RPTQkgvv3Qd1kXk48
-         j/Tw==
+        bh=8JEG6+n+BeLLwnBA6bPY15DVa+Dgy5qktator0P/4IE=;
+        b=hcFLOWpjdMKhs55Fb3lkY8QIeL3lregE3ERnV49BTJ3QLl2V0/AyZLCoLunC7ZE+/j
+         hWlMTk9bBFwG97ftX+30fPfnwsXNoFrXQS/xneMD7IIQJTDlV2jkC0fNMXAngCfz2wC4
+         vntCoaEdu6p+YLH4MHU9YWWvvDb6kHxKE3pzZlREyoQnELBPSaCxFaz1nGYS2TUP/suu
+         RY0pD0fxYuAWDhMeFlxFz7adrsGaY0aXLfdVMIj3gbiTINOrRVk8Ei5vbwe48/xpXOcw
+         4h2HbL6wBiyk9RROUw6XC0/YkFuXM/YjzQ25zpY8re59nFqa1EhcwIjZ7O+KiVLJGnRy
+         oLEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=K4Cf3PKgRRlNl8jh3XjcvB5sF7GWafxkwPQ91gY1DWw=;
-        b=jbHWdJLc1AkysTatymo7dTDaxJE+1+J2+pd/t3dhIAenUotnslj1K1EZsQ+eIFvpgV
-         vRNIgVvVFQlqJD5lu1lbUHs6VhtiUzEa8OasseH6ptnmktTW28hctQQan9i0aaMDFQMS
-         qX8qsKibURkZn3g6cmBlWyGVWdYSBMWvy4TZDWCPykxlyc/hMbkCI6mQe9U9MX8+STxD
-         YwD9RVTXUZIdiWfDJMCX+MxkvionXcUD4t8ArF/HNbWKTBe5PPojINv9+5rZsyEALPE5
-         PSn7o3jLn9oMALOfX4KRSGOsuDBS3sieO2Mbcx3o4QEwNWStHF4S3MLCx8lnKPUcirWP
-         DN+Q==
-X-Gm-Message-State: AOAM533mPMLAC7yOWH+Ss71RRKJS399culFSw0Sv36hd2v6iUAR7CemD
-        R3H8X5QInmJvgBrbWJzjW+bh+JBS72raXw==
-X-Google-Smtp-Source: ABdhPJxeVJJkzpL5bsHxoyPX+aAzxXDnSTci5nxYo7QaJgQ1LvMyb+CdGdKyt+iazOL2toQxLuqspw==
-X-Received: by 2002:a17:902:eb0c:b029:db:c0d6:6289 with SMTP id l12-20020a170902eb0cb02900dbc0d66289mr6974741plb.12.1609980641977;
-        Wed, 06 Jan 2021 16:50:41 -0800 (PST)
+        bh=8JEG6+n+BeLLwnBA6bPY15DVa+Dgy5qktator0P/4IE=;
+        b=fHDKdcns/uK48nrgyHkGgsPs/1pVmelSgGYbkih/VEVNh9Ebv7tNSPb8U+aHAILx7y
+         uxGjX8+0iW+DPnfUfRHuvsZGBs0OeVAJci8of9eHyUlki/smcxsg9fAJLb34r/NZskqC
+         qUZYN4vhEsi3nlHSK8/K3hsAroRRNnC7SWBX+8oWDG7E9YnrQGO1GLRJXLAmQPE865kG
+         vGMatfhwRKxHephyoB6SzyFqov+LIZm4URJ5oIY8U3oKfywppDRYBJ8Dauzey+c158JD
+         h4lSbWmzmdHspzv9dX8sChTo5cK+VdeMZP8sCxyMvQ9ym3QtO52g3hnmFJxtCBByk49b
+         MN3Q==
+X-Gm-Message-State: AOAM531IAnxfd9WE5zMfce/ULtc93TzSoR2kNSDrRrWUGwGUa4hS0qS/
+        Y8lh7TW7PFCotDXabmVAcJPGXIhXOB0e4w==
+X-Google-Smtp-Source: ABdhPJzUSJjiWDXRYB1972D7Pk+Z8Nv6NgrwQBHjgvoNBL5lIzutHc6+s0/gCIXyFPLOPH1jlLeduA==
+X-Received: by 2002:a17:90b:1087:: with SMTP id gj7mr6637081pjb.41.1609980643005;
+        Wed, 06 Jan 2021 16:50:43 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id w27sm3600634pfq.104.2021.01.06.16.50.41
+        by smtp.gmail.com with ESMTPSA id w27sm3600634pfq.104.2021.01.06.16.50.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Jan 2021 16:50:41 -0800 (PST)
+        Wed, 06 Jan 2021 16:50:42 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Ram Vegesna <ram.vegesna@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>, Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH v6 08/31] elx: libefc: Generic state machine framework
-Date:   Wed,  6 Jan 2021 16:50:07 -0800
-Message-Id: <20210107005030.2929-9-jsmart2021@gmail.com>
+        Daniel Wagner <dwagner@suse.de>
+Subject: [PATCH v6 09/31] elx: libefc: Emulex FC discovery library APIs and definitions
+Date:   Wed,  6 Jan 2021 16:50:08 -0800
+Message-Id: <20210107005030.2929-10-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210107005030.2929-1-jsmart2021@gmail.com>
 References: <20210107005030.2929-1-jsmart2021@gmail.com>
@@ -74,32 +74,117 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch starts the population of the libefc library.
-The library will contain common tasks usable by a target or initiator
-driver. The library will also contain a FC discovery state machine
-interface.
+This patch continues the libefc library population.
 
-This patch creates the library directory and adds definitions
-for the discovery state machine interface.
+This patch adds library interface definitions for:
+- SLI/Local FC port objects
+- efc_domain_s: FC domain (aka fabric) objects
+- efc_node_s: FC node (aka remote ports) objects
 
 Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Daniel Wagner <dwagner@suse.de>
----
- drivers/scsi/elx/libefc/efc_sm.c |  54 +++++++++
- drivers/scsi/elx/libefc/efc_sm.h | 197 +++++++++++++++++++++++++++++++
- 2 files changed, 251 insertions(+)
- create mode 100644 drivers/scsi/elx/libefc/efc_sm.c
- create mode 100644 drivers/scsi/elx/libefc/efc_sm.h
 
-diff --git a/drivers/scsi/elx/libefc/efc_sm.c b/drivers/scsi/elx/libefc/efc_sm.c
+---
+v6:
+ Slight update to node_sm_trace macro
+ convert prototype for efc_nport_cb() from int to void
+ moved libefc/efc_lib.c to libefc/efclib.c
+v5:
+ Added Mempool for ELS ios.
+ Remove EFC_HW_NODE_XXX and EFC_HW_NPORT_XXX events.
+ Use EFC_EVT_XXX events directly for port and node callbacks.
+---
+ drivers/scsi/elx/libefc/efc.h    |  69 ++++
+ drivers/scsi/elx/libefc/efclib.c |  81 +++++
+ drivers/scsi/elx/libefc/efclib.h | 601 +++++++++++++++++++++++++++++++
+ 3 files changed, 751 insertions(+)
+ create mode 100644 drivers/scsi/elx/libefc/efc.h
+ create mode 100644 drivers/scsi/elx/libefc/efclib.c
+ create mode 100644 drivers/scsi/elx/libefc/efclib.h
+
+diff --git a/drivers/scsi/elx/libefc/efc.h b/drivers/scsi/elx/libefc/efc.h
 new file mode 100644
-index 000000000000..252399c19293
+index 000000000000..19b98c2153f6
 --- /dev/null
-+++ b/drivers/scsi/elx/libefc/efc_sm.c
-@@ -0,0 +1,54 @@
++++ b/drivers/scsi/elx/libefc/efc.h
+@@ -0,0 +1,69 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
++ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
++ */
++
++#ifndef __EFC_H__
++#define __EFC_H__
++
++#include "../include/efc_common.h"
++#include "efclib.h"
++#include "efc_sm.h"
++#include "efc_cmds.h"
++#include "efc_domain.h"
++#include "efc_nport.h"
++#include "efc_node.h"
++#include "efc_fabric.h"
++#include "efc_device.h"
++#include "efc_els.h"
++
++#define EFC_MAX_REMOTE_NODES			2048
++#define NODE_SPARAMS_SIZE			256
++
++enum efc_hw_rtn {
++	EFC_HW_RTN_SUCCESS = 0,
++	EFC_HW_RTN_SUCCESS_SYNC = 1,
++	EFC_HW_RTN_ERROR = -1,
++	EFC_HW_RTN_NO_RESOURCES = -2,
++	EFC_HW_RTN_NO_MEMORY = -3,
++	EFC_HW_RTN_IO_NOT_ACTIVE = -4,
++	EFC_HW_RTN_IO_ABORT_IN_PROGRESS = -5,
++	EFC_HW_RTN_IO_PORT_OWNED_ALREADY_ABORTED = -6,
++	EFC_HW_RTN_INVALID_ARG = -7,
++};
++
++#define EFC_HW_RTN_IS_ERROR(e) ((e) < 0)
++
++enum efc_scsi_del_initiator_reason {
++	EFC_SCSI_INITIATOR_DELETED,
++	EFC_SCSI_INITIATOR_MISSING,
++};
++
++enum efc_scsi_del_target_reason {
++	EFC_SCSI_TARGET_DELETED,
++	EFC_SCSI_TARGET_MISSING,
++};
++
++#define EFC_SCSI_CALL_COMPLETE			0
++#define EFC_SCSI_CALL_ASYNC			1
++
++#define EFC_FC_ELS_DEFAULT_RETRIES		3
++
++#define domain_sm_trace(domain) \
++	efc_log_debug(domain->efc, "[domain:%s] %-20s %-20s\n", \
++		      domain->display_name, __func__, efc_sm_event_name(evt)) \
++
++#define domain_trace(domain, fmt, ...) \
++	efc_log_debug(domain->efc, \
++		      "[%s]" fmt, domain->display_name, ##__VA_ARGS__) \
++
++#define node_sm_trace() \
++	efc_log_debug(node->efc, "[%s] %-20s %-20s\n", \
++		      node->display_name, __func__, efc_sm_event_name(evt)) \
++
++#define nport_sm_trace(nport) \
++	efc_log_debug(nport->efc, \
++		"[%s] %-20s\n", nport->display_name, efc_sm_event_name(evt)) \
++
++#endif /* __EFC_H__ */
+diff --git a/drivers/scsi/elx/libefc/efclib.c b/drivers/scsi/elx/libefc/efclib.c
+new file mode 100644
+index 000000000000..786266a5aeaf
+--- /dev/null
++++ b/drivers/scsi/elx/libefc/efclib.c
+@@ -0,0 +1,81 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
@@ -107,256 +192,687 @@ index 000000000000..252399c19293
 + */
 +
 +/*
-+ * Generic state machine framework.
-+ */
-+#include "efc.h"
-+#include "efc_sm.h"
-+
-+/**
-+ * efc_sm_post_event() - Post an event to a context.
++ * LIBEFC LOCKING
 + *
-+ * @ctx: State machine context
-+ * @evt: Event to post
-+ * @data: Event-specific data (if any)
++ * The critical sections protected by the efc's spinlock are quite broad and
++ * may be improved upon in the future. The libefc code and its locking doesn't
++ * influence the I/O path, so excessive locking doesn't impact I/O performance.
++ *
++ * The strategy is to lock whenever processing a request from user driver. This
++ * means that the entry points into the libefc library are protected by efc
++ * lock. So all the state machine transitions are protected.
 + */
-+int
-+efc_sm_post_event(struct efc_sm_ctx *ctx,
-+		  enum efc_sm_event evt, void *data)
++
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include "efc.h"
++
++int efcport_init(struct efc *efc)
 +{
-+	if (!ctx->current_state)
++	u32 rc = EFC_SUCCESS;
++
++	spin_lock_init(&efc->lock);
++	INIT_LIST_HEAD(&efc->vport_list);
++	efc->hold_frames = false;
++	spin_lock_init(&efc->pend_frames_lock);
++	INIT_LIST_HEAD(&efc->pend_frames);
++
++	/* Create Node pool */
++	efc->node_pool = mempool_create_kmalloc_pool(EFC_MAX_REMOTE_NODES,
++						sizeof(struct efc_node));
++	if (!efc->node_pool) {
++		efc_log_err(efc, "Can't allocate node pool\n");
 +		return EFC_FAIL;
-+
-+	ctx->current_state(ctx, evt, data);
-+	return EFC_SUCCESS;
-+}
-+
-+void
-+efc_sm_transition(struct efc_sm_ctx *ctx,
-+		  void (*state)(struct efc_sm_ctx *,
-+				 enum efc_sm_event, void *), void *data)
-+
-+{
-+	if (ctx->current_state == state) {
-+		efc_sm_post_event(ctx, EFC_EVT_REENTER, data);
-+	} else {
-+		efc_sm_post_event(ctx, EFC_EVT_EXIT, data);
-+		ctx->current_state = state;
-+		efc_sm_post_event(ctx, EFC_EVT_ENTER, data);
 +	}
++
++	efc->node_dma_pool = dma_pool_create("node_dma_pool", &efc->pci->dev,
++						NODE_SPARAMS_SIZE, 0, 0);
++	if (!efc->node_dma_pool) {
++		efc_log_err(efc, "Can't allocate node dma pool\n");
++		mempool_destroy(efc->node_pool);
++		return EFC_FAIL;
++	}
++
++	efc->els_io_pool = mempool_create_kmalloc_pool(EFC_ELS_IO_POOL_SZ,
++						sizeof(struct efc_els_io_req));
++	if (!efc->els_io_pool) {
++		efc_log_err(efc, "Can't allocate els io pool\n");
++		return EFC_FAIL;
++	}
++
++	return rc;
 +}
 +
-+static char *event_name[] = EFC_SM_EVENT_NAME;
-+
-+const char *efc_sm_event_name(enum efc_sm_event evt)
++static void
++efc_purge_pending(struct efc *efc)
 +{
-+	if (evt > EFC_EVT_LAST)
-+		return "unknown";
++	struct efc_hw_sequence *frame, *next;
++	unsigned long flags = 0;
 +
-+	return event_name[evt];
++	spin_lock_irqsave(&efc->pend_frames_lock, flags);
++
++	list_for_each_entry_safe(frame, next, &efc->pend_frames, list_entry) {
++		list_del(&frame->list_entry);
++		efc->tt.hw_seq_free(efc, frame);
++	}
++
++	spin_unlock_irqrestore(&efc->pend_frames_lock, flags);
 +}
-diff --git a/drivers/scsi/elx/libefc/efc_sm.h b/drivers/scsi/elx/libefc/efc_sm.h
++
++void efcport_destroy(struct efc *efc)
++{
++	efc_purge_pending(efc);
++	mempool_destroy(efc->els_io_pool);
++	mempool_destroy(efc->node_pool);
++	dma_pool_destroy(efc->node_dma_pool);
++}
+diff --git a/drivers/scsi/elx/libefc/efclib.h b/drivers/scsi/elx/libefc/efclib.h
 new file mode 100644
-index 000000000000..e28835e7717d
+index 000000000000..5c40a91457d5
 --- /dev/null
-+++ b/drivers/scsi/elx/libefc/efc_sm.h
-@@ -0,0 +1,197 @@
++++ b/drivers/scsi/elx/libefc/efclib.h
+@@ -0,0 +1,601 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
 + * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
 + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
++ */
++
++#ifndef __EFCLIB_H__
++#define __EFCLIB_H__
++
++#include "scsi/fc/fc_els.h"
++#include "scsi/fc/fc_fs.h"
++#include "scsi/fc/fc_ns.h"
++#include "scsi/fc/fc_gs.h"
++#include "scsi/fc_frame.h"
++#include "../include/efc_common.h"
++#include "../libefc_sli/sli4.h"
++
++#define EFC_SERVICE_PARMS_LENGTH	120
++#define EFC_NAME_LENGTH			32
++#define EFC_SM_NAME_LENGTH		64
++#define EFC_DISPLAY_BUS_INFO_LENGTH	16
++
++#define EFC_WWN_LENGTH			32
++
++#define EFC_FC_ELS_DEFAULT_RETRIES	3
++
++/* Timeouts */
++#define EFC_FC_ELS_SEND_DEFAULT_TIMEOUT	0
++#define EFC_FC_FLOGI_TIMEOUT_SEC	5
++#define EFC_SHUTDOWN_TIMEOUT_USEC	30000000
++
++/* Local port topology */
++enum efc_nport_topology {
++	EFC_NPORT_TOPO_UNKNOWN = 0,
++	EFC_NPORT_TOPO_FABRIC,
++	EFC_NPORT_TOPO_P2P,
++	EFC_NPORT_TOPO_FC_AL,
++};
++
++#define enable_target_rscn(efc)		1
++
++enum efc_node_shutd_rsn {
++	EFC_NODE_SHUTDOWN_DEFAULT = 0,
++	EFC_NODE_SHUTDOWN_EXPLICIT_LOGO,
++	EFC_NODE_SHUTDOWN_IMPLICIT_LOGO,
++};
++
++enum efc_node_send_ls_acc {
++	EFC_NODE_SEND_LS_ACC_NONE = 0,
++	EFC_NODE_SEND_LS_ACC_PLOGI,
++	EFC_NODE_SEND_LS_ACC_PRLI,
++};
++
++#define EFC_LINK_STATUS_UP		0
++#define EFC_LINK_STATUS_DOWN		1
++
++/* State machine context header  */
++struct efc_sm_ctx {
++	void (*current_state)(struct efc_sm_ctx *ctx,
++			       u32 evt, void *arg);
++
++	const char	*description;
++	void		*app;
++};
++
++/* Description of discovered Fabric Domain */
++struct efc_domain_record {
++	u32		index;
++	u32		priority;
++	u8		address[6];
++	u8		wwn[8];
++	union {
++		u8	vlan[512];
++		u8	loop[128];
++	} map;
++	u32		speed;
++	u32		fc_id;
++	bool		is_loop;
++	bool		is_nport;
++};
++
++/* Domain events */
++enum efc_hw_domain_event {
++	EFC_HW_DOMAIN_ALLOC_OK,
++	EFC_HW_DOMAIN_ALLOC_FAIL,
++	EFC_HW_DOMAIN_ATTACH_OK,
++	EFC_HW_DOMAIN_ATTACH_FAIL,
++	EFC_HW_DOMAIN_FREE_OK,
++	EFC_HW_DOMAIN_FREE_FAIL,
++	EFC_HW_DOMAIN_LOST,
++	EFC_HW_DOMAIN_FOUND,
++	EFC_HW_DOMAIN_CHANGED,
++};
++
++struct efc_nport {
++	struct list_head	list_entry;
++	struct kref		ref;
++	void			(*release)(struct kref *arg);
++	struct efc		*efc;
++	u32			tgt_id;
++	u32			index;
++	u32			instance_index;
++	char			display_name[EFC_NAME_LENGTH];
++	bool			is_vport;
++	bool			free_req_pending;
++	bool			attached;
++	bool			p2p_winner;
++	struct efc_domain	*domain;
++	u64			wwpn;
++	u64			wwnn;
++	void			*ini_nport;
++	void			*tgt_nport;
++	void			*tgt_data;
++	void			*ini_data;
++
++	/* Members private to HW/SLI */
++	void			*hw;
++	u32			indicator;
++	u32			fc_id;
++	struct efc_dma		dma;
++
++	u8			wwnn_str[EFC_WWN_LENGTH];
++	__be64			sli_wwpn;
++	__be64			sli_wwnn;
++
++	struct efc_sm_ctx	sm;
++	struct xarray		lookup;
++	bool			enable_ini;
++	bool			enable_tgt;
++	bool			enable_rscn;
++	bool			shutting_down;
++	u32			p2p_port_id;
++	enum efc_nport_topology topology;
++	u8			service_params[EFC_SERVICE_PARMS_LENGTH];
++	u32			p2p_remote_port_id;
++};
++
++/**
++ * Fibre Channel domain object
++ *
++ * This object is a container for the various SLI components needed
++ * to connect to the domain of a FC or FCoE switch
++ * @efc:		pointer back to efc
++ * @instance_index:	unique instance index value
++ * @display_name:	Node display name
++ * @nport_list:		linked list of nports associated with this domain
++ * @ref:		Reference count, each nport takes a reference
++ * @release:		Function to free domain object
++ * @ini_domain:		initiator backend private domain data
++ * @tgt_domain:		target backend private domain data
++ * @hw:			pointer to HW
++ * @sm:			state machine context
++ * @fcf:		FC Forwarder table index
++ * @fcf_indicator:	FCFI
++ * @indicator:		VFI
++ * @nport_count:	Number of nports allocated
++ * @dma:		memory for Service Parameters
++ * @fcf_wwn:		WWN for FCF/switch
++ * @drvsm:		driver domain sm context
++ * @attached:		set true after attach completes
++ * @is_fc:		is FC
++ * @is_loop:		is loop topology
++ * @is_nlport:		is public loop
++ * @domain_found_pending:A domain found is pending, drec is updated
++ * @req_domain_free:	True if domain object should be free'd
++ * @req_accept_frames:	set in domain state machine to enable frames
++ * @domain_notify_pend:	Set in domain SM to avoid duplicate node event post
++ * @pending_drec:	Pending drec if a domain found is pending
++ * @service_params:	any nports service parameters
++ * @flogi_service_params:Fabric/P2p service parameters from FLOGI
++ * @lookup:		d_id to node lookup object
++ * @nport:		Pointer to first (physical) SLI port
++ */
++struct efc_domain {
++	struct efc		*efc;
++	char			display_name[EFC_NAME_LENGTH];
++	struct list_head	nport_list;
++	struct kref		ref;
++	void			(*release)(struct kref *arg);
++	void			*ini_domain;
++	void			*tgt_domain;
++
++	/* Declarations private to HW/SLI */
++	void			*hw;
++	u32			fcf;
++	u32			fcf_indicator;
++	u32			indicator;
++	u32			nport_count;
++	struct efc_dma		dma;
++
++	/* Declarations private to FC trannport */
++	u64			fcf_wwn;
++	struct efc_sm_ctx	drvsm;
++	bool			attached;
++	bool			is_fc;
++	bool			is_loop;
++	bool			is_nlport;
++	bool			domain_found_pending;
++	bool			req_domain_free;
++	bool			req_accept_frames;
++	bool			domain_notify_pend;
++
++	struct efc_domain_record pending_drec;
++	u8			service_params[EFC_SERVICE_PARMS_LENGTH];
++	u8			flogi_service_params[EFC_SERVICE_PARMS_LENGTH];
++
++	struct xarray		lookup;
++
++	struct efc_nport	*nport;
++};
++
++/**
++ * Remote Node object
++ *
++ * This object represents a connection between the SLI port and another
++ * Nx_Port on the fabric. Note this can be either a well known port such
++ * as a F_Port (i.e. ff:ff:fe) or another N_Port.
++ * @indicator:		RPI
++ * @fc_id:		FC address
++ * @attached:		true if attached
++ * @nport:		associated SLI port
++ * @node:		associated node
++ */
++struct efc_remote_node {
++	u32			indicator;
++	u32			index;
++	u32			fc_id;
++
++	bool			attached;
++
++	struct efc_nport	*nport;
++	void			*node;
++};
++
++/**
++ * FC Node object
++ * @efc:		pointer back to efc structure
++ * @display_name:	Node display name
++ * @nort:		Assosiated nport pointer.
++ * @hold_frames:	hold incoming frames if true
++ * @els_io_enabled:	Enable allocating els ios for this node
++ * @els_ios_lock:	lock to protect the els ios list
++ * @els_ios_list:	ELS I/O's for this node
++ * @ini_node:		backend initiator private node data
++ * @tgt_node:		backend target private node data
++ * @rnode:		Remote node
++ * @sm:			state machine context
++ * @evtdepth:		current event posting nesting depth
++ * @req_free:		this node is to be free'd
++ * @attached:		node is attached (REGLOGIN complete)
++ * @fcp_enabled:	node is enabled to handle FCP
++ * @rscn_pending:	for name server node RSCN is pending
++ * @send_plogi:		send PLOGI accept, upon completion of node attach
++ * @send_plogi_acc:	TRUE if io_alloc() is enabled.
++ * @send_ls_acc:	type of LS acc to send
++ * @ls_acc_io:		SCSI IO for LS acc
++ * @ls_acc_oxid:	OX_ID for pending accept
++ * @ls_acc_did:		D_ID for pending accept
++ * @shutdown_reason:	reason for node shutdown
++ * @sparm_dma_buf:	service parameters buffer
++ * @service_params:	plogi/acc frame from remote device
++ * @pend_frames_lock:	lock for inbound pending frames list
++ * @pend_frames:	inbound pending frames list
++ * @pend_frames_processed:count of frames processed in hold frames interval
++ * @ox_id_in_use:	used to verify one at a time us of ox_id
++ * @els_retries_remaining:for ELS, number of retries remaining
++ * @els_req_cnt:	number of outstanding ELS requests
++ * @els_cmpl_cnt:	number of outstanding ELS completions
++ * @abort_cnt:		Abort counter for debugging purpos
++ * @current_state_name:	current node state
++ * @prev_state_name:	previous node state
++ * @current_evt:	current event
++ * @prev_evt:		previous event
++ * @targ:		node is target capable
++ * @init:		node is init capable
++ * @refound:		Handle node refound case when node is being deleted
++ * @els_io_pend_list:	list of pending (not yet processed) ELS IOs
++ * @els_io_active_list:	list of active (processed) ELS IOs
++ * @nodedb_state:	Node debugging, saved state
++ * @gidpt_delay_timer:	GIDPT delay timer
++ * @time_last_gidpt_msec:Start time of last target RSCN GIDPT
++ * @wwnn:		remote port WWNN
++ * @wwpn:		remote port WWPN
++ */
++struct efc_node {
++	struct efc		*efc;
++	char			display_name[EFC_NAME_LENGTH];
++	struct efc_nport	*nport;
++	struct kref		ref;
++	void			(*release)(struct kref *arg);
++	bool			hold_frames;
++	bool			els_io_enabled;
++	bool			send_plogi_acc;
++	bool			send_plogi;
++	bool			rscn_pending;
++	bool			fcp_enabled;
++	bool			attached;
++	bool			req_free;
++
++	spinlock_t		els_ios_lock;
++	struct list_head	els_ios_list;
++	void			*ini_node;
++	void			*tgt_node;
++
++	struct efc_remote_node	rnode;
++	/* Declarations private to FC trannport */
++	struct efc_sm_ctx	sm;
++	u32			evtdepth;
++
++	enum efc_node_send_ls_acc send_ls_acc;
++	void			*ls_acc_io;
++	u32			ls_acc_oxid;
++	u32			ls_acc_did;
++	enum efc_node_shutd_rsn	shutdown_reason;
++	bool			targ;
++	bool			init;
++	bool			refound;
++	struct efc_dma		sparm_dma_buf;
++	u8			service_params[EFC_SERVICE_PARMS_LENGTH];
++	spinlock_t		pend_frames_lock;
++	struct list_head	pend_frames;
++	u32			pend_frames_processed;
++	u32			ox_id_in_use;
++	u32			els_retries_remaining;
++	u32			els_req_cnt;
++	u32			els_cmpl_cnt;
++	u32			abort_cnt;
++
++	char			current_state_name[EFC_SM_NAME_LENGTH];
++	char			prev_state_name[EFC_SM_NAME_LENGTH];
++	int			current_evt;
++	int			prev_evt;
++
++	void (*nodedb_state)(struct efc_sm_ctx *ctx,
++			      u32 evt, void *arg);
++	struct timer_list	gidpt_delay_timer;
++	u64			time_last_gidpt_msec;
++
++	char			wwnn[EFC_WWN_LENGTH];
++	char			wwpn[EFC_WWN_LENGTH];
++};
++
++/**
++ * NPIV port
++ *
++ * Collection of the information required to restore a virtual port across
++ * link events
++ * @wwnn:		node name
++ * @wwpn:		port name
++ * @fc_id:		port id
++ * @tgt_data:		target backend pointer
++ * @ini_data:		initiator backend pointe
++ * @nport:		Used to match record after attaching for update
 + *
 + */
 +
-+/**
-+ * Generic state machine framework declarations.
-+ */
-+
-+#ifndef _EFC_SM_H
-+#define _EFC_SM_H
-+
-+struct efc_sm_ctx;
-+
-+/* State Machine events */
-+enum efc_sm_event {
-+	/* Common Events */
-+	EFC_EVT_ENTER,
-+	EFC_EVT_REENTER,
-+	EFC_EVT_EXIT,
-+	EFC_EVT_SHUTDOWN,
-+	EFC_EVT_ALL_CHILD_NODES_FREE,
-+	EFC_EVT_RESUME,
-+	EFC_EVT_TIMER_EXPIRED,
-+
-+	/* Domain Events */
-+	EFC_EVT_RESPONSE,
-+	EFC_EVT_ERROR,
-+
-+	EFC_EVT_DOMAIN_FOUND,
-+	EFC_EVT_DOMAIN_ALLOC_OK,
-+	EFC_EVT_DOMAIN_ALLOC_FAIL,
-+	EFC_EVT_DOMAIN_REQ_ATTACH,
-+	EFC_EVT_DOMAIN_ATTACH_OK,
-+	EFC_EVT_DOMAIN_ATTACH_FAIL,
-+	EFC_EVT_DOMAIN_LOST,
-+	EFC_EVT_DOMAIN_FREE_OK,
-+	EFC_EVT_DOMAIN_FREE_FAIL,
-+	EFC_EVT_HW_DOMAIN_REQ_ATTACH,
-+	EFC_EVT_HW_DOMAIN_REQ_FREE,
-+
-+	/* Sport Events */
-+	EFC_EVT_NPORT_ALLOC_OK,
-+	EFC_EVT_NPORT_ALLOC_FAIL,
-+	EFC_EVT_NPORT_ATTACH_OK,
-+	EFC_EVT_NPORT_ATTACH_FAIL,
-+	EFC_EVT_NPORT_FREE_OK,
-+	EFC_EVT_NPORT_FREE_FAIL,
-+	EFC_EVT_NPORT_TOPOLOGY_NOTIFY,
-+	EFC_EVT_HW_PORT_ALLOC_OK,
-+	EFC_EVT_HW_PORT_ALLOC_FAIL,
-+	EFC_EVT_HW_PORT_ATTACH_OK,
-+	EFC_EVT_HW_PORT_REQ_ATTACH,
-+	EFC_EVT_HW_PORT_REQ_FREE,
-+	EFC_EVT_HW_PORT_FREE_OK,
-+
-+	/* Login Events */
-+	EFC_EVT_SRRS_ELS_REQ_OK,
-+	EFC_EVT_SRRS_ELS_CMPL_OK,
-+	EFC_EVT_SRRS_ELS_REQ_FAIL,
-+	EFC_EVT_SRRS_ELS_CMPL_FAIL,
-+	EFC_EVT_SRRS_ELS_REQ_RJT,
-+	EFC_EVT_NODE_ATTACH_OK,
-+	EFC_EVT_NODE_ATTACH_FAIL,
-+	EFC_EVT_NODE_FREE_OK,
-+	EFC_EVT_NODE_FREE_FAIL,
-+	EFC_EVT_ELS_FRAME,
-+	EFC_EVT_ELS_REQ_TIMEOUT,
-+	EFC_EVT_ELS_REQ_ABORTED,
-+	/* request an ELS IO be aborted */
-+	EFC_EVT_ABORT_ELS,
-+	/* ELS abort process complete */
-+	EFC_EVT_ELS_ABORT_CMPL,
-+
-+	EFC_EVT_ABTS_RCVD,
-+
-+	/* node is not in the GID_PT payload */
-+	EFC_EVT_NODE_MISSING,
-+	/* node is allocated and in the GID_PT payload */
-+	EFC_EVT_NODE_REFOUND,
-+	/* node shutting down due to PLOGI recvd (implicit logo) */
-+	EFC_EVT_SHUTDOWN_IMPLICIT_LOGO,
-+	/* node shutting down due to LOGO recvd/sent (explicit logo) */
-+	EFC_EVT_SHUTDOWN_EXPLICIT_LOGO,
-+
-+	EFC_EVT_PLOGI_RCVD,
-+	EFC_EVT_FLOGI_RCVD,
-+	EFC_EVT_LOGO_RCVD,
-+	EFC_EVT_PRLI_RCVD,
-+	EFC_EVT_PRLO_RCVD,
-+	EFC_EVT_PDISC_RCVD,
-+	EFC_EVT_FDISC_RCVD,
-+	EFC_EVT_ADISC_RCVD,
-+	EFC_EVT_RSCN_RCVD,
-+	EFC_EVT_SCR_RCVD,
-+	EFC_EVT_ELS_RCVD,
-+
-+	EFC_EVT_FCP_CMD_RCVD,
-+
-+	EFC_EVT_GIDPT_DELAY_EXPIRED,
-+
-+	/* SCSI Target Server events */
-+	EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY,
-+	EFC_EVT_NODE_DEL_INI_COMPLETE,
-+	EFC_EVT_NODE_DEL_TGT_COMPLETE,
-+	EFC_EVT_NODE_SESS_REG_OK,
-+	EFC_EVT_NODE_SESS_REG_FAIL,
-+
-+	/* Must be last */
-+	EFC_EVT_LAST
++struct efc_vport_spec {
++	struct list_head	list_entry;
++	u64			wwnn;
++	u64			wwpn;
++	u32			fc_id;
++	bool			enable_tgt;
++	bool			enable_ini;
++	void			*tgt_data;
++	void			*ini_data;
++	struct efc_nport	*nport;
 +};
 +
-+/* State Machine event name lookup array */
-+#define EFC_SM_EVENT_NAME {						\
-+	[EFC_EVT_ENTER]			= "EFC_EVT_ENTER",		\
-+	[EFC_EVT_REENTER]		= "EFC_EVT_REENTER",		\
-+	[EFC_EVT_EXIT]			= "EFC_EVT_EXIT",		\
-+	[EFC_EVT_SHUTDOWN]		= "EFC_EVT_SHUTDOWN",		\
-+	[EFC_EVT_ALL_CHILD_NODES_FREE]	= "EFC_EVT_ALL_CHILD_NODES_FREE",\
-+	[EFC_EVT_RESUME]		= "EFC_EVT_RESUME",		\
-+	[EFC_EVT_TIMER_EXPIRED]		= "EFC_EVT_TIMER_EXPIRED",	\
-+	[EFC_EVT_RESPONSE]		= "EFC_EVT_RESPONSE",		\
-+	[EFC_EVT_ERROR]			= "EFC_EVT_ERROR",		\
-+	[EFC_EVT_DOMAIN_FOUND]		= "EFC_EVT_DOMAIN_FOUND",	\
-+	[EFC_EVT_DOMAIN_ALLOC_OK]	= "EFC_EVT_DOMAIN_ALLOC_OK",	\
-+	[EFC_EVT_DOMAIN_ALLOC_FAIL]	= "EFC_EVT_DOMAIN_ALLOC_FAIL",	\
-+	[EFC_EVT_DOMAIN_REQ_ATTACH]	= "EFC_EVT_DOMAIN_REQ_ATTACH",	\
-+	[EFC_EVT_DOMAIN_ATTACH_OK]	= "EFC_EVT_DOMAIN_ATTACH_OK",	\
-+	[EFC_EVT_DOMAIN_ATTACH_FAIL]	= "EFC_EVT_DOMAIN_ATTACH_FAIL",	\
-+	[EFC_EVT_DOMAIN_LOST]		= "EFC_EVT_DOMAIN_LOST",	\
-+	[EFC_EVT_DOMAIN_FREE_OK]	= "EFC_EVT_DOMAIN_FREE_OK",	\
-+	[EFC_EVT_DOMAIN_FREE_FAIL]	= "EFC_EVT_DOMAIN_FREE_FAIL",	\
-+	[EFC_EVT_HW_DOMAIN_REQ_ATTACH]	= "EFC_EVT_HW_DOMAIN_REQ_ATTACH",\
-+	[EFC_EVT_HW_DOMAIN_REQ_FREE]	= "EFC_EVT_HW_DOMAIN_REQ_FREE",	\
-+	[EFC_EVT_NPORT_ALLOC_OK]	= "EFC_EVT_NPORT_ALLOC_OK",	\
-+	[EFC_EVT_NPORT_ALLOC_FAIL]	= "EFC_EVT_NPORT_ALLOC_FAIL",	\
-+	[EFC_EVT_NPORT_ATTACH_OK]	= "EFC_EVT_NPORT_ATTACH_OK",	\
-+	[EFC_EVT_NPORT_ATTACH_FAIL]	= "EFC_EVT_NPORT_ATTACH_FAIL",	\
-+	[EFC_EVT_NPORT_FREE_OK]		= "EFC_EVT_NPORT_FREE_OK",	\
-+	[EFC_EVT_NPORT_FREE_FAIL]	= "EFC_EVT_NPORT_FREE_FAIL",	\
-+	[EFC_EVT_NPORT_TOPOLOGY_NOTIFY]	= "EFC_EVT_NPORT_TOPOLOGY_NOTIFY",\
-+	[EFC_EVT_HW_PORT_ALLOC_OK]	= "EFC_EVT_HW_PORT_ALLOC_OK",	\
-+	[EFC_EVT_HW_PORT_ALLOC_FAIL]	= "EFC_EVT_HW_PORT_ALLOC_FAIL",	\
-+	[EFC_EVT_HW_PORT_ATTACH_OK]	= "EFC_EVT_HW_PORT_ATTACH_OK",	\
-+	[EFC_EVT_HW_PORT_REQ_ATTACH]	= "EFC_EVT_HW_PORT_REQ_ATTACH",	\
-+	[EFC_EVT_HW_PORT_REQ_FREE]	= "EFC_EVT_HW_PORT_REQ_FREE",	\
-+	[EFC_EVT_HW_PORT_FREE_OK]	= "EFC_EVT_HW_PORT_FREE_OK",	\
-+	[EFC_EVT_SRRS_ELS_REQ_OK]	= "EFC_EVT_SRRS_ELS_REQ_OK",	\
-+	[EFC_EVT_SRRS_ELS_CMPL_OK]	= "EFC_EVT_SRRS_ELS_CMPL_OK",	\
-+	[EFC_EVT_SRRS_ELS_REQ_FAIL]	= "EFC_EVT_SRRS_ELS_REQ_FAIL",	\
-+	[EFC_EVT_SRRS_ELS_CMPL_FAIL]	= "EFC_EVT_SRRS_ELS_CMPL_FAIL",	\
-+	[EFC_EVT_SRRS_ELS_REQ_RJT]	= "EFC_EVT_SRRS_ELS_REQ_RJT",	\
-+	[EFC_EVT_NODE_ATTACH_OK]	= "EFC_EVT_NODE_ATTACH_OK",	\
-+	[EFC_EVT_NODE_ATTACH_FAIL]	= "EFC_EVT_NODE_ATTACH_FAIL",	\
-+	[EFC_EVT_NODE_FREE_OK]		= "EFC_EVT_NODE_FREE_OK",	\
-+	[EFC_EVT_NODE_FREE_FAIL]	= "EFC_EVT_NODE_FREE_FAIL",	\
-+	[EFC_EVT_ELS_FRAME]		= "EFC_EVT_ELS_FRAME",		\
-+	[EFC_EVT_ELS_REQ_TIMEOUT]	= "EFC_EVT_ELS_REQ_TIMEOUT",	\
-+	[EFC_EVT_ELS_REQ_ABORTED]	= "EFC_EVT_ELS_REQ_ABORTED",	\
-+	[EFC_EVT_ABORT_ELS]		= "EFC_EVT_ABORT_ELS",		\
-+	[EFC_EVT_ELS_ABORT_CMPL]	= "EFC_EVT_ELS_ABORT_CMPL",	\
-+	[EFC_EVT_ABTS_RCVD]		= "EFC_EVT_ABTS_RCVD",		\
-+	[EFC_EVT_NODE_MISSING]		= "EFC_EVT_NODE_MISSING",	\
-+	[EFC_EVT_NODE_REFOUND]		= "EFC_EVT_NODE_REFOUND",	\
-+	[EFC_EVT_SHUTDOWN_IMPLICIT_LOGO] = "EFC_EVT_SHUTDOWN_IMPLICIT_LOGO",\
-+	[EFC_EVT_SHUTDOWN_EXPLICIT_LOGO] = "EFC_EVT_SHUTDOWN_EXPLICIT_LOGO",\
-+	[EFC_EVT_PLOGI_RCVD]		= "EFC_EVT_PLOGI_RCVD",		\
-+	[EFC_EVT_FLOGI_RCVD]		= "EFC_EVT_FLOGI_RCVD",		\
-+	[EFC_EVT_LOGO_RCVD]		= "EFC_EVT_LOGO_RCVD",		\
-+	[EFC_EVT_PRLI_RCVD]		= "EFC_EVT_PRLI_RCVD",		\
-+	[EFC_EVT_PRLO_RCVD]		= "EFC_EVT_PRLO_RCVD",		\
-+	[EFC_EVT_PDISC_RCVD]		= "EFC_EVT_PDISC_RCVD",		\
-+	[EFC_EVT_FDISC_RCVD]		= "EFC_EVT_FDISC_RCVD",		\
-+	[EFC_EVT_ADISC_RCVD]		= "EFC_EVT_ADISC_RCVD",		\
-+	[EFC_EVT_RSCN_RCVD]		= "EFC_EVT_RSCN_RCVD",		\
-+	[EFC_EVT_SCR_RCVD]		= "EFC_EVT_SCR_RCVD",		\
-+	[EFC_EVT_ELS_RCVD]		= "EFC_EVT_ELS_RCVD",		\
-+	[EFC_EVT_FCP_CMD_RCVD]		= "EFC_EVT_FCP_CMD_RCVD",	\
-+	[EFC_EVT_NODE_DEL_INI_COMPLETE]	= "EFC_EVT_NODE_DEL_INI_COMPLETE",\
-+	[EFC_EVT_NODE_DEL_TGT_COMPLETE]	= "EFC_EVT_NODE_DEL_TGT_COMPLETE",\
-+	[EFC_EVT_LAST]			= "EFC_EVT_LAST",		\
-+}
++#define node_printf(node, fmt, args...) \
++	efc_log_info(node->efc, "[%s] " fmt, node->display_name, ##args)
 +
-+int
-+efc_sm_post_event(struct efc_sm_ctx *ctx,
-+		  enum efc_sm_event evt, void *data);
++/* Node SM IO Context Callback structure */
++struct efc_node_cb {
++	int			status;
++	int			ext_status;
++	struct efc_hw_rq_buffer *header;
++	struct efc_hw_rq_buffer *payload;
++	struct efc_dma		els_rsp;
++
++	/* Actual length of data received */
++	int			rsp_len;
++};
++
++/* HW unsolicited callback status */
++enum efc_hw_unsol_status {
++	EFC_HW_UNSOL_SUCCESS,
++	EFC_HW_UNSOL_ERROR,
++	EFC_HW_UNSOL_ABTS_RCVD,
++	EFC_HW_UNSOL_MAX,	/**< must be last */
++};
++
++enum efc_hw_rq_buffer_type {
++	EFC_HW_RQ_BUFFER_TYPE_HDR,
++	EFC_HW_RQ_BUFFER_TYPE_PAYLOAD,
++	EFC_HW_RQ_BUFFER_TYPE_MAX,
++};
++
++struct efc_hw_rq_buffer {
++	u16			rqindex;
++	struct efc_dma		dma;
++};
++
++/*
++ * Defines a general FC sequence object,
++ * consisting of a header, payload buffers
++ * and a HW IO in the case of port owned XRI
++ */
++struct efc_hw_sequence {
++	struct list_head	list_entry;
++	void			*hw;
++	u8			fcfi;
++	u8			auto_xrdy;
++	u8			out_of_xris;
++	enum efc_hw_unsol_status status;
++
++	struct efc_hw_rq_buffer *header;
++	struct efc_hw_rq_buffer *payload;
++
++	void			*hw_priv;
++};
++
++enum efc_disc_io_type {
++	EFC_DISC_IO_ELS_REQ,
++	EFC_DISC_IO_ELS_RESP,
++	EFC_DISC_IO_CT_REQ,
++	EFC_DISC_IO_CT_RESP
++};
++
++struct efc_io_els_params {
++	u32             s_id;
++	u16             ox_id;
++	u8              timeout;
++};
++
++struct efc_io_ct_params {
++	u8              r_ctl;
++	u8              type;
++	u8              df_ctl;
++	u8              timeout;
++	u16             ox_id;
++};
++
++union efc_disc_io_param {
++	struct efc_io_els_params els;
++	struct efc_io_ct_params ct;
++};
++
++struct efc_disc_io {
++	struct efc_dma		req;         /* send buffer */
++	struct efc_dma		rsp;         /* receive buffer */
++	enum efc_disc_io_type	io_type;     /* EFC_DISC_IO_TYPE enum*/
++	u16			xmit_len;    /* Length of els request*/
++	u16			rsp_len;     /* Max length of rsps to be rcvd */
++	u32			rpi;         /* Registered RPI */
++	u32			vpi;         /* VPI for this nport */
++	u32			s_id;
++	u32			d_id;
++	bool			rpi_registered; /* if false, use tmp RPI */
++	union efc_disc_io_param iparam;
++};
++
++/* Return value indiacating the sequence can not be freed */
++#define EFC_HW_SEQ_HOLD		0
++/* Return value indiacating the sequence can be freed */
++#define EFC_HW_SEQ_FREE		1
++
++struct libefc_function_template {
++	/*Sport*/
++	int (*new_nport)(struct efc *efc, struct efc_nport *sp);
++	void (*del_nport)(struct efc *efc, struct efc_nport *sp);
++
++	/*Scsi Node*/
++	int (*scsi_new_node)(struct efc *efc, struct efc_node *n);
++	int (*scsi_del_node)(struct efc *efc, struct efc_node *n, int reason);
++
++	int (*issue_mbox_rqst)(void *efct, void *buf, void *cb, void *arg);
++	/*Send ELS IO*/
++	int (*send_els)(struct efc *efc, struct efc_disc_io *io);
++	/*Send BLS IO*/
++	int (*send_bls)(struct efc *efc, u32 type, struct sli_bls_params *bls);
++	/*Free HW frame*/
++	int (*hw_seq_free)(struct efc *efc, struct efc_hw_sequence *seq);
++};
++
++#define EFC_LOG_LIB		0x01
++#define EFC_LOG_NODE		0x02
++#define EFC_LOG_PORT		0x04
++#define EFC_LOG_DOMAIN		0x08
++#define EFC_LOG_ELS		0x10
++#define EFC_LOG_DOMAIN_SM	0x20
++#define EFC_LOG_SM		0x40
++
++/* efc library port structure */
++struct efc {
++	void			*base;
++	struct pci_dev		*pci;
++	struct sli4		*sli;
++	u32			fcfi;
++	u64			req_wwpn;
++	u64			req_wwnn;
++
++	u64			def_wwpn;
++	u64			def_wwnn;
++	u64			max_xfer_size;
++	mempool_t		*node_pool;
++	struct dma_pool		*node_dma_pool;
++	u32			nodes_count;
++
++	u32			link_status;
++
++	struct list_head	vport_list;
++	/* lock to protect the vport list */
++	spinlock_t		vport_lock;
++
++	struct libefc_function_template tt;
++	/* lock to protect the discovery library.
++	 * Refer to efclib.c for more details.
++	 */
++	spinlock_t		lock;
++
++	bool			enable_ini;
++	bool			enable_tgt;
++
++	u32			log_level;
++
++	struct efc_domain	*domain;
++	void (*domain_free_cb)(struct efc *efc, void *arg);
++	void			*domain_free_cb_arg;
++
++	u64			tgt_rscn_delay_msec;
++	u64			tgt_rscn_period_msec;
++
++	bool			external_loopback;
++	u32			nodedb_mask;
++	u32			logmask;
++	mempool_t		*els_io_pool;
++	atomic_t		els_io_alloc_failed_count;
++
++	/* hold pending frames */
++	bool			hold_frames;
++	/* lock to protect pending frames list access */
++	spinlock_t		pend_frames_lock;
++	struct list_head	pend_frames;
++	/* count of pending frames that were processed */
++	u32			pend_frames_processed;
++
++};
++
++/*
++ * EFC library registration
++ * **********************************/
++int efcport_init(struct efc *efc);
++void efcport_destroy(struct efc *efc);
++/*
++ * EFC Domain
++ * **********************************/
++int efc_domain_cb(void *arg, int event, void *data);
 +void
-+efc_sm_transition(struct efc_sm_ctx *ctx,
-+		  void (*state)(struct efc_sm_ctx *ctx,
-+				 enum efc_sm_event evt, void *arg),
-+		  void *data);
-+void efc_sm_disable(struct efc_sm_ctx *ctx);
-+const char *efc_sm_event_name(enum efc_sm_event evt);
++efc_register_domain_free_cb(struct efc *efc,
++			void (*callback)(struct efc *efc, void *arg),
++			void *arg);
 +
-+#endif /* ! _EFC_SM_H */
++/*
++ * EFC nport
++ * **********************************/
++void efc_nport_cb(void *arg, int event, void *data);
++struct efc_vport_spec *efc_vport_create_spec(struct efc *efc, u64 wwnn,
++			u64 wwpn, u32 fc_id, bool enable_ini, bool enable_tgt,
++			void *tgt_data, void *ini_data);
++int efc_nport_vport_new(struct efc_domain *domain, u64 wwpn,
++			u64 wwnn, u32 fc_id, bool ini, bool tgt,
++			void *tgt_data, void *ini_data);
++int efc_nport_vport_del(struct efc *efc, struct efc_domain *domain,
++			u64 wwpn, u64 wwnn);
++
++void efc_vport_del_all(struct efc *efc);
++
++/*
++ * EFC Node
++ * **********************************/
++int efc_remote_node_cb(void *arg, int event, void *data);
++void efc_node_fcid_display(u32 fc_id, char *buffer, u32 buf_len);
++void efc_node_post_shutdown(struct efc_node *node, u32 evt, void *arg);
++u64 efc_node_get_wwpn(struct efc_node *node);
++
++/*
++ * EFC FCP/ELS/CT interface
++ * **********************************/
++void efc_dispatch_frame(struct efc *efc, struct efc_hw_sequence *seq);
++void efc_disc_io_complete(struct efc_disc_io *io, u32 len, u32 status,
++			  u32 ext_status);
++
++/*
++ * EFC SCSI INTERACTION LAYER
++ * **********************************/
++void efc_scsi_sess_reg_complete(struct efc_node *node, u32 status);
++void efc_scsi_del_initiator_complete(struct efc *efc, struct efc_node *node);
++void efc_scsi_del_target_complete(struct efc *efc, struct efc_node *node);
++void efc_scsi_io_list_empty(struct efc *efc, struct efc_node *node);
++
++#endif /* __EFCLIB_H__ */
 -- 
 2.26.2
 
