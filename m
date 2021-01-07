@@ -7,58 +7,59 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29B37C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 06:11:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28B4BC43381
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 06:39:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF4A222E03
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 06:11:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0437422E00
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 06:39:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726584AbhAGGLT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jan 2021 01:11:19 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:60112 "EHLO
+        id S1726893AbhAGGjr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jan 2021 01:39:47 -0500
+Received: from so254-31.mailgun.net ([198.61.254.31]:19102 "EHLO
         so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726545AbhAGGLS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2021 01:11:18 -0500
+        with ESMTP id S1725959AbhAGGjn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2021 01:39:43 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1609999854; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1610001564; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=dFQegvrRvGd0eGFxd2nAZpJcWozq9olKCdVXlGOTAMM=;
- b=bDAy8dwiOOb0DLKd7Qn3RLGipA+ppFw6UzTraXKljxQhBe9r6kEIHJI213SV+trdul9cstPt
- GB4B26DuoZkz6QTlmR+bDdofi1vtWSde92VGqjnV1z/BOYgQ36nPSp82sKdYY/HP7SXk6jVH
- PWDlwFkzHzzlhlirkoStkVUelps=
+ MIME-Version: Sender; bh=eR2BA7ahLtdq8P6A3Z0TLenLeHiqJ6K9ONAaTza5lBI=;
+ b=r8HOcPDImeh9JUe9a2z42HQE5kwxKKYglIBtF03mYcczat/pbLzYYvgdp0VsmJd7zBEbzPJ5
+ jzXG//egKvnMLzDF5mkaX3r6ltLQV7qqKecFEkcz+31PjXcDXhAKaZYyIzwSFePtxB1rqfHa
+ GAMk5+cqo+Ny8/73xnOc1o0rgHI=
 X-Mailgun-Sending-Ip: 198.61.254.31
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n10.prod.us-east-1.postgun.com with SMTP id
- 5ff6a5cde2332e083a312e6e (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 07 Jan 2021 06:10:21
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 5ff6ac7f512813ac4451e668 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 07 Jan 2021 06:38:55
  GMT
 Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A6727C43465; Thu,  7 Jan 2021 06:10:20 +0000 (UTC)
+        id 6E233C43461; Thu,  7 Jan 2021 06:38:54 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 01A81C433CA;
-        Thu,  7 Jan 2021 06:10:19 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7BC40C433CA;
+        Thu,  7 Jan 2021 06:38:53 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Thu, 07 Jan 2021 14:10:19 +0800
+Date:   Thu, 07 Jan 2021 14:38:53 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Jaegeuk Kim <jaegeuk@kernel.org>
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, alim.akhtar@samsung.com,
         avri.altman@wdc.com, bvanassche@acm.org,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com
-Subject: Re: [PATCH v3 1/2] scsi: ufs: fix livelock of ufshcd_clear_ua_wluns
-In-Reply-To: <20210106214109.44041-2-jaegeuk@kernel.org>
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        Jaegeuk Kim <jaegeuk@google.com>
+Subject: Re: [PATCH v3 2/2] scsi: ufs: handle LINERESET with correct tm_cmd
+In-Reply-To: <20210106214109.44041-3-jaegeuk@kernel.org>
 References: <20210106214109.44041-1-jaegeuk@kernel.org>
- <20210106214109.44041-2-jaegeuk@kernel.org>
-Message-ID: <fc4cb27df8bd6b2c1037d82e4b5d3860@codeaurora.org>
+ <20210106214109.44041-3-jaegeuk@kernel.org>
+Message-ID: <163fae07a94933230e0432e2ca584040@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
@@ -66,87 +67,132 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2021-01-07 05:41, Jaegeuk Kim wrote:
-> When gate_work/ungate_work gets an error during hibern8_enter or exit,
->  ufshcd_err_handler()
->    ufshcd_scsi_block_requests()
->    ufshcd_reset_and_restore()
->      ufshcd_clear_ua_wluns() -> stuck
->    ufshcd_scsi_unblock_requests()
+> From: Jaegeuk Kim <jaegeuk@google.com>
 > 
-> In order to avoid it, ufshcd_clear_ua_wluns() can be called per 
-> recovery flows
-> such as suspend/resume, link_recovery, and error_handler.
+> This fixes a warning caused by wrong reserve tag usage in 
+> __ufshcd_issue_tm_cmd.
 > 
-> Fixes: 1918651f2d7e ("scsi: ufs: Clear UAC for RPMB after ufshcd 
-> resets")
+> WARNING: CPU: 7 PID: 7 at block/blk-core.c:630 
+> blk_get_request+0x68/0x70
+> WARNING: CPU: 4 PID: 157 at block/blk-mq-tag.c:82 
+> blk_mq_get_tag+0x438/0x46c
+> 
+> And, in ufshcd_err_handler(), we can avoid to send tm_cmd before 
+> aborting
+> outstanding commands by waiting a bit for IO completion like this.
+> 
+> __ufshcd_issue_tm_cmd: task management cmd 0x80 timed-out
+> 
+
+Would you mind add a Fixes tag?
+
 > Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 15 ++++++++++-----
->  1 file changed, 10 insertions(+), 5 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 36 ++++++++++++++++++++++++++++++++----
+>  1 file changed, 32 insertions(+), 4 deletions(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index bedb822a40a3..1678cec08b51 100644
+> index 1678cec08b51..47fc8da3cbf9 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -3996,6 +3996,8 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
->  	if (ret)
->  		dev_err(hba->dev, "%s: link recovery failed, err %d",
->  			__func__, ret);
-> +	else
-> +		ufshcd_clear_ua_wluns(hba);
+> @@ -44,6 +44,9 @@
+>  /* Query request timeout */
+>  #define QUERY_REQ_TIMEOUT 1500 /* 1.5 seconds */
+> 
+> +/* LINERESET TIME OUT */
+> +#define LINERESET_IO_TIMEOUT_MS			(30000) /* 30 sec */
+> +
+>  /* Task management command timeout */
+>  #define TM_CMD_TIMEOUT	100 /* msecs */
+> 
+> @@ -5899,6 +5902,8 @@ static void ufshcd_err_handler(struct work_struct 
+> *work)
+>  	 * check if power mode restore is needed.
+>  	 */
+>  	if (hba->saved_uic_err & UFSHCD_UIC_PA_GENERIC_ERROR) {
+> +		ktime_t start = ktime_get();
+> +
+>  		hba->saved_uic_err &= ~UFSHCD_UIC_PA_GENERIC_ERROR;
+>  		if (!hba->saved_uic_err)
+>  			hba->saved_err &= ~UIC_ERROR;
+> @@ -5906,6 +5911,20 @@ static void ufshcd_err_handler(struct 
+> work_struct *work)
+>  		if (ufshcd_is_pwr_mode_restore_needed(hba))
+>  			needs_restore = true;
+>  		spin_lock_irqsave(hba->host->host_lock, flags);
+> +		/* Wait for IO completion to avoid aborting IOs */
+> +		while (hba->outstanding_reqs) {
+> +			ufshcd_complete_requests(hba);
+> +			spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +			schedule();
+> +			spin_lock_irqsave(hba->host->host_lock, flags);
+> +			if (ktime_to_ms(ktime_sub(ktime_get(), start)) >
+> +						LINERESET_IO_TIMEOUT_MS) {
+> +				dev_err(hba->dev, "%s: timeout, outstanding=0x%lx\n",
+> +					__func__, hba->outstanding_reqs);
+> +				break;
+> +			}
+> +		}
+> +
+>  		if (!hba->saved_err && !needs_restore)
+>  			goto skip_err_handling;
+>  	}
+> @@ -6302,9 +6321,13 @@ static irqreturn_t ufshcd_intr(int irq, void 
+> *__hba)
+>  		intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+>  	}
+> 
+> -	if (enabled_intr_status && retval == IRQ_NONE) {
+> -		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x\n",
+> -					__func__, intr_status);
+> +	if (enabled_intr_status && retval == IRQ_NONE &&
+> +				!ufshcd_eh_in_progress(hba)) {
+> +		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x (0x%08x, 
+> 0x%08x)\n",
+> +					__func__,
+> +					intr_status,
+> +					hba->ufs_stats.last_intr_status,
+> +					enabled_intr_status);
+>  		ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
+>  	}
+> 
+> @@ -6348,7 +6371,11 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba 
+> *hba,
+>  	 * Even though we use wait_event() which sleeps indefinitely,
+>  	 * the maximum wait time is bounded by %TM_CMD_TIMEOUT.
+>  	 */
+> -	req = blk_get_request(q, REQ_OP_DRV_OUT, BLK_MQ_REQ_RESERVED);
+> +	req = blk_get_request(q, REQ_OP_DRV_OUT, BLK_MQ_REQ_RESERVED |
+> +						BLK_MQ_REQ_NOWAIT);
 
-Can we put it right after ufshcd_scsi_add_wlus() in ufshcd_add_lus()?
+Sorry that I didn't pay much attention to this part of code before.
+May I know why must we use the BLK_MQ_REQ_RESERVED flag?
 
 Thanks,
 Can Guo.
 
-> 
->  	return ret;
->  }
-> @@ -6003,6 +6005,9 @@ static void ufshcd_err_handler(struct work_struct 
-> *work)
->  	ufshcd_scsi_unblock_requests(hba);
->  	ufshcd_err_handling_unprepare(hba);
->  	up(&hba->eh_sem);
+> +	if (IS_ERR(req))
+> +		return PTR_ERR(req);
 > +
-> +	if (!err && needs_reset)
-> +		ufshcd_clear_ua_wluns(hba);
->  }
+>  	req->end_io_data = &wait;
+>  	free_slot = req->tag;
+>  	WARN_ON_ONCE(free_slot < 0 || free_slot >= hba->nutmrs);
+> @@ -9355,6 +9382,7 @@ int ufshcd_init(struct ufs_hba *hba, void
+> __iomem *mmio_base, unsigned int irq)
 > 
->  /**
-> @@ -6940,14 +6945,11 @@ static int
-> ufshcd_host_reset_and_restore(struct ufs_hba *hba)
->  	ufshcd_set_clk_freq(hba, true);
-> 
->  	err = ufshcd_hba_enable(hba);
-> -	if (err)
-> -		goto out;
-> 
->  	/* Establish the link again and restore the device */
-> -	err = ufshcd_probe_hba(hba, false);
->  	if (!err)
-> -		ufshcd_clear_ua_wluns(hba);
-> -out:
-> +		err = ufshcd_probe_hba(hba, false);
-> +
->  	if (err)
->  		dev_err(hba->dev, "%s: Host init failed %d\n", __func__, err);
->  	ufshcd_update_evt_hist(hba, UFS_EVT_HOST_RESET, (u32)err);
-> @@ -8777,6 +8779,7 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  		ufshcd_resume_clkscaling(hba);
->  	hba->clk_gating.is_suspended = false;
->  	hba->dev_info.b_rpm_dev_flush_capable = false;
-> +	ufshcd_clear_ua_wluns(hba);
->  	ufshcd_release(hba);
->  out:
->  	if (hba->dev_info.b_rpm_dev_flush_capable) {
-> @@ -8887,6 +8890,8 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  		cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
->  	}
-> 
-> +	ufshcd_clear_ua_wluns(hba);
-> +
->  	/* Schedule clock gating in case of no access to UFS device yet */
->  	ufshcd_release(hba);
+>  	hba->tmf_tag_set = (struct blk_mq_tag_set) {
+>  		.nr_hw_queues	= 1,
+> +		.reserved_tags	= 1,
+
+If we give reserved_tags as 1 and always ask for a tm requst with
+BLK_MQ_REQ_RESERVED flag set, then the tag shall only be allocated
+from the reserved sbitmap_queue, whose depth is set to 1 here.
+UFS supports tm queue depth as 8, but here is allowing only one tm
+req at a time. Why? Please correct me if my understanding is wrong.
+
+Thanks,
+Can Guo.
+
+>  		.queue_depth	= hba->nutmrs,
+>  		.ops		= &ufshcd_tmf_ops,
+>  		.flags		= BLK_MQ_F_NO_SCHED,
