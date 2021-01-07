@@ -7,33 +7,34 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8BEFC433DB
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 16:45:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14175C4332B
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 16:45:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D1E823403
+	by mail.kernel.org (Postfix) with ESMTP id D7C8423403
 	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 16:45:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728437AbhAGQpW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jan 2021 11:45:22 -0500
-Received: from mx2.suse.de ([195.135.220.15]:35594 "EHLO mx2.suse.de"
+        id S1728933AbhAGQpf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jan 2021 11:45:35 -0500
+Received: from mx2.suse.de ([195.135.220.15]:35720 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726294AbhAGQpW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 Jan 2021 11:45:22 -0500
+        id S1726427AbhAGQpd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 Jan 2021 11:45:33 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1610037874; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1610037886; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ZMatMx941ZHjWs6spaBF93rVAWa0hUGoWxmwTC6Z9Ik=;
-        b=pEpiixXsVePQ+PJuum0Tt8j93yMiBh4ojRAySE/yBEpYYEg8C9AhXA2kF4KFYavcUfWGz8
-        m0X3wAxIdVkGZ7c26MKfFCvQ0Zg+gN9uLjWD+x9+Q0/Majq+egMK3QUyMTzcNgVC3kkuA9
-        6vq8fgG6sAVI0RxfQDxreMZ+EfVmbpw=
+        bh=+N7dNJ28+5fxqjannanAydtumEMocmboiRTbVhBuA4k=;
+        b=ZGRWtfpGpkMfNN5YIuoRN/DrZdq6j00kCtgk49PzEEUmEGiEsR0vAOfKbtV7/ho2fnKn4o
+        rXuxcELTw9r7gGcAi1yhLwyPL4Iugvk6rku4l021+nZ4L+VkYnBqLs2Hm8Zl17f1mcxoK2
+        VIMsVlKFLAKJ+vP6wR2tZ3ak8yVz1LU=
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 0A9FAAD26;
-        Thu,  7 Jan 2021 16:44:34 +0000 (UTC)
-Message-ID: <8db21f825551d9eefc9f8fd15bc9d0b877b9594c.camel@suse.com>
-Subject: Re: [PATCH V3 05/25] smartpqi: add support for raid1 writes
+        by mx2.suse.de (Postfix) with ESMTP id F2AAAB765;
+        Thu,  7 Jan 2021 16:44:45 +0000 (UTC)
+Message-ID: <688b16a6318e11967d6032b94248db5f66b6503b.camel@suse.com>
+Subject: Re: [PATCH V3 06/25] smartpqi: add support for BMIC sense feature
+ cmd and feature bits
 From:   Martin Wilck <mwilck@suse.com>
 To:     Don Brace <don.brace@microchip.com>, Kevin.Barnett@microchip.com,
         scott.teel@microchip.com, Justin.Lindley@microchip.com,
@@ -41,10 +42,10 @@ To:     Don Brace <don.brace@microchip.com>, Kevin.Barnett@microchip.com,
         mahesh.rajashekhara@microchip.com, hch@infradead.org,
         jejb@linux.vnet.ibm.com, joseph.szczypek@hpe.com, POSWALD@suse.com
 Cc:     linux-scsi@vger.kernel.org
-Date:   Thu, 07 Jan 2021 17:44:33 +0100
-In-Reply-To: <160763248937.26927.6012524710393214473.stgit@brunhilda>
+Date:   Thu, 07 Jan 2021 17:44:45 +0100
+In-Reply-To: <160763249519.26927.10907963332068924699.stgit@brunhilda>
 References: <160763241302.26927.17487238067261230799.stgit@brunhilda>
-         <160763248937.26927.6012524710393214473.stgit@brunhilda>
+         <160763249519.26927.10907963332068924699.stgit@brunhilda>
 Content-Type: text/plain; charset="ISO-8859-15"
 User-Agent: Evolution 3.38.2 
 MIME-Version: 1.0
@@ -54,488 +55,249 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Thu, 2020-12-10 at 14:34 -0600, Don Brace wrote:
-> * Add raid1 write IU.
-> * Add in raid1 write support.
+> From: Kevin Barnett <kevin.barnett@microchip.com>
 > 
-> Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+> * Determine support for supported features from
+>   BMIC sense feature command instead of config table.
+> 
 > Reviewed-by: Scott Teel <scott.teel@microchip.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+> Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+> Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
 > Signed-off-by: Don Brace <don.brace@microchip.com>
 > ---
->  drivers/scsi/smartpqi/smartpqi.h      |   37 +++++
->  drivers/scsi/smartpqi/smartpqi_init.c |  235
-> +++++++++++++++++++++++----------
->  2 files changed, 196 insertions(+), 76 deletions(-)
+>  drivers/scsi/smartpqi/smartpqi.h      |   77 +++++++-
+>  drivers/scsi/smartpqi/smartpqi_init.c |  328
+> +++++++++++++++++++++++++++++----
+>  2 files changed, 363 insertions(+), 42 deletions(-)
 > 
-> diff --git a/drivers/scsi/smartpqi/smartpqi.h
-> b/drivers/scsi/smartpqi/smartpqi.h
-> index e9844210c4a0..225ec6843c68 100644
-> --- a/drivers/scsi/smartpqi/smartpqi.h
-> +++ b/drivers/scsi/smartpqi/smartpqi.h
-> @@ -313,6 +313,36 @@ struct pqi_aio_path_request {
->                 sg_descriptors[PQI_MAX_EMBEDDED_SG_DESCRIPTORS];
->  };
->  
-> +#define PQI_RAID1_NVME_XFER_LIMIT      (32 * 1024)     /* 32 KiB */
-> +struct pqi_aio_r1_path_request {
-> +       struct pqi_iu_header header;
-> +       __le16  request_id;
-> +       __le16  volume_id;      /* ID of the RAID volume */
-> +       __le32  it_nexus_1;     /* IT nexus of the 1st drive in the
-> RAID volume */
-> +       __le32  it_nexus_2;     /* IT nexus of the 2nd drive in the
-> RAID volume */
-> +       __le32  it_nexus_3;     /* IT nexus of the 3rd drive in the
-> RAID volume */
-> +       __le32  data_length;    /* total bytes to read/write */
-> +       u8      data_direction : 2;
-> +       u8      partial : 1;
-> +       u8      memory_type : 1;
-> +       u8      fence : 1;
-> +       u8      encryption_enable : 1;
-> +       u8      reserved : 2;
-> +       u8      task_attribute : 3;
-> +       u8      command_priority : 4;
-> +       u8      reserved2 : 1;
-> +       __le16  data_encryption_key_index;
-> +       u8      cdb[16];
-> +       __le16  error_index;
-> +       u8      num_sg_descriptors;
-> +       u8      cdb_length;
-> +       u8      num_drives;     /* number of drives in the RAID
-> volume (2 or 3) */
-> +       u8      reserved3[3];
-> +       __le32  encrypt_tweak_lower;
-> +       __le32  encrypt_tweak_upper;
-> +       struct pqi_sg_descriptor
-> sg_descriptors[PQI_MAX_EMBEDDED_SG_DESCRIPTORS];
-> +};
-> +
->  #define PQI_RAID56_XFER_LIMIT_4K       0x1000 /* 4Kib */
->  #define PQI_RAID56_XFER_LIMIT_8K       0x2000 /* 8Kib */
->  struct pqi_aio_r56_path_request {
-> @@ -520,6 +550,7 @@ struct pqi_raid_error_info {
->  #define PQI_REQUEST_IU_AIO_PATH_IO                     0x15
->  #define PQI_REQUEST_IU_AIO_PATH_RAID5_IO               0x18
->  #define PQI_REQUEST_IU_AIO_PATH_RAID6_IO               0x19
-> +#define PQI_REQUEST_IU_AIO_PATH_RAID1_IO               0x1A
->  #define PQI_REQUEST_IU_GENERAL_ADMIN                   0x60
->  #define PQI_REQUEST_IU_REPORT_VENDOR_EVENT_CONFIG      0x72
->  #define PQI_REQUEST_IU_SET_VENDOR_EVENT_CONFIG         0x73
-> @@ -972,14 +1003,12 @@ struct pqi_scsi_dev_raid_map_data {
->         u16     strip_size;
->         u32     first_group;
->         u32     last_group;
-> -       u32     current_group;
->         u32     map_row;
->         u32     aio_handle;
->         u64     disk_block;
->         u32     disk_block_cnt;
->         u8      cdb[16];
->         u8      cdb_length;
-> -       int     offload_to_mirror;
->  
->         /* RAID1 specific */
->  #define NUM_RAID1_MAP_ENTRIES 3
-> @@ -1040,8 +1069,7 @@ struct pqi_scsi_dev {
->         u16     phys_connector[8];
->         bool    raid_bypass_configured; /* RAID bypass configured */
->         bool    raid_bypass_enabled;    /* RAID bypass enabled */
-> -       int     offload_to_mirror;      /* Send next RAID bypass
-> request */
-> -                                       /* to mirror drive. */
-> +       u32     next_bypass_group;
->         struct raid_map *raid_map;      /* RAID bypass map */
->  
->         struct pqi_sas_port *sas_port;
-> @@ -1247,6 +1275,7 @@ struct pqi_ctrl_info {
->         u8              soft_reset_handshake_supported : 1;
->         u8              raid_iu_timeout_supported: 1;
->         u8              tmf_iu_timeout_supported: 1;
-> +       u8              enable_r1_writes : 1;
->         u8              enable_r5_writes : 1;
->         u8              enable_r6_writes : 1;
->  
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c
-> b/drivers/scsi/smartpqi/smartpqi_init.c
-> index c813cec10003..8da9031c9c0b 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -67,6 +67,10 @@ static int pqi_aio_submit_io(struct pqi_ctrl_info
-> *ctrl_info,
->         struct scsi_cmnd *scmd, u32 aio_handle, u8 *cdb,
->         unsigned int cdb_length, struct pqi_queue_group *queue_group,
->         struct pqi_encryption_info *encryption_info, bool
-> raid_bypass);
-> +static  int pqi_aio_submit_r1_write_io(struct pqi_ctrl_info
-> *ctrl_info,
-> +       struct scsi_cmnd *scmd, struct pqi_queue_group *queue_group,
-> +       struct pqi_encryption_info *encryption_info, struct
-> pqi_scsi_dev *device,
-> +       struct pqi_scsi_dev_raid_map_data *rmd);
->  static int pqi_aio_submit_r56_write_io(struct pqi_ctrl_info
-> *ctrl_info,
->         struct scsi_cmnd *scmd, struct pqi_queue_group *queue_group,
->         struct pqi_encryption_info *encryption_info, struct
-> pqi_scsi_dev *device,
-> @@ -1717,7 +1721,7 @@ static void pqi_scsi_update_device(struct
-> pqi_scsi_dev *existing_device,
->                 sizeof(existing_device->box));
->         memcpy(existing_device->phys_connector, new_device-
-> >phys_connector,
->                 sizeof(existing_device->phys_connector));
-> -       existing_device->offload_to_mirror = 0;
-> +       existing_device->next_bypass_group = 0;
->         kfree(existing_device->raid_map);
->         existing_device->raid_map = new_device->raid_map;
->         existing_device->raid_bypass_configured =
-> @@ -2250,7 +2254,10 @@ static bool
-> pqi_aio_raid_level_supported(struct pqi_ctrl_info *ctrl_info,
->         case SA_RAID_0:
->                 break;
->         case SA_RAID_1:
-> -               is_supported = false;
-> +               fallthrough;
 
-Nit: fallthrough isn't necessary here.
+In general: This patch contains a lot of whitespace, indentation, and
+minor comment formatting changes which should rather go into a separate
+patch IMHO. This one is big enough without them.
 
-> +       case SA_RAID_ADM:
-> +               if (rmd->is_write && !ctrl_info->enable_r1_writes)
-> +                       is_supported = false;
->                 break;
->         case SA_RAID_5:
->                 if (rmd->is_write && !ctrl_info->enable_r5_writes)
-> @@ -2260,10 +2267,6 @@ static bool
-> pqi_aio_raid_level_supported(struct pqi_ctrl_info *ctrl_info,
->                 if (rmd->is_write && !ctrl_info->enable_r6_writes)
->                         is_supported = false;
->                 break;
-> -       case SA_RAID_ADM:
-> -               if (rmd->is_write)
-> -                       is_supported = false;
-> -               break;
->         default:
->                 is_supported = false;
->         }
-> @@ -2385,64 +2388,6 @@ static int
-> pci_get_aio_common_raid_map_values(struct pqi_ctrl_info *ctrl_info,
->         return 0;
->  }
->  
-> -static int pqi_calc_aio_raid_adm(struct pqi_scsi_dev_raid_map_data
-> *rmd,
-> -                               struct pqi_scsi_dev *device)
-> -{
-> -       /* RAID ADM */
-> -       /*
-> -        * Handles N-way mirrors  (R1-ADM) and R10 with # of drives
-> -        * divisible by 3.
-> -        */
-> -       rmd->offload_to_mirror = device->offload_to_mirror;
-> -
-> -       if (rmd->offload_to_mirror == 0)  {
-> -               /* use physical disk in the first mirrored group. */
-> -               rmd->map_index %= rmd->data_disks_per_row;
-> -       } else {
-> -               do {
-> -                       /*
-> -                        * Determine mirror group that map_index
-> -                        * indicates.
-> -                        */
-> -                       rmd->current_group =
-> -                               rmd->map_index / rmd-
-> >data_disks_per_row;
-> -
-> -                       if (rmd->offload_to_mirror !=
-> -                                       rmd->current_group) {
-> -                               if (rmd->current_group <
-> -                                       rmd->layout_map_count - 1) {
-> -                                       /*
-> -                                        * Select raid index from
-> -                                        * next group.
-> -                                        */
-> -                                       rmd->map_index += rmd-
-> >data_disks_per_row;
-> -                                       rmd->current_group++;
-> -                               } else {
-> -                                       /*
-> -                                        * Select raid index from
-> first
-> -                                        * group.
-> -                                        */
-> -                                       rmd->map_index %= rmd-
-> >data_disks_per_row;
-> -                                       rmd->current_group = 0;
-> -                               }
-> -                       }
-> -               } while (rmd->offload_to_mirror != rmd-
-> >current_group);
-> -       }
-> -
-> -       /* Set mirror group to use next time. */
-> -       rmd->offload_to_mirror =
-> -               (rmd->offload_to_mirror >= rmd->layout_map_count - 1)
-> ?
-> -                       0 : rmd->offload_to_mirror + 1;
-> -       device->offload_to_mirror = rmd->offload_to_mirror;
-> -       /*
-> -        * Avoid direct use of device->offload_to_mirror within this
-> -        * function since multiple threads might simultaneously
-> -        * increment it beyond the range of device->layout_map_count
-> -1.
-> -        */
-> -
-> -       return 0;
-> -}
-> -
->  static int pqi_calc_aio_r5_or_r6(struct pqi_scsi_dev_raid_map_data
-> *rmd,
->                                 struct raid_map *raid_map)
->  {
-> @@ -2577,12 +2522,34 @@ static void pqi_set_aio_cdb(struct
-> pqi_scsi_dev_raid_map_data *rmd)
->         }
->  }
->  
-> +static void pqi_calc_aio_r1_nexus(struct raid_map *raid_map,
-> +                               struct pqi_scsi_dev_raid_map_data
-> *rmd)
-> +{
-> +       u32 index;
-> +       u32 group;
-> +
-> +       group = rmd->map_index / rmd->data_disks_per_row;
-> +
-> +       index = rmd->map_index - (group * rmd->data_disks_per_row);
-> +       rmd->it_nexus[0] = raid_map->disk_data[index].aio_handle;
-> +       index += rmd->data_disks_per_row;
-> +       rmd->it_nexus[1] = raid_map->disk_data[index].aio_handle;
-> +       if (rmd->layout_map_count > 2) {
-> +               index += rmd->data_disks_per_row;
-> +               rmd->it_nexus[2] = raid_map-
-> >disk_data[index].aio_handle;
-> +       }
-> +
-> +       rmd->num_it_nexus_entries = rmd->layout_map_count;
-> +}
-> +
->  static int pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info
-> *ctrl_info,
->         struct pqi_scsi_dev *device, struct scsi_cmnd *scmd,
->         struct pqi_queue_group *queue_group)
->  {
-> -       struct raid_map *raid_map;
->         int rc;
-> +       struct raid_map *raid_map;
-> +       u32 group;
-> +       u32 next_bypass_group;
+Further remarks below.
+
+> [...]
+> 
+> @@ -2552,7 +2686,7 @@ static int
+> pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
+>         u32 next_bypass_group;
 >         struct pqi_encryption_info *encryption_info_ptr;
 >         struct pqi_encryption_info encryption_info;
->         struct pqi_scsi_dev_raid_map_data rmd = {0};
-> @@ -2605,13 +2572,18 @@ static int
-> pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
->         if (rc)
->                 return PQI_RAID_BYPASS_INELIGIBLE;
+> -       struct pqi_scsi_dev_raid_map_data rmd = {0};
+> +       struct pqi_scsi_dev_raid_map_data rmd = { 0 };
 >  
-> -       /* RAID 1 */
-> -       if (device->raid_level == SA_RAID_1) {
-> -               if (device->offload_to_mirror)
-> -                       rmd.map_index += rmd.data_disks_per_row;
-> -               device->offload_to_mirror = !device-
-> >offload_to_mirror;
-> -       } else if (device->raid_level == SA_RAID_ADM) {
-> -               rc = pqi_calc_aio_raid_adm(&rmd, device);
-> +       if (device->raid_level == SA_RAID_1 ||
-> +               device->raid_level == SA_RAID_ADM) {
-> +               if (rmd.is_write) {
-> +                       pqi_calc_aio_r1_nexus(raid_map, &rmd);
-> +               } else {
-> +                       group = device->next_bypass_group;
-> +                       next_bypass_group = group + 1;
-> +                       if (next_bypass_group >=
-> rmd.layout_map_count)
-> +                               next_bypass_group = 0;
-> +                       device->next_bypass_group =
-> next_bypass_group;
-> +                       rmd.map_index += group *
-> rmd.data_disks_per_row;
-> +               }
->         } else if ((device->raid_level == SA_RAID_5 ||
->                 device->raid_level == SA_RAID_6) &&
->                 (rmd.layout_map_count > 1 || rmd.is_write)) {
-> @@ -2655,6 +2627,10 @@ static int
+>         rc = pqi_get_aio_lba_and_block_count(scmd, &rmd);
+>         if (rc)
+> @@ -2613,7 +2747,9 @@ static int
 > pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
->                         return pqi_aio_submit_io(ctrl_info, scmd,
+>         pqi_set_aio_cdb(&rmd);
+>  
+>         if (get_unaligned_le16(&raid_map->flags) &
+> -               RAID_MAP_ENCRYPTION_ENABLED) {
+> +                       RAID_MAP_ENCRYPTION_ENABLED) {
+> +               if (rmd.data_length > device->max_transfer_encrypted)
+> +                       return PQI_RAID_BYPASS_INELIGIBLE;
+>                 pqi_set_encryption_info(&encryption_info, raid_map,
+>                         rmd.first_block);
+>                 encryption_info_ptr = &encryption_info;
+> @@ -2623,10 +2759,6 @@ static int
+> pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
+>  
+
+This hunk is fine, but AFAICS it doesn't belong here logically, it
+should rather be part of patch 04 and 05.
+
+>         if (rmd.is_write) {
+>                 switch (device->raid_level) {
+> -               case SA_RAID_0:
+> -                       return pqi_aio_submit_io(ctrl_info, scmd,
 > rmd.aio_handle,
->                                 rmd.cdb, rmd.cdb_length, queue_group,
->                                 encryption_info_ptr, true);
-> +               case SA_RAID_1:
-> +               case SA_RAID_ADM:
-> +                       return pqi_aio_submit_r1_write_io(ctrl_info,
+> -                               rmd.cdb, rmd.cdb_length, queue_group,
+> -                               encryption_info_ptr, true);
+>                 case SA_RAID_1:
+>                 case SA_RAID_ADM:
+>                         return pqi_aio_submit_r1_write_io(ctrl_info,
 > scmd, queue_group,
-> +                               encryption_info_ptr, device, &rmd);
->                 case SA_RAID_5:
+> @@ -2635,17 +2767,12 @@ static int
+> pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
 >                 case SA_RAID_6:
 >                         return pqi_aio_submit_r56_write_io(ctrl_info,
 > scmd, queue_group,
-> @@ -4982,6 +4958,44 @@ static int pqi_build_raid_sg_list(struct
-> pqi_ctrl_info *ctrl_info,
->         return 0;
+>                                         encryption_info_ptr, device,
+> &rmd);
+> -               default:
+> -                       return pqi_aio_submit_io(ctrl_info, scmd,
+> rmd.aio_handle,
+> -                               rmd.cdb, rmd.cdb_length, queue_group,
+> -                               encryption_info_ptr, true);
+>                 }
+> -       } else {
+> -               return pqi_aio_submit_io(ctrl_info, scmd,
+> rmd.aio_handle,
+> -                       rmd.cdb, rmd.cdb_length, queue_group,
+> -                       encryption_info_ptr, true);
+>         }
+>  
+> +       return pqi_aio_submit_io(ctrl_info, scmd, rmd.aio_handle,
+> +               rmd.cdb, rmd.cdb_length, queue_group,
+> +               encryption_info_ptr, true);
 >  }
 >  
-> +static int pqi_build_aio_r1_sg_list(struct pqi_ctrl_info *ctrl_info,
-> +       struct pqi_aio_r1_path_request *request, struct scsi_cmnd
-> *scmd,
-> +       struct pqi_io_request *io_request)
-> +{
-> +       u16 iu_length;
-> +       int sg_count;
-> +       bool chained;
-> +       unsigned int num_sg_in_iu;
-> +       struct scatterlist *sg;
-> +       struct pqi_sg_descriptor *sg_descriptor;
-> +
-> +       sg_count = scsi_dma_map(scmd);
-> +       if (sg_count < 0)
-> +               return sg_count;
-> +
-> +       iu_length = offsetof(struct pqi_aio_r1_path_request,
-> sg_descriptors) -
-> +               PQI_REQUEST_HEADER_LENGTH;
-> +       num_sg_in_iu = 0;
-> +
-> +       if (sg_count == 0)
-> +               goto out;
-> +
-> +       sg = scsi_sglist(scmd);
-> +       sg_descriptor = request->sg_descriptors;
-> +
-> +       num_sg_in_iu = pqi_build_sg_list(sg_descriptor, sg, sg_count,
-> io_request,
-> +               ctrl_info->max_sg_per_iu, &chained);
-> +
-> +       request->partial = chained;
-> +       iu_length += num_sg_in_iu * sizeof(*sg_descriptor);
-> +
-> +out:
-> +       put_unaligned_le16(iu_length, &request->header.iu_length);
-> +       request->num_sg_descriptors = num_sg_in_iu;
-> +
-> +       return 0;
-> +}
-> +
->  static int pqi_build_aio_r56_sg_list(struct pqi_ctrl_info
-> *ctrl_info,
->         struct pqi_aio_r56_path_request *request, struct scsi_cmnd
-> *scmd,
->         struct pqi_io_request *io_request)
-> @@ -5424,6 +5438,83 @@ static int pqi_aio_submit_io(struct
+>  #define PQI_STATUS_IDLE                0x0
+> @@ -7209,6 +7336,7 @@ static int pqi_enable_firmware_features(struct
 > pqi_ctrl_info *ctrl_info,
->         return 0;
->  }
+>  {
+>         void *features_requested;
+>         void __iomem *features_requested_iomem_addr;
+> +       void __iomem *host_max_known_feature_iomem_addr;
 >  
-> +static  int pqi_aio_submit_r1_write_io(struct pqi_ctrl_info
-> *ctrl_info,
-> +       struct scsi_cmnd *scmd, struct pqi_queue_group *queue_group,
-> +       struct pqi_encryption_info *encryption_info, struct
-> pqi_scsi_dev *device,
-> +       struct pqi_scsi_dev_raid_map_data *rmd)
+>         features_requested = firmware_features->features_supported +
+>                 le16_to_cpu(firmware_features->num_elements);
+> @@ -7219,6 +7347,16 @@ static int pqi_enable_firmware_features(struct
+> pqi_ctrl_info *ctrl_info,
+>         memcpy_toio(features_requested_iomem_addr,
+> features_requested,
+>                 le16_to_cpu(firmware_features->num_elements));
+>  
+> +       if (pqi_is_firmware_feature_supported(firmware_features,
+> +               PQI_FIRMWARE_FEATURE_MAX_KNOWN_FEATURE)) {
+> +               host_max_known_feature_iomem_addr =
+> +                       features_requested_iomem_addr +
+> +                       (le16_to_cpu(firmware_features->num_elements)
+> * 2) +
+> +                       sizeof(__le16);
+> +               writew(PQI_FIRMWARE_FEATURE_MAXIMUM,
+> +                       host_max_known_feature_iomem_addr);
+> +       }
 > +
-> +{
-> +       int rc;
-> +       struct pqi_io_request *io_request;
-> +       struct pqi_aio_r1_path_request *r1_request;
-> +
-> +       io_request = pqi_alloc_io_request(ctrl_info);
-> +       io_request->io_complete_callback = pqi_aio_io_complete;
-> +       io_request->scmd = scmd;
-> +       io_request->raid_bypass = true;
-> +
-> +       r1_request = io_request->iu;
-> +       memset(r1_request, 0, offsetof(struct
-> pqi_aio_r1_path_request, sg_descriptors));
-> +
-> +       r1_request->header.iu_type =
-> PQI_REQUEST_IU_AIO_PATH_RAID1_IO;
-> +
-> +       put_unaligned_le16(*(u16 *)device->scsi3addr & 0x3fff,
-> &r1_request->volume_id);
-> +       r1_request->num_drives = rmd->num_it_nexus_entries;
-> +       put_unaligned_le32(rmd->it_nexus[0], &r1_request-
-> >it_nexus_1);
-> +       put_unaligned_le32(rmd->it_nexus[1], &r1_request-
-> >it_nexus_2);
-> +       if (rmd->num_it_nexus_entries == 3)
-> +               put_unaligned_le32(rmd->it_nexus[2], &r1_request-
-> >it_nexus_3);
-> +
-> +       put_unaligned_le32(scsi_bufflen(scmd), &r1_request-
-> >data_length);
-> +       r1_request->task_attribute = SOP_TASK_ATTRIBUTE_SIMPLE;
-> +       put_unaligned_le16(io_request->index, &r1_request-
-> >request_id);
-> +       r1_request->error_index = r1_request->request_id;
-> +       if (rmd->cdb_length > sizeof(r1_request->cdb))
-> +               rmd->cdb_length = sizeof(r1_request->cdb);
-> +       r1_request->cdb_length = rmd->cdb_length;
-> +       memcpy(r1_request->cdb, rmd->cdb, rmd->cdb_length);
-> +
-> +       switch (scmd->sc_data_direction) {
-> +       case DMA_TO_DEVICE:
-> +               r1_request->data_direction = SOP_READ_FLAG;
+>         return pqi_config_table_update(ctrl_info,
+>                 PQI_CONFIG_TABLE_SECTION_FIRMWARE_FEATURES,
+>                 PQI_CONFIG_TABLE_SECTION_FIRMWARE_FEATURES);
+> @@ -7256,6 +7394,15 @@ static void
+> pqi_ctrl_update_feature_flags(struct pqi_ctrl_info *ctrl_info,
+>         struct pqi_firmware_feature *firmware_feature)
+>  {
+>         switch (firmware_feature->feature_bit) {
+> +       case PQI_FIRMWARE_FEATURE_RAID_1_WRITE_BYPASS:
+> +               ctrl_info->enable_r1_writes = firmware_feature-
+> >enabled;
 > +               break;
+> +       case PQI_FIRMWARE_FEATURE_RAID_5_WRITE_BYPASS:
+> +               ctrl_info->enable_r5_writes = firmware_feature-
+> >enabled;
+> +               break;
+> +       case PQI_FIRMWARE_FEATURE_RAID_6_WRITE_BYPASS:
+> +               ctrl_info->enable_r6_writes = firmware_feature-
+> >enabled;
+> +               break;
+>         case PQI_FIRMWARE_FEATURE_SOFT_RESET_HANDSHAKE:
+>                 ctrl_info->soft_reset_handshake_supported =
+>                         firmware_feature->enabled;
+> @@ -7293,6 +7440,51 @@ static struct pqi_firmware_feature
+> pqi_firmware_features[] = {
+>                 .feature_bit = PQI_FIRMWARE_FEATURE_SMP,
+>                 .feature_status = pqi_firmware_feature_status,
+>         },
+> +       {
+> +               .feature_name = "Maximum Known Feature",
+> +               .feature_bit =
+> PQI_FIRMWARE_FEATURE_MAX_KNOWN_FEATURE,
+> +               .feature_status = pqi_firmware_feature_status,
+> +       },
+> +       {
+> +               .feature_name = "RAID 0 Read Bypass",
+> +               .feature_bit =
+> PQI_FIRMWARE_FEATURE_RAID_0_READ_BYPASS,
+> +               .feature_status = pqi_firmware_feature_status,
+> +       },
+> +       {
+> +               .feature_name = "RAID 1 Read Bypass",
+> +               .feature_bit =
+> PQI_FIRMWARE_FEATURE_RAID_1_READ_BYPASS,
+> +               .feature_status = pqi_firmware_feature_status,
+> +       },
+> +       {
+> +               .feature_name = "RAID 5 Read Bypass",
+> +               .feature_bit =
+> PQI_FIRMWARE_FEATURE_RAID_5_READ_BYPASS,
+> +               .feature_status = pqi_firmware_feature_status,
+> +       },
+> +       {
+> +               .feature_name = "RAID 6 Read Bypass",
+> +               .feature_bit =
+> PQI_FIRMWARE_FEATURE_RAID_6_READ_BYPASS,
+> +               .feature_status = pqi_firmware_feature_status,
+> +       },
+> +       {
+> +               .feature_name = "RAID 0 Write Bypass",
+> +               .feature_bit =
+> PQI_FIRMWARE_FEATURE_RAID_0_WRITE_BYPASS,
+> +               .feature_status = pqi_firmware_feature_status,
+> +       },
+> +       {
+> +               .feature_name = "RAID 1 Write Bypass",
+> +               .feature_bit =
+> PQI_FIRMWARE_FEATURE_RAID_1_WRITE_BYPASS,
+> +               .feature_status = pqi_ctrl_update_feature_flags,
+> +       },
+> +       {
+> +               .feature_name = "RAID 5 Write Bypass",
+> +               .feature_bit =
+> PQI_FIRMWARE_FEATURE_RAID_5_WRITE_BYPASS,
+> +               .feature_status = pqi_ctrl_update_feature_flags,
+> +       },
+> +       {
+> +               .feature_name = "RAID 6 Write Bypass",
+> +               .feature_bit =
+> PQI_FIRMWARE_FEATURE_RAID_6_WRITE_BYPASS,
+> +               .feature_status = pqi_ctrl_update_feature_flags,
+> +       },
+>         {
+>                 .feature_name = "New Soft Reset Handshake",
+>                 .feature_bit =
+> PQI_FIRMWARE_FEATURE_SOFT_RESET_HANDSHAKE,
+> @@ -7667,6 +7859,17 @@ static int pqi_ctrl_init(struct pqi_ctrl_info
+> *ctrl_info)
+>  
+>         pqi_start_heartbeat_timer(ctrl_info);
+>  
+> +       if (ctrl_info->enable_r5_writes || ctrl_info-
+> >enable_r6_writes) {
+> +               rc = pqi_get_advanced_raid_bypass_config(ctrl_info);
+> +               if (rc) {
+> +                       dev_err(&ctrl_info->pci_dev->dev,
+> +                               "error obtaining advanced RAID bypass
+> configuration\n");
+> +                       return rc;
+> +               }
+> +               ctrl_info->ciss_report_log_flags |=
+> +                       CISS_REPORT_LOG_FLAG_DRIVE_TYPE_MIX;
+> +       }
+> +
+>         rc = pqi_enable_events(ctrl_info);
+>         if (rc) {
+>                 dev_err(&ctrl_info->pci_dev->dev,
+> @@ -7822,6 +8025,17 @@ static int pqi_ctrl_init_resume(struct
+> pqi_ctrl_info *ctrl_info)
+>  
+>         pqi_start_heartbeat_timer(ctrl_info);
+>  
+> +       if (ctrl_info->enable_r5_writes || ctrl_info-
+> >enable_r6_writes) {
+> +               rc = pqi_get_advanced_raid_bypass_config(ctrl_info);
+> +               if (rc) {
+> +                       dev_err(&ctrl_info->pci_dev->dev,
+> +                               "error obtaining advanced RAID bypass
+> configuration\n");
+> +                       return rc;
 
-Same question as for previous patch, how would anything else than
-DMA_TO_DEVICE be possible here?
+Do you need to error out here ? Can't you simply unset the
+enable_rX_writes feature?
 
-> +       case DMA_FROM_DEVICE:
-> +               r1_request->data_direction = SOP_WRITE_FLAG;
-> +               break;
-> +       case DMA_NONE:
-> +               r1_request->data_direction = SOP_NO_DIRECTION_FLAG;
-> +               break;
-> +       case DMA_BIDIRECTIONAL:
-> +               r1_request->data_direction = SOP_BIDIRECTIONAL;
-> +               break;
-> +       default:
-> +               dev_err(&ctrl_info->pci_dev->dev,
-> +                       "unknown data direction: %d\n",
-> +                       scmd->sc_data_direction);
-> +               break;
-> +       }
-> +
-> +       if (encryption_info) {
-> +               r1_request->encryption_enable = true;
-> +               put_unaligned_le16(encryption_info-
-> >data_encryption_key_index,
-> +                               &r1_request-
-> >data_encryption_key_index);
-> +               put_unaligned_le32(encryption_info-
-> >encrypt_tweak_lower,
-> +                               &r1_request->encrypt_tweak_lower);
-> +               put_unaligned_le32(encryption_info-
-> >encrypt_tweak_upper,
-> +                               &r1_request->encrypt_tweak_upper);
-> +       }
-> +
-> +       rc = pqi_build_aio_r1_sg_list(ctrl_info, r1_request, scmd,
-> io_request);
-> +       if (rc) {
-> +               pqi_free_io_request(io_request);
-> +               return SCSI_MLQUEUE_HOST_BUSY;
-> +       }
-> +
-> +       pqi_start_io(ctrl_info, queue_group, AIO_PATH, io_request);
-> +
-> +       return 0;
-> +}
-> +
->  static int pqi_aio_submit_r56_write_io(struct pqi_ctrl_info
-> *ctrl_info,
->         struct scsi_cmnd *scmd, struct pqi_queue_group *queue_group,
->         struct pqi_encryption_info *encryption_info, struct
-> pqi_scsi_dev *device,
-> 
+
+Regards
+Martin
 
 
 
