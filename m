@@ -2,100 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF96C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 17:58:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE5BCC433E9
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 18:54:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA577223E8
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 17:58:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC7A023403
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 18:54:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728149AbhAGR6Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jan 2021 12:58:25 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:41928 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728131AbhAGR6Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2021 12:58:24 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107HsoL3089446;
-        Thu, 7 Jan 2021 17:57:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=u9DEn27WHLjLH+RPDAtJ0DDpHFMigkQ/vF201ccKZls=;
- b=xC1UGJa+8nbvLCMAggec2iGv+sr8fUFH4EQwoIuvmnbx3W9hF0QEZ1+KgScymGGBK/3G
- 1qMPS9giNkwel29eJch5cHaHkojKfQ+1qHEI9YDCAb416cp2Uy5YrC0ah/Hyb/wJ/MHg
- o9/2QiRharIdeQjK9Vok9d562hV8UpkERA5xy0XuhrcR5iKZzfWAHePRQZtLUZL4JciD
- 6HDVnbp8ksh94bD2H1uLH1GYlN2i9FNYRzTrKYK3cpcYkVp3/yeWM1hoBNOn5bvl45DN
- bucLzudEuL5pq/vxXJTbHupTwrrSfRha47mwCxF/r5bU70Z2f9cLkUpN7aqNwci94q7a bQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 35wcuxwy6d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 07 Jan 2021 17:57:42 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107Hsxrx096610;
-        Thu, 7 Jan 2021 17:57:42 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 35v1fbhpmf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Jan 2021 17:57:42 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 107HvfnF011863;
-        Thu, 7 Jan 2021 17:57:41 GMT
-Received: from [192.168.63.242] (/71.42.68.90)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 07 Jan 2021 09:57:28 -0800
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.4\))
-Subject: Re: [EXT] [PATCH v3 1/7] qla2xxx: Implementation to get and manage
- host, target stats and initiator port
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-In-Reply-To: <BN8PR18MB30257A867FEEE66D619C12C3D2AF9@BN8PR18MB3025.namprd18.prod.outlook.com>
-Date:   Thu, 7 Jan 2021 11:57:28 -0600
-Cc:     Nilesh Javali <njavali@marvell.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <89A792AF-49D2-425A-AC0E-BA673C84A181@oracle.com>
-References: <20210105103847.25041-1-njavali@marvell.com>
- <20210105103847.25041-2-njavali@marvell.com>
- <DC6A6732-5FF5-48BA-AAEA-75DAD94F1A55@oracle.com>
- <BN8PR18MB30257A867FEEE66D619C12C3D2AF9@BN8PR18MB3025.namprd18.prod.outlook.com>
-To:     Saurav Kashyap <skashyap@marvell.com>
-X-Mailer: Apple Mail (2.3608.120.23.2.4)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
- suspectscore=0 spamscore=0 bulkscore=0 adultscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101070105
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
- clxscore=1015 spamscore=0 impostorscore=0 priorityscore=1501 mlxscore=0
- adultscore=0 mlxlogscore=999 lowpriorityscore=0 phishscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101070105
+        id S1726427AbhAGSyS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jan 2021 13:54:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39914 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727215AbhAGSyI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 Jan 2021 13:54:08 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B027223406;
+        Thu,  7 Jan 2021 18:53:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610045607;
+        bh=wZlEKoUTut7Ta2lwXD3pCQy/hjX8qt2LFA8HJ2Y+NuI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=fVVZyAeUPuuz7dfWULNBLT2kn3ZYmBOxCtbvR1kZl1/jmF+4Fb/VjbH4CDqSHAfcD
+         M9ANs3y8/HBKKoTWy4TZGVq++4KUnwPnGItYK7f+ZV49MmSdDuu5dMNiseC8f2LzNy
+         iuNAFy/KpDVBiOIeao+/2A9wU+Jj+Qv+UcjWDdgGaT5DHyX/HWsUNSFuVvVt0WBnCy
+         3Y/iOzI8PqH7U0soEqxpvluoh/iooOP9IDNeMB8l/sFYtDt4kf8uZSSaWDYYed8bGP
+         RLxVc+VSUpswZq+kqK70ft6RwB+qowAKynU9KyRIhr7JemMI+3lqCa6cL8sB3S8+tw
+         BJYpsJpIjEP7g==
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     cang@codeaurora.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        bvanassche@acm.org, martin.petersen@oracle.com,
+        stanley.chu@mediatek.com, Jaegeuk Kim <jaegeuk@google.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: [PATCH v5 2/2] scsi: ufs: fix tm request correctly when non-fatal error happens
+Date:   Thu,  7 Jan 2021 10:53:16 -0800
+Message-Id: <20210107185316.788815-3-jaegeuk@kernel.org>
+X-Mailer: git-send-email 2.29.2.729.g45daf8777d-goog
+In-Reply-To: <20210107185316.788815-1-jaegeuk@kernel.org>
+References: <20210107185316.788815-1-jaegeuk@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: Jaegeuk Kim <jaegeuk@google.com>
 
+When non-fatal error like line-reset happens, ufshcd_err_handler() starts to
+abort tasks by ufshcd_try_to_abort_task(). When it tries to issue tm request,
+we've hit two warnings.
 
-> On Jan 6, 2021, at 11:34 PM, Saurav Kashyap <skashyap@marvell.com> =
-wrote:
->=20
-> <SK> It's a state of the port, it comes as part of managing the port. =
-If the error count is more,
-> user can opt to change the state and port will go to offline state.
+WARNING: CPU: 7 PID: 7 at block/blk-core.c:630 blk_get_request+0x68/0x70
+WARNING: CPU: 4 PID: 157 at block/blk-mq-tag.c:82 blk_mq_get_tag+0x438/0x46c
 
-In that case, small description in a commit message would have been very =
-helpful. Its not Clear from the patch about user=E2=80=99s capability of =
-changing state of port=20
+After fixing the above warnings, I've hit another tm_cmd timeout, which may be
+caused by unstable controller state.
 
---
-Himanshu Madhani	 Oracle Linux Engineering
+__ufshcd_issue_tm_cmd: task management cmd 0x80 timed-out
+
+Then, ufshcd_err_handler() enters full reset, and I hit kernel stuck. It turned
+out ufshcd_print_trs() printed too many messages in console which requires CPU
+locks. Likewise hba->silence_err_logs, we need to avoid too verbose messages.
+Actually it came from ufshcd_transfer_rsp_status() when requeuing commands back.
+Indeed, this is actually not an error case, so let's fix it.
+
+Fixes: 69a6c269c097 ("scsi: ufs: Use blk_{get,put}_request() to allocate and free TMFs")
+Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e6e7bdf99cd7..2a715f13fe1d 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4996,7 +4996,8 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 		break;
+ 	} /* end of switch */
+ 
+-	if ((host_byte(result) != DID_OK) && !hba->silence_err_logs)
++	if ((host_byte(result) != DID_OK) &&
++	    (host_byte(result) != DID_REQUEUE) && !hba->silence_err_logs)
+ 		ufshcd_print_trs(hba, 1 << lrbp->task_tag, true);
+ 	return result;
+ }
+@@ -6302,9 +6303,13 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ 		intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+ 	}
+ 
+-	if (enabled_intr_status && retval == IRQ_NONE) {
+-		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x\n",
+-					__func__, intr_status);
++	if (enabled_intr_status && retval == IRQ_NONE &&
++				!ufshcd_eh_in_progress(hba)) {
++		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x (0x%08x, 0x%08x)\n",
++					__func__,
++					intr_status,
++					hba->ufs_stats.last_intr_status,
++					enabled_intr_status);
+ 		ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
+ 	}
+ 
+@@ -6348,7 +6353,10 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	 * Even though we use wait_event() which sleeps indefinitely,
+ 	 * the maximum wait time is bounded by %TM_CMD_TIMEOUT.
+ 	 */
+-	req = blk_get_request(q, REQ_OP_DRV_OUT, BLK_MQ_REQ_RESERVED);
++	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
++	if (IS_ERR(req))
++		return PTR_ERR(req);
++
+ 	req->end_io_data = &wait;
+ 	free_slot = req->tag;
+ 	WARN_ON_ONCE(free_slot < 0 || free_slot >= hba->nutmrs);
+-- 
+2.29.2.729.g45daf8777d-goog
 
