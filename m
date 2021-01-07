@@ -8,1248 +8,520 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5863BC43331
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC35CC43217
 	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 00:52:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34C1B23118
+	by mail.kernel.org (Postfix) with ESMTP id 9528923123
 	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 00:52:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726511AbhAGAwB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jan 2021 19:52:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41536 "EHLO
+        id S1726572AbhAGAwG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jan 2021 19:52:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726479AbhAGAv6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 19:51:58 -0500
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 778F9C0612F0
-        for <linux-scsi@vger.kernel.org>; Wed,  6 Jan 2021 16:50:45 -0800 (PST)
-Received: by mail-pf1-x42b.google.com with SMTP id x126so2744601pfc.7
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Jan 2021 16:50:45 -0800 (PST)
+        with ESMTP id S1726528AbhAGAwF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 19:52:05 -0500
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CC3FC0612A2
+        for <linux-scsi@vger.kernel.org>; Wed,  6 Jan 2021 16:50:54 -0800 (PST)
+Received: by mail-pl1-x635.google.com with SMTP id r4so2461819pls.11
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Jan 2021 16:50:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=0ymt5fb9QnyyRya3ea6uU0PrHs96lt2yhWKO7N2M3Ys=;
-        b=JSrDmgjZhNamN3dYxL6yFszrmRwsfWBpO9V6jOH/wtRaMCX7vqYgcJiORtOZ9BaYUF
-         FbV3n1yyak7lNJOKY6rEb138YpZ0Lxq/JWq7E1AtadSV+MkSpodMKbJrAzt6LjWgXhC0
-         EVYQoFxGc2n8rV3+QtjZnE/3igk4S+4W25wGtv7I+LBrfZ9CynL3JdudLwKzcItf2GSh
-         9huKp3QNRlBv/2s4rMbGNNUQSdE5xYHUFJ7RHWQgPjpi9fiQA6KRfFmwhu+bAYlsIdPA
-         s+MlGqEK4ScoyCWF+o2Sf8+U77X/7oVxhvE2HFzKsHeDwpy5jkiGqt3yyhlhEdCHZMIK
-         snFw==
+        bh=6t5fQq+Lxd12aXO14ltKpdNZvyGFsig/vM9rOOgFKCE=;
+        b=nnY4PVZUKYkw3Mk+zhaMBugx662nOQYyzX0L9y4L4d9wyPYbPvFXmbPUMh08zu9DsX
+         +hUdEUDbccRMgk3usduZB5OaBdGE0nrQmVoFuZA+1OMh9m+hxCSQDKVWtdVZCXyoWTHL
+         HA22HSQidHLvhVLpKHRne0CX8WGCZN5cakFYnSAOIHLPI39C5yJ05l1RvtrEO7LwRg/7
+         YvTnXnUqx2qiO1WY26btaer4D7lb9P+HAL0bLPI35LPfNbwRUrrFabe7UQJNHF1IC0wE
+         XDE5zMiHXaAsUbLZaQDNyoe9KLrBtpHQt8O01MIMluHrs6f3iR3GjxScOC3kIPknLJ0G
+         5GBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=0ymt5fb9QnyyRya3ea6uU0PrHs96lt2yhWKO7N2M3Ys=;
-        b=tm6ibYNgxG7oYjSbeEJDbKb0zR+Vq58qqAGuyqSZ86Tkdp10P5YD32cUv8uNRKx7Lp
-         3nVgLAzTnDMc9OumVr+X2CHxpHpfBA0S68tr9kjyjVShHUqswO1umKxzGU9Y/yFCqYhQ
-         lksxjkcC9L5HF9gY9MvgZ3tdeoCZr0fpMofTuy3M6Sps3WGiwEq5ygJVOAgl26hs5CuM
-         UzI10D++ZEw6NK4Xp57z3QiBKyF7CF1y+vwjJmRREXLKut/nh3wmEyZd4geoHQuff19W
-         2Y3A1QWpKkLMkKF4CL2GLNhjXrpzY1asZouKNWC1+bvDNn+6TNqDKr5r/YEAcHXRQT9r
-         1/Wg==
-X-Gm-Message-State: AOAM531jQaUCWmSKmTdMBhT4+YfercXX+ScoIWTJawR5t+uA1N18P+93
-        535fsqtliEZQVFlDHb8DuEI8nqTxzqFXTA==
-X-Google-Smtp-Source: ABdhPJwROvTf14x+1EAjDg0hE0GaqxtWo3PqgpXb1boPJ5zDhgbqvOrfRLQlSquH4uB47sPTpMR1Cw==
-X-Received: by 2002:a63:dd53:: with SMTP id g19mr7133246pgj.291.1609980644447;
-        Wed, 06 Jan 2021 16:50:44 -0800 (PST)
+        bh=6t5fQq+Lxd12aXO14ltKpdNZvyGFsig/vM9rOOgFKCE=;
+        b=Pn17BjOOZrByWNYJcy+1RZpPg4B9NjP/Ka7cG4mgDHbVCLNDsPb8TE8XX19mMbizL2
+         axH0iYaNu9Xtv6mY8p7eAbTDpszVU8Bm0hyQNujSa7ok+sz/JgIAbPst4muvinxwwRzB
+         QWchaaexotGrs4ACZSbVXkBVHYvxBcbXFmQLIzlSKsgsM7+HNb5nSlQizUOw3HLJUu+p
+         X1nkuAL0AVlcGHDcfXBpyNvQxJZ0BEAG3BPjkv4nWJJ1YUBIEvbnMCP6QJVYcmREP+Xo
+         iONGAnHLsZN/tdxYYJW8faKTyI3fAiGzdYLQJqU8qwyygE0if2PBs+Yr+AlT2nx38vHu
+         jyag==
+X-Gm-Message-State: AOAM532qxrWFkPfyd5nEBOb4gtwO8ibj5cJwdBzgzW2QFcxc1GqdQa9P
+        zqsAtZPzfLeMRPgMcvqNDkrgOSWzeqfHMg==
+X-Google-Smtp-Source: ABdhPJyo4feSaLv8aKUaW547N02DvGJjIY0Bu/bHbJqR5xc55YEfleqklgeRH0cA289EBPRF+uhfuQ==
+X-Received: by 2002:a17:90a:dc18:: with SMTP id i24mr6778906pjv.118.1609980653856;
+        Wed, 06 Jan 2021 16:50:53 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id w27sm3600634pfq.104.2021.01.06.16.50.43
+        by smtp.gmail.com with ESMTPSA id w27sm3600634pfq.104.2021.01.06.16.50.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Jan 2021 16:50:44 -0800 (PST)
+        Wed, 06 Jan 2021 16:50:53 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>, Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH v6 10/31] elx: libefc: FC Domain state machine interfaces
-Date:   Wed,  6 Jan 2021 16:50:09 -0800
-Message-Id: <20210107005030.2929-11-jsmart2021@gmail.com>
+        Ram Vegesna <ram.vegesna@broadcom.com>
+Subject: [PATCH v6 20/31] elx: efct: RQ buffer, memory pool allocation and deallocation APIs
+Date:   Wed,  6 Jan 2021 16:50:19 -0800
+Message-Id: <20210107005030.2929-21-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210107005030.2929-1-jsmart2021@gmail.com>
 References: <20210107005030.2929-1-jsmart2021@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch continues the libefc library population.
+This patch continues the efct driver population.
 
-This patch adds library interface definitions for:
-- FC Domain registration, allocation and deallocation sequence
+This patch adds driver definitions for:
+RQ data buffer allocation and deallocate.
+Memory pool allocation and deallocation APIs.
+Mailbox command submission and completion routines.
 
 Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
----
- drivers/scsi/elx/libefc/efc_domain.c | 1093 ++++++++++++++++++++++++++
- drivers/scsi/elx/libefc/efc_domain.h |   54 ++
- 2 files changed, 1147 insertions(+)
- create mode 100644 drivers/scsi/elx/libefc/efc_domain.c
- create mode 100644 drivers/scsi/elx/libefc/efc_domain.h
 
-diff --git a/drivers/scsi/elx/libefc/efc_domain.c b/drivers/scsi/elx/libefc/efc_domain.c
-new file mode 100644
-index 000000000000..eddb98a601ad
---- /dev/null
-+++ b/drivers/scsi/elx/libefc/efc_domain.c
-@@ -0,0 +1,1093 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
-+ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
-+ */
+---
+v6:
+  Refactor efct_hw_rx_buffer_alloc() for indentation
+  Fix return variables to have same type as routine
+---
+ drivers/scsi/elx/efct/efct_hw.c | 404 ++++++++++++++++++++++++++++++++
+ drivers/scsi/elx/efct/efct_hw.h |   9 +
+ 2 files changed, 413 insertions(+)
+
+diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
+index 132914cb22cd..ead2d4d16f4e 100644
+--- a/drivers/scsi/elx/efct/efct_hw.c
++++ b/drivers/scsi/elx/efct/efct_hw.c
+@@ -1158,3 +1158,407 @@ efct_get_wwpn(struct efct_hw *hw)
+ 	memcpy(p, sli->wwpn, sizeof(p));
+ 	return get_unaligned_be64(p);
+ }
 +
-+/*
-+ * domain_sm Domain State Machine: States
-+ */
-+
-+#include "efc.h"
-+
-+int
-+efc_domain_cb(void *arg, int event, void *data)
++static struct efc_hw_rq_buffer *
++efct_hw_rx_buffer_alloc(struct efct_hw *hw, u32 rqindex, u32 count,
++			u32 size)
 +{
-+	struct efc *efc = arg;
-+	struct efc_domain *domain = NULL;
-+	int rc = 0;
-+	unsigned long flags = 0;
++	struct efct *efct = hw->os;
++	struct efc_hw_rq_buffer *rq_buf = NULL;
++	struct efc_hw_rq_buffer *prq;
++	u32 i;
 +
-+	if (event != EFC_HW_DOMAIN_FOUND)
-+		domain = data;
-+
-+	/* Accept domain callback events from the user driver */
-+	spin_lock_irqsave(&efc->lock, flags);
-+	switch (event) {
-+	case EFC_HW_DOMAIN_FOUND: {
-+		u64 fcf_wwn = 0;
-+		struct efc_domain_record *drec = data;
-+
-+		/* extract the fcf_wwn */
-+		fcf_wwn = be64_to_cpu(*((__be64 *)drec->wwn));
-+
-+		efc_log_debug(efc, "Domain found: wwn %016llX\n", fcf_wwn);
-+
-+		/* lookup domain, or allocate a new one */
-+		domain = efc->domain;
-+		if (!domain) {
-+			domain = efc_domain_alloc(efc, fcf_wwn);
-+			if (!domain) {
-+				efc_log_err(efc, "efc_domain_alloc() failed\n");
-+				rc = -1;
-+				break;
-+			}
-+			efc_sm_transition(&domain->drvsm, __efc_domain_init,
-+					  NULL);
-+		}
-+		efc_domain_post_event(domain, EFC_EVT_DOMAIN_FOUND, drec);
-+		break;
-+	}
-+
-+	case EFC_HW_DOMAIN_LOST:
-+		domain_trace(domain, "EFC_HW_DOMAIN_LOST:\n");
-+		efc->hold_frames = true;
-+		efc_domain_post_event(domain, EFC_EVT_DOMAIN_LOST, NULL);
-+		break;
-+
-+	case EFC_HW_DOMAIN_ALLOC_OK:
-+		domain_trace(domain, "EFC_HW_DOMAIN_ALLOC_OK:\n");
-+		efc_domain_post_event(domain, EFC_EVT_DOMAIN_ALLOC_OK, NULL);
-+		break;
-+
-+	case EFC_HW_DOMAIN_ALLOC_FAIL:
-+		domain_trace(domain, "EFC_HW_DOMAIN_ALLOC_FAIL:\n");
-+		efc_domain_post_event(domain, EFC_EVT_DOMAIN_ALLOC_FAIL,
-+				      NULL);
-+		break;
-+
-+	case EFC_HW_DOMAIN_ATTACH_OK:
-+		domain_trace(domain, "EFC_HW_DOMAIN_ATTACH_OK:\n");
-+		efc_domain_post_event(domain, EFC_EVT_DOMAIN_ATTACH_OK, NULL);
-+		break;
-+
-+	case EFC_HW_DOMAIN_ATTACH_FAIL:
-+		domain_trace(domain, "EFC_HW_DOMAIN_ATTACH_FAIL:\n");
-+		efc_domain_post_event(domain,
-+				      EFC_EVT_DOMAIN_ATTACH_FAIL, NULL);
-+		break;
-+
-+	case EFC_HW_DOMAIN_FREE_OK:
-+		domain_trace(domain, "EFC_HW_DOMAIN_FREE_OK:\n");
-+		efc_domain_post_event(domain, EFC_EVT_DOMAIN_FREE_OK, NULL);
-+		break;
-+
-+	case EFC_HW_DOMAIN_FREE_FAIL:
-+		domain_trace(domain, "EFC_HW_DOMAIN_FREE_FAIL:\n");
-+		efc_domain_post_event(domain, EFC_EVT_DOMAIN_FREE_FAIL, NULL);
-+		break;
-+
-+	default:
-+		efc_log_warn(efc, "unsupported event %#x\n", event);
-+	}
-+	spin_unlock_irqrestore(&efc->lock, flags);
-+
-+	if (efc->domain && domain->req_accept_frames) {
-+		domain->req_accept_frames = false;
-+		efc->hold_frames = false;
-+	}
-+
-+	return rc;
-+}
-+
-+static void
-+_efc_domain_free(struct kref *arg)
-+{
-+	struct efc_domain *domain = container_of(arg, struct efc_domain, ref);
-+	struct efc *efc = domain->efc;
-+
-+	if (efc->domain_free_cb)
-+		(*efc->domain_free_cb)(efc, efc->domain_free_cb_arg);
-+
-+	kfree(domain);
-+}
-+
-+void
-+efc_domain_free(struct efc_domain *domain)
-+{
-+	struct efc *efc;
-+
-+	efc = domain->efc;
-+
-+	/* Hold frames to clear the domain pointer from the xport lookup */
-+	efc->hold_frames = false;
-+
-+	efc_log_debug(efc, "Domain free: wwn %016llX\n", domain->fcf_wwn);
-+
-+	xa_destroy(&domain->lookup);
-+	efc->domain = NULL;
-+	kref_put(&domain->ref, domain->release);
-+}
-+
-+struct efc_domain *
-+efc_domain_alloc(struct efc *efc, uint64_t fcf_wwn)
-+{
-+	struct efc_domain *domain;
-+
-+	domain = kzalloc(sizeof(*domain), GFP_ATOMIC);
-+	if (!domain)
++	if (!count)
 +		return NULL;
 +
-+	domain->efc = efc;
-+	domain->drvsm.app = domain;
++	rq_buf = kmalloc_array(count, sizeof(*rq_buf), GFP_KERNEL);
++	if (!rq_buf)
++		return NULL;
++	memset(rq_buf, 0, sizeof(*rq_buf) * count);
 +
-+	/* initialize refcount */
-+	kref_init(&domain->ref);
-+	domain->release = _efc_domain_free;
-+
-+	xa_init(&domain->lookup);
-+
-+	INIT_LIST_HEAD(&domain->nport_list);
-+	efc->domain = domain;
-+	domain->fcf_wwn = fcf_wwn;
-+	efc_log_debug(efc, "Domain allocated: wwn %016llX\n", domain->fcf_wwn);
-+
-+	return domain;
-+}
-+
-+void
-+efc_register_domain_free_cb(struct efc *efc,
-+			    void (*callback)(struct efc *efc, void *arg),
-+			    void *arg)
-+{
-+	/* Register a callback to be called when the domain is freed */
-+	efc->domain_free_cb = callback;
-+	efc->domain_free_cb_arg = arg;
-+	if (!efc->domain && callback)
-+		(*callback)(efc, arg);
++	for (i = 0, prq = rq_buf; i < count; i ++, prq++) {
++		prq->rqindex = rqindex;
++		prq->dma.size = size;
++		prq->dma.virt = dma_alloc_coherent(&efct->pci->dev,
++						   prq->dma.size,
++						   &prq->dma.phys,
++						   GFP_DMA);
++		if (!prq->dma.virt) {
++			efc_log_err(hw->os, "DMA allocation failed\n");
++			kfree(rq_buf);
++			return NULL;
++		}
++	}
++	return rq_buf;
 +}
 +
 +static void
-+__efc_domain_common(const char *funcname, struct efc_sm_ctx *ctx,
-+		    enum efc_sm_event evt, void *arg)
++efct_hw_rx_buffer_free(struct efct_hw *hw,
++		       struct efc_hw_rq_buffer *rq_buf,
++			u32 count)
 +{
-+	struct efc_domain *domain = ctx->app;
++	struct efct *efct = hw->os;
++	u32 i;
++	struct efc_hw_rq_buffer *prq;
 +
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+	case EFC_EVT_REENTER:
-+	case EFC_EVT_EXIT:
-+	case EFC_EVT_ALL_CHILD_NODES_FREE:
-+		/*
-+		 * this can arise if an FLOGI fails on the NPORT,
-+		 * and the NPORT is shutdown
-+		 */
-+		break;
-+	default:
-+		efc_log_warn(domain->efc, "%-20s %-20s not handled\n",
-+			     funcname, efc_sm_event_name(evt));
++	if (rq_buf) {
++		for (i = 0, prq = rq_buf; i < count; i++, prq++) {
++			dma_free_coherent(&efct->pci->dev,
++					  prq->dma.size, prq->dma.virt,
++					  prq->dma.phys);
++			memset(&prq->dma, 0, sizeof(struct efc_dma));
++		}
++
++		kfree(rq_buf);
 +	}
 +}
 +
-+static void
-+__efc_domain_common_shutdown(const char *funcname, struct efc_sm_ctx *ctx,
-+			     enum efc_sm_event evt, void *arg)
++enum efct_hw_rtn
++efct_hw_rx_allocate(struct efct_hw *hw)
 +{
-+	struct efc_domain *domain = ctx->app;
++	struct efct *efct = hw->os;
++	u32 i;
++	enum efct_hw_rtn rc = EFCT_HW_RTN_SUCCESS;
++	u32 rqindex = 0;
++	u32 hdr_size = EFCT_HW_RQ_SIZE_HDR;
++	u32 payload_size = hw->config.rq_default_buffer_size;
 +
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+	case EFC_EVT_REENTER:
-+	case EFC_EVT_EXIT:
-+		break;
-+	case EFC_EVT_DOMAIN_FOUND:
-+		/* save drec, mark domain_found_pending */
-+		memcpy(&domain->pending_drec, arg,
-+		       sizeof(domain->pending_drec));
-+		domain->domain_found_pending = true;
-+		break;
-+	case EFC_EVT_DOMAIN_LOST:
-+		/* unmark domain_found_pending */
-+		domain->domain_found_pending = false;
-+		break;
++	rqindex = 0;
 +
-+	default:
-+		efc_log_warn(domain->efc, "%-20s %-20s not handled\n",
-+			     funcname, efc_sm_event_name(evt));
-+	}
-+}
++	for (i = 0; i < hw->hw_rq_count; i++) {
++		struct hw_rq *rq = hw->hw_rq[i];
 +
-+#define std_domain_state_decl(...)\
-+	struct efc_domain *domain = NULL;\
-+	struct efc *efc = NULL;\
-+	\
-+	WARN_ON(!ctx || !ctx->app);\
-+	domain = ctx->app;\
-+	WARN_ON(!domain->efc);\
-+	efc = domain->efc
-+
-+void
-+__efc_domain_init(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
-+		  void *arg)
-+{
-+	std_domain_state_decl();
-+
-+	domain_sm_trace(domain);
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		domain->attached = false;
-+		break;
-+
-+	case EFC_EVT_DOMAIN_FOUND: {
-+		u32	i;
-+		struct efc_domain_record *drec = arg;
-+		struct efc_nport *nport;
-+
-+		u64 my_wwnn = efc->req_wwnn;
-+		u64 my_wwpn = efc->req_wwpn;
-+		__be64 bewwpn;
-+
-+		if (my_wwpn == 0 || my_wwnn == 0) {
-+			efc_log_debug(efc,
-+				"using default hardware WWN configuration\n");
-+			my_wwpn = efc->def_wwpn;
-+			my_wwnn = efc->def_wwnn;
-+		}
-+
-+		efc_log_debug(efc,
-+			"Creating base nport using WWPN %016llX WWNN %016llX\n",
-+			my_wwpn, my_wwnn);
-+
-+		/* Allocate a nport and transition to __efc_nport_allocated */
-+		nport = efc_nport_alloc(domain, my_wwpn, my_wwnn, U32_MAX,
-+					efc->enable_ini, efc->enable_tgt);
-+
-+		if (!nport) {
-+			efc_log_err(efc, "efc_nport_alloc() failed\n");
-+			break;
-+		}
-+		efc_sm_transition(&nport->sm, __efc_nport_allocated, NULL);
-+
-+		bewwpn = cpu_to_be64(nport->wwpn);
-+
-+		/* allocate struct efc_nport object for local port
-+		 * Note: drec->fc_id is ALPA from read_topology only if loop
-+		 */
-+		if (efc_cmd_nport_alloc(efc, nport, NULL, (uint8_t *)&bewwpn)) {
-+			efc_log_err(efc, "Can't allocate port\n");
-+			efc_nport_free(nport);
++		/* Allocate header buffers */
++		rq->hdr_buf = efct_hw_rx_buffer_alloc(hw, rqindex,
++						      rq->entry_count,
++						      hdr_size);
++		if (!rq->hdr_buf) {
++			efc_log_err(efct,
++				     "efct_hw_rx_buffer_alloc hdr_buf failed\n");
++			rc = EFCT_HW_RTN_ERROR;
 +			break;
 +		}
 +
-+		domain->is_loop = drec->is_loop;
++		efc_log_debug(hw->os,
++			       "rq[%2d] rq_id %02d header  %4d by %4d bytes\n",
++			      i, rq->hdr->id, rq->entry_count, hdr_size);
 +
-+		/*
-+		 * If the loop position map includes ALPA == 0,
-+		 * then we are in a public loop (NL_PORT)
-+		 * Note that the first element of the loopmap[]
-+		 * contains the count of elements, and if
-+		 * ALPA == 0 is present, it will occupy the first
-+		 * location after the count.
-+		 */
-+		domain->is_nlport = drec->map.loop[1] == 0x00;
++		rqindex++;
 +
-+		if (!domain->is_loop) {
-+			/* Initiate HW domain alloc */
-+			if (efc_cmd_domain_alloc(efc, domain, drec->index)) {
-+				efc_log_err(efc,
-+					    "Failed to initiate HW domain allocation\n");
-+				break;
-+			}
-+			efc_sm_transition(ctx, __efc_domain_wait_alloc, arg);
++		/* Allocate payload buffers */
++		rq->payload_buf = efct_hw_rx_buffer_alloc(hw, rqindex,
++							  rq->entry_count,
++							  payload_size);
++		if (!rq->payload_buf) {
++			efc_log_err(efct,
++				     "efct_hw_rx_buffer_alloc fb_buf failed\n");
++			rc = EFCT_HW_RTN_ERROR;
 +			break;
 +		}
-+
-+		efc_log_debug(efc, "%s fc_id=%#x speed=%d\n",
-+			      drec->is_loop ?
-+			      (domain->is_nlport ?
-+			      "public-loop" : "loop") : "other",
-+			      drec->fc_id, drec->speed);
-+
-+		nport->fc_id = drec->fc_id;
-+		nport->topology = EFC_NPORT_TOPO_FC_AL;
-+		snprintf(nport->display_name, sizeof(nport->display_name),
-+			 "s%06x", drec->fc_id);
-+
-+		if (efc->enable_ini) {
-+			u32 count = drec->map.loop[0];
-+
-+			efc_log_debug(efc, "%d position map entries\n",
-+				      count);
-+			for (i = 1; i <= count; i++) {
-+				if (drec->map.loop[i] != drec->fc_id) {
-+					struct efc_node *node;
-+
-+					efc_log_debug(efc, "%#x -> %#x\n",
-+						      drec->fc_id,
-+						      drec->map.loop[i]);
-+					node = efc_node_alloc(nport,
-+							      drec->map.loop[i],
-+							      false, true);
-+					if (!node) {
-+						efc_log_err(efc,
-+							    "efc_node_alloc() failed\n");
-+						break;
-+					}
-+					efc_node_transition(node,
-+							    __efc_d_wait_loop,
-+							    NULL);
-+				}
-+			}
-+		}
-+
-+		/* Initiate HW domain alloc */
-+		if (efc_cmd_domain_alloc(efc, domain, drec->index)) {
-+			efc_log_err(efc,
-+				    "Failed to initiate HW domain allocation\n");
-+			break;
-+		}
-+		efc_sm_transition(ctx, __efc_domain_wait_alloc, arg);
-+		break;
++		efc_log_debug(hw->os,
++			       "rq[%2d] rq_id %02d default %4d by %4d bytes\n",
++			      i, rq->data->id, rq->entry_count, payload_size);
++		rqindex++;
 +	}
-+	default:
-+		__efc_domain_common(__func__, ctx, evt, arg);
-+	}
++
++	return rc ? EFCT_HW_RTN_ERROR : EFCT_HW_RTN_SUCCESS;
 +}
 +
-+void
-+__efc_domain_wait_alloc(struct efc_sm_ctx *ctx,
-+			enum efc_sm_event evt, void *arg)
++enum efct_hw_rtn
++efct_hw_rx_post(struct efct_hw *hw)
 +{
-+	std_domain_state_decl();
++	u32 i;
++	u32 idx;
++	u32 rq_idx;
++	enum efct_hw_rtn rc = EFCT_HW_RTN_SUCCESS;
 +
-+	domain_sm_trace(domain);
++	if (!hw->seq_pool) {
++		u32 count = 0;
 +
-+	switch (evt) {
-+	case EFC_EVT_DOMAIN_ALLOC_OK: {
-+		struct fc_els_flogi  *sp;
-+		struct efc_nport *nport;
++		for (i = 0; i < hw->hw_rq_count; i++)
++			count += hw->hw_rq[i]->entry_count;
 +
-+		nport = domain->nport;
-+		if (WARN_ON(!nport))
-+			return;
-+
-+		sp = (struct fc_els_flogi  *)nport->service_params;
-+
-+		/* Save the domain service parameters */
-+		memcpy(domain->service_params + 4, domain->dma.virt,
-+		       sizeof(struct fc_els_flogi) - 4);
-+		memcpy(nport->service_params + 4, domain->dma.virt,
-+		       sizeof(struct fc_els_flogi) - 4);
-+
-+		/*
-+		 * Update the nport's service parameters,
-+		 * user might have specified non-default names
-+		 */
-+		sp->fl_wwpn = cpu_to_be64(nport->wwpn);
-+		sp->fl_wwnn = cpu_to_be64(nport->wwnn);
-+
-+		/*
-+		 * Take the loop topology path,
-+		 * unless we are an NL_PORT (public loop)
-+		 */
-+		if (domain->is_loop && !domain->is_nlport) {
-+			/*
-+			 * For loop, we already have our FC ID
-+			 * and don't need fabric login.
-+			 * Transition to the allocated state and
-+			 * post an event to attach to
-+			 * the domain. Note that this breaks the
-+			 * normal action/transition
-+			 * pattern here to avoid a race with the
-+			 * domain attach callback.
-+			 */
-+			/* sm: is_loop / domain_attach */
-+			efc_sm_transition(ctx, __efc_domain_allocated, NULL);
-+			__efc_domain_attach_internal(domain, nport->fc_id);
-+			break;
-+		}
-+		{
-+			struct efc_node *node;
-+
-+			/* alloc fabric node, send FLOGI */
-+			node = efc_node_find(nport, FC_FID_FLOGI);
-+			if (node) {
-+				efc_log_err(efc,
-+					    "Fabric Controller node already exists\n");
-+				break;
-+			}
-+			node = efc_node_alloc(nport, FC_FID_FLOGI,
-+					      false, false);
-+			if (!node) {
-+				efc_log_err(efc,
-+					    "Error: efc_node_alloc() failed\n");
-+			} else {
-+				efc_node_transition(node,
-+						    __efc_fabric_init, NULL);
-+			}
-+			/* Accept frames */
-+			domain->req_accept_frames = true;
-+		}
-+		/* sm: / start fabric logins */
-+		efc_sm_transition(ctx, __efc_domain_allocated, NULL);
-+		break;
++		hw->seq_pool = kmalloc_array(count,
++				sizeof(struct efc_hw_sequence),	GFP_KERNEL);
++		if (!hw->seq_pool)
++			return EFCT_HW_RTN_NO_MEMORY;
 +	}
-+
-+	case EFC_EVT_DOMAIN_ALLOC_FAIL:
-+		efc_log_err(efc, "%s recv'd waiting for DOMAIN_ALLOC_OK;",
-+			    efc_sm_event_name(evt));
-+		efc_log_err(efc, "shutting down domain\n");
-+		domain->req_domain_free = true;
-+		break;
-+
-+	case EFC_EVT_DOMAIN_FOUND:
-+		/* Should not happen */
-+		break;
-+
-+	case EFC_EVT_DOMAIN_LOST:
-+		efc_log_debug(efc,
-+			      "%s received while waiting for hw_domain_alloc()\n",
-+			efc_sm_event_name(evt));
-+		efc_sm_transition(ctx, __efc_domain_wait_domain_lost, NULL);
-+		break;
-+
-+	default:
-+		__efc_domain_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_domain_allocated(struct efc_sm_ctx *ctx,
-+		       enum efc_sm_event evt, void *arg)
-+{
-+	std_domain_state_decl();
-+
-+	domain_sm_trace(domain);
-+
-+	switch (evt) {
-+	case EFC_EVT_DOMAIN_REQ_ATTACH: {
-+		int rc = 0;
-+		u32 fc_id;
-+
-+		if (WARN_ON(!arg))
-+			return;
-+
-+		fc_id = *((u32 *)arg);
-+		efc_log_debug(efc, "Requesting hw domain attach fc_id x%x\n",
-+			      fc_id);
-+		/* Update nport lookup */
-+		rc = xa_err(xa_store(&domain->lookup, fc_id, domain->nport,
-+				     GFP_ATOMIC));
-+		if (rc) {
-+			efc_log_err(efc, "Sport lookup store failed: %d\n", rc);
-+			return;
-+		}
-+
-+		/* Update display name for the nport */
-+		efc_node_fcid_display(fc_id, domain->nport->display_name,
-+				      sizeof(domain->nport->display_name));
-+
-+		/* Issue domain attach call */
-+		rc = efc_cmd_domain_attach(efc, domain, fc_id);
-+		if (rc) {
-+			efc_log_err(efc, "efc_hw_domain_attach failed: %d\n",
-+				    rc);
-+			return;
-+		}
-+		/* sm: / domain_attach */
-+		efc_sm_transition(ctx, __efc_domain_wait_attach, NULL);
-+		break;
-+	}
-+
-+	case EFC_EVT_DOMAIN_FOUND:
-+		/* Should not happen */
-+		efc_log_err(efc, "%s: evt: %d should not happen\n",
-+			    __func__, evt);
-+		break;
-+
-+	case EFC_EVT_DOMAIN_LOST: {
-+		efc_log_debug(efc,
-+			      "%s received while in EFC_EVT_DOMAIN_REQ_ATTACH\n",
-+			efc_sm_event_name(evt));
-+		if (!list_empty(&domain->nport_list)) {
-+			/*
-+			 * if there are nports, transition to
-+			 * wait state and send shutdown to each
-+			 * nport
-+			 */
-+			struct efc_nport *nport = NULL, *nport_next = NULL;
-+
-+			efc_sm_transition(ctx, __efc_domain_wait_nports_free,
-+					  NULL);
-+			list_for_each_entry_safe(nport, nport_next,
-+						 &domain->nport_list,
-+						 list_entry) {
-+				efc_sm_post_event(&nport->sm,
-+						  EFC_EVT_SHUTDOWN, NULL);
-+			}
-+		} else {
-+			/* no nports exist, free domain */
-+			efc_sm_transition(ctx, __efc_domain_wait_shutdown,
-+					  NULL);
-+			if (efc_cmd_domain_free(efc, domain))
-+				efc_log_err(efc, "hw_domain_free failed\n");
-+		}
-+
-+		break;
-+	}
-+
-+	default:
-+		__efc_domain_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_domain_wait_attach(struct efc_sm_ctx *ctx,
-+			 enum efc_sm_event evt, void *arg)
-+{
-+	std_domain_state_decl();
-+
-+	domain_sm_trace(domain);
-+
-+	switch (evt) {
-+	case EFC_EVT_DOMAIN_ATTACH_OK: {
-+		struct efc_node *node = NULL;
-+		struct efc_nport *nport, *next_nport;
-+		unsigned long index;
-+
-+		/*
-+		 * Set domain notify pending state to avoid
-+		 * duplicate domain event post
-+		 */
-+		domain->domain_notify_pend = true;
-+
-+		/* Mark as attached */
-+		domain->attached = true;
-+
-+		/* Transition to ready */
-+		/* sm: / forward event to all nports and nodes */
-+		efc_sm_transition(ctx, __efc_domain_ready, NULL);
-+
-+		/* We have an FCFI, so we can accept frames */
-+		domain->req_accept_frames = true;
-+
-+		/*
-+		 * Notify all nodes that the domain attach request
-+		 * has completed
-+		 * Note: nport will have already received notification
-+		 * of nport attached as a result of the HW's port attach.
-+		 */
-+		list_for_each_entry_safe(nport, next_nport,
-+					 &domain->nport_list, list_entry) {
-+			xa_for_each(&nport->lookup, index, node) {
-+				efc_node_post_event(node,
-+						    EFC_EVT_DOMAIN_ATTACH_OK,
-+						    NULL);
-+			}
-+		}
-+		domain->domain_notify_pend = false;
-+		break;
-+	}
-+
-+	case EFC_EVT_DOMAIN_ATTACH_FAIL:
-+		efc_log_debug(efc,
-+			      "%s received while waiting for hw attach\n",
-+			      efc_sm_event_name(evt));
-+		break;
-+
-+	case EFC_EVT_DOMAIN_FOUND:
-+		/* Should not happen */
-+		efc_log_err(efc, "%s: evt: %d should not happen\n",
-+			    __func__, evt);
-+		break;
-+
-+	case EFC_EVT_DOMAIN_LOST:
-+		/*
-+		 * Domain lost while waiting for an attach to complete,
-+		 * go to a state that waits for  the domain attach to
-+		 * complete, then handle domain lost
-+		 */
-+		efc_sm_transition(ctx, __efc_domain_wait_domain_lost, NULL);
-+		break;
-+
-+	case EFC_EVT_DOMAIN_REQ_ATTACH:
-+		/*
-+		 * In P2P we can get an attach request from
-+		 * the other FLOGI path, so drop this one
-+		 */
-+		break;
-+
-+	default:
-+		__efc_domain_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_domain_ready(struct efc_sm_ctx *ctx, enum efc_sm_event evt, void *arg)
-+{
-+	std_domain_state_decl();
-+
-+	domain_sm_trace(domain);
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER: {
-+		/* start any pending vports */
-+		if (efc_vport_start(domain)) {
-+			efc_log_debug(domain->efc,
-+				      "efc_vport_start didn't start vports\n");
-+		}
-+		break;
-+	}
-+	case EFC_EVT_DOMAIN_LOST: {
-+		if (!list_empty(&domain->nport_list)) {
-+			/*
-+			 * if there are nports, transition to wait state
-+			 * and send shutdown to each nport
-+			 */
-+			struct efc_nport *nport = NULL, *nport_next = NULL;
-+
-+			efc_sm_transition(ctx, __efc_domain_wait_nports_free,
-+					  NULL);
-+			list_for_each_entry_safe(nport, nport_next,
-+						 &domain->nport_list,
-+						 list_entry) {
-+				efc_sm_post_event(&nport->sm,
-+						  EFC_EVT_SHUTDOWN, NULL);
-+			}
-+		} else {
-+			/* no nports exist, free domain */
-+			efc_sm_transition(ctx, __efc_domain_wait_shutdown,
-+					  NULL);
-+			if (efc_cmd_domain_free(efc, domain))
-+				efc_log_err(efc, "hw_domain_free failed\n");
-+		}
-+		break;
-+	}
-+
-+	case EFC_EVT_DOMAIN_FOUND:
-+		/* Should not happen */
-+		efc_log_err(efc, "%s: evt: %d should not happen\n",
-+			    __func__, evt);
-+		break;
-+
-+	case EFC_EVT_DOMAIN_REQ_ATTACH: {
-+		/* can happen during p2p */
-+		u32 fc_id;
-+
-+		fc_id = *((u32 *)arg);
-+
-+		/* Assume that the domain is attached */
-+		WARN_ON(!domain->attached);
-+
-+		/*
-+		 * Verify that the requested FC_ID
-+		 * is the same as the one we're working with
-+		 */
-+		WARN_ON(domain->nport->fc_id != fc_id);
-+		break;
-+	}
-+
-+	default:
-+		__efc_domain_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_domain_wait_nports_free(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
-+			      void *arg)
-+{
-+	std_domain_state_decl();
-+
-+	domain_sm_trace(domain);
-+
-+	/* Wait for nodes to free prior to the domain shutdown */
-+	switch (evt) {
-+	case EFC_EVT_ALL_CHILD_NODES_FREE: {
-+		int rc;
-+
-+		/* sm: / efc_hw_domain_free */
-+		efc_sm_transition(ctx, __efc_domain_wait_shutdown, NULL);
-+
-+		/* Request efc_hw_domain_free and wait for completion */
-+		rc = efc_cmd_domain_free(efc, domain);
-+		if (rc) {
-+			efc_log_err(efc, "efc_hw_domain_free() failed: %d\n",
-+				    rc);
-+		}
-+		break;
-+	}
-+	default:
-+		__efc_domain_common_shutdown(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_domain_wait_shutdown(struct efc_sm_ctx *ctx,
-+			   enum efc_sm_event evt, void *arg)
-+{
-+	std_domain_state_decl();
-+
-+	domain_sm_trace(domain);
-+
-+	switch (evt) {
-+	case EFC_EVT_DOMAIN_FREE_OK:
-+		/* sm: / domain_free */
-+		if (domain->domain_found_pending) {
-+			/*
-+			 * save fcf_wwn and drec from this domain,
-+			 * free current domain and allocate
-+			 * a new one with the same fcf_wwn
-+			 * could use a SLI-4 "re-register VPI"
-+			 * operation here?
-+			 */
-+			u64 fcf_wwn = domain->fcf_wwn;
-+			struct efc_domain_record drec = domain->pending_drec;
-+
-+			efc_log_debug(efc, "Reallocating domain\n");
-+			domain->req_domain_free = true;
-+			domain = efc_domain_alloc(efc, fcf_wwn);
-+
-+			if (!domain) {
-+				efc_log_err(efc,
-+					    "efc_domain_alloc() failed\n");
-+				return;
-+			}
-+			/*
-+			 * got a new domain; at this point,
-+			 * there are at least two domains
-+			 * once the req_domain_free flag is processed,
-+			 * the associated domain will be removed.
-+			 */
-+			efc_sm_transition(&domain->drvsm, __efc_domain_init,
-+					  NULL);
-+			efc_sm_post_event(&domain->drvsm,
-+					  EFC_EVT_DOMAIN_FOUND, &drec);
-+		} else {
-+			domain->req_domain_free = true;
-+		}
-+		break;
-+	default:
-+		__efc_domain_common_shutdown(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_domain_wait_domain_lost(struct efc_sm_ctx *ctx,
-+			      enum efc_sm_event evt, void *arg)
-+{
-+	std_domain_state_decl();
-+
-+	domain_sm_trace(domain);
 +
 +	/*
-+	 * Wait for the domain alloc/attach completion
-+	 * after receiving a domain lost.
++	 * In RQ pair mode, we MUST post the header and payload buffer at the
++	 * same time.
 +	 */
-+	switch (evt) {
-+	case EFC_EVT_DOMAIN_ALLOC_OK:
-+	case EFC_EVT_DOMAIN_ATTACH_OK: {
-+		if (!list_empty(&domain->nport_list)) {
-+			/*
-+			 * if there are nports, transition to
-+			 * wait state and send shutdown to each nport
-+			 */
-+			struct efc_nport *nport = NULL, *nport_next = NULL;
++	for (rq_idx = 0, idx = 0; rq_idx < hw->hw_rq_count; rq_idx++) {
++		struct hw_rq *rq = hw->hw_rq[rq_idx];
 +
-+			efc_sm_transition(ctx, __efc_domain_wait_nports_free,
-+					  NULL);
-+			list_for_each_entry_safe(nport, nport_next,
-+						 &domain->nport_list,
-+						 list_entry) {
-+				efc_sm_post_event(&nport->sm,
-+						  EFC_EVT_SHUTDOWN, NULL);
-+			}
-+		} else {
-+			/* no nports exist, free domain */
-+			efc_sm_transition(ctx, __efc_domain_wait_shutdown,
-+					  NULL);
-+			if (efc_cmd_domain_free(efc, domain))
-+				efc_log_err(efc, "hw_domain_free() failed\n");
++		for (i = 0; i < rq->entry_count - 1; i++) {
++			struct efc_hw_sequence *seq;
++
++			seq = hw->seq_pool + idx;
++			idx++;
++			seq->header = &rq->hdr_buf[i];
++			seq->payload = &rq->payload_buf[i];
++			rc = efct_hw_sequence_free(hw, seq);
++			if (rc)
++				break;
 +		}
-+		break;
++		if (rc)
++			break;
 +	}
-+	case EFC_EVT_DOMAIN_ALLOC_FAIL:
-+	case EFC_EVT_DOMAIN_ATTACH_FAIL:
-+		efc_log_err(efc, "[domain] %-20s: failed\n",
-+			    efc_sm_event_name(evt));
-+		break;
 +
-+	default:
-+		__efc_domain_common_shutdown(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_domain_attach_internal(struct efc_domain *domain, u32 s_id)
-+{
-+	memcpy(domain->dma.virt,
-+	       ((uint8_t *)domain->flogi_service_params) + 4,
-+		   sizeof(struct fc_els_flogi) - 4);
-+	(void)efc_sm_post_event(&domain->drvsm, EFC_EVT_DOMAIN_REQ_ATTACH,
-+				 &s_id);
-+}
-+
-+void
-+efc_domain_attach(struct efc_domain *domain, u32 s_id)
-+{
-+	__efc_domain_attach_internal(domain, s_id);
-+}
-+
-+int
-+efc_domain_post_event(struct efc_domain *domain,
-+		      enum efc_sm_event event, void *arg)
-+{
-+	int rc;
-+	bool req_domain_free;
-+
-+	rc = efc_sm_post_event(&domain->drvsm, event, arg);
-+
-+	req_domain_free = domain->req_domain_free;
-+	domain->req_domain_free = false;
-+
-+	if (req_domain_free)
-+		efc_domain_free(domain);
++	if (rc && hw->seq_pool)
++		kfree(hw->seq_pool);
 +
 +	return rc;
 +}
 +
-+static void
-+efct_domain_process_pending(struct efc_domain *domain)
-+{
-+	struct efc *efc = domain->efc;
-+	struct efc_hw_sequence *seq = NULL;
-+	u32 processed = 0;
-+	unsigned long flags = 0;
-+
-+	for (;;) {
-+		/* need to check for hold frames condition after each frame
-+		 * processed because any given frame could cause a transition
-+		 * to a state that holds frames
-+		 */
-+		if (efc->hold_frames)
-+			break;
-+
-+		/* Get next frame/sequence */
-+		spin_lock_irqsave(&efc->pend_frames_lock, flags);
-+
-+		if (!list_empty(&efc->pend_frames)) {
-+			seq = list_first_entry(&efc->pend_frames,
-+					struct efc_hw_sequence, list_entry);
-+			list_del(&seq->list_entry);
-+		}
-+
-+		if (!seq) {
-+			processed = efc->pend_frames_processed;
-+			efc->pend_frames_processed = 0;
-+			spin_unlock_irqrestore(&efc->pend_frames_lock, flags);
-+			break;
-+		}
-+		efc->pend_frames_processed++;
-+
-+		spin_unlock_irqrestore(&efc->pend_frames_lock, flags);
-+
-+		/* now dispatch frame(s) to dispatch function */
-+		if (efc_domain_dispatch_frame(domain, seq))
-+			efc->tt.hw_seq_free(efc, seq);
-+
-+		seq = NULL;
-+	}
-+
-+	if (processed != 0)
-+		efc_log_debug(efc, "%u domain frames held and processed\n",
-+					processed);
-+}
-+
 +void
-+efc_dispatch_frame(struct efc *efc, struct efc_hw_sequence *seq)
++efct_hw_rx_free(struct efct_hw *hw)
 +{
-+	struct efc_domain *domain = efc->domain;
++	u32 i;
 +
-+	/*
-+	 * If we are holding frames or the domain is not yet registered or
-+	 * there's already frames on the pending list,
-+	 * then add the new frame to pending list
-+	 */
-+	if (!domain || efc->hold_frames || !list_empty(&efc->pend_frames)) {
-+		unsigned long flags = 0;
++	/* Free hw_rq buffers */
++	for (i = 0; i < hw->hw_rq_count; i++) {
++		struct hw_rq *rq = hw->hw_rq[i];
 +
-+		spin_lock_irqsave(&efc->pend_frames_lock, flags);
-+		INIT_LIST_HEAD(&seq->list_entry);
-+		list_add_tail(&seq->list_entry, &efc->pend_frames);
-+		spin_unlock_irqrestore(&efc->pend_frames_lock, flags);
-+
-+		if (domain) {
-+			/* immediately process pending frames */
-+			efct_domain_process_pending(domain);
++		if (rq) {
++			efct_hw_rx_buffer_free(hw, rq->hdr_buf,
++					       rq->entry_count);
++			rq->hdr_buf = NULL;
++			efct_hw_rx_buffer_free(hw, rq->payload_buf,
++					       rq->entry_count);
++			rq->payload_buf = NULL;
 +		}
-+	} else {
-+		/*
-+		 * We are not holding frames and pending list is empty,
-+		 * just process frame. A non-zero return means the frame
-+		 * was not handled - so cleanup
-+		 */
-+		if (efc_domain_dispatch_frame(domain, seq))
-+			efc->tt.hw_seq_free(efc, seq);
 +	}
 +}
 +
-+int
-+efc_domain_dispatch_frame(void *arg, struct efc_hw_sequence *seq)
++static int
++efct_hw_cmd_submit_pending(struct efct_hw *hw)
 +{
-+	struct efc_domain *domain = (struct efc_domain *)arg;
-+	struct efc *efc = domain->efc;
-+	struct fc_frame_header *hdr;
-+	struct efc_node *node = NULL;
-+	struct efc_nport *nport = NULL;
-+	unsigned long flags = 0;
-+	u32 s_id, d_id, rc = EFC_HW_SEQ_FREE;
++	struct efct_command_ctx *ctx = NULL;
++	int rc = 0;
 +
-+	if (!seq->header || !seq->header->dma.virt || !seq->payload->dma.virt) {
-+		efc_log_err(efc, "Sequence header or payload is null\n");
-+		return rc;
-+	}
++	/* Assumes lock held */
 +
-+	hdr = seq->header->dma.virt;
++	/* Only submit MQE if there's room */
++	while (hw->cmd_head_count < (EFCT_HW_MQ_DEPTH - 1) &&
++	       !list_empty(&hw->cmd_pending)) {
++		ctx = list_first_entry(&hw->cmd_pending,
++				       struct efct_command_ctx, list_entry);
++		if (!ctx)
++			break;
 +
-+	/* extract the s_id and d_id */
-+	s_id = ntoh24(hdr->fh_s_id);
-+	d_id = ntoh24(hdr->fh_d_id);
++		list_del_init(&ctx->list_entry);
 +
-+	spin_lock_irqsave(&efc->lock, flags);
-+
-+	nport = efc_nport_find(domain, d_id);
-+	if (!nport) {
-+		if (hdr->fh_type == FC_TYPE_FCP) {
-+			/* Drop frame */
-+			efc_log_warn(efc, "FCP frame with invalid d_id x%x\n",
-+				     d_id);
-+			goto out;
-+		}
-+
-+		/* p2p will use this case */
-+		nport = domain->nport;
-+		if (!nport || !kref_get_unless_zero(&nport->ref)) {
-+			efc_log_err(efc, "Physical nport is NULL\n");
-+			goto out;
++		list_add_tail(&ctx->list_entry, &hw->cmd_head);
++		hw->cmd_head_count++;
++		if (sli_mq_write(&hw->sli, hw->mq, ctx->buf) < 0) {
++			efc_log_debug(hw->os,
++				      "sli_queue_write failed: %d\n", rc);
++			rc = -1;
++			break;
 +		}
 +	}
-+
-+	/* Lookup the node given the remote s_id */
-+	node = efc_node_find(nport, s_id);
-+
-+	/* If not found, then create a new node */
-+	if (!node) {
-+		/*
-+		 * If this is solicited data or control based on R_CTL and
-+		 * there is no node context, then we can drop the frame
-+		 */
-+		if ((hdr->fh_r_ctl == FC_RCTL_DD_SOL_DATA) ||
-+			(hdr->fh_r_ctl == FC_RCTL_DD_SOL_CTL)) {
-+			efc_log_debug(efc,
-+				"solicited data/ctrl frame without node,drop\n");
-+			goto out_release;
-+		}
-+
-+		node = efc_node_alloc(nport, s_id, false, false);
-+		if (!node) {
-+			efc_log_err(efc, "efc_node_alloc() failed\n");
-+			goto out_release;
-+		}
-+		/* don't send PLOGI on efc_d_init entry */
-+		efc_node_init_device(node, false);
-+	}
-+
-+	if (node->hold_frames || !list_empty(&node->pend_frames)) {
-+
-+		/* add frame to node's pending list */
-+		spin_lock_irqsave(&node->pend_frames_lock, flags);
-+		INIT_LIST_HEAD(&seq->list_entry);
-+		list_add_tail(&seq->list_entry, &node->pend_frames);
-+		spin_unlock_irqrestore(&node->pend_frames_lock, flags);
-+		rc = EFC_HW_SEQ_HOLD;
-+		goto out_release;
-+	}
-+
-+	/* now dispatch frame to the node frame handler */
-+	efc_node_dispatch_frame(node, seq);
-+
-+out_release:
-+	kref_put(&nport->ref, nport->release);
-+out:
-+	spin_unlock_irqrestore(&efc->lock, flags);
 +	return rc;
 +}
 +
-+void
-+efc_node_dispatch_frame(void *arg, struct efc_hw_sequence *seq)
++enum efct_hw_rtn
++efct_hw_command(struct efct_hw *hw, u8 *cmd, u32 opts, void *cb, void *arg)
 +{
-+	struct fc_frame_header *hdr = seq->header->dma.virt;
-+	u32 port_id;
-+	struct efc_node *node = (struct efc_node *)arg;
-+	struct efc *efc = node->efc;
++	enum efct_hw_rtn rc = EFCT_HW_RTN_ERROR;
++	unsigned long flags = 0;
++	void *bmbx = NULL;
 +
-+	port_id = ntoh24(hdr->fh_s_id);
++	/*
++	 * If the chip is in an error state (UE'd) then reject this mailbox
++	 * command.
++	 */
++	if (sli_fw_error_status(&hw->sli) > 0) {
++		efc_log_crit(hw->os,
++			      "Chip is in an error state - reset needed\n");
++		efc_log_crit(hw->os,
++			      "status=%#x error1=%#x error2=%#x\n",
++			sli_reg_read_status(&hw->sli),
++			sli_reg_read_err1(&hw->sli),
++			sli_reg_read_err2(&hw->sli));
 +
-+	if (WARN_ON(port_id != node->rnode.fc_id))
-+		return;
-+
-+	if ((!(ntoh24(hdr->fh_f_ctl) & FC_FC_END_SEQ)) ||
-+	    !(ntoh24(hdr->fh_f_ctl) & FC_FC_SEQ_INIT)) {
-+		node_printf(node,
-+		    "Dropping frame hdr = %08x %08x %08x %08x %08x %08x\n",
-+		    cpu_to_be32(((u32 *)hdr)[0]),
-+		    cpu_to_be32(((u32 *)hdr)[1]),
-+		    cpu_to_be32(((u32 *)hdr)[2]),
-+		    cpu_to_be32(((u32 *)hdr)[3]),
-+		    cpu_to_be32(((u32 *)hdr)[4]),
-+		    cpu_to_be32(((u32 *)hdr)[5]));
-+		return;
++		return EFCT_HW_RTN_ERROR;
 +	}
 +
-+	switch (hdr->fh_r_ctl) {
-+	case FC_RCTL_ELS_REQ:
-+	case FC_RCTL_ELS_REP:
-+		efc_node_recv_els_frame(node, seq);
-+		break;
++	/*
++	 * Send a mailbox command to the hardware, and either wait for
++	 * a completion (EFCT_CMD_POLL) or get an optional asynchronous
++	 * completion (EFCT_CMD_NOWAIT).
++	 */
 +
-+	case FC_RCTL_BA_ABTS:
-+	case FC_RCTL_BA_ACC:
-+	case FC_RCTL_BA_RJT:
-+	case FC_RCTL_BA_NOP:
-+		efc_log_err(efc, "Received ABTS:\n");
-+		break;
++	if (opts == EFCT_CMD_POLL) {
++		mutex_lock(&hw->bmbx_lock);
++		bmbx = hw->sli.bmbx.virt;
 +
-+	case FC_RCTL_DD_UNSOL_CMD:
-+	case FC_RCTL_DD_UNSOL_CTL:
-+		switch (hdr->fh_type) {
-+		case FC_TYPE_FCP:
-+			if ((hdr->fh_r_ctl & 0xf) == FC_RCTL_DD_UNSOL_CMD) {
-+				if (!node->fcp_enabled) {
-+					efc_node_recv_fcp_cmd(node, seq);
-+					break;
-+				}
-+				efc_log_err(efc,
-+					"Received FCP CMD. Dropping IO\n");
-+			} else if ((hdr->fh_r_ctl & 0xf) ==
-+							FC_RCTL_DD_SOL_DATA) {
-+				node_printf(node,
-+				    "solicited data received.Dropping IO\n");
-+			}
-+			break;
++		memset(bmbx, 0, SLI4_BMBX_SIZE);
++		memcpy(bmbx, cmd, SLI4_BMBX_SIZE);
 +
-+		case FC_TYPE_CT:
-+			efc_node_recv_ct_frame(node, seq);
-+			break;
-+		default:
-+			break;
++		if (sli_bmbx_command(&hw->sli) == 0) {
++			rc = EFCT_HW_RTN_SUCCESS;
++			memcpy(cmd, bmbx, SLI4_BMBX_SIZE);
 +		}
-+		break;
-+	default:
-+		efc_log_err(efc, "Unhandled frame rctl: %02x\n", hdr->fh_r_ctl);
++		mutex_unlock(&hw->bmbx_lock);
++	} else if (opts == EFCT_CMD_NOWAIT) {
++		struct efct_command_ctx	*ctx = NULL;
++
++		if (hw->state != EFCT_HW_STATE_ACTIVE) {
++			efc_log_err(hw->os,
++				     "Can't send command, HW state=%d\n",
++				    hw->state);
++			return EFCT_HW_RTN_ERROR;
++		}
++
++		ctx = mempool_alloc(hw->cmd_ctx_pool, GFP_ATOMIC);
++		if (!ctx)
++			return EFCT_HW_RTN_NO_RESOURCES;
++
++		memset(ctx, 0, sizeof(struct efct_command_ctx));
++
++		if (cb) {
++			ctx->cb = cb;
++			ctx->arg = arg;
++		}
++
++		memcpy(ctx->buf, cmd, SLI4_BMBX_SIZE);
++		ctx->ctx = hw;
++
++		spin_lock_irqsave(&hw->cmd_lock, flags);
++
++		/* Add to pending list */
++		INIT_LIST_HEAD(&ctx->list_entry);
++		list_add_tail(&ctx->list_entry, &hw->cmd_pending);
++
++		/* Submit as much of the pending list as we can */
++		rc = efct_hw_cmd_submit_pending(hw);
++
++		spin_unlock_irqrestore(&hw->cmd_lock, flags);
++	}
++
++	return rc;
++}
++
++static int
++efct_hw_command_process(struct efct_hw *hw, int status, u8 *mqe,
++			size_t size)
++{
++	struct efct_command_ctx *ctx = NULL;
++	unsigned long flags = 0;
++
++	spin_lock_irqsave(&hw->cmd_lock, flags);
++	if (!list_empty(&hw->cmd_head)) {
++		ctx = list_first_entry(&hw->cmd_head,
++				       struct efct_command_ctx, list_entry);
++		list_del_init(&ctx->list_entry);
++	}
++	if (!ctx) {
++		efc_log_err(hw->os, "no command context?!?\n");
++		spin_unlock_irqrestore(&hw->cmd_lock, flags);
++		return EFC_FAIL;
++	}
++
++	hw->cmd_head_count--;
++
++	/* Post any pending requests */
++	efct_hw_cmd_submit_pending(hw);
++
++	spin_unlock_irqrestore(&hw->cmd_lock, flags);
++
++	if (ctx->cb) {
++		memcpy(ctx->buf, mqe, size);
++		ctx->cb(hw, status, ctx->buf, ctx->arg);
++	}
++
++	mempool_free(ctx, hw->cmd_ctx_pool);
++
++	return EFC_SUCCESS;
++}
++
++static int
++efct_hw_mq_process(struct efct_hw *hw,
++		   int status, struct sli4_queue *mq)
++{
++	u8 mqe[SLI4_BMBX_SIZE];
++
++	if (!sli_mq_read(&hw->sli, mq, mqe))
++		efct_hw_command_process(hw, status, mqe, mq->size);
++
++	return EFC_SUCCESS;
++}
++
++static int
++efct_hw_command_cancel(struct efct_hw *hw)
++{
++	unsigned long flags = 0;
++
++	spin_lock_irqsave(&hw->cmd_lock, flags);
++
++	/*
++	 * Manually clean up remaining commands. Note: since this calls
++	 * efct_hw_command_process(), we'll also process the cmd_pending
++	 * list, so no need to manually clean that out.
++	 */
++	while (!list_empty(&hw->cmd_head)) {
++		u8		mqe[SLI4_BMBX_SIZE] = { 0 };
++		struct efct_command_ctx *ctx =
++	list_first_entry(&hw->cmd_head, struct efct_command_ctx, list_entry);
++
++		efc_log_debug(hw->os, "hung command %08x\n",
++			      !ctx ? U32_MAX :
++			      (!ctx->buf ? U32_MAX :
++			       *((u32 *)ctx->buf)));
++		spin_unlock_irqrestore(&hw->cmd_lock, flags);
++		efct_hw_command_process(hw, -1, mqe, SLI4_BMBX_SIZE);
++		spin_lock_irqsave(&hw->cmd_lock, flags);
++	}
++
++	spin_unlock_irqrestore(&hw->cmd_lock, flags);
++
++	return EFC_SUCCESS;
++}
++
++static void
++efct_mbox_rsp_cb(struct efct_hw *hw, int status, u8 *mqe, void *arg)
++{
++	struct efct_mbox_rqst_ctx *ctx = arg;
++
++	if (ctx) {
++		if (ctx->callback)
++			(*ctx->callback)(hw->os->efcport, status, mqe,
++					 ctx->arg);
++
++		mempool_free(ctx, hw->mbox_rqst_pool);
 +	}
 +}
-diff --git a/drivers/scsi/elx/libefc/efc_domain.h b/drivers/scsi/elx/libefc/efc_domain.h
-new file mode 100644
-index 000000000000..5468ea7ab19b
---- /dev/null
-+++ b/drivers/scsi/elx/libefc/efc_domain.h
-@@ -0,0 +1,54 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
-+ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
-+ */
-+
-+/*
-+ * Declare driver's domain handler exported interface
-+ */
-+
-+#ifndef __EFCT_DOMAIN_H__
-+#define __EFCT_DOMAIN_H__
-+
-+struct efc_domain *
-+efc_domain_alloc(struct efc *efc, uint64_t fcf_wwn);
-+void
-+efc_domain_free(struct efc_domain *domain);
-+
-+void
-+__efc_domain_init(struct efc_sm_ctx *ctx, enum efc_sm_event evt, void *arg);
-+void
-+__efc_domain_wait_alloc(struct efc_sm_ctx *ctx,	enum efc_sm_event evt,
-+			void *arg);
-+void
-+__efc_domain_allocated(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
-+		       void *arg);
-+void
-+__efc_domain_wait_attach(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
-+			 void *arg);
-+void
-+__efc_domain_ready(struct efc_sm_ctx *ctx, enum efc_sm_event evt, void *arg);
-+void
-+__efc_domain_wait_nports_free(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
-+			      void *arg);
-+void
-+__efc_domain_wait_shutdown(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
-+			   void *arg);
-+void
-+__efc_domain_wait_domain_lost(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
-+			      void *arg);
-+void
-+efc_domain_attach(struct efc_domain *domain, u32 s_id);
-+int
-+efc_domain_post_event(struct efc_domain *domain, enum efc_sm_event event,
-+		      void *arg);
-+void
-+__efc_domain_attach_internal(struct efc_domain *domain, u32 s_id);
 +
 +int
-+efc_domain_dispatch_frame(void *arg, struct efc_hw_sequence *seq);
-+void
-+efc_node_dispatch_frame(void *arg, struct efc_hw_sequence *seq);
++efct_issue_mbox_rqst(void *base, void *cmd, void *cb, void *arg)
++{
++	int rc = 0;
++	struct efct_mbox_rqst_ctx *ctx;
++	struct efct *efct = base;
++	struct efct_hw *hw = &efct->hw;
 +
-+#endif /* __EFCT_DOMAIN_H__ */
++	/*
++	 * Allocate a callback context (which includes the mbox cmd buffer),
++	 * we need this to be persistent as the mbox cmd submission may be
++	 * queued and executed later execution.
++	 */
++	ctx = mempool_alloc(hw->mbox_rqst_pool, GFP_ATOMIC);
++	if (!ctx)
++		return EFC_FAIL;
++
++	ctx->callback = cb;
++	ctx->arg = arg;
++
++	if (efct_hw_command(hw, cmd, EFCT_CMD_NOWAIT, efct_mbox_rsp_cb, ctx)) {
++		efc_log_err(efct, "issue mbox rqst failure\n");
++		mempool_free(ctx, hw->mbox_rqst_pool);
++		rc = -1;
++	}
++	return rc;
++}
+diff --git a/drivers/scsi/elx/efct/efct_hw.h b/drivers/scsi/elx/efct/efct_hw.h
+index 39cfe6658783..76de5decfbea 100644
+--- a/drivers/scsi/elx/efct/efct_hw.h
++++ b/drivers/scsi/elx/efct/efct_hw.h
+@@ -619,4 +619,13 @@ efct_get_wwnn(struct efct_hw *hw);
+ uint64_t
+ efct_get_wwpn(struct efct_hw *hw);
+ 
++enum efct_hw_rtn efct_hw_rx_allocate(struct efct_hw *hw);
++enum efct_hw_rtn efct_hw_rx_post(struct efct_hw *hw);
++void efct_hw_rx_free(struct efct_hw *hw);
++enum efct_hw_rtn
++efct_hw_command(struct efct_hw *hw, u8 *cmd, u32 opts, void *cb,
++		void *arg);
++int
++efct_issue_mbox_rqst(void *base, void *cmd, void *cb, void *arg);
++
+ #endif /* __EFCT_H__ */
 -- 
 2.26.2
 
