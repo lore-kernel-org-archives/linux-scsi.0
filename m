@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 401E9C4332B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B0A3C43333
 	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 00:52:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CF4723120
+	by mail.kernel.org (Postfix) with ESMTP id 808F223120
 	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jan 2021 00:52:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726516AbhAGAwB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jan 2021 19:52:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41546 "EHLO
+        id S1726571AbhAGAwF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jan 2021 19:52:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726507AbhAGAwA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 19:52:00 -0500
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A4C4C0612FD
-        for <linux-scsi@vger.kernel.org>; Wed,  6 Jan 2021 16:50:47 -0800 (PST)
-Received: by mail-pl1-x633.google.com with SMTP id b8so2496203plx.0
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Jan 2021 16:50:47 -0800 (PST)
+        with ESMTP id S1726525AbhAGAwE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2021 19:52:04 -0500
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0AF6C0612A0
+        for <linux-scsi@vger.kernel.org>; Wed,  6 Jan 2021 16:50:53 -0800 (PST)
+Received: by mail-pf1-x436.google.com with SMTP id a188so2729507pfa.11
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Jan 2021 16:50:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Wb5KePHKXdbKwxKD1lbIbAEb84VbYEiHRd9R0i9cErc=;
-        b=owzaUgOeSCldbM5ebfRarzHkRrOU3Y57hYVlnA2eOc//pbga8jSyxyNZf3bdKdpVgB
-         EeYH6vDQqG22CmoS3jY6oSZG3EB+Tqov1WfNamLq8S/5q2PfDtIiXPeJX9QTD0mcEvI4
-         Fn6oYH8kbcb1kmeYPuW0xGZ6fVrT+GWSjAZHe+CMhD0ysUNWJWfJiJo+JH/R/D1F8PfE
-         4RvyfUT1oXF042xKrj8xCIcN4maCarvR5knQPxn/y20CwMKLBE/gkAme9Kb4qGNTJEL5
-         CgbBmL0r0ve48yNUQgLzbV1G3+JZYMPy3le/N1UJeZaq4CMR+hck0xkoxueNUHGbaoEP
-         zMGA==
+        bh=25p39Yte3ZrMOSL/mz34vioeHl7nX3feCy/xdOj1j48=;
+        b=GLCUx1bAy0fKVjgl5lojZhmGWAwwqn/vxgEgVsZxbDyBlDMJy6xfZ3jHhTlzzZsaOE
+         mDleDmqT3FPRyhoHxU4gbQcWL1o7swNwYuHVkVJKaUh2eEWf6aQR+IPXKZm2iA17p57S
+         RSuvFLxI3YpK4wX9PSGfUiBkUEKWpAP6tryx8+3rWkORPJWRjYfSIn1Chm76CT4EAOjA
+         krKQK7HexVC6c1MoN3uZpmO9MoHG0/hjl4djroHPx/L6mX6sVlikElh6UlAOukQ7HKAs
+         tdBWvaSkewQgyibEzEb8P9Hp0rHGGJCXzoQ8U1inBJd3/nuGouEcYAVbsBnmTRYKVJo6
+         FsYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Wb5KePHKXdbKwxKD1lbIbAEb84VbYEiHRd9R0i9cErc=;
-        b=gfFkzr/z3i+mN3Hzfv7IGuNdgZA7NeaLndKvaPdWqG53UFDVXzsPRZxQuDM8Cx2MrA
-         EHEJ4KerXRYuKpetXpqrB7AIv02IeK23bEWWxxTszuF5XTYpaGmUq2PHbdJ58M72nFlV
-         FisHeYROkx/0nJQhYufzjenY3NvrYISrKhsOwyv5PHaHwgWHnMN58P6kKt8Ji2gyKQKO
-         4zmlIYstK8yWDpXnSizXo4GrNK7F7jvFHaNdTlywsAWKr0yLCW0LhK29LJwVoVdlcsuM
-         jmyAkvo8UzJg/MEiXIOCzM3GTClAk0J8nCeNQl783n8H69RncREeP/dJAtv1QecQCx/Q
-         ffsA==
-X-Gm-Message-State: AOAM5302ds8Z7JIEtailTu27R+9eTO5xu0ghL+5+LfQp+3zQHhibH/Iy
-        5a+0oU7fOm/viVTY8GNGI5Hj18diONF+cw==
-X-Google-Smtp-Source: ABdhPJzXYeLw9uD60LYMgQSHRe5Fp74V3ByEiZbfqM6jJvdIW4tanFoOLIWEowOA97jNZtk9bMEqBQ==
-X-Received: by 2002:a17:90a:db0b:: with SMTP id g11mr6651087pjv.168.1609980646255;
-        Wed, 06 Jan 2021 16:50:46 -0800 (PST)
+        bh=25p39Yte3ZrMOSL/mz34vioeHl7nX3feCy/xdOj1j48=;
+        b=Rr4Jh0x+QyCrQ5IO8LLp8H3nrFkiWenJ/sZU27ZVn8HbmzybbGbnV9ugK5RChoXrSq
+         0BEQjhYmsISpXt1AWfQEAdwq1UI+ZrIbAt3rxOdcotU7HSqtZUoPkZfgcnNEqAROpMgs
+         ZKWOH6YGVBtogqzVqEorDhl0bR7gGspULFa671mN+qG/fXH/GHY5R5Wf5W93IPYJJAJ5
+         Y0iyRMWJP2gLqKol9RaQLOFzv9UwVJdw6KmrqG6eQniomiQxcC4ZOdOULGjUBP2in8sR
+         +j/LwpSMNtA/LXjTMVkzm/WscproORf9dKDdMEEYUJmDbhr0dq3BooWyZ5mHdhrUeQZx
+         hdkA==
+X-Gm-Message-State: AOAM5330L+HJ8R0BAwy0hSTMHZ/F4+vR6KgqhzKsMbf2xxtnneyG1bB5
+        1uNHmsYPAmZtdFDM1FK+H4C+Hm+5fqdiEg==
+X-Google-Smtp-Source: ABdhPJyFk5vrrShGnVMaAqFTiLtX2ynPHJ5t0ktel5jAGmJkFQXhmbbuhtnngEV3oOroHW1QZdl4Rw==
+X-Received: by 2002:aa7:9782:0:b029:19e:b084:f0a9 with SMTP id o2-20020aa797820000b029019eb084f0a9mr6349560pfp.28.1609980653079;
+        Wed, 06 Jan 2021 16:50:53 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id w27sm3600634pfq.104.2021.01.06.16.50.45
+        by smtp.gmail.com with ESMTPSA id w27sm3600634pfq.104.2021.01.06.16.50.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Jan 2021 16:50:45 -0800 (PST)
+        Wed, 06 Jan 2021 16:50:52 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Ram Vegesna <ram.vegesna@broadcom.com>,
-        Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH v6 12/31] elx: libefc: Remote node state machine interfaces
-Date:   Wed,  6 Jan 2021 16:50:11 -0800
-Message-Id: <20210107005030.2929-13-jsmart2021@gmail.com>
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v6 19/31] elx: efct: Hardware queues creation and deletion
+Date:   Wed,  6 Jan 2021 16:50:18 -0800
+Message-Id: <20210107005030.2929-20-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210107005030.2929-1-jsmart2021@gmail.com>
 References: <20210107005030.2929-1-jsmart2021@gmail.com>
@@ -74,1336 +74,725 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch continues the libefc library population.
+This patch continues the efct driver population.
 
-This patch adds library interface definitions for:
-- Remote node (aka remote port) allocation, initializaion and
-  destroy routines.
+This patch adds driver definitions for:
+Routines for queue creation, deletion, and configuration.
 
 Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 ---
 v6:
- Reword comment in efc_node_handle_explicit_logo()
-v5:
- Use EFC_EVT_XXX events directly for node callbacks.
- Remove node_list from nport and use xarray lookup.
- Use WRITE_ONCE/READ_ONCE for els_io_enabled flag.
+ Allocate wq_cpu_array based on the number of possible cpus
 ---
- drivers/scsi/elx/libefc/efc_node.c | 1102 ++++++++++++++++++++++++++++
- drivers/scsi/elx/libefc/efc_node.h |  191 +++++
- 2 files changed, 1293 insertions(+)
- create mode 100644 drivers/scsi/elx/libefc/efc_node.c
- create mode 100644 drivers/scsi/elx/libefc/efc_node.h
+ drivers/scsi/elx/efct/efct_hw.h        |   4 +
+ drivers/scsi/elx/efct/efct_hw_queues.c | 679 +++++++++++++++++++++++++
+ 2 files changed, 683 insertions(+)
+ create mode 100644 drivers/scsi/elx/efct/efct_hw_queues.c
 
-diff --git a/drivers/scsi/elx/libefc/efc_node.c b/drivers/scsi/elx/libefc/efc_node.c
+diff --git a/drivers/scsi/elx/efct/efct_hw.h b/drivers/scsi/elx/efct/efct_hw.h
+index 44f248356d42..39cfe6658783 100644
+--- a/drivers/scsi/elx/efct/efct_hw.h
++++ b/drivers/scsi/elx/efct/efct_hw.h
+@@ -610,6 +610,10 @@ efct_hw_setup(struct efct_hw *hw, void *os, struct pci_dev *pdev);
+ enum efct_hw_rtn efct_hw_init(struct efct_hw *hw);
+ enum efct_hw_rtn
+ efct_hw_parse_filter(struct efct_hw *hw, void *value);
++enum efct_hw_rtn
++efct_hw_init_queues(struct efct_hw *hw);
++int
++efct_hw_map_wq_cpu(struct efct_hw *hw);
+ uint64_t
+ efct_get_wwnn(struct efct_hw *hw);
+ uint64_t
+diff --git a/drivers/scsi/elx/efct/efct_hw_queues.c b/drivers/scsi/elx/efct/efct_hw_queues.c
 new file mode 100644
-index 000000000000..abae70f6f7d4
+index 000000000000..cefe56ba4a56
 --- /dev/null
-+++ b/drivers/scsi/elx/libefc/efc_node.c
-@@ -0,0 +1,1102 @@
++++ b/drivers/scsi/elx/efct/efct_hw_queues.c
+@@ -0,0 +1,679 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
 + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
 + */
 +
-+#include "efc.h"
++#include "efct_driver.h"
++#include "efct_hw.h"
++#include "efct_unsol.h"
++
++enum efct_hw_rtn
++efct_hw_init_queues(struct efct_hw *hw)
++{
++	struct hw_eq *eq = NULL;
++	struct hw_cq *cq = NULL;
++	struct hw_wq *wq = NULL;
++	struct hw_mq *mq = NULL;
++
++	struct hw_eq *eqs[EFCT_HW_MAX_NUM_EQ];
++	struct hw_cq *cqs[EFCT_HW_MAX_NUM_EQ];
++	struct hw_rq *rqs[EFCT_HW_MAX_NUM_EQ];
++	u32 i = 0, j;
++
++	hw->eq_count = 0;
++	hw->cq_count = 0;
++	hw->mq_count = 0;
++	hw->wq_count = 0;
++	hw->rq_count = 0;
++	hw->hw_rq_count = 0;
++	INIT_LIST_HEAD(&hw->eq_list);
++
++	for (i = 0; i < hw->config.n_eq; i++) {
++		/* Create EQ */
++		eq = efct_hw_new_eq(hw, EFCT_HW_EQ_DEPTH);
++		if (!eq) {
++			efct_hw_queue_teardown(hw);
++			return EFCT_HW_RTN_NO_MEMORY;
++		}
++
++		eqs[i] = eq;
++
++		/* Create one MQ */
++		if (!i) {
++			cq = efct_hw_new_cq(eq,
++					    hw->num_qentries[SLI4_QTYPE_CQ]);
++			if (!cq) {
++				efct_hw_queue_teardown(hw);
++				return EFCT_HW_RTN_NO_MEMORY;
++			}
++
++			mq = efct_hw_new_mq(cq, EFCT_HW_MQ_DEPTH);
++			if (!mq) {
++				efct_hw_queue_teardown(hw);
++				return EFCT_HW_RTN_NO_MEMORY;
++			}
++		}
++
++		/* Create WQ */
++		cq = efct_hw_new_cq(eq, hw->num_qentries[SLI4_QTYPE_CQ]);
++		if (!cq) {
++			efct_hw_queue_teardown(hw);
++			return EFCT_HW_RTN_NO_MEMORY;
++		}
++
++		wq = efct_hw_new_wq(cq, hw->num_qentries[SLI4_QTYPE_WQ]);
++		if (!wq) {
++			efct_hw_queue_teardown(hw);
++			return EFCT_HW_RTN_NO_MEMORY;
++		}
++	}
++
++	/* Create CQ set */
++	if (efct_hw_new_cq_set(eqs, cqs, i, hw->num_qentries[SLI4_QTYPE_CQ])) {
++		efct_hw_queue_teardown(hw);
++		return EFCT_HW_RTN_ERROR;
++	}
++
++	/* Create RQ set */
++	if (efct_hw_new_rq_set(cqs, rqs, i, EFCT_HW_RQ_ENTRIES_DEF)) {
++		efct_hw_queue_teardown(hw);
++		return EFCT_HW_RTN_ERROR;
++	}
++
++	for (j = 0; j < i ; j++) {
++		rqs[j]->filter_mask = 0;
++		rqs[j]->is_mrq = true;
++		rqs[j]->base_mrq_id = rqs[0]->hdr->id;
++	}
++
++	hw->hw_mrq_count = i;
++
++	return EFCT_HW_RTN_SUCCESS;
++}
 +
 +int
-+efc_remote_node_cb(void *arg, int event, void *data)
++efct_hw_map_wq_cpu(struct efct_hw *hw)
 +{
-+	struct efc *efc = arg;
-+	struct efc_remote_node *rnode = data;
-+	struct efc_node *node = rnode->node;
-+	unsigned long flags = 0;
++	struct efct *efct = hw->os;
++	u32 cpu = 0, i;
 +
-+	spin_lock_irqsave(&efc->lock, flags);
-+	efc_node_post_event(node, event, NULL);
-+	spin_unlock_irqrestore(&efc->lock, flags);
++	/* Init cpu_map array */
++	hw->wq_cpu_array = kcalloc(num_possible_cpus(), sizeof(void *),
++				   GFP_KERNEL);
++	if (!hw->wq_cpu_array)
++		return EFC_FAIL;
++
++	for (i = 0; i < hw->config.n_eq; i++) {
++		const struct cpumask *maskp;
++
++		/* Get a CPU mask for all CPUs affinitized to this vector */
++		maskp = pci_irq_get_affinity(efct->pci, i);
++		if (!maskp) {
++			efc_log_debug(efct, "maskp null for vector:%d\n", i);
++			continue;
++		}
++
++		/* Loop through all CPUs associated with vector idx */
++		for_each_cpu_and(cpu, maskp, cpu_present_mask) {
++			efc_log_debug(efct, "CPU:%d irq vector:%d\n", cpu, i);
++			hw->wq_cpu_array[cpu] = hw->hw_wq[i];
++		}
++	}
 +
 +	return EFC_SUCCESS;
 +}
 +
-+struct efc_node *
-+efc_node_find(struct efc_nport *nport, u32 port_id)
++struct hw_eq *
++efct_hw_new_eq(struct efct_hw *hw, u32 entry_count)
 +{
-+	/* Find an FC node structure given the FC port ID */
-+	return xa_load(&nport->lookup, port_id);
-+}
++	struct hw_eq *eq = kzalloc(sizeof(*eq), GFP_KERNEL);
 +
-+static void
-+_efc_node_free(struct kref *arg)
-+{
-+	struct efc_node *node = container_of(arg, struct efc_node, ref);
-+	struct efc *efc = node->efc;
-+	struct efc_dma *dma;
++	if (!eq)
++		return NULL;
 +
-+	dma = &node->sparm_dma_buf;
-+	dma_pool_free(efc->node_dma_pool, dma->virt, dma->phys);
-+	memset(dma, 0, sizeof(struct efc_dma));
-+	mempool_free(node, efc->node_pool);
-+}
++	eq->type = SLI4_QTYPE_EQ;
++	eq->hw = hw;
++	eq->entry_count = entry_count;
++	eq->instance = hw->eq_count++;
++	eq->queue = &hw->eq[eq->instance];
++	INIT_LIST_HEAD(&eq->cq_list);
 +
-+struct efc_node *efc_node_alloc(struct efc_nport *nport,
-+				  u32 port_id, bool init, bool targ)
-+{
-+	int rc;
-+	struct efc_node *node = NULL;
-+	struct efc *efc = nport->efc;
-+	struct efc_dma *dma;
-+
-+	if (nport->shutting_down) {
-+		efc_log_debug(efc, "node allocation when shutting down %06x",
-+			      port_id);
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_EQ, eq->queue,	entry_count,
++				NULL)) {
++		efc_log_err(hw->os, "EQ[%d] alloc failure\n", eq->instance);
++		kfree(eq);
 +		return NULL;
 +	}
 +
-+	node = mempool_alloc(efc->node_pool, GFP_ATOMIC);
-+	if (!node) {
-+		efc_log_err(efc, "node allocation failed %06x", port_id);
++	sli_eq_modify_delay(&hw->sli, eq->queue, 1, 0, 8);
++	hw->hw_eq[eq->instance] = eq;
++	INIT_LIST_HEAD(&eq->list_entry);
++	list_add_tail(&eq->list_entry, &hw->eq_list);
++	efc_log_debug(hw->os, "create eq[%2d] id %3d len %4d\n", eq->instance,
++				eq->queue->id, eq->entry_count);
++	return eq;
++}
++
++struct hw_cq *
++efct_hw_new_cq(struct hw_eq *eq, u32 entry_count)
++{
++	struct efct_hw *hw = eq->hw;
++	struct hw_cq *cq = kzalloc(sizeof(*cq), GFP_KERNEL);
++
++	if (!cq)
++		return NULL;
++
++	cq->eq = eq;
++	cq->type = SLI4_QTYPE_CQ;
++	cq->instance = eq->hw->cq_count++;
++	cq->entry_count = entry_count;
++	cq->queue = &hw->cq[cq->instance];
++
++	INIT_LIST_HEAD(&cq->q_list);
++
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_CQ, cq->queue,
++				cq->entry_count, eq->queue)) {
++		efc_log_err(hw->os, "CQ[%d] allocation failure len=%d\n",
++				    eq->instance, eq->entry_count);
++		kfree(cq);
 +		return NULL;
 +	}
-+	memset(node, 0, sizeof(*node));
 +
-+	dma = &node->sparm_dma_buf;
-+	dma->size = NODE_SPARAMS_SIZE;
-+	dma->virt = dma_pool_zalloc(efc->node_dma_pool, GFP_ATOMIC, &dma->phys);
-+	if (!dma->virt) {
-+		efc_log_err(efc, "node dma alloc failed\n");
-+		goto dma_fail;
++	hw->hw_cq[cq->instance] = cq;
++	INIT_LIST_HEAD(&cq->list_entry);
++	list_add_tail(&cq->list_entry, &eq->cq_list);
++	efc_log_debug(hw->os, "create cq[%2d] id %3d len %4d\n", cq->instance,
++				cq->queue->id, cq->entry_count);
++	return cq;
++}
++
++u32
++efct_hw_new_cq_set(struct hw_eq *eqs[], struct hw_cq *cqs[],
++		   u32 num_cqs, u32 entry_count)
++{
++	u32 i;
++	struct efct_hw *hw = eqs[0]->hw;
++	struct sli4 *sli4 = &hw->sli;
++	struct hw_cq *cq = NULL;
++	struct sli4_queue *qs[SLI4_MAX_CQ_SET_COUNT];
++	struct sli4_queue *assefct[SLI4_MAX_CQ_SET_COUNT];
++
++	/* Initialise CQS pointers to NULL */
++	for (i = 0; i < num_cqs; i++)
++		cqs[i] = NULL;
++
++	for (i = 0; i < num_cqs; i++) {
++		cq = kzalloc(sizeof(*cq), GFP_KERNEL);
++		if (!cq)
++			goto error;
++
++		cqs[i]          = cq;
++		cq->eq          = eqs[i];
++		cq->type        = SLI4_QTYPE_CQ;
++		cq->instance    = hw->cq_count++;
++		cq->entry_count = entry_count;
++		cq->queue       = &hw->cq[cq->instance];
++		qs[i]           = cq->queue;
++		assefct[i]       = eqs[i]->queue;
++		INIT_LIST_HEAD(&cq->q_list);
 +	}
-+	node->rnode.indicator = U32_MAX;
-+	node->nport = nport;
 +
-+	node->efc = efc;
-+	node->init = init;
-+	node->targ = targ;
-+
-+	spin_lock_init(&node->pend_frames_lock);
-+	INIT_LIST_HEAD(&node->pend_frames);
-+	spin_lock_init(&node->els_ios_lock);
-+	INIT_LIST_HEAD(&node->els_ios_list);
-+	WRITE_ONCE(node->els_io_enabled, true);
-+
-+	rc = efc_cmd_node_alloc(efc, &node->rnode, port_id, nport);
-+	if (rc) {
-+		efc_log_err(efc, "efc_hw_node_alloc failed: %d\n", rc);
-+		goto hw_alloc_fail;
++	if (sli_cq_alloc_set(sli4, qs, num_cqs, entry_count, assefct)) {
++		efc_log_err(hw->os, "Failed to create CQ Set.\n");
++		goto error;
 +	}
 +
-+	node->rnode.node = node;
-+	node->sm.app = node;
-+	node->evtdepth = 0;
-+
-+	efc_node_update_display_name(node);
-+
-+	rc = xa_err(xa_store(&nport->lookup, port_id, node, GFP_ATOMIC));
-+	if (rc) {
-+		efc_log_err(efc, "Node lookup store failed: %d\n", rc);
-+		goto xa_fail;
++	for (i = 0; i < num_cqs; i++) {
++		hw->hw_cq[cqs[i]->instance] = cqs[i];
++		INIT_LIST_HEAD(&cqs[i]->list_entry);
++		list_add_tail(&cqs[i]->list_entry, &cqs[i]->eq->cq_list);
 +	}
 +
-+	/* initialize refcount */
-+	kref_init(&node->ref);
-+	node->release = _efc_node_free;
-+	kref_get(&nport->ref);
++	return EFC_SUCCESS;
 +
-+	return node;
++error:
++	for (i = 0; i < num_cqs; i++) {
++		kfree(cqs[i]);
++		cqs[i] = NULL;
++	}
++	return EFC_FAIL;
++}
 +
-+xa_fail:
-+	efc_node_free_resources(efc, &node->rnode);
-+hw_alloc_fail:
-+	dma_pool_free(efc->node_dma_pool, dma->virt, dma->phys);
-+dma_fail:
-+	mempool_free(node, efc->node_pool);
-+	return NULL;
++struct hw_mq *
++efct_hw_new_mq(struct hw_cq *cq, u32 entry_count)
++{
++	struct efct_hw *hw = cq->eq->hw;
++	struct hw_mq *mq = kzalloc(sizeof(*mq), GFP_KERNEL);
++
++	if (!mq)
++		return NULL;
++
++	mq->cq = cq;
++	mq->type = SLI4_QTYPE_MQ;
++	mq->instance = cq->eq->hw->mq_count++;
++	mq->entry_count = entry_count;
++	mq->entry_size = EFCT_HW_MQ_DEPTH;
++	mq->queue = &hw->mq[mq->instance];
++
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_MQ, mq->queue, mq->entry_size,
++			    cq->queue)) {
++		efc_log_err(hw->os, "MQ allocation failure\n");
++		kfree(mq);
++		return NULL;
++	}
++
++	hw->hw_mq[mq->instance] = mq;
++	INIT_LIST_HEAD(&mq->list_entry);
++	list_add_tail(&mq->list_entry, &cq->q_list);
++	efc_log_debug(hw->os, "create mq[%2d] id %3d len %4d\n", mq->instance,
++				mq->queue->id, mq->entry_count);
++	return mq;
++}
++
++struct hw_wq *
++efct_hw_new_wq(struct hw_cq *cq, u32 entry_count)
++{
++	struct efct_hw *hw = cq->eq->hw;
++	struct hw_wq *wq = kzalloc(sizeof(*wq), GFP_KERNEL);
++
++	if (!wq)
++		return NULL;
++
++	wq->hw = cq->eq->hw;
++	wq->cq = cq;
++	wq->type = SLI4_QTYPE_WQ;
++	wq->instance = cq->eq->hw->wq_count++;
++	wq->entry_count = entry_count;
++	wq->queue = &hw->wq[wq->instance];
++	wq->wqec_set_count = EFCT_HW_WQEC_SET_COUNT;
++	wq->wqec_count = wq->wqec_set_count;
++	wq->free_count = wq->entry_count - 1;
++	INIT_LIST_HEAD(&wq->pending_list);
++
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_WQ, wq->queue,
++				    wq->entry_count, cq->queue)) {
++		efc_log_err(hw->os, "WQ allocation failure\n");
++		kfree(wq);
++		return NULL;
++	}
++
++	hw->hw_wq[wq->instance] = wq;
++	INIT_LIST_HEAD(&wq->list_entry);
++	list_add_tail(&wq->list_entry, &cq->q_list);
++	efc_log_debug(hw->os, "create wq[%2d] id %3d len %4d cls %d\n",
++		wq->instance, wq->queue->id, wq->entry_count, wq->class);
++	return wq;
++}
++
++u32
++efct_hw_new_rq_set(struct hw_cq *cqs[], struct hw_rq *rqs[],
++		   u32 num_rq_pairs, u32 entry_count)
++{
++	struct efct_hw *hw = cqs[0]->eq->hw;
++	struct hw_rq *rq = NULL;
++	struct sli4_queue *qs[SLI4_MAX_RQ_SET_COUNT * 2] = { NULL };
++	u32 i, q_count, size;
++
++	/* Initialise RQS pointers */
++	for (i = 0; i < num_rq_pairs; i++)
++		rqs[i] = NULL;
++
++	/*
++	 * Allocate an RQ object SET, where each element in set
++	 * encapsulates 2 SLI queues (for rq pair)
++	 */
++	for (i = 0, q_count = 0; i < num_rq_pairs; i++, q_count += 2) {
++		rq = kzalloc(sizeof(*rq), GFP_KERNEL);
++		if (!rq)
++			goto error;
++
++		rqs[i] = rq;
++		rq->instance = hw->hw_rq_count++;
++		rq->cq = cqs[i];
++		rq->type = SLI4_QTYPE_RQ;
++		rq->entry_count = entry_count;
++
++		/* Header RQ */
++		rq->hdr = &hw->rq[hw->rq_count];
++		rq->hdr_entry_size = EFCT_HW_RQ_HEADER_SIZE;
++		hw->hw_rq_lookup[hw->rq_count] = rq->instance;
++		hw->rq_count++;
++		qs[q_count] = rq->hdr;
++
++		/* Data RQ */
++		rq->data = &hw->rq[hw->rq_count];
++		rq->data_entry_size = hw->config.rq_default_buffer_size;
++		hw->hw_rq_lookup[hw->rq_count] = rq->instance;
++		hw->rq_count++;
++		qs[q_count + 1] = rq->data;
++
++		rq->rq_tracker = NULL;
++	}
++
++	if (sli_fc_rq_set_alloc(&hw->sli, num_rq_pairs, qs,
++				cqs[0]->queue->id,
++			    rqs[0]->entry_count,
++			    rqs[0]->hdr_entry_size,
++			    rqs[0]->data_entry_size)) {
++		efc_log_err(hw->os, "RQ Set alloc failure for base CQ=%d\n",
++			    cqs[0]->queue->id);
++		goto error;
++	}
++
++	for (i = 0; i < num_rq_pairs; i++) {
++		hw->hw_rq[rqs[i]->instance] = rqs[i];
++		INIT_LIST_HEAD(&rqs[i]->list_entry);
++		list_add_tail(&rqs[i]->list_entry, &cqs[i]->q_list);
++		size = sizeof(struct efc_hw_sequence *) * rqs[i]->entry_count;
++		rqs[i]->rq_tracker = kzalloc(size, GFP_KERNEL);
++		if (!rqs[i]->rq_tracker)
++			goto error;
++	}
++
++	return EFC_SUCCESS;
++
++error:
++	for (i = 0; i < num_rq_pairs; i++) {
++		if (rqs[i]) {
++			kfree(rqs[i]->rq_tracker);
++			kfree(rqs[i]);
++		}
++	}
++
++	return EFC_FAIL;
 +}
 +
 +void
-+efc_node_free(struct efc_node *node)
++efct_hw_del_eq(struct hw_eq *eq)
 +{
-+	struct efc_nport *nport;
-+	struct efc *efc;
-+	int rc = 0;
-+	struct efc_node *ns = NULL;
++	struct hw_cq *cq;
++	struct hw_cq *cq_next;
 +
-+	nport = node->nport;
-+	efc = node->efc;
-+
-+	node_printf(node, "Free'd\n");
-+
-+	if (node->refound) {
-+		/*
-+		 * Save the name server node. We will send fake RSCN event at
-+		 * the end to handle ignored RSCN event during node deletion
-+		 */
-+		ns = efc_node_find(node->nport, FC_FID_DIR_SERV);
-+	}
-+
-+	if (!node->nport) {
-+		efc_log_err(efc, "Node already Freed\n");
++	if (!eq)
 +		return;
-+	}
 +
-+	/* Free HW resources */
-+	rc = efc_node_free_resources(efc, &node->rnode);
-+	if (EFC_HW_RTN_IS_ERROR(rc))
-+		efc_log_err(efc, "efc_hw_node_free failed: %d\n", rc);
-+
-+	/* if the gidpt_delay_timer is still running, then delete it */
-+	if (timer_pending(&node->gidpt_delay_timer))
-+		del_timer(&node->gidpt_delay_timer);
-+
-+	xa_erase(&nport->lookup, node->rnode.fc_id);
-+
-+	/*
-+	 * If the node_list is empty,
-+	 * then post a ALL_CHILD_NODES_FREE event to the nport,
-+	 * after the lock is released.
-+	 * The nport may be free'd as a result of the event.
-+	 */
-+	if (xa_empty(&nport->lookup))
-+		efc_sm_post_event(&nport->sm, EFC_EVT_ALL_CHILD_NODES_FREE,
-+				  NULL);
-+
-+	node->nport = NULL;
-+	node->sm.current_state = NULL;
-+
-+	kref_put(&nport->ref, nport->release);
-+	kref_put(&node->ref, node->release);
-+
-+	if (ns) {
-+		/* sending fake RSCN event to name server node */
-+		efc_node_post_event(ns, EFC_EVT_RSCN_RCVD, NULL);
-+	}
++	list_for_each_entry_safe(cq, cq_next, &eq->cq_list, list_entry)
++		efct_hw_del_cq(cq);
++	list_del(&eq->list_entry);
++	eq->hw->hw_eq[eq->instance] = NULL;
++	kfree(eq);
 +}
 +
-+static void
-+efc_dma_copy_in(struct efc_dma *dma, void *buffer, u32 buffer_length)
++void
++efct_hw_del_cq(struct hw_cq *cq)
 +{
-+	if (!dma || !buffer || !buffer_length)
++	struct hw_q *q;
++	struct hw_q *q_next;
++
++	if (!cq)
 +		return;
 +
-+	if (buffer_length > dma->size)
-+		buffer_length = dma->size;
++	list_for_each_entry_safe(q, q_next, &cq->q_list, list_entry) {
++		switch (q->type) {
++		case SLI4_QTYPE_MQ:
++			efct_hw_del_mq((struct hw_mq *)q);
++			break;
++		case SLI4_QTYPE_WQ:
++			efct_hw_del_wq((struct hw_wq *)q);
++			break;
++		case SLI4_QTYPE_RQ:
++			efct_hw_del_rq((struct hw_rq *)q);
++			break;
++		default:
++			break;
++		}
++	}
++	list_del(&cq->list_entry);
++	cq->eq->hw->hw_cq[cq->instance] = NULL;
++	kfree(cq);
++}
 +
-+	memcpy(dma->virt, buffer, buffer_length);
-+	dma->len = buffer_length;
++void
++efct_hw_del_mq(struct hw_mq *mq)
++{
++	if (!mq)
++		return;
++
++	list_del(&mq->list_entry);
++	mq->cq->eq->hw->hw_mq[mq->instance] = NULL;
++	kfree(mq);
++}
++
++void
++efct_hw_del_wq(struct hw_wq *wq)
++{
++	if (!wq)
++		return;
++
++	list_del(&wq->list_entry);
++	wq->cq->eq->hw->hw_wq[wq->instance] = NULL;
++	kfree(wq);
++}
++
++void
++efct_hw_del_rq(struct hw_rq *rq)
++{
++	struct efct_hw *hw = NULL;
++
++	if (!rq)
++		return;
++	/* Free RQ tracker */
++	kfree(rq->rq_tracker);
++	rq->rq_tracker = NULL;
++	list_del(&rq->list_entry);
++	hw = rq->cq->eq->hw;
++	hw->hw_rq[rq->instance] = NULL;
++	kfree(rq);
++}
++
++void
++efct_hw_queue_teardown(struct efct_hw *hw)
++{
++	struct hw_eq *eq;
++	struct hw_eq *eq_next;
++
++	if (!hw->eq_list.next)
++		return;
++
++	list_for_each_entry_safe(eq, eq_next, &hw->eq_list, list_entry)
++		efct_hw_del_eq(eq);
++}
++
++static inline int
++efct_hw_rqpair_find(struct efct_hw *hw, u16 rq_id)
++{
++	return efct_hw_queue_hash_find(hw->rq_hash, rq_id);
++}
++
++static struct efc_hw_sequence *
++efct_hw_rqpair_get(struct efct_hw *hw, u16 rqindex, u16 bufindex)
++{
++	struct sli4_queue *rq_hdr = &hw->rq[rqindex];
++	struct efc_hw_sequence *seq = NULL;
++	struct hw_rq *rq = hw->hw_rq[hw->hw_rq_lookup[rqindex]];
++	unsigned long flags = 0;
++
++	if (bufindex >= rq_hdr->length) {
++		efc_log_err(hw->os,
++				"RQidx %d bufidx %d exceed ring len %d for id %d\n",
++				rqindex, bufindex, rq_hdr->length, rq_hdr->id);
++		return NULL;
++	}
++
++	/* rq_hdr lock also covers rqindex+1 queue */
++	spin_lock_irqsave(&rq_hdr->lock, flags);
++
++	seq = rq->rq_tracker[bufindex];
++	rq->rq_tracker[bufindex] = NULL;
++
++	if (!seq) {
++		efc_log_err(hw->os,
++			     "RQbuf NULL, rqidx %d, bufidx %d, cur q idx = %d\n",
++			     rqindex, bufindex, rq_hdr->index);
++	}
++
++	spin_unlock_irqrestore(&rq_hdr->lock, flags);
++	return seq;
 +}
 +
 +int
-+efc_node_attach(struct efc_node *node)
++efct_hw_rqpair_process_rq(struct efct_hw *hw, struct hw_cq *cq,
++			  u8 *cqe)
 +{
-+	int rc = 0;
-+	struct efc_nport *nport = node->nport;
-+	struct efc_domain *domain = nport->domain;
-+	struct efc *efc = node->efc;
++	u16 rq_id;
++	u32 index;
++	int rqindex;
++	int rq_status;
++	u32 h_len;
++	u32 p_len;
++	struct efc_hw_sequence *seq;
++	struct hw_rq *rq;
 +
-+	if (!domain->attached) {
-+		efc_log_err(efc, "Warning: unattached domain\n");
++	rq_status = sli_fc_rqe_rqid_and_index(&hw->sli, cqe,
++					      &rq_id, &index);
++	if (rq_status != 0) {
++		switch (rq_status) {
++		case SLI4_FC_ASYNC_RQ_BUF_LEN_EXCEEDED:
++		case SLI4_FC_ASYNC_RQ_DMA_FAILURE:
++			/* just get RQ buffer then return to chip */
++			rqindex = efct_hw_rqpair_find(hw, rq_id);
++			if (rqindex < 0) {
++				efc_log_debug(hw->os,
++					      "status=%#x: lookup fail id=%#x\n",
++					     rq_status, rq_id);
++				break;
++			}
++
++			/* get RQ buffer */
++			seq = efct_hw_rqpair_get(hw, rqindex, index);
++
++			/* return to chip */
++			if (efct_hw_rqpair_sequence_free(hw, seq)) {
++				efc_log_debug(hw->os,
++					      "status=%#x,fail rtrn buf to RQ\n",
++					     rq_status);
++				break;
++			}
++			break;
++		case SLI4_FC_ASYNC_RQ_INSUFF_BUF_NEEDED:
++		case SLI4_FC_ASYNC_RQ_INSUFF_BUF_FRM_DISC:
++			/*
++			 * since RQ buffers were not consumed, cannot return
++			 * them to chip
++			 */
++			efc_log_debug(hw->os, "Warning: RCQE status=%#x,\n",
++				       rq_status);
++			fallthrough;
++		default:
++			break;
++		}
 +		return EFC_FAIL;
 +	}
-+	/* Update node->wwpn/wwnn */
 +
-+	efc_node_build_eui_name(node->wwpn, sizeof(node->wwpn),
-+				efc_node_get_wwpn(node));
-+	efc_node_build_eui_name(node->wwnn, sizeof(node->wwnn),
-+				efc_node_get_wwnn(node));
++	rqindex = efct_hw_rqpair_find(hw, rq_id);
++	if (rqindex < 0) {
++		efc_log_debug(hw->os, "Error: rq_id lookup failed for id=%#x\n",
++			      rq_id);
++		return EFC_FAIL;
++	}
 +
-+	efc_dma_copy_in(&node->sparm_dma_buf, node->service_params + 4,
-+			sizeof(node->service_params) - 4);
++	rq = hw->hw_rq[hw->hw_rq_lookup[rqindex]];
++	rq->use_count++;
 +
-+	/* take lock to protect node->rnode.attached */
-+	rc = efc_cmd_node_attach(efc, &node->rnode, &node->sparm_dma_buf);
-+	if (EFC_HW_RTN_IS_ERROR(rc))
-+		efc_log_debug(efc, "efc_hw_node_attach failed: %d\n", rc);
++	seq = efct_hw_rqpair_get(hw, rqindex, index);
++	if (WARN_ON(!seq))
++		return EFC_FAIL;
++
++	seq->hw = hw;
++	seq->auto_xrdy = 0;
++	seq->out_of_xris = 0;
++
++	sli_fc_rqe_length(&hw->sli, cqe, &h_len, &p_len);
++	seq->header->dma.len = h_len;
++	seq->payload->dma.len = p_len;
++	seq->fcfi = sli_fc_rqe_fcfi(&hw->sli, cqe);
++	seq->hw_priv = cq->eq;
++
++	efct_unsolicited_cb(hw->os, seq);
++
++	return EFC_SUCCESS;
++}
++
++static int
++efct_hw_rqpair_put(struct efct_hw *hw, struct efc_hw_sequence *seq)
++{
++	struct sli4_queue *rq_hdr = &hw->rq[seq->header->rqindex];
++	struct sli4_queue *rq_payload = &hw->rq[seq->payload->rqindex];
++	u32 hw_rq_index = hw->hw_rq_lookup[seq->header->rqindex];
++	struct hw_rq *rq = hw->hw_rq[hw_rq_index];
++	u32 phys_hdr[2];
++	u32 phys_payload[2];
++	int qindex_hdr;
++	int qindex_payload;
++	unsigned long flags = 0;
++
++	/* Update the RQ verification lookup tables */
++	phys_hdr[0] = upper_32_bits(seq->header->dma.phys);
++	phys_hdr[1] = lower_32_bits(seq->header->dma.phys);
++	phys_payload[0] = upper_32_bits(seq->payload->dma.phys);
++	phys_payload[1] = lower_32_bits(seq->payload->dma.phys);
++
++	/* rq_hdr lock also covers payload / header->rqindex+1 queue */
++	spin_lock_irqsave(&rq_hdr->lock, flags);
++
++	/*
++	 * Note: The header must be posted last for buffer pair mode because
++	 *       posting on the header queue posts the payload queue as well.
++	 *       We do not ring the payload queue independently in RQ pair mode.
++	 */
++	qindex_payload = sli_rq_write(&hw->sli, rq_payload,
++				      (void *)phys_payload);
++	qindex_hdr = sli_rq_write(&hw->sli, rq_hdr, (void *)phys_hdr);
++	if (qindex_hdr < 0 ||
++	    qindex_payload < 0) {
++		efc_log_err(hw->os, "RQ_ID=%#x write failed\n", rq_hdr->id);
++		spin_unlock_irqrestore(&rq_hdr->lock, flags);
++		return EFCT_HW_RTN_ERROR;
++	}
++
++	/* ensure the indexes are the same */
++	WARN_ON(qindex_hdr != qindex_payload);
++
++	/* Update the lookup table */
++	if (!rq->rq_tracker[qindex_hdr]) {
++		rq->rq_tracker[qindex_hdr] = seq;
++	} else {
++		efc_log_debug(hw->os,
++			      "expected rq_tracker[%d][%d] buffer to be NULL\n",
++			      hw_rq_index, qindex_hdr);
++	}
++
++	spin_unlock_irqrestore(&rq_hdr->lock, flags);
++	return EFCT_HW_RTN_SUCCESS;
++}
++
++enum efct_hw_rtn
++efct_hw_rqpair_sequence_free(struct efct_hw *hw, struct efc_hw_sequence *seq)
++{
++	enum efct_hw_rtn rc = EFCT_HW_RTN_SUCCESS;
++
++	/*
++	 * Post the data buffer first. Because in RQ pair mode, ringing the
++	 * doorbell of the header ring will post the data buffer as well.
++	 */
++	if (efct_hw_rqpair_put(hw, seq)) {
++		efc_log_err(hw->os, "error writing buffers\n");
++		return EFCT_HW_RTN_ERROR;
++	}
 +
 +	return rc;
 +}
 +
-+void
-+efc_node_fcid_display(u32 fc_id, char *buffer, u32 buffer_length)
-+{
-+	switch (fc_id) {
-+	case FC_FID_FLOGI:
-+		snprintf(buffer, buffer_length, "fabric");
-+		break;
-+	case FC_FID_FCTRL:
-+		snprintf(buffer, buffer_length, "fabctl");
-+		break;
-+	case FC_FID_DIR_SERV:
-+		snprintf(buffer, buffer_length, "nserve");
-+		break;
-+	default:
-+		if (fc_id == FC_FID_DOM_MGR) {
-+			snprintf(buffer, buffer_length, "dctl%02x",
-+				 (fc_id & 0x0000ff));
-+		} else {
-+			snprintf(buffer, buffer_length, "%06x", fc_id);
-+		}
-+		break;
-+	}
-+}
-+
-+void
-+efc_node_update_display_name(struct efc_node *node)
-+{
-+	u32 port_id = node->rnode.fc_id;
-+	struct efc_nport *nport = node->nport;
-+	char portid_display[16];
-+
-+	efc_node_fcid_display(port_id, portid_display, sizeof(portid_display));
-+
-+	snprintf(node->display_name, sizeof(node->display_name), "%s.%s",
-+		 nport->display_name, portid_display);
-+}
-+
-+void
-+efc_node_send_ls_io_cleanup(struct efc_node *node)
-+{
-+	if (node->send_ls_acc != EFC_NODE_SEND_LS_ACC_NONE) {
-+		efc_log_debug(node->efc, "[%s] cleaning up LS_ACC oxid=0x%x\n",
-+			      node->display_name, node->ls_acc_oxid);
-+
-+		node->send_ls_acc = EFC_NODE_SEND_LS_ACC_NONE;
-+		node->ls_acc_io = NULL;
-+	}
-+}
-+
-+static void efc_node_handle_implicit_logo(struct efc_node *node)
-+{
-+	int rc;
-+
-+	/*
-+	 * currently, only case for implicit logo is PLOGI
-+	 * recvd. Thus, node's ELS IO pending list won't be
-+	 * empty (PLOGI will be on it)
-+	 */
-+	WARN_ON(node->send_ls_acc != EFC_NODE_SEND_LS_ACC_PLOGI);
-+	node_printf(node, "Reason: implicit logout, re-authenticate\n");
-+
-+	/* Re-attach node with the same HW node resources */
-+	node->req_free = false;
-+	rc = efc_node_attach(node);
-+	efc_node_transition(node, __efc_d_wait_node_attach, NULL);
-+
-+	if (rc == EFC_HW_RTN_SUCCESS_SYNC)
-+		efc_node_post_event(node, EFC_EVT_NODE_ATTACH_OK, NULL);
-+
-+}
-+
-+static void efc_node_handle_explicit_logo(struct efc_node *node)
-+{
-+	s8 pend_frames_empty;
-+	unsigned long flags = 0;
-+
-+	/* cleanup any pending LS_ACC ELSs */
-+	efc_node_send_ls_io_cleanup(node);
-+
-+	spin_lock_irqsave(&node->pend_frames_lock, flags);
-+	pend_frames_empty = list_empty(&node->pend_frames);
-+	spin_unlock_irqrestore(&node->pend_frames_lock, flags);
-+
-+	/*
-+	 * there are two scenarios where we want to keep
-+	 * this node alive:
-+	 * 1. there are pending frames that need to be
-+	 *    processed or
-+	 * 2. we're an initiator and the remote node is
-+	 *    a target and we need to re-authenticate
-+	 */
-+	node_printf(node, "Shutdown: explicit logo pend=%d ",
-+			  !pend_frames_empty);
-+	node_printf(node, "nport.ini=%d node.tgt=%d\n",
-+			  node->nport->enable_ini, node->targ);
-+	if (!pend_frames_empty || (node->nport->enable_ini && node->targ)) {
-+		u8 send_plogi = false;
-+
-+		if (node->nport->enable_ini && node->targ) {
-+			/*
-+			 * we're an initiator and
-+			 * node shutting down is a target;
-+			 * we'll need to re-authenticate in
-+			 * initial state
-+			 */
-+			send_plogi = true;
-+		}
-+
-+		/*
-+		 * transition to __efc_d_init
-+		 * (will retain HW node resources)
-+		 */
-+		node->req_free = false;
-+
-+		/*
-+		 * either pending frames exist or we are re-authenticating
-+		 * with PLOGI (or both); in either case, return to initial
-+		 * state
-+		 */
-+		efc_node_init_device(node, send_plogi);
-+	}
-+	/* else: let node shutdown occur */
-+}
-+
-+static void
-+efc_node_purge_pending(struct efc_node *node)
-+{
-+	struct efc *efc = node->efc;
-+	struct efc_hw_sequence *frame, *next;
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&node->pend_frames_lock, flags);
-+
-+	list_for_each_entry_safe(frame, next, &node->pend_frames, list_entry) {
-+		list_del(&frame->list_entry);
-+		efc->tt.hw_seq_free(efc, frame);
-+	}
-+
-+	spin_unlock_irqrestore(&node->pend_frames_lock, flags);
-+}
-+
-+void
-+__efc_node_shutdown(struct efc_sm_ctx *ctx,
-+		    enum efc_sm_event evt, void *arg)
-+{
-+	struct efc_node *node = ctx->app;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER: {
-+		efc_node_hold_frames(node);
-+		WARN_ON(!efc_els_io_list_empty(node, &node->els_ios_list));
-+		/* by default, we will be freeing node after we unwind */
-+		node->req_free = true;
-+
-+		switch (node->shutdown_reason) {
-+		case EFC_NODE_SHUTDOWN_IMPLICIT_LOGO:
-+			/* Node shutdown b/c of PLOGI received when node
-+			 * already logged in. We have PLOGI service
-+			 * parameters, so submit node attach; we won't be
-+			 * freeing this node
-+			 */
-+
-+			efc_node_handle_implicit_logo(node);
-+			break;
-+
-+		case EFC_NODE_SHUTDOWN_EXPLICIT_LOGO:
-+			efc_node_handle_explicit_logo(node);
-+			break;
-+
-+		case EFC_NODE_SHUTDOWN_DEFAULT:
-+		default: {
-+			/*
-+			 * shutdown due to link down,
-+			 * node going away (xport event) or
-+			 * nport shutdown, purge pending and
-+			 * proceed to cleanup node
-+			 */
-+
-+			/* cleanup any pending LS_ACC ELSs */
-+			efc_node_send_ls_io_cleanup(node);
-+
-+			node_printf(node,
-+				    "Shutdown reason: default, purge pending\n");
-+			efc_node_purge_pending(node);
-+			break;
-+		}
-+		}
-+
-+		break;
-+	}
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	default:
-+		__efc_node_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+static bool
-+efc_node_check_els_quiesced(struct efc_node *node)
-+{
-+	/* check to see if ELS requests, completions are quiesced */
-+	if (node->els_req_cnt == 0 && node->els_cmpl_cnt == 0 &&
-+	    efc_els_io_list_empty(node, &node->els_ios_list)) {
-+		if (!node->attached) {
-+			/* hw node detach already completed, proceed */
-+			node_printf(node, "HW node not attached\n");
-+			efc_node_transition(node,
-+					    __efc_node_wait_ios_shutdown,
-+					     NULL);
-+		} else {
-+			/*
-+			 * hw node detach hasn't completed,
-+			 * transition and wait
-+			 */
-+			node_printf(node, "HW node still attached\n");
-+			efc_node_transition(node, __efc_node_wait_node_free,
-+					    NULL);
-+		}
-+		return true;
-+	}
-+	return false;
-+}
-+
-+void
-+efc_node_initiate_cleanup(struct efc_node *node)
-+{
-+	/*
-+	 * if ELS's have already been quiesced, will move to next state
-+	 * if ELS's have not been quiesced, abort them
-+	 */
-+	if (!efc_node_check_els_quiesced(node)) {
-+		efc_node_hold_frames(node);
-+		efc_node_transition(node, __efc_node_wait_els_shutdown, NULL);
-+	}
-+}
-+
-+void
-+__efc_node_wait_els_shutdown(struct efc_sm_ctx *ctx,
-+			     enum efc_sm_event evt, void *arg)
-+{
-+	bool check_quiesce = false;
-+	struct efc_node *node = ctx->app;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+	/* Node state machine: Wait for all ELSs to complete */
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		if (efc_els_io_list_empty(node, &node->els_ios_list)) {
-+			node_printf(node, "All ELS IOs complete\n");
-+			check_quiesce = true;
-+		}
-+		break;
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_REQ_OK:
-+	case EFC_EVT_SRRS_ELS_REQ_FAIL:
-+	case EFC_EVT_SRRS_ELS_REQ_RJT:
-+	case EFC_EVT_ELS_REQ_ABORTED:
-+		if (WARN_ON(!node->els_req_cnt))
-+			break;
-+		node->els_req_cnt--;
-+		check_quiesce = true;
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_CMPL_OK:
-+	case EFC_EVT_SRRS_ELS_CMPL_FAIL:
-+		if (WARN_ON(!node->els_cmpl_cnt))
-+			break;
-+		node->els_cmpl_cnt--;
-+		check_quiesce = true;
-+		break;
-+
-+	case EFC_EVT_ALL_CHILD_NODES_FREE:
-+		/* all ELS IO's complete */
-+		node_printf(node, "All ELS IOs complete\n");
-+		WARN_ON(!efc_els_io_list_empty(node, &node->els_ios_list));
-+		check_quiesce = true;
-+		break;
-+
-+	case EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY:
-+		check_quiesce = true;
-+		break;
-+
-+	case EFC_EVT_DOMAIN_ATTACH_OK:
-+		/* don't care about domain_attach_ok */
-+		break;
-+
-+	/* ignore shutdown events as we're already in shutdown path */
-+	case EFC_EVT_SHUTDOWN:
-+		/* have default shutdown event take precedence */
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
-+		fallthrough;
-+
-+	case EFC_EVT_SHUTDOWN_EXPLICIT_LOGO:
-+	case EFC_EVT_SHUTDOWN_IMPLICIT_LOGO:
-+		node_printf(node, "%s received\n", efc_sm_event_name(evt));
-+		break;
-+
-+	default:
-+		__efc_node_common(__func__, ctx, evt, arg);
-+	}
-+
-+	if (check_quiesce)
-+		efc_node_check_els_quiesced(node);
-+}
-+
-+void
-+__efc_node_wait_node_free(struct efc_sm_ctx *ctx,
-+			  enum efc_sm_event evt, void *arg)
-+{
-+	struct efc_node *node = ctx->app;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_NODE_FREE_OK:
-+		/* node is officially no longer attached */
-+		node->attached = false;
-+		efc_node_transition(node, __efc_node_wait_ios_shutdown, NULL);
-+		break;
-+
-+	case EFC_EVT_ALL_CHILD_NODES_FREE:
-+	case EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY:
-+		/* As IOs and ELS IO's complete we expect to get these events */
-+		break;
-+
-+	case EFC_EVT_DOMAIN_ATTACH_OK:
-+		/* don't care about domain_attach_ok */
-+		break;
-+
-+	/* ignore shutdown events as we're already in shutdown path */
-+	case EFC_EVT_SHUTDOWN:
-+		/* have default shutdown event take precedence */
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
-+		fallthrough;
-+
-+	case EFC_EVT_SHUTDOWN_EXPLICIT_LOGO:
-+	case EFC_EVT_SHUTDOWN_IMPLICIT_LOGO:
-+		node_printf(node, "%s received\n", efc_sm_event_name(evt));
-+		break;
-+	default:
-+		__efc_node_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_node_wait_ios_shutdown(struct efc_sm_ctx *ctx,
-+			     enum efc_sm_event evt, void *arg)
-+{
-+	struct efc_node *node = ctx->app;
-+	struct efc *efc = node->efc;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+
-+		/* first check to see if no ELS IOs are outstanding */
-+		if (efc_els_io_list_empty(node, &node->els_ios_list))
-+			/* If there are any active IOS, Free them. */
-+			efc_node_transition(node, __efc_node_shutdown, NULL);
-+		break;
-+
-+	case EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY:
-+	case EFC_EVT_ALL_CHILD_NODES_FREE:
-+		if (efc_els_io_list_empty(node, &node->els_ios_list))
-+			efc_node_transition(node, __efc_node_shutdown, NULL);
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_REQ_FAIL:
-+		/* Can happen as ELS IO IO's complete */
-+		if (WARN_ON(!node->els_req_cnt))
-+			break;
-+		node->els_req_cnt--;
-+		break;
-+
-+	/* ignore shutdown events as we're already in shutdown path */
-+	case EFC_EVT_SHUTDOWN:
-+		/* have default shutdown event take precedence */
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
-+		fallthrough;
-+
-+	case EFC_EVT_SHUTDOWN_EXPLICIT_LOGO:
-+	case EFC_EVT_SHUTDOWN_IMPLICIT_LOGO:
-+		efc_log_debug(efc, "[%s] %-20s\n", node->display_name,
-+			      efc_sm_event_name(evt));
-+		break;
-+	case EFC_EVT_DOMAIN_ATTACH_OK:
-+		/* don't care about domain_attach_ok */
-+		break;
-+	default:
-+		__efc_node_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+__efc_node_common(const char *funcname, struct efc_sm_ctx *ctx,
-+		  enum efc_sm_event evt, void *arg)
-+{
-+	struct efc_node *node = NULL;
-+	struct efc *efc = NULL;
-+	struct efc_node_cb *cbdata = arg;
-+
-+	node = ctx->app;
-+	efc = node->efc;
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+	case EFC_EVT_REENTER:
-+	case EFC_EVT_EXIT:
-+	case EFC_EVT_NPORT_TOPOLOGY_NOTIFY:
-+	case EFC_EVT_NODE_MISSING:
-+	case EFC_EVT_FCP_CMD_RCVD:
-+		break;
-+
-+	case EFC_EVT_NODE_REFOUND:
-+		node->refound = true;
-+		break;
-+
-+	/*
-+	 * node->attached must be set appropriately
-+	 * for all node attach/detach events
-+	 */
-+	case EFC_EVT_NODE_ATTACH_OK:
-+		node->attached = true;
-+		break;
-+
-+	case EFC_EVT_NODE_FREE_OK:
-+	case EFC_EVT_NODE_ATTACH_FAIL:
-+		node->attached = false;
-+		break;
-+
-+	/*
-+	 * handle any ELS completions that
-+	 * other states either didn't care about
-+	 * or forgot about
-+	 */
-+	case EFC_EVT_SRRS_ELS_CMPL_OK:
-+	case EFC_EVT_SRRS_ELS_CMPL_FAIL:
-+		if (WARN_ON(!node->els_cmpl_cnt))
-+			break;
-+		node->els_cmpl_cnt--;
-+		break;
-+
-+	/*
-+	 * handle any ELS request completions that
-+	 * other states either didn't care about
-+	 * or forgot about
-+	 */
-+	case EFC_EVT_SRRS_ELS_REQ_OK:
-+	case EFC_EVT_SRRS_ELS_REQ_FAIL:
-+	case EFC_EVT_SRRS_ELS_REQ_RJT:
-+	case EFC_EVT_ELS_REQ_ABORTED:
-+		if (WARN_ON(!node->els_req_cnt))
-+			break;
-+		node->els_req_cnt--;
-+		break;
-+
-+	case EFC_EVT_ELS_RCVD: {
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+
-+		/*
-+		 * Unsupported ELS was received,
-+		 * send LS_RJT, command not supported
-+		 */
-+		efc_log_debug(efc,
-+			      "[%s] (%s) ELS x%02x, LS_RJT not supported\n",
-+			      node->display_name, funcname,
-+			      ((uint8_t *)cbdata->payload->dma.virt)[0]);
-+
-+		efc_send_ls_rjt(node, be16_to_cpu(hdr->fh_ox_id),
-+				ELS_RJT_UNSUP, ELS_EXPL_NONE, 0);
-+		break;
-+	}
-+
-+	case EFC_EVT_PLOGI_RCVD:
-+	case EFC_EVT_FLOGI_RCVD:
-+	case EFC_EVT_LOGO_RCVD:
-+	case EFC_EVT_PRLI_RCVD:
-+	case EFC_EVT_PRLO_RCVD:
-+	case EFC_EVT_PDISC_RCVD:
-+	case EFC_EVT_FDISC_RCVD:
-+	case EFC_EVT_ADISC_RCVD:
-+	case EFC_EVT_RSCN_RCVD:
-+	case EFC_EVT_SCR_RCVD: {
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+
-+		/* sm: / send ELS_RJT */
-+		efc_log_debug(efc, "[%s] (%s) %s sending ELS_RJT\n",
-+			      node->display_name, funcname,
-+			      efc_sm_event_name(evt));
-+		/* if we didn't catch this in a state, send generic LS_RJT */
-+		efc_send_ls_rjt(node, be16_to_cpu(hdr->fh_ox_id),
-+				ELS_RJT_UNAB, ELS_EXPL_NONE, 0);
-+		break;
-+	}
-+	case EFC_EVT_ABTS_RCVD: {
-+		efc_log_debug(efc, "[%s] (%s) %s sending BA_ACC\n",
-+			      node->display_name, funcname,
-+			      efc_sm_event_name(evt));
-+
-+		/* sm: / send BA_ACC */
-+		efc_send_bls_acc(node, cbdata->header->dma.virt);
-+		break;
-+	}
-+
-+	default:
-+		efc_log_debug(node->efc, "[%s] %-20s %-20s not handled\n",
-+			     node->display_name, funcname,
-+			     efc_sm_event_name(evt));
-+	}
-+}
-+
-+void
-+efc_node_save_sparms(struct efc_node *node, void *payload)
-+{
-+	memcpy(node->service_params, payload, sizeof(node->service_params));
-+}
-+
-+void
-+efc_node_post_event(struct efc_node *node,
-+		    enum efc_sm_event evt, void *arg)
-+{
-+	bool free_node = false;
-+
-+	node->evtdepth++;
-+
-+	efc_sm_post_event(&node->sm, evt, arg);
-+
-+	/* If our event call depth is one and
-+	 * we're not holding frames
-+	 * then we can dispatch any pending frames.
-+	 * We don't want to allow the efc_process_node_pending()
-+	 * call to recurse.
-+	 */
-+	if (!node->hold_frames && node->evtdepth == 1)
-+		efc_process_node_pending(node);
-+
-+	node->evtdepth--;
-+
-+	/*
-+	 * Free the node object if so requested,
-+	 * and we're at an event call depth of zero
-+	 */
-+	if (node->evtdepth == 0 && node->req_free)
-+		free_node = true;
-+
-+	if (free_node)
-+		efc_node_free(node);
-+}
-+
-+void
-+efc_node_transition(struct efc_node *node,
-+		    void (*state)(struct efc_sm_ctx *,
-+				   enum efc_sm_event, void *), void *data)
-+{
-+	struct efc_sm_ctx *ctx = &node->sm;
-+
-+	if (ctx->current_state == state) {
-+		efc_node_post_event(node, EFC_EVT_REENTER, data);
-+	} else {
-+		efc_node_post_event(node, EFC_EVT_EXIT, data);
-+		ctx->current_state = state;
-+		efc_node_post_event(node, EFC_EVT_ENTER, data);
-+	}
-+}
-+
-+void
-+efc_node_build_eui_name(char *buf, u32 buf_len, uint64_t eui_name)
-+{
-+	memset(buf, 0, buf_len);
-+
-+	snprintf(buf, buf_len, "eui.%016llX", (unsigned long long)eui_name);
-+}
-+
-+u64
-+efc_node_get_wwpn(struct efc_node *node)
-+{
-+	struct fc_els_flogi *sp =
-+			(struct fc_els_flogi *)node->service_params;
-+
-+	return be64_to_cpu(sp->fl_wwpn);
-+}
-+
-+u64
-+efc_node_get_wwnn(struct efc_node *node)
-+{
-+	struct fc_els_flogi *sp =
-+			(struct fc_els_flogi *)node->service_params;
-+
-+	return be64_to_cpu(sp->fl_wwnn);
-+}
-+
 +int
-+efc_node_check_els_req(struct efc_sm_ctx *ctx, enum efc_sm_event evt, void *arg,
-+		uint8_t cmd, void (*efc_node_common_func)(const char *,
-+				struct efc_sm_ctx *, enum efc_sm_event, void *),
-+		const char *funcname)
++efct_efc_hw_sequence_free(struct efc *efc, struct efc_hw_sequence *seq)
 +{
-+	return 0;
++	struct efct *efct = efc->base;
++
++	return efct_hw_rqpair_sequence_free(&efct->hw, seq);
 +}
-+
-+int
-+efc_node_check_ns_req(struct efc_sm_ctx *ctx, enum efc_sm_event evt, void *arg,
-+		uint16_t cmd, void (*efc_node_common_func)(const char *,
-+				struct efc_sm_ctx *, enum efc_sm_event, void *),
-+		const char *funcname)
-+{
-+	return 0;
-+}
-+
-+int
-+efc_els_io_list_empty(struct efc_node *node, struct list_head *list)
-+{
-+	int empty;
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&node->els_ios_lock, flags);
-+	empty = list_empty(list);
-+	spin_unlock_irqrestore(&node->els_ios_lock, flags);
-+	return empty;
-+}
-+
-+void
-+efc_node_pause(struct efc_node *node,
-+	       void (*state)(struct efc_sm_ctx *,
-+			      enum efc_sm_event, void *))
-+
-+{
-+	node->nodedb_state = state;
-+	efc_node_transition(node, __efc_node_paused, NULL);
-+}
-+
-+void
-+__efc_node_paused(struct efc_sm_ctx *ctx,
-+		  enum efc_sm_event evt, void *arg)
-+{
-+	struct efc_node *node = ctx->app;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	/*
-+	 * This state is entered when a state is "paused". When resumed, the
-+	 * node is transitioned to a previously saved state (node->ndoedb_state)
-+	 */
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		node_printf(node, "Paused\n");
-+		break;
-+
-+	case EFC_EVT_RESUME: {
-+		void (*pf)(struct efc_sm_ctx *ctx,
-+			   enum efc_sm_event evt, void *arg);
-+
-+		pf = node->nodedb_state;
-+
-+		node->nodedb_state = NULL;
-+		efc_node_transition(node, pf, NULL);
-+		break;
-+	}
-+
-+	case EFC_EVT_DOMAIN_ATTACH_OK:
-+		break;
-+
-+	case EFC_EVT_SHUTDOWN:
-+		node->req_free = true;
-+		break;
-+
-+	default:
-+		__efc_node_common(__func__, ctx, evt, arg);
-+	}
-+}
-+
-+void
-+efc_node_recv_els_frame(struct efc_node *node,
-+			struct efc_hw_sequence *seq)
-+{
-+	u32 prli_size = sizeof(struct fc_els_prli) + sizeof(struct fc_els_spp);
-+	struct {
-+		u32 cmd;
-+		enum efc_sm_event evt;
-+		u32 payload_size;
-+	} els_cmd_list[] = {
-+		{ELS_PLOGI, EFC_EVT_PLOGI_RCVD,	sizeof(struct fc_els_flogi)},
-+		{ELS_FLOGI, EFC_EVT_FLOGI_RCVD,	sizeof(struct fc_els_flogi)},
-+		{ELS_LOGO, EFC_EVT_LOGO_RCVD, sizeof(struct fc_els_ls_acc)},
-+		{ELS_PRLI, EFC_EVT_PRLI_RCVD, prli_size},
-+		{ELS_PRLO, EFC_EVT_PRLO_RCVD, prli_size},
-+		{ELS_PDISC, EFC_EVT_PDISC_RCVD,	MAX_ACC_REJECT_PAYLOAD},
-+		{ELS_FDISC, EFC_EVT_FDISC_RCVD,	MAX_ACC_REJECT_PAYLOAD},
-+		{ELS_ADISC, EFC_EVT_ADISC_RCVD,	sizeof(struct fc_els_adisc)},
-+		{ELS_RSCN, EFC_EVT_RSCN_RCVD, MAX_ACC_REJECT_PAYLOAD},
-+		{ELS_SCR, EFC_EVT_SCR_RCVD, MAX_ACC_REJECT_PAYLOAD},
-+	};
-+	struct efc_node_cb cbdata;
-+	u8 *buf = seq->payload->dma.virt;
-+	enum efc_sm_event evt = EFC_EVT_ELS_RCVD;
-+	u32 i;
-+
-+	memset(&cbdata, 0, sizeof(cbdata));
-+	cbdata.header = seq->header;
-+	cbdata.payload = seq->payload;
-+
-+	/* find a matching event for the ELS command */
-+	for (i = 0; i < ARRAY_SIZE(els_cmd_list); i++) {
-+		if (els_cmd_list[i].cmd == buf[0]) {
-+			evt = els_cmd_list[i].evt;
-+			break;
-+		}
-+	}
-+
-+	efc_node_post_event(node, evt, &cbdata);
-+}
-+
-+void
-+efc_node_recv_ct_frame(struct efc_node *node,
-+		       struct efc_hw_sequence *seq)
-+{
-+	struct fc_ct_hdr *iu = seq->payload->dma.virt;
-+	struct fc_frame_header *hdr = seq->header->dma.virt;
-+	struct efc *efc = node->efc;
-+	u16 gscmd = be16_to_cpu(iu->ct_cmd);
-+
-+	efc_log_err(efc, "[%s] Received cmd :%x sending CT_REJECT\n",
-+		    node->display_name, gscmd);
-+	efc_send_ct_rsp(efc, node, be16_to_cpu(hdr->fh_ox_id), iu,
-+			FC_FS_RJT, FC_FS_RJT_UNSUP, 0);
-+}
-+
-+void
-+efc_node_recv_fcp_cmd(struct efc_node *node, struct efc_hw_sequence *seq)
-+{
-+	struct efc_node_cb cbdata;
-+
-+	memset(&cbdata, 0, sizeof(cbdata));
-+	cbdata.header = seq->header;
-+	cbdata.payload = seq->payload;
-+
-+	efc_node_post_event(node, EFC_EVT_FCP_CMD_RCVD, &cbdata);
-+}
-+
-+void
-+efc_process_node_pending(struct efc_node *node)
-+{
-+	struct efc *efc = node->efc;
-+	struct efc_hw_sequence *seq = NULL;
-+	u32 pend_frames_processed = 0;
-+	unsigned long flags = 0;
-+
-+	for (;;) {
-+		/* need to check for hold frames condition after each frame
-+		 * processed because any given frame could cause a transition
-+		 * to a state that holds frames
-+		 */
-+		if (node->hold_frames)
-+			break;
-+
-+		seq = NULL;
-+		/* Get next frame/sequence */
-+		spin_lock_irqsave(&node->pend_frames_lock, flags);
-+
-+		if (!list_empty(&node->pend_frames)) {
-+			seq = list_first_entry(&node->pend_frames,
-+					struct efc_hw_sequence, list_entry);
-+			list_del(&seq->list_entry);
-+		}
-+		spin_unlock_irqrestore(&node->pend_frames_lock, flags);
-+
-+		if (!seq) {
-+			pend_frames_processed =	node->pend_frames_processed;
-+			node->pend_frames_processed = 0;
-+			break;
-+		}
-+		node->pend_frames_processed++;
-+
-+		/* now dispatch frame(s) to dispatch function */
-+		efc_node_dispatch_frame(node, seq);
-+		efc->tt.hw_seq_free(efc, seq);
-+	}
-+
-+	if (pend_frames_processed != 0)
-+		efc_log_debug(efc, "%u node frames held and processed\n",
-+			      pend_frames_processed);
-+}
-+
-+void
-+efc_scsi_sess_reg_complete(struct efc_node *node, u32 status)
-+{
-+	unsigned long flags = 0;
-+	enum efc_sm_event evt = EFC_EVT_NODE_SESS_REG_OK;
-+	struct efc *efc = node->efc;
-+
-+	if (status)
-+		evt = EFC_EVT_NODE_SESS_REG_FAIL;
-+
-+	spin_lock_irqsave(&efc->lock, flags);
-+	/* Notify the node to resume */
-+	efc_node_post_event(node, evt, NULL);
-+	spin_unlock_irqrestore(&efc->lock, flags);
-+}
-+
-+void
-+efc_scsi_del_initiator_complete(struct efc *efc, struct efc_node *node)
-+{
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&efc->lock, flags);
-+	/* Notify the node to resume */
-+	efc_node_post_event(node, EFC_EVT_NODE_DEL_INI_COMPLETE, NULL);
-+	spin_unlock_irqrestore(&efc->lock, flags);
-+}
-+
-+void
-+efc_scsi_del_target_complete(struct efc *efc, struct efc_node *node)
-+{
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&efc->lock, flags);
-+	/* Notify the node to resume */
-+	efc_node_post_event(node, EFC_EVT_NODE_DEL_TGT_COMPLETE, NULL);
-+	spin_unlock_irqrestore(&efc->lock, flags);
-+}
-+
-+void
-+efc_scsi_io_list_empty(struct efc *efc, struct efc_node *node)
-+{
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&efc->lock, flags);
-+	efc_node_post_event(node, EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY, NULL);
-+	spin_unlock_irqrestore(&efc->lock, flags);
-+}
-+
-+void efc_node_post_els_resp(struct efc_node *node, u32 evt, void *arg)
-+{
-+	struct efc *efc = node->efc;
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&efc->lock, flags);
-+	efc_node_post_event(node, evt, arg);
-+	spin_unlock_irqrestore(&efc->lock, flags);
-+}
-+
-+void efc_node_post_shutdown(struct efc_node *node, u32 evt, void *arg)
-+{
-+	unsigned long flags = 0;
-+	struct efc *efc = node->efc;
-+
-+	spin_lock_irqsave(&efc->lock, flags);
-+	efc_node_post_event(node, EFC_EVT_SHUTDOWN, arg);
-+	spin_unlock_irqrestore(&efc->lock, flags);
-+}
-diff --git a/drivers/scsi/elx/libefc/efc_node.h b/drivers/scsi/elx/libefc/efc_node.h
-new file mode 100644
-index 000000000000..7ff6a0adb55e
---- /dev/null
-+++ b/drivers/scsi/elx/libefc/efc_node.h
-@@ -0,0 +1,191 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
-+ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
-+ */
-+
-+#if !defined(__EFC_NODE_H__)
-+#define __EFC_NODE_H__
-+#include "scsi/fc/fc_ns.h"
-+
-+#define EFC_NODEDB_PAUSE_FABRIC_LOGIN	(1 << 0)
-+#define EFC_NODEDB_PAUSE_NAMESERVER	(1 << 1)
-+#define EFC_NODEDB_PAUSE_NEW_NODES	(1 << 2)
-+
-+#define MAX_ACC_REJECT_PAYLOAD	sizeof(struct fc_els_ls_rjt)
-+
-+#define scsi_io_printf(io, fmt, ...) \
-+	efc_log_debug(io->efc, "[%s] [%04x][i:%04x t:%04x h:%04x]" fmt, \
-+	io->node->display_name, io->instance_index, io->init_task_tag, \
-+	io->tgt_task_tag, io->hw_tag, ##__VA_ARGS__)
-+
-+static inline void
-+efc_node_evt_set(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
-+		 const char *handler)
-+{
-+	struct efc_node *node = ctx->app;
-+
-+	if (evt == EFC_EVT_ENTER) {
-+		strncpy(node->current_state_name, handler,
-+			sizeof(node->current_state_name));
-+	} else if (evt == EFC_EVT_EXIT) {
-+		strncpy(node->prev_state_name, node->current_state_name,
-+			sizeof(node->prev_state_name));
-+		strncpy(node->current_state_name, "invalid",
-+			sizeof(node->current_state_name));
-+	}
-+	node->prev_evt = node->current_evt;
-+	node->current_evt = evt;
-+}
-+
-+/**
-+ * hold frames in pending frame list
-+ *
-+ * Unsolicited receive frames are held on the node pending frame list,
-+ * rather than being processed.
-+ */
-+
-+static inline void
-+efc_node_hold_frames(struct efc_node *node)
-+{
-+	node->hold_frames = true;
-+}
-+
-+/**
-+ * accept frames
-+ *
-+ * Unsolicited receive frames processed rather than being held on the node
-+ * pending frame list.
-+ */
-+
-+static inline void
-+efc_node_accept_frames(struct efc_node *node)
-+{
-+	node->hold_frames = false;
-+}
-+
-+/*
-+ * Node initiator/target enable defines
-+ * All combinations of the SLI port (nport) initiator/target enable,
-+ * and remote node initiator/target enable are enumerated.
-+ * ex: EFC_NODE_ENABLE_T_TO_IT decodes to target mode is enabled on SLI port
-+ * and I+T is enabled on remote node.
-+ */
-+enum efc_node_enable {
-+	EFC_NODE_ENABLE_x_TO_x,
-+	EFC_NODE_ENABLE_x_TO_T,
-+	EFC_NODE_ENABLE_x_TO_I,
-+	EFC_NODE_ENABLE_x_TO_IT,
-+	EFC_NODE_ENABLE_T_TO_x,
-+	EFC_NODE_ENABLE_T_TO_T,
-+	EFC_NODE_ENABLE_T_TO_I,
-+	EFC_NODE_ENABLE_T_TO_IT,
-+	EFC_NODE_ENABLE_I_TO_x,
-+	EFC_NODE_ENABLE_I_TO_T,
-+	EFC_NODE_ENABLE_I_TO_I,
-+	EFC_NODE_ENABLE_I_TO_IT,
-+	EFC_NODE_ENABLE_IT_TO_x,
-+	EFC_NODE_ENABLE_IT_TO_T,
-+	EFC_NODE_ENABLE_IT_TO_I,
-+	EFC_NODE_ENABLE_IT_TO_IT,
-+};
-+
-+static inline enum efc_node_enable
-+efc_node_get_enable(struct efc_node *node)
-+{
-+	u32 retval = 0;
-+
-+	if (node->nport->enable_ini)
-+		retval |= (1U << 3);
-+	if (node->nport->enable_tgt)
-+		retval |= (1U << 2);
-+	if (node->init)
-+		retval |= (1U << 1);
-+	if (node->targ)
-+		retval |= (1U << 0);
-+	return (enum efc_node_enable)retval;
-+}
-+
-+int
-+efc_node_check_els_req(struct efc_sm_ctx *ctx,
-+		       enum efc_sm_event evt, void *arg,
-+		       u8 cmd, void (*efc_node_common_func)(const char *,
-+		       struct efc_sm_ctx *, enum efc_sm_event, void *),
-+		       const char *funcname);
-+int
-+efc_node_check_ns_req(struct efc_sm_ctx *ctx,
-+		      enum efc_sm_event evt, void *arg,
-+		  u16 cmd, void (*efc_node_common_func)(const char *,
-+		  struct efc_sm_ctx *, enum efc_sm_event, void *),
-+		  const char *funcname);
-+int
-+efc_node_attach(struct efc_node *node);
-+struct efc_node *
-+efc_node_alloc(struct efc_nport *nport, u32 port_id,
-+		bool init, bool targ);
-+void
-+efc_node_free(struct efc_node *efc);
-+void
-+efc_node_update_display_name(struct efc_node *node);
-+void efc_node_post_event(struct efc_node *node, enum efc_sm_event evt,
-+			 void *arg);
-+
-+void
-+__efc_node_shutdown(struct efc_sm_ctx *ctx,
-+		    enum efc_sm_event evt, void *arg);
-+void
-+__efc_node_wait_node_free(struct efc_sm_ctx *ctx,
-+			  enum efc_sm_event evt, void *arg);
-+void
-+__efc_node_wait_els_shutdown(struct efc_sm_ctx *ctx,
-+			     enum efc_sm_event evt, void *arg);
-+void
-+__efc_node_wait_ios_shutdown(struct efc_sm_ctx *ctx,
-+			     enum efc_sm_event evt, void *arg);
-+void
-+efc_node_save_sparms(struct efc_node *node, void *payload);
-+void
-+efc_node_transition(struct efc_node *node,
-+		    void (*state)(struct efc_sm_ctx *,
-+		    enum efc_sm_event, void *), void *data);
-+void
-+__efc_node_common(const char *funcname, struct efc_sm_ctx *ctx,
-+		  enum efc_sm_event evt, void *arg);
-+
-+void
-+efc_node_initiate_cleanup(struct efc_node *node);
-+
-+void
-+efc_node_build_eui_name(char *buf, u32 buf_len, uint64_t eui_name);
-+
-+void
-+efc_node_pause(struct efc_node *node,
-+	       void (*state)(struct efc_sm_ctx *ctx,
-+			      enum efc_sm_event evt, void *arg));
-+void
-+__efc_node_paused(struct efc_sm_ctx *ctx,
-+		  enum efc_sm_event evt, void *arg);
-+int
-+efc_node_active_ios_empty(struct efc_node *node);
-+void
-+efc_node_send_ls_io_cleanup(struct efc_node *node);
-+
-+int
-+efc_els_io_list_empty(struct efc_node *node, struct list_head *list);
-+
-+void
-+efc_process_node_pending(struct efc_node *domain);
-+
-+u64 efc_node_get_wwnn(struct efc_node *node);
-+struct efc_node *
-+efc_node_find(struct efc_nport *nport, u32 id);
-+void
-+efc_node_post_els_resp(struct efc_node *node, u32 evt, void *arg);
-+void
-+efc_node_recv_els_frame(struct efc_node *node, struct efc_hw_sequence *s);
-+void
-+efc_node_recv_ct_frame(struct efc_node *node, struct efc_hw_sequence *seq);
-+void
-+efc_node_recv_fcp_cmd(struct efc_node *node, struct efc_hw_sequence *seq);
-+
-+#endif /* __EFC_NODE_H__ */
 -- 
 2.26.2
 
