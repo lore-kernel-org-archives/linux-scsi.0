@@ -8,93 +8,102 @@ X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0B02C4332B
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 04:21:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F15BC43333
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 04:21:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EC0B207B8
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 04:21:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21EA72075A
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 04:21:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727711AbhAHEUp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jan 2021 23:20:45 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:52502 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727676AbhAHEUn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2021 23:20:43 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10849j0g096801;
-        Fri, 8 Jan 2021 04:19:56 GMT
+        id S1727783AbhAHEUy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jan 2021 23:20:54 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:49392 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727100AbhAHEUw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2021 23:20:52 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10849fcd106185;
+        Fri, 8 Jan 2021 04:19:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=mhlu5DlX8TBsODbrNtircvmM16EzqJ5TdA/dACh+jGk=;
- b=Q6EGHzgkmeJBQ8hRqGah/PFytVQxLqYh1KJMcCovgfiLUFxtPvy7/bfJB4YaBNl/uSCj
- UlSPHFbnZCn5IWqMURqHkZ1IQl7+n1wCFW5kWKe6I3LAZniHxUkqV6yxE0n6wY0bCagA
- yqwDnbfPKqRzRzF1G53yNMNitsrAGol/rmN+LzMmbPkBvU9vGlhFwuM335zbh9nUfHgR
- JsFC9eOaOLoBfGvwTiR14BU1W5YSD1MHBx4qC7lLYipdS+Nb4eCJmCRspO+DUS16W3IW
- 7ET4lfACUMhTgHoOEdXP5idExbThTHMdI/6MPxWMmXAUk6YhZxAT9pdn/NCMkPv27zsI MQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 35wepmfd99-1
+ bh=yZzYiFILMo+MCkdifb5EGY33AydWCm2X4YPlhcEGEgM=;
+ b=EO0fpG0qFkDLFfRKU8FoaKNDAIjDTAAtwinun2P2mXnP3aIGvgPQ8eDxJ7BRU/sRRqrX
+ vFvcXeofnBruXz1RMkZcwmJ6jHeOTD/jHWKQ7xNE3107tbE6k+vTIV9jfTa3ZlAt5Wyk
+ HixsnR+Aav01bjW+uaElW77Ceu4XhWbqSIE2PHqX039sm3IjKDoDIbbNWzK1f7BkXvjD
+ Rndw6wuzsHGOkJVdeb/BGKiRAHfLVGtTlrxJPVK/wiFqGuFzwqlNQpUSOFv09PAFQG5n
+ IzWazj7tF1Phi8iZyqD5BWD1ecYJRQYnr71F/iC8Y2jpZQ+ZTbhgjrn4tXOymhXFjc4K 0A== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 35wftxeyt8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 08 Jan 2021 04:19:56 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1084Au7j079245;
-        Fri, 8 Jan 2021 04:19:56 GMT
+        Fri, 08 Jan 2021 04:19:58 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1084ATkY040361;
+        Fri, 8 Jan 2021 04:19:57 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 35v1fc2x8y-1
+        by userp3020.oracle.com with ESMTP id 35w3qut0gw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Jan 2021 04:19:55 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 1084JsNb012503;
-        Fri, 8 Jan 2021 04:19:54 GMT
+        Fri, 08 Jan 2021 04:19:57 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 1084JuOi012527;
+        Fri, 8 Jan 2021 04:19:56 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 07 Jan 2021 20:19:54 -0800
+        with ESMTP ; Fri, 08 Jan 2021 04:19:55 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
+To:     linux-scsi@vger.kernel.org, Stanley Chu <stanley.chu@mediatek.com>,
+        jejb@linux.ibm.com, avri.altman@wdc.com, alim.akhtar@samsung.com
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        kernel test robot <lkp@intel.com>,
-        linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH] scsi: ufs: ufshcd-pltfrm depends on HAS_IOMEM
-Date:   Thu,  7 Jan 2021 23:19:39 -0500
-Message-Id: <161007949339.9892.14233545766949320025.b4-ty@oracle.com>
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kuohong.wang@mediatek.com, bvanassche@acm.org,
+        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
+        peter.wang@mediatek.com, matthias.bgg@gmail.com,
+        andy.teng@mediatek.com, cang@codeaurora.org,
+        chun-hung.wu@mediatek.com, cc.chou@mediatek.com,
+        linux-arm-kernel@lists.infradead.org, beanhuo@micron.com,
+        asutoshd@codeaurora.org, alice.chao@mediatek.com
+Subject: Re: [PATCH v2 0/2] scsi: ufs: Fix power drain and hci quirk for WriteBooster
+Date:   Thu,  7 Jan 2021 23:19:40 -0500
+Message-Id: <161007949337.9892.11394622290093764791.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210106040822.933-1-rdunlap@infradead.org>
-References: <20210106040822.933-1-rdunlap@infradead.org>
+In-Reply-To: <20201222072905.32221-1-stanley.chu@mediatek.com>
+References: <20201222072905.32221-1-stanley.chu@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=883 phishscore=0
- suspectscore=0 spamscore=0 bulkscore=0 adultscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101080021
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
+ spamscore=0 mlxlogscore=944 phishscore=0 bulkscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101080021
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 spamscore=0
- impostorscore=0 phishscore=0 lowpriorityscore=0 suspectscore=0
- priorityscore=1501 mlxscore=0 malwarescore=0 clxscore=1015 mlxlogscore=892
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 mlxscore=0
+ bulkscore=0 priorityscore=1501 impostorscore=0 clxscore=1015
+ lowpriorityscore=0 mlxlogscore=960 malwarescore=0 spamscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2101080021
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 5 Jan 2021 20:08:22 -0800, Randy Dunlap wrote:
+On Tue, 22 Dec 2020 15:29:03 +0800, Stanley Chu wrote:
 
-> Building ufshcd-pltfrm.c on arch/s390/ has a linker error since
-> S390 does not support IOMEM, so add a dependency on HAS_IOMEM.
+> This series fixes two WriteBooster issues,
+> 1. Fix a corner case that device flush capability is not disabled during system suspend
+> 2. Fix the checking of UFSHCI quirk UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
 > 
-> s390-linux-ld: drivers/scsi/ufs/ufshcd-pltfrm.o: in function `ufshcd_pltfrm_init':
-> ufshcd-pltfrm.c:(.text+0x38e): undefined reference to `devm_platform_ioremap_resource'
+> Stanley Chu (2):
+>   scsi: ufs: Fix possible power drain during system suspend
+>   scsi: ufs: Relax the condition of
+>     UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
 > 
-> where that devm_ function is inside an #ifdef CONFIG_HAS_IOMEM/#endif block.
+> [...]
 
 Applied to 5.11/scsi-fixes, thanks!
 
-[1/1] scsi: ufs: ufshcd-pltfrm depends on HAS_IOMEM
-      https://git.kernel.org/mkp/scsi/c/5e6ddadf7637
+[1/2] scsi: ufs: Fix possible power drain during system suspend
+      https://git.kernel.org/mkp/scsi/c/1d53864c3617
+[2/2] scsi: ufs: Relax the condition of UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
+      https://git.kernel.org/mkp/scsi/c/21acf4601cc6
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
