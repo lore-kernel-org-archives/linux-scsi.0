@@ -4,28 +4,28 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1717C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 11:00:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 302E4C433E9
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 11:00:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B3B92399A
+	by mail.kernel.org (Postfix) with ESMTP id DFEA423977
 	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 11:00:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727265AbhAHLAE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Jan 2021 06:00:04 -0500
-Received: from alexa-out-tai-02.qualcomm.com ([103.229.16.227]:55682 "EHLO
-        alexa-out-tai-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726520AbhAHLAE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2021 06:00:04 -0500
-Received: from ironmsg03-tai.qualcomm.com ([10.249.140.8])
-  by alexa-out-tai-02.qualcomm.com with ESMTP; 08 Jan 2021 18:59:21 +0800
+        id S1726789AbhAHLAB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Jan 2021 06:00:01 -0500
+Received: from alexa-out-tai-01.qualcomm.com ([103.229.16.226]:25446 "EHLO
+        alexa-out-tai-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726520AbhAHLAB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2021 06:00:01 -0500
+Received: from ironmsg01-tai.qualcomm.com ([10.249.140.6])
+  by alexa-out-tai-01.qualcomm.com with ESMTP; 08 Jan 2021 18:59:02 +0800
 X-QCInternal: smtphost
 Received: from cbsp-sh-gv.ap.qualcomm.com (HELO cbsp-sh-gv.qualcomm.com) ([10.231.249.68])
-  by ironmsg03-tai.qualcomm.com with ESMTP; 08 Jan 2021 18:58:57 +0800
+  by ironmsg01-tai.qualcomm.com with ESMTP; 08 Jan 2021 18:58:55 +0800
 Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
-        id 593A729ED; Fri,  8 Jan 2021 18:58:56 +0800 (CST)
+        id 265A629ED; Fri,  8 Jan 2021 18:58:54 +0800 (CST)
 From:   Ziqi Chen <ziqichen@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         cang@codeaurora.org, hongwus@codeaurora.org, rnayak@codeaurora.org,
@@ -34,16 +34,14 @@ To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
         ziqichen@codeaurora.org, kwmad.kim@samsung.com,
         stanley.chu@mediatek.com
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
+        Bean Huo <beanhuo@micron.com>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v6 2/2] scsi: ufs-qcom: Fix ufs RST_n specs violation
-Date:   Fri,  8 Jan 2021 18:56:25 +0800
-Message-Id: <1610103385-45755-3-git-send-email-ziqichen@codeaurora.org>
+Subject: [PATCH v6 1/2] scsi: ufs: Fix ufs clk specs violation
+Date:   Fri,  8 Jan 2021 18:56:24 +0800
+Message-Id: <1610103385-45755-2-git-send-email-ziqichen@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1610103385-45755-1-git-send-email-ziqichen@codeaurora.org>
 References: <1610103385-45755-1-git-send-email-ziqichen@codeaurora.org>
@@ -52,59 +50,88 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 As per specs, e.g, JESD220E chapter 7.2, while powering
-off/on the ufs device, RST_n signal should be between
+off/on the ufs device, REF_CLK signal should be between
 VSS(Ground) and VCCQ/VCCQ2.
 
+Reviewed-by: Can Guo <cang@codeaurora.org>
 Signed-off-by: Ziqi Chen <ziqichen@codeaurora.org>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 2206b1e..f97d7b0 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -568,6 +568,17 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 	return err;
- }
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e221add..3f807f7 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8686,8 +8686,6 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	if (ret)
+ 		goto set_dev_active;
  
-+static void ufs_qcom_device_reset_ctrl(struct ufs_hba *hba, bool asserted)
-+{
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+
-+	/* reset gpio is optional */
-+	if (!host->device_reset)
-+		return;
-+
-+	gpiod_set_value_cansleep(host->device_reset, asserted);
-+}
-+
- static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-@@ -582,6 +593,9 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		ufs_qcom_disable_lane_clks(host);
- 		phy_power_off(phy);
- 
-+		/* reset the connected UFS device during power down */
-+		ufs_qcom_device_reset_ctrl(hba, true);
-+
- 	} else if (!ufs_qcom_is_link_active(hba)) {
- 		ufs_qcom_disable_lane_clks(host);
+-	ufshcd_vreg_set_lpm(hba);
+-
+ disable_clks:
+ 	/*
+ 	 * Call vendor specific suspend callback. As these callbacks may access
+@@ -8711,6 +8709,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 					hba->clk_gating.state);
  	}
-@@ -1421,10 +1435,10 @@ static int ufs_qcom_device_reset(struct ufs_hba *hba)
- 	 * The UFS device shall detect reset pulses of 1us, sleep for 10us to
- 	 * be on the safe side.
+ 
++	ufshcd_vreg_set_lpm(hba);
++
+ 	/* Put the host controller in low power mode if possible */
+ 	ufshcd_hba_vreg_set_lpm(hba);
+ 	goto out;
+@@ -8778,18 +8778,18 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	old_link_state = hba->uic_link_state;
+ 
+ 	ufshcd_hba_vreg_set_hpm(hba);
++	ret = ufshcd_vreg_set_hpm(hba);
++	if (ret)
++		goto out;
++
+ 	/* Make sure clocks are enabled before accessing controller */
+ 	ret = ufshcd_setup_clocks(hba, true);
+ 	if (ret)
+-		goto out;
++		goto disable_vreg;
+ 
+ 	/* enable the host irq as host controller would be active soon */
+ 	ufshcd_enable_irq(hba);
+ 
+-	ret = ufshcd_vreg_set_hpm(hba);
+-	if (ret)
+-		goto disable_irq_and_vops_clks;
+-
+ 	/*
+ 	 * Call vendor specific resume callback. As these callbacks may access
+ 	 * vendor specific host controller register space call them when the
+@@ -8797,7 +8797,7 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
  	 */
--	gpiod_set_value_cansleep(host->device_reset, 1);
-+	ufs_qcom_device_reset_ctrl(hba, true);
- 	usleep_range(10, 15);
+ 	ret = ufshcd_vops_resume(hba, pm_op);
+ 	if (ret)
+-		goto disable_vreg;
++		goto disable_irq_and_vops_clks;
  
--	gpiod_set_value_cansleep(host->device_reset, 0);
-+	ufs_qcom_device_reset_ctrl(hba, false);
- 	usleep_range(10, 15);
- 
- 	return 0;
+ 	/* For DeepSleep, the only supported option is to have the link off */
+ 	WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && !ufshcd_is_link_off(hba));
+@@ -8864,8 +8864,6 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	ufshcd_link_state_transition(hba, old_link_state, 0);
+ vendor_suspend:
+ 	ufshcd_vops_suspend(hba, pm_op);
+-disable_vreg:
+-	ufshcd_vreg_set_lpm(hba);
+ disable_irq_and_vops_clks:
+ 	ufshcd_disable_irq(hba);
+ 	if (hba->clk_scaling.is_allowed)
+@@ -8876,6 +8874,8 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		trace_ufshcd_clk_gating(dev_name(hba->dev),
+ 					hba->clk_gating.state);
+ 	}
++disable_vreg:
++	ufshcd_vreg_set_lpm(hba);
+ out:
+ 	hba->pm_op_in_progress = 0;
+ 	if (ret)
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
