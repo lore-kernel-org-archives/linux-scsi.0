@@ -7,33 +7,34 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5701FC433E0
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 00:30:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E23BC433DB
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 00:35:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1196223435
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 00:30:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D76B2236FB
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 00:35:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727935AbhAHAa5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jan 2021 19:30:57 -0500
-Received: from mx2.suse.de ([195.135.220.15]:38680 "EHLO mx2.suse.de"
+        id S1729542AbhAHAfP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jan 2021 19:35:15 -0500
+Received: from mx2.suse.de ([195.135.220.15]:39618 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727235AbhAHAa5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 Jan 2021 19:30:57 -0500
+        id S1727858AbhAHAfP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 Jan 2021 19:35:15 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1610065810; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1610066068; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=BS3L9WXRXQeyymo+Pzg3AoWdQiyUgv541kZSdTk0kv0=;
-        b=Z2mCAwOrR2osTDEkWtwUGssf0uik14Ygdmmh0lqH6pXJgSb9+WyvbRDbtj6bqhaPysRs86
-        ZXwyCuFOToLJXVhsvhWjMjOeJZlSc9TGTmKG0RLcK1sZOc5IXdeydsOQByt4dsTvfmuZsz
-        5iL87mO06LohiTT/RcgpVw1IkSyJPS8=
+        bh=n3qtYIMYh6fAVMXomM9BZvVJrKoGdiFkdyRsDUvMs7s=;
+        b=Qni8W3FiOLAtjnWjZZNOFj92Z/KIMyzln2kNak4zPutfNdh8ahA7jAXph2HTMKlszNSrP4
+        GO+MXQ/EO5egeKDqvHMZPffEdeJzbLjg7FgExltgxVClGgTjUn/lozWB2e7HA5yuEYjP4Y
+        ahWJcsN61MSUoBFRrm367Ed5uBKmT8Y=
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 8C101ABC4;
-        Fri,  8 Jan 2021 00:30:10 +0000 (UTC)
-Message-ID: <ff8339afa9f17cf65648f2a9a6ba8b8460f4020e.camel@suse.com>
-Subject: Re: [PATCH V3 22/25] smartpqi: update enclosure identifier in sysf
+        by mx2.suse.de (Postfix) with ESMTP id 3C521AD26;
+        Fri,  8 Jan 2021 00:34:28 +0000 (UTC)
+Message-ID: <42c087bddc3cc3f83a2c6e3fdd84940dc204ff5a.camel@suse.com>
+Subject: Re: [PATCH V3 23/25] smartpqi: correct system hangs when resuming
+ from hibernation
 From:   Martin Wilck <mwilck@suse.com>
 To:     Don Brace <don.brace@microchip.com>, Kevin.Barnett@microchip.com,
         scott.teel@microchip.com, Justin.Lindley@microchip.com,
@@ -41,10 +42,10 @@ To:     Don Brace <don.brace@microchip.com>, Kevin.Barnett@microchip.com,
         mahesh.rajashekhara@microchip.com, hch@infradead.org,
         jejb@linux.vnet.ibm.com, joseph.szczypek@hpe.com, POSWALD@suse.com
 Cc:     linux-scsi@vger.kernel.org
-Date:   Fri, 08 Jan 2021 01:30:09 +0100
-In-Reply-To: <160763258826.26927.5141004289781904133.stgit@brunhilda>
+Date:   Fri, 08 Jan 2021 01:34:26 +0100
+In-Reply-To: <160763259402.26927.11602719287229380898.stgit@brunhilda>
 References: <160763241302.26927.17487238067261230799.stgit@brunhilda>
-         <160763258826.26927.5141004289781904133.stgit@brunhilda>
+         <160763259402.26927.11602719287229380898.stgit@brunhilda>
 Content-Type: text/plain; charset="ISO-8859-15"
 User-Agent: Evolution 3.38.2 
 MIME-Version: 1.0
@@ -54,38 +55,47 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Thu, 2020-12-10 at 14:36 -0600, Don Brace wrote:
-> From: Murthy Bhat <Murthy.Bhat@microchip.com>
+> From: Kevin Barnett <kevin.barnett@microchip.com>
 > 
-> * Update enclosure identifier field corresponding to
->   physical devices in lsscsi/sysfs.
+> * Correct system hangs when resuming from hibernation after
+>   first successful hibernation/resume cycle.
+>   * Rare condition involving OFA.
 > 
 > Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-> Reviewed-by: Scott Teel <scott.teel@microchip.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-> Signed-off-by: Murthy Bhat <Murthy.Bhat@microchip.com>
+> Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
 > Signed-off-by: Don Brace <don.brace@microchip.com>
 > ---
->  drivers/scsi/smartpqi/smartpqi_init.c |    1 -
->  1 file changed, 1 deletion(-)
+>  drivers/scsi/smartpqi/smartpqi_init.c |    5 +++++
+>  1 file changed, 5 insertions(+)
 > 
 > diff --git a/drivers/scsi/smartpqi/smartpqi_init.c
 > b/drivers/scsi/smartpqi/smartpqi_init.c
-> index 1c51a59f1da6..40ae82470d8c 100644
+> index 40ae82470d8c..5ca265babaa2 100644
 > --- a/drivers/scsi/smartpqi/smartpqi_init.c
 > +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -1841,7 +1841,6 @@ static void pqi_dev_info(struct pqi_ctrl_info
-> *ctrl_info,
->  static void pqi_scsi_update_device(struct pqi_scsi_dev
-> *existing_device,
->         struct pqi_scsi_dev *new_device)
->  {
-> -       existing_device->devtype = new_device->devtype;
->         existing_device->device_type = new_device->device_type;
->         existing_device->bus = new_device->bus;
->         if (new_device->target_lun_valid) {
-> 
+> @@ -8688,6 +8688,11 @@ static __maybe_unused int pqi_resume(struct
+> pci_dev *pci_dev)
+>         pci_set_power_state(pci_dev, PCI_D0);
+>         pci_restore_state(pci_dev);
+>  
+> +       pqi_ctrl_unblock_device_reset(ctrl_info);
+> +       pqi_ctrl_unblock_requests(ctrl_info);
+> +       pqi_scsi_unblock_requests(ctrl_info);
+> +       pqi_ctrl_unblock_scan(ctrl_info);
+> +
+>         return pqi_ctrl_init_resume(ctrl_info);
+>  }
 
-I don't get this. Why was it wrong to update the devtype field?
+Like I said in my comments on 14/25:
+
+pqi_ctrl_unblock_scan() and pqi_ctrl_unblock_device_reset() expand
+to mutex_unlock(). Unlocking an already-unlocked mutex is wrong, and
+a mutex has to be unlocked by the task that owns the lock. How
+can you be sure that these conditions are met here?
+
+Regards
+Martin
+
 
 
 
