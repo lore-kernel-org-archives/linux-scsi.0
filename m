@@ -4,113 +4,166 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A0D0C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 08:16:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E89FDC433E0
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 08:24:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBC652343F
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 08:16:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A250223447
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jan 2021 08:24:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725848AbhAHIQC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Jan 2021 03:16:02 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:39938 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725791AbhAHIQB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2021 03:16:01 -0500
+        id S1727728AbhAHIYG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Jan 2021 03:24:06 -0500
+Received: from m43-15.mailgun.net ([69.72.43.15]:28016 "EHLO
+        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727719AbhAHIYG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2021 03:24:06 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1610093741; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1610094225; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=b6AodYinfxqgN5rmyfBtR5RJOs+mkE0k1+xFJsU25VQ=;
- b=comGnX5ceWkUAdh6NkjhCjR0sN+jh5AT+/PVjVq0Rtea4zmv3FdbVc6JrIcU7XdMaxPKidVa
- Stf63lCUhZ6IyL5g7IXZHnCGL77oESI3S2QY1hYcvxtc5AXWxM60GCGL0DVgfgN8GsbW2Tti
- XKD/gKhDh4i0Xy++AkkFb9a22fs=
-X-Mailgun-Sending-Ip: 198.61.254.31
+ MIME-Version: Sender; bh=sreoNIyJ/5cnElQ0k+QsFCG3nuSt8c81dyQkMmfUrmc=;
+ b=kzHWML58ssT8uim+X2Eqnbc4yspZd1R0I5RlWN76BTiiX/K89ogBVtRx+uzboJFnlu5yR0KM
+ 5uAvAYJuepGKPsUEubK/hjMdgoMYF7xf866uViqWWh+mxy2fQRBhF+l+PDeUkyYXokxkjNl1
+ vYDmLQtNcGapKWC7rr7B5n3ISeA=
+X-Mailgun-Sending-Ip: 69.72.43.15
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5ff81491b95fc593262f9a23 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 08 Jan 2021 08:15:13
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 5ff81674fc3778927e83d17c (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 08 Jan 2021 08:23:16
  GMT
-Sender: ziqichen=codeaurora.org@mg.codeaurora.org
+Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 65DF1C43467; Fri,  8 Jan 2021 08:15:12 +0000 (UTC)
+        id 37F8DC4346A; Fri,  8 Jan 2021 08:23:16 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: ziqichen)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 80F07C433C6;
-        Fri,  8 Jan 2021 08:15:11 +0000 (UTC)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A6601C433CA;
+        Fri,  8 Jan 2021 08:23:09 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Fri, 08 Jan 2021 16:15:11 +0800
-From:   ziqichen@codeaurora.org
-To:     Can Guo <cang@codeaurora.org>
+Date:   Fri, 08 Jan 2021 16:23:09 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Ziqi Chen <ziqichen@codeaurora.org>
 Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
         vinholikatti@gmail.com, jejb@linux.vnet.ibm.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
         kwmad.kim@samsung.com, stanley.chu@mediatek.com,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 2/2] scsi: ufs-qcom: Fix ufs RST_n specs violation
-In-Reply-To: <d7e6a5ed6da3b18be7440e7590f6ef14@codeaurora.org>
+        Bean Huo <beanhuo@micron.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 1/2] scsi: ufs: Fix ufs clk specs violation
+In-Reply-To: <1610090885-50099-2-git-send-email-ziqichen@codeaurora.org>
 References: <1610090885-50099-1-git-send-email-ziqichen@codeaurora.org>
- <1610090885-50099-3-git-send-email-ziqichen@codeaurora.org>
- <d7e6a5ed6da3b18be7440e7590f6ef14@codeaurora.org>
-Message-ID: <7ba4d02c624ca973257a40e95e04ae69@codeaurora.org>
-X-Sender: ziqichen@codeaurora.org
+ <1610090885-50099-2-git-send-email-ziqichen@codeaurora.org>
+Message-ID: <56a0fd934614ed4feb476360f8b2c461@codeaurora.org>
+X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-01-08 16:05, Can Guo wrote:
-> On 2021-01-08 15:28, Ziqi Chen wrote:
->> As per specs, e.g, JESD220E chapter 7.2, while powering
->> off/on the ufs device, RST_n signal should be between
->> VSS(Ground) and VCCQ/VCCQ2.
->> 
->> Signed-off-by: Ziqi Chen <ziqichen@codeaurora.org>
->> ---
->>  drivers/scsi/ufs/ufs-qcom.c | 4 ++++
->>  1 file changed, 4 insertions(+)
->> 
->> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
->> index 2206b1e..d8b896c 100644
->> --- a/drivers/scsi/ufs/ufs-qcom.c
->> +++ b/drivers/scsi/ufs/ufs-qcom.c
->> @@ -582,6 +582,10 @@ static int ufs_qcom_suspend(struct ufs_hba *hba,
->> enum ufs_pm_op pm_op)
->>  		ufs_qcom_disable_lane_clks(host);
->>  		phy_power_off(phy);
->> 
->> +		/* reset the connected UFS device during power down */
->> +		if (host->device_reset)
->> +			gpiod_set_value_cansleep(host->device_reset, 1);
->> +
+On 2021-01-08 15:28, Ziqi Chen wrote:
+> As per specs, e.g, JESD220E chapter 7.2, while powering
+> off/on the ufs device, REF_CLK signal should be between
+> VSS(Ground) and VCCQ/VCCQ2.
 > 
-> Instead of calling gpiod_set_value(1/0) directly,
-> can we have a wrapper func for it?
+> Signed-off-by: Ziqi Chen <ziqichen@codeaurora.org>
+
+Reviewed-by: Can Guo <cang@codeaurora.org>
+
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
 > 
-> Thanks,
-> Can Guo.
-
-Sure, it'll be better that way.
-
-Best Regards,
-Ziqi
-
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index e221add..3f807f7 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -8686,8 +8686,6 @@ static int ufshcd_suspend(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  	if (ret)
+>  		goto set_dev_active;
 > 
->>  	} else if (!ufs_qcom_is_link_active(hba)) {
->>  		ufs_qcom_disable_lane_clks(host);
->>  	}
+> -	ufshcd_vreg_set_lpm(hba);
+> -
+>  disable_clks:
+>  	/*
+>  	 * Call vendor specific suspend callback. As these callbacks may 
+> access
+> @@ -8711,6 +8709,8 @@ static int ufshcd_suspend(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  					hba->clk_gating.state);
+>  	}
+> 
+> +	ufshcd_vreg_set_lpm(hba);
+> +
+>  	/* Put the host controller in low power mode if possible */
+>  	ufshcd_hba_vreg_set_lpm(hba);
+>  	goto out;
+> @@ -8778,18 +8778,18 @@ static int ufshcd_resume(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  	old_link_state = hba->uic_link_state;
+> 
+>  	ufshcd_hba_vreg_set_hpm(hba);
+> +	ret = ufshcd_vreg_set_hpm(hba);
+> +	if (ret)
+> +		goto out;
+> +
+>  	/* Make sure clocks are enabled before accessing controller */
+>  	ret = ufshcd_setup_clocks(hba, true);
+>  	if (ret)
+> -		goto out;
+> +		goto disable_vreg;
+> 
+>  	/* enable the host irq as host controller would be active soon */
+>  	ufshcd_enable_irq(hba);
+> 
+> -	ret = ufshcd_vreg_set_hpm(hba);
+> -	if (ret)
+> -		goto disable_irq_and_vops_clks;
+> -
+>  	/*
+>  	 * Call vendor specific resume callback. As these callbacks may 
+> access
+>  	 * vendor specific host controller register space call them when the
+> @@ -8797,7 +8797,7 @@ static int ufshcd_resume(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  	 */
+>  	ret = ufshcd_vops_resume(hba, pm_op);
+>  	if (ret)
+> -		goto disable_vreg;
+> +		goto disable_irq_and_vops_clks;
+> 
+>  	/* For DeepSleep, the only supported option is to have the link off 
+> */
+>  	WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && 
+> !ufshcd_is_link_off(hba));
+> @@ -8864,8 +8864,6 @@ static int ufshcd_resume(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  	ufshcd_link_state_transition(hba, old_link_state, 0);
+>  vendor_suspend:
+>  	ufshcd_vops_suspend(hba, pm_op);
+> -disable_vreg:
+> -	ufshcd_vreg_set_lpm(hba);
+>  disable_irq_and_vops_clks:
+>  	ufshcd_disable_irq(hba);
+>  	if (hba->clk_scaling.is_allowed)
+> @@ -8876,6 +8874,8 @@ static int ufshcd_resume(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>  		trace_ufshcd_clk_gating(dev_name(hba->dev),
+>  					hba->clk_gating.state);
+>  	}
+> +disable_vreg:
+> +	ufshcd_vreg_set_lpm(hba);
+>  out:
+>  	hba->pm_op_in_progress = 0;
+>  	if (ret)
