@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37E9AC43381
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 12:30:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F9E4C433E0
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 12:30:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11C44235DD
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 12:30:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3557523A5B
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 12:30:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726380AbhAIMaQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Jan 2021 07:30:16 -0500
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:63795 "EHLO
+        id S1726432AbhAIMaa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Jan 2021 07:30:30 -0500
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:45867 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725983AbhAIMaP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jan 2021 07:30:15 -0500
+        with ESMTP id S1725983AbhAIMaa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jan 2021 07:30:30 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1610195415; x=1641731415;
+  t=1610195429; x=1641731429;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version;
-  bh=Pg3+iD6hQ4yFLccBbptltt+di+PcRAHEVvCS2zvfKjE=;
-  b=b3GtRSwsyEJ3HRHoDzK0Vqb19bILerx4UKYYrTneprrqVmkoKei4u8Yq
-   ECXt0BAgrEW8h4a31ovPhsqmez5lWEPGgJ+dRAFARGBZfaAqFlSWEoaGH
-   ATrXp1OiV9HjLSCgFWVN1mR57FqNnHAjK+IJ2JfvLNzsLSy4kZZdaemJ6
-   rZLxA1JCXpR4Hn1X9tXuolPLcqeYSh00EY/i3gqa5vwcYkDY0eH5qjz6z
-   0Lo/p3tJPKa8thmld5m8MWpWVnZtlKl5GFvzKGIKYxpFRF0KRzh/0n/jh
-   Brqb0wTC1KsYUmA6FkElJuWWv5Bt2U9DzFdzCO5SevngyhjGJde+rAntL
+  bh=crgptfdo4ZvB/eP/lKCiawEC/FxPXC3A+NiZk4ydCYw=;
+  b=yfEEP0wcIfiaDv3PtygdHkEXtS+8NDy+seKm8L/1cq9EXjGZaJ984cYp
+   xLOV8z6ys4DBpO66bQUEo4kcAcNDlGSk1AUqIXG6xTVgulIxlezzJTgnx
+   7TVllunp4y/U4qaOT286E1WDwL38rDLQnA2j5Z/B1l1cueUdlBfYhumNF
+   sVmu5CJRbWIvJ35vxmzKOsb7qseB+SnHVqFlUk/UlTsha2kwkWXn1TjXG
+   0uIQ0NLDiOAgLI9owURUYIVC1yPuJCu+ayIbSuiMvF0pHb8etEOGRR6NN
+   G8uMQuSq418Z3JcgbyD6z5HTC2rzOq5NQkTkslDmf4DBDFDxTze4emfnK
    A==;
-IronPort-SDR: qZjYevN1bnoWHqM9UkGZojaIjiTIsUk4Ggd88LJFBiruEC5CYXQgBl2T9vE35OnsnhSaX4GzmU
- iiuLtxfuALvVAZuEl2NN3jhbZIE+kkImxE0OP01oXOr11aHCSmxRJlSoeFAM1e/5M4Vk3ARFXO
- kxCNYakqNrhEw5kYMyuo+mVN+wGwFEZE212JF4XYFzPrk2COg5zDb6y73fHyfCH8STweT+iIeM
- GaAcXA/8m7RG1g3sWRlO0KNZ6FaZ81Pf/sR70q5ocjv9rIOpgyGUXNQOGufF72K3ru3P81EXfG
- zRI=
+IronPort-SDR: 2UKqalPbVB94ePdmiP4HMhX5o2W+t+gLhNEqdWhz73inT/zJlQF4mCd4610xRiOoPtTm7Fy6/M
+ W9Z43pVIlW0+yxXSJpAKePTDW8DVsoI8wORXBxq/zN1Rx443wDOyO2ISApaSLKhHpT0OYSbhYf
+ rbvezR6hk3lfBStBuBanSezupCA3NSUboGb4B4VqPAuiiH/4pEx5L1Q/o9hXve8618s8I1mNU+
+ 2rOwEWO2/pCw9zGBS8FIWOK8MO+IHcy5M5LGfFBsMixa8ty+ZXAXanmtvUSItwKGkNfALljlyq
+ YLY=
 X-IronPort-AV: E=Sophos;i="5.79,333,1602572400"; 
-   d="scan'208";a="39871682"
+   d="scan'208";a="105371470"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 09 Jan 2021 05:28:59 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.87.72) by
- chn-vm-ex02.mchp-main.com (10.10.87.72) with Microsoft SMTP Server
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 09 Jan 2021 05:29:07 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Sat, 9 Jan 2021 05:28:59 -0700
-Received: from localhost (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Sat, 9 Jan 2021 05:28:58 -0700
+ 15.1.1979.3; Sat, 9 Jan 2021 05:29:07 -0700
+Received: from localhost (10.10.115.15) by chn-vm-ex04.mchp-main.com
+ (10.10.85.152) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Sat, 9 Jan 2021 05:29:06 -0700
 From:   Viswas G <Viswas.G@microchip.com>
 To:     <linux-scsi@vger.kernel.org>
 CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
@@ -55,9 +55,9 @@ CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
         <yuuzheng@google.com>, <vishakhavc@google.com>, <radha@google.com>,
         <akshatzen@google.com>, <bjashnani@google.com>,
         <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH v2 3/8] pm80xx: check main config table address
-Date:   Sat, 9 Jan 2021 18:08:44 +0530
-Message-ID: <20210109123849.17098-4-Viswas.G@microchip.com>
+Subject: [PATCH v2 7/8] pm80xx: Log SATA IOMB completion status on failure.
+Date:   Sat, 9 Jan 2021 18:08:48 +0530
+Message-ID: <20210109123849.17098-8-Viswas.G@microchip.com>
 X-Mailer: git-send-email 2.16.3
 In-Reply-To: <20210109123849.17098-1-Viswas.G@microchip.com>
 References: <20210109123849.17098-1-Viswas.G@microchip.com>
@@ -67,261 +67,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: akshatzen <akshatzen@google.com>
+From: Vishakha Channapattan <vishakhavc@google.com>
 
-pm8001 driver initializes main configuration, general status, inbound
-queue and outbound queue table address based on value read from
-MSGU_SCRATCH_PAD_0 register.
+Added a log message in sata completion path to log the status of failed
+command. If the status does not match any expected status, another
+message will be logged.
 
-We should validate these addresses before dereferencing them.
+On IO failure with known status, log message will be
 
-This change adds two validations:
-1. Check if main configuration table offset lies within the pcibar
-mapped
-2. Check if first dword of main configuration table reads "PMCS"
+[ 1712.951735] pm80xx0:: mpi_sata_completion 2269: IO failed device_id
+16385 status 0x1 tag XX
 
-There are two calls to init_pci_device_addresses() done during
-pm8001_pci_probe() in this sequence:
-1. First inside chip_soft_rst, where if init_pci_device_addresses fails
-we will go ahead assuming MPI state is not ready and reset the device as
-long as bootloader is okay.  This gives chance to second call of
-init_pci_device_addresses to set up the addresses after reset.
+If the firmware returns unexpected status, log message of the following
+format will be logged -
 
-2. The second call is via pm80xx_chip_init, after soft reset is done and
-firmware is checked to be ready. Once that is done we are safe to go
-ahead and initialize default table values and use them.
+[ 1712.951735] pm80xx0:: mpi_sata_completion XXXX: Unknown status
+device_id XXXXX status 0xX tag XX
 
-Tested:
-
-1. Enabled debugging logs and observed no issues during initialization,
-with a controller with No issues.
-
-pm80xx0:: pm8001_setup_msix 1034: pci_alloc_irq_vectors request ret:64
-no of intr 64
-pm80xx0:: init_pci_device_addresses 917: Scratchpad 0 Offset: 0x2000
-value 0x40002000
-pm80xx0:: init_pci_device_addresses 925: Scratchpad 0 PCI BAR: 0
-pm80xx0:: init_pci_device_addresses 952: VALID main config signature
-0x53434d50
-pm80xx0:: init_pci_device_addresses 975: GST OFFSET 0xc4
-pm80xx0:: init_pci_device_addresses 978: INBND OFFSET 0x20000128
-pm80xx0:: init_pci_device_addresses 981: OBND OFFSET 0x24000928
-pm80xx0:: init_pci_device_addresses 984: IVT OFFSET 0x8001408
-pm80xx0:: init_pci_device_addresses 987: PSPA OFFSET 0x8001608
-pm80xx0:: init_pci_device_addresses 991: addr - main cfg (ptrval)
-general status (ptrval)
-pm80xx0:: init_pci_device_addresses 995: addr - inbnd (ptrval) obnd
-(ptrval)
-pm80xx0:: init_pci_device_addresses 999: addr - pspa (ptrval) ivt
-(ptrval)
-pm80xx0:: pm80xx_chip_soft_rst 1446: reset register before write : 0x0
-pm80xx0:: pm80xx_chip_soft_rst 1478: reset register after write 0x40
-pm80xx0:: pm80xx_chip_soft_rst 1544: SPCv soft reset Complete
-pm80xx0:: init_pci_device_addresses 917: Scratchpad 0 Offset: 0x2000
-value 0x40002000
-pm80xx0:: init_pci_device_addresses 925: Scratchpad 0 PCI BAR: 0
-pm80xx0:: init_pci_device_addresses 952: VALID main config signature
-0x53434d50
-pm80xx0:: init_pci_device_addresses 975: GST OFFSET 0xc4
-pm80xx0:: init_pci_device_addresses 978: INBND OFFSET 0x20000128
-pm80xx0:: init_pci_device_addresses 981: OBND OFFSET 0x24000928
-pm80xx0:: init_pci_device_addresses 984: IVT OFFSET 0x8001408
-pm80xx0:: init_pci_device_addresses 987: PSPA OFFSET 0x8001608
-pm80xx0:: init_pci_device_addresses 991: addr - main cfg (ptrval)
-general status (ptrval)
-pm80xx0:: init_pci_device_addresses 995: addr - inbnd (ptrval) obnd
-(ptrval)
-pm80xx0:: init_pci_device_addresses 999: addr - pspa (ptrval) ivt
-(ptrval)
-pm80xx0:: pm80xx_chip_init 1329: MPI initialize successful!
-
-2. Tested controller with firmware known to have initialization issue
-and observed no crashes with this fix
-
-pm80xx 0000:01:00.0: pm80xx: driver version 0.1.38
-pm80xx 0000:01:00.0: Removing from 1:1 domain
-pm80xx 0000:01:00.0: Requesting non-1:1 mappings
-pm80xx0:: init_pci_device_addresses 948: BAD main config signature 0x0
-pm80xx0:: mpi_uninit_check 1365: Failed to init pci addresses
-pm80xx0:: pm80xx_chip_soft_rst 1435: MPI state is not ready
-scratch:0:8:62a01000:0
-pm80xx0:: pm80xx_chip_soft_rst 1518: Firmware is not ready!
-pm80xx0:: pm80xx_chip_soft_rst 1532: iButton Feature is not Available!!!
-pm80xx0:: pm80xx_chip_init 1301: Firmware is not ready!
-pm80xx0:: pm8001_pci_probe 1215: chip_init failed [ret: -16]
-pm80xx: probe of 0000:01:00.0 failed with error -16
-pm80xx 0000:07:00.0: pm80xx: driver version 0.1.38
-pm80xx 0000:07:00.0: Removing from 1:1 domain
-pm80xx 0000:07:00.0: Requesting non-1:1 mappings
-scsi host6: pm80xx
-pm80xx1:: pm8001_setup_sgpio 5568: failed sgpio_req timeout
-pm80xx1:: mpi_phy_start_resp 3447: phy start resp status:0x0, phyid:0x0
-pm80xx 0000:08:00.0: pm80xx: driver version 0.1.38
-pm80xx 0000:08:00.0: Removing from 1:1 domain
-pm80xx 0000:08:00.0: Requesting non-1:1 mappings
-
-3. Without this fix we observe crash on the same controller.
-
-pm80xx 0000:01:00.0: pm80xx: driver version 0.1.38
-pm80xx 0000:01:00.0: Removing from 1:1 domain
-pm80xx 0000:01:00.0: Requesting non-1:1 mappings
-[<ffffffffc0451b3b>] pm80xx_chip_soft_rst+0x6b/0x4c0 [pm80xx]
-[<ffffffffc043a933>] pm8001_pci_probe+0xa43/0x1630 [pm80xx]
-RIP: 0010:pm80xx_chip_soft_rst+0x71/0x4c0 [pm80xx]
-[<ffffffffc0451b3b>] ? pm80xx_chip_soft_rst+0x6b/0x4c0 [pm80xx]
-[<ffffffffc043a933>] pm8001_pci_probe+0xa43/0x1630 [pm80xx]
-pm80xx0:: mpi_uninit_check 1339: TIMEOUT:IBDB value/=2
-pm80xx0:: pm80xx_chip_soft_rst 1387: MPI state is not ready
-scratch:0:8:62a01000:0
-pm80xx0:: pm80xx_chip_soft_rst 1470: Firmware is not ready!
-pm80xx0:: pm80xx_chip_soft_rst 1484: iButton Feature is not Available!!!
-pm80xx0:: pm80xx_chip_init 1266: Firmware is not ready!
-pm80xx0:: pm8001_pci_probe 1207: chip_init failed [ret: -16]
-pm80xx: probe of 0000:01:00.0 failed with error -16
-
-Signed-off-by: akshatzen <akshatzen@google.com>
+Signed-off-by: Vishakha Channapattan <vishakhavc@google.com>
 Signed-off-by: Viswas G <Viswas.G@microchip.com>
 Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
+Signed-off-by: Ashokkumar N <Ashokkumar.N@microchip.com>
 Signed-off-by: Radha Ramachandran <radha@google.com>
 Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 11 +++++---
- drivers/scsi/pm8001/pm80xx_hwi.c  | 53 ++++++++++++++++++++++++++++++++++++---
- 2 files changed, 58 insertions(+), 6 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index ee2de177d0d0..d21078ca7fb3 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -466,9 +466,12 @@ static int pm8001_ioremap(struct pm8001_hba_info *pm8001_ha)
- 			pm8001_ha->io_mem[logicalBar].memvirtaddr =
- 				ioremap(pm8001_ha->io_mem[logicalBar].membase,
- 				pm8001_ha->io_mem[logicalBar].memsize);
--			pm8001_dbg(pm8001_ha, INIT,
--				   "PCI: bar %d, logicalBar %d\n",
-+			if (!pm8001_ha->io_mem[logicalBar].memvirtaddr) {
-+				pm8001_dbg(pm8001_ha, INIT,
-+					"Failed to ioremap bar %d, logicalBar %d",
- 				   bar, logicalBar);
-+				return -ENOMEM;
-+			}
- 			pm8001_dbg(pm8001_ha, INIT,
- 				   "base addr %llx virt_addr=%llx len=%d\n",
- 				   (u64)pm8001_ha->io_mem[logicalBar].membase,
-@@ -540,9 +543,11 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
- 			tasklet_init(&pm8001_ha->tasklet[j], pm8001_tasklet,
- 				(unsigned long)&(pm8001_ha->irq_vector[j]));
- #endif
--	pm8001_ioremap(pm8001_ha);
-+	if (pm8001_ioremap(pm8001_ha))
-+		goto failed_pci_alloc;
- 	if (!pm8001_alloc(pm8001_ha, ent))
- 		return pm8001_ha;
-+failed_pci_alloc:
- 	pm8001_free(pm8001_ha);
- 	return NULL;
- }
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 86a3d483749c..7d0eada11d3c 100644
+index df679e36954a..e7fef42b4f6c 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -1115,7 +1115,7 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
- 	return ret;
- }
+@@ -2437,10 +2437,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		return;
+ 	}
  
--static void init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
-+static int init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
- {
- 	void __iomem *base_addr;
- 	u32	value;
-@@ -1124,15 +1124,48 @@ static void init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
- 	u32	pcilogic;
- 
- 	value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_0);
-+
-+	/**
-+	 * lower 26 bits of SCRATCHPAD0 register describes offset within the
-+	 * PCIe BAR where the MPI configuration table is present
-+	 */
- 	offset = value & 0x03FFFFFF; /* scratch pad 0 TBL address */
- 
- 	pm8001_dbg(pm8001_ha, DEV, "Scratchpad 0 Offset: 0x%x value 0x%x\n",
- 		   offset, value);
-+	/**
-+	 * Upper 6 bits describe the offset within PCI config space where BAR
-+	 * is located.
-+	 */
- 	pcilogic = (value & 0xFC000000) >> 26;
- 	pcibar = get_pci_bar_index(pcilogic);
- 	pm8001_dbg(pm8001_ha, INIT, "Scratchpad 0 PCI BAR: %d\n", pcibar);
-+
-+	/**
-+	 * Make sure the offset falls inside the ioremapped PCI BAR
-+	 */
-+	if (offset > pm8001_ha->io_mem[pcibar].memsize) {
+-	if (unlikely(status))
+-		pm8001_dbg(pm8001_ha, IOERR,
+-			   "status:0x%x, tag:0x%x, task::0x%p\n",
+-			   status, tag, t);
++	if (status != IO_SUCCESS) {
 +		pm8001_dbg(pm8001_ha, FAIL,
-+			"Main cfg tbl offset outside %u > %u\n",
-+				offset, pm8001_ha->io_mem[pcibar].memsize);
-+		return -EBUSY;
++			"IO failed device_id %u status 0x%x tag %d\n",
++			pm8001_dev->device_id, status, tag);
 +	}
- 	pm8001_ha->main_cfg_tbl_addr = base_addr =
- 		pm8001_ha->io_mem[pcibar].memvirtaddr + offset;
-+
-+	/**
-+	 * Validate main configuration table address: first DWord should read
-+	 * "PMCS"
-+	 */
-+	value = pm8001_mr32(pm8001_ha->main_cfg_tbl_addr, 0);
-+	if (memcmp(&value, "PMCS", 4) != 0) {
-+		pm8001_dbg(pm8001_ha, FAIL,
-+			"BAD main config signature 0x%x\n",
-+				value);
-+		return -EBUSY;
-+	}
-+	pm8001_dbg(pm8001_ha, INIT,
-+			"VALID main config signature 0x%x\n", value);
- 	pm8001_ha->general_stat_tbl_addr =
- 		base_addr + (pm8001_cr32(pm8001_ha, pcibar, offset + 0x18) &
- 					0xFFFFFF);
-@@ -1171,6 +1204,7 @@ static void init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
- 	pm8001_dbg(pm8001_ha, INIT, "addr - pspa %p ivt %p\n",
- 		   pm8001_ha->pspa_q_tbl_addr,
- 		   pm8001_ha->ivt_tbl_addr);
-+	return 0;
- }
  
- /**
-@@ -1438,7 +1472,12 @@ static int pm80xx_chip_init(struct pm8001_hba_info *pm8001_ha)
- 	pm8001_ha->controller_fatal_error = false;
- 
- 	/* Initialize pci space address eg: mpi offset */
--	init_pci_device_addresses(pm8001_ha);
-+	ret = init_pci_device_addresses(pm8001_ha);
-+	if (ret) {
-+		pm8001_dbg(pm8001_ha, FAIL,
-+			"Failed to init pci addresses");
-+		return ret;
-+	}
- 	init_default_table_values(pm8001_ha);
- 	read_main_config_table(pm8001_ha);
- 	read_general_status_table(pm8001_ha);
-@@ -1482,7 +1521,15 @@ static int mpi_uninit_check(struct pm8001_hba_info *pm8001_ha)
- 	u32 max_wait_count;
- 	u32 value;
- 	u32 gst_len_mpistate;
--	init_pci_device_addresses(pm8001_ha);
-+	int ret;
-+
-+	ret = init_pci_device_addresses(pm8001_ha);
-+	if (ret) {
-+		pm8001_dbg(pm8001_ha, FAIL,
-+			"Failed to init pci addresses");
-+		return ret;
-+	}
-+
- 	/* Write bit1=1 to Inbound DoorBell Register to tell the SPC FW the
- 	table is stop */
- 	pm8001_cw32(pm8001_ha, 0, MSGU_IBDB_SET, SPCv_MSGU_CFG_TABLE_RESET);
+ 	/* Print sas address of IO failed device */
+ 	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
+@@ -2762,7 +2763,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 			atomic_dec(&pm8001_dev->running_req);
+ 		break;
+ 	default:
+-		pm8001_dbg(pm8001_ha, DEVIO, "Unknown status 0x%x\n", status);
++		pm8001_dbg(pm8001_ha, DEVIO,
++				"Unknown status device_id %u status 0x%x tag %d\n",
++			pm8001_dev->device_id, status, tag);
+ 		/* not allowed case. Therefore, return failed status */
+ 		ts->resp = SAS_TASK_COMPLETE;
+ 		ts->stat = SAS_DEV_NO_RESPONSE;
 -- 
 2.16.3
 
