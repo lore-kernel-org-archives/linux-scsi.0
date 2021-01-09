@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F9E4C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70B1AC433E6
 	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 12:30:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3557523A5B
+	by mail.kernel.org (Postfix) with ESMTP id 4BFB023A63
 	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 12:30:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726432AbhAIMaa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Jan 2021 07:30:30 -0500
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:45867 "EHLO
+        id S1726437AbhAIMag (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Jan 2021 07:30:36 -0500
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:63795 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725983AbhAIMaa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jan 2021 07:30:30 -0500
+        with ESMTP id S1725983AbhAIMag (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jan 2021 07:30:36 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1610195429; x=1641731429;
+  t=1610195436; x=1641731436;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version;
-  bh=crgptfdo4ZvB/eP/lKCiawEC/FxPXC3A+NiZk4ydCYw=;
-  b=yfEEP0wcIfiaDv3PtygdHkEXtS+8NDy+seKm8L/1cq9EXjGZaJ984cYp
-   xLOV8z6ys4DBpO66bQUEo4kcAcNDlGSk1AUqIXG6xTVgulIxlezzJTgnx
-   7TVllunp4y/U4qaOT286E1WDwL38rDLQnA2j5Z/B1l1cueUdlBfYhumNF
-   sVmu5CJRbWIvJ35vxmzKOsb7qseB+SnHVqFlUk/UlTsha2kwkWXn1TjXG
-   0uIQ0NLDiOAgLI9owURUYIVC1yPuJCu+ayIbSuiMvF0pHb8etEOGRR6NN
-   G8uMQuSq418Z3JcgbyD6z5HTC2rzOq5NQkTkslDmf4DBDFDxTze4emfnK
+  bh=5ya5BFz+18adfq5rPPGG4XfJwN2WDmPc77XTVR5z2IE=;
+  b=qAnl2qfRSx3gBw/wlEadcWFBo0mFQ3bXOajQqVehrUI23xfqz+17kUAS
+   qVS0weXKAYoeUqV9GW8gSL9ccuC30DIXgFALJnjlaX2gwu3ObqSv89opk
+   mfipmmFynZIjISWcmLZJLvqPlk1IKhI6Tk4FaYHDYon8f1Lcj1Jze+/Qv
+   oPBayJ1Z46A42yCZ64MV11fw2vgMMJI2MFtGU/A3vnJqKL2RwhSz6Vd4C
+   Oo/KzhOxmneDRLfjeJ2xj0Ll/2zy44UA/3bZM6kCuIb7gFDLy68hqLVVN
+   bdwEmQ6v0nAsZP/X8c8118gEEkWATJ4Dzi8GobuUfRgDqjFW870KHrtGH
    A==;
-IronPort-SDR: 2UKqalPbVB94ePdmiP4HMhX5o2W+t+gLhNEqdWhz73inT/zJlQF4mCd4610xRiOoPtTm7Fy6/M
- W9Z43pVIlW0+yxXSJpAKePTDW8DVsoI8wORXBxq/zN1Rx443wDOyO2ISApaSLKhHpT0OYSbhYf
- rbvezR6hk3lfBStBuBanSezupCA3NSUboGb4B4VqPAuiiH/4pEx5L1Q/o9hXve8618s8I1mNU+
- 2rOwEWO2/pCw9zGBS8FIWOK8MO+IHcy5M5LGfFBsMixa8ty+ZXAXanmtvUSItwKGkNfALljlyq
- YLY=
+IronPort-SDR: FyLFuRIztOx7o/IBCP4A/oCbKZkxjWC+Mp4Fth29UXYabh+CSeLL1Q+pd4VUZxIx1/Aw5h5pHo
+ KKXIXXNSurtLtwL6J8o4DZmRYAm0jZvYpd+IavDInCZ2BTCLAYEezR0hFKK0bH7De9LMaOTCsS
+ Dnfoohjum0KFP8E5bF5hz9WUlvbi6WO11zMRphLruK0JB/ghwUcPTC4QaCb+kaSa+Tls8boAEd
+ wAyLGpVbk5Glhm4cs1xvxZbRtRt11uMQKOgaZtQp47djc9Wdqf9FtjGVkrL1JfsLoBS2rLafAv
+ dIg=
 X-IronPort-AV: E=Sophos;i="5.79,333,1602572400"; 
-   d="scan'208";a="105371470"
+   d="scan'208";a="39871685"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 09 Jan 2021 05:29:07 -0700
-Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 09 Jan 2021 05:29:03 -0700
+Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+ chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Sat, 9 Jan 2021 05:29:07 -0700
-Received: from localhost (10.10.115.15) by chn-vm-ex04.mchp-main.com
- (10.10.85.152) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Sat, 9 Jan 2021 05:29:06 -0700
+ 15.1.1979.3; Sat, 9 Jan 2021 05:29:03 -0700
+Received: from localhost (10.10.115.15) by chn-vm-ex01.mchp-main.com
+ (10.10.85.143) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Sat, 9 Jan 2021 05:29:02 -0700
 From:   Viswas G <Viswas.G@microchip.com>
 To:     <linux-scsi@vger.kernel.org>
 CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
@@ -55,9 +55,9 @@ CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
         <yuuzheng@google.com>, <vishakhavc@google.com>, <radha@google.com>,
         <akshatzen@google.com>, <bjashnani@google.com>,
         <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH v2 7/8] pm80xx: Log SATA IOMB completion status on failure.
-Date:   Sat, 9 Jan 2021 18:08:48 +0530
-Message-ID: <20210109123849.17098-8-Viswas.G@microchip.com>
+Subject: [PATCH v2 5/8] pm80xx: fix driver fatal dump failure.
+Date:   Sat, 9 Jan 2021 18:08:46 +0530
+Message-ID: <20210109123849.17098-6-Viswas.G@microchip.com>
 X-Mailer: git-send-email 2.16.3
 In-Reply-To: <20210109123849.17098-1-Viswas.G@microchip.com>
 References: <20210109123849.17098-1-Viswas.G@microchip.com>
@@ -67,64 +67,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Vishakha Channapattan <vishakhavc@google.com>
+The fatal dump function pm80xx_get_fatal_dump() has two issues that
+result in the fatal dump not being completed successfully.
 
-Added a log message in sata completion path to log the status of failed
-command. If the status does not match any expected status, another
-message will be logged.
+1. When trying collect fatal_logs from the application it is getting
+failed, because we are not shifting MEMBASE-II register properly.
+Once we read 64K region of data we have to shift the MEMBASE-II register
+and read the next chunk of data, then only we would be able to get
+complete data.
 
-On IO failure with known status, log message will be
+2. If timeout occurs our application will get stuck because we are not
+handling this case. In this patch it resolves all these issues.
 
-[ 1712.951735] pm80xx0:: mpi_sata_completion 2269: IO failed device_id
-16385 status 0x1 tag XX
-
-If the firmware returns unexpected status, log message of the following
-format will be logged -
-
-[ 1712.951735] pm80xx0:: mpi_sata_completion XXXX: Unknown status
-device_id XXXXX status 0xX tag XX
-
-Signed-off-by: Vishakha Channapattan <vishakhavc@google.com>
 Signed-off-by: Viswas G <Viswas.G@microchip.com>
 Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
 Signed-off-by: Ashokkumar N <Ashokkumar.N@microchip.com>
-Signed-off-by: Radha Ramachandran <radha@google.com>
 Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index df679e36954a..e7fef42b4f6c 100644
+index 7d0eada11d3c..407c0cf6ab5f 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -2437,10 +2437,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		return;
+@@ -349,10 +349,15 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
+ 				sprintf(
+ 				pm8001_ha->forensic_info.data_buf.direct_data,
+ 				"%08x ", 0xFFFFFFFF);
+-				pm8001_cw32(pm8001_ha, 0,
++				return((char *)pm8001_ha->forensic_info.data_buf.direct_data -
++						(char *)buf);
++			}
++	/* reset fatal_forensic_shift_offset back to zero and reset MEMBASE 2 register to zero */
++			pm8001_ha->fatal_forensic_shift_offset = 0; /* location in 64k region */
++			pm8001_cw32(pm8001_ha, 0,
+ 					MEMBASE_II_SHIFT_REGISTER,
+ 					pm8001_ha->fatal_forensic_shift_offset);
+-			}
++		}
+ 			/* Read the next block of the debug data.*/
+ 			length_to_read = pm8001_mr32(fatal_table_address,
+ 			MPI_FATAL_EDUMP_TABLE_ACCUM_LEN) -
+@@ -373,13 +378,12 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
+ 								= 0;
+ 				pm8001_ha->forensic_info.data_buf.read_len = 0;
+ 			}
+-		}
  	}
+ 	offset = (int)((char *)pm8001_ha->forensic_info.data_buf.direct_data
+ 			- (char *)buf);
+ 	pm8001_dbg(pm8001_ha, IO, "get_fatal_spcv: return4 0x%x\n", offset);
+-	return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
+-		(char *)buf;
++	return ((char *)pm8001_ha->forensic_info.data_buf.direct_data -
++		(char *)buf);
+ }
  
--	if (unlikely(status))
--		pm8001_dbg(pm8001_ha, IOERR,
--			   "status:0x%x, tag:0x%x, task::0x%p\n",
--			   status, tag, t);
-+	if (status != IO_SUCCESS) {
-+		pm8001_dbg(pm8001_ha, FAIL,
-+			"IO failed device_id %u status 0x%x tag %d\n",
-+			pm8001_dev->device_id, status, tag);
-+	}
- 
- 	/* Print sas address of IO failed device */
- 	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
-@@ -2762,7 +2763,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 			atomic_dec(&pm8001_dev->running_req);
- 		break;
- 	default:
--		pm8001_dbg(pm8001_ha, DEVIO, "Unknown status 0x%x\n", status);
-+		pm8001_dbg(pm8001_ha, DEVIO,
-+				"Unknown status device_id %u status 0x%x tag %d\n",
-+			pm8001_dev->device_id, status, tag);
- 		/* not allowed case. Therefore, return failed status */
- 		ts->resp = SAS_TASK_COMPLETE;
- 		ts->stat = SAS_DEV_NO_RESPONSE;
+ /* pm80xx_get_non_fatal_dump - dump the nonfatal data from the dma
 -- 
 2.16.3
 
