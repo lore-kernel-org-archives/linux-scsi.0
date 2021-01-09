@@ -2,161 +2,144 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01812C433E0
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 20:41:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7171EC433DB
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 20:53:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF4C523B00
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 20:41:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27A6023B01
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 20:53:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726253AbhAIUld (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Jan 2021 15:41:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39978 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726001AbhAIUld (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jan 2021 15:41:33 -0500
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98A37C061786;
-        Sat,  9 Jan 2021 12:40:52 -0800 (PST)
-Received: by mail-wm1-x331.google.com with SMTP id v14so10506661wml.1;
-        Sat, 09 Jan 2021 12:40:52 -0800 (PST)
+        id S1726245AbhAIUx1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Jan 2021 15:53:27 -0500
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:15997 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726062AbhAIUx0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jan 2021 15:53:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1610226380; x=1641762380;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=a6JK6xLwxXbRs+xrLxYv7QCKvOd7dYs3dfgVMljvLJ4=;
+  b=VcE4Q+BHfvS2kb/7Kc+D9asoDBRrgE+7wMCdSeEOt+Bgt+bRNZeJvS9g
+   ydp156wwDMJa2HI5J1dbmT1hYzbEfXJf8j+fp23znNIv3CU5cYCmSvezK
+   g61BqWnZyr+fmsDjqvvdhznP8ZjdvdXrEueOmiN9lpFg/bCtVv4w/m6U3
+   KqcyZ+ZHfzq7TUlxXdxPo9Wf2OsXOT0SA7WgyRYw6O2yGu4G5ZRDeVrkq
+   9BAYHbodfXzKFRoFM86CAR+C4YRErnQn4NrKFjf6DYeLNzI9oBHKfjg7I
+   LnrIPHT/EC7qSC9CaGb/PABEf9teZJjemCpI9IJHDt1VC8l8y2y30pu/w
+   g==;
+IronPort-SDR: fEdzt2Z6FGpA5oxeeOII9i+qPS11EIyJi2+k7meZdgPnrM2Y/UUDF1jYQM4QtN6J8pSkn4ewYQ
+ jHGlXbBcnPm/XNzo6/fGDVzTVWaE6sW4mzLGtWZVy0zhFeQZWUiUQRTdJGR9grWgimlsEKkapn
+ D54vmF4o9hsTy9KUXbrMc/lGKx2N2xMcvE+RKkvjZwbORETT4bDtVjbVrJoREdkJMASfjDvN6T
+ JZtAQ3VYXvtAAldJ0Ov27lwbhOh68wMLQq9MXQlFt8YKmSH3uzT3zcZk42CAjfFc8fIbK0umnN
+ tS8=
+X-IronPort-AV: E=Sophos;i="5.79,334,1602518400"; 
+   d="scan'208";a="260925140"
+Received: from mail-bn8nam11lp2174.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.174])
+  by ob1.hgst.iphmx.com with ESMTP; 10 Jan 2021 05:04:40 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=VgQfIHYoRjjyQdLg/PQNFhlqNV7HSAS0Krq+uaKM/DtfIhnPh6q6SDGPoq2LieWYV1VOmbK9Dc+ksPy4VOe7xcagv5S2PjZXGlziZbcgI3f9CgEf7Icqq2Wl9zZjsDe1Qpg6xz5b/5BB0PO267QDr2QMTTcz799wK24iJrfgDh+CuPbO+/EYscbkUc/gc5FjA/llYkZttxROLctnyqU8xRz+eX/LlEkL+mlxO3XKDUZXIg7CAQEUgnXB/UHWNYNi6DUcb4mFXdH40PqkTexSuhH8ClqvnAkG9l7Ix2R765d5AlIHK7GLGvSB375TpOZK89er/18a84w4PUVAUHvvCg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=a6JK6xLwxXbRs+xrLxYv7QCKvOd7dYs3dfgVMljvLJ4=;
+ b=AEuCUswqiaq/RZUxtxCd3n0Cf03mceX17E+4oCMPIzoL0tATz8Uq29cAtO/2ZevEiF3XXkhgkw85ql5FnTbnS0A7ZzNKyTPph1E8xVj2NpONLQ6lGNcWsql2qa6R1Rg1s9BIQ64O2AP0CrGPOLgVLfZk9TTGu5YByazdEjEQyHXPRqR6bOVtf8z1TvnzLPmtpyQIZfb7gAQmFSfJGxJUWQYBlEXitheDuv97xQgsCFU0vqaXxGCnsFNjmGf4oSEguOTBeHNEAzocFCJ2U2EjdZfaIDRjauHNU26232O+R1WclIsfyW/dOYi/GNZqPErtsGPJXiuo9ndbJ8xQ3reSew==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:autocrypt:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=Ib82eIyanEEkt8I4OWdosJ1EHFYlnvzj4hshfHKZ+yA=;
-        b=pAr7qg5K7ex6JHMgvJwLgGIE7KvhsaELwWZy/UMO9LlwANmuqGSr/CxpHsbkdAxPw7
-         qfV137NMqGysLhk2RKnC5+am7MY6IJfksScCRYOZ8MiHWpc8rS5RBGN0gjua0qoX4+9a
-         XmhOm+V0ABrt+S4E6tNmvoflk95Mi8Z57tk3k+n3wUzrWibzpn5di6zcckYoNCLm07CA
-         jP4OrRZ9byN7KotFnRv0bPNTKxYxPnI+NZVUptUiyIR+XzeseWoiDM4m3wu9C0xMynIo
-         39gO7Nykx/Ya+fKUAZYx16zAMUHkue9pEMfkpUtWEpdLCAsNurzg7+GSll8SCmCzzkDA
-         uOUQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=Ib82eIyanEEkt8I4OWdosJ1EHFYlnvzj4hshfHKZ+yA=;
-        b=cnhzqMNs4DII7QvAjfSGnO4OrRy7qIDLNmwv6IK6rvimA5ibsIcIRRKtMROmvmNJmM
-         rpB2aqj8OJlkkiLeNM/6uP0Tfhbp0NUFZARo9hYJhXyD4Qr9maYZvYvJiEp6QmqY0sMM
-         nEzkw2NQyPw2LH+VvOfolVWr2f31ncQyKiIpQ0w1iEsceTX52CdTUYtMq26TjT+k6bQ0
-         eUA4PMMNX6BUxmxR8yt5w9yiddlUqxdUlDdt4W3vQpg72EVpz8GRiaMbcszIw5pEL3HK
-         cj3k1bPHhVf4iln8Rh+Mor4iYI/Q3XGC/+t6m+4y3Iy84bAol5AkyX5M9VZaduXrM9HY
-         +fVA==
-X-Gm-Message-State: AOAM532YTzHUjCp2nPK7KKEOhj81+t+mzraRWpEbasnndCDXtkzInDqF
-        U0XUbFVCVIlxNB7sCyZycX/e3TLk9DjBJCSq
-X-Google-Smtp-Source: ABdhPJyU5uEHFcmyFjb3oynOlR4xgz6vxFwYo6o0ODoz0OEt4Zl9I2u6RrOWggwV+nsTKIgSXyLvSQ==
-X-Received: by 2002:a7b:c3c8:: with SMTP id t8mr8268783wmj.88.1610224851184;
-        Sat, 09 Jan 2021 12:40:51 -0800 (PST)
-Received: from [192.168.8.114] ([85.255.237.6])
-        by smtp.gmail.com with ESMTPSA id w189sm16858374wmg.31.2021.01.09.12.40.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 09 Jan 2021 12:40:50 -0800 (PST)
-Subject: Re: [PATCH] target/file: don't zero iter before iov_iter_bvec
-To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=a6JK6xLwxXbRs+xrLxYv7QCKvOd7dYs3dfgVMljvLJ4=;
+ b=FCCAD01X1sB84juKrp/sGHOi0qBlTJAOq0yku/TMfhyz3OX0oSQoG7q18ynMG4J2CrYLqciJmYSs4/9uZy+xfiJPZj2/EezXAEEpOYyF/C+ehqcvyGkiP32aq/X9vl5I5UMBTeeZvhabEXPqfH9TawX6fFTXGAaq64THHik+kqI=
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
+ by BY5PR04MB6961.namprd04.prod.outlook.com (2603:10b6:a03:22b::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3742.9; Sat, 9 Jan
+ 2021 20:52:15 +0000
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::716c:4e0c:c6d1:298a]) by BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::716c:4e0c:c6d1:298a%6]) with mapi id 15.20.3742.009; Sat, 9 Jan 2021
+ 20:52:15 +0000
+From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+To:     Pavel Begunkov <asml.silence@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] target/file: don't zero iter before iov_iter_bvec
+Thread-Topic: [PATCH] target/file: don't zero iter before iov_iter_bvec
+Thread-Index: AQHW5qBkaWm3Wnjfmk+XiYs/GS5+eQ==
+Date:   Sat, 9 Jan 2021 20:52:15 +0000
+Message-ID: <BYAPR04MB49653C92C7925B8C3EAEF3CE86AD0@BYAPR04MB4965.namprd04.prod.outlook.com>
 References: <34cd22d6cec046e3adf402accb1453cc255b9042.1610207523.git.asml.silence@gmail.com>
  <BYAPR04MB4965F4DCF59E5225CF17322D86AD0@BYAPR04MB4965.namprd04.prod.outlook.com>
-From:   Pavel Begunkov <asml.silence@gmail.com>
-Autocrypt: addr=asml.silence@gmail.com; prefer-encrypt=mutual; keydata=
- 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 bA==
-Message-ID: <4d063dde-c710-44e3-31b9-8fb6b7e1d952@gmail.com>
-Date:   Sat, 9 Jan 2021 20:37:17 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.0
-MIME-Version: 1.0
-In-Reply-To: <BYAPR04MB4965F4DCF59E5225CF17322D86AD0@BYAPR04MB4965.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
+ <4d063dde-c710-44e3-31b9-8fb6b7e1d952@gmail.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: gmail.com; dkim=none (message not signed)
+ header.d=none;gmail.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [199.255.45.62]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 49a88bea-d636-4365-8859-08d8b4e07210
+x-ms-traffictypediagnostic: BY5PR04MB6961:
+x-microsoft-antispam-prvs: <BY5PR04MB6961D1EA9DBE711BCB39D9DF86AD0@BY5PR04MB6961.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:605;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: dG8X2Fatk7XQ9kvdZfzXeBdR00HJVZI/9V4vcv8HXUBlIqodAnbgd5poHvZah4nIuzil2wzBdZ0EpXdg7BsO2bIpecSbZ/ufYqVPiSMwqTpbNQse2ODdfh7Ac8spf5sjwYpFa42cXZmkirskrb8akJeLJERvNfC8alnaX2LkB73cfMeW4FTzty2BGxGfS9BlheJiOISPfA8MMKXCWif7gOb1eJjsPqwbB53VGeQ8Y6Q/Q135s2X8UA3MPBxufh/xgNvyHHWeISP4rA9fDCSWdhVHYkr38K5CjAQOKUP2hJ5dmBtyp5Nuj0c+9LcN4Akbr953sIJ4VUChSVZ0/MMmm/N3ukHRnl7Ek3mJI0RFMlzh1HXj8bbOae0WqeoZG15jhpyoFfaXhQDVhNgmuFme3Q==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(366004)(376002)(396003)(136003)(39860400002)(66556008)(478600001)(2906002)(8936002)(53546011)(6506007)(186003)(26005)(110136005)(54906003)(316002)(86362001)(55016002)(71200400001)(33656002)(9686003)(8676002)(7696005)(52536014)(76116006)(66446008)(4326008)(4744005)(5660300002)(66476007)(64756008)(66946007);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?qHRr21L76EIwma8ShmYdd2OGjagterdg5Ry5br/mmxEQFLQjoQd3Zp1OkVvs?=
+ =?us-ascii?Q?iwM4F88P/H0THUYcgK1G8DRyHO+3ejHHhPF2ADpBzv88vii1lP+afdCOCX2/?=
+ =?us-ascii?Q?jHV3pbSkvrSjvUuA9rmuQlzjYwcmlgyNazYbZ7L/6PZXSjCS2XrtF/KeiBQh?=
+ =?us-ascii?Q?IQ5U17rNBjhSfJUA5QMCBfI+zDJVMRVB8ScMysBgAtwi2TFQJ4Qyomadfc8j?=
+ =?us-ascii?Q?KIjlWHQy2rgL9NCiZEtgM2L0U+QrWQEAt35n7ys60s95lB87sdMB71mnkX1/?=
+ =?us-ascii?Q?mVf4g7Ydal4Ka5TzrujE+n2J+hzxTDg2bbT0eoNOzyiw0RtyrGTWpaEBd2Xy?=
+ =?us-ascii?Q?F3odfqAXKaaZw6UZQTjH3b6wUX++7Jz5T0mRH7ggmsriRatHJps6KtyB0AsJ?=
+ =?us-ascii?Q?YYwBUiuDMY0zuwo1TG6n0RoktYP+EuhGJct/+iIh29FSQyUiRdHKNdVeVYMc?=
+ =?us-ascii?Q?mr/ELMM2H4cqdqjCn1H7UMxWKEySNhRYvLW1zpCl5B83CE30yds6Q+17gnj+?=
+ =?us-ascii?Q?XU7fVpvSQ0VEPiAzw+4gRuiXwj7OiHjEfhaeBY0vvrX0tUmuaRSGAt9kiAfY?=
+ =?us-ascii?Q?P6gbkrlPvmfYBnzhYrxxbBzRkn/0OU+SMT0BF4NDniPzxz5eJhkSZA3oP3OM?=
+ =?us-ascii?Q?U+zZC9zzAl93rCp96xGfdcIyzRo4xrCG6AZhkx9kUV8iRsIfMZBYGOwoIwcL?=
+ =?us-ascii?Q?yoQBbrC+3oK3xBf6CX4OkR+ndc/cqvNxr+Q/EsmY1DH9IEH+u+BWhLEY+28x?=
+ =?us-ascii?Q?51Va5jmiJ/84Ekzn0fhygcQzt121mB+o4NaKtjHTNpXorzpRAbgHo6Ic/Kwv?=
+ =?us-ascii?Q?SbD1s26XqNOp3INUkaizHmb9NpJCpCDJRGuB3bOwoW1TRPA44+oZFLGQlpGO?=
+ =?us-ascii?Q?fKIH/nFK79f22BQ0EMt6HCGXaWj/Z1FPJbYhDGCEvTpr4gHtMKZf2w2WlnFP?=
+ =?us-ascii?Q?DcREeakoqrR5QqGLjEotDg3dAjQDA8ZdSZ0ZOVFk8yeRQKs23tl07wGrWz/Z?=
+ =?us-ascii?Q?CdYg?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 49a88bea-d636-4365-8859-08d8b4e07210
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2021 20:52:15.0718
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: IpeMAOA1WsGK1j6erhKN3dJdNkO5/zXW+CcfUK9S4Ev9mm2AY4r7sy1ShUAL7hz3P1yLVvD2ZniomyJbEQ47Tr9Uj22/qEPbaaoi4+tajjc=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR04MB6961
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/01/2021 20:09, Chaitanya Kulkarni wrote:
-> On 1/9/21 07:59, Pavel Begunkov wrote:
->> iov_iter_bvec() initialises iterators well, no need to pre-zero it
->> beforehand as done in fd_execute_rw_aio(). Compilers can't optimise it
->> out and generate extra code for that (confirmed with assembly).
-> It will be great if we can quantify this optimization with the actual
-> performance
-> numbers.
-
-I expect you won't find any, but such little things can pile up
-into a not-easy-to-spot overhead over time.
-
-In any case, I don't think this requires performance justification
-because it neither makes it less safe or uglier. Those iov_iter*()
-are there to handle initialisation, that's a part of the iter API.
-
->> Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
->> ---
->>  drivers/target/target_core_file.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
->> index cce455929778..5a66854def95 100644
->> --- a/drivers/target/target_core_file.c
->> +++ b/drivers/target/target_core_file.c
->> @@ -267,7 +267,7 @@ fd_execute_rw_aio(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
->>  	struct fd_dev *fd_dev = FD_DEV(dev);
->>  	struct file *file = fd_dev->fd_file;
->>  	struct target_core_file_cmd *aio_cmd;
->> -	struct iov_iter iter = {};
->> +	struct iov_iter iter;
->>  	struct scatterlist *sg;
->>  	ssize_t len = 0;
->>  	int ret = 0, i;
-> 
-
--- 
-Pavel Begunkov
+On 1/9/21 12:40, Pavel Begunkov wrote:=0A=
+> I expect you won't find any, but such little things can pile up=0A=
+> into a not-easy-to-spot overhead over time.=0A=
+=0A=
+That is what I suspected with the resulting assembly. The commit log=0A=
+needs to document that there is no direct impact on the performance=0A=
+which can be seen with this patch, but this is nice to have=0A=
+micro-optimization in the long run.=0A=
+=0A=
+=0A=
