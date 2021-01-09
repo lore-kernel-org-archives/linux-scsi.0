@@ -2,296 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F40C0C433E6
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 04:52:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01636C433E0
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 12:30:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD2CD23A69
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 04:52:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1A78235DD
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 12:30:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726216AbhAIEwh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Jan 2021 23:52:37 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:19080 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725970AbhAIEwh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2021 23:52:37 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1610167935; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=FgEh/5UB5jvRFest+1GLzsAFDbAXmrT8WLnBgnbmy+w=;
- b=cayBszSyRcYJuv/dSkRGSziEYxY4DnjNT7iuIcrRmW+thmPVl10GHrs5WiBDu5hTzI2L+Y8E
- 2AEuEa98vhAOXNxhxLmfSkXVs2ud9yRCvJS2kUQpLQBNm+6KWLi1kiNo06+d+LoxjP5pauNw
- Flg4hk6FfOFTf4q6bjc9BCye2Bs=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 5ff93664e53eb5da8c9e9d07 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 09 Jan 2021 04:51:48
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D9121C4346A; Sat,  9 Jan 2021 04:51:47 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1A659C433CA;
-        Sat,  9 Jan 2021 04:51:46 +0000 (UTC)
+        id S1726357AbhAIMaJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Jan 2021 07:30:09 -0500
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:45867 "EHLO
+        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725983AbhAIMaJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jan 2021 07:30:09 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1610195409; x=1641731409;
+  h=from:to:cc:subject:date:message-id:mime-version;
+  bh=KQ7yH6uBhBUlG4QrD5c7DuEAUfG8RnkAfQpr0H13bWE=;
+  b=ZJ4tVhxELFsubbhyVq0+dKc4mq8RZRs3z6mlj15nmTx4bqjq4h8M43tQ
+   jdUchETmm3IzQerVPErV7lM1BSzmqKwLnoKkLFeCb6huKriPzJzGPNTfn
+   Y4kkckwSUZMPqHsj6wRdcdKwghpQarp5QMASMMGO4dh8jDGbcqEIEoyxz
+   pV+qYbTlVQ5R5aQItzq/ar8QUZ/4sgImJg6gA8mTRUtnVUkD3qC4u224t
+   M1I37Bh3dyWIFQ/XOZQrjuBDasoZFTPDXqQMuM5J5fMS6+OWccDEvuPEj
+   uKYU/6hPeQpPtT1xITcKO7chMjsuFSgUqHhCvnraPyKSQM+sm0QrEkpXX
+   A==;
+IronPort-SDR: TgyXwAOWYG0DbhR36GNEI0E+I/VFlIFEShaZbWT9umCPlZMPpXlMLlywb3VWhBoYy1xu/uHHG4
+ hPcoYZCmHxr8QYcjnfU360iYdqYDXhwLr3oEA3YjtsCAfVIhBhBqdfeEQphb5Ajys1Fk/HnHxS
+ up4QWH2+w8HX7cfRnZ4APviLiAyAQ7Zek+is8I4dmL65NW6xVTEs11mVdduPSeTfMMCUa2CLiw
+ 7ln/QTVc6mkiqlcaSP3BhTAt/7WtASi6o52HoxH7kiBEy4pW3yaUNJKLl5/13HBd9Gr+3re00y
+ h5A=
+X-IronPort-AV: E=Sophos;i="5.79,333,1602572400"; 
+   d="scan'208";a="105371467"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 09 Jan 2021 05:28:53 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1979.3; Sat, 9 Jan 2021 05:28:53 -0700
+Received: from localhost (10.10.115.15) by chn-vm-ex03.mchp-main.com
+ (10.10.85.151) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Sat, 9 Jan 2021 05:28:53 -0700
+From:   Viswas G <Viswas.G@microchip.com>
+To:     <linux-scsi@vger.kernel.org>
+CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
+        <Viswas.G@microchip.com>, <Ruksar.devadi@microchip.com>,
+        <yuuzheng@google.com>, <vishakhavc@google.com>, <radha@google.com>,
+        <akshatzen@google.com>, <bjashnani@google.com>,
+        <jinpu.wang@cloud.ionos.com>
+Subject: [PATCH v2 0/8] pm80xx updates.
+Date:   Sat, 9 Jan 2021 18:08:41 +0530
+Message-ID: <20210109123849.17098-1-Viswas.G@microchip.com>
+X-Mailer: git-send-email 2.16.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Sat, 09 Jan 2021 12:51:45 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bean Huo <huobean@gmail.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        rjw@rjwysocki.net, Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Nitin Rawat <nitirawa@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] scsi: ufs: Protect PM ops and err_handler from user
- access through sysfs
-In-Reply-To: <e69bd5a6b73d5c652130bf4fa077aac0@codeaurora.org>
-References: <1609595975-12219-1-git-send-email-cang@codeaurora.org>
- <1609595975-12219-3-git-send-email-cang@codeaurora.org>
- <80a15afab8024d0b61d312b57585c9322ac91958.camel@gmail.com>
- <7d49c1dfc3f648c484076f3c3a7f4e1e@codeaurora.org>
- <1514403adf486ac8069253c09f45b021bad32e00.camel@gmail.com>
- <f814b71d1d4ea87a72df4851a8190807@codeaurora.org>
- <cb388d8ea15b2c80a072dec74d9ededecb183a08.camel@gmail.com>
- <e69bd5a6b73d5c652130bf4fa077aac0@codeaurora.org>
-Message-ID: <606774efd4d89f0ea78cefeb428cc9e1@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-01-09 12:45, Can Guo wrote:
-> On 2021-01-08 19:29, Bean Huo wrote:
->> On Wed, 2021-01-06 at 09:20 +0800, Can Guo wrote:
->>> Hi Bean,
->>> 
->>> On 2021-01-06 02:38, Bean Huo wrote:
->>> > On Tue, 2021-01-05 at 09:07 +0800, Can Guo wrote:
->>> > > On 2021-01-05 04:05, Bean Huo wrote:
->>> > > > On Sat, 2021-01-02 at 05:59 -0800, Can Guo wrote:
->>> > > > > + * @shutting_down: flag to check if shutdown has been
->>> > > > > invoked
->>> > > >
->>> > > > I am not much sure if this flag is need, since once PM going in
->>> > > > shutdown path, what will be returnded by pm_runtime_get_sync()?
->>> > > >
->>> > > > If pm_runtime_get_sync() will fail, just check its return.
->>> > > >
->>> > >
->>> > > That depends. During/after shutdown, for UFS's case only,
->>> > > pm_runtime_get_sync(hba->dev) will most likely return 0,
->>> > > because it is already RUNTIME_ACTIVE, pm_runtime_get_sync()
->>> > > will directly return 0... meaning you cannot count on it.
->>> > >
->>> > > Check Stanley's change -
->>> > > https://lore.kernel.org/patchwork/patch/1341389/
->>> > >
->>> > > Can Guo.
->>> >
->>> > Can,
->>> >
->>> > Thanks for pointing out that.
->>> >
->>> > Based on my understanding, that patch is redundent. maybe I
->>> > misundestood Linux shutdown sequence.
->>> 
->>> Sorry, do you mean Stanley's change is redundant?
->> 
->> yes.
->> 
-> 
-> No, it is definitely needed. As Stanley replied you in another
-> thread, it is not protecting I/Os from user layer, but from
-> other subsystems during shutdown.
-> 
->>> 
->>> >
->>> > I checked the shutdown flow:
->>> >
->>> > 1. Set the "system_state" variable
->>> > 2. Disable usermod to ensure that no user from userspace can start
->>> > a
->>> > request
->>> 
->>> I hope it is like what you interpreted, but step #2 only stops
->>> UMH(#265)
->>> but not all user space activities. Whereas, UMH is for kernel space
->>> calling
->>> user space.
->> 
->> 
->> Can,
->> 
->> I did further study and homework on the Linux shutdown in the last few
->> days. Yes, you are right, usermodehelper_disable() is to prevent
->> executing the process from the kernel space.
->> 
->> But I didn't reproduce this "maybe" race issue while shutdown. no
->> matter how I torment my system, once Linux shutdown/halt/reboot 
->> starts,
->> nobody can access the sysfs node. I create 10 processes in the user
->> space and constantly access UFS sysfs node, also, fio is running in 
->> the
->> background for the normal data read/write. there is a shutdown thread
->> that will randomly trigger shutdown/halt/reboot. but no race issue
->> appears.
->> 
->> I don't know if this is a hypothetical issue(the race between shutdown
->> flow and sysfs node access), it may not really exist in the Linux
->> envriroment. everytime, the shutdonw flow will be:
->> 
->> e10_sync_handler()->e10_svc()->do_e10_svc()->__do_sys_reboot()-
->>> kernel_poweroff/kernel_halt()->device_shutdown()->platform_shutdown()-
->>> ufshcd_platform_shutdown()->ufshcd_shutdown().
->> 
->> I think before going into the kernel shutdown, the userspace cannot
->> issue new requests anymore. otherwise, this would be a big issue.
->> 
->> pm_runtime_get_sync() will return 0 or failure while shutdown? the
->> answer is not important now, maybe as you said, it is always 0. But in
->> my testing, it didn't get there the system has been shutdown. Which
->> means once shutdonw starts, sysfs node access path cannot reach
->> pm_runtime_get_sync(). (note, I don't know if sysfs node access thread
->> has been disabled or not)
->> 
->> 
->> Responsibly say, I didn't reproduce this issue on my system (ubuntu),
->> maybe you are using Android. I am not an expert on this topic, if you
->> have the best idea on how to reproduce this issue. please please let 
->> me
->> try. appreciate it!!!!!
->> 
-> 
-> When you do a reboot/shutdown/poweroff, how your system behaves highly
-> depends on how the reboot cmd is implemented in C code under /sbin/.
-> 
-> On Ubuntu, reboot looks like:
-> $ reboot --help
-> reboot [OPTIONS...] [ARG]
-> 
-> Reboot the system.
-> 
->      --help      Show this help
->      --halt      Halt the machine
->   -p --poweroff  Switch off the machine
->      --reboot    Reboot the machine
->   -f --force     Force immediate halt/power-off/reboot
->   -w --wtmp-only Don't halt/power-off/reboot, just write wtmp record
->   -d --no-wtmp   Don't write wtmp record
->      --no-wall   Don't send wall message before halt/power-off/reboot
-> 
-> 
-> On a pure Linux with a initrd RAM FS built from busybox, reboot looks 
-> like:
-> # reboot --help
-> BusyBox v1.30.1 (2019-05-24 12:53:36 IST) multi-call binary.
-> 
-> Usage: reboot [-d DELAY] [-n] [-f]
-> 
-> Reboot the system
-> 
->         -d SEC  Delay interval
->         -n      Do not sync
->         -f      Force (don't go through init)
-> 
-> 
-> For example, when you work on a pure Linux with a filesystem built from
-> busybox, when you hit reboot cmd, halt_main() will be called. And based
-> on the reboot options passed to reboot cmd, halt_main() behaves 
-> differently.
-> 
-> A plain reboot cmd does things like sync filesystem, send SIGKILL to 
-> all
-> processes (except for init), remount all filesytem as read-only and so 
-> on
-> before invoking linux kernel reboot syscall. In this case, we are safe.
-> 
-> However, if you do a "reboot -f", halt_main() directly invokes 
-> reboot().
-> And with "reboot -f", I can easily reproduce the race condition we are
-> talking about here - it is not based on imagination.
-> 
-> Find the patch I used for replication in the attachment, fix conflicts
-> if any. After boot up, the cmd lines I used are
-> 
-> # while true; do cat /sys/devices/platform/soc@0/*ufshc*/rpm_lvl; done 
-> &
-> # reboot -f
-> 
-> Can Guo.
+This patch set include some bug fixes and enhancements for pm80xx driver.
 
-Oops... forgot the logs:
+Changes from v1:
+	Corrected email id.
 
-#
-# while true; do cat /sys/devices/platform/soc@0/*ufshc*/rpm_lvl; done &
-3
-3
-3
-3
-....
-# reboot -f
-3
-3
-3
-....
-[   17.959206] sd 0:0:0:5: [sdf] Synchronizing SCSI cache
-3
-[   17.964833] sd 0:0:0:4: [sde] Synchronizing SCSI cache
-[   17.970224] sd 0:0:0:3: [sdd] Synchronizing SCSI cache
-[   17.975574] sd 0:0:0:2: [sdc] Synchronizing SCSI cache
-3
-[   17.981034] sd 0:0:0:1: [sdb] Synchronizing SCSI cache
-[   17.986493] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-3
-[   17.991870] [DEBUG]ufshcd_shutdown: UFS SHUTDOWN START
-[   17.998902] ------------[ cut here ]------------
-[   18.003648] kernel BUG at drivers/scsi/ufs/ufs-sysfs.c:62!
-[   18.009286] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
-[   18.034249] pstate: 40c00005 (nZcv daif +PAN +UAO)
-[   18.039185] pc : rpm_lvl_show+0x38/0x40
-[   18.043137] lr : dev_attr_show+0x1c/0x58
-[   18.132552] Call trace:
-[   18.135076]  rpm_lvl_show+0x38/0x40
-[   18.138672]  sysfs_kf_seq_show+0xa8/0x140
-[   18.142802]  kernfs_seq_show+0x28/0x30
-[   18.146665]  seq_read+0x1d8/0x4b0
-[   18.150072]  kernfs_fop_read+0x12c/0x1f0
-[   18.154109]  do_iter_read+0x184/0x1c0
-[   18.157882]  vfs_readv+0x68/0xb0
-....
+Bhavesh Jashnani (1):
+  pm80xx: Simultaneous poll for all FW readiness.
 
-> 
->> 
->> Thanks,
->> Bean
->> 
->> 
->>> 
->>> 264     system_state = state;
->>> 265     usermodehelper_disable();
->>> 266     device_shutdown();
->>> 
->>> Thanks,
->>> Can Guo.
+Vishakha Channapattan (2):
+  pm80xx: Log SATA IOMB completion status on failure.
+  pm80xx: Add sysfs attribute for ioc health
+
+Viswas G (1):
+  pm80xx: fix driver fatal dump failure.
+
+akshatzen (4):
+  pm80xx: No busywait in MPI init check
+  pm80xx: check fatal error
+  pm80xx: check main config table address
+  pm80xx: fix missing tag_free in NVMD DATA req
+
+ drivers/scsi/pm8001/pm8001_ctl.c  |  42 ++++++++
+ drivers/scsi/pm8001/pm8001_hwi.c  |  15 ++-
+ drivers/scsi/pm8001/pm8001_init.c |  11 ++-
+ drivers/scsi/pm8001/pm8001_sas.c  |   9 ++
+ drivers/scsi/pm8001/pm8001_sas.h  |   2 +
+ drivers/scsi/pm8001/pm80xx_hwi.c  | 202 ++++++++++++++++++++++++--------------
+ drivers/scsi/pm8001/pm80xx_hwi.h  |  17 +++-
+ 7 files changed, 216 insertions(+), 82 deletions(-)
+
+-- 
+2.16.3
+
