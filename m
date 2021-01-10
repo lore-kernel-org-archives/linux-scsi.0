@@ -2,125 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7578DC433E6
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 23:01:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E8DCC433E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Jan 2021 08:48:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C630238E8
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jan 2021 23:01:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4310523B02
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Jan 2021 08:48:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726381AbhAIXBY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Jan 2021 18:01:24 -0500
-Received: from mail-1.ca.inter.net ([208.85.220.69]:60552 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726281AbhAIXBY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jan 2021 18:01:24 -0500
-Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id 9D28D2EA01D;
-        Sat,  9 Jan 2021 18:00:42 -0500 (EST)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
-        with ESMTP id RP9EYr1UqlHY; Sat,  9 Jan 2021 17:47:42 -0500 (EST)
-Received: from [192.168.48.23] (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 1599B2EA0BD;
-        Sat,  9 Jan 2021 18:00:42 -0500 (EST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v5 4/4] scatterlist: add sgl_memset()
-To:     Jason Gunthorpe <jgg@ziepe.ca>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, bostroesser@gmail.com, bvanassche@acm.org,
-        ddiss@suse.de
-References: <20201228234955.190858-1-dgilbert@interlog.com>
- <20201228234955.190858-5-dgilbert@interlog.com>
- <20210107174629.GC504133@ziepe.ca>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <9b727a9a-eb58-ab20-f42b-aa9c9e90a49a@interlog.com>
-Date:   Sat, 9 Jan 2021 18:00:41 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726516AbhAJIst (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Jan 2021 03:48:49 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:62862 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725956AbhAJIss (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jan 2021 03:48:48 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1610268528; x=1641804528;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=dKUH/8eT9WQR0MY/ea171yF0916vthqpVDusouW2ttM=;
+  b=eKRBFnddKUzezpG/FoiWFML/wtyg+1QN2WAE07iV1dFtth07eq5Hz148
+   LLUGnS/yyLV1HNoa+ngesAlpRJ7maQO5RuUn/9u2xGZeYFcCfmzuhio1i
+   VE9DJQhwvzCwRkMpTjn42aWa2OaoACXiWT5jL4L49+5sWMjQHswsPlRba
+   6Tnkosyi8woSYwzaS7UuqNcihS/7myVa9//Lara/WdX1AAbGCoEEeIpZn
+   Y0q9iwSVWUVVwMBvQRQddcxVhZm58yhQ13Y1+iXBcGWZDkGUAJQ/fr15B
+   dWxSkkhByTkTGQR/oYdnASwyR0dtGmvOGY2JcLSVVH+PYYqKNcckazn9V
+   A==;
+IronPort-SDR: M2wKaD1CsD/zAcUpiRB6mDelBGREH+a8duMEA75TRVPTh7HmrteIKO+ubevW2epTbbWSOlv/Q9
+ 0TByeSXuxaAV7LI72IV2SN5dTJu9tO6rF1KpCPRaB28S2FeCEcmr4BK1gK71PvcW+7oCwGu+So
+ gpqGphV+ApjVA/z1wFOaw/2qTzLHHqhywuy8gSEJ0SXaku9OldSgmw3jJOCdou6YCeg5CnyGkd
+ Ei0Fkq9Pe7Ce+9pWu7m/jK3aGvtURCy8a0jm56L/JK7rGkzcb3vB5Eb3U2XoOMPh7NUq7An36R
+ cTY=
+X-IronPort-AV: E=Sophos;i="5.79,336,1602518400"; 
+   d="scan'208";a="157073250"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 10 Jan 2021 16:47:42 +0800
+IronPort-SDR: LfukvEU8b7Y6QTxisfAN4R6YzV/MjGf0v/E+3UV0O8Aa8ZbGKTcUQPtan5Y7QeAcsVBacdf7YC
+ NPBxR+ezUs3TxMOAazEEJIKII5huzZhs/vH+CYD35N4sa0BGk+kn4xXZWDjnPryuEg9Fvy2nkT
+ BOkRyqJRw6sm87I+h6oSLdefGZVjHZ4V3neQBFHoJvhb9DumHF0YhfOTpRv2R6R+w34t3+r/W7
+ sX7mZxR8EaLHsCiTdz47rESiscxDp5LWA1YEkCO72xNPwJGZebtSzkli7TY5Iv7pzFhWzSjzxP
+ 43N+Bzds+ZwNceIkHdqbmm0+
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2021 00:32:30 -0800
+IronPort-SDR: aUZQyilq4s1FIoH7A4y9sJ/FCZrPEAnv0f5ZO/+X6EZwJu9tRIAXM0tyWL/LZX89zS9GR0Ni0j
+ CEPVbcORn06k9gmdGEWLn1Bob21+LI9RgjUZokkk8ueuAISCBi7A6ZjQ5I8jPhXgHFzYwI7AuN
+ ZAteFu/+qrcY4i5zM7lR/ExrXsqh2JOqfAYSuQc8EkfXKegAMjH9o3t3Fnb/KFY0DhOchEy+wk
+ llLpw8PFoBMC5K2CokpNfp7Hp4wm8wpr/bSLXLTbcq8Szg3KZySopHGcoGRUlIPdi+i1UqSMBP
+ 9og=
+WDCIronportException: Internal
+Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
+  by uls-op-cesaip02.wdc.com with ESMTP; 10 Jan 2021 00:47:41 -0800
+From:   Avri Altman <avri.altman@wdc.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     alim.akhtar@samsung.com, Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH] scsi: ufs: A tad optimization in query upiu trace
+Date:   Sun, 10 Jan 2021 10:46:18 +0200
+Message-Id: <20210110084618.189371-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <20210107174629.GC504133@ziepe.ca>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-01-07 12:46 p.m., Jason Gunthorpe wrote:
-> On Mon, Dec 28, 2020 at 06:49:55PM -0500, Douglas Gilbert wrote:
->> The existing sg_zero_buffer() function is a bit restrictive. For
->> example protection information (PI) blocks are usually initialized
->> to 0xff bytes. As its name suggests sgl_memset() is modelled on
->> memset(). One difference is the type of the val argument which is
->> u8 rather than int. Plus it returns the number of bytes (over)written.
->>
->> Change implementation of sg_zero_buffer() to call this new function.
->>
->> Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
->> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
->>   include/linux/scatterlist.h |  3 ++
->>   lib/scatterlist.c           | 65 +++++++++++++++++++++++++------------
->>   2 files changed, 48 insertions(+), 20 deletions(-)
->>
->> diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
->> index 71be65f9ebb5..70d3f1f73df1 100644
->> +++ b/include/linux/scatterlist.h
->> @@ -333,6 +333,9 @@ bool sgl_compare_sgl_idx(struct scatterlist *x_sgl, unsigned int x_nents, off_t
->>   			 struct scatterlist *y_sgl, unsigned int y_nents, off_t y_skip,
->>   			 size_t n_bytes, size_t *miscompare_idx);
->>   
->> +size_t sgl_memset(struct scatterlist *sgl, unsigned int nents, off_t skip,
->> +		  u8 val, size_t n_bytes);
->> +
->>   /*
->>    * Maximum number of entries that will be allocated in one piece, if
->>    * a list larger than this is required then chaining will be utilized.
->> diff --git a/lib/scatterlist.c b/lib/scatterlist.c
->> index 9332365e7eb6..f06614a880c8 100644
->> +++ b/lib/scatterlist.c
->> @@ -1038,26 +1038,7 @@ EXPORT_SYMBOL(sg_pcopy_to_buffer);
->>   size_t sg_zero_buffer(struct scatterlist *sgl, unsigned int nents,
->>   		       size_t buflen, off_t skip)
->>   {
->> -	unsigned int offset = 0;
->> -	struct sg_mapping_iter miter;
->> -	unsigned int sg_flags = SG_MITER_ATOMIC | SG_MITER_TO_SG;
->> -
->> -	sg_miter_start(&miter, sgl, nents, sg_flags);
->> -
->> -	if (!sg_miter_skip(&miter, skip))
->> -		return false;
->> -
->> -	while (offset < buflen && sg_miter_next(&miter)) {
->> -		unsigned int len;
->> -
->> -		len = min(miter.length, buflen - offset);
->> -		memset(miter.addr, 0, len);
->> -
->> -		offset += len;
->> -	}
->> -
->> -	sg_miter_stop(&miter);
->> -	return offset;
->> +	return sgl_memset(sgl, nents, skip, 0, buflen);
->>   }
->>   EXPORT_SYMBOL(sg_zero_buffer);
-> 
-> May as well make this one liner a static inline in the header. Just
-> rename this function to sgl_memset so the diff is clearer
+Remove a redundant if clause in ufshcd_add_query_upiu_trace.
 
-Yes, fine. I can roll a new version.
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-Doug Gilbert
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 53fd59ce50b2..678a520b303e 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -316,19 +316,13 @@ static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+ 			  UFS_TSF_CDB);
+ }
+ 
+-static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+-					enum ufs_trace_str_t str_t)
++static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
++					enum ufs_trace_str_t str_t,
++					struct utp_upiu_req *rq_rsp)
+ {
+-	struct utp_upiu_req *rq_rsp;
+-
+ 	if (!trace_ufshcd_upiu_enabled())
+ 		return;
+ 
+-	if (str_t == UFS_QUERY_SEND)
+-		rq_rsp = hba->lrb[tag].ucd_req_ptr;
+-	else
+-		rq_rsp = (struct utp_upiu_req *)hba->lrb[tag].ucd_rsp_ptr;
+-
+ 	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq_rsp->header,
+ 			  &rq_rsp->qr, UFS_TSF_OSF);
+ }
+@@ -2876,7 +2870,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 
+ 	hba->dev_cmd.complete = &wait;
+ 
+-	ufshcd_add_query_upiu_trace(hba, tag, UFS_QUERY_SEND);
++	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+ 	/* Make sure descriptors are ready before ringing the doorbell */
+ 	wmb();
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+@@ -2886,8 +2880,8 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+ 
+ out:
+-	ufshcd_add_query_upiu_trace(hba, tag,
+-			err ? UFS_QUERY_ERR : UFS_QUERY_COMP);
++	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
++				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
+ 
+ out_put_tag:
+ 	blk_put_request(req);
+-- 
+2.25.1
 
