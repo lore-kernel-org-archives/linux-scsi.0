@@ -2,130 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E8DCC433E0
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Jan 2021 08:48:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA9BC433E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Jan 2021 12:56:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4310523B02
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Jan 2021 08:48:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E5BA23108
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Jan 2021 12:56:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726516AbhAJIst (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 Jan 2021 03:48:49 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:62862 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725956AbhAJIss (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jan 2021 03:48:48 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1610268528; x=1641804528;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=dKUH/8eT9WQR0MY/ea171yF0916vthqpVDusouW2ttM=;
-  b=eKRBFnddKUzezpG/FoiWFML/wtyg+1QN2WAE07iV1dFtth07eq5Hz148
-   LLUGnS/yyLV1HNoa+ngesAlpRJ7maQO5RuUn/9u2xGZeYFcCfmzuhio1i
-   VE9DJQhwvzCwRkMpTjn42aWa2OaoACXiWT5jL4L49+5sWMjQHswsPlRba
-   6Tnkosyi8woSYwzaS7UuqNcihS/7myVa9//Lara/WdX1AAbGCoEEeIpZn
-   Y0q9iwSVWUVVwMBvQRQddcxVhZm58yhQ13Y1+iXBcGWZDkGUAJQ/fr15B
-   dWxSkkhByTkTGQR/oYdnASwyR0dtGmvOGY2JcLSVVH+PYYqKNcckazn9V
-   A==;
-IronPort-SDR: M2wKaD1CsD/zAcUpiRB6mDelBGREH+a8duMEA75TRVPTh7HmrteIKO+ubevW2epTbbWSOlv/Q9
- 0TByeSXuxaAV7LI72IV2SN5dTJu9tO6rF1KpCPRaB28S2FeCEcmr4BK1gK71PvcW+7oCwGu+So
- gpqGphV+ApjVA/z1wFOaw/2qTzLHHqhywuy8gSEJ0SXaku9OldSgmw3jJOCdou6YCeg5CnyGkd
- Ei0Fkq9Pe7Ce+9pWu7m/jK3aGvtURCy8a0jm56L/JK7rGkzcb3vB5Eb3U2XoOMPh7NUq7An36R
- cTY=
-X-IronPort-AV: E=Sophos;i="5.79,336,1602518400"; 
-   d="scan'208";a="157073250"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 10 Jan 2021 16:47:42 +0800
-IronPort-SDR: LfukvEU8b7Y6QTxisfAN4R6YzV/MjGf0v/E+3UV0O8Aa8ZbGKTcUQPtan5Y7QeAcsVBacdf7YC
- NPBxR+ezUs3TxMOAazEEJIKII5huzZhs/vH+CYD35N4sa0BGk+kn4xXZWDjnPryuEg9Fvy2nkT
- BOkRyqJRw6sm87I+h6oSLdefGZVjHZ4V3neQBFHoJvhb9DumHF0YhfOTpRv2R6R+w34t3+r/W7
- sX7mZxR8EaLHsCiTdz47rESiscxDp5LWA1YEkCO72xNPwJGZebtSzkli7TY5Iv7pzFhWzSjzxP
- 43N+Bzds+ZwNceIkHdqbmm0+
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2021 00:32:30 -0800
-IronPort-SDR: aUZQyilq4s1FIoH7A4y9sJ/FCZrPEAnv0f5ZO/+X6EZwJu9tRIAXM0tyWL/LZX89zS9GR0Ni0j
- CEPVbcORn06k9gmdGEWLn1Bob21+LI9RgjUZokkk8ueuAISCBi7A6ZjQ5I8jPhXgHFzYwI7AuN
- ZAteFu/+qrcY4i5zM7lR/ExrXsqh2JOqfAYSuQc8EkfXKegAMjH9o3t3Fnb/KFY0DhOchEy+wk
- llLpw8PFoBMC5K2CokpNfp7Hp4wm8wpr/bSLXLTbcq8Szg3KZySopHGcoGRUlIPdi+i1UqSMBP
- 9og=
-WDCIronportException: Internal
-Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
-  by uls-op-cesaip02.wdc.com with ESMTP; 10 Jan 2021 00:47:41 -0800
-From:   Avri Altman <avri.altman@wdc.com>
-To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        id S1726321AbhAJM4j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Jan 2021 07:56:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49630 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726250AbhAJM4i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jan 2021 07:56:38 -0500
+Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 741DCC061786;
+        Sun, 10 Jan 2021 04:55:58 -0800 (PST)
+Received: by mail-ed1-x531.google.com with SMTP id dk8so16068855edb.1;
+        Sun, 10 Jan 2021 04:55:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=0V57Vb+0sFCgztOz5DR/A3AaU9+g4X59JOpRHevJ9hI=;
+        b=iAKddSodN1R98E6GPQKKYujD3Uc1RdzB39Xd/Pv+7Om38YeFrTIBhRslL3Y9bUF5pM
+         ABU3g0GDNBgZktDTHwgmeSYRej19FQ+DABVS92Xxx18+Mos5so56KJGwIznf6E2NjKTR
+         8pnqDS8GdTqHoxJLuDy4dwo4E4MRbM1fDRyaAiRmo3GbWyM9xRwRuCCxAv9Q5FRTMQnH
+         xkmMwZtShkDEd9OBhqIRm5J2rwDTasaIvR5WUvc31yQ5utgZZ0CfO7OKDM2XRpTcIjUd
+         d3Spz4yZSf5LuDa46Es1ur0pV8L4UNXzVrAM8Hz3Bb14KJOOyicQCUaW5QEKWMPERH8R
+         rK7Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=0V57Vb+0sFCgztOz5DR/A3AaU9+g4X59JOpRHevJ9hI=;
+        b=ubmLw7d7nM52pPIDLuYX2aXX6d5xfxlCLgMd/nDcEzcP/HgR8I61hbgeMXYz47u28n
+         qDbk3arILvypjklvfNwhw9Tp1IPvEi9e6LL6dyFLt5Kz2601FrQeb7uoOZG8rDtsPLPQ
+         q9EkF1Rs0Pyh6qKvgcAiH8g702aLwudfH/Umh0fFvBt7uEBRMPsuYaX72P8jj6PlZn8B
+         nhiD8diLP9tvP8x6hXKW1acGiWAqaiHIW8Lme5zQ6ykrrJ1oGaGDUFe1UuqHKtHjWvZm
+         YOm3GnIjxX0fcc/v3j7GDsPOYglQi5TWMo0E6RzzuNCjJ4iv6bQyYf76N19hq7qrSWiD
+         msnQ==
+X-Gm-Message-State: AOAM530vQdY2EwyveSaXbejCim4nDZQ9Ew6lHE35oVc0Nqh0Z+GtVIv5
+        mgl7K2czt/IvaG2HUrq0dhs=
+X-Google-Smtp-Source: ABdhPJxT8XMHZEuENZ+U2Bau0+6SL4s2o6LRwqCIXKCDS7iGxYxARhRUUUegcsljecansWsEGR6joA==
+X-Received: by 2002:a50:eb97:: with SMTP id y23mr11215202edr.29.1610283357204;
+        Sun, 10 Jan 2021 04:55:57 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bfcff.dynamic.kabel-deutschland.de. [95.91.252.255])
+        by smtp.googlemail.com with ESMTPSA id f11sm5693447ejd.40.2021.01.10.04.55.55
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Sun, 10 Jan 2021 04:55:56 -0800 (PST)
+Message-ID: <d32949dc2f4be9bd0b4912967b2f10af021cc097.camel@gmail.com>
+Subject: Re: [PATCH] scsi: ufs: A tad optimization in query upiu trace
+From:   Bean Huo <huobean@gmail.com>
+To:     Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     alim.akhtar@samsung.com, Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH] scsi: ufs: A tad optimization in query upiu trace
-Date:   Sun, 10 Jan 2021 10:46:18 +0200
-Message-Id: <20210110084618.189371-1-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Cc:     alim.akhtar@samsung.com, Bean Huo <beanhuo@micron.com>
+Date:   Sun, 10 Jan 2021 13:55:55 +0100
+In-Reply-To: <20210110084618.189371-1-avri.altman@wdc.com>
+References: <20210110084618.189371-1-avri.altman@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove a redundant if clause in ufshcd_add_query_upiu_trace.
+On Sun, 2021-01-10 at 10:46 +0200, Avri Altman wrote:
+> Remove a redundant if clause in ufshcd_add_query_upiu_trace.
+> 
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/scsi/ufs/ufshcd.c | 18 ++++++------------
- 1 file changed, 6 insertions(+), 12 deletions(-)
+Looks good to me, thanks.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 53fd59ce50b2..678a520b303e 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -316,19 +316,13 @@ static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
- 			  UFS_TSF_CDB);
- }
- 
--static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba, unsigned int tag,
--					enum ufs_trace_str_t str_t)
-+static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
-+					enum ufs_trace_str_t str_t,
-+					struct utp_upiu_req *rq_rsp)
- {
--	struct utp_upiu_req *rq_rsp;
--
- 	if (!trace_ufshcd_upiu_enabled())
- 		return;
- 
--	if (str_t == UFS_QUERY_SEND)
--		rq_rsp = hba->lrb[tag].ucd_req_ptr;
--	else
--		rq_rsp = (struct utp_upiu_req *)hba->lrb[tag].ucd_rsp_ptr;
--
- 	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq_rsp->header,
- 			  &rq_rsp->qr, UFS_TSF_OSF);
- }
-@@ -2876,7 +2870,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 
- 	hba->dev_cmd.complete = &wait;
- 
--	ufshcd_add_query_upiu_trace(hba, tag, UFS_QUERY_SEND);
-+	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
- 	/* Make sure descriptors are ready before ringing the doorbell */
- 	wmb();
- 	spin_lock_irqsave(hba->host->host_lock, flags);
-@@ -2886,8 +2880,8 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
- 
- out:
--	ufshcd_add_query_upiu_trace(hba, tag,
--			err ? UFS_QUERY_ERR : UFS_QUERY_COMP);
-+	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
-+				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
- 
- out_put_tag:
- 	blk_put_request(req);
--- 
-2.25.1
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
