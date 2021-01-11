@@ -2,124 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D18BC43331
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 15:22:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB40AC4332B
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 15:32:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D21822A83
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 15:22:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7760822AAD
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 15:32:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730649AbhAKPWR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jan 2021 10:22:17 -0500
-Received: from comms.puri.sm ([159.203.221.185]:56914 "EHLO comms.puri.sm"
+        id S1730073AbhAKPb5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jan 2021 10:31:57 -0500
+Received: from comms.puri.sm ([159.203.221.185]:57582 "EHLO comms.puri.sm"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732692AbhAKPWL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 Jan 2021 10:22:11 -0500
+        id S1727996AbhAKPb5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 Jan 2021 10:31:57 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by comms.puri.sm (Postfix) with ESMTP id D6E47DF76B;
-        Mon, 11 Jan 2021 07:21:00 -0800 (PST)
+        by comms.puri.sm (Postfix) with ESMTP id D21F4DFC6D;
+        Mon, 11 Jan 2021 07:31:16 -0800 (PST)
 Received: from comms.puri.sm ([127.0.0.1])
         by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id PZI06H7Wq84z; Mon, 11 Jan 2021 07:21:00 -0800 (PST)
-From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+        with ESMTP id XSc4KUmciF7T; Mon, 11 Jan 2021 07:31:15 -0800 (PST)
+Subject: Re: [PATCH 3/3] scsi: sd: add support for expect_media_change_suspend
+ flag
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         stern@rowland.harvard.edu, bvanassche@acm.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Martin Kepplinger <martin.kepplinger@puri.sm>
-Subject: [PATCH 2/3] scsi: add expect_media_change_suspend sysfs device setting
-Date:   Mon, 11 Jan 2021 16:20:28 +0100
-Message-Id: <20210111152029.28426-3-martin.kepplinger@puri.sm>
-In-Reply-To: <20210111152029.28426-1-martin.kepplinger@puri.sm>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20210111152029.28426-1-martin.kepplinger@puri.sm>
-Content-Transfer-Encoding: 8bit
+ <20210111152029.28426-4-martin.kepplinger@puri.sm>
+From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+Message-ID: <b6bdd914-7c6d-032f-6412-9bd097f7c059@puri.sm>
+Date:   Mon, 11 Jan 2021 16:31:10 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
+In-Reply-To: <20210111152029.28426-4-martin.kepplinger@puri.sm>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a user-facing flag that sets expecting_media_change on runtime
-resume. That works around devices that send MEDIA_CHANGED when it
-actually is just resumed from suspend and the media can be expected
-not to have changed.
+On 11.01.21 16:20, Martin Kepplinger wrote:
+> Make the sd driver act appropriately when the user has set
+> expect_media_change_suspend for a device.
+> 
+> Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
+> ---
+>   drivers/scsi/sd.c | 21 ++++++++++++++++++++-
+>   1 file changed, 20 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index a3d2d4bc4a3d..ad89f8c76a27 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -608,7 +608,7 @@ static const struct dev_pm_ops sd_pm_ops = {
+>   	.poweroff		= sd_suspend_system,
+>   	.restore		= sd_resume,
+>   	.runtime_suspend	= sd_suspend_runtime,
+> -	.runtime_resume		= sd_resume,
+> +	.runtime_resume		= sd_resume_runtime,
+>   };
+>   
+>   static struct scsi_driver sd_template = {
+> @@ -3699,6 +3699,25 @@ static int sd_resume(struct device *dev)
+>   	return ret;
+>   }
+>   
+> +static int sd_resume_runtime(struct device *dev)
+> +{
+> +	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+> +	int ret;
+> +
+> +	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
+> +		return 0;
+> +
+> +	/*
+> +	 * expect_media_change_suspend is the userspace setting and
+> +	 * expecting_media_change is what is checked and cleared in the
+> +	 * error path if we set it here.
+> +	 */
+> +	if (sdkp->device->expect_media_change_suspend)
+> +		sdkp->device->expecting_media_change = 1;
+> +
+> +	return sd_resume(dev);
+> +}
+> +
+>   /**
+>    *	init_sd - entry point for this driver (both when built in or when
+>    *	a module).
+> 
 
-Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
----
- drivers/scsi/scsi_sysfs.c  | 38 ++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_device.h |  2 ++
- 2 files changed, 40 insertions(+)
+oops, I'm very sorry, but the following is missing in order for this to 
+build:
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index b6378c8ca783..a049290addff 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1189,6 +1189,43 @@ static DEVICE_ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
- 		   sdev_show_queue_ramp_up_period,
- 		   sdev_store_queue_ramp_up_period);
- 
-+static ssize_t
-+sdev_show_expect_media_change_suspend(struct device *dev,
-+				      struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev;
-+	sdev = to_scsi_device(dev);
-+
-+	if (sdev->expect_media_change_suspend)
-+		return sprintf(buf, "1\n");
-+	else
-+		return sprintf(buf, "0\n");
-+}
-+
-+static ssize_t
-+sdev_store_expect_media_change_suspend(struct device *dev,
-+				       struct device_attribute *attr,
-+				       const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev;
-+	unsigned int flag;
-+	int err;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	sdev = to_scsi_device(dev);
-+	err = kstrtouint(buf, 10, &flag);
-+	if (err)
-+		return err;
-+	sdev->expect_media_change_suspend = !!flag;
-+
-+	return count;
-+}
-+static DEVICE_ATTR(expect_media_change_suspend, S_IRUGO | S_IWUSR,
-+		   sdev_show_expect_media_change_suspend,
-+		   sdev_store_expect_media_change_suspend);
-+
- static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
- 					 struct attribute *attr, int i)
- {
-@@ -1260,6 +1297,7 @@ static struct attribute *scsi_sdev_attrs[] = {
- 	&dev_attr_queue_type.attr,
- 	&dev_attr_wwid.attr,
- 	&dev_attr_blacklist.attr,
-+	&dev_attr_expect_media_change_suspend.attr,
- #ifdef CONFIG_SCSI_DH
- 	&dev_attr_dh_state.attr,
- 	&dev_attr_access_state.attr,
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index ca2c3eb5830f..fafb8e6ea4d0 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -171,6 +171,8 @@ struct scsi_device {
- 	unsigned expecting_cc_ua:1; /* Expecting a CHECK_CONDITION/UNIT_ATTN
- 				     * because we did a bus reset. */
- 	unsigned expecting_media_change:1; /* Expecting "media changed" UA */
-+	unsigned expect_media_change_suspend:1; /* User facing flag to enable
-+						 * the above flag on runtime resume */
- 	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
- 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
- 	unsigned set_dbd_for_ms:1; /* Set "DBD" field in mode sense */
--- 
-2.20.1
-
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -114,6 +114,7 @@ static void sd_shutdown(struct device *);
+  static int sd_suspend_system(struct device *);
+  static int sd_suspend_runtime(struct device *);
+  static int sd_resume(struct device *);
++static int sd_resume_runtime(struct device *);
+  static void sd_rescan(struct device *);
+  static blk_status_t sd_init_command(struct scsi_cmnd *SCpnt);
+  static void sd_uninit_command(struct scsi_cmnd *SCpnt);
