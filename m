@@ -2,136 +2,172 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BF86C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 10:05:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72AB1C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 10:08:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40B102220F
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 10:05:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3712622252
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 10:08:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728531AbhAKKFQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jan 2021 05:05:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37198 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728527AbhAKKFQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2021 05:05:16 -0500
-Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C40AFC061786;
-        Mon, 11 Jan 2021 02:04:35 -0800 (PST)
-Received: by mail-ed1-x52b.google.com with SMTP id h16so18138922edt.7;
-        Mon, 11 Jan 2021 02:04:35 -0800 (PST)
+        id S1728783AbhAKKI6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jan 2021 05:08:58 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:6404 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726734AbhAKKI6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2021 05:08:58 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1610359737; x=1641895737;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=iCnNnyN+m7TBfAn3oda6k76r+tp666TIF3dIGknFj1w=;
+  b=kzA60HppGWtPIHwZZzcwNkiTmXIzZ5OV0MzxdyP2ULk4dx41Mp+b7FR7
+   hk6VzuUZlLwgieozPTCRqivGUZmhw8zxNXlQx7p2vr8gDEPteL20U/e1+
+   OCvNeSyNkJwdnm7dcVaorpP0DWbmdv2PtQd6OgvnU0fH6HGJlmbJqj5/O
+   +XQQPnrATjZ8/suW0CruZ4Xu16sHak1R9plac8mWuI0FmLcZaS5WRFTc1
+   lye22+X2x86uq3V9M4FymJO/+p3FsSX8CVPeVfbDUf+FzT9X/vx76HhJx
+   1+WQDFhjjl05RKU82oJUx742IWni3DHXrTBqdOgC2TPCmzRrrjbdU88Gk
+   A==;
+IronPort-SDR: EdK7O3AQaCp97eYmyrOzC0MQe21E1hSlL6FqnVaUV6Z4nnsqSSzkouty+c0Akk3r4rEqVfYrQu
+ Go93onDnDmPc58Bu33BcpxwefnfpIO89YzKJnR99IeDGmxfvffQG1cBtmpLYdkz5amGawn6U1K
+ aDHHvQIYgwqUUxYiHcTbd0fDQ3zpFBlfLMs9CifZwqz9xa5sEboxBXVyeiFuWD1Pxib04kijZ0
+ OMF1caHUtfEqbRa8pF66nrgpymVRXSk099cMKel3GR13eRa7T+TMGQOiZT5BBPIGpU3YG9yEND
+ AU8=
+X-IronPort-AV: E=Sophos;i="5.79,338,1602518400"; 
+   d="scan'208";a="157140980"
+Received: from mail-dm6nam12lp2177.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.177])
+  by ob1.hgst.iphmx.com with ESMTP; 11 Jan 2021 18:07:51 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=A4yJfQrdBCtbEQgCJ5+yDY/4hRC+VTfzoT1iMzdphvnF5iNqS7FvW06CztcHktyNwefLoKTbD4b5gYkyxqmZz6gIjm9dTdrI03lG2yTqJkmu4yUton1GtpugAR0A26hxeoyrg3V1CDT6/lW3A3Nag6fc7u25ciTU7PcMqmRCr8v7o39VtvsJ4zAdfPw9/i4Hom5QSZyaQvl+SWtFIHjXO0fw2ACQeaLi6qEIftooAjqmPjvEfcIpuztoUMzpjX8+3sItEiONiStM6y2JIBpLufWdL/Tpjc8lOYHKyEWCHXvtoCJUXz/mBZcjMYsTCwj+aWWpVOz1upzcoTmVS2DP/Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HfmKTTCelo4SeNdhCLK4y+EL0gSG8j9rDLSAdtz8XMs=;
+ b=WkhqozXFzJ9sgLNqX475L8Q+Zu8ae+IsUsVwbeNaWgoqTCe6DMa+rFgSTMLbkS41+zn9BfvMkPX0olzB92XymeOr7Zpf2AxEu/nmHo3YEptCQEN3ml7+p+04Z/T+iTug4JRroAZr2GQ1J8AfbiKsQfnpAU220ImbENgFlR6iZgH87tPk3NXM0T4JuVIHtHPICvnzKC5ysWLWqYLY7X3ELc+ZG+cyxUSBiDxkyXH+DKnPGefia2qILXZ1FBoCMz4N1HMsAari14rVWMpHKZxKxotlpYc73FYNEbU5hdvJu+mAAh5vprwHzuQj7Z10f6e6AqIIJuk69ro2PRqFA6Rbhw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=YOzaCXEr/kpfYx4XNxIfJ2wmIFUIzb+KQl5qAT3V4vg=;
-        b=inC2mB8BG86FhisiYKWxfnrs2hC5mpc4KyEy1kdQaPEHzCE0j8clGN3LnG1hAU5vYn
-         fH4mIN5Q23lzKwoab14+TcI/CDcOLcVmRjANBfmN+laQBAR7oecs9LXsXvWaP8udEdLD
-         wORuwEbgsUG0r6YjypoMiLW25ylyzBxT8JbwjFNkgH8MWTy59sXU/Oktrcpa+7TaYFEv
-         IZL15lQabuYcRum5hy6ZDo1kDPBAlLugrhJUAl3/q6LIRETEsXiqW8CxxrRDwmnS9XkF
-         4E9qsARvS+Cr5l1/wJf1VHJSc4aqtVEZ+/ERCGiGS/mhz3wBZM9n/UOLkNLQmZfN7CLq
-         6hSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=YOzaCXEr/kpfYx4XNxIfJ2wmIFUIzb+KQl5qAT3V4vg=;
-        b=ZvWiwsgbILGEBql9TQwZAWNi69pdPaHP2L/uy/2Hv+pWlAfcqmtu8RVJCG8tagWprE
-         8t8XkUjnrz4/NLqg14f8okCPIWn1+i6y2PeTNPKaDq61+83/TYOs1XI8yyQvy61Hn5Gc
-         VNsO36heid6oXdo/Zo1AqnidHkBoGt/lCdlwIi8pyjzn5btwn+p/jeDOZOjgLmHnXUZF
-         0QqFXZROvhKdfl5+eRS7HJSuhx0A0uz/AQ9OdyKQj+w8yAUOFooRIr+jl7RyMfyx+f8a
-         KWffPIoz1rs+BLxfXNCTyVRc22xOOV01NOehXkm5hi4zhNfWS156vF9jBH7jbCgPigm0
-         QwKQ==
-X-Gm-Message-State: AOAM532mAeCrbgkC8ABIHMTxCPdePbEPj9ogR73FxPTwdYmxq4JR0R8I
-        0zp5O0ICNUftnxqui3C4BBI=
-X-Google-Smtp-Source: ABdhPJy9rOzRaHHsqhgViDX/kv2CPjZnb5DTmUtM6p8LgX52UEdnLLpsOtJNM4nL/J1SrIAViJbNBA==
-X-Received: by 2002:a05:6402:746:: with SMTP id p6mr13672420edy.313.1610359474332;
-        Mon, 11 Jan 2021 02:04:34 -0800 (PST)
-Received: from ubuntu-laptop (ip5f5bfcff.dynamic.kabel-deutschland.de. [95.91.252.255])
-        by smtp.googlemail.com with ESMTPSA id v18sm6781220ejw.18.2021.01.11.02.04.32
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 11 Jan 2021 02:04:33 -0800 (PST)
-Message-ID: <6eaa5c51c0b17968e0169b8a16bdbfa4934af5d8.camel@gmail.com>
-Subject: Re: [PATCH 2/2] scsi: ufs: Protect PM ops and err_handler from user
- access through sysfs
-From:   Bean Huo <huobean@gmail.com>
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        rjw@rjwysocki.net, Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Nitin Rawat <nitirawa@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-Date:   Mon, 11 Jan 2021 11:04:31 +0100
-In-Reply-To: <7f193fe5abfb41aa72d17f7884cbd113@codeaurora.org>
-References: <1609595975-12219-1-git-send-email-cang@codeaurora.org>
-         <1609595975-12219-3-git-send-email-cang@codeaurora.org>
-         <80a15afab8024d0b61d312b57585c9322ac91958.camel@gmail.com>
-         <7d49c1dfc3f648c484076f3c3a7f4e1e@codeaurora.org>
-         <1514403adf486ac8069253c09f45b021bad32e00.camel@gmail.com>
-         <f814b71d1d4ea87a72df4851a8190807@codeaurora.org>
-         <cb388d8ea15b2c80a072dec74d9ededecb183a08.camel@gmail.com>
-         <e69bd5a6b73d5c652130bf4fa077aac0@codeaurora.org>
-         <606774efd4d89f0ea78cefeb428cc9e1@codeaurora.org>
-         <146b46a5c38f4582a9a8e6df1d87cdfc0684f549.camel@gmail.com>
-         <fa0e976387070c64752c972d32ce15df@codeaurora.org>
-         <976641f42211af23d90464d0c4841cc40740b0d7.camel@gmail.com>
-         <7f193fe5abfb41aa72d17f7884cbd113@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HfmKTTCelo4SeNdhCLK4y+EL0gSG8j9rDLSAdtz8XMs=;
+ b=Hkr/Ni7InJ1gGDHVQ/XMz5CaecmUbegXbQtsx47kL30i64eKlfYY362FG9UhnDV+R+0zoLZ0P0haz4ls/9YbDQfljI7Wy2sx6OmkCi3RakuRLGF75Hbuj0mic2Nov3ZIgH34sCWBuz+lRPuqFVsBVG3BDjvRF7TgNis+9unLvdw=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ DM6PR04MB4155.namprd04.prod.outlook.com (2603:10b6:5:a3::21) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3742.6; Mon, 11 Jan 2021 10:07:50 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::a564:c676:b866:34f6]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::a564:c676:b866:34f6%8]) with mapi id 15.20.3742.012; Mon, 11 Jan 2021
+ 10:07:50 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>
+CC:     "cang@codeaurora.org" <cang@codeaurora.org>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        Jaegeuk Kim <jaegeuk@google.com>
+Subject: RE: [PATCH v3] scsi: ufs: WB is only available on LUN #0 to #7
+Thread-Topic: [PATCH v3] scsi: ufs: WB is only available on LUN #0 to #7
+Thread-Index: AQHW6AB4DC+JktXf6kWECxPVufZm26oiMutw
+Date:   Mon, 11 Jan 2021 10:07:50 +0000
+Message-ID: <DM6PR04MB6575AE5E44E55342A7A66F4AFCAB0@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20210111095927.1830311-1-jaegeuk@kernel.org>
+In-Reply-To: <20210111095927.1830311-1-jaegeuk@kernel.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: kernel.org; dkim=none (message not signed)
+ header.d=none;kernel.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 4ca61204-3379-4744-6be3-08d8b618c0db
+x-ms-traffictypediagnostic: DM6PR04MB4155:
+x-microsoft-antispam-prvs: <DM6PR04MB4155F1079FA975C12E65A424FCAB0@DM6PR04MB4155.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:6790;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: /yyhd0ENJHKAlRCWY6JfWzicynaFSy75OW0BLn0Aej7pLuMPUvHBjJvKir+dCzUS+uzzJrHaPOZeS8Rgpt7R0t7ztzpBVclkYVnuHiorNHbKHJEHk+rxFRSEhcb9O+11CvnF2RlwrY0NAtk1usikshcasRGEU+jsMq4tykB0j3FJaM/2IcDuNKeruhXSG7A9twmqSP4TYspwynMWurdjnqJI0zGFvtXeQF1TfnP2Zttg3I7qoYM/LZrJPiO3gKHMoGzVnSyrrH5/2CaxXl7koIZBM+e9QVC6x2G2C3Y/206naYODUk8A+oCC3H6P4PI62vB6cEh8QzEl9weizIMNnkEMKk4fjb6p0e37fr1HkplOu4/2t8ybx4QciveM5iEX7hFmhqj79D+t9G1CUVi7yEpInNQO+S2bfFypvmUq88U/MgXq7r4wwwbbbmhYroTD
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(396003)(39860400002)(376002)(346002)(366004)(66446008)(7416002)(76116006)(55016002)(9686003)(6506007)(66476007)(5660300002)(66556008)(52536014)(86362001)(54906003)(110136005)(4326008)(66946007)(64756008)(4744005)(186003)(71200400001)(7696005)(26005)(8936002)(478600001)(8676002)(2906002)(316002)(33656002)(131093003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?iPnF2RayxSedO5xnmtDQobSyGXcanTIYvd1G8X7ICSwQMcZF+8+brSGso1yv?=
+ =?us-ascii?Q?o1KqemnmJMZg8htOhXYay+7z5JSCu4r3r/ruzb1p/IhejOO19FPpvAxBsYMD?=
+ =?us-ascii?Q?skCePyvKVXS5VjAsy/EyW5Mnhd7dh8Ifo4TWftOzlWsVqZXMIc9qd2X7/92u?=
+ =?us-ascii?Q?AhK/7DUsIFs45pGRibh5Qz30u9mmnD3rBSvrrMswntGgGQGGGRoeN0QxW0Lj?=
+ =?us-ascii?Q?ueobY68nhgvEUAbB/KIp5gj0C9qXUx3aiUPISJ3dE38dNW9pAFK/atbhaOQP?=
+ =?us-ascii?Q?rYj15FQeu0cuPSDNkaFrMNF7i0d+mEE+DIRCqeP4h/eWEg8eKU7iZ37O1f17?=
+ =?us-ascii?Q?HOE3Erqp9VJOCpN3bxqcho5k0JpjzOeomD/VqjJq0IhlS64wgZwekjtANeZL?=
+ =?us-ascii?Q?Vn8o/x1nVgIougNa8pf/XHwfhLyJSMfl8DaBe6dH/RKQtuq5AQdWLJcResXU?=
+ =?us-ascii?Q?QLmaGI+AKtHqqROp1PtEzKAutRCuCtjyPgnYgPuAqVDzwyvo3AopMkEP/1zs?=
+ =?us-ascii?Q?5wxVz6KQlKnraJGz8omtMDT92cjfdjUbrWPX0Luy00t+AJ5Ddk6J5LvBxKkx?=
+ =?us-ascii?Q?9o1BKSUqtgMmeaKB8dEcF4NGKMBZDsPjnRfWKJd3LdMoZ+Ot8E551bXdzpIa?=
+ =?us-ascii?Q?w1CL1o/WJc6KHGswtLJHLgIKDjKWW4eEBL7rMgLirnelxfI+3j9IkMvBz/j3?=
+ =?us-ascii?Q?1NDKsbaJfFcIaQtwHufnnYivSIU4cb8I3RLJ2DFSYmvh5LkX9KhYkHFVYN0s?=
+ =?us-ascii?Q?ZpDJ6vnlKk4HsziGNVA6/OxbJBO6Dy/8hr25yIb6ntW/ymNXXnau8ecmCGvC?=
+ =?us-ascii?Q?Q+hpGs0WiE/mPh5CrrwhahuuNHgdKVTUqlzcM/RRKRx9enII6swfgwg11aiV?=
+ =?us-ascii?Q?Ewe0mb79kCLmeE8Qg0aq4lXCnfnfPqL22Gu/8UsdaG2Vb1y+wz5DHkiKTaHi?=
+ =?us-ascii?Q?wAuIor7SorM95AjgEcck85P0spV474L9dsN9ih1aWrM=3D?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4ca61204-3379-4744-6be3-08d8b618c0db
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Jan 2021 10:07:50.2676
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: BCrCWFSwnZXzHyGM5FdVnV6u2VreZKPkdCQt70xH9irb3MA4tkXd47Fj1CUbT/bi3H4pSK1J+GwG8EbQewcEVQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB4155
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2021-01-11 at 17:22 +0800, Can Guo wrote:
-> > > meaning you are tring to access a register when clocks are
-> > > disabled.
-> > > This
-> > > leads to system CRASH.
-> > > 
-> > 
-> > OK, let it simple, share this kind of crash log becuase of access
-> > sysfs
-> > node in the shutdown flow.
-> > 
-> > 
-> > > [2] OCP is over current protection. While UFS shutting down, you
-> > > may
-> > > have put UFS regulators to LPM. After that, if you are still
-> > > trying
-> > > to
-> > > talk to UFS, OCP can happen on VCCQ/VCCQ2. This leads to system
-> > > CRASH
-> > > too.
-> > 
-> > the same as above, share the crash log.
-> > 
-> 
-> If you have hand-on experiences on NoC and/or OCP issues, you won't
-> ask
-> for the crash log. The tricky parts about critial NoC and OCP issues
-> is
-
-OK, interesting. would you tell me which register access node in ufs-
-sysfs.c can trigger this crash? let me verify your statement.
-
-
-Bean
-
-> 
-
+>=20
+>=20
+> From: Jaegeuk Kim <jaegeuk@google.com>
+>=20
+> Kernel stack violation when getting unit_descriptor/wb_buf_alloc_units fr=
+om
+> rpmb lun. The reason is the unit descriptor length is different per LU.
+>=20
+> The lengh of Normal LU is 45, while the one of rpmb LU is 35.
+>=20
+> int ufshcd_read_desc_param(struct ufs_hba *hba, ...)
+> {
+>         param_offset=3D41;
+>         param_size=3D4;
+>         buff_len=3D45;
+>         ...
+>         buff_len=3D35 by rpmb LU;
+>=20
+>         if (is_kmalloc) {
+>                 /* Make sure we don't copy more data than available */
+>                 if (param_offset + param_size > buff_len)
+>                         param_size =3D buff_len - param_offset;
+>                         --> param_size =3D 250;
+>                 memcpy(param_read_buf, &desc_buf[param_offset], param_siz=
+e);
+>                 --> memcpy(param_read_buf, desc_buf+41, 250);
+>=20
+> [  141.868974][ T9174] Kernel panic - not syncing: stack-protector: Kerne=
+l
+> stack is corrupted in: wb_buf_alloc_units_show+0x11c/0x11c
+>         }
+> }
+>=20
+> Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
