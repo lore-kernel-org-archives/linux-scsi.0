@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F6BCC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 00:31:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AEEAC43381
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 00:31:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17D4522D08
+	by mail.kernel.org (Postfix) with ESMTP id D746B22D08
 	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 00:31:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391766AbhALAZr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jan 2021 19:25:47 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:23044 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2403872AbhAKXNX (ORCPT
+        id S2391764AbhALAZq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jan 2021 19:25:46 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:46372 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2403864AbhAKXNV (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 Jan 2021 18:13:23 -0500
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10BN2UBG175401;
-        Mon, 11 Jan 2021 18:12:38 -0500
+        Mon, 11 Jan 2021 18:13:21 -0500
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10BNBrbs017938;
+        Mon, 11 Jan 2021 18:12:31 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=GmNvDU70WRRDHGJO5ab1fmTFybGNSQl2UdTKfI7awiA=;
- b=tJgxcxYtkfnXs6IVD/eBdT0dQl+tDnTPOk6AFTab02hgb+Tauz/9fKDeWfWvGM2T14dn
- aqZMipMs3zqICG/tSn3cCvOPQ/mfaROcc/fEqJtPjilDUkgYMNMnJW+hGwNzrlxCytzL
- 0xvGgzyD4jPDraTzexOSAcdnFmqD1BIJwl7+W/YV2IiEpUOpCuRWSbVXQfUzbWteYq9F
- 0JEPV3KkUdO3GyRVeULyGAjzXup7q41Zxa4YNgk+R4i2po0lQiTABl0gHPonSKh7Pa1U
- 1iIvVJj50I6oLKBKbo8d5AIOetDuND7K3Y3YQhiCmakTmzr7zTapHQy0xg+YrFwCH2xf SQ== 
-Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 360yvkrf51-1
+ bh=tW30Dz7n8q+6qhgZvSJ2mdmZP94XSZx4NCukQuMrLos=;
+ b=r3PmpfOuffHCHW/Mya3jDFb5U8ZFAMwJJCyaCIJrOVxbJwxc2K7lF29qxHZ3iyQT3AYm
+ FQl3qahFR4K/wA54X0LDGKPQL0n+ZaIrIDm+85IIC3E2/hHnKrkZmwbP5BeB+juYaghR
+ wFk44a9tF/zZiEdqFFHQsxAjCEYeYGV0sKjsUNqzmwDRK0PA+zDiAvprtv631iJyIPKy
+ mompwZeYbWflFX9hTGq+i3z1PMSWvrbxdj0kt/ytoQVvFuNbgJvQ34SaZKKREzqsOaHf
+ rk1Bnrw6JswYrAghRFbGKwpbZxV0ECfHOpam+kvnhQdN+SF4dbqE+KiZqf5h82N3HZp2 Ew== 
+Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 36104wg083-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Jan 2021 18:12:38 -0500
-Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
-        by ppma03dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10BN7xjI008136;
-        Mon, 11 Jan 2021 23:12:37 GMT
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-        by ppma03dal.us.ibm.com with ESMTP id 35y448xcph-1
+        Mon, 11 Jan 2021 18:12:31 -0500
+Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
+        by ppma04dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10BN8Who022027;
+        Mon, 11 Jan 2021 23:12:30 GMT
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+        by ppma04dal.us.ibm.com with ESMTP id 35y448xfh4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Jan 2021 23:12:37 +0000
+        Mon, 11 Jan 2021 23:12:30 +0000
 Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10BNCa7v23855526
+        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10BNCSUM28180986
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Jan 2021 23:12:36 GMT
+        Mon, 11 Jan 2021 23:12:28 GMT
 Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 164407805F;
-        Mon, 11 Jan 2021 23:12:36 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id BDE4578064;
+        Mon, 11 Jan 2021 23:12:28 +0000 (GMT)
 Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A962C78067;
-        Mon, 11 Jan 2021 23:12:35 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 5C56678063;
+        Mon, 11 Jan 2021 23:12:28 +0000 (GMT)
 Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
         by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Mon, 11 Jan 2021 23:12:35 +0000 (GMT)
+        Mon, 11 Jan 2021 23:12:28 +0000 (GMT)
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     james.bottomley@hansenpartnership.com
 Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
         brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH v4 17/21] ibmvfc: add cancel mad initialization helper
-Date:   Mon, 11 Jan 2021 17:12:21 -0600
-Message-Id: <20210111231225.105347-18-tyreld@linux.ibm.com>
+Subject: [PATCH v4 02/21] ibmvfc: move event pool init/free routines
+Date:   Mon, 11 Jan 2021 17:12:06 -0600
+Message-Id: <20210111231225.105347-3-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210111231225.105347-1-tyreld@linux.ibm.com>
 References: <20210111231225.105347-1-tyreld@linux.ibm.com>
@@ -72,118 +72,197 @@ Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
  definitions=2021-01-11_32:2021-01-11,2021-01-11 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 impostorscore=0
- malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0 mlxlogscore=999
- lowpriorityscore=0 phishscore=0 priorityscore=1501 suspectscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 adultscore=0 phishscore=0
+ bulkscore=0 suspectscore=0 mlxlogscore=947 clxscore=1015 spamscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2101110126
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a helper routine for initializing a Cancel MAD. This will be useful
-for a channelized client that needs to send Cancel commands down every
-channel commands were sent for a particular LUN.
+The next patch in this series reworks the event pool allocation calls to
+happen within the individual queue allocation routines instead of as
+independent calls.
+
+Move the init/free routines earlier in ibmvfc.c to prevent undefined
+reference errors when calling these functions from the queue allocation
+code. No functional change.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 68 ++++++++++++++++++++--------------
- 1 file changed, 40 insertions(+), 28 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 151 +++++++++++++++++----------------
+ 1 file changed, 76 insertions(+), 75 deletions(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 578e27180f10..b0b0212344f3 100644
+index 9200fe49c57e..cd9273a5fadb 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -2379,6 +2379,45 @@ static int ibmvfc_wait_for_ops(struct ibmvfc_host *vhost, void *device,
- 	return SUCCESS;
+@@ -716,6 +716,82 @@ static int ibmvfc_send_crq_init_complete(struct ibmvfc_host *vhost)
+ 	return ibmvfc_send_crq(vhost, 0xC002000000000000LL, 0);
  }
  
-+static struct ibmvfc_event *ibmvfc_init_tmf(struct ibmvfc_queue *queue,
-+					    struct scsi_device *sdev,
-+					    int type)
++/**
++ * ibmvfc_init_event_pool - Allocates and initializes the event pool for a host
++ * @vhost:	ibmvfc host who owns the event pool
++ *
++ * Returns zero on success.
++ **/
++static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost,
++				  struct ibmvfc_queue *queue)
 +{
-+	struct ibmvfc_host *vhost = shost_priv(sdev->host);
-+	struct scsi_target *starget = scsi_target(sdev);
-+	struct fc_rport *rport = starget_to_rport(starget);
-+	struct ibmvfc_event *evt;
-+	struct ibmvfc_tmf *tmf;
++	int i;
++	struct ibmvfc_event_pool *pool = &queue->evt_pool;
 +
-+	evt = ibmvfc_get_event(queue);
-+	ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_MAD_FORMAT);
++	ENTER;
++	pool->size = max_requests + IBMVFC_NUM_INTERNAL_REQ;
++	pool->events = kcalloc(pool->size, sizeof(*pool->events), GFP_KERNEL);
++	if (!pool->events)
++		return -ENOMEM;
 +
-+	tmf = &evt->iu.tmf;
-+	memset(tmf, 0, sizeof(*tmf));
-+	if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN)) {
-+		tmf->common.version = cpu_to_be32(2);
-+		tmf->target_wwpn = cpu_to_be64(rport->port_name);
-+	} else {
-+		tmf->common.version = cpu_to_be32(1);
++	pool->iu_storage = dma_alloc_coherent(vhost->dev,
++					      pool->size * sizeof(*pool->iu_storage),
++					      &pool->iu_token, 0);
++
++	if (!pool->iu_storage) {
++		kfree(pool->events);
++		return -ENOMEM;
 +	}
-+	tmf->common.opcode = cpu_to_be32(IBMVFC_TMF_MAD);
-+	tmf->common.length = cpu_to_be16(sizeof(*tmf));
-+	tmf->scsi_id = cpu_to_be64(rport->port_id);
-+	int_to_scsilun(sdev->lun, &tmf->lun);
-+	if (!ibmvfc_check_caps(vhost, IBMVFC_CAN_SUPPRESS_ABTS))
-+		type &= ~IBMVFC_TMF_SUPPRESS_ABTS;
-+	if (vhost->state == IBMVFC_ACTIVE)
-+		tmf->flags = cpu_to_be32((type | IBMVFC_TMF_LUA_VALID));
-+	else
-+		tmf->flags = cpu_to_be32(((type & IBMVFC_TMF_SUPPRESS_ABTS) | IBMVFC_TMF_LUA_VALID));
-+	tmf->cancel_key = cpu_to_be32((unsigned long)sdev->hostdata);
-+	tmf->my_cancel_key = cpu_to_be32((unsigned long)starget->hostdata);
 +
-+	init_completion(&evt->comp);
++	INIT_LIST_HEAD(&queue->sent);
++	INIT_LIST_HEAD(&queue->free);
++	spin_lock_init(&queue->l_lock);
 +
-+	return evt;
++	for (i = 0; i < pool->size; ++i) {
++		struct ibmvfc_event *evt = &pool->events[i];
++
++		atomic_set(&evt->free, 1);
++		evt->crq.valid = 0x80;
++		evt->crq.ioba = cpu_to_be64(pool->iu_token + (sizeof(*evt->xfer_iu) * i));
++		evt->xfer_iu = pool->iu_storage + i;
++		evt->vhost = vhost;
++		evt->queue = queue;
++		evt->ext_list = NULL;
++		list_add_tail(&evt->queue_list, &queue->free);
++	}
++
++	LEAVE;
++	return 0;
++}
++
++/**
++ * ibmvfc_free_event_pool - Frees memory of the event pool of a host
++ * @vhost:	ibmvfc host who owns the event pool
++ *
++ **/
++static void ibmvfc_free_event_pool(struct ibmvfc_host *vhost,
++				   struct ibmvfc_queue *queue)
++{
++	int i;
++	struct ibmvfc_event_pool *pool = &queue->evt_pool;
++
++	ENTER;
++	for (i = 0; i < pool->size; ++i) {
++		list_del(&pool->events[i].queue_list);
++		BUG_ON(atomic_read(&pool->events[i].free) != 1);
++		if (pool->events[i].ext_list)
++			dma_pool_free(vhost->sg_pool,
++				      pool->events[i].ext_list,
++				      pool->events[i].ext_list_token);
++	}
++
++	kfree(pool->events);
++	dma_free_coherent(vhost->dev,
++			  pool->size * sizeof(*pool->iu_storage),
++			  pool->iu_storage, pool->iu_token);
++	LEAVE;
 +}
 +
  /**
-  * ibmvfc_cancel_all - Cancel all outstanding commands to the device
-  * @sdev:	scsi device to cancel commands
-@@ -2393,9 +2432,6 @@ static int ibmvfc_wait_for_ops(struct ibmvfc_host *vhost, void *device,
- static int ibmvfc_cancel_all(struct scsi_device *sdev, int type)
- {
- 	struct ibmvfc_host *vhost = shost_priv(sdev->host);
--	struct scsi_target *starget = scsi_target(sdev);
--	struct fc_rport *rport = starget_to_rport(starget);
--	struct ibmvfc_tmf *tmf;
- 	struct ibmvfc_event *evt, *found_evt;
- 	union ibmvfc_iu rsp;
- 	int rsp_rc = -EBUSY;
-@@ -2422,32 +2458,8 @@ static int ibmvfc_cancel_all(struct scsi_device *sdev, int type)
- 	}
+  * ibmvfc_free_queue - Deallocate queue
+  * @vhost:	ibmvfc host struct
+@@ -1312,81 +1388,6 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+ 	strncpy(login_info->drc_name, location, IBMVFC_MAX_NAME);
+ }
  
- 	if (vhost->logged_in) {
--		evt = ibmvfc_get_event(&vhost->crq);
--		ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_MAD_FORMAT);
+-/**
+- * ibmvfc_init_event_pool - Allocates and initializes the event pool for a host
+- * @vhost:	ibmvfc host who owns the event pool
+- *
+- * Returns zero on success.
+- **/
+-static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost,
+-				  struct ibmvfc_queue *queue)
+-{
+-	int i;
+-	struct ibmvfc_event_pool *pool = &queue->evt_pool;
 -
--		tmf = &evt->iu.tmf;
--		memset(tmf, 0, sizeof(*tmf));
--		if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN)) {
--			tmf->common.version = cpu_to_be32(2);
--			tmf->target_wwpn = cpu_to_be64(rport->port_name);
--		} else {
--			tmf->common.version = cpu_to_be32(1);
--		}
--		tmf->common.opcode = cpu_to_be32(IBMVFC_TMF_MAD);
--		tmf->common.length = cpu_to_be16(sizeof(*tmf));
--		tmf->scsi_id = cpu_to_be64(rport->port_id);
--		int_to_scsilun(sdev->lun, &tmf->lun);
--		if (!ibmvfc_check_caps(vhost, IBMVFC_CAN_SUPPRESS_ABTS))
--			type &= ~IBMVFC_TMF_SUPPRESS_ABTS;
--		if (vhost->state == IBMVFC_ACTIVE)
--			tmf->flags = cpu_to_be32((type | IBMVFC_TMF_LUA_VALID));
--		else
--			tmf->flags = cpu_to_be32(((type & IBMVFC_TMF_SUPPRESS_ABTS) | IBMVFC_TMF_LUA_VALID));
--		tmf->cancel_key = cpu_to_be32((unsigned long)sdev->hostdata);
--		tmf->my_cancel_key = cpu_to_be32((unsigned long)starget->hostdata);
+-	ENTER;
+-	pool->size = max_requests + IBMVFC_NUM_INTERNAL_REQ;
+-	pool->events = kcalloc(pool->size, sizeof(*pool->events), GFP_KERNEL);
+-	if (!pool->events)
+-		return -ENOMEM;
 -
-+		evt = ibmvfc_init_tmf(&vhost->crq, sdev, type);
- 		evt->sync_iu = &rsp;
--		init_completion(&evt->comp);
- 		rsp_rc = ibmvfc_send_event(evt, vhost, default_timeout);
- 	}
- 
+-	pool->iu_storage = dma_alloc_coherent(vhost->dev,
+-					      pool->size * sizeof(*pool->iu_storage),
+-					      &pool->iu_token, 0);
+-
+-	if (!pool->iu_storage) {
+-		kfree(pool->events);
+-		return -ENOMEM;
+-	}
+-
+-	INIT_LIST_HEAD(&queue->sent);
+-	INIT_LIST_HEAD(&queue->free);
+-	spin_lock_init(&queue->l_lock);
+-
+-	for (i = 0; i < pool->size; ++i) {
+-		struct ibmvfc_event *evt = &pool->events[i];
+-		atomic_set(&evt->free, 1);
+-		evt->crq.valid = 0x80;
+-		evt->crq.ioba = cpu_to_be64(pool->iu_token + (sizeof(*evt->xfer_iu) * i));
+-		evt->xfer_iu = pool->iu_storage + i;
+-		evt->vhost = vhost;
+-		evt->queue = queue;
+-		evt->ext_list = NULL;
+-		list_add_tail(&evt->queue_list, &queue->free);
+-	}
+-
+-	LEAVE;
+-	return 0;
+-}
+-
+-/**
+- * ibmvfc_free_event_pool - Frees memory of the event pool of a host
+- * @vhost:	ibmvfc host who owns the event pool
+- *
+- **/
+-static void ibmvfc_free_event_pool(struct ibmvfc_host *vhost,
+-				   struct ibmvfc_queue *queue)
+-{
+-	int i;
+-	struct ibmvfc_event_pool *pool = &queue->evt_pool;
+-
+-	ENTER;
+-	for (i = 0; i < pool->size; ++i) {
+-		list_del(&pool->events[i].queue_list);
+-		BUG_ON(atomic_read(&pool->events[i].free) != 1);
+-		if (pool->events[i].ext_list)
+-			dma_pool_free(vhost->sg_pool,
+-				      pool->events[i].ext_list,
+-				      pool->events[i].ext_list_token);
+-	}
+-
+-	kfree(pool->events);
+-	dma_free_coherent(vhost->dev,
+-			  pool->size * sizeof(*pool->iu_storage),
+-			  pool->iu_storage, pool->iu_token);
+-	LEAVE;
+-}
+-
+ /**
+  * ibmvfc_get_event - Gets the next free event in pool
+  * @vhost:	ibmvfc host struct
 -- 
 2.27.0
 
