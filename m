@@ -2,93 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA0DAC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 08:20:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BB52C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 08:25:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A2AF22AAA
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 08:20:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51495216C4
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 08:25:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727347AbhAKIUT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jan 2021 03:20:19 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:35911 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725885AbhAKIUS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2021 03:20:18 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1610353202; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=qw/c4lu6kAigwWBL51ikONX2GIaFw4LqTFQWJ2iKgGs=;
- b=d0LPbmcVNKPg4PDkAWOHIqGPGJ8esT2MGxFkmzbeivUvEcpGWSiOUtiHvKQ9u6Grybul7Efq
- NDgvsDuksO2dXfUQDAhqdQ5wOnPojriq7e3FQ6Nq3xD82RTMEu1u2XUBtDr/glTveg4OIGGT
- 2cmUArmvlEfzH1mjdedJ9n9RwYo=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 5ffc0a0a4dcca12475f03fbc (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 11 Jan 2021 08:19:22
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id CBD47C43462; Mon, 11 Jan 2021 08:19:21 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4ABCCC433C6;
-        Mon, 11 Jan 2021 08:19:21 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+        id S1727347AbhAKIYU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jan 2021 03:24:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43808 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725843AbhAKIYS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2021 03:24:18 -0500
+Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76D72C061786;
+        Mon, 11 Jan 2021 00:23:38 -0800 (PST)
+Received: by mail-ej1-x62c.google.com with SMTP id q22so23521273eja.2;
+        Mon, 11 Jan 2021 00:23:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=bVN0e+guDBLEpu6mTxspL6cIVlkhLwLLZ+onFEWXX6A=;
+        b=tJkpcXk8vFzGwDuQsBli+0A51PRMs8y/ZaSc1V518emxHlfPUgO6R9ghca15yuq0k+
+         GI3K6iFlQs7ArQLFItoxdmNstsSMWVzh7CgAGhRMtmXCFExZ/tuCGYWBse0+1IfJ7gRu
+         Z4BPBgD5Xv76hvYMSBC3cGAvCdK0okaHfkzlO35wKXI65tX2RI/MfaMwXVJ09ykrCp9a
+         RHZMLSdWnkDo04n/58icl8uawRzHj1k4m8bSB3H/ELxMd4PQrIIYNVxTisrHzm6/CDIk
+         eOmF586XoHaBOval+esEDYIa57YCu/ALhiXlwqG7olISb0+kab/KyS1Heza2BnvZqzKw
+         Inaw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=bVN0e+guDBLEpu6mTxspL6cIVlkhLwLLZ+onFEWXX6A=;
+        b=VnDhKmkbHDYEIHx0uFwJWhE8V14KFqQQCZRWCMAZnkY8cx8txYWNdO9O8VGjT8n4+N
+         w5+uOAxNyqjpkoCQ9dNCNAlctGjpGeIyj+3rWk9DJlEuU9pidMlMrHlYnBFUCIyRQV4h
+         +WCWf9kxAeXOWPjlinL9o39GRQt33TEW5HzOm15LFWiwNPO+j0XmeIQWIrp/FwnZ/ndV
+         xn3cX8dWLUwfv9s65F7T2l6YwIaJAJlhdDO3i1EvxPnv3Zu5RYzsdtjFKsLOqdIlOtrO
+         PDL5Mt9hSmy761O7phkwv9yJARo3XJpc5TcYvqQT+DPFPrpcpby6GNUsTqbWnzdtHrEu
+         7fpw==
+X-Gm-Message-State: AOAM531BUNM3d2CXyCgeN7p4k6FQsZnyliRyZXZZr8h2LkzzPMPVVBJu
+        PUkxJfbIU8EmQuKQp+XhETk=
+X-Google-Smtp-Source: ABdhPJxLp00VJeDO4ym1wWtt5UUQ7OHMb2Ke85WdRScCsecilBrIfomuAnuHUxc3OKiZoE4mP61kpQ==
+X-Received: by 2002:a17:906:8151:: with SMTP id z17mr10197276ejw.48.1610353417073;
+        Mon, 11 Jan 2021 00:23:37 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bfcff.dynamic.kabel-deutschland.de. [95.91.252.255])
+        by smtp.googlemail.com with ESMTPSA id t15sm6740531ejx.88.2021.01.11.00.23.35
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 11 Jan 2021 00:23:36 -0800 (PST)
+Message-ID: <976641f42211af23d90464d0c4841cc40740b0d7.camel@gmail.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: Protect PM ops and err_handler from user
+ access through sysfs
+From:   Bean Huo <huobean@gmail.com>
+To:     Can Guo <cang@codeaurora.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        rjw@rjwysocki.net, Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Nitin Rawat <nitirawa@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+Date:   Mon, 11 Jan 2021 09:23:35 +0100
+In-Reply-To: <fa0e976387070c64752c972d32ce15df@codeaurora.org>
+References: <1609595975-12219-1-git-send-email-cang@codeaurora.org>
+         <1609595975-12219-3-git-send-email-cang@codeaurora.org>
+         <80a15afab8024d0b61d312b57585c9322ac91958.camel@gmail.com>
+         <7d49c1dfc3f648c484076f3c3a7f4e1e@codeaurora.org>
+         <1514403adf486ac8069253c09f45b021bad32e00.camel@gmail.com>
+         <f814b71d1d4ea87a72df4851a8190807@codeaurora.org>
+         <cb388d8ea15b2c80a072dec74d9ededecb183a08.camel@gmail.com>
+         <e69bd5a6b73d5c652130bf4fa077aac0@codeaurora.org>
+         <606774efd4d89f0ea78cefeb428cc9e1@codeaurora.org>
+         <146b46a5c38f4582a9a8e6df1d87cdfc0684f549.camel@gmail.com>
+         <fa0e976387070c64752c972d32ce15df@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Date:   Mon, 11 Jan 2021 16:19:21 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        alim.akhtar@samsung.com, bvanassche@acm.org,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        Jaegeuk Kim <jaegeuk@google.com>
-Subject: Re: [PATCH] scsi: ufs: should not override buffer lengh
-In-Reply-To: <DM6PR04MB65753C88CF333FABF5CB1704FCAB0@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20210111044443.1405049-1-jaegeuk@kernel.org>
- <6551e7d6dd7dc4132dc69e77a51f6f21@codeaurora.org>
- <e1b29f7cdd62cefcc9355baaed66641f@codeaurora.org>
- <DM6PR04MB65753C88CF333FABF5CB1704FCAB0@DM6PR04MB6575.namprd04.prod.outlook.com>
-Message-ID: <f4f633617ce91628b251b6ba668df820@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-01-11 16:15, Avri Altman wrote:
->> 
->> Sorry, typo corrected.
->> 
->> Hi Jaegeuk,
->> 
->> I think the problem is that func ufshcd_read_desc_param() is not
->> expecting
->> one access unsupported descriptors on RPMB LU.
-> Correct.
-> This is about wb introducing a new constraint: wb buffer is only
-> allowed in lu 0..7.
-> And this is why, IMHO, the fix should be in ufs_is_valid_unit_desc_lun,
-> To include param offset, as it is only called in contingency of
-> ufshcd_read_desc_param.
+On Mon, 2021-01-11 at 09:27 +0800, Can Guo wrote:
+> > 
+> > If accessing sysfs nodes, which triggers a UFS UPIU request to
+> > read/write UFS device descriptors during shutdown flow, there is
+> > only
+> > one issue that sysfs node access failure since UFS device and LINK
+> > has
+> > been shutdown. Strictly speaking, the failure comes after
+> > ufshcd_set_dev_pwr_mode().
+> > 
+> >     __ufshcd_query_descriptor: opcode 0x01 for idn 0 failed, index
+> > 0,
+> > err = -11
 > 
-> Thanks,
-> Avri
+> You misunderstood it again. You are expecting a simple query cmd
+> error.
+> But what really matters are NoC issues[1] and OCP[2]. And
+> while/after 
+> UFS
+> shutting down, either of them may happen.
+> 
+> [1] When a un-clocked register access issue happens, we call it a
+> NoC 
+> issue,
+> meaning you are tring to access a register when clocks are disabled. 
+> This
+> leads to system CRASH.
+> 
 
-Yeah... Fixing it in ufs-sysfs.c also works. Anyways, the math in
-ufshcd_read_desc_param is already complex. Let's fix it somewhere
-close to the source/initiator.
+OK, let it simple, share this kind of crash log becuase of access sysfs
+node in the shutdown flow.
+
+
+> [2] OCP is over current protection. While UFS shutting down, you may
+> have put UFS regulators to LPM. After that, if you are still trying
+> to
+> talk to UFS, OCP can happen on VCCQ/VCCQ2. This leads to system
+> CRASH 
+> too.
+
+the same as above, share the crash log.
+
+> 
+> > 
+> > Since the shutdown is oneway process, this failure is not big
+> > issue. If
+> > you meant to avoid this failure for unsafe shutdown, I agree with
+> > you,
+> > But for the race issue, I don't know.
+> > 
+> 
+> Easy for you to say. System crash is a big issue to any SoC vendors
+> I 
+> belive.
+> 
+
+indeed, crash is serious issue, share the log.
+
 
 Thanks,
-Can Guo.
+Bean
+
+
+> Can Guo.
+
