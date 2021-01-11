@@ -2,69 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4538FC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 02:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 692D1C43381
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 02:50:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 04D5822483
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 02:50:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AEF222AAA
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 02:50:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726995AbhAKCtz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 Jan 2021 21:49:55 -0500
-Received: from mail-pg1-f177.google.com ([209.85.215.177]:36346 "EHLO
-        mail-pg1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725919AbhAKCtz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jan 2021 21:49:55 -0500
-Received: by mail-pg1-f177.google.com with SMTP id c132so11678801pga.3;
-        Sun, 10 Jan 2021 18:49:39 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=mBjywu/JytUrPm5jEBE65SGQ7hTVgYgPqE4uJPglmZg=;
-        b=KhA2vXQQH5jO+40bakLl5SUkhCqvheJwZjwQmo68aEF+vJJT0UPEJ7wDrGYLaDHuCq
-         kLShdFmj2SzjfN0DfGK1IYcI7gVRAn5npqUHSUf0UXCdlIWiJV5liBwg77X4deF0eZ8+
-         JAMXsWRg81UJZRP3SKDgZQ8BCJiyuTxp/riD0+nHLjlAzUv2GGwwJopSjVC5RWdkPNDz
-         nGMOc3lZLscB+BVFeRnQ7bUHmmnb0civkEfQnkbrWKK6YhrdAWRQd1kBkUjJcJ7EDASt
-         QIA7T00KsUkNa/FNrARhBGOolM2tVGbTh9k1laj9lOk6WqxdO+uFF6qhtYLWp17Uf8Lw
-         xn3g==
-X-Gm-Message-State: AOAM533FwjnCNLOHdH5XBS5E2MeGmVmMMwpWq3lpmmAqzPXwqW3iEjFx
-        XugpWb4WTQ6ZGJqnAsPVBd2bLXnrkDA=
-X-Google-Smtp-Source: ABdhPJwx7hHoRkvykENMFtJARWFXfDuoe21ONMt3g8QlDBGcFe9Zq3QEWxncW7AGikPR4S7xLtD+9A==
-X-Received: by 2002:a62:ca:0:b029:19e:67a9:f0f2 with SMTP id 193-20020a6200ca0000b029019e67a9f0f2mr14291608pfa.60.1610333353639;
-        Sun, 10 Jan 2021 18:49:13 -0800 (PST)
-Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id p17sm16378472pfn.52.2021.01.10.18.49.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 10 Jan 2021 18:49:12 -0800 (PST)
-Subject: Re: [PATCH] target/file: don't zero iter before iov_iter_bvec
-To:     Pavel Begunkov <asml.silence@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <34cd22d6cec046e3adf402accb1453cc255b9042.1610207523.git.asml.silence@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <488fa4ff-3e08-28cc-60f1-b8c5172e1f79@acm.org>
-Date:   Sun, 10 Jan 2021 18:49:11 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S1727152AbhAKCu0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Jan 2021 21:50:26 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:23363 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727130AbhAKCuY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 10 Jan 2021 21:50:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1610333338;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=yjguCijslXAGWOXFjKVOGOP7FungpwsXWLGY8oK5Jm0=;
+        b=YNpAa7mL9UfbkU3kYwcoePeNddhm5qgP+SYr3At0wUpluLGhCeVOrb/0+CHaEv+tYZRbOt
+        WA4yZ9zwUYE8RFqhNV2TsWDIf1WCIoP+iDTNLE6YQ7z1mDVwNNlxMIDahK12/4bGKKzzQf
+        uX3iG4siP/SDqeg0wrecEPT0RjdV87w=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-181-tJVw7DbHPtK0V-YSLLxZtg-1; Sun, 10 Jan 2021 21:48:54 -0500
+X-MC-Unique: tJVw7DbHPtK0V-YSLLxZtg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6F608800D53;
+        Mon, 11 Jan 2021 02:48:51 +0000 (UTC)
+Received: from T590 (ovpn-12-180.pek2.redhat.com [10.72.12.180])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 74CBA19D9D;
+        Mon, 11 Jan 2021 02:48:40 +0000 (UTC)
+Date:   Mon, 11 Jan 2021 10:48:35 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Pavel Begunkov <asml.silence@gmail.com>
+Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 1/7] splice: don't generate zero-len segement bvecs
+Message-ID: <20210111024835.GB4147870@T590>
+References: <cover.1610170479.git.asml.silence@gmail.com>
+ <bfaeb54c88f0c962461b75c6493103e11bb0b17b.1610170479.git.asml.silence@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <34cd22d6cec046e3adf402accb1453cc255b9042.1610207523.git.asml.silence@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bfaeb54c88f0c962461b75c6493103e11bb0b17b.1610170479.git.asml.silence@gmail.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/9/21 7:53 AM, Pavel Begunkov wrote:
-> iov_iter_bvec() initialises iterators well, no need to pre-zero it
-> beforehand as done in fd_execute_rw_aio(). Compilers can't optimise it
-> out and generate extra code for that (confirmed with assembly).
+On Sat, Jan 09, 2021 at 04:02:57PM +0000, Pavel Begunkov wrote:
+> iter_file_splice_write() may spawn bvec segments with zero-length. In
+> preparation for prohibiting them, filter out by hand at splice level.
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
+> ---
+>  fs/splice.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/splice.c b/fs/splice.c
+> index 866d5c2367b2..474fb8b5562a 100644
+> --- a/fs/splice.c
+> +++ b/fs/splice.c
+> @@ -662,12 +662,14 @@ iter_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
+>  
+>  		/* build the vector */
+>  		left = sd.total_len;
+> -		for (n = 0; !pipe_empty(head, tail) && left && n < nbufs; tail++, n++) {
+> +		for (n = 0; !pipe_empty(head, tail) && left && n < nbufs; tail++) {
+>  			struct pipe_buffer *buf = &pipe->bufs[tail & mask];
+>  			size_t this_len = buf->len;
+>  
+> -			if (this_len > left)
+> -				this_len = left;
+> +			/* zero-length bvecs are not supported, skip them */
+> +			if (!this_len)
+> +				continue;
+> +			this_len = min(this_len, left);
+>  
+>  			ret = pipe_buf_confirm(pipe, buf);
+>  			if (unlikely(ret)) {
+> @@ -680,6 +682,7 @@ iter_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
+>  			array[n].bv_len = this_len;
+>  			array[n].bv_offset = buf->offset;
+>  			left -= this_len;
+> +			n++;
+>  		}
+>  
+>  		iov_iter_bvec(&from, WRITE, array, n, sd.total_len - left);
+> -- 
+> 2.24.0
+> 
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+
+-- 
+Ming
+
