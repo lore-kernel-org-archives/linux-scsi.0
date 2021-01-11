@@ -2,108 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24F28C4332E
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 22:33:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D74CDC433E9
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 00:25:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0761022D06
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 22:33:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B04FE22D57
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 00:25:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390538AbhAKWc7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jan 2021 17:32:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57222 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390193AbhAKWc4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2021 17:32:56 -0500
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4969AC06179F;
-        Mon, 11 Jan 2021 14:32:15 -0800 (PST)
-Received: by mail-ej1-x62b.google.com with SMTP id b9so713410ejy.0;
-        Mon, 11 Jan 2021 14:32:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=q+wom0BMfaWQ690xBm+ubEDHR/EXGn4oiMHIKz+sgME=;
-        b=iEQBHu5YmJ+yo34rUy1Pl/BzYp1e/5M966RFtPV9p85BHpAonfmevpw99OjscJazHH
-         u9Sv0jGiK97nDqWiHGSK06Hy47ogAi9abVEzj1QBv1wvE7n3xnwGIqCfu77U8oT+r1JO
-         mP60mLokG2Z9IGBgUqeS/r7pETY+lvhIrNHNJReqpOrVsO5J+RIbniYry1SLtOSYjGJ7
-         /+Tqe7Ht98bmSOJjgfeq9D9brMZdm4Bcl1hiswRwHM8EWmEEcVntec4dVJua6g86Jp/U
-         GOHEuZdPfNymLH77DsAOV0bVt1Wtzfen169Eg21rGz4+vG2qMDhYo93BTd22iYLXtisY
-         j3Ug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=q+wom0BMfaWQ690xBm+ubEDHR/EXGn4oiMHIKz+sgME=;
-        b=ikyBNBL7bpEpXu+UxkXwJyaOkUmgBylX6qqW9rZSph7QhZnPjdd0qbZNegVFazHyOO
-         vMa4P3UrRKgtxRWmgs5MpE73VgXtAkkDSl6fiMaKhwUnlKa4xlomk5ceTxTlgEFEoGEt
-         34v8ndN2eN7TaKuEStbyUHQ66cZUCiLvYSGGCZkhF3WOnujXRKLQ23ZG13gWbD0Byk4E
-         LHa3KDdkDnT+bDzE3dvKdv3xoB35CNUbsRmA6eW2LHbsWWwWobzk7rzH+DaGnjn9+By/
-         M4MzrlwxKHDI8FHt9g3AkqfnPl8euTVfksRNtxWI3MTiRUoc3tZShObsbcuFcIHKmzTs
-         Scow==
-X-Gm-Message-State: AOAM5309Jh4g2tYTs4O4w33x0Y6Kgs/56ArvxqBNwAbO8buUEqaqFTvc
-        cwl7uXxZoJeCR8ouq8/tOIY=
-X-Google-Smtp-Source: ABdhPJxxEyHeOY9mHKvJyxTFP4Vf3Uh3YJuJwLnI+t4sL6V6Vld0vSRW/n1WeRqPpQm70wuUgd12kQ==
-X-Received: by 2002:a17:906:3712:: with SMTP id d18mr1131903ejc.178.1610404333886;
-        Mon, 11 Jan 2021 14:32:13 -0800 (PST)
-Received: from localhost.localdomain (ip5f5bfcff.dynamic.kabel-deutschland.de. [95.91.252.255])
-        by smtp.gmail.com with ESMTPSA id r18sm550154edx.41.2021.01.11.14.32.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Jan 2021 14:32:13 -0800 (PST)
-From:   Bean Huo <huobean@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        john.garry@huawei.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, ebiggers@google.com, satyat@google.com,
-        shipujin.t@gmail.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bean Huo <beanhuo@micron.com>
-Subject: [PATCH 2/2] scsi: ufs: Remove unnecessary devm_kfree
-Date:   Mon, 11 Jan 2021 23:32:02 +0100
-Message-Id: <20210111223202.26369-3-huobean@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20210111223202.26369-1-huobean@gmail.com>
-References: <20210111223202.26369-1-huobean@gmail.com>
+        id S2405539AbhALAZs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jan 2021 19:25:48 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:23178 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2403932AbhAKXOl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 Jan 2021 18:14:41 -0500
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10BN9FR9028234;
+        Mon, 11 Jan 2021 18:12:36 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=zItf6+mbSfLvIL9pxQZIi/E7XRG+Y4KsHH2EKTlW9iM=;
+ b=AJDI7Ph1hI7r2Sl2nOeovWhDSA1hT0AgMFpUzNFAkj8PglGsdAQKa8N1yRsD0uS9CRK2
+ AAODp/jRVuf5bXFHUKtAMou4mbBQUxwsgp0YgbVfRYuClt3fxsfO0xPzte06Dc1+X9Ya
+ flHatr+aOVs6V7++/pF9W2W3q4wqHGVfmMKrj1mD3JjPoT4PNRVFNqs/acacabtWIoSn
+ 12qmi01l6ZwzvqLSz7M84o25cDDQKEZHyuWlvh2wPa7UYOYfNNHRR00p/aXnqu1uppF3
+ rjiJY7d7BuXIfVyTty+ch9kn5KDfzQIg3HeXmGWBh2QXE/7kSdt4V2r8Zpp6Mrbv6wOX 3Q== 
+Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 360yc7ry3t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Jan 2021 18:12:36 -0500
+Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
+        by ppma01wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10BN7S5I010344;
+        Mon, 11 Jan 2021 23:12:32 GMT
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+        by ppma01wdc.us.ibm.com with ESMTP id 35y448sys5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Jan 2021 23:12:32 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10BNCVFD27656670
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 11 Jan 2021 23:12:31 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B38D478063;
+        Mon, 11 Jan 2021 23:12:31 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 4840F7805C;
+        Mon, 11 Jan 2021 23:12:31 +0000 (GMT)
+Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Mon, 11 Jan 2021 23:12:31 +0000 (GMT)
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+To:     james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH v4 08/21] ibmvfc: add Sub-CRQ IRQ enable/disable routine
+Date:   Mon, 11 Jan 2021 17:12:12 -0600
+Message-Id: <20210111231225.105347-9-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20210111231225.105347-1-tyreld@linux.ibm.com>
+References: <20210111231225.105347-1-tyreld@linux.ibm.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
+ definitions=2021-01-11_34:2021-01-11,2021-01-11 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
+ spamscore=0 mlxlogscore=838 mlxscore=0 lowpriorityscore=0 clxscore=1015
+ suspectscore=0 priorityscore=1501 impostorscore=0 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101110130
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+Each Sub-CRQ has its own interrupt. A hypercall is required to toggle
+the IRQ state. Provide the necessary mechanism via a helper function.
 
-The memory allocated with devm_kzalloc() is freed automatically
-no need to explicitly call devm_kfree.
-
-Signed-off-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/ufs/ufshcd-crypto.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd-crypto.c b/drivers/scsi/ufs/ufshcd-crypto.c
-index 07310b12a5dc..ec80ec83cf85 100644
---- a/drivers/scsi/ufs/ufshcd-crypto.c
-+++ b/drivers/scsi/ufs/ufshcd-crypto.c
-@@ -182,7 +182,7 @@ int ufshcd_hba_init_crypto_capabilities(struct ufs_hba *hba)
- 	err = blk_ksm_init(&hba->ksm,
- 			   hba->crypto_capabilities.config_count + 1);
- 	if (err)
--		goto out_free_caps;
-+		goto out;
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index a198e118887d..5d7ada0ed0d6 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -3465,6 +3465,26 @@ static void ibmvfc_tasklet(void *data)
+ 	}
+ }
  
- 	hba->ksm.ksm_ll_ops = ufshcd_ksm_ops;
- 	/* UFS only supports 8 bytes for any DUN */
-@@ -208,8 +208,6 @@ int ufshcd_hba_init_crypto_capabilities(struct ufs_hba *hba)
- 
- 	return 0;
- 
--out_free_caps:
--	devm_kfree(hba->dev, hba->crypto_cap_array);
- out:
- 	/* Indicate that init failed by clearing UFSHCD_CAP_CRYPTO */
- 	hba->caps &= ~UFSHCD_CAP_CRYPTO;
++static int ibmvfc_toggle_scrq_irq(struct ibmvfc_queue *scrq, int enable)
++{
++	struct device *dev = scrq->vhost->dev;
++	struct vio_dev *vdev = to_vio_dev(dev);
++	unsigned long rc;
++	int irq_action = H_ENABLE_VIO_INTERRUPT;
++
++	if (!enable)
++		irq_action = H_DISABLE_VIO_INTERRUPT;
++
++	rc = plpar_hcall_norets(H_VIOCTL, vdev->unit_address, irq_action,
++				scrq->hw_irq, 0, 0);
++
++	if (rc)
++		dev_err(dev, "Couldn't %s sub-crq[%lu] irq. rc=%ld\n",
++			enable ? "enable" : "disable", scrq->hwq_id, rc);
++
++	return rc;
++}
++
+ /**
+  * ibmvfc_init_tgt - Set the next init job step for the target
+  * @tgt:		ibmvfc target struct
 -- 
-2.17.1
+2.27.0
 
