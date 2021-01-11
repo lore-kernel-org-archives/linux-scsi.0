@@ -6,350 +6,154 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AAA6C433E6
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 01:53:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EF69C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 02:07:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1965522573
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 01:53:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4217D227C3
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 02:07:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726608AbhAKBxI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 Jan 2021 20:53:08 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:58247 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726472AbhAKBxH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jan 2021 20:53:07 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1610329962; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=rNZHt9TaKit6EWBoetGCh4uJWhptH0EFppEZxNGgHxI=;
- b=YdOusTyX26uYzCEYFBEEZsqvaXzdh49hDVYuSDxnyGpNk53fTD46pxlDB+bYMw2AulhGvkRj
- kb/Dc10HeWMOEJC7EkKIpBYCRRdzm42TmznacrX+rxTkVvSGpD41oEmdSi7Urzb2Ld0cQg+U
- ktSxfDhIdSkfwqromwY04gn5ve4=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-west-2.postgun.com with SMTP id
- 5ffbaf4bd84bad3547553c8b (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 11 Jan 2021 01:52:11
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 6EE2FC433ED; Mon, 11 Jan 2021 01:52:11 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 89A62C433C6;
-        Mon, 11 Jan 2021 01:52:09 +0000 (UTC)
+        id S1727100AbhAKCHV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Jan 2021 21:07:21 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:34648 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727043AbhAKCHU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jan 2021 21:07:20 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1610330839; x=1641866839;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=gI/87ItPBjesG5AtnFSnIy8lth146aH0sYHayJi1W+4=;
+  b=jNJNj6dStccdYphhsoQ2tyMVeaWBU4gbnM+8zS6vM41GqEbpvXHTU41Z
+   Mu6VcbyNmujaEO0xMt1Rhx6dHnYO0uSCGWO1pd6RpdSVOmCqulaT5TpKp
+   rH9YiE3y9Ig1seXfZJAm0wYeYyW3sy2w//X7t3NZ55iBoqSZpGSMLmGCA
+   BF7jUllaXwLGU6nRcNKNokS/AeXW8IABgDSdQmds3T/EF/9rr03kIN8xj
+   65ysWLS0mUMUxiRshxtiLa0HTlBtfPej3wL6VvyjDmO7i8x57lRGrgpgm
+   hjs2/zpNgyYotDumoqBQy43sS5sm0A1FzjTIBCgS/IY5tHuqPe9LIlCYl
+   g==;
+IronPort-SDR: T7i9qUDUyKLTaYhcFz9jrwsMcDLUDytq88T1klXoqrE+WaaE6zwq9O8C08/phTV5F5mAOJVJug
+ UDlTPdMi9P1NSXJY8RB6vDoTO5NCPE/f1QSZitoW31CcfqM8EUcLpLdFbwDU4tlFXa4FGbt56Y
+ R0/tAXN5J73FLnaZhfmvopE62cUdUudMJu+boPi8JeQq0nN7RadS/0I0TgphxKoToLJVpQfbkd
+ 4tfp30JsffwUoeo7MwGT4pHReiM6aFyUh7sR4lkT67xXEGyaM1n/QxYTvyW0+RJZVe98Y7mbG5
+ kIo=
+X-IronPort-AV: E=Sophos;i="5.79,337,1602518400"; 
+   d="scan'208";a="157109830"
+Received: from mail-bn7nam10lp2103.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.103])
+  by ob1.hgst.iphmx.com with ESMTP; 11 Jan 2021 10:06:13 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=WZaID0KnqxzgSWuGhSQduTwGnfPXPCex/ZBQ4/wemxNQ/RvX8ZiJobmmC+aOK2CrLSwgovbrVxHETQ69DkQc7yLZpNh7IDomVtisjTJsjTK4uBXeUdao4ZljdFkMf+JJ1HEJPI3cschcpoLYPpkTIB4SdV1rMo2GuZgilLAguWRjmZSD81NBlnGSJMru8LMgZ2B9X2zEhJadhXI9WLlhtk39ob0VaFSGhNpztojFYaOayZWSgE5PBKKF2CZoWlp4oQVpgZ0CKXnfuq6UTduMLHhLbNwZRYBEka2wYkT84xchfW3Ko0Efk5Cu0tLLRRLiINpNcKtK5kn/0EKto2nBMg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gI/87ItPBjesG5AtnFSnIy8lth146aH0sYHayJi1W+4=;
+ b=SBNifqlj+IsErCx4jOwW+iDtnsBscCHmRIpY4nf0JBbgCyL6H9FFigAF5xZft10cUkwezYHpnh6wqgdN5XDNieBZCStD0NBGuGDoQp4pgXnkOCiVRBRcGY67Jzv7x1KG6gd3SmX6LCygQVk0t6Uj/f23s0PC1WiSU9Lp1DZ5MLmjpc6dH5kZokMm3fnCJNfMPM8PpRJyUIV8Im/9uTiwWBmWauHncwQKvJ89WAdxtXlmdZR6ZyJydaEvl/Vu4kJ2fEDpw0n37NHCe61m4bXkEzx0Na3N2dDYp9tvXf2fyfYbIaTk4bE/2HZn5asrLaU1afsg12LQkk1Sqm4Bcg0t/w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gI/87ItPBjesG5AtnFSnIy8lth146aH0sYHayJi1W+4=;
+ b=NIT7WJNyIv8U9LNDCuY9F2o9vG9JOpT0PfH5HBnhOwpqW4xCGkrhYM3f3qDUjCDEAZpzS8oHDTwARRJhcZ7/JZefhUWdELAkpcsD3qIzSKhZtFXW8q0uEhJ+Vh6J/qy0hYe2u+QlsU4klFRsq9p15swxUtC/Iz2l5O+IsJiyEEo=
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
+ by BYAPR04MB5334.namprd04.prod.outlook.com (2603:10b6:a03:c8::26) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3742.6; Mon, 11 Jan
+ 2021 02:06:12 +0000
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::716c:4e0c:c6d1:298a]) by BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::716c:4e0c:c6d1:298a%6]) with mapi id 15.20.3742.012; Mon, 11 Jan 2021
+ 02:06:12 +0000
+From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+To:     Pavel Begunkov <asml.silence@gmail.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] target/file: don't zero iter before iov_iter_bvec
+Thread-Topic: [PATCH] target/file: don't zero iter before iov_iter_bvec
+Thread-Index: AQHW5qBkaWm3Wnjfmk+XiYs/GS5+eQ==
+Date:   Mon, 11 Jan 2021 02:06:11 +0000
+Message-ID: <BYAPR04MB4965E008861D5B29B9E757D186AB0@BYAPR04MB4965.namprd04.prod.outlook.com>
+References: <34cd22d6cec046e3adf402accb1453cc255b9042.1610207523.git.asml.silence@gmail.com>
+ <BYAPR04MB4965F4DCF59E5225CF17322D86AD0@BYAPR04MB4965.namprd04.prod.outlook.com>
+ <4d063dde-c710-44e3-31b9-8fb6b7e1d952@gmail.com>
+ <BYAPR04MB49653C92C7925B8C3EAEF3CE86AD0@BYAPR04MB4965.namprd04.prod.outlook.com>
+ <b9558bf8-a7e3-c2f9-ce00-3fc2b90dcc87@gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: gmail.com; dkim=none (message not signed)
+ header.d=none;gmail.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [199.255.45.62]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 17a077a6-4864-4eff-b479-08d8b5d57835
+x-ms-traffictypediagnostic: BYAPR04MB5334:
+x-microsoft-antispam-prvs: <BYAPR04MB53346B09010BFE5B7FF80D1A86AB0@BYAPR04MB5334.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:1284;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: KtfT562tRKKS4fyHR36t3HTlaGLemikqHg1JVI8n8uXfzqt+5ZyBCkxPDWvIx5zjYNJEDKo48bBwSymYaz6kHrwrQYiOYsDrnktDH4TdKN53iESNsOjlxDpDdjLsruPqKeL8yuFHHTG+z82Uu74797xQz7c4/+gVLfVTeD+abglio8Zpwsa7UMSP7Ajvjbjpw2xL1cMo/gShpFIe4QO8Cx7gGW6y80h9pHxgd7Gl2TkJIRccIDfMM/jkDsT7Nz7TzrMBirfVgedIMEpWa6N25Hc2XQYTruMq69GelqVMkcaf/bdADX1FXJCTbRodXsnfvgBTlMDJ4mR7T1F+QxjxW1pqF9/54lXcv3R+kBsME/98gdHXWyG2CWG3ynZqqfnsEbPsLYgsThch7wBbCikwYwZkC4yAezXp0LjwQi2WX5VhbyS9KDdjq1sCCDwFAlXmvsBh2G04+152l7XIHun3Kg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(396003)(346002)(366004)(136003)(39860400002)(4326008)(83380400001)(186003)(86362001)(52536014)(26005)(54906003)(66446008)(478600001)(64756008)(6506007)(966005)(9686003)(110136005)(33656002)(8936002)(76116006)(66556008)(66476007)(2906002)(53546011)(66946007)(8676002)(316002)(5660300002)(7696005)(71200400001)(55016002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?5mgma7cQmu5I4OhPoriBdHzVNJE0TQ9jrqTvZB64QoZQ6+Qt9JuflYFrVizU?=
+ =?us-ascii?Q?jP5Pv34W0VIa9VdVJdAbtO5nefw/Zz6oVvN3K9iomdvSqeqkMuRldf8RcrhP?=
+ =?us-ascii?Q?PbDiy1pERytbyhPhEPCIUJEDXgxNFaTqEwzUJU5cw/ktmhvcIB3NH3AxtENj?=
+ =?us-ascii?Q?y0+yLxfmqUGrOkzoMRlGT3KSl7JFfIRx6ThclhbxANGFOnSYlvqr2VmcCerK?=
+ =?us-ascii?Q?utenkoDnMManLxJFZriinkttibeDN79zjTRMERkIUBMe3Yizb4LDxvFCX51f?=
+ =?us-ascii?Q?VFdFVJ/u2oC+mcrNm7saX8D09bxdGLC503Qf46jRR3ZbdDhzBxTrLRls3E4i?=
+ =?us-ascii?Q?lwHb1oUZ9jMUd0GeurCrPJsBt7ndq42eY62Ud3E4cjmjNLjOv8XnVSAR7PfR?=
+ =?us-ascii?Q?vxDaFsLS8ypSxPS81l3tsg3A1eZvsGtfM3YCZbo1eupDWDiNVD98/10aWPe/?=
+ =?us-ascii?Q?IM+b/Iv0BuS1tNRi5cQ5gvte0ECJCqV4M0HYEdt+/onYLVi9qXiBo+cJqL51?=
+ =?us-ascii?Q?E1HSTEIgN/brdzShiMw5NCfLid0yDbrfcqYnv5h/IH9W2pQBL2FOHwj8P5g1?=
+ =?us-ascii?Q?bVW8cIaP4rVkF3UbuwBjgmPDtUO8zHHHMRElV0/etMeWXuteS1G3Ip4lujq8?=
+ =?us-ascii?Q?FF75wt+A6ECUTq+tNyIjLq2DI8lj0WNNGoDQlH0t3uad1F4YL50cVkAl1Ws7?=
+ =?us-ascii?Q?udk0CBud5fk82uWj6yE5vEB830CNqeBh8l9JpfYFzR5LQKkxvnqj8ro06wud?=
+ =?us-ascii?Q?GylF6W4JNPeVLiyPm5wJk8ibpyI1+1Tj/l+9RceebajQf1UrccBf4BjG7jay?=
+ =?us-ascii?Q?FAsqiMG00Jr9Alx+m204cHrW+d3SE7ObGk7+gaB62RqIFyWdNjiLqcY3QINr?=
+ =?us-ascii?Q?MDXFfJVZoM3mjuuymVg3GYzVQPEtEBtJnUIIjEs8F4OweZr0/Y79Fu0iAV/6?=
+ =?us-ascii?Q?LO3FsQhle+8+HHXcyR/vHpBV+Fl4D7OqK3W+INvptSEyRNKxhQc1l9a5vG+4?=
+ =?us-ascii?Q?5U6h?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 11 Jan 2021 09:52:09 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bean Huo <huobean@gmail.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        rjw@rjwysocki.net, Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Nitin Rawat <nitirawa@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] scsi: ufs: Protect PM ops and err_handler from user
- access through sysfs
-In-Reply-To: <146b46a5c38f4582a9a8e6df1d87cdfc0684f549.camel@gmail.com>
-References: <1609595975-12219-1-git-send-email-cang@codeaurora.org>
- <1609595975-12219-3-git-send-email-cang@codeaurora.org>
- <80a15afab8024d0b61d312b57585c9322ac91958.camel@gmail.com>
- <7d49c1dfc3f648c484076f3c3a7f4e1e@codeaurora.org>
- <1514403adf486ac8069253c09f45b021bad32e00.camel@gmail.com>
- <f814b71d1d4ea87a72df4851a8190807@codeaurora.org>
- <cb388d8ea15b2c80a072dec74d9ededecb183a08.camel@gmail.com>
- <e69bd5a6b73d5c652130bf4fa077aac0@codeaurora.org>
- <606774efd4d89f0ea78cefeb428cc9e1@codeaurora.org>
- <146b46a5c38f4582a9a8e6df1d87cdfc0684f549.camel@gmail.com>
-Message-ID: <a957cf74c6b72379ee04769294338d14@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 17a077a6-4864-4eff-b479-08d8b5d57835
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Jan 2021 02:06:12.1114
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 0qqlWQ0aoPkb0O/77uIvbdeFli0T5fs61zBKPB7Q0iQ45seJzB97jhiLGNPYZ0jFF9BP3l6GxxGOuu0r/ga7EgZ6/9Jxe3ZD7957GD/e3zU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5334
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-01-11 00:13, Bean Huo wrote:
-> On Sat, 2021-01-09 at 12:51 +0800, Can Guo wrote:
->> On 2021-01-09 12:45, Can Guo wrote:
->> > On 2021-01-08 19:29, Bean Huo wrote:
->> > > On Wed, 2021-01-06 at 09:20 +0800, Can Guo wrote:
->> > > > Hi Bean,
->> > > >
->> > > > On 2021-01-06 02:38, Bean Huo wrote:
->> > > > > On Tue, 2021-01-05 at 09:07 +0800, Can Guo wrote:
->> > > > > > On 2021-01-05 04:05, Bean Huo wrote:
->> > > > > > > On Sat, 2021-01-02 at 05:59 -0800, Can Guo wrote:
->> > > > > > > > + * @shutting_down: flag to check if shutdown has been
->> > > > > > > > invoked
->> > > > > > >
->> > > > > > > I am not much sure if this flag is need, since once PM
->> > > > > > > going in
->> > > > > > > shutdown path, what will be returnded by
->> > > > > > > pm_runtime_get_sync()?
->> > > > > > >
->> > > > > > > If pm_runtime_get_sync() will fail, just check its
->> > > > > > > return.
->> > > > > > >
->> > > > > >
->> > > > > > That depends. During/after shutdown, for UFS's case only,
->> > > > > > pm_runtime_get_sync(hba->dev) will most likely return 0,
->> > > > > > because it is already RUNTIME_ACTIVE, pm_runtime_get_sync()
->> > > > > > will directly return 0... meaning you cannot count on it.
->> > > > > >
->> > > > > > Check Stanley's change -
->> > > > > > https://lore.kernel.org/patchwork/patch/1341389/
->> > > > > >
->> > > > > > Can Guo.
->> > > > >
->> > > > > Can,
->> > > > >
->> > > > > Thanks for pointing out that.
->> > > > >
->> > > > > Based on my understanding, that patch is redundent. maybe I
->> > > > > misundestood Linux shutdown sequence.
->> > > >
->> > > > Sorry, do you mean Stanley's change is redundant?
->> > >
->> > > yes.
->> > >
->> >
->> > No, it is definitely needed. As Stanley replied you in another
->> > thread, it is not protecting I/Os from user layer, but from
->> > other subsystems during shutdown.
->> >
->> > > >
->> > > > >
->> > > > > I checked the shutdown flow:
->> > > > >
->> > > > > 1. Set the "system_state" variable
->> > > > > 2. Disable usermod to ensure that no user from userspace can
->> > > > > start
->> > > > > a
->> > > > > request
->> > > >
->> > > > I hope it is like what you interpreted, but step #2 only stops
->> > > > UMH(#265)
->> > > > but not all user space activities. Whereas, UMH is for kernel
->> > > > space
->> > > > calling
->> > > > user space.
->> > >
->> > >
->> > > Can,
->> > >
->> > > I did further study and homework on the Linux shutdown in the
->> > > last few
->> > > days. Yes, you are right, usermodehelper_disable() is to prevent
->> > > executing the process from the kernel space.
->> > >
->> > > But I didn't reproduce this "maybe" race issue while shutdown. no
->> > > matter how I torment my system, once Linux shutdown/halt/reboot
->> > > starts,
->> > > nobody can access the sysfs node. I create 10 processes in the
->> > > user
->> > > space and constantly access UFS sysfs node, also, fio is running
->> > > in
->> > > the
->> > > background for the normal data read/write. there is a shutdown
->> > > thread
->> > > that will randomly trigger shutdown/halt/reboot. but no race
->> > > issue
->> > > appears.
->> > >
->> > > I don't know if this is a hypothetical issue(the race between
->> > > shutdown
->> > > flow and sysfs node access), it may not really exist in the Linux
->> > > envriroment. everytime, the shutdonw flow will be:
->> > >
->> > > e10_sync_handler()->e10_svc()->do_e10_svc()->__do_sys_reboot()-
->> > > > kernel_poweroff/kernel_halt()->device_shutdown()-
->> > > > >platform_shutdown()-
->> > > > ufshcd_platform_shutdown()->ufshcd_shutdown().
->> > >
->> > > I think before going into the kernel shutdown, the userspace
->> > > cannot
->> > > issue new requests anymore. otherwise, this would be a big issue.
->> > >
->> > > pm_runtime_get_sync() will return 0 or failure while shutdown?
->> > > the
->> > > answer is not important now, maybe as you said, it is always 0.
->> > > But in
->> > > my testing, it didn't get there the system has been shutdown.
->> > > Which
->> > > means once shutdonw starts, sysfs node access path cannot reach
->> > > pm_runtime_get_sync(). (note, I don't know if sysfs node access
->> > > thread
->> > > has been disabled or not)
->> > >
->> > >
->> > > Responsibly say, I didn't reproduce this issue on my system
->> > > (ubuntu),
->> > > maybe you are using Android. I am not an expert on this topic, if
->> > > you
->> > > have the best idea on how to reproduce this issue. please please
->> > > let
->> > > me
->> > > try. appreciate it!!!!!
->> > >
->> >
->> > When you do a reboot/shutdown/poweroff, how your system behaves
->> > highly
->> > depends on how the reboot cmd is implemented in C code under
->> > /sbin/.
->> >
->> > On Ubuntu, reboot looks like:
->> > $ reboot --help
->> > reboot [OPTIONS...] [ARG]
->> >
->> > Reboot the system.
->> >
->> >       --help      Show this help
->> >       --halt      Halt the machine
->> >    -p --poweroff  Switch off the machine
->> >       --reboot    Reboot the machine
->> >    -f --force     Force immediate halt/power-off/reboot
->> >    -w --wtmp-only Don't halt/power-off/reboot, just write wtmp
->> > record
->> >    -d --no-wtmp   Don't write wtmp record
->> >       --no-wall   Don't send wall message before halt/power-
->> > off/reboot
->> >
->> >
->> > On a pure Linux with a initrd RAM FS built from busybox, reboot
->> > looks
->> > like:
->> > # reboot --help
->> > BusyBox v1.30.1 (2019-05-24 12:53:36 IST) multi-call binary.
->> >
->> > Usage: reboot [-d DELAY] [-n] [-f]
->> >
->> > Reboot the system
->> >
->> >          -d SEC  Delay interval
->> >          -n      Do not sync
->> >          -f      Force (don't go through init)
->> >
->> >
->> > For example, when you work on a pure Linux with a filesystem built
->> > from
->> > busybox, when you hit reboot cmd, halt_main() will be called. And
->> > based
->> > on the reboot options passed to reboot cmd, halt_main() behaves
->> > differently.
->> >
->> > A plain reboot cmd does things like sync filesystem, send SIGKILL
->> > to
->> > all
->> > processes (except for init), remount all filesytem as read-only and
->> > so
->> > on
->> > before invoking linux kernel reboot syscall. In this case, we are
->> > safe.
->> >
->> > However, if you do a "reboot -f", halt_main() directly invokes
->> > reboot().
->> > And with "reboot -f", I can easily reproduce the race condition we
->> > are
->> > talking about here - it is not based on imagination.
->> >
->> > Find the patch I used for replication in the attachment, fix
->> > conflicts
->> > if any. After boot up, the cmd lines I used are
->> >
->> > # while true; do cat /sys/devices/platform/soc@0/*ufshc*/rpm_lvl;
->> > done
->> > &
->> > # reboot -f
->> >
->> > Can Guo.
->> 
->> Oops... forgot the logs:
->> 
->> #
->> # while true; do cat /sys/devices/platform/soc@0/*ufshc*/rpm_lvl;
->> done &
->> 3
->> 3
->> 3
->> 3
->> ....
->> # reboot -f
->> 3
->> 3
->> 3
->> ....
->> [   17.959206] sd 0:0:0:5: [sdf] Synchronizing SCSI cache
->> 3
->> [   17.964833] sd 0:0:0:4: [sde] Synchronizing SCSI cache
->> [   17.970224] sd 0:0:0:3: [sdd] Synchronizing SCSI cache
->> [   17.975574] sd 0:0:0:2: [sdc] Synchronizing SCSI cache
->> 3
->> [   17.981034] sd 0:0:0:1: [sdb] Synchronizing SCSI cache
->> [   17.986493] sd 0:0:0:0: [sda] Synchronizing SCSI cache
->> 3
->> [   17.991870] [DEBUG]ufshcd_shutdown: UFS SHUTDOWN START
->> [   17.998902] ------------[ cut here ]------------
->> [   18.003648] kernel BUG at drivers/scsi/ufs/ufs-sysfs.c:62!
->> [   18.009286] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
->> [   18.034249] pstate: 40c00005 (nZcv daif +PAN +UAO)
->> [   18.039185] pc : rpm_lvl_show+0x38/0x40
->> [   18.043137] lr : dev_attr_show+0x1c/0x58
->> [   18.132552] Call trace:
->> [   18.135076]  rpm_lvl_show+0x38/0x40
->> [   18.138672]  sysfs_kf_seq_show+0xa8/0x140
->> [   18.142802]  kernfs_seq_show+0x28/0x30
->> [   18.146665]  seq_read+0x1d8/0x4b0
->> [   18.150072]  kernfs_fop_read+0x12c/0x1f0
->> [   18.154109]  do_iter_read+0x184/0x1c0
->> [   18.157882]  vfs_readv+0x68/0xb0
->> ....
-> 
-> Hi Can
-> Please forgive me for being verbose.
-> 
-> The above BUG log is from your BUG_ON() called, not becuase of the race
-> betwen shutdown flow and sysfs node access(if I misunderstood, correct
-> me). But it tells that the user can still access UFS by sysfs node in
-> the "reboot -f" flow since it skips the actual shutdown process, "
-> --force" is not a safe way anyway.
-
-What is an "actual shutdown process", is there a standard? I believe it
-is free for users to decide what to do before invoking kernel reboot()
-syscall. "reboot -f" simply invokes kernel reboot() syscall, safe or not
-I don't know, but UFS shold not be the one nailed to the pillar. Do you 
-agree?
-
-Can Guo.
-
-> 
-> 
-> If accessing sysfs nodes, which triggers a UFS UPIU request to
-> read/write UFS device descriptors during shutdown flow, there is only
-> one issue that sysfs node access failure since UFS device and LINK has
-> been shutdown. Strictly speaking, the failure comes after
-> ufshcd_set_dev_pwr_mode().
-> 
->    __ufshcd_query_descriptor: opcode 0x01 for idn 0 failed, index 0,
-> err = -11
-> 
-> Since the shutdown is oneway process, this failure is not big issue. If
-> you meant to avoid this failure for unsafe shutdown, I agree with you,
-> But for the race issue, I don't know.
-> 
-> Bean
+On 1/9/21 13:29, Pavel Begunkov wrote:=0A=
+> On 09/01/2021 20:52, Chaitanya Kulkarni wrote:=0A=
+>> On 1/9/21 12:40, Pavel Begunkov wrote:=0A=
+>>> I expect you won't find any, but such little things can pile up=0A=
+>>> into a not-easy-to-spot overhead over time.=0A=
+>> That is what I suspected with the resulting assembly. The commit log=0A=
+>> needs to document that there is no direct impact on the performance=0A=
+> It's obvious that 3-4 extra mov $0 off(%reg) won't change performance=0A=
+> but still hasn't been formally confirmed ...=0A=
+This is obvious for you and me since we spent time into looking into=0A=
+resulting assembly not every reviewer is expected to do that see [1].=0A=
+>=0A=
+>> which can be seen with this patch, but this is nice to have=0A=
+> ... so if you don't mind, I won't be resending just for that.=0A=
+As per commit log guidelines [1] you have to quantify the optimization.=0A=
+=0A=
+Since you cannot quantify the optimization modify the commit log explaining=
+=0A=
+that there is not significant performance benefit observe.=0A=
+> -- Pavel Begunkov=0A=
+[1] https://www.kernel.org/doc/html/v4.10/process/submitting-patches.html=
+=0A=
