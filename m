@@ -2,87 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 189A9C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 15:51:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E321BC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 16:23:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7355224D2
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 15:51:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9962822AAD
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 16:23:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729521AbhAKPu7 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jan 2021 10:50:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60300 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727996AbhAKPu7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 Jan 2021 10:50:59 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPS id CA8F02251F
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Jan 2021 15:50:18 +0000 (UTC)
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 211137] New: Booting 5.10.5 gives panic in
- pm8001_mpi_msg_consume
-Date:   Mon, 11 Jan 2021 15:50:18 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: eliventer@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression attachments.created
-Message-ID: <bug-211137-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S2388513AbhAKQXS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jan 2021 11:23:18 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2306 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388683AbhAKQXR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2021 11:23:17 -0500
+Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DDzR95cl6z67Yr5;
+        Tue, 12 Jan 2021 00:18:45 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Mon, 11 Jan 2021 17:22:35 +0100
+Received: from [10.210.171.188] (10.210.171.188) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.1.2106.2; Mon, 11 Jan 2021 16:22:34 +0000
+From:   John Garry <john.garry@huawei.com>
+Subject: About scsi device queue depth
+To:     Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
+CC:     chenxiang <chenxiang66@hisilicon.com>
+Message-ID: <9ff894da-cf2c-9094-2690-1973cc57835a@huawei.com>
+Date:   Mon, 11 Jan 2021 16:21:27 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.171.188]
+X-ClientProxiedBy: lhreml703-chm.china.huawei.com (10.201.108.52) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=211137
+Hi,
 
-            Bug ID: 211137
-           Summary: Booting 5.10.5 gives panic in pm8001_mpi_msg_consume
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 5.10.5
-          Hardware: x86-64
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: high
-          Priority: P1
-         Component: Other
-          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
-          Reporter: eliventer@gmail.com
-        Regression: No
+I was looking at some IOMMU issue on a LSI RAID 3008 card, and noticed 
+that performance there is not what I get on other SAS HBAs - it's lower.
 
-Created attachment 294603
-  --> https://bugzilla.kernel.org/attachment.cgi?id=294603&action=edit
-Console panic message photo
+After some debugging and fiddling with sdev queue depth in mpt3sas 
+driver, I am finding that performance changes appreciably with sdev 
+queue depth:
 
-Booting Linux 5.10.5 panics on a server with an X11SPW-TF motherboard, single 
-Silver 4208 CPU and 2 SAS controllers: LSI Logic / Symbios Logic SAS3008
-PCI-Express Fusion-MPT SAS-3, and ATTO Technology, Inc. ExpressSAS 6Gb/s
-SAS/SATA HBA. The pm80xx driver appears to be the one giving the panic in the
-attached console photo. System boots fine on 5.9.11.
+sdev qdepth	fio number jobs* 	1	10	20
+16					1590	1654	1660
+32					1545	1646	1654
+64					1436	1085	1070
+254 (default)				1436	1070	1050
 
--- 
-You may reply to this email to add a comment.
+fio queue depth is 40, and I'm using 12x SAS SSDs.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+I got comparable disparity in results for fio queue depth = 128 and num 
+jobs = 1:
+
+sdev qdepth	fio number jobs* 	1	
+16					1640
+32					1618	
+64					1577	
+254 (default)				1437	
+
+IO sched = none.
+
+That driver also sets queue depth tracking = 1, but never seems to kick in.
+
+So it seems to me that the block layer is merging more bios per request, 
+as averge sg count per request goes up from 1 - > upto 6 or more. As I 
+see, when queue depth lowers the only thing that is really changing is 
+that we fail more often in getting the budget in 
+scsi_mq_get_budget()->scsi_dev_queue_ready().
+
+So initial sdev queue depth comes from cmd_per_lun by default or 
+manually setting in the driver via scsi_change_queue_depth(). It seems 
+to me that some drivers are not setting this optimally, as above.
+
+Thoughts on guidance for setting sdev queue depth? Could blk-mq changed 
+this behavior?
+
+Thanks,
+John
