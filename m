@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEAC8C43331
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3EDDC4332D
 	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 00:33:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A8F622CF7
+	by mail.kernel.org (Postfix) with ESMTP id 6F69622CB8
 	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 00:33:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405533AbhALAZp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S2405534AbhALAZp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 11 Jan 2021 19:25:45 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:32696 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:65212 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2403853AbhAKXNU (ORCPT
+        by vger.kernel.org with ESMTP id S2403844AbhAKXNU (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 11 Jan 2021 18:13:20 -0500
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10BN3Jtv109839;
-        Mon, 11 Jan 2021 18:12:33 -0500
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10BN2UOp175352;
+        Mon, 11 Jan 2021 18:12:35 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=KuKVw+l4AKfXXo1oLHlINLaq9JT/aeLO017xRvNUuos=;
- b=Mh6tAdxax+d4LBQv47QWEwanub4jsCePsvswQ/3fLtE+n8aXEw6AyGT6z1RUoNC5GRxe
- MRnsnWkmF58qcmYAJClEI51rXhmMirI5ikE0KeWLm7HRelRS5RhFPZIHLTkTDjh6MCIe
- VtdVoAGw6tmCEQaRbzJ4Ugyv60rIz9GP/kSiM9n85Aso//l0/8IPZLOh4txvecSItIgg
- mO8hvQFy82Dxf6TS+QQbVVdhF+3QT/5DVvnUvIwPajg9u49SC8HeTc3U9QGpDrEIfY/R
- gIUrtW2Bl4AmVyMIUnVbYheMzPKi2zGvBh2kVdA/gi1EQEttC31PaTnXf5iou/LY44B/ /g== 
-Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 360y9ksbuq-1
+ bh=y2i4GWq5LEr5rklEQ6slWMtaroYCAfGe74ncTmgMpHs=;
+ b=iJTiM3e3q/m54PXJUvSrsCAoFFyOx/upTQSbhRAMO0F84qvH6vE37kkUkwfIK8k4njou
+ vvYSz3nLA7xcBJVJ9V8AqHQ6LKS2WejQEt74cdGy3FPoysiemoeWGPOqWmPAE/CMT3kS
+ Gnuz7WeesXWS8uU3CaFPHXbI/cSjruKaMTy37aiWG87OyHd8RKTVh7w5sgHoqmtnVX6V
+ kkOjFWGkUAxhPPlunc6pyfFIxVfl6Txe8fSXB5I5eE7Yn4Nql5p05by6UOY/C+3XXGJF
+ Jhn8l88nUdFGTJKBzVzDDpfx7QxeNYGA0tfaO4/IIKDoYUURS6TWv/KVqbb1OURHOUWd Kw== 
+Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 360yvkrf42-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Jan 2021 18:12:33 -0500
-Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10BN7v6d022232;
-        Mon, 11 Jan 2021 23:12:32 GMT
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-        by ppma01dal.us.ibm.com with ESMTP id 35y448xesk-1
+        Mon, 11 Jan 2021 18:12:35 -0500
+Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
+        by ppma05wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10BN89Rf011995;
+        Mon, 11 Jan 2021 23:12:34 GMT
+Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
+        by ppma05wdc.us.ibm.com with ESMTP id 35y448sxff-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Jan 2021 23:12:32 +0000
+        Mon, 11 Jan 2021 23:12:34 +0000
 Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10BNCUBX28246430
+        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10BNCWs28323354
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Jan 2021 23:12:30 GMT
+        Mon, 11 Jan 2021 23:12:32 GMT
 Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B3DBA78068;
-        Mon, 11 Jan 2021 23:12:30 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id B28357805C;
+        Mon, 11 Jan 2021 23:12:32 +0000 (GMT)
 Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 51B647805C;
-        Mon, 11 Jan 2021 23:12:30 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 479D078064;
+        Mon, 11 Jan 2021 23:12:32 +0000 (GMT)
 Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
         by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Mon, 11 Jan 2021 23:12:30 +0000 (GMT)
+        Mon, 11 Jan 2021 23:12:32 +0000 (GMT)
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     james.bottomley@hansenpartnership.com
 Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
         brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH v4 06/21] ibmvfc: add Subordinate CRQ definitions
-Date:   Mon, 11 Jan 2021 17:12:10 -0600
-Message-Id: <20210111231225.105347-7-tyreld@linux.ibm.com>
+Subject: [PATCH v4 10/21] ibmvfc: define Sub-CRQ interrupt handler routine
+Date:   Mon, 11 Jan 2021 17:12:14 -0600
+Message-Id: <20210111231225.105347-11-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210111231225.105347-1-tyreld@linux.ibm.com>
 References: <20210111231225.105347-1-tyreld@linux.ibm.com>
@@ -72,85 +72,43 @@ Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
  definitions=2021-01-11_32:2021-01-11,2021-01-11 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
- adultscore=0 priorityscore=1501 impostorscore=0 lowpriorityscore=0
- malwarescore=0 bulkscore=0 mlxscore=0 spamscore=0 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 impostorscore=0
+ malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0 mlxlogscore=999
+ lowpriorityscore=0 phishscore=0 priorityscore=1501 suspectscore=0
  clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101110130
+ engine=8.12.0-2009150000 definitions=main-2101110126
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Subordinate Command Response Queues (Sub CRQ) are used in conjunction
-with the primary CRQ when more than one queue is needed by the virtual
-IO adapter. Recent phyp firmware versions support Sub CRQ's with ibmvfc
-adapters. This feature is a prerequisite for supporting multiple
-hardware backed submission queues in the vfc adapter.
-
-The Sub CRQ command element differs from the standard CRQ in that it is
-32bytes long as opposed to 16bytes for the latter. Despite this extra
-16bytes the ibmvfc protocol will use the original CRQ command element
-mapped to the first 16bytes of the Sub CRQ element initially.
-
-Add definitions for the Sub CRQ command element and queue.
+Simple handler that calls Sub-CRQ drain routine directly.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.h | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-index dd6d89292867..b9eed05c165f 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.h
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-@@ -650,6 +650,11 @@ struct ibmvfc_crq {
- 	volatile __be64 ioba;
- } __packed __aligned(8);
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index f3cd092478ee..51bcafad9490 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -3571,6 +3571,16 @@ static void ibmvfc_drain_sub_crq(struct ibmvfc_queue *scrq)
+ 	}
+ }
  
-+struct ibmvfc_sub_crq {
-+	struct ibmvfc_crq crq;
-+	__be64 reserved[2];
-+} __packed __aligned(8);
++static irqreturn_t ibmvfc_interrupt_scsi(int irq, void *scrq_instance)
++{
++	struct ibmvfc_queue *scrq = (struct ibmvfc_queue *)scrq_instance;
 +
- enum ibmvfc_ae_link_state {
- 	IBMVFC_AE_LS_LINK_UP		= 0x01,
- 	IBMVFC_AE_LS_LINK_BOUNCED	= 0x02,
-@@ -761,12 +766,14 @@ struct ibmvfc_event_pool {
- enum ibmvfc_msg_fmt {
- 	IBMVFC_CRQ_FMT = 0,
- 	IBMVFC_ASYNC_FMT,
-+	IBMVFC_SUB_CRQ_FMT,
- };
- 
- union ibmvfc_msgs {
- 	void *handle;
- 	struct ibmvfc_crq *crq;
- 	struct ibmvfc_async_crq *async;
-+	struct ibmvfc_sub_crq *scrq;
- };
- 
- struct ibmvfc_queue {
-@@ -781,6 +788,20 @@ struct ibmvfc_queue {
- 	struct list_head sent;
- 	struct list_head free;
- 	spinlock_t l_lock;
++	ibmvfc_toggle_scrq_irq(scrq, 0);
++	ibmvfc_drain_sub_crq(scrq);
 +
-+	/* Sub-CRQ fields */
-+	struct ibmvfc_host *vhost;
-+	unsigned long cookie;
-+	unsigned long vios_cookie;
-+	unsigned long hw_irq;
-+	unsigned long irq;
-+	unsigned long hwq_id;
-+	char name[32];
-+};
++	return IRQ_HANDLED;
++}
 +
-+struct ibmvfc_scsi_channels {
-+	struct ibmvfc_queue *scrqs;
-+	unsigned int active_queues;
- };
- 
- enum ibmvfc_host_action {
+ /**
+  * ibmvfc_init_tgt - Set the next init job step for the target
+  * @tgt:		ibmvfc target struct
 -- 
 2.27.0
 
