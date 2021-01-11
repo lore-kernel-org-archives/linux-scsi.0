@@ -2,83 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE516C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 08:47:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B00CDC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 08:48:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C8A822AB9
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 08:47:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B3DA22AAF
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jan 2021 08:48:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728111AbhAKIr0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jan 2021 03:47:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42224 "EHLO mail.kernel.org"
+        id S1727963AbhAKIsl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jan 2021 03:48:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42562 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728100AbhAKIr0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 Jan 2021 03:47:26 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 69C4022581;
-        Mon, 11 Jan 2021 08:46:45 +0000 (UTC)
+        id S1726611AbhAKIsl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 Jan 2021 03:48:41 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 67FCD22581;
+        Mon, 11 Jan 2021 08:48:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610354805;
-        bh=iuSTbGqR+zsnjqjBJ9uA9PVEqOmt2IdakL8100IQQu8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=P89kzg7DSWAd18bJTIESq1nH4/nKUPtIt99k9lGIJQHXcws2N4kMrDpjn0rvF+UpD
-         1mXRmtdQ+i4tWDKf9ALWlFmiJQVc3jOxxqOAIiOrOX3JwWEa0nezPxEUmopUajJDH9
-         U8t0uhIg6rF3a5Lsx+6KtirpLqybb2xp/cXB03TSBMKHa6hzFGFIB1RswMVMWRSvNn
-         Wki9pO90R7dZwEWMRqvqNCHFREzM7bD8wZswraqDsmlZq73XUHP/N97dEzDYULQK80
-         wNWbk7hCb4XxYTJWIbXhxb1G6v3x7x9PonXph3CRW8uBJ4LM+ctWv7KWVyNHOuvgum
-         Rq+pRWReWrgdA==
-Date:   Mon, 11 Jan 2021 00:46:43 -0800
+        s=k20201202; t=1610354880;
+        bh=N98hLzcb3E+X96QtBAkk1ea6lYkc4SJir9whIubX4Ck=;
+        h=From:To:Cc:Subject:Date:From;
+        b=eI7ihsLfQmobHMfkfmOHembqlu6Df5bRvRpmfqnTndCxfL11p5bqxQz4GxbKAyL7d
+         exkB5WreT5lAcljKPum2JRJVuyCxES8w7B7jT3exkbIovJA7/8c7qqMZYw05Ve7xtG
+         FWuY4bmlvlp/lPjCHBRKOKSvA4TJ7LFvHWlDCgtFtXRacqwBeuU1VASrGa8uypeysN
+         vsT/0dBIRWgEVth1yDQ8cALkzX+Rgi47mkblCjreOZh7XsvE2Ph+H7nF5D03pdmrYx
+         0+mb9MsU8Y45eh3jEvz83mPAsaGQ8ehKLCmVoEDOesjO+7HWLo/wLYQiM+MaFl/1iz
+         QmNiUKwR0/GxQ==
 From:   Jaegeuk Kim <jaegeuk@kernel.org>
-To:     Can Guo <cang@codeaurora.org>
-Cc:     Avri Altman <Avri.Altman@wdc.com>, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        alim.akhtar@samsung.com, bvanassche@acm.org,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com
-Subject: Re: [PATCH] scsi: ufs: should not override buffer lengh
-Message-ID: <X/wQcwkdSOTkuFBV@google.com>
-References: <20210111044443.1405049-1-jaegeuk@kernel.org>
- <6551e7d6dd7dc4132dc69e77a51f6f21@codeaurora.org>
- <e1b29f7cdd62cefcc9355baaed66641f@codeaurora.org>
- <DM6PR04MB65753C88CF333FABF5CB1704FCAB0@DM6PR04MB6575.namprd04.prod.outlook.com>
- <f4f633617ce91628b251b6ba668df820@codeaurora.org>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     cang@codeaurora.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        bvanassche@acm.org, martin.petersen@oracle.com,
+        stanley.chu@mediatek.com, Jaegeuk Kim <jaegeuk@google.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: [PATCH v2] scsi: ufs: WB is not allowed in RPMB_LUN
+Date:   Mon, 11 Jan 2021 00:47:56 -0800
+Message-Id: <20210111084756.1810924-1-jaegeuk@kernel.org>
+X-Mailer: git-send-email 2.30.0.284.gd98b1dd5eaa7-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f4f633617ce91628b251b6ba668df820@codeaurora.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 01/11, Can Guo wrote:
-> On 2021-01-11 16:15, Avri Altman wrote:
-> > > 
-> > > Sorry, typo corrected.
-> > > 
-> > > Hi Jaegeuk,
-> > > 
-> > > I think the problem is that func ufshcd_read_desc_param() is not
-> > > expecting
-> > > one access unsupported descriptors on RPMB LU.
-> > Correct.
-> > This is about wb introducing a new constraint: wb buffer is only
-> > allowed in lu 0..7.
-> > And this is why, IMHO, the fix should be in ufs_is_valid_unit_desc_lun,
-> > To include param offset, as it is only called in contingency of
-> > ufshcd_read_desc_param.
-> > 
-> > Thanks,
-> > Avri
-> 
-> Yeah... Fixing it in ufs-sysfs.c also works. Anyways, the math in
-> ufshcd_read_desc_param is already complex. Let's fix it somewhere
-> close to the source/initiator.
+From: Jaegeuk Kim <jaegeuk@google.com>
 
-Thank you, Can and Avri.
-I think fixing the lun check makese sense. Let me post v2. :)
+Kernel stack violation when getting unit_descriptor/wb_buf_alloc_units from
+rpmb lun. The reason is the unit descriptor length is different per LU.
 
-> 
-> Thanks,
-> Can Guo.
+The lengh of Normal LU is 45, while the one of rpmb LU is 35.
+
+int ufshcd_read_desc_param(struct ufs_hba *hba, ...)
+{
+	param_offset=41;
+	param_size=4;
+	buff_len=45;
+	...
+	buff_len=35 by rpmb LU;
+
+	if (is_kmalloc) {
+		/* Make sure we don't copy more data than available */
+		if (param_offset + param_size > buff_len)
+			param_size = buff_len - param_offset;
+			--> param_size = 250;
+		memcpy(param_read_buf, &desc_buf[param_offset], param_size);
+		--> memcpy(param_read_buf, desc_buf+41, 250);
+
+[  141.868974][ T9174] Kernel panic - not syncing: stack-protector: Kernel stack is corrupted in: wb_buf_alloc_units_show+0x11c/0x11c
+	}
+}
+
+Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+---
+ drivers/scsi/ufs/ufs-sysfs.c | 3 ++-
+ drivers/scsi/ufs/ufs.h       | 6 ++++--
+ drivers/scsi/ufs/ufshcd.c    | 2 +-
+ 3 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index 08e72b7eef6a..50e90416262b 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -792,7 +792,8 @@ static ssize_t _pname##_show(struct device *dev,			\
+ 	struct scsi_device *sdev = to_scsi_device(dev);			\
+ 	struct ufs_hba *hba = shost_priv(sdev->host);			\
+ 	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);			\
+-	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun))		\
++	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun,		\
++				_duname##_DESC_PARAM##_puname))		\
+ 		return -EINVAL;						\
+ 	return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
+ 		lun, _duname##_DESC_PARAM##_puname, buf, _size);	\
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 14dfda735adf..7a0069c83900 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -552,13 +552,15 @@ struct ufs_dev_info {
+  * @return: true if the lun has a matching unit descriptor, false otherwise
+  */
+ static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info,
+-		u8 lun)
++		u8 lun, u8 param_offset)
+ {
+ 	if (!dev_info || !dev_info->max_lu_supported) {
+ 		pr_err("Max General LU supported by UFS isn't initialized\n");
+ 		return false;
+ 	}
+-
++	/* WB is not allowed in RPMB_WLUN */
++	if (param_offset == UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS)
++		return lun < dev_info->max_lu_supported;
+ 	return lun == UFS_UPIU_RPMB_WLUN || (lun < dev_info->max_lu_supported);
+ }
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 2a715f13fe1d..48cbd4f294dd 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3425,7 +3425,7 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
+ 	 * Unit descriptors are only available for general purpose LUs (LUN id
+ 	 * from 0 to 7) and RPMB Well known LU.
+ 	 */
+-	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun))
++	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun, param_offset))
+ 		return -EOPNOTSUPP;
+ 
+ 	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
+-- 
+2.30.0.284.gd98b1dd5eaa7-goog
+
