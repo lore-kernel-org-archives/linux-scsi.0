@@ -2,57 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32CC6C43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C4A6C432C3
 	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 00:33:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0FAB222D08
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 00:33:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF23122CF7
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 00:33:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391759AbhALAZo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S2405529AbhALAZo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 11 Jan 2021 19:25:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37320 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2403832AbhAKXLw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2021 18:11:52 -0500
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C810C061786;
-        Mon, 11 Jan 2021 15:11:12 -0800 (PST)
-Received: by mail-ed1-x533.google.com with SMTP id i24so236757edj.8;
-        Mon, 11 Jan 2021 15:11:12 -0800 (PST)
+        with ESMTP id S2403834AbhAKXLx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2021 18:11:53 -0500
+Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56C53C061795;
+        Mon, 11 Jan 2021 15:11:13 -0800 (PST)
+Received: by mail-ed1-x52b.google.com with SMTP id c7so249167edv.6;
+        Mon, 11 Jan 2021 15:11:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=PNrKOWpeQ8TNDhDgZ+AtRxMiWuAnBXCXVKCEOv6JX3k=;
-        b=slXzPALxignK5OGkPXKWGS1QKbGvx2b/m2Y6iE33SPoQTJCA0t/YYxSFv+i21d+MGS
-         WxnJGlXLtNTB2P8QI7gaWCNKgFsVGCbjPzQxC13t06kRCgAB+VkJCaVsMI5qeFnLNtW/
-         WMTSMR5IeHUV3S8R0GOXKrFQF4ADTI9+QdnmDDeOTXJ0xwEHNvyD2S3jAEP5P0dwXIVZ
-         pjST+UONBFuHdQgUcOSipdmF2wfbqhf0OdO15LmxYcKdMEvszWx/r32cSLrdZ6Rqw7HD
-         1PefNgTVXiBFo+ucJGucqa5WnG4k4M4JK0x78xIkrN91+T2Ky+dI3uB98To3qAeiB6gW
-         fU9A==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=ah/q3uu0NF5NAJc51bIJTM6fDruzI2XSC5DNs/Dxtm8=;
+        b=oBAekmOfTMxtV955Smgg9ThMJh8PQiUuaMEwpaCtJSwWjegEz2RHCH8fuiCPkTnZ0E
+         iX3KmVuH8cpAZQUBZ19adgGrKSRVUTT7XSG3+k5mXXjLEZA/CqXq7X9nM4FD3hbXltxT
+         SOijpUN4NoqmmN5B2sorRei87jLoWdJf4Zb3Qg3Sy129UZP2c/ZS8uWqo7NJviVBZnlh
+         HkWEK4v+5mZn7H3nunU/K4hHqtYyn820b5vaYiAKILq1OxuZvB7bC7CBTsaJ1mrQXxkA
+         D4j1GLzloPtV1S09N+sbVgPt3o66kDuuKelSs3/EVHyYDjeTfSS9OnAq5DGWL+xMn1Hn
+         SD/Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=PNrKOWpeQ8TNDhDgZ+AtRxMiWuAnBXCXVKCEOv6JX3k=;
-        b=Dsi6DrqNwnbpZa5d+PfRKlN9hH/ZuR1NCPSB2JglpmEGqn4POzSHqjMvxKMXuMGfsf
-         oQc/D6nQQ0e04Fxx4djgpGsUYuYRHg0fOVOkjU6Z3VM6PIoYokscEwsGlBgQYQZLBg7i
-         7qdJQDFtafPpH6rGB0r4rVgmIC0qm2x95kMh51pEqALF/04Rhsq8RrJ+cAZrWdIaHDWx
-         DtaTl25p0CLZqDdID8+kllpZogYF/D6SL5uZlLkxw3QxdW+m7At1srFlP4Muz/2S/Dxm
-         ICGFKmVmliFSORpdvJ84NllPrqrqqGsi4jhSeMUETZN4JNIgjofGjLd3b17BXhKnPJX4
-         NUlw==
-X-Gm-Message-State: AOAM533Aug/wsrPxEIh36m3e2SG4VpGpToBXEaHBvAJEBRsR1TREL/6m
-        Gi/pBNLxpiFc/IIWPLdpe8k=
-X-Google-Smtp-Source: ABdhPJyChlVC1zSMOrcRlaoMGKhjGOzpVnhN3kYvxcBhVlZmfYuAhpweS3Yu7CC3rzmbpQ/qb6gq2w==
-X-Received: by 2002:a50:e846:: with SMTP id k6mr1175118edn.245.1610406671087;
-        Mon, 11 Jan 2021 15:11:11 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=ah/q3uu0NF5NAJc51bIJTM6fDruzI2XSC5DNs/Dxtm8=;
+        b=RPyRYw1ot7cpHtxcTJykaOYSbasG3ttogUJ/8+1SJbfeQGSzjf9YJgrKuIFb0mRC1X
+         PNtLgRPv+7t6TI4e9rDWIsOtlrecNf42OQI45clLu9MGyAASbAJGkh75EAvE+yQpn7vj
+         t5mzQXWLxE+siUB9mjYg+3ec3HNC7Ch5wnsPWlFrjtIIe57I2iiVRkQoDbt/YlLKIRXZ
+         CmS0548Wnycs4uakLskbOD5ONk/v1HGkDXGIx8vWbo7yN2RspuCI11q381cG+8tXm15g
+         8sOth70yQX8h6cLFlmlkvxSr97eB89k2c1qVGbtsQJxqBV0w/WtglXi6FdeD7U1S1bZi
+         /KZg==
+X-Gm-Message-State: AOAM531mCQCHLSraVONFNpIBE4GTjsIhhMhZNXilxnhmcvdVEQmRTOF7
+        CHwQZJJ91COb9R3AMXAnDyI=
+X-Google-Smtp-Source: ABdhPJw8RaPy3vaS+Af/3aRdG9msO3YdlwcnHzpK1kAPmEgmMAKhDgBkxr6pCclxqmHylrE6cRAmQw==
+X-Received: by 2002:a50:cdc8:: with SMTP id h8mr1171584edj.293.1610406672012;
+        Mon, 11 Jan 2021 15:11:12 -0800 (PST)
 Received: from localhost.localdomain (ip5f5bfcff.dynamic.kabel-deutschland.de. [95.91.252.255])
-        by smtp.gmail.com with ESMTPSA id ch30sm598175edb.8.2021.01.11.15.11.09
+        by smtp.gmail.com with ESMTPSA id ch30sm598175edb.8.2021.01.11.15.11.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Jan 2021 15:11:10 -0800 (PST)
+        Mon, 11 Jan 2021 15:11:11 -0800 (PST)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         john.garry@huawei.com, jejb@linux.ibm.com,
@@ -60,30 +62,79 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         shipujin.t@gmail.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v2 0/2] Remove unnecessary devm_kfree
-Date:   Tue, 12 Jan 2021 00:10:56 +0100
-Message-Id: <20210111231058.14559-1-huobean@gmail.com>
+Subject: [PATCH v2 1/2] scsi: hisi_sas: Remove unnecessary devm_kfree
+Date:   Tue, 12 Jan 2021 00:10:57 +0100
+Message-Id: <20210111231058.14559-2-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210111231058.14559-1-huobean@gmail.com>
+References: <20210111231058.14559-1-huobean@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-Changelog:
+The memory allocated with devm_kzalloc() is freed automatically
+no need to explicitly call devm_kfree.
 
-V1-V2:
-    1. Remove unused variable i in patch 1/2
-    2. Add Eric Biggers review tag in patch 2/2
-
-Bean Huo (2):
-  scsi: hisi_sas: Remove unnecessary devm_kfree
-  scsi: ufs: Remove unnecessary devm_kfree
-
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 28 +-------------------------
- drivers/scsi/ufs/ufshcd-crypto.c       |  4 +---
- 2 files changed, 2 insertions(+), 30 deletions(-)
+ 1 file changed, 1 insertion(+), 27 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 91a7286e8102..5600411a0820 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -4172,30 +4172,6 @@ static void debugfs_work_handler_v3_hw(struct work_struct *work)
+ 	hisi_hba->debugfs_dump_index++;
+ }
+ 
+-static void debugfs_release_v3_hw(struct hisi_hba *hisi_hba, int dump_index)
+-{
+-	struct device *dev = hisi_hba->dev;
+-	int i;
+-
+-	devm_kfree(dev, hisi_hba->debugfs_iost_cache[dump_index].cache);
+-	devm_kfree(dev, hisi_hba->debugfs_itct_cache[dump_index].cache);
+-	devm_kfree(dev, hisi_hba->debugfs_iost[dump_index].iost);
+-	devm_kfree(dev, hisi_hba->debugfs_itct[dump_index].itct);
+-
+-	for (i = 0; i < hisi_hba->queue_count; i++)
+-		devm_kfree(dev, hisi_hba->debugfs_dq[dump_index][i].hdr);
+-
+-	for (i = 0; i < hisi_hba->queue_count; i++)
+-		devm_kfree(dev,
+-			   hisi_hba->debugfs_cq[dump_index][i].complete_hdr);
+-
+-	for (i = 0; i < DEBUGFS_REGS_NUM; i++)
+-		devm_kfree(dev, hisi_hba->debugfs_regs[dump_index][i].data);
+-
+-	for (i = 0; i < hisi_hba->n_phy; i++)
+-		devm_kfree(dev, hisi_hba->debugfs_port_reg[dump_index][i].data);
+-}
+-
+ static const struct hisi_sas_debugfs_reg *debugfs_reg_array_v3_hw[DEBUGFS_REGS_NUM] = {
+ 	[DEBUGFS_GLOBAL] = &debugfs_global_reg,
+ 	[DEBUGFS_AXI] = &debugfs_axi_reg,
+@@ -4206,7 +4182,7 @@ static int debugfs_alloc_v3_hw(struct hisi_hba *hisi_hba, int dump_index)
+ {
+ 	const struct hisi_sas_hw *hw = hisi_hba->hw;
+ 	struct device *dev = hisi_hba->dev;
+-	int p, c, d, r, i;
++	int p, c, d, r;
+ 	size_t sz;
+ 
+ 	for (r = 0; r < DEBUGFS_REGS_NUM; r++) {
+@@ -4286,8 +4262,6 @@ static int debugfs_alloc_v3_hw(struct hisi_hba *hisi_hba, int dump_index)
+ 
+ 	return 0;
+ fail:
+-	for (i = 0; i < hisi_sas_debugfs_dump_count; i++)
+-		debugfs_release_v3_hw(hisi_hba, i);
+ 	return -ENOMEM;
+ }
+ 
 -- 
 2.17.1
 
