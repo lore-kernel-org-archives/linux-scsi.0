@@ -2,67 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F9B1C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:39:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7876CC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:45:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4643C22CBE
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:39:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2723223103
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:45:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730168AbhALLin (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 06:38:43 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:45534 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727982AbhALLil (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 06:38:41 -0500
-Date:   Tue, 12 Jan 2021 12:37:56 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1610451478;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=BaNYnLvf1TVhjRaIRbG4PoMO6ZraNHBHvAXZ6JVm1eU=;
-        b=ZHaVdHnEmv7pOcHFjsuvSwhzLiUyjmpZ8+R+MmADfphr5MsL/9G84qdFiIJ8O1j26Wzc4F
-        iDhV33ch4Cx0KBDlbrGdJJJ2CMrgfBbe8kORFg0k6qcWruNiyOUZG2lgUqtyxgOL9YFC3d
-        NG75sCuaUF7TomH93Lu+v2ldz0AWnj0RmmmXFEsGC3hZ0gWpww8/qW1yZMEwRNdfByT/kf
-        thq1hUpgw01DIaHmhL7boHNmyH5CUVwXtIEjF6MAlWAsFFcAzTL9/dCRR0yaivHvObLl22
-        JiT41dBKAIAXYzpLtt0tFdGJb2pjdhneuv87ta9hDlCUS/fScG7j02Qk6k6MMw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1610451478;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=BaNYnLvf1TVhjRaIRbG4PoMO6ZraNHBHvAXZ6JVm1eU=;
-        b=j4knClf51uDpNKbQ8H6qWxLGsWUQiSmfhgb4BrO8rnVToDA8Td2wD+bTxmvjobYF3ExjJd
-        kWOylWRF17ZlypCA==
-From:   "Ahmed S. Darwish" <a.darwish@linutronix.de>
-To:     John Garry <john.garry@huawei.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: [PATCH] MAINTAINERS: Remove intel-linux-scu@intel.com for INTEL
- C600 SAS DRIVER
-Message-ID: <20210112113756.GA3541178@debian-buster-darwi.lab.linutronix.de>
-References: <1610449890-198089-1-git-send-email-john.garry@huawei.com>
+        id S1730739AbhALLpH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 06:45:07 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2317 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727959AbhALLpG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 06:45:06 -0500
+Received: from fraeml705-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DFTBH5127z67Zll;
+        Tue, 12 Jan 2021 19:39:19 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml705-chm.china.huawei.com (10.206.15.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2106.2; Tue, 12 Jan 2021 12:44:24 +0100
+Received: from [10.210.171.61] (10.210.171.61) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 12 Jan 2021 11:44:23 +0000
+Subject: Re: [PATCH v4 01/21] ibmvfc: add vhost fields and defaults for MQ
+ enablement
+To:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+        <james.bottomley@hansenpartnership.com>
+CC:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-kernel@vger.kernel.org>,
+        <brking@linux.ibm.com>
+References: <20210111231225.105347-1-tyreld@linux.ibm.com>
+ <20210111231225.105347-2-tyreld@linux.ibm.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <b9b2f3c0-0d88-6c64-8b45-fe2ce6d581fd@huawei.com>
+Date:   Tue, 12 Jan 2021 11:43:15 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1610449890-198089-1-git-send-email-john.garry@huawei.com>
+In-Reply-To: <20210111231225.105347-2-tyreld@linux.ibm.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.171.61]
+X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jan 12, 2021 at 07:11:30PM +0800, John Garry wrote:
-> The mail address intel-linux-scu@intel.com bounces for Ahmed and I, so
-> just remove it.
->
-> Cc: Ahmed S. Darwish <a.darwish@linutronix.de>
-> Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> Signed-off-by: John Garry <john.garry@huawei.com>
->
+On 11/01/2021 23:12, Tyrel Datwyler wrote:
+> Introduce several new vhost fields for managing MQ state of the adapter
+> as well as initial defaults for MQ enablement.
+> 
+> Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+> ---
+>   drivers/scsi/ibmvscsi/ibmvfc.c | 8 ++++++++
+>   drivers/scsi/ibmvscsi/ibmvfc.h | 9 +++++++++
+>   2 files changed, 17 insertions(+)
+> 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index ba95438a8912..9200fe49c57e 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -3302,6 +3302,7 @@ static struct scsi_host_template driver_template = {
+>   	.max_sectors = IBMVFC_MAX_SECTORS,
+>   	.shost_attrs = ibmvfc_attrs,
+>   	.track_queue_depth = 1,
+> +	.host_tagset = 1,
 
-Acked-by: Ahmed S. Darwish <a.darwish@linutronix.de>
+Good to see another user :)
+
+I didn't check the whole series very thoroughly, but I guess that you 
+only need to set this when shost->nr_hw_queues > 1. Having said that, it 
+should be fine when shost->nr_hw_queues = 0 or 1.
+
+Thanks,
+John
+
+>   };
+>   
+>   /**
+> @@ -5290,6 +5291,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+>   	shost->max_sectors = IBMVFC_MAX_SECTORS;
+>   	shost->max_cmd_len = IBMVFC_MAX_CDB_LEN;
+>   	shost->unique_id = shost->host_no;
+> +	shost->nr_hw_queues = IBMVFC_MQ ? IBMVFC_SCSI_HW_QUEUES : 1;
+>   
+>   	vhost = shost_priv(shost);
+>   	INIT_LIST_HEAD(&vhost->targets);
+> @@ -5300,6 +5302,12 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+>   	vhost->partition_number = -1;
+>   	vhost->log_level = log_level;
+>   	vhost->task_set = 1;
+> +
+> +	vhost->mq_enabled = IBMVFC_MQ;
+> +	vhost->client_scsi_channels = IBMVFC_SCSI_CHANNELS;
+> +	vhost->using_channels = 0;
+> +	vhost->do_enquiry = 1;
+> +
+>   	strcpy(vhost->partition_name, "UNKNOWN");
+>   	init_waitqueue_head(&vhost->work_wait_q);
+>   	init_waitqueue_head(&vhost->init_wait_q);
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+> index 632e977449c5..dd6d89292867 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.h
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+> @@ -41,6 +41,11 @@
+>   #define IBMVFC_DEFAULT_LOG_LEVEL	2
+>   #define IBMVFC_MAX_CDB_LEN		16
+>   #define IBMVFC_CLS3_ERROR		0
+> +#define IBMVFC_MQ			0
+> +#define IBMVFC_SCSI_CHANNELS		0
+> +#define IBMVFC_SCSI_HW_QUEUES		1
+> +#define IBMVFC_MIG_NO_SUB_TO_CRQ	0
+> +#define IBMVFC_MIG_NO_N_TO_M		0
+>   
+>   /*
+>    * Ensure we have resources for ERP and initialization:
+> @@ -840,6 +845,10 @@ struct ibmvfc_host {
+>   	int delay_init;
+>   	int scan_complete;
+>   	int logged_in;
+> +	int mq_enabled;
+> +	int using_channels;
+> +	int do_enquiry;
+> +	int client_scsi_channels;
+>   	int aborting_passthru;
+>   	int events_to_log;
+>   #define IBMVFC_AE_LINKUP	0x0001
+> 
+
