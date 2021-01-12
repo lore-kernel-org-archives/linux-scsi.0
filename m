@@ -2,69 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DECE6C43381
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 15:49:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30566C433E6
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 16:03:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B038023131
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 15:49:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2D6F21D81
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 16:03:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405750AbhALPsK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 10:48:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53832 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405742AbhALPsJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 10:48:09 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70C20C061786;
-        Tue, 12 Jan 2021 07:47:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=UKM0jxJzjj7aZZaUpjoPtSaloslyeAwT5PAA2KS1qPw=; b=sfoDpnQpTy15YMXkKej9WwbmtA
-        oT79dKefFx8gZXg1glqjV0U6ETsrwvcf3jwSDwYr1otHR+umhbzkCqx6rlEzX5NPMuHPsX+GCTrLS
-        n3Yd99v3qS9hmzmcHrFhYx8QsOKGHyzMotAl4/gH6WwJswte8e36vlaHcoewe7AiRRGacMSzg11pO
-        sQo6pwNf33lMicwFnqZFlxFkv+eQQi4pv83DoQkCnrtc59it5Q/zWw7CJICQ6uDhbyxy1OxOIzYgl
-        WiHp4LSi9zeb7akNA/cGqRcOQ+W4k3a4qUHKM2Sp8Yh5BwmJb3T8D3kfU3MVwBQfd1+3WLrUeHu74
-        pO2JunnQ==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1kzLsY-004yr9-AY; Tue, 12 Jan 2021 15:46:49 +0000
-Date:   Tue, 12 Jan 2021 15:46:42 +0000
-From:   Christoph Hellwig <hch@infradead.org>
+        id S2405550AbhALQCv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 11:02:51 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2320 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2405500AbhALQCu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 11:02:50 -0500
+Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DFZvg048rz67Z23;
+        Tue, 12 Jan 2021 23:57:03 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 12 Jan 2021 17:02:08 +0100
+Received: from [10.210.171.61] (10.210.171.61) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 12 Jan 2021 16:02:05 +0000
+Subject: Re: [PATCH v2 00/19] scsi: libsas: Remove in_interrupt() check
 To:     "Ahmed S. Darwish" <a.darwish@linutronix.de>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.garry@huawei.com>,
         Jason Yan <yanaijie@huawei.com>,
         Daniel Wagner <dwagner@suse.de>,
         Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
         Jack Wang <jinpu.wang@cloud.ionos.com>,
-        linux-scsi@vger.kernel.org, intel-linux-scu@intel.com,
-        LKML <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
         Thomas Gleixner <tglx@linutronix.de>,
         "Sebastian A. Siewior" <bigeasy@linutronix.de>
-Subject: Re: [PATCH v2 04/19] scsi: mvsas: Pass gfp_t flags to libsas event
- notifiers
-Message-ID: <20210112154642.GC1185705@infradead.org>
 References: <20210112110647.627783-1-a.darwish@linutronix.de>
- <20210112110647.627783-5-a.darwish@linutronix.de>
+ <8683f401-29b6-4067-af51-7b518ad3a10f@huawei.com> <X/2h0yNqtmgoLIb+@lx-t490>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <e9bc0c89-a4d6-1e5b-793d-3c246882210e@huawei.com>
+Date:   Tue, 12 Jan 2021 16:00:57 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210112110647.627783-5-a.darwish@linutronix.de>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <X/2h0yNqtmgoLIb+@lx-t490>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.171.61]
+X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->  	} else if (mwq->handler & EXP_BRCT_CHG) {
->  		phy->phy_event &= ~EXP_BRCT_CHG;
-> -		sas_notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
-> +		sas_notify_port_event_gfp(sas_phy, PORTE_BROADCAST_RCVD, GFP_ATOMIC);
+- intel-linux-scu@intel.com
 
-Please don't add pointless lines > 80 chars.  This seems to happen a lot
-more in the series.
+On 12/01/2021 13:19, Ahmed S. Darwish wrote:
+> On Tue, Jan 12, 2021 at 11:53:50AM +0000, John Garry wrote:
+>> On 12/01/2021 11:06, Ahmed S. Darwish wrote:
+>>> Hi,
+>>>
+>>> Changelog v2
+>>> ------------
+> ...
+>>
+>> I'll give this a spin today and help review also then.
+>>
+
+I boot-tested on my machines which have hisi_sas v2 and v3 hw, and it's 
+ok. I will ask some guys to test a bit more.
+
+And generally the changes look ok. But I just have a slight concern that 
+we don't pass the gfp_flags all the way from the origin caller.
+
+So we have some really long callchains, for example:
+
+host.c: sci_controller_error_handler(): atomic, irq handler     (*)
+OR host.c: sci_controller_completion_handler(), atomic, tasklet (*)
+   -> sci_controller_process_completions()
+     -> sci_controller_unsolicited_frame()
+       -> phy.c: sci_phy_frame_handler()
+         -> sci_change_state(SCI_PHY_SUB_AWAIT_SAS_POWER)
+           -> sci_phy_starting_await_sas_power_substate_enter()
+             -> host.c: sci_controller_power_control_queue_insert()
+               -> phy.c: sci_phy_consume_power_handler()
+                 -> sci_change_state(SCI_PHY_SUB_FINAL)
+         -> sci_change_state(SCI_PHY_SUB_FINAL)
+     -> sci_controller_event_completion()
+       -> phy.c: sci_phy_event_handler()
+         -> sci_phy_start_sata_link_training()
+           -> sci_change_state(SCI_PHY_SUB_AWAIT_SATA_POWER)
+             -> sci_phy_starting_await_sata_power_substate_enter
+               -> host.c: sci_controller_power_control_queue_insert()
+                 -> phy.c: sci_phy_consume_power_handler()
+                   -> sci_change_state(SCI_PHY_SUB_FINAL)
+
+So if someone rearranges the code later, adds new callchains, etc., it 
+could be missed that the context may have changed than what we assume at 
+the bottom. But then passing the flags everywhere is cumbersome, and all 
+the libsas users see little or no significant changes anyway, apart from 
+a couple.
+
+Thanks,
+John
+
