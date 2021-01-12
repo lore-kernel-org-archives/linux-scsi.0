@@ -2,494 +2,75 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 216CAC433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 14:43:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11B37C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 14:44:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2D9A23132
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 14:43:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A37420888
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 14:44:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726411AbhALOmx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 09:42:53 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:57976 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725984AbhALOmw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 09:42:52 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10CEdW0j106662;
-        Tue, 12 Jan 2021 14:42:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=PmIbAK2YxD24+DUtLCngpIFxGIYjWXjbFJJuxuduK8w=;
- b=KNxU6av+e1Izd81wojwWcZQAn5pvNM3eHwC8ngu2ngPDabd4JWfXL1FQemK06ogJzJL2
- iZKdsDjH1PXxQGzMOpiwhdUgCPw3DlOkbw22MU52wUA/6IGUj/wXxh+zFfL88VU3VxY8
- BCJM6s+q7Hh3rd+VSncN8cetSq171HYntvFHoKhLhKPA6dtwQG0ds6YlOb0xFpnFznRA
- UkqeA5GNyKQbb1jpmHvPgYEgayFDSx3HVQ6vrWZoe1orVYNjuq2BEMkzv67UX3joKLAG
- BoLqzYpNQVs/heRWigPYjhE805yhCXJHBFFrnBo0LaSABfdKcf7KrDF0K/W6yLOsGTF2 Kg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 360kg1pm2t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Jan 2021 14:42:07 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10CEaUh9177981;
-        Tue, 12 Jan 2021 14:40:07 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 360kf5hcf7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Jan 2021 14:40:06 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 10CEe5m4004664;
-        Tue, 12 Jan 2021 14:40:05 GMT
-Received: from dhcp-10-154-188-39.vpn.oracle.com (/10.154.188.39)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 12 Jan 2021 06:40:05 -0800
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.4\))
-Subject: Re: [PATCH v4 4/7] qla2xxx: Wait for ABTS response on I/O timeouts
- for NVMe
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-In-Reply-To: <20210111093134.1206-5-njavali@marvell.com>
-Date:   Tue, 12 Jan 2021 08:40:05 -0600
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <7C5CA836-A605-4336-A8F9-5F6BDFBE4378@oracle.com>
-References: <20210111093134.1206-1-njavali@marvell.com>
- <20210111093134.1206-5-njavali@marvell.com>
-To:     Nilesh Javali <njavali@marvell.com>
-X-Mailer: Apple Mail (2.3608.120.23.2.4)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9861 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- mlxlogscore=999 phishscore=0 bulkscore=0 spamscore=0 mlxscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101120084
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9861 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
- clxscore=1015 impostorscore=0 spamscore=0 priorityscore=1501 mlxscore=0
- phishscore=0 mlxlogscore=999 bulkscore=0 adultscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101120084
+        id S1732479AbhALOoJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 09:44:09 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2319 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726241AbhALOoJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 09:44:09 -0500
+Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DFY8s5wMRz67TgM;
+        Tue, 12 Jan 2021 22:38:21 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 12 Jan 2021 15:43:27 +0100
+Received: from [10.210.171.61] (10.210.171.61) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 12 Jan 2021 14:43:26 +0000
+Subject: Re: [PATCH v2 16/19] scsi: libsas: Switch back to original event
+ notifiers API
+To:     "Ahmed S. Darwish" <a.darwish@linutronix.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        "Artur Paszkiewicz" <artur.paszkiewicz@intel.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>
+CC:     <linux-scsi@vger.kernel.org>, <intel-linux-scu@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Sebastian A. Siewior" <bigeasy@linutronix.de>
+References: <20210112110647.627783-1-a.darwish@linutronix.de>
+ <20210112110647.627783-17-a.darwish@linutronix.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <522737ea-ed28-72c0-b0b5-316e1ee9c404@huawei.com>
+Date:   Tue, 12 Jan 2021 14:42:18 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <20210112110647.627783-17-a.darwish@linutronix.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.171.61]
+X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 12/01/2021 11:06, Ahmed S. Darwish wrote:
+>   		sas_phy = container_of(port->phy_list.next, struct asd_sas_phy,
+>   				port_phy_el);
+> -		sas_notify_port_event_gfp(sas_phy,
+> +		sas_notify_port_event(sas_phy,
+>   				PORTE_BROADCAST_RCVD, GFP_KERNEL);
 
+nit: I think that this now fits on a single line, without exceeding 80 
+characters
 
-> On Jan 11, 2021, at 3:31 AM, Nilesh Javali <njavali@marvell.com> =
-wrote:
->=20
-> From: Bikash Hazarika <bhazarika@marvell.com>
->=20
-> FW needs to wait for an ABTS response before completing the I/O
->=20
-> Signed-off-by: Bikash Hazarika <bhazarika@marvell.com>
-> Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-> Signed-off-by: Arun Easi <aeasi@marvell.com>
-> Signed-off-by: Nilesh Javali <njavali@marvell.com>
-> ---
-> drivers/scsi/qla2xxx/qla_def.h  | 12 +++++
-> drivers/scsi/qla2xxx/qla_fw.h   | 27 ++++++++--
-> drivers/scsi/qla2xxx/qla_gbl.h  |  6 +++
-> drivers/scsi/qla2xxx/qla_init.c |  4 ++
-> drivers/scsi/qla2xxx/qla_iocb.c |  6 +++
-> drivers/scsi/qla2xxx/qla_isr.c  |  9 +++-
-> drivers/scsi/qla2xxx/qla_mbx.c  |  6 +++
-> drivers/scsi/qla2xxx/qla_nvme.c | 91 ++++++++++++++++++++++++++++++++-
-> drivers/scsi/qla2xxx/qla_os.c   |  5 ++
-> 9 files changed, 160 insertions(+), 6 deletions(-)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h =
-b/drivers/scsi/qla2xxx/qla_def.h
-> index ca67be8b62ec..49b42b430df4 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -2101,6 +2101,7 @@ typedef struct {
-> #define CS_COMPLETE_CHKCOND	0x30	/* Error? */
-> #define CS_IOCB_ERROR		0x31	/* Generic error for IOCB =
-request
-> 					   failure */
-> +#define CS_REJECT_RECEIVED	0x4E	/* Reject received */
-> #define CS_BAD_PAYLOAD		0x80	/* Driver defined */
-> #define CS_UNKNOWN		0x81	/* Driver defined */
-> #define CS_RETRY		0x82	/* Driver defined */
-> @@ -4150,6 +4151,17 @@ struct qla_hw_data {
-> /* Bit 21 of fw_attributes decides the MCTP capabilities */
-> #define IS_MCTP_CAPABLE(ha)	(IS_QLA2031(ha) && \
-> 				((ha)->fw_attributes_ext[0] & BIT_0))
-> +#define QLA_ABTS_FW_ENABLED(_ha)       ((_ha)->fw_attributes_ext[0] & =
-BIT_14)
-> +#define QLA_SRB_NVME_LS(_sp) ((_sp)->type =3D=3D SRB_NVME_LS)
-> +#define QLA_SRB_NVME_CMD(_sp) ((_sp)->type =3D=3D SRB_NVME_CMD)
-> +#define QLA_NVME_IOS(_sp) (QLA_SRB_NVME_CMD(_sp) || =
-QLA_SRB_NVME_LS(_sp))
-> +#define QLA_LS_ABTS_WAIT_ENABLED(_sp) \
-> +	(QLA_SRB_NVME_LS(_sp) && =
-QLA_ABTS_FW_ENABLED(_sp->fcport->vha->hw))
-> +#define QLA_CMD_ABTS_WAIT_ENABLED(_sp) \
-> +	(QLA_SRB_NVME_CMD(_sp) && =
-QLA_ABTS_FW_ENABLED(_sp->fcport->vha->hw))
-> +#define QLA_ABTS_WAIT_ENABLED(_sp) \
-> +	(QLA_NVME_IOS(_sp) && QLA_ABTS_FW_ENABLED(_sp->fcport->vha->hw))
-> +
-> #define IS_PI_UNINIT_CAPABLE(ha)	(IS_QLA83XX(ha) || =
-IS_QLA27XX(ha))
-> #define IS_PI_IPGUARD_CAPABLE(ha)	(IS_QLA83XX(ha) || =
-IS_QLA27XX(ha))
-> #define IS_PI_DIFB_DIX0_CAPABLE(ha)	(0)
-> diff --git a/drivers/scsi/qla2xxx/qla_fw.h =
-b/drivers/scsi/qla2xxx/qla_fw.h
-> index 12b689e32883..49df418030e4 100644
-> --- a/drivers/scsi/qla2xxx/qla_fw.h
-> +++ b/drivers/scsi/qla2xxx/qla_fw.h
-> @@ -982,11 +982,18 @@ struct abort_entry_24xx {
->=20
-> 	uint32_t handle;		/* System handle. */
->=20
-> -	__le16	nport_handle;		/* N_PORT handle. */
-> -					/* or Completion status. */
-> +	union {
-> +		__le16 nport_handle;            /* N_PORT handle. */
-> +		__le16 comp_status;             /* Completion status. */
-> +	};
->=20
-> 	__le16	options;		/* Options. */
-> #define AOF_NO_ABTS		BIT_0	/* Do not send any ABTS. */
-> +#define AOF_NO_RRQ		BIT_1   /* Do not send RRQ. */
-> +#define AOF_ABTS_TIMEOUT	BIT_2   /* Disable logout on ABTS =
-timeout. */
-> +#define AOF_ABTS_RTY_CNT	BIT_3   /* Use driver specified retry =
-count. */
-> +#define AOF_RSP_TIMEOUT		BIT_4   /* Use specified =
-response timeout. */
-> +
->=20
-> 	uint32_t handle_to_abort;	/* System handle to abort. */
->=20
-> @@ -995,8 +1002,20 @@ struct abort_entry_24xx {
->=20
-> 	uint8_t port_id[3];		/* PortID of destination port. =
-*/
-> 	uint8_t vp_index;
-> -
-> -	uint8_t reserved_2[12];
-> +	u8	reserved_2[4];
-> +	union {
-> +		struct {
-> +			__le16 abts_rty_cnt;
-> +			__le16 rsp_timeout;
-> +		} drv;
-> +		struct {
-> +			u8	ba_rjt_vendorUnique;
-> +			u8	ba_rjt_reasonCodeExpl;
-> +			u8	ba_rjt_reasonCode;
-> +			u8	reserved_3;
-> +		} fw;
-> +	};
-> +	u8	reserved_4[4];
-> };
->=20
-> #define ABTS_RCV_TYPE		0x54
-> diff --git a/drivers/scsi/qla2xxx/qla_gbl.h =
-b/drivers/scsi/qla2xxx/qla_gbl.h
-> index 708f82311b83..6486f97d649e 100644
-> --- a/drivers/scsi/qla2xxx/qla_gbl.h
-> +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-> @@ -177,6 +177,7 @@ extern int ql2xexlogins;
-> extern int ql2xdifbundlinginternalbuffers;
-> extern int ql2xfulldump_on_mpifail;
-> extern int ql2xenforce_iocb_limit;
-> +extern int ql2xabts_wait_nvme;
->=20
-> extern int qla2x00_loop_reset(scsi_qla_host_t *);
-> extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
-> @@ -941,6 +942,11 @@ int qla2x00_set_data_rate(scsi_qla_host_t *vha, =
-uint16_t mode);
-> extern void qla24xx_process_purex_list(struct purex_list *);
-> extern void qla2x00_dfs_create_rport(scsi_qla_host_t *vha, struct =
-fc_port *fp);
-> extern void qla2x00_dfs_remove_rport(scsi_qla_host_t *vha, struct =
-fc_port *fp);
-> +extern void qla_wait_nvme_release_cmd_kref(srb_t *sp);
-> +extern void qla_nvme_abort_set_option
-> +		(struct abort_entry_24xx *abt, srb_t *sp);
-> +extern void qla_nvme_abort_process_comp_status
-> +		(struct abort_entry_24xx *abt, srb_t *sp);
->=20
-> /* nvme.c */
-> void qla_nvme_unregister_remote_port(struct fc_port *fcport);
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c =
-b/drivers/scsi/qla2xxx/qla_init.c
-> index 221369cdf71f..a6ab2629b7cf 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -136,6 +136,10 @@ static void qla24xx_abort_iocb_timeout(void =
-*data)
-> static void qla24xx_abort_sp_done(srb_t *sp, int res)
-> {
-> 	struct srb_iocb *abt =3D &sp->u.iocb_cmd;
-> +	srb_t *orig_sp =3D sp->cmd_sp;
-> +
-> +	if (orig_sp)
-> +		qla_wait_nvme_release_cmd_kref(orig_sp);
->=20
-> 	del_timer(&sp->u.iocb_cmd.timer);
-> 	if (sp->flags & SRB_WAKEUP_ON_COMP)
-> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c =
-b/drivers/scsi/qla2xxx/qla_iocb.c
-> index c532c74ca1ab..e27359b294d3 100644
-> --- a/drivers/scsi/qla2xxx/qla_iocb.c
-> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-> @@ -3571,6 +3571,7 @@ qla24xx_abort_iocb(srb_t *sp, struct =
-abort_entry_24xx *abt_iocb)
-> 	struct srb_iocb *aio =3D &sp->u.iocb_cmd;
-> 	scsi_qla_host_t *vha =3D sp->vha;
-> 	struct req_que *req =3D sp->qpair->req;
-> +	srb_t *orig_sp =3D sp->cmd_sp;
->=20
-> 	memset(abt_iocb, 0, sizeof(struct abort_entry_24xx));
-> 	abt_iocb->entry_type =3D ABORT_IOCB_TYPE;
-> @@ -3587,6 +3588,11 @@ qla24xx_abort_iocb(srb_t *sp, struct =
-abort_entry_24xx *abt_iocb)
-> 			    aio->u.abt.cmd_hndl);
-> 	abt_iocb->vp_index =3D vha->vp_idx;
-> 	abt_iocb->req_que_no =3D aio->u.abt.req_que_no;
-> +
-> +	/* need to pass original sp */
-> +	if (orig_sp)
-> +		qla_nvme_abort_set_option(abt_iocb, orig_sp);
-> +
-> 	/* Send the command to the firmware */
-> 	wmb();
-> }
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c =
-b/drivers/scsi/qla2xxx/qla_isr.c
-> index bfc8bbaeea46..5ceb45dfd6c7 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -5,6 +5,7 @@
->  */
-> #include "qla_def.h"
-> #include "qla_target.h"
-> +#include "qla_gbl.h"
->=20
-> #include <linux/delay.h>
-> #include <linux/slab.h>
-> @@ -3431,6 +3432,7 @@ qla24xx_abort_iocb_entry(scsi_qla_host_t *vha, =
-struct req_que *req,
-> {
-> 	const char func[] =3D "ABT_IOCB";
-> 	srb_t *sp;
-> +	srb_t *orig_sp =3D NULL;
-> 	struct srb_iocb *abt;
->=20
-> 	sp =3D qla2x00_get_sp_from_handle(vha, func, req, pkt);
-> @@ -3438,7 +3440,12 @@ qla24xx_abort_iocb_entry(scsi_qla_host_t *vha, =
-struct req_que *req,
-> 		return;
->=20
-> 	abt =3D &sp->u.iocb_cmd;
-> -	abt->u.abt.comp_status =3D pkt->nport_handle;
-> +	abt->u.abt.comp_status =3D le16_to_cpu(pkt->comp_status);
-> +	orig_sp =3D sp->cmd_sp;
-> +	/* Need to pass original sp */
-> +	if (orig_sp)
-> +		qla_nvme_abort_process_comp_status(pkt, orig_sp);
-> +
-> 	sp->done(sp, 0);
-> }
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c =
-b/drivers/scsi/qla2xxx/qla_mbx.c
-> index f438cdedca23..629af6fe8c55 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -3243,6 +3243,8 @@ qla24xx_abort_command(srb_t *sp)
-> 	abt->vp_index =3D fcport->vha->vp_idx;
->=20
-> 	abt->req_que_no =3D cpu_to_le16(req->id);
-> +	/* Need to pass original sp */
-> +	qla_nvme_abort_set_option(abt, sp);
->=20
-> 	rval =3D qla2x00_issue_iocb(vha, abt, abt_dma, 0);
-> 	if (rval !=3D QLA_SUCCESS) {
-> @@ -3265,6 +3267,10 @@ qla24xx_abort_command(srb_t *sp)
-> 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1091,
-> 		    "Done %s.\n", __func__);
-> 	}
-> +	if (rval =3D=3D QLA_SUCCESS)
-> +		qla_nvme_abort_process_comp_status(abt, sp);
-> +
-> +	qla_wait_nvme_release_cmd_kref(sp);
->=20
-> 	dma_pool_free(ha->s_dma_pool, abt, abt_dma);
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c =
-b/drivers/scsi/qla2xxx/qla_nvme.c
-> index eab559b3b257..017b4c272531 100644
-> --- a/drivers/scsi/qla2xxx/qla_nvme.c
-> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-> @@ -245,6 +245,13 @@ static void qla_nvme_abort_work(struct =
-work_struct *work)
-> 	    __func__, (rval !=3D QLA_SUCCESS) ? "Failed to abort" : =
-"Aborted",
-> 	    sp, sp->handle, fcport, rval);
->=20
-> +	/*
-> +	 * Returned before decreasing kref so that I/O requests
-> +	 * are waited until ABTS complete. This kref is decreased
-> +	 * at qla24xx_abort_sp_done function.
-> +	 */
-> +	if (ql2xabts_wait_nvme && QLA_ABTS_WAIT_ENABLED(sp))
-> +		return;
-> out:
-> 	/* kref_get was done before work was schedule. */
-> 	kref_put(&sp->cmd_kref, sp->put_fn);
-> @@ -284,7 +291,6 @@ static int qla_nvme_ls_req(struct =
-nvme_fc_local_port *lport,
-> 	struct qla_hw_data *ha;
-> 	srb_t           *sp;
->=20
-> -
-> 	if (!fcport || (fcport && fcport->deleted))
-> 		return rval;
->=20
-> @@ -591,6 +597,7 @@ static int qla_nvme_post_cmd(struct =
-nvme_fc_local_port *lport,
-> 	sp->put_fn =3D qla_nvme_release_fcp_cmd_kref;
-> 	sp->qpair =3D qpair;
-> 	sp->vha =3D vha;
-> +	sp->cmd_sp =3D sp;
-> 	nvme =3D &sp->u.iocb_cmd;
-> 	nvme->u.nvme.desc =3D fd;
->=20
-> @@ -744,3 +751,85 @@ int qla_nvme_register_hba(struct scsi_qla_host =
-*vha)
->=20
-> 	return ret;
-> }
-> +
-> +void qla_nvme_abort_set_option(struct abort_entry_24xx *abt, srb_t =
-*orig_sp)
-> +{
-> +	struct qla_hw_data *ha;
-> +
-> +	if (!(ql2xabts_wait_nvme && QLA_ABTS_WAIT_ENABLED(orig_sp)))
-> +		return;
-> +
-> +	ha =3D orig_sp->fcport->vha->hw;
-> +
-> +	WARN_ON_ONCE(abt->options & cpu_to_le16(BIT_0));
-> +	/* Use Driver Specified Retry Count */
-> +	abt->options |=3D cpu_to_le16(AOF_ABTS_RTY_CNT);
-> +	abt->drv.abts_rty_cnt =3D cpu_to_le16(2);
-> +	/* Use specified response timeout */
-> +	abt->options |=3D cpu_to_le16(AOF_RSP_TIMEOUT);
-> +	/* set it to 2 * r_a_tov in secs */
-> +	abt->drv.rsp_timeout =3D cpu_to_le16(2 * (ha->r_a_tov / 10));
-> +}
-> +
-> +void qla_nvme_abort_process_comp_status(struct abort_entry_24xx *abt, =
-srb_t *orig_sp)
-> +{
-> +	u16	comp_status;
-> +	struct scsi_qla_host *vha;
-> +
-> +	if (!(ql2xabts_wait_nvme && QLA_ABTS_WAIT_ENABLED(orig_sp)))
-> +		return;
-> +
-> +	vha =3D orig_sp->fcport->vha;
-> +
-> +	comp_status =3D le16_to_cpu(abt->comp_status);
-> +	switch (comp_status) {
-> +	case CS_RESET:		/* reset event aborted */
-> +	case CS_ABORTED:	/* IOCB was cleaned */
-> +	/* N_Port handle is not currently logged in */
-> +	case CS_TIMEOUT:
-> +	/* N_Port handle was logged out while waiting for ABTS to =
-complete */
-> +	case CS_PORT_UNAVAILABLE:
-> +	/* Firmware found that the port name changed */
-> +	case CS_PORT_LOGGED_OUT:
-> +	/* BA_RJT was received for the ABTS */
-> +	case CS_PORT_CONFIG_CHG:
-> +		ql_dbg(ql_dbg_async + ql_dbg_mbx, vha, 0xf09d,
-> +		       "Abort I/O IOCB completed with error, =
-comp_status=3D%x\n",
-> +		comp_status);
-> +		break;
-> +
-> +	/* BA_RJT was received for the ABTS */
-> +	case CS_REJECT_RECEIVED:
-> +		ql_dbg(ql_dbg_async + ql_dbg_mbx, vha, 0xf09e,
-> +		       "BA_RJT was received for the ABTS =
-rjt_vendorUnique =3D %u",
-> +			abt->fw.ba_rjt_vendorUnique);
-> +		ql_dbg(ql_dbg_async + ql_dbg_mbx, vha, 0xf09e,
-> +		       "ba_rjt_reasonCodeExpl =3D %u, ba_rjt_reasonCode =
-=3D %u\n",
-> +		       abt->fw.ba_rjt_reasonCodeExpl, =
-abt->fw.ba_rjt_reasonCode);
-> +		break;
-> +
-> +	case CS_COMPLETE:
-> +		ql_dbg(ql_dbg_async + ql_dbg_mbx, vha, 0xf09f,
-> +		       "IOCB request is completed successfully =
-comp_status=3D%x\n",
-> +		comp_status);
-> +		break;
-> +
-> +	case CS_IOCB_ERROR:
-> +		ql_dbg(ql_dbg_async + ql_dbg_mbx, vha, 0xf0a0,
-> +		       "IOCB request is failed, comp_status=3D%x\n", =
-comp_status);
-> +		break;
-> +
-> +	default:
-> +		ql_dbg(ql_dbg_async + ql_dbg_mbx, vha, 0xf0a1,
-> +		       "Invalid Abort IO IOCB Completion Status %x\n",
-> +		comp_status);
-> +		break;
-> +	}
-> +}
-> +
-> +inline void qla_wait_nvme_release_cmd_kref(srb_t *orig_sp)
-> +{
-> +	if (!(ql2xabts_wait_nvme && QLA_ABTS_WAIT_ENABLED(orig_sp)))
-> +		return;
-> +	kref_put(&orig_sp->cmd_kref, orig_sp->put_fn);
-> +}
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c =
-b/drivers/scsi/qla2xxx/qla_os.c
-> index a760cb38e487..3cfd83fce9c5 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -327,6 +327,11 @@ MODULE_PARM_DESC(ql2xrdpenable,
-> 		"Enables RDP responses. "
-> 		"0 - no RDP responses (default). "
-> 		"1 - provide RDP responses.");
-> +int ql2xabts_wait_nvme =3D 1;
-> +module_param(ql2xabts_wait_nvme, int, 0444);
-> +MODULE_PARM_DESC(ql2xabts_wait_nvme,
-> +		 "To wait for ABTS response on I/O timeouts for NVMe. =
-(default: 1)");
-> +
->=20
-> static void qla2x00_clear_drv_active(struct qla_hw_data *);
-> static void qla2x00_free_device(scsi_qla_host_t *);
-> --=20
-> 2.19.0.rc0
->=20
-
-Looks Good
-
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-
---
-Himanshu Madhani	 Oracle Linux Engineering
-
+Thanks,
+John
