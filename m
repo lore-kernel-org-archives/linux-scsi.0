@@ -2,171 +2,150 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A760FC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 06:37:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2000C433E6
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 06:53:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B63622CA2
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 06:37:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F73E22CA2
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 06:53:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730806AbhALGhF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 01:37:05 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:53772 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729223AbhALGhF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 12 Jan 2021 01:37:05 -0500
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10C6XpON107042;
-        Tue, 12 Jan 2021 01:35:47 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=7ICjcjyZoP36IcIqAtmsWOjw8Be2kuyorFnzhFljoHU=;
- b=TxDSP2nKH9h/7nEwIsELkW4NCaoGs4Qxlas2oN2Iz5FIHX3yCaCx+aflGqSWfqL/Aidc
- T9C1rBMu13/3PAzO2wtI8iknErkZkLccrwR2IgRK7Mj+4ML3UMQ6HNCUAz5A6GhZkVnm
- nvTqpZbKA+a/j8DsQP0USKLncnvEfYaEe+AoDqqQOMLoN1CSpjqVokvpVL8CNjjnZsq0
- muLP8pdbpM447NpHaaYets/bqGIG1Y6jEWkqE2lQhmXkii98ryNoBKXhytu0t9/+oHPa
- EEgv+dnILB6bNW14nvazcYGiFdpb5rDJaHG14Wq+Xls+UFP2EGG8nXsVB+C6Cf3w/VUj xA== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3616c58af9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 12 Jan 2021 01:35:47 -0500
-Received: from m0098394.ppops.net (m0098394.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 10C6YBgW108844;
-        Tue, 12 Jan 2021 01:35:47 -0500
-Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3616c58af2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 12 Jan 2021 01:35:46 -0500
-Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10C6WAR0026671;
-        Tue, 12 Jan 2021 06:35:45 GMT
-Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
-        by ppma01dal.us.ibm.com with ESMTP id 35y44914gw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 12 Jan 2021 06:35:45 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10C6Zic18323786
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Jan 2021 06:35:44 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 120F678060;
-        Tue, 12 Jan 2021 06:35:44 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A4BBE7805C;
-        Tue, 12 Jan 2021 06:35:41 +0000 (GMT)
-Received: from jarvis.int.hansenpartnership.com (unknown [9.85.180.222])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Tue, 12 Jan 2021 06:35:41 +0000 (GMT)
-Message-ID: <62b562eae9830830d87ea9f92dcc0018a1935583.camel@linux.ibm.com>
-Subject: Re: About scsi device queue depth
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
-Cc:     chenxiang <chenxiang66@hisilicon.com>
-Date:   Mon, 11 Jan 2021 22:35:40 -0800
-In-Reply-To: <b51fc658-b28a-d627-a2a3-b2835132ab13@huawei.com>
-References: <9ff894da-cf2c-9094-2690-1973cc57835a@huawei.com>
-         <d784f7ff4f61a81c4c9df96decc6b7f6d884c616.camel@linux.ibm.com>
-         <b51fc658-b28a-d627-a2a3-b2835132ab13@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        id S2391473AbhALGxB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 01:53:01 -0500
+Received: from m43-15.mailgun.net ([69.72.43.15]:12655 "EHLO
+        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728165AbhALGxB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 01:53:01 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1610434361; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=AMekzKIoXfjswvih+CfUuEZfypT+jF7HVNK0MT9+CpY=;
+ b=mhH8Jbfm1Y6nfG05hHSJKvHoBzTvL2/pfWSkVV5UOYhLOwNfIEb5bmHgEGfkt7MXQHmcWALZ
+ 0a9TV3/roL/bZok11LEcV7/eM+eSEi9sSny5S/Xjue3UTbChG7cg+XJEVvOhIhENALcx5tuT
+ F/coySe562y+0kfjr9Y/jX9FjIQ=
+X-Mailgun-Sending-Ip: 69.72.43.15
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n10.prod.us-east-1.postgun.com with SMTP id
+ 5ffd471ef1be2d22c46eb43b (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 12 Jan 2021 06:52:14
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 032EAC43463; Tue, 12 Jan 2021 06:52:13 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2FBACC433CA;
+        Tue, 12 Jan 2021 06:52:13 +0000 (UTC)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2021-01-12_03:2021-01-11,2021-01-12 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0
- priorityscore=1501 spamscore=0 phishscore=0 impostorscore=0 adultscore=0
- malwarescore=0 mlxlogscore=999 lowpriorityscore=0 mlxscore=0 clxscore=1031
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101120035
+Date:   Tue, 12 Jan 2021 14:52:13 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] scsi: ufs: Fix a possible NULL pointer issue
+In-Reply-To: <1610433327.17820.5.camel@mtkswgap22>
+References: <1609595975-12219-1-git-send-email-cang@codeaurora.org>
+ <1609595975-12219-2-git-send-email-cang@codeaurora.org>
+ <1610433327.17820.5.camel@mtkswgap22>
+Message-ID: <6d03cdacda2f757ba0d0f39ce625eaec@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2021-01-11 at 17:11 +0000, John Garry wrote:
-> On 11/01/2021 16:40, James Bottomley wrote:
-> > > So initial sdev queue depth comes from cmd_per_lun by default or
-> > > manually setting in the driver via scsi_change_queue_depth(). It
-> > > seems to me that some drivers are not setting this optimally, as
-> > > above.
-> > > 
-> > > Thoughts on guidance for setting sdev queue depth? Could blk-mq
-> > > changed this behavior?
+On 2021-01-12 14:35, Stanley Chu wrote:
+> Hi Can,
 > 
-> Hi James,
+> On Sat, 2021-01-02 at 05:59 -0800, Can Guo wrote:
+>> During system resume/suspend, hba could be NULL. In this case, do not 
+>> touch
+>> eh_sem.
+>> 
+>> Fixes: 88a92d6ae4fe ("scsi: ufs: Serialize eh_work with system PM 
+>> events and async scan")
+>> 
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> 
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index e221add..9829c8d 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -94,6 +94,8 @@
+>>  		       16, 4, buf, __len, false);                        \
+>>  } while (0)
+>> 
+>> +static bool early_suspend;
+>> +
+>>  int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+>>  		     const char *prefix)
+>>  {
+>> @@ -8896,8 +8898,14 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+>>  	int ret = 0;
+>>  	ktime_t start = ktime_get();
+>> 
+>> +	if (!hba) {
+>> +		early_suspend = true;
+>> +		return 0;
+>> +	}
+>> +
+>>  	down(&hba->eh_sem);
+>> -	if (!hba || !hba->is_powered)
+>> +
+>> +	if (!hba->is_powered)
+>>  		return 0;
+>> 
+>>  	if ((ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl) ==
+>> @@ -8945,9 +8953,12 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+>>  	int ret = 0;
+>>  	ktime_t start = ktime_get();
+>> 
+>> -	if (!hba) {
+>> -		up(&hba->eh_sem);
+>> +	if (!hba)
+>>  		return -EINVAL;
+>> +
+>> +	if (unlikely(early_suspend)) {
+>> +		early_suspend = false;
+>> +		down(&hba->eh_sem);
+>>  	}
 > 
-> > In general, for spinning rust, you want the minimum queue depth
-> > possible for keeping the device active because merging is a very
-> > important performance enhancement and once the drive is fully
-> > occupied simply sending more tags won't improve latency.  We used
-> > to recommend a depth of about 4 for this reason.  A co-operative
-> > device can help you find the optimal by returning QUEUE_FULL when
-> > it's fully occupied so we have a mechanism to track the queue full
-> > returns and change the depth interactively.
-> > 
-> > For high iops devices, these considerations went out of the window
-> > and it's generally assumed (without varying evidence) the more tags
-> > the better. 
+> I guess early_suspend here is to handle the case that hba is null 
+> during
+> ufshcd_system_suspend() but !null during ufshcd_system_resume(). If 
+> yes,
+> would it be possible? If no, may I know what is the purpose?
 > 
-> For this case, it seems the opposite - less is more. And I seem to
-> be hitting closer to the sweet spot there, with more merges.
 
-I think cheaper SSDs have a write latency problem due to erase block
-issues.  I suspect all SSDs have a channel problem in that there's a
-certain number of parallel channels and once you go over that number
-they can't actually work on any more operations even if they can queue
-them.  For cheaper (as in fewer channels, and less spare erased block
-capacity) SSDs there will be a benefit to reducing the depth to some
-multiplier of the channels (I'd guess 2-4 as the multiplier).  When
-SSDs become write throttled, there may be less benefit to us queueing
-in the block layer (merging produces bigger packets with lower
-overhead, but the erase block consumption will remain the same).
+Yes, you are right. I think it is possible. platform_set_drvdata()
+is called in ufshcd_pltfrm_init(). Say suspend happens before
+platform_set_drvdata() is called, but resume comes back after
+platform_set_drvdata() is called. What do you think?
 
-For the record, the internet thinks that cheap SSDs have 2-4 channels,
-so that would argue a tag depth somewhere from 4-16
+Thanks,
+Can Guo.
 
-> > SSDs have a peculiar lifetime problem in that when they get
-> > erase block starved they start behaving more like spinning rust in
-> > that they reach a processing limit but only for writes, so lowering
-> > the write queue depth (which we don't even have a knob for) might
-> > be a good solution.  Trying to track the erase block problem has
-> > been a constant bugbear.
+> Thanks a lot.
+> Stanley Chu
 > 
-> I am only doing read performance test here, and the disks are SAS3.0 
-> SSDs HUSMM1640ASS204, so not exactly slow.
-
-Possibly ... the stats on most manufacturer SSDs don't give you
-information about the channels or spare erase blocks.
-
-> > I'm assuming you're using spinning rust in the above, so it sounds
-> > like the firmware in the card might be eating the queue full
-> > returns.  Icould see this happening in RAID mode, but it shouldn't
-> > happen in jbod mode.
-> 
-> Not sure on that, but I didn't check too much. I did try to increase
-> fio queue depth and sdev queue depth to be very large to clobber the
-> disks, but still nothing.
-
-If it's an SSD it's likely not giving the queue full you'd need to get
-the mid-layer to throttle automatically.
-
-James
-
-
+>> 
+>>  	if (!hba->is_powered || pm_runtime_suspended(hba->dev))
