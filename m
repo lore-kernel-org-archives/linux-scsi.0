@@ -2,98 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66566C433E6
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 04:39:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CCC8C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 06:36:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3735D222B3
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 04:39:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE56B22AED
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 06:36:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731049AbhALEjh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jan 2021 23:39:37 -0500
-Received: from mail-pj1-f51.google.com ([209.85.216.51]:33339 "EHLO
-        mail-pj1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731028AbhALEjh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2021 23:39:37 -0500
-Received: by mail-pj1-f51.google.com with SMTP id w1so956426pjc.0
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Jan 2021 20:39:21 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=x5qgj+EZIYvLDvAjcB8kuUG7MhawOyKr3/XQ5AmQv4M=;
-        b=bOjcERujQQ+S1eXRC7i5qxoP3tX+7LziCcisr2X3Zjz9OjG0L3Iik6nx3c3uj2QKFI
-         fYqz1ZUmW8/1QHfhOgvsOSODA3GSOyBQhDTKpLwmKWWpqokSKBpyNSXI/1UIUG0f/stW
-         EeLXpumRatTpKTTwu53CYzpyqHyjJNYYjQePxcTKMBKEMAIO7CsKYAdm3U0V7PcWxqx5
-         qf+OEHz2adDHq6wS5lrOuSxTpuVg2LqnPI5MCID2ZH6zBp4CHPele/UNOklazHcwbUbt
-         Q0gExIE8x7lfHsBtBaY6wrlkdUmXeVCaoI+YEfSOe2n21eAYDPBtSfxYNJ41/5mm5+7q
-         f2rA==
-X-Gm-Message-State: AOAM533BhY8gtvnFWchl05kkyoX1HweHspHXodZXwRVz3dDLxyczq/bS
-        2EjVSSgIlmZW9eEytaLI9cYmSeRV8UM=
-X-Google-Smtp-Source: ABdhPJz6yE3uQY53MAebv49EXmZQplmUCtK7waxtxIRIt7dp8uBnXWpgWQQhKuhYpkkNi98IXEOWfw==
-X-Received: by 2002:a17:902:8203:b029:dc:3371:6b04 with SMTP id x3-20020a1709028203b02900dc33716b04mr2813806pln.81.1610426336170;
-        Mon, 11 Jan 2021 20:38:56 -0800 (PST)
-Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id n28sm1310038pfq.61.2021.01.11.20.38.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 Jan 2021 20:38:55 -0800 (PST)
-Subject: Re: [PATCH] scsi: scsi_transport_srp: don't block target in failfast
- state
-To:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>
-Cc:     linux-scsi@vger.kernel.org,
-        James Bottomley <jejb@linux.vnet.ibm.com>
-References: <20210111142541.21534-1-mwilck@suse.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <98b70265-83b6-2e1f-3f71-c39989ba581f@acm.org>
-Date:   Mon, 11 Jan 2021 20:38:53 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S1730745AbhALGgQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 01:36:16 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:53155 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730221AbhALGgQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 01:36:16 -0500
+X-UUID: b1784a5e40854f6aaf6bca73675cb29a-20210112
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=Yx9EFuHFi0fiBfDNCMYj/85UN42yeWmQPfOqfJfYs+c=;
+        b=SSP1gFfFSKk+Mp+sLB99pPPo/t48G4KCWwZ1/ppJviHInldBBKHxRZEgL2b1NxQ3F/elo1fRdj2AuZK/RIdTpPzZeuKCyYye/F61hGuZSrJljQ7b5jRfBq8j43xXaO8H48rLomvnvExWDJ5OLrxNTC44ky4YFilx3uk4y5MeJY0=;
+X-UUID: b1784a5e40854f6aaf6bca73675cb29a-20210112
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1207321009; Tue, 12 Jan 2021 14:35:29 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 12 Jan 2021 14:35:27 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 12 Jan 2021 14:35:27 +0800
+Message-ID: <1610433327.17820.5.camel@mtkswgap22>
+Subject: Re: [PATCH 1/2] scsi: ufs: Fix a possible NULL pointer issue
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Can Guo <cang@codeaurora.org>
+CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
+        <hongwus@codeaurora.org>, <ziqichen@codeaurora.org>,
+        <rnayak@codeaurora.org>, <linux-scsi@vger.kernel.org>,
+        <kernel-team@android.com>, <saravanak@google.com>,
+        <salyzyn@google.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+Date:   Tue, 12 Jan 2021 14:35:27 +0800
+In-Reply-To: <1609595975-12219-2-git-send-email-cang@codeaurora.org>
+References: <1609595975-12219-1-git-send-email-cang@codeaurora.org>
+         <1609595975-12219-2-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-In-Reply-To: <20210111142541.21534-1-mwilck@suse.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/11/21 6:25 AM, mwilck@suse.com wrote:
-> From: Martin Wilck <mwilck@suse.com>
-> 
-> If the port is in SRP_RPORT_FAIL_FAST state when srp_reconnect_rport()
-> is entered, a transition to SDEV_BLOCK would be illegal, and a kernel
-> WARNING would be triggered. Skip scsi_target_block() in this case.
-> 
-> Signed-off-by: Martin Wilck <mwilck@suse.com>
-> ---
->  drivers/scsi/scsi_transport_srp.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-> index cba1cf6a1c12..1e939a2a387f 100644
-> --- a/drivers/scsi/scsi_transport_srp.c
-> +++ b/drivers/scsi/scsi_transport_srp.c
-> @@ -541,7 +541,14 @@ int srp_reconnect_rport(struct srp_rport *rport)
->  	res = mutex_lock_interruptible(&rport->mutex);
->  	if (res)
->  		goto out;
-> -	scsi_target_block(&shost->shost_gendev);
-> +	if (rport->state != SRP_RPORT_FAIL_FAST)
-> +		/*
-> +		 * sdev state must be SDEV_TRANSPORT_OFFLINE, transition
-> +		 * to SDEV_BLOCK is illegal. Calling scsi_target_unblock()
-> +		 * later is ok though, scsi_internal_device_unblock_nowait()
-> +		 * treats SDEV_TRANSPORT_OFFLINE like SDEV_BLOCK.
-> +		 */
-> +		scsi_target_block(&shost->shost_gendev);
->  	res = rport->state != SRP_RPORT_LOST ? i->f->reconnect(rport) : -ENODEV;
->  	pr_debug("%s (state %d): transport.reconnect() returned %d\n",
->  		 dev_name(&shost->shost_gendev), rport->state, res);
+SGkgQ2FuLA0KDQpPbiBTYXQsIDIwMjEtMDEtMDIgYXQgMDU6NTkgLTA4MDAsIENhbiBHdW8gd3Jv
+dGU6DQo+IER1cmluZyBzeXN0ZW0gcmVzdW1lL3N1c3BlbmQsIGhiYSBjb3VsZCBiZSBOVUxMLiBJ
+biB0aGlzIGNhc2UsIGRvIG5vdCB0b3VjaA0KPiBlaF9zZW0uDQo+IA0KPiBGaXhlczogODhhOTJk
+NmFlNGZlICgic2NzaTogdWZzOiBTZXJpYWxpemUgZWhfd29yayB3aXRoIHN5c3RlbSBQTSBldmVu
+dHMgYW5kIGFzeW5jIHNjYW4iKQ0KPiANCj4gU2lnbmVkLW9mZi1ieTogQ2FuIEd1byA8Y2FuZ0Bj
+b2RlYXVyb3JhLm9yZz4NCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hj
+ZC5jIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KPiBpbmRleCBlMjIxYWRkLi45ODI5Yzhk
+IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+ICsrKyBiL2RyaXZl
+cnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gQEAgLTk0LDYgKzk0LDggQEANCj4gIAkJICAgICAgIDE2
+LCA0LCBidWYsIF9fbGVuLCBmYWxzZSk7ICAgICAgICAgICAgICAgICAgICAgICAgXA0KPiAgfSB3
+aGlsZSAoMCkNCj4gIA0KPiArc3RhdGljIGJvb2wgZWFybHlfc3VzcGVuZDsNCj4gKw0KPiAgaW50
+IHVmc2hjZF9kdW1wX3JlZ3Moc3RydWN0IHVmc19oYmEgKmhiYSwgc2l6ZV90IG9mZnNldCwgc2l6
+ZV90IGxlbiwNCj4gIAkJICAgICBjb25zdCBjaGFyICpwcmVmaXgpDQo+ICB7DQo+IEBAIC04ODk2
+LDggKzg4OTgsMTQgQEAgaW50IHVmc2hjZF9zeXN0ZW1fc3VzcGVuZChzdHJ1Y3QgdWZzX2hiYSAq
+aGJhKQ0KPiAgCWludCByZXQgPSAwOw0KPiAgCWt0aW1lX3Qgc3RhcnQgPSBrdGltZV9nZXQoKTsN
+Cj4gIA0KPiArCWlmICghaGJhKSB7DQo+ICsJCWVhcmx5X3N1c3BlbmQgPSB0cnVlOw0KPiArCQly
+ZXR1cm4gMDsNCj4gKwl9DQo+ICsNCj4gIAlkb3duKCZoYmEtPmVoX3NlbSk7DQo+IC0JaWYgKCFo
+YmEgfHwgIWhiYS0+aXNfcG93ZXJlZCkNCj4gKw0KPiArCWlmICghaGJhLT5pc19wb3dlcmVkKQ0K
+PiAgCQlyZXR1cm4gMDsNCj4gIA0KPiAgCWlmICgodWZzX2dldF9wbV9sdmxfdG9fZGV2X3B3cl9t
+b2RlKGhiYS0+c3BtX2x2bCkgPT0NCj4gQEAgLTg5NDUsOSArODk1MywxMiBAQCBpbnQgdWZzaGNk
+X3N5c3RlbV9yZXN1bWUoc3RydWN0IHVmc19oYmEgKmhiYSkNCj4gIAlpbnQgcmV0ID0gMDsNCj4g
+IAlrdGltZV90IHN0YXJ0ID0ga3RpbWVfZ2V0KCk7DQo+ICANCj4gLQlpZiAoIWhiYSkgew0KPiAt
+CQl1cCgmaGJhLT5laF9zZW0pOw0KPiArCWlmICghaGJhKQ0KPiAgCQlyZXR1cm4gLUVJTlZBTDsN
+Cj4gKw0KPiArCWlmICh1bmxpa2VseShlYXJseV9zdXNwZW5kKSkgew0KPiArCQllYXJseV9zdXNw
+ZW5kID0gZmFsc2U7DQo+ICsJCWRvd24oJmhiYS0+ZWhfc2VtKTsNCj4gIAl9DQoNCkkgZ3Vlc3Mg
+ZWFybHlfc3VzcGVuZCBoZXJlIGlzIHRvIGhhbmRsZSB0aGUgY2FzZSB0aGF0IGhiYSBpcyBudWxs
+IGR1cmluZw0KdWZzaGNkX3N5c3RlbV9zdXNwZW5kKCkgYnV0ICFudWxsIGR1cmluZyB1ZnNoY2Rf
+c3lzdGVtX3Jlc3VtZSgpLiBJZiB5ZXMsDQp3b3VsZCBpdCBiZSBwb3NzaWJsZT8gSWYgbm8sIG1h
+eSBJIGtub3cgd2hhdCBpcyB0aGUgcHVycG9zZT8NCg0KVGhhbmtzIGEgbG90Lg0KU3RhbmxleSBD
+aHUNCg0KPiAgDQo+ICAJaWYgKCFoYmEtPmlzX3Bvd2VyZWQgfHwgcG1fcnVudGltZV9zdXNwZW5k
+ZWQoaGJhLT5kZXYpKQ0KDQo=
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
