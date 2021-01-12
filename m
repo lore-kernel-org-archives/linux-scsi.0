@@ -2,112 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30566C433E6
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 16:03:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96A7DC433E6
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 16:20:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2D6F21D81
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 16:03:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F2392222B
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 16:20:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405550AbhALQCv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 11:02:51 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2320 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405500AbhALQCu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 11:02:50 -0500
-Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DFZvg048rz67Z23;
-        Tue, 12 Jan 2021 23:57:03 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Tue, 12 Jan 2021 17:02:08 +0100
-Received: from [10.210.171.61] (10.210.171.61) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Tue, 12 Jan 2021 16:02:05 +0000
-Subject: Re: [PATCH v2 00/19] scsi: libsas: Remove in_interrupt() check
-To:     "Ahmed S. Darwish" <a.darwish@linutronix.de>
-CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S2406623AbhALQTp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 11:19:45 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:59226 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2406051AbhALQTk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 Jan 2021 11:19:40 -0500
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10CG62ld109811;
+        Tue, 12 Jan 2021 11:09:39 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=eYhDlcctcc2cD1XoD7ylVybwm8pGhznp/qXjIgMQu1Y=;
+ b=C+yzlHCew57SVpERqqp/3stoYEmzr08wu4sVsXHSYyYzvdvgDVTU5wQ+1VdmEdXQGGCd
+ XBgzuZ+RI4dadDikdeYVS0V7R4E1VHeipm5MT51I3EiUvA7W6hPuamPzXgHBYiSK2c+O
+ ogqpmhgExFs/N9MTwfD/gzDl5IcpqQOtZU0yW0Dya6UGA0N7rsNsP3bHSW7Rg332i6H0
+ tXVwxL/sgO6EnKj1fVEPRKJhwyovx9MlqfXEnik5y/KQwwUQ0cO3PRJ/nlgcMA1bqv77
+ AKPULazwPQsllLcdUBqkmUTz1Xu2CP+eUhl4aGVqskN/BtS2aPvoLpGYUJU6jwgXqDCf 1A== 
+Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 361e7yshen-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 12 Jan 2021 11:09:39 -0500
+Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
+        by ppma02dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10CG83PX031695;
+        Tue, 12 Jan 2021 16:09:38 GMT
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+        by ppma02dal.us.ibm.com with ESMTP id 35y449cy5a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 12 Jan 2021 16:09:38 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10CG9bHU15073756
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 12 Jan 2021 16:09:37 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 494D378064;
+        Tue, 12 Jan 2021 16:09:37 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 02D297805F;
+        Tue, 12 Jan 2021 16:09:35 +0000 (GMT)
+Received: from jarvis.int.hansenpartnership.com (unknown [9.85.180.222])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Tue, 12 Jan 2021 16:09:35 +0000 (GMT)
+Message-ID: <b2a24db42b66ffbc6a9a39bf36ed31875795ae31.camel@linux.ibm.com>
+Subject: Re: [PATCH 0/3] Improve comments in Adaptec AHA-154x driver
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Sergey Shtylyov <s.shtylyov@omprussia.ru>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Sebastian A. Siewior" <bigeasy@linutronix.de>
-References: <20210112110647.627783-1-a.darwish@linutronix.de>
- <8683f401-29b6-4067-af51-7b518ad3a10f@huawei.com> <X/2h0yNqtmgoLIb+@lx-t490>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <e9bc0c89-a4d6-1e5b-793d-3c246882210e@huawei.com>
-Date:   Tue, 12 Jan 2021 16:00:57 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        linux-scsi@vger.kernel.org
+Cc:     Ondrej Zary <linux@zary.sk>
+Date:   Tue, 12 Jan 2021 08:09:34 -0800
+In-Reply-To: <2726d35a-ac66-fae9-51e7-ea4f13e89fd7@omprussia.ru>
+References: <2726d35a-ac66-fae9-51e7-ea4f13e89fd7@omprussia.ru>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-In-Reply-To: <X/2h0yNqtmgoLIb+@lx-t490>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.171.61]
-X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
+ definitions=2021-01-12_10:2021-01-12,2021-01-12 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
+ impostorscore=0 mlxlogscore=993 spamscore=0 bulkscore=0 adultscore=0
+ malwarescore=0 lowpriorityscore=0 clxscore=1011 mlxscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101120090
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-- intel-linux-scu@intel.com
+On Sun, 2021-01-10 at 19:45 +0300, Sergey Shtylyov wrote:
+> Here are 3 patches against the 'for-next' branch of Martin Petersen's
+> 'scsi.git' repo.
+> I'm trying to clean up and improve the driver comments...
 
-On 12/01/2021 13:19, Ahmed S. Darwish wrote:
-> On Tue, Jan 12, 2021 at 11:53:50AM +0000, John Garry wrote:
->> On 12/01/2021 11:06, Ahmed S. Darwish wrote:
->>> Hi,
->>>
->>> Changelog v2
->>> ------------
-> ...
->>
->> I'll give this a spin today and help review also then.
->>
+Do you actually have one of these?  The last known working one was
+owned by Ondrej Zary (added to cc).  Since they're ISA only and that
+hardware is pretty much dead, this class of drivers might be a good
+candidate for removal.
 
-I boot-tested on my machines which have hisi_sas v2 and v3 hw, and it's 
-ok. I will ask some guys to test a bit more.
+James
 
-And generally the changes look ok. But I just have a slight concern that 
-we don't pass the gfp_flags all the way from the origin caller.
-
-So we have some really long callchains, for example:
-
-host.c: sci_controller_error_handler(): atomic, irq handler     (*)
-OR host.c: sci_controller_completion_handler(), atomic, tasklet (*)
-   -> sci_controller_process_completions()
-     -> sci_controller_unsolicited_frame()
-       -> phy.c: sci_phy_frame_handler()
-         -> sci_change_state(SCI_PHY_SUB_AWAIT_SAS_POWER)
-           -> sci_phy_starting_await_sas_power_substate_enter()
-             -> host.c: sci_controller_power_control_queue_insert()
-               -> phy.c: sci_phy_consume_power_handler()
-                 -> sci_change_state(SCI_PHY_SUB_FINAL)
-         -> sci_change_state(SCI_PHY_SUB_FINAL)
-     -> sci_controller_event_completion()
-       -> phy.c: sci_phy_event_handler()
-         -> sci_phy_start_sata_link_training()
-           -> sci_change_state(SCI_PHY_SUB_AWAIT_SATA_POWER)
-             -> sci_phy_starting_await_sata_power_substate_enter
-               -> host.c: sci_controller_power_control_queue_insert()
-                 -> phy.c: sci_phy_consume_power_handler()
-                   -> sci_change_state(SCI_PHY_SUB_FINAL)
-
-So if someone rearranges the code later, adds new callchains, etc., it 
-could be missed that the context may have changed than what we assume at 
-the bottom. But then passing the flags everywhere is cumbersome, and all 
-the libsas users see little or no significant changes anyway, apart from 
-a couple.
-
-Thanks,
-John
 
