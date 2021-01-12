@@ -2,152 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03E25C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 15:07:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C251C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 15:40:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B045E23134
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 15:07:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8E182312F
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 15:39:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728013AbhALPHt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 10:07:49 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:7080 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726440AbhALPHs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 12 Jan 2021 10:07:48 -0500
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10CF2XEj045078;
-        Tue, 12 Jan 2021 10:07:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id; s=pp1;
- bh=2+QIzgqEv4+5LR/ITcMUSMKb5H8YlfepXNhjamCOSFM=;
- b=kj4H4SoyYgcHayKhQ8vl7mT/lgPWj2CL487++RhiCJI9Kwao1Krrbvd5D6rISBiSQb4k
- FMinPzkboKoOvUlstAjVXudSoqDcm1u/zjGU4/dzHbp2h7Z3ftIefGOrDW5jYXVcJlM/
- TBnbR4Gh5LGR+YKP2YR0cIHEnkt5E36ZcqbxrxetaHfRxeX+WgR9ZO/nGcRIvicb/BG5
- ZZVltLB2eYkgY3lvLCGkm4ggyAqRIrIUO11ToxGYO1kdjXN0Sn87LUoaIfeB+pkLpZga
- goGc6umYlp3Wf8WDKQjBm1fKydK9ghOD7wl5jGgh+41/ZuTV1gA44WIrEYjLTEE7en70 lg== 
-Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 361ds58yav-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 12 Jan 2021 10:07:04 -0500
-Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10CEvxTs031137;
-        Tue, 12 Jan 2021 15:06:59 GMT
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-        by ppma01dal.us.ibm.com with ESMTP id 35y4494hqd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 12 Jan 2021 15:06:59 +0000
-Received: from b01ledav001.gho.pok.ibm.com (b01ledav001.gho.pok.ibm.com [9.57.199.106])
-        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10CF6wjj15925716
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Jan 2021 15:06:59 GMT
-Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E05972805A;
-        Tue, 12 Jan 2021 15:06:58 +0000 (GMT)
-Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 3072828058;
-        Tue, 12 Jan 2021 15:06:58 +0000 (GMT)
-Received: from oc6034535106.ibm.com (unknown [9.163.25.172])
-        by b01ledav001.gho.pok.ibm.com (Postfix) with ESMTP;
-        Tue, 12 Jan 2021 15:06:58 +0000 (GMT)
-From:   Brian King <brking@linux.vnet.ibm.com>
-To:     tyreld@linux.ibm.com
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        James.Bottomley@HansenPartnership.com,
-        Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH] ibmvfc: Set default timeout to avoid crash during migration
-Date:   Tue, 12 Jan 2021 09:06:38 -0600
-Message-Id: <1610463998-19791-1-git-send-email-brking@linux.vnet.ibm.com>
-X-Mailer: git-send-email 1.8.3.1
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2021-01-12_10:2021-01-12,2021-01-12 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- impostorscore=0 phishscore=0 spamscore=0 suspectscore=0 mlxlogscore=999
- adultscore=0 mlxscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101120083
+        id S2391565AbhALPjc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 10:39:32 -0500
+Received: from mx2.suse.de ([195.135.220.15]:60250 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727421AbhALPjc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 Jan 2021 10:39:32 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 91894ABD6;
+        Tue, 12 Jan 2021 15:38:50 +0000 (UTC)
+Subject: Re: [PATCH 1/3] aha1542: clarify 'struct ccb' comments
+To:     Sergey Shtylyov <s.shtylyov@omprussia.ru>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+References: <2726d35a-ac66-fae9-51e7-ea4f13e89fd7@omprussia.ru>
+ <17a7be14-a9d2-9822-bb3e-1d7385f486b0@omprussia.ru>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <719bc981-d171-d96c-8247-6d33f1054b69@suse.de>
+Date:   Tue, 12 Jan 2021 16:38:50 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
+MIME-Version: 1.0
+In-Reply-To: <17a7be14-a9d2-9822-bb3e-1d7385f486b0@omprussia.ru>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-While testing live partition mobility, we have observed occasional
-crashes of the Linux partition. What we've seen is that during
-the live migration, for specific configurations with large amounts
-of memory, slow network links, and workloads that are changing
-memory a lot, the partition can end up being suspended for 30 seconds
-or longer. This resulted in the following scenario:
+On 1/10/21 5:46 PM, Sergey Shtylyov wrote:
+> This driver's original authors did pretty bad job of documenting the
+> Command Control Block (CCB) structure -- especially its 2nd byte, where
+> the bit numbers were completely left out.  Let's sync up the 'struct ccb'
+> comments to the Adaptec AHA-154xA manual I have...
+> 
+> Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
+> 
+> ---
+>   drivers/scsi/aha1542.h |   33 +++++++++++++++++++--------------
+>   1 file changed, 19 insertions(+), 14 deletions(-)
+> 
+> Index: scsi/drivers/scsi/aha1542.h
+> ===================================================================
+> --- scsi.orig/drivers/scsi/aha1542.h
+> +++ scsi/drivers/scsi/aha1542.h
+> @@ -78,23 +78,28 @@ static inline void any2scsi(u8 *p, u32 v
+>   #define MAX_CDB 12
+>   #define MAX_SENSE 14
+>   
+> -struct ccb {		/* Command Control Block 5.3 */
+> -	u8 op;		/* Command Control Block Operation Code */
+> -	u8 idlun;	/* op=0,2:Target Id, op=1:Initiator Id */
+> -			/* Outbound data transfer, length is checked*/
+> -			/* Inbound data transfer, length is checked */
+> -			/* Logical Unit Number */
+> +/* Command Control Block (CCB), 5.3 */
+> +struct ccb {
+> +	u8 op;		/* Command Control Block Operation Code: */
+> +			/* 0x00: SCSI Initiator CCB, 0x01: SCSI Target CCB, */
+> +			/* 0x02: SCSI Initiator CCB with Scatter/Gather, */
+> +			/* 0x81: SCSI Bus Device Reset CCB */
+> +	u8 idlun;	/* Address and Direction Control: */
+> +			/* Bits 7-5: op=0, 2: Target ID, op=1: Initiator ID */
+> +			/* Bit	4: Outbound data transfer, length is checked */
+> +			/* Bit	3:  Inbound data transfer, length is checked */
+> +			/* Bits 2-0: Logical Unit Number */
+>   	u8 cdblen;	/* SCSI Command Length */
+> -	u8 rsalen;	/* Request Sense Allocation Length/Disable */
+> -	u8 datalen[3];	/* Data Length (msb, .., lsb) */
+> -	u8 dataptr[3];	/* Data Pointer */
+> -	u8 linkptr[3];	/* Link Pointer */
+> +	u8 rsalen;	/* Request Sense Allocation Length/Disable Auto Sense */
+> +	u8 datalen[3];	/* Data Length  (MSB, ..., LSB) */
+> +	u8 dataptr[3];	/* Data Pointer (MSB, ..., LSB) */
+> +	u8 linkptr[3];	/* Link Pointer (MSB, ..., LSB) */
+>   	u8 commlinkid;	/* Command Linking Identifier */
+> -	u8 hastat;	/* Host Adapter Status (HASTAT) */
+> -	u8 tarstat;	/* Target Device Status */
+> +	u8 hastat;	/* Host  Adapter Status (HASTAT) */
+> +	u8 tarstat;	/* Target Device Status (TARSTAT) */
+>   	u8 reserved[2];
+> -	u8 cdb[MAX_CDB+MAX_SENSE];	/* SCSI Command Descriptor Block */
+> -					/* REQUEST SENSE */
+> +	u8 cdb[MAX_CDB + MAX_SENSE];	/* SCSI Command Descriptor Block */
+> +					/* followed by the Auto Sense data */
+>   };
+>   
+>   #define AHA1542_REGION_SIZE 4
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-CPU 0                          CPU 1
--------------------------------  ----------------------------------
-scsi_queue_rq                    migration_store
- -> blk_mq_start_request          -> rtas_ibm_suspend_me
-  -> blk_add_timer                 -> on_each_cpu(rtas_percpu_suspend_me
-              _______________________________________V
-             |
-             V
-    -> IPI from CPU 1
-     -> rtas_percpu_suspend_me
-                                     -> __rtas_suspend_last_cpu
+Cheers,
 
--- Linux partition suspended for > 30 seconds --
-                                      -> for_each_online_cpu(cpu)
-                                           plpar_hcall_norets(H_PROD
- -> scsi_dispatch_cmd
-                                      -> scsi_times_out
-                                       -> scsi_abort_command
-                                        -> queue_delayed_work
-  -> ibmvfc_queuecommand_lck
-   -> ibmvfc_send_event
-    -> ibmvfc_send_crq
-     - returns H_CLOSED
-   <- returns SCSI_MLQUEUE_HOST_BUSY
--> __blk_mq_requeue_request
-
-                                      -> scmd_eh_abort_handler
-                                       -> scsi_try_to_abort_cmd
-                                         - returns SUCCESS
-                                       -> scsi_queue_insert
-
-Normally, the SCMD_STATE_COMPLETE bit would protect against the
-command completion and the timeout, but that doesn't work here,
-since we don't check that at all in the SCSI_MLQUEUE_HOST_BUSY
-path.
-
-In this case we end up calling scsi_queue_insert on a request
-that has already been queued, or possibly even freed, and
-we crash.
-
-The patch below simply increases the default I/O timeout to avoid
-this race condition. This is also the timeout value that nearly
-all IBM SAN storage recommends setting as the default value.
-
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvfc.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 42e4d35..79badaa 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -3007,8 +3007,10 @@ static int ibmvfc_slave_configure(struct scsi_device *sdev)
- 	unsigned long flags = 0;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
--	if (sdev->type == TYPE_DISK)
-+	if (sdev->type == TYPE_DISK) {
- 		sdev->allow_restart = 1;
-+		blk_queue_rq_timeout(sdev->request_queue, 120 * HZ);
-+	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 	return 0;
- }
+Hannes
 -- 
-1.8.3.1
-
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
