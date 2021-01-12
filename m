@@ -4,46 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A07CEC43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3E26C4321A
 	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:08:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B9102310C
+	by mail.kernel.org (Postfix) with ESMTP id 95B9E2310D
 	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:08:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730355AbhALLIA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 06:08:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49910 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730007AbhALLIA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 06:08:00 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2083C0617A2;
-        Tue, 12 Jan 2021 03:07:19 -0800 (PST)
+        id S1730158AbhALLH5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 06:07:57 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:45158 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726572AbhALLH4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 06:07:56 -0500
 From:   "Ahmed S. Darwish" <a.darwish@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1610449637;
+        s=2020; t=1610449633;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Jyir26ynSGymnraXCeh2P93SjcPTZ0DbcdxeKKW9geM=;
-        b=HaG2KiZiE9OrZQTjdSER0pi/qJ5+nap8pgPAISPJ5qajcIcVIDTkro9l0TO8noo2p2aTUT
-        Py5bB6c2MNE1DEtly+mV03D/kr4LRQXl7xpLcKL1emyjGG58cHvv6ymPPVDTFlnYY006h3
-        ih7+624IOc7wZUdXPfH2/WC8LhDLW4j3ZjBgtAND4ubnQjmYMPNye6QFrRrpx6IxGfm4uP
-        dAC0Wq4h/KgAlv4jofFIBF+Tr+4LDE75x+IRj0p0kbqx6R8rJSK936SxZYaeXlmQCtdf0S
-        Kv6/ndbvWtqkMKGhueQJWD6dKgY+3sRe5kjO+rqbASI7g2wVQ1NvKrokisLnEA==
+        bh=XwE3NWOoqRuJWC9QHIg8MEniBW1ChmIXc8KitBchGV0=;
+        b=tiMCVFBrZjrzJTbvMk991vvpVJyDz+vwy6czBNOh0jTKoHLpYh6T6kKAIsdX87YA99UOgg
+        WUbrrW1D1hvh/0aBjjkdohZ8P1wC2JC1OxzjJq8hXo6kiA1VdYRjBoKG88huXOS43WIyzX
+        GqTdmFU7gq/V0XE+oQzqWqjaxaC85n7+H36FY5ngULZ1yyA1t/esh5jW5aVwAiZuXIONVw
+        EF8L1nZ29Xw5infLKGX/7IA4uke0H8czRc+dUixbQIXAcDlM1CV//sMKbLaNJBiSPjskra
+        QO4psFA3cpjkPNDKJOk464ixTyy8Y1zY/B5fgwrjxD0q2M43GH4EppwCtBu62w==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1610449637;
+        s=2020e; t=1610449633;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Jyir26ynSGymnraXCeh2P93SjcPTZ0DbcdxeKKW9geM=;
-        b=I0v/LT2AcVGl/Cw9xZQudk0gsYjS+QgORR66Vc7CxVBM2PLH+Tv4ba2ZZXk6ljzbsib5bf
-        E4MYohM0aTvrOCCQ==
+        bh=XwE3NWOoqRuJWC9QHIg8MEniBW1ChmIXc8KitBchGV0=;
+        b=Q3NNyfvJeAklW83HiScosADNvUA+LHsZ1rqZ0xyoOCxKcEnp+rVStG8s/RBk/STdFXNMpA
+        wxrAwS3MhmDyK7Cw==
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         John Garry <john.garry@huawei.com>,
@@ -56,9 +53,9 @@ Cc:     linux-scsi@vger.kernel.org, intel-linux-scu@intel.com,
         Thomas Gleixner <tglx@linutronix.de>,
         "Sebastian A. Siewior" <bigeasy@linutronix.de>,
         "Ahmed S. Darwish" <a.darwish@linutronix.de>
-Subject: [PATCH v2 06/19] scsi: isci: port: link up: Pass gfp_t flags
-Date:   Tue, 12 Jan 2021 12:06:34 +0100
-Message-Id: <20210112110647.627783-7-a.darwish@linutronix.de>
+Subject: [PATCH v2 05/19] scsi: isci: port: link down: Pass gfp_t flags
+Date:   Tue, 12 Jan 2021 12:06:33 +0100
+Message-Id: <20210112110647.627783-6-a.darwish@linutronix.de>
 In-Reply-To: <20210112110647.627783-1-a.darwish@linutronix.de>
 References: <20210112110647.627783-1-a.darwish@linutronix.de>
 MIME-Version: 1.0
@@ -70,8 +67,59 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 Use the new libsas event notifiers API, which requires callers to
 explicitly pass the gfp_t memory allocation flags.
 
-libsas sas_notify_port_event() is called from isci_port_link_up().
+sas_notify_phy_event() is exclusively called by isci_port_link_down().
 Below is the context analysis for all of its call chains:
+
+port.c: port_timeout(), atomic, timer callback                  (*)
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> port_state_machine_change(..., SCI_PORT_FAILED)
+    -> enter SCI port state: *SCI_PORT_FAILED*
+      -> sci_port_failed_state_enter()
+        -> isci_port_hard_reset_complete()
+          -> isci_port_link_down()
+
+port.c: isci_port_perform_hard_reset()
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> port.c: sci_port_hard_reset(), atomic                      (*)
+    -> phy.c: sci_phy_reset()
+      -> sci_change_state(SCI_PHY_RESETTING)
+        -> enter SCI PHY state: *SCI_PHY_RESETTING*
+          -> sci_phy_resetting_state_enter()
+            -> port.c: sci_port_deactivate_phy()
+	      -> isci_port_link_down()
+
+port.c: enter SCI port state: *SCI_PORT_READY*                  # Cont. from [1]
+  -> sci_port_ready_state_enter()
+    -> isci_port_hard_reset_complete()
+      -> isci_port_link_down()
+
+phy.c: enter SCI state: *SCI_PHY_STOPPED*                       # Cont. from [2]
+  -> sci_phy_stopped_state_enter()
+    -> host.c: sci_controller_link_down()
+      -> ->link_down_handler()
+      == port_config.c: sci_apc_agent_link_down()
+        -> port.c: sci_port_remove_phy()
+          -> sci_port_deactivate_phy()
+            -> isci_port_link_down()
+      == port_config.c: sci_mpc_agent_link_down()
+        -> port.c: sci_port_link_down()
+          -> sci_port_deactivate_phy()
+            -> isci_port_link_down()
+
+phy.c: enter SCI state: *SCI_PHY_STARTING*                      # Cont. from [3]
+  -> sci_phy_starting_state_enter()
+    -> host.c: sci_controller_link_down()
+      -> ->link_down_handler()
+      == port_config.c: sci_apc_agent_link_down()
+        -> port.c: sci_port_remove_phy()
+          -> isci_port_link_down()
+      == port_config.c: sci_mpc_agent_link_down()
+        -> port.c: sci_port_link_down()
+          -> sci_port_deactivate_phy()
+            -> isci_port_link_down()
+
+[1] Call chains for 'enter SCI port state: *SCI_PORT_READY*'
+------------------------------------------------------------
 
 host.c: isci_host_init()                                        (@)
 spin_lock_irq(isci_host::scic_lock)
@@ -80,49 +128,56 @@ spin_lock_irq(isci_host::scic_lock)
       -> sci_mpc_agent_validate_phy_configuration()
         -> port.c: sci_port_add_phy()
           -> sci_port_general_link_up_handler()
-            -> sci_port_activate_phy()
-              -> isci_port_link_up()
+            -> port_state_machine_change(, SCI_PORT_READY)
+              -> enter port state *SCI_PORT_READY*
+
+host.c: isci_host_start()                                       (@)
+spin_lock_irq(isci_host::scic_lock)
+  -> host.c: sci_controller_start(), atomic                     (*)
+    -> host.c: sci_port_start()
+      -> port.c: port_state_machine_change(, SCI_PORT_READY)
+        -> enter port state *SCI_PORT_READY*
 
 port_config.c: apc_agent_timeout(), atomic, timer callback      (*)
   -> sci_apc_agent_configure_ports()
     -> port.c: sci_port_add_phy()
       -> sci_port_general_link_up_handler()
-        -> sci_port_activate_phy()
-          -> isci_port_link_up()
-
-phy.c: enter SCI state: *SCI_PHY_SUB_FINAL*                     # Cont. from [1]
-  -> phy.c: sci_phy_starting_final_substate_enter()
-    -> phy.c: sci_change_state(SCI_PHY_READY)
-      -> enter SCI state: *SCI_PHY_READY*
-        -> phy.c: sci_phy_ready_state_enter()
-          -> host.c: sci_controller_link_up()
-            -> .link_up_handler()
-            == port_config.c: sci_apc_agent_link_up()
-              -> port.c: sci_port_link_up()
-                -> (continue at [A])
-            == port_config.c: sci_mpc_agent_link_up()
-	      -> port.c: sci_port_link_up()
-                -> (continue at [A])
+        -> port_state_machine_change(, SCI_PORT_READY)
+          -> enter port state *SCI_PORT_READY*
 
 port_config.c: mpc_agent_timeout(), atomic, timer callback      (*)
 spin_lock_irqsave(isci_host::scic_lock, )
   -> ->link_up_handler()
-  == port_config.c: sci_apc_agent_link_up()
+  == port.c: sci_apc_agent_link_up()
+    -> sci_port_general_link_up_handler()
+      -> port_state_machine_change(, SCI_PORT_READY)
+        -> enter port state *SCI_PORT_READY*
+  == port.c: sci_mpc_agent_link_up()
     -> port.c: sci_port_link_up()
-      -> (continue at [A])
-  == port_config.c: sci_mpc_agent_link_up()
-    -> port.c: sci_port_link_up()
-      -> (continue at [A])
+      -> sci_port_general_link_up_handler()
+        -> port_state_machine_change(, SCI_PORT_READY)
+          -> enter port state *SCI_PORT_READY*
 
-[A] port.c: sci_port_link_up()
-  -> sci_port_activate_phy()
-    -> isci_port_link_up()
-  -> sci_port_general_link_up_handler()
-    -> sci_port_activate_phy()
-      -> isci_port_link_up()
+phy.c: enter SCI state: SCI_PHY_SUB_FINAL                       # Cont. from [1A]
+  -> sci_phy_starting_final_substate_enter()
+    -> sci_change_state(SCI_PHY_READY)
+      -> enter SCI state: *SCI_PHY_READY*
+        -> sci_phy_ready_state_enter()
+          -> host.c: sci_controller_link_up()
+            -> port_agent.link_up_handler()
+            == port_config.c: sci_apc_agent_link_up()
+              -> port.c: sci_port_link_up()
+                -> sci_port_general_link_up_handler()
+                  -> port_state_machine_change(, SCI_PORT_READY)
+                    -> enter port state *SCI_PORT_READY*
+            == port_config.c: sci_mpc_agent_link_up()
+              -> port.c: sci_port_link_up()
+                -> sci_port_general_link_up_handler()
+                  -> port_state_machine_change(, SCI_PORT_READY)
+                    -> enter port state *SCI_PORT_READY*
 
-[1] Call chains for entering SCI state: *SCI_PHY_SUB_FINAL*
------------------------------------------------------------
+[1A] Call chains for entering SCI state: *SCI_PHY_SUB_FINAL*
+------------------------------------------------------------
 
 host.c: power_control_timeout(), atomic, timer callback         (*)
 spin_lock_irqsave(isci_host::scic_lock, )
@@ -149,10 +204,71 @@ OR host.c: sci_controller_completion_handler(), atomic, tasklet (*)
                 -> phy.c: sci_phy_consume_power_handler()
                   -> sci_change_state(SCI_PHY_SUB_FINAL)
 
-As can be seen from the "(*)" markers above, all the call-chains are
-atomic.  Pass GFP_ATOMIC to libsas port event notifier.
+[2] Call chains for entering state: *SCI_PHY_STOPPED*
+-----------------------------------------------------
 
-Note, the now-replaced libsas APIs used in_interrupt() to implicitly
+host.c: isci_host_init()                                        (@)
+spin_lock_irq(isci_host::scic_lock)
+  -> sci_controller_initialize(), atomic                        (*)
+      -> phy.c: sci_phy_initialize()
+        -> phy.c: sci_phy_link_layer_initialization()
+          -> phy.c: sci_change_state(SCI_PHY_STOPPED)
+
+init.c: PCI ->remove() || PM_OPS ->suspend,  process context    (+)
+  -> host.c: isci_host_deinit()
+    -> sci_controller_stop_phys()
+      -> phy.c: sci_phy_stop()
+	-> sci_change_state(SCI_PHY_STOPPED)
+
+phy.c: isci_phy_control()
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> sci_phy_stop(), atomic                                     (*)
+    -> sci_change_state(SCI_PHY_STOPPED)
+
+[3] Call chains for entering state: *SCI_PHY_STARTING*
+------------------------------------------------------
+
+phy.c: phy_sata_timeout(), atimer, timer callback               (*)
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> sci_change_state(SCI_PHY_STARTING)
+
+host.c: phy_startup_timeout(), atomic, timer callback           (*)
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> sci_controller_start_next_phy()
+    -> sci_phy_start()
+      -> sci_change_state(SCI_PHY_STARTING)
+
+host.c: isci_host_start()                                       (@)
+spin_lock_irq(isci_host::scic_lock)
+  -> sci_controller_start(), atomic                             (*)
+    -> sci_controller_start_next_phy()
+      -> sci_phy_start()
+        -> sci_change_state(SCI_PHY_STARTING)
+
+phy.c: Enter SCI state *SCI_PHY_SUB_FINAL*, atomic, check above (*)
+  -> sci_change_state(SCI_PHY_SUB_FINAL)
+    -> sci_phy_starting_final_substate_enter()
+      -> sci_change_state(SCI_PHY_READY)
+        -> Enter SCI state: *SCI_PHY_READY*
+          -> sci_phy_ready_state_enter()
+            -> host.c: sci_controller_link_up()
+              -> sci_controller_start_next_phy()
+                -> sci_phy_start()
+                  -> sci_change_state(SCI_PHY_STARTING)
+
+phy.c: sci_phy_event_handler(), atomic, discussed earlier       (*)
+  -> sci_change_state(SCI_PHY_STARTING), 11 instances
+
+phy.c: enter SCI state: *SCI_PHY_RESETTING*, atomic, discussed  (*)
+  -> sci_phy_resetting_state_enter()
+    -> sci_change_state(SCI_PHY_STARTING)
+
+As can be seen from the "(*)" markers above, almost all the call-chains
+are atomic. The only exception, marked with "(+)", is a PCI ->remove()
+and PM_OPS ->suspend() cold path. Thus, pass GFP_ATOMIC to the libsas
+phy event notifier.
+
+Note, The now-replaced libsas APIs used in_interrupt() to implicitly
 decide which memory allocation type to use.  This was only partially
 correct, as it fails to choose the correct GFP flags when just
 preemption or interrupts are disabled. Such buggy code paths are marked
@@ -162,23 +278,24 @@ Fixes: 1c393b970e0f ("scsi: libsas: Use dynamic alloced work to avoid sas event 
 Signed-off-by: Ahmed S. Darwish <a.darwish@linutronix.de>
 Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- drivers/scsi/isci/port.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/isci/port.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
-index a3c58718c260..10136ae466e2 100644
+index 8d9349738067..a3c58718c260 100644
 --- a/drivers/scsi/isci/port.c
 +++ b/drivers/scsi/isci/port.c
-@@ -223,7 +223,8 @@ static void isci_port_link_up(struct isci_host *isci_host,
- 	/* Notify libsas that we have an address frame, if indeed
- 	 * we've found an SSP, SMP, or STP target */
- 	if (success)
--		sas_notify_port_event(&iphy->sas_phy, PORTE_BYTES_DMAED);
-+		sas_notify_port_event_gfp(&iphy->sas_phy,
-+					  PORTE_BYTES_DMAED, GFP_ATOMIC);
- }
+@@ -269,8 +269,8 @@ static void isci_port_link_down(struct isci_host *isci_host,
+ 	 * isci_port_deformed and isci_dev_gone functions.
+ 	 */
+ 	sas_phy_disconnected(&isci_phy->sas_phy);
+-	sas_notify_phy_event(&isci_phy->sas_phy,
+-					   PHYE_LOSS_OF_SIGNAL);
++	sas_notify_phy_event_gfp(&isci_phy->sas_phy,
++				 PHYE_LOSS_OF_SIGNAL, GFP_ATOMIC);
  
- 
+ 	dev_dbg(&isci_host->pdev->dev,
+ 		"%s: isci_port = %p - Done\n", __func__, isci_port);
 -- 
 2.30.0
 
