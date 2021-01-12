@@ -2,100 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB79DC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 09:14:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E201C4332D
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 09:17:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9BD7622D58
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 09:14:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6861922E00
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 09:17:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389624AbhALJN4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 04:13:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53588 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732726AbhALJN4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 04:13:56 -0500
-Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E96B3C061575;
-        Tue, 12 Jan 2021 01:13:15 -0800 (PST)
-Received: by mail-ej1-x634.google.com with SMTP id t16so2400913ejf.13;
-        Tue, 12 Jan 2021 01:13:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=IGnH6pyj0wE74SBCSOC+j1GpxuVSjHdGUM/hxz5Ygfk=;
-        b=V98JukMSsmuUMqSi9DPSvZdEmlqy0JXdVny3xWqD7owk3L/i9UdbxkGVfwy0Wnscep
-         fEQfC2vyMCxnAkbN0qHmjZ+XSPVNHSq6mu0mO85JsYayKyLEjdL3QernDvCfpb7iAIVx
-         Vc+yF4UaY0k/tUJ+FFOye5sBQMePmiIdBZJAHkUn1B3LvLc+gdsLMZhsq4SCPy4P3xer
-         ShciYCKA6QcG4Z91TMP2GYyjpauXfPjahMYj2BPAafqtZBqVhoBLcuKO1COkBBVxop36
-         AgedPZaKGywaMv/4AM14NvpbPmUpPcBlPAT8eJn/M3BLZeIN+i0qQexg1G7iZzV5DRlH
-         mx8Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=IGnH6pyj0wE74SBCSOC+j1GpxuVSjHdGUM/hxz5Ygfk=;
-        b=YqRahtAV158TFJhIqaQKrWbrOc7kJ5bvXKztBxDsVPhXxACuBOY64p/qPFJxcfoEAO
-         FV/QLcM8t8PrUXRv0yP84EfsnGQUKdkp/cPj+rh4Rreq9d9m8xJd9kVrtkclIAM2VQud
-         IsC6tZnVsMAwdmTKd3Cz1WAx/eY89oA0XxOOkCfC3EQYhNbL2GEKZNRS6L4BtOqyRhm+
-         hwQsB0XXJlVYba1/ApCdifD2PgwmwYdgtSiaddr+QL0bDfwY5CHiXwvWvhXO+dlj54xH
-         zZUpXTMbUJ8LqQVmj3L7t0ixdCBwZ0A/b4Ix7AwxgqfIpVlqpd2xOqU5l/U3mv7J4DBG
-         upzw==
-X-Gm-Message-State: AOAM5319X7VmUfJg8HMkW4A6P1Gh+UYaHaolhHMBjg1qA+v7MCqqQn5J
-        T1cx3qT7sq3DlrnTOKcqZho=
-X-Google-Smtp-Source: ABdhPJxjjWv9r65cEz8v9s1G3B0tJaE3DJa9rNAq/RkKZ5bvbT4ptK+m+jTVy5c0kL8VqYlJrrxmuw==
-X-Received: by 2002:a17:906:f949:: with SMTP id ld9mr2562029ejb.401.1610442794667;
-        Tue, 12 Jan 2021 01:13:14 -0800 (PST)
-Received: from ubuntu-laptop (ip5f5bfcff.dynamic.kabel-deutschland.de. [95.91.252.255])
-        by smtp.googlemail.com with ESMTPSA id t8sm919063eju.69.2021.01.12.01.13.13
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 12 Jan 2021 01:13:14 -0800 (PST)
-Message-ID: <cbc5782c0148422dd524ea1c825731d2232fb7e9.camel@gmail.com>
-Subject: Re: [PATCH v2 1/2] scsi: hisi_sas: Remove unnecessary devm_kfree
-From:   Bean Huo <huobean@gmail.com>
-To:     John Garry <john.garry@huawei.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, ebiggers@google.com, satyat@google.com,
-        shipujin.t@gmail.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bean Huo <beanhuo@micron.com>
-Date:   Tue, 12 Jan 2021 10:13:13 +0100
-In-Reply-To: <b34eac20-e194-783b-f29e-83eec8bb127c@huawei.com>
-References: <20210111231058.14559-1-huobean@gmail.com>
-         <20210111231058.14559-2-huobean@gmail.com>
-         <b34eac20-e194-783b-f29e-83eec8bb127c@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
+        id S2390438AbhALJRP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 04:17:15 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2311 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389835AbhALJRP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 04:17:15 -0500
+Received: from fraeml708-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DFPy82Wyrz67bPC;
+        Tue, 12 Jan 2021 17:13:36 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml708-chm.china.huawei.com (10.206.15.36) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 12 Jan 2021 10:16:33 +0100
+Received: from [10.210.171.61] (10.210.171.61) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 12 Jan 2021 09:16:31 +0000
+Subject: Re: About scsi device queue depth
+To:     Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>,
+        "Bart Van Assche" <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
+CC:     chenxiang <chenxiang66@hisilicon.com>
+References: <9ff894da-cf2c-9094-2690-1973cc57835a@huawei.com>
+ <2b9a90c4-17e6-4935-bf3f-4bef54de27cc@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <2deb6f66-a00e-270c-84c2-f2269d2094e4@huawei.com>
+Date:   Tue, 12 Jan 2021 09:15:24 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <2b9a90c4-17e6-4935-bf3f-4bef54de27cc@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.171.61]
+X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2021-01-12 at 09:03 +0000, John Garry wrote:
-> On 11/01/2021 23:10, Bean Huo wrote:
-> > From: Bean Huo <beanhuo@micron.com>
-> > 
-> > The memory allocated with devm_kzalloc() is freed automatically
-> > no need to explicitly call devm_kfree.
-> > 
-> 
-> This change is not right - we use devm_kfree() to manually release
-> the 
-> devm-allocated debugfs memories upon memory allocation failure for 
-> driver debugfs feature during probe. The reason is that we allow the 
-> driver probe can still continue (for this failure).
-> 
-> Thanks,
-> John
+On 12/01/2021 07:23, Hannes Reinecke wrote:
+>>
+>> So it seems to me that the block layer is merging more bios per 
+>> request, as averge sg count per request goes up from 1 - > upto 6 or 
+>> more. As I see, when queue depth lowers the only thing that is really 
+>> changing is that we fail more often in getting the budget in 
+>> scsi_mq_get_budget()->scsi_dev_queue_ready().
+>>
+>> So initial sdev queue depth comes from cmd_per_lun by default or 
+>> manually setting in the driver via scsi_change_queue_depth(). It seems 
+>> to me that some drivers are not setting this optimally, as above.
+>>
+>> Thoughts on guidance for setting sdev queue depth? Could blk-mq 
+>> changed this behavior?
+>>
+> First of all: are these 'real' SAS SSDs?
+> The peak at 32 seems very ATA-ish, and I wouldn't put it past the LSI 
+> folks to optimize for that case :-)
+> Can you get a more detailed picture by changing the queue depth more 
+> finegrained?
+> (Will get you nicer graphs to boot :-)
 
-yea, I see, probe didn't deal with ENOMEM error. will drop this change.
-thanks.
+They're HUSMM1640ASS204 - not the fastest you can get today, but still 
+decent.
 
-Bean
+I'll see about fine-grained IOPs vs depth results ...
 
+Cheers,
+John
