@@ -6,41 +6,45 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D575C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 17:05:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B6E1C433E9
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 17:13:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 083E923107
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 17:05:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33F5D23121
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 17:13:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392158AbhALREl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 12:04:41 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:47204 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391244AbhALREl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 12:04:41 -0500
-Date:   Tue, 12 Jan 2021 18:03:58 +0100
+        id S2389699AbhALRNh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 12:13:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44094 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392249AbhALRNg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 12:13:36 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BAFDC061575;
+        Tue, 12 Jan 2021 09:12:56 -0800 (PST)
+Date:   Tue, 12 Jan 2021 18:12:53 +0100
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1610471040;
+        s=2020; t=1610471574;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=mNh+yzVHE/sNBkk7cHTXw7yap6jYDVOK0gkef2AcTtU=;
-        b=3hU04IR+oMWYinzQj/t8LllbUtDL4GVTBb0qV6z7x5O+NYx5LD2CYZArTqSu7gEb1LA25r
-        3krHlVkIKTWIBtdDM+jm9vZP2HD5KGYRwHkK2ntsMTr2EVHnOFh6xPLLvkLifyIwxFl0O9
-        uDRU9KhSLM1UZVCLZ+z32lnIdXW0oA/mUXyu/nSXWzdE1PQnsPfghNHnBALVvIC8kZIAfu
-        kYBcWAdHSWfIgPifSWz8cEfTh/0MEYsO5+F1s4i+Pw4zL2Ivk28zWMR8636pqA8TavP6/c
-        uFugp7NUk1Ugc1zdUc7XG/UQ0zn8y+DTvRGO+ua0mjJse6IBoQ1k01gJeG7G1A==
+        bh=6/W5F33DLubCuSV5FhlC8sI+LESNtjrftT/4Oy9kQH0=;
+        b=UxFIisiT2QYcyIlJQM+M4CDvhMniKuYYNk7aOp8srgzrv87sOAUG1Nn28WwO/ME37iBT+M
+        ETEzV6Rq0XpEdqA7vYljk+ARaOw8xLQNHsOC7k3854ALUtsfAtDBX4xPmmpqw7ULjH4cdg
+        0hD+JhC3neZBbrXHGqNE+pJMqu3TTZMy6joFjvKJysTJWitnBPxAzu8mKOPSOsqoHZEHqF
+        jobwdKb1erWE5E5tt4moFsz07YpAcWixefbrOqAmHNGpIGIf03unHW1iSxJQeP4d/oTtcp
+        eF3xLcQBy90HA0MbcCEdyvWoJMcNbvvuOjZR4AcUZG6zjMSRL8sDztDV0sKAtQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1610471040;
+        s=2020e; t=1610471574;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=mNh+yzVHE/sNBkk7cHTXw7yap6jYDVOK0gkef2AcTtU=;
-        b=qSnuyRnWxHoXNLjppHjjzN6/VfMepBsXXa0FcEbeA3e6dp4MhaXmlzqWxCIOLaYevbTErU
-        HKxTztqNtzw1NqDw==
-From:   "Ahmed S. Darwish" <a.darwish@linutronix.de>
+        bh=6/W5F33DLubCuSV5FhlC8sI+LESNtjrftT/4Oy9kQH0=;
+        b=9afzGohH8UMt3DTl2V+/L6HbOFjh7CwGv8Nkcvoa9Ips+nML0t5AG9GCefzVdBwy9gWTJQ
+        lpT9YcR8RiiLvLBg==
+From:   "Sebastian A. Siewior" <bigeasy@linutronix.de>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+Cc:     "Ahmed S. Darwish" <a.darwish@linutronix.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         John Garry <john.garry@huawei.com>,
         Jason Yan <yanaijie@huawei.com>,
@@ -49,39 +53,39 @@ Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Jack Wang <jinpu.wang@cloud.ionos.com>,
         linux-scsi@vger.kernel.org, intel-linux-scu@intel.com,
         LKML <linux-kernel@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Sebastian A. Siewior" <bigeasy@linutronix.de>
-Subject: Re: [PATCH v2 04/19] scsi: mvsas: Pass gfp_t flags to libsas event
- notifiers
-Message-ID: <X/3Wfj9KiQeFsdxA@lx-t490>
+        Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH v2 03/19] scsi: libsas: Introduce a _gfp() variant of
+ event notifiers
+Message-ID: <20210112171253.ues2euwoszf7mz4z@linutronix.de>
 References: <20210112110647.627783-1-a.darwish@linutronix.de>
- <20210112110647.627783-5-a.darwish@linutronix.de>
- <20210112154642.GC1185705@infradead.org>
+ <20210112110647.627783-4-a.darwish@linutronix.de>
+ <20210112154512.GB1185705@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210112154642.GC1185705@infradead.org>
+In-Reply-To: <20210112154512.GB1185705@infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jan 12, 2021 at 03:46:42PM +0000, Christoph Hellwig wrote:
-> >  	} else if (mwq->handler & EXP_BRCT_CHG) {
-> >  		phy->phy_event &= ~EXP_BRCT_CHG;
-> > -		sas_notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
-> > +		sas_notify_port_event_gfp(sas_phy, PORTE_BROADCAST_RCVD, GFP_ATOMIC);
->
-> Please don't add pointless lines > 80 chars.  This seems to happen a lot
-> more in the series.
+On 2021-01-12 15:45:12 [+0000], Christoph Hellwig wrote:
+> What is the problem with simply adding a gfp_t argument to the existing
+> calls?  The end result of this series looks fine, but the way we get
+> there looks extremely cumbersome.
 
-I didn't break the lines because they will be modified at the end of the
-series anway.
+Maybe I don't understand you fully but if you want to avoid adding the
+two _gftp functions (+ remove the other & rename at the end of series)
+and passing the gfp_t argument right away then this what I had in my
+inbox at the very beginning.
+It was one big patch with a long description of the relevant code paths
+and why it is the way it is. Since the two functions are used by many
+drivers you had to patch all at once. So I suggested to split in smaller
+chunks to make it easier to review (and bisect) and at the end the old
+functions can be removed once all users are gone (and rename if the
+maintainer wishes).
+Once we had the individual patches for driver/folder it was easier to
+review them. Then we also identified the first few patches which got the
+Fixes: tag because in_interrupt() didn't take disabled interrupts into
+account.
 
-When the _gfp() suffix is removed (patches #13 => #19), the lines get
-within the 80 cols range.
-
-Thanks,
-
---
-Ahmed S. Darwish
-Linutronix GmbH
+Sebastian
