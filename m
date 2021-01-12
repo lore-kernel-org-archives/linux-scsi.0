@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53E5CC433E6
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 15:40:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB80FC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 15:40:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F1B923131
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 15:40:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70C392312F
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 15:40:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391738AbhALPj7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 10:39:59 -0500
-Received: from mx2.suse.de ([195.135.220.15]:60476 "EHLO mx2.suse.de"
+        id S2391743AbhALPk0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 10:40:26 -0500
+Received: from mx2.suse.de ([195.135.220.15]:60784 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390080AbhALPj7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 12 Jan 2021 10:39:59 -0500
+        id S2391706AbhALPk0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 Jan 2021 10:40:26 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id F2FD7AED0;
-        Tue, 12 Jan 2021 15:39:17 +0000 (UTC)
-Subject: Re: [PATCH 2/3] aha1542: kill trailing whitespace
+        by mx2.suse.de (Postfix) with ESMTP id E1D49AF24;
+        Tue, 12 Jan 2021 15:39:44 +0000 (UTC)
+Subject: Re: [PATCH 3/3] aha1542: fix multi-line comment style
 To:     Sergey Shtylyov <s.shtylyov@omprussia.ru>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
 References: <2726d35a-ac66-fae9-51e7-ea4f13e89fd7@omprussia.ru>
- <59829052-4932-4ea3-b504-857bbb19e6a0@omprussia.ru>
+ <08c231e5-d86f-9d0b-19ac-ad46fa0c0b58@omprussia.ru>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <d653cfc7-0d69-601e-8da1-40184cffc572@suse.de>
-Date:   Tue, 12 Jan 2021 16:39:16 +0100
+Message-ID: <9f6278b6-7aa1-a867-e8b1-772e5bf1a02e@suse.de>
+Date:   Tue, 12 Jan 2021 16:39:44 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <59829052-4932-4ea3-b504-857bbb19e6a0@omprussia.ru>
+In-Reply-To: <08c231e5-d86f-9d0b-19ac-ad46fa0c0b58@omprussia.ru>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -44,15 +44,21 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/10/21 5:48 PM, Sergey Shtylyov wrote:
-> Some source lines (mostly the comments) in this driver end with spaces, as
-> reported by 'scripts/checkpatch.pl' -- let's trim these lines.
+On 1/10/21 5:49 PM, Sergey Shtylyov wrote:
+> Some comments in this driver don't comply with the preferred multi-line
+> comment style, as reported by 'scripts/checkpatch.pl':
+> 
+> WARNING: Block comments use * on subsequent lines
+> WARNING: Block comments use a trailing */ on a separate line
+> 
+> Fix those comments, along with the (unreported for some reason?) starts
+> of the multi-line comments not being /* on their own line...
 > 
 > Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
 > 
 > ---
->   drivers/scsi/aha1542.c |   14 +++++++-------
->   1 file changed, 7 insertions(+), 7 deletions(-)
+>   drivers/scsi/aha1542.c |  119 ++++++++++++++++++++++++++++++-------------------
+>   1 file changed, 75 insertions(+), 44 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
