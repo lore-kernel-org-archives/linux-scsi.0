@@ -2,152 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F7D1C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 08:58:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5938C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 09:04:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E00D8208E4
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 08:58:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 914DD221ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 09:04:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392434AbhALI6g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 03:58:36 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2309 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727916AbhALI6f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 03:58:35 -0500
-Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DFPV91R3Tz67b8F;
-        Tue, 12 Jan 2021 16:52:49 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Tue, 12 Jan 2021 09:57:53 +0100
-Received: from [10.210.171.61] (10.210.171.61) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Tue, 12 Jan 2021 08:57:52 +0000
-Subject: Re: About scsi device queue depth
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>,
-        chenxiang <chenxiang66@hisilicon.com>
-References: <9ff894da-cf2c-9094-2690-1973cc57835a@huawei.com>
- <20210112014203.GA60605@T590>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <4b50f067-a368-2197-c331-a8c981f5cd02@huawei.com>
-Date:   Tue, 12 Jan 2021 08:56:45 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S2389226AbhALJE0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 04:04:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51532 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731246AbhALJEX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 04:04:23 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A20F4C061575
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Jan 2021 01:03:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=XBKNWbQ0VDuq6yUObcVhuSk3WOxpO6jypaQpawlFoUE=; b=UTaNygP2hkFWo48TC1az00ld0x
+        0+xU7Bj7jScBi885sbRQQwGfWKeXq9rxz30mWfqtA5y8HghJjqxaQq+CiCc6Z6/xl22RwxF6IDih9
+        NJLBS/MkIgBdIv/YHn7AHPpoRIZsGNs8rMcz+d48B/U0hVXjrO2Igx5Ixnlpyj1L8XdCuJhUnqx5I
+        r1RVrlDDc55sDr67lu8pCBeOGaa8d3YLQJyNYmtoj0xoDdSdSyJ9KeTP0d43zy8MABP5nfEAvvqwo
+        J9VhaHKO1kvr9leNmox93xBGaBf6LSboCFDOxt3olHIChGkum8dym0lyoplBAc20F06UwKJzpriGr
+        GY1uNxLA==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1kzFa7-004YQb-UU; Tue, 12 Jan 2021 09:03:20 +0000
+Date:   Tue, 12 Jan 2021 09:03:15 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Kiwoong Kim <kwmad.kim@samsung.com>
+Cc:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
+        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com
+Subject: Re: [PATCH v5 2/2] ufs: ufs-exynos: set dma_alignment to 4095
+Message-ID: <20210112090315.GA1084989@infradead.org>
+References: <cover.1610419491.git.kwmad.kim@samsung.com>
+ <CGME20210112025712epcas2p4f92af7bd5781df2fcefecca47d55bf8e@epcas2p4.samsung.com>
+ <689878ebbad3e63a96b431df8d843264f8fe57ba.1610419491.git.kwmad.kim@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <20210112014203.GA60605@T590>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.171.61]
-X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <689878ebbad3e63a96b431df8d843264f8fe57ba.1610419491.git.kwmad.kim@samsung.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Ming,
-
->>
->> I was looking at some IOMMU issue on a LSI RAID 3008 card, and noticed that
->> performance there is not what I get on other SAS HBAs - it's lower.
->>
->> After some debugging and fiddling with sdev queue depth in mpt3sas driver, I
->> am finding that performance changes appreciably with sdev queue depth:
->>
->> sdev qdepth	fio number jobs* 	1	10	20
->> 16					1590	1654	1660
->> 32					1545	1646	1654
->> 64					1436	1085	1070
->> 254 (default)				1436	1070	1050
-> 
-> What does the performance number mean? IOPS or others? What is the fio
-> io test? random IO or sequential IO?
-
-So those figures are x1K IOPs read performance; so 1590, above, is 1.59M 
-IOPs read. Here's the fio script:
-
-[global]
-rw=read
-direct=1
-ioengine=libaio
-iodepth=40
-numjobs=20
-bs=4k
-;size=10240000m
-;zero_buffers=1
-group_reporting=1
-;ioscheduler=noop
-;cpumask=0xffe
-;cpus_allowed=1-47
-;gtod_reduce=1
-;iodepth_batch=2
-;iodepth_batch_complete=2
-runtime=60
-;thread
-loops = 10000
-
->>
->> fio queue depth is 40, and I'm using 12x SAS SSDs.
->>
->> I got comparable disparity in results for fio queue depth = 128 and num jobs
->> = 1:
->>
->> sdev qdepth	fio number jobs* 	1	
->> 16					1640
->> 32					1618	
->> 64					1577	
->> 254 (default)				1437	
->>
->> IO sched = none.
->>
->> That driver also sets queue depth tracking = 1, but never seems to kick in.
->>
->> So it seems to me that the block layer is merging more bios per request, as
->> averge sg count per request goes up from 1 - > upto 6 or more. As I see,
->> when queue depth lowers the only thing that is really changing is that we
->> fail more often in getting the budget in
->> scsi_mq_get_budget()->scsi_dev_queue_ready().
-> 
-> Right, the behavior basically doesn't change compared with block legacy
-> io path. And that is why sdev->queue_depth is a bit important for HDD.
-
-OK
-
-> 
->>
->> So initial sdev queue depth comes from cmd_per_lun by default or manually
->> setting in the driver via scsi_change_queue_depth(). It seems to me that
->> some drivers are not setting this optimally, as above.
->>
->> Thoughts on guidance for setting sdev queue depth? Could blk-mq changed this
->> behavior?
-> 
-> So far, the sdev queue depth is provided by SCSI layer, and blk-mq can
-> queue one request only if budget is obtained via .get_budget().
-> 
-
-Well, based on my testing, default sdev queue depth seems too large for 
-that LLDD ...
-
-Thanks,
-John
-
+Just use quirk instead of all these indirections.
