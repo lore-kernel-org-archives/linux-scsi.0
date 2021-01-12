@@ -5,45 +5,45 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F35EC43332
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A07CEC43219
 	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:08:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0093B2311F
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:08:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B9102310C
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:08:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729932AbhALLHv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 06:07:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49870 "EHLO
+        id S1730355AbhALLIA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 06:08:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726572AbhALLHu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 06:07:50 -0500
+        with ESMTP id S1730007AbhALLIA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 06:08:00 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEBB8C061795;
-        Tue, 12 Jan 2021 03:07:09 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2083C0617A2;
+        Tue, 12 Jan 2021 03:07:19 -0800 (PST)
 From:   "Ahmed S. Darwish" <a.darwish@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1610449628;
+        s=2020; t=1610449637;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=qrVCpeZeiY5FHKiy/PwgrhdiC7AEPIMjamJhWmEWlqI=;
-        b=EhDENl32rzzhSofwLQ14GKjSdEbtztOCsCqcKTOFB4nejw0LW+is3S/8B6ZmrgDIur1BW7
-        B1W6RvnZVcks0sRHq0qsQAXp6TfijW6rojTp92iIz7Sf64pPUJjnb8RCDU3zuGDPTHbKLp
-        EHwkqB0qm23DODAxZmE1JQKSAXnmQbBJf1fxGcYeKKmaTB0bYlgbt3RPHb8xcJTBmFvxXX
-        YWrIL8tzaf+Qrw1BNJu8G0FkyDbp60rPLnsoi0v4/DRG56t6mQE4Qf+qBomqO7K/xJ7mDK
-        mpzwziKJQOVKSit2fnR6WnmnstsFKV2IhFqq/B24qB9A4nArEnWVUs/MewYP3Q==
+        bh=Jyir26ynSGymnraXCeh2P93SjcPTZ0DbcdxeKKW9geM=;
+        b=HaG2KiZiE9OrZQTjdSER0pi/qJ5+nap8pgPAISPJ5qajcIcVIDTkro9l0TO8noo2p2aTUT
+        Py5bB6c2MNE1DEtly+mV03D/kr4LRQXl7xpLcKL1emyjGG58cHvv6ymPPVDTFlnYY006h3
+        ih7+624IOc7wZUdXPfH2/WC8LhDLW4j3ZjBgtAND4ubnQjmYMPNye6QFrRrpx6IxGfm4uP
+        dAC0Wq4h/KgAlv4jofFIBF+Tr+4LDE75x+IRj0p0kbqx6R8rJSK936SxZYaeXlmQCtdf0S
+        Kv6/ndbvWtqkMKGhueQJWD6dKgY+3sRe5kjO+rqbASI7g2wVQ1NvKrokisLnEA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1610449628;
+        s=2020e; t=1610449637;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=qrVCpeZeiY5FHKiy/PwgrhdiC7AEPIMjamJhWmEWlqI=;
-        b=KlVY1/zUbdQ9miofaMAlElr2mF3jMHuWTMiIrv175+hhAMM6QRKIZUOO2fnCO9DKGmpVCE
-        hhoxvLZbYhH2eBCw==
+        bh=Jyir26ynSGymnraXCeh2P93SjcPTZ0DbcdxeKKW9geM=;
+        b=I0v/LT2AcVGl/Cw9xZQudk0gsYjS+QgORR66Vc7CxVBM2PLH+Tv4ba2ZZXk6ljzbsib5bf
+        E4MYohM0aTvrOCCQ==
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         John Garry <john.garry@huawei.com>,
@@ -56,9 +56,9 @@ Cc:     linux-scsi@vger.kernel.org, intel-linux-scu@intel.com,
         Thomas Gleixner <tglx@linutronix.de>,
         "Sebastian A. Siewior" <bigeasy@linutronix.de>,
         "Ahmed S. Darwish" <a.darwish@linutronix.de>
-Subject: [PATCH v2 04/19] scsi: mvsas: Pass gfp_t flags to libsas event notifiers
-Date:   Tue, 12 Jan 2021 12:06:32 +0100
-Message-Id: <20210112110647.627783-5-a.darwish@linutronix.de>
+Subject: [PATCH v2 06/19] scsi: isci: port: link up: Pass gfp_t flags
+Date:   Tue, 12 Jan 2021 12:06:34 +0100
+Message-Id: <20210112110647.627783-7-a.darwish@linutronix.de>
 In-Reply-To: <20210112110647.627783-1-a.darwish@linutronix.de>
 References: <20210112110647.627783-1-a.darwish@linutronix.de>
 MIME-Version: 1.0
@@ -67,132 +67,118 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-mvsas calls the non _gfp version of the libsas event notifiers API,
-leading to the buggy call chains below:
-
-  mvsas/mv_sas.c: mvs_work_queue() [process context]
-  spin_lock_irqsave(mvs_info::lock, )
-    -> libsas/sas_event.c: sas_notify_phy_event()
-      -> sas_alloc_event()
-        -> in_interrupt() = false
-          -> invalid GFP_KERNEL allocation
-    -> libsas/sas_event.c: sas_notify_port_event()
-      -> sas_alloc_event()
-        -> in_interrupt() = false
-          -> invalid GFP_KERNEL allocation
-
-Use the new event notifiers API instead, which requires callers to
+Use the new libsas event notifiers API, which requires callers to
 explicitly pass the gfp_t memory allocation flags.
 
-Below are context analysis for the modified functions:
+libsas sas_notify_port_event() is called from isci_port_link_up().
+Below is the context analysis for all of its call chains:
 
-=> mvs_bytes_dmaed():
+host.c: isci_host_init()                                        (@)
+spin_lock_irq(isci_host::scic_lock)
+  -> sci_controller_initialize(), atomic                        (*)
+    -> port_config.c: sci_port_configuration_agent_initialize()
+      -> sci_mpc_agent_validate_phy_configuration()
+        -> port.c: sci_port_add_phy()
+          -> sci_port_general_link_up_handler()
+            -> sci_port_activate_phy()
+              -> isci_port_link_up()
 
-Since it is invoked from both process and atomic contexts, let its
-callers pass the gfp_t flags. Call chains:
+port_config.c: apc_agent_timeout(), atomic, timer callback      (*)
+  -> sci_apc_agent_configure_ports()
+    -> port.c: sci_port_add_phy()
+      -> sci_port_general_link_up_handler()
+        -> sci_port_activate_phy()
+          -> isci_port_link_up()
 
-  scsi_scan.c: do_scsi_scan_host() [has msleep()]
-    -> shost->hostt->scan_start()
-    -> [mvsas/mv_init.c: Scsi_Host::scsi_host_template .scan_start = mvs_scan_start()]
-    -> mvsas/mv_sas.c: mvs_scan_start()
-      -> mvs_bytes_dmaed(..., GFP_KERNEL)
+phy.c: enter SCI state: *SCI_PHY_SUB_FINAL*                     # Cont. from [1]
+  -> phy.c: sci_phy_starting_final_substate_enter()
+    -> phy.c: sci_change_state(SCI_PHY_READY)
+      -> enter SCI state: *SCI_PHY_READY*
+        -> phy.c: sci_phy_ready_state_enter()
+          -> host.c: sci_controller_link_up()
+            -> .link_up_handler()
+            == port_config.c: sci_apc_agent_link_up()
+              -> port.c: sci_port_link_up()
+                -> (continue at [A])
+            == port_config.c: sci_mpc_agent_link_up()
+	      -> port.c: sci_port_link_up()
+                -> (continue at [A])
 
-  mvsas/mv_sas.c: mvs_work_queue()
-  spin_lock_irqsave(mvs_info::lock,)
-    -> mvs_bytes_dmaed(..., GFP_ATOMIC)
+port_config.c: mpc_agent_timeout(), atomic, timer callback      (*)
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> ->link_up_handler()
+  == port_config.c: sci_apc_agent_link_up()
+    -> port.c: sci_port_link_up()
+      -> (continue at [A])
+  == port_config.c: sci_mpc_agent_link_up()
+    -> port.c: sci_port_link_up()
+      -> (continue at [A])
 
-  mvsas/mv_64xx.c: mvs_64xx_isr() || mvsas/mv_94xx.c: mvs_94xx_isr()
-    -> mvsas/mv_chips.h: mvs_int_full()
-      -> mvsas/mv_sas.c: mvs_int_port()
-        -> mvs_bytes_dmaed(..., GFP_ATOMIC);
+[A] port.c: sci_port_link_up()
+  -> sci_port_activate_phy()
+    -> isci_port_link_up()
+  -> sci_port_general_link_up_handler()
+    -> sci_port_activate_phy()
+      -> isci_port_link_up()
 
-=> mvs_work_queue():
+[1] Call chains for entering SCI state: *SCI_PHY_SUB_FINAL*
+-----------------------------------------------------------
 
-Invoked from process context, but it calls all the libsas event notifier
-APIs under a spin_lock_irqsave(). Pass GFP_ATOMIC.
+host.c: power_control_timeout(), atomic, timer callback         (*)
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> phy.c: sci_phy_consume_power_handler()
+    -> phy.c: sci_change_state(SCI_PHY_SUB_FINAL)
+
+host.c: sci_controller_error_handler(): atomic, irq handler     (*)
+OR host.c: sci_controller_completion_handler(), atomic, tasklet (*)
+  -> sci_controller_process_completions()
+    -> sci_controller_unsolicited_frame()
+      -> phy.c: sci_phy_frame_handler()
+        -> sci_change_state(SCI_PHY_SUB_AWAIT_SAS_POWER)
+          -> sci_phy_starting_await_sas_power_substate_enter()
+            -> host.c: sci_controller_power_control_queue_insert()
+              -> phy.c: sci_phy_consume_power_handler()
+                -> sci_change_state(SCI_PHY_SUB_FINAL)
+        -> sci_change_state(SCI_PHY_SUB_FINAL)
+    -> sci_controller_event_completion()
+      -> phy.c: sci_phy_event_handler()
+        -> sci_phy_start_sata_link_training()
+          -> sci_change_state(SCI_PHY_SUB_AWAIT_SATA_POWER)
+            -> sci_phy_starting_await_sata_power_substate_enter
+              -> host.c: sci_controller_power_control_queue_insert()
+                -> phy.c: sci_phy_consume_power_handler()
+                  -> sci_change_state(SCI_PHY_SUB_FINAL)
+
+As can be seen from the "(*)" markers above, all the call-chains are
+atomic.  Pass GFP_ATOMIC to libsas port event notifier.
+
+Note, the now-replaced libsas APIs used in_interrupt() to implicitly
+decide which memory allocation type to use.  This was only partially
+correct, as it fails to choose the correct GFP flags when just
+preemption or interrupts are disabled. Such buggy code paths are marked
+with "(@)" in the call chains above.
 
 Fixes: 1c393b970e0f ("scsi: libsas: Use dynamic alloced work to avoid sas event lost")
 Signed-off-by: Ahmed S. Darwish <a.darwish@linutronix.de>
-Cc: John Garry <john.garry@huawei.com>
-Cc: Jason Yan <yanaijie@huawei.com>
+Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- drivers/scsi/mvsas/mv_sas.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/isci/port.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index e5e3e95f78b0..e80f760f8abd 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -216,7 +216,7 @@ void mvs_set_sas_addr(struct mvs_info *mvi, int port_id, u32 off_lo,
- 	MVS_CHIP_DISP->write_port_cfg_data(mvi, port_id, hi);
+diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
+index a3c58718c260..10136ae466e2 100644
+--- a/drivers/scsi/isci/port.c
++++ b/drivers/scsi/isci/port.c
+@@ -223,7 +223,8 @@ static void isci_port_link_up(struct isci_host *isci_host,
+ 	/* Notify libsas that we have an address frame, if indeed
+ 	 * we've found an SSP, SMP, or STP target */
+ 	if (success)
+-		sas_notify_port_event(&iphy->sas_phy, PORTE_BYTES_DMAED);
++		sas_notify_port_event_gfp(&iphy->sas_phy,
++					  PORTE_BYTES_DMAED, GFP_ATOMIC);
  }
  
--static void mvs_bytes_dmaed(struct mvs_info *mvi, int i)
-+static void mvs_bytes_dmaed(struct mvs_info *mvi, int i, gfp_t gfp_flags)
- {
- 	struct mvs_phy *phy = &mvi->phy[i];
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-@@ -229,7 +229,7 @@ static void mvs_bytes_dmaed(struct mvs_info *mvi, int i)
- 		return;
- 	}
  
--	sas_notify_phy_event(sas_phy, PHYE_OOB_DONE);
-+	sas_notify_phy_event_gfp(sas_phy, PHYE_OOB_DONE, gfp_flags);
- 
- 	if (sas_phy->phy) {
- 		struct sas_phy *sphy = sas_phy->phy;
-@@ -261,7 +261,7 @@ static void mvs_bytes_dmaed(struct mvs_info *mvi, int i)
- 
- 	sas_phy->frame_rcvd_size = phy->frame_rcvd_size;
- 
--	sas_notify_port_event(sas_phy, PORTE_BYTES_DMAED);
-+	sas_notify_port_event_gfp(sas_phy, PORTE_BYTES_DMAED, gfp_flags);
- }
- 
- void mvs_scan_start(struct Scsi_Host *shost)
-@@ -277,7 +277,7 @@ void mvs_scan_start(struct Scsi_Host *shost)
- 	for (j = 0; j < core_nr; j++) {
- 		mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[j];
- 		for (i = 0; i < mvi->chip->n_phy; ++i)
--			mvs_bytes_dmaed(mvi, i);
-+			mvs_bytes_dmaed(mvi, i, GFP_KERNEL);
- 	}
- 	mvs_prv->scan_finished = 1;
- }
-@@ -1892,20 +1892,20 @@ static void mvs_work_queue(struct work_struct *work)
- 			if (!(tmp & PHY_READY_MASK)) {
- 				sas_phy_disconnected(sas_phy);
- 				mvs_phy_disconnected(phy);
--				sas_notify_phy_event(sas_phy,
--					PHYE_LOSS_OF_SIGNAL);
-+				sas_notify_phy_event_gfp(sas_phy,
-+					PHYE_LOSS_OF_SIGNAL, GFP_ATOMIC);
- 				mv_dprintk("phy%d Removed Device\n", phy_no);
- 			} else {
- 				MVS_CHIP_DISP->detect_porttype(mvi, phy_no);
- 				mvs_update_phyinfo(mvi, phy_no, 1);
--				mvs_bytes_dmaed(mvi, phy_no);
-+				mvs_bytes_dmaed(mvi, phy_no, GFP_ATOMIC);
- 				mvs_port_notify_formed(sas_phy, 0);
- 				mv_dprintk("phy%d Attached Device\n", phy_no);
- 			}
- 		}
- 	} else if (mwq->handler & EXP_BRCT_CHG) {
- 		phy->phy_event &= ~EXP_BRCT_CHG;
--		sas_notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
-+		sas_notify_port_event_gfp(sas_phy, PORTE_BROADCAST_RCVD, GFP_ATOMIC);
- 		mv_dprintk("phy%d Got Broadcast Change\n", phy_no);
- 	}
- 	list_del(&mwq->entry);
-@@ -2022,7 +2022,7 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
- 				mdelay(10);
- 			}
- 
--			mvs_bytes_dmaed(mvi, phy_no);
-+			mvs_bytes_dmaed(mvi, phy_no, GFP_ATOMIC);
- 			/* whether driver is going to handle hot plug */
- 			if (phy->phy_event & PHY_PLUG_OUT) {
- 				mvs_port_notify_formed(&phy->sas_phy, 0);
 -- 
 2.30.0
 
