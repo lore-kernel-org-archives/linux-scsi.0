@@ -2,223 +2,176 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA16EC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:45:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B10C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:55:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 943C623104
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:45:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 167B723104
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 11:55:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730884AbhALLpm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 06:45:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58018 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729397AbhALLpm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 06:45:42 -0500
-Received: from mail-qt1-x832.google.com (mail-qt1-x832.google.com [IPv6:2607:f8b0:4864:20::832])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB281C061575
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Jan 2021 03:45:01 -0800 (PST)
-Received: by mail-qt1-x832.google.com with SMTP id c14so1348750qtn.0
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Jan 2021 03:45:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=1T0idZqMLc4DRMAHGZJABDEvVBVpes26TM0gIni7kec=;
-        b=cTEMhq9PpQfT99szXxMpYRG2va207NoINq1axKqBEdm4BaI0dIi2wev4m4seFfU2+s
-         iNv3Pr7GVSgs3NfyLReX65aDgnRy+EQ+7hlfv+KmvqPjJuMuGvob9Yfa0dMxYgkLPiC1
-         OEHmBBGo+pFgsEyef0AARh7s3zn0HV+hgIHhc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=1T0idZqMLc4DRMAHGZJABDEvVBVpes26TM0gIni7kec=;
-        b=hxOplnExuBGpCmOG/4iApMsUAZIwwziylNXLYrgv7u9gTek0E2a0xkOf2t1+l2du8R
-         UyLnHg8k7Ij6sPocp1CPsR/soRwSvn4hfd4Yfdj25CawRYPNO/yh3JIW0lr63t8gKv0Q
-         OxHXbNDeqD1HEeItiFJ3NZmFaeccR5POno1gMiAYdizeMBCHkgPNVWloiH4Pq/3gJg95
-         e1e1/W4LwN9kp/ThqSrffV2zKdhDjQ9NIMgzA8O28xEfSqrdEs9jkcZO+MDq0RCAr4aq
-         AvsRfliHirNo07DKBrVBRhFuTtHCsQb6LxQ3bbEfaZjVvvGYcrp7HJ67/WKiVR/MmttZ
-         vLUg==
-X-Gm-Message-State: AOAM530ebGyogsd6BZgGSD6FCp7BGXQPrPkjSr9viwSvL2z6WWs02MVa
-        f6oGDm9BkPjSm6oTVk17mmakp2+oy/Bqjx4vGI2ZgvTbUWOp7X6uupdfBA3brisYJpePQAr5j3x
-        3/aPSzx1EEZahYeFf+eX6fe/ljf73
-X-Google-Smtp-Source: ABdhPJxcGt8kNXlOAzJKK+ROgZALMntqhSeknsdLrB9uz+137yiY46AgH3Yala2L5E0tQY2rOBJmmrxfvM07bwXqaDA=
-X-Received: by 2002:ac8:6f4f:: with SMTP id n15mr4175457qtv.216.1610451900954;
- Tue, 12 Jan 2021 03:45:00 -0800 (PST)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <9ff894da-cf2c-9094-2690-1973cc57835a@huawei.com>
- <20210112014203.GA60605@T590> <4b50f067-a368-2197-c331-a8c981f5cd02@huawei.com>
- <20210112090634.GA97446@T590> <e5832d8b-383c-9734-85a1-6f36bdb5a773@huawei.com>
-In-Reply-To: <e5832d8b-383c-9734-85a1-6f36bdb5a773@huawei.com>
-MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQLK1Tl3n9fZXq51bK89gKniZzGk2wIkQ7HVAdrZcb8B5o4EcAGH6ytZqACXHwA=
-Date:   Tue, 12 Jan 2021 17:14:58 +0530
-Message-ID: <7a342a60943cd7ed28d319b189c105ba@mail.gmail.com>
-Subject: RE: About scsi device queue depth
-To:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        id S1731749AbhALLzm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 06:55:42 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2318 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728310AbhALLzl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 06:55:41 -0500
+Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DFTRw17Nzz67ZPZ;
+        Tue, 12 Jan 2021 19:51:08 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 12 Jan 2021 12:54:59 +0100
+Received: from [10.210.171.61] (10.210.171.61) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 12 Jan 2021 11:54:57 +0000
+Subject: Re: [PATCH v2 00/19] scsi: libsas: Remove in_interrupt() check
+To:     "Ahmed S. Darwish" <a.darwish@linutronix.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>,
-        chenxiang <chenxiang66@hisilicon.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000082045005b8b28dc5"
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        "Artur Paszkiewicz" <artur.paszkiewicz@intel.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>
+CC:     <linux-scsi@vger.kernel.org>, <intel-linux-scu@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Sebastian A. Siewior" <bigeasy@linutronix.de>
+References: <20210112110647.627783-1-a.darwish@linutronix.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <8683f401-29b6-4067-af51-7b518ad3a10f@huawei.com>
+Date:   Tue, 12 Jan 2021 11:53:50 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <20210112110647.627783-1-a.darwish@linutronix.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.171.61]
+X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000082045005b8b28dc5
-Content-Type: text/plain; charset="UTF-8"
+On 12/01/2021 11:06, Ahmed S. Darwish wrote:
+> Hi,
+> 
+> Changelog v2
+> ------------
+> 
+> - Rebase on top of v5.11-rc3
+> 
+> - Rebase on top of John's patch "scsi: libsas and users: Remove notifier
+>    indirection", as it affects every other patch. Include it in this
+>    series (patch #2).
+> 
+> - Introduce patches #13 => #19, which modify call sites back to use the
+>    original libsas notifier function names without _gfp() suffix.
+> 
+> - Collect r-b tags
+> 
+> v1 Submission
+> -------------
+> 
+>    https://lkml.kernel.org/r/20201218204354.586951-1-a.darwish@linutronix.de
+> 
+> Cover letter
+> ------------
+> 
+> In the discussion about preempt count consistency across kernel
+> configurations:
+> 
+>    https://lkml.kernel.org/r/20200914204209.256266093@linutronix.de
+> 
+> it was concluded that the usage of in_interrupt() and related context
+> checks should be removed from non-core code.
+> 
+> This includes memory allocation mode decisions (GFP_*). In the long run,
+> usage of in_interrupt() and its siblings should be banned from driver
+> code completely.
+> 
+> This series addresses SCSI libsas. Basically, the function:
+> 
+>    => drivers/scsi/libsas/sas_init.c:
+>    struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
+>    {
+>          ...
+>          gfp_t flags = in_interrupt() ? GFP_ATOMIC : GFP_KERNEL;
+>          event = kmem_cache_zalloc(sas_event_cache, flags);
+>          ...
+>    }
+> 
+> is transformed so that callers explicitly pass the gfp_t memory
+> allocation flags. Affected libsas clients are modified accordingly.
+> 
+> Patches #1, #2 => #7 have "Fixes: " tags and address bugs the were
+> noticed during the context analysis.
+> 
+> Thanks!
+> 
+> 8<--------------
+> 
+> Ahmed S. Darwish (18):
+>    Documentation: scsi: libsas: Remove notify_ha_event()
+>    scsi: libsas: Introduce a _gfp() variant of event notifiers
+>    scsi: mvsas: Pass gfp_t flags to libsas event notifiers
+>    scsi: isci: port: link down: Pass gfp_t flags
+>    scsi: isci: port: link up: Pass gfp_t flags
+>    scsi: isci: port: broadcast change: Pass gfp_t flags
+>    scsi: libsas: Pass gfp_t flags to event notifiers
+>    scsi: pm80xx: Pass gfp_t flags to libsas event notifiers
+>    scsi: aic94xx: Pass gfp_t flags to libsas event notifiers
+>    scsi: hisi_sas: Pass gfp_t flags to libsas event notifiers
+>    scsi: libsas: event notifiers API: Add gfp_t flags parameter
+>    scsi: hisi_sas: Switch back to original libsas event notifiers
+>    scsi: aic94xx: Switch back to original libsas event notifiers
+>    scsi: pm80xx: Switch back to original libsas event notifiers
+>    scsi: libsas: Switch back to original event notifiers API
+>    scsi: isci: Switch back to original libsas event notifiers
+>    scsi: mvsas: Switch back to original libsas event notifiers
+>    scsi: libsas: Remove temporarily-added _gfp() API variants
 
-> On 12/01/2021 09:06, Ming Lei wrote:
-> >> OPs read. Here's the fio script:
-> >>
-> >> [global]
-> >> rw=read
-> >> direct=1
-> >> ioengine=libaio
-> >> iodepth=40
-> >> numjobs=20
-> >> bs=4k
-> >> ;size=10240000m
-> >> ;zero_buffers=1
-> >> group_reporting=1
-> >> ;ioscheduler=noop
-> >> ;cpumask=0xffe
-> >> ;cpus_allowed=1-47
-> >> ;gtod_reduce=1
-> >> ;iodepth_batch=2
-> >> ;iodepth_batch_complete=2
-> >> runtime=60
-> >> ;thread
-> >> loops = 10000
-> > Is there any effect on random read IOPS when you decrease sdev queue
-> > depth? For sequential IO, IO merge can be enhanced by that way.
-> >
->
-> Let me check...
+I'll give this a spin today and help review also then.
 
-John - Can you check your test with rq_affinity = 2  and nomerges=2 ?
+There's 18 patches here - it would be very convenient if they were on a 
+public branch :)
 
-I have noticed similar drops (whatever you have reported) -  "once we reach
-near pick of sdev or host queue depth, sometimes performance drop due to
-contention."
-But this behavior keep changing since kernel changes in this area is very
-actively happened in past. So I don't know the exact details about kernel
-version etc.
-I have similar setup (16 SSDs) and I will try similar test on latest kernel.
+Cheers,
+John
 
-BTW - I remember that rq_affinity=2 play major role in such issue.  I
-usually do testing with rq_affinity = 2.
+> 
+> John Garry (1):
+>    scsi: libsas and users: Remove notifier indirection
+> 
+>   Documentation/scsi/libsas.rst          |  5 ++--
+>   drivers/scsi/aic94xx/aic94xx_scb.c     | 20 ++++++-------
+>   drivers/scsi/hisi_sas/hisi_sas.h       |  3 +-
+>   drivers/scsi/hisi_sas/hisi_sas_main.c  | 29 +++++++++----------
+>   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  6 ++--
+>   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  6 ++--
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  6 ++--
+>   drivers/scsi/isci/port.c               | 11 +++----
+>   drivers/scsi/libsas/sas_event.c        | 27 ++++++++---------
+>   drivers/scsi/libsas/sas_init.c         | 17 ++++-------
+>   drivers/scsi/libsas/sas_internal.h     |  5 ++--
+>   drivers/scsi/mvsas/mv_sas.c            | 24 +++++++---------
+>   drivers/scsi/pm8001/pm8001_hwi.c       | 40 ++++++++++++--------------
+>   drivers/scsi/pm8001/pm8001_sas.c       | 12 +++-----
+>   drivers/scsi/pm8001/pm80xx_hwi.c       | 37 +++++++++++-------------
+>   include/scsi/libsas.h                  |  9 +++---
+>   16 files changed, 115 insertions(+), 142 deletions(-)
+> 
+> base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
+> --
+> 2.30.0
+> .
+> 
 
-
-
->
-> Thanks,
-> John
-
--- 
-This electronic communication and the information and any files transmitted 
-with it, or attached to it, are confidential and are intended solely for 
-the use of the individual or entity to whom it is addressed and may contain 
-information that is confidential, legally privileged, protected by privacy 
-laws, or otherwise restricted from disclosure to anyone else. If you are 
-not the intended recipient or the person responsible for delivering the 
-e-mail to the intended recipient, you are hereby notified that any use, 
-copying, distributing, dissemination, forwarding, printing, or copying of 
-this e-mail is strictly prohibited. If you received this e-mail in error, 
-please return the e-mail to the sender, delete it from your computer, and 
-destroy any printed copy of it.
-
---00000000000082045005b8b28dc5
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-yfWKfxJx8FcWmsjkSlrwDu+oVuDUa2wqeKBU12HQ4JAVd+LOb5edsbbFQxgGHu+MPuc/1hl9kTkC
-AwEAAaOCAdEwggHNMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYIKwYBBQUH
-MAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxzaWduMnNo
-YTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5jb20vZ3Nw
-ZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIB
-FiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEQGA1Ud
-HwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNpZ24yc2hh
-MmczLmNybDAlBgNVHREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAK
-BggrBgEFBQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4EFgQU4dX1
-Yg4eoWXbqyPW/N1ZD/LPIWcwDQYJKoZIhvcNAQELBQADggEBABBuHYKGUwHIhCjd3LieJwKVuJNr
-YohEnZzCoNaOj33/j5thiA4cZehCh6SgrIlFBIktLD7jW9Dwl88Gfcy+RrVa7XK5Hyqwr1JlCVsW
-pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
-8S/v9LyyP4X2aRTWOg9RG8D/13rLxFAApfYvCrf0quIUBWw2BXlq3+e3r7pU7j40d6P04VV3Zxws
-M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
-1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
-IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
-RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgM83Rfymm
-BwrZoepbJHoVWH/T8+O7Gk6b9wFeSfTGAi8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMjEwMTEyMTE0NTAxWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
-BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
-9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAFfl9vnITTX9mww7ebE+VEicBimh
-DbNjNKXITNX5TFnvGvDT/Q7/k4xgOnr7u5wUdQ5YobAx/5g9rnf20islUcyLCt1xjXvRUFPmaoER
-bo1alyq1aDyxPEa1onfwrAQuCc73CPlmnov9tHu2q1WR7p5EoxO9EanbfpSli2wgF803NgS3LquT
-soKeGlXd2l6XVl6QRbUV4dC73jx3RCrKfm8U87EGT0wJb5IoByc1Kc3edBsyh6ZGnL+lb5CSSDNN
-0MxX4CT1t899JWGZoVvRiLoe/ktnFQbyajRkOd+Ojf8AYf3UcVMnNfyINLmQIW7BGutKFpEctkPO
-pQ55ENG1XzA=
---00000000000082045005b8b28dc5--
