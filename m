@@ -2,133 +2,168 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28994C433E9
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 09:05:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 343F3C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 09:08:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF5822220F
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 09:05:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB7582220F
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jan 2021 09:08:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388589AbhALJFM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 04:05:12 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2310 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727916AbhALJFI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 04:05:08 -0500
-Received: from fraeml744-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DFPg63dQ9z67Zyp;
-        Tue, 12 Jan 2021 17:00:34 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml744-chm.china.huawei.com (10.206.15.225) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Tue, 12 Jan 2021 10:04:25 +0100
-Received: from [10.210.171.61] (10.210.171.61) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Tue, 12 Jan 2021 09:04:24 +0000
-Subject: Re: [PATCH v2 1/2] scsi: hisi_sas: Remove unnecessary devm_kfree
-To:     Bean Huo <huobean@gmail.com>, <alim.akhtar@samsung.com>,
-        <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <ebiggers@google.com>,
-        <satyat@google.com>, <shipujin.t@gmail.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Bean Huo <beanhuo@micron.com>
-References: <20210111231058.14559-1-huobean@gmail.com>
- <20210111231058.14559-2-huobean@gmail.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <b34eac20-e194-783b-f29e-83eec8bb127c@huawei.com>
-Date:   Tue, 12 Jan 2021 09:03:17 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S2387918AbhALJIX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 04:08:23 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:42312 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727750AbhALJIW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 Jan 2021 04:08:22 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1610442415;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=NQxW4Rp9hAeG9MWVRxpWkAVSDGuS5ozpYGrzrzDY5aQ=;
+        b=QRhVy01IUIgCz5VNqsbol2PvZM4rtHMkhXlnPpUpI90zgEoPm1lw+DKI7+kZITV5xZ6tlt
+        3sjtuLX7UEJVg8hCr6WDRtWoyxSTs70OwdmRdhjdOtKA9Y/kQpHNhiiCPVzqv0qEvubmkG
+        EcDCTqZM9Ao2hOeSC5bL84xNiUvS3KY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-50-nRd17vSBMJ-FatVTOrF8wQ-1; Tue, 12 Jan 2021 04:06:51 -0500
+X-MC-Unique: nRd17vSBMJ-FatVTOrF8wQ-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CE610B8121;
+        Tue, 12 Jan 2021 09:06:49 +0000 (UTC)
+Received: from T590 (ovpn-12-62.pek2.redhat.com [10.72.12.62])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3B2756F44B;
+        Tue, 12 Jan 2021 09:06:39 +0000 (UTC)
+Date:   Tue, 12 Jan 2021 17:06:34 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>,
+        chenxiang <chenxiang66@hisilicon.com>
+Subject: Re: About scsi device queue depth
+Message-ID: <20210112090634.GA97446@T590>
+References: <9ff894da-cf2c-9094-2690-1973cc57835a@huawei.com>
+ <20210112014203.GA60605@T590>
+ <4b50f067-a368-2197-c331-a8c981f5cd02@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20210111231058.14559-2-huobean@gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.171.61]
-X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4b50f067-a368-2197-c331-a8c981f5cd02@huawei.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/01/2021 23:10, Bean Huo wrote:
-> From: Bean Huo <beanhuo@micron.com>
+On Tue, Jan 12, 2021 at 08:56:45AM +0000, John Garry wrote:
+> Hi Ming,
 > 
-> The memory allocated with devm_kzalloc() is freed automatically
-> no need to explicitly call devm_kfree.
+> > > 
+> > > I was looking at some IOMMU issue on a LSI RAID 3008 card, and noticed that
+> > > performance there is not what I get on other SAS HBAs - it's lower.
+> > > 
+> > > After some debugging and fiddling with sdev queue depth in mpt3sas driver, I
+> > > am finding that performance changes appreciably with sdev queue depth:
+> > > 
+> > > sdev qdepth	fio number jobs* 	1	10	20
+> > > 16					1590	1654	1660
+> > > 32					1545	1646	1654
+> > > 64					1436	1085	1070
+> > > 254 (default)				1436	1070	1050
+> > 
+> > What does the performance number mean? IOPS or others? What is the fio
+> > io test? random IO or sequential IO?
 > 
+> So those figures are x1K IOPs read performance; so 1590, above, is 1.59M
+> IOPs read. Here's the fio script:
+> 
+> [global]
+> rw=read
+> direct=1
+> ioengine=libaio
+> iodepth=40
+> numjobs=20
+> bs=4k
+> ;size=10240000m
+> ;zero_buffers=1
+> group_reporting=1
+> ;ioscheduler=noop
+> ;cpumask=0xffe
+> ;cpus_allowed=1-47
+> ;gtod_reduce=1
+> ;iodepth_batch=2
+> ;iodepth_batch_complete=2
+> runtime=60
+> ;thread
+> loops = 10000
 
-This change is not right - we use devm_kfree() to manually release the 
-devm-allocated debugfs memories upon memory allocation failure for 
-driver debugfs feature during probe. The reason is that we allow the 
-driver probe can still continue (for this failure).
+Is there any effect on random read IOPS when you decrease sdev queue
+depth? For sequential IO, IO merge can be enhanced by that way.
 
-Thanks,
-John
+> 
+> > > 
+> > > fio queue depth is 40, and I'm using 12x SAS SSDs.
+> > > 
+> > > I got comparable disparity in results for fio queue depth = 128 and num jobs
+> > > = 1:
+> > > 
+> > > sdev qdepth	fio number jobs* 	1	
+> > > 16					1640
+> > > 32					1618	
+> > > 64					1577	
+> > > 254 (default)				1437	
+> > > 
+> > > IO sched = none.
+> > > 
+> > > That driver also sets queue depth tracking = 1, but never seems to kick in.
+> > > 
+> > > So it seems to me that the block layer is merging more bios per request, as
+> > > averge sg count per request goes up from 1 - > upto 6 or more. As I see,
+> > > when queue depth lowers the only thing that is really changing is that we
+> > > fail more often in getting the budget in
+> > > scsi_mq_get_budget()->scsi_dev_queue_ready().
+> > 
+> > Right, the behavior basically doesn't change compared with block legacy
+> > io path. And that is why sdev->queue_depth is a bit important for HDD.
+> 
+> OK
+> 
+> > 
+> > > 
+> > > So initial sdev queue depth comes from cmd_per_lun by default or manually
+> > > setting in the driver via scsi_change_queue_depth(). It seems to me that
+> > > some drivers are not setting this optimally, as above.
+> > > 
+> > > Thoughts on guidance for setting sdev queue depth? Could blk-mq changed this
+> > > behavior?
+> > 
+> > So far, the sdev queue depth is provided by SCSI layer, and blk-mq can
+> > queue one request only if budget is obtained via .get_budget().
+> > 
+> 
+> Well, based on my testing, default sdev queue depth seems too large for that
+> LLDD ...
 
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-> ---
->   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 28 +-------------------------
->   1 file changed, 1 insertion(+), 27 deletions(-)
-> 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> index 91a7286e8102..5600411a0820 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> @@ -4172,30 +4172,6 @@ static void debugfs_work_handler_v3_hw(struct work_struct *work)
->   	hisi_hba->debugfs_dump_index++;
->   }
->   
-> -static void debugfs_release_v3_hw(struct hisi_hba *hisi_hba, int dump_index)
-> -{
-> -	struct device *dev = hisi_hba->dev;
-> -	int i;
-> -
-> -	devm_kfree(dev, hisi_hba->debugfs_iost_cache[dump_index].cache);
-> -	devm_kfree(dev, hisi_hba->debugfs_itct_cache[dump_index].cache);
-> -	devm_kfree(dev, hisi_hba->debugfs_iost[dump_index].iost);
-> -	devm_kfree(dev, hisi_hba->debugfs_itct[dump_index].itct);
-> -
-> -	for (i = 0; i < hisi_hba->queue_count; i++)
-> -		devm_kfree(dev, hisi_hba->debugfs_dq[dump_index][i].hdr);
-> -
-> -	for (i = 0; i < hisi_hba->queue_count; i++)
-> -		devm_kfree(dev,
-> -			   hisi_hba->debugfs_cq[dump_index][i].complete_hdr);
-> -
-> -	for (i = 0; i < DEBUGFS_REGS_NUM; i++)
-> -		devm_kfree(dev, hisi_hba->debugfs_regs[dump_index][i].data);
-> -
-> -	for (i = 0; i < hisi_hba->n_phy; i++)
-> -		devm_kfree(dev, hisi_hba->debugfs_port_reg[dump_index][i].data);
-> -}
-> -
->   static const struct hisi_sas_debugfs_reg *debugfs_reg_array_v3_hw[DEBUGFS_REGS_NUM] = {
->   	[DEBUGFS_GLOBAL] = &debugfs_global_reg,
->   	[DEBUGFS_AXI] = &debugfs_axi_reg,
-> @@ -4206,7 +4182,7 @@ static int debugfs_alloc_v3_hw(struct hisi_hba *hisi_hba, int dump_index)
->   {
->   	const struct hisi_sas_hw *hw = hisi_hba->hw;
->   	struct device *dev = hisi_hba->dev;
-> -	int p, c, d, r, i;
-> +	int p, c, d, r;
->   	size_t sz;
->   
->   	for (r = 0; r < DEBUGFS_REGS_NUM; r++) {
-> @@ -4286,8 +4262,6 @@ static int debugfs_alloc_v3_hw(struct hisi_hba *hisi_hba, int dump_index)
->   
->   	return 0;
->   fail:
-> -	for (i = 0; i < hisi_sas_debugfs_dump_count; i++)
-> -		debugfs_release_v3_hw(hisi_hba, i);
->   	return -ENOMEM;
->   }
->   
-> 
+Yeah, it is similar with NVMe since people often cares latency more for
+SSD.
+
+
+-- 
+Ming
 
