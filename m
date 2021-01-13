@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAFEFC433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 02:35:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 617AFC43381
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 02:35:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9FD7F235FF
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 02:35:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 197DE235FF
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 02:35:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727639AbhANCfS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 21:35:18 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:50803 "EHLO smtp.infotech.no"
+        id S1727676AbhANCfT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jan 2021 21:35:19 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:50806 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727235AbhANCfR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727261AbhANCfR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 13 Jan 2021 21:35:17 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 9DE772042B7;
-        Wed, 13 Jan 2021 23:46:08 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 175AE2042C6;
+        Wed, 13 Jan 2021 23:46:23 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id CEeN-lD-8Fub; Wed, 13 Jan 2021 23:46:07 +0100 (CET)
+        with ESMTP id FHfhW-tqLTuv; Wed, 13 Jan 2021 23:46:21 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 72F8E204296;
-        Wed, 13 Jan 2021 23:46:05 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id C19BC2042A5;
+        Wed, 13 Jan 2021 23:46:20 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        kashyap.desai@broadcom.com, Hannes Reinecke <hare@suse.com>
-Subject: [PATCH v13 29/45] sg: add 8 byte SCSI LUN to sg_scsi_id
-Date:   Wed, 13 Jan 2021 17:45:10 -0500
-Message-Id: <20210113224526.861000-30-dgilbert@interlog.com>
+        kashyap.desai@broadcom.com
+Subject: [PATCH v13 42/45] sg: remove unit attention check for device changed
+Date:   Wed, 13 Jan 2021 17:45:23 -0500
+Message-Id: <20210113224526.861000-43-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210113224526.861000-1-dgilbert@interlog.com>
 References: <20210113224526.861000-1-dgilbert@interlog.com>
@@ -45,76 +45,97 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The existing ioctl(SG_GET_SCSI_ID) fills a object of type
-struct sg_scsi_id whose last field is int unused[2]. Add
-an anonymous union with u8 scsi_lun[8] sharing those last
-8 bytes. This patch will place the current device's full
-LUN in the scsi_lun array using T10's preferred LUN
-format (i.e. an array of 8 bytes) when
-ioctl(SG_GET_SCSI_ID) is called.
+The SCSI mid-layer now checks for SCSI UNIT ATTENTIONs and takes
+the appropriate actions. This means that the sg driver no longer
+needs to do this check.
 
-Note that structure already contains a 'lun' field but that
-is a 32 bit integer. Users of this upgrade should choose
-the scsi_lun array field henceforth but existing code
-can remain as it is and will get the same 'lun' value with
-the version 3 or version 4 driver.
-
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c      | 8 +++++---
- include/uapi/scsi/sg.h | 5 ++++-
- 2 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/scsi/sg.c | 49 ++++++++++++-----------------------------------
+ 1 file changed, 12 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 05d26b4ad77d..5f8589158345 100644
+index 2c9255d4abf1..a00f488ee5e2 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -1226,7 +1226,7 @@ sg_receive_v4(struct sg_fd *sfp, struct sg_request *srp, void __user *p,
- 	h4p->din_resid = srp->in_resid;
- 	h4p->dout_resid = srp->s_hdr4.out_resid;
- 	h4p->usr_ptr = srp->s_hdr4.usr_ptr;
--	h4p->response = (u64)srp->s_hdr4.sbp;
-+	h4p->response = (uintptr_t)srp->s_hdr4.sbp;
- 	h4p->request_extra = srp->pack_id;
- 	if (p) {
- 		if (copy_to_user(p, h4p, SZ_SG_IO_V4))
-@@ -1839,6 +1839,7 @@ static int
- sg_ctl_scsi_id(struct scsi_device *sdev, struct sg_fd *sfp, void __user *p)
+@@ -2457,39 +2457,6 @@ sg_rq_end_io_usercontext(struct work_struct *work)
+ 	kref_put(&sfp->f_ref, sg_remove_sfp);
+ }
+ 
+-static void
+-sg_check_sense(struct sg_device *sdp, struct sg_request *srp, int sense_len)
+-{
+-	int driver_stat;
+-	u32 rq_res = srp->rq_result;
+-	struct scsi_request *scsi_rp = scsi_req(srp->rq);
+-	u8 *sbp = scsi_rp ? scsi_rp->sense : NULL;
+-
+-	if (!sbp)
+-		return;
+-	driver_stat = driver_byte(rq_res);
+-	if (driver_stat & DRIVER_SENSE) {
+-		struct scsi_sense_hdr ssh;
+-
+-		if (scsi_normalize_sense(sbp, sense_len, &ssh)) {
+-			if (!scsi_sense_is_deferred(&ssh)) {
+-				if (ssh.sense_key == UNIT_ATTENTION) {
+-					if (sdp->device->removable)
+-						sdp->device->changed = 1;
+-				}
+-			}
+-		}
+-	}
+-	if (test_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm) > 0) {
+-		int scsi_stat = rq_res & 0xff;
+-
+-		if (scsi_stat == SAM_STAT_CHECK_CONDITION ||
+-		    scsi_stat == SAM_STAT_COMMAND_TERMINATED)
+-			__scsi_print_sense(sdp->device, __func__, sbp,
+-					   sense_len);
+-	}
+-}
+-
+ /*
+  * This "bottom half" (soft interrupt) handler is called by the mid-level
+  * when a request has completed or failed. This callback is registered in a
+@@ -2501,6 +2468,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
  {
- 	struct sg_scsi_id ss_id;
-+	struct scsi_lun lun8b;
+ 	enum sg_rq_state rqq_state = SG_RS_AWAIT_RCV;
+ 	int a_resid, slen;
++	u32 rq_result;
+ 	struct sg_request *srp = rq->end_io_data;
+ 	struct scsi_request *scsi_rp = scsi_req(rq);
+ 	struct sg_device *sdp;
+@@ -2514,7 +2482,8 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 	sfp = srp->parentfp;
+ 	sdp = sfp->parentdp;
  
- 	SG_LOG(3, sfp, "%s:    SG_GET_SCSI_ID\n", __func__);
- 	ss_id.host_no = sdev->host->host_no;
-@@ -1848,8 +1849,9 @@ sg_ctl_scsi_id(struct scsi_device *sdev, struct sg_fd *sfp, void __user *p)
- 	ss_id.scsi_type = sdev->type;
- 	ss_id.h_cmd_per_lun = sdev->host->cmd_per_lun;
- 	ss_id.d_queue_depth = sdev->queue_depth;
--	ss_id.unused[0] = 0;
--	ss_id.unused[1] = 0;
-+	int_to_scsilun(sdev->lun, &lun8b);
-+	/* ss_id.scsi_lun is in an anonymous union with 'int unused[2]' */
-+	memcpy(ss_id.scsi_lun, lun8b.scsi_lun, 8);
- 	if (copy_to_user(p, &ss_id, sizeof(struct sg_scsi_id)))
- 		return -EFAULT;
- 	return 0;
-diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
-index 51b86d20a7a5..182001023360 100644
---- a/include/uapi/scsi/sg.h
-+++ b/include/uapi/scsi/sg.h
-@@ -136,7 +136,10 @@ typedef struct sg_scsi_id {
- 	int scsi_type;	/* TYPE_... defined in scsi/scsi.h */
- 	short h_cmd_per_lun;/* host (adapter) maximum commands per lun */
- 	short d_queue_depth;/* device (or adapter) maximum queue length */
--	int unused[2];
-+	union {
-+		int unused[2];  /* as per version 3 driver */
-+		__u8 scsi_lun[8];  /* full 8 byte SCSI LUN [in v4 driver] */
-+	};
- } sg_scsi_id_t;
+-	srp->rq_result = scsi_rp->result;
++	rq_result = scsi_rp->result;
++	srp->rq_result = rq_result;
+ 	slen = min_t(int, scsi_rp->sense_len, SCSI_SENSE_BUFFERSIZE);
+ 	a_resid = scsi_rp->resid_len;
  
- /* For backward compatibility v4 driver yields at most SG_MAX_QUEUE of these */
+@@ -2530,10 +2499,16 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 	}
+ 
+ 	SG_LOG(6, sfp, "%s: pack_id=%d, res=0x%x\n", __func__, srp->pack_id,
+-	       srp->rq_result);
++	       rq_result);
+ 	srp->duration = sg_calc_rq_dur(srp);
+-	if (unlikely((srp->rq_result & SG_ML_RESULT_MSK) && slen > 0))
+-		sg_check_sense(sdp, srp, slen);
++	if (unlikely((rq_result & SG_ML_RESULT_MSK) && slen > 0 &&
++		     test_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm))) {
++		u32 scsi_stat = rq_result & 0xff;
++
++		if (scsi_stat == SAM_STAT_CHECK_CONDITION ||
++		    scsi_stat == SAM_STAT_COMMAND_TERMINATED)
++			__scsi_print_sense(sdp->device, __func__, scsi_rp->sense, slen);
++	}
+ 	if (slen > 0) {
+ 		if (scsi_rp->sense && !srp->sense_bp) {
+ 			srp->sense_bp = mempool_alloc(sg_sense_pool,
 -- 
 2.25.1
 
