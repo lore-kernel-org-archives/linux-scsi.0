@@ -2,198 +2,186 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B2ABC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 17:11:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C148C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 17:14:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D194E233F6
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 17:11:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C226023406
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 17:14:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727778AbhAMRLI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 12:11:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44106 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727144AbhAMRLH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2021 12:11:07 -0500
-Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 166D5C061575;
-        Wed, 13 Jan 2021 09:10:27 -0800 (PST)
-Received: by mail-ej1-x62a.google.com with SMTP id 6so4144786ejz.5;
-        Wed, 13 Jan 2021 09:10:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=rFBmtH1TI8zpSCup/4jrWzYhxSsaVXPS2ThkcS6xCJ0=;
-        b=aIMagPTPW5supDBmENlZq7xdFrzi1OXEo7ZF+Q483gf21qhw4fDc2TqDjy6ROodjhY
-         HMPFMQNT4RJubJpa9mEYiTRexS6oolOfsrfr5p1WE8NpkcMqvGntrhpjV0K9tt6YbNp9
-         HdPTXwAuiHtcxGtwVLUqOwi5tWQIWdud/69FA7w3fDMTsKcBvik43ek+OuZZ6nSUTKPi
-         RWJHE6EiQUGbb48k2DFWLTz14nOOfkDi/xdXwPuL4/dUnJzknwqybUts4UiPctJF0bLk
-         4r+2vMKSOn7GUwRJHbeTGkGJIm59kFryO+N6guxLLXYGjqkSk1EHbuMODOfbEUW7xnWg
-         tPAg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=rFBmtH1TI8zpSCup/4jrWzYhxSsaVXPS2ThkcS6xCJ0=;
-        b=RKEw44ITEMH7t+2dtlgaBmIU7fE1zKquf9IYxQjrmE6ilqC1nD3GbP2SprJNiVzb1X
-         Xjgc+okYMY/1qLtaXuhXHCHs2QQdmKwyAdo/pVGg14E5sHi3cSvNO4TVPIjCBXhcil7q
-         LDLpWxiPGu/O8ifibrdZclbNJtUT5Y3EYhCCKpUcO3BdhEW04JafgrrXwlA2jpBVUmUC
-         3LXHLlH1yMPd67Y+88IylD5DN+EBZXUEzsVehJklNOF1EPjSXv6Wqt0ySH/q9mBnDQS/
-         v/F8DBjGzSuPT7idAhRWPyk4ezvc7ZSuwn0IJLBzsgGUtn2nY4zCGNCK403Z28c3H4K9
-         yLRg==
-X-Gm-Message-State: AOAM532Jp3TsMxQoVm4FGpYyCu6QaE33+5od+4hiIWDkATQNCLJnvoG1
-        rG4A0ikvboFbrjGt1cG6knw=
-X-Google-Smtp-Source: ABdhPJzGYWrWx1+YdVnW0dg98O3rMutlkpoXJNZ/Ah+UuIVDnTp2g6rawPy5mtCs/vv1YtqPangINQ==
-X-Received: by 2002:a17:906:1f8e:: with SMTP id t14mr2312243ejr.350.1610557825759;
-        Wed, 13 Jan 2021 09:10:25 -0800 (PST)
-Received: from [192.168.178.40] (ipbcc05d1b.dynamic.kabel-deutschland.de. [188.192.93.27])
-        by smtp.gmail.com with ESMTPSA id d14sm1148101edn.31.2021.01.13.09.10.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Jan 2021 09:10:25 -0800 (PST)
-Subject: Re: [PATCH] scsi: target: tcmu: Fix use-after-free of se_cmd->priv
-To:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>
-References: <20210113024508.1264992-1-shinichiro.kawasaki@wdc.com>
-From:   Bodo Stroesser <bostroesser@gmail.com>
-Message-ID: <53431c50-e13c-27cf-572f-51b5d0ef6f0c@gmail.com>
-Date:   Wed, 13 Jan 2021 18:10:23 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1727788AbhAMROW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jan 2021 12:14:22 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:42918 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727403AbhAMROV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Jan 2021 12:14:21 -0500
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10DH4tto051009;
+        Wed, 13 Jan 2021 12:13:29 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=MNu69AKjJm3nG53SgMHXypE4CI8PDaFzLPocZJuT2zo=;
+ b=TqSDKmxKJnzq6KrKhrcYuRdzcXOjpTBNPAYgty9wNUrlsJW9FZtNYi2Cstk7ojJn+BR1
+ psfQVXlJl3SUHR4aImKWhBZ0311lWIa5ZujUGAg85lHD239ng1ps0IoYlspGYSz6Cm65
+ QmpSe1v06rbFQqPo35DFbcxenK6TZZ/4BkYHGh3OhnbDmWL7T2I2y7O+te1bo7tB1xJH
+ ErfHl+jODssT1N+O8fd7K46SAlvgyN5s9MmLA3hv0DoP3njEfwFYrCK2s6SVYUcvxZua
+ VwVQQndnX8a8R3EGRI+j1W3G856WGuf5Fd1pbliatz4IwdVv1WXxyGTOCELQiIxG/9T4 eg== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3624ech2es-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 13 Jan 2021 12:13:27 -0500
+Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 10DH54fX051294;
+        Wed, 13 Jan 2021 12:13:13 -0500
+Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3624ech2d8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 13 Jan 2021 12:13:12 -0500
+Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
+        by ppma05wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10DH2W1i025433;
+        Wed, 13 Jan 2021 17:13:10 GMT
+Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
+        by ppma05wdc.us.ibm.com with ESMTP id 35y44972pc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 13 Jan 2021 17:13:10 +0000
+Received: from b01ledav003.gho.pok.ibm.com (b01ledav003.gho.pok.ibm.com [9.57.199.108])
+        by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10DHD9Lh36831742
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Jan 2021 17:13:09 GMT
+Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A44E6B205F;
+        Wed, 13 Jan 2021 17:13:09 +0000 (GMT)
+Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 62E6FB2064;
+        Wed, 13 Jan 2021 17:13:08 +0000 (GMT)
+Received: from oc6034535106.ibm.com (unknown [9.211.128.152])
+        by b01ledav003.gho.pok.ibm.com (Postfix) with ESMTP;
+        Wed, 13 Jan 2021 17:13:08 +0000 (GMT)
+Subject: Re: [PATCH v4 01/21] ibmvfc: add vhost fields and defaults for MQ
+ enablement
+To:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+        james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com, james.smart@broadcom.com,
+        Ming Lei <ming.lei@redhat.com>
+References: <20210111231225.105347-1-tyreld@linux.ibm.com>
+ <20210111231225.105347-2-tyreld@linux.ibm.com>
+ <0525bee7-433f-dcc7-9e35-e8706d6edee5@linux.vnet.ibm.com>
+ <a8623705-6d49-2056-09bb-80190e0b6f52@linux.ibm.com>
+From:   Brian King <brking@linux.vnet.ibm.com>
+Message-ID: <51bfc34b-c2c4-bf14-c903-d37015f65361@linux.vnet.ibm.com>
+Date:   Wed, 13 Jan 2021 11:13:07 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-In-Reply-To: <20210113024508.1264992-1-shinichiro.kawasaki@wdc.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <a8623705-6d49-2056-09bb-80190e0b6f52@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
+ definitions=2021-01-13_07:2021-01-13,2021-01-13 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 clxscore=1015
+ adultscore=0 impostorscore=0 bulkscore=0 malwarescore=0 lowpriorityscore=0
+ mlxlogscore=999 spamscore=0 priorityscore=1501 mlxscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101130100
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13.01.21 03:45, Shin'ichiro Kawasaki wrote:
-> Commit a35129024e88 ("scsi: target: tcmu: Use priv pointer in se_cmd")
-> modified tcmu_free_cmd() to set NULL to priv pointer in se_cmd. However,
-> se_cmd can be already freed by work queue triggered in
-> target_complete_cmd(). This caused BUG KASAN use-after-free [1].
+On 1/12/21 6:33 PM, Tyrel Datwyler wrote:
+> On 1/12/21 2:54 PM, Brian King wrote:
+>> On 1/11/21 5:12 PM, Tyrel Datwyler wrote:
+>>> Introduce several new vhost fields for managing MQ state of the adapter
+>>> as well as initial defaults for MQ enablement.
+>>>
+>>> Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+>>> ---
+>>>  drivers/scsi/ibmvscsi/ibmvfc.c | 8 ++++++++
+>>>  drivers/scsi/ibmvscsi/ibmvfc.h | 9 +++++++++
+>>>  2 files changed, 17 insertions(+)
+>>>
+>>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+>>> index ba95438a8912..9200fe49c57e 100644
+>>> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+>>> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+>>> @@ -3302,6 +3302,7 @@ static struct scsi_host_template driver_template = {
+>>>  	.max_sectors = IBMVFC_MAX_SECTORS,
+>>>  	.shost_attrs = ibmvfc_attrs,
+>>>  	.track_queue_depth = 1,
+>>> +	.host_tagset = 1,
+>>
+>> This doesn't seem right. You are setting host_tagset, which means you want a
+>> shared, host wide, tag set for commands. It also means that the total
+>> queue depth for the host is can_queue. However, it looks like you are allocating
+>> max_requests events for each sub crq, which means you are over allocating memory.
 > 
-> To fix the bug, do not touch priv pointer in tcmu_free_cmd(). Instead,
-> set NULL to priv pointer before target_complete_cmd() calls. Also, to
-> avoid unnecessary priv pointer change in tcmu_queue_cmd(), modify priv
-> pointer in the function only when tcmu_free_cmd() is not called.
+> With the shared tagset yes the queue depth for the host is can_queue, but this
+> also implies that the max queue depth for each hw queue is also can_queue. So,
+> in the worst case that all commands are queued down the same hw queue we need an
+> event pool with can_queue commands.
 > 
-> [1]
-> BUG: KASAN: use-after-free in tcmu_handle_completions+0x1172/0x1770 [target_core_user]
-> Write of size 8 at addr ffff88814cf79a40 by task cmdproc-uio0/14842
+>>
+>> Looking at this closer, we might have bigger problems. There is a host wide
+>> max number of commands that the VFC host supports, which gets returned on
+>> NPIV Login. This value can change across a live migration event.
 > 
-> CPU: 2 PID: 14842 Comm: cmdproc-uio0 Not tainted 5.11.0-rc2 #1
-> Hardware name: Supermicro Super Server/X10SRL-F, BIOS 3.2 11/22/2019
-> Call Trace:
->   dump_stack+0x9a/0xcc
->   ? tcmu_handle_completions+0x1172/0x1770 [target_core_user]
->   print_address_description.constprop.0+0x18/0x130
->   ? tcmu_handle_completions+0x1172/0x1770 [target_core_user]
->   ? tcmu_handle_completions+0x1172/0x1770 [target_core_user]
->   kasan_report.cold+0x7f/0x10e
->   ? tcmu_handle_completions+0x1172/0x1770 [target_core_user]
->   tcmu_handle_completions+0x1172/0x1770 [target_core_user]
->   ? queue_tmr_ring+0x5d0/0x5d0 [target_core_user]
->   tcmu_irqcontrol+0x28/0x60 [target_core_user]
->   uio_write+0x155/0x230
->   ? uio_vma_fault+0x460/0x460
->   ? security_file_permission+0x4f/0x440
->   vfs_write+0x1ce/0x860
->   ksys_write+0xe9/0x1b0
->   ? __ia32_sys_read+0xb0/0xb0
->   ? syscall_enter_from_user_mode+0x27/0x70
->   ? trace_hardirqs_on+0x1c/0x110
->   do_syscall_64+0x33/0x40
->   entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> RIP: 0033:0x7fcf8b61905f
-> Code: 89 54 24 18 48 89 74 24 10 89 7c 24 08 e8 b9 fc ff ff 48 8b 54 24 18 48 8b 74 24 10 41 89 c0 8b 7c 24 08 b8 01 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 31 44 89 c7 48 89 44 24 08 e8 0c fd ff ff 48
-> RSP: 002b:00007fcf7b3e6c30 EFLAGS: 00000293 ORIG_RAX: 0000000000000001
-> RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007fcf8b61905f
-> RDX: 0000000000000004 RSI: 00007fcf7b3e6c78 RDI: 000000000000000c
-> RBP: 00007fcf7b3e6c80 R08: 0000000000000000 R09: 00007fcf7b3e6aa8
-> R10: 000000000b01c000 R11: 0000000000000293 R12: 00007ffe0c32a52e
-> R13: 00007ffe0c32a52f R14: 0000000000000000 R15: 00007fcf7b3e7640
+> From what I understand the max commands can only become less.
 > 
-> Allocated by task 383:
->   kasan_save_stack+0x1b/0x40
->   ____kasan_kmalloc.constprop.0+0x84/0xa0
->   kmem_cache_alloc+0x142/0x330
->   tcm_loop_queuecommand+0x2a/0x4e0 [tcm_loop]
->   scsi_queue_rq+0x12ec/0x2d20
->   blk_mq_dispatch_rq_list+0x30a/0x1db0
->   __blk_mq_do_dispatch_sched+0x326/0x830
->   __blk_mq_sched_dispatch_requests+0x2c8/0x3f0
->   blk_mq_sched_dispatch_requests+0xca/0x120
->   __blk_mq_run_hw_queue+0x93/0xe0
->   process_one_work+0x7b6/0x1290
->   worker_thread+0x590/0xf80
->   kthread+0x362/0x430
->   ret_from_fork+0x22/0x30
+>>
+>> The ibmvfc driver, which does the same thing the lpfc driver does, modifies
+>> can_queue on the scsi_host *after* the tag set has been allocated. This looks
+>> to be a concern with ibmvfc, not sure about lpfc, as it doesn't look like
+>> we look at can_queue once the tag set is setup, and I'm not seeing a good way
+>> to dynamically change the host queue depth once the tag set is setup. 
+>>
+>> Unless I'm missing something, our best options appear to either be to implement
+>> our own host wide busy reference counting, which doesn't sound very good, or
+>> we need to add some API to block / scsi that allows us to dynamically change
+>> can_queue.
 > 
-> Freed by task 11655:
->   kasan_save_stack+0x1b/0x40
->   kasan_set_track+0x1c/0x30
->   kasan_set_free_info+0x20/0x30
->   ____kasan_slab_free+0xec/0x120
->   slab_free_freelist_hook+0x53/0x160
->   kmem_cache_free+0xf4/0x5c0
->   target_release_cmd_kref+0x3ea/0x9e0 [target_core_mod]
->   transport_generic_free_cmd+0x28b/0x2f0 [target_core_mod]
->   target_complete_ok_work+0x250/0xac0 [target_core_mod]
->   process_one_work+0x7b6/0x1290
->   worker_thread+0x590/0xf80
->   kthread+0x362/0x430
->   ret_from_fork+0x22/0x30
-> 
-> Last potentially related work creation:
->   kasan_save_stack+0x1b/0x40
->   kasan_record_aux_stack+0xa3/0xb0
->   insert_work+0x48/0x2e0
->   __queue_work+0x4e8/0xdf0
->   queue_work_on+0x78/0x80
->   tcmu_handle_completions+0xad0/0x1770 [target_core_user]
->   tcmu_irqcontrol+0x28/0x60 [target_core_user]
->   uio_write+0x155/0x230
->   vfs_write+0x1ce/0x860
->   ksys_write+0xe9/0x1b0
->   do_syscall_64+0x33/0x40
->   entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> 
-> Second to last potentially related work creation:
->   kasan_save_stack+0x1b/0x40
->   kasan_record_aux_stack+0xa3/0xb0
->   insert_work+0x48/0x2e0
->   __queue_work+0x4e8/0xdf0
->   queue_work_on+0x78/0x80
->   tcm_loop_queuecommand+0x1c3/0x4e0 [tcm_loop]
->   scsi_queue_rq+0x12ec/0x2d20
->   blk_mq_dispatch_rq_list+0x30a/0x1db0
->   __blk_mq_do_dispatch_sched+0x326/0x830
->   __blk_mq_sched_dispatch_requests+0x2c8/0x3f0
->   blk_mq_sched_dispatch_requests+0xca/0x120
->   __blk_mq_run_hw_queue+0x93/0xe0
->   process_one_work+0x7b6/0x1290
->   worker_thread+0x590/0xf80
->   kthread+0x362/0x430
->   ret_from_fork+0x22/0x30
-> 
-> The buggy address belongs to the object at ffff88814cf79800
->   which belongs to the cache tcm_loop_cmd_cache of size 896
-> 
-> Fixes: a35129024e88 ("scsi: target: tcmu: Use priv pointer in se_cmd")
-> Cc: stable@vger.kernel.org # v5.9+
-> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+> Changing can_queue won't do use any good with the shared tagset becasue each
+> queue still needs to be able to queue can_queue number of commands in the worst
+> case.
 
-Thank you for the fix.
+The issue I'm trying to highlight here is the following scenario:
 
-Acked-by: Bodo Stroesser <bostroesser@gmail.com>
+1. We set shost->can_queue, then call scsi_add_host, which allocates the tag set.
+
+2. On our NPIV login response from the VIOS, we might get a lower value than we
+initially set in shost->can_queue, so we update it, but nobody ever looks at it
+again, and we don't have any protection against sending too many commands to the host.
+
+
+Basically, we no longer have any code that ensures we don't send more
+commands to the VIOS than we are told it supports. According to the architecture,
+if we actually do this, the VIOS will do an h_free_crq, which would be a bit
+of a bug on our part.
+
+I don't think it was ever clearly defined in the API that a driver can
+change shost->can_queue after calling scsi_add_host, but up until
+commit 6eb045e092efefafc6687409a6fa6d1dabf0fb69, this worked and now
+it doesn't. 
+
+I started looking through drivers that do this, and so far, it looks like the
+following drivers do: ibmvfc, lpfc, aix94xx, libfc, BusLogic, and likely others...
+
+We probably need an API that lets us change shost->can_queue dynamically.
+
+Thanks,
+
+Brian
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
