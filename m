@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0D16C4332B
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:06:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B572C433E6
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:06:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7959C233A1
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:06:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D5E0233A2
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:06:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727555AbhAMJGf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 04:06:35 -0500
-Received: from mx2.suse.de ([195.135.220.15]:53834 "EHLO mx2.suse.de"
+        id S1727553AbhAMJGd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jan 2021 04:06:33 -0500
+Received: from mx2.suse.de ([195.135.220.15]:53818 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727534AbhAMJGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Jan 2021 04:06:31 -0500
+        id S1727457AbhAMJG3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Jan 2021 04:06:29 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id D9F2FB732;
+        by mx2.suse.de (Postfix) with ESMTP id CBB85B741;
         Wed, 13 Jan 2021 09:05:03 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/35] nsp32: fixup status handling
-Date:   Wed, 13 Jan 2021 10:04:36 +0100
-Message-Id: <20210113090500.129644-12-hare@suse.de>
+Subject: [PATCH 07/35] aic7xxx,aic79xx: kill pointless forward declarations
+Date:   Wed, 13 Jan 2021 10:04:32 +0100
+Message-Id: <20210113090500.129644-8-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210113090500.129644-1-hare@suse.de>
 References: <20210113090500.129644-1-hare@suse.de>
@@ -40,28 +40,81 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SCp.status is always the SAM-defined status value, not the linux
-ones. Fixup the one wrong definition.
-
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/nsp32.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.h | 23 -----------------------
+ drivers/scsi/aic7xxx/aic7xxx_osm.h | 23 -----------------------
+ 2 files changed, 46 deletions(-)
 
-diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-index da814c2da16d..e44b1a0f6709 100644
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -935,7 +935,7 @@ static int nsp32_queuecommand_lck(struct scsi_cmnd *SCpnt, void (*done)(struct s
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
+index d6e38298f15b..35ec24f28d2c 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -497,29 +497,6 @@ int	ahd_proc_write_seeprom(struct Scsi_Host *, char *, int);
+ int	ahd_linux_show_info(struct seq_file *,struct Scsi_Host *);
  
- 	SCpnt->scsi_done     = done;
- 	data->CurrentSC      = SCpnt;
--	SCpnt->SCp.Status    = CHECK_CONDITION;
-+	SCpnt->SCp.Status    = SAM_STAT_CHECK_CONDITION;
- 	SCpnt->SCp.Message   = 0;
- 	scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
+ /*********************** Transaction Access Wrappers **************************/
+-static inline void ahd_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
+-static inline void ahd_set_transaction_status(struct scb *, uint32_t);
+-static inline void ahd_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
+-static inline void ahd_set_scsi_status(struct scb *, uint32_t);
+-static inline uint32_t ahd_cmd_get_transaction_status(struct scsi_cmnd *cmd);
+-static inline uint32_t ahd_get_transaction_status(struct scb *);
+-static inline uint32_t ahd_cmd_get_scsi_status(struct scsi_cmnd *cmd);
+-static inline uint32_t ahd_get_scsi_status(struct scb *);
+-static inline void ahd_set_transaction_tag(struct scb *, int, u_int);
+-static inline u_long ahd_get_transfer_length(struct scb *);
+-static inline int ahd_get_transfer_dir(struct scb *);
+-static inline void ahd_set_residual(struct scb *, u_long);
+-static inline void ahd_set_sense_residual(struct scb *scb, u_long resid);
+-static inline u_long ahd_get_residual(struct scb *);
+-static inline u_long ahd_get_sense_residual(struct scb *);
+-static inline int ahd_perform_autosense(struct scb *);
+-static inline uint32_t ahd_get_sense_bufsize(struct ahd_softc *,
+-					       struct scb *);
+-static inline void ahd_notify_xfer_settings_change(struct ahd_softc *,
+-						     struct ahd_devinfo *);
+-static inline void ahd_platform_scb_free(struct ahd_softc *ahd,
+-					   struct scb *scb);
+-static inline void ahd_freeze_scb(struct scb *scb);
  
+ static inline
+ void ahd_cmd_set_transaction_status(struct scsi_cmnd *cmd, uint32_t status)
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.h b/drivers/scsi/aic7xxx/aic7xxx_osm.h
+index 125ba5eb175d..53240f53b654 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.h
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.h
+@@ -515,29 +515,6 @@ int	ahc_linux_show_info(struct seq_file *, struct Scsi_Host *);
+ 
+ /*************************** Domain Validation ********************************/
+ /*********************** Transaction Access Wrappers *************************/
+-static inline void ahc_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
+-static inline void ahc_set_transaction_status(struct scb *, uint32_t);
+-static inline void ahc_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
+-static inline void ahc_set_scsi_status(struct scb *, uint32_t);
+-static inline uint32_t ahc_cmd_get_transaction_status(struct scsi_cmnd *cmd);
+-static inline uint32_t ahc_get_transaction_status(struct scb *);
+-static inline uint32_t ahc_cmd_get_scsi_status(struct scsi_cmnd *cmd);
+-static inline uint32_t ahc_get_scsi_status(struct scb *);
+-static inline void ahc_set_transaction_tag(struct scb *, int, u_int);
+-static inline u_long ahc_get_transfer_length(struct scb *);
+-static inline int ahc_get_transfer_dir(struct scb *);
+-static inline void ahc_set_residual(struct scb *, u_long);
+-static inline void ahc_set_sense_residual(struct scb *scb, u_long resid);
+-static inline u_long ahc_get_residual(struct scb *);
+-static inline u_long ahc_get_sense_residual(struct scb *);
+-static inline int ahc_perform_autosense(struct scb *);
+-static inline uint32_t ahc_get_sense_bufsize(struct ahc_softc *,
+-					       struct scb *);
+-static inline void ahc_notify_xfer_settings_change(struct ahc_softc *,
+-						     struct ahc_devinfo *);
+-static inline void ahc_platform_scb_free(struct ahc_softc *ahc,
+-					   struct scb *scb);
+-static inline void ahc_freeze_scb(struct scb *scb);
+ 
+ static inline
+ void ahc_cmd_set_transaction_status(struct scsi_cmnd *cmd, uint32_t status)
 -- 
 2.29.2
 
