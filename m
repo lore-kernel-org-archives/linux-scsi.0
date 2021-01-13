@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62117C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 903CCC433DB
 	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E1B7233A1
+	by mail.kernel.org (Postfix) with ESMTP id 48771233CE
 	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727653AbhAMJHX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 04:07:23 -0500
-Received: from mx2.suse.de ([195.135.220.15]:54872 "EHLO mx2.suse.de"
+        id S1727655AbhAMJHZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jan 2021 04:07:25 -0500
+Received: from mx2.suse.de ([195.135.220.15]:54844 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727632AbhAMJHM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Jan 2021 04:07:12 -0500
+        id S1727629AbhAMJHJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Jan 2021 04:07:09 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 23215B7E0;
-        Wed, 13 Jan 2021 09:05:04 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id F185DB748;
+        Wed, 13 Jan 2021 09:05:03 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 25/35] mac53c94: Do not set invalid command result
-Date:   Wed, 13 Jan 2021 10:04:50 +0100
-Message-Id: <20210113090500.129644-26-hare@suse.de>
+Subject: [PATCH 12/35] dc395: drop private SAM status code definitions
+Date:   Wed, 13 Jan 2021 10:04:37 +0100
+Message-Id: <20210113090500.129644-13-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210113090500.129644-1-hare@suse.de>
 References: <20210113090500.129644-1-hare@suse.de>
@@ -40,28 +40,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-CMD_ACCEPT_MSG is an internal definition, and most certainly not
-a SCSI status. As the latter gets set during command completion
-we can drop the assignment here.
+We don't need to duplicate definitions from the common include
+files.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/mac53c94.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/dc395x.h | 16 ----------------
+ 1 file changed, 16 deletions(-)
 
-diff --git a/drivers/scsi/mac53c94.c b/drivers/scsi/mac53c94.c
-index 43edf83fdb62..9e989776609b 100644
---- a/drivers/scsi/mac53c94.c
-+++ b/drivers/scsi/mac53c94.c
-@@ -326,7 +326,6 @@ static void mac53c94_interrupt(int irq, void *dev_id)
- 		}
- 		cmd->SCp.Status = readb(&regs->fifo);
- 		cmd->SCp.Message = readb(&regs->fifo);
--		cmd->result = CMD_ACCEPT_MSG;
- 		writeb(CMD_ACCEPT_MSG, &regs->command);
- 		state->phase = busfreeing;
- 		break;
+diff --git a/drivers/scsi/dc395x.h b/drivers/scsi/dc395x.h
+index 5379a936141a..a7786a6d462e 100644
+--- a/drivers/scsi/dc395x.h
++++ b/drivers/scsi/dc395x.h
+@@ -156,15 +156,6 @@
+ #define H_ABORT				0x0FF
+ 
+ /* SCSI BUS Status byte codes */
+-#define SCSI_STAT_GOOD			0x0	/* Good status				*/
+-#define SCSI_STAT_CHECKCOND		0x02	/* SCSI Check Condition			*/
+-#define SCSI_STAT_CONDMET		0x04	/* Condition Met			*/
+-#define SCSI_STAT_BUSY			0x08	/* Target busy status			*/
+-#define SCSI_STAT_INTER			0x10	/* Intermediate status			*/
+-#define SCSI_STAT_INTERCONDMET		0x14	/* Intermediate condition met		*/
+-#define SCSI_STAT_RESCONFLICT		0x18	/* Reservation conflict			*/
+-#define SCSI_STAT_CMDTERM		0x22	/* Command Terminated			*/
+-#define SCSI_STAT_QUEUEFULL		0x28	/* Queue Full				*/
+ #define SCSI_STAT_UNEXP_BUS_F		0xFD	/* Unexpect Bus Free			*/
+ #define SCSI_STAT_BUS_RST_DETECT	0xFE	/* Scsi Bus Reset detected		*/
+ #define SCSI_STAT_SEL_TIMEOUT		0xFF	/* Selection Time out			*/
+@@ -203,13 +194,6 @@
+ #define MSG_IDENTIFY			0x80
+ #define MSG_HOST_ID			0xC0
+ 
+-/* SCSI STATUS BYTE */
+-#define STATUS_GOOD			0x00
+-#define CHECK_CONDITION_		0x02
+-#define STATUS_BUSY			0x08
+-#define STATUS_INTERMEDIATE		0x10
+-#define RESERVE_CONFLICT		0x18
+-
+ /* cmd->result */
+ #define STATUS_MASK_			0xFF
+ #define MSG_MASK			0xFF00
 -- 
 2.29.2
 
