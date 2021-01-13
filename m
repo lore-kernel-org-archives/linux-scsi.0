@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9746DC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FC07C4332D
 	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:06:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45E5C2339F
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:06:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0480233A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:06:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727529AbhAMJGn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 04:06:43 -0500
-Received: from mx2.suse.de ([195.135.220.15]:53812 "EHLO mx2.suse.de"
+        id S1727495AbhAMJGj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jan 2021 04:06:39 -0500
+Received: from mx2.suse.de ([195.135.220.15]:53820 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727394AbhAMJGd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727412AbhAMJGd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 13 Jan 2021 04:06:33 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id A22AAB73C;
+        by mx2.suse.de (Postfix) with ESMTP id A9B0CB73D;
         Wed, 13 Jan 2021 09:05:03 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 05/35] atp870u: Whitespace cleanup
-Date:   Wed, 13 Jan 2021 10:04:30 +0100
-Message-Id: <20210113090500.129644-6-hare@suse.de>
+Subject: [PATCH 06/35] aic7xxx,aic79xx: Whitespace cleanup
+Date:   Wed, 13 Jan 2021 10:04:31 +0100
+Message-Id: <20210113090500.129644-7-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210113090500.129644-1-hare@suse.de>
 References: <20210113090500.129644-1-hare@suse.de>
@@ -42,988 +42,1664 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/atp870u.c | 431 ++++++++++++++++++++++++-----------------
- drivers/scsi/atp870u.h |  14 +-
- 2 files changed, 258 insertions(+), 187 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx.h         |  36 +++----
+ drivers/scsi/aic7xxx/aic79xx_core.c    | 111 ++++++++++-----------
+ drivers/scsi/aic7xxx/aic79xx_osm.h     |  14 +--
+ drivers/scsi/aic7xxx/aic79xx_osm_pci.c |   6 +-
+ drivers/scsi/aic7xxx/aic79xx_proc.c    |  13 +--
+ drivers/scsi/aic7xxx/aic7xxx_93cx6.c   |   4 +-
+ drivers/scsi/aic7xxx/aic7xxx_core.c    | 131 ++++++++++++-------------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c     |  71 +++++++-------
+ drivers/scsi/aic7xxx/aic7xxx_osm.h     |  16 +--
+ drivers/scsi/aic7xxx/aic7xxx_proc.c    |  15 +--
+ 10 files changed, 208 insertions(+), 209 deletions(-)
 
-diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index c6a752309dda..e559baeb0329 100644
---- a/drivers/scsi/atp870u.c
-+++ b/drivers/scsi/atp870u.c
-@@ -42,7 +42,8 @@
+diff --git a/drivers/scsi/aic7xxx/aic79xx.h b/drivers/scsi/aic7xxx/aic79xx.h
+index dd5dfd4f30a5..77e1d6bb59a3 100644
+--- a/drivers/scsi/aic7xxx/aic79xx.h
++++ b/drivers/scsi/aic7xxx/aic79xx.h
+@@ -211,7 +211,7 @@ typedef enum {
+  */
+ typedef enum {
+ 	AHD_FENONE		= 0x00000,
+-	AHD_WIDE  		= 0x00001,/* Wide Channel */
++	AHD_WIDE		= 0x00001,/* Wide Channel */
+ 	AHD_AIC79XXB_SLOWCRC    = 0x00002,/* SLOWCRC bit should be set */
+ 	AHD_MULTI_FUNC		= 0x00100,/* Multi-Function/Channel Device */
+ 	AHD_TARGETMODE		= 0x01000,/* Has tested target mode support */
+@@ -433,7 +433,7 @@ union initiator_data {
+  * Target mode version of the shared data SCB segment.
+  */
+ struct target_data {
+-	uint32_t spare[2];	
++	uint32_t spare[2];
+ 	uint8_t  scsi_status;		/* SCSI status to give to initiator */
+ 	uint8_t  target_phases;		/* Bitmap of phases to execute */
+ 	uint8_t  data_phase;		/* Data-In or Data-Out */
+@@ -608,9 +608,9 @@ struct scb {
+ 	struct ahd_softc	 *ahd_softc;
+ 	scb_flag		  flags;
+ 	struct scb_platform_data *platform_data;
+-	struct map_node	 	 *hscb_map;
+-	struct map_node	 	 *sg_map;
+-	struct map_node	 	 *sense_map;
++	struct map_node		 *hscb_map;
++	struct map_node		 *sg_map;
++	struct map_node		 *sense_map;
+ 	void			 *sg_list;
+ 	uint8_t			 *sense_data;
+ 	dma_addr_t		  sg_list_busaddr;
+@@ -674,7 +674,7 @@ struct scb_data {
+ struct target_cmd {
+ 	uint8_t scsiid;		/* Our ID and the initiator's ID */
+ 	uint8_t identify;	/* Identify message */
+-	uint8_t bytes[22];	/* 
++	uint8_t bytes[22];	/*
+ 				 * Bytes contains any additional message
+ 				 * bytes terminated by 0xFF.  The remainder
+ 				 * is the cdb to execute.
+@@ -712,7 +712,7 @@ struct ahd_tmode_event {
+  * structure here so we can store arrays of them, etc. in OS neutral
+  * data structures.
+  */
+-#ifdef AHD_TARGET_MODE 
++#ifdef AHD_TARGET_MODE
+ struct ahd_tmode_lstate {
+ 	struct cam_path *path;
+ 	struct ccb_hdr_slist accept_tios;
+@@ -807,11 +807,11 @@ struct ahd_tmode_tstate {
+ /***************************** Lookup Tables **********************************/
+ /*
+  * Phase -> name and message out response
+- * to parity errors in each phase table. 
++ * to parity errors in each phase table.
+  */
+ struct ahd_phase_table_entry {
+-        uint8_t phase;
+-        uint8_t mesg_out; /* Message response to parity errors */
++	uint8_t phase;
++	uint8_t mesg_out; /* Message response to parity errors */
+ 	const char *phasemsg;
+ };
  
- static struct scsi_host_template atp870u_template;
- static void send_s870(struct atp_unit *dev,unsigned char c);
--static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode);
-+static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip,
-+		   unsigned char lvdmode);
+@@ -844,7 +844,7 @@ struct seeprom_config {
+ #define		    CFBS_ENABLED	0x04
+ #define		    CFBS_DISABLED_SCAN	0x08
+ #define		CFENABLEDV	0x0010	/* Perform Domain Validation */
+-#define		CFCTRL_A	0x0020	/* BIOS displays Ctrl-A message */	
++#define		CFCTRL_A	0x0020	/* BIOS displays Ctrl-A message */
+ #define		CFSPARITY	0x0040	/* SCSI parity */
+ #define		CFEXTEND	0x0080	/* extended translation enabled */
+ #define		CFBOOTCD	0x0100  /* Support Bootable CD-ROM */
+@@ -858,7 +858,7 @@ struct seeprom_config {
+ /*
+  * Host Adapter Control Bits
+  */
+-	uint16_t adapter_control;	/* word 17 */	
++	uint16_t adapter_control;	/* word 17 */
+ #define		CFAUTOTERM	0x0001	/* Perform Auto termination */
+ #define		CFSTERM		0x0002	/* SCSI low byte termination */
+ #define		CFWSTERM	0x0004	/* SCSI high byte termination */
+@@ -867,7 +867,7 @@ struct seeprom_config {
+ #define		CFSEHIGHTERM	0x0020	/* Ultra2 secondary high term */
+ #define		CFSTPWLEVEL	0x0040	/* Termination level control */
+ #define		CFBIOSAUTOTERM	0x0080	/* Perform Auto termination */
+-#define		CFTERM_MENU	0x0100	/* BIOS displays termination menu */	
++#define		CFTERM_MENU	0x0100	/* BIOS displays termination menu */
+ #define		CFCLUSTERENB	0x8000	/* Cluster Enable */
  
- static inline void atp_writeb_base(struct atp_unit *atp, u8 reg, u8 val)
- {
-@@ -137,16 +138,17 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 	}
- 	if ((j & 0x80) == 0)
- 		return IRQ_NONE;
--#ifdef ED_DBGP	
-+#ifdef ED_DBGP
- 	printk("atp870u_intr_handle enter\n");
--#endif	
-+#endif
- 	dev->in_int[c] = 1;
- 	cmdp = atp_readb_io(dev, c, 0x10);
- 	if (dev->working[c] != 0) {
- 		if (is885(dev)) {
- 			if ((atp_readb_io(dev, c, 0x16) & 0x80) == 0)
--				atp_writeb_io(dev, c, 0x16, (atp_readb_io(dev, c, 0x16) | 0x80));
--		}		
-+				atp_writeb_io(dev, c, 0x16,
-+					      (atp_readb_io(dev, c, 0x16) | 0x80));
-+		}
- 		if ((atp_readb_pci(dev, c, 0x00) & 0x08) != 0)
- 		{
- 			for (k=0; k < 1000; k++) {
-@@ -157,9 +159,9 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			}
- 		}
- 		atp_writeb_pci(dev, c, 0, 0x00);
--		
-+
- 		i = atp_readb_io(dev, c, 0x17);
--		
-+
- 		if (is885(dev))
- 			atp_writeb_pci(dev, c, 2, 0x06);
+ /*
+@@ -881,7 +881,7 @@ struct seeprom_config {
+ /*
+  * Maximum targets
+  */
+-	uint16_t max_targets;		/* word 19 */	
++	uint16_t max_targets;		/* word 19 */
+ #define		CFMAXTARG	0x00ff	/* maximum targets */
+ #define		CFBOOTLUN	0x0f00	/* Lun to boot from */
+ #define		CFBOOTID	0xf000	/* Target to boot from */
+@@ -941,7 +941,7 @@ struct vpd_config {
+ #define		FLX_ROMSTAT_EE_2MBx8	0x2
+ #define		FLX_ROMSTAT_EE_4MBx8	0x3
+ #define		FLX_ROMSTAT_EE_16MBx8	0x4
+-#define 		CURSENSE_ENB	0x1
++#define			CURSENSE_ENB	0x1
+ #define	FLXADDR_FLEXSTAT		0x2
+ #define		FLX_FSTAT_BUSY		0x1
+ #define FLXADDR_CURRENT_STAT		0x4
+@@ -1051,8 +1051,8 @@ struct ahd_completion
+ };
  
-@@ -185,44 +187,51 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			dev->r1f[c][target_id] |= j;
- #ifdef ED_DBGP
- 		printk("atp870u_intr_handle status = %x\n",i);
--#endif	
-+#endif
- 		if (i == 0x85) {
- 			if ((dev->last_cmd[c] & 0xf0) != 0x40) {
- 			   dev->last_cmd[c] = 0xff;
- 			}
- 			if (is885(dev)) {
- 				adrcnt = 0;
--				((unsigned char *) &adrcnt)[2] = atp_readb_io(dev, c, 0x12);
--				((unsigned char *) &adrcnt)[1] = atp_readb_io(dev, c, 0x13);
--				((unsigned char *) &adrcnt)[0] = atp_readb_io(dev, c, 0x14);
-+				((unsigned char *) &adrcnt)[2] =
-+					atp_readb_io(dev, c, 0x12);
-+				((unsigned char *) &adrcnt)[1] =
-+					atp_readb_io(dev, c, 0x13);
-+				((unsigned char *) &adrcnt)[0] =
-+					atp_readb_io(dev, c, 0x14);
- 				if (dev->id[c][target_id].last_len != adrcnt) {
- 					k = dev->id[c][target_id].last_len;
--			   		k -= adrcnt;
--			   		dev->id[c][target_id].tran_len = k;			   
-+					k -= adrcnt;
-+					dev->id[c][target_id].tran_len = k;
- 					dev->id[c][target_id].last_len = adrcnt;
- 				}
- #ifdef ED_DBGP
--				printk("dev->id[c][target_id].last_len = %d dev->id[c][target_id].tran_len = %d\n",dev->id[c][target_id].last_len,dev->id[c][target_id].tran_len);
--#endif		
-+				printk("dev->id[c][target_id].last_len = %d "
-+				       "dev->id[c][target_id].tran_len = %d\n",
-+				       dev->id[c][target_id].last_len,
-+				       dev->id[c][target_id].tran_len);
-+#endif
- 			}
+ struct ahd_softc {
+-	bus_space_tag_t           tags[2];
+-	bus_space_handle_t        bshs[2];
++	bus_space_tag_t		  tags[2];
++	bus_space_handle_t	  bshs[2];
+ 	struct scb_data		  scb_data;
  
- 			/*
- 			 *      Flip wide
--			 */			
-+			 */
- 			if (dev->wide_id[c] != 0) {
- 				atp_writeb_io(dev, c, 0x1b, 0x01);
- 				while ((atp_readb_io(dev, c, 0x1b) & 0x01) != 0x01)
- 					atp_writeb_io(dev, c, 0x1b, 0x01);
--			}		
-+			}
- 			/*
- 			 *	Issue more commands
- 			 */
--			spin_lock_irqsave(dev->host->host_lock, flags);			 			 
--			if (((dev->quhd[c] != dev->quend[c]) || (dev->last_cmd[c] != 0xff)) &&
-+			spin_lock_irqsave(dev->host->host_lock, flags);
-+			if (((dev->quhd[c] != dev->quend[c]) ||
-+			     (dev->last_cmd[c] != 0xff)) &&
- 			    (dev->in_snd[c] == 0)) {
- #ifdef ED_DBGP
- 				printk("Call sent_s870\n");
--#endif				
-+#endif
- 				send_s870(dev,c);
- 			}
- 			spin_unlock_irqrestore(dev->host->host_lock, flags);
-@@ -232,7 +241,7 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			dev->in_int[c] = 0;
- #ifdef ED_DBGP
- 				printk("Status 0x85 return\n");
--#endif				
-+#endif
- 			return IRQ_HANDLED;
- 		}
+ 	struct hardware_scb	 *next_queued_hscb;
+@@ -1243,7 +1243,7 @@ struct ahd_softc {
+ 	u_int			  int_coalescing_threshold;
+ 	u_int			  int_coalescing_stop_threshold;
  
-@@ -247,9 +256,12 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			   dev->last_cmd[c] = 0xff;
- 			}
- 			adrcnt = 0;
--			((unsigned char *) &adrcnt)[2] = atp_readb_io(dev, c, 0x12);
--			((unsigned char *) &adrcnt)[1] = atp_readb_io(dev, c, 0x13);
--			((unsigned char *) &adrcnt)[0] = atp_readb_io(dev, c, 0x14);
-+			((unsigned char *) &adrcnt)[2] =
-+				atp_readb_io(dev, c, 0x12);
-+			((unsigned char *) &adrcnt)[1] =
-+				atp_readb_io(dev, c, 0x13);
-+			((unsigned char *) &adrcnt)[0] =
-+				atp_readb_io(dev, c, 0x14);
- 			k = dev->id[c][target_id].last_len;
- 			k -= adrcnt;
- 			dev->id[c][target_id].tran_len = k;
-@@ -262,17 +274,16 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
+-	uint16_t	 	  user_discenable;/* Disconnection allowed  */
++	uint16_t		  user_discenable;/* Disconnection allowed  */
+ 	uint16_t		  user_tagenable;/* Tagged Queuing allowed */
+ };
  
- 		if (is885(dev)) {
- 			if ((i == 0x4c) || (i == 0x4d) || (i == 0x8c) || (i == 0x8d)) {
--		   		if ((i == 0x4c) || (i == 0x8c)) 
--		      			i=0x48;
--		   		else 
--		      			i=0x49;
--		   	}	
--			
-+				if ((i == 0x4c) || (i == 0x8c))
-+					i=0x48;
-+				else
-+					i=0x49;
-+			}
- 		}
- 		if ((i == 0x80) || (i == 0x8f)) {
- #ifdef ED_DBGP
- 			printk(KERN_DEBUG "Device reselect\n");
--#endif			
-+#endif
- 			lun = 0;
- 			if (cmdp == 0x44 || i == 0x80)
- 				lun = atp_readb_io(dev, c, 0x1d) & 0x07;
-@@ -283,11 +294,14 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 				if (cmdp == 0x41) {
- #ifdef ED_DBGP
- 					printk("cmdp = 0x41\n");
--#endif						
-+#endif
- 					adrcnt = 0;
--					((unsigned char *) &adrcnt)[2] = atp_readb_io(dev, c, 0x12);
--					((unsigned char *) &adrcnt)[1] = atp_readb_io(dev, c, 0x13);
--					((unsigned char *) &adrcnt)[0] = atp_readb_io(dev, c, 0x14);
-+					((unsigned char *) &adrcnt)[2] =
-+						atp_readb_io(dev, c, 0x12);
-+					((unsigned char *) &adrcnt)[1] =
-+						atp_readb_io(dev, c, 0x13);
-+					((unsigned char *) &adrcnt)[0] =
-+						atp_readb_io(dev, c, 0x14);
- 					k = dev->id[c][target_id].last_len;
- 					k -= adrcnt;
- 					dev->id[c][target_id].tran_len = k;
-@@ -298,7 +312,7 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 				} else {
- #ifdef ED_DBGP
- 					printk("cmdp != 0x41\n");
--#endif						
-+#endif
- 					atp_writeb_io(dev, c, 0x10, 0x46);
- 					dev->id[c][target_id].dirct = 0x00;
- 					atp_writeb_io(dev, c, 0x12, 0x00);
-@@ -330,13 +344,13 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			if (is885(dev))
- 				atp_writeb_io(dev, c, 0x10, 0x45);
- 			workreq = dev->id[c][target_id].curr_req;
--#ifdef ED_DBGP			
-+#ifdef ED_DBGP
- 			scmd_printk(KERN_DEBUG, workreq, "CDB");
- 			for (l = 0; l < workreq->cmd_len; l++)
- 				printk(KERN_DEBUG " %x",workreq->cmnd[l]);
- 			printk("\n");
--#endif	
--			
-+#endif
-+
- 			atp_writeb_io(dev, c, 0x0f, lun);
- 			atp_writeb_io(dev, c, 0x11, dev->id[c][target_id].devsp);
- 			adrcnt = dev->id[c][target_id].tran_len;
-@@ -345,9 +359,12 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			atp_writeb_io(dev, c, 0x12, ((unsigned char *) &k)[2]);
- 			atp_writeb_io(dev, c, 0x13, ((unsigned char *) &k)[1]);
- 			atp_writeb_io(dev, c, 0x14, ((unsigned char *) &k)[0]);
--#ifdef ED_DBGP			
--			printk("k %x, k[0] 0x%x k[1] 0x%x k[2] 0x%x\n", k, atp_readb_io(dev, c, 0x14), atp_readb_io(dev, c, 0x13), atp_readb_io(dev, c, 0x12));
--#endif			
-+#ifdef ED_DBGP
-+			printk("k %x, k[0] 0x%x k[1] 0x%x k[2] 0x%x\n", k,
-+			       atp_readb_io(dev, c, 0x14),
-+			       atp_readb_io(dev, c, 0x13),
-+			       atp_readb_io(dev, c, 0x12));
-+#endif
- 			/* Remap wide */
- 			j = target_id;
- 			if (target_id > 7) {
-@@ -357,26 +374,39 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			j |= dev->id[c][target_id].dirct;
- 			atp_writeb_io(dev, c, 0x15, j);
- 			atp_writeb_io(dev, c, 0x16, 0x80);
--			
--			/* enable 32 bit fifo transfer */	
-+
-+			/* enable 32 bit fifo transfer */
- 			if (is885(dev)) {
- 				i = atp_readb_pci(dev, c, 1) & 0xf3;
--				//j=workreq->cmnd[0];	    		    	
--				if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
-+				//j=workreq->cmnd[0];
-+				if ((workreq->cmnd[0] == 0x08) ||
-+				    (workreq->cmnd[0] == 0x28) ||
-+				    (workreq->cmnd[0] == 0x0a) ||
-+				    (workreq->cmnd[0] == 0x2a)) {
- 				   i |= 0x0c;
- 				}
- 				atp_writeb_pci(dev, c, 1, i);
- 			} else if (is880(dev)) {
--				if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
--					atp_writeb_base(dev, 0x3b, (atp_readb_base(dev, 0x3b) & 0x3f) | 0xc0);
-+				if ((workreq->cmnd[0] == 0x08) ||
-+				    (workreq->cmnd[0] == 0x28) ||
-+				    (workreq->cmnd[0] == 0x0a) ||
-+				    (workreq->cmnd[0] == 0x2a))
-+					atp_writeb_base(dev, 0x3b,
-+							(atp_readb_base(dev, 0x3b) & 0x3f) | 0xc0);
- 				else
--					atp_writeb_base(dev, 0x3b, atp_readb_base(dev, 0x3b) & 0x3f);
--			} else {				
--				if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
--					atp_writeb_base(dev, 0x3a, (atp_readb_base(dev, 0x3a) & 0xf3) | 0x08);
-+					atp_writeb_base(dev, 0x3b,
-+							atp_readb_base(dev, 0x3b) & 0x3f);
-+			} else {
-+				if ((workreq->cmnd[0] == 0x08) ||
-+				    (workreq->cmnd[0] == 0x28) ||
-+				    (workreq->cmnd[0] == 0x0a) ||
-+				    (workreq->cmnd[0] == 0x2a))
-+					atp_writeb_base(dev, 0x3a,
-+							(atp_readb_base(dev, 0x3a) & 0xf3) | 0x08);
- 				else
--					atp_writeb_base(dev, 0x3a, atp_readb_base(dev, 0x3a) & 0xf3);
--			}	
-+					atp_writeb_base(dev, 0x3a,
-+							atp_readb_base(dev, 0x3a) & 0xf3);
-+			}
- 			j = 0;
- 			id = 1;
- 			id = id << target_id;
-@@ -394,12 +424,12 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 				dev->in_int[c] = 0;
- #ifdef ED_DBGP
- 				printk("dev->id[c][target_id].last_len = 0\n");
--#endif					
-+#endif
- 				return IRQ_HANDLED;
- 			}
- #ifdef ED_DBGP
- 			printk("target_id = %d adrcnt = %d\n",target_id,adrcnt);
--#endif			
-+#endif
- 			prd = dev->id[c][target_id].prd_pos;
- 			while (adrcnt != 0) {
- 				id = ((unsigned short int *)prd)[2];
-@@ -409,8 +439,8 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 					k = id;
- 				}
- 				if (k > adrcnt) {
--					((unsigned short int *)prd)[2] = (unsigned short int)
--					    (k - adrcnt);
-+					((unsigned short int *)prd)[2] =
-+						(unsigned short int)(k - adrcnt);
- 					((unsigned long *)prd)[0] += adrcnt;
- 					adrcnt = 0;
- 					dev->id[c][target_id].prd_pos = prd;
-@@ -421,11 +451,12 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 					if (adrcnt == 0) {
- 						dev->id[c][target_id].prd_pos = prd;
- 					}
--				}				
-+				}
- 			}
- 			atp_writel_pci(dev, c, 0x04, dev->id[c][target_id].prdaddr);
- #ifdef ED_DBGP
--			printk("dev->id[%d][%d].prdaddr 0x%8x\n", c, target_id, dev->id[c][target_id].prdaddr);
-+			printk("dev->id[%d][%d].prdaddr 0x%8x\n",
-+			       c, target_id, dev->id[c][target_id].prdaddr);
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index c55b5880eb7e..c2b0b3847beb 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -57,7 +57,7 @@ static const char *const ahd_chip_names[] =
+  * Hardware error codes.
+  */
+ struct ahd_hard_error_entry {
+-        uint8_t errno;
++	uint8_t errno;
+ 	const char *errmesg;
+ };
+ 
+@@ -113,7 +113,7 @@ static void		ahd_free_tstate(struct ahd_softc *ahd,
+ 					u_int scsi_id, char channel, int force);
  #endif
- 			if (!is885(dev)) {
- 				atp_writeb_pci(dev, c, 2, 0x06);
-@@ -440,7 +471,7 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 				dev->in_int[c] = 0;
- #ifdef ED_DBGP
- 				printk("status 0x80 return dirct != 0\n");
--#endif				
-+#endif
- 				return IRQ_HANDLED;
- 			}
- 			atp_writeb_io(dev, c, 0x18, 0x08);
-@@ -448,7 +479,7 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			dev->in_int[c] = 0;
- #ifdef ED_DBGP
- 			printk("status 0x80 return dirct = 0\n");
--#endif			
-+#endif
- 			return IRQ_HANDLED;
+ static void		ahd_devlimited_syncrate(struct ahd_softc *ahd,
+-					        struct ahd_initiator_tinfo *,
++						struct ahd_initiator_tinfo *,
+ 						u_int *period,
+ 						u_int *ppr_options,
+ 						role_t role);
+@@ -170,7 +170,7 @@ static void		ahd_setup_target_msgin(struct ahd_softc *ahd,
+ static u_int		ahd_sglist_size(struct ahd_softc *ahd);
+ static u_int		ahd_sglist_allocsize(struct ahd_softc *ahd);
+ static bus_dmamap_callback_t
+-			ahd_dmamap_cb; 
++			ahd_dmamap_cb;
+ static void		ahd_initialize_hscbs(struct ahd_softc *ahd);
+ static int		ahd_init_scbdata(struct ahd_softc *ahd);
+ static void		ahd_fini_scbdata(struct ahd_softc *ahd);
+@@ -268,7 +268,7 @@ static void		ahd_run_tqinfifo(struct ahd_softc *ahd, int paused);
+ static void		ahd_handle_hwerrint(struct ahd_softc *ahd);
+ static void		ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat);
+ static void		ahd_handle_scsiint(struct ahd_softc *ahd,
+-				           u_int intstat);
++					   u_int intstat);
+ 
+ /************************ Sequencer Execution Control *************************/
+ void
+@@ -1203,7 +1203,7 @@ ahd_flush_qoutfifo(struct ahd_softc *ahd)
+ 	while ((ahd_inb(ahd, LQISTAT2) & LQIGSAVAIL) != 0) {
+ 		u_int fifo_mode;
+ 		u_int i;
+-		
++
+ 		scbid = ahd_inw(ahd, GSFIFO);
+ 		scb = ahd_lookup_scb(ahd, scbid);
+ 		if (scb == NULL) {
+@@ -1326,7 +1326,7 @@ ahd_flush_qoutfifo(struct ahd_softc *ahd)
+ 	while (!SCBID_IS_NULL(scbid)) {
+ 		uint8_t *hscb_ptr;
+ 		u_int	 i;
+-		
++
+ 		ahd_set_scbptr(ahd, scbid);
+ 		next_scbid = ahd_inw_scbram(ahd, SCB_NEXT_COMPLETE);
+ 		scb = ahd_lookup_scb(ahd, scbid);
+@@ -1991,7 +1991,7 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
+ 	{
+ 		struct	scb *scb;
+ 		u_int	scb_index;
+-		
++
+ #ifdef AHD_DEBUG
+ 		if ((ahd_debug & AHD_SHOW_RECOVERY) != 0) {
+ 			printk("%s: CFG4OVERRUN mode = %x\n", ahd_name(ahd),
+@@ -2094,8 +2094,7 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
+ 					ahd->msg_type =
+ 					    MSG_TYPE_TARGET_MSGOUT;
+ 					ahd->msgin_index = 0;
+-				}
+-				else 
++				} else
+ 					ahd_setup_target_msgin(ahd,
+ 							       &devinfo,
+ 							       scb);
+@@ -2338,9 +2337,9 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
+ 				;
+ 			ahd_outb(ahd, SCB_TASK_MANAGEMENT, 0);
+ 			ahd_search_qinfifo(ahd, SCB_GET_TARGET(ahd, scb),
+-					   SCB_GET_CHANNEL(ahd, scb),  
+-					   SCB_GET_LUN(scb), SCB_GET_TAG(scb), 
+-					   ROLE_INITIATOR, /*status*/0,   
++					   SCB_GET_CHANNEL(ahd, scb),
++					   SCB_GET_LUN(scb), SCB_GET_TAG(scb),
++					   ROLE_INITIATOR, /*status*/0,
+ 					   SEARCH_REMOVE);
  		}
- 
-@@ -484,7 +515,7 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			(*workreq->scsi_done) (workreq);
- #ifdef ED_DBGP
- 			   printk("workreq->scsi_done\n");
--#endif	
-+#endif
- 			/*
- 			 *	Clear it off the queue
- 			 */
-@@ -498,16 +529,17 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 				atp_writeb_io(dev, c, 0x1b, 0x01);
- 				while ((atp_readb_io(dev, c, 0x1b) & 0x01) != 0x01)
- 					atp_writeb_io(dev, c, 0x1b, 0x01);
--			} 
-+			}
- 			/*
- 			 *	If there is stuff to send and nothing going then send it
- 			 */
- 			spin_lock_irqsave(dev->host->host_lock, flags);
--			if (((dev->last_cmd[c] != 0xff) || (dev->quhd[c] != dev->quend[c])) &&
-+			if (((dev->last_cmd[c] != 0xff) ||
-+			     (dev->quhd[c] != dev->quend[c])) &&
- 			    (dev->in_snd[c] == 0)) {
- #ifdef ED_DBGP
- 			   printk("Call sent_s870(scsi_done)\n");
--#endif				   
-+#endif
- 			   send_s870(dev,c);
- 			}
- 			spin_unlock_irqrestore(dev->host->host_lock, flags);
-@@ -528,9 +560,12 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			atp_writeb_io(dev, c, 0x10, 0x41);
- 			if (is885(dev)) {
- 				k = dev->id[c][target_id].last_len;
--				atp_writeb_io(dev, c, 0x12, ((unsigned char *) (&k))[2]);
--				atp_writeb_io(dev, c, 0x13, ((unsigned char *) (&k))[1]);
--				atp_writeb_io(dev, c, 0x14, ((unsigned char *) (&k))[0]);
-+				atp_writeb_io(dev, c, 0x12,
-+					      ((unsigned char *) (&k))[2]);
-+				atp_writeb_io(dev, c, 0x13,
-+					      ((unsigned char *) (&k))[1]);
-+				atp_writeb_io(dev, c, 0x14,
-+					      ((unsigned char *) (&k))[0]);
- 				dev->id[c][target_id].dirct = 0x00;
- 			} else {
- 				dev->id[c][target_id].dirct = 0x00;
-@@ -547,11 +582,15 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			atp_writeb_io(dev, c, 0x10, 0x41);
- 			if (is885(dev)) {
- 				k = dev->id[c][target_id].last_len;
--				atp_writeb_io(dev, c, 0x12, ((unsigned char *) (&k))[2]);
--				atp_writeb_io(dev, c, 0x13, ((unsigned char *) (&k))[1]);
--				atp_writeb_io(dev, c, 0x14, ((unsigned char *) (&k))[0]);
-+				atp_writeb_io(dev, c, 0x12,
-+					      ((unsigned char *) (&k))[2]);
-+				atp_writeb_io(dev, c, 0x13,
-+					      ((unsigned char *) (&k))[1]);
-+				atp_writeb_io(dev, c, 0x14,
-+					      ((unsigned char *) (&k))[0]);
- 			}
--			atp_writeb_io(dev, c, 0x15, atp_readb_io(dev, c, 0x15) | 0x20);
-+			atp_writeb_io(dev, c, 0x15,
-+				      atp_readb_io(dev, c, 0x15) | 0x20);
- 			dev->id[c][target_id].dirct = 0x20;
- 			atp_writeb_io(dev, c, 0x18, 0x08);
- 			atp_writeb_pci(dev, c, 0, 0x01);
-@@ -593,17 +632,15 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
- 	if (scmd_channel(req_p) > 1) {
- 		req_p->result = 0x00040000;
- 		done(req_p);
--#ifdef ED_DBGP		
--		printk("atp870u_queuecommand : req_p->device->channel > 1\n");	
--#endif			
-+#ifdef ED_DBGP
-+		printk("atp870u_queuecommand : req_p->device->channel > 1\n");
-+#endif
- 		return 0;
- 	}
- 
- 	host = req_p->device->host;
- 	dev = (struct atp_unit *)&host->hostdata;
--		
- 
--		
- 	m = 1;
- 	m = m << scmd_id(req_p);
- 
-@@ -620,14 +657,14 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
- 	if (done) {
- 		req_p->scsi_done = done;
- 	} else {
--#ifdef ED_DBGP		
-+#ifdef ED_DBGP
- 		printk( "atp870u_queuecommand: done can't be NULL\n");
--#endif		
-+#endif
- 		req_p->result = 0;
- 		done(req_p);
- 		return 0;
- 	}
+ 		break;
+@@ -2694,14 +2693,14 @@ ahd_handle_transmission_error(struct ahd_softc *ahd)
+ 	perrdiag = ahd_inb(ahd, PERRDIAG);
+ 	msg_out = MSG_INITIATOR_DET_ERR;
+ 	ahd_outb(ahd, CLRSINT1, CLRSCSIPERR);
 -	
 +
  	/*
- 	 *	Count new command
+ 	 * Try to find the SCB associated with this error.
  	 */
-@@ -635,7 +672,7 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
- 	if (dev->quend[c] >= qcnt) {
- 		dev->quend[c] = 0;
- 	}
+ 	silent = FALSE;
+ 	if (lqistat1 == 0
+ 	 || (lqistat1 & LQICRCI_NLQ) != 0) {
+-	 	if ((lqistat1 & (LQICRCI_NLQ|LQIOVERI_NLQ)) != 0)
++		if ((lqistat1 & (LQICRCI_NLQ|LQIOVERI_NLQ)) != 0)
+ 			ahd_set_active_fifo(ahd);
+ 		scbid = ahd_get_scbptr(ahd);
+ 		scb = ahd_lookup_scb(ahd, scbid);
+@@ -2818,7 +2817,7 @@ ahd_handle_transmission_error(struct ahd_softc *ahd)
+ 				    ahd_lookup_phase_entry(curphase)->phasemsg);
+ 			ahd_inb(ahd, SCSIDAT);
+ 		}
 -	
 +
- 	/*
- 	 *	Check queue state
- 	 */
-@@ -643,27 +680,32 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
- 		if (dev->quend[c] == 0) {
- 			dev->quend[c] = qcnt;
+ 		if (curphase == P_MESGIN)
+ 			msg_out = MSG_PARITY_ERROR;
+ 	}
+@@ -3446,7 +3445,6 @@ ahd_clear_critical_section(struct ahd_softc *ahd)
+ 
+ 		cs = ahd->critical_sections;
+ 		for (i = 0; i < ahd->num_critical_sections; i++, cs++) {
+-			
+ 			if (cs->begin < seqaddr && cs->end >= seqaddr)
+ 				break;
  		}
--#ifdef ED_DBGP		
-+#ifdef ED_DBGP
- 		printk("atp870u_queuecommand : dev->quhd[c] == dev->quend[c]\n");
--#endif		
-+#endif
- 		dev->quend[c]--;
- 		req_p->result = 0x00020000;
--		done(req_p);	
-+		done(req_p);
- 		return 0;
- 	}
- 	dev->quereq[c][dev->quend[c]] = req_p;
--#ifdef ED_DBGP	
--	printk("dev->ioport[c] = %x atp_readb_io(dev, c, 0x1c) = %x dev->in_int[%d] = %d dev->in_snd[%d] = %d\n",dev->ioport[c],atp_readb_io(dev, c, 0x1c),c,dev->in_int[c],c,dev->in_snd[c]);
-+#ifdef ED_DBGP
-+	printk("dev->ioport[c] = %x atp_readb_io(dev, c, 0x1c) = %x "
-+	       "dev->in_int[%d] = %d dev->in_snd[%d] = %d\n",
-+	       dev->ioport[c], atp_readb_io(dev, c, 0x1c), c,
-+	       dev->in_int[c],c,dev->in_snd[c]);
- #endif
--	if ((atp_readb_io(dev, c, 0x1c) == 0) && (dev->in_int[c] == 0) && (dev->in_snd[c] == 0)) {
-+	if ((atp_readb_io(dev, c, 0x1c) == 0) &&
-+	    (dev->in_int[c] == 0) &&
-+	    (dev->in_snd[c] == 0)) {
- #ifdef ED_DBGP
- 		printk("Call sent_s870(atp870u_queuecommand)\n");
--#endif		
-+#endif
- 		send_s870(dev,c);
- 	}
--#ifdef ED_DBGP	
-+#ifdef ED_DBGP
- 	printk("atp870u_queuecommand : exit\n");
--#endif	
-+#endif
- 	return 0;
+@@ -3472,8 +3470,8 @@ ahd_clear_critical_section(struct ahd_softc *ahd)
+ 		if (stepping == FALSE) {
+ 
+ 			first_instr = seqaddr;
+-  			ahd_set_modes(ahd, AHD_MODE_CFG, AHD_MODE_CFG);
+-  			simode0 = ahd_inb(ahd, SIMODE0);
++			ahd_set_modes(ahd, AHD_MODE_CFG, AHD_MODE_CFG);
++			simode0 = ahd_inb(ahd, SIMODE0);
+ 			simode3 = ahd_inb(ahd, SIMODE3);
+ 			lqimode0 = ahd_inb(ahd, LQIMODE0);
+ 			lqimode1 = ahd_inb(ahd, LQIMODE1);
+@@ -3515,7 +3513,7 @@ ahd_clear_critical_section(struct ahd_softc *ahd)
+ 		ahd_outb(ahd, LQOMODE1, lqomode1);
+ 		ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
+ 		ahd_outb(ahd, SEQCTL0, ahd_inb(ahd, SEQCTL0) & ~STEP);
+-  		ahd_outb(ahd, SIMODE1, simode1);
++		ahd_outb(ahd, SIMODE1, simode1);
+ 		/*
+ 		 * SCSIINT seems to glitch occasionally when
+ 		 * the interrupt masks are restored.  Clear SCSIINT
+@@ -3553,7 +3551,7 @@ ahd_clear_intstat(struct ahd_softc *ahd)
+ 	ahd_outb(ahd, CLRSINT1, CLRSELTIMEO|CLRATNO|CLRSCSIRSTI
+ 				|CLRBUSFREE|CLRSCSIPERR|CLRREQINIT);
+ 	ahd_outb(ahd, CLRSINT0, CLRSELDO|CLRSELDI|CLRSELINGO
+-			        |CLRIOERR|CLROVERRUN);
++				|CLRIOERR|CLROVERRUN);
+ 	ahd_outb(ahd, CLRINT, CLRSCSIINT);
  }
  
-@@ -674,7 +716,7 @@ static DEF_SCSI_QCMD(atp870u_queuecommand)
-  *	@host: host
-  *
-  *	On entry there is work queued to be done. We move some of that work to the
-- *	controller itself. 
-+ *	controller itself.
-  *
-  *	Caller holds the host lock.
-  */
-@@ -689,7 +731,7 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 	unsigned long  sg_count;
+@@ -3689,7 +3687,7 @@ ahd_devlimited_syncrate(struct ahd_softc *ahd,
+ 	 */
+ 	if (role == ROLE_TARGET)
+ 		transinfo = &tinfo->user;
+-	else 
++	else
+ 		transinfo = &tinfo->goal;
+ 	*ppr_options &= (transinfo->ppr_options|MSG_EXT_PPR_PCOMP_EN);
+ 	if (transinfo->width == MSG_EXT_WDTR_BUS_8_BIT) {
+@@ -3720,7 +3718,7 @@ ahd_find_syncrate(struct ahd_softc *ahd, u_int *period,
+ 	if ((*ppr_options & MSG_EXT_PPR_DT_REQ) != 0
+ 	 && *period > AHD_SYNCRATE_MIN_DT)
+ 		*ppr_options &= ~MSG_EXT_PPR_DT_REQ;
+-		
++
+ 	if (*period > AHD_SYNCRATE_MIN)
+ 		*period = 0;
  
- 	if (dev->in_snd[c] != 0) {
--#ifdef ED_DBGP		
-+#ifdef ED_DBGP
- 		printk("cmnd in_snd\n");
+@@ -4083,7 +4081,7 @@ ahd_update_neg_table(struct ahd_softc *ahd, struct ahd_devinfo *devinfo,
+ 	ahd_outb(ahd, NEGOADDR, devinfo->target);
+ 	period = tinfo->period;
+ 	offset = tinfo->offset;
+-	memcpy(iocell_opts, ahd->iocell_opts, sizeof(ahd->iocell_opts)); 
++	memcpy(iocell_opts, ahd->iocell_opts, sizeof(ahd->iocell_opts));
+ 	ppr_opts = tinfo->ppr_options & (MSG_EXT_PPR_QAS_REQ|MSG_EXT_PPR_DT_REQ
+ 					|MSG_EXT_PPR_IU_REQ|MSG_EXT_PPR_RTI);
+ 	con_opts = 0;
+@@ -4849,7 +4847,7 @@ ahd_handle_message_phase(struct ahd_softc *ahd)
  #endif
- 		return;
-@@ -729,7 +771,8 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 		dev->id[c][scmd_id(workreq)].curr_req = workreq;
- 		dev->last_cmd[c] = scmd_id(workreq);
+ 				ahd_assert_atn(ahd);
+ 			}
+-		} else 
++		} else
+ 			ahd->msgin_index++;
+ 
+ 		if (message_done == MSGLOOP_TERMINATED) {
+@@ -4952,7 +4950,7 @@ ahd_handle_message_phase(struct ahd_softc *ahd)
+ 			 */
+ 			return;
+ 		}
+-		
++
+ 		ahd->msgin_index++;
+ 
+ 		/*
+@@ -5120,7 +5118,7 @@ ahd_parse_msg(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
+ 			u_int	 ppr_options;
+ 			u_int	 offset;
+ 			u_int	 saved_offset;
+-			
++
+ 			if (ahd->msgin_buf[1] != MSG_EXT_SDTR_LEN) {
+ 				reject = TRUE;
+ 				break;
+@@ -5607,7 +5605,7 @@ ahd_handle_msg_reject(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
+ 		 */
+ 		ahd_outb(ahd, SCB_CONTROL,
+ 			 ahd_inb_scbram(ahd, SCB_CONTROL) & mask);
+-	 	scb->hscb->control &= mask;
++		scb->hscb->control &= mask;
+ 		ahd_set_transaction_tag(scb, /*enabled*/FALSE,
+ 					/*type*/MSG_SIMPLE_TASK);
+ 		ahd_outb(ahd, MSG_OUT, MSG_IDENTIFYFLAG);
+@@ -5816,7 +5814,7 @@ ahd_reinitialize_dataptrs(struct ahd_softc *ahd)
+ 
+ 	AHD_ASSERT_MODES(ahd, AHD_MODE_DFF0_MSK|AHD_MODE_DFF1_MSK,
+ 			 AHD_MODE_DFF0_MSK|AHD_MODE_DFF1_MSK);
+-			 
++
+ 	scb_index = ahd_get_scbptr(ahd);
+ 	scb = ahd_lookup_scb(ahd, scb_index);
+ 
+@@ -5938,7 +5936,7 @@ ahd_handle_devreset(struct ahd_softc *ahd, struct ahd_devinfo *devinfo,
+ 	ahd_set_syncrate(ahd, devinfo, /*period*/0, /*offset*/0,
+ 			 /*ppr_options*/0, AHD_TRANS_CUR,
+ 			 /*paused*/TRUE);
+-	
++
+ 	if (status != CAM_SEL_TIMEOUT)
+ 		ahd_send_async(ahd, devinfo->channel, devinfo->target,
+ 			       CAM_LUN_WILDCARD, AC_SENT_BDR);
+@@ -5954,11 +5952,11 @@ ahd_setup_target_msgin(struct ahd_softc *ahd, struct ahd_devinfo *devinfo,
+ 		       struct scb *scb)
+ {
+ 
+-	/*              
++	/*
+ 	 * To facilitate adding multiple messages together,
+ 	 * each routine should increment the index and len
+ 	 * variables instead of setting them explicitly.
+-	 */             
++	 */
+ 	ahd->msgout_index = 0;
+ 	ahd->msgout_len = 0;
+ 
+@@ -6091,7 +6089,7 @@ ahd_softc_init(struct ahd_softc *ahd)
+ {
+ 
+ 	ahd->unpause = 0;
+-	ahd->pause = PAUSE; 
++	ahd->pause = PAUSE;
+ 	return (0);
+ }
+ 
+@@ -6204,7 +6202,7 @@ ahd_reset(struct ahd_softc *ahd, int reinit)
+ 	u_int	 sxfrctl1;
+ 	int	 wait;
+ 	uint32_t cmd;
+-	
++
+ 	/*
+ 	 * Preserve the value of the SXFRCTL1 register for all channels.
+ 	 * It contains settings that affect termination and we don't want
+@@ -6444,7 +6442,7 @@ ahd_init_scbdata(struct ahd_softc *ahd)
+ 	/*
+ 	 * Note that we were successful
+ 	 */
+-	return (0); 
++	return (0);
+ 
+ error_exit:
+ 
+@@ -6962,7 +6960,7 @@ ahd_controller_info(struct ahd_softc *ahd, char *buf)
+ static const char *channel_strings[] = {
+ 	"Primary Low",
+ 	"Primary High",
+-	"Secondary Low", 
++	"Secondary Low",
+ 	"Secondary High"
+ };
+ 
+@@ -7234,7 +7232,7 @@ ahd_chip_init(struct ahd_softc *ahd)
+ 	} else {
+ 		sxfrctl1 |= ahd->seltime;
  	}
--	if ((atp_readb_io(dev, c, 0x1f) & 0xb0) != 0 || atp_readb_io(dev, c, 0x1c) != 0) {
-+	if ((atp_readb_io(dev, c, 0x1f) & 0xb0) != 0 ||
-+	    atp_readb_io(dev, c, 0x1c) != 0) {
- #ifdef ED_DBGP
- 		printk("Abort to Send\n");
- #endif
-@@ -744,7 +787,7 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 		printk(" %x",workreq->cmnd[i]);
+-		
++
+ 	ahd_outb(ahd, SXFRCTL0, DFON);
+ 	ahd_outb(ahd, SXFRCTL1, sxfrctl1|ahd->seltime|ENSTIMER|ACTNEGEN);
+ 	ahd_outb(ahd, SIMODE1, ENSELTIMO|ENSCSIRST|ENSCSIPERR);
+@@ -7490,7 +7488,7 @@ ahd_chip_init(struct ahd_softc *ahd)
+ 	ahd_outb(ahd, CMDSIZE_TABLE + 5, 11);
+ 	ahd_outb(ahd, CMDSIZE_TABLE + 6, 0);
+ 	ahd_outb(ahd, CMDSIZE_TABLE + 7, 0);
+-		
++
+ 	/* Tell the sequencer of our initial queue positions */
+ 	ahd_set_modes(ahd, AHD_MODE_CCHAN, AHD_MODE_CCHAN);
+ 	ahd_outb(ahd, QOFF_CTLSTA, SCB_QSIZE_512);
+@@ -7884,7 +7882,7 @@ void __maybe_unused
+ ahd_resume(struct ahd_softc *ahd)
+ {
+ 	ahd_reset(ahd, /*reinit*/TRUE);
+-	ahd_intr_enable(ahd, TRUE); 
++	ahd_intr_enable(ahd, TRUE);
+ 	ahd_restart(ahd);
+ }
+ 
+@@ -7925,7 +7923,7 @@ ahd_find_busy_tcl(struct ahd_softc *ahd, u_int tcl)
+ 	u_int scbid;
+ 	u_int scb_offset;
+ 	u_int saved_scbptr;
+-		
++
+ 	scb_offset = ahd_index_busy_tcl(ahd, &saved_scbptr, tcl);
+ 	scbid = ahd_inw_scbram(ahd, scb_offset);
+ 	ahd_set_scbptr(ahd, saved_scbptr);
+@@ -7937,7 +7935,7 @@ ahd_busy_tcl(struct ahd_softc *ahd, u_int tcl, u_int scbid)
+ {
+ 	u_int scb_offset;
+ 	u_int saved_scbptr;
+-		
++
+ 	scb_offset = ahd_index_busy_tcl(ahd, &saved_scbptr, tcl);
+ 	ahd_outw(ahd, scb_offset, scbid);
+ 	ahd_set_scbptr(ahd, saved_scbptr);
+@@ -7990,7 +7988,7 @@ ahd_freeze_devq(struct ahd_softc *ahd, struct scb *scb)
+ 	target = SCB_GET_TARGET(ahd, scb);
+ 	lun = SCB_GET_LUN(scb);
+ 	channel = SCB_GET_CHANNEL(ahd, scb);
+-	
++
+ 	ahd_search_qinfifo(ahd, target, channel, lun,
+ 			   /*tag*/SCB_LIST_NULL, ROLE_UNKNOWN,
+ 			   CAM_REQUEUE_REQ, SEARCH_COMPLETE);
+@@ -8031,7 +8029,7 @@ ahd_qinfifo_requeue(struct ahd_softc *ahd, struct scb *prev_scb,
+ 		ahd_outl(ahd, NEXT_QUEUED_SCB_ADDR, busaddr);
+ 	} else {
+ 		prev_scb->hscb->next_hscb_busaddr = scb->hscb->hscb_busaddr;
+-		ahd_sync_scb(ahd, prev_scb, 
++		ahd_sync_scb(ahd, prev_scb,
+ 			     BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
+ 	}
+ 	ahd->qinfifo[AHD_QIN_WRAP(ahd->qinfifonext)] = SCB_GET_TAG(scb);
+@@ -8331,7 +8329,7 @@ ahd_search_qinfifo(struct ahd_softc *ahd, int target, char channel,
+ static int
+ ahd_search_scb_list(struct ahd_softc *ahd, int target, char channel,
+ 		    int lun, u_int tag, role_t role, uint32_t status,
+-		    ahd_search_action action, u_int *list_head, 
++		    ahd_search_action action, u_int *list_head,
+ 		    u_int *list_tail, u_int tid)
+ {
+ 	struct	scb *scb;
+@@ -8789,7 +8787,7 @@ ahd_stat_timer(struct timer_list *t)
+ 	struct	ahd_softc *ahd = from_timer(ahd, t, stat_timer);
+ 	u_long	s;
+ 	int	enint_coal;
+-	
++
+ 	ahd_lock(ahd, &s);
+ 
+ 	enint_coal = ahd->hs_mailbox & ENINT_COALESCE;
+@@ -8834,7 +8832,7 @@ ahd_handle_scsi_status(struct ahd_softc *ahd, struct scb *scb)
+ 	 * operations are on data structures that the sequencer
+ 	 * is not touching once the queue is frozen.
+ 	 */
+-	hscb = scb->hscb; 
++	hscb = scb->hscb;
+ 
+ 	if (ahd_is_paused(ahd)) {
+ 		paused = 1;
+@@ -9108,7 +9106,7 @@ ahd_calc_residual(struct ahd_softc *ahd, struct scb *scb)
+ 
+ 		/*
+ 		 * Remainder of the SG where the transfer
+-		 * stopped.  
++		 * stopped.
+ 		 */
+ 		resid = ahd_le32toh(spkt->residual_datacnt) & AHD_SG_LEN_MASK;
+ 		sg = ahd_sg_bus_to_virt(ahd, scb, resid_sgptr & SG_PTR_MASK);
+@@ -9291,7 +9289,7 @@ ahd_loadseq(struct ahd_softc *ahd)
+ 
+ 	/*
+ 	 * Setup downloadable constant table.
+-	 * 
++	 *
+ 	 * The computation for the S/G prefetch variables is
+ 	 * a bit complicated.  We would like to always fetch
+ 	 * in terms of cachelined sized increments.  However,
+@@ -9380,7 +9378,7 @@ ahd_loadseq(struct ahd_softc *ahd)
+ 				if (begin_set[cs_count] == TRUE
+ 				 && end_set[cs_count] == FALSE) {
+ 					cs_table[cs_count].end = downloaded;
+-				 	end_set[cs_count] = TRUE;
++					end_set[cs_count] = TRUE;
+ 					cs_count++;
+ 				}
+ 				continue;
+@@ -9615,7 +9613,7 @@ ahd_print_register(const ahd_reg_parse_entry_t *table, u_int num_entries,
+ 					  printed_mask == 0 ? ":(" : "|",
+ 					  table[entry].name);
+ 			printed_mask |= table[entry].mask;
+-			
++
+ 			break;
+ 		}
+ 		if (entry >= num_entries)
+@@ -9652,7 +9650,7 @@ ahd_dump_card_state(struct ahd_softc *ahd)
+ 	ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
+ 	printk(">>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<\n"
+ 	       "%s: Dumping Card State at program address 0x%x Mode 0x%x\n",
+-	       ahd_name(ahd), 
++	       ahd_name(ahd),
+ 	       ahd_inw(ahd, CURADDR),
+ 	       ahd_build_mode_state(ahd, ahd->saved_src_mode,
+ 				    ahd->saved_dst_mode));
+@@ -9768,7 +9766,6 @@ ahd_dump_card_state(struct ahd_softc *ahd)
  	}
  	printk("\n");
--#endif	
-+#endif
- 	l = scsi_bufflen(workreq);
  
- 	if (is885(dev)) {
-@@ -752,7 +795,7 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 		atp_writeb_base(dev, 0x29, j);
- 		dev->r1f[c][scmd_id(workreq)] = 0;
+-	
+ 	printk("Sequencer DMA-Up and Complete list: ");
+ 	scb_index = ahd_inw(ahd, COMPLETE_DMA_SCB_HEAD);
+ 	i = 0;
+@@ -9946,7 +9943,7 @@ ahd_read_seeprom(struct ahd_softc *ahd, uint16_t *buf,
+ 
+ 		ahd_outb(ahd, SEEADR, cur_addr);
+ 		ahd_outb(ahd, SEECTL, SEEOP_READ | SEESTART);
+-		
++
+ 		error = ahd_wait_seeprom(ahd);
+ 		if (error)
+ 			break;
+@@ -10001,7 +9998,7 @@ ahd_write_seeprom(struct ahd_softc *ahd, uint16_t *buf,
+ 		ahd_outw(ahd, SEEDAT, *buf++);
+ 		ahd_outb(ahd, SEEADR, cur_addr);
+ 		ahd_outb(ahd, SEECTL, SEEOP_WRITE | SEESTART);
+-		
++
+ 		retval = ahd_wait_seeprom(ahd);
+ 		if (retval)
+ 			break;
+@@ -10106,7 +10103,7 @@ ahd_acquire_seeprom(struct ahd_softc *ahd)
+ 
+ 	error = ahd_read_flexport(ahd, FLXADDR_ROMSTAT_CURSENSECTL, &seetype);
+ 	if (error != 0
+-         || ((seetype & FLX_ROMSTAT_SEECFG) == FLX_ROMSTAT_SEE_NONE))
++	    || ((seetype & FLX_ROMSTAT_SEECFG) == FLX_ROMSTAT_SEE_NONE))
+ 		return (0);
+ 	return (1);
+ #endif
+@@ -10248,7 +10245,7 @@ ahd_handle_en_lun(struct ahd_softc *ahd, struct cam_sim *sim, union ccb *ccb)
+ 		our_id = ahd->our_id;
+ 		if (ccb->ccb_h.target_id != our_id) {
+ 			if ((ahd->features & AHD_MULTI_TID) != 0
+-		   	 && (ahd->flags & AHD_INITIATORROLE) != 0) {
++			 && (ahd->flags & AHD_INITIATORROLE) != 0) {
+ 				/*
+ 				 * Only allow additional targets if
+ 				 * the initiator role is disabled.
+@@ -10435,7 +10432,7 @@ ahd_handle_en_lun(struct ahd_softc *ahd, struct cam_sim *sim, union ccb *ccb)
+ 		}
+ 
+ 		ahd_lock(ahd, &s);
+-		
++
+ 		ccb->ccb_h.status = CAM_REQ_CMP;
+ 		LIST_FOREACH(scb, &ahd->pending_scbs, pending_links) {
+ 			struct ccb_hdr *ccbh;
+@@ -10699,7 +10696,7 @@ ahd_handle_target_cmd(struct ahd_softc *ahd, struct target_cmd *cmd)
+ 		printk("Reserved or VU command code type encountered\n");
+ 		break;
  	}
 -	
 +
- 	if (workreq->cmnd[0] == READ_CAPACITY) {
- 		if (l > 8)
- 			l = 8;
-@@ -796,8 +839,9 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 	 *	Write the target
- 	 */
- 	atp_writeb_io(dev, c, 0x11, dev->id[c][target_id].devsp);
--#ifdef ED_DBGP	
--	printk("dev->id[%d][%d].devsp = %2x\n",c,target_id,dev->id[c][target_id].devsp);
-+#ifdef ED_DBGP
-+	printk("dev->id[%d][%d].devsp = %2x\n",c,target_id,
-+	       dev->id[c][target_id].devsp);
- #endif
+ 	memcpy(atio->cdb_io.cdb_bytes, byte, atio->cdb_len);
  
- 	sg_count = scsi_dma_map(workreq);
-@@ -807,12 +851,12 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 	atp_writeb_io(dev, c, 0x12, ((unsigned char *) (&l))[2]);
- 	atp_writeb_io(dev, c, 0x13, ((unsigned char *) (&l))[1]);
- 	atp_writeb_io(dev, c, 0x14, ((unsigned char *) (&l))[0]);
--	j = target_id;	
-+	j = target_id;
- 	dev->id[c][j].last_len = l;
- 	dev->id[c][j].tran_len = 0;
--#ifdef ED_DBGP	
-+#ifdef ED_DBGP
- 	printk("dev->id[%2d][%2d].last_len = %d\n",c,j,dev->id[c][j].last_len);
--#endif	
-+#endif
+ 	atio->ccb_h.status |= CAM_CDB_RECVD;
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
+index 8a8b7ae7aed3..d6e38298f15b 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -242,7 +242,7 @@ struct ahd_linux_device {
+ 	int			active;
+ 
  	/*
- 	 *	Flip the wide bits
+-	 * The currently allowed number of 
++	 * The currently allowed number of
+ 	 * transactions that can be queued to
+ 	 * the device.  Must be signed for
+ 	 * conversion from tagged to untagged
+@@ -256,7 +256,7 @@ struct ahd_linux_device {
+ 	 * device's queue is halted.
  	 */
-@@ -832,8 +876,8 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 	if (l == 0) {
- 		if (atp_readb_io(dev, c, 0x1c) == 0) {
- #ifdef ED_DBGP
--			printk("change SCSI_CMD_REG 0x08\n");	
--#endif				
-+			printk("change SCSI_CMD_REG 0x08\n");
-+#endif
- 			atp_writeb_io(dev, c, 0x18, 0x08);
- 		} else
- 			dev->last_cmd[c] |= 0x40;
-@@ -854,9 +898,9 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 		scsi_for_each_sg(workreq, sgpnt, sg_count, j) {
- 			bttl = sg_dma_address(sgpnt);
- 			l=sg_dma_len(sgpnt);
--#ifdef ED_DBGP		
-+#ifdef ED_DBGP
- 			printk("1. bttl %x, l %x\n",bttl, l);
--#endif			
-+#endif
- 			while (l > 0x10000) {
- 				(((u16 *) (prd))[i + 3]) = 0x0000;
- 				(((u16 *) (prd))[i + 2]) = 0x0000;
-@@ -868,17 +912,22 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 			(((u32 *) (prd))[i >> 1]) = cpu_to_le32(bttl);
- 			(((u16 *) (prd))[i + 2]) = cpu_to_le16(l);
- 			(((u16 *) (prd))[i + 3]) = 0;
--			i += 0x04;			
-+			i += 0x04;
- 		}
--		(((u16 *) (prd))[i - 1]) = cpu_to_le16(0x8000);	
--#ifdef ED_DBGP		
--		printk("prd %4x %4x %4x %4x\n",(((unsigned short int *)prd)[0]),(((unsigned short int *)prd)[1]),(((unsigned short int *)prd)[2]),(((unsigned short int *)prd)[3]));
-+		(((u16 *) (prd))[i - 1]) = cpu_to_le16(0x8000);
-+#ifdef ED_DBGP
-+		printk("prd %4x %4x %4x %4x\n",
-+		       (((unsigned short int *)prd)[0]),
-+		       (((unsigned short int *)prd)[1]),
-+		       (((unsigned short int *)prd)[2]),
-+		       (((unsigned short int *)prd)[3]));
- 		printk("2. bttl %x, l %x\n",bttl, l);
--#endif			
-+#endif
- 	}
--#ifdef ED_DBGP		
--	printk("send_s870: prdaddr_2 0x%8x target_id %d\n", dev->id[c][target_id].prdaddr,target_id);
--#endif	
-+#ifdef ED_DBGP
-+	printk("send_s870: prdaddr_2 0x%8x target_id %d\n",
-+	       dev->id[c][target_id].prdaddr,target_id);
-+#endif
- 	dev->id[c][target_id].prdaddr = dev->id[c][target_id].prd_bus;
- 	atp_writel_pci(dev, c, 4, dev->id[c][target_id].prdaddr);
- 	atp_writeb_pci(dev, c, 2, 0x06);
-@@ -886,30 +935,36 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 	if (is885(dev)) {
- 		j = atp_readb_pci(dev, c, 1) & 0xf3;
- 		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) ||
--	    	(workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
--	   		j |= 0x0c;
-+		    (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
-+			j |= 0x0c;
- 		}
- 		atp_writeb_pci(dev, c, 1, j);
- 	} else if (is880(dev)) {
--		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
--			atp_writeb_base(dev, 0x3b, (atp_readb_base(dev, 0x3b) & 0x3f) | 0xc0);
-+		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) ||
-+		    (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
-+			atp_writeb_base(dev, 0x3b,
-+					(atp_readb_base(dev, 0x3b) & 0x3f) | 0xc0);
- 		else
--			atp_writeb_base(dev, 0x3b, atp_readb_base(dev, 0x3b) & 0x3f);
--	} else {		
--		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
--			atp_writeb_base(dev, 0x3a, (atp_readb_base(dev, 0x3a) & 0xf3) | 0x08);
-+			atp_writeb_base(dev, 0x3b,
-+					atp_readb_base(dev, 0x3b) & 0x3f);
-+	} else {
-+		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) ||
-+		    (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
-+			atp_writeb_base(dev, 0x3a,
-+					(atp_readb_base(dev, 0x3a) & 0xf3) | 0x08);
- 		else
--			atp_writeb_base(dev, 0x3a, atp_readb_base(dev, 0x3a) & 0xf3);
--	}	
-+			atp_writeb_base(dev, 0x3a,
-+					atp_readb_base(dev, 0x3a) & 0xf3);
-+	}
- 
- 	if(workreq->sc_data_direction == DMA_TO_DEVICE) {
- 		dev->id[c][target_id].dirct = 0x20;
- 		if (atp_readb_io(dev, c, 0x1c) == 0) {
- 			atp_writeb_io(dev, c, 0x18, 0x08);
- 			atp_writeb_pci(dev, c, 0, 0x01);
--#ifdef ED_DBGP		
-+#ifdef ED_DBGP
- 		printk( "start DMA(to target)\n");
--#endif				
-+#endif
- 		} else {
- 			dev->last_cmd[c] |= 0x40;
- 		}
-@@ -919,9 +974,9 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 	if (atp_readb_io(dev, c, 0x1c) == 0) {
- 		atp_writeb_io(dev, c, 0x18, 0x08);
- 		atp_writeb_pci(dev, c, 0, 0x09);
--#ifdef ED_DBGP		
-+#ifdef ED_DBGP
- 		printk( "start DMA(to host)\n");
--#endif			
-+#endif
- 	} else {
- 		dev->last_cmd[c] |= 0x40;
- 	}
-@@ -1193,7 +1248,9 @@ static void atp870u_free_tables(struct Scsi_Host *host)
- 		for (k = 0; k < 16; k++) {
- 			if (!atp_dev->id[j][k].prd_table)
- 				continue;
--			dma_free_coherent(&atp_dev->pdev->dev, 1024, atp_dev->id[j][k].prd_table, atp_dev->id[j][k].prd_bus);
-+			dma_free_coherent(&atp_dev->pdev->dev, 1024,
-+					  atp_dev->id[j][k].prd_table,
-+					  atp_dev->id[j][k].prd_bus);
- 			atp_dev->id[j][k].prd_table = NULL;
- 		}
- 	}
-@@ -1204,35 +1261,38 @@ static int atp870u_init_tables(struct Scsi_Host *host)
- 	struct atp_unit *atp_dev = (struct atp_unit *)&host->hostdata;
- 	int c,k;
- 	for(c=0;c < 2;c++) {
--	   	for(k=0;k<16;k++) {
--				atp_dev->id[c][k].prd_table = dma_alloc_coherent(&atp_dev->pdev->dev, 1024, &(atp_dev->id[c][k].prd_bus), GFP_KERNEL);
--	   			if (!atp_dev->id[c][k].prd_table) {
--	   				printk("atp870u_init_tables fail\n");
-+		for(k=0;k<16;k++) {
-+			atp_dev->id[c][k].prd_table =
-+				dma_alloc_coherent(&atp_dev->pdev->dev, 1024,
-+						   &(atp_dev->id[c][k].prd_bus),
-+						   GFP_KERNEL);
-+			if (!atp_dev->id[c][k].prd_table) {
-+				printk("atp870u_init_tables fail\n");
- 				atp870u_free_tables(host);
- 				return -ENOMEM;
- 			}
- 			atp_dev->id[c][k].prdaddr = atp_dev->id[c][k].prd_bus;
- 			atp_dev->id[c][k].devsp=0x20;
- 			atp_dev->id[c][k].devtype = 0x7f;
--			atp_dev->id[c][k].curr_req = NULL;			   
--	   	}
--	   			
--	   	atp_dev->active_id[c] = 0;
--	   	atp_dev->wide_id[c] = 0;
--	   	atp_dev->host_id[c] = 0x07;
--	   	atp_dev->quhd[c] = 0;
--	   	atp_dev->quend[c] = 0;
--	   	atp_dev->last_cmd[c] = 0xff;
--	   	atp_dev->in_snd[c] = 0;
--	   	atp_dev->in_int[c] = 0;
--	   	
--	   	for (k = 0; k < qcnt; k++) {
--	   		  atp_dev->quereq[c][k] = NULL;
--	   	}	   		   
--	   	for (k = 0; k < 16; k++) {
-+			atp_dev->id[c][k].curr_req = NULL;
-+		}
+ 	u_int			qfrozen;
+-	
 +
-+		atp_dev->active_id[c] = 0;
-+		atp_dev->wide_id[c] = 0;
-+		atp_dev->host_id[c] = 0x07;
-+		atp_dev->quhd[c] = 0;
-+		atp_dev->quend[c] = 0;
-+		atp_dev->last_cmd[c] = 0xff;
-+		atp_dev->in_snd[c] = 0;
-+		atp_dev->in_int[c] = 0;
-+
-+		for (k = 0; k < qcnt; k++) {
-+			atp_dev->quereq[c][k] = NULL;
-+		}
-+		for (k = 0; k < 16; k++) {
- 			   atp_dev->id[c][k].curr_req = NULL;
- 			   atp_dev->sp[c][k] = 0x04;
--	   	}		   
-+		}
- 	}
- 	return 0;
- }
-@@ -1263,7 +1323,8 @@ static void atp870_init(struct Scsi_Host *shpnt)
+ 	/*
+ 	 * Cumulative command counter.
+ 	 */
+@@ -340,11 +340,11 @@ struct ahd_platform_data {
+ 	/*
+ 	 * Fields accessed from interrupt context.
+ 	 */
+-	struct scsi_target *starget[AHD_NUM_TARGETS]; 
++	struct scsi_target *starget[AHD_NUM_TARGETS];
  
- 	pci_read_config_byte(pdev, 0x49, &host_id);
- 
--	dev_info(&pdev->dev, "ACARD AEC-671X PCI Ultra/W SCSI-2/3 Host Adapter: IO:%lx, IRQ:%d.\n",
-+	dev_info(&pdev->dev, "ACARD AEC-671X PCI Ultra/W SCSI-2/3 "
-+		 "Host Adapter: IO:%lx, IRQ:%d.\n",
- 		 shpnt->io_port, shpnt->irq);
- 
- 	atpdev->ioport[0] = shpnt->io_port;
-@@ -1314,7 +1375,8 @@ static void atp880_init(struct Scsi_Host *shpnt)
- 
- 	host_id = atp_readb_base(atpdev, 0x39) >> 4;
- 
--	dev_info(&pdev->dev, "ACARD AEC-67160 PCI Ultra3 LVD Host Adapter: IO:%lx, IRQ:%d.\n",
-+	dev_info(&pdev->dev, "ACARD AEC-67160 PCI Ultra3 LVD "
-+		 "Host Adapter: IO:%lx, IRQ:%d.\n",
- 		 shpnt->io_port, shpnt->irq);
- 	atpdev->host_id[0] = host_id;
- 
-@@ -1393,7 +1455,8 @@ static void atp885_init(struct Scsi_Host *shpnt)
- 	unsigned int n;
- 	unsigned char setupdata[2][16];
- 
--	dev_info(&pdev->dev, "ACARD AEC-67162 PCI Ultra3 LVD Host Adapter: IO:%lx, IRQ:%d.\n",
-+	dev_info(&pdev->dev, "ACARD AEC-67162 PCI Ultra3 LVD "
-+		 "Host Adapter: IO:%lx, IRQ:%d.\n",
- 		 shpnt->io_port, shpnt->irq);
- 
- 	atpdev->ioport[0] = shpnt->io_port + 0x80;
-@@ -1413,11 +1476,13 @@ static void atp885_init(struct Scsi_Host *shpnt)
- 			atpdev->global_map[m] = 0;
- 			for (k = 0; k < 4; k++) {
- 				atp_writew_base(atpdev, 0x3c, n++);
--				((u32 *)&setupdata[m][0])[k] = atp_readl_base(atpdev, 0x38);
-+				((u32 *)&setupdata[m][0])[k] =
-+					atp_readl_base(atpdev, 0x38);
- 			}
- 			for (k = 0; k < 4; k++) {
- 				atp_writew_base(atpdev, 0x3c, n++);
--				((u32 *)&atpdev->sp[m][0])[k] = atp_readl_base(atpdev, 0x38);
-+				((u32 *)&atpdev->sp[m][0])[k] =
-+					atp_readl_base(atpdev, 0x38);
- 			}
- 			n += 8;
- 		}
-@@ -1510,17 +1575,17 @@ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto fail;
- 
- 	if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(32))) {
--                printk(KERN_ERR "atp870u: DMA mask required but not available.\n");
--                err = -EIO;
--                goto disable_device;
+ 	spinlock_t		 spin_lock;
+ 	struct completion	*eh_done;
+-	struct Scsi_Host        *host;		/* pointer to scsi host */
++	struct Scsi_Host	*host;		/* pointer to scsi host */
+ #define AHD_LINUX_NOIRQ	((uint32_t)~0)
+ 	uint32_t		 irq;		/* IRQ for this adapter */
+ 	uint32_t		 bios_address;
+@@ -655,9 +655,9 @@ static inline void
+ ahd_freeze_scb(struct scb *scb)
+ {
+ 	if ((scb->io_ctx->result & (CAM_DEV_QFRZN << 16)) == 0) {
+-                scb->io_ctx->result |= CAM_DEV_QFRZN << 16;
+-                scb->platform_data->dev->qfrozen++;
 -        }
-+		printk(KERN_ERR "atp870u: DMA mask required but not available.\n");
-+		err = -EIO;
-+		goto disable_device;
++		scb->io_ctx->result |= CAM_DEV_QFRZN << 16;
++		scb->platform_data->dev->qfrozen++;
 +	}
- 
- 	err = pci_request_regions(pdev, "atp870u");
- 	if (err)
- 		goto disable_device;
- 	pci_set_master(pdev);
- 
--        err = -ENOMEM;
-+	err = -ENOMEM;
- 	shpnt = scsi_host_alloc(&atp870u_template, sizeof(struct atp_unit));
- 	if (!shpnt)
- 		goto release_region;
-@@ -1586,7 +1651,7 @@ static int atp870u_abort(struct scsi_cmnd * SCpnt)
- {
- 	unsigned char  j, k, c;
- 	struct scsi_cmnd *workrequ;
--	struct atp_unit *dev;	
-+	struct atp_unit *dev;
- 	struct Scsi_Host *host;
- 	host = SCpnt->device->host;
- 
-@@ -1655,11 +1720,10 @@ static int atp870u_biosparam(struct scsi_device *disk, struct block_device *dev,
  }
  
- static void atp870u_remove (struct pci_dev *pdev)
--{	
-+{
- 	struct atp_unit *devext = pci_get_drvdata(pdev);
- 	struct Scsi_Host *pshost = devext->host;
--	
+ void	ahd_platform_set_tags(struct ahd_softc *ahd, struct scsi_device *sdev,
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+index 07b670b80f1b..b92e2e3c358a 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+@@ -45,8 +45,8 @@
+ 
+ /* Define the macro locally since it's different for different class of chips.
+  */
+-#define ID(x)            \
+-	ID2C(x),         \
++#define ID(x)		 \
++	ID2C(x),	 \
+ 	ID2C(IDIROC(x))
+ 
+ static const struct pci_device_id ahd_linux_pci_id_table[] = {
+@@ -367,7 +367,7 @@ ahd_pci_map_int(struct ahd_softc *ahd)
+ 			    IRQF_SHARED, "aic79xx", ahd);
+ 	if (!error)
+ 		ahd->platform_data->irq = ahd->dev_softc->irq;
 -	
 +
- 	scsi_remove_host(pshost);
- 	free_irq(pshost->irq, pshost);
- 	pci_release_regions(pdev);
-@@ -1671,23 +1735,23 @@ MODULE_LICENSE("GPL");
- 
- static struct scsi_host_template atp870u_template = {
-      .module			= THIS_MODULE,
--     .name              	= "atp870u"		/* name */,
-+     .name			= "atp870u"		/* name */,
-      .proc_name			= "atp870u",
-      .show_info			= atp870u_show_info,
--     .info              	= atp870u_info		/* info */,
--     .queuecommand      	= atp870u_queuecommand	/* queuecommand */,
--     .eh_abort_handler  	= atp870u_abort		/* abort */,
--     .bios_param        	= atp870u_biosparam	/* biosparm */,
--     .can_queue         	= qcnt			/* can_queue */,
--     .this_id           	= 7			/* SCSI ID */,
--     .sg_tablesize      	= ATP870U_SCATTER	/*SG_ALL*/,
-+     .info			= atp870u_info		/* info */,
-+     .queuecommand		= atp870u_queuecommand	/* queuecommand */,
-+     .eh_abort_handler		= atp870u_abort		/* abort */,
-+     .bios_param		= atp870u_biosparam	/* biosparm */,
-+     .can_queue			= qcnt			/* can_queue */,
-+     .this_id			= 7			/* SCSI ID */,
-+     .sg_tablesize		= ATP870U_SCATTER	/*SG_ALL*/,
-      .max_sectors		= ATP870U_MAX_SECTORS,
- };
- 
- static struct pci_device_id atp870u_id_table[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_ARTOP, ATP885_DEVID)			  },
--	{ PCI_DEVICE(PCI_VENDOR_ID_ARTOP, ATP880_DEVID1)			  },
--	{ PCI_DEVICE(PCI_VENDOR_ID_ARTOP, ATP880_DEVID2)			  },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_ARTOP, ATP880_DEVID1)		  },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_ARTOP, ATP880_DEVID2)		  },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_ARTOP, PCI_DEVICE_ID_ARTOP_AEC7610)    },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_ARTOP, PCI_DEVICE_ID_ARTOP_AEC7612UW)  },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_ARTOP, PCI_DEVICE_ID_ARTOP_AEC7612U)   },
-@@ -1709,7 +1773,8 @@ static struct pci_driver atp870u_driver = {
- 
- module_pci_driver(atp870u_driver);
- 
--static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode)
-+static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip,
-+		   unsigned char lvdmode)
- {
- 	unsigned char i, j, k, rmb, n;
- 	unsigned short int m;
-@@ -1982,8 +2047,9 @@ static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsign
- 			m = m << i;
- 			dev->wide_id[c] |= m;
- 			dev->id[c][i].devsp = 0xce;
--#ifdef ED_DBGP		   
--			printk("dev->id[%2d][%2d].devsp = %2x\n",c,i,dev->id[c][i].devsp);
-+#ifdef ED_DBGP
-+			printk("dev->id[%2d][%2d].devsp = %2x\n",
-+			       c, i, dev->id[c][i].devsp);
- #endif
- 			continue;
- 		}
-@@ -2005,7 +2071,8 @@ static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsign
- 		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
- 			cpu_relax();
- 
--		if (atp_readb_io(dev, c, 0x17) != 0x11 && atp_readb_io(dev, c, 0x17) != 0x8e)
-+		if (atp_readb_io(dev, c, 0x17) != 0x11 &&
-+		    atp_readb_io(dev, c, 0x17) != 0x8e)
- 			continue;
- 
- 		while (atp_readb_io(dev, c, 0x17) != 0x8e)
-@@ -2109,7 +2176,9 @@ static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsign
- 		m = m << i;
- 		dev->wide_id[c] |= m;
- not_wide:
--		if ((dev->id[c][i].devtype == 0x00) || (dev->id[c][i].devtype == 0x07) || ((dev->id[c][i].devtype == 0x05) && ((n & 0x10) != 0))) {
-+		if ((dev->id[c][i].devtype == 0x00) ||
-+		    (dev->id[c][i].devtype == 0x07) ||
-+		    ((dev->id[c][i].devtype == 0x05) && ((n & 0x10) != 0))) {
- 			m = 1;
- 			m = m << i;
- 			if ((dev->async[c] & m) != 0) {
-@@ -2148,7 +2217,8 @@ static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsign
- 		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
- 			cpu_relax();
- 
--		if (atp_readb_io(dev, c, 0x17) != 0x11 && atp_readb_io(dev, c, 0x17) != 0x8e)
-+		if (atp_readb_io(dev, c, 0x17) != 0x11 &&
-+		    atp_readb_io(dev, c, 0x17) != 0x8e)
- 			continue;
- 
- 		while (atp_readb_io(dev, c, 0x17) != 0x8e)
-@@ -2310,7 +2380,8 @@ static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsign
- set_syn_ok:
- 		dev->id[c][i].devsp = (dev->id[c][i].devsp & 0x0f) | j;
- #ifdef ED_DBGP
--		printk("dev->id[%2d][%2d].devsp = %2x\n",c,i,dev->id[c][i].devsp);
-+		printk("dev->id[%2d][%2d].devsp = %2x\n",
-+		       c,i,dev->id[c][i].devsp);
- #endif
- 	}
+ 	return (-error);
  }
-diff --git a/drivers/scsi/atp870u.h b/drivers/scsi/atp870u.h
-index 75c44399fc88..31f6ab24b5cb 100644
---- a/drivers/scsi/atp870u.h
-+++ b/drivers/scsi/atp870u.h
-@@ -7,10 +7,10 @@
  
- /* I/O Port */
+diff --git a/drivers/scsi/aic7xxx/aic79xx_proc.c b/drivers/scsi/aic7xxx/aic79xx_proc.c
+index add2da581d66..746d0ca2a657 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_proc.c
++++ b/drivers/scsi/aic7xxx/aic79xx_proc.c
+@@ -100,17 +100,17 @@ ahd_format_transinfo(struct seq_file *m, struct ahd_transinfo *tinfo)
+ 		seq_puts(m, "Renegotiation Pending\n");
+ 		return;
+ 	}
+-        speed = 3300;
+-        freq = 0;
++	speed = 3300;
++	freq = 0;
+ 	if (tinfo->offset != 0) {
+ 		freq = ahd_calc_syncsrate(tinfo->period);
+ 		speed = freq;
+ 	}
+ 	speed *= (0x01 << tinfo->width);
+-        mb = speed / 1000;
+-        if (mb > 0)
++	mb = speed / 1000;
++	if (mb > 0)
+ 		seq_printf(m, "%d.%03dMB/s transfers", mb, speed % 1000);
+-        else
++	else
+ 		seq_printf(m, "%dKB/s transfers", speed);
  
--#define MAX_CDB 	12
--#define MAX_SENSE 	14
--#define qcnt	       	32
--#define ATP870U_SCATTER 	128
-+#define MAX_CDB		12
-+#define MAX_SENSE	14
-+#define qcnt		32
-+#define ATP870U_SCATTER	128
+ 	if (freq != 0) {
+@@ -242,7 +242,8 @@ ahd_proc_write_seeprom(struct Scsi_Host *shost, char *buffer, int length)
+ 		u_int start_addr;
  
- #define MAX_ADAPTER	8
- #define MAX_SCSI_ID	16
-@@ -40,7 +40,7 @@ struct atp_unit
- 	unsigned short ultra_map[2];
- 	unsigned short async[2];
- 	unsigned char sp[2][16];
--	unsigned char r1f[2][16];		
-+	unsigned char r1f[2][16];
- 	struct scsi_cmnd *quereq[2][qcnt];
- 	struct atp_id
- 	{
-@@ -55,8 +55,8 @@ struct atp_unit
- 		dma_addr_t prdaddr;		/* Dynamically updated in driver */
- 		struct scsi_cmnd *curr_req;
- 	} id[2][16];
--    	struct Scsi_Host *host;
--    	struct pci_dev *pdev;
-+	struct Scsi_Host *host;
-+	struct pci_dev *pdev;
- 	unsigned int unit;
+ 		if (ahd->seep_config == NULL) {
+-			ahd->seep_config = kmalloc(sizeof(*ahd->seep_config), GFP_ATOMIC);
++			ahd->seep_config = kmalloc(sizeof(*ahd->seep_config),
++						   GFP_ATOMIC);
+ 			if (ahd->seep_config == NULL) {
+ 				printk("aic79xx: Unable to allocate serial "
+ 				       "eeprom buffer.  Write failing\n");
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_93cx6.c b/drivers/scsi/aic7xxx/aic7xxx_93cx6.c
+index cc9e41967ce4..11ddffbcc2f3 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_93cx6.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_93cx6.c
+@@ -73,8 +73,8 @@
+  * add other 93Cx6 functions.
+  */
+ struct seeprom_cmd {
+-  	uint8_t len;
+- 	uint8_t bits[11];
++	uint8_t len;
++	uint8_t bits[11];
  };
  
+ /* Short opcodes for the c46 */
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index b1b852fe940b..b61a32c53645 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -66,7 +66,7 @@ static const char *const ahc_chip_names[] = {
+  * Hardware error codes.
+  */
+ struct ahc_hard_error_entry {
+-        uint8_t errno;
++	uint8_t errno;
+ 	const char *errmesg;
+ };
+ 
+@@ -142,7 +142,7 @@ static void		ahc_free_tstate(struct ahc_softc *ahc,
+ #endif
+ static const struct ahc_syncrate*
+ 			ahc_devlimited_syncrate(struct ahc_softc *ahc,
+-					        struct ahc_initiator_tinfo *,
++						struct ahc_initiator_tinfo *,
+ 						u_int *period,
+ 						u_int *ppr_options,
+ 						role_t role);
+@@ -195,7 +195,7 @@ static void		ahc_setup_target_msgin(struct ahc_softc *ahc,
+ 					       struct scb *scb);
+ #endif
+ 
+-static bus_dmamap_callback_t	ahc_dmamap_cb; 
++static bus_dmamap_callback_t	ahc_dmamap_cb;
+ static void		ahc_build_free_scb_list(struct ahc_softc *ahc);
+ static int		ahc_init_scbdata(struct ahc_softc *ahc);
+ static void		ahc_fini_scbdata(struct ahc_softc *ahc);
+@@ -978,7 +978,7 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ {
+ 	struct scb *scb;
+ 	struct ahc_devinfo devinfo;
+-	
++
+ 	ahc_fetch_devinfo(ahc, &devinfo);
+ 
+ 	/*
+@@ -1022,7 +1022,7 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ 			goto unpause;
+ 		}
+ 
+-		hscb = scb->hscb; 
++		hscb = scb->hscb;
+ 
+ 		/* Don't want to clobber the original sense code */
+ 		if ((scb->flags & SCB_SENSE) != 0) {
+@@ -1071,7 +1071,7 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ 							&tstate);
+ 			tinfo = &targ_info->curr;
+ 			sg = scb->sg_list;
+-			sc = (struct scsi_sense *)(&hscb->shared_data.cdb); 
++			sc = (struct scsi_sense *)(&hscb->shared_data.cdb);
+ 			/*
+ 			 * Save off the residual if there is one.
+ 			 */
+@@ -1117,8 +1117,8 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ 			 * errors will be reported before any data
+ 			 * phases occur.
+ 			 */
+-			if (ahc_get_residual(scb) 
+-			 == ahc_get_transfer_length(scb)) {
++			if (ahc_get_residual(scb)
++			    == ahc_get_transfer_length(scb)) {
+ 				ahc_update_neg_request(ahc, &devinfo,
+ 						       tstate, targ_info,
+ 						       AHC_NEG_IF_NON_ASYNC);
+@@ -1129,7 +1129,7 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ 				scb->flags |= SCB_AUTO_NEGOTIATE;
+ 			}
+ 			hscb->cdb_len = sizeof(*sc);
+-			hscb->dataptr = sg->addr; 
++			hscb->dataptr = sg->addr;
+ 			hscb->datacnt = sg->len;
+ 			hscb->sgptr = scb->sg_list_phys | SG_FULL_RESID;
+ 			hscb->sgptr = ahc_htole32(hscb->sgptr);
+@@ -1187,13 +1187,13 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ 		ahc_assert_atn(ahc);
+ 		break;
+ 	}
+-	case SEND_REJECT: 
++	case SEND_REJECT:
+ 	{
+ 		u_int rejbyte = ahc_inb(ahc, ACCUM);
+ 		printk("%s:%c:%d: Warning - unknown message received from "
+-		       "target (0x%x).  Rejecting\n", 
++		       "target (0x%x).  Rejecting\n",
+ 		       ahc_name(ahc), devinfo.channel, devinfo.target, rejbyte);
+-		break; 
++		break;
+ 	}
+ 	case PROTO_VIOLATION:
+ 	{
+@@ -1286,8 +1286,7 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ 					ahc->msg_type =
+ 					    MSG_TYPE_TARGET_MSGOUT;
+ 					ahc->msgin_index = 0;
+-				}
+-				else 
++				} else
+ 					ahc_setup_target_msgin(ahc,
+ 							       &devinfo,
+ 							       scb);
+@@ -1359,7 +1358,7 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ 					if (scb != NULL)
+ 						ahc_set_transaction_status(scb,
+ 						    CAM_UNCOR_PARITY);
+-					ahc_reset_channel(ahc, devinfo.channel, 
++					ahc_reset_channel(ahc, devinfo.channel,
+ 							  /*init reset*/TRUE);
+ 				}
+ 			} else {
+@@ -1391,7 +1390,7 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ 		printk("data overrun detected %s."
+ 		       "  Tag == 0x%x.\n",
+ 		       ahc_phase_table[i].phasemsg,
+-  		       scb->hscb->tag);
++		       scb->hscb->tag);
+ 		ahc_print_path(ahc, scb);
+ 		printk("%s seen Data Phase.  Length = %ld.  NumSGs = %d.\n",
+ 		       ahc_inb(ahc, SEQ_FLAGS) & DPHASE ? "Have" : "Haven't",
+@@ -1402,7 +1401,7 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ 				printk("sg[%d] - Addr 0x%x%x : Length %d\n",
+ 				       i,
+ 				       (ahc_le32toh(scb->sg_list[i].len) >> 24
+-				        & SG_HIGH_ADDR_BITS),
++					& SG_HIGH_ADDR_BITS),
+ 				       ahc_le32toh(scb->sg_list[i].addr),
+ 				       ahc_le32toh(scb->sg_list[i].len)
+ 				       & AHC_SG_LEN_MASK);
+@@ -1549,7 +1548,7 @@ ahc_handle_scsiint(struct ahc_softc *ahc, u_int intstat)
+ 	if (status == 0 && status0 == 0) {
+ 		if ((ahc->features & AHC_TWIN) != 0) {
+ 			/* Try the other channel */
+-		 	ahc_outb(ahc, SBLKCTL, ahc_inb(ahc, SBLKCTL) ^ SELBUSB);
++			ahc_outb(ahc, SBLKCTL, ahc_inb(ahc, SBLKCTL) ^ SELBUSB);
+ 			status = ahc_inb(ahc, SSTAT1)
+ 			       & (SELTO|SCSIRSTI|BUSFREE|SCSIPERR);
+ 			intr_channel = (cur_channel == 'A') ? 'B' : 'A';
+@@ -1595,7 +1594,7 @@ ahc_handle_scsiint(struct ahc_softc *ahc, u_int intstat)
+ 		printk("%s: Someone reset channel %c\n",
+ 			ahc_name(ahc), intr_channel);
+ 		if (intr_channel != cur_channel)
+-		 	ahc_outb(ahc, SBLKCTL, ahc_inb(ahc, SBLKCTL) ^ SELBUSB);
++			ahc_outb(ahc, SBLKCTL, ahc_inb(ahc, SBLKCTL) ^ SELBUSB);
+ 		ahc_reset_channel(ahc, intr_channel, /*Initiate Reset*/FALSE);
+ 	} else if ((status & SCSIPERR) != 0) {
+ 		/*
+@@ -1688,8 +1687,8 @@ ahc_handle_scsiint(struct ahc_softc *ahc, u_int intstat)
+ 		}
+ 
+ 		/*
+-		 * We've set the hardware to assert ATN if we   
+-		 * get a parity error on "in" phases, so all we  
++		 * We've set the hardware to assert ATN if we
++		 * get a parity error on "in" phases, so all we
+ 		 * need to do is stuff the message buffer with
+ 		 * the appropriate message.  "In" phases have set
+ 		 * mesg_out to something other than MSG_NOP.
+@@ -1986,7 +1985,7 @@ ahc_clear_critical_section(struct ahc_softc *ahc)
+ 			| (ahc_inb(ahc, SEQADDR1) << 8);
+ 
+ 		/*
+-		 * Seqaddr represents the next instruction to execute, 
++		 * Seqaddr represents the next instruction to execute,
+ 		 * so we are really executing the instruction just
+ 		 * before it.
+ 		 */
+@@ -1994,7 +1993,6 @@ ahc_clear_critical_section(struct ahc_softc *ahc)
+ 			seqaddr -= 1;
+ 		cs = ahc->critical_sections;
+ 		for (i = 0; i < ahc->num_critical_sections; i++, cs++) {
+-			
+ 			if (cs->begin < seqaddr && cs->end >= seqaddr)
+ 				break;
+ 		}
+@@ -2064,7 +2062,7 @@ ahc_clear_intstat(struct ahc_softc *ahc)
+ 				CLRREQINIT);
+ 	ahc_flush_device_writes(ahc);
+ 	ahc_outb(ahc, CLRSINT0, CLRSELDO|CLRSELDI|CLRSELINGO);
+- 	ahc_flush_device_writes(ahc);
++	ahc_flush_device_writes(ahc);
+ 	ahc_outb(ahc, CLRINT, CLRSCSIINT);
+ 	ahc_flush_device_writes(ahc);
+ }
+@@ -2101,7 +2099,7 @@ ahc_print_scb(struct scb *scb)
+ 			printk("sg[%d] - Addr 0x%x%x : Length %d\n",
+ 			       i,
+ 			       (ahc_le32toh(scb->sg_list[i].len) >> 24
+-			        & SG_HIGH_ADDR_BITS),
++				& SG_HIGH_ADDR_BITS),
+ 			       ahc_le32toh(scb->sg_list[i].addr),
+ 			       ahc_le32toh(scb->sg_list[i].len));
+ 		}
+@@ -2223,7 +2221,7 @@ ahc_devlimited_syncrate(struct ahc_softc *ahc,
+ 	 */
+ 	if (role == ROLE_TARGET)
+ 		transinfo = &tinfo->user;
+-	else 
++	else
+ 		transinfo = &tinfo->goal;
+ 	*ppr_options &= transinfo->ppr_options;
+ 	if (transinfo->width == MSG_EXT_WDTR_BUS_8_BIT) {
+@@ -2655,9 +2653,9 @@ ahc_set_tags(struct ahc_softc *ahc, struct scsi_cmnd *cmd,
+ {
+ 	struct scsi_device *sdev = cmd->device;
+ 
+- 	ahc_platform_set_tags(ahc, sdev, devinfo, alg);
+- 	ahc_send_async(ahc, devinfo->channel, devinfo->target,
+- 		       devinfo->lun, AC_TRANSFER_NEG);
++	ahc_platform_set_tags(ahc, sdev, devinfo, alg);
++	ahc_send_async(ahc, devinfo->channel, devinfo->target,
++		       devinfo->lun, AC_TRANSFER_NEG);
+ }
+ 
+ /*
+@@ -2756,9 +2754,9 @@ ahc_fetch_devinfo(struct ahc_softc *ahc, struct ahc_devinfo *devinfo)
+ 		role = ROLE_INITIATOR;
+ 
+ 	if (role == ROLE_TARGET
+-	 && (ahc->features & AHC_MULTI_TID) != 0
+-	 && (ahc_inb(ahc, SEQ_FLAGS)
+- 	   & (CMDPHASE_PENDING|TARG_CMD_PENDING|NO_DISCONNECT)) != 0) {
++	    && (ahc->features & AHC_MULTI_TID) != 0
++	    && (ahc_inb(ahc, SEQ_FLAGS)
++	     & (CMDPHASE_PENDING|TARG_CMD_PENDING|NO_DISCONNECT)) != 0) {
+ 		/* We were selected, so pull our id from TARGIDIN */
+ 		our_id = ahc_inb(ahc, TARGIDIN) & OID;
+ 	} else if ((ahc->features & AHC_ULTRA2) != 0)
+@@ -3366,7 +3364,7 @@ ahc_handle_message_phase(struct ahc_softc *ahc)
+ #endif
+ 				ahc_assert_atn(ahc);
+ 			}
+-		} else 
++		} else
+ 			ahc->msgin_index++;
+ 
+ 		if (message_done == MSGLOOP_TERMINATED) {
+@@ -3459,7 +3457,7 @@ ahc_handle_message_phase(struct ahc_softc *ahc)
+ 			 */
+ 			return;
+ 		}
+-		
++
+ 		ahc->msgin_index++;
+ 
+ 		/*
+@@ -4338,7 +4336,7 @@ ahc_handle_devreset(struct ahc_softc *ahc, struct ahc_devinfo *devinfo,
+ 	ahc_set_syncrate(ahc, devinfo, /*syncrate*/NULL,
+ 			 /*period*/0, /*offset*/0, /*ppr_options*/0,
+ 			 AHC_TRANS_CUR, /*paused*/TRUE);
+-	
++
+ 	if (status != CAM_SEL_TIMEOUT)
+ 		ahc_send_async(ahc, devinfo->channel, devinfo->target,
+ 			       CAM_LUN_WILDCARD, AC_SENT_BDR);
+@@ -4355,11 +4353,11 @@ ahc_setup_target_msgin(struct ahc_softc *ahc, struct ahc_devinfo *devinfo,
+ 		       struct scb *scb)
+ {
+ 
+-	/*              
++	/*
+ 	 * To facilitate adding multiple messages together,
+ 	 * each routine should increment the index and len
+ 	 * variables instead of setting them explicitly.
+-	 */             
++	 */
+ 	ahc->msgout_index = 0;
+ 	ahc->msgout_len = 0;
+ 
+@@ -4432,7 +4430,7 @@ ahc_softc_init(struct ahc_softc *ahc)
+ 		ahc->unpause = ahc_inb(ahc, HCNTRL) & IRQMS;
+ 	else
+ 		ahc->unpause = 0;
+-	ahc->pause = ahc->unpause | PAUSE; 
++	ahc->pause = ahc->unpause | PAUSE;
+ 	/* XXX The shared scb data stuff should be deprecated */
+ 	if (ahc->scb_data == NULL) {
+ 		ahc->scb_data = kzalloc(sizeof(*ahc->scb_data), GFP_ATOMIC);
+@@ -4554,7 +4552,7 @@ ahc_reset(struct ahc_softc *ahc, int reinit)
+ 	u_int	sxfrctl1_a, sxfrctl1_b;
+ 	int	error;
+ 	int	wait;
+-	
++
+ 	/*
+ 	 * Preserve the value of the SXFRCTL1 register for all channels.
+ 	 * It contains settings that affect termination and we don't want
+@@ -4643,7 +4641,7 @@ ahc_reset(struct ahc_softc *ahc, int reinit)
+ 		 */
+ 		error = ahc->bus_chip_init(ahc);
+ #ifdef AHC_DUMP_SEQ
+-	else 
++	else
+ 		ahc_dumpseq(ahc);
+ #endif
+ 
+@@ -4708,7 +4706,7 @@ ahc_build_free_scb_list(struct ahc_softc *ahc)
+ 		/* Set the next pointer */
+ 		if ((ahc->flags & AHC_PAGESCBS) != 0)
+ 			ahc_outb(ahc, SCB_NEXT, i+1);
+-		else 
++		else
+ 			ahc_outb(ahc, SCB_NEXT, SCB_LIST_NULL);
+ 
+ 		/* Make the tag number, SCSIID, and lun invalid */
+@@ -4861,7 +4859,7 @@ ahc_init_scbdata(struct ahc_softc *ahc)
+ 	/*
+ 	 * Note that we were successful
+ 	 */
+-	return (0); 
++	return (0);
+ 
+ error_exit:
+ 
+@@ -5004,7 +5002,7 @@ ahc_controller_info(struct ahc_softc *ahc, char *buf)
+ 	len = sprintf(buf, "%s: ", ahc_chip_names[ahc->chip & AHC_CHIPID_MASK]);
+ 	buf += len;
+ 	if ((ahc->features & AHC_TWIN) != 0)
+- 		len = sprintf(buf, "Twin Channel, A SCSI Id=%d, "
++		len = sprintf(buf, "Twin Channel, A SCSI Id=%d, "
+ 			      "B SCSI Id=%d, primary %c, ",
+ 			      ahc->our_id, ahc->our_id_b,
+ 			      (ahc->flags & AHC_PRIMARY_CHANNEL) + 'A');
+@@ -5140,7 +5138,7 @@ ahc_chip_init(struct ahc_softc *ahc)
+ 	ahc_outb(ahc, CMDSIZE_TABLE + 5, 11);
+ 	ahc_outb(ahc, CMDSIZE_TABLE + 6, 0);
+ 	ahc_outb(ahc, CMDSIZE_TABLE + 7, 0);
+-		
++
+ 	if ((ahc->features & AHC_HS_MAILBOX) != 0)
+ 		ahc_outb(ahc, HS_MAILBOX, 0);
+ 
+@@ -5271,7 +5269,7 @@ ahc_init(struct ahc_softc *ahc)
+ 	 */
+ 	if ((ahc->flags & AHC_USEDEFAULTS) != 0)
+ 		ahc->our_id = ahc->our_id_b = 7;
+-	
++
+ 	/*
+ 	 * Default to allowing initiator operations.
+ 	 */
+@@ -5289,7 +5287,7 @@ ahc_init(struct ahc_softc *ahc)
+ 	 * DMA tag for our command fifos and other data in system memory
+ 	 * the card's sequencer must be able to access.  For initiator
+ 	 * roles, we need to allocate space for the qinfifo and qoutfifo.
+-	 * The qinfifo and qoutfifo are composed of 256 1 byte elements. 
++	 * The qinfifo and qoutfifo are composed of 256 1 byte elements.
+ 	 * When providing for the target mode role, we must additionally
+ 	 * provide space for the incoming target command fifo and an extra
+ 	 * byte to deal with a dma bug in some chip versions.
+@@ -5398,7 +5396,7 @@ ahc_init(struct ahc_softc *ahc)
+ 	 && (ahc->flags & AHC_INITIATORROLE) != 0)
+ 		ahc->flags |= AHC_RESET_BUS_A;
+ 
+-	ultraenb = 0;	
++	ultraenb = 0;
+ 	tagenable = ALL_TARGETS_MASK;
+ 
+ 	/* Grab the disconnection disable table and invert it for our needs */
+@@ -5494,9 +5492,9 @@ ahc_init(struct ahc_softc *ahc)
+ 				 && (ultraenb & mask) != 0) {
+ 					/* Treat 10MHz as a non-ultra speed */
+ 					scsirate &= ~SXFR;
+-				 	ultraenb &= ~mask;
++					ultraenb &= ~mask;
+ 				}
+-				tinfo->user.period = 
++				tinfo->user.period =
+ 				    ahc_find_period(ahc, scsirate,
+ 						    (ultraenb & mask)
+ 						   ? AHC_SYNCRATE_ULTRA
+@@ -5622,7 +5620,7 @@ ahc_resume(struct ahc_softc *ahc)
+ {
+ 
+ 	ahc_reset(ahc, /*reinit*/TRUE);
+-	ahc_intr_enable(ahc, TRUE); 
++	ahc_intr_enable(ahc, TRUE);
+ 	ahc_restart(ahc);
+ 	return (0);
+ }
+@@ -5639,7 +5637,7 @@ ahc_index_busy_tcl(struct ahc_softc *ahc, u_int tcl)
+ 
+ 	if ((ahc->flags & AHC_SCB_BTT) != 0) {
+ 		u_int saved_scbptr;
+-		
++
+ 		saved_scbptr = ahc_inb(ahc, SCBPTR);
+ 		ahc_outb(ahc, SCBPTR, TCL_LUN(tcl));
+ 		scbid = ahc_inb(ahc, SCB_64_BTT + TCL_TARGET_OFFSET(tcl));
+@@ -5659,7 +5657,7 @@ ahc_unbusy_tcl(struct ahc_softc *ahc, u_int tcl)
+ 
+ 	if ((ahc->flags & AHC_SCB_BTT) != 0) {
+ 		u_int saved_scbptr;
+-		
++
+ 		saved_scbptr = ahc_inb(ahc, SCBPTR);
+ 		ahc_outb(ahc, SCBPTR, TCL_LUN(tcl));
+ 		ahc_outb(ahc, SCB_64_BTT+TCL_TARGET_OFFSET(tcl), SCB_LIST_NULL);
+@@ -5677,7 +5675,7 @@ ahc_busy_tcl(struct ahc_softc *ahc, u_int tcl, u_int scbid)
+ 
+ 	if ((ahc->flags & AHC_SCB_BTT) != 0) {
+ 		u_int saved_scbptr;
+-		
++
+ 		saved_scbptr = ahc_inb(ahc, SCBPTR);
+ 		ahc_outb(ahc, SCBPTR, TCL_LUN(tcl));
+ 		ahc_outb(ahc, SCB_64_BTT + TCL_TARGET_OFFSET(tcl), scbid);
+@@ -5735,7 +5733,7 @@ ahc_freeze_devq(struct ahc_softc *ahc, struct scb *scb)
+ 	target = SCB_GET_TARGET(ahc, scb);
+ 	lun = SCB_GET_LUN(scb);
+ 	channel = SCB_GET_CHANNEL(ahc, scb);
+-	
++
+ 	ahc_search_qinfifo(ahc, target, channel, lun,
+ 			   /*tag*/SCB_LIST_NULL, ROLE_UNKNOWN,
+ 			   CAM_REQUEUE_REQ, SEARCH_COMPLETE);
+@@ -5773,7 +5771,7 @@ ahc_qinfifo_requeue(struct ahc_softc *ahc, struct scb *prev_scb,
+ 		ahc_outb(ahc, NEXT_QUEUED_SCB, scb->hscb->tag);
+ 	} else {
+ 		prev_scb->hscb->next = scb->hscb->tag;
+-		ahc_sync_scb(ahc, prev_scb, 
++		ahc_sync_scb(ahc, prev_scb,
+ 			     BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
+ 	}
+ 	ahc->qinfifo[ahc->qinfifonext++] = scb->hscb->tag;
+@@ -5989,7 +5987,6 @@ ahc_search_qinfifo(struct ahc_softc *ahc, int target, char channel,
+ 				break;
+ 			}
+ 		} else {
+-			
+ 			prev = next;
+ 			next = ahc_inb(ahc, SCB_NEXT);
+ 		}
+@@ -6235,7 +6232,7 @@ ahc_rem_wscb(struct ahc_softc *ahc, u_int scbpos, u_int prev)
+ 	/* update the waiting list */
+ 	if (prev == SCB_LIST_NULL) {
+ 		/* First in the list */
+-		ahc_outb(ahc, WAITING_SCBH, next); 
++		ahc_outb(ahc, WAITING_SCBH, next);
+ 
+ 		/*
+ 		 * Ensure we aren't attempting to perform
+@@ -6244,7 +6241,7 @@ ahc_rem_wscb(struct ahc_softc *ahc, u_int scbpos, u_int prev)
+ 		ahc_outb(ahc, SCSISEQ, (ahc_inb(ahc, SCSISEQ) & ~ENSELO));
+ 	} else {
+ 		/*
+-		 * Select the scb that pointed to us 
++		 * Select the scb that pointed to us
+ 		 * and update its next pointer.
+ 		 */
+ 		ahc_outb(ahc, SCBPTR, prev);
+@@ -6638,7 +6635,7 @@ ahc_calc_residual(struct ahc_softc *ahc, struct scb *scb)
+ 
+ 		/*
+ 		 * Remainder of the SG where the transfer
+-		 * stopped.  
++		 * stopped.
+ 		 */
+ 		resid = ahc_le32toh(spkt->residual_datacnt) & AHC_SG_LEN_MASK;
+ 		sg = ahc_sg_bus_to_virt(scb, resid_sgptr & SG_PTR_MASK);
+@@ -6857,7 +6854,7 @@ ahc_loadseq(struct ahc_softc *ahc)
+ 				if (begin_set[cs_count] == TRUE
+ 				 && end_set[cs_count] == FALSE) {
+ 					cs_table[cs_count].end = downloaded;
+-				 	end_set[cs_count] = TRUE;
++					end_set[cs_count] = TRUE;
+ 					cs_count++;
+ 				}
+ 				continue;
+@@ -7085,7 +7082,6 @@ ahc_print_register(const ahc_reg_parse_entry_t *table, u_int num_entries,
+ 					  printed_mask == 0 ? ":(" : "|",
+ 					  table[entry].name);
+ 			printed_mask |= table[entry].mask;
+-			
+ 			break;
+ 		}
+ 		if (entry >= num_entries)
+@@ -7199,7 +7195,7 @@ ahc_dump_card_state(struct ahc_softc *ahc)
+ 		scb_index = ahc_inb(ahc, SCB_NEXT);
+ 	}
+ 	printk("\n");
+-		
++
+ 	ahc_sync_qoutfifo(ahc, BUS_DMASYNC_POSTREAD);
+ 	printk("QOUTFIFO entries: ");
+ 	qoutpos = ahc->qoutfifonext;
+@@ -7376,7 +7372,7 @@ ahc_handle_en_lun(struct ahc_softc *ahc, struct cam_sim *sim, union ccb *ccb)
+ 		if ((ahc->features & AHC_MULTIROLE) != 0) {
+ 
+ 			if ((ahc->features & AHC_MULTI_TID) != 0
+-		   	 && (ahc->flags & AHC_INITIATORROLE) != 0) {
++			 && (ahc->flags & AHC_INITIATORROLE) != 0) {
+ 				/*
+ 				 * Only allow additional targets if
+ 				 * the initiator role is disabled.
+@@ -7527,7 +7523,6 @@ ahc_handle_en_lun(struct ahc_softc *ahc, struct cam_sim *sim, union ccb *ccb)
+ 				targid_mask |= target_mask;
+ 				ahc_outb(ahc, TARGID, targid_mask);
+ 				ahc_outb(ahc, TARGID+1, (targid_mask >> 8));
+-				
+ 				ahc_update_scsiid(ahc, targid_mask);
+ 			} else {
+ 				u_int our_id;
+@@ -7592,7 +7587,7 @@ ahc_handle_en_lun(struct ahc_softc *ahc, struct cam_sim *sim, union ccb *ccb)
+ 		}
+ 
+ 		ahc_lock(ahc, &s);
+-		
++
+ 		ccb->ccb_h.status = CAM_REQ_CMP;
+ 		LIST_FOREACH(scb, &ahc->pending_scbs, pending_links) {
+ 			struct ccb_hdr *ccbh;
+@@ -7651,7 +7646,7 @@ ahc_handle_en_lun(struct ahc_softc *ahc, struct cam_sim *sim, union ccb *ccb)
+ 					targid_mask &= ~target_mask;
+ 					ahc_outb(ahc, TARGID, targid_mask);
+ 					ahc_outb(ahc, TARGID+1,
+-					 	 (targid_mask >> 8));
++						 (targid_mask >> 8));
+ 					ahc_update_scsiid(ahc, targid_mask);
+ 				}
+ 			}
+@@ -7780,7 +7775,7 @@ ahc_run_tqinfifo(struct ahc_softc *ahc, int paused)
+ 				ahc_outb(ahc, HS_MAILBOX, hs_mailbox);
+ 			} else {
+ 				if (!paused)
+-					ahc_pause(ahc);	
++					ahc_pause(ahc);
+ 				ahc_outb(ahc, KERNEL_TQINPOS,
+ 					 ahc->tqinfifonext & HOST_TQINPOS);
+ 				if (!paused)
+@@ -7879,7 +7874,7 @@ ahc_handle_target_cmd(struct ahc_softc *ahc, struct target_cmd *cmd)
+ 		printk("Reserved or VU command code type encountered\n");
+ 		break;
+ 	}
+-	
++
+ 	memcpy(atio->cdb_io.cdb_bytes, byte, atio->cdb_len);
+ 
+ 	atio->ccb_h.status |= CAM_CDB_RECVD;
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index 7bba961d1ae0..0aaca2eab6b6 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -452,7 +452,7 @@ ahc_insb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
+ static void ahc_linux_unmap_scb(struct ahc_softc*, struct scb*);
+ 
+ static int ahc_linux_map_seg(struct ahc_softc *ahc, struct scb *scb,
+-		 		      struct ahc_dma_seg *sg,
++				      struct ahc_dma_seg *sg,
+ 				      dma_addr_t addr, bus_size_t len);
+ 
+ static void
+@@ -571,7 +571,7 @@ ahc_linux_target_alloc(struct scsi_target *starget)
+ 	target_offset = starget->id;
+ 	if (starget->channel != 0)
+ 		target_offset += 8;
+-	  
++
+ 	if (starget->channel)
+ 		our_id = ahc->our_id_b;
+ 
+@@ -597,18 +597,18 @@ ahc_linux_target_alloc(struct scsi_target *starget)
+ 			ultra = 0;
+ 			flags &= ~CFXFER;
+ 		}
+-	    
++
+ 		if ((ahc->features & AHC_ULTRA2) != 0) {
+ 			scsirate = (flags & CFXFER) | (ultra ? 0x8 : 0);
+ 		} else {
+ 			scsirate = (flags & CFXFER) << 4;
+-			maxsync = ultra ? AHC_SYNCRATE_ULTRA : 
++			maxsync = ultra ? AHC_SYNCRATE_ULTRA :
+ 				AHC_SYNCRATE_FAST;
+ 		}
+ 		spi_max_width(starget) = (flags & CFWIDEB) ? 1 : 0;
+ 		if (!(flags & CFSYNCH))
+ 			spi_max_offset(starget) = 0;
+-		spi_min_period(starget) = 
++		spi_min_period(starget) =
+ 			ahc_find_period(ahc, scsirate, maxsync);
+ 	}
+ 	ahc_compile_devinfo(&devinfo, our_id, starget->id,
+@@ -657,7 +657,7 @@ ahc_linux_slave_alloc(struct scsi_device *sdev)
+ 	 * a tagged queuing capable device.
+ 	 */
+ 	dev->maxtags = 0;
+-	
++
+ 	spi_period(starget) = 0;
+ 
+ 	return 0;
+@@ -1219,8 +1219,8 @@ ahc_platform_free(struct ahc_softc *ahc)
+ 			starget = ahc->platform_data->starget[i];
+ 			if (starget != NULL) {
+ 				ahc->platform_data->starget[i] = NULL;
+- 			}
+- 		}
++			}
++		}
+ 
+ 		if (ahc->platform_data->irq != AHC_LINUX_NOIRQ)
+ 			free_irq(ahc->platform_data->irq, ahc);
+@@ -1267,7 +1267,7 @@ ahc_platform_set_tags(struct ahc_softc *ahc, struct scsi_device *sdev,
+ 	default:
+ 	case AHC_QUEUE_NONE:
+ 		now_queuing = 0;
+-		break; 
++		break;
+ 	case AHC_QUEUE_BASIC:
+ 		now_queuing = AHC_DEV_Q_BASIC;
+ 		break;
+@@ -1468,10 +1468,10 @@ ahc_linux_run_command(struct ahc_softc *ahc, struct ahc_linux_device *dev,
+ 	hscb->scsioffset = tinfo->curr.offset;
+ 	if ((tstate->ultraenb & mask) != 0)
+ 		hscb->control |= ULTRAENB;
+-	
++
+ 	if ((ahc->user_discenable & mask) != 0)
+ 		hscb->control |= DISCENB;
+-	
++
+ 	if ((tstate->auto_negotiate & mask) != 0) {
+ 		scb->flags |= SCB_AUTO_NEGOTIATE;
+ 		scb->hscb->control |= MK_MESSAGE;
+@@ -1531,7 +1531,7 @@ ahc_linux_run_command(struct ahc_softc *ahc, struct ahc_linux_device *dev,
+ 		 */
+ 		scb->hscb->sgptr =
+ 			ahc_htole32(scb->sg_list_phys | SG_FULL_RESID);
+-		
++
+ 		/*
+ 		 * Copy the first SG into the "current"
+ 		 * data pointer area.
+@@ -1551,7 +1551,7 @@ ahc_linux_run_command(struct ahc_softc *ahc, struct ahc_linux_device *dev,
+ 	dev->commands_issued++;
+ 	if ((dev->flags & AHC_DEV_PERIODIC_OTAG) != 0)
+ 		dev->commands_since_idle_or_otag++;
+-	
++
+ 	scb->flags |= SCB_ACTIVE;
+ 	if (untagged_q) {
+ 		TAILQ_INSERT_TAIL(untagged_q, scb, links.tqe);
+@@ -1572,7 +1572,7 @@ ahc_linux_isr(int irq, void *dev_id)
+ 	int	ours;
+ 
+ 	ahc = (struct ahc_softc *) dev_id;
+-	ahc_lock(ahc, &flags); 
++	ahc_lock(ahc, &flags);
+ 	ours = ahc_intr(ahc);
+ 	ahc_unlock(ahc, &flags);
+ 	return IRQ_RETVAL(ours);
+@@ -1647,22 +1647,22 @@ ahc_send_async(struct ahc_softc *ahc, char channel,
+ 		spi_display_xfer_agreement(starget);
+ 		break;
+ 	}
+-        case AC_SENT_BDR:
++	case AC_SENT_BDR:
+ 	{
+ 		WARN_ON(lun != CAM_LUN_WILDCARD);
+ 		scsi_report_device_reset(ahc->platform_data->host,
+ 					 channel - 'A', target);
+ 		break;
+ 	}
+-        case AC_BUS_RESET:
++	case AC_BUS_RESET:
+ 		if (ahc->platform_data->host != NULL) {
+ 			scsi_report_bus_reset(ahc->platform_data->host,
+ 					      channel - 'A');
+ 		}
+-                break;
+-        default:
+-                panic("ahc_send_async: Unexpected async event");
+-        }
++		break;
++	default:
++		panic("ahc_send_async: Unexpected async event");
++	}
+ }
+ 
+ /*
+@@ -1802,7 +1802,7 @@ ahc_linux_handle_scsi_status(struct ahc_softc *ahc,
+ 			    sdev->sdev_target->id, sdev->lun,
+ 			    sdev->sdev_target->channel == 0 ? 'A' : 'B',
+ 			    ROLE_INITIATOR);
+-	
++
+ 	/*
+ 	 * We don't currently trust the mid-layer to
+ 	 * properly deal with queue full or busy.  So,
+@@ -2108,7 +2108,7 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 
+ 		/* Any SCB for this device will do for a target reset */
+ 		LIST_FOREACH(pending_scb, &ahc->pending_scbs, pending_links) {
+-		  	if (ahc_match_scb(ahc, pending_scb, scmd_id(cmd),
++			if (ahc_match_scb(ahc, pending_scb, scmd_id(cmd),
+ 					  scmd_channel(cmd) + 'A',
+ 					  CAM_LUN_WILDCARD,
+ 					  SCB_LIST_NULL, ROLE_INITIATOR))
+@@ -2329,7 +2329,7 @@ static void ahc_linux_set_period(struct scsi_target *starget, int period)
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
+ 	struct ahc_tmode_tstate *tstate;
+-	struct ahc_initiator_tinfo *tinfo 
++	struct ahc_initiator_tinfo *tinfo
+ 		= ahc_fetch_transinfo(ahc,
+ 				      starget->channel + 'A',
+ 				      shost->this_id, starget->id, &tstate);
+@@ -2361,7 +2361,8 @@ static void ahc_linux_set_period(struct scsi_target *starget, int period)
+ 			ppr_options &= MSG_EXT_PPR_QAS_REQ;
+ 	}
+ 
+-	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options, AHC_SYNCRATE_DT);
++	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options,
++				     AHC_SYNCRATE_DT);
+ 	ahc_lock(ahc, &flags);
+ 	ahc_set_syncrate(ahc, &devinfo, syncrate, period, offset,
+ 			 ppr_options, AHC_TRANS_GOAL, FALSE);
+@@ -2373,7 +2374,7 @@ static void ahc_linux_set_offset(struct scsi_target *starget, int offset)
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
+ 	struct ahc_tmode_tstate *tstate;
+-	struct ahc_initiator_tinfo *tinfo 
++	struct ahc_initiator_tinfo *tinfo
+ 		= ahc_fetch_transinfo(ahc,
+ 				      starget->channel + 'A',
+ 				      shost->this_id, starget->id, &tstate);
+@@ -2386,7 +2387,8 @@ static void ahc_linux_set_offset(struct scsi_target *starget, int offset)
+ 	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
+ 			    starget->channel + 'A', ROLE_INITIATOR);
+ 	if (offset != 0) {
+-		syncrate = ahc_find_syncrate(ahc, &period, &ppr_options, AHC_SYNCRATE_DT);
++		syncrate = ahc_find_syncrate(ahc, &period, &ppr_options,
++					     AHC_SYNCRATE_DT);
+ 		period = tinfo->goal.period;
+ 		ppr_options = tinfo->goal.ppr_options;
+ 	}
+@@ -2401,7 +2403,7 @@ static void ahc_linux_set_dt(struct scsi_target *starget, int dt)
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
+ 	struct ahc_tmode_tstate *tstate;
+-	struct ahc_initiator_tinfo *tinfo 
++	struct ahc_initiator_tinfo *tinfo
+ 		= ahc_fetch_transinfo(ahc,
+ 				      starget->channel + 'A',
+ 				      shost->this_id, starget->id, &tstate);
+@@ -2422,7 +2424,8 @@ static void ahc_linux_set_dt(struct scsi_target *starget, int dt)
+ 
+ 	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
+ 			    starget->channel + 'A', ROLE_INITIATOR);
+-	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options,AHC_SYNCRATE_DT);
++	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options,
++				     AHC_SYNCRATE_DT);
+ 	ahc_lock(ahc, &flags);
+ 	ahc_set_syncrate(ahc, &devinfo, syncrate, period, tinfo->goal.offset,
+ 			 ppr_options, AHC_TRANS_GOAL, FALSE);
+@@ -2439,7 +2442,7 @@ static void ahc_linux_set_qas(struct scsi_target *starget, int qas)
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
+ 	struct ahc_tmode_tstate *tstate;
+-	struct ahc_initiator_tinfo *tinfo 
++	struct ahc_initiator_tinfo *tinfo
+ 		= ahc_fetch_transinfo(ahc,
+ 				      starget->channel + 'A',
+ 				      shost->this_id, starget->id, &tstate);
+@@ -2455,7 +2458,8 @@ static void ahc_linux_set_qas(struct scsi_target *starget, int qas)
+ 
+ 	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
+ 			    starget->channel + 'A', ROLE_INITIATOR);
+-	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options, AHC_SYNCRATE_DT);
++	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options,
++				     AHC_SYNCRATE_DT);
+ 	ahc_lock(ahc, &flags);
+ 	ahc_set_syncrate(ahc, &devinfo, syncrate, period, tinfo->goal.offset,
+ 			 ppr_options, AHC_TRANS_GOAL, FALSE);
+@@ -2467,7 +2471,7 @@ static void ahc_linux_set_iu(struct scsi_target *starget, int iu)
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
+ 	struct ahc_tmode_tstate *tstate;
+-	struct ahc_initiator_tinfo *tinfo 
++	struct ahc_initiator_tinfo *tinfo
+ 		= ahc_fetch_transinfo(ahc,
+ 				      starget->channel + 'A',
+ 				      shost->this_id, starget->id, &tstate);
+@@ -2483,7 +2487,8 @@ static void ahc_linux_set_iu(struct scsi_target *starget, int iu)
+ 
+ 	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
+ 			    starget->channel + 'A', ROLE_INITIATOR);
+-	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options, AHC_SYNCRATE_DT);
++	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options,
++				     AHC_SYNCRATE_DT);
+ 	ahc_lock(ahc, &flags);
+ 	ahc_set_syncrate(ahc, &devinfo, syncrate, period, tinfo->goal.offset,
+ 			 ppr_options, AHC_TRANS_GOAL, FALSE);
+@@ -2499,7 +2504,7 @@ static void ahc_linux_get_signalling(struct Scsi_Host *shost)
+ 
+ 	if (!(ahc->features & AHC_ULTRA2)) {
+ 		/* non-LVD chipset, may not have SBLKCTL reg */
+-		spi_signalling(shost) = 
++		spi_signalling(shost) =
+ 			ahc->features & AHC_HVD ?
+ 			SPI_SIGNAL_HVD :
+ 			SPI_SIGNAL_SE;
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.h b/drivers/scsi/aic7xxx/aic7xxx_osm.h
+index f8489078f003..125ba5eb175d 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.h
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.h
+@@ -258,7 +258,7 @@ struct ahc_linux_device {
+ 	int			active;
+ 
+ 	/*
+-	 * The currently allowed number of 
++	 * The currently allowed number of
+ 	 * transactions that can be queued to
+ 	 * the device.  Must be signed for
+ 	 * conversion from tagged to untagged
+@@ -272,7 +272,7 @@ struct ahc_linux_device {
+ 	 * device's queue is halted.
+ 	 */
+ 	u_int			qfrozen;
+-	
++
+ 	/*
+ 	 * Cumulative command counter.
+ 	 */
+@@ -351,16 +351,16 @@ struct ahc_platform_data {
+ 	/*
+ 	 * Fields accessed from interrupt context.
+ 	 */
+-	struct scsi_target *starget[AHC_NUM_TARGETS]; 
++	struct scsi_target *starget[AHC_NUM_TARGETS];
+ 
+ 	spinlock_t		 spin_lock;
+ 	u_int			 qfrozen;
+ 	struct completion	*eh_done;
+-	struct Scsi_Host        *host;		/* pointer to scsi host */
++	struct Scsi_Host	*host;		/* pointer to scsi host */
+ #define AHC_LINUX_NOIRQ	((uint32_t)~0)
+ 	uint32_t		 irq;		/* IRQ for this adapter */
+ 	uint32_t		 bios_address;
+-	resource_size_t 	 mem_busaddr;	/* Mem Base Addr */
++	resource_size_t		 mem_busaddr;	/* Mem Base Addr */
+ };
+ 
+ void ahc_delay(long);
+@@ -671,9 +671,9 @@ static inline void
+ ahc_freeze_scb(struct scb *scb)
+ {
+ 	if ((scb->io_ctx->result & (CAM_DEV_QFRZN << 16)) == 0) {
+-                scb->io_ctx->result |= CAM_DEV_QFRZN << 16;
+-                scb->platform_data->dev->qfrozen++;
+-        }
++		scb->io_ctx->result |= CAM_DEV_QFRZN << 16;
++		scb->platform_data->dev->qfrozen++;
++	}
+ }
+ 
+ void	ahc_platform_set_tags(struct ahc_softc *ahc, struct scsi_device *sdev,
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_proc.c b/drivers/scsi/aic7xxx/aic7xxx_proc.c
+index 18459605d991..4bc9e2dfccf6 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_proc.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_proc.c
+@@ -97,17 +97,17 @@ ahc_format_transinfo(struct seq_file *m, struct ahc_transinfo *tinfo)
+ 	u_int freq;
+ 	u_int mb;
+ 
+-        speed = 3300;
+-        freq = 0;
++	speed = 3300;
++	freq = 0;
+ 	if (tinfo->offset != 0) {
+ 		freq = ahc_calc_syncsrate(tinfo->period);
+ 		speed = freq;
+ 	}
+ 	speed *= (0x01 << tinfo->width);
+-        mb = speed / 1000;
+-        if (mb > 0)
++	mb = speed / 1000;
++	if (mb > 0)
+ 		seq_printf(m, "%d.%03dMB/s transfers", mb, speed % 1000);
+-        else
++	else
+ 		seq_printf(m, "%dKB/s transfers", speed);
+ 
+ 	if (freq != 0) {
+@@ -234,7 +234,7 @@ ahc_proc_write_seeprom(struct Scsi_Host *shost, char *buffer, int length)
+ 	if ((ahc->chip & AHC_VL) != 0) {
+ 		sd.sd_control_offset = SEECTL_2840;
+ 		sd.sd_status_offset = STATUS_2840;
+-		sd.sd_dataout_offset = STATUS_2840;		
++		sd.sd_dataout_offset = STATUS_2840;
+ 		sd.sd_chip = C46;
+ 		sd.sd_MS = 0;
+ 		sd.sd_RDY = EEPROM_TF;
+@@ -255,7 +255,8 @@ ahc_proc_write_seeprom(struct Scsi_Host *shost, char *buffer, int length)
+ 		u_int start_addr;
+ 
+ 		if (ahc->seep_config == NULL) {
+-			ahc->seep_config = kmalloc(sizeof(*ahc->seep_config), GFP_ATOMIC);
++			ahc->seep_config = kmalloc(sizeof(*ahc->seep_config),
++						   GFP_ATOMIC);
+ 			if (ahc->seep_config == NULL) {
+ 				printk("aic7xxx: Unable to allocate serial "
+ 				       "eeprom buffer.  Write failing\n");
 -- 
 2.29.2
 
