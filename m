@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE0FDC433E9
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:06:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12023C4332E
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:06:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A500B233A2
+	by mail.kernel.org (Postfix) with ESMTP id C788A2339F
 	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:06:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727415AbhAMJGg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 04:06:36 -0500
-Received: from mx2.suse.de ([195.135.220.15]:53832 "EHLO mx2.suse.de"
+        id S1727535AbhAMJGh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jan 2021 04:06:37 -0500
+Received: from mx2.suse.de ([195.135.220.15]:53830 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727535AbhAMJGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727495AbhAMJGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 13 Jan 2021 04:06:31 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id E75A9B745;
+        by mx2.suse.de (Postfix) with ESMTP id DF399B743;
         Wed, 13 Jan 2021 09:05:03 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 17/35] stex: do not set COMMAND_COMPLETE
-Date:   Wed, 13 Jan 2021 10:04:42 +0100
-Message-Id: <20210113090500.129644-18-hare@suse.de>
+Subject: [PATCH 18/35] nsp_cs: drop internal SCSI message definition
+Date:   Wed, 13 Jan 2021 10:04:43 +0100
+Message-Id: <20210113090500.129644-19-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210113090500.129644-1-hare@suse.de>
 References: <20210113090500.129644-1-hare@suse.de>
@@ -40,97 +40,83 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-COMMAND_COMPLETE is defined as '0', so setting it is quite pointless.
+Use the standard SCSI message definitions instead of the
+driver-internal ones.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/stex.c | 25 +++++++++++++------------
- 1 file changed, 13 insertions(+), 12 deletions(-)
+ drivers/scsi/pcmcia/nsp_cs.c | 12 ++++++------
+ drivers/scsi/pcmcia/nsp_cs.h | 11 -----------
+ 2 files changed, 6 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 40473e4f850f..12471208c7a8 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -625,7 +625,7 @@ stex_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
- 		if (page == 0x8 || page == 0x3f) {
- 			scsi_sg_copy_from_buffer(cmd, ms10_caching_page,
- 						 sizeof(ms10_caching_page));
--			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-+			cmd->result = DID_OK << 16;
- 			done(cmd);
- 		} else
- 			stex_invalid_field(cmd, done);
-@@ -644,7 +644,7 @@ stex_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
- 		break;
- 	case TEST_UNIT_READY:
- 		if (id == host->max_id - 1) {
--			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-+			cmd->result = DID_OK << 16;
- 			done(cmd);
- 			return 0;
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index bb3b3884f968..5d5f50d6a02d 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -1132,7 +1132,7 @@ static irqreturn_t nspintr(int irq, void *dev_id)
+ 		//*sync_neg       = SYNC_NOT_YET;
+ 
+ 		/* all command complete and return status */
+-		if (tmpSC->SCp.Message == MSG_COMMAND_COMPLETE) {
++		if (tmpSC->SCp.Message == COMMAND_COMPLETE) {
+ 			tmpSC->result = (DID_OK		             << 16) |
+ 					((tmpSC->SCp.Message & 0xff) <<  8) |
+ 					((tmpSC->SCp.Status  & 0xff) <<  0);
+@@ -1226,9 +1226,9 @@ static irqreturn_t nspintr(int irq, void *dev_id)
+ 			data->Sync[target].SyncOffset = 0;
+ 
+ 			/**/
+-			data->MsgBuffer[i] = MSG_EXTENDED; i++;
++			data->MsgBuffer[i] = EXTENDED_MESSAGE; i++;
+ 			data->MsgBuffer[i] = 3;            i++;
+-			data->MsgBuffer[i] = MSG_EXT_SDTR; i++;
++			data->MsgBuffer[i] = EXTENDED_SDTR; i++;
+ 			data->MsgBuffer[i] = 0x0c;         i++;
+ 			data->MsgBuffer[i] = 15;           i++;
+ 			/**/
+@@ -1255,9 +1255,9 @@ static irqreturn_t nspintr(int irq, void *dev_id)
+ 			//nsp_dbg(NSP_DEBUG_INTR, "sync target=%d,lun=%d",target,lun);
+ 
+ 			if (data->MsgLen       >= 5            &&
+-			    data->MsgBuffer[0] == MSG_EXTENDED &&
++			    data->MsgBuffer[0] == EXTENDED_MESSAGE &&
+ 			    data->MsgBuffer[1] == 3            &&
+-			    data->MsgBuffer[2] == MSG_EXT_SDTR ) {
++			    data->MsgBuffer[2] == EXTENDED_SDTR ) {
+ 				data->Sync[target].SyncPeriod = data->MsgBuffer[3];
+ 				data->Sync[target].SyncOffset = data->MsgBuffer[4];
+ 				//nsp_dbg(NSP_DEBUG_INTR, "sync ok, %d %d", data->MsgBuffer[3], data->MsgBuffer[4]);
+@@ -1275,7 +1275,7 @@ static irqreturn_t nspintr(int irq, void *dev_id)
+ 		tmp = -1;
+ 		for (i = 0; i < data->MsgLen; i++) {
+ 			tmp = data->MsgBuffer[i];
+-			if (data->MsgBuffer[i] == MSG_EXTENDED) {
++			if (data->MsgBuffer[i] == EXTENDED_MESSAGE) {
+ 				i += (1 + data->MsgBuffer[i+1]);
+ 			}
  		}
-@@ -661,7 +661,7 @@ stex_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
- 			(cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
- 			scsi_sg_copy_from_buffer(cmd, (void *)console_inq_page,
- 						 sizeof(console_inq_page));
--			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-+			cmd->result = DID_OK << 16;
- 			done(cmd);
- 		} else
- 			stex_invalid_field(cmd, done);
-@@ -679,9 +679,10 @@ stex_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
- 			ver.console_id = host->max_id - 1;
- 			ver.host_no = hba->host->host_no;
- 			cp_len = scsi_sg_copy_from_buffer(cmd, &ver, cp_len);
--			cmd->result = sizeof(ver) == cp_len ?
--				DID_OK << 16 | COMMAND_COMPLETE << 8 :
--				DID_ERROR << 16 | COMMAND_COMPLETE << 8;
-+			if (sizeof(ver) == cp_len)
-+				cmd->result = DID_OK << 16;
-+			else
-+				cmd->result = DID_ERROR << 16;
- 			done(cmd);
- 			return 0;
- 		}
-@@ -736,16 +737,16 @@ static void stex_scsi_done(struct st_ccb *ccb)
- 		result = ccb->scsi_status;
- 		switch (ccb->scsi_status) {
- 		case SAM_STAT_GOOD:
--			result |= DID_OK << 16 | COMMAND_COMPLETE << 8;
-+			result |= DID_OK << 16;
- 			break;
- 		case SAM_STAT_CHECK_CONDITION:
- 			result |= DRIVER_SENSE << 24;
- 			break;
- 		case SAM_STAT_BUSY:
--			result |= DID_BUS_BUSY << 16 | COMMAND_COMPLETE << 8;
-+			result |= DID_BUS_BUSY << 16;
- 			break;
- 		default:
--			result |= DID_ERROR << 16 | COMMAND_COMPLETE << 8;
-+			result |= DID_ERROR << 16;
- 			break;
- 		}
- 	}
-@@ -753,15 +754,15 @@ static void stex_scsi_done(struct st_ccb *ccb)
- 		result = DRIVER_SENSE << 24 | SAM_STAT_CHECK_CONDITION;
- 	else switch (ccb->srb_status) {
- 		case SRB_STATUS_SELECTION_TIMEOUT:
--			result = DID_NO_CONNECT << 16 | COMMAND_COMPLETE << 8;
-+			result = DID_NO_CONNECT << 16;
- 			break;
- 		case SRB_STATUS_BUSY:
--			result = DID_BUS_BUSY << 16 | COMMAND_COMPLETE << 8;
-+			result = DID_BUS_BUSY << 16;
- 			break;
- 		case SRB_STATUS_INVALID_REQUEST:
- 		case SRB_STATUS_ERROR:
- 		default:
--			result = DID_ERROR << 16 | COMMAND_COMPLETE << 8;
-+			result = DID_ERROR << 16;
- 			break;
- 	}
+diff --git a/drivers/scsi/pcmcia/nsp_cs.h b/drivers/scsi/pcmcia/nsp_cs.h
+index ea5122f3396d..665bf8d0faf7 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.h
++++ b/drivers/scsi/pcmcia/nsp_cs.h
+@@ -370,17 +370,6 @@ enum _burst_mode {
+ 	BURST_MEM32 = 2,
+ };
+ 
+-/**************************************************************************
+- * SCSI messaage
+- */
+-#define MSG_COMMAND_COMPLETE 0x00
+-#define MSG_EXTENDED         0x01
+-#define MSG_ABORT            0x06
+-#define MSG_NO_OPERATION     0x08
+-#define MSG_BUS_DEVICE_RESET 0x0c
+-
+-#define MSG_EXT_SDTR         0x01
+-
+ /* scatter-gather table */
+ #  define BUFFER_ADDR ((char *)((sg_virt(SCpnt->SCp.buffer))))
  
 -- 
 2.29.2
