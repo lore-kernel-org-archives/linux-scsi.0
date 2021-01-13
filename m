@@ -2,270 +2,153 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 523E9C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 02:46:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5DC2C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 03:56:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1503023120
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 02:46:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57CD42311B
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 03:56:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728153AbhAMCqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jan 2021 21:46:17 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:23338 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726406AbhAMCqR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 21:46:17 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1610505975; x=1642041975;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=5Xf6qlI2st+RJp44dBtRLbjM6u8hw1HIH9wC1FEtltg=;
-  b=VnF5xZ9lnx5flbk/yprT7Zkm18kbbhuIKB2aERoF5U4JC/HX9VXI8ed3
-   hhXIRy/PJENbtu4VqLYoP+4poYRX6+/CUyMe6dqFWxYdmaySxorUQ+gB2
-   R1/rvEu4cXfLyEBtPGGCEfr4Azk5D1qw8X+dKRb3b5l/Y9NVC7WF42MTi
-   CRiUjo4Ca6k0UQz9omRVoCGyAnFkaxymOVakTUJAdlAfCbwZ0sDFPyS9p
-   5pKIuZUxs3gTt5/i7wlMukaEiCI8jSH72TLwqqNdLedve4N2jNUT1Rc+f
-   e0xFpbK4EOOnziufs+PX6rVns8DUOQrjRy2kzcFTliY8tKcsggomwC1eo
-   Q==;
-IronPort-SDR: Jzu1FEwFvrEkq3H29YoWRFWrmsJzGu24j1aoFZF2ESRdamf5HNMSeMbey1p5WsaOxBsJINXypZ
- hKVtQL44SqBFkfwGeb9wi9ADUagXg8hOkd9z7nWEUQKt3c8FqeMqpIaHIczcHxFcbmobxIftHn
- Q0mf4AP7O4KHsubOYw3aIL3z6Uov5/5nO29CPIz0uafAeRhfzKnjQYGY5RLMVJAdCPwpK3HKVH
- 9TIZ/uIu2cRKCILBM033MwENtvR9NGxIV31cyt4fyYUC6UD3SYwcmC4sX1rNNUfXqoB63Hn2LZ
- +z8=
-X-IronPort-AV: E=Sophos;i="5.79,343,1602518400"; 
-   d="scan'208";a="267598514"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Jan 2021 10:45:10 +0800
-IronPort-SDR: 3SCwMf/r9fcxkCDP/Z/WG/ckEmyKQRNNp56hVHPoeRGleGBlYRO2Cdj9l62mVEvLXqnWFpXn8E
- L0A3YRIf4lj9xZbGS052K2a3XZj/S4MPJ0eVxwNL0N+jCf5qyhvNDjyeSMulFQV5H1T06RYohk
- qevC2RgI9aUwXurdhvLUi72LAObR3f2Ixygwd/8CR6V/cpVe+t2ll/8dIiB4IEtYYlFjiaYRWq
- 4Bt7p+m9fl+6/auExQU3N19ztG/oEcXlWQTkxQHt16RB/Ex7tjo96Nb5UqE6k4xMtQ1DRQFN5r
- A724peCr5oWFfFD2EgYG9JiA
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2021 18:29:55 -0800
-IronPort-SDR: I3t4uJi7uZ6U+8FbcXBp+c2lWOoRIr2WLxhkURx6PTmvHUSIQavoQJzkyWiAQic5yJAb9sPO46
- +zecJOh0ERoXkoqNejpXK7xgppYwArAx3y+LtgP8sSvAXCdobh4c3nV7X8X7HkIz4aZOUzgGjO
- InC9hmCZ9KjAswWg90UJbHn1XrM573fxqHfJrwU4EoUjr/s+kiOm+jf+9l3l9FGUmzR+R0xG9d
- VkZEx7Ozd65YWl4aP09TFwQABxIDeEDOfZcBeEW/RbeAkLvlQ6j3MHOo8rdQVb36+wFB3xSILg
- qSY=
-WDCIronportException: Internal
-Received: from shindev.dhcp.fujisawa.hgst.com ([10.149.52.189])
-  by uls-op-cesaip01.wdc.com with ESMTP; 12 Jan 2021 18:45:09 -0800
-From:   Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        Bodo Stroesser <bostroesser@gmail.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH] scsi: target: tcmu: Fix use-after-free of se_cmd->priv
-Date:   Wed, 13 Jan 2021 11:45:08 +0900
-Message-Id: <20210113024508.1264992-1-shinichiro.kawasaki@wdc.com>
-X-Mailer: git-send-email 2.28.0
+        id S1725873AbhAMD4i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jan 2021 22:56:38 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:54116 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725536AbhAMD4i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2021 22:56:38 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10D3tsPQ129427;
+        Wed, 13 Jan 2021 03:55:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=zGbtn+Qpj0vb7Gronh8ACqx5r/LxImUK0EFWfpAKwmQ=;
+ b=exzHXhFwvBnBeCQWnexRjaKyvhWuaRkdmyOrF7PZiVJMdFm6ySdluCI8kQwydSVhJCKs
+ TnUuR7DE6i3JXLYMvyVnu3A5hTjYrdjB6Vb1m4adRAmu4pkqz7ugphbPtX5FLo/yYlJs
+ dH4/JVIEcSIAjUg3LKwLAKfuzb5jGFJdM52+oKKoA7MUtE5cTAC9sQsY/l1r5V2so+Dn
+ SESH/PzXS17bSqz5ex+PtmF8ECyre7ANVejHu+mjllTCDmQkjx+6P+GAnE17Ge0/111N
+ 9J4WbXBCFpOrS8yEFX+5xoWVdkHi0s15UUKNiHOmoG96SVX/wjRAUEtOzsOqJblwARdD Pg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 360kvk1cda-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Jan 2021 03:55:54 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10D3tdGR135544;
+        Wed, 13 Jan 2021 03:55:53 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2109.outbound.protection.outlook.com [104.47.70.109])
+        by aserp3020.oracle.com with ESMTP id 360ke7menq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Jan 2021 03:55:53 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=fzl1/678nZqh96C+NYwoNrlHz7tMmtuh0QyCPZ28bqvsgKWtXq0H2O91dcWodbJOGyXMcgZnSpW8WGE1EtP2EshJC5ZK1/V98a7uFm6Blk7fXSgkFlkBtY6Rt6NxSlRKi7pAmjT8rpWYykhgqsoMEI4Vj9BGgTb6muodBzO2OjTWvaZaPOo30gMrCeBWnIyHrs27UyN+LHu7ia+a+PUgCRxk93vPqBOz7AB5QwCv1z8RAks3VlIPtlAIXuwbbltcXwM1ZDdi/R1hHF+kdHRFfUeNoEDxAKqsq2ED1AiKG5QOLmZ4F6GndNevYmU/6eLIuh1R9krIB4XMPsA+pEj1EA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=zGbtn+Qpj0vb7Gronh8ACqx5r/LxImUK0EFWfpAKwmQ=;
+ b=iOX60zTcIWqonrJOknSsKZMDG0ZFQS4ws7x4o1dvZmOSBv/ZgStPbFAeSGEZvEp7UcbYCxDOTf8C8v6zTPUD7Ljb7aOkLdB7gUE7K7Ky6Pt9b48aHNiPkLJwzW1c4W6Cl+2JPNDeEQ0mp8eRR2dKSFpiPa21sosVioY3ylzv8Gveu9e2NTyK6+xMx0pyv3B2rY4S7ce9UM0RaYEiGnSRL8nMe/NtGYJc/JPGl1o+xo0W4s29ZvTKJ8udU/mj1hf4f+pqlPnbhw2NkieyX1U6gAoWhRKYrdksFEUEofS8M20N7BALqHVCku3ZIdrMpvTME0hRD8GeKB1ZBvtEjSL9YA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=zGbtn+Qpj0vb7Gronh8ACqx5r/LxImUK0EFWfpAKwmQ=;
+ b=fwCVCQvJPWrysvtMw7lla63dZtUPZHKGKB9sNHaATXw1lp7TFB+3T29WmRCpXyCZ0yhkEnMwZtsU3/mJagVHIcWXxbeVnj+M+M1XrxixNaXgZDRZybHlQJXuYdnInK178DNP4VAoxNQFzIFDUzM3+FthWEnqXJhtsO0NLRdCVrQ=
+Authentication-Results: broadcom.com; dkim=none (message not signed)
+ header.d=none;broadcom.com; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB4536.namprd10.prod.outlook.com (2603:10b6:510:40::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3763.10; Wed, 13 Jan
+ 2021 03:55:50 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::54f3:a8aa:a2cd:a3a4]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::54f3:a8aa:a2cd:a3a4%5]) with mapi id 15.20.3763.009; Wed, 13 Jan 2021
+ 03:55:50 +0000
+To:     Kashyap Desai <kashyap.desai@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Subject: Re: [PATCH v2 0/4] io_uring iopoll in scsi layer
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1h7nl4hpj.fsf@ca-mkp.ca.oracle.com>
+References: <20201203034100.29716-1-kashyap.desai@broadcom.com>
+        <af1ef280ded61be8ec5882b7a3b99ef9@mail.gmail.com>
+Date:   Tue, 12 Jan 2021 22:55:46 -0500
+In-Reply-To: <af1ef280ded61be8ec5882b7a3b99ef9@mail.gmail.com> (Kashyap
+        Desai's message of "Mon, 11 Jan 2021 17:45:29 +0530")
+Content-Type: text/plain
+X-Originating-IP: [138.3.200.58]
+X-ClientProxiedBy: SN4PR0801CA0012.namprd08.prod.outlook.com
+ (2603:10b6:803:29::22) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SN4PR0801CA0012.namprd08.prod.outlook.com (2603:10b6:803:29::22) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3763.9 via Frontend Transport; Wed, 13 Jan 2021 03:55:49 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 72e5cd8b-3a97-4782-b92d-08d8b7771e00
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4536:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB453659E91604B6F0867AD9998EA90@PH0PR10MB4536.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:519;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: h6get2YVcMuKC4+DfsWldk73bTOQZdXXKbENgI+Bt2002Mxk+M8zTiO/piFSCN15bfynKuRV+4dPHJrlIQ7+arGB4QgRRgAmugpSQZ0308wu73K7ChqoXMM93+PmPK8BOVRNqES5b9DRdK12s4PpRT5PGALSnSfqmrvdtlVpXTcbZa/y/GPUvP0qbG8ugUOGWsn0IXHZ20ZPQzp5Bo3c/l7+rYqAIL2+u97LoNkK7JgnuvoY66GeyxC3mvKddoQgHDhTIzNaU5sEAdgGPWZhKSROfuEPJ/vzh5QPgZxE9KgGXBLZzN1GVVQwGrevBXujqAkwsybPFFR7aGNghkgvSK/G891WEDZvgtmpe13sU4k+DenoBGX5gSOCS1XF3vD5HzyAsSf8CJz1Gcsf6hpXQQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(396003)(136003)(39850400004)(376002)(346002)(6916009)(5660300002)(66476007)(55016002)(8676002)(956004)(107886003)(16526019)(66556008)(4326008)(6666004)(66946007)(186003)(83380400001)(26005)(478600001)(36916002)(86362001)(8936002)(7696005)(2906002)(52116002)(4744005)(316002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?4lZYmoy7dIVWwrKc/ZulVNyRvGCR/WE01C/jYuzqwP6sY/kTR0whSGJ1dCvs?=
+ =?us-ascii?Q?l4KBsBynIotd0qFPJDDXM7WNKFjPGoyiw/9qIdVqIMKUKce/+k90hwk6JApP?=
+ =?us-ascii?Q?U1TkOSEz5Hcq0gDizjc2JeZI5W0I3peCC0N9nGQjoc8H1JqIIhr+Q+FVjsYd?=
+ =?us-ascii?Q?J4VejZJvW2cNV4rIp331JhohqbTk8vQ7+jSXQMq/FXlKgcoKytNk1eehKDXX?=
+ =?us-ascii?Q?2FGE7W+WHH0jgw8ulZLFvTgKvKySNSsdrBBcsPbNVj84t6VUCvL+M8Wr/kFg?=
+ =?us-ascii?Q?/W9uTCgYkDpCJh0diDDB9YaRXORMeItkbLvN6phJ5LgcOprHvbzacTwTSwl+?=
+ =?us-ascii?Q?eZdaL3gv5Y3+cMt7ELVfckWG+nQ3feYFb9KD++mv+6lwfjBQvIPPzdkLTSBm?=
+ =?us-ascii?Q?jf5xOFCPMyDlh7ilYkjpHFbacxOfi1QDb3bvcyI7RpJhEHxbQmSReiQgGvur?=
+ =?us-ascii?Q?gk6H6Pw2s9ULb7NQNamcn4AYBlm1F2Cr0eSSpGor5aRrzQVWWavCxGGkdiN6?=
+ =?us-ascii?Q?iKJtvyr59hV7qUAIvmjYeOeiQ05ESv50uYNQGRr/Of5XFg9CmvLnbe5may0d?=
+ =?us-ascii?Q?vvELhsOa39N30aUIMYUbqMZvFQluqxV+Y0sSLQ94KGSb/vVRHdFvAQzV+QG8?=
+ =?us-ascii?Q?ILBp8nrcj33PCSIpq6jK0pHW7voN3g/tYZEa4Dh3UWTgxg7YeGC+ZBnoqv/b?=
+ =?us-ascii?Q?lQubHmNf5CSYgnmf3yqWV+r+VrLTFMvkOLq3srXonjlDruTYH1y+b7mZ7MNW?=
+ =?us-ascii?Q?+pomcIogOurh4gZ0OgqZevdImvRRKd/2pHMQdu8YUfBHGudiT9RUGkvKheox?=
+ =?us-ascii?Q?Ev1ai88IpDCZgYLDhcs/vD/7J2uCO6uP9w4hW3qAQd7Vb/l0p1ySa4mFUXEn?=
+ =?us-ascii?Q?tgIwm2x/aMOVA47Xhxq3zWAIMv2489yObq26bI/AT+VGgFg11NBJdVePRTE+?=
+ =?us-ascii?Q?zqg7ZfaElxdi926Hf5s0X+ub2NMWENRAw8SltvYw4NU=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jan 2021 03:55:50.4394
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-Network-Message-Id: 72e5cd8b-3a97-4782-b92d-08d8b7771e00
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ddqxvRM5hhgav4nr3qLbYGRjLd2H6wvgsf6P60W1oF/SsWSKVpCJzlN2fOc5WpibKY6+6WF662HMYhRPRXvl564F81LlN+joxwCSHwrJNU8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4536
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9862 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0 spamscore=0
+ mlxlogscore=999 malwarescore=0 bulkscore=0 mlxscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101130020
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9862 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ lowpriorityscore=0 bulkscore=0 priorityscore=1501 malwarescore=0
+ clxscore=1015 impostorscore=0 spamscore=0 mlxscore=0 suspectscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101130020
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit a35129024e88 ("scsi: target: tcmu: Use priv pointer in se_cmd")
-modified tcmu_free_cmd() to set NULL to priv pointer in se_cmd. However,
-se_cmd can be already freed by work queue triggered in
-target_complete_cmd(). This caused BUG KASAN use-after-free [1].
 
-To fix the bug, do not touch priv pointer in tcmu_free_cmd(). Instead,
-set NULL to priv pointer before target_complete_cmd() calls. Also, to
-avoid unnecessary priv pointer change in tcmu_queue_cmd(), modify priv
-pointer in the function only when tcmu_free_cmd() is not called.
+Kashyap,
 
-[1]
-BUG: KASAN: use-after-free in tcmu_handle_completions+0x1172/0x1770 [target_core_user]
-Write of size 8 at addr ffff88814cf79a40 by task cmdproc-uio0/14842
+> Can you include this patch set for 5.11 ?  I see
+> (origin/5.11/scsi-queue) has below change set. It looks like you have
+> already queued up "shared host tag feature for 5.11"
 
-CPU: 2 PID: 14842 Comm: cmdproc-uio0 Not tainted 5.11.0-rc2 #1
-Hardware name: Supermicro Super Server/X10SRL-F, BIOS 3.2 11/22/2019
-Call Trace:
- dump_stack+0x9a/0xcc
- ? tcmu_handle_completions+0x1172/0x1770 [target_core_user]
- print_address_description.constprop.0+0x18/0x130
- ? tcmu_handle_completions+0x1172/0x1770 [target_core_user]
- ? tcmu_handle_completions+0x1172/0x1770 [target_core_user]
- kasan_report.cold+0x7f/0x10e
- ? tcmu_handle_completions+0x1172/0x1770 [target_core_user]
- tcmu_handle_completions+0x1172/0x1770 [target_core_user]
- ? queue_tmr_ring+0x5d0/0x5d0 [target_core_user]
- tcmu_irqcontrol+0x28/0x60 [target_core_user]
- uio_write+0x155/0x230
- ? uio_vma_fault+0x460/0x460
- ? security_file_permission+0x4f/0x440
- vfs_write+0x1ce/0x860
- ksys_write+0xe9/0x1b0
- ? __ia32_sys_read+0xb0/0xb0
- ? syscall_enter_from_user_mode+0x27/0x70
- ? trace_hardirqs_on+0x1c/0x110
- do_syscall_64+0x33/0x40
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-RIP: 0033:0x7fcf8b61905f
-Code: 89 54 24 18 48 89 74 24 10 89 7c 24 08 e8 b9 fc ff ff 48 8b 54 24 18 48 8b 74 24 10 41 89 c0 8b 7c 24 08 b8 01 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 31 44 89 c7 48 89 44 24 08 e8 0c fd ff ff 48
-RSP: 002b:00007fcf7b3e6c30 EFLAGS: 00000293 ORIG_RAX: 0000000000000001
-RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007fcf8b61905f
-RDX: 0000000000000004 RSI: 00007fcf7b3e6c78 RDI: 000000000000000c
-RBP: 00007fcf7b3e6c80 R08: 0000000000000000 R09: 00007fcf7b3e6aa8
-R10: 000000000b01c000 R11: 0000000000000293 R12: 00007ffe0c32a52e
-R13: 00007ffe0c32a52f R14: 0000000000000000 R15: 00007fcf7b3e7640
+The revert was reverted in v5.11-rc3. Note that 5.12/scsi-queue is based
+on v5.11-rc2 so the queue tree does not have the commit.
 
-Allocated by task 383:
- kasan_save_stack+0x1b/0x40
- ____kasan_kmalloc.constprop.0+0x84/0xa0
- kmem_cache_alloc+0x142/0x330
- tcm_loop_queuecommand+0x2a/0x4e0 [tcm_loop]
- scsi_queue_rq+0x12ec/0x2d20
- blk_mq_dispatch_rq_list+0x30a/0x1db0
- __blk_mq_do_dispatch_sched+0x326/0x830
- __blk_mq_sched_dispatch_requests+0x2c8/0x3f0
- blk_mq_sched_dispatch_requests+0xca/0x120
- __blk_mq_run_hw_queue+0x93/0xe0
- process_one_work+0x7b6/0x1290
- worker_thread+0x590/0xf80
- kthread+0x362/0x430
- ret_from_fork+0x22/0x30
-
-Freed by task 11655:
- kasan_save_stack+0x1b/0x40
- kasan_set_track+0x1c/0x30
- kasan_set_free_info+0x20/0x30
- ____kasan_slab_free+0xec/0x120
- slab_free_freelist_hook+0x53/0x160
- kmem_cache_free+0xf4/0x5c0
- target_release_cmd_kref+0x3ea/0x9e0 [target_core_mod]
- transport_generic_free_cmd+0x28b/0x2f0 [target_core_mod]
- target_complete_ok_work+0x250/0xac0 [target_core_mod]
- process_one_work+0x7b6/0x1290
- worker_thread+0x590/0xf80
- kthread+0x362/0x430
- ret_from_fork+0x22/0x30
-
-Last potentially related work creation:
- kasan_save_stack+0x1b/0x40
- kasan_record_aux_stack+0xa3/0xb0
- insert_work+0x48/0x2e0
- __queue_work+0x4e8/0xdf0
- queue_work_on+0x78/0x80
- tcmu_handle_completions+0xad0/0x1770 [target_core_user]
- tcmu_irqcontrol+0x28/0x60 [target_core_user]
- uio_write+0x155/0x230
- vfs_write+0x1ce/0x860
- ksys_write+0xe9/0x1b0
- do_syscall_64+0x33/0x40
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-
-Second to last potentially related work creation:
- kasan_save_stack+0x1b/0x40
- kasan_record_aux_stack+0xa3/0xb0
- insert_work+0x48/0x2e0
- __queue_work+0x4e8/0xdf0
- queue_work_on+0x78/0x80
- tcm_loop_queuecommand+0x1c3/0x4e0 [tcm_loop]
- scsi_queue_rq+0x12ec/0x2d20
- blk_mq_dispatch_rq_list+0x30a/0x1db0
- __blk_mq_do_dispatch_sched+0x326/0x830
- __blk_mq_sched_dispatch_requests+0x2c8/0x3f0
- blk_mq_sched_dispatch_requests+0xca/0x120
- __blk_mq_run_hw_queue+0x93/0xe0
- process_one_work+0x7b6/0x1290
- worker_thread+0x590/0xf80
- kthread+0x362/0x430
- ret_from_fork+0x22/0x30
-
-The buggy address belongs to the object at ffff88814cf79800
- which belongs to the cache tcm_loop_cmd_cache of size 896
-
-Fixes: a35129024e88 ("scsi: target: tcmu: Use priv pointer in se_cmd")
-Cc: stable@vger.kernel.org # v5.9+
-Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
----
- drivers/target/target_core_user.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 6b171fff007b..a5991df23581 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -562,8 +562,6 @@ tcmu_get_block_page(struct tcmu_dev *udev, uint32_t dbi)
- 
- static inline void tcmu_free_cmd(struct tcmu_cmd *tcmu_cmd)
- {
--	if (tcmu_cmd->se_cmd)
--		tcmu_cmd->se_cmd->priv = NULL;
- 	kfree(tcmu_cmd->dbi);
- 	kmem_cache_free(tcmu_cmd_cache, tcmu_cmd);
- }
-@@ -1174,11 +1172,12 @@ tcmu_queue_cmd(struct se_cmd *se_cmd)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
- 	mutex_lock(&udev->cmdr_lock);
--	se_cmd->priv = tcmu_cmd;
- 	if (!(se_cmd->transport_state & CMD_T_ABORTED))
- 		ret = queue_cmd_ring(tcmu_cmd, &scsi_ret);
- 	if (ret < 0)
- 		tcmu_free_cmd(tcmu_cmd);
-+	else
-+		se_cmd->priv = tcmu_cmd;
- 	mutex_unlock(&udev->cmdr_lock);
- 	return scsi_ret;
- }
-@@ -1241,6 +1240,7 @@ tcmu_tmr_notify(struct se_device *se_dev, enum tcm_tmreq_table tmf,
- 
- 		list_del_init(&cmd->queue_entry);
- 		tcmu_free_cmd(cmd);
-+		se_cmd->priv = NULL;
- 		target_complete_cmd(se_cmd, SAM_STAT_TASK_ABORTED);
- 		unqueued = true;
- 	}
-@@ -1332,6 +1332,7 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
- 	}
- 
- done:
-+	se_cmd->priv = NULL;
- 	if (read_len_valid) {
- 		pr_debug("read_len = %d\n", read_len);
- 		target_complete_cmd_with_length(cmd->se_cmd,
-@@ -1478,6 +1479,7 @@ static void tcmu_check_expired_queue_cmd(struct tcmu_cmd *cmd)
- 	se_cmd = cmd->se_cmd;
- 	tcmu_free_cmd(cmd);
- 
-+	se_cmd->priv = NULL;
- 	target_complete_cmd(se_cmd, SAM_STAT_TASK_SET_FULL);
- }
- 
-@@ -1592,6 +1594,7 @@ static void run_qfull_queue(struct tcmu_dev *udev, bool fail)
- 			 * removed then LIO core will do the right thing and
- 			 * fail the retry.
- 			 */
-+			tcmu_cmd->se_cmd->priv = NULL;
- 			target_complete_cmd(tcmu_cmd->se_cmd, SAM_STAT_BUSY);
- 			tcmu_free_cmd(tcmu_cmd);
- 			continue;
-@@ -1605,6 +1608,7 @@ static void run_qfull_queue(struct tcmu_dev *udev, bool fail)
- 			 * Ignore scsi_ret for now. target_complete_cmd
- 			 * drops it.
- 			 */
-+			tcmu_cmd->se_cmd->priv = NULL;
- 			target_complete_cmd(tcmu_cmd->se_cmd,
- 					    SAM_STAT_CHECK_CONDITION);
- 			tcmu_free_cmd(tcmu_cmd);
-@@ -2212,6 +2216,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
- 		if (!test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
- 			WARN_ON(!cmd->se_cmd);
- 			list_del_init(&cmd->queue_entry);
-+			cmd->se_cmd->priv = NULL;
- 			if (err_level == 1) {
- 				/*
- 				 * Userspace was not able to start the
 -- 
-2.28.0
-
+Martin K. Petersen	Oracle Linux Engineering
