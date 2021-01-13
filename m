@@ -5,72 +5,71 @@ X-Spam-Level:
 X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 619DAC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 05:51:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B3D6C433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 05:52:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1733523125
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 05:51:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A17723120
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 05:52:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726543AbhAMFvm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 00:51:42 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:35386 "EHLO
+        id S1726207AbhAMFv7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jan 2021 00:51:59 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:35696 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726535AbhAMFvl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2021 00:51:41 -0500
+        with ESMTP id S1725831AbhAMFv6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2021 00:51:58 -0500
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10D5nwZN170908;
-        Wed, 13 Jan 2021 05:50:50 GMT
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10D5ne9t170789;
+        Wed, 13 Jan 2021 05:50:39 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=SedtQit5XrcXPxSi63MAXCoE17t1q9k7AjveDhzCY+4=;
- b=EM89Tv0hTXem4VRWnmfAEwtKiK7D9hPlh7WqKHQRRPxIFVf8XFAcC4T9w0leTjZfIhud
- ozxCjA9Wh1hVjJEGfnVSQIZVMrGkC5/QUiPX375jzpWadZBtj1Jpc8MZ+XFCIB7uvlcO
- 5togkNAcdP7+ZgyLrhonlAQ7CPmjIe8+jgQomuOTmU1kKv7f0OHXe69yhRwDLyPAneVx
- NsyHMxAODOKzukpJvYCEpXsPLMiVSsqDYqIBW8pccrWwH7nYIla1Iay1qCmVF+mhyTYz
- ClAN2J4mZhQwWa/buuLjwx8jjwg6utj6ARZSu5kw0o2gD7+aX92xv1gGd6SydAyQnCTC /Q== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 360kg1sp0q-1
+ bh=Fa53x9KCB45aZToeaa6imRFJDCfKeEZyIw4w0UELXYU=;
+ b=qNX1fy3863Uc+9Cdm1risWemmIyLPaAvwCb15uuQu8JI6ajp/MZfa6QiroaWVLyFnsF4
+ RSfD8hzMdcojJMI9x2VUp7Iu5qP+w/YC4esGXGgzHdOAXI5d5fbDfMOWkQZwNT96w36M
+ XN//udxOhHgtw2QPuiU0Wop7ojgQzp/o88Tb10JTAnHZY9FA+T9lHgWj5BCD+DP7MME5
+ L81GehSrUiyQ4J5jE6N+tpusvXRl42xWN7cjzDIh22SclAvnqyDQq8Y4pTobPLBfO2Q4
+ vOI4qz03OiGXwSae8VqkBaaq8+VwbK19JeY3iowxkO6dIAOPlUXYPFRhF1WzH1HOdxEU TQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 360kg1sp04-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Jan 2021 05:50:50 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10D5eVgu058740;
-        Wed, 13 Jan 2021 05:48:49 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 360kf6w07y-1
+        Wed, 13 Jan 2021 05:50:39 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10D5dcoH158982;
+        Wed, 13 Jan 2021 05:48:39 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 360ke7rkjb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Jan 2021 05:48:49 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 10D5mmor011521;
-        Wed, 13 Jan 2021 05:48:48 GMT
+        Wed, 13 Jan 2021 05:48:39 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 10D5mWOQ023651;
+        Wed, 13 Jan 2021 05:48:32 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 12 Jan 2021 21:48:36 -0800
+        with ESMTP ; Tue, 12 Jan 2021 21:48:31 -0800
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     bhoon95.kim@samsung.com, sh425.lee@samsung.com, beanhuo@micron.com,
-        jejb@linux.ibm.com, Kiwoong Kim <kwmad.kim@samsung.com>,
-        alim.akhtar@samsung.com, bvanassche@acm.org,
-        grant.jung@samsung.com, hy50.seo@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, linux-scsi@vger.kernel.org,
-        sc.suh@samsung.com, cang@codeaurora.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3 0/2] permit vendor specific values of unipro timeouts
-Date:   Wed, 13 Jan 2021 00:48:25 -0500
-Message-Id: <161050726818.14224.9504573132098411358.b4-ty@oracle.com>
+To:     stanley.chu@mediatek.com, beanhuo@micron.com, jejb@linux.ibm.com,
+        Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
+        rostedt@goodmis.org, bvanassche@acm.org, tomas.winkler@intel.com,
+        asutoshd@codeaurora.org, avri.altman@wdc.com, cang@codeaurora.org
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v4 0/6] Several changes for the UPIU trace
+Date:   Wed, 13 Jan 2021 00:48:22 -0500
+Message-Id: <161050726819.14224.15923940659426155067.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <cover.1608513782.git.kwmad.kim@samsung.com>
-References: <CGME20201221013532epcas2p4cfd78329e4d56e3ac5317ae23c27bc8c@epcas2p4.samsung.com> <cover.1608513782.git.kwmad.kim@samsung.com>
+In-Reply-To: <20210105113446.16027-1-huobean@gmail.com>
+References: <20210105113446.16027-1-huobean@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9862 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- mlxlogscore=999 phishscore=0 bulkscore=0 spamscore=0 mlxscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101130034
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0 spamscore=0
+ mlxlogscore=999 malwarescore=0 bulkscore=0 mlxscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101130034
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9862 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
  clxscore=1015 impostorscore=0 spamscore=0 priorityscore=1501 mlxscore=0
@@ -81,26 +80,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 21 Dec 2020 10:24:39 +0900, Kiwoong Kim wrote:
+On Tue, 5 Jan 2021 12:34:40 +0100, Bean Huo wrote:
 
-> v2 -> v3: remove change ids
-> v1 -> v2: change some comments and rename the quirk
+> Changelog:
 > 
-> There are some attribute settings before power mode change in ufshcd.c
-> that should have been variant per vendor.
+> V3--v4:
+>  1. Rebase patch onto 5.12/scsi-queue
+>  2. Incorporate Avri's suggestion in patch 2/6
 > 
-> Kiwoong Kim (2):
->   ufs: add a quirk not to use default unipro timeout values
->   ufs: ufs-exynos: apply vendor specifics for three timeouts
+> V2--V3:
+>   1. Fix a typo in patch 1/6 (Reported-by: Joe Perches <joe@perches.com>)
 > 
 > [...]
 
 Applied to 5.12/scsi-queue, thanks!
 
-[1/2] ufs: add a quirk not to use default unipro timeout values
-      https://git.kernel.org/mkp/scsi/c/b1d0d2eb89d4
-[2/2] ufs: ufs-exynos: apply vendor specifics for three timeouts
-      https://git.kernel.org/mkp/scsi/c/a967ddb22d94
+[1/6] scsi: ufs: Remove stringize operator '#' restriction
+      https://git.kernel.org/mkp/scsi/c/c7c730ac6a88
+[2/6] scsi: ufs: Use __print_symbolic() for UFS trace string print
+      https://git.kernel.org/mkp/scsi/c/28fa68fc557a
+[3/6] scsi: ufs: Don't call trace_ufshcd_upiu() in case trace poit is disabled
+      https://git.kernel.org/mkp/scsi/c/9d5095e74c83
+[4/6] scsi: ufs: Distinguish between query REQ and query RSP in query trace
+      https://git.kernel.org/mkp/scsi/c/be20b51cfd85
+[5/6] scsi: ufs: Distinguish between TM request UPIU and response UPIU in TM UPIU trace
+      https://git.kernel.org/mkp/scsi/c/0ed083e91662
+[6/6] scsi: ufs: Make UPIU trace easier differentiate among CDB, OSF, and TM
+      https://git.kernel.org/mkp/scsi/c/867fdc2d6e34
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
