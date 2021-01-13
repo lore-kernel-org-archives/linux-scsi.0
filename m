@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B816C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE04FC433E6
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33C80233A1
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82F8A233A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727620AbhAMJHk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1727657AbhAMJHk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 13 Jan 2021 04:07:40 -0500
-Received: from mx2.suse.de ([195.135.220.15]:55256 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55204 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727634AbhAMJHU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727646AbhAMJHU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 13 Jan 2021 04:07:20 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 8660CB8F9;
+        by mx2.suse.de (Postfix) with ESMTP id 70DAEB8F4;
         Wed, 13 Jan 2021 09:05:04 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 35/35] ncr53c8xx: Use SAM status values
-Date:   Wed, 13 Jan 2021 10:05:00 +0100
-Message-Id: <20210113090500.129644-36-hare@suse.de>
+Subject: [PATCH 34/35] advansys: kill driver_defined status byte accessors
+Date:   Wed, 13 Jan 2021 10:04:59 +0100
+Message-Id: <20210113090500.129644-35-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210113090500.129644-1-hare@suse.de>
 References: <20210113090500.129644-1-hare@suse.de>
@@ -40,313 +40,224 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use SAM status values instead of the driver-defined ones.
-This also fixes a potential bug as the driver-defined values
-declare 'COMMAND TERMINATED' with a value of 0x20, whereas
-SCSI-II defines it with a value of 0x22.
+Replace the driver-defined status byte accessors by the
+mid-layer defined ones.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/ncr53c8xx.c | 83 ++++++++++++++++++++++------------------
- drivers/scsi/ncr53c8xx.h | 16 --------
- 2 files changed, 46 insertions(+), 53 deletions(-)
+ drivers/scsi/advansys.c | 84 ++++++++++++-----------------------------
+ 1 file changed, 24 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
-index 03d70138ad58..71e97384102a 100644
---- a/drivers/scsi/ncr53c8xx.c
-+++ b/drivers/scsi/ncr53c8xx.c
-@@ -148,6 +148,11 @@ static int ncr_debug = SCSI_NCR_DEBUG_FLAGS;
- 	#define DEBUG_FLAGS	SCSI_NCR_DEBUG_FLAGS
- #endif
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 79830e77afa9..9529074c8886 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -2085,12 +2085,6 @@ do { \
+ #define ASC_BUSY        0
+ #define ASC_ERROR       (-1)
  
-+/*
-+ * Locally used status flag
-+ */
-+#define SAM_STAT_ILLEGAL	0xff
-+
- static inline struct list_head *ncr_list_pop(struct list_head *head)
- {
- 	if (!list_empty(head)) {
-@@ -998,8 +1003,6 @@ typedef u32 tagmap_t;
- **	Other definitions
- */
- 
--#define ScsiResult(host_code, scsi_code) (((host_code) << 16) + ((scsi_code) & 0x7f))
+-/* struct scsi_cmnd function return codes */
+-#define STATUS_BYTE(byte)   (byte)
+-#define MSG_BYTE(byte)      ((byte) << 8)
+-#define HOST_BYTE(byte)     ((byte) << 16)
+-#define DRIVER_BYTE(byte)   ((byte) << 24)
 -
- #define initverbose (driver_setup.verbose)
- #define bootverbose (np->verbose)
- 
-@@ -2430,7 +2433,7 @@ static	struct script script0 __initdata = {
- 	*/
- 	SCR_FROM_REG (SS_REG),
- 		0,
--	SCR_CALL ^ IFFALSE (DATA (S_GOOD)),
-+	SCR_CALL ^ IFFALSE (DATA (SAM_STAT_GOOD)),
- 		PADDRH (bad_status),
- 
- #ifndef	SCSI_NCR_CCB_DONE_SUPPORT
-@@ -2879,7 +2882,7 @@ static	struct scripth scripth0 __initdata = {
- 		8,
- 	SCR_TO_REG (HS_REG),
- 		0,
--	SCR_LOAD_REG (SS_REG, S_GOOD),
-+	SCR_LOAD_REG (SS_REG, SAM_STAT_GOOD),
- 		0,
- 	SCR_JUMP,
- 		PADDR (cleanup_ok),
-@@ -3341,15 +3344,15 @@ static	struct scripth scripth0 __initdata = {
- 		PADDRH (reset),
- }/*-------------------------< BAD_STATUS >-----------------*/,{
+ #define ASC_STATS(shost, counter) ASC_STATS_ADD(shost, counter, 1)
+ #ifndef ADVANSYS_STATS
+ #define ASC_STATS_ADD(shost, counter, count)
+@@ -5986,10 +5980,10 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
  	/*
--	**	If command resulted in either QUEUE FULL,
-+	**	If command resulted in either TASK_SET FULL,
- 	**	CHECK CONDITION or COMMAND TERMINATED,
- 	**	call the C code.
- 	*/
--	SCR_INT ^ IFTRUE (DATA (S_QUEUE_FULL)),
-+	SCR_INT ^ IFTRUE (DATA (SAM_STAT_TASK_SET_FULL)),
- 		SIR_BAD_STATUS,
--	SCR_INT ^ IFTRUE (DATA (S_CHECK_COND)),
-+	SCR_INT ^ IFTRUE (DATA (SAM_STAT_CHECK_CONDITION)),
- 		SIR_BAD_STATUS,
--	SCR_INT ^ IFTRUE (DATA (S_TERMINATED)),
-+	SCR_INT ^ IFTRUE (DATA (SAM_STAT_COMMAND_TERMINATED)),
- 		SIR_BAD_STATUS,
- 	SCR_RETURN,
- 		0,
-@@ -4371,7 +4374,7 @@ static int ncr_queue_command (struct ncb *np, struct scsi_cmnd *cmd)
- 	*/
- 	cp->actualquirks		= 0;
- 	cp->host_status			= cp->nego_status ? HS_NEGOTIATE : HS_BUSY;
--	cp->scsi_status			= S_ILLEGAL;
-+	cp->scsi_status			= SAM_STAT_ILLEGAL;
- 	cp->parity_status		= 0;
- 
- 	cp->xerr_status			= XE_OK;
-@@ -4602,7 +4605,7 @@ static int ncr_reset_bus (struct ncb *np, struct scsi_cmnd *cmd, int sync_reset)
-  * in order to keep it alive.
-  */
- 	if (!found && sync_reset && !retrieve_from_waiting_list(0, np, cmd)) {
--		cmd->result = DID_RESET << 16;
-+		set_host_byte(cmd, DID_RESET);
- 		ncr_queue_done_cmd(np, cmd);
- 	}
- 
-@@ -4630,7 +4633,7 @@ static int ncr_abort_command (struct ncb *np, struct scsi_cmnd *cmd)
-  * First, look for the scsi command in the waiting list
-  */
- 	if (remove_from_waiting_list(np, cmd)) {
--		cmd->result = ScsiResult(DID_ABORT, 0);
-+		set_host_byte(cmd, DID_ABORT);
- 		ncr_queue_done_cmd(np, cmd);
- 		return SCSI_ABORT_SUCCESS;
- 	}
-@@ -4895,7 +4898,8 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 	**	Print out any error for debugging purpose.
- 	*/
- 	if (DEBUG_FLAGS & (DEBUG_RESULT|DEBUG_TINY)) {
--		if (cp->host_status!=HS_COMPLETE || cp->scsi_status!=S_GOOD) {
-+		if (cp->host_status != HS_COMPLETE ||
-+		    cp->scsi_status != SAM_STAT_GOOD) {
- 			PRINT_ADDR(cmd, "ERROR: cmd=%x host_status=%x "
- 					"scsi_status=%x\n", cmd->cmnd[0],
- 					cp->host_status, cp->scsi_status);
-@@ -4905,15 +4909,16 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 	/*
- 	**	Check the status.
- 	*/
-+	cmd->result = 0;
- 	if (   (cp->host_status == HS_COMPLETE)
--		&& (cp->scsi_status == S_GOOD ||
--		    cp->scsi_status == S_COND_MET)) {
-+		&& (cp->scsi_status == SAM_STAT_GOOD ||
-+		    cp->scsi_status == SAM_STAT_CONDITION_MET)) {
- 		/*
- 		 *	All went well (GOOD status).
--		 *	CONDITION MET status is returned on 
-+		 *	CONDITION MET status is returned on
- 		 *	`Pre-Fetch' or `Search data' success.
- 		 */
--		cmd->result = ScsiResult(DID_OK, cp->scsi_status);
-+		set_status_byte(cmd, cp->scsi_status);
+ 	 * 'done_status' contains the command's ending status.
+ 	 */
++	scp->result = 0;
+ 	switch (scsiqp->done_status) {
+ 	case QD_NO_ERROR:
+ 		ASC_DBG(2, "QD_NO_ERROR\n");
+-		scp->result = 0;
  
  		/*
- 		**	@RESID@
-@@ -4944,11 +4949,11 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
+ 		 * Check for an underrun condition.
+@@ -6010,47 +6004,33 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+ 		ASC_DBG(2, "QD_WITH_ERROR\n");
+ 		switch (scsiqp->host_status) {
+ 		case QHSTA_NO_ERROR:
++			set_status_byte(scp, scsiqp->scsi_status);
+ 			if (scsiqp->scsi_status == SAM_STAT_CHECK_CONDITION) {
+ 				ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
+ 				ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
+ 						  SCSI_SENSE_BUFFERSIZE);
+-				/*
+-				 * Note: The 'status_byte()' macro used by
+-				 * target drivers defined in scsi.h shifts the
+-				 * status byte returned by host drivers right
+-				 * by 1 bit.  This is why target drivers also
+-				 * use right shifted status byte definitions.
+-				 * For instance target drivers use
+-				 * CHECK_CONDITION, defined to 0x1, instead of
+-				 * the SCSI defined check condition value of
+-				 * 0x2. Host drivers are supposed to return
+-				 * the status byte as it is defined by SCSI.
+-				 */
+-				scp->result = DRIVER_BYTE(DRIVER_SENSE) |
+-				    STATUS_BYTE(scsiqp->scsi_status);
+-			} else {
+-				scp->result = STATUS_BYTE(scsiqp->scsi_status);
++				set_driver_byte(scp, DRIVER_SENSE);
  			}
+ 			break;
+ 
+ 		default:
+ 			/* Some other QHSTA error occurred. */
+ 			ASC_DBG(1, "host_status 0x%x\n", scsiqp->host_status);
+-			scp->result = HOST_BYTE(DID_BAD_TARGET);
++			set_host_byte(scp, DID_BAD_TARGET);
+ 			break;
  		}
- 	} else if ((cp->host_status == HS_COMPLETE)
--		&& (cp->scsi_status == S_CHECK_COND)) {
-+		&& (cp->scsi_status == SAM_STAT_CHECK_CONDITION)) {
- 		/*
- 		**   Check condition code
- 		*/
--		cmd->result = DID_OK << 16 | S_CHECK_COND;
-+		set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
+ 		break;
  
- 		/*
- 		**	Copy back sense data to caller's buffer.
-@@ -4965,20 +4970,20 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 			printk (".\n");
- 		}
- 	} else if ((cp->host_status == HS_COMPLETE)
--		&& (cp->scsi_status == S_CONFLICT)) {
-+		&& (cp->scsi_status == SAM_STAT_RESERVATION_CONFLICT)) {
- 		/*
- 		**   Reservation Conflict condition code
- 		*/
--		cmd->result = DID_OK << 16 | S_CONFLICT;
--	
-+		set_status_byte(cmd, SAM_STAT_RESERVATION_CONFLICT);
-+
- 	} else if ((cp->host_status == HS_COMPLETE)
--		&& (cp->scsi_status == S_BUSY ||
--		    cp->scsi_status == S_QUEUE_FULL)) {
-+		&& (cp->scsi_status == SAM_STAT_BUSY ||
-+		    cp->scsi_status == SAM_STAT_TASK_SET_FULL)) {
+ 	case QD_ABORTED_BY_HOST:
+ 		ASC_DBG(1, "QD_ABORTED_BY_HOST\n");
+-		scp->result =
+-		    HOST_BYTE(DID_ABORT) | STATUS_BYTE(scsiqp->scsi_status);
++		set_status_byte(scp, scsiqp->scsi_status);
++		set_host_byte(scp, DID_ABORT);
+ 		break;
  
- 		/*
- 		**   Target is busy.
- 		*/
--		cmd->result = ScsiResult(DID_OK, cp->scsi_status);
-+		set_status_byte(cmd, cp->scsi_status);
- 
- 	} else if ((cp->host_status == HS_SEL_TIMEOUT)
- 		|| (cp->host_status == HS_TIMEOUT)) {
-@@ -4986,21 +4991,24 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 		/*
- 		**   No response
- 		*/
--		cmd->result = ScsiResult(DID_TIME_OUT, cp->scsi_status);
-+		set_status_byte(cmd, cp->scsi_status);
-+		set_host_byte(cmd, DID_TIME_OUT);
- 
- 	} else if (cp->host_status == HS_RESET) {
- 
- 		/*
- 		**   SCSI bus reset
- 		*/
--		cmd->result = ScsiResult(DID_RESET, cp->scsi_status);
-+		set_status_byte(cmd, sp->scsi_status);
-+		set_host_byte(cmd, DID_RESET);
- 
- 	} else if (cp->host_status == HS_ABORTED) {
- 
- 		/*
- 		**   Transfer aborted
- 		*/
--		cmd->result = ScsiResult(DID_ABORT, cp->scsi_status);
-+		set_status_byte(cmd, cp->scsi_status);
-+		set_host_byte(cmd, DID_ABORT);
- 
- 	} else {
- 
-@@ -5010,7 +5018,8 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 		PRINT_ADDR(cmd, "COMMAND FAILED (%x %x) @%p.\n",
- 			cp->host_status, cp->scsi_status, cp);
- 
--		cmd->result = ScsiResult(DID_ERROR, cp->scsi_status);
-+		set_status_byte(cmd, cp->scsi_status);
-+		set_host_byte(cmd, DID_ERROR);
+ 	default:
+ 		ASC_DBG(1, "done_status 0x%x\n", scsiqp->done_status);
+-		scp->result =
+-		    HOST_BYTE(DID_ERROR) | STATUS_BYTE(scsiqp->scsi_status);
++		set_status_byte(scp, scsiqp->scsi_status);
++		set_host_byte(scp, DID_ERROR);
+ 		break;
  	}
  
+@@ -6752,10 +6732,10 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
  	/*
-@@ -5026,10 +5035,10 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
+ 	 * 'qdonep' contains the command's ending status.
+ 	 */
++	scp->result = 0;
+ 	switch (qdonep->d3.done_stat) {
+ 	case QD_NO_ERROR:
+ 		ASC_DBG(2, "QD_NO_ERROR\n");
+-		scp->result = 0;
  
- 		if (cp->host_status==HS_COMPLETE) {
- 			switch (cp->scsi_status) {
--			case S_GOOD:
-+			case SAM_STAT_GOOD:
- 				printk ("  GOOD");
- 				break;
--			case S_CHECK_COND:
-+			case SAM_STAT_CHECK_CONDITION:
- 				printk ("  SENSE:");
- 				p = (u_char*) &cmd->sense_buffer;
- 				for (i=0; i<14; i++)
-@@ -6564,7 +6573,7 @@ static void ncr_sir_to_redo(struct ncb *np, int num, struct ccb *cp)
- 
- 	switch(s_status) {
- 	default:	/* Just for safety, should never happen */
--	case S_QUEUE_FULL:
-+	case SAM_STAT_TASK_SET_FULL:
  		/*
- 		**	Decrease number of tags to the number of 
- 		**	disconnected commands.
-@@ -6588,15 +6597,15 @@ static void ncr_sir_to_redo(struct ncb *np, int num, struct ccb *cp)
- 		*/
- 		cp->phys.header.savep = cp->startp;
- 		cp->host_status = HS_BUSY;
--		cp->scsi_status = S_ILLEGAL;
-+		cp->scsi_status = SAM_STAT_ILLEGAL;
+ 		 * Check for an underrun condition.
+@@ -6775,51 +6755,35 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
+ 		ASC_DBG(2, "QD_WITH_ERROR\n");
+ 		switch (qdonep->d3.host_stat) {
+ 		case QHSTA_NO_ERROR:
++			set_status_byte(scp, qdonep->d3.scsi_stat);
+ 			if (qdonep->d3.scsi_stat == SAM_STAT_CHECK_CONDITION) {
+ 				ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
+ 				ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
+ 						  SCSI_SENSE_BUFFERSIZE);
+-				/*
+-				 * Note: The 'status_byte()' macro used by
+-				 * target drivers defined in scsi.h shifts the
+-				 * status byte returned by host drivers right
+-				 * by 1 bit.  This is why target drivers also
+-				 * use right shifted status byte definitions.
+-				 * For instance target drivers use
+-				 * CHECK_CONDITION, defined to 0x1, instead of
+-				 * the SCSI defined check condition value of
+-				 * 0x2. Host drivers are supposed to return
+-				 * the status byte as it is defined by SCSI.
+-				 */
+-				scp->result = DRIVER_BYTE(DRIVER_SENSE) |
+-				    STATUS_BYTE(qdonep->d3.scsi_stat);
+-			} else {
+-				scp->result = STATUS_BYTE(qdonep->d3.scsi_stat);
++				set_driver_byte(scp, DRIVER_SENSE);
+ 			}
+ 			break;
  
- 		ncr_put_start_queue(np, cp);
- 		if (disc_cnt)
- 			INB (nc_ctest2);		/* Clear SIGP */
- 		OUTL_DSP (NCB_SCRIPT_PHYS (np, reselect));
- 		return;
--	case S_TERMINATED:
--	case S_CHECK_COND:
-+	case SAM_STAT_COMMAND_TERMINATED:
-+	case SAM_STAT_CHECK_CONDIION:
- 		/*
- 		**	If we were requesting sense, give up.
- 		*/
-@@ -6646,7 +6655,7 @@ static void ncr_sir_to_redo(struct ncb *np, int num, struct ccb *cp)
- 		cp->phys.header.wlastp	= startp;
- 
- 		cp->host_status = HS_BUSY;
--		cp->scsi_status = S_ILLEGAL;
-+		cp->scsi_status = SAM_STAT_ILLEGAL;
- 		cp->auto_sense	= s_status;
- 
- 		cp->start.schedule.l_paddr =
-@@ -8035,7 +8044,7 @@ printk("ncr53c8xx_queue_command\n");
-      spin_lock_irqsave(&np->smp_lock, flags);
- 
-      if ((sts = ncr_queue_command(np, cmd)) != DID_OK) {
--	  cmd->result = sts << 16;
-+	     set_host_byte(cmd, sts;
- #ifdef DEBUG_NCR53C8XX
- printk("ncr53c8xx : command not queued - result=%d\n", sts);
- #endif
-@@ -8226,7 +8235,7 @@ static void process_waiting_list(struct ncb *np, int sts)
- #ifdef DEBUG_WAITING_LIST
- 	printk("%s: cmd %lx done forced sts=%d\n", ncr_name(np), (u_long) wcmd, sts);
- #endif
--			wcmd->result = sts << 16;
-+			set_host_byte(wcmd, sts);
- 			ncr_queue_done_cmd(np, wcmd);
+ 		default:
+ 			/* QHSTA error occurred */
+ 			ASC_DBG(1, "host_stat 0x%x\n", qdonep->d3.host_stat);
+-			scp->result = HOST_BYTE(DID_BAD_TARGET);
++			set_host_byte(scp, DID_BAD_TARGET);
+ 			break;
  		}
- 	}
-diff --git a/drivers/scsi/ncr53c8xx.h b/drivers/scsi/ncr53c8xx.h
-index 8326f5f01e07..fa14b5ca8783 100644
---- a/drivers/scsi/ncr53c8xx.h
-+++ b/drivers/scsi/ncr53c8xx.h
-@@ -1238,22 +1238,6 @@ struct scr_tblsel {
- **-----------------------------------------------------------
- */
+ 		break;
  
--/*
--**	Status
--*/
--
--#define	S_GOOD		(0x00)
--#define	S_CHECK_COND	(0x02)
--#define	S_COND_MET	(0x04)
--#define	S_BUSY		(0x08)
--#define	S_INT		(0x10)
--#define	S_INT_COND_MET	(0x14)
--#define	S_CONFLICT	(0x18)
--#define	S_TERMINATED	(0x20)
--#define	S_QUEUE_FULL	(0x28)
--#define	S_ILLEGAL	(0xff)
--#define	S_SENSE		(0x80)
--
- /*
-  * End of ncrreg from FreeBSD
-  */
+ 	case QD_ABORTED_BY_HOST:
+ 		ASC_DBG(1, "QD_ABORTED_BY_HOST\n");
+-		scp->result =
+-		    HOST_BYTE(DID_ABORT) | MSG_BYTE(qdonep->d3.
+-						    scsi_msg) |
+-		    STATUS_BYTE(qdonep->d3.scsi_stat);
++		set_status_byte(scp, qdonep->d3.scsi_stat);
++		set_msg_byte(scp, qdonep->d3.scsi_msg);
++		set_host_byte(scp, DID_ABORT);
+ 		break;
+ 
+ 	default:
+ 		ASC_DBG(1, "done_stat 0x%x\n", qdonep->d3.done_stat);
+-		scp->result =
+-		    HOST_BYTE(DID_ERROR) | MSG_BYTE(qdonep->d3.
+-						    scsi_msg) |
+-		    STATUS_BYTE(qdonep->d3.scsi_stat);
++		set_status_byte(scp, qdonep->d3.scsi_stat);
++		set_msg_byte(scp, qdonep->d3.scsi_msg);
++		set_host_byte(scp, DID_ERROR);
+ 		break;
+ 	}
+ 
+@@ -7558,7 +7522,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 				"sg_tablesize %d\n", use_sg,
+ 				scp->device->host->sg_tablesize);
+ 			scsi_dma_unmap(scp);
+-			scp->result = HOST_BYTE(DID_ERROR);
++			set_host_byte(scp, DID_ERROR);
+ 			return ASC_ERROR;
+ 		}
+ 
+@@ -7566,7 +7530,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 			use_sg * sizeof(struct asc_sg_list), GFP_ATOMIC);
+ 		if (!asc_sg_head) {
+ 			scsi_dma_unmap(scp);
+-			scp->result = HOST_BYTE(DID_SOFT_ERROR);
++			set_host_byte(scp, DID_SOFT_ERROR);
+ 			return ASC_ERROR;
+ 		}
+ 
+@@ -7809,7 +7773,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 				   "ADV_MAX_SG_LIST %d\n", use_sg,
+ 				   scp->device->host->sg_tablesize);
+ 			scsi_dma_unmap(scp);
+-			scp->result = HOST_BYTE(DID_ERROR);
++			set_host_byte(scp, DID_ERROR);
+ 			reqp->cmndp = NULL;
+ 			scp->host_scribble = NULL;
+ 
+@@ -7821,7 +7785,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 		ret = adv_get_sglist(boardp, reqp, scsiqp, scp, use_sg);
+ 		if (ret != ADV_SUCCESS) {
+ 			scsi_dma_unmap(scp);
+-			scp->result = HOST_BYTE(DID_ERROR);
++			set_host_byte(scp, DID_ERROR);
+ 			reqp->cmndp = NULL;
+ 			scp->host_scribble = NULL;
+ 
+@@ -8518,13 +8482,13 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 		scmd_printk(KERN_ERR, scp, "ExeScsiQueue() ASC_ERROR, "
+ 			"err_code 0x%x\n", err_code);
+ 		ASC_STATS(scp->device->host, exe_error);
+-		scp->result = HOST_BYTE(DID_ERROR);
++		set_host_byte(scp, DID_ERROR);
+ 		break;
+ 	default:
+ 		scmd_printk(KERN_ERR, scp, "ExeScsiQueue() unknown, "
+ 			"err_code 0x%x\n", err_code);
+ 		ASC_STATS(scp->device->host, exe_unknown);
+-		scp->result = HOST_BYTE(DID_ERROR);
++		set_host_byte(scp, DID_ERROR);
+ 		break;
+ 	}
+ 
 -- 
 2.29.2
 
