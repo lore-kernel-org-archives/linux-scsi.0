@@ -2,100 +2,202 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F25CC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 19:00:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68587C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 22:49:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 370A42250E
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 19:00:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36EB023339
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 22:49:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728371AbhAMS7b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 13:59:31 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36836 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726803AbhAMS7a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Jan 2021 13:59:30 -0500
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10DIgljf047426;
-        Wed, 13 Jan 2021 13:58:43 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=FNPJxGcEkUrwdtZEZgtzXyzGghgxOucKG1P8Dukz0RQ=;
- b=Jfu8hG3mRC6/kPLjdB3S11MpwkdSkNXEHgamQpN/jKKWnaKQRdKUj2c0eyYbn6xnGpHi
- jbkpo1exA2J26gD7Z8D4paOY2eOnnRb6OPEX2ODtstF7yg10CgFSLHawm5pbefbqoLoW
- uoDuXRCxYu0Z9BDUH19MffSWTQl7z7TpZpYZ8nLTElTCoUFzgXlJo9HvTqJBIqugR8Nx
- vK1YjK2cHc0Iz8ShNjSSCZANk25Msee65ziVhU5epBSebza0tqpvwsQ2sL9zbQ84Xv/T
- 304IchTlqVk3Uijz8M+Yy/RWdA2qUWrUEpGDp6P2VBhB3c1aGHj4OMgvdrTnoDgPOSe+ Lw== 
-Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3626cq8af9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 13 Jan 2021 13:58:43 -0500
-Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10DIw39p003889;
-        Wed, 13 Jan 2021 18:58:41 GMT
-Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
-        by ppma01dal.us.ibm.com with ESMTP id 35y449fjxs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 13 Jan 2021 18:58:41 +0000
-Received: from b01ledav003.gho.pok.ibm.com (b01ledav003.gho.pok.ibm.com [9.57.199.108])
-        by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10DIweiJ29557062
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Jan 2021 18:58:41 GMT
-Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id DC370B2064;
-        Wed, 13 Jan 2021 18:58:40 +0000 (GMT)
-Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1923FB205F;
-        Wed, 13 Jan 2021 18:58:40 +0000 (GMT)
-Received: from oc6034535106.ibm.com (unknown [9.211.128.152])
-        by b01ledav003.gho.pok.ibm.com (Postfix) with ESMTP;
-        Wed, 13 Jan 2021 18:58:39 +0000 (GMT)
-Subject: Re: [PATCH v4 00/21] ibmvfc: initial MQ development
-To:     Tyrel Datwyler <tyreld@linux.ibm.com>,
-        james.bottomley@hansenpartnership.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        brking@linux.ibm.com
-References: <20210111231225.105347-1-tyreld@linux.ibm.com>
-From:   Brian King <brking@linux.vnet.ibm.com>
-Message-ID: <cec44513-c3c6-6c72-0965-14229c7962b4@linux.vnet.ibm.com>
-Date:   Wed, 13 Jan 2021 12:58:39 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S1729428AbhAMWsz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jan 2021 17:48:55 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:49393 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729420AbhAMWql (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Jan 2021 17:46:41 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 49CBB204271;
+        Wed, 13 Jan 2021 23:45:33 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id ydqv8n5D+XkA; Wed, 13 Jan 2021 23:45:30 +0100 (CET)
+Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        by smtp.infotech.no (Postfix) with ESMTPA id 0524F20416A;
+        Wed, 13 Jan 2021 23:45:29 +0100 (CET)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        kashyap.desai@broadcom.com
+Subject: [PATCH v13 00/45] sg: add v4 interface
+Date:   Wed, 13 Jan 2021 17:44:41 -0500
+Message-Id: <20210113224526.861000-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <20210111231225.105347-1-tyreld@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2021-01-13_09:2021-01-13,2021-01-13 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 phishscore=0
- suspectscore=0 clxscore=1015 spamscore=0 adultscore=0 malwarescore=0
- mlxlogscore=999 priorityscore=1501 impostorscore=0 mlxscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101130109
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-With the exception of the few comments I've shared, the rest of this looks
-good to me and you can add my:
+This patchset is the first stage of a two stage rewrite of the scsi
+generic (sg) driver. The main goal of the first stage is to introduce
+the sg v4 interface that uses 'struct sg_io_v4' as well as keeping and
+modernizing the sg v3 interface (based on 'struct sg_io_hdr'). The
+async interface formerly requiring the use of write() and read()
+system calls now have ioctl(SG_IOSUBMIT) and ioctl(SG_IORECEIVE)
+replacements.
 
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
+This patchset adds support for blk_poll() and requests that have
+REQ_HIPRI set. The blk_poll() additions are in patch 44 and will
+compile. However, to use those additions one or more SCSI LLDs
+are needed that support mq_poll(). For those look to a patchset
+from Kashyap Desai called "[PATCH v1 0/3] io_uring iopoll in scsi
+layer". This patchset allows 'iopoll' requests to be issued
+without io_uring. iopoll and blk_poll() can be considered
+synonymous. One further note, an _async_ interface to blk_poll()
+is being proposed.
 
-Thanks,
+For documentation see:
+    http://sg.danny.cz/sg/sg_v40.html
+for more details. If accessing http pages is a problem, a temporary
+rendering of this page can be found here:
+    https://doug-gilbert.github.io/sg_v40.html
 
-Brian
+This patchset is against Martin Petersen's 5.11/scsi-queue branch.
+
+Changes since v12 (sent to linux-scsi list on 20201115)
+  - add blk_poll() support, prefix that patch's subject with 'RFC'
+
+Changes since v11 (sent to linux-scsi list on 20201014)
+  - no author originated changes since v11
+  - port from lk 5.9.0-rc1 to lk 5.10.0-rc1 picks up a change to
+    the import_iovec() which requires a change to patch 25/44
+  - only publish this cover letter and v12 of patch 25/44 to
+    the linux-scsi list. The other 43 patches remain as published
+    on 20201014.
+
+Changes since v10 (sent to linux-scsi list on 20200823)
+  - unchanged: 0001 to 0009, 0010 to 0017
+  - rename sg_add_req() to sg_setup_req() [0010]
+  - patches 40,41,42 and 43 are new, see their commit messages
+  - remove SG_RS_RCV_DONE request state leaving 3.5 states
+    [the 0.5 state is SG_RS_BUSY]
+  - rework sg_rq_chg_state() code that enforces request
+    state changes and associated xarray marks
+  - track lowest used and unused indexes in the request arrays so
+    iterations over the request xarray are efficient. This is a
+    significant saving when the iodepth queue length is large
+
+Changes since v9 (sent to linux-scsi list on 20200421)
+  - rebase on MKP's 5.10/scsi-queue branch
+  - remove some master/slave terminology that had bled in from
+    the part 2 patchset
+  - change sg_request::start_ns type from ktime_t to u64
+  - pick up several error path correction fixes applied to the
+    sg driver by other authors
+
+Changes since v8 (sent to linux-scsi list on 20200301)
+  - add new patch to ignore the /proc/scsi/sg/allow_dio setting.
+    Now direct IO will be attempted whenever the SG_FLAG_DIRECT_IO
+    flag is given
+  - add new patch to track mmap_sz from previous mmap() call.
+    Allows catching mmap-ed requests that exceed that value
+  - change warning about using the v3 interface with the write()
+    system call from WARN_ONCE() to pr_warn_once()
+  - remove __KERNEL__ conditionals in include/scsi/sg.h
+  - change struct sg_fd::start_ns from u64 to ktime_t type
+  - introduce a new small sg_rq_state_mul2arr array to avoid
+    a multiplication at runtime in the state machine engine
+  - tweak mempool introduced in v7 for sense buffers
+  - rework sg_mk_sgat() to better handle low memory situations;
+    similar work on sg_remove_sgat_helper()
+
+Changes since v7 (sent to linux-scsi list on 20200227)
+  - improve direct IO code, remove the SG_FRQ_DIO_IN_USE
+    sg_request::frq_bm flag as it is no longer needed
+  - simplify state changing code. Many state changes (rq_st) do not
+    need changes to the xarray "marks"; only lock those that do
+    (reviewer queried the locking)
+  - remove some misplaced likely()/unlikely() macros. They are gathered
+    together in a separate patch (in a second patchset)
+  - change a cast that the kbuild robot complained about. It also
+    flagged a stack size problem in sg_ioctl_common() for reasons not
+    given nor obvious. That function (and its parents) declare only
+    simple scalars on the stack.
+  - add 'Reviewed-by' where appropriate
+
+Changes since v6 (sent to linux-scsi list on 20200112)
+  - based on Martin Petersen's 5.7/scsi-queue branch in his
+    linux-scsi repository
+  - major work on mmap support: when mmap(2) is used the reserve
+    request scatter gather list is rebuilt to have order=0
+    elements (i.e. each is PAGE_SIZE bytes).
+  - address one kbuild robot issue: add include defining size_t
+  - nearly all patches that have been reviewed have been changed,
+    usually in minor ways. Those patches have "***" before the
+    "Reviewed-by" line.
+
+
+Changes since v5 to v1 in earlier patchsets
+  - for example: the v10 patchset sent to linux-scsi on 20200823
+
+Douglas Gilbert (45):
+  sg: move functions around
+  sg: remove typedefs, type+formatting cleanup
+  sg: sg_log and is_enabled
+  sg: rework sg_poll(), minor changes
+  sg: bitops in sg_device
+  sg: make open count an atomic
+  sg: move header to uapi section
+  sg: speed sg_poll and sg_get_num_waiting
+  sg: sg_allow_if_err_recovery and renames
+  sg: improve naming
+  sg: change rwlock to spinlock
+  sg: ioctl handling
+  sg: split sg_read
+  sg: sg_common_write add structure for arguments
+  sg: rework sg_vma_fault
+  sg: rework sg_mmap
+  sg: replace sg_allow_access
+  sg: rework scatter gather handling
+  sg: introduce request state machine
+  sg: sg_find_srp_by_id
+  sg: sg_fill_request_element
+  sg: printk change %p to %pK
+  sg: xarray for fds in device
+  sg: xarray for reqs in fd
+  sg: replace rq array with xarray
+  sg: sense buffer rework
+  sg: add sg v4 interface support
+  sg: rework debug info
+  sg: add 8 byte SCSI LUN to sg_scsi_id
+  sg: expand sg_comm_wr_t
+  sg: add sg_iosubmit_v3 and sg_ioreceive_v3 ioctls
+  sg: add some __must_hold macros
+  sg: move procfs objects to avoid forward decls
+  sg: protect multiple receivers
+  sg: first debugfs support
+  sg: rework mmap support
+  sg: defang allow_dio
+  sg: warn v3 write system call users
+  sg: add mmap_sz tracking
+  sg: remove rcv_done request state
+  sg: track lowest inactive and await indexes
+  sg: remove unit attention check for device changed
+  sg: no_dxfer: move to/from kernel buffers
+  sg: [RFC] add blk_poll support
+  sg: bump version to 4.0.12
+
+ drivers/scsi/sg.c      | 5385 +++++++++++++++++++++++++++-------------
+ include/scsi/sg.h      |  273 +-
+ include/uapi/scsi/sg.h |  375 +++
+ 3 files changed, 4106 insertions(+), 1927 deletions(-)
+ create mode 100644 include/uapi/scsi/sg.h
 
 -- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+2.25.1
 
