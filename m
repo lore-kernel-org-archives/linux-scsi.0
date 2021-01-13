@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 426ABC4332D
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 01:55:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 936A9C4332D
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 01:55:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D6DA2343E
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 01:55:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F747235FA
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 01:55:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728375AbhANByc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 20:54:32 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:50065 "EHLO smtp.infotech.no"
+        id S1728065AbhANBzi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jan 2021 20:55:38 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:50039 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729653AbhAMXzg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Jan 2021 18:55:36 -0500
+        id S1729620AbhAMXvE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Jan 2021 18:51:04 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 546E4204279;
-        Wed, 13 Jan 2021 23:45:41 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 18C6F204277;
+        Wed, 13 Jan 2021 23:45:47 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id TzppgrkVaRKa; Wed, 13 Jan 2021 23:45:39 +0100 (CET)
+        with ESMTP id jjMSC+oBfYei; Wed, 13 Jan 2021 23:45:45 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 0549C204275;
-        Wed, 13 Jan 2021 23:45:37 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id 51899204273;
+        Wed, 13 Jan 2021 23:45:44 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        kashyap.desai@broadcom.com, Hannes Reinecke <hare@suse.com>
-Subject: [PATCH v13 06/45] sg: make open count an atomic
-Date:   Wed, 13 Jan 2021 17:44:47 -0500
-Message-Id: <20210113224526.861000-7-dgilbert@interlog.com>
+        kashyap.desai@broadcom.com
+Subject: [PATCH v13 11/45] sg: change rwlock to spinlock
+Date:   Wed, 13 Jan 2021 17:44:52 -0500
+Message-Id: <20210113224526.861000-12-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210113224526.861000-1-dgilbert@interlog.com>
 References: <20210113224526.861000-1-dgilbert@interlog.com>
@@ -45,172 +45,215 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Convert sg_device::open_cnt into an atomic. Also rename
-sg_tablesize into the more descriptive max_sgat_elems.
+A reviewer suggested that the extra overhead associated with a
+rw lock compared to a spinlock was not worth it for short,
+oft-used critcal sections.
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+So the rwlock on the request list/array is changed to a spinlock.
+The head of that list is in the owning sf file descriptor object.
 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 44 +++++++++++++++++++++++---------------------
- 1 file changed, 23 insertions(+), 21 deletions(-)
+ drivers/scsi/sg.c | 52 +++++++++++++++++++++++------------------------
+ 1 file changed, 26 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index c58cf47532d5..a3116463231e 100644
+index 4013d56338bf..1d0463d70d0b 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -162,9 +162,9 @@ struct sg_device { /* holds the state of each scsi generic device */
- 	struct mutex open_rel_lock;     /* held when in open() or release() */
- 	struct list_head sfds;
- 	rwlock_t sfd_lock;      /* protect access to sfd list */
--	int sg_tablesize;	/* adapter's max scatter-gather table size */
-+	int max_sgat_elems;	/* adapter's max sgat number of elements */
- 	u32 index;		/* device index number */
--	int open_cnt;		/* count of opens (perhaps < num(sfds) ) */
-+	atomic_t open_cnt;	/* count of opens (perhaps < num(sfds) ) */
- 	unsigned long fdev_bm[1];	/* see SG_FDEV_* defines above */
- 	struct gendisk *disk;
- 	struct cdev *cdev;
-@@ -276,11 +276,11 @@ sg_wait_open_event(struct sg_device *sdp, bool o_excl)
- 	int retval = 0;
+@@ -139,7 +139,7 @@ struct sg_fd {		/* holds the state of a file descriptor */
+ 	struct list_head sfd_entry;	/* member sg_device::sfds list */
+ 	struct sg_device *parentdp;	/* owning device */
+ 	wait_queue_head_t read_wait;	/* queue read until command done */
+-	rwlock_t rq_list_lock;	/* protect access to list in req_arr */
++	spinlock_t rq_list_lock;	/* protect access to list in req_arr */
+ 	struct mutex f_mutex;	/* protect against changes in this fd */
+ 	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
+ 	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
+@@ -742,17 +742,17 @@ sg_get_rq_mark(struct sg_fd *sfp, int pack_id)
+ 	struct sg_request *resp;
+ 	unsigned long iflags;
  
- 	if (o_excl) {
--		while (sdp->open_cnt > 0) {
-+		while (atomic_read(&sdp->open_cnt) > 0) {
- 			mutex_unlock(&sdp->open_rel_lock);
- 			retval = wait_event_interruptible(sdp->open_wait,
- 					(SG_IS_DETACHING(sdp) ||
--					 !sdp->open_cnt));
-+					 atomic_read(&sdp->open_cnt) == 0));
- 			mutex_lock(&sdp->open_rel_lock);
- 
- 			if (retval) /* -ERESTARTSYS */
-@@ -328,7 +328,7 @@ sg_open(struct inode *inode, struct file *filp)
- 	o_excl = !!(op_flags & O_EXCL);
- 	if (o_excl && ((op_flags & O_ACCMODE) == O_RDONLY))
- 		return -EPERM; /* Can't lock it with read only access */
--	sdp = sg_get_dev(min_dev);
-+	sdp = sg_get_dev(min_dev);	/* increments sdp->d_ref */
- 	if (IS_ERR(sdp))
- 		return PTR_ERR(sdp);
- 
-@@ -355,7 +355,7 @@ sg_open(struct inode *inode, struct file *filp)
- 	mutex_lock(&sdp->open_rel_lock);
- 	if (op_flags & O_NONBLOCK) {
- 		if (o_excl) {
--			if (sdp->open_cnt > 0) {
-+			if (atomic_read(&sdp->open_cnt) > 0) {
- 				retval = -EBUSY;
- 				goto error_mutex_locked;
- 			}
-@@ -375,27 +375,29 @@ sg_open(struct inode *inode, struct file *filp)
- 	if (o_excl)
- 		set_bit(SG_FDEV_EXCLUDE, sdp->fdev_bm);
- 
--	if (sdp->open_cnt < 1) {  /* no existing opens */
-+	if (atomic_read(&sdp->open_cnt) < 1) {  /* no existing opens */
- 		clear_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm);
- 		q = sdp->device->request_queue;
--		sdp->sg_tablesize = queue_max_segments(q);
-+		sdp->max_sgat_elems = queue_max_segments(q);
- 	}
--	sfp = sg_add_sfp(sdp);
-+	sfp = sg_add_sfp(sdp);		/* increments sdp->d_ref */
- 	if (IS_ERR(sfp)) {
- 		retval = PTR_ERR(sfp);
- 		goto out_undo;
- 	}
- 
- 	filp->private_data = sfp;
--	sdp->open_cnt++;
-+	atomic_inc(&sdp->open_cnt);
- 	mutex_unlock(&sdp->open_rel_lock);
- 	SG_LOG(3, sfp, "%s: minor=%d, op_flags=0x%x; %s count prior=%d%s\n",
--	       __func__, min_dev, op_flags, "device open", sdp->open_cnt,
-+	       __func__, min_dev, op_flags, "device open",
-+	       atomic_read(&sdp->open_cnt),
- 	       ((op_flags & O_NONBLOCK) ? " O_NONBLOCK" : ""));
- 
- 	retval = 0;
- sg_put:
- 	kref_put(&sdp->d_ref, sg_device_destroy);
-+	/* if success, sdp->d_ref is incremented twice, decremented once */
- 	return retval;
- 
- out_undo:
-@@ -423,20 +425,20 @@ sg_release(struct inode *inode, struct file *filp)
- 	sfp = filp->private_data;
- 	sdp = sfp->parentdp;
- 	SG_LOG(3, sfp, "%s: device open count prior=%d\n", __func__,
--	       sdp->open_cnt);
-+	       atomic_read(&sdp->open_cnt));
- 	if (!sdp)
- 		return -ENXIO;
- 
- 	mutex_lock(&sdp->open_rel_lock);
- 	scsi_autopm_put_device(sdp->device);
- 	kref_put(&sfp->f_ref, sg_remove_sfp);
--	sdp->open_cnt--;
-+	atomic_dec(&sdp->open_cnt);
- 
- 	/* possibly many open()s waiting on exlude clearing, start many;
- 	 * only open(O_EXCL)s wait on 0==open_cnt so only start one */
- 	if (test_and_clear_bit(SG_FDEV_EXCLUDE, sdp->fdev_bm))
- 		wake_up_interruptible_all(&sdp->open_wait);
--	else if (sdp->open_cnt == 0)
-+	else if (atomic_read(&sdp->open_cnt) == 0)
- 		wake_up_interruptible(&sdp->open_wait);
- 	mutex_unlock(&sdp->open_rel_lock);
- 	return 0;
-@@ -1110,7 +1112,7 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
- 		read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 		return put_user(val, ip);
- 	case SG_GET_SG_TABLESIZE:
--		return put_user(sdp->sg_tablesize, ip);
-+		return put_user(sdp->max_sgat_elems, ip);
- 	case SG_SET_RESERVED_SIZE:
- 		result = get_user(val, ip);
- 		if (result)
-@@ -1589,7 +1591,7 @@ sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
- 	init_waitqueue_head(&sdp->open_wait);
- 	clear_bit(SG_FDEV_DETACHING, sdp->fdev_bm);
- 	rwlock_init(&sdp->sfd_lock);
--	sdp->sg_tablesize = queue_max_segments(q);
-+	sdp->max_sgat_elems = queue_max_segments(q);
- 	sdp->index = k;
- 	kref_init(&sdp->d_ref);
- 	error = 0;
-@@ -1985,7 +1987,7 @@ sg_build_indirect(struct sg_scatter_hold *schp, struct sg_fd *sfp,
- 		  int buff_size)
- {
- 	int ret_sz = 0, i, k, rem_sz, num, mx_sc_elems;
--	int sg_tablesize = sfp->parentdp->sg_tablesize;
-+	int max_sgat_elems = sfp->parentdp->max_sgat_elems;
- 	int blk_size = buff_size, order;
- 	gfp_t gfp_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN | __GFP_ZERO;
- 	struct sg_device *sdp = sfp->parentdp;
-@@ -2000,7 +2002,7 @@ sg_build_indirect(struct sg_scatter_hold *schp, struct sg_fd *sfp,
- 	       blk_size);
- 
- 	/* N.B. ret_sz carried into this block ... */
--	mx_sc_elems = sg_build_sgat(schp, sfp, sg_tablesize);
-+	mx_sc_elems = sg_build_sgat(schp, sfp, max_sgat_elems);
- 	if (mx_sc_elems < 0)
- 		return mx_sc_elems;	/* most likely -ENOMEM */
- 
-@@ -2688,9 +2690,9 @@ sg_proc_seq_show_debug(struct seq_file *s, void *v)
- 				   scsidp->lun,
- 				   scsidp->host->hostt->emulated);
+-	write_lock_irqsave(&sfp->rq_list_lock, iflags);
++	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 	list_for_each_entry(resp, &sfp->rq_list, entry) {
+ 		/* look for requests that are ready + not SG_IO owned */
+ 		if (resp->done == 1 && !resp->sg_io_owned &&
+ 		    (-1 == pack_id || resp->header.pack_id == pack_id)) {
+ 			resp->done = 2;	/* guard against other readers */
+-			write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++			spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 			return resp;
  		}
--		seq_printf(s, " sg_tablesize=%d excl=%d open_cnt=%d\n",
--			   sdp->sg_tablesize, SG_HAVE_EXCLUDE(sdp),
--			   sdp->open_cnt);
-+		seq_printf(s, " max_sgat_elems=%d excl=%d open_cnt=%d\n",
-+			   sdp->max_sgat_elems, SG_HAVE_EXCLUDE(sdp),
-+			   atomic_read(&sdp->open_cnt));
- 		sg_proc_debug_helper(s, sdp);
  	}
- 	read_unlock(&sdp->sfd_lock);
+-	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 	return NULL;
+ }
+ 
+@@ -806,9 +806,9 @@ srp_done(struct sg_fd *sfp, struct sg_request *srp)
+ 	unsigned long flags;
+ 	int ret;
+ 
+-	read_lock_irqsave(&sfp->rq_list_lock, flags);
++	spin_lock_irqsave(&sfp->rq_list_lock, flags);
+ 	ret = srp->done;
+-	read_unlock_irqrestore(&sfp->rq_list_lock, flags);
++	spin_unlock_irqrestore(&sfp->rq_list_lock, flags);
+ 	return ret;
+ }
+ 
+@@ -1072,15 +1072,15 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 			(srp_done(sfp, srp) || SG_IS_DETACHING(sdp)));
+ 		if (SG_IS_DETACHING(sdp))
+ 			return -ENODEV;
+-		write_lock_irq(&sfp->rq_list_lock);
++		spin_lock_irq(&sfp->rq_list_lock);
+ 		if (srp->done) {
+ 			srp->done = 2;
+-			write_unlock_irq(&sfp->rq_list_lock);
++			spin_unlock_irq(&sfp->rq_list_lock);
+ 			result = sg_new_read(sfp, p, SZ_SG_IO_HDR, srp);
+ 			return (result < 0) ? result : 0;
+ 		}
+ 		srp->orphan = 1;
+-		write_unlock_irq(&sfp->rq_list_lock);
++		spin_unlock_irq(&sfp->rq_list_lock);
+ 		return result;	/* -ERESTARTSYS because signal hit process */
+ 	case SG_SET_TIMEOUT:
+ 		result = get_user(val, ip);
+@@ -1132,15 +1132,15 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 		sfp->force_packid = val ? 1 : 0;
+ 		return 0;
+ 	case SG_GET_PACK_ID:
+-		read_lock_irqsave(&sfp->rq_list_lock, iflags);
++		spin_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 		list_for_each_entry(srp, &sfp->rq_list, entry) {
+ 			if ((1 == srp->done) && (!srp->sg_io_owned)) {
+-				read_unlock_irqrestore(&sfp->rq_list_lock,
++				spin_unlock_irqrestore(&sfp->rq_list_lock,
+ 						       iflags);
+ 				return put_user(srp->header.pack_id, ip);
+ 			}
+ 		}
+-		read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++		spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 		return put_user(-1, ip);
+ 	case SG_GET_NUM_WAITING:
+ 		return put_user(atomic_read(&sfp->waiting), ip);
+@@ -1209,9 +1209,9 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 					GFP_KERNEL);
+ 			if (!rinfo)
+ 				return -ENOMEM;
+-			read_lock_irqsave(&sfp->rq_list_lock, iflags);
++			spin_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 			sg_fill_request_table(sfp, rinfo);
+-			read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++			spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 	#ifdef CONFIG_COMPAT
+ 			if (in_compat_syscall())
+ 				result = put_compat_request_table(p, rinfo);
+@@ -1531,7 +1531,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 	scsi_req_free_cmd(scsi_req(rq));
+ 	blk_put_request(rq);
+ 
+-	write_lock_irqsave(&sfp->rq_list_lock, iflags);
++	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 	if (unlikely(srp->orphan)) {
+ 		if (sfp->keep_orphan)
+ 			srp->sg_io_owned = 0;
+@@ -1539,7 +1539,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 			done = 0;
+ 	}
+ 	srp->done = done;
+-	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 
+ 	if (likely(done)) {
+ 		/* Now wake up any sg_read() that is waiting for this
+@@ -2213,7 +2213,7 @@ sg_setup_req(struct sg_fd *sfp)
+ 	unsigned long iflags;
+ 	struct sg_request *rp = sfp->req_arr;
+ 
+-	write_lock_irqsave(&sfp->rq_list_lock, iflags);
++	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 	if (!list_empty(&sfp->rq_list)) {
+ 		if (!sfp->cmd_q)
+ 			goto out_unlock;
+@@ -2229,10 +2229,10 @@ sg_setup_req(struct sg_fd *sfp)
+ 	rp->parentfp = sfp;
+ 	rp->header.duration = jiffies_to_msecs(jiffies);
+ 	list_add_tail(&rp->entry, &sfp->rq_list);
+-	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 	return rp;
+ out_unlock:
+-	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 	return NULL;
+ }
+ 
+@@ -2245,13 +2245,13 @@ sg_remove_request(struct sg_fd *sfp, struct sg_request *srp)
+ 
+ 	if (!sfp || !srp || list_empty(&sfp->rq_list))
+ 		return res;
+-	write_lock_irqsave(&sfp->rq_list_lock, iflags);
++	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 	if (!list_empty(&srp->entry)) {
+ 		list_del(&srp->entry);
+ 		srp->parentfp = NULL;
+ 		res = 1;
+ 	}
+-	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 	return res;
+ }
+ 
+@@ -2267,7 +2267,7 @@ sg_add_sfp(struct sg_device *sdp)
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	init_waitqueue_head(&sfp->read_wait);
+-	rwlock_init(&sfp->rq_list_lock);
++	spin_lock_init(&sfp->rq_list_lock);
+ 	INIT_LIST_HEAD(&sfp->rq_list);
+ 	kref_init(&sfp->f_ref);
+ 	mutex_init(&sfp->f_mutex);
+@@ -2312,14 +2312,14 @@ sg_remove_sfp_usercontext(struct work_struct *work)
+ 	unsigned long iflags;
+ 
+ 	/* Cleanup any responses which were never read(). */
+-	write_lock_irqsave(&sfp->rq_list_lock, iflags);
++	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 	while (!list_empty(&sfp->rq_list)) {
+ 		srp = list_first_entry(&sfp->rq_list, struct sg_request, entry);
+ 		sg_finish_scsi_blk_rq(srp);
+ 		list_del(&srp->entry);
+ 		srp->parentfp = NULL;
+ 	}
+-	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 
+ 	if (sfp->reserve.buflen > 0) {
+ 		SG_LOG(6, sfp, "%s:    buflen=%d, num_sgat=%d\n", __func__,
+@@ -2641,7 +2641,7 @@ sg_proc_debug_helper(struct seq_file *s, struct sg_device *sdp)
+ 	k = 0;
+ 	list_for_each_entry(fp, &sdp->sfds, sfd_entry) {
+ 		k++;
+-		read_lock(&fp->rq_list_lock); /* irqs already disabled */
++		spin_lock(&fp->rq_list_lock); /* irqs already disabled */
+ 		seq_printf(s, "   FD(%d): timeout=%dms buflen=%d "
+ 			   "(res)sgat=%d low_dma=%d\n", k,
+ 			   jiffies_to_msecs(fp->timeout),
+@@ -2691,7 +2691,7 @@ sg_proc_debug_helper(struct seq_file *s, struct sg_device *sdp)
+ 		}
+ 		if (list_empty(&fp->rq_list))
+ 			seq_puts(s, "     No requests active\n");
+-		read_unlock(&fp->rq_list_lock);
++		spin_unlock(&fp->rq_list_lock);
+ 	}
+ }
+ 
 -- 
 2.25.1
 
