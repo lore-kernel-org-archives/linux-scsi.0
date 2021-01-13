@@ -7,30 +7,31 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB938C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5CA5C433E9
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68BC2233CE
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98B7F233A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727645AbhAMJHP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 04:07:15 -0500
-Received: from mx2.suse.de ([195.135.220.15]:53828 "EHLO mx2.suse.de"
+        id S1727560AbhAMJHS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jan 2021 04:07:18 -0500
+Received: from mx2.suse.de ([195.135.220.15]:54986 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727610AbhAMJHG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Jan 2021 04:07:06 -0500
+        id S1727639AbhAMJHO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Jan 2021 04:07:14 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id B9D34B8FC;
+        by mx2.suse.de (Postfix) with ESMTP id 6D7ACB8F2;
         Wed, 13 Jan 2021 09:05:04 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 13/35] qla4xxx: use standard SAM status definitions
-Date:   Wed, 13 Jan 2021 10:04:38 +0100
-Message-Id: <20210113090500.129644-14-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 30/35] wd33c93: use SCSI status
+Date:   Wed, 13 Jan 2021 10:04:55 +0100
+Message-Id: <20210113090500.129644-31-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210113090500.129644-1-hare@suse.de>
 References: <20210113090500.129644-1-hare@suse.de>
@@ -40,41 +41,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use standard SAM status definitions and drop the
-driver-defined ones.
+Use standard SCSI status and drop usage of the linux-specific ones.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/qla4xxx/ql4_fw.h  | 1 -
- drivers/scsi/qla4xxx/ql4_isr.c | 2 +-
- 2 files changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/wd33c93.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
-index b9142464d3f0..4e1764df0a73 100644
---- a/drivers/scsi/qla4xxx/ql4_fw.h
-+++ b/drivers/scsi/qla4xxx/ql4_fw.h
-@@ -1181,7 +1181,6 @@ struct status_entry {
- 	uint32_t handle;	/* 04-07 */
- 
- 	uint8_t scsiStatus;	/* 08 */
--#define SCSI_CHECK_CONDITION		  0x02
- 
- 	uint8_t iscsiFlags;	/* 09 */
- #define ISCSI_FLAG_RESIDUAL_UNDER	  0x02
-diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
-index a51910ae9525..6f0e77dc2a34 100644
---- a/drivers/scsi/qla4xxx/ql4_isr.c
-+++ b/drivers/scsi/qla4xxx/ql4_isr.c
-@@ -182,7 +182,7 @@ static void qla4xxx_status_entry(struct scsi_qla_host *ha,
- 
- 		cmd->result = DID_OK << 16 | scsi_status;
- 
--		if (scsi_status != SCSI_CHECK_CONDITION)
-+		if (scsi_status != SAM_STAT_CHECK_CONDITION)
- 			break;
- 
- 		/* Copy Sense Data into sense buffer. */
+diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+index 87dafbc942d3..a23277bb870e 100644
+--- a/drivers/scsi/wd33c93.c
++++ b/drivers/scsi/wd33c93.c
+@@ -1176,7 +1176,7 @@ wd33c93_intr(struct Scsi_Host *instance)
+ 			if (cmd->SCp.Status == ILLEGAL_STATUS_BYTE)
+ 				cmd->SCp.Status = lun;
+ 			if (cmd->cmnd[0] == REQUEST_SENSE
+-			    && cmd->SCp.Status != GOOD)
++			    && cmd->SCp.Status != SAM_STAT_GOOD)
+ 				cmd->result =
+ 				    (cmd->
+ 				     result & 0x00ffff) | (DID_ERROR << 16);
+@@ -1262,7 +1262,7 @@ wd33c93_intr(struct Scsi_Host *instance)
+ 		    hostdata->connected = NULL;
+ 		hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
+ 		hostdata->state = S_UNCONNECTED;
+-		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != GOOD)
++		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != SAM_STAT_GOOD)
+ 			cmd->result =
+ 			    (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+ 		else
+@@ -1296,7 +1296,7 @@ wd33c93_intr(struct Scsi_Host *instance)
+ 			hostdata->state = S_UNCONNECTED;
+ 			DB(DB_INTR, printk(":%d", cmd->SCp.Status))
+ 			    if (cmd->cmnd[0] == REQUEST_SENSE
+-				&& cmd->SCp.Status != GOOD)
++				&& cmd->SCp.Status != SAM_STAT_GOOD)
+ 				cmd->result =
+ 				    (cmd->
+ 				     result & 0x00ffff) | (DID_ERROR << 16);
 -- 
 2.29.2
 
