@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 903CCC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79E0FC433E9
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48771233CE
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34E25233A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jan 2021 09:07:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727655AbhAMJHZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 04:07:25 -0500
-Received: from mx2.suse.de ([195.135.220.15]:54844 "EHLO mx2.suse.de"
+        id S1727623AbhAMJHG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jan 2021 04:07:06 -0500
+Received: from mx2.suse.de ([195.135.220.15]:53822 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727629AbhAMJHJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Jan 2021 04:07:09 -0500
+        id S1727416AbhAMJGs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Jan 2021 04:06:48 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id F185DB748;
-        Wed, 13 Jan 2021 09:05:03 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 3B557B8EB;
+        Wed, 13 Jan 2021 09:05:04 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 12/35] dc395: drop private SAM status code definitions
-Date:   Wed, 13 Jan 2021 10:04:37 +0100
-Message-Id: <20210113090500.129644-13-hare@suse.de>
+Subject: [PATCH 24/35] atp870u: use standard definitions
+Date:   Wed, 13 Jan 2021 10:04:49 +0100
+Message-Id: <20210113090500.129644-25-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210113090500.129644-1-hare@suse.de>
 References: <20210113090500.129644-1-hare@suse.de>
@@ -40,49 +40,144 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We don't need to duplicate definitions from the common include
-files.
+Use standard definitions for SCSI commands and return status
+instead of the hardcoded values.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/dc395x.h | 16 ----------------
- 1 file changed, 16 deletions(-)
+ drivers/scsi/atp870u.c | 54 +++++++++++++++++++++++-------------------
+ 1 file changed, 30 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/scsi/dc395x.h b/drivers/scsi/dc395x.h
-index 5379a936141a..a7786a6d462e 100644
---- a/drivers/scsi/dc395x.h
-+++ b/drivers/scsi/dc395x.h
-@@ -156,15 +156,6 @@
- #define H_ABORT				0x0FF
+diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
+index e559baeb0329..da6ca2b153d8 100644
+--- a/drivers/scsi/atp870u.c
++++ b/drivers/scsi/atp870u.c
+@@ -379,28 +379,28 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
+ 			if (is885(dev)) {
+ 				i = atp_readb_pci(dev, c, 1) & 0xf3;
+ 				//j=workreq->cmnd[0];
+-				if ((workreq->cmnd[0] == 0x08) ||
+-				    (workreq->cmnd[0] == 0x28) ||
+-				    (workreq->cmnd[0] == 0x0a) ||
+-				    (workreq->cmnd[0] == 0x2a)) {
++				if ((workreq->cmnd[0] == READ_6) ||
++				    (workreq->cmnd[0] == READ_10) ||
++				    (workreq->cmnd[0] == WRITE_6) ||
++				    (workreq->cmnd[0] == WRITE_10)) {
+ 				   i |= 0x0c;
+ 				}
+ 				atp_writeb_pci(dev, c, 1, i);
+ 			} else if (is880(dev)) {
+-				if ((workreq->cmnd[0] == 0x08) ||
+-				    (workreq->cmnd[0] == 0x28) ||
+-				    (workreq->cmnd[0] == 0x0a) ||
+-				    (workreq->cmnd[0] == 0x2a))
++				if ((workreq->cmnd[0] == READ_6) ||
++				    (workreq->cmnd[0] == READ_10) ||
++				    (workreq->cmnd[0] == WRITE_6) ||
++				    (workreq->cmnd[0] == WRITE_10))
+ 					atp_writeb_base(dev, 0x3b,
+ 							(atp_readb_base(dev, 0x3b) & 0x3f) | 0xc0);
+ 				else
+ 					atp_writeb_base(dev, 0x3b,
+ 							atp_readb_base(dev, 0x3b) & 0x3f);
+ 			} else {
+-				if ((workreq->cmnd[0] == 0x08) ||
+-				    (workreq->cmnd[0] == 0x28) ||
+-				    (workreq->cmnd[0] == 0x0a) ||
+-				    (workreq->cmnd[0] == 0x2a))
++				if ((workreq->cmnd[0] == READ_6) ||
++				    (workreq->cmnd[0] == READ_10) ||
++				    (workreq->cmnd[0] == WRITE_6) ||
++				    (workreq->cmnd[0] == WRITE_10))
+ 					atp_writeb_base(dev, 0x3a,
+ 							(atp_readb_base(dev, 0x3a) & 0xf3) | 0x08);
+ 				else
+@@ -497,10 +497,10 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
+ 				workreq->result = atp_readb_io(dev, c, 0x0f);
+ 				if (((dev->r1f[c][target_id] & 0x10) != 0) && is885(dev)) {
+ 					printk(KERN_WARNING "AEC67162 CRC ERROR !\n");
+-					workreq->result = 0x02;
++					workreq->result = SAM_STAT_CHECK_CONDITION;
+ 				}
+ 			} else
+-				workreq->result = 0x02;
++				workreq->result = SAM_STAT_CHECK_CONDITION;
  
- /* SCSI BUS Status byte codes */
--#define SCSI_STAT_GOOD			0x0	/* Good status				*/
--#define SCSI_STAT_CHECKCOND		0x02	/* SCSI Check Condition			*/
--#define SCSI_STAT_CONDMET		0x04	/* Condition Met			*/
--#define SCSI_STAT_BUSY			0x08	/* Target busy status			*/
--#define SCSI_STAT_INTER			0x10	/* Intermediate status			*/
--#define SCSI_STAT_INTERCONDMET		0x14	/* Intermediate condition met		*/
--#define SCSI_STAT_RESCONFLICT		0x18	/* Reservation conflict			*/
--#define SCSI_STAT_CMDTERM		0x22	/* Command Terminated			*/
--#define SCSI_STAT_QUEUEFULL		0x28	/* Queue Full				*/
- #define SCSI_STAT_UNEXP_BUS_F		0xFD	/* Unexpect Bus Free			*/
- #define SCSI_STAT_BUS_RST_DETECT	0xFE	/* Scsi Bus Reset detected		*/
- #define SCSI_STAT_SEL_TIMEOUT		0xFF	/* Selection Time out			*/
-@@ -203,13 +194,6 @@
- #define MSG_IDENTIFY			0x80
- #define MSG_HOST_ID			0xC0
+ 			if (is885(dev)) {
+ 				j = atp_readb_base(dev, 0x29) | 0x01;
+@@ -630,7 +630,7 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
+ 	req_p->sense_buffer[0]=0;
+ 	scsi_set_resid(req_p, 0);
+ 	if (scmd_channel(req_p) > 1) {
+-		req_p->result = 0x00040000;
++		req_p->result = DID_BAD_TARGET << 16;
+ 		done(req_p);
+ #ifdef ED_DBGP
+ 		printk("atp870u_queuecommand : req_p->device->channel > 1\n");
+@@ -649,7 +649,7 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
+ 	 */
  
--/* SCSI STATUS BYTE */
--#define STATUS_GOOD			0x00
--#define CHECK_CONDITION_		0x02
--#define STATUS_BUSY			0x08
--#define STATUS_INTERMEDIATE		0x10
--#define RESERVE_CONFLICT		0x18
--
- /* cmd->result */
- #define STATUS_MASK_			0xFF
- #define MSG_MASK			0xFF00
+ 	if ((m & dev->active_id[c]) == 0) {
+-		req_p->result = 0x00040000;
++		req_p->result = DID_BAD_TARGET << 16;
+ 		done(req_p);
+ 		return 0;
+ 	}
+@@ -684,7 +684,7 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
+ 		printk("atp870u_queuecommand : dev->quhd[c] == dev->quend[c]\n");
+ #endif
+ 		dev->quend[c]--;
+-		req_p->result = 0x00020000;
++		req_p->result = DID_BUS_BUSY << 16;
+ 		done(req_p);
+ 		return 0;
+ 	}
+@@ -800,7 +800,7 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
+ 		if (l > 8)
+ 			l = 8;
+ 	}
+-	if (workreq->cmnd[0] == 0x00) {
++	if (workreq->cmnd[0] == TEST_UNIT_READY) {
+ 		l = 0;
+ 	}
+ 
+@@ -934,22 +934,28 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
+ 	atp_writeb_pci(dev, c, 2, 0x00);
+ 	if (is885(dev)) {
+ 		j = atp_readb_pci(dev, c, 1) & 0xf3;
+-		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) ||
+-		    (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
++		if ((workreq->cmnd[0] == READ_6) ||
++		    (workreq->cmnd[0] == READ_10) ||
++		    (workreq->cmnd[0] == WRITE_6) ||
++		    (workreq->cmnd[0] == WRITE_10)) {
+ 			j |= 0x0c;
+ 		}
+ 		atp_writeb_pci(dev, c, 1, j);
+ 	} else if (is880(dev)) {
+-		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) ||
+-		    (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
++		if ((workreq->cmnd[0] == READ_6) ||
++		    (workreq->cmnd[0] == READ_10) ||
++		    (workreq->cmnd[0] == WRITE_6) ||
++		    (workreq->cmnd[0] == WRITE_10))
+ 			atp_writeb_base(dev, 0x3b,
+ 					(atp_readb_base(dev, 0x3b) & 0x3f) | 0xc0);
+ 		else
+ 			atp_writeb_base(dev, 0x3b,
+ 					atp_readb_base(dev, 0x3b) & 0x3f);
+ 	} else {
+-		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) ||
+-		    (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
++		if ((workreq->cmnd[0] == READ_6) ||
++		    (workreq->cmnd[0] == READ_10) ||
++		    (workreq->cmnd[0] == WRITE_6) ||
++		    (workreq->cmnd[0] == WRITE_10))
+ 			atp_writeb_base(dev, 0x3a,
+ 					(atp_readb_base(dev, 0x3a) & 0xf3) | 0x08);
+ 		else
 -- 
 2.29.2
 
