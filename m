@@ -2,164 +2,227 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45913C433E6
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 16:51:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2D0FC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 17:12:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19CEF23B40
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 16:51:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C524423B4B
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 17:12:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727590AbhANQur (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Jan 2021 11:50:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38958 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727214AbhANQuq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2021 11:50:46 -0500
-Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57007C061574;
-        Thu, 14 Jan 2021 08:50:06 -0800 (PST)
-Received: by mail-ej1-x633.google.com with SMTP id hs11so6827322ejc.1;
-        Thu, 14 Jan 2021 08:50:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=tlbKPE7uTZZR7ghtrcJbjkI4MtAdaHYk7YXhrBrERiw=;
-        b=LFAVkpoOP4ym75SjjeKlxMP30bXZQd/la1MU80s7ATLCMNl0imGhVeCf7r3Ez0HBDp
-         RHzpPCwZaYHxxvtA2Y1icrrWVut3k36nkOU6YQYAT+NR3ok2ZmwZQRwwT2H5iB++Qfqc
-         ceky3/JElTRWxv7RMlsUtfT5/PRZEJgE0x/gOsfzpbagjgfs2KjhvrMebcHHrL2T3TFe
-         GZwgvq8qokbl3DJrvZHJB4lfJhHQwylxtpkDCKZP/vzPwFCFAaNwTJewdztJs8EgP1Go
-         eyvLhVg89sfGJ+TWStdce2c4WMyiJ7VwIPM3um7WILmyZD9s2uPxcfs23cnjUYMn2QET
-         FDfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=tlbKPE7uTZZR7ghtrcJbjkI4MtAdaHYk7YXhrBrERiw=;
-        b=MFinXC89tsjNv4shlLp7yiDi5zaUbdR3y6lfSu4tPYTcB5K0RIUlTEsErZcFzp5vSm
-         6pLoTS7vUAIBFJF0YEmfSPwPRfExvsJWFnDfb2FES0Mjjy8rN1hEyC11yiinNqkIInkP
-         TIZnjCjnIDn5mZ32i1K8IfB2I+rtgAGb727b+PYmX/4yoapt5leFDaLF8xBNXuq3gmsn
-         RW9e7fsOp+w38/UpgmGwPX4PASWK/NFJ4Jy+EyUqmqYVljNUYUhVmAwjYxisWK6iBPSp
-         4pI/0SVv4XlVYX70tWka1JazQtGm268Ri/zFxcDt7rrkoOTPYnpqV2KuK2bLVH5re6dX
-         jCqg==
-X-Gm-Message-State: AOAM531BPW2xqlJd/KcmOh/LWP49PryadcQgGH0NBkQm1wmk5ApDx3f2
-        8gixerYAfkOuPUy3oBH0wJc=
-X-Google-Smtp-Source: ABdhPJznUfoVSAxoHGale9B+KIbksfqRnSUgxQr4Tq75l4SnGXbgepoKsdJ4RyW5ZAWJ7H77RCFaKQ==
-X-Received: by 2002:a17:906:2695:: with SMTP id t21mr6155193ejc.287.1610643005032;
-        Thu, 14 Jan 2021 08:50:05 -0800 (PST)
-Received: from [192.168.178.40] (ipbcc05d1b.dynamic.kabel-deutschland.de. [188.192.93.27])
-        by smtp.gmail.com with ESMTPSA id bo20sm2435232edb.1.2021.01.14.08.50.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 14 Jan 2021 08:50:04 -0800 (PST)
-Subject: Re: [PATCH] scsi: target: tcmu: Fix wrong uio handling causing big
- memory leak
-To:     Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20201218141534.9918-1-bostroesser@gmail.com>
- <73dc2d01-6398-c1d1-df47-66034d184eec@oracle.com>
- <aa95b4db-ca88-e38c-3871-fb935f1e2212@gmail.com>
- <3caa89ba-47b8-d85c-e7a5-54d84d1471f0@oracle.com>
-From:   Bodo Stroesser <bostroesser@gmail.com>
-Message-ID: <f2bf0c02-0d44-4b75-7c36-5d5fb213d747@gmail.com>
-Date:   Thu, 14 Jan 2021 17:50:03 +0100
+        id S1726175AbhANRMe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Jan 2021 12:12:34 -0500
+Received: from mail-1.ca.inter.net ([208.85.220.69]:58667 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725772AbhANRMd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2021 12:12:33 -0500
+Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 7143F2EA3CC;
+        Thu, 14 Jan 2021 12:11:52 -0500 (EST)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
+        with ESMTP id GOneSSauA7jc; Thu, 14 Jan 2021 11:58:33 -0500 (EST)
+Received: from [192.168.48.23] (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 1C78A2EA030;
+        Thu, 14 Jan 2021 12:11:51 -0500 (EST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v13 43/45] sg: no_dxfer: move to/from kernel buffers
+To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com,
+        kashyap.desai@broadcom.com
+References: <20210113224526.861000-1-dgilbert@interlog.com>
+ <20210113224526.861000-44-dgilbert@interlog.com>
+ <c8f449c2-9a69-2fb7-a1fa-a309b4d8b768@suse.de>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <d15aa6a1-f889-8c5f-f80e-c680a42bb8c4@interlog.com>
+Date:   Thu, 14 Jan 2021 12:11:50 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <3caa89ba-47b8-d85c-e7a5-54d84d1471f0@oracle.com>
+In-Reply-To: <c8f449c2-9a69-2fb7-a1fa-a309b4d8b768@suse.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Language: en-CA
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13.01.21 22:04, Mike Christie wrote:
-> On 1/13/21 11:59 AM, Bodo Stroesser wrote:
->> On 12.01.21 19:36, Mike Christie wrote:
->>> On 12/18/20 8:15 AM, Bodo Stroesser wrote:
->>>> tcmu calls uio_unregister_device from tcmu_destroy_device.
->>>> After that uio will never call tcmu_release for this device.
->>>> If userspace still had the uio device open and / or mmap'ed
->>>> during uio_unregister_device, tcmu_release will not be called and
->>>> udev->kref will never go down to 0.
->>>>
->>>
->>> I didn't get why the release function is not called if you call
->>> uio_unregister_device while a device is open. Does the device_destroy call in
->>> uio_unregister_device completely free the device or does it set some bits so
->>> uio_release is not called later?
+On 2021-01-14 2:30 a.m., Hannes Reinecke wrote:
+> On 1/13/21 11:45 PM, Douglas Gilbert wrote:
+>> When the NO_DXFER flag is use on a command/request, the data-in
+>> and data-out buffers (if present) should not be ignored. Add
+>> sg_rq_map_kern() function to handle this. Uses a single bio with
+>> multiple bvec_s usually each holding multiple pages, if necessary.
+>> The driver default element size is 32 KiB so if PAGE_SIZE is 4096
+>> then get_order()==3 .
 >>
->> uio_unregister_device() resets the pointer (idev->info) to the struct uio_info which tcmu provided in uio_register_device().
->> The uio device itself AFAICS is kept while it is open / mmap'ed.
->> But no matter what userspace does, uio will not call tcmu's callbacks
->> since info pointer now is NULL.
+>> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+>> ---
+>>   drivers/scsi/sg.c | 59 +++++++++++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 59 insertions(+)
 >>
->> When userspace finally closes the uio device, uio_release is called, but
->> tcmu_release can not be called.
+>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+>> index a00f488ee5e2..ad97f0756a9c 100644
+>> --- a/drivers/scsi/sg.c
+>> +++ b/drivers/scsi/sg.c
+>> @@ -2865,6 +2865,63 @@ exit_sg(void)
+>>       idr_destroy(&sg_index_idr);
+>>   }
+>> +static struct bio *
+>> +sg_mk_kern_bio(int bvec_cnt)
+>> +{
+>> +    struct bio *biop;
+>> +
+>> +    if (bvec_cnt > BIO_MAX_PAGES)
+>> +        return NULL;
+>> +    biop = bio_alloc(GFP_ATOMIC, bvec_cnt);
+>> +    if (!biop)
+>> +        return NULL;
+>> +    biop->bi_end_io = bio_put;
+> 
+> Huh? That is the default action, is it not?
+> So why specify it separately?
+
+I'll check. That code snippet is copied from NVMe which has equivalent
+code: moving storage data to/from _kernel_ buffers. Later in the driver
+rewrite, bios are re-used, so if any earlier path puts a different
+value in biop->bi_end_io, I'm screwed without that line. So I assumed
+the NVMe code did it for a good reason.
+
+>> +    return biop;
+>> +}
+>> +
+>> +/*
+>> + * Setup to move data between kernel buffers managed by this driver and a 
+>> SCSI device. Note that
+>> + * there is no corresponding 'unmap' call as is required by blk_rq_map_user() 
+>> . Uses a single
+>> + * bio with an expanded appended bvec if necessary.
+>> + */
+>> +static int
+>> +sg_rq_map_kern(struct sg_request *srp, struct request_queue *q, struct 
+>> request *rqq, int rw_ind)
+>> +{
+>> +    struct sg_scatter_hold *schp = &srp->sgat_h;
+>> +    struct bio *bio;
+>> +    int k, ln;
+>> +    int op_flags = 0;
+>> +    int num_sgat = schp->num_sgat;
+>> +    int dlen = schp->dlen;
+>> +    int pg_sz = 1 << (PAGE_SHIFT + schp->page_order);
+>> +    int num_segs = (1 << schp->page_order) * num_sgat;
+>> +    int res = 0;
+>> +
+>> +    SG_LOG(4, srp->parentfp, "%s: dlen=%d, pg_sz=%d\n", __func__, dlen, pg_sz);
+>> +    if (num_sgat <= 0)
+>> +        return 0;
+>> +    if (rw_ind == WRITE)
+>> +        op_flags = REQ_SYNC | REQ_IDLE;
+>> +    bio = sg_mk_kern_bio(num_sgat - k);
+>> +    if (!bio)
+>> +        return -ENOMEM;
+>> +    bio->bi_opf = req_op(rqq) | op_flags;
+>> +
+>> +    for (k = 0; k < num_sgat && dlen > 0; ++k, dlen -= ln) {
+>> +        ln = min_t(int, dlen, pg_sz);
+>> +        if (bio_add_pc_page(q, bio, schp->pages[k], ln, 0) < ln) {
+>> +            bio_put(bio);
+>> +            return -EINVAL;
+>> +        }
+>> +    }
+>> +    res = blk_rq_append_bio(rqq, &bio);
+>> +    if (unlikely(res))
+>> +        bio_put(bio);
+>> +    else
+>> +        rqq->nr_phys_segments = num_segs;
+>> +    return res;
+>> +}
+>> +
+>>   static inline void
+>>   sg_set_map_data(const struct sg_scatter_hold *schp, bool up_valid,
+>>           struct rq_map_data *mdp)
+>> @@ -3028,6 +3085,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t 
+>> *cwrp, int dxfer_dir)
+>>           if (IS_ENABLED(CONFIG_SCSI_PROC_FS) && res)
+>>               SG_LOG(1, sfp, "%s: blk_rq_map_user() res=%d\n",
+>>                      __func__, res);
+>> +    } else {    /* transfer data to/from kernel buffers */
+>> +        res = sg_rq_map_kern(srp, q, rq, r0w);
+>>       }
+>>   fini:
+>>       if (unlikely(res)) {        /* failure, free up resources */
 >>
->>>
->>> Do other drivers hit this? Should uio have refcounting so uio_release is called
->>> when the last ref (from userspace open/close/mmap calls and from the kernel by
->>> drivers like target_core_user) is done?
->>>
->>
->> To be honest I don't know exactly.
->> tcmu seems to be a special case in that is has it's own mmap callback.
->> That allows us to map pages allocated by tcmu.
->> As long as userspace still holds the mapping, we should not unmap those
->> pages, because userspace then could get killed by SIGSEGV.
->> So we have to wait for userspace closing uio before we may unmap and
->> free the pages.
-> 
-> 
-> If we removed the clearing of idev->info in uio_unregister_device, and
-> then moved the idev->info->release call from uio_release to
-> uio_device_release it would work like you need right? The release callback
-> would always be called and called when userspace has dropped it's refs.
-> You need to also fix up the module refcount and some other bits because
-> it looks like uio uses the uio->info check to determine if the device is
-> being removed.
+> Hmm. I must say I fail to see the rationale here.
 
-I fear that would not work, because uio_release must be called always,
-no matter whether userspace closes the device before or after
-uio_unregister_device.
+See below.
 
-But we could add a new callback pointer 'late_release' to struct
-uio_info and struct uio_device. During uio_register_device we would
-copy the pointer from info to idev.
+> Why do you need to do the additional mapping?
 
-If info == NULL, uio_release calls idev->late_release if != NULL.
+I don't understand this question.
 
-tcmu would of course set info->release and ->late_release both to
-tcmu_release.
+> And doens't the 'NO_DXFER' flag indicate that _no_ data should be transferred?
 
-> 
-> I don't know if that is the correct approach. It looks like non
-> target_core_user drivers could hit a similar issue. It seems like drivers
-> like qedi/bnx2i could hit the issue if their port is removed from the
-> kernel before their uio daemon closes the device. However, they also
-> could do a driver specific fix and handle the issue by adding some extra
-> kernel/userspace bits to sync the port removal.
-> 
+NO, it absolutely does not mean that! With indirect IO (i.e. the default) there
+are two transfers, taking a READ operation is an example:
+    1) transfer user data from the device (a LU) to the internal buffer allocated
+       by the sg driver. LLD arranges that transfer.
+    2) transfer that user data from the internal buffer to the user space as
+       indicated by the call to ioctl(SG_IO) or its alternatives. This transfer
+       is driven by the sg driver using copy_to_user().
 
-I had a closer look into qedi. I assume there might be a leak also,
-because qedi_uio_close calls "qedi_ll2_free_skbs(qedi)".
+The SG_FLAG_NO_DXFER flag skips step 2) _not_ 1) .
 
-Unfortunately my above proposal would not work here without adding a
-new refcount to qedi_uio_dev, because currently in __qedi_free_uio
-the udev is freed shortly after uio_unregister_device. So later calls
-of qedi_uio_close(udev) would be harmful.
+The SG_FLAG_NO_DXFER flag has been in the sg driver since 1998. Sometime between
+2010 and now that functionality was quietly dropped. Tony Battersby for one
+seemed quite peeved when I told him that functionality had been silently
+dropped.
 
-But I guess the leak can be fixed by adding two lines after the
-uio_unregister_device() in __qedi_free_uio:
+Why have the SG_FLAG_NO_DXFER flag?
+   - originally to test read speed; no need to allocate and manage a user
+     space buffer that isn't going to be used
+   - force a RAID to properly check the validity of user data, especially
+     if one doesn't trust the VERIFY command which can cheat and simply
+     say: "Looks good, next"
+   - on mirrored disks: full READ on primary, NO_DXFER READ on secondary;
+     checks secondary mirror is in "good order" ***
+   - implementation overlaps with mmap()-ed IO in which the "internal buffer"
+     is visible to the user space
+   - and the big one, for the sg driver rewrite: it is the basis of
+     fast copy and compare: that READ internal buffer (a bio) is the perfect
+     candidate for the internal buffer of the corresponding WRITE operation,
+     both in space and time. In space: one bio for a bound READ and WRITE;
+     in time: that WRITE cannot start until the READ completes.
 
-	if (test_bit(UIO_DEV_OPENED, &udev->qedi->flags)
-		qedi_ll2_free_skbs(qedi);
+And please RTFM, not just the code. Every time I present this driver I refer
+to: https://doug-gilbert.github.io/sg_v40.html and/or the "danny' url. This
+from table 2 on the flags field in the v3 and v4 interface:
+
+SG_FLAG_NO_DXFER [0x10000]
+SGV4_FLAG_NO_DXFER
+With indirect IO, data is "bounced" through a kernel buffer as it passes from 
+user space memory to the storage device (or vice versa). This flag instructs the 
+driver not to do the portion of the copy between the kernel buffers and user 
+memory. There are several cases where this is useful. It is used on WRITE side 
+of request sharing because the data to be written is already sitting in that 
+kernel buffer (placed there by the preceding READ). Another case is when data is 
+mirrored on two disks, it only needs to be actually read back from one of the 
+disks, but it may be a good idea to read it back from the other disk at the same 
+time to see if a MEDIUM ERROR is reported (which would indicate the mirror is no 
+longer safe). If the data is not going to be compared, then the second READ 
+could use this flag.
+
+Doug Gilbert
+
+
+*** I have run the idea of returning a CRC value (T10 algo?) from a NO_DXFER
+     READ which is produced from the returned user data. In the mirrored disk
+     scenario it would be a way to not only check the secondary was in "good
+     order" but that the CRC over the secondary data was the same as the CRC
+     over the primary data which has been returned to the user space in full.
+     Underwhelming response to date for that idea.
