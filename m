@@ -2,113 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C020FC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 04:10:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3D6CC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 07:13:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 786D8238E2
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 04:10:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F7C02395C
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 07:13:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726962AbhANEKJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jan 2021 23:10:09 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:54433 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726705AbhANEKJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2021 23:10:09 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1610597389; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=KEhEnxDdZvkvCPxXrDuP2+CvAQyFcZ9lrV7IBZA6ja4=;
- b=UIyOQk4WziOlVV7U118jrXusSPzrgVPF0uxWgdF66Xe3QMunbznIxSRImPha0kDGyiRhUTkC
- VwyGZ9QjueY0et8Y/v7LwFchZDNSiSBaOylbd01vlWDMTwXt7+vDDgyCQzunzvJh3e+iVyj/
- jjJYudZQyxyIFZU/Ve128tlmoTE=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 5fffc3e5c88af06107e11724 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 14 Jan 2021 04:09:09
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id DEC3CC43464; Thu, 14 Jan 2021 04:09:08 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 222F1C433CA;
-        Thu, 14 Jan 2021 04:09:08 +0000 (UTC)
+        id S1726806AbhANHNJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Jan 2021 02:13:09 -0500
+Received: from mx2.suse.de ([195.135.220.15]:35824 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725888AbhANHNJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 14 Jan 2021 02:13:09 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id E5019ABD6;
+        Thu, 14 Jan 2021 07:12:27 +0000 (UTC)
+Subject: Re: [PATCH v13 28/45] sg: rework debug info
+To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com,
+        kashyap.desai@broadcom.com
+References: <20210113224526.861000-1-dgilbert@interlog.com>
+ <20210113224526.861000-29-dgilbert@interlog.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <d9337b54-6d27-b109-9667-5a913f82797f@suse.de>
+Date:   Thu, 14 Jan 2021 08:12:27 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 14 Jan 2021 12:09:08 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     daejun7.park@samsung.com
-Cc:     Greg KH <gregkh@linuxfoundation.org>, avri.altman@wdc.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        asutoshd@codeaurora.org, stanley.chu@mediatek.com,
-        bvanassche@acm.org, huobean@gmail.com,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>
-Subject: Re: [PATCH v18 3/3] scsi: ufs: Prepare HPB read for cached sub-region
-In-Reply-To: <20210113013633epcms2p60b9dccaa405ff568a18d28b94089665b@epcms2p6>
-References: <e9b2479d0371e3cbe8aeb6c90ffb5d72@codeaurora.org>
- <20201222015704epcms2p643f0c5011064a7ce56b08331811a8509@epcms2p6>
- <20201222015854epcms2p1bdc30b8fab8ef01502451b75e7fbaf49@epcms2p1>
- <CGME20201222015704epcms2p643f0c5011064a7ce56b08331811a8509@epcms2p6>
- <20210113013633epcms2p60b9dccaa405ff568a18d28b94089665b@epcms2p6>
-Message-ID: <c6a4e4abd856aa03b6b91b619cddbeb7@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+In-Reply-To: <20210113224526.861000-29-dgilbert@interlog.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Daejun,
-
-On 2021-01-13 09:36, Daejun Park wrote:
-> Hi Can Guo,
+On 1/13/21 11:45 PM, Douglas Gilbert wrote:
+> Since the version 2 driver, the state of the driver can be found
+> with 'cat /proc/scsi/sg/debug'. As the driver becomes more
+> threaded and IO faster (e.g. scsi_debug with a command timer
+> of 5 microseconds), the existing state dump can become
+> misleading as the state can change during the "snapshot". The
+> new approach in this patch is to allocate a buffer of
+> SG_PROC_DEBUG_SZ bytes and use scnprintf() to populate it. Only
+> when the whole state is captured (or the buffer fills) is the
+> output to the caller's terminal performed. The previous
+> approach was line based: assemble a line of information and
+> then output it.
 > 
->> > +static void
->> > +ufshpb_set_hpb_read_to_upiu(struct ufshpb_lu *hpb, struct ufshcd_lrb
->> > *lrbp,
->> > +				  u32 lpn, u64 ppn,  unsigned int transfer_len)
->> > +{
->> > +	unsigned char *cdb = lrbp->ucd_req_ptr->sc.cdb;
->> > +
->> > +	cdb[0] = UFSHPB_READ;
->> 
->> You are only replacing opcode in cdb[0], but 
->> ufshcd_add_command_trace()
->> is
->> counting on lrbp->cmd->cmnd. This will lead to wrong opcode recorded 
->> by
->> UFS ftrace.
->> 
-> You're comment is good point for improving this patch. But there is no
-> "case" for HPB read (0xF8) in ufshcd_add_command_trace().
-> So I will add codes to support tracing HPB read command in
-> ufshcd_add_command_trace() on next patch.
-> 
+Hmm. The whole '/proc' business is considered deprecated, and new
+(or updated) drivers should be moving to debugfs.
+Wouldn't it be better to do that, and deprecate /proc/sg, seeing that
+you are rewriting the entire driver anyway?
 
-It is not just about ftrace. If HPB READ cmd fails with sense key infos.
-When SCSI layer prints the cmd, it still prints the READ(10) CDB, which 
-is
-misleading.
+Cheers,
 
-Thanks,
-Can Guo.
-
-> Thanks,
-> Daejun
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
