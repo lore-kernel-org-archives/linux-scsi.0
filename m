@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EF1FC4332E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B522EC4332D
 	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 20:33:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70CB523A5F
+	by mail.kernel.org (Postfix) with ESMTP id 8EFC823A56
 	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 20:33:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728654AbhANUdL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1728623AbhANUdL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 14 Jan 2021 15:33:11 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:53546 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726066AbhANUcp (ORCPT
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:56062 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728060AbhANUcq (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 Jan 2021 15:32:45 -0500
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10EK2slJ051361;
-        Thu, 14 Jan 2021 15:32:01 -0500
+        Thu, 14 Jan 2021 15:32:46 -0500
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10EKVl5B036570;
+        Thu, 14 Jan 2021 15:32:00 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=dj9oH9mDaFvH1GVNXBhap4vp+1FQO0wVABQYlHPF47o=;
- b=eP1dXuIzAtFLGDEgsXlNxStkGf9fhROQNgSrBBGbeLWJ0ssyUdLWx3K3slCtrVY9YhqG
- TC8zgi7+T+pf9pKCySsL3lBs16LTJSa3SLhy6vuMDl+C+boLALw0lRxQP/4l8xoo1ShF
- ksK11Qo9htFX10BnfH4z5XEQ29uxo0xF5QGXZxUObu8BNo6U6HOkSQxU3XrxUg5z9jUU
- OtKWwthgqS2Rsy9rL0lHzK/HFbxbdX+kVcOCGdxI3WMwbYJZBqVsvKGVFFDUsQ06QZC6
- LK1nLlEy8x6aHx5tyC3FHrpxfAx1kQ4JvlXNgPo4QKU3EiY3kY+IzWjHUMDVXHlYukfO wA== 
-Received: from ppma02wdc.us.ibm.com (aa.5b.37a9.ip4.static.sl-reverse.com [169.55.91.170])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 362v29sgj4-1
+ bh=z3nI/cWv0TReJ7MoPJifthz7mo+0RrF8eBMrSt6XeU0=;
+ b=ffreLlDgKO2EhYoW8D4HFwBnytpqwN0yuaRI5ETvLPDafQ0rb6CgIoY9Xt5/oAhNhLnw
+ ycIyWn8xc8Nw8zWozfv4R4CYsp1NTQ1b/Z4KDbIqWHLX23TQaNuRyi0HBjHHduQ3FyzE
+ uiVepPWoUDMaYCRMjxzJ0PznxVkqWHWcI+S/zcmukKruLEb7SsEvc0vrY9UWu+lNjOBv
+ D0YKtF5+eVKBN9KffQC4RAqkBWf3wYwm5gbLah9lDbHvCscQgbeRyE3GDRcL0+goSZEb
+ nKVOp+fGZ39nfJ0pNdGMxzX8xH4ZD/d0RWC68u1fQQfaQzqMW0hJ5IbO0jehCEm0fTdk cw== 
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 362vbj94ur-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Jan 2021 15:32:01 -0500
-Received: from pps.filterd (ppma02wdc.us.ibm.com [127.0.0.1])
-        by ppma02wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10EKHJNa004698;
-        Thu, 14 Jan 2021 20:32:00 GMT
+        Thu, 14 Jan 2021 15:32:00 -0500
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10EKROJW032073;
+        Thu, 14 Jan 2021 20:31:59 GMT
 Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-        by ppma02wdc.us.ibm.com with ESMTP id 35y449fryn-1
+        by ppma04wdc.us.ibm.com with ESMTP id 35y449fskh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Thu, 14 Jan 2021 20:31:59 +0000
 Received: from b03ledav001.gho.boulder.ibm.com (b03ledav001.gho.boulder.ibm.com [9.17.130.232])
-        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10EKVwDX24510782
+        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10EKVwua23986446
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Thu, 14 Jan 2021 20:31:58 GMT
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 83C5F6E050;
+        by IMSVA (Postfix) with ESMTP id 18A306E050;
         Thu, 14 Jan 2021 20:31:58 +0000 (GMT)
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2796D6E052;
-        Thu, 14 Jan 2021 20:31:58 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id BA6386E05B;
+        Thu, 14 Jan 2021 20:31:57 +0000 (GMT)
 Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
         by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Thu, 14 Jan 2021 20:31:58 +0000 (GMT)
+        Thu, 14 Jan 2021 20:31:57 +0000 (GMT)
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     james.bottomley@hansenpartnership.com
 Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
         brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>,
         Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH v5 20/21] ibmvfc: enable MQ and set reasonable defaults
-Date:   Thu, 14 Jan 2021 14:31:47 -0600
-Message-Id: <20210114203148.246656-21-tyreld@linux.ibm.com>
+Subject: [PATCH v5 19/21] ibmvfc: purge scsi channels after transport loss/reset
+Date:   Thu, 14 Jan 2021 14:31:46 -0600
+Message-Id: <20210114203148.246656-20-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210114203148.246656-1-tyreld@linux.ibm.com>
 References: <20210114203148.246656-1-tyreld@linux.ibm.com>
@@ -73,42 +73,59 @@ Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
  definitions=2021-01-14_07:2021-01-14,2021-01-14 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 suspectscore=0
- priorityscore=1501 mlxlogscore=856 malwarescore=0 impostorscore=0
- spamscore=0 clxscore=1015 bulkscore=0 adultscore=0 phishscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101140115
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ lowpriorityscore=0 priorityscore=1501 mlxscore=0 mlxlogscore=999
+ adultscore=0 clxscore=1015 bulkscore=0 suspectscore=0 spamscore=0
+ impostorscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2009150000 definitions=main-2101140115
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Turn on MQ by default and set sane values for the upper limit on hw
-queues for the scsi host, and number of hw scsi channels to request from
-the partner VIOS.
+Grab the queue and list lock for each Sub-CRQ and add any uncompleted
+events to the host purge list.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-index c3bb83c9d8a6..0391cb746d0b 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.h
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-@@ -41,9 +41,9 @@
- #define IBMVFC_DEFAULT_LOG_LEVEL	2
- #define IBMVFC_MAX_CDB_LEN		16
- #define IBMVFC_CLS3_ERROR		0
--#define IBMVFC_MQ			0
--#define IBMVFC_SCSI_CHANNELS		0
--#define IBMVFC_SCSI_HW_QUEUES		1
-+#define IBMVFC_MQ			1
-+#define IBMVFC_SCSI_CHANNELS		8
-+#define IBMVFC_SCSI_HW_QUEUES		8
- #define IBMVFC_MIG_NO_SUB_TO_CRQ	0
- #define IBMVFC_MIG_NO_N_TO_M		0
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 5ca8fcafd1d5..d314dffaafc4 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -1056,7 +1056,13 @@ static void ibmvfc_fail_request(struct ibmvfc_event *evt, int error_code)
+ static void ibmvfc_purge_requests(struct ibmvfc_host *vhost, int error_code)
+ {
+ 	struct ibmvfc_event *evt, *pos;
++	struct ibmvfc_queue *queues = vhost->scsi_scrqs.scrqs;
+ 	unsigned long flags;
++	int hwqs = 0;
++	int i;
++
++	if (vhost->using_channels)
++		hwqs = vhost->scsi_scrqs.active_queues;
  
+ 	ibmvfc_dbg(vhost, "Purging all requests\n");
+ 	spin_lock_irqsave(&vhost->crq.l_lock, flags);
+@@ -1064,6 +1070,16 @@ static void ibmvfc_purge_requests(struct ibmvfc_host *vhost, int error_code)
+ 		ibmvfc_fail_request(evt, error_code);
+ 	list_splice_init(&vhost->crq.sent, &vhost->purge);
+ 	spin_unlock_irqrestore(&vhost->crq.l_lock, flags);
++
++	for (i = 0; i < hwqs; i++) {
++		spin_lock_irqsave(queues[i].q_lock, flags);
++		spin_lock(&queues[i].l_lock);
++		list_for_each_entry_safe(evt, pos, &queues[i].sent, queue_list)
++			ibmvfc_fail_request(evt, error_code);
++		list_splice_init(&queues[i].sent, &vhost->purge);
++		spin_unlock(&queues[i].l_lock);
++		spin_unlock_irqrestore(queues[i].q_lock, flags);
++	}
+ }
+ 
+ /**
 -- 
 2.27.0
 
