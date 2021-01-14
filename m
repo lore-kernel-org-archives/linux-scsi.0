@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E1A1C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 07:21:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C8EFC433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 07:26:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B28C239E7
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 07:21:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B1721207AE
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 07:26:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726121AbhANHVb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Jan 2021 02:21:31 -0500
-Received: from mx2.suse.de ([195.135.220.15]:38054 "EHLO mx2.suse.de"
+        id S1726127AbhANH0e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Jan 2021 02:26:34 -0500
+Received: from mx2.suse.de ([195.135.220.15]:40066 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727174AbhANHV1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 Jan 2021 02:21:27 -0500
+        id S1726055AbhANH0e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 14 Jan 2021 02:26:34 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 2904BABD6;
-        Thu, 14 Jan 2021 07:20:46 +0000 (UTC)
-Subject: Re: [PATCH v13 40/45] sg: remove rcv_done request state
+        by mx2.suse.de (Postfix) with ESMTP id DD8CDABD6;
+        Thu, 14 Jan 2021 07:25:52 +0000 (UTC)
+Subject: Re: [PATCH v13 41/45] sg: track lowest inactive and await indexes
 To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com,
         kashyap.desai@broadcom.com
 References: <20210113224526.861000-1-dgilbert@interlog.com>
- <20210113224526.861000-41-dgilbert@interlog.com>
+ <20210113224526.861000-42-dgilbert@interlog.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <43af5016-d42f-1222-3716-82aa4566c019@suse.de>
-Date:   Thu, 14 Jan 2021 08:20:45 +0100
+Message-ID: <50eee49d-8a88-3692-af3a-cbede1b77737@suse.de>
+Date:   Thu, 14 Jan 2021 08:25:51 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20210113224526.861000-41-dgilbert@interlog.com>
+In-Reply-To: <20210113224526.861000-42-dgilbert@interlog.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -44,14 +44,24 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 1/13/21 11:45 PM, Douglas Gilbert wrote:
-> Remove SG_RQ_RCV_DONE request state. Also remember the position of
-> the last used request array element and start subsequent searches
-> for completed requests and new requests from that index.
+> Use two integers in the sg_fd structure to track recent and lowest
+> xarray indexes that have become inactive or await a foreground
+> receive. This is used to shorten the number of xarray iterations
+> required prior to a match when queue (IO) depths are large, say
+> 128.
+> 
+> Replace the req_cnt atomic in struct sg_fd with the inactives
+> atomic. With large queues cycles were wasted checking the request
+> xarray for any inactives when there were none to be found.
+> 
+> Rename the sg_rq_state_chg_*() functions to sg_rq_chg_state_*()
+> since too many things start with "sg_rq_state". Also the new
+> function names emphasize the change part a little more.
 > 
 > Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
->   drivers/scsi/sg.c | 168 ++++++++++++++++++++++++++--------------------
->   1 file changed, 96 insertions(+), 72 deletions(-)
+>   drivers/scsi/sg.c | 304 ++++++++++++++++++++++++++--------------------
+>   1 file changed, 175 insertions(+), 129 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
