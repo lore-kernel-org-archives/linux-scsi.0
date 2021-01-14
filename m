@@ -4,67 +4,67 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8791BC4321A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2217C433DB
 	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 20:34:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D9EF23B03
+	by mail.kernel.org (Postfix) with ESMTP id A9B0D23A7E
 	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 20:34:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727192AbhANUcl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Jan 2021 15:32:41 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:31104 "EHLO
+        id S1729481AbhANUeH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Jan 2021 15:34:07 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:13374 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725918AbhANUck (ORCPT
+        by vger.kernel.org with ESMTP id S1726262AbhANUcl (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 Jan 2021 15:32:40 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10EK3WpO133088;
-        Thu, 14 Jan 2021 15:31:54 -0500
+        Thu, 14 Jan 2021 15:32:41 -0500
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10EK2D8j069176;
+        Thu, 14 Jan 2021 15:31:56 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=w9GOEHUIwadmmQ6/WimiQJ9BqdJfITO+Oan6ZTv5mO4=;
- b=eWg2vY6Rpq1pKQ9E+c/N4BRnUP81IpJSiX4tmCZ1qYPq7GAQ2r9dnrRSuBG3dNggOzpi
- Q5saCITWT7H8DEYFeJWWBz6AtAuDORvQkzx6f2K7aIm8Xf4b3L66BiixFAksMPAeCUKN
- oBf4fhzneIkC+N++QKzaNcTqYSObJNEr9jZ9wZV9qUTkJfeSOv94leXKiakeU6SeueoH
- Pk2fNjCmfeuenvLZCdTBf2wZKxMQu7VM4MjFht3K+TWc3CPT8OMlqKfn9CQZ0zg5Ixq4
- c4SnOmKlaJdFDmSaeFutQ0Fpf4/gcSpizxLA6O7n/tgy7ZnatMsdQ0oYbbBs1DBbj1Yi HQ== 
-Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 362vnm8pe0-1
+ bh=9rCZsdpWTuc9zRargT+2e60gHxzDGTdQNT6kzrtC5v0=;
+ b=ip77GuWC4QLW4ZMEOqizsn6NO30SRfZ0E4hZugLHnSt80dD4XPdDGYGF4B1+VXOagv5r
+ 53AsoWnf8ukberKEV4tk9c+2RGRDsHnEb+qpPU17CfHu4/XD5ZioiTJdcNVyNyb9nj9u
+ 13NXqf+dWfN35lkFUwQoFYlJ4+Fhk//E2zRvX9hgkZ45TIc27tXZZGnLJuvrcvh5aNGW
+ YPR0Z+b9OEgTdbnZC1dTzV+kZFkv1ah9XdDJXVpIzLRqaALpPNHuHrwWO571VhOaE7d8
+ UDGG/TM5d4V82YnxFNJ35R+P77N7TgrcbUB7tbX7hXhF5I05pSa0wabKGnRgvY4WDKat zQ== 
+Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 362ucvjutf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Jan 2021 15:31:53 -0500
-Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
-        by ppma04wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10EKRP40032079;
-        Thu, 14 Jan 2021 20:31:52 GMT
-Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
-        by ppma04wdc.us.ibm.com with ESMTP id 35y449fsjs-1
+        Thu, 14 Jan 2021 15:31:55 -0500
+Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
+        by ppma03dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10EKS7Yc026129;
+        Thu, 14 Jan 2021 20:31:54 GMT
+Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
+        by ppma03dal.us.ibm.com with ESMTP id 35y449sne3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Jan 2021 20:31:52 +0000
+        Thu, 14 Jan 2021 20:31:54 +0000
 Received: from b03ledav001.gho.boulder.ibm.com (b03ledav001.gho.boulder.ibm.com [9.17.130.232])
-        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10EKVpHX27066818
+        by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10EKVr1423527776
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 14 Jan 2021 20:31:51 GMT
+        Thu, 14 Jan 2021 20:31:53 GMT
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 31CF16E052;
-        Thu, 14 Jan 2021 20:31:51 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 3AA0E6E04E;
+        Thu, 14 Jan 2021 20:31:53 +0000 (GMT)
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D2F906E04C;
-        Thu, 14 Jan 2021 20:31:50 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id DC1DE6E04C;
+        Thu, 14 Jan 2021 20:31:52 +0000 (GMT)
 Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
         by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Thu, 14 Jan 2021 20:31:50 +0000 (GMT)
+        Thu, 14 Jan 2021 20:31:52 +0000 (GMT)
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     james.bottomley@hansenpartnership.com
 Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
         brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>,
         Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH v5 02/21] ibmvfc: move event pool init/free routines
-Date:   Thu, 14 Jan 2021 14:31:29 -0600
-Message-Id: <20210114203148.246656-3-tyreld@linux.ibm.com>
+Subject: [PATCH v5 07/21] ibmvfc: add alloc/dealloc routines for SCSI Sub-CRQ Channels
+Date:   Thu, 14 Jan 2021 14:31:34 -0600
+Message-Id: <20210114203148.246656-8-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210114203148.246656-1-tyreld@linux.ibm.com>
 References: <20210114203148.246656-1-tyreld@linux.ibm.com>
@@ -73,198 +73,213 @@ Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
  definitions=2021-01-14_07:2021-01-14,2021-01-14 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=959 phishscore=0
- mlxscore=0 suspectscore=0 priorityscore=1501 bulkscore=0
- lowpriorityscore=0 impostorscore=0 malwarescore=0 adultscore=0 spamscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101140115
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ spamscore=0 suspectscore=0 bulkscore=0 mlxscore=0 clxscore=1015
+ lowpriorityscore=0 adultscore=0 phishscore=0 impostorscore=0
+ malwarescore=0 mlxlogscore=999 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2009150000 definitions=main-2101140111
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The next patch in this series reworks the event pool allocation calls to
-happen within the individual queue allocation routines instead of as
-independent calls.
+Allocate a set of Sub-CRQs in advance. During channel setup the client
+and VIOS negotiate the number of queues the VIOS supports and the number
+that the client desires to request. Its possible that the final channel
+resources allocated is less than requested, but the client is still
+responsible for sending handles for every queue it is hoping for.
 
-Move the init/free routines earlier in ibmvfc.c to prevent undefined
-reference errors when calling these functions from the queue allocation
-code. No functional change.
+Also, provide deallocation cleanup routines.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 151 +++++++++++++++++----------------
- 1 file changed, 76 insertions(+), 75 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 125 +++++++++++++++++++++++++++++++++
+ drivers/scsi/ibmvscsi/ibmvfc.h |   1 +
+ 2 files changed, 126 insertions(+)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 9200fe49c57e..cd9273a5fadb 100644
+index 612c7f3d7bd3..a198e118887d 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -716,6 +716,82 @@ static int ibmvfc_send_crq_init_complete(struct ibmvfc_host *vhost)
- 	return ibmvfc_send_crq(vhost, 0xC002000000000000LL, 0);
- }
- 
-+/**
-+ * ibmvfc_init_event_pool - Allocates and initializes the event pool for a host
-+ * @vhost:	ibmvfc host who owns the event pool
-+ *
-+ * Returns zero on success.
-+ **/
-+static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost,
-+				  struct ibmvfc_queue *queue)
-+{
+@@ -895,6 +895,8 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
+ 	unsigned long flags;
+ 	struct vio_dev *vdev = to_vio_dev(vhost->dev);
+ 	struct ibmvfc_queue *crq = &vhost->crq;
++	struct ibmvfc_queue *scrq;
 +	int i;
-+	struct ibmvfc_event_pool *pool = &queue->evt_pool;
-+
-+	ENTER;
-+	pool->size = max_requests + IBMVFC_NUM_INTERNAL_REQ;
-+	pool->events = kcalloc(pool->size, sizeof(*pool->events), GFP_KERNEL);
-+	if (!pool->events)
-+		return -ENOMEM;
-+
-+	pool->iu_storage = dma_alloc_coherent(vhost->dev,
-+					      pool->size * sizeof(*pool->iu_storage),
-+					      &pool->iu_token, 0);
-+
-+	if (!pool->iu_storage) {
-+		kfree(pool->events);
-+		return -ENOMEM;
+ 
+ 	/* Close the CRQ */
+ 	do {
+@@ -912,6 +914,16 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
+ 	memset(crq->msgs.crq, 0, PAGE_SIZE);
+ 	crq->cur = 0;
+ 
++	if (vhost->scsi_scrqs.scrqs) {
++		for (i = 0; i < IBMVFC_SCSI_HW_QUEUES; i++) {
++			scrq = &vhost->scsi_scrqs.scrqs[i];
++			spin_lock(scrq->q_lock);
++			memset(scrq->msgs.scrq, 0, PAGE_SIZE);
++			scrq->cur = 0;
++			spin_unlock(scrq->q_lock);
++		}
 +	}
 +
-+	INIT_LIST_HEAD(&queue->sent);
-+	INIT_LIST_HEAD(&queue->free);
-+	spin_lock_init(&queue->l_lock);
+ 	/* And re-open it again */
+ 	rc = plpar_hcall_norets(H_REG_CRQ, vdev->unit_address,
+ 				crq->msg_token, PAGE_SIZE);
+@@ -5045,6 +5057,11 @@ static int ibmvfc_alloc_queue(struct ibmvfc_host *vhost,
+ 	case IBMVFC_ASYNC_FMT:
+ 		fmt_size = sizeof(*queue->msgs.async);
+ 		break;
++	case IBMVFC_SUB_CRQ_FMT:
++		fmt_size = sizeof(*queue->msgs.scrq);
++		/* We need one extra event for Cancel Commands */
++		pool_size = max_requests + 1;
++		break;
+ 	default:
+ 		dev_warn(dev, "Unknown command/response queue message format: %d\n", fmt);
+ 		return -EINVAL;
+@@ -5136,6 +5153,107 @@ static int ibmvfc_init_crq(struct ibmvfc_host *vhost)
+ 	return retrc;
+ }
+ 
++static int ibmvfc_register_scsi_channel(struct ibmvfc_host *vhost,
++				  int index)
++{
++	struct device *dev = vhost->dev;
++	struct vio_dev *vdev = to_vio_dev(dev);
++	struct ibmvfc_queue *scrq = &vhost->scsi_scrqs.scrqs[index];
++	int rc = -ENOMEM;
 +
-+	for (i = 0; i < pool->size; ++i) {
-+		struct ibmvfc_event *evt = &pool->events[i];
++	ENTER;
 +
-+		atomic_set(&evt->free, 1);
-+		evt->crq.valid = 0x80;
-+		evt->crq.ioba = cpu_to_be64(pool->iu_token + (sizeof(*evt->xfer_iu) * i));
-+		evt->xfer_iu = pool->iu_storage + i;
-+		evt->vhost = vhost;
-+		evt->queue = queue;
-+		evt->ext_list = NULL;
-+		list_add_tail(&evt->queue_list, &queue->free);
++	if (ibmvfc_alloc_queue(vhost, scrq, IBMVFC_SUB_CRQ_FMT))
++		return -ENOMEM;
++
++	rc = h_reg_sub_crq(vdev->unit_address, scrq->msg_token, PAGE_SIZE,
++			   &scrq->cookie, &scrq->hw_irq);
++
++	if (rc) {
++		dev_warn(dev, "Error registering sub-crq: %d\n", rc);
++		if (rc == H_PARAMETER)
++			dev_warn_once(dev, "Firmware may not support MQ\n");
++		goto reg_failed;
++	}
++
++	scrq->hwq_id = index;
++	scrq->vhost = vhost;
++
++	LEAVE;
++	return 0;
++
++reg_failed:
++	ibmvfc_free_queue(vhost, scrq);
++	LEAVE;
++	return rc;
++}
++
++static void ibmvfc_deregister_scsi_channel(struct ibmvfc_host *vhost, int index)
++{
++	struct device *dev = vhost->dev;
++	struct vio_dev *vdev = to_vio_dev(dev);
++	struct ibmvfc_queue *scrq = &vhost->scsi_scrqs.scrqs[index];
++	long rc;
++
++	ENTER;
++
++	do {
++		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
++					scrq->cookie);
++	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
++
++	if (rc)
++		dev_err(dev, "Failed to free sub-crq[%d]: rc=%ld\n", index, rc);
++
++	ibmvfc_free_queue(vhost, scrq);
++	LEAVE;
++}
++
++static int ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
++{
++	int i, j;
++
++	ENTER;
++
++	vhost->scsi_scrqs.scrqs = kcalloc(IBMVFC_SCSI_HW_QUEUES,
++					  sizeof(*vhost->scsi_scrqs.scrqs),
++					  GFP_KERNEL);
++	if (!vhost->scsi_scrqs.scrqs)
++		return -1;
++
++	for (i = 0; i < IBMVFC_SCSI_HW_QUEUES; i++) {
++		if (ibmvfc_register_scsi_channel(vhost, i)) {
++			for (j = i; j > 0; j--)
++				ibmvfc_deregister_scsi_channel(vhost, j - 1);
++			kfree(vhost->scsi_scrqs.scrqs);
++			vhost->scsi_scrqs.scrqs = NULL;
++			vhost->scsi_scrqs.active_queues = 0;
++			LEAVE;
++			return -1;
++		}
 +	}
 +
 +	LEAVE;
 +	return 0;
 +}
 +
-+/**
-+ * ibmvfc_free_event_pool - Frees memory of the event pool of a host
-+ * @vhost:	ibmvfc host who owns the event pool
-+ *
-+ **/
-+static void ibmvfc_free_event_pool(struct ibmvfc_host *vhost,
-+				   struct ibmvfc_queue *queue)
++static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
 +{
 +	int i;
-+	struct ibmvfc_event_pool *pool = &queue->evt_pool;
 +
 +	ENTER;
-+	for (i = 0; i < pool->size; ++i) {
-+		list_del(&pool->events[i].queue_list);
-+		BUG_ON(atomic_read(&pool->events[i].free) != 1);
-+		if (pool->events[i].ext_list)
-+			dma_pool_free(vhost->sg_pool,
-+				      pool->events[i].ext_list,
-+				      pool->events[i].ext_list_token);
-+	}
++	if (!vhost->scsi_scrqs.scrqs)
++		return;
 +
-+	kfree(pool->events);
-+	dma_free_coherent(vhost->dev,
-+			  pool->size * sizeof(*pool->iu_storage),
-+			  pool->iu_storage, pool->iu_token);
++	for (i = 0; i < IBMVFC_SCSI_HW_QUEUES; i++)
++		ibmvfc_deregister_scsi_channel(vhost, i);
++
++	kfree(vhost->scsi_scrqs.scrqs);
++	vhost->scsi_scrqs.scrqs = NULL;
++	vhost->scsi_scrqs.active_queues = 0;
 +	LEAVE;
 +}
 +
  /**
-  * ibmvfc_free_queue - Deallocate queue
+  * ibmvfc_free_mem - Free memory for vhost
   * @vhost:	ibmvfc host struct
-@@ -1312,81 +1388,6 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
- 	strncpy(login_info->drc_name, location, IBMVFC_MAX_NAME);
- }
+@@ -5371,6 +5489,12 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 		goto remove_shost;
+ 	}
  
--/**
-- * ibmvfc_init_event_pool - Allocates and initializes the event pool for a host
-- * @vhost:	ibmvfc host who owns the event pool
-- *
-- * Returns zero on success.
-- **/
--static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost,
--				  struct ibmvfc_queue *queue)
--{
--	int i;
--	struct ibmvfc_event_pool *pool = &queue->evt_pool;
--
--	ENTER;
--	pool->size = max_requests + IBMVFC_NUM_INTERNAL_REQ;
--	pool->events = kcalloc(pool->size, sizeof(*pool->events), GFP_KERNEL);
--	if (!pool->events)
--		return -ENOMEM;
--
--	pool->iu_storage = dma_alloc_coherent(vhost->dev,
--					      pool->size * sizeof(*pool->iu_storage),
--					      &pool->iu_token, 0);
--
--	if (!pool->iu_storage) {
--		kfree(pool->events);
--		return -ENOMEM;
--	}
--
--	INIT_LIST_HEAD(&queue->sent);
--	INIT_LIST_HEAD(&queue->free);
--	spin_lock_init(&queue->l_lock);
--
--	for (i = 0; i < pool->size; ++i) {
--		struct ibmvfc_event *evt = &pool->events[i];
--		atomic_set(&evt->free, 1);
--		evt->crq.valid = 0x80;
--		evt->crq.ioba = cpu_to_be64(pool->iu_token + (sizeof(*evt->xfer_iu) * i));
--		evt->xfer_iu = pool->iu_storage + i;
--		evt->vhost = vhost;
--		evt->queue = queue;
--		evt->ext_list = NULL;
--		list_add_tail(&evt->queue_list, &queue->free);
--	}
--
--	LEAVE;
--	return 0;
--}
--
--/**
-- * ibmvfc_free_event_pool - Frees memory of the event pool of a host
-- * @vhost:	ibmvfc host who owns the event pool
-- *
-- **/
--static void ibmvfc_free_event_pool(struct ibmvfc_host *vhost,
--				   struct ibmvfc_queue *queue)
--{
--	int i;
--	struct ibmvfc_event_pool *pool = &queue->evt_pool;
--
--	ENTER;
--	for (i = 0; i < pool->size; ++i) {
--		list_del(&pool->events[i].queue_list);
--		BUG_ON(atomic_read(&pool->events[i].free) != 1);
--		if (pool->events[i].ext_list)
--			dma_pool_free(vhost->sg_pool,
--				      pool->events[i].ext_list,
--				      pool->events[i].ext_list_token);
--	}
--
--	kfree(pool->events);
--	dma_free_coherent(vhost->dev,
--			  pool->size * sizeof(*pool->iu_storage),
--			  pool->iu_storage, pool->iu_token);
--	LEAVE;
--}
--
- /**
-  * ibmvfc_get_event - Gets the next free event in pool
-  * @vhost:	ibmvfc host struct
++	if (vhost->mq_enabled) {
++		rc = ibmvfc_init_sub_crqs(vhost);
++		if (rc)
++			dev_warn(dev, "Failed to allocate Sub-CRQs. rc=%d\n", rc);
++	}
++
+ 	if (shost_to_fc_host(shost)->rqst_q)
+ 		blk_queue_max_segments(shost_to_fc_host(shost)->rqst_q, 1);
+ 	dev_set_drvdata(dev, vhost);
+@@ -5427,6 +5551,7 @@ static int ibmvfc_remove(struct vio_dev *vdev)
+ 	list_splice_init(&vhost->purge, &purge);
+ 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+ 	ibmvfc_complete_purge(&purge);
++	ibmvfc_release_sub_crqs(vhost);
+ 	ibmvfc_release_crq_queue(vhost);
+ 
+ 	ibmvfc_free_mem(vhost);
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index b9eed05c165f..bdafe9956649 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -850,6 +850,7 @@ struct ibmvfc_host {
+ 	mempool_t *tgt_pool;
+ 	struct ibmvfc_queue crq;
+ 	struct ibmvfc_queue async_crq;
++	struct ibmvfc_scsi_channels scsi_scrqs;
+ 	struct ibmvfc_npiv_login login_info;
+ 	union ibmvfc_npiv_login_data *login_buf;
+ 	dma_addr_t login_buf_dma;
 -- 
 2.27.0
 
