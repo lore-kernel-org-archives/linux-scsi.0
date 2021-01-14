@@ -4,67 +4,67 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9648C43603
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 20:34:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BEADC433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 20:35:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81EE523A7C
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 20:34:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA2C623A6C
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jan 2021 20:35:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726897AbhANUcl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Jan 2021 15:32:41 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:11574 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726058AbhANUck (ORCPT
+        id S1727244AbhANUez (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Jan 2021 15:34:55 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:18056 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726459AbhANUey (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 Jan 2021 15:32:40 -0500
-Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10EKSQI9153407;
-        Thu, 14 Jan 2021 15:31:55 -0500
+        Thu, 14 Jan 2021 15:34:54 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10EKY0JU161229;
+        Thu, 14 Jan 2021 15:34:07 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=TGs63mVFywZBnj3AKF8wn2z5azFR5i+RSJ9O5mdxhAY=;
- b=RHe7J+pU6cEpHQJ+IlvRr5YRpQk7t5H2fwK93HyK4YMQi4IPrRAE2aXgEKCRCwRX7WYr
- CUh6OSx0lHgMYJSWzO0e/jyDnSWhYWxK2BJAan/7mzmpF22nAxTobv+Gc9SLztKUhFUe
- +ivtEyzHv4ihAQXDA2zUgxPS73wUdVuxrXi6WABGbeHqCD6mFUkHlyqsyYW25i2A+GhZ
- Nmi9wl3Rg6i4vQ5unlpn/lFqngs57aZP/iVApRoJ+WfAAOV9LBe6Ib0ZMvyzjt7CJnIG
- WntF0FPBkh5uBDo7xP5IgoM6rXv/xtyXJ9z36sVXOhugDob9PdaZ+7fp9YxHj8eiRhWo xg== 
-Received: from ppma02wdc.us.ibm.com (aa.5b.37a9.ip4.static.sl-reverse.com [169.55.91.170])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 362w19r1yg-1
+ bh=pF1kTWzRDvOqDI/b1vn9yhlfp+aMDWf1vIB0dT8+eMA=;
+ b=agpmYs3VPjX1Ad+N5CNvVMC8g7YPaKwNOpMq1UMNZL/3ibSGwqctN2czRIEZJCyS1Uej
+ Jre6KmHADjcdHZ585ksSfBU0mr2raKcYrnoM1jnQan63zdq2341xsaKt8We5+jca8oCc
+ hxAr1I9JV9ePN5IVOtxeLjYHXw8Gmey3+VVu41CA0rgbdOW8cIzoEGalpmCBpAzp83t9
+ t6o+6ywyJw4Q0pBcC36LzE3foZKAUH7l1kDjSzePiPAFSgQFuJ8CN7CJR8TAOEa66Qvt
+ soKJmM2AbNJUPRYWHqY11GwVfncdsUnFm2eOgnnnRlnVg4JhRJMsYgi0sG+t64M9BqDX iw== 
+Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 362vtb8c59-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Jan 2021 15:31:55 -0500
-Received: from pps.filterd (ppma02wdc.us.ibm.com [127.0.0.1])
-        by ppma02wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10EKHF38004680;
-        Thu, 14 Jan 2021 20:31:54 GMT
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-        by ppma02wdc.us.ibm.com with ESMTP id 35y449fry9-1
+        Thu, 14 Jan 2021 15:34:04 -0500
+Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
+        by ppma03wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10EKRQ1L013843;
+        Thu, 14 Jan 2021 20:31:58 GMT
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+        by ppma03wdc.us.ibm.com with ESMTP id 35y449fsv8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Jan 2021 20:31:54 +0000
+        Thu, 14 Jan 2021 20:31:58 +0000
 Received: from b03ledav001.gho.boulder.ibm.com (b03ledav001.gho.boulder.ibm.com [9.17.130.232])
-        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10EKVqD925428354
+        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10EKVviO25756030
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 14 Jan 2021 20:31:52 GMT
+        Thu, 14 Jan 2021 20:31:57 GMT
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C378B6E04E;
-        Thu, 14 Jan 2021 20:31:52 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 512B86E056;
+        Thu, 14 Jan 2021 20:31:57 +0000 (GMT)
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 7B1916E052;
-        Thu, 14 Jan 2021 20:31:52 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id F28F86E052;
+        Thu, 14 Jan 2021 20:31:56 +0000 (GMT)
 Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
         by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Thu, 14 Jan 2021 20:31:52 +0000 (GMT)
+        Thu, 14 Jan 2021 20:31:56 +0000 (GMT)
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     james.bottomley@hansenpartnership.com
 Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
         brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>,
         Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH v5 06/21] ibmvfc: add Subordinate CRQ definitions
-Date:   Thu, 14 Jan 2021 14:31:33 -0600
-Message-Id: <20210114203148.246656-7-tyreld@linux.ibm.com>
+Subject: [PATCH v5 17/21] ibmvfc: add cancel mad initialization helper
+Date:   Thu, 14 Jan 2021 14:31:44 -0600
+Message-Id: <20210114203148.246656-18-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210114203148.246656-1-tyreld@linux.ibm.com>
 References: <20210114203148.246656-1-tyreld@linux.ibm.com>
@@ -73,86 +73,119 @@ Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
  definitions=2021-01-14_07:2021-01-14,2021-01-14 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 impostorscore=0
- priorityscore=1501 mlxscore=0 clxscore=1015 adultscore=0 phishscore=0
- malwarescore=0 bulkscore=0 lowpriorityscore=0 suspectscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101140111
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ spamscore=0 impostorscore=0 phishscore=0 adultscore=0 clxscore=1015
+ priorityscore=1501 mlxlogscore=999 mlxscore=0 suspectscore=0 bulkscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101140115
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Subordinate Command Response Queues (Sub CRQ) are used in conjunction
-with the primary CRQ when more than one queue is needed by the virtual
-IO adapter. Recent phyp firmware versions support Sub CRQ's with ibmvfc
-adapters. This feature is a prerequisite for supporting multiple
-hardware backed submission queues in the vfc adapter.
-
-The Sub CRQ command element differs from the standard CRQ in that it is
-32bytes long as opposed to 16bytes for the latter. Despite this extra
-16bytes the ibmvfc protocol will use the original CRQ command element
-mapped to the first 16bytes of the Sub CRQ element initially.
-
-Add definitions for the Sub CRQ command element and queue.
+Add a helper routine for initializing a Cancel MAD. This will be useful
+for a channelized client that needs to send Cancel commands down every
+channel commands were sent for a particular LUN.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.h | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 68 ++++++++++++++++++++--------------
+ 1 file changed, 40 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-index dd6d89292867..b9eed05c165f 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.h
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-@@ -650,6 +650,11 @@ struct ibmvfc_crq {
- 	volatile __be64 ioba;
- } __packed __aligned(8);
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 578e27180f10..b0b0212344f3 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -2379,6 +2379,45 @@ static int ibmvfc_wait_for_ops(struct ibmvfc_host *vhost, void *device,
+ 	return SUCCESS;
+ }
  
-+struct ibmvfc_sub_crq {
-+	struct ibmvfc_crq crq;
-+	__be64 reserved[2];
-+} __packed __aligned(8);
++static struct ibmvfc_event *ibmvfc_init_tmf(struct ibmvfc_queue *queue,
++					    struct scsi_device *sdev,
++					    int type)
++{
++	struct ibmvfc_host *vhost = shost_priv(sdev->host);
++	struct scsi_target *starget = scsi_target(sdev);
++	struct fc_rport *rport = starget_to_rport(starget);
++	struct ibmvfc_event *evt;
++	struct ibmvfc_tmf *tmf;
 +
- enum ibmvfc_ae_link_state {
- 	IBMVFC_AE_LS_LINK_UP		= 0x01,
- 	IBMVFC_AE_LS_LINK_BOUNCED	= 0x02,
-@@ -761,12 +766,14 @@ struct ibmvfc_event_pool {
- enum ibmvfc_msg_fmt {
- 	IBMVFC_CRQ_FMT = 0,
- 	IBMVFC_ASYNC_FMT,
-+	IBMVFC_SUB_CRQ_FMT,
- };
- 
- union ibmvfc_msgs {
- 	void *handle;
- 	struct ibmvfc_crq *crq;
- 	struct ibmvfc_async_crq *async;
-+	struct ibmvfc_sub_crq *scrq;
- };
- 
- struct ibmvfc_queue {
-@@ -781,6 +788,20 @@ struct ibmvfc_queue {
- 	struct list_head sent;
- 	struct list_head free;
- 	spinlock_t l_lock;
++	evt = ibmvfc_get_event(queue);
++	ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_MAD_FORMAT);
 +
-+	/* Sub-CRQ fields */
-+	struct ibmvfc_host *vhost;
-+	unsigned long cookie;
-+	unsigned long vios_cookie;
-+	unsigned long hw_irq;
-+	unsigned long irq;
-+	unsigned long hwq_id;
-+	char name[32];
-+};
++	tmf = &evt->iu.tmf;
++	memset(tmf, 0, sizeof(*tmf));
++	if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN)) {
++		tmf->common.version = cpu_to_be32(2);
++		tmf->target_wwpn = cpu_to_be64(rport->port_name);
++	} else {
++		tmf->common.version = cpu_to_be32(1);
++	}
++	tmf->common.opcode = cpu_to_be32(IBMVFC_TMF_MAD);
++	tmf->common.length = cpu_to_be16(sizeof(*tmf));
++	tmf->scsi_id = cpu_to_be64(rport->port_id);
++	int_to_scsilun(sdev->lun, &tmf->lun);
++	if (!ibmvfc_check_caps(vhost, IBMVFC_CAN_SUPPRESS_ABTS))
++		type &= ~IBMVFC_TMF_SUPPRESS_ABTS;
++	if (vhost->state == IBMVFC_ACTIVE)
++		tmf->flags = cpu_to_be32((type | IBMVFC_TMF_LUA_VALID));
++	else
++		tmf->flags = cpu_to_be32(((type & IBMVFC_TMF_SUPPRESS_ABTS) | IBMVFC_TMF_LUA_VALID));
++	tmf->cancel_key = cpu_to_be32((unsigned long)sdev->hostdata);
++	tmf->my_cancel_key = cpu_to_be32((unsigned long)starget->hostdata);
 +
-+struct ibmvfc_scsi_channels {
-+	struct ibmvfc_queue *scrqs;
-+	unsigned int active_queues;
- };
++	init_completion(&evt->comp);
++
++	return evt;
++}
++
+ /**
+  * ibmvfc_cancel_all - Cancel all outstanding commands to the device
+  * @sdev:	scsi device to cancel commands
+@@ -2393,9 +2432,6 @@ static int ibmvfc_wait_for_ops(struct ibmvfc_host *vhost, void *device,
+ static int ibmvfc_cancel_all(struct scsi_device *sdev, int type)
+ {
+ 	struct ibmvfc_host *vhost = shost_priv(sdev->host);
+-	struct scsi_target *starget = scsi_target(sdev);
+-	struct fc_rport *rport = starget_to_rport(starget);
+-	struct ibmvfc_tmf *tmf;
+ 	struct ibmvfc_event *evt, *found_evt;
+ 	union ibmvfc_iu rsp;
+ 	int rsp_rc = -EBUSY;
+@@ -2422,32 +2458,8 @@ static int ibmvfc_cancel_all(struct scsi_device *sdev, int type)
+ 	}
  
- enum ibmvfc_host_action {
+ 	if (vhost->logged_in) {
+-		evt = ibmvfc_get_event(&vhost->crq);
+-		ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_MAD_FORMAT);
+-
+-		tmf = &evt->iu.tmf;
+-		memset(tmf, 0, sizeof(*tmf));
+-		if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN)) {
+-			tmf->common.version = cpu_to_be32(2);
+-			tmf->target_wwpn = cpu_to_be64(rport->port_name);
+-		} else {
+-			tmf->common.version = cpu_to_be32(1);
+-		}
+-		tmf->common.opcode = cpu_to_be32(IBMVFC_TMF_MAD);
+-		tmf->common.length = cpu_to_be16(sizeof(*tmf));
+-		tmf->scsi_id = cpu_to_be64(rport->port_id);
+-		int_to_scsilun(sdev->lun, &tmf->lun);
+-		if (!ibmvfc_check_caps(vhost, IBMVFC_CAN_SUPPRESS_ABTS))
+-			type &= ~IBMVFC_TMF_SUPPRESS_ABTS;
+-		if (vhost->state == IBMVFC_ACTIVE)
+-			tmf->flags = cpu_to_be32((type | IBMVFC_TMF_LUA_VALID));
+-		else
+-			tmf->flags = cpu_to_be32(((type & IBMVFC_TMF_SUPPRESS_ABTS) | IBMVFC_TMF_LUA_VALID));
+-		tmf->cancel_key = cpu_to_be32((unsigned long)sdev->hostdata);
+-		tmf->my_cancel_key = cpu_to_be32((unsigned long)starget->hostdata);
+-
++		evt = ibmvfc_init_tmf(&vhost->crq, sdev, type);
+ 		evt->sync_iu = &rsp;
+-		init_completion(&evt->comp);
+ 		rsp_rc = ibmvfc_send_event(evt, vhost, default_timeout);
+ 	}
+ 
 -- 
 2.27.0
 
