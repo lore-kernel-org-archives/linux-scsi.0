@@ -2,109 +2,175 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B82D9C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jan 2021 11:34:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E1F0C433E6
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jan 2021 13:08:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8772E23358
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jan 2021 11:34:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE2BC23136
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jan 2021 13:08:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727478AbhAOLes (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Jan 2021 06:34:48 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2356 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726137AbhAOLer (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jan 2021 06:34:47 -0500
-Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DHJpn61gPz67c1b;
-        Fri, 15 Jan 2021 19:28:49 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2106.2; Fri, 15 Jan 2021 12:34:04 +0100
-Received: from [10.47.4.21] (10.47.4.21) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2106.2; Fri, 15 Jan
- 2021 11:34:02 +0000
-Subject: Re: [RESEND PATCH v3 0/4] iommu/iova: Solve longterm IOVA issue
-To:     <robin.murphy@arm.com>, <joro@8bytes.org>, <will@kernel.org>
-CC:     <xiyou.wangcong@gmail.com>, <iommu@lists.linux-foundation.org>,
-        <linux-kernel@vger.kernel.org>, <chenxiang66@hisilicon.com>,
-        "linuxarm@openeuler.org" <linuxarm@openeuler.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Kashyap Desai <kashyap.desai@broadcom.com>
-References: <1605608734-84416-1-git-send-email-john.garry@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <8830b44d-3893-6096-0cf1-37a1e8bc6c6b@huawei.com>
-Date:   Fri, 15 Jan 2021 11:32:52 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1732297AbhAONIN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Jan 2021 08:08:13 -0500
+Received: from mga12.intel.com ([192.55.52.136]:30033 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731957AbhAONIM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 Jan 2021 08:08:12 -0500
+IronPort-SDR: FXqdTMvEsB93t+kcUR+4gI49aL9UY1mLGegMDCg2VPphywYKtTytvpOLEEprFnuKV7CbKD+7x0
+ ZwXQZ1zxmsKg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9864"; a="157724043"
+X-IronPort-AV: E=Sophos;i="5.79,349,1602572400"; 
+   d="scan'208";a="157724043"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jan 2021 05:07:31 -0800
+IronPort-SDR: 6YR778+hus2fU+STJcThOeRRIhWnhQOy3bMSti4spS1Bi8wSghUjWZHFSBgH0DeF2nXcMyH6ya
+ bd1FvZt8ozZA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.79,349,1602572400"; 
+   d="scan'208";a="354299548"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.149]) ([10.237.72.149])
+  by fmsmga008.fm.intel.com with ESMTP; 15 Jan 2021 05:07:26 -0800
+Subject: Re: [PATCH v2 1/2] scsi: ufs: Fix a possible NULL pointer issue
+To:     Can Guo <cang@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1609479893-8889-1-git-send-email-cang@codeaurora.org>
+ <1609479893-8889-2-git-send-email-cang@codeaurora.org>
+ <7cff30c3-6df8-7b8c-0f5b-a95980b8f706@acm.org>
+ <b2385bdf0ce1ac799ccf77c2e952d9bf@codeaurora.org>
+ <204e13398c0b4c3d61786815e757e0bf@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <8dea503d-9ab7-c003-9ade-3470def21764@intel.com>
+Date:   Fri, 15 Jan 2021 15:07:25 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-In-Reply-To: <1605608734-84416-1-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <204e13398c0b4c3d61786815e757e0bf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.4.21]
-X-ClientProxiedBy: lhreml708-chm.china.huawei.com (10.201.108.57) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-+ linux-scsi (see 
-https://lore.kernel.org/linux-iommu/1607538189-237944-4-git-send-email-john.garry@huawei.com/)
-
-On 17/11/2020 10:25, John Garry wrote:
-> This series contains a patch to solve the longterm IOVA issue which
-> leizhen originally tried to address at [0].
+On 2/01/21 3:10 pm, Can Guo wrote:
+> On 2021-01-02 20:29, Can Guo wrote:
+>> On 2021-01-02 00:05, Bart Van Assche wrote:
+>>> On 12/31/20 9:44 PM, Can Guo wrote:
+>>>> During system resume/suspend, hba could be NULL. In this case, do not touch
+>>>> eh_sem.
+>>>>
+>>>> Fixes: 88a92d6ae4fe ("scsi: ufs: Serialize eh_work with system PM events
+>>>> and async scan")
+>>>>
+>>>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>>>> ---
+>>>>  drivers/scsi/ufs/ufshcd.c | 9 +++++----
+>>>>  1 file changed, 5 insertions(+), 4 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>>> index e221add..34e2541 100644
+>>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>>> @@ -8896,8 +8896,11 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+>>>>      int ret = 0;
+>>>>      ktime_t start = ktime_get();
+>>>>
+>>>> +    if (!hba)
+>>>> +        return 0;
+>>>> +
+>>>>      down(&hba->eh_sem);
+>>>> -    if (!hba || !hba->is_powered)
+>>>> +    if (!hba->is_powered)
+>>>>          return 0;
+>>>>
+>>>>      if ((ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl) ==
+>>>> @@ -8945,10 +8948,8 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+>>>>      int ret = 0;
+>>>>      ktime_t start = ktime_get();
+>>>>
+>>>> -    if (!hba) {
+>>>> -        up(&hba->eh_sem);
+>>>> +    if (!hba)
+>>>>          return -EINVAL;
+>>>> -    }
+>>>>
+>>>>      if (!hba->is_powered || pm_runtime_suspended(hba->dev))
+>>>>          /*
+>>>
+>>> Hi Can,
+>>>
+>>> How can ufshcd_system_suspend() or ufshcd_system_resume() be called with a
+>>> NULL argument? In ufshcd_pci_probe() I see that pci_set_drvdata() is called
+>>> before pm_runtime_allow(). ufshcd_pci_remove() calls pm_runtime_forbid().
+>>>
+>>> Thanks,
+>>>
+>>> Bart.
+>>
+>> Hi Bart,
+>>
+>> You are right about ufshcd_RUNTIME_suspend/resume() - platform_set_drvdata()
+>> is called before pm_runtime_enable(), so runtime suspend/resume cannot happen
+>> before pm_runtime_enable() is called. We can remove the sanity checks of
+>> !hba there, they are outdated.
 > 
-> A sieved kernel log is at the following, showing periodic dumps of IOVA
-> sizes, per CPU and per depot bin, per IOVA size granule:
-> https://raw.githubusercontent.com/hisilicon/kernel-dev/topic-iommu-5.10-iova-debug-v3/aging_test
+> Add more history here - before Stanley's change (see below),
+> platform_set_drvdata()
+> is called AFTER pm_runtime_enable(), which was why we needed sanity checks
+> of !hba.
+> But now the sanity checks are unnecessary in
+> ufshcd_RUNTIME_suspend/resume(), so
+> feel free to remove them.
 > 
-> Notice, for example, the following logs:
-> [13175.355584] print_iova1 cpu_total=40135 depot_total=3866 total=44001
-> [83483.457858] print_iova1 cpu_total=62532 depot_total=24476 total=87008
+> But still, things are a bit different for ufshcd_SYSTEM_suspend/resume(), we
+> need
+> the sanity checks of !hba there if my understanding is correct.
 > 
-> Where total IOVA rcache size has grown from 44K->87K over a long time.
+> commit 24e2e7a19f7e4b83d0d5189040d997bce3596473
+> Author: Stanley Chu <stanley.chu@mediatek.com>
+> Date:   Wed Jun 12 23:19:05 2019 +0800
 > 
-
-JFYI, I am able to reproduce this aging issue on another storage card, 
-an LSI SAS 3008, so now it's harder to say it's an issue specific to a 
-(buggy) single driver.
-
-A log of the IOVA size dumps is here:
-https://raw.githubusercontent.com/hisilicon/kernel-dev/064c4dc8869b3f2ad07edffceafde0b129f276b0/lsi3008_dmesg
-
-Notice again how the total IOVA size goes up over time, like:
-[ 68.176914] print_iova1 cpu_total=23663 depot_total=256 total=23919
-[ 2337.008194] print_iova1 cpu_total=67361 depot_total=9088 total=76449
-[17141.860078] print_iova1 cpu_total=73397 depot_total=10368 total=83765
-[27087.850830] print_iova1 cpu_total=73386 depot_total=10624 total=84010
-[10434.042877] print_iova1 cpu_total=90652 depot_total=12928 total=103580
-
-I had to change some settings for that storage card to reproduce, though 
-[0]. Could explain why no other reports.
-
-So please consider this issue again...
-
-Thanks,
-john
-
-[0] 
-https://lore.kernel.org/linux-scsi/dd8e6fdc-397d-b6ad-3371-0b65d1932ad1@huawei.com/T/#m953d21446a5756981412c92d0924ca65c8d2f3a5
-
-> Along with this patch, I included the following:
-> - A smaller helper to clear all IOVAs for a domain
-> - Change polarity of the IOVA magazine helpers
-> - Small optimisation from Cong Wang included, which was never applied [1].
->    There was some debate of the other patches in that series, but this one
->    is quite straightforward.
+>     scsi: ufs: Avoid runtime suspend possibly being blocked forever
 > 
-> Differnces to v2:
-> - Update commit message for patch 3/4
+> Thanks,
+> Can Guo.
+> 
+>>
+>> But for ufshcd_SYSTEM_suspend/resume() callbacks (not runtime ones), my
+>> understanding is that system suspend/resume may happen after probe (vendor
+>> driver probe calls ufshcd_pltfrm_init()) starts but before
+>> platform_set_drvdata()
+>> is called, in this case hba is NULL.
+>>
+>> int ufshcd_pltfrm_init(struct platform_device *pdev,
+>>                const struct ufs_hba_variant_ops *vops)
+>> {
+>> ...
+>>      platform_set_drvdata(pdev, hba);
+>>
+>>     pm_runtime_set_active(&pdev->dev);
+>>     pm_runtime_enable(&pdev->dev);
+>> }
+
+Hi Can
+
+I expect probe and system suspend are synchronized e.g. by device_lock(), so
+hba would not be NULL.  Is there any example of it being NULL in system suspend?
+
+Regards
+Adrian
