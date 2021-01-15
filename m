@@ -7,170 +7,128 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E1F0C433E6
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jan 2021 13:08:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B45A0C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jan 2021 16:18:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE2BC23136
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jan 2021 13:08:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8458E238EB
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jan 2021 16:18:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732297AbhAONIN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Jan 2021 08:08:13 -0500
-Received: from mga12.intel.com ([192.55.52.136]:30033 "EHLO mga12.intel.com"
+        id S1727031AbhAOQSN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Jan 2021 11:18:13 -0500
+Received: from mx2.suse.de ([195.135.220.15]:36502 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731957AbhAONIM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 Jan 2021 08:08:12 -0500
-IronPort-SDR: FXqdTMvEsB93t+kcUR+4gI49aL9UY1mLGegMDCg2VPphywYKtTytvpOLEEprFnuKV7CbKD+7x0
- ZwXQZ1zxmsKg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9864"; a="157724043"
-X-IronPort-AV: E=Sophos;i="5.79,349,1602572400"; 
-   d="scan'208";a="157724043"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jan 2021 05:07:31 -0800
-IronPort-SDR: 6YR778+hus2fU+STJcThOeRRIhWnhQOy3bMSti4spS1Bi8wSghUjWZHFSBgH0DeF2nXcMyH6ya
- bd1FvZt8ozZA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.79,349,1602572400"; 
-   d="scan'208";a="354299548"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.149]) ([10.237.72.149])
-  by fmsmga008.fm.intel.com with ESMTP; 15 Jan 2021 05:07:26 -0800
-Subject: Re: [PATCH v2 1/2] scsi: ufs: Fix a possible NULL pointer issue
-To:     Can Guo <cang@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1609479893-8889-1-git-send-email-cang@codeaurora.org>
- <1609479893-8889-2-git-send-email-cang@codeaurora.org>
- <7cff30c3-6df8-7b8c-0f5b-a95980b8f706@acm.org>
- <b2385bdf0ce1ac799ccf77c2e952d9bf@codeaurora.org>
- <204e13398c0b4c3d61786815e757e0bf@codeaurora.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <8dea503d-9ab7-c003-9ade-3470def21764@intel.com>
-Date:   Fri, 15 Jan 2021 15:07:25 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1726751AbhAOQSM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 Jan 2021 11:18:12 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id E6957B73E;
+        Fri, 15 Jan 2021 16:17:30 +0000 (UTC)
+Subject: Re: [PATCH v13 43/45] sg: no_dxfer: move to/from kernel buffers
+To:     dgilbert@interlog.com, linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com,
+        kashyap.desai@broadcom.com
+References: <20210113224526.861000-1-dgilbert@interlog.com>
+ <20210113224526.861000-44-dgilbert@interlog.com>
+ <c8f449c2-9a69-2fb7-a1fa-a309b4d8b768@suse.de>
+ <d15aa6a1-f889-8c5f-f80e-c680a42bb8c4@interlog.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <6abb445c-87cb-2409-8d5a-51294b639a64@suse.de>
+Date:   Fri, 15 Jan 2021 17:17:30 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <204e13398c0b4c3d61786815e757e0bf@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <d15aa6a1-f889-8c5f-f80e-c680a42bb8c4@interlog.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/01/21 3:10 pm, Can Guo wrote:
-> On 2021-01-02 20:29, Can Guo wrote:
->> On 2021-01-02 00:05, Bart Van Assche wrote:
->>> On 12/31/20 9:44 PM, Can Guo wrote:
->>>> During system resume/suspend, hba could be NULL. In this case, do not touch
->>>> eh_sem.
->>>>
->>>> Fixes: 88a92d6ae4fe ("scsi: ufs: Serialize eh_work with system PM events
->>>> and async scan")
->>>>
->>>> Signed-off-by: Can Guo <cang@codeaurora.org>
->>>> ---
->>>>  drivers/scsi/ufs/ufshcd.c | 9 +++++----
->>>>  1 file changed, 5 insertions(+), 4 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>>> index e221add..34e2541 100644
->>>> --- a/drivers/scsi/ufs/ufshcd.c
->>>> +++ b/drivers/scsi/ufs/ufshcd.c
->>>> @@ -8896,8 +8896,11 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
->>>>      int ret = 0;
->>>>      ktime_t start = ktime_get();
->>>>
->>>> +    if (!hba)
->>>> +        return 0;
->>>> +
->>>>      down(&hba->eh_sem);
->>>> -    if (!hba || !hba->is_powered)
->>>> +    if (!hba->is_powered)
->>>>          return 0;
->>>>
->>>>      if ((ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl) ==
->>>> @@ -8945,10 +8948,8 @@ int ufshcd_system_resume(struct ufs_hba *hba)
->>>>      int ret = 0;
->>>>      ktime_t start = ktime_get();
->>>>
->>>> -    if (!hba) {
->>>> -        up(&hba->eh_sem);
->>>> +    if (!hba)
->>>>          return -EINVAL;
->>>> -    }
->>>>
->>>>      if (!hba->is_powered || pm_runtime_suspended(hba->dev))
->>>>          /*
+On 1/14/21 6:11 PM, Douglas Gilbert wrote:
+> On 2021-01-14 2:30 a.m., Hannes Reinecke wrote:
+>> On 1/13/21 11:45 PM, Douglas Gilbert wrote:
+>>> When the NO_DXFER flag is use on a command/request, the data-in
+>>> and data-out buffers (if present) should not be ignored. Add
+>>> sg_rq_map_kern() function to handle this. Uses a single bio with
+>>> multiple bvec_s usually each holding multiple pages, if necessary.
+>>> The driver default element size is 32 KiB so if PAGE_SIZE is 4096
+>>> then get_order()==3 .
 >>>
->>> Hi Can,
+>>> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+>>> ---
+>>>   drivers/scsi/sg.c | 59 +++++++++++++++++++++++++++++++++++++++++++++++
+>>>   1 file changed, 59 insertions(+)
 >>>
->>> How can ufshcd_system_suspend() or ufshcd_system_resume() be called with a
->>> NULL argument? In ufshcd_pci_probe() I see that pci_set_drvdata() is called
->>> before pm_runtime_allow(). ufshcd_pci_remove() calls pm_runtime_forbid().
->>>
->>> Thanks,
->>>
->>> Bart.
+>>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+>>> index a00f488ee5e2..ad97f0756a9c 100644
+>>> --- a/drivers/scsi/sg.c
+>>> +++ b/drivers/scsi/sg.c
+>>> @@ -2865,6 +2865,63 @@ exit_sg(void)
+>>>       idr_destroy(&sg_index_idr);
+>>>   }
+>>> +static struct bio *
+>>> +sg_mk_kern_bio(int bvec_cnt)
+>>> +{
+>>> +    struct bio *biop;
+>>> +
+>>> +    if (bvec_cnt > BIO_MAX_PAGES)
+>>> +        return NULL;
+>>> +    biop = bio_alloc(GFP_ATOMIC, bvec_cnt);
+>>> +    if (!biop)
+>>> +        return NULL;
+>>> +    biop->bi_end_io = bio_put;
 >>
->> Hi Bart,
->>
->> You are right about ufshcd_RUNTIME_suspend/resume() - platform_set_drvdata()
->> is called before pm_runtime_enable(), so runtime suspend/resume cannot happen
->> before pm_runtime_enable() is called. We can remove the sanity checks of
->> !hba there, they are outdated.
+>> Huh? That is the default action, is it not?
+>> So why specify it separately?
 > 
-> Add more history here - before Stanley's change (see below),
-> platform_set_drvdata()
-> is called AFTER pm_runtime_enable(), which was why we needed sanity checks
-> of !hba.
-> But now the sanity checks are unnecessary in
-> ufshcd_RUNTIME_suspend/resume(), so
-> feel free to remove them.
+> I'll check. That code snippet is copied from NVMe which has equivalent
+> code: moving storage data to/from _kernel_ buffers. Later in the driver
+> rewrite, bios are re-used, so if any earlier path puts a different
+> value in biop->bi_end_io, I'm screwed without that line. So I assumed
+> the NVMe code did it for a good reason.
 > 
-> But still, things are a bit different for ufshcd_SYSTEM_suspend/resume(), we
-> need
-> the sanity checks of !hba there if my understanding is correct.
-> 
-> commit 24e2e7a19f7e4b83d0d5189040d997bce3596473
-> Author: Stanley Chu <stanley.chu@mediatek.com>
-> Date:   Wed Jun 12 23:19:05 2019 +0800
-> 
->     scsi: ufs: Avoid runtime suspend possibly being blocked forever
-> 
-> Thanks,
-> Can Guo.
-> 
->>
->> But for ufshcd_SYSTEM_suspend/resume() callbacks (not runtime ones), my
->> understanding is that system suspend/resume may happen after probe (vendor
->> driver probe calls ufshcd_pltfrm_init()) starts but before
->> platform_set_drvdata()
->> is called, in this case hba is NULL.
->>
->> int ufshcd_pltfrm_init(struct platform_device *pdev,
->>                const struct ufs_hba_variant_ops *vops)
->> {
->> ...
->>      platform_set_drvdata(pdev, hba);
->>
->>     pm_runtime_set_active(&pdev->dev);
->>     pm_runtime_enable(&pdev->dev);
->> }
+Re-used? Uh-oh.
+But okay, then it kinda makes sense.
 
-Hi Can
+[ .. ]
+>> Why do you need to do the additional mapping?
+> 
+> I don't understand this question.
+> 
+>> And doens't the 'NO_DXFER' flag indicate that _no_ data should be 
+>> transferred?
+> 
+> NO, it absolutely does not mean that! With indirect IO (i.e. the 
+> default) there
+> are two transfers, taking a READ operation is an example:
+>     1) transfer user data from the device (a LU) to the internal buffer 
+> allocated
+>        by the sg driver. LLD arranges that transfer.
+>     2) transfer that user data from the internal buffer to the user 
+> space as
+>        indicated by the call to ioctl(SG_IO) or its alternatives. This 
+> transfer
+>        is driven by the sg driver using copy_to_user().
+> 
+> The SG_FLAG_NO_DXFER flag skips step 2) _not_ 1) .
+> 
+> The SG_FLAG_NO_DXFER flag has been in the sg driver since 1998. Sometime 
+> between
+> 2010 and now that functionality was quietly dropped. Tony Battersby for one
+> seemed quite peeved when I told him that functionality had been silently
+> dropped.
+> 
+Ah. Now that makes sense. Data transfer with not data transfer.
+You should've said :-)
 
-I expect probe and system suspend are synchronized e.g. by device_lock(), so
-hba would not be NULL.  Is there any example of it being NULL in system suspend?
+I'll have another look with that in mind.
 
-Regards
-Adrian
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
