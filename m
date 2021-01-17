@@ -2,65 +2,213 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4ABAC433E0
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Jan 2021 20:29:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F70CC433E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 17 Jan 2021 13:26:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67B602245C
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Jan 2021 20:29:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 328B8223E4
+	for <linux-scsi@archiver.kernel.org>; Sun, 17 Jan 2021 13:26:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726608AbhAPU2m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Jan 2021 15:28:42 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49386 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726083AbhAPU2m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Jan 2021 15:28:42 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPS id 78DAE21D7A;
-        Sat, 16 Jan 2021 20:28:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610828881;
-        bh=Xw/VNlfwy5YeX0aoPrdMTyWWFQHQD0FzJjaDKMJgAAk=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=u2gigHckGklIUSxzDaqE/4iQjr81Avg6W41TP/6CV7UFTayGdtzlajlVrtPyEwveL
-         zQP24KiF7BIHul+wA12jwf+Ze/yt6CKc2YIx9yZBbHkTGgH2C6FSyRUYj1NcpNAtKg
-         MjSBEwiMg7M5LRfgjzLQ9fW1eJ68XFQpThUSeNU5biiZybUBikiyjsVcwxsMhw1mt9
-         6XhhgKcrXjm/X4ETSclF7LawwqPBKWIDlKONsAN0641J1DrYbC9IsfltFCesqB5NhF
-         gMi80bk5ZYVKrymXQjvmQHHRrd9BNpFk57roSlC3nntScfTTWsErY4/4DSlVeJ1BGd
-         sSo+O0LwOwcbw==
-Subject: Re: [GIT PULL] SCSI fixes for 5.11-rc3
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <1aef3ddd04fcbfe8259f21d7c8a80404770b8af6.camel@HansenPartnership.com>
-References: <1aef3ddd04fcbfe8259f21d7c8a80404770b8af6.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <1aef3ddd04fcbfe8259f21d7c8a80404770b8af6.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: be2553358cd40c0db11d1aa96f819c07413b2aae
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 0da0a8a0a0e1845f495431c3d8d733d2bbf9e9e5
-Message-Id: <161082888133.18233.3757872085763392333.pr-tracker-bot@kernel.org>
-Date:   Sat, 16 Jan 2021 20:28:01 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S1728789AbhAQN0f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 17 Jan 2021 08:26:35 -0500
+Received: from smtp08.smtpout.orange.fr ([80.12.242.130]:22074 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728181AbhAQN0a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jan 2021 08:26:30 -0500
+Received: from localhost.localdomain ([92.131.99.25])
+        by mwinf5d43 with ME
+        id HpQk2400C0Ys01Y03pQkUw; Sun, 17 Jan 2021 14:24:46 +0100
+X-ME-Helo: localhost.localdomain
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Sun, 17 Jan 2021 14:24:46 +0100
+X-ME-IP: 92.131.99.25
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     jinpu.wang@cloud.ionos.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] scsi: pm80xx: switch from 'pci_' to 'dma_' API
+Date:   Sun, 17 Jan 2021 14:24:45 +0100
+Message-Id: <20210117132445.562552-1-christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.27.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 16 Jan 2021 12:21:17 -0800:
+The wrappers in include/linux/pci-dma-compat.h should go away.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+The patch has been generated with the coccinelle script below and has been
+hand modified to replace GFP_ with a correct flag.
+It has been compile tested.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/0da0a8a0a0e1845f495431c3d8d733d2bbf9e9e5
+When memory is allocated in 'pm8001_init_ccb_tag()' GFP_KERNEL can be used
+because this function already uses this flag a few lines above.
 
-Thank you!
+While at it, remove "pm80xx: " in a debug message. 'pm8001_dbg()' already
+add the driver name in the message.
 
+
+@@
+@@
+-    PCI_DMA_BIDIRECTIONAL
++    DMA_BIDIRECTIONAL
+
+@@
+@@
+-    PCI_DMA_TODEVICE
++    DMA_TO_DEVICE
+
+@@
+@@
+-    PCI_DMA_FROMDEVICE
++    DMA_FROM_DEVICE
+
+@@
+@@
+-    PCI_DMA_NONE
++    DMA_NONE
+
+@@
+expression e1, e2, e3;
+@@
+-    pci_alloc_consistent(e1, e2, e3)
++    dma_alloc_coherent(&e1->dev, e2, e3, GFP_)
+
+@@
+expression e1, e2, e3;
+@@
+-    pci_zalloc_consistent(e1, e2, e3)
++    dma_alloc_coherent(&e1->dev, e2, e3, GFP_)
+
+@@
+expression e1, e2, e3, e4;
+@@
+-    pci_free_consistent(e1, e2, e3, e4)
++    dma_free_coherent(&e1->dev, e2, e3, e4)
+
+@@
+expression e1, e2, e3, e4;
+@@
+-    pci_map_single(e1, e2, e3, e4)
++    dma_map_single(&e1->dev, e2, e3, e4)
+
+@@
+expression e1, e2, e3, e4;
+@@
+-    pci_unmap_single(e1, e2, e3, e4)
++    dma_unmap_single(&e1->dev, e2, e3, e4)
+
+@@
+expression e1, e2, e3, e4, e5;
+@@
+-    pci_map_page(e1, e2, e3, e4, e5)
++    dma_map_page(&e1->dev, e2, e3, e4, e5)
+
+@@
+expression e1, e2, e3, e4;
+@@
+-    pci_unmap_page(e1, e2, e3, e4)
++    dma_unmap_page(&e1->dev, e2, e3, e4)
+
+@@
+expression e1, e2, e3, e4;
+@@
+-    pci_map_sg(e1, e2, e3, e4)
++    dma_map_sg(&e1->dev, e2, e3, e4)
+
+@@
+expression e1, e2, e3, e4;
+@@
+-    pci_unmap_sg(e1, e2, e3, e4)
++    dma_unmap_sg(&e1->dev, e2, e3, e4)
+
+@@
+expression e1, e2, e3, e4;
+@@
+-    pci_dma_sync_single_for_cpu(e1, e2, e3, e4)
++    dma_sync_single_for_cpu(&e1->dev, e2, e3, e4)
+
+@@
+expression e1, e2, e3, e4;
+@@
+-    pci_dma_sync_single_for_device(e1, e2, e3, e4)
++    dma_sync_single_for_device(&e1->dev, e2, e3, e4)
+
+@@
+expression e1, e2, e3, e4;
+@@
+-    pci_dma_sync_sg_for_cpu(e1, e2, e3, e4)
++    dma_sync_sg_for_cpu(&e1->dev, e2, e3, e4)
+
+@@
+expression e1, e2, e3, e4;
+@@
+-    pci_dma_sync_sg_for_device(e1, e2, e3, e4)
++    dma_sync_sg_for_device(&e1->dev, e2, e3, e4)
+
+@@
+expression e1, e2;
+@@
+-    pci_dma_mapping_error(e1, e2)
++    dma_mapping_error(&e1->dev, e2)
+
+@@
+expression e1, e2;
+@@
+-    pci_set_dma_mask(e1, e2)
++    dma_set_mask(&e1->dev, e2)
+
+@@
+expression e1, e2;
+@@
+-    pci_set_consistent_dma_mask(e1, e2)
++    dma_set_coherent_mask(&e1->dev, e2)
+
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+If needed, see post from Christoph Hellwig on the kernel-janitors ML:
+   https://marc.info/?l=kernel-janitors&m=158745678307186&w=4
+---
+ drivers/scsi/pm8001/pm8001_init.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index d21078ca7fb3..bd626ef876da 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -423,7 +423,7 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+ err_out_nodev:
+ 	for (i = 0; i < pm8001_ha->max_memcnt; i++) {
+ 		if (pm8001_ha->memoryMap.region[i].virt_ptr != NULL) {
+-			pci_free_consistent(pm8001_ha->pdev,
++			dma_free_coherent(&pm8001_ha->pdev->dev,
+ 				(pm8001_ha->memoryMap.region[i].total_len +
+ 				pm8001_ha->memoryMap.region[i].alignment),
+ 				pm8001_ha->memoryMap.region[i].virt_ptr,
+@@ -1197,12 +1197,13 @@ pm8001_init_ccb_tag(struct pm8001_hba_info *pm8001_ha, struct Scsi_Host *shost,
+ 		goto err_out_noccb;
+ 	}
+ 	for (i = 0; i < ccb_count; i++) {
+-		pm8001_ha->ccb_info[i].buf_prd = pci_alloc_consistent(pdev,
++		pm8001_ha->ccb_info[i].buf_prd = dma_alloc_coherent(&pdev->dev,
+ 				sizeof(struct pm8001_prd) * PM8001_MAX_DMA_SG,
+-				&pm8001_ha->ccb_info[i].ccb_dma_handle);
++				&pm8001_ha->ccb_info[i].ccb_dma_handle,
++				GFP_KERNEL);
+ 		if (!pm8001_ha->ccb_info[i].buf_prd) {
+ 			pm8001_dbg(pm8001_ha, FAIL,
+-				   "pm80xx: ccb prd memory allocation error\n");
++				   "ccb prd memory allocation error\n");
+ 			goto err_out;
+ 		}
+ 		pm8001_ha->ccb_info[i].task = NULL;
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.27.0
+
