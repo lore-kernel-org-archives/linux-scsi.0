@@ -5,43 +5,43 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A652C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 00:52:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93AEAC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 00:52:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E791C22516
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 00:52:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 721952245C
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 00:52:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730124AbhARAvn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 17 Jan 2021 19:51:43 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:29595 "EHLO
+        id S1729056AbhARAwA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 17 Jan 2021 19:52:00 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:55964 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730048AbhARAvh (ORCPT
+        by vger.kernel.org with ESMTP id S1729266AbhARAv2 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 17 Jan 2021 19:51:37 -0500
+        Sun, 17 Jan 2021 19:51:28 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1610931011;
+        s=mimecast20190719; t=1610931001;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=KkYBbKplqfo7oIrfyFhsPXiLEOrJSYaa7anlc/YinxY=;
-        b=DsEokG2Vel2zw0w0c7JR9mdUT+w+mjnQLMIt+ImqdePAfXp6yZtHYvA1bYSAxZBmCEZPL2
-        zcoprzhEq6zT3mX/rus5i984y9xzj0Kq3O1ra+HP/TqzxJH5mqjTmSWlHOkEA1lMpBzLRQ
-        aIkUCifNORU0+U01cVBr12o0tn/w2Ss=
+        bh=DRJU3UIRDYH6AV7+OpjzeyHd207y1qKfCPJ5VGudNVw=;
+        b=PEjZybFkjEai9irCYXgifk7HB2yD45KYTtEgcdC19t2Crfs7AvoFfa5hsjGQADa3g1lE3W
+        ksdil6bCU202wojbHjJCjefj5f8GiipIUYcZQfmebLthN7MkIQL/NFWG7tE2ZrDQ4vdJqd
+        pRpOd2Tc/gH6SaclFX4ldXyEuADGxXY=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-276-8-3K3g4BNgucV5Xk5oU0wQ-1; Sun, 17 Jan 2021 19:50:09 -0500
-X-MC-Unique: 8-3K3g4BNgucV5Xk5oU0wQ-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-223-8l30H0XUNDeVwHRJJJtD1Q-1; Sun, 17 Jan 2021 19:49:59 -0500
+X-MC-Unique: 8l30H0XUNDeVwHRJJJtD1Q-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A0127180A086;
-        Mon, 18 Jan 2021 00:50:07 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9807F59;
+        Mon, 18 Jan 2021 00:49:57 +0000 (UTC)
 Received: from localhost (ovpn-12-73.pek2.redhat.com [10.72.12.73])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D9D941001281;
-        Mon, 18 Jan 2021 00:50:06 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id CC0605D9CC;
+        Mon, 18 Jan 2021 00:49:53 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -51,113 +51,90 @@ Cc:     Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
         Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
         "Ewan D . Milne" <emilne@redhat.com>,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH V6 07/13] blk-mq: add callbacks for storing & retrieving budget token
-Date:   Mon, 18 Jan 2021 08:49:15 +0800
-Message-Id: <20210118004921.202545-8-ming.lei@redhat.com>
+Subject: [PATCH V6 05/13] sbitmap: export sbitmap_weight
+Date:   Mon, 18 Jan 2021 08:49:13 +0800
+Message-Id: <20210118004921.202545-6-ming.lei@redhat.com>
 In-Reply-To: <20210118004921.202545-1-ming.lei@redhat.com>
 References: <20210118004921.202545-1-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SCSI is the only driver which requires dispatch budget, and it isn't
-fair to add one field into 'struct request' for storing budget token
-which will be used in the following patches for improving scsi's device
-busy scalability.
+SCSI's .device_busy will be converted to sbitmap, and sbitmap_weight
+is needed, so export the helper.
+
+Meantime the only user of sbitmap_weight() is just for getting how
+many set and not cleared bits, so align sbitmap_weight() meaning
+with this way because the external user only cares how many busy
+bits there are in the sbitmap.
 
 Cc: Omar Sandoval <osandov@fb.com>
 Cc: Kashyap Desai <kashyap.desai@broadcom.com>
 Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
 Cc: Ewan D. Milne <emilne@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Tested-by: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/scsi_lib.c  | 18 ++++++++++++++++++
- include/linux/blk-mq.h   |  9 +++++++++
- include/scsi/scsi_cmnd.h |  2 ++
- 3 files changed, 29 insertions(+)
+ include/linux/sbitmap.h | 10 ++++++++++
+ lib/sbitmap.c           | 11 ++++++-----
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b3f14f05340a..eeaae47fee8a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1641,6 +1641,20 @@ static bool scsi_mq_get_budget(struct request_queue *q)
- 	return false;
+diff --git a/include/linux/sbitmap.h b/include/linux/sbitmap.h
+index a27a83146d30..3aad25cbd046 100644
+--- a/include/linux/sbitmap.h
++++ b/include/linux/sbitmap.h
+@@ -341,6 +341,16 @@ static inline int sbitmap_test_bit(struct sbitmap *sb, unsigned int bitnr)
+  */
+ void sbitmap_show(struct sbitmap *sb, struct seq_file *m);
+ 
++
++/**
++ * sbitmap_weight() - Return how many set and not cleared bits in a &struct
++ * sbitmap.
++ * @sb: Bitmap to check.
++ *
++ * Return: How many set and not cleared bits set
++ */
++unsigned int sbitmap_weight(const struct sbitmap *sb);
++
+ /**
+  * sbitmap_bitmap_show() - Write a hex dump of a &struct sbitmap to a &struct
+  * seq_file.
+diff --git a/lib/sbitmap.c b/lib/sbitmap.c
+index e395435654aa..73da26ad021e 100644
+--- a/lib/sbitmap.c
++++ b/lib/sbitmap.c
+@@ -334,20 +334,21 @@ static unsigned int __sbitmap_weight(const struct sbitmap *sb, bool set)
+ 	return weight;
  }
  
-+static void scsi_mq_set_rq_budget_token(struct request *req, int token)
-+{
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
-+
-+	cmd->budget_token = token;
-+}
-+
-+static int scsi_mq_get_rq_budget_token(struct request *req)
-+{
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
-+
-+	return cmd->budget_token;
-+}
-+
- static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 			 const struct blk_mq_queue_data *bd)
+-static unsigned int sbitmap_weight(const struct sbitmap *sb)
++static unsigned int sbitmap_cleared(const struct sbitmap *sb)
  {
-@@ -1855,6 +1869,8 @@ static const struct blk_mq_ops scsi_mq_ops_no_commit = {
- 	.cleanup_rq	= scsi_cleanup_rq,
- 	.busy		= scsi_mq_lld_busy,
- 	.map_queues	= scsi_map_queues,
-+	.set_rq_budget_token = scsi_mq_set_rq_budget_token,
-+	.get_rq_budget_token = scsi_mq_get_rq_budget_token,
- };
+-	return __sbitmap_weight(sb, true);
++	return __sbitmap_weight(sb, false);
+ }
  
+-static unsigned int sbitmap_cleared(const struct sbitmap *sb)
++unsigned int sbitmap_weight(const struct sbitmap *sb)
+ {
+-	return __sbitmap_weight(sb, false);
++	return __sbitmap_weight(sb, true) - sbitmap_cleared(sb);
+ }
++EXPORT_SYMBOL_GPL(sbitmap_weight);
  
-@@ -1883,6 +1899,8 @@ static const struct blk_mq_ops scsi_mq_ops = {
- 	.cleanup_rq	= scsi_cleanup_rq,
- 	.busy		= scsi_mq_lld_busy,
- 	.map_queues	= scsi_map_queues,
-+	.set_rq_budget_token = scsi_mq_set_rq_budget_token,
-+	.get_rq_budget_token = scsi_mq_get_rq_budget_token,
- };
- 
- struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev)
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index d705b174d346..1f84d47b72f6 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -317,6 +317,15 @@ struct blk_mq_ops {
- 	 */
- 	void (*put_budget)(struct request_queue *);
- 
-+	/*
-+	 * @set_rq_budget_toekn: store rq's budget token
-+	 */
-+	void (*set_rq_budget_token)(struct request *, int);
-+	/*
-+	 * @get_rq_budget_toekn: retrieve rq's budget token
-+	 */
-+	int (*get_rq_budget_token)(struct request *);
-+
- 	/**
- 	 * @timeout: Called on request timeout.
- 	 */
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 69ade4fb71aa..4884f300c896 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -75,6 +75,8 @@ struct scsi_cmnd {
- 
- 	int eh_eflags;		/* Used by error handlr */
- 
-+	int budget_token;
-+
- 	/*
- 	 * This is set to jiffies as it was when the command was first
- 	 * allocated.  It is used to time how long the command has
+ void sbitmap_show(struct sbitmap *sb, struct seq_file *m)
+ {
+ 	seq_printf(m, "depth=%u\n", sb->depth);
+-	seq_printf(m, "busy=%u\n", sbitmap_weight(sb) - sbitmap_cleared(sb));
++	seq_printf(m, "busy=%u\n", sbitmap_weight(sb));
+ 	seq_printf(m, "cleared=%u\n", sbitmap_cleared(sb));
+ 	seq_printf(m, "bits_per_word=%u\n", 1U << sb->shift);
+ 	seq_printf(m, "map_nr=%u\n", sb->map_nr);
 -- 
 2.28.0
 
