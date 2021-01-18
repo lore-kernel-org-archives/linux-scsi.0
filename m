@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91C78C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 21:27:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51389C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 21:27:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6722722D6E
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 21:27:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12FBF22D6F
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 21:27:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394649AbhARV06 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jan 2021 16:26:58 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:54928 "EHLO
+        id S2394655AbhARV1B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jan 2021 16:27:01 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:54966 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389243AbhARKLL (ORCPT
+        with ESMTP id S2389621AbhARKLL (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 05:11:11 -0500
 From:   "Ahmed S. Darwish" <a.darwish@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1610964615;
+        s=2020; t=1610964625;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=NkkVqWalPLNmP6iVYEJDDHa+oGp/xpN9IA9pHFCSXuc=;
-        b=3eRqL9y+7byzmwk5sC5SAOBdhjvwnwTr0utAQkVdOvjkskWzHKPMbtzJUHvjhOOMgJFfPg
-        pq/l3CaQKZ2rDwYXDLWl7r/NCEKrvJyc/WSyfRjuLyXsI718Q9Ij3NmuJCFCeWF/ifqFjR
-        HsC06+E/cNTLpe9bzVI0IFbmpcfS9p+ObA7hGrOEUXl5xm+CTLL6L4t1+/JO2p05Jn/DMz
-        0qXVVPFJVK21Ci8ZQHdYRaqXN33nsbLUMnH3lJA+hqw9G/1Cp/Ch6FTKLBz/xGkFXuRY5Z
-        rV2zzLSfknhnVYNvTHtgeNpTvA1JzP9lb6ZLhGXJ4umwS2TiRCI4G905CR80eQ==
+        bh=SqeRulDhHNHgL6fy8LbaFwThp5hQYIRRAVQEh8ugmNg=;
+        b=ntnlxHd7IuHcgbEk0ZOKpUm9vd+xZnLDVgXvuho+1zC+/NPMGSii0wc39ObkOAtY1tTzYa
+        WdrxQJhdkuFV4PPSmaQamIUEijaufnr7B6BChBmey10HJFTwLdOuGAcpx2apENRiZ7oXzP
+        Hbo0pn/oWJPQLJ+NLnBHs+jCs4kt8wNdkv/UuCtqpwNjUvtbHUnPpI4pGSEFuAcct+O7fh
+        lNMWV7cfMm9+pOFFa2TOi4CDYAh8HsW6HQ5eK1a7zwR3P81A4sUAKEA4612w7mGx212Ves
+        NfDKwMsamb3/dYcJXOo0CgpDWDWq3y/i/c1kM4WsgzfKGl4syY9Uv+Cm3cfYNw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1610964615;
+        s=2020e; t=1610964625;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=NkkVqWalPLNmP6iVYEJDDHa+oGp/xpN9IA9pHFCSXuc=;
-        b=ZiRlKOwt0FrqWs3i3ZKpzeotwm2y9y52KBunqHiQ1LqlP7ErxJ2IOowZV3BVVTIdC+6OQ9
-        MzMinMdqWmGT7HDw==
+        bh=SqeRulDhHNHgL6fy8LbaFwThp5hQYIRRAVQEh8ugmNg=;
+        b=kcwnSThXdgqdPmMpuJcSMgWMmx4FqCXJRH2KousTyv2QEW5oeWom7TKKDF3VCZLtWDYh1/
+        XHJJFC56Jt32FRBQ==
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@infradead.org>,
@@ -53,9 +53,9 @@ Cc:     linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
         Thomas Gleixner <tglx@linutronix.de>,
         "Sebastian A. Siewior" <bigeasy@linutronix.de>,
         "Ahmed S. Darwish" <a.darwish@linutronix.de>
-Subject: [PATCH v3 03/19] scsi: libsas: Introduce a _gfp() variant of event notifiers
-Date:   Mon, 18 Jan 2021 11:09:39 +0100
-Message-Id: <20210118100955.1761652-4-a.darwish@linutronix.de>
+Subject: [PATCH v3 05/19] scsi: isci: port: link down: Pass gfp_t flags
+Date:   Mon, 18 Jan 2021 11:09:41 +0100
+Message-Id: <20210118100955.1761652-6-a.darwish@linutronix.de>
 In-Reply-To: <20210118100955.1761652-1-a.darwish@linutronix.de>
 References: <20210118100955.1761652-1-a.darwish@linutronix.de>
 MIME-Version: 1.0
@@ -64,254 +64,239 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-sas_alloc_event() uses in_interrupt() to decide which allocation should
-be used.
+Use the new libsas event notifiers API, which requires callers to
+explicitly pass the gfp_t memory allocation flags.
 
-The usage of in_interrupt() in drivers is phased out and Linus clearly
-requested that code which changes behaviour depending on context should
-either be separated or the context be conveyed in an argument passed by
-the caller, which usually knows the context.
+sas_notify_phy_event() is exclusively called by isci_port_link_down().
+Below is the context analysis for all of its call chains:
 
-The in_interrupt() check is also only partially correct, because it
-fails to choose the correct code path when just preemption or interrupts
-are disabled. For example, as in the following call chain:
+port.c: port_timeout(), atomic, timer callback                  (*)
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> port_state_machine_change(..., SCI_PORT_FAILED)
+    -> enter SCI port state: *SCI_PORT_FAILED*
+      -> sci_port_failed_state_enter()
+        -> isci_port_hard_reset_complete()
+          -> isci_port_link_down()
 
-  mvsas/mv_sas.c: mvs_work_queue() [process context]
-  spin_lock_irqsave(mvs_info::lock, )
-    -> libsas/sas_event.c: sas_notify_phy_event()
-      -> sas_alloc_event()
-        -> in_interrupt() = false
-          -> invalid GFP_KERNEL allocation
-    -> libsas/sas_event.c: sas_notify_port_event()
-      -> sas_alloc_event()
-        -> in_interrupt() = false
-          -> invalid GFP_KERNEL allocation
+port.c: isci_port_perform_hard_reset()
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> port.c: sci_port_hard_reset(), atomic                      (*)
+    -> phy.c: sci_phy_reset()
+      -> sci_change_state(SCI_PHY_RESETTING)
+        -> enter SCI PHY state: *SCI_PHY_RESETTING*
+          -> sci_phy_resetting_state_enter()
+            -> port.c: sci_port_deactivate_phy()
+	      -> isci_port_link_down()
 
-Introduce sas_alloc_event_gfp(), sas_notify_port_event_gfp(), and
-sas_notify_phy_event_gfp(), which all behave like the non _gfp()
-variants but use a caller-passed GFP mask for allocations.
+port.c: enter SCI port state: *SCI_PORT_READY*                  # Cont. from [1]
+  -> sci_port_ready_state_enter()
+    -> isci_port_hard_reset_complete()
+      -> isci_port_link_down()
 
-For bisectability, all callers will be modified first to pass GFP
-context, then the non _gfp() libsas API variants will be modified to
-take a gfp_t by default.
+phy.c: enter SCI state: *SCI_PHY_STOPPED*                       # Cont. from [2]
+  -> sci_phy_stopped_state_enter()
+    -> host.c: sci_controller_link_down()
+      -> ->link_down_handler()
+      == port_config.c: sci_apc_agent_link_down()
+        -> port.c: sci_port_remove_phy()
+          -> sci_port_deactivate_phy()
+            -> isci_port_link_down()
+      == port_config.c: sci_mpc_agent_link_down()
+        -> port.c: sci_port_link_down()
+          -> sci_port_deactivate_phy()
+            -> isci_port_link_down()
+
+phy.c: enter SCI state: *SCI_PHY_STARTING*                      # Cont. from [3]
+  -> sci_phy_starting_state_enter()
+    -> host.c: sci_controller_link_down()
+      -> ->link_down_handler()
+      == port_config.c: sci_apc_agent_link_down()
+        -> port.c: sci_port_remove_phy()
+          -> isci_port_link_down()
+      == port_config.c: sci_mpc_agent_link_down()
+        -> port.c: sci_port_link_down()
+          -> sci_port_deactivate_phy()
+            -> isci_port_link_down()
+
+[1] Call chains for 'enter SCI port state: *SCI_PORT_READY*'
+------------------------------------------------------------
+
+host.c: isci_host_init()                                        (@)
+spin_lock_irq(isci_host::scic_lock)
+  -> sci_controller_initialize(), atomic                        (*)
+    -> port_config.c: sci_port_configuration_agent_initialize()
+      -> sci_mpc_agent_validate_phy_configuration()
+        -> port.c: sci_port_add_phy()
+          -> sci_port_general_link_up_handler()
+            -> port_state_machine_change(, SCI_PORT_READY)
+              -> enter port state *SCI_PORT_READY*
+
+host.c: isci_host_start()                                       (@)
+spin_lock_irq(isci_host::scic_lock)
+  -> host.c: sci_controller_start(), atomic                     (*)
+    -> host.c: sci_port_start()
+      -> port.c: port_state_machine_change(, SCI_PORT_READY)
+        -> enter port state *SCI_PORT_READY*
+
+port_config.c: apc_agent_timeout(), atomic, timer callback      (*)
+  -> sci_apc_agent_configure_ports()
+    -> port.c: sci_port_add_phy()
+      -> sci_port_general_link_up_handler()
+        -> port_state_machine_change(, SCI_PORT_READY)
+          -> enter port state *SCI_PORT_READY*
+
+port_config.c: mpc_agent_timeout(), atomic, timer callback      (*)
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> ->link_up_handler()
+  == port.c: sci_apc_agent_link_up()
+    -> sci_port_general_link_up_handler()
+      -> port_state_machine_change(, SCI_PORT_READY)
+        -> enter port state *SCI_PORT_READY*
+  == port.c: sci_mpc_agent_link_up()
+    -> port.c: sci_port_link_up()
+      -> sci_port_general_link_up_handler()
+        -> port_state_machine_change(, SCI_PORT_READY)
+          -> enter port state *SCI_PORT_READY*
+
+phy.c: enter SCI state: SCI_PHY_SUB_FINAL                       # Cont. from [1A]
+  -> sci_phy_starting_final_substate_enter()
+    -> sci_change_state(SCI_PHY_READY)
+      -> enter SCI state: *SCI_PHY_READY*
+        -> sci_phy_ready_state_enter()
+          -> host.c: sci_controller_link_up()
+            -> port_agent.link_up_handler()
+            == port_config.c: sci_apc_agent_link_up()
+              -> port.c: sci_port_link_up()
+                -> sci_port_general_link_up_handler()
+                  -> port_state_machine_change(, SCI_PORT_READY)
+                    -> enter port state *SCI_PORT_READY*
+            == port_config.c: sci_mpc_agent_link_up()
+              -> port.c: sci_port_link_up()
+                -> sci_port_general_link_up_handler()
+                  -> port_state_machine_change(, SCI_PORT_READY)
+                    -> enter port state *SCI_PORT_READY*
+
+[1A] Call chains for entering SCI state: *SCI_PHY_SUB_FINAL*
+------------------------------------------------------------
+
+host.c: power_control_timeout(), atomic, timer callback         (*)
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> phy.c: sci_phy_consume_power_handler()
+    -> phy.c: sci_change_state(SCI_PHY_SUB_FINAL)
+
+host.c: sci_controller_error_handler(): atomic, irq handler     (*)
+OR host.c: sci_controller_completion_handler(), atomic, tasklet (*)
+  -> sci_controller_process_completions()
+    -> sci_controller_unsolicited_frame()
+      -> phy.c: sci_phy_frame_handler()
+        -> sci_change_state(SCI_PHY_SUB_AWAIT_SAS_POWER)
+          -> sci_phy_starting_await_sas_power_substate_enter()
+            -> host.c: sci_controller_power_control_queue_insert()
+              -> phy.c: sci_phy_consume_power_handler()
+                -> sci_change_state(SCI_PHY_SUB_FINAL)
+        -> sci_change_state(SCI_PHY_SUB_FINAL)
+    -> sci_controller_event_completion()
+      -> phy.c: sci_phy_event_handler()
+        -> sci_phy_start_sata_link_training()
+          -> sci_change_state(SCI_PHY_SUB_AWAIT_SATA_POWER)
+            -> sci_phy_starting_await_sata_power_substate_enter
+              -> host.c: sci_controller_power_control_queue_insert()
+                -> phy.c: sci_phy_consume_power_handler()
+                  -> sci_change_state(SCI_PHY_SUB_FINAL)
+
+[2] Call chains for entering state: *SCI_PHY_STOPPED*
+-----------------------------------------------------
+
+host.c: isci_host_init()                                        (@)
+spin_lock_irq(isci_host::scic_lock)
+  -> sci_controller_initialize(), atomic                        (*)
+      -> phy.c: sci_phy_initialize()
+        -> phy.c: sci_phy_link_layer_initialization()
+          -> phy.c: sci_change_state(SCI_PHY_STOPPED)
+
+init.c: PCI ->remove() || PM_OPS ->suspend,  process context    (+)
+  -> host.c: isci_host_deinit()
+    -> sci_controller_stop_phys()
+      -> phy.c: sci_phy_stop()
+	-> sci_change_state(SCI_PHY_STOPPED)
+
+phy.c: isci_phy_control()
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> sci_phy_stop(), atomic                                     (*)
+    -> sci_change_state(SCI_PHY_STOPPED)
+
+[3] Call chains for entering state: *SCI_PHY_STARTING*
+------------------------------------------------------
+
+phy.c: phy_sata_timeout(), atimer, timer callback               (*)
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> sci_change_state(SCI_PHY_STARTING)
+
+host.c: phy_startup_timeout(), atomic, timer callback           (*)
+spin_lock_irqsave(isci_host::scic_lock, )
+  -> sci_controller_start_next_phy()
+    -> sci_phy_start()
+      -> sci_change_state(SCI_PHY_STARTING)
+
+host.c: isci_host_start()                                       (@)
+spin_lock_irq(isci_host::scic_lock)
+  -> sci_controller_start(), atomic                             (*)
+    -> sci_controller_start_next_phy()
+      -> sci_phy_start()
+        -> sci_change_state(SCI_PHY_STARTING)
+
+phy.c: Enter SCI state *SCI_PHY_SUB_FINAL*, atomic, check above (*)
+  -> sci_change_state(SCI_PHY_SUB_FINAL)
+    -> sci_phy_starting_final_substate_enter()
+      -> sci_change_state(SCI_PHY_READY)
+        -> Enter SCI state: *SCI_PHY_READY*
+          -> sci_phy_ready_state_enter()
+            -> host.c: sci_controller_link_up()
+              -> sci_controller_start_next_phy()
+                -> sci_phy_start()
+                  -> sci_change_state(SCI_PHY_STARTING)
+
+phy.c: sci_phy_event_handler(), atomic, discussed earlier       (*)
+  -> sci_change_state(SCI_PHY_STARTING), 11 instances
+
+phy.c: enter SCI state: *SCI_PHY_RESETTING*, atomic, discussed  (*)
+  -> sci_phy_resetting_state_enter()
+    -> sci_change_state(SCI_PHY_STARTING)
+
+As can be seen from the "(*)" markers above, almost all the call-chains
+are atomic. The only exception, marked with "(+)", is a PCI ->remove()
+and PM_OPS ->suspend() cold path. Thus, pass GFP_ATOMIC to the libsas
+phy event notifier.
+
+Note, The now-replaced libsas APIs used in_interrupt() to implicitly
+decide which memory allocation type to use.  This was only partially
+correct, as it fails to choose the correct GFP flags when just
+preemption or interrupts are disabled. Such buggy code paths are marked
+with "(@)" in the call chains above.
 
 Fixes: 1c393b970e0f ("scsi: libsas: Use dynamic alloced work to avoid sas event lost")
 Signed-off-by: Ahmed S. Darwish <a.darwish@linutronix.de>
 Reviewed-by: John Garry <john.garry@huawei.com>
-Cc: Jason Yan <yanaijie@huawei.com>
+Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- Documentation/scsi/libsas.rst      |  2 +
- drivers/scsi/libsas/sas_event.c    | 67 ++++++++++++++++++++++++------
- drivers/scsi/libsas/sas_init.c     | 21 +++++++---
- drivers/scsi/libsas/sas_internal.h |  4 ++
- include/scsi/libsas.h              |  4 ++
- 5 files changed, 80 insertions(+), 18 deletions(-)
+ drivers/scsi/isci/port.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/scsi/libsas.rst b/Documentation/scsi/libsas.rst
-index 6722e352444b..ea63ab3a9216 100644
---- a/Documentation/scsi/libsas.rst
-+++ b/Documentation/scsi/libsas.rst
-@@ -191,6 +191,8 @@ The event interface::
- 	/* LLDD calls these to notify the class of an event. */
- 	void sas_notify_port_event(struct sas_phy *, enum port_event);
- 	void sas_notify_phy_event(struct sas_phy *, enum phy_event);
-+	void sas_notify_port_event_gfp(struct sas_phy *, enum port_event, gfp_t);
-+	void sas_notify_phy_event_gfp(struct sas_phy *, enum phy_event, gfp_t);
+diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
+index 8d9349738067..a3c58718c260 100644
+--- a/drivers/scsi/isci/port.c
++++ b/drivers/scsi/isci/port.c
+@@ -269,8 +269,8 @@ static void isci_port_link_down(struct isci_host *isci_host,
+ 	 * isci_port_deformed and isci_dev_gone functions.
+ 	 */
+ 	sas_phy_disconnected(&isci_phy->sas_phy);
+-	sas_notify_phy_event(&isci_phy->sas_phy,
+-					   PHYE_LOSS_OF_SIGNAL);
++	sas_notify_phy_event_gfp(&isci_phy->sas_phy,
++				 PHYE_LOSS_OF_SIGNAL, GFP_ATOMIC);
  
- The port notification::
- 
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 112a1b76f63b..ba266a17250a 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -131,18 +131,15 @@ static void sas_phy_event_worker(struct work_struct *work)
- 	sas_free_event(ev);
- }
- 
--int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event)
-+static int __sas_notify_port_event(struct asd_sas_phy *phy,
-+				   enum port_event event,
-+				   struct asd_sas_event *ev)
- {
--	struct asd_sas_event *ev;
- 	struct sas_ha_struct *ha = phy->ha;
- 	int ret;
- 
- 	BUG_ON(event >= PORT_NUM_EVENTS);
- 
--	ev = sas_alloc_event(phy);
--	if (!ev)
--		return -ENOMEM;
--
- 	INIT_SAS_EVENT(ev, sas_port_event_worker, phy, event);
- 
- 	ret = sas_queue_event(event, &ev->work, ha);
-@@ -151,20 +148,41 @@ int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event)
- 
- 	return ret;
- }
-+
-+int sas_notify_port_event_gfp(struct asd_sas_phy *phy, enum port_event event,
-+			      gfp_t gfp_flags)
-+{
-+	struct asd_sas_event *ev;
-+
-+	ev = sas_alloc_event_gfp(phy, gfp_flags);
-+	if (!ev)
-+		return -ENOMEM;
-+
-+	return __sas_notify_port_event(phy, event, ev);
-+}
-+EXPORT_SYMBOL_GPL(sas_notify_port_event_gfp);
-+
-+int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event)
-+{
-+	struct asd_sas_event *ev;
-+
-+	ev = sas_alloc_event(phy);
-+	if (!ev)
-+		return -ENOMEM;
-+
-+	return __sas_notify_port_event(phy, event, ev);
-+}
- EXPORT_SYMBOL_GPL(sas_notify_port_event);
- 
--int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
-+static inline int __sas_notify_phy_event(struct asd_sas_phy *phy,
-+					 enum phy_event event,
-+					 struct asd_sas_event *ev)
- {
--	struct asd_sas_event *ev;
- 	struct sas_ha_struct *ha = phy->ha;
- 	int ret;
- 
- 	BUG_ON(event >= PHY_NUM_EVENTS);
- 
--	ev = sas_alloc_event(phy);
--	if (!ev)
--		return -ENOMEM;
--
- 	INIT_SAS_EVENT(ev, sas_phy_event_worker, phy, event);
- 
- 	ret = sas_queue_event(event, &ev->work, ha);
-@@ -173,5 +191,28 @@ int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
- 
- 	return ret;
- }
-+
-+int sas_notify_phy_event_gfp(struct asd_sas_phy *phy, enum phy_event event,
-+			     gfp_t gfp_flags)
-+{
-+	struct asd_sas_event *ev;
-+
-+	ev = sas_alloc_event_gfp(phy, gfp_flags);
-+	if (!ev)
-+		return -ENOMEM;
-+
-+	return __sas_notify_phy_event(phy, event, ev);
-+}
-+EXPORT_SYMBOL_GPL(sas_notify_phy_event_gfp);
-+
-+int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
-+{
-+	struct asd_sas_event *ev;
-+
-+	ev = sas_alloc_event(phy);
-+	if (!ev)
-+		return -ENOMEM;
-+
-+	return __sas_notify_phy_event(phy, event, ev);
-+}
- EXPORT_SYMBOL_GPL(sas_notify_phy_event);
--
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 6dc2505d36af..f8ae1f0f17d3 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -584,16 +584,15 @@ sas_domain_attach_transport(struct sas_domain_function_template *dft)
- }
- EXPORT_SYMBOL_GPL(sas_domain_attach_transport);
- 
--
--struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
-+static struct asd_sas_event *__sas_alloc_event(struct asd_sas_phy *phy,
-+					       gfp_t gfp_flags)
- {
- 	struct asd_sas_event *event;
--	gfp_t flags = in_interrupt() ? GFP_ATOMIC : GFP_KERNEL;
- 	struct sas_ha_struct *sas_ha = phy->ha;
- 	struct sas_internal *i =
- 		to_sas_internal(sas_ha->core.shost->transportt);
- 
--	event = kmem_cache_zalloc(sas_event_cache, flags);
-+	event = kmem_cache_zalloc(sas_event_cache, gfp_flags);
- 	if (!event)
- 		return NULL;
- 
-@@ -604,7 +603,8 @@ struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
- 			if (cmpxchg(&phy->in_shutdown, 0, 1) == 0) {
- 				pr_notice("The phy%d bursting events, shut it down.\n",
- 					  phy->id);
--				sas_notify_phy_event(phy, PHYE_SHUTDOWN);
-+				sas_notify_phy_event_gfp(phy, PHYE_SHUTDOWN,
-+							 gfp_flags);
- 			}
- 		} else {
- 			/* Do not support PHY control, stop allocating events */
-@@ -618,6 +618,17 @@ struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
- 	return event;
- }
- 
-+struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
-+{
-+	return __sas_alloc_event(phy, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
-+}
-+
-+struct asd_sas_event *sas_alloc_event_gfp(struct asd_sas_phy *phy,
-+					  gfp_t gfp_flags)
-+{
-+	return __sas_alloc_event(phy, gfp_flags);
-+}
-+
- void sas_free_event(struct asd_sas_event *event)
- {
- 	struct asd_sas_phy *phy = event->phy;
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 53ea32ed17a7..52e09c3e2b50 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -49,6 +49,8 @@ int  sas_register_phys(struct sas_ha_struct *sas_ha);
- void sas_unregister_phys(struct sas_ha_struct *sas_ha);
- 
- struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy);
-+struct asd_sas_event *sas_alloc_event_gfp(struct asd_sas_phy *phy,
-+					  gfp_t gfp_flags);
- void sas_free_event(struct asd_sas_event *event);
- 
- int  sas_register_ports(struct sas_ha_struct *sas_ha);
-@@ -77,6 +79,8 @@ int sas_smp_phy_control(struct domain_device *dev, int phy_id,
- int sas_smp_get_phy_events(struct sas_phy *phy);
- 
- int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event);
-+int sas_notify_phy_event_gfp(struct asd_sas_phy *phy, enum phy_event event,
-+			     gfp_t flags);
- void sas_device_set_phy(struct domain_device *dev, struct sas_port *port);
- struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
- struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 3387149502e9..e6a43163ab5b 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -704,5 +704,9 @@ int sas_request_addr(struct Scsi_Host *shost, u8 *addr);
- 
- int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event);
- int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event);
-+int sas_notify_port_event_gfp(struct asd_sas_phy *phy, enum port_event event,
-+			      gfp_t gfp_flags);
-+int sas_notify_phy_event_gfp(struct asd_sas_phy *phy, enum phy_event event,
-+			     gfp_t gfp_flags);
- 
- #endif /* _SASLIB_H_ */
+ 	dev_dbg(&isci_host->pdev->dev,
+ 		"%s: isci_port = %p - Done\n", __func__, isci_port);
 -- 
 2.30.0
 
