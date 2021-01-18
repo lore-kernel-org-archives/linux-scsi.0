@@ -2,181 +2,168 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA86EC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 21:24:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7D2CC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 21:25:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7198722D6F
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 21:24:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B5DC22CB1
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 21:25:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437765AbhARVXc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jan 2021 16:23:32 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:54990 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389624AbhARKLN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 05:11:13 -0500
-From:   "Ahmed S. Darwish" <a.darwish@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1610964630;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=oXp58ztUPQpe2lDu9I5bDZMNMwvtBAwE8TiJPqiuvCM=;
-        b=KrSbafBpEUMukNZoCo4iLwtn95xctagBaRD/HSr5feTNfOn7KLbwrHQqjTzQR84N+KTSko
-        s95Oal9oII21QPhvSXPL7AelUYlvcKmPgSpksPsPtjHcCWv1Wxgp3rlVHpmxTusyOhn/XR
-        0IoOILhijnnmmcLMR8GgttkaBK+n4nzhqCp2UcOx94fiT3vdGWTQsj08ocAvd5vgGALRUQ
-        dpW2Yg7hYNVz0FtPl/6XPdKdlZUGITctRz/PY8AdGtpHQ7G5PIPKsAB4TQ5YbGiRPpocU9
-        kFRFo9UuVMYzuYZ/cyxZyr6K8MpCNZVmuyJv5LDVnoiR06l1zWldNSR9bs148w==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1610964630;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=oXp58ztUPQpe2lDu9I5bDZMNMwvtBAwE8TiJPqiuvCM=;
-        b=y80DiuCzoMP2vvuroUZW8RgJS3b2cd3CVH8tx8q46jJbDovhohn/sWj1R5KxP1I7Fut3qc
-        OSWN+UH19RlWPxBQ==
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        John Garry <john.garry@huawei.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>
-Cc:     linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Sebastian A. Siewior" <bigeasy@linutronix.de>,
-        "Ahmed S. Darwish" <a.darwish@linutronix.de>
-Subject: [PATCH v3 06/19] scsi: isci: port: link up: Pass gfp_t flags
-Date:   Mon, 18 Jan 2021 11:09:42 +0100
-Message-Id: <20210118100955.1761652-7-a.darwish@linutronix.de>
-In-Reply-To: <20210118100955.1761652-1-a.darwish@linutronix.de>
-References: <20210118100955.1761652-1-a.darwish@linutronix.de>
+        id S2437970AbhARVYk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jan 2021 16:24:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58644 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2438052AbhARVXq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 16:23:46 -0500
+Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77D54C061573;
+        Mon, 18 Jan 2021 13:22:59 -0800 (PST)
+Received: by mail-ej1-x630.google.com with SMTP id ox12so1321569ejb.2;
+        Mon, 18 Jan 2021 13:22:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Giv0GJHiR0U7EHzqjMGjtNcbBY4s91RtnAoeLxvrwL4=;
+        b=fqJW2k5L9DSKd2FkqB1VRaQcaE9/yIOY+GHwrsIGzeGPSqi6pAez/9o8N24ga5378M
+         tX8s/np4npMdreeXn0+jUSPr3/nyhMHX7JcQYCx9EgKStEU6extVGTmhBtvDv1/OpGCy
+         z3tZkkDB7HMXR8lIR9gjUPxO3LN9AdxP/gdl4d0Oy/MUmCkLYLBNq7ueX/uSLA95ryxG
+         G+7HTEEJfHJ1QfLjThUwYefr5GYQDkw/cY95YElyTa/rDUJbxVkEsRSrEgr+b3PBfB2n
+         VeQwm/n3XYoUzszQr2hD3S42MjfoXkULKPWOt5PC0tc1zdlBCjoGYrZ4BOcQ7jAUyQT2
+         KeSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Giv0GJHiR0U7EHzqjMGjtNcbBY4s91RtnAoeLxvrwL4=;
+        b=Z3qy+aNpC9kjdEbRLoPQCrHaBQaFCe4Gp8VYU4xeFm0H34afuDRFMTQvdY5vzWvpXu
+         txIftvA2kY7ANTZJwpu0s6GR6LwCIaNsbTg4vrD+94BX7mO9HlPIcVTdjrd4IQxwUqeM
+         jiS5ZycMNAuFTY4g4fl8UvhOyc3rLoH1RN6B6nVk4L0zsMMrNYkFVR7xUBR8cL3jybJZ
+         as6d/dL7b1zNjzBML23MgYGny67IamE65l+W38I4Ojy+oEn0tGiQbICxiEgSfRToucT0
+         zVmKbD97VfGIceMHMYkz8r2P+2fHw5gVI71Q2Gppup6Iof3g8RrFnfKZmHS3SULc2hne
+         27aw==
+X-Gm-Message-State: AOAM530t2J8h6065YBtU7aWEzJNksI8aOUBPZLXntz4nw+gD6nomTFKX
+        67NDSrJuU3Jm/y7P3FHpaWs=
+X-Google-Smtp-Source: ABdhPJzUtiGI8cqGbVVsOEIghLaawZpYS1WoHneVMPFuQMBKqIao3ek/l4qpxvvLjkU1v34FnSi3fg==
+X-Received: by 2002:a17:906:7798:: with SMTP id s24mr1012838ejm.19.1611004977974;
+        Mon, 18 Jan 2021 13:22:57 -0800 (PST)
+Received: from [192.168.178.40] (ipbcc06d06.dynamic.kabel-deutschland.de. [188.192.109.6])
+        by smtp.gmail.com with ESMTPSA id h16sm11583847edw.34.2021.01.18.13.22.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 18 Jan 2021 13:22:57 -0800 (PST)
+Subject: Re: [PATCH v6 1/4] sgl_alloc_order: remove 4 GiB limit, sgl_free()
+ warning
+To:     Jason Gunthorpe <jgg@ziepe.ca>,
+        Douglas Gilbert <dgilbert@interlog.com>
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.vnet.ibm.com, ddiss@suse.de, bvanassche@acm.org
+References: <20210118163006.61659-1-dgilbert@interlog.com>
+ <20210118163006.61659-2-dgilbert@interlog.com>
+ <20210118182854.GJ4605@ziepe.ca>
+ <59707b66-0b6c-b397-82fe-5ad6a6f99ba1@interlog.com>
+ <20210118202431.GO4605@ziepe.ca>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+Message-ID: <7f443666-b210-6f99-7b50-6c26d87fa7ca@gmail.com>
+Date:   Mon, 18 Jan 2021 22:22:56 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210118202431.GO4605@ziepe.ca>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the new libsas event notifiers API, which requires callers to
-explicitly pass the gfp_t memory allocation flags.
+On 18.01.21 21:24, Jason Gunthorpe wrote:
+> On Mon, Jan 18, 2021 at 03:08:51PM -0500, Douglas Gilbert wrote:
+>> On 2021-01-18 1:28 p.m., Jason Gunthorpe wrote:
+>>> On Mon, Jan 18, 2021 at 11:30:03AM -0500, Douglas Gilbert wrote:
+>>>
+>>>> After several flawed attempts to detect overflow, take the fastest
+>>>> route by stating as a pre-condition that the 'order' function argument
+>>>> cannot exceed 16 (2^16 * 4k = 256 MiB).
+>>>
+>>> That doesn't help, the point of the overflow check is similar to
+>>> overflow checks in kcalloc: to prevent the routine from allocating
+>>> less memory than the caller might assume.
+>>>
+>>> For instance ipr_store_update_fw() uses request_firmware() (which is
+>>> controlled by userspace) to drive the length argument to
+>>> sgl_alloc_order(). If userpace gives too large a value this will
+>>> corrupt kernel memory.
+>>>
+>>> So this math:
+>>>
+>>>     	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
+>>
+>> But that check itself overflows if order is too large (e.g. 65).
+> 
+> I don't reall care about order. It is always controlled by the kernel
+> and it is fine to just require it be low enough to not
+> overflow. length is the data under userspace control so math on it
+> must be checked for overflow.
+> 
+>> Also note there is another pre-condition statement in that function's
+>> definition, namely that length cannot be 0.
+> 
+> I don't see callers checking for that either, if it is true length 0
+> can't be allowed it should be blocked in the function
+> 
+> Jason
+> 
 
-libsas sas_notify_port_event() is called from isci_port_link_up().
-Below is the context analysis for all of its call chains:
+A already said, I also think there should be a check for length or
+rather nent overflow.
 
-host.c: isci_host_init()                                        (@)
-spin_lock_irq(isci_host::scic_lock)
-  -> sci_controller_initialize(), atomic                        (*)
-    -> port_config.c: sci_port_configuration_agent_initialize()
-      -> sci_mpc_agent_validate_phy_configuration()
-        -> port.c: sci_port_add_phy()
-          -> sci_port_general_link_up_handler()
-            -> sci_port_activate_phy()
-              -> isci_port_link_up()
+I like the easy to understand check in your proposed code:
 
-port_config.c: apc_agent_timeout(), atomic, timer callback      (*)
-  -> sci_apc_agent_configure_ports()
-    -> port.c: sci_port_add_phy()
-      -> sci_port_general_link_up_handler()
-        -> sci_port_activate_phy()
-          -> isci_port_link_up()
+	if (length >> (PAGE_SHIFT + order) >= UINT_MAX)
+		return NULL;
 
-phy.c: enter SCI state: *SCI_PHY_SUB_FINAL*                     # Cont. from [1]
-  -> phy.c: sci_phy_starting_final_substate_enter()
-    -> phy.c: sci_change_state(SCI_PHY_READY)
-      -> enter SCI state: *SCI_PHY_READY*
-        -> phy.c: sci_phy_ready_state_enter()
-          -> host.c: sci_controller_link_up()
-            -> .link_up_handler()
-            == port_config.c: sci_apc_agent_link_up()
-              -> port.c: sci_port_link_up()
-                -> (continue at [A])
-            == port_config.c: sci_mpc_agent_link_up()
-	      -> port.c: sci_port_link_up()
-                -> (continue at [A])
 
-port_config.c: mpc_agent_timeout(), atomic, timer callback      (*)
-spin_lock_irqsave(isci_host::scic_lock, )
-  -> ->link_up_handler()
-  == port_config.c: sci_apc_agent_link_up()
-    -> port.c: sci_port_link_up()
-      -> (continue at [A])
-  == port_config.c: sci_mpc_agent_link_up()
-    -> port.c: sci_port_link_up()
-      -> (continue at [A])
+But I don't understand, why you open-coded the nent calculation:
 
-[A] port.c: sci_port_link_up()
-  -> sci_port_activate_phy()
-    -> isci_port_link_up()
-  -> sci_port_general_link_up_handler()
-    -> sci_port_activate_phy()
-      -> isci_port_link_up()
+	nent = length >> (PAGE_SHIFT + order);
+	if (length & ((1ULL << (PAGE_SHIFT + order)) - 1))
+		nent++;
 
-[1] Call chains for entering SCI state: *SCI_PHY_SUB_FINAL*
------------------------------------------------------------
+Wouldn't it be better to keep the original line instead:
 
-host.c: power_control_timeout(), atomic, timer callback         (*)
-spin_lock_irqsave(isci_host::scic_lock, )
-  -> phy.c: sci_phy_consume_power_handler()
-    -> phy.c: sci_change_state(SCI_PHY_SUB_FINAL)
+	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
 
-host.c: sci_controller_error_handler(): atomic, irq handler     (*)
-OR host.c: sci_controller_completion_handler(), atomic, tasklet (*)
-  -> sci_controller_process_completions()
-    -> sci_controller_unsolicited_frame()
-      -> phy.c: sci_phy_frame_handler()
-        -> sci_change_state(SCI_PHY_SUB_AWAIT_SAS_POWER)
-          -> sci_phy_starting_await_sas_power_substate_enter()
-            -> host.c: sci_controller_power_control_queue_insert()
-              -> phy.c: sci_phy_consume_power_handler()
-                -> sci_change_state(SCI_PHY_SUB_FINAL)
-        -> sci_change_state(SCI_PHY_SUB_FINAL)
-    -> sci_controller_event_completion()
-      -> phy.c: sci_phy_event_handler()
-        -> sci_phy_start_sata_link_training()
-          -> sci_change_state(SCI_PHY_SUB_AWAIT_SATA_POWER)
-            -> sci_phy_starting_await_sata_power_substate_enter
-              -> host.c: sci_controller_power_control_queue_insert()
-                -> phy.c: sci_phy_consume_power_handler()
-                  -> sci_change_state(SCI_PHY_SUB_FINAL)
+Or maybe even better:
 
-As can be seen from the "(*)" markers above, all the call-chains are
-atomic.  Pass GFP_ATOMIC to libsas port event notifier.
+	nent = DIV_ROUND_UP(length, PAGE_SIZE << order);
 
-Note, the now-replaced libsas APIs used in_interrupt() to implicitly
-decide which memory allocation type to use.  This was only partially
-correct, as it fails to choose the correct GFP flags when just
-preemption or interrupts are disabled. Such buggy code paths are marked
-with "(@)" in the call chains above.
 
-Fixes: 1c393b970e0f ("scsi: libsas: Use dynamic alloced work to avoid sas event lost")
-Signed-off-by: Ahmed S. Darwish <a.darwish@linutronix.de>
-Reviewed-by: John Garry <john.garry@huawei.com>
-Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- drivers/scsi/isci/port.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+I think, combining the above lines results in short and easily readable code:
 
-diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
-index a3c58718c260..10136ae466e2 100644
---- a/drivers/scsi/isci/port.c
-+++ b/drivers/scsi/isci/port.c
-@@ -223,7 +223,8 @@ static void isci_port_link_up(struct isci_host *isci_host,
- 	/* Notify libsas that we have an address frame, if indeed
- 	 * we've found an SSP, SMP, or STP target */
- 	if (success)
--		sas_notify_port_event(&iphy->sas_phy, PORTE_BYTES_DMAED);
-+		sas_notify_port_event_gfp(&iphy->sas_phy,
-+					  PORTE_BYTES_DMAED, GFP_ATOMIC);
- }
- 
- 
--- 
-2.30.0
 
+	u32 elem_len;
+
+	if (length >> (PAGE_SHIFT + order) >= UINT_MAX)
+		return NULL;
+	nent = DIV_ROUND_UP(length, PAGE_SIZE << order);
+
+	if (chainable) {
+		if (check_add_overflow(nent, 1, &nalloc))
+			return NULL;
+	}
+	else
+		nalloc = nent;
+
+
+Thank you,
+Bodo
+
+
+	
