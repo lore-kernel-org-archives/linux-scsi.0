@@ -2,60 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 863EFC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 20:12:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D2B0C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 20:12:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D02022DA7
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 20:12:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A27E22DA9
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 20:12:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437842AbhARULm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jan 2021 15:11:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43070 "EHLO
+        id S2388075AbhARULu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jan 2021 15:11:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2437857AbhARULa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 15:11:30 -0500
-Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EAE6C061573;
-        Mon, 18 Jan 2021 12:10:50 -0800 (PST)
-Received: by mail-ed1-x52e.google.com with SMTP id s11so11670823edd.5;
-        Mon, 18 Jan 2021 12:10:49 -0800 (PST)
+        with ESMTP id S2437862AbhARULh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 15:11:37 -0500
+Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA342C0613CF;
+        Mon, 18 Jan 2021 12:10:56 -0800 (PST)
+Received: by mail-ej1-x634.google.com with SMTP id w1so25355352ejf.11;
+        Mon, 18 Jan 2021 12:10:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=J2lGSje/t96HRnhu7U2uaaKspvjeI4RxTKrY+0OroNo=;
-        b=HCo5aaSUvJDkL5g8BT99WGeWQTYwt9Km77uI5q1/PdWgXrDRWwCHXPmS2oYb5lGgkP
-         xV3QFvYD4JiZUPpMFqGmsduB9yg+GfwiJl/FurnaWhdmjKZPDVT0wiNGDak4gr0EdLSE
-         0NS5RAhptwI5CzeWIRoOzku8t5D70rOevZMcbjnjRAEFiWsUiCJrB/+yHas0/eptmTj2
-         v/MJ1yG2VvPAthHjsqsuImzuS8aKeESsSoLdvEBEDe/Y7GewcgmlvwH8YC3N/S0DdgJJ
-         lWSSfJOPF2Yk8HVqiq241CPtK5CHBY+pUmIFftt3b4YnlkrsypgCbPt3xHzpp2odhNx8
-         JWyQ==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=ltiNIANAr10krz1rWQiJ2pZ0/X2sLNeMpvDcCYoHUaY=;
+        b=MVA9dTIDRvYh6XXUpamir6tr2JSXd4+CrkBOdiGdSvl6lYqjAOrQqfvfqLPiGz2yHI
+         L3iEzw1Ag+ZWRoIKjbjd2/RVx6fzrGMmgiSRvM6dOyLrq7VWN7msSrOU+M8i00Wfezdt
+         i4z3qX6Trs0cP8+wVeAmZ5hYW3MI4xMkzmBC/yHkF4TOYoPdITZaVPj+gMxk98OLQKaM
+         l+v/t/kAbEMcAhEPjDpJQyd7ps/nqOpJES0QBpC31DcK3RtetyEBSakCYOnBaB3kDg13
+         UI8AfdPv7EoOjERGMuyrZd+4wMAogad1Pcws10m22wce1e/OGflqAmNchj6Uu9HFqV14
+         MrOQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=J2lGSje/t96HRnhu7U2uaaKspvjeI4RxTKrY+0OroNo=;
-        b=sx2InV28uLcN3+NbAMX3PH4V2EJLI8DoY3CV3Q8PpJTrUxyCn1+uNCHX2i2gunQUK2
-         TZSl2oPgoq3bs93LZ7JX5ZN5KX55SyxpUDjBIZOhM7LnhTutk9N/aZ3ca8KlE/Qm4DVj
-         K8rarAszdDRRnKs1nsFjD11+D11Uv4pXcMRTCiYGzgrMeW7E3bEYhCSqfhVaUhJJXhnA
-         OQCygXIMk4m17uOOrHx1AjzwuR6U/Sh4fwrqCy4MzIrf64xQUYHiaPFoT18vVF6rmszA
-         COx+L92Cbaa612y4J79rAvM9YtVsgrCSRjMaRWeEUCQnYTA5FpO0v/QMT8xcxAn+b+7n
-         eTUg==
-X-Gm-Message-State: AOAM532DmGlF74yLFfzMxxCeiV9Ip7I0thRK0yn4GWScQRXYo+SdBNCh
-        PVlG9rLR+PkQmRZHK51AS9Q=
-X-Google-Smtp-Source: ABdhPJwsPGDVkoWyMaKh4k/5jFkQDyIAlKMitx5et0e6NS019tRR/reJIBp1FbTZaER81rPV2ArwPA==
-X-Received: by 2002:a05:6402:70a:: with SMTP id w10mr878192edx.184.1611000648770;
-        Mon, 18 Jan 2021 12:10:48 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=ltiNIANAr10krz1rWQiJ2pZ0/X2sLNeMpvDcCYoHUaY=;
+        b=iNh2SNWN96nD/VJZ5eOWTN039jf4hwlX3033J6sk4XjQZsNuvFqQ7srz3jBJzTv0xN
+         Tw96LvK8OnvSYYeDnofGQeVVGdYYrP0tjtP/6Psk9p9se65e1osdfsWt0BMovcTBt2C1
+         vBTwAiJ0Y+zl7dcGXWPI6gi5eEFk6PTXQ6Q88CGi8DpSi/xo+4tgy+1Z+HRO6Pm3ZDQE
+         vsdYj+uzgHG+lRBJ1CDrseTUhfpWvUExKJVdBaA2P14OSbsnF/45JNj+D+vGonQQSs0+
+         zY34icb1JF5tn7Ky8S5iTn8rTZTqaBW0eOywD3IKqA7xa8xuhHg3aH3UiqVsSBVeIl04
+         wr7A==
+X-Gm-Message-State: AOAM531RM6JXw92MtS6GfqLuZ+Yh866VYEn0E3wqbXJL4OHneUX025Ru
+        XZNbnUpcUfAN5S43Ko64BqQ=
+X-Google-Smtp-Source: ABdhPJw0xKA+oHIWulQZfG90elveZMHUGbjfIACbR8mR7TqqBkatGmRKoRN3KQ7kDb0Dd7H1fzaaMw==
+X-Received: by 2002:a17:906:bfcc:: with SMTP id us12mr836618ejb.163.1611000655621;
+        Mon, 18 Jan 2021 12:10:55 -0800 (PST)
 Received: from localhost.localdomain (ip5f5bee1b.dynamic.kabel-deutschland.de. [95.91.238.27])
-        by smtp.gmail.com with ESMTPSA id qh13sm3972543ejb.33.2021.01.18.12.10.47
+        by smtp.gmail.com with ESMTPSA id qh13sm3972543ejb.33.2021.01.18.12.10.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Jan 2021 12:10:48 -0800 (PST)
+        Mon, 18 Jan 2021 12:10:55 -0800 (PST)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -63,63 +62,86 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v6 0/6] Several changes for UFS WriteBooster
-Date:   Mon, 18 Jan 2021 21:10:33 +0100
-Message-Id: <20210118201039.2398-1-huobean@gmail.com>
+Subject: [PATCH v6 4/6] scsi: ufs: Remove two WB related fields from struct ufs_dev_info
+Date:   Mon, 18 Jan 2021 21:10:37 +0100
+Message-Id: <20210118201039.2398-5-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210118201039.2398-1-huobean@gmail.com>
+References: <20210118201039.2398-1-huobean@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-Changelog:
+d_wb_alloc_units and d_ext_ufs_feature_sup only be used while WB probe.
+They are just used to confirm the condition that "if bWriteBoosterBufferType
+is set to 01h but dNumSharedWriteBoosterBufferAllocUnits is set to zero,
+the WriteBooster feature is disabled", and if UFS device supports WB.
+After that, no user uses them any more. So, don't need to keep time in
+runtime.
 
-v5--v6:
- 1. Remove original patch 7/7:
- "scsi: ufs: Keep device active mode only fWriteBoosterBufferFlushDuringHibernate == 1"
- 2. Rebased patch onto 5.12/scsi-staging
- 3. Add protection of PM ops and err_handler for the wb_on entry access
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/scsi/ufs/ufs.h    |  2 --
+ drivers/scsi/ufs/ufshcd.c | 14 ++++++--------
+ 2 files changed, 6 insertions(+), 10 deletions(-)
 
-V4--V5:
-  1. Add patch "docs: ABI: Add wb_on documentation for UFS sysfs"
-  2. Unify WB related flags with wb_* prefix (Stanley Chu)
-  3. Delete d_ext_ufs_feature_sup (Stanley Chu)
-  4. Incorporate Stanley's suggestion to patch 6/7
-  5. Replace scnprintf() with sysfs_emit() in 1/7 (Greg KH)
-
-v3--v4:
-  1. Rebase patch on 5.11/scsi-staging
-  2. Add WB cleanup patches 3/6, 4/6 adn 5/6
-
-v2--v3:
-  1. Change multi-line comments style in patch 1/3 (Can Guo)
-
-v1--v2:
-  1. Take is_hibern8_wb_flush checkup out from function
-     ufshcd_wb_need_flush() in patch 2/3
-  2. Add UFSHCD_CAP_CLK_SCALING checkup in patch 1/3. that means
-     only for the platform, which doesn't support UFSHCD_CAP_CLK_SCALING,
-     can control WB through "wb_on".
-
-Bean Huo (6):
-  scsi: ufs: Add "wb_on" sysfs node to control WB on/off
-  docs: ABI: Add wb_on documentation for UFS sysfs
-  scsi: ufs: Changes comment in the function ufshcd_wb_probe()
-  scsi: ufs: Remove two WB related fields from struct ufs_dev_info
-  scsi: ufs: Group UFS WB related flags to struct ufs_dev_info
-  scsi: ufs: Cleanup WB buffer flush toggle implementation
-
- Documentation/ABI/testing/sysfs-driver-ufs |   8 ++
- drivers/scsi/ufs/ufs-sysfs.c               |  46 +++++++++
- drivers/scsi/ufs/ufs.h                     |  29 +++---
- drivers/scsi/ufs/ufshcd.c                  | 103 ++++++++-------------
- drivers/scsi/ufs/ufshcd.h                  |   6 +-
- 5 files changed, 110 insertions(+), 82 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 09c7cc8a678d..a8000ed0017e 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -538,9 +538,7 @@ struct ufs_dev_info {
+ 	u8 *model;
+ 	u16 wspecversion;
+ 	u32 clk_gating_wait_us;
+-	u32 d_ext_ufs_feature_sup;
+ 	u8 b_wb_buffer_type;
+-	u32 d_wb_alloc_units;
+ 	bool b_rpm_dev_flush_capable;
+ 	u8 b_presrv_uspc_en;
+ };
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index a3758fd83ebd..827d9f360287 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7269,6 +7269,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
+ 	struct ufs_dev_info *dev_info = &hba->dev_info;
+ 	u8 lun;
+ 	u32 d_lu_wb_buf_alloc;
++	u32 ext_ufs_feature;
+ 
+ 	if (!ufshcd_is_wb_allowed(hba))
+ 		return;
+@@ -7286,11 +7287,10 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
+ 	    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
+ 		goto wb_disabled;
+ 
+-	dev_info->d_ext_ufs_feature_sup =
+-		get_unaligned_be32(desc_buf +
+-				   DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
++	ext_ufs_feature = get_unaligned_be32(desc_buf +
++					DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+ 
+-	if (!(dev_info->d_ext_ufs_feature_sup & UFS_DEV_WRITE_BOOSTER_SUP))
++	if (!(ext_ufs_feature & UFS_DEV_WRITE_BOOSTER_SUP))
+ 		goto wb_disabled;
+ 
+ 	/*
+@@ -7305,10 +7305,8 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
+ 		desc_buf[DEVICE_DESC_PARAM_WB_PRESRV_USRSPC_EN];
+ 
+ 	if (dev_info->b_wb_buffer_type == WB_BUF_MODE_SHARED) {
+-		dev_info->d_wb_alloc_units =
+-		get_unaligned_be32(desc_buf +
+-				   DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS);
+-		if (!dev_info->d_wb_alloc_units)
++		if (!get_unaligned_be32(desc_buf +
++				   DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS))
+ 			goto wb_disabled;
+ 	} else {
+ 		for (lun = 0; lun < UFS_UPIU_MAX_WB_LUN_ID; lun++) {
 -- 
 2.17.1
 
