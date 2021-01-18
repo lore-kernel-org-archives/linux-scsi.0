@@ -2,67 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40349C433E6
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 18:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 714CEC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 20:10:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F5DC22D08
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 18:52:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 426BD22D6F
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 20:10:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436816AbhARSwQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jan 2021 13:52:16 -0500
-Received: from mx2.suse.de ([195.135.220.15]:33812 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2407537AbhARSv6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Jan 2021 13:51:58 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 845DBAF5B;
-        Mon, 18 Jan 2021 18:51:04 +0000 (UTC)
-From:   Enzo Matsumiya <ematsumiya@suse.de>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Enzo Matsumiya <ematsumiya@suse.de>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Arun Easi <aeasi@marvell.com>, Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>
-Subject: [PATCH] scsi: qla2xxx: fix description for parameter ql2xenforce_iocb_limit
-Date:   Mon, 18 Jan 2021 15:49:22 -0300
-Message-Id: <20210118184922.23793-1-ematsumiya@suse.de>
-X-Mailer: git-send-email 2.29.2
+        id S2437679AbhARUJn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jan 2021 15:09:43 -0500
+Received: from mail-1.ca.inter.net ([208.85.220.69]:41946 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2394185AbhARUJh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 15:09:37 -0500
+Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 17EE32EA2F1;
+        Mon, 18 Jan 2021 15:08:53 -0500 (EST)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
+        with ESMTP id 6wxIMQiKLd4y; Mon, 18 Jan 2021 14:55:17 -0500 (EST)
+Received: from [192.168.48.23] (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 06E792EA2DB;
+        Mon, 18 Jan 2021 15:08:51 -0500 (EST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v6 1/4] sgl_alloc_order: remove 4 GiB limit, sgl_free()
+ warning
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.vnet.ibm.com, bostroesser@gmail.com, ddiss@suse.de,
+        bvanassche@acm.org
+References: <20210118163006.61659-1-dgilbert@interlog.com>
+ <20210118163006.61659-2-dgilbert@interlog.com>
+ <20210118182854.GJ4605@ziepe.ca>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <59707b66-0b6c-b397-82fe-5ad6a6f99ba1@interlog.com>
+Date:   Mon, 18 Jan 2021 15:08:51 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210118182854.GJ4605@ziepe.ca>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Parameter ql2xenforce_iocb_limit is enabled by default.
+On 2021-01-18 1:28 p.m., Jason Gunthorpe wrote:
+> On Mon, Jan 18, 2021 at 11:30:03AM -0500, Douglas Gilbert wrote:
+> 
+>> After several flawed attempts to detect overflow, take the fastest
+>> route by stating as a pre-condition that the 'order' function argument
+>> cannot exceed 16 (2^16 * 4k = 256 MiB).
+> 
+> That doesn't help, the point of the overflow check is similar to
+> overflow checks in kcalloc: to prevent the routine from allocating
+> less memory than the caller might assume.
+> 
+> For instance ipr_store_update_fw() uses request_firmware() (which is
+> controlled by userspace) to drive the length argument to
+> sgl_alloc_order(). If userpace gives too large a value this will
+> corrupt kernel memory.
+> 
+> So this math:
+> 
+>    	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
 
-Fixes: 89c72f4245a8 ("scsi: qla2xxx: Add IOCB resource tracking")
-Signed-off-by: Enzo Matsumiya <ematsumiya@suse.de>
----
- drivers/scsi/qla2xxx/qla_os.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+But that check itself overflows if order is too large (e.g. 65).
+A pre-condition says that the caller must know or check a value
+is sane, and if the user space can have a hand in the value passed
+the caller _must_ check pre-conditions IMO. A pre-condition also
+implies that the function's implementation will not have code to
+check the pre-condition.
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index f80abe28f35a..0e0fe5b09496 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -42,7 +42,7 @@ MODULE_PARM_DESC(ql2xfulldump_on_mpifail,
- int ql2xenforce_iocb_limit = 1;
- module_param(ql2xenforce_iocb_limit, int, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(ql2xenforce_iocb_limit,
--		 "Enforce IOCB throttling, to avoid FW congestion. (default: 0)");
-+		 "Enforce IOCB throttling, to avoid FW congestion. (default: 1)");
- 
- /*
-  * CT6 CTX allocation cache
--- 
-2.29.2
+My "log of both sides" proposal at least got around the overflowing
+left shift problem. And one reviewer, Bodo Stroesser, liked it.
+
+> Needs to be checked, add a precondition to order does not help. I
+> already proposed a straightforward algorithm you can use.
+
+It does help, it stops your proposed check from being flawed :-)
+
+Giving a false sense of security seems more dangerous than a
+pre-condition statement IMO. Bart's original overflow check (in
+the mainline) limits length to 4GB (due to wrapping inside a 32
+bit unsigned).
+
+Also note there is another pre-condition statement in that function's
+definition, namely that length cannot be 0.
+
+So perhaps you, Bart Van Assche and Bodo Stroesser, should compare
+notes and come up with a solution that you are _all_ happy with.
+The pre-condition works for me and is the fastest. The 'length'
+argument might be large, say > 1 GB [I use 1 GB in testing but
+did try 4GB and found the bug I'm trying to fix] but having
+individual elements greater than say 32 MB each does not
+seem very practical (and fails on the systems that I test with).
+In my testing the largest element size is 4 MB.
+
+
+Doug Gilbert
 
