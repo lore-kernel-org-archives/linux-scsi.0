@@ -7,43 +7,40 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5DD2C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 10:48:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DE4FC433E6
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 10:48:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E7A32222F
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 10:48:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17F6B2222F
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 10:48:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389183AbhARKsV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jan 2021 05:48:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55360 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389753AbhARKNa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 05:13:30 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B484C0613D3;
-        Mon, 18 Jan 2021 02:12:49 -0800 (PST)
+        id S2389271AbhARKs1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jan 2021 05:48:27 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:55222 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389754AbhARKNb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 05:13:31 -0500
 From:   "Ahmed S. Darwish" <a.darwish@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1610964690;
+        s=2020; t=1610964695;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=yewws0s6s3/xuCM1cWNhQ98mFYo9ii8BH+uQAWu4Oo4=;
-        b=OTOZq5CsdtFsbsnCvZJw2i0TQrGOwFvOVj//JwDcuvxNUmDNPSiLgYR+5t/6toqrFVc7QS
-        L90AicuyqKvV7qZW3KKL5hm+Ac75V+VNysRSVJa42OqPdkFyZcL7Na0zerkkT5hEG1FpGu
-        VbD2ddPYUCQp9SoRQFQkfdLox1pEA097wkn7xOxL2gJwXed1OPRkSRCy5wan1cYp1S9Fls
-        gXqcB15R09FeKCZjDqGk7G3hHz3KyggRfFmxM5qs5A1vHKvHThX+9Rl6VT367Gj/6gkcMJ
-        +MIuO/YNUDgLO6BZDi6Bq7RTbm8aulArqHEehZdlcxZSdgYrWXOijauhjOuJMg==
+        bh=rCoUnEGucDJKkx1I4wm0D1GIGgiWaqTeEVIetS2fm+4=;
+        b=Q3xEKCocQgMx+JuhL1cJPT9+A+G1/5qYduRgToKI9PLcLpIOe9/wrDEln9LBeQcIxFNDS3
+        9gd8ZCtW8zzFB5hCn/gMGvjGnvry29pb+lYShIZ9JVQ61w07VW+t5O5CI+3dhXf9b5E8+1
+        1wvqCHNTjSJ3OP1XLYQQrsIU/aVHKRGF2Pi+wZc2FFX7wqGuSEvyMd6a/xG8I8yXRaWiCw
+        BvOsMFbjDrfWpk4UU4jNYKbpKELGKC6FPx21NQirF+yFbduHz7o/26p9G/t8IwJSTHIUbJ
+        yv10hMH5DV3w7Uk6VSZGAd7Wufr95Ik80ZW/yKa3ZhRWjdyu63kO+dx7xQt9xA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1610964690;
+        s=2020e; t=1610964695;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=yewws0s6s3/xuCM1cWNhQ98mFYo9ii8BH+uQAWu4Oo4=;
-        b=Emv3JrlRdpAqT9VOyXO0/sgAH5YjfXe7YwkCtryMgzPh3SPw/4HCZqFT5TykOfu8aunHYk
-        4dQ1YonUvjxyHEBg==
+        bh=rCoUnEGucDJKkx1I4wm0D1GIGgiWaqTeEVIetS2fm+4=;
+        b=9vHl+lAFxHJX7yhS1t9HtiVS04XjwW2xuJ746m6vtlxdAZ3EadGte6AKGSrfFYJs5MzSPZ
+        3X+Rf8EWcHbQjhCQ==
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@infradead.org>,
@@ -56,9 +53,9 @@ Cc:     linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
         Thomas Gleixner <tglx@linutronix.de>,
         "Sebastian A. Siewior" <bigeasy@linutronix.de>,
         "Ahmed S. Darwish" <a.darwish@linutronix.de>
-Subject: [PATCH v3 17/19] scsi: isci: Switch back to original libsas event notifiers
-Date:   Mon, 18 Jan 2021 11:09:53 +0100
-Message-Id: <20210118100955.1761652-18-a.darwish@linutronix.de>
+Subject: [PATCH v3 18/19] scsi: mvsas: Switch back to original libsas event notifiers
+Date:   Mon, 18 Jan 2021 11:09:54 +0100
+Message-Id: <20210118100955.1761652-19-a.darwish@linutronix.de>
 In-Reply-To: <20210118100955.1761652-1-a.darwish@linutronix.de>
 References: <20210118100955.1761652-1-a.darwish@linutronix.de>
 MIME-Version: 1.0
@@ -79,48 +76,50 @@ The libsas _gfp() variants will be removed afterwards.
 
 Signed-off-by: Ahmed S. Darwish <a.darwish@linutronix.de>
 Reviewed-by: John Garry <john.garry@huawei.com>
-Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- drivers/scsi/isci/port.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/mvsas/mv_sas.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
-index e50c3b0deeb3..448a8c31ba35 100644
---- a/drivers/scsi/isci/port.c
-+++ b/drivers/scsi/isci/port.c
-@@ -164,8 +164,8 @@ static void isci_port_bc_change_received(struct isci_host *ihost,
- 		"%s: isci_phy = %p, sas_phy = %p\n",
- 		__func__, iphy, &iphy->sas_phy);
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 484e01428da2..1acea528f27f 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -229,7 +229,7 @@ static void mvs_bytes_dmaed(struct mvs_info *mvi, int i, gfp_t gfp_flags)
+ 		return;
+ 	}
  
--	sas_notify_port_event_gfp(&iphy->sas_phy,
--				  PORTE_BROADCAST_RCVD, GFP_ATOMIC);
-+	sas_notify_port_event(&iphy->sas_phy,
-+			      PORTE_BROADCAST_RCVD, GFP_ATOMIC);
- 	sci_port_bcn_enable(iport);
+-	sas_notify_phy_event_gfp(sas_phy, PHYE_OOB_DONE, gfp_flags);
++	sas_notify_phy_event(sas_phy, PHYE_OOB_DONE, gfp_flags);
+ 
+ 	if (sas_phy->phy) {
+ 		struct sas_phy *sphy = sas_phy->phy;
+@@ -261,7 +261,7 @@ static void mvs_bytes_dmaed(struct mvs_info *mvi, int i, gfp_t gfp_flags)
+ 
+ 	sas_phy->frame_rcvd_size = phy->frame_rcvd_size;
+ 
+-	sas_notify_port_event_gfp(sas_phy, PORTE_BYTES_DMAED, gfp_flags);
++	sas_notify_port_event(sas_phy, PORTE_BYTES_DMAED, gfp_flags);
  }
  
-@@ -224,8 +224,8 @@ static void isci_port_link_up(struct isci_host *isci_host,
- 	/* Notify libsas that we have an address frame, if indeed
- 	 * we've found an SSP, SMP, or STP target */
- 	if (success)
--		sas_notify_port_event_gfp(&iphy->sas_phy,
--					  PORTE_BYTES_DMAED, GFP_ATOMIC);
-+		sas_notify_port_event(&iphy->sas_phy,
-+				      PORTE_BYTES_DMAED, GFP_ATOMIC);
- }
- 
- 
-@@ -271,8 +271,8 @@ static void isci_port_link_down(struct isci_host *isci_host,
- 	 * isci_port_deformed and isci_dev_gone functions.
- 	 */
- 	sas_phy_disconnected(&isci_phy->sas_phy);
--	sas_notify_phy_event_gfp(&isci_phy->sas_phy,
--				 PHYE_LOSS_OF_SIGNAL, GFP_ATOMIC);
-+	sas_notify_phy_event(&isci_phy->sas_phy,
-+			     PHYE_LOSS_OF_SIGNAL, GFP_ATOMIC);
- 
- 	dev_dbg(&isci_host->pdev->dev,
- 		"%s: isci_port = %p - Done\n", __func__, isci_port);
+ void mvs_scan_start(struct Scsi_Host *shost)
+@@ -1892,7 +1892,7 @@ static void mvs_work_queue(struct work_struct *work)
+ 			if (!(tmp & PHY_READY_MASK)) {
+ 				sas_phy_disconnected(sas_phy);
+ 				mvs_phy_disconnected(phy);
+-				sas_notify_phy_event_gfp(sas_phy,
++				sas_notify_phy_event(sas_phy,
+ 					PHYE_LOSS_OF_SIGNAL, GFP_ATOMIC);
+ 				mv_dprintk("phy%d Removed Device\n", phy_no);
+ 			} else {
+@@ -1905,7 +1905,7 @@ static void mvs_work_queue(struct work_struct *work)
+ 		}
+ 	} else if (mwq->handler & EXP_BRCT_CHG) {
+ 		phy->phy_event &= ~EXP_BRCT_CHG;
+-		sas_notify_port_event_gfp(sas_phy,
++		sas_notify_port_event(sas_phy,
+ 				PORTE_BROADCAST_RCVD, GFP_ATOMIC);
+ 		mv_dprintk("phy%d Got Broadcast Change\n", phy_no);
+ 	}
 -- 
 2.30.0
 
