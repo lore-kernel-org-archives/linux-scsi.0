@@ -2,116 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEDDDC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 20:26:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80514C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 20:36:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76CF722D2A
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 20:26:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E7F522D71
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jan 2021 20:36:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437915AbhARUZ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jan 2021 15:25:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46084 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2437916AbhARUZT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 15:25:19 -0500
-Received: from mail-qk1-x729.google.com (mail-qk1-x729.google.com [IPv6:2607:f8b0:4864:20::729])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69E8CC0613D3
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2021 12:24:33 -0800 (PST)
-Received: by mail-qk1-x729.google.com with SMTP id 186so19871309qkj.3
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2021 12:24:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=fMGAcyIUDonqC5vZX69em4dMaV0h+aNyMhhqjLVgSNo=;
-        b=X30e563Uk9Cma5YsX+T0s86EdcxvWZwgWtXA/TZZOF1Jd5jusebodDLu6075LgiI0j
-         kOC62o8jQ3Zp2PAVFQjlANcfZL50+khhiGW2aI03D6Nf/7SAJm54aH0AXQ/X6FcScWDk
-         g3s9YJa7RIs+cWeibt9s7OK05D7xN9d9QM7WEhW9nEPeYdMlR+KMrxKCLWM+zD69aL6d
-         SHVjlWo8U3xyPJu95ZFHVQ1PUawj/szSOji3jeRN9YmZ4zGEe1WAxupTcFtLtie9OJ47
-         ASdmoeVRDNULjbmtRJdDyc3pWJRh3ZF+2H3bJA5m9S/4RgKCuS27o2WM65Igz/9p/i/f
-         r/WQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=fMGAcyIUDonqC5vZX69em4dMaV0h+aNyMhhqjLVgSNo=;
-        b=r41BIVPvgyWGIhKuOmj5XStgvCFsCB3RXY0YaGrCPdHAXJsidqmeJ1U//5yt1SnkVl
-         zbou3ebDITDEA9XUPgddeSnKJrBfM9XYbvYziOZM7hbUttwLcSBHn0dhcayHGArn0Scn
-         HCviRBCCtTiA8I56Cc5k26A8DW6nB6JyQnWo2CPSlOBlvxujY8HcW/s6pSui5ymUcG1j
-         A9M+W8zOgogcGcV4vVIN07HTXtY/1l2wosPcCFQdOtLPh2XW0R2sRMmScp88iQ+uxTIb
-         0PRpxHuMMdMY4j1aqCtcKX67tJjmAhtnmBTAAPAh12H+P4B/Hj77GJwYn2u4jj95tr4r
-         /zZA==
-X-Gm-Message-State: AOAM533pVgblhPECPyC3MfmTguQavw0leF8U4RpvpmzXe69/v7yzToqk
-        7RAhi9JVJSmDaJSP8GaIH4zxV7druk7Bfg==
-X-Google-Smtp-Source: ABdhPJxc2E3L8aTmtUgQMfQq+Vt6ZEqRDoOS7jM0GndhlpxFniYLv2gxPPWM2uS+0jTBvknhSEn3ww==
-X-Received: by 2002:a05:620a:14a:: with SMTP id e10mr1271604qkn.103.1611001472585;
-        Mon, 18 Jan 2021 12:24:32 -0800 (PST)
-Received: from ziepe.ca (hlfxns017vw-142-162-115-133.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.115.133])
-        by smtp.gmail.com with ESMTPSA id k19sm11091498qkh.6.2021.01.18.12.24.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Jan 2021 12:24:32 -0800 (PST)
-Received: from jgg by mlx with local (Exim 4.94)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1l1b4h-003Hn6-Hd; Mon, 18 Jan 2021 16:24:31 -0400
-Date:   Mon, 18 Jan 2021 16:24:31 -0400
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Douglas Gilbert <dgilbert@interlog.com>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, bostroesser@gmail.com, ddiss@suse.de,
-        bvanassche@acm.org
-Subject: Re: [PATCH v6 1/4] sgl_alloc_order: remove 4 GiB limit, sgl_free()
- warning
-Message-ID: <20210118202431.GO4605@ziepe.ca>
-References: <20210118163006.61659-1-dgilbert@interlog.com>
- <20210118163006.61659-2-dgilbert@interlog.com>
- <20210118182854.GJ4605@ziepe.ca>
- <59707b66-0b6c-b397-82fe-5ad6a6f99ba1@interlog.com>
+        id S2388427AbhARUgP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jan 2021 15:36:15 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:40480 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388980AbhARUfn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 15:35:43 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10IKYl6f084990;
+        Mon, 18 Jan 2021 20:34:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=nfFwApzLr/YH2epVDj9g4gF/FFyeWmuW3Dm2F09oTBE=;
+ b=lxq0m8skR4bDgOEPJS/H+0s8utjwYm2KWSyNPOLmoBGL/ir7LPhmpsbIJc92oaQikqm6
+ zKjHcNrhG3Hqxt+TwiVxVzS39bClNKea0pVtV2VwgTmyBAjb5v52Sby6GP3cfQwVm7ge
+ ajnFXA3PGk24+B3hp2gTYkuFGHPcLsVRiOnptvi4xdhvl3B/NBc9VoFbIqqSE0ZL1PRi
+ K9fsrKP8WZ0A282sblsojplRTWZWHlJKubs+XxZ7GSdh8QAwso73HbkJLCkGMT9DKgq8
+ jAMvkeYeZV9IIkoBkQvhV89juE8PLqK867N7EnCsMedq2787j5mKRhBXT87R0r6794Ze lw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 363r3kphkn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 18 Jan 2021 20:34:47 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10IKPPaj026106;
+        Mon, 18 Jan 2021 20:34:46 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 364a2vhh0r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 18 Jan 2021 20:34:46 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 10IKYj9K004859;
+        Mon, 18 Jan 2021 20:34:45 GMT
+Received: from localhost.localdomain (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 18 Jan 2021 12:34:44 -0800
+From:   Mike Christie <michael.christie@oracle.com>
+To:     lduncan@suse.com, cleech@redhat.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
+Cc:     lutianxiong@huawei.com, linfeilong@huawei.com,
+        liuzhiqiang26@huawei.com, haowenchao@huawei.com
+Subject: [PATCH 6/7] iscsi_tcp: fix shost can_queue initialization
+Date:   Mon, 18 Jan 2021 14:34:29 -0600
+Message-Id: <20210118203430.4921-7-michael.christie@oracle.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210118203430.4921-1-michael.christie@oracle.com>
+References: <20210118203430.4921-1-michael.christie@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <59707b66-0b6c-b397-82fe-5ad6a6f99ba1@interlog.com>
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9868 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 suspectscore=0
+ phishscore=0 mlxlogscore=999 bulkscore=0 adultscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101180123
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9868 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0 spamscore=0
+ clxscore=1015 lowpriorityscore=0 priorityscore=1501 mlxscore=0
+ malwarescore=0 phishscore=0 suspectscore=0 impostorscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101180124
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jan 18, 2021 at 03:08:51PM -0500, Douglas Gilbert wrote:
-> On 2021-01-18 1:28 p.m., Jason Gunthorpe wrote:
-> > On Mon, Jan 18, 2021 at 11:30:03AM -0500, Douglas Gilbert wrote:
-> > 
-> > > After several flawed attempts to detect overflow, take the fastest
-> > > route by stating as a pre-condition that the 'order' function argument
-> > > cannot exceed 16 (2^16 * 4k = 256 MiB).
-> > 
-> > That doesn't help, the point of the overflow check is similar to
-> > overflow checks in kcalloc: to prevent the routine from allocating
-> > less memory than the caller might assume.
-> > 
-> > For instance ipr_store_update_fw() uses request_firmware() (which is
-> > controlled by userspace) to drive the length argument to
-> > sgl_alloc_order(). If userpace gives too large a value this will
-> > corrupt kernel memory.
-> > 
-> > So this math:
-> > 
-> >    	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
-> 
-> But that check itself overflows if order is too large (e.g. 65).
+We are setting the shost's can_queue after we add the host which is
+too late, because scsi-ml will have allocated the tag set based on
+the can_queue value at that time. This patch has us use the
+iscsi_host_get_max_scsi_cmds helper to figure out the number of
+scsi cmds.
 
-I don't reall care about order. It is always controlled by the kernel
-and it is fine to just require it be low enough to not
-overflow. length is the data under userspace control so math on it
-must be checked for overflow.
+It also fixes up the template can_queue so it reflects the max scsi
+cmds we can support like how other drivers work.
 
-> Also note there is another pre-condition statement in that function's
-> definition, namely that length cannot be 0.
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
+---
+ drivers/scsi/iscsi_tcp.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-I don't see callers checking for that either, if it is true length 0
-can't be allowed it should be blocked in the function
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index a9ce6298b935..f0070e3c7ffa 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -847,6 +847,7 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
+ 	struct iscsi_session *session;
+ 	struct iscsi_sw_tcp_host *tcp_sw_host;
+ 	struct Scsi_Host *shost;
++	int rc;
+ 
+ 	if (ep) {
+ 		printk(KERN_ERR "iscsi_tcp: invalid ep %p.\n", ep);
+@@ -864,6 +865,11 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
+ 	shost->max_channel = 0;
+ 	shost->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
+ 
++	rc = iscsi_host_get_max_scsi_cmds(shost, cmds_max);
++	if (rc < 0)
++		goto free_host;
++	shost->can_queue = rc;
++
+ 	if (iscsi_host_add(shost, NULL))
+ 		goto free_host;
+ 
+@@ -878,7 +884,6 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
+ 	tcp_sw_host = iscsi_host_priv(shost);
+ 	tcp_sw_host->session = session;
+ 
+-	shost->can_queue = session->scsi_cmds_max;
+ 	if (iscsi_tcp_r2tpool_alloc(session))
+ 		goto remove_session;
+ 	return cls_session;
+@@ -981,7 +986,7 @@ static struct scsi_host_template iscsi_sw_tcp_sht = {
+ 	.name			= "iSCSI Initiator over TCP/IP",
+ 	.queuecommand           = iscsi_queuecommand,
+ 	.change_queue_depth	= scsi_change_queue_depth,
+-	.can_queue		= ISCSI_DEF_XMIT_CMDS_MAX - 1,
++	.can_queue		= ISCSI_TOTAL_CMDS_MAX - ISCSI_MGMT_CMDS_MAX,
+ 	.sg_tablesize		= 4096,
+ 	.max_sectors		= 0xFFFF,
+ 	.cmd_per_lun		= ISCSI_DEF_CMD_PER_LUN,
+-- 
+2.25.1
 
-Jason
