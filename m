@@ -7,91 +7,82 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CDAEC433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 14:40:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB1BAC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 14:40:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16866208E4
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 14:40:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB3912312E
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 14:40:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391202AbhASOju (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jan 2021 09:39:50 -0500
-Received: from labrats.qualcomm.com ([199.106.110.90]:9248 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392007AbhASL4X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 06:56:23 -0500
-IronPort-SDR: ZZoBz4pTtpQGVytKQ3DHRANApILwpfC4UkRPbn5u5bv5+HQhn0D+CC/k6a1cdnEjAXmtUGaDjI
- qkONwsi+Ef8DDZ1hb4NmrKfpZi168SI4jyFWAmHuB1N2Q8GZBcPk50i/ehk+hHl918NzqNYNF3
- lo0VYKPE8MgYPKm1QmC8rZ8LB5qSonsoXK7m33rmLR4k6o//r7osss1fO3X2m/ad4en5SsikQH
- KULvscJVKIVb+58RTjlwuXlq1ZaOPhMaO/OO2D17nJZbwNg6TMC6odm5pmmUQ63+XnYBMkLoNs
- 1t4=
-X-IronPort-AV: E=Sophos;i="5.79,358,1602572400"; 
-   d="scan'208";a="29552957"
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by labrats.qualcomm.com with ESMTP; 19 Jan 2021 03:53:35 -0800
+        id S2389126AbhASOkH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jan 2021 09:40:07 -0500
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:11508 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389319AbhASMIu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 07:08:50 -0500
+Received: from ironmsg07-lv.qualcomm.com (HELO ironmsg07-lv.qulacomm.com) ([10.47.202.151])
+  by alexa-out.qualcomm.com with ESMTP; 19 Jan 2021 04:07:27 -0800
 X-QCInternal: smtphost
-Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 19 Jan 2021 03:53:35 -0800
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 7166B218E7; Tue, 19 Jan 2021 03:53:35 -0800 (PST)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support),
-        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support)
-Subject: [PATCH v10 3/3] scsi: ufs: Revert "Make sure clk scaling happens only when HBA is runtime ACTIVE"
-Date:   Tue, 19 Jan 2021 03:53:01 -0800
-Message-Id: <1611057183-6925-4-git-send-email-cang@codeaurora.org>
+Received: from ironmsg02-blr.qualcomm.com ([10.86.208.131])
+  by ironmsg07-lv.qulacomm.com with ESMTP/TLS/AES256-SHA; 19 Jan 2021 04:07:25 -0800
+X-QCInternal: smtphost
+Received: from maggarwa.ap.qualcomm.com (HELO nitirawa-linux.qualcomm.com) ([10.206.25.176])
+  by ironmsg02-blr.qualcomm.com with ESMTP; 19 Jan 2021 17:37:02 +0530
+Received: by nitirawa-linux.qualcomm.com (Postfix, from userid 2342877)
+        id C03482C52; Tue, 19 Jan 2021 17:37:02 +0530 (IST)
+From:   Nitin Rawat <nitirawa@codeaurora.org>
+To:     cang@codeaurora.org, asutoshd@codeaurora.org,
+        stummala@codeaurora.org, vbadigan@codeaurora.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Nitin Rawat <nitirawa@codeaurora.org>
+Subject: [PATCH V2] scsi: ufs: Add UFS3.0 in ufs HCI version check
+Date:   Tue, 19 Jan 2021 17:37:01 +0530
+Message-Id: <1611058021-18611-1-git-send-email-nitirawa@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1611057183-6925-1-git-send-email-cang@codeaurora.org>
-References: <1611057183-6925-1-git-send-email-cang@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit 73cc291c27024 ("Make sure clk scaling happens only when HBA is
-runtime ACTIVE") is no longer needed since commit f7a42540928a8 ("scsi:
-ufs: Protect some contexts from unexpected clock scaling") is a more
-mature fix to protect UFS LLD stability from clock scaling invoked through
-sysfs nodes by users.
+As per JESD223D UFS HCI v3.0 spec, HCI version 3.0
+is also supported. Hence Adding UFS3.0 in UFS HCI
+version check to avoid logging of the error message.
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Nitin Rawat <nitirawa@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 7 -------
- 1 file changed, 7 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 5 +++--
+ drivers/scsi/ufs/ufshci.h | 1 +
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index df046bd..8ec41ea 100644
+index 82ad317..54ca765 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1355,15 +1355,8 @@ static int ufshcd_devfreq_target(struct device *dev,
- 	}
- 	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
- 
--	pm_runtime_get_noresume(hba->dev);
--	if (!pm_runtime_active(hba->dev)) {
--		pm_runtime_put_noidle(hba->dev);
--		ret = -EAGAIN;
--		goto out;
--	}
- 	start = ktime_get();
- 	ret = ufshcd_devfreq_scale(hba, scale_up);
--	pm_runtime_put(hba->dev);
- 
- 	trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
- 		(scale_up ? "up" : "down"),
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+@@ -9255,8 +9255,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	if ((hba->ufs_version != UFSHCI_VERSION_10) &&
+ 	    (hba->ufs_version != UFSHCI_VERSION_11) &&
+ 	    (hba->ufs_version != UFSHCI_VERSION_20) &&
+-	    (hba->ufs_version != UFSHCI_VERSION_21))
+-		dev_err(hba->dev, "invalid UFS version 0x%x\n",
++	    (hba->ufs_version != UFSHCI_VERSION_21) &&
++	    (hba->ufs_version != UFSHCI_VERSION_30))
++		dev_err(hba->dev, "invalid UFS HCI version 0x%x\n",
+ 			hba->ufs_version);
+
+ 	/* Get Interrupt bit mask per version */
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index 6795e1f..48f6c19 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -80,6 +80,7 @@ enum {
+ 	UFSHCI_VERSION_11 = 0x00010100, /* 1.1 */
+ 	UFSHCI_VERSION_20 = 0x00000200, /* 2.0 */
+ 	UFSHCI_VERSION_21 = 0x00000210, /* 2.1 */
++	UFSHCI_VERSION_30 = 0x00000300, /* 3.0 */
+ };
+
+ /*
+--
+2.7.4
 
