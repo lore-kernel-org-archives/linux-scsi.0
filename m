@@ -2,143 +2,133 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7854DC433E6
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 01:28:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A786C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 02:41:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 492B923101
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 01:28:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EF2822E00
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 02:41:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391920AbhASB1x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jan 2021 20:27:53 -0500
-Received: from mail-1.ca.inter.net ([208.85.220.69]:53424 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731837AbhASB1v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 20:27:51 -0500
-Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id 27C9A2EA06F;
-        Mon, 18 Jan 2021 20:27:10 -0500 (EST)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
-        with ESMTP id jAEqzhtktl6J; Mon, 18 Jan 2021 20:13:33 -0500 (EST)
-Received: from [192.168.48.23] (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 77EAC2EA02A;
-        Mon, 18 Jan 2021 20:27:09 -0500 (EST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v6 1/4] sgl_alloc_order: remove 4 GiB limit, sgl_free()
- warning
-To:     Jason Gunthorpe <jgg@ziepe.ca>,
-        Bodo Stroesser <bostroesser@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, ddiss@suse.de, bvanassche@acm.org
-References: <20210118163006.61659-1-dgilbert@interlog.com>
- <20210118163006.61659-2-dgilbert@interlog.com>
- <20210118182854.GJ4605@ziepe.ca>
- <59707b66-0b6c-b397-82fe-5ad6a6f99ba1@interlog.com>
- <20210118202431.GO4605@ziepe.ca>
- <7f443666-b210-6f99-7b50-6c26d87fa7ca@gmail.com>
- <20210118234818.GP4605@ziepe.ca>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <770a562e-52b9-ba93-59d3-1026340bf4f3@interlog.com>
-Date:   Mon, 18 Jan 2021 20:27:09 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <20210118234818.GP4605@ziepe.ca>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+        id S2394491AbhASCl2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jan 2021 21:41:28 -0500
+Received: from mailout1.samsung.com ([203.254.224.24]:12156 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2394318AbhASClR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2021 21:41:17 -0500
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210119024015epoutp01e02039ab6ac82e9f433cbcd22a067168~bgc50t3vl1862818628epoutp01B
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Jan 2021 02:40:15 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210119024015epoutp01e02039ab6ac82e9f433cbcd22a067168~bgc50t3vl1862818628epoutp01B
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1611024015;
+        bh=PYId0D+AaqtP9cPa7UlXQ4T1x4pdoD75JkM7IuTDsJk=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=avhQQ/EucTbor/4JXtM6oSTZWki1L2WRCpsiC1q1YIIFf9O3fChMq6QiSOo5r40hD
+         p+0uPctgHgNkbfTAyKJkZ53ZZIHa54R/DUsMKAZDqvd7lz72FeozBp8+YDSGOaEaaF
+         9F745EQuMtqaYwRjVnmdVyNZeT6ZSohbf/Uxq1dM=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20210119024014epcas2p4cc51b08d61d6f7f72758089344c8b955~bgc5I8hrb1487614876epcas2p40;
+        Tue, 19 Jan 2021 02:40:14 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.189]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4DKXtz5yq0z4x9Q1; Tue, 19 Jan
+        2021 02:40:11 +0000 (GMT)
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        BE.3E.10621.B8646006; Tue, 19 Jan 2021 11:40:11 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20210119024011epcas2p45256028f99195958140a6846d40b9143~bgc18Yanu1589715897epcas2p4o;
+        Tue, 19 Jan 2021 02:40:11 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20210119024011epsmtrp1da92eb05400ee538701de33f185e78d9~bgc17UMHo1474014740epsmtrp1Y;
+        Tue, 19 Jan 2021 02:40:11 +0000 (GMT)
+X-AuditID: b6c32a45-337ff7000001297d-1e-6006468b54ef
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        F6.D6.13470.B8646006; Tue, 19 Jan 2021 11:40:11 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20210119024010epsmtip23c9b9b78362d908ad53c7f0e9576f350~bgc1rh05a0144501445epsmtip2t;
+        Tue, 19 Jan 2021 02:40:10 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
+        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [ PATCH v6 0/2] introduce a quirk to allow only page-aligned sg
+ entries
+Date:   Tue, 19 Jan 2021 11:28:47 +0900
+Message-Id: <cover.1611023224.git.kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmplk+LIzCtJLcpLzFFi42LZdljTXLfbjS3BYEervsWDedvYLPa2nWC3
+        ePnzKpvFwYedLBZflz5jtZj24Sezxaf1y1gtfv1dz26xevEDFotFN7YxWdzccpTFovv6DjaL
+        5cf/MVl03b3BaLH031sWB36Py1e8PS739TJ5TFh0gNHj+/oONo+PT2+xePRtWcXo8XmTnEf7
+        gW6mAI6oHJuM1MSU1CKF1Lzk/JTMvHRbJe/geOd4UzMDQ11DSwtzJYW8xNxUWyUXnwBdt8wc
+        oOOVFMoSc0qBQgGJxcVK+nY2RfmlJakKGfnFJbZKqQUpOQWGhgV6xYm5xaV56XrJ+blWhgYG
+        RqZAlQk5GQ9XT2Ys+MVc0TqvmbmBsZu5i5GTQ0LAROLn45XsXYxcHEICOxglOi7sYwNJCAl8
+        YpRo2WYOkfjGKNH4rR+u4+SypYwQib2MEm3TV7BAOD8YJTp/HGEFqWIT0JR4enMqE0hCROAM
+        k8S11rNgCWYBdYldE04AJTg4hAWCJJZdrQUJswioSny7dpUdxOYVsJA492A5C8Q2OYmb5zqZ
+        QeZICPxll9h4bAtUwkVi6vp3rBC2sMSr41vYIWwpiZf9bVB2vcS+qQ2sEM09jBJP9/1jhEgY
+        S8x61s4IcgQz0KXrd+mDmBICyhJHbrFAnMkn0XH4LztEmFeio00IolFZ4tekyVBDJCVm3rwD
+        tclDYn3rGbCvhARiJR5t8pzAKDsLYfwCRsZVjGKpBcW56anFRgWGyHG0iRGcHrVcdzBOfvtB
+        7xAjEwfjIUYJDmYlEd7SdUwJQrwpiZVVqUX58UWlOanFhxhNgcE1kVlKNDkfmKDzSuINTY3M
+        zAwsTS1MzYwslMR5iw0exAsJpCeWpGanphakFsH0MXFwSjUwVYfO2frlVX/4IlYnlaMaEWJB
+        xveeuLTcvsbGYMn87dit2Rl7C6V6C7T3Cyn6cf7Kae7cfINjRzu7c+4E/lSNQ3WsyqHs9++1
+        yp6/vIq/bKuT9LJX4QInaqfXFERqf47Is135k/f0y3LDy1etSr3fet80Obqs/KFtr+3psFgh
+        r9sXt+afi7mkJcrj9rGldbK+ybOk3wX9nW732+7x+/lc8fBbE67JPod9ScmSAw1rJRs0RW4r
+        slTO3bGHU0pococaQ4SXumRp+Lxs/pcmYusWXj5jzcJWs7b6Hl92r1IE85S2zM3HOiXaI041
+        mHEYrpK/NuG+a93FtN1c2dbssu1MYbcZHvpezUmJ/PC3UYmlOCPRUIu5qDgRAFEI9VkYBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGLMWRmVeSWpSXmKPExsWy7bCSvG63G1uCQddzTosH87axWextO8Fu
+        8fLnVTaLgw87WSy+Ln3GajHtw09mi0/rl7Fa/Pq7nt1i9eIHLBaLbmxjsri55SiLRff1HWwW
+        y4//Y7LounuD0WLpv7csDvwel694e1zu62XymLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2
+        A91MARxRXDYpqTmZZalF+nYJXBkPV09mLPjFXNE6r5m5gbGbuYuRk0NCwETi5LKljF2MXBxC
+        ArsZJW49P84GkZCUOLHzOSOELSxxv+UIK0TRN0aJrW8fghWxCWhKPL05lQkkISJwj0ni0oS5
+        YGOZBdQldk04wQRiCwsESHRu2wZmswioSny7dpUdxOYVsJA492A5C8QGOYmb5zqZJzDyLGBk
+        WMUomVpQnJueW2xYYJiXWq5XnJhbXJqXrpecn7uJERy0Wpo7GLev+qB3iJGJg/EQowQHs5II
+        b+k6pgQh3pTEyqrUovz4otKc1OJDjNIcLErivBe6TsYLCaQnlqRmp6YWpBbBZJk4OKUamBIW
+        e9QuuhwvN0+di2+lhZOpb1eSwXb1R4Xe35+KrlRSbd6Qd3ulHFdM7t0ZhasvpHvNXpCyzGfv
+        mcQ01w/XJYRncCkEP9Zo2vH9Rmm/2KUdjSf+HEzcUNIRnu6lxfXgpMSSg/ck3aO8z0yOr/f4
+        stHUvoRrjV2z793bKw6K/vNvOnVv76VXhXu/vda85P9F9v7n8tQ9mh+lJnzU9JORKHZjWvQt
+        Kc30n9qTBOO0lpe7Ml7riGef6xM48z7v2+2brD0Tnzu4N2YtiRVbs7RjitJfmbpracxcm65+
+        OsZ2Xpkhrqrl0gQJ/kzbtfFrPd8ItspNUe1cuq5C4d0qnst8ctcymFk37xE/Uf339lPdr0os
+        xRmJhlrMRcWJACxiPVnJAgAA
+X-CMS-MailID: 20210119024011epcas2p45256028f99195958140a6846d40b9143
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210119024011epcas2p45256028f99195958140a6846d40b9143
+References: <CGME20210119024011epcas2p45256028f99195958140a6846d40b9143@epcas2p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-01-18 6:48 p.m., Jason Gunthorpe wrote:
-> On Mon, Jan 18, 2021 at 10:22:56PM +0100, Bodo Stroesser wrote:
->> On 18.01.21 21:24, Jason Gunthorpe wrote:
->>> On Mon, Jan 18, 2021 at 03:08:51PM -0500, Douglas Gilbert wrote:
->>>> On 2021-01-18 1:28 p.m., Jason Gunthorpe wrote:
->>>>> On Mon, Jan 18, 2021 at 11:30:03AM -0500, Douglas Gilbert wrote:
->>>>>
->>>>>> After several flawed attempts to detect overflow, take the fastest
->>>>>> route by stating as a pre-condition that the 'order' function argument
->>>>>> cannot exceed 16 (2^16 * 4k = 256 MiB).
->>>>>
->>>>> That doesn't help, the point of the overflow check is similar to
->>>>> overflow checks in kcalloc: to prevent the routine from allocating
->>>>> less memory than the caller might assume.
->>>>>
->>>>> For instance ipr_store_update_fw() uses request_firmware() (which is
->>>>> controlled by userspace) to drive the length argument to
->>>>> sgl_alloc_order(). If userpace gives too large a value this will
->>>>> corrupt kernel memory.
->>>>>
->>>>> So this math:
->>>>>
->>>>>      	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
->>>>
->>>> But that check itself overflows if order is too large (e.g. 65).
->>>
->>> I don't reall care about order. It is always controlled by the kernel
->>> and it is fine to just require it be low enough to not
->>> overflow. length is the data under userspace control so math on it
->>> must be checked for overflow.
->>>
->>>> Also note there is another pre-condition statement in that function's
->>>> definition, namely that length cannot be 0.
->>>
->>> I don't see callers checking for that either, if it is true length 0
->>> can't be allowed it should be blocked in the function
->>>
->>> Jason
->>>
->>
->> A already said, I also think there should be a check for length or
->> rather nent overflow.
->>
->> I like the easy to understand check in your proposed code:
->>
->> 	if (length >> (PAGE_SHIFT + order) >= UINT_MAX)
->> 		return NULL;
->>
->>
->> But I don't understand, why you open-coded the nent calculation:
->>
->> 	nent = length >> (PAGE_SHIFT + order);
->> 	if (length & ((1ULL << (PAGE_SHIFT + order)) - 1))
->> 		nent++;
-> 
-> It is necessary to properly check for overflow, because the easy to
-> understand check doesn't prove that round_up will work, only that >>
-> results in something that fits in an int and that +1 won't overflow
-> the int.
-> 
->> Wouldn't it be better to keep the original line instead:
->>
->> 	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
-> 
-> This can overflow inside the round_up
+v5 -> v6: collect received tags
+v4 -> v5: collect received tags
+v3 -> v4: fix some typos
+v2 -> v3: rename exynos functions
+v1 -> v2: rename the vops and fix some typos
 
-To protect against the "unsigned long long" length being too big why
-not pick a large power of two and if someone can justify a larger
-value, they can send a patch.
+Kiwoong Kim (2):
+  ufs: introduce a quirk to allow only page-aligned sg entries
+  ufs: ufs-exynos: use UFSHCD_QUIRK_ALIGN_SG_WITH_PAGE_SIZE
 
-         if (length > 64ULL * 1024 * 1024 * 1024)
-		return NULL;
+ drivers/scsi/ufs/ufs-exynos.c | 3 ++-
+ drivers/scsi/ufs/ufshcd.c     | 2 ++
+ drivers/scsi/ufs/ufshcd.h     | 4 ++++
+ 3 files changed, 8 insertions(+), 1 deletion(-)
 
-So 64 GiB or a similar calculation involving PAGE_SIZE. Compiler does
-the multiplication and at run time there is only a 64 bit comparison.
-
-
-I tested 6 one GiB ramdisks on an 8 GiB machine, worked fine until
-firefox was started. Then came the OOM killer ...
-
-Doug Gilbert
+-- 
+2.7.4
 
