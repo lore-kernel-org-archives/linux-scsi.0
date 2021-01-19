@@ -2,98 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,
-	DKIM_ADSP_CUSTOM_MED,DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2BE7C43381
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 20:54:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDAB2C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 21:26:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8AB5922CE3
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 20:54:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95D4D22DD3
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 21:26:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729438AbhASUwI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jan 2021 15:52:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50546 "EHLO
+        id S1727275AbhASSpz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jan 2021 13:45:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404382AbhASUvL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 15:51:11 -0500
-Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2594EC061575;
-        Tue, 19 Jan 2021 12:50:31 -0800 (PST)
-Received: by mail-wr1-x431.google.com with SMTP id c5so21039749wrp.6;
-        Tue, 19 Jan 2021 12:50:31 -0800 (PST)
+        with ESMTP id S1727684AbhASSJP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 13:09:15 -0500
+Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15F17C061573;
+        Tue, 19 Jan 2021 10:08:35 -0800 (PST)
+Received: by mail-ej1-x62a.google.com with SMTP id g3so10445330ejb.6;
+        Tue, 19 Jan 2021 10:08:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=vH6HUy38oMUJplJNeKlr7VopL4Mea1KWW8m/wPDj6uM=;
-        b=QQfLVY7DDyNmFBsVJSzaqhxrYiPYNfVxkhGXR/ZQ8sTrc8xc8mxhSwm6yRy6ODFeyD
-         ox+hZSAYHz6OUNDalYclpenoHrUpz+jAdo/GLrjDg794JaCrTePf6dIdsr7g4erZh233
-         clu5tVppJldjZ6tS7YKvVB3RNcP7XwmgjKrOPCh5LndbxmvFPWvGPCUzOMLgzpUk4AjH
-         +fBuBnsQuHM764SRKeuaBLYT7+i8s9+2ja2iZnkgjRW9EB6hHPcQjDBbBvxStkQHN3p/
-         D9iaRW9uI6fOEz+Ju+ESBa6KRV4vACWYjz9NhXKQ8bv6IvwQh8ZPgR+GUtgD5dWLDW2P
-         DAxw==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=QUIebfX8U940ENGHUTnKwYQ6vp3a2I5vmh0z1iwQG5o=;
+        b=b+NjSi8PtAmQc+ZlPq6VTlb/cUTGixdwmfMxQjrNKadr6m31k0f694vi7xBuV+CTTz
+         3gq5WRCHjKUdJQISQdXvV4mrdV1CpNlVKGkQj1JtGnOqKpWUrVuTSq86IutQQSDOLSOc
+         2BG/LjX6OEOR74D9Eso8Z/afSjVVF9zorwjjGbIugB6V7PeuZpT7GIDLTkTCXT9JX+vA
+         ep3Wsf44MjzhookyrMbIECdDhIzQgeQPfplMRVWlKBvuwFF0Ha/dMcPN57aTVa03yfPW
+         iPnkNE9h9HWDEHpCOBypmyJz0KOnLWV7ADgOzdAZFl5u3WvR/ptP1TJbnU1gdEx2g3kw
+         clIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=vH6HUy38oMUJplJNeKlr7VopL4Mea1KWW8m/wPDj6uM=;
-        b=tO6OymZRGXeVk0GyTdHvhOHblSMvQqZl8bGoOfQVkRU4HWOlamDBUF0GyP5q9IBrUl
-         yfUNTXpUvFgy5Xk8nW1eq+SgPRzrVJ16UOoLonb+Wc57/YKmYuHktKKHHThKfwwVjYYK
-         PQlEH1lzwjQ2iEChNeB2INjrYbMwAWXeX4fr5gU7HQ/L2Qu0gndIkJem4WQXbK/+0Wr2
-         mbgIOuChlesvHMaUHePFvs5tNcDXgR4fU/oQ76qAqdLVbdzvB+1bfKyPagLyQbKq0axW
-         fRdvIYncRZdv950gbc7rhHCs8gmKj3dw2Zc68GzTvIFMSVTNfvYx8ntypay2er//QUIa
-         m/2w==
-X-Gm-Message-State: AOAM530FDlFkW7IOJdCmPv74QTSSBr2AbPnQJ04CHe33OzI3gikDsUSQ
-        OxXRodlEKsL63c6c3OI+pA8=
-X-Google-Smtp-Source: ABdhPJyg9255+bek8/LJIAHk5pbX9Mu2jpCiaCO+VW3sT28GwkycQ8pif/Ly49fLL3NaJkXC9rYVfA==
-X-Received: by 2002:adf:bbc1:: with SMTP id z1mr2985222wrg.95.1611089429912;
-        Tue, 19 Jan 2021 12:50:29 -0800 (PST)
-Received: from curtine-Aspire-A515-55.lan ([2001:818:e279:2100:e157:80a8:2e2e:c679])
-        by smtp.googlemail.com with ESMTPSA id x128sm6681248wmb.29.2021.01.19.12.50.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Jan 2021 12:50:29 -0800 (PST)
-From:   Eric Curtin <ericcurtin17@gmail.com>
-Cc:     ericcurtin17@gmail.com, James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org (open list:EMULEX/BROADCOM LPFC FC/FCOE SCSI
-        DRIVER), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] rename lpfc_sli4_dump_page_a0 to lpfc_sli4_dump_sfp_pagea0
-Date:   Tue, 19 Jan 2021 20:50:22 +0000
-Message-Id: <20210119205022.40000-1-ericcurtin17@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        bh=QUIebfX8U940ENGHUTnKwYQ6vp3a2I5vmh0z1iwQG5o=;
+        b=m8itd4a4G1LySpPDN7lIht4nLtPeDXCx1wf5ec5nJdPKliyXN9fvQTCxwyUINYgYlb
+         NUPv+VJg7oEFP8sJutKuyp7bWI3WHmzIkkpf96DqRlDk+N+LcTuzRHLsU8A2InrIeJHx
+         ZBNFO1tqA6fYg8lJuE9lGCAluhWDk5ycZBk7clfG+e4KNkBREP35/WAbgmz6XAeg18Uz
+         S0SCLRANussjSFc6RZemZiIQTcDhqYnybrgaP9YIJwgOWq0dADNCGwyUjVZ7U+jsFS1a
+         ixO1Pdn5pZKW2X/g5PMQiu45WXaVoK8NLFiyX6mERJGjs3/6rWnAiZa1OdpX9aN3bq+7
+         vi/w==
+X-Gm-Message-State: AOAM532r1tYgFOgr//NZ27rrFcCdQgN97nm1AfP/yNHFcTyssiAlc2ej
+        lNRAxzSA8Hrv7oacTf4avhg=
+X-Google-Smtp-Source: ABdhPJxbPkdPQezctxiD6SZFvmQnmR1KZV4He8vTQy9fMToLOFpgvarG+gK/zrilW2FVZgdv7Grt0g==
+X-Received: by 2002:a17:906:f98f:: with SMTP id li15mr3724800ejb.123.1611079713890;
+        Tue, 19 Jan 2021 10:08:33 -0800 (PST)
+Received: from [192.168.178.40] (ipbcc06d06.dynamic.kabel-deutschland.de. [188.192.109.6])
+        by smtp.gmail.com with ESMTPSA id b101sm4741633edf.49.2021.01.19.10.08.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 Jan 2021 10:08:33 -0800 (PST)
+Subject: Re: [PATCH v6 1/4] sgl_alloc_order: remove 4 GiB limit, sgl_free()
+ warning
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     Douglas Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.vnet.ibm.com, ddiss@suse.de, bvanassche@acm.org
+References: <20210118163006.61659-1-dgilbert@interlog.com>
+ <20210118163006.61659-2-dgilbert@interlog.com>
+ <20210118182854.GJ4605@ziepe.ca>
+ <59707b66-0b6c-b397-82fe-5ad6a6f99ba1@interlog.com>
+ <20210118202431.GO4605@ziepe.ca>
+ <7f443666-b210-6f99-7b50-6c26d87fa7ca@gmail.com>
+ <20210118234818.GP4605@ziepe.ca>
+ <6faed1e2-13bc-68ba-7726-91924cf21b66@gmail.com>
+ <20210119180327.GX4605@ziepe.ca>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+Message-ID: <7ba5bfdf-6bc2-eddb-4c26-133c1bc08a33@gmail.com>
+Date:   Tue, 19 Jan 2021 19:08:32 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-To:     unlisted-recipients:; (no To-header on input)
+In-Reply-To: <20210119180327.GX4605@ziepe.ca>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Comment did not match function signature.
+On 19.01.21 19:03, Jason Gunthorpe wrote:
+> On Tue, Jan 19, 2021 at 06:24:49PM +0100, Bodo Stroesser wrote:
+>>
+>> I had a second look into math.h, but I don't find any reason why round_up
+>> could overflow. Can you give a hint please?
+> 
+> #define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
+>                                                      ^^^^^
+> 
+> That +1 can overflow
 
-Signed-off-by: Eric Curtin <ericcurtin17@gmail.com>
----
- drivers/scsi/lpfc/lpfc_mbox.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+But that would be a unsigned long long overflow. I considered this to
+not be relevant.
 
-diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
-index 3414ffcb26fe..c03a7f12dd65 100644
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -2409,7 +2409,7 @@ lpfc_mbx_cmpl_rdp_page_a0(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
- 
- 
- /*
-- * lpfc_sli4_dump_sfp_pagea0 - Dump sli4 read SFP Diagnostic.
-+ * lpfc_sli4_dump_page_a0 - Dump sli4 read SFP Diagnostic.
-  * @phba: pointer to the hba structure containing.
-  * @mbox: pointer to lpfc mbox command to initialize.
-  *
--- 
-2.25.1
-
+> 
+> It looks like it would not be so bad to implement some
+> check_round_up_overflow() if people prefer
+> 
+> Jason
+> 
