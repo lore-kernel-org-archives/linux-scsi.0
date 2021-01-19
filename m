@@ -2,100 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5275CC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82F6EC43381
 	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 14:48:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 24E172168B
+	by mail.kernel.org (Postfix) with ESMTP id 5A0402168B
 	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 14:48:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389643AbhASOjB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jan 2021 09:39:01 -0500
-Received: from labrats.qualcomm.com ([199.106.110.90]:49451 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390373AbhASLyM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 06:54:12 -0500
-IronPort-SDR: Ux6YGD4UtoX8otGJOxUDfPgWL7JEK6akdKgKiZ4/WQDMu59F9745jG4oi9wVsZFWCyNG6XSr+e
- 5a3rgGX0MVO/KOlnKhxLTLks27Ff0XKVP44eDqaAPQ3i9vwTMUZVmSdhFWyn0wxx/yee/p+a0G
- enwKjcB/2/WuvRqzF0vpuAE9LQEIZx9SvhDpZco2x0fyiKgNsOK8SoT/KMcDWiX9Qb5f86W4KK
- Qkv/Hi4ttG6ZIeHB4X3d2pVuS48M9+9tn+Lpm7cawuVfMAvofw8ecobIfDj+1Po0rDgU2qPpGo
- ndw=
-X-IronPort-AV: E=Sophos;i="5.79,358,1602572400"; 
-   d="scan'208";a="47679370"
-Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
-  by labrats.qualcomm.com with ESMTP; 19 Jan 2021 03:53:18 -0800
-X-QCInternal: smtphost
-Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg02-sd.qualcomm.com with ESMTP; 19 Jan 2021 03:53:17 -0800
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id ED71B218E7; Tue, 19 Jan 2021 03:53:17 -0800 (PST)
+        id S2389962AbhASOkM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jan 2021 09:40:12 -0500
+Received: from m42-8.mailgun.net ([69.72.42.8]:20787 "EHLO m42-8.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2390750AbhASMPt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Jan 2021 07:15:49 -0500
+X-Greylist: delayed 372 seconds by postgrey-1.27 at vger.kernel.org; Tue, 19 Jan 2021 07:15:48 EST
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1611058513; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=aUEtiVmAQ8CmZiOc/Yc+ZB78ABF/TMFtTD6V4jrkLKc=;
+ b=pIEu+hPBhqe38YXtq5ec/thqVd+SrSYr8PP7aMGAszAauSLQLO90Fc9FRueEhTBns0TZ8YNy
+ RYBm72+jV63zdGRmNI4e5w7lshYqKuyCkwpNpb37bNo+6kT7ieQVc19dlVstlpyR+o98m5bH
+ d8yiTVcfzbx4+4AjDaffT2L/odw=
+X-Mailgun-Sending-Ip: 69.72.42.8
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
+ 6006cbb1859d74370d289e04 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 19 Jan 2021 12:08:17
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 257D5C433CA; Tue, 19 Jan 2021 12:08:17 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1D9FDC433ED;
+        Tue, 19 Jan 2021 12:08:16 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 19 Jan 2021 20:08:15 +0800
 From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        cang@codeaurora.org
-Subject: [PATCH v10 0/3] Three changes related with UFS clock scaling
-Date:   Tue, 19 Jan 2021 03:52:58 -0800
-Message-Id: <1611057183-6925-1-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+To:     Nitin Rawat <nitirawa@codeaurora.org>
+Cc:     asutoshd@codeaurora.org, stummala@codeaurora.org,
+        vbadigan@codeaurora.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V2] scsi: ufs: Add UFS3.0 in ufs HCI version check
+In-Reply-To: <1611058021-18611-1-git-send-email-nitirawa@codeaurora.org>
+References: <1611058021-18611-1-git-send-email-nitirawa@codeaurora.org>
+Message-ID: <d08cc44fa93256f040d397372afa7af1@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This series is made based on 5.12/scsi-queue branch.
+On 2021-01-19 20:07, Nitin Rawat wrote:
+> As per JESD223D UFS HCI v3.0 spec, HCI version 3.0
+> is also supported. Hence Adding UFS3.0 in UFS HCI
+> version check to avoid logging of the error message.
+> 
 
-Current devfreq framework allows sysfs nodes like governor, min_freq and max_freq to be changed even after devfreq device is suspended.
-Meanwhile, devfreq_suspend_device() cannot/wouldn't synchronize clock scaling which has already been invoked through devfreq sysfs nodes menitioned above.
-It means that clock scaling invoked through these devfreq sysfs nodes can happen at any time regardless of the state of UFS host and/or device.
-We need to control and synchronize clock scaling in this scenario.
+Reviewed-by: Can Guo <cang@codeaurora.org>
 
-The 1st change allows contexts to prevent clock scaling from being invoked through devfreq sysfs nodes.
-The 2nd change is just a code cleanup for clk_scaling/gating initialization routine.
-The 3rd change reverts one old change which can be covered by the 1st change. For branches which do not have this change yet, it can be ignored.
-
-Change since v9:
-- Minor update in the 1st change.
-
-Change since v8:
-- Rebased on 5.12/scsi-queue
-
-Change since v7:
-- Slightly updated the 1st change: changed the up_write() before ufshcd_wb_ctrl() to downgrade_write() in ufshcd_devfreq_scale(),
-  so that ufshcd_wb_ctrl() is called with clk_scale_lock held, this is to make sure race condition won't happen to ufshcd_wb_ctrl().
-
-Change since v6:
-- Updated the 2nd change
-
-Change since v5:
-- Reomved the code change in ufshcd_shutdown() since it is not quite relevant with this fix
-
-Change since v4:
-- Updated some comment lines as requested by Stanley
-
-Change since v3:
-- Slightly updated the 1st change
-
-Change since v2:
-- Split the 1st change to two changes, which become the 1st change and the 3rd change
-
-Change since v1:
-- Updated the 2nd change
-
-*** BLURB HERE ***
-
-Can Guo (3):
-  scsi: ufs: Protect some contexts from unexpected clock scaling
-  scsi: ufs: Refactor ufshcd_init/exit_clk_scaling/gating()
-  scsi: ufs: Revert "Make sure clk scaling happens only when HBA is
-    runtime ACTIVE"
-
- drivers/scsi/ufs/ufshcd.c | 214 +++++++++++++++++++++++++---------------------
- drivers/scsi/ufs/ufshcd.h |  10 ++-
- 2 files changed, 127 insertions(+), 97 deletions(-)
-
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
-
+> Signed-off-by: Nitin Rawat <nitirawa@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 5 +++--
+>  drivers/scsi/ufs/ufshci.h | 1 +
+>  2 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 82ad317..54ca765 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -9255,8 +9255,9 @@ int ufshcd_init(struct ufs_hba *hba, void
+> __iomem *mmio_base, unsigned int irq)
+>  	if ((hba->ufs_version != UFSHCI_VERSION_10) &&
+>  	    (hba->ufs_version != UFSHCI_VERSION_11) &&
+>  	    (hba->ufs_version != UFSHCI_VERSION_20) &&
+> -	    (hba->ufs_version != UFSHCI_VERSION_21))
+> -		dev_err(hba->dev, "invalid UFS version 0x%x\n",
+> +	    (hba->ufs_version != UFSHCI_VERSION_21) &&
+> +	    (hba->ufs_version != UFSHCI_VERSION_30))
+> +		dev_err(hba->dev, "invalid UFS HCI version 0x%x\n",
+>  			hba->ufs_version);
+> 
+>  	/* Get Interrupt bit mask per version */
+> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+> index 6795e1f..48f6c19 100644
+> --- a/drivers/scsi/ufs/ufshci.h
+> +++ b/drivers/scsi/ufs/ufshci.h
+> @@ -80,6 +80,7 @@ enum {
+>  	UFSHCI_VERSION_11 = 0x00010100, /* 1.1 */
+>  	UFSHCI_VERSION_20 = 0x00000200, /* 2.0 */
+>  	UFSHCI_VERSION_21 = 0x00000210, /* 2.1 */
+> +	UFSHCI_VERSION_30 = 0x00000300, /* 3.0 */
+>  };
+> 
+>  /*
+> --
+> 2.7.4
