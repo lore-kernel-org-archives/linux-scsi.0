@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 478FCC43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A84AEC4332D
 	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 05:33:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B50E22D08
+	by mail.kernel.org (Postfix) with ESMTP id 7AC9222CAD
 	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 05:33:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729917AbhASFa7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jan 2021 00:30:59 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:51835 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389314AbhASFLK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 00:11:10 -0500
+        id S2389905AbhASFbF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jan 2021 00:31:05 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:34702 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389469AbhASFLq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 00:11:46 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611033069; x=1642569069;
+  t=1611033106; x=1642569106;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=wDWv58LHKZByyePyDiVmBTfQ0E5jsIWpV0zm9LPXpkA=;
-  b=qBiZpaumSDTpkYLLaDKrdIIaENH9awMoOcNQx+qV+IZi39jSFwlBFMKj
-   SBL0Wb/8Cd8eo49GUXs0DGvClJMryB1586Xl9Yaf+xbTyhScxNgLVkQfH
-   pQaJJgYm1APfbJzqOoqKJuNzm1Ji882ET4/Xg2buLtUnHoj1XfdDpF3LE
-   BEipdHIgzYFlU6Kb5gwil/n/bTPl/Z/hsdduUo0z8Fva7F8iyCksWnfGk
-   CCtfiHUQu1KsgWOsqZTA5x0xcMiVNiAkfe4cH2kCmnwf7nPrUsuqA+4Ay
-   eQw0NjHtdvekK6nF4RXcGLFmkaDAvj5t+52fez2LXfkYG+oTlkxNOwfuL
+  bh=AAA7t74fBBFYvhmmUXL9ltnfWbGOnWjeqm/UNzN2uR4=;
+  b=rfxiqHo2Il4cuUpS/2Vwyfwnr+h2EYw5neM0L3rZ4PP/tO6QXAHGinW4
+   1E9yyyewXGMZZl6EAFrbEqcI6NYhkMwJ6m6U2O6c15kH4H64IXNnaEp/8
+   TcbyqfJOMlBepojasDcmRTA4iwyJKE2fpwK+1iBXJ2q6GDam69Cs/YHTI
+   NOYc1/y8RdsF4B4s87AxDNIWQ+UwYqFUpMWpoDrSBdYXRj0QzvR9HmKQq
+   TU5or9G3Yq6hki1AIKoaKumEZ7L3b2DKgYGKgXQw63xPXYGkeZMQj45Oy
+   wUftI2qwYakzoSliniYS6jGwDniyrty/2S08slSc+dhksvJChbYRGlltF
    w==;
-IronPort-SDR: yOKOfYWsY5pvhNiovVDC3nHUDdP46u6zCAoVRLAtMPAlBKuoy6uT5mkhlPsWV2sJJLGcudIsAM
- QlzSHVHQLlyhYL+akfnQ/cyCU6IfTpsMt3+5bcI6d+44dxN1tF0lX6qxGxIPT4WP+HQPkKcgde
- AY4YUAYNfcUU7qJFeTw6bU3pwH2oIIIPpoF2B4Cz+A7gKsAMohlMgMQIWM5TXaJiXEgwPckDoe
- nFi8SqSIwKD3fTv5A2SgPwNFDuLkGvJzm21CPRn5R6l1614RyMrc+Tp/A+cMiVWfL0Xfw9Lfcn
- F2A=
+IronPort-SDR: +EeBMaQhit70YY212VnNAf2HBYHVD/39brDoueIcuI2QBCHqQs0R4kZ+c1RaP/Pvk17B3/PZvc
+ X1MaIXukuw0WJ9xCVcjAeBJy/HuTrEU7l1NDTzayObdUPMTdIJtjv8KQ5OJ0wQc+qEGO4GU6IT
+ /6L43+mXfGICRrxTNk2Z43DHaoTh3rr080ssD4ycVBrxYbD6598TYseg0o6HJ8ihkNcN2gqEEC
+ w66YgfM5yotmWp1W+fe8XBwQ/nKfd7wCWe+LH7FeIxx5j33mCNM5SCIZ5iFr5XDSKPFdWUVfY6
+ ZB8=
 X-IronPort-AV: E=Sophos;i="5.79,357,1602518400"; 
-   d="scan'208";a="157763947"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:08:51 +0800
-IronPort-SDR: bQvCPuZFI+aaY4xhcSrkTYVAP+H+T/nZnmXJ0IEqYDNSJ4rjFZLxr0B/CjtmBmF35t5xDh8hZ4
- fW0T4jFym2ovFkxiaBoEjggq43wN03Tx3A5wehqF7pdpRHHIqlDZeOuoWEGtydIg08AuyagMqi
- vJrHcbx+1E0QvxtTky5RRLSrtOaBDf4BwCmv71hlnGg0KLMnFgD+PS141W8c4ATBVYk+qNS/Jy
- hN7ZphN8cRo/dU0Zah+XDotNjI33TlkN8fOGxLttYxnuHdKaInLpZbZ4ZtUD7YUf5wIBNb8+3U
- tgEvN2TKuKmZBSxUcdua5vJl
+   d="scan'208";a="268081222"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:10:19 +0800
+IronPort-SDR: orMjc/tSb01dXK1HklYi66wWdxLkDv9HBfCcvlkdiiN5n+Hbspp8Uz6u0gyZHJVKpvAzzuGLAT
+ h6uFmIljQk3kRywCcg4naDEGogW4/pBvZK6xt5QJEC1B0xJJaMqmOb97+vEYD//h6B0DvtiBH6
+ npIM52Ogvb0hxlv5aYvM+zdVBbGF68nkvpn5FOP22Faa38lRqd5QC2u0tQNtdiPIcrqOuofOSA
+ 1u0+jeEinED0lhBmoy87IOkU1XoynSas2lHcuhtYnpoR4dWhrOOVK3sQVyzSo26zr5om9ncTEa
+ thxeVRcuOH4WOe0vdQUKcdcS
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:53:29 -0800
-IronPort-SDR: zqmdr8uNSGUFgZ7LrU0GCeEBE+HwqEp3d6yRCc4vmJxwtA/Yo4CFOUY62UCXmXuPUcpvGTrzPZ
- ZvCO6cAymIpMTiIbl4e2oge4VHFzjo0lUvlL/UEVWaUmjNMbvFL6pQOn3IbgBdVAxsKv/xFkfH
- Muc3sg0LIgVa0PCQf7zl6WshjAalrUxlLiYGPDB48hNEN7m0zho6fJXM/WqCYq7SGSNzGvX8Gl
- 6TzvHwI3LTXrv+sfDj/IEWvxKvmwhi3VABVseKTOUqh9RvyxCMjwM25iJM4iyI7r5ezZ5UcdOF
- Ldg=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:54:55 -0800
+IronPort-SDR: cPCtUc/IRHJ6v0mRHjS8V8MFIsoN0oL2wMbe6Ozxyn7u6Jlq2FjrgvACBEr/lheyPR/5wD4N+M
+ KEDIu5wE7UWz8Cv9qJDWZum4DMbM7mOvzj/7tfqqgYPHbQ1LhSR/PgR8NGyaDkjJQEt2LBkn32
+ 1OZrCSpTxv+AMTCn8V0WZgKvKOAI/tj1Sffo8uYhn7bxkZYYg0/EqRTNAqMwUOaWkw/9SrZbM5
+ n6bVFFI/rd2QJwwAKHXPwXh+bmpzJXrCR4jV/u3YAVKTR0Pw0jMhQst/htFOvMCrlOnknkAxQ9
+ MSM=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:08:51 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:10:18 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -77,9 +77,9 @@ Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
         osandov@fb.com, bvanassche@acm.org, gustavo@embeddedor.com,
         asml.silence@gmail.com, jefflexu@linux.alibaba.com,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [RFC PATCH 19/37] bcache: use bio_init_fields in super
-Date:   Mon, 18 Jan 2021 21:06:13 -0800
-Message-Id: <20210119050631.57073-20-chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 31/37] eros: use bio_init_fields in data
+Date:   Mon, 18 Jan 2021 21:06:25 -0800
+Message-Id: <20210119050631.57073-32-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1
 In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
 References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
@@ -91,60 +91,25 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- drivers/md/bcache/super.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+ fs/erofs/data.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index a4752ac410dc..b4ced138a0c0 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -312,9 +312,7 @@ void bch_write_bdev_super(struct cached_dev *dc, struct closure *parent)
- 	closure_init(cl, parent);
+diff --git a/fs/erofs/data.c b/fs/erofs/data.c
+index ea4f693bee22..15f3a3f01fa3 100644
+--- a/fs/erofs/data.c
++++ b/fs/erofs/data.c
+@@ -220,10 +220,8 @@ static inline struct bio *erofs_read_raw_page(struct bio *bio,
  
- 	bio_init(bio, dc->sb_bv, 1);
--	bio_set_dev(bio, dc->bdev);
--	bio->bi_end_io	= write_bdev_super_endio;
--	bio->bi_private = dc;
-+	bio_init_fields(bio, dc->bdev, 0, dc, write_bdev_super_endio, 0, 0);
+ 		bio = bio_alloc(GFP_NOIO, nblocks);
  
- 	closure_get(cl);
- 	/* I/O request sent to backing device */
-@@ -356,9 +354,7 @@ void bcache_write_super(struct cache_set *c)
- 		ca->sb.version = version;
- 
- 	bio_init(bio, ca->sb_bv, 1);
--	bio_set_dev(bio, ca->bdev);
--	bio->bi_end_io	= write_super_endio;
--	bio->bi_private = ca;
-+	bio_init_fields(bio, ca->bdev, 0, ca, write_super_endio, 0, 0);
- 
- 	closure_get(cl);
- 	__write_super(&ca->sb, ca->sb_disk, bio);
-@@ -402,9 +398,7 @@ static void uuid_io(struct cache_set *c, int op, unsigned long op_flags,
- 
- 		bio->bi_opf = REQ_SYNC | REQ_META | op_flags;
- 		bio->bi_iter.bi_size = KEY_SIZE(k) << 9;
--
--		bio->bi_end_io	= uuid_endio;
--		bio->bi_private = cl;
-+		bio_init_fields(bio, NULL, 0, cl, uuid_endio, 0, 0);
- 		bio_set_op_attrs(bio, op, REQ_SYNC|REQ_META|op_flags);
- 		bch_bio_map(bio, c->uuids);
- 
-@@ -566,12 +560,9 @@ static void prio_io(struct cache *ca, uint64_t bucket, int op,
- 
- 	closure_init_stack(cl);
- 
--	bio->bi_iter.bi_sector	= bucket * ca->sb.bucket_size;
--	bio_set_dev(bio, ca->bdev);
- 	bio->bi_iter.bi_size	= meta_bucket_bytes(&ca->sb);
--
--	bio->bi_end_io	= prio_endio;
--	bio->bi_private = ca;
-+	bio_init_fields(bio, ca->bdev, bucket * ca->sb.bucket_size, ca,
-+			prio_endio, 0, 0);
- 	bio_set_op_attrs(bio, op, REQ_SYNC|REQ_META|op_flags);
- 	bch_bio_map(bio, ca->disk_buckets);
+-		bio->bi_end_io = erofs_readendio;
+-		bio_set_dev(bio, sb->s_bdev);
+-		bio->bi_iter.bi_sector = (sector_t)blknr <<
+-			LOG_SECTORS_PER_BLOCK;
++		bio_init_fields(bio, sb->s_bdev, (sector_t)blknr <<
++			LOG_SECTORS_PER_BLOCK, NULL, erofs_readendio, 0, 0);
+ 		bio->bi_opf = REQ_OP_READ | (ra ? REQ_RAHEAD : 0);
+ 	}
  
 -- 
 2.22.1
