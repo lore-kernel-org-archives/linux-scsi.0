@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C27EC433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 05:33:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F3BBC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 05:33:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2D62206DC
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 05:33:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C91B206F8
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 05:33:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390574AbhASFbb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jan 2021 00:31:31 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:40916 "EHLO
+        id S2390582AbhASFbf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jan 2021 00:31:35 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:40896 "EHLO
         esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389695AbhASFMd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 00:12:33 -0500
+        with ESMTP id S2389696AbhASFMl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 00:12:41 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611033152; x=1642569152;
+  t=1611033161; x=1642569161;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=CEdgjJXFGgEM2vVXbkhgIZw1T1rq8VUMRvKmaMfgKhs=;
-  b=K6Sc8u+1aHwDoDoUjWq2qe1FD8ylUlcKuP2atuiLEGbdtbOp4iG1q0ff
-   qoOH+3hu3HQCGpEFTs+u3cWTs2FTfs9CypUCc9hD+fsi6+LiptlmnQeKJ
-   Mp4MR1xBzTW4j6UOd+XV5OQ2Zx0mhwnNm2JYuxgV+FGZC/mOiFiEvoKtw
-   gBwTLkTlRCbbZ2wA2Hjgju6WLNJyM7tFE9zVI9VOrt5lc3nQso9AQw8zW
-   kgutGawJaMvq9bsztGyB0tZJKTefh5sDSyxJYb8c2RlJfW7f0CKcxE0A+
-   XcfxRnJxbBD1UgT6tIzUs/W4pfML0ZntSd8w4UzSmPqh4SCB2+v5EMHcx
+  bh=B7JA06wyQJSeb+bJeyEVFkKODUviRdB86RqHthiYHdM=;
+  b=ouOni97SuZpoqJlXXMcRL7lRR1+iNiwMjgVznXYaIpadeZkz1qFERecB
+   GAgRhCX6aFbGYbhtkRY0ZL8+qDTao4cKyK1G6N4raXIecORW2jrnTm9Rl
+   +WJAFJ7ge6CuohqthMSSzE7svIfZ3AExhhkdjau7AM0koee5UzV2cfGtb
+   cNn/iQt7WH8wHwpV/9VxnmuhIEHrHBWwdg640EQYLLQ6KVH2tj4HoFPF4
+   cGE3qeCiPOwjP20FK4cJEdw2+naPLMdmNKrDoY3LuuL2dvBy5ffRQ4Kxt
+   7TysnhjM4bXenexVljdGuiiAT7ooRZIY6oLpqF1FaivFuc1h2+on+3jlp
    Q==;
-IronPort-SDR: ZZT3dTC3LgrQnMc0YvYmSzw0J5KCJZpEqCnugPU0w0sIVLBviznV6s5FyxiWLWAw05I2QiLrO0
- tNehEyJ8nRJW7/eoUmbDtumOK80CwYopuK7EgkUxppEM30zoRxT/tgXPttw3Rm/XiCoGMpGA5S
- wuTDcZMXoEpIMpn5T8wBrmJlv4QhnhTyHFUOP2YltITAnfO/4xOQ9hOEhXobD62k/gxAl+O1ro
- VTwz1Yq3QKklhBj63JOoe32jZDBT9Oc0FOd71pUkwCOGDZjCoA6Rt6dYKQfmSWTB0mFS4Q5pVb
- I0c=
+IronPort-SDR: 4z3aZWZxCieA0rN+zw+fq/P2stf8dEc/KSM3wno5g1uuWad03M3zF3LM+LbSNxlSdRuTHZon5K
+ T4LoCENiOPO+6NeITJkShalOOBLH/UzAy9QF60LtvSRLcgJKXr4fAjJQ/L38UAGlkpvHZP50y7
+ LUKS9S0zrquBEwe14reUOk74yIlT+yRdNWSQ4Pr4jKXF/vvueUHSdEf4RIlzCXjH6UpOxn5lqQ
+ oebmwJxVz+wW8rs5/VsBNsaXbxh8DYdm2VRRMve9rXeMhBLDRTJkSnqJ0pimFzUyxzRge4EYtV
+ c9E=
 X-IronPort-AV: E=Sophos;i="5.79,357,1602518400"; 
-   d="scan'208";a="157758782"
+   d="scan'208";a="157758840"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:09:57 +0800
-IronPort-SDR: emmkH4Lr39KJWKJg8IcWQtuK7MQstWVyMU+jg4t1xvZC9yGl0lBJJXPFVvZMAswgGuGUq05SBL
- uMsEfxHkK5QbAl3dJWnHt84fh/EGS9DdzVxBV6YE2fhW6pYcaUEbHnKWZmESdFx3U/2HBuOVH3
- ebvcVLJ9G5NDhjbkhoFZMWI41B+WZZ+qQtayVJ/iwVhJ1o743TbdpbreUmrnGIxffNJtoXrBuT
- QdhTCaSEGBYp/JqjB5p4fIBBgjvdwgYRiXG4fFqvuW+PdPN/Z+nSrlq0KWmNaIVb1YR2I6lGVb
- bVb6yLdCjz7ALKV7Zr24/PjW
+  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:10:34 +0800
+IronPort-SDR: z5AjucngcymGRAYBcpkxPRmq8c6STPUfEwLD7pAaYBHKcfyLw07jEzY+AqXkwxDYI5OYKqXSlc
+ 5ksr+M7axDeDOj6TKOwy0DBz8fjK+4QV4T+/EYgplCiJDr1fAGVBLk/ZuLIQ/lYZJ/da/84FYs
+ qahtD8qVdMViDqzy/LzRWYVEY2jy8CIbuJk5N8H8p/mZ27OueXGI11W9/tkCcWaWipEYerTJ2v
+ X9ORk22Ipcp0F45ExX5U1iLgnhPh3OzdCVNBYpsM+rqpxPzfepTA5QfdFuvlwct/3ckYP3MSxH
+ gULS906KTfNqDI6IXk0RTS0p
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:52:32 -0800
-IronPort-SDR: a+gnNfhBGlfndCUXu2PRYuff1boYNdHfSgVMM4QGOo0gBqok0UAFSw+CakQqID9DiHlkJTF/tk
- tfTEZKWrBtDq0dUvqYcf+WsTdC0Igy/6eIFaVKPX3skORR8vkvebU+R6xmJfb/vQkDxguYmQjy
- ooWIxSrSXOWgrTQsQSnSH8xsuNu9hFytU9enoqFYqBIe5DbNODHACUTbxgGCYD+JsMeKIy4eA6
- k/5Kfh84EPk4WfgFSkdXjOf+OkCHZJ/80U/a+Ke2lW0oT2ODaSYtQOG1ltNBLA3AQquOKSkivD
- 2TA=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:53:09 -0800
+IronPort-SDR: To60I5qpFjC/qrOYyP0e+8PtEHWn/E+IX3B/NtCL2AEGlknL6XuDdu2+0YOMCEUl9jN0+NDuzq
+ dZBtHVmFs8c2MbBK6nyyqiUGvL7D/ICacqAETpUNh7sNU3jN3gr3oMEn5okCkDfyC/0Irc2Fc4
+ 74E8Jj0L1yozehCSNmdf8CdFJegKv/E3LC+h6Fa4Hmz/L2OxthixlGPQheihc6U0PL3qEeNS+1
+ hIM5iqNNXixY/QFjQ8bMwljmNMnnwya/seW7BmRZG7IJzaltfLW+/RKR36uM7dMhYxQCE98dv2
+ Nnw=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:09:57 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:10:34 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -77,9 +77,9 @@ Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
         osandov@fb.com, bvanassche@acm.org, gustavo@embeddedor.com,
         asml.silence@gmail.com, jefflexu@linux.alibaba.com,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [RFC PATCH 28/37] target: use bio_init_fields in iblock
-Date:   Mon, 18 Jan 2021 21:06:22 -0800
-Message-Id: <20210119050631.57073-29-chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 33/37] jfs: use bio_init_fields in metadata
+Date:   Mon, 18 Jan 2021 21:06:27 -0800
+Message-Id: <20210119050631.57073-34-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1
 In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
 References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
@@ -91,39 +91,43 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- drivers/target/target_core_iblock.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ fs/jfs/jfs_metapage.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 8ed93fd205c7..ec65a9494bee 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -324,10 +324,7 @@ iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int op,
- 		return NULL;
- 	}
+diff --git a/fs/jfs/jfs_metapage.c b/fs/jfs/jfs_metapage.c
+index 176580f54af9..5cea9c137a48 100644
+--- a/fs/jfs/jfs_metapage.c
++++ b/fs/jfs/jfs_metapage.c
+@@ -417,10 +417,10 @@ static int metapage_writepage(struct page *page, struct writeback_control *wbc)
+ 		len = min(xlen, (int)JFS_SBI(inode->i_sb)->nbperpage);
  
--	bio_set_dev(bio, ib_dev->ibd_bd);
--	bio->bi_private = cmd;
--	bio->bi_end_io = &iblock_bio_done;
--	bio->bi_iter.bi_sector = lba;
-+	bio_init_fields(bio, ib_dev->ibd_bd, lba, cmd, &iblock_bio_done, 0, 0);
- 	bio_set_op_attrs(bio, op, op_flags);
+ 		bio = bio_alloc(GFP_NOFS, 1);
+-		bio_set_dev(bio, inode->i_sb->s_bdev);
+-		bio->bi_iter.bi_sector = pblock << (inode->i_blkbits - 9);
+-		bio->bi_end_io = metapage_write_end_io;
+-		bio->bi_private = page;
++		bio_init_fields(bio, inode->i_sb->s_bdev,
++				pblock << (inode->i_blkbits - 9),
++				page, metapage_write_end_io, 0, 0);
++
+ 		bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
  
- 	return bio;
-@@ -380,11 +377,9 @@ iblock_execute_sync_cache(struct se_cmd *cmd)
- 		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 		/* Don't call bio_add_page yet, we may add to this vec */
+@@ -497,11 +497,9 @@ static int metapage_readpage(struct file *fp, struct page *page)
+ 				submit_bio(bio);
  
- 	bio = bio_alloc(GFP_KERNEL, 0);
--	bio->bi_end_io = iblock_end_io_flush;
--	bio_set_dev(bio, ib_dev->ibd_bd);
-+	bio_init_fields(bio, ib_dev->ibd_bd, 0, immed ? NULL : cmd,
-+			iblock_end_io_flush, 0, 0);
- 	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
--	if (!immed)
--		bio->bi_private = cmd;
- 	submit_bio(bio);
- 	return 0;
- }
+ 			bio = bio_alloc(GFP_NOFS, 1);
+-			bio_set_dev(bio, inode->i_sb->s_bdev);
+-			bio->bi_iter.bi_sector =
+-				pblock << (inode->i_blkbits - 9);
+-			bio->bi_end_io = metapage_read_end_io;
+-			bio->bi_private = page;
++			bio_init_fields(bio, inode->i_sb->s_bdev,
++					pblock << (inode->i_blkbits - 9,
++					page, metapage_read_end_io, 0, 0);
+ 			bio_set_op_attrs(bio, REQ_OP_READ, 0);
+ 			len = xlen << inode->i_blkbits;
+ 			offset = block_offset << inode->i_blkbits;
 -- 
 2.22.1
 
