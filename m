@@ -2,165 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B26ABC4332E
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 18:28:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30157C282D5
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 18:28:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9796823109
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 18:28:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1032A23107
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 18:28:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390561AbhASRLY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jan 2021 12:11:24 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:59504 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389552AbhASRKt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Jan 2021 12:10:49 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 32E9B2042B2;
-        Tue, 19 Jan 2021 18:09:37 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id IQ6qjm-zJqzh; Tue, 19 Jan 2021 18:09:34 +0100 (CET)
-Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 6080A2041AC;
-        Tue, 19 Jan 2021 18:09:33 +0100 (CET)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        id S2389793AbhASR0H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jan 2021 12:26:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34090 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390855AbhASRZc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 12:25:32 -0500
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE67BC061573;
+        Tue, 19 Jan 2021 09:24:51 -0800 (PST)
+Received: by mail-ej1-x632.google.com with SMTP id g3so10244155ejb.6;
+        Tue, 19 Jan 2021 09:24:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Qy8mcYDslRubqQMPczlIvoAYWYvQDOq96eQu0PafMfE=;
+        b=eYfwUxhXfHaIuxuNwRrS8kQvPBRik+2A3J6NIRPhdjdSewQ2FD4YP6cz0CzJ/dRyni
+         3Nl8SNvf0ZfUSIH8M8bHbgPvVZvfOZh0F1olxQfRGqmUlZJvT4CTvQ1IDetZNfnsywLS
+         YTJObCiYFz8qs4JmrJZDJYx5rTXYoq16cu9z8PGpv1+jUY7yoMBmJNHhjOqw0/673aU1
+         yQvFUpoKeMzBAzJWh6m+uMLYfNoqwWB9COa2EkQvGd1kF5yH+8MjCmiKVDLrMSlI80B3
+         Tp0X5UjNbZ7UilcKIoJ4Si85g+Hc0vOra2v3AuTTGdKTsvo2eg2Qd2ujYfLeZdBrFosQ
+         BYmA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Qy8mcYDslRubqQMPczlIvoAYWYvQDOq96eQu0PafMfE=;
+        b=Za0i2LrP7pnw2SHBT7m8MKwhmTaRnIwXstgAzRFjlDT/NB8+Coat7Yymuym6CI2NPS
+         l9nzXgq0IVtetQQ9InLpAK9S2viTxi5aGgK2NY4+z0Sgbcuf2yBEcGlEDqk+4NwtAaM/
+         +dofHkd9tlVqy06APZJ4oOxzElrmsMThYSGa7zySIa188Zbpe0fSSxbJxu6+Dqxp1HS4
+         2eUWyKVAl8ZUG3lQkOWjZ61CnfP+Ea7ZvgGohu7lOzUCVodog+lbfjoccei80TaaMRdo
+         qHGFQJIRLOFBldCxuI6Z5RVm39Ht/W/FQ/0++6rsdMr6E2/uJTxZ8Qy+K3jo5WQTqSuX
+         LWTw==
+X-Gm-Message-State: AOAM533bnQrhnWaaCcrtUPiUTIBd7C2ckmn/A24uCNg+4n0riS8qjZyf
+        Q9DtaAKJUsl/1xJoSz4DZTA=
+X-Google-Smtp-Source: ABdhPJwIemtsVHlkxlk8JB7ypAMSs0GcJ4fX03fAf9hgs661+3MwI0c+/ccJWxE9OP0oPSEYjCWTVQ==
+X-Received: by 2002:a17:906:dfce:: with SMTP id jt14mr2794501ejc.435.1611077090638;
+        Tue, 19 Jan 2021 09:24:50 -0800 (PST)
+Received: from [192.168.178.40] (ipbcc06d06.dynamic.kabel-deutschland.de. [188.192.109.6])
+        by smtp.gmail.com with ESMTPSA id s19sm13021962edx.7.2021.01.19.09.24.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 Jan 2021 09:24:50 -0800 (PST)
+Subject: Re: [PATCH v6 1/4] sgl_alloc_order: remove 4 GiB limit, sgl_free()
+ warning
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     Douglas Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         target-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com,
-        bostroesser@gmail.com, ddiss@suse.de, bvanassche@acm.org
-Subject: [PATCH 1/3] scatterlist: add sgl_copy_sgl() function
-Date:   Tue, 19 Jan 2021 12:09:26 -0500
-Message-Id: <20210119170928.79805-2-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210119170928.79805-1-dgilbert@interlog.com>
-References: <20210119170928.79805-1-dgilbert@interlog.com>
+        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.vnet.ibm.com, ddiss@suse.de, bvanassche@acm.org
+References: <20210118163006.61659-1-dgilbert@interlog.com>
+ <20210118163006.61659-2-dgilbert@interlog.com>
+ <20210118182854.GJ4605@ziepe.ca>
+ <59707b66-0b6c-b397-82fe-5ad6a6f99ba1@interlog.com>
+ <20210118202431.GO4605@ziepe.ca>
+ <7f443666-b210-6f99-7b50-6c26d87fa7ca@gmail.com>
+ <20210118234818.GP4605@ziepe.ca>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+Message-ID: <6faed1e2-13bc-68ba-7726-91924cf21b66@gmail.com>
+Date:   Tue, 19 Jan 2021 18:24:49 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210118234818.GP4605@ziepe.ca>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Both the SCSI and NVMe subsystems receive user data from the block
-layer in scatterlist_s (aka scatter gather lists (sgl) which are
-often arrays). If drivers in those subsystems represent storage
-(e.g. a ramdisk) or cache "hot" user data then they may also
-choose to use scatterlist_s. Currently there are no sgl to sgl
-operations in the kernel. Start with a sgl to sgl copy. Stops
-when the first of the number of requested bytes to copy, or the
-source sgl, or the destination sgl is exhausted. So the
-destination sgl will _not_ grow.
+On 19.01.21 00:48, Jason Gunthorpe wrote:
+> On Mon, Jan 18, 2021 at 10:22:56PM +0100, Bodo Stroesser wrote:
+>> On 18.01.21 21:24, Jason Gunthorpe wrote:
+>>> On Mon, Jan 18, 2021 at 03:08:51PM -0500, Douglas Gilbert wrote:
+>>>> On 2021-01-18 1:28 p.m., Jason Gunthorpe wrote:
+>>>>> On Mon, Jan 18, 2021 at 11:30:03AM -0500, Douglas Gilbert wrote:
+>>>>>
+>>>>>> After several flawed attempts to detect overflow, take the fastest
+>>>>>> route by stating as a pre-condition that the 'order' function argument
+>>>>>> cannot exceed 16 (2^16 * 4k = 256 MiB).
+>>>>>
+>>>>> That doesn't help, the point of the overflow check is similar to
+>>>>> overflow checks in kcalloc: to prevent the routine from allocating
+>>>>> less memory than the caller might assume.
+>>>>>
+>>>>> For instance ipr_store_update_fw() uses request_firmware() (which is
+>>>>> controlled by userspace) to drive the length argument to
+>>>>> sgl_alloc_order(). If userpace gives too large a value this will
+>>>>> corrupt kernel memory.
+>>>>>
+>>>>> So this math:
+>>>>>
+>>>>>      	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
+>>>>
+>>>> But that check itself overflows if order is too large (e.g. 65).
+>>>
+>>> I don't reall care about order. It is always controlled by the kernel
+>>> and it is fine to just require it be low enough to not
+>>> overflow. length is the data under userspace control so math on it
+>>> must be checked for overflow.
+>>>
+>>>> Also note there is another pre-condition statement in that function's
+>>>> definition, namely that length cannot be 0.
+>>>
+>>> I don't see callers checking for that either, if it is true length 0
+>>> can't be allowed it should be blocked in the function
+>>>
+>>> Jason
+>>>
+>>
+>> A already said, I also think there should be a check for length or
+>> rather nent overflow.
+>>
+>> I like the easy to understand check in your proposed code:
+>>
+>> 	if (length >> (PAGE_SHIFT + order) >= UINT_MAX)
+>> 		return NULL;
+>>
+>>
+>> But I don't understand, why you open-coded the nent calculation:
+>>
+>> 	nent = length >> (PAGE_SHIFT + order);
+>> 	if (length & ((1ULL << (PAGE_SHIFT + order)) - 1))
+>> 		nent++;
+> 
+> It is necessary to properly check for overflow, because the easy to
+> understand check doesn't prove that round_up will work, only that >>
+> results in something that fits in an int and that +1 won't overflow
+> the int.
+> 
+>> Wouldn't it be better to keep the original line instead:
+>>
+>> 	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
+> 
+> This can overflow inside the round_up
 
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- include/linux/scatterlist.h |  4 ++
- lib/scatterlist.c           | 74 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 78 insertions(+)
+I had a second look into math.h, but I don't find any reason why 
+round_up could overflow. Can you give a hint please?
 
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index 6f70572b2938..22111ee21383 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -320,6 +320,10 @@ size_t sg_pcopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
- size_t sg_zero_buffer(struct scatterlist *sgl, unsigned int nents,
- 		       size_t buflen, off_t skip);
- 
-+size_t sgl_copy_sgl(struct scatterlist *d_sgl, unsigned int d_nents, off_t d_skip,
-+		    struct scatterlist *s_sgl, unsigned int s_nents, off_t s_skip,
-+		    size_t n_bytes);
-+
- /*
-  * Maximum number of entries that will be allocated in one piece, if
-  * a list larger than this is required then chaining will be utilized.
-diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index a59778946404..782bcfe72c60 100644
---- a/lib/scatterlist.c
-+++ b/lib/scatterlist.c
-@@ -1058,3 +1058,77 @@ size_t sg_zero_buffer(struct scatterlist *sgl, unsigned int nents,
- 	return offset;
- }
- EXPORT_SYMBOL(sg_zero_buffer);
-+
-+/**
-+ * sgl_copy_sgl - Copy over a destination sgl from a source sgl
-+ * @d_sgl:		 Destination sgl
-+ * @d_nents:		 Number of SG entries in destination sgl
-+ * @d_skip:		 Number of bytes to skip in destination before starting
-+ * @s_sgl:		 Source sgl
-+ * @s_nents:		 Number of SG entries in source sgl
-+ * @s_skip:		 Number of bytes to skip in source before starting
-+ * @n_bytes:		 The (maximum) number of bytes to copy
-+ *
-+ * Returns:
-+ *   The number of copied bytes.
-+ *
-+ * Notes:
-+ *   Destination arguments appear before the source arguments, as with memcpy().
-+ *
-+ *   Stops copying if either d_sgl, s_sgl or n_bytes is exhausted.
-+ *
-+ *   Since memcpy() is used, overlapping copies (where d_sgl and s_sgl belong
-+ *   to the same sgl and the copy regions overlap) are not supported.
-+ *
-+ *   Large copies are broken into copy segments whose sizes may vary. Those
-+ *   copy segment sizes are chosen by the min3() statement in the code below.
-+ *   Since SG_MITER_ATOMIC is used for both sides, each copy segment is started
-+ *   with kmap_atomic() [in sg_miter_next()] and completed with kunmap_atomic()
-+ *   [in sg_miter_stop()]. This means pre-emption is inhibited for relatively
-+ *   short periods even in very large copies.
-+ *
-+ *   If d_skip is large, potentially spanning multiple d_nents then some
-+ *   integer arithmetic to adjust d_sgl may improve performance. For example
-+ *   if d_sgl is built using sgl_alloc_order(chainable=false) then the sgl
-+ *   will be an array with equally sized segments facilitating that
-+ *   arithmetic. The suggestion applies to s_skip, s_sgl and s_nents as well.
-+ *
-+ **/
-+size_t sgl_copy_sgl(struct scatterlist *d_sgl, unsigned int d_nents, off_t d_skip,
-+		    struct scatterlist *s_sgl, unsigned int s_nents, off_t s_skip,
-+		    size_t n_bytes)
-+{
-+	size_t len;
-+	size_t offset = 0;
-+	struct sg_mapping_iter d_iter, s_iter;
-+
-+	if (n_bytes == 0)
-+		return 0;
-+	sg_miter_start(&s_iter, s_sgl, s_nents, SG_MITER_ATOMIC | SG_MITER_FROM_SG);
-+	sg_miter_start(&d_iter, d_sgl, d_nents, SG_MITER_ATOMIC | SG_MITER_TO_SG);
-+	if (!sg_miter_skip(&s_iter, s_skip))
-+		goto fini;
-+	if (!sg_miter_skip(&d_iter, d_skip))
-+		goto fini;
-+
-+	while (offset < n_bytes) {
-+		if (!sg_miter_next(&s_iter))
-+			break;
-+		if (!sg_miter_next(&d_iter))
-+			break;
-+		len = min3(d_iter.length, s_iter.length, n_bytes - offset);
-+
-+		memcpy(d_iter.addr, s_iter.addr, len);
-+		offset += len;
-+		/* LIFO order (stop d_iter before s_iter) needed with SG_MITER_ATOMIC */
-+		d_iter.consumed = len;
-+		sg_miter_stop(&d_iter);
-+		s_iter.consumed = len;
-+		sg_miter_stop(&s_iter);
-+	}
-+fini:
-+	sg_miter_stop(&d_iter);
-+	sg_miter_stop(&s_iter);
-+	return offset;
-+}
-+EXPORT_SYMBOL(sgl_copy_sgl);
--- 
-2.25.1
+Regarding the overflow checks: would it be a good idea to not check
+length >> (PAGE_SHIFT + order) in the beginning, but check nalloc
+immediately before the kmalloc_array() as the only overrun check:
 
+	if ((unsigned long long)nalloc << (PAGE_SHIFT + order) < length)
+		return NULL;
+
+-Bodo
