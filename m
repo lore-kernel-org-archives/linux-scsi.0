@@ -2,120 +2,139 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C88BC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 15:48:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DE94C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 18:27:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 398602070C
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 15:48:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DBDA2253A
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jan 2021 18:27:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389899AbhASPsZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jan 2021 10:48:25 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:52036 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389189AbhASPrn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 10:47:43 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10JFYIJk150996;
-        Tue, 19 Jan 2021 15:46:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=5Uy+Pa/jD4jlnqQSrCyAWcYlvoNXAtFz5RTUmGI3lNY=;
- b=fdd5S2oxBaDpccPX7bb01SE6BFi6TegWpLjD5KeXvBVXiJLJ9nEi3w7amYNcqq0kltU1
- /a9mJUpkxrINyRp+xSoq2e+95tmHWV9K5x0j2eRrOmT2MV2pm3EFkYwWLawObyrsJCQN
- 87oQGQrf2U9xe3fx1hLHF2wzdQHqoJSKRWnjStNH/1lNofx0oSUYguZe8+PkGISITPRX
- 8PL89TuJLrAlq2xHHwlFXDQ1fQX5TmUL9eQ2W3eGftGiJZOL0ZA7crhITCkD1fRxwLtf
- i1G9R7OIMP59vz62V3eMR8Hjk5zX7bCHbO2ZevtFDfmGpjr6ayAA4oqnoz/MGCMz1rDa /w== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 363r3ksp0u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 19 Jan 2021 15:46:51 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10JFZj3D083877;
-        Tue, 19 Jan 2021 15:46:50 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 3661equw6h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 19 Jan 2021 15:46:50 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 10JFknfr020344;
-        Tue, 19 Jan 2021 15:46:49 GMT
-Received: from dhcp-10-154-146-132.vpn.oracle.com (/10.154.146.132)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 19 Jan 2021 07:16:25 -0800
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.4\))
-Subject: Re: [PATCH] scsi: qla2xxx: fix description for parameter
- ql2xenforce_iocb_limit
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-In-Reply-To: <20210118184922.23793-1-ematsumiya@suse.de>
-Date:   Tue, 19 Jan 2021 09:16:25 -0600
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Arun Easi <aeasi@marvell.com>, Quinn Tran <qutran@marvell.com>
+        id S1732083AbhASOiS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jan 2021 09:38:18 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2369 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404390AbhASKff (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2021 05:35:35 -0500
+Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DKlKx4GFXz67bhy;
+        Tue, 19 Jan 2021 18:30:45 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 19 Jan 2021 11:34:52 +0100
+Received: from [10.47.10.61] (10.47.10.61) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Tue, 19 Jan
+ 2021 10:34:50 +0000
+Subject: Re: [PATCH V3 15/25] smartpqi: fix host qdepth limit
+To:     <Don.Brace@microchip.com>, <mwilck@suse.com>,
+        <pmenzel@molgen.mpg.de>, <Kevin.Barnett@microchip.com>,
+        <Scott.Teel@microchip.com>, <Justin.Lindley@microchip.com>,
+        <Scott.Benesh@microchip.com>, <Gerry.Morong@microchip.com>,
+        <Mahesh.Rajashekhara@microchip.com>, <hch@infradead.org>,
+        <joseph.szczypek@hpe.com>, <POSWALD@suse.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <it+linux-scsi@molgen.mpg.de>,
+        <buczek@molgen.mpg.de>, <gregkh@linuxfoundation.org>,
+        Ming Lei <ming.lei@redhat.com>
+References: <160763241302.26927.17487238067261230799.stgit@brunhilda>
+ <160763254769.26927.9249430312259308888.stgit@brunhilda>
+ <ddd8bca4-2ae7-a2dc-cca6-0a2ff85a7d35@molgen.mpg.de>
+ <SN6PR11MB28487527276CEBC75D36A732E1C60@SN6PR11MB2848.namprd11.prod.outlook.com>
+ <85c6e1705c55fb930ac13bc939279f0d1faa526f.camel@suse.com>
+ <SN6PR11MB2848C1195C65F87C910E979BE1A70@SN6PR11MB2848.namprd11.prod.outlook.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <b3e4e597-779b-7c1e-0d3c-07bc3dab1bb5@huawei.com>
+Date:   Tue, 19 Jan 2021 10:33:36 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <SN6PR11MB2848C1195C65F87C910E979BE1A70@SN6PR11MB2848.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-Message-Id: <9228BCF5-EFDE-4A23-96DB-674554979D44@oracle.com>
-References: <20210118184922.23793-1-ematsumiya@suse.de>
-To:     Enzo Matsumiya <ematsumiya@suse.de>
-X-Mailer: Apple Mail (2.3608.120.23.2.4)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9868 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 mlxscore=0
- mlxlogscore=999 adultscore=0 suspectscore=0 malwarescore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101190094
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9868 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0 spamscore=0
- clxscore=1011 lowpriorityscore=0 priorityscore=1501 mlxscore=0
- malwarescore=0 phishscore=0 suspectscore=0 impostorscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101190094
+X-Originating-IP: [10.47.10.61]
+X-ClientProxiedBy: lhreml742-chm.china.huawei.com (10.201.108.192) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-> On Jan 18, 2021, at 12:49 PM, Enzo Matsumiya <ematsumiya@suse.de> wrote:
+>>
+>> Am 10.12.20 um 21:35 schrieb Don Brace:
+>>> From: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+>>>
+>>> * Correct scsi-mid-layer sending more requests than
+>>>     exposed host Q depth causing firmware ASSERT issue.
+>>>     * Add host Qdepth counter.
+>>
+>> This supposedly fixes the regression between Linux 5.4 and 5.9, which
+>> we reported in [1].
+>>
+>>       kernel: smartpqi 0000:89:00.0: controller is offline: status code
+>> 0x6100c
+>>       kernel: smartpqi 0000:89:00.0: controller offline
+>>
+>> Thank you for looking into this issue and fixing it. We are going to
+>> test this.
+>>
+>> For easily finding these things in the git history or the WWW, it
+>> would be great if these log messages could be included (in the
+>> future).
+>> DON> Thanks for your suggestion. Well add them in the next time.
+>>
+>> Also, that means, that the regression is still present in Linux 5.10,
+>> released yesterday, and this commit does not apply to these versions.
+>>
+>> DON> They have started 5.10-RC7 now. So possibly 5.11 or 5.12
+>> depending when all of the patches are applied. The patch in question
+>> is among 28 other patches.
+>>
+>> Mahesh, do you have any idea, what commit caused the regression and
+>> why the issue started to show up?
+>> DON> The smartpqi driver sets two scsi_host_template member fields:
+>> .can_queue and .nr_hw_queues. But we have not yet converted to
+>> host_tagset. So the queue_depth becomes nr_hw_queues * can_queue,
+>> which is more than the hw can support. That can be verified by looking
+>> at scsi_host.h.
+>>          /*
+>>           * In scsi-mq mode, the number of hardware queues supported by
+>> the LLD.
+>>           *
+>>           * Note: it is assumed that each hardware queue has a queue
+>> depth of
+>>           * can_queue. In other words, the total queue depth per host
+>>           * is nr_hw_queues * can_queue. However, for when host_tagset
+>> is set,
+>>           * the total queue depth is can_queue.
+>>           */
+>>
+>> So, until we make this change, the queue_depth change prevents the
+>> above issue from happening.
 > 
-> Parameter ql2xenforce_iocb_limit is enabled by default.
+> can_queue and nr_hw_queues have been set like this as long as the driver existed. Why did Paul observe a regression with 5.9?
 > 
-> Fixes: 89c72f4245a8 ("scsi: qla2xxx: Add IOCB resource tracking")
-> Signed-off-by: Enzo Matsumiya <ematsumiya@suse.de>
-> ---
-> drivers/scsi/qla2xxx/qla_os.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
+> And why can't you simply set can_queue to (ctrl_info->scsi_ml_can_queue / nr_hw_queues)?
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index f80abe28f35a..0e0fe5b09496 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -42,7 +42,7 @@ MODULE_PARM_DESC(ql2xfulldump_on_mpifail,
-> int ql2xenforce_iocb_limit = 1;
-> module_param(ql2xenforce_iocb_limit, int, S_IRUGO | S_IWUSR);
-> MODULE_PARM_DESC(ql2xenforce_iocb_limit,
-> -		 "Enforce IOCB throttling, to avoid FW congestion. (default: 0)");
-> +		 "Enforce IOCB throttling, to avoid FW congestion. (default: 1)");
-> 
-> /*
->  * CT6 CTX allocation cache
-> -- 
-> 2.29.2
+> Don: I did this in an internal patch, but this patch seemed to work the best for our driver. HBA performance remained steady when running benchmarks.
 > 
 
-Good Catch. 
+I guess that this is a fallout from commit 6eb045e092ef ("scsi:
+  core: avoid host-wide host_busy counter for scsi_mq"). But that commit 
+is correct.
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+If .can_queue is set to (ctrl_info->scsi_ml_can_queue / nr_hw_queues), 
+then blk-mq can send each hw queue only (ctrl_info->scsi_ml_can_queue / 
+nr_hw_queues) commands, while it should be possible to send 
+ctrl_info->scsi_ml_can_queue commands.
 
---
-Himanshu Madhani	 Oracle Linux Engineering
+I think that this can alternatively be solved by setting .host_tagset flag.
+
+Thanks,
+John
+
 
