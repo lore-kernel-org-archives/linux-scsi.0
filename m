@@ -2,129 +2,186 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 004FAC4321A
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 15:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B89F9C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 16:53:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C61732343E
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 15:38:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85EFD23358
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 16:53:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732600AbhATPhy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Jan 2021 10:37:54 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58034 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389676AbhATPhT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Jan 2021 10:37:19 -0500
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10KFWHve187670;
-        Wed, 20 Jan 2021 10:36:35 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=R2RIBpwZDEBNU18LwgcUXYyWUxt5dd69H5SvHZw9sNM=;
- b=g/5h4g/dZ8YM6IGo6PhGGccKuuR5Z45eEsOEKbdZSv8uqB36/xFQtz/1zNKt40PruVaB
- IMuGH0iE6B0SGTWSQhlXVYVhId5OVtX38CMckNzBt4pPPFNCwN9xY71QLSKShl0KjJcc
- ziOnFUC2c/7CMEcQhc07tDz04kXB0oD2MFJDc7CGMTGUi7DFfL0ydRDOj4aTHhklxWbL
- fU1OxjeIk+o6x3v62P+E8ytnrJjdmQhLX0uG5wfEVvEtWSE4HP4mBbpcxMc3BCSVP9BP
- timPICzt6b9J3uM77fmLFUHek2lG22+jRXgW4OT7XgLkbgGHWDt3XY+5Yg5UxhE4Os2X 8w== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 366q8887m4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 20 Jan 2021 10:36:34 -0500
-Received: from m0098409.ppops.net (m0098409.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 10KFWJPU187854;
-        Wed, 20 Jan 2021 10:36:34 -0500
-Received: from ppma02wdc.us.ibm.com (aa.5b.37a9.ip4.static.sl-reverse.com [169.55.91.170])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 366q8887jj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 20 Jan 2021 10:36:34 -0500
-Received: from pps.filterd (ppma02wdc.us.ibm.com [127.0.0.1])
-        by ppma02wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10KFOSGQ019434;
-        Wed, 20 Jan 2021 15:36:32 GMT
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-        by ppma02wdc.us.ibm.com with ESMTP id 3668rv56rn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 20 Jan 2021 15:36:32 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10KFaVHs37683602
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 20 Jan 2021 15:36:31 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A6F6B7805E;
-        Wed, 20 Jan 2021 15:36:31 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 3BFFB78060;
-        Wed, 20 Jan 2021 15:36:30 +0000 (GMT)
-Received: from jarvis.int.hansenpartnership.com (unknown [9.85.161.248])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Wed, 20 Jan 2021 15:36:29 +0000 (GMT)
-Message-ID: <9829db9b8e207f5ffc57cfbe19a0d3b4d341a302.camel@linux.ibm.com>
-Subject: Re: [PATCH] drivers/scsi/qla4xxx: use scnprintf() instead of
- snprintf()
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Jiapeng Zhong <abaci-bugfix@linux.alibaba.com>, njavali@marvell.com
-Cc:     mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Wed, 20 Jan 2021 07:36:28 -0800
-In-Reply-To: <1611127365-45929-1-git-send-email-abaci-bugfix@linux.alibaba.com>
-References: <1611127365-45929-1-git-send-email-abaci-bugfix@linux.alibaba.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        id S1732681AbhATQxI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Jan 2021 11:53:08 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:56151 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1731111AbhATQnE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 20 Jan 2021 11:43:04 -0500
+Received: from [192.168.0.5] (ip5f5aed2c.dynamic.kabel-deutschland.de [95.90.237.44])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 848ED20645D55;
+        Wed, 20 Jan 2021 17:42:12 +0100 (CET)
+Subject: Re: [PATCH V3 15/25] smartpqi: fix host qdepth limit
+To:     Martin Wilck <mwilck@suse.com>, John Garry <john.garry@huawei.com>,
+        Don.Brace@microchip.com, pmenzel@molgen.mpg.de,
+        Kevin.Barnett@microchip.com, Scott.Teel@microchip.com,
+        Justin.Lindley@microchip.com, Scott.Benesh@microchip.com,
+        Gerry.Morong@microchip.com, Mahesh.Rajashekhara@microchip.com,
+        hch@infradead.org, joseph.szczypek@hpe.com, POSWALD@suse.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        Ming Lei <ming.lei@redhat.com>
+Cc:     linux-scsi@vger.kernel.org, it+linux-scsi@molgen.mpg.de,
+        gregkh@linuxfoundation.org
+References: <160763241302.26927.17487238067261230799.stgit@brunhilda>
+ <160763254769.26927.9249430312259308888.stgit@brunhilda>
+ <ddd8bca4-2ae7-a2dc-cca6-0a2ff85a7d35@molgen.mpg.de>
+ <SN6PR11MB28487527276CEBC75D36A732E1C60@SN6PR11MB2848.namprd11.prod.outlook.com>
+ <85c6e1705c55fb930ac13bc939279f0d1faa526f.camel@suse.com>
+ <SN6PR11MB2848C1195C65F87C910E979BE1A70@SN6PR11MB2848.namprd11.prod.outlook.com>
+ <b3e4e597-779b-7c1e-0d3c-07bc3dab1bb5@huawei.com>
+ <4555695d649afada5d4358485f0a146aa0848f65.camel@suse.com>
+From:   Donald Buczek <buczek@molgen.mpg.de>
+Message-ID: <f97756ca-84fc-9960-80fb-14e65986c880@molgen.mpg.de>
+Date:   Wed, 20 Jan 2021 17:42:11 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2021-01-20_06:2021-01-20,2021-01-20 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011
- lowpriorityscore=0 phishscore=0 mlxlogscore=999 spamscore=0
- impostorscore=0 adultscore=0 suspectscore=0 malwarescore=0 mlxscore=0
- bulkscore=0 priorityscore=1501 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2009150000 definitions=main-2101200090
+In-Reply-To: <4555695d649afada5d4358485f0a146aa0848f65.camel@suse.com>
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2021-01-20 at 15:22 +0800, Jiapeng Zhong wrote:
-> Fix the following coccicheck warning:
+On 19.01.21 15:12, Martin Wilck wrote:
+> On Tue, 2021-01-19 at 10:33 +0000, John Garry wrote:
+>>>>
+>>>> Am 10.12.20 um 21:35 schrieb Don Brace:
+>>>>> From: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+>>>>>
+>>>>> * Correct scsi-mid-layer sending more requests than
+>>>>>      exposed host Q depth causing firmware ASSERT issue.
+>>>>>      * Add host Qdepth counter.
+>>>>
+>>>> This supposedly fixes the regression between Linux 5.4 and 5.9,
+>>>> which
+>>>> we reported in [1].
+>>>>
+>>>>        kernel: smartpqi 0000:89:00.0: controller is offline:
+>>>> status code
+>>>> 0x6100c
+>>>>        kernel: smartpqi 0000:89:00.0: controller offline
+>>>>
+>>>> Thank you for looking into this issue and fixing it. We are going
+>>>> to
+>>>> test this.
+>>>>
+>>>> For easily finding these things in the git history or the WWW, it
+>>>> would be great if these log messages could be included (in the
+>>>> future).
+>>>> DON> Thanks for your suggestion. Well add them in the next time.
+>>>>
+>>>> Also, that means, that the regression is still present in Linux
+>>>> 5.10,
+>>>> released yesterday, and this commit does not apply to these
+>>>> versions.
+>>>>
+>>>> DON> They have started 5.10-RC7 now. So possibly 5.11 or 5.12
+>>>> depending when all of the patches are applied. The patch in
+>>>> question
+>>>> is among 28 other patches.
+>>>>
+>>>> Mahesh, do you have any idea, what commit caused the regression
+>>>> and
+>>>> why the issue started to show up?
+>>>> DON> The smartpqi driver sets two scsi_host_template member
+>>>> fields:
+>>>> .can_queue and .nr_hw_queues. But we have not yet converted to
+>>>> host_tagset. So the queue_depth becomes nr_hw_queues * can_queue,
+>>>> which is more than the hw can support. That can be verified by
+>>>> looking
+>>>> at scsi_host.h.
+>>>>           /*
+>>>>            * In scsi-mq mode, the number of hardware queues
+>>>> supported by
+>>>> the LLD.
+>>>>            *
+>>>>            * Note: it is assumed that each hardware queue has a
+>>>> queue
+>>>> depth of
+>>>>            * can_queue. In other words, the total queue depth per
+>>>> host
+>>>>            * is nr_hw_queues * can_queue. However, for when
+>>>> host_tagset
+>>>> is set,
+>>>>            * the total queue depth is can_queue.
+>>>>            */
+>>>>
+>>>> So, until we make this change, the queue_depth change prevents
+>>>> the
+>>>> above issue from happening.
+>>>
+>>> can_queue and nr_hw_queues have been set like this as long as the
+>>> driver existed. Why did Paul observe a regression with 5.9?
+>>>
+>>> And why can't you simply set can_queue to (ctrl_info-
+>>>> scsi_ml_can_queue / nr_hw_queues)?
+>>>
+>>> Don: I did this in an internal patch, but this patch seemed to work
+>>> the best for our driver. HBA performance remained steady when
+>>> running benchmarks.
 > 
-> ./drivers/scsi/qla4xxx/ql4_attr.c: WARNING: use scnprintf or
-> sprintf
+> That was a stupid suggestion on my part. Sorry.
 > 
-> The snprintf() function returns the number of characters which would
-> have been printed if there were enough space, but the scnprintf()
-> returns the number of characters which were actually printed.  If
-> the buffer is not large enough, then using snprintf() would result
-> in a read overflow and an information leak.
+>> I guess that this is a fallout from commit 6eb045e092ef ("scsi:
+>>    core: avoid host-wide host_busy counter for scsi_mq"). But that
+>> commit
+>> is correct.
 > 
-> Reported-by: Abaci Robot<abaci@linux.alibaba.com>
-> Signed-off-by: Jiapeng Zhong <abaci-bugfix@linux.alibaba.com>
-> ---
->  drivers/scsi/qla4xxx/ql4_attr.c | 22 +++++++++++-----------
->  1 file changed, 11 insertions(+), 11 deletions(-)
+> It would be good if someone (Paul?) could verify whether that commit
+> actually caused the regression they saw.
+
+We can reliably trigger the issue with a certain load pattern on a certain hardware.
+
+I've compiled 6eb045e092ef  and got (as with other affected kernels) "controller is offline: status code 0x6100c" after 15 minutes of the test load.
+I've compiled 6eb045e092ef^ and the load is running for 3 1/2 hours now.
+
+So you hit it.
+
+> Looking at that 6eb045e092ef, I notice this hunk:
 > 
-> diff --git a/drivers/scsi/qla4xxx/ql4_attr.c
-> b/drivers/scsi/qla4xxx/ql4_attr.c
-> index ec43528..1a16017 100644
-> --- a/drivers/scsi/qla4xxx/ql4_attr.c
-> +++ b/drivers/scsi/qla4xxx/ql4_attr.c
-> @@ -170,7 +170,7 @@ void qla4_8xxx_free_sysfs_attr(struct
-> scsi_qla_host *ha)
->  			char *buf)
->  {
->  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-> -	return snprintf(buf, PAGE_SIZE, "%s\n", ha->serial_number);
-> +	return scnprintf(buf, PAGE_SIZE, "%s\n", ha->serial_number);
+>   
+> -       busy = atomic_inc_return(&shost->host_busy) - 1;
+>          if (atomic_read(&shost->host_blocked) > 0) {
+> -               if (busy)
+> +               if (scsi_host_busy(shost) > 0)
+>                          goto starved;
+> 
+> Before 6eb045e092ef, the busy count was incremented with membarrier
+> before looking at "host_blocked". The new code does this instead:
+> 
+> @ -1403,6 +1400,8 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+>                  spin_unlock_irq(shost->host_lock);
+>          }
+>   
+> +       __set_bit(SCMD_STATE_INFLIGHT, &cmd->state);
+> +
+> 
+> but it happens *after* the "host_blocked" check. Could that perhaps
+> have caused the regression?
 
-This is the wrong ABI to be replacing anything sysfs with, it should be
-sysfs_emit()
+I'm not into this and can't comment on that. But if you need me to test any patch for verification, I'll certainly can do that.
 
-James
+Best
+   Donald
 
-
+>
+> 
+> Thanks
+> Martin
+> 
