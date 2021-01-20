@@ -2,336 +2,416 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D08DC433E9
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 08:02:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CF5DC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 08:32:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C37A723341
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 08:02:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 980782251D
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 08:32:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730448AbhATICd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Jan 2021 03:02:33 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:1407 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728895AbhATIBr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2021 03:01:47 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611129708; x=1642665708;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=I3f/7EQQ2VcSuxPqXKLMDSyvCAtUgvv47Yc0ideXZUs=;
-  b=b3+FATzJ9IwHhau8LN6jJVpgqTzG9SweliyXkPL2zg8HccMMQbLodpbd
-   V4DeTZwviy9ZL7bQuFAtR2em+6Tg5YVwWgJLw9mbs0ap6WTN2mGLhAx3g
-   V9sGyhHV9LZUacWD44wz9yNeZej6kQ5MMm1KGSHqpwKULb1kiCRjg1Bgl
-   WN9ae9aevPDTOzASFMnzoQRXNpkBknJry45mzzwB05QSbpKM3aS6fk0aV
-   fs4N8DYcst8PgvpI6qj7+CctKXaIajmgcoqM5dBPZDkFBQzjHLHbRfg1q
-   I66tBN/AeijoyX5nHDYgyYoh9F+bJBp/OQC3HgCtgKqfxuaXwUjdI3pAq
-   Q==;
-IronPort-SDR: dHVO28iSpuornUii3/eIARsaSRcww2V9rCPNAOYWFc9PhMnr4oon7LUR4AA8BiHKSVkLZExWel
- dAigFrt/okJDztCAtSC4td1sWGl5mnkKbLhqNioVOOH/gbFbT/YAdM2HxC69fyhe6VjDBj+bZL
- 6p5vbUm+pelyFNMRNEEywzNc1D7KKfWY3ByCe7g05ffXbTNvclC/BwXfM73oa7YYZDIDiGar+2
- v7GrNT9yZpwOZxKVfj9GfGZuBWHUeN2ddIJ4YHF5YUiulTp4jQAKNtMH9DVb90p0tZWhXUTxDW
- z5k=
-X-IronPort-AV: E=Sophos;i="5.79,360,1602518400"; 
-   d="scan'208";a="159053474"
-Received: from mail-mw2nam10lp2100.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.100])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Jan 2021 16:00:30 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jPJyGvqnM9D0XXAHK9rfFGYi9Aac7RJOAvMnieWD6DGIIeqXbGWPNxpBO6XCWvINAzWlLES5tlCPeon1QhIyfZbIdqb4mOj9FsEWcekpUvp0vMz22tVjBZZByuPb3jKeDZ30EEUJbqf4Q6ifMT0jZvJ2Tsz+Q3hDpZrnJUm/7vapoRhl0vab5VzcuPXyg2VSPfAN9pm2vXAMDvFV7qYu6MuGdROIOKslW4JMQQmq1FW+sSuHlCJF5Ca24h5q7vH3q9iR57w43P/0Fe+5BiubkOShFZHXIUYr4JuoBrMEHtpKKYoNgQWES1gGwsfyVNPu4vJ9LnG1qVTNCOBCexWI3A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hBqKJhdZGPpMFdgEWd4ddROgKU0wz/Kiz/hXxx7uWF0=;
- b=akjXgEvZZsMr/4zLiZ3iSkTOVlZFy6ZS4MtabAbC1cQo7UvLPwBVgfiXbMzS6VFDHeEw7KmOnTn8JrobNeDTCOKqfH0qDtsmHkVu1Vzgj8Vuwssz/+QO+IO2XcZ5kCamCUqX1Fwh7lLgEETbBeJ+meBzBRAyFG0+dFmYMaqxCdwFoCgOpnfMluB4Uw7ycKfoAxOl5/BY+ZA8Dyx6Fs2dg9js58xQsh3FNU8miYM+JuC8rPZADweRdrcQhIj+Kw3GMhNUa85urUm/bDg0qWYWAPDCZg3T9S36G0/tUGBm8sBgcyLeeByyQm17g/hW4mHvrFhTPMXdwvKeT4freckZaQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hBqKJhdZGPpMFdgEWd4ddROgKU0wz/Kiz/hXxx7uWF0=;
- b=tJDmthe1+/2TloLGYSpymsC+kEpUXkOLLbS0joqt1VjsUxCRt2oajjSVbJZR5dDZpfV1NVgzvRPNoJxQDEI8GrK8Jdo+H+hQuCkz5dVr8Oc2ZM/N/1M+uTHhGzzJlptroSDYzVAoMlwg2WhB1E5Jqz3r6fB32jI7O4BXEPyv2uo=
-Received: from BL0PR04MB6514.namprd04.prod.outlook.com (2603:10b6:208:1ca::23)
- by BL0PR04MB6482.namprd04.prod.outlook.com (2603:10b6:208:1cf::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3763.9; Wed, 20 Jan
- 2021 08:00:28 +0000
-Received: from BL0PR04MB6514.namprd04.prod.outlook.com
- ([fe80::b880:19d5:c7fe:329d]) by BL0PR04MB6514.namprd04.prod.outlook.com
- ([fe80::b880:19d5:c7fe:329d%8]) with mapi id 15.20.3763.014; Wed, 20 Jan 2021
- 08:00:28 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Manjong Lee <mj0123.lee@samsung.com>, "hch@lst.de" <hch@lst.de>,
-        "michael.christie@oracle.com" <michael.christie@oracle.com>,
-        "oneukum@suse.com" <oneukum@suse.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "jisoo2146.oh@samsung.com" <jisoo2146.oh@samsung.com>,
-        "junho89.kim@samsung.com" <junho89.kim@samsung.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "nanich.lee@samsung.com" <nanich.lee@samsung.com>,
-        "seunghwan.hyun@samsung.com" <seunghwan.hyun@samsung.com>,
-        "sookwan7.kim@samsung.com" <sookwan7.kim@samsung.com>,
-        "woosung2.lee@samsung.com" <woosung2.lee@samsung.com>,
-        "yt0928.kim@samsung.com" <yt0928.kim@samsung.com>
-Subject: Re: [PATCH 1/1] scsi: sd: use max_xfer_blocks for set rw_max if
- max_xfer_blocks is available
-Thread-Topic: [PATCH 1/1] scsi: sd: use max_xfer_blocks for set rw_max if
- max_xfer_blocks is available
-Thread-Index: AQHW6XfKh7ukksSNykCpKuE87ZdU0Q==
-Date:   Wed, 20 Jan 2021 08:00:28 +0000
-Message-ID: <BL0PR04MB65144693C61F2192038FA5C0E7A20@BL0PR04MB6514.namprd04.prod.outlook.com>
-References: <20210113155009.9592-1-mj0123.lee@samsung.com>
- <CGME20210120064450epcas1p1b00b7a040e0951a2da44abce916e1698@epcas1p1.samsung.com>
- <20210113155009.9592-1-mj0123.lee@samsung.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: samsung.com; dkim=none (message not signed)
- header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2400:2411:43c0:6000:b0d5:1d20:2559:58ed]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: cc385185-bbd1-418a-9574-08d8bd1973a5
-x-ms-traffictypediagnostic: BL0PR04MB6482:
-x-microsoft-antispam-prvs: <BL0PR04MB64827600BDAD73C3F11C88E5E7A20@BL0PR04MB6482.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: HAlF7wFdG1InKVXDI6SE8bKYRtNYX49QQvHi+t8JIYhOJx9sqVIZ1PulIvJqhjRJDXI774j0pcOb3iE7sjKD93eFkDwJsjjoTHUcu11yoKwRAsvRC9zIe2yl1ICBqtDxOwj6xCSo2nJd91PxUR85sJh6FHTOQ6Rzy9N6PuKaiBem2UTx1uX7pesm+lOkbxRUr02y2IcIUIGTEYZ/ap8Xb2VbM+HoXwO/qdjabNjcmx9eZvkgY8NeQJq+qzFjV8k/xeCYjJNlowb1AdkN6V2SRb1WxB4HdjKd/p0VF/ApNAAXywb3EnDB4yZxBHxA5pH+Mzye7e5kbjHpRTLnp4mjx+UupvascNNQ87YvUGiaVL5PTDnUxsLix0YxbOnVeRIfVvuBNXHGXtYCGzD5rGB0meYXeY1dC9JtUiAQ7++G2nEstW9BiMFfE8S2QMGfMmcl
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR04MB6514.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(366004)(376002)(396003)(136003)(39860400002)(52536014)(186003)(5660300002)(66476007)(33656002)(83380400001)(66556008)(71200400001)(7696005)(2906002)(7416002)(54906003)(478600001)(91956017)(64756008)(110136005)(53546011)(66946007)(316002)(86362001)(55016002)(66446008)(76116006)(4326008)(9686003)(8936002)(8676002)(6506007)(21314003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?VC9wfuv9QjBUD+8OV9bJZmCMdZYfoQF5Y7CwH/qCHW8qN7zyhoAC4/wzj+S2?=
- =?us-ascii?Q?VhI05cKBpiSESOCeKxrTvSB43F2fNCy1U1DLqYJCTLQoZ4btYCTt2nM6SUu6?=
- =?us-ascii?Q?JlBSg9tf0GaddhoJ/mvOMjRS7ayvkKqJ7yE/R5NXkthWraeEfjlJkDbwPi+l?=
- =?us-ascii?Q?1VQThsv1xAphJ04TZy1rdaulqHEi36ozxFcyAbtav71RQdAXEqpxDQev06Au?=
- =?us-ascii?Q?ibY4zj/uBMaoV/2zV8gYtYDdq7TkoB19dryrKkdCkWCIG1VafHdmKlZPF9bb?=
- =?us-ascii?Q?Xg8FUANBVA0jzK/PFvidze0Yt2nQ9gdxNfJzrP2Kkuj3MguCB5kGKP8PlqqT?=
- =?us-ascii?Q?mJXs99byhEqcYe58ePhr5wvVj1pBNXXRe3V4NgeCcXnUq2y9nQqYj+yra+A9?=
- =?us-ascii?Q?MM/lQfrrJMl7eD/mQLGzl5zIxnjTmKTgopoZP3wjknAizXgxKfLguI7QtbSs?=
- =?us-ascii?Q?+wDNyice08PFgx60DO7LwL73Wmd09sCrPxC0oE+853Y/+EIRbUF9EUPuLjHK?=
- =?us-ascii?Q?p4K8CXabBpGhaggl+ZA3a/uJUOgIUr1m/jDoT/iqhWJyjT7cmZ942WiCwhYW?=
- =?us-ascii?Q?R7qFqKiehxMtKNDDYfsVN4ZvIp1Hd9s44gzlxmsEnjVF+fAXxkoIl04L9m+U?=
- =?us-ascii?Q?e44nmIVIYxlgt00NQd7fkXDW+FzxLYfiXIH9iqc52lNveaetnJrGUKVAxri+?=
- =?us-ascii?Q?s1LgVsXGGGFNBK9rza4cE7q6XAca4ogo+8RWaNyxoarCkUE/jgORWDATNrOF?=
- =?us-ascii?Q?9p3emDfqwlIXXrx58pePHIHg7xnLJv3m26OJ1OAh3wXxSx9MQKAQJ2VyMEWt?=
- =?us-ascii?Q?lcZDXs3MkqjP0v2E4bfsnwd44+e2KBbabOIcYeduIVBRxKzEThUaeq93c82c?=
- =?us-ascii?Q?TCsvtAdIxFBX7f4iWvtGUV1mHe570gUwCOZgSn92ytPtGYiMICe6Uu5TV1mN?=
- =?us-ascii?Q?uNL/spWAjy5Sdp2sBVLK0LVzdQO40GTzV9HnvL379zemTDRt+jN6khOym4X3?=
- =?us-ascii?Q?7IzqE+smu8swJ7ZIuBYQr//aqQs/EGicZQz2QayLBigR7Pfs0Shkw65uvTfG?=
- =?us-ascii?Q?52t0SDTuzlkbcpreUWelCzo3BctTbnFLKZDlrRvVNAmDaqbxERO1/8PHrXOS?=
- =?us-ascii?Q?eZUw8GtbiOpPmwS7TUcsHcE5NjxEKkMKvw=3D=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1730465AbhATIbx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Jan 2021 03:31:53 -0500
+Received: from a1.mail.mailgun.net ([198.61.254.60]:59279 "EHLO
+        a1.mail.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730925AbhATIad (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2021 03:30:33 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1611131405; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=Mp4yQQCSbmzB8BgSXIJHw+hGvH34AKSc++wzgF8lU1E=;
+ b=GEehKusQCkr5H4jc8wMjk6ItMPv2IbHEo6IkxC0p27CTzufLPW7G45lJJM/cRDHfW9bqzl8d
+ kgpd3L7HtDWpd758O/LAX2ftD1Xf2zWje7FbgUZKJvzqBmqCMgqELDr+pUvwU7jBbSx4ChUe
+ XMZUrEYIRApMvygDl7/HEeDbZf8=
+X-Mailgun-Sending-Ip: 198.61.254.60
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 6007e9f0e23dedcc3a5f08c5 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 20 Jan 2021 08:29:36
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 560FBC43465; Wed, 20 Jan 2021 08:29:35 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2EAB4C433CA;
+        Wed, 20 Jan 2021 08:29:33 +0000 (UTC)
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR04MB6514.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cc385185-bbd1-418a-9574-08d8bd1973a5
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Jan 2021 08:00:28.3555
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: oBzr5Xp3xJP/dSKUbGhdBJC/Fke2K96VR2AmURJRfHy78i4SACaixXNEHXnh5C7FT1jeGwoJEUnl59Pr9Mv5PA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR04MB6482
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 20 Jan 2021 16:29:33 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v10 1/3] scsi: ufs: Protect some contexts from unexpected
+ clock scaling
+In-Reply-To: <1611118491.1261.3.camel@mtkswgap22>
+References: <1611057183-6925-1-git-send-email-cang@codeaurora.org>
+ <1611057183-6925-2-git-send-email-cang@codeaurora.org>
+ <1611118491.1261.3.camel@mtkswgap22>
+Message-ID: <ee1bff22e19e522533f5e48b572c80e2@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/01/20 15:45, Manjong Lee wrote:=0A=
-> Add recipients for more reviews.=0A=
-=0A=
-Please resend instead of replying to your own patch. The reply quoting corr=
-upts=0A=
-the patch.=0A=
-=0A=
-The patch title is very long.=0A=
-=0A=
-> =0A=
->> SCSI device has max_xfer_size and opt_xfer_size,=0A=
->> but current kernel uses only opt_xfer_size.=0A=
->>=0A=
->> It causes the limitation on setting IO chunk size,=0A=
->> although it can support larger one.=0A=
->>=0A=
->> So, I propose this patch to use max_xfer_size in case it has valid value=
-.=0A=
->> It can support to use the larger chunk IO on SCSI device.=0A=
->>=0A=
->> For example,=0A=
->> This patch is effective in case of some SCSI device like UFS=0A=
->> with opt_xfer_size 512KB, queue depth 32 and max_xfer_size over 512KB.=
-=0A=
->>=0A=
->> I expect both the performance improvement=0A=
->> and the efficiency use of smaller command queue depth.=0A=
-=0A=
-This can be measured, and this commit message should include results to sho=
-w how=0A=
-effective this change is.=0A=
-=0A=
->>=0A=
->> Signed-off-by: Manjong Lee <mj0123.lee@samsung.com>=0A=
->> ---=0A=
->> drivers/scsi/sd.c | 56 +++++++++++++++++++++++++++++++++++++++++++----=
-=0A=
->> 1 file changed, 52 insertions(+), 4 deletions(-)=0A=
->>=0A=
->> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c=0A=
->> index 679c2c025047..de59f01c1304 100644=0A=
->> --- a/drivers/scsi/sd.c=0A=
->> +++ b/drivers/scsi/sd.c=0A=
->> @@ -3108,6 +3108,53 @@ static void sd_read_security(struct scsi_disk *sd=
-kp, unsigned char *buffer)=0A=
->> sdkp->security =3D 1;=0A=
->> }=0A=
->>=0A=
->> +static bool sd_validate_max_xfer_size(struct scsi_disk *sdkp,=0A=
->> +				      unsigned int dev_max)=0A=
->> +{=0A=
->> +	struct scsi_device *sdp =3D sdkp->device;=0A=
->> +	unsigned int max_xfer_bytes =3D=0A=
->> +		logical_to_bytes(sdp, sdkp->max_xfer_blocks);=0A=
->> +=0A=
->> +	if (sdkp->max_xfer_blocks =3D=3D 0)=0A=
->> +		return false;=0A=
->> +=0A=
->> +	if (sdkp->max_xfer_blocks > SD_MAX_XFER_BLOCKS) {=0A=
->> +		sd_first_printk(KERN_WARNING, sdkp,=0A=
->> +				"Maximal transfer size %u logical blocks " \=0A=
->> +				"> sd driver limit (%u logical blocks)\n",=0A=
->> +				sdkp->max_xfer_blocks, SD_DEF_XFER_BLOCKS);=0A=
->> +		return false;=0A=
->> +	}=0A=
->> +=0A=
->> +	if (sdkp->max_xfer_blocks > dev_max) {=0A=
->> +		sd_first_printk(KERN_WARNING, sdkp,=0A=
->> +				"Maximal transfer size %u logical blocks "=0A=
->> +				"> dev_max (%u logical blocks)\n",=0A=
->> +				sdkp->max_xfer_blocks, dev_max);=0A=
->> +		return false;=0A=
->> +	}=0A=
->> +=0A=
->> +	if (max_xfer_bytes < PAGE_SIZE) {=0A=
->> +		sd_first_printk(KERN_WARNING, sdkp,=0A=
->> +				"Maximal transfer size %u bytes < " \=0A=
->> +				"PAGE_SIZE (%u bytes)\n",=0A=
->> +				max_xfer_bytes, (unsigned int)PAGE_SIZE);=0A=
->> +		return false;=0A=
->> +	}=0A=
->> +=0A=
->> +	if (max_xfer_bytes & (sdkp->physical_block_size - 1)) {=0A=
->> +		sd_first_printk(KERN_WARNING, sdkp,=0A=
->> +				"Maximal transfer size %u bytes not a " \=0A=
->> +				"multiple of physical block size (%u bytes)\n",=0A=
->> +				max_xfer_bytes, sdkp->physical_block_size);=0A=
->> +		return false;=0A=
->> +	}=0A=
->> +=0A=
->> +	sd_first_printk(KERN_INFO, sdkp, "Maximal transfer size %u bytes\n",=
-=0A=
->> +			max_xfer_bytes);=0A=
->> +	return true;=0A=
->> +}=0A=
-=0A=
-Except for the order of the comparisons against SD_MAX_XFER_BLOCKS and dev_=
-max,=0A=
-this function looks identical to sd_validate_opt_xfer_size(), modulo the us=
-e of=0A=
-max_xfer_blocks instead of opt_xfer_blocks. Can't you turn this into someth=
-ing like:=0A=
-=0A=
-static bool sd_validate_max_xfer_size(struct scsi_disk *sdkp,=0A=
-				const char *name,=0A=
-				unsigned int xfer_blocks,=0A=
-				unsigned int dev_max)=0A=
-=0A=
-To allow checking both opt_xfer_blocks and max_xfer_blocks ?=0A=
-=0A=
->> +=0A=
->> /*=0A=
->> * Determine the device's preferred I/O size for reads and writes=0A=
->> * unless the reported value is unreasonably small, large, not a=0A=
->> @@ -3233,12 +3280,13 @@ static int sd_revalidate_disk(struct gendisk *di=
-sk)=0A=
->>=0A=
->> /* Initial block count limit based on CDB TRANSFER LENGTH field size. */=
-=0A=
->> dev_max =3D sdp->use_16_for_rw ? SD_MAX_XFER_BLOCKS : SD_DEF_XFER_BLOCKS=
-;=0A=
-=0A=
-This looks weird: no indentation. Care to resend ?=0A=
-=0A=
->> -=0A=
->> -	/* Some devices report a maximum block count for READ/WRITE requests. =
-*/=0A=
->> -	dev_max =3D min_not_zero(dev_max, sdkp->max_xfer_blocks);=0A=
->> q->limits.max_dev_sectors =3D logical_to_sectors(sdp, dev_max);=0A=
->>=0A=
->> -	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {=0A=
->> +	if (sd_validate_max_xfer_size(sdkp, dev_max)) {=0A=
->> +		q->limits.io_opt =3D 0;=0A=
->> +		rw_max =3D logical_to_sectors(sdp, sdkp->max_xfer_blocks);=0A=
->> +		q->limits.max_dev_sectors =3D rw_max;=0A=
->> +	} else if (sd_validate_opt_xfer_size(sdkp, dev_max)) {=0A=
-=0A=
-This does not look correct to me. This renders the device reported=0A=
-opt_xfer_blocks useless.=0A=
-=0A=
-The unmodified code sets dev_max to the min of SD_MAX_XFER_BLOCKS or=0A=
-SD_DEF_XFER_BLOCKS and of the device reported max_xfer_blocks. The result o=
-f=0A=
-this is used as the device max_dev_sectors queue limit, which in turn is us=
-ed to=0A=
-set the max_hw_sectors queue limit accounting for the adapter limits too.=
-=0A=
-=0A=
-opt_xfer_blocks, if it is valid, will be used to set the io_opt queue limit=
-,=0A=
-which is a hint. This hint is used to optimize the "soft" max_sectors comma=
-nd=0A=
-limit used by the block layer to limit command size if the value of=0A=
-opt_xfer_blocks is smaller than the limit initially set with max_xfer_block=
-s.=0A=
-=0A=
-So if for your device max_sectors end up being too small, it is likely beca=
-use=0A=
-the device itself is reporting an opt_xfer_blocks value that is too small f=
-or=0A=
-its own good. The max_sectors limit can be manually increased with "echo xx=
-x >=0A=
-/sys/block/sdX/queue/max_sectors_kb". A udev rule can be used to handle thi=
-s=0A=
-autmatically if needed.=0A=
-=0A=
-But to get a saner default for that device, I do not think that this patch =
-is=0A=
-the right solution. Ideally, the device peculiarity should be handled with =
-a=0A=
-quirk, but that is not used in scsi. So beside the udev rule trick, I am no=
-t=0A=
-sure what the right approach is here.=0A=
-=0A=
->> q->limits.io_opt =3D logical_to_bytes(sdp, sdkp->opt_xfer_blocks);=0A=
->> rw_max =3D logical_to_sectors(sdp, sdkp->opt_xfer_blocks);=0A=
->> } else {=0A=
->> -- =0A=
->> 2.29.0=0A=
->>=0A=
->>=0A=
-> =0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+On 2021-01-20 12:54, Stanley Chu wrote:
+> Hi Can,
+> 
+> On Tue, 2021-01-19 at 03:52 -0800, Can Guo wrote:
+>> In contexts like suspend, shutdown and error handling, we need to 
+>> suspend
+>> devfreq to make sure these contexts won't be disturbed by clock 
+>> scaling.
+>> However, suspending devfreq is not enough since users can still 
+>> trigger a
+>> clock scaling by manipulating the devfreq sysfs nodes like 
+>> min/max_freq and
+>> governor even after devfreq is suspended. Moreover, mere suspending 
+>> devfreq
+>> cannot synchroinze a clock scaling which has already been invoked 
+>> through
+>> these sysfs nodes. Add one more flag in struct clk_scaling and wrap 
+>> the
+>> entire func ufshcd_devfreq_scale() with the clk_scaling_lock, so that 
+>> we
+>> can use this flag and clk_scaling_lock to control and synchronize 
+>> clock
+>> scaling invoked through devfreq sysfs nodes.
+>> 
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> ---
+>>  drivers/scsi/ufs/ufshcd.c | 83 
+>> +++++++++++++++++++++++++++++------------------
+>>  drivers/scsi/ufs/ufshcd.h |  6 +++-
+>>  2 files changed, 56 insertions(+), 33 deletions(-)
+>> 
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 53fd59c..ba62d84 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -1201,19 +1201,30 @@ static int ufshcd_clock_scaling_prepare(struct 
+>> ufs_hba *hba)
+>>  	 */
+>>  	ufshcd_scsi_block_requests(hba);
+>>  	down_write(&hba->clk_scaling_lock);
+>> -	if (ufshcd_wait_for_doorbell_clr(hba, DOORBELL_CLR_TOUT_US)) {
+>> +
+>> +	if (!hba->clk_scaling.is_allowed ||
+>> +	    ufshcd_wait_for_doorbell_clr(hba, DOORBELL_CLR_TOUT_US)) {
+>>  		ret = -EBUSY;
+>>  		up_write(&hba->clk_scaling_lock);
+>>  		ufshcd_scsi_unblock_requests(hba);
+>> +		goto out;
+>>  	}
+>> 
+>> +	/* let's not get into low power until clock scaling is completed */
+>> +	ufshcd_hold(hba, false);
+>> +
+>> +out:
+>>  	return ret;
+>>  }
+>> 
+>> -static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba)
+>> +static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool 
+>> writelock)
+>>  {
+>> -	up_write(&hba->clk_scaling_lock);
+>> +	if (writelock)
+>> +		up_write(&hba->clk_scaling_lock);
+>> +	else
+>> +		up_read(&hba->clk_scaling_lock);
+>>  	ufshcd_scsi_unblock_requests(hba);
+>> +	ufshcd_release(hba);
+>>  }
+>> 
+>>  /**
+>> @@ -1228,13 +1239,11 @@ static void 
+>> ufshcd_clock_scaling_unprepare(struct ufs_hba *hba)
+>>  static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+>>  {
+>>  	int ret = 0;
+>> -
+>> -	/* let's not get into low power until clock scaling is completed */
+>> -	ufshcd_hold(hba, false);
+>> +	bool is_writelock = true;
+>> 
+>>  	ret = ufshcd_clock_scaling_prepare(hba);
+>>  	if (ret)
+>> -		goto out;
+>> +		return ret;
+>> 
+>>  	/* scale down the gear before scaling down clocks */
+>>  	if (!scale_up) {
+>> @@ -1260,14 +1269,12 @@ static int ufshcd_devfreq_scale(struct ufs_hba 
+>> *hba, bool scale_up)
+>>  	}
+>> 
+>>  	/* Enable Write Booster if we have scaled up else disable it */
+>> -	up_write(&hba->clk_scaling_lock);
+>> +	downgrade_write(&hba->clk_scaling_lock);
+>> +	is_writelock = false;
+>>  	ufshcd_wb_ctrl(hba, scale_up);
+>> -	down_write(&hba->clk_scaling_lock);
+>> 
+>>  out_unprepare:
+>> -	ufshcd_clock_scaling_unprepare(hba);
+>> -out:
+>> -	ufshcd_release(hba);
+>> +	ufshcd_clock_scaling_unprepare(hba, is_writelock);
+>>  	return ret;
+>>  }
+>> 
+>> @@ -1541,7 +1548,7 @@ static ssize_t 
+>> ufshcd_clkscale_enable_show(struct device *dev,
+>>  {
+>>  	struct ufs_hba *hba = dev_get_drvdata(dev);
+>> 
+>> -	return snprintf(buf, PAGE_SIZE, "%d\n", 
+>> hba->clk_scaling.is_allowed);
+>> +	return snprintf(buf, PAGE_SIZE, "%d\n", 
+>> hba->clk_scaling.is_enabled);
+>>  }
+>> 
+>>  static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
+>> @@ -1555,7 +1562,7 @@ static ssize_t 
+>> ufshcd_clkscale_enable_store(struct device *dev,
+>>  		return -EINVAL;
+>> 
+>>  	value = !!value;
+>> -	if (value == hba->clk_scaling.is_allowed)
+>> +	if (value == hba->clk_scaling.is_enabled)
+>>  		goto out;
+>> 
+>>  	pm_runtime_get_sync(hba->dev);
+>> @@ -1564,7 +1571,7 @@ static ssize_t 
+>> ufshcd_clkscale_enable_store(struct device *dev,
+>>  	cancel_work_sync(&hba->clk_scaling.suspend_work);
+>>  	cancel_work_sync(&hba->clk_scaling.resume_work);
+>> 
+>> -	hba->clk_scaling.is_allowed = value;
+>> +	hba->clk_scaling.is_enabled = value;
+>> 
+>>  	if (value) {
+>>  		ufshcd_resume_clkscaling(hba);
+>> @@ -1902,8 +1909,6 @@ static void ufshcd_init_clk_scaling(struct 
+>> ufs_hba *hba)
+>>  	snprintf(wq_name, sizeof(wq_name), "ufs_clkscaling_%d",
+>>  		 hba->host->host_no);
+>>  	hba->clk_scaling.workq = create_singlethread_workqueue(wq_name);
+>> -
+>> -	ufshcd_clkscaling_init_sysfs(hba);
+>>  }
+>> 
+>>  static void ufshcd_exit_clk_scaling(struct ufs_hba *hba)
+>> @@ -1911,6 +1916,8 @@ static void ufshcd_exit_clk_scaling(struct 
+>> ufs_hba *hba)
+>>  	if (!ufshcd_is_clkscaling_supported(hba))
+>>  		return;
+>> 
+>> +	if (hba->clk_scaling.enable_attr.attr.name)
+>> +		device_remove_file(hba->dev, &hba->clk_scaling.enable_attr);
+>>  	destroy_workqueue(hba->clk_scaling.workq);
+>>  	ufshcd_devfreq_remove(hba);
+>>  }
+>> @@ -1975,7 +1982,7 @@ static void ufshcd_clk_scaling_start_busy(struct 
+>> ufs_hba *hba)
+>>  	if (!hba->clk_scaling.active_reqs++)
+>>  		queue_resume_work = true;
+>> 
+>> -	if (!hba->clk_scaling.is_allowed || hba->pm_op_in_progress)
+>> +	if (!hba->clk_scaling.is_enabled || hba->pm_op_in_progress)
+>>  		return;
+>> 
+>>  	if (queue_resume_work)
+>> @@ -5093,7 +5100,8 @@ static void __ufshcd_transfer_req_compl(struct 
+>> ufs_hba *hba,
+>>  				update_scaling = true;
+>>  			}
+>>  		}
+>> -		if (ufshcd_is_clkscaling_supported(hba) && update_scaling)
+>> +		if (ufshcd_is_clkscaling_supported(hba) && update_scaling &&
+> 
+>> +		    hba->clk_scaling.active_reqs > 0)
+> Do we need to check hba->clk_scaling.active_reqs here?
+> 
+> if hba->clk_scaling.active_reqs is possibly decreased to negative value
+> here, then there may be something to be fixed?
+
+No actual issue here, just want to be on the safe side.
+Let me remove it in next version.
+
+Thanks,
+Can Guo.
+
+> 
+> Otherwise this patch looks good to me.
+> 
+> Thanks,
+> Stanley Chu
+> 
+>>  			hba->clk_scaling.active_reqs--;
+>>  	}
+>> 
+>> @@ -5759,18 +5767,24 @@ static void ufshcd_err_handling_prepare(struct 
+>> ufs_hba *hba)
+>>  		ufshcd_vops_resume(hba, pm_op);
+>>  	} else {
+>>  		ufshcd_hold(hba, false);
+>> -		if (hba->clk_scaling.is_allowed) {
+>> +		if (hba->clk_scaling.is_enabled) {
+>>  			cancel_work_sync(&hba->clk_scaling.suspend_work);
+>>  			cancel_work_sync(&hba->clk_scaling.resume_work);
+>>  			ufshcd_suspend_clkscaling(hba);
+>>  		}
+>> +		down_write(&hba->clk_scaling_lock);
+>> +		hba->clk_scaling.is_allowed = false;
+>> +		up_write(&hba->clk_scaling_lock);
+>>  	}
+>>  }
+>> 
+>>  static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+>>  {
+>>  	ufshcd_release(hba);
+>> -	if (hba->clk_scaling.is_allowed)
+>> +	down_write(&hba->clk_scaling_lock);
+>> +	hba->clk_scaling.is_allowed = true;
+>> +	up_write(&hba->clk_scaling_lock);
+>> +	if (hba->clk_scaling.is_enabled)
+>>  		ufshcd_resume_clkscaling(hba);
+>>  	pm_runtime_put(hba->dev);
+>>  }
+>> @@ -7750,12 +7764,14 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+>>  			sizeof(struct ufs_pa_layer_attr));
+>>  		hba->clk_scaling.saved_pwr_info.is_valid = true;
+>>  		if (!hba->devfreq) {
+>> +			hba->clk_scaling.is_allowed = true;
+>>  			ret = ufshcd_devfreq_init(hba);
+>>  			if (ret)
+>>  				goto out;
+>> -		}
+>> 
+>> -		hba->clk_scaling.is_allowed = true;
+>> +			hba->clk_scaling.is_enabled = true;
+>> +			ufshcd_clkscaling_init_sysfs(hba);
+>> +		}
+>>  	}
+>> 
+>>  	ufs_bsg_probe(hba);
+>> @@ -8672,11 +8688,14 @@ static int ufshcd_suspend(struct ufs_hba *hba, 
+>> enum ufs_pm_op pm_op)
+>>  	ufshcd_hold(hba, false);
+>>  	hba->clk_gating.is_suspended = true;
+>> 
+>> -	if (hba->clk_scaling.is_allowed) {
+>> +	if (hba->clk_scaling.is_enabled) {
+>>  		cancel_work_sync(&hba->clk_scaling.suspend_work);
+>>  		cancel_work_sync(&hba->clk_scaling.resume_work);
+>>  		ufshcd_suspend_clkscaling(hba);
+>>  	}
+>> +	down_write(&hba->clk_scaling_lock);
+>> +	hba->clk_scaling.is_allowed = false;
+>> +	up_write(&hba->clk_scaling_lock);
+>> 
+>>  	if (req_dev_pwr_mode == UFS_ACTIVE_PWR_MODE &&
+>>  			req_link_state == UIC_LINK_ACTIVE_STATE) {
+>> @@ -8773,8 +8792,6 @@ static int ufshcd_suspend(struct ufs_hba *hba, 
+>> enum ufs_pm_op pm_op)
+>>  	goto out;
+>> 
+>>  set_link_active:
+>> -	if (hba->clk_scaling.is_allowed)
+>> -		ufshcd_resume_clkscaling(hba);
+>>  	ufshcd_vreg_set_hpm(hba);
+>>  	/*
+>>  	 * Device hardware reset is required to exit DeepSleep. Also, for
+>> @@ -8798,7 +8815,10 @@ static int ufshcd_suspend(struct ufs_hba *hba, 
+>> enum ufs_pm_op pm_op)
+>>  	if (!ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MODE))
+>>  		ufshcd_disable_auto_bkops(hba);
+>>  enable_gating:
+>> -	if (hba->clk_scaling.is_allowed)
+>> +	down_write(&hba->clk_scaling_lock);
+>> +	hba->clk_scaling.is_allowed = true;
+>> +	up_write(&hba->clk_scaling_lock);
+>> +	if (hba->clk_scaling.is_enabled)
+>>  		ufshcd_resume_clkscaling(hba);
+>>  	hba->clk_gating.is_suspended = false;
+>>  	hba->dev_info.b_rpm_dev_flush_capable = false;
+>> @@ -8901,7 +8921,10 @@ static int ufshcd_resume(struct ufs_hba *hba, 
+>> enum ufs_pm_op pm_op)
+>> 
+>>  	hba->clk_gating.is_suspended = false;
+>> 
+>> -	if (hba->clk_scaling.is_allowed)
+>> +	down_write(&hba->clk_scaling_lock);
+>> +	hba->clk_scaling.is_allowed = true;
+>> +	up_write(&hba->clk_scaling_lock);
+>> +	if (hba->clk_scaling.is_enabled)
+>>  		ufshcd_resume_clkscaling(hba);
+>> 
+>>  	/* Enable Auto-Hibernate if configured */
+>> @@ -8925,8 +8948,6 @@ static int ufshcd_resume(struct ufs_hba *hba, 
+>> enum ufs_pm_op pm_op)
+>>  	ufshcd_vreg_set_lpm(hba);
+>>  disable_irq_and_vops_clks:
+>>  	ufshcd_disable_irq(hba);
+>> -	if (hba->clk_scaling.is_allowed)
+>> -		ufshcd_suspend_clkscaling(hba);
+>>  	ufshcd_setup_clocks(hba, false);
+>>  	if (ufshcd_is_clkgating_allowed(hba)) {
+>>  		hba->clk_gating.state = CLKS_OFF;
+>> @@ -9153,8 +9174,6 @@ void ufshcd_remove(struct ufs_hba *hba)
+>> 
+>>  	ufshcd_exit_clk_scaling(hba);
+>>  	ufshcd_exit_clk_gating(hba);
+>> -	if (ufshcd_is_clkscaling_supported(hba))
+>> -		device_remove_file(hba->dev, &hba->clk_scaling.enable_attr);
+>>  	ufshcd_hba_exit(hba);
+>>  }
+>>  EXPORT_SYMBOL_GPL(ufshcd_remove);
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> index 85f9d0f..d553e46 100644
+>> --- a/drivers/scsi/ufs/ufshcd.h
+>> +++ b/drivers/scsi/ufs/ufshcd.h
+>> @@ -419,7 +419,10 @@ struct ufs_saved_pwr_info {
+>>   * @suspend_work: worker to suspend devfreq
+>>   * @resume_work: worker to resume devfreq
+>>   * @min_gear: lowest HS gear to scale down to
+>> - * @is_allowed: tracks if scaling is currently allowed or not
+>> + * @is_enabled: tracks if scaling is currently enabled or not, 
+>> controlled by
+>> +		clkscale_enable sysfs node
+>> + * @is_allowed: tracks if scaling is currently allowed or not, used 
+>> to block
+>> +		clock scaling which is not invoked from devfreq governor
+>>   * @is_busy_started: tracks if busy period has started or not
+>>   * @is_suspended: tracks if devfreq is suspended or not
+>>   */
+>> @@ -434,6 +437,7 @@ struct ufs_clk_scaling {
+>>  	struct work_struct suspend_work;
+>>  	struct work_struct resume_work;
+>>  	u32 min_gear;
+>> +	bool is_enabled;
+>>  	bool is_allowed;
+>>  	bool is_busy_started;
+>>  	bool is_suspended;
