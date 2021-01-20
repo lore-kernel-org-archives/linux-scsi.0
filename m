@@ -7,41 +7,42 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ABABC4332B
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 03:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A62A1C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 03:44:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A45023109
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 03:36:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B93B23110
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 03:44:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731792AbhATC3X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jan 2021 21:29:23 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47354 "EHLO mail.kernel.org"
+        id S1731725AbhATC3S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jan 2021 21:29:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46618 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730755AbhATB3Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Jan 2021 20:29:24 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1F7F523440;
-        Wed, 20 Jan 2021 01:27:46 +0000 (UTC)
+        id S1730110AbhATB2w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Jan 2021 20:28:52 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AC2F823384;
+        Wed, 20 Jan 2021 01:27:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611106067;
-        bh=G0hwRYnbXc6l/tV8pex+dZGLS2ecO09b9ad3GWlMxkU=;
+        s=k20201202; t=1611106032;
+        bh=4aYKqfny2+FurLm5ERUJNtuNpGS1lclFpA7L3y2j0xo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BYFTrseT4K4OeSvv3iwaDaML/QAvQwehdzz31yME8lKFuYaqlb2oDCPF9t4XgdVU2
-         VBWo70XaKr6lfD/Dn1JL+4YqS3YbOQyvWt72k98A2cKV6Ai3djF4LzkwIShoSs/nma
-         C0FPNumL+pEA7tgqndXZgl4sV3qYK0F7pF66NO8nVGMu7qyZAxs+KR83MxQrG8ML9v
-         q7x2qgSsLdCh6sAzoZfihNEIYvfFlW+c+BHuDfLJC4536teDzeAT7sHcmW7MYoaFIi
-         rpiRpI3l3uwyr64MjQSotwIm0DcouX5ICCRtOUKE4kuJwtDTBCaxogwr4JCX0suV1b
-         Zv9SBLZybEkOw==
+        b=n9/ykJtjXsfZpXJOXd+16k4ICUKNgBFbBfUT0k5AteR+vq4pGkPIGQwBdw7ydRIc/
+         qI9FR/ushGnRRokBa5PvLwfOyvMtmaJtS08fMlyUb6XWAymDhtOppa3FEVQwqEWK/G
+         1+7EF/+0f7BJQcQfudeYbk0HGsyDnvhg0FIHv+ftkoUJNenXWnoy9kgQQk3R/CklgG
+         TWOxRIdsox9TO8ikyrh8qG8R7JfyDMk6I/LFFn/zY3YEH5/dErr24jFOKVs9DAddvH
+         3a9wtmYvo31SKN8P/sb+xTPOUyby5H1Pn/voI1p7tkvjJ2aa+Qj53JjMLT1cQ+P+2a
+         PETw2CNi/5MOw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nilesh Javali <njavali@marvell.com>, Lee Duncan <lduncan@suse.com>,
+Cc:     "Ewan D. Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 04/15] scsi: qedi: Correct max length of CHAP secret
-Date:   Tue, 19 Jan 2021 20:27:29 -0500
-Message-Id: <20210120012740.770354-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 06/26] scsi: sd: Suppress spurious errors when WRITE SAME is being disabled
+Date:   Tue, 19 Jan 2021 20:26:43 -0500
+Message-Id: <20210120012704.770095-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210120012740.770354-1-sashal@kernel.org>
-References: <20210120012740.770354-1-sashal@kernel.org>
+In-Reply-To: <20210120012704.770095-1-sashal@kernel.org>
+References: <20210120012704.770095-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -50,44 +51,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Nilesh Javali <njavali@marvell.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-[ Upstream commit d50c7986fbf0e2167279e110a2ed5bd8e811c660 ]
+[ Upstream commit e5cc9002caafacbaa8dab878d17a313192c3b03b ]
 
-The CHAP secret displayed garbage characters causing iSCSI login
-authentication failure. Correct the CHAP password max length.
+The block layer code will split a large zeroout request into multiple bios
+and if WRITE SAME is disabled because the storage device reports that it
+does not support it (or support the length used), we can get an error
+message from the block layer despite the setting of RQF_QUIET on the first
+request.  This is because more than one request may have already been
+submitted.
 
-Link: https://lore.kernel.org/r/20201217105144.8055-1-njavali@marvell.com
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Fix this by setting RQF_QUIET when BLK_STS_TARGET is returned to fail the
+request early, we don't need to log a message because we did not actually
+submit the command to the device, and the block layer code will handle the
+error by submitting individual write bios.
+
+Link: https://lore.kernel.org/r/20201207221021.28243-1-emilne@redhat.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/sd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index eaa50328de90c..e201c163ea1c8 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -2129,7 +2129,7 @@ qedi_show_boot_tgt_info(struct qedi_ctx *qedi, int type,
- 			     chap_name);
- 		break;
- 	case ISCSI_BOOT_TGT_CHAP_SECRET:
--		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
-+		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
- 			     chap_secret);
- 		break;
- 	case ISCSI_BOOT_TGT_REV_CHAP_NAME:
-@@ -2137,7 +2137,7 @@ qedi_show_boot_tgt_info(struct qedi_ctx *qedi, int type,
- 			     mchap_name);
- 		break;
- 	case ISCSI_BOOT_TGT_REV_CHAP_SECRET:
--		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
-+		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
- 			     mchap_secret);
- 		break;
- 	case ISCSI_BOOT_TGT_FLAGS:
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 6a2f8bacfacea..f55249766d224 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -934,8 +934,10 @@ static blk_status_t sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
+ 		}
+ 	}
+ 
+-	if (sdp->no_write_same)
++	if (sdp->no_write_same) {
++		rq->rq_flags |= RQF_QUIET;
+ 		return BLK_STS_TARGET;
++	}
+ 
+ 	if (sdkp->ws16 || lba > 0xffffffff || nr_blocks > 0xffff)
+ 		return sd_setup_write_same16_cmnd(cmd, false);
 -- 
 2.27.0
 
