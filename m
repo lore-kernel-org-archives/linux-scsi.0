@@ -5,46 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01E5CC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 01:28:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A42CC433E6
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 02:09:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B28212360D
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 01:28:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FF7022509
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 02:09:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729604AbhATB1i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jan 2021 20:27:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46618 "EHLO mail.kernel.org"
+        id S1728369AbhATCI5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jan 2021 21:08:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47344 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729344AbhATB12 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Jan 2021 20:27:28 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6B05B23137;
-        Wed, 20 Jan 2021 01:26:13 +0000 (UTC)
+        id S1730871AbhATB3q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Jan 2021 20:29:46 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E7A282332A;
+        Wed, 20 Jan 2021 01:28:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611105974;
-        bh=kIiqZT07QAhNej8L6TLFgKeIFuu/Q7XuyWxPXs0BqQU=;
+        s=k20201202; t=1611106100;
+        bh=6s/Zt7W+Wkg1fAW8F+7rxzIrH/88u0za87HrNngqBCU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nv6/qtRk0fah0BuFN6r+/aKIVcmYxaFxmQLDLkn06tZCyxv4a0C+qeIVDTvgJXETu
-         4l9q3xFsCEVJASwdjU+yYUoQ9uqYDDv6qmUKIc4aTftRop57lp1naKGVdDblkpljyG
-         f+rkr9lNxc4oV0C5ZJx/ZEN4BEdjx4k2rFyPvLkeKbn67T+2fBukIJbe/9TRXRmOUz
-         gmAVeksAr1ASQmtNFJ22wodfsXEKQMjsZdmRdtR+BmRO1m5RMvrgxPxr+7rRAZ34R/
-         jhnUMF+FlrDKPlXu57jdgm3lrX7cuAfAJ0kk6CqGEc646apPNboK5GxK/QI14efndF
-         eRAghLmTBfyjw==
+        b=Xjay960n1aYnj1AFVw8xaK8sJmgQeJgO5vbQjDKnWWsgUt3pfOO6ZvReEc5mls34X
+         fTxv4BZYrkz+oj/2//MiaJeVAtllJxe1wx75TPvVBHzXg5BiO6pz4/cODedT0nJ/3t
+         9WTujEWEb+YrPbv/qnkIUF+mBWoxMFwDFs973rs15CnpWHRge+Ja/sF6MEL2qv8R1G
+         tOL727xHpieZ8NiNshikFbhRk1k5COGxqBw56y+tcomkyBGMGerSOj2lk8WSbDhSd0
+         9vIbFxinpk7iQUh4pvec/VLXDIIZaW1Z4at0YNBi2OvrwNhJbF+7jCtwbFICiBHT05
+         SWKAK0zC1EJ4g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
+Cc:     Can Guo <cang@codeaurora.org>, Avri Altman <avri.altman@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.10 09/45] scsi: ufs: Relax the condition of UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
-Date:   Tue, 19 Jan 2021 20:25:26 -0500
-Message-Id: <20210120012602.769683-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 2/4] scsi: ufs: Correct the LUN used in eh_device_reset_handler() callback
+Date:   Tue, 19 Jan 2021 20:28:14 -0500
+Message-Id: <20210120012816.770648-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210120012602.769683-1-sashal@kernel.org>
-References: <20210120012602.769683-1-sashal@kernel.org>
+In-Reply-To: <20210120012816.770648-1-sashal@kernel.org>
+References: <20210120012816.770648-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,47 +53,63 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Stanley Chu <stanley.chu@mediatek.com>
+From: Can Guo <cang@codeaurora.org>
 
-[ Upstream commit 21acf4601cc63cf564c6fc1a74d81b191313c929 ]
+[ Upstream commit 35fc4cd34426c242ab015ef280853b7bff101f48 ]
 
-UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL is intended to skip enabling
-fWriteBoosterBufferFlushEn while WriteBooster is initializing.  Therefore
-it is better to apply the checking during WriteBooster initialization only.
+Users can initiate resets to specific SCSI device/target/host through
+IOCTL. When this happens, the SCSI cmd passed to eh_device/target/host
+_reset_handler() callbacks is initialized with a request whose tag is -1.
+In this case it is not right for eh_device_reset_handler() callback to
+count on the LUN get from hba->lrb[-1]. Fix it by getting LUN from the SCSI
+device associated with the SCSI cmd.
 
-Link: https://lore.kernel.org/r/20201222072905.32221-3-stanley.chu@mediatek.com
-Reviewed-by: Can Guo <cang@codeaurora.org>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Link: https://lore.kernel.org/r/1609157080-26283-1-git-send-email-cang@codeaurora.org
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Can Guo <cang@codeaurora.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7558b4abebfc5..cc0aebf54b079 100644
+index ad80e4223c2d3..a767d942bfca5 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -283,7 +283,8 @@ static inline void ufshcd_wb_config(struct ufs_hba *hba)
- 	if (ret)
- 		dev_err(hba->dev, "%s: En WB flush during H8: failed: %d\n",
- 			__func__, ret);
--	ufshcd_wb_toggle_flush(hba, true);
-+	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
-+		ufshcd_wb_toggle_flush(hba, true);
- }
- 
- static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
-@@ -5353,9 +5354,6 @@ static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
- 
- static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
+@@ -4552,19 +4552,16 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
  {
--	if (hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL)
--		return;
--
- 	if (enable)
- 		ufshcd_wb_buf_flush_enable(hba);
- 	else
+ 	struct Scsi_Host *host;
+ 	struct ufs_hba *hba;
+-	unsigned int tag;
+ 	u32 pos;
+ 	int err;
+-	u8 resp = 0xF;
+-	struct ufshcd_lrb *lrbp;
++	u8 resp = 0xF, lun;
+ 	unsigned long flags;
+ 
+ 	host = cmd->device->host;
+ 	hba = shost_priv(host);
+-	tag = cmd->request->tag;
+ 
+-	lrbp = &hba->lrb[tag];
+-	err = ufshcd_issue_tm_cmd(hba, lrbp->lun, 0, UFS_LOGICAL_RESET, &resp);
++	lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
++	err = ufshcd_issue_tm_cmd(hba, lun, 0, UFS_LOGICAL_RESET, &resp);
+ 	if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
+ 		if (!err)
+ 			err = resp;
+@@ -4573,7 +4570,7 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
+ 
+ 	/* clear the commands that were pending for corresponding LUN */
+ 	for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs) {
+-		if (hba->lrb[pos].lun == lrbp->lun) {
++		if (hba->lrb[pos].lun == lun) {
+ 			err = ufshcd_clear_cmd(hba, pos);
+ 			if (err)
+ 				break;
 -- 
 2.27.0
 
