@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF31CC433E6
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 02:27:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E45AC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 02:27:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77F0D22D08
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 02:27:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C72D22DD3
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jan 2021 02:27:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730933AbhATCUJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jan 2021 21:20:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48234 "EHLO mail.kernel.org"
+        id S1730363AbhATB24 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jan 2021 20:28:56 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46598 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730839AbhATB3o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Jan 2021 20:29:44 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5633523718;
-        Wed, 20 Jan 2021 01:28:06 +0000 (UTC)
+        id S1728240AbhATB2t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Jan 2021 20:28:49 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E0B5923380;
+        Wed, 20 Jan 2021 01:27:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611106087;
-        bh=BBY9OQcl7jlbZXYBgYkN24kB9pwOUGb0NtCq3VWpy3E=;
+        s=k20201202; t=1611106030;
+        bh=W5NAZVDP8beKlp9/Yh4Wz4PsHIzzl1P5C8CT2bQsD3c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HTEGikyl+X8HmEDuMrpTterHDcPmXyXyyjO69zceZg3ASkLw98tRNA5TlOVUGYmTc
-         fH/q/TPGgK1SnSNGDknOr0bgXjuDOMlx/X8rgevodUO7Hz/3OUXK4McZ8YGRhp/VRI
-         DJ4jsYW4s6oq5LmIRpJo0w+/IIcyZgosZ9QapNsbWEZyi7RQl/K8CZF9Nx5Gcf6H5F
-         GrBtPJFCm2QK7EMiFGVBYfpiPvxPt5nHX3r8a8N72VIgIkbkkFklyZY1fRUgrGBrny
-         gA821QY4Cp0d9Q0sKWkd+Xp2Aa69yg79wMTww73W+xBma99+BK0o5MgXQ5Qk55w6JT
-         ByRWg/GTEcaCw==
+        b=eQww9l3FRiXtrExW7CAPpEbxl5Cr0N2Ptmu2i7GAKbgB48soCr9TJiljAUqm96zsx
+         XzcShyFnVdvqXJVAtMz4X4ovWUVHnyJBviQd0m7qcy6VJeFy3meTZ5gXpmXwwBCU/L
+         7+lh+07Z74r6nDqA08wEaODndSrIR+rRkDJFCPzkjbiI63oviZD1WznJhDgEQvaSwE
+         zkClvkWLPW44/yLO+u2kLGrQn7dRUPSzYdVzVnB+NfpUMDoU65vgA+gXh8Jga5/BRc
+         WtcMhAK99pUUYjCiA6gHkFSsWEWwvFfScuP6cgS41TQAgMITvCGXLmQ+n6brrf6pzI
+         hVirFemfgyHuw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Can Guo <cang@codeaurora.org>, Avri Altman <avri.altman@wdc.com>,
@@ -39,12 +39,12 @@ Cc:     Can Guo <cang@codeaurora.org>, Avri Altman <avri.altman@wdc.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.14 3/9] scsi: ufs: Correct the LUN used in eh_device_reset_handler() callback
-Date:   Tue, 19 Jan 2021 20:27:56 -0500
-Message-Id: <20210120012802.770525-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 04/26] scsi: ufs: Correct the LUN used in eh_device_reset_handler() callback
+Date:   Tue, 19 Jan 2021 20:26:41 -0500
+Message-Id: <20210120012704.770095-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210120012802.770525-1-sashal@kernel.org>
-References: <20210120012802.770525-1-sashal@kernel.org>
+In-Reply-To: <20210120012704.770095-1-sashal@kernel.org>
+References: <20210120012704.770095-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -75,10 +75,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 342e086e41991..f46fa8a2f6585 100644
+index b888117f4ecd3..476ef8044ae59 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5536,19 +5536,16 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
+@@ -5980,19 +5980,16 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
  {
  	struct Scsi_Host *host;
  	struct ufs_hba *hba;
@@ -101,7 +101,7 @@ index 342e086e41991..f46fa8a2f6585 100644
  	if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
  		if (!err)
  			err = resp;
-@@ -5557,7 +5554,7 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
+@@ -6001,7 +5998,7 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
  
  	/* clear the commands that were pending for corresponding LUN */
  	for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs) {
