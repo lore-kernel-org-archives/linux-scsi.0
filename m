@@ -2,119 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB534C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 06:05:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFDAAC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 06:10:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A1602389B
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 06:05:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94462238D6
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 06:10:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726532AbhAUGEg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Jan 2021 01:04:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45422 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2393499AbhAUDBc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2021 22:01:32 -0500
-Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD714C0613CF;
-        Wed, 20 Jan 2021 19:00:51 -0800 (PST)
-Received: by mail-ej1-x62d.google.com with SMTP id l9so583797ejx.3;
-        Wed, 20 Jan 2021 19:00:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=YdnR/g1AUsA802dFK4Bs9r1QCNRoeBKoAACTpgBxsAQ=;
-        b=S82oKn6Q+hAvCVWp3R9ocfOXM2/txxi1xOjHxUHmByrZ8kBz2L+vdZmpZsEoegtsH7
-         kEKPOe4hs5bnGP8bgsWbRPouosUnKNj9uWM25NvOl6npKH6Q3aIq351tyu35oZ16Gcd9
-         gI+/RZHwBoUQXrBob5pPzeDFlql7a72PNMpdC/G6NQL7jOeLy08k8OzSFgGhZ/81pKeb
-         bfGMAqvNxE6MPJJ+X7pfFTpMlP/b5cWbsk8wBXFKl5pUb3B1PIYLs2reLAOvnsUFUsv7
-         f1sf/+zO67e9eDmjS0bptW4tw0r9uzixuWtFOktEToRwo2mwE5lw5fhIJQSO5xGWaVtk
-         y6dw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=YdnR/g1AUsA802dFK4Bs9r1QCNRoeBKoAACTpgBxsAQ=;
-        b=ez9h2LlsuvWrYsPqp/PeF+WDfmqlNQbArORHLxSXOEglSJoXQgGO1qbofj49C2zR76
-         QME0+VhhuRakNmZQnYNwAFqJvBRjzcDp0+VKXHnG4i/lnLcHmAa2pXvd6VXi6VUtvEK5
-         5mKu3fvHenQji/0UfwZXh/NjDnGUZALGS/2NV89BOrO6+c36vb9l+M9L/CxOwJ4UJPh0
-         Ne8St4Uf0E3tocdo+8rQoWoz8qVD8VkpbtO8o5rsHAmLwSO3siEMI0+savsequQ2NRi/
-         r+VoaiNwHEA+MIzFlvu93p0EVMdO+H+N1Dz+0KppinyKsSBfQK+nZec+hZwGwnRJUi4n
-         Nx6g==
-X-Gm-Message-State: AOAM533fZeGuuVM+IMtHB9WAYJBYPR0JZRgY7vVzIWcez9FSQvyRRlJD
-        1I8IP3oT954QEQz91EpA0C2vILPUd4rAc4wHnmE=
-X-Google-Smtp-Source: ABdhPJx4hIKkKiU2iBKXjdqE5eWNNe7e0osIQ9gJJ07rfesCCPovnPnhiYH+s1vpHW57b+spuuKB7GPDWGgtgfAiGN4=
-X-Received: by 2002:a17:906:9619:: with SMTP id s25mr7999226ejx.345.1611198050485;
- Wed, 20 Jan 2021 19:00:50 -0800 (PST)
-MIME-Version: 1.0
-References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
-From:   Julian Calaby <julian.calaby@gmail.com>
-Date:   Thu, 21 Jan 2021 14:00:38 +1100
-Message-ID: <CAGRGNgWLspr6M1COgX9cuDDgYdiXvQQjWQb7XYLsmFpfMYt0sA@mail.gmail.com>
-Subject: Re: [RFC PATCH 00/37] block: introduce bio_init_fields()
-To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Cc:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        drbd-dev@lists.linbit.com, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
-        jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
-        Jens Axboe <axboe@kernel.dk>, philipp.reisner@linbit.com,
-        lars.ellenberg@linbit.com, Denis Efremov <efremov@linux.com>,
-        colyli@suse.de, kent.overstreet@gmail.com, agk@redhat.com,
-        snitzer@redhat.com, song@kernel.org,
-        Christoph Hellwig <hch@lst.de>, sagi@grimberg.me,
+        id S1726426AbhAUGJ5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Jan 2021 01:09:57 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:36064 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726110AbhAUGJk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jan 2021 01:09:40 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10L63Y2J063401;
+        Thu, 21 Jan 2021 06:08:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=BKTmDn4+SGZjxL0GqTs40duq5z1Lf/bxap1CYtFK5mc=;
+ b=gVvgPRt0GS+8SQa49uBYs/4XONyXVSoXVEX7e9wbPiK6X49J+Z4apg0wh+X1xPaXl74v
+ eiA0JYygHZMEdS2gYL4mYlfl8oWMmU0llUo82BF5NHXreYFVcgrMTm4jqWDuqshMElf9
+ RJ3RGVHBB55RJj7CPJdt4ZVGmtO5BqaNcBuyPEj2FZJrcPZQi9RaAhnaGjkekYVrad3J
+ irOC5WpnSzMpdC+2YY2jofuG0bmGr5fIB9mgZXIz59cnZlxm1jeAHzaN+C0ACcjbCe3Z
+ TuLJEseN5bCdmZh0zm0K8qi5s7zL/4UvTiT+i0EHNbi+HKaAWqWxFa4fRj/9nmg33gp1 dQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 3668qadq75-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Jan 2021 06:08:51 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10L64g4O012929;
+        Thu, 21 Jan 2021 06:08:50 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 3668qwexfp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Jan 2021 06:08:49 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 10L68mfS017364;
+        Thu, 21 Jan 2021 06:08:49 GMT
+Received: from mwanda (/102.36.221.92)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 20 Jan 2021 22:08:48 -0800
+Date:   Thu, 21 Jan 2021 09:08:41 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Nilesh Javali <njavali@marvell.com>
+Cc:     GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, clm@fb.com,
-        josef@toxicpanda.com, dsterba@suse.com, tytso@mit.edu,
-        adilger.kernel@dilger.ca, rpeterso@redhat.com, agruenba@redhat.com,
-        darrick.wong@oracle.com, shaggy@kernel.org, damien.lemoal@wdc.com,
-        naohiro.aota@wdc.com, jth@kernel.org, Tejun Heo <tj@kernel.org>,
-        osandov@fb.com, bvanassche@acm.org, gustavo@embeddedor.com,
-        asml.silence@gmail.com, jefflexu@linux.alibaba.com
-Content-Type: text/plain; charset="UTF-8"
+        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: qla2xxx: remove unnecessary NULL check
+Message-ID: <YAkaaSrhn1mFqyHy@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9870 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 bulkscore=0
+ mlxlogscore=999 spamscore=0 suspectscore=0 malwarescore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101210031
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9870 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
+ impostorscore=0 mlxscore=0 priorityscore=1501 phishscore=0 mlxlogscore=999
+ lowpriorityscore=0 malwarescore=0 adultscore=0 clxscore=1011 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101210031
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Chaitanya,
+The list iterator can't be NULL so this check is not required.  Removing
+the check silences a Smatch warning about inconsistent NULL checking.
 
-On Tue, Jan 19, 2021 at 5:01 PM Chaitanya Kulkarni
-<chaitanya.kulkarni@wdc.com> wrote:
->
-> Hi,
->
-> This is a *compile only RFC* which adds a generic helper to initialize
-> the various fields of the bio that is repeated all the places in
-> file-systems, block layer, and drivers.
->
-> The new helper allows callers to initialize various members such as
-> bdev, sector, private, end io callback, io priority, and write hints.
->
-> The objective of this RFC is to only start a discussion, this it not
-> completely tested at all.
-> Following diff shows code level benefits of this helper :-
->  38 files changed, 124 insertions(+), 236 deletions(-)
+    drivers/scsi/qla2xxx/qla_dfs.c:371 qla_dfs_tgt_counters_show()
+    error: we previously assumed 'fcport' could be null (see line 372)
 
-On a more abstract note, I don't think this diffstat is actually
-illustrating the benefits of this as much as you think it is.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+ drivers/scsi/qla2xxx/qla_dfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yeah, we've reduced the code by 112 lines, but that's barely half the
-curn here. It looks, from the diffstat, that you've effectively
-reduced 2 lines into 1. That isn't much of a saving.
-
-Thanks,
-
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index ccce0eab844e..85bd0e468d43 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -369,7 +369,7 @@ qla_dfs_tgt_counters_show(struct seq_file *s, void *unused)
+ 	seq_puts(s, "\n");
+ 
+ 	list_for_each_entry(fcport, &vha->vp_fcports, list) {
+-		if (!fcport || !fcport->rport)
++		if (!fcport->rport)
+ 			continue;
+ 
+ 		seq_printf(s, "Target Num = %7d Link Down Count = %14lld\n",
 -- 
-Julian Calaby
+2.29.2
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
