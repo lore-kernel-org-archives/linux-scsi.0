@@ -2,124 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70469C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 21:13:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FA77C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 23:33:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 470A622BEF
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 21:13:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 347992087E
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 23:33:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727348AbhAUVIs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Jan 2021 16:08:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51718 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727453AbhAUU6P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jan 2021 15:58:15 -0500
-X-Greylist: delayed 485 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 21 Jan 2021 12:57:22 PST
-Received: from antares.kleine-koenig.org (antares.kleine-koenig.org [IPv6:2a01:4f8:c0c:3a97::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD63EC06174A;
-        Thu, 21 Jan 2021 12:57:22 -0800 (PST)
-Received: by antares.kleine-koenig.org (Postfix, from userid 1000)
-        id 4F281AD8EB0; Thu, 21 Jan 2021 21:48:22 +0100 (CET)
-From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <uwe@kleine-koenig.org>
-To:     Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        William Breathitt Gray <vilhelm.gray@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Pau Oliva Fora <pof@eslack.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Hannes Reinecke <hare@suse.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S1726617AbhAUXdA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Jan 2021 18:33:00 -0500
+Received: from mx2.suse.de ([195.135.220.15]:54252 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726015AbhAUXc5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Jan 2021 18:32:57 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1611271930; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=buZ7hCah14JlxAK4UCUAW3Ia/sZi8xMRjhPZ6hLKL24=;
+        b=OYly1ACxqP7ygxN0fCzYWuJw3pXK+p344Oa5y6yHEQLSFE1rKYcN0+0wqldWMP1uM8SnTg
+        FMsyiHhidUTZJc5SK2e9UL3y3BVzDU0Un0UCPhzkMstWbGTwNwNBVKnB3bQQIe4hlAzUa6
+        Su2Hg73R2wsqc8Dv5YO9FO7mLKBWVFk=
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 4FD8CAB7A;
+        Thu, 21 Jan 2021 23:32:10 +0000 (UTC)
+Message-ID: <5724da4acbad312e8824ee097ca4d8eb831360e5.camel@suse.com>
+Subject: Re: [PATCH] scsi: scsi_host_queue_ready: increase busy count early
+From:   Martin Wilck <mwilck@suse.com>
+To:     John Garry <john.garry@huawei.com>,
+        Donald Buczek <buczek@molgen.mpg.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>
-Cc:     linux-watchdog@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-can@vger.kernel.org,
-        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
-        alsa-devel@alsa-project.org
-Subject: [PATCH v1 0/2] isa: Make the remove callback for isa drivers return void
-Date:   Thu, 21 Jan 2021 21:48:10 +0100
-Message-Id: <20210121204812.402589-1-uwe@kleine-koenig.org>
-X-Mailer: git-send-email 2.29.2
+        Ming Lei <ming.lei@redhat.com>
+Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Hannes Reinecke <hare@suse.de>,
+        Don Brace <Don.Brace@microchip.com>,
+        Kevin Barnett <Kevin.Barnett@microchip.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        Hannes Reinecke <hare@suse.com>
+Date:   Fri, 22 Jan 2021 00:32:08 +0100
+In-Reply-To: <361d5a2f-fb8e-c400-2818-29aea435aff2@huawei.com>
+References: <20210120184548.20219-1-mwilck@suse.com>
+         <37579c64-1cdb-8864-6a30-4d912836f28a@huawei.com>
+         <231d9fcd-14f4-6abf-c41a-56315877a3dc@molgen.mpg.de>
+         <87b7f873-46c4-140b-ee45-f724b50b6aca@huawei.com>
+         <d48f98a9-77e3-dfe3-af5c-91b0ef45586b@molgen.mpg.de>
+         <361d5a2f-fb8e-c400-2818-29aea435aff2@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.38.2 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+On Thu, 2021-01-21 at 13:05 +0000, John Garry wrote:
+> > > 
+> 
+> Confirmed my suspicions - it looks like the host is sent more
+> commands 
+> than it can handle. We would need many disks to see this issue
+> though, 
+> which you have.
+> 
+> So for stable kernels, 6eb045e092ef is not in 5.4 . Next is 5.10, and
+> I 
+> suppose it could be simply fixed by setting .host_tagset in scsi host
+> template there.
 
-as described in the commit log of the 2nd patch returning an error code
-from a bus' remove callback doesn't make any difference as the driver
-core ignores it and still considers the device removed.
+If it's really just that, it should be easy enough to verify.
 
-So change the remove callback to return void to not give driver authors
-an incentive to believe they could return an error.
+@Donald, you'd need to test with a 5.10 kernel, and after reproducing
+the issue, add 
 
-There is only a single isa driver in the tree (assuming I didn't miss
-any) that has a remove callback that can return a non zero return code.
-This is "fixed" in the first patch, to make the second patch more
-obviously correct.
+        .host_tagset            = 1,
 
-Best regards
-Uwe
+to the definition of pqi_driver_template in
+drivers/scsi/smartpqi/smartpqi_init.c. 
 
-Uwe Kleine-KÃ¶nig (2):
-  watchdog: pcwd: drop always-false if from remove callback
-  isa: Make the remove callback for isa drivers return void
+You don't need a patch to test that, I believe. Would you able to do
+this test?
 
- drivers/base/isa.c                   | 2 +-
- drivers/i2c/busses/i2c-elektor.c     | 4 +---
- drivers/i2c/busses/i2c-pca-isa.c     | 4 +---
- drivers/input/touchscreen/htcpen.c   | 4 +---
- drivers/media/radio/radio-sf16fmr2.c | 4 +---
- drivers/net/can/sja1000/tscan1.c     | 4 +---
- drivers/net/ethernet/3com/3c509.c    | 3 +--
- drivers/scsi/advansys.c              | 3 +--
- drivers/scsi/aha1542.c               | 3 +--
- drivers/scsi/fdomain_isa.c           | 3 +--
- drivers/scsi/g_NCR5380.c             | 3 +--
- drivers/watchdog/pcwd.c              | 7 +------
- include/linux/isa.h                  | 2 +-
- sound/isa/ad1848/ad1848.c            | 3 +--
- sound/isa/adlib.c                    | 3 +--
- sound/isa/cmi8328.c                  | 3 +--
- sound/isa/cmi8330.c                  | 3 +--
- sound/isa/cs423x/cs4231.c            | 3 +--
- sound/isa/cs423x/cs4236.c            | 3 +--
- sound/isa/es1688/es1688.c            | 3 +--
- sound/isa/es18xx.c                   | 3 +--
- sound/isa/galaxy/galaxy.c            | 3 +--
- sound/isa/gus/gusclassic.c           | 3 +--
- sound/isa/gus/gusextreme.c           | 3 +--
- sound/isa/gus/gusmax.c               | 3 +--
- sound/isa/gus/interwave.c            | 3 +--
- sound/isa/msnd/msnd_pinnacle.c       | 3 +--
- sound/isa/opl3sa2.c                  | 3 +--
- sound/isa/opti9xx/miro.c             | 3 +--
- sound/isa/opti9xx/opti92x-ad1848.c   | 3 +--
- sound/isa/sb/jazz16.c                | 3 +--
- sound/isa/sb/sb16.c                  | 3 +--
- sound/isa/sb/sb8.c                   | 3 +--
- sound/isa/sc6000.c                   | 3 +--
- sound/isa/sscape.c                   | 3 +--
- sound/isa/wavefront/wavefront.c      | 3 +--
- 36 files changed, 36 insertions(+), 79 deletions(-)
+Regards,
+Martin
 
 
-base-commit: 5a158981aafa7f29709034b17bd007b15cb29983
--- 
-2.29.2
