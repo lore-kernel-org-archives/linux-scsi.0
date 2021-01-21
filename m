@@ -2,31 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C0B2C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 09:09:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEEC7C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 10:06:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACFE7235E4
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 09:09:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F63B239EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 10:06:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726247AbhAUJJC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Jan 2021 04:09:02 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:35153 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726123AbhAUJIH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Jan 2021 04:08:07 -0500
-Received: from [192.168.0.5] (ip5f5aed2c.dynamic.kabel-deutschland.de [95.90.237.44])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: buczek)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 25B272064790F;
-        Thu, 21 Jan 2021 10:07:17 +0100 (CET)
+        id S1728705AbhAUKGd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Jan 2021 05:06:33 -0500
+Received: from mx2.suse.de ([195.135.220.15]:55640 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728546AbhAUKG2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Jan 2021 05:06:28 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1611223539; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=x+fMNi7i0ADkZQ1neIgikNKiJTFKRWpEYgnfDwLkIgc=;
+        b=RNExLDhhtTSkJiCo2PUMsaG3jmiz7vbehWkxXpYbWSjgmhIsxmQNHbFo8IhItqC7gSVlQ1
+        c1ldOZRX7XXrNII3AY61PS4E2DP36qWO/2ZLPWJXXRjPSEOMvU/c/zkbqZVg+okdUJflj2
+        jCIKkVIIQIVkpIHi1cAoV31EmuaC9jY=
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 21E8FAD11;
+        Thu, 21 Jan 2021 10:05:39 +0000 (UTC)
+Message-ID: <166f7a2e10f27647aee5d62e31a074af982b52e8.camel@suse.com>
 Subject: Re: [PATCH] scsi: scsi_host_queue_ready: increase busy count early
-To:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
+From:   Martin Wilck <mwilck@suse.com>
+To:     Donald Buczek <buczek@molgen.mpg.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         Ming Lei <ming.lei@redhat.com>
 Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
@@ -34,32 +44,38 @@ Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
         Kevin Barnett <Kevin.Barnett@microchip.com>,
         John Garry <john.garry@huawei.com>,
         Paul Menzel <pmenzel@molgen.mpg.de>
+Date:   Thu, 21 Jan 2021 11:05:38 +0100
+In-Reply-To: <936ea886-e7ae-c3c5-1bab-911754050fff@molgen.mpg.de>
 References: <20210120184548.20219-1-mwilck@suse.com>
-From:   Donald Buczek <buczek@molgen.mpg.de>
-Message-ID: <936ea886-e7ae-c3c5-1bab-911754050fff@molgen.mpg.de>
-Date:   Thu, 21 Jan 2021 10:07:16 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+         <936ea886-e7ae-c3c5-1bab-911754050fff@molgen.mpg.de>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.38.2 
 MIME-Version: 1.0
-In-Reply-To: <20210120184548.20219-1-mwilck@suse.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 20.01.21 19:45, mwilck@suse.com wrote:
-> From: Martin Wilck <mwilck@suse.com>
+On Thu, 2021-01-21 at 10:07 +0100, Donald Buczek wrote:
+> On 20.01.21 19:45, mwilck@suse.com wrote:
+> > From: Martin Wilck <mwilck@suse.com>
+> > 
+> > Donald: please give this patch a try.
+> > 
+> > Commit 6eb045e092ef ("scsi: core: avoid host-wide host_busy counter
+> > for scsi_mq")
+> > [...]
 > 
-> Donald: please give this patch a try.
 > 
-> Commit 6eb045e092ef ("scsi: core: avoid host-wide host_busy counter for scsi_mq")
-> [...]
+> Unfortunately, this patch (on top of 6eb045e092ef) did not fix the
+> problem. Same error (""controller is offline: status code 0x6100c"")
+> after about 20 minutes of the test load.
+
+Too bad. Well, I believe it was worth a try. Thanks for testing it.
+
+Martin
 
 
-Unfortunately, this patch (on top of 6eb045e092ef) did not fix the problem. Same error (""controller is offline: status code 0x6100c"") after about 20 minutes of the test load.
 
-Best
-   Donald
+
 
