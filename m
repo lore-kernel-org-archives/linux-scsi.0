@@ -2,106 +2,66 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAD14C43381
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 17:11:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37406C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 17:11:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81CAC23A58
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 17:11:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC7D023A57
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 17:11:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388369AbhAURL3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Jan 2021 12:11:29 -0500
-Received: from mx2.suse.de ([195.135.220.15]:35360 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388320AbhAURE6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Jan 2021 12:04:58 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 9B5BBAC63;
-        Thu, 21 Jan 2021 17:04:00 +0000 (UTC)
-From:   Enzo Matsumiya <ematsumiya@suse.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     Enzo Matsumiya <ematsumiya@suse.de>,
-        Don Brace <don.brace@microchip.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        storagedev@microchip.com, linux-kernel@vger.kernel.org
-Subject: [RFC PATCH] scsi: smartpqi: create module parameters for LUN reset
-Date:   Thu, 21 Jan 2021 14:03:39 -0300
-Message-Id: <20210121170339.11891-1-ematsumiya@suse.de>
-X-Mailer: git-send-email 2.30.0
+        id S2388393AbhAURLc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Jan 2021 12:11:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57880 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388298AbhAURE5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jan 2021 12:04:57 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EABDDC0613D6;
+        Thu, 21 Jan 2021 09:03:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=QzyNyEp1YsTE5vSV+3cDru2rTzeX2CsFjS3xBz6a990=; b=m/sCpkjOMCVgP4VoWYhFT+pNFA
+        XsN5cp/1QMUAEvRGYKVrcCWtT0K0Qc1rUYrY8tnWtvRBGAzYQF1aJcWF3PjXrGGN5DB6crvK52Uhq
+        VmNi8hTrqhlV+i2i9NAfj+R5YQr9uVin10+P+GGGvl4s+Wro8U/2/QQy8nAXo/5hPnH9AZL+NWlnM
+        toPoiBaqrmygPeFA0pi51swSnxTXmB2rXAaBa2z16O2JBwXvSZdc+MGy9skDIY3SNinDpyuqYtJ3N
+        cyelbC61FxOX5f44I6+AYEzvIq/k8mhEfUgaLp9Knoar2TChae7OQQlHwtAFdMat/0mm5SWvcQ2ZF
+        9pImn9Kw==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1l2dMH-00HI8V-2u; Thu, 21 Jan 2021 17:03:07 +0000
+Date:   Thu, 21 Jan 2021 17:02:57 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-nfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] block: remove unnecessary argument from
+ blk_execute_rq_nowait
+Message-ID: <20210121170257.GA4120717@infradead.org>
+References: <20210121142905.13089-1-guoqing.jiang@cloud.ionos.com>
+ <20210121142905.13089-2-guoqing.jiang@cloud.ionos.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210121142905.13089-2-guoqing.jiang@cloud.ionos.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit c2922f174fa0 ("scsi: smartpqi: fix LUN reset when fw bkgnd thread is hung")
-added support for a timeout on LUN resets.
+On Thu, Jan 21, 2021 at 03:29:04PM +0100, Guoqing Jiang wrote:
+> The 'q' is not used since commit a1ce35fa4985 ("block: remove dead
+> elevator code"), also update the comment of the function.
 
-However, when there are 2 or more devices connected to the same
-controller and you hot-remove one of them, I/O will stall on the
-devices still online for PQI_LUN_RESET_RETRIES * PQI_LUN_RESET_RETRY_INTERVAL_MSECS
-miliseconds.
+And more importantly it never really was needed to start with given
+that we can triviall derive it from struct request.
 
-This commit makes those values configurable via module parameters.
-
-Changing the bail out condition on rc in _pqi_device_reset() might be possible,
-but could also break the original purpose of commit c2922f174fa0.
-
-Signed-off-by: Enzo Matsumiya <ematsumiya@suse.de>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index c53f456fbd09..9835b2e5b91a 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -157,6 +157,18 @@ module_param_named(hide_vsep,
- MODULE_PARM_DESC(hide_vsep,
- 	"Hide the virtual SEP for direct attached drives.");
- 
-+static int pqi_lun_reset_retries = 3;
-+module_param_named(lun_reset_retries,
-+	pqi_lun_reset_retries, int, 0644);
-+MODULE_PARM_DESC(lun_reset_retries,
-+	"Number of retries when resetting a LUN");
-+
-+static int pqi_lun_reset_tmo_interval = 10000;
-+module_param_named(lun_reset_tmo_interval,
-+	pqi_lun_reset_tmo_interval, int, 0644);
-+MODULE_PARM_DESC(lun_reset_tmo_interval,
-+	"LUN reset timeout interval (in miliseconds)");
-+
- static char *raid_levels[] = {
- 	"RAID-0",
- 	"RAID-4",
-@@ -5687,8 +5699,6 @@ static int pqi_lun_reset(struct pqi_ctrl_info *ctrl_info,
- 
- /* Performs a reset at the LUN level. */
- 
--#define PQI_LUN_RESET_RETRIES			3
--#define PQI_LUN_RESET_RETRY_INTERVAL_MSECS	10000
- #define PQI_LUN_RESET_PENDING_IO_TIMEOUT_SECS	120
- 
- static int _pqi_device_reset(struct pqi_ctrl_info *ctrl_info,
-@@ -5700,9 +5710,9 @@ static int _pqi_device_reset(struct pqi_ctrl_info *ctrl_info,
- 
- 	for (retries = 0;;) {
- 		rc = pqi_lun_reset(ctrl_info, device);
--		if (rc == 0 || ++retries > PQI_LUN_RESET_RETRIES)
-+		if (rc == 0 || ++retries > pqi_lun_reset_retries)
- 			break;
--		msleep(PQI_LUN_RESET_RETRY_INTERVAL_MSECS);
-+		msleep(pqi_lun_reset_tmo_interval);
- 	}
- 
- 	timeout_secs = rc ? PQI_LUN_RESET_PENDING_IO_TIMEOUT_SECS : NO_TIMEOUT;
--- 
-2.30.0
-
+> -extern void blk_execute_rq_nowait(struct request_queue *, struct gendisk *,
+> +extern void blk_execute_rq_nowait(struct gendisk *,
+>  				  struct request *, int, rq_end_io_fn *);
