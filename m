@@ -2,105 +2,190 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E038C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 00:15:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86300C433DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 01:05:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C5A423A5E
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 00:15:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56FC0207C5
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 01:05:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726187AbhAVAPQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Jan 2021 19:15:16 -0500
-Received: from mx2.suse.de ([195.135.220.15]:46580 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725868AbhAVAPM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Jan 2021 19:15:12 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1611274464; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=MItRsCGJp16QrZvw3B4KwEgPlJ4YNLlvqdE/Z/iA5Rc=;
-        b=aQ12UDYzxEmOVn3RQL0Bwus/qvLmg5Gp219fCm8vRuDxRZTneDgfRJVseVNis/J4whkqeI
-        nBnbIZKGqX0W4zup6y0Puwg3wVQcqj0SKs8Xo11MVd+9pYwJpNP9fGMtb/aazYFqmLxmms
-        bN4PI4YqFrfRs0UXrU/4nJV2yHAzH0g=
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id B58F6AC45;
-        Fri, 22 Jan 2021 00:14:24 +0000 (UTC)
-Message-ID: <5a5ac22d5bc36b8e743e5e609411aa0b64490718.camel@suse.com>
-Subject: Re: [PATCH] scsi: scsi_host_queue_ready: increase busy count early
-From:   Martin Wilck <mwilck@suse.com>
-To:     Donald Buczek <buczek@molgen.mpg.de>,
+        id S1725968AbhAVBEa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Jan 2021 20:04:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48382 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725283AbhAVBE0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jan 2021 20:04:26 -0500
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78D54C06174A;
+        Thu, 21 Jan 2021 17:03:46 -0800 (PST)
+Received: by mail-pl1-x633.google.com with SMTP id b8so2275719plh.12;
+        Thu, 21 Jan 2021 17:03:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=lw4cm+7RXhLgXHhIgHAntQuy6SsZDwNqhL+qH8M4o3Q=;
+        b=XhdA9ei1rorZZbjDB1bxDSifSMzivWAG6Z/YPsqR6QqmUxc6VTdh+WLbjCztj5VjV2
+         Y+dKEpFeuWM2An1Evn24rEmp+5Z1dm7qpRCibEQ+1GbNwX1r9T5/Gx9nSURWWwbIIe2r
+         HfM82xGGVz+LObwR71Pbjpi2+oRPfDZQWmV9/DV6mcUFtH+iaAEuh/XYNUYmanyIPwXg
+         ATzqC2zmij1Tegt2Xv3ZP71dx/wTol+Zu5oxZfoID7vldOsjrt6OxnB20MrihUv46wT5
+         9Qbw8tCFYnUVghfTteSJg3nWRppmB8WPscLwqjlcs2JIeH8v07/c+Q9k08CQy2bIBPMN
+         fXYw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=lw4cm+7RXhLgXHhIgHAntQuy6SsZDwNqhL+qH8M4o3Q=;
+        b=HOA6o1HkBG9t+R1vfk89GuC6qTiMgzzVu3SmXhDzN4KAbya9dKaKG4hbfPuwMWE4ys
+         43eOuIBhCofQDs5RRUUmSH/z2f+E65fXj2PO8L0tz09PYN0BWklD1fdRpK072oGF0tSV
+         u0l79cdWgkVYu43JHR63hUB64CZZOQ+7an3giSgSVRZTwfTcE1JOq9qMZ5si3ZMc310J
+         mkilybkFgqbaFPXZgcZgQxlS8w7eZ8bPg7mLYOK6Hfn3e8C+bC5rVKOhjHENznj1bTOQ
+         uSPIOIOG7n9ih5TsBfOjKFrjweBEIkUjS4NDWOsmhynG8C2/nrHL5API8E5MP7mqsuw4
+         8i8g==
+X-Gm-Message-State: AOAM530EdHrzRMj3PcYjJvddiszCN0pNQ17jFaEMXmiOGjJw4ETCe5XD
+        gpfrdgajeGNqZW3r4NBKIag=
+X-Google-Smtp-Source: ABdhPJzmb7nke4O74Aga3Has5vmSGhKK4Sa5I6pQqAuiHRHYi6rZ29DGdsXsL8nJ1Ji6VskHwOhaDA==
+X-Received: by 2002:a17:90a:5513:: with SMTP id b19mr2363941pji.99.1611277425889;
+        Thu, 21 Jan 2021 17:03:45 -0800 (PST)
+Received: from shinobu (113x33x126x33.ap113.ftth.ucom.ne.jp. [113.33.126.33])
+        by smtp.gmail.com with ESMTPSA id e3sm6395565pgs.60.2021.01.21.17.03.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Jan 2021 17:03:44 -0800 (PST)
+Date:   Fri, 22 Jan 2021 10:03:32 +0900
+From:   William Breathitt Gray <vilhelm.gray@gmail.com>
+To:     Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <uwe@kleine-koenig.org>
+Cc:     Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Pau Oliva Fora <pof@eslack.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hannes Reinecke <hare@suse.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Ming Lei <ming.lei@redhat.com>
-Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Don Brace <Don.Brace@microchip.com>,
-        Kevin Barnett <Kevin.Barnett@microchip.com>,
-        John Garry <john.garry@huawei.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>
-Date:   Fri, 22 Jan 2021 01:14:23 +0100
-In-Reply-To: <166f7a2e10f27647aee5d62e31a074af982b52e8.camel@suse.com>
-References: <20210120184548.20219-1-mwilck@suse.com>
-         <936ea886-e7ae-c3c5-1bab-911754050fff@molgen.mpg.de>
-         <166f7a2e10f27647aee5d62e31a074af982b52e8.camel@suse.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.38.2 
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, linux-watchdog@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-can@vger.kernel.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
+Subject: Re: [PATCH v1 0/2] isa: Make the remove callback for isa drivers
+ return void
+Message-ID: <YAokZMNkgVfJ+csC@shinobu>
+References: <20210121204812.402589-1-uwe@kleine-koenig.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="PZu/ILMf5FNwdU4R"
+Content-Disposition: inline
+In-Reply-To: <20210121204812.402589-1-uwe@kleine-koenig.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2021-01-21 at 11:05 +0100, Martin Wilck wrote:
-> On Thu, 2021-01-21 at 10:07 +0100, Donald Buczek wrote:
-> > 
-> > Unfortunately, this patch (on top of 6eb045e092ef) did not fix the
-> > problem. Same error (""controller is offline: status code
-> > 0x6100c"")
 
-Rethinking, this patch couldn't have fixed your problem. I apologize
-for the dumb suggestion.
+--PZu/ILMf5FNwdU4R
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-However, I still believe I had a point in that patch, and would like to
-ask the experts for an opinion.
+On Thu, Jan 21, 2021 at 09:48:10PM +0100, Uwe Kleine-K=C3=B6nig wrote:
+> Hello,
+>=20
+> as described in the commit log of the 2nd patch returning an error code
+> from a bus' remove callback doesn't make any difference as the driver
+> core ignores it and still considers the device removed.
+>=20
+> So change the remove callback to return void to not give driver authors
+> an incentive to believe they could return an error.
+>=20
+> There is only a single isa driver in the tree (assuming I didn't miss
+> any) that has a remove callback that can return a non zero return code.
+> This is "fixed" in the first patch, to make the second patch more
+> obviously correct.
+>=20
+> Best regards
+> Uwe
+>=20
+> Uwe Kleine-K=C3=B6nig (2):
+>   watchdog: pcwd: drop always-false if from remove callback
+>   isa: Make the remove callback for isa drivers return void
+>=20
+>  drivers/base/isa.c                   | 2 +-
+>  drivers/i2c/busses/i2c-elektor.c     | 4 +---
+>  drivers/i2c/busses/i2c-pca-isa.c     | 4 +---
+>  drivers/input/touchscreen/htcpen.c   | 4 +---
+>  drivers/media/radio/radio-sf16fmr2.c | 4 +---
+>  drivers/net/can/sja1000/tscan1.c     | 4 +---
+>  drivers/net/ethernet/3com/3c509.c    | 3 +--
+>  drivers/scsi/advansys.c              | 3 +--
+>  drivers/scsi/aha1542.c               | 3 +--
+>  drivers/scsi/fdomain_isa.c           | 3 +--
+>  drivers/scsi/g_NCR5380.c             | 3 +--
+>  drivers/watchdog/pcwd.c              | 7 +------
+>  include/linux/isa.h                  | 2 +-
+>  sound/isa/ad1848/ad1848.c            | 3 +--
+>  sound/isa/adlib.c                    | 3 +--
+>  sound/isa/cmi8328.c                  | 3 +--
+>  sound/isa/cmi8330.c                  | 3 +--
+>  sound/isa/cs423x/cs4231.c            | 3 +--
+>  sound/isa/cs423x/cs4236.c            | 3 +--
+>  sound/isa/es1688/es1688.c            | 3 +--
+>  sound/isa/es18xx.c                   | 3 +--
+>  sound/isa/galaxy/galaxy.c            | 3 +--
+>  sound/isa/gus/gusclassic.c           | 3 +--
+>  sound/isa/gus/gusextreme.c           | 3 +--
+>  sound/isa/gus/gusmax.c               | 3 +--
+>  sound/isa/gus/interwave.c            | 3 +--
+>  sound/isa/msnd/msnd_pinnacle.c       | 3 +--
+>  sound/isa/opl3sa2.c                  | 3 +--
+>  sound/isa/opti9xx/miro.c             | 3 +--
+>  sound/isa/opti9xx/opti92x-ad1848.c   | 3 +--
+>  sound/isa/sb/jazz16.c                | 3 +--
+>  sound/isa/sb/sb16.c                  | 3 +--
+>  sound/isa/sb/sb8.c                   | 3 +--
+>  sound/isa/sc6000.c                   | 3 +--
+>  sound/isa/sscape.c                   | 3 +--
+>  sound/isa/wavefront/wavefront.c      | 3 +--
+>  36 files changed, 36 insertions(+), 79 deletions(-)
+>=20
+>=20
+> base-commit: 5a158981aafa7f29709034b17bd007b15cb29983
+> --=20
+> 2.29.2
 
-Assume no commands in flight (busy == 0), host_blocked == 2, and that
-two CPUs enter scsi_host_queue_ready() at the same time. Before
-6eb045e092ef, it was impossible that the function returned 1 on either
-CPU in this situation.
+Acked-by: William Breathitt Gray <vilhelm.gray@gmail.com>
 
-CPU 1                              CPU 2
+--PZu/ILMf5FNwdU4R
+Content-Type: application/pgp-signature; name="signature.asc"
 
-scsi_host_queue_ready              scsi_host_queue_ready
-   host_busy = 1                      host_busy = 2
-      (busy = 0)                         (busy = 1)
-   host_blocked = 1                   goto starved
-   goto out_dec                       add sdev to starved list
-   host_busy = 1                      host_busy = 0
-   return 0                           return 0
-                                      
-With 6eb045e092ef (and without my patch), the result could be:
+-----BEGIN PGP SIGNATURE-----
 
-CPU 1                              CPU 2
+iQIzBAABCgAdFiEEk5I4PDJ2w1cDf/bghvpINdm7VJIFAmAKJFgACgkQhvpINdm7
+VJLzPQ/9FPQmfnPF1kWcQikWSXr31BdrY/bU1k3tsN3+yIFcnAkjeW5mH5TGysY8
+zpAFfnbdVIMz5er9oBLPRcOztSwitbQeOuLQHNnm5Bf8Vs/BBYahD8iK0Z11CLzU
+NaOcLr3iJYTisqqbPjiadkoKUeCh6vizab5oaZUR/5jn6YvtFX1vB3amb2J0600r
+mNVDoLHL4BnWW40jTxr12OQF/Z27BGaRqUImGhmgUqvLY8WMz79zGTgg4qHYMujs
+MYZxWX9ILt3oXKwFrd58mIcG9cIP9q18ndjkyMdH3sXMMYHPm6vKuVnVHcOjSqBn
+sX0ciA2HizGr7V2o1AhQiU3loQEaE3uHZ1t0te/vEqVRLlWlqSevRdNxxpgNk58Y
+iQe3J72kgc2Pb3009+FpzMMO4MaGfpNTXBeVP9qurmHmaAGBQLAoNxqmSOFnXx7I
+aSmNOW9wTuijQeUWN7WlYGtaRlEldvQlPiPbut8p9M7/5kTkW8GTXxvbJd1ylwwF
+Oxz1NxLAEvJN3NuwPoAkywW930fVXy4JJigSwMjKlc+vXvJgGqGP20HqeHKBxTdE
+GglZQJ0FunBNAYckgJwTqt6A84+wCwZ/5erqRqsJDipn8qcnQ79YiKjh+L4za0QA
+yyItzFeVSsa/lPxJ3OrDiOD2LsTb9hkJhmT5OHPFjwxt++d7KiA=
+=WpSs
+-----END PGP SIGNATURE-----
 
-scsi_host_queue_ready              scsi_host_queue_ready
-  read scsi_host_busy() = 0          read scsi_host_busy() = 0
-  host_blocked = 1                   host_blocked = 0
-  goto out_dec                       remove sdev from starved list
-  return 0                           set SCMD_STATE_INFLIGHT 
-                                       (host_busy = 1)
-                                     return 1
-  
-So now, one command can be sent, and the host is unblocked. A very
-different outcome than before. Was this intentional?
-
-Thanks
-Martin
-
-
-
+--PZu/ILMf5FNwdU4R--
