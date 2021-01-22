@@ -2,84 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E41C9C433E6
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:41:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 914E7C433E9
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:55:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5CDF235F9
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:41:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AF2D236F9
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:55:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727204AbhAVIk6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Jan 2021 03:40:58 -0500
-Received: from comms.puri.sm ([159.203.221.185]:56210 "EHLO comms.puri.sm"
+        id S1727248AbhAVIyz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Jan 2021 03:54:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54954 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725935AbhAVIkr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Jan 2021 03:40:47 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by comms.puri.sm (Postfix) with ESMTP id 1048DE0496;
-        Fri, 22 Jan 2021 00:39:31 -0800 (PST)
-Received: from comms.puri.sm ([127.0.0.1])
-        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id fBzHxDwNO5Fp; Fri, 22 Jan 2021 00:39:30 -0800 (PST)
-From:   Martin Kepplinger <martin.kepplinger@puri.sm>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     dgilbert@interlog.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Martin Kepplinger <martin.kepplinger@puri.sm>
-Subject: [PATCH] scsi_logging: print cdb into new line after opcode
-Date:   Fri, 22 Jan 2021 09:39:18 +0100
-Message-Id: <20210122083918.901-1-martin.kepplinger@puri.sm>
-Content-Transfer-Encoding: 8bit
+        id S1727229AbhAVIyb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Jan 2021 03:54:31 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 576F220739;
+        Fri, 22 Jan 2021 08:53:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611305631;
+        bh=Fz2SdsRmzyg/R2X1FlxG9bQZ+ajptlq0wR7ERPzwqDc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ddZNA3M6UjNKCbv2ln05xi74+gg8RxPyfmTwHQ4mUmmkjwJ9S9/sn0rRIy3ApJYra
+         ofdkWNtzHT0/iNjwUZK2whof89UzJC4pL+jhDlg2zofzNVukbVCGpITfv4dRSH/NP+
+         Vljz4p4ya+TFxfBBgfNn7l16vKcvpy85i80JNbTCcKiLpQnkq2hhXjk5a4bFmW6INV
+         djOy8m4qPjMvnzIVJvaQcwI+tPU6Vw+ZXR4jezPjuaA6S/H0iY30pf7MLs8p7yjxK+
+         R37SCiknKGV/Du5Z6/rAraxkbZZzlhu5BiY1umPObLP6MEingJjnI2C2JBYNfkRqlq
+         PS2UjRs5P+fWQ==
+Date:   Fri, 22 Jan 2021 09:53:48 +0100
+From:   Wolfram Sang <wsa@kernel.org>
+To:     Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <uwe@kleine-koenig.org>
+Cc:     Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        William Breathitt Gray <vilhelm.gray@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Pau Oliva Fora <pof@eslack.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hannes Reinecke <hare@suse.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, linux-watchdog@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-can@vger.kernel.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
+Subject: Re: [PATCH v1 2/2] isa: Make the remove callback for isa drivers
+ return void
+Message-ID: <20210122085348.GB858@kunai>
+Mail-Followup-To: Wolfram Sang <wsa@kernel.org>,
+        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <uwe@kleine-koenig.org>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        William Breathitt Gray <vilhelm.gray@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Pau Oliva Fora <pof@eslack.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hannes Reinecke <hare@suse.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+        linux-watchdog@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-input@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-can@vger.kernel.org,
+        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
+        alsa-devel@alsa-project.org
+References: <20210121204812.402589-1-uwe@kleine-koenig.org>
+ <20210121204812.402589-3-uwe@kleine-koenig.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="ADZbWkCsHQ7r3kzd"
+Content-Disposition: inline
+In-Reply-To: <20210121204812.402589-3-uwe@kleine-koenig.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The current log message results in a line like the following where
-the first byte is duplicated, giving a wrong impression:
 
-sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x28 28 00 00 00 60 40 00 00 01 00
+--ADZbWkCsHQ7r3kzd
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Print the cdb into a new line in any case, not only when cmd_len is
-greater than 16. The above example error will then read:
+On Thu, Jan 21, 2021 at 09:48:12PM +0100, Uwe Kleine-K=C3=B6nig wrote:
+> The driver core ignores the return value of the remove callback, so
+> don't give isa drivers the chance to provide a value.
+>=20
+> Adapt all isa_drivers with a remove callbacks accordingly; they all
+> return 0 unconditionally anyhow.
+>=20
+> Signed-off-by: Uwe Kleine-K=C3=B6nig <uwe@kleine-koenig.org>
 
-sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x28
-28 00 01 c0 09 00 00 00 08 00
+Acked-by: Wolfram Sang <wsa@kernel.org> # for I2C
 
-Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
----
- drivers/scsi/scsi_logging.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-index 8ea44c6595ef..0081d3936f83 100644
---- a/drivers/scsi/scsi_logging.c
-+++ b/drivers/scsi/scsi_logging.c
-@@ -200,10 +200,11 @@ void scsi_print_command(struct scsi_cmnd *cmd)
- 	if (off >= logbuf_len)
- 		goto out_printk;
- 
-+	/* Print opcode in one line and use separate lines for CDB */
-+	off += scnprintf(logbuf + off, logbuf_len - off, "\n");
-+
- 	/* print out all bytes in cdb */
- 	if (cmd->cmd_len > 16) {
--		/* Print opcode in one line and use separate lines for CDB */
--		off += scnprintf(logbuf + off, logbuf_len - off, "\n");
- 		dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s", logbuf);
- 		for (k = 0; k < cmd->cmd_len; k += 16) {
- 			size_t linelen = min(cmd->cmd_len - k, 16);
-@@ -224,7 +225,6 @@ void scsi_print_command(struct scsi_cmnd *cmd)
- 		goto out;
- 	}
- 	if (!WARN_ON(off > logbuf_len - 49)) {
--		off += scnprintf(logbuf + off, logbuf_len - off, " ");
- 		hex_dump_to_buffer(cmd->cmnd, cmd->cmd_len, 16, 1,
- 				   logbuf + off, logbuf_len - off,
- 				   false);
--- 
-2.20.1
+--ADZbWkCsHQ7r3kzd
+Content-Type: application/pgp-signature; name="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAmAKkpwACgkQFA3kzBSg
+KbYioA//frCM2vGMNRb9m2Wz+bP5qkNSp3R5QbWC14WxE8ZsbjcOun8Op9VX023l
+cmNSjxAFJ7nXTQgZYnrdfSo5+ZegXPapPa6zwpSF29HDrvoDmo7yHCVnrhSp+ko2
+nauFE8d5U2LLJftrZ29QteTfvmBQn0RFdsO2NFFwCo9bVZd5UfwxinwQk3ncG4Fs
+7th2N/Hwnb0Xb5NswrpHEeknQCVuYZdOx3bo21TQ/eImBBwT6iKExwzBYN+YX/Uw
+AckTF0es+DatjTNiFBLvNHSDf0/bjroW+oIsZeu6Wz5G73yBqWiJmyhNLR4XxRJf
+RgkOj9UvQsNAZhA/hKbFjtT0sv9yXYm4pe76+47Aw5YxnN5WQIAtBV0tsd5Dfs4Q
+FCOIHYbsR8lchLm/HGG4D9L0w5fUgQ3TzaOUaWUQ3sjeHvpTGSH7JJCblU3FXlFB
+N3Cn6HcfRTe7Izg9jH6lkYmaDvwsshB3VjK/uiegjLZPkN/EPGkNdwRnDId4zk/7
+/Zgb5gYeLzQzXlxJM+WFgTS4aLLGg6UGxgl6PUHeSUXKdxoo9pjk7LtfRVpb+mHu
+LHt7KzZLjCHrntyYHaXrxSHcjQZzxr8pGnPl+bfMjlpKpkbMBIyfncncJUiDz6cy
+DuITnJtHM/j/zc6ciV1UPNWiF9bIu1ga6GdKu9/UEMlvE7xkgXs=
+=0OvQ
+-----END PGP SIGNATURE-----
+
+--ADZbWkCsHQ7r3kzd--
