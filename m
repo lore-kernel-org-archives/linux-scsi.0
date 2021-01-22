@@ -2,122 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4726EC432C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 09:23:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D64BC433DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 09:28:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08EE3239D1
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 09:23:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1ABC4222B6
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 09:28:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726664AbhAVIjP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Jan 2021 03:39:15 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:52457 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727105AbhAVIhq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jan 2021 03:37:46 -0500
-X-UUID: d7790b7198b84e9997d0567646afedae-20210122
-X-UUID: d7790b7198b84e9997d0567646afedae-20210122
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 679792100; Fri, 22 Jan 2021 16:36:40 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 22 Jan 2021 16:36:38 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 22 Jan 2021 16:36:38 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <robh+dt@kernel.org>, <robh@kernel.org>,
-        <martin.petersen@oracle.com>, <jejb@linux.ibm.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>
-CC:     <linux-mediatek@lists.infradead.org>, <yingjoe.chen@mediatek.com>,
-        <matthias.bgg@gmail.com>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <alice.chao@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <cc.chou@mediatek.com>,
-        <jiajie.hao@mediatek.com>, <hanks.chen@mediatek.com>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v3 2/2] arm64: dts: mt6779: Support ufshci and ufsphy
-Date:   Fri, 22 Jan 2021 16:36:27 +0800
-Message-ID: <20210122083627.2893-3-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20210122083627.2893-1-stanley.chu@mediatek.com>
-References: <20210122083627.2893-1-stanley.chu@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+        id S1727226AbhAVJ1k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Jan 2021 04:27:40 -0500
+Received: from out30-44.freemail.mail.aliyun.com ([115.124.30.44]:41729 "EHLO
+        out30-44.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727378AbhAVJSE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Jan 2021 04:18:04 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R631e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e01424;MF=abaci-bugfix@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0UMW2Lur_1611306989;
+Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:abaci-bugfix@linux.alibaba.com fp:SMTPD_---0UMW2Lur_1611306989)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Fri, 22 Jan 2021 17:16:41 +0800
+From:   Yang Li <abaci-bugfix@linux.alibaba.com>
+To:     jejb@linux.ibm.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yang Li <abaci-bugfix@linux.alibaba.com>
+Subject: [PATCH 1/2] scsi: qla2xxx: remove redundant NULL check
+Date:   Fri, 22 Jan 2021 17:16:26 +0800
+Message-Id: <1611306987-103954-1-git-send-email-abaci-bugfix@linux.alibaba.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Support UFS on MT6779 platforms by adding ufshci and ufsphy
-nodes in dts file.
+Fix below warnings reported by coccicheck:
+./drivers/scsi/qla2xxx/qla_init.c:3371:2-7: WARNING: NULL check before
+some freeing functions is not needed.
+./drivers/scsi/qla2xxx/qla_init.c:7855:5-10: WARNING: NULL check before
+some freeing functions is not needed.
+./drivers/scsi/qla2xxx/qla_init.c:7916:2-7: WARNING: NULL check before
+some freeing functions is not needed.
+./drivers/scsi/qla2xxx/qla_init.c:8113:4-18: WARNING: NULL check before
+some freeing functions is not needed.
+./drivers/scsi/qla2xxx/qla_init.c:8174:2-7: WARNING: NULL check before
+some freeing functions is not needed.
 
-Reviewed-by: Hanks Chen <hanks.chen@mediatek.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Yang Li <abaci-bugfix@linux.alibaba.com>
 ---
- arch/arm64/boot/dts/mediatek/mt6779.dtsi | 36 +++++++++++++++++++++++-
- 1 file changed, 35 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_init.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/mediatek/mt6779.dtsi b/arch/arm64/boot/dts/mediatek/mt6779.dtsi
-index 370f309d32de..6eaf230bb0d1 100644
---- a/arch/arm64/boot/dts/mediatek/mt6779.dtsi
-+++ b/arch/arm64/boot/dts/mediatek/mt6779.dtsi
-@@ -225,6 +225,41 @@
- 			#clock-cells = <1>;
- 		};
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index dcc0f0d8..edd5dd1 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -3371,8 +3371,7 @@ static void qla2x00_tmf_sp_done(srb_t *sp, int res)
+ 				    "Re-Allocated (%d KB) and save firmware dump.\n",
+ 				    dump_size / 1024);
+ 			} else {
+-				if (ha->fw_dump)
+-					vfree(ha->fw_dump);
++				vfree(ha->fw_dump);
+ 				ha->fw_dump = fw_dump;
  
-+		ufshci: ufshci@11270000 {
-+			compatible = "mediatek,mt8183-ufshci";
-+			reg = <0 0x11270000 0 0x2300>;
-+			interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_LOW>;
-+			phys = <&ufsphy>;
-+
-+			clocks = <&infracfg_ao CLK_INFRA_UFS>,
-+				 <&infracfg_ao CLK_INFRA_UFS_TICK>,
-+				 <&infracfg_ao CLK_INFRA_UFS_AXI>,
-+				 <&infracfg_ao CLK_INFRA_UNIPRO_TICK>,
-+				 <&infracfg_ao CLK_INFRA_UNIPRO_MBIST>,
-+				 <&topckgen CLK_TOP_FAES_UFSFDE>,
-+				 <&infracfg_ao CLK_INFRA_AES_UFSFDE>,
-+				 <&infracfg_ao CLK_INFRA_AES_BCLK>;
-+			clock-names = "ufs", "ufs_tick", "ufs_axi",
-+				      "unipro_tick", "unipro_mbist",
-+				      "aes_top", "aes_infra", "aes_bclk";
-+			freq-table-hz = <0 0>, <0 0>, <0 0>,
-+					<0 0>, <0 0>, <0 0>,
-+					<0 0>, <0 0>;
-+
-+			mediatek,ufs-disable-ah8;
-+			mediatek,ufs-support-va09;
-+		};
-+
-+		ufsphy: phy@11fa0000 {
-+			compatible = "mediatek,mt8183-ufsphy";
-+			reg = <0 0x11fa0000 0 0xc000>;
-+			#phy-cells = <0>;
-+
-+			clocks = <&infracfg_ao CLK_INFRA_UNIPRO_SCK>,
-+				 <&infracfg_ao CLK_INFRA_UFS_MP_SAP_BCLK>;
-+			clock-names = "unipro", "mp";
-+		};
-+
- 		mfgcfg: clock-controller@13fbf000 {
- 			compatible = "mediatek,mt6779-mfgcfg", "syscon";
- 			reg = <0 0x13fbf000 0 0x1000>;
-@@ -266,6 +301,5 @@
- 			reg = <0 0x1b000000 0 0x1000>;
- 			#clock-cells = <1>;
- 		};
--
- 	};
- };
+ 				ha->fw_dump_len = ha->fw_dump_alloc_len =
+@@ -7855,8 +7854,7 @@ bool qla24xx_risc_firmware_invalid(uint32_t *dword)
+ 	templates = (risc_attr & BIT_9) ? 2 : 1;
+ 	ql_dbg(ql_dbg_init, vha, 0x0160, "-> templates = %u\n", templates);
+ 	for (j = 0; j < templates; j++, fwdt++) {
+-		if (fwdt->template)
+-			vfree(fwdt->template);
++		vfree(fwdt->template);
+ 		fwdt->template = NULL;
+ 		fwdt->length = 0;
+ 
+@@ -7916,8 +7914,7 @@ bool qla24xx_risc_firmware_invalid(uint32_t *dword)
+ 	return QLA_SUCCESS;
+ 
+ failed:
+-	if (fwdt->template)
+-		vfree(fwdt->template);
++	vfree(fwdt->template);
+ 	fwdt->template = NULL;
+ 	fwdt->length = 0;
+ 
+@@ -8113,8 +8110,7 @@ bool qla24xx_risc_firmware_invalid(uint32_t *dword)
+ 	templates = (risc_attr & BIT_9) ? 2 : 1;
+ 	ql_dbg(ql_dbg_init, vha, 0x0170, "-> templates = %u\n", templates);
+ 	for (j = 0; j < templates; j++, fwdt++) {
+-		if (fwdt->template)
+-			vfree(fwdt->template);
++		vfree(fwdt->template);
+ 		fwdt->template = NULL;
+ 		fwdt->length = 0;
+ 
+@@ -8174,8 +8170,7 @@ bool qla24xx_risc_firmware_invalid(uint32_t *dword)
+ 	return QLA_SUCCESS;
+ 
+ failed:
+-	if (fwdt->template)
+-		vfree(fwdt->template);
++	vfree(fwdt->template);
+ 	fwdt->template = NULL;
+ 	fwdt->length = 0;
+ 
 -- 
-2.18.0
+1.8.3.1
 
