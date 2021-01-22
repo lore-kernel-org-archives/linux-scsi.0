@@ -2,124 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15F62C433DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 07:37:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2146DC433E6
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 07:38:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E10C722DBF
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 07:37:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE96722DBF
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 07:38:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726919AbhAVHgr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Jan 2021 02:36:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47528 "EHLO
+        id S1727081AbhAVHiC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Jan 2021 02:38:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727081AbhAVHgI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jan 2021 02:36:08 -0500
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A11C2C061794
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Jan 2021 23:35:21 -0800 (PST)
-Received: from gallifrey.ext.pengutronix.de ([2001:67c:670:201:5054:ff:fe8d:eefb] helo=bjornoya.blackshift.org)
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <mkl@pengutronix.de>)
-        id 1l2qxq-0007E4-Mh; Fri, 22 Jan 2021 08:34:38 +0100
-Received: from hardanger.blackshift.org (unknown [IPv6:2a03:f580:87bc:d400:aed1:e241:8b32:9cc0])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        (Authenticated sender: mkl-all@blackshift.org)
-        by smtp.blackshift.org (Postfix) with ESMTPSA id 9F94B5CA50A;
-        Fri, 22 Jan 2021 07:34:32 +0000 (UTC)
-Date:   Fri, 22 Jan 2021 08:34:31 +0100
-From:   Marc Kleine-Budde <mkl@pengutronix.de>
-To:     Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <uwe@kleine-koenig.org>
-Cc:     Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        William Breathitt Gray <vilhelm.gray@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Pau Oliva Fora <pof@eslack.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Hannes Reinecke <hare@suse.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>, linux-watchdog@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-can@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
-Subject: Re: [PATCH v1 2/2] isa: Make the remove callback for isa drivers
- return void
-Message-ID: <20210122073431.a3igyqh3rucmiy5y@hardanger.blackshift.org>
-References: <20210121204812.402589-1-uwe@kleine-koenig.org>
- <20210121204812.402589-3-uwe@kleine-koenig.org>
+        with ESMTP id S1727011AbhAVHh7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jan 2021 02:37:59 -0500
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35575C06178B
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Jan 2021 23:37:12 -0800 (PST)
+Received: by mail-pf1-x42d.google.com with SMTP id i63so3159358pfg.7
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Jan 2021 23:37:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=xnObBx7qCVcq4Xmng0HzOiOYW//hrsobDgYRbXW2qoA=;
+        b=dfhsrZgi1qJDI2m/ilO0UZ7ihv26w0btzlf1zmTicpi6ZJPqGMSAzlb7G4wGiF0FW3
+         Gijmj6YCtu3PwTEsxPDNKVLwzNJfoZ+kzsARJbaXfKhjIPk0hIdEI6k7+iABd3J0Ge6o
+         E21BaI1DVfxYzhQmtffSyiTWTX0ggTKcY1OLoksddvORRrvfQMQGbsphmp1xU/IKzC+G
+         sD/zie7QvCQK1vih68EwWOxT3P4AOnndd/VBNtbw7iZsbzo+OPZQFBdc76x6uF8HLA4t
+         egiWvXKCvt0EJ4zf4Nru3997s4IFCMrrcBcXNTQ8OpxxqBRXA3kIBOHmAEsIKhM9WxEA
+         fFbw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=xnObBx7qCVcq4Xmng0HzOiOYW//hrsobDgYRbXW2qoA=;
+        b=raAQzADaBOK0barQMudHtlM1Oeds85tEkgu5VT1obNzC0SVxk7Fo6sCtZzj1rnoi21
+         GVxPzxHlMJQt3peegeBHcCMG7HNn+k317D4gKSXeTUy4NT0N5TYIPGZRRXLHh+T0BtT3
+         iQA7hC9IZnwBA51N5hFseoeazd/jDm5VkM9IcssNRFicx5hgU4/oeec8xhnQMFrvoXfc
+         SVR6SvZ7ieTQ58idpoMjt7+Pm/WOOvw7ixlzk3hg36KFeEcVTfZ9bigHtx+kRVqyGijc
+         Q8mbAMkj/uPDIs0ukagqPiVdnsVnV6O5Jpxjn+yA7ayGD/LpiPWeGAgq+6fZMmws8M3U
+         FT5g==
+X-Gm-Message-State: AOAM531s4Icxxnp+HQMVYQ6YAAMz0RI6BY5Hh7wKmDH4Ed95MnNY9pbo
+        Dssj6eQBY990EMekhTrWoB6Orw==
+X-Google-Smtp-Source: ABdhPJwPLaEjEPKwC34UrAC2gsulKg3s4j7+J97bZTNNIKaoZ/lJu48wNw2Iwm4BkDrJnbbca6y71A==
+X-Received: by 2002:a63:1f18:: with SMTP id f24mr3506723pgf.133.1611301030526;
+        Thu, 21 Jan 2021 23:37:10 -0800 (PST)
+Received: from [10.8.0.116] ([196.245.9.36])
+        by smtp.gmail.com with ESMTPSA id fh7sm7835085pjb.43.2021.01.21.23.37.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 21 Jan 2021 23:37:09 -0800 (PST)
+Subject: Re: [PATCH 1/2] block: remove unnecessary argument from
+ blk_execute_rq_nowait
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-nfs@vger.kernel.org
+References: <20210121142905.13089-1-guoqing.jiang@cloud.ionos.com>
+ <20210121142905.13089-2-guoqing.jiang@cloud.ionos.com>
+ <20210121170257.GA4120717@infradead.org>
+From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Message-ID: <b87591b9-e598-6436-d41f-80cc56640549@cloud.ionos.com>
+Date:   Fri, 22 Jan 2021 08:36:45 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="zjvnr6y4kfwj4bce"
-Content-Disposition: inline
-In-Reply-To: <20210121204812.402589-3-uwe@kleine-koenig.org>
-X-SA-Exim-Connect-IP: 2001:67c:670:201:5054:ff:fe8d:eefb
-X-SA-Exim-Mail-From: mkl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
+In-Reply-To: <20210121170257.GA4120717@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---zjvnr6y4kfwj4bce
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jan 21, 2021 at 09:48:12PM +0100, Uwe Kleine-K=C3=B6nig wrote:
-> The driver core ignores the return value of the remove callback, so
-> don't give isa drivers the chance to provide a value.
->=20
-> Adapt all isa_drivers with a remove callbacks accordingly; they all
-> return 0 unconditionally anyhow.
->=20
-> Signed-off-by: Uwe Kleine-K=C3=B6nig <uwe@kleine-koenig.org>
-> ---
->  drivers/net/can/sja1000/tscan1.c     | 4 +---
+On 1/21/21 18:02, Christoph Hellwig wrote:
+> On Thu, Jan 21, 2021 at 03:29:04PM +0100, Guoqing Jiang wrote:
+>> The 'q' is not used since commit a1ce35fa4985 ("block: remove dead
+>> elevator code"), also update the comment of the function.
+> 
+> And more importantly it never really was needed to start with given
+> that we can triviall derive it from struct request.
 
-For the can driver:
+Thanks Christoph, will add the above to header and send new version.
 
-Acked-by: Marc Kleine-Budde <mkl@pengutronix.de>
-
-Marc
-
---=20
-Pengutronix e.K.                 | Marc Kleine-Budde           |
-Embedded Linux                   | https://www.pengutronix.de  |
-Vertretung West/Dortmund         | Phone: +49-231-2826-924     |
-Amtsgericht Hildesheim, HRA 2686 | Fax:   +49-5121-206917-5555 |
-
---zjvnr6y4kfwj4bce
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEK3kIWJt9yTYMP3ehqclaivrt76kFAmAKgAUACgkQqclaivrt
-76nKFwf/Qh+ytJZ22nqfhmCPbPHzMEovze0rf40PzuBbydukQ2E77J1a91Ol+M6I
-1ETmnULm8kVPDDxAcJDMCpVjyMJxgwLzxAFUbO/AXMpj94QvNurQZQfJvFSuDDIi
-b8bMue+b3+Bir9bDAQW+GAfmyMa6ARm5kpQFvnnMvLOerD9r3iPfMvMFmAM3tlpJ
-QBlvhC3avamtLNyYuNZUDq4Mq8AqsJOHy+0GHptbO7JGN6TS7tkuUo4blKU4XI2j
-JizmoGti3M6q+jHuUDOnLpHh6JDaetW68A+M4ggQIhoFVEvbS93ROd8v7exaUwrK
-f/iFuhnPc/++doJnCc4XvQg1N02pYA==
-=HgrA
------END PGP SIGNATURE-----
-
---zjvnr6y4kfwj4bce--
+Guoqing
