@@ -2,81 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C257C433DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:39:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E41C9C433E6
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:41:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08BF9235FF
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:39:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5CDF235F9
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:41:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727038AbhAVIjr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Jan 2021 03:39:47 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:52444 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727142AbhAVIi1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jan 2021 03:38:27 -0500
-X-UUID: 6be9fd9f647a492380ef63eac5be8551-20210122
-X-UUID: 6be9fd9f647a492380ef63eac5be8551-20210122
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1481106957; Fri, 22 Jan 2021 16:36:41 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 22 Jan 2021 16:36:38 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 22 Jan 2021 16:36:38 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <robh+dt@kernel.org>, <robh@kernel.org>,
-        <martin.petersen@oracle.com>, <jejb@linux.ibm.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>
-CC:     <linux-mediatek@lists.infradead.org>, <yingjoe.chen@mediatek.com>,
-        <matthias.bgg@gmail.com>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <alice.chao@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <cc.chou@mediatek.com>,
-        <jiajie.hao@mediatek.com>, <hanks.chen@mediatek.com>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v3 1/2] arm64: configs: Support Universal Flash Storage on MediaTek platforms
-Date:   Fri, 22 Jan 2021 16:36:26 +0800
-Message-ID: <20210122083627.2893-2-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20210122083627.2893-1-stanley.chu@mediatek.com>
-References: <20210122083627.2893-1-stanley.chu@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: F1840B8654F83275B0B86B7812F4FA79CD6A7E398873C42452E32310C25006012000:8
-X-MTK:  N
+        id S1727204AbhAVIk6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Jan 2021 03:40:58 -0500
+Received: from comms.puri.sm ([159.203.221.185]:56210 "EHLO comms.puri.sm"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725935AbhAVIkr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Jan 2021 03:40:47 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by comms.puri.sm (Postfix) with ESMTP id 1048DE0496;
+        Fri, 22 Jan 2021 00:39:31 -0800 (PST)
+Received: from comms.puri.sm ([127.0.0.1])
+        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id fBzHxDwNO5Fp; Fri, 22 Jan 2021 00:39:30 -0800 (PST)
+From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     dgilbert@interlog.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Martin Kepplinger <martin.kepplinger@puri.sm>
+Subject: [PATCH] scsi_logging: print cdb into new line after opcode
+Date:   Fri, 22 Jan 2021 09:39:18 +0100
+Message-Id: <20210122083918.901-1-martin.kepplinger@puri.sm>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Support UFS on MediaTek platforms by enabling CONFIG_SCSI_UFS_MEDIATEK.
+The current log message results in a line like the following where
+the first byte is duplicated, giving a wrong impression:
 
-Reviewed-by: Hanks Chen <hanks.chen@mediatek.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x28 28 00 00 00 60 40 00 00 01 00
+
+Print the cdb into a new line in any case, not only when cmd_len is
+greater than 16. The above example error will then read:
+
+sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x28
+28 00 01 c0 09 00 00 00 08 00
+
+Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
 ---
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/scsi_logging.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 838301650a79..12ff990b2691 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -283,6 +283,7 @@ CONFIG_SCSI_MPT3SAS=m
- CONFIG_SCSI_UFSHCD=y
- CONFIG_SCSI_UFSHCD_PLATFORM=y
- CONFIG_SCSI_UFS_QCOM=m
-+CONFIG_SCSI_UFS_MEDIATEK=m
- CONFIG_SCSI_UFS_HISI=y
- CONFIG_ATA=y
- CONFIG_SATA_AHCI=y
+diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+index 8ea44c6595ef..0081d3936f83 100644
+--- a/drivers/scsi/scsi_logging.c
++++ b/drivers/scsi/scsi_logging.c
+@@ -200,10 +200,11 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+ 	if (off >= logbuf_len)
+ 		goto out_printk;
+ 
++	/* Print opcode in one line and use separate lines for CDB */
++	off += scnprintf(logbuf + off, logbuf_len - off, "\n");
++
+ 	/* print out all bytes in cdb */
+ 	if (cmd->cmd_len > 16) {
+-		/* Print opcode in one line and use separate lines for CDB */
+-		off += scnprintf(logbuf + off, logbuf_len - off, "\n");
+ 		dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s", logbuf);
+ 		for (k = 0; k < cmd->cmd_len; k += 16) {
+ 			size_t linelen = min(cmd->cmd_len - k, 16);
+@@ -224,7 +225,6 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+ 		goto out;
+ 	}
+ 	if (!WARN_ON(off > logbuf_len - 49)) {
+-		off += scnprintf(logbuf + off, logbuf_len - off, " ");
+ 		hex_dump_to_buffer(cmd->cmnd, cmd->cmd_len, 16, 1,
+ 				   logbuf + off, logbuf_len - off,
+ 				   false);
 -- 
-2.18.0
+2.20.1
 
