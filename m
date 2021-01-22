@@ -2,26 +2,26 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3FBAC433E6
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:57:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94001C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:58:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 643DD2087E
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:57:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46321239D1
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 08:58:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727140AbhAVI5C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Jan 2021 03:57:02 -0500
-Received: from verein.lst.de ([213.95.11.211]:35682 "EHLO verein.lst.de"
+        id S1727219AbhAVI6F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Jan 2021 03:58:05 -0500
+Received: from verein.lst.de ([213.95.11.211]:35677 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727207AbhAVInN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Jan 2021 03:43:13 -0500
+        id S1727170AbhAVInC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Jan 2021 03:43:02 -0500
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id DB33168B05; Fri, 22 Jan 2021 09:42:31 +0100 (CET)
-Date:   Fri, 22 Jan 2021 09:42:31 +0100
+        id 882E068AFE; Fri, 22 Jan 2021 09:42:09 +0100 (CET)
+Date:   Fri, 22 Jan 2021 09:42:09 +0100
 From:   Christoph Hellwig <hch@lst.de>
 To:     Damien Le Moal <damien.lemoal@wdc.com>
 Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
@@ -30,18 +30,43 @@ Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-nvme@lists.infradead.org, Christoph Hellwig <hch@lst.de>,
         Keith Busch <keith.busch@wdc.com>
-Subject: Re: [PATCH v3 3/3] zonefs: use zone write granularity as block size
-Message-ID: <20210122084231.GB15710@lst.de>
-References: <20210122080014.174391-1-damien.lemoal@wdc.com> <20210122080014.174391-4-damien.lemoal@wdc.com>
+Subject: Re: [PATCH v3 1/3] block: introduce zone_write_granularity limit
+Message-ID: <20210122084209.GA15710@lst.de>
+References: <20210122080014.174391-1-damien.lemoal@wdc.com> <20210122080014.174391-2-damien.lemoal@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210122080014.174391-4-damien.lemoal@wdc.com>
+In-Reply-To: <20210122080014.174391-2-damien.lemoal@wdc.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks good,
+> @@ -864,18 +891,20 @@ void blk_queue_set_zoned(struct gendisk *disk, enum blk_zoned_model model)
+>  		 * partitions and zoned block device support is enabled, else
+>  		 * we do nothing special as far as the block layer is concerned.
+>  		 */
+> -		if (!IS_ENABLED(CONFIG_BLK_DEV_ZONED) ||
+> -		    disk_has_partitions(disk))
+> -			model = BLK_ZONED_NONE;
+> -		break;
+> +		if (IS_ENABLED(CONFIG_BLK_DEV_ZONED) &&
+> +		    !disk_has_partitions(disk))
+> +			break;
+> +		model = BLK_ZONED_NONE;
+> +		fallthrough;
+>  	case BLK_ZONED_NONE:
+>  	default:
+>  		if (WARN_ON_ONCE(model != BLK_ZONED_NONE))
+>  			model = BLK_ZONED_NONE;
+> +		q->limits.zone_write_granularity = 0;
+>  		break;
+>  	}
+>  
+> -	disk->queue->limits.zoned = model;
+> +	q->limits.zoned = model;
+>  }
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This looks a little strange.  If we special case zoned vs not zoned
+here anyway, why not set the zone_write_granularity to the logical
+block size here by default.
