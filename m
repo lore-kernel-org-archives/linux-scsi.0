@@ -6,53 +6,48 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FA77C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 23:33:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E038C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 00:15:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 347992087E
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jan 2021 23:33:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C5A423A5E
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jan 2021 00:15:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726617AbhAUXdA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Jan 2021 18:33:00 -0500
-Received: from mx2.suse.de ([195.135.220.15]:54252 "EHLO mx2.suse.de"
+        id S1726187AbhAVAPQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Jan 2021 19:15:16 -0500
+Received: from mx2.suse.de ([195.135.220.15]:46580 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726015AbhAUXc5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Jan 2021 18:32:57 -0500
+        id S1725868AbhAVAPM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Jan 2021 19:15:12 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1611271930; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1611274464; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=buZ7hCah14JlxAK4UCUAW3Ia/sZi8xMRjhPZ6hLKL24=;
-        b=OYly1ACxqP7ygxN0fCzYWuJw3pXK+p344Oa5y6yHEQLSFE1rKYcN0+0wqldWMP1uM8SnTg
-        FMsyiHhidUTZJc5SK2e9UL3y3BVzDU0Un0UCPhzkMstWbGTwNwNBVKnB3bQQIe4hlAzUa6
-        Su2Hg73R2wsqc8Dv5YO9FO7mLKBWVFk=
+        bh=MItRsCGJp16QrZvw3B4KwEgPlJ4YNLlvqdE/Z/iA5Rc=;
+        b=aQ12UDYzxEmOVn3RQL0Bwus/qvLmg5Gp219fCm8vRuDxRZTneDgfRJVseVNis/J4whkqeI
+        nBnbIZKGqX0W4zup6y0Puwg3wVQcqj0SKs8Xo11MVd+9pYwJpNP9fGMtb/aazYFqmLxmms
+        bN4PI4YqFrfRs0UXrU/4nJV2yHAzH0g=
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 4FD8CAB7A;
-        Thu, 21 Jan 2021 23:32:10 +0000 (UTC)
-Message-ID: <5724da4acbad312e8824ee097ca4d8eb831360e5.camel@suse.com>
+        by mx2.suse.de (Postfix) with ESMTP id B58F6AC45;
+        Fri, 22 Jan 2021 00:14:24 +0000 (UTC)
+Message-ID: <5a5ac22d5bc36b8e743e5e609411aa0b64490718.camel@suse.com>
 Subject: Re: [PATCH] scsi: scsi_host_queue_ready: increase busy count early
 From:   Martin Wilck <mwilck@suse.com>
-To:     John Garry <john.garry@huawei.com>,
-        Donald Buczek <buczek@molgen.mpg.de>,
+To:     Donald Buczek <buczek@molgen.mpg.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Ming Lei <ming.lei@redhat.com>
 Cc:     James Bottomley <jejb@linux.vnet.ibm.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.de>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
         Don Brace <Don.Brace@microchip.com>,
         Kevin Barnett <Kevin.Barnett@microchip.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        Hannes Reinecke <hare@suse.com>
-Date:   Fri, 22 Jan 2021 00:32:08 +0100
-In-Reply-To: <361d5a2f-fb8e-c400-2818-29aea435aff2@huawei.com>
+        John Garry <john.garry@huawei.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>
+Date:   Fri, 22 Jan 2021 01:14:23 +0100
+In-Reply-To: <166f7a2e10f27647aee5d62e31a074af982b52e8.camel@suse.com>
 References: <20210120184548.20219-1-mwilck@suse.com>
-         <37579c64-1cdb-8864-6a30-4d912836f28a@huawei.com>
-         <231d9fcd-14f4-6abf-c41a-56315877a3dc@molgen.mpg.de>
-         <87b7f873-46c4-140b-ee45-f724b50b6aca@huawei.com>
-         <d48f98a9-77e3-dfe3-af5c-91b0ef45586b@molgen.mpg.de>
-         <361d5a2f-fb8e-c400-2818-29aea435aff2@huawei.com>
+         <936ea886-e7ae-c3c5-1bab-911754050fff@molgen.mpg.de>
+         <166f7a2e10f27647aee5d62e31a074af982b52e8.camel@suse.com>
 Content-Type: text/plain; charset="ISO-8859-15"
 User-Agent: Evolution 3.38.2 
 MIME-Version: 1.0
@@ -61,34 +56,51 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2021-01-21 at 13:05 +0000, John Garry wrote:
-> > > 
-> 
-> Confirmed my suspicions - it looks like the host is sent more
-> commands 
-> than it can handle. We would need many disks to see this issue
-> though, 
-> which you have.
-> 
-> So for stable kernels, 6eb045e092ef is not in 5.4 . Next is 5.10, and
-> I 
-> suppose it could be simply fixed by setting .host_tagset in scsi host
-> template there.
+On Thu, 2021-01-21 at 11:05 +0100, Martin Wilck wrote:
+> On Thu, 2021-01-21 at 10:07 +0100, Donald Buczek wrote:
+> > 
+> > Unfortunately, this patch (on top of 6eb045e092ef) did not fix the
+> > problem. Same error (""controller is offline: status code
+> > 0x6100c"")
 
-If it's really just that, it should be easy enough to verify.
+Rethinking, this patch couldn't have fixed your problem. I apologize
+for the dumb suggestion.
 
-@Donald, you'd need to test with a 5.10 kernel, and after reproducing
-the issue, add 
+However, I still believe I had a point in that patch, and would like to
+ask the experts for an opinion.
 
-        .host_tagset            = 1,
+Assume no commands in flight (busy == 0), host_blocked == 2, and that
+two CPUs enter scsi_host_queue_ready() at the same time. Before
+6eb045e092ef, it was impossible that the function returned 1 on either
+CPU in this situation.
 
-to the definition of pqi_driver_template in
-drivers/scsi/smartpqi/smartpqi_init.c. 
+CPU 1                              CPU 2
 
-You don't need a patch to test that, I believe. Would you able to do
-this test?
+scsi_host_queue_ready              scsi_host_queue_ready
+   host_busy = 1                      host_busy = 2
+      (busy = 0)                         (busy = 1)
+   host_blocked = 1                   goto starved
+   goto out_dec                       add sdev to starved list
+   host_busy = 1                      host_busy = 0
+   return 0                           return 0
+                                      
+With 6eb045e092ef (and without my patch), the result could be:
 
-Regards,
+CPU 1                              CPU 2
+
+scsi_host_queue_ready              scsi_host_queue_ready
+  read scsi_host_busy() = 0          read scsi_host_busy() = 0
+  host_blocked = 1                   host_blocked = 0
+  goto out_dec                       remove sdev from starved list
+  return 0                           set SCMD_STATE_INFLIGHT 
+                                       (host_busy = 1)
+                                     return 1
+  
+So now, one command can be sent, and the host is unblocked. A very
+different outcome than before. Was this intentional?
+
+Thanks
 Martin
+
 
 
