@@ -2,195 +2,673 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C55AC433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:28:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86197C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:29:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A1CD206F7
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:28:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31807206F7
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:29:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727417AbhAZF2R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:28:17 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:32878 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727444AbhAYKYN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Jan 2021 05:24:13 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 10P9ZSDd025329;
-        Mon, 25 Jan 2021 01:52:31 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pfpt0220;
- bh=m6qGuHzQSkYN6uDOT5kTbmc4I59UuqyBRVG/chMkGvQ=;
- b=K39DW/ZNAjgUuWXAnGb6SXgHmwHSfX0thAND/DSeCxWQo2ZWweRbBM2g1a87qXaxzfSR
- eHni1obVctijA//+cl946Gmar+ijxpryHcrhK/9Kew3klG7UsuN2q/3GEyAhHhoS3DzO
- FXmatd2DhGpzD53N2yyRM+AKgXm1JWiGtzdsN6s48G7zJC3jEO2x8Hbult169ZAdGw5o
- wV2UXL0Wdz7y+IUVYb+6iyAgQL9sTy+IQJU1kVpGKIii+qfOLf3yc8w3eryET1ULQJAU
- W26t8mUFHrGMPT7gSaa2whI6uQy4ir0vgTHPwX1K5ve1eEL2XJQ984VDb5w6bRa9ICFT yA== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 368j1u42kf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 25 Jan 2021 01:52:31 -0800
-Received: from SC-EXCH02.marvell.com (10.93.176.82) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 25 Jan
- 2021 01:52:29 -0800
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 25 Jan
- 2021 01:52:29 -0800
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (104.47.56.175)
- by DC5-EXCH01.marvell.com (10.69.176.38) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2 via Frontend Transport; Mon, 25 Jan 2021 01:52:29 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=D0Rvm8QDoeDt5POneWX3PF3y7/1bDCpGNwfqmbdPu2ewF8/RNKPksHgChWnFixRHbzY/Qr+UDN3zekC9vCg8P5JrEOQ6wPHccvHP4Zi9fExN3dF95pKmcHuq4FCp59C/Z8dHt0l4+7RWClhEslWVylc5gIwX6mvK2vlaYqhE1A9N9CZ5120jT/j1hwlJDCQ+bu1lEKGT//khkyJjo1wJ6E8im4UEah5OLlKWQINcomMPfeO5/3Ir6wheofAmuirRNQPrdJZRCOMgGQgdN/+yM/b6FgNXY+4FWxffOxsh6fKlrN29QKwD2xHjGqCtQbaUoWNXvPhLbcrOxyMx5JtL1g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=m6qGuHzQSkYN6uDOT5kTbmc4I59UuqyBRVG/chMkGvQ=;
- b=KNI/NULdmNiT/yxwN6QLUPxXnB1lpZ5R03NZW0CVm4EhB+6VwtfWueWVfEtvJNWVVWh3Dy9aytqt6FNt/wuVui0utKwTsUk+fqv26ocH3+HiK6DhpBx2nfL4obYfNKwRZEyLoBIkgyRfiE4VDnIP9xlAx3zfpaXKdAAQm48i1PuCAHeblTD4QjbSSK4Tk36mORhxNjLHEfuWLMXdX/IV7/mDrws1lVvRySoUMVjYBHCtuNbAbwjKhocr787H0PNdpQeJXmQcwlWf4ddobr+BMDAoW8tdmAab3eUISq4Jys9ml5xQsjbcyJE0/kNZjItykSn+pYnr/KL8vZyAJGVzuA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=m6qGuHzQSkYN6uDOT5kTbmc4I59UuqyBRVG/chMkGvQ=;
- b=PoQMZeTh8aOXaxxOAcUJ8uj4kdErlxmnYjmagg3SoYkNsZHHElb1bsGRN1aDx64qJlKfWm66QctK7+xmR2ln0DScJjtIJVmjQDlmfZQ6QXPkYyJqbxC7LltH6IqQXh5OeiDq7w8QwCvaouotZzYYLq9z7IjXKwHLYG5J0KyXmfM=
-Received: from DM6PR18MB3034.namprd18.prod.outlook.com (2603:10b6:5:18c::32)
- by DM6PR18MB3722.namprd18.prod.outlook.com (2603:10b6:5:c2::28) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.13; Mon, 25 Jan
- 2021 09:52:27 +0000
-Received: from DM6PR18MB3034.namprd18.prod.outlook.com
- ([fe80::455c:aa82:3f6c:95e9]) by DM6PR18MB3034.namprd18.prod.outlook.com
- ([fe80::455c:aa82:3f6c:95e9%7]) with mapi id 15.20.3784.019; Mon, 25 Jan 2021
- 09:52:27 +0000
-From:   Saurav Kashyap <skashyap@marvell.com>
-To:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>
-CC:     GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: RE: [EXT] [PATCH] scsi: qla2xxx: fix some memory corruption
-Thread-Topic: [EXT] [PATCH] scsi: qla2xxx: fix some memory corruption
-Thread-Index: AQHW8vZQqe0wROdeNU6MRb6tZasxpqo4GW/A
-Date:   Mon, 25 Jan 2021 09:52:27 +0000
-Message-ID: <DM6PR18MB303455B3BC025E7F82469A4AD2BD9@DM6PR18MB3034.namprd18.prod.outlook.com>
-References: <YA6E0geUlL9Hs04A@mwanda>
-In-Reply-To: <YA6E0geUlL9Hs04A@mwanda>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: oracle.com; dkim=none (message not signed)
- header.d=none;oracle.com; dmarc=none action=none header.from=marvell.com;
-x-originating-ip: [103.103.215.229]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 207da384-2975-499b-5cc5-08d8c116ec6f
-x-ms-traffictypediagnostic: DM6PR18MB3722:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM6PR18MB3722DB8361C551FF32A98C22D2BD9@DM6PR18MB3722.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:6790;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: WR+g2FYgbLRlZLWDaZ/94Hzi535Sp3VfyAaMTmYDT89yOFnxZvk2blMbwpMqAiK1TG/7YH/6EyrJw5IlViVEMR09lutQILtVKWyO9krHZvp46CqFGuldczbZfQkgKrwG346Ft7ULLU8//LavnUrW2lk85kbkdnpMIVd3C/5sXtBKVeOISYdmYflb5Nz/Z7jYFsnJjVpbkjvwB/QbfRgomilpfqExeVcj33xmlAuKuWQCfzzbfjQXLwXeTPo60BZGQ7rx7gRCkTzbK2xfCZhbW+oJ5UDOEykX5mCUZXXx9l1Ff7XE121ZM2+A9Xy2r4EZ75Y98cgbZffNbaUfh61LimVvB6l/AVp/zAXTWKg1dMk8qxwatEsXinOK5frsZN741SHQYHuTbGbk0GRgf1qsXymUOTvdRB6eq9kRZQQ1+Mw9xH/TniONFjqBbFYGm2KGDRV9A3N6q1/BjZoRHkIW4a8u1B5fyIN1kUw1S8+IumEQas/oa0YwkuqApgx3u3bzg3dxlN7lKeDP5uQ8Ruv6/A==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR18MB3034.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(396003)(136003)(346002)(366004)(39860400002)(4326008)(53546011)(478600001)(86362001)(83380400001)(76116006)(71200400001)(316002)(8936002)(7696005)(2906002)(66946007)(52536014)(8676002)(186003)(6636002)(66476007)(66556008)(64756008)(66446008)(110136005)(9686003)(6506007)(55016002)(26005)(5660300002)(33656002)(54906003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?qpbIOVFhnYrnJkxY7bN46ZHIf7gHivOM1QJ1YXaOVOkAeVp52iQER4GJUvlA?=
- =?us-ascii?Q?Kcxh1qC8Si5HaM2ySmpPVtUy6Z/yhQGB4LJaIaHFdkXh4fkWZ6coMNjZfce4?=
- =?us-ascii?Q?rlMHF6ENSlKixQnZlgpdWKkeAT3ilkidJcs6MEoUd8Y9Vp1AihfOtoW/OJnW?=
- =?us-ascii?Q?MnRaRgOjIEWweKbDf8rYXtlxgc9coJZsLzuOhPE7FSxKxM6N1RXYfJLKqHUI?=
- =?us-ascii?Q?hWpNpt6h1Xq517b5ncGwuGGVHzo/muTtJsDEPxbz53qVcJ7ss1clfJCBqF0e?=
- =?us-ascii?Q?8qfQbHTrb4rcR8tmkXGdOyrdBzTzfis6+HZmC6FCrJUkbllBLKj/DEsKUN9T?=
- =?us-ascii?Q?BKF2V8CCYeZPS5xCTgq+j/sB49T5jQpfoSuo2Q5VpX88gpVcnUW7nFHP9kOa?=
- =?us-ascii?Q?Cyzt6ZtPMfLD7fuF9zAB+u/t85ct63B8KYzZAwRMk8Y5uLWDY6t7qtHjyGiD?=
- =?us-ascii?Q?Lp+e4bxcLAPnhNkcTluzT7woeseilPwjFkISMOwCucyPfm2jE4h2rLxd196Z?=
- =?us-ascii?Q?5B1CW7rbSImdgHLekMNpyDI1uwjriurTiW54Eg1gtyTg8MaLU0TTcmeyjVxh?=
- =?us-ascii?Q?o4WH9fKIYG/Xr7CozAom7SAhEqM+Tr5sDsjyBJa4C6PanQxafMnW4tah60vb?=
- =?us-ascii?Q?wN3nhLVReBO3601I7QM6cxPq7jYKZODBrrxkBWdFGBui9VKoAO3Zaf0sRENx?=
- =?us-ascii?Q?z4cak8pQBrVdavzFMQd/8sxGe32+xpS6ACTeCYHOOjlOqAhd4D+UKEy7Uiuw?=
- =?us-ascii?Q?sEA69Xc1gH7vBgOgosOpf5ZL5Mxpl9BH9dyzV3US2H535DdYiEfedlvA1fCH?=
- =?us-ascii?Q?cSnhAaSDi7+D32YziqkkHg/qmOq9WfYmjsDlj/xAEnQ57d55/tKyCr3N80d4?=
- =?us-ascii?Q?LXPju9MoLn/E8s4rto63zRaapjYWFjKFACTu5z24GPFTmcVS2k+BzWn+2kFI?=
- =?us-ascii?Q?lvTdTrvfsGF0i/ZAso4g4vwcgwQuU5XkkOBI1msr5EU=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1732894AbhAZF2j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 00:28:39 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:48425 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726313AbhAYTMX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Jan 2021 14:12:23 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 2FB8820425B;
+        Mon, 25 Jan 2021 20:11:32 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id A0-qo5ykU4jd; Mon, 25 Jan 2021 20:11:28 +0100 (CET)
+Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        by smtp.infotech.no (Postfix) with ESMTPA id 7E3C52041CF;
+        Mon, 25 Jan 2021 20:11:27 +0100 (CET)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        kashyap.desai@broadcom.com, Hannes Reinecke <hare@suse.com>
+Subject: [PATCH v15 01/45] sg: move functions around
+Date:   Mon, 25 Jan 2021 14:10:38 -0500
+Message-Id: <20210125191122.345858-2-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210125191122.345858-1-dgilbert@interlog.com>
+References: <20210125191122.345858-1-dgilbert@interlog.com>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR18MB3034.namprd18.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 207da384-2975-499b-5cc5-08d8c116ec6f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jan 2021 09:52:27.2168
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: YQ3RtI/LiOQOGmFA1lnr6OoSe2Fy85IVXb3CrvKwGSVPHHfYfUuBeTPKV5GCyomI4favd2IJxemfDWFRExN8XA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR18MB3722
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2021-01-25_03:2021-01-22,2021-01-25 signatures=0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Dan,
-Thanks for a patch.
+Move main entry point functions around so submission code comes
+before completion code. Prior to this, the driver used the
+traditional open(), close(), read(), write(), ioctl() ordering
+however in this case that places completion code (i.e.
+sg_read()) before submission code (i.e. sg_write()). The main
+driver entry points are considered to be those named in struct
+file_operations sg_fops' definition.
 
-> -----Original Message-----
-> From: Dan Carpenter <dan.carpenter@oracle.com>
-> Sent: Monday, January 25, 2021 2:14 PM
-> To: Nilesh Javali <njavali@marvell.com>
-> Cc: GR-QLogic-Storage-Upstream <GR-QLogic-Storage-
-> Upstream@marvell.com>; James E.J. Bottomley <jejb@linux.ibm.com>;
-> Martin K. Petersen <martin.petersen@oracle.com>; Himanshu Madhani
-> <himanshu.madhani@oracle.com>; Saurav Kashyap
-> <skashyap@marvell.com>; linux-scsi@vger.kernel.org; linux-
-> kernel@vger.kernel.org; kernel-janitors@vger.kernel.org
-> Subject: [EXT] [PATCH] scsi: qla2xxx: fix some memory corruption
->=20
-> External Email
->=20
-> ----------------------------------------------------------------------
-> This was supposed to be "data" instead of "&data".  The current code
-> will corrupt the stack.
->=20
-> Fixes: dbf1f53cfd23 ("scsi: qla2xxx: Implementation to get and manage hos=
-t,
-> target stats and initiator port")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
->  drivers/scsi/qla2xxx/qla_bsg.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
-g.c
-> index e45da05383cd..bee8cf9f8123 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -2667,7 +2667,7 @@ qla2x00_get_tgt_stats(struct bsg_job *bsg_job)
->=20
->  		bsg_reply->reply_payload_rcv_len =3D
->  			sg_copy_from_buffer(bsg_job-
-> >reply_payload.sg_list,
-> -					    bsg_job->reply_payload.sg_cnt,
-> &data,
-> +					    bsg_job->reply_payload.sg_cnt,
-> data,
->  					    sizeof(struct
-> ql_vnd_tgt_stats_resp));
->=20
->  		bsg_reply->result =3D DID_OK;
-> --
+Helper functions are placed above their caller to reduce the
+number of forward function declarations needed.
 
-Acked-by: Saurav Kashyap <skashyap@marvell.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/sg.c | 496 ++++++++++++++++++++++++----------------------
+ 1 file changed, 261 insertions(+), 235 deletions(-)
 
-> 2.29.2
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index bfa8d77322d7..acb5bb8788ee 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -8,11 +8,12 @@
+  * Original driver (sg.c):
+  *        Copyright (C) 1992 Lawrence Foard
+  * Version 2 and 3 extensions to driver:
+- *        Copyright (C) 1998 - 2014 Douglas Gilbert
++ *        Copyright (C) 1998 - 2019 Douglas Gilbert
+  */
+ 
+-static int sg_version_num = 30536;	/* 2 digits for each component */
+-#define SG_VERSION_STR "3.5.36"
++static int sg_version_num = 30901;  /* [x]xyyzz where [x] empty when x=0 */
++#define SG_VERSION_STR "3.9.01"		/* [x]x.[y]y.zz */
++static char *sg_version_date = "20190606";
+ 
+ /*
+  *  D. P. Gilbert (dgilbert@interlog.com), notes:
+@@ -47,6 +48,7 @@ static int sg_version_num = 30536;	/* 2 digits for each component */
+ #include <linux/ratelimit.h>
+ #include <linux/uio.h>
+ #include <linux/cred.h> /* for sg_check_file_access() */
++#include <linux/proc_fs.h>
+ 
+ #include "scsi.h"
+ #include <scsi/scsi_dbg.h>
+@@ -57,12 +59,6 @@ static int sg_version_num = 30536;	/* 2 digits for each component */
+ 
+ #include "scsi_logging.h"
+ 
+-#ifdef CONFIG_SCSI_PROC_FS
+-#include <linux/proc_fs.h>
+-static char *sg_version_date = "20140603";
+-
+-static int sg_proc_init(void);
+-#endif
+ 
+ #define SG_ALLOW_DIO_DEF 0
+ 
+@@ -173,11 +169,11 @@ typedef struct sg_device { /* holds the state of each scsi generic device */
+ 
+ /* tasklet or soft irq callback */
+ static void sg_rq_end_io(struct request *rq, blk_status_t status);
++/* Declarations of other static functions used before they are defined */
++static int sg_proc_init(void);
+ static int sg_start_req(Sg_request *srp, unsigned char *cmd);
+ static int sg_finish_rem_req(Sg_request * srp);
+ static int sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size);
+-static ssize_t sg_new_read(Sg_fd * sfp, char __user *buf, size_t count,
+-			   Sg_request * srp);
+ static ssize_t sg_new_write(Sg_fd *sfp, struct file *file,
+ 			const char __user *buf, size_t count, int blocking,
+ 			int read_only, int sg_io_owned, Sg_request **o_srp);
+@@ -190,7 +186,6 @@ static void sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size);
+ static void sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp);
+ static Sg_fd *sg_add_sfp(Sg_device * sdp);
+ static void sg_remove_sfp(struct kref *);
+-static Sg_request *sg_get_rq_mark(Sg_fd * sfp, int pack_id);
+ static Sg_request *sg_add_request(Sg_fd * sfp);
+ static int sg_remove_request(Sg_fd * sfp, Sg_request * srp);
+ static Sg_device *sg_get_dev(int dev);
+@@ -232,16 +227,6 @@ static int sg_check_file_access(struct file *filp, const char *caller)
+ 	return 0;
+ }
+ 
+-static int sg_allow_access(struct file *filp, unsigned char *cmd)
+-{
+-	struct sg_fd *sfp = filp->private_data;
+-
+-	if (sfp->parentdp->device->type == TYPE_SCANNER)
+-		return 0;
+-
+-	return blk_verify_command(cmd, filp->f_mode);
+-}
+-
+ static int
+ open_wait(Sg_device *sdp, int flags)
+ {
+@@ -405,196 +390,6 @@ sg_release(struct inode *inode, struct file *filp)
+ 	return 0;
+ }
+ 
+-static int get_sg_io_pack_id(int *pack_id, void __user *buf, size_t count)
+-{
+-	struct sg_header __user *old_hdr = buf;
+-	int reply_len;
+-
+-	if (count >= SZ_SG_HEADER) {
+-		/* negative reply_len means v3 format, otherwise v1/v2 */
+-		if (get_user(reply_len, &old_hdr->reply_len))
+-			return -EFAULT;
+-
+-		if (reply_len >= 0)
+-			return get_user(*pack_id, &old_hdr->pack_id);
+-
+-		if (in_compat_syscall() &&
+-		    count >= sizeof(struct compat_sg_io_hdr)) {
+-			struct compat_sg_io_hdr __user *hp = buf;
+-
+-			return get_user(*pack_id, &hp->pack_id);
+-		}
+-
+-		if (count >= sizeof(struct sg_io_hdr)) {
+-			struct sg_io_hdr __user *hp = buf;
+-
+-			return get_user(*pack_id, &hp->pack_id);
+-		}
+-	}
+-
+-	/* no valid header was passed, so ignore the pack_id */
+-	*pack_id = -1;
+-	return 0;
+-}
+-
+-static ssize_t
+-sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+-{
+-	Sg_device *sdp;
+-	Sg_fd *sfp;
+-	Sg_request *srp;
+-	int req_pack_id = -1;
+-	sg_io_hdr_t *hp;
+-	struct sg_header *old_hdr;
+-	int retval;
+-
+-	/*
+-	 * This could cause a response to be stranded. Close the associated
+-	 * file descriptor to free up any resources being held.
+-	 */
+-	retval = sg_check_file_access(filp, __func__);
+-	if (retval)
+-		return retval;
+-
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+-		return -ENXIO;
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+-				      "sg_read: count=%d\n", (int) count));
+-
+-	if (sfp->force_packid)
+-		retval = get_sg_io_pack_id(&req_pack_id, buf, count);
+-	if (retval)
+-		return retval;
+-
+-	srp = sg_get_rq_mark(sfp, req_pack_id);
+-	if (!srp) {		/* now wait on packet to arrive */
+-		if (atomic_read(&sdp->detaching))
+-			return -ENODEV;
+-		if (filp->f_flags & O_NONBLOCK)
+-			return -EAGAIN;
+-		retval = wait_event_interruptible(sfp->read_wait,
+-			(atomic_read(&sdp->detaching) ||
+-			(srp = sg_get_rq_mark(sfp, req_pack_id))));
+-		if (atomic_read(&sdp->detaching))
+-			return -ENODEV;
+-		if (retval)
+-			/* -ERESTARTSYS as signal hit process */
+-			return retval;
+-	}
+-	if (srp->header.interface_id != '\0')
+-		return sg_new_read(sfp, buf, count, srp);
+-
+-	hp = &srp->header;
+-	old_hdr = kzalloc(SZ_SG_HEADER, GFP_KERNEL);
+-	if (!old_hdr)
+-		return -ENOMEM;
+-
+-	old_hdr->reply_len = (int) hp->timeout;
+-	old_hdr->pack_len = old_hdr->reply_len; /* old, strange behaviour */
+-	old_hdr->pack_id = hp->pack_id;
+-	old_hdr->twelve_byte =
+-	    ((srp->data.cmd_opcode >= 0xc0) && (12 == hp->cmd_len)) ? 1 : 0;
+-	old_hdr->target_status = hp->masked_status;
+-	old_hdr->host_status = hp->host_status;
+-	old_hdr->driver_status = hp->driver_status;
+-	if ((CHECK_CONDITION & hp->masked_status) ||
+-	    (DRIVER_SENSE & hp->driver_status))
+-		memcpy(old_hdr->sense_buffer, srp->sense_b,
+-		       sizeof (old_hdr->sense_buffer));
+-	switch (hp->host_status) {
+-	/* This setup of 'result' is for backward compatibility and is best
+-	   ignored by the user who should use target, host + driver status */
+-	case DID_OK:
+-	case DID_PASSTHROUGH:
+-	case DID_SOFT_ERROR:
+-		old_hdr->result = 0;
+-		break;
+-	case DID_NO_CONNECT:
+-	case DID_BUS_BUSY:
+-	case DID_TIME_OUT:
+-		old_hdr->result = EBUSY;
+-		break;
+-	case DID_BAD_TARGET:
+-	case DID_ABORT:
+-	case DID_PARITY:
+-	case DID_RESET:
+-	case DID_BAD_INTR:
+-		old_hdr->result = EIO;
+-		break;
+-	case DID_ERROR:
+-		old_hdr->result = (srp->sense_b[0] == 0 && 
+-				  hp->masked_status == GOOD) ? 0 : EIO;
+-		break;
+-	default:
+-		old_hdr->result = EIO;
+-		break;
+-	}
+-
+-	/* Now copy the result back to the user buffer.  */
+-	if (count >= SZ_SG_HEADER) {
+-		if (copy_to_user(buf, old_hdr, SZ_SG_HEADER)) {
+-			retval = -EFAULT;
+-			goto free_old_hdr;
+-		}
+-		buf += SZ_SG_HEADER;
+-		if (count > old_hdr->reply_len)
+-			count = old_hdr->reply_len;
+-		if (count > SZ_SG_HEADER) {
+-			if (sg_read_oxfer(srp, buf, count - SZ_SG_HEADER)) {
+-				retval = -EFAULT;
+-				goto free_old_hdr;
+-			}
+-		}
+-	} else
+-		count = (old_hdr->result == 0) ? 0 : -EIO;
+-	sg_finish_rem_req(srp);
+-	sg_remove_request(sfp, srp);
+-	retval = count;
+-free_old_hdr:
+-	kfree(old_hdr);
+-	return retval;
+-}
+-
+-static ssize_t
+-sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
+-{
+-	sg_io_hdr_t *hp = &srp->header;
+-	int err = 0, err2;
+-	int len;
+-
+-	if (in_compat_syscall()) {
+-		if (count < sizeof(struct compat_sg_io_hdr)) {
+-			err = -EINVAL;
+-			goto err_out;
+-		}
+-	} else if (count < SZ_SG_IO_HDR) {
+-		err = -EINVAL;
+-		goto err_out;
+-	}
+-	hp->sb_len_wr = 0;
+-	if ((hp->mx_sb_len > 0) && hp->sbp) {
+-		if ((CHECK_CONDITION & hp->masked_status) ||
+-		    (DRIVER_SENSE & hp->driver_status)) {
+-			int sb_len = SCSI_SENSE_BUFFERSIZE;
+-			sb_len = (hp->mx_sb_len > sb_len) ? sb_len : hp->mx_sb_len;
+-			len = 8 + (int) srp->sense_b[7];	/* Additional sense length field */
+-			len = (len > sb_len) ? sb_len : len;
+-			if (copy_to_user(hp->sbp, srp->sense_b, len)) {
+-				err = -EFAULT;
+-				goto err_out;
+-			}
+-			hp->sb_len_wr = len;
+-		}
+-	}
+-	if (hp->masked_status || hp->host_status || hp->driver_status)
+-		hp->info |= SG_INFO_CHECK;
+-	err = put_sg_io_hdr(hp, buf);
+-err_out:
+-	err2 = sg_finish_rem_req(srp);
+-	sg_remove_request(sfp, srp);
+-	return err ? : err2 ? : count;
+-}
+-
+ static ssize_t
+ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ {
+@@ -708,6 +503,16 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	return (k < 0) ? k : count;
+ }
+ 
++static int sg_allow_access(struct file *filp, unsigned char *cmd)
++{
++	struct sg_fd *sfp = filp->private_data;
++
++	if (sfp->parentdp->device->type == TYPE_SCANNER)
++		return 0;
++
++	return blk_verify_command(cmd, filp->f_mode);
++}
++
+ static ssize_t
+ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
+ 		 size_t count, int blocking, int read_only, int sg_io_owned,
+@@ -834,6 +639,75 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 	return 0;
+ }
+ 
++/*
++ * read(2) related functions follow. They are shown after write(2) related
++ * functions. Apart from read(2) itself, ioctl(SG_IORECEIVE) and the second
++ * half of the ioctl(SG_IO) share code with read(2).
++ */
++
++static Sg_request *
++sg_get_rq_mark(Sg_fd *sfp, int pack_id)
++{
++	Sg_request *resp;
++	unsigned long iflags;
++
++	write_lock_irqsave(&sfp->rq_list_lock, iflags);
++	list_for_each_entry(resp, &sfp->rq_list, entry) {
++		/* look for requests that are ready + not SG_IO owned */
++		if (resp->done == 1 && !resp->sg_io_owned &&
++		    (-1 == pack_id || resp->header.pack_id == pack_id)) {
++			resp->done = 2;	/* guard against other readers */
++			write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++			return resp;
++		}
++	}
++	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++	return NULL;
++}
++
++static ssize_t
++sg_new_read(Sg_fd *sfp, char __user *buf, size_t count, Sg_request *srp)
++{
++	sg_io_hdr_t *hp = &srp->header;
++	int err = 0, err2;
++	int len;
++
++	if (in_compat_syscall()) {
++		if (count < sizeof(struct compat_sg_io_hdr)) {
++			err = -EINVAL;
++			goto err_out;
++		}
++	} else if (count < SZ_SG_IO_HDR) {
++		err = -EINVAL;
++		goto err_out;
++	}
++	hp->sb_len_wr = 0;
++	if (hp->mx_sb_len > 0 && hp->sbp) {
++		if ((CHECK_CONDITION & hp->masked_status) ||
++		    (DRIVER_SENSE & hp->driver_status)) {
++			int sb_len = SCSI_SENSE_BUFFERSIZE;
++
++			sb_len = (hp->mx_sb_len > sb_len) ? sb_len :
++							    hp->mx_sb_len;
++			/* Additional sense length field */
++			len = 8 + (int)srp->sense_b[7];
++			len = (len > sb_len) ? sb_len : len;
++			if (copy_to_user(hp->sbp, srp->sense_b, len)) {
++				err = -EFAULT;
++				goto err_out;
++			}
++			hp->sb_len_wr = len;
++		}
++	}
++	if (hp->masked_status || hp->host_status || hp->driver_status)
++		hp->info |= SG_INFO_CHECK;
++	err = put_sg_io_hdr(hp, buf);
++err_out:
++	err2 = sg_finish_rem_req(srp);
++	sg_remove_request(sfp, srp);
++	return err ? : err2 ? : count;
++}
++
+ static int srp_done(Sg_fd *sfp, Sg_request *srp)
+ {
+ 	unsigned long flags;
+@@ -845,6 +719,171 @@ static int srp_done(Sg_fd *sfp, Sg_request *srp)
+ 	return ret;
+ }
+ 
++static ssize_t
++sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
++{
++	Sg_device *sdp;
++	Sg_fd *sfp;
++	Sg_request *srp;
++	int req_pack_id = -1;
++	sg_io_hdr_t *hp;
++	struct sg_header *old_hdr = NULL;
++	int retval = 0;
++
++	/*
++	 * This could cause a response to be stranded. Close the associated
++	 * file descriptor to free up any resources being held.
++	 */
++	retval = sg_check_file_access(filp, __func__);
++	if (retval)
++		return retval;
++
++	sfp = filp->private_data;
++	sdp = sfp->parentdp;
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
++				      "%s: count=%d\n", __func__,
++				      (int)count));
++	if (!sdp)
++		return -ENXIO;
++
++	if (!access_ok(buf, count))
++		return -EFAULT;
++	if (sfp->force_packid && count >= SZ_SG_HEADER) {
++		old_hdr = kmalloc(SZ_SG_HEADER, GFP_KERNEL);
++		if (!old_hdr)
++			return -ENOMEM;
++		if (__copy_from_user(old_hdr, buf, SZ_SG_HEADER)) {
++			retval = -EFAULT;
++			goto free_old_hdr;
++		}
++		if (old_hdr->reply_len < 0) {
++			if (count >= SZ_SG_IO_HDR) {
++				sg_io_hdr_t *new_hdr;
++
++				new_hdr = kmalloc(SZ_SG_IO_HDR, GFP_KERNEL);
++				if (!new_hdr) {
++					retval = -ENOMEM;
++					goto free_old_hdr;
++				}
++				retval = __copy_from_user
++				    (new_hdr, buf, SZ_SG_IO_HDR);
++				req_pack_id = new_hdr->pack_id;
++				kfree(new_hdr);
++				if (retval) {
++					retval = -EFAULT;
++					goto free_old_hdr;
++				}
++			}
++		} else {
++			req_pack_id = old_hdr->pack_id;
++		}
++	}
++	srp = sg_get_rq_mark(sfp, req_pack_id);
++	if (!srp) {		/* now wait on packet to arrive */
++		if (atomic_read(&sdp->detaching)) {
++			retval = -ENODEV;
++			goto free_old_hdr;
++		}
++		if (filp->f_flags & O_NONBLOCK) {
++			retval = -EAGAIN;
++			goto free_old_hdr;
++		}
++		retval = wait_event_interruptible
++				(sfp->read_wait,
++				 (atomic_read(&sdp->detaching) ||
++				  (srp = sg_get_rq_mark(sfp, req_pack_id))));
++		if (atomic_read(&sdp->detaching)) {
++			retval = -ENODEV;
++			goto free_old_hdr;
++		}
++		if (retval) {
++			/* -ERESTARTSYS as signal hit process */
++			goto free_old_hdr;
++		}
++	}
++	if (srp->header.interface_id != '\0') {
++		retval = sg_new_read(sfp, buf, count, srp);
++		goto free_old_hdr;
++	}
++
++	hp = &srp->header;
++	if (!old_hdr) {
++		old_hdr = kmalloc(SZ_SG_HEADER, GFP_KERNEL);
++		if (!old_hdr) {
++			retval = -ENOMEM;
++			goto free_old_hdr;
++		}
++	}
++	memset(old_hdr, 0, SZ_SG_HEADER);
++	old_hdr->reply_len = (int)hp->timeout;
++	old_hdr->pack_len = old_hdr->reply_len; /* old, strange behaviour */
++	old_hdr->pack_id = hp->pack_id;
++	old_hdr->twelve_byte =
++	    ((srp->data.cmd_opcode >= 0xc0) && (hp->cmd_len == 12)) ? 1 : 0;
++	old_hdr->target_status = hp->masked_status;
++	old_hdr->host_status = hp->host_status;
++	old_hdr->driver_status = hp->driver_status;
++	if ((hp->masked_status & CHECK_CONDITION) ||
++	    (hp->driver_status & DRIVER_SENSE))
++		memcpy(old_hdr->sense_buffer, srp->sense_b,
++		       sizeof(old_hdr->sense_buffer));
++	switch (hp->host_status) {
++	/*
++	 * This setup of 'result' is for backward compatibility and is best
++	 * ignored by the user who should use target, host + driver status
++	 */
++	case DID_OK:
++	case DID_PASSTHROUGH:
++	case DID_SOFT_ERROR:
++		old_hdr->result = 0;
++		break;
++	case DID_NO_CONNECT:
++	case DID_BUS_BUSY:
++	case DID_TIME_OUT:
++		old_hdr->result = EBUSY;
++		break;
++	case DID_BAD_TARGET:
++	case DID_ABORT:
++	case DID_PARITY:
++	case DID_RESET:
++	case DID_BAD_INTR:
++		old_hdr->result = EIO;
++		break;
++	case DID_ERROR:
++		old_hdr->result = (srp->sense_b[0] == 0 &&
++				  hp->masked_status == GOOD) ? 0 : EIO;
++		break;
++	default:
++		old_hdr->result = EIO;
++		break;
++	}
++
++	/* Now copy the result back to the user buffer.  */
++	if (count >= SZ_SG_HEADER) {
++		if (__copy_to_user(buf, old_hdr, SZ_SG_HEADER)) {
++			retval = -EFAULT;
++			goto free_old_hdr;
++		}
++		buf += SZ_SG_HEADER;
++		if (count > old_hdr->reply_len)
++			count = old_hdr->reply_len;
++		if (count > SZ_SG_HEADER) {
++			if (sg_read_oxfer(srp, buf, count - SZ_SG_HEADER)) {
++				retval = -EFAULT;
++				goto free_old_hdr;
++			}
++		}
++	} else {
++		count = (old_hdr->result == 0) ? 0 : -EIO;
++	}
++	sg_finish_rem_req(srp);
++	sg_remove_request(sfp, srp);
++	retval = count;
++free_old_hdr:
++	kfree(old_hdr);
++	return retval;
++}
++
+ static int max_sectors_bytes(struct request_queue *q)
+ {
+ 	unsigned int max_sectors = queue_max_sectors(q);
+@@ -1692,9 +1731,7 @@ init_sg(void)
+ 	sg_sysfs_valid = 1;
+ 	rc = scsi_register_interface(&sg_interface);
+ 	if (0 == rc) {
+-#ifdef CONFIG_SCSI_PROC_FS
+ 		sg_proc_init();
+-#endif				/* CONFIG_SCSI_PROC_FS */
+ 		return 0;
+ 	}
+ 	class_destroy(sg_sysfs_class);
+@@ -1703,6 +1740,14 @@ init_sg(void)
+ 	return rc;
+ }
+ 
++#ifndef CONFIG_SCSI_PROC_FS
++static int
++sg_proc_init(void)
++{
++	return 0;
++}
++#endif
++
+ static void __exit
+ exit_sg(void)
+ {
+@@ -2069,9 +2114,10 @@ sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size)
+ 			rem -= num;
+ 	}
+ 
+-	if (k >= rsv_schp->k_use_sg)
++	if (k >= rsv_schp->k_use_sg) {
+ 		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sfp->parentdp,
+ 				 "sg_link_reserve: BAD size\n"));
++	}
+ }
+ 
+ static void
+@@ -2092,26 +2138,6 @@ sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp)
+ 	sfp->res_in_use = 0;
+ }
+ 
+-static Sg_request *
+-sg_get_rq_mark(Sg_fd * sfp, int pack_id)
+-{
+-	Sg_request *resp;
+-	unsigned long iflags;
+-
+-	write_lock_irqsave(&sfp->rq_list_lock, iflags);
+-	list_for_each_entry(resp, &sfp->rq_list, entry) {
+-		/* look for requests that are ready + not SG_IO owned */
+-		if ((1 == resp->done) && (!resp->sg_io_owned) &&
+-		    ((-1 == pack_id) || (resp->header.pack_id == pack_id))) {
+-			resp->done = 2;	/* guard against other readers */
+-			write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+-			return resp;
+-		}
+-	}
+-	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+-	return NULL;
+-}
+-
+ /* always adds to end of list */
+ static Sg_request *
+ sg_add_request(Sg_fd * sfp)
+-- 
+2.25.1
 
