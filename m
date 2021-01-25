@@ -2,184 +2,448 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E75B3C07EBE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 176A2C433DB
 	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:30:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C7313229C4
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:30:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA523230FD
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:30:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387711AbhAZFag (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:30:36 -0500
-Received: from mailout3.samsung.com ([203.254.224.33]:16922 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726821AbhAZEPn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2021 23:15:43 -0500
-Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210126041459epoutp03c64733fae53cd36d504346453252f9d6~drQncXHJj0643006430epoutp03h
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Jan 2021 04:14:59 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210126041459epoutp03c64733fae53cd36d504346453252f9d6~drQncXHJj0643006430epoutp03h
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1611634499;
-        bh=hAQ7FhiZ1JZFqagmbqbRZIMv0fmG2NAsjmCKv4BvjQQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=t7/P9o8fPgAMsF/FIDOHv550wvU7/mldpoRKlWzgSqCbOU5djWwkv+EHSbXexIKbS
-         hpXSbopR5sbCMclUvT6xGdrrTDzt/uqqxv5ML4uGLm1K0VvsdD3coSmsxWt3YH8clV
-         PTYg0zhQ/gTw5YdnEMYufvFflpGfr8beu0XH1s+U=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas1p3.samsung.com (KnoxPortal) with ESMTP id
-        20210126041458epcas1p3d73bb188aaafa2edd0444104ded26a67~drQmzBl351969619696epcas1p3X;
-        Tue, 26 Jan 2021 04:14:58 +0000 (GMT)
-Received: from epsmges1p3.samsung.com (unknown [182.195.40.163]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4DPtg41kjGz4x9Q6; Tue, 26 Jan
-        2021 04:14:56 +0000 (GMT)
-Received: from epcas1p4.samsung.com ( [182.195.41.48]) by
-        epsmges1p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        EB.2F.09582.0479F006; Tue, 26 Jan 2021 13:14:56 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20210126041455epcas1p2c38ddc3bfe20bcf10217956b47096a33~drQj3KSZj0618706187epcas1p2x;
-        Tue, 26 Jan 2021 04:14:55 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20210126041455epsmtrp12a2a8edff2a6b5b451291a4b5dc759e3~drQj2MjtO2957929579epsmtrp1M;
-        Tue, 26 Jan 2021 04:14:55 +0000 (GMT)
-X-AuditID: b6c32a37-899ff7000000256e-8e-600f97408c5b
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        42.19.08745.F379F006; Tue, 26 Jan 2021 13:14:55 +0900 (KST)
-Received: from localhost.localdomain (unknown [10.253.99.105]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20210126041455epsmtip2ae4bdd25ecef58635dbe56f808bb33a3~drQjjPh700268402684epsmtip2W;
-        Tue, 26 Jan 2021 04:14:55 +0000 (GMT)
-From:   Changheun Lee <nanich.lee@samsung.com>
-To:     martin.petersen@oracle.com, Damien.LeMoal@wdc.com
-Cc:     arnd@arndb.de, hch@lst.de, jejb@linux.ibm.com,
-        jisoo2146.oh@samsung.com, junho89.kim@samsung.com,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        michael.christie@oracle.com, mj0123.lee@samsung.com,
-        nanich.lee@samsung.com, oneukum@suse.com,
-        seunghwan.hyun@samsung.com, sookwan7.kim@samsung.com,
-        woosung2.lee@samsung.com, yt0928.kim@samsung.com
-Subject: Re: [PATCH 1/1] scsi: sd: use max_xfer_blocks for set rw_max if
- max_xfer_blocks is available
-Date:   Tue, 26 Jan 2021 12:59:27 +0900
-Message-Id: <20210126035927.4768-1-nanich.lee@samsung.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <yq15z3o9vod.fsf@ca-mkp.ca.oracle.com>
+        id S2387595AbhAZFaL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 00:30:11 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:48768 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726690AbhAYTYa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Jan 2021 14:24:30 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 9B1B42042BE;
+        Mon, 25 Jan 2021 20:12:19 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id CakXLqWx2tIo; Mon, 25 Jan 2021 20:12:17 +0100 (CET)
+Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        by smtp.infotech.no (Postfix) with ESMTPA id 1A79C2042BC;
+        Mon, 25 Jan 2021 20:12:15 +0100 (CET)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        kashyap.desai@broadcom.com
+Subject: [PATCH v15 40/45] sg: remove rcv_done request state
+Date:   Mon, 25 Jan 2021 14:11:17 -0500
+Message-Id: <20210125191122.345858-41-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210125191122.345858-1-dgilbert@interlog.com>
+References: <20210125191122.345858-1-dgilbert@interlog.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrLJsWRmVeSWpSXmKPExsWy7bCmga7DdP4Eg8sHuCz+TjrGbtHa/o3J
-        YuXqo0wWi25sY7LoedLEavH1YbHF5V1z2Cy6r+9gs1h+/B8TUO0NVovpm+cwW1y7f4bdouvx
-        SjaLcyc/sVrMe+xgcWrHZGaL9Xt/sjkIevz+NYnRY8KiA4weu282sHl8fHqLxaNvyypGj/Vb
-        rrJ4fN4k59F+oJspgCMqxyYjNTEltUghNS85PyUzL91WyTs43jne1MzAUNfQ0sJcSSEvMTfV
-        VsnFJ0DXLTMH6AslhbLEnFKgUEBicbGSvp1NUX5pSapCRn5xia1SakFKToGhQYFecWJucWle
-        ul5yfq6VoYGBkSlQZUJOxsHp3AW/+Sv+Hz/A2sD4iqeLkZNDQsBEYufEu4wgtpDADkaJx0ek
-        uxi5gOxPjBLvP01ihnA+M0rMuPKADaZjZn8/O0RiF6NE19E3CFU/jswFm8UmoCPR9/YWWIeI
-        gKnE1D/TGUGKmAXeM0l8//8EyOHgEBZIl/j2G6yeRUBV4tKs80wgNq+AlcTaze2sENvkJZ72
-        LmcGsTkFjCWal+1nhqgRlDg58wkLiM0MVNO8dTbYERICRzgkzq7+wgjR7CLRsH0V1NnCEq+O
-        b2GHsKUkXva3sUM0dDNKNLfNZ4RwJjBKLHm+jAmiylji0+fPYJcyC2hKrN+lDxFWlNj5G+JL
-        ZgE+iXdfe1hBSiQEeCU62oQgSlQkzrTcZ4bZ9XztTqiJHhJHju5hhIRWG6PE039LmCYwKsxC
-        8tAsJA/NQti8gJF5FaNYakFxbnpqsWGBMXIUb2IEp2st8x2M095+0DvEyMTBeIhRgoNZSYR3
-        tx5PghBvSmJlVWpRfnxRaU5q8SFGU2BwT2SWEk3OB2aMvJJ4Q1MjY2NjCxMzczNTYyVx3iSD
-        B/FCAumJJanZqakFqUUwfUwcnFINTA5dS+70MP49qLxKRnv60aaybX+9g+SEJztG9qZZxPIG
-        NF1c0x9/6v9p3wecnSsW886L2rrscd7JpbHbfmZMyom/FCgi3HBHvWODULf1FTODFy4/jP+Z
-        zim7xCp2rVUgvdY7jzOoqG3F2lux99lEZHYzsfJfZJT7MnfvyZcLgiRO1qr2bM/fHP6Yy9PK
-        6zAHG+v7GJUrMX6avrJ77qzdXTj14LOAmat+iadeb07SWrLm4DFV/YT7fO6Sk2e0c/44rBkz
-        Wy38FPtJJdXbK6zjT7y5uO9IRazeHT6PUz+v+Kv1cGvtevTodcWREm/+iY09ZzSs03onrWSZ
-        xCR/lfG+ZOGLd1tmlPOtStpVMY3DXImlOCPRUIu5qDgRAOpPKWhgBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpmkeLIzCtJLcpLzFFi42LZdlhJXtd+On+CQdMMOYu/k46xW7S2f2Oy
-        WLn6KJPFohvbmCx6njSxWnx9WGxxedccNovu6zvYLJYf/8cEVHuD1WL65jnMFtfun2G36Hq8
-        ks3i3MlPrBbzHjtYnNoxmdli/d6fbA6CHr9/TWL0mLDoAKPH7psNbB4fn95i8ejbsorRY/2W
-        qywenzfJebQf6GYK4IjisklJzcksSy3St0vgyjg4nbvgN3/F/+MHWBsYX/F0MXJySAiYSMzs
-        72fvYuTiEBLYwShxsqOHCSIhJXH8xFvWLkYOIFtY4vDhYoiaj4wSM9aeYwepYRPQkeh7e4sN
-        xBYRMJe4c2IB2CBmgUZmie41t5lBmoUFUiX2zrIDqWERUJW4NOs82HxeASuJtZvbWSF2yUs8
-        7V3ODGJzChhLNC/bD9YqJGAkcWi9I0S5oMTJmU9YQGxmoPLmrbOZJzAKzEKSmoUktYCRaRWj
-        ZGpBcW56brFhgVFearlecWJucWleul5yfu4mRnA8aWntYNyz6oPeIUYmDsZDjBIczEoivLv1
-        eBKEeFMSK6tSi/Lji0pzUosPMUpzsCiJ817oOhkvJJCeWJKanZpakFoEk2Xi4JRqYGorMLl7
-        8XCAJRvHxZf5niFrSncosSzbVVOjMPt73pLF9u9PXXtT++fuRxF/h1MP9T6dbNf10JpxmMmu
-        MVRvu2xQbpJuY6fywhMdTzrmBL5iZ45KqtZ9bf3kEEvlShczgzVWZ4LdrifpFh8Sn/ThVflL
-        1ylFiU+c1hjlb809GKvCfuOCjv5llzjT/sCdnT6CnoVLuAUuLojumeMn2uUx/UmYmOcd1xtf
-        nHYYbVPUL6zoPN4TrR/2cIZqlFKc5UOWgLkPr1f5X5I4+3m/f7VC12NjH+1DhTuCzod7fnb6
-        de7uqZlXrabUc5d9nOuiGSHauv3AdRWm++JXrp8Q8skJt4t+K39WZ7HVro1TY3dcV2Ipzkg0
-        1GIuKk4EAPpE3j0WAwAA
-X-CMS-MailID: 20210126041455epcas1p2c38ddc3bfe20bcf10217956b47096a33
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: SVC_REQ_APPROVE
-CMS-TYPE: 101P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210126041455epcas1p2c38ddc3bfe20bcf10217956b47096a33
-References: <yq15z3o9vod.fsf@ca-mkp.ca.oracle.com>
-        <CGME20210126041455epcas1p2c38ddc3bfe20bcf10217956b47096a33@epcas1p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> Damien,
-> 
-> >> How about set larger valid value between sdkp->max_xfer_blocks,
-> >> and sdkp->opt_xfer_blocks to rw_max?
-> >
-> > Again, if your device reports an opt_xfer_blocks value that is too
-> > small for its own good, that is a problem with this device.
-> 
-> Correct. It is very much intentional that we do not default to issuing
-> the largest commands supported by the physical hardware.
-> 
-> If the device is not reporting an optimal transfer size, and the block
-> layer default is too small, the solution is to adjust max_sectors_kb in
-> sysfs (by adding a udev rule, for instance).
->
+Remove SG_RQ_RCV_DONE request state. Also remember the position of
+the last used request array element and start subsequent searches
+for completed requests and new requests from that index.
 
-Sorry, I said wrong.
-As others mentioned, it's device problem if opt_xfer_blocks is wrong.
-kernel modification is not needed for it.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/sg.c | 168 ++++++++++++++++++++++++++--------------------
+ 1 file changed, 96 insertions(+), 72 deletions(-)
 
-I want to discuss using max_xfer_blocks instead of opt_xfer_blocks as a optional.
-For example, device reports opt_xfer_blocks is 512KB and 1MB as a
-max_xfer_blocks too. Currently rw_max is set with 512KB only.
-I want a option to select max_xfer_blocks for rw_max.
-Are there any historical problem when rw_max is set with max_xfer_blocks?
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 9512ebc064cc..862a7c158e4e 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -90,7 +90,6 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
+ 	SG_RS_INACTIVE = 0,	/* request not in use (e.g. on fl) */
+ 	SG_RS_INFLIGHT,		/* active: cmd/req issued, no response yet */
+ 	SG_RS_AWAIT_RCV,	/* have response from LLD, awaiting receive */
+-	SG_RS_RCV_DONE,		/* receive is ongoing or done */
+ 	SG_RS_BUSY,		/* temporary state should rarely be seen */
+ };
+ 
+@@ -226,6 +225,7 @@ struct sg_fd {		/* holds the state of a file descriptor */
+ 	struct mutex f_mutex;	/* serialize ioctls on this fd */
+ 	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
+ 	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
++	int prev_used_idx;	/* previous used index */
+ 	u32 idx;		/* my index within parent's sfp_arr */
+ 	atomic_t submitted;	/* number inflight or awaiting receive */
+ 	atomic_t waiting;	/* number of requests awaiting receive */
+@@ -298,7 +298,9 @@ static struct sg_device *sg_get_dev(int min_dev);
+ static void sg_device_destroy(struct kref *kref);
+ static struct sg_request *sg_mk_srp_sgat(struct sg_fd *sfp, bool first,
+ 					 int db_len);
++#if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
+ static const char *sg_rq_st_str(enum sg_rq_state rq_st, bool long_str);
++#endif
+ 
+ #define SG_WRITE_COUNT_LIMIT (32 * 1024 * 1024)
+ 
+@@ -872,20 +874,18 @@ sg_ctl_iosubmit_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
+ #if IS_ENABLED(SG_LOG_ACTIVE)
+ static void
+ sg_rq_state_fail_msg(struct sg_fd *sfp, enum sg_rq_state exp_old_st,
+-		     enum sg_rq_state want_st, enum sg_rq_state act_old_st,
+-		     const char *fromp)
++		     enum sg_rq_state want_st, const char *fromp)
+ {
+-	const char *eaw_rs = "expected_old,actual_old,wanted rq_st";
++	const char *eaw_rs = "expected_old,wanted rq_st";
+ 
+ 	if (IS_ENABLED(CONFIG_SCSI_PROC_FS))
+-		SG_LOG(1, sfp, "%s: %s: %s: %s,%s,%s\n",
++		SG_LOG(1, sfp, "%s: %s: %s,%s,%s\n",
+ 		       __func__, fromp, eaw_rs,
+ 		       sg_rq_st_str(exp_old_st, false),
+-		       sg_rq_st_str(act_old_st, false),
+ 		       sg_rq_st_str(want_st, false));
+ 	else
+-		pr_info("sg: %s: %s: %s: %d,%d,%d\n", __func__, fromp, eaw_rs,
+-			(int)exp_old_st, (int)act_old_st, (int)want_st);
++		pr_info("sg: %s: %s: %s: %d,%d\n", __func__, fromp, eaw_rs,
++			(int)exp_old_st, (int)want_st);
+ }
+ #endif
+ 
+@@ -929,8 +929,8 @@ sg_rq_state_helper(struct xarray *xafp, struct sg_request *srp, int indic)
+ }
+ 
+ /* Following array indexed by enum sg_rq_state, 0 means no xa mark change */
+-static const int sg_rq_state_arr[] = {1, 0, 4, 0, 0};
+-static const int sg_rq_state_mul2arr[] = {2, 0, 8, 0, 0};
++static const int sg_rq_state_arr[] = {1, 0, 4, 0};
++static const int sg_rq_state_mul2arr[] = {2, 0, 8, 0};
+ 
+ /*
+  * This function keeps the srp->rq_st state and associated marks on the
+@@ -945,39 +945,47 @@ static const int sg_rq_state_mul2arr[] = {2, 0, 8, 0, 0};
+  */
+ static int
+ sg_rq_state_chg(struct sg_request *srp, enum sg_rq_state old_st,
+-		enum sg_rq_state new_st, bool force, const char *fromp)
++		enum sg_rq_state new_st)
+ {
+ 	enum sg_rq_state act_old_st;
+ 	int indic;
+ 	unsigned long iflags;
+-	struct xarray *xafp = &srp->parentfp->srp_arr;
++	struct sg_fd *sfp = srp->parentfp;
++	struct xarray *xafp = &sfp->srp_arr;
+ 
+-	if (force) {
+-		xa_lock_irqsave(xafp, iflags);
+-		sg_rq_state_force(srp, new_st);
+-		xa_unlock_irqrestore(xafp, iflags);
+-		return 0;
+-	}
+ 	indic = sg_rq_state_arr[(int)old_st] +
+ 		sg_rq_state_mul2arr[(int)new_st];
+ 	act_old_st = (enum sg_rq_state)atomic_cmpxchg(&srp->rq_st, old_st,
+ 						      new_st);
+ 	if (act_old_st != old_st) {
+-#if IS_ENABLED(SG_LOG_ACTIVE)
+-		if (fromp)
+-			sg_rq_state_fail_msg(srp->parentfp, old_st, new_st,
+-					     act_old_st, fromp);
+-#endif
++		SG_LOG(1, sfp, "%s: unexpected old state: %s\n", __func__,
++		       sg_rq_st_str(act_old_st, false));
+ 		return -EPROTOTYPE;	/* only used for this error type */
+ 	}
+ 	if (indic) {
+ 		xa_lock_irqsave(xafp, iflags);
++		if (new_st == SG_RS_INACTIVE)
++			WRITE_ONCE(sfp->prev_used_idx, srp->rq_idx);
+ 		sg_rq_state_helper(xafp, srp, indic);
+ 		xa_unlock_irqrestore(xafp, iflags);
+ 	}
+ 	return 0;
+ }
+ 
++static void
++sg_rq_state_chg_force(struct sg_request *srp, enum sg_rq_state new_st)
++{
++	unsigned long iflags;
++	struct sg_fd *sfp = srp->parentfp;
++	struct xarray *xafp = &sfp->srp_arr;
++
++	xa_lock_irqsave(xafp, iflags);
++	if (new_st == SG_RS_INACTIVE)
++		WRITE_ONCE(sfp->prev_used_idx, srp->rq_idx);
++	sg_rq_state_force(srp, new_st);
++	xa_unlock_irqrestore(xafp, iflags);
++}
++
+ static void
+ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
+ {
+@@ -999,8 +1007,7 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
+ 		at_head = !(srp->rq_flags & SG_FLAG_Q_AT_TAIL);
+ 
+ 	kref_get(&sfp->f_ref); /* sg_rq_end_io() does kref_put(). */
+-	sg_rq_state_chg(srp, SG_RS_BUSY /* ignored */, SG_RS_INFLIGHT,
+-			true, __func__);
++	sg_rq_state_chg_force(srp, SG_RS_INFLIGHT);
+ 
+ 	/* >>>>>>> send cmd/req off to other levels <<<<<<<< */
+ 	if (!sync)
+@@ -1212,10 +1219,6 @@ sg_receive_v3(struct sg_fd *sfp, struct sg_request *srp, size_t count,
+ 	hp->driver_status = driver_byte(rq_result);
+ 	err2 = put_sg_io_hdr(hp, p);
+ 	err = err ? err : err2;
+-	err2 = sg_rq_state_chg(srp, atomic_read(&srp->rq_st), SG_RS_RCV_DONE,
+-			       false, __func__);
+-	if (err2)
+-		err = err ? err : err2;
+ err_out:
+ 	sg_finish_scsi_blk_rq(srp);
+ 	sg_deact_request(sfp, srp);
+@@ -1226,7 +1229,7 @@ static int
+ sg_receive_v4(struct sg_fd *sfp, struct sg_request *srp, void __user *p,
+ 	      struct sg_io_v4 *h4p)
+ {
+-	int err, err2;
++	int err;
+ 	u32 rq_result = srp->rq_result;
+ 
+ 	SG_LOG(3, sfp, "%s: p=%s, h4p=%s\n", __func__,
+@@ -1261,10 +1264,6 @@ sg_receive_v4(struct sg_fd *sfp, struct sg_request *srp, void __user *p,
+ 		if (copy_to_user(p, h4p, SZ_SG_IO_V4))
+ 			err = err ? err : -EFAULT;
+ 	}
+-	err2 = sg_rq_state_chg(srp, atomic_read(&srp->rq_st), SG_RS_RCV_DONE,
+-			       false, __func__);
+-	if (err2)
+-		err = err ? err : err2;
+ 	sg_finish_scsi_blk_rq(srp);
+ 	sg_deact_request(sfp, srp);
+ 	return err < 0 ? err : 0;
+@@ -1459,7 +1458,6 @@ sg_read_v1v2(void __user *buf, int count, struct sg_fd *sfp,
+ 		res = (h2p->result == 0) ? 0 : -EIO;
+ 	}
+ fini:
+-	atomic_set(&srp->rq_st, SG_RS_RCV_DONE);
+ 	sg_finish_scsi_blk_rq(srp);
+ 	sg_deact_request(sfp, srp);
+ 	return res;
+@@ -1633,7 +1631,6 @@ sg_get_dur(struct sg_request *srp, const enum sg_rq_state *sr_stp,
+ 		res = sg_calc_rq_dur(srp);
+ 		break;
+ 	case SG_RS_AWAIT_RCV:
+-	case SG_RS_RCV_DONE:
+ 	case SG_RS_INACTIVE:
+ 		res = srp->duration;
+ 		is_dur = true;	/* completion has occurred, timing finished */
+@@ -1704,9 +1701,13 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
+ 	sr_st = atomic_read(&srp->rq_st);
+ 	if (unlikely(sr_st != SG_RS_AWAIT_RCV))
+ 		return -EPROTO;         /* Logic error */
+-	res = sg_rq_state_chg(srp, sr_st, SG_RS_BUSY, false, __func__);
+-	if (unlikely(res))
++	res = sg_rq_state_chg(srp, sr_st, SG_RS_BUSY);
++	if (unlikely(res)) {
++#if IS_ENABLED(SG_LOG_ACTIVE)
++		sg_rq_state_fail_msg(sfp, sr_st, SG_RS_BUSY, __func__);
++#endif
+ 		return res;
++	}
+ 	if (test_bit(SG_FRQ_IS_V4I, srp->frq_bm))
+ 		res = sg_receive_v4(sfp, srp, p, h4p);
+ 	else
+@@ -2550,8 +2551,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 	}
+ 	if (!test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm))
+ 		atomic_inc(&sfp->waiting);
+-	if (unlikely(sg_rq_state_chg(srp, SG_RS_INFLIGHT, rqq_state,
+-				     false, __func__)))
++	if (unlikely(sg_rq_state_chg(srp, SG_RS_INFLIGHT, rqq_state)))
+ 		pr_warn("%s: can't set rq_st\n", __func__);
+ 	/*
+ 	 * Free the mid-level resources apart from the bio (if any). The bio's
+@@ -3258,9 +3258,10 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
+ 	__maybe_unused bool is_bad_st = false;
+ 	__maybe_unused enum sg_rq_state bad_sr_st = SG_RS_INACTIVE;
+ 	bool search_for_1 = (pack_id != SG_PACK_ID_WILDCARD);
++	bool second = false;
+ 	int res;
+ 	int num_waiting = atomic_read(&sfp->waiting);
+-	unsigned long idx;
++	unsigned long idx, start_idx, end_idx;
+ 	struct sg_request *srp = NULL;
+ 	struct xarray *xafp = &sfp->srp_arr;
+ 
+@@ -3272,8 +3273,7 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
+ 				continue;
+ 			if (srp->pack_id != pack_id)
+ 				continue;
+-			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY,
+-					      false, __func__);
++			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY);
+ 			if (likely(res == 0))
+ 				goto good;
+ 			/* else another caller got it, move on */
+@@ -3283,14 +3283,35 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
+ 			}
+ 			break;
+ 		}
+-	} else {        /* search for any request is more likely */
+-		xa_for_each_marked(xafp, idx, srp, SG_XA_RQ_AWAIT) {
+-			if (!srp)
+-				continue;
+-			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY,
+-					      false, __func__);
++	} else {
++		/*
++		 * Searching for _any_ request is the more likely usage. Start searching with the
++		 * last xarray index that was used. In the case of a large-ish IO depth, it is
++		 * likely that the second (relative) position will be the request we want, if it
++		 * is ready. If there is no queuing and the "last used" has been re-used then the
++		 * first (relative) position will be the request we want.
++		 */
++		start_idx = READ_ONCE(sfp->prev_used_idx);
++		end_idx = ULONG_MAX;
++second_time:
++		idx = start_idx;
++		for (srp = xa_find(xafp, &idx, end_idx, SG_XA_RQ_AWAIT);
++		     srp;
++		     srp = xa_find_after(xafp, &idx, end_idx, SG_XA_RQ_AWAIT)) {
++			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY);
+ 			if (likely(res == 0))
+ 				goto good;
++#if IS_ENABLED(SG_LOG_ACTIVE)
++			else
++				sg_rq_state_fail_msg(sfp, SG_RS_AWAIT_RCV, SG_RS_BUSY, __func__);
++#endif
++		}
++		/* If not found so far, need to wrap around and search [0 ... start_idx) */
++		if (!srp && !second && start_idx > 0) {
++			end_idx = start_idx - 1;
++			start_idx = 0;
++			second = true;
++			goto second_time;
+ 		}
+ 	}
+ 	/* here if one of above loops does _not_ find a match */
+@@ -3408,8 +3429,9 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
+ 	bool found = false;
+ 	bool mk_new_srp = true;
+ 	bool try_harder = false;
++	bool second = false;
+ 	int num_inactive = 0;
+-	unsigned long idx, last_idx, iflags;
++	unsigned long idx, start_idx, end_idx, iflags;
+ 	struct sg_fd *fp = cwrp->sfp;
+ 	struct sg_request *r_srp = NULL;	/* request to return */
+ 	struct sg_request *last_srp = NULL;
+@@ -3422,45 +3444,48 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
+ 		act_empty = true;
+ 		mk_new_srp = true;
+ 	} else if (!try_harder && dxfr_len < SG_DEF_SECTOR_SZ) {
+-		last_idx = ~0UL;
+ 		xa_for_each_marked(xafp, idx, r_srp, SG_XA_RQ_INACTIVE) {
+-			if (!r_srp)
+-				continue;
+ 			++num_inactive;
+-			if (dxfr_len < SG_DEF_SECTOR_SZ) {
+-				last_idx = idx;
++			if (dxfr_len < SG_DEF_SECTOR_SZ)
+ 				last_srp = r_srp;
+-				continue;
+-			}
+ 		}
+ 		/* If dxfr_len is small, use last inactive request */
+-		if (last_idx != ~0UL && last_srp) {
++		if (last_srp) {
+ 			r_srp = last_srp;
+-			if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY,
+-					    false, __func__))
++			if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY))
+ 				goto start_again; /* gone to another thread */
+ 			cp = "toward end of srp_arr";
+ 			found = true;
+ 		}
+ 	} else {
+-		xa_for_each_marked(xafp, idx, r_srp, SG_XA_RQ_INACTIVE) {
+-			if (!r_srp)
+-				continue;
++		start_idx = READ_ONCE(fp->prev_used_idx);
++		end_idx = ULONG_MAX;
++second_time:
++		idx = start_idx;
++		for (r_srp = xa_find(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE);
++		     r_srp;
++		     r_srp = xa_find_after(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE)) {
+ 			if (r_srp->sgat_h.buflen >= dxfr_len) {
+-				if (sg_rq_state_chg
+-					(r_srp, SG_RS_INACTIVE, SG_RS_BUSY,
+-					 false, __func__))
++				if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY))
+ 					continue;
+-				cp = "from front of srp_arr";
++				cp = "near front of srp_arr";
+ 				found = true;
+ 				break;
+ 			}
+ 		}
++		/* If not found so far, need to wrap around and search [0 ... start_idx) */
++		if (!r_srp && !second && start_idx > 0) {
++			end_idx = start_idx - 1;
++			start_idx = 0;
++			second = true;
++			goto second_time;
++		}
+ 	}
+ 	if (found) {
+ 		r_srp->in_resid = 0;
+ 		r_srp->rq_info = 0;
+ 		r_srp->sense_len = 0;
++		WRITE_ONCE(fp->prev_used_idx, r_srp->rq_idx);
+ 		mk_new_srp = false;
+ 	} else {
+ 		mk_new_srp = true;
+@@ -3533,7 +3558,7 @@ sg_deact_request(struct sg_fd *sfp, struct sg_request *srp)
+ 	sbp = srp->sense_bp;
+ 	srp->sense_bp = NULL;
+ 	WRITE_ONCE(srp->frq_bm[0], 0);
+-	sg_rq_state_chg(srp, 0, SG_RS_INACTIVE, true /* force */, __func__);
++	sg_rq_state_chg_force(srp, SG_RS_INACTIVE);
+ 	/* maybe orphaned req, thus never read */
+ 	if (sbp)
+ 		mempool_free(sbp, sg_sense_pool);
+@@ -3624,7 +3649,7 @@ sg_add_sfp(struct sg_device *sdp)
+ 		}
+ 		srp->rq_idx = idx;
+ 		srp->parentfp = sfp;
+-		sg_rq_state_chg(srp, 0, SG_RS_INACTIVE, true, __func__);
++		sg_rq_state_chg_force(srp, SG_RS_INACTIVE);
+ 	}
+ 	if (!reduced) {
+ 		SG_LOG(4, sfp, "%s: built reserve buflen=%d\n", __func__,
+@@ -3775,8 +3800,6 @@ sg_rq_st_str(enum sg_rq_state rq_st, bool long_str)
+ 		return long_str ? "inflight" : "act";
+ 	case SG_RS_AWAIT_RCV:
+ 		return long_str ? "await_receive" : "rcv";
+-	case SG_RS_RCV_DONE:
+-		return long_str ? "receive_done" : "fin";
+ 	case SG_RS_BUSY:
+ 		return long_str ? "busy" : "bsy";
+ 	default:
+@@ -4053,7 +4076,8 @@ sg_proc_debug_fd(struct sg_fd *fp, char *obp, int len, unsigned long idx)
+ 		       (int)test_bit(SG_FFD_FORCE_PACKID, fp->ffd_bm),
+ 		       (int)test_bit(SG_FFD_KEEP_ORPHAN, fp->ffd_bm),
+ 		       fp->ffd_bm[0]);
+-	n += scnprintf(obp + n, len - n, "   mmap_sz=%d\n", fp->mmap_sz);
++	n += scnprintf(obp + n, len - n, "   mmap_sz=%d prev_used_idx=%d\n",
++		       fp->mmap_sz, fp->prev_used_idx);
+ 	n += scnprintf(obp + n, len - n,
+ 		       "   submitted=%d waiting=%d   open thr_id=%d\n",
+ 		       atomic_read(&fp->submitted),
+-- 
+2.25.1
 
-How about below approach if max_xfer_blocks can be set to rw_max?
-It's using queue flag as a option. Do you have good idea to suggest?
-
-static bool sd_validate_max_xfer_size(struct scsi_disk *sdkp,
-				      unsigned int dev_max)
-{
-	struct request_queue *q = sdkp->disk->queue;
-
-	if (!blk_queue_allow_sd_rw_max(q))
-		return false;
-
-	if (sdkp->max_xfer_blocks == 0)
-		return false;
-
-        ......
-
-	return true;
-}
-
-static int sd_revalidate_disk(struct gendisk *disk)
-{
-	......
-
-	if (sd_validate_max_xfer_size(sdkp, dev_max)) {
-		q->limits.io_opt = logical_to_bytes(sdp, sdkp->max_xfer_blocks);
-		rw_max = logical_to_sectors(sdp, sdkp->max_xfer_blocks);
-	} else if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
-		q->limits.io_opt = logical_to_bytes(sdp, sdkp->opt_xfer_blocks);
-		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
-	} else {
-	
-	......
-}
-
-> -- 
-> Martin K. Petersen	Oracle Linux Engineering
