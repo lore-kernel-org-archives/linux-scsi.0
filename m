@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4785C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:17:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4041AC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:17:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A16E922C9F
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:17:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 123C122C9F
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:17:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726601AbhAYCCP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Jan 2021 21:02:15 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:45890 "EHLO smtp.infotech.no"
+        id S1727018AbhAYCB3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Jan 2021 21:01:29 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:45887 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726630AbhAYB72 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 24 Jan 2021 20:59:28 -0500
+        id S1726597AbhAYB7H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 24 Jan 2021 20:59:07 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id E1DC82042C9;
-        Mon, 25 Jan 2021 02:27:44 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 1C387204272;
+        Mon, 25 Jan 2021 02:27:23 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id QHgfva-FLo2S; Mon, 25 Jan 2021 02:27:43 +0100 (CET)
+        with ESMTP id WCOyx0ngbxcc; Mon, 25 Jan 2021 02:27:21 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 8067A2042B8;
-        Mon, 25 Jan 2021 02:27:32 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id ED27B20425C;
+        Mon, 25 Jan 2021 02:27:11 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         kashyap.desai@broadcom.com
-Subject: [PATCH v14 33/45] sg: move procfs objects to avoid forward decls
-Date:   Sun, 24 Jan 2021 20:26:38 -0500
-Message-Id: <20210125012650.269411-34-dgilbert@interlog.com>
+Subject: [PATCH v14 15/45] sg: rework sg_vma_fault
+Date:   Sun, 24 Jan 2021 20:26:20 -0500
+Message-Id: <20210125012650.269411-16-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210125012650.269411-1-dgilbert@interlog.com>
 References: <20210125012650.269411-1-dgilbert@interlog.com>
@@ -45,163 +45,77 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move the procfs related file_operations and seq_operations
-definitions toward the end of the source file to minimize the
-need for forward declarations of the functions they name.
+Simple refactoring of the sg_vma_fault() function.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 129 +++++++++++++++++++++-------------------------
- 1 file changed, 58 insertions(+), 71 deletions(-)
+ drivers/scsi/sg.c | 33 +++++++++++++++++++++++----------
+ 1 file changed, 23 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 472ed9491615..791385da06db 100644
+index e847d94cf2b2..afeb12cc40b7 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -3766,77 +3766,6 @@ sg_rq_st_str(enum sg_rq_state rq_st, bool long_str)
- #endif
- 
- #if IS_ENABLED(CONFIG_SCSI_PROC_FS)     /* long, almost to end of file */
--static int sg_proc_seq_show_int(struct seq_file *s, void *v);
--
--static int sg_proc_single_open_adio(struct inode *inode, struct file *filp);
--static ssize_t sg_proc_write_adio(struct file *filp, const char __user *buffer,
--			          size_t count, loff_t *off);
--static const struct proc_ops adio_proc_ops = {
--	.proc_open	= sg_proc_single_open_adio,
--	.proc_read	= seq_read,
--	.proc_lseek	= seq_lseek,
--	.proc_write	= sg_proc_write_adio,
--	.proc_release	= single_release,
--};
--
--static int sg_proc_single_open_dressz(struct inode *inode, struct file *filp);
--static ssize_t sg_proc_write_dressz(struct file *filp, 
--		const char __user *buffer, size_t count, loff_t *off);
--static const struct proc_ops dressz_proc_ops = {
--	.proc_open	= sg_proc_single_open_dressz,
--	.proc_read	= seq_read,
--	.proc_lseek	= seq_lseek,
--	.proc_write	= sg_proc_write_dressz,
--	.proc_release	= single_release,
--};
--
--static int sg_proc_seq_show_version(struct seq_file *s, void *v);
--static int sg_proc_seq_show_devhdr(struct seq_file *s, void *v);
--static int sg_proc_seq_show_dev(struct seq_file *s, void *v);
--static void * dev_seq_start(struct seq_file *s, loff_t *pos);
--static void * dev_seq_next(struct seq_file *s, void *v, loff_t *pos);
--static void dev_seq_stop(struct seq_file *s, void *v);
--static const struct seq_operations dev_seq_ops = {
--	.start = dev_seq_start,
--	.next  = dev_seq_next,
--	.stop  = dev_seq_stop,
--	.show  = sg_proc_seq_show_dev,
--};
--
--static int sg_proc_seq_show_devstrs(struct seq_file *s, void *v);
--static const struct seq_operations devstrs_seq_ops = {
--	.start = dev_seq_start,
--	.next  = dev_seq_next,
--	.stop  = dev_seq_stop,
--	.show  = sg_proc_seq_show_devstrs,
--};
--
--static int sg_proc_seq_show_debug(struct seq_file *s, void *v);
--static const struct seq_operations debug_seq_ops = {
--	.start = dev_seq_start,
--	.next  = dev_seq_next,
--	.stop  = dev_seq_stop,
--	.show  = sg_proc_seq_show_debug,
--};
--
--static int
--sg_proc_init(void)
--{
--	struct proc_dir_entry *p;
--
--	p = proc_mkdir("scsi/sg", NULL);
--	if (!p)
--		return 1;
--
--	proc_create("allow_dio", 0644, p, &adio_proc_ops);
--	proc_create_seq("debug", 0444, p, &debug_seq_ops);
--	proc_create("def_reserved_size", 0644, p, &dressz_proc_ops);
--	proc_create_single("device_hdr", 0444, p, sg_proc_seq_show_devhdr);
--	proc_create_seq("devices", 0444, p, &dev_seq_ops);
--	proc_create_seq("device_strs", 0444, p, &devstrs_seq_ops);
--	proc_create_single("version", 0444, p, sg_proc_seq_show_version);
--	return 0;
--}
- 
- static int
- sg_last_dev(void)
-@@ -4209,6 +4138,64 @@ sg_proc_seq_show_debug(struct seq_file *s, void *v)
- 	return 0;
+@@ -1429,14 +1429,16 @@ sg_fasync(int fd, struct file *filp, int mode)
+ 	return fasync_helper(fd, filp, mode, &sfp->async_qp);
  }
  
-+static const struct proc_ops adio_proc_ops = {
-+	.proc_open      = sg_proc_single_open_adio,
-+	.proc_read      = seq_read,
-+	.proc_lseek     = seq_lseek,
-+	.proc_write     = sg_proc_write_adio,
-+	.proc_release   = single_release,
-+};
-+
-+static const struct proc_ops dressz_proc_ops = {
-+	.proc_open      = sg_proc_single_open_dressz,
-+	.proc_read      = seq_read,
-+	.proc_lseek     = seq_lseek,
-+	.proc_write     = sg_proc_write_dressz,
-+	.proc_release   = single_release,
-+};
-+
-+static const struct seq_operations dev_seq_ops = {
-+	.start = dev_seq_start,
-+	.next  = dev_seq_next,
-+	.stop  = dev_seq_stop,
-+	.show  = sg_proc_seq_show_dev,
-+};
-+
-+static const struct seq_operations devstrs_seq_ops = {
-+	.start = dev_seq_start,
-+	.next  = dev_seq_next,
-+	.stop  = dev_seq_stop,
-+	.show  = sg_proc_seq_show_devstrs,
-+};
-+
-+static const struct seq_operations debug_seq_ops = {
-+	.start = dev_seq_start,
-+	.next  = dev_seq_next,
-+	.stop  = dev_seq_stop,
-+	.show  = sg_proc_seq_show_debug,
-+};
-+
-+static int
-+sg_proc_init(void)
-+{
-+	struct proc_dir_entry *p;
-+
-+	p = proc_mkdir("scsi/sg", NULL);
-+	if (!p)
-+		return 1;
-+
-+	proc_create("allow_dio", 0644, p, &adio_proc_ops);
-+	proc_create_seq("debug", 0444, p, &debug_seq_ops);
-+	proc_create("def_reserved_size", 0644, p, &dressz_proc_ops);
-+	proc_create_single("device_hdr", 0444, p, sg_proc_seq_show_devhdr);
-+	proc_create_seq("devices", 0444, p, &dev_seq_ops);
-+	proc_create_seq("device_strs", 0444, p, &devstrs_seq_ops);
-+	proc_create_single("version", 0444, p, sg_proc_seq_show_version);
-+	return 0;
-+}
-+
-+/* remove_proc_subtree("scsi/sg", NULL) in exit_sg() does cleanup */
-+
- #endif				/* CONFIG_SCSI_PROC_FS (~400 lines back) */
++/* Note: the error return: VM_FAULT_SIGBUS causes a "bus error" */
+ static vm_fault_t
+ sg_vma_fault(struct vm_fault *vmf)
+ {
+-	struct vm_area_struct *vma = vmf->vma;
+-	struct sg_fd *sfp;
++	int k, length;
+ 	unsigned long offset, len, sa;
++	struct vm_area_struct *vma = vmf->vma;
+ 	struct sg_scatter_hold *rsv_schp;
+-	int k, length;
++	struct sg_device *sdp;
++	struct sg_fd *sfp;
+ 	const char *nbp = "==NULL, bad";
  
- module_init(init_sg);
+ 	if (!vma) {
+@@ -1448,20 +1450,31 @@ sg_vma_fault(struct vm_fault *vmf)
+ 		pr_warn("%s: sfp%s\n", __func__, nbp);
+ 		goto out_err;
+ 	}
++	sdp = sfp->parentdp;
++	if (sdp && unlikely(SG_IS_DETACHING(sdp))) {
++		SG_LOG(1, sfp, "%s: device detaching\n", __func__);
++		goto out_err;
++	}
+ 	rsv_schp = &sfp->reserve;
+ 	offset = vmf->pgoff << PAGE_SHIFT;
+-	if (offset >= rsv_schp->buflen)
+-		return VM_FAULT_SIGBUS;
++	if (offset >= (unsigned int)rsv_schp->buflen) {
++		SG_LOG(1, sfp, "%s: offset[%lu] >= rsv.buflen\n", __func__,
++		       offset);
++		goto out_err;
++	}
+ 	sa = vma->vm_start;
+ 	SG_LOG(3, sfp, "%s: vm_start=0x%lx, off=%lu\n", __func__, sa, offset);
+ 	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
+-	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; k++) {
++	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; ++k) {
+ 		len = vma->vm_end - sa;
+-		len = (len < length) ? len : length;
++		len = min_t(int, len, (int)length);
+ 		if (offset < len) {
+-			struct page *page = nth_page(rsv_schp->pages[k],
+-						     offset >> PAGE_SHIFT);
+-			get_page(page);	/* increment page count */
++			struct page *page;
++			struct page *pp;
++
++			pp = rsv_schp->pages[k];
++			page = nth_page(pp, offset >> PAGE_SHIFT);
++			get_page(page); /* increment page count */
+ 			vmf->page = page;
+ 			return 0; /* success */
+ 		}
 -- 
 2.25.1
 
