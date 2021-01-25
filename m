@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 055F8C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:30:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B3D5C4332E
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:30:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE1FC22ADF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:30:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52F7C229C4
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:30:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732996AbhAZF26 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:28:58 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:48694 "EHLO smtp.infotech.no"
+        id S2387472AbhAZF3p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 00:29:45 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:48753 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731634AbhAYTNX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Jan 2021 14:13:23 -0500
+        id S1731784AbhAYTXc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Jan 2021 14:23:32 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id D1550204279;
-        Mon, 25 Jan 2021 20:11:47 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id D58EA2042BD;
+        Mon, 25 Jan 2021 20:12:17 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id U4wJ7TuaSdz7; Mon, 25 Jan 2021 20:11:46 +0100 (CET)
+        with ESMTP id 6I25031uTKeB; Mon, 25 Jan 2021 20:12:16 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 90DB7204259;
-        Mon, 25 Jan 2021 20:11:44 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id E2589204275;
+        Mon, 25 Jan 2021 20:12:14 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         kashyap.desai@broadcom.com
-Subject: [PATCH v15 14/45] sg: sg_common_write add structure for arguments
-Date:   Mon, 25 Jan 2021 14:10:51 -0500
-Message-Id: <20210125191122.345858-15-dgilbert@interlog.com>
+Subject: [PATCH v15 39/45] sg: add mmap_sz tracking
+Date:   Mon, 25 Jan 2021 14:11:16 -0500
+Message-Id: <20210125191122.345858-40-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210125191122.345858-1-dgilbert@interlog.com>
 References: <20210125191122.345858-1-dgilbert@interlog.com>
@@ -45,143 +45,110 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As the number of arguments to sg_common_write() starts to grow
-(more in later patches) add a structure to hold most of these
-arguments.
+Track mmap_sz from prior mmap(2) call, per sg file descriptor. Also
+reset this value whenever munmap(2) is called. Fail SG_FLAG_MMAP_IO
+uses if mmap(2) hasn't been called or the memory associated with it
+is not large enough for the current request.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Remove SG_FFD_MMAP_CALLED bit as it can be deduced from
+sfp->mmap_sz where a value of 0 implies no mmap() call active.
+
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 47 ++++++++++++++++++++++++++++++++---------------
- 1 file changed, 32 insertions(+), 15 deletions(-)
+ drivers/scsi/sg.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 40e7bc1f0fbc..34670a8902ef 100644
+index c7c59cd6af23..9512ebc064cc 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -174,6 +174,13 @@ struct sg_device { /* holds the state of each scsi generic device */
- 	struct kref d_ref;
- };
+@@ -122,8 +122,7 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
+ #define SG_FFD_FORCE_PACKID	0	/* receive only given pack_id/tag */
+ #define SG_FFD_CMD_Q		1	/* clear: only 1 active req per fd */
+ #define SG_FFD_KEEP_ORPHAN	2	/* policy for this fd */
+-#define SG_FFD_MMAP_CALLED	3	/* mmap(2) system call made on fd */
+-#define SG_FFD_Q_AT_TAIL	5	/* set: queue reqs at tail of blk q */
++#define SG_FFD_Q_AT_TAIL	3	/* set: queue reqs at tail of blk q */
  
-+struct sg_comm_wr_t {  /* arguments to sg_common_write() */
-+	int timeout;
-+	int blocking;
-+	struct sg_request *srp;
-+	u8 *cmnd;
-+};
-+
- /* tasklet or soft irq callback */
- static void sg_rq_end_io(struct request *rq, blk_status_t status);
- /* Declarations of other static functions used before they are defined */
-@@ -186,8 +193,7 @@ static ssize_t sg_submit(struct sg_fd *sfp, struct file *filp,
- 			 const char __user *buf, size_t count, bool blocking,
- 			 bool read_only, bool sg_io_owned,
- 			 struct sg_request **o_srp);
--static int sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
--			   u8 *cmnd, int timeout, int blocking);
-+static int sg_common_write(struct sg_fd *sfp, struct sg_comm_wr_t *cwp);
- static int sg_read_append(struct sg_request *srp, void __user *outp,
- 			  int num_xfer);
- static void sg_remove_scat(struct sg_fd *sfp, struct sg_scatter_hold *schp);
-@@ -487,6 +493,7 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
- 	struct sg_io_hdr v3hdr;
- 	struct sg_header *ohp = &ov2hdr;
- 	struct sg_io_hdr *h3p = &v3hdr;
-+	struct sg_comm_wr_t cwr;
- 	u8 cmnd[SG_MAX_CDB_SIZE];
- 
- 	res = sg_check_file_access(filp, __func__);
-@@ -590,7 +597,11 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
- 				   input_size, (unsigned int) cmnd[0],
- 				   current->comm);
- 	}
--	res = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
-+	cwr.timeout = sfp->timeout;
-+	cwr.blocking = blocking;
-+	cwr.srp = srp;
-+	cwr.cmnd = cmnd;
-+	res = sg_common_write(sfp, &cwr);
- 	return (res < 0) ? res : count;
- }
- 
-@@ -613,6 +624,7 @@ sg_submit(struct sg_fd *sfp, struct file *filp, const char __user *buf,
- 	int k;
- 	struct sg_request *srp;
- 	struct sg_io_hdr *hp;
-+	struct sg_comm_wr_t cwr;
- 	u8 cmnd[SG_MAX_CDB_SIZE];
- 	int timeout;
- 	unsigned long ul_timeout;
-@@ -663,23 +675,28 @@ sg_submit(struct sg_fd *sfp, struct file *filp, const char __user *buf,
- 		sg_remove_request(sfp, srp);
- 		return -EPERM;
- 	}
--	k = sg_common_write(sfp, srp, cmnd, timeout, blocking);
-+	cwr.timeout = timeout;
-+	cwr.blocking = blocking;
-+	cwr.srp = srp;
-+	cwr.cmnd = cmnd;
-+	k = sg_common_write(sfp, &cwr);
- 	if (k < 0)
- 		return k;
- 	if (o_srp)
--		*o_srp = srp;
-+		*o_srp = cwr.srp;
- 	return count;
- }
- 
- static int
--sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
--		u8 *cmnd, int timeout, int blocking)
-+sg_common_write(struct sg_fd *sfp, struct sg_comm_wr_t *cwrp)
+ /* Bit positions (flags) for sg_device::fdev_bm bitmask follow */
+ #define SG_FDEV_EXCLUDE		0	/* have fd open with O_EXCL */
+@@ -232,6 +231,7 @@ struct sg_fd {		/* holds the state of a file descriptor */
+ 	atomic_t waiting;	/* number of requests awaiting receive */
+ 	atomic_t req_cnt;	/* number of requests */
+ 	int sgat_elem_sz;	/* initialized to scatter_elem_sz */
++	int mmap_sz;		/* byte size of previous mmap() call */
+ 	unsigned long ffd_bm[1];	/* see SG_FFD_* defines above */
+ 	pid_t tid;		/* thread id when opened */
+ 	u8 next_cmd_len;	/* 0: automatic, >0: use on next write() */
+@@ -725,10 +725,14 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
+ static inline int
+ sg_chk_mmap(struct sg_fd *sfp, int rq_flags, int len)
  {
--	int k, at_head;
-+	bool at_head;
-+	int k;
- 	struct sg_device *sdp = sfp->parentdp;
-+	struct sg_request *srp = cwrp->srp;
- 	struct sg_io_hdr *hp = &srp->header;
- 
--	srp->data.cmd_opcode = cmnd[0];	/* hold opcode of command */
-+	srp->data.cmd_opcode = cwrp->cmnd[0];	/* hold opcode of command */
- 	hp->status = 0;
- 	hp->masked_status = 0;
- 	hp->msg_status = 0;
-@@ -688,14 +705,14 @@ sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
- 	hp->driver_status = 0;
- 	hp->resid = 0;
- 	SG_LOG(4, sfp, "%s:  opcode=0x%02x, cmd_sz=%d\n", __func__,
--	       (int)cmnd[0], hp->cmd_len);
-+	       (int)cwrp->cmnd[0], hp->cmd_len);
- 
- 	if (hp->dxfer_len >= SZ_256M) {
- 		sg_remove_request(sfp, srp);
- 		return -EINVAL;
++	if (unlikely(sfp->mmap_sz == 0))
++		return -EBADFD;
+ 	if (atomic_read(&sfp->submitted) > 0)
+ 		return -EBUSY;  /* already active requests on fd */
+ 	if (len > sfp->rsv_srp->sgat_h.buflen)
+ 		return -ENOMEM; /* MMAP_IO size must fit in reserve */
++	if (unlikely(len > sfp->mmap_sz))
++		return -ENOMEM; /* MMAP_IO size can't exceed mmap() size */
+ 	if (rq_flags & SG_FLAG_DIRECT_IO)
+ 		return -EINVAL; /* not both MMAP_IO and DIRECT_IO */
+ 	return 0;
+@@ -1800,8 +1804,7 @@ sg_set_reserved_sz(struct sg_fd *sfp, int want_rsv_sz)
+ 		res = -EPROTO;
+ 		goto fini;
  	}
+-	if (SG_RS_ACTIVE(o_srp) ||
+-	    test_bit(SG_FFD_MMAP_CALLED, sfp->ffd_bm)) {
++	if (SG_RS_ACTIVE(o_srp) || sfp->mmap_sz > 0) {
+ 		res = -EBUSY;
+ 		goto fini;
+ 	}
+@@ -2262,6 +2265,7 @@ sg_vma_close(struct vm_area_struct *vma)
+ 		pr_warn("%s: sfp null\n", __func__);
+ 		return;
+ 	}
++	sfp->mmap_sz = 0;
+ 	kref_put(&sfp->f_ref, sg_remove_sfp); /* get in: sg_vma_open() */
+ }
  
--	k = sg_start_req(srp, cmnd);
-+	k = sg_start_req(srp, cwrp->cmnd);
- 	if (k) {
- 		SG_LOG(1, sfp, "%s: start_req err=%d\n", __func__, k);
- 		sg_finish_scsi_blk_rq(srp);
-@@ -717,13 +734,13 @@ sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
- 	hp->duration = jiffies_to_msecs(jiffies);
- 	if (hp->interface_id != '\0' &&	/* v3 (or later) interface */
- 	    (SG_FLAG_Q_AT_TAIL & hp->flags))
--		at_head = 0;
-+		at_head = false;
- 	else
--		at_head = 1;
-+		at_head = true;
- 
--	if (!blocking)
-+	if (!srp->sg_io_owned)
- 		atomic_inc(&sfp->submitted);
--	srp->rq->timeout = timeout;
-+	srp->rq->timeout = cwrp->timeout;
- 	kref_get(&sfp->f_ref); /* sg_rq_end_io() does kref_put(). */
- 	blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
- 			      srp->rq, at_head, sg_rq_end_io);
+@@ -2352,7 +2356,7 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	req_sz = vma->vm_end - vma->vm_start;
+ 	SG_LOG(3, sfp, "%s: vm_start=%pK, len=%d\n", __func__,
+ 	       (void *)vma->vm_start, (int)req_sz);
+-	if (vma->vm_pgoff) {
++	if (unlikely(vma->vm_pgoff || req_sz < SG_DEF_SECTOR_SZ)) {
+ 		res = -EINVAL; /* only an offset of 0 accepted */
+ 		goto fini;
+ 	}
+@@ -2366,7 +2370,7 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 		res = -ENOMEM;
+ 		goto fini;
+ 	}
+-	if (test_and_set_bit(SG_FFD_MMAP_CALLED, sfp->ffd_bm)) {
++	if (sfp->mmap_sz > 0) {
+ 		SG_LOG(1, sfp, "%s: multiple invocations on this fd\n",
+ 		       __func__);
+ 		res = -EADDRINUSE;
+@@ -2383,6 +2387,7 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 			goto fini;
+ 		}
+ 	}
++	sfp->mmap_sz = req_sz;
+ 	vma->vm_flags |= VM_IO | VM_DONTEXPAND | VM_DONTDUMP;
+ 	vma->vm_private_data = sfp;
+ 	vma->vm_ops = &sg_mmap_vm_ops;
+@@ -4048,8 +4053,7 @@ sg_proc_debug_fd(struct sg_fd *fp, char *obp, int len, unsigned long idx)
+ 		       (int)test_bit(SG_FFD_FORCE_PACKID, fp->ffd_bm),
+ 		       (int)test_bit(SG_FFD_KEEP_ORPHAN, fp->ffd_bm),
+ 		       fp->ffd_bm[0]);
+-	n += scnprintf(obp + n, len - n, "   mmap_called=%d\n",
+-		       test_bit(SG_FFD_MMAP_CALLED, fp->ffd_bm));
++	n += scnprintf(obp + n, len - n, "   mmap_sz=%d\n", fp->mmap_sz);
+ 	n += scnprintf(obp + n, len - n,
+ 		       "   submitted=%d waiting=%d   open thr_id=%d\n",
+ 		       atomic_read(&fp->submitted),
 -- 
 2.25.1
 
