@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B133C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:06:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 734D8C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:06:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59AB12256F
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:06:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 425B32256F
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:06:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727032AbhAYCEi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Jan 2021 21:04:38 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:45911 "EHLO smtp.infotech.no"
+        id S1727072AbhAYCGE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Jan 2021 21:06:04 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:45909 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727035AbhAYCD0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 24 Jan 2021 21:03:26 -0500
+        id S1727025AbhAYCDW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 24 Jan 2021 21:03:22 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 2BBF72042B4;
-        Mon, 25 Jan 2021 02:27:58 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 4824F2042A6;
+        Mon, 25 Jan 2021 02:27:49 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id oqT3PRQxq6uR; Mon, 25 Jan 2021 02:27:55 +0100 (CET)
+        with ESMTP id eZ8Qyir+rY-V; Mon, 25 Jan 2021 02:27:47 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id C08C4204274;
-        Mon, 25 Jan 2021 02:27:44 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id EC4A020429C;
+        Mon, 25 Jan 2021 02:27:36 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         kashyap.desai@broadcom.com
-Subject: [PATCH v14 44/45] sg: add blk_poll support
-Date:   Sun, 24 Jan 2021 20:26:49 -0500
-Message-Id: <20210125012650.269411-45-dgilbert@interlog.com>
+Subject: [PATCH v14 37/45] sg: defang allow_dio
+Date:   Sun, 24 Jan 2021 20:26:42 -0500
+Message-Id: <20210125012650.269411-38-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210125012650.269411-1-dgilbert@interlog.com>
 References: <20210125012650.269411-1-dgilbert@interlog.com>
@@ -45,227 +45,110 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The support is added via the new SGV4_FLAG_HIPRI command flag which
-causes REQ_HIPRI to be set on the request. Before waiting on an
-inflight request, it is checked to see if it has SGV4_FLAG_HIPRI,
-and if so blk_poll() is called instead of the wait. In situations
-where only the file descriptor is known (e.g. sg_poll() and
-ioctl(SG_GET_NUM_WAITING)) all inflight requests associated with
-the file descriptor that have SGV4_FLAG_HIPRI set, have blk_poll()
-called on them.
+Before direct IO was permitted by this driver, the user either had
+to give 'allow_dio=1' as a module parameter or write to procfs
+with 'echo 1 > /proc/scsi/sg/allow_dio'. The user also needs
+to set the SG_FLAG_DIRECT_IO flag in the flags field of either
+the sg v3 or v3 interface. The reason this "belts and braces"
+approach was taken is lost in the mists of time (done over 20
+years ago). So this patch keeps the allow_dio attribute for
+backward compatibility but ignores it, relying on the
+SG_FLAG_DIRECT_IO flag alone. This brings the use of the
+SG_FLAG_DIRECT_IO flag into line with the SG_FLAG_MMAP_IO
+flag; the two mechanisms are no more, or less, safe than one
+another in recent Linux kernels.
 
-Note that the implementation of blk_poll() calls mq_poll() in the
-LLD associated with the request. Then for any request found to be
-ready, blk_poll() invokes the scsi_done() callback. So this means
-if blk_poll() returns 1 then sg_rq_end_io() has already been
-called for the polled request.
-
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c      | 100 ++++++++++++++++++++++++++++++++++++++---
- include/uapi/scsi/sg.h |   1 +
- 2 files changed, 96 insertions(+), 5 deletions(-)
+ drivers/scsi/sg.c | 26 ++++++++------------------
+ 1 file changed, 8 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 10c0c3ff4435..1f00f13ba8fe 100644
+index 94f974977659..5ea10eb08361 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -122,7 +122,8 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
- #define SG_FFD_FORCE_PACKID	0	/* receive only given pack_id/tag */
- #define SG_FFD_CMD_Q		1	/* clear: only 1 active req per fd */
- #define SG_FFD_KEEP_ORPHAN	2	/* policy for this fd */
--#define SG_FFD_Q_AT_TAIL	3	/* set: queue reqs at tail of blk q */
-+#define SG_FFD_HIPRI_SEEN	3	/* could have HIPRI requests active */
-+#define SG_FFD_Q_AT_TAIL	4	/* set: queue reqs at tail of blk q */
+@@ -142,7 +142,7 @@ int sg_big_buff = SG_DEF_RESERVED_SIZE;
+  * not enough memory) will be reserved for use by this file descriptor.
+  */
+ static int def_reserved_size = -1;	/* picks up init parameter */
+-static int sg_allow_dio = SG_ALLOW_DIO_DEF;
++static int sg_allow_dio = SG_ALLOW_DIO_DEF;	/* ignored by code */
  
- /* Bit positions (flags) for sg_device::fdev_bm bitmask follow */
- #define SG_FDEV_EXCLUDE		0	/* have fd open with O_EXCL */
-@@ -300,6 +301,8 @@ static struct sg_device *sg_get_dev(int min_dev);
- static void sg_device_destroy(struct kref *kref);
- static struct sg_request *sg_mk_srp_sgat(struct sg_fd *sfp, bool first,
- 					 int db_len);
-+static int sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count);
-+static int sg_srp_blk_poll(struct sg_request *srp, int loop_count);
- #if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
- static const char *sg_rq_st_str(enum sg_rq_state rq_st, bool long_str);
- #endif
-@@ -1032,6 +1035,8 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
- 		atomic_inc(&sfp->submitted);
- 		set_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm);
+ static int scatter_elem_sz = SG_SCATTER_SZ;
+ 
+@@ -2862,19 +2862,6 @@ exit_sg(void)
+ 	idr_destroy(&sg_index_idr);
+ }
+ 
+-static inline bool
+-sg_chk_dio_allowed(struct sg_device *sdp, struct sg_request *srp,
+-		   int iov_count, int dir)
+-{
+-	if (sg_allow_dio && (srp->rq_flags & SG_FLAG_DIRECT_IO)) {
+-		if (dir != SG_DXFER_UNKNOWN && !iov_count) {
+-			if (!sdp->device->host->unchecked_isa_dma)
+-				return true;
+-		}
+-	}
+-	return false;
+-}
+-
+ static inline void
+ sg_set_map_data(const struct sg_scatter_hold *schp, bool up_valid,
+ 		struct rq_map_data *mdp)
+@@ -2893,6 +2880,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 	int res = 0;
+ 	int dxfer_len = 0;
+ 	int r0w = READ;
++	u32 rq_flags = srp->rq_flags;
+ 	unsigned int iov_count = 0;
+ 	void __user *up;
+ 	struct request *rq;
+@@ -2973,7 +2961,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
  	}
-+	if (srp->rq_flags & SGV4_FLAG_HIPRI)
-+		srp->rq->cmd_flags |= REQ_HIPRI;
- 	blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
- 			      srp->rq, (int)at_head, sg_rq_end_io);
- }
-@@ -1704,6 +1709,12 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
- 
- 	if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
- 		goto skip_wait;		/* and skip _acquire() */
-+	if (srp->rq_flags & SGV4_FLAG_HIPRI) {
-+		res = sg_srp_blk_poll(srp, -1);	/* spin till found */
-+		if (unlikely(res < 0))
-+			return res;
-+		goto skip_wait;
-+	}
- 	SG_LOG(3, sfp, "%s: about to wait_event...()\n", __func__);
- 	/* usually will be woken up by sg_rq_end_io() callback */
- 	res = wait_event_interruptible(sfp->read_wait,
-@@ -2030,6 +2041,8 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
- 		SG_LOG(3, sfp, "%s:    SG_GET_PACK_ID=%d\n", __func__, val);
- 		return put_user(val, ip);
- 	case SG_GET_NUM_WAITING:
-+		if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
-+			sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready push */
- 		val = atomic_read(&sfp->waiting);
- 		if (val)
- 			return put_user(val, ip);
-@@ -2239,6 +2252,72 @@ sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- }
- #endif
- 
-+static int
-+sg_srp_q_blk_poll(struct sg_request *srp, struct request *rqq, struct request_queue *q,
-+		  int loop_count)
-+{
-+	int k, n, num;
-+	blk_qc_t cookie;
-+
-+	if (rqq && rqq->mq_hctx)
-+		cookie = request_to_qc_t(rqq->mq_hctx, rqq);
-+	else
-+		return 0;
-+	num = (loop_count < 1) ? 1 : loop_count;
-+	for (k = 0; k < num; ++k) {
-+		if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
-+			return 0;
-+		n = blk_poll(q, cookie, loop_count < 0 /* spin if negative */);
-+		if (n != 0)
-+			return n;
-+	}
-+	return 0;
-+}
-+
-+/*
-+ * Check all requests on this sfp that are both inflight and HIPRI. That check involves calling
-+ * blk_poll(spin<-false) loop_count times. If loop_count is 0 then call blk_poll once.
-+ * If loop_count is negative then call blk_poll(spin<-true)) once for each request.
-+ * Returns number found (could be 0) or a negated errno value.
-+ */
-+static int
-+sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count)
-+{
-+	int res = 0;
-+	int n;
-+	unsigned long idx, iflags;
-+	struct sg_request *srp;
-+	struct request *rqq;
-+	struct scsi_device *sdev = sfp->parentdp->device;
-+	struct request_queue *q = sdev ? sdev->request_queue : NULL;
-+	struct xarray *xafp = &sfp->srp_arr;
-+
-+	if (!q)
-+		return -EINVAL;
-+	xa_lock_irqsave(xafp, iflags);
-+	xa_for_each(xafp, idx, srp) {
-+		rqq = srp->rq;
-+		if (rqq && (srp->rq_flags & SGV4_FLAG_HIPRI) &&
-+		    atomic_read(&srp->rq_st) == SG_RS_INFLIGHT) {
-+			xa_unlock_irqrestore(xafp, iflags);
-+			n = sg_srp_q_blk_poll(srp, rqq, q, loop_count);
-+			if (unlikely(n < 0))
-+				return n;
-+			xa_lock_irqsave(xafp, iflags);
-+			res += n;
-+		}
-+	}
-+	xa_unlock_irqrestore(xafp, iflags);
-+	return res;
-+}
-+
-+static inline int
-+sg_srp_blk_poll(struct sg_request *srp, int loop_count)
-+{
-+	return sg_srp_q_blk_poll(srp, srp->rq, srp->parentfp->parentdp->device->request_queue,
-+				 loop_count);
-+}
-+
- /*
-  * Implements the poll(2) system call for this driver. Returns various EPOLL*
-  * flags OR-ed together.
-@@ -2250,6 +2329,8 @@ sg_poll(struct file *filp, poll_table * wait)
- 	__poll_t p_res = 0;
- 	struct sg_fd *sfp = filp->private_data;
- 
-+	if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
-+		sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready to push up */
- 	num = atomic_read(&sfp->waiting);
- 	if (num < 1) {
- 		poll_wait(filp, &sfp->read_wait, wait);
-@@ -2561,7 +2642,8 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 
- 	if (likely(rqq_state == SG_RS_AWAIT_RCV)) {
- 		/* Wake any sg_read()/ioctl(SG_IORECEIVE) awaiting this req */
--		wake_up_interruptible(&sfp->read_wait);
-+		if (!(srp->rq_flags & SGV4_FLAG_HIPRI))
-+			wake_up_interruptible(&sfp->read_wait);
- 		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
- 		kref_put(&sfp->f_ref, sg_remove_sfp);
- 	} else {        /* clean up orphaned request that aren't being kept */
-@@ -3004,6 +3086,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 	/* current sg_request protected by SG_RS_BUSY state */
- 	scsi_rp = scsi_req(rq);
- 	srp->rq = rq;
-+	if (rq_flags & SGV4_FLAG_HIPRI)
-+		set_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
- 
- 	if (cwrp->cmd_len > BLK_MAX_CDB)
- 		scsi_rp->cmd = long_cmdp;
-@@ -3117,7 +3201,10 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
- 	SG_LOG(4, sfp, "%s: srp=0x%pK%s\n", __func__, srp,
- 	       (srp->parentfp->rsv_srp == srp) ? " rsv" : "");
- 	if (test_and_clear_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
--		atomic_dec(&sfp->submitted);
-+		bool now_zero = !atomic_dec_and_test(&sfp->submitted);
-+
-+		if (now_zero)
-+			clear_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
- 		atomic_dec(&sfp->waiting);
+ 	scsi_rp->cmd_len = cwrp->cmd_len;
+ 	srp->cmd_opcode = scsi_rp->cmd[0];
+-	us_xfer = !(srp->rq_flags & (SG_FLAG_NO_DXFER | SG_FLAG_MMAP_IO));
++	us_xfer = !(rq_flags & (SG_FLAG_NO_DXFER | SG_FLAG_MMAP_IO));
+ 	assign_bit(SG_FRQ_NO_US_XFER, srp->frq_bm, !us_xfer);
+ 	reserved = (sfp->rsv_srp == srp);
+ 	rq->end_io_data = srp;
+@@ -2984,7 +2972,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 		SG_LOG(4, sfp, "%s: no data xfer [0x%pK]\n", __func__, srp);
+ 		set_bit(SG_FRQ_NO_US_XFER, srp->frq_bm);
+ 		goto fini;	/* path of reqs with no din nor dout */
+-	} else if (sg_chk_dio_allowed(sdp, srp, iov_count, dxfer_dir) &&
++	} else if ((rq_flags & SG_FLAG_DIRECT_IO) && iov_count == 0 &&
++		   !sdp->device->host->unchecked_isa_dma &&
+ 		   blk_rq_aligned(q, (unsigned long)up, dxfer_len)) {
+ 		srp->rq_info |= SG_INFO_DIRECT_IO;
+ 		md = NULL;
+@@ -2995,7 +2984,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
  	}
  
-@@ -3318,6 +3405,8 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
- 	struct sg_request *srp = NULL;
- 	struct xarray *xafp = &sfp->srp_arr;
- 
-+	if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
-+		sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready to push up */
- 	if (num_waiting < 1) {
- 		num_waiting = atomic_read_acquire(&sfp->waiting);
- 		if (num_waiting < 1)
-@@ -4124,8 +4213,9 @@ sg_proc_debug_sreq(struct sg_request *srp, int to, char *obp, int len)
- 	else if (dur < U32_MAX)	/* in-flight or busy (so ongoing) */
- 		n += scnprintf(obp + n, len - n, " t_o/elap=%us/%ums",
- 			       to / 1000, dur);
--	n += scnprintf(obp + n, len - n, " sgat=%d op=0x%02x\n",
--		       srp->sgat_h.num_sgat, srp->cmd_opcode);
-+	cp = (srp->rq_flags & SGV4_FLAG_HIPRI) ? "hipri " : "";
-+	n += scnprintf(obp + n, len - n, " sgat=%d %sop=0x%02x\n",
-+		       srp->sgat_h.num_sgat, cp, srp->cmd_opcode);
- 	return n;
+ 	if (likely(md)) {	/* normal, "indirect" IO */
+-		if (unlikely(srp->rq_flags & SG_FLAG_MMAP_IO)) {
++		if (unlikely(rq_flags & SG_FLAG_MMAP_IO)) {
+ 			/* mmap IO must use and fit in reserve request */
+ 			if (!reserved || dxfer_len > req_schp->buflen)
+ 				res = reserved ? -ENOMEM : -EBUSY;
+@@ -3886,6 +3875,7 @@ sg_proc_single_open_adio(struct inode *inode, struct file *filp)
+ 	return single_open(filp, sg_proc_seq_show_int, &sg_allow_dio);
  }
  
-diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
-index 6162a5d5995c..11b58b279241 100644
---- a/include/uapi/scsi/sg.h
-+++ b/include/uapi/scsi/sg.h
-@@ -110,6 +110,7 @@ typedef struct sg_io_hdr {
- #define SGV4_FLAG_Q_AT_TAIL SG_FLAG_Q_AT_TAIL
- #define SGV4_FLAG_Q_AT_HEAD SG_FLAG_Q_AT_HEAD
- #define SGV4_FLAG_IMMED 0x400 /* for polling with SG_IOR, ignored in SG_IOS */
-+#define SGV4_FLAG_HIPRI 0x800 /* request will use blk_poll to complete */
++/* Kept for backward compatibility. sg_allow_dio is now ignored. */
+ static ssize_t
+ sg_proc_write_adio(struct file *filp, const char __user *buffer,
+ 		   size_t count, loff_t *off)
+@@ -4506,6 +4496,6 @@ MODULE_ALIAS_CHARDEV_MAJOR(SCSI_GENERIC_MAJOR);
  
- /* Output (potentially OR-ed together) in v3::info or v4::info field */
- #define SG_INFO_OK_MASK 0x1
+ MODULE_PARM_DESC(scatter_elem_sz, "scatter gather element size (default: max(SG_SCATTER_SZ, PAGE_SIZE))");
+ MODULE_PARM_DESC(def_reserved_size, "size of buffer reserved for each fd");
+-MODULE_PARM_DESC(allow_dio, "allow direct I/O (default: 0 (disallow))");
++MODULE_PARM_DESC(allow_dio, "allow direct I/O (default: 0 (disallow)); now ignored");
+ module_init(init_sg);
+ module_exit(exit_sg);
 -- 
 2.25.1
 
