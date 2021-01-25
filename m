@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21283C433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91BBBC4332B
 	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 19:55:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EBE2122B3F
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 19:55:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63B5422B3F
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 19:55:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387614AbhAZFaO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:30:14 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:48769 "EHLO smtp.infotech.no"
+        id S2387583AbhAZFaK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 00:30:10 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:48763 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731773AbhAYTZD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Jan 2021 14:25:03 -0500
+        id S1731067AbhAYTYT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Jan 2021 14:24:19 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 197CD2042BA;
-        Mon, 25 Jan 2021 20:12:16 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 5DCD4204275;
+        Mon, 25 Jan 2021 20:12:22 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id gDCuxGt4QB2o; Mon, 25 Jan 2021 20:12:14 +0100 (CET)
+        with ESMTP id BTo6mkFPhUM2; Mon, 25 Jan 2021 20:12:20 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 826482042A1;
-        Mon, 25 Jan 2021 20:12:12 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id 9EF9A2042B1;
+        Mon, 25 Jan 2021 20:12:19 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         kashyap.desai@broadcom.com
-Subject: [PATCH v15 37/45] sg: defang allow_dio
-Date:   Mon, 25 Jan 2021 14:11:14 -0500
-Message-Id: <20210125191122.345858-38-dgilbert@interlog.com>
+Subject: [PATCH v15 43/45] sg: no_dxfer: move to/from kernel buffers
+Date:   Mon, 25 Jan 2021 14:11:20 -0500
+Message-Id: <20210125191122.345858-44-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210125191122.345858-1-dgilbert@interlog.com>
 References: <20210125191122.345858-1-dgilbert@interlog.com>
@@ -45,110 +45,95 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Before direct IO was permitted by this driver, the user either had
-to give 'allow_dio=1' as a module parameter or write to procfs
-with 'echo 1 > /proc/scsi/sg/allow_dio'. The user also needs
-to set the SG_FLAG_DIRECT_IO flag in the flags field of either
-the sg v3 or v3 interface. The reason this "belts and braces"
-approach was taken is lost in the mists of time (done over 20
-years ago). So this patch keeps the allow_dio attribute for
-backward compatibility but ignores it, relying on the
-SG_FLAG_DIRECT_IO flag alone. This brings the use of the
-SG_FLAG_DIRECT_IO flag into line with the SG_FLAG_MMAP_IO
-flag; the two mechanisms are no more, or less, safe than one
-another in recent Linux kernels.
+When the NO_DXFER flag is use on a command/request, the data-in
+and data-out buffers (if present) should not be ignored. Add
+sg_rq_map_kern() function to handle this. Uses a single bio with
+multiple bvec_s usually each holding multiple pages, if necessary.
+The driver default element size is 32 KiB so if PAGE_SIZE is 4096
+then get_order()==3 .
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 26 ++++++++------------------
- 1 file changed, 8 insertions(+), 18 deletions(-)
+ drivers/scsi/sg.c | 59 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 2de327b8f06f..f22662a6ea37 100644
+index fdfa34c27e3e..37258b4804ab 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -142,7 +142,7 @@ int sg_big_buff = SG_DEF_RESERVED_SIZE;
-  * not enough memory) will be reserved for use by this file descriptor.
-  */
- static int def_reserved_size = -1;	/* picks up init parameter */
--static int sg_allow_dio = SG_ALLOW_DIO_DEF;
-+static int sg_allow_dio = SG_ALLOW_DIO_DEF;	/* ignored by code */
- 
- static int scatter_elem_sz = SG_SCATTER_SZ;
- 
-@@ -2862,19 +2862,6 @@ exit_sg(void)
+@@ -2862,6 +2862,63 @@ exit_sg(void)
  	idr_destroy(&sg_index_idr);
  }
  
--static inline bool
--sg_chk_dio_allowed(struct sg_device *sdp, struct sg_request *srp,
--		   int iov_count, int dir)
--{
--	if (sg_allow_dio && (srp->rq_flags & SG_FLAG_DIRECT_IO)) {
--		if (dir != SG_DXFER_UNKNOWN && !iov_count) {
--			if (!sdp->device->host->unchecked_isa_dma)
--				return true;
--		}
--	}
--	return false;
--}
--
++static struct bio *
++sg_mk_kern_bio(int bvec_cnt)
++{
++	struct bio *biop;
++
++	if (bvec_cnt > BIO_MAX_PAGES)
++		return NULL;
++	biop = bio_alloc(GFP_ATOMIC, bvec_cnt);
++	if (!biop)
++		return NULL;
++	biop->bi_end_io = bio_put;
++	return biop;
++}
++
++/*
++ * Setup to move data between kernel buffers managed by this driver and a SCSI device. Note that
++ * there is no corresponding 'unmap' call as is required by blk_rq_map_user() . Uses a single
++ * bio with an expanded appended bvec if necessary.
++ */
++static int
++sg_rq_map_kern(struct sg_request *srp, struct request_queue *q, struct request *rqq, int rw_ind)
++{
++	struct sg_scatter_hold *schp = &srp->sgat_h;
++	struct bio *bio;
++	int k, ln;
++	int op_flags = 0;
++	int num_sgat = schp->num_sgat;
++	int dlen = schp->dlen;
++	int pg_sz = 1 << (PAGE_SHIFT + schp->page_order);
++	int num_segs = (1 << schp->page_order) * num_sgat;
++	int res = 0;
++
++	SG_LOG(4, srp->parentfp, "%s: dlen=%d, pg_sz=%d\n", __func__, dlen, pg_sz);
++	if (num_sgat <= 0)
++		return 0;
++	if (rw_ind == WRITE)
++		op_flags = REQ_SYNC | REQ_IDLE;
++	bio = sg_mk_kern_bio(num_sgat - k);
++	if (!bio)
++		return -ENOMEM;
++	bio->bi_opf = req_op(rqq) | op_flags;
++
++	for (k = 0; k < num_sgat && dlen > 0; ++k, dlen -= ln) {
++		ln = min_t(int, dlen, pg_sz);
++		if (bio_add_pc_page(q, bio, schp->pages[k], ln, 0) < ln) {
++			bio_put(bio);
++			return -EINVAL;
++		}
++	}
++	res = blk_rq_append_bio(rqq, &bio);
++	if (unlikely(res))
++		bio_put(bio);
++	else
++		rqq->nr_phys_segments = num_segs;
++	return res;
++}
++
  static inline void
  sg_set_map_data(const struct sg_scatter_hold *schp, bool up_valid,
  		struct rq_map_data *mdp)
-@@ -2893,6 +2880,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 	int res = 0;
- 	int dxfer_len = 0;
- 	int r0w = READ;
-+	u32 rq_flags = srp->rq_flags;
- 	unsigned int iov_count = 0;
- 	void __user *up;
- 	struct request *rq;
-@@ -2973,7 +2961,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+@@ -3025,6 +3082,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 		if (IS_ENABLED(CONFIG_SCSI_PROC_FS) && res)
+ 			SG_LOG(1, sfp, "%s: blk_rq_map_user() res=%d\n",
+ 			       __func__, res);
++	} else {	/* transfer data to/from kernel buffers */
++		res = sg_rq_map_kern(srp, q, rq, r0w);
  	}
- 	scsi_rp->cmd_len = cwrp->cmd_len;
- 	srp->cmd_opcode = scsi_rp->cmd[0];
--	us_xfer = !(srp->rq_flags & (SG_FLAG_NO_DXFER | SG_FLAG_MMAP_IO));
-+	us_xfer = !(rq_flags & (SG_FLAG_NO_DXFER | SG_FLAG_MMAP_IO));
- 	assign_bit(SG_FRQ_NO_US_XFER, srp->frq_bm, !us_xfer);
- 	reserved = (sfp->rsv_srp == srp);
- 	rq->end_io_data = srp;
-@@ -2984,7 +2972,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 		SG_LOG(4, sfp, "%s: no data xfer [0x%pK]\n", __func__, srp);
- 		set_bit(SG_FRQ_NO_US_XFER, srp->frq_bm);
- 		goto fini;	/* path of reqs with no din nor dout */
--	} else if (sg_chk_dio_allowed(sdp, srp, iov_count, dxfer_dir) &&
-+	} else if ((rq_flags & SG_FLAG_DIRECT_IO) && iov_count == 0 &&
-+		   !sdp->device->host->unchecked_isa_dma &&
- 		   blk_rq_aligned(q, (unsigned long)up, dxfer_len)) {
- 		srp->rq_info |= SG_INFO_DIRECT_IO;
- 		md = NULL;
-@@ -2995,7 +2984,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 	}
- 
- 	if (likely(md)) {	/* normal, "indirect" IO */
--		if (unlikely(srp->rq_flags & SG_FLAG_MMAP_IO)) {
-+		if (unlikely(rq_flags & SG_FLAG_MMAP_IO)) {
- 			/* mmap IO must use and fit in reserve request */
- 			if (!reserved || dxfer_len > req_schp->buflen)
- 				res = reserved ? -ENOMEM : -EBUSY;
-@@ -3886,6 +3875,7 @@ sg_proc_single_open_adio(struct inode *inode, struct file *filp)
- 	return single_open(filp, sg_proc_seq_show_int, &sg_allow_dio);
- }
- 
-+/* Kept for backward compatibility. sg_allow_dio is now ignored. */
- static ssize_t
- sg_proc_write_adio(struct file *filp, const char __user *buffer,
- 		   size_t count, loff_t *off)
-@@ -4506,6 +4496,6 @@ MODULE_ALIAS_CHARDEV_MAJOR(SCSI_GENERIC_MAJOR);
- 
- MODULE_PARM_DESC(scatter_elem_sz, "scatter gather element size (default: max(SG_SCATTER_SZ, PAGE_SIZE))");
- MODULE_PARM_DESC(def_reserved_size, "size of buffer reserved for each fd");
--MODULE_PARM_DESC(allow_dio, "allow direct I/O (default: 0 (disallow))");
-+MODULE_PARM_DESC(allow_dio, "allow direct I/O (default: 0 (disallow)); now ignored");
- module_init(init_sg);
- module_exit(exit_sg);
+ fini:
+ 	if (unlikely(res)) {		/* failure, free up resources */
 -- 
 2.25.1
 
