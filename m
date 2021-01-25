@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-23.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E572EC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 20:15:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFB6EC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 20:24:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A687F22583
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 20:15:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A52B7216FD
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 20:24:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732062AbhAYUPO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jan 2021 15:15:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35480 "EHLO
+        id S1732150AbhAYUT2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Jan 2021 15:19:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731193AbhAYUOw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2021 15:14:52 -0500
-Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F347BC061756
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2021 12:14:11 -0800 (PST)
-Received: by mail-io1-xd34.google.com with SMTP id p72so29138843iod.12
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2021 12:14:11 -0800 (PST)
+        with ESMTP id S1731944AbhAYUTH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2021 15:19:07 -0500
+Received: from mail-io1-xd2f.google.com (mail-io1-xd2f.google.com [IPv6:2607:f8b0:4864:20::d2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A3DCC0613D6
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2021 12:18:16 -0800 (PST)
+Received: by mail-io1-xd2f.google.com with SMTP id z22so29189793ioh.9
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2021 12:18:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=5oPVxsDUHFnjzZ37jztimVx7kT5rl5MLP23lod84D8k=;
-        b=O7ObVy/vbDbvYgKIJLJJe1Y9IKfOCCLlQ6AzYhjLSNlxQ1feUkOZBwlBjw+UCjoO68
-         SoONYMJJPORKbbwddqa0AP8EdbK0fP3GezYgLp2C7FF3PJT9bdhP+7EtHDzxCH3z1Hgr
-         ZaDtA2Pb5lNw5h7P7YQp2ybuW1FNCqIq3AjX5MFuiFDJfI5sJ+tgm+v+KDfaSNsbZA3D
-         t6QCSDvG9sY9qA0cmzpFWbArfD3avEasYZvSHAsSXvxqmTUst4QOhxubnaG2MPygpyIm
-         r2s7yZdAYKTJFhAfIJwa2MgmhNICTcpq16Bcb8DmgRQdQ4y61MZsVNfs0dXPo5QNUSZd
-         sFUg==
+        bh=sYXv/wFZRyq+FlPUZdvlnm5Gtp7c31gg6fYDez/8oj8=;
+        b=OELKLw491QNs3/30f3DpvGIw5ZMY5saX/n4jHRSc5rfn4//Mq+061C63lJYsEwq7We
+         P4ocd3aq5MFBF2PlKqju4yF7P5hZX7c2eGpvZwuqqSeSoU6gG9BAN9pWIoPuUzplTIep
+         BD6skTKmXKhSVZPl1jRerbjrVEIciGaWznxWvyiMZpErj5P6Y+cjb7i20HZIQS6HEg+a
+         GfE3ltauTtB2osCvlzL3x2FGr65oF8aKJf2iPklau8ZkjqStV8e2Cv8wCofQAXT8+zdv
+         zM4+t9YrF5ULBKfdkpGElHrbPzq+YMh2xZwqiM5CVLLUtVV9StWfwP5U/+2YvyApk7Cc
+         hmnw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=5oPVxsDUHFnjzZ37jztimVx7kT5rl5MLP23lod84D8k=;
-        b=ZSf1zj8otIX2pagWOodicyPTclgfod1OkSER2o3xLLkhTkvC56USEQpZVDit2Xb3Ni
-         5qVWhvCZEzlpnPgaQa+XGJMWm0O8/fv4POlKg6gFnzOFXZYtvQiDleGaIGUZBv98gFpz
-         eAdI5aNhGUfZB3QOzPTMEtN+RoDEQ11TGXBasJejV+Is3fzNuwu41zp5ZsiG6IrEs3LB
-         voxwWQXJd9WItKOoBwjsIc94Wrso0DpHJDg3zZRb1rtqfKxNLLQk75j3Y/iSqW/RApNw
-         PZTunsqwcpqDv7il6nc5r1oOm1WH0a9yC0dWBMsD7JYom6QBrMUOuuliL2+YCTPTtu6l
-         SDyg==
-X-Gm-Message-State: AOAM533Q5GvkAa9T+Q7NoWv3mdZJwgDMChLgHkTPWbXmsNqM95AQzajp
-        Q4L5iR3OLrd/eKNN3UK7m+0gm/KBvDgup3J++SmVOQ==
-X-Google-Smtp-Source: ABdhPJzMjR4NyG/6n7ZBSL9gkgUVYaYxJ5W7f+6z3TKM10CBC8DzB/dFVXPVii8iOsQguaod82m7mEWmkYOU3l7Har4=
-X-Received: by 2002:a5e:8905:: with SMTP id k5mr1836963ioj.140.1611605651165;
- Mon, 25 Jan 2021 12:14:11 -0800 (PST)
+        bh=sYXv/wFZRyq+FlPUZdvlnm5Gtp7c31gg6fYDez/8oj8=;
+        b=W9ZOvHEZ5Qap/wn0qy5c61FVjxtAmV9oFPqD58Z7KnNsIJteYqBmZSMpws4h57BwlS
+         HfA+2PtKKNPq81BDttM9Ky3p03wWJb8pmvAhE0S0J2+eT9lxym1LZwgqjplTKIg+Lrtm
+         jUFdehn7zepcR+9LuLohnv0gjGha+oz4zj2otCfRH9JQselwffH5ox1MMEgsAuzzJkZ5
+         PtLqqN8U/H8iTbLG6jdas/TPActE+IS2wSRita36aDNJvXcT+l94qcl3xM9KVeqd6zt/
+         rAZ3xh7juYVnz+wCzUiHOC7S1vWgGv4ksRkto9ONxTxa6YqGo8BDW85uNhQExXPJ+K0F
+         qgbA==
+X-Gm-Message-State: AOAM531jUGQiScbP6HKep+rp0d+jBvyv3USFJZ/sYGAlrovk4F/QTS8i
+        3cxDnHc1AZixH87wIekGhK8NoDh93sg36mfmgxR/VQ==
+X-Google-Smtp-Source: ABdhPJxpudsxrM44lyXDrh/Zm39qLbQ2YNhJzS6BTx4PGQ2lvGprbUMFq1qSrL+8zgabt8wpxeBxsfrrozxyvh7w2cY=
+X-Received: by 2002:a05:6638:35ac:: with SMTP id v44mr2166386jal.103.1611605895544;
+ Mon, 25 Jan 2021 12:18:15 -0800 (PST)
 MIME-Version: 1.0
-References: <20210121082155.111333-1-ebiggers@kernel.org> <20210121082155.111333-2-ebiggers@kernel.org>
-In-Reply-To: <20210121082155.111333-2-ebiggers@kernel.org>
+References: <20210121082155.111333-1-ebiggers@kernel.org> <20210121082155.111333-3-ebiggers@kernel.org>
+In-Reply-To: <20210121082155.111333-3-ebiggers@kernel.org>
 From:   Satya Tangirala <satyat@google.com>
-Date:   Mon, 25 Jan 2021 12:14:00 -0800
-Message-ID: <CAA+FYZerh02JXSKghCKuG29ATdYU_=2O93moGnLgD6Jv2v2auQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] block/keyslot-manager: introduce devm_blk_ksm_init()
+Date:   Mon, 25 Jan 2021 12:18:04 -0800
+Message-ID: <CAA+FYZfVJRqETCjy2f2N-sikydjhtwQnSkMEQ3v=BDkoHLd_4w@mail.gmail.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: use devm_blk_ksm_init()
 To:     Eric Biggers <ebiggers@kernel.org>
 Cc:     linux-block@vger.kernel.org, linux-mmc@vger.kernel.org,
         linux-scsi@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>
@@ -70,115 +70,77 @@ On Thu, Jan 21, 2021 at 12:23 AM Eric Biggers <ebiggers@kernel.org> wrote:
 >
 > From: Eric Biggers <ebiggers@google.com>
 >
-> Add a resource-managed variant of blk_ksm_init() so that drivers don't
-> have to worry about calling blk_ksm_destroy().
->
-> Note that the implementation uses a custom devres action to call
-> blk_ksm_destroy() rather than switching the two allocations to be
-> directly devres-managed, e.g. with devm_kmalloc().  This is because we
-> need to keep zeroing the memory containing the keyslots when it is
-> freed, and also because we want to continue using kvmalloc() (and there
-> is no devm_kvmalloc()).
+> Use the new resource-managed variant of blk_ksm_init() so that the UFS
+> driver doesn't have to manually call blk_ksm_destroy().
 >
 > Signed-off-by: Eric Biggers <ebiggers@google.com>
 > ---
->  Documentation/block/inline-encryption.rst | 12 +++++-----
->  block/keyslot-manager.c                   | 29 +++++++++++++++++++++++
->  include/linux/keyslot-manager.h           |  3 +++
->  3 files changed, 38 insertions(+), 6 deletions(-)
+>  drivers/scsi/ufs/ufshcd-crypto.c | 9 ++-------
+>  drivers/scsi/ufs/ufshcd-crypto.h | 5 -----
+>  drivers/scsi/ufs/ufshcd.c        | 1 -
+>  3 files changed, 2 insertions(+), 13 deletions(-)
 >
-> diff --git a/Documentation/block/inline-encryption.rst b/Documentation/block/inline-encryption.rst
-> index e75151e467d39..7f9b40d6b416b 100644
-> --- a/Documentation/block/inline-encryption.rst
-> +++ b/Documentation/block/inline-encryption.rst
-> @@ -182,8 +182,9 @@ API presented to device drivers
+> diff --git a/drivers/scsi/ufs/ufshcd-crypto.c b/drivers/scsi/ufs/ufshcd-crypto.c
+> index 07310b12a5dc8..153dd5765d9ca 100644
+> --- a/drivers/scsi/ufs/ufshcd-crypto.c
+> +++ b/drivers/scsi/ufs/ufshcd-crypto.c
+> @@ -179,8 +179,8 @@ int ufshcd_hba_init_crypto_capabilities(struct ufs_hba *hba)
+>         }
 >
->  A :c:type:``struct blk_keyslot_manager`` should be set up by device drivers in
->  the ``request_queue`` of the device. The device driver needs to call
-> -``blk_ksm_init`` on the ``blk_keyslot_manager``, which specifying the number of
-> -keyslots supported by the hardware.
-> +``blk_ksm_init`` (or its resource-managed variant ``devm_blk_ksm_init``) on the
-> +``blk_keyslot_manager``, while specifying the number of keyslots supported by
-> +the hardware.
+>         /* The actual number of configurations supported is (CFGC+1) */
+> -       err = blk_ksm_init(&hba->ksm,
+> -                          hba->crypto_capabilities.config_count + 1);
+> +       err = devm_blk_ksm_init(hba->dev, &hba->ksm,
+> +                               hba->crypto_capabilities.config_count + 1);
+>         if (err)
+>                 goto out_free_caps;
 >
->  The device driver also needs to tell the KSM how to actually manipulate the
->  IE hardware in the device to do things like programming the crypto key into
-> @@ -202,10 +203,9 @@ needs each and every of its keyslots to be reprogrammed with the key it
->  "should have" at the point in time when the function is called. This is useful
->  e.g. if a device loses all its keys on runtime power down/up.
->
-> -``blk_ksm_destroy`` should be called to free up all resources used by a keyslot
-> -manager upon ``blk_ksm_init``, once the ``blk_keyslot_manager`` is no longer
-> -needed.
-> -
-> +If the driver used ``blk_ksm_init`` instead of ``devm_blk_ksm_init``, then
-> +``blk_ksm_destroy`` should be called to free up all resources used by a
-> +``blk_keyslot_manager`` once it is no longer needed.
->
->  Layered Devices
->  ===============
-> diff --git a/block/keyslot-manager.c b/block/keyslot-manager.c
-> index 86f8195d8039e..324bf4244f5fb 100644
-> --- a/block/keyslot-manager.c
-> +++ b/block/keyslot-manager.c
-> @@ -29,6 +29,7 @@
->  #define pr_fmt(fmt) "blk-crypto: " fmt
->
->  #include <linux/keyslot-manager.h>
-> +#include <linux/device.h>
->  #include <linux/atomic.h>
->  #include <linux/mutex.h>
->  #include <linux/pm_runtime.h>
-> @@ -127,6 +128,34 @@ int blk_ksm_init(struct blk_keyslot_manager *ksm, unsigned int num_slots)
+> @@ -238,8 +238,3 @@ void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
+>         if (hba->caps & UFSHCD_CAP_CRYPTO)
+>                 blk_ksm_register(&hba->ksm, q);
 >  }
->  EXPORT_SYMBOL_GPL(blk_ksm_init);
+> -
+> -void ufshcd_crypto_destroy_keyslot_manager(struct ufs_hba *hba)
+> -{
+> -       blk_ksm_destroy(&hba->ksm);
+> -}
+> diff --git a/drivers/scsi/ufs/ufshcd-crypto.h b/drivers/scsi/ufs/ufshcd-crypto.h
+> index d53851be55416..78a58e788dff9 100644
+> --- a/drivers/scsi/ufs/ufshcd-crypto.h
+> +++ b/drivers/scsi/ufs/ufshcd-crypto.h
+> @@ -43,8 +43,6 @@ void ufshcd_init_crypto(struct ufs_hba *hba);
+>  void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
+>                                             struct request_queue *q);
 >
-> +static void blk_ksm_destroy_callback(void *ksm)
-> +{
-> +       blk_ksm_destroy(ksm);
-> +}
-> +
-> +/**
-> + * devm_blk_ksm_init() - Resource-managed blk_ksm_init()
-> + * @dev: The device which owns the blk_keyslot_manager.
-> + * @ksm: The blk_keyslot_manager to initialize.
-> + * @num_slots: The number of key slots to manage.
-> + *
-> + * Like blk_ksm_init(), but causes blk_ksm_destroy() to be called automatically
-> + * on driver detach.
-> + *
-> + * Return: 0 on success, or else a negative error code.
-> + */
-> +int devm_blk_ksm_init(struct device *dev, struct blk_keyslot_manager *ksm,
-> +                     unsigned int num_slots)
-> +{
-> +       int err = blk_ksm_init(ksm, num_slots);
-> +
-> +       if (err)
-> +               return err;
-> +
-> +       return devm_add_action_or_reset(dev, blk_ksm_destroy_callback, ksm);
-> +}
-> +EXPORT_SYMBOL_GPL(devm_blk_ksm_init);
-> +
->  static inline struct hlist_head *
->  blk_ksm_hash_bucket_for_key(struct blk_keyslot_manager *ksm,
->                             const struct blk_crypto_key *key)
-> diff --git a/include/linux/keyslot-manager.h b/include/linux/keyslot-manager.h
-> index 18f3f5346843f..443ad817c6c57 100644
-> --- a/include/linux/keyslot-manager.h
-> +++ b/include/linux/keyslot-manager.h
-> @@ -85,6 +85,9 @@ struct blk_keyslot_manager {
+> -void ufshcd_crypto_destroy_keyslot_manager(struct ufs_hba *hba);
+> -
+>  #else /* CONFIG_SCSI_UFS_CRYPTO */
 >
->  int blk_ksm_init(struct blk_keyslot_manager *ksm, unsigned int num_slots);
+>  static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
+> @@ -69,9 +67,6 @@ static inline void ufshcd_init_crypto(struct ufs_hba *hba) { }
+>  static inline void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
+>                                                 struct request_queue *q) { }
 >
-> +int devm_blk_ksm_init(struct device *dev, struct blk_keyslot_manager *ksm,
-> +                     unsigned int num_slots);
-> +
->  blk_status_t blk_ksm_get_slot_for_key(struct blk_keyslot_manager *ksm,
->                                       const struct blk_crypto_key *key,
->                                       struct blk_ksm_keyslot **slot_ptr);
+> -static inline void ufshcd_crypto_destroy_keyslot_manager(struct ufs_hba *hba)
+> -{ }
+> -
+>  #endif /* CONFIG_SCSI_UFS_CRYPTO */
+>
+>  #endif /* _UFSHCD_CRYPTO_H */
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index e31d2c5c7b23b..d905c84474c2c 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -9139,7 +9139,6 @@ EXPORT_SYMBOL_GPL(ufshcd_remove);
+>   */
+>  void ufshcd_dealloc_host(struct ufs_hba *hba)
+>  {
+> -       ufshcd_crypto_destroy_keyslot_manager(hba);
+>         scsi_host_put(hba->host);
+>  }
+>  EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
 > --
 > 2.30.0
+>
 Looks good to me. Please feel free to add
 Reviewed-by: Satya Tangirala <satyat@google.com>
