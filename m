@@ -2,221 +2,188 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C785C43332
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 20:00:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A6B5C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 20:02:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E27D222B3B
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 20:00:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EEFB22B3B
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 20:02:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732876AbhAZF2c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:28:32 -0500
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:36439 "EHLO
-        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729953AbhAYRLC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2021 12:11:02 -0500
+        id S1732868AbhAZF22 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 00:28:28 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:13759 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728027AbhAYMZa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2021 07:25:30 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1611594661; x=1643130661;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1611577529; x=1643113529;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=RlkGnt7k+XvGYtnQoqZ/6jSGnB7+GMdScnclOKjPm7M=;
-  b=zofMO7ypjWoem+c0WqUwfozsIBsNCaggdDQCMJl7r5isJQvL9GdN7KCP
-   cXalBQn8iz0YE3yNlOBoZlcxv/2UgvTyOpITroAwyyZwg/zVYfVLbgG+T
-   uZw+Py49ylkeNaR/kHG4wlRci0mvMoUx73vwyb9IYliISvfVJDsdvRDnB
-   iYQw0xsmdJq+n2geeU7gb3PfxYnGbGCkhXP1EbUYs7ScNrGVZOpM2AWbz
-   j6CaRkghCs0ZlrMcmtropqVaCDT0WGwloulWe6rg88OUUcUqktKfxrd2K
-   dtwO49WMhNWAOjzymlfrWOmRt1CY5DLSjBwvhOPyePsK10P18xN+s46xY
-   g==;
-IronPort-SDR: 5CLEqlpQWXsHxh0aHsuSzWm2YS4Tp5Kkt/yTQyE1ut63mNaRWHVqG7EmIcI4xqiXBWy64B8GKO
- 1jYJM/aS787UXQn/LoL89O50bbsjXFTQMiHtnOpleohGZtCWARATZ/tpIL5dRLP3Syd3rBQjWN
- fPJ5nzICj9Gwhld+DWHdhAIeIBGImMbyrOz6QbI+MHWbRsFhcVohr1kX/uShJgeQPsTmlED1F8
- jliXR04/otW9/qu8dOHtfrNp0wGYJquklLi2CyhQrgpEeltrS/4KQRqUqTHvRAFWQSFy7IoaC2
- tB4=
-X-IronPort-AV: E=Sophos;i="5.79,374,1602572400"; 
-   d="scan'208";a="112387555"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 25 Jan 2021 10:09:46 -0700
-Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Mon, 25 Jan 2021 10:09:45 -0700
-Received: from NAM11-BN8-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3
- via Frontend Transport; Mon, 25 Jan 2021 10:09:45 -0700
+  bh=jjWIHLT5lbq78MQ1fyUel9TUvNItCas7vtDdFfeiFFM=;
+  b=p+WOb9zC52fmQ932Xk/J4iaoA7KKkk3mVuDcab06BkkgJdh+SQ7mcEjC
+   OoPNgRZOoCeWD/okbhWEHuz9IyRaE08bXhfgyHQ9ito3QpbAYeocE9KEA
+   pTvRuesfeYkF2Q3sGPSs0/kJxeCGfZkZIQrrgFgfQKJTI7s8GkOiF4Yhk
+   BWRQWMbWch4z4WCacDQwMmvcP4ymnrv9+iaYzduV2B5SZT1nTFkCUn1av
+   DcrhkKsVAkqoRK8UCjbwQQw0SAyhZBR++NARfogU2SonSgXok4y4lm8WR
+   zoG8/0E+NbR3+PGmshuViT5PgmWXSJZZcEtG6TJ6uIS3B30FlbY6fAKCt
+   w==;
+IronPort-SDR: Fdxe5QS7l6XNZUSQXLMMhvN5eEW2G+mSWcoPJxf45SQXueMlhB3hWhMkOxN9E9g63limpRd9bb
+ EdB1gqgiAEw4XKRMacRYDiyy7siHvqirwfkjeVvMkfM1HUo1HG4/4ZnVLau/l3jDY98DQe9Am9
+ O1BvBS0Qq1yGU0umktoXtj0DviZ+zIbVN1UQDBvoasKTzqUx55y2GxckWAAyFz4jRYF56UArAi
+ ExofGPWy8BkNH9EZCGG7rE5y5HM223avLMt1jsn6UY2+Y+C5Qx0eWYyG8UN8BuUDarLRXw0Vvw
+ KYY=
+X-IronPort-AV: E=Sophos;i="5.79,373,1602518400"; 
+   d="scan'208";a="162692015"
+Received: from mail-dm6nam10lp2104.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.104])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Jan 2021 19:36:04 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NPHV2l6nhgVXtSymN2vfKlvEl/0uVTrMnwfFXpk10aEPilJTUpwNMSm7pQiz/ypX3FioXaDh6ySJt8LX/JXKD6EFvPXFreOB68T5yrlN4JjTXekj145Wr+A0FGwhUBP9YDS1RaAlzTWJHhnOd+k2bxd5ZvMLJmki72F0Mt38zFPiHbzZ7MMyNCeOeeU6nHA8frlyzyNbeXMJ/ZwtRDEQFH2V/p1CAVbVzx37vCGZLGMZuhHkevGnFXO9Dm8UQMRj5aMuLHSbStxVSMV5WPYE1Clbgj5yrnj6e3yA6wxUZkluSrbj8gWZYhvGvGAOY1e9OWAe8kTct6ogc73l2ypHAQ==
+ b=jdbg+935we+EDxkTIbdkZmp4x6gfx8/Dbf6fgf9R+KD9ncGoBh80Fefvu6I1Y+CsRfQcZkTxFEbF086HyguG88ooYr7fYwh+w0pB8gp4WqCnOX8AhV1FxjWWPgQHXr2C+pVECLT87RPF+fC0eWMG6vICsSxb98QLoTr288xmgUfPTqmVw3cKTtOveKUYHJXg1qXTfx67mgkKEJlf+DA43O0Tg/otZUjFdsLY3SgOZmvchwTJhAvOWUvSFPMb5uLru5njq/SxLEOh0KT9MhDgBcGHvvVd3YZ/0TE7+g0tWRTs+gRCeEX0YZyFc1mGM9ZtFLhliZ6Gw55nPSb9zS0FTA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9NEnZUZJE8POXqrlS6hM+TUSMUO0kF3OV0l/jqWFaU0=;
- b=WbJ4I1oMWNguJIiY8C3VfkQQMVvHOx2pl+H5jndowj6Y5xKN7rYR0zqs4lYxtCXuV975n3maFPYn4DPIJbHQnOtHlsWU4xVecCb+JIAiegMJCnZVdSFiUAvOVNSziGAqYxSThp7b26ujsHfp/jCeZMFXeau3FUtuXLZaKstrYA1PEWNeFCUT2D67VLUtaudkviVgZ6zAwX9eYorZXPU86Aq1bYM+1a9Exd2sdqusyH9EOmOP9fmzZm00gcL9mouJp9QnhgTx7pplpNk9NBYPi2hO0JC5pibBuRv9ic2FafkxV2V2HG82d49MKHidKkiMkuRm1xLZjI6WolTVFkv1Ug==
+ bh=v2l4U0y9fVUpDKRbL2gcFk0lq7R9MkoC4iq8WfEIeM4=;
+ b=UpHRMuW9VA+OMgaCLP0YvBQKb5XyB8bf5oeC+6W5qu4CRhjAHdwDrrOW/mIDy8dXvs8rWoBYJPvgkFWLrfGwLG+8xcDq3fgTcvinu6Z3lqsozOEDymarvtZJTzjxQJD7PUUgkSdiZelGyPE7VDFq0APBUPjvRnntxpBB7MhMO1dlAUrz9uPi2qkL1GXISMZOBxGxJrQgAs7hpdQCPqsMXVx9iqrPOqM5XLMdx4fM0Sea4XMBdHgwvXsh2huZxCmpkc/rq9+VxCkETyLpLs8Okpmt33x38bhOSmCbZ4BkYsdBBLpN3d/bFIs/0QJTR6ONOPicuPTI6mgUfWXFS4ngjg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9NEnZUZJE8POXqrlS6hM+TUSMUO0kF3OV0l/jqWFaU0=;
- b=CgXEOeRfA5TKeHp7GvOkfdG2HhfsE8JKcJr3//OVExJKkGP9CYnfTQ7/SGd4AOIBuMtZ/XoAUUYzctjtfDUegU6jsX+lFEzTNse34Yc92F09XzsFlnqdbdfH3gZQSVjigeoZf3QS/m5q3xSwwq0RrJ1ngaea71g+ncP33RdH2+4=
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
- by SA2PR11MB4892.namprd11.prod.outlook.com (2603:10b6:806:f9::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.13; Mon, 25 Jan
- 2021 17:09:39 +0000
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::ccd1:992c:7bc5:4b00]) by SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::ccd1:992c:7bc5:4b00%3]) with mapi id 15.20.3784.017; Mon, 25 Jan 2021
- 17:09:39 +0000
-From:   <Don.Brace@microchip.com>
-To:     <mwilck@suse.com>, <Kevin.Barnett@microchip.com>,
-        <Scott.Teel@microchip.com>, <Justin.Lindley@microchip.com>,
-        <Scott.Benesh@microchip.com>, <Gerry.Morong@microchip.com>,
-        <Mahesh.Rajashekhara@microchip.com>, <hch@infradead.org>,
-        <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
-        <POSWALD@suse.com>
-CC:     <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH V3 21/25] smartpqi: add additional logging for LUN resets
-Thread-Topic: [PATCH V3 21/25] smartpqi: add additional logging for LUN resets
-Thread-Index: AQHWzzRnQ7gZWgfv30y1/UJfpv40KKodC6iAgBD13gA=
-Date:   Mon, 25 Jan 2021 17:09:39 +0000
-Message-ID: <SN6PR11MB2848C7584DB2FB8EF36532A0E1BD9@SN6PR11MB2848.namprd11.prod.outlook.com>
-References: <160763241302.26927.17487238067261230799.stgit@brunhilda>
-         <160763258244.26927.17723549050349595895.stgit@brunhilda>
- <2b62a04b71dfe762b7a04906b3962e690587ed78.camel@suse.com>
-In-Reply-To: <2b62a04b71dfe762b7a04906b3962e690587ed78.camel@suse.com>
+ bh=v2l4U0y9fVUpDKRbL2gcFk0lq7R9MkoC4iq8WfEIeM4=;
+ b=vPRwO9lC6XMVqLCbh/lqG2JnNI+DMAuKxxICiuU76l4MiczfbEnKdpVkwZftWW3aod8ImFmKw/moxC/Mronu3kRnMkj5mezh8/b/2Bvwi1HBQ6wQNS40F4O49po+tu2PuThzunI7d0UujAC8ThriPOapkUAJsoc1uqxGyC30S9k=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ DM6PR04MB4844.namprd04.prod.outlook.com (2603:10b6:5:1f::33) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3784.17; Mon, 25 Jan 2021 11:36:02 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::a564:c676:b866:34f6]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::a564:c676:b866:34f6%9]) with mapi id 15.20.3784.019; Mon, 25 Jan 2021
+ 11:36:02 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Can Guo <cang@codeaurora.org>,
+        "jaegeuk@kernel.org" <jaegeuk@kernel.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
+        "hongwus@codeaurora.org" <hongwus@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v2] scsi: ufs: Fix some problems in task management
+ request implementation
+Thread-Topic: [PATCH v2] scsi: ufs: Fix some problems in task management
+ request implementation
+Thread-Index: AQHW76TBHapLUhkMNUSBLd+xVXHyt6o4OnQQ
+Date:   Mon, 25 Jan 2021 11:36:01 +0000
+Message-ID: <DM6PR04MB65754B0CF70B9A3EB036D157FCBD9@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <1611199388-24668-1-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1611199388-24668-1-git-send-email-cang@codeaurora.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: suse.com; dkim=none (message not signed)
- header.d=none;suse.com; dmarc=none action=none header.from=microchip.com;
-x-originating-ip: [76.30.208.15]
+authentication-results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 24195322-07ef-45a7-a73f-08d8c153ffed
-x-ms-traffictypediagnostic: SA2PR11MB4892:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SA2PR11MB4892236D756529A9A5174FFDE1BD9@SA2PR11MB4892.namprd11.prod.outlook.com>
-x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:7691;
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 04c56bc7-28c8-435b-bfd7-08d8c12564c0
+x-ms-traffictypediagnostic: DM6PR04MB4844:
+x-microsoft-antispam-prvs: <DM6PR04MB484403F63789AFD21617088BFCBD9@DM6PR04MB4844.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: TB7YnX8dSPN1kMo05trjqx2br7TTm4Ibi2C6/yHiWdoDnvVmUTDOmCpdV0ZsDQ4Lso8ahlz/5LQeDcnMGyO/wq7GJF3t0Tt3aGSnnEz8x52LUYujZU6ycvZq7XcddVcsrRtMmzxMNezUOlfdFS7yUknaNXIOq9pY8Ws3o/gljGNs7iPrByVzWlSuuOxcaDfDAuh9pVp3SOCUQMA6fN+2roRgIJPUxoEYBm3qEnUYEgYqS41IGs6/KspLkukJwyzbTD/KJnEKFuDDB5RprrZVgguLfhPDfuJGt6k+kfa7wuQH+Ky+q1xNHzlGWychlFRaGFxx+VESthUoxKkHukY3GaaaBxBM8wYTQ7BPkTTO3xAKtQMOP/kvDz8kbHBqKK1BEYVpo8y3J3tBw6OCEyprTggwXcA3bfgRCpqWk88W/vHgXCaS0m1pyKJwXF+/24Te
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(376002)(39860400002)(396003)(136003)(366004)(66446008)(66556008)(66946007)(478600001)(83380400001)(2906002)(8676002)(76116006)(8936002)(186003)(33656002)(64756008)(66476007)(55016002)(52536014)(921005)(26005)(9686003)(4326008)(110136005)(86362001)(71200400001)(316002)(7696005)(6506007)(5660300002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?iso-8859-1?Q?t9dzvJeHli7m1ZxECh2bhH3xNuProWjU+/QNr8wIwJarhnLoUqxTbh4q5I?=
- =?iso-8859-1?Q?EDGfqkgtzlslJGhVgjOTc5F+G0jUzm8CnB3Ml43eaBBywySXAzi8RISk6V?=
- =?iso-8859-1?Q?w1TqM/QsOHqbfoGW9+gsts+CIumqOrxMUzRSzpoVhAirYBn/55Uvdj6UYz?=
- =?iso-8859-1?Q?xPp7ihLepbu9I5CEoSaCXIoVK9qd+13S80n2CTfNHKZJzHPZoIopJQAuO4?=
- =?iso-8859-1?Q?elw3sTYqdASMxekOslKmjgsDpu7eh/utLLqlt8l2d/ZgimBJiPPmeFZnUX?=
- =?iso-8859-1?Q?uYdWCKdh0SYpsmGh1K9+xYapPAWDWtGX8ocQ/ZY9SrCSprezkBDmYokYjN?=
- =?iso-8859-1?Q?YqxRCZHGKEZFNn0f1tgPjFo9H1yGWM+Sgn7jgZeWzZFHeVpDpdoA1kKA1p?=
- =?iso-8859-1?Q?vfcftEQPQJytrMSI8VrCwLDkb68gWgsTOqEdWfLtO0t5Q/CXRfUhBiEPaJ?=
- =?iso-8859-1?Q?213tUjE56JTjccES7KBHiEXWInEzu050wR1UtH1SeJnxFPPsDaQe8SBoJV?=
- =?iso-8859-1?Q?yVT/Jywig/Z8+j1SIj2KXp5zoYnIbFMxfdR21+hNpzOB+APR/9F1JDwOzW?=
- =?iso-8859-1?Q?HdJ4oC/ORr0otcw9dtu2ATfCVK7yjcj/znjC91PYRSWznHPpJw2YnLHEBn?=
- =?iso-8859-1?Q?l8qGTkHktF9/hFDKyirqYLotazFIbImpC4hEYbO6k5iORBThqv/9R1JS/v?=
- =?iso-8859-1?Q?osC+ZFOoqq8JDSDW0TY38n6mQ47sKKVnHLA1+/RATiqW4f++w4zlNRJ96h?=
- =?iso-8859-1?Q?GP/Y+0/0sMU7XxDs0/Oaa8+6CAzKRZVx0Fk/iNuHy/nRo9D62YVeVVUQl6?=
- =?iso-8859-1?Q?5FOjYRbjCrqw/coyYYn9bU11KmDodrx9z5GlCPVuMxkJ+Feo4NP8GJTOcV?=
- =?iso-8859-1?Q?3HMMz5nTvXq0lIkF8EVaCYPJxyYGa5Cow6ZLsDo9VWCBs5V/9VogmfhBQM?=
- =?iso-8859-1?Q?ZozxLENMZj4qJhgnXvxieMKRhMWafp+0jinTXUBOalJu7xNaCzaPsU61B/?=
- =?iso-8859-1?Q?hgyN276mmGUpw5pdjRV36ehq44Rs4JVySMBirVz1iQBQ833WzuWQoxztJ+?=
- =?iso-8859-1?Q?3gDKCklhLmAZTLq42FOha+x1axElSUL96GQRXucrVjW+?=
-Content-Type: text/plain; charset="iso-8859-1"
+x-microsoft-antispam-message-info: g9GS3Bq8YYO1pvgKvSTq3wTVzjNTuzNLPQjomWxZBDXClhQvQFTniudAiFPHz5s+l7//S2Msf34X+XipVYV0wBXMOIpVLDQFyHq9n0Cq/ANCXTNrUKbaVmgPe/y5HVHFvw7DszCyrKv1c4/JtlwxHv59xOnrX20y89af0m7dxpZOIkqWBRCILB/DAooeXTSpux+TvXBkD29jeWzwVkdfO0gYCxi15qU4+2cni7V7qbYARIeRmRfrarEocNV6Vv9x3U6f4N1lyMEjU5Sm3HVWIEBjHXLVmaC0P1IDoFjK+b2AYP5KNMYSy64clIF2mcFNNt9LV0C9Wd23csbRCjZ9XUOzd9F7wC3F+0zIatl5v0RYEFWNR4P2lOlS7WANi0/odqbtOMPNaijH4X6ynNGN5g==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(136003)(346002)(366004)(39860400002)(376002)(86362001)(83380400001)(316002)(110136005)(54906003)(64756008)(66946007)(76116006)(66476007)(66446008)(8676002)(7416002)(2906002)(66556008)(478600001)(52536014)(186003)(26005)(7696005)(71200400001)(4326008)(5660300002)(9686003)(8936002)(6506007)(55016002)(33656002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?RodNVflO7g2ROIlkRu6yRqrnMo9nFHhS0qlGGVTsEWDSRxb2D6Gga8RLyMPh?=
+ =?us-ascii?Q?In3zMCeBSPOqRdJqJOIOM14HXGWhEsY9hmVwY/yZ6MybSKCqayRI/jXDc1pO?=
+ =?us-ascii?Q?8btyUXAEME89XhfChFFIZWX1npqX9Fvm3vZm1Y34ZVIGNf6sBRlfIwKerL3D?=
+ =?us-ascii?Q?XGHjb0yPr8xlMJ2x+zii/NZXexgfyNpEDU0HopGAOCmDLmDHKsxwsBUN9jFW?=
+ =?us-ascii?Q?OszEc9X2yigbSTUEbUhiLRnsIYSQ8LqbxQpCDXxybhGIQDEToJC3dOc9jk4C?=
+ =?us-ascii?Q?aUPW02aveqJeaSgEvWy5929s7vSp1xO5rKDOTfRKQ7viwaOClaQg8CQGRytI?=
+ =?us-ascii?Q?KfaGapMIJQP1LpWzWkE+W8IuzOKdZX4EHBl5azu3sOtLRpAfJE1Oa9WNZTYg?=
+ =?us-ascii?Q?tpbWxj+5vdBQqUKj5G0AeXvDtHtgJxvH93/qaRbrN9Zo+VuKWr8T3k/5ppfg?=
+ =?us-ascii?Q?vOi+DKU3Rbzt3c1qEqF9i+bx2ZEzIF/sFAm6aQ3sUb+VseDtGWcMjR4wOy4K?=
+ =?us-ascii?Q?SUKoZDv0X/BkA/LSw5MLcjMfOQsAINQDf8D7CSJ3vfHNWpCX8O2AMCMgk2il?=
+ =?us-ascii?Q?mugoj0UplaFkfj61b1QMz1YoYRUXS02mJi/I+dVZxsDkWHfzAXXGQ9sHjXw2?=
+ =?us-ascii?Q?F6qWU/UJB/KX10gmDoGKP9w4laDy8ovDyklp9TJwV9iljl/Nc2MQes2ZbcIe?=
+ =?us-ascii?Q?xA0vt4UoHgcIhlSRWeeE0Xc0L+MLHG8bYlKPkXKqLFRwYZjFq/HQFRGVszWp?=
+ =?us-ascii?Q?hlnlGS9MLrdxRw9HLnHbpXF+Fv59o7PwvrtejzzakDcLS2QZtjz2BYQSrZss?=
+ =?us-ascii?Q?i5MjYZN/IRN0xvvkX2PSrhtj67bDB3wnC8ocyVv5nMh9Gcq+kjFrTYBQChkt?=
+ =?us-ascii?Q?3O2kcKqfRKSbvXSnvlLsR1LTgdnoj8Ehnr6oC5TNe21gogrankEOOi5StVKT?=
+ =?us-ascii?Q?byeiHmP3oWo2BX2YxovddhzmFcO8geu01swQf3K1fyA=3D?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2848.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 24195322-07ef-45a7-a73f-08d8c153ffed
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jan 2021 17:09:39.1947
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 04c56bc7-28c8-435b-bfd7-08d8c12564c0
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jan 2021 11:36:01.9666
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: p6L8noso5XTowAPnaVcomttt7bNtWpoKI6+vxqMmsCvk5UlOaZ/YrIG5tVi9NROcVmaKu4Bfxe5bpnpoI4AN9g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR11MB4892
+X-MS-Exchange-CrossTenant-userprincipalname: 2YKEi7hYtYXIG9i2w5TZ0TkUkG7NNhCzyYuutWPS4ZBuEB63O8K4WAYewMhvywtowXEXQBsF64IMsarQXGdDVA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB4844
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+=20
+> Current task management request send/compl implementation is broken, the
+> problems and fixes are listed as below:
+>=20
+> Problem: TMR completion timeout. ufshcd_tmc_handler() calls
+>          blk_mq_tagset_busy_iter(fn =3D=3D ufshcd_compl_tm()), but since
+>          blk_mq_tagset_busy_iter() only iterates over all reserved tags a=
+nd
+>          started requests, so ufshcd_compl_tm() never gets a chance to ru=
+n.
+> Fix:     Call blk_mq_start_request() in __ufshcd_issue_tm_cmd().
+>=20
+> Problem: Race condition in send/compl paths. ufshcd_compl_tm() looks for
+>          all 0 bits in the REG_UTP_TASK_REQ_DOOR_BELL and call complete()
+>          for each req who has the req->end_io_data set. There can be a ra=
+ce
+>          condition btw tmc send/compl, because req->end_io_data is set, i=
+n
+>          __ufshcd_issue_tm_cmd(), without host lock protection, so it is
+>          possible that when ufshcd_compl_tm() checks the req->end_io_data=
+,
+>          req->end_io_data is set but the corresponding tag has not been s=
+et
+>          in the REG_UTP_TASK_REQ_DOOR_BELL. Thus, ufshcd_tmc_handler()
+> may
+>          wrongly complete TMRs which have not been sent.
+> Fix:     Protect req->end_io_data with host lock. And let ufshcd_compl_tm=
+()
+>          only handle those tm cmds which have been completed instead of
+>          looking for 0 bits in the REG_UTP_TASK_REQ_DOOR_BELL.
+>=20
+> Problem: In __ufshcd_issue_tm_cmd(), it is not right to use hba->nutrs +
+>          req->tag as the Task Tag in one TMR UPIU.
+> Fix:     Directly use req->tag as Task Tag.
+>=20
+> Cc: Jaegeuk Kim <jaegeuk@kernel.org>
+Since you are practically reverting Bart's change (69a6c269c097), maybe cc =
+him as well,
+And add a fixes tag?
 
-From: Martin Wilck [mailto:mwilck@suse.com]=20
-Subject: Re: [PATCH V3 21/25] smartpqi: add additional logging for LUN rese=
-ts
+Also, even though all those fixes are around the same place, but fixing dif=
+ferent issues,
+You might want to consider to separate those.  Whatever you think.
 
-
-The patch description is not complete, as the patch also changes some timin=
-gs. Two remarks below.
-
-Cheers,
-Martin
-
-> ---
->  drivers/scsi/smartpqi/smartpqi_init.c |=A0 125
-> +++++++++++++++++++++++----------
->  1 file changed, 89 insertions(+), 36 deletions(-)
->
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c
-> b/drivers/scsi/smartpqi/smartpqi_init.c
-> index 6b624413c8e6..1c51a59f1da6 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -84,7 +84,7 @@ static void pqi_ofa_setup_host_buffer(struct=20
-> pqi_ctrl_info *ctrl_info);  static void=20
-> pqi_ofa_free_host_buffer(struct pqi_ctrl_info *ctrl_info);  static int=20
-> pqi_ofa_host_memory_update(struct pqi_ctrl_info *ctrl_info);  static=20
-> int pqi_device_wait_for_pending_io(struct pqi_ctrl_info *ctrl_info,
-> -       struct pqi_scsi_dev *device, unsigned long timeout_secs);
-> +       struct pqi_scsi_dev *device, unsigned long timeout_msecs);
->
->  /* for flags argument to pqi_submit_raid_request_synchronous() */
->  #define PQI_SYNC_FLAGS_INTERRUPTABLE   0x1
-> @@ -335,11 +335,34 @@ static void pqi_wait_if_ctrl_blocked(struct
-> pqi_ctrl_info *ctrl_info)
->         atomic_dec(&ctrl_info->num_blocked_threads);
->  }
->
-> +#define PQI_QUIESE_WARNING_TIMEOUT_SECS                10
-
-Did you mean QUIESCE ?
-
-Don: Yes, corrected. Thank-you.
-
->
->         pqi_start_io(ctrl_info, &ctrl_info-
-> >queue_groups[PQI_DEFAULT_QUEUE_GROUP], RAID_PATH,
->                 io_request);
-> @@ -5958,29 +6007,33 @@ static int pqi_lun_reset(struct pqi_ctrl_info
-> *ctrl_info,
->         return rc;
->  }
->
-> -#define PQI_LUN_RESET_RETRIES                  3
-> -#define PQI_LUN_RESET_RETRY_INTERVAL_MSECS     10000
-> -#define PQI_LUN_RESET_PENDING_IO_TIMEOUT_SECS  120
-> +#define PQI_LUN_RESET_RETRIES                          3
-> +#define PQI_LUN_RESET_RETRY_INTERVAL_MSECS             (10 * 1000)
-> +#define PQI_LUN_RESET_PENDING_IO_TIMEOUT_MSECS         (10 * 60 *
-> 1000)
-
-10 minutes? Isn't that a bit much?
-
-Don: 10 minutes seems to hold true for our worst-case-scenarios.
-
-> +#define PQI_LUN_RESET_FAILED_PENDING_IO_TIMEOUT_MSECS  (2 * 60 *
-> 1000)
-
-Why wait less long after a failure?
-
-Don: If the reset TMF fails, the driver is waiting two more minutes for I/O=
- to be flushed out. After this timeout return a failure if the I/O has not =
-been flushed. In many tests, the I/O eventually returns.
-
-
-
+Thanks,
+Avri
