@@ -7,68 +7,73 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D0FC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 21:10:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29212C433E6
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 21:15:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D1CC620708
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 21:10:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F11B220679
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 21:15:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732319AbhAYVJl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jan 2021 16:09:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47012 "EHLO
+        id S1732372AbhAYVPl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Jan 2021 16:15:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732415AbhAYVIA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2021 16:08:00 -0500
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC3D3C061574
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2021 13:07:19 -0800 (PST)
-Received: by mail-pf1-x432.google.com with SMTP id q131so9111885pfq.10
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2021 13:07:19 -0800 (PST)
+        with ESMTP id S1732581AbhAYVPP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2021 16:15:15 -0500
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00914C061573
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2021 13:14:34 -0800 (PST)
+Received: by mail-pj1-x102d.google.com with SMTP id lw17so362984pjb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2021 13:14:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20150623.gappssmtp.com; s=20150623;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=HGw05zA/pd2eBKukAgDLbM9NGJ+BfrSrfgfG5GSt9rA=;
-        b=zAqzonaLBsAJMCw1ZHhG6665Eu8oGucSk87NQjlhprK7oMPNKEOhwWiD10nbipxDdB
-         NFBwGXFca7yyEGBunPfSJQPCVCKU+lE2dTsjKiHWy6jjqqMWZ7dIObpMMe4T9dUi+WIu
-         ph85eEaN2hw0DVxDEV2HjFWg6DLh2isUf79hjRwsVpt6BfcbPmBSWGBzhzNG6HmJxw2V
-         HBxymMYVWaP9dIQ3P4TPMGeRbEsJmKBSwAWGTxc088ah1AK6zphHt1bkeOoMYFRUlD12
-         ENulZ7ozDedypaj9zUXnkIaivGyfothqaQdUIGhg/yGTenUzPZxHG/T5mt734tc9E/h+
-         o0fQ==
+        bh=qRHVlys2zAjjxBtjE+T6wwnyF8H38Om4NwqdpPjEWwM=;
+        b=XJ6Etu3MXGdkNqFWNxmgTkstn5En/9aC8l8yyMUXyYE3wCP9zGyS2+HSQJ1I0mwg63
+         1iigcIsBBPA/wvpReIFCrkTxffBIgLQ0eTlgAl3USfTYLmMl+dFPLwOrED/C+Xxdtrc9
+         0YfFifIVT0hCyBp0W2XVYhLuNWiYWsjlO2W2AnUDLkODBTsusnyoNCKtMQN60UB7Y+VD
+         rZbG0Fh8LevhgLJk43X6VXrrLQ6l0rX7awWPrdGAUYqgVzd5cSpFd0d1jm4PfkBwuCjX
+         BSq5KEn9OYAZY+LZrMjK8ZU8SoBm+cAr2PkM3EGg1yuypLHblRFwzA03nmRkNKBSQV5N
+         cC1Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=HGw05zA/pd2eBKukAgDLbM9NGJ+BfrSrfgfG5GSt9rA=;
-        b=kCKAIqkA1v/sJaYVlpBaW0h7NZWiZozI+yXMhGGYkDGVZ1NCxthAkKe+iRVH0q6OjG
-         RM/tYeri4DFkdud3x756QMUjsTdfsdShG/lZvfija0itP9XzWeTzXIccjEKw5VKD1vRQ
-         QoNo47/eayqPWuclJPZrQxb7uTWuyFVhTXRSs3okcCg/NfYqQxIWwT9n9fUdvyAOhCMQ
-         jIgcN92IR9bQ1uIijXhL5MdG1G/wUSOrUZ4jVPsjPlHEREGfgL2s5zIdVJXrdciK+bDe
-         xKaMQg+azZlSdaT4dg6w2gIIpRqCilB/MMUD4FF4wwLCyzUS5VWyTsPJIvZVxAj2GjvA
-         mi7Q==
-X-Gm-Message-State: AOAM532+qTFG88ACLk4EdkLF6tLD4W+cKvtnpg4dT6+izUU7mx/H0iRx
-        HDqG7LM54npPdq6Zmz9CuD14OQ==
-X-Google-Smtp-Source: ABdhPJzFGOY5iDZliF+XsijM3lvUm5mKjqT+ZECePYQBdwXGnAFIbhKdmjKPiWJE2iLflP2T8NfyjA==
-X-Received: by 2002:a62:7f12:0:b029:1bd:d6e7:e2ba with SMTP id a18-20020a627f120000b02901bdd6e7e2bamr2030253pfd.65.1611608839460;
-        Mon, 25 Jan 2021 13:07:19 -0800 (PST)
+        bh=qRHVlys2zAjjxBtjE+T6wwnyF8H38Om4NwqdpPjEWwM=;
+        b=q+MC2/YD8hHXZDfJSmukMJmDYkOSFook5mhrA+I6dm3DiDV0j0YQ3X3Fw1Wh9kab1A
+         eenkb6T/hmQWCHS7PmnU4HfCP1Y1PJEsx6RxFRHpWTtAexWR+HtjUiwo3Dp4uWwiZ1Sl
+         cj3oy7+8y3Q19AUoPjwiD0u8LB788zllnNz6O5mjFFuvelx7apWkWaylOTPLA8hUuSVZ
+         pkbQMmIGcL89Y4i+SbDw8URlCmcXPdapNxf8SQUQyDa497nyFZVTFadRD4j+lSy/fCIc
+         cKNK1ht9Gp4K2kzIEIKc2JJxqMLGoHQIE96+4jy20BPOwC2T4nxo6WxtDgnCeLsRo42/
+         xymg==
+X-Gm-Message-State: AOAM533qjJdE6HynF6eMDg2Ba6JiNnXur11q188RH8tsNVeKbXWqLWF7
+        k/KN3ep6Viy6ocQWBef48tY9EA==
+X-Google-Smtp-Source: ABdhPJyu4y6/35DKByDjoOtf3OGFpY5YYhLb7LjvpjQwqZaT4/kHlkcBWKXiBbFTRzB5pEth1NfUJg==
+X-Received: by 2002:a17:90a:c907:: with SMTP id v7mr2207890pjt.0.1611609274381;
+        Mon, 25 Jan 2021 13:14:34 -0800 (PST)
 Received: from [192.168.4.41] (cpe-72-132-29-68.dc.res.rr.com. [72.132.29.68])
-        by smtp.gmail.com with ESMTPSA id 7sm17100222pfh.142.2021.01.25.13.07.17
+        by smtp.gmail.com with ESMTPSA id r14sm18607214pgi.27.2021.01.25.13.14.32
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Jan 2021 13:07:18 -0800 (PST)
-Subject: Re: [PATCH v2] fio: add hipri option to sg engine
-To:     Douglas Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        kashyap.desai@broadcom.com
-References: <20210125202651.346783-1-dgilbert@interlog.com>
+        Mon, 25 Jan 2021 13:14:33 -0800 (PST)
+Subject: Re: [PATCH 0/2] Resource-managed blk_ksm_init()
+To:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Eric Biggers <ebiggers@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-block <linux-block@vger.kernel.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Satya Tangirala <satyat@google.com>
+References: <20210121082155.111333-1-ebiggers@kernel.org>
+ <CAPDyKFrLn_4Csxc6BeRR0-zY+_RQuNqNSF9SmKk3Bx2WFJJ_Ag@mail.gmail.com>
 From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <fde36155-55e6-d502-d3e5-ea23886a9d19@kernel.dk>
-Date:   Mon, 25 Jan 2021 14:07:17 -0700
+Message-ID: <2d03dda2-adaf-a44a-922d-f3770e3da8f4@kernel.dk>
+Date:   Mon, 25 Jan 2021 14:14:32 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210125202651.346783-1-dgilbert@interlog.com>
+In-Reply-To: <CAPDyKFrLn_4Csxc6BeRR0-zY+_RQuNqNSF9SmKk3Bx2WFJJ_Ag@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -76,24 +81,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/25/21 1:26 PM, Douglas Gilbert wrote:
-> Adds hipri option to the Linux sg driver engine. This turns on the
-> SGV4_FLAG_HIPRI flag in recent sg drivers (January 2021) on READ
-> and WRITE commands (and not on UNMAP (trim), VERIFY, etc). Uses
-> blk_poll() and the mq_poll() callback in SCSI LLDs. The mechanism
-> is also called "iopoll".
+On 1/21/21 5:50 AM, Ulf Hansson wrote:
+> + Jens, Martin, James
 > 
-> The Linux sg engine in fio uses the struct sg_io_hdr based interface
-> known as the sg driver "v3" interface.
-> Linux sg drivers in the kernel prior to January 2021 (sg version
-> 4.0.12) will just ignore the SGV4_FLAG_HIPRI flag and do normal
-> completions where LLDs indicate command completion with a (software)
-> interrupt or similar mechanism.
 > 
-> Update fio.1 (manpage) with new hipri sg engine option.
+> On Thu, 21 Jan 2021 at 09:23, Eric Biggers <ebiggers@kernel.org> wrote:
+>>
+>> This patchset adds a resource-managed variant of blk_ksm_init() so that
+>> drivers don't have to worry about calling blk_ksm_destroy().
+>>
+>> This was suggested during review of my patchset which adds eMMC inline
+>> encryption support
+>> (https://lkml.kernel.org/linux-mmc/20210104184542.4616-1-ebiggers@kernel.org/T/#u).
+>> That patchset proposes a second caller of blk_ksm_init().  But it can
+>> instead use the resource-managed variant, as can the UFS driver.
+>>
+>> My preference is that patch #1 be taken through the MMC tree together
+>> with my MMC patchset, so that we don't have to wait an extra cycle for
+>> the MMC changes.  Patch #2 can then go in later.
+> 
+> Sure, I can pick patch #1 through my mmc tree, but need an ack from
+> Jens to do it. Or whatever he prefers.
 
-Applied - but you forgot the HOWTO that I mentioned, I added that
-one.
+Or we can take it through the block tree, usually the easiest as
+it's the most likely source of potential conflicts. And that's true
+for both of them, as long as the SCSI side signs off on patch 2/2.
+
 
 -- 
 Jens Axboe
