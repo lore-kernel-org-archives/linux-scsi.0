@@ -2,232 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 683C9C433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C18B9C4332D
 	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 20:00:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34B3822DFB
+	by mail.kernel.org (Postfix) with ESMTP id 992D722A85
 	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 20:00:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732899AbhAZF2l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:28:41 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:48455 "EHLO smtp.infotech.no"
+        id S1732883AbhAZF2e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 00:28:34 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38202 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731568AbhAYTM1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Jan 2021 14:12:27 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 64B0C20426C;
-        Mon, 25 Jan 2021 20:11:36 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id tIz-+tvm27D3; Mon, 25 Jan 2021 20:11:34 +0100 (CET)
-Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id D06D4204165;
-        Mon, 25 Jan 2021 20:11:31 +0100 (CET)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        kashyap.desai@broadcom.com, Hannes Reinecke <hare@suse.com>
-Subject: [PATCH v15 04/45] sg: rework sg_poll(), minor changes
-Date:   Mon, 25 Jan 2021 14:10:41 -0500
-Message-Id: <20210125191122.345858-5-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210125191122.345858-1-dgilbert@interlog.com>
-References: <20210125191122.345858-1-dgilbert@interlog.com>
+        id S1730962AbhAYSvA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Jan 2021 13:51:00 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 938F62067B;
+        Mon, 25 Jan 2021 18:50:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1611600617;
+        bh=c2MuqezHcKNzAiM1yrZjSxkfci542e9Lcb3Mdhpv3OY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=xyWEx5dhjucD0ew5zKK3yEoUtILxEaDHd3nzwRZWfuA8n3c+9+L0OLUWDPq6Bojik
+         BtoVG3s9ni2tMENLh/vQ6OeF6yIzjRmyK9cZ1IBd8G5xVj22OwVrvNXUg4pOFjVnHW
+         1nLIPT9Cly97Nfo2aGb0yJ5OhpaP8bWmSoMfkzhE=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        kernel test robot <lkp@intel.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 5.10 084/199] scsi: ufs: ufshcd-pltfrm depends on HAS_IOMEM
+Date:   Mon, 25 Jan 2021 19:38:26 +0100
+Message-Id: <20210125183219.812739460@linuxfoundation.org>
+X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210125183216.245315437@linuxfoundation.org>
+References: <20210125183216.245315437@linuxfoundation.org>
+User-Agent: quilt/0.66
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Re-arrange code in sg_poll(). Rename sg_read_oxfer() to
-sg_rd_append(). In sg_start_req() rename rw to r0w.
-Plus associated changes demanded by checkpatch.pl
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+[ Upstream commit 5e6ddadf7637d336acaad1df1f3bcbb07f7d104d ]
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+Building ufshcd-pltfrm.c on arch/s390/ has a linker error since S390 does
+not support IOMEM, so add a dependency on HAS_IOMEM.
+
+s390-linux-ld: drivers/scsi/ufs/ufshcd-pltfrm.o: in function `ufshcd_pltfrm_init':
+ufshcd-pltfrm.c:(.text+0x38e): undefined reference to `devm_platform_ioremap_resource'
+
+where that devm_ function is inside an #ifdef CONFIG_HAS_IOMEM/#endif
+block.
+
+Link: lore.kernel.org/r/202101031125.ZEFCUiKi-lkp@intel.com
+Link: https://lore.kernel.org/r/20210106040822.933-1-rdunlap@infradead.org
+Fixes: 03b1781aa978 ("[SCSI] ufs: Add Platform glue driver for ufshcd")
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Avri Altman <avri.altman@wdc.com>
+Cc: linux-scsi@vger.kernel.org
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/sg.c | 65 ++++++++++++++++++++++-------------------------
- 1 file changed, 30 insertions(+), 35 deletions(-)
+ drivers/scsi/ufs/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index a4290a8069d4..4b8e6a3d243f 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -182,8 +182,8 @@ static ssize_t sg_new_write(struct sg_fd *sfp, struct file *file,
- 			    struct sg_request **o_srp);
- static int sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
- 			   u8 *cmnd, int timeout, int blocking);
--static int sg_read_oxfer(struct sg_request *srp, char __user *outp,
--			 int num_xfer);
-+static int sg_rd_append(struct sg_request *srp, char __user *outp,
-+			int num_xfer);
- static void sg_remove_scat(struct sg_fd *sfp, struct sg_scatter_hold *schp);
- static void sg_build_reserve(struct sg_fd *sfp, int req_size);
- static void sg_link_reserve(struct sg_fd *sfp, struct sg_request *srp,
-@@ -797,7 +797,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
- 		old_hdr = kmalloc(SZ_SG_HEADER, GFP_KERNEL);
- 		if (!old_hdr)
- 			return -ENOMEM;
--		if (__copy_from_user(old_hdr, buf, SZ_SG_HEADER)) {
-+		if (copy_from_user(old_hdr, buf, SZ_SG_HEADER)) {
- 			retval = -EFAULT;
- 			goto free_old_hdr;
- 		}
-@@ -810,7 +810,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
- 					retval = -ENOMEM;
- 					goto free_old_hdr;
- 				}
--				retval = __copy_from_user
-+				retval = copy_from_user
- 				    (new_hdr, buf, SZ_SG_IO_HDR);
- 				req_pack_id = new_hdr->pack_id;
- 				kfree(new_hdr);
-@@ -905,7 +905,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
- 
- 	/* Now copy the result back to the user buffer.  */
- 	if (count >= SZ_SG_HEADER) {
--		if (__copy_to_user(buf, old_hdr, SZ_SG_HEADER)) {
-+		if (copy_to_user(buf, old_hdr, SZ_SG_HEADER)) {
- 			retval = -EFAULT;
- 			goto free_old_hdr;
- 		}
-@@ -913,7 +913,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
- 		if (count > old_hdr->reply_len)
- 			count = old_hdr->reply_len;
- 		if (count > SZ_SG_HEADER) {
--			if (sg_read_oxfer(srp, buf, count - SZ_SG_HEADER)) {
-+			if (sg_rd_append(srp, buf, count - SZ_SG_HEADER)) {
- 				retval = -EFAULT;
- 				goto free_old_hdr;
- 			}
-@@ -1279,38 +1279,34 @@ sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- static __poll_t
- sg_poll(struct file *filp, poll_table * wait)
- {
--	__poll_t res = 0;
--	struct sg_device *sdp;
--	struct sg_fd *sfp;
-+	__poll_t p_res = 0;
-+	struct sg_fd *sfp = filp->private_data;
- 	struct sg_request *srp;
- 	int count = 0;
- 	unsigned long iflags;
- 
--	sfp = filp->private_data;
- 	if (!sfp)
- 		return EPOLLERR;
--	sdp = sfp->parentdp;
--	if (!sdp)
--		return EPOLLERR;
- 	poll_wait(filp, &sfp->read_wait, wait);
- 	read_lock_irqsave(&sfp->rq_list_lock, iflags);
- 	list_for_each_entry(srp, &sfp->rq_list, entry) {
- 		/* if any read waiting, flag it */
--		if ((0 == res) && (1 == srp->done) && (!srp->sg_io_owned))
--			res = EPOLLIN | EPOLLRDNORM;
-+		if (p_res == 0 && srp->done == 1 && !srp->sg_io_owned)
-+			p_res = EPOLLIN | EPOLLRDNORM;
- 		++count;
- 	}
- 	read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 
--	if (atomic_read(&sdp->detaching))
--		res |= EPOLLHUP;
--	else if (!sfp->cmd_q) {
--		if (0 == count)
--			res |= EPOLLOUT | EPOLLWRNORM;
--	} else if (count < SG_MAX_QUEUE)
--		res |= EPOLLOUT | EPOLLWRNORM;
--	SG_LOG(3, sfp, "%s: res=0x%x\n", __func__, (__force u32)res);
--	return res;
-+	if (sfp->parentdp && atomic_read(&sfp->parentdp->detaching)) {
-+		p_res |= EPOLLHUP;
-+	} else if (!sfp->cmd_q) {
-+		if (count == 0)
-+			p_res |= EPOLLOUT | EPOLLWRNORM;
-+	} else if (count < SG_MAX_QUEUE) {
-+		p_res |= EPOLLOUT | EPOLLWRNORM;
-+	}
-+	SG_LOG(3, sfp, "%s: p_res=0x%x\n", __func__, (__force u32)p_res);
-+	return p_res;
- }
- 
- static int
-@@ -1828,7 +1824,7 @@ sg_start_req(struct sg_request *srp, u8 *cmd)
- 	struct sg_scatter_hold *rsv_schp = &sfp->reserve;
- 	struct request_queue *q = sfp->parentdp->device->request_queue;
- 	struct rq_map_data *md, map_data;
--	int rw = hp->dxfer_direction == SG_DXFER_TO_DEV ? WRITE : READ;
-+	int r0w = hp->dxfer_direction == SG_DXFER_TO_DEV ? WRITE : READ;
- 	u8 *long_cmdp = NULL;
- 
- 	if (hp->cmd_len > BLK_MAX_CDB) {
-@@ -1838,7 +1834,7 @@ sg_start_req(struct sg_request *srp, u8 *cmd)
- 		SG_LOG(5, sfp, "%s: long_cmdp=0x%p ++\n", __func__, long_cmdp);
- 	}
- 	SG_LOG(4, sfp, "%s: dxfer_len=%d, data-%s\n", __func__, dxfer_len,
--	       (rw ? "OUT" : "IN"));
-+	       (r0w ? "OUT" : "IN"));
- 
- 	/*
- 	 * NOTE
-@@ -1915,7 +1911,7 @@ sg_start_req(struct sg_request *srp, u8 *cmd)
- 		struct iovec *iov = NULL;
- 		struct iov_iter i;
- 
--		res = import_iovec(rw, hp->dxferp, iov_count, 0, &iov, &i);
-+		res = import_iovec(r0w, hp->dxferp, iov_count, 0, &iov, &i);
- 		if (res < 0)
- 			return res;
- 
-@@ -2084,33 +2080,32 @@ sg_remove_scat(struct sg_fd *sfp, struct sg_scatter_hold *schp)
-  * appended to given struct sg_header object.
-  */
- static int
--sg_read_oxfer(struct sg_request *srp, char __user *outp, int num_read_xfer)
-+sg_rd_append(struct sg_request *srp, char __user *outp, int num_xfer)
- {
- 	struct sg_scatter_hold *schp = &srp->data;
- 	int k, num;
- 
--	SG_LOG(4, srp->parentfp, "%s: num_xfer=%d\n", __func__, num_read_xfer);
--	if ((!outp) || (num_read_xfer <= 0))
-+	SG_LOG(4, srp->parentfp, "%s: num_xfer=%d\n", __func__, num_xfer);
-+	if (!outp || num_xfer <= 0)
- 		return 0;
- 
- 	num = 1 << (PAGE_SHIFT + schp->page_order);
- 	for (k = 0; k < schp->k_use_sg && schp->pages[k]; k++) {
--		if (num > num_read_xfer) {
-+		if (num > num_xfer) {
- 			if (copy_to_user(outp, page_address(schp->pages[k]),
--					   num_read_xfer))
-+					   num_xfer))
- 				return -EFAULT;
- 			break;
- 		} else {
- 			if (copy_to_user(outp, page_address(schp->pages[k]),
- 					   num))
- 				return -EFAULT;
--			num_read_xfer -= num;
--			if (num_read_xfer <= 0)
-+			num_xfer -= num;
-+			if (num_xfer <= 0)
- 				break;
- 			outp += num;
- 		}
- 	}
--
- 	return 0;
- }
- 
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index dcdb4eb1f90ba..c339517b7a094 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -72,6 +72,7 @@ config SCSI_UFS_DWC_TC_PCI
+ config SCSI_UFSHCD_PLATFORM
+ 	tristate "Platform bus based UFS Controller support"
+ 	depends on SCSI_UFSHCD
++	depends on HAS_IOMEM
+ 	help
+ 	This selects the UFS host controller support. Select this if
+ 	you have an UFS controller on Platform bus.
 -- 
-2.25.1
+2.27.0
+
+
 
