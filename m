@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D90DC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 01:35:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C74D6C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 01:38:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31BF922C7B
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 01:35:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92F2A22C9C
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 01:38:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726605AbhAYBeX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Jan 2021 20:34:23 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:45801 "EHLO smtp.infotech.no"
+        id S1726593AbhAYBiB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Jan 2021 20:38:01 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:45821 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726390AbhAYBcl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 24 Jan 2021 20:32:41 -0500
+        id S1726588AbhAYBhg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 24 Jan 2021 20:37:36 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 9E08E20426F;
-        Mon, 25 Jan 2021 02:27:57 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 4409C2042AC;
+        Mon, 25 Jan 2021 02:27:22 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id T1KFQ2gxGO3z; Mon, 25 Jan 2021 02:27:56 +0100 (CET)
+        with ESMTP id ur6u0yfIhxcW; Mon, 25 Jan 2021 02:27:20 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id DAB3C2042B4;
-        Mon, 25 Jan 2021 02:27:45 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id D0AEF20429C;
+        Mon, 25 Jan 2021 02:27:10 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         kashyap.desai@broadcom.com
-Subject: [PATCH v14 45/45] sg: bump version to 4.0.12
-Date:   Sun, 24 Jan 2021 20:26:50 -0500
-Message-Id: <20210125012650.269411-46-dgilbert@interlog.com>
+Subject: [PATCH v14 14/45] sg: sg_common_write add structure for arguments
+Date:   Sun, 24 Jan 2021 20:26:19 -0500
+Message-Id: <20210125012650.269411-15-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210125012650.269411-1-dgilbert@interlog.com>
 References: <20210125012650.269411-1-dgilbert@interlog.com>
@@ -45,69 +45,143 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that the sg version 4 interface is supported:
-  - with ioctl(SG_IO) for synchronous/blocking use
-  - with ioctl(SG_IOSUBMIT) and ioctl(SG_IORECEIVE) for
-    async/non-blocking use
-Plus new ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3)
-potentially replace write() and read() for the sg
-version 3 interface. Bump major driver version number
-from 3 to 4.
+As the number of arguments to sg_common_write() starts to grow
+(more in later patches) add a structure to hold most of these
+arguments.
 
-The main new feature is the removal of the fixed 16 element
-array of requests per file descriptor. It is replaced by
-a xarray (eXtensible array) in their parent which is a
-sg_fd object (i.e. a file descriptor). The sg_request
-objects are not freed until the owning file descriptor is
-closed; instead these objects are re-used when multiple
-commands are sent to the same file descriptor.
-
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c      | 11 ++++++-----
- include/uapi/scsi/sg.h |  4 ++--
- 2 files changed, 8 insertions(+), 7 deletions(-)
+ drivers/scsi/sg.c | 47 ++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 32 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 1f00f13ba8fe..49746024ac21 100644
+index a8707d08657b..e847d94cf2b2 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -7,13 +7,14 @@
-  *
-  * Original driver (sg.c):
-  *        Copyright (C) 1992 Lawrence Foard
-- * Version 2 and 3 extensions to driver:
-- *        Copyright (C) 1998 - 2019 Douglas Gilbert
-+ * Version 2, 3 and 4 extensions to driver:
-+ *        Copyright (C) 1998 - 2021 Douglas Gilbert
-+ *
-  */
+@@ -174,6 +174,13 @@ struct sg_device { /* holds the state of each scsi generic device */
+ 	struct kref d_ref;
+ };
  
--static int sg_version_num = 30901;  /* [x]xyyzz where [x] empty when x=0 */
--#define SG_VERSION_STR "3.9.01"		/* [x]x.[y]y.zz */
--static char *sg_version_date = "20190606";
-+static int sg_version_num = 40012;  /* [x]xyyzz where [x] empty when x=0 */
-+#define SG_VERSION_STR "4.0.12"		/* [x]x.[y]y.zz */
-+static char *sg_version_date = "20210124";
++struct sg_comm_wr_t {  /* arguments to sg_common_write() */
++	int timeout;
++	int blocking;
++	struct sg_request *srp;
++	u8 *cmnd;
++};
++
+ /* tasklet or soft irq callback */
+ static void sg_rq_end_io(struct request *rq, blk_status_t status);
+ /* Declarations of other static functions used before they are defined */
+@@ -186,8 +193,7 @@ static ssize_t sg_submit(struct sg_fd *sfp, struct file *filp,
+ 			 const char __user *buf, size_t count, bool blocking,
+ 			 bool read_only, bool sg_io_owned,
+ 			 struct sg_request **o_srp);
+-static int sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+-			   u8 *cmnd, int timeout, int blocking);
++static int sg_common_write(struct sg_fd *sfp, struct sg_comm_wr_t *cwp);
+ static int sg_read_append(struct sg_request *srp, void __user *outp,
+ 			  int num_xfer);
+ static void sg_remove_scat(struct sg_fd *sfp, struct sg_scatter_hold *schp);
+@@ -487,6 +493,7 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
+ 	struct sg_io_hdr v3hdr;
+ 	struct sg_header *ohp = &ov2hdr;
+ 	struct sg_io_hdr *h3p = &v3hdr;
++	struct sg_comm_wr_t cwr;
+ 	u8 cmnd[SG_MAX_CDB_SIZE];
  
- #include <linux/module.h>
+ 	res = sg_check_file_access(filp, __func__);
+@@ -590,7 +597,11 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
+ 				   input_size, (unsigned int) cmnd[0],
+ 				   current->comm);
+ 	}
+-	res = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
++	cwr.timeout = sfp->timeout;
++	cwr.blocking = blocking;
++	cwr.srp = srp;
++	cwr.cmnd = cmnd;
++	res = sg_common_write(sfp, &cwr);
+ 	return (res < 0) ? res : count;
+ }
  
-diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
-index 11b58b279241..33109f3d5ed3 100644
---- a/include/uapi/scsi/sg.h
-+++ b/include/uapi/scsi/sg.h
-@@ -12,9 +12,9 @@
-  *   Copyright (C) 1992 Lawrence Foard
-  *
-  * Later extensions (versions 2, 3 and 4) to driver:
-- *   Copyright (C) 1998 - 2018 Douglas Gilbert
-+ *   Copyright (C) 1998 - 2021 Douglas Gilbert
-  *
-- * Version 4.0.11 (20190502)
-+ * Version 4.0.12 (20210111)
-  *  This version is for Linux 4 and 5 series kernels.
-  *
-  * Documentation
+@@ -613,6 +624,7 @@ sg_submit(struct sg_fd *sfp, struct file *filp, const char __user *buf,
+ 	int k;
+ 	struct sg_request *srp;
+ 	struct sg_io_hdr *hp;
++	struct sg_comm_wr_t cwr;
+ 	u8 cmnd[SG_MAX_CDB_SIZE];
+ 	int timeout;
+ 	unsigned long ul_timeout;
+@@ -663,23 +675,28 @@ sg_submit(struct sg_fd *sfp, struct file *filp, const char __user *buf,
+ 		sg_remove_request(sfp, srp);
+ 		return -EPERM;
+ 	}
+-	k = sg_common_write(sfp, srp, cmnd, timeout, blocking);
++	cwr.timeout = timeout;
++	cwr.blocking = blocking;
++	cwr.srp = srp;
++	cwr.cmnd = cmnd;
++	k = sg_common_write(sfp, &cwr);
+ 	if (k < 0)
+ 		return k;
+ 	if (o_srp)
+-		*o_srp = srp;
++		*o_srp = cwr.srp;
+ 	return count;
+ }
+ 
+ static int
+-sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+-		u8 *cmnd, int timeout, int blocking)
++sg_common_write(struct sg_fd *sfp, struct sg_comm_wr_t *cwrp)
+ {
+-	int k, at_head;
++	bool at_head;
++	int k;
+ 	struct sg_device *sdp = sfp->parentdp;
++	struct sg_request *srp = cwrp->srp;
+ 	struct sg_io_hdr *hp = &srp->header;
+ 
+-	srp->data.cmd_opcode = cmnd[0];	/* hold opcode of command */
++	srp->data.cmd_opcode = cwrp->cmnd[0];	/* hold opcode of command */
+ 	hp->status = 0;
+ 	hp->masked_status = 0;
+ 	hp->msg_status = 0;
+@@ -688,14 +705,14 @@ sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+ 	hp->driver_status = 0;
+ 	hp->resid = 0;
+ 	SG_LOG(4, sfp, "%s:  opcode=0x%02x, cmd_sz=%d\n", __func__,
+-	       (int)cmnd[0], hp->cmd_len);
++	       (int)cwrp->cmnd[0], hp->cmd_len);
+ 
+ 	if (hp->dxfer_len >= SZ_256M) {
+ 		sg_remove_request(sfp, srp);
+ 		return -EINVAL;
+ 	}
+ 
+-	k = sg_start_req(srp, cmnd);
++	k = sg_start_req(srp, cwrp->cmnd);
+ 	if (k) {
+ 		SG_LOG(1, sfp, "%s: start_req err=%d\n", __func__, k);
+ 		sg_finish_scsi_blk_rq(srp);
+@@ -717,13 +734,13 @@ sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+ 	hp->duration = jiffies_to_msecs(jiffies);
+ 	if (hp->interface_id != '\0' &&	/* v3 (or later) interface */
+ 	    (SG_FLAG_Q_AT_TAIL & hp->flags))
+-		at_head = 0;
++		at_head = false;
+ 	else
+-		at_head = 1;
++		at_head = true;
+ 
+-	if (!blocking)
++	if (!srp->sg_io_owned)
+ 		atomic_inc(&sfp->submitted);
+-	srp->rq->timeout = timeout;
++	srp->rq->timeout = cwrp->timeout;
+ 	kref_get(&sfp->f_ref); /* sg_rq_end_io() does kref_put(). */
+ 	blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
+ 			      srp->rq, at_head, sg_rq_end_io);
 -- 
 2.25.1
 
