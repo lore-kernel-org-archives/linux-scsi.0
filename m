@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4935C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B133C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:06:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7CD702253A
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:04:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59AB12256F
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:06:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726847AbhAYCDq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Jan 2021 21:03:46 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:45912 "EHLO smtp.infotech.no"
+        id S1727032AbhAYCEi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Jan 2021 21:04:38 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:45911 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727032AbhAYCDX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 24 Jan 2021 21:03:23 -0500
+        id S1727035AbhAYCD0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 24 Jan 2021 21:03:26 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id E73F020429F;
-        Mon, 25 Jan 2021 02:27:52 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 2BBF72042B4;
+        Mon, 25 Jan 2021 02:27:58 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id HqlDNGkxG7AU; Mon, 25 Jan 2021 02:27:50 +0100 (CET)
+        with ESMTP id oqT3PRQxq6uR; Mon, 25 Jan 2021 02:27:55 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 53CD12042B2;
-        Mon, 25 Jan 2021 02:27:40 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id C08C4204274;
+        Mon, 25 Jan 2021 02:27:44 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         kashyap.desai@broadcom.com
-Subject: [PATCH v14 40/45] sg: remove rcv_done request state
-Date:   Sun, 24 Jan 2021 20:26:45 -0500
-Message-Id: <20210125012650.269411-41-dgilbert@interlog.com>
+Subject: [PATCH v14 44/45] sg: add blk_poll support
+Date:   Sun, 24 Jan 2021 20:26:49 -0500
+Message-Id: <20210125012650.269411-45-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210125012650.269411-1-dgilbert@interlog.com>
 References: <20210125012650.269411-1-dgilbert@interlog.com>
@@ -45,405 +45,227 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove SG_RQ_RCV_DONE request state. Also remember the position of
-the last used request array element and start subsequent searches
-for completed requests and new requests from that index.
+The support is added via the new SGV4_FLAG_HIPRI command flag which
+causes REQ_HIPRI to be set on the request. Before waiting on an
+inflight request, it is checked to see if it has SGV4_FLAG_HIPRI,
+and if so blk_poll() is called instead of the wait. In situations
+where only the file descriptor is known (e.g. sg_poll() and
+ioctl(SG_GET_NUM_WAITING)) all inflight requests associated with
+the file descriptor that have SGV4_FLAG_HIPRI set, have blk_poll()
+called on them.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Note that the implementation of blk_poll() calls mq_poll() in the
+LLD associated with the request. Then for any request found to be
+ready, blk_poll() invokes the scsi_done() callback. So this means
+if blk_poll() returns 1 then sg_rq_end_io() has already been
+called for the polled request.
+
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 168 ++++++++++++++++++++++++++--------------------
- 1 file changed, 96 insertions(+), 72 deletions(-)
+ drivers/scsi/sg.c      | 100 ++++++++++++++++++++++++++++++++++++++---
+ include/uapi/scsi/sg.h |   1 +
+ 2 files changed, 96 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index ef1f29ecc065..8531c7a8769f 100644
+index 10c0c3ff4435..1f00f13ba8fe 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -90,7 +90,6 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
- 	SG_RS_INACTIVE = 0,	/* request not in use (e.g. on fl) */
- 	SG_RS_INFLIGHT,		/* active: cmd/req issued, no response yet */
- 	SG_RS_AWAIT_RCV,	/* have response from LLD, awaiting receive */
--	SG_RS_RCV_DONE,		/* receive is ongoing or done */
- 	SG_RS_BUSY,		/* temporary state should rarely be seen */
- };
+@@ -122,7 +122,8 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
+ #define SG_FFD_FORCE_PACKID	0	/* receive only given pack_id/tag */
+ #define SG_FFD_CMD_Q		1	/* clear: only 1 active req per fd */
+ #define SG_FFD_KEEP_ORPHAN	2	/* policy for this fd */
+-#define SG_FFD_Q_AT_TAIL	3	/* set: queue reqs at tail of blk q */
++#define SG_FFD_HIPRI_SEEN	3	/* could have HIPRI requests active */
++#define SG_FFD_Q_AT_TAIL	4	/* set: queue reqs at tail of blk q */
  
-@@ -226,6 +225,7 @@ struct sg_fd {		/* holds the state of a file descriptor */
- 	struct mutex f_mutex;	/* serialize ioctls on this fd */
- 	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
- 	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
-+	int prev_used_idx;	/* previous used index */
- 	u32 idx;		/* my index within parent's sfp_arr */
- 	atomic_t submitted;	/* number inflight or awaiting receive */
- 	atomic_t waiting;	/* number of requests awaiting receive */
-@@ -298,7 +298,9 @@ static struct sg_device *sg_get_dev(int min_dev);
+ /* Bit positions (flags) for sg_device::fdev_bm bitmask follow */
+ #define SG_FDEV_EXCLUDE		0	/* have fd open with O_EXCL */
+@@ -300,6 +301,8 @@ static struct sg_device *sg_get_dev(int min_dev);
  static void sg_device_destroy(struct kref *kref);
  static struct sg_request *sg_mk_srp_sgat(struct sg_fd *sfp, bool first,
  					 int db_len);
-+#if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
++static int sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count);
++static int sg_srp_blk_poll(struct sg_request *srp, int loop_count);
+ #if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
  static const char *sg_rq_st_str(enum sg_rq_state rq_st, bool long_str);
-+#endif
+ #endif
+@@ -1032,6 +1035,8 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
+ 		atomic_inc(&sfp->submitted);
+ 		set_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm);
+ 	}
++	if (srp->rq_flags & SGV4_FLAG_HIPRI)
++		srp->rq->cmd_flags |= REQ_HIPRI;
+ 	blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
+ 			      srp->rq, (int)at_head, sg_rq_end_io);
+ }
+@@ -1704,6 +1709,12 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
  
- #define SG_WRITE_COUNT_LIMIT (32 * 1024 * 1024)
- 
-@@ -872,20 +874,18 @@ sg_ctl_iosubmit_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
- #if IS_ENABLED(SG_LOG_ACTIVE)
- static void
- sg_rq_state_fail_msg(struct sg_fd *sfp, enum sg_rq_state exp_old_st,
--		     enum sg_rq_state want_st, enum sg_rq_state act_old_st,
--		     const char *fromp)
-+		     enum sg_rq_state want_st, const char *fromp)
- {
--	const char *eaw_rs = "expected_old,actual_old,wanted rq_st";
-+	const char *eaw_rs = "expected_old,wanted rq_st";
- 
- 	if (IS_ENABLED(CONFIG_SCSI_PROC_FS))
--		SG_LOG(1, sfp, "%s: %s: %s: %s,%s,%s\n",
-+		SG_LOG(1, sfp, "%s: %s: %s,%s,%s\n",
- 		       __func__, fromp, eaw_rs,
- 		       sg_rq_st_str(exp_old_st, false),
--		       sg_rq_st_str(act_old_st, false),
- 		       sg_rq_st_str(want_st, false));
- 	else
--		pr_info("sg: %s: %s: %s: %d,%d,%d\n", __func__, fromp, eaw_rs,
--			(int)exp_old_st, (int)act_old_st, (int)want_st);
-+		pr_info("sg: %s: %s: %s: %d,%d\n", __func__, fromp, eaw_rs,
-+			(int)exp_old_st, (int)want_st);
+ 	if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
+ 		goto skip_wait;		/* and skip _acquire() */
++	if (srp->rq_flags & SGV4_FLAG_HIPRI) {
++		res = sg_srp_blk_poll(srp, -1);	/* spin till found */
++		if (unlikely(res < 0))
++			return res;
++		goto skip_wait;
++	}
+ 	SG_LOG(3, sfp, "%s: about to wait_event...()\n", __func__);
+ 	/* usually will be woken up by sg_rq_end_io() callback */
+ 	res = wait_event_interruptible(sfp->read_wait,
+@@ -2030,6 +2041,8 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 		SG_LOG(3, sfp, "%s:    SG_GET_PACK_ID=%d\n", __func__, val);
+ 		return put_user(val, ip);
+ 	case SG_GET_NUM_WAITING:
++		if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
++			sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready push */
+ 		val = atomic_read(&sfp->waiting);
+ 		if (val)
+ 			return put_user(val, ip);
+@@ -2239,6 +2252,72 @@ sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
  }
  #endif
  
-@@ -929,8 +929,8 @@ sg_rq_state_helper(struct xarray *xafp, struct sg_request *srp, int indic)
- }
- 
- /* Following array indexed by enum sg_rq_state, 0 means no xa mark change */
--static const int sg_rq_state_arr[] = {1, 0, 4, 0, 0};
--static const int sg_rq_state_mul2arr[] = {2, 0, 8, 0, 0};
-+static const int sg_rq_state_arr[] = {1, 0, 4, 0};
-+static const int sg_rq_state_mul2arr[] = {2, 0, 8, 0};
- 
- /*
-  * This function keeps the srp->rq_st state and associated marks on the
-@@ -945,39 +945,47 @@ static const int sg_rq_state_mul2arr[] = {2, 0, 8, 0, 0};
-  */
- static int
- sg_rq_state_chg(struct sg_request *srp, enum sg_rq_state old_st,
--		enum sg_rq_state new_st, bool force, const char *fromp)
-+		enum sg_rq_state new_st)
- {
- 	enum sg_rq_state act_old_st;
- 	int indic;
- 	unsigned long iflags;
--	struct xarray *xafp = &srp->parentfp->srp_arr;
-+	struct sg_fd *sfp = srp->parentfp;
-+	struct xarray *xafp = &sfp->srp_arr;
- 
--	if (force) {
--		xa_lock_irqsave(xafp, iflags);
--		sg_rq_state_force(srp, new_st);
--		xa_unlock_irqrestore(xafp, iflags);
--		return 0;
--	}
- 	indic = sg_rq_state_arr[(int)old_st] +
- 		sg_rq_state_mul2arr[(int)new_st];
- 	act_old_st = (enum sg_rq_state)atomic_cmpxchg(&srp->rq_st, old_st,
- 						      new_st);
- 	if (act_old_st != old_st) {
--#if IS_ENABLED(SG_LOG_ACTIVE)
--		if (fromp)
--			sg_rq_state_fail_msg(srp->parentfp, old_st, new_st,
--					     act_old_st, fromp);
--#endif
-+		SG_LOG(1, sfp, "%s: unexpected old state: %s\n", __func__,
-+		       sg_rq_st_str(act_old_st, false));
- 		return -EPROTOTYPE;	/* only used for this error type */
- 	}
- 	if (indic) {
- 		xa_lock_irqsave(xafp, iflags);
-+		if (new_st == SG_RS_INACTIVE)
-+			WRITE_ONCE(sfp->prev_used_idx, srp->rq_idx);
- 		sg_rq_state_helper(xafp, srp, indic);
- 		xa_unlock_irqrestore(xafp, iflags);
- 	}
- 	return 0;
- }
- 
-+static void
-+sg_rq_state_chg_force(struct sg_request *srp, enum sg_rq_state new_st)
++static int
++sg_srp_q_blk_poll(struct sg_request *srp, struct request *rqq, struct request_queue *q,
++		  int loop_count)
 +{
-+	unsigned long iflags;
-+	struct sg_fd *sfp = srp->parentfp;
-+	struct xarray *xafp = &sfp->srp_arr;
++	int k, n, num;
++	blk_qc_t cookie;
 +
-+	xa_lock_irqsave(xafp, iflags);
-+	if (new_st == SG_RS_INACTIVE)
-+		WRITE_ONCE(sfp->prev_used_idx, srp->rq_idx);
-+	sg_rq_state_force(srp, new_st);
-+	xa_unlock_irqrestore(xafp, iflags);
++	if (rqq && rqq->mq_hctx)
++		cookie = request_to_qc_t(rqq->mq_hctx, rqq);
++	else
++		return 0;
++	num = (loop_count < 1) ? 1 : loop_count;
++	for (k = 0; k < num; ++k) {
++		if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
++			return 0;
++		n = blk_poll(q, cookie, loop_count < 0 /* spin if negative */);
++		if (n != 0)
++			return n;
++	}
++	return 0;
 +}
 +
- static void
- sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
- {
-@@ -999,8 +1007,7 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
- 		at_head = !(srp->rq_flags & SG_FLAG_Q_AT_TAIL);
- 
- 	kref_get(&sfp->f_ref); /* sg_rq_end_io() does kref_put(). */
--	sg_rq_state_chg(srp, SG_RS_BUSY /* ignored */, SG_RS_INFLIGHT,
--			true, __func__);
-+	sg_rq_state_chg_force(srp, SG_RS_INFLIGHT);
- 
- 	/* >>>>>>> send cmd/req off to other levels <<<<<<<< */
- 	if (!sync)
-@@ -1212,10 +1219,6 @@ sg_receive_v3(struct sg_fd *sfp, struct sg_request *srp, size_t count,
- 	hp->driver_status = driver_byte(rq_result);
- 	err2 = put_sg_io_hdr(hp, p);
- 	err = err ? err : err2;
--	err2 = sg_rq_state_chg(srp, atomic_read(&srp->rq_st), SG_RS_RCV_DONE,
--			       false, __func__);
--	if (err2)
--		err = err ? err : err2;
- err_out:
- 	sg_finish_scsi_blk_rq(srp);
- 	sg_deact_request(sfp, srp);
-@@ -1226,7 +1229,7 @@ static int
- sg_receive_v4(struct sg_fd *sfp, struct sg_request *srp, void __user *p,
- 	      struct sg_io_v4 *h4p)
- {
--	int err, err2;
-+	int err;
- 	u32 rq_result = srp->rq_result;
- 
- 	SG_LOG(3, sfp, "%s: p=%s, h4p=%s\n", __func__,
-@@ -1261,10 +1264,6 @@ sg_receive_v4(struct sg_fd *sfp, struct sg_request *srp, void __user *p,
- 		if (copy_to_user(p, h4p, SZ_SG_IO_V4))
- 			err = err ? err : -EFAULT;
- 	}
--	err2 = sg_rq_state_chg(srp, atomic_read(&srp->rq_st), SG_RS_RCV_DONE,
--			       false, __func__);
--	if (err2)
--		err = err ? err : err2;
- 	sg_finish_scsi_blk_rq(srp);
- 	sg_deact_request(sfp, srp);
- 	return err < 0 ? err : 0;
-@@ -1459,7 +1458,6 @@ sg_read_v1v2(void __user *buf, int count, struct sg_fd *sfp,
- 		res = (h2p->result == 0) ? 0 : -EIO;
- 	}
- fini:
--	atomic_set(&srp->rq_st, SG_RS_RCV_DONE);
- 	sg_finish_scsi_blk_rq(srp);
- 	sg_deact_request(sfp, srp);
- 	return res;
-@@ -1633,7 +1631,6 @@ sg_get_dur(struct sg_request *srp, const enum sg_rq_state *sr_stp,
- 		res = sg_calc_rq_dur(srp);
- 		break;
- 	case SG_RS_AWAIT_RCV:
--	case SG_RS_RCV_DONE:
- 	case SG_RS_INACTIVE:
- 		res = srp->duration;
- 		is_dur = true;	/* completion has occurred, timing finished */
-@@ -1704,9 +1701,13 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
- 	sr_st = atomic_read(&srp->rq_st);
- 	if (unlikely(sr_st != SG_RS_AWAIT_RCV))
- 		return -EPROTO;         /* Logic error */
--	res = sg_rq_state_chg(srp, sr_st, SG_RS_BUSY, false, __func__);
--	if (unlikely(res))
-+	res = sg_rq_state_chg(srp, sr_st, SG_RS_BUSY);
-+	if (unlikely(res)) {
-+#if IS_ENABLED(SG_LOG_ACTIVE)
-+		sg_rq_state_fail_msg(sfp, sr_st, SG_RS_BUSY, __func__);
-+#endif
- 		return res;
++/*
++ * Check all requests on this sfp that are both inflight and HIPRI. That check involves calling
++ * blk_poll(spin<-false) loop_count times. If loop_count is 0 then call blk_poll once.
++ * If loop_count is negative then call blk_poll(spin<-true)) once for each request.
++ * Returns number found (could be 0) or a negated errno value.
++ */
++static int
++sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count)
++{
++	int res = 0;
++	int n;
++	unsigned long idx, iflags;
++	struct sg_request *srp;
++	struct request *rqq;
++	struct scsi_device *sdev = sfp->parentdp->device;
++	struct request_queue *q = sdev ? sdev->request_queue : NULL;
++	struct xarray *xafp = &sfp->srp_arr;
++
++	if (!q)
++		return -EINVAL;
++	xa_lock_irqsave(xafp, iflags);
++	xa_for_each(xafp, idx, srp) {
++		rqq = srp->rq;
++		if (rqq && (srp->rq_flags & SGV4_FLAG_HIPRI) &&
++		    atomic_read(&srp->rq_st) == SG_RS_INFLIGHT) {
++			xa_unlock_irqrestore(xafp, iflags);
++			n = sg_srp_q_blk_poll(srp, rqq, q, loop_count);
++			if (unlikely(n < 0))
++				return n;
++			xa_lock_irqsave(xafp, iflags);
++			res += n;
++		}
 +	}
- 	if (test_bit(SG_FRQ_IS_V4I, srp->frq_bm))
- 		res = sg_receive_v4(sfp, srp, p, h4p);
- 	else
-@@ -2550,8 +2551,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
++	xa_unlock_irqrestore(xafp, iflags);
++	return res;
++}
++
++static inline int
++sg_srp_blk_poll(struct sg_request *srp, int loop_count)
++{
++	return sg_srp_q_blk_poll(srp, srp->rq, srp->parentfp->parentdp->device->request_queue,
++				 loop_count);
++}
++
+ /*
+  * Implements the poll(2) system call for this driver. Returns various EPOLL*
+  * flags OR-ed together.
+@@ -2250,6 +2329,8 @@ sg_poll(struct file *filp, poll_table * wait)
+ 	__poll_t p_res = 0;
+ 	struct sg_fd *sfp = filp->private_data;
+ 
++	if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
++		sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready to push up */
+ 	num = atomic_read(&sfp->waiting);
+ 	if (num < 1) {
+ 		poll_wait(filp, &sfp->read_wait, wait);
+@@ -2561,7 +2642,8 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 
+ 	if (likely(rqq_state == SG_RS_AWAIT_RCV)) {
+ 		/* Wake any sg_read()/ioctl(SG_IORECEIVE) awaiting this req */
+-		wake_up_interruptible(&sfp->read_wait);
++		if (!(srp->rq_flags & SGV4_FLAG_HIPRI))
++			wake_up_interruptible(&sfp->read_wait);
+ 		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
+ 		kref_put(&sfp->f_ref, sg_remove_sfp);
+ 	} else {        /* clean up orphaned request that aren't being kept */
+@@ -3004,6 +3086,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 	/* current sg_request protected by SG_RS_BUSY state */
+ 	scsi_rp = scsi_req(rq);
+ 	srp->rq = rq;
++	if (rq_flags & SGV4_FLAG_HIPRI)
++		set_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
+ 
+ 	if (cwrp->cmd_len > BLK_MAX_CDB)
+ 		scsi_rp->cmd = long_cmdp;
+@@ -3117,7 +3201,10 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
+ 	SG_LOG(4, sfp, "%s: srp=0x%pK%s\n", __func__, srp,
+ 	       (srp->parentfp->rsv_srp == srp) ? " rsv" : "");
+ 	if (test_and_clear_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
+-		atomic_dec(&sfp->submitted);
++		bool now_zero = !atomic_dec_and_test(&sfp->submitted);
++
++		if (now_zero)
++			clear_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
+ 		atomic_dec(&sfp->waiting);
  	}
- 	if (!test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm))
- 		atomic_inc(&sfp->waiting);
--	if (unlikely(sg_rq_state_chg(srp, SG_RS_INFLIGHT, rqq_state,
--				     false, __func__)))
-+	if (unlikely(sg_rq_state_chg(srp, SG_RS_INFLIGHT, rqq_state)))
- 		pr_warn("%s: can't set rq_st\n", __func__);
- 	/*
- 	 * Free the mid-level resources apart from the bio (if any). The bio's
-@@ -3258,9 +3258,10 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
- 	__maybe_unused bool is_bad_st = false;
- 	__maybe_unused enum sg_rq_state bad_sr_st = SG_RS_INACTIVE;
- 	bool search_for_1 = (pack_id != SG_PACK_ID_WILDCARD);
-+	bool second = false;
- 	int res;
- 	int num_waiting = atomic_read(&sfp->waiting);
--	unsigned long idx;
-+	unsigned long idx, start_idx, end_idx;
+ 
+@@ -3318,6 +3405,8 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
  	struct sg_request *srp = NULL;
  	struct xarray *xafp = &sfp->srp_arr;
  
-@@ -3272,8 +3273,7 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
- 				continue;
- 			if (srp->pack_id != pack_id)
- 				continue;
--			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY,
--					      false, __func__);
-+			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY);
- 			if (likely(res == 0))
- 				goto good;
- 			/* else another caller got it, move on */
-@@ -3283,14 +3283,35 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
- 			}
- 			break;
- 		}
--	} else {        /* search for any request is more likely */
--		xa_for_each_marked(xafp, idx, srp, SG_XA_RQ_AWAIT) {
--			if (!srp)
--				continue;
--			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY,
--					      false, __func__);
-+	} else {
-+		/*
-+		 * Searching for _any_ request is the more likely usage. Start searching with the
-+		 * last xarray index that was used. In the case of a large-ish IO depth, it is
-+		 * likely that the second (relative) position will be the request we want, if it
-+		 * is ready. If there is no queuing and the "last used" has been re-used then the
-+		 * first (relative) position will be the request we want.
-+		 */
-+		start_idx = READ_ONCE(sfp->prev_used_idx);
-+		end_idx = ULONG_MAX;
-+second_time:
-+		idx = start_idx;
-+		for (srp = xa_find(xafp, &idx, end_idx, SG_XA_RQ_AWAIT);
-+		     srp;
-+		     srp = xa_find_after(xafp, &idx, end_idx, SG_XA_RQ_AWAIT)) {
-+			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY);
- 			if (likely(res == 0))
- 				goto good;
-+#if IS_ENABLED(SG_LOG_ACTIVE)
-+			else
-+				sg_rq_state_fail_msg(sfp, SG_RS_AWAIT_RCV, SG_RS_BUSY, __func__);
-+#endif
-+		}
-+		/* If not found so far, need to wrap around and search [0 ... start_idx) */
-+		if (!srp && !second && start_idx > 0) {
-+			end_idx = start_idx - 1;
-+			start_idx = 0;
-+			second = true;
-+			goto second_time;
- 		}
- 	}
- 	/* here if one of above loops does _not_ find a match */
-@@ -3408,8 +3429,9 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
- 	bool found = false;
- 	bool mk_new_srp = true;
- 	bool try_harder = false;
-+	bool second = false;
- 	int num_inactive = 0;
--	unsigned long idx, last_idx, iflags;
-+	unsigned long idx, start_idx, end_idx, iflags;
- 	struct sg_fd *fp = cwrp->sfp;
- 	struct sg_request *r_srp = NULL;	/* request to return */
- 	struct sg_request *last_srp = NULL;
-@@ -3422,45 +3444,48 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
- 		act_empty = true;
- 		mk_new_srp = true;
- 	} else if (!try_harder && dxfr_len < SG_DEF_SECTOR_SZ) {
--		last_idx = ~0UL;
- 		xa_for_each_marked(xafp, idx, r_srp, SG_XA_RQ_INACTIVE) {
--			if (!r_srp)
--				continue;
- 			++num_inactive;
--			if (dxfr_len < SG_DEF_SECTOR_SZ) {
--				last_idx = idx;
-+			if (dxfr_len < SG_DEF_SECTOR_SZ)
- 				last_srp = r_srp;
--				continue;
--			}
- 		}
- 		/* If dxfr_len is small, use last inactive request */
--		if (last_idx != ~0UL && last_srp) {
-+		if (last_srp) {
- 			r_srp = last_srp;
--			if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY,
--					    false, __func__))
-+			if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY))
- 				goto start_again; /* gone to another thread */
- 			cp = "toward end of srp_arr";
- 			found = true;
- 		}
- 	} else {
--		xa_for_each_marked(xafp, idx, r_srp, SG_XA_RQ_INACTIVE) {
--			if (!r_srp)
--				continue;
-+		start_idx = READ_ONCE(fp->prev_used_idx);
-+		end_idx = ULONG_MAX;
-+second_time:
-+		idx = start_idx;
-+		for (r_srp = xa_find(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE);
-+		     r_srp;
-+		     r_srp = xa_find_after(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE)) {
- 			if (r_srp->sgat_h.buflen >= dxfr_len) {
--				if (sg_rq_state_chg
--					(r_srp, SG_RS_INACTIVE, SG_RS_BUSY,
--					 false, __func__))
-+				if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY))
- 					continue;
--				cp = "from front of srp_arr";
-+				cp = "near front of srp_arr";
- 				found = true;
- 				break;
- 			}
- 		}
-+		/* If not found so far, need to wrap around and search [0 ... start_idx) */
-+		if (!r_srp && !second && start_idx > 0) {
-+			end_idx = start_idx - 1;
-+			start_idx = 0;
-+			second = true;
-+			goto second_time;
-+		}
- 	}
- 	if (found) {
- 		r_srp->in_resid = 0;
- 		r_srp->rq_info = 0;
- 		r_srp->sense_len = 0;
-+		WRITE_ONCE(fp->prev_used_idx, r_srp->rq_idx);
- 		mk_new_srp = false;
- 	} else {
- 		mk_new_srp = true;
-@@ -3533,7 +3558,7 @@ sg_deact_request(struct sg_fd *sfp, struct sg_request *srp)
- 	sbp = srp->sense_bp;
- 	srp->sense_bp = NULL;
- 	WRITE_ONCE(srp->frq_bm[0], 0);
--	sg_rq_state_chg(srp, 0, SG_RS_INACTIVE, true /* force */, __func__);
-+	sg_rq_state_chg_force(srp, SG_RS_INACTIVE);
- 	/* maybe orphaned req, thus never read */
- 	if (sbp)
- 		mempool_free(sbp, sg_sense_pool);
-@@ -3624,7 +3649,7 @@ sg_add_sfp(struct sg_device *sdp)
- 		}
- 		srp->rq_idx = idx;
- 		srp->parentfp = sfp;
--		sg_rq_state_chg(srp, 0, SG_RS_INACTIVE, true, __func__);
-+		sg_rq_state_chg_force(srp, SG_RS_INACTIVE);
- 	}
- 	if (!reduced) {
- 		SG_LOG(4, sfp, "%s: built reserve buflen=%d\n", __func__,
-@@ -3775,8 +3800,6 @@ sg_rq_st_str(enum sg_rq_state rq_st, bool long_str)
- 		return long_str ? "inflight" : "act";
- 	case SG_RS_AWAIT_RCV:
- 		return long_str ? "await_receive" : "rcv";
--	case SG_RS_RCV_DONE:
--		return long_str ? "receive_done" : "fin";
- 	case SG_RS_BUSY:
- 		return long_str ? "busy" : "bsy";
- 	default:
-@@ -4053,7 +4076,8 @@ sg_proc_debug_fd(struct sg_fd *fp, char *obp, int len, unsigned long idx)
- 		       (int)test_bit(SG_FFD_FORCE_PACKID, fp->ffd_bm),
- 		       (int)test_bit(SG_FFD_KEEP_ORPHAN, fp->ffd_bm),
- 		       fp->ffd_bm[0]);
--	n += scnprintf(obp + n, len - n, "   mmap_sz=%d\n", fp->mmap_sz);
-+	n += scnprintf(obp + n, len - n, "   mmap_sz=%d prev_used_idx=%d\n",
-+		       fp->mmap_sz, fp->prev_used_idx);
- 	n += scnprintf(obp + n, len - n,
- 		       "   submitted=%d waiting=%d   open thr_id=%d\n",
- 		       atomic_read(&fp->submitted),
++	if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
++		sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready to push up */
+ 	if (num_waiting < 1) {
+ 		num_waiting = atomic_read_acquire(&sfp->waiting);
+ 		if (num_waiting < 1)
+@@ -4124,8 +4213,9 @@ sg_proc_debug_sreq(struct sg_request *srp, int to, char *obp, int len)
+ 	else if (dur < U32_MAX)	/* in-flight or busy (so ongoing) */
+ 		n += scnprintf(obp + n, len - n, " t_o/elap=%us/%ums",
+ 			       to / 1000, dur);
+-	n += scnprintf(obp + n, len - n, " sgat=%d op=0x%02x\n",
+-		       srp->sgat_h.num_sgat, srp->cmd_opcode);
++	cp = (srp->rq_flags & SGV4_FLAG_HIPRI) ? "hipri " : "";
++	n += scnprintf(obp + n, len - n, " sgat=%d %sop=0x%02x\n",
++		       srp->sgat_h.num_sgat, cp, srp->cmd_opcode);
+ 	return n;
+ }
+ 
+diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
+index 6162a5d5995c..11b58b279241 100644
+--- a/include/uapi/scsi/sg.h
++++ b/include/uapi/scsi/sg.h
+@@ -110,6 +110,7 @@ typedef struct sg_io_hdr {
+ #define SGV4_FLAG_Q_AT_TAIL SG_FLAG_Q_AT_TAIL
+ #define SGV4_FLAG_Q_AT_HEAD SG_FLAG_Q_AT_HEAD
+ #define SGV4_FLAG_IMMED 0x400 /* for polling with SG_IOR, ignored in SG_IOS */
++#define SGV4_FLAG_HIPRI 0x800 /* request will use blk_poll to complete */
+ 
+ /* Output (potentially OR-ed together) in v3::info or v4::info field */
+ #define SG_INFO_OK_MASK 0x1
 -- 
 2.25.1
 
