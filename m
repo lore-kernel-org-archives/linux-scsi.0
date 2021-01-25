@@ -2,172 +2,218 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1757AC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 17:44:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80CDDC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 19:12:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D504822B3B
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 17:44:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49B6E2100A
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 19:12:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731128AbhAYRoc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jan 2021 12:44:32 -0500
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:60822 "EHLO
-        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729837AbhAYROa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2021 12:14:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1611594870; x=1643130870;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=oCCR8ZkUlDupWnQLA8/WWCogsjcNU6q/Y11T1dUwAEc=;
-  b=zMSKTv/IvPfOU+t7FfyTOcUmNJHgpEtbWa/yIvX4wCW8ghcwhGlKZD0z
-   CICB1SCURDeMwd7zuC8AtLZD1cN+wDVq3+ql6fBNdxK+agbpM4iCiW1SY
-   JVOe77ajJ4eL1peiJIQKY/s8v1D2XaA4iUpgiTRX0cau+eBOX2PYXsoUb
-   ApFDUxkFKhqoL/MhmoT+1ZZlvhSPDg1/2nY2dyIK1bjjPIBjSajEST7gA
-   AMKnBEH4Kn0WvaNupSDTLvYJi39QPeWtn406tJcgNFGmG/7vYFowborIh
-   ZYCvZf/tSxvW9PqExXhwrlR5qcpM/Z6NLxRp2QAymre5OPYoQfO0078eH
-   Q==;
-IronPort-SDR: +GVUewtaAA5bUQzwfz2vBY+SET5p84hICk3LMI3kjvRT+b9EMFFzuR+xkl+EvowE6PpZkzAwd/
- 319qfTiQ48Mp7SXvrHva+JNdxzSCKR7VUHL+X2k2iq6zl82iHsDvkXCSdN1xqtkDUyX38muSkr
- bTQkOFFtbCFyupMMSKTNiNsMqRXtX9KJF7TBXa2+lWe4QTeGdD/DvYlUylg6lhufGAXvS3b38X
- 9u1Pb0MuXcv6U9Nwkc+RoNtTuxycvlRic92Cqq8Mw84ZiZzInYKfndwEy/Nq3YudBN/zscbQaD
- kg8=
-X-IronPort-AV: E=Sophos;i="5.79,374,1602572400"; 
-   d="scan'208";a="106696675"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 25 Jan 2021 10:13:15 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.87.72) by
- chn-vm-ex02.mchp-main.com (10.10.87.72) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Mon, 25 Jan 2021 10:13:14 -0700
-Received: from NAM11-BN8-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.72) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3 via Frontend
- Transport; Mon, 25 Jan 2021 10:13:13 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=UtPB6Jv9eDPTkK4LfpkV9NS0QycUMuscR1kHJtmvkkPGTj6XiMP2neslIPaZcS3jeAT+rn/U9vamkrsjzAozINyS1AOmq8kTtWSF1LcV00dGO2/Ya6Knd+Xffzml2QPXW8Vim0Rpr1nEocteuufcV9/G5VmDI6KVBKp8xYiQxH13kB/66xzpt8pqGCXx19QaGUsm/0bVbgJ5ITKkEeOQeDbq/BVHVm1bhOJclk7q20acDBflLU5nkStW6agnMNc5FLqGJdNZi2j2nEgfW9HW8BknxKYttai8QIjrYAthbZPXZqoVeZnNXaGdR0IANjamJI0dufN0ZDkSzC6N8E5nQg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VqczCkk0tNmZGhngKibuZ6tZ5HpKa7vNAdMqwFnPd80=;
- b=WrD0opmq/F7DveryZbqYEeV/PsfbcxfdhIdLbh2BoZi1a4DeILFObw2xDY481yGYu9f/+ZxrYIUY4caoTsmC6/raASQX93tGyOcLxo/en14jkMcW83LtfyR/33L0J4yWthPzZO+fbtOQG95tD1CQjt9eTmh+1KDewMP4/Zm/fzhRcPUH1PZbJvfRq7YvjH5njZ6iqxnTMIq8yjaB03zcObI8HZrWR2O/BEI2Ny1qjVrc1k7lqd54mCqUaaBZTuh6PUpDtpy5cOP893/bNQrb8ApUUrbH/fhhSq0fCZ+28pflo8JAjVzglVHDxD67Ox6nT+XrSdysUrYlzYMxpYxcrA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VqczCkk0tNmZGhngKibuZ6tZ5HpKa7vNAdMqwFnPd80=;
- b=fwT5AIOSYtXmw5H8NN71ncOCZYrp6OViN0lhqZI7kOebgU7lumdyZNKVQGe26xN+7bE2K6bTZYcVgcPTtQ5Kz1zoQE4BPeFwPdvP5XxSaaLYh83uUnZ8ikRxe/X4+d4Sna2/ghIOtZxAgLgWarqmY1UffTvIPFmCTGptwXAQm5U=
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
- by SA2PR11MB4892.namprd11.prod.outlook.com (2603:10b6:806:f9::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.13; Mon, 25 Jan
- 2021 17:13:13 +0000
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::ccd1:992c:7bc5:4b00]) by SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::ccd1:992c:7bc5:4b00%3]) with mapi id 15.20.3784.017; Mon, 25 Jan 2021
- 17:13:12 +0000
-From:   <Don.Brace@microchip.com>
-To:     <mwilck@suse.com>, <Kevin.Barnett@microchip.com>,
-        <Scott.Teel@microchip.com>, <Justin.Lindley@microchip.com>,
-        <Scott.Benesh@microchip.com>, <Gerry.Morong@microchip.com>,
-        <Mahesh.Rajashekhara@microchip.com>, <hch@infradead.org>,
-        <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
-        <POSWALD@suse.com>
-CC:     <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH V3 22/25] smartpqi: update enclosure identifier in sysf
-Thread-Topic: [PATCH V3 22/25] smartpqi: update enclosure identifier in sysf
-Thread-Index: AQHWzzRpXOA4VQwuVU6fYV8or1KEiKodDG2AgBvPWBA=
-Date:   Mon, 25 Jan 2021 17:13:12 +0000
-Message-ID: <SN6PR11MB28485D3332238AD3F0261135E1BD9@SN6PR11MB2848.namprd11.prod.outlook.com>
-References: <160763241302.26927.17487238067261230799.stgit@brunhilda>
-         <160763258826.26927.5141004289781904133.stgit@brunhilda>
- <ff8339afa9f17cf65648f2a9a6ba8b8460f4020e.camel@suse.com>
-In-Reply-To: <ff8339afa9f17cf65648f2a9a6ba8b8460f4020e.camel@suse.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: suse.com; dkim=none (message not signed)
- header.d=none;suse.com; dmarc=none action=none header.from=microchip.com;
-x-originating-ip: [76.30.208.15]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: a765960d-66a7-484b-dbb9-08d8c1547f48
-x-ms-traffictypediagnostic: SA2PR11MB4892:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SA2PR11MB489262632EA05E1E61C9725DE1BD9@SA2PR11MB4892.namprd11.prod.outlook.com>
-x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: gM6PHPYjlGqYA0bm2Y+1D/SBBqprlYlOXhOfjGoA2AnrXy08ji6sN+A/X4DV8DFLJcRGJZpvpRtxeKMO5rBEUky/ZzSLYMzlPWO/gricdaBskQ81HgXo4NYjn8QzuBxss1E8Awo3GAB9BFFZElQOXmCBGTPfB3V7F134xeN2x8vGe9N83Cbl+6WvdRQ/ki5ThxMXoaU9rkiEctnmqIukPmZ2xMnvpgXcvdBQQeOFLMKmr0HYJGWVgiPwp4bAmxcFaufb79gwBdrD/5xmo9lcJozkCjAWLBFXu9W4Dvt33rbIrXrSLHUJVeHMdMdKJULQcMaQwNAkPoWBSlSPiw1Eu3apAVhlM0nBa1ec2eJpAYk1jWtig6z8Fj3/DWOyq+P/s5zHurGq1vsx9v/w67fIA3quLbCLPzqzNOzcpWDLuA3slrwjUrPk4ZWv3h0Um7qC
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(376002)(39860400002)(396003)(136003)(366004)(66446008)(66556008)(66946007)(478600001)(83380400001)(2906002)(8676002)(76116006)(8936002)(186003)(33656002)(64756008)(66476007)(55016002)(52536014)(921005)(26005)(9686003)(4326008)(110136005)(86362001)(71200400001)(316002)(7696005)(15650500001)(6506007)(5660300002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?NYC6/DVGLKXq373zS7fhmT0TfwNyeIuHDYJaNof3UaGIJUTkJjHI4m3IzTYt?=
- =?us-ascii?Q?WXT7pFXt/LlwXj4GmD/Da8ZrWe6PyernZ19tbvlyur6JLz8u2EsGcjBiK/Kt?=
- =?us-ascii?Q?frN3hYj0brNqr4cU6+NvyRsQ7/2GVcT6TeXTLjgoL1+ahhsvw0Md5hRyhozv?=
- =?us-ascii?Q?dsBfd+OWCNRMtBF7jcjKvayJpKKpzrgya/REuvzuAf49CHhwPegasI4b8QWq?=
- =?us-ascii?Q?EYu0KjplGfzsaY17fYH+6dT1WhjT0bXmlocUi5dPeYyagstjnJRbhFtrxgGX?=
- =?us-ascii?Q?ImqsxYcp/SVSr3HU7/7fP5k6PfzfbcE7txSo7fQnTGoPWMRbY+NJkly0vaC3?=
- =?us-ascii?Q?7BUjU7VzPAwh9FuA7irWxa5rhkDLB4W+9S8we1SgQPk1tGpDCNxtNm+P2yVG?=
- =?us-ascii?Q?8ChhdQtszj8OZIvckp3SitjrXSsZIX/UaaSWZvmcnm1z28Yopyc5sdokOB/4?=
- =?us-ascii?Q?+NvWvcb9BhCWzNFNBukBaA+ND9oo3pbYjCiZGXknsrYIO1vWA6GVU4V7w7+D?=
- =?us-ascii?Q?tiZ+ooKzfAEJBx+Pyp8NrYPGox2S1LfBEJmSNibObPIY0hoMDH/HVTKoMZXV?=
- =?us-ascii?Q?Gz8JRcwpfM8DBoVb884OIIrv5ASi6RAe0XMWVP0+2t7AstobcaxmssgixMNP?=
- =?us-ascii?Q?I2ucIClk6NkBKjKpUeOFtZpGP8y3PMQQKvXJwALVaMvvq0Jx1XSvWOby/eYw?=
- =?us-ascii?Q?EG6Vpc50BE6mGEqhXpXXnUXRrVFdy4RKz+8rWF02MsVw7Tlbbn9+vusp5L6v?=
- =?us-ascii?Q?Hd+vb8pdw4uNcgvS4CWn/lnd9RPZGcMa3OFylJzJSwVffisEZuPnzVbR9QCb?=
- =?us-ascii?Q?M+87vkQxMaK85tHQXF+pkqmE1SvvPuflm897j0JrXnZc3jgkU5awulgtFILG?=
- =?us-ascii?Q?Cvlv+1OZvEJ4O/ezUQUrYFt1pXCLWZ7Bqh3j5bs7DumHNyBLOJ6/S9TUF7wj?=
- =?us-ascii?Q?DcIiMnl13LB6NZJ9FNdWoLS15aQZ4RktNuZFSXveKH0sHxuUwePNT0KvhuoA?=
- =?us-ascii?Q?lC0lZHG3GvV0tdda+TXMizo201f2tv1n574KKClDqQ0sQy+VyWMGl7IfYREJ?=
- =?us-ascii?Q?2KAGDfkE?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1731479AbhAYTM1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Jan 2021 14:12:27 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:48412 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731561AbhAYTMP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Jan 2021 14:12:15 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id D6D9320425A;
+        Mon, 25 Jan 2021 20:11:30 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id B7P13Pn47tBo; Mon, 25 Jan 2021 20:11:27 +0100 (CET)
+Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        by smtp.infotech.no (Postfix) with ESMTPA id 4FAF7204165;
+        Mon, 25 Jan 2021 20:11:26 +0100 (CET)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        kashyap.desai@broadcom.com
+Subject: [PATCH v15 00/45] sg: add v4 interface
+Date:   Mon, 25 Jan 2021 14:10:37 -0500
+Message-Id: <20210125191122.345858-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2848.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a765960d-66a7-484b-dbb9-08d8c1547f48
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jan 2021 17:13:12.8470
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: vfzj3kC4DYDn2i3p5HtDDZVII4FJzN4P8VfkneEGcn/pIEz1Feo9P7Vo4tQ9LQoINKRpKRYAhmPEtkmCc0kYAQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR11MB4892
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This patchset is the first stage of a two stage rewrite of the scsi
+generic (sg) driver. The main goal of the first stage is to introduce
+the sg v4 interface that uses 'struct sg_io_v4' as well as keeping and
+modernizing the sg v3 interface (based on 'struct sg_io_hdr'). The
+async interface formerly requiring the use of write() and read()
+system calls now have ioctl(SG_IOSUBMIT) and ioctl(SG_IORECEIVE)
+replacements.
 
-From: Martin Wilck [mailto:mwilck@suse.com]=20
-Subject: Re: [PATCH V3 22/25] smartpqi: update enclosure identifier in sysf
+A recent patch added support for blk_poll() and requests that
+have REQ_HIPRI set. The blk_poll() additions are in patch 44 and
+will compile. However, to use those additions one or more SCSI LLDs
+are needed that support mq_poll(). For those look to a patchset
+from Kashyap Desai called "[PATCH v1 0/3] io_uring iopoll in scsi
+layer". This patchset allows 'iopoll' requests to be issued
+without io_uring. iopoll and blk_poll() can be considered
+synonymous. One further note, an _async_ interface to blk_poll()
+is being proposed.
 
-> @@ -1841,7 +1841,6 @@ static void pqi_dev_info(struct pqi_ctrl_info=20
-> *ctrl_info,  static void pqi_scsi_update_device(struct pqi_scsi_dev=20
-> *existing_device,
->         struct pqi_scsi_dev *new_device)  {
-> -       existing_device->devtype =3D new_device->devtype;
->         existing_device->device_type =3D new_device->device_type;
->         existing_device->bus =3D new_device->bus;
->         if (new_device->target_lun_valid) {
->
+For documentation see:
+    http://sg.danny.cz/sg/sg_v40.html
+for more details. If accessing http pages is a problem, a temporary
+rendering of this page can be found here:
+    https://doug-gilbert.github.io/sg_v40.html
 
-I don't get this. Why was it wrong to update the devtype field?
+This patchset is against Martin Petersen's 5.12/scsi-queue branch.
 
-Don: From patch Author...
-If we don't remove that statement, following issue will crop up.
+Changes since v14 (sent to linux-scsi list on 20210124)
+  - two fixes based on report from Dan Carpenter and kernel test
+    robot 
+  - fix Johannes Thumshirn's email address
+  - separate patch issued on fio to add 'hipri' option to its sg
+    engine. Enables fio to test new sg driver blk_poll() support
 
-During initial device enumeration, the devtype attribute of the device(in c=
-urrent case enclosure device) is filled in slave_configure.
-But whenever a rescan occurs, the f/w would return zero for this field,  an=
-d valid devtype is overwritten by zero, when device attributes are updated =
-in pqi_scsi_update_device. Due to this lsscsi output shows wrong values.
+Changes since v13 (sent to linux-scsi list on 20210113)
+  - fix obscure compile error reported by "kernel test robot
+    <lkp@intel.com>"
+  - harden code around blk_poll() invocation; needed based on
+    fio testing
+  - remove SG_FFD_MMAP_CALLED bit code after Hannes Reinecke pointed
+    out it was redundant
 
+Changes since v12 (sent to linux-scsi list on 20201115)
+  - add blk_poll() support, prefix that patch's subject with 'RFC'
+
+Changes since v11 (sent to linux-scsi list on 20201014)
+  - no author originated changes since v11
+  - port from lk 5.9.0-rc1 to lk 5.10.0-rc1 picks up a change to
+    the import_iovec() which requires a change to patch 25/44
+  - only publish this cover letter and v12 of patch 25/44 to
+    the linux-scsi list. The other 43 patches remain as published
+    on 20201014.
+
+Changes since v10 (sent to linux-scsi list on 20200823)
+  - unchanged: 0001 to 0009, 0010 to 0017
+  - rename sg_add_req() to sg_setup_req() [0010]
+  - patches 40,41,42 and 43 are new, see their commit messages
+  - remove SG_RS_RCV_DONE request state leaving 3.5 states
+    [the 0.5 state is SG_RS_BUSY]
+  - rework sg_rq_chg_state() code that enforces request
+    state changes and associated xarray marks
+  - track lowest used and unused indexes in the request arrays so
+    iterations over the request xarray are efficient. This is a
+    significant saving when the iodepth queue length is large
+
+Changes since v9 (sent to linux-scsi list on 20200421)
+  - rebase on MKP's 5.10/scsi-queue branch
+  - remove some master/slave terminology that had bled in from
+    the part 2 patchset
+  - change sg_request::start_ns type from ktime_t to u64
+  - pick up several error path correction fixes applied to the
+    sg driver by other authors
+
+Changes since v8 (sent to linux-scsi list on 20200301)
+  - add new patch to ignore the /proc/scsi/sg/allow_dio setting.
+    Now direct IO will be attempted whenever the SG_FLAG_DIRECT_IO
+    flag is given
+  - add new patch to track mmap_sz from previous mmap() call.
+    Allows catching mmap-ed requests that exceed that value
+  - change warning about using the v3 interface with the write()
+    system call from WARN_ONCE() to pr_warn_once()
+  - remove __KERNEL__ conditionals in include/scsi/sg.h
+  - change struct sg_fd::start_ns from u64 to ktime_t type
+  - introduce a new small sg_rq_state_mul2arr array to avoid
+    a multiplication at runtime in the state machine engine
+  - tweak mempool introduced in v7 for sense buffers
+  - rework sg_mk_sgat() to better handle low memory situations;
+    similar work on sg_remove_sgat_helper()
+
+Changes since v7 (sent to linux-scsi list on 20200227)
+  - improve direct IO code, remove the SG_FRQ_DIO_IN_USE
+    sg_request::frq_bm flag as it is no longer needed
+  - simplify state changing code. Many state changes (rq_st) do not
+    need changes to the xarray "marks"; only lock those that do
+    (reviewer queried the locking)
+  - remove some misplaced likely()/unlikely() macros. They are gathered
+    together in a separate patch (in a second patchset)
+  - change a cast that the kbuild robot complained about. It also
+    flagged a stack size problem in sg_ioctl_common() for reasons not
+    given nor obvious. That function (and its parents) declare only
+    simple scalars on the stack.
+  - add 'Reviewed-by' where appropriate
+
+Changes since v6 (sent to linux-scsi list on 20200112)
+  - based on Martin Petersen's 5.7/scsi-queue branch in his
+    linux-scsi repository
+  - major work on mmap support: when mmap(2) is used the reserve
+    request scatter gather list is rebuilt to have order=0
+    elements (i.e. each is PAGE_SIZE bytes).
+  - address one kbuild robot issue: add include defining size_t
+  - nearly all patches that have been reviewed have been changed,
+    usually in minor ways. Those patches have "***" before the
+    "Reviewed-by" line.
+
+
+Changes since v5 to v1 in earlier patchsets
+  - for example: the v10 patchset sent to linux-scsi on 20200823
+
+
+Douglas Gilbert (45):
+  sg: move functions around
+  sg: remove typedefs, type+formatting cleanup
+  sg: sg_log and is_enabled
+  sg: rework sg_poll(), minor changes
+  sg: bitops in sg_device
+  sg: make open count an atomic
+  sg: move header to uapi section
+  sg: speed sg_poll and sg_get_num_waiting
+  sg: sg_allow_if_err_recovery and renames
+  sg: improve naming
+  sg: change rwlock to spinlock
+  sg: ioctl handling
+  sg: split sg_read
+  sg: sg_common_write add structure for arguments
+  sg: rework sg_vma_fault
+  sg: rework sg_mmap
+  sg: replace sg_allow_access
+  sg: rework scatter gather handling
+  sg: introduce request state machine
+  sg: sg_find_srp_by_id
+  sg: sg_fill_request_element
+  sg: printk change %p to %pK
+  sg: xarray for fds in device
+  sg: xarray for reqs in fd
+  sg: replace rq array with xarray
+  sg: sense buffer rework
+  sg: add sg v4 interface support
+  sg: rework debug info
+  sg: add 8 byte SCSI LUN to sg_scsi_id
+  sg: expand sg_comm_wr_t
+  sg: add sg_iosubmit_v3 and sg_ioreceive_v3 ioctls
+  sg: add some __must_hold macros
+  sg: move procfs objects to avoid forward decls
+  sg: protect multiple receivers
+  sg: first debugfs support
+  sg: rework mmap support
+  sg: defang allow_dio
+  sg: warn v3 write system call users
+  sg: add mmap_sz tracking
+  sg: remove rcv_done request state
+  sg: track lowest inactive and await indexes
+  sg: remove unit attention check for device changed
+  sg: no_dxfer: move to/from kernel buffers
+  sg: add blk_poll support
+  sg: bump version to 4.0.12
+
+ drivers/scsi/sg.c      | 5389 +++++++++++++++++++++++++++-------------
+ include/scsi/sg.h      |  273 +-
+ include/uapi/scsi/sg.h |  375 +++
+ 3 files changed, 4112 insertions(+), 1925 deletions(-)
+ create mode 100644 include/uapi/scsi/sg.h
+
+-- 
+2.25.1
 
