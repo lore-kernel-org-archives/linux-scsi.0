@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91BBBC4332B
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 19:55:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD1EEC433E6
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 19:55:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63B5422B3F
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 19:55:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A081A22DFB
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 19:55:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387583AbhAZFaK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:30:10 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:48763 "EHLO smtp.infotech.no"
+        id S2387570AbhAZFaI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 00:30:08 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:48752 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731067AbhAYTYT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Jan 2021 14:24:19 -0500
+        id S1731203AbhAYTYS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Jan 2021 14:24:18 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 5DCD4204275;
-        Mon, 25 Jan 2021 20:12:22 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 580642042B5;
+        Mon, 25 Jan 2021 20:12:09 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id BTo6mkFPhUM2; Mon, 25 Jan 2021 20:12:20 +0100 (CET)
+        with ESMTP id jcXQgaLlbR7L; Mon, 25 Jan 2021 20:12:07 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 9EF9A2042B1;
-        Mon, 25 Jan 2021 20:12:19 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id 7468B2042B1;
+        Mon, 25 Jan 2021 20:12:05 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         kashyap.desai@broadcom.com
-Subject: [PATCH v15 43/45] sg: no_dxfer: move to/from kernel buffers
-Date:   Mon, 25 Jan 2021 14:11:20 -0500
-Message-Id: <20210125191122.345858-44-dgilbert@interlog.com>
+Subject: [PATCH v15 31/45] sg: add sg_iosubmit_v3 and sg_ioreceive_v3 ioctls
+Date:   Mon, 25 Jan 2021 14:11:08 -0500
+Message-Id: <20210125191122.345858-32-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210125191122.345858-1-dgilbert@interlog.com>
 References: <20210125191122.345858-1-dgilbert@interlog.com>
@@ -45,95 +45,155 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When the NO_DXFER flag is use on a command/request, the data-in
-and data-out buffers (if present) should not be ignored. Add
-sg_rq_map_kern() function to handle this. Uses a single bio with
-multiple bvec_s usually each holding multiple pages, if necessary.
-The driver default element size is 32 KiB so if PAGE_SIZE is 4096
-then get_order()==3 .
+Add ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3). These ioctls
+are meant to be (almost) drop-in replacements for the write()/read()
+async version 3 interface. They only accept the version 3 interface.
 
+See the webpage at: http://sg.danny.cz/sg/sg_v40.html
+specifically the table in the section titled: "13 SG interface
+support changes".
+
+If sgv3 is a struct sg_io_hdr object, suitably configured, then
+    res = write(sg_fd, &sgv3, sizeof(sgv3));
+and
+    res = ioctl(sg_fd, SG_IOSUBMIT_V3, &sgv3);
+are equivalent. Dito for read() and ioctl(SG_IORECEIVE_V3).
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 59 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 59 insertions(+)
+ drivers/scsi/sg.c      | 76 ++++++++++++++++++++++++++++++++++++++++++
+ include/uapi/scsi/sg.h |  6 ++++
+ 2 files changed, 82 insertions(+)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index fdfa34c27e3e..37258b4804ab 100644
+index 89eb8856bfa3..4f5604e5b2ba 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -2862,6 +2862,63 @@ exit_sg(void)
- 	idr_destroy(&sg_index_idr);
+@@ -834,6 +834,24 @@ sg_ctl_iosubmit(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	return -EPERM;
  }
  
-+static struct bio *
-+sg_mk_kern_bio(int bvec_cnt)
++static int
++sg_ctl_iosubmit_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
 +{
-+	struct bio *biop;
++	int res;
++	u8 hdr_store[SZ_SG_IO_V4];      /* max(v3interface, v4interface) */
++	struct sg_io_hdr *h3p = (struct sg_io_hdr *)hdr_store;
++	struct sg_device *sdp = sfp->parentdp;
 +
-+	if (bvec_cnt > BIO_MAX_PAGES)
-+		return NULL;
-+	biop = bio_alloc(GFP_ATOMIC, bvec_cnt);
-+	if (!biop)
-+		return NULL;
-+	biop->bi_end_io = bio_put;
-+	return biop;
++	res = sg_allow_if_err_recovery(sdp, (filp->f_flags & O_NONBLOCK));
++	if (unlikely(res))
++		return res;
++	if (copy_from_user(h3p, p, SZ_SG_IO_HDR))
++		return -EFAULT;
++	if (h3p->interface_id == 'S')
++		return sg_v3_submit(filp, sfp, h3p, false, NULL);
++	return -EPERM;
 +}
 +
+ #if IS_ENABLED(SG_LOG_ACTIVE)
+ static void
+ sg_rq_state_fail_msg(struct sg_fd *sfp, enum sg_rq_state exp_old_st,
+@@ -1168,6 +1186,7 @@ sg_receive_v3(struct sg_fd *sfp, struct sg_request *srp, size_t count,
+ 	hp->sb_len_wr = srp->sense_len;
+ 	hp->info = srp->rq_info;
+ 	hp->resid = srp->in_resid;
++	hp->pack_id = srp->pack_id;
+ 	hp->duration = srp->duration;
+ 	hp->status = rq_result & 0xff;
+ 	hp->masked_status = status_byte(rq_result);
+@@ -1283,6 +1302,57 @@ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	return sg_receive_v4(sfp, srp, p, h4p);
+ }
+ 
 +/*
-+ * Setup to move data between kernel buffers managed by this driver and a SCSI device. Note that
-+ * there is no corresponding 'unmap' call as is required by blk_rq_map_user() . Uses a single
-+ * bio with an expanded appended bvec if necessary.
++ * Called when ioctl(SG_IORECEIVE_V3) received. Expects a v3 interface.
++ * Checks if O_NONBLOCK file flag given, if not checks given flags field
++ * to see if SGV4_FLAG_IMMED is set. Either of these implies non blocking.
++ * When non-blocking and there is no request waiting, yields EAGAIN;
++ * otherwise it waits.
 + */
 +static int
-+sg_rq_map_kern(struct sg_request *srp, struct request_queue *q, struct request *rqq, int rw_ind)
++sg_ctl_ioreceive_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
 +{
-+	struct sg_scatter_hold *schp = &srp->sgat_h;
-+	struct bio *bio;
-+	int k, ln;
-+	int op_flags = 0;
-+	int num_sgat = schp->num_sgat;
-+	int dlen = schp->dlen;
-+	int pg_sz = 1 << (PAGE_SHIFT + schp->page_order);
-+	int num_segs = (1 << schp->page_order) * num_sgat;
-+	int res = 0;
++	bool non_block = !!(filp->f_flags & O_NONBLOCK);
++	int res;
++	int pack_id = SG_PACK_ID_WILDCARD;
++	u8 v3_holder[SZ_SG_IO_HDR];
++	struct sg_io_hdr *h3p = (struct sg_io_hdr *)v3_holder;
++	struct sg_device *sdp = sfp->parentdp;
++	struct sg_request *srp;
 +
-+	SG_LOG(4, srp->parentfp, "%s: dlen=%d, pg_sz=%d\n", __func__, dlen, pg_sz);
-+	if (num_sgat <= 0)
-+		return 0;
-+	if (rw_ind == WRITE)
-+		op_flags = REQ_SYNC | REQ_IDLE;
-+	bio = sg_mk_kern_bio(num_sgat - k);
-+	if (!bio)
-+		return -ENOMEM;
-+	bio->bi_opf = req_op(rqq) | op_flags;
-+
-+	for (k = 0; k < num_sgat && dlen > 0; ++k, dlen -= ln) {
-+		ln = min_t(int, dlen, pg_sz);
-+		if (bio_add_pc_page(q, bio, schp->pages[k], ln, 0) < ln) {
-+			bio_put(bio);
-+			return -EINVAL;
-+		}
-+	}
-+	res = blk_rq_append_bio(rqq, &bio);
++	res = sg_allow_if_err_recovery(sdp, non_block);
 +	if (unlikely(res))
-+		bio_put(bio);
-+	else
-+		rqq->nr_phys_segments = num_segs;
-+	return res;
++		return res;
++	/* Get first three 32 bit integers: guard, proto+subproto */
++	if (copy_from_user(h3p, p, SZ_SG_IO_HDR))
++		return -EFAULT;
++	/* for v3: interface_id=='S' (in a 32 bit int) */
++	if (h3p->interface_id != 'S')
++		return -EPERM;
++	if (h3p->flags & SGV4_FLAG_IMMED)
++		non_block = true;	/* set by either this or O_NONBLOCK */
++	SG_LOG(3, sfp, "%s: non_block(+IMMED)=%d\n", __func__, non_block);
++
++	if (test_bit(SG_FFD_FORCE_PACKID, sfp->ffd_bm))
++		pack_id = h3p->pack_id;
++
++	srp = sg_find_srp_by_id(sfp, pack_id);
++	if (!srp) {     /* nothing available so wait on packet or */
++		if (unlikely(SG_IS_DETACHING(sdp)))
++			return -ENODEV;
++		if (non_block)
++			return -EAGAIN;
++		res = wait_event_interruptible
++				(sfp->read_wait,
++				 sg_get_ready_srp(sfp, &srp, pack_id));
++		if (unlikely(SG_IS_DETACHING(sdp)))
++			return -ENODEV;
++		if (unlikely(res))
++			return res;	/* signal --> -ERESTARTSYS */
++	}	/* now srp should be valid */
++	return sg_receive_v3(sfp, srp, SZ_SG_IO_HDR, p);
 +}
 +
- static inline void
- sg_set_map_data(const struct sg_scatter_hold *schp, bool up_valid,
- 		struct rq_map_data *mdp)
-@@ -3025,6 +3082,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 		if (IS_ENABLED(CONFIG_SCSI_PROC_FS) && res)
- 			SG_LOG(1, sfp, "%s: blk_rq_map_user() res=%d\n",
- 			       __func__, res);
-+	} else {	/* transfer data to/from kernel buffers */
-+		res = sg_rq_map_kern(srp, q, rq, r0w);
- 	}
- fini:
- 	if (unlikely(res)) {		/* failure, free up resources */
+ static int
+ sg_read_v1v2(void __user *buf, int count, struct sg_fd *sfp,
+ 	     struct sg_request *srp)
+@@ -1875,9 +1945,15 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 	case SG_IOSUBMIT:
+ 		SG_LOG(3, sfp, "%s:    SG_IOSUBMIT\n", __func__);
+ 		return sg_ctl_iosubmit(filp, sfp, p);
++	case SG_IOSUBMIT_V3:
++		SG_LOG(3, sfp, "%s:    SG_IOSUBMIT_V3\n", __func__);
++		return sg_ctl_iosubmit_v3(filp, sfp, p);
+ 	case SG_IORECEIVE:
+ 		SG_LOG(3, sfp, "%s:    SG_IORECEIVE\n", __func__);
+ 		return sg_ctl_ioreceive(filp, sfp, p);
++	case SG_IORECEIVE_V3:
++		SG_LOG(3, sfp, "%s:    SG_IORECEIVE_V3\n", __func__);
++		return sg_ctl_ioreceive_v3(filp, sfp, p);
+ 	case SG_GET_SCSI_ID:
+ 		return sg_ctl_scsi_id(sdev, sfp, p);
+ 	case SG_SET_FORCE_PACK_ID:
+diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
+index af14379d5dcb..6162a5d5995c 100644
+--- a/include/uapi/scsi/sg.h
++++ b/include/uapi/scsi/sg.h
+@@ -357,6 +357,12 @@ struct sg_header {
+ /* Gives some v4 identifying info to driver, receives associated response */
+ #define SG_IORECEIVE _IOWR(SG_IOCTL_MAGIC_NUM, 0x42, struct sg_io_v4)
+ 
++/* Submits a v3 interface object to driver */
++#define SG_IOSUBMIT_V3 _IOWR(SG_IOCTL_MAGIC_NUM, 0x45, struct sg_io_hdr)
++
++/* Gives some v3 identifying info to driver, receives associated response */
++#define SG_IORECEIVE_V3 _IOWR(SG_IOCTL_MAGIC_NUM, 0x46, struct sg_io_hdr)
++
+ /* command queuing is always on when the v3 or v4 interface is used */
+ #define SG_DEF_COMMAND_Q 0
+ 
 -- 
 2.25.1
 
