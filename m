@@ -2,412 +2,195 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 310A3C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 02:03:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C55AC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:28:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBB8822EBF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 02:03:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A1CD206F7
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:28:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731777AbhAYTWu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jan 2021 14:22:50 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:48745 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731770AbhAYTWj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Jan 2021 14:22:39 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id AD4A12042A2;
-        Mon, 25 Jan 2021 20:12:14 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id OPCmo3kq0mmL; Mon, 25 Jan 2021 20:12:12 +0100 (CET)
-Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 54E9D204275;
-        Mon, 25 Jan 2021 20:12:11 +0100 (CET)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        kashyap.desai@broadcom.com
-Subject: [PATCH v15 36/45] sg: rework mmap support
-Date:   Mon, 25 Jan 2021 14:11:13 -0500
-Message-Id: <20210125191122.345858-37-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210125191122.345858-1-dgilbert@interlog.com>
-References: <20210125191122.345858-1-dgilbert@interlog.com>
+        id S1727417AbhAZF2R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 00:28:17 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:32878 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727444AbhAYKYN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Jan 2021 05:24:13 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 10P9ZSDd025329;
+        Mon, 25 Jan 2021 01:52:31 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pfpt0220;
+ bh=m6qGuHzQSkYN6uDOT5kTbmc4I59UuqyBRVG/chMkGvQ=;
+ b=K39DW/ZNAjgUuWXAnGb6SXgHmwHSfX0thAND/DSeCxWQo2ZWweRbBM2g1a87qXaxzfSR
+ eHni1obVctijA//+cl946Gmar+ijxpryHcrhK/9Kew3klG7UsuN2q/3GEyAhHhoS3DzO
+ FXmatd2DhGpzD53N2yyRM+AKgXm1JWiGtzdsN6s48G7zJC3jEO2x8Hbult169ZAdGw5o
+ wV2UXL0Wdz7y+IUVYb+6iyAgQL9sTy+IQJU1kVpGKIii+qfOLf3yc8w3eryET1ULQJAU
+ W26t8mUFHrGMPT7gSaa2whI6uQy4ir0vgTHPwX1K5ve1eEL2XJQ984VDb5w6bRa9ICFT yA== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0a-0016f401.pphosted.com with ESMTP id 368j1u42kf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 25 Jan 2021 01:52:31 -0800
+Received: from SC-EXCH02.marvell.com (10.93.176.82) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 25 Jan
+ 2021 01:52:29 -0800
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 25 Jan
+ 2021 01:52:29 -0800
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (104.47.56.175)
+ by DC5-EXCH01.marvell.com (10.69.176.38) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2 via Frontend Transport; Mon, 25 Jan 2021 01:52:29 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=D0Rvm8QDoeDt5POneWX3PF3y7/1bDCpGNwfqmbdPu2ewF8/RNKPksHgChWnFixRHbzY/Qr+UDN3zekC9vCg8P5JrEOQ6wPHccvHP4Zi9fExN3dF95pKmcHuq4FCp59C/Z8dHt0l4+7RWClhEslWVylc5gIwX6mvK2vlaYqhE1A9N9CZ5120jT/j1hwlJDCQ+bu1lEKGT//khkyJjo1wJ6E8im4UEah5OLlKWQINcomMPfeO5/3Ir6wheofAmuirRNQPrdJZRCOMgGQgdN/+yM/b6FgNXY+4FWxffOxsh6fKlrN29QKwD2xHjGqCtQbaUoWNXvPhLbcrOxyMx5JtL1g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=m6qGuHzQSkYN6uDOT5kTbmc4I59UuqyBRVG/chMkGvQ=;
+ b=KNI/NULdmNiT/yxwN6QLUPxXnB1lpZ5R03NZW0CVm4EhB+6VwtfWueWVfEtvJNWVVWh3Dy9aytqt6FNt/wuVui0utKwTsUk+fqv26ocH3+HiK6DhpBx2nfL4obYfNKwRZEyLoBIkgyRfiE4VDnIP9xlAx3zfpaXKdAAQm48i1PuCAHeblTD4QjbSSK4Tk36mORhxNjLHEfuWLMXdX/IV7/mDrws1lVvRySoUMVjYBHCtuNbAbwjKhocr787H0PNdpQeJXmQcwlWf4ddobr+BMDAoW8tdmAab3eUISq4Jys9ml5xQsjbcyJE0/kNZjItykSn+pYnr/KL8vZyAJGVzuA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=m6qGuHzQSkYN6uDOT5kTbmc4I59UuqyBRVG/chMkGvQ=;
+ b=PoQMZeTh8aOXaxxOAcUJ8uj4kdErlxmnYjmagg3SoYkNsZHHElb1bsGRN1aDx64qJlKfWm66QctK7+xmR2ln0DScJjtIJVmjQDlmfZQ6QXPkYyJqbxC7LltH6IqQXh5OeiDq7w8QwCvaouotZzYYLq9z7IjXKwHLYG5J0KyXmfM=
+Received: from DM6PR18MB3034.namprd18.prod.outlook.com (2603:10b6:5:18c::32)
+ by DM6PR18MB3722.namprd18.prod.outlook.com (2603:10b6:5:c2::28) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.13; Mon, 25 Jan
+ 2021 09:52:27 +0000
+Received: from DM6PR18MB3034.namprd18.prod.outlook.com
+ ([fe80::455c:aa82:3f6c:95e9]) by DM6PR18MB3034.namprd18.prod.outlook.com
+ ([fe80::455c:aa82:3f6c:95e9%7]) with mapi id 15.20.3784.019; Mon, 25 Jan 2021
+ 09:52:27 +0000
+From:   Saurav Kashyap <skashyap@marvell.com>
+To:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>
+CC:     GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: RE: [EXT] [PATCH] scsi: qla2xxx: fix some memory corruption
+Thread-Topic: [EXT] [PATCH] scsi: qla2xxx: fix some memory corruption
+Thread-Index: AQHW8vZQqe0wROdeNU6MRb6tZasxpqo4GW/A
+Date:   Mon, 25 Jan 2021 09:52:27 +0000
+Message-ID: <DM6PR18MB303455B3BC025E7F82469A4AD2BD9@DM6PR18MB3034.namprd18.prod.outlook.com>
+References: <YA6E0geUlL9Hs04A@mwanda>
+In-Reply-To: <YA6E0geUlL9Hs04A@mwanda>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: oracle.com; dkim=none (message not signed)
+ header.d=none;oracle.com; dmarc=none action=none header.from=marvell.com;
+x-originating-ip: [103.103.215.229]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 207da384-2975-499b-5cc5-08d8c116ec6f
+x-ms-traffictypediagnostic: DM6PR18MB3722:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <DM6PR18MB3722DB8361C551FF32A98C22D2BD9@DM6PR18MB3722.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:6790;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: WR+g2FYgbLRlZLWDaZ/94Hzi535Sp3VfyAaMTmYDT89yOFnxZvk2blMbwpMqAiK1TG/7YH/6EyrJw5IlViVEMR09lutQILtVKWyO9krHZvp46CqFGuldczbZfQkgKrwG346Ft7ULLU8//LavnUrW2lk85kbkdnpMIVd3C/5sXtBKVeOISYdmYflb5Nz/Z7jYFsnJjVpbkjvwB/QbfRgomilpfqExeVcj33xmlAuKuWQCfzzbfjQXLwXeTPo60BZGQ7rx7gRCkTzbK2xfCZhbW+oJ5UDOEykX5mCUZXXx9l1Ff7XE121ZM2+A9Xy2r4EZ75Y98cgbZffNbaUfh61LimVvB6l/AVp/zAXTWKg1dMk8qxwatEsXinOK5frsZN741SHQYHuTbGbk0GRgf1qsXymUOTvdRB6eq9kRZQQ1+Mw9xH/TniONFjqBbFYGm2KGDRV9A3N6q1/BjZoRHkIW4a8u1B5fyIN1kUw1S8+IumEQas/oa0YwkuqApgx3u3bzg3dxlN7lKeDP5uQ8Ruv6/A==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR18MB3034.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(396003)(136003)(346002)(366004)(39860400002)(4326008)(53546011)(478600001)(86362001)(83380400001)(76116006)(71200400001)(316002)(8936002)(7696005)(2906002)(66946007)(52536014)(8676002)(186003)(6636002)(66476007)(66556008)(64756008)(66446008)(110136005)(9686003)(6506007)(55016002)(26005)(5660300002)(33656002)(54906003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?qpbIOVFhnYrnJkxY7bN46ZHIf7gHivOM1QJ1YXaOVOkAeVp52iQER4GJUvlA?=
+ =?us-ascii?Q?Kcxh1qC8Si5HaM2ySmpPVtUy6Z/yhQGB4LJaIaHFdkXh4fkWZ6coMNjZfce4?=
+ =?us-ascii?Q?rlMHF6ENSlKixQnZlgpdWKkeAT3ilkidJcs6MEoUd8Y9Vp1AihfOtoW/OJnW?=
+ =?us-ascii?Q?MnRaRgOjIEWweKbDf8rYXtlxgc9coJZsLzuOhPE7FSxKxM6N1RXYfJLKqHUI?=
+ =?us-ascii?Q?hWpNpt6h1Xq517b5ncGwuGGVHzo/muTtJsDEPxbz53qVcJ7ss1clfJCBqF0e?=
+ =?us-ascii?Q?8qfQbHTrb4rcR8tmkXGdOyrdBzTzfis6+HZmC6FCrJUkbllBLKj/DEsKUN9T?=
+ =?us-ascii?Q?BKF2V8CCYeZPS5xCTgq+j/sB49T5jQpfoSuo2Q5VpX88gpVcnUW7nFHP9kOa?=
+ =?us-ascii?Q?Cyzt6ZtPMfLD7fuF9zAB+u/t85ct63B8KYzZAwRMk8Y5uLWDY6t7qtHjyGiD?=
+ =?us-ascii?Q?Lp+e4bxcLAPnhNkcTluzT7woeseilPwjFkISMOwCucyPfm2jE4h2rLxd196Z?=
+ =?us-ascii?Q?5B1CW7rbSImdgHLekMNpyDI1uwjriurTiW54Eg1gtyTg8MaLU0TTcmeyjVxh?=
+ =?us-ascii?Q?o4WH9fKIYG/Xr7CozAom7SAhEqM+Tr5sDsjyBJa4C6PanQxafMnW4tah60vb?=
+ =?us-ascii?Q?wN3nhLVReBO3601I7QM6cxPq7jYKZODBrrxkBWdFGBui9VKoAO3Zaf0sRENx?=
+ =?us-ascii?Q?z4cak8pQBrVdavzFMQd/8sxGe32+xpS6ACTeCYHOOjlOqAhd4D+UKEy7Uiuw?=
+ =?us-ascii?Q?sEA69Xc1gH7vBgOgosOpf5ZL5Mxpl9BH9dyzV3US2H535DdYiEfedlvA1fCH?=
+ =?us-ascii?Q?cSnhAaSDi7+D32YziqkkHg/qmOq9WfYmjsDlj/xAEnQ57d55/tKyCr3N80d4?=
+ =?us-ascii?Q?LXPju9MoLn/E8s4rto63zRaapjYWFjKFACTu5z24GPFTmcVS2k+BzWn+2kFI?=
+ =?us-ascii?Q?lvTdTrvfsGF0i/ZAso4g4vwcgwQuU5XkkOBI1msr5EU=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR18MB3034.namprd18.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 207da384-2975-499b-5cc5-08d8c116ec6f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jan 2021 09:52:27.2168
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: YQ3RtI/LiOQOGmFA1lnr6OoSe2Fy85IVXb3CrvKwGSVPHHfYfUuBeTPKV5GCyomI4favd2IJxemfDWFRExN8XA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR18MB3722
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
+ definitions=2021-01-25_03:2021-01-22,2021-01-25 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Linux has an issue with mmap-ed multiple pages issued by
-alloc_pages() [with order > 0]. So when mmap(2) is called if the
-reserve request's scatter gather (sgat) list is either:
-  - not big enough, or
-  - made up of elements of order > 0 (i.e. size > PAGE_SIZE)
-then throw away reserve requests sgat list and rebuild it meeting
-those requirements.
-Clean up related code and stop doing mmap+indirect_io.
+Hi Dan,
+Thanks for a patch.
 
-This new mmap implementation is marginally more flexible (but
-still compatible with) the production driver. Previously if the
-user wanted a larger mmap(2) 'length' than the reserve request's
-size, then they needed to use ioctl(SG_SET_RESERVED_SIZE) to set
-the new size first. Now mmap(2) called on a sg device node will
-adjust to the size given by 'length' [mmap's second parameter].
+> -----Original Message-----
+> From: Dan Carpenter <dan.carpenter@oracle.com>
+> Sent: Monday, January 25, 2021 2:14 PM
+> To: Nilesh Javali <njavali@marvell.com>
+> Cc: GR-QLogic-Storage-Upstream <GR-QLogic-Storage-
+> Upstream@marvell.com>; James E.J. Bottomley <jejb@linux.ibm.com>;
+> Martin K. Petersen <martin.petersen@oracle.com>; Himanshu Madhani
+> <himanshu.madhani@oracle.com>; Saurav Kashyap
+> <skashyap@marvell.com>; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org; kernel-janitors@vger.kernel.org
+> Subject: [EXT] [PATCH] scsi: qla2xxx: fix some memory corruption
+>=20
+> External Email
+>=20
+> ----------------------------------------------------------------------
+> This was supposed to be "data" instead of "&data".  The current code
+> will corrupt the stack.
+>=20
+> Fixes: dbf1f53cfd23 ("scsi: qla2xxx: Implementation to get and manage hos=
+t,
+> target stats and initiator port")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_bsg.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
+g.c
+> index e45da05383cd..bee8cf9f8123 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+> @@ -2667,7 +2667,7 @@ qla2x00_get_tgt_stats(struct bsg_job *bsg_job)
+>=20
+>  		bsg_reply->reply_payload_rcv_len =3D
+>  			sg_copy_from_buffer(bsg_job-
+> >reply_payload.sg_list,
+> -					    bsg_job->reply_payload.sg_cnt,
+> &data,
+> +					    bsg_job->reply_payload.sg_cnt,
+> data,
+>  					    sizeof(struct
+> ql_vnd_tgt_stats_resp));
+>=20
+>  		bsg_reply->result =3D DID_OK;
+> --
 
-Tweak some SG_LOG() levels to control the amount of debug
-output. Add some WRITE_ONCE() macros when bitop integers are
-being initialised.
+Acked-by: Saurav Kashyap <skashyap@marvell.com>
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/sg.c | 177 +++++++++++++++++++++++++++-------------------
- 1 file changed, 106 insertions(+), 71 deletions(-)
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index a3c948798d75..2de327b8f06f 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -116,6 +116,7 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
- #define SG_FRQ_DEACT_ORPHAN	6	/* not keeping orphan so de-activate */
- #define SG_FRQ_RECEIVING	7	/* guard against multiple receivers */
- #define SG_FRQ_BLK_PUT_REQ	8	/* set when blk_put_request() called */
-+#define SG_FRQ_FOR_MMAP		9	/* request needs PAGE_SIZE elements */
- 
- /* Bit positions (flags) for sg_fd::ffd_bm bitmask follow */
- #define SG_FFD_FORCE_PACKID	0	/* receive only given pack_id/tag */
-@@ -708,7 +709,7 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
- 			 input_size, (unsigned int)opcode, current->comm);
- 	}
- 	cwr.h3p = h3p;
--	cwr.frq_bm[0] = 0;
-+	WRITE_ONCE(cwr.frq_bm[0], 0);
- 	cwr.timeout = sfp->timeout;
- 	cwr.cmd_len = cmd_size;
- 	cwr.filp = filp;
-@@ -769,7 +770,7 @@ sg_v3_submit(struct file *filp, struct sg_fd *sfp, struct sg_io_hdr *hp,
- 	/* when v3 seen, allow cmd_q on this fd (def: no cmd_q) */
- 	set_bit(SG_FFD_CMD_Q, sfp->ffd_bm);
- 	ul_timeout = msecs_to_jiffies(hp->timeout);
--	cwr.frq_bm[0] = 0;
-+	WRITE_ONCE(cwr.frq_bm[0], 0);
- 	__assign_bit(SG_FRQ_SYNC_INVOC, cwr.frq_bm, (int)sync);
- 	cwr.h3p = hp;
- 	cwr.timeout = min_t(unsigned long, ul_timeout, INT_MAX);
-@@ -810,7 +811,7 @@ sg_submit_v4(struct file *filp, struct sg_fd *sfp, void __user *p,
- 	ul_timeout = msecs_to_jiffies(h4p->timeout);
- 	cwr.filp = filp;
- 	cwr.sfp = sfp;
--	cwr.frq_bm[0] = 0;
-+	WRITE_ONCE(cwr.frq_bm[0], 0);
- 	__assign_bit(SG_FRQ_SYNC_INVOC, cwr.frq_bm, (int)sync);
- 	__set_bit(SG_FRQ_IS_V4I, cwr.frq_bm);
- 	cwr.h4p = h4p;
-@@ -2237,13 +2238,39 @@ sg_fasync(int fd, struct file *filp, int mode)
- 	return fasync_helper(fd, filp, mode, &sfp->async_qp);
- }
- 
-+static void
-+sg_vma_open(struct vm_area_struct *vma)
-+{
-+	struct sg_fd *sfp = vma->vm_private_data;
-+
-+	if (unlikely(!sfp)) {
-+		pr_warn("%s: sfp null\n", __func__);
-+		return;
-+	}
-+	kref_get(&sfp->f_ref);
-+}
-+
-+static void
-+sg_vma_close(struct vm_area_struct *vma)
-+{
-+	struct sg_fd *sfp = vma->vm_private_data;
-+
-+	if (unlikely(!sfp)) {
-+		pr_warn("%s: sfp null\n", __func__);
-+		return;
-+	}
-+	kref_put(&sfp->f_ref, sg_remove_sfp); /* get in: sg_vma_open() */
-+}
-+
- /* Note: the error return: VM_FAULT_SIGBUS causes a "bus error" */
- static vm_fault_t
- sg_vma_fault(struct vm_fault *vmf)
- {
--	int k, length;
--	unsigned long offset, len, sa, iflags;
-+	int k, n, length;
-+	int res = VM_FAULT_SIGBUS;
-+	unsigned long offset;
- 	struct vm_area_struct *vma = vmf->vma;
-+	struct page *page;
- 	struct sg_scatter_hold *rsv_schp;
- 	struct sg_request *srp;
- 	struct sg_device *sdp;
-@@ -2269,7 +2296,7 @@ sg_vma_fault(struct vm_fault *vmf)
- 		SG_LOG(1, sfp, "%s: srp%s\n", __func__, nbp);
- 		goto out_err;
- 	}
--	xa_lock_irqsave(&sfp->srp_arr, iflags);
-+	mutex_lock(&sfp->f_mutex);
- 	rsv_schp = &srp->sgat_h;
- 	offset = vmf->pgoff << PAGE_SHIFT;
- 	if (offset >= (unsigned int)rsv_schp->buflen) {
-@@ -2277,44 +2304,37 @@ sg_vma_fault(struct vm_fault *vmf)
- 		       offset);
- 		goto out_err_unlock;
- 	}
--	sa = vma->vm_start;
--	SG_LOG(3, sfp, "%s: vm_start=0x%lx, off=%lu\n", __func__, sa, offset);
-+	SG_LOG(5, sfp, "%s: vm_start=0x%lx, off=%lu\n", __func__,
-+	       vma->vm_start, offset);
- 	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
--	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; ++k) {
--		len = vma->vm_end - sa;
--		len = min_t(int, len, (int)length);
--		if (offset < len) {
--			struct page *page;
--			struct page *pp;
--
--			pp = rsv_schp->pages[k];
--			xa_unlock_irqrestore(&sfp->srp_arr, iflags);
--			page = nth_page(pp, offset >> PAGE_SHIFT);
--			get_page(page); /* increment page count */
--			vmf->page = page;
--			return 0; /* success */
--		}
--		sa += len;
--		offset -= len;
--	}
-+	k = (int)offset / length;
-+	n = ((int)offset % length) >> PAGE_SHIFT;
-+	page = nth_page(rsv_schp->pages[k], n);
-+	get_page(page);
-+	vmf->page = page;
-+	res = 0;
- out_err_unlock:
--	xa_unlock_irqrestore(&sfp->srp_arr, iflags);
-+	mutex_unlock(&sfp->f_mutex);
- out_err:
--	return VM_FAULT_SIGBUS;
-+	return res;
- }
- 
- static const struct vm_operations_struct sg_mmap_vm_ops = {
- 	.fault = sg_vma_fault,
-+	.open = sg_vma_open,
-+	.close = sg_vma_close,
- };
- 
--/* Entry point for mmap(2) system call */
-+/*
-+ * Entry point for mmap(2) system call. For mmap(2) to work, request's
-+ * scatter gather list needs to be order 0 which it is unlikely to be
-+ * by default. mmap(2) cannot be called more than once per fd.
-+ */
- static int
- sg_mmap(struct file *filp, struct vm_area_struct *vma)
- {
--	int k, length;
--	int ret = 0;
--	unsigned long req_sz, len, sa, iflags;
--	struct sg_scatter_hold *rsv_schp;
-+	int res = 0;
-+	unsigned long req_sz;
- 	struct sg_fd *sfp;
- 	struct sg_request *srp;
- 
-@@ -2325,40 +2345,48 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
- 		pr_warn("sg: %s: sfp is NULL\n", __func__);
- 		return -ENXIO;
- 	}
-+	mutex_lock(&sfp->f_mutex);
- 	req_sz = vma->vm_end - vma->vm_start;
- 	SG_LOG(3, sfp, "%s: vm_start=%pK, len=%d\n", __func__,
- 	       (void *)vma->vm_start, (int)req_sz);
--	if (vma->vm_pgoff)
--		return -EINVAL; /* only an offset of 0 accepted */
-+	if (vma->vm_pgoff) {
-+		res = -EINVAL; /* only an offset of 0 accepted */
-+		goto fini;
-+	}
- 	/* Check reserve request is inactive and has large enough buffer */
--	mutex_lock(&sfp->f_mutex);
- 	srp = sfp->rsv_srp;
--	xa_lock_irqsave(&sfp->srp_arr, iflags);
- 	if (SG_RS_ACTIVE(srp)) {
--		ret = -EBUSY;
--		goto out;
-+		res = -EBUSY;
-+		goto fini;
- 	}
--	rsv_schp = &srp->sgat_h;
--	if (req_sz > (unsigned long)rsv_schp->buflen) {
--		ret = -ENOMEM;
--		goto out;
-+	if (req_sz > SG_WRITE_COUNT_LIMIT) {	/* sanity check */
-+		res = -ENOMEM;
-+		goto fini;
- 	}
--	sa = vma->vm_start;
--	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
--	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; ++k) {
--		len = vma->vm_end - sa;
--		len = min_t(unsigned long, len, (unsigned long)length);
--		sa += len;
-+	if (test_and_set_bit(SG_FFD_MMAP_CALLED, sfp->ffd_bm)) {
-+		SG_LOG(1, sfp, "%s: multiple invocations on this fd\n",
-+		       __func__);
-+		res = -EADDRINUSE;
-+		goto fini;
-+	}
-+	if (srp->sgat_h.page_order > 0 ||
-+	    req_sz > (unsigned long)srp->sgat_h.buflen) {
-+		sg_remove_sgat(srp);
-+		set_bit(SG_FRQ_FOR_MMAP, srp->frq_bm);
-+		res = sg_mk_sgat(srp, sfp, req_sz);
-+		if (res) {
-+			SG_LOG(1, sfp, "%s: sg_mk_sgat failed, wanted=%lu\n",
-+			       __func__, req_sz);
-+			goto fini;
-+		}
- 	}
--
--	set_bit(SG_FFD_MMAP_CALLED, sfp->ffd_bm);
- 	vma->vm_flags |= VM_IO | VM_DONTEXPAND | VM_DONTDUMP;
- 	vma->vm_private_data = sfp;
- 	vma->vm_ops = &sg_mmap_vm_ops;
--out:
--	xa_unlock_irqrestore(&sfp->srp_arr, iflags);
-+	sg_vma_open(vma);
-+fini:
- 	mutex_unlock(&sfp->f_mutex);
--	return ret;
-+	return res;
- }
- 
- static void
-@@ -2945,7 +2973,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 	}
- 	scsi_rp->cmd_len = cwrp->cmd_len;
- 	srp->cmd_opcode = scsi_rp->cmd[0];
--	us_xfer = !(srp->rq_flags & SG_FLAG_NO_DXFER);
-+	us_xfer = !(srp->rq_flags & (SG_FLAG_NO_DXFER | SG_FLAG_MMAP_IO));
- 	assign_bit(SG_FRQ_NO_US_XFER, srp->frq_bm, !us_xfer);
- 	reserved = (sfp->rsv_srp == srp);
- 	rq->end_io_data = srp;
-@@ -3084,6 +3112,7 @@ sg_mk_sgat(struct sg_request *srp, struct sg_fd *sfp, int minlen)
- 	gfp_t mask_kz = GFP_ATOMIC | __GFP_NOWARN;
- 	struct sg_device *sdp = sfp->parentdp;
- 	struct sg_scatter_hold *schp = &srp->sgat_h;
-+	struct page **pgp;
- 
- 	if (unlikely(minlen <= 0)) {
- 		if (minlen < 0)
-@@ -3099,32 +3128,37 @@ sg_mk_sgat(struct sg_request *srp, struct sg_fd *sfp, int minlen)
- 	if (unlikely(!schp->pages))
- 		return -ENOMEM;
- 
--	elem_sz = sfp->sgat_elem_sz;    /* power of 2 and >= PAGE_SIZE */
-+	/* elem_sz must be power of 2 and >= PAGE_SIZE */
-+	elem_sz = test_bit(SG_FRQ_FOR_MMAP, srp->frq_bm) ? (int)PAGE_SIZE : sfp->sgat_elem_sz;
- 	if (sdp && unlikely(sdp->device->host->unchecked_isa_dma))
- 		mask_ap |= GFP_DMA;
- 	o_order = get_order(elem_sz);
- 	order = o_order;
- 
- again:
--	for (k = 0, rem_sz = align_sz; rem_sz > 0 && k < mx_sgat_elems;
--	     ++k, rem_sz -= elem_sz) {
--		schp->pages[k] = alloc_pages(mask_ap, order);
--		if (!schp->pages[k])
-+	if (elem_sz * mx_sgat_elems < align_sz) {	/* misfit ? */
-+		SG_LOG(1, sfp, "%s: align_sz=%d too big\n", __func__,
-+		       align_sz);
-+		goto b4_alloc_pages;
-+	}
-+	rem_sz = align_sz;
-+	for (pgp = schp->pages; rem_sz > 0; ++pgp, rem_sz -= elem_sz) {
-+		*pgp = alloc_pages(mask_ap, order);
-+		if (unlikely(!*pgp))
- 			goto err_out;
--		SG_LOG(5, sfp, "%s: k=%d, order=%d [0x%pK ++]\n", __func__, k,
--		       order, schp->pages[k]);
-+		SG_LOG(6, sfp, "%s: elem_sz=%d [0x%pK ++]\n", __func__,
-+		       elem_sz, *pgp);
- 	}
-+	k = pgp - schp->pages;
-+	SG_LOG(((order != o_order || rem_sz > 0) ? 2 : 5), sfp,
-+	       "%s: num_sgat=%d, order=%d,%d  rem_sz=%d\n", __func__, k,
-+	       o_order, order, rem_sz);
- 	schp->page_order = order;
- 	schp->num_sgat = k;
--	SG_LOG(((order != o_order || rem_sz > 0) ? 2 : 5), sfp,
--	       "%s: num_sgat=%d, order=%d,%d\n", __func__, k, o_order, order);
--	if (unlikely(rem_sz > 0)) {	/* hit mx_sgat_elems */
--		order = 0;		/* force exit */
--		goto err_out;
--	}
- 	schp->buflen = align_sz;
- 	return 0;
- err_out:
-+	k = pgp - schp->pages;
- 	for (j = 0; j < k; ++j)
- 		__free_pages(schp->pages[j], order);
- 
-@@ -3132,6 +3166,7 @@ sg_mk_sgat(struct sg_request *srp, struct sg_fd *sfp, int minlen)
- 		elem_sz >>= 1;
- 		goto again;
- 	}
-+b4_alloc_pages:
- 	kfree(schp->pages);
- 	schp->pages = NULL;
- 	return -ENOMEM;
-@@ -3147,7 +3182,7 @@ sg_remove_sgat_helper(struct sg_fd *sfp, struct sg_scatter_hold *schp)
- 		return;
- 	for (k = 0; k < schp->num_sgat; ++k) {
- 		p = schp->pages[k];
--		SG_LOG(5, sfp, "%s: pg[%d]=0x%pK --\n", __func__, k, p);
-+		SG_LOG(6, sfp, "%s: pg[%d]=0x%pK --\n", __func__, k, p);
- 		if (unlikely(!p))
- 			continue;
- 		__free_pages(p, schp->page_order);
-@@ -3277,7 +3312,7 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
- 	}
- 	return NULL;
- good:
--	SG_LOG(6, sfp, "%s: %s%d found [srp=0x%pK]\n", __func__, "pack_id=",
-+	SG_LOG(5, sfp, "%s: %s%d found [srp=0x%pK]\n", __func__, "pack_id=",
- 	       pack_id, srp);
- 	return srp;
- }
-@@ -3473,7 +3508,7 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
- 		r_srp->parentfp = fp;
- 		SG_LOG(4, fp, "%s: mk_new_srp=0x%pK ++\n", __func__, r_srp);
- 	}
--	r_srp->frq_bm[0] = cwrp->frq_bm[0];	/* assumes <= 32 req flags */
-+	WRITE_ONCE(r_srp->frq_bm[0], cwrp->frq_bm[0]);	/* assumes <= 32 req flags */
- 	r_srp->sgat_h.dlen = dxfr_len;/* must be <= r_srp->sgat_h.buflen */
- 	r_srp->cmd_opcode = 0xff;  /* set invalid opcode (VS), 0x0 is TUR */
- fini:
-@@ -3500,7 +3535,7 @@ sg_deact_request(struct sg_fd *sfp, struct sg_request *srp)
- 		return;
- 	sbp = srp->sense_bp;
- 	srp->sense_bp = NULL;
--	srp->frq_bm[0] = 0;
-+	WRITE_ONCE(srp->frq_bm[0], 0);
- 	sg_rq_state_chg(srp, 0, SG_RS_INACTIVE, true /* force */, __func__);
- 	/* maybe orphaned req, thus never read */
- 	if (sbp)
--- 
-2.25.1
+> 2.29.2
 
