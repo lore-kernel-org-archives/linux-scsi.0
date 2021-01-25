@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1186C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:21:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C5C2C433E6
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:22:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 970CE22252
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:21:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3054E22252
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jan 2021 02:22:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727006AbhAYCUL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Jan 2021 21:20:11 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:45894 "EHLO smtp.infotech.no"
+        id S1726884AbhAYCVp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Jan 2021 21:21:45 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:45889 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726789AbhAYCAB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 24 Jan 2021 21:00:01 -0500
+        id S1726627AbhAYB7X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 24 Jan 2021 20:59:23 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id E2D6B2042A0;
-        Mon, 25 Jan 2021 02:27:13 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 1BC892042BD;
+        Mon, 25 Jan 2021 02:27:36 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id jxUNjY3m1wAC; Mon, 25 Jan 2021 02:27:10 +0100 (CET)
+        with ESMTP id 1mFrJjmePK7i; Mon, 25 Jan 2021 02:27:34 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 7FACF20426F;
-        Mon, 25 Jan 2021 02:27:01 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id 79E7320429C;
+        Mon, 25 Jan 2021 02:27:24 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        kashyap.desai@broadcom.com, Hannes Reinecke <hare@suse.com>
-Subject: [PATCH v14 06/45] sg: make open count an atomic
-Date:   Sun, 24 Jan 2021 20:26:11 -0500
-Message-Id: <20210125012650.269411-7-dgilbert@interlog.com>
+        kashyap.desai@broadcom.com
+Subject: [PATCH v14 26/45] sg: sense buffer rework
+Date:   Sun, 24 Jan 2021 20:26:31 -0500
+Message-Id: <20210125012650.269411-27-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210125012650.269411-1-dgilbert@interlog.com>
 References: <20210125012650.269411-1-dgilbert@interlog.com>
@@ -45,172 +45,272 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Convert sg_device::open_cnt into an atomic. Also rename
-sg_tablesize into the more descriptive max_sgat_elems.
+The biggest single item in the sg_request object is the sense
+buffer array which is SCSI_SENSE_BUFFERSIZE bytes long. That
+constant started out at 18 bytes 20 years ago and is 96 bytes
+now and might grow in the future. On the other hand the sense
+buffer is only used by a small number of SCSI commands: those
+that fail and those that want to return more information
+other than a SCSI status of GOOD.
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Set up a small mempool called "sg_sense" that is only used as
+required and released back to the mempool as soon as practical.
 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 44 +++++++++++++++++++++++---------------------
- 1 file changed, 23 insertions(+), 21 deletions(-)
+ drivers/scsi/sg.c | 114 +++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 88 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 087e2d7f5474..7f2a2d48d247 100644
+index 0c6d25ea33ac..042e0ecfa43f 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -162,9 +162,9 @@ struct sg_device { /* holds the state of each scsi generic device */
- 	struct mutex open_rel_lock;     /* held when in open() or release() */
- 	struct list_head sfds;
- 	rwlock_t sfd_lock;      /* protect access to sfd list */
--	int sg_tablesize;	/* adapter's max scatter-gather table size */
-+	int max_sgat_elems;	/* adapter's max sgat number of elements */
- 	u32 index;		/* device index number */
--	int open_cnt;		/* count of opens (perhaps < num(sfds) ) */
-+	atomic_t open_cnt;	/* count of opens (perhaps < num(sfds) ) */
- 	unsigned long fdev_bm[1];	/* see SG_FDEV_* defines above */
- 	struct gendisk *disk;
- 	struct cdev *cdev;
-@@ -276,11 +276,11 @@ sg_wait_open_event(struct sg_device *sdp, bool o_excl)
- 	int retval = 0;
+@@ -72,6 +72,10 @@ static char *sg_version_date = "20190606";
+  */
+ #define SG_MAX_CDB_SIZE 252
  
- 	if (o_excl) {
--		while (sdp->open_cnt > 0) {
-+		while (atomic_read(&sdp->open_cnt) > 0) {
- 			mutex_unlock(&sdp->open_rel_lock);
- 			retval = wait_event_interruptible(sdp->open_wait,
- 					(SG_IS_DETACHING(sdp) ||
--					 !sdp->open_cnt));
-+					 atomic_read(&sdp->open_cnt) == 0));
- 			mutex_lock(&sdp->open_rel_lock);
++static struct kmem_cache *sg_sense_cache;
++#define SG_MEMPOOL_MIN_NR 4
++static mempool_t *sg_sense_pool;
++
+ /* Following enum contains the states of sg_request::rq_st */
+ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
+ 	SG_RS_INACTIVE = 0,	/* request not in use (e.g. on fl) */
+@@ -174,7 +178,6 @@ struct sg_fd;
+ struct sg_request {	/* active SCSI command or inactive request */
+ 	struct sg_scatter_hold sgat_h;	/* hold buffer, perhaps scatter list */
+ 	struct sg_slice_hdr3 s_hdr3;  /* subset of sg_io_hdr */
+-	u8 sense_b[SCSI_SENSE_BUFFERSIZE];
+ 	u32 duration;		/* cmd duration in milliseconds */
+ 	u32 rq_flags;		/* hold user supplied flags */
+ 	u32 rq_idx;		/* my index within parent's srp_arr */
+@@ -187,6 +190,7 @@ struct sg_request {	/* active SCSI command or inactive request */
+ 	u8 cmd_opcode;		/* first byte of SCSI cdb */
+ 	u64 start_ns;		/* starting point of command duration calc */
+ 	unsigned long frq_bm[1];	/* see SG_FRQ_* defines above */
++	u8 *sense_bp;		/* mempool alloc-ed sense buffer, as needed */
+ 	struct sg_fd *parentfp;	/* pointer to owning fd, even when on fl */
+ 	struct request *rq;	/* released in sg_rq_end_io(), bio kept */
+ 	struct bio *bio;	/* kept until this req -->SG_RS_INACTIVE */
+@@ -969,18 +973,21 @@ sg_copy_sense(struct sg_request *srp)
+ 	    (driver_byte(srp->rq_result) & DRIVER_SENSE)) {
+ 		int sb_len = min_t(int, SCSI_SENSE_BUFFERSIZE, srp->sense_len);
+ 		int mx_sb_len = srp->s_hdr3.mx_sb_len;
++		u8 *sbp = srp->sense_bp;
+ 		void __user *up = srp->s_hdr3.sbp;
  
- 			if (retval) /* -ERESTARTSYS */
-@@ -328,7 +328,7 @@ sg_open(struct inode *inode, struct file *filp)
- 	o_excl = !!(op_flags & O_EXCL);
- 	if (o_excl && ((op_flags & O_ACCMODE) == O_RDONLY))
- 		return -EPERM; /* Can't lock it with read only access */
--	sdp = sg_get_dev(min_dev);
-+	sdp = sg_get_dev(min_dev);	/* increments sdp->d_ref */
- 	if (IS_ERR(sdp))
- 		return PTR_ERR(sdp);
- 
-@@ -355,7 +355,7 @@ sg_open(struct inode *inode, struct file *filp)
- 	mutex_lock(&sdp->open_rel_lock);
- 	if (op_flags & O_NONBLOCK) {
- 		if (o_excl) {
--			if (sdp->open_cnt > 0) {
-+			if (atomic_read(&sdp->open_cnt) > 0) {
- 				retval = -EBUSY;
- 				goto error_mutex_locked;
- 			}
-@@ -375,27 +375,29 @@ sg_open(struct inode *inode, struct file *filp)
- 	if (o_excl)
- 		set_bit(SG_FDEV_EXCLUDE, sdp->fdev_bm);
- 
--	if (sdp->open_cnt < 1) {  /* no existing opens */
-+	if (atomic_read(&sdp->open_cnt) < 1) {  /* no existing opens */
- 		clear_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm);
- 		q = sdp->device->request_queue;
--		sdp->sg_tablesize = queue_max_segments(q);
-+		sdp->max_sgat_elems = queue_max_segments(q);
- 	}
--	sfp = sg_add_sfp(sdp);
-+	sfp = sg_add_sfp(sdp);		/* increments sdp->d_ref */
- 	if (IS_ERR(sfp)) {
- 		retval = PTR_ERR(sfp);
- 		goto out_undo;
- 	}
- 
- 	filp->private_data = sfp;
--	sdp->open_cnt++;
-+	atomic_inc(&sdp->open_cnt);
- 	mutex_unlock(&sdp->open_rel_lock);
- 	SG_LOG(3, sfp, "%s: minor=%d, op_flags=0x%x; %s count prior=%d%s\n",
--	       __func__, min_dev, op_flags, "device open", sdp->open_cnt,
-+	       __func__, min_dev, op_flags, "device open",
-+	       atomic_read(&sdp->open_cnt),
- 	       ((op_flags & O_NONBLOCK) ? " O_NONBLOCK" : ""));
- 
- 	retval = 0;
- sg_put:
- 	kref_put(&sdp->d_ref, sg_device_destroy);
-+	/* if success, sdp->d_ref is incremented twice, decremented once */
- 	return retval;
- 
- out_undo:
-@@ -423,20 +425,20 @@ sg_release(struct inode *inode, struct file *filp)
- 	sfp = filp->private_data;
- 	sdp = sfp->parentdp;
- 	SG_LOG(3, sfp, "%s: device open count prior=%d\n", __func__,
--	       sdp->open_cnt);
-+	       atomic_read(&sdp->open_cnt));
- 	if (!sdp)
- 		return -ENXIO;
- 
- 	mutex_lock(&sdp->open_rel_lock);
- 	scsi_autopm_put_device(sdp->device);
- 	kref_put(&sfp->f_ref, sg_remove_sfp);
--	sdp->open_cnt--;
-+	atomic_dec(&sdp->open_cnt);
- 
- 	/* possibly many open()s waiting on exclude clearing, start many;
- 	 * only open(O_EXCL)s wait on 0==open_cnt so only start one */
- 	if (test_and_clear_bit(SG_FDEV_EXCLUDE, sdp->fdev_bm))
- 		wake_up_interruptible_all(&sdp->open_wait);
--	else if (sdp->open_cnt == 0)
-+	else if (atomic_read(&sdp->open_cnt) == 0)
- 		wake_up_interruptible(&sdp->open_wait);
- 	mutex_unlock(&sdp->open_rel_lock);
- 	return 0;
-@@ -1110,7 +1112,7 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
- 		read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 		return put_user(val, ip);
- 	case SG_GET_SG_TABLESIZE:
--		return put_user(sdp->sg_tablesize, ip);
-+		return put_user(sdp->max_sgat_elems, ip);
- 	case SG_SET_RESERVED_SIZE:
- 		result = get_user(val, ip);
- 		if (result)
-@@ -1589,7 +1591,7 @@ sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
- 	init_waitqueue_head(&sdp->open_wait);
- 	clear_bit(SG_FDEV_DETACHING, sdp->fdev_bm);
- 	rwlock_init(&sdp->sfd_lock);
--	sdp->sg_tablesize = queue_max_segments(q);
-+	sdp->max_sgat_elems = queue_max_segments(q);
- 	sdp->index = k;
- 	kref_init(&sdp->d_ref);
- 	error = 0;
-@@ -1985,7 +1987,7 @@ sg_build_indirect(struct sg_scatter_hold *schp, struct sg_fd *sfp,
- 		  int buff_size)
- {
- 	int ret_sz = 0, i, k, rem_sz, num, mx_sc_elems;
--	int sg_tablesize = sfp->parentdp->sg_tablesize;
-+	int max_sgat_elems = sfp->parentdp->max_sgat_elems;
- 	int blk_size = buff_size, order;
- 	gfp_t gfp_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN | __GFP_ZERO;
- 	struct sg_device *sdp = sfp->parentdp;
-@@ -2000,7 +2002,7 @@ sg_build_indirect(struct sg_scatter_hold *schp, struct sg_fd *sfp,
- 	       blk_size);
- 
- 	/* N.B. ret_sz carried into this block ... */
--	mx_sc_elems = sg_build_sgat(schp, sfp, sg_tablesize);
-+	mx_sc_elems = sg_build_sgat(schp, sfp, max_sgat_elems);
- 	if (mx_sc_elems < 0)
- 		return mx_sc_elems;	/* most likely -ENOMEM */
- 
-@@ -2688,9 +2690,9 @@ sg_proc_seq_show_debug(struct seq_file *s, void *v)
- 				   scsidp->lun,
- 				   scsidp->host->hostt->emulated);
+-		if (up && mx_sb_len > 0) {
++		srp->sense_bp = NULL;
++		if (up && mx_sb_len > 0 && sbp) {
+ 			sb_len = min_t(int, mx_sb_len, sb_len);
+ 			/* Additional sense length field */
+-			sb_len_ret = 8 + (int)srp->sense_b[7];
++			sb_len_ret = 8 + (int)sbp[7];
+ 			sb_len_ret = min_t(int, sb_len_ret, sb_len);
+-			if (copy_to_user(up, srp->sense_b, sb_len_ret))
++			if (copy_to_user(up, sbp, sb_len_ret))
+ 				sb_len_ret = -EFAULT;
+ 		} else {
+ 			sb_len_ret = 0;
  		}
--		seq_printf(s, " sg_tablesize=%d excl=%d open_cnt=%d\n",
--			   sdp->sg_tablesize, SG_HAVE_EXCLUDE(sdp),
--			   sdp->open_cnt);
-+		seq_printf(s, " max_sgat_elems=%d excl=%d open_cnt=%d\n",
-+			   sdp->max_sgat_elems, SG_HAVE_EXCLUDE(sdp),
-+			   atomic_read(&sdp->open_cnt));
- 		sg_proc_debug_helper(s, sdp);
++		mempool_free(sbp, sg_sense_pool);
  	}
- 	read_unlock(&sdp->sfd_lock);
+ 	return sb_len_ret;
+ }
+@@ -1071,8 +1078,14 @@ sg_read_v1v2(void __user *buf, int count, struct sg_fd *sfp,
+ 	h2p->driver_status = driver_byte(rq_result);
+ 	if ((CHECK_CONDITION & status_byte(rq_result)) ||
+ 	    (DRIVER_SENSE & driver_byte(rq_result))) {
+-		memcpy(h2p->sense_buffer, srp->sense_b,
+-		       sizeof(h2p->sense_buffer));
++		if (srp->sense_bp) {
++			u8 *sbp = srp->sense_bp;
++
++			srp->sense_bp = NULL;
++			memcpy(h2p->sense_buffer, sbp,
++			       sizeof(h2p->sense_buffer));
++			mempool_free(sbp, sg_sense_pool);
++		}
+ 	}
+ 	switch (host_byte(rq_result)) {
+ 	/*
+@@ -1107,18 +1120,22 @@ sg_read_v1v2(void __user *buf, int count, struct sg_fd *sfp,
+ 
+ 	/* Now copy the result back to the user buffer.  */
+ 	if (count >= SZ_SG_HEADER) {
+-		if (copy_to_user(buf, h2p, SZ_SG_HEADER))
+-			return -EFAULT;
++		if (copy_to_user(buf, h2p, SZ_SG_HEADER)) {
++			res = -EFAULT;
++			goto fini;
++		}
+ 		buf += SZ_SG_HEADER;
+ 		if (count > h2p->reply_len)
+ 			count = h2p->reply_len;
+ 		if (count > SZ_SG_HEADER) {
+-			if (sg_read_append(srp, buf, count - SZ_SG_HEADER))
+-				return -EFAULT;
++			res = sg_read_append(srp, buf, count - SZ_SG_HEADER);
++			if (res)
++				goto fini;
+ 		}
+ 	} else {
+ 		res = (h2p->result == 0) ? 0 : -EIO;
+ 	}
++fini:
+ 	atomic_set(&srp->rq_st, SG_RS_RCV_DONE);
+ 	sg_finish_scsi_blk_rq(srp);
+ 	sg_deact_request(sfp, srp);
+@@ -2105,8 +2122,25 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 	srp->duration = sg_calc_rq_dur(srp);
+ 	if (unlikely((srp->rq_result & SG_ML_RESULT_MSK) && slen > 0))
+ 		sg_check_sense(sdp, srp, slen);
+-	if (slen > 0)
+-		memcpy(srp->sense_b, scsi_rp->sense, slen);
++	if (slen > 0) {
++		if (scsi_rp->sense) {
++			srp->sense_bp = mempool_alloc(sg_sense_pool,
++						      GFP_ATOMIC);
++			if (srp->sense_bp) {
++				memcpy(srp->sense_bp, scsi_rp->sense, slen);
++				if (slen < SCSI_SENSE_BUFFERSIZE)
++					memset(srp->sense_bp + slen, 0,
++					       SCSI_SENSE_BUFFERSIZE - slen);
++			} else {
++				slen = 0;
++				pr_warn("%s: sense but can't alloc buffer\n",
++					__func__);
++			}
++		} else {
++			slen = 0;
++			pr_warn("%s: sense_len>0 but sense==NULL\n", __func__);
++		}
++	}
+ 	srp->sense_len = slen;
+ 	if (unlikely(test_bit(SG_FRQ_IS_ORPHAN, srp->frq_bm))) {
+ 		if (test_bit(SG_FFD_KEEP_ORPHAN, sfp->ffd_bm)) {
+@@ -2395,13 +2429,30 @@ init_sg(void)
+ 	if (rc)
+ 		return rc;
+ 
++	sg_sense_cache = kmem_cache_create_usercopy
++				("sg_sense", SCSI_SENSE_BUFFERSIZE, 0,
++				 SLAB_HWCACHE_ALIGN, 0,
++				 SCSI_SENSE_BUFFERSIZE, NULL);
++	if (!sg_sense_cache) {
++		pr_err("sg: can't init sense cache\n");
++		rc = -ENOMEM;
++		goto err_out_unreg;
++	}
++	sg_sense_pool = mempool_create_slab_pool(SG_MEMPOOL_MIN_NR,
++						 sg_sense_cache);
++	if (!sg_sense_pool) {
++		pr_err("sg: can't init sense pool\n");
++		rc = -ENOMEM;
++		goto err_out_cache;
++	}
++
+ 	pr_info("Registered %s[char major=0x%x], version: %s, date: %s\n",
+ 		"sg device ", SCSI_GENERIC_MAJOR, SG_VERSION_STR,
+ 		sg_version_date);
+ 	sg_sysfs_class = class_create(THIS_MODULE, "scsi_generic");
+ 	if (IS_ERR(sg_sysfs_class)) {
+ 		rc = PTR_ERR(sg_sysfs_class);
+-		goto err_out_unreg;
++		goto err_out_pool;
+ 	}
+ 	sg_sysfs_valid = true;
+ 	rc = scsi_register_interface(&sg_interface);
+@@ -2411,6 +2462,10 @@ init_sg(void)
+ 	}
+ 	class_destroy(sg_sysfs_class);
+ 
++err_out_pool:
++	mempool_destroy(sg_sense_pool);
++err_out_cache:
++	kmem_cache_destroy(sg_sense_cache);
+ err_out_unreg:
+ 	unregister_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0), SG_MAX_DEVS);
+ 	return rc;
+@@ -2430,6 +2485,8 @@ exit_sg(void)
+ 	if (IS_ENABLED(CONFIG_SCSI_PROC_FS))
+ 		remove_proc_subtree("scsi/sg", NULL);
+ 	scsi_unregister_interface(&sg_interface);
++	mempool_destroy(sg_sense_pool);
++	kmem_cache_destroy(sg_sense_cache);
+ 	class_destroy(sg_sysfs_class);
+ 	sg_sysfs_valid = false;
+ 	unregister_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0),
+@@ -2956,6 +3013,7 @@ sg_setup_req(struct sg_fd *sfp, int dxfr_len, struct sg_comm_wr_t *cwrp)
+ 	int num_inactive = 0;
+ 	unsigned long idx, last_idx, iflags;
+ 	struct sg_request *r_srp = NULL;	/* request to return */
++	struct sg_request *last_srp = NULL;
+ 	struct xarray *xafp = &sfp->srp_arr;
+ 	__maybe_unused const char *cp;
+ 
+@@ -2972,19 +3030,17 @@ sg_setup_req(struct sg_fd *sfp, int dxfr_len, struct sg_comm_wr_t *cwrp)
+ 			++num_inactive;
+ 			if (dxfr_len < SG_DEF_SECTOR_SZ) {
+ 				last_idx = idx;
++				last_srp = r_srp;
+ 				continue;
+ 			}
+ 		}
+ 		/* If dxfr_len is small, use last inactive request */
+-		if (last_idx != ~0UL) {
+-			idx = last_idx;
+-			r_srp = xa_load(xafp, idx);
+-			if (!r_srp)
+-				goto start_again;
++		if (last_idx != ~0UL && last_srp) {
++			r_srp = last_srp;
+ 			if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY,
+ 					    false, __func__))
+ 				goto start_again; /* gone to another thread */
+-			cp = "toward back of srp_arr";
++			cp = "toward end of srp_arr";
+ 			found = true;
+ 		}
+ 	} else {
+@@ -3069,15 +3125,16 @@ sg_setup_req(struct sg_fd *sfp, int dxfr_len, struct sg_comm_wr_t *cwrp)
+ static void
+ sg_deact_request(struct sg_fd *sfp, struct sg_request *srp)
+ {
+-	unsigned long iflags;
++	u8 *sbp;
+ 
+ 	if (WARN_ON(!sfp || !srp))
+ 		return;
+-	atomic_set(&srp->rq_st, SG_RS_INACTIVE);
+-	xa_lock_irqsave(&sfp->srp_arr, iflags);
+-	__xa_set_mark(&sfp->srp_arr, srp->rq_idx, SG_XA_RQ_INACTIVE);
+-	__xa_clear_mark(&sfp->srp_arr, srp->rq_idx, SG_XA_RQ_AWAIT);
+-	xa_unlock_irqrestore(&sfp->srp_arr, iflags);
++	sbp = srp->sense_bp;
++	srp->sense_bp = NULL;
++	sg_rq_state_chg(srp, 0, SG_RS_INACTIVE, true /* force */, __func__);
++	/* maybe orphaned req, thus never read */
++	if (sbp)
++		mempool_free(sbp, sg_sense_pool);
+ }
+ 
+ /* Returns pointer to sg_fd object or negated errno twisted by ERR_PTR */
+@@ -3226,7 +3283,12 @@ sg_remove_sfp_usercontext(struct work_struct *work)
+ 			continue;
+ 		if (!xa_get_mark(xafp, srp->rq_idx, SG_XA_RQ_INACTIVE))
+ 			sg_finish_scsi_blk_rq(srp);
+-		sg_remove_sgat(srp);
++		if (srp->sgat_h.buflen > 0)
++			sg_remove_sgat(srp);
++		if (srp->sense_bp) {
++			mempool_free(srp->sense_bp, sg_sense_pool);
++			srp->sense_bp = NULL;
++		}
+ 		xa_lock_irqsave(xafp, iflags);
+ 		e_srp = __xa_erase(xafp, srp->rq_idx);
+ 		xa_unlock_irqrestore(xafp, iflags);
 -- 
 2.25.1
 
