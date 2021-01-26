@@ -2,634 +2,166 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90702C4361A
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:30:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 140B7C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 06:48:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7684F22B51
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 05:30:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCE7F22B51
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 06:48:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387635AbhAZFaY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:30:24 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:48772 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731794AbhAYTZJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Jan 2021 14:25:09 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 5107D2042B9;
-        Mon, 25 Jan 2021 20:12:14 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id xmtQ76tUYVWe; Mon, 25 Jan 2021 20:12:11 +0100 (CET)
-Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 2A13A2042A2;
-        Mon, 25 Jan 2021 20:12:10 +0100 (CET)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        kashyap.desai@broadcom.com
-Subject: [PATCH v15 35/45] sg: first debugfs support
-Date:   Mon, 25 Jan 2021 14:11:12 -0500
-Message-Id: <20210125191122.345858-36-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210125191122.345858-1-dgilbert@interlog.com>
-References: <20210125191122.345858-1-dgilbert@interlog.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S2389076AbhAZGsA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 01:48:00 -0500
+Received: from mailout3.samsung.com ([203.254.224.33]:16281 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389162AbhAZGqF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2021 01:46:05 -0500
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210126064508epoutp038320b93eaa3fd39de870d146ecf10368~dtTt9xJvR2674426744epoutp03Z
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Jan 2021 06:45:08 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210126064508epoutp038320b93eaa3fd39de870d146ecf10368~dtTt9xJvR2674426744epoutp03Z
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1611643508;
+        bh=DhkGcpxq5DhmmGMg+sWb7jMNeb6KhzxfyXQqpuL2qjk=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=JR66LToEFN0u3J2rkYEH/XLvlAZLK6C/aMIDGcX8RtcWQ2Cc25QWl3cFDtJxdffHO
+         5NsplHOiYw7MTXSyKJXLB3fwsREbLHXeXkzf6aqH78Qi9EdYcNlCnndpvYi3TROeyy
+         R4ZpK+C9WFJJphO1KP2/XOdTehujlLNSRyE+FtjI=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20210126064507epcas2p44001e4853707cf8f2d1f178b3d48d23b~dtTs_Ek5f1137211372epcas2p4t;
+        Tue, 26 Jan 2021 06:45:07 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.40.188]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4DPy0K01Pvz4x9Ps; Tue, 26 Jan
+        2021 06:45:05 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        79.99.56312.07ABF006; Tue, 26 Jan 2021 15:45:04 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20210126064504epcas2p30f5c88e1aa8f24b8d597d73ec4abeb6a~dtTp-bFHr1451914519epcas2p3O;
+        Tue, 26 Jan 2021 06:45:04 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20210126064504epsmtrp189284920041494c0543b1560251344e6~dtTp9uWwQ0312103121epsmtrp13;
+        Tue, 26 Jan 2021 06:45:04 +0000 (GMT)
+X-AuditID: b6c32a46-1efff7000000dbf8-26-600fba70da96
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        63.09.13470.07ABF006; Tue, 26 Jan 2021 15:45:04 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20210126064504epsmtip2a458174850482805adff48ace28ba492~dtTpswwND1124411244epsmtip2F;
+        Tue, 26 Jan 2021 06:45:04 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
+        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v8 0/2] introduce the way to get cmd completion info
+Date:   Tue, 26 Jan 2021 15:33:33 +0900
+Message-Id: <cover.1611642467.git.kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpnk+LIzCtJLcpLzFFi42LZdljTTLdgF3+CwazXFhYP5m1js9jbdoLd
+        4uXPq2wWBx92slh8XfqM1WLah5/MFp/WL2O1+PV3PbvF6sUPWCwW3djGZHFzy1EWi+7rO9gs
+        lh//x2TRdfcGo8XSf29ZHPg9Ll/x9rjc18vkMWHRAUaP7+s72Dw+Pr3F4tG3ZRWjx+dNch7t
+        B7qZAjiicmwyUhNTUosUUvOS81My89JtlbyD453jTc0MDHUNLS3MlRTyEnNTbZVcfAJ03TJz
+        gI5XUihLzCkFCgUkFhcr6dvZFOWXlqQqZOQXl9gqpRak5BQYGhboFSfmFpfmpesl5+daGRoY
+        GJkCVSbkZGzvbGYq+MZdcf/cTpYGxk2cXYycHBICJhKt964zdzFycQgJ7GCUeDP9FhOE84lR
+        YuGuXUwgVUIC3xglbp5Ogen4t+E5C0TRXkaJtvtn2SCcH4wSyxq/MYNUsQloSjy9ORVslIjA
+        GSaJa61nWUESzALqErsmnAAbKyzgInG69QBYA4uAqsSnpneMIDavgIXE5jc9zBDr5CRunusE
+        O1BCoJFDYubn1ywQCReJ5i19bBC2sMSr41vYIWwpiZf9bVB2vcS+qQ2sEM09jBJP9/1jhEgY
+        S8x61g5kcwBdpCmxfpc+iCkhoCxx5BYLxJ18Eh2H/7JDhHklOtqEIBqVJX5Nmgw1RFJi5s07
+        UJs8JG69+cwOCa1YiU3PdrFPYJSdhTB/ASPjKkax1ILi3PTUYqMCI+RY2sQITpFabjsYp7z9
+        oHeIkYmD8RCjBAezkgjvbj2eBCHelMTKqtSi/Pii0pzU4kOMpsDwmsgsJZqcD0zSeSXxhqZG
+        ZmYGlqYWpmZGFkrivMUGD+KFBNITS1KzU1MLUotg+pg4OKUamCoMUzcuFrmxIrb2sYVQk84E
+        3lf/9GYxWj5fxlF2+WypD49Ct73nxsdPOa7d9k6b3C7SvO9qziXTFTdzw/4y6XDJnjA5k/RZ
+        wyZT8cXBk/W95woqsn98Wf2Y98VltRWca2XahQVVry+eL/xmT5r3h32+3xqeLTvH+H/LnZC8
+        rbx1r2vOP9P/FnPrUfu3WYd8ud8d3V95iWmKX9vFm7zRv5bqMVl4cj7/KpQ8Z06KYl//gn+T
+        Ii78CFidzGLi11zjbC7f6bnLw7nzYc+bC2ya2xacb/nNc91P9MGaqJ1LbhrtPWk31/exsG3F
+        hyelExV8OUqW69lWHlV9MmvT/+WOpr8+SjWvKPsuu+R07VaZKQeVWIozEg21mIuKEwHy9E+v
+        GgQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGLMWRmVeSWpSXmKPExsWy7bCSvG7BLv4Eg43LRSwezNvGZrG37QS7
+        xcufV9ksDj7sZLH4uvQZq8W0Dz+ZLT6tX8Zq8evvenaL1YsfsFgsurGNyeLmlqMsFt3Xd7BZ
+        LD/+j8mi6+4NRoul/96yOPB7XL7i7XG5r5fJY8KiA4we39d3sHl8fHqLxaNvyypGj8+b5Dza
+        D3QzBXBEcdmkpOZklqUW6dslcGVs72xmKvjGXXH/3E6WBsZNnF2MnBwSAiYS/zY8Z+li5OIQ
+        EtjNKHFp1WU2iISkxImdzxkhbGGJ+y1HWCGKvjFKXJtyG6yITUBT4unNqUwgCRGBe0wSlybM
+        ZQZJMAuoS+yacIIJxBYWcJE43XoALM4ioCrxqekd2FReAQuJzW96mCE2yEncPNfJPIGRZwEj
+        wypGydSC4tz03GLDAsO81HK94sTc4tK8dL3k/NxNjOCg1dLcwbh91Qe9Q4xMHIyHGCU4mJVE
+        eHfr8SQI8aYkVlalFuXHF5XmpBYfYpTmYFES573QdTJeSCA9sSQ1OzW1ILUIJsvEwSnVwJSy
+        8FGMWcKiglP1Uw0jjU14lHN4bI7HCH0QPCP7PHbXeWffstxu36uP1st8nR9+Mk36go7Ks/Tm
+        1Vu3nHm9sDTHv4VP77zQjbPbbq89n2Z+NuKdlOHSvSH1WYlhUg6TryqUpTE7T3Vk4NJvfHDg
+        94W7QRzuzUFbj2wsWu/YfPq8zjvRLR/0/F0vzz7mpMH9dWFEV3SQ63ypG6zf7kg27mEtTvSa
+        VWnlvfGdDpPIHct1umw7Js0svrSx8d/Zn4pvbA9skkyvYbwduuhC2LdI2919Z6+8c/23SPT9
+        2rPSnCdDZy28Up8cGx3mN+vju+OddU9POCpE5R3+s+89U1vxssczf227Lrvn2KssocDCTHMl
+        luKMREMt5qLiRABQ/LQnyQIAAA==
+X-CMS-MailID: 20210126064504epcas2p30f5c88e1aa8f24b8d597d73ec4abeb6a
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210126064504epcas2p30f5c88e1aa8f24b8d597d73ec4abeb6a
+References: <CGME20210126064504epcas2p30f5c88e1aa8f24b8d597d73ec4abeb6a@epcas2p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Duplicate the semantics of 'cat /proc/scsi/sg/debug' on
-'cat /sys/kernel/debug/scsi_generic/snapshot'. Make code
-that generates the snapshot conditional on either
-CONFIG_SCSI_PROC_FS or CONFIG_DEBUG_FS being defined.
+v7 -> v8
+change a way to get a range of cmd history more intuitively
+change the header name that is newly added
+fix some typos
 
-Also add snapshot_devs which can be written with a list of
-comma separated integers corresponding to sg (minor) device
-numbers. That file can also be read showing that list. Minus
-one (or any negative number) means accept all when in the
-first position (the default) or means the end of the list
-in a later position. When a subsequent
-cat /sys/kernel/debug/scsi_generic/snapshot
-is performed, only sg device numbers matching an element
-in that list are output.
+v6 -> v7
+migrate this to 5.10.
+shrink the patch set, two patches.
+merge a fix for build errors
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/sg.c | 412 +++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 332 insertions(+), 80 deletions(-)
+v5 -> v6
+replace put_aligned with get_unaligned_be32 to set lba and sct
+fix null pointer access symptom
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index d992c71a98ca..a3c948798d75 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -43,6 +43,7 @@ static char *sg_version_date = "20190606";
- #include <linux/cred.h>			/* for sg_check_file_access() */
- #include <linux/proc_fs.h>
- #include <linux/xarray.h>
-+#include <linux/debugfs.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_eh.h>
-@@ -67,6 +68,10 @@ static char *sg_version_date = "20190606";
- #endif
- #endif
- 
-+#if IS_ENABLED(CONFIG_SCSI_PROC_FS) || IS_ENABLED(CONFIG_DEBUG_FS)
-+#define SG_PROC_OR_DEBUG_FS 1
-+#endif
-+
- /* SG_MAX_CDB_SIZE should be 260 (spc4r37 section 3.1.30) however the type
-  * of sg_io_hdr::cmd_len can only represent 255. All SCSI commands greater
-  * than 16 bytes are "variable length" whose length is a multiple of 4, so:
-@@ -269,6 +274,8 @@ struct sg_comm_wr_t {  /* arguments to sg_common_write() */
- static void sg_rq_end_io(struct request *rq, blk_status_t status);
- /* Declarations of other static functions used before they are defined */
- static int sg_proc_init(void);
-+static void sg_dfs_init(void);
-+static void sg_dfs_exit(void);
- static int sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp,
- 			int dxfer_dir);
- static void sg_finish_scsi_blk_rq(struct sg_request *srp);
-@@ -2748,22 +2755,6 @@ sg_remove_device(struct device *cl_dev, struct class_interface *cl_intf)
- 	kref_put(&sdp->d_ref, sg_device_destroy);
- }
- 
--module_param_named(scatter_elem_sz, scatter_elem_sz, int, S_IRUGO | S_IWUSR);
--module_param_named(def_reserved_size, def_reserved_size, int,
--		   S_IRUGO | S_IWUSR);
--module_param_named(allow_dio, sg_allow_dio, int, S_IRUGO | S_IWUSR);
--
--MODULE_AUTHOR("Douglas Gilbert");
--MODULE_DESCRIPTION("SCSI generic (sg) driver");
--MODULE_LICENSE("GPL");
--MODULE_VERSION(SG_VERSION_STR);
--MODULE_ALIAS_CHARDEV_MAJOR(SCSI_GENERIC_MAJOR);
--
--MODULE_PARM_DESC(scatter_elem_sz, "scatter gather element "
--                "size (default: max(SG_SCATTER_SZ, PAGE_SIZE))");
--MODULE_PARM_DESC(def_reserved_size, "size of buffer reserved for each fd");
--MODULE_PARM_DESC(allow_dio, "allow direct I/O (default: 0 (disallow))");
--
- static int __init
- init_sg(void)
- {
-@@ -2813,6 +2804,7 @@ init_sg(void)
- 	rc = scsi_register_interface(&sg_interface);
- 	if (rc == 0) {
- 		sg_proc_init();
-+		sg_dfs_init();
- 		return 0;
- 	}
- 	class_destroy(sg_sysfs_class);
-@@ -2826,17 +2818,10 @@ init_sg(void)
- 	return rc;
- }
- 
--#if !IS_ENABLED(CONFIG_SCSI_PROC_FS)
--static int
--sg_proc_init(void)
--{
--	return 0;
--}
--#endif
--
- static void __exit
- exit_sg(void)
- {
-+	sg_dfs_exit();
- 	if (IS_ENABLED(CONFIG_SCSI_PROC_FS))
- 		remove_proc_subtree("scsi/sg", NULL);
- 	scsi_unregister_interface(&sg_interface);
-@@ -3279,7 +3264,7 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
- 	/* here if one of above loops does _not_ find a match */
- 	if (IS_ENABLED(CONFIG_SCSI_PROC_FS)) {
- 		if (search_for_1) {
--			const char *cptp = "pack_id=";
-+			__maybe_unused const char *cptp = "pack_id=";
- 
- 			if (is_bad_st)
- 				SG_LOG(1, sfp, "%s: %s%d wrong state: %s\n",
-@@ -3718,17 +3703,6 @@ sg_remove_sfp(struct kref *kref)
- 	schedule_work(&sfp->ew_fd.work);
- }
- 
--static int
--sg_idr_max_id(int id, void *p, void *data)
--		__must_hold(sg_index_lock)
--{
--	int *k = data;
--
--	if (*k < id)
--		*k = id;
--	return 0;
--}
--
- /* must be called with sg_index_lock held */
- static struct sg_device *
- sg_lookup_dev(int dev)
-@@ -3758,7 +3732,7 @@ sg_get_dev(int dev)
- 	return sdp;
- }
- 
--#if IS_ENABLED(CONFIG_SCSI_PROC_FS)
-+#if IS_ENABLED(SG_PROC_OR_DEBUG_FS)
- static const char *
- sg_rq_st_str(enum sg_rq_state rq_st, bool long_str)
- {
-@@ -3787,7 +3761,35 @@ sg_rq_st_str(enum sg_rq_state rq_st, bool long_str)
- }
- #endif
- 
--#if IS_ENABLED(CONFIG_SCSI_PROC_FS)     /* long, almost to end of file */
-+#if IS_ENABLED(SG_PROC_OR_DEBUG_FS)
-+
-+#define SG_SNAPSHOT_DEV_MAX 4
-+
-+/*
-+ * For snapshot_devs array, -1 or two adjacent the same is terminator.
-+ * -1 in first element of first two elements the same implies all.
-+ */
-+static struct sg_dfs_context_t {
-+	struct dentry *dfs_rootdir;
-+	int snapshot_devs[SG_SNAPSHOT_DEV_MAX];
-+} sg_dfs_cxt;
-+
-+struct sg_proc_deviter {
-+	loff_t	index;
-+	size_t	max;
-+	int fd_index;
-+};
-+
-+static int
-+sg_idr_max_id(int id, void *p, void *data)
-+		__must_hold(sg_index_lock)
-+{
-+	int *k = data;
-+
-+	if (*k < id)
-+		*k = id;
-+	return 0;
-+}
- 
- static int
- sg_last_dev(void)
-@@ -3801,6 +3803,41 @@ sg_last_dev(void)
- 	return k + 1;		/* origin 1 */
- }
- 
-+static void *
-+dev_seq_start(struct seq_file *s, loff_t *pos)
-+{
-+	struct sg_proc_deviter *it = kzalloc(sizeof(*it), GFP_KERNEL);
-+
-+	s->private = it;
-+	if (!it)
-+		return NULL;
-+
-+	it->index = *pos;
-+	it->max = sg_last_dev();
-+	if (it->index >= it->max)
-+		return NULL;
-+	return it;
-+}
-+
-+static void *
-+dev_seq_next(struct seq_file *s, void *v, loff_t *pos)
-+{
-+	struct sg_proc_deviter *it = s->private;
-+
-+	*pos = ++it->index;
-+	return (it->index < it->max) ? it : NULL;
-+}
-+
-+static void
-+dev_seq_stop(struct seq_file *s, void *v)
-+{
-+	kfree(s->private);
-+}
-+
-+#endif			/* SG_PROC_OR_DEBUG_FS */
-+
-+#if IS_ENABLED(CONFIG_SCSI_PROC_FS)     /* around 100 lines */
-+
- static int
- sg_proc_seq_show_int(struct seq_file *s, void *v)
- {
-@@ -3814,7 +3851,7 @@ sg_proc_single_open_adio(struct inode *inode, struct file *filp)
- 	return single_open(filp, sg_proc_seq_show_int, &sg_allow_dio);
- }
- 
--static ssize_t 
-+static ssize_t
- sg_proc_write_adio(struct file *filp, const char __user *buffer,
- 		   size_t count, loff_t *off)
- {
-@@ -3836,7 +3873,7 @@ sg_proc_single_open_dressz(struct inode *inode, struct file *filp)
- 	return single_open(filp, sg_proc_seq_show_int, &sg_big_buff);
- }
- 
--static ssize_t 
-+static ssize_t
- sg_proc_write_dressz(struct file *filp, const char __user *buffer,
- 		     size_t count, loff_t *off)
- {
-@@ -3871,43 +3908,6 @@ sg_proc_seq_show_devhdr(struct seq_file *s, void *v)
- 	return 0;
- }
- 
--struct sg_proc_deviter {
--	loff_t	index;
--	size_t	max;
--	int fd_index;
--};
--
--static void *
--dev_seq_start(struct seq_file *s, loff_t *pos)
--{
--	struct sg_proc_deviter *it = kzalloc(sizeof(*it), GFP_KERNEL);
--
--	s->private = it;
--	if (! it)
--		return NULL;
--
--	it->index = *pos;
--	it->max = sg_last_dev();
--	if (it->index >= it->max)
--		return NULL;
--	return it;
--}
--
--static void *
--dev_seq_next(struct seq_file *s, void *v, loff_t *pos)
--{
--	struct sg_proc_deviter *it = s->private;
--
--	*pos = ++it->index;
--	return (it->index < it->max) ? it : NULL;
--}
--
--static void
--dev_seq_stop(struct seq_file *s, void *v)
--{
--	kfree(s->private);
--}
--
- static int
- sg_proc_seq_show_dev(struct seq_file *s, void *v)
- {
-@@ -3954,6 +3954,10 @@ sg_proc_seq_show_devstrs(struct seq_file *s, void *v)
- 	return 0;
- }
- 
-+#endif		/* CONFIG_SCSI_PROC_FS (~100 lines back) */
-+
-+#if IS_ENABLED(SG_PROC_OR_DEBUG_FS)
-+
- /* Writes debug info for one sg_request in obp buffer */
- static int
- sg_proc_debug_sreq(struct sg_request *srp, int to, char *obp, int len)
-@@ -4096,18 +4100,20 @@ sg_proc_seq_show_debug(struct seq_file *s, void *v)
- 	bool found = false;
- 	bool trunc = false;
- 	const int bp_len = SG_PROC_DEBUG_SZ;
-+	int j, sd_n;
- 	int n = 0;
- 	int k = 0;
- 	unsigned long iflags;
- 	struct sg_proc_deviter *it = (struct sg_proc_deviter *)v;
- 	struct sg_device *sdp;
- 	int *fdi_p;
-+	const int *dev_arr = sg_dfs_cxt.snapshot_devs;
- 	char *bp;
- 	char *disk_name;
- 	char b1[128];
- 
- 	b1[0] = '\0';
--	if (it && (0 == it->index))
-+	if (it && it->index == 0)
- 		seq_printf(s, "max_active_device=%d  def_reserved_size=%d\n",
- 			   (int)it->max, def_reserved_size);
- 	fdi_p = it ? &it->fd_index : &k;
-@@ -4119,8 +4125,31 @@ sg_proc_seq_show_debug(struct seq_file *s, void *v)
- 	}
- 	read_lock_irqsave(&sg_index_lock, iflags);
- 	sdp = it ? sg_lookup_dev(it->index) : NULL;
--	if (NULL == sdp)
-+	if (!sdp)
- 		goto skip;
-+	sd_n = dev_arr[0];
-+	if (sd_n != -1 && sd_n != sdp->index && sd_n != dev_arr[1]) {
-+		for (j = 1; j < SG_SNAPSHOT_DEV_MAX; ) {
-+			sd_n = dev_arr[j];
-+			if (sd_n < 0)
-+				goto skip;
-+			++j;
-+			if (j >= SG_SNAPSHOT_DEV_MAX) {
-+				if (sd_n == sdp->index) {
-+					found = true;
-+					break;
-+				}
-+			} else if (sd_n == dev_arr[j]) {
-+				goto skip;
-+			} else if (sd_n == sdp->index) {
-+				found = true;
-+				break;
-+			}
-+		}
-+		if (!found)
-+			goto skip;
-+		found = false;
-+	}
- 	if (!xa_empty(&sdp->sfp_arr)) {
- 		found = true;
- 		disk_name = (sdp->disk ? sdp->disk->disk_name : "?_?");
-@@ -4160,6 +4189,10 @@ sg_proc_seq_show_debug(struct seq_file *s, void *v)
- 	return 0;
- }
- 
-+#endif         /* SG_PROC_OR_DEBUG_FS */
-+
-+#if IS_ENABLED(CONFIG_SCSI_PROC_FS)
-+
- static const struct proc_ops adio_proc_ops = {
- 	.proc_open      = sg_proc_single_open_adio,
- 	.proc_read      = seq_read,
-@@ -4218,7 +4251,226 @@ sg_proc_init(void)
- 
- /* remove_proc_subtree("scsi/sg", NULL) in exit_sg() does cleanup */
- 
--#endif				/* CONFIG_SCSI_PROC_FS (~400 lines back) */
-+#else
-+
-+static int
-+sg_proc_init(void)
-+{
-+	return 0;
-+}
-+
-+#endif			/* CONFIG_SCSI_PROC_FS */
-+
-+#if IS_ENABLED(CONFIG_DEBUG_FS)
-+
-+struct sg_dfs_attr {
-+	const char *name;
-+	umode_t mode;
-+	int (*show)(void *d, struct seq_file *m);
-+	ssize_t (*write)(void *d, const char __user *b, size_t s, loff_t *o);
-+	/* Set either .show or .seq_ops. */
-+	const struct seq_operations *seq_ops;
-+};
- 
-+static int
-+sg_dfs_snapshot_devs_show(void *data, struct seq_file *m)
-+{
-+	bool last;
-+	int k, d;
-+	struct sg_dfs_context_t *ctxp = data;
-+
-+	for (k = 0; k < SG_SNAPSHOT_DEV_MAX; ++k) {
-+		d = ctxp->snapshot_devs[k];
-+		last = (k + 1 == SG_SNAPSHOT_DEV_MAX);
-+		if (d < 0) {
-+			if (k == 0)
-+				seq_puts(m, "-1");
-+			break;
-+		}
-+		if (!last && d == ctxp->snapshot_devs[k + 1]) {
-+			if (k == 0)
-+				seq_puts(m, "-1");
-+			break;
-+		}
-+		if (k != 0)
-+			seq_puts(m, ",");
-+		seq_printf(m, "%d", d);
-+	}
-+	seq_puts(m, "\n");
-+	return 0;
-+}
-+
-+static ssize_t
-+sg_dfs_snapshot_devs_write(void *data, const char __user *buf, size_t count,
-+			   loff_t *ppos)
-+{
-+	bool trailing_comma;
-+	int k, n;
-+	struct sg_dfs_context_t *cxtp = data;
-+	char lbuf[64] = { }, *cp, *c2p;
-+
-+	if (count >= sizeof(lbuf)) {
-+		pr_err("%s: operation too long\n", __func__);
-+		return -EINVAL;
-+	}
-+	if (copy_from_user(lbuf, buf, count))
-+		return -EFAULT;
-+	for (k = 0, n = 0, cp = lbuf; k < SG_SNAPSHOT_DEV_MAX;
-+	     ++k, cp = c2p + 1) {
-+		c2p = strchr(cp, ',');
-+		if (c2p)
-+			*c2p = '\0';
-+		trailing_comma = !!c2p;
-+		/* sscanf is easier to use that this ... */
-+		if (kstrtoint(cp, 10, cxtp->snapshot_devs + k))
-+			break;
-+		++n;
-+		if (!trailing_comma)
-+			break;
-+	}
-+	if (n == 0) {
-+		return -EINVAL;
-+	} else if (k >= SG_SNAPSHOT_DEV_MAX && trailing_comma) {
-+		pr_err("%s: only %d elements in snapshot array\n", __func__,
-+		       SG_SNAPSHOT_DEV_MAX);
-+		return -EINVAL;
-+	}
-+	if (n < SG_SNAPSHOT_DEV_MAX)
-+		cxtp->snapshot_devs[n] = -1;
-+	return count;
-+}
-+
-+static int
-+sg_dfs_show(struct seq_file *m, void *v)
-+{
-+	const struct sg_dfs_attr *attr = m->private;
-+	void *data = d_inode(m->file->f_path.dentry->d_parent)->i_private;
-+
-+	return attr->show(data, m);
-+}
-+
-+static ssize_t
-+sg_dfs_write(struct file *file, const char __user *buf, size_t count,
-+	     loff_t *ppos)
-+{
-+	struct seq_file *m = file->private_data;
-+	const struct sg_dfs_attr *attr = m->private;
-+	void *data = d_inode(file->f_path.dentry->d_parent)->i_private;
-+
-+	/*
-+	 * Attributes that only implement .seq_ops are read-only and 'attr' is
-+	 * the same with 'data' in this case.
-+	 */
-+	if (attr == data || !attr->write)
-+		return -EPERM;
-+	return attr->write(data, buf, count, ppos);
-+}
-+
-+static int
-+sg_dfs_open(struct inode *inode, struct file *file)
-+{
-+	const struct sg_dfs_attr *attr = inode->i_private;
-+	void *data = d_inode(file->f_path.dentry->d_parent)->i_private;
-+	struct seq_file *m;
-+	int ret;
-+
-+	if (attr->seq_ops) {
-+		ret = seq_open(file, attr->seq_ops);
-+		if (!ret) {
-+			m = file->private_data;
-+			m->private = data;
-+		}
-+		return ret;
-+	}
-+	if (WARN_ON_ONCE(!attr->show))
-+		return -EPERM;
-+	return single_open(file, sg_dfs_show, inode->i_private);
-+}
-+
-+static int
-+sg_dfs_release(struct inode *inode, struct file *file)
-+{
-+	const struct sg_dfs_attr *attr = inode->i_private;
-+
-+	if (attr->show)
-+		return single_release(inode, file);
-+	return seq_release(inode, file);
-+}
-+
-+static const struct file_operations sg_dfs_fops = {
-+	.owner		= THIS_MODULE,
-+	.open		= sg_dfs_open,
-+	.read		= seq_read,
-+	.write		= sg_dfs_write,
-+	.llseek		= seq_lseek,
-+	.release	= sg_dfs_release,
-+};
-+
-+static void sg_dfs_mk_files(struct dentry *parent, void *data,
-+			    const struct sg_dfs_attr *attr)
-+{
-+	if (IS_ERR_OR_NULL(parent))
-+		return;
-+
-+	d_inode(parent)->i_private = data;
-+	for (; attr->name; ++attr)
-+		debugfs_create_file(attr->name, attr->mode, parent,
-+				    (void *)attr, &sg_dfs_fops);
-+}
-+
-+static const struct seq_operations sg_snapshot_seq_ops = {
-+	.start = dev_seq_start,
-+	.next  = dev_seq_next,
-+	.stop  = dev_seq_stop,
-+	.show  = sg_proc_seq_show_debug,
-+};
-+
-+static const struct sg_dfs_attr sg_dfs_attrs[] = {
-+	{"snapshot", 0400, .seq_ops = &sg_snapshot_seq_ops},
-+	{"snapshot_devs", 0600, sg_dfs_snapshot_devs_show,
-+	 sg_dfs_snapshot_devs_write},
-+	{ },
-+};
-+
-+static void
-+sg_dfs_init(void)
-+{
-+	/* create and populate /sys/kernel/debug/scsi_generic directory */
-+	if (!sg_dfs_cxt.dfs_rootdir) {
-+		sg_dfs_cxt.dfs_rootdir = debugfs_create_dir("scsi_generic",
-+							    NULL);
-+		sg_dfs_mk_files(sg_dfs_cxt.dfs_rootdir, &sg_dfs_cxt,
-+				sg_dfs_attrs);
-+	}
-+	sg_dfs_cxt.snapshot_devs[0] = -1;	/* show all sg devices */
-+}
-+
-+static void
-+sg_dfs_exit(void)
-+{
-+	debugfs_remove_recursive(sg_dfs_cxt.dfs_rootdir);
-+	sg_dfs_cxt.dfs_rootdir = NULL;
-+}
-+
-+#else		/* not  defined: CONFIG_DEBUG_FS */
-+
-+static void sg_dfs_init(void) {}
-+static void sg_dfs_exit(void) {}
-+
-+#endif		/* CONFIG_DEBUG_FS */
-+
-+module_param_named(scatter_elem_sz, scatter_elem_sz, int, 0644);
-+module_param_named(def_reserved_size, def_reserved_size, int, 0644);
-+module_param_named(allow_dio, sg_allow_dio, int, 0644);
-+
-+MODULE_AUTHOR("Douglas Gilbert");
-+MODULE_DESCRIPTION("SCSI generic (sg) driver");
-+MODULE_LICENSE("GPL");
-+MODULE_VERSION(SG_VERSION_STR);
-+MODULE_ALIAS_CHARDEV_MAJOR(SCSI_GENERIC_MAJOR);
-+
-+MODULE_PARM_DESC(scatter_elem_sz, "scatter gather element size (default: max(SG_SCATTER_SZ, PAGE_SIZE))");
-+MODULE_PARM_DESC(def_reserved_size, "size of buffer reserved for each fd");
-+MODULE_PARM_DESC(allow_dio, "allow direct I/O (default: 0 (disallow))");
- module_init(init_sg);
- module_exit(exit_sg);
+v4 -> v5
+Rebased on Stanley's patch (scsi: ufs: Fix and simplify ..
+Change cmd history print order
+rename config to SCSI_UFS_EXYNOS_DBG
+feature functions in ufs-exynos-dbg.c by SCSI_UFS_EXYNOS_DBG
+
+v3 -> v4
+seperate respective implementations of the callbacks
+change the location of compl_xfer_req related stuffs
+fix null pointer access
+
+v2 -> v3
+fix build errors
+
+v1 -> v2
+change callbacks
+allocate memory for ufs_s_dbg_mgr dynamically, not static way
+
+Kiwoong Kim (2):
+  ufs: introduce a callback to get info of command completion
+  ufs: exynos: introduce command history
+
+ drivers/scsi/ufs/Kconfig          |  14 +++
+ drivers/scsi/ufs/Makefile         |   4 +-
+ drivers/scsi/ufs/ufs-exynos-dbg.c | 206 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-exynos-dbg.h |  17 ++++
+ drivers/scsi/ufs/ufs-exynos.c     |  37 +++++++
+ drivers/scsi/ufs/ufs-exynos.h     |  34 +++++++
+ drivers/scsi/ufs/ufshcd.c         |   1 +
+ drivers/scsi/ufs/ufshcd.h         |   8 ++
+ 8 files changed, 320 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-dbg.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-dbg.h
+
 -- 
-2.25.1
+2.7.4
 
