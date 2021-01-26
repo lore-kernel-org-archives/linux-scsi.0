@@ -2,162 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDC9BC433E6
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 14:36:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BB63C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 17:20:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FEB322D58
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 14:36:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BF362083E
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 17:20:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391919AbhAZNZM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 08:25:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42508 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391724AbhAZJ7C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2021 04:59:02 -0500
-Received: from mail-vs1-xe31.google.com (mail-vs1-xe31.google.com [IPv6:2607:f8b0:4864:20::e31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A360DC0617A7
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Jan 2021 01:58:36 -0800 (PST)
-Received: by mail-vs1-xe31.google.com with SMTP id 187so8709217vsg.4
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Jan 2021 01:58:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=xAUX4GprPzfJpnKS+Lo2k56itTCgxOq8hTIK9hhikBo=;
-        b=yMLqhusdi2aisI8n3EYsY4b7uX64DLjmgiN7ntAidBYbDsED5leOQCmJSlsCarF/T+
-         Ed34AakMn7atFG1tHuru1bxCZfLwNf3/9RWXCZqJfzrhoYcYJvYvZe3JAWsNcN3mx029
-         XvbZasWKe7z20SCTOhJwM5B5hOteG5k+4UWVWSTm7bDy4+lrjVJDZhlEPzteoaS36tCi
-         OMPlQCWh5EfwHMGAT0qeom5wyPo9iJfFcvgT/t7wjQ5SWXN46cvFMbJ5nXx1Mbgx6RBk
-         AKawWmFxBazSWcZt940JkHuyie/rMXEQA0YAypuSICTCX1A68NMG9s+JBxZurKZbKqMZ
-         X7xA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=xAUX4GprPzfJpnKS+Lo2k56itTCgxOq8hTIK9hhikBo=;
-        b=QX7h+n05K33Zb/EGi4XLwKQZHwltsKD2QoGwxFDWSl32d9tblsI4GX9YXkg7Mm6ONK
-         3qdmqQiLHiRpDh4RYCG3VuYNhsaKoQTD1EYlnzvVZYti7vORe1DSIgIawEvu/KGGuUkl
-         dTopuRiJE0daaqtWhzY0zkJdLmWs4KS2ydMNGKDgGowwmNW7TieJRTJSQQqF0vi/zwSs
-         l78gCmFJy0/hnz2W47U7eg2WxKoGH0GouKL2dLXT+xwiIcISzmM3wKISA2m3jB6RIRWe
-         jBVRPh2gpS49lUNKIkS6xkwPfEhyaz+MqMdELgcQTELZewwXHkA1zd6Zpnt9vHaEM2ab
-         oAyg==
-X-Gm-Message-State: AOAM53037i02/098u07NA7Mt1fpgGbPTarze8KZy4ceG+7748nhVKWkA
-        EGfY0EcoqcxWUFQtsU9Ctq+2AzBI24UcHRNb9fNxsg==
-X-Google-Smtp-Source: ABdhPJz/rKFclHqeegtULkB5WJdYhx0oUc8lnkCsoUksDa5rkBDuriXnXzAWxmfhrKfLGYMbfLPN+b1awwoLDJ9pLa8=
-X-Received: by 2002:a05:6102:67b:: with SMTP id z27mr2247015vsf.19.1611655115911;
- Tue, 26 Jan 2021 01:58:35 -0800 (PST)
+        id S2390649AbhAZRTl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 12:19:41 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:43094 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2389340AbhAZJOf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Jan 2021 04:14:35 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 7BBE041306;
+        Tue, 26 Jan 2021 09:13:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1611652425;
+         x=1613466826; bh=pAwTHpdgiRj9rF1GL0yAcUFqatPELVV254k99kwCScg=; b=
+        aSMXm7DZMBYY2TwO97yWNjk0+nb/e/4Al0UkAdTiONrJn3vV3kJXXJIVvHSgFRjU
+        u7hTiIwAJYOp0KgYNVa5MK/raWOd2VR2kbQMx374onBxFPT6JtWqePue5ETttjd2
+        l3M7vVSSk0x3fLaT1vKVqPl2dSkgoSACqHsuAhJiPqw=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id NlMHm_nbvn1d; Tue, 26 Jan 2021 12:13:45 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id C55DD41280;
+        Tue, 26 Jan 2021 12:13:45 +0300 (MSK)
+Received: from localhost (172.17.204.212) by T-EXCH-03.corp.yadro.com
+ (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Tue, 26
+ Jan 2021 12:13:45 +0300
+Date:   Tue, 26 Jan 2021 12:13:44 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     David Disseldorp <ddiss@suse.de>
+CC:     Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux@yadro.com>
+Subject: Re: [PATCH v2] scsi: target: core: check SR field in REPORT LUNS
+Message-ID: <YA/dSDH2NYSRi9Bi@SPB-NB-133.local>
+References: <20210120102700.5514-1-d.bogdanov@yadro.com>
+ <20210122234251.595d5b7a@suse.de>
 MIME-Version: 1.0
-References: <20210121082155.111333-1-ebiggers@kernel.org> <20210121082155.111333-3-ebiggers@kernel.org>
-In-Reply-To: <20210121082155.111333-3-ebiggers@kernel.org>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Tue, 26 Jan 2021 10:57:59 +0100
-Message-ID: <CAPDyKFo_nsZuCX+nVBDTJ5QxZ18mQMx=MssJZtWTfJfFC=u+xw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] scsi: ufs: use devm_blk_ksm_init()
-To:     Eric Biggers <ebiggers@kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc:     linux-block <linux-block@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Satya Tangirala <satyat@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20210122234251.595d5b7a@suse.de>
+X-Originating-IP: [172.17.204.212]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-03.corp.yadro.com (172.17.100.103)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-+ Martin, James
+On Fri, Jan 22, 2021 at 11:42:51PM +0100, David Disseldorp wrote:
+> On Wed, 20 Jan 2021 13:27:00 +0300, Dmitry Bogdanov wrote:
+> 
+> > Now REPORT LUNS for software device servers always reports all luns
+> > regardless of SELECT REPORT field.
+> > Add handling of that field according to SPC-4:
+> > * accept known values,
+> > * reject unknown values.
+> 
+> We currently advertise SPC-3 VERSION compliance via standard INQUIRY
+> data, so I think we should either support SPC-3 SELECT REPORT values or
+> bump the VERSION field (SPC-4 behaviour is already scattered throughout
+> LIO).
+> Out of curiosity, do you know of any initiators which use this field?
+> 
 
-On Thu, 21 Jan 2021 at 09:23, Eric Biggers <ebiggers@kernel.org> wrote:
->
-> From: Eric Biggers <ebiggers@google.com>
->
-> Use the new resource-managed variant of blk_ksm_init() so that the UFS
-> driver doesn't have to manually call blk_ksm_destroy().
->
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
+Hi David,
 
-I took the liberty of applying this one to my mmc tree along with
-patch1, as it looks trivial to me.
+SELECT REPORT field can be used for vVOL (LU conglomerate) discovery and
+for well-known lun listing.
 
-Martin/James - if you have objections or want to ack it, please tell me.
+The field is used by VMware ESXi:
+https://support.purestorage.com/Solutions/VMware_Platform_Guide/User_Guides_for_VMware_Solutions/Virtual_Volumes_User_Guide/vVols_User_Guide%3A_Protocol_Endpoints
 
-Thanks and kind regards
-Uffe
+"PEs greatly extend the number of vVols that can be connected to an ESXi
+cluster; each PE can have up to 16,383 vVols per host bound to it
+simultaneously. Moreover, a new binding does not require a complete I/O
+rescan. Instead, ESXi issues a REPORT_LUNS SCSI command with SELECT
+REPORT to the PE to which the sub-lun is bound. The PE returns a list of
+sub-lun IDs for the vVols bound to that host. In large clusters,
+REPORT_LUNS is significantly faster than a full I/O rescan because it is
+more precisely targeted."
 
+The post also confirms that:
+https://sourceforge.net/p/scst/mailman/message/33030432/
 
+A few more targets that support SELECT REPORT field below.
 
+Sun/Oracle tape library:
+https://docs.oracle.com/en/storage/tape-storage/storagetek-sl150-modular-tape-library/slorm/report-luns-a0h.html#GUID-4140F40D-BD9A-495C-9A86-8BD7E91C985C
 
+IBM Flash Storage:
+https://www.ibm.com/support/pages/sites/default/files/support/ssg/ssgdocs.nsf/0/95d7115d7eb428e485257f80005cc3a7/%24FILE/FlashSystem_840_SCSI_Interface_Manual_1.2.pdf
 
-> ---
->  drivers/scsi/ufs/ufshcd-crypto.c | 9 ++-------
->  drivers/scsi/ufs/ufshcd-crypto.h | 5 -----
->  drivers/scsi/ufs/ufshcd.c        | 1 -
->  3 files changed, 2 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufshcd-crypto.c b/drivers/scsi/ufs/ufshcd-crypto.c
-> index 07310b12a5dc8..153dd5765d9ca 100644
-> --- a/drivers/scsi/ufs/ufshcd-crypto.c
-> +++ b/drivers/scsi/ufs/ufshcd-crypto.c
-> @@ -179,8 +179,8 @@ int ufshcd_hba_init_crypto_capabilities(struct ufs_hba *hba)
->         }
->
->         /* The actual number of configurations supported is (CFGC+1) */
-> -       err = blk_ksm_init(&hba->ksm,
-> -                          hba->crypto_capabilities.config_count + 1);
-> +       err = devm_blk_ksm_init(hba->dev, &hba->ksm,
-> +                               hba->crypto_capabilities.config_count + 1);
->         if (err)
->                 goto out_free_caps;
->
-> @@ -238,8 +238,3 @@ void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
->         if (hba->caps & UFSHCD_CAP_CRYPTO)
->                 blk_ksm_register(&hba->ksm, q);
->  }
-> -
-> -void ufshcd_crypto_destroy_keyslot_manager(struct ufs_hba *hba)
-> -{
-> -       blk_ksm_destroy(&hba->ksm);
-> -}
-> diff --git a/drivers/scsi/ufs/ufshcd-crypto.h b/drivers/scsi/ufs/ufshcd-crypto.h
-> index d53851be55416..78a58e788dff9 100644
-> --- a/drivers/scsi/ufs/ufshcd-crypto.h
-> +++ b/drivers/scsi/ufs/ufshcd-crypto.h
-> @@ -43,8 +43,6 @@ void ufshcd_init_crypto(struct ufs_hba *hba);
->  void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
->                                             struct request_queue *q);
->
-> -void ufshcd_crypto_destroy_keyslot_manager(struct ufs_hba *hba);
-> -
->  #else /* CONFIG_SCSI_UFS_CRYPTO */
->
->  static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
-> @@ -69,9 +67,6 @@ static inline void ufshcd_init_crypto(struct ufs_hba *hba) { }
->  static inline void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
->                                                 struct request_queue *q) { }
->
-> -static inline void ufshcd_crypto_destroy_keyslot_manager(struct ufs_hba *hba)
-> -{ }
-> -
->  #endif /* CONFIG_SCSI_UFS_CRYPTO */
->
->  #endif /* _UFSHCD_CRYPTO_H */
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index e31d2c5c7b23b..d905c84474c2c 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -9139,7 +9139,6 @@ EXPORT_SYMBOL_GPL(ufshcd_remove);
->   */
->  void ufshcd_dealloc_host(struct ufs_hba *hba)
->  {
-> -       ufshcd_crypto_destroy_keyslot_manager(hba);
->         scsi_host_put(hba->host);
->  }
->  EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
-> --
-> 2.30.0
->
+With regards to bumping TCM to SPC-4, are there any objections if we
+submit a separate patch for that? Or resubmit a series with the patch?
+
+Thanks,
+Roman
