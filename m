@@ -2,159 +2,411 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38A60C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 12:12:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49BBEC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 12:13:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0AAD920691
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 12:12:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BB9920691
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 12:13:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392114AbhAZMMk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 07:12:40 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:56264 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392109AbhAZLOO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2021 06:14:14 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611659654; x=1643195654;
-  h=from:to:subject:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version;
-  bh=exyPuAaXuF99GCNoJABPf989V4+RE5MjJUg8tpGtAKQ=;
-  b=MdrEd69Afdpvibfbiqba/kL/9tPWlaXAnY0P5zu+NTWyGKnr2w9YbxD7
-   +8cb5hoQ70XlpDM8NFtEdFp73u2VnyWiJoYpfo5tDy3SIK4/NlnOsU2il
-   xdqmcC+vt9zT+feVEP/a+SUa844+FJeq1lVhpoB4/gQzCWs0oSXi5Lwuz
-   BVEPUD60BPSLUjbMzoUE12YDMtCHZO4i8QoMIhTWsvIoVOGw/KBGwX2Bf
-   PyOZW926zhZqKkL1v9Qicuhkbz5UDW5YqLEEHVq5P56WMmeEfpmNbgZiu
-   hRNT9/kaugPpYNJ9r/LFZbUtB5JxWsPAiAFYk46CW1UPZUJiUAgq6Omte
-   g==;
-IronPort-SDR: G/i3wP0cpe1HWnnTrsKgr7bRd9hlKi6WUajs/F6Vj9bJaZ/ghAqUXdBhpYwXZ7eamXI0YKkyUT
- yHbdV69RzagGLoqMLW28+J2aAnZqsdq/m3bBtdw6pMzbvL8kx1uVTZCXg9SSfWpAYMHaKdHpyk
- CTvbYUQmMBQcjFOXBe0F5YPPzGyNiN/RNVhv7kyn89Gw2+ehGp6u+xP/6qjiYWsfYCFv3yNVri
- 8Czn9zTovFv6hd7gQz4m9tWcR8v6OObaXpi8jBUyunGINGT8scQcjJKbX4o+svwkZZVVibQLBx
- Qj4=
-X-IronPort-AV: E=Sophos;i="5.79,375,1602518400"; 
-   d="scan'208";a="159516454"
-Received: from mail-dm6nam11lp2172.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.172])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Jan 2021 19:13:08 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OBy1XceV9oOQxmk3+X0VIWMO2xPkOeQFIIQ+EwrMTWnyuhrNpHSnRv7TbbBgCs9uxLh8l8AnN9MvOykAvcMAWzE2CkS7qoqlNfj1PYF/GWSAS3cWBFYnzqzm/lCgzPHmWSSJzieMp/rb0VfIvwmLZdVXLLEVw38UaDM26c8855rI7WScBjlPaL5HJanCRGLvfvhef3Ym4/Pcx/QA5MoYMrkQB7bMq7ZWLOO2Z9Lpk/FB/CF/7IExQ1gmjQfThl5NDFXflTGTTEr3aSM57/gm7Vbe/P4O0qMyG/LjS6DqiikS7YrtkUMvAFtnT/57I/6VhskrNUT87ALS9ZYiqBVG5Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=exyPuAaXuF99GCNoJABPf989V4+RE5MjJUg8tpGtAKQ=;
- b=oYlKpfiwg2v9uPpb1R6gw3+WQ076i7g7EMEmdkG3PqGtUwvHsamhtVfUUpCmCqYru/+hFr9Rg28hHkVxVXGoOPXQObLrctHMyZfjdGLMwvpESN5fNznDZ22TsdmHgDy2BPQsDegsEvk02rxYZTA+mdGKD0XM6LXkxBv7FC27CTA5tXa/bGksLngBKK1yHJXVs8Qhfl3h4SSOGUe4XVdxGxQbxbYCd6I8hSutE4Oc7a7G7Rn5uNCix04QgmNrcpicKSV36pP2cdB9CijKu9nJQd3XdwrO7FzzJhJhn45ICUKgYwPWbwgOtNenFUq6pdZuxyViMxhTiKtFny9koYUz+A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=exyPuAaXuF99GCNoJABPf989V4+RE5MjJUg8tpGtAKQ=;
- b=w+SNUAH22ylCBPLqc5WePWjmusNniET4cejtXiJyTLG9GzFBe4tTRZKfUQWucE3zkLVZoNk3MEo2YiuufSWV7rgz0IeoZjVsBLa6L0qDQwZnmtqjhKKrfvKkfRnV2MkSXP80G3bkN0zI1oBl8JnGIlj7AO4LeeBb8VlmP5We3XU=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB5081.namprd04.prod.outlook.com (2603:10b6:5:fe::22) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3784.16; Tue, 26 Jan 2021 11:13:06 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::a564:c676:b866:34f6]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::a564:c676:b866:34f6%9]) with mapi id 15.20.3784.019; Tue, 26 Jan 2021
- 11:13:06 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Kiwoong Kim <kwmad.kim@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "grant.jung@samsung.com" <grant.jung@samsung.com>,
-        "sc.suh@samsung.com" <sc.suh@samsung.com>,
-        "hy50.seo@samsung.com" <hy50.seo@samsung.com>,
-        "sh425.lee@samsung.com" <sh425.lee@samsung.com>,
-        "bhoon95.kim@samsung.com" <bhoon95.kim@samsung.com>
-Subject: RE: [PATCH v8 2/2] ufs: exynos: introduce command history
-Thread-Topic: [PATCH v8 2/2] ufs: exynos: introduce command history
-Thread-Index: AQHW867RP2vI8AtugkiwZI90gE8Srao5vw/w
-Date:   Tue, 26 Jan 2021 11:13:06 +0000
-Message-ID: <DM6PR04MB65758E89AC1F171814CADFACFCBC9@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <cover.1611642467.git.kwmad.kim@samsung.com>
-        <CGME20210126064508epcas2p3c1132f7b6895d344784629a0d2e74c12@epcas2p3.samsung.com>
- <d2e077fc8e8cd49ada614a08bb3dda85e8222c8f.1611642467.git.kwmad.kim@samsung.com>
-In-Reply-To: <d2e077fc8e8cd49ada614a08bb3dda85e8222c8f.1611642467.git.kwmad.kim@samsung.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: samsung.com; dkim=none (message not signed)
- header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: b2d11def-2222-46ca-06ff-08d8c1eb5b63
-x-ms-traffictypediagnostic: DM6PR04MB5081:
-x-microsoft-antispam-prvs: <DM6PR04MB508149A67273D9038E564EFFFCBC9@DM6PR04MB5081.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:3173;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: xMfaNM7AKL0z8YxuDZHlJOGNN1KRKT9vnGb80oXuFhHhklamwyHI3Ez2gwuzINxsO/vcY0P/lWTSGDhpiaTf4kVYoGZ7SvGTmkCDgLqKpmlJhQrRFV/vHtJsb4HG3x1yoa0HPsVIzx4oEDSQgB8uNo492p3c4Mxl/brcS8akUqKSVMRhCcgv60pOd/vxBpeqgKOJSGYspiAOELmMzRW7sabhr2f2oFOr9dPBYzZz5Fp0VmULgJpPdKeGzpvl55tLOksV6nuY5sxkzBH9+VrbNYHMbmXy5scuO1etxumTQJ4fA13SeGShqaPsaOPahpUQZW9DVMWiCEaPQQP4QndPifAKt3nvFR89qUk+afXSkG5Vo5wE6yuZwlk/SgB6Tc5tzc2CpuP+wM4o6LXnBGctAH9AniM7cHI/Mno+Y+0saRkfbRzLGcdBV/jmkIW6iJRVEw+z9yRg+mY4Y242tgtsaxpvGFOVRiiZLs15IiFU+NdHZ5xUX6uiqQOyI2B9tNHDOcpjyvX9GEqYR9KdRDRG7iRAjCBGB24stZF9wW6EgHXpnXP1uvTtGhJnilwnM2Is
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(376002)(136003)(346002)(39860400002)(366004)(8936002)(5660300002)(71200400001)(478600001)(55016002)(66446008)(9686003)(4744005)(66556008)(66476007)(52536014)(66946007)(2906002)(76116006)(33656002)(64756008)(186003)(26005)(7696005)(921005)(110136005)(6506007)(86362001)(316002)(8676002)(7416002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?utf-8?B?NlJxeWlwQWtGUDhYaXJOTXBLMUtjZ1Y4WlYwalR6REpCNm1KM1JpWFlKNWdZ?=
- =?utf-8?B?a0RqcjV3dDIrcDVwQnBEQkhseFYzTEFGZXJMOTdESUEwcHFHb1JmVDBKMGNT?=
- =?utf-8?B?cGVXVUdSRTgrSlV5YXZ4ZFk0MzUvWlBmT2txL1lvVmV0eDhBMGg3dDg5Z0Rm?=
- =?utf-8?B?eXU5U3FUaldwMzl5NGhMTmppU21iMmlycXFCOW1obUpZcXRQOUQ3aHF2dWJL?=
- =?utf-8?B?c0QxUFRQZWZnQmZ4UzVvV09oSUUwZTZETnppdTJqelg5NmZpT3RXNGVNQ0Ru?=
- =?utf-8?B?MHN0N0VYVVBaL05JRHI3OFZ5QTlzbk1KTUltWGFxeFZ5OFpnSVpVVjdYd2dG?=
- =?utf-8?B?em93OEMrRjh2YUdPb0p0ZmxtUWZqQmNqeWdKNEJMc1hLM1Z5RXVRTDhuNUNQ?=
- =?utf-8?B?MHUxa0hxd056SmZUdSt4a3RqQzJrd2tqMUVrOWZDSGl3MzI5MzZOQ3hsS3VO?=
- =?utf-8?B?WkY0NGx4a2hMbDhjTFJ3cEZCeXZrTGIyOFdrOENuV01lVWpxM1FVdDNjZ3I1?=
- =?utf-8?B?cXhQeUZEVUlVTnBMYWdudkE5eU1xdjczSkNQcjJwSDB4MUVPb3Z4TTlieDV1?=
- =?utf-8?B?M1lMQ1FTbzFlOGNCVlVBRzN2U1NGaEtGMDI2REc1V1NtUTZ6ZWRnOFE5blZP?=
- =?utf-8?B?K3g4YzNYVGhhcE9rcmNUYXU0UGtHUDNpZlVTRGZxRHB6TUt6Z05mWlhwL2lk?=
- =?utf-8?B?c2dFdzd1VnhCb0YxdzVvUXNWL0Vmc1lCT3ZXUldmVkpCNkN6VzVFVU9TeCt4?=
- =?utf-8?B?TXJHUkZoNFBRdzhtZ2VOZW0rYnQ0c0xZalJjRWVZV3VWS2loVWk4SllnSHBV?=
- =?utf-8?B?RHd0Q09IT0NibW9Lb0gyeWxpUzhDUG1rV2VjbmVjTDR0QVhFRElJMmtUR1R6?=
- =?utf-8?B?T3NpVHFFKzB4eXZxdGVwTDM5dVl3bmZrRVZlRWJxYmNZaUxNd0ZqaGR3RUlo?=
- =?utf-8?B?d2tPWGJnR3FXQ0p2bTVyRDZ2ZHU3MVFJNEYwRTZIaE5PYVhzd0tHV0NYY2VO?=
- =?utf-8?B?NGxwOTZQekVpamZDT3dXQmVBU0w1UWZpcjQ3WHF0MklMWVE2TVE0WkYzYVZr?=
- =?utf-8?B?bEtOaFUrNVR6a01lY3pYcjE5cGk2aXBYS1BwREdkZ0owR1hmNXZqZXJSY3RZ?=
- =?utf-8?B?VC9MdXgwVlp1ZGhrZDBEdHVjWENST2pJT3lvRFJia3FnWHNwMkJTRDdrWGwx?=
- =?utf-8?B?VDlqVWdwV1RzWkZkdFRTeVJZb0hlRWFvYkcrNUR0YjkvUkZEZmhUdnllZTlD?=
- =?utf-8?B?OTJtS084NEZzSWFjRWI4STlEL0d2YVMzb1dvWUpXOU5ScDZ1NGR2SjVpZTZn?=
- =?utf-8?B?SjNzdEY1ZENYZjNQL3dIaWNreS96YXZ2SkRyem5WK25mcDlHalpaYitrMERG?=
- =?utf-8?B?UUU1MzVtQ1RReFBhcmFkOEZaSzRiQ1UwMlBHYkFES0ZZM0hVSVpxMklwdDdV?=
- =?utf-8?Q?DbpW4q1S?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S2404786AbhAZMNM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 07:13:12 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:11596 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404907AbhAZLJT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2021 06:09:19 -0500
+Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4DQ3pw1b7Jz15y3D;
+        Tue, 26 Jan 2021 19:07:20 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ DGGEMS403-HUB.china.huawei.com (10.3.19.203) with Microsoft SMTP Server id
+ 14.3.498.0; Tue, 26 Jan 2021 19:08:25 +0800
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@openeuler.org>, Luo Jiaxing <luojiaxing@huawei.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH 5/5] scsi: hisi_sas: Add trace FIFO debugfs support
+Date:   Tue, 26 Jan 2021 19:04:28 +0800
+Message-ID: <1611659068-131975-6-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1611659068-131975-1-git-send-email-john.garry@huawei.com>
+References: <1611659068-131975-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b2d11def-2222-46ca-06ff-08d8c1eb5b63
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Jan 2021 11:13:06.6272
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: yLG7UeZT8EntmIu+/s11Lg4VGJvGFOnZ/1qfru8TyoFdDlDW/VD/SmPdoFHsjIQkAjn0WfH2U4Y6rodvX2uNog==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB5081
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiArDQo+ICsgICAgICAgZm9yIChpID0gMCA7IGkgPCBjb3VudCA7IGkrKywgZGF0YSsrKSB7DQo+
-ICsgICAgICAgICAgICAgICBkZXZfZXJyKGRldiwgIjogMHglMDJ4LCAlMDJkLCAweCUwOGxseCwg
-MHglMDR4LCAlZCwgJWxsdSwgJWxsdSwNCj4gMHglbGx4IiwNCj4gKyAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICBkYXRhLT5vcCwgZGF0YS0+dGFnLCBkYXRhLT5sYmEsIGRhdGEtPnNjdCwg
-ZGF0YS0+cmV0cmllcywNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYXRhLT5z
-dGFydF90aW1lLCBkYXRhLT5lbmRfdGltZSwgZGF0YS0NCj4gPm91dHN0YW5kaW5nX3JlcXMpOw0K
-PiArICAgICAgICAgICAgICAgaWR4ID0gKGlkeCA9PSBNQVhfQ01EX0xPR1MgLSAxKSA/IDAgOiBp
-ZHggKyAxOw0KPiArICAgICAgIH0NCk1heWJlIGp1c3Qgb3V0c2lkZSBvZiB0aGUgbG9vcDoNCmlk
-eCArPSBjb3VudDsNCmlkeCAlPSAoTUFYX0NNRF9MT0dTIC0gMSk7DQoNCg==
+From: Luo Jiaxing <luojiaxing@huawei.com>
+
+The controller provides trace FIFO DFX tool to assist link fault debug and
+link optimization. This tool can be helpful when debug link faults without
+SAS analyzers. Each PHY has an independent trace FIFO interface.
+
+The user can configure trace FIFO tool of one PHY by using the following
+six interfaces:
+
+signal_sel: select signal group applies to different scenarios.
+  0x0: linkrate negotiation
+  0x1: Host 12G TX train
+  0x2: Disk 12G TX train
+  0x3: SAS PHY CTRL DFX 0
+  0x4: SAS PHY CTRL DFX 1
+  0x5: SAS PCS DFX
+  other: linkrate negotiation
+dump_mask: The masked hardware status bit will not be updated.
+dump_mode: determines how to dump data after trigger signal is generated.
+  0x0: dump forever
+  0x1: dump 32 data after trigger signal is generated
+  0x2: no more dump after trigger signal is generated
+trigger_mode: determines the trigger mode, level or edge.
+  0x0: dump when trigger signal changed
+  0x1: dump when trigger signal's level equal to trigger_level
+  0x2: dump when trigger signal's level different from trigger_level
+trigger_level: determines the trigger level.
+trigger_msk: mask trigger signal
+
+The user can get 32 signal datas from hardware by reading the rd_data.
+These 32 signal datas is the status record of hardware at different time
+points.
+
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h       |  15 ++
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 251 +++++++++++++++++++++++++
+ 2 files changed, 266 insertions(+)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 873bfffa626d..2401a9575215 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -44,6 +44,7 @@
+ 
+ #define HISI_SAS_IOST_ITCT_CACHE_NUM 64
+ #define HISI_SAS_IOST_ITCT_CACHE_DW_SZ 10
++#define HISI_SAS_FIFO_DATA_DW_SIZE 32
+ 
+ #define HISI_SAS_STATUS_BUF_SZ (sizeof(struct hisi_sas_status_buffer))
+ #define HISI_SAS_COMMAND_TABLE_SZ (sizeof(union hisi_sas_command_table))
+@@ -154,6 +155,16 @@ enum hisi_sas_phy_event {
+ 	HISI_PHYES_NUM,
+ };
+ 
++struct hisi_sas_debugfs_fifo {
++	u32 signal_sel;
++	u32 dump_msk;
++	u32 dump_mode;
++	u32 trigger;
++	u32 trigger_msk;
++	u32 trigger_mode;
++	u32 rd_data[HISI_SAS_FIFO_DATA_DW_SIZE];
++};
++
+ struct hisi_sas_phy {
+ 	struct work_struct	works[HISI_PHYES_NUM];
+ 	struct hisi_hba	*hisi_hba;
+@@ -175,6 +186,9 @@ struct hisi_sas_phy {
+ 	enum sas_linkrate	maximum_linkrate;
+ 	int enable;
+ 	atomic_t down_cnt;
++
++	/* Trace FIFO */
++	struct hisi_sas_debugfs_fifo fifo;
+ };
+ 
+ struct hisi_sas_port {
+@@ -474,6 +488,7 @@ struct hisi_hba {
+ 	struct dentry *debugfs_dir;
+ 	struct dentry *debugfs_dump_dentry;
+ 	struct dentry *debugfs_bist_dentry;
++	struct dentry *debugfs_fifo_dentry;
+ };
+ 
+ /* Generic HW DMA host memory structures */
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 4cc344ca121c..4580e081e489 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -303,6 +303,19 @@
+ #define ERR_CNT_INVLD_DW		(PORT_BASE + 0x390)
+ #define ERR_CNT_CODE_ERR		(PORT_BASE + 0x394)
+ #define ERR_CNT_DISP_ERR		(PORT_BASE + 0x398)
++#define DFX_FIFO_CTRL			(PORT_BASE + 0x3a0)
++#define DFX_FIFO_CTRL_TRIGGER_MODE_OFF	0
++#define DFX_FIFO_CTRL_TRIGGER_MODE_MSK	(0x7 << DFX_FIFO_CTRL_TRIGGER_MODE_OFF)
++#define DFX_FIFO_CTRL_DUMP_MODE_OFF	3
++#define DFX_FIFO_CTRL_DUMP_MODE_MSK	(0x7 << DFX_FIFO_CTRL_DUMP_MODE_OFF)
++#define DFX_FIFO_CTRL_SIGNAL_SEL_OFF	6
++#define DFX_FIFO_CTRL_SIGNAL_SEL_MSK	(0xF << DFX_FIFO_CTRL_SIGNAL_SEL_OFF)
++#define DFX_FIFO_CTRL_DUMP_DISABLE_OFF	10
++#define DFX_FIFO_CTRL_DUMP_DISABLE_MSK	(0x1 << DFX_FIFO_CTRL_DUMP_DISABLE_OFF)
++#define DFX_FIFO_TRIGGER		(PORT_BASE + 0x3a4)
++#define DFX_FIFO_TRIGGER_MSK		(PORT_BASE + 0x3a8)
++#define DFX_FIFO_DUMP_MSK		(PORT_BASE + 0x3aC)
++#define DFX_FIFO_RD_DATA		(PORT_BASE + 0x3b0)
+ 
+ #define DEFAULT_ITCT_HW		2048 /* reset value, not reprogrammed */
+ #if (HISI_SAS_MAX_DEVICES > DEFAULT_ITCT_HW)
+@@ -4153,6 +4166,243 @@ static const struct file_operations debugfs_phy_down_cnt_v3_hw_fops = {
+ 	.owner = THIS_MODULE,
+ };
+ 
++enum fifo_dump_mode_v3_hw {
++	FIFO_DUMP_FORVER =		(1U << 0),
++	FIFO_DUMP_AFTER_TRIGGER =	(1U << 1),
++	FIFO_DUMP_UNTILL_TRIGGER =	(1U << 2),
++};
++
++enum fifo_trigger_mode_v3_hw {
++	FIFO_TRIGGER_EDGE =		(1U << 0),
++	FIFO_TRIGGER_SAME_LEVEL =	(1U << 1),
++	FIFO_TRIGGER_DIFF_LEVEL =	(1U << 2),
++};
++
++static int debugfs_is_fifo_config_valid_v3_hw(struct hisi_sas_phy *phy)
++{
++	struct hisi_hba *hisi_hba = phy->hisi_hba;
++
++	if (phy->fifo.signal_sel > 0xf) {
++		dev_info(hisi_hba->dev, "Invalid signal select: %u\n",
++			 phy->fifo.signal_sel);
++		return -EINVAL;
++	}
++
++	switch (phy->fifo.dump_mode) {
++	case FIFO_DUMP_FORVER:
++	case FIFO_DUMP_AFTER_TRIGGER:
++	case FIFO_DUMP_UNTILL_TRIGGER:
++		break;
++	default:
++		dev_info(hisi_hba->dev, "Invalid dump mode: %u\n",
++			 phy->fifo.dump_mode);
++		return -EINVAL;
++	}
++
++	/* when FIFO_DUMP_FORVER, no need to check trigger_mode */
++	if (phy->fifo.dump_mode == FIFO_DUMP_FORVER)
++		return 0;
++
++	switch (phy->fifo.trigger_mode) {
++	case FIFO_TRIGGER_EDGE:
++	case FIFO_TRIGGER_SAME_LEVEL:
++	case FIFO_TRIGGER_DIFF_LEVEL:
++		break;
++	default:
++		dev_info(hisi_hba->dev, "Invalid trigger mode: %u\n",
++			 phy->fifo.trigger_mode);
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static int debugfs_update_fifo_config_v3_hw(struct hisi_sas_phy *phy)
++{
++	u32 trigger_mode = phy->fifo.trigger_mode;
++	u32 signal_sel = phy->fifo.signal_sel;
++	u32 dump_mode = phy->fifo.dump_mode;
++	struct hisi_hba *hisi_hba = phy->hisi_hba;
++	int phy_no = phy->sas_phy.id;
++	u32 reg_val;
++	int res;
++
++	/* Check the validity of trace FIFO configuration */
++	res = debugfs_is_fifo_config_valid_v3_hw(phy);
++	if (res)
++		return res;
++
++	reg_val = hisi_sas_phy_read32(hisi_hba, phy_no, DFX_FIFO_CTRL);
++	/* Disable trace FIFO before update configuration */
++	reg_val |= DFX_FIFO_CTRL_DUMP_DISABLE_MSK;
++
++	/* Update trace FIFO configuration */
++	reg_val &= ~(DFX_FIFO_CTRL_DUMP_MODE_MSK |
++		     DFX_FIFO_CTRL_SIGNAL_SEL_MSK |
++		     DFX_FIFO_CTRL_TRIGGER_MODE_MSK);
++
++	reg_val |= ((trigger_mode << DFX_FIFO_CTRL_TRIGGER_MODE_OFF) |
++		    (dump_mode << DFX_FIFO_CTRL_DUMP_MODE_OFF) |
++		    (signal_sel << DFX_FIFO_CTRL_SIGNAL_SEL_OFF));
++	hisi_sas_phy_write32(hisi_hba, phy_no, DFX_FIFO_CTRL, reg_val);
++
++	hisi_sas_phy_write32(hisi_hba, phy_no, DFX_FIFO_DUMP_MSK,
++			     phy->fifo.dump_msk);
++
++	hisi_sas_phy_write32(hisi_hba, phy_no, DFX_FIFO_TRIGGER,
++			     phy->fifo.trigger);
++
++	hisi_sas_phy_write32(hisi_hba, phy_no, DFX_FIFO_TRIGGER_MSK,
++			     phy->fifo.trigger_msk);
++
++	/* Enable trace FIFO after updated configuration */
++	reg_val = hisi_sas_phy_read32(hisi_hba, phy_no, DFX_FIFO_CTRL);
++	reg_val &= ~DFX_FIFO_CTRL_DUMP_DISABLE_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, DFX_FIFO_CTRL, reg_val);
++
++	return 0;
++}
++
++static ssize_t debugfs_fifo_update_cfg_v3_hw_write(struct file *filp,
++						   const char __user *buf,
++						   size_t count, loff_t *ppos)
++{
++	struct hisi_sas_phy *phy = filp->private_data;
++	bool update;
++	int val;
++
++	val = kstrtobool_from_user(buf, count, &update);
++	if (val)
++		return val;
++
++	if (update != 1)
++		return -EINVAL;
++
++	val = debugfs_update_fifo_config_v3_hw(phy);
++	if (val)
++		return val;
++
++	return count;
++}
++
++static const struct file_operations debugfs_fifo_update_cfg_v3_hw_fops = {
++	.open = simple_open,
++	.write = debugfs_fifo_update_cfg_v3_hw_write,
++	.owner = THIS_MODULE,
++};
++
++static void debugfs_read_fifo_data_v3_hw(struct hisi_sas_phy *phy)
++{
++	struct hisi_hba *hisi_hba = phy->hisi_hba;
++	u32 *buf = phy->fifo.rd_data;
++	int phy_no = phy->sas_phy.id;
++	u32 val;
++	int i;
++
++	memset(buf, 0, sizeof(phy->fifo.rd_data));
++
++	/* Disable trace FIFO before read data */
++	val = hisi_sas_phy_read32(hisi_hba, phy_no, DFX_FIFO_CTRL);
++	val |= DFX_FIFO_CTRL_DUMP_DISABLE_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, DFX_FIFO_CTRL, val);
++
++	for (i = 0; i < HISI_SAS_FIFO_DATA_DW_SIZE; i++) {
++		val = hisi_sas_phy_read32(hisi_hba, phy_no,
++					  DFX_FIFO_RD_DATA);
++		buf[i] = val;
++	}
++
++	/* Enable trace FIFO after read data */
++	val = hisi_sas_phy_read32(hisi_hba, phy_no, DFX_FIFO_CTRL);
++	val &= ~DFX_FIFO_CTRL_DUMP_DISABLE_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, DFX_FIFO_CTRL, val);
++}
++
++static int debugfs_fifo_data_v3_hw_show(struct seq_file *s, void *p)
++{
++	struct hisi_sas_phy *phy = s->private;
++
++	debugfs_read_fifo_data_v3_hw(phy);
++
++	debugfs_show_row_32_v3_hw(s, 0, HISI_SAS_FIFO_DATA_DW_SIZE * 4,
++				  phy->fifo.rd_data);
++
++	return 0;
++}
++DEFINE_SHOW_ATTRIBUTE(debugfs_fifo_data_v3_hw);
++
++static void debugfs_fifo_init_v3_hw(struct hisi_hba *hisi_hba)
++{
++	int phy_no;
++
++	hisi_hba->debugfs_fifo_dentry =
++			debugfs_create_dir("fifo", hisi_hba->debugfs_dir);
++
++	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
++		struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++		struct dentry *port_dentry;
++		char name[256];
++		u32 val;
++
++		/* get default configuration for trace FIFO */
++		val = hisi_sas_phy_read32(hisi_hba, phy_no, DFX_FIFO_CTRL);
++		val &= DFX_FIFO_CTRL_DUMP_MODE_MSK;
++		val >>= DFX_FIFO_CTRL_DUMP_MODE_OFF;
++		phy->fifo.dump_mode = val;
++
++		val = hisi_sas_phy_read32(hisi_hba, phy_no, DFX_FIFO_CTRL);
++		val &= DFX_FIFO_CTRL_TRIGGER_MODE_MSK;
++		val >>= DFX_FIFO_CTRL_TRIGGER_MODE_OFF;
++		phy->fifo.trigger_mode = val;
++
++		val = hisi_sas_phy_read32(hisi_hba, phy_no, DFX_FIFO_CTRL);
++		val &= DFX_FIFO_CTRL_SIGNAL_SEL_MSK;
++		val >>= DFX_FIFO_CTRL_SIGNAL_SEL_OFF;
++		phy->fifo.signal_sel = val;
++
++		val = hisi_sas_phy_read32(hisi_hba, phy_no, DFX_FIFO_DUMP_MSK);
++		phy->fifo.dump_msk = val;
++
++		val = hisi_sas_phy_read32(hisi_hba, phy_no, DFX_FIFO_TRIGGER);
++		phy->fifo.trigger = val;
++		val = hisi_sas_phy_read32(hisi_hba, phy_no, DFX_FIFO_TRIGGER_MSK);
++		phy->fifo.trigger_msk = val;
++
++		snprintf(name, 256, "%d", phy_no);
++		port_dentry = debugfs_create_dir(name,
++						 hisi_hba->debugfs_fifo_dentry);
++
++		debugfs_create_file("update_config", 0200, port_dentry, phy,
++				    &debugfs_fifo_update_cfg_v3_hw_fops);
++
++		debugfs_create_file("signal_sel", 0600, port_dentry,
++				    &phy->fifo.signal_sel,
++				    &debugfs_v3_hw_fops);
++
++		debugfs_create_file("dump_msk", 0600, port_dentry,
++				    &phy->fifo.dump_msk,
++				    &debugfs_v3_hw_fops);
++
++		debugfs_create_file("dump_mode", 0600, port_dentry,
++				    &phy->fifo.dump_mode,
++				    &debugfs_v3_hw_fops);
++
++		debugfs_create_file("trigger_mode", 0600, port_dentry,
++				    &phy->fifo.trigger_mode,
++				    &debugfs_v3_hw_fops);
++
++		debugfs_create_file("trigger", 0600, port_dentry,
++				    &phy->fifo.trigger,
++				    &debugfs_v3_hw_fops);
++
++		debugfs_create_file("trigger_msk", 0600, port_dentry,
++				    &phy->fifo.trigger_msk,
++				    &debugfs_v3_hw_fops);
++
++		debugfs_create_file("fifo_data", 0400, port_dentry, phy,
++				    &debugfs_fifo_data_v3_hw_fops);
++	}
++}
++
+ static void debugfs_work_handler_v3_hw(struct work_struct *work)
+ {
+ 	struct hisi_hba *hisi_hba =
+@@ -4388,6 +4638,7 @@ static void debugfs_init_v3_hw(struct hisi_hba *hisi_hba)
+ 			debugfs_create_dir("dump", hisi_hba->debugfs_dir);
+ 
+ 	debugfs_phy_down_cnt_init_v3_hw(hisi_hba);
++	debugfs_fifo_init_v3_hw(hisi_hba);
+ 
+ 	for (i = 0; i < hisi_sas_debugfs_dump_count; i++) {
+ 		if (debugfs_alloc_v3_hw(hisi_hba, i)) {
+-- 
+2.26.2
+
