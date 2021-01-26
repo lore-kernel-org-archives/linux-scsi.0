@@ -2,108 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B035C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 14:26:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDC9BC433E6
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 14:36:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 61E8122EBD
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 14:26:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FEB322D58
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jan 2021 14:36:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391730AbhAZOZf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 09:25:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59604 "EHLO
+        id S2391919AbhAZNZM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 08:25:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391724AbhAZN0W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2021 08:26:22 -0500
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2528C061A29;
-        Tue, 26 Jan 2021 05:25:30 -0800 (PST)
-Received: by mail-pl1-x62e.google.com with SMTP id d13so4013426plg.0;
-        Tue, 26 Jan 2021 05:25:30 -0800 (PST)
+        with ESMTP id S2391724AbhAZJ7C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2021 04:59:02 -0500
+Received: from mail-vs1-xe31.google.com (mail-vs1-xe31.google.com [IPv6:2607:f8b0:4864:20::e31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A360DC0617A7
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Jan 2021 01:58:36 -0800 (PST)
+Received: by mail-vs1-xe31.google.com with SMTP id 187so8709217vsg.4
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Jan 2021 01:58:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-transfer-encoding:content-language;
-        bh=hJpx0sAUwwTFVj7mi1u3wPShyqbE8agveuBzNbpt04c=;
-        b=VUVw7SCR7FSAHmjqsGnuI2BZNY6fiwd1M2tIyoOUO2UT32Fc7Y22aaLUmbOeuP35mb
-         P6kk217DvEtf/E81MGXRCzjJbie0rCIO6fqmdJsXry3+lwVOXKfo7lr3gPrzIDi2Ln1K
-         6LCJxe8VD7LnOqT4FhIIZwaCHa4JvUibRtqXmH6KScWXlnzhVEqSprFM+gbnxD9WJV7i
-         oED+4CUVzJHJ6zLIdYB4I6gl7a3BYC5d0G99y7Ncf7PRfrsqGYbY4OB2y14Q2RA16uuV
-         hnnTtSyNzwAQCfUSCuZi/Gtve4erGUqPFLbl5Mg7KMqc3oGn83PFdhxJ6fWfwIaIOl28
-         IOuw==
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=xAUX4GprPzfJpnKS+Lo2k56itTCgxOq8hTIK9hhikBo=;
+        b=yMLqhusdi2aisI8n3EYsY4b7uX64DLjmgiN7ntAidBYbDsED5leOQCmJSlsCarF/T+
+         Ed34AakMn7atFG1tHuru1bxCZfLwNf3/9RWXCZqJfzrhoYcYJvYvZe3JAWsNcN3mx029
+         XvbZasWKe7z20SCTOhJwM5B5hOteG5k+4UWVWSTm7bDy4+lrjVJDZhlEPzteoaS36tCi
+         OMPlQCWh5EfwHMGAT0qeom5wyPo9iJfFcvgT/t7wjQ5SWXN46cvFMbJ5nXx1Mbgx6RBk
+         AKawWmFxBazSWcZt940JkHuyie/rMXEQA0YAypuSICTCX1A68NMG9s+JBxZurKZbKqMZ
+         X7xA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=hJpx0sAUwwTFVj7mi1u3wPShyqbE8agveuBzNbpt04c=;
-        b=kMZz+lLQbQxO/u2u0xTKAvzIdf0I5hsyz3VzD2jM9ZpuXveq0dr2A/zuY6C7s8P2D4
-         ub//9cgYic06FS1/lxEn1RpKrJ1Gk5I2TeVgu0mlhHl33/Wc0D9WkyKTC/wZsr6RnJX6
-         oc82J45UXV8YfyC2bi0CT9jw45J+F2KHYGNOn4TIc+AibYQI6XR/nXS9GnGEgX5x/Zxk
-         zQdEXpnke6WWTxlSzs8vUXTvsyPRGZpeExhFfdVgqZgeZYEORtGg0FZ9nMH1wlUSytlx
-         CA8LqdCiMeklBCDRrORR7icEZSy1Rjr4wavIjkIuzzRJ9+PQhV1I37ye4/t2noqmcuHt
-         mZpg==
-X-Gm-Message-State: AOAM533GSbV6BI3yhMLRpEA3CNGUHVEBHcTz+on32p7QbAxqWJFRhvTK
-        98hVB+CFgJgHVYE/QoXQ6uBy0SIpfkA=
-X-Google-Smtp-Source: ABdhPJx6cCSvPh7H5Xm88DxJ8Yl0KyQ+k+xeKWqvcP0d9k5AZwCfxwEo3yvsuTu1r3Xbcn+4eErslw==
-X-Received: by 2002:a17:90a:ad48:: with SMTP id w8mr6306010pjv.48.1611667530301;
-        Tue, 26 Jan 2021 05:25:30 -0800 (PST)
-Received: from [10.230.128.89] ([192.19.228.250])
-        by smtp.gmail.com with ESMTPSA id r5sm18752031pfl.165.2021.01.26.05.25.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Jan 2021 05:25:29 -0800 (PST)
-Subject: Re: [PATCH v1] scsi: lpfc: Add auto select on IRQ_POLL
-To:     Tong Zhang <ztong0001@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20210126000554.309858-1-ztong0001@gmail.com>
-From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <8e4e3e25-e69f-56ee-bff6-4fbf68262b38@gmail.com>
-Date:   Tue, 26 Jan 2021 05:25:28 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=xAUX4GprPzfJpnKS+Lo2k56itTCgxOq8hTIK9hhikBo=;
+        b=QX7h+n05K33Zb/EGi4XLwKQZHwltsKD2QoGwxFDWSl32d9tblsI4GX9YXkg7Mm6ONK
+         3qdmqQiLHiRpDh4RYCG3VuYNhsaKoQTD1EYlnzvVZYti7vORe1DSIgIawEvu/KGGuUkl
+         dTopuRiJE0daaqtWhzY0zkJdLmWs4KS2ydMNGKDgGowwmNW7TieJRTJSQQqF0vi/zwSs
+         l78gCmFJy0/hnz2W47U7eg2WxKoGH0GouKL2dLXT+xwiIcISzmM3wKISA2m3jB6RIRWe
+         jBVRPh2gpS49lUNKIkS6xkwPfEhyaz+MqMdELgcQTELZewwXHkA1zd6Zpnt9vHaEM2ab
+         oAyg==
+X-Gm-Message-State: AOAM53037i02/098u07NA7Mt1fpgGbPTarze8KZy4ceG+7748nhVKWkA
+        EGfY0EcoqcxWUFQtsU9Ctq+2AzBI24UcHRNb9fNxsg==
+X-Google-Smtp-Source: ABdhPJz/rKFclHqeegtULkB5WJdYhx0oUc8lnkCsoUksDa5rkBDuriXnXzAWxmfhrKfLGYMbfLPN+b1awwoLDJ9pLa8=
+X-Received: by 2002:a05:6102:67b:: with SMTP id z27mr2247015vsf.19.1611655115911;
+ Tue, 26 Jan 2021 01:58:35 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20210126000554.309858-1-ztong0001@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+References: <20210121082155.111333-1-ebiggers@kernel.org> <20210121082155.111333-3-ebiggers@kernel.org>
+In-Reply-To: <20210121082155.111333-3-ebiggers@kernel.org>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Tue, 26 Jan 2021 10:57:59 +0100
+Message-ID: <CAPDyKFo_nsZuCX+nVBDTJ5QxZ18mQMx=MssJZtWTfJfFC=u+xw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: use devm_blk_ksm_init()
+To:     Eric Biggers <ebiggers@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc:     linux-block <linux-block@vger.kernel.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Satya Tangirala <satyat@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/25/2021 4:05 PM, Tong Zhang wrote:
-> lpfc depends on irq_poll library, but it is not selected automatically.
-> When irq_poll is not selected, compiling it can run into following error
++ Martin, James
+
+On Thu, 21 Jan 2021 at 09:23, Eric Biggers <ebiggers@kernel.org> wrote:
 >
-> ERROR: modpost: "irq_poll_init" [drivers/scsi/lpfc/lpfc.ko] undefined!
-> ERROR: modpost: "irq_poll_sched" [drivers/scsi/lpfc/lpfc.ko] undefined!
-> ERROR: modpost: "irq_poll_complete" [drivers/scsi/lpfc/lpfc.ko] undefined!
+> From: Eric Biggers <ebiggers@google.com>
 >
-> Signed-off-by: Tong Zhang <ztong0001@gmail.com>
+> Use the new resource-managed variant of blk_ksm_init() so that the UFS
+> driver doesn't have to manually call blk_ksm_destroy().
+>
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+
+I took the liberty of applying this one to my mmc tree along with
+patch1, as it looks trivial to me.
+
+Martin/James - if you have objections or want to ack it, please tell me.
+
+Thanks and kind regards
+Uffe
+
+
+
+
+
 > ---
->   drivers/scsi/Kconfig | 1 +
->   1 file changed, 1 insertion(+)
+>  drivers/scsi/ufs/ufshcd-crypto.c | 9 ++-------
+>  drivers/scsi/ufs/ufshcd-crypto.h | 5 -----
+>  drivers/scsi/ufs/ufshcd.c        | 1 -
+>  3 files changed, 2 insertions(+), 13 deletions(-)
 >
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 701b61ec76ee..c79ac0731b13 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -1159,6 +1159,7 @@ config SCSI_LPFC
->   	depends on NVME_TARGET_FC || NVME_TARGET_FC=n
->   	depends on NVME_FC || NVME_FC=n
->   	select CRC_T10DIF
-> +	select IRQ_POLL
->   	help
->             This lpfc driver supports the Emulex LightPulse
->             Family of Fibre Channel PCI host adapters.
-
-Reviewed-by: James Smart <jsmart2021@gmail.com>
-
--- james
-
+> diff --git a/drivers/scsi/ufs/ufshcd-crypto.c b/drivers/scsi/ufs/ufshcd-crypto.c
+> index 07310b12a5dc8..153dd5765d9ca 100644
+> --- a/drivers/scsi/ufs/ufshcd-crypto.c
+> +++ b/drivers/scsi/ufs/ufshcd-crypto.c
+> @@ -179,8 +179,8 @@ int ufshcd_hba_init_crypto_capabilities(struct ufs_hba *hba)
+>         }
+>
+>         /* The actual number of configurations supported is (CFGC+1) */
+> -       err = blk_ksm_init(&hba->ksm,
+> -                          hba->crypto_capabilities.config_count + 1);
+> +       err = devm_blk_ksm_init(hba->dev, &hba->ksm,
+> +                               hba->crypto_capabilities.config_count + 1);
+>         if (err)
+>                 goto out_free_caps;
+>
+> @@ -238,8 +238,3 @@ void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
+>         if (hba->caps & UFSHCD_CAP_CRYPTO)
+>                 blk_ksm_register(&hba->ksm, q);
+>  }
+> -
+> -void ufshcd_crypto_destroy_keyslot_manager(struct ufs_hba *hba)
+> -{
+> -       blk_ksm_destroy(&hba->ksm);
+> -}
+> diff --git a/drivers/scsi/ufs/ufshcd-crypto.h b/drivers/scsi/ufs/ufshcd-crypto.h
+> index d53851be55416..78a58e788dff9 100644
+> --- a/drivers/scsi/ufs/ufshcd-crypto.h
+> +++ b/drivers/scsi/ufs/ufshcd-crypto.h
+> @@ -43,8 +43,6 @@ void ufshcd_init_crypto(struct ufs_hba *hba);
+>  void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
+>                                             struct request_queue *q);
+>
+> -void ufshcd_crypto_destroy_keyslot_manager(struct ufs_hba *hba);
+> -
+>  #else /* CONFIG_SCSI_UFS_CRYPTO */
+>
+>  static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
+> @@ -69,9 +67,6 @@ static inline void ufshcd_init_crypto(struct ufs_hba *hba) { }
+>  static inline void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
+>                                                 struct request_queue *q) { }
+>
+> -static inline void ufshcd_crypto_destroy_keyslot_manager(struct ufs_hba *hba)
+> -{ }
+> -
+>  #endif /* CONFIG_SCSI_UFS_CRYPTO */
+>
+>  #endif /* _UFSHCD_CRYPTO_H */
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index e31d2c5c7b23b..d905c84474c2c 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -9139,7 +9139,6 @@ EXPORT_SYMBOL_GPL(ufshcd_remove);
+>   */
+>  void ufshcd_dealloc_host(struct ufs_hba *hba)
+>  {
+> -       ufshcd_crypto_destroy_keyslot_manager(hba);
+>         scsi_host_put(hba->host);
+>  }
+>  EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
+> --
+> 2.30.0
+>
