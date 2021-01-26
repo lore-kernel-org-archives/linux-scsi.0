@@ -7,40 +7,39 @@ X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87756C43381
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 04:21:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3575DC433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 04:21:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 575A020709
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 04:21:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E770920709
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 04:21:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343645AbhA0EVR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 23:21:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43920 "EHLO mail.kernel.org"
+        id S1343657AbhA0EVh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 23:21:37 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45046 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390633AbhAZVEO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Jan 2021 16:04:14 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BAF2622CE3;
-        Tue, 26 Jan 2021 21:03:31 +0000 (UTC)
+        id S1728325AbhAZVOK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Jan 2021 16:14:10 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D91BF221EF;
+        Tue, 26 Jan 2021 21:12:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611695012;
-        bh=pI7NO1G6lbsrKpcVZj2mLy00XIBQq74wDW2Y+mjP0v0=;
+        s=k20201202; t=1611695572;
+        bh=dCL2AuuUtM5dPRsG6o+bpmbCzvVA4DZcIH0XNZ24YV4=;
         h=From:To:Cc:Subject:Date:From;
-        b=BtJ2r8o7NibHvaqosz5qGDDvoC+oNFtQwoGXdMMWf9femfmyJqkz27Bjz6/uonm7d
-         7AmgLqls9SrZNFKx42DPQeEjYW+fpJKMyWzN4LhzeZZ+4f3dSHUIcZ0aAlf2s3K6ly
-         p3lcQo3uRlLQfB6uGOg53oRrskUagoawNPZsKfa0B2sx9GtspXFw907hmnesrkHlAF
-         UgcgTICG53xCHRnYFFyPDtQ/t7mWzQ9XkjfpNuZU/S9xm5B5zeP0wp5wDL/tMIs7f0
-         dCc5l1Pzejp3WScWJUOvmbXTefh2mB/u8La+paZN6UrKbss/v7VcGdIDgVnkUsXJCg
-         KXAv3glQPAejA==
+        b=eLFJiOW1a0PI35bnD7RigcQwKmXffd8RVbZ7WO3is5wSdFYCDhgrwRj7rmUP9mF0u
+         pOMIV1QM2i7CP6Pc6xK0IR3xKE/9JroLQfeYV3QKE5MnYghLjI0Z0W0HzYQs5LXw3R
+         Ur7gVb9oRNCCX5e2/PbQn9JIj1cq/NUw9Y9pN5XdCCmBlzgPCfxsn7DODVWmLV8aal
+         km0R+bjqdY1lUf3fFRzqTqLokE4Z0EjvSD3rCPACJUZ/j93ylVuA7st4W1DRFqgMsx
+         cQHosxzZUAcX1KzoEkbt4wuGJhSJnyOaid7/ikH+Lnfa1FRH07RM+tySBMEuAaYnM+
+         YSN68jPrJjjRQ==
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] scsi: message: fusion: fix 'physical' typos
-Date:   Tue, 26 Jan 2021 15:03:28 -0600
-Message-Id: <20210126210328.2918631-1-helgaas@kernel.org>
+To:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] scsi: lpfc: Fix 'physical' typos
+Date:   Tue, 26 Jan 2021 15:12:48 -0600
+Message-Id: <20210126211248.2920028-1-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -54,36 +53,22 @@ Fix misspellings of "physical".
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/message/fusion/lsi/mpi_cnfg.h      | 2 +-
- drivers/message/fusion/lsi/mpi_history.txt | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
-index 178f414ea8f9..3770cb1cff7d 100644
---- a/drivers/message/fusion/lsi/mpi_cnfg.h
-+++ b/drivers/message/fusion/lsi/mpi_cnfg.h
-@@ -313,7 +313,7 @@
-  *                      define.
-  *                      Added BIOS Page 4 structure.
-  *                      Added MPI_RAID_PHYS_DISK1_PATH_MAX define for RAID
-- *                      Physcial Disk Page 1.
-+ *                      Physical Disk Page 1.
-  *  01-15-07  01.05.17  Added additional bit defines for ExtFlags field of
-  *                      Manufacturing Page 4.
-  *                      Added Solid State Drives Supported bit to IOC Page 6
-diff --git a/drivers/message/fusion/lsi/mpi_history.txt b/drivers/message/fusion/lsi/mpi_history.txt
-index fa9249b4971a..2f76204fa1b0 100644
---- a/drivers/message/fusion/lsi/mpi_history.txt
-+++ b/drivers/message/fusion/lsi/mpi_history.txt
-@@ -513,7 +513,7 @@ mpi_cnfg.h
-  *                      define.
-  *                      Added BIOS Page 4 structure.
-  *                      Added MPI_RAID_PHYS_DISK1_PATH_MAX define for RAID
-- *                      Physcial Disk Page 1.
-+ *                      Physical Disk Page 1.
-  *  01-15-07  01.05.17  Added additional bit defines for ExtFlags field of
-  *                      Manufacturing Page 4.
-  *                      Added Solid State Drives Supported bit to IOC Page 6
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 96c087b8b474..78af645f6c5f 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -732,7 +732,7 @@ lpfc_cmpl_els_flogi_fabric(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 			spin_unlock_irq(&phba->hbalock);
+ 		} else {
+ 			/* Because we asked f/w for NPIV it still expects us
+-			to call reg_vnpid atleast for the physcial host */
++			to call reg_vnpid at least for the physical host */
+ 			lpfc_printf_vlog(vport, KERN_WARNING,
+ 					 LOG_ELS | LOG_VPORT,
+ 					 "1817 Fabric does not support NPIV "
 -- 
 2.25.1
 
