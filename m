@@ -2,189 +2,542 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F81C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 20:06:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01573C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 21:53:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD52164DA3
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 20:06:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B02DE64DA3
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 21:53:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232566AbhA0UGJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jan 2021 15:06:09 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:39422 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232455AbhA0UEn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2021 15:04:43 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10RJtsir060468;
-        Wed, 27 Jan 2021 20:03:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=VCEr248HUpRM683fctK7JonGwtfgj1IzlmMVu+p2JhU=;
- b=zzZ1V/wzBfYo0RnNG0IParTyr/mrx1UPRkUariyp8tegZ71nQ8ij4eOorGmdTR6uLZ01
- H50LjlCAbXP/dsc3nfYEKmnkJJaqRsbTzQ4bUApGT7bQ3PlkNQHNEpTeuKwSbgU0Pq8L
- MdLMS1kVEyyNX0of1n9ON3Q9tYp40O1ZpLzWSCPnZnIbM9G5/kfniCLUKwoJFvtTmao1
- G+HTg5v3VA7NgoKilo2sPSk2FEYAg2HjfLllmeRr7KJxQ8g/hyWFbR6anRYEREkPpq9n
- uSc+546v6YgkVWOrDS6DxPF4/k1Zraj6N7LzhM6dauUf8FRT+p/aIdt1/X4jBfYCBBWY Vg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 3689aas6kf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Jan 2021 20:03:35 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10RK0dkI125831;
-        Wed, 27 Jan 2021 20:01:35 GMT
-Received: from nam04-co1-obe.outbound.protection.outlook.com (mail-co1nam04lp2051.outbound.protection.outlook.com [104.47.45.51])
-        by aserp3020.oracle.com with ESMTP id 368wq0pqrs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Jan 2021 20:01:34 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YgnWZz4LYJFvhKTWTbO597S8eeYR2PCrM/utrBWxllkvEFWyE5HoR2DBGkuIJgJsibIinxnPzIzS24kobNl0E885aKzNHZI7hH75D/GiRBe8ADXO6jH9INimDTCN5HKTrcjYg/+Mv///aAhjBPhgPbZuEzc5ZH/E4Wyz0RYb5O55820/+pAU/muRDT8e1aFKrMqxqZUrqNZ2qJp6Y9i2T53pH2yBa3QsZToXscvnxyRYVmBlCucM+oFPp7ydUnJTY8kB8LtZ4wo6VEj5qBh7nWVAs4xWiudbeuWvZZ4Lzbf3jD5z+Wf6GfzyAPR0jkQZlg/D7LwFfv4xaEAvjSQjJQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VCEr248HUpRM683fctK7JonGwtfgj1IzlmMVu+p2JhU=;
- b=CREkHe6OS/ho0TOM2SDfb7FaNJmDbq3PK+o1tE4ZNaNsMWaEYJRL7HxwzPkFVXBL+5gUPGCkT/sUfstMwSgvyo4L43V6ttAuA2vW5sejVCBnbOsBEQWtFuBd4xdLTTAnjoI+l4r+d2TQNqwTiUHQjoqJM6RPwgYu7mnzRB5FIE+EkvhEdonXYThE9hJxfKQ8AQvsHQ/39lDEe1K7OlBl2boPmR62JyHOOPcxi92GyI6cy0SlmV+XMBU7ZOsZ1XNDZMtEYTc8LlLsXD22aBV5S/j/eeZFTb2nCFQDbjQg8FJ8Kdvf9igmSitN4Se4osqteCYBR4T+p9CGanWy4CwDrw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VCEr248HUpRM683fctK7JonGwtfgj1IzlmMVu+p2JhU=;
- b=Hjxxa7Nwx0JenJLMC1jRCuz+ccR/khdgog+GeaXKj4Hn8iCtHTqw1j7b0QOwASTQsARIcbyqGbg4lsd+52XJocWG6aiCB8WAY1Sknp8VoJyeMvve6rK8ie5Gm4UJ+2MbdArX2dxoBLGp50sXqgx3hiLtgGI54fnjRcVJqnOA+Uo=
-Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by SN6PR10MB3022.namprd10.prod.outlook.com (2603:10b6:805:d8::25) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.16; Wed, 27 Jan
- 2021 20:01:32 +0000
-Received: from SN6PR10MB2943.namprd10.prod.outlook.com
- ([fe80::793a:7eef:db3b:ad48]) by SN6PR10MB2943.namprd10.prod.outlook.com
- ([fe80::793a:7eef:db3b:ad48%5]) with mapi id 15.20.3784.017; Wed, 27 Jan 2021
- 20:01:32 +0000
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-To:     Jiapeng Zhong <abaci-bugfix@linux.alibaba.com>
-CC:     Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        id S232221AbhA0VxY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jan 2021 16:53:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55116 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231828AbhA0Vwg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2021 16:52:36 -0500
+Received: from antares.kleine-koenig.org (antares.kleine-koenig.org [IPv6:2a01:4f8:c0c:3a97::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CC4EC061574;
+        Wed, 27 Jan 2021 13:51:56 -0800 (PST)
+Received: by antares.kleine-koenig.org (Postfix, from userid 1000)
+        id 5B29DAE0BB9; Wed, 27 Jan 2021 22:50:27 +0100 (CET)
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <uwe@kleine-koenig.org>
+To:     Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jens Axboe <axboe@kernel.dk>, Matt Mackall <mpm@selenic.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Peter Huewe <peterhuewe@gmx.de>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Haren Myneni <haren@us.ibm.com>,
+        =?UTF-8?q?Breno=20Leit=C3=A3o?= <leitao@debian.org>,
+        Nayna Jain <nayna@linux.ibm.com>,
+        Paulo Flabiano Smorigo <pfsmorigo@gmail.com>,
+        Steven Royer <seroyer@linux.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Cristobal Forno <cforno12@linux.ibm.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Dany Madden <drt@linux.ibm.com>, Lijun Pan <ljp@linux.ibm.com>,
+        Sukadev Bhattiprolu <sukadev@linux.ibm.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] scsi: qla2xxx: Simplify the calculation of variables
-Thread-Topic: [PATCH] scsi: qla2xxx: Simplify the calculation of variables
-Thread-Index: AQHW9AeX2TRd5K8GiUSNNvRxrb08UKo75leA
-Date:   Wed, 27 Jan 2021 20:01:31 +0000
-Message-ID: <FA227E6E-536F-4C00-9BB1-7346EBDA2F7A@oracle.com>
-References: <1611650554-33019-1-git-send-email-abaci-bugfix@linux.alibaba.com>
-In-Reply-To: <1611650554-33019-1-git-send-email-abaci-bugfix@linux.alibaba.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: linux.alibaba.com; dkim=none (message not signed)
- header.d=none;linux.alibaba.com; dmarc=none action=none
- header.from=oracle.com;
-x-originating-ip: [70.114.128.235]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 06b690d6-fb28-4887-2d20-08d8c2fe5823
-x-ms-traffictypediagnostic: SN6PR10MB3022:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR10MB302299D8C0B0A76565ADFFC1E6BB9@SN6PR10MB3022.namprd10.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:586;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 8nvtmrTt0XU6ThS10vTiUbQ5JKE3Lv6GvJOvuu94VQ92lmKjFMa8WGp6jpajRMh623bNykBZBA3qDWhuJ+OLWBiTwIXaOKW1r7/FjmVKG/n8nKy8Ffd1ZyIonJQJH/ZNdRP+Zc2axlA+E+ddgOCatM9SHL47hE9akLHrBL00/65kSjnJuoUhRMvu5S67+QkEuvYhE4FCwBAl4pm/CFn21up3Pks4IbgNMlJn6NzMTYVHiUWoObm3ZULMRn5YgiIGohPXimjfMm3h+chLpgKNpjHD/oexobCcOTW31EpSlGMRKQFCHzaVV5LaFhGXOXnceJ+VrmHbnxBrIrwpWYGgnqM5ZTT20NzMo5DpfTFSFZ7TyO980PTUIeobWlP9zm1iyF63Uwowiz9fq5Swd6fKuSoYdxePQJIYik17lDG6o7Pft/+5Q7Ok/tYUl+7WmvKdgk0J5iTCY00lf0hZ2MFSnInYYEFsA2Er3OhTVZhe3VQF9UFXHIDXpkUzej0otYHlWWl3VRYIEQ18oUUuMERbHaJl/FeepuaYOXKo4MqZ6AK/0DPhQX7WFHnnU1MMvGhBefJR1TTNHnm8t0PdLf8erQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(346002)(366004)(376002)(136003)(39860400002)(5660300002)(4326008)(91956017)(8936002)(8676002)(76116006)(66476007)(4744005)(478600001)(2906002)(186003)(36756003)(66946007)(33656002)(316002)(6512007)(26005)(83380400001)(6486002)(53546011)(66446008)(54906003)(2616005)(6506007)(86362001)(6916009)(71200400001)(66556008)(64756008)(44832011)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?4T+dQmP5uuisiFBYL7m4bHK4goc+1vZAQ/L1E1philRFdj1714RNLv1CsrEb?=
- =?us-ascii?Q?OEsr2OmARek2L6rl3sdUE8HlTukhKFtwbLJSq0PIvcfA1gNsyDXpHJkPKVAz?=
- =?us-ascii?Q?35Iyx1/aB2mJW+tbYeqUZ0aMIDwSq1xYFVEuuYHRxGgN/KL7THZKIxMyothE?=
- =?us-ascii?Q?s51XTSHALSaejgkhwOxcCUZRbrz5rnJtJR6rQLNEzVGQaBSx0GVY5X3NaQ6p?=
- =?us-ascii?Q?VXHKZivC0q5PDrW7PYZ8dryMEgipFw7DWqRyF944lWMUlH/fFUJaJXqJAJ1x?=
- =?us-ascii?Q?RhHxcGIU1UZ+SQVcAu1+UYUnenqZrmPm98F6AXpqUjkxlSXtVudVpLL2YsQ+?=
- =?us-ascii?Q?DhdtGsoLFX8oiemzVLlPVTsfQhM9JofrnLyoR8ZUiJaniQtjOrtxM041ojmY?=
- =?us-ascii?Q?JM68gPyRrI+hRoKQIMSG+/wmD7osMcSq0/YQpU7wNSg0RfBDC1jURm2oSm+P?=
- =?us-ascii?Q?6FFmCyoXrveuxqQQFJnHZ2Pvf/jvFULlbdqZz3P9nUEGEpbwq6oBlur0h66k?=
- =?us-ascii?Q?9xMz7l/qGQj0JMS5B74TmE2anWq7XtJhu3jnlD0q7Uc8SwaJ15DY/6zr/DmP?=
- =?us-ascii?Q?c9guA84i2DkoJEJCCVdnWT92bQ0RnypUFmlvS9zbzfNCIAm4lCckEjQbvyM7?=
- =?us-ascii?Q?XMeDgQf1BnOs+dV9fIPtTHJlxTB1sz+nhHnG2N00QibCQAWxsN5/QYDKP1+7?=
- =?us-ascii?Q?gM6qtSre2ayw1R0IMohIcEZFNYrUL6vhOq59lKGE1JdxVjvjnTTWQq0GfYO0?=
- =?us-ascii?Q?vIiPoBnBNH+1yt1BlbYZTzA907CsO9LJwUsHnSNxJonNPegI7Q9PjX3ge5ES?=
- =?us-ascii?Q?aKKGxYuQ4PUIy7hv1XDaFyilGXjwWfwicg/5IkVsSwdZgnInIE5LV+1Miebd?=
- =?us-ascii?Q?MS1NY5nsXXoIWxlTDiQBh94GyGcvEppHkdYkqKnJjxihPvhNTe1Y+Ew7fAXM?=
- =?us-ascii?Q?TMDXlRAfz84lKuyaCXDfHiGbh/jC1zkKF+bHACQ10A81sMQX+kGt05FESMj5?=
- =?us-ascii?Q?PbUYGAaXSZaq7br7TlLt5oukKhq/rLSE9IYr/AI/dfpVnGuBimhepokmALO2?=
- =?us-ascii?Q?elAk73Fd8N05s3B4X7sqR2R/Cu/lzg=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <3B310DA6B45DDB4DA9BC4379FCE09972@namprd10.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Michael Cyr <mikecyr@linux.ibm.com>,
+        Jiri Slaby <jirislaby@kernel.org>
+Cc:     linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-integrity@vger.kernel.org,
+        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH] vio: make remove callback return void
+Date:   Wed, 27 Jan 2021 22:50:10 +0100
+Message-Id: <20210127215010.99954-1-uwe@kleine-koenig.org>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 06b690d6-fb28-4887-2d20-08d8c2fe5823
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Jan 2021 20:01:31.6504
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: OrxwIYtSrdgcPaPDlGNeJt6wN4NmP83QDxXejgitQT/3RRo90ohCtpeSnK6MDtVLEctsZ9a9lxr6oJV/AsPYUhoXAbECqT6BKsWBRJshULk=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR10MB3022
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9877 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 spamscore=0
- adultscore=0 bulkscore=0 phishscore=0 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101270100
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9877 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
- lowpriorityscore=0 mlxlogscore=999 clxscore=1015 phishscore=0 bulkscore=0
- spamscore=0 priorityscore=1501 mlxscore=0 suspectscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101270099
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+The driver core ignores the return value of struct bus_type::remove()
+because there is only little that can be done. To simplify the quest to
+make this function return void, let struct vio_driver::remove() return
+void, too. All users already unconditionally return 0, this commit makes
+it obvious that returning an error code is a bad idea and makes it
+obvious for future driver authors that returning an error code isn't
+intended.
 
+Note there are two nominally different implementations for a vio bus:
+one in arch/sparc/kernel/vio.c and the other in
+arch/powerpc/platforms/pseries/vio.c. I didn't care to check which
+driver is using which of these busses (or if even some of them can be
+used with both) and simply adapt all drivers and the two bus codes in
+one go.
 
-> On Jan 26, 2021, at 2:42 AM, Jiapeng Zhong <abaci-bugfix@linux.alibaba.co=
-m> wrote:
->=20
-> Fix the following coccicheck warnings:
->=20
-> ./drivers/scsi/qla2xxx/qla_nvme.c:288:24-26: WARNING !A || A && B is
-> equivalent to !A || B.
->=20
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Signed-off-by: Jiapeng Zhong <abaci-bugfix@linux.alibaba.com>
-> ---
-> drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_n=
-vme.c
-> index eab559b..38196b2 100644
-> --- a/drivers/scsi/qla2xxx/qla_nvme.c
-> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-> @@ -285,7 +285,7 @@ static int qla_nvme_ls_req(struct nvme_fc_local_port =
-*lport,
-> 	srb_t           *sp;
->=20
->=20
-> -	if (!fcport || (fcport && fcport->deleted))
-> +	if (!fcport || fcport->deleted)
-> 		return rval;
->=20
-> 	vha =3D fcport->vha;
-> --=20
-> 1.8.3.1
->=20
+Note that for the powerpc implementation there is a semantical change:
+Before this patch for a device that was bound to a driver without a
+remove callback vio_cmo_bus_remove(viodev) wasn't called. As the device
+core still considers the device unbound after vio_bus_remove() returns
+calling this unconditionally is the consistent behaviour which is
+implemented here.
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Uwe Kleine-König <uwe@kleine-koenig.org>
+---
+Hello,
 
---
-Himanshu Madhani	 Oracle Linux Engineering
+note that this change depends on
+https://lore.kernel.org/r/20210121062005.53271-1-ljp@linux.ibm.com which removes
+an (ignored) return -EBUSY in drivers/net/ethernet/ibm/ibmvnic.c.
+I don't know when/if this latter patch will be applied, so it might take
+some time until my patch can go in.
+
+Best regards
+Uwe
+
+ arch/powerpc/include/asm/vio.h           | 2 +-
+ arch/powerpc/platforms/pseries/vio.c     | 7 +++----
+ arch/sparc/include/asm/vio.h             | 2 +-
+ arch/sparc/kernel/ds.c                   | 6 ------
+ arch/sparc/kernel/vio.c                  | 4 ++--
+ drivers/block/sunvdc.c                   | 3 +--
+ drivers/char/hw_random/pseries-rng.c     | 3 +--
+ drivers/char/tpm/tpm_ibmvtpm.c           | 4 +---
+ drivers/crypto/nx/nx-842-pseries.c       | 4 +---
+ drivers/crypto/nx/nx.c                   | 4 +---
+ drivers/misc/ibmvmc.c                    | 4 +---
+ drivers/net/ethernet/ibm/ibmveth.c       | 4 +---
+ drivers/net/ethernet/ibm/ibmvnic.c       | 4 +---
+ drivers/net/ethernet/sun/ldmvsw.c        | 4 +---
+ drivers/net/ethernet/sun/sunvnet.c       | 3 +--
+ drivers/scsi/ibmvscsi/ibmvfc.c           | 3 +--
+ drivers/scsi/ibmvscsi/ibmvscsi.c         | 4 +---
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 4 +---
+ drivers/tty/hvc/hvcs.c                   | 3 +--
+ drivers/tty/vcc.c                        | 4 +---
+ 20 files changed, 22 insertions(+), 54 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/vio.h b/arch/powerpc/include/asm/vio.h
+index 0cf52746531b..721c0d6715ac 100644
+--- a/arch/powerpc/include/asm/vio.h
++++ b/arch/powerpc/include/asm/vio.h
+@@ -113,7 +113,7 @@ struct vio_driver {
+ 	const char *name;
+ 	const struct vio_device_id *id_table;
+ 	int (*probe)(struct vio_dev *dev, const struct vio_device_id *id);
+-	int (*remove)(struct vio_dev *dev);
++	void (*remove)(struct vio_dev *dev);
+ 	/* A driver must have a get_desired_dma() function to
+ 	 * be loaded in a CMO environment if it uses DMA.
+ 	 */
+diff --git a/arch/powerpc/platforms/pseries/vio.c b/arch/powerpc/platforms/pseries/vio.c
+index b2797cfe4e2b..9cb4fc839fd5 100644
+--- a/arch/powerpc/platforms/pseries/vio.c
++++ b/arch/powerpc/platforms/pseries/vio.c
+@@ -1261,7 +1261,6 @@ static int vio_bus_remove(struct device *dev)
+ 	struct vio_dev *viodev = to_vio_dev(dev);
+ 	struct vio_driver *viodrv = to_vio_driver(dev->driver);
+ 	struct device *devptr;
+-	int ret = 1;
+ 
+ 	/*
+ 	 * Hold a reference to the device after the remove function is called
+@@ -1270,13 +1269,13 @@ static int vio_bus_remove(struct device *dev)
+ 	devptr = get_device(dev);
+ 
+ 	if (viodrv->remove)
+-		ret = viodrv->remove(viodev);
++		viodrv->remove(viodev);
+ 
+-	if (!ret && firmware_has_feature(FW_FEATURE_CMO))
++	if (firmware_has_feature(FW_FEATURE_CMO))
+ 		vio_cmo_bus_remove(viodev);
+ 
+ 	put_device(devptr);
+-	return ret;
++	return 0;
+ }
+ 
+ /**
+diff --git a/arch/sparc/include/asm/vio.h b/arch/sparc/include/asm/vio.h
+index 059f0eb678e0..8a1a83bbb6d5 100644
+--- a/arch/sparc/include/asm/vio.h
++++ b/arch/sparc/include/asm/vio.h
+@@ -362,7 +362,7 @@ struct vio_driver {
+ 	struct list_head		node;
+ 	const struct vio_device_id	*id_table;
+ 	int (*probe)(struct vio_dev *dev, const struct vio_device_id *id);
+-	int (*remove)(struct vio_dev *dev);
++	void (*remove)(struct vio_dev *dev);
+ 	void (*shutdown)(struct vio_dev *dev);
+ 	unsigned long			driver_data;
+ 	struct device_driver		driver;
+diff --git a/arch/sparc/kernel/ds.c b/arch/sparc/kernel/ds.c
+index 522e5b51050c..4a5bdb0df779 100644
+--- a/arch/sparc/kernel/ds.c
++++ b/arch/sparc/kernel/ds.c
+@@ -1236,11 +1236,6 @@ static int ds_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	return err;
+ }
+ 
+-static int ds_remove(struct vio_dev *vdev)
+-{
+-	return 0;
+-}
+-
+ static const struct vio_device_id ds_match[] = {
+ 	{
+ 		.type = "domain-services-port",
+@@ -1251,7 +1246,6 @@ static const struct vio_device_id ds_match[] = {
+ static struct vio_driver ds_driver = {
+ 	.id_table	= ds_match,
+ 	.probe		= ds_probe,
+-	.remove		= ds_remove,
+ 	.name		= "ds",
+ };
+ 
+diff --git a/arch/sparc/kernel/vio.c b/arch/sparc/kernel/vio.c
+index 4f57056ed463..348a88691219 100644
+--- a/arch/sparc/kernel/vio.c
++++ b/arch/sparc/kernel/vio.c
+@@ -105,10 +105,10 @@ static int vio_device_remove(struct device *dev)
+ 		 * routines to do so at the moment. TBD
+ 		 */
+ 
+-		return drv->remove(vdev);
++		drv->remove(vdev);
+ 	}
+ 
+-	return 1;
++	return 0;
+ }
+ 
+ static ssize_t devspec_show(struct device *dev,
+diff --git a/drivers/block/sunvdc.c b/drivers/block/sunvdc.c
+index 39aeebc6837d..1547d4345ad8 100644
+--- a/drivers/block/sunvdc.c
++++ b/drivers/block/sunvdc.c
+@@ -1071,7 +1071,7 @@ static int vdc_port_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	return err;
+ }
+ 
+-static int vdc_port_remove(struct vio_dev *vdev)
++static void vdc_port_remove(struct vio_dev *vdev)
+ {
+ 	struct vdc_port *port = dev_get_drvdata(&vdev->dev);
+ 
+@@ -1094,7 +1094,6 @@ static int vdc_port_remove(struct vio_dev *vdev)
+ 
+ 		kfree(port);
+ 	}
+-	return 0;
+ }
+ 
+ static void vdc_requeue_inflight(struct vdc_port *port)
+diff --git a/drivers/char/hw_random/pseries-rng.c b/drivers/char/hw_random/pseries-rng.c
+index 8038a8a9fb58..f4949b689bd5 100644
+--- a/drivers/char/hw_random/pseries-rng.c
++++ b/drivers/char/hw_random/pseries-rng.c
+@@ -54,10 +54,9 @@ static int pseries_rng_probe(struct vio_dev *dev,
+ 	return hwrng_register(&pseries_rng);
+ }
+ 
+-static int pseries_rng_remove(struct vio_dev *dev)
++static void pseries_rng_remove(struct vio_dev *dev)
+ {
+ 	hwrng_unregister(&pseries_rng);
+-	return 0;
+ }
+ 
+ static const struct vio_device_id pseries_rng_driver_ids[] = {
+diff --git a/drivers/char/tpm/tpm_ibmvtpm.c b/drivers/char/tpm/tpm_ibmvtpm.c
+index 994385bf37c0..903604769de9 100644
+--- a/drivers/char/tpm/tpm_ibmvtpm.c
++++ b/drivers/char/tpm/tpm_ibmvtpm.c
+@@ -343,7 +343,7 @@ static int ibmvtpm_crq_send_init_complete(struct ibmvtpm_dev *ibmvtpm)
+  *
+  * Return: Always 0.
+  */
+-static int tpm_ibmvtpm_remove(struct vio_dev *vdev)
++static void tpm_ibmvtpm_remove(struct vio_dev *vdev)
+ {
+ 	struct tpm_chip *chip = dev_get_drvdata(&vdev->dev);
+ 	struct ibmvtpm_dev *ibmvtpm = dev_get_drvdata(&chip->dev);
+@@ -372,8 +372,6 @@ static int tpm_ibmvtpm_remove(struct vio_dev *vdev)
+ 	kfree(ibmvtpm);
+ 	/* For tpm_ibmvtpm_get_desired_dma */
+ 	dev_set_drvdata(&vdev->dev, NULL);
+-
+-	return 0;
+ }
+ 
+ /**
+diff --git a/drivers/crypto/nx/nx-842-pseries.c b/drivers/crypto/nx/nx-842-pseries.c
+index 2de5e3672e42..cc8dd3072b8b 100644
+--- a/drivers/crypto/nx/nx-842-pseries.c
++++ b/drivers/crypto/nx/nx-842-pseries.c
+@@ -1042,7 +1042,7 @@ static int nx842_probe(struct vio_dev *viodev,
+ 	return ret;
+ }
+ 
+-static int nx842_remove(struct vio_dev *viodev)
++static void nx842_remove(struct vio_dev *viodev)
+ {
+ 	struct nx842_devdata *old_devdata;
+ 	unsigned long flags;
+@@ -1063,8 +1063,6 @@ static int nx842_remove(struct vio_dev *viodev)
+ 	if (old_devdata)
+ 		kfree(old_devdata->counters);
+ 	kfree(old_devdata);
+-
+-	return 0;
+ }
+ 
+ static const struct vio_device_id nx842_vio_driver_ids[] = {
+diff --git a/drivers/crypto/nx/nx.c b/drivers/crypto/nx/nx.c
+index 0d2dc5be7f19..1d0e8a1ba160 100644
+--- a/drivers/crypto/nx/nx.c
++++ b/drivers/crypto/nx/nx.c
+@@ -783,7 +783,7 @@ static int nx_probe(struct vio_dev *viodev, const struct vio_device_id *id)
+ 	return nx_register_algs();
+ }
+ 
+-static int nx_remove(struct vio_dev *viodev)
++static void nx_remove(struct vio_dev *viodev)
+ {
+ 	dev_dbg(&viodev->dev, "entering nx_remove for UA 0x%x\n",
+ 		viodev->unit_address);
+@@ -811,8 +811,6 @@ static int nx_remove(struct vio_dev *viodev)
+ 		nx_unregister_skcipher(&nx_ecb_aes_alg, NX_FC_AES,
+ 				       NX_MODE_AES_ECB);
+ 	}
+-
+-	return 0;
+ }
+ 
+ 
+diff --git a/drivers/misc/ibmvmc.c b/drivers/misc/ibmvmc.c
+index 2d778d0f011e..c0fe3295c330 100644
+--- a/drivers/misc/ibmvmc.c
++++ b/drivers/misc/ibmvmc.c
+@@ -2288,15 +2288,13 @@ static int ibmvmc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	return -EPERM;
+ }
+ 
+-static int ibmvmc_remove(struct vio_dev *vdev)
++static void ibmvmc_remove(struct vio_dev *vdev)
+ {
+ 	struct crq_server_adapter *adapter = dev_get_drvdata(&vdev->dev);
+ 
+ 	dev_info(adapter->dev, "Entering remove for UA 0x%x\n",
+ 		 vdev->unit_address);
+ 	ibmvmc_release_crq_queue(adapter);
+-
+-	return 0;
+ }
+ 
+ static struct vio_device_id ibmvmc_device_table[] = {
+diff --git a/drivers/net/ethernet/ibm/ibmveth.c b/drivers/net/ethernet/ibm/ibmveth.c
+index c3ec9ceed833..7fea9ae60f13 100644
+--- a/drivers/net/ethernet/ibm/ibmveth.c
++++ b/drivers/net/ethernet/ibm/ibmveth.c
+@@ -1758,7 +1758,7 @@ static int ibmveth_probe(struct vio_dev *dev, const struct vio_device_id *id)
+ 	return 0;
+ }
+ 
+-static int ibmveth_remove(struct vio_dev *dev)
++static void ibmveth_remove(struct vio_dev *dev)
+ {
+ 	struct net_device *netdev = dev_get_drvdata(&dev->dev);
+ 	struct ibmveth_adapter *adapter = netdev_priv(netdev);
+@@ -1771,8 +1771,6 @@ static int ibmveth_remove(struct vio_dev *dev)
+ 
+ 	free_netdev(netdev);
+ 	dev_set_drvdata(&dev->dev, NULL);
+-
+-	return 0;
+ }
+ 
+ static struct attribute veth_active_attr;
+diff --git a/drivers/net/ethernet/ibm/ibmvnic.c b/drivers/net/ethernet/ibm/ibmvnic.c
+index a187d51bcf92..2eec0652760c 100644
+--- a/drivers/net/ethernet/ibm/ibmvnic.c
++++ b/drivers/net/ethernet/ibm/ibmvnic.c
+@@ -5430,7 +5430,7 @@ static int ibmvnic_probe(struct vio_dev *dev, const struct vio_device_id *id)
+ 	return rc;
+ }
+ 
+-static int ibmvnic_remove(struct vio_dev *dev)
++static void ibmvnic_remove(struct vio_dev *dev)
+ {
+ 	struct net_device *netdev = dev_get_drvdata(&dev->dev);
+ 	struct ibmvnic_adapter *adapter = netdev_priv(netdev);
+@@ -5460,8 +5460,6 @@ static int ibmvnic_remove(struct vio_dev *dev)
+ 	device_remove_file(&dev->dev, &dev_attr_failover);
+ 	free_netdev(netdev);
+ 	dev_set_drvdata(&dev->dev, NULL);
+-
+-	return 0;
+ }
+ 
+ static ssize_t failover_store(struct device *dev, struct device_attribute *attr,
+diff --git a/drivers/net/ethernet/sun/ldmvsw.c b/drivers/net/ethernet/sun/ldmvsw.c
+index 01ea0d6f8819..50bd4e3b0af9 100644
+--- a/drivers/net/ethernet/sun/ldmvsw.c
++++ b/drivers/net/ethernet/sun/ldmvsw.c
+@@ -404,7 +404,7 @@ static int vsw_port_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	return err;
+ }
+ 
+-static int vsw_port_remove(struct vio_dev *vdev)
++static void vsw_port_remove(struct vio_dev *vdev)
+ {
+ 	struct vnet_port *port = dev_get_drvdata(&vdev->dev);
+ 	unsigned long flags;
+@@ -430,8 +430,6 @@ static int vsw_port_remove(struct vio_dev *vdev)
+ 
+ 		free_netdev(port->dev);
+ 	}
+-
+-	return 0;
+ }
+ 
+ static void vsw_cleanup(void)
+diff --git a/drivers/net/ethernet/sun/sunvnet.c b/drivers/net/ethernet/sun/sunvnet.c
+index 96b883f965f6..58ee89223951 100644
+--- a/drivers/net/ethernet/sun/sunvnet.c
++++ b/drivers/net/ethernet/sun/sunvnet.c
+@@ -510,7 +510,7 @@ static int vnet_port_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	return err;
+ }
+ 
+-static int vnet_port_remove(struct vio_dev *vdev)
++static void vnet_port_remove(struct vio_dev *vdev)
+ {
+ 	struct vnet_port *port = dev_get_drvdata(&vdev->dev);
+ 
+@@ -533,7 +533,6 @@ static int vnet_port_remove(struct vio_dev *vdev)
+ 
+ 		kfree(port);
+ 	}
+-	return 0;
+ }
+ 
+ static const struct vio_device_id vnet_port_match[] = {
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 42e4d35e0d35..0a472acaca5d 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -5253,7 +5253,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+  * Return value:
+  * 	0
+  **/
+-static int ibmvfc_remove(struct vio_dev *vdev)
++static void ibmvfc_remove(struct vio_dev *vdev)
+ {
+ 	struct ibmvfc_host *vhost = dev_get_drvdata(&vdev->dev);
+ 	unsigned long flags;
+@@ -5282,7 +5282,6 @@ static int ibmvfc_remove(struct vio_dev *vdev)
+ 	spin_unlock(&ibmvfc_driver_lock);
+ 	scsi_host_put(vhost->host);
+ 	LEAVE;
+-	return 0;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 29fcc44be2d5..77fafb1bc173 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -2335,7 +2335,7 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	return -1;
+ }
+ 
+-static int ibmvscsi_remove(struct vio_dev *vdev)
++static void ibmvscsi_remove(struct vio_dev *vdev)
+ {
+ 	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
+ 
+@@ -2356,8 +2356,6 @@ static int ibmvscsi_remove(struct vio_dev *vdev)
+ 	spin_unlock(&ibmvscsi_driver_lock);
+ 
+ 	scsi_host_put(hostdata->host);
+-
+-	return 0;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index cc3908c2d2f9..9abd9e253af6 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -3595,7 +3595,7 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
+ 	return rc;
+ }
+ 
+-static int ibmvscsis_remove(struct vio_dev *vdev)
++static void ibmvscsis_remove(struct vio_dev *vdev)
+ {
+ 	struct scsi_info *vscsi = dev_get_drvdata(&vdev->dev);
+ 
+@@ -3622,8 +3622,6 @@ static int ibmvscsis_remove(struct vio_dev *vdev)
+ 	list_del(&vscsi->list);
+ 	spin_unlock_bh(&ibmvscsis_dev_lock);
+ 	kfree(vscsi);
+-
+-	return 0;
+ }
+ 
+ static ssize_t system_id_show(struct device *dev,
+diff --git a/drivers/tty/hvc/hvcs.c b/drivers/tty/hvc/hvcs.c
+index 3e0461285c34..80874945ded8 100644
+--- a/drivers/tty/hvc/hvcs.c
++++ b/drivers/tty/hvc/hvcs.c
+@@ -819,7 +819,7 @@ static int hvcs_probe(
+ 	return 0;
+ }
+ 
+-static int hvcs_remove(struct vio_dev *dev)
++static void hvcs_remove(struct vio_dev *dev)
+ {
+ 	struct hvcs_struct *hvcsd = dev_get_drvdata(&dev->dev);
+ 	unsigned long flags;
+@@ -849,7 +849,6 @@ static int hvcs_remove(struct vio_dev *dev)
+ 
+ 	printk(KERN_INFO "HVCS: vty-server@%X removed from the"
+ 			" vio bus.\n", dev->unit_address);
+-	return 0;
+ };
+ 
+ static struct vio_driver hvcs_vio_driver = {
+diff --git a/drivers/tty/vcc.c b/drivers/tty/vcc.c
+index e2d6205f83ce..5f72ebf93821 100644
+--- a/drivers/tty/vcc.c
++++ b/drivers/tty/vcc.c
+@@ -677,7 +677,7 @@ static int vcc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+  *
+  * Return: status of removal
+  */
+-static int vcc_remove(struct vio_dev *vdev)
++static void vcc_remove(struct vio_dev *vdev)
+ {
+ 	struct vcc_port *port = dev_get_drvdata(&vdev->dev);
+ 
+@@ -712,8 +712,6 @@ static int vcc_remove(struct vio_dev *vdev)
+ 		kfree(port->domain);
+ 		kfree(port);
+ 	}
+-
+-	return 0;
+ }
+ 
+ static const struct vio_device_id vcc_match[] = {
+-- 
+2.29.2
 
