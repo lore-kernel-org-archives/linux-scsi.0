@@ -2,157 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2456CC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 14:57:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49FA1C433E6
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 15:14:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE8192075A
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 14:57:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 016EB207B0
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 15:14:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235081AbhA0O5I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jan 2021 09:57:08 -0500
-Received: from de-smtp-delivery-102.mimecast.com ([62.140.7.102]:54903 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234800AbhA0OzE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Jan 2021 09:55:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1611759233;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zIJiPYieEGMw3HEPoaciUxdI6Z+vZp0M6793naW/nCg=;
-        b=E1Axr0cHALpQihEJGn6ULdxore7h1JIEJmfjnl8t/ADA8dFCkPFfZnngpj0XJV98GlKX0G
-        sVSXO9ACjBmjemGuZpZWa1hLeI7nFm0LXe1xmwNaP4bU04gPJcTnzBBCT+YbiS+5pbCtNR
-        jXPhnC9qDwhrnI/sLkmtFIPmUXyh/SI=
-Received: from EUR05-AM6-obe.outbound.protection.outlook.com
- (mail-am6eur05lp2106.outbound.protection.outlook.com [104.47.18.106])
- (Using TLS) by relay.mimecast.com with ESMTP id
- de-mta-32-wR7SsDN3N2GDaRBgXj152A-1; Wed, 27 Jan 2021 15:53:52 +0100
-X-MC-Unique: wR7SsDN3N2GDaRBgXj152A-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LUokHLRWOMfAovg/a59opQ+voMMRN163irT7hJFES7ncfpMyLw1VwjnwB5nypK0CDj8/Iaq1ETiQg3Pj2pNTwDaLEOj9MbtiTtYng5yFPkHgem/GAaaCZzTdwqfaJGbxe8qdvsvfYPHvDbv/RlzB7goqa2zbxROv/kCpoJm+cRKbZtZJt41ngHJ2E2q5xFoDhk1/TdWO5UGjlyUVRlh+JpWHu39b6K1IjOnbz8ngRQDNxaX8WrlLvi2TL9V3ppgZHPaJ8IARXY4GAr1TVcmHtV30AqHS+cPRPSBVExdyy7RzuqNa1Kg9glnmb9D/QfKgkO8EeaON5b9nnUzBRhJeuQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zIJiPYieEGMw3HEPoaciUxdI6Z+vZp0M6793naW/nCg=;
- b=lIfgVTdy2NLTf3Cc5PGddQ/L19FVMFx75pjrzTcc6vxCJJo4m4NuOFS28e6e6PEWwaPtoEchU+YsCpkVnO568Bsv1dCmfB/UqXo3smLf9hRHP+BBVG/Ou9eJTLbeMzY9y/Qc9PQqXgIvba7MMZI8QmuKUb/CdVV+m1X7MMh4YX828jdVpmfyc730OiQA81MJPwRHe2e1fAVJMMf4gzFxQeGYYDQvQwNC2GNJt1lFezFZ2QJtphrk1cMRx7DcuP1EnnxhRJpBcXbRJLj41Jz7hLq0z40LneWRffFq513hq1qkZiKQqz5SW2nBnjbJxoRThvW9kFh97jYk9u3Q2BoNyQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=suse.com;
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
- by AM5PR04MB3268.eurprd04.prod.outlook.com (2603:10a6:206:8::31) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3805.16; Wed, 27 Jan
- 2021 14:53:48 +0000
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::c60:6150:342e:e042]) by AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::c60:6150:342e:e042%6]) with mapi id 15.20.3805.016; Wed, 27 Jan 2021
- 14:53:48 +0000
-Subject: Re: [PATCH] fnic: fixup patch to resolve stack frame issues
-To:     Greg KH <gregkh@linuxfoundation.org>,
-        Lee Duncan <leeman.duncan@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
-References: <20210127012124.22241-1-leeman.duncan@gmail.com>
- <YBEaQEs6gvrSm6dA@kroah.com>
-From:   Lee Duncan <lduncan@suse.com>
-Message-ID: <98317a6b-8710-00c6-2b97-6c73749373e8@suse.com>
-Date:   Wed, 27 Jan 2021 06:53:44 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
-In-Reply-To: <YBEaQEs6gvrSm6dA@kroah.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [73.25.22.216]
-X-ClientProxiedBy: AM9P191CA0005.EURP191.PROD.OUTLOOK.COM
- (2603:10a6:20b:21c::10) To AM5PR04MB3089.eurprd04.prod.outlook.com
- (2603:10a6:206:b::28)
+        id S235261AbhA0POG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jan 2021 10:14:06 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:30681 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1343745AbhA0PNo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2021 10:13:44 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1611760423; x=1643296423;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Cs+pTXz7SUNQuOGw5qtZD6Wu/SDnaXgmW3BV9okxO9Y=;
+  b=h5iG2mQBEDlyB3u1PXQdKP97nR8Cp/k4gBol+bwqlQ4pJ7R3JFZXiHFM
+   u/dUihXx/N2K9tQP74LaGWl3SyiQ/jI2FkFs5wY3VUq591ZLtK2ZOISfF
+   l0sB1A/duIIq4ZXaKa9DL78b3zzIBhaFonV0kcAiDZYpzAC+9d/fYTrii
+   QHAVAFzGcfVYopE1AfavdA30zlCqioIu0zg2pRfG2Vz4m9DWo8vYamUV5
+   dedlUHtuYs9c+uTJde6aIzHe8I/a8Qf30fUUTWh81LBAh5F4iS0wTxifR
+   b9+ZfpC9mZJLQFZ8DCyG4CQyCTFnn43NYFLme0g0xXxCcL8tpJOtAd/Gu
+   g==;
+IronPort-SDR: yt5I8pYSBZDPgQ4PhwEusCd4zx6qf7J+3IaQN5SDPc3jU9lKPBh9FVGfJHilhPLlYulYMYfOXe
+ b83+z66z05w5xlaCuczYk62mkhPDuyDfo+wxyLno+f/OkAzyXsenCi1CasueH5/jEP/ck+nuKS
+ u6sG2SNuxW5gK7tKjfMDAAm23UzP/pZec3nwHDr9FqsSlPVSWg+S+9W0M/83JhmOWzqKxD87Yh
+ ml1jJk4t5xV7J9Ve2u4dhm7EwvNU0zlk9LTuo8HcK08C+rdCz3rkUq5Cq/dtgdnM8foBqYQzQI
+ GmE=
+X-IronPort-AV: E=Sophos;i="5.79,379,1602518400"; 
+   d="scan'208";a="158454180"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Jan 2021 23:12:38 +0800
+IronPort-SDR: G35u0EhCeayDmEiUDxnJMs3P0jcha64DLj8o5UzBxFkpEIc9HB9DZcA6roejzPtWBoYY7IACCa
+ ej1DhORmn5KEpoSz0wxhtZGlo+Yaqi1+aWVpXQd+eXuoK8xWxEqq2aOmD6AVZROCrEjkAZlkDZ
+ l8A4f3IMCPjIqzX0QzAO1hf07EKWE5gyeRLBabvmjy+tcHQJNJ+qJsmAbiYl87C0BUIl31KB6h
+ 03Uc5sZdykbHTuC6v4xNZaak/aUPvBxSzg/xbiouOZQCwePjNi+ifuffVSN4d8yXrxPOB9YTc5
+ N60tYvCFHbK6zx/WIGbA3D8S
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2021 06:56:59 -0800
+IronPort-SDR: lhhlUqcQtSw94TjPLC+KIW883fojWPhE+GuLNzaCkbobT4YpBvXAB+mlMqz2oxHWPeICLkdGLH
+ cPWxyxc1cS8+oydpjgkVGedboXcV4nZ8n/G9m4cmuNR/poTLe6THJGOGGDxEIlavumY+tLKi1q
+ kitC7FhILl3Y/2i7K+gPbDjqfhIqkmIMgdJx7qI+ZugSuSxpvWh0PwsOh6t5bgYwDJLvQT4Q29
+ TXHfNxpi8D8gDvAb8houp7PfgA7tK6wEgUTkQZ0j8lFk71v59dA9z23yknwym+tSD8Um8Xq8hZ
+ WnM=
+WDCIronportException: Internal
+Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
+  by uls-op-cesaip01.wdc.com with ESMTP; 27 Jan 2021 07:12:34 -0800
+From:   Avri Altman <avri.altman@wdc.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        alim.akhtar@samsung.com, asutoshd@codeaurora.org,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <avi.shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
+        stanley.chu@mediatek.com, Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH 0/8] Add Host control mode to HPB
+Date:   Wed, 27 Jan 2021 17:12:09 +0200
+Message-Id: <20210127151217.24760-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.20.3] (73.25.22.216) by AM9P191CA0005.EURP191.PROD.OUTLOOK.COM (2603:10a6:20b:21c::10) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3805.17 via Frontend Transport; Wed, 27 Jan 2021 14:53:47 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 1c820e9e-4862-49d7-cfcd-08d8c2d35a6f
-X-MS-TrafficTypeDiagnostic: AM5PR04MB3268:
-X-Microsoft-Antispam-PRVS: <AM5PR04MB3268BC96F54BAA831D632F13DABB0@AM5PR04MB3268.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2582;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 5d8P2NiXjuG2aPflfPGQB98itk0t3Jl1Js+baLYLR8Q1HKpqdyy6dwOkIoAXAilF3otFxZHFgjOwXLVCvMxbIX/Ly9gJnK/p+vl68XNautTWyrTe6H+2eFFHvKfPbL8OfJ7d6iXf/hJ1ic9cE3MH1QdyLtatGTB/+jP4JcggDDG+kGOnMz2C9F8bbKsKEvAZ8S85+L/XvmSZUQZXB9rNG5lmmFFJfTfFcZixx3XINcPL0ak2LqQNBKMUsrMq81ZnM7kAGrIa+475yAtNT1Ha5fWNycoakcAFPwWpM6AybfmN8vpfQiHZvaGpev+9OiLFbRFWAU64NBgFoYhNg7BGHUBaMkou5ScuxqjMJb5ahTq5mVRF0/9Ag8hyni2R5/53hiHX4P2dlJdZxNnMJNa6+vrfHw5HkWrmmrUWpoe2nrxGHhS0txDWSachHoAm5DXrUsWtFZnXQ3igrtlJd9PbJPl5b2r4IY9Up4JlBgLs4ihbfZbgDK9loeW7nUWb5O7wR8Y6cHVeDODocolCPhOM3Fbx+ygSf4PibiCjpJVv9yWWZYPhBW24pwwW79YBq3KouWM/vKpd9jpfaPZHC382mKfXvIvJVonnCbSiqjp5b7s=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(39850400004)(346002)(396003)(366004)(136003)(376002)(53546011)(478600001)(16576012)(2906002)(8676002)(4326008)(6486002)(316002)(8936002)(52116002)(36756003)(110136005)(956004)(26005)(66556008)(86362001)(186003)(16526019)(4744005)(6666004)(5660300002)(31696002)(66476007)(83380400001)(31686004)(2616005)(66946007)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?NkhTNnhqa3VrbFVzWDJmdXJITVlSTTBVRDdPWVM4UE1NTWR4Z2xzYTFDQ0I2?=
- =?utf-8?B?bnhINjlLcUxvWHdJbUJ1VkF4eUV3VUIwK1V4djdBTUZJTm5wMDRPRUF1Si9w?=
- =?utf-8?B?emtsZ1JJUmQ5NjA0V1VLenhVczNHMXU5ZHp4bVZVei9Iblk0UWViUDRweE9s?=
- =?utf-8?B?SFFYZWYwQWFVSStXOGJaOW1HeVNhcWp2VEpnUWpBbHhHL0dyWC9rTFROZEg0?=
- =?utf-8?B?MmNwYjQ1dGJOT1N5OW1FdVNqSnRCRGtjd1dYRnVSSG5zMHlaRDV0YnQvWE9N?=
- =?utf-8?B?R2s3T0VqWWxYYnFJZGFtQ2k2aDJVVGxhUUJ2dFVscVNJck04Nk5UUk1mQmdU?=
- =?utf-8?B?cVhkY0tLWk1GVHVvMHRmNEUyZ0llUkNtUytRMExoVTdZdXZzSm9KNy9QbmNi?=
- =?utf-8?B?ZzV5MG5GdlNQNnJkZ2oyaGErOEMwOSttSmVZQ085cWNkRHZOcmdMcU4weGE2?=
- =?utf-8?B?bndNVDJoQ3I0N0VaVnJUMVl0UkpJNkNwOHFoVFFhNTdTS0RTUkhOdjl5cUgv?=
- =?utf-8?B?VXFHMzdoMEJkaVNvbWZYVXdrMUpxNFB3NjQyNCtFUTFuK0lGeVJwend3NFEy?=
- =?utf-8?B?ZlUzOGUxQTg3QzNvZEMyOVd1VDZGa1JURWZHUUxNcXhvR1RBRzJNNWxYUEtT?=
- =?utf-8?B?ZUdNa3pGaEdzaEdFeTc0NU9GZWY5Nnd6ZTFEbjhMZEtYalpLQ0YvVnJDVDZw?=
- =?utf-8?B?Q2ZXSE16UlM3eDBGdE1YUWoyckxJT1VpVFRhZndiWWE4V25UZHlmTXdCRlZk?=
- =?utf-8?B?Y2syMDlQb2J2QUdmamlPamhKM2lNbTVFZ3RIWFN1SXZhWkZSYzE3RnErN1Rs?=
- =?utf-8?B?M0luOGo4SndYanhEMjlGQnJzbklSOEM5Mkd0V2VWd05pWUQ2VWNVSUZUWitE?=
- =?utf-8?B?UkVpQ3FUYnNOczRVQU5DNVF1aHoySXVBcld1cDBLODB3M0RzcW9xV3FjK3hX?=
- =?utf-8?B?VzZTOWN1WGgrZ0xnckFSa0ZDY291WTZsczdFbExTdllqNGdmQkJGT1c3cm1t?=
- =?utf-8?B?VDcrdWo3WjBudE1OaXE1dkxReDJnWEw1dW9FaXVGYlJ5Y081YjRSd1Q4WGZr?=
- =?utf-8?B?Q2xFdE1DeVhDMW5jYXZaK0VLWTBSQitjMktxY0RZOVNad0UxTHRZdFJwV1NW?=
- =?utf-8?B?SE4zL3hXTEl0NENxM3Zkd3BqTHd3Wm5Iekk2bnF3alF2dlJPRTBwUXBuS3Ey?=
- =?utf-8?B?ZkpwV1NVS1l4aVhhQkg2R3lpcGVuWW5XV2JQbWlLZTI3UjZXVkJDRkM4R2gx?=
- =?utf-8?B?c3RaK1dLM2trdVhQMkNQeTFEVzNCTmJLSk1YT0w2ZTJJNXZRbERDeU54dDc4?=
- =?utf-8?B?VEtpTWxyZ2xqNUZmRTA0Tmp6aDdIOGJRcGhLL1hkRlNXNkNCaHRFZWNPRW94?=
- =?utf-8?B?QjFDTmxIMTlHdkVXSUJPR0Rvbm9iVVlrSk9aWE1NQnU2ZmI5SmFlVEpIVjV5?=
- =?utf-8?Q?5XV37kcN?=
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1c820e9e-4862-49d7-cfcd-08d8c2d35a6f
-X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Jan 2021 14:53:48.5919
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: nISvsI09ZY1QNh5lheNTwNTbcW8Z5Wr96JkLz3VxHFfoTAlsTpWCgJv/bAMU+PcGwc9p6/d5zSSuRVvBAxYgOQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5PR04MB3268
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/26/21 11:46 PM, Greg KH wrote:
-> On Tue, Jan 26, 2021 at 05:21:24PM -0800, Lee Duncan wrote:
->> From: Hannes Reinecke <hare@suse.de>
->>
->> Commit 42ec15ceaea7 fixed a gcc issue with unused variables, but
->> introduced errors since it allocated an array of two u64-s but
->> then used more than that. Set the arrays to the proper size.
->>
->> Fixes: 42ec15ceaea74b5f7a621fc6686cbf69ca66c4cf
-> 
-> Please use the documented way to show sha1 commit ids to make it easier
-> to understand:
-> 
-> 	42ec15ceaea7 ("scsi: fnic: fix invalid stack access")
-> 
-> thanks,
-> 
-> greg k-h
-> 
+The HPB spec defines 2 control modes - device control mode and host
+control mode. In oppose to device control mode, in which the host obey
+to whatever recommendation received from the device - In host control
+mode, the host uses its own algorithms to decide which regions should
+be activated or inactivated.
 
-I will Greg. Thank you.
+We kept the host managed heuristic simple and concise.
 
-Please delete this patch, though. It is not correct.
+Aside from adding a by-spec functionality, host control mode entails
+some further potential benefits: makes the hpb logic transparent and
+readable, while allow tuning / scaling its various parameters, and
+utilize system-wide info to optimize HPB potential.
 
-My apologies for the churn.
+This series is based on Samsung's V18 device-control HPB1.0 driver, see
+msg-id: 20201222015704epcms2p643f0c5011064a7ce56b08331811a8509@epcms2p6
+in lore.kernel.org. The patches are also available in wdc ufs repo:
+https://github.com/westerndigitalcorporation/WDC-UFS-REPO/tree/hpb-v18
+
+This version was tested on Galaxy S20, and Xiaomi Mi10 pro.
+Your meticulous review and testing is mostly welcome and appreciated.
+
+Thanks,
+Avri
+
+Avri Altman (8):
+  scsi: ufshpb: Cache HPB Control mode on init
+  scsi: ufshpb: Add host control mode support to rsp_upiu
+  scsi: ufshpb: Add region's reads counter
+  scsi: ufshpb: Make eviction depends on region's reads
+  scsi: ufshpb: Region inactivation in host mode
+  scsi: ufshpb: Add hpb dev reset response
+  scsi: ufshpb: Add "Cold" regions timer
+  scsi: ufshpb: Add support for host control mode
+
+ drivers/scsi/ufs/ufshpb.c | 430 +++++++++++++++++++++++++++++++++-----
+ drivers/scsi/ufs/ufshpb.h |  23 ++
+ 2 files changed, 406 insertions(+), 47 deletions(-)
+
 -- 
-Lee Duncan
+2.25.1
 
