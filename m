@@ -2,63 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29BEAC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 07:54:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8B4CC433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 08:15:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D67FC2074B
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 07:54:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DBBA20756
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 08:15:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231697AbhA0Hy1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jan 2021 02:54:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51892 "EHLO mail.kernel.org"
+        id S231733AbhA0IPG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jan 2021 03:15:06 -0500
+Received: from m42-8.mailgun.net ([69.72.42.8]:59657 "EHLO m42-8.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234193AbhA0HrE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Jan 2021 02:47:04 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C6B3820724;
-        Wed, 27 Jan 2021 07:46:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1611733572;
-        bh=uCaLoTM3lDJhCWPDJk982fmCBCdiw+WrVEej0zl+pco=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JJMRocVtFJbqrKK8yv0QtGVUEZfYT5HEgtc9/4y9xJ8rH1h59MwIVkspzadEgh44f
-         qftvsEOxuBplYUNMhBMXKBjRDk5lvJTGDze4H0I3VHBpADESw5rX8O0Mr9+gIPo6mg
-         q1XOR46gjaPbf2dh1TULBPlDhVbIixo5bW3H9cb8=
-Date:   Wed, 27 Jan 2021 08:46:08 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Lee Duncan <leeman.duncan@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org,
-        Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH] fnic: fixup patch to resolve stack frame issues
-Message-ID: <YBEaQEs6gvrSm6dA@kroah.com>
-References: <20210127012124.22241-1-leeman.duncan@gmail.com>
+        id S234570AbhA0IMo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Jan 2021 03:12:44 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1611735115; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=960hhNTG56+qX20fkyX8J9sKQsVs3STq7WvHt5UIqf8=;
+ b=cGJj11TYTTo5i61xMwAPQ0566AQgksxJa1wpF553jmt+QTIO2usUtHtX+w3d4jXh0+gal9vt
+ 8x+EL3dEW+6CPMQxA66JG0Usx4UOhMCtM4w/2ZFRsUqmlaMuM4NMiZge7n1gSPbUUxslFQLd
+ 9wVBGQ3/nBe78+Breu+REx/vQ6c=
+X-Mailgun-Sending-Ip: 69.72.42.8
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 60111d6983c9d4cc539c9126 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 27 Jan 2021 07:59:37
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 3C403C43463; Wed, 27 Jan 2021 07:59:37 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 90577C433CA;
+        Wed, 27 Jan 2021 07:59:36 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210127012124.22241-1-leeman.duncan@gmail.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 27 Jan 2021 15:59:36 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     Asutosh Das <asutoshd@codeaurora.org>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        stern@rowland.harvard.edu,
+        "Bao D . Nguyen" <nguyenb@codeaurora.org>,
+        FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
+        Jens Axboe <axboe@kernel.dk>,
+        "open list:BLOCK LAYER" <linux-block@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH v1 1/2] block: bsg: resume scsi device before
+ accessing
+In-Reply-To: <DM6PR04MB6575D64869B24B4275D63503FCBB9@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <cover.1611719814.git.asutoshd@codeaurora.org>
+ <c04a11a590628c2497cef113b0dfea781de90416.1611719814.git.asutoshd@codeaurora.org>
+ <DM6PR04MB6575D64869B24B4275D63503FCBB9@DM6PR04MB6575.namprd04.prod.outlook.com>
+Message-ID: <75c66862d61c63fcfa61cd6dce254169@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jan 26, 2021 at 05:21:24PM -0800, Lee Duncan wrote:
-> From: Hannes Reinecke <hare@suse.de>
+On 2021-01-27 15:09, Avri Altman wrote:
+>> 
+>> Resumes the scsi device before accessing it.
+>> 
+>> Change-Id: I2929af60f2a92c89704a582fcdb285d35b429fde
+>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+> Following this patch, is it possible to revert commit 74e5e468b664d?
 > 
-> Commit 42ec15ceaea7 fixed a gcc issue with unused variables, but
-> introduced errors since it allocated an array of two u64-s but
-> then used more than that. Set the arrays to the proper size.
-> 
-> Fixes: 42ec15ceaea74b5f7a621fc6686cbf69ca66c4cf
 
-Please use the documented way to show sha1 commit ids to make it easier
-to understand:
+No, but this is a good finding... This change assumes
+that the queue->queue_data is a scsi_device, which is
+why we call scsi_auto_pm_get(). But for ufs_bsg's case,
+queue->queue_data is a device...
 
-	42ec15ceaea7 ("scsi: fnic: fix invalid stack access")
+Thanks,
+Can Guo.
 
-thanks,
-
-greg k-h
+> Thanks,
+> Avri
