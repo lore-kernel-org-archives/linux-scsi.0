@@ -2,155 +2,176 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3E18C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 04:22:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CAD8C433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 04:22:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 927452070C
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 04:22:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8CDF2070C
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 04:22:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233449AbhA0EWd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jan 2021 23:22:33 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:44262 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231361AbhA0DK2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2021 22:10:28 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10R38wtr062670;
-        Wed, 27 Jan 2021 03:09:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2020-01-29;
- bh=YQ0J/RJXSm4tVqxdzJWOF58HATLV7ovwr4gcvkSizNQ=;
- b=noW2KIeM1arj1244p0cDO3NHUE9A+R8PfrO/iV0uFehrqumRWZT7AxVo+HJxeWfQvam5
- 9zTs/naEXyd7zoX3rJs8TEVqEXgmORmpqiwSgJ4tW8s4tBtZqmoo423IqgAM4l8DRePv
- 4RjbZC2KXykcJXEKIsTA3sQASUFe+DLF+OB/7TRtulDX9avPiGRcYvKB3m/RQBARA3SJ
- mpGzZ4Y0ZhwQn3TgslWNVIfdUEUubLrfB34tTXLez1yAjQWBHn2dwP3bTROSSb84wt26
- D7wgDzPJsvkf5b9jtLcksWWLSQsiG1NMvWQuQ95pynnQJeRaNSEGsLJhDM9BRryf5B5D Gw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 368brkmx1x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Jan 2021 03:09:17 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10R35eQZ138664;
-        Wed, 27 Jan 2021 03:09:16 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2170.outbound.protection.outlook.com [104.47.56.170])
-        by userp3020.oracle.com with ESMTP id 368wjryv9s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Jan 2021 03:09:16 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Y6n1XsYbT3Wu2Ub8cVBeQtpmCk/b6OafUJUl6zPfyuZhx+o1o7FRIAi+qISK5ugmutz9Pp5lqIySHxysoxdrCueYNjE50QTkxkJRD2kYjVQMiRRt4gZGsxikkWDcW7rtEHcPI5h9+o/NFOgTKjB0l2jfcTjS5BI30cmX2eiyZ3RH2wGfruQGtJI4jaDPBKl45HnXu4Y2SL0o4eCNG9N0uN1Xxex05js63/KWpTmTumTkCljYRyoej0V9cfEa2EuA1a1a2n54VwVhYMIriPhQCZLVabCj487EECbQIKUGqP+OkQLneagMzrISwjeWvmzFFjkPtN28VyRIDPvypBBspg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YQ0J/RJXSm4tVqxdzJWOF58HATLV7ovwr4gcvkSizNQ=;
- b=A4V12+0lBvOkxO4yiGdlKhyo6oZ7vudN2K7P+r4JjRQR982BtY0UVza3a9t06SxQIhigfje0+EUD8TJbeuZKMXVQEOi5k+l4NyRispb0KSJHOjwoxCDBoqai9PuBPz4IWVNRBesB7mYoxOWkNeoRbPnIUm0cT9mJv7fAEYoDfxonT8v/QR6qsxdiRRmWEdrjyXD2JZbo4cjf9RZ+79b9023hgP6KJZKuF2aFN+1RgzwFxDoYDPWTDTKLPNTqAIoX0SnIpRwhk7VtfWZ4g84v7xyrLPgXXpQTwRc4yu1TGlHu4Sqt16wG4kWbRGSzFoq4sxNyCJSIKb+PKZvkBmuKhA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YQ0J/RJXSm4tVqxdzJWOF58HATLV7ovwr4gcvkSizNQ=;
- b=xdaD35EdKmSvsQWenoE915YuFxbeHDS+peZwT7T95upUqrdRzb593FDYHQU1ucT5pb83wIv7LDBcm8NFcRcB2OgYiqAtS0XY5/drouCy0X+iQo+315ktecQr2I4/j9OJX8PmL+DCBwnheSm7thG+tG3pjp7lwpe4P2FJfPob81E=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH0PR10MB4423.namprd10.prod.outlook.com (2603:10b6:510:40::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.15; Wed, 27 Jan
- 2021 03:09:14 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::54f3:a8aa:a2cd:a3a4]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::54f3:a8aa:a2cd:a3a4%5]) with mapi id 15.20.3784.019; Wed, 27 Jan 2021
- 03:09:14 +0000
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@steeleye.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] scsi: lpfc: Fix ancient double free
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1bldbxei9.fsf@ca-mkp.ca.oracle.com>
-References: <YA6E8rO51hE56SVw@mwanda>
-Date:   Tue, 26 Jan 2021 22:09:10 -0500
-In-Reply-To: <YA6E8rO51hE56SVw@mwanda> (Dan Carpenter's message of "Mon, 25
-        Jan 2021 11:44:34 +0300")
-Content-Type: text/plain
-X-Originating-IP: [138.3.200.58]
-X-ClientProxiedBy: CH2PR16CA0029.namprd16.prod.outlook.com
- (2603:10b6:610:50::39) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
-MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from ca-mkp.ca.oracle.com (138.3.200.58) by CH2PR16CA0029.namprd16.prod.outlook.com (2603:10b6:610:50::39) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3805.16 via Frontend Transport; Wed, 27 Jan 2021 03:09:13 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 6b9e1634-c644-4998-6d76-08d8c270ed00
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4423:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <PH0PR10MB44238F4081FE0002F3F7EF458EBB9@PH0PR10MB4423.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: yTU4pZDJ2/q8OqfYEYe+sr7rz9uuPmnMYFnVMFld7DT1E57Q6+G7jtnN/IhtQJ72XDY47ERfVWqQAESm8JWbVgM00ul4nGJFoBJe8ES/PpOOGS8OifyairrSSURICC/hjBJ6USMfsGc1VMXphDqyY9KAav68WVbi94ePE3U1m2usxRbpyDK3Ig66TRea+SYJjiv4vNz3kS02uyS1fvgOvXd5NH2aE4hgvEBAHC5F3SEQNYL7Su47hynfup/R4oPBylndO21kD3PezxwZAkOEVzde0BnMyxK27VucgyqNYDd2Dc2du2S/k72Q9v+muooWPVSW3lGSYV2tvyjKQHtXuhnEAKaqp9GeqgI66szyPyVessTrWAtLllYRAmwt2z5ldDfH0lPob2zW/A+DNGBeelPsvXhLKRXOZtSVUHlmB/EBA2/3HXmWkvoJcakZVaHtssO5XBU2ROtmxMXST4pmLDKrMUrzai38WdFEMio+t9YpW6V+saJd6lKKjevFzVKxQz+hFux5WjX1UJaROXVx4w==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(39860400002)(366004)(346002)(136003)(396003)(52116002)(558084003)(5660300002)(2906002)(7696005)(6636002)(6862004)(8936002)(36916002)(478600001)(66946007)(16526019)(956004)(4326008)(66476007)(66556008)(26005)(54906003)(8676002)(186003)(86362001)(55016002)(316002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?TWoluLT2ranW5GQNf1gkNzHBqIU9CwfHLd71Ozq+Y9mGtwCKhf3rIHtN5yKf?=
- =?us-ascii?Q?pa1yDdmi5uGw24r03PAHi9aJQe6TdY3qtr30XORN3SXSEjWpt8qGKpslyE9F?=
- =?us-ascii?Q?TRW4p6hs6aV9iqNgUHbGsYWV4bCdA+YuC+LZkY88MhZlP85NacopTMZnHGGw?=
- =?us-ascii?Q?luEIHZhO0rjz2cG7dOnP6daJGOS58BNTwH7tgfAidCc4R4CRAPEGmgkxDj8q?=
- =?us-ascii?Q?dY3xwizM5PhW3NI1Pf5W1kBIVvsw/AWPHP3hJcxZBmK9bLATNAUHMVVQh6Pb?=
- =?us-ascii?Q?R5lBHKJW9t8Q9pD6GZbx61VTzj72ZnaTzvKpM5fkOZUxNcMZxfL5qto0/fdD?=
- =?us-ascii?Q?PieFmysa9/Ox68Mt0BHwJM/G6mJKOeWBj32yfdxnmZCTeDhaf+6ziI1LqLQF?=
- =?us-ascii?Q?wInc1F3WnvKsXRYyQOZkg0nzWtFU+SA3tsUlZB6mdWTfuI7AE5lO6WDfm/aZ?=
- =?us-ascii?Q?bZn9pzgVRFVjZccm8zuDpsyL6EbkR8CRor5QVgYgm+4JI2vXPX4UtFq4d2dR?=
- =?us-ascii?Q?eNFCNS+rBPoQTbUaJ4Ny/4avGjQLB2P1DZMZL+7xSlb+F1COL+BxMaYrUBCn?=
- =?us-ascii?Q?QOq5OnE7A3/pFr5pRV1OLxQwbbPZDe4dnIYW6WUbBYgcSZhHovoEAd/gv1JU?=
- =?us-ascii?Q?WTDGzKm59xY6msiKlY4x+wZlelFRVpulhR04/fe0M7uC9HuTkN8vBg9KZDCQ?=
- =?us-ascii?Q?LYfVCFfmPPO3eOJQNel+Pt0x8CmVicspu7z5hz7WBVe41xq/S2PBwF6v3VJN?=
- =?us-ascii?Q?+dMO5yxkwISVpYD9VKaEpn+vCGiSPp66/+ALJSp//g5MT2X5ObeVsqZgWbNS?=
- =?us-ascii?Q?ucrqIUj8hpcjCt9vxSXOXrm4NvQoPmJ2CnpO16XFCzc+HP+MVNKGkCmCE5tP?=
- =?us-ascii?Q?3RH7GAlTju8W7FxyqjsmHjXkGXQEMHyFVHXD5HQiR78cNjgLzFM7F+eB2aoz?=
- =?us-ascii?Q?1gavmfDi1rY49uAVnjmOvtHWJhCLJVz06Ag1ogaW0+tTcNZfhXSqW+VBgG69?=
- =?us-ascii?Q?M7o9M++S8K2FtGsNTEeXCM0rE2Zxl0b8OjwVU8jlneArZpG4TGWyJMktzFEw?=
- =?us-ascii?Q?jl/15xLs?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6b9e1634-c644-4998-6d76-08d8c270ed00
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Jan 2021 03:09:14.2175
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: uSk76RcoLl5mwkRD2VCZjHhBIuWYqsMN80AQkNE3JX65xO+kF45SCGKB1q3qcdcXHLSEi1b0z6PW2FYhHtvvzNM8pyp3ELri965jFSKtxpI=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4423
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9876 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0
- adultscore=0 mlxscore=0 malwarescore=0 spamscore=0 mlxlogscore=835
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101270017
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9876 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 impostorscore=0
- phishscore=0 bulkscore=0 priorityscore=1501 mlxlogscore=999
- lowpriorityscore=0 spamscore=0 mlxscore=0 suspectscore=0 malwarescore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101270017
+        id S238430AbhA0EWp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jan 2021 23:22:45 -0500
+Received: from mailout3.samsung.com ([203.254.224.33]:54887 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237283AbhA0Dur (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2021 22:50:47 -0500
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210127034959epoutp03cd1d57654757c2854380f696736adedd~d_kFHHIUA1081910819epoutp03C
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2021 03:49:59 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210127034959epoutp03cd1d57654757c2854380f696736adedd~d_kFHHIUA1081910819epoutp03C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1611719399;
+        bh=fXkc/J8P35LYNPusVhQ+9QBrxVTdlboL1ax5vgyVZ0Q=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:In-Reply-To:References:From;
+        b=X2UHjILRKJK3ROGqGuH2tIWaF6urvAjbjQ6lks/JhcPsHtEM9Odp61GbPdZOpjxV1
+         OwpAt5p0v3tRUuEj5F7s+ziAdk5BLpx2DWBrbeEs2MvFWL1MLMXB/VqpS5hmGKXtXL
+         nOEv3IQKswj5BG1Tb5tyBCaM6rW4IBVbdeqHh7y8=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20210127034958epcas2p18c8104a03aa07dcf49e36b78e293c7b2~d_kECe-m60654406544epcas2p1h;
+        Wed, 27 Jan 2021 03:49:58 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.40.184]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4DQV3n58D1z4x9Q5; Wed, 27 Jan
+        2021 03:49:57 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C5.39.56312.5E2E0106; Wed, 27 Jan 2021 12:49:57 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20210127034957epcas2p3d9e58c70424505b05b8c6b9d6f7cf095~d_kChR6572454124541epcas2p3l;
+        Wed, 27 Jan 2021 03:49:57 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20210127034957epsmtrp288844f7bdfdc0ac5e2756ca5113dbe66~d_kCgXNVn2046420464epsmtrp2M;
+        Wed, 27 Jan 2021 03:49:57 +0000 (GMT)
+X-AuditID: b6c32a46-1efff7000000dbf8-cb-6010e2e5332e
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        D6.79.13470.4E2E0106; Wed, 27 Jan 2021 12:49:57 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20210127034956epsmtip25487dd458c2c7096be21f885e18d02fb~d_kCTEC-R2612426124epsmtip2O;
+        Wed, 27 Jan 2021 03:49:56 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
+        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v9 1/2] ufs: introduce a callback to get info of command
+ completion
+Date:   Wed, 27 Jan 2021 12:38:22 +0900
+Message-Id: <893c09bb91db01a105f0325ab5ff2e6c652ebfab.1611718633.git.kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1611718633.git.kwmad.kim@samsung.com>
+In-Reply-To: <cover.1611718633.git.kwmad.kim@samsung.com>
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprLJsWRmVeSWpSXmKPExsWy7bCmme7TRwIJBkuvKlo8mLeNzWJv2wl2
+        i5c/r7JZHHzYyWLxdekzVotpH34yW3xav4zV4tff9ewWqxc/YLFYdGMbk8XNLUdZLLqv72Cz
+        WH78H5NF190bjBZL/71lceD3uHzF2+NyXy+Tx4RFBxg9vq/vYPP4+PQWi0ffllWMHp83yXm0
+        H+hmCuCIyrHJSE1MSS1SSM1Lzk/JzEu3VfIOjneONzUzMNQ1tLQwV1LIS8xNtVVy8QnQdcvM
+        ATpeSaEsMacUKBSQWFyspG9nU5RfWpKqkJFfXGKrlFqQklNgaFigV5yYW1yal66XnJ9rZWhg
+        YGQKVJmQk7HmzUrmgjcCFccfGTUwNvB1MXJySAiYSPQt3c7excjFISSwg1Hi7dHJzBDOJ0aJ
+        j+3bmEGqhAS+MUosviMD03Fkcx8rRNFeRon/l7+wQDg/GCWOP5vHDlLFJqAp8fTmVCaQhIjA
+        GSaJa61nWUESzALqErsmnGACsYUFQiU2LN0AFmcRUJXYdnMyI4jNKxAt0TrpLyvEOjmJm+c6
+        gc7g4OAUsJR4vtsAhckFVDGTQ6JvwkU2iHIXidtd/5kgbGGJV8e3sEPYUhKf3+2FqqmX2De1
+        gRWiuYdR4um+f4wQCWOJWc/aGUEWMAM9sH6XPogpIaAsceQWC8T1fBIdh/+yQ4R5JTrahCAa
+        lSV+TZoMNURSYubNO1BbPSQWHpnJCAkeoE3TL+xnnMAoPwthwQJGxlWMYqkFxbnpqcVGBUbI
+        cbeJEZxOtdx2ME55+0HvECMTB+MhRgkOZiUR3vfKAglCvCmJlVWpRfnxRaU5qcWHGE2BwTiR
+        WUo0OR+Y0PNK4g1NjczMDCxNLUzNjCyUxHmLDR7ECwmkJ5akZqemFqQWwfQxcXBKNTCpsykr
+        /Hq85tsH+3qzl1s1lm/OcpnOrTojJas1s5/9+ffsw2psfFJ9h88nZyQck5BLf6urelac5VS5
+        8+bwuSyrLjz+AdS6bmHW08OFy1ZdOsx4a/sRg+kK94uLOOffn7MqfdvjkkKjDROKJzW87/MM
+        r3j7rMAi+db0XseGCSsn9PAUTWrO+5v/p+y/LgO/pueUWJlCy/jkLV1pxtsmPn1dd3j7qgrN
+        4zbPfT9uLz0VIBL5KJPBRsv4+Q85x2XxS7esbD+2+0aLXYJC8R1/zclLphuva8p/d+9hfEvo
+        5ElH50+UnrOjX/ORxwOL4qfNbzaFqN7hUFnuHB9ZvvjEzmeL+AV38v+e+NTmWv3tXVxKLMUZ
+        iYZazEXFiQCYwLYSMAQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrILMWRmVeSWpSXmKPExsWy7bCSvO7TRwIJBu2nmCwezNvGZrG37QS7
+        xcufV9ksDj7sZLH4uvQZq8W0Dz+ZLT6tX8Zq8evvenaL1YsfsFgsurGNyeLmlqMsFt3Xd7BZ
+        LD/+j8mi6+4NRoul/96yOPB7XL7i7XG5r5fJY8KiA4we39d3sHl8fHqLxaNvyypGj8+b5Dza
+        D3QzBXBEcdmkpOZklqUW6dslcGWsebOSueCNQMXxR0YNjA18XYycHBICJhJHNvexgthCArsZ
+        Jbq6FCDikhIndj5nhLCFJe63HIGq+cYo8ewWC4jNJqAp8fTmVKYuRi4OEYF7TBKXJsxlBkkw
+        C6hL7JpwggnEFhYIlvg0fyNYA4uAqsS2m5PBhvIKREu0TvrLCrFATuLmuU6gXg4OTgFLiee7
+        DSB2WUjcvLKSFYfwBEaBBYwMqxglUwuKc9Nziw0LDPNSy/WKE3OLS/PS9ZLzczcxgmNBS3MH
+        4/ZVH/QOMTJxMB5ilOBgVhLhfa8skCDEm5JYWZValB9fVJqTWnyIUZqDRUmc90LXyXghgfTE
+        ktTs1NSC1CKYLBMHp1QD045WXuMqkcPNezjnygkWBpV/yAuzMujtfrFw5voj3Vs/iZV3nzp1
+        +roh9+MjfxhU9Sca3jV/svzH061Pg9p2Js1/OmkT55P+hXyP3p/5K3fabnbi+nX9ki3Kkz7u
+        +tQ7OUCOk1P25/vZM0O1/lxPrDoXtM33UP0bsV1M3Vl9lf//PK7/ZLRJVkr/f+bFKKHueY+L
+        TkxNTSv8fEn596HfB4pb+DcV3ruc9lfEIEllkVN2qIz+ecGzL4RfXDr3Q2bqzcmx+xedfrXy
+        rm6l/LSqRSH8PPcXGDNcjbx5geto9lT323NWPi7/ytW/6vvdhoyJC+e3VYUc8WE8nsbRsOif
+        U9vXuvSfJ7a8ZFG97lR74qOtEktxRqKhFnNRcSIA2Uu+uPQCAAA=
+X-CMS-MailID: 20210127034957epcas2p3d9e58c70424505b05b8c6b9d6f7cf095
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210127034957epcas2p3d9e58c70424505b05b8c6b9d6f7cf095
+References: <cover.1611718633.git.kwmad.kim@samsung.com>
+        <CGME20210127034957epcas2p3d9e58c70424505b05b8c6b9d6f7cf095@epcas2p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Some SoC specific might need command history for
+various reasons, such as stacking command contexts
+in system memory to check for debugging in the future
+or scaling some DVFS knobs to boost IO throughput.
 
-Dan,
+What you would do with the information could be
+variant per SoC vendor.
 
-> The "pmb" pointer is freed at the start of the function and then freed
-> again in the error handling code.
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Acked-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 1 +
+ drivers/scsi/ufs/ufshcd.h | 8 ++++++++
+ 2 files changed, 9 insertions(+)
 
-Applied to 5.12/scsi-staging, thanks!
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 9c691e4..af0548a 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5093,6 +5093,7 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+ 		lrbp->in_use = false;
+ 		lrbp->compl_time_stamp = ktime_get();
+ 		cmd = lrbp->cmd;
++		ufshcd_vops_compl_xfer_req(hba, index, (cmd) ? true : false);
+ 		if (cmd) {
+ 			ufshcd_add_command_trace(hba, index, UFS_CMD_COMP);
+ 			result = ufshcd_transfer_rsp_status(hba, lrbp);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index ee61f82..0178365 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -343,6 +343,7 @@ struct ufs_hba_variant_ops {
+ 					struct ufs_pa_layer_attr *,
+ 					struct ufs_pa_layer_attr *);
+ 	void	(*setup_xfer_req)(struct ufs_hba *, int, bool);
++	void	(*compl_xfer_req)(struct ufs_hba *hba, int tag, bool is_scsi);
+ 	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
+ 	void    (*hibern8_notify)(struct ufs_hba *, enum uic_cmd_dme,
+ 					enum ufs_notify_change_status);
+@@ -1199,6 +1200,13 @@ static inline void ufshcd_vops_setup_xfer_req(struct ufs_hba *hba, int tag,
+ 		return hba->vops->setup_xfer_req(hba, tag, is_scsi_cmd);
+ }
+ 
++static inline void ufshcd_vops_compl_xfer_req(struct ufs_hba *hba,
++					      int tag, bool is_scsi)
++{
++	if (hba->vops && hba->vops->compl_xfer_req)
++		hba->vops->compl_xfer_req(hba, tag, is_scsi);
++}
++
+ static inline void ufshcd_vops_setup_task_mgmt(struct ufs_hba *hba,
+ 					int tag, u8 tm_function)
+ {
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.7.4
+
