@@ -2,198 +2,266 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,BIGNUM_EMAILS,
+X-Spam-Status: No, score=-17.4 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,SPF_HELO_NONE,SPF_PASS,
+	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52A17C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 11:15:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B56EC433E9
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 12:00:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CE872075B
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 11:15:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C616B2078D
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 12:00:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236318AbhA0LP1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jan 2021 06:15:27 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:46056 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236504AbhA0LNY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2021 06:13:24 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10RB9BNS105085;
-        Wed, 27 Jan 2021 11:12:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=EX6HZJ9b9FxkPsQlItz08LigH9FcyVGJGsFJG3Nwfi0=;
- b=Vt6bjmu/tPSP9s2X/j949ozKDCJ2aHUO3rjoK+RxAMPTQ8vU/wU31+8/nJ1UYkEThCl3
- kZiXitynMxGr41cXm8/tZK+mXii8nd9CQSLJACivNKKokPyZh4bigKsH1QbwV86sIqe5
- QdYGaBnPRmorblxqogUNFYi8yq8i5uO74zpdlcrKd0UtQV0CTeLqQCk+fBj8LUSQ8icG
- 7NE7GyPWX3uusycPSpeE4SD2sqtsiQoQAwF/dn8VHUKfqLXRufMJCiEI0qaQ79tDiG/y
- j/zMLLrovnMXTR64YKKt4esDQOB4x7EvQlZ0wA2vW6a2bG5/FCzTLk3YhJ+CB3ZkQGZM jg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 3689aapqda-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Jan 2021 11:12:38 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10RBAYdL131738;
-        Wed, 27 Jan 2021 11:10:36 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 368wq04rp7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Jan 2021 11:10:36 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 10RBAYki006820;
-        Wed, 27 Jan 2021 11:10:34 GMT
-Received: from mwanda (/10.175.203.212)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 27 Jan 2021 03:10:33 -0800
-Date:   Wed, 27 Jan 2021 14:10:27 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     adheer.chandravanshi@qlogic.com, QLogic-Storage-Upstream@qlogic.com
-Cc:     linux-scsi@vger.kernel.org
-Subject: [bug report] [SCSI] qla4xxx: Add flash node mgmt support
-Message-ID: <YBFKI1rjC6opxDUa@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9876 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 spamscore=0
- adultscore=0 bulkscore=0 phishscore=0 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101270060
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9876 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
- lowpriorityscore=0 mlxlogscore=999 clxscore=1011 phishscore=0 bulkscore=0
- spamscore=0 priorityscore=1501 mlxscore=0 suspectscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101270060
+        id S237330AbhA0MAE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jan 2021 07:00:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39952 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237449AbhA0L5Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2021 06:57:25 -0500
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68883C06178B
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2021 03:55:16 -0800 (PST)
+Received: by mail-pf1-x431.google.com with SMTP id w18so1029666pfu.9
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2021 03:55:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=xv9BXLaPLpWaMpfdyiy4gLOkFcTkt4HNTVzoz25nlcI=;
+        b=Qfy0+1bbDbeu3l9meBaavrWz04D/cd5y9nxWzY09c1wo+nhl+4GWTibYqkwn1k9v/0
+         /R6dL8ExZBjyW7RN8wgkyZSV8QB1C5GQDhibWZrgP56f6jOAVNrXIVt8/pThInvLUGIh
+         eSMBRBeENR3XB0ULiYhEMDVV4YCk4uS75RsP0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=xv9BXLaPLpWaMpfdyiy4gLOkFcTkt4HNTVzoz25nlcI=;
+        b=LjW9h84SIKGylC+csMsZ8Q+4scEpjN2r5im6GvXlbY9wHVaHHDFr87z/LRSPHwctxG
+         m6xQ2tFM84VUdIyvJ/KD2hqHJveRFYMdhYqILFCvUKi9eSAcJHLsdJYHKI0QRTSJg7qS
+         DsStRHGJqfBWkXkg3kT25j5bpPC2C7AyWtgUYUBhGTsRb7PeQVNL7l1PuMo4HMTeSZl2
+         32IiwAIFG/sc5wAXgMRRRhwitpy6i2ipZMqxQ5klPYDZeFviE4BD2kn9RvA3fVRJtixV
+         zgON62jy7OXIWxYkyp5dAX2/S+nv4hvkaBpUu7xv4FmBm/e8zPcVmgcyy+/H2uEkkQrc
+         XvdQ==
+X-Gm-Message-State: AOAM532MjQ6VB9eGCTvuS6aDhJxx+nRtKKzdPKvgHR54/6QUMrHUD/kn
+        ERpVjKYJTEPWl9XioQXlnzCXUGIrhseFKQU05afylicbKsCk5qIhMjAna91DHwQk4025xOPWYhy
+        VouX+R0tsUFW/dGhDcC50DQbdzDTz5/rJsCEVuQyeHrnpMDwrYmvX9RWLK9mbhTIPoFnYhc9wsX
+        jDiX1rRRuv
+X-Google-Smtp-Source: ABdhPJyU4eY5EzW6HJLHaujFROu2/XmiYp1kXce9b/dJnIoVPLDlRp6lu2SKM4p8+UKdhCvoXgaGqg==
+X-Received: by 2002:a62:1b15:0:b029:1b9:1c1:1673 with SMTP id b21-20020a621b150000b02901b901c11673mr10516920pfb.2.1611748515482;
+        Wed, 27 Jan 2021 03:55:15 -0800 (PST)
+Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id l190sm2235552pfl.205.2021.01.27.03.55.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Jan 2021 03:55:14 -0800 (PST)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
+        linux-block@vger.kernel.org
+Subject: [RESEND PATCH v2 1/4] add io_uring with IOPOLL support in scsi layer
+Date:   Wed, 27 Jan 2021 09:25:24 +0530
+Message-Id: <20210127035527.40622-2-kashyap.desai@broadcom.com>
+X-Mailer: git-send-email 2.18.1
+In-Reply-To: <20210127035527.40622-1-kashyap.desai@broadcom.com>
+References: <20210127035527.40622-1-kashyap.desai@broadcom.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000c266e005b9e0714e"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Adheer Chandravanshi,
+--000000000000c266e005b9e0714e
 
-The patch 1e9e2be3ee03: "[SCSI] qla4xxx: Add flash node mgmt support"
-from Mar 22, 2013, leads to the following static checker warning:
+io_uring with IOPOLL is not currently supported in scsi mid layer.
+Outside of that everything else should work and no extra support
+in the driver is needed.
 
-	drivers/scsi/qla4xxx/ql4_os.c:3723 qla4xxx_copy_to_fwddb_param()
-	warn: 'conn->redirect_ipaddr' sometimes too small '16' size = 32
+Currently io_uring with IOPOLL support is only available in block layer.
+This patch is to extend support of mq_poll in scsi layer.
 
-drivers/scsi/qla4xxx/ql4_os.c
-  3637  static int qla4xxx_copy_to_fwddb_param(struct iscsi_bus_flash_session *sess,
-  3638                                         struct iscsi_bus_flash_conn *conn,
-  3639                                         struct dev_db_entry *fw_ddb_entry)
-  3640  {
-  3641          uint16_t options;
-  3642          int rc = 0;
-  3643  
-  3644          options = le16_to_cpu(fw_ddb_entry->options);
-  3645          SET_BITVAL(conn->is_fw_assigned_ipv6,  options, BIT_11);
-  3646          if (!strncmp(sess->portal_type, PORTAL_TYPE_IPV6, 4))
-  3647                  options |= BIT_8;
-  3648          else
-  3649                  options &= ~BIT_8;
-  3650  
-  3651          SET_BITVAL(sess->auto_snd_tgt_disable, options, BIT_6);
-  3652          SET_BITVAL(sess->discovery_sess, options, BIT_4);
-  3653          SET_BITVAL(sess->entry_state, options, BIT_3);
-  3654          fw_ddb_entry->options = cpu_to_le16(options);
-  3655  
-  3656          options = le16_to_cpu(fw_ddb_entry->iscsi_options);
-  3657          SET_BITVAL(conn->hdrdgst_en, options, BIT_13);
-  3658          SET_BITVAL(conn->datadgst_en, options, BIT_12);
-  3659          SET_BITVAL(sess->imm_data_en, options, BIT_11);
-  3660          SET_BITVAL(sess->initial_r2t_en, options, BIT_10);
-  3661          SET_BITVAL(sess->dataseq_inorder_en, options, BIT_9);
-  3662          SET_BITVAL(sess->pdu_inorder_en, options, BIT_8);
-  3663          SET_BITVAL(sess->chap_auth_en, options, BIT_7);
-  3664          SET_BITVAL(conn->snack_req_en, options, BIT_6);
-  3665          SET_BITVAL(sess->discovery_logout_en, options, BIT_5);
-  3666          SET_BITVAL(sess->bidi_chap_en, options, BIT_4);
-  3667          SET_BITVAL(sess->discovery_auth_optional, options, BIT_3);
-  3668          SET_BITVAL(sess->erl & BIT_1, options, BIT_1);
-  3669          SET_BITVAL(sess->erl & BIT_0, options, BIT_0);
-  3670          fw_ddb_entry->iscsi_options = cpu_to_le16(options);
-  3671  
-  3672          options = le16_to_cpu(fw_ddb_entry->tcp_options);
-  3673          SET_BITVAL(conn->tcp_timestamp_stat, options, BIT_6);
-  3674          SET_BITVAL(conn->tcp_nagle_disable, options, BIT_5);
-  3675          SET_BITVAL(conn->tcp_wsf_disable, options, BIT_4);
-  3676          SET_BITVAL(conn->tcp_timer_scale & BIT_2, options, BIT_3);
-  3677          SET_BITVAL(conn->tcp_timer_scale & BIT_1, options, BIT_2);
-  3678          SET_BITVAL(conn->tcp_timer_scale & BIT_0, options, BIT_1);
-  3679          SET_BITVAL(conn->tcp_timestamp_en, options, BIT_0);
-  3680          fw_ddb_entry->tcp_options = cpu_to_le16(options);
-  3681  
-  3682          options = le16_to_cpu(fw_ddb_entry->ip_options);
-  3683          SET_BITVAL(conn->fragment_disable, options, BIT_4);
-  3684          fw_ddb_entry->ip_options = cpu_to_le16(options);
-  3685  
-  3686          fw_ddb_entry->iscsi_max_outsnd_r2t = cpu_to_le16(sess->max_r2t);
-  3687          fw_ddb_entry->iscsi_max_rcv_data_seg_len =
-  3688                                 cpu_to_le16(conn->max_recv_dlength / BYTE_UNITS);
-  3689          fw_ddb_entry->iscsi_max_snd_data_seg_len =
-  3690                                 cpu_to_le16(conn->max_xmit_dlength / BYTE_UNITS);
-  3691          fw_ddb_entry->iscsi_first_burst_len =
-  3692                                  cpu_to_le16(sess->first_burst / BYTE_UNITS);
-  3693          fw_ddb_entry->iscsi_max_burst_len = cpu_to_le16(sess->max_burst /
-  3694                                              BYTE_UNITS);
-  3695          fw_ddb_entry->iscsi_def_time2wait = cpu_to_le16(sess->time2wait);
-  3696          fw_ddb_entry->iscsi_def_time2retain = cpu_to_le16(sess->time2retain);
-  3697          fw_ddb_entry->tgt_portal_grp = cpu_to_le16(sess->tpgt);
-  3698          fw_ddb_entry->mss = cpu_to_le16(conn->max_segment_size);
-  3699          fw_ddb_entry->tcp_xmt_wsf = (uint8_t) cpu_to_le32(conn->tcp_xmit_wsf);
-  3700          fw_ddb_entry->tcp_rcv_wsf = (uint8_t) cpu_to_le32(conn->tcp_recv_wsf);
-  3701          fw_ddb_entry->ipv6_flow_lbl = cpu_to_le16(conn->ipv6_flow_label);
-  3702          fw_ddb_entry->ka_timeout = cpu_to_le16(conn->keepalive_timeout);
-  3703          fw_ddb_entry->lcl_port = cpu_to_le16(conn->local_port);
-  3704          fw_ddb_entry->stat_sn = cpu_to_le32(conn->statsn);
-  3705          fw_ddb_entry->exp_stat_sn = cpu_to_le32(conn->exp_statsn);
-  3706          fw_ddb_entry->ddb_link = cpu_to_le16(sess->discovery_parent_idx);
-  3707          fw_ddb_entry->chap_tbl_idx = cpu_to_le16(sess->chap_out_idx);
-  3708          fw_ddb_entry->tsid = cpu_to_le16(sess->tsid);
-  3709          fw_ddb_entry->port = cpu_to_le16(conn->port);
-  3710          fw_ddb_entry->def_timeout =
-  3711                                  cpu_to_le16(sess->default_taskmgmt_timeout);
-  3712  
-  3713          if (!strncmp(sess->portal_type, PORTAL_TYPE_IPV6, 4))
-  3714                  fw_ddb_entry->ipv4_tos = conn->ipv6_traffic_class;
-  3715          else
-  3716                  fw_ddb_entry->ipv4_tos = conn->ipv4_tos;
-  3717  
-  3718          if (conn->ipaddress)
-  3719                  memcpy(fw_ddb_entry->ip_addr, conn->ipaddress,
-  3720                         sizeof(fw_ddb_entry->ip_addr));
-  3721  
-  3722          if (conn->redirect_ipaddr)
-  3723                  memcpy(fw_ddb_entry->tgt_addr, conn->redirect_ipaddr,
-  3724                         sizeof(fw_ddb_entry->tgt_addr));
+Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: sumit.saxena@broadcom.com
+Cc: chandrakanth.patil@broadcom.com
+Cc: linux-block@vger.kernel.org
+---
+ drivers/scsi/scsi_lib.c  | 16 ++++++++++++++++
+ include/scsi/scsi_cmnd.h |  1 +
+ include/scsi/scsi_host.h | 11 +++++++++++
+ 3 files changed, 28 insertions(+)
 
-The conn->redirect_ipaddr is IPv6_ADDR_LEN (16) bytes.  It is allocated
-in qla4xxx_copy_from_fwddb_param().  The w_ddb_entry->tgt_addr[] is a
-32 byte buffer.  So this is definitely a read overflow and copying
-garbage from beyond the end of the buffer.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d0ae586565f8..8c29bf0e4cfd 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1789,6 +1789,19 @@ static void scsi_mq_exit_request(struct blk_mq_tag_set *set, struct request *rq,
+ 			       cmd->sense_buffer);
+ }
+ 
++
++static int scsi_mq_poll(struct blk_mq_hw_ctx *hctx)
++{
++	struct request_queue *q = hctx->queue;
++	struct scsi_device *sdev = q->queuedata;
++	struct Scsi_Host *shost = sdev->host;
++
++	if (shost->hostt->mq_poll)
++		return shost->hostt->mq_poll(shost, hctx->queue_num);
++
++	return 0;
++}
++
+ static int scsi_map_queues(struct blk_mq_tag_set *set)
+ {
+ 	struct Scsi_Host *shost = container_of(set, struct Scsi_Host, tag_set);
+@@ -1856,6 +1869,7 @@ static const struct blk_mq_ops scsi_mq_ops_no_commit = {
+ 	.cleanup_rq	= scsi_cleanup_rq,
+ 	.busy		= scsi_mq_lld_busy,
+ 	.map_queues	= scsi_map_queues,
++	.poll		= scsi_mq_poll,
+ };
+ 
+ 
+@@ -1884,6 +1898,7 @@ static const struct blk_mq_ops scsi_mq_ops = {
+ 	.cleanup_rq	= scsi_cleanup_rq,
+ 	.busy		= scsi_mq_lld_busy,
+ 	.map_queues	= scsi_map_queues,
++	.poll		= scsi_mq_poll,
+ };
+ 
+ struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev)
+@@ -1916,6 +1931,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+ 	else
+ 		tag_set->ops = &scsi_mq_ops_no_commit;
+ 	tag_set->nr_hw_queues = shost->nr_hw_queues ? : 1;
++	tag_set->nr_maps = shost->nr_maps ? : 1;
+ 	tag_set->queue_depth = shost->can_queue;
+ 	tag_set->cmd_size = cmd_size;
+ 	tag_set->numa_node = NUMA_NO_NODE;
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index ace15b5dc956..1d8a0f6ea8c5 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -10,6 +10,7 @@
+ #include <linux/timer.h>
+ #include <linux/scatterlist.h>
+ #include <scsi/scsi_device.h>
++#include <scsi/scsi_host.h>
+ #include <scsi/scsi_request.h>
+ 
+ struct Scsi_Host;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index e30fd963b97d..3d627bf7b951 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -270,6 +270,16 @@ struct scsi_host_template {
+ 	 */
+ 	int (* map_queues)(struct Scsi_Host *shost);
+ 
++	/*
++	 * SCSI interface of blk_poll - poll for IO completions.
++	 * Possible interface only if scsi LLD expose multiple h/w queues.
++	 *
++	 * Return value: Number of completed entries found.
++	 *
++	 * Status: OPTIONAL
++	 */
++	int (* mq_poll)(struct Scsi_Host *shost, unsigned int queue_num);
++
+ 	/*
+ 	 * Check if scatterlists need to be padded for DMA draining.
+ 	 *
+@@ -616,6 +626,7 @@ struct Scsi_Host {
+ 	 * the total queue depth is can_queue.
+ 	 */
+ 	unsigned nr_hw_queues;
++	unsigned nr_maps;
+ 	unsigned active_mode:2;
+ 	unsigned unchecked_isa_dma:1;
+ 
+-- 
+2.18.1
 
-I guess ->redirect_ipaddr has the first part of fw_ddb_entry->tgt_addr?
 
-  3725  
-  3726          if (conn->link_local_ipv6_addr)
-  3727                  memcpy(fw_ddb_entry->link_local_ipv6_addr,
-  3728                         conn->link_local_ipv6_addr,
-  3729                         sizeof(fw_ddb_entry->link_local_ipv6_addr));
-  3730  
-  3731          if (sess->targetname)
-  3732                  memcpy(fw_ddb_entry->iscsi_name, sess->targetname,
-  3733                         sizeof(fw_ddb_entry->iscsi_name));
-  3734  
-  3735          if (sess->targetalias)
-  3736                  memcpy(fw_ddb_entry->iscsi_alias, sess->targetalias,
-  3737                         sizeof(fw_ddb_entry->iscsi_alias));
-  3738  
-  3739          COPY_ISID(fw_ddb_entry->isid, sess->isid);
-  3740  
-  3741          return rc;
-  3742  }
+--000000000000c266e005b9e0714e
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-regards,
-dan carpenter
+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
+yfWKfxJx8FcWmsjkSlrwDu+oVuDUa2wqeKBU12HQ4JAVd+LOb5edsbbFQxgGHu+MPuc/1hl9kTkC
+AwEAAaOCAdEwggHNMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYIKwYBBQUH
+MAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxzaWduMnNo
+YTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5jb20vZ3Nw
+ZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIB
+FiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEQGA1Ud
+HwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNpZ24yc2hh
+MmczLmNybDAlBgNVHREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAK
+BggrBgEFBQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4EFgQU4dX1
+Yg4eoWXbqyPW/N1ZD/LPIWcwDQYJKoZIhvcNAQELBQADggEBABBuHYKGUwHIhCjd3LieJwKVuJNr
+YohEnZzCoNaOj33/j5thiA4cZehCh6SgrIlFBIktLD7jW9Dwl88Gfcy+RrVa7XK5Hyqwr1JlCVsW
+pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
+8S/v9LyyP4X2aRTWOg9RG8D/13rLxFAApfYvCrf0quIUBWw2BXlq3+e3r7pU7j40d6P04VV3Zxws
+M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
+1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
+IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg1UhIkhn4
+1j/zKdP/nVRrROzg+O9qgLk7SxNwznTSW2wwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjEwMTI3MTE1NTE1WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAAKgBu6SxgxUsxzBDKKfT71NFFeS
+q2mtFL4d3QGh4qtcZPGpz0fEWo9YQcMj92lAFPO53x4ko0ADGXkJXAzsP5+8ACuNx9jlYNKpXifD
+1D0zRg+rGuNCsbj784v8kugIytxcW2kn4BhMFz0iIMF0xQ9DNTv/sIn3fIKPzItCt9nhgjbH1+Al
+f4KIi0+ngwF61xY5VQvyObKFmSjiOlt+IxaSI1n47D6oxXkmpWR4yVcGSfcKnrqTzsavw+g3kqqx
+qTQotwwWI/jqZzfS7gPfU2RVORz6aqkiv4qxfRX+16nFfBVbNCRToHQz8lvrLmVxq/WcDaSrVREL
+q/HWu7e2iRk=
+--000000000000c266e005b9e0714e--
