@@ -2,118 +2,226 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F826C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 15:25:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA3C9C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 15:26:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1056C207BC
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 15:25:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D5E420771
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 15:26:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235801AbhA0PYd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jan 2021 10:24:33 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:51782 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235284AbhA0POV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2021 10:14:21 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611760460; x=1643296460;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=pYqNFpWu5gdPAJjbMMciUgh9gaj1oKk/cLrxHPOh+G8=;
-  b=QpuCXwWra1axa5mmSilLb3WVeC9awCyru0dLvVjjTMkphhw9n0rW/aCp
-   6zEw/rqj74XauWFc56QoRlKCuBJYzMymidnQMyvAoHOzlV3Ft6pu+qDCn
-   HTMZIqauxKGvxozfCz4dg69YeVNBTziTQsblhiyHj1mrNkToyatD951pq
-   EfvVr+LyCs41aKZISdlH49E4j+024BtlT212OuWvamj6LzeFUCNQS9+yZ
-   ggXBhMFVZILVtzBPPiBLO+NM7mhPwZsP7CLcWMA1NNSXefZQSupSec0lc
-   Hn+yxksNfpICrzhrtLNHANwatZhv+HgGb+WM+vu8aG7+hVv7Z4puqz5sq
-   w==;
-IronPort-SDR: DM3vvhmWQPZ22e0speaI34nn/kafJkycYudWC5F0GCDsr3nkj2SySXuEfTFXMNhnDVRR+2cY4y
- FdWTbYXH5O1JT1zj47tIF3X9FGVkjxBgq4YXcjvS256/RfK3Sm61vj58SriQrXhw+kJHGvFBot
- 2XrWcqy2aLmwF2G9Orj0dib3HAymusvHAU5vs0UD0TuLWR7kkWiXWCKq72QtxyYxElph0ZJenj
- d8Uqrg9+LC82fnr1SY7QZHe6JTTGeIySsIBRGiErnyqDC32Trh6FRuH1oR1beBrJasXFDY5T6B
- Q9M=
-X-IronPort-AV: E=Sophos;i="5.79,379,1602518400"; 
-   d="scan'208";a="158454188"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Jan 2021 23:12:50 +0800
-IronPort-SDR: j9uaeg9ovkYwmvKrEmEgQK442LzxJQ6vVZugPyksY8DbenSeuhqTvkkPE0VEBGFNWVwBGtFKaH
- EKCPGk1hUqoQtR0pfl9HC8gJs7ozpTfoRd0IthWRJpsFZbg7K5nLF6gTSB5869nvB5m63bjrRz
- Vj6Iq5HEFq34QBkh32UpDhkz01cYJ0hmR80IKHX8q1zgTrOapdkutddYkg3XjipVg3kuZL1cUl
- rihoztpYY7Fdss/o5SAon52hexqQrRZTrwWvRjG5qrDdXAZjRa7IaotwTNziuwewGnJLiVeMrO
- QDgwlgvqzCjLFTnhmo/Kh7hG
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2021 06:57:10 -0800
-IronPort-SDR: OoREcpqAz05j/2BjvIBTgK++qemH9rDka295k2VVoMO+Qei8qKNmtT3C30E+Y4pGEjjB8NYgNi
- AckljoYNl9XRWGFtMXZFB8aR2DjhenFG1070ZobvUhcVm5DaRVF0E+nRXlvCGLFs6LQQE9czZu
- fl/ufdYjO441BWlnLsQmvsXnvP3GlQ9ayiSjQ2bzgV4hX+0F8bs/eEwkIm21dq7tHnvMG4c34e
- 1BDcTsAyDfz3AvA4Hvt8PV3JpLNwIJP9D4L7nRImmz4d6DYUdxfGcct5ZLBLC8kpxGE2VwwOMi
- E44=
-WDCIronportException: Internal
-Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
-  by uls-op-cesaip01.wdc.com with ESMTP; 27 Jan 2021 07:12:46 -0800
-From:   Avri Altman <avri.altman@wdc.com>
-To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        id S235987AbhA0P0V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jan 2021 10:26:21 -0500
+Received: from mail.kernel.org ([198.145.29.99]:32966 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1343881AbhA0PYG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Jan 2021 10:24:06 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 944CE207B0;
+        Wed, 27 Jan 2021 15:23:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1611761005;
+        bh=bUaHqKG/IoHAawf9yAR4S3Kaji5t7hZh/OYxKzctjq8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=xHAO+HDcLNsDqqFYVnYY9RbWIM2d2j/S3iZPj4rFTVZtZtUd7dOP6fg/senoypzmx
+         +SX4TrZ+/+U+FULYcw00top68ss7hFPumbVgp7WMaXfYtjqUmHE6ThkORxctPxDuQ6
+         pGSIfR9ZuTzqP20mXqDvuPhewvqLTitMmjf8En+8=
+Date:   Wed, 27 Jan 2021 16:23:22 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Avri Altman <avri.altman@wdc.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>,
         yongmyung lee <ymhungry.lee@samsung.com>,
         Daejun Park <daejun7.park@samsung.com>,
         alim.akhtar@samsung.com, asutoshd@codeaurora.org,
         Zang Leigang <zangleigang@hisilicon.com>,
         Avi Shchislowski <avi.shchislowski@wdc.com>,
         Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
-        stanley.chu@mediatek.com, Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 1/8] scsi: ufshpb: Cache HPB Control mode on init
-Date:   Wed, 27 Jan 2021 17:12:10 +0200
-Message-Id: <20210127151217.24760-2-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210127151217.24760-1-avri.altman@wdc.com>
+        stanley.chu@mediatek.com
+Subject: Re: [PATCH 7/8] scsi: ufshpb: Add "Cold" regions timer
+Message-ID: <YBGFamLN83K5AHZe@kroah.com>
 References: <20210127151217.24760-1-avri.altman@wdc.com>
+ <20210127151217.24760-8-avri.altman@wdc.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210127151217.24760-8-avri.altman@wdc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We will use it later, when we'll need to differentiate between device
-and host control modes.
+On Wed, Jan 27, 2021 at 05:12:16PM +0200, Avri Altman wrote:
+> In order not to hang on to “cold” regions, we shall inactivate a
+> region that has no READ access for a predefined amount of time -
+> READ_TO_MS. For that purpose we shall monitor the active regions list,
+> polling it on every POLLING_INTERVAL_MS. On timeout expiry we shall add
+> the region to the "to-be-inactivated" list, unless it is clean and did
+> not exahust its READ_TO_EXPIRIES - another parameter.
+> 
+> All this does not apply to pinned regions.
+> 
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+> ---
+>  drivers/scsi/ufs/ufshpb.c | 75 ++++++++++++++++++++++++++++++++++++++-
+>  drivers/scsi/ufs/ufshpb.h |  7 ++++
+>  2 files changed, 81 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+> index cb99b57b4319..482f01c3b3ee 100644
+> --- a/drivers/scsi/ufs/ufshpb.c
+> +++ b/drivers/scsi/ufs/ufshpb.c
+> @@ -18,8 +18,12 @@
+>  
+>  #define WORK_PENDING 0
+>  #define RESET_PENDING 1
+> +#define TIMEOUT_WORK_PENDING 2
+>  #define ACTIVATION_THRSHLD 4 /* 4 IOs */
+>  #define EVICTION_THRSHLD (ACTIVATION_THRSHLD << 6) /* 256 IOs */
+> +#define READ_TO_MS 1000
+> +#define READ_TO_EXPIRIES 100
+> +#define POLLING_INTERVAL_MS 200
+>  
+>  /* memory management */
+>  static struct kmem_cache *ufshpb_mctx_cache;
+> @@ -671,12 +675,69 @@ static int ufshpb_check_srgns_issue_state(struct ufshpb_lu *hpb,
+>  	return 0;
+>  }
+>  
+> +static void ufshpb_read_to_handler(struct work_struct *work)
+> +{
+> +	struct delayed_work *dwork = to_delayed_work(work);
+> +	struct ufshpb_lu *hpb;
+> +	struct victim_select_info *lru_info;
+> +	struct ufshpb_region *rgn, *next_rgn;
+> +	unsigned long flags;
+> +	LIST_HEAD(expired_list);
+> +
+> +	hpb = container_of(dwork, struct ufshpb_lu, ufshpb_read_to_work);
+> +
+> +	if (test_and_set_bit(TIMEOUT_WORK_PENDING, &hpb->work_data_bits))
+> +		return;
+> +
+> +	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+> +
+> +	lru_info = &hpb->lru_info;
+> +
+> +	list_for_each_entry_safe(rgn, next_rgn, &lru_info->lh_lru_rgn,
+> +				 list_lru_rgn) {
+> +		bool timedout = ktime_after(ktime_get(), rgn->read_timeout);
+> +		bool dirty, expired;
+> +
+> +		if (!timedout)
+> +			continue;
+> +
+> +		dirty = is_rgn_dirty(rgn);
+> +		expired = atomic_dec_and_test(&rgn->read_timeout_expiries);
+> +
+> +		if (dirty || expired)
+> +			list_add(&rgn->list_expired_rgn, &expired_list);
+> +		else
+> +			rgn->read_timeout = ktime_add_ms(ktime_get(),
+> +							 READ_TO_MS);
+> +	}
+> +
+> +	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> +
+> +	list_for_each_entry_safe(rgn, next_rgn, &expired_list,
+> +				 list_expired_rgn) {
+> +		list_del_init(&rgn->list_expired_rgn);
+> +		spin_lock_irqsave(&hpb->rsp_list_lock, flags);
+> +		ufshpb_update_inactive_info(hpb, rgn->rgn_idx);
+> +		hpb->stats.rb_inactive_cnt++;
+> +		spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
+> +	}
+> +
+> +	clear_bit(TIMEOUT_WORK_PENDING, &hpb->work_data_bits);
+> +
+> +	schedule_delayed_work(&hpb->ufshpb_read_to_work,
+> +			      msecs_to_jiffies(POLLING_INTERVAL_MS));
+> +}
+> +
+>  static void ufshpb_add_lru_info(struct victim_select_info *lru_info,
+> -				       struct ufshpb_region *rgn)
+> +				struct ufshpb_region *rgn)
+>  {
+>  	rgn->rgn_state = HPB_RGN_ACTIVE;
+>  	list_add_tail(&rgn->list_lru_rgn, &lru_info->lh_lru_rgn);
+>  	atomic_inc(&lru_info->active_cnt);
+> +	if (ufshpb_mode == HPB_HOST_CONTROL) {
+> +		rgn->read_timeout = ktime_add_ms(ktime_get(), READ_TO_MS);
+> +		atomic_set(&rgn->read_timeout_expiries, READ_TO_EXPIRIES);
+> +	}
+>  }
+>  
+>  static void ufshpb_hit_lru_info(struct victim_select_info *lru_info,
+> @@ -1404,6 +1465,7 @@ static int ufshpb_alloc_region_tbl(struct ufs_hba *hba, struct ufshpb_lu *hpb)
+>  
+>  		INIT_LIST_HEAD(&rgn->list_inact_rgn);
+>  		INIT_LIST_HEAD(&rgn->list_lru_rgn);
+> +		INIT_LIST_HEAD(&rgn->list_expired_rgn);
+>  
+>  		if (rgn_idx == hpb->rgns_per_lu - 1)
+>  			srgn_cnt = ((hpb->srgns_per_lu - 1) %
+> @@ -1536,6 +1598,8 @@ static int ufshpb_lu_hpb_init(struct ufs_hba *hba, struct ufshpb_lu *hpb)
+>  			  ufshpb_normalization_work_handler);
+>  		INIT_WORK(&hpb->ufshpb_lun_reset_work,
+>  			  ufshpb_reset_work_handler);
+> +		INIT_DELAYED_WORK(&hpb->ufshpb_read_to_work,
+> +				  ufshpb_read_to_handler);
+>  	}
+>  
+>  	hpb->map_req_cache = kmem_cache_create("ufshpb_req_cache",
+> @@ -1562,6 +1626,10 @@ static int ufshpb_lu_hpb_init(struct ufs_hba *hba, struct ufshpb_lu *hpb)
+>  
+>  	ufshpb_stat_init(hpb);
+>  
+> +	if (ufshpb_mode == HPB_HOST_CONTROL)
+> +		schedule_delayed_work(&hpb->ufshpb_read_to_work,
+> +				      msecs_to_jiffies(POLLING_INTERVAL_MS));
+> +
+>  	return 0;
+>  
+>  release_m_page_cache:
+> @@ -1624,6 +1692,7 @@ static void ufshpb_discard_rsp_lists(struct ufshpb_lu *hpb)
+>  static void ufshpb_cancel_jobs(struct ufshpb_lu *hpb)
+>  {
+>  	if (ufshpb_mode == HPB_HOST_CONTROL) {
+> +		cancel_delayed_work_sync(&hpb->ufshpb_read_to_work);
+>  		cancel_work_sync(&hpb->ufshpb_lun_reset_work);
+>  		cancel_work_sync(&hpb->ufshpb_normalization_work);
+>  	}
+> @@ -1734,6 +1803,10 @@ void ufshpb_resume(struct ufs_hba *hba)
+>  			continue;
+>  		ufshpb_set_state(hpb, HPB_PRESENT);
+>  		ufshpb_kick_map_work(hpb);
+> +		if (ufshpb_mode == HPB_HOST_CONTROL)
+> +			schedule_delayed_work(&hpb->ufshpb_read_to_work,
+> +				msecs_to_jiffies(POLLING_INTERVAL_MS));
+> +
+>  	}
+>  }
+>  
+> diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+> index 4bf77169af00..86c16a4127bd 100644
+> --- a/drivers/scsi/ufs/ufshpb.h
+> +++ b/drivers/scsi/ufs/ufshpb.h
+> @@ -121,6 +121,12 @@ struct ufshpb_region {
+>  
+>  	/* region reads - for host mode */
+>  	atomic64_t reads;
+> +
+> +	/* region "cold" timer - for host mode */
+> +	ktime_t read_timeout;
+> +	atomic_t read_timeout_expiries;
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/scsi/ufs/ufshpb.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Why does this have to be an atomic when you have a lock to protect this
+structure already taken?
 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index d3e6c5b32328..183bdf35f2d0 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -26,6 +26,8 @@ static int tot_active_srgn_pages;
- 
- static struct workqueue_struct *ufshpb_wq;
- 
-+static enum UFSHPB_MODE ufshpb_mode;
-+
- bool ufshpb_is_allowed(struct ufs_hba *hba)
- {
- 	return !(hba->ufshpb_dev.hpb_disabled);
-@@ -1690,10 +1692,9 @@ void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf)
- {
- 	struct ufshpb_dev_info *hpb_dev_info = &hba->ufshpb_dev;
- 	int version;
--	u8 hpb_mode;
- 
--	hpb_mode = desc_buf[DEVICE_DESC_PARAM_HPB_CONTROL];
--	if (hpb_mode == HPB_HOST_CONTROL) {
-+	ufshpb_mode = desc_buf[DEVICE_DESC_PARAM_HPB_CONTROL];
-+	if (ufshpb_mode == HPB_HOST_CONTROL) {
- 		dev_err(hba->dev, "%s: host control mode is not supported.\n",
- 			__func__);
- 		hpb_dev_info->hpb_disabled = true;
--- 
-2.25.1
+thanks,
 
+greg k-h
