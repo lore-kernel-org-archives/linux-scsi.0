@@ -2,312 +2,282 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 526B3C433E9
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 19:39:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF338C433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 19:50:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 078AA64D9E
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 19:39:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F8DB64DA1
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 19:50:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344470AbhA0Tjs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jan 2021 14:39:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54476 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344600AbhA0ThZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2021 14:37:25 -0500
-Received: from mail-oi1-x22e.google.com (mail-oi1-x22e.google.com [IPv6:2607:f8b0:4864:20::22e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F753C061574
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2021 11:36:45 -0800 (PST)
-Received: by mail-oi1-x22e.google.com with SMTP id i25so3402758oie.10
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2021 11:36:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=UzfTDE7xNVc59LngKl0s3eeL5jT7JsMZ+XhPsjN4sxI=;
-        b=iFssMg5/RtEaDZxAAmyhEKkDZXUZw5QilUrLawsGXgU0SefH91KckpoBFy4opPitpQ
-         4lLHQucGE+/8+J055qQzTVVwxqhy3D3aLN2no4rdPyNt4SqewE0dNnmmzvtgIBsgSVu3
-         tsEQhNUotdZpnDQzCJ81zysjCIgWVhzCctrJfdD5KVw69xJEPs2UszA3rFpEE/6svicA
-         vuLwp3twsh29owL5F+NNKW2bInxg9KIrSJ4ViHHSJXBUx8rIAb3Wl4BGHZ85MvvYOTHH
-         08UxDBiY/WiX0d48+5LmbB1GcqVzTPLXMvQ94875rjEQgVtdf4SxqgoMT/+cl3waDmaB
-         iJpg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=UzfTDE7xNVc59LngKl0s3eeL5jT7JsMZ+XhPsjN4sxI=;
-        b=YqaezXeAfF/o/6pDSQ0hcmV+QSaFrlecBRnQpAK8bAfJ/ZbHw8oZiy3vFUYZ4yIL6n
-         c3l2MCR9o0TXODDxW26UoAQoOkA6Q8KXx7KQPdw6wUl28SIy6ASZ7mcYgGbdEXC3hyMX
-         gZiaQoHSVge9fWE7THE5fGYPvcMZUte5NwbXGXOwAG/8DdrAkpYl4oHPU5vun5Shf9Sp
-         usl8/7PJK/8LIL7ZWmXRuSSL0/WhMbOvsV4TVOeBIHQNPxLE7rXxeHBdAGEZDAk5QwYV
-         e4ocUE4HuPp6SQvd/IUBe3bnWHBuWEoeMfLm0HunRvUljaRPcMdDMnlThYbY7P185fB9
-         xpYQ==
-X-Gm-Message-State: AOAM530N2/OnjE2o1cdAA3SCaJjnAlXDEpECXA3/91+aA1SPjs0CykNv
-        C4DXiMZsoQlLMQVHydkAZpjMAQ==
-X-Google-Smtp-Source: ABdhPJxb2qL3P+5Pxwsx6YbDIlg7WfDjry7HVi9H25Zeb9eNWFqDaf0/+6kkzKtytPsyJd2/VGwaiw==
-X-Received: by 2002:aca:6089:: with SMTP id u131mr4242655oib.84.1611776204228;
-        Wed, 27 Jan 2021 11:36:44 -0800 (PST)
-Received: from builder.lan (104-57-184-186.lightspeed.austtx.sbcglobal.net. [104.57.184.186])
-        by smtp.gmail.com with ESMTPSA id q26sm529036otn.67.2021.01.27.11.36.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Jan 2021 11:36:43 -0800 (PST)
-Date:   Wed, 27 Jan 2021 13:36:41 -0600
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Asutosh Das <asutoshd@codeaurora.org>
-Cc:     cang@codeaurora.org, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        stern@rowland.harvard.edu
-Subject: Re: [RFC PATCH v1 0/2] Fix deadlock in ufs
-Message-ID: <YBHAyYRzlvqvB+N+@builder.lan>
-References: <cover.1611719814.git.asutoshd@codeaurora.org>
- <YBGFN7Rc0RZPNRcQ@ripper>
- <20210127161621.GA29156@stor-presley.qualcomm.com>
+        id S231343AbhA0TuZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jan 2021 14:50:25 -0500
+Received: from de-smtp-delivery-102.mimecast.com ([194.104.109.102]:48318 "EHLO
+        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231597AbhA0TrC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Jan 2021 14:47:02 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
+        t=1611776751;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=cJQ0FWDTDo+F95xl8rmdJSpv52SsIaXF7JXXW5seeFk=;
+        b=iSi//i6MTqgcTnpHddVDsKVCSOroiOXQJ1hJCwuf6qUwGOtez15iC3OB1z2GDLTYx2ZDRa
+        HOnvCoo7IRA9C+Q1RTyhVJXfrvPwumTsjE9PeiFdnv3162f2P/6TKRR/M4qn4Sed8XLlwE
+        /4nMndRWnyYp6PSmIOSjaJAX+7fpX+U=
+Received: from EUR05-VI1-obe.outbound.protection.outlook.com
+ (mail-vi1eur05lp2172.outbound.protection.outlook.com [104.47.17.172])
+ (Using TLS) by relay.mimecast.com with ESMTP id
+ de-mta-17-PnA-6ziaOB6P4eN-KnoXtg-1; Wed, 27 Jan 2021 20:45:50 +0100
+X-MC-Unique: PnA-6ziaOB6P4eN-KnoXtg-1
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=jhKQPpyvY7HqSXg8iPUW2jUxVGni7XMllfelNx0rdyIdR2L4tpAjc7Pd34GXGtVEQgGLOlVAh/pl62euOeo5aXxk88DS1VRB6ekANKwxZtxWfLizcb5+pKXA1dW4+aIUWHKXWbc0bRcPaMNFj/pNJaBSE/NNsBOL1nwk31AfHLefC3ACxzpXCgb6DjWE9Vg3kc6uNUj7j9PjnB3mwqA+GMeE9bKU7EGhGPo8s8Qla3uChNYCTfxnRjYgLd5HvMk9hoYazE/9RPznK4M/UNwEJKP57JYfbmmBj01Gboj37LfYMxT+N4TowNvVfDVUugo2dCkU8AvlNQK4bG+zvccJIA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cJQ0FWDTDo+F95xl8rmdJSpv52SsIaXF7JXXW5seeFk=;
+ b=WlXzrUJhxMdBU2w2lvsmeD7G8fHsS0H6Wz9trRhj8IWUC1ipU7PMlw4fYPf2+zxIDO4QweA2eXHI7nK8TB8ANAMfJk3TUYESYDrPDXXXipjN1UPY+ZQdW48BLHeOswGCfOgjPb/EmPMpN8npL71kOQv9xz+6GwgmqkpX/1Jg8E2oLN9cF8GPVGOYy9PcqbqPfr9Wa+LzfQGfVIRB3N3Y20SaS9qUDW5/jKpb5sjans0rBDpZ/mwhGKnQlNYBmVuVc8tBtS1eZDL7LP9RrOrXy9mhfnjCDrFldy+xum5gL9LFPQBU2doWwN20AVSZagArFySYo0oXk3TG9SoryXb0XQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+Authentication-Results: huawei.com; dkim=none (message not signed)
+ header.d=none;huawei.com; dmarc=none action=none header.from=suse.com;
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
+ by AM6PR04MB5224.eurprd04.prod.outlook.com (2603:10a6:20b:f::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3805.17; Wed, 27 Jan
+ 2021 19:45:48 +0000
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::c60:6150:342e:e042]) by AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::c60:6150:342e:e042%6]) with mapi id 15.20.3805.016; Wed, 27 Jan 2021
+ 19:45:48 +0000
+Subject: Re: [PATCH 5/7] libiscsi: add helper to calc max scsi cmds per
+ session
+To:     Mike Christie <michael.christie@oracle.com>, cleech@redhat.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+Cc:     lutianxiong@huawei.com, linfeilong@huawei.com,
+        liuzhiqiang26@huawei.com, haowenchao@huawei.com
+References: <20210118203430.4921-1-michael.christie@oracle.com>
+ <20210118203430.4921-6-michael.christie@oracle.com>
+From:   Lee Duncan <lduncan@suse.com>
+Message-ID: <8cccc83a-4f43-f3db-5f06-5a75f76e293e@suse.com>
+Date:   Wed, 27 Jan 2021 11:45:43 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
+In-Reply-To: <20210118203430.4921-6-michael.christie@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [73.25.22.216]
+X-ClientProxiedBy: AM0PR10CA0119.EURPRD10.PROD.OUTLOOK.COM
+ (2603:10a6:208:e6::36) To AM5PR04MB3089.eurprd04.prod.outlook.com
+ (2603:10a6:206:b::28)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210127161621.GA29156@stor-presley.qualcomm.com>
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.20.3] (73.25.22.216) by AM0PR10CA0119.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:208:e6::36) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3805.17 via Frontend Transport; Wed, 27 Jan 2021 19:45:46 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 0740383f-95cc-4c1f-639d-08d8c2fc2515
+X-MS-TrafficTypeDiagnostic: AM6PR04MB5224:
+X-Microsoft-Antispam-PRVS: <AM6PR04MB52245151639F1E00A4C478AFDABB0@AM6PR04MB5224.eurprd04.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: rpapC3SWsl6bBFWNefR3gjS2qitB+KYBl8OYqUjdG5kS3ZFX3DpNnvPRPUWcltzc/oPu3ajwLgWmJOWJW1yGZevASW0LjkRO5Js6CEECS+f640G4cMl32ZLZXvdIh/YFKeAaiBMmlqJERPS69Pb5h0AWOuaMQMzigyKPnQ0MtagZD9hnfRjtHG3/jV2h4CRzLEOi7GPQCxFOgFG9+5cwm9CyO2e4R3UMZ5n+c36U91uIPOWztZOBfC9s8jWhVu84SqbuvDxG1rKngaVW+hQleQPnZ/vqlsbo2UCnTmcQjXQH3Ol9vnIVEd6OPWZwu5j3b6neKU8eqod0FIvttNxWVwqixNL3n/0XzpCP1/MrPmMAEXes3pgJvgM8d6D2dNO+WwqBLYGVENpAcJne0clhBIoU6/TCX9w6mlI5guUabLiQttTECS6I5QrmkjnNoF6vyeSvTVj5iy4CuVCxg4I3hCjj7WVALyl/dTbEb1SLBNA8OkIQtcvjKtdnXZL0/zQJu5TuYbKMWOVoUuZ2+A9FDNiHOkBl2ToMKISMetZ29OPKlEfxuuZwxA8gzRpxhnzJ+iIOU06FoK34QSCEc13ALlLQIuRAT80FWHW22Y3CFaA=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(396003)(346002)(136003)(39850400004)(376002)(8676002)(66556008)(66476007)(478600001)(53546011)(16526019)(36756003)(6486002)(83380400001)(186003)(4326008)(6666004)(66946007)(86362001)(8936002)(26005)(2616005)(31686004)(956004)(16576012)(316002)(31696002)(52116002)(2906002)(5660300002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?L3dKdGZVNGNkaW8rUUtzVUFVaGFFRThqMkg0K3FneFN3REJiM1lIRlZNZEJB?=
+ =?utf-8?B?MW1jbTFzMWVjeTRPZHl3ejRocnlzS1BLS3RRa0ZieFl3Ky9IVnpYdTdUMEpp?=
+ =?utf-8?B?T29CQ1VrWm5VSzNUUnRJMkpGZnY4NmpaMlduN3pIMGZ5TnBlUXhGdmxaNDVi?=
+ =?utf-8?B?YjRGc1VDc1BxU2hwaE42UkJSV3B3eUtKTVNvK3BPcjVxd1l0YWI4cXUxNGtI?=
+ =?utf-8?B?TlVQVmJ5SGVKRGw5TUgrTXliQnQ4andNeFNoSTRUTzVtRUtNU1gxRjZyVVU3?=
+ =?utf-8?B?alRFcEg1Z01PaFVETUxaOFZDNFlGb0EwcGx2Z2VmVFR1L2pIZnc5YkN0eVBh?=
+ =?utf-8?B?U1Zkd094T2gvenRUR2c2OVFmNzNuZjY0YlBFMmxuZm1kSDErbmR6TXhtOERh?=
+ =?utf-8?B?U3VKZThuWkViS3pPbVkxeTNpZXpqd29YMHV2U2lnV3A3VEYwaSs5OXBrclVi?=
+ =?utf-8?B?WW9PcHpMY2VPNkJDVjFQMzZlN1dHMmtDcDIyQUtxUExYbERjZ3g1L2pJV0FI?=
+ =?utf-8?B?d25jU2VEYnppK1ZRZ2dwTmloQWFpZHIrcTgvMlFjQmVkK1pIaEoyYmFxbjU0?=
+ =?utf-8?B?VThLMW9hMkgvbm5ONWpzb1I4aXNYN2JwTUZJMjBVRUZOTUJzU2R2d2RaaHgy?=
+ =?utf-8?B?Zi9lWVhSSk9lZ2xla2JscVFIL2lpU0FuNmdTZXlQUmtweEZKbGtoRllwbGls?=
+ =?utf-8?B?NmY1U2N1cVZ0K0ZTbTMxVms3VjRNcm9renRlL1YyTzZXWU9hQjdWMGorNWFv?=
+ =?utf-8?B?aFZiUDlXaDhrbkJ4Q1kzR0RHYy81NzYycG9JRWw1U0VKWCtLeXNYdjY0b045?=
+ =?utf-8?B?UStFbzNjSTF4WmtoQVh6UTRBc1phb09NSmxOVi9SZWprQTVSckhqY2NONjJQ?=
+ =?utf-8?B?ek5oOU9JRlVRaUdlVFZxdGVCRXpQNWN1NkhyTkVYa2xMR05RQ3Q0eTh1cGwx?=
+ =?utf-8?B?NEZKYUNJUEM3N3RiUFd3YzhnR3hLdmY3WTRaUHd0VUVteEhSQU1SZG5oSk5C?=
+ =?utf-8?B?YnJaczc3V2p1SVFyMmxJTkg0U3FsWUQ5Uk5GUDVpU0diUHhqL3hCYmt5c1BF?=
+ =?utf-8?B?SVVBRTJ1NEx5UWVMVkwxSkZaM21mYUhvaTVFZE5tWDh2R3VYNEVxdllJcCtn?=
+ =?utf-8?B?SjE0Q1dZWVpIWjdIVUY5cWZteGNDUUY5QXZQbXBxdkpqNXN5TWx1bWE5THdF?=
+ =?utf-8?B?LzR3WnYwMVd1RnJNODdOaE9kd2YwemE2aEU0dVdNc2FOeU16M2d3U01hNGVJ?=
+ =?utf-8?B?RkxsSUg4V2I5NVdWK3JJSUJsTEIza3Z1eFNGT1MybnhTZjRHVUQ4Q1FVbExL?=
+ =?utf-8?B?c1NONDlDbVR6c0l1UERDTmtzS3E2RzJYL1MzalpjQWR6VlZhQVd4QXF3cTJj?=
+ =?utf-8?B?RlNsYW5GZEE4U1lTTisvaTdVQUlGS0w3ZGxOTDRMbEhKVy9OeTdEN0RzQ3I2?=
+ =?utf-8?Q?yOgNzo/n?=
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0740383f-95cc-4c1f-639d-08d8c2fc2515
+X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Jan 2021 19:45:48.3860
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: XSkOcDpIrF1LW14ZBEuihZZ8zBlGHuwxunja0x9Tu3IRO40ctCEZcQKhAMSegf81WA+Gy1x6r20UCUIVJ0RZyw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB5224
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed 27 Jan 10:16 CST 2021, Asutosh Das wrote:
-
-> On Wed, Jan 27 2021 at 07:25 -0800, Bjorn Andersson wrote:
-> > On Tue 26 Jan 20:00 PST 2021, Asutosh Das wrote:
-> > 
-> > > This patchset attempts to fix a deadlock in ufs.
-> > > This deadlock occurs because the ufs host driver tries to resume
-> > > its child (wlun scsi device) to send SSU to it during its suspend.
-> > > 
-> > 
-> > I've been trying to bisect a regression currently seen on all Qualcomm
-> > boards I've tried running next-20210125 on, but have yet to figure out
-> > the actual culprit. I was hoping this might be related, but no.
-> > 
-> > The following is the UFS related logs from a SDM845 board:
-> > 
-> > [    4.556147] ufshcd-qcom 1d84000.ufshc: Adding to iommu group 10
-> > [   14.823635] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vdd-hba-supply regulator, assuming enabled
-> > [   14.834483] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vccq-supply regulator, assuming enabled
-> > [   14.845022] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vccq2-supply regulator, assuming enabled
-> > [   14.859278] scsi host0: ufshcd
-> > [   14.894076] ufshcd-qcom 1d84000.ufshc: ufshcd_print_pwr_info:[RX, TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate = 0
-> > [   14.972730] ufshcd-qcom 1d84000.ufshc: ufshcd_find_max_sup_active_icc_level: Regulator capability was not set, actvIccLevel=0
-> > [   14.988386] scsi 0:0:0:49488: Well-known LUN    SKhynix  H28S7Q302BMR     A002 PQ: 0 ANSI: 6
-> > [   15.002508] scsi 0:0:0:49476: Well-known LUN    SKhynix  H28S7Q302BMR     A002 PQ: 0 ANSI: 6
-> > [   15.015848] scsi 0:0:0:49456: Well-known LUN    SKhynix  H28S7Q302BMR     A002 PQ: 0 ANSI: 6
-> > [   15.031551] scsi 0:0:0:0: Direct-Access     SKhynix  H28S7Q302BMR     A002 PQ: 0 ANSI: 6
-> > [   15.046885] scsi 0:0:0:1: Direct-Access     SKhynix  H28S7Q302BMR     A002 PQ: 0 ANSI: 6
-> > [   15.047204] sd 0:0:0:0: [sda] 14145536 4096-byte logical blocks: (57.9 GB/54.0 GiB)
-> > [   15.047274] sd 0:0:0:0: [sda] Write Protect is off
-> > [   15.047281] sd 0:0:0:0: [sda] Mode Sense: 00 32 00 10
-> > [   15.047418] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports DPO and FUA
-> > [   15.047488] sd 0:0:0:0: [sda] Optimal transfer size 786432 bytes
-> > [   15.062041] scsi 0:0:0:2: Direct-Access     SKhynix  H28S7Q302BMR     A002 PQ: 0 ANSI: 6
-> > [   15.062347] sd 0:0:0:1: [sdb] 1024 4096-byte logical blocks: (4.19 MB/4.00 MiB)
-> > [   15.062414] sd 0:0:0:1: [sdb] Write Protect is off
-> > [   15.062418] sd 0:0:0:1: [sdb] Mode Sense: 00 32 00 10
-> > [   15.062522] sd 0:0:0:1: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA
-> > [   15.062582] sd 0:0:0:1: [sdb] Optimal transfer size 786432 bytes
-> > [   15.074503] scsi 0:0:0:3: Direct-Access     SKhynix  H28S7Q302BMR     A002 PQ: 0 ANSI: 6
-> > [   15.075092] sd 0:0:0:2: [sdc] 1024 4096-byte logical blocks: (4.19 MB/4.00 MiB)
-> > [   15.075161] sd 0:0:0:2: [sdc] Write Protect is off
-> > [   15.075166] sd 0:0:0:2: [sdc] Mode Sense: 00 32 00 10
-> > [   15.075292] sd 0:0:0:2: [sdc] Write cache: enabled, read cache: enabled, supports DPO and FUA
-> > [   15.075358] sd 0:0:0:2: [sdc] Optimal transfer size 786432 bytes
-> > [   15.093820] ufshcd-qcom 1d84000.ufshc: dme-set: attr-id 0x1583 val 0x0 failed 0 retries
-> > [   15.199208] ufshcd-qcom 1d84000.ufshc: dme-set: attr-id 0x1568 val 0x0 failed 0 retries
-> > [   15.400514] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x80 timed-out
-> > [   15.409439] ufshcd-qcom 1d84000.ufshc: ufshcd_try_to_abort_task: no response from device. tag = 10, err -110
-> > [   15.479763] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   15.546285] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   15.612688] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   15.679057] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   15.685187] ufshcd-qcom 1d84000.ufshc: ufshcd_host_reset_and_restore: Host init failed -5
-> > [   15.754125] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   15.820405] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   15.886519] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   15.952976] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   15.959119] ufshcd-qcom 1d84000.ufshc: ufshcd_host_reset_and_restore: Host init failed -5
-> > [   16.027951] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.094499] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.161005] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.276723] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.282756] ufshcd-qcom 1d84000.ufshc: ufshcd_host_reset_and_restore: Host init failed -5
-> > [   16.360239] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.427425] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.497737] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.566869] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.572939] ufshcd-qcom 1d84000.ufshc: ufshcd_host_reset_and_restore: Host init failed -5
-> > [   16.642243] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.708590] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.774868] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.841364] ufshcd-qcom 1d84000.ufshc: Controller enable failed
-> > [   16.847492] ufshcd-qcom 1d84000.ufshc: ufshcd_host_reset_and_restore: Host init failed -5
-> > [   16.855938] ufshcd-qcom 1d84000.ufshc: ufshcd_err_handler: reset and restore failed with err -5
-> > [   16.936724] sd 0:0:0:2: [sdc] tag#12 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=1s
-> > [   16.946151] sd 0:0:0:2: [sdc] tag#12 CDB: opcode=0x28 28 00 00 00 00 00 00 00 01 00
-> > [   16.953950] blk_update_request: I/O error, dev sdc, sector 0 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-> > [   16.963987] Buffer I/O error on dev sdc, logical block 0, async page read
-> > [   16.971263] sd 0:0:0:1: [sdb] tag#13 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=1s
-> > [   16.980668] sd 0:0:0:1: [sdb] tag#13 CDB: opcode=0x28 28 00 00 00 00 00 00 00 01 00
-> > [   16.988457] blk_update_request: I/O error, dev sdb, sector 0 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-> > [   16.998455] Buffer I/O error on dev sdb, logical block 0, async page read
-> > [   17.005438] sd 0:0:0:0: [sda] tag#15 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=1s
-> > [   17.014887] sd 0:0:0:0: [sda] tag#15 CDB: opcode=0x28 28 00 00 00 00 00 00 00 01 00
-> > [   17.022639] blk_update_request: I/O error, dev sda, sector 0 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-> > [   17.032581] Buffer I/O error on dev sda, logical block 0, async page read
-> > [   17.060604] sd 0:0:0:2: [sdc] tag#11 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=0s
-> > [   17.070024] sd 0:0:0:2: [sdc] tag#11 CDB: opcode=0x28 28 00 00 00 00 00 00 00 01 00
-> > [   17.077811] blk_update_request: I/O error, dev sdc, sector 0 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-> > [   17.087785] Buffer I/O error on dev sdc, logical block 0, async page read
-> > [   17.094762]  sdc: unable to read partition table
-> > [   17.121375] sd 0:0:0:0: [sda] tag#13 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=0s
-> > [   17.124811] sd 0:0:0:1: [sdb] tag#14 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=0s
-> > [   17.130915] sd 0:0:0:0: [sda] tag#13 CDB: opcode=0x28 28 00 00 00 00 00 00 00 01 00
-> > [   17.138281] sd 0:0:0:2: [sdc] tag#9 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=0s
-> > [   17.138351] sd 0:0:0:2: [sdc] tag#9 CDB: opcode=0x28 28 00 00 00 03 f0 00 00 01 00
-> > [   17.138361] blk_update_request: I/O error, dev sdc, sector 8064 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > [   17.140305] sd 0:0:0:1: [sdb] tag#14 CDB: opcode=0x28 28 00 00 00 00 00 00 00 01 00
-> > [   17.148070] blk_update_request: I/O error, dev sda, sector 0 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-> > [   17.157308] blk_update_request: I/O error, dev sdb, sector 0 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-> > [   17.164973] Buffer I/O error on dev sda, logical block 0, async page read
-> > [   17.175522] Buffer I/O error on dev sdb, logical block 0, async page read
-> > [   17.183484]  sda: unable to read partition table
-> > [   17.193379]  sdb: unable to read partition table
-> > [   17.245890] sd 0:0:0:0: [sda] tag#16 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=0s
-> > [   17.255444] sd 0:0:0:0: [sda] tag#16 CDB: opcode=0x28 28 00 00 d7 d7 f0 00 00 01 00
-> > [   17.262309] sd 0:0:0:2: [sdc] tag#9 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=0s
-> > [   17.263226] blk_update_request: I/O error, dev sda, sector 113164160 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > [   17.267751] sd 0:0:0:1: [sdb] tag#14 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=0s
-> > [   17.267804] sd 0:0:0:1: [sdb] tag#14 CDB: opcode=0x28 28 00 00 00 03 f0 00 00 01 00
-> > [   17.267820] blk_update_request: I/O error, dev sdb, sector 8064 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > [   17.272473] sd 0:0:0:2: [sdc] tag#9 CDB: opcode=0x28 28 00 00 00 03 f0 00 00 01 00
-> > [   17.272480] blk_update_request: I/O error, dev sdc, sector 8064 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-> > [   17.328934] Buffer I/O error on dev sdc, logical block 1008, async page read
-> > [   17.336400] Buffer I/O error on dev sdb, logical block 1008, async page read
-> > [   17.344184] Buffer I/O error on dev sda, logical block 14145520, async page read
-> > [   17.356908] sd 0:0:0:3: [sdd] Read Capacity(16) failed: Result: hostbyte=0x07 driverbyte=0x00
-> > [   17.365890] sd 0:0:0:3: [sdd] Sense not available.
-> > [   17.504489] sd 0:0:0:1: [sdb] Read Capacity(16) failed: Result: hostbyte=0x07 driverbyte=0x00
-> > [   17.513199] sd 0:0:0:1: [sdb] Sense not available.
-> > [   17.548648] sd 0:0:0:0: [sda] Read Capacity(16) failed: Result: hostbyte=0x07 driverbyte=0x00
-> > [   17.548875] sd 0:0:0:2: [sdc] Read Capacity(16) failed: Result: hostbyte=0x07 driverbyte=0x00
-> > [   17.557365] sd 0:0:0:0: [sda] Sense not available.
-> > [   17.570888] sd 0:0:0:2: [sdc] Sense not available.
-> > [   17.612557] sd 0:0:0:3: [sdd] Read Capacity(10) failed: Result: hostbyte=0x07 driverbyte=0x00
-> > [   17.621302] sd 0:0:0:3: [sdd] Sense not available.
-> > [   17.720470] sd 0:0:0:3: [sdd] 0 512-byte logical blocks: (0 B/0 B)
-> > [   17.726895] sd 0:0:0:3: [sdd] 0-byte physical blocks
-> > [   17.756442] sd 0:0:0:1: [sdb] Read Capacity(10) failed: Result: hostbyte=0x07 driverbyte=0x00
-> > [   17.765154] sd 0:0:0:1: [sdb] Sense not available.
-> > [   17.796694] sd 0:0:0:0: [sda] Read Capacity(10) failed: Result: hostbyte=0x07 driverbyte=0x00
-> > [   17.805550] sd 0:0:0:0: [sda] Sense not available.
-> > [   17.812461] sd 0:0:0:2: [sdc] Read Capacity(10) failed: Result: hostbyte=0x07 driverbyte=0x00
-> > [   17.812479] sd 0:0:0:3: [sdd] Write Protect is off
-> > [   17.821124] sd 0:0:0:2: [sdc] Sense not available.
-> > [   17.831183] sd 0:0:0:3: [sdd] Mode Sense: 00 00 00 00
-> > [   17.916633] sd 0:0:0:3: [sdd] Asking for cache data failed
-> > [   17.922246] sd 0:0:0:3: [sdd] Assuming drive cache: write through
-> > [   17.928661] sd 0:0:0:1: [sdb] 0 4096-byte logical blocks: (0 B/0 B)
-> > [   17.964461] sd 0:0:0:2: [sdc] 0 4096-byte logical blocks: (0 B/0 B)
-> > [   17.968389] sd 0:0:0:0: [sda] 0 4096-byte logical blocks: (0 B/0 B)
-> > [   18.052598] sd 0:0:0:2: [sdc] Write Protect is on
-> > [   18.057654] sd 0:0:0:2: [sdc] Mode Sense: 00 01 1c 88
-> > [   18.140750] Buffer I/O error on dev sdc, logical block 1008, async page read
-> > [   18.148120] sdc: detected capacity change from 0 to 8192
-> > [   18.148436] sdb: detected capacity change from 0 to 8192
-> > [   18.153573] sd 0:0:0:2: [sdc] Attached SCSI disk
-> > [   18.161640] sd 0:0:0:1: [sdb] Attached SCSI disk
-> > [   18.272458] sda: detected capacity change from 0 to 113164288
-> > [   18.278440] sd 0:0:0:0: [sda] Attached SCSI disk
-> > [   18.336456] sd 0:0:0:3: [sdd] Read Capacity(16) failed: Result: hostbyte=0x07 driverbyte=0x00
-> > [   18.345155] sd 0:0:0:3: [sdd] Sense not available.
-> > [   18.437277] ufshcd-qcom 1d84000.ufshc: __ufshcd_query_descriptor: opcode 0x01 for idn 2 failed, index 4, err = -11
-> > [   18.588427] sd 0:0:0:3: [sdd] Read Capacity(10) failed: Result: hostbyte=0x07 driverbyte=0x00
-> > [   18.597131] sd 0:0:0:3: [sdd] Sense not available.
-> > [   18.984425] sd 0:0:0:3: [sdd] Attached SCSI disk
-> > [   19.973658] ufshcd-qcom 1d84000.ufshc: __ufshcd_query_descriptor: opcode 0x01 for idn 2 failed, index 4, err = -11
-> > [   21.508706] ufshcd-qcom 1d84000.ufshc: __ufshcd_query_descriptor: opcode 0x01 for idn 2 failed, index 4, err = -11
-> > [   21.519204] ufshcd-qcom 1d84000.ufshc: ufshcd_read_desc_param: Failed reading descriptor. desc_id 2, desc_index 4, param_offset 6, ret -11
-> > [   21.577216] sd 0:0:0:0: Unexpected response from lun 4 while scanning, scan aborted
-> > [   22.181387] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   23.007510] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   23.076607] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   23.524907] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   24.133026] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   24.421140] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   24.549023] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   25.156985] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   25.253136] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   26.180950] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   26.597019] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   27.204984] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   27.493135] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   27.621022] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   28.228982] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   28.325152] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   29.252956] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   29.669021] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   30.276984] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   30.565140] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   30.693023] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   31.300983] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   31.397134] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   32.324954] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   32.741021] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   33.348985] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   33.637132] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   33.765258] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   34.372980] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   34.469142] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   35.396957] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   35.813018] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   36.420980] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   36.709133] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   36.837021] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   37.444979] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   37.541138] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   38.468955] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   38.885021] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   39.492983] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   39.781134] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   39.909017] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   40.516977] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   40.613135] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   41.540956] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   41.957016] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   42.564987] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   42.853130] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   42.981020] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   43.588980] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   43.685135] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   44.612954] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   45.029014] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   45.636979] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   45.925137] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   46.053022] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   46.660983] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > [   46.757132] devfreq 1d84000.ufshc: dvfs failed with (-16) error
-> > 
-> > Is this something that you've seen?
-> > 
-> > Regards,
-> > Bjorn
+On 1/18/21 12:34 PM, Mike Christie wrote:
+> This patch just breaks out the code that calculates the number
+> of scsi cmds that will be used for a scsi session. It also adds
+> a check that we don't go over the host's can_queue value.
 > 
-> Hi Bjorn
-> Nope, I've not seen this issue yet.
-> Looks like the commands are timing out, could be clocks/power, perhaps?
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> ---
+>  drivers/scsi/libiscsi.c | 84 +++++++++++++++++++++++++----------------
+>  include/scsi/libiscsi.h |  2 +
+>  2 files changed, 54 insertions(+), 32 deletions(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index b271d3accd2a..195006a08e0d 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -2648,6 +2648,54 @@ void iscsi_pool_free(struct iscsi_pool *q)
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_pool_free);
+>  
+> +int iscsi_host_get_max_scsi_cmds(struct Scsi_Host *shost,
+> +				 uint16_t requested_cmds_max)
+> +{
+> +	int scsi_cmds, total_cmds = requested_cmds_max;
+> +
+> +check:
+> +	if (!total_cmds)
+> +		total_cmds = ISCSI_DEF_XMIT_CMDS_MAX;
+> +	/*
+> +	 * The iscsi layer needs some tasks for nop handling and tmfs,
+> +	 * so the cmds_max must at least be greater than ISCSI_MGMT_CMDS_MAX
+> +	 * + 1 command for scsi IO.
+> +	 */
+> +	if (total_cmds < ISCSI_TOTAL_CMDS_MIN) {
+> +		printk(KERN_ERR "iscsi: invalid max cmds of %d. Must be a power of two that is at least %d.\n",
+> +		       total_cmds, ISCSI_TOTAL_CMDS_MIN);
+> +		return -EINVAL;
+> +	}
+> +
+> +	if (total_cmds > ISCSI_TOTAL_CMDS_MAX) {
+> +		printk(KERN_ERR "iscsi: invalid max cmds of %d. Must be a power of 2 less than or equal to %d.\n",
+> +		       requested_cmds_max, ISCSI_TOTAL_CMDS_MAX);
+> +		total_cmds = ISCSI_TOTAL_CMDS_MAX;
+> +	}
+> +
+> +	if (!is_power_of_2(total_cmds)) {
+> +		printk(KERN_ERR "iscsi: invalid max cmds of %d. Must be a power of 2.\n",
+> +		       total_cmds);
+
+I don't like mixing KERN_ERR and KERN_INFO for the same event. Can we
+make it just one KERN_INFO? (since we keep going)
+
+> +		total_cmds = rounddown_pow_of_two(total_cmds);
+> +		if (total_cmds < ISCSI_TOTAL_CMDS_MIN)
+> +			return -EINVAL;
+> +		printk(KERN_INFO "iscsi: Rounding max cmds to %d.\n",
+> +		       total_cmds);
+> +	}
+> +
+> +	scsi_cmds = total_cmds - ISCSI_MGMT_CMDS_MAX;
+> +	if (shost->can_queue && scsi_cmds > shost->can_queue) {
+> +		total_cmds = shost->can_queue;
+> +
+> +		printk(KERN_INFO "iscsi: requested max cmds %u is higher than driver limit. Using driver limit %u\n",
+> +		       requested_cmds_max, shost->can_queue);
+> +		goto check;
+> +	}
+> +
+> +	return scsi_cmds;
+> +}
+> +EXPORT_SYMBOL_GPL(iscsi_host_get_max_scsi_cmds);
+> +
+>  /**
+>   * iscsi_host_add - add host to system
+>   * @shost: scsi host
+> @@ -2801,7 +2849,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
+>  	struct iscsi_host *ihost = shost_priv(shost);
+>  	struct iscsi_session *session;
+>  	struct iscsi_cls_session *cls_session;
+> -	int cmd_i, scsi_cmds, total_cmds = cmds_max;
+> +	int cmd_i, scsi_cmds;
+>  	unsigned long flags;
+>  
+>  	spin_lock_irqsave(&ihost->lock, flags);
+> @@ -2812,37 +2860,9 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
+>  	ihost->num_sessions++;
+>  	spin_unlock_irqrestore(&ihost->lock, flags);
+>  
+> -	if (!total_cmds)
+> -		total_cmds = ISCSI_DEF_XMIT_CMDS_MAX;
+> -	/*
+> -	 * The iscsi layer needs some tasks for nop handling and tmfs,
+> -	 * so the cmds_max must at least be greater than ISCSI_MGMT_CMDS_MAX
+> -	 * + 1 command for scsi IO.
+> -	 */
+> -	if (total_cmds < ISCSI_TOTAL_CMDS_MIN) {
+> -		printk(KERN_ERR "iscsi: invalid can_queue of %d. can_queue "
+> -		       "must be a power of two that is at least %d.\n",
+> -		       total_cmds, ISCSI_TOTAL_CMDS_MIN);
+> +	scsi_cmds = iscsi_host_get_max_scsi_cmds(shost, cmds_max);
+> +	if (scsi_cmds < 0)
+>  		goto dec_session_count;
+> -	}
+> -
+> -	if (total_cmds > ISCSI_TOTAL_CMDS_MAX) {
+> -		printk(KERN_ERR "iscsi: invalid can_queue of %d. can_queue "
+> -		       "must be a power of 2 less than or equal to %d.\n",
+> -		       cmds_max, ISCSI_TOTAL_CMDS_MAX);
+> -		total_cmds = ISCSI_TOTAL_CMDS_MAX;
+> -	}
+> -
+> -	if (!is_power_of_2(total_cmds)) {
+> -		printk(KERN_ERR "iscsi: invalid can_queue of %d. can_queue "
+> -		       "must be a power of 2.\n", total_cmds);
+> -		total_cmds = rounddown_pow_of_two(total_cmds);
+> -		if (total_cmds < ISCSI_TOTAL_CMDS_MIN)
+> -			goto dec_session_count;
+> -		printk(KERN_INFO "iscsi: Rounding can_queue to %d.\n",
+> -		       total_cmds);
+> -	}
+> -	scsi_cmds = total_cmds - ISCSI_MGMT_CMDS_MAX;
+>  
+>  	cls_session = iscsi_alloc_session(shost, iscsit,
+>  					  sizeof(struct iscsi_session) +
+> @@ -2858,7 +2878,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
+>  	session->lu_reset_timeout = 15;
+>  	session->abort_timeout = 10;
+>  	session->scsi_cmds_max = scsi_cmds;
+> -	session->cmds_max = total_cmds;
+> +	session->cmds_max = scsi_cmds + ISCSI_MGMT_CMDS_MAX;
+>  	session->queued_cmdsn = session->cmdsn = initial_cmdsn;
+>  	session->exp_cmdsn = initial_cmdsn + 1;
+>  	session->max_cmdsn = initial_cmdsn + 1;
+> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+> index 44a9554aea62..02f966e9358f 100644
+> --- a/include/scsi/libiscsi.h
+> +++ b/include/scsi/libiscsi.h
+> @@ -395,6 +395,8 @@ extern struct Scsi_Host *iscsi_host_alloc(struct scsi_host_template *sht,
+>  extern void iscsi_host_remove(struct Scsi_Host *shost);
+>  extern void iscsi_host_free(struct Scsi_Host *shost);
+>  extern int iscsi_target_alloc(struct scsi_target *starget);
+> +extern int iscsi_host_get_max_scsi_cmds(struct Scsi_Host *shost,
+> +					uint16_t requested_cmds_max);
+>  
+>  /*
+>   * session management
 > 
 
-I've finally concluded that reverting 4543d9d78227 ("scsi: ufs: Refactor
-ufshcd_init/exit_clk_scaling/gating()") fixes the problem and allow at
-least SDM845 to boot again (haven't yet tested the others).
+If you choose to change the KERN_ERR I mentioned above, please add my
+reviwed-by tag.
 
-I've not yet figured out why it's causing the regression.
-
-Regards,
-Bjorn
