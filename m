@@ -2,65 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3986C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 08:53:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71FBBC433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 08:57:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7520C20757
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 08:53:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E50B20754
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jan 2021 08:57:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233058AbhA0IxV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jan 2021 03:53:21 -0500
-Received: from out30-54.freemail.mail.aliyun.com ([115.124.30.54]:46769 "EHLO
-        out30-54.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232797AbhA0Iuu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Jan 2021 03:50:50 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=abaci-bugfix@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0UN1NS1g_1611737386;
-Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:abaci-bugfix@linux.alibaba.com fp:SMTPD_---0UN1NS1g_1611737386)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Wed, 27 Jan 2021 16:50:03 +0800
-From:   Abaci Team <abaci-bugfix@linux.alibaba.com>
-To:     jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Abaci Team <abaci-bugfix@linux.alibaba.com>
-Subject: [PATCH] scsi: ufs: fix: NULL pointer dereference
-Date:   Wed, 27 Jan 2021 16:49:44 +0800
-Message-Id: <1611737384-49321-1-git-send-email-abaci-bugfix@linux.alibaba.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S233380AbhA0I5G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jan 2021 03:57:06 -0500
+Received: from a1.mail.mailgun.net ([198.61.254.60]:55186 "EHLO
+        a1.mail.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233237AbhA0Iyy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2021 03:54:54 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1611737663; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=EUssQP2vZo9f1NeJLiuievSQB3Q8g6yl/yOnTsJJnrY=;
+ b=oQTnx3Cwl82f5vFXL+b+FUrZJ31PtSrwZiTpivoWxsgr6URr/XaT/qgA4e8WkUWwCz30+Nee
+ 4ao/cAm6hozmLvjvV2ABx5rrouWUXM8uFTRYw7ovJ0zTIPA1Pl/V6Nh6wBxugJI13Q3J8Iwv
+ k0eymC628r3DergbnbERivLlGlw=
+X-Mailgun-Sending-Ip: 198.61.254.60
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 60112a21a8db642432e346ad (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 27 Jan 2021 08:53:53
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 31DF8C43462; Wed, 27 Jan 2021 08:53:53 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9273BC433CA;
+        Wed, 27 Jan 2021 08:53:52 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 27 Jan 2021 16:53:52 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     Asutosh Das <asutoshd@codeaurora.org>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        stern@rowland.harvard.edu,
+        "Bao D . Nguyen" <nguyenb@codeaurora.org>,
+        FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
+        Jens Axboe <axboe@kernel.dk>,
+        "open list:BLOCK LAYER" <linux-block@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH v1 1/2] block: bsg: resume scsi device before
+ accessing
+In-Reply-To: <75c66862d61c63fcfa61cd6dce254169@codeaurora.org>
+References: <cover.1611719814.git.asutoshd@codeaurora.org>
+ <c04a11a590628c2497cef113b0dfea781de90416.1611719814.git.asutoshd@codeaurora.org>
+ <DM6PR04MB6575D64869B24B4275D63503FCBB9@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <75c66862d61c63fcfa61cd6dce254169@codeaurora.org>
+Message-ID: <19e1d785e5fb3d8ee79bf55758ef2dcf@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix below warnings reported by coccicheck:
-./drivers/scsi/ufs/ufshcd.c:8990:11-17: ERROR: hba is NULL but
-dereferenced.
+On 2021-01-27 15:59, Can Guo wrote:
+> On 2021-01-27 15:09, Avri Altman wrote:
+>>> 
+>>> Resumes the scsi device before accessing it.
+>>> 
+>>> Change-Id: I2929af60f2a92c89704a582fcdb285d35b429fde
+>>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>>> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+>> Following this patch, is it possible to revert commit 74e5e468b664d?
+>> 
+> 
+> No, but this is a good finding... This change assumes
+> that the queue->queue_data is a scsi_device, which is
+> why we call scsi_auto_pm_get(). But for ufs_bsg's case,
+> queue->queue_data is a device...
+> 
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Suggested-by: Yang Li <oswb@linux.alibaba.com>
-Signed-off-by: Abaci Team <abaci-bugfix@linux.alibaba.com>
----
- drivers/scsi/ufs/ufshcd.c | 1 -
- 1 file changed, 1 deletion(-)
+If we call pm_runtime_get/put_sync(bcd->class_dev->parent) in
+bsg_get/put_device(), commit 74e5e468b664d can be reverted.
+This is just a rough idea.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index fb32d12..9319251 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8990,7 +8990,6 @@ int ufshcd_system_resume(struct ufs_hba *hba)
- 	ktime_t start = ktime_get();
- 
- 	if (!hba) {
--		up(&hba->eh_sem);
- 		return -EINVAL;
- 	}
- 
--- 
-1.8.3.1
-
+> Thanks,
+> Can Guo.
+> 
+>> Thanks,
+>> Avri
