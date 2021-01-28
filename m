@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13749C433E6
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 07:49:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC832C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 07:53:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C0FCD64DD1
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 07:49:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 715DF6146D
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 07:53:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232254AbhA1Hrf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jan 2021 02:47:35 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:51578 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231531AbhA1HOS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2021 02:14:18 -0500
+        id S232145AbhA1Hwv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jan 2021 02:52:51 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:20080 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231648AbhA1HNu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2021 02:13:50 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611818200; x=1643354200;
+  t=1611818030; x=1643354030;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Co0rYGelfI2tueL8o6ihJdxL5NS5pM4BZ/hI8135Y8w=;
-  b=GRHRSEj9iWZoWvwzfPQ4GQHot6+83YlmNuccno6M39bclyyrH6IZ7lRj
-   gYpeSESDSiw8TcIO1A1H4/UL0PI8JIuVBTffG+t5Eye3aLklM1l+sJCIN
-   EyQH1ZzEuiznHbbN3AZW/GUmZE9iDlOm+sKOOsCDEX70C2f88KuHsYy+O
-   NqMwkgRGj39G8z2kYrOCO6sXtZUh2slTXP2eJDrej6/alfSg3PAT1pRyk
-   QPn4cuIT4EbLQBO1zQDLoXfSlbflueAfmZzLnpAN53RGKcw55ePRqENt/
-   BLDmxFykJ23ddconMBMwnuWqFpAbb3nEfvaojLlLcXOlk8Z9wplbyVxaB
-   Q==;
-IronPort-SDR: 4mTvy6atMVPrxp+VZDCUWD5gfpeJakwr73UVh4xU8Bk3fpPykw9wpyk6DsB67i7YAA8KWGgXjd
- 9/Rq8MAkYowfKPrdhk87R8uwMnkgc1+C8Q+AbSmEWta4dTEOk6LAqgEPlSBhETemQydix+h/Eh
- bMluRnN/kH5OPNxlcOHwP+kS9dOqD2Jl+pKNfSyORIpZWvCWx9I/BmX2qG7eIfdaNg3Gkbrf90
- 7XLgyJRzeQkw2IGpIw2sAuCgE1MBw0kKMJtUSiM68QN+qdNDJzfO9JlblV8fR6WD4PLiCJgu6a
- HDE=
+  bh=QAiSNZxQXn+fhhqJHg770cKqGnQ7j5esbXKR/QGBS14=;
+  b=VNfBQASV3ynBBt52wrcWE0FE4vzZyWsYS5j6gA4lUIiqFEkJ0cCkstTa
+   n6rSkZReCdLLi5nJ7LB7iG8Pz7W4SOxL9GEqpVH8GjAm4ksiWySBmxG/b
+   qyijG59O1cmb4+Zab5/fIQe2z8V4M6mO+UxdOfSKOO+iQgoFoqafaT2FT
+   fIQfj/HuCEiRAW6Jk1OprQ+wcdGL5JUv7xp+5JO/JzQBxZp5hjdZ3Jvvg
+   iL6T5ITh2woNPLrFqlQ3HL3nW7kuP46IS6wlGFrtEXs7I+kOh+6qIghaV
+   QXmX7W5aGT6ui69moIAL/WzUQ9U4Q8TdEsGAihFk4gkzKkQArb5zz57N3
+   A==;
+IronPort-SDR: iNuOwcin1x6ju9QcP0vYOZIUKIW6R1DQIxJJtr2EP0Rmhzavj4wN7iMwYLpkUp4xJSr+XguHBN
+ MLtJhMX3ruWIq0snFK0hXyXSzae3/DbVruj2MIKA5scucbrAXrcwEu858JJ+SMdXIhRuqb3v20
+ fN85o1l0zK0mhiZi3vg+nGexv/wzXbxuTr07wxsA40Vmvw5IaKTgEDviQsrXGW92iEkRQ0DFd3
+ zZhbGVTZLFRnKBSpOQIN7eaUpdI3riQxx7qQg4H6xE6riXh408VnOP7rgZhcDeqLkNvU5ANv0k
+ qZ0=
 X-IronPort-AV: E=Sophos;i="5.79,381,1602518400"; 
-   d="scan'208";a="262548967"
+   d="scan'208";a="159693772"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2021 15:15:00 +0800
-IronPort-SDR: LBIoJUPnqINs82cn9PprWfmulee+VR4Oe0d+OBed5wwmAkhbNzS9HgRbFZC54ThWruo9a3y1n9
- q55ZeV0ZAEPAlDKCzGuWZlsieXWWux+fLW7dNDbMq3GlWR9bS9Vf+PzO3HMOGTvQR6UPqCDIYi
- TO/Or6Ow3pc+q1TXKs1Fb0qxSkTJVKAOvRPM36mRvhUVMY7uYRfHBVitDh4ZYymH4SZx18lELK
- iGt5vUVrviwu9nyYhzgOS+SGJVdqzuF+olLIfcnWYyrJAIpC2qWlaD/o/7hbhED6hfWgmF1aSz
- /Ejjql1VCPRjpPMhzhUvTSZi
+  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2021 15:12:36 +0800
+IronPort-SDR: WMh/HqQLjbTmJYpJSwfBpOTpWN6VFfSuxpZ+VHhvR6RV9F1hRsB/mrrtslmOhQtPO7h4pqVdsZ
+ 8v/mcoQ4qAHs8kWJFldiPCo8xoD3CdXa6EvuU1+Bk0yARqpdbZ632nvWjNmosMzw6cUH42JogU
+ PAtRhHSKg5lZ/1WhDCuIQjGr6I66ssyoWPWGb0vnuuvdKmXt8PUpyQg8c+nO9lSbHpfE3HQvAb
+ lXbkT8a2bLvKt+CinaMno2KWOFHNmlcwoFszCy/Kvj89bJq4xCciEKqMwmUDxtp9qtp/GVXysw
+ 5pbNfau0lP4gEFjMHvTGHi6L
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2021 22:55:29 -0800
-IronPort-SDR: B3g2yURiLlkRDJQjiSw5Axb2Dh2vXpaNrKE/QAQl3YC0d9KYF6ZY/2WEGrs8Ad4s6CTMSYijlI
- As81DRh7fxTUcG6XscFZ0dEUGMxghLXCUSNbFTul1lhg8N84M173b0zoMSc59+C6RPGCZyVbXT
- e5q9NGchuukS+6n/XolnPl9CgZkf3lpSTdPe2xwj7IsZkLY+Q3H2m4972b6vr4aHe8P7F7VrjW
- YTjKY9EpCmYYdyolrCzI7bP6MpRPHgjkbRdfoyYEpwC7inxXY41c/i8ke9uNT4EC8+Q8lA/Kgh
- 6rI=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2021 22:54:54 -0800
+IronPort-SDR: Luc6lg4Pa+bVHOb4HzkXJiWLGqMg6JC6Nyg0Lqb88ZIBDNylXDUPHvAGuri+ui5nWB8hV8jug9
+ qFWTXFaOWHAL0oehOyPdERabJ1LaG9aVOt3b6RTgmVCVF9xZaJrmkG+mjzow98LgNG5t1Hjoni
+ gqXmojTILo9AyCGo2PpCozas3remWiyjnR1rz1m7Heq2aoYdQ+f2mWDUtJhIIR3UJyQKknW4V+
+ XZO06It7hG6XcBrRwkAZf9a8HSkB5bDSC1ddzu75XBYoKVtN9lipurMfP/HgqVuXVuz/kSCAwn
+ InQ=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip02.wdc.com with ESMTP; 27 Jan 2021 23:13:11 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 27 Jan 2021 23:12:36 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         dm-devel@redhat.com, linux-block@vger.kernel.org,
@@ -82,9 +82,9 @@ Cc:     axboe@kernel.dk, philipp.reisner@linbit.com,
         alex.shi@linux.alibaba.com, asml.silence@gmail.com,
         ming.lei@redhat.com, tj@kernel.org, osandov@fb.com,
         bvanassche@acm.org, jefflexu@linux.alibaba.com
-Subject: [RFC PATCH 10/34] dm-zoned: use bio_new in dmz_rdwr_block
-Date:   Wed, 27 Jan 2021 23:11:09 -0800
-Message-Id: <20210128071133.60335-11-chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 06/34] zram: use bio_new
+Date:   Wed, 27 Jan 2021 23:11:05 -0800
+Message-Id: <20210128071133.60335-7-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1
 In-Reply-To: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
 References: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
@@ -96,29 +96,28 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- drivers/md/dm-zoned-metadata.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/block/zram/zram_drv.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/dm-zoned-metadata.c b/drivers/md/dm-zoned-metadata.c
-index fa0ee732c6e9..5b5ed5fce2ed 100644
---- a/drivers/md/dm-zoned-metadata.c
-+++ b/drivers/md/dm-zoned-metadata.c
-@@ -755,13 +755,11 @@ static int dmz_rdwr_block(struct dmz_dev *dev, int op,
- 	if (dmz_bdev_is_dying(dev))
- 		return -EIO;
+diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+index d7018543842e..5d744e528d4f 100644
+--- a/drivers/block/zram/zram_drv.c
++++ b/drivers/block/zram/zram_drv.c
+@@ -587,12 +587,11 @@ static int read_from_bdev_async(struct zram *zram, struct bio_vec *bvec,
+ {
+ 	struct bio *bio;
  
--	bio = bio_alloc(GFP_NOIO, 1);
-+	bio = bio_new(dev->bdev, dmz_blk2sect(block), op,
-+		      REQ_SYNC | REQ_META | REQ_PRIO, 1, GFP_NOIO);
+-	bio = bio_alloc(GFP_ATOMIC, 1);
++	bio = bio_alloc(zram->bdev, entry * (PAGE_SIZE >> 9), 0, 0,
++			1, GFP_ATOMIC);
  	if (!bio)
  		return -ENOMEM;
  
--	bio->bi_iter.bi_sector = dmz_blk2sect(block);
--	bio_set_dev(bio, dev->bdev);
--	bio_set_op_attrs(bio, op, REQ_SYNC | REQ_META | REQ_PRIO);
- 	bio_add_page(bio, page, DMZ_BLOCK_SIZE, 0);
- 	ret = submit_bio_wait(bio);
- 	bio_put(bio);
+-	bio->bi_iter.bi_sector = entry * (PAGE_SIZE >> 9);
+-	bio_set_dev(bio, zram->bdev);
+ 	if (!bio_add_page(bio, bvec->bv_page, bvec->bv_len, bvec->bv_offset)) {
+ 		bio_put(bio);
+ 		return -EIO;
 -- 
 2.22.1
 
