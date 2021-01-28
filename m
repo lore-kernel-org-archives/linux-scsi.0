@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61E5BC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90736C433DB
 	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 07:57:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14C4B64DD6
+	by mail.kernel.org (Postfix) with ESMTP id 439BD64DDB
 	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 07:57:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232308AbhA1H5I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jan 2021 02:57:08 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:22235 "EHLO
+        id S232117AbhA1H5O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jan 2021 02:57:14 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:22258 "EHLO
         esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231630AbhA1HM5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2021 02:12:57 -0500
+        with ESMTP id S231633AbhA1HND (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2021 02:13:03 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611817976; x=1643353976;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=BWhCtPmFmY8SRwjALXcTfESKnsKfTCmOrzddkgcZe24=;
-  b=faLGKvi9FFV57Q0dVYgonwYrSTczxE9mFzdDUiyH3A743tinm8FHpmYz
-   E84KWYZzllaXLzXqmEQ3vDkz3D8fsHBtSi4Hmv/1R+AeQBknTP0ot2Svv
-   rnDYlpCWtEJ2+q1R44DxVzeuA5GnmFibXE1B6D+5DQso/hdAwQoFVa5pT
-   CLQn2gu7AeGLEYqMTzcoV59mbnaInDk5X20SLVrY6g8oA6DjKhe5i6x2+
-   WTW7Ce2WfoH/L9CLkjXMJ2Ixf1nQnpqJivqFH3mN0W6kUljS2DJh2UW3A
-   Q25yxzK7UVPZBNsUgpZo4nVvY5QMoYY170OhpNR7KneK5MlK1nUkKKU7H
+  t=1611817983; x=1643353983;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=1Q7huJyMDOVynURh2o3jolV4xRilOq3cl8xkF29/liU=;
+  b=BF656N9Md7amskVa9OhnRt/3h1JnVMpu86eJqYskPF+LqKax7r6fVHzP
+   19/IA4ZNrNUnwZCe9bqDsHTiLLnCCNy4xhPY5KO98fsmEeVZJ3QeJGo/0
+   YQjafx7kHo2MMEEvSGDcjawUjt6GU4i+gYGpuQB6zq/DOLgexYx141tbw
+   6ozPlkWuGM44zvfRqIbGPPzwkZipdhfaVuZMnK7ni60sUXAwPkcx5bzC9
+   qKXUkxhsZTZAGpy9P1boa2vXaJMWFLW/Mgf3XlBUj5uc1UCoINxsHCPqr
+   8CdejfBECfeJDkX16FQPpuxfLOpsyhsHpy56oT6sbi/DgOKiGMvfHtE1m
    A==;
-IronPort-SDR: VT21les7nQG03JqHJ+I6EARWf5lMn66DxTi2QYbOMs2YfDOw2AniSPT+pjejA5tq7xp1aaI8NN
- IJyHOrnvEj1JtURy8HGmu0MgaB3qFyIEUADD5Ek4rL9/qSDzGRwHO6xyMdhO+CtZpDm/nh3433
- uqgijKjcu6L3970RM639kqqPrmUmIl7WoTjb0NNVH7bhLYWGI4IDe794zDrJ4IASxPghSaTjLe
- TOkBT9TLksFi3mVkIqXo6YzEuM9Kaiezl7crmDupPQhL0bBL9PWXidnupZGcR3WjWU0VGSuTZw
- LNA=
+IronPort-SDR: vIZnkF2Czkmm3+nF5M88vV6vEUmFH522u3yLtlyjYiCT+NamsDP17XNTBpQzFGmeK8g6YBfNWS
+ lh/GaT2O5YMWRSMWVVz9esscsPjiZ3H1Ngab/0oRFWYpciQX9meaNknw3eMEDQqzsTyQyKegg8
+ bEVeuNjra5+epTKh4tkkWTkTX+yUWoRtDofjMYy11VFKyn6DVnqo2E4ANqwGD8fY0HHkoY4Tdi
+ rbI4THhx1yPQ52r4iHACoeUSOWEOssoLNeZu301qgZXTaKppcNso9dmSv/TWOp0MrK1CTDfws3
+ 4ik=
 X-IronPort-AV: E=Sophos;i="5.79,381,1602518400"; 
-   d="scan'208";a="158517186"
+   d="scan'208";a="158517214"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2021 15:11:38 +0800
-IronPort-SDR: w5IsHUigPS/mWpQBf9qBrfSIaakaFZLRWoHP6+aNWprDyks+eKEz/GYBDl9uDW4vjngYTV/B2D
- IFvxlHDM6q/6/9nde34O8UYBh6I0uIn3r+BtZNG8Q1Tp2UBHT91nGmc+bRVSX0vH6wYM+9iszA
- F/KYhmG/TW8AEVRLeQEnipOU8wNqnajsU2fYF/lAkiJR/GA7ObRI9w0PiHGbcZOSAzOETqvDL8
- hpZV/LAw9Bj86sme5bSbMQqxe65yf8vYoskZfjC3ApT6ZscD9accTAHZbY6UsQpC8kRLHHWojB
- s+1/3Wcsa3O5HFCg61j2s/8m
+  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2021 15:11:57 +0800
+IronPort-SDR: xYgbyLAQ5HcCHqYFed1v2HqdFeAtuF8ugd9ioDRWNeAXATeaQ56qJsRgg0dYMy8R9EzHkYHCxw
+ YxXGrxu8y8M98gONOgYP2L/1S3B+xeKwhKTWed/7mcR1BYud6C3z+4XL6SQVoOAFFMmHjk8+yl
+ AcOge4vA1UukuwkonUt2Xh+9FwxCU5TX2qPmaqHgAW6sYM1K93z0XE8H7nu3c/++BX+aw+Y4If
+ wLYWCWSefZ7b90CPVo+SNPlufolSEqBrVnih/6bIIgcZqGTlAew0INs9NtYPAE0C/eQFvtH276
+ eEqeaEW1P0WmxTowkAf9s6J8
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2021 22:55:58 -0800
-IronPort-SDR: 61Jf/0E9AfrbFBR+VL+aX9SYCVB0aW8ut/7/jLtTqvhkleWzu7b9JjkuOaGgMYwgMXw5C5Sybl
- VeNQs3LEjTqxDsR0ZyK8GA/cVYEZNMX2maaVF3ljBoeSQOO/ApbWgebfLMlSCkYd12pl+6neKj
- zn8nHOcIOMnNA2IBKV67KMXVLkXTllokNu+jCcdgoa5YFwfQecWL2vYSP5hgldmlqCiXple2ew
- fybG/wLzJMKvqPxvYQ59ATt+ZGQv1DjVDDtxXyNp0NJ+IswNbwLOu8d1uiq12NaSa1/W79MYTO
- wq8=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2021 22:56:17 -0800
+IronPort-SDR: HYKG8+pmcZ9KZ4KZ0ijEvKFdi7W0dgGDXHFsWIaWNxW3zaOZulAuYVmKBU97gor6eDg6ylP5Ni
+ 6/ahnxe6yM79ewZwsqKvrfMjvqQiAhLVOYCtlxS8Bh1Gz/vhwXPlVRnl4SwtLQD680yYKL86EL
+ o3y724i0cbqHM9ChTIb0swq0MYuYoJx+iwqVjQ/XkVzNSKEtJ8uwRbdybmRUPVMHWHGtPAl98+
+ IjNd0sVxBZiY+I2eDgAQpiJ9r1dqmBNoZAqnfBCkqleNy/DSVZGKQaXDO89s0wR1FlZS/ZCSSd
+ 5w0=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip02.wdc.com with ESMTP; 27 Jan 2021 23:11:38 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 27 Jan 2021 23:11:57 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         dm-devel@redhat.com, linux-block@vger.kernel.org,
@@ -82,98 +82,87 @@ Cc:     axboe@kernel.dk, philipp.reisner@linbit.com,
         alex.shi@linux.alibaba.com, asml.silence@gmail.com,
         ming.lei@redhat.com, tj@kernel.org, osandov@fb.com,
         bvanassche@acm.org, jefflexu@linux.alibaba.com
-Subject: [RFC PATCH 00/34] block: introduce bio_new()
-Date:   Wed, 27 Jan 2021 23:10:59 -0800
-Message-Id: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 02/34] block: introduce and use bio_new
+Date:   Wed, 27 Jan 2021 23:11:01 -0800
+Message-Id: <20210128071133.60335-3-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1
+In-Reply-To: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
+References: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Introduce bio_new() helper and use it in blk-lib.c to allocate and
+initialize various non-optional or semi-optional members of the bio
+along with bio allocation done with bio_alloc(). Here we also calmp the
+max_bvecs for bio with BIO_MAX_PAGES before we pass to bio_alloc().
 
-This is a *compile only RFC* which adds a generic helper to initialize
-the various fields of the bio that is repeated all the places in
-file-systems, block layer, and drivers.
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ block/blk-lib.c     |  6 +-----
+ include/linux/bio.h | 25 +++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+), 5 deletions(-)
 
-The new helper allows callers to initialize non-optional members of bio
-such as bdev, sector, op, opflags, max_bvecs and gfp_mask by
-encapsulating new bio allocation with bio alloc with initialization
-at one place.
-
-The objective of this RFC is to only start a discussion, this it not 
-completely tested at all.
-
--ck                         
-
-Chaitanya Kulkarni (34):
-  block: move common code into blk_next_bio()
-  block: introduce and use bio_new
-  drdb: use bio_new in drdb
-  drdb: use bio_new() in submit_one_flush
-  xen-blkback: use bio_new
-  zram: use bio_new
-  dm: use bio_new in dm-log-writes
-  dm-zoned: use bio_new in get_mblock_slow
-  dm-zoned: use bio_new in dmz_write_mblock
-  dm-zoned: use bio_new in dmz_rdwr_block
-  nvmet: use bio_new in nvmet_bdev_execute_rw
-  scsi: target/iblock: use bio_new
-  block: use bio_new in __blkdev_direct_IO
-  fs/buffer: use bio_new in submit_bh_wbc
-  fscrypt: use bio_new in fscrypt_zeroout_range
-  fs/direct-io: use bio_new in dio_bio_alloc
-  iomap: use bio_new in iomap_dio_zero
-  iomap: use bio_new in iomap_dio_bio_actor
-  fs/jfs/jfs_logmgr.c: use bio_new in lbmRead
-  fs/jfs/jfs_logmgr.c: use bio_new in lbmStartIO
-  fs/jfs/jfs_metapage.c: use bio_new in metapage_writepage
-  fs/jfs/jfs_metapage.c: use bio_new in metapage_readpage
-  fs/mpage.c: use bio_new mpage_alloc
-  fs/nilfs: use bio_new nilfs_alloc_seg_bio
-  ocfs/cluster: use bio_new in dm-log-writes
-  xfs: use bio_new in xfs_rw_bdev
-  xfs: use bio_new in xfs_buf_ioapply_map
-  zonefs: use bio_new
-  power/swap: use bio_new in hib_submit_io
-  hfsplus: use bio_new in hfsplus_submit_bio()
-  iomap: use bio_new in iomap_readpage_actor
-  mm: use bio_new in __swap_writepage
-  mm: use bio_new in swap_readpage
-  mm: add swap_bio_new common bio helper
-
- block/blk-lib.c                     | 34 ++++++++++-------------------
- block/blk-zoned.c                   |  4 +---
- block/blk.h                         |  5 +++--
- drivers/block/drbd/drbd_receiver.c  | 12 +++++-----
- drivers/block/xen-blkback/blkback.c | 20 +++++++++++------
- drivers/block/zram/zram_drv.c       |  5 ++---
- drivers/md/dm-log-writes.c          | 30 +++++++++----------------
- drivers/md/dm-zoned-metadata.c      | 18 +++++----------
- drivers/nvme/target/io-cmd-bdev.c   |  9 +++-----
- drivers/target/target_core_iblock.c |  5 ++---
- fs/block_dev.c                      |  6 ++---
- fs/buffer.c                         | 16 ++++++--------
- fs/crypto/bio.c                     |  5 ++---
- fs/direct-io.c                      |  6 ++---
- fs/hfsplus/wrapper.c                |  5 +----
- fs/iomap/buffered-io.c              | 12 +++++-----
- fs/iomap/direct-io.c                | 11 ++++------
- fs/jfs/jfs_logmgr.c                 | 13 ++++-------
- fs/jfs/jfs_metapage.c               | 15 +++++--------
- fs/mpage.c                          | 18 +++++----------
- fs/nilfs2/segbuf.c                  | 10 ++-------
- fs/ocfs2/cluster/heartbeat.c        |  6 ++---
- fs/xfs/xfs_bio_io.c                 |  7 ++----
- fs/xfs/xfs_buf.c                    |  6 ++---
- fs/zonefs/super.c                   |  6 ++---
- include/linux/bio.h                 | 25 +++++++++++++++++++++
- kernel/power/swap.c                 |  7 +++---
- mm/page_io.c                        | 30 +++++++++++++------------
- 28 files changed, 151 insertions(+), 195 deletions(-)
-
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index fb486a0bdb58..ec29415f00dd 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -14,17 +14,13 @@ struct bio *blk_next_bio(struct bio *bio, struct block_device *bdev,
+ 			sector_t sect, unsigned op, unsigned opf,
+ 			unsigned int nr_pages, gfp_t gfp)
+ {
+-	struct bio *new = bio_alloc(gfp, nr_pages);
++	struct bio *new = bio_new(bdev, sect, op, opf, gfp, nr_pages);
+ 
+ 	if (bio) {
+ 		bio_chain(bio, new);
+ 		submit_bio(bio);
+ 	}
+ 
+-	new->bi_iter.bi_sector = sect;
+-	bio_set_dev(new, bdev);
+-	bio_set_op_attrs(new, op, opf);
+-
+ 	return new;
+ }
+ 
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index c74857cf1252..2a09ba100546 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -826,5 +826,30 @@ static inline void bio_set_polled(struct bio *bio, struct kiocb *kiocb)
+ 	if (!is_sync_kiocb(kiocb))
+ 		bio->bi_opf |= REQ_NOWAIT;
+ }
++/**
++ * bio_new -	allcate and initialize new bio
++ * @bdev:	blockdev to issue discard for
++ * @sector:	start sector
++ * @op:		REQ_OP_XXX from enum req_opf
++ * @op_flags:	REQ_XXX from enum req_flag_bits
++ * @max_bvecs:	maximum bvec to be allocated for this bio
++ * @gfp_mask:	memory allocation flags (for bio_alloc)
++ *
++ * Description:
++ *    Allocates, initializes common members, and returns a new bio.
++ */
++static inline struct bio *bio_new(struct block_device *bdev, sector_t sector,
++				  unsigned int op, unsigned int op_flags,
++				  unsigned int max_bvecs, gfp_t gfp_mask)
++{
++	unsigned nr_bvec = clamp_t(unsigned int, max_bvecs, 0, BIO_MAX_PAGES);
++	struct bio *bio = bio_alloc(gfp_mask, nr_bvec);
++
++	bio_set_dev(bio, bdev);
++	bio->bi_iter.bi_sector = sector;
++	bio_set_op_attrs(bio, op, op_flags);
++
++	return bio;
++}
+ 
+ #endif /* __LINUX_BIO_H */
 -- 
 2.22.1
 
