@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1FCEC433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 05:18:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92982C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 05:27:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA18964DD6
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 05:18:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41C4964DCE
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 05:27:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229561AbhA1FSe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jan 2021 00:18:34 -0500
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:34587 "EHLO
+        id S229551AbhA1F1V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jan 2021 00:27:21 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:48179 "EHLO
         esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229490AbhA1FSd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2021 00:18:33 -0500
+        with ESMTP id S229504AbhA1F1S (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2021 00:27:18 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611811112; x=1643347112;
+  t=1611811637; x=1643347637;
   h=from:to:cc:subject:date:message-id:references:
    content-transfer-encoding:mime-version;
-  bh=ddp9Z4rqMdeOjy1Q1EFsmTP+4KLuZAIjrc92pM5wQIc=;
-  b=oHUSc4f8ar0YpRu//20rPAm/M51tkLodAwd3egfFq0REkC0IjwrbwukC
-   AaaUa/nQmwO8/ZGPMHqPzca+aGOXNF52/zjxQ4SBcGBy4bsJfDcWa9rRX
-   JgbUdi/y8XEdo2xadD3b1GEgiYpvpSw9fjjyxZVlgu6VaPNXOHdiXy7Xa
-   XgDr1/LxuV5/xfaJ9SB0ZgC5ieY8JgFmxIA1670IRw2DBhimPL5JwE708
-   aa5X9QYv47I2dPbB00geqZJ4hfVCsUoQf9SILBAAnw/4IjrZcRN6BgXy3
-   +xpi3E3im2weUu7k3CGGfw3P85rjBr/lCAvd5lr1SpI69kYfic/Hs7Dn4
-   Q==;
-IronPort-SDR: nuNDVrU+hcYN4yFXQSVbrcpYvQfXRlm5dEAk9VuCtDaBWai7DK9kGzoJDGaJlpkPlIkmqQZzSz
- ulNf7yfkDHh96+trTlZlejxf0lB51Fu3+jK+Xk/htYoG38LkqtEMCOWgQ/pnLbjcbiTEW8dn/a
- KZ9g9oHZuFhjwHsdg8aaIZv8KhhYkoyE/01pG++HMHqp8VF7kSW8gG92STTecxkfRI7z2jCMxs
- eEdAbANDyM0mw1Xa5P0VaGtHUjPu7PQtYzckT0VpBYGHX8F6ytGA+MXLtrwnY9BoZVancrYtIy
- LQQ=
+  bh=H6zp0agPc0nMTkB+YVG5ZDKA894T+5ElMB4yzFvsI30=;
+  b=gghyFDGm64Ydjmhz3gffyXwiPD78sl3UiX6diEOCkqMytie854Mm9L5t
+   yJmFWvvpw3MJXxVEOTLeWeON2Tb3ymGvTqXGjTqBRPK0bAGDEK2MlVm9P
+   NNfIVitjl1PaCrivvv1//zLOF+xJ2KrB+M3FsBelWUo+Q1ssEcmNiGKSk
+   jHD0hwRToaZ9Gg6Ht77Hxz0MDQ8YrgJvo0U7ZZxiVb7tSv3GMqqDWs4/4
+   1HAxMH6eDXqTP4s+MYqxOkNRrQpRRaCNr2BJazfTmU+wVYRB7fMYepzxG
+   W/4bYPE/Zu8vv8BokwmWLM8bkE8JrraMR6nZSAxnPLgIRHpYkhtAFo9/T
+   w==;
+IronPort-SDR: IflXg25q467Bs1FMKAviTUa0vJIMsx5c6cLuLzlSlFtvxF2q2M3Z+871X3EZQYN7rwiYMMSpA3
+ lh9UrOBi7TjOQo7Lw7gztxXfCrc7aG2J2XbNPiFJi1DXt/EEmqluYIcb3P4IN0w7nnLz0QLpTH
+ ycz9fkoaxOO91wzGZzzmyfjYqcBjS3c+U1cquOpQvq1FN/60vo2Be5aaQcJl8TvMfHdicFIklb
+ ji0yZRbD7l5CUpCEzmHi3ukczHkmyIwReF7L8luv8uSOd9NSRgg/opTLUWZAJOGey4vg2auyvI
+ Qkk=
 X-IronPort-AV: E=Sophos;i="5.79,381,1602518400"; 
-   d="scan'208";a="162957234"
-Received: from mail-mw2nam10lp2106.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.106])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2021 13:17:26 +0800
+   d="scan'208";a="162957535"
+Received: from mail-co1nam04lp2053.outbound.protection.outlook.com (HELO NAM04-CO1-obe.outbound.protection.outlook.com) ([104.47.45.53])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2021 13:26:12 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=av5gt1doDjX60G62NXCR5diJJwmtiaVY90zB1XQZfAA6HJAMC6Ln8Qg/8QFYdZ3rb2L/dED8B8m9YWixlAes43CRhIw+WEsA/AFDjoLCqK07nCBnfsgu9bL0kfD6P4dHJLDzOpB9yhm5WsIAbBd4+4D+RV0TpsvjEVKSwoZIccjRNZJ8FteJIWoCY4Po0W+CtEd9+ATurX2jujKkxWPbK9baSbPzb0cdKl/mrZgN7AVbi/Js5qdO+VMmiO3WghZWAOMyKW6SxcD0AUL9OQjPWfKe+St48pbFbwbGPDrc55EK6ws0iKVXDSznyR6hFjFcUOfYwE8P+wkSBOkxk+Gbcg==
+ b=V6XzehiK3BLGDzoCDig16/btcHw29nsFAhP1aTbgIvlZSpvE3Cq0YnW86s5jnDRcR2nAp409/x7xSsNPuGD9geqlTHpSKbP2hAAju48uFgpy8AvNGEFGzWhyV1HIgm3S8GTFUK3dJfaMz9G7RwjhY4AsXT+0tefold2TtklEkTbG6iS/dIiyghIHVXNkLJZHHaJh6a5JwvICGQV2DHcldEeC8NRHl8EvwGx4GtPfFnUydNREpScxr1OsZ6qmkxqEVfGmuhuF1RJ93CiAUHjQsd6uu9gwjm2e+wtHTWUNWnx5/7bMkQDaGBUwmRcbiLkmpGUD1Gt4rwVFnMS0+ky+og==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ddp9Z4rqMdeOjy1Q1EFsmTP+4KLuZAIjrc92pM5wQIc=;
- b=Q1YsE0lCI3DbBc0tIcDmsqIKO5n8bDbpZylngWQC6evpycL9H/XL3UDL7+vhe9i7YMl4abGo5TmsBhKXy6jalNSz/iTBcU2Ijbwamhi93yPoFdpCYBUKApmJDA0FbosodoYavFfeDFUGoh3gIap1jTGPR/VRQSKui2iIPWQjcit4JvPmpZSkzw1Y2VElWFrITzE5Ftx5W+FfT6rBFLCB0A/v2HOSz+rOCFSimeTHM1BdRFbDuFZR4TPCYeAi5QGwydFY33P5NXYAQ8kwWwcDiiMFX7uYyb3eC+OWh5ZXzW0V37XOsEq17gvlrDzjxg7hlbnCBOzsF7o3+fI536Sh7A==
+ bh=H6zp0agPc0nMTkB+YVG5ZDKA894T+5ElMB4yzFvsI30=;
+ b=LxwIjDGu+dXjHzEqDG7vbc7ptSEHZ29o+KI02q/mIQBcqEF4X573GxD45eYvo7atGYxHPyFo5hLn4QEAH2c+03OBPZDdpFVLKKl/JTiLPeqWovPZCFy7zDQx0yrUavcsmlonRd0Y13ISndqsinoCl9nUsGbDxev7XiCiCKsORGA2ec1yCkajBVP7CS7K07vG1ANwFa1DKRj9F+5OziE6ahh1Hcy/7oaRbthH/j91feoXdqlJakD9/IoQh3FHkPm0milZajkalp1u6eN7XVnJyQAvDKBFXJqOEkrecmLyDDIYmuZ+2y2xAQg6VH49e1ilPVGUjlyfsZG6XtAzpyv4Lg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ddp9Z4rqMdeOjy1Q1EFsmTP+4KLuZAIjrc92pM5wQIc=;
- b=fVxZUpWd5G40Co/SfZk2OaE+hA+wtsad0BU+kHeE+wmw0Ana2s35zHwT3fBZnR3eCj1izqXLE0wH3HpPx5uKEKvXF/XOUsrpMV5fzo1vnW46ZuP0rF+bwW9DV+2U6ay7lLJ7cKu5oeBu3sbUk/3mKzmVH0nmZ0vHIjj/QP3Byw8=
+ bh=H6zp0agPc0nMTkB+YVG5ZDKA894T+5ElMB4yzFvsI30=;
+ b=TjKpG9DZ5H4Z3utP8jhUYKJwOJ6anaX0Y17fDZaBRa+0WjCDyv3SW1J8/Xf9uJ+8k2x5cA1+YDbPqV2t2bIoEfleybuYZ9su6hWONdqcycOXc0S40aec7oCYJILkGf+5QThi4WsowjO1IqlyGSuEMsCrIn3F5zipWC2giGusGsM=
 Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
- by BYAPR04MB5591.namprd04.prod.outlook.com (2603:10b6:a03:101::16) with
+ by SJ0PR04MB7550.namprd04.prod.outlook.com (2603:10b6:a03:327::20) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.12; Thu, 28 Jan
- 2021 05:17:24 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.17; Thu, 28 Jan
+ 2021 05:26:09 +0000
 Received: from BYAPR04MB4965.namprd04.prod.outlook.com
  ([fe80::1d83:38d9:143:4c9c]) by BYAPR04MB4965.namprd04.prod.outlook.com
  ([fe80::1d83:38d9:143:4c9c%5]) with mapi id 15.20.3784.016; Thu, 28 Jan 2021
- 05:17:24 +0000
+ 05:26:09 +0000
 From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
 To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
         "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
@@ -74,13 +74,13 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
         Christoph Hellwig <hch@lst.de>,
         Keith Busch <Keith.Busch@wdc.com>
-Subject: Re: [PATCH v4 6/8] zonefs: use zone write granularity as block size
-Thread-Topic: [PATCH v4 6/8] zonefs: use zone write granularity as block size
-Thread-Index: AQHW9TC8dTbXC33JOEevBZloEgFWUw==
-Date:   Thu, 28 Jan 2021 05:17:24 +0000
-Message-ID: <BYAPR04MB4965377962784FD8065FAF9886BA9@BYAPR04MB4965.namprd04.prod.outlook.com>
+Subject: Re: [PATCH v4 7/8] block: introduce blk_queue_clear_zone_settings()
+Thread-Topic: [PATCH v4 7/8] block: introduce blk_queue_clear_zone_settings()
+Thread-Index: AQHW9TC+z+KJV1CxiU6HvWRe60peXw==
+Date:   Thu, 28 Jan 2021 05:26:09 +0000
+Message-ID: <BYAPR04MB496527AB027FB7BF084FEF9186BA9@BYAPR04MB4965.namprd04.prod.outlook.com>
 References: <20210128044733.503606-1-damien.lemoal@wdc.com>
- <20210128044733.503606-7-damien.lemoal@wdc.com>
+ <20210128044733.503606-8-damien.lemoal@wdc.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -90,68 +90,77 @@ authentication-results: wdc.com; dkim=none (message not signed)
 x-originating-ip: [199.255.45.62]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 8cc21c79-a94b-4669-3dbe-08d8c34bff5a
-x-ms-traffictypediagnostic: BYAPR04MB5591:
+x-ms-office365-filtering-correlation-id: b569713d-b25c-4b63-3fd0-08d8c34d3837
+x-ms-traffictypediagnostic: SJ0PR04MB7550:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB559140C0FFC3E72E0AF8A13E86BA9@BYAPR04MB5591.namprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <SJ0PR04MB7550A9D21C1F70744849284386BA9@SJ0PR04MB7550.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:4502;
+x-ms-oob-tlc-oobclassifiers: OLM:389;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 9GeqJsrdhgOM8fPDdNu40OWHhkiYzJnAs8Fh7MKDkPzw6s9z663o2sZiO5TjVeKpqLY7yYJ5sOyj14tr696CXb8WSoUZ6dgOCUEz4dJA/yd88840H2BwBTsCnQRC5oiapqUrs4QPCWai9WYF0UZleHxf9J60jmbxW55KfbRpCRlNfsreFfRKEO6tBd9YyYyxxGNi5B1kiY1xWapirLD3gUwjN+feGBk4cTSBBY+qehvQfjUnhBZCSowZApVXJHSgkrCODevpG9WnY0JydTE8KxDdFu4FClB9rgGoi4n5CnWNkLbWlR+0/2H0YAaH0IVaPzWLtGKbyVW9MOy5NZHYFcp6Y7L0HTw5WhOZQUAQI0nf2wGDGSsLRXBct6x/47yj8DvrUI+gvHlleZPzqWR8bWRPBKaRA+YuwKI22lMDGNOO4Z5rjL6ol0t0VCpXmMHw695kHte7eB01/28zvd4bOM3BMDafHd7Q7eA2OdKf8LWVH7ITokChG/dRLfvjg6zTXt+iM8xvZDJ6lAaLrWbZBg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(346002)(366004)(376002)(396003)(136003)(4326008)(66476007)(110136005)(54906003)(71200400001)(33656002)(316002)(6506007)(4744005)(83380400001)(52536014)(66556008)(86362001)(478600001)(2906002)(9686003)(5660300002)(26005)(7696005)(55016002)(66946007)(66446008)(186003)(8936002)(76116006)(53546011)(64756008)(8676002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?8Sb1P7nCEyl2qonN5RduF9FjFtRtKuGhPBBhkZ6GzDy9xHGWS8h1oQLIg4n+?=
- =?us-ascii?Q?P9MLV5oe+k8WBMjBeGLiX6QCze0uwcjcPhruOBfbMTdUeOsLvg13UfatDAqn?=
- =?us-ascii?Q?taOKGNg50jE3KAR6xlbF0hEiPQuIeOV1tk14wpwUcoTeNAPMe9WxFTdEygab?=
- =?us-ascii?Q?RP9qHSXCjrXi3CIR9kaQhKDub+DjSVsRZ+u+4wtP3kWx1ln4EhZ2KGwLI/YY?=
- =?us-ascii?Q?w03YCfFDlW77dm243xBeFS12/oV7SukWzbfWZoLqgoOfDKqM6kkFw1sW1gFw?=
- =?us-ascii?Q?8rSDt9z+El0ZhcT6QJpgrH2Uj0mh1DLLRX59Iw3iMefIyCoOwyZl1wG7+h1I?=
- =?us-ascii?Q?N6OaH+NPGJVJwjSPezpS4Q0V6xMwmHWJi4hUrxegMt7V80UIAA8eN3vN+osF?=
- =?us-ascii?Q?2GxLj4oRF8+eKnC7J9rl3mdBrkdaaodqLv/5MXlwv/eS61NSN1BKjZ1oZegC?=
- =?us-ascii?Q?XGAKyY/Bm341fYTpN3xmYeHV7rBjrHkopLsbDPgors45QZhd0UglMhZ57oy2?=
- =?us-ascii?Q?EHJ6aJek5z/cRvO+9UeVn8nFoMu3+auwD9qnKvqNmwWZJWKJZP9dkAiwxzKE?=
- =?us-ascii?Q?mIemZSSCuvD55sfDWNaZd1DJxzqLYk/geglzj+JU5fte7AuuYZk7CzgYLle7?=
- =?us-ascii?Q?DVwuuaPZGNI+kDNke3QdAomqm3t2Wt+CPhObdefN1uPhifQKXpZo7JQBvGk1?=
- =?us-ascii?Q?pqLzyKmDinecfySHnWEE8c7HOm+APbNdwwBOiDymzTS9dzxxbOttOJZeSV9t?=
- =?us-ascii?Q?+qsGjLkB4SZSeGBo+A2khDQZ9NEEkkEfRuovT2AXa+9E8OlsqA/3d8W63bAR?=
- =?us-ascii?Q?Q87RHs37cfg0dNbIPXd2Lmj3/rLCRNI6uUqbXS5T/tfXYLQeXu/Oycjd/sy1?=
- =?us-ascii?Q?bxS0TiEJKT4sNSlu92JHOV2cRsTP+7/tXLVoMlg9X1X3o+3C1sXN7hY4/vnH?=
- =?us-ascii?Q?rbJ3P/MHIqk1RXd5m6E9Obhq+5UJo6rWf/DjdUd6iisvCN0lXDOvg9mGR/Ob?=
- =?us-ascii?Q?7T2m44pgSAgyNgImlTIYyHuKSiU8BtCiWRTJo4me8Um2KIKK6QQ4AeN1mwoN?=
- =?us-ascii?Q?4FLcvQ7+4IRpvYAXgGAgRikvjpuNqw=3D=3D?=
+x-microsoft-antispam-message-info: ORRGCYey6iMKXLHKda/LXZTgF3kwfYvx04o024I3ARaQO1Dpwp3Hi31L6IIfMw5IyxvDDBt3iJKpzpdLjhEFz21sRZ3IM5+exmBVPy1Lge1yZFDMIiuDPlESye1buPUlM9lWIBRbPqJXB280aWTu0awZmZkMUhkZzXedofF3zgXmeY3ZoNXj54syFae4Q4p3wWoOb2XS3X3K88vcq1mGnM7hBnR7rgSjoVWxnGpYN279cRDRSGIiTIkDm3b7lJCu6f68PHIn2uWG06ydaCOj1CC4wvUNoVA73GbOEg2Iw4AvE0SYdBAgmb6sYDQ7ApU7Ru1lVtsBbtsjh6bVdREYgmn+hqXO5gWIU9D0epIH2YTh+kzvt+ZJTmrqFtf1wI7oy5Zsro2v/ctddvOtz1Pg/b8llO6MXRTZFlEii8Ub2JGGidyb7z9mmueIu8vT5IRnOEFNA0o1q+LovrI2p9t/23W/Q1SOCo3rSt9qZtcMTBnY4poSjjQ13ZknLR0B6bH/+m01Mxk/84icSXVYmvRTwg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(346002)(39860400002)(376002)(366004)(396003)(66946007)(9686003)(186003)(478600001)(76116006)(26005)(54906003)(6506007)(71200400001)(64756008)(53546011)(4744005)(5660300002)(66446008)(52536014)(110136005)(7696005)(316002)(55016002)(66476007)(8936002)(8676002)(83380400001)(4326008)(86362001)(33656002)(66556008)(2906002)(91956017);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?02I2W4tEwC8PU7CNMb7oogPgOGxdvxR+8Mc5rvXvCYLztN/HNp8x3QbaqfZv?=
+ =?us-ascii?Q?ryEowLO2rwIOuCbMYN7dnAn66aWaYx14V/k3iTARfQHVerhmD56aWK1jknOh?=
+ =?us-ascii?Q?aFZ1PRoTIKMjjFuOoTZi1PSI0yEQbhkw79nEgd3Wvmn65J9oEK9oiVOK6YIv?=
+ =?us-ascii?Q?G+2bNJvD9jWHPF2fFvPQG3ToPhoWprrroll6k9IjSTk9F7JMOrEf4hvRLOcO?=
+ =?us-ascii?Q?iDIhZQ2z4Qylv3O4obrgGuyMXzFg/WjCl18Zufq+gD1qBPOdGV7DiD0HLyKT?=
+ =?us-ascii?Q?1MMQ6so9f6WHlTBZDmuMUEZNJs7bMgGW7bnolmqXrVKXt54QaGw/TKNwR5EI?=
+ =?us-ascii?Q?xU2B/EdI1D3dgSNLZqNu0+n15tXrUPJwN3a63NFJ+UCs+zzvk0Iw2sFSQ1c+?=
+ =?us-ascii?Q?+g2LGawl6hSPHud0PeNLtmuvJ5lxdI4t2m1PFtUJE/aMl15IlIjt/CHH0KqN?=
+ =?us-ascii?Q?SgIivMGk/gAz1qRTrHYXZmD5/kQfnqmYjC+URKj3bvCy46sTcgOzIyjBfARU?=
+ =?us-ascii?Q?0n/y4z2Xc3l5HT+IR68DQZqUnJ0moJ/KjWQMw23H8m2edXyr5erajSx+QL00?=
+ =?us-ascii?Q?x+UrxgLmZA+n85H1Yahv8PvFIgc8uJYfo9oPFEhMMS0KVAWtCGzNJUOfO281?=
+ =?us-ascii?Q?XwL2dFby0bgBnN5YZJHTzDdMXZjojyzdfomhaCl5XNcJf6HaEl4le+AvjFRp?=
+ =?us-ascii?Q?GV5APyCuqx8OZa2DPBt4QVyCsgBDo6Bg/kwxKHoIO1XFVA24aALZP3QYwEqj?=
+ =?us-ascii?Q?W0hp5Jqr4c6dFUrh8Ed5Ij/SxIB4zkTxsNIFHRPmkzHG3j+OBjAY/uGx6h4v?=
+ =?us-ascii?Q?CHMSTHPhFOtNd5bla40SH70KVifW+5oRwga/I8wzhfIUlq3HR3Iz2S7U3l08?=
+ =?us-ascii?Q?56qXzHlrwWAevkAojfabBks+aII4MFQ1uiQxzpI0qAjjBx5NHcN7YF+T5IF3?=
+ =?us-ascii?Q?rP78k8NATYixdpaHx240lpCH3sOmyLrfYT0F2qqtuNx3I1GSg8LB963cZsrC?=
+ =?us-ascii?Q?wBnZV4KSS/XOYNHuhvPv2pNTbVQQS0px8VxMkQvV8RrPBt3oLm7pbatEDEXt?=
+ =?us-ascii?Q?lR84yWwq+dGrMmHYwTJ5l8LqKA8Nfg=3D=3D?=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8cc21c79-a94b-4669-3dbe-08d8c34bff5a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Jan 2021 05:17:24.5843
+X-MS-Exchange-CrossTenant-Network-Message-Id: b569713d-b25c-4b63-3fd0-08d8c34d3837
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Jan 2021 05:26:09.4818
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Jw99Akq+VF1Y51/MpXqlyc9D/tv6nVFVIpKnnCaY9MbXIqfhkDPlEKcOXMK+s0wjYK5AObBOYiGs2xZPLYjsVIzh+LReO0m4H2v/W1Jo3bA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5591
+X-MS-Exchange-CrossTenant-userprincipalname: z+KFpkcy+fJe/jCl6H8S/o+4i2PvTIcO6ZrfLUyZJqQAX7w2zQ3eUhdF/Z/ys6cUEltzlBq6my1MtRYQQC8o6Fo7Objhis5/DZ4Tv6g9lU0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR04MB7550
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 1/27/21 20:47, Damien Le Moal wrote:=0A=
-> Zoned block devices have different granularity constraints for write=0A=
-> operations into sequential zones. E.g. ZBC and ZAC devices require that=
+> Introduce the internal function blk_queue_clear_zone_settings() to=0A=
+> cleanup all limits and resources related to zoned block devices. This=0A=
+> new function is called from blk_queue_set_zoned() when a disk zoned=0A=
+> model is set to BLK_ZONED_NONE. This particular case can happens when a=
 =0A=
-> writes be aligned to the device physical block size while NVMe ZNS=0A=
-> devices allow logical block size aligned write operations. To correctly=
-=0A=
-> handle such difference, use the device zone write granularity limit to=0A=
-> set the block size of a zonefs volume, thus allowing the smallest=0A=
-> possible write unit for all zoned device types.=0A=
+> partition is created on a host-aware scsi disk.=0A=
 >=0A=
 > Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>=0A=
-> Reviewed-by: Christoph Hellwig <hch@lst.de>=0A=
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>=0A=
-Looks good.=0A=
+nit:- can be done at the time of applying the patch.=0A=
+In the last line of the commit log :-=0A=
+=0A=
+1. s/happens/happen/.=0A=
+2. article 'a' on the same line with the noun 'partition'.=0A=
+=0A=
+see it make sense otherwise ignore :-=0A=
+=0A=
+Introduce the internal function blk_queue_clear_zone_settings() to=0A=
+cleanup all limits and resources related to zoned block devices. This=0A=
+new function is called from blk_queue_set_zoned() when a disk zoned=0A=
+model is set to BLK_ZONED_NONE. This particular case can happen when=0A=
+apartition is created on a host-aware scsi disk.=0A=
+=0A=
+Either case LGTM,=0A=
 =0A=
 Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>=0A=
 =0A=
