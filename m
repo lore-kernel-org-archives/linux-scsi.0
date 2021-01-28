@@ -2,98 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C8EC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 20:30:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD540C433E6
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 20:49:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E76AC6146D
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 20:29:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8632664DE5
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 20:49:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229817AbhA1U3n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jan 2021 15:29:43 -0500
-Received: from mx2.suse.de ([195.135.220.15]:57958 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229595AbhA1U3j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Jan 2021 15:29:39 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id A88D5B130;
-        Thu, 28 Jan 2021 20:28:57 +0000 (UTC)
-Date:   Thu, 28 Jan 2021 21:28:56 +0100
-From:   David Disseldorp <ddiss@suse.de>
-To:     Roman Bolshakov <r.bolshakov@yadro.com>
-Cc:     Dmitry Bogdanov <d.bogdanov@yadro.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux@yadro.com>
+        id S231317AbhA1Usw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jan 2021 15:48:52 -0500
+Received: from mail-pl1-f179.google.com ([209.85.214.179]:33562 "EHLO
+        mail-pl1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231300AbhA1Usm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2021 15:48:42 -0500
+Received: by mail-pl1-f179.google.com with SMTP id d13so4036374plg.0;
+        Thu, 28 Jan 2021 12:48:27 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=bBzN1ISsTvCs+9iYTKnodflWkRsa4cqN3KQynPDNXAE=;
+        b=TQmlT4R1JXL2k8Y3zdP73im9iMB2u3dUCssCzNnWQAmlFWrleQ5wr59ekj6kPL3s26
+         Y3sPTjlJLqyHHjwoR0Pca/M001/FGlO1WBr6Oo15YcPt18k7VbleiAjhmupC8gzT+woj
+         13cRZaEjzS7ByF5XgMdfcIsxwT6QS1tYupSTMICnnq5lTrt0UQZJ48JFfXpD5EGmcWt0
+         Exk8/cCdOAyxHJw4uDOIG1kPunBq2fhiGIdc2u0cRKOqPECR8AWy3qTzMRrL0E0MA8fF
+         zDaePHj/FPSFIRyMONOBOiyOmZjcbtd/pBGHqU31Q127Y770bOqgBcjm+niRCTtEBvE7
+         SZSQ==
+X-Gm-Message-State: AOAM533JHj5/2F+UKfypSSCHYW8Y8qBrSPGt28mTswOFCGo8bxSOMchw
+        MlR07/Ao53/Vh8tr8ZWWdObMeKiJH7s=
+X-Google-Smtp-Source: ABdhPJwEc2BkQPZJACKFiXv1W1leEcLMI1hmIlsAeDwZRyLgr+7ABrplwZGxoYftG2PBmOQrk/0Hig==
+X-Received: by 2002:a17:90a:f010:: with SMTP id bt16mr1159552pjb.165.1611866880889;
+        Thu, 28 Jan 2021 12:48:00 -0800 (PST)
+Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id d22sm5802781pjv.11.2021.01.28.12.47.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 28 Jan 2021 12:48:00 -0800 (PST)
 Subject: Re: [PATCH v2] scsi: target: core: check SR field in REPORT LUNS
-Message-ID: <20210128212856.1f1117e6@suse.de>
-In-Reply-To: <YA/dSDH2NYSRi9Bi@SPB-NB-133.local>
+To:     Dmitriy Bogdanov <d.bogdanov@yadro.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux@yadro.com" <linux@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
 References: <20210120102700.5514-1-d.bogdanov@yadro.com>
-        <20210122234251.595d5b7a@suse.de>
-        <YA/dSDH2NYSRi9Bi@SPB-NB-133.local>
+ <yq1tur3knh1.fsf@ca-mkp.ca.oracle.com>
+ <83b96eded14d4722883836daebbe40dd@yadro.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <9a3c59aa-2f4d-c022-c573-afdbc00ca08f@acm.org>
+Date:   Thu, 28 Jan 2021 12:47:58 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <83b96eded14d4722883836daebbe40dd@yadro.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Roman,
-
-On Tue, 26 Jan 2021 12:13:44 +0300, Roman Bolshakov wrote:
-
-> Hi David,
+On 1/27/21 6:45 AM, Dmitriy Bogdanov wrote:
+> Hi Martin,
 > 
-> SELECT REPORT field can be used for vVOL (LU conglomerate) discovery and
-> for well-known lun listing.
+>>> +	switch (sr) {
+>>> +	case SCSI_SELECT_WELLKNOWN:
+>>> +	case SCSI_SELECT_ADMINISTRATIVE:
+>>> +	case SCSI_SELECT_SUBSIDIARY:
+>>> +		/* report empty lun list */
+>>> +		goto out;
 > 
-> The field is used by VMware ESXi:
-> https://support.purestorage.com/Solutions/VMware_Platform_Guide/User_Guides_for_VMware_Solutions/Virtual_Volumes_User_Guide/vVols_User_Guide%3A_Protocol_Endpoints
+>> I'm a bit concerned about things inadvertently breaking if we return an empty list for the well known LUNs.
+ >
+> According to SPC we shall report an empty list if there is no well-known LUNS.
+> FreeBSD has the same logic in REPORT LUNS handling. SCST does not support SELECT_WELLKNOWN case at all.
 > 
-> "PEs greatly extend the number of vVols that can be connected to an ESXi
-> cluster; each PE can have up to 16,383 vVols per host bound to it
-> simultaneously. Moreover, a new binding does not require a complete I/O
-> rescan. Instead, ESXi issues a REPORT_LUNS SCSI command with SELECT
-> REPORT to the PE to which the sub-lun is bound. The PE returns a list of
-> sub-lun IDs for the vVols bound to that host. In large clusters,
-> REPORT_LUNS is significantly faster than a full I/O rescan because it is
-> more precisely targeted."
+> I don't know the history of the existing behaviour to send always LUN0 instead of empty list. Probably it was
+> for the SCSI_SELECT_ALL_ACCESSIBLE(0x02) case, where SPC allows LUN0. My patch keeps it for the 0x00, 0x02, 0x11 cases.
+> Thus, I believe it does not break the backward compatibility.
 
-Interesting, thanks.
+Will this change require users to update their LUN configuration? Some 
+initiator operating systems require presence of a dummy LUN 0. Although 
+I agree that it is cleaner not to provide a hardcoded LUN 0, I think 
+Martin is concerned about this patch potentially breaking existing 
+configurations and causing frustration among LIO users.
 
-...
-> With regards to bumping TCM to SPC-4, are there any objections if we
-> submit a separate patch for that? Or resubmit a series with the patch?
+Bart.
 
-I don't object to that. FWIW, the following crude metrics could be seen
-as an argument in favour of SPC-4 versioning:
-  linux> git grep -ic -e "SPC4" -e "SPC-4" -- drivers/target/
-  drivers/target/target_core_alua.c:7
-  drivers/target/target_core_alua.h:5
-  drivers/target/target_core_device.c:1
-  drivers/target/target_core_fabric_lib.c:5
-  drivers/target/target_core_pr.c:37
-  drivers/target/target_core_spc.c:19
-  drivers/target/target_core_tmr.c:3
-  drivers/target/target_core_transport.c:2
-  drivers/target/target_core_ua.c:1
-  drivers/target/target_core_ua.h:1
-  drivers/target/target_core_xcopy.c:3
-  drivers/target/target_core_xcopy.h:1
-  linux> git grep -ic -e "SPC3" -e "SPC-3" -- drivers/target/
-  drivers/target/target_core_alua.c:1
-  drivers/target/target_core_configfs.c:14
-  drivers/target/target_core_pr.c:75
-  drivers/target/target_core_spc.c:4
-  drivers/target/target_core_tmr.c:1
-  drivers/target/target_core_transport.c:4
-  drivers/target/target_core_ua.c:1
-
-Most of the SPC3 target_core_pr and target_core_configfs matches above
-are debug/error messages, rather than spec references.
-
-Cheers, David
