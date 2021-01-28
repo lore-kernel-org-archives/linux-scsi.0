@@ -2,99 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B098CC433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 17:22:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2D41C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 17:24:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B63664E15
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 17:22:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9362B64DFB
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 17:24:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233046AbhA1RVm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jan 2021 12:21:42 -0500
-Received: from m42-8.mailgun.net ([69.72.42.8]:39703 "EHLO m42-8.mailgun.net"
+        id S232964AbhA1RYf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jan 2021 12:24:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52950 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233074AbhA1RUd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Jan 2021 12:20:33 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1611854414; h=In-Reply-To: Content-Type: MIME-Version:
- References: Message-ID: Subject: Cc: To: From: Date: Sender;
- bh=iuUm89es8XIusxem92uXKqqXeVmqQV52HZ/plYn3jHM=; b=wFdKhi3EJ935GvvfwULnYRb9YKiPtIpGoZKjHtyO8j20YoOR8JNqaw86IpVt6w3hBsAuD3Aw
- LePo4xMpQ7K5/cmEtqDCqkV7JSi6muEQteWIGOAqzIWtQ6PctUNODKVd2Cgf2n+6irk2rZUT
- R5c3p1HR1DcY5JWs1+0NUqgoC+w=
-X-Mailgun-Sending-Ip: 69.72.42.8
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 6012f22cfb02735e8c15bc07 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 28 Jan 2021 17:19:40
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id EA2E0C43462; Thu, 28 Jan 2021 17:19:39 +0000 (UTC)
-Received: from stor-presley.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 100F3C43463;
-        Thu, 28 Jan 2021 17:19:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 100F3C43463
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
-Date:   Thu, 28 Jan 2021 09:19:34 -0800
-From:   Asutosh Das <asutoshd@codeaurora.org>
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     "cang@codeaurora.org" <cang@codeaurora.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
-Subject: Re: [RFC PATCH v2 0/2] Fix deadlock in ufs
-Message-ID: <20210128171934.GA12764@stor-presley.qualcomm.com>
-References: <cover.1611719814.git.asutoshd@codeaurora.org>
- <DM6PR04MB657580F21E8474678D27D88FFCBA9@DM6PR04MB6575.namprd04.prod.outlook.com>
+        id S233003AbhA1RWN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Jan 2021 12:22:13 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C458764DED;
+        Thu, 28 Jan 2021 17:21:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611854492;
+        bh=wN/vYbjN9dGjcLcGdnyPwaVCaPorwnyIWndgrJa+c0Q=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=h4Jj9WXKrn+6FaWHbaqLTTirarAYDVXXbmjKm43Pwyv9CvWF/FCcMNgRPgrx3ByMo
+         28fxrNXlVVTo5g3juSTT+7sNpMpJgqbGb4DuHZ8KF3an7+1BY6+nbU2z1+n7iGhwih
+         wkXCxISTeJgnl/ygSyJKGjvjcoECGRGnzVlWu3E9jKtn6wt5VP3JuKjRalNmzU1hCy
+         4OORtBiU8sk9BK43/E82eZ6NyUeC5IBPMIffBmVCBQkowGnqLXw2BEreMWAztT9vas
+         UyeabZv1xy0SE+hBOV4TAGEolTup4mRCss8y10V/Fh7qEXQ2ropSARSls0wsWRnCVn
+         9DTzlrlwSUtJA==
+Date:   Thu, 28 Jan 2021 09:21:32 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com,
+        xen-devel@lists.xenproject.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org,
+        jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
+        ocfs2-devel@oss.oracle.com, linux-pm@vger.kernel.org,
+        linux-mm@kvack.org, axboe@kernel.dk, philipp.reisner@linbit.com,
+        lars.ellenberg@linbit.com, konrad.wilk@oracle.com,
+        roger.pau@citrix.com, minchan@kernel.org, ngupta@vflare.org,
+        sergey.senozhatsky.work@gmail.com, agk@redhat.com,
+        snitzer@redhat.com, hch@lst.de, sagi@grimberg.me,
+        martin.petersen@oracle.com, viro@zeniv.linux.org.uk, tytso@mit.edu,
+        jaegeuk@kernel.org, ebiggers@kernel.org, shaggy@kernel.org,
+        konishi.ryusuke@gmail.com, mark@fasheh.com, jlbec@evilplan.org,
+        joseph.qi@linux.alibaba.com, damien.lemoal@wdc.com,
+        naohiro.aota@wdc.com, jth@kernel.org, rjw@rjwysocki.net,
+        len.brown@intel.com, pavel@ucw.cz, akpm@linux-foundation.org,
+        hare@suse.de, gustavoars@kernel.org, tiwai@suse.de,
+        alex.shi@linux.alibaba.com, asml.silence@gmail.com,
+        ming.lei@redhat.com, tj@kernel.org, osandov@fb.com,
+        bvanassche@acm.org, jefflexu@linux.alibaba.com
+Subject: Re: [RFC PATCH 26/34] xfs: use bio_new in xfs_rw_bdev
+Message-ID: <20210128172132.GM7698@magnolia>
+References: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
+ <20210128071133.60335-27-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <DM6PR04MB657580F21E8474678D27D88FFCBA9@DM6PR04MB6575.namprd04.prod.outlook.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20210128071133.60335-27-chaitanya.kulkarni@wdc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jan 28 2021 at 01:36 -0800, Avri Altman wrote:
->Hi,
->Asking again:
->Following your 1/2 patch, shouldn't this series revert commit 74e5e468b664d as well?
->
->Thanks,
->Avri
->
+On Wed, Jan 27, 2021 at 11:11:25PM -0800, Chaitanya Kulkarni wrote:
+> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 
-Yes I think its reasonable to do that. I'll modify and send the v3 series.
+Seems fine to me...
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
->
->> v1 -> v2
->> Use pm_runtime_get/put APIs.
->> Assuming that all bsg devices are scsi devices may break.
->>
->> This patchset attempts to fix a deadlock in ufs.
->> This deadlock occurs because the ufs host driver tries to resume
->> its child (wlun scsi device) to send SSU to it during its suspend.
->>
->> Asutosh Das (2):
->>   block: bsg: resume scsi device before accessing
->>   scsi: ufs: Fix deadlock while suspending ufs host
->>
->>  block/bsg.c               |  8 ++++++++
->>  drivers/scsi/ufs/ufshcd.c | 18 ++----------------
->>  2 files changed, 10 insertions(+), 16 deletions(-)
->>
->> --
->> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux
->> Foundation Collaborative Project.
->
+--D
+
+> ---
+>  fs/xfs/xfs_bio_io.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
+> index e2148f2d5d6b..e4644f22ebe6 100644
+> --- a/fs/xfs/xfs_bio_io.c
+> +++ b/fs/xfs/xfs_bio_io.c
+> @@ -26,11 +26,8 @@ xfs_rw_bdev(
+>  	if (is_vmalloc && op == REQ_OP_WRITE)
+>  		flush_kernel_vmap_range(data, count);
+>  
+> -	bio = bio_alloc(GFP_KERNEL, bio_max_vecs(left));
+> -	bio_set_dev(bio, bdev);
+> -	bio->bi_iter.bi_sector = sector;
+> -	bio->bi_opf = op | REQ_META | REQ_SYNC;
+> -
+> +	bio = bio_new(bdev, sector, op, REQ_META | REQ_SYNC, bio_max_vecs(left),
+> +		      GFP_KERNEL);
+>  	do {
+>  		struct page	*page = kmem_to_page(data);
+>  		unsigned int	off = offset_in_page(data);
+> -- 
+> 2.22.1
+> 
