@@ -2,155 +2,143 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F221C433E6
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 04:18:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D602C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 04:48:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DA2564D9D
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 04:18:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5310064DD8
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jan 2021 04:48:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231324AbhA1ESh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jan 2021 23:18:37 -0500
-Received: from labrats.qualcomm.com ([199.106.110.90]:22726 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231351AbhA1ES2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2021 23:18:28 -0500
-IronPort-SDR: +1Hantmt2t8cJXJgQgpH1FLK8wvv45XYPozdeR4PYgUE1ibN7LOhk3+moEfUewwPcUWCINjpFM
- JQ627oOiFi1rdjyEBtzWAQr7Vk7D0opRKLUEgrK4H56YUFis1c5+HfIeWGL2pUpAmaKayZqSWj
- 7NxP7jBAWOovoq2wlFtlPHLV69odlMs9RFlEHgjndDNdYC0VROGQcFouuowxOCQGlOkhpX+zle
- iB7NSQ4UH6+xcbTL9+HlYGcPBKA5AsB6dEH5QfnOK6aGAxEzcuJvYRj+fGME5CJFn5ImLW0xQK
- /bw=
-X-IronPort-AV: E=Sophos;i="5.79,381,1602572400"; 
-   d="scan'208";a="47715651"
-Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
-  by labrats.qualcomm.com with ESMTP; 27 Jan 2021 20:17:52 -0800
-X-QCInternal: smtphost
-Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg02-sd.qualcomm.com with ESMTP; 27 Jan 2021 20:17:52 -0800
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 159E5219A2; Wed, 27 Jan 2021 20:17:52 -0800 (PST)
-From:   Can Guo <cang@codeaurora.org>
-To:     jaegeuk@kernel.org, bvanassche@acm.org, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, hongwus@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Sujit Reddy Thumma <sthumma@codeaurora.org>,
-        Vinayak Holikatti <vinholikatti@gmail.com>,
-        Yaniv Gardi <ygardi@codeaurora.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3 3/3] scsi: ufs: Fix wrong Task Tag used in task management request UPIUs
-Date:   Wed, 27 Jan 2021 20:16:04 -0800
-Message-Id: <1611807365-35513-4-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1611807365-35513-1-git-send-email-cang@codeaurora.org>
-References: <1611807365-35513-1-git-send-email-cang@codeaurora.org>
+        id S229606AbhA1Esm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jan 2021 23:48:42 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:21969 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229545AbhA1Esl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2021 23:48:41 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1611809321; x=1643345321;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=e5BRWH3ndZ4m7lh7jlC59rxB91+FzmyxAYGz5VrGiO0=;
+  b=EDOwgMdgUknZq9RIkjvlWixiIupW1A/JTk24Bof9N1Pf0CoJVUj1Z6V6
+   G0eCbP96A6OQDh/ALB34W8NstuWry/rWnIKZ4J2g7J642SYHEfwtq3f3h
+   1xR8xd+vjZG/P3dzLqQPlOmyY8Q0wm0DIDJXZFOMew9D7ajKLFfD1uZ+0
+   t9OBFN4JIplnSpYuZnSeOUM0arqlpjtqX6YOI7dPeixtG2b1rKpmdUDye
+   LdY8SF0//AtYHifTfk6HRK1aPsfYJk76ZkZZdLAvgHS7XtzuAp/ViuhB6
+   WYuXtRZC+STQcyclxdn2bSEfTsT6GzQhLkoMUOOvXRfTDkyM/6ChtVI3W
+   w==;
+IronPort-SDR: gYiXVyPYXZlQkLOX/qiXQ1N7z4uwqq0fh1X2CnImq7+viqgpRu8YIgHmA5LmkGTEptBwzmG3uB
+ bOqP5ufCyRI/1YY9NtvVPfF7lgJBfqpVVTLl/9TB3tmrGzUBVq48qoqnCWZOyNV8gFLtbfklyo
+ 9dGdSvHynqs7e06QPOH9q/TLQt+9im0F7HS4Bi4CVUsbDML5MMxG4OPCUnfT+yoCbtLFZLWY65
+ cPwrA+6fWFBTsh4LRxK58IDwQ2jKr8YXUOb0Kz1sUJ8HErpqglmwojeheqaSyEDxRDi2qnq+GO
+ YPE=
+X-IronPort-AV: E=Sophos;i="5.79,381,1602518400"; 
+   d="scan'208";a="158509121"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2021 12:47:36 +0800
+IronPort-SDR: aZXiiF2/6JYzTkc0MVw0rgBZXKviirYlj7EkkSJ++VxuMof7bAQCFNaBuFuZ0AD1w3W3XwHfWf
+ wxrTPtkuttloIuiwS9n1MiHLNMMBZzSC8Djkf1FUgBxtfg5cmEIkiWtP+y3BVt75vFhVWWA1S+
+ N42c/t3Z0whEbWPNjW9UeZL7LWcv1GvTJK9J1kHK4HMPK1GIZoBNwDZt895MQEv18sRSvFDl0v
+ Xfwrwcoig8kvXD5Xbf1u8GwPblcURocy1qWKMeS7B7xcyqbptjkkIzTc6XyU1NkUZnN+QJRemN
+ m277y33GOw3+ipzZzWBKDtmt
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2021 20:29:54 -0800
+IronPort-SDR: ZdHmQTx/rm7fgx7E8n7fVNa6Sxm51qOl0qUltYbh/FT1cmd4L8nHShfBziClAs7ExJMvQqrAOp
+ d9pGCnce6U4YY5zqq+gO+nCmvEzSEF6ylUsvXNS1kj8leKt4TRkUXIT1jRbwz6iRddh3brI+6Y
+ tu6kEmzuWooccB6nF94ImYRnHoppa01XRD9JSPJ9af3Zr+v4hKIT1vPteGLCUNTE0dln6o3kO2
+ 5ywlDhufk75DPMZR9D+oOLi7yw/T9PLZ50WPkjvKbsJ18lBUt0YvMnkGyvPx+cpYWoS1kHN0OV
+ 1BE=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip01.wdc.com with ESMTP; 27 Jan 2021 20:47:34 -0800
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-nvme@lists.infradead.org, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@wdc.com>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Subject: [PATCH v4 0/8] block: add zone write granularity limit
+Date:   Thu, 28 Jan 2021 13:47:25 +0900
+Message-Id: <20210128044733.503606-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.29.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In __ufshcd_issue_tm_cmd(), it is not right to use hba->nutrs + req->tag as
-the Task Tag in one TMR UPIU. Directly use req->tag as the Task Tag.
+The first patch of this series adds missing documentation of the
+zone_append_max_bytes sysfs attribute.
 
-Fixes: e293313262d3 ("scsi: ufs: Fix broken task management command implementation")
+The following 3 patches are cleanup and preparatory patches for the
+introduction of the zone write granularity limit. The goal of these
+patches is to have all code setting a device queue zoned model to use
+the helper function blk_queue_set_zoned(). The nvme driver, null_blk
+driver and the partition code are modified to do so.
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 36 +++++++++++++++---------------------
- 1 file changed, 15 insertions(+), 21 deletions(-)
+The fourth patch in this series introduces the zone write granularity
+queue limit to indicate the alignment constraint for write operations
+into sequential zones of zoned block devices. This limit is always set
+by default to the device logical block size. The following patch
+documents this new limit.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 43894a3..72fa14b 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6384,38 +6384,33 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	struct request *req;
- 	unsigned long flags;
--	int free_slot, task_tag, err;
-+	int task_tag, err;
- 
- 	/*
--	 * Get free slot, sleep if slots are unavailable.
--	 * Even though we use wait_event() which sleeps indefinitely,
--	 * the maximum wait time is bounded by %TM_CMD_TIMEOUT.
-+	 * blk_get_request() used here is only to get a free tag.
- 	 */
- 	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
- 	if (IS_ERR(req))
- 		return PTR_ERR(req);
- 
--	free_slot = req->tag;
--	WARN_ON_ONCE(free_slot < 0 || free_slot >= hba->nutmrs);
- 	ufshcd_hold(hba, false);
--
- 	spin_lock_irqsave(host->host_lock, flags);
- 	req->end_io_data = &wait;
--	task_tag = hba->nutrs + free_slot;
- 	blk_mq_start_request(req);
- 
-+	task_tag = req->tag;
- 	treq->req_header.dword_0 |= cpu_to_be32(task_tag);
- 
--	memcpy(hba->utmrdl_base_addr + free_slot, treq, sizeof(*treq));
--	ufshcd_vops_setup_task_mgmt(hba, free_slot, tm_function);
-+	memcpy(hba->utmrdl_base_addr + task_tag, treq, sizeof(*treq));
-+	ufshcd_vops_setup_task_mgmt(hba, task_tag, tm_function);
- 
- 	/* send command to the controller */
--	__set_bit(free_slot, &hba->outstanding_tasks);
-+	__set_bit(task_tag, &hba->outstanding_tasks);
- 
- 	/* Make sure descriptors are ready before ringing the task doorbell */
- 	wmb();
- 
--	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
-+	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TASK_REQ_DOOR_BELL);
- 	/* Make sure that doorbell is committed immediately */
- 	wmb();
- 
-@@ -6437,24 +6432,23 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 		ufshcd_add_tm_upiu_trace(hba, task_tag, UFS_TM_ERR);
- 		dev_err(hba->dev, "%s: task management cmd 0x%.2x timed-out\n",
- 				__func__, tm_function);
--		if (ufshcd_clear_tm_cmd(hba, free_slot))
--			dev_WARN(hba->dev, "%s: unable clear tm cmd (slot %d) after timeout\n",
--					__func__, free_slot);
-+		if (ufshcd_clear_tm_cmd(hba, task_tag)) {
-+			dev_WARN(hba->dev, "%s: unable to clear tm cmd (slot %d) after timeout\n",
-+					__func__, task_tag);
-+		} else {
-+			__clear_bit(task_tag, &hba->outstanding_tasks);
-+		}
- 		err = -ETIMEDOUT;
- 	} else {
- 		err = 0;
--		memcpy(treq, hba->utmrdl_base_addr + free_slot, sizeof(*treq));
-+		memcpy(treq, hba->utmrdl_base_addr + task_tag, sizeof(*treq));
- 
- 		ufshcd_add_tm_upiu_trace(hba, task_tag, UFS_TM_COMP);
- 	}
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
--	__clear_bit(free_slot, &hba->outstanding_tasks);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
--
-+	ufshcd_release(hba);
- 	blk_put_request(req);
- 
--	ufshcd_release(hba);
- 	return err;
- }
- 
+The last 2 patches introduce the blk_queue_clear_zone_settings()
+function and modify the SCSI sd driver to clear the zone related queue
+limits and resources of a host-aware zoned disk that is changed to a
+regular disk due to the presence of partitions.
+
+Changes from v3:
+* Added pathces 2, 3, 4, 7 and 8
+* Addressed Christoph's comments on patch 5
+
+Changes from v2:
+* Added patch 3 for zonefs
+* Addressed Christoph's comments on patch 1 and added the limit
+  initialization for zoned nullblk
+
+Changes from v1:
+* Fixed typo in patch 2
+
+Damien Le Moal (8):
+  block: document zone_append_max_bytes attribute
+  nvme: cleanup zone information initialization
+  nullb: use blk_queue_set_zoned() to setup zoned devices
+  block: use blk_queue_set_zoned in add_partition()
+  block: introduce zone_write_granularity limit
+  zonefs: use zone write granularity as block size
+  block: introduce blk_queue_clear_zone_settings()
+  sd_zbc: clear zone resources for non-zoned case
+
+Damien Le Moal (8):
+  block: document zone_append_max_bytes attribute
+  nvme: cleanup zone information initialization
+  nullb: use blk_queue_set_zoned() to setup zoned devices
+  block: use blk_queue_set_zoned in add_partition()
+  block: introduce zone_write_granularity limit
+  zonefs: use zone write granularity as block size
+  block: introduce blk_queue_clear_zone_settings()
+  sd_zbc: clear zone resources for non-zoned case
+
+ Documentation/block/queue-sysfs.rst | 13 +++++++++
+ block/blk-settings.c                | 39 +++++++++++++++++++++++++-
+ block/blk-sysfs.c                   |  8 ++++++
+ block/blk-zoned.c                   | 17 ++++++++++++
+ block/blk.h                         |  2 ++
+ block/partitions/core.c             |  2 +-
+ drivers/block/null_blk/zoned.c      |  8 +++---
+ drivers/nvme/host/core.c            | 11 ++++----
+ drivers/nvme/host/zns.c             | 11 ++------
+ drivers/scsi/sd_zbc.c               | 43 ++++++++++++++++++++++++++---
+ fs/zonefs/super.c                   |  9 +++---
+ include/linux/blkdev.h              | 15 ++++++++++
+ 12 files changed, 150 insertions(+), 28 deletions(-)
+
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.29.2
 
