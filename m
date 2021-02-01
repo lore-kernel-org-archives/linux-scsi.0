@@ -2,107 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF19EC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 02:40:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60DCCC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 04:26:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1C0B64E27
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 02:40:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AAC264E06
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 04:26:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231171AbhBACkL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 31 Jan 2021 21:40:11 -0500
-Received: from mail-pl1-f172.google.com ([209.85.214.172]:37565 "EHLO
-        mail-pl1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229765AbhBACkE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Jan 2021 21:40:04 -0500
-Received: by mail-pl1-f172.google.com with SMTP id q2so9152960plk.4;
-        Sun, 31 Jan 2021 18:39:48 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=tK0a4Xo4ptkxzB0G42n+8D8QUtFhHfX1haG6vf5kKJI=;
-        b=picoz5wfm4PyUtinBhrypPeTxVs3u7ME1vpyKZjYewmjbCzeCCTqA98lgv/ZlN0Omo
-         KB5Tw8dWiKeveivS3HOMc4CmoBbj0KyiE8C2nfp1WA6STaLL0ITrV1GP8ZvF2H5xgG1T
-         OkumO1jmv95AnvNauwlzt73KWKaCQgoVVIjSgYhVAZX5jEtULwYCNb16H2OTgqMbDtxj
-         gLnE7XNVabuM82u4khvlkEa6ZtJ/8VwqgnkyJLYFXeTRYLHofN4C96tvBGWFmln82O/N
-         iVnlTkMKKgsTKnezXoZJrDHAienpwGDHJamQ4k87NoEMneh7Y87YLypdTuZJ59cMolSM
-         MGhw==
-X-Gm-Message-State: AOAM533D4S2ucWsLJ2ZxPIieyL3hfHeTKZ8wOyD3lelm01StCPTQGypw
-        ZAqyluwND8YYp+LJTWLcpz84hArh42g=
-X-Google-Smtp-Source: ABdhPJzrzZFBKw1jvRRW5plU9Th08DTdyIDE43AFyvR2D2ccc0yltCkKp1gbLV8RZH6h6Ry/a4rz7A==
-X-Received: by 2002:a17:902:309:b029:e1:536b:4ab with SMTP id 9-20020a1709020309b02900e1536b04abmr4207825pld.65.1612147162696;
-        Sun, 31 Jan 2021 18:39:22 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:50bb:dc2d:705:e8e2? ([2601:647:4000:d7:50bb:dc2d:705:e8e2])
-        by smtp.gmail.com with ESMTPSA id k128sm15255359pfd.137.2021.01.31.18.39.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 31 Jan 2021 18:39:21 -0800 (PST)
-Subject: Re: [PATCH v3 3/3] scsi: ufs: Fix wrong Task Tag used in task
- management request UPIUs
-To:     Can Guo <cang@codeaurora.org>
-Cc:     jaegeuk@kernel.org, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, hongwus@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
+        id S231443AbhBAE0C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 31 Jan 2021 23:26:02 -0500
+Received: from mailout2.samsung.com ([203.254.224.25]:38369 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231397AbhBAEZv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Jan 2021 23:25:51 -0500
+Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20210201042502epoutp024cce63e5fbadbf7c4c226960970f29a0~fhRGhyWZg1296912969epoutp02X
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Feb 2021 04:25:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20210201042502epoutp024cce63e5fbadbf7c4c226960970f29a0~fhRGhyWZg1296912969epoutp02X
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1612153502;
+        bh=4CaMWmOxTRQ4Yvh5Egmq/VowEgz2jyK7bRflwWVi//g=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=VP7cOWaOIgG3nQaGUVL5/gtwTr3yEG2NfDy2tspxFvR66j6p3owX6kBzYDmOz9i6x
+         GGUNTEAVX7wmDlH5XwBgB7vs98xv7BsgJ6bH4E37+q4ZkpSNRLvMrrMDHXnhzJAuDM
+         DJmCcmqCz/o7G5XRSUKtu7/sL2PUGlHeFg3b1JYA=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas3p3.samsung.com (KnoxPortal) with ESMTP id
+        20210201042501epcas3p324f93d079b2b4cbe46209d413bc811f7~fhRGC5IB91510715107epcas3p3d;
+        Mon,  1 Feb 2021 04:25:01 +0000 (GMT)
+Received: from epcpadp3 (unknown [182.195.40.17]) by epsnrtp2.localdomain
+        (Postfix) with ESMTP id 4DTZbx5xfjz4x9Q0; Mon,  1 Feb 2021 04:25:01 +0000
+        (GMT)
+Mime-Version: 1.0
+Subject: RE: [PATCH 3/8] scsi: ufshpb: Add region's reads counter
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC:     "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <avi.shchislowski@wdc.com>,
         Bean Huo <beanhuo@micron.com>,
-        Sujit Reddy Thumma <sthumma@codeaurora.org>,
-        Vinayak Holikatti <vinholikatti@gmail.com>,
-        Yaniv Gardi <ygardi@codeaurora.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1611807365-35513-1-git-send-email-cang@codeaurora.org>
- <1611807365-35513-4-git-send-email-cang@codeaurora.org>
- <8351747f-0ec9-3c66-1bdf-b4b73fcee698@acm.org>
- <f0d1c6a196a044198647df6ca4b06efb@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <cd83aa1d-444e-d4ba-c363-517dbf07891a@acm.org>
-Date:   Sun, 31 Jan 2021 18:39:19 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
-MIME-Version: 1.0
-In-Reply-To: <f0d1c6a196a044198647df6ca4b06efb@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        Avri Altman <avri.altman@wdc.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <20210127151217.24760-4-avri.altman@wdc.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <1891546521.01612153501819.JavaMail.epsvc@epcpadp3>
+Date:   Mon, 01 Feb 2021 12:51:36 +0900
+X-CMS-MailID: 20210201035136epcms2p2c245b5fc97d5ecdf0c1ca96496d6e0c6
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20210127151311epcas2p1696c2b73f3b4777ac0e7f603790b552f
+References: <20210127151217.24760-4-avri.altman@wdc.com>
+        <20210127151217.24760-1-avri.altman@wdc.com>
+        <CGME20210127151311epcas2p1696c2b73f3b4777ac0e7f603790b552f@epcms2p2>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/28/21 9:57 PM, Can Guo wrote:
-> On 2021-01-29 11:15, Bart Van Assche wrote:
->> On 1/27/21 8:16 PM, Can Guo wrote:
->>> In __ufshcd_issue_tm_cmd(), it is not right to use hba->nutrs +
->>> req->tag as
->>> the Task Tag in one TMR UPIU. Directly use req->tag as the Task Tag.
->>
->> Why is the current code wrong and why is this patch the proper fix?
->> Please explain this in the patch description.
-> 
-> req->tag is the tag allocated for one TMR, no?
+Hi Avri,
 
-Hi Can,
- Commit e293313262d3 ("scsi: ufs: Fix broken task management command
-implementation") includes the following changes:
+Thanks for adding HCM support on HPB.
+I have some opinion for this patch.
 
-+       task_tag = hba->nutrs + free_slot;
-        task_req_upiup->header.dword_0 =
-                UPIU_HEADER_DWORD(UPIU_TRANSACTION_TASK_REQ, 0,
--                                            lrbp->lun, lrbp->task_tag);
-+                                            lun_id, task_tag);
-        task_req_upiup->header.dword_1 =
-                UPIU_HEADER_DWORD(0, tm_function, 0, 0);
+> +#define WORK_PENDING 0
+> +#define ACTIVATION_THRSHLD 4 /* 4 IOs */
+Rather than fixing it with macro, how about using sysfs and make it
+configurable?
 
-As one can see the value written in dword_0 starts at hba->nutrs. Was
-that code correct? If that code was correct, does your patch perhaps
-break task management support?
+> @@ -306,12 +325,39 @@ void ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>  		ufshpb_set_ppn_dirty(hpb, rgn_idx, srgn_idx, srgn_offset,
+>  				 transfer_len);
+>  		spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> +
+> +		if (ufshpb_mode == HPB_HOST_CONTROL)
+> +			atomic64_set(&rgn->reads, 0);
+> +
+>  		return;
+>  	}
+>  
+> +	if (ufshpb_mode == HPB_HOST_CONTROL)
+> +		reads = atomic64_inc_return(&rgn->reads);
+> +
+>  	if (!ufshpb_is_support_chunk(transfer_len))
+>  		return; <- *this*
+>  
+> +	if (ufshpb_mode == HPB_HOST_CONTROL) {
+> +		/*
+> +		 * in host control mode, reads are the main source for
+> +		 * activation trials.
+> +		 */
+> +		if (reads == ACTIVATION_THRSHLD) {
+If the chunk size is not supported, we can not active this region
+permanently. It may be returned before get this statement.
+
+> diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+> index 8a34b0f42754..b0e78728af38 100644
+> --- a/drivers/scsi/ufs/ufshpb.h
+> +++ b/drivers/scsi/ufs/ufshpb.h
+> @@ -115,6 +115,9 @@ struct ufshpb_region {
+>  	/* below information is used by lru */
+>  	struct list_head list_lru_rgn;
+>  	unsigned long rgn_flags;
+> +
+> +	/* region reads - for host mode */
+> +	atomic64_t reads;
+I think 32 bits are suitable, because it is normalized by worker on every
+specific time.
 
 Thanks,
-
-Bart.
+Daejun
