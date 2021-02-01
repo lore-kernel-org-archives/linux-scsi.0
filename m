@@ -2,173 +2,254 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D39C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 22:49:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9829C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 23:31:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A14264D9C
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 22:49:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AFB764D90
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 23:31:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229854AbhBAWtR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Feb 2021 17:49:17 -0500
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:6375 "EHLO
-        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229753AbhBAWtQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2021 17:49:16 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1612219755; x=1643755755;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=pb2f0V4OHDp9hoPAijRwCSPj4bDufTgQ5VtLiUaSAiY=;
-  b=t/Cy9LiMAm7CAEjKNkE7JB5kBkNRMILtguzoJOZlg4My9bVr7CPFe1H+
-   tw44siwCB+9OVjshsFapfNyA46u2PtoIHskXk67EnYZrdrfZ2/zMx+jZu
-   Y32Kb2Rw0WXQVjaz5XTOXSE1vCjUcphMKS+/Ob5yIXUk7jleOx2XFY09v
-   zsC4Lt3oxsWEffSX1rjT8F53WNn7WuYFgkXiy3848RGeQE0CIWcfbRyOT
-   dBnRV0ecV9w7TYaRIcrNYPzCAbuUMiCulPHvTDPoGIW9BDCjjRLbowZs4
-   IaLpE3xBXs/t1osRwwrvYtT7S2jHFyDSpZTjt3ZbhyZTHynnXgyGGffJ+
-   Q==;
-IronPort-SDR: veP9PcBQ1VRZrgxlc36MximSX1l6HND0nks8kQ6Hm1GEk6zM1ajYLd0sGgqh2nZE/6eE9RjHof
- 1lSUduyM9X8UNbB1FnXcVEYTG5tWsXsSKDN2e3+MDXUDHGV13mYF/0NRvvE4p2eGaXC0Vrkp/s
- n2kjlKh109bTaRyPCv2VoPhY1Udioztr+GXKVTT/MVET583stjkYC8tWdOnsXofymUQAHgTfb+
- C88FUu6uQfoxu5piwunouhaixoyux4NsJ1iMOhVN5TikxYuZUgFttK+3WLlGysKjuDTlksDtVK
- W7M=
-X-IronPort-AV: E=Sophos;i="5.79,393,1602572400"; 
-   d="scan'208";a="107585908"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 01 Feb 2021 15:48:00 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Mon, 1 Feb 2021 15:47:59 -0700
-Received: from NAM04-BN8-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3 via Frontend
- Transport; Mon, 1 Feb 2021 15:47:59 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=MbMwzGnl9qvxQUglGLCMRG8CCeT8hOZCn0JeYh+K/2BqvwTnPO64AV9I0VpBvpIAUErwUUzn1Ieha9qtc2ua9tGsS3/ePZ7jQywOwZpcGSr5bVsGqajkOuBybNizog7+bpvEpDpXddRDdSd38zvM3NdNid8s0fLQXpw1iqBptJTn+mAwykqlpYdULy/efnp/C3SMaCk2w3yE4K3UkUJnTltVyhyE1FnGhvMFYXDJClcvqsFXswbB+meA28D/F9+Xmj4Yh4MUEwJhnWi347BtKKY5WSOSdazZYzwYskVu3KGy/i2bNY+aWMuNYd1jBxFDGb/oz+YQ8BLbNNf8bQUphQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pb2f0V4OHDp9hoPAijRwCSPj4bDufTgQ5VtLiUaSAiY=;
- b=kkPdTMqtU4dFUfBMcXzlG5wgVgFYcp0pAlkoavBckrmvQRwPe4j7ueeSmZIILtryOQC0XoNNohom8wCQR4gfss6iyB//DrPc0zAOiE81jmaHDcmhapULctbqkZa1QpaM9aoC8l0t9XGGCW7gRzGyczJm+QQUGJ1AKaUE8SWcWzcKVkSH6ziB+mOMADS08GolSLM00f/FjpV4PwANkvBMX+5zidvB31y8Ah6yadC9sPDacS/cXCJwc986uACSJLstbJ2QVqHXfehqFwC9ez+5yzticEEqb71Y3+gN2L+vhP7Gn/5401qMbvcSClIeVObPji4dvwU5RCRX8taxjBOM4w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pb2f0V4OHDp9hoPAijRwCSPj4bDufTgQ5VtLiUaSAiY=;
- b=Jp/MBquD1tB7Q/xEXprz0pB3quC7bu1EYhLbSvSn63UpiEvyyV4eNI0f5ny0hDLBQ9T4gIjKbkKq+2uPv9bUU9f0Sg8jFup4JYQweB+xqLdROHN0yhauKir1NBFE9dYvqdqTy2hfzpghtaEwh33iT4KhTjd6bhvaod94KpPphvw=
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
- by SN6PR11MB3005.namprd11.prod.outlook.com (2603:10b6:805:d3::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3805.23; Mon, 1 Feb
- 2021 22:47:57 +0000
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::ccd1:992c:7bc5:4b00]) by SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::ccd1:992c:7bc5:4b00%3]) with mapi id 15.20.3805.027; Mon, 1 Feb 2021
- 22:47:57 +0000
-From:   <Don.Brace@microchip.com>
-To:     <mwilck@suse.com>, <Kevin.Barnett@microchip.com>,
-        <Scott.Teel@microchip.com>, <Justin.Lindley@microchip.com>,
-        <Scott.Benesh@microchip.com>, <Gerry.Morong@microchip.com>,
-        <Mahesh.Rajashekhara@microchip.com>, <hch@infradead.org>,
-        <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
-        <POSWALD@suse.com>
-CC:     <linux-scsi@vger.kernel.org>, <john.garry@huawei.com>
-Subject: RE: [PATCH V3 14/25] smartpqi: fix driver synchronization issues
-Thread-Topic: [PATCH V3 14/25] smartpqi: fix driver synchronization issues
-Thread-Index: AQHWzzSSsdBsRT4A0ESvA1E3btB71qoc/EEAgB8oiRCAAtR/AIAFQD/w
-Date:   Mon, 1 Feb 2021 22:47:57 +0000
-Message-ID: <SN6PR11MB284854146A2A85F5E70CFDA9E1B69@SN6PR11MB2848.namprd11.prod.outlook.com>
-References: <160763241302.26927.17487238067261230799.stgit@brunhilda>
-         <160763254176.26927.18089060465751833560.stgit@brunhilda>
-         <76f8c5cbdd1722eecdda017c46c0d617f5086e1d.camel@suse.com>
-         <SN6PR11MB2848C1C9B0F446E2D8F30F00E1BB9@SN6PR11MB2848.namprd11.prod.outlook.com>
- <c1e6b199f5ccda5ccec5223dfcbd1fba22171c86.camel@suse.com>
-In-Reply-To: <c1e6b199f5ccda5ccec5223dfcbd1fba22171c86.camel@suse.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: suse.com; dkim=none (message not signed)
- header.d=none;suse.com; dmarc=none action=none header.from=microchip.com;
-x-originating-ip: [76.30.208.15]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 3893de4e-db59-45fd-75db-08d8c7036b9e
-x-ms-traffictypediagnostic: SN6PR11MB3005:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR11MB300531203CD4CB3CC19F32F1E1B69@SN6PR11MB3005.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:8273;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: ju/xLVXqaHVZQZhrw1cIBtrYYCbGVMT/MgtjGdnNWKXOjx/Ipgt+P8VS4t1bPK3d9etKMhLhcFK2kmkRMxa41SGBahngryYW+qE4ubjcV39wK++GxQaDDuKgnKp6kKl9j/UwA0RnlpL0tq2DXVOhHD3Bg9D+hFOerxSdchNUT7mm4DO5oRybR4zm5hkdTYoGwgDUHZ+DqZW/cI4/G5BjgAChVxiVepDuojplaNYdanRYYysf180594tV2zj4xk4n74j+7cF1Y/3RtqEFFj0TFwREcMOQgXdQ/TaiynZtO0+6iKN/OTC0NJ4E6eu0zDizrowo0v2gZOWbbIsCGiFgoZSfbDR0t54Cv34LkQ/s+HRWZLcsoq32JOiqm+bIIfYc8tS8d1rd4qAvx4Fpr4aiQRlwHHkTn6ya8M2YNdIwl8xc8exPOFkUR2fb0FVvHMZQJpNSdacRS8LoXe1cL9/muhvzIb/xGacp4XRAVQLQ8nm++sZS3X6AQZ16Pnf1Dqwx714++FSRJjIxnzUsTXuVLti97tqxvUZfS6wk2KqQpqemkPNZJ6vAOz9w/WLp0Ssb
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(136003)(376002)(346002)(396003)(39860400002)(52536014)(66946007)(64756008)(66476007)(66556008)(186003)(4744005)(86362001)(26005)(76116006)(66446008)(83380400001)(6506007)(7696005)(921005)(8936002)(8676002)(110136005)(33656002)(2906002)(5660300002)(9686003)(54906003)(55016002)(478600001)(71200400001)(4326008)(316002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?dCTCa8gRlA2Om2TUXcsmdYrgk9ezUfZFBRPnJqBe3bU5e9w8nU3sm7S9D8Vk?=
- =?us-ascii?Q?5Yz04KgWd4Z/6PmhFrk2dqEtmy9foe5km5Nt5m2Y880eWLKOGXHlzTl4eavc?=
- =?us-ascii?Q?r9olkTHfuodZCfmrY3Eo9/LPIj2/BiKhct2HHG3dulaf1VSM6ju6yxIr+9qk?=
- =?us-ascii?Q?wv9t+WFlR+X7Czipisv6EJsKHnzQC0p6+CKH2598h6kC267hjExvCTjyhhDu?=
- =?us-ascii?Q?o2/IydlbtyTqKHAjA9nKh4L8YQ60UGQXT2U9joCzFiebLN2jfe1a0+YNK32K?=
- =?us-ascii?Q?4GJwY4HSO+wJAMBBZ3Ld+HlSrWWOwZk9Lqm5y20Qz7x+IBVgvWDDx+vr7HBh?=
- =?us-ascii?Q?apEkOBv/RH/k1eZM8xEhwlKk9gn36gg9VADLnI4VVq+r6MbAgPCK5jaRi6NQ?=
- =?us-ascii?Q?henjEgjWexryCoQiNZBv1Gln2hApN8Mrj7+No0xri3iYRrMU+zKolndTj0jN?=
- =?us-ascii?Q?Q0y7X6DC/HuJqPiFfkG9H4XqZzYmeabEXo1pH7/aKN9SMQghmBQXa7N5WsFL?=
- =?us-ascii?Q?PSrtBMcdW7Qi9YvyvwZhFJLR2djRA+oqELwe4N+uBBnCntIoJpfkcNO+CWe1?=
- =?us-ascii?Q?Qm+Glu6VoJhED9GLkizJE6k+n0fsptVJvQf5WFlXmW6JUCWm7mVGA549Ex8f?=
- =?us-ascii?Q?32EmBDcfNCKsGvyy6lyHPisABhVTKz8loht7Ks1rfc0f4qe+xHtQNi3wW5Hd?=
- =?us-ascii?Q?H2uzY4U92ThYD50QuAV+Y3FAe9uIqphJYD6s57OvUGt723soNHRQq9u6/cZV?=
- =?us-ascii?Q?EmbpxzsetPZ7ClB36HHYFc8WZ8vSY+3XpZ1u/hlfVV1jVSSxTz5nMUfyV5Jl?=
- =?us-ascii?Q?keaJ3vfsWJa8X83/PoGkKZq3jiWu/rrBLfRkeHND9VLSqsEIoIqvDigo1q7J?=
- =?us-ascii?Q?5Y7KO7ljiY+kQAg6KB6IByIhvsgzwuTOulK0nQ8JLnc11Zralj/Rnb9xqISO?=
- =?us-ascii?Q?BwPe3YmfF7ChNj8WpujyiXiwJ0JLlDhKvfHPo0zIQCq+PRpsMiPQCzH0NOvB?=
- =?us-ascii?Q?mwQzTVsKKRQL/19mx5lKP98T+8AC4CZKym9g0QSMS+hVlR4VzX7cxdFXOABw?=
- =?us-ascii?Q?1W+dR/5u?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S229629AbhBAXbP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Feb 2021 18:31:15 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:48784 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229593AbhBAXbK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 1 Feb 2021 18:31:10 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id C7A7020418D;
+        Tue,  2 Feb 2021 00:30:25 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id aW6GXK8b6cK7; Tue,  2 Feb 2021 00:30:23 +0100 (CET)
+Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        by smtp.infotech.no (Postfix) with ESMTPA id CE3572042A6;
+        Tue,  2 Feb 2021 00:30:22 +0100 (CET)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        kashyap.desai@broadcom.com
+Subject: [PATCH] scsi_debug: add new defer_type for mq_poll
+Date:   Mon,  1 Feb 2021 18:30:20 -0500
+Message-Id: <20210201233020.4773-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2848.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3893de4e-db59-45fd-75db-08d8c7036b9e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Feb 2021 22:47:57.5422
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: bnMmn+ZaD3q/zzd6zxZjXIvX0SIVrAsv9963CJY7pjW5LV2bnRMN8nAP1mVDCdfCkMbDwRMe5f+J7Zva3x6n9A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB3005
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
------Original Message-----
-From: Martin Wilck [mailto:mwilck@suse.com]=20
-Subject: Re: [PATCH V3 14/25] smartpqi: fix driver synchronization issues
+Add a new sdeb_defer_type enumeration: SDEB_DEFER_POLL for requests
+that have REQ_HIPRI set in cmd_flags field. It is expected that
+these requests will be polled via the mq_poll entry point which
+is driven by calls to blk_poll() in the block layer. Therefore
+timer events are not 'wired up' in the normal fashion.
 
+There are still cases with short delays (e.g. < 10 microseconds)
+where by the time the command reponse processing occurs, the delay
+is already exceeded in which case the code calls scsi_done()
+directly. In such cases there is no window for mq_poll() to be
+called.
 
-I would still like to figure out if "smartpqi_fix_host_qdepth_limit" is rea=
-lly necessary. It duplicates functionality that's already in the block and =
-SCSI layers. I tend to think that John Garry is right, and that all that is=
- needed to fix the queue overflow would be setting host_tagset to 1. Someon=
-e would need to verify that, though. If yes, it'd be preferrable to "smartp=
-qi_fix_host_qdepth_limit", and we'd need to figure out a different fix for =
-the above.
+This patch is against the 5.12/scsi-staging branch which includes
+   a98d6bdf181eb71bf4686666eaf47c642a061642
+   scsi_debug : iouring iopoll support
+which it alters. So this patch is a fix of that patch which fails
+in testing.
 
-Don: I have been testing with setting host_tagset =3D 1. Seems to be workin=
-g.
-I answered John Gary's e-mail. Thanks for your suggestion. However I want t=
-o test this some more before calling it good.
-Thanks,
-Don Brace=20
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi_debug.c | 106 +++++++++++++++++++++++++++-----------
+ 1 file changed, 75 insertions(+), 31 deletions(-)
 
-
-Regards
-Martin
-
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 746eec521f79..d030c270796b 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -322,17 +322,19 @@ struct sdeb_store_info {
+ 	container_of(d, struct sdebug_host_info, dev)
+ 
+ enum sdeb_defer_type {SDEB_DEFER_NONE = 0, SDEB_DEFER_HRT = 1,
+-		      SDEB_DEFER_WQ = 2};
++		      SDEB_DEFER_WQ = 2, SDEB_DEFER_POLL = 3};
+ 
+ struct sdebug_defer {
+ 	struct hrtimer hrt;
+ 	struct execute_work ew;
++	ktime_t cmpl_ts;/* time since boot to complete this cmd */
+ 	int sqa_idx;	/* index of sdebug_queue array */
+ 	int qc_idx;	/* index of sdebug_queued_cmd array within sqa_idx */
+ 	int hc_idx;	/* hostwide tag index */
+ 	int issuing_cpu;
+ 	bool init_hrt;
+ 	bool init_wq;
++	bool init_poll;
+ 	bool aborted;	/* true when blk_abort_request() already called */
+ 	enum sdeb_defer_type defer_t;
+ };
+@@ -5517,40 +5519,62 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 				kt -= d;
+ 			}
+ 		}
+-		if (!sd_dp->init_hrt) {
+-			sd_dp->init_hrt = true;
+-			sqcp->sd_dp = sd_dp;
+-			hrtimer_init(&sd_dp->hrt, CLOCK_MONOTONIC,
+-				     HRTIMER_MODE_REL_PINNED);
+-			sd_dp->hrt.function = sdebug_q_cmd_hrt_complete;
+-			sd_dp->sqa_idx = sqp - sdebug_q_arr;
+-			sd_dp->qc_idx = k;
++		sd_dp->cmpl_ts = ktime_add(ns_to_ktime(ns_from_boot), kt);
++		if (cmnd->request->cmd_flags & REQ_HIPRI) {
++			if (!sd_dp->init_poll) {
++				sd_dp->init_poll = true;
++				sqcp->sd_dp = sd_dp;
++				sd_dp->sqa_idx = sqp - sdebug_q_arr;
++				sd_dp->qc_idx = k;
++			}
++			sd_dp->defer_t = SDEB_DEFER_POLL;
++		} else {
++			if (!sd_dp->init_hrt) {
++				sd_dp->init_hrt = true;
++				sqcp->sd_dp = sd_dp;
++				hrtimer_init(&sd_dp->hrt, CLOCK_MONOTONIC,
++					     HRTIMER_MODE_REL_PINNED);
++				sd_dp->hrt.function = sdebug_q_cmd_hrt_complete;
++				sd_dp->sqa_idx = sqp - sdebug_q_arr;
++				sd_dp->qc_idx = k;
++			}
++			sd_dp->defer_t = SDEB_DEFER_HRT;
++			/* schedule the invocation of scsi_done() for a later time */
++			hrtimer_start(&sd_dp->hrt, kt, HRTIMER_MODE_REL_PINNED);
+ 		}
+ 		if (sdebug_statistics)
+ 			sd_dp->issuing_cpu = raw_smp_processor_id();
+-		sd_dp->defer_t = SDEB_DEFER_HRT;
+-		/* schedule the invocation of scsi_done() for a later time */
+-		hrtimer_start(&sd_dp->hrt, kt, HRTIMER_MODE_REL_PINNED);
+ 	} else {	/* jdelay < 0, use work queue */
+-		if (!sd_dp->init_wq) {
+-			sd_dp->init_wq = true;
+-			sqcp->sd_dp = sd_dp;
+-			sd_dp->sqa_idx = sqp - sdebug_q_arr;
+-			sd_dp->qc_idx = k;
+-			INIT_WORK(&sd_dp->ew.work, sdebug_q_cmd_wq_complete);
+-		}
+-		if (sdebug_statistics)
+-			sd_dp->issuing_cpu = raw_smp_processor_id();
+-		sd_dp->defer_t = SDEB_DEFER_WQ;
+ 		if (unlikely((sdebug_opts & SDEBUG_OPT_CMD_ABORT) &&
+ 			     atomic_read(&sdeb_inject_pending)))
+ 			sd_dp->aborted = true;
+-		schedule_work(&sd_dp->ew.work);
+-		if (unlikely((sdebug_opts & SDEBUG_OPT_CMD_ABORT) &&
+-			     atomic_read(&sdeb_inject_pending))) {
++		sd_dp->cmpl_ts = ns_to_ktime(ns_from_boot);
++		if (cmnd->request->cmd_flags & REQ_HIPRI) {
++			if (!sd_dp->init_poll) {
++				sd_dp->init_poll = true;
++				sqcp->sd_dp = sd_dp;
++				sd_dp->sqa_idx = sqp - sdebug_q_arr;
++				sd_dp->qc_idx = k;
++			}
++			sd_dp->defer_t = SDEB_DEFER_POLL;
++		} else {
++			if (!sd_dp->init_wq) {
++				sd_dp->init_wq = true;
++				sqcp->sd_dp = sd_dp;
++				sd_dp->sqa_idx = sqp - sdebug_q_arr;
++				sd_dp->qc_idx = k;
++				INIT_WORK(&sd_dp->ew.work, sdebug_q_cmd_wq_complete);
++			}
++			sd_dp->defer_t = SDEB_DEFER_WQ;
++			schedule_work(&sd_dp->ew.work);
++		}
++		if (sdebug_statistics)
++			sd_dp->issuing_cpu = raw_smp_processor_id();
++		if (unlikely(sd_dp->aborted)) {
+ 			sdev_printk(KERN_INFO, sdp, "abort request tag %d\n", cmnd->request->tag);
+ 			blk_abort_request(cmnd->request);
+ 			atomic_set(&sdeb_inject_pending, 0);
++			sd_dp->aborted = false;
+ 		}
+ 	}
+ 	if (unlikely((SDEBUG_OPT_Q_NOISE & sdebug_opts) && scsi_result == device_qfull_result))
+@@ -7246,30 +7270,47 @@ static int sdebug_map_queues(struct Scsi_Host *shost)
+ 
+ static int sdebug_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ {
+-	int qc_idx;
++	bool first = true;
+ 	int retiring = 0;
++	int num_entries = 0;
++	unsigned int qc_idx;
+ 	unsigned long iflags;
++	ktime_t kt_from_boot = ktime_get_boottime();
+ 	struct sdebug_queue *sqp;
+ 	struct sdebug_queued_cmd *sqcp;
+ 	struct scsi_cmnd *scp;
+ 	struct sdebug_dev_info *devip;
+-	int num_entries = 0;
+ 
+ 	sqp = sdebug_q_arr + queue_num;
+ 
+ 	do {
+ 		spin_lock_irqsave(&sqp->qc_lock, iflags);
+-		qc_idx = find_first_bit(sqp->in_use_bm, sdebug_max_queue);
+-		if (unlikely((qc_idx < 0) || (qc_idx >= sdebug_max_queue)))
++		if (first) {
++			qc_idx = find_first_bit(sqp->in_use_bm, sdebug_max_queue);
++			first = false;
++		} else {
++			qc_idx = find_next_bit(sqp->in_use_bm, sdebug_max_queue, qc_idx + 1);
++		}
++		if (unlikely(qc_idx >= sdebug_max_queue))
+ 			goto out;
+ 
+ 		sqcp = &sqp->qc_arr[qc_idx];
+ 		scp = sqcp->a_cmnd;
+ 		if (unlikely(scp == NULL)) {
+-			pr_err("scp is NULL, queue_num=%d, qc_idx=%d from %s\n",
++			pr_err("scp is NULL, queue_num=%d, qc_idx=%u from %s\n",
+ 			       queue_num, qc_idx, __func__);
+ 			goto out;
+ 		}
++		if (sqcp->sd_dp->defer_t == SDEB_DEFER_POLL) {
++			if (kt_from_boot < sqcp->sd_dp->cmpl_ts) {
++				spin_unlock_irqrestore(&sqp->qc_lock, iflags);
++				goto around;
++			}
++
++		} else {	/* ignoring non REQ_HIPRI requests */
++			spin_unlock_irqrestore(&sqp->qc_lock, iflags);
++			goto around;
++		}
+ 		devip = (struct sdebug_dev_info *)scp->device->hostdata;
+ 		if (likely(devip))
+ 			atomic_dec(&devip->num_in_q);
+@@ -7280,7 +7321,7 @@ static int sdebug_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ 
+ 		sqcp->a_cmnd = NULL;
+ 		if (unlikely(!test_and_clear_bit(qc_idx, sqp->in_use_bm))) {
+-			pr_err("Unexpected completion sqp %p queue_num=%d qc_idx=%d from %s\n",
++			pr_err("Unexpected completion sqp %p queue_num=%d qc_idx=%u from %s\n",
+ 				sqp, queue_num, qc_idx, __func__);
+ 			goto out;
+ 		}
+@@ -7302,6 +7343,9 @@ static int sdebug_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ 		spin_unlock_irqrestore(&sqp->qc_lock, iflags);
+ 		scp->scsi_done(scp); /* callback to mid level */
+ 		num_entries++;
++around:
++		if (qc_idx + 1 == sdebug_max_queue)
++			return num_entries;
+ 	} while (1);
+ 
+ out:
+-- 
+2.25.1
 
