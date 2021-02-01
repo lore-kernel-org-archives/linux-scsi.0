@@ -2,187 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-18.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_NO_TEXT,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17139C433E9
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 13:56:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8C97C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 14:13:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D6CF464D9D
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 13:56:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9C8964EA2
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 14:13:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232201AbhBAN4U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Feb 2021 08:56:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49734 "EHLO
+        id S232324AbhBAONJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Feb 2021 09:13:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231314AbhBAN4S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2021 08:56:18 -0500
-Received: from mail-qt1-x82f.google.com (mail-qt1-x82f.google.com [IPv6:2607:f8b0:4864:20::82f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA7AEC06174A
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Feb 2021 05:55:37 -0800 (PST)
-Received: by mail-qt1-x82f.google.com with SMTP id l23so12191132qtq.13
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Feb 2021 05:55:37 -0800 (PST)
+        with ESMTP id S231284AbhBAONI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2021 09:13:08 -0500
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C2B0C061573
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Feb 2021 06:12:28 -0800 (PST)
+Received: by mail-pj1-x1031.google.com with SMTP id a20so10375578pjs.1
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Feb 2021 06:12:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=eNxna7h2xa8+ixV6z06jUxKCPT2DP2OjAPUHxZM+gyg=;
-        b=T5krZzOAQGbX9w4Fd//mWkWtpJ1L4y5euZDH2wDZUOxVJ9GoRWBe1YUsewVqi0OdQH
-         Sq8BvbxfTySgYTsfZDPk0NxIAewEBy3xAnLj7z/Xyl0b2oWUbXbQOKZmsVtgx61dkdUm
-         UfTHV6WC0ImqpLmrudTuKaJQPhugNkLIeINLI=
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=8t/6W30CCVQ/nNMtpdYz5AiGKHXoaDJZSnjHthbtS6U=;
+        b=QOjolRufHwJTAuK439OWLp2lWSsw3L4zeqIeAclUNWDUBdBUyu/n/B5edhNz4I8AtS
+         lcDBINkw4njeL3x30KWGffGB7TaMwtmIkqbJ9x4jmxI2CytUc51VXKJmC3T9VpSvu5QF
+         TzC8A+Du1It+W0aR1DgFLeW/7TKuvnNS2Ruoc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=eNxna7h2xa8+ixV6z06jUxKCPT2DP2OjAPUHxZM+gyg=;
-        b=lSKGRAw8Remdss87IiWFs+myoLuGWnKvmsrI1l3p8kJjU5ktbSOsdKKm88cj0DFRA+
-         cdur9zDwgecrVxvzB9qxyNoq0qEc6re7CpK0btSkjeBMPARTUb7dAHDU6nzVcmbcpxdP
-         R/gEWju2Daj4uRNhPcu3EW2FIgX/Pb5emFrIn851Z2no30o9oBSY20pZ4hor6pYAMXh+
-         tvzYA4S6k/8n7JUYfpiIVnq31WV0wj5UN+jy74kKyzYFJjGAh+Vu3he01drw39vNKpy4
-         M0VctQ9Ku6p/r94jnFesxoJzf9TkR4VU8pUEuv78Go9WANasoAvQvJTs/KcTcpbTux43
-         oayQ==
-X-Gm-Message-State: AOAM531YiBlM8EedgOHkkbibAvXfK6wbPGib7PpwyKq5lcuX/TBDYvJj
-        krSGRit9BzlQcRBZfSIkh3NZ1aNJvKFeqyDWrLcyzw==
-X-Google-Smtp-Source: ABdhPJyOBfiztPB+NcXuBiXaMD65uEeT43XGTPbgbkfliqA7LAr9qjH/0WcjwTg45Z2gEepzH4UlIk7F+e9CTylRLRE=
-X-Received: by 2002:ac8:130d:: with SMTP id e13mr14984705qtj.216.1612187736923;
- Mon, 01 Feb 2021 05:55:36 -0800 (PST)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <20201203034100.29716-1-kashyap.desai@broadcom.com>
- <20201203034100.29716-3-kashyap.desai@broadcom.com> <379caf31-6158-cb4b-325e-0be3b79b97b9@suse.de>
-In-Reply-To: <379caf31-6158-cb4b-325e-0be3b79b97b9@suse.de>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=8t/6W30CCVQ/nNMtpdYz5AiGKHXoaDJZSnjHthbtS6U=;
+        b=TBefzOhrLQl3fGFqUbJROJujHBoC9viSOCY4M2dj3nukGf7UpU3LJBTI8k3JJwFlrj
+         RhwpxokhllnP6H0LGjGB/0QXtRidML0OthRA0Gm/p3SZmRnYy/+d95tAmPZyNRDh5/kH
+         PsVzFNSGP25Hc6JnwIBsQK9pXAMIbrgz93siG+DPozh3d/Cr7PmKPpXmQ3KrUu/Eyorp
+         fI3Igxymd/yXHsH6soIm7OphVJKVm6rrlUEEUlo0RhQd8zWVyOJDJOzW1RsEVtC3qenq
+         LnCmqkgmQM1nT3fPaJcoktq8pshC20hDE+ItrYZuCfEuK1k+7Kgg7d5LnCsr0TDQ+gbB
+         pe9A==
+X-Gm-Message-State: AOAM530Mn/cbiR8mNq4A73yRbYOJNJL3Lwzd8Vu30naTlF0HuV54gkmC
+        Gd6BJiZZ2LM8LcT+RkUFJVrDAc8YNZdE6Jon
+X-Google-Smtp-Source: ABdhPJytYytO2A+gQ0xyABGeADR3Yj8q9E2YMn54q0wlHfrTOvvIfj9/z09pTHxv27rJ9FHgi3CNAA==
+X-Received: by 2002:a17:90a:d258:: with SMTP id o24mr17971082pjw.231.1612188747483;
+        Mon, 01 Feb 2021 06:12:27 -0800 (PST)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id 83sm17995849pfb.68.2021.02.01.06.12.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 01 Feb 2021 06:12:25 -0800 (PST)
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
+        suganath-prabu.subramani@broadcom.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: fix ReplyPostFree pool allocation
+Date:   Mon,  1 Feb 2021 19:45:22 +0530
+Message-Id: <20210201141522.25363-1-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQHOEf3M/0CyAu39AtgNSQNXwBT1dAIUsluLAeMqdfCqNWBW0A==
-Date:   Mon, 1 Feb 2021 19:25:34 +0530
-Message-ID: <534865e428d0452f3355e05fd55b4138@mail.gmail.com>
-Subject: RE: [PATCH v2 2/4] megaraid_sas: iouring iopoll support
-To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
-Cc:     Sumit Saxena <sumit.saxena@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        linux-block@vger.kernel.org
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000664e6805ba46b5f3"
+        boundary="000000000000a09ba305ba46f19e"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000664e6805ba46b5f3
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+--000000000000a09ba305ba46f19e
+Content-Transfer-Encoding: 8bit
 
-> >   static int megasas_map_queues(struct Scsi_Host *shost)
-> >   {
-> >   	struct megasas_instance *instance;
-> > +	int i, qoff, offset;
-> >
-> >   	instance =3D (struct megasas_instance *)shost->hostdata;
-> >
-> >   	if (shost->nr_hw_queues =3D=3D 1)
-> >   		return 0;
-> >
-> > -	return blk_mq_pci_map_queues(&shost-
-> >tag_set.map[HCTX_TYPE_DEFAULT],
-> > -			instance->pdev, instance->low_latency_index_start);
-> > +	offset =3D instance->low_latency_index_start;
-> > +
-> > +	for (i =3D 0, qoff =3D 0; i < HCTX_MAX_TYPES; i++) {
-> > +		struct blk_mq_queue_map *map =3D &shost->tag_set.map[i];
-> > +
-> > +		map->nr_queues  =3D 0;
-> > +
-> > +		if (i =3D=3D HCTX_TYPE_DEFAULT)
-> > +			map->nr_queues =3D instance->msix_vectors - offset;
-> > +		else if (i =3D=3D HCTX_TYPE_POLL)
-> > +			map->nr_queues =3D instance->iopoll_q_count;
-> > +
-> > +		if (!map->nr_queues) {
-> > +			BUG_ON(i =3D=3D HCTX_TYPE_DEFAULT);
-> > +			continue;
-> > +		}
-> > +
-> > +		/*
-> > +		 * The poll queue(s) doesn't have an IRQ (and hence IRQ
-> > +		 * affinity), so use the regular blk-mq cpu mapping
-> > +		 */
-> > +		map->queue_offset =3D qoff;
-> > +		if (i !=3D HCTX_TYPE_POLL)
-> > +			blk_mq_pci_map_queues(map, instance->pdev,
-> offset);
-> > +		else
-> > +			blk_mq_map_queues(map);
-> > +
-> > +		qoff +=3D map->nr_queues;
-> > +		offset +=3D map->nr_queues;
-> > +	}
-> > +
-> Seeing that you only ever use HCTX_TYPE_DEFAULT and HCTX_TYPE_POLL
-> that loop is a bit non-obvious; maybe it's better to unroll it and assign=
-e
-> the
-> values manually.
+Currently driver allocate memory for ReplyPostFree queues in
+chunks of 16 ReplyPostFree queue count.
+On less resource environment such as VM with 1GB and two CPUs,
+memory allocation for ReplyPostFree pools may fail, since
+driver tries to allocate a memory for 16 ReplyPostFree queue count
+even though the actual number of ReplyPostFree queue used is two.
+Now, the driver will allocate memory for only the actual number of
+ReplyPostFree queues instead for 16 queues if the ReplyPostFree
+queue count is less than 16.
 
-Hannes- I have taken care this in V3 series. Please review.
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> >   /**
-> >    * megasas_enable_irq_poll() - enable irqpoll
-> >    * @instance:			Adapter soft state
->
-> Double newline
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index f5582c8..e2455b9 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -5641,7 +5641,8 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 	reply_post_free_sz = ioc->reply_post_queue_depth *
+ 	    sizeof(Mpi2DefaultReplyDescriptor_t);
+ 	rdpq_sz = reply_post_free_sz * RDPQ_MAX_INDEX_IN_ONE_CHUNK;
+-	if (_base_is_controller_msix_enabled(ioc) && !ioc->rdpq_array_enable)
++	if ((_base_is_controller_msix_enabled(ioc) && !ioc->rdpq_array_enable)
++	    || (ioc->reply_queue_count < RDPQ_MAX_INDEX_IN_ONE_CHUNK))
+ 		rdpq_sz = reply_post_free_sz * ioc->reply_queue_count;
+ 	ret = base_alloc_rdpq_dma_pool(ioc, rdpq_sz);
+ 	if (ret == -EAGAIN) {
+-- 
+2.27.0
 
-Taken care in V3.
 
->
-> > @@ -4164,6 +4203,8 @@ void  megasas_reset_reply_desc(struct
-> > megasas_instance *instance)
-> >
-> >   	fusion =3D instance->ctrl_context;
-> >   	count =3D instance->msix_vectors > 0 ? instance->msix_vectors : 1;
-> > +	count +=3D instance->iopoll_q_count;
-> > +
-> >   	for (i =3D 0 ; i < count ; i++) {
-> >   		fusion->last_reply_idx[i] =3D 0;
-> >   		reply_desc =3D fusion->reply_frames_desc[i]; diff --git
-> > a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> > b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> > index 30de4b01f703..242ff58a3404 100644
-> > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> > @@ -1303,6 +1303,9 @@ struct fusion_context {
-> >   	u8 *sense;
-> >   	dma_addr_t sense_phys_addr;
-> >
-> > +	atomic_t   busy_mq_poll[MAX_MSIX_QUEUES_FUSION];
-> > +
-> > +
-> >   	dma_addr_t reply_frames_desc_phys[MAX_MSIX_QUEUES_FUSION];
-> >   	union MPI2_REPLY_DESCRIPTORS_UNION
-> *reply_frames_desc[MAX_MSIX_QUEUES_FUSION];
-> >   	struct rdpq_alloc_detail rdpq_tracker[RDPQ_MAX_CHUNK_COUNT];
-> >
-> Same here.
-
-Taken care in V3.
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke                Kernel Storage Architect
-> hare@suse.de                              +49 911 74053 688
-> SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg HRB 3680=
-9
-> (AG N=C3=BCrnberg), Gesch=C3=A4ftsf=C3=BChrer: Felix Imend=C3=B6rffer
-
---000000000000664e6805ba46b5f3
+--000000000000a09ba305ba46f19e
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Description: S/MIME Cryptographic Signature
 
-MIIQRQYJKoZIhvcNAQcCoIIQNjCCEDICAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-gg2aMIIE6DCCA9CgAwIBAgIOSBtqCRO9gCTKXSLwFPMwDQYJKoZIhvcNAQELBQAwTDEgMB4GA1UE
+MIIQSwYJKoZIhvcNAQcCoIIQPDCCEDgCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
+gg2gMIIE6DCCA9CgAwIBAgIOSBtqCRO9gCTKXSLwFPMwDQYJKoZIhvcNAQELBQAwTDEgMB4GA1UE
 CxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMT
 Ckdsb2JhbFNpZ24wHhcNMTYwNjE1MDAwMDAwWhcNMjQwNjE1MDAwMDAwWjBdMQswCQYDVQQGEwJC
 RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25h
@@ -219,40 +147,40 @@ yAzv95ZURUm7lgAJQayzE4aGKAczymvmdLm6AC2upArT9fHxD4q/c2dKg8dEe3jgr25sbwMpjjM5
 RcOO5LlXbKr8EpbsU8Yt5CRsuZRj+9xTaGdWPoO4zzUhw8lo/s7awlOqzJCK6fBdRoyV3XpYKBov
 Hd7NADdBj+1EbddTKJd+82cEHhXXipa0095MJ6RMG3NzdvQXmcIfeg7jLQitChws/zyrVQ4PkX42
 68NXSb7hLi18YIvDQVETI53O9zJrlAGomecsMx86OyXShkDOOyyGeMlhLxS67ttVb9+E7gUJTb0o
-2HLO02JQZR7rkpeDMdmztcpHWD9fMIIFRzCCBC+gAwIBAgIMNJ2hfsaqieGgTtOzMA0GCSqGSIb3
+2HLO02JQZR7rkpeDMdmztcpHWD9fMIIFTTCCBDWgAwIBAgIMGYbVrXj/AWDyoGFSMA0GCSqGSIb3
 DQEBCwUAMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTMwMQYDVQQD
-EypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMwHhcNMjAwOTE0MTE0
-NTE2WhcNMjIwOTE1MTE0NTE2WjCBkDELMAkGA1UEBhMCSU4xEjAQBgNVBAgTCUthcm5hdGFrYTES
-MBAGA1UEBxMJQmFuZ2Fsb3JlMRYwFAYDVQQKEw1Ccm9hZGNvbSBJbmMuMRYwFAYDVQQDEw1LYXNo
-eWFwIERlc2FpMSkwJwYJKoZIhvcNAQkBFhprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTCCASIw
-DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALcJrXmVmbWEd4eX2uEKGBI6v43LPHKbbncKqMGH
-Dez52MTfr4QkOZYWM4Rqv8j6vb8LPlUc9k0CEnC9Yaj9ZzDOcR+gHfoZ3F1JXSVRWdguz25MiB6a
-bU8odXAymhaig9sNJLxiWid3RORmG/w1Nceflo/72Cwttt0ytDTKdF987/aVGqMIxg3NnXM/cn+T
-0wUiccp8WINUie4nuR9pzv5RKGqAzNYyo8krQ2URk+3fGm1cPRoFEVAkwrCs/FOs6LfggC2CC4LB
-yfWKfxJx8FcWmsjkSlrwDu+oVuDUa2wqeKBU12HQ4JAVd+LOb5edsbbFQxgGHu+MPuc/1hl9kTkC
-AwEAAaOCAdEwggHNMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYIKwYBBQUH
-MAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxzaWduMnNo
-YTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5jb20vZ3Nw
-ZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIB
-FiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEQGA1Ud
-HwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNpZ24yc2hh
-MmczLmNybDAlBgNVHREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAK
-BggrBgEFBQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4EFgQU4dX1
-Yg4eoWXbqyPW/N1ZD/LPIWcwDQYJKoZIhvcNAQELBQADggEBABBuHYKGUwHIhCjd3LieJwKVuJNr
-YohEnZzCoNaOj33/j5thiA4cZehCh6SgrIlFBIktLD7jW9Dwl88Gfcy+RrVa7XK5Hyqwr1JlCVsW
-pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
-8S/v9LyyP4X2aRTWOg9RG8D/13rLxFAApfYvCrf0quIUBWw2BXlq3+e3r7pU7j40d6P04VV3Zxws
-M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
-1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
-IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
-RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgQwN26nWb
-IYtIOzqTFvA9E9CJKQdwOMcltduzb4HWV2AwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMjEwMjAxMTM1NTM3WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
-BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
-9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBADC0rgkf4v52AN6qoLvrEqAAYcCM
-XXyzMI7Y2CwXUdiCLUlnJoYFRKMgHMZPICFbJz0o1SvYWFbEuab6rJSs4uf6XputfolqfpnZ4a3w
-0DdCM7hNOJknSTEdL+eCO4SDAJGBxguCtfm/vrCnFCejvz9hPj8wZrkPte9EuCch3llJi4FT0tgH
-61o76+QNCJghjeCl5ZA2kKj83rM8fGGisAeoQNNN+Q5jWnB/1jea/9xkLlS/ZAbxRyv8gqoLZblx
-zOvQgn1KXSEQeLk3/nz1VwhoLtzhUy4gikgI1yD4NV9HgCcJB+DlGrt3/n+L9VscM9150aWkGNto
-qdDNIFXnK1w=
---000000000000664e6805ba46b5f3--
+EypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMwHhcNMjAwOTE0MTE1
+MTU2WhcNMjIwOTE1MTE1MTU2WjCBlDELMAkGA1UEBhMCSU4xEjAQBgNVBAgTCUthcm5hdGFrYTES
+MBAGA1UEBxMJQmFuZ2Fsb3JlMRYwFAYDVQQKEw1Ccm9hZGNvbSBJbmMuMRgwFgYDVQQDEw9TcmVl
+a2FudGggUmVkZHkxKzApBgkqhkiG9w0BCQEWHHNyZWVrYW50aC5yZWRkeUBicm9hZGNvbS5jb20w
+ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC5niRDfOcA/lFVV4Ef3caitEmDttFcfX8E
+gCdwYxGiEDiO37ld/yjXb+HO8Y3Jk+dlVMltv+IdjiUPF+vr+J2NnRBy4sWkgifn+o4/VpUmBLhL
+NW+bBYuIuG4+iUoA9XXuqZZNN55aelW0TperHdzcZSfhByomrRfnBUlH2Spvd/EU4DjW25SXwSF/
++uC6y31UYvj52z/Vzvqpapm6CKt0e+JFxTSdRS6Fsf+f/5/++IM51GSIrrePsCgrgq6S1S9kdKIn
+Rag/s/0IKyxAQsoBcla5ZufuDE5ir/mlnYktkPJdg+kns/OPDsINSyWqNYE9PKy9+3cp/fItNFtH
+krg1AgMBAAGjggHTMIIBzzAOBgNVHQ8BAf8EBAMCBaAwgZ4GCCsGAQUFBwEBBIGRMIGOME0GCCsG
+AQUFBzAChkFodHRwOi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc3BlcnNvbmFsc2ln
+bjJzaGEyZzNvY3NwLmNydDA9BggrBgEFBQcwAYYxaHR0cDovL29jc3AyLmdsb2JhbHNpZ24uY29t
+L2dzcGVyc29uYWxzaWduMnNoYTJnMzBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEF
+BQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBE
+BgNVHR8EPTA7MDmgN6A1hjNodHRwOi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzcGVyc29uYWxzaWdu
+MnNoYTJnMy5jcmwwJwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNV
+HSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4E
+FgQU1CyhXqcQo40SZ7kFS/AiOnRW6lMwDQYJKoZIhvcNAQELBQADggEBAFeMmmz112eNFAV8Ense
+5WremClV5F3Md1xS0yXKqxlgakUJaOI/Fai7OLQaQqsEoxW6/QqWEi1wbZOccbdritOkL5b7sVUp
+SU9OfuIlV8c3XMLaWSIluy+0ImtRJ49jDCI4KtQESHrqfQRZcc1C/avZvNED3U4b10U6N3SY+59b
+fm2Vlwacwp+8ESTp49DsLcJqc4U/0rUZxLWtgPokzS+ovX+JAu8zx1SmOzUC4hj4Bp6Vnfd5KWUK
+JJQBmQHXii+acSeTgHmPWUYs3tYQ0uIX0Yy8LUWPdGbEq+KWepzY2otC+iVWdngCCv8Nf1Xo1jki
+AGJ6hrlWFE0qJVWv25sxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
+YWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hB
+MjU2IC0gRzMCDBmG1a14/wFg8qBhUjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg
+XGybyRysku6PY2aJDGcPwdm7/QZafc2Op2IO3n+Xu6owGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
+ATAcBgkqhkiG9w0BCQUxDxcNMjEwMjAxMTQxMjI3WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
+AwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjAL
+BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAEUIb9QQoL8y0RbJ91Rp
+UeMUoVNOUj31XiDyL0BkK9MduAeMydCiYngP2K2i42AYQ18hmifJvh+MDNrx1bpdkuC7lTiWup/Z
+0FaIrWWB0jrSnLXPfIFggwuwEBVY3Gl4T+TDsEuhSDiHJudf2sUujXtSLc1ulmL2VkZQNPFod1Yd
+lLEowxWTPmNAG2yhJfV3adm8K3S7z/72vvZ/pXnqnPuEc8zH57pBJxOdCk3SXAXadEWv+uqkHUdP
+Gp6wc70w6puNP99JRPF1WXuojHEGJu0zEVbQ6io2ls4lbB3K5w2KiUJt9GM7njDQJHrPQ8puGj/n
+hpyOge72umSggIQbRcg=
+--000000000000a09ba305ba46f19e--
