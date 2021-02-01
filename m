@@ -2,389 +2,197 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_HEADER_CTYPE_ONLY,MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,
+	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 405A8C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 11:26:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06E1AC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 13:17:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D928A64DAF
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 11:25:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0E9C64E2A
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 13:17:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233370AbhBALZ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Feb 2021 06:25:26 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2463 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232573AbhBALZW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2021 06:25:22 -0500
-Received: from fraeml710-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DTlpq47zjz67YvQ;
-        Mon,  1 Feb 2021 19:20:03 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml710-chm.china.huawei.com (10.206.15.59) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Mon, 1 Feb 2021 12:24:39 +0100
-Received: from [10.47.11.37] (10.47.11.37) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Mon, 1 Feb 2021
- 11:24:37 +0000
-Subject: Re: [RFC/RFT PATCH] scsi: pm8001: Expose HW queues for pm80xx hw
-To:     "Viswas.G@microchip.com" <Viswas.G@microchip.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "akshatzen@google.com" <akshatzen@google.com>,
-        "Ruksar.devadi@microchip.com" <Ruksar.devadi@microchip.com>,
-        "radha@google.com" <radha@google.com>,
-        "bjashnani@google.com" <bjashnani@google.com>,
-        "vishakhavc@google.com" <vishakhavc@google.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>,
-        "Ashokkumar.N@microchip.com" <Ashokkumar.N@microchip.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "hare@suse.de" <hare@suse.de>,
-        "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>
-References: <1609845423-110410-1-git-send-email-john.garry@huawei.com>
- <SN6PR11MB34882CBBF9CF1C6EA2C50EB29DB79@SN6PR11MB3488.namprd11.prod.outlook.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <0a20dc79-a462-f3fb-14af-db151b688e5a@huawei.com>
-Date:   Mon, 1 Feb 2021 11:23:11 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <SN6PR11MB34882CBBF9CF1C6EA2C50EB29DB79@SN6PR11MB3488.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.11.37]
-X-ClientProxiedBy: lhreml754-chm.china.huawei.com (10.201.108.204) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        id S231530AbhBANQ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Feb 2021 08:16:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41232 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231649AbhBANQq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2021 08:16:46 -0500
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A988CC061573
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Feb 2021 05:16:06 -0800 (PST)
+Received: by mail-pg1-x543.google.com with SMTP id r38so12031631pgk.13
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Feb 2021 05:16:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=bKrIaZHqj2kVjdr++9NJqgunOk7EF53LWAI4/d2ef0Q=;
+        b=GZWWJS+5iLBUbUpGnT6s2jaV3b/PqsCI5f7gdfm/3RQkXI2SL7gWMN6wHRT8DBFTWM
+         Ry3bMBVOIPmZYq7Iu1p7uKx5QH49bwCk9vqmEMoNpR/aGzj5Yo18IE/s2tV0qmDNdLGg
+         4YCTZ+YWh8r4iryA7TQcJOM0RzMzbpm3Ci4/I=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=bKrIaZHqj2kVjdr++9NJqgunOk7EF53LWAI4/d2ef0Q=;
+        b=VsWdB57AdRqaeI/umseIZRPxOt+k8zJj34YKhKK1x4yynhQRMQu3Ch6nwZN060uTFU
+         kaB2Fpeie7/lIQ7SGPyY70Mz0ULqvd0ZqRvvCS6Tzkshz56S4vO0hPljYJI7Vy//fFEF
+         PvN0M+IA2c+ayd3V6QI+wDAHGezM6RK8HRZE7Up09ZaIqrOMWqhTmeQbIk6f0uoitXVX
+         sCFe5L2uXiiGYaxSfN8nP0ai4suhcNhXF9Rup/HO3/aFiS+91cRiA2buqNum6rAuGmQ1
+         itKT7HRfPTx47LTO9f54FuWtO/Fd/o8yAdREEN3v8GMxxgZ+Isi6pQ/ZCxnLL6h+TKqh
+         cwzA==
+X-Gm-Message-State: AOAM532fRJftswMrURrDmylmQCfqVRrLBwVCK7PGH5umjSOSRPUO/S+S
+        tqLtAE3HIdoHH+ImXSq4BVcaxWrEw2PWWGFu1Dtg3RAIMDibK+7cruN3dgzUNrlb+ihnYkiuTKK
+        MCXfmhnrf0EIMLf5VBXoBSzsXqm1Y3apIY2nA8ENcg/TJab2YJaG1GWFoOacIiXuFD7Lxen/UWh
+        DG9/wSp5lU
+X-Google-Smtp-Source: ABdhPJwDCBHU/7a68fI03Bo0OtCsym7bxlUO4KiGAVDgrqBtqTd3bSZGb6UGizrjDzN5orHXC3sh0A==
+X-Received: by 2002:a62:75d0:0:b029:1b8:ae4d:620c with SMTP id q199-20020a6275d00000b02901b8ae4d620cmr16244830pfc.80.1612185365740;
+        Mon, 01 Feb 2021 05:16:05 -0800 (PST)
+Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id h2sm18573898pfk.4.2021.02.01.05.16.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 01 Feb 2021 05:16:04 -0800 (PST)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: [PATCH v3 0/4] io_uring iopoll in scsi layer
+Date:   Mon,  1 Feb 2021 10:46:15 +0530
+Message-Id: <20210201051619.19909-1-kashyap.desai@broadcom.com>
+X-Mailer: git-send-email 2.18.1
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000114b7a05ba46285f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 31/01/2021 07:19, Viswas.G@microchip.com wrote:
-> Thanks Johns.
-> 
-> We could see a kernel crash while testing this patch.
+--000000000000114b7a05ba46285f
 
-Thanks for testing.
+This patch series is to support io_uring iopoll feature
+in scsi stack. This patch set requires shared hosttag support.
 
-> 
-> [  246.724632] scsi host10: pm80xx
-> [  248.005258] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
-> [  248.168973] BUG: kernel NULL pointer dereference, address: 0000000000000110
-> [  248.175926] #PF: supervisor read access in kernel mode
-> [  248.181065] #PF: error_code(0x0000) - not-present page
-> [  248.186196] PGD 0 P4D 0
-> [  248.188736] Oops: 0000 [#1] SMP PTI
-> [  248.192230] CPU: 10 PID: 77 Comm: kworker/u26:2 Kdump: loaded Tainted: G S         OE     5.11.0-rc3 #2
-> [  248.201614] Hardware name: Supermicro Super Server/X10DRi-LN4+, BIOS 3.1 06/08/2018
-> [  248.209258] Workqueue: events_unbound async_run_entry_fn
-> [  248.214571] RIP: 0010:pm80xx_chip_sata_req+0x7f/0x5e0 [pm80xx]
-> [  248.220413] Code: c1 7c c1 e9 03 4d 8b ac 24 80 01 00 00 48 c7 44 24 14 00 00 00 00 89 04 24 31 c0 48 c7 84 24 88 00 00 00 00 00 00 00 f3 48 ab <48> 8b ba 10 01 00 00 e8 35 35 c6 ef c1 e8 10 89 44 24 04 0f b6 43
-> [  248.239157] RSP: 0018:ffffb98d834979f0 EFLAGS: 00010046
-> [  248.244384] RAX: 0000000000000000 RBX: ffff9523c321c000 RCX: 0000000000000000
-> [  248.251516] RDX: 0000000000000000 RSI: ffff952450720048 RDI: ffffb98d83497a80
-> [  248.258641] RBP: ffff9523c7420000 R08: 0000000000000100 R09: 0000000000000001
-> [  248.265764] R10: 0000000000000001 R11: ffff9523c9e40000 R12: ffff9523ca1c3600
-> [  248.272887] R13: ffff9523c9e40000 R14: ffffb98d83497a04 R15: ffff952450720048
-> [  248.280013] FS:  0000000000000000(0000) GS:ffff9527afd00000(0000) knlGS:0000000000000000
-> [  248.288090] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  248.293826] CR2: 0000000000000110 CR3: 000000029ac10001 CR4: 00000000001706e0
-> [  248.300952] Call Trace:
+This patch set is created on top of 5.12/scsi-staging branch.
+https://kernel.googlesource.com/pub/scm/linux/kernel/git/mkp/scsi/+/refs/heads/5.12/scsi-staging
 
-I think that the problem here is that ata_queued_cmd->scmd is NULL for 
-the ata internal command.
+v3 ->  
+- added reviewed-by tag
+- Fix comment provided by Hannes for below patch.
+https://patchwork.kernel.org/project/linux-scsi/patch/20201203034100.29716-3-kashyap.desai@broadcom.com/
+- Fix Functional issue of poll_queues settings not working in v2.
 
-Please try this fix:
+v2 -> 
+- updated feedback from v1.
+- added reviewed-by & tested-by tag
+- remove flood of prints in scsi_debug driver during iopoll
+  reported by Douglas Gilbert.
+- added new patch to support to get shost from hctx.
+  added new helper function "scsi_init_hctx"
 
----->8-----
+v1 -> 
+Fixed warnings in scsi_debug driver.
+Reported-by: kernel test robot <lkp@intel.com>
 
-@@ -4451,7 +4451,7 @@ static int pm80xx_chip_sata_req(struct 
-pm8001_hba_info *pm8001_ha,
-  	struct scsi_cmnd *scmd = qc->scsicmd;
-  	u32 tag = ccb->ccb_tag;
-  	int ret;
--	u32 q_index, blk_tag;
-+	u32 q_index = 0, blk_tag;
-  	struct sata_start_req sata_cmd;
-  	u32 hdr_tag, ncg_tag = 0;
-  	u64 phys_addr, start_addr, end_addr;
-@@ -4463,8 +4463,10 @@ static int pm80xx_chip_sata_req(struct 
-pm8001_hba_info *pm8001_ha,
-  	u32 opc = OPC_INB_SATA_HOST_OPSTART;
-  	memset(&sata_cmd, 0, sizeof(sata_cmd));
+Kashyap Desai (4):
+  add io_uring with IOPOLL support in scsi layer
+  megaraid_sas: iouring iopoll support
+  scsi_debug : iouring iopoll support
+  scsi: set shost as hctx driver_data
 
--	blk_tag = blk_mq_unique_tag(scmd->request);
--	q_index = blk_mq_unique_tag_to_hwq(blk_tag);
-+	if (scmd) {
-+		blk_tag = blk_mq_unique_tag(scmd->request);
-+		q_index = blk_mq_unique_tag_to_hwq(blk_tag);
-+	}
-  	circularQ = &pm8001_ha->inbnd_q_tbl[q_index];
-
-----8<-----
-
-You may need similar for other dispatch paths also - like smp - but I 
-don't think that you will.
-
-BTW, do you know if there is actually a limitation on the HW that queue 
-#0 is used for all "internal" IO (mpi), like phy control operation? Jack?
-
-Thanks,
-John
+ drivers/scsi/megaraid/megaraid_sas.h        |   3 +
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  87 +++++++++++--
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  42 ++++++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |   2 +
+ drivers/scsi/scsi_debug.c                   | 130 ++++++++++++++++++++
+ drivers/scsi/scsi_lib.c                     |  29 ++++-
+ include/scsi/scsi_cmnd.h                    |   1 +
+ include/scsi/scsi_host.h                    |  11 ++
+ 8 files changed, 291 insertions(+), 14 deletions(-)
 
 
-> [  248.303402]  pm8001_task_exec.isra.9+0x2a4/0x460 [pm80xx]
-> [  248.308805]  sas_ata_qc_issue+0x187/0x220 [libsas]
-> [  248.313607]  ata_qc_issue+0x107/0x1e0 [libata]
-> [  248.318069]  ata_exec_internal_sg+0x2c8/0x580 [libata]
-> [  248.323217]  ata_exec_internal+0x5f/0x90 [libata]
-> [  248.327931]  ata_dev_read_id+0x306/0x480 [libata]
-> [  248.332647]  ata_eh_recover+0x7ea/0x12a0 [libata]
-> [  248.337369]  ? vprintk_emit+0x114/0x220
-> [  248.341208]  ? sas_ata_sched_eh+0x60/0x60 [libsas]
-> [  248.346002]  ? sas_ata_prereset+0x50/0x50 [libsas]
-> [  248.350795]  ? printk+0x58/0x6f
-> [  248.353941]  ? sas_ata_sched_eh+0x60/0x60 [libsas]
-> [  248.358733]  ? sas_ata_prereset+0x50/0x50 [libsas]
-> [  248.363525]  ata_do_eh+0x40/0xb0 [libata]
-> [  248.367556]  ata_scsi_port_error_handler+0x354/0x770 [libata]
-> [  248.373318]  async_sas_ata_eh+0x44/0x7b [libsas]
-> [  248.377938]  async_run_entry_fn+0x39/0x160
-> [  248.382040]  process_one_work+0x1cb/0x360
-> [  248.386050]  worker_thread+0x30/0x370
-> [  248.389706]  ? processe_work+0x360/0x360
-> [  248.393884]  kthread+0x116/0x130
-> [  248.397116]  ? kthread_park+0x80/0x80
-> [  248.400773]  ret_from_fork+0x22/0x30
-> [  248.404355] Modules linked in: pm80xx(OE) libsas scsi_transport_sas xt_CHECKSUM xt_MASQUERADE xt_conntrack ipt_REJECT nf_reject_ipv4 nft_compat nft_counter nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 nf_tables nfnetlink tun bridge stp llc rfkill sunrpc vfat fat intel_rapl_msr intel_rapl_common sb_edac x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass joydev crct10dif_pclmul crc32_pclmul ghash_clmulni_intel ipmi_ssif iTCO_wdt iTCO_vendor_support mei_me rapl i2c_i801 intel_cstate mei acpi_ipmi lpc_ich intel_uncore pcspkr ipmi_si i2c_smbus ipmi_devintf ipmi_msghandler acpi_power_meter acpi_pad ioatdma ip_tables xfs libcrc32c sr_mod sd_mod cdrom t10_pi sg ast drm_vram_helper drm_kms_helper syscopyarea igb sysfillrect sysimgblt fb_sys_fops drm_ttm_helper ttm ahci libahci dca drm crc32c_intel libata i2c_algo_bit wmi dm_mirror dm_region_hash dm_log dm_mod fuse
-> [  248.483431] CR2: 0000000000000110
-> [    0.000000] Linux version 5.11.0-rc3 (root@localhost.localdomain) (gcc (GCC) 8.3.1 20191121 (Red Hat 8.3.1-5), GNU ld version 2.30-79.el8) #2 SMP Mon Jan 25 23:56:12 IST 2021
-> [    0.000000] Command line: elfcorehr=0x45000000 BOOT_IMAGE=(hd14,gpt2)/vmlinuz-5.11.0-rc3 ro resume=/dev/mapper/rhel-swap rhgb console=ttyS1,115200 loglevel=7 irqpoll nr_cpus=1 reset_devices cgroup_disable=memory mce=off numa=off udev.children-max=2 panic=10 rootflags=nofail acpi_no_memhotplug transparent_hugepage=never nokaslr novmcoredd hest_disable disable_cpu_apicid=0
-> 
-> 
->> -----Original Message-----
->> From: John Garry <john.garry@huawei.com>
->> Sent: Tuesday, January 5, 2021 4:47 PM
->> To: jejb@linux.ibm.com; martin.petersen@oracle.com;
->> akshatzen@google.com; Viswas G - I30667 <Viswas.G@microchip.com>;
->> Ruksar Devadi - I52327 <Ruksar.devadi@microchip.com>;
->> radha@google.com; bjashnani@google.com; vishakhavc@google.com;
->> jinpu.wang@cloud.ionos.com; Ashokkumar N - X53535
->> <Ashokkumar.N@microchip.com>
->> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; hare@suse.de;
->> kashyap.desai@broadcom.com; ming.lei@redhat.com; John Garry
->> <john.garry@huawei.com>
->> Subject: [RFC/RFT PATCH] scsi: pm8001: Expose HW queues for pm80xx hw
->>
->> EXTERNAL EMAIL: Do not click links or open attachments unless you know the
->> content is safe
->>
->> In commit 05c6c029a44d ("scsi: pm80xx: Increase number of supported
->> queues"), support for 80xx chip was improved by enabling multiple HW
->> queues.
->>
->> In this, like other SCSI MQ HBA drivers, the HW queues were not exposed to
->> upper layer, and instead the driver managed the queues internally.
->>
->> However, this management duplicates blk-mq code. In addition, the HW
->> queue management is sub-optimal for a system where the number of CPUs
->> exceeds the HW queues - this is because queues are selected in a round-
->> robin fashion, when it would be better to make adjacent CPUs submit on the
->> same queue. And finally, the affinity of the completion queue interrupts is
->> not set to mirror the cpu<->HQ queue mapping, which is suboptimal.
->>
->> As such, for when MSIX is supported, expose HW queues to upper layer. Flag
->> PCI_IRQ_AFFINITY is set for allocating the MSIX vectors to automatically
->> assign affinity for the completion queue interrupts.
->>
->> Signed-off-by: John Garry <john.garry@huawei.com>
->>
->> ---
->> I sent as an RFC/RFT as I have no HW to test. In addition, since HW queue
->> #0 is used always for internal commands (like in send_task_abort()), if all
->> CPUs associated with HW queue #0 are offlined, the interrupt for that queue
->> will be shutdown, and no CPUs would be available to service any internal
->> commands completion. To solve that, we need [0] merged first and switch
->> over to use the new API. But we can still test performance in the meantime.
->>
->> I assume someone else is making the change to use the request tag for IO
->> tag management.
->>
->> [0] https://lore.kernel.org/linux-scsi/47ba045e-a490-198b-1744-
->> 529f97192d3b@suse.de/
->>
->> diff --git a/drivers/scsi/pm8001/pm8001_init.c
->> b/drivers/scsi/pm8001/pm8001_init.c
->> index ee2de177d0d0..73479803a23e 100644
->> --- a/drivers/scsi/pm8001/pm8001_init.c
->> +++ b/drivers/scsi/pm8001/pm8001_init.c
->> @@ -81,6 +81,15 @@ LIST_HEAD(hba_list);
->>
->>   struct workqueue_struct *pm8001_wq;
->>
->> +static int pm8001_map_queues(struct Scsi_Host *shost) {
->> +       struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
->> +       struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
->> +       struct blk_mq_queue_map *qmap =
->> +&shost->tag_set.map[HCTX_TYPE_DEFAULT];
->> +
->> +       return blk_mq_pci_map_queues(qmap, pm8001_ha->pdev, 0); }
->> +
->>   /*
->>    * The main structure which LLDD must register for scsi core.
->>    */
->> @@ -106,6 +115,7 @@ static struct scsi_host_template pm8001_sht = {
->> #ifdef CONFIG_COMPAT
->>          .compat_ioctl           = sas_ioctl,
->>   #endif
->> +       .map_queues                     = pm8001_map_queues,
->>          .shost_attrs            = pm8001_host_attrs,
->>          .track_queue_depth      = 1,
->>   };
->> @@ -923,9 +933,8 @@ static int pm8001_configure_phy_settings(struct
->> pm8001_hba_info *pm8001_ha)  static u32 pm8001_setup_msix(struct
->> pm8001_hba_info *pm8001_ha)  {
->>          u32 number_of_intr;
->> -       int rc, cpu_online_count;
->> +       int rc;
->>          unsigned int allocated_irq_vectors;
->> -
->>          /* SPCv controllers supports 64 msi-x */
->>          if (pm8001_ha->chip_id == chip_8001) {
->>                  number_of_intr = 1;
->> @@ -933,16 +942,15 @@ static u32 pm8001_setup_msix(struct
->> pm8001_hba_info *pm8001_ha)
->>                  number_of_intr = PM8001_MAX_MSIX_VEC;
->>          }
->>
->> -       cpu_online_count = num_online_cpus();
->> -       number_of_intr = min_t(int, cpu_online_count, number_of_intr);
->> -       rc = pci_alloc_irq_vectors(pm8001_ha->pdev, number_of_intr,
->> -                       number_of_intr, PCI_IRQ_MSIX);
->> +       /* Use default affinity descriptor, which spreads *all* vectors */
->> +       rc = pci_alloc_irq_vectors(pm8001_ha->pdev, 1,
->> +                       number_of_intr, PCI_IRQ_MSIX |
->> + PCI_IRQ_AFFINITY);
->>          allocated_irq_vectors = rc;
->>          if (rc < 0)
->>                  return rc;
->>
->>          /* Assigns the number of interrupts */
->> -       number_of_intr = min_t(int, allocated_irq_vectors, number_of_intr);
->> +       number_of_intr = allocated_irq_vectors;
->>          pm8001_ha->number_of_intr = number_of_intr;
->>
->>          /* Maximum queue number updating in HBA structure */ @@ -1113,6
->> +1121,16 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
->>          if (rc)
->>                  goto err_out_enable;
->>
->> +       if (pm8001_ha->number_of_intr > 1) {
->> +               shost->nr_hw_queues = pm8001_ha->number_of_intr;
->> +               /*
->> +                * For now, ensure we're not sent too many commands by setting
->> +                * host_tagset. This is also required if we start using request
->> +                * tag.
->> +                */
->> +               shost->host_tagset = 1;
->> +       }
->> +
->>          rc = scsi_add_host(shost, &pdev->dev);
->>          if (rc)
->>                  goto err_out_ha_free;
->> diff --git a/drivers/scsi/pm8001/pm8001_sas.h
->> b/drivers/scsi/pm8001/pm8001_sas.h
->> index f2c8cbad3853..74bc6fed693e 100644
->> --- a/drivers/scsi/pm8001/pm8001_sas.h
->> +++ b/drivers/scsi/pm8001/pm8001_sas.h
->> @@ -55,6 +55,8 @@
->>   #include <scsi/scsi_tcq.h>
->>   #include <scsi/sas_ata.h>
->>   #include <linux/atomic.h>
->> +#include <linux/blk-mq.h>
->> +#include <linux/blk-mq-pci.h>
->>   #include "pm8001_defs.h"
->>
->>   #define DRV_NAME               "pm80xx"
->> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c
->> b/drivers/scsi/pm8001/pm80xx_hwi.c
->> index 6772b0924dac..31d65ce91e7d 100644
->> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
->> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
->> @@ -4299,12 +4299,13 @@ static int pm80xx_chip_ssp_io_req(struct
->> pm8001_hba_info *pm8001_ha,
->>          struct domain_device *dev = task->dev;
->>          struct pm8001_device *pm8001_dev = dev->lldd_dev;
->>          struct ssp_ini_io_start_req ssp_cmd;
->> +       struct scsi_cmnd *scmd = task->uldd_task;
->>          u32 tag = ccb->ccb_tag;
->>          int ret;
->>          u64 phys_addr, start_addr, end_addr;
->>          u32 end_addr_high, end_addr_low;
->>          struct inbound_queue_table *circularQ;
->> -       u32 q_index, cpu_id;
->> +       u32 blk_tag, q_index;
->>          u32 opc = OPC_INB_SSPINIIOSTART;
->>          memset(&ssp_cmd, 0, sizeof(ssp_cmd));
->>          memcpy(ssp_cmd.ssp_iu.lun, task->ssp_task.LUN, 8); @@ -4323,8
->> +4324,8 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info
->> *pm8001_ha,
->>          ssp_cmd.ssp_iu.efb_prio_attr |= (task->ssp_task.task_attr & 7);
->>          memcpy(ssp_cmd.ssp_iu.cdb, task->ssp_task.cmd->cmnd,
->>                         task->ssp_task.cmd->cmd_len);
->> -       cpu_id = smp_processor_id();
->> -       q_index = (u32) (cpu_id) % (pm8001_ha->max_q_num);
->> +       blk_tag = blk_mq_unique_tag(scmd->request);
->> +       q_index = blk_mq_unique_tag_to_hwq(blk_tag);
->>          circularQ = &pm8001_ha->inbnd_q_tbl[q_index];
->>
->>          /* Check if encryption is set */ @@ -4446,9 +4447,11 @@ static int
->> pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
->>          struct sas_task *task = ccb->task;
->>          struct domain_device *dev = task->dev;
->>          struct pm8001_device *pm8001_ha_dev = dev->lldd_dev;
->> +       struct ata_queued_cmd *qc = task->uldd_task;
->> +       struct scsi_cmnd *scmd = qc->scsicmd;
->>          u32 tag = ccb->ccb_tag;
->>          int ret;
->> -       u32 q_index, cpu_id;
->> +       u32 q_index, blk_tag;
->>          struct sata_start_req sata_cmd;
->>          u32 hdr_tag, ncg_tag = 0;
->>          u64 phys_addr, start_addr, end_addr; @@ -4459,8 +4462,9 @@ static int
->> pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
->>          unsigned long flags;
->>          u32 opc = OPC_INB_SATA_HOST_OPSTART;
->>          memset(&sata_cmd, 0, sizeof(sata_cmd));
->> -       cpu_id = smp_processor_id();
->> -       q_index = (u32) (cpu_id) % (pm8001_ha->max_q_num);
->> +
->> +       blk_tag = blk_mq_unique_tag(scmd->request);
-> 
-> Here the scsi command is NULL.
-> 
->    if(scmd) {
->                  blk_tag = blk_mq_unique_tag(scmd->request);
->                  q_index = blk_mq_unique_tag_to_hwq(blk_tag);
->          } else {
->                  q_index = 0;
->    }
-> 
-> With this change, we have started our testing. We will update you the result soon.
-> 
->> +       q_index = blk_mq_unique_tag_to_hwq(blk_tag);
->>          circularQ = &pm8001_ha->inbnd_q_tbl[q_index];
->>
->>          if (task->data_dir == DMA_NONE) {
->> --
->> 2.26.2
-> 
-> .
-> 
+base-commit: a927ec3995427e9c47752900ad2df0755d02aba5
+-- 
+2.18.1
 
+
+--000000000000114b7a05ba46285f
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+yfWKfxJx8FcWmsjkSlrwDu+oVuDUa2wqeKBU12HQ4JAVd+LOb5edsbbFQxgGHu+MPuc/1hl9kTkC
+AwEAAaOCAdEwggHNMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYIKwYBBQUH
+MAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxzaWduMnNo
+YTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5jb20vZ3Nw
+ZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIB
+FiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEQGA1Ud
+HwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNpZ24yc2hh
+MmczLmNybDAlBgNVHREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAK
+BggrBgEFBQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4EFgQU4dX1
+Yg4eoWXbqyPW/N1ZD/LPIWcwDQYJKoZIhvcNAQELBQADggEBABBuHYKGUwHIhCjd3LieJwKVuJNr
+YohEnZzCoNaOj33/j5thiA4cZehCh6SgrIlFBIktLD7jW9Dwl88Gfcy+RrVa7XK5Hyqwr1JlCVsW
+pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
+8S/v9LyyP4X2aRTWOg9RG8D/13rLxFAApfYvCrf0quIUBWw2BXlq3+e3r7pU7j40d6P04VV3Zxws
+M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
+1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
+IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgmFu54xnb
+8toWIBUjVCsbT2PBkaa/e4oJX+S8jvU1jkcwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjEwMjAxMTMxNjA2WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBADgdAI/rUB7XaXnm/uDWcBNfmfWd
+C19Tn9wx8H3V2dcFTd4IYsqjvl3bYNyVQif8nlShdRzbYhx70XGQy1hsDQ0F5+7i5yDOtJyF/wc2
+4TmZSETmEi+K4q5MY30ZANjoxC8PpOIUVgIJKzJlaFWtreRrem9QYN8Bx/OcA3wJmjpS9dx8oihR
+ORGJGnOlh90WqX0GN75T2vHuSaX2XVkoVciBeQcVXOWNqQWBqgNw2vj+AJVYJ4QqjFrAfu/D2ziw
+i1NKObv5ivroQT8GuUgWeWuOtd1sII5VRu6Yz44X04GR1WaXDkGEzhNwXKIA4P9i9MOMPIQq90G8
+//gFQ655o6I=
+--000000000000114b7a05ba46285f--
