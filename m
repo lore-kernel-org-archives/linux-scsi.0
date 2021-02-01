@@ -2,77 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A39C7C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 20:28:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A522C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 20:58:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 541A964ECA
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 20:28:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04F5C64ECE
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 20:58:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229963AbhBAU2R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Feb 2021 15:28:17 -0500
-Received: from mail-pl1-f180.google.com ([209.85.214.180]:39429 "EHLO
-        mail-pl1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229646AbhBAU2R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2021 15:28:17 -0500
-Received: by mail-pl1-f180.google.com with SMTP id b17so10672813plz.6;
-        Mon, 01 Feb 2021 12:28:02 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=U4ktwnjaRtmZk6EQoaTVD7VLH/ZerIN7F1qnQ1tll7I=;
-        b=kWlGzJVcucH1INzDbcejNP9pnM9y37BvU260fpXYj7r+OdFM5u2CT+M0MjHwi1cmlz
-         Tp8VJgfhU3qGRUGXrlUPq8hAEDKaBxAmnmYRYhnF6h1F75WjKVdkJm1hGOW3uSl+bb2I
-         tnbw+U/RNpEo+FWtcqpYmd5KVWqREu+P0+YP6vrElo8iPwDLn2ND9IwK5HM8h+2IZxIk
-         j6AW++My+nFWwv7RWsNm8KV7LlA0jeGG0U7X8VQLnooUCohhb1FiQY6/cnX4uUxOWz8i
-         ZKqST7iRu9BXdSP/mf/xO5vJWy2H0fzARMdfgu6Oyhxue3AX25tL+ZWQANUOiTdxJS2L
-         Vbww==
-X-Gm-Message-State: AOAM530bQwjqRynv4V3q/KDnllE6/S0mul3lFmbsHogRyaNkKAj1ZZRK
-        q/6+hC5Em51KI9K69gaeLKTSnTtsNeY=
-X-Google-Smtp-Source: ABdhPJxsTFRGFSINdq7/ikXsc6+lSYpxRIMdEETAL7rgd7fuM5ecMeUKgJyGeVwv+9NxDJbjrY4t4Q==
-X-Received: by 2002:a17:902:6945:b029:e1:5877:2bb1 with SMTP id k5-20020a1709026945b02900e158772bb1mr6976826plt.21.1612211256067;
-        Mon, 01 Feb 2021 12:27:36 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:2f4:69d1:f66f:971d? ([2601:647:4000:d7:2f4:69d1:f66f:971d])
-        by smtp.gmail.com with ESMTPSA id b62sm19621643pfg.58.2021.02.01.12.27.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 01 Feb 2021 12:27:35 -0800 (PST)
-Subject: Re: [RFC PATCH v2 0/2] Fix deadlock in ufs
-To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>, cang@codeaurora.org,
-        martin.petersen@oracle.com, stern@rowland.harvard.edu
-Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <cover.1611719814.git.asutoshd@codeaurora.org>
- <84a182cc-de9c-4d6d-2193-3a44e4c88c8b@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <cbc1ea4a-e44c-9d7b-a6f6-73959dd8afb5@acm.org>
-Date:   Mon, 1 Feb 2021 12:27:33 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
+        id S229879AbhBAU6S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Feb 2021 15:58:18 -0500
+Received: from mail-1.ca.inter.net ([208.85.220.69]:48670 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229567AbhBAU6R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2021 15:58:17 -0500
+Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 1B2712EA084;
+        Mon,  1 Feb 2021 15:57:36 -0500 (EST)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
+        with ESMTP id v-OmWA89mqNO; Mon,  1 Feb 2021 15:43:04 -0500 (EST)
+Received: from [192.168.48.23] (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 925B82EA08D;
+        Mon,  1 Feb 2021 15:57:35 -0500 (EST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v3 0/4] io_uring iopoll in scsi layer
+To:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        linux-scsi@vger.kernel.org
+References: <20210201051619.19909-1-kashyap.desai@broadcom.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <ed737c08-e382-5654-09d6-0948b9411aac@interlog.com>
+Date:   Mon, 1 Feb 2021 15:57:35 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <84a182cc-de9c-4d6d-2193-3a44e4c88c8b@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+In-Reply-To: <20210201051619.19909-1-kashyap.desai@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/1/21 12:11 PM, Asutosh Das (asd) wrote:
-> Please can you take a look at this series.
-> Please let me know if you've any better suggestions for this.
+On 2021-02-01 12:16 a.m., Kashyap Desai wrote:
+> This patch series is to support io_uring iopoll feature
+> in scsi stack. This patch set requires shared hosttag support.
+> 
+> This patch set is created on top of 5.12/scsi-staging branch.
+> https://kernel.googlesource.com/pub/scm/linux/kernel/git/mkp/scsi/+/refs/heads/5.12/scsi-staging
 
-Hi Asutosh,
+Hi,
+I don't understand how this patchset works. My testing shows
+scsi_debug is broken and I will be sending a correcting patch
+shortly (similar to the one I sent you on 20210108).
 
-Against which kernel version has this patch series been prepared and
-tested? Have you noticed the following patch series that went into
-v5.11-rc1:
-https://lore.kernel.org/linux-scsi/20201209052951.16136-1-bvanassche@acm.org/
-?
+The scsi_debug driver is a simplified LLD that needs to know in
+advance whether a request/command issued to it will be using the
+.mq_poll callback. Perhaps you have found another way but one
+simple way to find that out is this test:
+    if (request->cmd_flags & REQ_HIPRI)
 
-Thanks,
+In the case of scsi_debug (after my patch) the delay associated with
+the command is not wired up to generate an event which leads to
+completion. Instead, callbacks through .mq_poll are expected and
+they will check if that delay has expired, if not the callback returns
+0. When the delay has expired and a .mq_poll is received then completion
+occurs.
 
-Bart.
+Doug Gilbert
+
+> v3 ->
+> - added reviewed-by tag
+> - Fix comment provided by Hannes for below patch.
+> https://patchwork.kernel.org/project/linux-scsi/patch/20201203034100.29716-3-kashyap.desai@broadcom.com/
+> - Fix Functional issue of poll_queues settings not working in v2.
+> 
+> v2 ->
+> - updated feedback from v1.
+> - added reviewed-by & tested-by tag
+> - remove flood of prints in scsi_debug driver during iopoll
+>    reported by Douglas Gilbert.
+> - added new patch to support to get shost from hctx.
+>    added new helper function "scsi_init_hctx"
+> 
+> v1 ->
+> Fixed warnings in scsi_debug driver.
+> Reported-by: kernel test robot <lkp@intel.com>
+> 
+> Kashyap Desai (4):
+>    add io_uring with IOPOLL support in scsi layer
+>    megaraid_sas: iouring iopoll support
+>    scsi_debug : iouring iopoll support
+>    scsi: set shost as hctx driver_data
+> 
+>   drivers/scsi/megaraid/megaraid_sas.h        |   3 +
+>   drivers/scsi/megaraid/megaraid_sas_base.c   |  87 +++++++++++--
+>   drivers/scsi/megaraid/megaraid_sas_fusion.c |  42 ++++++-
+>   drivers/scsi/megaraid/megaraid_sas_fusion.h |   2 +
+>   drivers/scsi/scsi_debug.c                   | 130 ++++++++++++++++++++
+>   drivers/scsi/scsi_lib.c                     |  29 ++++-
+>   include/scsi/scsi_cmnd.h                    |   1 +
+>   include/scsi/scsi_host.h                    |  11 ++
+>   8 files changed, 291 insertions(+), 14 deletions(-)
+> 
+> 
+> base-commit: a927ec3995427e9c47752900ad2df0755d02aba5
+> 
+
