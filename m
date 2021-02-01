@@ -2,114 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D36C4C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 08:45:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE041C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 09:04:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D50B64E33
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 08:45:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 586CF64E06
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 09:04:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232509AbhBAIpF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Feb 2021 03:45:05 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46780 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232452AbhBAIpD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 1 Feb 2021 03:45:03 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3825164E33;
-        Mon,  1 Feb 2021 08:44:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1612169062;
-        bh=zVmeZjSKPYgQEaLUS6EY0CKKZiQUZErvhF5byvqvT9I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=kd2PZHj4xQK0mXTWKDAAp3yKTqd52zZj9zgMyJK6iTCz4JyXgPCST/gYsPYWfN4yl
-         3AQMd0qvT+OGifw2/hyZUowy8hjyDCGQH0RBQYInyWnp9iCB7AjNI1nuBCHndjrVnq
-         3n8svPXM6fDw0N2q0Rokam3YohMy5TjRUrULEfwI=
-Date:   Mon, 1 Feb 2021 09:44:18 +0100
-From:   "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        Zang Leigang <zangleigang@hisilicon.com>,
-        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
-Subject: Re: [PATCH 3/8] scsi: ufshpb: Add region's reads counter
-Message-ID: <YBe/YjlF4GewQFi6@kroah.com>
-References: <20210127151217.24760-4-avri.altman@wdc.com>
- <20210127151217.24760-1-avri.altman@wdc.com>
- <CGME20210127151311epcas2p1696c2b73f3b4777ac0e7f603790b552f@epcms2p2>
- <1891546521.01612153501819.JavaMail.epsvc@epcpadp3>
- <DM6PR04MB657521540E2769C5F1BA2BBFFCB69@DM6PR04MB6575.namprd04.prod.outlook.com>
- <YBeuK92cgBkvYpk1@kroah.com>
- <DM6PR04MB6575018DEE12E7A5910FF2CBFCB69@DM6PR04MB6575.namprd04.prod.outlook.com>
- <YBe1QxSyMBKSTJA9@kroah.com>
- <DM6PR04MB65751A2F42801BAACF073F6FFCB69@DM6PR04MB6575.namprd04.prod.outlook.com>
+        id S232632AbhBAJDo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Feb 2021 04:03:44 -0500
+Received: from mail29.static.mailgun.info ([104.130.122.29]:56184 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232593AbhBAJDl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2021 04:03:41 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1612170209; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=ToLwJRD4UxZjNpGfb3cboR+GWoPA2k1KGynQOg7+1Xg=;
+ b=RoE/fNvJbLxvI+vHEpd0vE7UPG5CaGzWwTpGTiAd23VDUdMdURPwkYS4KFGTz0+JFeBZgTjy
+ Hw05BQ4lEB5k7S1ED7GvMXFMGKkd8pcp5ps7BjreC8RSir+D9NQm6Ouj7l4bt0dSm9VubY/U
+ ZadrK18bF/YGx0q8l2OWhj5rIO4=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 6017c3a3ab96aecb9f83a663 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 01 Feb 2021 09:02:27
+ GMT
+Sender: nitirawa=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 91DC9C43461; Mon,  1 Feb 2021 09:02:27 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: nitirawa)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AF2F2C433C6;
+        Mon,  1 Feb 2021 09:02:26 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DM6PR04MB65751A2F42801BAACF073F6FFCB69@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 01 Feb 2021 14:32:26 +0530
+From:   nitirawa@codeaurora.org
+To:     Bean Huo <huobean@gmail.com>
+Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
+        stummala@codeaurora.org, vbadigan@codeaurora.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, nitirawa@codeaurora.org
+Subject: Re: [PATCH V2] scsi: ufs: Add UFS3.0 in ufs HCI version check
+In-Reply-To: <63f00f514f1e912b8fb1d0c183e9167b60b3a5dc.camel@gmail.com>
+References: <1611058021-18611-1-git-send-email-nitirawa@codeaurora.org>
+ <63f00f514f1e912b8fb1d0c183e9167b60b3a5dc.camel@gmail.com>
+Message-ID: <d1b23943b6b3ae6c1f6af041cc592932@codeaurora.org>
+X-Sender: nitirawa@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Feb 01, 2021 at 08:17:59AM +0000, Avri Altman wrote:
-> > 
-> > On Mon, Feb 01, 2021 at 07:51:19AM +0000, Avri Altman wrote:
-> > > >
-> > > > On Mon, Feb 01, 2021 at 07:12:53AM +0000, Avri Altman wrote:
-> > > > > > > +#define WORK_PENDING 0
-> > > > > > > +#define ACTIVATION_THRSHLD 4 /* 4 IOs */
-> > > > > > Rather than fixing it with macro, how about using sysfs and make it
-> > > > > > configurable?
-> > > > > Yes.
-> > > > > I will add a patch making all the logic configurable.
-> > > > > As all those are hpb-related parameters, I think module parameters are
-> > > > more adequate.
-> > > >
-> > > > No, this is not the 1990's, please never add new module parameters to
-> > > > drivers.  If not for the basic problem of they do not work on a
-> > > > per-device basis, but on a per-driver basis, which is what you almost
-> > > > never want.
-> > > OK.
-> > >
-> > > >
-> > > > But why would you want to change this value, why can't the driver "just
-> > > > work" and not need manual intervention?
-> > > It is.
-> > > But those are a knobs each vendor may want to tweak,
-> > > So it'll be optimized with its internal device's implementation.
-> > >
-> > > Tweaking the parameters, as well as the entire logic, is really an endless
-> > task.
-> > > Some logic works better for some scenarios, while falling behind on others.
-> > 
-> > Shouldn't the hardware know how to handle this dynamically?  If not, how
-> > is a user going to know?
-> There is one "brain".
-> It is either in the device - in device mode, Or in the host - in host mode control.
-> The "brain" decides which region is active, thus carrying the physical address along with the logical -
-> minimizing context switches in the device's RAM.
+On 2021-01-30 00:55, Bean Huo wrote:
+> On Tue, 2021-01-19 at 17:37 +0530, Nitin Rawat wrote:
+>> As per JESD223D UFS HCI v3.0 spec, HCI version 3.0
+>> is also supported. Hence Adding UFS3.0 in UFS HCI
+>> version check to avoid logging of the error message.
+>> 
+>> Signed-off-by: Nitin Rawat <nitirawa@codeaurora.org>
+>> ---
+>>  drivers/scsi/ufs/ufshcd.c | 5 +++--
+>>  drivers/scsi/ufs/ufshci.h | 1 +
+>>  2 files changed, 4 insertions(+), 2 deletions(-)
+>> 
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 82ad317..54ca765 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -9255,8 +9255,9 @@ int ufshcd_init(struct ufs_hba *hba, void
+>> __iomem *mmio_base, unsigned int irq)
+>>         if ((hba->ufs_version != UFSHCI_VERSION_10) &&
+>>             (hba->ufs_version != UFSHCI_VERSION_11) &&
+>>             (hba->ufs_version != UFSHCI_VERSION_20) &&
+>> -           (hba->ufs_version != UFSHCI_VERSION_21))
+>> -               dev_err(hba->dev, "invalid UFS version 0x%x\n",
+>> +           (hba->ufs_version != UFSHCI_VERSION_21) &&
+>> +           (hba->ufs_version != UFSHCI_VERSION_30))
+>> +               dev_err(hba->dev, "invalid UFS HCI version 0x%x\n",
+>>                         hba->ufs_version);
 > 
-> There can be up to N active regions.
-> Activation and deactivation has its overhead.
-> So basically it is a constraint-optimization problem.
+> Hi Nitin
+> Except HCI 1.0 / 1.1 / 2.0 / 2.1 / 3.0, do you have the other UFS HCI
+> version? if no, current driver supports all of them,  instead of
+> scaling these check, and avoid logging of the error message, I suggest
+> you can directly delete these redundant checkup.
+> 
+> If there is a weird HCI version that not supported by the current
+> driver, you can only add an unsupported checkup list. thus, you don't
+> need to scale this useless checkup.
+> 
+> Bean
 
-So how do you solve it?  And how would you expect a user to solve it if
-the kernel can not?
+Hi Bean,
+That's a good suggestion. If nobody has any concern, i will
+post new patchset by removing these redundant check.
 
-You better document the heck out of these configuration options :)
-
-thanks,
-
-greg k-h
+Regards,
+Nitin
