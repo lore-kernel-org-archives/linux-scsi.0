@@ -6,43 +6,43 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99027C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 02:28:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF19EC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 02:40:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B25A64E10
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 02:28:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1C0B64E27
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Feb 2021 02:40:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231312AbhBAC2f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 31 Jan 2021 21:28:35 -0500
-Received: from mail-pg1-f175.google.com ([209.85.215.175]:33854 "EHLO
-        mail-pg1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229765AbhBAC21 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Jan 2021 21:28:27 -0500
-Received: by mail-pg1-f175.google.com with SMTP id o7so11046294pgl.1;
-        Sun, 31 Jan 2021 18:28:12 -0800 (PST)
+        id S231171AbhBACkL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 31 Jan 2021 21:40:11 -0500
+Received: from mail-pl1-f172.google.com ([209.85.214.172]:37565 "EHLO
+        mail-pl1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229765AbhBACkE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Jan 2021 21:40:04 -0500
+Received: by mail-pl1-f172.google.com with SMTP id q2so9152960plk.4;
+        Sun, 31 Jan 2021 18:39:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=ARGvhnM43cJPff0XjargiMIzKCXDBX6OR95+IhVDQ+w=;
-        b=CNTF5K9YuSv6GUgCLNv0dWWe6kV4Jsi0i1Ajr7I88kcGFu4GQaEidQh7+D90hvP3+v
-         /w1XrfqODWxjxLgMU75grzq+DIfwOnxxXWdSXc0npjXPHiCriDEJiC+L/GW1Aaxz/dKd
-         AOG0OXYXMpLjW47/Qtxs1I+bNrelvmAex6rd3b+56pejngRL0fUtwiuPIPK8N1b8iUQw
-         f8Lku4v2hvI8pEmMJR34bcw5E/LWTQ8gqSJVZPN1cMgDM/94SZ3U+apIr5mRoGprfYXo
-         xMp78rztMwHwDthmt+t40qZM+Ff+ZfoFDBkFpalLZT6YYcmSBViwc4v8OBxVnR/pZL/L
-         tjBw==
-X-Gm-Message-State: AOAM530A1huanHDTbkz6tZIrDWGfxnn1MjWmONRFJnvu6CnTzIR9UyED
-        D1PLderIdf+feKW+8kRlbez5wwu+EwQ=
-X-Google-Smtp-Source: ABdhPJyKK4eKW9eYtRPds+vHvAOxv3JfScWepWr8H+XKACzLjnzaOEBvFsgvVWDOKkYfD4SvgkZy2g==
-X-Received: by 2002:a63:9811:: with SMTP id q17mr15077930pgd.238.1612146465273;
-        Sun, 31 Jan 2021 18:27:45 -0800 (PST)
+        bh=tK0a4Xo4ptkxzB0G42n+8D8QUtFhHfX1haG6vf5kKJI=;
+        b=picoz5wfm4PyUtinBhrypPeTxVs3u7ME1vpyKZjYewmjbCzeCCTqA98lgv/ZlN0Omo
+         KB5Tw8dWiKeveivS3HOMc4CmoBbj0KyiE8C2nfp1WA6STaLL0ITrV1GP8ZvF2H5xgG1T
+         OkumO1jmv95AnvNauwlzt73KWKaCQgoVVIjSgYhVAZX5jEtULwYCNb16H2OTgqMbDtxj
+         gLnE7XNVabuM82u4khvlkEa6ZtJ/8VwqgnkyJLYFXeTRYLHofN4C96tvBGWFmln82O/N
+         iVnlTkMKKgsTKnezXoZJrDHAienpwGDHJamQ4k87NoEMneh7Y87YLypdTuZJ59cMolSM
+         MGhw==
+X-Gm-Message-State: AOAM533D4S2ucWsLJ2ZxPIieyL3hfHeTKZ8wOyD3lelm01StCPTQGypw
+        ZAqyluwND8YYp+LJTWLcpz84hArh42g=
+X-Google-Smtp-Source: ABdhPJzrzZFBKw1jvRRW5plU9Th08DTdyIDE43AFyvR2D2ccc0yltCkKp1gbLV8RZH6h6Ry/a4rz7A==
+X-Received: by 2002:a17:902:309:b029:e1:536b:4ab with SMTP id 9-20020a1709020309b02900e1536b04abmr4207825pld.65.1612147162696;
+        Sun, 31 Jan 2021 18:39:22 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:50bb:dc2d:705:e8e2? ([2601:647:4000:d7:50bb:dc2d:705:e8e2])
-        by smtp.gmail.com with ESMTPSA id hs21sm13450661pjb.6.2021.01.31.18.27.42
+        by smtp.gmail.com with ESMTPSA id k128sm15255359pfd.137.2021.01.31.18.39.20
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 31 Jan 2021 18:27:43 -0800 (PST)
-Subject: Re: [PATCH v3 2/3] scsi: ufs: Fix a race condition btw task
- management request send and compl
+        Sun, 31 Jan 2021 18:39:21 -0800 (PST)
+Subject: Re: [PATCH v3 3/3] scsi: ufs: Fix wrong Task Tag used in task
+ management request UPIUs
 To:     Can Guo <cang@codeaurora.org>
 Cc:     jaegeuk@kernel.org, asutoshd@codeaurora.org,
         nguyenb@codeaurora.org, hongwus@codeaurora.org,
@@ -53,19 +53,21 @@ Cc:     jaegeuk@kernel.org, asutoshd@codeaurora.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
+        Sujit Reddy Thumma <sthumma@codeaurora.org>,
+        Vinayak Holikatti <vinholikatti@gmail.com>,
+        Yaniv Gardi <ygardi@codeaurora.org>,
         open list <linux-kernel@vger.kernel.org>
 References: <1611807365-35513-1-git-send-email-cang@codeaurora.org>
- <1611807365-35513-3-git-send-email-cang@codeaurora.org>
- <73362ca9-93be-c38f-a881-4b7cf690fbc1@acm.org>
- <5f77542d66732003f0154a4e8a6ae13b@codeaurora.org>
- <56b26318de92eb88d663bbdc7096edcf@codeaurora.org>
+ <1611807365-35513-4-git-send-email-cang@codeaurora.org>
+ <8351747f-0ec9-3c66-1bdf-b4b73fcee698@acm.org>
+ <f0d1c6a196a044198647df6ca4b06efb@codeaurora.org>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <687cc78a-cb07-bd4f-e1c7-1ff0aeaef6b5@acm.org>
-Date:   Sun, 31 Jan 2021 18:27:41 -0800
+Message-ID: <cd83aa1d-444e-d4ba-c363-517dbf07891a@acm.org>
+Date:   Sun, 31 Jan 2021 18:39:19 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.6.1
 MIME-Version: 1.0
-In-Reply-To: <56b26318de92eb88d663bbdc7096edcf@codeaurora.org>
+In-Reply-To: <f0d1c6a196a044198647df6ca4b06efb@codeaurora.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -73,16 +75,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/28/21 10:29 PM, Can Guo wrote:
-> On second thought, actually the 1st fix alone is enough to eliminate the
-> race condition. Because blk_mq_tagset_busy_iter() only iterates over all
-> requests which are not in IDLE state, if blk_mq_start_request() is called
-> within the protection of host spin lock, ufshcd_compl_tm() shall not run
-> into the scenario where req->end_io_data is set but
-> REG_UTP_TASK_REQ_DOOR_BELL
-> has not been set. What do you think?
+On 1/28/21 9:57 PM, Can Guo wrote:
+> On 2021-01-29 11:15, Bart Van Assche wrote:
+>> On 1/27/21 8:16 PM, Can Guo wrote:
+>>> In __ufshcd_issue_tm_cmd(), it is not right to use hba->nutrs +
+>>> req->tag as
+>>> the Task Tag in one TMR UPIU. Directly use req->tag as the Task Tag.
+>>
+>> Why is the current code wrong and why is this patch the proper fix?
+>> Please explain this in the patch description.
+> 
+> req->tag is the tag allocated for one TMR, no?
 
-That sounds reasonable to me.
+Hi Can,
+ Commit e293313262d3 ("scsi: ufs: Fix broken task management command
+implementation") includes the following changes:
+
++       task_tag = hba->nutrs + free_slot;
+        task_req_upiup->header.dword_0 =
+                UPIU_HEADER_DWORD(UPIU_TRANSACTION_TASK_REQ, 0,
+-                                            lrbp->lun, lrbp->task_tag);
++                                            lun_id, task_tag);
+        task_req_upiup->header.dword_1 =
+                UPIU_HEADER_DWORD(0, tm_function, 0, 0);
+
+As one can see the value written in dword_0 starts at hba->nutrs. Was
+that code correct? If that code was correct, does your patch perhaps
+break task management support?
 
 Thanks,
 
