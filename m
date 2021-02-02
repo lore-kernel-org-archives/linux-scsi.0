@@ -2,127 +2,143 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-21.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FB42C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 22:06:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0832EC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 23:52:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5AABB64DF0
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 22:06:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDFC164F54
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 23:52:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232257AbhBBWG1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Feb 2021 17:06:27 -0500
-Received: from netrider.rowland.org ([192.131.102.5]:44613 "HELO
-        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S232210AbhBBWGV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2021 17:06:21 -0500
-Received: (qmail 464709 invoked by uid 1000); 2 Feb 2021 17:05:36 -0500
-Date:   Tue, 2 Feb 2021 17:05:36 -0500
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Asutosh Das <asutoshd@codeaurora.org>
-Cc:     cang@codeaurora.org, martin.petersen@oracle.com,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH v2 0/2] Fix deadlock in ufs
-Message-ID: <20210202220536.GA464234@rowland.harvard.edu>
-References: <cover.1611719814.git.asutoshd@codeaurora.org>
- <84a182cc-de9c-4d6d-2193-3a44e4c88c8b@codeaurora.org>
- <20210201214802.GB420232@rowland.harvard.edu>
- <20210202205245.GA8444@stor-presley.qualcomm.com>
+        id S230304AbhBBXwG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Feb 2021 18:52:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54222 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230128AbhBBXwD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Feb 2021 18:52:03 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A6F5964E38;
+        Tue,  2 Feb 2021 23:51:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612309881;
+        bh=bqlmAkMhKva2byst9LEVKv4NYTOjwULo7/hJYHFBF14=;
+        h=Date:From:To:Cc:Subject:From;
+        b=eJvrM6PiBK2LVNDfT4u3CtMm5eWGtaUNYimeH0yG1PazE22rtGpB8Fn68q+UaUAUh
+         U9nvuCIU0rr3FhWzcpgUVwWPnQ0IYUKb7nNo1OiAfu6X1cmKzDuOAdZ/dpRq5ySm8I
+         hjnmKsb6Alk5wZd7umxAEyu3Ef76h01lC1wTTHDJ8tSn2YoGmOvZF/Ej5CJBeQdbZt
+         8HUOf/v/qafG8O5MsWmHQCgdiehKIH8TsKXTzVOEBNs7EdXj2gcUr/UH4eTDgDpX9k
+         suyhGTtJWAXJl27j5rfmgdAhQBGK6w/OeCqR8cj+j13HHlT3aWaBluImagQgmgkLJb
+         jgIFxErjTVubg==
+Date:   Tue, 2 Feb 2021 17:51:18 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH v2][next] scsi: mpt3sas: Replace one-element array with
+ flexible-array in struct _MPI2_CONFIG_PAGE_IO_UNIT_3
+Message-ID: <20210202235118.GA314410@embeddedor>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210202205245.GA8444@stor-presley.qualcomm.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Feb 02, 2021 at 12:52:45PM -0800, Asutosh Das wrote:
-> On Mon, Feb 01 2021 at 13:48 -0800, Alan Stern wrote:
-> > On Mon, Feb 01, 2021 at 12:11:23PM -0800, Asutosh Das (asd) wrote:
-> > > On 1/27/2021 7:26 PM, Asutosh Das wrote:
-> > > > v1 -> v2
-> > > > Use pm_runtime_get/put APIs.
-> > > > Assuming that all bsg devices are scsi devices may break.
-> > > >
-> > > > This patchset attempts to fix a deadlock in ufs.
-> > > > This deadlock occurs because the ufs host driver tries to resume
-> > > > its child (wlun scsi device) to send SSU to it during its suspend.
-> > > >
-> > > > Asutosh Das (2):
-> > > >    block: bsg: resume scsi device before accessing
-> > > >    scsi: ufs: Fix deadlock while suspending ufs host
-> > > >
-> > > >   block/bsg.c               |  8 ++++++++
-> > > >   drivers/scsi/ufs/ufshcd.c | 18 ++----------------
-> > > >   2 files changed, 10 insertions(+), 16 deletions(-)
-> > > >
-> > > 
-> > > Hi Alan/Bart
-> > > 
-> > > Please can you take a look at this series.
-> > > Please let me know if you've any better suggestions for this.
-> > 
-> > I haven't commented on them so far because I don't understand them.
-> 
-> Merging thread with Bart.
-> 
-> > Against which kernel version has this patch series been prepared and
-> > tested? Have you noticed the following patch series that went into
-> > v5.11-rc1
-> > https://lore.kernel.org/linux-scsi/20201209052951.16136-1-bvanassche@acm.org/
-> Hi Bart - Yes this was tested with this series pulled in.
-> I'm on 5.10.9.
-> 
-> Thanks Alan.
-> I've tried to summarize below the problem that I'm seeing.
-> 
-> Problem:
-> There's a deadlock seen in ufs's runtime-suspend path.
-> Currently, the wlun's are registered to request based blk-pm.
-> During ufs pltform-dev runtime-suspend cb, as per protocol needs,
-> it sends a few cmds (uac, ssu) to wlun.
+There is a regular need in the kernel to provide a way to declare having
+a dynamically sized set of trailing elements in a structure. Kernel code
+should always use “flexible array members”[1] for these cases. The older
+style of one-element or zero-length arrays should no longer be used[2].
 
-That doesn't make sense.  Why send commands to the wlun at a time when 
-you know the wlun is already suspended?  If you wanted the wlun to 
-execute those commands, you should have sent them while the wlun was 
-still powered up.
+Refactor the code according to the use of a flexible-array member in
+struct _MPI2_CONFIG_PAGE_IO_UNIT_3, instead of a one-element array,
+and use the struct_size() helper to calculate the size for the
+allocation.
 
-> In this path, it tries to resume the ufs platform device which is actually
-> suspending and deadlocks.
+Also, this helps the ongoing efforts to enable -Warray-bounds and fix the
+following warnings:
 
-Because you have violated the power management layering.  The platform 
-device's suspend routine is meant to assume that all of its child 
-devices are already suspended and therefore it must not try to 
-communicate with them.
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:3193:63: warning: array subscript 24
+is above array bounds of ‘U16[1]’ {aka ‘short unsigned int[1]’}
+[-Warray-bounds]
 
-> Yes, if the host doesn't send any commands during it's suspend there wouldn't be
-> this deadlock.
-> Setting manage_start_stop would send ssu only.
-> I can't seem to find a way to send cmds to wlun during it's suspend.
+[1] https://en.wikipedia.org/wiki/Flexible_array_member
+[2] https://www.kernel.org/doc/html/v5.9/process/deprecated.html#zero-length-and-one-element-arrays
 
-You can't send commands to _any_ device while it is suspended!  That's 
-kind of the whole point -- being suspended means the device is in a 
-low-power state and therefore is unable to execute commands.
+Link: https://github.com/KSPP/linux/issues/79
+Link: https://github.com/KSPP/linux/issues/109
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+Changes in v2:
+ - Fix format specifier: use %zu for size_t type.
 
-> Would overriding sd_pm_ops for wlun be a good idea?
-> Do you've any other pointers on how to do this?
-> I'd appreciate any pointers.
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 11 +----------
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c   |  6 +++---
+ 2 files changed, 4 insertions(+), 13 deletions(-)
 
-I am not a good person to answer these questions, mainly because I know 
-so little about this.  What is the relation between the wlun and the sd 
-driver?  For that matter, what does the "w" in "wlun" stand for?
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index 43a3bf8ff428..908b0ca63204 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -987,21 +987,12 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1 {
+ 
+ /*IO Unit Page 3 */
+ 
+-/*
+- *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
+- *one and check the value returned for GPIOCount at runtime.
+- */
+-#ifndef MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX
+-#define MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX    (1)
+-#endif
+-
+ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_3 {
+ 	MPI2_CONFIG_PAGE_HEADER Header;			 /*0x00 */
+ 	U8                      GPIOCount;		 /*0x04 */
+ 	U8                      Reserved1;		 /*0x05 */
+ 	U16                     Reserved2;		 /*0x06 */
+-	U16
+-		GPIOVal[MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX];/*0x08 */
++	U16			GPIOVal[];		 /*0x08 */
+ } MPI2_CONFIG_PAGE_IO_UNIT_3,
+ 	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_3,
+ 	Mpi2IOUnitPage3_t, *pMpi2IOUnitPage3_t;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index c8a0ce18f2c5..ffb21f873058 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -3143,7 +3143,7 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 	Mpi2ConfigReply_t mpi_reply;
+ 	u16 backup_rail_monitor_status = 0;
+ 	u16 ioc_status;
+-	int sz;
++	size_t sz;
+ 	ssize_t rc = 0;
+ 
+ 	if (!ioc->is_warpdrive) {
+@@ -3157,11 +3157,11 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 		goto out;
+ 
+ 	/* allocate upto GPIOVal 36 entries */
+-	sz = offsetof(Mpi2IOUnitPage3_t, GPIOVal) + (sizeof(u16) * 36);
++	sz = struct_size(io_unit_pg3, GPIOVal, 36);
+ 	io_unit_pg3 = kzalloc(sz, GFP_KERNEL);
+ 	if (!io_unit_pg3) {
+ 		rc = -ENOMEM;
+-		ioc_err(ioc, "%s: failed allocating memory for iounit_pg3: (%d) bytes\n",
++		ioc_err(ioc, "%s: failed allocating memory for iounit_pg3: (%zu) bytes\n",
+ 			__func__, sz);
+ 		goto out;
+ 	}
+-- 
+2.27.0
 
-(And for that matter, what do "ufs" and "bsg" stand for?)
-
-You really need to direct these questions to the SCSI maintainers; I am 
-not in charge of any of that code.  I can only suggest a couple of 
-possibilities.  For instance, you could modify the sd_suspend_runtime 
-routine: make it send the commands whenever they are needed.  Or you 
-could add a callback pointer to a routine that would send the commands.
-
-Alan Stern
