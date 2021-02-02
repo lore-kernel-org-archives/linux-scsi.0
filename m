@@ -2,103 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16333C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 20:49:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA191C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 20:53:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B664164F61
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 20:49:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A860E64F61
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 20:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231768AbhBBUtZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Feb 2021 15:49:25 -0500
-Received: from mx2.suse.de ([195.135.220.15]:45704 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231343AbhBBUtX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Feb 2021 15:49:23 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1612298917; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0AiDbdfvkfioMr2lwDiljufHKju9PMRRBj3UXL4HZ2U=;
-        b=nrHj8GcFkfQdsyTjYI9IYx075zehjRRb2DXRpxDq3ytCLklOvbtmSrfVn19cgn+YQEDsV5
-        gGoCiQfdpGlSJM/Rf5vy9pzevfhcegcFgJ0VSaBKkhyWNPocsxt/Du5/OSa7qsio6tD5RT
-        uwCioXQBLJZsz6w/zguP5+ISrtZhzXE=
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id EFC5BAC55;
-        Tue,  2 Feb 2021 20:48:36 +0000 (UTC)
-Message-ID: <2e4cca87aaa27220e186025573ae7c24579e8b7b.camel@suse.com>
-Subject: Re: [PATCH] scsi: scsi_host_queue_ready: increase busy count early
-From:   Martin Wilck <mwilck@suse.com>
-To:     Don.Brace@microchip.com, john.garry@huawei.com,
-        buczek@molgen.mpg.de, martin.petersen@oracle.com,
-        ming.lei@redhat.com
-Cc:     jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, hare@suse.de,
-        Kevin.Barnett@microchip.com, pmenzel@molgen.mpg.de, hare@suse.com
-Date:   Tue, 02 Feb 2021 21:48:35 +0100
-In-Reply-To: <SN6PR11MB2848BC0AF824B45CA39A6348E1B59@SN6PR11MB2848.namprd11.prod.outlook.com>
-References: <20210120184548.20219-1-mwilck@suse.com>
-         <37579c64-1cdb-8864-6a30-4d912836f28a@huawei.com>
-         <231d9fcd-14f4-6abf-c41a-56315877a3dc@molgen.mpg.de>
-         <87b7f873-46c4-140b-ee45-f724b50b6aca@huawei.com>
-         <d48f98a9-77e3-dfe3-af5c-91b0ef45586b@molgen.mpg.de>
-         <361d5a2f-fb8e-c400-2818-29aea435aff2@huawei.com>
-         <SN6PR11MB2848BC0AF824B45CA39A6348E1B59@SN6PR11MB2848.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.38.2 
+        id S233881AbhBBUxT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Feb 2021 15:53:19 -0500
+Received: from mail29.static.mailgun.info ([104.130.122.29]:12348 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232829AbhBBUxR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2021 15:53:17 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1612299178; h=In-Reply-To: Content-Type: MIME-Version:
+ References: Message-ID: Subject: Cc: To: From: Date: Sender;
+ bh=Kc0BGWO7ac9Fj5088Vazpv6+ZSCVPkzHcUD4b+gryrg=; b=QZj3uVyDSLhlknPzy+C3igubjZyslnvWr+NiZu42mfmxh/N2EcCemPMH6RudLndEhTQ15jO9
+ l29ifw6hmnJWPDHF69J5JT8eeOkErK0C2vpWW2CGYOZvVd4gNZEht3MO0yI75zGaq11HSJDz
+ H4Qy+CE/iVB83ZgQHDIVXTk2+/U=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 6019bba4bfd9520723af1853 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 02 Feb 2021 20:52:52
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 9B274C433C6; Tue,  2 Feb 2021 20:52:51 +0000 (UTC)
+Received: from stor-presley.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7E5D2C433ED;
+        Tue,  2 Feb 2021 20:52:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7E5D2C433ED
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
+Date:   Tue, 2 Feb 2021 12:52:45 -0800
+From:   Asutosh Das <asutoshd@codeaurora.org>
+To:     Alan Stern <stern@rowland.harvard.edu>
+Cc:     cang@codeaurora.org, martin.petersen@oracle.com,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [RFC PATCH v2 0/2] Fix deadlock in ufs
+Message-ID: <20210202205245.GA8444@stor-presley.qualcomm.com>
+References: <cover.1611719814.git.asutoshd@codeaurora.org>
+ <84a182cc-de9c-4d6d-2193-3a44e4c88c8b@codeaurora.org>
+ <20210201214802.GB420232@rowland.harvard.edu>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20210201214802.GB420232@rowland.harvard.edu>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2021-02-02 at 20:04 +0000, Don.Brace@microchip.com wrote:
-> -----Original Message-----
-> From: John Garry [mailto:john.garry@huawei.com] 
-> Subject: Re: [PATCH] scsi: scsi_host_queue_ready: increase busy count
-> early
-> 
-> 
-> Confirmed my suspicions - it looks like the host is sent more
-> commands than it can handle. We would need many disks to see this
-> issue though, which you have.
-> 
-> So for stable kernels, 6eb045e092ef is not in 5.4 . Next is 5.10, and
-> I suppose it could be simply fixed by setting .host_tagset in scsi
-> host template there.
-> 
-> Thanks,
-> John
-> --
-> Don: Even though this works for current kernels, what would chances
-> of this getting back-ported to 5.9 or even further?
-> 
-> Otherwise the original patch smartpqi_fix_host_qdepth_limit would
-> correct this issue for older kernels.
+On Mon, Feb 01 2021 at 13:48 -0800, Alan Stern wrote:
+>On Mon, Feb 01, 2021 at 12:11:23PM -0800, Asutosh Das (asd) wrote:
+>> On 1/27/2021 7:26 PM, Asutosh Das wrote:
+>> > v1 -> v2
+>> > Use pm_runtime_get/put APIs.
+>> > Assuming that all bsg devices are scsi devices may break.
+>> >
+>> > This patchset attempts to fix a deadlock in ufs.
+>> > This deadlock occurs because the ufs host driver tries to resume
+>> > its child (wlun scsi device) to send SSU to it during its suspend.
+>> >
+>> > Asutosh Das (2):
+>> >    block: bsg: resume scsi device before accessing
+>> >    scsi: ufs: Fix deadlock while suspending ufs host
+>> >
+>> >   block/bsg.c               |  8 ++++++++
+>> >   drivers/scsi/ufs/ufshcd.c | 18 ++----------------
+>> >   2 files changed, 10 insertions(+), 16 deletions(-)
+>> >
+>>
+>> Hi Alan/Bart
+>>
+>> Please can you take a look at this series.
+>> Please let me know if you've any better suggestions for this.
+>
+>I haven't commented on them so far because I don't understand them.
 
-True. However this is 5.12 material, so we shouldn't be bothered by
-that here. For 5.5 up to 5.9, you need a workaround. But I'm unsure
-whether smartpqi_fix_host_qdepth_limit would be the solution.
-You could simply divide can_queue by nr_hw_queues, as suggested before,
-or even simpler, set nr_hw_queues = 1.
+Merging thread with Bart.
 
-How much performance would that cost you?
+>Against which kernel version has this patch series been prepared and
+>tested? Have you noticed the following patch series that went into
+>v5.11-rc1
+>https://lore.kernel.org/linux-scsi/20201209052951.16136-1-bvanassche@acm.org/
+Hi Bart - Yes this was tested with this series pulled in.
+I'm on 5.10.9.
 
-Distribution kernels would be yet another issue, distros can backport
-host_tagset and get rid of the issue.
+Thanks Alan.
+I've tried to summarize below the problem that I'm seeing.
 
-Regards
-Martin
+Problem:
+There's a deadlock seen in ufs's runtime-suspend path.
+Currently, the wlun's are registered to request based blk-pm.
+During ufs pltform-dev runtime-suspend cb, as per protocol needs,
+it sends a few cmds (uac, ssu) to wlun.
 
+In this path, it tries to resume the ufs platform device which is actually
+suspending and deadlocks.
 
+Yes, if the host doesn't send any commands during it's suspend there wouldn't be
+this deadlock.
+Setting manage_start_stop would send ssu only.
+I can't seem to find a way to send cmds to wlun during it's suspend.
+Would overriding sd_pm_ops for wlun be a good idea?
+Do you've any other pointers on how to do this?
+I'd appreciate any pointers.
 
-
-
-
-
-
-
+>
+>> [RFC PATCH v2 1/2] block: bsg: resume platform device before accessing:
+>>
+>> It may happen that the underlying device's runtime-pm is
+>> not controlled by block-pm. So it's possible that when
+>> commands are sent to the device, it's suspended and may not
+>> be resumed by blk-pm. Hence explicitly resume the parent
+>> which is the platform device.
+>
+>If you want to send a command to the underlying device, why do you
+>resume the underlying device's _parent_?  Why not resume the device
+>itself?
+>
+>Why is bsg sending commands to the underlying device in a way that
+>evades checks for whether the device is suspended?  Shouldn't the
+>device's driver already be responsible for automatically resuming the
+>device when a command is sent?
+>
+>> [RFC PATCH v2 2/2] scsi: ufs: Fix deadlock while suspending ufs host:
+>>
+>> During runtime-suspend of ufs host, the scsi devices are
+>> already suspended and so are the queues associated with them.
+>> But the ufs host sends SSU to wlun during its runtime-suspend.
+>> During the process blk_queue_enter checks if the queue is not in
+>> suspended state. If so, it waits for the queue to resume, and never
+>> comes out of it.
+>> The commit
+>> (d55d15a33: scsi: block: Do not accept any requests while suspended)
+>> adds the check if the queue is in suspended state in blk_queue_enter().
+>>
+>> Fix this, by decoupling wlun scsi devices from block layer pm.
+>> The runtime-pm for these devices would be managed by bsg and sg drivers.
+>
+>Why do you need to send a command to the wlun when the host is being
+>suspended?  Shouldn't that command already have been sent, at the time
+>when the wlun was suspended?
+>
+>Alan Stern
