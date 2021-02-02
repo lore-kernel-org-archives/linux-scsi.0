@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06310C433E6
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 08:32:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A797C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 08:32:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7758D64ED4
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 08:32:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 609F664EC3
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 08:32:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232643AbhBBIbw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Feb 2021 03:31:52 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:61803 "EHLO
+        id S232262AbhBBIcM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Feb 2021 03:32:12 -0500
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:61831 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232339AbhBBIbt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2021 03:31:49 -0500
+        with ESMTP id S232660AbhBBIcF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2021 03:32:05 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1612255213; x=1643791213;
+  t=1612255236; x=1643791236;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=gyCwZHq1v+lKDMIZojckDSZqvBp22l96r/2T9aYBWGo=;
-  b=Oxrnam8wNhyo4jApt7M3ah71kjtQu9WOBPOt2bUQ2GZ/sH5En8gfGEat
-   lRPC16vnBAG5VZQqV7w4P5qZ+YEso6r1jlhBDTDFeQeqquinPUVCp1ZSh
-   q8DrKvNrasNBNImc2taRfFRwSTEo4aEbBu1KleGNHUPHJ1zZUwVrHIKEw
-   nVXC+fFddndHdF6GWVxkHf4XUzeTb9u4gcUdzxnvvXbiwCKgWjaDHSxQB
-   syWU0jwKfaZLHTrIGmkT2Tx/gv7asRacbdUkOFvjYVSEewq60Vprhqbrk
-   ja++FUfkEcpm7EsTkIapY19OTmhwhE9oS0Sjk5ZBJ0Qyaal6yCeCBH1e3
-   A==;
-IronPort-SDR: XOIYKLC5FigogSIMGcYwj9PeIM4NnOCCYN43ogFscwKYqA2TkhseKM+9utSAXKzy6VzD/oQ2ME
- z35qIQG2FCR7SaE4AF4EsqlL29fPV+3BMrXGTv1PoYOJpbMX2b90mWdrVfahJ/dK63CN5sHrAh
- 90zJ6Dtcnclq+7r6gAVThk3KRn6+cmtjjJruH7c2ZrMJNwcxDNz2jo3t209dYvNKXhzbkWuYr0
- kqrZrO5G9DVH+d+1VVRO2lHBwnjVhbbmlUm731YbUvxCfewpte9ZbdEGQFbW5njh3ZiAffkAm/
- pC0=
+  bh=Uc6S6JLc9fPtNQ4x1i1Afa72HYjOgH8MRSDYSHHVYws=;
+  b=YR/1PubuPmk9TD00K2a2wGw9lcjuGE5qFdpMs8Cb3CVoQfCo4wHjK15L
+   cJ/zRdEyqZ1XOH4CN7GhlQy2gALTQvdKJwsJyLhiPWt9BwTOoJmopHKQi
+   TPTtBNoYeFSTUa4nDNAalt2LAVVgYKCrG5XlWBshoJ2aTOQm9N8So31y5
+   tJ6TwH10C9m7JJowOQqWQIdYPG3469uyK5qg/AfJlWMezR+j4sY2ONVtv
+   xa3XD0J3IgmcQqIwDukduU6ZVe0n2umja4DwOCb4EWI05xQvGIO4B0+Of
+   bxQ8j/nMoKjettcqQc/o8wD55+Ph3n1GJTGvz56rdMO9N4Akbzl4P9447
+   Q==;
+IronPort-SDR: RSyhR/xZ9s+xochbjeod4FBsP8cwS+9fHzZMY4e7/bZ5VfzavdF0FzG/0hMCI98RQ7VADAwt8E
+ lFeLnBX/QRufpUuAXVzo3Nemw+NbRLQ9E3s7kwX5Of8s2ME2L6oIBPlVYBzA5KG22i1xa3EJR3
+ fJTzq3wyJFv6sBxuilW5bkg4NKI83GovqOqhZdjWRPmv3A/xlJ3Aeow3l0tuYBYIIHckYdZJkN
+ +e3ezXsbh7PxZ+1MBe9zytZiMdCILaNcHLwhu3iBSOGhxIe0xyVkm93xxY6KpXV1V9un+wacfJ
+ SMg=
 X-IronPort-AV: E=Sophos;i="5.79,394,1602518400"; 
-   d="scan'208";a="262976952"
+   d="scan'208";a="262976972"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Feb 2021 16:38:33 +0800
-IronPort-SDR: hxiRJicvem0Hj3JMPJ1HoEbNROdYWcYmYw8kbzCldHMpayS6dr/bEvSInM8v1HsaYD+OrG55YS
- j5za5Jti6DRgBPWjS/VNf5riLGt9ta8k8TYJ7V09XTQsT7gmcK2oomp9b2bo8HLD5GcuFSKrfn
- OLV4B4E8sJjWyOghdJoIQb3TLt2AcXUC6QSttMsM8a7sGahea70dWDNomF7Wghq0CW79RsyX2M
- koU+UujbmiXqLXZP6qWESY8EdtYNhW+EZuUKKPtpGdhIpXjA1OtTHXpgGf4nmFRlSDeOlrwjra
- mLXnVAhAlUM+tuMymUihrJpV
+  by ob1.hgst.iphmx.com with ESMTP; 02 Feb 2021 16:38:57 +0800
+IronPort-SDR: M8eCInVLMSb8vP6NrF/mSJyNq31JYwAUQNrmTqVJ4+p9enmHNfY6ovK0z3lvPuluOgEii1qO5d
+ ccc+lkOVe+8bxqyMM53LrzuBaHcS7erYEL1sv7aBhetIrsY3oKb9SmtGIqblvM3IeNzyRKEuIV
+ ahLiKlQi5yYz3gk3mSHM8fLraNe2OVwpWzguzic0wOx/mCRMbS38HIuaIR7FuOGzm23VM5C0cJ
+ Nn1CdYNaQq65+ZW7MLesE79kk7ccXUV7W6jxdlniCnzmv1DJSWnso7sn+0O4fLrgXk9ETWyUQj
+ G1LTMovYuHA27XhpNv9EDEiS
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2021 00:14:51 -0800
-IronPort-SDR: NCcdU79cT8jUEwguT5PeUMP30wdlC/0cms/LNNm4R1TAlRM1+0Rv+gKIgQGtIvaaDItMrFIxam
- Vx5YlhCvFruRmBX5sMPB55vTVDvzG4DfsdDK82ql01MINUJkRSl+Z3LwFbuTypKAC9MUJar+5w
- +BW2lsJLKUoH5gdx2AJWIz2jvBjnDlAB6Vn/zVuL/zmSkJmpDJ+StyL6d5OaBTBNn+IgPgJtZa
- jgUqo7/vPkZwfkgHXYYC/dAehnzGHRhsV+yV+gLkdeiooXEnm9KpLHbf4DzlzVp/Rv09jE5YCF
- UUg=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2021 00:15:07 -0800
+IronPort-SDR: ahMIH6VADxBtNa9HQR4ouPqnrzLNVR5sfgIEPlCIwgA5y0A900GRbCSNSEluB9XypR9dcLcucz
+ rFlrZF2nEhAFyv48aWszEOudkBE8rAA+Cz+OM7fmKTQlcpCDOwMHSP2YYoHQ84vwF35UbsUJzO
+ 9sXSnB3+l2xLEhT/on0n2VP1K6b60U8iCXO1bpe36Sn9nPDFnITPBr6FzBCPbd8zbpU7XNYs50
+ P7Vr0gHTCF6zx+v6keMxBPRsR2On8ySPIekPfyXqANLy3yc3FiyXX5lUatgr2MWqiNMzELbhPc
+ TuM=
 WDCIronportException: Internal
 Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
-  by uls-op-cesaip01.wdc.com with ESMTP; 02 Feb 2021 00:30:39 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 02 Feb 2021 00:30:55 -0800
 From:   Avri Altman <avri.altman@wdc.com>
 To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -68,9 +68,9 @@ Cc:     gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
         Avi Shchislowski <avi.shchislowski@wdc.com>,
         Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
         stanley.chu@mediatek.com, Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v2 2/9] scsi: ufshpb: Add host control mode support to rsp_upiu
-Date:   Tue,  2 Feb 2021 10:30:00 +0200
-Message-Id: <20210202083007.104050-3-avri.altman@wdc.com>
+Subject: [PATCH v2 4/9] scsi: ufshpb: Make eviction depends on region's reads
+Date:   Tue,  2 Feb 2021 10:30:02 +0200
+Message-Id: <20210202083007.104050-5-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210202083007.104050-1-avri.altman@wdc.com>
 References: <20210202083007.104050-1-avri.altman@wdc.com>
@@ -80,139 +80,106 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In device control mode, the device may recommend the host to either
-activate or inactivate a region, and the host should follow. Meaning
-those are not actually recommendations, but more of instructions.
-
-On the contrary, in host control mode, the recommendation protocol is
-slightly changed:
-a) The device may only recommend the host to update a subregion of an
-   already-active region. And,
-b) The device may *not* recommend to inactivate a region.
-
-Furthermore, in host control mode, the host may choose not to follow any
-of the device's recommendations. However, in case of a recommendation to
-update an active and clean subregion, it is better to follow those
-recommendation because otherwise the host has no other way to know that
-some internal relocation took place.
+In host mode, eviction is considered an extreme measure.
+verify that the entering region has enough reads, and the exiting
+region has much less reads.
 
 Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- drivers/scsi/ufs/ufshpb.c | 35 +++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshpb.h |  6 ++++++
- 2 files changed, 41 insertions(+)
+ drivers/scsi/ufs/ufshpb.c | 42 ++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 39 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index 46f6a7104e7e..61de80a778a7 100644
+index de4866d42df0..bae7dca105da 100644
 --- a/drivers/scsi/ufs/ufshpb.c
 +++ b/drivers/scsi/ufs/ufshpb.c
-@@ -138,6 +138,8 @@ static void ufshpb_set_ppn_dirty(struct ufshpb_lu *hpb, int rgn_idx,
- 	else
- 		set_bit_len = cnt;
+@@ -18,6 +18,7 @@
  
-+	set_bit(RGN_FLAG_DIRTY, &rgn->rgn_flags);
-+
- 	if (rgn->rgn_state != HPB_RGN_INACTIVE &&
- 	    srgn->srgn_state == HPB_SRGN_VALID)
- 		bitmap_set(srgn->mctx->ppn_dirty, srgn_offset, set_bit_len);
-@@ -199,6 +201,11 @@ static bool ufshpb_test_ppn_dirty(struct ufshpb_lu *hpb, int rgn_idx,
- 	return false;
- }
+ #define WORK_PENDING 0
+ #define ACTIVATION_THRSHLD 4 /* 4 IOs */
++#define EVICTION_THRSHLD (ACTIVATION_THRSHLD << 6) /* 256 IOs */
  
-+static inline bool is_rgn_dirty(struct ufshpb_region *rgn)
-+{
-+	return test_bit(RGN_FLAG_DIRTY, &rgn->rgn_flags);
-+}
-+
- static u64 ufshpb_get_ppn(struct ufshpb_lu *hpb,
- 			  struct ufshpb_map_ctx *mctx, int pos, int *error)
- {
-@@ -380,8 +387,12 @@ static void ufshpb_put_map_req(struct ufshpb_lu *hpb,
- static int ufshpb_clear_dirty_bitmap(struct ufshpb_lu *hpb,
- 				     struct ufshpb_subregion *srgn)
- {
-+	struct ufshpb_region *rgn;
-+
- 	WARN_ON(!srgn->mctx);
- 	bitmap_zero(srgn->mctx->ppn_dirty, hpb->entries_per_srgn);
-+	rgn = hpb->rgn_tbl + srgn->rgn_idx;
-+	clear_bit(RGN_FLAG_DIRTY, &rgn->rgn_flags);
- 	return 0;
- }
+ /* memory management */
+ static struct kmem_cache *ufshpb_mctx_cache;
+@@ -644,6 +645,13 @@ static struct ufshpb_region *ufshpb_victim_lru_info(struct ufshpb_lu *hpb)
+ 		if (ufshpb_check_srgns_issue_state(hpb, rgn))
+ 			continue;
  
-@@ -814,17 +825,39 @@ static void ufshpb_rsp_req_region_update(struct ufshpb_lu *hpb,
- 	 */
- 	spin_lock(&hpb->rsp_list_lock);
- 	for (i = 0; i < rsp_field->active_rgn_cnt; i++) {
-+		struct ufshpb_region *rgn;
-+
- 		rgn_idx =
- 			be16_to_cpu(rsp_field->hpb_active_field[i].active_rgn);
- 		srgn_idx =
- 			be16_to_cpu(rsp_field->hpb_active_field[i].active_srgn);
- 
-+		rgn = hpb->rgn_tbl + rgn_idx;
-+		if (hpb->is_hcm &&
-+		    (rgn->rgn_state != HPB_RGN_ACTIVE || is_rgn_dirty(rgn))) {
-+			/*
-+			 * in host control mode, subregion activation
-+			 * recommendations are only allowed to active regions.
-+			 * Also, ignore recommendations for dirty regions - the
-+			 * host will make decisions concerning those by himself
-+			 */
++		/*
++		 * in host control mode, verify that the exiting region
++		 * has less reads
++		 */
++		if (hpb->is_hcm && rgn->reads > (EVICTION_THRSHLD >> 1))
 +			continue;
-+		}
 +
- 		dev_dbg(&hpb->sdev_ufs_lu->sdev_dev,
- 			"activate(%d) region %d - %d\n", i, rgn_idx, srgn_idx);
- 		ufshpb_update_active_info(hpb, rgn_idx, srgn_idx);
- 		hpb->stats.rb_active_cnt++;
+ 		victim_rgn = rgn;
+ 		break;
  	}
+@@ -799,7 +807,7 @@ static int ufshpb_issue_map_req(struct ufshpb_lu *hpb,
  
+ static int ufshpb_add_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
+ {
+-	struct ufshpb_region *victim_rgn;
++	struct ufshpb_region *victim_rgn = NULL;
+ 	struct victim_select_info *lru_info = &hpb->lru_info;
+ 	unsigned long flags;
+ 	int ret = 0;
+@@ -827,6 +835,16 @@ static int ufshpb_add_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
+ 			 * because the device could detect this region
+ 			 * by not issuing HPB_READ
+ 			 */
++
++			/*
++			 * in host control mode, verify that the entering
++			 * region has enough reads
++			 */
++			if (hpb->is_hcm && rgn->reads < EVICTION_THRSHLD) {
++				ret = -EACCES;
++				goto out;
++			}
++
+ 			victim_rgn = ufshpb_victim_lru_info(hpb);
+ 			if (!victim_rgn) {
+ 				dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
+@@ -1034,8 +1052,13 @@ static void ufshpb_run_active_subregion_list(struct ufshpb_lu *hpb)
+ 
+ 		rgn = hpb->rgn_tbl + srgn->rgn_idx;
+ 		ret = ufshpb_add_region(hpb, rgn);
+-		if (ret)
+-			goto active_failed;
++		if (ret) {
++			if (ret == -EACCES) {
++				spin_lock_irqsave(&hpb->rsp_list_lock, flags);
++				continue;
++			}
++			goto add_region_failed;
++		}
+ 
+ 		ret = ufshpb_issue_map_req(hpb, rgn, srgn);
+ 		if (ret) {
+@@ -1049,9 +1072,22 @@ static void ufshpb_run_active_subregion_list(struct ufshpb_lu *hpb)
+ 	spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
+ 	return;
+ 
++add_region_failed:
 +	if (hpb->is_hcm) {
 +		/*
-+		 * in host control mode the device is not allowed to inactivate
-+		 * regions
++		 * In host control mode, it is common that eviction trials
++		 * fail, either because the entering region didn't have enough
++		 * reads, or a poor-performing exiting region wasn't found.
++		 * No need to re-insert those regions to the "to-be-activated"
++		 * list.
 +		 */
-+		goto out_unlock;
++		return;
 +	}
 +
- 	for (i = 0; i < rsp_field->inactive_rgn_cnt; i++) {
- 		rgn_idx = be16_to_cpu(rsp_field->hpb_inactive_field[i]);
- 		dev_dbg(&hpb->sdev_ufs_lu->sdev_dev,
-@@ -832,6 +865,8 @@ static void ufshpb_rsp_req_region_update(struct ufshpb_lu *hpb,
- 		ufshpb_update_inactive_info(hpb, rgn_idx);
- 		hpb->stats.rb_inactive_cnt++;
- 	}
+ active_failed:
+ 	dev_err(&hpb->sdev_ufs_lu->sdev_dev, "failed to activate region %d - %d, will retry\n",
+ 		   rgn->rgn_idx, srgn->srgn_idx);
 +
-+out_unlock:
- 	spin_unlock(&hpb->rsp_list_lock);
- 
- 	dev_dbg(&hpb->sdev_ufs_lu->sdev_dev, "Noti: #ACT %u #INACT %u\n",
-diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-index afeb6365daf8..5ec4023db74d 100644
---- a/drivers/scsi/ufs/ufshpb.h
-+++ b/drivers/scsi/ufs/ufshpb.h
-@@ -48,6 +48,11 @@ enum UFSHPB_MODE {
- 	HPB_DEVICE_CONTROL,
- };
- 
-+enum HPB_RGN_FLAGS {
-+	RGN_FLAG_UPDATE = 0,
-+	RGN_FLAG_DIRTY,
-+};
-+
- enum UFSHPB_STATE {
- 	HPB_PRESENT = 1,
- 	HPB_SUSPEND,
-@@ -109,6 +114,7 @@ struct ufshpb_region {
- 
- 	/* below information is used by lru */
- 	struct list_head list_lru_rgn;
-+	unsigned long rgn_flags;
- };
- 
- #define for_each_sub_region(rgn, i, srgn)				\
+ 	spin_lock_irqsave(&hpb->rsp_list_lock, flags);
+ 	ufshpb_add_active_list(hpb, rgn, srgn);
+ 	spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
 -- 
 2.25.1
 
