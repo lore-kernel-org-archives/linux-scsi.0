@@ -2,115 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB224C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 08:25:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDC10C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 08:31:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9EDE464EDF
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 08:25:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C34264ED3
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Feb 2021 08:31:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231912AbhBBIZH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Feb 2021 03:25:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60638 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232409AbhBBISf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2021 03:18:35 -0500
-Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1AE7C06174A
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Feb 2021 00:17:54 -0800 (PST)
-Received: by mail-wm1-x32f.google.com with SMTP id m1so1455621wml.2
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Feb 2021 00:17:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=ACGAKZnb6JF4l8ikEp5I5AXDxCVsSoURups5lEzImcE=;
-        b=faVgTeBCLeqPvkrmO4za/Et/AIZPpbyYeOSQwvHRa9gdZ2t4QAgk5uHJv5ELGJyfWx
-         NkW06AKTrif2dFxuIWk9dry3jBm80jDcKSAwR+3ic2S+E2AAtxF4udrC71YF65Y0tO3u
-         7DeAp0qh96TSD3KmOfO+E1qFOaGHSmzNHJTP1Nb2G0+QA14xARDqk8MP+ptlN3uFwcKI
-         7vzCnPl/s0q93U1hzL1wUoiRTPZ8QqYlU8TMztPh09dh5E/z9izsSuQGckGZD+JXdAGe
-         tvLAIdwmpIJdI2YMcngrqC3yFgBxmKtzzy4z98byi4krI9324BskEq4vkdLQx9jKpy/8
-         N90w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=ACGAKZnb6JF4l8ikEp5I5AXDxCVsSoURups5lEzImcE=;
-        b=EyZl+pJ/yLkZR0LGKxZKfKfgCrwcZXqe3oIAJXvObj5EzRNeAxjbNOlWccCl+wSTE1
-         tGTVVVBcCwNyMSVGGUapzUaC/dufzNQXL4888LE/1UNOFkp09Yn4u2II3A4WhlvtU+NA
-         h3d3wJWiHJxVx2oQD6LLjdtUSFWHpsw1elT8OjrhYR33rIszY8zHzzpBipWTKqXJT9We
-         6JFH+WvF07sgsvZtM8zn26sHJPgBN6BC41VPaXpDSJlTH4dAI/Nfs/LseCehXi79wQgV
-         tig8d8f0qQiFmiNo8glW6K8DOmjxaPXiSeLkq5SOZ5D727hKXiBLg9j4hH9wcd7PdzLU
-         HUfQ==
-X-Gm-Message-State: AOAM532eAYZigOA1Sbi+vlx6XTKTIKrlGnsCXV9dATUCoHQSJf+p8TGd
-        p5PPOOHiZzFhJ79jab1RtQkXGw==
-X-Google-Smtp-Source: ABdhPJxxw8SaCGfa18oKKwhPP66vF4sF3f2ps9se2LMWTc4wfpbd+MEzuOcdQstMg0aiFEYB2sBnxw==
-X-Received: by 2002:a1c:e905:: with SMTP id q5mr2443624wmc.84.1612253873405;
-        Tue, 02 Feb 2021 00:17:53 -0800 (PST)
-Received: from dell ([91.110.221.188])
-        by smtp.gmail.com with ESMTPSA id d10sm5269530wrn.88.2021.02.02.00.17.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Feb 2021 00:17:52 -0800 (PST)
-Date:   Tue, 2 Feb 2021 08:17:51 +0000
-From:   Lee Jones <lee.jones@linaro.org>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Satish Kharat <satishkh@cisco.com>,
-        Lee Duncan <lduncan@suse.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: pmcraid: fix 'ioarcb' alignment warning
-Message-ID: <20210202081751.GZ4774@dell>
-References: <20210201170013.727112-1-arnd@kernel.org>
+        id S232584AbhBBIbc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Feb 2021 03:31:32 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:42108 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232553AbhBBIba (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2021 03:31:30 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1612254690; x=1643790690;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=OCdpwgqTjdpm1vlos+hHl6mfuQuYzHnv5sqBXpqxmSo=;
+  b=j6x7OTz/+E/YU5L412MBW7v97bH/oxZOBsub/uycRJExXa4Cyqt9CLG+
+   SLwl94Tl9J+46wAfXO+XXXc0FVmpWn78wdL4BqHiZ6pP1fq3jTH6/IcA5
+   qaH9M800KJw1CBsxP1mSGcbadFXgGJAAGfkGUiCVFLvVvvlQLqXJjzwsB
+   p2EcVTfA8ag9Cq0k+XXVKD824sPJXHji8Ld6qDw9KEkbEnVgOIY5j24ve
+   3tvjeHSnkxPLvfT20qm7yZMFjpkYP0H1R126wtAl3wyeeisGBmPDhm/0f
+   2gHauFU07shiuPoQOE+PvyXsNFndHnR8RZ6TEVITx6eHtPlyJhhhnkE4F
+   w==;
+IronPort-SDR: wqKg/QFIzArnUEoKi8p0fRYhJpnAVRZvACxjMmW9DdOCClARZdmkV1Mu8zQpBx7eAQxsuiGgMW
+ 8Kr4I/R/f+YliWlA2psDf1AMruKySzlYLInbtRInbJc8txOvlKwJn6ibTdEDFn9tii6PcHZ2Ao
+ H1mUbEmj+IVIQ7YYw80pGZrUaotGTKwVLa90j9sNLVq6ZZijGFI6gHSb+b0GIKzby/cet5IuEp
+ yYQRHMqBg76vagH156LCL+cA/rKHIUu/RpJ7HmiGc6P3Wlo/lWAWlCoNasRwkL4Dj3HfVFEAER
+ D+Y=
+X-IronPort-AV: E=Sophos;i="5.79,394,1602518400"; 
+   d="scan'208";a="160083458"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Feb 2021 16:30:20 +0800
+IronPort-SDR: KfGVjQcUVVcYlFXGsuizdapaM6AMtG7iEQ2F2F5CjTmWqw/5Jp2tTD10mpUv/uQfJR2vmxRUMC
+ yJ3sD0WKN4PXp1sO4mWlnn5zIehAJEkias02c/5qDHzTgjpEr3LbNbesJR28TifFXo2inVsWRN
+ x/mUOTAAJzbnQB02TKv9G3NZGzoPqk+CAfX30w2nenRrW96/dnO+btXzgyUDQ88GfbR9Q2Bthi
+ P7NDyQ5AJpr8bFdf84+zqXLrm7+WY/BWeL83FtupKDOhJACOZ7mbfvl4RJyDvZdwk281xe2otF
+ hSA3ZP24xVpFNuzlkDAi2lSI
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2021 00:14:29 -0800
+IronPort-SDR: gu3FR2BzrMtWzyiw24YhkIMG7b3CBCFYLfyNTfo7AT4m1Xp4slKrm5SC+nOSGH8FH5KF5WG9Jk
+ myjb+32azyYXUzklhENsGHjwYX5U/DBzUpQ0otwFXUNaPh1LFsjRZUYpE3GnBYzIGyDpuzCnuy
+ gogexgC//WM49sP6/8GN1UA1bKplPhewk6WjXyPA5FssxdY5e5g2QJnCCRFqdIGtISx5quGJuA
+ P8pourcFBdeVS4mwlDxwgLhIllGkZ20pMcFu0UO+bP6f+3lQQwgbIvyxQUqmdJRJR31oh1iAZU
+ guY=
+WDCIronportException: Internal
+Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
+  by uls-op-cesaip01.wdc.com with ESMTP; 02 Feb 2021 00:30:17 -0800
+From:   Avri Altman <avri.altman@wdc.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        alim.akhtar@samsung.com, asutoshd@codeaurora.org,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <avi.shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
+        stanley.chu@mediatek.com, Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v2 0/9] Add Host control mode to HPB
+Date:   Tue,  2 Feb 2021 10:29:58 +0200
+Message-Id: <20210202083007.104050-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210201170013.727112-1-arnd@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 01 Feb 2021, Arnd Bergmann wrote:
+v1 -> v2:
+ - attend Greg's and Daejun's comments
+ - add patch 9 making host mode parameters configurable
+ - rebase on Daejun's v19
 
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> Building with 'make W=1' enables -Wpacked-not-aligned, and this
-> warns about pmcraid because of incompatible alignment constraints for
-> pmcraid_passthrough_ioctl_buffer:
-> 
-> drivers/scsi/pmcraid.h:1044:1: warning: alignment 1 of 'struct pmcraid_passthrough_ioctl_buffer' is less than 32 [-Wpacked-not-aligned]
->  1044 | } __attribute__ ((packed));
->       | ^
-> drivers/scsi/pmcraid.h:1041:24: warning: 'ioarcb' offset 16 in 'struct pmcraid_passthrough_ioctl_buffer' isn't aligned to 32 [-Wpacked-not-aligned]
->  1041 |  struct pmcraid_ioarcb ioarcb;
-> 
-> The inner structure is documented as having 32 byte alignment here,
-> but is starts at a 16 byte offset in the outer structure, so it's never
-> actually aligned, as the outer structure is also marked 'packed'.
-> 
-> Lee Jones point this out as one of the last files that need to be changed
-> before the warning can be enabled by default.
-> 
-> Change the annotations in a way that avoids the warning but leaves the
-> layout unchanged, by removing the packing on the inner structure and
-> adding it to the outer one. The one-byte request_buffer[] array should
-> have been a flexible array member here, which is how I change it to
-> avoid extra padding from the alignment attribute.
 
-Looks good to me.
+The HPB spec defines 2 control modes - device control mode and host
+control mode. In oppose to device control mode, in which the host obey
+to whatever recommendation received from the device - In host control
+mode, the host uses its own algorithms to decide which regions should
+be activated or inactivated.
 
-Reviewed-by: Lee Jones <lee.jones@linaro.org>
+We kept the host managed heuristic simple and concise.
+
+Aside from adding a by-spec functionality, host control mode entails
+some further potential benefits: makes the hpb logic transparent and
+readable, while allow tuning / scaling its various parameters, and
+utilize system-wide info to optimize HPB potential.
+
+This series is based on Samsung's V19 device-control HPB1.0 driver, see
+msg-id: 20210129052848epcms2p6e5797efd94e6282b76ad9ae6c99e3ab5@epcms2p6
+in lore.kernel.org. The patches are also available in wdc ufs repo:
+https://github.com/westerndigitalcorporation/WDC-UFS-REPO/tree/hpb-v19
+
+This version was tested on Galaxy S20, and Xiaomi Mi10 pro.
+Your meticulous review and testing is mostly welcome and appreciated.
+
+Thanks,
+Avri
+
+Avri Altman (9):
+  scsi: ufshpb: Cache HPB Control mode on init
+  scsi: ufshpb: Add host control mode support to rsp_upiu
+  scsi: ufshpb: Add region's reads counter
+  scsi: ufshpb: Make eviction depends on region's reads
+  scsi: ufshpb: Region inactivation in host mode
+  scsi: ufshpb: Add hpb dev reset response
+  scsi: ufshpb: Add "Cold" regions timer
+  scsi: ufshpb: Add support for host control mode
+  scsi: ufshpb: Make host mode parameters configurable
+
+ drivers/scsi/ufs/ufshcd.c |   1 +
+ drivers/scsi/ufs/ufshcd.h |   2 +
+ drivers/scsi/ufs/ufshpb.c | 697 +++++++++++++++++++++++++++++++++++---
+ drivers/scsi/ufs/ufshpb.h |  47 +++
+ 4 files changed, 697 insertions(+), 50 deletions(-)
 
 -- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+2.25.1
+
