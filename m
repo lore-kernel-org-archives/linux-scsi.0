@@ -2,277 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FB36C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Feb 2021 08:22:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B1FCC433DB
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Feb 2021 08:27:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E72764F60
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Feb 2021 08:22:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CA4C64F68
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Feb 2021 08:27:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232427AbhBCIWX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Feb 2021 03:22:23 -0500
-Received: from out30-131.freemail.mail.aliyun.com ([115.124.30.131]:57999 "EHLO
-        out30-131.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232493AbhBCIWW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2021 03:22:22 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R641e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04420;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0UNkcr5h_1612340378;
-Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0UNkcr5h_1612340378)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Wed, 03 Feb 2021 16:19:43 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     sathya.prakash@broadcom.com
-Cc:     sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Subject: [PATCH] scsi: mpt3sas: convert sysfs sprintf/snprintf family to sysfs_emit
-Date:   Wed,  3 Feb 2021 16:19:36 +0800
-Message-Id: <1612340376-1549-1-git-send-email-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S232591AbhBCI0o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Feb 2021 03:26:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33266 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232427AbhBCI0n (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2021 03:26:43 -0500
+Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE577C061573;
+        Wed,  3 Feb 2021 00:26:02 -0800 (PST)
+Received: by mail-ed1-x529.google.com with SMTP id df22so9871496edb.1;
+        Wed, 03 Feb 2021 00:26:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=bkUQDZpVbfxnFaN4l3OLU7yirmVfzAanKG3Z2wgHBvM=;
+        b=JSGTtH/wxc9WGsK/YVkO/k4JJjnjhrlSVktaCaqdAVr8ElAh72G9ONhEuK59CMAPEf
+         E+UTUTsO5DT5lKdYcjLITsj8k5i/9vXXXJ88wEb9mN/sBCs1RjCKNUBryxmRTD3ZbcST
+         B6zwow5S5KeyXL19nUYJckTTTjBH+WW/PM7nXetBYHwS7zyZ1IIYDOnFLq6388vzqyq1
+         0fB3BKm4VZ4yOde7yVqe/kiMpAavE5stpVcWrrnGflvFQJFaXh+1sQe00J5L1mUNJaRy
+         XGoJZhvF0Og4smvHqjdGSO5xthxXPFQoQAmmkSuS7/u3u9tI31hwuCeDTRpPZp9B/iZR
+         VorQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=bkUQDZpVbfxnFaN4l3OLU7yirmVfzAanKG3Z2wgHBvM=;
+        b=t4y9+Td9RP53fXbbQJNqIjksW7b1gefkcrUMWy/jWqWrdCKD/7qi4z5k3JvCvzMdE1
+         0CNIv8SnMwroZmNgYM0FsmieNfnXe39PgyXCLHhdb47YgP0TaAGnhsnPXlZEUxnJrrrv
+         zG/ShRqyyOuEUcDPbMbDlWACiw2XFg2aMshI9NLTe5dpvLlqy7eAcXWkB3tgItVFYsl3
+         bC43t7y2mU4qCWa8huOVrcSkWw4hYrwg6+T4XODMTfT06wZargXsrayAC/6ApxFx47Tn
+         mofmeD+2bo1T2BNqzgPd0pYXRvpo40TdvEyB8l8IVONNZ9uD7TOp1vj+gAO16qkNUMBu
+         0IBg==
+X-Gm-Message-State: AOAM530n/cBVgB+ZS9EstZq4qLTw92qoBkANnQHu/q6jzj+Yx7b6uAXI
+        3n01FNB+2jKiz9zdciEL4Rs=
+X-Google-Smtp-Source: ABdhPJxGs8xk305nQ3+LiTJBqzpao0500W0opVAcOtfcT4PANfeF33k7xAzFavCP2fJptcJnjS7eSw==
+X-Received: by 2002:a05:6402:4ce:: with SMTP id n14mr1806580edw.309.1612340761618;
+        Wed, 03 Feb 2021 00:26:01 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bee1b.dynamic.kabel-deutschland.de. [95.91.238.27])
+        by smtp.googlemail.com with ESMTPSA id k3sm633363ejv.121.2021.02.03.00.26.00
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 03 Feb 2021 00:26:01 -0800 (PST)
+Message-ID: <4d160868dbe924e3109ce7f74c478a83f2a42502.camel@gmail.com>
+Subject: Re: [PATCH 2/4] scsi: ufs: Add exception event definitions
+From:   Bean Huo <huobean@gmail.com>
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Date:   Wed, 03 Feb 2021 09:25:59 +0100
+In-Reply-To: <20210119141542.3808-3-adrian.hunter@intel.com>
+References: <20210119141542.3808-1-adrian.hunter@intel.com>
+         <20210119141542.3808-3-adrian.hunter@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following coccicheck warning:
-
-./drivers/scsi/ufs/ufshcd.c: WARNING: use scnprintf or sprintf.
-
-Reported-by: Abaci Robot<abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 71 ++++++++++++++++++--------------------
- 1 file changed, 33 insertions(+), 38 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index c8a0ce1..1371831 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -2746,11 +2746,11 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
--	    (ioc->facts.FWVersion.Word & 0xFF000000) >> 24,
--	    (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
--	    (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
--	    ioc->facts.FWVersion.Word & 0x000000FF);
-+	return sysfs_emit(buf, "%02d.%02d.%02d.%02d\n",
-+			  (ioc->facts.FWVersion.Word & 0xFF000000) >> 24,
-+			  (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
-+			  (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
-+			  ioc->facts.FWVersion.Word & 0x000000FF);
- }
- static DEVICE_ATTR_RO(version_fw);
- 
-@@ -2771,11 +2771,11 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 
- 	u32 version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
- 
--	return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
--	    (version & 0xFF000000) >> 24,
--	    (version & 0x00FF0000) >> 16,
--	    (version & 0x0000FF00) >> 8,
--	    version & 0x000000FF);
-+	return sysfs_emit(buf, "%02d.%02d.%02d.%02d\n",
-+			  (version & 0xFF000000) >> 24,
-+			  (version & 0x00FF0000) >> 16,
-+			  (version & 0x0000FF00) >> 8,
-+			   version & 0x000000FF);
- }
- static DEVICE_ATTR_RO(version_bios);
- 
-@@ -2794,8 +2794,7 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%03x.%02x\n",
--	    ioc->facts.MsgVersion, ioc->facts.HeaderVersion >> 8);
-+	return sysfs_emit(buf, "%03x.%02x\n", ioc->facts.MsgVersion, ioc->facts.HeaderVersion >> 8);
- }
- static DEVICE_ATTR_RO(version_mpi);
- 
-@@ -2833,8 +2832,8 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%08xh\n",
--	    le32_to_cpu(ioc->iounit_pg0.NvdataVersionPersistent.Word));
-+	return sysfs_emit(buf, "%08xh\n",
-+			  le32_to_cpu(ioc->iounit_pg0.NvdataVersionPersistent.Word));
- }
- static DEVICE_ATTR_RO(version_nvdata_persistent);
- 
-@@ -2853,8 +2852,7 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%08xh\n",
--	    le32_to_cpu(ioc->iounit_pg0.NvdataVersionDefault.Word));
-+	return sysfs_emit(buf, "%08xh\n", le32_to_cpu(ioc->iounit_pg0.NvdataVersionDefault.Word));
- }
- static DEVICE_ATTR_RO(version_nvdata_default);
- 
-@@ -2933,7 +2931,7 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->io_missing_delay);
-+	return sysfs_emit(buf, "%02d\n", ioc->io_missing_delay);
- }
- static DEVICE_ATTR_RO(io_delay);
- 
-@@ -2955,7 +2953,7 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->device_missing_delay);
-+	return sysfs_emit(buf, "%02d\n", ioc->device_missing_delay);
- }
- static DEVICE_ATTR_RO(device_delay);
- 
-@@ -2976,7 +2974,7 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->facts.RequestCredit);
-+	return sysfs_emit(buf, "%02d\n", ioc->facts.RequestCredit);
- }
- static DEVICE_ATTR_RO(fw_queue_depth);
- 
-@@ -2998,8 +2996,7 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "0x%016llx\n",
--	    (unsigned long long)ioc->sas_hba.sas_address);
-+	return sysfs_emit(buf, "0x%016llx\n", (unsigned long long)ioc->sas_hba.sas_address);
- }
- static DEVICE_ATTR_RO(host_sas_address);
- 
-@@ -3018,7 +3015,7 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%08xh\n", ioc->logging_level);
-+	return sysfs_emit(buf, "%08xh\n", ioc->logging_level);
- }
- static ssize_t
- logging_level_store(struct device *cdev, struct device_attribute *attr,
-@@ -3054,7 +3051,7 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", ioc->fwfault_debug);
-+	return sysfs_emit(buf, "%d\n", ioc->fwfault_debug);
- }
- static ssize_t
- fwfault_debug_store(struct device *cdev, struct device_attribute *attr,
-@@ -3091,7 +3088,7 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", ioc->ioc_reset_count);
-+	return sysfs_emit(buf, "%d\n", ioc->ioc_reset_count);
- }
- static DEVICE_ATTR_RO(ioc_reset_count);
- 
-@@ -3119,7 +3116,7 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	else
- 		reply_queue_count = 1;
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", reply_queue_count);
-+	return sysfs_emit(buf, "%d\n", reply_queue_count);
- }
- static DEVICE_ATTR_RO(reply_queue_count);
- 
-@@ -3191,7 +3188,7 @@ void mpt3sas_ctl_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 
- 	/* BRM status is in bit zero of GPIOVal[24] */
- 	backup_rail_monitor_status = le16_to_cpu(io_unit_pg3->GPIOVal[24]);
--	rc = snprintf(buf, PAGE_SIZE, "%d\n", (backup_rail_monitor_status & 1));
-+	rc = sysfs_emit(buf, "%d\n", (backup_rail_monitor_status & 1));
- 
-  out:
- 	kfree(io_unit_pg3);
-@@ -3249,7 +3246,7 @@ struct DIAG_BUFFER_START {
- 		size = le32_to_cpu(request_data->Size);
- 
- 	ioc->ring_buffer_sz = size;
--	return snprintf(buf, PAGE_SIZE, "%d\n", size);
-+	return sysfs_emit(buf, "%d\n", size);
- }
- static DEVICE_ATTR_RO(host_trace_buffer_size);
- 
-@@ -3336,12 +3333,12 @@ struct DIAG_BUFFER_START {
- 	if ((!ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE]) ||
- 	   ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
- 	    MPT3_DIAG_BUFFER_IS_REGISTERED) == 0))
--		return snprintf(buf, PAGE_SIZE, "off\n");
-+		return sysfs_emit(buf, "off\n");
- 	else if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
- 	    MPT3_DIAG_BUFFER_IS_RELEASED))
--		return snprintf(buf, PAGE_SIZE, "release\n");
-+		return sysfs_emit(buf, "release\n");
- 	else
--		return snprintf(buf, PAGE_SIZE, "post\n");
-+		return sysfs_emit(buf, "post\n");
- }
- 
- static ssize_t
-@@ -3677,7 +3674,7 @@ struct DIAG_BUFFER_START {
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "0x%08x\n", ioc->drv_support_bitmap);
-+	return sysfs_emit(buf, "0x%08x\n", ioc->drv_support_bitmap);
- }
- static DEVICE_ATTR_RO(drv_support_bitmap);
- 
-@@ -3697,7 +3694,7 @@ struct DIAG_BUFFER_START {
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", ioc->enable_sdev_max_qd);
-+	return sysfs_emit(buf, "%d\n", ioc->enable_sdev_max_qd);
- }
- 
- /**
-@@ -3835,8 +3832,8 @@ struct device_attribute *mpt3sas_host_attrs[] = {
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 	struct MPT3SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE, "0x%016llx\n",
--	    (unsigned long long)sas_device_priv_data->sas_target->sas_address);
-+	return sysfs_emit(buf, "0x%016llx\n",
-+			  (unsigned long long)sas_device_priv_data->sas_target->sas_address);
- }
- static DEVICE_ATTR_RO(sas_address);
- 
-@@ -3857,8 +3854,7 @@ struct device_attribute *mpt3sas_host_attrs[] = {
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 	struct MPT3SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE, "0x%04x\n",
--	    sas_device_priv_data->sas_target->handle);
-+	return sysfs_emit(buf, "0x%04x\n", sas_device_priv_data->sas_target->handle);
- }
- static DEVICE_ATTR_RO(sas_device_handle);
- 
-@@ -3877,8 +3873,7 @@ struct device_attribute *mpt3sas_host_attrs[] = {
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 	struct MPT3SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n",
--			sas_device_priv_data->ncq_prio_enable);
-+	return sysfs_emit(buf, "%d\n", sas_device_priv_data->ncq_prio_enable);
- }
- 
- static ssize_t
--- 
-1.8.3.1
+On Tue, 2021-01-19 at 16:15 +0200, Adrian Hunter wrote:
+> For readability and completeness, add exception event definitions.
+> 
+> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
