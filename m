@@ -2,114 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A2FCC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Feb 2021 08:59:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4159DC433DB
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Feb 2021 09:46:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A05EE64E49
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Feb 2021 08:59:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5FFA64E11
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Feb 2021 09:46:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232972AbhBCI7B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Feb 2021 03:59:01 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:51363 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232897AbhBCI7A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 Feb 2021 03:59:00 -0500
-Received: from [192.168.0.2] (ip5f5aeaac.dynamic.kabel-deutschland.de [95.90.234.172])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id CF98220645D52;
-        Wed,  3 Feb 2021 09:58:15 +0100 (CET)
-Subject: Re: [PATCH] scsi: scsi_host_queue_ready: increase busy count early
-To:     John Garry <john.garry@huawei.com>, Martin Wilck <mwilck@suse.com>,
-        Don Brace <Don.Brace@microchip.com>
-Cc:     jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, hare@suse.de,
-        Kevin Barnett <Kevin.Barnett@microchip.com>, hare@suse.com,
-        Ming Lei <ming.lei@redhat.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        Donald Buczek <buczek@molgen.mpg.de>,
-        it+linux-scsi@molgen.mpg.de
-References: <20210120184548.20219-1-mwilck@suse.com>
- <37579c64-1cdb-8864-6a30-4d912836f28a@huawei.com>
- <231d9fcd-14f4-6abf-c41a-56315877a3dc@molgen.mpg.de>
- <87b7f873-46c4-140b-ee45-f724b50b6aca@huawei.com>
- <d48f98a9-77e3-dfe3-af5c-91b0ef45586b@molgen.mpg.de>
- <361d5a2f-fb8e-c400-2818-29aea435aff2@huawei.com>
- <SN6PR11MB2848BC0AF824B45CA39A6348E1B59@SN6PR11MB2848.namprd11.prod.outlook.com>
- <2e4cca87aaa27220e186025573ae7c24579e8b7b.camel@suse.com>
- <475c5b49-7a75-3ee7-6f8d-de5f400856da@huawei.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-Message-ID: <e60ed23d-676f-a1f9-81a1-44d2ca97f9da@molgen.mpg.de>
-Date:   Wed, 3 Feb 2021 09:58:15 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
-MIME-Version: 1.0
-In-Reply-To: <475c5b49-7a75-3ee7-6f8d-de5f400856da@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S232665AbhBCJqb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Feb 2021 04:46:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50366 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233554AbhBCJp7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2021 04:45:59 -0500
+Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28F01C06174A;
+        Wed,  3 Feb 2021 01:45:19 -0800 (PST)
+Received: by mail-ej1-x62f.google.com with SMTP id b9so15023075ejy.12;
+        Wed, 03 Feb 2021 01:45:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=YWGhO/R0pAuQVaURKT9FVGsTGqlU8Ef1ASYagpB/+c0=;
+        b=pJ8vRs6O+XElTVmGNBL6byZPwrIt5RdeLiz4AImc5Lfz+68+Oz92JscqqJH0JN424W
+         DKoB3TQ/aKp6roVHnGS6hVkSeA4IuFG6hKzNkV+6SRD8ONI5cmOZ6BYr9bj58m8Az+hP
+         0E3CqFUcC+yehoN7nXmJwgjVeP02fELJ8hLkzkzbS1ExVkqAKxxvKfSlIFGtRCg8BkhM
+         mqMTgH27fcmfKSn6z/z4dUWEFZe2YhHVwrmOM4RCxJHvaQEfGkjcqAGS4mFb+7t8LUxP
+         LuV9B8AXMqlpKNU0++I4F0lyf460rF1rd76VhfHPg9swnszuMc01B3fLINP7BHh34Cjf
+         Pldg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=YWGhO/R0pAuQVaURKT9FVGsTGqlU8Ef1ASYagpB/+c0=;
+        b=INQK3YNwojwwpR0kLI19AYdFeyloPgtAdtiPzh7lIsIpjZTd3ZDPAZkbdN5uUDR3Mb
+         YLN/v6+XOfu3n+dr2W5VS/f7Hf27H9rNcua2LdZOsCoc2wkNKv+8cquIcmYwgF2IXGEe
+         Oawz34yDjvo8bKIvxkpeft+zJjEVbZBM+nNEOAhIqzNDSHNQEa5sbCwiDK46Zr+HLu/P
+         8kv5+AWbgbWbPFkuuv32RnduB7swxNJ/+m9NxQX2P+Ue00BLgGw+QCW2GaMFJozk+9KJ
+         tnXnGJenRrIgF36gLAuYCdUzN9LukEbiv33cFyPbMyOj3WaJv7rxOjyfNfSieu7S7XrK
+         OhwQ==
+X-Gm-Message-State: AOAM532eHLwVWM0hoAI4vILljbGGrhoBeiVBCuPloSPlsz/16r7iCk98
+        IfRxMZxYA6ef3qs6vR6cgmU=
+X-Google-Smtp-Source: ABdhPJxa3RPqJgg+EqWVA5YI4G9NkuPkYgT1jCDjhNqVF3BzO/Q4qa5aCc9T7yEnAoutFBWkXt1tLw==
+X-Received: by 2002:a17:906:a851:: with SMTP id dx17mr2253260ejb.537.1612345517919;
+        Wed, 03 Feb 2021 01:45:17 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bee1b.dynamic.kabel-deutschland.de. [95.91.238.27])
+        by smtp.googlemail.com with ESMTPSA id bz20sm767023ejc.38.2021.02.03.01.45.16
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 03 Feb 2021 01:45:17 -0800 (PST)
+Message-ID: <85b6cbb805e97081a676aeb30fe76f059eba192e.camel@gmail.com>
+Subject: Re: [PATCH 3/4] scsi: ufs-debugfs: Add user-defined
+ exception_event_mask
+From:   Bean Huo <huobean@gmail.com>
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Date:   Wed, 03 Feb 2021 10:45:15 +0100
+In-Reply-To: <20210119141542.3808-4-adrian.hunter@intel.com>
+References: <20210119141542.3808-1-adrian.hunter@intel.com>
+         <20210119141542.3808-4-adrian.hunter@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dear Linux folks,
-
-
-Am 03.02.21 um 09:49 schrieb John Garry:
-> On 02/02/2021 20:48, Martin Wilck wrote:
->> On Tue, 2021-02-02 at 20:04 +0000, Don.Brace@microchip.com wrote:
->>> -----Original Message-----
->>> From: John Garry [mailto:john.garry@huawei.com]
->>> Subject: Re: [PATCH] scsi: scsi_host_queue_ready: increase busy count early
->>>
->>>
->>> Confirmed my suspicions - it looks like the host is sent more
->>> commands than it can handle. We would need many disks to see this
->>> issue though, which you have.
->>>
->>> So for stable kernels, 6eb045e092ef is not in 5.4 . Next is 5.10, and
->>> I suppose it could be simply fixed by setting .host_tagset in scsi
->>> host template there.
->>>
->>> Thanks,
->>> John
->>> -- 
->>> Don: Even though this works for current kernels, what would chances
->>> of this getting back-ported to 5.9 or even further?
->>>
->>> Otherwise the original patch smartpqi_fix_host_qdepth_limit would
->>> correct this issue for older kernels.
->>
->> True. However this is 5.12 material, so we shouldn't be bothered by
->> that here. For 5.5 up to 5.9, you need a workaround. But I'm unsure
->> whether smartpqi_fix_host_qdepth_limit would be the solution.
->> You could simply divide can_queue by nr_hw_queues, as suggested before,
->> or even simpler, set nr_hw_queues = 1.
->>
->> How much performance would that cost you?
->>
->> Distribution kernels would be yet another issue, distros can backport
->> host_tagset and get rid of the issue.
+On Tue, 2021-01-19 at 16:15 +0200, Adrian Hunter wrote:
+> Allow users to enable specific exception events via debugfs.
 > 
-> Aren't they (distros) the only issue? As I mentioned above, for 5.10 
-> mainline stable, I think it's reasonable to backport a patch to set 
-> .host_tagset for the driver.
+> The bits enabled by the driver ee_drv_ctrl are separated from the
+> bits
+> enabled by the user ee_usr_ctrl. The control mask ee_mask_ctrl is the
+> logical-or of those two. A mutex is needed to ensure that the masks
+> match
+> what was written to the device.
 
-Indeed. As per the Linux kernel Web site [1]: 5.5 and 5.9 are not 
-maintained anymore (EOL) upstream. So, if distributions decided to go 
-with another Linux kernel release, it’s their job to backport things. If 
-the commit message is well written, and contains the Fixes tag, their 
-tooling should be able to pick it up.
+Hallo Adrian
 
+Would you like sharing the advantage of this debugfs node comparing to
+sysfs node "attributes/exception_event_control(if it is writable)"?
+what is the value of this?
+Also, now I can disable/enable UFS event over ufs-bsg.
 
-Kind regards,
+Bean
 
-Paul
-
-
-[1]: https://www.kernel.org/
