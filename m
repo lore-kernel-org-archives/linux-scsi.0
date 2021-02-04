@@ -2,101 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B57DAC433DB
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 15:27:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BAC3C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 16:13:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 69A1664DF5
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 15:27:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E12B764F4D
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 16:13:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237284AbhBDP1S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Feb 2021 10:27:18 -0500
-Received: from mga09.intel.com ([134.134.136.24]:45849 "EHLO mga09.intel.com"
+        id S237846AbhBDQJl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Feb 2021 11:09:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41506 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237248AbhBDPZu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 4 Feb 2021 10:25:50 -0500
-IronPort-SDR: 44f/ual3VdHpLTvG9d6Fy322EUPOp8WxG3JOIviZQvTl6Q2TGbAWmycHC+t4LN22QunWgLHCMb
- pgY8qF1Dfj7w==
-X-IronPort-AV: E=McAfee;i="6000,8403,9884"; a="181410965"
-X-IronPort-AV: E=Sophos;i="5.79,401,1602572400"; 
-   d="scan'208";a="181410965"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2021 07:25:04 -0800
-IronPort-SDR: SrO7SuHPlHWikYTbmVkiTa5ISyfDiJUSCKwuFoung0M3TjbN4kIAtNn0oR+Sovzcr7MQ6KvNcT
- HFpS9bPOGFJw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.79,401,1602572400"; 
-   d="scan'208";a="483274049"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.149]) ([10.237.72.149])
-  by fmsmga001.fm.intel.com with ESMTP; 04 Feb 2021 07:25:02 -0800
-Subject: Re: [PATCH 3/4] scsi: ufs-debugfs: Add user-defined
- exception_event_mask
-To:     Bean Huo <huobean@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>
-References: <20210119141542.3808-1-adrian.hunter@intel.com>
- <20210119141542.3808-4-adrian.hunter@intel.com>
- <85b6cbb805e97081a676aeb30fe76f059eba192e.camel@gmail.com>
- <b7a812ed-8965-76cf-3d05-be2486fcaed2@intel.com>
- <372c6dbbda18cccdcf2b053ee87f2ada9640e2b8.camel@gmail.com>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <a4102d62-9101-c69d-c030-ec6a6bad7fc7@intel.com>
-Date:   Thu, 4 Feb 2021 17:25:05 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S237835AbhBDQJa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 Feb 2021 11:09:30 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B37B264F6A;
+        Thu,  4 Feb 2021 16:08:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1612454929;
+        bh=3IAPQCCNYn5V60zzmVrr36a9HtGkWRc99HBODO496rg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SbGXD2TYulwmiUQymxa1aJ6E9gI3aWMtXnHBN5sPgXVrkpXtCbu+v0ZHPxelGg3kf
+         OCEK7Js2lxNP6OULdJSFxzpq9FfVDxZmJCQNHvO0+GZx0qC8q1M2tspWFbV3CM2ebX
+         7vYTxzaaKedXFZO77mr+R3l5UMy2ORCNsruSabzc=
+Date:   Thu, 4 Feb 2021 17:08:46 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>
+Cc:     Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jens Axboe <axboe@kernel.dk>, Matt Mackall <mpm@selenic.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Peter Huewe <peterhuewe@gmx.de>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Haren Myneni <haren@us.ibm.com>,
+        Breno =?iso-8859-1?Q?Leit=E3o?= <leitao@debian.org>,
+        Nayna Jain <nayna@linux.ibm.com>,
+        Paulo Flabiano Smorigo <pfsmorigo@gmail.com>,
+        Steven Royer <seroyer@linux.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Cristobal Forno <cforno12@linux.ibm.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Dany Madden <drt@linux.ibm.com>, Lijun Pan <ljp@linux.ibm.com>,
+        Sukadev Bhattiprolu <sukadev@linux.ibm.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Michael Cyr <mikecyr@linux.ibm.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-integrity@vger.kernel.org,
+        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: Re: [PATCH] vio: make remove callback return void
+Message-ID: <YBwcDmtefa2WmS90@kroah.com>
+References: <20210127215010.99954-1-uwe@kleine-koenig.org>
 MIME-Version: 1.0
-In-Reply-To: <372c6dbbda18cccdcf2b053ee87f2ada9640e2b8.camel@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210127215010.99954-1-uwe@kleine-koenig.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/02/21 4:58 pm, Bean Huo wrote:
-> On Wed, 2021-02-03 at 11:56 +0200, Adrian Hunter wrote:
->>>
->>> Hallo Adrian
->>
->> Hi Bean
->>
->> Thanks for the review
->>
->>>
->>> Would you like sharing the advantage of this debugfs node comparing
->>> to
->>> sysfs node "attributes/exception_event_control(if it is writable)"?
->>
->> Primarily this is being done as a debug interface, but the user's
->> exception
->> events also need to be kept separate from the driver's ones.
->>
->>> what is the value of this?
->>
->> To be able to determine if the UFS device is being affected by
->> exception events.
->>
->>> Also, now I can disable/enable UFS event over ufs-bsg.
->>
->> That will be overwritten by the driver when it updates the e.g. bkops
->> control, or sometimes also suspend/resume.
+On Wed, Jan 27, 2021 at 10:50:10PM +0100, Uwe Kleine-König wrote:
+> The driver core ignores the return value of struct bus_type::remove()
+> because there is only little that can be done. To simplify the quest to
+> make this function return void, let struct vio_driver::remove() return
+> void, too. All users already unconditionally return 0, this commit makes
+> it obvious that returning an error code is a bad idea and makes it
+> obvious for future driver authors that returning an error code isn't
+> intended.
 > 
-> Hi Adrian
-> yes, I saw that, they are not tracked by driver.
+> Note there are two nominally different implementations for a vio bus:
+> one in arch/sparc/kernel/vio.c and the other in
+> arch/powerpc/platforms/pseries/vio.c. I didn't care to check which
+> driver is using which of these busses (or if even some of them can be
+> used with both) and simply adapt all drivers and the two bus codes in
+> one go.
 > 
-> I have one question that why "exception_event_mask" cannot represent
-> the current QUERY_ATTR_IDN_EE_CONTROL value? only after writing it.
+> Note that for the powerpc implementation there is a semantical change:
+> Before this patch for a device that was bound to a driver without a
+> remove callback vio_cmo_bus_remove(viodev) wasn't called. As the device
+> core still considers the device unbound after vio_bus_remove() returns
+> calling this unconditionally is the consistent behaviour which is
+> implemented here.
+> 
+> Signed-off-by: Uwe Kleine-König <uwe@kleine-koenig.org>
+> ---
+> Hello,
+> 
+> note that this change depends on
+> https://lore.kernel.org/r/20210121062005.53271-1-ljp@linux.ibm.com which removes
+> an (ignored) return -EBUSY in drivers/net/ethernet/ibm/ibmvnic.c.
+> I don't know when/if this latter patch will be applied, so it might take
+> some time until my patch can go in.
 
-It represents only the user's exception events (ee_usr_mask), not the
-driver's ones (ee_drv_mask) as well.  ee_usr_mask is updated after
-successfully ensuring it is set on the device.
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
