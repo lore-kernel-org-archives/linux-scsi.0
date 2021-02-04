@@ -2,225 +2,191 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F0E3C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 08:49:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AE36C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 09:34:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5752D64F4D
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 08:49:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25B3964F55
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 09:34:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235233AbhBDItX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Feb 2021 03:49:23 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:43018 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235218AbhBDItL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2021 03:49:11 -0500
+        id S234689AbhBDJeb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Feb 2021 04:34:31 -0500
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:23158 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233628AbhBDJeP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2021 04:34:15 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1612428550; x=1643964550;
+  t=1612431894; x=1643967894;
   h=from:to:cc:subject:date:message-id:references:
    content-transfer-encoding:mime-version;
-  bh=GLNFOvBvurWz3clG/6kugpYUDqIj4coVXGW89HvCqaI=;
-  b=pVUZdzFCKsBjaEBSN4euZwxX9NEdViU1vLO1BA4Q6yIGoVzF9Z6+fh0N
-   svi0Q/M2LiyG2u8OtxXHwVlcNGv1/1Iq2h4X/YWtM9gytn96ZgIPpTqHP
-   Sj7TIZntO2NIu1oZsc6IC6DY/dl6E47HgGbD8gLpNcMNpuXBRArBOVFt/
-   4TNjxgveiDpo4V+AJ/XyF6P8nBwFoPd83zKRFDPyfOhTOMFypUeJzQZ9b
-   5kZQFY493NYDXoIhngU7FtD771EE/ryAj2//aOu9+svQASplDvifgf9YE
-   IgA87ofW3GL0BZovK7vjzpJg4FS4mh8/cSsRFDFyz/JP6SfwydWcoLOFu
-   A==;
-IronPort-SDR: tPou8lo8/34MR27+Gn94z4Vc2CEmO+eFE4BeNXWqm2Ma1Cok5uo0SJHgta2jMhSzdg5kSNEhyf
- Hhp7x9aOUhEkDF6uKeE4GqNHj5kM75+WafQhCd32sBWGzaglyeY3oW9Tk0a581U4PfGjEXZEIc
- 1Ekiq8sWQf73CvQyf2/yTOpjnKijQRL2VTnJnTpZ8rlbsIi7/DBRTTtw83ch87xmCu9UJlMZ1z
- qnwtaApI8e02d9JkCU49HQBqDqrRbUN1B59UGE8yvvU9u5CAb39vHScpreBN3A/YKc8ybio4w7
- NHU=
+  bh=/v+UehsQwS/ZG+XPawqxOiSSLBGh7ofKGzN2z+q0zbo=;
+  b=JC9JIAnMdoPII2zAv0RB2cWw4BTr4Y4hjREz+WB9yHEovSJXNDJKk5gj
+   blrvLXy2r4HgIYnUbMg5diXdQA6i43Nv1gT3Jzbd8kcRl9XWWyK/nJJW0
+   djKtnquTN0t5Yf/KjNEh8OgVV+La7W/Ow2rZcXVd6zXtwsT7c897EEOtQ
+   JLjNx4AkxgiSsCUFFyUoh8yzratTy0+og0V4nko2VIJ27f5sXGvOFDOLB
+   eNLs2RR4pR5iEAGrvgkt8J+A/Ub7ecY0eomoRHhzpk0uOWKuTCY6ile+A
+   A9W9nb2ppeFYcCEi9vDj7DKvovcBFV1GeOvl86pl7bnfAMDI2rh6/pv3o
+   Q==;
+IronPort-SDR: nL+K9OBZyCJQB1X/EOtOd/9n2ixDFmjQQ9g+BAsxmovqa/Vzvcjk0kwJVclhhYevkSvERSw+/g
+ 4bh97FAYXwPhTdd/ST/kcRtI3kZVJusBYBbF1BFzVvdAp37flarZl90W4Uw8pfg6fhOG92bzr9
+ /6A3ypAKa9zmUEpNQ8d9IvU8fyM4NrPgKdDT4+JkWTAVJ43nhkH0eBAAselmaE3vClT67hei1n
+ HDzjKfuUo5d4ibgA0HzlUCGJ5f65XK5I9n8dedrMziUqom15ukr4YrvIQrrmpZARB2KhqYcMSb
+ zxQ=
 X-IronPort-AV: E=Sophos;i="5.79,400,1602518400"; 
-   d="scan'208";a="159100734"
-Received: from mail-sn1nam04lp2057.outbound.protection.outlook.com (HELO NAM04-SN1-obe.outbound.protection.outlook.com) ([104.47.44.57])
-  by ob1.hgst.iphmx.com with ESMTP; 04 Feb 2021 16:47:53 +0800
+   d="scan'208";a="263195900"
+Received: from mail-dm6nam10lp2106.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.106])
+  by ob1.hgst.iphmx.com with ESMTP; 04 Feb 2021 17:43:14 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hkqVmBsmd5I7MVukLt7PA9BeOGVwFqt1MRDQTCIPFMiRZmWOivJj1tPrtP2vSKVmHwgZBLf/qu+xaMjzhNKm/Px64FKV9g8G46OLuzPgXzXk8AvMgcEx+JDR1j1c79wPhdNC1tSbRWaga53wTd9M+fX87/qFvOT46+uQW6XG72aDFHQeOAWsLGkbRPYQO7OiGzCBRA/QZCh1Q2ba34TbCFLK7J+ggHb0y9LfqW3dHk9ms6weQX9LVUPhOZMXNxW9CM7g/W/m8MR9dNpmq/rqOW2hM2d7o3+dnNF/8nao20M5yK1Z//1BAGdLfjd2wFFNksSAWvrDqD0P49AGjMEE2g==
+ b=Kyq/IwjsNDUr5DCAK+UnrsvLDVddej+HGUrIMAZEredvA4aw7pF+ZA2ii/dv5AH66QUOEylkv0FL9+P9P5xnWL3O7LQGINtwRDARNipugblBE2AHUSOa+iD2O1r1L8yZu/2ZH8zgkfRFtyVZn4tLV97fq/H1ctfGC+ME6meEi6lqGuiUmuvNEjiPqiY6YFYFQGYJCXJ2AYtJynZXMbVPCnZHOX+gdj436LJGtqdUIPti9pA4rkELWwZPDi5lMWZ0Av3AutTdNiUjNh4kOc97UO/BCoXvOVjdvl8i8X1PrXoESOY9KS5hr1Ira7SRcfEg/2l3VDW8fkmwbvk2prUCzg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qU1ap/2Xjoqi9mxjiMaIZCj5QnKurDuIrScvs7VafhI=;
- b=WnD7O6pkTDbUCOcaTUhYlN2Yl6hCQUYjyjPd6D4bABi+ZsjG4uhCPUU3V9oryVCK6XVNk4XjGz95p4uDyC8KjIyPcaQyt0A69JK/J+coWV3OvUgQNBN6x0zjgq5U7//HJGwoZDurliwX3VBHj4uLYt2zPDXNWdfsavS989qCA2s9DgFfdFKUl13NFO0bl3BoDqmqhLY0w5RQKFNY3bteZaleGLCE7ltAf7iybZrNoPxfeVwh4g2OCfp+O7Jbt/Nw9/QdP5j8L6J+0u19K0A9xmIE5Ejm7/U+WB5xoFZal41uglphKltOmmTJNNM7pUP9Xj9a242cOdOHhQJg0O51Jw==
+ bh=k5KHF0iYIOjW62NVtRpH3N8n5sVd/y9uSX9lkzBha40=;
+ b=cB9XSGBMAzcDybaXALwBFUpEqEDEKvn9wYWoS2rGGFxjdWTYeVdv1ircXHdleN2cMm9NnUWLK2JUuFTwtajQUJgJRsbQvlJ9yMi4fGm1M89+aQzhOO0fSeeP9jD6zKQRGbu5gVFxNFWxuWPFvWjQHBul4Q/CH6RIeVZw2xjoiKl+zDXokP7Pcz+6e469MJq9EgeqPMBfsv5bhhQY/pLHTXPq8exk6a4lLkcobAVrp7vv4XfvIxGfOxPAn+6KO3yTLI7DSa4TrXGkIm2jv3fx9kQHo3C9I4tpwFw/HjHpZ62JUhJu6qgFHOQ+VU+BFMNgUfRVM677a2mqiIWIf1ohug==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qU1ap/2Xjoqi9mxjiMaIZCj5QnKurDuIrScvs7VafhI=;
- b=egjYuRzpW95hQ9RRTeBrq8AC/ktlir+c36SmXGn6qknnZIu9UF0lmuGJiLf99DIEJIfjHbNE6VCjoNDF/yfzsO3ymmlk1t51rRZgnV6Cq/8nTQBqfDgd8bcNwChMAq8X3qVeRsCRZU4H+zlGGV8R3aMtLrETxohAGZaXpcU2RR4=
-Received: from BL0PR04MB6514.namprd04.prod.outlook.com (2603:10b6:208:1ca::23)
- by BL0PR04MB4740.namprd04.prod.outlook.com (2603:10b6:208:43::31) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3805.19; Thu, 4 Feb
- 2021 08:47:51 +0000
-Received: from BL0PR04MB6514.namprd04.prod.outlook.com
- ([fe80::b880:19d5:c7fe:329d]) by BL0PR04MB6514.namprd04.prod.outlook.com
- ([fe80::b880:19d5:c7fe:329d%8]) with mapi id 15.20.3805.024; Thu, 4 Feb 2021
- 08:47:51 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <Keith.Busch@wdc.com>
-Subject: Re: [PATCH v4 0/8] block: add zone write granularity limit
-Thread-Topic: [PATCH v4 0/8] block: add zone write granularity limit
-Thread-Index: AQHW9TEj5Ey4b7FkN0Gz3QH5CcuabQ==
-Date:   Thu, 4 Feb 2021 08:47:51 +0000
-Message-ID: <BL0PR04MB65147501739ABF4F27B72290E7B39@BL0PR04MB6514.namprd04.prod.outlook.com>
-References: <20210128044733.503606-1-damien.lemoal@wdc.com>
+ bh=k5KHF0iYIOjW62NVtRpH3N8n5sVd/y9uSX9lkzBha40=;
+ b=cEo56uWlFfSQfuTVei+EYieBCjkB96cA2rGNjjxPonRvuLSl5ZWZDQQo7FfJr/taTSukSL6WeORGbn6lByqkHOMbRz7oVoCFMxm9vPzIoJaKO7wU7rdKoWhJezXTnFQr7mQfiPIbxHKmNALh3OPQA86g5cBTAqCgf6jEoDiTlh0=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ (2603:10b6:803:47::21) by SN4PR0401MB3599.namprd04.prod.outlook.com
+ (2603:10b6:803:4e::16) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3825.19; Thu, 4 Feb
+ 2021 09:33:07 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::c19b:805:20e0:6274]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::c19b:805:20e0:6274%7]) with mapi id 15.20.3805.024; Thu, 4 Feb 2021
+ 09:33:07 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Yang Li <yang.lee@linux.alibaba.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "brking@us.ibm.com" <brking@us.ibm.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] scsi: ipr: Remove unneeded return variable
+Thread-Topic: [PATCH] scsi: ipr: Remove unneeded return variable
+Thread-Index: AQHW+sdPjcW8ddogR0uDkhrg8dfJcw==
+Date:   Thu, 4 Feb 2021 09:33:06 +0000
+Message-ID: <SN4PR0401MB35981D9E1825962920A0CB6E9BB39@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <1612423568-81006-1-git-send-email-yang.lee@linux.alibaba.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2400:2411:43c0:6000:61dd:3796:e34d:42c6]
+authentication-results: linux.alibaba.com; dkim=none (message not signed)
+ header.d=none;linux.alibaba.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [2001:a62:1542:e101:51f:6b4a:2171:57e6]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 92ec8639-a4c8-42fe-74bb-08d8c8e98e74
-x-ms-traffictypediagnostic: BL0PR04MB4740:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BL0PR04MB4740E17989F145A7C471425CE7B39@BL0PR04MB4740.namprd04.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: 74315d2f-1025-4765-2642-08d8c8efe109
+x-ms-traffictypediagnostic: SN4PR0401MB3599:
+x-microsoft-antispam-prvs: <SN4PR0401MB359945A238CF102BB9D6AF949BB39@SN4PR0401MB3599.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:8273;
+x-ms-oob-tlc-oobclassifiers: OLM:3044;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: olf0hj8r6ny7H4WEIZkNXogHSZvFhS/BqmE4Pa2B9gpiKY9BaLUEHrCVPqin//X2JdaTy0zn0MoLOhY/lUiYddgmLdwi4GafBrtgFYurb+3WZIc8QTcVh3SieptuJYRGgi6PMd64+/rqrxbgL5ukPlsGxNC5a7V/xPZ22lczXAJRCotWmmb55pZx2rcuooNwnFQ6qHkqMyOUY9I6yfmfck1wsgAtNvlnnLAq3qKoX2I51W8T6uf4I7tJ/VBO2/oJOgRR1oy4fr5l6+h/i9m0F0lIXD6xLfvLT7ka0Lh85CTq9/0o96aBnIQ3daKQZjJKXZ/nWyspIGMd0OBngc9qx4ULMx59U9Zu2l2JeH9EIj6A5YR3Yl/6WwDI3TWxM1df0h6Wfx9LsHpl2TQq+FbjZ+A471qDe+fZGfeLvkKy1hnROikEn1DTc+bWgcu0jTa524DiVj5BO/T6n/xHcdle6e5YEC4wWVaEINWWkyUo9EGvospj4LeRKn8iZAttJy2nM5gy7ww2LVoyJ/82wPzADw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR04MB6514.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(376002)(136003)(366004)(346002)(39860400002)(9686003)(91956017)(71200400001)(110136005)(478600001)(8676002)(54906003)(55016002)(66556008)(2906002)(316002)(66446008)(64756008)(66946007)(66476007)(76116006)(53546011)(52536014)(83380400001)(4326008)(33656002)(5660300002)(7696005)(86362001)(186003)(6506007)(8936002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?tE6/3O+wNvKxuvg1IUR96b4Nm65akWtnnJgshcDikCD5BiO+vjzMM9quUln4?=
- =?us-ascii?Q?Va0ISZ/oxPdHQO7hCMIiv20+ArACTKA7PWfWMA5j+h/z1njpW10KH8x3fy0O?=
- =?us-ascii?Q?x7Ye8KMH04/I7DhFzw3lQGq4Dd0zMfFoWueyQa1Unc4C+Te2aiO7aAy2ahwJ?=
- =?us-ascii?Q?f/r6BZI7cVTBGD+PL9lfifCK2CX/+sOD63WqIg3lYX8/4zWlK7y2OHp1Fco2?=
- =?us-ascii?Q?/kKbyQyDZRUxifDrk0PZYUsDW27vmMLA7ojKpYx/BEjo45C/YiFYGjcHxS92?=
- =?us-ascii?Q?1sQZZdW9Yv4gc6flNL163VPiQ2sc8bfLJh+pcr8ibVrNNuhL/cP0gczDI3lX?=
- =?us-ascii?Q?JFgfJpLjjTbHGxorCE3lpK5Kk7UH+pjAdFpR1+hX3Vr4rp3mIrq04kLVloDg?=
- =?us-ascii?Q?e3kRQS7/Qk6opK8FAV/HpuLDQBC8A6h3245Jpua4qI7o8o6n5MPSAfJrKTrE?=
- =?us-ascii?Q?BqaFHS/XdRQcPS2/gasEi0Nu1U2UHeZO5ZIuBbTqKmOBqx+532kIZ+nbdWAh?=
- =?us-ascii?Q?ZYZTsaitHejTnt+UJi8UXURMiOZBTOThUS1lobQABYr+ERwuxxytG5OgGFDT?=
- =?us-ascii?Q?iKcppON3HIC76QXC9Qub1yHSGks+J5enwdnHGsa984Gw48W35p8As6yKEkgo?=
- =?us-ascii?Q?vsiqGFqLZlJhyjjl93f7lyQjN3TJtnJ1soxDlYzO66EY3Cz8G3uZ06x9o5C9?=
- =?us-ascii?Q?3kvCotDlvgPrLysXkJg5idtcjNGvFHbOUhz9VpRQ/Vn/7SFcHo0t5CNjfEE+?=
- =?us-ascii?Q?FENWzdeW/Aiik9Gfbxzs21VdOHDfHwIOSrhAkTJoC4Pz9gznzbUuPXBLUCEg?=
- =?us-ascii?Q?9uNCrIBJB/Bjyb3de3EBwjwnuUGYI2K4klKXeWzldpG2O4CqvqBeJSzKL8Pt?=
- =?us-ascii?Q?n9UZVFfnlriR/d+E92IoXWFADuga+1JQOJ6sIfnYswYkbOkY8pN/+XPptCS/?=
- =?us-ascii?Q?f2KRsz0JoSzPby1J7cjVFbn/ClJjo8O73k6/lwNKnv8xOSlc4NEqvPgpdD3U?=
- =?us-ascii?Q?eFXf0VoaPTqmkiR8qmbRzmywyMGeksdK/rAQSuUOEmbJeHFcoiwPjH3zSZ0R?=
- =?us-ascii?Q?VA5QhBnmZtBubKiZbgGkuyNJURRHwH9tcMfNEPT2StIiy3GrW9SoFbTbFPxo?=
- =?us-ascii?Q?hfyCSv46juqAljYlU28d+7Y8Je0sMcnpRXRc9tS7SbB+XSw5Vrt2Rcw2vbXL?=
- =?us-ascii?Q?MAdEUbRn6ejdTU0Eb31hycSzA8Bmc4cR1AlJWSZaLbI+dVF6xkO763KKg15d?=
- =?us-ascii?Q?wH3o9P5yxf+WPnt0PepIVF/29WXlEoTmFCRODxPONtpwsPSFArlQya8GqkXs?=
- =?us-ascii?Q?kb9VnjgEXyRrsiZHmqJWRAaGQZOYtXvCgbPVWq21viseFCnVHa+VkEuE+18l?=
- =?us-ascii?Q?nrq3Ho9ngEHbXG+8c55gkoGMOlgIERvIDzLKmTKxef4rVBNF3A=3D=3D?=
+x-microsoft-antispam-message-info: CwsKxaPVqIIzw+8k2k6K+i498EV4Qe01cTGRXbEmsZEeB1NVAo2ij7BuRhd8HIR33ezo7ud/Mt82bzrI61zfQ/aR8GjmnibFal3EsdXvvK0LRx9sCcSmb4iMr1mvtvKwLGr1T53akF9X8kgsBeyCaKJdAp59qYOdZBqJY3myFCKDY1SdWL2y+gWsILtaoWSYDn8Bd6hDGHXtAqFCpd93dFL66aMzf2KRolfZ89SaBJ77Xf8L063RRCs88U3P5BN8JMogTPCzDR6bFX6kVJgsScPIZa5v8yh7zS1ZhSJkxNBJDYvKH3eqWRokhtVSsbJQfSh+A5g3CApbmu7jukAC6ZIhz+FK/VM9OgxpI6DZKYEmc9j2r+/yFWwx2jdlcY+0RYBjfgnMfANIfnlzHHddWnMe82LT8dxxKMyqDEWe1q5NnoD/gBzm06RXcojs/xSCp6XfpWsz2uRRBtaSqsl9U1O3fZeYuTwDHE9F7YSaHEMH3LcKWs7yG+NdikWS6m4XyYkLPiPPpSo7kDL8VVhz5Q==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(366004)(136003)(39860400002)(376002)(346002)(9686003)(54906003)(71200400001)(110136005)(8936002)(83380400001)(5660300002)(7696005)(55016002)(86362001)(33656002)(52536014)(2906002)(186003)(8676002)(6506007)(66556008)(64756008)(66476007)(66446008)(4326008)(53546011)(66946007)(91956017)(76116006)(316002)(478600001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?x+6vbGW9I9n9m3s5yAbqRW/j8N4gvtX61cveivpztQTUY/ZD2Of5qm5Hf2e4?=
+ =?us-ascii?Q?8GP6Xaqdj1fzVbbO1/SQJ0ktuMYOHreym62z2UpRBDdWU54lrYtNba56NemK?=
+ =?us-ascii?Q?HrdTldTRIMFCGA7agNJv5DEtDgQMx2OBfIx6Oq1Th0usWOnRR9vfvPbQ6Yj4?=
+ =?us-ascii?Q?n/CenN1eQOTNv35CK4Wgz8USQkwg3Q2wgmwlX9WkSw8xN2uXJldhNUXXwcr/?=
+ =?us-ascii?Q?tS18XNhZwh2UD7MHFYMQGSAx6RmK/1WHrgaNZJfGXu0mbXu1vBR7QAZLV2ys?=
+ =?us-ascii?Q?OJbsVPH9AvvulS24qzZwDVH1XFOO+ZIs3FzWTUtg6hkqCTkhGsef3gfo3MYU?=
+ =?us-ascii?Q?f1MyC6Tv784LyeeMxzzy9C9LCyQuV7FOWYokOj57zQBhUEyb68tyAJYDG1zo?=
+ =?us-ascii?Q?3MyYvOSgfwMoRaj65qjKXzPkoHFss6Cw4mnkWZBmAC98NKVfGiSjvbl+AgE1?=
+ =?us-ascii?Q?XDdMqeKZv2Fy3b6S5RSEtt3bgDYoxPay43e0ZBKpHTYxqqzKDjrzC7omkOOM?=
+ =?us-ascii?Q?ZEXDKkInKbNaJnHiC7w0fulWXJMTH5INfusWi2tCqffDxfIBURRstaL1CbTw?=
+ =?us-ascii?Q?+1PMonUJ4MR84yh/9fhF4RSBbB78gqUMh7jKkzIJWWqLL4jQM4aLgbQXB/gN?=
+ =?us-ascii?Q?rEvMgBZ1iVN9w9uiQx/eGjWBI+C5GxJGlhT/JAO20L68c5q3Elcl9ebJyDLj?=
+ =?us-ascii?Q?ylQF2CQFw1jKWaFSHybUfDQXvPk5c3QC4djtCbZzPH8yfwEfUKzgxFu3wi+G?=
+ =?us-ascii?Q?CWauOum15/eBRY3N4Zzns6JBkOvQhKKbuovcBkEZoqhOjQB93DfVaOFYFdk9?=
+ =?us-ascii?Q?Qh9Rr+0y+jNmnjn3PVUq+yaQ6o/1BZ0t7pL32KgJSPj4PnAj8Al1Pjs28sQV?=
+ =?us-ascii?Q?9b6vrJNkLZ2bsxHZ61yzQAy7M1QbpZzPLde2XrpsLnyYzEF/PMnKvmdNDfSU?=
+ =?us-ascii?Q?XxE2nkuLM5NMbNz1RE215o9crW+gP2D5POpVeaOMgHxSF1IRjurSx0VsrYHq?=
+ =?us-ascii?Q?0+NqU3iMRcD5fiJA4SQ9OMnVmFVdSCUCpTqtVqwO4sFNyAgEWn8kW8V/CWBf?=
+ =?us-ascii?Q?NqCKIra4GFSYkyNjhrn2WDp5KwtU3FFHdrfntZwDQktcHh7D6P0byEqh/4q+?=
+ =?us-ascii?Q?OuwaNVug1k99SEn0jlOFCyjEuDXHCk3/IQ=3D=3D?=
+x-ms-exchange-transport-forked: True
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR04MB6514.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 92ec8639-a4c8-42fe-74bb-08d8c8e98e74
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Feb 2021 08:47:51.4931
+X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 74315d2f-1025-4765-2642-08d8c8efe109
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Feb 2021 09:33:06.9978
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: qRNZNk5mnG6CVIDAA2i4KUE55hcYqFejXo84fdX/xpXPEruxBquKf3RcqJJreIZYZGJn0PFWgBa+cg211dlypQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR04MB4740
+X-MS-Exchange-CrossTenant-userprincipalname: FsLh/8EulViacvtZdWVsHEQQbDVRhE5MmTlswFew+P5q6dQVtPPL/zjwR77UUrIPenQ+NG0OwW0SkH/u4IxrZ6LEKcv4H3MUdHzfnDRXsuI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3599
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/01/28 13:50, Damien Le Moal wrote:=0A=
-> The first patch of this series adds missing documentation of the=0A=
-> zone_append_max_bytes sysfs attribute.=0A=
+On 04/02/2021 08:28, Yang Li wrote:=0A=
+> This patch removes unneeded return variables, using only=0A=
+> '0' instead.=0A=
+> It fixes the following warning detected by coccinelle:=0A=
+> ./drivers/scsi/ipr.c:9508:5-7: Unneeded variable: "rc". Return "0" on=0A=
+> line 9524=0A=
 > =0A=
-> The following 3 patches are cleanup and preparatory patches for the=0A=
-> introduction of the zone write granularity limit. The goal of these=0A=
-> patches is to have all code setting a device queue zoned model to use=0A=
-> the helper function blk_queue_set_zoned(). The nvme driver, null_blk=0A=
-> driver and the partition code are modified to do so.=0A=
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>=0A=
+> Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>=0A=
+> ---=0A=
+>  drivers/scsi/ipr.c | 3 +--=0A=
+>  1 file changed, 1 insertion(+), 2 deletions(-)=0A=
 > =0A=
-> The fourth patch in this series introduces the zone write granularity=0A=
-> queue limit to indicate the alignment constraint for write operations=0A=
-> into sequential zones of zoned block devices. This limit is always set=0A=
-> by default to the device logical block size. The following patch=0A=
-> documents this new limit.=0A=
-> =0A=
-> The last 2 patches introduce the blk_queue_clear_zone_settings()=0A=
-> function and modify the SCSI sd driver to clear the zone related queue=0A=
-> limits and resources of a host-aware zoned disk that is changed to a=0A=
-> regular disk due to the presence of partitions.=0A=
-=0A=
-Hi Jens,=0A=
-=0A=
-Any comment on this series ?=0A=
-=0A=
-Martin,=0A=
-=0A=
-The scsi bits (patch 5 and 8) may need your ack.=0A=
-=0A=
-Thanks !=0A=
-=0A=
-> =0A=
-> Changes from v3:=0A=
-> * Added pathces 2, 3, 4, 7 and 8=0A=
-> * Addressed Christoph's comments on patch 5=0A=
-> =0A=
-> Changes from v2:=0A=
-> * Added patch 3 for zonefs=0A=
-> * Addressed Christoph's comments on patch 1 and added the limit=0A=
->   initialization for zoned nullblk=0A=
-> =0A=
-> Changes from v1:=0A=
-> * Fixed typo in patch 2=0A=
-> =0A=
-> Damien Le Moal (8):=0A=
->   block: document zone_append_max_bytes attribute=0A=
->   nvme: cleanup zone information initialization=0A=
->   nullb: use blk_queue_set_zoned() to setup zoned devices=0A=
->   block: use blk_queue_set_zoned in add_partition()=0A=
->   block: introduce zone_write_granularity limit=0A=
->   zonefs: use zone write granularity as block size=0A=
->   block: introduce blk_queue_clear_zone_settings()=0A=
->   sd_zbc: clear zone resources for non-zoned case=0A=
-> =0A=
-> Damien Le Moal (8):=0A=
->   block: document zone_append_max_bytes attribute=0A=
->   nvme: cleanup zone information initialization=0A=
->   nullb: use blk_queue_set_zoned() to setup zoned devices=0A=
->   block: use blk_queue_set_zoned in add_partition()=0A=
->   block: introduce zone_write_granularity limit=0A=
->   zonefs: use zone write granularity as block size=0A=
->   block: introduce blk_queue_clear_zone_settings()=0A=
->   sd_zbc: clear zone resources for non-zoned case=0A=
-> =0A=
->  Documentation/block/queue-sysfs.rst | 13 +++++++++=0A=
->  block/blk-settings.c                | 39 +++++++++++++++++++++++++-=0A=
->  block/blk-sysfs.c                   |  8 ++++++=0A=
->  block/blk-zoned.c                   | 17 ++++++++++++=0A=
->  block/blk.h                         |  2 ++=0A=
->  block/partitions/core.c             |  2 +-=0A=
->  drivers/block/null_blk/zoned.c      |  8 +++---=0A=
->  drivers/nvme/host/core.c            | 11 ++++----=0A=
->  drivers/nvme/host/zns.c             | 11 ++------=0A=
->  drivers/scsi/sd_zbc.c               | 43 ++++++++++++++++++++++++++---=
-=0A=
->  fs/zonefs/super.c                   |  9 +++---=0A=
->  include/linux/blkdev.h              | 15 ++++++++++=0A=
->  12 files changed, 150 insertions(+), 28 deletions(-)=0A=
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c=0A=
+> index e451102..8eced7c 100644=0A=
+> --- a/drivers/scsi/ipr.c=0A=
+> +++ b/drivers/scsi/ipr.c=0A=
+> @@ -9505,7 +9505,6 @@ static pci_ers_result_t ipr_pci_error_detected(stru=
+ct pci_dev *pdev,=0A=
+>   **/=0A=
+>  static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)=0A=
+>  {=0A=
+> -	int rc =3D 0;=0A=
+>  	unsigned long host_lock_flags =3D 0;=0A=
+>  =0A=
+>  	ENTER;=0A=
+> @@ -9521,7 +9520,7 @@ static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *=
+ioa_cfg)=0A=
+>  	spin_unlock_irqrestore(ioa_cfg->host->host_lock, host_lock_flags);=0A=
+>  =0A=
+>  	LEAVE;=0A=
+> -	return rc;=0A=
+> +	return 0;=0A=
+>  }=0A=
+>  =0A=
+>  /**=0A=
 > =0A=
 =0A=
+As it's always returning 0 this is dead code as well:=0A=
 =0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+	rc =3D ipr_probe_ioa_part2(ioa_cfg);=0A=
+=0A=
+	if (rc) {=0A=
+		__ipr_remove(pdev);=0A=
+		return rc;=0A=
+	}=0A=
+=0A=
+I think:=0A=
+- static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)=0A=
++ static void ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)=0A=
+=0A=
+is the right thing to do if you really want to touch it.=0A=
+=0A=
+=0A=
+=0A=
