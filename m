@@ -2,107 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BAC3C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 16:13:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45D3FC433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 16:39:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E12B764F4D
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 16:13:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E31464F53
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 16:39:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237846AbhBDQJl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Feb 2021 11:09:41 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41506 "EHLO mail.kernel.org"
+        id S237484AbhBDQjO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Feb 2021 11:39:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46770 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237835AbhBDQJa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 4 Feb 2021 11:09:30 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B37B264F6A;
-        Thu,  4 Feb 2021 16:08:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1612454929;
-        bh=3IAPQCCNYn5V60zzmVrr36a9HtGkWRc99HBODO496rg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SbGXD2TYulwmiUQymxa1aJ6E9gI3aWMtXnHBN5sPgXVrkpXtCbu+v0ZHPxelGg3kf
-         OCEK7Js2lxNP6OULdJSFxzpq9FfVDxZmJCQNHvO0+GZx0qC8q1M2tspWFbV3CM2ebX
-         7vYTxzaaKedXFZO77mr+R3l5UMy2ORCNsruSabzc=
-Date:   Thu, 4 Feb 2021 17:08:46 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>
-Cc:     Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jens Axboe <axboe@kernel.dk>, Matt Mackall <mpm@selenic.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Peter Huewe <peterhuewe@gmx.de>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Haren Myneni <haren@us.ibm.com>,
-        Breno =?iso-8859-1?Q?Leit=E3o?= <leitao@debian.org>,
-        Nayna Jain <nayna@linux.ibm.com>,
-        Paulo Flabiano Smorigo <pfsmorigo@gmail.com>,
-        Steven Royer <seroyer@linux.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Cristobal Forno <cforno12@linux.ibm.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Dany Madden <drt@linux.ibm.com>, Lijun Pan <ljp@linux.ibm.com>,
-        Sukadev Bhattiprolu <sukadev@linux.ibm.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Michael Cyr <mikecyr@linux.ibm.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-integrity@vger.kernel.org,
-        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: Re: [PATCH] vio: make remove callback return void
-Message-ID: <YBwcDmtefa2WmS90@kroah.com>
-References: <20210127215010.99954-1-uwe@kleine-koenig.org>
+        id S238087AbhBDQbF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 Feb 2021 11:31:05 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 56A6E64F42;
+        Thu,  4 Feb 2021 16:30:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612456225;
+        bh=CzTEpM9u8CI5p3juLfoehGkHvp3K66pt2EkozHWzGDg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=SGPgNrPK6w9SYhailX+Myofm8zqDZypXNuD/ZTl8DQ60fMj9rLjJ1uHrtFYl0wAiD
+         DcamnU0Y2XEhwTAKkT/fAzmU3y+l8/peZ1wMY8pLk2bz0l/T1eA7dqm4DHbteJZK6F
+         3DDpqluvT7t4E0XK3nXLaIH1X0SKyKNLBJYo+DsywNdPSZfa2HV7FPmOZAXa+Ifhkd
+         j9RKC+pqVollzFmEOUXFctg4+jlqcDEC88l2yq3KLUzmkyc8RIxhj3xw32rF32uKuN
+         ErfmDH4yktP1UnzzwSu6/Di+zrW/k3bYDOjC4SxpGHa/yTxWDx4PAlJd2PI0AwCXxs
+         DaV2OnBBggOMw==
+From:   Arnd Bergmann <arnd@kernel.org>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>, Lee Jones <lee.jones@linaro.org>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Satish Kharat <satishkh@cisco.com>,
+        Lee Duncan <lduncan@suse.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: pmcraid: fix 'ioarcb' alignment warning
+Date:   Thu,  4 Feb 2021 17:30:14 +0100
+Message-Id: <20210204163020.3286210-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210127215010.99954-1-uwe@kleine-koenig.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jan 27, 2021 at 10:50:10PM +0100, Uwe Kleine-König wrote:
-> The driver core ignores the return value of struct bus_type::remove()
-> because there is only little that can be done. To simplify the quest to
-> make this function return void, let struct vio_driver::remove() return
-> void, too. All users already unconditionally return 0, this commit makes
-> it obvious that returning an error code is a bad idea and makes it
-> obvious for future driver authors that returning an error code isn't
-> intended.
-> 
-> Note there are two nominally different implementations for a vio bus:
-> one in arch/sparc/kernel/vio.c and the other in
-> arch/powerpc/platforms/pseries/vio.c. I didn't care to check which
-> driver is using which of these busses (or if even some of them can be
-> used with both) and simply adapt all drivers and the two bus codes in
-> one go.
-> 
-> Note that for the powerpc implementation there is a semantical change:
-> Before this patch for a device that was bound to a driver without a
-> remove callback vio_cmo_bus_remove(viodev) wasn't called. As the device
-> core still considers the device unbound after vio_bus_remove() returns
-> calling this unconditionally is the consistent behaviour which is
-> implemented here.
-> 
-> Signed-off-by: Uwe Kleine-König <uwe@kleine-koenig.org>
-> ---
-> Hello,
-> 
-> note that this change depends on
-> https://lore.kernel.org/r/20210121062005.53271-1-ljp@linux.ibm.com which removes
-> an (ignored) return -EBUSY in drivers/net/ethernet/ibm/ibmvnic.c.
-> I don't know when/if this latter patch will be applied, so it might take
-> some time until my patch can go in.
+From: Arnd Bergmann <arnd@arndb.de>
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Building with 'make W=1' enables -Wpacked-not-aligned, and this
+warns about pmcraid because of incompatible alignment constraints for
+pmcraid_passthrough_ioctl_buffer:
+
+drivers/scsi/pmcraid.h:1044:1: warning: alignment 1 of 'struct pmcraid_passthrough_ioctl_buffer' is less than 32 [-Wpacked-not-aligned]
+ 1044 | } __attribute__ ((packed));
+      | ^
+drivers/scsi/pmcraid.h:1041:24: warning: 'ioarcb' offset 16 in 'struct pmcraid_passthrough_ioctl_buffer' isn't aligned to 32 [-Wpacked-not-aligned]
+ 1041 |  struct pmcraid_ioarcb ioarcb;
+
+The inner structure is documented as having 32 byte alignment here,
+but is starts at a 16 byte offset in the outer structure, so it's never
+actually aligned, as the outer structure is also marked 'packed'.
+
+Lee Jones point this out as one of the last files that need to be changed
+before the warning can be enabled by default.
+
+Change the annotations in a way that avoids the warning but leaves the
+layout unchanged, by removing the packing on the inner structure and
+adding it to the outer one. The one-byte request_buffer[] array should
+have been a flexible array member here, which is how I change it to
+avoid extra padding from the alignment attribute.
+
+Cc: Lee Jones <lee.jones@linaro.org>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/pmcraid.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/pmcraid.h b/drivers/scsi/pmcraid.h
+index 15c962108075..6d36debde18e 100644
+--- a/drivers/scsi/pmcraid.h
++++ b/drivers/scsi/pmcraid.h
+@@ -244,7 +244,7 @@ struct pmcraid_ioarcb {
+ 	__u8  hrrq_id;
+ 	__u8  cdb[PMCRAID_MAX_CDB_LEN];
+ 	struct pmcraid_ioarcb_add_data add_data;
+-} __attribute__((packed, aligned(PMCRAID_IOARCB_ALIGNMENT)));
++};
+ 
+ /* well known resource handle values */
+ #define PMCRAID_IOA_RES_HANDLE        0xffffffff
+@@ -1040,8 +1040,8 @@ struct pmcraid_passthrough_ioctl_buffer {
+ 	struct pmcraid_ioctl_header ioctl_header;
+ 	struct pmcraid_ioarcb ioarcb;
+ 	struct pmcraid_ioasa  ioasa;
+-	u8  request_buffer[1];
+-} __attribute__ ((packed));
++	u8  request_buffer[];
++} __attribute__ ((packed, aligned(PMCRAID_IOARCB_ALIGNMENT)));
+ 
+ /*
+  * keys to differentiate between driver handled IOCTLs and passthrough
+-- 
+2.29.2
+
