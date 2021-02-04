@@ -2,103 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2689C43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EA78C433E9
 	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 03:35:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8601064F6B
+	by mail.kernel.org (Postfix) with ESMTP id 0E1CA64F5F
 	for <linux-scsi@archiver.kernel.org>; Thu,  4 Feb 2021 03:35:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234478AbhBDDfW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Feb 2021 22:35:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55216 "EHLO
+        id S234193AbhBDDfK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Feb 2021 22:35:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234328AbhBDDfL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2021 22:35:11 -0500
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32925C061786
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Feb 2021 19:34:31 -0800 (PST)
-Received: by mail-pj1-x102b.google.com with SMTP id z9so959187pjl.5
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Feb 2021 19:34:31 -0800 (PST)
+        with ESMTP id S233762AbhBDDfF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2021 22:35:05 -0500
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D56CC0613D6
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Feb 2021 19:34:24 -0800 (PST)
+Received: by mail-pj1-x1029.google.com with SMTP id gx20so972654pjb.1
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Feb 2021 19:34:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version;
-        bh=mvEFBJZSgaWlaLW0lMbaWkmJHhs8LFRyiA3MDCaxwQo=;
-        b=BTOFEKgRuSB+7E3SKoLZSq2A1O26PrRobnVy6XY/EyHt1IWlL+3dDU2XINbwdYY6a6
-         usLS3bNjMCaWoega83ccgFTnBB/7exOzCf7iJXwhCxm/tDZvY+Oc0c5JgEFVsd6EshPB
-         Bb1YervEnqCfnZlTw5EgOgRnfEdc1ahnAJ9i4=
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=gDZr6xSueK1jR3Ek4K8GdKKjU1BqKh+rxTblFhEwqek=;
+        b=YSASJ7EE67ZuH6KqBJbWn4xhAZIu8d10cSxkUBkOEFV+Xfngs2yeab3BTRq0TWEaac
+         meqDX63Dkrd2gVvZkJn8cnwe3gcZFn92sQEOudEHih/tqXYTwjdwo8jcH1knGhq0exNE
+         QhB+xu+leT730/yEsW5rEtonpzfF3aadg+s4I=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version;
-        bh=mvEFBJZSgaWlaLW0lMbaWkmJHhs8LFRyiA3MDCaxwQo=;
-        b=IcY2fAamZ3ktWhuC1Zugj41V9FacaWpblw9S5AklM/SSzsG1GVXQxwQUdR+qb0vMTi
-         nIKUzW0TtQ7NqQBQTdGjlwgqfQ97BFwCuWnBWzpoN3x2lOrEB/JSgtcNIrhFG+Xw1k4J
-         vTlbTz4YhTpemOltAdtrrP8/7gMEZ24Z23HXXHneWgsWwdLO2LZKrJpjTy4TolqXt3sw
-         Rua1TcDRb52rJE0awxnnjQi9XBEiCSxjYPuNaNZN6NYT4oHTr3ya6TDkGuweAwXOJ8JW
-         gFQ1O7Zd1cWijyRykqNRqPRAo6YbuDhHBHkM1aN6OmmEyRF8RhaYndHwYzBWTP7aoaav
-         ggBA==
-X-Gm-Message-State: AOAM533z7qw+yeHiGJytw1nxDp/XIeK1+lDgOGwvrSzn5pUuMAegME7n
-        IUUpeLuCqOZeWm6lNmDFfqjA0KA9zpY6oIoJ
-X-Google-Smtp-Source: ABdhPJx+w1pl7ZXxnLeByrSzlmVKrJoePSQYkUTKDqeQq6vnIfNu5YstXJbUEN87OS7DHBMnzj5Hag==
-X-Received: by 2002:a17:90a:9310:: with SMTP id p16mr6316796pjo.211.1612409670191;
-        Wed, 03 Feb 2021 19:34:30 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=gDZr6xSueK1jR3Ek4K8GdKKjU1BqKh+rxTblFhEwqek=;
+        b=Yc4GqHn8KEfAYNGCf8uiKRHPBYljMqcYi2E5xi1whaSg+FYQU+uxhoMhUUPb/kJucB
+         v0RWz1O62ob6LkacJww6kwtul4CoJ3Gnwh/p+fUB2YeSThgDsCda2cOaHOeHW9Hfycdp
+         2Og2OKZj/+xA9rOOZSfbrWJqm/L10NMZradI7AkYzuDmsiD/HpK+/getOQaMZwC5roCv
+         3F/H62NhZi3sCtt18OHhcwpgKxsJjYEBsQjh5OYf+6gaKhEWuiusktcF8GwwWy2bhMN+
+         BVPKeuP5iQNl6WiE4oDYav5zB4Tsz2uDHrpELMj3+x394x/e3S79l1wiQ1DQs7WAGQOO
+         DBOg==
+X-Gm-Message-State: AOAM530Vt8UZpNS7r2WAcbvZMjV55poLHjcXE7U5QcVIqM6nKmQcISDv
+        dUcgOGJYe3tGVm2nUUI0rYOIxw==
+X-Google-Smtp-Source: ABdhPJzHmcgdV71fC8OcO3iA3DiipPZD5B3iZcwD4YdrnjX9UnkJCa246lT3owl41Of07FsIwGhWCg==
+X-Received: by 2002:a17:90a:7888:: with SMTP id x8mr6544456pjk.69.1612409663154;
+        Wed, 03 Feb 2021 19:34:23 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id x184sm4180808pfb.199.2021.02.03.19.34.27
+        by smtp.gmail.com with ESMTPSA id x184sm4180808pfb.199.2021.02.03.19.34.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Feb 2021 19:34:29 -0800 (PST)
+        Wed, 03 Feb 2021 19:34:22 -0800 (PST)
 From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc:     Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com,
         Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 2/2] mpt3sas: Update driver version to 37.100.00.00
-Date:   Thu,  4 Feb 2021 09:07:24 +0530
-Message-Id: <20210204033724.1345-3-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 0/2] Additional Diagnostic Buffer Query IOCTL
+Date:   Thu,  4 Feb 2021 09:07:22 +0530
+Message-Id: <20210204033724.1345-1-suganath-prabu.subramani@broadcom.com>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210204033724.1345-1-suganath-prabu.subramani@broadcom.com>
-References: <20210204033724.1345-1-suganath-prabu.subramani@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ac0ad705ba7a61c4"
+        boundary="00000000000043218405ba7a617d"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ac0ad705ba7a61c4
+--00000000000043218405ba7a617d
 Content-Transfer-Encoding: 8bit
 
-Update Driver version to 37.100.00.00
+* When a host trace buffer is released, applications never know for what
+reason the buffer is released.
+* Add new ioctl interface to pass more intelligent data to the
+applications along with information like what causes or triggers the
+buffer release. An Additional Query Command is issued before reading
+the buffer and applications would also come to know whether the buffer
+is released or not.
 
-Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+* Update the driver version.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 39388bf..61c380b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -77,8 +77,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"36.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		36
-+#define MPT3SAS_DRIVER_VERSION		"37.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		37
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
+Suganath Prabu S (2):
+  mpt3sas: Additional Diagnostic Buffer Query IOCTL interface.
+  mpt3sas: Update driver version to 37.100.00.00
+
+ drivers/scsi/mpt3sas/mpt3sas_base.c         |  5 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h         | 51 +++++++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c          | 67 ++++++++++++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.h          | 22 +++++++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        |  2 +
+ drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c | 38 +++++++++++-
+ 6 files changed, 179 insertions(+), 6 deletions(-)
+
 -- 
 2.27.0
 
 
---000000000000ac0ad705ba7a61c4
+--00000000000043218405ba7a617d
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -169,13 +165,13 @@ DAYA3uHCdaZTnVbSESs1pk+HAhlZhqrDYXWCG6ya+SIG51Q4PHS6jfst/6xnaSFPhWhIv2hSB2NA
 vWzrcXMq9IfE5HFZXqzOWMP/gUOKk155U6EuRQzVcCpabG8ROpPND3sxggJvMIICawIBATBtMF0x
 CzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxT
 aWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDE84Ya9bsUMoMZ6qKjANBglghkgB
-ZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgr9F9rjQY8QF+5HPYs0UU461Tbf1eiSBcQ4aDfzzq
-0AAwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMjEwMjA0MDMzNDMx
+ZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgiPLEQMqkTOSysD4yITp0azAcm9lLCsSuo59E8hR0
+bpkwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMjEwMjA0MDMzNDI0
 WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAEC
 MAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqG
-SIb3DQEBAQUABIIBALE2w38IFllMjjbD5hU2+dAe0zfBX17YA78g6SebbusSm/bzbpod4c0wiQsz
-RKzGhJsBzlO7otMCmIS4PF0cICKyzKgtLJW4tdN3dEWcghXVblJSEC8nx4N9YOhN+c1O+94zkzHV
-OndVgPZcakrHem3BesSthPOm9X+w4O4KixyThoUWd+gKqHkeMgVPMVdw/nAPtrAFuJhc7SqmvhNw
-/OnG8jdLkP0WvrpyWsOMzDqavlGiQIUzCbE3eHiI6ueLjriWo4wEMCkjs9VqPFD0Wp6Tbbc7TcOV
-ez+U9JBRGL6244KkE39z2uAGJrfFv5JkU2sYjV59tPxqqdiTa7VFaNw=
---000000000000ac0ad705ba7a61c4--
+SIb3DQEBAQUABIIBAJHJ1ugJrcL/I20UZkZEte8l46EeBr+ISFeyu/dfw9a9fpEi/QKXg+Za8BoD
+hY9q6LomMDD4+qsMBNe3KZ8Ixf/OQvtQuf7PcmWPvKi8OMKpJUot6ODnLsIbORpx4Tq/0ufizTg8
+cm1bRtZJB0jLdy9Q5iypRbTp2BEyOF8/fxrURX6fJ7ql3WsmgQ14lSoSy7ey29pzVcorXXKcp1vK
+0aA7dWURmiZ/rKjDzI0p0JFcFLiHJ+LOp2vWQJqVp4tE9PSUiB5b4my0D5wZ7BcUNOYytQEXhhY1
+EDMPPX9ydx1IRmLOsgDXTXZ3Z+pLEwEOlsNMCKWEMIVdWHbUE2gdcgw=
+--00000000000043218405ba7a617d--
