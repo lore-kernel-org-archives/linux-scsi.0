@@ -7,73 +7,81 @@ X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32F10C433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 101B3C433E0
 	for <linux-scsi@archiver.kernel.org>; Fri,  5 Feb 2021 11:57:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D759B64FD8
+	by mail.kernel.org (Postfix) with ESMTP id A4E7164FD7
 	for <linux-scsi@archiver.kernel.org>; Fri,  5 Feb 2021 11:57:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231663AbhBEL5e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Feb 2021 06:57:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45950 "EHLO
+        id S231398AbhBEL5Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Feb 2021 06:57:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231835AbhBELoH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2021 06:44:07 -0500
-Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DDEAC0613D6;
-        Fri,  5 Feb 2021 03:43:26 -0800 (PST)
-Received: by mail-ed1-x52c.google.com with SMTP id g10so8514895eds.2;
-        Fri, 05 Feb 2021 03:43:26 -0800 (PST)
+        with ESMTP id S232004AbhBELy7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2021 06:54:59 -0500
+Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F136C0613D6;
+        Fri,  5 Feb 2021 03:54:18 -0800 (PST)
+Received: by mail-ej1-x635.google.com with SMTP id b9so11443118ejy.12;
+        Fri, 05 Feb 2021 03:54:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=message-id:subject:from:to:cc:date:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=7J7vBIegnlV9sASm56pPp++fG0Zc79ZZJaLOUVeal/M=;
-        b=rdfZPg3TfknpHei5fhpixTQWc1e6ZhPckXcxJ+UqDrr+ZR9wEJZtA1zxDEYU2xjN4j
-         V8rH3KR4vHJuPgi8OFh9xFsT07ygRetdqgyirT8NSpB29EZwszjly7O/dS71w9SnTdoP
-         UyhKz+xMblpo1JElidTLleIILjCi/Fxf1Knrbm1tgJ0UgvU8ZOKjDuX5x8kTOa3T7tUS
-         G2ac9WfKbbXbWGod2L8MutAN2+I1CQVQ09VzLPnNkjLwqv0alaTRqwKFmSlIbDBovJF+
-         ImerFYpPgc5W+4fyR6qM8WV0n/ktUJ6xdbGfD+HAXrKXYpXwOhw0CvkIXFgb1hKIEBvz
-         axtQ==
+        bh=Pca7yULDBNu4TLScGZnnvR4Eqjg+DgmKbpOuQ5aWZ0s=;
+        b=NqXIXDXe2cfYtChuO9cMWpHpKARL9W/EaCpZLvWv335UJ2i1QuRBJ4PpNn94Ub4jIA
+         A1sA67Jru17CM2nMD0gQbpz/vgmw0IuLUCqhP/JqR0RZt308DQTCge30dAT8B8Mq7Ruy
+         154+7aYtk9FkquyezgNOFvA42mFI4g+Tlc5IFJrKBnjkErGQnFY4i5NIjORW6SUEBZ+L
+         ZGFXdfhxrFnsJ8Q1BIgo0lj3QQbf7WxIV7QoBZwx5Ig+9D+OuUSR3GvagPfAX8a9vEK0
+         zIGlQsScU7gT+DzHU92GecJhvQ4zFEL8yURZb85SEFI035oY9g5Y3MmZBBoL0B28Hiv9
+         oNTg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=7J7vBIegnlV9sASm56pPp++fG0Zc79ZZJaLOUVeal/M=;
-        b=uAE8NP/ddLHoe+tQD5ZBK6vlvW9U2dwiFjUuhBzuqBvQP9vmdN+VizlHcsTJA5dwTW
-         idpYrl2SvxJPNtSnXWNvTyvHxnJW2kXMf0cUzzIR7HoF1/JH1EGy0lmh/P2dEj0ibMHG
-         M6VF2v6LqOV5Cs+Pg9iduHs8km/TddUouZ5iTtVx0c1CbObUM+rburtWiVACN2zmGHBo
-         DGJUuqnNszS8wKYaFBcVjTLOkABGGvJU5zuGbIaW8EAegLJf+TN0IugR07SEAM7WIY1z
-         xi5/OcmbA5bjxzI1KgoaF6TaeQS0StKK57ojEDJkydPmrmwzMs8IvN+9qYr3ULaxnsEv
-         DvYQ==
-X-Gm-Message-State: AOAM531951nah1QrNgTueb1BmLSk5Zst2KIAPvDxGvO0gekGt7RM1mqe
-        y7GxN+xdk34tWomrOe9Ah8Q=
-X-Google-Smtp-Source: ABdhPJxK8FT+l7xFbpTIP35J7EgkShl4Hckg9G/OCk/AeNHX+v5Vm7wdbhqGPvonahHJRdW7NPtFkw==
-X-Received: by 2002:aa7:ce96:: with SMTP id y22mr3103098edv.369.1612525405339;
-        Fri, 05 Feb 2021 03:43:25 -0800 (PST)
+        bh=Pca7yULDBNu4TLScGZnnvR4Eqjg+DgmKbpOuQ5aWZ0s=;
+        b=dNaJs4WqEHMRtrCPFAz7yeoHxu6ntUgD2H2yEiEw6a2BZ+sOASPQO2/QSqJevVoW4T
+         MFWYprCefZGjNIIW2G36aoIQX3D89rF+DTpZ4FCwU4j9a4eRviANY3O6+vLQ2Mhiocxb
+         KTjkFS9HW6jLyBXuCVjr/Lkc8WquJnTBAlOu/hiJm65pmLqxodNkbHZmY01ArlvSj4Br
+         JQhb7mmfgwvHs0i1folvcmXPNgwnXRqEzua6s3EyEDqJ0UjCauDVgO1ZhknGDdSvjiJF
+         k2VXsWWnlCv5lPjs1hDbeNuikSg++55WklN7ohnS4aYNkJgC9JL+X7iNdcpBeDETuyOi
+         XSmw==
+X-Gm-Message-State: AOAM533cYSQ3CsEtz5aw9aPWL/VQADbm48JlagyyHsn18++aXboqhEW3
+        H1Ba34AE7K/nmOT2oe1/UBM=
+X-Google-Smtp-Source: ABdhPJxCq02Qk/px5e72mtIZ2CxxdODbCmvqoKlJpHoAlQ0E87sw21rwb+eluApapRByDWbEYUAZVw==
+X-Received: by 2002:a17:906:805:: with SMTP id e5mr3663996ejd.104.1612526056991;
+        Fri, 05 Feb 2021 03:54:16 -0800 (PST)
 Received: from ubuntu-laptop (ip5f5bee1b.dynamic.kabel-deutschland.de. [95.91.238.27])
-        by smtp.googlemail.com with ESMTPSA id sb6sm3532201ejb.54.2021.02.05.03.43.24
+        by smtp.googlemail.com with ESMTPSA id p2sm3770951ejg.45.2021.02.05.03.54.15
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 05 Feb 2021 03:43:24 -0800 (PST)
-Message-ID: <304cb44c67dc1d5fe081ea4450823c1c3b456284.camel@gmail.com>
-Subject: Re: [PATCH v2 0/9] Add Host control mode to HPB
+        Fri, 05 Feb 2021 03:54:16 -0800 (PST)
+Message-ID: <527b4233f6118cf7e9d90eb726394d85fe1bb26d.camel@gmail.com>
+Subject: Re: [PATCH v19 2/3] scsi: ufs: L2P map management for HPB read
 From:   Bean Huo <huobean@gmail.com>
-To:     Avri Altman <avri.altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
         yongmyung lee <ymhungry.lee@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        alim.akhtar@samsung.com, asutoshd@codeaurora.org,
-        Zang Leigang <zangleigang@hisilicon.com>,
-        Avi Shchislowski <avi.shchislowski@wdc.com>,
-        Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
-        stanley.chu@mediatek.com
-Date:   Fri, 05 Feb 2021 12:43:23 +0100
-In-Reply-To: <ec32248a3e56eef83744cd4844210d347add27d3.camel@gmail.com>
-References: <20210202083007.104050-1-avri.altman@wdc.com>
-         <ec32248a3e56eef83744cd4844210d347add27d3.camel@gmail.com>
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>
+Date:   Fri, 05 Feb 2021 12:54:14 +0100
+In-Reply-To: <DM6PR04MB65759D6418E8FCD4B0BD6236FCB29@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20210129052848epcms2p6e5797efd94e6282b76ad9ae6c99e3ab5@epcms2p6>
+         <CGME20210129052848epcms2p6e5797efd94e6282b76ad9ae6c99e3ab5@epcms2p3>
+         <20210129053005epcms2p323338fbb83459d2786fc0ef92701b147@epcms2p3>
+         <218be362c71a9cdb8312f6d8156a0935985aae04.camel@gmail.com>
+         <DM6PR04MB65759D6418E8FCD4B0BD6236FCB29@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 Mime-Version: 1.0
@@ -82,58 +90,44 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2021-02-05 at 12:36 +0100, Bean Huo wrote:
-> > to whatever recommendation received from the device - In host
-> > control
-> > mode, the host uses its own algorithms to decide which regions
-> > should
-> > be activated or inactivated.
-> > 
-> > We kept the host managed heuristic simple and concise.
-> > 
-> > Aside from adding a by-spec functionality, host control mode
-> > entails
-> > some further potential benefits: makes the hpb logic transparent
-> > and
-> > readable, while allow tuning / scaling its various parameters, and
-> > utilize system-wide info to optimize HPB potential.
+On Fri, 2021-02-05 at 11:42 +0000, Avri Altman wrote:
+> > "If the requested field of the HPB Region or HPB Sub-Region is out
+> > of
+> > range, then the device shall terminate the command by sending
+> > RESPONSE
+> > UPIU with CHECK CONDITION status, with the SENSE KEY set to ILLEGAL
+> > REQUEST, and the additional sense code set to INVALID FIELD IN CDB"
 > 
-> Hi Avri
-> In addition to the above advantage of HPB device mode, would you
-> please
-> share the performance comparison data with host mode? that will draw
-> more attention, since you mentioned "you tested on Galaxy S20, and
-> Xiaomi Mi10 pro", I think you have this kind of data.
+> You don't need to worry about setting invalid ppn to HPB-READ command
+> - 
+> you'll never get a read request for those LBAs.
 > 
-> Your HPB host driver sits in the ufs driver. Since my HPB host mode
-> driver is also implemented in the UFS driver layer, I did test my HPB
-> driver between device mode and host mode. Saw there is an
-> improvement,
-> but not significant. If you can share your HPB drviver data, that
-> will
-> be awesome.
+> Say all subregions are 16MB and the last subregion of the last region
+> is 10MB.
+> Keep all sizes the same - 16MB, and the ppn of the last subregion
+> contain some invalid data.
+> But you'll never get a read request for those LBAs anyway - they
+> don't exist,
+> so you'll never get to use those invalid ppns.
 > 
-> Kind regards,
-> Bean
-
-So sorry, there are several typos, easily confused you. correct them as
-below:
+> Thanks,
+> Avri
 
 Hi Avri
+ah, I don't know if your above comments are inline with Spec.
 
-In addition to the above advantage of HPB "host control mode", would
-you please share the performance comparison data with "device control
-mode"? that will draw more attention, since you mentioned "you tested
-on Galaxy S20, and Xiaomi Mi10 pro", I think you have this kind of
-data.
+Spec:
+"A HPB Region is divided into HPB Sub-Regions. HPB Sub-Region size is
+specified by the bHPBSubRegionSize parameter of Geometry Descriptor.
+HPB Sub-Regions are equally sized except for the last one which is
+smaller if the last HPB Region is not an interger multiple of
+bHPBSubRegionSize."
 
-Your HPB "host control mode" driver sits in the ufs driver. Since my
-HPB "host control mode" driver is also implemented in the UFS driver
-layer, I did test my HPB driver between device mode and host mode. Saw
-UFS HPB "host control mode" driver has performance gain comparing to
-HPB "device control mode" driver, but not significant. If you can share
-your HPB host control mode drviver data, that will be awesome.
+It is not invalidate ppn concern, it is illegal request issue in sense
+key.
 
 Kind regards,
 Bean
+
+
 
