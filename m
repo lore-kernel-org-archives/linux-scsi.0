@@ -2,129 +2,206 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28F5AC433E0
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 Feb 2021 19:20:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6274CC433E0
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 Feb 2021 19:25:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8BE664E41
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 Feb 2021 19:20:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2702464E65
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 Feb 2021 19:25:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230029AbhBFTUR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 6 Feb 2021 14:20:17 -0500
-Received: from mail.xenproject.org ([104.130.215.37]:55394 "EHLO
-        mail.xenproject.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230027AbhBFTUL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Feb 2021 14:20:11 -0500
-X-Greylist: delayed 1943 seconds by postgrey-1.27 at vger.kernel.org; Sat, 06 Feb 2021 14:20:09 EST
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=xen.org;
-        s=20200302mail; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject;
-        bh=t6RLyrgrl+6icHjlUcT9RbYfFIeBzwHbjcRTiWQRm98=; b=43EaaP4+j2FIHADQ+iNmhrZtp0
-        GLLA9A9bhzBLCUTEmZpoYo6oq6x56VWfSamlcEe/O4+HBPeu8pCDytu4q9Bzkgv7ilF9il4FX1NOD
-        K7jLFGXa7skQOkAsb39MmrKdRzJI8/tOs0ZLz1rkmDtI72Y9XJ/WSlFNsht6iZoWXYVs=;
-Received: from xenbits.xenproject.org ([104.239.192.120])
-        by mail.xenproject.org with esmtp (Exim 4.92)
-        (envelope-from <julien@xen.org>)
-        id 1l8SbJ-0006wh-UU; Sat, 06 Feb 2021 18:46:33 +0000
-Received: from [54.239.6.185] (helo=a483e7b01a66.ant.amazon.com)
-        by xenbits.xenproject.org with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.92)
-        (envelope-from <julien@xen.org>)
-        id 1l8SbJ-0001KW-JY; Sat, 06 Feb 2021 18:46:33 +0000
-Subject: Re: [PATCH 0/7] xen/events: bug fixes and some diagnostic aids
-To:     Juergen Gross <jgross@suse.com>, xen-devel@lists.xenproject.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        netdev@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        stable@vger.kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
-        Jens Axboe <axboe@kernel.dk>, Wei Liu <wei.liu@kernel.org>,
-        Paul Durrant <paul@xen.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-References: <20210206104932.29064-1-jgross@suse.com>
-From:   Julien Grall <julien@xen.org>
-Message-ID: <bd63694e-ac0c-7954-ec00-edad05f8da1c@xen.org>
-Date:   Sat, 6 Feb 2021 18:46:30 +0000
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.7.0
+        id S229608AbhBFTZc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 6 Feb 2021 14:25:32 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:37082 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229508AbhBFTZa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Feb 2021 14:25:30 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1612639529; x=1644175529;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=phdhSJGcKJbW2BzGc+t6H78uWeZG2DPNniAQJZN6az0=;
+  b=gCPbWY95BmzNTEzRRg6OJ849kV8uMmSJJfuIyKExzgs3bZGOHFlMkdRn
+   RlWhOc0igTFyvHm2U+MoBGWabOpTIRhSAL8rExRxq+rm4WVlixd8+lhpQ
+   5i+mUjbzQHerInc8gVZBRw6l/ZApq7KAmFYgEWpZSv/PoIc/MY7aBlEUT
+   4RYi+0+XXMJCQA0vaiduAEYX+09UNUujSG04eami1kewgczmFI5Dpa897
+   Fl85m1gY/Ict95k5rujxfVLx3jfQVwAFq+Pp4wiDAVuvFpPCNlI4MqRAS
+   mzwmlF4cMjJwNh2G+cdlV0rKAmSLYbKGhaHf81D4cIHLQIDrBgA0ilud1
+   g==;
+IronPort-SDR: /J6N6Mm05fCw9NHfZyj1IHpIfxu5lyySScC/b2D5PALhLm4eyKKlAb1nR7EkAg5XpAQffP7pNj
+ 4cMbP6caIytwbu+IvGHBqoq5navF1c12pW8/EPKoiQazmWSgBsSW34omdC4UdG+NK/1DoMPJKx
+ C2hX69FZMpXjvPCVh+fhbj1yPMHIU8Az8BSFfOFSEwfjjeywR6Qf2cB26dUf+1FwSSth7lEUaa
+ y7KFUG9Qx+JcVXgVj5bojPu8VAN4eQRYcYoSTnidg6oP2U/tTZB5/NEL6YwzWMrS0z5ZK1t1x4
+ +iE=
+X-IronPort-AV: E=Sophos;i="5.81,158,1610380800"; 
+   d="scan'208";a="160529284"
+Received: from mail-co1nam11lp2171.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.171])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2021 03:24:23 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Qc2Ee1XhRErFYe4KgJOiojnvNdj6Qw3bQgFYx4ZbukIoFsBmBUI2aieiL86++UV3qLGqWiyiPBqOgN3Hr0nuFMOXrtfU8F+2fCQhwUa6EP+Ah+6ZUomEiAcl4RMDgrZbb9chp+No5xSA5a1ikYkpCjDjSriVmPHvPeIEc3F0EF3JV7YP9LR457NO63BWnJ73uw6VOXocqN8MrN9+tPYb1UQYpd17QdiO38vCf36VfpITHSL7YznMXObIQl3IGSZHKSjqavPEm7URx8t2jnQ9uerY3MN2pabQfUe7TPQ0xlrtpTkeC/zznAfPsl/R3Az9EIMZQp2kVnrEBoXA9rwLJQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gD84gRlOd6pxi9XiX+dOlF9+EIouMYU5ZXCCIJgZSho=;
+ b=nzxizY9cn8pZzH9xETl7bTEgyxwY5Qe4YCZGAQoprb0hE7Tn1U6Gz0ZAkHLiPcgicGPdAgthYzrPaCMjXbYcdLitdYu657LJBVKqrbutaxJWqeEGdYQf/zzb/kDCBp5p/j1WOulMVT1yRqAPt+wTjTy3kwQCFhC6rRAsykEJXHc2HXhtzEo6u5G4pvXNw8+L2sfA+KpP2dXe53K1/+ni6w2ctv7XBNERz8xNmKwl4zqbykkMLFwSnkNXw4hjM56+o0gmZGT89H6r+56JjrLfpSgiiL/Zf8mkdgD1mra4wSAFi91uI6mmAshFM8IDDD0aEVLczE/LCEUTbMc7ZrzOIg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gD84gRlOd6pxi9XiX+dOlF9+EIouMYU5ZXCCIJgZSho=;
+ b=zjpCPOMLS5dGVYGTAgBsNG/Zh2ukioCdUJ9TYEjh+CfCeQXTf5v5wSNIZBaQIhQhsIVkFgy0dVOarO2Ap+neyzdFAfWlFAEhmr/cgm/OS4pHuCY2TdQxufbO+zom73trmGsTt9nOtZyzMvbEO8IdwqHF88y/BkQBellsYGMfic8=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ DM6PR04MB6511.namprd04.prod.outlook.com (2603:10b6:5:1bf::17) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3825.23; Sat, 6 Feb 2021 19:24:22 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::e824:f31b:38cf:ef66]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::e824:f31b:38cf:ef66%3]) with mapi id 15.20.3805.033; Sat, 6 Feb 2021
+ 19:24:22 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Asutosh Das <asutoshd@codeaurora.org>
+CC:     Alan Stern <stern@rowland.harvard.edu>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: RE: [RFC PATCH v2 0/2] Fix deadlock in ufs
+Thread-Topic: [RFC PATCH v2 0/2] Fix deadlock in ufs
+Thread-Index: AQHW+y62BDWX6X6k8kupYsmVqHFwfapIfw8AgACs1ECAAJC+AIABxuPw
+Date:   Sat, 6 Feb 2021 19:24:22 +0000
+Message-ID: <DM6PR04MB65759417507BA054F8CAE86AFCB19@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <cover.1611719814.git.asutoshd@codeaurora.org>
+ <84a182cc-de9c-4d6d-2193-3a44e4c88c8b@codeaurora.org>
+ <20210201214802.GB420232@rowland.harvard.edu>
+ <20210202205245.GA8444@stor-presley.qualcomm.com>
+ <20210202220536.GA464234@rowland.harvard.edu>
+ <20210204001354.GD37557@stor-presley.qualcomm.com>
+ <20210204194831.GA567391@rowland.harvard.edu>
+ <20210204211424.GH37557@stor-presley.qualcomm.com>
+ <DM6PR04MB6575692524202EC91E2A5480FCB29@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <20210205161102.GJ37557@stor-presley.qualcomm.com>
+In-Reply-To: <20210205161102.GJ37557@stor-presley.qualcomm.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [77.138.4.172]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 86855be5-0606-4bf5-83e0-08d8cad4ced1
+x-ms-traffictypediagnostic: DM6PR04MB6511:
+x-microsoft-antispam-prvs: <DM6PR04MB6511AE44A48EE750E3FB5589FCB19@DM6PR04MB6511.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: sH5lP0X180+5AGFsaoDzcG/vPNKgcZOOsFtWBW3VvaqW3CqnJZ+2DDHQ+Wke94xOU4/nElOKwLnrKq8KbbbwYpgbl53NMFhObPvkTBY8KFDh32Be0JKa5614Vnm3RC5a+ElxgztLRoMjKiuYrVVySqo2j83CkW8JtNMRL/ZxYWtRY6lgIxoPFCDbpaqTDDMI22fzuQKGbHy2FBQnrE8dLVNnchcj7OooP26Tka1Uh1necN9kNSPFrHEYfbwqn9tPeHjyj6038dZ6rheDMT92q+fr9YVYjXvwTwW8SeL8b6+aSHdx3otgd/cOzjg1jz/UL5smH9oPl1zPEEgDmfFF2iuI1JUWnMwvHaBIob6qCD9LuJ14QaLvM3LH8rSIb3+FP9BwT1vbQgnVRYBn5TNwNYG5MozQRhdVr1rxMlgKPPfT5tg5GotmZJZzyOVQZUtVRBQMAF3XDmzrS2nynlyGdhI8xt8zxOw7omjN/h7fQ58oxnoQ2PIbDYpehAnZ0Uz6l3eEJrzexZPvPucyH8MMYA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(396003)(376002)(346002)(366004)(39860400002)(186003)(7696005)(4326008)(5660300002)(9686003)(6916009)(316002)(54906003)(76116006)(26005)(55016002)(64756008)(66946007)(33656002)(66446008)(66556008)(83380400001)(6506007)(478600001)(2906002)(71200400001)(86362001)(8936002)(66476007)(8676002)(52536014);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?ta41m2LxVlMJhEeI68PaLje7u3az9iwC+YYevd22hqNePIldVK9FuRBkSVhm?=
+ =?us-ascii?Q?alKDkFPNJAmImcHVrd/lZMZbgDT9WCxq1rdro26bwS0UQ1o8ZicStcIu2hnG?=
+ =?us-ascii?Q?UHPQO3dkippwmf076MDUyfeS+BCZ2Ndf2h0YGcTAjibVhUlYekTOg7P2ddAY?=
+ =?us-ascii?Q?OOYahvE/7Ov7X+c/5cpjFmoDy19wAlA9jJbk6sYhIK0iPHLD6073hqUyKUuZ?=
+ =?us-ascii?Q?zCfrG7TsqZuDJVfoT8iDcRKVJMvYOgPSuhwGy9m4KtWRdJqxRqWrJNNx83U6?=
+ =?us-ascii?Q?vQGtUHi2lzB0ne8nCqrtGgKTVddWC6wshWUBkFsjupVkvdKyTi4VIJstma6x?=
+ =?us-ascii?Q?brbny9FErlzAtOcTr21pgrkTbK25GdLrlUaoOduRrKyMLv6vP9DsRSHrgBdB?=
+ =?us-ascii?Q?LyV/8xibZ6T0MpPsxQhis9i4cW22XebPHbP0YrP8DaM05VD3YIpWIpvu6XCy?=
+ =?us-ascii?Q?ZOMRdTmAyVJUb/yzlqNWJj3Xt+APLqjdiijvBaBxzOhmZ7uL2Cgg50ZqwsTz?=
+ =?us-ascii?Q?XLGpPnnD4SjpCXsFmISi6SKIc5DWn/5lDBqLhgBWTNmfXpSJ4sAKfI/AWJX4?=
+ =?us-ascii?Q?2t/AkfHmNSY74s+PyaxjnAcTbi52yTBcQIR3MRR6sU8ZScMK+5jh8G1yPVx4?=
+ =?us-ascii?Q?RD+rNjUwngWpX6HLCqLnRxea50ZQJZbJmGbBuYyMseETxrdFYS4oAlu3FE+g?=
+ =?us-ascii?Q?NZM4CaiX69alp0I87px1IZYP9dBt9DwAzwZk8NukNnaxpECYuwI2TTZ8UXfK?=
+ =?us-ascii?Q?l22AcStB5ZefbMkh79Xtu3byaV0Iuz8gQlnTBk2XZFUWG2r3cO0UlAKimVz3?=
+ =?us-ascii?Q?ZBEcbHHTYA2BPxO9c9+KE1yYKxaBDrtYqcYsFDZpESzHsGb1xSAQ8mVQGUTl?=
+ =?us-ascii?Q?fmLYwEnbYz/GTgIp/pOWikoLE3ZSu+i05/Ll+6cR/pBIZwgT9bF2kFFwJQXx?=
+ =?us-ascii?Q?AAWdNaPPfINmOet5Wvfbx/snv1SPouKD/eLsNcKZS/yJUFut0GZVWAPYcWsY?=
+ =?us-ascii?Q?rclwEeURqfivCn1HQxiGr9+7wfPYIrkeHd4fW9cn/pumeS/Trthh4BtkW8TD?=
+ =?us-ascii?Q?HNOa19N6mBr52Q+ODThv9fLQuJKfbcVgEelCKLFUsk4zTiFE9QNaubv+MaI0?=
+ =?us-ascii?Q?no6qjLL/pxkSIJeOKX+tNyhUPsyXRirj0HxKf+7DFy5Sv/pdDJxN/JTJEt+i?=
+ =?us-ascii?Q?95wH8q1HtRjzwTOUPdbe24vsGblcqaDiIsu3d5mpRcKBXZPimCs2Mq12Uy8s?=
+ =?us-ascii?Q?4uueW0gL78MryXtxwewljmqdkNm4jLyYz6Rpjn994FlU0ORC1nc22DK68/qM?=
+ =?us-ascii?Q?Ggo=3D?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-In-Reply-To: <20210206104932.29064-1-jgross@suse.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 86855be5-0606-4bf5-83e0-08d8cad4ced1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Feb 2021 19:24:22.3624
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: +l0gVamxCsmtsAR+sVRnm4fxhghZagRlSr829SjMEKwrzFXCORmz8QXZ0B80wXbb49CsX+nM89nIr3Zzgia9pQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB6511
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Juergen,
+> >Regardless of your above proposal, as for the issues you were witnessing=
+ with
+> rpmb,
+> >That started this RFC in the first place, and the whole clearing uac ser=
+ies for
+> that matter:
+> > "In order to conduct FFU or RPMB operations, UFS needs to clear UNIT
+> ATTENTION condition...."
+> >
+> >Functionally, This was already done for the device wlun, and only added =
+the
+> rpmb wlun.
+> >
+> >Now you are trying to solve stuff because the rpmb is not provisioned.
+> >a) There should be no relation between response to request-sense command=
+,
+> > and if the key is programmed or not. And
+> >b) rpmb is accessed from user-space.  If it is not provisioned, it shoul=
+d
+> processed the error (-7)
+> >    and realize that by itself.  And also, It only makes sense that if n=
+eeded,
+> >    the access sequence will include  the request-sense command.
+> >
+> >Therefore, IMHO, just reverting Randall commit (1918651f2d7e) and fixing
+> the user-space code
+> >Should suffice.
+> >
+> >Thanks,
+> >Avri
+> >
+> Hi Avri
+>=20
+> Thanks.
+>=20
+> I don't think reverting 1918651f2d7e would fix this.
+>=20
+> [   12.182750] ufshcd-qcom 1d84000.ufshc: ufshcd_suspend: Setting power
+> mode
+> [   12.190467] ufshcd-qcom 1d84000.ufshc: wlun_dev_clr_ua: 0 <-- uac wasn=
+'t
+> sent
+> [   12.196735] ufshcd-qcom 1d84000.ufshc: Sending ssu
+> [   12.202412] scsi 0:0:0:49488: Queue rpm status b4 ssu: 2 <- sdev_ufs_d=
+evice
+> queue is suspended
+> [   12.208613] ufshcd-qcom 1d84000.ufshc: Wait for resume - <-- deadlock!
+>=20
+> The issue is sending any command to any lun which is registered for blk
+> runtime-pm in ufs host's suspend path would deadlock; since, it'd try to =
+resume
+> the ufs host in the same suspend calling sequence.
+Did you managed to bisect the commit that caused the regression?
+Is it in the series that Bart referred to?
 
-On 06/02/2021 10:49, Juergen Gross wrote:
-> The first three patches are fixes for XSA-332. The avoid WARN splats
-> and a performance issue with interdomain events.
-
-Thanks for helping to figure out the problem. Unfortunately, I still see 
-reliably the WARN splat with the latest Linux master (1e0d27fce010) + 
-your first 3 patches.
-
-I am using Xen 4.11 (1c7d984645f9) and dom0 is forced to use the 2L 
-events ABI.
-
-After some debugging, I think I have an idea what's went wrong. The 
-problem happens when the event is initially bound from vCPU0 to a 
-different vCPU.
-
- From the comment in xen_rebind_evtchn_to_cpu(), we are masking the 
-event to prevent it being delivered on an unexpected vCPU. However, I 
-believe the following can happen:
-
-vCPU0				| vCPU1
-				|
-				| Call xen_rebind_evtchn_to_cpu()
-receive event X			|
-				| mask event X
-				| bind to vCPU1
-<vCPU descheduled>		| unmask event X
-				|
-				| receive event X
-				|
-				| handle_edge_irq(X)
-handle_edge_irq(X)		|  -> handle_irq_event()
-				|   -> set IRQD_IN_PROGRESS
-  -> set IRQS_PENDING		|
-				|   -> evtchn_interrupt()
-				|   -> clear IRQD_IN_PROGRESS
-				|  -> IRQS_PENDING is set
-				|  -> handle_irq_event()
-				|   -> evtchn_interrupt()
-				|     -> WARN()
-				|
-
-All the lateeoi handlers expect a ONESHOT semantic and 
-evtchn_interrupt() is doesn't tolerate any deviation.
-
-I think the problem was introduced by 7f874a0447a9 ("xen/events: fix 
-lateeoi irq acknowledgment") because the interrupt was disabled 
-previously. Therefore we wouldn't do another iteration in handle_edge_irq().
-
-Aside the handlers, I think it may impact the defer EOI mitigation 
-because in theory if a 3rd vCPU is joining the party (let say vCPU A 
-migrate the event from vCPU B to vCPU C). So info->{eoi_cpu, irq_epoch, 
-eoi_time} could possibly get mangled?
-
-For a fix, we may want to consider to hold evtchn_rwlock with the write 
-permission. Although, I am not 100% sure this is going to prevent 
-everything.
-
-Does my write-up make sense to you?
-
-Cheers,
-
--- 
-Julien Grall
+Thanks,
+Avri
