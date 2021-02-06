@@ -2,206 +2,337 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6274CC433E0
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 Feb 2021 19:25:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F28CC433DB
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 Feb 2021 21:15:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2702464E65
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 Feb 2021 19:25:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5030264E88
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 Feb 2021 21:15:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229608AbhBFTZc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 6 Feb 2021 14:25:32 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:37082 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbhBFTZa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Feb 2021 14:25:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1612639529; x=1644175529;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=phdhSJGcKJbW2BzGc+t6H78uWeZG2DPNniAQJZN6az0=;
-  b=gCPbWY95BmzNTEzRRg6OJ849kV8uMmSJJfuIyKExzgs3bZGOHFlMkdRn
-   RlWhOc0igTFyvHm2U+MoBGWabOpTIRhSAL8rExRxq+rm4WVlixd8+lhpQ
-   5i+mUjbzQHerInc8gVZBRw6l/ZApq7KAmFYgEWpZSv/PoIc/MY7aBlEUT
-   4RYi+0+XXMJCQA0vaiduAEYX+09UNUujSG04eami1kewgczmFI5Dpa897
-   Fl85m1gY/Ict95k5rujxfVLx3jfQVwAFq+Pp4wiDAVuvFpPCNlI4MqRAS
-   mzwmlF4cMjJwNh2G+cdlV0rKAmSLYbKGhaHf81D4cIHLQIDrBgA0ilud1
-   g==;
-IronPort-SDR: /J6N6Mm05fCw9NHfZyj1IHpIfxu5lyySScC/b2D5PALhLm4eyKKlAb1nR7EkAg5XpAQffP7pNj
- 4cMbP6caIytwbu+IvGHBqoq5navF1c12pW8/EPKoiQazmWSgBsSW34omdC4UdG+NK/1DoMPJKx
- C2hX69FZMpXjvPCVh+fhbj1yPMHIU8Az8BSFfOFSEwfjjeywR6Qf2cB26dUf+1FwSSth7lEUaa
- y7KFUG9Qx+JcVXgVj5bojPu8VAN4eQRYcYoSTnidg6oP2U/tTZB5/NEL6YwzWMrS0z5ZK1t1x4
- +iE=
-X-IronPort-AV: E=Sophos;i="5.81,158,1610380800"; 
-   d="scan'208";a="160529284"
-Received: from mail-co1nam11lp2171.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.171])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2021 03:24:23 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Qc2Ee1XhRErFYe4KgJOiojnvNdj6Qw3bQgFYx4ZbukIoFsBmBUI2aieiL86++UV3qLGqWiyiPBqOgN3Hr0nuFMOXrtfU8F+2fCQhwUa6EP+Ah+6ZUomEiAcl4RMDgrZbb9chp+No5xSA5a1ikYkpCjDjSriVmPHvPeIEc3F0EF3JV7YP9LR457NO63BWnJ73uw6VOXocqN8MrN9+tPYb1UQYpd17QdiO38vCf36VfpITHSL7YznMXObIQl3IGSZHKSjqavPEm7URx8t2jnQ9uerY3MN2pabQfUe7TPQ0xlrtpTkeC/zznAfPsl/R3Az9EIMZQp2kVnrEBoXA9rwLJQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gD84gRlOd6pxi9XiX+dOlF9+EIouMYU5ZXCCIJgZSho=;
- b=nzxizY9cn8pZzH9xETl7bTEgyxwY5Qe4YCZGAQoprb0hE7Tn1U6Gz0ZAkHLiPcgicGPdAgthYzrPaCMjXbYcdLitdYu657LJBVKqrbutaxJWqeEGdYQf/zzb/kDCBp5p/j1WOulMVT1yRqAPt+wTjTy3kwQCFhC6rRAsykEJXHc2HXhtzEo6u5G4pvXNw8+L2sfA+KpP2dXe53K1/+ni6w2ctv7XBNERz8xNmKwl4zqbykkMLFwSnkNXw4hjM56+o0gmZGT89H6r+56JjrLfpSgiiL/Zf8mkdgD1mra4wSAFi91uI6mmAshFM8IDDD0aEVLczE/LCEUTbMc7ZrzOIg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gD84gRlOd6pxi9XiX+dOlF9+EIouMYU5ZXCCIJgZSho=;
- b=zjpCPOMLS5dGVYGTAgBsNG/Zh2ukioCdUJ9TYEjh+CfCeQXTf5v5wSNIZBaQIhQhsIVkFgy0dVOarO2Ap+neyzdFAfWlFAEhmr/cgm/OS4pHuCY2TdQxufbO+zom73trmGsTt9nOtZyzMvbEO8IdwqHF88y/BkQBellsYGMfic8=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB6511.namprd04.prod.outlook.com (2603:10b6:5:1bf::17) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3825.23; Sat, 6 Feb 2021 19:24:22 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::e824:f31b:38cf:ef66]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::e824:f31b:38cf:ef66%3]) with mapi id 15.20.3805.033; Sat, 6 Feb 2021
- 19:24:22 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Asutosh Das <asutoshd@codeaurora.org>
-CC:     Alan Stern <stern@rowland.harvard.edu>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: RE: [RFC PATCH v2 0/2] Fix deadlock in ufs
-Thread-Topic: [RFC PATCH v2 0/2] Fix deadlock in ufs
-Thread-Index: AQHW+y62BDWX6X6k8kupYsmVqHFwfapIfw8AgACs1ECAAJC+AIABxuPw
-Date:   Sat, 6 Feb 2021 19:24:22 +0000
-Message-ID: <DM6PR04MB65759417507BA054F8CAE86AFCB19@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <cover.1611719814.git.asutoshd@codeaurora.org>
- <84a182cc-de9c-4d6d-2193-3a44e4c88c8b@codeaurora.org>
- <20210201214802.GB420232@rowland.harvard.edu>
- <20210202205245.GA8444@stor-presley.qualcomm.com>
- <20210202220536.GA464234@rowland.harvard.edu>
- <20210204001354.GD37557@stor-presley.qualcomm.com>
- <20210204194831.GA567391@rowland.harvard.edu>
- <20210204211424.GH37557@stor-presley.qualcomm.com>
- <DM6PR04MB6575692524202EC91E2A5480FCB29@DM6PR04MB6575.namprd04.prod.outlook.com>
- <20210205161102.GJ37557@stor-presley.qualcomm.com>
-In-Reply-To: <20210205161102.GJ37557@stor-presley.qualcomm.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: codeaurora.org; dkim=none (message not signed)
- header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [77.138.4.172]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 86855be5-0606-4bf5-83e0-08d8cad4ced1
-x-ms-traffictypediagnostic: DM6PR04MB6511:
-x-microsoft-antispam-prvs: <DM6PR04MB6511AE44A48EE750E3FB5589FCB19@DM6PR04MB6511.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: sH5lP0X180+5AGFsaoDzcG/vPNKgcZOOsFtWBW3VvaqW3CqnJZ+2DDHQ+Wke94xOU4/nElOKwLnrKq8KbbbwYpgbl53NMFhObPvkTBY8KFDh32Be0JKa5614Vnm3RC5a+ElxgztLRoMjKiuYrVVySqo2j83CkW8JtNMRL/ZxYWtRY6lgIxoPFCDbpaqTDDMI22fzuQKGbHy2FBQnrE8dLVNnchcj7OooP26Tka1Uh1necN9kNSPFrHEYfbwqn9tPeHjyj6038dZ6rheDMT92q+fr9YVYjXvwTwW8SeL8b6+aSHdx3otgd/cOzjg1jz/UL5smH9oPl1zPEEgDmfFF2iuI1JUWnMwvHaBIob6qCD9LuJ14QaLvM3LH8rSIb3+FP9BwT1vbQgnVRYBn5TNwNYG5MozQRhdVr1rxMlgKPPfT5tg5GotmZJZzyOVQZUtVRBQMAF3XDmzrS2nynlyGdhI8xt8zxOw7omjN/h7fQ58oxnoQ2PIbDYpehAnZ0Uz6l3eEJrzexZPvPucyH8MMYA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(396003)(376002)(346002)(366004)(39860400002)(186003)(7696005)(4326008)(5660300002)(9686003)(6916009)(316002)(54906003)(76116006)(26005)(55016002)(64756008)(66946007)(33656002)(66446008)(66556008)(83380400001)(6506007)(478600001)(2906002)(71200400001)(86362001)(8936002)(66476007)(8676002)(52536014);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?ta41m2LxVlMJhEeI68PaLje7u3az9iwC+YYevd22hqNePIldVK9FuRBkSVhm?=
- =?us-ascii?Q?alKDkFPNJAmImcHVrd/lZMZbgDT9WCxq1rdro26bwS0UQ1o8ZicStcIu2hnG?=
- =?us-ascii?Q?UHPQO3dkippwmf076MDUyfeS+BCZ2Ndf2h0YGcTAjibVhUlYekTOg7P2ddAY?=
- =?us-ascii?Q?OOYahvE/7Ov7X+c/5cpjFmoDy19wAlA9jJbk6sYhIK0iPHLD6073hqUyKUuZ?=
- =?us-ascii?Q?zCfrG7TsqZuDJVfoT8iDcRKVJMvYOgPSuhwGy9m4KtWRdJqxRqWrJNNx83U6?=
- =?us-ascii?Q?vQGtUHi2lzB0ne8nCqrtGgKTVddWC6wshWUBkFsjupVkvdKyTi4VIJstma6x?=
- =?us-ascii?Q?brbny9FErlzAtOcTr21pgrkTbK25GdLrlUaoOduRrKyMLv6vP9DsRSHrgBdB?=
- =?us-ascii?Q?LyV/8xibZ6T0MpPsxQhis9i4cW22XebPHbP0YrP8DaM05VD3YIpWIpvu6XCy?=
- =?us-ascii?Q?ZOMRdTmAyVJUb/yzlqNWJj3Xt+APLqjdiijvBaBxzOhmZ7uL2Cgg50ZqwsTz?=
- =?us-ascii?Q?XLGpPnnD4SjpCXsFmISi6SKIc5DWn/5lDBqLhgBWTNmfXpSJ4sAKfI/AWJX4?=
- =?us-ascii?Q?2t/AkfHmNSY74s+PyaxjnAcTbi52yTBcQIR3MRR6sU8ZScMK+5jh8G1yPVx4?=
- =?us-ascii?Q?RD+rNjUwngWpX6HLCqLnRxea50ZQJZbJmGbBuYyMseETxrdFYS4oAlu3FE+g?=
- =?us-ascii?Q?NZM4CaiX69alp0I87px1IZYP9dBt9DwAzwZk8NukNnaxpECYuwI2TTZ8UXfK?=
- =?us-ascii?Q?l22AcStB5ZefbMkh79Xtu3byaV0Iuz8gQlnTBk2XZFUWG2r3cO0UlAKimVz3?=
- =?us-ascii?Q?ZBEcbHHTYA2BPxO9c9+KE1yYKxaBDrtYqcYsFDZpESzHsGb1xSAQ8mVQGUTl?=
- =?us-ascii?Q?fmLYwEnbYz/GTgIp/pOWikoLE3ZSu+i05/Ll+6cR/pBIZwgT9bF2kFFwJQXx?=
- =?us-ascii?Q?AAWdNaPPfINmOet5Wvfbx/snv1SPouKD/eLsNcKZS/yJUFut0GZVWAPYcWsY?=
- =?us-ascii?Q?rclwEeURqfivCn1HQxiGr9+7wfPYIrkeHd4fW9cn/pumeS/Trthh4BtkW8TD?=
- =?us-ascii?Q?HNOa19N6mBr52Q+ODThv9fLQuJKfbcVgEelCKLFUsk4zTiFE9QNaubv+MaI0?=
- =?us-ascii?Q?no6qjLL/pxkSIJeOKX+tNyhUPsyXRirj0HxKf+7DFy5Sv/pdDJxN/JTJEt+i?=
- =?us-ascii?Q?95wH8q1HtRjzwTOUPdbe24vsGblcqaDiIsu3d5mpRcKBXZPimCs2Mq12Uy8s?=
- =?us-ascii?Q?4uueW0gL78MryXtxwewljmqdkNm4jLyYz6Rpjn994FlU0ORC1nc22DK68/qM?=
- =?us-ascii?Q?Ggo=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S229536AbhBFVPY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 6 Feb 2021 16:15:24 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:45701 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229522AbhBFVPY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 6 Feb 2021 16:15:24 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id C2FAD2041BB;
+        Sat,  6 Feb 2021 22:14:40 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id fDKf7h3I7R3o; Sat,  6 Feb 2021 22:14:35 +0100 (CET)
+Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        by smtp.infotech.no (Postfix) with ESMTPA id 4A04D20418F;
+        Sat,  6 Feb 2021 22:14:34 +0100 (CET)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        kashyap.desai@broadcom.com
+Subject: [PATCH v2] scsi_debug: add new defer_type for mq_poll
+Date:   Sat,  6 Feb 2021 16:14:31 -0500
+Message-Id: <20210206211431.25952-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 86855be5-0606-4bf5-83e0-08d8cad4ced1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Feb 2021 19:24:22.3624
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: +l0gVamxCsmtsAR+sVRnm4fxhghZagRlSr829SjMEKwrzFXCORmz8QXZ0B80wXbb49CsX+nM89nIr3Zzgia9pQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB6511
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> >Regardless of your above proposal, as for the issues you were witnessing=
- with
-> rpmb,
-> >That started this RFC in the first place, and the whole clearing uac ser=
-ies for
-> that matter:
-> > "In order to conduct FFU or RPMB operations, UFS needs to clear UNIT
-> ATTENTION condition...."
-> >
-> >Functionally, This was already done for the device wlun, and only added =
-the
-> rpmb wlun.
-> >
-> >Now you are trying to solve stuff because the rpmb is not provisioned.
-> >a) There should be no relation between response to request-sense command=
-,
-> > and if the key is programmed or not. And
-> >b) rpmb is accessed from user-space.  If it is not provisioned, it shoul=
-d
-> processed the error (-7)
-> >    and realize that by itself.  And also, It only makes sense that if n=
-eeded,
-> >    the access sequence will include  the request-sense command.
-> >
-> >Therefore, IMHO, just reverting Randall commit (1918651f2d7e) and fixing
-> the user-space code
-> >Should suffice.
-> >
-> >Thanks,
-> >Avri
-> >
-> Hi Avri
->=20
-> Thanks.
->=20
-> I don't think reverting 1918651f2d7e would fix this.
->=20
-> [   12.182750] ufshcd-qcom 1d84000.ufshc: ufshcd_suspend: Setting power
-> mode
-> [   12.190467] ufshcd-qcom 1d84000.ufshc: wlun_dev_clr_ua: 0 <-- uac wasn=
-'t
-> sent
-> [   12.196735] ufshcd-qcom 1d84000.ufshc: Sending ssu
-> [   12.202412] scsi 0:0:0:49488: Queue rpm status b4 ssu: 2 <- sdev_ufs_d=
-evice
-> queue is suspended
-> [   12.208613] ufshcd-qcom 1d84000.ufshc: Wait for resume - <-- deadlock!
->=20
-> The issue is sending any command to any lun which is registered for blk
-> runtime-pm in ufs host's suspend path would deadlock; since, it'd try to =
-resume
-> the ufs host in the same suspend calling sequence.
-Did you managed to bisect the commit that caused the regression?
-Is it in the series that Bart referred to?
+Add a new sdeb_defer_type enumeration: SDEB_DEFER_POLL for requests
+that have REQ_HIPRI set in cmd_flags field. It is expected that
+these requests will be polled via the mq_poll entry point which
+is driven by calls to blk_poll() in the block layer. Therefore
+timer events are not 'wired up' in the normal fashion.
 
-Thanks,
-Avri
+There are still cases with short delays (e.g. < 10 microseconds)
+where by the time the command reponse processing occurs, the delay
+is already exceeded in which case the code calls scsi_done()
+directly. In such cases there is no window for mq_poll() to be
+called.
+
+Add 'mq_polls' counter that increments on each scsi_done() called
+via the mq_poll entry point. Can be used to show (with 'cat
+/proc/scsi/scsi_debug/<host_id>') that blk_poll() is causing
+completions rather than some of mechanism.
+
+
+This patch is against the 5.12/scsi-staging branch which includes
+   a98d6bdf181eb71bf4686666eaf47c642a061642
+   scsi_debug : iouring iopoll support
+which it alters. So this patch is a fix of that patch.
+
+Changes since version 1 [sent 20210201 to linux-scsi list]
+  - harden SDEB_DEFER_POLL which broke under testing
+  - add mq_polls counter for debug output
+
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi_debug.c | 137 +++++++++++++++++++++++++-------------
+ 1 file changed, 90 insertions(+), 47 deletions(-)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 746eec521f79..f46e8b3811f5 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -322,17 +322,19 @@ struct sdeb_store_info {
+ 	container_of(d, struct sdebug_host_info, dev)
+ 
+ enum sdeb_defer_type {SDEB_DEFER_NONE = 0, SDEB_DEFER_HRT = 1,
+-		      SDEB_DEFER_WQ = 2};
++		      SDEB_DEFER_WQ = 2, SDEB_DEFER_POLL = 3};
+ 
+ struct sdebug_defer {
+ 	struct hrtimer hrt;
+ 	struct execute_work ew;
++	ktime_t cmpl_ts;/* time since boot to complete this cmd */
+ 	int sqa_idx;	/* index of sdebug_queue array */
+ 	int qc_idx;	/* index of sdebug_queued_cmd array within sqa_idx */
+ 	int hc_idx;	/* hostwide tag index */
+ 	int issuing_cpu;
+ 	bool init_hrt;
+ 	bool init_wq;
++	bool init_poll;
+ 	bool aborted;	/* true when blk_abort_request() already called */
+ 	enum sdeb_defer_type defer_t;
+ };
+@@ -357,6 +359,7 @@ static atomic_t sdebug_completions;  /* count of deferred completions */
+ static atomic_t sdebug_miss_cpus;    /* submission + completion cpus differ */
+ static atomic_t sdebug_a_tsf;	     /* 'almost task set full' counter */
+ static atomic_t sdeb_inject_pending;
++static atomic_t sdeb_mq_poll_count;  /* bumped when mq_poll returns > 0 */
+ 
+ struct opcode_info_t {
+ 	u8 num_attached;	/* 0 if this is it (i.e. a leaf); use 0xff */
+@@ -4730,7 +4733,6 @@ static void sdebug_q_cmd_complete(struct sdebug_defer *sd_dp)
+ 	struct scsi_cmnd *scp;
+ 	struct sdebug_dev_info *devip;
+ 
+-	sd_dp->defer_t = SDEB_DEFER_NONE;
+ 	if (unlikely(aborted))
+ 		sd_dp->aborted = false;
+ 	qc_idx = sd_dp->qc_idx;
+@@ -4745,6 +4747,7 @@ static void sdebug_q_cmd_complete(struct sdebug_defer *sd_dp)
+ 		return;
+ 	}
+ 	spin_lock_irqsave(&sqp->qc_lock, iflags);
++	sd_dp->defer_t = SDEB_DEFER_NONE;
+ 	sqcp = &sqp->qc_arr[qc_idx];
+ 	scp = sqcp->a_cmnd;
+ 	if (unlikely(scp == NULL)) {
+@@ -5517,40 +5520,66 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 				kt -= d;
+ 			}
+ 		}
+-		if (!sd_dp->init_hrt) {
+-			sd_dp->init_hrt = true;
+-			sqcp->sd_dp = sd_dp;
+-			hrtimer_init(&sd_dp->hrt, CLOCK_MONOTONIC,
+-				     HRTIMER_MODE_REL_PINNED);
+-			sd_dp->hrt.function = sdebug_q_cmd_hrt_complete;
+-			sd_dp->sqa_idx = sqp - sdebug_q_arr;
+-			sd_dp->qc_idx = k;
++		sd_dp->cmpl_ts = ktime_add(ns_to_ktime(ns_from_boot), kt);
++		if (cmnd->request->cmd_flags & REQ_HIPRI) {
++			spin_lock_irqsave(&sqp->qc_lock, iflags);
++			if (!sd_dp->init_poll) {
++				sd_dp->init_poll = true;
++				sqcp->sd_dp = sd_dp;
++				sd_dp->sqa_idx = sqp - sdebug_q_arr;
++				sd_dp->qc_idx = k;
++			}
++			sd_dp->defer_t = SDEB_DEFER_POLL;
++			spin_unlock_irqrestore(&sqp->qc_lock, iflags);
++		} else {
++			if (!sd_dp->init_hrt) {
++				sd_dp->init_hrt = true;
++				sqcp->sd_dp = sd_dp;
++				hrtimer_init(&sd_dp->hrt, CLOCK_MONOTONIC,
++					     HRTIMER_MODE_REL_PINNED);
++				sd_dp->hrt.function = sdebug_q_cmd_hrt_complete;
++				sd_dp->sqa_idx = sqp - sdebug_q_arr;
++				sd_dp->qc_idx = k;
++			}
++			sd_dp->defer_t = SDEB_DEFER_HRT;
++			/* schedule the invocation of scsi_done() for a later time */
++			hrtimer_start(&sd_dp->hrt, kt, HRTIMER_MODE_REL_PINNED);
+ 		}
+ 		if (sdebug_statistics)
+ 			sd_dp->issuing_cpu = raw_smp_processor_id();
+-		sd_dp->defer_t = SDEB_DEFER_HRT;
+-		/* schedule the invocation of scsi_done() for a later time */
+-		hrtimer_start(&sd_dp->hrt, kt, HRTIMER_MODE_REL_PINNED);
+ 	} else {	/* jdelay < 0, use work queue */
+-		if (!sd_dp->init_wq) {
+-			sd_dp->init_wq = true;
+-			sqcp->sd_dp = sd_dp;
+-			sd_dp->sqa_idx = sqp - sdebug_q_arr;
+-			sd_dp->qc_idx = k;
+-			INIT_WORK(&sd_dp->ew.work, sdebug_q_cmd_wq_complete);
+-		}
+-		if (sdebug_statistics)
+-			sd_dp->issuing_cpu = raw_smp_processor_id();
+-		sd_dp->defer_t = SDEB_DEFER_WQ;
+ 		if (unlikely((sdebug_opts & SDEBUG_OPT_CMD_ABORT) &&
+ 			     atomic_read(&sdeb_inject_pending)))
+ 			sd_dp->aborted = true;
+-		schedule_work(&sd_dp->ew.work);
+-		if (unlikely((sdebug_opts & SDEBUG_OPT_CMD_ABORT) &&
+-			     atomic_read(&sdeb_inject_pending))) {
++		sd_dp->cmpl_ts = ns_to_ktime(ns_from_boot);
++		if (cmnd->request->cmd_flags & REQ_HIPRI) {
++			spin_lock_irqsave(&sqp->qc_lock, iflags);
++			if (!sd_dp->init_poll) {
++				sd_dp->init_poll = true;
++				sqcp->sd_dp = sd_dp;
++				sd_dp->sqa_idx = sqp - sdebug_q_arr;
++				sd_dp->qc_idx = k;
++			}
++			sd_dp->defer_t = SDEB_DEFER_POLL;
++			spin_unlock_irqrestore(&sqp->qc_lock, iflags);
++		} else {
++			if (!sd_dp->init_wq) {
++				sd_dp->init_wq = true;
++				sqcp->sd_dp = sd_dp;
++				sd_dp->sqa_idx = sqp - sdebug_q_arr;
++				sd_dp->qc_idx = k;
++				INIT_WORK(&sd_dp->ew.work, sdebug_q_cmd_wq_complete);
++			}
++			sd_dp->defer_t = SDEB_DEFER_WQ;
++			schedule_work(&sd_dp->ew.work);
++		}
++		if (sdebug_statistics)
++			sd_dp->issuing_cpu = raw_smp_processor_id();
++		if (unlikely(sd_dp->aborted)) {
+ 			sdev_printk(KERN_INFO, sdp, "abort request tag %d\n", cmnd->request->tag);
+ 			blk_abort_request(cmnd->request);
+ 			atomic_set(&sdeb_inject_pending, 0);
++			sd_dp->aborted = false;
+ 		}
+ 	}
+ 	if (unlikely((SDEBUG_OPT_Q_NOISE & sdebug_opts) && scsi_result == device_qfull_result))
+@@ -5779,11 +5808,12 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
+ 		   dix_reads, dix_writes, dif_errors);
+ 	seq_printf(m, "usec_in_jiffy=%lu, statistics=%d\n", TICK_NSEC / 1000,
+ 		   sdebug_statistics);
+-	seq_printf(m, "cmnd_count=%d, completions=%d, %s=%d, a_tsf=%d\n",
++	seq_printf(m, "cmnd_count=%d, completions=%d, %s=%d, a_tsf=%d, mq_polls=%d\n",
+ 		   atomic_read(&sdebug_cmnd_count),
+ 		   atomic_read(&sdebug_completions),
+ 		   "miss_cpus", atomic_read(&sdebug_miss_cpus),
+-		   atomic_read(&sdebug_a_tsf));
++		   atomic_read(&sdebug_a_tsf),
++		   atomic_read(&sdeb_mq_poll_count));
+ 
+ 	seq_printf(m, "submit_queues=%d\n", submit_queues);
+ 	for (j = 0, sqp = sdebug_q_arr; j < submit_queues; ++j, ++sqp) {
+@@ -7246,52 +7276,64 @@ static int sdebug_map_queues(struct Scsi_Host *shost)
+ 
+ static int sdebug_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ {
+-	int qc_idx;
+-	int retiring = 0;
++	bool first;
++	bool retiring = false;
++	int num_entries = 0;
++	unsigned int qc_idx = 0;
+ 	unsigned long iflags;
++	ktime_t kt_from_boot = ktime_get_boottime();
+ 	struct sdebug_queue *sqp;
+ 	struct sdebug_queued_cmd *sqcp;
+ 	struct scsi_cmnd *scp;
+ 	struct sdebug_dev_info *devip;
+-	int num_entries = 0;
+ 
+ 	sqp = sdebug_q_arr + queue_num;
++	spin_lock_irqsave(&sqp->qc_lock, iflags);
+ 
+-	do {
+-		spin_lock_irqsave(&sqp->qc_lock, iflags);
+-		qc_idx = find_first_bit(sqp->in_use_bm, sdebug_max_queue);
+-		if (unlikely((qc_idx < 0) || (qc_idx >= sdebug_max_queue)))
+-			goto out;
++	for (first = true; first || qc_idx + 1 < sdebug_max_queue; )   {
++		if (first) {
++			qc_idx = find_first_bit(sqp->in_use_bm, sdebug_max_queue);
++			first = false;
++		} else {
++			qc_idx = find_next_bit(sqp->in_use_bm, sdebug_max_queue, qc_idx + 1);
++		}
++		if (unlikely(qc_idx >= sdebug_max_queue))
++			break;
+ 
+ 		sqcp = &sqp->qc_arr[qc_idx];
+ 		scp = sqcp->a_cmnd;
+ 		if (unlikely(scp == NULL)) {
+-			pr_err("scp is NULL, queue_num=%d, qc_idx=%d from %s\n",
++			pr_err("scp is NULL, queue_num=%d, qc_idx=%u from %s\n",
+ 			       queue_num, qc_idx, __func__);
+-			goto out;
++			break;
+ 		}
++		if (sqcp->sd_dp->defer_t == SDEB_DEFER_POLL) {
++			if (kt_from_boot < sqcp->sd_dp->cmpl_ts)
++				continue;
++
++		} else		/* ignoring non REQ_HIPRI requests */
++			continue;
+ 		devip = (struct sdebug_dev_info *)scp->device->hostdata;
+ 		if (likely(devip))
+ 			atomic_dec(&devip->num_in_q);
+ 		else
+ 			pr_err("devip=NULL from %s\n", __func__);
+ 		if (unlikely(atomic_read(&retired_max_queue) > 0))
+-			retiring = 1;
++			retiring = true;
+ 
+ 		sqcp->a_cmnd = NULL;
+ 		if (unlikely(!test_and_clear_bit(qc_idx, sqp->in_use_bm))) {
+-			pr_err("Unexpected completion sqp %p queue_num=%d qc_idx=%d from %s\n",
++			pr_err("Unexpected completion sqp %p queue_num=%d qc_idx=%u from %s\n",
+ 				sqp, queue_num, qc_idx, __func__);
+-			goto out;
++			break;
+ 		}
+-
+ 		if (unlikely(retiring)) {	/* user has reduced max_queue */
+ 			int k, retval;
+ 
+ 			retval = atomic_read(&retired_max_queue);
+ 			if (qc_idx >= retval) {
+ 				pr_err("index %d too large\n", retval);
+-				goto out;
++				break;
+ 			}
+ 			k = find_last_bit(sqp->in_use_bm, retval);
+ 			if ((k < sdebug_max_queue) || (k == retval))
+@@ -7299,17 +7341,18 @@ static int sdebug_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ 			else
+ 				atomic_set(&retired_max_queue, k + 1);
+ 		}
++		sqcp->sd_dp->defer_t = SDEB_DEFER_NONE;
+ 		spin_unlock_irqrestore(&sqp->qc_lock, iflags);
+ 		scp->scsi_done(scp); /* callback to mid level */
++		spin_lock_irqsave(&sqp->qc_lock, iflags);
+ 		num_entries++;
+-	} while (1);
+-
+-out:
++	}
+ 	spin_unlock_irqrestore(&sqp->qc_lock, iflags);
++	if (num_entries > 0)
++		atomic_add(num_entries, &sdeb_mq_poll_count);
+ 	return num_entries;
+ }
+ 
+-
+ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 				   struct scsi_cmnd *scp)
+ {
+-- 
+2.25.1
+
