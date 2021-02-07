@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2877EC433DB
-	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 09:22:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FE18C433DB
+	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 09:22:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2D1664E44
-	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 09:22:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3181E64E43
+	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 09:22:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229646AbhBGJWb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 7 Feb 2021 04:22:31 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:46670 "EHLO
+        id S229742AbhBGJWw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 7 Feb 2021 04:22:52 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:33440 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229548AbhBGJWZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Feb 2021 04:22:25 -0500
+        by vger.kernel.org with ESMTP id S229717AbhBGJWd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Feb 2021 04:22:33 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612689659;
+        s=mimecast20190719; t=1612689666;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=KnG5gZBPUTLeVx2S/SnAZtG2WSuge4Xyl5Npf9sycBs=;
-        b=EePu3SAZjlPdfKF6iVUBWywPStKAspdtkGpjvySYI/u1NFueVA97aQFzYyJ1f+Wu78SFOa
-        Dd0KICswL+nhTwzIZCdGYOa+RxryT/Nb6mFIZQEuAma9QnlWyCUpnYpH0Wj+xEEhk+GLQm
-        VNdHaeOK97nE4jUhSLr5wige2XuosyU=
+        bh=3NQbHSeYUBG1OhOepiNAE6URM0kU5Vn4WnKABOQl7lo=;
+        b=ZcBBEG0C3+yTUV9HNTaNlwxIto2yQlz9jqullNsQ/etNnQayd4Btw3ZidJ4V8LRNAxsk3z
+        1S2wvrljIBYQq3nHv8yCqUu8Z2CVIjYtz19CXx84e/sznUB44a53M+hxPwmMTJCtymQgGg
+        ly6PpciJxCCkoAIoSd3KJAAbHIurjYg=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-311-cvp7uKv4OHSS-51X10hGfw-1; Sun, 07 Feb 2021 04:20:55 -0500
-X-MC-Unique: cvp7uKv4OHSS-51X10hGfw-1
+ us-mta-507-ap8Y5AizOLuhA0eR-DzMag-1; Sun, 07 Feb 2021 04:21:04 -0500
+X-MC-Unique: ap8Y5AizOLuhA0eR-DzMag-1
 Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5F0611846098;
-        Sun,  7 Feb 2021 09:20:53 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 475161846092;
+        Sun,  7 Feb 2021 09:21:03 +0000 (UTC)
 Received: from localhost (ovpn-13-9.pek2.redhat.com [10.72.13.9])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BDAFA5C5AE;
-        Sun,  7 Feb 2021 09:20:49 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 97AB35C8A7;
+        Sun,  7 Feb 2021 09:21:02 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -50,9 +50,9 @@ Cc:     Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
         Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
         "Ewan D . Milne" <emilne@redhat.com>,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH V8 03/13] sbitmap: add helpers for updating allocation hint
-Date:   Sun,  7 Feb 2021 17:20:19 +0800
-Message-Id: <20210207092029.1558550-4-ming.lei@redhat.com>
+Subject: [PATCH V8 05/13] sbitmap: export sbitmap_weight
+Date:   Sun,  7 Feb 2021 17:20:21 +0800
+Message-Id: <20210207092029.1558550-6-ming.lei@redhat.com>
 In-Reply-To: <20210207092029.1558550-1-ming.lei@redhat.com>
 References: <20210207092029.1558550-1-ming.lei@redhat.com>
 MIME-Version: 1.0
@@ -62,156 +62,78 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add helpers for updating allocation hint, so that we can
-avoid to duplicate code.
+SCSI's .device_busy will be converted to sbitmap, and sbitmap_weight
+is needed, so export the helper.
 
-Prepare for moving allocation hint into sbitmap.
+Meantime the only user of sbitmap_weight() is just for getting how
+many set and not cleared bits, so align sbitmap_weight() meaning
+with this way because the external user only cares how many busy
+bits there are in the sbitmap.
 
 Cc: Omar Sandoval <osandov@fb.com>
 Cc: Kashyap Desai <kashyap.desai@broadcom.com>
 Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
 Cc: Ewan D. Milne <emilne@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Tested-by: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- lib/sbitmap.c | 93 ++++++++++++++++++++++++++++++---------------------
- 1 file changed, 54 insertions(+), 39 deletions(-)
+ include/linux/sbitmap.h | 10 ++++++++++
+ lib/sbitmap.c           | 11 ++++++-----
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
+diff --git a/include/linux/sbitmap.h b/include/linux/sbitmap.h
+index 247776fcc02c..c65ba887dcc3 100644
+--- a/include/linux/sbitmap.h
++++ b/include/linux/sbitmap.h
+@@ -341,6 +341,16 @@ static inline int sbitmap_test_bit(struct sbitmap *sb, unsigned int bitnr)
+  */
+ void sbitmap_show(struct sbitmap *sb, struct seq_file *m);
+ 
++
++/**
++ * sbitmap_weight() - Return how many set and not cleared bits in a &struct
++ * sbitmap.
++ * @sb: Bitmap to check.
++ *
++ * Return: How many set and not cleared bits set
++ */
++unsigned int sbitmap_weight(const struct sbitmap *sb);
++
+ /**
+  * sbitmap_bitmap_show() - Write a hex dump of a &struct sbitmap to a &struct
+  * seq_file.
 diff --git a/lib/sbitmap.c b/lib/sbitmap.c
-index 7000636933b3..2b43a6aefec3 100644
+index e395435654aa..73da26ad021e 100644
 --- a/lib/sbitmap.c
 +++ b/lib/sbitmap.c
-@@ -9,6 +9,55 @@
- #include <linux/sbitmap.h>
- #include <linux/seq_file.h>
- 
-+static int init_alloc_hint(struct sbitmap_queue *sbq, gfp_t flags)
-+{
-+	unsigned depth = sbq->sb.depth;
-+
-+	sbq->alloc_hint = alloc_percpu_gfp(unsigned int, flags);
-+	if (!sbq->alloc_hint)
-+		return -ENOMEM;
-+
-+	if (depth && !sbq->sb.round_robin) {
-+		int i;
-+
-+		for_each_possible_cpu(i)
-+			*per_cpu_ptr(sbq->alloc_hint, i) = prandom_u32() % depth;
-+	}
-+
-+	return 0;
-+}
-+
-+static inline unsigned update_alloc_hint_before_get(struct sbitmap_queue *sbq,
-+						    unsigned int depth)
-+{
-+	unsigned hint;
-+
-+	hint = this_cpu_read(*sbq->alloc_hint);
-+	if (unlikely(hint >= depth)) {
-+		hint = depth ? prandom_u32() % depth : 0;
-+		this_cpu_write(*sbq->alloc_hint, hint);
-+	}
-+
-+	return hint;
-+}
-+
-+static inline void update_alloc_hint_after_get(struct sbitmap_queue *sbq,
-+					       unsigned int depth,
-+					       unsigned int hint,
-+					       unsigned int nr)
-+{
-+	if (nr == -1) {
-+		/* If the map is full, a hint won't do us much good. */
-+		this_cpu_write(*sbq->alloc_hint, 0);
-+	} else if (nr == hint || unlikely(sbq->sb.round_robin)) {
-+		/* Only update the hint if we used it. */
-+		hint = nr + 1;
-+		if (hint >= depth - 1)
-+			hint = 0;
-+		this_cpu_write(*sbq->alloc_hint, hint);
-+	}
-+}
-+
- /*
-  * See if we have deferred clears that we can batch move
-  */
-@@ -355,17 +404,11 @@ int sbitmap_queue_init_node(struct sbitmap_queue *sbq, unsigned int depth,
- 	if (ret)
- 		return ret;
- 
--	sbq->alloc_hint = alloc_percpu_gfp(unsigned int, flags);
--	if (!sbq->alloc_hint) {
-+	if (init_alloc_hint(sbq, flags) != 0) {
- 		sbitmap_free(&sbq->sb);
- 		return -ENOMEM;
- 	}
- 
--	if (depth && !round_robin) {
--		for_each_possible_cpu(i)
--			*per_cpu_ptr(sbq->alloc_hint, i) = prandom_u32() % depth;
--	}
--
- 	sbq->min_shallow_depth = UINT_MAX;
- 	sbq->wake_batch = sbq_calc_wake_batch(sbq, depth);
- 	atomic_set(&sbq->wake_index, 0);
-@@ -418,24 +461,10 @@ int __sbitmap_queue_get(struct sbitmap_queue *sbq)
- 	unsigned int hint, depth;
- 	int nr;
- 
--	hint = this_cpu_read(*sbq->alloc_hint);
- 	depth = READ_ONCE(sbq->sb.depth);
--	if (unlikely(hint >= depth)) {
--		hint = depth ? prandom_u32() % depth : 0;
--		this_cpu_write(*sbq->alloc_hint, hint);
--	}
-+	hint = update_alloc_hint_before_get(sbq, depth);
- 	nr = sbitmap_get(&sbq->sb, hint);
--
--	if (nr == -1) {
--		/* If the map is full, a hint won't do us much good. */
--		this_cpu_write(*sbq->alloc_hint, 0);
--	} else if (nr == hint || unlikely(sbq->sb.round_robin)) {
--		/* Only update the hint if we used it. */
--		hint = nr + 1;
--		if (hint >= depth - 1)
--			hint = 0;
--		this_cpu_write(*sbq->alloc_hint, hint);
--	}
-+	update_alloc_hint_after_get(sbq, depth, hint, nr);
- 
- 	return nr;
+@@ -334,20 +334,21 @@ static unsigned int __sbitmap_weight(const struct sbitmap *sb, bool set)
+ 	return weight;
  }
-@@ -449,24 +478,10 @@ int __sbitmap_queue_get_shallow(struct sbitmap_queue *sbq,
  
- 	WARN_ON_ONCE(shallow_depth < sbq->min_shallow_depth);
- 
--	hint = this_cpu_read(*sbq->alloc_hint);
- 	depth = READ_ONCE(sbq->sb.depth);
--	if (unlikely(hint >= depth)) {
--		hint = depth ? prandom_u32() % depth : 0;
--		this_cpu_write(*sbq->alloc_hint, hint);
--	}
-+	hint = update_alloc_hint_before_get(sbq, depth);
- 	nr = sbitmap_get_shallow(&sbq->sb, hint, shallow_depth);
--
--	if (nr == -1) {
--		/* If the map is full, a hint won't do us much good. */
--		this_cpu_write(*sbq->alloc_hint, 0);
--	} else if (nr == hint || unlikely(sbq->sb.round_robin)) {
--		/* Only update the hint if we used it. */
--		hint = nr + 1;
--		if (hint >= depth - 1)
--			hint = 0;
--		this_cpu_write(*sbq->alloc_hint, hint);
--	}
-+	update_alloc_hint_after_get(sbq, depth, hint, nr);
- 
- 	return nr;
+-static unsigned int sbitmap_weight(const struct sbitmap *sb)
++static unsigned int sbitmap_cleared(const struct sbitmap *sb)
+ {
+-	return __sbitmap_weight(sb, true);
++	return __sbitmap_weight(sb, false);
  }
+ 
+-static unsigned int sbitmap_cleared(const struct sbitmap *sb)
++unsigned int sbitmap_weight(const struct sbitmap *sb)
+ {
+-	return __sbitmap_weight(sb, false);
++	return __sbitmap_weight(sb, true) - sbitmap_cleared(sb);
+ }
++EXPORT_SYMBOL_GPL(sbitmap_weight);
+ 
+ void sbitmap_show(struct sbitmap *sb, struct seq_file *m)
+ {
+ 	seq_printf(m, "depth=%u\n", sb->depth);
+-	seq_printf(m, "busy=%u\n", sbitmap_weight(sb) - sbitmap_cleared(sb));
++	seq_printf(m, "busy=%u\n", sbitmap_weight(sb));
+ 	seq_printf(m, "cleared=%u\n", sbitmap_cleared(sb));
+ 	seq_printf(m, "bits_per_word=%u\n", 1U << sb->shift);
+ 	seq_printf(m, "map_nr=%u\n", sb->map_nr);
 -- 
 2.29.2
 
