@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B459CC433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE9CFC43381
 	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 11:41:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90CCA64E4D
+	by mail.kernel.org (Postfix) with ESMTP id B9D9664E3C
 	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 11:41:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229750AbhBGLkq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 7 Feb 2021 06:40:46 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:12083 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229581AbhBGLkW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Feb 2021 06:40:22 -0500
-Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4DYRwg3gzSzMVwb;
-        Sun,  7 Feb 2021 19:37:55 +0800 (CST)
+        id S229763AbhBGLkt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 7 Feb 2021 06:40:49 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:12448 "EHLO
+        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229681AbhBGLk0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Feb 2021 06:40:26 -0500
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4DYRxV0b6mzjJlk;
+        Sun,  7 Feb 2021 19:38:38 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS408-HUB.china.huawei.com (10.3.19.208) with Microsoft SMTP Server id
- 14.3.498.0; Sun, 7 Feb 2021 19:39:30 +0800
+ 14.3.498.0; Sun, 7 Feb 2021 19:39:37 +0800
 From:   Xiaofei Tan <tanxiaofei@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linuxarm@openeuler.org>, Xiaofei Tan <tanxiaofei@huawei.com>
-Subject: [PATCH for-next 13/32] scsi: hptiop: Replace spin_lock_irqsave with spin_lock in hard IRQ
-Date:   Sun, 7 Feb 2021 19:36:44 +0800
-Message-ID: <1612697823-8073-14-git-send-email-tanxiaofei@huawei.com>
+Subject: [PATCH for-next 29/32] scsi: stex: Replace spin_lock_irqsave with spin_lock in hard IRQ
+Date:   Sun, 7 Feb 2021 19:37:00 +0800
+Message-ID: <1612697823-8073-30-git-send-email-tanxiaofei@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com>
 References: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com>
@@ -48,26 +48,77 @@ it has been in a irq-disabled context.
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 ---
- drivers/scsi/hptiop.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/stex.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index db4c7a7..5424e31 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -834,11 +834,10 @@ static irqreturn_t hptiop_intr(int irq, void *dev_id)
- {
- 	struct hptiop_hba  *hba = dev_id;
- 	int  handled;
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 1247120..1e797d1 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -886,9 +886,8 @@ static irqreturn_t stex_intr(int irq, void *__hba)
+ 	struct st_hba *hba = __hba;
+ 	void __iomem *base = hba->mmio_base;
+ 	u32 data;
 -	unsigned long flags;
  
 -	spin_lock_irqsave(hba->host->host_lock, flags);
 +	spin_lock(hba->host->host_lock);
- 	handled = hba->ops->iop_intr(hba);
+ 
+ 	data = readl(base + ODBL);
+ 
+@@ -897,14 +896,14 @@ static irqreturn_t stex_intr(int irq, void *__hba)
+ 		writel(data, base + ODBL);
+ 		readl(base + ODBL); /* flush */
+ 		stex_mu_intr(hba, data);
+-		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		spin_unlock(hba->host->host_lock);
+ 		if (unlikely(data & MU_OUTBOUND_DOORBELL_REQUEST_RESET &&
+ 			hba->cardtype == st_shasta))
+ 			queue_work(hba->work_q, &hba->reset_work);
+ 		return IRQ_HANDLED;
+ 	}
+ 
 -	spin_unlock_irqrestore(hba->host->host_lock, flags);
 +	spin_unlock(hba->host->host_lock);
  
- 	return handled;
+ 	return IRQ_NONE;
+ }
+@@ -987,9 +986,8 @@ static irqreturn_t stex_ss_intr(int irq, void *__hba)
+ 	struct st_hba *hba = __hba;
+ 	void __iomem *base = hba->mmio_base;
+ 	u32 data;
+-	unsigned long flags;
+ 
+-	spin_lock_irqsave(hba->host->host_lock, flags);
++	spin_lock(hba->host->host_lock);
+ 
+ 	if (hba->cardtype == st_yel) {
+ 		data = readl(base + YI2H_INT);
+@@ -997,7 +995,7 @@ static irqreturn_t stex_ss_intr(int irq, void *__hba)
+ 			/* clear the interrupt */
+ 			writel(data, base + YI2H_INT_C);
+ 			stex_ss_mu_intr(hba);
+-			spin_unlock_irqrestore(hba->host->host_lock, flags);
++			spin_unlock(hba->host->host_lock);
+ 			if (unlikely(data & SS_I2H_REQUEST_RESET))
+ 				queue_work(hba->work_q, &hba->reset_work);
+ 			return IRQ_HANDLED;
+@@ -1011,14 +1009,14 @@ static irqreturn_t stex_ss_intr(int irq, void *__hba)
+ 				writel((1 << 22), base + YH2I_INT);
+ 			}
+ 			stex_ss_mu_intr(hba);
+-			spin_unlock_irqrestore(hba->host->host_lock, flags);
++			spin_unlock(hba->host->host_lock);
+ 			if (unlikely(data & SS_I2H_REQUEST_RESET))
+ 				queue_work(hba->work_q, &hba->reset_work);
+ 			return IRQ_HANDLED;
+ 		}
+ 	}
+ 
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	spin_unlock(hba->host->host_lock);
+ 
+ 	return IRQ_NONE;
  }
 -- 
 2.8.1
