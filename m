@@ -2,134 +2,164 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D759C433DB
-	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 07:37:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46609C433DB
+	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 09:22:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F51664E78
-	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 07:37:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CED464E44
+	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 09:22:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229548AbhBGHhM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 7 Feb 2021 02:37:12 -0500
-Received: from so15.mailgun.net ([198.61.254.15]:22710 "EHLO so15.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229445AbhBGHhJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 Feb 2021 02:37:09 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1612683406; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=vFvvHLjgjdxstAnQa5f3esWGzIkB2tiB9mU/LldaNe8=;
- b=vxgudXWB4TI5vfcn8lIxBrAiE+1+5zqBY3BOt3sS60m/RMUxYEozqM0yoAqFVwRgO1w5EtxD
- EGpDuyq6+E7D2Dh+DH2AY3b46ypG21yQUxqVrKkjTuWkDjQMYnaqKv+MEQFNcR+/f5KWEo/f
- YiEaitZc1UPRLucY4trxgDbyiJM=
-X-Mailgun-Sending-Ip: 198.61.254.15
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 601f98658e43a988b7be10f3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 07 Feb 2021 07:36:05
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 81162C433ED; Sun,  7 Feb 2021 07:36:05 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id S229609AbhBGJWL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 7 Feb 2021 04:22:11 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:29580 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229537AbhBGJWK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Feb 2021 04:22:10 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1612689643;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=iBz/iLlr5qBE9o6kaS9BAEHAOHYQP/r6X6hM5pogZfU=;
+        b=ehiNf2SfWpI8uWjqnMauRoOBIxufsfZgciciD+yefG60Jhrq+4B97PZWn3qIJQyJJV9/44
+        1lwed5nWaDdqdesexago0xNm2nmS4bV8Qf+me4NHw5T/Ug8IbgXfCaKlM7BxAbLXJY/Bp0
+        Lfi7063w5zoECunFCFVheKH9pyygDz4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-260-XBcBp5jUMd67CBjwEVdZBg-1; Sun, 07 Feb 2021 04:20:39 -0500
+X-MC-Unique: XBcBp5jUMd67CBjwEVdZBg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C702EC433C6;
-        Sun,  7 Feb 2021 07:36:04 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E39478030C1;
+        Sun,  7 Feb 2021 09:20:37 +0000 (UTC)
+Received: from localhost (ovpn-13-9.pek2.redhat.com [10.72.13.9])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1EB0D1A930;
+        Sun,  7 Feb 2021 09:20:33 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH V8 00/13] blk-mq/scsi: tracking device queue depth via sbitmap
+Date:   Sun,  7 Feb 2021 17:20:16 +0800
+Message-Id: <20210207092029.1558550-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Sun, 07 Feb 2021 15:36:04 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bean Huo <huobean@gmail.com>
-Cc:     Avri Altman <Avri.Altman@wdc.com>, daejun7.park@samsung.com,
-        Greg KH <gregkh@linuxfoundation.org>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, asutoshd@codeaurora.org,
-        stanley.chu@mediatek.com, bvanassche@acm.org,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>
-Subject: Re: [PATCH v19 3/3] scsi: ufs: Prepare HPB read for cached sub-region
-In-Reply-To: <12a011cd895dc9be5ec6c4f964b6011af492f06d.camel@gmail.com>
-References: <20210129052848epcms2p6e5797efd94e6282b76ad9ae6c99e3ab5@epcms2p6>
- <CGME20210129052848epcms2p6e5797efd94e6282b76ad9ae6c99e3ab5@epcms2p5>
- <20210129053042epcms2p538e7fa396c3c2104594c44e48be53eb8@epcms2p5>
- <7f25ccb1d857131baa1c0424c4542e33@codeaurora.org>
- <b6a8652c00411e3f71d33e7a6322f49eb5701039.camel@gmail.com>
- <DM6PR04MB657522B94AB436CF096460F6FCB29@DM6PR04MB6575.namprd04.prod.outlook.com>
- <12a011cd895dc9be5ec6c4f964b6011af492f06d.camel@gmail.com>
-Message-ID: <ba7943ab40720df96a9fedb04ab0e4c8@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-02-05 23:08, Bean Huo wrote:
-> On Fri, 2021-02-05 at 14:06 +0000, Avri Altman wrote:
->> > > > +     put_unaligned_be64(ppn, &cdb[6]);
->> > >
->> > > You are assuming the HPB entries read out by "HPB Read Buffer"
->> > > cmd
->> > > are
->> > > in Little
->> > > Endian, which is why you are using put_unaligned_be64 here.
->> > > However,
->> > > this assumption
->> > > is not right for all the other flash vendors - HPB entries read
->> > > out
->> > > by
->> > > "HPB Read Buffer"
->> > > cmd may come in Big Endian, if so, their random read performance
->> > > are
->> > > screwed.
->> >
->> > For this question, it is very hard to make a correct format since
->> > the
->> > Spec doesn't give a clear definition. Should we have a default
->> > format,
->> > if there is conflict, and then add quirk or add a vendor-specific
->> > table?
->> >
->> > Hi Avri
->> > Do you have a good idea?
->> 
->> I don't know.  Better let Daejun answer this.
->> This was working for me for both Galaxy S20 (Exynos) as well as
->> Xiaomi Mi10 (8250).
->> 
-> 
-> Thanks, I tested Daejun's patchset before, it is also ok (I don't know
-> which version patchset). maybe we can keep current implementation as
-> default, then if there is conflict, and submit the quirk.
-> 
+Hi,
 
-Yeah, you've tested it, are you sure that Micron's UFS devices are OK
-with this specific code line?
+scsi uses one global atomic variable to track queue depth for each
+LUN/request queue. This way can't scale well when there is lots of CPU
+cores and the disk is very fast. Broadcom guys has complained that their
+high end HBA can't reach top performance because .device_busy is
+operated in IO path.
 
-Micron UFS FW team has confirmed that Micron's HPB entries read out by
-"HPB Buffer Read" cmd are in big-endian byte ordering.
+Replace the atomic variable sdev->device_busy with sbitmap for
+tracking scsi device queue depth.
 
-If Micron FW team is right, I am pretty sure that you would have seen
-random read performance regression on Micron UFS devices caused by
-invalid HPB entry format in HPB Read cmd UPIU (which leads to L2P cache
-miss in device side all the time) during your test.
+Test on scsi_debug shows this way improve IOPS > 20%. Meantime
+the IOPS difference is just ~1% compared with bypassing .device_busy
+on scsi_debug via patches[1]
 
-Can Guo.
+The 1st 6 patches moves percpu allocation hint into sbitmap, since
+the improvement by doing percpu allocation hint on sbitmap is observable.
+Meantime export helpers for SCSI.
 
-> Thanks,
-> Bean
-> 
->> Thanks,
->> Avri
+Patch 7 and 8 prepares for the conversion by returning budget token
+from .get_budget callback, meantime passes the budget token to driver
+via 'struct blk_mq_queue_data' in .queue_rq().
+
+The last four patches changes SCSI for switching to track device queue
+depth via sbitmap.
+
+The patchset have been tested by Broadcom, and obvious performance boost
+can be observed on megaraid_sas.
+
+V8:
+	- fix handling for device_blocked, only patch 13 is changed
+	- rebase on latest for-5.12/block, only patch 10 is changed
+
+V7:
+	- fix build failure on drivers/vhost/scsi.c, only patch 2 & 4 are
+	  changed
+
+V6:
+	- rebase on for-5.12/block
+
+V5:
+	- add comment on sbitmap_weight()
+	- add patch 'megaraid_sas: v2 replace sdev_busy with local counter'
+	  for fixing build failure
+
+V4:
+	- limit max sdev->queue_depth as max(1024, shost->can_queue)
+	- simplify code for moving per-cpu allocation hint into sbitmap
+
+V3:
+	- rebase on both for-5.10/block and 5.10/scsi-queue.
+
+V2:
+	- fix one build failure
+
+
+Kashyap Desai (1):
+  megaraid_sas: v2 replace sdev_busy with local counter
+
+Ming Lei (12):
+  sbitmap: remove sbitmap_clear_bit_unlock
+  sbitmap: maintain allocation round_robin in sbitmap
+  sbitmap: add helpers for updating allocation hint
+  sbitmap: move allocation hint into sbitmap
+  sbitmap: export sbitmap_weight
+  sbitmap: add helper of sbitmap_calculate_shift
+  blk-mq: add callbacks for storing & retrieving budget token
+  blk-mq: return budget token from .get_budget callback
+  scsi: put hot fields of scsi_host_template into one cacheline
+  scsi: add scsi_device_busy() to read sdev->device_busy
+  scsi: make sure sdev->queue_depth is <= max(shost->can_queue, 1024)
+  scsi: replace sdev->device_busy with sbitmap
+
+ block/blk-mq-sched.c                        |  17 +-
+ block/blk-mq.c                              |  38 ++--
+ block/blk-mq.h                              |  25 ++-
+ block/kyber-iosched.c                       |   3 +-
+ drivers/message/fusion/mptsas.c             |   2 +-
+ drivers/scsi/megaraid/megaraid_sas.h        |   2 +
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  47 ++++-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        |   2 +-
+ drivers/scsi/scsi.c                         |  13 ++
+ drivers/scsi/scsi_lib.c                     |  71 ++++---
+ drivers/scsi/scsi_priv.h                    |   3 +
+ drivers/scsi/scsi_scan.c                    |  23 ++-
+ drivers/scsi/scsi_sysfs.c                   |   4 +-
+ drivers/scsi/sg.c                           |   2 +-
+ drivers/vhost/scsi.c                        |   4 +-
+ include/linux/blk-mq.h                      |  13 +-
+ include/linux/sbitmap.h                     |  85 +++++---
+ include/scsi/scsi_cmnd.h                    |   2 +
+ include/scsi/scsi_device.h                  |   8 +-
+ include/scsi/scsi_host.h                    |  72 ++++---
+ lib/sbitmap.c                               | 210 +++++++++++---------
+ 21 files changed, 432 insertions(+), 214 deletions(-)
+
+Cc: Omar Sandoval <osandov@fb.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+Cc: Ewan D. Milne <emilne@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>
+-- 
+2.29.2
+
