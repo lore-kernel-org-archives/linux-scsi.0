@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B1A2C4332B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78F0BC43381
 	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 11:40:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CBDF64E3C
+	by mail.kernel.org (Postfix) with ESMTP id 5625664E3C
 	for <linux-scsi@archiver.kernel.org>; Sun,  7 Feb 2021 11:40:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229715AbhBGLkg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 7 Feb 2021 06:40:36 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:12084 "EHLO
+        id S229731AbhBGLki (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 7 Feb 2021 06:40:38 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:12082 "EHLO
         szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229590AbhBGLkV (ORCPT
+        with ESMTP id S229587AbhBGLkV (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Feb 2021 06:40:21 -0500
 Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4DYRwg3wfRzMWQH;
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4DYRwg48JvzMWRN;
         Sun,  7 Feb 2021 19:37:55 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS408-HUB.china.huawei.com (10.3.19.208) with Microsoft SMTP Server id
- 14.3.498.0; Sun, 7 Feb 2021 19:39:32 +0800
+ 14.3.498.0; Sun, 7 Feb 2021 19:39:29 +0800
 From:   Xiaofei Tan <tanxiaofei@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linuxarm@openeuler.org>, Xiaofei Tan <tanxiaofei@huawei.com>
-Subject: [PATCH for-next 18/32] scsi: mesh: Replace spin_lock_irqsave with spin_lock in hard IRQ
-Date:   Sun, 7 Feb 2021 19:36:49 +0800
-Message-ID: <1612697823-8073-19-git-send-email-tanxiaofei@huawei.com>
+Subject: [PATCH for-next 10/32] scsi: bfa: Replace spin_lock_irqsave with spin_lock in hard IRQ
+Date:   Sun, 7 Feb 2021 19:36:41 +0800
+Message-ID: <1612697823-8073-11-git-send-email-tanxiaofei@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com>
 References: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com>
@@ -48,29 +48,69 @@ it has been in a irq-disabled context.
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 ---
- drivers/scsi/mesh.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/bfa/bfad.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/mesh.c b/drivers/scsi/mesh.c
-index 0a9f4e4..67c660a 100644
---- a/drivers/scsi/mesh.c
-+++ b/drivers/scsi/mesh.c
-@@ -1018,13 +1018,12 @@ static void handle_reset(struct mesh_state *ms)
- 
- static irqreturn_t do_mesh_interrupt(int irq, void *dev_id)
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index 440ef32..8c6f3eb 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1089,25 +1089,24 @@ bfad_intx(int irq, void *dev_id)
  {
--	unsigned long flags;
- 	struct mesh_state *ms = dev_id;
- 	struct Scsi_Host *dev = ms->host;
- 	
--	spin_lock_irqsave(dev->host_lock, flags);
-+	spin_lock(dev->host_lock);
- 	mesh_interrupt(ms);
--	spin_unlock_irqrestore(dev->host_lock, flags);
-+	spin_unlock(dev->host_lock);
- 	return IRQ_HANDLED;
- }
+ 	struct bfad_s	*bfad = dev_id;
+ 	struct list_head	doneq;
+-	unsigned long	flags;
+ 	bfa_boolean_t rc;
  
+-	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	spin_lock(&bfad->bfad_lock);
+ 	rc = bfa_intx(&bfad->bfa);
+ 	if (!rc) {
+-		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++		spin_unlock(&bfad->bfad_lock);
+ 		return IRQ_NONE;
+ 	}
+ 
+ 	bfa_comp_deq(&bfad->bfa, &doneq);
+-	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	spin_unlock(&bfad->bfad_lock);
+ 
+ 	if (!list_empty(&doneq)) {
+ 		bfa_comp_process(&bfad->bfa, &doneq);
+ 
+-		spin_lock_irqsave(&bfad->bfad_lock, flags);
++		spin_lock(&bfad->bfad_lock);
+ 		bfa_comp_free(&bfad->bfa, &doneq);
+-		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++		spin_unlock(&bfad->bfad_lock);
+ 	}
+ 
+ 	return IRQ_HANDLED;
+@@ -1120,20 +1119,19 @@ bfad_msix(int irq, void *dev_id)
+ 	struct bfad_msix_s *vec = dev_id;
+ 	struct bfad_s *bfad = vec->bfad;
+ 	struct list_head doneq;
+-	unsigned long   flags;
+ 
+-	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	spin_lock(&bfad->bfad_lock);
+ 
+ 	bfa_msix(&bfad->bfa, vec->msix.entry);
+ 	bfa_comp_deq(&bfad->bfa, &doneq);
+-	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	spin_unlock(&bfad->bfad_lock);
+ 
+ 	if (!list_empty(&doneq)) {
+ 		bfa_comp_process(&bfad->bfa, &doneq);
+ 
+-		spin_lock_irqsave(&bfad->bfad_lock, flags);
++		spin_lock(&bfad->bfad_lock);
+ 		bfa_comp_free(&bfad->bfa, &doneq);
+-		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++		spin_unlock(&bfad->bfad_lock);
+ 	}
+ 
+ 	return IRQ_HANDLED;
 -- 
 2.8.1
 
