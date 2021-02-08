@@ -2,278 +2,206 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA58EC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 12:34:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1D38C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 12:57:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B7C964E82
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 12:34:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACF5F64E84
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 12:57:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231977AbhBHMeU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Feb 2021 07:34:20 -0500
-Received: from mx2.suse.de ([195.135.220.15]:39830 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231866AbhBHMcZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 8 Feb 2021 07:32:25 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1612787497; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=IWEu9KuKzRSdTdHxRxZvVuwEzOx1f/VeQ3IFyCOr++U=;
-        b=GQKDajpLJzYZO4pSYsJM+ATEYZWQcmjsx1htbQ1dlH1riPWjdSYjdAYdH3MWfsocoPPh9x
-        HpGElfceU/9byhIVwFrXc+zBff9tj+EvVI/kwvBJJ4wRiTKGUX9iEJSBuIqfIxDesrwyjz
-        LftZdS5c7L7GeuhXd0hA3h6H38S2GzE=
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 54E13B0CC;
-        Mon,  8 Feb 2021 12:31:37 +0000 (UTC)
-To:     Julien Grall <julien@xen.org>, xen-devel@lists.xenproject.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        netdev@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        stable@vger.kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
-        Jens Axboe <axboe@kernel.dk>, Wei Liu <wei.liu@kernel.org>,
-        Paul Durrant <paul@xen.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-References: <20210206104932.29064-1-jgross@suse.com>
- <bd63694e-ac0c-7954-ec00-edad05f8da1c@xen.org>
- <eeb62129-d9fc-2155-0e0f-aff1fbb33fbc@suse.com>
- <fcf3181b-3efc-55f5-687c-324937b543e6@xen.org>
- <7aaeeb3d-1e1b-6166-84e9-481153811b62@suse.com>
- <6f547bb5-777a-6fc2-eba2-cccb4adfca87@xen.org>
- <0d623c98-a714-1639-cc53-f58ba3f08212@suse.com>
- <28399fd1-9fe8-f31a-6ee8-e78de567155b@xen.org>
- <1831964f-185e-31bb-2446-778f2c18d71b@suse.com>
- <e8c46e36-cf9e-fb30-21b5-fa662834a01a@xen.org>
-From:   =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>
-Subject: Re: [PATCH 0/7] xen/events: bug fixes and some diagnostic aids
-Message-ID: <199b76fd-630b-a0c6-926b-3e662103ec42@suse.com>
-Date:   Mon, 8 Feb 2021 13:31:36 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
-MIME-Version: 1.0
-In-Reply-To: <e8c46e36-cf9e-fb30-21b5-fa662834a01a@xen.org>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="JgNIcJOaVP5Gw4rk7riNifkQ1mxTeO1Ew"
+        id S229756AbhBHM5a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Feb 2021 07:57:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51134 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229715AbhBHM52 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Feb 2021 07:57:28 -0500
+Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92BA9C061786
+        for <linux-scsi@vger.kernel.org>; Mon,  8 Feb 2021 04:56:48 -0800 (PST)
+Received: by mail-yb1-xb4a.google.com with SMTP id p22so16739044ybc.18
+        for <linux-scsi@vger.kernel.org>; Mon, 08 Feb 2021 04:56:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=sender:date:message-id:mime-version:subject:from:to:cc;
+        bh=sQapmmmD1H+xp8DLEh2Jo59f71Qc7V57DYbFZYvaoAY=;
+        b=OuvN92SqUW+TAnggwqjIb2dlgpxNei1LU6zL/tAyxL48x74UE9j2SP1xkbflB+HLWf
+         81BI1v95NBcVmy68BqAri1q6pZDbZvLTwmVqUQDOq+RZLugpXZa7Jt+nsfbkTwPkcDpF
+         YyegRzS6Z0GpRq/tVfmFm5vyPdS5yXKsnwyw2YtVHNhOzjSPrpIPSHJVjRpkslvp+J9G
+         +gPe8V4pbQ4N5/nAGBQv6b59NeMstXsYpTr5iVLkrm1Q08tq0AAclcJ2PieVQILiTRrR
+         6zvYMG5JQFItRPjtC+zdLQk/UbIES8OOKqLy1dZJ16Wb4mnEA361eFXYkvDZD3rDjQ3P
+         GQLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:message-id:mime-version:subject:from
+         :to:cc;
+        bh=sQapmmmD1H+xp8DLEh2Jo59f71Qc7V57DYbFZYvaoAY=;
+        b=WhmJZ0P1rKs7tSxJdb44SC1GXWbVzr+iu+XlScdmf5qikC6dTYkFvSNA0sEUkrJrbE
+         qQGPloTeoiV5lEvMYQZYXvEqMZS6COCkCNrAE79oKnTAJqeXTthKrQt7xE+S080w5Tet
+         b5HLXU8FME/wJKxrDbaTOIG9X9PNUyHJ2kpsinz6xNkUSv2vPZfQ/DUPCfGahev6f7O8
+         9SwRHlC2BUXtRiGRAUbzOOQ9qsYRxaomkXxx52LefcV9PnXk3lezgsaWyeMu8dZ23tXp
+         RLMwD3azqdvco1xcJGFNvYykUONUSk2ZWqX8jt8iNq2VQuMFM2jn8zFkXqsotPAXhh7r
+         ArIg==
+X-Gm-Message-State: AOAM531P0Te59/4GU4QvO6BHvjGmV5VrZMsiIIYS20BmwsM2Wt+jXa8K
+        OYO/YBA0Vl4FujdT/hHdOb1/Ja0idIfo
+X-Google-Smtp-Source: ABdhPJxIwr1scQCsqW2E/bPKYUfRfRXkiadxgU/MWblekS4Dgnu0T5GCv14TtEkQEHCbpH2XlJ+0Lhd7zMNv
+Sender: "leoliou via sendgmr" <leoliou@leoliou.ntc.corp.google.com>
+X-Received: from leoliou.ntc.corp.google.com ([2401:fa00:fc:202:9995:e502:106b:c601])
+ (user=leoliou job=sendgmr) by 2002:a25:264b:: with SMTP id
+ m72mr25645047ybm.486.1612789007205; Mon, 08 Feb 2021 04:56:47 -0800 (PST)
+Date:   Mon,  8 Feb 2021 20:56:28 +0800
+Message-Id: <20210208125628.2758665-1-leoliou@google.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.30.0.478.g8a0d178c01-goog
+Subject: [PATCH] scsi: ufs: create a hook for unipro dme control
+From:   Leo Liou <leoliou@google.com>
+To:     agross@kernel.org, bjorn.andersson@linaro.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        cang@codeaurora.org, asutoshd@codeaurora.org, beanhuo@micron.com,
+        jaegeuk@kernel.org, adrian.hunter@intel.com, satyat@google.com,
+        essuuj@gmail.com, linux-arm-msm@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     leoliou@google.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---JgNIcJOaVP5Gw4rk7riNifkQ1mxTeO1Ew
-Content-Type: multipart/mixed; boundary="sCmJlej2lRR5GzR7qwJDdoFQWBk5LVHvX";
- protected-headers="v1"
-From: =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>
-To: Julien Grall <julien@xen.org>, xen-devel@lists.xenproject.org,
- linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
- netdev@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- Stefano Stabellini <sstabellini@kernel.org>, stable@vger.kernel.org,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
- Jens Axboe <axboe@kernel.dk>, Wei Liu <wei.liu@kernel.org>,
- Paul Durrant <paul@xen.org>, "David S. Miller" <davem@davemloft.net>,
- Jakub Kicinski <kuba@kernel.org>
-Message-ID: <199b76fd-630b-a0c6-926b-3e662103ec42@suse.com>
-Subject: Re: [PATCH 0/7] xen/events: bug fixes and some diagnostic aids
-References: <20210206104932.29064-1-jgross@suse.com>
- <bd63694e-ac0c-7954-ec00-edad05f8da1c@xen.org>
- <eeb62129-d9fc-2155-0e0f-aff1fbb33fbc@suse.com>
- <fcf3181b-3efc-55f5-687c-324937b543e6@xen.org>
- <7aaeeb3d-1e1b-6166-84e9-481153811b62@suse.com>
- <6f547bb5-777a-6fc2-eba2-cccb4adfca87@xen.org>
- <0d623c98-a714-1639-cc53-f58ba3f08212@suse.com>
- <28399fd1-9fe8-f31a-6ee8-e78de567155b@xen.org>
- <1831964f-185e-31bb-2446-778f2c18d71b@suse.com>
- <e8c46e36-cf9e-fb30-21b5-fa662834a01a@xen.org>
-In-Reply-To: <e8c46e36-cf9e-fb30-21b5-fa662834a01a@xen.org>
+Based on ufshci spec, it defines that "Offset C0h to FFh" belong
+to vendor specific. If cpu vendor doesn't support these commands, it
+makes the dme errors:
 
---sCmJlej2lRR5GzR7qwJDdoFQWBk5LVHvX
-Content-Type: multipart/mixed;
- boundary="------------2B450E9D523701FD7CCF2F18"
-Content-Language: en-US
+ufs: dme-set: attr-id 0xd041 val 0x1fff failed 0 retries
+ufs: dme-set: attr-id 0xd042 val 0xffff failed 0 retries
+ufs: dme-set: attr-id 0xd043 val 0x7fff failed 0 retries
 
-This is a multi-part message in MIME format.
---------------2B450E9D523701FD7CCF2F18
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Create a hook for unipro vendor-specific commands.
 
-On 08.02.21 13:16, Julien Grall wrote:
->=20
->=20
-> On 08/02/2021 12:14, J=C3=BCrgen Gro=C3=9F wrote:
->> On 08.02.21 11:40, Julien Grall wrote:
->>> Hi Juergen,
->>>
->>> On 08/02/2021 10:22, J=C3=BCrgen Gro=C3=9F wrote:
->>>> On 08.02.21 10:54, Julien Grall wrote:
->>>>> ... I don't really see how the difference matter here. The idea is =
+Signed-off-by: Leo Liou <leoliou@google.com>
+---
+ drivers/scsi/ufs/ufs-qcom.c | 11 +++++++++++
+ drivers/scsi/ufs/ufs-qcom.h |  5 +++++
+ drivers/scsi/ufs/ufshcd.c   |  7 +------
+ drivers/scsi/ufs/ufshcd.h   |  8 ++++++++
+ drivers/scsi/ufs/unipro.h   |  4 ----
+ 5 files changed, 25 insertions(+), 10 deletions(-)
 
->>>>> to re-use what's already existing rather than trying to re-invent=20
->>>>> the wheel with an extra lock (or whatever we can come up).
->>>>
->>>> The difference is that the race is occurring _before_ any IRQ is
->>>> involved. So I don't see how modification of IRQ handling would help=
-=2E
->>>
->>> Roughly our current IRQ handling flow (handle_eoi_irq()) looks like:
->>>
->>> if ( irq in progress )
->>> {
->>> =C2=A0=C2=A0 set IRQS_PENDING
->>> =C2=A0=C2=A0 return;
->>> }
->>>
->>> do
->>> {
->>> =C2=A0=C2=A0 clear IRQS_PENDING
->>> =C2=A0=C2=A0 handle_irq()
->>> } while (IRQS_PENDING is set)
->>>
->>> IRQ handling flow like handle_fasteoi_irq() looks like:
->>>
->>> if ( irq in progress )
->>> =C2=A0=C2=A0 return;
->>>
->>> handle_irq()
->>>
->>> The latter flow would catch "spurious" interrupt and ignore them. So =
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 2206b1e4b774..f2a925587029 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -759,6 +759,16 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 	return ret;
+ }
+ 
++static void ufs_qcom_unipro_dme_set(struct ufs_hba *hba)
++{
++	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalFC0ProtectionTimeOutVal),
++		       DL_FC0ProtectionTimeOutVal_Default);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalTC0ReplayTimeOutVal),
++		       DL_TC0ReplayTimeOutVal_Default);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalAFC0ReqTimeOutVal),
++		       DL_AFC0ReqTimeOutVal_Default);
++}
++
+ static int ufs_qcom_quirk_host_pa_saveconfigtime(struct ufs_hba *hba)
+ {
+ 	int err;
+@@ -1469,6 +1479,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.hce_enable_notify      = ufs_qcom_hce_enable_notify,
+ 	.link_startup_notify    = ufs_qcom_link_startup_notify,
+ 	.pwr_change_notify	= ufs_qcom_pwr_change_notify,
++	.unipro_dme_set		= ufs_qcom_unipro_dme_set,
+ 	.apply_dev_quirks	= ufs_qcom_apply_dev_quirks,
+ 	.suspend		= ufs_qcom_suspend,
+ 	.resume			= ufs_qcom_resume,
+diff --git a/drivers/scsi/ufs/ufs-qcom.h b/drivers/scsi/ufs/ufs-qcom.h
+index 8208e3a3ef59..83db97caaa1b 100644
+--- a/drivers/scsi/ufs/ufs-qcom.h
++++ b/drivers/scsi/ufs/ufs-qcom.h
+@@ -124,6 +124,11 @@ enum {
+ /* QUniPro Vendor specific attributes */
+ #define PA_VS_CONFIG_REG1	0x9000
+ #define DME_VS_CORE_CLK_CTRL	0xD002
++
++#define DME_LocalFC0ProtectionTimeOutVal	0xD041
++#define DME_LocalTC0ReplayTimeOutVal		0xD042
++#define DME_LocalAFC0ReqTimeOutVal		0xD043
++
+ /* bit and mask definitions for DME_VS_CORE_CLK_CTRL attribute */
+ #define DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT		BIT(8)
+ #define DME_VS_CORE_CLK_CTRL_MAX_CORE_CLK_1US_CYCLES_MASK	0xFF
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index fb32d122f2e3..8ba2ce8c5d0c 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4231,12 +4231,7 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+ 	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA5),
+ 			DL_AFC1ReqTimeOutVal_Default);
+ 
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalFC0ProtectionTimeOutVal),
+-			DL_FC0ProtectionTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalTC0ReplayTimeOutVal),
+-			DL_TC0ReplayTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalAFC0ReqTimeOutVal),
+-			DL_AFC0ReqTimeOutVal_Default);
++	ufshcd_vops_unipro_dme_set(hba);
+ 
+ 	ret = ufshcd_uic_change_pwr_mode(hba, pwr_mode->pwr_rx << 4
+ 			| pwr_mode->pwr_tx);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index aa9ea3552323..b8c90bee7503 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -311,6 +311,7 @@ struct ufs_pwr_mode_info {
+  * @pwr_change_notify: called before and after a power mode change
+  *			is carried out to allow vendor spesific capabilities
+  *			to be set.
++ * @unipro_dme_set: called when vendor speicific control is needed
+  * @setup_xfer_req: called before any transfer request is issued
+  *                  to set some things
+  * @setup_task_mgmt: called before any task management request is issued
+@@ -342,6 +343,7 @@ struct ufs_hba_variant_ops {
+ 					enum ufs_notify_change_status status,
+ 					struct ufs_pa_layer_attr *,
+ 					struct ufs_pa_layer_attr *);
++	void    (*unipro_dme_set)(struct ufs_hba *hba);
+ 	void	(*setup_xfer_req)(struct ufs_hba *, int, bool);
+ 	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
+ 	void    (*hibern8_notify)(struct ufs_hba *, enum uic_cmd_dme,
+@@ -1161,6 +1163,12 @@ static inline int ufshcd_vops_pwr_change_notify(struct ufs_hba *hba,
+ 	return -ENOTSUPP;
+ }
+ 
++static inline void ufshcd_vops_unipro_dme_set(struct ufs_hba *hba)
++{
++	if (hba->vops && hba->vops->unipro_dme_set)
++		return hba->vops->unipro_dme_set(hba);
++}
++
+ static inline void ufshcd_vops_setup_xfer_req(struct ufs_hba *hba, int tag,
+ 					bool is_scsi_cmd)
+ {
+diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+index 8e9e486a4f7b..224162e5afd8 100644
+--- a/drivers/scsi/ufs/unipro.h
++++ b/drivers/scsi/ufs/unipro.h
+@@ -192,10 +192,6 @@
+ #define DL_TC1ReplayTimeOutVal_Default		65535
+ #define DL_AFC1ReqTimeOutVal_Default		32767
+ 
+-#define DME_LocalFC0ProtectionTimeOutVal	0xD041
+-#define DME_LocalTC0ReplayTimeOutVal		0xD042
+-#define DME_LocalAFC0ReqTimeOutVal		0xD043
+-
+ /* PA power modes */
+ enum {
+ 	FAST_MODE	= 1,
+-- 
+2.30.0.478.g8a0d178c01-goog
 
->>> it would handle nicely the race when changing the event affinity.
->>
->> Sure? Isn't "irq in progress" being reset way before our "lateeoi" is
->> issued, thus having the same problem again?=20
->=20
-> Sorry I can't parse this.
-
-handle_fasteoi_irq() will do nothing "if ( irq in progress )". When is
-this condition being reset again in order to be able to process another
-IRQ? I believe this will be the case before our "lateeoi" handling is
-becoming active (more precise: when our IRQ handler is returning to
-handle_fasteoi_irq()), resulting in the possibility of the same race we
-are experiencing now.
-
-
-Juergen
-
---------------2B450E9D523701FD7CCF2F18
-Content-Type: application/pgp-keys;
- name="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
- filename="OpenPGP_0xB0DE9DD628BF132F.asc"
-
------BEGIN PGP PUBLIC KEY BLOCK-----
-
-xsBNBFOMcBYBCACgGjqjoGvbEouQZw/ToiBg9W98AlM2QHV+iNHsEs7kxWhKMjrioyspZKOBy=
-cWx
-w3ie3j9uvg9EOB3aN4xiTv4qbnGiTr3oJhkB1gsb6ToJQZ8uxGq2kaV2KL9650I1SJvedYm8O=
-f8Z
-d621lSmoKOwlNClALZNew72NjJLEzTalU1OdT7/i1TXkH09XSSI8mEQ/ouNcMvIJNwQpd369y=
-9bf
-IhWUiVXEK7MlRgUG6MvIj6Y3Am/BBLUVbDa4+gmzDC9ezlZkTZG2t14zWPvxXP3FAp2pkW0xq=
-G7/
-377qptDmrk42GlSKN4z76ELnLxussxc7I2hx18NUcbP8+uty4bMxABEBAAHNHEp1ZXJnZW4gR=
-3Jv
-c3MgPGpnQHBmdXBmLm5ldD7CwHkEEwECACMFAlOMcBYCGwMHCwkIBwMCAQYVCAIJCgsEFgIDA=
-QIe
-AQIXgAAKCRCw3p3WKL8TL0KdB/93FcIZ3GCNwFU0u3EjNbNjmXBKDY4FUGNQH2lvWAUy+dnyT=
-hpw
-dtF/jQ6j9RwE8VP0+NXcYpGJDWlNb9/JmYqLiX2Q3TyevpB0CA3dbBQp0OW0fgCetToGIQrg0=
-MbD
-1C/sEOv8Mr4NAfbauXjZlvTj30H2jO0u+6WGM6nHwbh2l5O8ZiHkH32iaSTfN7Eu5RnNVUJbv=
-oPH
-Z8SlM4KWm8rG+lIkGurqqu5gu8q8ZMKdsdGC4bBxdQKDKHEFExLJK/nRPFmAuGlId1E3fe10v=
-5QL
-+qHI3EIPtyfE7i9Hz6rVwi7lWKgh7pe0ZvatAudZ+JNIlBKptb64FaiIOAWDCx1SzR9KdWVyZ=
-2Vu
-IEdyb3NzIDxqZ3Jvc3NAc3VzZS5jb20+wsB5BBMBAgAjBQJTjHCvAhsDBwsJCAcDAgEGFQgCC=
-QoL
-BBYCAwECHgECF4AACgkQsN6d1ii/Ey/HmQf/RtI7kv5A2PS4RF7HoZhPVPogNVbC4YA6lW7Dr=
-Wf0
-teC0RR3MzXfy6pJ+7KLgkqMlrAbN/8Dvjoz78X+5vhH/rDLa9BuZQlhFmvcGtCF8eR0T1v0nC=
-/nu
-AFVGy+67q2DH8As3KPu0344TBDpAvr2uYM4tSqxK4DURx5INz4ZZ0WNFHcqsfvlGJALDeE0Lh=
-ITT
-d9jLzdDad1pQSToCnLl6SBJZjDOX9QQcyUigZFtCXFst4dlsvddrxyqT1f17+2cFSdu7+ynLm=
-XBK
-7abQ3rwJY8SbRO2iRulogc5vr/RLMMlscDAiDkaFQWLoqHHOdfO9rURssHNN8WkMnQfvUewRz=
-80h
-SnVlcmdlbiBHcm9zcyA8amdyb3NzQG5vdmVsbC5jb20+wsB5BBMBAgAjBQJTjHDXAhsDBwsJC=
-AcD
-AgEGFQgCCQoLBBYCAwECHgECF4AACgkQsN6d1ii/Ey8PUQf/ehmgCI9jB9hlgexLvgOtf7PJn=
-FOX
-gMLdBQgBlVPO3/D9R8LtF9DBAFPNhlrsfIG/SqICoRCqUcJ96Pn3P7UUinFG/I0ECGF4EvTE1=
-jnD
-kfJZr6jrbjgyoZHiw/4BNwSTL9rWASyLgqlA8u1mf+c2yUwcGhgkRAd1gOwungxcwzwqgljf0=
-N51
-N5JfVRHRtyfwq/ge+YEkDGcTU6Y0sPOuj4Dyfm8fJzdfHNQsWq3PnczLVELStJNdapwPOoE+l=
-otu
-fe3AM2vAEYJ9rTz3Cki4JFUsgLkHFqGZarrPGi1eyQcXeluldO3m91NK/1xMI3/+8jbO0tsn1=
-tqS
-EUGIJi7ox80eSnVlcmdlbiBHcm9zcyA8amdyb3NzQHN1c2UuZGU+wsB5BBMBAgAjBQJTjHDrA=
-hsD
-BwsJCAcDAgEGFQgCCQoLBBYCAwECHgECF4AACgkQsN6d1ii/Ey+LhQf9GL45eU5vOowA2u5N3=
-g3O
-ZUEBmDHVVbqMtzwlmNC4k9Kx39r5s2vcFl4tXqW7g9/ViXYuiDXb0RfUpZiIUW89siKrkzmQ5=
-dM7
-wRqzgJpJwK8Bn2MIxAKArekWpiCKvBOB/Cc+3EXE78XdlxLyOi/NrmSGRIov0karw2RzMNOu5=
-D+j
-LRZQd1Sv27AR+IP3I8U4aqnhLpwhK7MEy9oCILlgZ1QZe49kpcumcZKORmzBTNh30FVKK1Evm=
-V2x
-AKDoaEOgQB4iFQLhJCdP1I5aSgM5IVFdn7v5YgEYuJYx37IoN1EblHI//x/e2AaIHpzK5h88N=
-Eaw
-QsaNRpNSrcfbFmAg987ATQRTjHAWAQgAyzH6AOODMBjgfWE9VeCgsrwH3exNAU32gLq2xvjpW=
-nHI
-s98ndPUDpnoxWQugJ6MpMncr0xSwFmHEgnSEjK/PAjppgmyc57BwKII3sV4on+gDVFJR6Y8ZR=
-wgn
-BC5mVM6JjQ5xDk8WRXljExRfUX9pNhdE5eBOZJrDRoLUmmjDtKzWaDhIg/+1Hzz93X4fCQkNV=
-bVF
-LELU9bMaLPBG/x5q4iYZ2k2ex6d47YE1ZFdMm6YBYMOljGkZKwYde5ldM9mo45mmwe0icXKLk=
-pEd
-IXKTZeKDO+Hdv1aqFuAcccTg9RXDQjmwhC3yEmrmcfl0+rPghO0Iv3OOImwTEe4co3c1mwARA=
-QAB
-wsBfBBgBAgAJBQJTjHAWAhsMAAoJELDendYovxMvQ/gH/1ha96vm4P/L+bQpJwrZ/dneZcmEw=
-Tbe
-8YFsw2V/Buv6Z4Mysln3nQK5ZadD534CF7TDVft7fC4tU4PONxF5D+/tvgkPfDAfF77zy2AH1=
-vJz
-Q1fOU8lYFpZXTXIHb+559UqvIB8AdgR3SAJGHHt4RKA0F7f5ipYBBrC6cyXJyyoprT10EMvU8=
-VGi
-wXvTyJz3fjoYsdFzpWPlJEBRMedCot60g5dmbdrZ5DWClAr0yau47zpWj3enf1tLWaqcsuylW=
-svi
-uGjKGw7KHQd3bxALOknAp4dN3QwBYCKuZ7AddY9yjynVaD5X7nF9nO5BjR/i1DG86lem3iBDX=
-zXs
-ZDn8R38=3D
-=3D2wuH
------END PGP PUBLIC KEY BLOCK-----
-
---------------2B450E9D523701FD7CCF2F18--
-
---sCmJlej2lRR5GzR7qwJDdoFQWBk5LVHvX--
-
---JgNIcJOaVP5Gw4rk7riNifkQ1mxTeO1Ew
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmAhLygFAwAAAAAACgkQsN6d1ii/Ey9e
-Nwf9FLV8FM82fXo33jJcXnUYTrhDEBODgfNVp6BIWVPs0z2jnkfnoxy7wQkEupYsbRkEU18fcRQj
-aymzBqq57r/iDuI3vGOHHZV0CCIz9sn91SnCUC3hDCV+HR3u5jK2bvJRnXp2YxBILxdDrWac6vUw
-oEsdCbLMtCDf8aKIcSnTYNTcDTQuJqXTmtZJttua/M8LvNshYjJg5mMpKt2BWjSaE1GCzAug08dx
-I/SvrIHAPDfAU5/2ZrH5SqQYzkuBu61B5/y/RbP8yLoVvg9XxFYkfEDB9xmSz8KWYeMBFJ0LtY85
-ocnORaemCMS72+2eRittkqWU9WXJ/j9RgccWVn8x5A==
-=VUK/
------END PGP SIGNATURE-----
-
---JgNIcJOaVP5Gw4rk7riNifkQ1mxTeO1Ew--
