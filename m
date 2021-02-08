@@ -2,165 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 630EBC43381
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 09:14:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 541ECC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 09:26:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 358BC64E9C
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 09:14:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0794F64E7B
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 09:26:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231537AbhBHJOA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Feb 2021 04:14:00 -0500
-Received: from mail.xenproject.org ([104.130.215.37]:58000 "EHLO
-        mail.xenproject.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231431AbhBHJMa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Feb 2021 04:12:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=xen.org;
-        s=20200302mail; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject;
-        bh=Z2FuntU0FCSPGAWD+ofKK+yUmsoCyrZClvV7APxBvaU=; b=S3YFzpNjNeKQK9a3thbvJwcCVT
-        /0VqloskC35+uEOgRFBZD+9JV3WrwxjsyPgNFqKOnfjWAtoIi0DKRJlxFQvbTwbupeSSukJX8x1dj
-        n1sYe+iGxzjWMHsDVsqLDKXVJUELdnB3CcU8BTrhm0NTQvuJ5S5mzzk9OVF2XbxfQZ1w=;
-Received: from xenbits.xenproject.org ([104.239.192.120])
-        by mail.xenproject.org with esmtp (Exim 4.92)
-        (envelope-from <julien@xen.org>)
-        id 1l92Zm-00046z-Fi; Mon, 08 Feb 2021 09:11:22 +0000
-Received: from [54.239.6.177] (helo=a483e7b01a66.ant.amazon.com)
-        by xenbits.xenproject.org with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.92)
-        (envelope-from <julien@xen.org>)
-        id 1l92Zm-0003Oc-7O; Mon, 08 Feb 2021 09:11:22 +0000
-Subject: Re: [PATCH 0/7] xen/events: bug fixes and some diagnostic aids
-To:     =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>,
-        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        stable@vger.kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
-        Jens Axboe <axboe@kernel.dk>, Wei Liu <wei.liu@kernel.org>,
-        Paul Durrant <paul@xen.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-References: <20210206104932.29064-1-jgross@suse.com>
- <bd63694e-ac0c-7954-ec00-edad05f8da1c@xen.org>
- <eeb62129-d9fc-2155-0e0f-aff1fbb33fbc@suse.com>
-From:   Julien Grall <julien@xen.org>
-Message-ID: <fcf3181b-3efc-55f5-687c-324937b543e6@xen.org>
-Date:   Mon, 8 Feb 2021 09:11:18 +0000
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.7.0
+        id S231307AbhBHJ0c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Feb 2021 04:26:32 -0500
+Received: from so15.mailgun.net ([198.61.254.15]:29379 "EHLO so15.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231171AbhBHJYX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 Feb 2021 04:24:23 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1612776228; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=I/bB5csHyQa5LojQBmfZSqE+Dm4Nn4V/dZ5cfnA1UYE=;
+ b=T7wF63BJP0J3c8RUmhw1AhynIoJ+UHUUwAC7u3dqs22RZYJg4upVi8hOHVjRCL3hISRqkk4j
+ KfCkVybmFdjab1bguc2UStAzTRx5rDyPCxUUJXw8EYfcder4/2MJWGaQwvXgbrZVxB4XiKFD
+ R9y6Mln4GEKt2r2HpyzDldgxk/0=
+X-Mailgun-Sending-Ip: 198.61.254.15
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 6021030134db06ef790e834d (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 09:23:13
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 108FEC43464; Mon,  8 Feb 2021 09:23:12 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 23D27C433CA;
+        Mon,  8 Feb 2021 09:23:12 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <eeb62129-d9fc-2155-0e0f-aff1fbb33fbc@suse.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 08 Feb 2021 17:23:12 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     daejun7.park@samsung.com
+Cc:     Greg KH <gregkh@linuxfoundation.org>, avri.altman@wdc.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        asutoshd@codeaurora.org, stanley.chu@mediatek.com,
+        huobean@gmail.com, bvanassche@acm.org,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>
+Subject: Re: [PATCH v19 2/3] scsi: ufs: L2P map management for HPB read
+In-Reply-To: <20210208085346epcms2p1c11b70be9d258df66cb2ca4542835fac@epcms2p1>
+References: <88b608e2e133ba7ccd5bb452898848fd@codeaurora.org>
+ <5bd43da52369a56f18867fa18efb3020@codeaurora.org>
+ <20210129052848epcms2p6e5797efd94e6282b76ad9ae6c99e3ab5@epcms2p6>
+ <20210129053005epcms2p323338fbb83459d2786fc0ef92701b147@epcms2p3>
+ <20210208080333epcms2p59403f0acbc9730c9a605d265836a956d@epcms2p5>
+ <CGME20210129052848epcms2p6e5797efd94e6282b76ad9ae6c99e3ab5@epcms2p1>
+ <20210208085346epcms2p1c11b70be9d258df66cb2ca4542835fac@epcms2p1>
+Message-ID: <5b9f5edbe26930765ee4adaa786db7da@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Juergen,
+On 2021-02-08 16:53, Daejun Park wrote:
+>>>> @@ -342,13 +1208,14 @@ void ufshpb_suspend(struct ufs_hba *hba)
+>>>> >          struct scsi_device *sdev;
+>>>> >
+>>>> >          shost_for_each_device(sdev, hba->host) {
+>>>> > -                hpb = sdev->hostdata;
+>>>> > +                hpb = ufshpb_get_hpb_data(sdev);
+>>>> >                  if (!hpb)
+>>>> >                          continue;
+>>>> >
+>>>> >                  if (ufshpb_get_state(hpb) != HPB_PRESENT)
+>>>> >                          continue;
+>>>> >                  ufshpb_set_state(hpb, HPB_SUSPEND);
+>>>> > +                ufshpb_cancel_jobs(hpb);
+>>>> 
+>>>> Here may have a dead lock problem - in the case of runtime suspend,
+>>>> when ufshpb_suspend() is invoked, all of hba's children scsi devices
+>>>> are in RPM_SUSPENDED state. When this line tries to cancel a running
+>>>> map work, i.e. when ufshpb_get_map_req() calls below lines, it will
+>>>> be stuck at blk_queue_enter().
+>>>> 
+>>>> req = blk_get_request(hpb->sdev_ufs_lu->request_queue,
+>>>>                       REQ_OP_SCSI_IN, 0);
+>>>> 
+>>>> Please check block layer power management, and see also commit
+>>>> d55d15a33
+>>>> ("scsi: block: Do not accept any requests while suspended").
+>>> 
+>>> I am agree with your comment.
+>>> How about add BLK_MQ_REQ_NOWAIT flag on blk_get_request() to avoid
+>>> hang?
+>>> 
+>> 
+>> That won't work - BLK_MQ_REQ_NOWAIT allows one to fast fail from
+>> blk_mq_get_tag(),
+>> but blk_queue_enter() comes before __blk_mq_alloc_request();
+>> 
+> In blk_queue_enter(), BLK_MQ_REQ_NOWAIT flag can make error than wait 
+> rpm
+> resume. Please refer following code.
 
-On 07/02/2021 12:58, Jürgen Groß wrote:
-> On 06.02.21 19:46, Julien Grall wrote:
->> Hi Juergen,
->>
->> On 06/02/2021 10:49, Juergen Gross wrote:
->>> The first three patches are fixes for XSA-332. The avoid WARN splats
->>> and a performance issue with interdomain events.
->>
->> Thanks for helping to figure out the problem. Unfortunately, I still 
->> see reliably the WARN splat with the latest Linux master 
->> (1e0d27fce010) + your first 3 patches.
->>
->> I am using Xen 4.11 (1c7d984645f9) and dom0 is forced to use the 2L 
->> events ABI.
->>
->> After some debugging, I think I have an idea what's went wrong. The 
->> problem happens when the event is initially bound from vCPU0 to a 
->> different vCPU.
->>
->>  From the comment in xen_rebind_evtchn_to_cpu(), we are masking the 
->> event to prevent it being delivered on an unexpected vCPU. However, I 
->> believe the following can happen:
->>
->> vCPU0                | vCPU1
->>                  |
->>                  | Call xen_rebind_evtchn_to_cpu()
->> receive event X            |
->>                  | mask event X
->>                  | bind to vCPU1
->> <vCPU descheduled>        | unmask event X
->>                  |
->>                  | receive event X
->>                  |
->>                  | handle_edge_irq(X)
->> handle_edge_irq(X)        |  -> handle_irq_event()
->>                  |   -> set IRQD_IN_PROGRESS
->>   -> set IRQS_PENDING        |
->>                  |   -> evtchn_interrupt()
->>                  |   -> clear IRQD_IN_PROGRESS
->>                  |  -> IRQS_PENDING is set
->>                  |  -> handle_irq_event()
->>                  |   -> evtchn_interrupt()
->>                  |     -> WARN()
->>                  |
->>
->> All the lateeoi handlers expect a ONESHOT semantic and 
->> evtchn_interrupt() is doesn't tolerate any deviation.
->>
->> I think the problem was introduced by 7f874a0447a9 ("xen/events: fix 
->> lateeoi irq acknowledgment") because the interrupt was disabled 
->> previously. Therefore we wouldn't do another iteration in 
->> handle_edge_irq().
-> 
-> I think you picked the wrong commit for blaming, as this is just
-> the last patch of the three patches you were testing.
+Oops, sorry, my memory needs to be refreshed on that part.
 
-I actually found the right commit for blaming but I copied the 
-information from the wrong shell :/. The bug was introduced by:
+But will BLK_MQ_REQ_NOWAIT flag breaks your original purpose? When
+runtime suspend is out of the picture, if traffic is heavy on the
+request queue, map_work() will be stopped frequently once it is
+not able to get a request from the queue - that shall pull down the
+efficiency of one map_work(), that may hurt random performance...
 
-c44b849cee8c ("xen/events: switch user event channels to lateeoi model")
+Can Guo.
 
 > 
->> Aside the handlers, I think it may impact the defer EOI mitigation 
->> because in theory if a 3rd vCPU is joining the party (let say vCPU A 
->> migrate the event from vCPU B to vCPU C). So info->{eoi_cpu, 
->> irq_epoch, eoi_time} could possibly get mangled?
->>
->> For a fix, we may want to consider to hold evtchn_rwlock with the 
->> write permission. Although, I am not 100% sure this is going to 
->> prevent everything.
+> int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
+> {
+> 	const bool pm = flags & BLK_MQ_REQ_PM;
 > 
-> It will make things worse, as it would violate the locking hierarchy
-> (xen_rebind_evtchn_to_cpu() is called with the IRQ-desc lock held).
-
-Ah, right.
-
+> 	while (true) {
+> 		bool success = false;
 > 
-> On a first glance I think we'll need a 3rd masking state ("temporarily
-> masked") in the second patch in order to avoid a race with lateeoi.
+> 		rcu_read_lock();
+> 		if (percpu_ref_tryget_live(&q->q_usage_counter)) {
+> 			/*
+> 			 * The code that increments the pm_only counter is
+> 			 * responsible for ensuring that that counter is
+> 			 * globally visible before the queue is unfrozen.
+> 			 */
+> 			if ((pm && queue_rpm_status(q) != RPM_SUSPENDED) ||
+> 			    !blk_queue_pm_only(q)) {
+> 				success = true;
+> 			} else {
+> 				percpu_ref_put(&q->q_usage_counter);
+> 			}
+> 		}
+> 		rcu_read_unlock();
 > 
-> In order to avoid the race you outlined above we need an "event is being
-> handled" indicator checked via test_and_set() semantics in
-> handle_irq_for_port() and reset only when calling clear_evtchn().
-
-It feels like we are trying to workaround the IRQ flow we are using 
-(i.e. handle_edge_irq()).
-
-This reminds me the thread we had before discovering XSA-332 (see [1]). 
-Back then, it was suggested to switch back to handle_fasteoi_irq().
-
-Cheers,
-
-[1] 
-https://lore.kernel.org/xen-devel/alpine.DEB.2.21.2004271552430.29217@sstabellini-ThinkPad-T480s/
-
--- 
-Julien Grall
+> 		if (success)
+> 			return 0;
+> 
+> 		if (flags & BLK_MQ_REQ_NOWAIT)
+> 			return -EBUSY;	<-- out from the function.
+> 
+> Thanks,
+> Daejun
