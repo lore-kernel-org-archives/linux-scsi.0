@@ -2,128 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87623C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 16:25:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B475C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 17:19:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 359D664E87
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 16:25:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D2D764EB6
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 17:19:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234327AbhBHQZ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Feb 2021 11:25:28 -0500
-Received: from mail29.static.mailgun.info ([104.130.122.29]:56879 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233829AbhBHQZS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Feb 2021 11:25:18 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1612801499; h=In-Reply-To: Content-Type: MIME-Version:
- References: Message-ID: Subject: Cc: To: From: Date: Sender;
- bh=NDr/HPHdjO2ZWUoJtkzsAUeh5iN7eMmJUDu+B2PEZ9Q=; b=VTbFbeB+BxwJFNXygPyzzhOjpi729upgoa9pg9L+T43QOD/ZC9DBegh0gXJ0FDB/R2Usr96H
- peOuIInuvb9O8lbnwfYJHWQTNZVKgIozxe2sK9xUqUkYTHISHmo21NRBKtcuKVOWgYBc0yXS
- tLtmsn2Ea0mnic1e+vBTZfwgDTo=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 602165b9e3df861f4b4e65e9 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 16:24:25
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id F3332C433ED; Mon,  8 Feb 2021 16:24:24 +0000 (UTC)
-Received: from stor-presley.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EC716C433CA;
-        Mon,  8 Feb 2021 16:24:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EC716C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
-Date:   Mon, 8 Feb 2021 08:24:22 -0800
-From:   Asutosh Das <asutoshd@codeaurora.org>
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [RFC PATCH v2 0/2] Fix deadlock in ufs
-Message-ID: <20210208162422.GL37557@stor-presley.qualcomm.com>
-References: <84a182cc-de9c-4d6d-2193-3a44e4c88c8b@codeaurora.org>
- <20210201214802.GB420232@rowland.harvard.edu>
- <20210202205245.GA8444@stor-presley.qualcomm.com>
- <20210202220536.GA464234@rowland.harvard.edu>
- <20210204001354.GD37557@stor-presley.qualcomm.com>
- <20210204194831.GA567391@rowland.harvard.edu>
- <20210204211424.GH37557@stor-presley.qualcomm.com>
- <DM6PR04MB6575692524202EC91E2A5480FCB29@DM6PR04MB6575.namprd04.prod.outlook.com>
- <20210205161102.GJ37557@stor-presley.qualcomm.com>
- <DM6PR04MB65759417507BA054F8CAE86AFCB19@DM6PR04MB6575.namprd04.prod.outlook.com>
+        id S234773AbhBHRTV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Feb 2021 12:19:21 -0500
+Received: from verein.lst.de ([213.95.11.211]:42327 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232460AbhBHRSh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 Feb 2021 12:18:37 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 2835A67373; Mon,  8 Feb 2021 18:17:44 +0100 (CET)
+Date:   Mon, 8 Feb 2021 18:17:43 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <Keith.Busch@wdc.com>
+Subject: Re: [PATCH v4 0/8] block: add zone write granularity limit
+Message-ID: <20210208171743.GA15614@lst.de>
+References: <20210128044733.503606-1-damien.lemoal@wdc.com> <BL0PR04MB65147501739ABF4F27B72290E7B39@BL0PR04MB6514.namprd04.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <DM6PR04MB65759417507BA054F8CAE86AFCB19@DM6PR04MB6575.namprd04.prod.outlook.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <BL0PR04MB65147501739ABF4F27B72290E7B39@BL0PR04MB6514.namprd04.prod.outlook.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Feb 06 2021 at 11:24 -0800, Avri Altman wrote:
->> >Regardless of your above proposal, as for the issues you were witnessing with
->> rpmb,
->> >That started this RFC in the first place, and the whole clearing uac series for
->> that matter:
->> > "In order to conduct FFU or RPMB operations, UFS needs to clear UNIT
->> ATTENTION condition...."
->> >
->> >Functionally, This was already done for the device wlun, and only added the
->> rpmb wlun.
->> >
->> >Now you are trying to solve stuff because the rpmb is not provisioned.
->> >a) There should be no relation between response to request-sense command,
->> > and if the key is programmed or not. And
->> >b) rpmb is accessed from user-space.  If it is not provisioned, it should
->> processed the error (-7)
->> >    and realize that by itself.  And also, It only makes sense that if needed,
->> >    the access sequence will include  the request-sense command.
->> >
->> >Therefore, IMHO, just reverting Randall commit (1918651f2d7e) and fixing
->> the user-space code
->> >Should suffice.
->> >
->> >Thanks,
->> >Avri
->> >
->> Hi Avri
->>
->> Thanks.
->>
->> I don't think reverting 1918651f2d7e would fix this.
->>
->> [   12.182750] ufshcd-qcom 1d84000.ufshc: ufshcd_suspend: Setting power
->> mode
->> [   12.190467] ufshcd-qcom 1d84000.ufshc: wlun_dev_clr_ua: 0 <-- uac wasn't
->> sent
->> [   12.196735] ufshcd-qcom 1d84000.ufshc: Sending ssu
->> [   12.202412] scsi 0:0:0:49488: Queue rpm status b4 ssu: 2 <- sdev_ufs_device
->> queue is suspended
->> [   12.208613] ufshcd-qcom 1d84000.ufshc: Wait for resume - <-- deadlock!
->>
->> The issue is sending any command to any lun which is registered for blk
->> runtime-pm in ufs host's suspend path would deadlock; since, it'd try to resume
->> the ufs host in the same suspend calling sequence.
->Did you managed to bisect the commit that caused the regression?
-No - I didn't bisect.
+On Thu, Feb 04, 2021 at 08:47:51AM +0000, Damien Le Moal wrote:
+> Any comment on this series ?
+> 
+> Martin,
+> 
+> The scsi bits (patch 5 and 8) may need your ack.
 
->Is it in the series that Bart referred to?
->
-Yes - the debug points to that.
-
->Thanks,
->Avri
+ping?  Jens, having this series really helps with some of the
+ongoing zoned device work.
