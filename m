@@ -2,115 +2,261 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ED6BC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 12:04:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74133C433E6
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 12:15:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48DBC64E8A
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 12:04:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36B6D64E7C
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 12:15:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233426AbhBHMEe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Feb 2021 07:04:34 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:32544 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233570AbhBHMC4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Feb 2021 07:02:56 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612785690;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+        id S230477AbhBHMPZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Feb 2021 07:15:25 -0500
+Received: from mx2.suse.de ([195.135.220.15]:50032 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230319AbhBHMPE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 Feb 2021 07:15:04 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1612786454; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=PTlcoT+IigUWQzE/5Lb/sZFJTttDVxoCx4ggLUb2mzc=;
-        b=Blw9yFoEvaa3Sdy1kZOkx1K2QQN7KMNj77LTZUztX8xI3IgtZ0tj3v9p9CF6Tr7+Cus/Iy
-        MUhnoAfGPqDv8cpKdlOvzPLfsdpPsQ9eT+u2tSvUUhVXLWuDZmg53uvJehGaZC6tYDkAx4
-        5DcRT/pL4/bPU2e0o10yX0szbDeSaJM=
-Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
- [209.85.208.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-104-qiIGaivGOl2ETUnwsREHtA-1; Mon, 08 Feb 2021 07:01:29 -0500
-X-MC-Unique: qiIGaivGOl2ETUnwsREHtA-1
-Received: by mail-ed1-f69.google.com with SMTP id ay16so13090874edb.2
-        for <linux-scsi@vger.kernel.org>; Mon, 08 Feb 2021 04:01:29 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=PTlcoT+IigUWQzE/5Lb/sZFJTttDVxoCx4ggLUb2mzc=;
-        b=OirjyQhxbNKCl9Gq1tO1mGOepIPn5bljTbNnR+0cjcndM7R9DsCNZ/Rf0FLsDBSsZV
-         1qkhSqExMeFpxGiz00xJ+nngKlpymFeya158LRCA8EwuCG2DgVM6g8C8l9Agtiz58eTw
-         kVae8MrKIC/nUjS6PrKufvp43POQ1cyF+9X+Q/GVbEYYk1pI4kU77GnGjkxr/k7NvaTP
-         W2tev7SUSeOcOI9QLJweP1tF3ZkD+Ysw8nvLwv+RIOx6RlFWfI+bQwylcuLREBXBFwJM
-         zxtV+2oZ+gSUWP3zD5lY0D+B1+T7EZOscvL0Begb+lw7lstOBBqo5AA25AAUIJ+mw5C8
-         ftyw==
-X-Gm-Message-State: AOAM531i9aKPDalhbp7bWJm+Ol385mAEmRqwpCxL9AUHshzsNy+VgPR9
-        IJFqgd5tXnv7oNE9LR/UnBw8QFUITKQpUpT19Qtta6N2V74+KlC+8LLNuwZTyb539R+zrxzI0jO
-        SOJrhc7zFwitr0I6S5u4HFw==
-X-Received: by 2002:a05:6402:1914:: with SMTP id e20mr16757907edz.89.1612785687644;
-        Mon, 08 Feb 2021 04:01:27 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJz6KUrSSLZ/WJvZD7GSCwfBw66PX8V89QFLyOzcHizAKpcWVSLgUjhtBHtAVbQuSaC5ixXRIw==
-X-Received: by 2002:a05:6402:1914:: with SMTP id e20mr16757890edz.89.1612785687468;
-        Mon, 08 Feb 2021 04:01:27 -0800 (PST)
-Received: from redhat.com (bzq-79-180-2-31.red.bezeqint.net. [79.180.2.31])
-        by smtp.gmail.com with ESMTPSA id h25sm8481385ejy.7.2021.02.08.04.01.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Feb 2021 04:01:26 -0800 (PST)
-Date:   Mon, 8 Feb 2021 07:01:23 -0500
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, jasowang@redhat.com,
-        stefanha@redhat.com, virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 00/11] target: fix cmd plugging and completion
-Message-ID: <20210208070050-mutt-send-email-mst@kernel.org>
-References: <20210204113513.93204-1-michael.christie@oracle.com>
+        bh=YkL31YCnyHYbb7t23TaR8QRiNbERTptF7wXzJLL1Vxo=;
+        b=f6+8KpM2onabGcpcXQyUEuf2Tz0jJbgqS9S25f4GYpXaFlrQJeFMiR0nSmfFIILRXAFi/D
+        CHRNDrFYiA/HyMMwMls90LLIPO0p6n9ZzVr1Xl+qs/Wp8cpEY1kF6KD7/GClbtpZoCDncK
+        Z3KzAvtPmxBw//0U7enbXBF6dX3j/fo=
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 4C4C1AEC2;
+        Mon,  8 Feb 2021 12:14:14 +0000 (UTC)
+To:     Julien Grall <julien@xen.org>, xen-devel@lists.xenproject.org,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        stable@vger.kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
+        Jens Axboe <axboe@kernel.dk>, Wei Liu <wei.liu@kernel.org>,
+        Paul Durrant <paul@xen.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+References: <20210206104932.29064-1-jgross@suse.com>
+ <bd63694e-ac0c-7954-ec00-edad05f8da1c@xen.org>
+ <eeb62129-d9fc-2155-0e0f-aff1fbb33fbc@suse.com>
+ <fcf3181b-3efc-55f5-687c-324937b543e6@xen.org>
+ <7aaeeb3d-1e1b-6166-84e9-481153811b62@suse.com>
+ <6f547bb5-777a-6fc2-eba2-cccb4adfca87@xen.org>
+ <0d623c98-a714-1639-cc53-f58ba3f08212@suse.com>
+ <28399fd1-9fe8-f31a-6ee8-e78de567155b@xen.org>
+From:   =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>
+Subject: Re: [PATCH 0/7] xen/events: bug fixes and some diagnostic aids
+Message-ID: <1831964f-185e-31bb-2446-778f2c18d71b@suse.com>
+Date:   Mon, 8 Feb 2021 13:14:13 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210204113513.93204-1-michael.christie@oracle.com>
+In-Reply-To: <28399fd1-9fe8-f31a-6ee8-e78de567155b@xen.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="hIAoLX3MJuQazBJLmWBlWtXZWpRDvRYID"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Feb 04, 2021 at 05:35:02AM -0600, Mike Christie wrote:
-> The following patches made over Martin's 5.12 branches fix two
-> issues:
-> 
-> 1. target_core_iblock plugs and unplugs the queue for every
-> command. To handle this issue and handle an issue that
-> vhost-scsi and loop were avoiding by adding their own workqueue,
-> I added a new submission workqueue to LIO. Drivers can pass cmds
-> to it, and we can then submit batches of cmds.
-> 
-> 2. vhost-scsi and loop on the submission side were doing a work
-> per cmd and on the lio completion side it was doing a work per
-> cmd. The cap on running works is 512 (max_active) and so we can
-> end up end up using a lot of threads when submissions start blocking
-> because they hit the block tag limit or the completion side blocks
-> trying to send the cmd. In this patchset I just use a cmd list
-> per session to avoid abusing the workueue layer.
-> 
-> The combined patchset fixes a major perf issue we've been hitting
-> where IOPs is stuck at 230K when running:
-> 
->     fio --filename=/dev/sda  --direct=1 --rw=randrw --bs=4k
->     --ioengine=libaio --iodepth=128  --numjobs=8 --time_based
->     --group_reporting --runtime=60
-> 
-> The patches in this set get me to 350K when using devices that
-> have native IOPs of around 400-500K.
-> 
-> Note that 5.12 has some interrupt changes that my patches
-> collide with. Martin's 5.12 branches had the changes so I
-> based my patches on that.
-> 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--hIAoLX3MJuQazBJLmWBlWtXZWpRDvRYID
+Content-Type: multipart/mixed; boundary="qiVuDEdwEs52OcBCUZRJfP80UdZbnlZdc";
+ protected-headers="v1"
+From: =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>
+To: Julien Grall <julien@xen.org>, xen-devel@lists.xenproject.org,
+ linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+ netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+ Stefano Stabellini <sstabellini@kernel.org>, stable@vger.kernel.org,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
+ Jens Axboe <axboe@kernel.dk>, Wei Liu <wei.liu@kernel.org>,
+ Paul Durrant <paul@xen.org>, "David S. Miller" <davem@davemloft.net>,
+ Jakub Kicinski <kuba@kernel.org>
+Message-ID: <1831964f-185e-31bb-2446-778f2c18d71b@suse.com>
+Subject: Re: [PATCH 0/7] xen/events: bug fixes and some diagnostic aids
+References: <20210206104932.29064-1-jgross@suse.com>
+ <bd63694e-ac0c-7954-ec00-edad05f8da1c@xen.org>
+ <eeb62129-d9fc-2155-0e0f-aff1fbb33fbc@suse.com>
+ <fcf3181b-3efc-55f5-687c-324937b543e6@xen.org>
+ <7aaeeb3d-1e1b-6166-84e9-481153811b62@suse.com>
+ <6f547bb5-777a-6fc2-eba2-cccb4adfca87@xen.org>
+ <0d623c98-a714-1639-cc53-f58ba3f08212@suse.com>
+ <28399fd1-9fe8-f31a-6ee8-e78de567155b@xen.org>
+In-Reply-To: <28399fd1-9fe8-f31a-6ee8-e78de567155b@xen.org>
 
-OK so feel free to merge through that branch.
+--qiVuDEdwEs52OcBCUZRJfP80UdZbnlZdc
+Content-Type: multipart/mixed;
+ boundary="------------910DD0FAB41FE5DC74A08D00"
+Content-Language: en-US
 
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
+This is a multi-part message in MIME format.
+--------------910DD0FAB41FE5DC74A08D00
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
--- 
-MST
+On 08.02.21 11:40, Julien Grall wrote:
+> Hi Juergen,
+>=20
+> On 08/02/2021 10:22, J=C3=BCrgen Gro=C3=9F wrote:
+>> On 08.02.21 10:54, Julien Grall wrote:
+>>> ... I don't really see how the difference matter here. The idea is to=
+=20
+>>> re-use what's already existing rather than trying to re-invent the=20
+>>> wheel with an extra lock (or whatever we can come up).
+>>
+>> The difference is that the race is occurring _before_ any IRQ is
+>> involved. So I don't see how modification of IRQ handling would help.
+>=20
+> Roughly our current IRQ handling flow (handle_eoi_irq()) looks like:
+>=20
+> if ( irq in progress )
+> {
+>  =C2=A0 set IRQS_PENDING
+>  =C2=A0 return;
+> }
+>=20
+> do
+> {
+>  =C2=A0 clear IRQS_PENDING
+>  =C2=A0 handle_irq()
+> } while (IRQS_PENDING is set)
+>=20
+> IRQ handling flow like handle_fasteoi_irq() looks like:
+>=20
+> if ( irq in progress )
+>  =C2=A0 return;
+>=20
+> handle_irq()
+>=20
+> The latter flow would catch "spurious" interrupt and ignore them. So it=
+=20
+> would handle nicely the race when changing the event affinity.
 
+Sure? Isn't "irq in progress" being reset way before our "lateeoi" is
+issued, thus having the same problem again? And I think we want to keep
+the lateeoi behavior in order to be able to control event storms.
+
+
+Juergen
+
+--------------910DD0FAB41FE5DC74A08D00
+Content-Type: application/pgp-keys;
+ name="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+ filename="OpenPGP_0xB0DE9DD628BF132F.asc"
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+xsBNBFOMcBYBCACgGjqjoGvbEouQZw/ToiBg9W98AlM2QHV+iNHsEs7kxWhKMjrioyspZKOBy=
+cWx
+w3ie3j9uvg9EOB3aN4xiTv4qbnGiTr3oJhkB1gsb6ToJQZ8uxGq2kaV2KL9650I1SJvedYm8O=
+f8Z
+d621lSmoKOwlNClALZNew72NjJLEzTalU1OdT7/i1TXkH09XSSI8mEQ/ouNcMvIJNwQpd369y=
+9bf
+IhWUiVXEK7MlRgUG6MvIj6Y3Am/BBLUVbDa4+gmzDC9ezlZkTZG2t14zWPvxXP3FAp2pkW0xq=
+G7/
+377qptDmrk42GlSKN4z76ELnLxussxc7I2hx18NUcbP8+uty4bMxABEBAAHNHEp1ZXJnZW4gR=
+3Jv
+c3MgPGpnQHBmdXBmLm5ldD7CwHkEEwECACMFAlOMcBYCGwMHCwkIBwMCAQYVCAIJCgsEFgIDA=
+QIe
+AQIXgAAKCRCw3p3WKL8TL0KdB/93FcIZ3GCNwFU0u3EjNbNjmXBKDY4FUGNQH2lvWAUy+dnyT=
+hpw
+dtF/jQ6j9RwE8VP0+NXcYpGJDWlNb9/JmYqLiX2Q3TyevpB0CA3dbBQp0OW0fgCetToGIQrg0=
+MbD
+1C/sEOv8Mr4NAfbauXjZlvTj30H2jO0u+6WGM6nHwbh2l5O8ZiHkH32iaSTfN7Eu5RnNVUJbv=
+oPH
+Z8SlM4KWm8rG+lIkGurqqu5gu8q8ZMKdsdGC4bBxdQKDKHEFExLJK/nRPFmAuGlId1E3fe10v=
+5QL
++qHI3EIPtyfE7i9Hz6rVwi7lWKgh7pe0ZvatAudZ+JNIlBKptb64FaiIOAWDCx1SzR9KdWVyZ=
+2Vu
+IEdyb3NzIDxqZ3Jvc3NAc3VzZS5jb20+wsB5BBMBAgAjBQJTjHCvAhsDBwsJCAcDAgEGFQgCC=
+QoL
+BBYCAwECHgECF4AACgkQsN6d1ii/Ey/HmQf/RtI7kv5A2PS4RF7HoZhPVPogNVbC4YA6lW7Dr=
+Wf0
+teC0RR3MzXfy6pJ+7KLgkqMlrAbN/8Dvjoz78X+5vhH/rDLa9BuZQlhFmvcGtCF8eR0T1v0nC=
+/nu
+AFVGy+67q2DH8As3KPu0344TBDpAvr2uYM4tSqxK4DURx5INz4ZZ0WNFHcqsfvlGJALDeE0Lh=
+ITT
+d9jLzdDad1pQSToCnLl6SBJZjDOX9QQcyUigZFtCXFst4dlsvddrxyqT1f17+2cFSdu7+ynLm=
+XBK
+7abQ3rwJY8SbRO2iRulogc5vr/RLMMlscDAiDkaFQWLoqHHOdfO9rURssHNN8WkMnQfvUewRz=
+80h
+SnVlcmdlbiBHcm9zcyA8amdyb3NzQG5vdmVsbC5jb20+wsB5BBMBAgAjBQJTjHDXAhsDBwsJC=
+AcD
+AgEGFQgCCQoLBBYCAwECHgECF4AACgkQsN6d1ii/Ey8PUQf/ehmgCI9jB9hlgexLvgOtf7PJn=
+FOX
+gMLdBQgBlVPO3/D9R8LtF9DBAFPNhlrsfIG/SqICoRCqUcJ96Pn3P7UUinFG/I0ECGF4EvTE1=
+jnD
+kfJZr6jrbjgyoZHiw/4BNwSTL9rWASyLgqlA8u1mf+c2yUwcGhgkRAd1gOwungxcwzwqgljf0=
+N51
+N5JfVRHRtyfwq/ge+YEkDGcTU6Y0sPOuj4Dyfm8fJzdfHNQsWq3PnczLVELStJNdapwPOoE+l=
+otu
+fe3AM2vAEYJ9rTz3Cki4JFUsgLkHFqGZarrPGi1eyQcXeluldO3m91NK/1xMI3/+8jbO0tsn1=
+tqS
+EUGIJi7ox80eSnVlcmdlbiBHcm9zcyA8amdyb3NzQHN1c2UuZGU+wsB5BBMBAgAjBQJTjHDrA=
+hsD
+BwsJCAcDAgEGFQgCCQoLBBYCAwECHgECF4AACgkQsN6d1ii/Ey+LhQf9GL45eU5vOowA2u5N3=
+g3O
+ZUEBmDHVVbqMtzwlmNC4k9Kx39r5s2vcFl4tXqW7g9/ViXYuiDXb0RfUpZiIUW89siKrkzmQ5=
+dM7
+wRqzgJpJwK8Bn2MIxAKArekWpiCKvBOB/Cc+3EXE78XdlxLyOi/NrmSGRIov0karw2RzMNOu5=
+D+j
+LRZQd1Sv27AR+IP3I8U4aqnhLpwhK7MEy9oCILlgZ1QZe49kpcumcZKORmzBTNh30FVKK1Evm=
+V2x
+AKDoaEOgQB4iFQLhJCdP1I5aSgM5IVFdn7v5YgEYuJYx37IoN1EblHI//x/e2AaIHpzK5h88N=
+Eaw
+QsaNRpNSrcfbFmAg987ATQRTjHAWAQgAyzH6AOODMBjgfWE9VeCgsrwH3exNAU32gLq2xvjpW=
+nHI
+s98ndPUDpnoxWQugJ6MpMncr0xSwFmHEgnSEjK/PAjppgmyc57BwKII3sV4on+gDVFJR6Y8ZR=
+wgn
+BC5mVM6JjQ5xDk8WRXljExRfUX9pNhdE5eBOZJrDRoLUmmjDtKzWaDhIg/+1Hzz93X4fCQkNV=
+bVF
+LELU9bMaLPBG/x5q4iYZ2k2ex6d47YE1ZFdMm6YBYMOljGkZKwYde5ldM9mo45mmwe0icXKLk=
+pEd
+IXKTZeKDO+Hdv1aqFuAcccTg9RXDQjmwhC3yEmrmcfl0+rPghO0Iv3OOImwTEe4co3c1mwARA=
+QAB
+wsBfBBgBAgAJBQJTjHAWAhsMAAoJELDendYovxMvQ/gH/1ha96vm4P/L+bQpJwrZ/dneZcmEw=
+Tbe
+8YFsw2V/Buv6Z4Mysln3nQK5ZadD534CF7TDVft7fC4tU4PONxF5D+/tvgkPfDAfF77zy2AH1=
+vJz
+Q1fOU8lYFpZXTXIHb+559UqvIB8AdgR3SAJGHHt4RKA0F7f5ipYBBrC6cyXJyyoprT10EMvU8=
+VGi
+wXvTyJz3fjoYsdFzpWPlJEBRMedCot60g5dmbdrZ5DWClAr0yau47zpWj3enf1tLWaqcsuylW=
+svi
+uGjKGw7KHQd3bxALOknAp4dN3QwBYCKuZ7AddY9yjynVaD5X7nF9nO5BjR/i1DG86lem3iBDX=
+zXs
+ZDn8R38=3D
+=3D2wuH
+-----END PGP PUBLIC KEY BLOCK-----
+
+--------------910DD0FAB41FE5DC74A08D00--
+
+--qiVuDEdwEs52OcBCUZRJfP80UdZbnlZdc--
+
+--hIAoLX3MJuQazBJLmWBlWtXZWpRDvRYID
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmAhKxUFAwAAAAAACgkQsN6d1ii/Ey/X
+GwgAhB+De5IgMGnLjs2xXuEsjs1CoaFMv6yM53+0stHNws/f9YhqD6Kd0pD3uEC4cy4Fthz6T3c8
+J/lq5sS+jmbxUG1UGG8TJjmDK63oSwAqIBU+aefIRsOjLeMGuWxSy+wpvkAllz9iTrJmPg40i+u2
+LXDclNuKGEnAAyIUEhfbITMYSsV6K7UTZKiiRC2K42nPyxn9e2KNBtCcGgttYvkop35e3ejDYBoc
+QpffC1v/HZOkDBXWqSdffwRlQeQAVhBLwYkXk6J8zynxTqmT5GQJUkhfn4MZQqdGlItysPwuIgQl
+kY567Mvsh2aL2O4yNPzEcNpzfKS8wqoZbjAOU+XsuA==
+=VlL/
+-----END PGP SIGNATURE-----
+
+--hIAoLX3MJuQazBJLmWBlWtXZWpRDvRYID--
