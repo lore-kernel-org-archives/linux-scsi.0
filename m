@@ -2,180 +2,180 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 449E9C43217
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 10:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56D49C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 10:11:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1260364E8F
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 10:00:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F388D64EA7
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Feb 2021 10:11:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231860AbhBHKAN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Feb 2021 05:00:13 -0500
-Received: from mail.xenproject.org ([104.130.215.37]:49814 "EHLO
-        mail.xenproject.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231846AbhBHJ4E (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Feb 2021 04:56:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=xen.org;
-        s=20200302mail; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject;
-        bh=DAnR7MzHh3CuEpYPfOXRcoYHW4xu0lHgJg9s/j96+CA=; b=NQGvflJoJaq+BVdv8rdh+MkiSv
-        yol9jTaW9vwwwSHp5cMZreqBIOdubT37g1wVGnfYlYuHjdIVeTKUrOIYNxXb/NkBsEkGnK0YWRmVR
-        Oy5X/RCcavvyZ/EDQTSzY9UNWcretq8xUfp9jvHU7Azj5q1sWMdWYfbpuZTB3zCUWJ6w=;
-Received: from xenbits.xenproject.org ([104.239.192.120])
-        by mail.xenproject.org with esmtp (Exim 4.92)
-        (envelope-from <julien@xen.org>)
-        id 1l93FJ-0000fi-7C; Mon, 08 Feb 2021 09:54:17 +0000
-Received: from [54.239.6.177] (helo=a483e7b01a66.ant.amazon.com)
-        by xenbits.xenproject.org with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.92)
-        (envelope-from <julien@xen.org>)
-        id 1l93FI-00019w-RE; Mon, 08 Feb 2021 09:54:17 +0000
-Subject: Re: [PATCH 0/7] xen/events: bug fixes and some diagnostic aids
-To:     =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>,
-        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        stable@vger.kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
-        Jens Axboe <axboe@kernel.dk>, Wei Liu <wei.liu@kernel.org>,
-        Paul Durrant <paul@xen.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-References: <20210206104932.29064-1-jgross@suse.com>
- <bd63694e-ac0c-7954-ec00-edad05f8da1c@xen.org>
- <eeb62129-d9fc-2155-0e0f-aff1fbb33fbc@suse.com>
- <fcf3181b-3efc-55f5-687c-324937b543e6@xen.org>
- <7aaeeb3d-1e1b-6166-84e9-481153811b62@suse.com>
-From:   Julien Grall <julien@xen.org>
-Message-ID: <6f547bb5-777a-6fc2-eba2-cccb4adfca87@xen.org>
-Date:   Mon, 8 Feb 2021 09:54:13 +0000
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.7.0
+        id S230445AbhBHKKJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Feb 2021 05:10:09 -0500
+Received: from mail29.static.mailgun.info ([104.130.122.29]:28443 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232124AbhBHJ7s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Feb 2021 04:59:48 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1612778366; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=SaZaHBLKUsOHV+ADNlGOajlR/W8Hmri2bwY0Sr/RM5U=;
+ b=pK2IddlUFyUC+3hRbB6HxyINmp4OM4r+1eoaWZwxS156MhUfoYqrGGvQE4eja/Nz3PgE2o1n
+ Vm6OTv3/EeFcyC1sBhng7Wg6RqfHgilWLCn/tM8w+ux9JAgub0t8eX16oEswJ0szvA/YRjAh
+ m9RyhtGDa/N0/v74EUFoT06Xbjg=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
+ 60210b58f112b7872c08e0a9 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 09:58:48
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 63587C43469; Mon,  8 Feb 2021 09:58:48 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 74B43C433C6;
+        Mon,  8 Feb 2021 09:58:47 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <7aaeeb3d-1e1b-6166-84e9-481153811b62@suse.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 08 Feb 2021 17:58:47 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Bean Huo <huobean@gmail.com>
+Cc:     daejun7.park@samsung.com, Greg KH <gregkh@linuxfoundation.org>,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, asutoshd@codeaurora.org,
+        stanley.chu@mediatek.com, bvanassche@acm.org,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>
+Subject: Re: [PATCH v19 3/3] scsi: ufs: Prepare HPB read for cached sub-region
+In-Reply-To: <a95af313ee4dfb7173b0c5a23b52d2168a94f87a.camel@gmail.com>
+References: <20210129052848epcms2p6e5797efd94e6282b76ad9ae6c99e3ab5@epcms2p6>
+ <CGME20210129052848epcms2p6e5797efd94e6282b76ad9ae6c99e3ab5@epcms2p5>
+ <20210129053042epcms2p538e7fa396c3c2104594c44e48be53eb8@epcms2p5>
+ <7f25ccb1d857131baa1c0424c4542e33@codeaurora.org>
+ <a95af313ee4dfb7173b0c5a23b52d2168a94f87a.camel@gmail.com>
+Message-ID: <8c79dfb0dc749c3c1362b57c5a9766c0@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 08/02/2021 09:41, Jürgen Groß wrote:
-> On 08.02.21 10:11, Julien Grall wrote:
->> Hi Juergen,
->>
->> On 07/02/2021 12:58, Jürgen Groß wrote:
->>> On 06.02.21 19:46, Julien Grall wrote:
->>>> Hi Juergen,
->>>>
->>>> On 06/02/2021 10:49, Juergen Gross wrote:
->>>>> The first three patches are fixes for XSA-332. The avoid WARN splats
->>>>> and a performance issue with interdomain events.
->>>>
->>>> Thanks for helping to figure out the problem. Unfortunately, I still 
->>>> see reliably the WARN splat with the latest Linux master 
->>>> (1e0d27fce010) + your first 3 patches.
->>>>
->>>> I am using Xen 4.11 (1c7d984645f9) and dom0 is forced to use the 2L 
->>>> events ABI.
->>>>
->>>> After some debugging, I think I have an idea what's went wrong. The 
->>>> problem happens when the event is initially bound from vCPU0 to a 
->>>> different vCPU.
->>>>
->>>>  From the comment in xen_rebind_evtchn_to_cpu(), we are masking the 
->>>> event to prevent it being delivered on an unexpected vCPU. However, 
->>>> I believe the following can happen:
->>>>
->>>> vCPU0                | vCPU1
->>>>                  |
->>>>                  | Call xen_rebind_evtchn_to_cpu()
->>>> receive event X            |
->>>>                  | mask event X
->>>>                  | bind to vCPU1
->>>> <vCPU descheduled>        | unmask event X
->>>>                  |
->>>>                  | receive event X
->>>>                  |
->>>>                  | handle_edge_irq(X)
->>>> handle_edge_irq(X)        |  -> handle_irq_event()
->>>>                  |   -> set IRQD_IN_PROGRESS
->>>>   -> set IRQS_PENDING        |
->>>>                  |   -> evtchn_interrupt()
->>>>                  |   -> clear IRQD_IN_PROGRESS
->>>>                  |  -> IRQS_PENDING is set
->>>>                  |  -> handle_irq_event()
->>>>                  |   -> evtchn_interrupt()
->>>>                  |     -> WARN()
->>>>                  |
->>>>
->>>> All the lateeoi handlers expect a ONESHOT semantic and 
->>>> evtchn_interrupt() is doesn't tolerate any deviation.
->>>>
->>>> I think the problem was introduced by 7f874a0447a9 ("xen/events: fix 
->>>> lateeoi irq acknowledgment") because the interrupt was disabled 
->>>> previously. Therefore we wouldn't do another iteration in 
->>>> handle_edge_irq().
->>>
->>> I think you picked the wrong commit for blaming, as this is just
->>> the last patch of the three patches you were testing.
->>
->> I actually found the right commit for blaming but I copied the 
->> information from the wrong shell :/. The bug was introduced by:
->>
->> c44b849cee8c ("xen/events: switch user event channels to lateeoi model")
->>
->>>
->>>> Aside the handlers, I think it may impact the defer EOI mitigation 
->>>> because in theory if a 3rd vCPU is joining the party (let say vCPU A 
->>>> migrate the event from vCPU B to vCPU C). So info->{eoi_cpu, 
->>>> irq_epoch, eoi_time} could possibly get mangled?
->>>>
->>>> For a fix, we may want to consider to hold evtchn_rwlock with the 
->>>> write permission. Although, I am not 100% sure this is going to 
->>>> prevent everything.
->>>
->>> It will make things worse, as it would violate the locking hierarchy
->>> (xen_rebind_evtchn_to_cpu() is called with the IRQ-desc lock held).
->>
->> Ah, right.
->>
->>>
->>> On a first glance I think we'll need a 3rd masking state ("temporarily
->>> masked") in the second patch in order to avoid a race with lateeoi.
->>>
->>> In order to avoid the race you outlined above we need an "event is being
->>> handled" indicator checked via test_and_set() semantics in
->>> handle_irq_for_port() and reset only when calling clear_evtchn().
->>
->> It feels like we are trying to workaround the IRQ flow we are using 
->> (i.e. handle_edge_irq()).
+On 2021-02-08 16:16, Bean Huo wrote:
+> On Fri, 2021-02-05 at 11:29 +0800, Can Guo wrote:
+>> > +     return ppn_table[offset];
+>> > +}
+>> > +
+>> > +static void
+>> > +ufshpb_get_pos_from_lpn(struct ufshpb_lu *hpb, unsigned long lpn,
+>> > int
+>> > *rgn_idx,
+>> > +                     int *srgn_idx, int *offset)
+>> > +{
+>> > +     int rgn_offset;
+>> > +
+>> > +     *rgn_idx = lpn >> hpb->entries_per_rgn_shift;
+>> > +     rgn_offset = lpn & hpb->entries_per_rgn_mask;
+>> > +     *srgn_idx = rgn_offset >> hpb->entries_per_srgn_shift;
+>> > +     *offset = rgn_offset & hpb->entries_per_srgn_mask;
+>> > +}
+>> > +
+>> > +static void
+>> > +ufshpb_set_hpb_read_to_upiu(struct ufshpb_lu *hpb, struct
+>> > ufshcd_lrb
+>> > *lrbp,
+>> > +                               u32 lpn, u64 ppn,  unsigned int
+>> > transfer_len)
+>> > +{
+>> > +     unsigned char *cdb = lrbp->cmd->cmnd;
+>> > +
+>> > +     cdb[0] = UFSHPB_READ;
+>> > +
+>> > +     put_unaligned_be64(ppn, &cdb[6]);
+>> 
+>> You are assuming the HPB entries read out by "HPB Read Buffer" cmd
+>> are
+>> in Little
+>> Endian, which is why you are using put_unaligned_be64 here.
+>> 
 > 
-> I'm not really sure this is the main problem here. According to your
-> analysis the main problem is occurring when handling the event, not when
-> handling the IRQ: the event is being received on two vcpus.
-
-I don't think we can easily divide the two because we rely on the IRQ 
-framework to handle the lifecycle of the event. So...
-
 > 
-> Our problem isn't due to the IRQ still being pending, but due it being
-> raised again, which should happen for a one shot IRQ the same way.
+> Actaully, here uses put_unaligned_be64 is no problem. SCSI command
+> should be big-endian filled. I Think the problem is that geting ppn
+> from HPB cache in ufshpb_get_ppn().
+> 
 
-... I don't really see how the difference matter here. The idea is to 
-re-use what's already existing rather than trying to re-invent the wheel 
-with an extra lock (or whatever we can come up).
+whatever...
 
-Cheers,
-
--- 
-Julien Grall
+> ...
+> e0000001f: 12 34 56 78 90 fa de ef
+> ...
+> 
+> +
+> +static u64 ufshpb_get_ppn(struct ufshpb_lu *hpb,
+> +			  struct ufshpb_map_ctx *mctx, int pos, int
+> *error)
+> +{
+> +	u64 *ppn_table;  // It s a 64 bits pointer
+> +	struct page *page;
+> +	int index, offset;
+> +
+> +	index = pos / (PAGE_SIZE / HPB_ENTRY_SIZE);
+> +	offset = pos % (PAGE_SIZE / HPB_ENTRY_SIZE);
+> +
+> +	page = mctx->m_page[index];
+> +	if (unlikely(!page)) {
+> +		*error = -ENOMEM;
+> +		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+> +			"error. cannot find page in mctx\n");
+> +		return 0;
+> +	}
+> +
+> +	ppn_table = page_address(page);
+> +	if (unlikely(!ppn_table)) {
+> +		*error = -ENOMEM;
+> +		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+> +			"error. cannot get ppn_table\n");
+> +		return 0;
+> +	}
+> +
+> +	return ppn_table[offset];
+> +}
+> 
+> 
+> 
+> 
+>> this assumption
+>> is not right for all the other flash vendors - HPB entries read out
+>> by
+>> "HPB Read Buffer"
+>> cmd may come in Big Endian, if so, their random read performance are
+>> screwed.
+>> Actually, I have seen at least two flash vendors acting so. I had to
+>> modify this line
+>> to get the code work properly on my setups.
+>> 
+>> Meanwhile, in your cover letter, you mentioned that the performance
+>> data
+>> is collected
+>> on a UFS2.1 device. Please re-collect the data on a real UFS3.1
+>> device
+>> and let me
+>> know the part number. Otherwise, the data is not quite convincing to
+>> us.
+>> 
+>> Regards,
+>> Can Guo.
