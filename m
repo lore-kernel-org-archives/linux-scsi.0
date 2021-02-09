@@ -5,78 +5,78 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF76AC4332B
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 12:40:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91C88C43331
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 12:40:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD56D64E88
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 12:40:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CD8E64EB4
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 12:40:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230231AbhBIMkA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Feb 2021 07:40:00 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:39130 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230184AbhBIMjs (ORCPT
+        id S230235AbhBIMkB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Feb 2021 07:40:01 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:43206 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230183AbhBIMjs (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2021 07:39:48 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 119CYEdh047856;
-        Tue, 9 Feb 2021 12:39:02 GMT
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 119CYA8k054681;
+        Tue, 9 Feb 2021 12:39:00 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2020-01-29; bh=u+xiQn5GyXdQkBxVmYnI8zNMC01FeeMnEGS9mCrFlsI=;
- b=IGWiRwAmag8htC30vXBslO5cGvW8qZ9O1S4uJbOQbkufyiYYA19h78qg0PAI9ALyVC7m
- zjdPKnqu9YQn6WXRGyIDoC6GLvQglAie6D6GQDlKU9NlCcPsV6fymqE48RkO7aU9thLI
- P8BbtjGg1umCgBhW8+26Tu+pCJ66pTGGDo2Ze60sIF+1McOYRi4U/hz1wmIQbl74cWNK
- cnQrLQNgg2mN2tYuDonQOcf4SrSfzkVqkCP/IiVRklbnluO9Krmjju3Gr+c0dsOBfK5p
- UW8AXWZz64oZ/YwLD7odoagluFjGMVIDFiYXyPOK5iHUneRjvp+ELimTdPkneKq7otYL KA== 
+ s=corp-2020-01-29; bh=/PA4gd1D6jVrBXFmI67kErEr/sUV9xPGhvQiBeIrQXk=;
+ b=DUwaFX0gvqgSRe3VeXsh+8pKHu+T3MmB1gOsLNq5UG4MHEL4Go0qS9xXbbKOKQS0J6gW
+ wlH2rjy0r3FIsB529NmDZ7S4/qO4WAS/tAlvqvsESNOnHnTixalY+x0/S5bQXgOarQ8P
+ BJ4MXKTrRUI0WvCD3HvZnoaPVK01kaQnf9Yw546g++IJ4O/DpnSbC0KO8mmRghtxqsVu
+ bLqSOM+vdbrgXCUdQMkz4bIVFNpj0Ae1aPGTjVo7hT9O6BDrnRF8+4G9cmdRkxFzuTBh
+ bifLGkjdF/wJJ+/uH0tT1X3aoCyddVLZQmhdmBMARHoON2FcKOU+MBJmkdItm+CwhA68 6A== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 36hkrmy8c9-1
+        by aserp2130.oracle.com with ESMTP id 36hgmafe4p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 09 Feb 2021 12:39:02 +0000
+        Tue, 09 Feb 2021 12:38:59 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 119CaDIK178533;
-        Tue, 9 Feb 2021 12:39:01 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2108.outbound.protection.outlook.com [104.47.58.108])
-        by aserp3030.oracle.com with ESMTP id 36j4pnn0cr-1
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 119CaDIH178533;
+        Tue, 9 Feb 2021 12:38:59 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2100.outbound.protection.outlook.com [104.47.58.100])
+        by aserp3030.oracle.com with ESMTP id 36j4pnn07j-4
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 09 Feb 2021 12:39:01 +0000
+        Tue, 09 Feb 2021 12:38:59 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eQoQrmbIqfpvTUTNBjebcHeKkrxErMHK7ZAQ1frc/M1LcNamUz80zMiTe2kmUQiddWBm86PmSpIJdibbzN6avZfPmN84ORBhTe63mfxJUb5iLmLqKig5HpW45Jpzyt7mHi3m5wk6vDBXcnILX41q8SzWiAwtIgD0yLG+GTAwbNjpT3fK8rgXTwNvYsRlrhU/re2gGtxe1F3pAIDkiGpkFNaXk14L8ArzYB4Rcy9AgzOkaVIq4rp0q29tMmH1Yqpq1keO3Ghs3fCtwRMbrGRYXVTamaQn2mHCfBKhD9QSsAYrXfyktrJ/DIp3zubUL5B/BKOi+YaSiqgiYpj6fPk9/w==
+ b=VCq+LcRGgk8e5A80+oDvV7gUvLEK9+nP5SZbT5vuO0PPJx6Lk69/KZdcsVfdkp0IlqQWh2rOjdX/xQeQ6vGj8E2zFxNFFJBp+sniZLAH9bCkr+lmmLYaBX8VmsymcTVJayigGIqW2qLP90CknWYx62qu7SookT7sIz5L46oCDjUpFl+G23BTRy9U0Rwp5CN829O47zTv2/TssfjEykL3fwOxGv0ZPPKELX6K8zezY6ccHp88IEvuYmW29UA22P88DF4sabECNA7dZdpczKXjzX8puopDpws303vz7Mycq0EBV8AAxHlPTU20TPkzWormV8bYZ/349RGoWzdhLFTRow==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=u+xiQn5GyXdQkBxVmYnI8zNMC01FeeMnEGS9mCrFlsI=;
- b=WIYaW0FnORRHXtQZImkd7gN/Lfy8oY6UevGBqSXcnSnOLCeuaApT8HM2P4JR+UT7W9YqVzXNj0ioOZur5j4HNFBttHAd+dFFzBYb6GIMVlToKxf1weH4AQ/uMcdC2r+Ye9nmXuFnUOS6pgKCFNvxrEiZKm3zkyS7PR5RUuNGCJvh+e1BhVKIKNi46oAPKjQQG3qFbTpKHGQdha5NTf0Kf1iwYmZW3BWUmppM0sax4T8gkMtK7NMt1t9u+u5L01g5MKTGFQebiRdL73CXFWdFuV+1VM01GGI0Wr913XhYqBv/jesNclxUUkPYNYFP8SOXplnv9PnQKfQC/1rF4AoRKQ==
+ bh=/PA4gd1D6jVrBXFmI67kErEr/sUV9xPGhvQiBeIrQXk=;
+ b=GajDKcug2p8V+ZLDgt8tW4Pz1uFVTDdZzxxWJicbZPiOI+PlDJ8HWdmrT0xn+G8p5MvIOyJuFd8FP6xo58CRw8BTVLMU+xnTI1BCNNOTnrwkACD0aPpE8dGvyEKL8q0HgSsRS13t66Q2uFzf4e3ocD9YbkvK3h9fxXOFTZABX13WQmBxpxWkBWSpP3tmZ3Hy5YPgPQyUKfM84tMi6J35Moh2nAkOL97QsMjiBpfNiGwPK1vhuV96s3xRo1LjmKJvuenE9tRcvC3Vn5/d/LkCI9IpwLfN9rXo5JJ6/mQs8tXzEMF5laVajN74AAXTm+5CSfYPaM6tfizZif8VO0TaWQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=u+xiQn5GyXdQkBxVmYnI8zNMC01FeeMnEGS9mCrFlsI=;
- b=cjBi7/qjSHB471ZHvJiSEtvYtrhu3ocv5XfxkA5p+xySZWU4z4crLjiE8BLQ7t5tLmpYrBQ8LAPH51Y7U8ORr9tx42d/Ec87d2z8qm8VrBAoDWkYfNddUf5JNVZ01fq5bVbb7YMo7ivMFVXv12zK0GagmtJmmM0PFO/B19IwbUs=
+ bh=/PA4gd1D6jVrBXFmI67kErEr/sUV9xPGhvQiBeIrQXk=;
+ b=puzm1Mw3dv1ghnbG9hCC51TucUizDDTnW5sAl8D8RW+uRZh3AtGPdJG91sZORzJ0fXfzPs8N2DeWhGMyERPHvydvq8XdM73KjEqNKQdEf4y33OquijPsHpShtvr4EwnQXgyXbdmvqB7MCkk5ICSjkF29QWv8JB6W8PB81LKu5XY=
 Authentication-Results: wdc.com; dkim=none (message not signed)
  header.d=none;wdc.com; dmarc=none action=none header.from=oracle.com;
 Received: from BYAPR10MB3573.namprd10.prod.outlook.com (2603:10b6:a03:11e::32)
  by BYAPR10MB2600.namprd10.prod.outlook.com (2603:10b6:a02:aa::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3825.25; Tue, 9 Feb
- 2021 12:38:59 +0000
+ 2021 12:38:58 +0000
 Received: from BYAPR10MB3573.namprd10.prod.outlook.com
  ([fe80::1d86:b9d7:c9ef:ba20]) by BYAPR10MB3573.namprd10.prod.outlook.com
  ([fe80::1d86:b9d7:c9ef:ba20%7]) with mapi id 15.20.3825.030; Tue, 9 Feb 2021
- 12:38:59 +0000
+ 12:38:58 +0000
 From:   Mike Christie <michael.christie@oracle.com>
 To:     Chaitanya.Kulkarni@wdc.com, loberman@redhat.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org, mst@redhat.com, stefanha@redhat.com,
         virtualization@lists.linux-foundation.org
 Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 04/13] vhost scsi: use lio wq cmd submission helper
-Date:   Tue,  9 Feb 2021 06:38:36 -0600
-Message-Id: <20210209123845.4856-5-michael.christie@oracle.com>
+Subject: [PATCH 03/13] target: add workqueue based cmd submission
+Date:   Tue,  9 Feb 2021 06:38:35 -0600
+Message-Id: <20210209123845.4856-4-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210209123845.4856-1-michael.christie@oracle.com>
 References: <20210209123845.4856-1-michael.christie@oracle.com>
@@ -88,50 +88,50 @@ X-ClientProxiedBy: CH2PR03CA0007.namprd03.prod.outlook.com
  (2603:10b6:a03:11e::32)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (73.88.28.6) by CH2PR03CA0007.namprd03.prod.outlook.com (2603:10b6:610:59::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.25 via Frontend Transport; Tue, 9 Feb 2021 12:38:58 +0000
+Received: from localhost.localdomain (73.88.28.6) by CH2PR03CA0007.namprd03.prod.outlook.com (2603:10b6:610:59::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.25 via Frontend Transport; Tue, 9 Feb 2021 12:38:56 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 4c746f92-72c5-4ad0-e89f-08d8ccf7ac1a
+X-MS-Office365-Filtering-Correlation-Id: 685d3e76-995a-446f-76a8-08d8ccf7ab6a
 X-MS-TrafficTypeDiagnostic: BYAPR10MB2600:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BYAPR10MB260082803CFDD044284D7495F18E9@BYAPR10MB2600.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
+X-Microsoft-Antispam-PRVS: <BYAPR10MB2600EFFF8157983E6E62A070F18E9@BYAPR10MB2600.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5516;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: myEZXt4oc2Y0kFe7u2v8Dsn4foE+L5lhJTnHepPnk/9b1+u2Op4PfzsvYA13xYvrGi4tfn8STFJcQGg03PHZk/OTEwOenmzxgaKQzCbod4X7yphsTtULNaVmjTigyRrXMbU3HBjSsScJUqrC+qKP/BvI7kxq4JJyHbNLv/OSS/9oh/OOuEfELlZt2rJWG8Eos0EISHonnZMVudEOEm7HtLAFIFWPDooRRZm9Bf6RwKLTs1c+SKx3V0DRMZUUe2LeRGiF071c7/d+LKmT5RcPXasLjkZ3ao1TysGBv0zS7rDFKqBD9vzCAn7USbpDZOkYboYDILuYfDsb2+BGz+WLCInCmg95p9z7Un5dGC3h7V/kAZJ0DeX4IZa8XwBYyuWBbvmq39aNoQdcM44EmuTUoys4gAEK8hcs4ojNifmCrNWXGtUu7joCtxM8/W5vhV45K+pdJzZrLCXN8/bdKA8EkHXppBTxojRGKKvIjApkjYzz35pLhR4n9kny/xowCkvds/4j43b+Duv2Ta1G1mtirnqdFFfInZ7hiJGnbSQfNaZtI+mgfuu0VZvOQtynqnwOEyZoK/Pz42ma38G87CQ5hQ==
+X-Microsoft-Antispam-Message-Info: BlRGrxny6ExQ+lf5UlDesm1FJVggZiEAl5Rh28I0IHhoQI6SskTNy1HQlry7f6m4mWAwx30FFIsK/ga1tVnLQ3NSLXA2rDzy0Fg01yfJE8JamdrocdzRIREgDqkU4yG2/ApVLXh6cjMGaHdkujaNNv0wdRZn8IJF2EwSE4m67ON0FSffKYBgMPRE7ZZ27DLLlHgS9HI2jogCDRFSy4shkVc4efCSSGTvjMdYaa03FH/q2U2IjjXVNKMtW9mX+hhDw4u215af5oLfP/Lfw0Q/6pxUSCh6FUYFvzK/bNaMrIoEcHcBLPo82l8QScaBwknMl/GA7B9X2UpSOa5f7yj8H9r7KobHTBZT262CIC8k9Ze94wtrT8qj3ME6Pb1sz1vQuYyODMfzCHKRpz9ZOHnOBTRIHcOIeqCvB+mrkfjXDB9tLSQ/qigKGBdWMJcO/6LBbA8rpqaExQAlq+KFMVnrAu01NHSmkj7eg7oDDRLkbREFZBrNPU4WY4OjcFOYMSj35HFFCKIZhUPXpHeR5mOvGUF/SmBFxbitKv48kojQOwu5kGykR69IhenTizy7kjov+ldOT4tPdErW6c1/4HKRpw==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB3573.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(39860400002)(346002)(376002)(366004)(136003)(396003)(2906002)(6486002)(16526019)(8676002)(86362001)(8936002)(5660300002)(4326008)(6666004)(107886003)(1076003)(478600001)(6512007)(6506007)(52116002)(26005)(69590400011)(186003)(66946007)(66476007)(36756003)(66556008)(316002)(83380400001)(956004)(2616005);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?luXGpZeQ9CHR7Nif3aD0tv+VuhNgsRCR0+MwltmY2TC4+uEelnxhEuQDqg6U?=
- =?us-ascii?Q?lPelFHvNgPpR3U7PRVv4ijr5O0reJMznXF1K19ahfCFcB+ByOKKrFhB62vwK?=
- =?us-ascii?Q?4fohEp084wxyaZ+cjsKv2bvXGy8Y+SzIzeeS9i+7DGjJyjYw3G5UN4z9SJNV?=
- =?us-ascii?Q?BMmCfC3O81/ls4m+mxhdy5q/F5enlP6NkLdb06jYMPuG+yrubFkcAoo44fVy?=
- =?us-ascii?Q?/Svjd/LvJjCkk31xdiPpgkl79ikl2oCpv7m1YavqEkN9OAx75y3gXqUfCQ3m?=
- =?us-ascii?Q?zjDY5K0hbyKDmm0zOsex5vB69d6W5zXMvvz1+Gw0EIwNyTMkb08P1oAEZxp0?=
- =?us-ascii?Q?NV0/4GvqpaItMYVYzxjbk7xx5iFxmXBUjAr9cC3UNARlBTQWzKk2IUEZCWVq?=
- =?us-ascii?Q?bdl/+9dNTc/0TyO36Zp2Jm1UD5AKfCZ5unXo2K8F1wQo8b1FZrn3HpmHuBDA?=
- =?us-ascii?Q?TOdo/nZcTJ0zV3UsawtlcRAHRAcYfQ1P5hn+5/dlYgFTZwrf5aZSLLdHgw4S?=
- =?us-ascii?Q?UnRbE70mdtOCfqQz3F2Yh3L/qLJ2NalZtyy62yBR66w/8kbx/ntEC+zzjIgB?=
- =?us-ascii?Q?lgfbJ9RXQYPnvybskxWb2aE6i0pwUxRh6uMy7KtE3Vfci0RO1tGyNGEET1+g?=
- =?us-ascii?Q?3I96g9Eo32pl31Jya23Td4hHfqVPuhmeYZpEBcZt0sJEN+31b/qaHku2Ep8E?=
- =?us-ascii?Q?4XHuret5eTHXL3qlnm6dEKI/DdHjhUf1+oVJA7Sohx0x5YF2GdnnJfOKYLra?=
- =?us-ascii?Q?CmM+vesp1HNqBToSOodE7WOZyDwK0cQuas0HXyX1lcjhWpGqsLkSjVsdbg0U?=
- =?us-ascii?Q?d0DRB853utT9tnSciURvp1fx5xjW91UFoXqN+PFQLeGrGDk3+W54pvAMe6VE?=
- =?us-ascii?Q?F0pNgWT2fkxV76/nLcjVkKHHOpwOvQtJ13UOih5FJIGw09k1bBv+1h2VlLcc?=
- =?us-ascii?Q?dFq6PqCpjFXvKNA4z05JbNzlq09BamJ9nfQ7W1CY5G2xWaNa+jGyg9B7lvTz?=
- =?us-ascii?Q?Ppj5Nex859T359Y7i2jJIQNS7TT2I+VzqNscKNSTR57XojFAUtLlyepMi2Us?=
- =?us-ascii?Q?i3GqIfQj0gx2n66oYJkPijA58i9la2onZJ/l5q5yiPKVti5AXx03WtHPsR0w?=
- =?us-ascii?Q?8pANaJLvRZctaceCKChs+Asr+Gvic9ZWQy/aiNCv4kEsbh2/VX1twnONGjw1?=
- =?us-ascii?Q?A63Nq4OJmhbRxvKR7RiScjIM9ed6aAdy/fU28bTk74a4KK1Rl+Mgu23RzDbf?=
- =?us-ascii?Q?qN6YMe+HF3bfhDxbh+smlz0Dqaa+XxTq+CiMtQxYxRT1Z+BF+pL6G2qNGC+Q?=
- =?us-ascii?Q?6mPWm4fP6UBiu470ArNnRmqp?=
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?trq/OHb3UlXaMAOP+E8spcc2cCTLeNekSdv/hSCPHnbaHphDH7p1T8NLTJWD?=
+ =?us-ascii?Q?fLDbGeOMRXTe3K29tbsk5Ywke08O/XIsG8t28Z/hPGIpziujNJS/5Zj4QYua?=
+ =?us-ascii?Q?dbmcDr3Tjybt7BbfAvSfWVwmSYNcpSq37F/5fwBXaqdzfSBWxOROMBPdBYuu?=
+ =?us-ascii?Q?l2x6/fzTjAvXHSK5JT0vhLISgbqYzVLhukB0Qx5912wufjlgtSWFdTvzgLIY?=
+ =?us-ascii?Q?0rDkEZipMiYhIcCWYj23DBNbPwu+IezdBE8rhFiM/7EKvXyiwiVnFemZUa8x?=
+ =?us-ascii?Q?sYbLptcxf1S4OH77W7DqBI1+6LRTmSSo2yMGrLiH7z1Rj4RtmYs0Z2iQiLBa?=
+ =?us-ascii?Q?czqOEyoA+9P5U8KwrG/O7t3U2g/TWeklEGfRYIRYpAhh2minTEJrGhDiSCGk?=
+ =?us-ascii?Q?xx55jZY7mBdzYXV9v+dXvtzsDGlfjgIl4fWatUBVdqSAuqgx5R3aIl1Gy4p7?=
+ =?us-ascii?Q?1Z5vhmX6Kr0VI6tG9Ge3sOHFxKd1glz7UrM/5+v4fVDvEJPcbJKA2+9BAH1A?=
+ =?us-ascii?Q?F8NJ2MsX7pc+7wBsqjF2IHDpLuYVDFrAxggG8Um/cCHqa6ypBG8rgqBt6j4E?=
+ =?us-ascii?Q?3aRWS7M4OFm47S77QLAgADLOJ0W7M0kut8xRJOKOAuc7oE7H6UdiCWtGm78Y?=
+ =?us-ascii?Q?+ox4jXIjPGvM1vCjfMJgmIz73BdmJcevNtKLW3S2AJbADuzk98Il+aZ2VFde?=
+ =?us-ascii?Q?CF4dOVKgH1sAUuC8Hpm6an/UcUBWvvc2wJVD+n/+AsUz47EL0GKDdCsUHqy7?=
+ =?us-ascii?Q?bgXiiwdsX+9wCPF9fbCww5oHnMGwMiSrWx0P15YUoALAo5esO5Osi5Z/i1oJ?=
+ =?us-ascii?Q?SS6a923geXVFDPC0WNoDQGfpapfi6km0K+ek4zv58CPxzAk4d9KXDkNdbnzc?=
+ =?us-ascii?Q?1UvXtXN0wCPG9ta68jwMqi5eNY3nWT8bEci5FvWCGVQj5fuLwlOc54fCnj0+?=
+ =?us-ascii?Q?bC6Eqs3sVKnI6o1kVJkfVyYtB8Z3IUWLDF6mRZBVk3R5zs6VP9rgFUhBrU3m?=
+ =?us-ascii?Q?UM6viHObf+jvLYcOr4vGq3ckYDx6qMK1V92lRcq7FQ0GxqV+lNzn/dHzCuum?=
+ =?us-ascii?Q?cACCAwPxXfOPOx39hXWzfI9bPox+DAZXLAvQqoRxouWoK/uarvOhzHdZyshU?=
+ =?us-ascii?Q?YlEYRASLEBY4rPcOBTn0/ysi9NcSd03/HRgEBFLkVkOADXPufYYQcTwad44Q?=
+ =?us-ascii?Q?DYFi77ZgJ086MiIF59nzNDCxq/f7YpagoS1nOvoMJTO2jkmJ5sJ+77i8762v?=
+ =?us-ascii?Q?gsAQ6WV80V3/D0+spXS5zTx/qq+Mq63Rkn+jB+EFu9yu9K5xmAX6HsugDE75?=
+ =?us-ascii?Q?igy/MJELuXwi3UqLjcYr6cAj?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4c746f92-72c5-4ad0-e89f-08d8ccf7ac1a
+X-MS-Exchange-CrossTenant-Network-Message-Id: 685d3e76-995a-446f-76a8-08d8ccf7ab6a
 X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB3573.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Feb 2021 12:38:59.1896
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Feb 2021 12:38:57.9323
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: vgYbfa6PEx+HgdbLGEnHpcpMnbhT0s4D8J8HAAfrzWOZM2doEPg+MJuw3oXH37EPnXk9xjBkwi1TI+5W74kudhlw/+sasDUVrxWdkW/Mz5E=
+X-MS-Exchange-CrossTenant-UserPrincipalName: jNbNFNqI+BEEl2c+4zQTS6BG979/w77BH83Ff9cy9FcGKIEVP2iuqBDy/3mEX1cyDhizs9m3W+nA1zPTOjMSP+01DQVoMaP1ZyMMbLAQbm0=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2600
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9889 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
@@ -139,158 +139,260 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 ad
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2102090066
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9889 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
- priorityscore=1501 bulkscore=0 spamscore=0 impostorscore=0 mlxscore=0
- suspectscore=0 mlxlogscore=999 adultscore=0 clxscore=1015
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2102090066
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ spamscore=0 lowpriorityscore=0 phishscore=0 adultscore=0 impostorscore=0
+ suspectscore=0 mlxscore=0 clxscore=1015 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2102090066
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Convert vhost-scsi to use the lio wq cmd submission helper.
+loop and vhost-scsi do their target cmd submission from driver
+workqueues. This allows them to avoid an issue where the backend may
+block waiting for resources like tags/requests, mem/locks, etc
+and that ends up blocking their entire submission path and for the
+case of vhost-scsi both the submission and completion path.
+
+This patch adds a helper drivers can use to submit from a lio
+workqueue. This code will then be extended in the next patches to
+fix the plugging of backend devices.
+
+Note: I'm only converting vhost/loop initially, but the workqueue
+based submission will work for other drivers and have similar
+benefits where the main target loops will not end up blocking one
+some backend resource. I'll port others when I have more time to
+test as I think we might want to make it configurable for some
+drivers.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
-Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- drivers/vhost/scsi.c | 49 +++++++++++++++-----------------------------
- 1 file changed, 17 insertions(+), 32 deletions(-)
+ drivers/target/target_core_device.c    | 10 ++-
+ drivers/target/target_core_internal.h  |  1 +
+ drivers/target/target_core_transport.c | 91 +++++++++++++++++++++++++-
+ include/target/target_core_base.h      |  8 ++-
+ include/target/target_core_fabric.h    |  7 ++
+ 5 files changed, 113 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 4ce9f00ae10e..99909c6f3960 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -85,7 +85,7 @@ struct vhost_scsi_cmd {
- 	/* The number of scatterlists associated with this cmd */
- 	u32 tvc_sgl_count;
- 	u32 tvc_prot_sgl_count;
--	/* Saved unpacked SCSI LUN for vhost_scsi_submission_work() */
-+	/* Saved unpacked SCSI LUN for vhost_scsi_target_queue_cmd() */
- 	u32 tvc_lun;
- 	/* Pointer to the SGL formatted memory from virtio-scsi */
- 	struct scatterlist *tvc_sgl;
-@@ -101,8 +101,6 @@ struct vhost_scsi_cmd {
- 	struct vhost_scsi_nexus *tvc_nexus;
- 	/* The TCM I/O descriptor that is accessed via container_of() */
- 	struct se_cmd tvc_se_cmd;
--	/* work item used for cmwq dispatch to vhost_scsi_submission_work() */
--	struct work_struct work;
- 	/* Copy of the incoming SCSI command descriptor block (CDB) */
- 	unsigned char tvc_cdb[VHOST_SCSI_MAX_CDB_SIZE];
- 	/* Sense buffer that will be mapped into outgoing status */
-@@ -240,8 +238,6 @@ struct vhost_scsi_ctx {
- 	struct iov_iter out_iter;
- };
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 7787c527aad3..74d3a4896588 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -735,8 +735,14 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
  
--static struct workqueue_struct *vhost_scsi_workqueue;
--
- /* Global spinlock to protect vhost_scsi TPG list for vhost IOCTL access */
- static DEFINE_MUTEX(vhost_scsi_mutex);
- static LIST_HEAD(vhost_scsi_list);
-@@ -782,12 +778,10 @@ static int vhost_scsi_to_tcm_attr(int attr)
- 	return TCM_SIMPLE_TAG;
- }
- 
--static void vhost_scsi_submission_work(struct work_struct *work)
-+static void vhost_scsi_target_queue_cmd(struct vhost_scsi_cmd *cmd)
- {
--	struct vhost_scsi_cmd *cmd =
--		container_of(work, struct vhost_scsi_cmd, work);
--	struct vhost_scsi_nexus *tv_nexus;
- 	struct se_cmd *se_cmd = &cmd->tvc_se_cmd;
-+	struct vhost_scsi_nexus *tv_nexus;
- 	struct scatterlist *sg_ptr, *sg_prot_ptr = NULL;
- 	int rc;
- 
-@@ -805,9 +799,9 @@ static void vhost_scsi_submission_work(struct work_struct *work)
- 	tv_nexus = cmd->tvc_nexus;
- 
- 	se_cmd->tag = 0;
--	rc = target_submit_cmd_map_sgls(se_cmd, tv_nexus->tvn_se_sess,
--			cmd->tvc_cdb, &cmd->tvc_sense_buf[0],
--			cmd->tvc_lun, cmd->tvc_exp_data_len,
-+	rc = target_queue_cmd_submit(se_cmd, tv_nexus->tvn_se_sess,
-+			&cmd->tvc_sense_buf[0], cmd->tvc_lun,
-+			cmd->tvc_exp_data_len,
- 			vhost_scsi_to_tcm_attr(cmd->tvc_task_attr),
- 			cmd->tvc_data_direction, TARGET_SCF_ACK_KREF,
- 			sg_ptr, cmd->tvc_sgl_count, NULL, 0, sg_prot_ptr,
-@@ -819,6 +813,14 @@ static void vhost_scsi_submission_work(struct work_struct *work)
- 	}
- }
- 
-+static unsigned char *vhost_scsi_get_cdb(struct se_cmd *se_cmd)
-+{
-+	struct vhost_scsi_cmd *cmd = container_of(se_cmd, struct vhost_scsi_cmd,
-+						  tvc_se_cmd);
+ 	dev->queue_cnt = nr_cpu_ids;
+ 	for (i = 0; i < dev->queue_cnt; i++) {
+-		INIT_LIST_HEAD(&dev->queues[i].state_list);
+-		spin_lock_init(&dev->queues[i].lock);
++		struct se_device_queue *q;
 +
-+	return cmd->tvc_cdb;
++		q = &dev->queues[i];
++		INIT_LIST_HEAD(&q->state_list);
++		spin_lock_init(&q->lock);
++
++		init_llist_head(&q->sq.cmd_list);
++		INIT_WORK(&q->sq.work, target_queued_submit_work);
+ 	}
+ 
+ 	dev->se_hba = hba;
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index e7b3c6e5d574..56f841fd7f04 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -153,6 +153,7 @@ void	target_qf_do_work(struct work_struct *work);
+ bool	target_check_wce(struct se_device *dev);
+ bool	target_check_fua(struct se_device *dev);
+ void	__target_execute_cmd(struct se_cmd *, bool);
++void	target_queued_submit_work(struct work_struct *work);
+ 
+ /* target_core_stat.c */
+ void	target_stat_setup_dev_default_groups(struct se_device *);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 71b0a862608b..46e20c42119e 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -41,6 +41,7 @@
+ #include <trace/events/target.h>
+ 
+ static struct workqueue_struct *target_completion_wq;
++static struct workqueue_struct *target_submission_wq;
+ static struct kmem_cache *se_sess_cache;
+ struct kmem_cache *se_ua_cache;
+ struct kmem_cache *t10_pr_reg_cache;
+@@ -129,8 +130,15 @@ int init_se_kmem_caches(void)
+ 	if (!target_completion_wq)
+ 		goto out_free_lba_map_mem_cache;
+ 
++	target_submission_wq = alloc_workqueue("target_submission",
++					       WQ_MEM_RECLAIM, 0);
++	if (!target_submission_wq)
++		goto out_free_completion_wq;
++
+ 	return 0;
+ 
++out_free_completion_wq:
++	destroy_workqueue(target_completion_wq);
+ out_free_lba_map_mem_cache:
+ 	kmem_cache_destroy(t10_alua_lba_map_mem_cache);
+ out_free_lba_map_cache:
+@@ -153,6 +161,7 @@ int init_se_kmem_caches(void)
+ 
+ void release_se_kmem_caches(void)
+ {
++	destroy_workqueue(target_submission_wq);
+ 	destroy_workqueue(target_completion_wq);
+ 	kmem_cache_destroy(se_sess_cache);
+ 	kmem_cache_destroy(se_ua_cache);
+@@ -1380,7 +1389,6 @@ void transport_init_se_cmd(
+ {
+ 	INIT_LIST_HEAD(&cmd->se_delayed_node);
+ 	INIT_LIST_HEAD(&cmd->se_qf_node);
+-	INIT_LIST_HEAD(&cmd->se_cmd_list);
+ 	INIT_LIST_HEAD(&cmd->state_list);
+ 	init_completion(&cmd->t_transport_stop_comp);
+ 	cmd->free_compl = NULL;
+@@ -1827,6 +1835,87 @@ int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
+ }
+ EXPORT_SYMBOL(target_submit_cmd);
+ 
++void target_queued_submit_work(struct work_struct *work)
++{
++	struct se_cmd_queue *sq = container_of(work, struct se_cmd_queue, work);
++	struct se_cmd *se_cmd, *next_cmd;
++	struct llist_node *cmd_list;
++	unsigned char *cdb;
++
++	cmd_list = llist_del_all(&sq->cmd_list);
++	if (!cmd_list)
++		/* Previous call took what we were queued to submit */
++		return;
++
++	cmd_list = llist_reverse_order(cmd_list);
++	llist_for_each_entry_safe(se_cmd, next_cmd, cmd_list, se_cmd_list) {
++		cdb = se_cmd->se_tfo->get_cdb(se_cmd);
++		target_submit(se_cmd, cdb);
++	}
 +}
 +
- static void
- vhost_scsi_send_bad_target(struct vhost_scsi *vs,
- 			   struct vhost_virtqueue *vq,
-@@ -1132,14 +1134,7 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
- 		 * vhost_scsi_queue_data_in() and vhost_scsi_queue_status()
- 		 */
- 		cmd->tvc_vq_desc = vc.head;
--		/*
--		 * Dispatch cmd descriptor for cmwq execution in process
--		 * context provided by vhost_scsi_workqueue.  This also ensures
--		 * cmd is executed on the same kworker CPU as this vhost
--		 * thread to gain positive L2 cache locality effects.
--		 */
--		INIT_WORK(&cmd->work, vhost_scsi_submission_work);
--		queue_work(vhost_scsi_workqueue, &cmd->work);
-+		vhost_scsi_target_queue_cmd(cmd);
- 		ret = 0;
- err:
- 		/*
-@@ -2466,6 +2461,7 @@ static const struct target_core_fabric_ops vhost_scsi_ops = {
- 	.queue_status			= vhost_scsi_queue_status,
- 	.queue_tm_rsp			= vhost_scsi_queue_tm_rsp,
- 	.aborted_task			= vhost_scsi_aborted_task,
-+	.get_cdb			= vhost_scsi_get_cdb,
- 	/*
- 	 * Setup callers for generic logic in target_core_fabric_configfs.c
- 	 */
-@@ -2489,17 +2485,9 @@ static int __init vhost_scsi_init(void)
- 		" on "UTS_RELEASE"\n", VHOST_SCSI_VERSION, utsname()->sysname,
- 		utsname()->machine);
- 
--	/*
--	 * Use our own dedicated workqueue for submitting I/O into
--	 * target core to avoid contention within system_wq.
--	 */
--	vhost_scsi_workqueue = alloc_workqueue("vhost_scsi", 0, 0);
--	if (!vhost_scsi_workqueue)
--		goto out;
--
- 	ret = vhost_scsi_register();
- 	if (ret < 0)
--		goto out_destroy_workqueue;
-+		goto out;
- 
- 	ret = target_register_template(&vhost_scsi_ops);
- 	if (ret < 0)
-@@ -2509,8 +2497,6 @@ static int __init vhost_scsi_init(void)
- 
- out_vhost_scsi_deregister:
- 	vhost_scsi_deregister();
--out_destroy_workqueue:
--	destroy_workqueue(vhost_scsi_workqueue);
- out:
- 	return ret;
- };
-@@ -2519,7 +2505,6 @@ static void vhost_scsi_exit(void)
++static void target_queue_cmd_work(struct se_cmd_queue *q, struct se_cmd *se_cmd,
++				  int cpu)
++{
++	llist_add(&se_cmd->se_cmd_list, &q->cmd_list);
++	queue_work_on(cpu, target_submission_wq, &q->work);
++}
++
++/**
++ * target_queue_cmd_submit - queue the cmd to run on the LIO workqueue
++ * @se_cmd: command descriptor to submit
++ * @se_sess: associated se_sess for endpoint
++ * @sense: pointer to SCSI sense buffer
++ * @unpacked_lun: unpacked LUN to reference for struct se_lun
++ * @data_length: fabric expected data transfer length
++ * @task_attr: SAM task attribute
++ * @data_dir: DMA data direction
++ * @flags: flags for command submission from target_sc_flags_tables
++ * @sgl: struct scatterlist memory for unidirectional mapping
++ * @sgl_count: scatterlist count for unidirectional mapping
++ * @sgl_bidi: struct scatterlist memory for bidirectional READ mapping
++ * @sgl_bidi_count: scatterlist count for bidirectional READ mapping
++ * @sgl_prot: struct scatterlist memory protection information
++ * @sgl_prot_count: scatterlist count for protection information
++ *
++ * Task tags are supported if the caller has set @se_cmd->tag.
++ *
++ * Returns non zero to signal active I/O shutdown failure.  All other
++ * setup exceptions will be returned as a SCSI CHECK_CONDITION response,
++ * but still return zero here.
++ *
++ * This may only be called from interrupt context if the caller's
++ * queue_status and release_cmd callouts do not block.
++ *
++ * This assumes internal allocation of fabric payload buffer by target-core.
++ */
++int
++target_queue_cmd_submit(struct se_cmd *se_cmd, struct se_session *se_sess,
++			unsigned char *sense, u64 unpacked_lun, u32 data_length,
++			int task_attr, int data_dir, int flags,
++			struct scatterlist *sgl, u32 sgl_count,
++			struct scatterlist *sgl_bidi, u32 sgl_bidi_count,
++			struct scatterlist *sgl_prot, u32 sgl_prot_count)
++{
++	struct se_device *se_dev;
++	int cpu, ret;
++
++	ret = target_submit_prep(se_cmd, se_sess, sense, unpacked_lun,
++				 data_length, task_attr, data_dir, flags,
++				 sgl, sgl_count, sgl_bidi, sgl_bidi_count,
++				 sgl_prot, sgl_prot_count);
++	if (ret < 0)
++		return ret;
++	else if (ret > 0)
++		return 0;
++
++	cpu = se_cmd->cpuid;
++	se_dev = se_cmd->se_dev;
++	target_queue_cmd_work(&se_dev->queues[cpu].sq, se_cmd, cpu);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(target_queue_cmd_submit);
++
+ static void target_complete_tmr_failure(struct work_struct *work)
  {
- 	target_unregister_template(&vhost_scsi_ops);
- 	vhost_scsi_deregister();
--	destroy_workqueue(vhost_scsi_workqueue);
+ 	struct se_cmd *se_cmd = container_of(work, struct se_cmd, work);
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 63dd12124139..815de4c97230 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -487,7 +487,7 @@ struct se_cmd {
+ 	/* Only used for internal passthrough and legacy TCM fabric modules */
+ 	struct se_session	*se_sess;
+ 	struct se_tmr_req	*se_tmr_req;
+-	struct list_head	se_cmd_list;
++	struct llist_node	se_cmd_list;
+ 	struct completion	*free_compl;
+ 	struct completion	*abrt_compl;
+ 	const struct target_core_fabric_ops *se_tfo;
+@@ -764,9 +764,15 @@ struct se_dev_stat_grps {
+ 	struct config_group scsi_lu_group;
  };
  
- MODULE_DESCRIPTION("VHOST_SCSI series fabric driver");
++struct se_cmd_queue {
++	struct llist_head	cmd_list;
++	struct work_struct	work;
++};
++
+ struct se_device_queue {
+ 	struct list_head	state_list;
+ 	spinlock_t		lock;
++	struct se_cmd_queue	sq;
+ };
+ 
+ struct se_device {
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index d60a3eb7517a..d7b54f3e04da 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -80,6 +80,7 @@ struct target_core_fabric_ops {
+ 	int (*queue_status)(struct se_cmd *);
+ 	void (*queue_tm_rsp)(struct se_cmd *);
+ 	void (*aborted_task)(struct se_cmd *);
++	unsigned char *(*get_cdb)(struct se_cmd *);
+ 	/*
+ 	 * fabric module calls for target_core_fabric_configfs.c
+ 	 */
+@@ -160,6 +161,12 @@ int	target_submit_cmd_map_sgls(struct se_cmd *, struct se_session *,
+ 		struct scatterlist *, u32);
+ int	target_submit_cmd(struct se_cmd *, struct se_session *, unsigned char *,
+ 		unsigned char *, u64, u32, int, int, int);
++int	target_queue_cmd_submit(struct se_cmd *se_cmd, struct se_session *se_sess,
++		unsigned char *sense, u64 unpacked_lun, u32 data_length,
++		int task_attr, int data_dir, int flags, struct scatterlist *sgl,
++		u32 sgl_count, struct scatterlist *sgl_bidi, u32 sgl_bidi_count,
++		struct scatterlist *sgl_prot, u32 sgl_prot_count);
++
+ int	target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
+ 		unsigned char *sense, u64 unpacked_lun,
+ 		void *fabric_tmr_ptr, unsigned char tm_type,
 -- 
 2.25.1
 
