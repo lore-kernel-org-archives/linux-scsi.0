@@ -2,173 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60DF1C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 05:47:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CAF5C433E6
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 06:26:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1ABAF64EB1
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 05:47:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F35064E8C
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 06:26:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229752AbhBIFrV convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Feb 2021 00:47:21 -0500
-Received: from szxga03-in.huawei.com ([45.249.212.189]:2893 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229464AbhBIFrN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2021 00:47:13 -0500
-Received: from DGGEMM404-HUB.china.huawei.com (unknown [172.30.72.57])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4DZX0C5Sc7z5Q5v;
-        Tue,  9 Feb 2021 13:44:43 +0800 (CST)
-Received: from dggemi760-chm.china.huawei.com (10.1.198.146) by
- DGGEMM404-HUB.china.huawei.com (10.3.20.212) with Microsoft SMTP Server (TLS)
- id 14.3.498.0; Tue, 9 Feb 2021 13:46:28 +0800
-Received: from dggemi761-chm.china.huawei.com (10.1.198.147) by
- dggemi760-chm.china.huawei.com (10.1.198.146) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2106.2; Tue, 9 Feb 2021 13:46:28 +0800
-Received: from dggemi761-chm.china.huawei.com ([10.9.49.202]) by
- dggemi761-chm.china.huawei.com ([10.9.49.202]) with mapi id 15.01.2106.006;
- Tue, 9 Feb 2021 13:46:28 +0800
-From:   "Song Bao Hua (Barry Song)" <song.bao.hua@hisilicon.com>
-To:     Finn Thain <fthain@telegraphics.com.au>
-CC:     tanxiaofei <tanxiaofei@huawei.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linuxarm@openeuler.org" <linuxarm@openeuler.org>,
-        "linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>
-Subject: RE: [Linuxarm]  Re: [PATCH for-next 00/32] spin lock usage
- optimization for SCSI drivers
-Thread-Topic: [Linuxarm]  Re: [PATCH for-next 00/32] spin lock usage
- optimization for SCSI drivers
-Thread-Index: AQHW/fAMrBMz1ua2YUiLJwcWnjqnW6pPDROA//+zewCAAIlDYIAABJ6A
-Date:   Tue, 9 Feb 2021 05:46:27 +0000
-Message-ID: <88d26bd86c314e5483ec596952054be7@hisilicon.com>
-References: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com>
- <31cd807d-3d0-ed64-60d-fde32cb3833c@telegraphics.com.au>
- <e949a474a9284ac6951813bfc8b34945@hisilicon.com>
- <f0a3339d-b1db-6571-fa2f-6765e150eb9d@telegraphics.com.au> 
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.126.200.92]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+        id S230258AbhBIG0B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Feb 2021 01:26:01 -0500
+Received: from mga07.intel.com ([134.134.136.100]:37168 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229639AbhBIGZU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Feb 2021 01:25:20 -0500
+IronPort-SDR: ZHj4i/RB6o/zF4TvEHt2Yt1XHoAaVX4/Buq+nCcu5jAgbvFDXtAsWwI22MfFavlmvSRw835+e8
+ GnCwf4Q9PLGA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9889"; a="245904362"
+X-IronPort-AV: E=Sophos;i="5.81,164,1610438400"; 
+   d="scan'208";a="245904362"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2021 22:24:38 -0800
+IronPort-SDR: rFhM6d2jyaZAITfd/ARuYEQ9kL1PMazbr9zTRnID6C/X0xWaZUr4EfKjR7KdJZukmHR+b8l+/Y
+ bCAzsrcetgUw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,164,1610438400"; 
+   d="scan'208";a="398681940"
+Received: from ahunter-desktop.fi.intel.com ([10.237.72.149])
+  by orsmga007.jf.intel.com with ESMTP; 08 Feb 2021 22:24:35 -0800
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>, Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH V2 0/4] scsi: ufs-debugfs: Add UFS Exception Event reporting
+Date:   Tue,  9 Feb 2021 08:24:33 +0200
+Message-Id: <20210209062437.6954-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.17.1
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi
+
+Here are V2 patches to add a tracepoint for UFS Exception Events and to
+allow users to enable specific exception events without affecting the
+driver's use of exception events.
 
 
-> -----Original Message-----
-> From: Song Bao Hua (Barry Song)
-> Sent: Tuesday, February 9, 2021 6:28 PM
-> To: 'Finn Thain' <fthain@telegraphics.com.au>
-> Cc: tanxiaofei <tanxiaofei@huawei.com>; jejb@linux.ibm.com;
-> martin.petersen@oracle.com; linux-scsi@vger.kernel.org;
-> linux-kernel@vger.kernel.org; linuxarm@openeuler.org;
-> linux-m68k@vger.kernel.org
-> Subject: RE: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage optimization
-> for SCSI drivers
-> 
-> 
-> 
-> > -----Original Message-----
-> > From: Finn Thain [mailto:fthain@telegraphics.com.au]
-> > Sent: Tuesday, February 9, 2021 6:06 PM
-> > To: Song Bao Hua (Barry Song) <song.bao.hua@hisilicon.com>
-> > Cc: tanxiaofei <tanxiaofei@huawei.com>; jejb@linux.ibm.com;
-> > martin.petersen@oracle.com; linux-scsi@vger.kernel.org;
-> > linux-kernel@vger.kernel.org; linuxarm@openeuler.org;
-> > linux-m68k@vger.kernel.org
-> > Subject: RE: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage optimization
-> > for SCSI drivers
-> >
-> > On Tue, 9 Feb 2021, Song Bao Hua (Barry Song) wrote:
-> >
-> > > > -----Original Message-----
-> > > > From: Finn Thain [mailto:fthain@telegraphics.com.au]
-> > > > Sent: Monday, February 8, 2021 8:57 PM
-> > > > To: tanxiaofei <tanxiaofei@huawei.com>
-> > > > Cc: jejb@linux.ibm.com; martin.petersen@oracle.com;
-> > > > linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > > > linuxarm@openeuler.org
-> > > > Subject: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage optimization
-> > > > for SCSI drivers
-> > > >
-> > > > On Sun, 7 Feb 2021, Xiaofei Tan wrote:
-> > > >
-> > > > > Replace spin_lock_irqsave with spin_lock in hard IRQ of SCSI drivers.
-> > > > > There are no function changes, but may speed up if interrupt happen
-> too
-> > > > > often.
-> > > >
-> > > > This change doesn't necessarily work on platforms that support nested
-> > > > interrupts.
-> > > >
-> > > > Were you able to measure any benefit from this change on some other
-> > > > platform?
-> > >
-> > > I think the code disabling irq in hardIRQ is simply wrong.
-> > > Since this commit
-> > >
-> >
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/
-> > ?id=e58aa3d2d0cc
-> > > genirq: Run irq handlers with interrupts disabled
-> > >
-> > > interrupt handlers are definitely running in a irq-disabled context
-> > > unless irq handlers enable them explicitly in the handler to permit
-> > > other interrupts.
-> > >
-> >
-> > Repeating the same claim does not somehow make it true. If you put your
-> 
-> Sorry for I didn't realize xiaofei had replied.
-> 
-> > claim to the test, you'll see that that interrupts are not disabled on
-> > m68k when interrupt handlers execute.
-> 
-> Sounds like an implementation issue of m68k since IRQF_DISABLED has
-> been totally removed.
-> 
-> >
-> > The Interrupt Priority Level (IPL) can prevent any given irq handler from
-> > being re-entered, but an irq with a higher priority level may be handled
-> > during execution of a lower priority irq handler.
-> >
-> 
-> We used to have IRQF_DISABLED to support so-called "fast interrupt" to avoid
-> this. But the concept has been totally removed. That is interesting if m68k
-> still has this issue.
-> 
-> > sonic_interrupt() uses an irq lock within an interrupt handler to avoid
-> > issues relating to this. This kind of locking may be needed in the drivers
-> > you are trying to patch. Or it might not. Apparently, no-one has looked.
+Changes in V2:
 
-Is the comment in sonic_interrupt() outdated according to this:
-m68k: irq: Remove IRQF_DISABLED
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=77a4279
-http://lkml.iu.edu/hypermail/linux/kernel/1109.2/01687.html
+    scsi: ufs: Add exception event tracepoint
+	Change status field from "exception event status" to "status"
 
-and this:
-genirq: Warn when handler enables interrupts
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b738a50a
+    scsi: ufs: Add exception event definitions
+	Add Reviewed-by: Bean Huo
 
-wouldn't genirq report a warning on m68k?
 
-> 
-> Thanks
-> Barry
+Adrian Hunter (4):
+      scsi: ufs: Add exception event tracepoint
+      scsi: ufs: Add exception event definitions
+      scsi: ufs-debugfs: Add user-defined exception_event_mask
+      scsi: ufs-debugfs: Add user-defined exception event rate limiting
 
-Thanks
-Barry
+ drivers/scsi/ufs/ufs-debugfs.c | 90 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-debugfs.h |  2 +
+ drivers/scsi/ufs/ufs.h         | 10 ++++-
+ drivers/scsi/ufs/ufshcd.c      | 87 +++++++++++++++++++++++++---------------
+ drivers/scsi/ufs/ufshcd.h      | 26 +++++++++++-
+ include/trace/events/ufs.h     | 21 ++++++++++
+ 6 files changed, 201 insertions(+), 35 deletions(-)
 
+
+Regards
+Adrian
