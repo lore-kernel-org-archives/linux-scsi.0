@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DD81C433E9
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 06:26:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 190BCC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 06:26:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D7E864EB9
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 06:26:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D40DC64E54
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 06:26:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230263AbhBIG0G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Feb 2021 01:26:06 -0500
-Received: from mga07.intel.com ([134.134.136.100]:37175 "EHLO mga07.intel.com"
+        id S230269AbhBIG0O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Feb 2021 01:26:14 -0500
+Received: from mga07.intel.com ([134.134.136.100]:37168 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230238AbhBIGZY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Feb 2021 01:25:24 -0500
-IronPort-SDR: MBI6W8AgSej/AZ9ffwTCKcLo8BHMGPOrH90qRd5mHp6pJZc8aKMOAHnPgSC7G3YPeh1ZoCyi/Q
- 5D8rggeRENKQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9889"; a="245904366"
+        id S230250AbhBIG0C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Feb 2021 01:26:02 -0500
+IronPort-SDR: CH2sR/7IvAgJYaVn1tWNRu1ibPxg86y5M2vuLpNh8HeN/6DVbnHMNSLa3cYfKiFcp1RXetsTRT
+ DzYv/F6iOZmw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9889"; a="245904367"
 X-IronPort-AV: E=Sophos;i="5.81,164,1610438400"; 
-   d="scan'208";a="245904366"
+   d="scan'208";a="245904367"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2021 22:24:44 -0800
-IronPort-SDR: O4F4OmzKXgvycv2r781oHsiJhDKsT7SuUUYawavI1rK3amF72xk6JRrjpfUDSSgyDEZUL0JAb3
- e0bzgfP6qvZA==
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2021 22:24:46 -0800
+IronPort-SDR: ObTc+4p0aZ0eWTl6WhlAM1I8fRJmmPTA1pcWy82woEAl1MGskcRA/SQz5fQRUAd1jBlmNaEhM3
+ IBVH8D6/J4rQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.81,164,1610438400"; 
-   d="scan'208";a="398681952"
+   d="scan'208";a="398681958"
 Received: from ahunter-desktop.fi.intel.com ([10.237.72.149])
-  by orsmga007.jf.intel.com with ESMTP; 08 Feb 2021 22:24:41 -0800
+  by orsmga007.jf.intel.com with ESMTP; 08 Feb 2021 22:24:44 -0800
 From:   Adrian Hunter <adrian.hunter@intel.com>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>
@@ -41,9 +41,9 @@ Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Avri Altman <avri.altman@wdc.com>,
         Bean Huo <huobean@gmail.com>, Can Guo <cang@codeaurora.org>,
         Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH V2 2/4] scsi: ufs: Add exception event definitions
-Date:   Tue,  9 Feb 2021 08:24:35 +0200
-Message-Id: <20210209062437.6954-3-adrian.hunter@intel.com>
+Subject: [PATCH V2 3/4] scsi: ufs-debugfs: Add user-defined exception_event_mask
+Date:   Tue,  9 Feb 2021 08:24:36 +0200
+Message-Id: <20210209062437.6954-4-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210209062437.6954-1-adrian.hunter@intel.com>
 References: <20210209062437.6954-1-adrian.hunter@intel.com>
@@ -52,35 +52,260 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-For readability and completeness, add exception event definitions.
+Allow users to enable specific exception events via debugfs.
+
+The bits enabled by the driver ee_drv_ctrl are separated from the bits
+enabled by the user ee_usr_ctrl. The control mask ee_mask_ctrl is the
+logical-or of those two. A mutex is needed to ensure that the masks match
+what was written to the device.
 
 Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufs.h | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufs-debugfs.c | 46 ++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.c      | 86 +++++++++++++++++++++-------------
+ drivers/scsi/ufs/ufshcd.h      | 22 ++++++++-
+ 3 files changed, 120 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index bf1897a72532..cb80b9670bfe 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -348,8 +348,14 @@ enum power_desc_param_offset {
+diff --git a/drivers/scsi/ufs/ufs-debugfs.c b/drivers/scsi/ufs/ufs-debugfs.c
+index dee98dc72d29..59729073b569 100644
+--- a/drivers/scsi/ufs/ufs-debugfs.c
++++ b/drivers/scsi/ufs/ufs-debugfs.c
+@@ -44,10 +44,56 @@ static int ufs_debugfs_stats_show(struct seq_file *s, void *data)
+ }
+ DEFINE_SHOW_ATTRIBUTE(ufs_debugfs_stats);
  
- /* Exception event mask values */
- enum {
--	MASK_EE_STATUS		= 0xFFFF,
--	MASK_EE_URGENT_BKOPS	= (1 << 2),
-+	MASK_EE_STATUS			= 0xFFFF,
-+	MASK_EE_DYNCAP_EVENT		= BIT(0),
-+	MASK_EE_SYSPOOL_EVENT		= BIT(1),
-+	MASK_EE_URGENT_BKOPS		= BIT(2),
-+	MASK_EE_TOO_HIGH_TEMP		= BIT(3),
-+	MASK_EE_TOO_LOW_TEMP		= BIT(4),
-+	MASK_EE_WRITEBOOSTER_EVENT	= BIT(5),
-+	MASK_EE_PERFORMANCE_THROTTLING	= BIT(6),
- };
++static int ee_usr_mask_get(void *data, u64 *val)
++{
++	struct ufs_hba *hba = data;
++
++	*val = hba->ee_usr_mask;
++	return 0;
++}
++
++static int ufs_debugfs_get_user_access(struct ufs_hba *hba)
++__acquires(&hba->host_sem)
++{
++	down(&hba->host_sem);
++	if (!ufshcd_is_user_access_allowed(hba)) {
++		up(&hba->host_sem);
++		return -EBUSY;
++	}
++	pm_runtime_get_sync(hba->dev);
++	return 0;
++}
++
++static void ufs_debugfs_put_user_access(struct ufs_hba *hba)
++__releases(&hba->host_sem)
++{
++	pm_runtime_put_sync(hba->dev);
++	up(&hba->host_sem);
++}
++
++static int ee_usr_mask_set(void *data, u64 val)
++{
++	struct ufs_hba *hba = data;
++	int err;
++
++	if (val & ~(u64)MASK_EE_STATUS)
++		return -EINVAL;
++	err = ufs_debugfs_get_user_access(hba);
++	if (err)
++		return err;
++	err = ufshcd_update_ee_usr_mask(hba, val, MASK_EE_STATUS);
++	ufs_debugfs_put_user_access(hba);
++	return err;
++}
++
++DEFINE_DEBUGFS_ATTRIBUTE(ee_usr_mask_fops, ee_usr_mask_get, ee_usr_mask_set, "%#llx\n");
++
+ void ufs_debugfs_hba_init(struct ufs_hba *hba)
+ {
+ 	hba->debugfs_root = debugfs_create_dir(dev_name(hba->dev), ufs_debugfs_root);
+ 	debugfs_create_file("stats", 0400, hba->debugfs_root, hba, &ufs_debugfs_stats_fops);
++	debugfs_create_file("exception_event_mask", 0600, hba->debugfs_root,
++			    hba, &ee_usr_mask_fops);
+ }
  
- /* Background operation status */
+ void ufs_debugfs_hba_exit(struct ufs_hba *hba)
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index d6fdce655388..065a662e7886 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5160,6 +5160,46 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 	}
+ }
+ 
++static int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask)
++{
++	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
++				       QUERY_ATTR_IDN_EE_CONTROL, 0, 0,
++				       &ee_ctrl_mask);
++}
++
++static int ufshcd_write_ee_control(struct ufs_hba *hba)
++{
++	int err;
++
++	mutex_lock(&hba->ee_ctrl_mutex);
++	err = __ufshcd_write_ee_control(hba, hba->ee_ctrl_mask);
++	mutex_unlock(&hba->ee_ctrl_mutex);
++	if (err)
++		dev_err(hba->dev, "%s: failed to write ee control %d\n",
++			__func__, err);
++	return err;
++}
++
++int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
++			     u16 set, u16 clr)
++{
++	u16 new_mask, ee_ctrl_mask;
++	int err = 0;
++
++	mutex_lock(&hba->ee_ctrl_mutex);
++	new_mask = (*mask & ~clr) | set;
++	ee_ctrl_mask = new_mask | *other_mask;
++	if (ee_ctrl_mask != hba->ee_ctrl_mask)
++		err = __ufshcd_write_ee_control(hba, ee_ctrl_mask);
++	/* Still need to update 'mask' even if 'ee_ctrl_mask' was unchanged */
++	if (!err) {
++		hba->ee_ctrl_mask = ee_ctrl_mask;
++		*mask = new_mask;
++	}
++	mutex_unlock(&hba->ee_ctrl_mutex);
++	return err;
++}
++
+ /**
+  * ufshcd_disable_ee - disable exception event
+  * @hba: per-adapter instance
+@@ -5170,22 +5210,9 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+  *
+  * Returns zero on success, non-zero error value on failure.
+  */
+-static int ufshcd_disable_ee(struct ufs_hba *hba, u16 mask)
++static inline int ufshcd_disable_ee(struct ufs_hba *hba, u16 mask)
+ {
+-	int err = 0;
+-	u32 val;
+-
+-	if (!(hba->ee_ctrl_mask & mask))
+-		goto out;
+-
+-	val = hba->ee_ctrl_mask & ~mask;
+-	val &= MASK_EE_STATUS;
+-	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+-			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
+-	if (!err)
+-		hba->ee_ctrl_mask &= ~mask;
+-out:
+-	return err;
++	return ufshcd_update_ee_drv_mask(hba, 0, mask);
+ }
+ 
+ /**
+@@ -5198,22 +5225,9 @@ static int ufshcd_disable_ee(struct ufs_hba *hba, u16 mask)
+  *
+  * Returns zero on success, non-zero error value on failure.
+  */
+-static int ufshcd_enable_ee(struct ufs_hba *hba, u16 mask)
++static inline int ufshcd_enable_ee(struct ufs_hba *hba, u16 mask)
+ {
+-	int err = 0;
+-	u32 val;
+-
+-	if (hba->ee_ctrl_mask & mask)
+-		goto out;
+-
+-	val = hba->ee_ctrl_mask | mask;
+-	val &= MASK_EE_STATUS;
+-	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+-			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
+-	if (!err)
+-		hba->ee_ctrl_mask |= mask;
+-out:
+-	return err;
++	return ufshcd_update_ee_drv_mask(hba, mask, 0);
+ }
+ 
+ /**
+@@ -5618,9 +5632,7 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+ 
+ 	trace_ufshcd_exception_event(dev_name(hba->dev), status);
+ 
+-	status &= hba->ee_ctrl_mask;
+-
+-	if (status & MASK_EE_URGENT_BKOPS)
++	if (status & hba->ee_drv_mask & MASK_EE_URGENT_BKOPS)
+ 		ufshcd_bkops_exception_event_handler(hba);
+ 
+ out:
+@@ -7921,6 +7933,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool async)
+ 	ufshcd_set_active_icc_lvl(hba);
+ 
+ 	ufshcd_wb_config(hba);
++	if (hba->ee_usr_mask)
++		ufshcd_write_ee_control(hba);
+ 	/* Enable Auto-Hibernate if configured */
+ 	ufshcd_auto_hibern8_enable(hba);
+ 
+@@ -8918,6 +8932,9 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		 */
+ 		ufshcd_urgent_bkops(hba);
+ 
++	if (hba->ee_usr_mask)
++		ufshcd_write_ee_control(hba);
++
+ 	hba->clk_gating.is_suspended = false;
+ 
+ 	if (ufshcd_is_clkscaling_supported(hba))
+@@ -9355,6 +9372,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	/* Initialize mutex for device management commands */
+ 	mutex_init(&hba->dev_cmd.lock);
+ 
++	/* Initialize mutex for exception event control */
++	mutex_init(&hba->ee_ctrl_mutex);
++
+ 	init_rwsem(&hba->clk_scaling_lock);
+ 
+ 	ufshcd_init_clk_gating(hba);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index ee61f821f75d..9b7413f35def 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -773,7 +773,10 @@ struct ufs_hba {
+ 	u32 ufshcd_state;
+ 	u32 eh_flags;
+ 	u32 intr_mask;
+-	u16 ee_ctrl_mask;
++	u16 ee_ctrl_mask; /* Exception event mask */
++	u16 ee_drv_mask;  /* Exception event mask for driver */
++	u16 ee_usr_mask;  /* Exception event mask for user (via debugfs) */
++	struct mutex ee_ctrl_mutex;
+ 	bool is_powered;
+ 	bool shutting_down;
+ 	struct semaphore host_sem;
+@@ -1285,4 +1288,21 @@ static inline u8 ufshcd_scsi_to_upiu_lun(unsigned int scsi_lun)
+ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+ 		     const char *prefix);
+ 
++int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
++			     u16 set, u16 clr);
++
++static inline int ufshcd_update_ee_drv_mask(struct ufs_hba *hba,
++					    u16 set, u16 clr)
++{
++	return ufshcd_update_ee_control(hba, &hba->ee_drv_mask,
++					&hba->ee_usr_mask, set, clr);
++}
++
++static inline int ufshcd_update_ee_usr_mask(struct ufs_hba *hba,
++					    u16 set, u16 clr)
++{
++	return ufshcd_update_ee_control(hba, &hba->ee_usr_mask,
++					&hba->ee_drv_mask, set, clr);
++}
++
+ #endif /* End of Header */
 -- 
 2.17.1
 
