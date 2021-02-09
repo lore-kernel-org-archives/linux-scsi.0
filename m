@@ -2,150 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B90DC433DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 02:28:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C455C43381
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 02:37:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 503B164EA4
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 02:28:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDD6E64DE8
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Feb 2021 02:37:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230318AbhBIC25 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Feb 2021 21:28:57 -0500
-Received: from mail29.static.mailgun.info ([104.130.122.29]:42526 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229891AbhBIC24 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Feb 2021 21:28:56 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1612837708; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=N5MkOy+dItUMJzDjFfLkpv3cK/NtA8m2zIRGjlV7V2w=;
- b=FJmaFIBGAmjxv/VuDXQEI98kf1ayN1fghIEZRmkj9UgccSB+aRA7xr5/+XTc7/KNQXnl3gnx
- +4kaQzM7cwPDibot5CwETk+e69KJgHCi83urP/HBGAPEmij9+IKNYN75JrkSGBPMpDJ7aGeO
- b9OKfmMt2J5JOW9e/SxNCBDo7ak=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 6021f333e3df861f4b98bc8d (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 09 Feb 2021 02:28:03
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id AAD94C43465; Tue,  9 Feb 2021 02:28:02 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C1375C433CA;
-        Tue,  9 Feb 2021 02:28:01 +0000 (UTC)
+        id S230226AbhBIChi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Feb 2021 21:37:38 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:58582 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230144AbhBIChP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Feb 2021 21:37:15 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1191Ixkg014590;
+        Tue, 9 Feb 2021 02:36:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=NRL2hvwkKlkdmJ1vP1Dk+f76tc/dzf+8asYZ3Wag/vQ=;
+ b=IdJGd6sfiyYKBVWgDUfQBHeWWk8hEqSqG+bDEfSC/UXr2WKcDhGyTe9qQRJ6q+KYpx2k
+ uz0cuOy5khAFH08xPuzJhBWvKbl5k9THYJfhmagHVJ7Av4+VhKhmzSpXUU1QTv2EzyOa
+ 3VhvoA0qG7TOoP3wYBzMrgfaNC/Al+8hM7Bym1wfdgFcgE/Oc8uOjCAZC2B5PlGaA3vO
+ O/KOIeXLHNvRAOydY5MQG/RKPfJqseim78VEB4qf/XAqR09FO/Jx90dvFUMGqLRLGvjo
+ ToCaFS8XgFBf1tnEkfOpB29VjNB+bIoh6+Cx40PlEn5mabi8Ie6kmHIxqW8JLn6VR07Q JQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 36hjhqp1u8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 09 Feb 2021 02:36:30 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1191KpLN089674;
+        Tue, 9 Feb 2021 02:36:30 GMT
+Received: from nam04-co1-obe.outbound.protection.outlook.com (mail-co1nam04lp2057.outbound.protection.outlook.com [104.47.45.57])
+        by userp3020.oracle.com with ESMTP id 36j4vqp7cy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 09 Feb 2021 02:36:30 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Nf3GRqCTsnp6nY9K9JRh0uVxvc/SAuj94WSDoBJuCfbpf7xzmaQ4pZ+USOWQc9Sh/dpze+82x86GYfEftVn3X3UQroYMAr5MPVxrH5J1/2Ru7KHS5E9zi53lpFaBSuQ4BupEA52/srR2EtEAtb0BFSFhv7WY9oKUsMk8/UNGaOIHbfvTSKU7tMqJpl8JzIRnibt6vvAakYdGtLa5SW/y12u5w9c4GN16YA7YOCbKGeUdXw/OrJkW0fs6GnRiWg60nCwi6tj4qjoZgwxkjdjNav5GHRG3LQ+yUenA8WSyBTyUpOqgrKJxMLSW3M6tOFmxxqaABUsaWdvH8BRruNeByA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NRL2hvwkKlkdmJ1vP1Dk+f76tc/dzf+8asYZ3Wag/vQ=;
+ b=XTKCF1Q/ne8FRIH0LNDYRikkRVlv6YEfvRkOryWfFff1wqu28PL5HJXEbikXwfresPBhaPWevzYFAmP5gLxWASiNf5r009lgo+T2gB0aBzP/x9foEgG6iKC7wR8t5faySnchLjY+sbFAUfa6PCVLXSmRQuXaICXiefWyNXuTGgjZTZDGQZC+JxdckB6gB2vLgxrV1qpuOvA7fO0vBBxZ3mrrl0qitHOyjn7VMinC3o69bBDG4piRopNUw1qmI9I7ZqT20PUV+tWx6lp1/Y7/CdManJIbYOFc9f7vxlP6QQ1RHn6V4AtoDjgdI/pO3oblhKptLpQxhQaSLcuquVgsqA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NRL2hvwkKlkdmJ1vP1Dk+f76tc/dzf+8asYZ3Wag/vQ=;
+ b=LhNKiOiphdAy3FE+w8wzi9M1wc5FGS3V4+58/zm2pcR+pLpTjDJyH5O2D6Jg8StYWQyjoXNWxyUKTv/VfZbFSW82dZoHh6FB2H8Rrwjhx1WYhqGxcuypXQgxIhqq/PQ/Q/gRm5s5CYDewP/b2u4wyRj4Foy2P7PJZerhE+RcWcw=
+Authentication-Results: broadcom.com; dkim=none (message not signed)
+ header.d=none;broadcom.com; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB4597.namprd10.prod.outlook.com (2603:10b6:510:43::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3825.24; Tue, 9 Feb
+ 2021 02:36:28 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::dc39:c9fa:7365:8c8e]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::dc39:c9fa:7365:8c8e%5]) with mapi id 15.20.3825.030; Tue, 9 Feb 2021
+ 02:36:28 +0000
+To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        sathya.prakash@broadcom.com, suganath-prabu.subramani@broadcom.com,
+        kashyap.desai@broadcom.com, kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH v2] mpt3sas: Added support for shared host tagset for
+ cpuhotplug
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1lfbyrmqp.fsf@ca-mkp.ca.oracle.com>
+References: <20210202095832.23072-1-sreekanth.reddy@broadcom.com>
+Date:   Mon, 08 Feb 2021 21:36:26 -0500
+In-Reply-To: <20210202095832.23072-1-sreekanth.reddy@broadcom.com> (Sreekanth
+        Reddy's message of "Tue, 2 Feb 2021 15:28:32 +0530")
+Content-Type: text/plain
+X-Originating-IP: [138.3.200.58]
+X-ClientProxiedBy: BY3PR05CA0014.namprd05.prod.outlook.com
+ (2603:10b6:a03:254::19) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 09 Feb 2021 10:28:01 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     daejun7.park@samsung.com
-Cc:     Greg KH <gregkh@linuxfoundation.org>, avri.altman@wdc.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        asutoshd@codeaurora.org, stanley.chu@mediatek.com,
-        huobean@gmail.com, bvanassche@acm.org,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>
-Subject: Re: [PATCH v19 2/3] scsi: ufs: L2P map management for HPB read
-In-Reply-To: <20210209012734epcms2p8354347b1dd71601e74b505c715d36af0@epcms2p8>
-References: <5b9f5edbe26930765ee4adaa786db7da@codeaurora.org>
- <88b608e2e133ba7ccd5bb452898848fd@codeaurora.org>
- <5bd43da52369a56f18867fa18efb3020@codeaurora.org>
- <20210129052848epcms2p6e5797efd94e6282b76ad9ae6c99e3ab5@epcms2p6>
- <20210129053005epcms2p323338fbb83459d2786fc0ef92701b147@epcms2p3>
- <20210208080333epcms2p59403f0acbc9730c9a605d265836a956d@epcms2p5>
- <20210208085346epcms2p1c11b70be9d258df66cb2ca4542835fac@epcms2p1>
- <CGME20210129052848epcms2p6e5797efd94e6282b76ad9ae6c99e3ab5@epcms2p8>
- <20210209012734epcms2p8354347b1dd71601e74b505c715d36af0@epcms2p8>
-Message-ID: <4bc9f6ea1189cffa92e70a9afbb95e9f@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by BY3PR05CA0014.namprd05.prod.outlook.com (2603:10b6:a03:254::19) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.11 via Frontend Transport; Tue, 9 Feb 2021 02:36:28 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 1fbf80d5-b1e8-4b55-245a-08d8cca380df
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4597:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB4597064F52130E601F1FDC538E8E9@PH0PR10MB4597.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4303;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: uDDT7Z9v3gqjZT+rPgMo83IyTV4MRne8NqHscMbr3u/BlTLhkuyUdSmzNZcZ0NPnZwK2nYbvvcgveD4RE2bVNt4HwxtBX992HsYZf1ExkDM/hOjfsVgJb6jMFRjYxKtFHoq/0+//9zg94U8xjRCperTz0EM20V3IXQjMyE1EYZx9oEfaP52W4DOxEk1I91tUi9eUs5eKkHeemtrLFj5GWnrJu3iru128qoFJ97+BDFSor1IvQb3XfqlCjf/MTyAQHheY84H2c/MNZ8oWSR07SllxfrVYk/iwr97piCnPBdBF4Lp8Vu/+udO842yWnLokbUkGaGT6aK3fvnlF3EGTVPlUCsCHwJ31T/246BBqf9ncoJ8MKUhD0u8xgrxp7Rla6fX43ei/AR5Y4i315fWb32tvGACarXwGlCebhg9kTWopadws3PHHGyNVypjy0hLEl+TS9HC5FQyZhanC+puiizwnstmniS/3poC+uc7p27oYPuLywSZnjwN6Ujsc5h/PDpNeBcUIsbpz+P+y2abEDJyoFT/5lPGQKwK9ykImpz3c+qUeMeru8BSH5vZ/6yC3
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(346002)(366004)(396003)(39860400002)(136003)(316002)(4326008)(5660300002)(2906002)(956004)(8936002)(558084003)(66476007)(36916002)(52116002)(26005)(7696005)(66556008)(66946007)(86362001)(55016002)(8676002)(16526019)(6916009)(478600001)(186003)(32563001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?zQd87QmwXTCr1vimzWNDGRwo9dkUhhHLdGhfRTxw36PBqVEbJI5PS/3ulVPY?=
+ =?us-ascii?Q?jfg8ll0CQL/ChmLm2Js8tZAq9ASghf8eTQl2gcUu/GabXBy0ymhMJQFUTLFP?=
+ =?us-ascii?Q?WTfaTRGccADkxUID/7IfMj4D5+upgyhSLSu5X3Ls1BPDpkFGuvgTOnQHzZKE?=
+ =?us-ascii?Q?kgQwybyX0e/SkR2Z3ntdNQqJubcjWa0F3uDzBH6J3VNH9kbcaEDSlF3NqZE/?=
+ =?us-ascii?Q?6ZYx29KmyKN9jja2S/uIrnlxSWwjuNFQ8Snk7Po4T0Z7LQM67XlLrpEsYkl9?=
+ =?us-ascii?Q?UJAMjGJW4sJbJX4nqFUZ/r2oR5wE+5yHQEYtT3xn357/nPT99ov75KJhughs?=
+ =?us-ascii?Q?FV79jMXCppxK76CApVRjWcEw5ocXCbMV9J2V1U631tcKnaUrYnyACclySPWC?=
+ =?us-ascii?Q?J8a5gc2A7RrE7bqaLY4rTVRbfWpDTCsEu5D1jJ8ukbod/zobHswoeP6nIYW9?=
+ =?us-ascii?Q?OmZGhga3x64lI6tn2b6zC9fnqYoDmxqNK0/c4bMZOGnJEoX94NIP4XXPJtrO?=
+ =?us-ascii?Q?mbCETSjMlT71kxLe+r+wIuhB3Vau355U/pbVkdq2dJuS8dfIBf5biRX8w/sp?=
+ =?us-ascii?Q?fCb1n/tJ68YbK1J8qtRpfP2ttEski7CM/grdYEbN3CsQpjz1m6O1y8x1tNYX?=
+ =?us-ascii?Q?y7l+VHbN+8fY5MVAruslvxrATXawxlE80gS6ETCgbgEFQScn9fb+G/ft8q0E?=
+ =?us-ascii?Q?iU4PYCC/vUxqaAB1elJRW/CyjD2DSiwhEySJE91/qKORSPjeJ+PqNWR9WqSX?=
+ =?us-ascii?Q?/99o2PfCh3AXuo7FNYw9E8ARaJsBRDx8m/bA/f8FGAIARnZ2dJXC0+y9Cw6O?=
+ =?us-ascii?Q?HRlQLmCZ1qIZUGGp7ahWJ7XyqngjxhkvdQp3kWSbtog0xdLJl/NvwH/fd7Ia?=
+ =?us-ascii?Q?x3qIqRCsAi/84k992vzOD9ovlzGooM4DcfqgnWmvIhcW4KGV/pGFPsJnusNC?=
+ =?us-ascii?Q?+V6U711cvktEoKoz8YHSY9unR1z6H/t2ne6dwF0jY5GszxCInIWoIJl0GEIE?=
+ =?us-ascii?Q?03LXvDqVz467OGDtgL3MPDBT7FRVswVG3by5/l/Q82MMWIkhUgGN7V3ROc3T?=
+ =?us-ascii?Q?0pt9i+b+Q38WuJNQzLNNZTj30sL2Fq0ipvLoYoTYCZhEazvt9PciMN61veXz?=
+ =?us-ascii?Q?t/BbFuOy78OZ2qdylAcjrcRhqvv0OXYdtSi9eaEttxBvHwrNfKYflsLeUaea?=
+ =?us-ascii?Q?R1v47O2F9vfU8gYvMqz6dRr6EOsr/icy21/ibS5iAGG2hTt32zKr1+N1PjSV?=
+ =?us-ascii?Q?rKJnD4A1hTC4wlaKZiHQdj8v/icNpMPfSDNkzNIYFJGXTuCCUzFi+4Ao+Ulo?=
+ =?us-ascii?Q?TcflBN8Yx5FhohTZ2IQsEDP4?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1fbf80d5-b1e8-4b55-245a-08d8cca380df
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Feb 2021 02:36:28.7694
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: xvEIf8NrnINn1qpZdx8KwaY6ZzGvRSjXMeYWwucEnC0jsEiJ2qlVRPmhabkqXcjlR0iWlNtDzEynPfqI+CE4zGbspv94R5Ic9d+t7L5Xp9Q=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4597
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9889 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0
+ mlxlogscore=999 mlxscore=0 suspectscore=0 malwarescore=0 phishscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2102090002
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9889 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 impostorscore=0
+ priorityscore=1501 bulkscore=0 suspectscore=0 mlxscore=0 phishscore=0
+ lowpriorityscore=0 mlxlogscore=999 clxscore=1015 spamscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2102090002
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-02-09 09:27, Daejun Park wrote:
->>>>>> @@ -342,13 +1208,14 @@ void ufshpb_suspend(struct ufs_hba *hba)
->>>>>> >          struct scsi_device *sdev;
->>>>>> >
->>>>>> >          shost_for_each_device(sdev, hba->host) {
->>>>>> > -                hpb = sdev->hostdata;
->>>>>> > +                hpb = ufshpb_get_hpb_data(sdev);
->>>>>> >                  if (!hpb)
->>>>>> >                          continue;
->>>>>> >
->>>>>> >                  if (ufshpb_get_state(hpb) != HPB_PRESENT)
->>>>>> >                          continue;
->>>>>> >                  ufshpb_set_state(hpb, HPB_SUSPEND);
->>>>>> > +                ufshpb_cancel_jobs(hpb);
->>>>>> 
->>>>>> Here may have a dead lock problem - in the case of runtime 
->>>>>> suspend,
->>>>>> when ufshpb_suspend() is invoked, all of hba's children scsi 
->>>>>> devices
->>>>>> are in RPM_SUSPENDED state. When this line tries to cancel a 
->>>>>> running
->>>>>> map work, i.e. when ufshpb_get_map_req() calls below lines, it 
->>>>>> will
->>>>>> be stuck at blk_queue_enter().
->>>>>> 
->>>>>> req = blk_get_request(hpb->sdev_ufs_lu->request_queue,
->>>>>>                       REQ_OP_SCSI_IN, 0);
->>>>>> 
->>>>>> Please check block layer power management, and see also commit
->>>>>> d55d15a33
->>>>>> ("scsi: block: Do not accept any requests while suspended").
->>>>> 
->>>>> I am agree with your comment.
->>>>> How about add BLK_MQ_REQ_NOWAIT flag on blk_get_request() to avoid
->>>>> hang?
->>>>> 
->>>> 
->>>> That won't work - BLK_MQ_REQ_NOWAIT allows one to fast fail from
->>>> blk_mq_get_tag(),
->>>> but blk_queue_enter() comes before __blk_mq_alloc_request();
->>>> 
->>> In blk_queue_enter(), BLK_MQ_REQ_NOWAIT flag can make error than wait
->>> rpm
->>> resume. Please refer following code.
->> 
->> Oops, sorry, my memory needs to be refreshed on that part.
->> 
->> But will BLK_MQ_REQ_NOWAIT flag breaks your original purpose? When
->> runtime suspend is out of the picture, if traffic is heavy on the
->> request queue, map_work() will be stopped frequently once it is
->> not able to get a request from the queue - that shall pull down the
->> efficiency of one map_work(), that may hurt random performance...
-> 
-> I think deadlock prevention is the most important. So I want to add
-> BLK_MQ_REQ_NOWAIT flag.
-> Starvation of map request can be distinguish by return value of
-> blk_get_request(). -EWOULDBLOCK means there is no available tags for 
-> this
-> request. -EBUSY means failed on blk_queue_enter(). To overcome 
-> starvation
-> of map request, we can try N times in heavy traffic situation (maybe 
-> N=3?).
-> 
 
-LGTM. You make the call.
+Sreekanth,
 
-Regards,
-Can Guo.
+> MPT Fusion adapters can steer completions to individual queues, and we
+> now have support for shared host-wide tags.  So we can enable
+> multiqueue support for MPT fusion adapters.
 
-> Thanks,
-> Daejun
+Applied to 5.12/scsi-staging, thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
