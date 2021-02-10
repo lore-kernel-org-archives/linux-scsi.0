@@ -2,139 +2,169 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3F48C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Feb 2021 21:30:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51522C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Feb 2021 22:36:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 948DA64E66
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Feb 2021 21:30:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DC0464EBB
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Feb 2021 22:36:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233250AbhBJVaX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Feb 2021 16:30:23 -0500
-Received: from szxga08-in.huawei.com ([45.249.212.255]:2834 "EHLO
-        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233446AbhBJV3k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Feb 2021 16:29:40 -0500
-Received: from DGGEMM401-HUB.china.huawei.com (unknown [172.30.72.56])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4DbXrY1D1mz13kph;
-        Thu, 11 Feb 2021 05:26:37 +0800 (CST)
-Received: from dggemi710-chm.china.huawei.com (10.3.20.109) by
- DGGEMM401-HUB.china.huawei.com (10.3.20.209) with Microsoft SMTP Server (TLS)
- id 14.3.498.0; Thu, 11 Feb 2021 05:28:53 +0800
-Received: from dggemi761-chm.china.huawei.com (10.1.198.147) by
- dggemi710-chm.china.huawei.com (10.3.20.109) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2106.2; Thu, 11 Feb 2021 05:28:53 +0800
-Received: from dggemi761-chm.china.huawei.com ([10.9.49.202]) by
- dggemi761-chm.china.huawei.com ([10.9.49.202]) with mapi id 15.01.2106.006;
- Thu, 11 Feb 2021 05:28:53 +0800
-From:   "Song Bao Hua (Barry Song)" <song.bao.hua@hisilicon.com>
-To:     Finn Thain <fthain@telegraphics.com.au>
-CC:     tanxiaofei <tanxiaofei@huawei.com>,
+        id S233744AbhBJWg2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Feb 2021 17:36:28 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:44078 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233733AbhBJWgL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Feb 2021 17:36:11 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 8CBF62A94E;
+        Wed, 10 Feb 2021 17:34:46 -0500 (EST)
+Date:   Thu, 11 Feb 2021 09:34:51 +1100 (AEDT)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     "Song Bao Hua (Barry Song)" <song.bao.hua@hisilicon.com>
+cc:     tanxiaofei <tanxiaofei@huawei.com>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linuxarm@openeuler.org" <linuxarm@openeuler.org>,
         "linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>
-Subject: RE: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage
- optimization for SCSI drivers
-Thread-Topic: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage
- optimization for SCSI drivers
-Thread-Index: AQHW//Cyu0PLR2OKVEm5NkJUbKWYbqpR4DFw
-Date:   Wed, 10 Feb 2021 21:28:53 +0000
-Message-ID: <13c414b9bd7940caa5e1df810356dcfd@hisilicon.com>
-References: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com>
- <31cd807d-3d0-ed64-60d-fde32cb3833c@telegraphics.com.au>
- <e949a474a9284ac6951813bfc8b34945@hisilicon.com>
- <f0a3339d-b1db-6571-fa2f-6765e150eb9d@telegraphics.com.au>
- <88d26bd86c314e5483ec596952054be7@hisilicon.com>
- <da111631-83ef-1ad8-799a-5d976d5759d@telegraphics.com.au>
- <00c06b19e87a425fa3a4b6aaecc66d49@hisilicon.com>
- <9611728-3e7-3954-cfee-f3d3cf45df6@telegraphics.com.au>
-In-Reply-To: <9611728-3e7-3954-cfee-f3d3cf45df6@telegraphics.com.au>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.126.201.223]
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Subject: RE: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage optimization
+ for SCSI drivers
+In-Reply-To: <13c414b9bd7940caa5e1df810356dcfd@hisilicon.com>
+Message-ID: <221cb29-53a8-fd1-4232-360655f28f3@telegraphics.com.au>
+References: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com> <31cd807d-3d0-ed64-60d-fde32cb3833c@telegraphics.com.au> <e949a474a9284ac6951813bfc8b34945@hisilicon.com> <f0a3339d-b1db-6571-fa2f-6765e150eb9d@telegraphics.com.au>
+ <88d26bd86c314e5483ec596952054be7@hisilicon.com> <da111631-83ef-1ad8-799a-5d976d5759d@telegraphics.com.au> <00c06b19e87a425fa3a4b6aaecc66d49@hisilicon.com> <9611728-3e7-3954-cfee-f3d3cf45df6@telegraphics.com.au>
+ <13c414b9bd7940caa5e1df810356dcfd@hisilicon.com>
 MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+Content-Type: multipart/mixed; boundary="-1463811774-653018509-1612996491=:23"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRmlubiBUaGFpbiBbbWFp
-bHRvOmZ0aGFpbkB0ZWxlZ3JhcGhpY3MuY29tLmF1XQ0KPiBTZW50OiBUaHVyc2RheSwgRmVicnVh
-cnkgMTEsIDIwMjEgMTA6MDcgQU0NCj4gVG86IFNvbmcgQmFvIEh1YSAoQmFycnkgU29uZykgPHNv
-bmcuYmFvLmh1YUBoaXNpbGljb24uY29tPg0KPiBDYzogdGFueGlhb2ZlaSA8dGFueGlhb2ZlaUBo
-dWF3ZWkuY29tPjsgamVqYkBsaW51eC5pYm0uY29tOw0KPiBtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xl
-LmNvbTsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IGxpbnV4LWtlcm5lbEB2Z2VyLmtl
-cm5lbC5vcmc7IGxpbnV4YXJtQG9wZW5ldWxlci5vcmc7DQo+IGxpbnV4LW02OGtAdmdlci5rZXJu
-ZWwub3JnDQo+IFN1YmplY3Q6IFJFOiBbTGludXhhcm1dIFJlOiBbUEFUQ0ggZm9yLW5leHQgMDAv
-MzJdIHNwaW4gbG9jayB1c2FnZSBvcHRpbWl6YXRpb24NCj4gZm9yIFNDU0kgZHJpdmVycw0KPiAN
-Cj4gDQo+IE9uIFdlZCwgMTAgRmViIDIwMjEsIFNvbmcgQmFvIEh1YSAoQmFycnkgU29uZykgd3Jv
-dGU6DQo+IA0KPiA+ID4gT24gVHVlLCA5IEZlYiAyMDIxLCBTb25nIEJhbyBIdWEgKEJhcnJ5IFNv
-bmcpIHdyb3RlOg0KPiA+ID4NCj4gPiA+ID4gPiA+IHNvbmljX2ludGVycnVwdCgpIHVzZXMgYW4g
-aXJxIGxvY2sgd2l0aGluIGFuIGludGVycnVwdCBoYW5kbGVyDQo+ID4gPiA+ID4gPiB0byBhdm9p
-ZCBpc3N1ZXMgcmVsYXRpbmcgdG8gdGhpcy4gVGhpcyBraW5kIG9mIGxvY2tpbmcgbWF5IGJlDQo+
-ID4gPiA+ID4gPiBuZWVkZWQgaW4gdGhlIGRyaXZlcnMgeW91IGFyZSB0cnlpbmcgdG8gcGF0Y2gu
-IE9yIGl0IG1pZ2h0IG5vdC4NCj4gPiA+ID4gPiA+IEFwcGFyZW50bHksIG5vLW9uZSBoYXMgbG9v
-a2VkLg0KPiA+ID4gPg0KPiA+ID4gPiBJcyB0aGUgY29tbWVudCBpbiBzb25pY19pbnRlcnJ1cHQo
-KSBvdXRkYXRlZCBhY2NvcmRpbmcgdG8gdGhpczoNCj4gPiA+ID4gbTY4azogaXJxOiBSZW1vdmUg
-SVJRRl9ESVNBQkxFRA0KPiA+ID4gPg0KPiBodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20v
-bGludXgva2VybmVsL2dpdC90b3J2YWxkcy9saW51eC5naXQvY29tbWl0Lw0KPiA/aWQ9NzdhNDI3
-OQ0KPiA+ID4gPiBodHRwOi8vbGttbC5pdS5lZHUvaHlwZXJtYWlsL2xpbnV4L2tlcm5lbC8xMTA5
-LjIvMDE2ODcuaHRtbA0KPiA+ID4gPg0KPiA+ID4NCj4gPiA+IFRoZSByZW1vdmFsIG9mIElSUUZf
-RElTQUJMRUQgaXNuJ3QgcmVsZXZhbnQgdG8gdGhpcyBkcml2ZXIuIENvbW1pdA0KPiA+ID4gNzdh
-NDI3OTY3ODZjICgibTY4azogUmVtb3ZlIGRlcHJlY2F0ZWQgSVJRRl9ESVNBQkxFRCIpIGRpZCBu
-b3QgZGlzYWJsZQ0KPiA+ID4gaW50ZXJydXB0cywgaXQganVzdCByZW1vdmVkIHNvbWUgY29kZSB0
-byBlbmFibGUgdGhlbS4NCj4gPiA+DQo+ID4gPiBUaGUgY29kZSBhbmQgY29tbWVudHMgaW4gc29u
-aWNfaW50ZXJydXB0KCkgYXJlIGNvcnJlY3QuIFlvdSBjYW4NCj4gPiA+IGNvbmZpcm0gdGhpcyBm
-b3IgeW91cnNlbGYgcXVpdGUgZWFzaWx5IHVzaW5nIFFFTVUgYW5kIGENCj4gPiA+IGNyb3NzLWNv
-bXBpbGVyLg0KPiA+ID4NCj4gPiA+ID4gYW5kIHRoaXM6IGdlbmlycTogV2FybiB3aGVuIGhhbmRs
-ZXIgZW5hYmxlcyBpbnRlcnJ1cHRzDQo+ID4gPiA+DQo+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcv
-cHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L3RvcnZhbGRzL2xpbnV4LmdpdC9jb21taXQvDQo+ID9p
-ZD1iNzM4YTUwYQ0KPiA+ID4gPg0KPiA+ID4gPiB3b3VsZG4ndCBnZW5pcnEgcmVwb3J0IGEgd2Fy
-bmluZyBvbiBtNjhrPw0KPiA+ID4gPg0KPiA+ID4NCj4gPiA+IFRoZXJlIGlzIG5vIHdhcm5pbmcg
-ZnJvbSBtNjhrIGJ1aWxkcy4gVGhhdCdzIGJlY2F1c2UNCj4gPiA+IGFyY2hfaXJxc19kaXNhYmxl
-ZCgpIHJldHVybnMgdHJ1ZSB3aGVuIHRoZSBJUEwgaXMgbm9uLXplcm8uDQo+ID4NCj4gPg0KPiA+
-IFNvIGZvciBtNjhrLCB0aGUgY2FzZSBpcw0KPiA+IGFyY2hfaXJxc19kaXNhYmxlZCgpIGlzIHRy
-dWUsIGJ1dCBpbnRlcnJ1cHRzIGNhbiBzdGlsbCBjb21lPw0KPiA+DQo+ID4gVGhlbiBpdCBzZWVt
-cyBpdCBpcyB2ZXJ5IGNvbmZ1c2luZy4gSWYgcHJpb3JpdGl6ZWQgaW50ZXJydXB0cyBjYW4gc3Rp
-bGwNCj4gPiBjb21lIHdoaWxlIGFyY2hfaXJxc19kaXNhYmxlZCgpIGlzIHRydWUsDQo+IA0KPiBZ
-ZXMsIG9uIG02OGsgQ1BVcywgYW4gSVJRIGhhdmluZyBhIHByaW9yaXR5IGxldmVsIGhpZ2hlciB0
-aGFuIHRoZSBwcmVzZW50DQo+IHByaW9yaXR5IG1hc2sgd2lsbCBnZXQgc2VydmljZWQuDQo+IA0K
-PiBOb24tTWFza2FibGUgSW50ZXJydXB0IChOTUkpIGlzIG5vdCBzdWJqZWN0IHRvIHRoaXMgcnVs
-ZSBhbmQgZ2V0cyBzZXJ2aWNlZA0KPiByZWdhcmRsZXNzLg0KPiANCj4gPiBob3cgY291bGQgc3Bp
-bl9sb2NrX2lycXNhdmUoKSBibG9jayB0aGUgcHJpb3JpdGl6ZWQgaW50ZXJydXB0cz8NCj4gDQo+
-IEl0IHJhaXNlcyB0aGUgdGhlIG1hc2sgbGV2ZWwgdG8gNy4gQWdhaW4sIHBsZWFzZSBzZWUNCj4g
-YXJjaC9tNjhrL2luY2x1ZGUvYXNtL2lycWZsYWdzLmgNCg0KSGkgRmlubiwNClRoYW5rcyBmb3Ig
-eW91ciBleHBsYW5hdGlvbiBhZ2Fpbi4NCg0KVEJILCB0aGF0IGlzIHdoeSBtNjhrIGlzIHNvIGNv
-bmZ1c2luZy4gaXJxc19kaXNhYmxlZCgpIG9uIG02OGsgc2hvdWxkIGp1c3QNCnJlZmxlY3QgdGhl
-IHN0YXR1cyBvZiBhbGwgaW50ZXJydXB0cyBoYXZlIGJlZW4gZGlzYWJsZWQgZXhjZXB0IE5NSS4N
-Cg0KaXJxc19kaXNhYmxlZCgpIHNob3VsZCBiZSBjb25zaXN0ZW50IHdpdGggdGhlIGNhbGxpbmcg
-b2YgQVBJcyBzdWNoDQphcyBsb2NhbF9pcnFfZGlzYWJsZSwgbG9jYWxfaXJxX3NhdmUsIHNwaW5f
-bG9ja19pcnFzYXZlIGV0Yy4NCg0KPiANCj4gPiBJc24ndCBhcmNoX2lycXNfZGlzYWJsZWQoKSBh
-IHN0YXR1cyByZWZsZWN0aW9uIG9mIGlycSBkaXNhYmxlIEFQST8NCj4gPg0KPiANCj4gV2h5IG5v
-dD8NCg0KSWYgc28sIGFyY2hfaXJxc19kaXNhYmxlZCgpIHNob3VsZCBtZWFuIGFsbCBpbnRlcnJ1
-cHRzIGhhdmUgYmVlbiBtYXNrZWQNCmV4Y2VwdCBOTUkgYXMgTk1JIGlzIHVubWFza2FibGUuDQoN
-Cj4gDQo+IEFyZSBhbGwgaW50ZXJydXB0cyAoaW5jbHVkaW5nIE5NSSkgbWFza2VkIHdoZW5ldmVy
-IGFyY2hfaXJxc19kaXNhYmxlZCgpDQo+IHJldHVybnMgdHJ1ZSBvbiB5b3VyIHBsYXRmb3Jtcz8N
-Cg0KT24gbXkgcGxhdGZvcm0sIG9uY2UgaXJxc19kaXNhYmxlZCgpIGlzIHRydWUsIGFsbCBpbnRl
-cnJ1cHRzIGFyZSBtYXNrZWQNCmV4Y2VwdCBOTUkuIE5NSSBqdXN0IGlnbm9yZSBzcGluX2xvY2tf
-aXJxc2F2ZSBvciBsb2NhbF9pcnFfZGlzYWJsZS4NCg0KT24gQVJNNjQsIHdlIGFsc28gaGF2ZSBo
-aWdoLXByaW9yaXR5IGludGVycnVwdHMsIGJ1dCB0aGV5IGFyZSBydW5uaW5nIGFzDQpQRVNVRE9f
-Tk1JOg0KaHR0cHM6Ly9sd24ubmV0L0FydGljbGVzLzc1NTkwNi8NCg0KT24gbTY4aywgaXQgc2Vl
-bXMgeW91IG1lYW6jug0KaXJxX2Rpc2FibGVkKCkgaXMgdHJ1ZSwgYnV0IGhpZ2gtcHJpb3JpdHkg
-aW50ZXJydXB0cyBjYW4gc3RpbGwgY29tZTsNCmxvY2FsX2lycV9kaXNhYmxlKCkgY2FuIGRpc2Fi
-bGUgaGlnaC1wcmlvcml0eSBpbnRlcnJ1cHRzLCBhbmQgYXQgdGhhdA0KdGltZSwgaXJxX2Rpc2Fi
-bGVkKCkgaXMgYWxzbyB0cnVlLg0KDQpUQkgsIHRoaXMgaXMgd3JvbmcgYW5kIGNvbmZ1c2luZyBv
-biBtNjhrLg0KDQo+IA0KPiA+IFRoYW5rcw0KPiA+IEJhcnJ5DQo+ID4NCg0KVGhhbmtzDQpCYXJy
-eQ0K
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+---1463811774-653018509-1612996491=:23
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+
+On Wed, 10 Feb 2021, Song Bao Hua (Barry Song) wrote:
+
+> > On Wed, 10 Feb 2021, Song Bao Hua (Barry Song) wrote:
+> >=20
+> > > >
+> > > > There is no warning from m68k builds. That's because=20
+> > > > arch_irqs_disabled() returns true when the IPL is non-zero.
+> > >
+> > > So for m68k, the case is
+> > > arch_irqs_disabled() is true, but interrupts can still come?
+> > >
+> > > Then it seems it is very confusing. If prioritized interrupts can=20
+> > > still come while arch_irqs_disabled() is true,
+> >=20
+> > Yes, on m68k CPUs, an IRQ having a priority level higher than the=20
+> > present priority mask will get serviced.
+> >=20
+> > Non-Maskable Interrupt (NMI) is not subject to this rule and gets=20
+> > serviced regardless.
+> >=20
+> > > how could spin_lock_irqsave() block the prioritized interrupts?
+> >=20
+> > It raises the the mask level to 7. Again, please see=20
+> > arch/m68k/include/asm/irqflags.h
+>=20
+> Hi Finn,
+> Thanks for your explanation again.
+>=20
+> TBH, that is why m68k is so confusing. irqs_disabled() on m68k should=20
+> just reflect the status of all interrupts have been disabled except NMI.
+>=20
+> irqs_disabled() should be consistent with the calling of APIs such as=20
+> local_irq_disable, local_irq_save, spin_lock_irqsave etc.
+>=20
+
+When irqs_disabled() returns true, we cannot infer that=20
+arch_local_irq_disable() was called. But I have not yet found driver code=
+=20
+or core kernel code attempting that inference.
+
+> >=20
+> > > Isn't arch_irqs_disabled() a status reflection of irq disable API?
+> > >
+> >=20
+> > Why not?
+>=20
+> If so, arch_irqs_disabled() should mean all interrupts have been masked=
+=20
+> except NMI as NMI is unmaskable.
+>=20
+
+Can you support that claim with a reference to core kernel code or=20
+documentation? (If some arch code agrees with you, that's neither here nor=
+=20
+there.)
+
+> >=20
+> > Are all interrupts (including NMI) masked whenever=20
+> > arch_irqs_disabled() returns true on your platforms?
+>=20
+> On my platform, once irqs_disabled() is true, all interrupts are masked=
+=20
+> except NMI. NMI just ignore spin_lock_irqsave or local_irq_disable.
+>=20
+> On ARM64, we also have high-priority interrupts, but they are running as
+> PESUDO_NMI:
+> https://lwn.net/Articles/755906/
+>=20
+
+A glance at the ARM GIC specification suggests that your hardware works=20
+much like 68000 hardware.
+
+   When enabled, a CPU interface takes the highest priority pending=20
+   interrupt for its connected processor and determines whether the=20
+   interrupt has sufficient priority for it to signal the interrupt=20
+   request to the processor. [...]
+
+   When the processor acknowledges the interrupt at the CPU interface, the=
+=20
+   Distributor changes the status of the interrupt from pending to either=
+=20
+   active, or active and pending. At this point the CPU interface can=20
+   signal another interrupt to the processor, to preempt interrupts that=20
+   are active on the processor. If there is no pending interrupt with=20
+   sufficient priority for signaling to the processor, the interface=20
+   deasserts the interrupt request signal to the processor.
+
+https://developer.arm.com/documentation/ihi0048/b/
+
+Have you considered that Linux/arm might benefit if it could fully exploit=
+=20
+hardware features already available, such as the interrupt priority=20
+masking feature in the GIC in existing arm systems?
+
+> On m68k, it seems you mean=EF=BC=9A
+> irq_disabled() is true, but high-priority interrupts can still come;
+> local_irq_disable() can disable high-priority interrupts, and at that
+> time, irq_disabled() is also true.
+>=20
+> TBH, this is wrong and confusing on m68k.
+>=20
+
+Like you, I was surprised when I learned about it. But that doesn't mean=20
+it's wrong. The fact that it works should tell you something.
+
+Things could always be made simpler. But discarding features isn't=20
+necessarily an improvement.
+
+> >=20
+> > > Thanks
+> > > Barry
+> > >
+>=20
+> Thanks
+> Barry
+>=20
+---1463811774-653018509-1612996491=:23--
