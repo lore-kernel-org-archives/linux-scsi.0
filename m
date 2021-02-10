@@ -2,144 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E31DC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Feb 2021 14:27:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D87A1C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Feb 2021 14:45:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDBCD64E7C
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Feb 2021 14:27:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A11B664E2A
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Feb 2021 14:45:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231708AbhBJO05 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Feb 2021 09:26:57 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:45491 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231626AbhBJO0z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 Feb 2021 09:26:55 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612967128;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=AjqdGl9gBCtzXZ4MgSNybS3a2eF3BdoT/sWONctal1Y=;
-        b=YFGsYSSA0+aGtmx2ulVzpOvQAifiel20lS9tOs5r/KZYHJFTcumnABX1nTDrlJiYeRwmS5
-        2VSMN5GyUH2PDrGDUdW1wWoue6HSH38kVLi70hRxBQWXIHny4FJ4fSX4YDIWsFpJ/H+V96
-        Eq+QF7lDir1cJXuq3m2aYDsFqB7f4QQ=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-297-sSPm8nNONQuxBKqIdo5gyA-1; Wed, 10 Feb 2021 09:25:26 -0500
-X-MC-Unique: sSPm8nNONQuxBKqIdo5gyA-1
-Received: by mail-qv1-f72.google.com with SMTP id p30so1440268qva.13
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Feb 2021 06:25:26 -0800 (PST)
+        id S229639AbhBJOp4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Feb 2021 09:45:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44994 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230347AbhBJOpy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Feb 2021 09:45:54 -0500
+Received: from mail-il1-x136.google.com (mail-il1-x136.google.com [IPv6:2607:f8b0:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4C31C061756
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Feb 2021 06:45:12 -0800 (PST)
+Received: by mail-il1-x136.google.com with SMTP id z18so2016606ile.9
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Feb 2021 06:45:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ysd4jTSM/A3Qbvo3IAamzntPbVEsPTPu5msfcyC0amY=;
+        b=n/cl3sU4LxnsDfTlbLqkffWFtoeo/limIQtoBM8kz/2fWU2gL1fPfJ2kXfAXu+gcVa
+         nhqwc2x/5b+bogrjP+YNHvnzG7LtQmY33VDtQ62/D9hiL2S5l/2QbIzpsE289QYd6INV
+         nCKWcb+Gosn6FHz6FRn6UaGFwchiiA21g7C/I/Rk/3JMwzK3Fhid1vmH6BBZR5XNUD66
+         mKBuFGIU1gH3EN9fT9WHhMQLyByOlJPpbX8FOwRPocPek2Odww3BhWLT08k9vvqR5dY3
+         ibIT8pO4WLWI49PogeDRiDHb7DJoJlU8HLwX0Gkep21uFk+o/WsAEuuS+dVFarSG+vSz
+         c8ag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=AjqdGl9gBCtzXZ4MgSNybS3a2eF3BdoT/sWONctal1Y=;
-        b=N7RojWKNCotxmEZQV4YM1352mpFu6VyF7nH747C4oe7k9uJxp4QkWllZgvZGBdqHH0
-         1QXJ95Ej58yuPhUeucmfay7OXBxhaY8ZQpQNEZ4Fiods0BSJ6jXYexa3QVAfmy6K7pIQ
-         J3cUcBXkSO5hsRw4HMv4gcQxZpMeKgxI9/+hkGe5lhU3ot+xEiz+1zSA8kUGoXBgqxkW
-         2rNKAcOe+L3/nQ5IEHvl1oEGkRt0kWYH1MDSVZj80/WRt1TGAvhsLD4lqMQ5Qv6wd6LF
-         pugOS6G65yhoAjvGVeY6+YMe+rL9mQ8t+ZgVnwSOCZXnQAgY8ybn9X7+DQENfgiDg48H
-         flAw==
-X-Gm-Message-State: AOAM5310QmP9eJH0v7HwwWjr1pUW0nlUyG1D0+wVc3p6JKekCH9HYW+W
-        qFAQLHDQnb+Ch9n1npbE+fgDyuIB8hd1JPypM0WPns3akWgQCDiKqFl8lcNu/vt2u28y8hUcdVE
-        Qws8I11fje7V2NPcRnjrdIA==
-X-Received: by 2002:a05:620a:9cf:: with SMTP id y15mr3510300qky.44.1612967126191;
-        Wed, 10 Feb 2021 06:25:26 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJx7JkAwZ6eyRiwDMr8CAX5LfuNBYjtuaKgz+zlOU/JKZLXd+KP3cqaHVb8JoNaeNXiG07pxJw==
-X-Received: by 2002:a05:620a:9cf:: with SMTP id y15mr3510272qky.44.1612967125918;
-        Wed, 10 Feb 2021 06:25:25 -0800 (PST)
-Received: from loberhel7laptop ([2600:6c64:4e7f:cee0:ccad:a4ca:9a69:d8bc])
-        by smtp.gmail.com with ESMTPSA id p188sm1520751qkf.89.2021.02.10.06.25.24
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 10 Feb 2021 06:25:25 -0800 (PST)
-Message-ID: <f11dbbf675281cacd80044cb8600bd3ba6684dc2.camel@redhat.com>
-Subject: Re: [PATCH 13/13] target: flush submission work during TMR
- processing
-From:   Laurence Oberman <loberman@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        Chaitanya.Kulkarni@wdc.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        mst@redhat.com, stefanha@redhat.com,
-        virtualization@lists.linux-foundation.org
-Date:   Wed, 10 Feb 2021 09:25:23 -0500
-In-Reply-To: <679c61cf1dad2848edac6f7d6490ad6587f0ada3.camel@redhat.com>
-References: <20210209123845.4856-1-michael.christie@oracle.com>
-         <20210209123845.4856-14-michael.christie@oracle.com>
-         <679c61cf1dad2848edac6f7d6490ad6587f0ada3.camel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-10.el7) 
-Mime-Version: 1.0
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ysd4jTSM/A3Qbvo3IAamzntPbVEsPTPu5msfcyC0amY=;
+        b=rTbmWsVCEaPOmy1POk9JbAiSu5UTsr6o6VhTl+Dv5CsmQPNIYRZp4uVm8WPnw9BBDD
+         F/2RsADzdcwRMWx8w7sU3B+EJCMXaRssAZbTwGf0ckdj2/CzDFsTLUZCKRCFgqRdDNYG
+         9aCnxMU8Lz6xEpUI7dDHWfdolKG+rn2jTPJOfpHbANlcUuFjbujcrWmuDWjwbJZ5tGK5
+         mHt17NIMYQywOj578QIqiim2KmZHDlR81kuzputZbvFiUghPNRfRxAySAzCAN/tcV+HB
+         0doC7b9Ga6YjKeeLGNQ45cZmd4fjAKcpWhfoizxdIcA9WYICy32/5jYhzfxZKJT1DBVM
+         IrkQ==
+X-Gm-Message-State: AOAM532Xf1GqAyk/04Cf3FW/HDWowTAgRiE9YVLrbfDQ0lGrhOegnWMF
+        I4OQatcX9wzUHbM5BS9LvlNQRQ==
+X-Google-Smtp-Source: ABdhPJzLNMS1CqKK3WC8WmbvmcLOE3sfTRaTeeyEbcdTj69ndKl5ePzTxDZuwjdkwGqxqKGNIyEpJA==
+X-Received: by 2002:a92:4b06:: with SMTP id m6mr1345567ilg.177.1612968312334;
+        Wed, 10 Feb 2021 06:45:12 -0800 (PST)
+Received: from [192.168.1.30] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id h9sm1086368ili.43.2021.02.10.06.45.11
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 10 Feb 2021 06:45:12 -0800 (PST)
+Subject: Re: [PATCH v4 0/8] block: add zone write granularity limit
+To:     Damien Le Moal <damien.lemoal@wdc.com>, linux-block@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-nvme@lists.infradead.org, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@wdc.com>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+References: <20210128044733.503606-1-damien.lemoal@wdc.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <cfe15751-e07e-101f-49d8-a2f184e30618@kernel.dk>
+Date:   Wed, 10 Feb 2021 07:45:12 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <20210128044733.503606-1-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2021-02-09 at 09:31 -0500, Laurence Oberman wrote:
-> On Tue, 2021-02-09 at 06:38 -0600, Mike Christie wrote:
-> > If a cmd is on the submission workqueue then the TMR code will
-> > miss it, and end up returning task not found or success for
-> > lun resets. The fabric driver might then tell the initiator that
-> > the running cmds have been handled when they are about to run.
-> > 
-> > This adds a cancel when we are processing TMRs.
-> > 
-> > Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> > ---
-> >  drivers/target/target_core_tmr.c | 4 ++++
-> >  1 file changed, 4 insertions(+)
-> > 
-> > diff --git a/drivers/target/target_core_tmr.c
-> > b/drivers/target/target_core_tmr.c
-> > index 7347285471fa..9b7f159f9341 100644
-> > --- a/drivers/target/target_core_tmr.c
-> > +++ b/drivers/target/target_core_tmr.c
-> > @@ -124,6 +124,8 @@ void core_tmr_abort_task(
-> >  	int i;
-> >  
-> >  	for (i = 0; i < dev->queue_cnt; i++) {
-> > +		cancel_work_sync(&dev->queues[i].sq.work);
-> > +
-> >  		spin_lock_irqsave(&dev->queues[i].lock, flags);
-> >  		list_for_each_entry_safe(se_cmd, next, &dev-
-> > > queues[i].state_list,
-> > 
-> >  					 state_list) {
-> > @@ -302,6 +304,8 @@ static void core_tmr_drain_state_list(
-> >  	 * in the Control Mode Page.
-> >  	 */
-> >  	for (i = 0; i < dev->queue_cnt; i++) {
-> > +		cancel_work_sync(&dev->queues[i].sq.work);
-> > +
-> >  		spin_lock_irqsave(&dev->queues[i].lock, flags);
-> >  		list_for_each_entry_safe(cmd, next, &dev-
-> > > queues[i].state_list,
-> > 
-> >  	
+On 1/27/21 9:47 PM, Damien Le Moal wrote:
+> The first patch of this series adds missing documentation of the
+> zone_append_max_bytes sysfs attribute.
 > 
+> The following 3 patches are cleanup and preparatory patches for the
+> introduction of the zone write granularity limit. The goal of these
+> patches is to have all code setting a device queue zoned model to use
+> the helper function blk_queue_set_zoned(). The nvme driver, null_blk
+> driver and the partition code are modified to do so.
 > 
-> > 				 state_list) {
+> The fourth patch in this series introduces the zone write granularity
+> queue limit to indicate the alignment constraint for write operations
+> into sequential zones of zoned block devices. This limit is always set
+> by default to the device logical block size. The following patch
+> documents this new limit.
 > 
-> Hello Mike
-> Thanks for these
-> This one in particular is the one that I think will help our case. I
-> will pull all of these and test later this week as a bundle.
-> 
-> Many Thanks
-> Laurence Oberman
-> 
+> The last 2 patches introduce the blk_queue_clear_zone_settings()
+> function and modify the SCSI sd driver to clear the zone related queue
+> limits and resources of a host-aware zoned disk that is changed to a
+> regular disk due to the presence of partitions.
 
-I pulled v2 and built a test kernel to start the testing but I see
-Christoph has also suggested changes as well to your v3 submission.
+Applied, thanks.
 
-I will wait until we are finalized and then do a full test.
-
-Thanks
-Laurence
+-- 
+Jens Axboe
 
