@@ -4,95 +4,138 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.4 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E293C433E6
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 16:01:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15BA1C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 16:14:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 399A864DEC
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 16:01:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB8A464E74
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 16:14:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231277AbhBKQAp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Feb 2021 11:00:45 -0500
-Received: from mail-pg1-f169.google.com ([209.85.215.169]:43027 "EHLO
-        mail-pg1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229983AbhBKP6c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 10:58:32 -0500
-Received: by mail-pg1-f169.google.com with SMTP id n10so4166567pgl.10;
-        Thu, 11 Feb 2021 07:58:07 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=mzu5SvT094Aj9xpBSbKSYnATyOFU5sYsh4lDYB93wbw=;
-        b=AabvZcUJqbpXJz26ThSvFyrsUphZ6gGvuCWWc0U+v7CVSSsbtzHgiuHeBBx4WO1sIP
-         qm9YnVN3J52hLCF+hHKtjUyVNQ8GU3AHyRcHr6Wx1JJnbcg1OCEj9Q0QUEZv9U1owMUu
-         +EuYWnOcKqFpRyG/J/B5nE6OGiSUnd5KkNqlSxtzcjxonrYha8kZXa0fixa5iiuLrxL+
-         6xiGUlx2xUhVU4dv7kThx23XalKQ0nXJZZ8xAyZkPo1XbsuhK1rvIXFhVAG0RRMi1l6t
-         atzOiGPobiQUFw0Dr0uk0UT80/jL7t/h6C+izzIfR+5p21AZz/ziyK8n1PTHGtH2RA7R
-         u3zQ==
-X-Gm-Message-State: AOAM531T9dEmlr3DcjNJ9yR3XUK4VeKEb/tI/C5GvWV2qAyzoP0TtD4M
-        CEaIB9h5qpalZM2I+v1Tp5s=
-X-Google-Smtp-Source: ABdhPJzu3MAk0XclPIOwd5kfO2xIarZ3P6Mfu+VaT6x+jBwW135zJW6PpUETbhYZAYz4vclpSSADaA==
-X-Received: by 2002:a63:2746:: with SMTP id n67mr8527633pgn.54.1613059061797;
-        Thu, 11 Feb 2021 07:57:41 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:4fec:f2e9:7034:dfe7? ([2601:647:4000:d7:4fec:f2e9:7034:dfe7])
-        by smtp.gmail.com with ESMTPSA id y2sm5673841pjw.36.2021.02.11.07.57.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 11 Feb 2021 07:57:40 -0800 (PST)
-Subject: Re: [PATCH v2] scsi: qla2xxx: Removed extra space in variable
- declaration.
-To:     "Milan P. Gandhi" <mgandhi@redhat.com>,
-        kernel-janitors@vger.kernel.org
-Cc:     GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
-        njavali@marvell.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-References: <20210211131628.GA10754@machine1>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <ccf393f7-cbfc-fb8c-6f73-bb502eaa54f3@acm.org>
-Date:   Thu, 11 Feb 2021 07:57:38 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S231142AbhBKQOa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Feb 2021 11:14:30 -0500
+Received: from mail-1.ca.inter.net ([208.85.220.69]:60719 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231783AbhBKQMS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 11:12:18 -0500
+Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id ADAE02EA572;
+        Thu, 11 Feb 2021 11:11:18 -0500 (EST)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
+        with ESMTP id h-rD3B4uW+6y; Thu, 11 Feb 2021 10:56:08 -0500 (EST)
+Received: from [192.168.48.23] (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id B215F2EA56C;
+        Thu, 11 Feb 2021 11:11:17 -0500 (EST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v3] scsi_debug: add new defer_type for mq_poll
+To:     Kashyap Desai <kashyap.desai@broadcom.com>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        Hannes Reinecke <hare@suse.de>
+References: <20210209225624.108341-1-dgilbert@interlog.com>
+ <CAHsXFKEhiwHmMmJ00eeA1ikP3wdiJP2xggsuO0Qc9H1ogNXnVQ@mail.gmail.com>
+ <c9084cf7-4f75-dc62-1927-a2695f6cc52c@interlog.com>
+ <3253ac6a020bd3c36ed03519c4182250@mail.gmail.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <9fc5ef5c-1871-c0e1-8ba6-1489c4a0656a@interlog.com>
+Date:   Thu, 11 Feb 2021 11:11:17 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210211131628.GA10754@machine1>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+In-Reply-To: <3253ac6a020bd3c36ed03519c4182250@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/11/21 5:16 AM, Milan P. Gandhi wrote:
-> Removed extra space in variable declaration in qla2x00_sysfs_write_nvram
+On 2021-02-11 7:13 a.m., Kashyap Desai wrote:
+>> Kashyap,
+>> There is another issue here, namely iodepth > host_max_queue (64 > 32) and
+>> in my setup that is not handled well. So there is a problem with
+>> scsi_debug
+>> *** or the mid-level in handling this case.
+>>
+>> If you have modified the sd driver to call blk_poll() then perhaps you
+>> could try
+>> the above test again with a reduced iodepth.
 > 
-> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
-> ---
-> changes v2:
->  - Added a small note about change.
-> ---
-> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-> index ab45ac1e5a72..7f2db8badb6d 100644
-> --- a/drivers/scsi/qla2xxx/qla_attr.c
-> +++ b/drivers/scsi/qla2xxx/qla_attr.c
-> @@ -226,7 +226,7 @@ qla2x00_sysfs_write_nvram(struct file *filp, struct kobject *kobj,
->  	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
->  	    struct device, kobj)));
->  	struct qla_hw_data *ha = vha->hw;
-> -	uint16_t	cnt;
-> +	uint16_t cnt;
->  
->  	if (!capable(CAP_SYS_ADMIN) || off != 0 || count != ha->nvram_size ||
->  	    !ha->isp_ops->write_nvram)
+> Doug -
+> 
+> I debug the issue and found the fix. We need to remove below code to handle
+> this new defer type for mq poll.
+> Earlier I did not used " REQ_HIPRI" to handle mq poll, but now you are
+> managing it through REQ_HIPRI check, it is safe and required to have below
+> patch.
+> 
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index b9ec3a47fbf1..c50de49a2c2f 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -5437,13 +5437,6 @@ static int schedule_resp(struct scsi_cmnd *cmnd,
+> struct sdebug_dev_info *devip,
+>          sd_dp = sqcp->sd_dp;
+>          spin_unlock_irqrestore(&sqp->qc_lock, iflags);
+> 
+> -       /* Do not complete IO from default completion path.
+> -        * Let it to be on queue.
+> -        * Completion should happen from mq_poll interface.
+> -        */
+> -       if ((sqp - sdebug_q_arr) >= (submit_queues - poll_queues))
+> -               return 0;
+> -
+>          if (!sd_dp) {
+>                  sd_dp = kzalloc(sizeof(*sd_dp), GFP_ATOMIC);
+>                  if (!sd_dp) {
+> 
+> 
+> On top of your v3 patch + above fix, I am able to run IO and there are no
+> issues.  There is no issue with higher QD as well, so we are good to go.
+> 
+> Tested-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> 
+> So how shall we progress now ? Shall I ask Martin to pick all the patches
+> from " [PATCH v3 0/4] io_uring iopoll in scsi layer" since this patch has
+> dependency on my series.
 
-I'm not sure if such a patch is considered substantial enough to be
-included upstream.
+Kashyap,
+Good catch!
 
-For future patches, please follow the guidelines for submitting patches
-and use the imperative mood for the subject (Removed -> Remove) and do
-not end the patch subject with a dot. See also
-Documentation/process/submitting-patches.rst
+You could roll all the scsi_debug stuff into one patch and put both
+our sign-offs on it, or present it as two patches:
+   - first one: your original plus this fix
+   - second one: mine with your tested-by on it
 
-Bart.
+Since this is new functionality for the scsi sub-system, it is unlikely
+that all the corner cases have been visited. However, with what we have
+in place for the next cycle, others have something reasonably solid to
+build on.
 
+Doug Gilbert
+
+>> *** the scsi_debug should either yield a TASK SET FULL status or return
+>>       SCSI_MLQUEUE_HOST_BUSY from queuecommand() when it has run out of
+>>       slots.
+>>
+>>> [seqprecon]
+>>> filename=/dev/sdd
+>>> [seqprecon]
+>>> filename=/dev/sde
+>>> [seqprecon]
+>>> filename=/dev/sdf
+>>>
+>>>
+>>> I will ask Martin to pick all the patches from "[v3,1/4] add io_uring
+>>> with IOPOLL support in the scsi layer" except scsi_debug. We can work
+>>> on scsi_debug and send standalone patch.
+>>>
+>>> Kashyap
 
