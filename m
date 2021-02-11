@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B029FC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:47:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0DDBC433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:47:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 894FC64E45
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:47:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD1F964E44
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:47:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230233AbhBKXrO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Feb 2021 18:47:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46592 "EHLO
+        id S229935AbhBKXrX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Feb 2021 18:47:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230155AbhBKXqb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 18:46:31 -0500
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C715CC06121D
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:03 -0800 (PST)
-Received: by mail-pf1-x42f.google.com with SMTP id 18so4729159pfz.3
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:03 -0800 (PST)
+        with ESMTP id S230159AbhBKXqc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 18:46:32 -0500
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F09AC06121F
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:05 -0800 (PST)
+Received: by mail-pg1-x534.google.com with SMTP id t25so5071075pga.2
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=CkHaf4S1rspxuNXLcRzaWZQzXhiJ7fIoupCM3XgrDs8=;
-        b=X+hRVIuS3+AqucFJIX91If37Fb6SG1HjpMVQY6PY++S1PtChPnYm9XXILYhs7aKu3O
-         Z47tblqdOsET0JW2HTe7qt6ISkHndn4WrzrrIO9C5H64QRlpc+NsnVqCuzBIwUHqO0Oq
-         BQ0EuGsAWSNG4KWnx1Im7OLNNist+t+/dCZH0hRGfS5yVzuwQBAShSvLyKpdEiw6aU4E
-         MjjqssNkZVd1acjD6aSkKwDGpyfb+DkybGnUMau8AlcaXP4fsaPwI86Asm0qlGO3x1i/
-         QjOPWjTiTNxhIb87VXR0CG7COgbIp/bEbnlF3s0FnXEQQCNM+zr8ziGT1z1lxLLKeoHU
-         MoYQ==
+        bh=PP5qfphJSo2ohYrBq1IGAxXMaJIgoockdBFaDi4uDPA=;
+        b=lRiYi51mpaWHZRT67Wi1UO8j4a8mQkh0NaqCQYJzHN6rnueqiBw0NrZmqx+Rra+KFp
+         Hibb3YfwWMvMTUTD3SrCVUZROhNVM825lv5oTotBnPn1j/6Ye51ft2NGbGdlrFR79FQ3
+         9EQ98hn8YCYoruI5JcKwkt6eCDTZxlFBaRdei8nK5uHEA+Dl6y7OOnVIiekm/J65Kv8T
+         DhE9r/juUoBXwjl4j1mSmvXd9cbW0ejHgUdACUvsqywNkkrikGmcJoduNgCLdmE07OlI
+         2MTQxp6tbHSBYjW8eEqbG3bTfE6Q1eorhnzMOdEwGw+tFltJCvvQ+egPkyWsLugsfAaz
+         yUcw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=CkHaf4S1rspxuNXLcRzaWZQzXhiJ7fIoupCM3XgrDs8=;
-        b=PMLj83B5uWdYIgOk+ATia5mRBHT7OjkiKfx0SiHdZmC0n4E/t2tI576kqVDbmpNH2R
-         JEAWs4aymB5zGU2OT/GWodzt5kw3EzRgvDTQaSrDrQB7KT/MnxdNHxu4fAq/D6mcL6eW
-         Dc0ju/6ucT0k0KYFzXaa3YFcWwz8gDB0+kPlb2cQjiVfnTBBpVB7IYuZfpyVPYR3xUMt
-         z6Fd/HSo8RJhSL6zusNASKSo/aXR2nw5xDmaUMjUQSUBPKydkaKsIJYeq7fAAhQsve7c
-         sooWzqKt1xCRTJkz/S5rAOw+SD/n8yMp5LmkZTGcEbIfI6cMDAHOjVAFLtQLFv/BCwoV
-         UUGw==
-X-Gm-Message-State: AOAM5338w9AOONVmF1uzfzcmnpc2x9u5vC/Pm/nB99c8hk45khVdMORD
-        hmXudPQEjVF1UwBaSLdcQkuyvRAxK+8=
-X-Google-Smtp-Source: ABdhPJxV5cqt7lYHdDUFGjVc8F9Wf94KubQWGdDAFl0twSGlblnCjQVjwwfV5bo/MJaBTpr18+Teeg==
-X-Received: by 2002:aa7:808c:0:b029:1d5:c9d4:d39a with SMTP id v12-20020aa7808c0000b02901d5c9d4d39amr371332pff.46.1613087103303;
-        Thu, 11 Feb 2021 15:45:03 -0800 (PST)
+        bh=PP5qfphJSo2ohYrBq1IGAxXMaJIgoockdBFaDi4uDPA=;
+        b=bTejT89ZB4yz7RwrmiPoQ/KNGbNwUSzBQIRFnim8+GQgjs1IU0xugZJCyhDInuGvHS
+         DuN2BHtZATABcu1KkbV70ZXBCgUVQqNQkHOoAsKpiUHhm21HILJVwaRyiBNyYSduuOap
+         9VmdZZlSeOFphOafBmYgoYJBfKKA8EoQ7HyQL/hGzOHqIhHUZ0o30+hO1cqd+QZZG5Jn
+         ZZqpg+oak5uMiUZJCOc1uACzahCM3BJQsAI5W16Py41kUdi7fXNg8hUogE6WlsA8YHKb
+         QHOMDvy5iLUUfMhKsYlEAEtSdQpFxLS/4FxNnYX7ymwqz+hBeo0YIL2nmSn3LRRWKedq
+         /HhA==
+X-Gm-Message-State: AOAM5320Nz5BUAyiwtFByoaCugDLPfdoc6pQ1uGcmPgr6oxVvnQS0oPx
+        SQz1OMiyXnQfzLujj0mZvXs8SiGKYOU=
+X-Google-Smtp-Source: ABdhPJyuwtwrOpJmGy2/iBZuNQwpiEQx1cwbaKMFPsGtQM71BFt3zZo41/317k4kdyyoZg8/V3ktQg==
+X-Received: by 2002:a62:191:0:b029:1dd:3b65:c91d with SMTP id 139-20020a6201910000b02901dd3b65c91dmr452953pfb.14.1613087105121;
+        Thu, 11 Feb 2021 15:45:05 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id i67sm6808035pfe.19.2021.02.11.15.45.02
+        by smtp.gmail.com with ESMTPSA id i67sm6808035pfe.19.2021.02.11.15.45.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Feb 2021 15:45:03 -0800 (PST)
+        Thu, 11 Feb 2021 15:45:04 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 18/22] lpfc: Change wording of invalid pci reset log message
-Date:   Thu, 11 Feb 2021 15:44:39 -0800
-Message-Id: <20210211234443.3107-19-jsmart2021@gmail.com>
+Subject: [PATCH 21/22] lpfc: Update lpfc version to 12.8.0.8
+Date:   Thu, 11 Feb 2021 15:44:42 -0800
+Message-Id: <20210211234443.3107-22-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210211234443.3107-1-jsmart2021@gmail.com>
 References: <20210211234443.3107-1-jsmart2021@gmail.com>
@@ -72,32 +72,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Message 8347 Invalid device found log message is logged when an LPe12000
-adapter is installed.  The log message is supposed to indicate an
-unsupported pci reset adapter rather than an invalid device.
-
-Change the wording to: Incapable PCI reset device.
+Update lpfc version to 12.8.0.8
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_version.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 8446165b15ba..9786c368baeb 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -5031,7 +5031,7 @@ lpfc_check_pci_resettable(struct lpfc_hba *phba)
- 			break;
- 		default:
- 			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
--					"8347 Invalid device found: "
-+					"8347 Incapable PCI reset device: "
- 					"0x%04x\n", ptr->device);
- 			return -EBADSLT;
- 		}
+diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+index fade044c8f15..6360aa95c6b2 100644
+--- a/drivers/scsi/lpfc/lpfc_version.h
++++ b/drivers/scsi/lpfc/lpfc_version.h
+@@ -20,7 +20,7 @@
+  * included with this package.                                     *
+  *******************************************************************/
+ 
+-#define LPFC_DRIVER_VERSION "12.8.0.7"
++#define LPFC_DRIVER_VERSION "12.8.0.8"
+ #define LPFC_DRIVER_NAME		"lpfc"
+ 
+ /* Used for SLI 2/3 */
+@@ -32,6 +32,6 @@
+ 
+ #define LPFC_MODULE_DESC "Emulex LightPulse Fibre Channel SCSI driver " \
+ 		LPFC_DRIVER_VERSION
+-#define LPFC_COPYRIGHT "Copyright (C) 2017-2020 Broadcom. All Rights " \
++#define LPFC_COPYRIGHT "Copyright (C) 2017-2021 Broadcom. All Rights " \
+ 		"Reserved. The term \"Broadcom\" refers to Broadcom Inc. " \
+ 		"and/or its subsidiaries."
 -- 
 2.26.2
 
