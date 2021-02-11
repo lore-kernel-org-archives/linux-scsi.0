@@ -2,141 +2,161 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55525C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 05:57:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A59C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 06:52:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CE8B64E15
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 05:57:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F37460C40
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 06:52:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229493AbhBKF5M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Feb 2021 00:57:12 -0500
-Received: from mail-1.ca.inter.net ([208.85.220.69]:34350 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229478AbhBKF5K (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 00:57:10 -0500
-Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id 6574A2EA1A5;
-        Thu, 11 Feb 2021 00:56:27 -0500 (EST)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
-        with ESMTP id yvbXlzG+4f5a; Thu, 11 Feb 2021 00:41:18 -0500 (EST)
-Received: from [192.168.48.23] (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 71AAF2EA008;
-        Thu, 11 Feb 2021 00:56:26 -0500 (EST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v3] scsi_debug: add new defer_type for mq_poll
-To:     Kashyap Desai <kashyap.desai@broadcom.com>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        id S229713AbhBKGw2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Feb 2021 01:52:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53156 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229678AbhBKGwT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 11 Feb 2021 01:52:19 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A422964D9A;
+        Thu, 11 Feb 2021 06:51:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1613026291;
+        bh=/bqBzgsBwYu/4OWo8yzcEBn/7GQQ8Lv9Niz3kBW/VWM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=1QJjeqSTOBLk8sQWqKjJZqLaZA933MTVDA3vE1bYAgp+pbNmVJam/IcUXg46nXzRS
+         0QAaaMpQZBWtebp8LATsgI2tZhJyAmpU8GsDdu24fK4SVwpUYtaH367sVMUzU83kaK
+         xjGz6S7Uyc+RmTHL23aiYf1ZlyJ6NfCJdu1OZR+s=
+Date:   Thu, 11 Feb 2021 07:51:28 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Bodo Stroesser <bostroesser@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        Hannes Reinecke <hare@suse.de>
-References: <20210209225624.108341-1-dgilbert@interlog.com>
- <CAHsXFKEhiwHmMmJ00eeA1ikP3wdiJP2xggsuO0Qc9H1ogNXnVQ@mail.gmail.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <c9084cf7-4f75-dc62-1927-a2695f6cc52c@interlog.com>
-Date:   Thu, 11 Feb 2021 00:56:26 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        Mike Christie <michael.christie@oracle.com>
+Subject: Re: [PATCH 1/2] uio: Add late_release callback to uio_info
+Message-ID: <YCTT8HQ7PobTyUz4@kroah.com>
+References: <20210210194031.7422-1-bostroesser@gmail.com>
+ <20210210194031.7422-2-bostroesser@gmail.com>
+ <YCQ4aEz29P26ZxaL@kroah.com>
+ <7bc9eef9-0a9e-58a9-11f1-2c32010c70f0@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHsXFKEhiwHmMmJ00eeA1ikP3wdiJP2xggsuO0Qc9H1ogNXnVQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7bc9eef9-0a9e-58a9-11f1-2c32010c70f0@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-02-09 10:08 p.m., Kashyap Desai wrote:
-> On Wed, Feb 10, 2021 at 4:26 AM Douglas Gilbert <dgilbert@interlog.com> wrote:
->>
->> Add a new sdeb_defer_type enumeration: SDEB_DEFER_POLL for requests
->> that have REQ_HIPRI set in cmd_flags field. It is expected that
->> these requests will be polled via the mq_poll entry point which
->> is driven by calls to blk_poll() in the block layer. Therefore
->> timer events are not 'wired up' in the normal fashion.
->>
->> There are still cases with short delays (e.g. < 10 microseconds)
->> where by the time the command response processing occurs, the delay
->> is already exceeded in which case the code calls scsi_done()
->> directly. In such cases there is no window for mq_poll() to be
->> called.
->>
->> Add 'mq_polls' counter that increments on each scsi_done() called
->> via the mq_poll entry point. Can be used to show (with 'cat
->> /proc/scsi/scsi_debug/<host_id>') that blk_poll() is causing
->> completions rather than some other mechanism.
->>
->>
->> This patch is against the 5.12/scsi-staging branch which includes
->>     a98d6bdf181eb71bf4686666eaf47c642a061642
->>     scsi_debug : iouring iopoll support
->> which it alters. So this patch is a fix of that patch.
->>
->> Changes since version 2 [sent 20210206 to linux-scsi list]
->>    - the sdebug_blk_mq_poll() callback didn't cope with the
->>      uncommon case where sqcp->sd_dp is NULL. Fix.
+On Wed, Feb 10, 2021 at 08:57:11PM +0100, Bodo Stroesser wrote:
+> On 10.02.21 20:47, Greg Kroah-Hartman wrote:
+> > On Wed, Feb 10, 2021 at 08:40:30PM +0100, Bodo Stroesser wrote:
+> > > If uio_unregister_device() is called while userspace daemon
+> > > still holds the uio device open or mmap'ed, uio will not call
+> > > uio_info->release() on later close / munmap.
+> > > 
+> > > At least one user of uio (tcmu) should not free resources (pages
+> > > allocated by tcmu which are mmap'ed to userspace) while uio
+> > > device still is open, because that could cause userspace daemon
+> > > to be killed by SIGSEGV or SIGBUS. Therefore tcmu frees the
+> > > pages only after it called uio_unregister_device _and_ the device
+> > > was closed.
+> > > So, uio not calling uio_info->release causes trouble.
+> > > tcmu currently leaks memory in that case.
+> > > 
+> > > Just waiting for userspace daemon to exit before calling
+> > > uio_unregister_device I think is not the right solution, because
+> > > daemon would not become aware of kernel code wanting to destroy
+> > > the uio device.
+> > > After uio_unregister_device was called, reading or writing the
+> > > uio device returns -EIO, which normally results in daemon exit.
+> > > 
+> > > This patch adds new callback pointer 'late_release' to struct
+> > > uio_info. If uio user sets this callback, it will be called by
+> > > uio if userspace closes / munmaps the device after
+> > > uio_unregister_device was executed.
+> > > 
+> > > That way we can use uio_unregister_device() to notify userspace
+> > > that we are going to destroy the device, but still get a call
+> > > to late_release when uio device is finally closed.
+> > > 
+> > > Signed-off-by: Bodo Stroesser <bostroesser@gmail.com>
+> > > ---
+> > >   Documentation/driver-api/uio-howto.rst | 10 ++++++++++
+> > >   drivers/uio/uio.c                      |  4 ++++
+> > >   include/linux/uio_driver.h             |  4 ++++
+> > >   3 files changed, 18 insertions(+)
+> > > 
+> > > diff --git a/Documentation/driver-api/uio-howto.rst b/Documentation/driver-api/uio-howto.rst
+> > > index 907ffa3b38f5..a2d57a7d623a 100644
+> > > --- a/Documentation/driver-api/uio-howto.rst
+> > > +++ b/Documentation/driver-api/uio-howto.rst
+> > > @@ -265,6 +265,16 @@ the members are required, others are optional.
+> > >      function. The parameter ``irq_on`` will be 0 to disable interrupts
+> > >      and 1 to enable them.
+> > > +-  ``int (*late_release)(struct uio_info *info, struct inode *inode)``:
+> > > +   Optional. If you define your own :c:func:`open()`, you will
+> > > +   in certain cases also want a custom :c:func:`late_release()`
+> > > +   function. If uio device is unregistered - by calling
+> > > +   :c:func:`uio_unregister_device()` - while it is open or mmap'ed by
+> > > +   userspace, the custom :c:func:`release()` function will not be
+> > > +   called when userspace later closes the device. An optionally
+> > > +   specified :c:func:`late_release()` function will be called in that
+> > > +   situation.
+> > > +
+> > >   Usually, your device will have one or more memory regions that can be
+> > >   mapped to user space. For each region, you have to set up a
+> > >   ``struct uio_mem`` in the ``mem[]`` array. Here's a description of the
+> > > diff --git a/drivers/uio/uio.c b/drivers/uio/uio.c
+> > > index ea96e319c8a0..0b2636f8d373 100644
+> > > --- a/drivers/uio/uio.c
+> > > +++ b/drivers/uio/uio.c
+> > > @@ -532,6 +532,8 @@ static int uio_release(struct inode *inode, struct file *filep)
+> > >   	mutex_lock(&idev->info_lock);
+> > >   	if (idev->info && idev->info->release)
+> > >   		ret = idev->info->release(idev->info, inode);
+> > > +	else if (idev->late_info && idev->late_info->late_release)
+> > > +		ret = idev->late_info->late_release(idev->late_info, inode);
+> > >   	mutex_unlock(&idev->info_lock);
+> > 
+> > Why can't release() be called here?  Why doesn't your driver define a
+> > release() if it cares about this information?  Why do we need 2
+> > different callbacks that fire at exactly the same time?
+> > 
+> > This feels really wrong.
+> > 
+> > greg k-h
+> > 
 > 
-> Hi Doug, I tried this patch on top of below iouring patch series -
-> "[v3,1/4] add io_uring with IOPOLL support in scsi layer"
-> 
-> After applying patch, I am seeing an IO hang issue - I see
-> io_wqe_worker goes into a tight loop.
-> 
-> 18210 root      20   0 1316348   3552   2376 R  99.1   0.0   0:24.09
-> fio                                       18303 root      20   0
-> 0      0      0 D  78.8   0.0   0:01.75 io_wqe_worker-0
->             18219 root      20   0       0      0      0 R  71.7   0.0
->   0:06.59 io_wqe_worker-0
-> 
-> 
-> I used below command -
-> insmod drivers/scsi/scsi_debug.ko dev_size_mb=1024 sector_size=512
-> add_host=24 per_host_store=1 ndelay=10000 host_max_queue=32
-> submit_queues=76 num_parts=1 poll_queues=8
-> 
-> and here is my fio script -
-> [global]
-> ioengine=io_uring
-> hipri=1
-> direct=1
-> runtime=30s
-> rw=randread
-> norandommap
-> bs=4k
-> iodepth=64
+> tcmu has a release callback. But uio can't call it after
+> uio_unregister_device was executed, because in uio_unregister_device
+> uio sets the uio_device::info to NULL.
 
-Kashyap,
-There is another issue here, namely iodepth > host_max_queue (64 > 32)
-and in my setup that is not handled well. So there is a problem with
-scsi_debug *** or the mid-level in handling this case.
+As it should because the driver could then be gone.  It should NEVER
+call back into it again.
 
-If you have modified the sd driver to call blk_poll() then perhaps
-you could try the above test again with a reduced iodepth.
+> So, uio would never call both callbacks for the same release action,
+> but would call release before uio_unregister_device is executed, and
+> late_release after that.
 
-Doug Gilbert
+That's not ok.
 
-*** the scsi_debug should either yield a TASK SET FULL status or return
-     SCSI_MLQUEUE_HOST_BUSY from queuecommand() when it has run out of
-     slots.
+> Of course it would be good for tcmu if uio would call uio_info:release even
+> after uio_unregister_device, but changing this AFAICS could cause
+> trouble in other drivers using uio.
 
-> [seqprecon]
-> filename=/dev/sdd
-> [seqprecon]
-> filename=/dev/sde
-> [seqprecon]
-> filename=/dev/sdf
-> 
-> 
-> I will ask Martin to pick all the patches from "[v3,1/4] add io_uring
-> with IOPOLL support in the scsi layer" except scsi_debug. We can work
-> on scsi_debug and send standalone patch.
-> 
-> Kashyap
+You are confusing two different lifetime rules here it seems.  One is
+the char device and one is the struct device.  They work independently
+as different users affect them.
+
+So if one is removed from the system, do not try to keep a callback to
+it, otherwise you will crash.
+
+And why is scsi using the uio driver in the first place?  That feels
+really odd to me.  Why not just make a "real" driver if you want to
+somehow tie these two lifetimes together?
+
+thanks,
+
+greg k-h
