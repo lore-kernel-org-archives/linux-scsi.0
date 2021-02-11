@@ -5,65 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE,
-	TVD_PH_BODY_META_ALL,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB25EC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:46:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F107C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:46:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9160C64E44
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:46:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2857164E45
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:46:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230163AbhBKXqm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Feb 2021 18:46:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46614 "EHLO
+        id S230176AbhBKXqp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Feb 2021 18:46:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230131AbhBKXqQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 18:46:16 -0500
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3F0CC0617A9
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:00 -0800 (PST)
-Received: by mail-pj1-x102a.google.com with SMTP id gb24so4366553pjb.4
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:00 -0800 (PST)
+        with ESMTP id S230148AbhBKXqR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 18:46:17 -0500
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3447EC0617AA
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:01 -0800 (PST)
+Received: by mail-pf1-x430.google.com with SMTP id w18so4714067pfu.9
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=2O4odr6JI6gMFgyZB8ERLRgGVnXTqS1MF9Gbv5df7ss=;
-        b=nK7xKn0sdRh/ciaNv/bq/8PPp0grcsRYUVFhPnmYxUNI7USfwTgRxz7JWNZn5a+/xG
-         4Lvz6CKHaC6trXWawj0Ksr4YN1KMKN1W1/BlZRaO76mY+02CpLy9KP4IGRbIXHgPg8rl
-         8mJqlnbNp5VeXdo++ItgEKbsAEbst1IyCK5upWLd8Fep6M281LwD4ExiWeuSvZB8IPWr
-         hLrQG4qYGXG4bvWOcbQ5qMQIewp+I49Kg6ZfLFBy6Tsk81O+K1zNq9sgb8QO4CK3NeaD
-         TlK95PPCOyczLmROCtQ5O81bq8GbMQCznJntrH9zmSKkY+K0/btU9+xCJwIlqzl9sRxN
-         U/EQ==
+        bh=CxsMad5k/3ffEXYeNG0RvxIidWONStWnXltbzLNu+Js=;
+        b=eUZHnC41Tqfn23dGqijyguRg8BeBPoGjWUVtr6u8FFNT43SOXw4YdpEgcjrDETaG+w
+         PdHnUCd8EdqfmxpSi7GlfPNiytqdBY6ByBcaCCeAoWO6f0t8Z4EfXfn9rIO6SDlWf7If
+         By1mEn7GwIOnI22X2D8M/MYL1bSu/Sv2mkwaypzf6vvFWgimzV0H5tbUhUrco7bIdgTd
+         731uOXjHWtuP9LvtHELNWHMqcWB+mhwAeMT44C0LqbQNjAX3hv9nqMejpZpBqoCsDUVm
+         8mbs6MyaQhVQjxbw+FDk751pwJ6dhGjKFLbMOMcxt+y9SuwcEpiNAV7GtX5HtFsz04Ri
+         3VDw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=2O4odr6JI6gMFgyZB8ERLRgGVnXTqS1MF9Gbv5df7ss=;
-        b=Wbai4gmF0nsAjOHsbVeYTOtIxzz6cuXWjgT6K+cYiKM8jhvyOZCIfh29Ar1yaMNYJW
-         TO0lRXKq61snLLJIjuGqF0ScjBuiaV3y2YteJhIGa2KNyoT5GMCvDOZiGsz54Sj3xKxy
-         KD/CX59U44jpXPkbBw74ghTtp7cMSjYd7m1rktzUFMoCiaNgaACAE2J9TZkpw8jpqSzA
-         QXlwGeW+sUWaqarKMribVWANPnHOqT6a3cYLsnbLEedA1XQUbk6A8gaHw233I6NZVK84
-         W87h9NzTz/1AQuP05K/59TlBC+BWaa9TEMXhulBtvyV8bWO4UtkPnKDtD5rEnueAkS+/
-         25PA==
-X-Gm-Message-State: AOAM5302I1ib90HnJzrNHSvitkfBBHesH9EHINpJAsJ/FnfxWMCVlKWg
-        d8cryUxBgsBJ4OzXjNzMEhNb0SGqSB8=
-X-Google-Smtp-Source: ABdhPJysIyoZs58K6LUE+/hOdO1bhumDo/39L6IeZKJiLrLDUVnKNxevXTYWcx9UxSFhM5c0OFg6sA==
-X-Received: by 2002:a17:903:2285:b029:e1:58a2:b937 with SMTP id b5-20020a1709032285b02900e158a2b937mr286065plh.68.1613087099913;
-        Thu, 11 Feb 2021 15:44:59 -0800 (PST)
+        bh=CxsMad5k/3ffEXYeNG0RvxIidWONStWnXltbzLNu+Js=;
+        b=Mq2RG1XrsHG4gUBgga9xU/Po0oK0F8t7r2XjmKFflYFAFYOXGmIbO90OrNoEIRjQZD
+         Q2HWtSiXS35qN12OjVsQF5tlRLvTEgfOfGTsnklIU8JXU1ko4NQAJ7/UsUCDb9sMuULU
+         KRZ1rnCDu9oLGZttrbisgHGAND/Hg+2qHsE/p5pllQARMNxS6+9u9jy75hrKLRP9sMnl
+         KaT6cPTsiyVYrYOcuMMzhy/iRIfvjMfwXP/Sl8y5eEJ+CElanScG4wfOxsnzOympVR9W
+         hZLUbPFCTtLQ46+zY05KG6WU888gvs99FEmYl3p2MIU4H93Bcbt6w2zoyh0JsY651v9G
+         +U3Q==
+X-Gm-Message-State: AOAM531ACIQWXEMXuPbZoYYdoy2HaXoTKsWJdK0dqzKg9rQ+fCzIwHhm
+        A4vhHb4MczDtRwmLqc1OEJtIzss823k=
+X-Google-Smtp-Source: ABdhPJwmbIfhIjrYtC75Ar7Iy+dwk8XQASfBCreUvoZDqodQzsitIYHXwmcLlPFP8PMz81CClN8OCA==
+X-Received: by 2002:a62:1c84:0:b029:1c4:f959:7b29 with SMTP id c126-20020a621c840000b02901c4f9597b29mr361001pfc.34.1613087100620;
+        Thu, 11 Feb 2021 15:45:00 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id i67sm6808035pfe.19.2021.02.11.15.44.59
+        by smtp.gmail.com with ESMTPSA id i67sm6808035pfe.19.2021.02.11.15.45.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Feb 2021 15:44:59 -0800 (PST)
+        Thu, 11 Feb 2021 15:45:00 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 13/22] lpfc: Fix PLOGI ACC to be transmit after REG_LOGIN
-Date:   Thu, 11 Feb 2021 15:44:34 -0800
-Message-Id: <20210211234443.3107-14-jsmart2021@gmail.com>
+Subject: [PATCH 14/22] lpfc: Fix ADISC handling that never frees nodes
+Date:   Thu, 11 Feb 2021 15:44:35 -0800
+Message-Id: <20210211234443.3107-15-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210211234443.3107-1-jsmart2021@gmail.com>
 References: <20210211234443.3107-1-jsmart2021@gmail.com>
@@ -73,357 +72,89 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver is seeing a scenario where PLOGI response was issued and
-traffic is arriving while the adapter is still setting up the login
-context. This is resulting in errors handling the traffic.
+While testing target port swap test with ADISC enabled, several nodes
+remain in UNUSED state. These nodes are never freed and rmmod hangs
+for long time before finising with "0233 Nodelist not empty" error.
 
-Change the driver so that PLOGI response is sent after the login context
-has been setup to avoid the situation.
+During PLOGI completion lpfc_plogi_confirm_nport() looks for existing
+nodes with same WWPN. If found, the existing node is used to continue
+discovery. The node on which plogi was performed is freed.  When ADISC
+is enabled, an ADISC els request is triggered in response to an RSCN.
+It's possible that the ADISC may be rejected by the remote port causing
+the ADISC completion handler to clear the port and node name in the node.
+If this occurs, if a PLOGI is received it causes a node lookup based on
+wwpn to now fail, causing the port swap logic to kick in which allocates
+a new node and swaps to it. This effectively orphans the original node
+structure.
+
+Fix the situation by detecting when the lookup fails and forgo the node
+swap and node allocation by using the node on which the PLOGI was issued.
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 239 +++++++++--------------------
- 1 file changed, 70 insertions(+), 169 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 33 +++++++--------------------------
+ 1 file changed, 7 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 57e4aef8a9a3..090a4232bfa8 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -279,106 +279,43 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
- 	lpfc_cancel_retry_delay_tmo(phba->pport, ndlp);
- }
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index fc70b4a23c8e..a96536988ca1 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1608,7 +1608,7 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+ 	struct lpfc_nodelist *new_ndlp;
+ 	struct serv_parm *sp;
+ 	uint8_t  name[sizeof(struct lpfc_name)];
+-	uint32_t rc, keepDID = 0, keep_nlp_flag = 0;
++	uint32_t keepDID = 0, keep_nlp_flag = 0;
+ 	uint32_t keep_new_nlp_flag = 0;
+ 	uint16_t keep_nlp_state;
+ 	u32 keep_nlp_fc4_type = 0;
+@@ -1630,7 +1630,7 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+ 	new_ndlp = lpfc_findnode_wwpn(vport, &sp->portName);
  
--/* lpfc_defer_pt2pt_acc - Complete SLI3 pt2pt processing on link up
-+/* lpfc_defer_plogi_acc - Issue PLOGI ACC after reg_login completes
-  * @phba: pointer to lpfc hba data structure.
-- * @link_mbox: pointer to CONFIG_LINK mailbox object
-+ * @login_mbox: pointer to REG_RPI mailbox object
-  *
-- * This routine is only called if we are SLI3, direct connect pt2pt
-- * mode and the remote NPort issues the PLOGI after link up.
-+ * The ACC for a rcv'ed PLOGI is deferred until AFTER the REG_RPI completes
-  */
- static void
--lpfc_defer_pt2pt_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *link_mbox)
-+lpfc_defer_plogi_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *login_mbox)
- {
--	LPFC_MBOXQ_t *login_mbox;
--	MAILBOX_t *mb = &link_mbox->u.mb;
- 	struct lpfc_iocbq *save_iocb;
- 	struct lpfc_nodelist *ndlp;
-+	MAILBOX_t *mb = &login_mbox->u.mb;
+ 	/* return immediately if the WWPN matches ndlp */
+-	if (new_ndlp == ndlp)
++	if (!new_ndlp || (new_ndlp == ndlp))
+ 		return ndlp;
+ 
+ 	if (phba->sli_rev == LPFC_SLI_REV4) {
+@@ -1649,30 +1649,11 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+ 			 (new_ndlp ? new_ndlp->nlp_flag : 0),
+ 			 (new_ndlp ? new_ndlp->nlp_fc4_type : 0));
+ 
+-	if (!new_ndlp) {
+-		rc = memcmp(&ndlp->nlp_portname, name,
+-			    sizeof(struct lpfc_name));
+-		if (!rc) {
+-			if (active_rrqs_xri_bitmap)
+-				mempool_free(active_rrqs_xri_bitmap,
+-					     phba->active_rrq_pool);
+-			return ndlp;
+-		}
+-		new_ndlp = lpfc_nlp_init(vport, ndlp->nlp_DID);
+-		if (!new_ndlp) {
+-			if (active_rrqs_xri_bitmap)
+-				mempool_free(active_rrqs_xri_bitmap,
+-					     phba->active_rrq_pool);
+-			return ndlp;
+-		}
+-	} else {
+-		keepDID = new_ndlp->nlp_DID;
+-		if (phba->sli_rev == LPFC_SLI_REV4 &&
+-		    active_rrqs_xri_bitmap)
+-			memcpy(active_rrqs_xri_bitmap,
+-			       new_ndlp->active_rrqs_xri_bitmap,
+-			       phba->cfg_rrq_xri_bitmap_sz);
+-	}
++	keepDID = new_ndlp->nlp_DID;
 +
- 	int rc;
++	if (phba->sli_rev == LPFC_SLI_REV4 && active_rrqs_xri_bitmap)
++		memcpy(active_rrqs_xri_bitmap, new_ndlp->active_rrqs_xri_bitmap,
++		       phba->cfg_rrq_xri_bitmap_sz);
  
--	ndlp = link_mbox->ctx_ndlp;
--	login_mbox = link_mbox->context3;
-+	ndlp = login_mbox->ctx_ndlp;
- 	save_iocb = login_mbox->context3;
--	link_mbox->context3 = NULL;
--	login_mbox->context3 = NULL;
--
--	/* Check for CONFIG_LINK error */
--	if (mb->mbxStatus) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"4575 CONFIG_LINK fails pt2pt discovery: %x\n",
--				mb->mbxStatus);
--		mempool_free(login_mbox, phba->mbox_mem_pool);
--		mempool_free(link_mbox, phba->mbox_mem_pool);
--		kfree(save_iocb);
--		return;
--	}
- 
--	/* Now that CONFIG_LINK completed, and our SID is configured,
--	 * we can now proceed with sending the PLOGI ACC.
--	 */
--	rc = lpfc_els_rsp_acc(link_mbox->vport, ELS_CMD_PLOGI,
--			      save_iocb, ndlp, login_mbox);
--	if (rc) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"4576 PLOGI ACC fails pt2pt discovery: %x\n",
--				rc);
--		mempool_free(login_mbox, phba->mbox_mem_pool);
-+	if (mb->mbxStatus == MBX_SUCCESS) {
-+		/* Now that REG_RPI completed successfully,
-+		 * we can now proceed with sending the PLOGI ACC.
-+		 */
-+		rc = lpfc_els_rsp_acc(login_mbox->vport, ELS_CMD_PLOGI,
-+				      save_iocb, ndlp, NULL);
-+		if (rc) {
-+			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
-+					"4576 PLOGI ACC fails pt2pt discovery: "
-+					"DID %x Data: %x\n", ndlp->nlp_DID, rc);
-+		}
- 	}
- 
--	mempool_free(link_mbox, phba->mbox_mem_pool);
-+	/* Now process the REG_RPI cmpl */
-+	lpfc_mbx_cmpl_reg_login(phba, login_mbox);
-+	ndlp->nlp_flag &= ~NLP_ACC_REGLOGIN;
- 	kfree(save_iocb);
- }
- 
--/**
-- * lpfc_defer_tgt_acc - Progress SLI4 target rcv PLOGI handler
-- * @phba: Pointer to HBA context object.
-- * @pmb: Pointer to mailbox object.
-- *
-- * This function provides the unreg rpi mailbox completion handler for a tgt.
-- * The routine frees the memory resources associated with the completed
-- * mailbox command and transmits the ELS ACC.
-- *
-- * This routine is only called if we are SLI4, acting in target
-- * mode and the remote NPort issues the PLOGI after link up.
-- **/
--static void
--lpfc_defer_acc_rsp(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
--{
--	struct lpfc_vport *vport = pmb->vport;
--	struct lpfc_nodelist *ndlp = pmb->ctx_ndlp;
--	LPFC_MBOXQ_t *mbox = pmb->context3;
--	struct lpfc_iocbq *piocb = NULL;
--	int rc;
--
--	if (mbox) {
--		pmb->context3 = NULL;
--		piocb = mbox->context3;
--		mbox->context3 = NULL;
--	}
--
--	/*
--	 * Complete the unreg rpi mbx request, and update flags.
--	 * This will also restart any deferred events.
--	 */
--	lpfc_sli4_unreg_rpi_cmpl_clr(phba, pmb);
--
--	if (!piocb) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--				 "4578 PLOGI ACC fail\n");
--		if (mbox)
--			mempool_free(mbox, phba->mbox_mem_pool);
--		return;
--	}
--
--	rc = lpfc_els_rsp_acc(vport, ELS_CMD_PLOGI, piocb, ndlp, mbox);
--	if (rc) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--				 "4579 PLOGI ACC fail %x\n", rc);
--		if (mbox)
--			mempool_free(mbox, phba->mbox_mem_pool);
--	}
--	kfree(piocb);
--}
--
- static int
- lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	       struct lpfc_iocbq *cmdiocb)
-@@ -395,8 +332,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	struct lpfc_iocbq *save_iocb;
- 	struct ls_rjt stat;
- 	uint32_t vid, flag;
--	u16 rpi;
--	int rc, defer_acc;
-+	int rc;
- 
- 	memset(&stat, 0, sizeof (struct ls_rjt));
- 	pcmd = (struct lpfc_dmabuf *) cmdiocb->context2;
-@@ -445,7 +381,6 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	else
- 		ndlp->nlp_fcp_info |= CLASS3;
- 
--	defer_acc = 0;
- 	ndlp->nlp_class_sup = 0;
- 	if (sp->cls1.classValid)
- 		ndlp->nlp_class_sup |= FC_COS_CLASS1;
-@@ -549,27 +484,26 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 
- 		memcpy(&phba->fc_fabparam, sp, sizeof(struct serv_parm));
- 
--		/* Issue config_link / reg_vfi to account for updated TOV's */
--
-+		/* Issue CONFIG_LINK for SLI3 or REG_VFI for SLI4,
-+		 * to account for updated TOV's / parameters
-+		 */
- 		if (phba->sli_rev == LPFC_SLI_REV4)
- 			lpfc_issue_reg_vfi(vport);
- 		else {
--			defer_acc = 1;
- 			link_mbox = mempool_alloc(phba->mbox_mem_pool,
- 						  GFP_KERNEL);
- 			if (!link_mbox)
- 				goto out;
- 			lpfc_config_link(phba, link_mbox);
--			link_mbox->mbox_cmpl = lpfc_defer_pt2pt_acc;
-+			link_mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
- 			link_mbox->vport = vport;
- 			link_mbox->ctx_ndlp = ndlp;
- 
--			save_iocb = kzalloc(sizeof(*save_iocb), GFP_KERNEL);
--			if (!save_iocb)
-+			rc = lpfc_sli_issue_mbox(phba, link_mbox, MBX_NOWAIT);
-+			if (rc == MBX_NOT_FINISHED) {
-+				mempool_free(link_mbox, phba->mbox_mem_pool);
- 				goto out;
--			/* Save info from cmd IOCB used in rsp */
--			memcpy((uint8_t *)save_iocb, (uint8_t *)cmdiocb,
--			       sizeof(struct lpfc_iocbq));
-+			}
- 		}
- 
- 		lpfc_can_disctmo(vport);
-@@ -588,59 +522,28 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	if (!login_mbox)
- 		goto out;
- 
--	/* Registering an existing RPI behaves differently for SLI3 vs SLI4 */
--	if (phba->nvmet_support && !defer_acc) {
--		link_mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
--		if (!link_mbox)
--			goto out;
--
--		/* As unique identifiers such as iotag would be overwritten
--		 * with those from the cmdiocb, allocate separate temporary
--		 * storage for the copy.
--		 */
--		save_iocb = kzalloc(sizeof(*save_iocb), GFP_KERNEL);
--		if (!save_iocb)
--			goto out;
--
--		/* Unreg RPI is required for SLI4. */
--		rpi = phba->sli4_hba.rpi_ids[ndlp->nlp_rpi];
--		lpfc_unreg_login(phba, vport->vpi, rpi, link_mbox);
--		link_mbox->vport = vport;
--		link_mbox->ctx_ndlp = lpfc_nlp_get(ndlp);
--		if (!link_mbox->ctx_ndlp)
--			goto out;
--
--		link_mbox->mbox_cmpl = lpfc_defer_acc_rsp;
--
--		if (((ndlp->nlp_DID & Fabric_DID_MASK) != Fabric_DID_MASK) &&
--		    (!(vport->fc_flag & FC_OFFLINE_MODE)))
--			ndlp->nlp_flag |= NLP_UNREG_INP;
-+	save_iocb = kzalloc(sizeof(*save_iocb), GFP_KERNEL);
-+	if (!save_iocb)
-+		goto out;
- 
--		/* Save info from cmd IOCB used in rsp */
--		memcpy(save_iocb, cmdiocb, sizeof(*save_iocb));
-+	/* Save info from cmd IOCB to be used in rsp after all mbox completes */
-+	memcpy((uint8_t *)save_iocb, (uint8_t *)cmdiocb,
-+	       sizeof(struct lpfc_iocbq));
- 
--		/* Delay sending ACC till unreg RPI completes. */
--		defer_acc = 1;
--	} else if (phba->sli_rev == LPFC_SLI_REV4)
-+	/* Registering an existing RPI behaves differently for SLI3 vs SLI4 */
-+	if (phba->sli_rev == LPFC_SLI_REV4)
- 		lpfc_unreg_rpi(vport, ndlp);
- 
-+	/* Issue REG_LOGIN first, before ACCing the PLOGI, thus we will
-+	 * always be deferring the ACC.
-+	 */
- 	rc = lpfc_reg_rpi(phba, vport->vpi, icmd->un.rcvels.remoteID,
- 			    (uint8_t *)sp, login_mbox, ndlp->nlp_rpi);
- 	if (rc)
- 		goto out;
- 
--	/* ACC PLOGI rsp command needs to execute first,
--	 * queue this login_mbox command to be processed later.
--	 */
- 	login_mbox->mbox_cmpl = lpfc_mbx_cmpl_reg_login;
--	/*
--	 * login_mbox->ctx_ndlp = lpfc_nlp_get(ndlp) deferred until mailbox
--	 * command issued in lpfc_cmpl_els_acc().
--	 */
- 	login_mbox->vport = vport;
--	spin_lock_irq(&ndlp->lock);
--	ndlp->nlp_flag |= (NLP_ACC_REGLOGIN | NLP_RCV_PLOGI);
--	spin_unlock_irq(&ndlp->lock);
- 
- 	/*
- 	 * If there is an outstanding PLOGI issued, abort it before
-@@ -670,7 +573,8 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		 * to register, then unregister the RPI.
- 		 */
- 		spin_lock_irq(&ndlp->lock);
--		ndlp->nlp_flag |= NLP_RM_DFLT_RPI;
-+		ndlp->nlp_flag |= (NLP_RM_DFLT_RPI | NLP_ACC_REGLOGIN |
-+				   NLP_RCV_PLOGI);
- 		spin_unlock_irq(&ndlp->lock);
- 		stat.un.b.lsRjtRsnCode = LSRJT_INVALID_CMD;
- 		stat.un.b.lsRjtRsnCodeExp = LSEXP_NOTHING_MORE;
-@@ -680,42 +584,39 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 			mempool_free(login_mbox, phba->mbox_mem_pool);
- 		return 1;
- 	}
--	if (defer_acc) {
--		/* So the order here should be:
--		 * SLI3 pt2pt
--		 *   Issue CONFIG_LINK mbox
--		 *   CONFIG_LINK cmpl
--		 * SLI4 tgt
--		 *   Issue UNREG RPI mbx
--		 *   UNREG RPI cmpl
--		 * Issue PLOGI ACC
--		 * PLOGI ACC cmpl
--		 * Issue REG_LOGIN mbox
--		 */
- 
--		/* Save the REG_LOGIN mbox for and rcv IOCB copy later */
--		link_mbox->context3 = login_mbox;
--		login_mbox->context3 = save_iocb;
-+	/* So the order here should be:
-+	 * SLI3 pt2pt
-+	 *   Issue CONFIG_LINK mbox
-+	 *   CONFIG_LINK cmpl
-+	 * SLI4 pt2pt
-+	 *   Issue REG_VFI mbox
-+	 *   REG_VFI cmpl
-+	 * SLI4
-+	 *   Issue UNREG RPI mbx
-+	 *   UNREG RPI cmpl
-+	 * Issue REG_RPI mbox
-+	 * REG RPI cmpl
-+	 * Issue PLOGI ACC
-+	 * PLOGI ACC cmpl
-+	 */
-+	login_mbox->mbox_cmpl = lpfc_defer_plogi_acc;
-+	login_mbox->ctx_ndlp = lpfc_nlp_get(ndlp);
-+	login_mbox->context3 = save_iocb; /* For PLOGI ACC */
- 
--		/* Start the ball rolling by issuing CONFIG_LINK here */
--		rc = lpfc_sli_issue_mbox(phba, link_mbox, MBX_NOWAIT);
--		if (rc == MBX_NOT_FINISHED)
--			goto out;
--		return 1;
--	}
-+	spin_lock_irq(&ndlp->lock);
-+	ndlp->nlp_flag |= (NLP_ACC_REGLOGIN | NLP_RCV_PLOGI);
-+	spin_unlock_irq(&ndlp->lock);
-+
-+	/* Start the ball rolling by issuing REG_LOGIN here */
-+	rc = lpfc_sli_issue_mbox(phba, login_mbox, MBX_NOWAIT);
-+	if (rc == MBX_NOT_FINISHED)
-+		goto out;
-+	lpfc_nlp_set_state(vport, ndlp, NLP_STE_REG_LOGIN_ISSUE);
- 
--	rc = lpfc_els_rsp_acc(vport, ELS_CMD_PLOGI, cmdiocb, ndlp, login_mbox);
--	if (rc)
--		mempool_free(login_mbox, phba->mbox_mem_pool);
- 	return 1;
- out:
--	if (defer_acc)
--		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"4577 discovery failure: %p %p %p\n",
--				save_iocb, link_mbox, login_mbox);
- 	kfree(save_iocb);
--	if (link_mbox)
--		mempool_free(link_mbox, phba->mbox_mem_pool);
- 	if (login_mbox)
- 		mempool_free(login_mbox, phba->mbox_mem_pool);
- 
+ 	/* At this point in this routine, we know new_ndlp will be
+ 	 * returned. however, any previous GID_FTs that were done
 -- 
 2.26.2
 
