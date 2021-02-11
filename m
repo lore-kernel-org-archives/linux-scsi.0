@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F107C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:46:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 457B0C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:46:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2857164E45
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:46:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1417F64E44
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:46:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230176AbhBKXqp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Feb 2021 18:46:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46616 "EHLO
+        id S230178AbhBKXqs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Feb 2021 18:46:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230148AbhBKXqR (ORCPT
+        with ESMTP id S230150AbhBKXqR (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 18:46:17 -0500
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3447EC0617AA
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF767C0617AB
         for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:01 -0800 (PST)
-Received: by mail-pf1-x430.google.com with SMTP id w18so4714067pfu.9
+Received: by mail-pf1-x429.google.com with SMTP id m6so4732537pfk.1
         for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=CxsMad5k/3ffEXYeNG0RvxIidWONStWnXltbzLNu+Js=;
-        b=eUZHnC41Tqfn23dGqijyguRg8BeBPoGjWUVtr6u8FFNT43SOXw4YdpEgcjrDETaG+w
-         PdHnUCd8EdqfmxpSi7GlfPNiytqdBY6ByBcaCCeAoWO6f0t8Z4EfXfn9rIO6SDlWf7If
-         By1mEn7GwIOnI22X2D8M/MYL1bSu/Sv2mkwaypzf6vvFWgimzV0H5tbUhUrco7bIdgTd
-         731uOXjHWtuP9LvtHELNWHMqcWB+mhwAeMT44C0LqbQNjAX3hv9nqMejpZpBqoCsDUVm
-         8mbs6MyaQhVQjxbw+FDk751pwJ6dhGjKFLbMOMcxt+y9SuwcEpiNAV7GtX5HtFsz04Ri
-         3VDw==
+        bh=HojwSP4OY4K/DWvWvgLZZT3DYlNWcPTcaG9iktTxOp8=;
+        b=nwZlavpoNYbn3VfvgCuITKnEZ8MCJImGMMJAfHOmfnCBX3TKNbUEf6PrP241FBhpDp
+         AddvlKed9eBzTlbzAakCx5Figm1T/j9dcXc7R4KkfsxWT3FzSjM+FNpG6C07T4WQVkht
+         YFJZQozPltFOfRp5FnQhzltTgX1yecsijCXmGv9MsoHaElWp5xx/+UVA2B2dBQ3c7mMM
+         uvvrv1+ljR0myzhPZAJn3tBc1rLdrOy7v2uKUzpP4WdUe/LcflwoGETIcQ/ub527+0nn
+         coClPP+uIFFbtXI5NBAytCiMXmzhz/lvMgmgwncwAZ8LSCL7t/TSWE9csnMPU7fIB5Au
+         v8Tw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=CxsMad5k/3ffEXYeNG0RvxIidWONStWnXltbzLNu+Js=;
-        b=Mq2RG1XrsHG4gUBgga9xU/Po0oK0F8t7r2XjmKFflYFAFYOXGmIbO90OrNoEIRjQZD
-         Q2HWtSiXS35qN12OjVsQF5tlRLvTEgfOfGTsnklIU8JXU1ko4NQAJ7/UsUCDb9sMuULU
-         KRZ1rnCDu9oLGZttrbisgHGAND/Hg+2qHsE/p5pllQARMNxS6+9u9jy75hrKLRP9sMnl
-         KaT6cPTsiyVYrYOcuMMzhy/iRIfvjMfwXP/Sl8y5eEJ+CElanScG4wfOxsnzOympVR9W
-         hZLUbPFCTtLQ46+zY05KG6WU888gvs99FEmYl3p2MIU4H93Bcbt6w2zoyh0JsY651v9G
-         +U3Q==
-X-Gm-Message-State: AOAM531ACIQWXEMXuPbZoYYdoy2HaXoTKsWJdK0dqzKg9rQ+fCzIwHhm
-        A4vhHb4MczDtRwmLqc1OEJtIzss823k=
-X-Google-Smtp-Source: ABdhPJwmbIfhIjrYtC75Ar7Iy+dwk8XQASfBCreUvoZDqodQzsitIYHXwmcLlPFP8PMz81CClN8OCA==
-X-Received: by 2002:a62:1c84:0:b029:1c4:f959:7b29 with SMTP id c126-20020a621c840000b02901c4f9597b29mr361001pfc.34.1613087100620;
-        Thu, 11 Feb 2021 15:45:00 -0800 (PST)
+        bh=HojwSP4OY4K/DWvWvgLZZT3DYlNWcPTcaG9iktTxOp8=;
+        b=cTi48ZjibGeIW1/ROoKm6olFbO2/xgRsAGOR7taqURqWc4FLGPRRNL8j54wmvAW/SX
+         qYh6yBUUU+moe+Uo81fiHZaf1EiN96Dxi8UkQgFAAZsFMrG5bpz5LmyD/jwL7RS2Fj7/
+         woukai+XIwAVQViMp0jjiACJFEYX5Vym+QbKQ4hdu3gRiQ/vvuyFywtbb1WIazK86Mh2
+         R4f3BTDGKqD1hN8aGsAuA/PtH1OxEN3lag1lyf6EFWTLy3jEzQYNyjGQO24vYVP7D+m+
+         RBKmrkVkuz53+iQAgzS1MtN70FrJLuliH5ScACRu4dU00qMSo3PsglhoW6uGvaqIZlb2
+         x8kw==
+X-Gm-Message-State: AOAM530Ux+wcD1hJ7HknkObX+q6Suh5Uxfod89MgC/E1+Ico4VkB01S1
+        pJHxshx1Ic18Mly5B/w5ZwLXhYGE0I0=
+X-Google-Smtp-Source: ABdhPJyjL5divSReryA9JunU8x2lzcXmBs1d67UZGXFq1NuIbyl/z20t8Et2MaRk7WyWY+5re3ZF7w==
+X-Received: by 2002:a62:78c8:0:b029:1d3:85cc:2133 with SMTP id t191-20020a6278c80000b02901d385cc2133mr404534pfc.65.1613087101390;
+        Thu, 11 Feb 2021 15:45:01 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
         by smtp.gmail.com with ESMTPSA id i67sm6808035pfe.19.2021.02.11.15.45.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Feb 2021 15:45:00 -0800 (PST)
+        Thu, 11 Feb 2021 15:45:01 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 14/22] lpfc: Fix ADISC handling that never frees nodes
-Date:   Thu, 11 Feb 2021 15:44:35 -0800
-Message-Id: <20210211234443.3107-15-jsmart2021@gmail.com>
+Subject: [PATCH 15/22] lpfc: Fix nodeinfo debugfs output
+Date:   Thu, 11 Feb 2021 15:44:36 -0800
+Message-Id: <20210211234443.3107-16-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210211234443.3107-1-jsmart2021@gmail.com>
 References: <20210211234443.3107-1-jsmart2021@gmail.com>
@@ -72,89 +72,55 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-While testing target port swap test with ADISC enabled, several nodes
-remain in UNUSED state. These nodes are never freed and rmmod hangs
-for long time before finising with "0233 Nodelist not empty" error.
+The debugfs nodeinfo output gets jumbled when  no rpri or a defer entry
+is displayed. The misalignment makes it difficult to read.
 
-During PLOGI completion lpfc_plogi_confirm_nport() looks for existing
-nodes with same WWPN. If found, the existing node is used to continue
-discovery. The node on which plogi was performed is freed.  When ADISC
-is enabled, an ADISC els request is triggered in response to an RSCN.
-It's possible that the ADISC may be rejected by the remote port causing
-the ADISC completion handler to clear the port and node name in the node.
-If this occurs, if a PLOGI is received it causes a node lookup based on
-wwpn to now fail, causing the port swap logic to kick in which allocates
-a new node and swaps to it. This effectively orphans the original node
-structure.
-
-Fix the situation by detecting when the lookup fails and forgo the node
-swap and node allocation by using the node on which the PLOGI was issued.
+Change the format to consistently print out a 4 character rpi, and turn
+defer into a suffix.
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 33 +++++++--------------------------
- 1 file changed, 7 insertions(+), 26 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index fc70b4a23c8e..a96536988ca1 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1608,7 +1608,7 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
- 	struct lpfc_nodelist *new_ndlp;
- 	struct serv_parm *sp;
- 	uint8_t  name[sizeof(struct lpfc_name)];
--	uint32_t rc, keepDID = 0, keep_nlp_flag = 0;
-+	uint32_t keepDID = 0, keep_nlp_flag = 0;
- 	uint32_t keep_new_nlp_flag = 0;
- 	uint16_t keep_nlp_state;
- 	u32 keep_nlp_fc4_type = 0;
-@@ -1630,7 +1630,7 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
- 	new_ndlp = lpfc_findnode_wwpn(vport, &sp->portName);
- 
- 	/* return immediately if the WWPN matches ndlp */
--	if (new_ndlp == ndlp)
-+	if (!new_ndlp || (new_ndlp == ndlp))
- 		return ndlp;
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
-@@ -1649,30 +1649,11 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
- 			 (new_ndlp ? new_ndlp->nlp_flag : 0),
- 			 (new_ndlp ? new_ndlp->nlp_fc4_type : 0));
- 
--	if (!new_ndlp) {
--		rc = memcmp(&ndlp->nlp_portname, name,
--			    sizeof(struct lpfc_name));
--		if (!rc) {
--			if (active_rrqs_xri_bitmap)
--				mempool_free(active_rrqs_xri_bitmap,
--					     phba->active_rrq_pool);
--			return ndlp;
--		}
--		new_ndlp = lpfc_nlp_init(vport, ndlp->nlp_DID);
--		if (!new_ndlp) {
--			if (active_rrqs_xri_bitmap)
--				mempool_free(active_rrqs_xri_bitmap,
--					     phba->active_rrq_pool);
--			return ndlp;
--		}
--	} else {
--		keepDID = new_ndlp->nlp_DID;
--		if (phba->sli_rev == LPFC_SLI_REV4 &&
--		    active_rrqs_xri_bitmap)
--			memcpy(active_rrqs_xri_bitmap,
--			       new_ndlp->active_rrqs_xri_bitmap,
--			       phba->cfg_rrq_xri_bitmap_sz);
--	}
-+	keepDID = new_ndlp->nlp_DID;
-+
-+	if (phba->sli_rev == LPFC_SLI_REV4 && active_rrqs_xri_bitmap)
-+		memcpy(active_rrqs_xri_bitmap, new_ndlp->active_rrqs_xri_bitmap,
-+		       phba->cfg_rrq_xri_bitmap_sz);
- 
- 	/* At this point in this routine, we know new_ndlp will be
- 	 * returned. however, any previous GID_FTs that were done
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index bc79a017e1a2..689c183485f7 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -869,7 +869,7 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
+ 				"WWNN x%llx ",
+ 				wwn_to_u64(ndlp->nlp_nodename.u.wwn));
+ 		if (ndlp->nlp_flag & NLP_RPI_REGISTERED)
+-			len += scnprintf(buf+len, size-len, "RPI:%03d ",
++			len += scnprintf(buf+len, size-len, "RPI:%04d ",
+ 					ndlp->nlp_rpi);
+ 		else
+ 			len += scnprintf(buf+len, size-len, "RPI:none ");
+@@ -895,7 +895,7 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
+ 		if (ndlp->nlp_type & NLP_NVME_INITIATOR)
+ 			len += scnprintf(buf + len,
+ 					size - len, "NVME_INITIATOR ");
+-		len += scnprintf(buf+len, size-len, "refcnt:%x",
++		len += scnprintf(buf+len, size-len, "refcnt:%d",
+ 			kref_read(&ndlp->kref));
+ 		if (iocnt) {
+ 			i = atomic_read(&ndlp->cmd_pending);
+@@ -904,8 +904,11 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
+ 					i, ndlp->cmd_qdepth);
+ 			outio += i;
+ 		}
+-		len += scnprintf(buf + len, size - len, "defer:%x ",
+-			ndlp->nlp_defer_did);
++		len += scnprintf(buf+len, size-len, " xpt:x%x",
++				 ndlp->fc4_xpt_flags);
++		if (ndlp->nlp_defer_did != NLP_EVT_NOTHING_PENDING)
++			len += scnprintf(buf+len, size-len, " defer:%x",
++					 ndlp->nlp_defer_did);
+ 		len +=  scnprintf(buf+len, size-len, "\n");
+ 	}
+ 	spin_unlock_irq(shost->host_lock);
 -- 
 2.26.2
 
