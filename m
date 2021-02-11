@@ -2,89 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DA50C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 09:47:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D277DC4332D
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 10:19:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D08D964E00
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 09:47:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A81EC64E08
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 10:19:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230038AbhBKJrV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Feb 2021 04:47:21 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:35854 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229939AbhBKJhh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 11 Feb 2021 04:37:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1613036162;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=yrH14ThSpslMqaxU9hfy00CpYCwozqauB+Xha4aC2vk=;
-        b=FoRymX0tRzyHXp2+bOKNFF7/SiRusHkQtAf+I+nLtImZHBUwzNNv4SmDuMeJnIJ2EYa7Ud
-        en4iFjCJ02B4hjy+8aJhPQVv09LkzjIQF6uer+xWVKK4vy1/CAlgqwkVfTgoz1CcWlAUfx
-        6TGyIRrzz05XRJdlsnIzGBWSwzyKip4=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-168-JKIb-o8XNuCDqwxBLKRv5A-1; Thu, 11 Feb 2021 04:36:00 -0500
-X-MC-Unique: JKIb-o8XNuCDqwxBLKRv5A-1
-Received: by mail-pj1-f71.google.com with SMTP id gx14so3418713pjb.6
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 01:36:00 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=yrH14ThSpslMqaxU9hfy00CpYCwozqauB+Xha4aC2vk=;
-        b=d0coDsb+nvzicu8D8ncCRgYw+GC/rWOVXNc92i4hyj8uEMz67RHoY08txkzNaxtO7v
-         RvF4zwYOQ/SVGZht52PQPYUkgiSllJL/WXDUVbTx68p1GnBboEnlXTErHLi8eimEkv2C
-         0jEjE0okd1N70yH/UNjLZHcSeJ2IuxJKJxz0WLHTUKvYSj1dGo5nIFR0tBDgiwOg6QrO
-         fU3vPfCeEwXLFYBok3I18pEwA1BB768fGmzyl17s/S2JeRWwvTs9zrRbJ+NfVJnPPkvg
-         utnsW68S1JB2T9Sizzs12KkGJYbTgM0zQDDGq6Ki+LHYzh/jz7L3rbdOVQRF1y926rYx
-         OFuA==
-X-Gm-Message-State: AOAM5321ATpp9jyy3w9KWwsdWObXZsv5+k6Ln73MKQvH4TtKlQuP4pht
-        x3nkRz4rSKVNGAyo/S3RcdbWjGNcgW7gT6LBt5WHCQ9z5VmmLm0tuzGzc0p7k5dTD4Yx7gslvQm
-        cFrwlgAhLh2xR5OwuoAvZLA==
-X-Received: by 2002:a17:90b:4a8c:: with SMTP id lp12mr3150910pjb.214.1613036159714;
-        Thu, 11 Feb 2021 01:35:59 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJzX5s6369kWgAFyoKTN1EnUhX28RncCcpO0G+q/leGwlQX5B7qbMMkpk7dNzP4jkl0D3uCh/A==
-X-Received: by 2002:a17:90b:4a8c:: with SMTP id lp12mr3150881pjb.214.1613036159432;
-        Thu, 11 Feb 2021 01:35:59 -0800 (PST)
-Received: from machine1 ([171.50.216.159])
-        by smtp.gmail.com with ESMTPSA id p12sm4469782pju.35.2021.02.11.01.35.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Feb 2021 01:35:58 -0800 (PST)
-Date:   Thu, 11 Feb 2021 15:05:52 +0530
-From:   "Milan P. Gandhi" <mgandhi@redhat.com>
-To:     kernel-janitors@vger.kernel.org
-Cc:     GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
-        njavali@marvell.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Subject: [PATCH] scsi: qla2xxx: Removed extra space in variable declaration.
-Message-ID: <20210211093552.GA5375@machine1>
+        id S229988AbhBKKTv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Feb 2021 05:19:51 -0500
+Received: from mx2.suse.de ([195.135.220.15]:40916 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229639AbhBKKS1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 11 Feb 2021 05:18:27 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1613038660; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=in+h4lBDIRM6mJ7t9cKXZa5bGbgsEjGF9LUcGBiK4pw=;
+        b=V6/nHildAeeP4mTaW9pkNSIVN3W5JG7oTeZ/pm8uEYQwO4UvFiHUpuKpMve/BpBv1v2hDc
+        zSTmNSzLpmjpGw4gEVI+1q7BnJ17tQmdjF7FJ39oRAfLmWt2kbB7tj8L2NeYypbl1pGYHA
+        D4i8R84Uh3YQj183ZThezUvLnAY9qNY=
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 2F54EADA2;
+        Thu, 11 Feb 2021 10:17:40 +0000 (UTC)
+From:   Juergen Gross <jgross@suse.com>
+To:     xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     Juergen Gross <jgross@suse.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        stable@vger.kernel.org, Wei Liu <wei.liu@kernel.org>,
+        Paul Durrant <paul@xen.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
+        Jens Axboe <axboe@kernel.dk>
+Subject: [PATCH v2 0/8] xen/events: bug fixes and some diagnostic aids
+Date:   Thu, 11 Feb 2021 11:16:08 +0100
+Message-Id: <20210211101616.13788-1-jgross@suse.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.11.3 (2019-02-01)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
----
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index ab45ac1e5a72..7f2db8badb6d 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -226,7 +226,7 @@ qla2x00_sysfs_write_nvram(struct file *filp, struct kobject *kobj,
- 	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
- 	struct qla_hw_data *ha = vha->hw;
--	uint16_t	cnt;
-+	uint16_t cnt;
- 
- 	if (!capable(CAP_SYS_ADMIN) || off != 0 || count != ha->nvram_size ||
- 	    !ha->isp_ops->write_nvram)
+The first four patches are fixes for XSA-332. The avoid WARN splats
+and a performance issue with interdomain events.
+
+Patches 5 and 6 are some additions to event handling in order to add
+some per pv-device statistics to sysfs and the ability to have a per
+backend device spurious event delay control.
+
+Patches 7 and 8 are minor fixes I had lying around.
+
+Juergen Gross (8):
+  xen/events: reset affinity of 2-level event when tearing it down
+  xen/events: don't unmask an event channel when an eoi is pending
+  xen/events: avoid handling the same event on two cpus at the same time
+  xen/netback: fix spurious event detection for common event case
+  xen/events: link interdomain events to associated xenbus device
+  xen/events: add per-xenbus device event statistics and settings
+  xen/evtchn: use smp barriers for user event ring
+  xen/evtchn: use READ/WRITE_ONCE() for accessing ring indices
+
+ .../ABI/testing/sysfs-devices-xenbus          |  41 ++++
+ drivers/block/xen-blkback/xenbus.c            |   2 +-
+ drivers/net/xen-netback/interface.c           |  24 ++-
+ drivers/xen/events/events_2l.c                |  22 +-
+ drivers/xen/events/events_base.c              | 190 ++++++++++++++----
+ drivers/xen/events/events_fifo.c              |   7 -
+ drivers/xen/events/events_internal.h          |  14 +-
+ drivers/xen/evtchn.c                          |  29 ++-
+ drivers/xen/pvcalls-back.c                    |   4 +-
+ drivers/xen/xen-pciback/xenbus.c              |   2 +-
+ drivers/xen/xen-scsiback.c                    |   2 +-
+ drivers/xen/xenbus/xenbus_probe.c             |  66 ++++++
+ include/xen/events.h                          |   7 +-
+ include/xen/xenbus.h                          |   7 +
+ 14 files changed, 323 insertions(+), 94 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-devices-xenbus
+
+-- 
+2.26.2
 
