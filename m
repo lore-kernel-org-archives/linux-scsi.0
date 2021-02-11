@@ -2,231 +2,267 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03671C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 01:12:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9610EC433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 03:03:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A388D6146D
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 01:12:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F89764E31
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 03:03:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230010AbhBKBMa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Feb 2021 20:12:30 -0500
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:48776 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229745AbhBKBM2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Feb 2021 20:12:28 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id DAF3F2A81C;
-        Wed, 10 Feb 2021 20:11:43 -0500 (EST)
-Date:   Thu, 11 Feb 2021 12:11:49 +1100 (AEDT)
-From:   Finn Thain <fthain@telegraphics.com.au>
-To:     "Song Bao Hua (Barry Song)" <song.bao.hua@hisilicon.com>
-cc:     tanxiaofei <tanxiaofei@huawei.com>,
+        id S229741AbhBKDC7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Feb 2021 22:02:59 -0500
+Received: from szxga01-in.huawei.com ([45.249.212.187]:2583 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229587AbhBKDC6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Feb 2021 22:02:58 -0500
+Received: from DGGEMM403-HUB.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4DbhF81SJbzW8cc;
+        Thu, 11 Feb 2021 10:59:56 +0800 (CST)
+Received: from dggemi710-chm.china.huawei.com (10.3.20.109) by
+ DGGEMM403-HUB.china.huawei.com (10.3.20.211) with Microsoft SMTP Server (TLS)
+ id 14.3.498.0; Thu, 11 Feb 2021 11:02:13 +0800
+Received: from dggemi761-chm.china.huawei.com (10.1.198.147) by
+ dggemi710-chm.china.huawei.com (10.3.20.109) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2106.2; Thu, 11 Feb 2021 11:02:12 +0800
+Received: from dggemi761-chm.china.huawei.com ([10.9.49.202]) by
+ dggemi761-chm.china.huawei.com ([10.9.49.202]) with mapi id 15.01.2106.006;
+ Thu, 11 Feb 2021 11:02:12 +0800
+From:   "Song Bao Hua (Barry Song)" <song.bao.hua@hisilicon.com>
+To:     Finn Thain <fthain@telegraphics.com.au>
+CC:     tanxiaofei <tanxiaofei@huawei.com>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linuxarm@openeuler.org" <linuxarm@openeuler.org>,
         "linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>
-Subject: RE: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage optimization
- for SCSI drivers
-In-Reply-To: <3ec7cb32aa754a59b894d048873132cf@hisilicon.com>
-Message-ID: <9d248ea6-f861-850-ba71-ac2cdd5596ff@telegraphics.com.au>
-References: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com> <31cd807d-3d0-ed64-60d-fde32cb3833c@telegraphics.com.au> <e949a474a9284ac6951813bfc8b34945@hisilicon.com> <f0a3339d-b1db-6571-fa2f-6765e150eb9d@telegraphics.com.au>
- <88d26bd86c314e5483ec596952054be7@hisilicon.com> <da111631-83ef-1ad8-799a-5d976d5759d@telegraphics.com.au> <00c06b19e87a425fa3a4b6aaecc66d49@hisilicon.com> <9611728-3e7-3954-cfee-f3d3cf45df6@telegraphics.com.au> <13c414b9bd7940caa5e1df810356dcfd@hisilicon.com>
- <221cb29-53a8-fd1-4232-360655f28f3@telegraphics.com.au> <3ec7cb32aa754a59b894d048873132cf@hisilicon.com>
+Subject: RE: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage
+ optimization for SCSI drivers
+Thread-Topic: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage
+ optimization for SCSI drivers
+Thread-Index: AQHW//Cyu0PLR2OKVEm5NkJUbKWYbqpR4DFw//+TtYCAAJWd4P//lj6AgACbEFA=
+Date:   Thu, 11 Feb 2021 03:02:12 +0000
+Message-ID: <4646dd5cb26d4e1195951228c46fbff6@hisilicon.com>
+References: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com>
+ <31cd807d-3d0-ed64-60d-fde32cb3833c@telegraphics.com.au>
+ <e949a474a9284ac6951813bfc8b34945@hisilicon.com>
+ <f0a3339d-b1db-6571-fa2f-6765e150eb9d@telegraphics.com.au>
+ <88d26bd86c314e5483ec596952054be7@hisilicon.com>
+ <da111631-83ef-1ad8-799a-5d976d5759d@telegraphics.com.au>
+ <00c06b19e87a425fa3a4b6aaecc66d49@hisilicon.com>
+ <9611728-3e7-3954-cfee-f3d3cf45df6@telegraphics.com.au>
+ <13c414b9bd7940caa5e1df810356dcfd@hisilicon.com>
+ <221cb29-53a8-fd1-4232-360655f28f3@telegraphics.com.au>
+ <3ec7cb32aa754a59b894d048873132cf@hisilicon.com>
+ <9d248ea6-f861-850-ba71-ac2cdd5596ff@telegraphics.com.au>
+In-Reply-To: <9d248ea6-f861-850-ba71-ac2cdd5596ff@telegraphics.com.au>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.126.201.246]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="-1463811774-1889743738-1613005844=:6"
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
----1463811774-1889743738-1613005844=:6
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-
-On Wed, 10 Feb 2021, Song Bao Hua (Barry Song) wrote:
-
-> > On Wed, 10 Feb 2021, Song Bao Hua (Barry Song) wrote:
-> >=20
-> > > > On Wed, 10 Feb 2021, Song Bao Hua (Barry Song) wrote:
-> > > >
-> > > > > > There is no warning from m68k builds. That's because=20
-> > > > > > arch_irqs_disabled() returns true when the IPL is non-zero.
-> > > > >
-> > > > > So for m68k, the case is arch_irqs_disabled() is true, but=20
-> > > > > interrupts can still come?
-> > > > >
-> > > > > Then it seems it is very confusing. If prioritized interrupts=20
-> > > > > can still come while arch_irqs_disabled() is true,
-> > > >
-> > > > Yes, on m68k CPUs, an IRQ having a priority level higher than the=
-=20
-> > > > present priority mask will get serviced.
-> > > >
-> > > > Non-Maskable Interrupt (NMI) is not subject to this rule and gets=
-=20
-> > > > serviced regardless.
-> > > >
-> > > > > how could spin_lock_irqsave() block the prioritized interrupts?
-> > > >
-> > > > It raises the the mask level to 7. Again, please see=20
-> > > > arch/m68k/include/asm/irqflags.h
-> > >
-> > > Hi Finn,
-> > > Thanks for your explanation again.
-> > >
-> > > TBH, that is why m68k is so confusing. irqs_disabled() on m68k=20
-> > > should just reflect the status of all interrupts have been disabled=
-=20
-> > > except NMI.
-> > >
-> > > irqs_disabled() should be consistent with the calling of APIs such=20
-> > > as local_irq_disable, local_irq_save, spin_lock_irqsave etc.
-> > >
-> >=20
-> > When irqs_disabled() returns true, we cannot infer that=20
-> > arch_local_irq_disable() was called. But I have not yet found driver=20
-> > code or core kernel code attempting that inference.
-> >=20
-> > > >
-> > > > > Isn't arch_irqs_disabled() a status reflection of irq disable=20
-> > > > > API?
-> > > > >
-> > > >
-> > > > Why not?
-> > >
-> > > If so, arch_irqs_disabled() should mean all interrupts have been=20
-> > > masked except NMI as NMI is unmaskable.
-> > >
-> >=20
-> > Can you support that claim with a reference to core kernel code or=20
-> > documentation? (If some arch code agrees with you, that's neither here=
-=20
-> > nor there.)
->=20
-> I think those links I share you have supported this. Just you don't=20
-> believe :-)
->=20
-
-Your links show that the distinction between fast and slow handlers was=20
-removed. Your links don't support your claim that "arch_irqs_disabled()=20
-should mean all interrupts have been masked". Where is the code that makes=
-=20
-that inference? Where is the documentation that supports your claim?
-
-> >=20
-> > > >
-> > > > Are all interrupts (including NMI) masked whenever=20
-> > > > arch_irqs_disabled() returns true on your platforms?
-> > >
-> > > On my platform, once irqs_disabled() is true, all interrupts are=20
-> > > masked except NMI. NMI just ignore spin_lock_irqsave or=20
-> > > local_irq_disable.
-> > >
-> > > On ARM64, we also have high-priority interrupts, but they are=20
-> > > running as PESUDO_NMI:
-> > > https://lwn.net/Articles/755906/
-> > >
-> >=20
-> > A glance at the ARM GIC specification suggests that your hardware=20
-> > works much like 68000 hardware.
-> >=20
-> >    When enabled, a CPU interface takes the highest priority pending=20
-> >    interrupt for its connected processor and determines whether the=20
-> >    interrupt has sufficient priority for it to signal the interrupt=20
-> >    request to the processor. [...]
-> >=20
-> >    When the processor acknowledges the interrupt at the CPU interface,=
-=20
-> >    the Distributor changes the status of the interrupt from pending to=
-=20
-> >    either active, or active and pending. At this point the CPU=20
-> >    interface can signal another interrupt to the processor, to preempt=
-=20
-> >    interrupts that are active on the processor. If there is no pending=
-=20
-> >    interrupt with sufficient priority for signaling to the processor,=
-=20
-> >    the interface deasserts the interrupt request signal to the=20
-> >    processor.
-> >=20
-> > https://developer.arm.com/documentation/ihi0048/b/
-> >=20
-> > Have you considered that Linux/arm might benefit if it could fully=20
-> > exploit hardware features already available, such as the interrupt=20
-> > priority masking feature in the GIC in existing arm systems?
->=20
-> I guess no:-) there are only two levels: IRQ and NMI. Injecting a=20
-> high-prio IRQ level between them makes no sense.
->=20
-> To me, arm64's design is quite clear and has no any confusion.
->=20
-
-Are you saying that the ARM64 hardware design is confusing because it=20
-implements a priority mask, and that's why you had to simplify it with a=20
-pseudo-nmi scheme in software?
-
-> >=20
-> > > On m68k, it seems you mean=EF=BC=9A
-> > > irq_disabled() is true, but high-priority interrupts can still come;
-> > > local_irq_disable() can disable high-priority interrupts, and at that
-> > > time, irq_disabled() is also true.
-> > >
-> > > TBH, this is wrong and confusing on m68k.
-> > >
-> >=20
-> > Like you, I was surprised when I learned about it. But that doesn't mea=
-n
-> > it's wrong. The fact that it works should tell you something.
-> >=20
->=20
-> The fact is that m68k lets arch_irq_disabled() return true to pretend=20
-> all IRQs are disabled while high-priority IRQ is still open, thus "pass"=
-=20
-> all sanitizing check in genirq and kernel core.
->=20
-
-The fact is that m68k has arch_irq_disabled() return false when all IRQs=20
-are enabled. So there is no bug.
-
-> > Things could always be made simpler. But discarding features isn't=20
-> > necessarily an improvement.
->=20
-> This feature could be used by calling local_irq_enable_in_hardirq() in=20
-> those IRQ handlers who hope high-priority interrupts to preempt it for a=
-=20
-> while.
->=20
-
-So, if one handler is sensitive to interrupt latency, all other handlers=20
-should be modified? I don't think that's workable.
-
-In anycase, what you're describing is a completely different nested=20
-interrupt scheme that would defeat the priority level mechanism that the=20
-hardware provides us with.
-
-> It shouldn't hide somewhere and make confusion.
->=20
-
-The problem is hiding so well that no-one has found it! I say it doesn't=20
-exist.
-
-> On the other hand, those who care about realtime should use threaded IRQ=
-=20
-> and let IRQ threads preempt each other.
->=20
-
-Yes. And those threads also have priority levels.
-
-> Thanks
-> Barry
->=20
->=20
----1463811774-1889743738-1613005844=:6--
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRmlubiBUaGFpbiBbbWFp
+bHRvOmZ0aGFpbkB0ZWxlZ3JhcGhpY3MuY29tLmF1XQ0KPiBTZW50OiBUaHVyc2RheSwgRmVicnVh
+cnkgMTEsIDIwMjEgMjoxMiBQTQ0KPiBUbzogU29uZyBCYW8gSHVhIChCYXJyeSBTb25nKSA8c29u
+Zy5iYW8uaHVhQGhpc2lsaWNvbi5jb20+DQo+IENjOiB0YW54aWFvZmVpIDx0YW54aWFvZmVpQGh1
+YXdlaS5jb20+OyBqZWpiQGxpbnV4LmlibS5jb207DQo+IG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUu
+Y29tOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsNCj4gbGludXgta2VybmVsQHZnZXIua2Vy
+bmVsLm9yZzsgbGludXhhcm1Ab3BlbmV1bGVyLm9yZzsNCj4gbGludXgtbTY4a0B2Z2VyLmtlcm5l
+bC5vcmcNCj4gU3ViamVjdDogUkU6IFtMaW51eGFybV0gUmU6IFtQQVRDSCBmb3ItbmV4dCAwMC8z
+Ml0gc3BpbiBsb2NrIHVzYWdlIG9wdGltaXphdGlvbg0KPiBmb3IgU0NTSSBkcml2ZXJzDQo+IA0K
+PiBPbiBXZWQsIDEwIEZlYiAyMDIxLCBTb25nIEJhbyBIdWEgKEJhcnJ5IFNvbmcpIHdyb3RlOg0K
+PiANCj4gPiA+IE9uIFdlZCwgMTAgRmViIDIwMjEsIFNvbmcgQmFvIEh1YSAoQmFycnkgU29uZykg
+d3JvdGU6DQo+ID4gPg0KPiA+ID4gPiA+IE9uIFdlZCwgMTAgRmViIDIwMjEsIFNvbmcgQmFvIEh1
+YSAoQmFycnkgU29uZykgd3JvdGU6DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gVGhlcmUgaXMg
+bm8gd2FybmluZyBmcm9tIG02OGsgYnVpbGRzLiBUaGF0J3MgYmVjYXVzZQ0KPiA+ID4gPiA+ID4g
+PiBhcmNoX2lycXNfZGlzYWJsZWQoKSByZXR1cm5zIHRydWUgd2hlbiB0aGUgSVBMIGlzIG5vbi16
+ZXJvLg0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IFNvIGZvciBtNjhrLCB0aGUgY2FzZSBpcyBh
+cmNoX2lycXNfZGlzYWJsZWQoKSBpcyB0cnVlLCBidXQNCj4gPiA+ID4gPiA+IGludGVycnVwdHMg
+Y2FuIHN0aWxsIGNvbWU/DQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gVGhlbiBpdCBzZWVtcyBp
+dCBpcyB2ZXJ5IGNvbmZ1c2luZy4gSWYgcHJpb3JpdGl6ZWQgaW50ZXJydXB0cw0KPiA+ID4gPiA+
+ID4gY2FuIHN0aWxsIGNvbWUgd2hpbGUgYXJjaF9pcnFzX2Rpc2FibGVkKCkgaXMgdHJ1ZSwNCj4g
+PiA+ID4gPg0KPiA+ID4gPiA+IFllcywgb24gbTY4ayBDUFVzLCBhbiBJUlEgaGF2aW5nIGEgcHJp
+b3JpdHkgbGV2ZWwgaGlnaGVyIHRoYW4gdGhlDQo+ID4gPiA+ID4gcHJlc2VudCBwcmlvcml0eSBt
+YXNrIHdpbGwgZ2V0IHNlcnZpY2VkLg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gTm9uLU1hc2thYmxl
+IEludGVycnVwdCAoTk1JKSBpcyBub3Qgc3ViamVjdCB0byB0aGlzIHJ1bGUgYW5kIGdldHMNCj4g
+PiA+ID4gPiBzZXJ2aWNlZCByZWdhcmRsZXNzLg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiBob3cg
+Y291bGQgc3Bpbl9sb2NrX2lycXNhdmUoKSBibG9jayB0aGUgcHJpb3JpdGl6ZWQgaW50ZXJydXB0
+cz8NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IEl0IHJhaXNlcyB0aGUgdGhlIG1hc2sgbGV2ZWwgdG8g
+Ny4gQWdhaW4sIHBsZWFzZSBzZWUNCj4gPiA+ID4gPiBhcmNoL202OGsvaW5jbHVkZS9hc20vaXJx
+ZmxhZ3MuaA0KPiA+ID4gPg0KPiA+ID4gPiBIaSBGaW5uLA0KPiA+ID4gPiBUaGFua3MgZm9yIHlv
+dXIgZXhwbGFuYXRpb24gYWdhaW4uDQo+ID4gPiA+DQo+ID4gPiA+IFRCSCwgdGhhdCBpcyB3aHkg
+bTY4ayBpcyBzbyBjb25mdXNpbmcuIGlycXNfZGlzYWJsZWQoKSBvbiBtNjhrDQo+ID4gPiA+IHNo
+b3VsZCBqdXN0IHJlZmxlY3QgdGhlIHN0YXR1cyBvZiBhbGwgaW50ZXJydXB0cyBoYXZlIGJlZW4g
+ZGlzYWJsZWQNCj4gPiA+ID4gZXhjZXB0IE5NSS4NCj4gPiA+ID4NCj4gPiA+ID4gaXJxc19kaXNh
+YmxlZCgpIHNob3VsZCBiZSBjb25zaXN0ZW50IHdpdGggdGhlIGNhbGxpbmcgb2YgQVBJcyBzdWNo
+DQo+ID4gPiA+IGFzIGxvY2FsX2lycV9kaXNhYmxlLCBsb2NhbF9pcnFfc2F2ZSwgc3Bpbl9sb2Nr
+X2lycXNhdmUgZXRjLg0KPiA+ID4gPg0KPiA+ID4NCj4gPiA+IFdoZW4gaXJxc19kaXNhYmxlZCgp
+IHJldHVybnMgdHJ1ZSwgd2UgY2Fubm90IGluZmVyIHRoYXQNCj4gPiA+IGFyY2hfbG9jYWxfaXJx
+X2Rpc2FibGUoKSB3YXMgY2FsbGVkLiBCdXQgSSBoYXZlIG5vdCB5ZXQgZm91bmQgZHJpdmVyDQo+
+ID4gPiBjb2RlIG9yIGNvcmUga2VybmVsIGNvZGUgYXR0ZW1wdGluZyB0aGF0IGluZmVyZW5jZS4N
+Cj4gPiA+DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IElzbid0IGFyY2hfaXJxc19kaXNhYmxlZCgp
+IGEgc3RhdHVzIHJlZmxlY3Rpb24gb2YgaXJxIGRpc2FibGUNCj4gPiA+ID4gPiA+IEFQST8NCj4g
+PiA+ID4gPiA+DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBXaHkgbm90Pw0KPiA+ID4gPg0KPiA+ID4g
+PiBJZiBzbywgYXJjaF9pcnFzX2Rpc2FibGVkKCkgc2hvdWxkIG1lYW4gYWxsIGludGVycnVwdHMg
+aGF2ZSBiZWVuDQo+ID4gPiA+IG1hc2tlZCBleGNlcHQgTk1JIGFzIE5NSSBpcyB1bm1hc2thYmxl
+Lg0KPiA+ID4gPg0KPiA+ID4NCj4gPiA+IENhbiB5b3Ugc3VwcG9ydCB0aGF0IGNsYWltIHdpdGgg
+YSByZWZlcmVuY2UgdG8gY29yZSBrZXJuZWwgY29kZSBvcg0KPiA+ID4gZG9jdW1lbnRhdGlvbj8g
+KElmIHNvbWUgYXJjaCBjb2RlIGFncmVlcyB3aXRoIHlvdSwgdGhhdCdzIG5laXRoZXIgaGVyZQ0K
+PiA+ID4gbm9yIHRoZXJlLikNCj4gPg0KPiA+IEkgdGhpbmsgdGhvc2UgbGlua3MgSSBzaGFyZSB5
+b3UgaGF2ZSBzdXBwb3J0ZWQgdGhpcy4gSnVzdCB5b3UgZG9uJ3QNCj4gPiBiZWxpZXZlIDotKQ0K
+PiA+DQo+IA0KPiBZb3VyIGxpbmtzIHNob3cgdGhhdCB0aGUgZGlzdGluY3Rpb24gYmV0d2VlbiBm
+YXN0IGFuZCBzbG93IGhhbmRsZXJzIHdhcw0KPiByZW1vdmVkLiBZb3VyIGxpbmtzIGRvbid0IHN1
+cHBvcnQgeW91ciBjbGFpbSB0aGF0ICJhcmNoX2lycXNfZGlzYWJsZWQoKQ0KPiBzaG91bGQgbWVh
+biBhbGwgaW50ZXJydXB0cyBoYXZlIGJlZW4gbWFza2VkIi4gV2hlcmUgaXMgdGhlIGNvZGUgdGhh
+dCBtYWtlcw0KPiB0aGF0IGluZmVyZW5jZT8gV2hlcmUgaXMgdGhlIGRvY3VtZW50YXRpb24gdGhh
+dCBzdXBwb3J0cyB5b3VyIGNsYWltPw0KDQooMSkNCmh0dHBzOi8vbHduLm5ldC9BcnRpY2xlcy8z
+ODA5MzEvDQpMb29raW5nIGF0IGFsbCB0aGVzZSB3b3JyaWVzLCBvbmUgbWlnaHQgd2VsbCB3b25k
+ZXIgaWYgYSBzeXN0ZW0gd2hpY2ggKmRpc2FibGVkDQppbnRlcnJ1cHRzIGZvciBhbGwgaGFuZGxl
+cnMqIHdvdWxkIGZ1bmN0aW9uIHdlbGwgYXQgYWxsLiBTbyBpdCBpcyBpbnRlcmVzdGluZw0KdG8g
+bm90ZSBvbmUgdGhpbmc6IGFueSBzeXN0ZW0gd2hpY2ggaGFzIHRoZSBsb2NrZGVwIGxvY2tpbmcg
+Y2hlY2tlciBlbmFibGVkDQpoYXMgYmVlbiBydW5uaW5nIGFsbCBoYW5kbGVycyB0aGF0IHdheSBm
+b3Igc29tZSB5ZWFycyBub3cuIE1hbnkgZGV2ZWxvcGVycw0KYW5kIHRlc3RlcnMgcnVuIGxvY2tk
+ZXAtZW5hYmxlZCBrZXJuZWxzLCBhbmQgdGhleSBhcmUgYXZhaWxhYmxlIGZvciBzb21lIG9mDQp0
+aGUgbW9yZSBhZHZlbnR1cm91cyBkaXN0cmlidXRpb25zIChSYXdoaWRlLCBmb3IgZXhhbXBsZSkg
+YXMgd2VsbC4gU28gd2UNCmhhdmUgcXVpdGUgYSBiaXQgb2YgdGVzdCBjb3ZlcmFnZSBmb3IgdGhp
+cyBtb2RlIG9mIG9wZXJhdGlvbiBhbHJlYWR5Lg0KDQooMikNCmh0dHBzOi8vZ2l0Lmtlcm5lbC5v
+cmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L3RvcnZhbGRzL2xpbnV4LmdpdC9jb21taXQvP2lk
+PWI3MzhhNTBhDQoNCiJXZSBydW4gYWxsIGhhbmRsZXJzICp3aXRoIGludGVycnVwdHMgZGlzYWJs
+ZWQqIGFuZCBleHBlY3QgdGhlbSBub3QgdG8NCmVuYWJsZSB0aGVtLiBXYXJuIHdoZW4gd2UgY2F0
+Y2ggb25lIHdobyBkb2VzLiINCg0KKDMpIA0KaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2Nt
+L2xpbnV4L2tlcm5lbC9naXQvdG9ydmFsZHMvbGludXguZ2l0L2NvbW1pdC8/aWQ9ZTU4YWEzZDJk
+MGNjDQpnZW5pcnE6IFJ1biBpcnEgaGFuZGxlcnMgKndpdGggaW50ZXJydXB0cyBkaXNhYmxlZCoN
+Cg0KUnVubmluZyBpbnRlcnJ1cHQgaGFuZGxlcnMgd2l0aCBpbnRlcnJ1cHRzIGVuYWJsZWQgY2Fu
+IGNhdXNlIHN0YWNrDQpvdmVyZmxvd3MuIFRoYXQgaGFzIGJlZW4gb2JzZXJ2ZWQgd2l0aCBtdWx0
+aXF1ZXVlIE5JQ3MgZGVsaXZlcmluZyBhbGwNCnRoZWlyIGludGVycnVwdHMgdG8gYSBzaW5nbGUg
+Y29yZS4gV2UgbWlnaHQgYmFuZCBhaWQgdGhhdCBzb21laG93IGJ5DQpjaGVja2luZyB0aGUgaW50
+ZXJydXB0IHN0YWNrcywgYnV0IHRoZSByZWFsIHNhZmUgZml4IGlzIHRvICpydW4gdGhlIGlycQ0K
+aGFuZGxlcnMgd2l0aCBpbnRlcnJ1cHRzIGRpc2FibGVkKi4NCg0KDQpBbGwgdGhlc2UgZG9jdW1l
+bnRzIHNheSB3ZSBhcmUgcnVubmluZyBpcnEgaGFuZGxlciB3aXRoIGludGVycnVwdHMNCmRpc2Fi
+bGVkLiBidXQgaXQgc2VlbXMgeW91IHRoaW5rIGhpZ2gtcHJpbyBpbnRlcnJ1cHRzIGRvbid0IGJl
+bG9uZw0KdG8gImludGVycnVwdHMiIGluIHRob3NlIGRvY3VtZW50cyA6LSkNCg0KdGhhdCBpcyB3
+aHkgd2UgY2FuJ3QgZ2V0IGFncmVlbWVudC4gSSB0aGluayAiaW50ZXJydXB0cyIgbWVhbg0KYWxs
+IGV4Y2VwdCBOTUkgaW4gdGhlc2UgZG9jdW1lbnRzLCBidXQgeW91IGluc2lzdCBoaWdoLXByaW8g
+SVJRDQppcyBhbiBleGNlcHRpb24uDQoNCj4gDQo+ID4gPg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4g
+QXJlIGFsbCBpbnRlcnJ1cHRzIChpbmNsdWRpbmcgTk1JKSBtYXNrZWQgd2hlbmV2ZXINCj4gPiA+
+ID4gPiBhcmNoX2lycXNfZGlzYWJsZWQoKSByZXR1cm5zIHRydWUgb24geW91ciBwbGF0Zm9ybXM/
+DQo+ID4gPiA+DQo+ID4gPiA+IE9uIG15IHBsYXRmb3JtLCBvbmNlIGlycXNfZGlzYWJsZWQoKSBp
+cyB0cnVlLCBhbGwgaW50ZXJydXB0cyBhcmUNCj4gPiA+ID4gbWFza2VkIGV4Y2VwdCBOTUkuIE5N
+SSBqdXN0IGlnbm9yZSBzcGluX2xvY2tfaXJxc2F2ZSBvcg0KPiA+ID4gPiBsb2NhbF9pcnFfZGlz
+YWJsZS4NCj4gPiA+ID4NCj4gPiA+ID4gT24gQVJNNjQsIHdlIGFsc28gaGF2ZSBoaWdoLXByaW9y
+aXR5IGludGVycnVwdHMsIGJ1dCB0aGV5IGFyZQ0KPiA+ID4gPiBydW5uaW5nIGFzIFBFU1VET19O
+TUk6DQo+ID4gPiA+IGh0dHBzOi8vbHduLm5ldC9BcnRpY2xlcy83NTU5MDYvDQo+ID4gPiA+DQo+
+ID4gPg0KPiA+ID4gQSBnbGFuY2UgYXQgdGhlIEFSTSBHSUMgc3BlY2lmaWNhdGlvbiBzdWdnZXN0
+cyB0aGF0IHlvdXIgaGFyZHdhcmUNCj4gPiA+IHdvcmtzIG11Y2ggbGlrZSA2ODAwMCBoYXJkd2Fy
+ZS4NCj4gPiA+DQo+ID4gPiAgICBXaGVuIGVuYWJsZWQsIGEgQ1BVIGludGVyZmFjZSB0YWtlcyB0
+aGUgaGlnaGVzdCBwcmlvcml0eSBwZW5kaW5nDQo+ID4gPiAgICBpbnRlcnJ1cHQgZm9yIGl0cyBj
+b25uZWN0ZWQgcHJvY2Vzc29yIGFuZCBkZXRlcm1pbmVzIHdoZXRoZXIgdGhlDQo+ID4gPiAgICBp
+bnRlcnJ1cHQgaGFzIHN1ZmZpY2llbnQgcHJpb3JpdHkgZm9yIGl0IHRvIHNpZ25hbCB0aGUgaW50
+ZXJydXB0DQo+ID4gPiAgICByZXF1ZXN0IHRvIHRoZSBwcm9jZXNzb3IuIFsuLi5dDQo+ID4gPg0K
+PiA+ID4gICAgV2hlbiB0aGUgcHJvY2Vzc29yIGFja25vd2xlZGdlcyB0aGUgaW50ZXJydXB0IGF0
+IHRoZSBDUFUgaW50ZXJmYWNlLA0KPiA+ID4gICAgdGhlIERpc3RyaWJ1dG9yIGNoYW5nZXMgdGhl
+IHN0YXR1cyBvZiB0aGUgaW50ZXJydXB0IGZyb20gcGVuZGluZyB0bw0KPiA+ID4gICAgZWl0aGVy
+IGFjdGl2ZSwgb3IgYWN0aXZlIGFuZCBwZW5kaW5nLiBBdCB0aGlzIHBvaW50IHRoZSBDUFUNCj4g
+PiA+ICAgIGludGVyZmFjZSBjYW4gc2lnbmFsIGFub3RoZXIgaW50ZXJydXB0IHRvIHRoZSBwcm9j
+ZXNzb3IsIHRvIHByZWVtcHQNCj4gPiA+ICAgIGludGVycnVwdHMgdGhhdCBhcmUgYWN0aXZlIG9u
+IHRoZSBwcm9jZXNzb3IuIElmIHRoZXJlIGlzIG5vIHBlbmRpbmcNCj4gPiA+ICAgIGludGVycnVw
+dCB3aXRoIHN1ZmZpY2llbnQgcHJpb3JpdHkgZm9yIHNpZ25hbGluZyB0byB0aGUgcHJvY2Vzc29y
+LA0KPiA+ID4gICAgdGhlIGludGVyZmFjZSBkZWFzc2VydHMgdGhlIGludGVycnVwdCByZXF1ZXN0
+IHNpZ25hbCB0byB0aGUNCj4gPiA+ICAgIHByb2Nlc3Nvci4NCj4gPiA+DQo+ID4gPiBodHRwczov
+L2RldmVsb3Blci5hcm0uY29tL2RvY3VtZW50YXRpb24vaWhpMDA0OC9iLw0KPiA+ID4NCj4gPiA+
+IEhhdmUgeW91IGNvbnNpZGVyZWQgdGhhdCBMaW51eC9hcm0gbWlnaHQgYmVuZWZpdCBpZiBpdCBj
+b3VsZCBmdWxseQ0KPiA+ID4gZXhwbG9pdCBoYXJkd2FyZSBmZWF0dXJlcyBhbHJlYWR5IGF2YWls
+YWJsZSwgc3VjaCBhcyB0aGUgaW50ZXJydXB0DQo+ID4gPiBwcmlvcml0eSBtYXNraW5nIGZlYXR1
+cmUgaW4gdGhlIEdJQyBpbiBleGlzdGluZyBhcm0gc3lzdGVtcz8NCj4gPg0KPiA+IEkgZ3Vlc3Mg
+bm86LSkgdGhlcmUgYXJlIG9ubHkgdHdvIGxldmVsczogSVJRIGFuZCBOTUkuIEluamVjdGluZyBh
+DQo+ID4gaGlnaC1wcmlvIElSUSBsZXZlbCBiZXR3ZWVuIHRoZW0gbWFrZXMgbm8gc2Vuc2UuDQo+
+ID4NCj4gPiBUbyBtZSwgYXJtNjQncyBkZXNpZ24gaXMgcXVpdGUgY2xlYXIgYW5kIGhhcyBubyBh
+bnkgY29uZnVzaW9uLg0KPiA+DQo+IA0KPiBBcmUgeW91IHNheWluZyB0aGF0IHRoZSBBUk02NCBo
+YXJkd2FyZSBkZXNpZ24gaXMgY29uZnVzaW5nIGJlY2F1c2UgaXQNCj4gaW1wbGVtZW50cyBhIHBy
+aW9yaXR5IG1hc2ssIGFuZCB0aGF0J3Mgd2h5IHlvdSBoYWQgdG8gc2ltcGxpZnkgaXQgd2l0aCBh
+DQo+IHBzZXVkby1ubWkgc2NoZW1lIGluIHNvZnR3YXJlPw0KDQpObywgSSB3YXMgbm90IHNheWlu
+ZyB0aGlzLiBJIHRoaW5rIGJvdGggbTY4ayBhbmQgYXJtNjQgaGF2ZSBnb29kIGhhcmR3YXJlDQpk
+ZXNpZ24uIEp1c3QgTGludXgncyBpbXBsZW1lbnRhdGlvbiBpcyBydW5uaW5nIGlycS1oYW5kbGVy
+cyB3aXRoIGludGVycnVwdHMNCmRpc2FibGVkLiBTbyBBUk02NCdzIHBzZXVkby1ubWkgaXMgYWRh
+cHRlZCB0byBMaW51eCBiZXR0ZXIuDQoNCj4gDQo+ID4gPg0KPiA+ID4gPiBPbiBtNjhrLCBpdCBz
+ZWVtcyB5b3UgbWVhbu+8mg0KPiA+ID4gPiBpcnFfZGlzYWJsZWQoKSBpcyB0cnVlLCBidXQgaGln
+aC1wcmlvcml0eSBpbnRlcnJ1cHRzIGNhbiBzdGlsbCBjb21lOw0KPiA+ID4gPiBsb2NhbF9pcnFf
+ZGlzYWJsZSgpIGNhbiBkaXNhYmxlIGhpZ2gtcHJpb3JpdHkgaW50ZXJydXB0cywgYW5kIGF0IHRo
+YXQNCj4gPiA+ID4gdGltZSwgaXJxX2Rpc2FibGVkKCkgaXMgYWxzbyB0cnVlLg0KPiA+ID4gPg0K
+PiA+ID4gPiBUQkgsIHRoaXMgaXMgd3JvbmcgYW5kIGNvbmZ1c2luZyBvbiBtNjhrLg0KPiA+ID4g
+Pg0KPiA+ID4NCj4gPiA+IExpa2UgeW91LCBJIHdhcyBzdXJwcmlzZWQgd2hlbiBJIGxlYXJuZWQg
+YWJvdXQgaXQuIEJ1dCB0aGF0IGRvZXNuJ3QgbWVhbg0KPiA+ID4gaXQncyB3cm9uZy4gVGhlIGZh
+Y3QgdGhhdCBpdCB3b3JrcyBzaG91bGQgdGVsbCB5b3Ugc29tZXRoaW5nLg0KPiA+ID4NCj4gPg0K
+PiA+IFRoZSBmYWN0IGlzIHRoYXQgbTY4ayBsZXRzIGFyY2hfaXJxX2Rpc2FibGVkKCkgcmV0dXJu
+IHRydWUgdG8gcHJldGVuZA0KPiA+IGFsbCBJUlFzIGFyZSBkaXNhYmxlZCB3aGlsZSBoaWdoLXBy
+aW9yaXR5IElSUSBpcyBzdGlsbCBvcGVuLCB0aHVzICJwYXNzIg0KPiA+IGFsbCBzYW5pdGl6aW5n
+IGNoZWNrIGluIGdlbmlycSBhbmQga2VybmVsIGNvcmUuDQo+ID4NCj4gDQo+IFRoZSBmYWN0IGlz
+IHRoYXQgbTY4ayBoYXMgYXJjaF9pcnFfZGlzYWJsZWQoKSByZXR1cm4gZmFsc2Ugd2hlbiBhbGwg
+SVJRcw0KPiBhcmUgZW5hYmxlZC4gU28gdGhlcmUgaXMgbm8gYnVnLg0KDQpCdXQgaXQgaGFzIGFy
+Y2hfaXJxX2Rpc2FibGVkKCkgcmV0dXJuIHRydWUgd2hpbGUgc29tZSBpbnRlcnJ1cHRzKG5vdCBO
+TUkpDQphcmUgc3RpbGwgb3Blbi4NCg0KPiANCj4gPiA+IFRoaW5ncyBjb3VsZCBhbHdheXMgYmUg
+bWFkZSBzaW1wbGVyLiBCdXQgZGlzY2FyZGluZyBmZWF0dXJlcyBpc24ndA0KPiA+ID4gbmVjZXNz
+YXJpbHkgYW4gaW1wcm92ZW1lbnQuDQo+ID4NCj4gPiBUaGlzIGZlYXR1cmUgY291bGQgYmUgdXNl
+ZCBieSBjYWxsaW5nIGxvY2FsX2lycV9lbmFibGVfaW5faGFyZGlycSgpIGluDQo+ID4gdGhvc2Ug
+SVJRIGhhbmRsZXJzIHdobyBob3BlIGhpZ2gtcHJpb3JpdHkgaW50ZXJydXB0cyB0byBwcmVlbXB0
+IGl0IGZvciBhDQo+ID4gd2hpbGUuDQo+ID4NCj4gDQo+IFNvLCBpZiBvbmUgaGFuZGxlciBpcyBz
+ZW5zaXRpdmUgdG8gaW50ZXJydXB0IGxhdGVuY3ksIGFsbCBvdGhlciBoYW5kbGVycw0KPiBzaG91
+bGQgYmUgbW9kaWZpZWQ/IEkgZG9uJ3QgdGhpbmsgdGhhdCdzIHdvcmthYmxlLg0KDQpJIHRoaW5r
+IHdlIGp1c3QgZW5hYmxlIHByZWVtcHRfcnQgb3IgZm9yY2UgdGhyZWFkZWRfaXJxLCBhbmQgdGhl
+biBpbXByb3ZlDQp0aGUgcHJpb3JpdHkgb2YgdGhlIGlycSB0aHJlYWQgd2hvIGlzIHNlbnNpdGl2
+ZSB0byBsYXRlbmN5LiBObyBuZWVkIHRvDQp0b3VjaCBhbGwgdGhyZWFkcy4NCg0KSSBhbHNvIHVu
+ZGVyc3RhbmQgeW91ciBwb2ludCwgd2UgbGV0IG9uZSBoaWdoLXByaW8gaW50ZXJydXB0IHByZWVt
+cHQNCmxvdyBwcmlvcml0eSBpbnRlcnJ1cHQsIHRoZW4gd2UgZG9uJ3QgbmVlZCB0byBjaGFuZ2Ug
+dGhlIHdob2xlIHN5c3RlbS4NCkJ1dCBJIHRoaW5rIExpbnV4IHByZWZlcnMgdGhlIG1ldGhvZCBv
+ZiB0aHJlYWRlZF9pcnEgb3IgcHJlZW1wdF9ydA0KZm9yIHRoaXMga2luZCBvZiBwcm9ibGVtcy4N
+Cg0KPiANCj4gSW4gYW55Y2FzZSwgd2hhdCB5b3UncmUgZGVzY3JpYmluZyBpcyBhIGNvbXBsZXRl
+bHkgZGlmZmVyZW50IG5lc3RlZA0KPiBpbnRlcnJ1cHQgc2NoZW1lIHRoYXQgd291bGQgZGVmZWF0
+IHRoZSBwcmlvcml0eSBsZXZlbCBtZWNoYW5pc20gdGhhdCB0aGUNCj4gaGFyZHdhcmUgcHJvdmlk
+ZXMgdXMgd2l0aC4NCg0KWWVzLiBJbmRlZWQuDQoNCj4gDQo+ID4gSXQgc2hvdWxkbid0IGhpZGUg
+c29tZXdoZXJlIGFuZCBtYWtlIGNvbmZ1c2lvbi4NCj4gPg0KPiANCj4gVGhlIHByb2JsZW0gaXMg
+aGlkaW5nIHNvIHdlbGwgdGhhdCBuby1vbmUgaGFzIGZvdW5kIGl0ISBJIHNheSBpdCBkb2Vzbid0
+DQo+IGV4aXN0Lg0KDQpMb25nIGxvbmcgYWdvKGJlZm9yZSAyLjYuMzgpLCB3ZSBoYWQgYSBrZXJu
+ZWwgc3VwcG9ydGluZyBJUlFGX0RJU0FCTEVEIGFuZA0KbmVzdGVkIGludGVycnVwdHMgd2VyZSB3
+aWRlbHkgc3VwcG9ydGVkLCBidXQgc3lzdGVtIGFsc28gcmFuIHdlbGwgaW4gbW9zdA0KY2FzZXMu
+IFRoYXQgbWVhbnMgbmVzdGVkIGludGVycnVwdHMgZG9uJ3QgcmVhbGx5IG1hdHRlciBpbiBtb3N0
+IGNhc2VzLg0KVGhhdCBpcyB3aHkgbTY4ayBpcyBhbHNvIHJ1bm5pbmcgd2VsbCBldmVuIHRob3Vn
+aCBpdCBpcyBzdGlsbCBuZXN0aW5nLg0KDQo+IA0KPiA+IE9uIHRoZSBvdGhlciBoYW5kLCB0aG9z
+ZSB3aG8gY2FyZSBhYm91dCByZWFsdGltZSBzaG91bGQgdXNlIHRocmVhZGVkIElSUQ0KPiA+IGFu
+ZCBsZXQgSVJRIHRocmVhZHMgcHJlZW1wdCBlYWNoIG90aGVyLg0KPiA+DQo+IA0KPiBZZXMuIEFu
+ZCB0aG9zZSB0aHJlYWRzIGFsc28gaGF2ZSBwcmlvcml0eSBsZXZlbHMuDQoNCkZpbm4sIEkgYW0g
+bm90IGEgbTY4ayBndXksIHdvdWxkIHlvdSBoZWxwIGNoZWNrIGlmIHRoaXMgY291bGQgYWN0aXZh
+dGUgYQ0Kd2FybmluZyBvbiBtNjhrLiBtYXliZSB3ZSBjYW4gZGlzY3VzcyB0aGlzIHF1ZXN0aW9u
+IGluIGdlbmlycSBtYWlsbGlzdCBmcm9tDQp0aGlzIHdhcm5pbmcgaWYgeW91IGFyZSBoYXBweS4g
+VGhhbmtzIHZlcnkgbXVjaC4NCg0KZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvaGFyZGlycS5o
+IGIvaW5jbHVkZS9saW51eC9oYXJkaXJxLmgNCmluZGV4IDdjOWQ2YTJkN2U5MC4uYjhjYTI3NTU1
+Yzc2IDEwMDY0NA0KLS0tIGEvaW5jbHVkZS9saW51eC9oYXJkaXJxLmgNCisrKyBiL2luY2x1ZGUv
+bGludXgvaGFyZGlycS5oDQpAQCAtMzIsNiArMzIsNyBAQCBzdGF0aWMgX19hbHdheXNfaW5saW5l
+IHZvaWQgcmN1X2lycV9lbnRlcl9jaGVja190aWNrKHZvaWQpDQogICovDQogI2RlZmluZSBfX2ly
+cV9lbnRlcigpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwNCiAgICAgICAgZG8g
+eyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXA0KKyAgICAgICAg
+ICAgICAgIFdBUk5fT05DRShpbl9oYXJkaXJxKCkgJiYgaXJxc19kaXNhYmxlZCgpLCAibmVzdGVk
+DQppbnRlcnJ1cHRzXG4iKTsgXA0KICAgICAgICAgICAgICAgIHByZWVtcHRfY291bnRfYWRkKEhB
+UkRJUlFfT0ZGU0VUKTsgICAgICBcDQogICAgICAgICAgICAgICAgbG9ja2RlcF9oYXJkaXJxX2Vu
+dGVyKCk7ICAgICAgICAgICAgICAgIFwNCiAgICAgICAgICAgICAgICBhY2NvdW50X2hhcmRpcnFf
+ZW50ZXIoY3VycmVudCk7ICAgICAgICAgXA0KQEAgLTQ0LDYgKzQ1LDcgQEAgc3RhdGljIF9fYWx3
+YXlzX2lubGluZSB2b2lkIHJjdV9pcnFfZW50ZXJfY2hlY2tfdGljayh2b2lkKQ0KICAqLw0KICNk
+ZWZpbmUgX19pcnFfZW50ZXJfcmF3KCkgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcDQog
+ICAgICAgIGRvIHsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwN
+CisgICAgICAgICAgICAgICBXQVJOX09OQ0UoaW5faGFyZGlycSgpICYmIGlycXNfZGlzYWJsZWQo
+KSwgIm5lc3RlZA0KaW50ZXJydXB0c1xuIik7IFwNCiAgICAgICAgICAgICAgICBwcmVlbXB0X2Nv
+dW50X2FkZChIQVJESVJRX09GRlNFVCk7ICAgICAgXA0KICAgICAgICAgICAgICAgIGxvY2tkZXBf
+aGFyZGlycV9lbnRlcigpOyAgICAgICAgICAgICAgICBcDQogICAgICAgIH0gd2hpbGUgKDApDQoN
+CkJlc3QgUmVnYXJkcw0KQmFycnkNCg0K
