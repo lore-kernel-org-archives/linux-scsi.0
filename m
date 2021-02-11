@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D1C6C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:47:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B0C1C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:47:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 726DA64E4A
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:47:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F57864E44
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Feb 2021 23:47:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230172AbhBKXrp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Feb 2021 18:47:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46756 "EHLO
+        id S229809AbhBKXrs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Feb 2021 18:47:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230185AbhBKXqz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 18:46:55 -0500
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31691C06121C
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:03 -0800 (PST)
-Received: by mail-pg1-x533.google.com with SMTP id o63so5059713pgo.6
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:03 -0800 (PST)
+        with ESMTP id S230187AbhBKXq4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 18:46:56 -0500
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FBB1C06121E
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:04 -0800 (PST)
+Received: by mail-pf1-x431.google.com with SMTP id 189so4714917pfy.6
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 15:45:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=rlvTP1LxTWr1Jm68l9z5rIe/zD5lnVcwmYbosICTVDY=;
-        b=NjJICZ/n9jhmajNcX7PN2x/eA0KgSk8u3WGZeP9Q+leDLKymJqYjbqKlbppWes87My
-         w9brWDj88S0eveVRcH8wQKDUoKiJmuIXJe8OnlLic7KasZ7to/LnUllC9cz3rhz4Xi+2
-         YYNytC3Hjy0kY8BoKqDtxskcPFrB+qm+NorXMrC391Bd7vgsYFUlte9tJQrjzpmvNx0x
-         mrSjGRurV+H/oBuwCL4mKxjNLGitCfX+0BlpzcBBUfoI7GwUqhKUkw+0n0omAvSF5Wtc
-         yl0LUVI0AnwQ2zhg/Xfby5HIaNix8+Pc+tSrC1vLCNvOCkkiHpfLkDPU15ddeDO+SQsf
-         ECtA==
+        bh=oQB1dAaUqsMnmq94iSdRzzEk5JowgE6V55+PiCf8re8=;
+        b=s8ShMmJfppC11a9vzQvFakMZdEIT8zVLNchxdXGkCZJ3CZXJJ/O1VCQacKnfi5E2xt
+         OcCALFWVMiQzkJnQngkIxDk75QPPAhFogVu9dP6iNCCg1au3/SDyPkoB5s6u8FdwiF78
+         byWKGwKjKWIq9iPQQ/PXSSsxhKp+0TFUibXpoajjKx4dO18gJJrt2t8QljHSybifSUfg
+         zsMyxOKaT5ZDYIOAXKcMzy0bCl9GOi8oVe9st4ybnyFq39VgFLUo1YDBRZPD1QAJDR2f
+         5ORvxXpgijoJxuzvtv52h9Yxuy0IXYvPlxeXJcqR/QOeSF/LjoECzQ9wf1Kb3Dw+Snz8
+         gVEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=rlvTP1LxTWr1Jm68l9z5rIe/zD5lnVcwmYbosICTVDY=;
-        b=GzT8Pyy9KPDiq+YgG0WZOPLcMfBdS8+PnhNJPzyugp7Y+5a6YUn3N+12WeCUvBguBc
-         C/wGJtD3s+fb2rPMhSoNFTfkaPfpYLVdCjaJU9XV/D56e0rrz6LartNLhl1uwq97cKf/
-         ZZ3pE+cHZoaeJXA3O9EkK+JsNsZSyhG1xfAr0FPfMWdEP3pOz6DVT1unSn9fTlNGU8/Q
-         LEc41ZN2FTkWTc26Ygi4nVQ+QDArjqBHPoGK4/D8kJRsIZPu6MPf63Mq6xcTA7Kwpiqm
-         QfS377k/SJEdfZ//SFwWZbDgLYFTRqnk1pxbg/+r7uyhk7hSd4Q5fYDMjnP/0RTg/BSN
-         zYng==
-X-Gm-Message-State: AOAM533GIvyQL2qnjmuO87Sn/KH0svsJ2S87QW+/ohcpHtTkWDjL/PZP
-        YGz3mwfemVcYulJkGS3CJ4RHXFDvDP4=
-X-Google-Smtp-Source: ABdhPJxZvlsPk2IgGrA6Jyc7DlfK//kYPsOusBrnVD+aAfPWT6X4rGEPT/REmTOoMmOuQBvcVku1Dw==
-X-Received: by 2002:a62:190d:0:b029:1bd:e11c:4eff with SMTP id 13-20020a62190d0000b02901bde11c4effmr222776pfz.22.1613087102645;
-        Thu, 11 Feb 2021 15:45:02 -0800 (PST)
+        bh=oQB1dAaUqsMnmq94iSdRzzEk5JowgE6V55+PiCf8re8=;
+        b=lET336JJ19t8askgwR2FeIJG1ThRtcUZ7UEK/G+3Y+Bn1AlDH4OBdWTdindKnmLSA8
+         QwkQGM1NHgZaIlVG0V5c3TM7yNXfHxzpi+sEzlGt6HqLUxK8j6GEtP9WeGNOPYSXWH46
+         bdQHLhuZLrP3OeaHcVZ47JOrNv2RcCpiRM9jIj+Ch/ypKpAUD1ET71YafEV6GOEC56AZ
+         sqlGHlTMiEoyFrk7b8xjZM2//fM6iSpNVgHJe+DoKG8bOzM1Fd5cZc2w+5ypIomz1DPs
+         hekElCLePUkXnuPIUat7JJVuS4TPsW4O+pGqWKgMWOmwQhzNwCLP84fADoiL04IYg8Ii
+         eszg==
+X-Gm-Message-State: AOAM531wUw51pixVbklmxQSQ/QjjZBQD/uwX2IK2LapWc0bTuMYj1rlI
+        73kORZH4STUN4uT/oSvsC16j7D/9tXk=
+X-Google-Smtp-Source: ABdhPJzT9yLYd3cq8uj1d+K0UQNpad4xS5PqgLYGqMmB52e2SdmOQDbjc+VtlJLVgH40Ldfr6xy1eA==
+X-Received: by 2002:a05:6a00:2305:b029:1b4:8368:13fd with SMTP id h5-20020a056a002305b02901b4836813fdmr445183pfh.0.1613087103902;
+        Thu, 11 Feb 2021 15:45:03 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id i67sm6808035pfe.19.2021.02.11.15.45.02
+        by smtp.gmail.com with ESMTPSA id i67sm6808035pfe.19.2021.02.11.15.45.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Feb 2021 15:45:02 -0800 (PST)
+        Thu, 11 Feb 2021 15:45:03 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 17/22] lpfc: Fix crash caused by switch reboot
-Date:   Thu, 11 Feb 2021 15:44:38 -0800
-Message-Id: <20210211234443.3107-18-jsmart2021@gmail.com>
+Subject: [PATCH 19/22] lpfc: Reduce LOG_TRACE_EVENT logging for vports
+Date:   Thu, 11 Feb 2021 15:44:40 -0800
+Message-Id: <20210211234443.3107-20-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210211234443.3107-1-jsmart2021@gmail.com>
 References: <20210211234443.3107-1-jsmart2021@gmail.com>
@@ -72,43 +72,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Driver is causing a crash in __lpfc_sli_release_iocbq_s4() when it
-dereferences the els_wq which is NULL.
+Lots of discovery messages are flooding the console log when testing
+NPIV.
 
-Validate the pring for the els_wq before dereferencing. Reorg the code
-to move the pring assignment closer to where it is actually used.
+Informational message for vports should have LOG_VPORT associated with
+it as opposed to LOG_TRACE_EVENT.
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_vport.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 56112c9fb6aa..941540fe67ba 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -1403,7 +1403,6 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
- 			goto out;
- 		}
+diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+index ccf7b6cd0bd8..2fb6904f3209 100644
+--- a/drivers/scsi/lpfc/lpfc_vport.c
++++ b/drivers/scsi/lpfc/lpfc_vport.c
+@@ -190,7 +190,7 @@ lpfc_valid_wwn_format(struct lpfc_hba *phba, struct lpfc_name *wwn,
+ 	      ((wwn->u.wwn[0] & 0xf) != 0 || (wwn->u.wwn[1] & 0xf) != 0)))
+ 		return 1;
  
--		pring = phba->sli4_hba.els_wq->pring;
- 		if ((iocbq->iocb_flag & LPFC_EXCHANGE_BUSY) &&
- 			(sglq->state != SGL_XRI_ABORTED)) {
- 			spin_lock_irqsave(&phba->sli4_hba.sgl_list_lock,
-@@ -1426,9 +1425,9 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
- 				      &phba->sli4_hba.lpfc_els_sgl_list);
- 			spin_unlock_irqrestore(
- 				&phba->sli4_hba.sgl_list_lock, iflag);
--
-+			pring = lpfc_phba_elsring(phba);
- 			/* Check if TXQ queue needs to be serviced */
--			if (!list_empty(&pring->txq))
-+			if (pring && (!list_empty(&pring->txq)))
- 				lpfc_worker_wake_up(phba);
- 		}
+-	lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
++	lpfc_printf_log(phba, KERN_ERR, LOG_VPORT,
+ 			"1822 Invalid %s: %02x:%02x:%02x:%02x:"
+ 			"%02x:%02x:%02x:%02x\n",
+ 			name_type,
+@@ -531,7 +531,7 @@ disable_vport(struct fc_vport *fc_vport)
  	}
+ 
+ 	lpfc_vport_set_state(vport, FC_VPORT_DISABLED);
+-	lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
++	lpfc_printf_vlog(vport, KERN_ERR, LOG_VPORT,
+ 			 "1826 Vport Disabled.\n");
+ 	return VPORT_OK;
+ }
+@@ -579,7 +579,7 @@ enable_vport(struct fc_vport *fc_vport)
+ 	}
+ 
+ out:
+-	lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
++	lpfc_printf_vlog(vport, KERN_ERR, LOG_VPORT,
+ 			 "1827 Vport Enabled.\n");
+ 	return VPORT_OK;
+ }
+@@ -725,7 +725,7 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
+ 	spin_lock_irq(&phba->port_list_lock);
+ 	list_del_init(&vport->listentry);
+ 	spin_unlock_irq(&phba->port_list_lock);
+-	lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
++	lpfc_printf_vlog(vport, KERN_ERR, LOG_VPORT,
+ 			 "1828 Vport Deleted.\n");
+ 	scsi_host_put(shost);
+ 	return VPORT_OK;
 -- 
 2.26.2
 
