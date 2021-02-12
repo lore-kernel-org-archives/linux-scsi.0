@@ -2,140 +2,211 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 819EAC433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Feb 2021 04:13:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C386C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Feb 2021 07:27:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4751364E57
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Feb 2021 04:13:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6D1664E65
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Feb 2021 07:27:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229582AbhBLEMz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Feb 2021 23:12:55 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:34214 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229547AbhBLEMo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 11 Feb 2021 23:12:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1613103077;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=uGSTJ+HM+7VqDqFE+Eky32FecMVzs7Bcg9hDuw+mgkU=;
-        b=HYxGcbkfz5a1JXkyJqxkPc994HrJeozN9vnotzeMwx/9+Z3cjZaeBjDD7pmLzYZWNw76Xh
-        c+SqyWBUITwG7i4o3QdMctL/28rBYMbfTltMTM/o9g8LzIay97PXAcF2fwCZfjVegd5n7j
-        UzskMId0nLOuFw9PVtLLUu6J7twcc3o=
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
- [209.85.215.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-202-BHXZ-BwcNg6eqIEm_rPgfw-1; Thu, 11 Feb 2021 23:11:16 -0500
-X-MC-Unique: BHXZ-BwcNg6eqIEm_rPgfw-1
-Received: by mail-pg1-f199.google.com with SMTP id n2so6643003pgj.12
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2021 20:11:15 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:reply-to:subject:to:cc:references:from
-         :organization:message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=uGSTJ+HM+7VqDqFE+Eky32FecMVzs7Bcg9hDuw+mgkU=;
-        b=saSztWY95tF0ttWmAeH2dimc1iT4hKHIFqsMS46N6vhqH0wNP+baFB9m8aPebhqsjT
-         y+l8y0vWwHy7F2sJREn0UzXpxF0bI1HyniBePUdeZDMS2R/mzHlKarZFgM0ZjNeBcqDj
-         JVKDCU9B4Jf4FfNcg7nZBX9JIiId8xHJwvq3n5OPgqiKO+YH/jiu9ukiLV+ykbHiIeyr
-         Ar/wX0Fb4omlFAefCPFjTqEOOjt21gn/TOfI+iFVA0tYmvax6fAEA5meS7RNuhJ0H/vs
-         u5TRy5+fApZN+vEujQoUSx/4hIYv9LhQqW+01cYc04gdIN3zVDe4ylEgV8WEqfu97yUn
-         JYLQ==
-X-Gm-Message-State: AOAM533tcaxswtOBquA0nqRNeBhSF0O5spuYY8/OQHQxqCaQXEqVrTF7
-        oNloj4j46EoejnDS7sWhTQ3MtSnNYGBgkcn2d9Cnoo8lvm+O7nC3Dn8sVDQO3+6xXdXnbneqe31
-        htHtFzez8csOp/P+OxzYBZg==
-X-Received: by 2002:a63:6203:: with SMTP id w3mr1417633pgb.224.1613103056858;
-        Thu, 11 Feb 2021 20:10:56 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyduJ+VUkuvUWyn8zdfdOMBfeRnXsDPGGc6LXBWFnQ5eLwYhOE3VLPCITfJhujNVxCd1nLFog==
-X-Received: by 2002:a63:6203:: with SMTP id w3mr1415657pgb.224.1613103016659;
-        Thu, 11 Feb 2021 20:10:16 -0800 (PST)
-Received: from [172.24.0.1] ([122.169.13.134])
-        by smtp.gmail.com with ESMTPSA id nl12sm8449191pjb.2.2021.02.11.20.10.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 11 Feb 2021 20:10:10 -0800 (PST)
-Reply-To: mgandhi@redhat.com
-Subject: Re: [PATCH v2] scsi: qla2xxx: Removed extra space in variable
- declaration.
-To:     Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        kernel-janitors@vger.kernel.org
-Cc:     GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
-        njavali@marvell.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-References: <20210211131628.GA10754@machine1>
- <ccf393f7-cbfc-fb8c-6f73-bb502eaa54f3@acm.org>
- <b44bd29e-389c-634f-333d-edc88b3d7be9@oracle.com>
-From:   "Milan P. Gandhi" <mgandhi@redhat.com>
-Organization: Red Hat
-Message-ID: <9da0412a-6bf0-1f09-85af-2aec025ee3ec@redhat.com>
-Date:   Fri, 12 Feb 2021 09:40:06 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
-MIME-Version: 1.0
-In-Reply-To: <b44bd29e-389c-634f-333d-edc88b3d7be9@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        id S229730AbhBLH1p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Feb 2021 02:27:45 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:40236 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229710AbhBLH1n (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Feb 2021 02:27:43 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11C7PNgS016784;
+        Fri, 12 Feb 2021 07:26:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=7PSiiholU+bj09wr2L1i6BdRlm6F5FaI6m6nJVktJQY=;
+ b=PRdchNX/qapPUcZlD2N3A8KojLyvBKqTGHibdNTpmWlNUhVVyfPQFLaxoDMYo0GQkb9L
+ g/tyGu4kN6BOUpdJM+ItUqMdtUbrCAFnEeSLWepJXHff5PTklxcPbrLI0QZXnIWTx8sV
+ J7ysT262mjgGNIWW5x5HZC1yHOJXmcKa+HuUDDrCUkNIawhbdFugEUKcACjrVrC1bSQB
+ ZJFuTKmV9/9ZZuo/nCXBlI+Kst+4y+a9t8QIQZYMpZT3uJLHTvmW1LPGb33YzYNyYifI
+ OyI6GDZplLw7h+j2KH3VB6SbkiACYbmZZduZrZScrCWxAGON4vUvYDnjEQl/0Lg3LhlF Yg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 36mv9dvctv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 12 Feb 2021 07:26:55 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11C7PZdL022757;
+        Fri, 12 Feb 2021 07:26:54 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2170.outbound.protection.outlook.com [104.47.58.170])
+        by aserp3020.oracle.com with ESMTP id 36j5155a2x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 12 Feb 2021 07:26:54 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=OK79ub6RkrEJJ7JmXyZIZXVlpE4IUg4FXXFIWADeVHsBp60wlg2/9qvVGDE3QGDe0WeNftjz13O6ucjvHnupcigAXwHrDTx7CTjzEVTxtOb6xB+A4lq/twudMqSWySeydLdY/ouzm4x4FUB6eGMSEJTfB7d1VgGF4EWxb4M/pj0fqPlcYX8NKEPZjO/xMozX/gXxeDt9nOyg4z3uCeOmeuYR2unwaa12xfA4aY0O9PG4YD/BSxm6TWP1XecBmFgA4OmR8764LBxCjoNwfPxPY+VYqENXKIe0P2X3Jap3xo9PvOgN+GyP47mXTF0r0iD1ZOxyGUMPOFhaazUVEkUaiQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7PSiiholU+bj09wr2L1i6BdRlm6F5FaI6m6nJVktJQY=;
+ b=A2f59ucCQGB0u9+7JER6PCl/+frkvIG2esXwI7wHaDh/44Fpiy5OZrKKYelMsy1x1ZihzcL4w5Unh1aOvYuxCiCMxsY9HB7RgBXv68eDgEWq0VZv/DOxjLBc2/syjZDXugtbQLZQ8m9hyV+RMMfw+vCBMY8baRhiN29LvmqHqNgHBxiTvSiuDyEjqVoXT0I0IbGeQ1aGavQYpkWGBz+AzRUCIdZumo3bF7qEfuo4oNT6xuTRCphG/uMsztBvBwdqhi7OM1stoiX9xeADB/OaAD56L9BgBKjJhGNwku6KbddnKnffdAE0U6+Y6evrO1mBky+lI+LboDkrNz7NtaqATQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7PSiiholU+bj09wr2L1i6BdRlm6F5FaI6m6nJVktJQY=;
+ b=U0jKsKMTGoMnbIpC+NsLClGPwMoAKmPFcuS9vmheNYiQ3W27iA6VT2hvcGZIsncnv8z9JZ4d5EU1WJ7dFJjxWTYOXZJ9/BUTQCHD2XlNcJsFsulHk0v0SM/PnxXs+/y+n8lWLiTdmFplnHWP9MEHebg78EBgud30OvB9YxMzGmo=
+Authentication-Results: redhat.com; dkim=none (message not signed)
+ header.d=none;redhat.com; dmarc=none action=none header.from=oracle.com;
+Received: from BN8PR10MB3570.namprd10.prod.outlook.com (2603:10b6:408:ae::12)
+ by BN0PR10MB5256.namprd10.prod.outlook.com (2603:10b6:408:12f::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.27; Fri, 12 Feb
+ 2021 07:26:51 +0000
+Received: from BN8PR10MB3570.namprd10.prod.outlook.com
+ ([fe80::513a:2259:52d5:e495]) by BN8PR10MB3570.namprd10.prod.outlook.com
+ ([fe80::513a:2259:52d5:e495%4]) with mapi id 15.20.3846.027; Fri, 12 Feb 2021
+ 07:26:51 +0000
+From:   Mike Christie <michael.christie@oracle.com>
+To:     mst@redhat.com, stefanha@redhat.com, Chaitanya.Kulkarni@wdc.com,
+        hch@lst.de, loberman@redhat.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: PATCH 00/25 V4] target: fix cmd plugging and submission
+Date:   Fri, 12 Feb 2021 01:26:17 -0600
+Message-Id: <20210212072642.17520-1-michael.christie@oracle.com>
+X-Mailer: git-send-email 2.25.1
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [73.88.28.6]
+X-ClientProxiedBy: CH2PR14CA0050.namprd14.prod.outlook.com
+ (2603:10b6:610:56::30) To BN8PR10MB3570.namprd10.prod.outlook.com
+ (2603:10b6:408:ae::12)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from localhost.localdomain (73.88.28.6) by CH2PR14CA0050.namprd14.prod.outlook.com (2603:10b6:610:56::30) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.27 via Frontend Transport; Fri, 12 Feb 2021 07:26:50 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: e5664f02-feec-44d0-393a-08d8cf279079
+X-MS-TrafficTypeDiagnostic: BN0PR10MB5256:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BN0PR10MB52561515A552144E5AD00F3AF18B9@BN0PR10MB5256.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: cI3ejF/JxZU7wt0TMs2QPPesLcVwnv746DQ8gYkODRqJzwa7bHmEzK11ybMm2+ePlAeJnz3mbPta2eI6BAaVWBVC2rQlJ9zdodAeWQBzsuMUa10NlVb7b9ulB9ei0yyTqYb8+CrXRPmiPpwQjpLezlRvrC+zxQ1ceDkUQVPUWnspDyzzYFx9sdjTpdNkDELb58De882f55eBf/yLkO1Jejjzx321Ik76nFNvKAHPhF2S8inl3xqI+8c8gr5ir0ouUQQV8iRIFg/31KxsqaL8xYPzJTlyaGpV1fHUampgTfZWyg7fKHHbq4HuUyORQKKjRVYO173RS8vhkLYXBwuz3EYCqt2fE7NfW+20Mi5jla/vZLaWqY8m6C7bDfqQPuM65Y3IW1aRWfQJth/unQjgQa2rSQjtfPzLGfXGpf2VK/4CGRpN/fZa78wUjKrSB7MtnI4IIsRYIAL2cAD9ByTWQGRgQR2GpB5xkBePWrQy9+mQHuAHg7Chsyh0jSNRPCfDsxT410vSRFhDrFuz7vwpZnqjrxZzt46ZCUcCC+ZRwqRsB11/wqAXdxRZNeimGTOWi/ofw02GZSAltTsbH93eNA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR10MB3570.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(346002)(396003)(366004)(39860400002)(136003)(478600001)(1076003)(6512007)(83380400001)(8676002)(66556008)(5660300002)(316002)(66476007)(6666004)(8936002)(69590400011)(36756003)(86362001)(6506007)(16526019)(2906002)(186003)(2616005)(956004)(6486002)(52116002)(26005)(66946007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?m8GlFlwcj+32+Wh7gFmv40L3LFUwunQzs6bihRxxWlBsuPQiSGkwbM/AIzZm?=
+ =?us-ascii?Q?FtgK26RP35hnVcuQiK7DjPqURG4lz+qzbgsywlsCiOSwC59ocHyKnZcMK8h/?=
+ =?us-ascii?Q?4J7BCt1qeE79icICl1lQNO6nysH2ILigQIlv7b9tAfL9nYd0qbNlUZCj2gA6?=
+ =?us-ascii?Q?I/Yl2Qm4S7iiozKWlNYmVGE/4X36JUaBUJqiZfaiAmrh8Ma1tgVuI3jJLcb9?=
+ =?us-ascii?Q?wnvy29Ahkw+0tZ+YLUEGz6a2eqwil//qiubs0viy+ZYf0MtaReNgRo8ILyC7?=
+ =?us-ascii?Q?Xh5Qlm1r3X879H9/83tZ7YIgweg3GPuXDHmRFG1q096vZ8ezp+gRACduCyxM?=
+ =?us-ascii?Q?QRfX/F3O/w1JrD00Xgcgu4wPYuciOyZdiZQNAgmhb8ZrBeGqOis3vRkAucoL?=
+ =?us-ascii?Q?y8aXuld8jERIUhVbLq3dUtGCrjWavvEjdPZ3IgzuLq6ELnY4Yo/6L+mQ/awA?=
+ =?us-ascii?Q?THrOMY++NRZfTRQXAvTwzwuqzR6Sd4GdVQKfi2HuYUHiIrAxTC8gKBOwaCsk?=
+ =?us-ascii?Q?i8EA8lMKLC9bIz4qjq8X8fuJ8miGUYkg9xxqJfu8LUtwJr4KTKMBQez3HL1h?=
+ =?us-ascii?Q?CPYNTxf5Xp7aO31yDXiZYcrgs0qGxz/1z9ZZcIguCczHtpjKAckTRov2lnCI?=
+ =?us-ascii?Q?MYVT4lq9xN2Jlgi+MXBSzkvGE3vqSPvzUC8Ep4lQqJD552eoHncUzvoTkhZr?=
+ =?us-ascii?Q?mtuhUz4YYjC8srzKhVPZ0s7rMLvx/9l3mymHiOenIRBQwJEnT/m+aivRAFtU?=
+ =?us-ascii?Q?vzlGl12jzKm3lP6xGi2JArW6KZ3K1qqHL46LDNNwl5jUB9aKY+Q/rcKCPzua?=
+ =?us-ascii?Q?SswmwP1na3g9ZybxJQFdEayZFWI6/kR6VLye/1Z3XxQ78zXiI8W5C9m5H3bU?=
+ =?us-ascii?Q?/XezA7Ms+4EPngwD5aI3+E8dXCwSrR4Ajmh5PGGR7/MmXOMFBWkiGQNxwPkR?=
+ =?us-ascii?Q?EC+T3hyVzD02Ch77Ko42Hi3s0e2kWSHtFfsDuXAEWPgc44TflIWMEowi/eeX?=
+ =?us-ascii?Q?A9m2bnvZ/2dW2zLkeMC10MaOtDus6tCIBdzxJFcRwFsx0yIX/myX9/uw3Ps6?=
+ =?us-ascii?Q?+7JE+LHunsE/eurunfYFIXw/9EVS/Mor5lZeNppu7cfQjDDYvk/rr+Fz+127?=
+ =?us-ascii?Q?raioBZtDyTYU0EQmXXRngr4VZO0SdhFFN0LCMFT6eGnKW5LLC17xSWXQs+hd?=
+ =?us-ascii?Q?/pzlvMQRRubff1QtwzMoJAFtm9FDTLOfNPEqFv8a8oFK8OAAvv+7zY8/7Xzi?=
+ =?us-ascii?Q?Wvu/EflHe66RhUjdWvD/G2XTvoIPIFmfff0Z42NIbolGgCrgK5cYx1wWydvN?=
+ =?us-ascii?Q?hVYgxYs4tr+ii4bfg7rWEp74?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e5664f02-feec-44d0-393a-08d8cf279079
+X-MS-Exchange-CrossTenant-AuthSource: BN8PR10MB3570.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Feb 2021 07:26:51.0461
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: HxWF/ZDkG4zlWm8dryrpZdG96V9weh1doEvcH1XMkH+uc4tw8r8PRR1nw+RHKrKRtKHesURQkTxIL4hi4prv5rGZnq19czdXDYhtIxtqFqI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB5256
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9892 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 adultscore=0
+ mlxlogscore=999 phishscore=0 spamscore=0 suspectscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2102120053
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9892 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 mlxlogscore=999
+ bulkscore=0 suspectscore=0 phishscore=0 adultscore=0 impostorscore=0
+ mlxscore=0 clxscore=1015 lowpriorityscore=0 malwarescore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2102120053
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart, Himanshu,
+The following patches were made over Martin's 5.12 branches
+to handle conflicts with the in_interrupt changes.
 
-On 2/11/21 10:18 PM, Himanshu Madhani wrote:
-> Hi Milan,
-> 
-> On 2/11/21 9:57 AM, Bart Van Assche wrote:
->> On 2/11/21 5:16 AM, Milan P. Gandhi wrote:
->>> Removed extra space in variable declaration in qla2x00_sysfs_write_nvram
->>>
->>> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
->>> ---
->>> changes v2:
->>>   - Added a small note about change.
->>> ---
->>> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
->>> index ab45ac1e5a72..7f2db8badb6d 100644
->>> --- a/drivers/scsi/qla2xxx/qla_attr.c
->>> +++ b/drivers/scsi/qla2xxx/qla_attr.c
->>> @@ -226,7 +226,7 @@ qla2x00_sysfs_write_nvram(struct file *filp, struct kobject *kobj,
->>>       struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
->>>           struct device, kobj)));
->>>       struct qla_hw_data *ha = vha->hw;
->>> -    uint16_t    cnt;
->>> +    uint16_t cnt;
->>>         if (!capable(CAP_SYS_ADMIN) || off != 0 || count != ha->nvram_size ||
->>>           !ha->isp_ops->write_nvram)
->>
->> I'm not sure if such a patch is considered substantial enough to be
->> included upstream.
->>
->> For future patches, please follow the guidelines for submitting patches
->> and use the imperative mood for the subject (Removed -> Remove) and do
->> not end the patch subject with a dot. See also
->> Documentation/process/submitting-patches.rst
->>
->> Bart.
->>
->>
-> Agree with Bart here.
-> 
-> What was motivation behind this patch?
-> 
-> if you scroll through code, i am pretty sure you will find more than one place where spaces are not consistent (especially 15+ yr old code).
-> 
-I thought it was a typo and extra space was left, so just fixed it.
-But it looks that there are many other places in qla2xxx source with similar declarations.
-I apologize for the noise.
+The patches fix the following issues:
 
-Thanks,
-Milan.
+1. target_core_iblock plugs and unplugs the queue for every
+command. To handle this issue and handle an issue that
+vhost-scsi and loop were avoiding by adding their own workqueue,
+I added a new submission workqueue to LIO. Drivers can pass cmds
+to it, and we can then submit batches of cmds.
+
+2. vhost-scsi and loop on the submission side were doing a work
+per cmd but because we can block in the block layer on resources
+like tags we can end up creating lots of threads that will fight
+each other. In this patchset I just use a cmd list per device to
+avoid abusing the workueue layer and to better batch the cmds
+to the lower layers.
+
+The combined patchset fixes a major perf issue we've been hitting
+with vhost-scsi where IOPs were stuck at 230K when running:
+
+    fio --filename=/dev/sda  --direct=1 --rw=randrw --bs=4k
+    --ioengine=libaio --iodepth=128  --numjobs=8 --time_based
+    --group_reporting --runtime=60
+
+The patches in this set get me to 350K when using devices that
+have native IOPs of around 400-500K. 
+
+3. Fix target_submit* error handling. While handling Christoph's
+comment to kill target_submit_cmd_map_sgls I hit several bugs that
+are now also fixed up.
+
+V4:
+- Fixed the target_submit error handling.
+- Dropped get_cdb callback.
+- Fixed kernel robot errors for incorrect return values and unused
+variables.
+- Used flush instead of cancel to fix bug in tmr code.
+- Fixed race in tcmu.
+- Made completion affinity handling a configfs setting
+- Dropped patch that added the per device work lists. It really helped
+a lot for higher perf initiators and tcm loop but only gave around a 5%
+boost to other drivers. So I dropped it for now to see if there is
+something more generic we can do.
+
+V3:
+- Fix rc type in target_submit so its a sense_reason_t
+- Add BUG_ON if caller uses target_queue_cmd_submit but hasn't
+implemented get_cdb.
+- Drop unused variables in loop.
+- Fix race in tcmu plug check
+- Add comment about how plug check works in iblock
+- Do a flush when handling TMRs instead of cancel
+
+V2:
+- Fix up container_of use coding style
+- Handle offlist review comment from Laurence where with the
+original code and my patches we can hit a bug where the cmd
+times out, LIO starts up the TMR code, but it misses the cmd
+because it's on the workqueue.
+- Made the work per device work instead of session to handle
+the previous issue and so if one dev hits some issue it sleeps on,
+it won't block other devices.
+
+
 
