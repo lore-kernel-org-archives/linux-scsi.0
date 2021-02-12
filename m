@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA173C433DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Feb 2021 00:23:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52426C433E6
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Feb 2021 02:53:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F52B64E01
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Feb 2021 00:23:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2404364E62
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Feb 2021 02:53:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230315AbhBLAWy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Feb 2021 19:22:54 -0500
-Received: from szxga02-in.huawei.com ([45.249.212.188]:3439 "EHLO
+        id S229587AbhBLCql convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Feb 2021 21:46:41 -0500
+Received: from szxga02-in.huawei.com ([45.249.212.188]:3021 "EHLO
         szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230295AbhBLAWg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 19:22:36 -0500
-Received: from DGGEMM404-HUB.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4DcDfg5QMZz5Mlp;
-        Fri, 12 Feb 2021 08:20:27 +0800 (CST)
-Received: from dggemi709-chm.china.huawei.com (10.3.20.108) by
- DGGEMM404-HUB.china.huawei.com (10.3.20.212) with Microsoft SMTP Server (TLS)
- id 14.3.498.0; Fri, 12 Feb 2021 08:21:52 +0800
+        with ESMTP id S229469AbhBLCqk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2021 21:46:40 -0500
+Received: from DGGEMM402-HUB.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4DcHs13h3kzRDQr;
+        Fri, 12 Feb 2021 10:44:37 +0800 (CST)
+Received: from dggemi762-chm.china.huawei.com (10.1.198.148) by
+ DGGEMM402-HUB.china.huawei.com (10.3.20.210) with Microsoft SMTP Server (TLS)
+ id 14.3.498.0; Fri, 12 Feb 2021 10:45:55 +0800
 Received: from dggemi761-chm.china.huawei.com (10.1.198.147) by
- dggemi709-chm.china.huawei.com (10.3.20.108) with Microsoft SMTP Server
+ dggemi762-chm.china.huawei.com (10.1.198.148) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2106.2; Fri, 12 Feb 2021 08:21:52 +0800
+ 15.1.2106.2; Fri, 12 Feb 2021 10:45:54 +0800
 Received: from dggemi761-chm.china.huawei.com ([10.9.49.202]) by
  dggemi761-chm.china.huawei.com ([10.9.49.202]) with mapi id 15.01.2106.006;
- Fri, 12 Feb 2021 08:21:52 +0800
+ Fri, 12 Feb 2021 10:45:54 +0800
 From:   "Song Bao Hua (Barry Song)" <song.bao.hua@hisilicon.com>
 To:     Finn Thain <fthain@telegraphics.com.au>
 CC:     tanxiaofei <tanxiaofei@huawei.com>,
@@ -41,270 +41,171 @@ CC:     tanxiaofei <tanxiaofei@huawei.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linuxarm@openeuler.org" <linuxarm@openeuler.org>,
         "linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>
-Subject: RE: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage
- optimization for SCSI drivers
-Thread-Topic: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage
- optimization for SCSI drivers
-Thread-Index: AQHW//Cyu0PLR2OKVEm5NkJUbKWYbqpR4DFw//+TtYCAAJWd4P//lj6AgACbEFCAAOKqAIAAiLxQ
-Date:   Fri, 12 Feb 2021 00:21:52 +0000
-Message-ID: <63585f6eb9a4419d84084bfc73edd44f@hisilicon.com>
-References: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com>
- <31cd807d-3d0-ed64-60d-fde32cb3833c@telegraphics.com.au>
- <e949a474a9284ac6951813bfc8b34945@hisilicon.com>
- <f0a3339d-b1db-6571-fa2f-6765e150eb9d@telegraphics.com.au>
- <88d26bd86c314e5483ec596952054be7@hisilicon.com>
- <da111631-83ef-1ad8-799a-5d976d5759d@telegraphics.com.au>
- <00c06b19e87a425fa3a4b6aaecc66d49@hisilicon.com>
- <9611728-3e7-3954-cfee-f3d3cf45df6@telegraphics.com.au>
- <13c414b9bd7940caa5e1df810356dcfd@hisilicon.com>
- <221cb29-53a8-fd1-4232-360655f28f3@telegraphics.com.au>
- <3ec7cb32aa754a59b894d048873132cf@hisilicon.com>
- <9d248ea6-f861-850-ba71-ac2cdd5596ff@telegraphics.com.au>
- <4646dd5cb26d4e1195951228c46fbff6@hisilicon.com>
- <8296cd-85d0-6b2e-3291-9a73db553ad8@telegraphics.com.au>
-In-Reply-To: <8296cd-85d0-6b2e-3291-9a73db553ad8@telegraphics.com.au>
+Subject: RE: Re: [PATCH for-next 00/32] spin lock usage optimization for SCSI
+ drivers
+Thread-Topic: Re: [PATCH for-next 00/32] spin lock usage optimization for SCSI
+ drivers
+Thread-Index: AdcAYpckfegWyL1RTeK8yhWOZkcCaAAK/seAABDAZzD//30igP//VM2g
+Date:   Fri, 12 Feb 2021 02:45:54 +0000
+Message-ID: <48d2891ad9e340028c3b551a83d570b0@hisilicon.com>
+References: <417fa728c3ff4418ac87e0d409b5a084@hisilicon.com>
+ <c7fdb63e-e84-c685-35f4-6b6f663cd867@telegraphics.com.au>
+ <0d104f0e26134b1ea9c530be895e65d1@hisilicon.com>
+ <4dcf1410-768e-ae95-33bf-cba093b0751d@telegraphics.com.au>
+In-Reply-To: <4dcf1410-768e-ae95-33bf-cba093b0751d@telegraphics.com.au>
 Accept-Language: en-GB, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-originating-ip: [10.126.201.23]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRmlubiBUaGFpbiBbbWFp
-bHRvOmZ0aGFpbkB0ZWxlZ3JhcGhpY3MuY29tLmF1XQ0KPiBTZW50OiBGcmlkYXksIEZlYnJ1YXJ5
-IDEyLCAyMDIxIDEyOjU4IFBNDQo+IFRvOiBTb25nIEJhbyBIdWEgKEJhcnJ5IFNvbmcpIDxzb25n
-LmJhby5odWFAaGlzaWxpY29uLmNvbT4NCj4gQ2M6IHRhbnhpYW9mZWkgPHRhbnhpYW9mZWlAaHVh
-d2VpLmNvbT47IGplamJAbGludXguaWJtLmNvbTsNCj4gbWFydGluLnBldGVyc2VuQG9yYWNsZS5j
-b207IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOw0KPiBsaW51eC1rZXJuZWxAdmdlci5rZXJu
-ZWwub3JnOyBsaW51eGFybUBvcGVuZXVsZXIub3JnOw0KPiBsaW51eC1tNjhrQHZnZXIua2VybmVs
-Lm9yZw0KPiBTdWJqZWN0OiBSRTogW0xpbnV4YXJtXSBSZTogW1BBVENIIGZvci1uZXh0IDAwLzMy
-XSBzcGluIGxvY2sgdXNhZ2Ugb3B0aW1pemF0aW9uDQo+IGZvciBTQ1NJIGRyaXZlcnMNCj4gDQo+
-IE9uIFRodSwgMTEgRmViIDIwMjEsIFNvbmcgQmFvIEh1YSAoQmFycnkgU29uZykgd3JvdGU6DQo+
-IA0KPiA+ID4gT24gV2VkLCAxMCBGZWIgMjAyMSwgU29uZyBCYW8gSHVhIChCYXJyeSBTb25nKSB3
-cm90ZToNCj4gPiA+DQo+ID4gPiA+ID4gT24gV2VkLCAxMCBGZWIgMjAyMSwgU29uZyBCYW8gSHVh
-IChCYXJyeSBTb25nKSB3cm90ZToNCj4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gVEJILCB0aGF0IGlz
-IHdoeSBtNjhrIGlzIHNvIGNvbmZ1c2luZy4gaXJxc19kaXNhYmxlZCgpIG9uIG02OGsNCj4gPiA+
-ID4gPiA+IHNob3VsZCBqdXN0IHJlZmxlY3QgdGhlIHN0YXR1cyBvZiBhbGwgaW50ZXJydXB0cyBo
-YXZlIGJlZW4NCj4gPiA+ID4gPiA+IGRpc2FibGVkIGV4Y2VwdCBOTUkuDQo+ID4gPiA+ID4gPg0K
-PiA+ID4gPiA+ID4gaXJxc19kaXNhYmxlZCgpIHNob3VsZCBiZSBjb25zaXN0ZW50IHdpdGggdGhl
-IGNhbGxpbmcgb2YgQVBJcw0KPiA+ID4gPiA+ID4gc3VjaCBhcyBsb2NhbF9pcnFfZGlzYWJsZSwg
-bG9jYWxfaXJxX3NhdmUsIHNwaW5fbG9ja19pcnFzYXZlDQo+ID4gPiA+ID4gPiBldGMuDQo+ID4g
-PiA+ID4gPg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gV2hlbiBpcnFzX2Rpc2FibGVkKCkgcmV0dXJu
-cyB0cnVlLCB3ZSBjYW5ub3QgaW5mZXIgdGhhdA0KPiA+ID4gPiA+IGFyY2hfbG9jYWxfaXJxX2Rp
-c2FibGUoKSB3YXMgY2FsbGVkLiBCdXQgSSBoYXZlIG5vdCB5ZXQgZm91bmQNCj4gPiA+ID4gPiBk
-cml2ZXIgY29kZSBvciBjb3JlIGtlcm5lbCBjb2RlIGF0dGVtcHRpbmcgdGhhdCBpbmZlcmVuY2Uu
-DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gPiBJc24ndCBhcmNoX2ly
-cXNfZGlzYWJsZWQoKSBhIHN0YXR1cyByZWZsZWN0aW9uIG9mIGlycQ0KPiA+ID4gPiA+ID4gPiA+
-IGRpc2FibGUgQVBJPw0KPiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4g
-PiA+IFdoeSBub3Q/DQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gSWYgc28sIGFyY2hfaXJxc19k
-aXNhYmxlZCgpIHNob3VsZCBtZWFuIGFsbCBpbnRlcnJ1cHRzIGhhdmUgYmVlbg0KPiA+ID4gPiA+
-ID4gbWFza2VkIGV4Y2VwdCBOTUkgYXMgTk1JIGlzIHVubWFza2FibGUuDQo+ID4gPiA+ID4gPg0K
-PiA+ID4gPiA+DQo+ID4gPiA+ID4gQ2FuIHlvdSBzdXBwb3J0IHRoYXQgY2xhaW0gd2l0aCBhIHJl
-ZmVyZW5jZSB0byBjb3JlIGtlcm5lbCBjb2RlIG9yDQo+ID4gPiA+ID4gZG9jdW1lbnRhdGlvbj8g
-KElmIHNvbWUgYXJjaCBjb2RlIGFncmVlcyB3aXRoIHlvdSwgdGhhdCdzIG5laXRoZXINCj4gPiA+
-ID4gPiBoZXJlIG5vciB0aGVyZS4pDQo+ID4gPiA+DQo+ID4gPiA+IEkgdGhpbmsgdGhvc2UgbGlu
-a3MgSSBzaGFyZSB5b3UgaGF2ZSBzdXBwb3J0ZWQgdGhpcy4gSnVzdCB5b3UgZG9uJ3QNCj4gPiA+
-ID4gYmVsaWV2ZSA6LSkNCj4gPiA+ID4NCj4gPiA+DQo+ID4gPiBZb3VyIGxpbmtzIHNob3cgdGhh
-dCB0aGUgZGlzdGluY3Rpb24gYmV0d2VlbiBmYXN0IGFuZCBzbG93IGhhbmRsZXJzDQo+ID4gPiB3
-YXMgcmVtb3ZlZC4gWW91ciBsaW5rcyBkb24ndCBzdXBwb3J0IHlvdXIgY2xhaW0gdGhhdA0KPiA+
-ID4gImFyY2hfaXJxc19kaXNhYmxlZCgpIHNob3VsZCBtZWFuIGFsbCBpbnRlcnJ1cHRzIGhhdmUg
-YmVlbiBtYXNrZWQiLg0KPiA+ID4gV2hlcmUgaXMgdGhlIGNvZGUgdGhhdCBtYWtlcyB0aGF0IGlu
-ZmVyZW5jZT8gV2hlcmUgaXMgdGhlDQo+ID4gPiBkb2N1bWVudGF0aW9uIHRoYXQgc3VwcG9ydHMg
-eW91ciBjbGFpbT8NCj4gPg0KPiA+ICgxKQ0KPiA+IGh0dHBzOi8vbHduLm5ldC9BcnRpY2xlcy8z
-ODA5MzEvDQo+ID4gTG9va2luZyBhdCBhbGwgdGhlc2Ugd29ycmllcywgb25lIG1pZ2h0IHdlbGwg
-d29uZGVyIGlmIGEgc3lzdGVtIHdoaWNoDQo+ID4gKmRpc2FibGVkIGludGVycnVwdHMgZm9yIGFs
-bCBoYW5kbGVycyogd291bGQgZnVuY3Rpb24gd2VsbCBhdCBhbGwuIFNvIGl0DQo+ID4gaXMgaW50
-ZXJlc3RpbmcgdG8gbm90ZSBvbmUgdGhpbmc6IGFueSBzeXN0ZW0gd2hpY2ggaGFzIHRoZSBsb2Nr
-ZGVwDQo+ID4gbG9ja2luZyBjaGVja2VyIGVuYWJsZWQgaGFzIGJlZW4gcnVubmluZyBhbGwgaGFu
-ZGxlcnMgdGhhdCB3YXkgZm9yIHNvbWUNCj4gPiB5ZWFycyBub3cuIE1hbnkgZGV2ZWxvcGVycyBh
-bmQgdGVzdGVycyBydW4gbG9ja2RlcC1lbmFibGVkIGtlcm5lbHMsIGFuZA0KPiA+IHRoZXkgYXJl
-IGF2YWlsYWJsZSBmb3Igc29tZSBvZiB0aGUgbW9yZSBhZHZlbnR1cm91cyBkaXN0cmlidXRpb25z
-DQo+ID4gKFJhd2hpZGUsIGZvciBleGFtcGxlKSBhcyB3ZWxsLiBTbyB3ZSBoYXZlIHF1aXRlIGEg
-Yml0IG9mIHRlc3QgY292ZXJhZ2UNCj4gPiBmb3IgdGhpcyBtb2RlIG9mIG9wZXJhdGlvbiBhbHJl
-YWR5Lg0KPiA+DQo+IA0KPiBJSVVDLCB5b3VyIGNsYWltIGlzIHRoYXQgQ09ORklHX0xPQ0tERVAg
-aW52b2x2ZXMgY29kZSB0aGF0IGNvbnRhaW5zIHRoZQ0KPiBpbmZlcmVuY2UsICJhcmNoX2lycXNf
-ZGlzYWJsZWQoKSBtZWFucyBhbGwgaW50ZXJydXB0cyBoYXZlIGJlZW4gbWFza2VkIi4NCj4gDQo+
-IFVuZm9ydHVuYXRlbHksIG02OGsgbGFja3MgQ09ORklHX0xPQ0tERVAgc3VwcG9ydCBzbyBJIGNh
-bid0IGVhc2lseSBjb25maXJtDQo+IHRoaXMuIEkgc3VwcG9zZSB0aGVyZSBtYXkgYmUgb3RoZXIg
-YXJjaGl0ZWN0dXJlcyB0aGF0IHN1cHBvcnQgYm90aCBMT0NLREVQDQo+IGFuZCBuZXN0ZWQgaW50
-ZXJydXB0cyAoPykNCj4gDQo+IEFueXdheSwgaWYgeW91IHdvdWxkIHBvaW50IHRvIHRoZSBjb2Rl
-IHRoYXQgY29udGFpbnMgc2FpZCBpbmZlcmVuY2UsIHRoYXQNCj4gd291bGQgaGVscCBhIGxvdC4N
-Cj4gDQo+ID4gKDIpDQo+ID4NCj4gaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4
-L2tlcm5lbC9naXQvdG9ydmFsZHMvbGludXguZ2l0L2NvbW1pdC8NCj4gP2lkPWI3MzhhNTBhDQo+
-ID4NCj4gPiAiV2UgcnVuIGFsbCBoYW5kbGVycyAqd2l0aCBpbnRlcnJ1cHRzIGRpc2FibGVkKiBh
-bmQgZXhwZWN0IHRoZW0gbm90IHRvDQo+ID4gZW5hYmxlIHRoZW0uIFdhcm4gd2hlbiB3ZSBjYXRj
-aCBvbmUgd2hvIGRvZXMuIg0KPiA+DQo+IA0KPiBBZ2FpbiwgeW91IGRvbid0IHNlZSB0aGF0IHdh
-cm5pbmcgYmVjYXVzZSBpcnFzX2Rpc2FibGVkKCkgY29ycmVjdGx5DQo+IHJldHVybnMgdHJ1ZS4g
-WW91IGNhbiBjb25maXJtIHRoaXMgZmFjdCBpbiBRRU1VIG9yIEFyYW55bSBpZiB5b3UgYXJlDQo+
-IGludGVyZXN0ZWQuDQo+IA0KPiA+ICgzKQ0KPiA+DQo+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcv
-cHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L3RvcnZhbGRzL2xpbnV4LmdpdC9jb21taXQvDQo+ID9p
-ZD1lNThhYTNkMmQwY2MNCj4gPiBnZW5pcnE6IFJ1biBpcnEgaGFuZGxlcnMgKndpdGggaW50ZXJy
-dXB0cyBkaXNhYmxlZCoNCj4gPg0KPiA+IFJ1bm5pbmcgaW50ZXJydXB0IGhhbmRsZXJzIHdpdGgg
-aW50ZXJydXB0cyBlbmFibGVkIGNhbiBjYXVzZSBzdGFjaw0KPiA+IG92ZXJmbG93cy4gVGhhdCBo
-YXMgYmVlbiBvYnNlcnZlZCB3aXRoIG11bHRpcXVldWUgTklDcyBkZWxpdmVyaW5nIGFsbA0KPiA+
-IHRoZWlyIGludGVycnVwdHMgdG8gYSBzaW5nbGUgY29yZS4gV2UgbWlnaHQgYmFuZCBhaWQgdGhh
-dCBzb21laG93IGJ5DQo+ID4gY2hlY2tpbmcgdGhlIGludGVycnVwdCBzdGFja3MsIGJ1dCB0aGUg
-cmVhbCBzYWZlIGZpeCBpcyB0byAqcnVuIHRoZSBpcnENCj4gPiBoYW5kbGVycyB3aXRoIGludGVy
-cnVwdHMgZGlzYWJsZWQqLg0KPiA+DQo+IA0KPiBBZ2FpbiwgdGhlIHN0YWNrIG92ZXJmbG93IGlz
-c3VlIGlzIG5vdCBhcHBsaWNhYmxlLiA2ODAwMCB1c2VzIGEgcHJpb3JpdHkNCj4gbWFzaywgbGlr
-ZSBBUk0gR0lDLiBTbyB0aGVyZSdzIG5vIGFyYml0cmFyeSBuZXN0aW5nIG9mIGludGVycnVwdCBo
-YW5kbGVycy4NCj4gDQo+IEluIHByYWN0aWNlIHN0YWNrIG92ZXJmbG93cyBzaW1wbHkgZG9uJ3Qg
-b2NjdXIgb24gbTY4ay4gUGxlYXNlIGRvIHRyeSBpdC4NCj4gDQo+ID4NCj4gPiBBbGwgdGhlc2Ug
-ZG9jdW1lbnRzIHNheSB3ZSBhcmUgcnVubmluZyBpcnEgaGFuZGxlciB3aXRoIGludGVycnVwdHMN
-Cj4gPiBkaXNhYmxlZC4gYnV0IGl0IHNlZW1zIHlvdSB0aGluayBoaWdoLXByaW8gaW50ZXJydXB0
-cyBkb24ndCBiZWxvbmcNCj4gPiB0byAiaW50ZXJydXB0cyIgaW4gdGhvc2UgZG9jdW1lbnRzIDot
-KQ0KPiA+DQo+ID4gdGhhdCBpcyB3aHkgd2UgY2FuJ3QgZ2V0IGFncmVlbWVudC4gSSB0aGluayAi
-aW50ZXJydXB0cyIgbWVhbiBhbGwgZXhjZXB0DQo+ID4gTk1JIGluIHRoZXNlIGRvY3VtZW50cywg
-YnV0IHlvdSBpbnNpc3QgaGlnaC1wcmlvIElSUSBpcyBhbiBleGNlcHRpb24uDQo+ID4NCj4gDQo+
-IFdlIGNhbid0IGdldCBhZ3JlZW1lbnQgYmVjYXVzZSB5b3Ugc2VlayB0byByZW1vdmUgZnVuY3Rp
-b25hbGl0eSB3aXRob3V0DQo+IGp1c3RpZmljYXRpb24uDQo+IA0KPiA+ID4gPiA+DQo+ID4gPiA+
-ID4gPiA+DQo+ID4gPiA+ID4gPiA+IEFyZSBhbGwgaW50ZXJydXB0cyAoaW5jbHVkaW5nIE5NSSkg
-bWFza2VkIHdoZW5ldmVyDQo+ID4gPiA+ID4gPiA+IGFyY2hfaXJxc19kaXNhYmxlZCgpIHJldHVy
-bnMgdHJ1ZSBvbiB5b3VyIHBsYXRmb3Jtcz8NCj4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiBPbiBt
-eSBwbGF0Zm9ybSwgb25jZSBpcnFzX2Rpc2FibGVkKCkgaXMgdHJ1ZSwgYWxsIGludGVycnVwdHMg
-YXJlDQo+ID4gPiA+ID4gPiBtYXNrZWQgZXhjZXB0IE5NSS4gTk1JIGp1c3QgaWdub3JlIHNwaW5f
-bG9ja19pcnFzYXZlIG9yDQo+ID4gPiA+ID4gPiBsb2NhbF9pcnFfZGlzYWJsZS4NCj4gPiA+ID4g
-PiA+DQo+ID4gPiA+ID4gPiBPbiBBUk02NCwgd2UgYWxzbyBoYXZlIGhpZ2gtcHJpb3JpdHkgaW50
-ZXJydXB0cywgYnV0IHRoZXkgYXJlDQo+ID4gPiA+ID4gPiBydW5uaW5nIGFzIFBFU1VET19OTUk6
-DQo+ID4gPiA+ID4gPiBodHRwczovL2x3bi5uZXQvQXJ0aWNsZXMvNzU1OTA2Lw0KPiA+ID4gPiA+
-ID4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IEEgZ2xhbmNlIGF0IHRoZSBBUk0gR0lDIHNwZWNpZmlj
-YXRpb24gc3VnZ2VzdHMgdGhhdCB5b3VyIGhhcmR3YXJlDQo+ID4gPiA+ID4gd29ya3MgbXVjaCBs
-aWtlIDY4MDAwIGhhcmR3YXJlLg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gICAgV2hlbiBlbmFibGVk
-LCBhIENQVSBpbnRlcmZhY2UgdGFrZXMgdGhlIGhpZ2hlc3QgcHJpb3JpdHkNCj4gPiA+ID4gPiAg
-ICBwZW5kaW5nIGludGVycnVwdCBmb3IgaXRzIGNvbm5lY3RlZCBwcm9jZXNzb3IgYW5kIGRldGVy
-bWluZXMNCj4gPiA+ID4gPiAgICB3aGV0aGVyIHRoZSBpbnRlcnJ1cHQgaGFzIHN1ZmZpY2llbnQg
-cHJpb3JpdHkgZm9yIGl0IHRvIHNpZ25hbA0KPiA+ID4gPiA+ICAgIHRoZSBpbnRlcnJ1cHQgcmVx
-dWVzdCB0byB0aGUgcHJvY2Vzc29yLiBbLi4uXQ0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gICAgV2hl
-biB0aGUgcHJvY2Vzc29yIGFja25vd2xlZGdlcyB0aGUgaW50ZXJydXB0IGF0IHRoZSBDUFUNCj4g
-PiA+ID4gPiAgICBpbnRlcmZhY2UsIHRoZSBEaXN0cmlidXRvciBjaGFuZ2VzIHRoZSBzdGF0dXMg
-b2YgdGhlIGludGVycnVwdA0KPiA+ID4gPiA+ICAgIGZyb20gcGVuZGluZyB0byBlaXRoZXIgYWN0
-aXZlLCBvciBhY3RpdmUgYW5kIHBlbmRpbmcuIEF0IHRoaXMNCj4gPiA+ID4gPiAgICBwb2ludCB0
-aGUgQ1BVIGludGVyZmFjZSBjYW4gc2lnbmFsIGFub3RoZXIgaW50ZXJydXB0IHRvIHRoZQ0KPiA+
-ID4gPiA+ICAgIHByb2Nlc3NvciwgdG8gcHJlZW1wdCBpbnRlcnJ1cHRzIHRoYXQgYXJlIGFjdGl2
-ZSBvbiB0aGUNCj4gPiA+ID4gPiAgICBwcm9jZXNzb3IuIElmIHRoZXJlIGlzIG5vIHBlbmRpbmcg
-aW50ZXJydXB0IHdpdGggc3VmZmljaWVudA0KPiA+ID4gPiA+ICAgIHByaW9yaXR5IGZvciBzaWdu
-YWxpbmcgdG8gdGhlIHByb2Nlc3NvciwgdGhlIGludGVyZmFjZQ0KPiA+ID4gPiA+ICAgIGRlYXNz
-ZXJ0cyB0aGUgaW50ZXJydXB0IHJlcXVlc3Qgc2lnbmFsIHRvIHRoZSBwcm9jZXNzb3IuDQo+ID4g
-PiA+ID4NCj4gPiA+ID4gPiBodHRwczovL2RldmVsb3Blci5hcm0uY29tL2RvY3VtZW50YXRpb24v
-aWhpMDA0OC9iLw0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gSGF2ZSB5b3UgY29uc2lkZXJlZCB0aGF0
-IExpbnV4L2FybSBtaWdodCBiZW5lZml0IGlmIGl0IGNvdWxkIGZ1bGx5DQo+ID4gPiA+ID4gZXhw
-bG9pdCBoYXJkd2FyZSBmZWF0dXJlcyBhbHJlYWR5IGF2YWlsYWJsZSwgc3VjaCBhcyB0aGUgaW50
-ZXJydXB0DQo+ID4gPiA+ID4gcHJpb3JpdHkgbWFza2luZyBmZWF0dXJlIGluIHRoZSBHSUMgaW4g
-ZXhpc3RpbmcgYXJtIHN5c3RlbXM/DQo+ID4gPiA+DQo+ID4gPiA+IEkgZ3Vlc3Mgbm86LSkgdGhl
-cmUgYXJlIG9ubHkgdHdvIGxldmVsczogSVJRIGFuZCBOTUkuIEluamVjdGluZyBhDQo+ID4gPiA+
-IGhpZ2gtcHJpbyBJUlEgbGV2ZWwgYmV0d2VlbiB0aGVtIG1ha2VzIG5vIHNlbnNlLg0KPiA+ID4g
-Pg0KPiA+ID4gPiBUbyBtZSwgYXJtNjQncyBkZXNpZ24gaXMgcXVpdGUgY2xlYXIgYW5kIGhhcyBu
-byBhbnkgY29uZnVzaW9uLg0KPiA+ID4gPg0KPiA+ID4NCj4gPiA+IEFyZSB5b3Ugc2F5aW5nIHRo
-YXQgdGhlIEFSTTY0IGhhcmR3YXJlIGRlc2lnbiBpcyBjb25mdXNpbmcgYmVjYXVzZSBpdA0KPiA+
-ID4gaW1wbGVtZW50cyBhIHByaW9yaXR5IG1hc2ssIGFuZCB0aGF0J3Mgd2h5IHlvdSBoYWQgdG8g
-c2ltcGxpZnkgaXQgd2l0aA0KPiA+ID4gYSBwc2V1ZG8tbm1pIHNjaGVtZSBpbiBzb2Z0d2FyZT8N
-Cj4gPg0KPiA+IE5vLCBJIHdhcyBub3Qgc2F5aW5nIHRoaXMuIEkgdGhpbmsgYm90aCBtNjhrIGFu
-ZCBhcm02NCBoYXZlIGdvb2QNCj4gPiBoYXJkd2FyZSBkZXNpZ24uIEp1c3QgTGludXgncyBpbXBs
-ZW1lbnRhdGlvbiBpcyBydW5uaW5nIGlycS1oYW5kbGVycw0KPiA+IHdpdGggaW50ZXJydXB0cyBk
-aXNhYmxlZC4gU28gQVJNNjQncyBwc2V1ZG8tbm1pIGlzIGFkYXB0ZWQgdG8gTGludXgNCj4gPiBi
-ZXR0ZXIuDQo+ID4NCj4gDQo+IFNvLCBhIHBsYXRmb3JtIHNob3VsZCBkbyB3aGF0IGFsbCB0aGUg
-b3RoZXIgcGxhdGZvcm1zIGRvIGJlY2F1c2UgdG8NCj4gZGV2aWF0ZSB3b3VsZCBiZSB0b28gZGFu
-Z2Vyb3VzPw0KPiANCj4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gT24gbTY4aywgaXQgc2VlbXMgeW91
-IG1lYW7vvJoNCj4gPiA+ID4gPiA+IGlycV9kaXNhYmxlZCgpIGlzIHRydWUsIGJ1dCBoaWdoLXBy
-aW9yaXR5IGludGVycnVwdHMgY2FuIHN0aWxsDQo+ID4gPiA+ID4gPiBjb21lOyBsb2NhbF9pcnFf
-ZGlzYWJsZSgpIGNhbiBkaXNhYmxlIGhpZ2gtcHJpb3JpdHkgaW50ZXJydXB0cywNCj4gPiA+ID4g
-PiA+IGFuZCBhdCB0aGF0IHRpbWUsIGlycV9kaXNhYmxlZCgpIGlzIGFsc28gdHJ1ZS4NCj4gPiA+
-ID4gPiA+DQo+ID4gPiA+ID4gPiBUQkgsIHRoaXMgaXMgd3JvbmcgYW5kIGNvbmZ1c2luZyBvbiBt
-NjhrLg0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IExpa2UgeW91LCBJIHdhcyBz
-dXJwcmlzZWQgd2hlbiBJIGxlYXJuZWQgYWJvdXQgaXQuIEJ1dCB0aGF0DQo+ID4gPiA+ID4gZG9l
-c24ndCBtZWFuIGl0J3Mgd3JvbmcuIFRoZSBmYWN0IHRoYXQgaXQgd29ya3Mgc2hvdWxkIHRlbGwg
-eW91DQo+ID4gPiA+ID4gc29tZXRoaW5nLg0KPiA+ID4gPiA+DQo+ID4gPiA+DQo+ID4gPiA+IFRo
-ZSBmYWN0IGlzIHRoYXQgbTY4ayBsZXRzIGFyY2hfaXJxX2Rpc2FibGVkKCkgcmV0dXJuIHRydWUg
-dG8NCj4gPiA+ID4gcHJldGVuZCBhbGwgSVJRcyBhcmUgZGlzYWJsZWQgd2hpbGUgaGlnaC1wcmlv
-cml0eSBJUlEgaXMgc3RpbGwgb3BlbiwNCj4gPiA+ID4gdGh1cyAicGFzcyIgYWxsIHNhbml0aXpp
-bmcgY2hlY2sgaW4gZ2VuaXJxIGFuZCBrZXJuZWwgY29yZS4NCj4gPiA+ID4NCj4gPiA+DQo+ID4g
-PiBUaGUgZmFjdCBpcyB0aGF0IG02OGsgaGFzIGFyY2hfaXJxX2Rpc2FibGVkKCkgcmV0dXJuIGZh
-bHNlIHdoZW4gYWxsDQo+ID4gPiBJUlFzIGFyZSBlbmFibGVkLiBTbyB0aGVyZSBpcyBubyBidWcu
-DQo+ID4NCj4gPiBCdXQgaXQgaGFzIGFyY2hfaXJxX2Rpc2FibGVkKCkgcmV0dXJuIHRydWUgd2hp
-bGUgc29tZSBpbnRlcnJ1cHRzKG5vdA0KPiA+IE5NSSkgYXJlIHN0aWxsIG9wZW4uDQo+ID4NCj4g
-PiA+DQo+ID4gPiA+ID4gVGhpbmdzIGNvdWxkIGFsd2F5cyBiZSBtYWRlIHNpbXBsZXIuIEJ1dCBk
-aXNjYXJkaW5nIGZlYXR1cmVzIGlzbid0DQo+ID4gPiA+ID4gbmVjZXNzYXJpbHkgYW4gaW1wcm92
-ZW1lbnQuDQo+ID4gPiA+DQo+ID4gPiA+IFRoaXMgZmVhdHVyZSBjb3VsZCBiZSB1c2VkIGJ5IGNh
-bGxpbmcgbG9jYWxfaXJxX2VuYWJsZV9pbl9oYXJkaXJxKCkNCj4gPiA+ID4gaW4gdGhvc2UgSVJR
-IGhhbmRsZXJzIHdobyBob3BlIGhpZ2gtcHJpb3JpdHkgaW50ZXJydXB0cyB0byBwcmVlbXB0DQo+
-ID4gPiA+IGl0IGZvciBhIHdoaWxlLg0KPiA+ID4gPg0KPiA+ID4NCj4gPiA+IFNvLCBpZiBvbmUg
-aGFuZGxlciBpcyBzZW5zaXRpdmUgdG8gaW50ZXJydXB0IGxhdGVuY3ksIGFsbCBvdGhlcg0KPiA+
-ID4gaGFuZGxlcnMgc2hvdWxkIGJlIG1vZGlmaWVkPyBJIGRvbid0IHRoaW5rIHRoYXQncyB3b3Jr
-YWJsZS4NCj4gPg0KPiA+IEkgdGhpbmsgd2UganVzdCBlbmFibGUgcHJlZW1wdF9ydCBvciBmb3Jj
-ZSB0aHJlYWRlZF9pcnEsIGFuZCB0aGVuDQo+ID4gaW1wcm92ZSB0aGUgcHJpb3JpdHkgb2YgdGhl
-IGlycSB0aHJlYWQgd2hvIGlzIHNlbnNpdGl2ZSB0byBsYXRlbmN5LiBObw0KPiA+IG5lZWQgdG8g
-dG91Y2ggYWxsIHRocmVhZHMuDQo+ID4NCj4gPiBJIGFsc28gdW5kZXJzdGFuZCB5b3VyIHBvaW50
-LCB3ZSBsZXQgb25lIGhpZ2gtcHJpbyBpbnRlcnJ1cHQgcHJlZW1wdCBsb3cNCj4gPiBwcmlvcml0
-eSBpbnRlcnJ1cHQsIHRoZW4gd2UgZG9uJ3QgbmVlZCB0byBjaGFuZ2UgdGhlIHdob2xlIHN5c3Rl
-bS4gQnV0IEkNCj4gPiB0aGluayBMaW51eCBwcmVmZXJzIHRoZSBtZXRob2Qgb2YgdGhyZWFkZWRf
-aXJxIG9yIHByZWVtcHRfcnQgZm9yIHRoaXMNCj4gPiBraW5kIG9mIHByb2JsZW1zLg0KPiA+DQo+
-IA0KPiBTbywgc29tZSBpbnRlcnJ1cHQgKG9yIGV4Y2VwdGlvbikgcHJvY2Vzc2luZyBoYXBwZW5z
-IGF0b21pY2FsbHkgYW5kIHRoZQ0KPiByZXN0IGlzIGRlZmVycmVkIHRvIGEgZGlmZmVyZW50IGV4
-ZWN1dGlvbiBjb250ZXh0LiAoTm90IGEgbmV3IGlkZWEuKQ0KPiANCj4gSWYgeW91IGludHJvZHVj
-ZSBsYXRlbmN5IGluIHRoZSBmb3JtZXIgY29udGV4dCB5b3UgY2FuJ3Qgd2luIGl0IGJhY2sgaW4N
-Cj4gdGhlIGxhdHRlci4gWW91ciBzb2x1dGlvbiBmYWlscyBiZWNhdXNlIGl0IGFkZHMgbGF0ZW5j
-eSB0byBoaWdoIHByaW9yaXR5DQo+IGhhbmRsZXJzLg0KPiANCj4gPiA+DQo+ID4gPiBJbiBhbnlj
-YXNlLCB3aGF0IHlvdSdyZSBkZXNjcmliaW5nIGlzIGEgY29tcGxldGVseSBkaWZmZXJlbnQgbmVz
-dGVkDQo+ID4gPiBpbnRlcnJ1cHQgc2NoZW1lIHRoYXQgd291bGQgZGVmZWF0IHRoZSBwcmlvcml0
-eSBsZXZlbCBtZWNoYW5pc20gdGhhdA0KPiA+ID4gdGhlIGhhcmR3YXJlIHByb3ZpZGVzIHVzIHdp
-dGguDQo+ID4NCj4gPiBZZXMuIEluZGVlZC4NCj4gPg0KPiA+ID4NCj4gPiA+ID4gSXQgc2hvdWxk
-bid0IGhpZGUgc29tZXdoZXJlIGFuZCBtYWtlIGNvbmZ1c2lvbi4NCj4gPiA+ID4NCj4gPiA+DQo+
-ID4gPiBUaGUgcHJvYmxlbSBpcyBoaWRpbmcgc28gd2VsbCB0aGF0IG5vLW9uZSBoYXMgZm91bmQg
-aXQhIEkgc2F5IGl0DQo+ID4gPiBkb2Vzbid0IGV4aXN0Lg0KPiA+DQo+ID4gTG9uZyBsb25nIGFn
-byhiZWZvcmUgMi42LjM4KSwgd2UgaGFkIGEga2VybmVsIHN1cHBvcnRpbmcgSVJRRl9ESVNBQkxF
-RA0KPiA+IGFuZCBuZXN0ZWQgaW50ZXJydXB0cyB3ZXJlIHdpZGVseSBzdXBwb3J0ZWQsIGJ1dCBz
-eXN0ZW0gYWxzbyByYW4gd2VsbCBpbg0KPiA+IG1vc3QgY2FzZXMuIFRoYXQgbWVhbnMgbmVzdGVk
-IGludGVycnVwdHMgZG9uJ3QgcmVhbGx5IG1hdHRlciBpbiBtb3N0DQo+ID4gY2FzZXMuIFRoYXQg
-aXMgd2h5IG02OGsgaXMgYWxzbyBydW5uaW5nIHdlbGwgZXZlbiB0aG91Z2ggaXQgaXMgc3RpbGwN
-Cj4gPiBuZXN0aW5nLg0KPiA+DQo+IA0KPiBObywgbTY4ayBydW5zIHdlbGwgYmVjYXVzZSBpdCB1
-c2VzIHByaW9yaXR5IG1hc2tpbmcuIEl0IGlzIG5vdCBiZWNhdXNlDQo+IHNvbWUgY2FzZXMgYXJl
-IHVudGVzdGVkLg0KPiANCj4gWW91ciBoYXJkd2FyZSBtYXkgbm90IGhhdmUgYmVlbiBhcm91bmQg
-Zm9yIDQgZGVjYWRlcyBidXQgaXQgaW1wbGVtZW50cyB0aGUNCj4gc2FtZSBjYXBhYmlsaXR5IGJl
-Y2F1c2UgdGhlIGRlc2lnbiBpcyBrbm93biB0byB3b3JrLg0KPiANCj4gPiA+DQo+ID4gPiA+IE9u
-IHRoZSBvdGhlciBoYW5kLCB0aG9zZSB3aG8gY2FyZSBhYm91dCByZWFsdGltZSBzaG91bGQgdXNl
-IHRocmVhZGVkDQo+ID4gPiA+IElSUSBhbmQgbGV0IElSUSB0aHJlYWRzIHByZWVtcHQgZWFjaCBv
-dGhlci4NCj4gPiA+ID4NCj4gPiA+DQo+ID4gPiBZZXMuIEFuZCB0aG9zZSB0aHJlYWRzIGFsc28g
-aGF2ZSBwcmlvcml0eSBsZXZlbHMuDQo+ID4NCj4gPiBGaW5uLCBJIGFtIG5vdCBhIG02OGsgZ3V5
-LCB3b3VsZCB5b3UgaGVscCBjaGVjayBpZiB0aGlzIGNvdWxkIGFjdGl2YXRlIGENCj4gPiB3YXJu
-aW5nIG9uIG02OGsuIG1heWJlIHdlIGNhbiBkaXNjdXNzIHRoaXMgcXVlc3Rpb24gaW4gZ2VuaXJx
-IG1haWxsaXN0IGZyb20NCj4gPiB0aGlzIHdhcm5pbmcgaWYgeW91IGFyZSBoYXBweS4gVGhhbmtz
-IHZlcnkgbXVjaC4NCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2hhcmRpcnEu
-aCBiL2luY2x1ZGUvbGludXgvaGFyZGlycS5oDQo+ID4gaW5kZXggN2M5ZDZhMmQ3ZTkwLi5iOGNh
-Mjc1NTVjNzYgMTAwNjQ0DQo+ID4gLS0tIGEvaW5jbHVkZS9saW51eC9oYXJkaXJxLmgNCj4gPiAr
-KysgYi9pbmNsdWRlL2xpbnV4L2hhcmRpcnEuaA0KPiA+IEBAIC0zMiw2ICszMiw3IEBAIHN0YXRp
-YyBfX2Fsd2F5c19pbmxpbmUgdm9pZCByY3VfaXJxX2VudGVyX2NoZWNrX3RpY2sodm9pZCkNCj4g
-PiAgICovDQo+ID4gICNkZWZpbmUgX19pcnFfZW50ZXIoKSAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICBcDQo+ID4gICAgICAgICBkbyB7ICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICBcDQo+ID4gKyAgICAgICAgICAgICAgIFdBUk5fT05DRShpbl9oYXJk
-aXJxKCkgJiYgaXJxc19kaXNhYmxlZCgpLCAibmVzdGVkDQo+IGludGVycnVwdHNcbiIpOyBcDQo+
-ID4gICAgICAgICAgICAgICAgIHByZWVtcHRfY291bnRfYWRkKEhBUkRJUlFfT0ZGU0VUKTsgICAg
-ICBcDQo+ID4gICAgICAgICAgICAgICAgIGxvY2tkZXBfaGFyZGlycV9lbnRlcigpOyAgICAgICAg
-ICAgICAgICBcDQo+ID4gICAgICAgICAgICAgICAgIGFjY291bnRfaGFyZGlycV9lbnRlcihjdXJy
-ZW50KTsgICAgICAgICBcDQo+ID4gQEAgLTQ0LDYgKzQ1LDcgQEAgc3RhdGljIF9fYWx3YXlzX2lu
-bGluZSB2b2lkIHJjdV9pcnFfZW50ZXJfY2hlY2tfdGljayh2b2lkKQ0KPiA+ICAgKi8NCj4gPiAg
-I2RlZmluZSBfX2lycV9lbnRlcl9yYXcoKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwN
-Cj4gPiAgICAgICAgIGRvIHsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIFwNCj4gPiArICAgICAgICAgICAgICAgV0FSTl9PTkNFKGluX2hhcmRpcnEoKSAmJiBpcnFz
-X2Rpc2FibGVkKCksICJuZXN0ZWQNCj4gaW50ZXJydXB0c1xuIik7IFwNCj4gPiAgICAgICAgICAg
-ICAgICAgcHJlZW1wdF9jb3VudF9hZGQoSEFSRElSUV9PRkZTRVQpOyAgICAgIFwNCj4gPiAgICAg
-ICAgICAgICAgICAgbG9ja2RlcF9oYXJkaXJxX2VudGVyKCk7ICAgICAgICAgICAgICAgIFwNCj4g
-PiAgICAgICAgIH0gd2hpbGUgKDApDQo+ID4NCj4gDQo+IElmIHlvdSB0aGluayB0aGF0IGxvY2tk
-ZXAgb3Igc29tZSBvdGhlciBjb2RlIHNvbWV3aGVyZSBzaG91bGQgYmUgcHJvdGVjdGVkDQo+IGlu
-IHRoaXMgd2F5LCBwZXJoYXBzIHlvdSBjYW4gcG9pbnQgdG8gdGhhdCBjb2RlLiBPdGhlcndpc2Us
-IHlvdXIgcGF0Y2gNCj4gc2VlbXMgdG8gbGFjayBhbnkganVzdGlmaWNhdGlvbi4NCg0KT2suIEkg
-YW0gbm90IHNheSB0aGlzIHBhdGNoIGlzIHJpZ2h0LiBJIHdhcyBhY3R1YWxseSBleHBlY3Rpbmcg
-YSBsb2cgdG8gc3RhcnQNCnRoZSBkaXNjdXNzaW9uIGluIGdlbmlycS4NCkFueXdheSwgSSB0aGlu
-ayB0aGlzIGlzIGEgdmVyeSBpbXBvcnRhbnQgcHJvYmxlbSB3ZSBuZWVkIHRvIGNsYXJpZnkgaW4N
-CmdlbmlycS4NCklmIGlycSBoYW5kbGVycyBhcmUgYWJsZSB0byBydW4gd2l0aCBzb21lIGhpZ2gt
-cHJpbyBpbnRlcnJ1cHRzIGVuYWJsZWQNCm9uIHNvbWUgcGxhdGZvcm0gbGlrZSBtNjhrLCB3ZSBu
-ZWVkIHNvbWV3aGVyZSB0byBkb2N1bWVudCB0aGlzIGlzIGEgY2FzZQ0Kc29tZXdoZXJlLg0KDQpB
-bnl3YXksIEkgdGhpbmsgaXQgaXMgaW1wb3J0YW50IHRvIGNsYXJpZnkgdGhpcyB0aG9yb3VnaGx5
-IGluIGdlbmlycSBieQ0Kc3RhcnRpbmcgYSBkaXNjdXNzaW9uIHdpdGggcmVsYXRlZCBndXlzLg0K
-DQo+IA0KPiA+IEJlc3QgUmVnYXJkcw0KPiA+IEJhcnJ5DQo+ID4NCj4gPg0KDQpUaGFua3MNCkJh
-cnJ5DQo=
+
+
+> -----Original Message-----
+> From: Finn Thain [mailto:fthain@telegraphics.com.au]
+> Sent: Friday, February 12, 2021 1:09 PM
+> To: Song Bao Hua (Barry Song) <song.bao.hua@hisilicon.com>
+> Cc: tanxiaofei <tanxiaofei@huawei.com>; jejb@linux.ibm.com;
+> martin.petersen@oracle.com; linux-scsi@vger.kernel.org;
+> linux-kernel@vger.kernel.org; linuxarm@openeuler.org;
+> linux-m68k@vger.kernel.org
+> Subject: RE: Re: [PATCH for-next 00/32] spin lock usage optimization for SCSI
+> drivers
+> 
+> On Fri, 12 Feb 2021, Song Bao Hua (Barry Song) wrote:
+> 
+> >
+> > > -----Original Message-----
+> > > From: Finn Thain [mailto:fthain@telegraphics.com.au]
+> > > Sent: Friday, February 12, 2021 12:57 PM
+> > > To: Song Bao Hua (Barry Song) <song.bao.hua@hisilicon.com>
+> > > Cc: tanxiaofei <tanxiaofei@huawei.com>; jejb@linux.ibm.com;
+> > > martin.petersen@oracle.com; linux-scsi@vger.kernel.org;
+> > > linux-kernel@vger.kernel.org; linuxarm@openeuler.org;
+> > > linux-m68k@vger.kernel.org
+> > > Subject: RE: Re: [PATCH for-next 00/32] spin lock usage optimization for
+> SCSI
+> > > drivers
+> > >
+> > >
+> > > On Thu, 11 Feb 2021, Song Bao Hua (Barry Song) wrote:
+> > >
+> > > >
+> > > > Actually in m68k, I also saw its IRQ entry disabled interrupts by
+> > > > ' move	#0x2700,%sr		/* disable intrs */'
+> > > >
+> > > > arch/m68k/include/asm/entry.h:
+> > > >
+> > > > .macro SAVE_ALL_SYS
+> > > > 	move	#0x2700,%sr		/* disable intrs */
+> > > > 	btst	#5,%sp@(2)		/* from user? */
+> > > > 	bnes	6f			/* no, skip */
+> > > > 	movel	%sp,sw_usp		/* save user sp */
+> > > > ...
+> > > >
+> > > > .macro SAVE_ALL_INT
+> > > > 	SAVE_ALL_SYS
+> > > > 	moveq	#-1,%d0			/* not system call entry */
+> > > > 	movel	%d0,%sp@(PT_OFF_ORIG_D0)
+> > > > .endm
+> > > >
+> > > > arch/m68k/kernel/entry.S:
+> > > >
+> > > > /* This is the main interrupt handler for autovector interrupts */
+> > > >
+> > > > ENTRY(auto_inthandler)
+> > > > 	SAVE_ALL_INT
+> > > > 	GET_CURRENT(%d0)
+> > > > 					|  put exception # in d0
+> > > > 	bfextu	%sp@(PT_OFF_FORMATVEC){#4,#10},%d0
+> > > > 	subw	#VEC_SPUR,%d0
+> > > >
+> > > > 	movel	%sp,%sp@-
+> > > > 	movel	%d0,%sp@-		|  put vector # on stack
+> > > > auto_irqhandler_fixup = . + 2
+> > > > 	jsr	do_IRQ			|  process the IRQ
+> > > > 	addql	#8,%sp			|  pop parameters off stack
+> > > > 	jra	ret_from_exception
+> > > >
+> > > > So my question is that " move	#0x2700,%sr" is actually disabling
+> > > > all interrupts? And is m68k actually running irq handlers
+> > > > with interrupts disabled?
+> > > >
+> > >
+> > > When sonic_interrupt() executes, the IPL is 2 or 3 (since either IRQ may
+> > > be involved). That is, SR & 0x700 is 0x200 or 0x300. The level 3 interrupt
+> > > may interrupt execution of the level 2 handler so an irq lock is used to
+> > > avoid re-entrance.
+> > >
+> > > This patch,
+> > >
+> > > diff --git a/drivers/net/ethernet/natsemi/sonic.c
+> > > b/drivers/net/ethernet/natsemi/sonic.c
+> > > index d17d1b4f2585..041354647bad 100644
+> > > --- a/drivers/net/ethernet/natsemi/sonic.c
+> > > +++ b/drivers/net/ethernet/natsemi/sonic.c
+> > > @@ -355,6 +355,8 @@ static irqreturn_t sonic_interrupt(int irq, void *dev_id)
+> > >          */
+> > >         spin_lock_irqsave(&lp->lock, flags);
+> > >
+> > > +       printk_once(KERN_INFO "%s: %08lx\n", __func__, flags);
+> > > +
+> > >         status = SONIC_READ(SONIC_ISR) & SONIC_IMR_DEFAULT;
+> > >         if (!status) {
+> > >                 spin_unlock_irqrestore(&lp->lock, flags);
+> > >
+> > > produces this output,
+> > >
+> > > [    3.800000] sonic_interrupt: 00002300
+> >
+> > I actually hope you can directly read the register rather than reading
+> > a flag which might be a software one not from register.
+> >
+> 
+> Again, the implementation of arch_local_irq_save() may be found in
+> arch/m68k/include/asm/irqflags.h
+
+Yes. I have read it. Anyway, I started a discussion in genirq
+with you cc-ed:
+https://lore.kernel.org/lkml/c46ddb954cfe45d9849c911271d7ec23@hisilicon.com/
+
+And thanks very much for all your efforts to help me understand
+M68k. Let's get this clarified thoroughly in genirq level.
+
+In arm, we also have some special high-priority interrupts
+which are not NMI but able to preempt normal IRQ. They are
+managed by arch-extended APIs rather than common APIs.
+
+Neither arch_irqs_disabled() nor local_irq_disable() API can
+access this kind of interrupts. They are using things specific
+to ARM like:
+local_fiq_disable()
+local_fiq_enable()
+set_fiq_handler()
+disable_fiq()
+enable_fiq()
+...
+
+so fiq doesn't bother us anyhow in genirq.
+
+> 
+> > >
+> > > I ran that code in QEMU, but experience shows that Apple hardware works
+> > > exactly the same. Please do confirm this for yourself, if you still think
+> > > the code and comments in sonic_interrupt are wrong.
+> > >
+> > > > Best Regards
+> > > > Barry
+> > > >
+> >
+
+Thanks
+Barry
+
