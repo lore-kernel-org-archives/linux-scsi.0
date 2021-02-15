@@ -9,141 +9,433 @@ X-Spam-Status: No, score=-17.1 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08FC6C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Feb 2021 15:44:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66419C433E6
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Feb 2021 15:44:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D1A3664E91
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Feb 2021 15:44:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B78064E8E
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Feb 2021 15:44:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231285AbhBOPoC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Feb 2021 10:44:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41132 "EHLO
+        id S231436AbhBOPoP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Feb 2021 10:44:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231422AbhBOPnZ (ORCPT
+        with ESMTP id S230232AbhBOPnZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Feb 2021 10:43:25 -0500
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 488CFC0617A7
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Feb 2021 07:40:35 -0800 (PST)
-Received: by mail-pj1-x102f.google.com with SMTP id e9so4146418pjj.0
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Feb 2021 07:40:35 -0800 (PST)
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9831C06178C
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Feb 2021 07:40:29 -0800 (PST)
+Received: by mail-pj1-x102b.google.com with SMTP id l18so4132891pji.3
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Feb 2021 07:40:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ghAL0+h3u1cX9VyWJd2C9M5FvR34M42h2tqveRBuqus=;
-        b=M4S4achrnOe/5b9+HVprlhmTffhmiWsOUFewAcv+hIpD+WYa1b2AHcCQM+7BI5+uhe
-         W+8B0eXV0Wvm3i+mW+m5diTJPI+hgO3jvhq/lNtRUxlHQ+fn9qGK+pNmHPnO/biBRkxr
-         ymiHtGvB9DHV8wtFyLfoJnjJzRxLcCM3epji8=
+        bh=s5C6MDrHPuMCawmzOm6qQQTsGxX+e2GqXd2tUvS1FuY=;
+        b=SBLTD/ndwdTnxwN+nZs1cPgG42DSzh6lJZvflPtyOF2gYb0CrUm0VLBC4jQbFEw/la
+         N1RowxNW+Uu589xsSTmUVNPdczd0C/fbYwKCL9kykHz8O9zywGnaCUkV7bX87nKXt7tG
+         Dxk9abEv8nxG+qfyo+KoO9bCkvynmn9NIALwI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=ghAL0+h3u1cX9VyWJd2C9M5FvR34M42h2tqveRBuqus=;
-        b=FZovrbp0xjt3CF1dvoQYPfTrMVTr5Aviq8HOEzlufFts+t1emCgoxcpFcx22iqeCRC
-         zarViCHwcvCnpVcq7x/hof1eizQp5h7X/W+VpIb1kl2B8vZLnMh/aQz5tmeKz4Q4nk0W
-         pq837DhgPUpX7gHxKoKDAAa9Zeo3adgpY+AvowJIFlUd1XuEfmqhLV5cyG12DhetlFeN
-         wEDtM3iryMxxC+gq7Ynvt+VcoUEhrqFSn3jJ0W3TnakugS/8YeNVk/oocIfZc93mQgjh
-         UnU9I3NTPB9wtFMTUIctdIO+ZlNddg3+nZljevmNQsG4FSyhfoSjWtcDmwnIF5BIkUW9
-         upyQ==
-X-Gm-Message-State: AOAM531t4SHBOAJj7x82MgFEwoZXLVOFAxvkf6H5VeNeEC67GW1pXARZ
-        Cu5SCGbYiHX1ZdRC+1GtlsQe6GyfCfqUgJEjGon+SCluWA5Tj1RHlZWgWwy7oimD7iD94tRE0u0
-        J2YM1qOWUuXCU2U/LhIkZlJMtoJ2LWn7qUFpfgp2SeM77Z0pPiSxBmpdPdGmegLJl7cORSrPwLT
-        RUnLO0XZL5
-X-Google-Smtp-Source: ABdhPJz4z+vS2l8D/WxfuaWIKgXTCPuM75quW8qVK5TZMY85DO50sU4akhCvlsVZ/uDW/16zaw6XjQ==
-X-Received: by 2002:a17:90a:517:: with SMTP id h23mr16827138pjh.108.1613403634434;
-        Mon, 15 Feb 2021 07:40:34 -0800 (PST)
+        bh=s5C6MDrHPuMCawmzOm6qQQTsGxX+e2GqXd2tUvS1FuY=;
+        b=COMXpZn4anJZ0s2DnCBYXSGLhTLroDfISVFzYW0AHF8AXhkPwWVDJq+yOTVApUwq5S
+         lPpxKqYslpd26Bra6F2sKnwM5Q+FVJiZpS5aokN6Ge2L3Tu7YBWdxvTX5Xo3sL8wLQ/5
+         gNxsBl1+aWKTsQlU3kUmpgq8Du0BZxIcjY2aa2R00mIyL1XtXRS3DBmPqJmBHvRQiXU8
+         Qmw7I5lcV8PbIPQraJ9OxMYN3k8AVEbd3SPMLNlNFMjtbOsJERlyXkkjUhzR36POikbF
+         XKcMJFZ/fGARFa4GXRzLgibf6m0Prddq31OFWixiUFxlscsWD1B9BM30tbx0wPxfQvWY
+         WC/Q==
+X-Gm-Message-State: AOAM532scYj0YmtzpY1ExLsAVjlchcnPvuwDzYMXbxYJ3tU2d4cFuELJ
+        xd/2Q+Mc47PKspKoAnlIjSDZTAnM4jXlE7xSIvEjTvNtLE8UYmazzgs/58d00N93AuXYa36Cy0s
+        /yxHnxTkaKg4FBYizIKL0UtpEseUo5yISDU1msgQ0JrqAd6tq6OI/fhihkIZiFuAkQzb/YKc23y
+        QH0r7YfkJo
+X-Google-Smtp-Source: ABdhPJx3WzSPqP5P0FOIs/xLY+w+n7g7NkgZOt4f31vv+8/M2ozuGlMJn1Kv6+P2uuGGPDkpErSV5A==
+X-Received: by 2002:a17:90a:206:: with SMTP id c6mr17062411pjc.50.1613403628970;
+        Mon, 15 Feb 2021 07:40:28 -0800 (PST)
 Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id m4sm18031341pgu.4.2021.02.15.07.40.33
+        by smtp.gmail.com with ESMTPSA id m4sm18031341pgu.4.2021.02.15.07.40.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Feb 2021 07:40:34 -0800 (PST)
+        Mon, 15 Feb 2021 07:40:28 -0800 (PST)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
-Cc:     Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: [PATCH v4 5/5] scsi: set shost as hctx driver_data
-Date:   Mon, 15 Feb 2021 13:10:48 +0530
-Message-Id: <20210215074048.19424-6-kashyap.desai@broadcom.com>
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
+        linux-block@vger.kernel.org
+Subject: [PATCH v4 2/5] megaraid_sas: iouring iopoll support
+Date:   Mon, 15 Feb 2021 13:10:45 +0530
+Message-Id: <20210215074048.19424-3-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210215074048.19424-1-kashyap.desai@broadcom.com>
 References: <20210215074048.19424-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000089050e05bb61ce31"
+        boundary="00000000000035585705bb61ce2a"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000089050e05bb61ce31
+--00000000000035585705bb61ce2a
 
-hctx->driver_data is not set for SCSI currently.
-Separately set hctx->driver_data = shost.
+Add support of iouring iopoll interface. This feature requires shared
+hosttag support in kernel and driver.
 
-Suggested-by: John Garry <john.garry@huawei.com>
+Driver will work in non-IRQ mode = There will not be any msix vector
+associated for poll_queues and h/w can still work in this mode.
+MegaRaid h/w is single submission queue and multiple reply queue, but
+using shared host tagset support it will enable simulated multiple hw queue.
+
+Driver allocates some extra reply queues and it will be marked as poll_queue.
+These poll_queues will not have associated msix vectors. All the IO
+completion on this queue will be done from IOPOLL interface.
+
+megaraid_sas driver having 8 poll_queues and using io_uring hiprio=1 settings,
+It can reach 3.2M IOPs and there is zero interrupt generated by h/w.
+
+This feature can be enabled using module parameter poll_queues.
+
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/scsi_lib.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 8c29bf0e4cfd..f661c50f3b88 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1792,9 +1792,7 @@ static void scsi_mq_exit_request(struct blk_mq_tag_set *set, struct request *rq,
+Cc: sumit.saxena@broadcom.com
+Cc: chandrakanth.patil@broadcom.com
+Cc: linux-block@vger.kernel.org
+---
+ drivers/scsi/megaraid/megaraid_sas.h        |  3 +
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 87 ++++++++++++++++++---
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 42 +++++++++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 +
+ 4 files changed, 123 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 0f808d63580e..d8b1797e2768 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2212,6 +2212,7 @@ struct megasas_irq_context {
+ 	struct irq_poll irqpoll;
+ 	bool irq_poll_scheduled;
+ 	bool irq_line_enable;
++	atomic_t   in_used;
+ };
  
- static int scsi_mq_poll(struct blk_mq_hw_ctx *hctx)
+ struct MR_DRV_SYSTEM_INFO {
+@@ -2446,6 +2447,7 @@ struct megasas_instance {
+ 	bool support_pci_lane_margining;
+ 	u8  low_latency_index_start;
+ 	int perf_mode;
++	int iopoll_q_count;
+ };
+ 
+ struct MR_LD_VF_MAP {
+@@ -2726,5 +2728,6 @@ void megasas_init_debugfs(void);
+ void megasas_exit_debugfs(void);
+ void megasas_setup_debugfs(struct megasas_instance *instance);
+ void megasas_destroy_debugfs(struct megasas_instance *instance);
++int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num);
+ 
+ #endif				/*LSI_MEGARAID_SAS_H */
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 63a4f48bdc75..25673d0ee524 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -114,6 +114,15 @@ unsigned int enable_sdev_max_qd;
+ module_param(enable_sdev_max_qd, int, 0444);
+ MODULE_PARM_DESC(enable_sdev_max_qd, "Enable sdev max qd as can_queue. Default: 0");
+ 
++int poll_queues;
++module_param(poll_queues, int, 0444);
++MODULE_PARM_DESC(poll_queues, "Number of queues to be use for io_uring poll mode.\n\t\t"
++		"This parameter is effective only if host_tagset_enable=1 &\n\t\t"
++		"It is not applicable for MFI_SERIES. &\n\t\t"
++		"Driver will work in latency mode. &\n\t\t"
++		"High iops queues are not allocated &\n\t\t"
++		);
++
+ int host_tagset_enable = 1;
+ module_param(host_tagset_enable, int, 0444);
+ MODULE_PARM_DESC(host_tagset_enable, "Shared host tagset enable/disable Default: enable(1)");
+@@ -207,6 +216,7 @@ static bool support_pci_lane_margining;
+ static spinlock_t poll_aen_lock;
+ 
+ extern struct dentry *megasas_debugfs_root;
++extern int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num);
+ 
+ void
+ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
+@@ -3127,14 +3137,37 @@ megasas_bios_param(struct scsi_device *sdev, struct block_device *bdev,
+ static int megasas_map_queues(struct Scsi_Host *shost)
  {
--	struct request_queue *q = hctx->queue;
--	struct scsi_device *sdev = q->queuedata;
--	struct Scsi_Host *shost = sdev->host;
-+	struct Scsi_Host *shost = hctx->driver_data;
+ 	struct megasas_instance *instance;
++	int qoff = 0, offset;
++	struct blk_mq_queue_map *map;
  
- 	if (shost->hostt->mq_poll)
- 		return shost->hostt->mq_poll(shost, hctx->queue_num);
-@@ -1802,6 +1800,15 @@ static int scsi_mq_poll(struct blk_mq_hw_ctx *hctx)
- 	return 0;
+ 	instance = (struct megasas_instance *)shost->hostdata;
+ 
+ 	if (shost->nr_hw_queues == 1)
+ 		return 0;
+ 
+-	return blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
+-			instance->pdev, instance->low_latency_index_start);
++	offset = instance->low_latency_index_start;
++
++	/* Setup Default hctx */
++	map = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
++	map->nr_queues = instance->msix_vectors - offset;
++	map->queue_offset = 0;
++	blk_mq_pci_map_queues(map, instance->pdev, offset);
++	qoff += map->nr_queues;
++	offset += map->nr_queues;
++
++	/* Setup Poll hctx */
++	map = &shost->tag_set.map[HCTX_TYPE_POLL];
++	map->nr_queues = instance->iopoll_q_count;
++	if (map->nr_queues) {
++		/*
++		 * The poll queue(s) doesn't have an IRQ (and hence IRQ
++		 * affinity), so use the regular blk-mq cpu mapping
++		 */
++		map->queue_offset = qoff;
++		blk_mq_map_queues(map);
++	}
++
++	return 0;
  }
  
-+static int scsi_init_hctx(struct blk_mq_hw_ctx *hctx, void *data,
-+			  unsigned int hctx_idx)
-+{
-+	struct Scsi_Host *shost = data;
+ static void megasas_aen_polling(struct work_struct *work);
+@@ -3446,6 +3479,7 @@ static struct scsi_host_template megasas_template = {
+ 	.shost_attrs = megaraid_host_attrs,
+ 	.bios_param = megasas_bios_param,
+ 	.map_queues = megasas_map_queues,
++	.mq_poll = megasas_blk_mq_poll,
+ 	.change_queue_depth = scsi_change_queue_depth,
+ 	.max_segment_size = 0xffffffff,
+ };
+@@ -5834,13 +5868,16 @@ __megasas_alloc_irq_vectors(struct megasas_instance *instance)
+ 	irq_flags = PCI_IRQ_MSIX;
+ 
+ 	if (instance->smp_affinity_enable)
+-		irq_flags |= PCI_IRQ_AFFINITY;
++		irq_flags |= PCI_IRQ_AFFINITY | PCI_IRQ_ALL_TYPES;
+ 	else
+ 		descp = NULL;
+ 
++	/* Do not allocate msix vectors for poll_queues.
++	 * msix_vectors is always within a range of FW supported reply queue.
++	 */
+ 	i = pci_alloc_irq_vectors_affinity(instance->pdev,
+ 		instance->low_latency_index_start,
+-		instance->msix_vectors, irq_flags, descp);
++		instance->msix_vectors - instance->iopoll_q_count, irq_flags, descp);
+ 
+ 	return i;
+ }
+@@ -5856,10 +5893,30 @@ megasas_alloc_irq_vectors(struct megasas_instance *instance)
+ 	int i;
+ 	unsigned int num_msix_req;
+ 
++	instance->iopoll_q_count = 0;
++	if ((instance->adapter_type != MFI_SERIES) &&
++		poll_queues) {
 +
-+	hctx->driver_data = shost;
-+	return 0;
++		instance->perf_mode = MR_LATENCY_PERF_MODE;
++		instance->low_latency_index_start = 1;
++
++		/* reserve for default and non-mananged pre-vector. */
++		if (instance->msix_vectors > (poll_queues + 2))
++			instance->iopoll_q_count = poll_queues;
++		else
++			instance->iopoll_q_count = 0;
++
++		num_msix_req = num_online_cpus() + instance->low_latency_index_start;
++		instance->msix_vectors = min(num_msix_req,
++				instance->msix_vectors);
++
++	}
++
+ 	i = __megasas_alloc_irq_vectors(instance);
+ 
+-	if ((instance->perf_mode == MR_BALANCED_PERF_MODE) &&
+-	    (i != instance->msix_vectors)) {
++	if (((instance->perf_mode == MR_BALANCED_PERF_MODE)
++		|| instance->iopoll_q_count) &&
++	    (i != (instance->msix_vectors - instance->iopoll_q_count))) {
+ 		if (instance->msix_vectors)
+ 			pci_free_irq_vectors(instance->pdev);
+ 		/* Disable Balanced IOPS mode and try realloc vectors */
+@@ -5870,12 +5927,15 @@ megasas_alloc_irq_vectors(struct megasas_instance *instance)
+ 		instance->msix_vectors = min(num_msix_req,
+ 				instance->msix_vectors);
+ 
++		instance->iopoll_q_count = 0;
+ 		i = __megasas_alloc_irq_vectors(instance);
+ 
+ 	}
+ 
+ 	dev_info(&instance->pdev->dev,
+-		"requested/available msix %d/%d\n", instance->msix_vectors, i);
++		"requested/available msix %d/%d poll_queue %d\n",
++			instance->msix_vectors - instance->iopoll_q_count,
++			i, instance->iopoll_q_count);
+ 
+ 	if (i > 0)
+ 		instance->msix_vectors = i;
+@@ -6841,12 +6901,18 @@ static int megasas_io_attach(struct megasas_instance *instance)
+ 		instance->smp_affinity_enable) {
+ 		host->host_tagset = 1;
+ 		host->nr_hw_queues = instance->msix_vectors -
+-			instance->low_latency_index_start;
++			instance->low_latency_index_start + instance->iopoll_q_count;
++		if (instance->iopoll_q_count)
++			host->nr_maps = 3;
++	} else {
++		instance->iopoll_q_count = 0;
+ 	}
+ 
+ 	dev_info(&instance->pdev->dev,
+-		"Max firmware commands: %d shared with nr_hw_queues = %d\n",
+-		instance->max_fw_cmds, host->nr_hw_queues);
++		"Max firmware commands: %d shared with default "
++		"hw_queues = %d poll_queues %d\n", instance->max_fw_cmds,
++		host->nr_hw_queues - instance->iopoll_q_count,
++		instance->iopoll_q_count);
+ 	/*
+ 	 * Notify the mid-layer about the new controller
+ 	 */
+@@ -8859,6 +8925,7 @@ static int __init megasas_init(void)
+ 		msix_vectors = 1;
+ 		rdpq_enable = 0;
+ 		dual_qdepth_disable = 1;
++		poll_queues = 0;
+ 	}
+ 
+ 	/*
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 38fc9467c625..10b8157044bb 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -685,6 +685,8 @@ megasas_alloc_reply_fusion(struct megasas_instance *instance)
+ 	fusion = instance->ctrl_context;
+ 
+ 	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
++	count += instance->iopoll_q_count;
++
+ 	fusion->reply_frames_desc_pool =
+ 			dma_pool_create("mr_reply", &instance->pdev->dev,
+ 				fusion->reply_alloc_sz * count, 16, 0);
+@@ -779,6 +781,7 @@ megasas_alloc_rdpq_fusion(struct megasas_instance *instance)
+ 	}
+ 
+ 	msix_count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
++	msix_count += instance->iopoll_q_count;
+ 
+ 	fusion->reply_frames_desc_pool = dma_pool_create("mr_rdpq",
+ 							 &instance->pdev->dev,
+@@ -1129,7 +1132,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+ 			MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE : 0;
+ 	IOCInitMessage->SystemRequestFrameBaseAddress = cpu_to_le64(fusion->io_request_frames_phys);
+ 	IOCInitMessage->SenseBufferAddressHigh = cpu_to_le32(upper_32_bits(fusion->sense_phys_addr));
+-	IOCInitMessage->HostMSIxVectors = instance->msix_vectors;
++	IOCInitMessage->HostMSIxVectors = instance->msix_vectors + instance->iopoll_q_count;
+ 	IOCInitMessage->HostPageSize = MR_DEFAULT_NVME_PAGE_SHIFT;
+ 
+ 	time = ktime_get_real();
+@@ -1823,6 +1826,8 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ 		 sizeof(union MPI2_SGE_IO_UNION))/16;
+ 
+ 	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
++	count += instance->iopoll_q_count;
++
+ 	for (i = 0 ; i < count; i++)
+ 		fusion->last_reply_idx[i] = 0;
+ 
+@@ -1835,6 +1840,9 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ 				MEGASAS_FUSION_IOCTL_CMDS);
+ 	sema_init(&instance->ioctl_sem, MEGASAS_FUSION_IOCTL_CMDS);
+ 
++	for (i = 0; i < MAX_MSIX_QUEUES_FUSION; i++)
++		atomic_set(&fusion->busy_mq_poll[i], 0);
++
+ 	if (megasas_alloc_ioc_init_frame(instance))
+ 		return 1;
+ 
+@@ -3500,6 +3508,9 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
+ 	if (reply_descript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
+ 		return IRQ_NONE;
+ 
++	if (irq_context && !atomic_add_unless(&irq_context->in_used, 1, 1))
++		return 0;
++
+ 	num_completed = 0;
+ 
+ 	while (d_val.u.low != cpu_to_le32(UINT_MAX) &&
+@@ -3613,6 +3624,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
+ 					irq_context->irq_line_enable = true;
+ 					irq_poll_sched(&irq_context->irqpoll);
+ 				}
++				atomic_dec(&irq_context->in_used);
+ 				return num_completed;
+ 			}
+ 		}
+@@ -3630,9 +3642,35 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
+ 				instance->reply_post_host_index_addr[0]);
+ 		megasas_check_and_restore_queue_depth(instance);
+ 	}
++
++	if (irq_context)
++		atomic_dec(&irq_context->in_used);
++
+ 	return num_completed;
+ }
+ 
++int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
++{
++
++	struct megasas_instance *instance;
++	int num_entries = 0;
++	struct fusion_context *fusion;
++
++	instance = (struct megasas_instance *)shost->hostdata;
++
++	fusion = instance->ctrl_context;
++
++	queue_num = queue_num + instance->low_latency_index_start;
++
++	if (!atomic_add_unless(&fusion->busy_mq_poll[queue_num], 1, 1))
++		return 0;
++
++	num_entries = complete_cmd_fusion(instance, queue_num, NULL);
++	atomic_dec(&fusion->busy_mq_poll[queue_num]);
++
++	return num_entries;
 +}
 +
- static int scsi_map_queues(struct blk_mq_tag_set *set)
- {
- 	struct Scsi_Host *shost = container_of(set, struct Scsi_Host, tag_set);
-@@ -1869,15 +1876,14 @@ static const struct blk_mq_ops scsi_mq_ops_no_commit = {
- 	.cleanup_rq	= scsi_cleanup_rq,
- 	.busy		= scsi_mq_lld_busy,
- 	.map_queues	= scsi_map_queues,
-+	.init_hctx	= scsi_init_hctx,
- 	.poll		= scsi_mq_poll,
- };
+ /**
+  * megasas_enable_irq_poll() - enable irqpoll
+  * @instance:			Adapter soft state
+@@ -4163,6 +4201,8 @@ void  megasas_reset_reply_desc(struct megasas_instance *instance)
  
+ 	fusion = instance->ctrl_context;
+ 	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
++	count += instance->iopoll_q_count;
++
+ 	for (i = 0 ; i < count ; i++) {
+ 		fusion->last_reply_idx[i] = 0;
+ 		reply_desc = fusion->reply_frames_desc[i];
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index 30de4b01f703..ce84f811e5e1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -1303,6 +1303,8 @@ struct fusion_context {
+ 	u8 *sense;
+ 	dma_addr_t sense_phys_addr;
  
- static void scsi_commit_rqs(struct blk_mq_hw_ctx *hctx)
- {
--	struct request_queue *q = hctx->queue;
--	struct scsi_device *sdev = q->queuedata;
--	struct Scsi_Host *shost = sdev->host;
-+	struct Scsi_Host *shost = hctx->driver_data;
- 
- 	shost->hostt->commit_rqs(shost, hctx->queue_num);
- }
-@@ -1898,6 +1904,7 @@ static const struct blk_mq_ops scsi_mq_ops = {
- 	.cleanup_rq	= scsi_cleanup_rq,
- 	.busy		= scsi_mq_lld_busy,
- 	.map_queues	= scsi_map_queues,
-+	.init_hctx	= scsi_init_hctx,
- 	.poll		= scsi_mq_poll,
- };
- 
++	atomic_t   busy_mq_poll[MAX_MSIX_QUEUES_FUSION];
++
+ 	dma_addr_t reply_frames_desc_phys[MAX_MSIX_QUEUES_FUSION];
+ 	union MPI2_REPLY_DESCRIPTORS_UNION *reply_frames_desc[MAX_MSIX_QUEUES_FUSION];
+ 	struct rdpq_alloc_detail rdpq_tracker[RDPQ_MAX_CHUNK_COUNT];
 -- 
 2.18.1
 
 
---00000000000089050e05bb61ce31
+--00000000000035585705bb61ce2a
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -213,14 +505,14 @@ pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
 M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
 1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
 IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
-RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgw4CRQBdg
-ORj8jCNSKdZtXtudlYwNDSwscohmmm8htWAwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMjEwMjE1MTU0MDM0WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgPgauUoIv
+26K47V9wOmNGds8w7XibYNKkBQlfT1MvElswGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjEwMjE1MTU0MDI5WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
 BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
-9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAGiWbqpSGSRdVKD/4gMWH9epdT9d
-xmPt4ROwjSgDezOSFzIcBjDEfmd7mVETzdegMsMPzYX43aALk3lfd3+em5LHoJm9OWholM0IkXun
-+UG7q02aGZw4KBTYyyYugyC24dajHZTTxH+IrM+19KouvNoy1eaXmRP+9cohJ++X+8PWEt2qS8KA
-z5ScygTglgmI5HqB+USC7Q5zt2Dm+QGm0CbvgMpfaCBZalk3kW+hdycATHZ3LL5BVvs/ALmDmled
-LsKGQbnhNjBozfd3WWYeYatdijUpAnSGMWrZI1vF4qXLxYSDSNp9iCyeHM9MUtAKqB+9bUSgpKAG
-EFxTpeuIXfg=
---00000000000089050e05bb61ce31--
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAJtYSScsoAB1jcJdUPe7/HqAfn2G
+NBINHoHDVzYiOgjYSXrLacfE4nbvNQ6VxhpCs/ZHlSfCKRFOFIp9TMtIvXeUcZ8sviubekfYiHZu
+G1mvvoqoMos+OaYnpADijwO+/KzNvyRWJS7UyiFcltHBldyrEWHw9Vgc4rtPYczwULFhqH2v8hdB
+JMY71SmP3vT4rcwOF8HJcIv6dGM7Uu5+SyKcWwigCmtRb3qfQPSIo9oGH+2kjvBGhKTrVGZzMQK7
+udh6t4EJAbazgpbeT1yv2n84KkGdJhh99AH5yIJETM2QSqaeIb9PHaSP7pd9zM1Bl6YIjIqXgC7a
+kVbfL8usG74=
+--00000000000035585705bb61ce2a--
