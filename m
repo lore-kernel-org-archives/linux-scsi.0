@@ -2,113 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68EA7C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Feb 2021 14:59:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E53DC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Feb 2021 17:39:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2A36964E07
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Feb 2021 14:59:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6082664E07
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Feb 2021 17:39:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229916AbhBPO7Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Feb 2021 09:59:25 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:12434 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S229864AbhBPO7V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 16 Feb 2021 09:59:21 -0500
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 11GEnctk014819;
-        Tue, 16 Feb 2021 09:58:34 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=vCXzb5OpCKLaHDVmWut1qFi4BxjtzdfHygiEhaPanUU=;
- b=goCISUI7PndlL4FJ7okkCp5O1fn6oUQQueIOCD4PoY0mHq+yJ+QKn1X5J2Ge4r64/YIf
- f5X/vdbFZtgiam/MS6xq1CKdQZSyRsk6F7X+0CNXuyECD7yXHAUFEPymkkC1yYfm1wgF
- q519qcqEqjtuujHWBMQciVDKOiU52IxwtvIlAohS2Dp21XYN7rvyPbF7hsl1BBVmxo/D
- Hek1R2JNM8fQ46GlAnekwLLEa2OhQDO9x0mvO4YL4ieZ/0t8bh1DQz1YZ9apSSm92Wg0
- N58K30S+hgp4q4odfn4yAO43Pt3bDSNT5Vu0gJcbvHwGKHXqa4qgLq4y5ImP5kla/LLS rA== 
-Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 36rg570716-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 Feb 2021 09:58:34 -0500
-Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
-        by ppma02dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 11GEqYTh018382;
-        Tue, 16 Feb 2021 14:58:33 GMT
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-        by ppma02dal.us.ibm.com with ESMTP id 36p6d9mr0s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 Feb 2021 14:58:33 +0000
-Received: from b01ledav004.gho.pok.ibm.com (b01ledav004.gho.pok.ibm.com [9.57.199.109])
-        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 11GEwWxr33489364
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 16 Feb 2021 14:58:32 GMT
-Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A70A6112065;
-        Tue, 16 Feb 2021 14:58:32 +0000 (GMT)
-Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C46AA112062;
-        Tue, 16 Feb 2021 14:58:31 +0000 (GMT)
-Received: from oc6034535106.ibm.com (unknown [9.163.23.155])
-        by b01ledav004.gho.pok.ibm.com (Postfix) with ESMTP;
-        Tue, 16 Feb 2021 14:58:31 +0000 (GMT)
-Subject: Re: [PATCH 4/4] ibmvfc: store return code of H_FREE_SUB_CRQ during
- cleanup
-To:     Tyrel Datwyler <tyreld@linux.ibm.com>,
-        james.bottomley@hansenpartnership.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        brking@linux.ibm.com
-References: <20210211185742.50143-1-tyreld@linux.ibm.com>
- <20210211185742.50143-5-tyreld@linux.ibm.com>
-From:   Brian King <brking@linux.vnet.ibm.com>
-Message-ID: <94321ded-7970-258c-cee9-222f7b2b511f@linux.vnet.ibm.com>
-Date:   Tue, 16 Feb 2021 08:58:31 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S229845AbhBPRjK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Feb 2021 12:39:10 -0500
+Received: from z11.mailgun.us ([104.130.96.11]:12878 "EHLO z11.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229956AbhBPRjJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 16 Feb 2021 12:39:09 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1613497122; h=In-Reply-To: Content-Type: MIME-Version:
+ References: Message-ID: Subject: Cc: To: From: Date: Sender;
+ bh=dHSm7vvwLQgIxBTKqi4LaoYnmAC8Gq0ayiqNbTZxQok=; b=SAuTfqNUiyNKDl2v5r9/A80KJnEHmG1ttjpK4+48OViGdqQUOMIAmpi/9iRA41eZqqJ+OHJJ
+ wRw15WrRQ/TEFBbmJM2JmdvSKWF+MhzgwWL8tjY+CqXwGxHLHz2QhzmFiCog3GmTiwlswQIu
+ TYzl2W9GnM+RnLLOCMD3I85+y70=
+X-Mailgun-Sending-Ip: 104.130.96.11
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 602c031906bddda9df22eec4 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 16 Feb 2021 17:38:33
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 92211C433CA; Tue, 16 Feb 2021 17:38:32 +0000 (UTC)
+Received: from stor-presley.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B38A5C433CA;
+        Tue, 16 Feb 2021 17:38:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B38A5C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
+Date:   Tue, 16 Feb 2021 09:38:29 -0800
+From:   Asutosh Das <asutoshd@codeaurora.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     cang@codeaurora.org, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        stern@rowland.harvard.edu, Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH v3 1/1] scsi: ufs: Enable power management for wlun
+Message-ID: <20210216173829.GB35819@stor-presley.qualcomm.com>
+References: <cover.1613070911.git.asutoshd@codeaurora.org>
+ <eed327cdace40d1e1d706da5b0fa64ea4ee99422.1613070912.git.asutoshd@codeaurora.org>
+ <29fcd3c1-72c7-1191-ec03-aea1b0c6b8c9@acm.org>
 MIME-Version: 1.0
-In-Reply-To: <20210211185742.50143-5-tyreld@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
- definitions=2021-02-16_04:2021-02-16,2021-02-16 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 priorityscore=1501
- lowpriorityscore=0 malwarescore=0 clxscore=1015 mlxlogscore=999
- impostorscore=0 bulkscore=0 phishscore=0 adultscore=0 spamscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2102160130
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <29fcd3c1-72c7-1191-ec03-aea1b0c6b8c9@acm.org>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/11/21 12:57 PM, Tyrel Datwyler wrote:
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-> index ba6fcf9cbc57..23b803ac4a13 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -5670,7 +5670,7 @@ static int ibmvfc_register_scsi_channel(struct ibmvfc_host *vhost,
->  
->  irq_failed:
->  	do {
-> -		plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
-> +		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
->  	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
+On Fri, Feb 12 2021 at 19:25 -0800, Bart Van Assche wrote:
+>On 2/11/21 11:18 AM, Asutosh Das wrote:
+>> +static inline bool is_rpmb_wlun(struct scsi_device *sdev)
+>> +{
+>> +	return (sdev->lun == ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN));
+>> +}
+>> +
+>> +static inline bool is_device_wlun(struct scsi_device *sdev)
+>> +{
+>> +	return (sdev->lun ==
+>> +		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN));
+>> +}
+>
+>A minor comment: checkpatch should have reported that "return is not a
+>function" for the above code.
+>
+>>  /**
+>> + * ufshcd_setup_links - associate link b/w device wlun and other luns
+>> + * @sdev: pointer to SCSI device
+>> + * @hba: pointer to ufs hba
+>> + *
+>> + * Returns void
+>> + */
+>
+>Please leave out "Returns void".
+>
+>> +static int ufshcd_wl_suspend(struct device *dev)
+>> +{
+>> +	struct scsi_device *sdev = to_scsi_device(dev);
+>> +	struct ufs_hba *hba;
+>> +	int ret;
+>> +	ktime_t start = ktime_get();
+>> +
+>> +	if (is_rpmb_wlun(sdev))
+>> +		return 0;
+>> +	hba = shost_priv(sdev->host);
+>> +	ret = __ufshcd_wl_suspend(hba, UFS_SYSTEM_PM);
+>> +	if (ret)
+>> +		dev_err(&sdev->sdev_gendev, "%s failed: %d\n", __func__,  ret);
+>> +
+>> +	trace_ufshcd_wl_suspend(dev_name(dev), ret,
+>> +		ktime_to_us(ktime_sub(ktime_get(), start)),
+>> +		hba->curr_dev_pwr_mode, hba->uic_link_state);
+>> +
+>> +	return ret;
+>> +
+>> +}
+>
+>Please remove the blank line after the return statement.
+>
+>Otherwise this patch looks good to me. Hence:
+>
+>Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+>
 
-Other places in the driver where we get a busy return code back we have an msleep(100).
-Should we be doing that here as well?
+Done.
 
 Thanks,
-
-Brian
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
+-asd
