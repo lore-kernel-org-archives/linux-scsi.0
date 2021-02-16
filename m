@@ -2,118 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12762C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Feb 2021 18:44:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 976E2C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Feb 2021 19:40:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D02BB64E85
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Feb 2021 18:44:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5AE3264E7A
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Feb 2021 19:40:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230505AbhBPSoU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Feb 2021 13:44:20 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:41782 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229912AbhBPSoR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 16 Feb 2021 13:44:17 -0500
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 11GIWDlZ173635;
-        Tue, 16 Feb 2021 13:43:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=V1xU+saz9w4xiE659/nYzU7asqdKegzxMTqU8mFL/EU=;
- b=VSUZDZmuDejsM9+YVG+Q1nR+xPVfbS3+TRCWqLYBb0Um4A8GTLO5Co0D50p6VCTYqOGW
- BJl4Be8LnfIrCV6UuxzWNtPnRN6dtr5Nkz9Ha2otr88hWwZR7OL1irT8x1MSlpX+nzsw
- foSyBHz45yR3Sz0+++/C6/VdQVdNzKz6mYCAPrTTSotpYUIJ1NlbOHq4x9C2BAl5MoFk
- /ITuT3b3B58mXwvsDMJfG+nkHQ3fFWyH3L37p9l8lWPI1KHLOh93ndfcGkhMyssdqncD
- 2i4sAfoWysZIZu9qZMIfxLMpja9wgOPeJ62bM1DLeb2++pZTPy5mCvIgL67m7RxvxnNX LQ== 
-Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 36rhtdusc2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 Feb 2021 13:43:30 -0500
-Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
-        by ppma02dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 11GIaX6F016141;
-        Tue, 16 Feb 2021 18:43:29 GMT
-Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
-        by ppma02dal.us.ibm.com with ESMTP id 36p6d9pf0q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 Feb 2021 18:43:29 +0000
-Received: from b01ledav001.gho.pok.ibm.com (b01ledav001.gho.pok.ibm.com [9.57.199.106])
-        by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 11GIhTAJ7799706
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 16 Feb 2021 18:43:29 GMT
-Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 02B7328066;
-        Tue, 16 Feb 2021 18:43:29 +0000 (GMT)
-Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 4D7D428058;
-        Tue, 16 Feb 2021 18:43:26 +0000 (GMT)
-Received: from oc6857751186.ibm.com (unknown [9.160.70.200])
-        by b01ledav001.gho.pok.ibm.com (Postfix) with ESMTP;
-        Tue, 16 Feb 2021 18:43:25 +0000 (GMT)
-Subject: Re: [PATCH 4/4] ibmvfc: store return code of H_FREE_SUB_CRQ during
- cleanup
-To:     Brian King <brking@linux.vnet.ibm.com>,
-        james.bottomley@hansenpartnership.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        brking@linux.ibm.com
-References: <20210211185742.50143-1-tyreld@linux.ibm.com>
- <20210211185742.50143-5-tyreld@linux.ibm.com>
- <94321ded-7970-258c-cee9-222f7b2b511f@linux.vnet.ibm.com>
-From:   Tyrel Datwyler <tyreld@linux.ibm.com>
-Message-ID: <f5821413-f390-f759-a8a4-764c7f69537c@linux.ibm.com>
-Date:   Tue, 16 Feb 2021 10:43:24 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S229896AbhBPTk2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Feb 2021 14:40:28 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:58256 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229871AbhBPTkN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Feb 2021 14:40:13 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11GJUW5t136422;
+        Tue, 16 Feb 2021 19:39:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=492vjlvaUPKSaMVwta9O8w4AIhJp40UlYOsCPkXq78k=;
+ b=LrPylPDGtm4ZLNKFaTBQM/JzmJDsyajlKXztfGk8NDpmypeyD456DUWrNfjEB/Y4dFy0
+ xZDBsMsYXz1gUakkY+u+7M2IABRo6zSVuanmSXhCbyNa5JXeuP2qj9jd+SMpbVsB8YQF
+ Dln0vmZPxRFDqgUqj3gnHnCYgLobeKcmXQUmthTSkYVEV3re4LO1rxM43ccgQaup3bik
+ 7Mi68SrnioK+8Yq//XZjINtGaZ7W5ReQcICpRQEa7mrwSLJz53AidRis2nu8mZ0vTmDg
+ WomBsVAVkTbDr9RnWQ3bcuB2ZsTySO6joi4H3VGoZiFgMrUfBUjByoIOgIaD1tSnezl6 9A== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 36pd9a7jna-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 16 Feb 2021 19:39:28 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11GJVWun145914;
+        Tue, 16 Feb 2021 19:39:25 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 36prhryb24-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 16 Feb 2021 19:39:25 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 11GJdNPN029503;
+        Tue, 16 Feb 2021 19:39:23 GMT
+Received: from mwanda (/102.36.221.92)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 16 Feb 2021 11:39:23 -0800
+Date:   Tue, 16 Feb 2021 22:39:13 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     johannes.thumshirn@wdc.com
+Cc:     linux-scsi@vger.kernel.org, Michal Hocko <mhocko@kernel.org>
+Subject: [bug report] scsi: sd_zbc: emulate ZONE_APPEND commands
+Message-ID: <YCuvSfKw4qEQBr/t@mwanda>
 MIME-Version: 1.0
-In-Reply-To: <94321ded-7970-258c-cee9-222f7b2b511f@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
- definitions=2021-02-16_08:2021-02-16,2021-02-16 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 mlxscore=0
- malwarescore=0 phishscore=0 spamscore=0 clxscore=1015 suspectscore=0
- impostorscore=0 adultscore=0 bulkscore=0 priorityscore=1501
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-IMR: 1
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9897 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=770 adultscore=0 mlxscore=0
+ bulkscore=0 suspectscore=0 malwarescore=0 spamscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2102160162
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9897 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1011 impostorscore=0
+ mlxscore=0 phishscore=0 mlxlogscore=678 spamscore=0 bulkscore=0
+ priorityscore=1501 malwarescore=0 suspectscore=0 adultscore=0
  lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2102160153
+ engine=8.12.0-2009150000 definitions=main-2102160162
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/16/21 6:58 AM, Brian King wrote:
-> On 2/11/21 12:57 PM, Tyrel Datwyler wrote:
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
->> index ba6fcf9cbc57..23b803ac4a13 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
->> @@ -5670,7 +5670,7 @@ static int ibmvfc_register_scsi_channel(struct ibmvfc_host *vhost,
->>  
->>  irq_failed:
->>  	do {
->> -		plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
->> +		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
->>  	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
-> 
-> Other places in the driver where we get a busy return code back we have an msleep(100).
-> Should we be doing that here as well?
+Hello Johannes Thumshirn,
 
-Indeed, and actually even better would be to use rtas_busy_delay() which will
-perform the sleep with the correct ms delay, and marks itself with the
-might_sleep() macro.
+The patch 5795eb443060: "scsi: sd_zbc: emulate ZONE_APPEND commands"
+from May 12, 2020, leads to the following static checker warning:
 
--Tyrel
+	drivers/scsi/sd_zbc.c:741 sd_zbc_revalidate_zones()
+	error: kvmalloc() only makes sense with GFP_KERNEL
 
-> 
-> Thanks,
-> 
-> Brian
-> 
+drivers/scsi/sd_zbc.c
+   721          /*
+   722           * There is nothing to do for regular disks, including host-aware disks
+   723           * that have partitions.
+   724           */
+   725          if (!blk_queue_is_zoned(q))
+   726                  return 0;
+   727  
+   728          /*
+   729           * Make sure revalidate zones are serialized to ensure exclusive
+   730           * updates of the scsi disk data.
+   731           */
+   732          mutex_lock(&sdkp->rev_mutex);
+   733  
+   734          if (sdkp->zone_blocks == zone_blocks &&
+   735              sdkp->nr_zones == nr_zones &&
+   736              disk->queue->nr_zones == nr_zones)
+   737                  goto unlock;
+   738  
+   739          sdkp->zone_blocks = zone_blocks;
+   740          sdkp->nr_zones = nr_zones;
+   741          sdkp->rev_wp_offset = kvcalloc(nr_zones, sizeof(u32), GFP_NOIO);
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+We're passing GFP_NOIO here so it just defaults to kcalloc() and will
+not vmalloc() the memory.
 
+   742          if (!sdkp->rev_wp_offset) {
+   743                  ret = -ENOMEM;
+   744                  goto unlock;
+   745          }
+   746  
+   747          ret = blk_revalidate_disk_zones(disk, sd_zbc_revalidate_zones_cb);
+   748  
+
+regards,
+dan carpenter
