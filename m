@@ -2,224 +2,314 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0593AC433E6
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Feb 2021 01:29:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2FC0C433E6
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Feb 2021 05:25:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C9E3564E15
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Feb 2021 01:29:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B437F64D73
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Feb 2021 05:25:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230080AbhBRB33 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Feb 2021 20:29:29 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:56299 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229947AbhBRB30 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2021 20:29:26 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1613611765; x=1645147765;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=9qH2YcBXObP3U7J9syAbJhGF6oEFdit3Uuies5zV6L0=;
-  b=ktamL3gXCQpBp01M8ku8x9LGdatA5J/C4xvH7jWSNjYIuNBCWh1da9j0
-   xq0vja3z2ttDRKmrq/FAkUc0weRlMtsDVx0nbholVeMJJiLzik0TpjtEB
-   ZyJu83JT15yfIW24FJhM0BIAgLj6MAxveYNCdmqw8JIORzNCq1ow7kslN
-   Qk3eDf6gPQu10xv3R80MEZn/IgxpJdmHldVwvGhJAc4AKF+HpTlxumh3g
-   8RG9k/oPRPuUqvhv7yx+/ohSfbHUxjwPxuOOPAxcnVizyS+moyiZmrkM4
-   +BxaRzafpONVaOA7HZuXrjmL6RL2CindiWAk4KbHqgAR+C+wc3oB1PITf
-   w==;
-IronPort-SDR: 4M88/9R/M4HR78hDDgozsqeLNcrKDcQhQIJmP9TXkmbtTPL6yPoZ1bM7xqHkXXxRFDDdTwigus
- mX5gd0CwlopugYCRTtOHQJopUAAsTISKaYaw4apfQyBsiluX3a4Rjf7VpS2Lf3x7MzVjK/nTdx
- djmGlB7C12dt0Rta8wMbhG6TZWfwu4HmiE1uxo6qqVm89CyfifeWMzkq23vWWRp6oFDDG6pKxJ
- IGK+ZbjuTPsRQYy55cOH0fLinw9UoYX1CD67RhnSXlGc+WYIAKau3aAnc6EaAEKVzmR4RuLma5
- 7b0=
-X-IronPort-AV: E=Sophos;i="5.81,185,1610380800"; 
-   d="scan'208";a="160235283"
-Received: from mail-bn8nam08lp2045.outbound.protection.outlook.com (HELO NAM04-BN8-obe.outbound.protection.outlook.com) ([104.47.74.45])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Feb 2021 09:28:05 +0800
+        id S229889AbhBRFZ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Feb 2021 00:25:29 -0500
+Received: from mail-co1nam11on2100.outbound.protection.outlook.com ([40.107.220.100]:63584
+        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229656AbhBRFZ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 18 Feb 2021 00:25:27 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GsvHQavf7uNlQ8d/3oXOF87+GvxVIS7rl+xPiEGXnHP+bBUzAqaNm79hvp6eEOelgsqnMdrw+/UPYXBqUqOTa5pnRU4tFNgDa9nLm4urO01I3oavRBVKe/vBSZY0cmZCNUfeMdAy448tzUkbPFZ+HA0L678ORN689HKD3GlNknbjj/aa/inu26GRcHgxm6ZoaTp4vnJIX0csxabEjE6nXT7No/iQFEwefWDC2u9zDR33iE8JiBL/QdUGhtOfICUkWaWMVhHbQwy1/JhuPajet2bj67dnvUlXiTo9kDSgmRpWiIUCJN5wOqA3M1VNKsXEe2jfnCtxL0fSMYuJw4vVOA==
+ b=obbZ1+/jcO1tRKoycp2cqW1op4aPgQ2D8uUu+g+QT3Sez17qIMbAFEUdpXlNt2l/1gJL9gpLInxoH6M+9+C8tRRvRVJ8aiqhJB5M2R+mBYlz/nojAbN85HRvz67tBjH6CSdyRDFnRekCm1OnAlKrVmerzRe/YaP0eVNXBsU/8DbFcypPdjKI5+3TXW7fAguHd4y9RcA5qJtOd6Rc9OxJa0p2Nalwsu1Swpjtm8UmDgiVk3zTJQRETZ0ryA0vjVaGhyUbkS7glrbYNhjE9SPUuCOxzl8GdD47rEsxaigRJ3xXeFZQaz9AurvyNN0kmu7UYgCPBiESzPttFgr9uPgA4Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nVXbQhzjMljenFFGdNZDlx1QlYnqBP6C3iQWXjZAeDQ=;
- b=D5Ytc/df2DjxEIjW1QryLJ4PGUbnB4Ea3TV4TMBIJJe8DPrtS7/fCrYYQqqU4ssKhfL6DXKyI+ZNIR6LwOebIgPjxKUsjt0VplzRsXrmumld0mbBvENF/awZ15Ok/IV6/9F9mTCXij7K1iD7W+Z0sFanabFIx+4VFlXzVHtIjaNPcKGT03ZluX8jLrza9njERNtaKgX2RI3q74SGBrf4x8krmb/G7SmtLcmpf9Z+p8jh5zsmy03qoXUJFM7u3O4PUmydrU65J49EK9YrYeUvGRQPEtmB28UyPJfcA10fq1voUzC4x1k0u63AqIPz8W0Gv9XhFgSoMRGCHlVRMjeeKw==
+ bh=XD7MLhDWEqAUpZUWrUoR3I4H4bNXgtqE/4Qgiz3sv6I=;
+ b=lilw1uBo+ocpVSzGmr/ZeLE+wZvt8InPwq4cRc6BwPvUcQMvCdKLY+vFgvK4YJ8P0qo9YxTq/TW28w4r8P1VdgdHubX1LL1DTxKM9+lHmr3bo84XaSWhv4Aft9vg0p9LF23sLwaVXJkd01O2qTi8Ad9s7432EijQ3dae/GLfNFWqQ3TARKC1maeOxGsOif3zY0VbjU8NkMpFwC3v4AiUMSqi3ITKqc1ynqmkLkRKI4i+mPSDiyKtQ4oXiGljEVI65TgH8sjjv8W6CTMrAuCwiXmItstDZ5ZbMjgJ7k29H94YiGIKRxJ7woDZcbdM8KoSwnK9oDW7VbBiAWmLVAqa1g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nVXbQhzjMljenFFGdNZDlx1QlYnqBP6C3iQWXjZAeDQ=;
- b=iMEzjUgowwL4XBlFMbTYGFc9RSs3LvDC4WW6RrbatNzS7M+z+PyPrjOSGE6fAOGm592UnzFD8A7h93qDIuXnq9uKDUbExBwysGUd8rs6aYwe7pKW6YjBYZL8YQshg3SnC3pqPIF1BU1dXdY1nP0og2xoM8Xmxfh5ANKbKh/4HrE=
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
- by BYAPR04MB4759.namprd04.prod.outlook.com (2603:10b6:a03:15::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.38; Thu, 18 Feb
- 2021 01:28:03 +0000
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::1d83:38d9:143:4c9c]) by BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::1d83:38d9:143:4c9c%5]) with mapi id 15.20.3846.041; Thu, 18 Feb 2021
- 01:28:03 +0000
-From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-To:     Pavel Machek <pavel@ucw.cz>
-CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
-        "jfs-discussion@lists.sourceforge.net" 
-        <jfs-discussion@lists.sourceforge.net>,
-        "linux-nilfs@vger.kernel.org" <linux-nilfs@vger.kernel.org>,
-        "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>,
-        "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "roger.pau@citrix.com" <roger.pau@citrix.com>,
-        "minchan@kernel.org" <minchan@kernel.org>,
-        "ngupta@vflare.org" <ngupta@vflare.org>,
-        "sergey.senozhatsky.work@gmail.com" 
-        <sergey.senozhatsky.work@gmail.com>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "hch@lst.de" <hch@lst.de>, "sagi@grimberg.me" <sagi@grimberg.me>,
+ bh=XD7MLhDWEqAUpZUWrUoR3I4H4bNXgtqE/4Qgiz3sv6I=;
+ b=FnrCF+Mlilr7m9L3ze5Vb5m3BovfkWn8IBUB8PUDQp4FqgaeQseSkLbslwZ78Uq5krqCrprfYfKS4n/5eBMdKGQ3c7QrxxcunKn/KFjVCtxoC2lpQjY1JImeWrm84WwCj+30rrja0iuDV4xNbNQHOsuf3CqWgC72RUMVY/BWfq8=
+Received: from (2603:10b6:301:7c::11) by
+ MW4PR21MB1956.namprd21.prod.outlook.com (2603:10b6:303:7a::14) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3825.3; Thu, 18 Feb 2021 05:24:35 +0000
+Received: from MWHPR21MB1593.namprd21.prod.outlook.com
+ ([fe80::9c8:94c9:faf1:17c2]) by MWHPR21MB1593.namprd21.prod.outlook.com
+ ([fe80::9c8:94c9:faf1:17c2%9]) with mapi id 15.20.3890.003; Thu, 18 Feb 2021
+ 05:24:35 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     melanieplageman <melanieplageman@gmail.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "andres@anarazel.de" <andres@anarazel.de>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "tytso@mit.edu" <tytso@mit.edu>,
-        "jaegeuk@kernel.org" <jaegeuk@kernel.org>,
-        "ebiggers@kernel.org" <ebiggers@kernel.org>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "shaggy@kernel.org" <shaggy@kernel.org>,
-        "konishi.ryusuke@gmail.com" <konishi.ryusuke@gmail.com>,
-        "mark@fasheh.com" <mark@fasheh.com>,
-        "jlbec@evilplan.org" <jlbec@evilplan.org>,
-        "joseph.qi@linux.alibaba.com" <joseph.qi@linux.alibaba.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Naohiro Aota <Naohiro.Aota@wdc.com>,
-        "jth@kernel.org" <jth@kernel.org>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "len.brown@intel.com" <len.brown@intel.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "hare@suse.de" <hare@suse.de>,
-        "gustavoars@kernel.org" <gustavoars@kernel.org>,
-        "tiwai@suse.de" <tiwai@suse.de>,
-        "alex.shi@linux.alibaba.com" <alex.shi@linux.alibaba.com>,
-        "asml.silence@gmail.com" <asml.silence@gmail.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "tj@kernel.org" <tj@kernel.org>, "osandov@fb.com" <osandov@fb.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>
-Subject: Re: [RFC PATCH 29/34] power/swap: use bio_new in hib_submit_io
-Thread-Topic: [RFC PATCH 29/34] power/swap: use bio_new in hib_submit_io
-Thread-Index: AQHW9UVtzcRBxm47UEq6Z+ZGJ3C99A==
-Date:   Thu, 18 Feb 2021 01:28:03 +0000
-Message-ID: <BYAPR04MB49652FAADFDCAA3DF72DDEE186859@BYAPR04MB4965.namprd04.prod.outlook.com>
-References: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
- <20210128071133.60335-30-chaitanya.kulkarni@wdc.com>
- <20210217220257.GA10791@amd>
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v3] scsi: storvsc: Parameterize number hardware queues
+Thread-Topic: [PATCH v3] scsi: storvsc: Parameterize number hardware queues
+Thread-Index: AQHXAMx7G8GrUlQ5zUOjW2P1qe9C2qpUsILwgAhhSYCAAAHFMA==
+Date:   Thu, 18 Feb 2021 05:24:35 +0000
+Message-ID: <MWHPR21MB15930EFD2B324F7DBECA1E11D7859@MWHPR21MB1593.namprd21.prod.outlook.com>
+References: <20210211231803.25463-1-melanieplageman@gmail.com>
+ <MWHPR21MB15932F068976333B8D3DCEFCD78B9@MWHPR21MB1593.namprd21.prod.outlook.com>
+ <20210218000459.GA56402@goldwasser>
+In-Reply-To: <20210218000459.GA56402@goldwasser>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: ucw.cz; dkim=none (message not signed)
- header.d=none;ucw.cz; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [199.255.45.62]
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-02-18T05:24:31Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=55e84aa6-7c42-41b6-bde7-3c54e710a882;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0
+authentication-results: gmail.com; dkim=none (message not signed)
+ header.d=none;gmail.com; dmarc=none action=none header.from=microsoft.com;
+x-originating-ip: [24.22.167.197]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 06721654-7df7-4cf0-a01b-08d8d3ac6fd8
-x-ms-traffictypediagnostic: BYAPR04MB4759:
+x-ms-office365-filtering-correlation-id: 04ed6ed0-4f81-4312-84a8-08d8d3cd7aad
+x-ms-traffictypediagnostic: MW4PR21MB1956:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB475955F370F81E8B007520E886859@BYAPR04MB4759.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:4941;
+x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
+x-microsoft-antispam-prvs: <MW4PR21MB1956779FCED929BC3A3AD3C8D7859@MW4PR21MB1956.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:10000;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: RcRwgz6IM2A/u/TWxloQlzmC7jpW7IdpwapwE2srZFbILm7vBO1dKGMJs5xJorby8uToHqvtIxmTesokOK2N67DDeAojN22PAHvdQmSqNaSTDLBzH2qMKpFV1+WzWIVjxYMdCnh4jbF3SPjmDqwN/yIYFDFyk1EwDVJOfFLLMnaVxJAscRAP1ZFSZCNBzbges1ZNat9Mh1a+bsGirLXNwdSp2Afj7WrLg+DqkEDznkumbqbojWv2cikOO/w0aDpnRPnXREJ+NQdYMomG/M/yAnArKOyCvjTCoBmEv3pXZZerNQ1l33hI6zSUNjzJcTlPZ2+8e2cI2VO0+TzZ/hOuxZ06W2eFjAmeVDqVAaTFUCCfPrlmFghyrFtQzTvLF3BAta6ZiKq6LdIOocMNcqDB7SvM+Vy8jGmeQRmHkzsdJBhthIkjCGU/2Ujs3bqZtAIGKXyX+QheehpSxQ7dv8hPsjXXDBRnon9r6T5eMc3v1712HMeHqbj4g63qCPkU2S/O4NB5wD8r4YmNhCQ8vmr6qQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(376002)(396003)(39860400002)(366004)(346002)(6916009)(33656002)(2906002)(55016002)(5660300002)(7406005)(9686003)(8676002)(4326008)(86362001)(8936002)(478600001)(71200400001)(7366002)(316002)(186003)(7416002)(52536014)(54906003)(76116006)(66556008)(66946007)(64756008)(7696005)(53546011)(6506007)(66446008)(66476007)(26005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?FIItwhJNoqlHqrXr7ohF0LCXk2DS0EdG1yLZV0Z4VhMmvaysA9SgTmrClqIG?=
- =?us-ascii?Q?H3mrueUZG2rfqbYjvGN1Y1jpOkrI0tSChqG3PmuxYoz9EC8+CqA2NMt8YiG0?=
- =?us-ascii?Q?avib5faAAruYFRaTRBrtOZqj5Kae+D1MvohlzKuTpITQC0MUwI3xYA7RkXrc?=
- =?us-ascii?Q?sgn3HFfoZar+Qd1DoDBCAFo7j8O/MTD5eZZo9pgTs5AtwYk1hYbuFqmFZlpl?=
- =?us-ascii?Q?bSWSn/tV9sXNp9d/FpFzxvANMuy2h0Z4koAntonbxCVQWy4RXgZuCfKx8ihl?=
- =?us-ascii?Q?8ITpSwYLWRPvHfIrYc71WuBsdFzfr/s7nQZKVj5B6Oc/989Pk5sDFQTMhl8s?=
- =?us-ascii?Q?8d+5CSeJfjq/AR24QEulThpVLzLCKx9lznAAO1BPf9880E0vT+ocFYFXhz+T?=
- =?us-ascii?Q?2pCjGrPdpVJOwWMBa+WyzoiugWCSlCBlIQtpNUlB/QyBMx5eN5PUQsDN1btn?=
- =?us-ascii?Q?qlENDWj+45WaUXLdHYx6Ks+YpBEKLM2r1XMI5fdEEGkfwh7f7GqMUFbfOk0K?=
- =?us-ascii?Q?HIIBEvTq3oJXoFzib/yy596Ppl2fJiJGTDpXIdDPU/zN4dtzkkyv0VD085vR?=
- =?us-ascii?Q?0HkezDO7QBfwWpmkoV6OewO/RJOFoq5jNR/QJiiiqsPEzV7Z6T1Q95PJdvTP?=
- =?us-ascii?Q?PZuGAalpLyPcO7ms4hMFMo1U8+6XyfAmlkCrgWrtJieSu89xTLjPjcIurFvC?=
- =?us-ascii?Q?jufErXi6AIdXYhjfC7Qn3j6LJFeUffVyeQJ3yqz7aMaCXyh0N61ZHZ49g2hv?=
- =?us-ascii?Q?2SUpJ4MmLH7bSeIDLDUkJs9k1ufFvCwpfwdb3NBo6YxbGJPxFKXaR8idCCSb?=
- =?us-ascii?Q?QJNDgOlpvtM1yL3zcYDbkemuOABjcaDowGs8058X3FlzN1YAwF/CVtD0ThkW?=
- =?us-ascii?Q?zZNPs/x8dmVxzxocn+ZAXR+OsGnBy+YX/PRHIFYX90Am3Qbmfrzs+aJchYGK?=
- =?us-ascii?Q?zIm2tUM2jO4CTM7LW+UBFu8AJ0Cei4vmpe6L49QadsHoZuf5OahJLq6jE/j1?=
- =?us-ascii?Q?5pn6S4Byv5bclnFanhxBSiVv6JKQ6F5huJ3GY5KxMKvPj/X0TWWcX6uK0vq6?=
- =?us-ascii?Q?tHS/FYwrjHMEiMY+qErRsjEL30TJZlvtn9X9cKL0SUutNIDqZfNys6WxLiUX?=
- =?us-ascii?Q?oDsEk2EkVDQxEL/eb/QRixTUrTZcELUTddej0C3ypQcmIgJHJPhLB/8bzobn?=
- =?us-ascii?Q?RzpfPgCl6hVEWzSynB3Lqqljq5oh5VUFHrvF2iVFdEpMKWDlnBnVzKP1MoVY?=
- =?us-ascii?Q?+9+yJJYgYEJjcZPzXmUL4J2skzLncVRkrpGKxdRSLWhJrGgqm7HHSe67r4PW?=
- =?us-ascii?Q?BAQaAMKewt7oKQDpMEem1Qmz?=
+x-microsoft-antispam-message-info: v05kHQ6e/5ErWVAd26qjU6XAqMeVinbd1y61OcuFscHGu+ebWKu25Jl7KXfUjBzl/wUgJ5pCrv0DyQB/c/iLQAKyaYRrq0y+rHw1F67SzweBvfUIxR+gOtn9R/0VvnI4MRkrPMdF6nXdGNuexLFWWSfmDRIJzWNHQOtGkGwpBE1iAd6b5UcgCKAId6ebP4Isrmql+T3VrDRRcM+wg5I99iBfMcmyWqz1mj7fFMKyeOllfYoZuuj/rXJuVhs7HNJRoz9OS6GBdQ/XRl0gCS/U4g1/BiSFFMEnzHup8kXsZWXTYaFvK34jUZ5i1uYoVmCSELM5TtaVPSGxhhKuP+P1zdbowXEo5QQvro0rRAUrR1d+T5IqzV6wNnHTKpoAMYobAR0lDpTrssPHgravzWSVxiOpI+ewhs39gEt7+Ov4g8NfFbmubLNqVnbE51KdZBaSTgkim+uruVnZNDNoBrmrrKPJmW/PE9LNaG7QT0/YeHFg7zrkMRamSyCgzs7FW3Nutoae5t5rU2ycSr+EgShFug==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR21MB1593.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(376002)(346002)(136003)(366004)(396003)(52536014)(55016002)(7696005)(478600001)(66556008)(71200400001)(6916009)(66476007)(9686003)(33656002)(82960400001)(82950400001)(76116006)(6506007)(186003)(8676002)(8936002)(66946007)(54906003)(8990500004)(26005)(316002)(2906002)(4326008)(83380400001)(86362001)(64756008)(10290500003)(5660300002)(66446008);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?6EwOMaBl7qyVpWpGZ5U3aIft4W9RKa4NQyKEQiG4AlZfl78JTHmaOph6L1XG?=
+ =?us-ascii?Q?t9r3Q6VUxKnjCVGVh1xynjt+6DJ86ZU/yrIJ+3q/8HUX3x7jABMbhXaVQsU3?=
+ =?us-ascii?Q?rBam+p3iBpDvCPJZz++nSm+AZGaaHWNkCQY5tcwvTDH15SFy9AP2zw+mpRNq?=
+ =?us-ascii?Q?Ky/OuCUIkVnxwextHSpHQP9nQOp4xVAbv3/FZsVeW5en++16KnXR70Ft2t+Y?=
+ =?us-ascii?Q?P15oD6DSMhQ1v5L4w8CVBACWCLhBVQfzAJJ02x9s7iERdVQMOgnT0ZICOhDZ?=
+ =?us-ascii?Q?NSKGHrTMY5x5OUfY8n924megnHQjRt1Clz6z3egvZIprgXyjQJZBBfzt6Rx/?=
+ =?us-ascii?Q?qLoOEu7re58pC0e9Ot6B2BPfcVhdeKpdDFSY6haLtwboF7FXoPyCIuc5AXKU?=
+ =?us-ascii?Q?C//Cpm5dgaOBrru72w3hMOJgXDOSbKqpbrjuQYhBr3+uGkW64eTcsMI+CSab?=
+ =?us-ascii?Q?TWQCnW/368lMLM7GA15olkL4rm6S2LRr5jIyu0ex0GrtmmktzcE/pSYpCIH1?=
+ =?us-ascii?Q?M9QNrfajgTvujxAN6R98TOShvpcN1WEHX4arLcYC24eAusP6oj+BkWin4gG4?=
+ =?us-ascii?Q?8D4iFYVC9RFrSBxr8yvYDHq4awRrr8+zp0zRiuFhHvyM64Ium00xFiEK9f3W?=
+ =?us-ascii?Q?UjNCYd4t06tdIZZxSKbm41l8OohnkXfSo08qV+m6JRu8JLXVF4JkeyMuuttz?=
+ =?us-ascii?Q?GEU/yTD3vs+OyvyVtVPxnntfULwkVTm9NIlSyaD11XJcRImnzKJX4ppFFvWy?=
+ =?us-ascii?Q?wUVK+zK2zyp3zGwm/Th9AfXfJKPmptvPk78Ju4TSCjPErs6Ho9L+0Au+4ktv?=
+ =?us-ascii?Q?d949xLppYGA7P3Rxdt27ub0lhhHXOUoGvfFyBigJsGt0a/YHNhyJPS0WUIKz?=
+ =?us-ascii?Q?bPojwl0ytfv0tnqCSb9x1HrVCj9twinA2uLemmjYSlppAI28dyaqVcERIwjs?=
+ =?us-ascii?Q?cir8ypdew+NGBzpkBpktZeN1PRkuIiJq/JV3++CfWKRxEnIx8Rc1sLxoKJ9E?=
+ =?us-ascii?Q?V7/orqmj2D35ozNgpGjTGm0/N1eWYIQxM+qVe04socir0YDhCKFSO6fJfiI8?=
+ =?us-ascii?Q?hyO8r9bJ8a9qhqFZnMqTJwNatwMltLDjTKxqPu6cSRYZhNpG01zQBA+T6lva?=
+ =?us-ascii?Q?Io0ke2IBlcLJRqBzusMT5lEy/aRdrMmQeD0mTPwN/9UmDq0delShTm4lCgOa?=
+ =?us-ascii?Q?ajAvU2PGgPg2UY7fAGcxMs+KSkwxIXYDBwP4UXRstevLLViD2iPMmMpy1ZDb?=
+ =?us-ascii?Q?FUb6jdRL0vQcGApRDP6AUTBOBB9Q5WEy6Ags0GWgB/LpkFWBSzsoqtvseEd7?=
+ =?us-ascii?Q?bDZJWdsV+5/i3KYkGl2MlGO9?=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
+X-OriginatorOrg: microsoft.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 06721654-7df7-4cf0-a01b-08d8d3ac6fd8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Feb 2021 01:28:03.6019
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR21MB1593.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 04ed6ed0-4f81-4312-84a8-08d8d3cd7aad
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Feb 2021 05:24:35.1684
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: iwT3NHWXg8QVXADRxHceCUGDm5QEez0FiJmRfbimNLUHwFL3p95byR8mLhVMJL3VGD62zPKA+aTh7kf1DD7ORrPoFj0oolcWym1ymC0x1KQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4759
+X-MS-Exchange-CrossTenant-userprincipalname: w3svj3WsYSwcDJEBqSyFhH6UogmISR43znMZkgksd8uZzwTR6rcEmPdCh2O3wuqY/otntZreHjk2vteOkmRi04YyGDDgA7rKGum+T07tPL4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR21MB1956
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/17/21 14:03, Pavel Machek wrote:=0A=
-> Hi!=0A=
->> diff --git a/kernel/power/swap.c b/kernel/power/swap.c=0A=
->> index c73f2e295167..e92e36c053a6 100644=0A=
->> --- a/kernel/power/swap.c=0A=
->> +++ b/kernel/power/swap.c=0A=
->> @@ -271,13 +271,12 @@ static int hib_submit_io(int op, int op_flags, pgo=
-ff_t page_off, void *addr,=0A=
->>  		struct hib_bio_batch *hb)=0A=
->>  {=0A=
->>  	struct page *page =3D virt_to_page(addr);=0A=
->> +	sector_t sect =3D page_off * (PAGE_SIZE >> 9);=0A=
->>  	struct bio *bio;=0A=
->>  	int error =3D 0;=0A=
->>  =0A=
->> -	bio =3D bio_alloc(GFP_NOIO | __GFP_HIGH, 1);=0A=
->> -	bio->bi_iter.bi_sector =3D page_off * (PAGE_SIZE >> 9);=0A=
->> -	bio_set_dev(bio, hib_resume_bdev);=0A=
->> -	bio_set_op_attrs(bio, op, op_flags);=0A=
->> +	bio =3D bio_new(hib_resume_bdev, sect, op, op_flags, 1,=0A=
->> +		      GFP_NOIO | __GFP_HIGH);=0A=
->>  =0A=
-> C function with 6 arguments... dunno. Old version looks comparable or=0A=
-> even more readable...=0A=
->=0A=
-> Best regards,=0A=
-> 							Pavel=0A=
-The library functions that are in the kernel tree which are used=0A=
-in different file-systems and fabrics drivers do take 6 arguments.=0A=
-=0A=
-Plus what is the point of duplicating code for mandatory=0A=
-parameters all over the kernel ?=0A=
-=0A=
+From: Melanie Plageman <melanieplageman@gmail.com> Sent: Wednesday, Februar=
+y 17, 2021 4:05 PM
+>=20
+> On Fri, Feb 12, 2021 at 04:35:16PM +0000, Michael Kelley wrote:
+> > From: Melanie Plageman <melanieplageman@gmail.com> Sent: Thursday, Febr=
+uary 11,
+> 2021 3:18 PM
+> > >
+> > > Add ability to set the number of hardware queues with new module para=
+meter,
+> > > storvsc_max_hw_queues. The default value remains the number of CPUs. =
+ This
+> > > functionality is useful in some environments (e.g. Microsoft Azure) w=
+here
+> > > decreasing the number of hardware queues has been shown to improve
+> > > performance.
+> > >
+> > > Signed-off-by: Melanie Plageman (Microsoft) <melanieplageman@gmail.co=
+m>
+> > > ---
+> > >  drivers/scsi/storvsc_drv.c | 28 ++++++++++++++++++++++++++--
+> > >  1 file changed, 26 insertions(+), 2 deletions(-)
+> > >
+> > > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> > > index 2e4fa77445fd..a64e6664c915 100644
+> > > --- a/drivers/scsi/storvsc_drv.c
+> > > +++ b/drivers/scsi/storvsc_drv.c
+> > > @@ -378,10 +378,14 @@ static u32 max_outstanding_req_per_channel;
+> > >  static int storvsc_change_queue_depth(struct scsi_device *sdev, int =
+queue_depth);
+> > >
+> > >  static int storvsc_vcpus_per_sub_channel =3D 4;
+> > > +static int storvsc_max_hw_queues =3D -1;
+> > >
+> > >  module_param(storvsc_ringbuffer_size, int, S_IRUGO);
+> > >  MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)"=
+);
+> > >
+> > > +module_param(storvsc_max_hw_queues, int, S_IRUGO|S_IWUSR);
+> > > +MODULE_PARM_DESC(storvsc_max_hw_queues, "Maximum number of hardware
+> > > queues");
+> > > +
+> >
+> > There's been an effort underway to not use the symbolic permissions in
+> > module_param(), but to just use the octal digits (like 0600 for root on=
+ly
+> > access).   But I couldn't immediately find documentation on why this
+> > change is being made.  And clearly it hasn't been applied to the
+> > existing module_param() uses here in storvsc_drv.c.  But with this bein=
+g
+> > a new parameter, let's use the recommended octal digit format.
+>=20
+> Thanks. I will update this in v4.
+>=20
+> >
+> > >  module_param(storvsc_vcpus_per_sub_channel, int, S_IRUGO);
+> > >  MODULE_PARM_DESC(storvsc_vcpus_per_sub_channel, "Ratio of VCPUs to
+> > > subchannels");
+> > >
+> > > @@ -1897,6 +1901,7 @@ static int storvsc_probe(struct hv_device *devi=
+ce,
+> > >  {
+> > >  	int ret;
+> > >  	int num_cpus =3D num_online_cpus();
+> > > +	int num_present_cpus =3D num_present_cpus();
+> > >  	struct Scsi_Host *host;
+> > >  	struct hv_host_device *host_dev;
+> > >  	bool dev_is_ide =3D ((dev_id->driver_data =3D=3D IDE_GUID) ? true :=
+ false);
+> > > @@ -2004,8 +2009,19 @@ static int storvsc_probe(struct hv_device *dev=
+ice,
+> > >  	 * For non-IDE disks, the host supports multiple channels.
+> > >  	 * Set the number of HW queues we are supporting.
+> > >  	 */
+> > > -	if (!dev_is_ide)
+> > > -		host->nr_hw_queues =3D num_present_cpus();
+> > > +	if (!dev_is_ide) {
+> > > +		if (storvsc_max_hw_queues =3D=3D -1)
+> > > +			host->nr_hw_queues =3D num_present_cpus;
+> > > +		else if (storvsc_max_hw_queues > num_present_cpus ||
+> > > +			 storvsc_max_hw_queues =3D=3D 0 ||
+> > > +			storvsc_max_hw_queues < -1) {
+> > > +			storvsc_log(device, STORVSC_LOGGING_WARN,
+> > > +				"Resetting invalid storvsc_max_hw_queues value to default.\n");
+> > > +			host->nr_hw_queues =3D num_present_cpus;
+> > > +			storvsc_max_hw_queues =3D -1;
+> > > +		} else
+> > > +			host->nr_hw_queues =3D storvsc_max_hw_queues;
+> > > +	}
+> >
+> > I have a couple of thoughts about the above logic.  As the code is writ=
+ten,
+> > valid values are integers from 1 to the number of CPUs, and -1.  The lo=
+gic
+> > would be simpler if the module parameter was an unsigned int instead of
+> > a signed int, and zero was the marker for "use number of CPUs".  Then
+> > you wouldn't have to check for negative values or have special handling
+> > for -1.
+>=20
+> I used -1 because the linter ./scripts/checkpatch.pl throws an ERROR "do
+> not initialise statics to 0"
+
+OK, right.  The intent of that warning is not that using zero as a value
+is bad.  The intent that to indicate that statics are by default initialize=
+d
+to zero, so explicitly adding the "=3D 0" is unnecessary.  So feel free to
+use "0" as the marker for "use numbers of CPUs".  Just don't
+add the "=3D 0" in the variable declaration. :-)
+
+>=20
+> >
+> > Second, I think you can avoid intertwining the logic for checking for a=
+n
+> > invalid value, and actually setting host->nr_hw_queues.  Check for an
+> > invalid value first, then do the setting of host->hr_hw_queues.
+> >
+> > Putting both thoughts together, you could get code like this:
+> >
+> > 	if (!dev_is ide) {
+> > 		if (storvsc_max_hw_queues > num_present_cpus) {
+> > 			storvsc_max_hw_queues =3D 0;
+> > 			storvsc_log(device, STORVSC_LOGGING_WARN,
+> > 				"Resetting invalid storvsc_max_hw_queues value to default.\n");
+> > 		}
+> > 		if (storvsc_max_hw_queues)
+> > 			host->nr_hw_queues =3D storvsc_max_hw_queues
+> > 		else
+> > 			host->hr_hw_queues =3D num_present_cpus;
+> > 	}
+>=20
+> I will update the logic like this.
+>=20
+> >
+> > >
+> > >  	/*
+> > >  	 * Set the error handler work queue.
+> > > @@ -2169,6 +2185,14 @@ static int __init storvsc_drv_init(void)
+> > >  		vmscsi_size_delta,
+> > >  		sizeof(u64)));
+> > >
+> > > +	if (storvsc_max_hw_queues > num_present_cpus() ||
+> > > +		storvsc_max_hw_queues =3D=3D 0 ||
+> > > +		storvsc_max_hw_queues < -1) {
+> > > +		pr_warn("Setting storvsc_max_hw_queues to -1. %d is invalid.\n",
+> > > +			storvsc_max_hw_queues);
+> > > +		storvsc_max_hw_queues =3D -1;
+> > > +	}
+> > > +
+> >
+> > Is this check really needed?  Any usage of the value will be in
+> > storvsc_probe() where the same check is performed.  I'm not seeing
+> > a scenario where this check adds value over what's already being
+> > done in storvsc_probe(), but maybe I'm missing it.
+>=20
+> It is not. I had initially added it because I did not plan on making the
+> parameter updatable and thought it would be better to only have one
+> message about the invalid value instead of #device messages (from each
+> probe()). But, after making it updatable, I had to add invalid value
+> checking to storvsc_probe() anyway, so, this is definitely unneeded. If
+> you specify the parameter at boot-time and this is here, you would only
+> get one instance of the logging message (because it resets the value of
+> storvsc_max_hw_queues to the default before probe() is called), but, I
+> don't think that is worth it.
+
+I agree.  And actually, if the code in storvsc_probe() "fixes" the bad
+value, you would not get the warning on subsequent calls to
+storvsc_probe().  So again, you would have only one warning unless
+someone manually changed it to a bad value again via the /sys/module
+interface.
+
+Michael
+
+>=20
+> >
+> > >  #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+> > >  	fc_transport_template =3D fc_attach_transport(&fc_transport_functio=
+ns);
+> > >  	if (!fc_transport_template)
+> > > --
+> > > 2.20.1
+> >
