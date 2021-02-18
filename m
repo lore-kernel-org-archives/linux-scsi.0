@@ -2,241 +2,270 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E794AC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Feb 2021 21:03:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40F80C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Feb 2021 21:59:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BF2A64E79
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Feb 2021 21:03:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D82BD64EB3
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Feb 2021 21:59:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230169AbhBRVDf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Feb 2021 16:03:35 -0500
-Received: from mail-dm6nam11on2132.outbound.protection.outlook.com ([40.107.223.132]:23072
-        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229671AbhBRVDJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 Feb 2021 16:03:09 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XvJUa7+Bg/qoKbvmPxv2rNGidKocOdpxaGsNV831DLcVSs2MfdpaGQ6+16CTms1VMb1LQEo249iVcD6i3UsGQMD01jq1VKhvamDbQJiNUUKM1wGuUVAoyepbrisqzZfvUMF4uohM2udtCpY8rT+cWvXVx/iZ4z0BvBOkg39KzNCOADN+VAmvbeciIUjUpKz68ryYj1X74qtNFRs9Xge7qnsOKjeo+qmjv/a9lwUbQF234pPAe7opTIUOHd4FGhgUGPreevpcr7vepRaliaK+V6GpcUhVlcD+QDPXG9hU/5rG2n85XgEepGEA5uEG07ouLo+QsqL6doDE58XreAm/uw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kb553JjDFfDPJo9/Pt7OBvdjOTgAfCF3uRWnDI/Q+v4=;
- b=luX4/kKLryQQBTC4jwfDPN1OyBu8xNanF7gdJpJtsSaoiSawF8fy8ePyAL/4wM4Qib3R1vrxwzC4tavl3GUHJwAnFZQyGeMTXFq5gdyfrRV2BnoJ8c8lNn9yeFW4SKa692PTM27BWyFpy2zwmK1HWgmC9wK5ns3tPJth2DBXpFTVB06OBtEBnHQ4S7/CX8c8K+LWi0xTzJYlh+2iNbBv1rZMnI6HA7Wm0QLFaltIm9TytBzrIag35pK+7M9VE6shCWkCu2CZa3FEGwMEfszRkdP3TmFCSO2ik+G+IPhhNS8YV1PiU9iHWTB7Ypjp9W7BfSXmcAut95QETn3YgWgGZQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kb553JjDFfDPJo9/Pt7OBvdjOTgAfCF3uRWnDI/Q+v4=;
- b=b1f75KDkG48+ieXJLDHPsVYVgVi0Y4FEpQpQJ1Nb4FnLZUjBJy2QeAkkVTYQCefCLRiqXisKkhgSZmpAgbEoY77TD4Peg0YFaxmWgnRihj2DaOzUGraUG6p78jZJy4Gg5UjB/ol7o3Z9XYqYdNrKqkTs43mmJUTIFG+2DGbLCcc=
-Authentication-Results: microsoft.com; dkim=none (message not signed)
- header.d=none;microsoft.com; dmarc=none action=none
- header.from=microsoft.com;
-Received: from (2603:10b6:5:22d::11) by
- DM5PR21MB1543.namprd21.prod.outlook.com (2603:10b6:4:7a::18) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3846.3; Thu, 18 Feb 2021 21:02:21 +0000
-Received: from DM6PR21MB1514.namprd21.prod.outlook.com
- ([fe80::1c32:e52a:6a36:3ff]) by DM6PR21MB1514.namprd21.prod.outlook.com
- ([fe80::1c32:e52a:6a36:3ff%5]) with mapi id 15.20.3890.002; Thu, 18 Feb 2021
- 21:02:21 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     kys@microsoft.com, martin.petersen@oracle.com,
-        longli@microsoft.com, wei.liu@kernel.org, jejb@linux.ibm.com,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     mikelley@microsoft.com
-Subject: [PATCH 1/1] scsi: storvsc: Enable scatterlist entry lengths > 4Kbytes
-Date:   Thu, 18 Feb 2021 13:01:27 -0800
-Message-Id: <1613682087-102535-1-git-send-email-mikelley@microsoft.com>
-X-Mailer: git-send-email 1.8.3.1
-Content-Type: text/plain
-X-Originating-IP: [131.107.159.144]
-X-ClientProxiedBy: MW4PR04CA0088.namprd04.prod.outlook.com
- (2603:10b6:303:6b::33) To DM6PR21MB1514.namprd21.prod.outlook.com
- (2603:10b6:5:22d::11)
+        id S229809AbhBRV7E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Feb 2021 16:59:04 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43344 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229620AbhBRV7A (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 18 Feb 2021 16:59:00 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1613685452;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:mime-version:mime-version:
+         content-type:content-type:  content-transfer-encoding:content-transfer-encoding;
+        bh=NssRbP94TC5srIoM+rBsE8Noo9FeHqIvEgyf6HZQRK4=;
+        b=Rvb4mXZCpq9NWiv+y6RYiQFr+yFo+5YP/U/kIMTmVzyKIJJB8MlRpEyGHUn5Ff4v8/cd/w
+        ELVUGtKfK2RmVRzgw0Yt/IFaf/dkY05vcAnBAzm/9lXjMv3CaYIDhdr8HxkN4FZi3Nacsv
+        ADU3Rof4Z6iRktGXHbyzoVvcP8jJPkc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-515-URNHQSXXMP2ZfnAhVbSJ6w-1; Thu, 18 Feb 2021 16:57:30 -0500
+X-MC-Unique: URNHQSXXMP2ZfnAhVbSJ6w-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9289710CE781;
+        Thu, 18 Feb 2021 21:57:29 +0000 (UTC)
+Received: from [10.10.112.124] (ovpn-112-124.rdu2.redhat.com [10.10.112.124])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id F2FB05C8B4;
+        Thu, 18 Feb 2021 21:57:28 +0000 (UTC)
+From:   Tony Asleson <tasleson@redhat.com>
+Subject: BusLogic driver with spurious logical units
+Reply-To: tasleson@redhat.com
+To:     khalid@gonehiking.org, linux-scsi@vger.kernel.org
+Organization: Red Hat
+Message-ID: <5a74cc0b-65e7-c5f8-edc5-80746fc38be7@redhat.com>
+Date:   Thu, 18 Feb 2021 15:57:28 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from mhkdev.corp.microsoft.com (131.107.159.144) by MW4PR04CA0088.namprd04.prod.outlook.com (2603:10b6:303:6b::33) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.27 via Frontend Transport; Thu, 18 Feb 2021 21:02:20 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: 2d57950e-c7fb-4d2b-7b18-08d8d4507bdb
-X-MS-TrafficTypeDiagnostic: DM5PR21MB1543:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DM5PR21MB154314360F904086A13367AFD7859@DM5PR21MB1543.namprd21.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5516;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 7uW697sJSaTMFy1NMmBB6y1SKV4Y5Wmpm9MsRA+ylsludr4hoQJEfD0suth8qlqDH4M6+CK4OnAky2xD6b4qY/Bd06c+5iysAKgFzLP7RwZczh/BvteqtkTUHJJ4k5N2w+SPwrY0vAKwv+p7mxBGxBOklEm19+m1YckWcgcwGXfmhSxwp+EBeQ3OZyY7FfxvpaPc1LuUYiphBzlcnXHwNrLX0wgju5B4tx1JOA0wpij1wR+yds7KH1PGGJQWiiy9aFe7KuqU5PQocHAJqJqLGsWyXXRfqtDubuPxeBldnV/vDtFAhIU7GTboNVbk7Zh3dmonN6+WKeTilasqIpP/nLYG9CWfS1c1MQwxAW5NBJqWRvXcBJskCHvw1UuQU+1iRIebC9Z15xtPJRLh//3hKXLe+7F/W2FrgG0YyjAblgASGdjNaICXa4gIcbsEMBv4A7VDlja5/RMq2a75aPvUCJHHOcLpD2s0ItvJmF2bClxzNb+dhfBsGYTXbwcYcyqxRjFyNyKntY0yez/uf87qOg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1514.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(39860400002)(346002)(396003)(376002)(366004)(5660300002)(6486002)(2906002)(8676002)(316002)(10290500003)(478600001)(36756003)(26005)(107886003)(66476007)(66946007)(52116002)(7696005)(82960400001)(2616005)(66556008)(82950400001)(4326008)(956004)(83380400001)(16526019)(86362001)(8936002)(186003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?/lHAcCoKvjJUqPSPRA+JUg/nIULXcR17+nAOZ2h+4rUi3qiMCSYnohMuFv5V?=
- =?us-ascii?Q?VgkTXDbbgX0vMFBBgpQXYfhrHD210QDLBtpnwRJHN21HsjneTOM6GLrgV/pO?=
- =?us-ascii?Q?+3wWxLMZ9VS9V3jjGV+BvrW5a00oKxXZbrT1dzI09/VCW6pjNzjC0RxuhAG2?=
- =?us-ascii?Q?iwRKVB1JuX/QY1UXH+ISoCIzxS5pjyJIaGPFTFR7LZcxQpmCicPbY7nDGWxr?=
- =?us-ascii?Q?dHiVEC84uf1WywtaufSj7t37zzRqCjKShYg2zt9LZXPJ2vYn4hU105awYmpg?=
- =?us-ascii?Q?PcTd+pOD35Wxm7dIfaU7cKWJrpdkUt+NfVdsRnZdOGVtvXZ7iD1IhnFs0fJe?=
- =?us-ascii?Q?p+uMP0fDgD+Px05ODTHtoY8K32NBDmWW27M+LgE27pKNwy5tJGXC0K6p7gTG?=
- =?us-ascii?Q?KoOoGlMsE7ODbWy61C8hQRLxGuXJmv/8ro9oqHFGLQfbyI+9nxo78hk8wCs3?=
- =?us-ascii?Q?BsJJ9myf5KjVqbCqYloI4e2CjDcAKxV2jaOciX/QjVAe5rvrdZ7H1e6podx2?=
- =?us-ascii?Q?wwTTCUgtXUkjw17GPHr14QjqDIQ4l+AzaiCSYeIyh6/dSl2PcOGwkoWpam5R?=
- =?us-ascii?Q?ckjZYrUiswMyPPPA4Irt+GYlQtiztwhwM3UcZC33MucfAuSOIspuScNCLbDr?=
- =?us-ascii?Q?YYmm2QjeLM7fVKzO02wcBeZa9ZE+0VML6630YI/nM0cWSVqrjovzUx2KNVBH?=
- =?us-ascii?Q?wHQ5M+GGPYDIh0cLYm1SUeZXcYSJZTOttW61D+gUHH2rePpj2oNaRJomhgDP?=
- =?us-ascii?Q?5PPEoj/fWTJkBQUzSTJrN/EObqpmhloPB1kZFLvg+9rHP7M095RkWtZiB5Hl?=
- =?us-ascii?Q?LebHTmui3Wt000VSvv3nvlCkbSxVL0e5Wg+Dc08ixak4wn0BmuRsBggzlu+r?=
- =?us-ascii?Q?0gtRJ0hn3Kc9lYYp4cBJKxYYSneWC8Au6izZT6Jqivr1bTAw4uCnnDJ18okl?=
- =?us-ascii?Q?2Hoet6vhSOFZkUjcO8ohjuE+HPhRtuuOsGS/K08Y29RGpUHttc0j5cZSPBm/?=
- =?us-ascii?Q?2xSQzIcIQPIZYWgDY/gYHoDke63Pk3Fe5WNo8kjXxF4SWrOouukS7WtelmqF?=
- =?us-ascii?Q?0G+GU4bNhiClpqZoDiEqIz0CQrSr79fFDlloLzHDKytaoOPXVf5rdocv/QFv?=
- =?us-ascii?Q?l7m9NbvytY40GK0EqUwiRP4V/Fz9obnPLrvjFbCd/Xz5glQDQ7W6kKl0nvQl?=
- =?us-ascii?Q?MsMoH0QWC3cjQbdbExPfUxI0SoI16BLxAz6b66y8rvQwk3WrX0Qlgm5/aHzU?=
- =?us-ascii?Q?M5cY6LYPtiFrOvmDwvjfIS536iyQJlceu0lA8rZW/oslmrQ3u8eV0t+5P4ey?=
- =?us-ascii?Q?4Jwy43jOd+OnTGH/Te0wtrsV?=
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2d57950e-c7fb-4d2b-7b18-08d8d4507bdb
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1514.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2021 21:02:21.5111
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: cNkQgEBuI2KY6Q34llTV3gLUx8RipLaiu/yyntLiOnaGPF2EF5lKMZ/d6bRxkd173mQjLSGZrPGU8uECyJ6TmA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR21MB1543
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-storvsc currently sets .dma_boundary to limit scatterlist entries
-to 4 Kbytes, which is less efficient with huge pages that offer
-large chunks of contiguous physical memory. Improve the algorithm
-for creating the Hyper-V guest physical address PFN array so
-that scatterlist entries with lengths > 4Kbytes are handled.
-As a result, remove the .dma_boundary setting.
+Using Virtualbox (6.1.18 r142142) with Buslogic & IDE, I booted a fedora
+33 (5.10.15-200.fc33.x86_64) server ISO and I find *many* targets with
+size 512 bytes which is incorrect.  To get another data point, I used
+same VM and a NetBSD 9.1 ISO and that booted with the expected
+configuration.  Although, it still could be a VM hardware model issue.
 
-The improved algorithm also adds support for scatterlist
-entries with offsets >= 4Kbytes, which is supported by many
-other SCSI low-level drivers.  And it retains support for
-architectures where possibly PAGE_SIZE != HV_HYP_PAGE_SIZE
-(such as ARM64).
+Expected:
+1 80GB IDE disk & CDROM
+1 2GB SCSI buslogic attached disk
 
-Signed-off-by: Michael Kelley <mikelley@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 63 ++++++++++++++++------------------------------
- 1 file changed, 22 insertions(+), 41 deletions(-)
+Found:
+1 80GB IDE disk & CDROM
+120 512-byte SCSI disks
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 2e4fa77..5d06061 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1678,9 +1678,8 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	struct storvsc_cmd_request *cmd_request = scsi_cmd_priv(scmnd);
- 	int i;
- 	struct scatterlist *sgl;
--	unsigned int sg_count = 0;
-+	unsigned int sg_count;
- 	struct vmscsi_request *vm_srb;
--	struct scatterlist *cur_sgl;
- 	struct vmbus_packet_mpb_array  *payload;
- 	u32 payload_sz;
- 	u32 length;
-@@ -1759,7 +1758,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	payload_sz = sizeof(cmd_request->mpb);
- 
- 	if (sg_count) {
--		unsigned int hvpgoff = 0;
-+		unsigned int hvpgoff, sgl_size;
- 		unsigned long offset_in_hvpg = sgl->offset & ~HV_HYP_PAGE_MASK;
- 		unsigned int hvpg_count = HVPFN_UP(offset_in_hvpg + length);
- 		u64 hvpfn;
-@@ -1773,51 +1772,35 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 				return SCSI_MLQUEUE_DEVICE_BUSY;
- 		}
- 
--		/*
--		 * sgl is a list of PAGEs, and payload->range.pfn_array
--		 * expects the page number in the unit of HV_HYP_PAGE_SIZE (the
--		 * page size that Hyper-V uses, so here we need to divide PAGEs
--		 * into HV_HYP_PAGE in case that PAGE_SIZE > HV_HYP_PAGE_SIZE.
--		 * Besides, payload->range.offset should be the offset in one
--		 * HV_HYP_PAGE.
--		 */
- 		payload->range.len = length;
- 		payload->range.offset = offset_in_hvpg;
--		hvpgoff = sgl->offset >> HV_HYP_PAGE_SHIFT;
- 
--		cur_sgl = sgl;
--		for (i = 0; i < hvpg_count; i++) {
-+
-+		for (i = 0; sgl != NULL; sgl = sg_next(sgl)) {
- 			/*
--			 * 'i' is the index of hv pages in the payload and
--			 * 'hvpgoff' is the offset (in hv pages) of the first
--			 * hv page in the the first page. The relationship
--			 * between the sum of 'i' and 'hvpgoff' and the offset
--			 * (in hv pages) in a payload page ('hvpgoff_in_page')
--			 * is as follow:
--			 *
--			 * |------------------ PAGE -------------------|
--			 * |   NR_HV_HYP_PAGES_IN_PAGE hvpgs in total  |
--			 * |hvpg|hvpg| ...              |hvpg|... |hvpg|
--			 * ^         ^                                 ^                 ^
--			 * +-hvpgoff-+                                 +-hvpgoff_in_page-+
--			 *           ^                                                   |
--			 *           +--------------------- i ---------------------------+
-+			 * Init values for the current sgl entry. sgl_size
-+			 * and hvpgoff are in units of Hyper-V size pages.
-+			 * Handling the PAGE_SIZE != HV_HYP_PAGE_SIZE case
-+			 * also handles values of sgl->offset that are
-+			 * larger than PAGE_SIZE. Such offsets are handled
-+			 * even on other than the first sgl entry, provided
-+			 * they are a multiple of PAGE_SIZE.
- 			 */
--			unsigned int hvpgoff_in_page =
--				(i + hvpgoff) % NR_HV_HYP_PAGES_IN_PAGE;
-+			sgl_size = HVPFN_UP(sgl->offset + sgl->length);
-+			hvpgoff = sgl->offset >> HV_HYP_PAGE_SHIFT;
-+			hvpfn = page_to_hvpfn(sg_page(sgl));
- 
- 			/*
--			 * Two cases that we need to fetch a page:
--			 * 1) i == 0, the first step or
--			 * 2) hvpgoff_in_page == 0, when we reach the boundary
--			 *    of a page.
-+			 * Fill the next portion of the PFN array with
-+			 * sequential Hyper-V PFNs for the continguous physical
-+			 * memory described by the sgl entry. The end of the
-+			 * last sgl should be reached at the same time that
-+			 * the PFN array is filled.
- 			 */
--			if (hvpgoff_in_page == 0 || i == 0) {
--				hvpfn = page_to_hvpfn(sg_page(cur_sgl));
--				cur_sgl = sg_next(cur_sgl);
-+			while (hvpgoff != sgl_size) {
-+				payload->range.pfn_array[i++] =
-+							hvpfn + hvpgoff++;
- 			}
--
--			payload->range.pfn_array[i] = hvpfn + hvpgoff_in_page;
- 		}
- 	}
- 
-@@ -1851,8 +1834,6 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	.slave_configure =	storvsc_device_configure,
- 	.cmd_per_lun =		2048,
- 	.this_id =		-1,
--	/* Make sure we dont get a sg segment crosses a page boundary */
--	.dma_boundary =		PAGE_SIZE-1,
- 	/* Ensure there are no gaps in presented sgls */
- 	.virt_boundary_mask =	PAGE_SIZE-1,
- 	.no_write_same =	1,
--- 
-1.8.3.1
+
+snippet of dmesg
+...
+[    2.910331] scsi: ***** BusLogic SCSI Driver Version 2.1.17 of 12
+September 2013 *****
+[    2.910332] scsi: Copyright 1995-1998 by Leonard N. Zubkoff
+<lnz@dandelion.com>
+[    2.935623] scsi3: Configuring BusLogic Model BT-958D PCI Wide Ultra
+SCSI Host Adapter
+[    2.935625] scsi3:   Firmware Version: 5.07B, I/O Address: 0xD280,
+IRQ Channel: 21/Level
+[    2.935626] scsi3:   PCI Bus: 0, Device: 21, Address:
+[    2.935627] 0xF0808000,
+[    2.935627] Host Adapter SCSI ID: 7
+[    2.935628] scsi3:   Parity Checking: Enabled, Extended Translation:
+Enabled
+[    2.935629] scsi3:   Synchronous Negotiation: Ultra, Wide
+Negotiation: Enabled
+[    2.935629] scsi3:   Disconnect/Reconnect: Enabled, Tagged Queuing:
+Enabled
+[    2.935634] scsi3:   Scatter/Gather Limit: 128 of 8192 segments,
+Mailboxes: 211
+[    2.935635] scsi3:   Driver Queue Depth: 211, Host Adapter Queue
+Depth: 192
+[    2.935636] scsi3:   Tagged Queue Depth:
+[    2.935636] Automatic
+[    2.935639] , Untagged Queue Depth: 3
+[    2.935639] scsi3:   SCSI Bus Termination: Both Enabled
+
+[    2.939422] Adding 2009084k swap on /dev/zram0.  Priority:100
+extents:1 across:2009084k SSFS
+[    3.049353] scsi3: *** BusLogic BT-958D Initialized Successfully ***
+[    5.106302] RAPL PMU: API unit is 2^-32 Joules, 0 fixed counters,
+10737418240 ms ovfl timer
+[    5.748255] snd_intel8x0 0000:00:05.0: allow list rate for 1028:0177
+is 48000
+[    5.839188] scsi host3: BusLogic BT-958D
+[    5.839661] scsi host3: scsi scan: INQUIRY result too short (5), using 36
+[    5.839663] scsi 3:0:0:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.839723] scsi 3:0:0:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.839788] scsi 3:0:0:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.839875] scsi 3:0:0:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.840351] scsi 3:0:0:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.840723] scsi 3:0:0:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.840929] scsi 3:0:0:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.841139] scsi 3:0:0:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.841213] scsi 3:0:1:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.841274] scsi 3:0:1:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.841329] scsi 3:0:1:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.841378] scsi 3:0:1:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.841425] scsi 3:0:1:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.841974] scsi 3:0:1:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.842047] scsi 3:0:1:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.842494] scsi 3:0:1:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.842555] scsi 3:0:2:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.842704] scsi 3:0:2:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.842837] scsi 3:0:2:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.842933] scsi 3:0:2:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.842993] scsi 3:0:2:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.843050] scsi 3:0:2:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.843164] scsi 3:0:2:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.843600] scsi 3:0:2:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.843870] scsi 3:0:3:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.844043] scsi 3:0:3:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.844202] scsi 3:0:3:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.844321] scsi 3:0:3:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.844394] scsi 3:0:3:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.844457] scsi 3:0:3:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.844536] scsi 3:0:3:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.844740] scsi 3:0:3:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.844799] scsi 3:0:4:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.844851] scsi 3:0:4:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.844915] scsi 3:0:4:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.845640] scsi 3:0:4:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.845776] scsi 3:0:4:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.845833] scsi 3:0:4:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846214] scsi 3:0:4:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846285] scsi 3:0:4:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846349] scsi 3:0:5:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846410] scsi 3:0:5:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846466] scsi 3:0:5:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846517] scsi 3:0:5:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846566] scsi 3:0:5:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846626] scsi 3:0:5:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846681] scsi 3:0:5:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846736] scsi 3:0:5:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846792] scsi 3:0:6:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846843] scsi 3:0:6:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.846906] scsi 3:0:6:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.847436] scsi 3:0:6:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.847494] scsi 3:0:6:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.847549] scsi 3:0:6:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.847596] scsi 3:0:6:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.847659] scsi 3:0:6:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.847723] scsi 3:0:8:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.847785] scsi 3:0:8:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.848173] scsi 3:0:8:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.848226] scsi 3:0:8:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.848325] scsi 3:0:8:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.848389] scsi 3:0:8:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.848445] scsi 3:0:8:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.848498] scsi 3:0:8:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.849166] scsi 3:0:9:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.849220] scsi 3:0:9:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.849991] scsi 3:0:9:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.850055] scsi 3:0:9:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.850274] scsi 3:0:9:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.850380] scsi 3:0:9:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.850477] scsi 3:0:9:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.850602] scsi 3:0:9:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.852462] scsi 3:0:10:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.857171] scsi 3:0:10:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.858541] scsi 3:0:10:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.858661] scsi 3:0:10:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.858762] scsi 3:0:10:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.858864] scsi 3:0:10:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.858958] scsi 3:0:10:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.859020] scsi 3:0:10:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.863336] scsi 3:0:11:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.863438] scsi 3:0:11:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.863536] scsi 3:0:11:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.863793] scsi 3:0:11:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.864117] scsi 3:0:11:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.864224] scsi 3:0:11:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.864388] scsi 3:0:11:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.864485] scsi 3:0:11:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.864567] scsi 3:0:12:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.864812] scsi 3:0:12:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.864879] scsi 3:0:12:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.865400] scsi 3:0:12:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.865509] scsi 3:0:12:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.865770] scsi 3:0:12:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.865865] scsi 3:0:12:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.866851] scsi 3:0:12:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.867193] scsi 3:0:13:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.867312] scsi 3:0:13:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.867417] scsi 3:0:13:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.867660] scsi 3:0:13:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.867719] scsi 3:0:13:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.867824] scsi 3:0:13:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.868226] scsi 3:0:13:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.868328] scsi 3:0:13:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.868420] scsi 3:0:14:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.868507] scsi 3:0:14:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.868599] scsi 3:0:14:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.868653] scsi 3:0:14:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.868733] scsi 3:0:14:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.869178] scsi 3:0:14:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.869311] scsi 3:0:14:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.869378] scsi 3:0:14:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.869472] scsi 3:0:15:0: Direct-Access                 PQ: 0 ANSI: 0
+[    5.870097] scsi 3:0:15:1: Direct-Access                 PQ: 0 ANSI: 0
+[    5.870849] scsi 3:0:15:2: Direct-Access                 PQ: 0 ANSI: 0
+[    5.871028] scsi 3:0:15:3: Direct-Access                 PQ: 0 ANSI: 0
+[    5.871138] scsi 3:0:15:4: Direct-Access                 PQ: 0 ANSI: 0
+[    5.871229] scsi 3:0:15:5: Direct-Access                 PQ: 0 ANSI: 0
+[    5.871319] scsi 3:0:15:6: Direct-Access                 PQ: 0 ANSI: 0
+[    5.871744] scsi 3:0:15:7: Direct-Access                 PQ: 0 ANSI: 0
+[    5.871998] sd 3:0:0:0: [sdb] Sector size 0 reported, assuming 512.
+[    5.872000] sd 3:0:0:0: [sdb] 1 512-byte logical blocks: (512 B/512 B)
+[    5.872001] sd 3:0:0:0: [sdb] 0-byte physical blocks
+[    5.872026] sd 3:0:0:0: [sdb] Write Protect is off
+[    5.872027] sd 3:0:0:0: [sdb] Mode Sense: 00 00 00 00
+[    5.872051] sd 3:0:0:0: [sdb] Asking for cache data failed
+[    5.872052] sd 3:0:0:0: [sdb] Assuming drive cache: write through
+[    5.872836] Dev sdb: unable to read RDB block 1
+[    5.872838]  sdb: unable to read partition table
+[    5.872840] sdb: partition table beyond EOD, enabling native capacity
+[    5.872873] sd 3:0:0:0: Attached scsi generic sg2 type 0
+[    5.872922] Dev sdb: unable to read RDB block 1
+[    5.872923]  sdb: unable to read partition table
+[    5.872925] sdb: partition table beyond EOD, truncated
+[    5.873051] sd 3:0:0:0: [sdb] Sector size 0 reported, assuming 512.
+[    5.873177] sd 3:0:0:1: [sdc] Sector size 0 reported, assuming 512.
+[    5.873179] sd 3:0:0:1: [sdc] 1 512-byte logical blocks: (512 B/512 B)
+[    5.873180] sd 3:0:0:1: [sdc] 0-byte physical blocks
+[    5.873201] sd 3:0:0:0: [sdb] Attached SCSI disk
+[    5.873210] sd 3:0:0:1: [sdc] Write Protect is off
+[    5.873211] sd 3:0:0:1: [sdc] Mode Sense: 00 00 00 00
+[    5.873236] sd 3:0:0:1: [sdc] Asking for cache data failed
+[    5.873237] sd 3:0:0:1: [sdc] Assuming drive cache: write through
+[    5.873362] Dev sdc: unable to read RDB block 1
+[    5.873364]  sdc: unable to read partition table
+[    5.873365] sdc: partition table beyond EOD, enabling native capacity
+[    5.873405] Dev sdc: unable to read RDB block 1
+[    5.873407]  sdc: unable to read partition table
+[    5.873408] sdc: partition table beyond EOD, truncated
+[    5.873507] sd 3:0:0:1: Attached scsi generic sg3 type 0
+[    5.873525] sd 3:0:0:1: [sdc] Sector size 0 reported, assuming 512.
+[    5.873594] sd 3:0:0:1: [sdc] Attached SCSI disk'
+
+...
+
+-Tony
+
 
