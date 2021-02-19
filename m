@@ -6,71 +6,71 @@ X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A74EC433E9
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Feb 2021 19:02:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C214C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Feb 2021 19:10:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9FCD64EB3
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Feb 2021 19:02:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E05364EB4
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Feb 2021 19:10:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229947AbhBSTCP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Feb 2021 14:02:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45270 "EHLO
+        id S229658AbhBSTKu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Feb 2021 14:10:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229896AbhBSTCA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Feb 2021 14:02:00 -0500
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E19E0C061574;
-        Fri, 19 Feb 2021 11:01:19 -0800 (PST)
-Received: by mail-ej1-x630.google.com with SMTP id t11so15439692ejx.6;
-        Fri, 19 Feb 2021 11:01:19 -0800 (PST)
+        with ESMTP id S229587AbhBSTKr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Feb 2021 14:10:47 -0500
+Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C456C061756;
+        Fri, 19 Feb 2021 11:10:07 -0800 (PST)
+Received: by mail-ej1-x62c.google.com with SMTP id do6so15528620ejc.3;
+        Fri, 19 Feb 2021 11:10:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:references:from:message-id:date:user-agent:mime-version
          :in-reply-to:content-language:content-transfer-encoding;
-        bh=k+zc6wIpg2MHiGYYkgbWwjMqC5EFo3O9/MN09M1dTLM=;
-        b=Y38yWHpU4digjrgNBrQBRJ61mIY0kSikxgM2ItbkGECrMS+h/XA/kBDDKvcRboYq3o
-         JyvXFYUcx/Kjn5bgDJW6USgb1jFiSRPrwl66LEstfzrYoqjXpywBEBO+p6skVOO25LG1
-         54K7qS4H0rp5PTVbuj1a5vnclSzcZL3wPi5nMi3nUMuFJfUY93pBfHmlG2F9TsT9lUdH
-         C63C+oetdpgqbfN29qvpHuncV/KS+8DR1J7VYwzFIMZUMkPcG1yUemV93NdRSt0AerDP
-         6X3cHA/KZWh17EayBdOk5pPPRe5OEphfUB0CHa5fId2eSTLy5eP/4DR2wgxs1L7OiorX
-         +/iA==
+        bh=XLkoPoIFUYSG0CnG6IeXuqS8bVpwDZfgCMeGfArQxjc=;
+        b=JlNWvlFA9KjjsglUQfCjxWMMidI6wVm/8reK+dV5XzRc3NYt3gjgyNZps1mkFuQtOf
+         TqYdNbBFkJ1rIhf+B9ErVa0Tqy5FtH5HwZBEhk0tdxEh4Y8eBpcERnT2zpxJGFavxDP0
+         6kx774esN00S+skIL/9dPitZWDJgO0iF8qEmXZvxkZz38UoUWr5hGViiAyvY2QhqpVtq
+         M98Wz8fxEVi1mPKSIP/e2ko1nmXDgBDAeM8D3vawXR0ZdNcPskUblTqPCvPhA+6/LFyt
+         e/yg8JrxSXCBy7CxnLW2wrJ4fFYy8kEeDyLVVskfAydqVjsW5OIBh0Txl5Oc9QR2PVTb
+         JYnQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=k+zc6wIpg2MHiGYYkgbWwjMqC5EFo3O9/MN09M1dTLM=;
-        b=n3OuffynfOVA5UHmcTGQB72TJWAgWyEFM4kWVSXr+XNQDstYVrSDY3MmU/vLqCtXtu
-         7tyxFZj9W2nM1yB8K50O/QgT9NyyP/yF4DcMansoteSCJ/bVirc2zGux0DeKU9GBa9sS
-         jjPIMVWy2Icd/nUkiI/xhZaKYYMKX7yhb8eYKaW/J8/7oIYLmrJT54qvDO0NkUaCpxHG
-         I6RnCYh03t8WsnqPP/GjHBt+SZ4UnLxNNwXOmdrKZO0m2AO3Lc97pdmx5VNU4Yu5uR5z
-         1yOnvIEL5D0m25UZ2BY8KboP/h9uHhLG2lUgn7ymnROMjftUZmSMV6oLh1nUHAQevuCN
-         9lpA==
-X-Gm-Message-State: AOAM5330dCAQJNY142Xd5eL0Fya8iZGL8HPHExA7Jqlfq0empNipqBjZ
-        l5MAAVZHcWwZuDfMMgbcj1Yz4xEdB3M=
-X-Google-Smtp-Source: ABdhPJy/r5UStOE8wn09sLTutkxohssEOIJP6THzTTq9h6in+FHzpgavgu4Hq2ewHH/lOjPVTVK57g==
-X-Received: by 2002:a17:906:380b:: with SMTP id v11mr10206299ejc.183.1613761278631;
-        Fri, 19 Feb 2021 11:01:18 -0800 (PST)
+        bh=XLkoPoIFUYSG0CnG6IeXuqS8bVpwDZfgCMeGfArQxjc=;
+        b=jlucej5oVdMmBKpfUTTl4MqB9+tF9Y758q8lZ1ek4ppyt9ldy2VaVHpHNcWwiv2UoQ
+         ngP6VbTGeq9+iqQlg91Ag52hpDZ69mpuWPw6Z9KAGS2CFfReQ5g2R/ulTprhMoPHNp94
+         MbqQObR2t+VcCIe0QkMdKSjkgUHslzxM9VMqAePXQOIozqQA14rZhaocgZAZOVi3RYZC
+         cnGEUJst9pRUTvEVORcndyBMQxEPI7plc7ssOD1zXTxi6OCoHvEDabSgDVN1Nq9zxj44
+         z7bGfh/bfDhphTXBMyVq4IImpWqtgQZPXNKZIz+XcftAigvKTxRUYmBtGGnxYtVAW6i+
+         UWbg==
+X-Gm-Message-State: AOAM533A1g8fnBPI2VJdJ25CEpLH8wiMCYBtd9cuLYO6gjZS0UHZnAzF
+        vUDWCEmfU2z2anLIklvA9GwN0yUhc7E=
+X-Google-Smtp-Source: ABdhPJwKmJxUfl7nKoRU7JScQW/AvbUlzE4Tcpf37syJ4FEEqKWdPGfShgKx54eKSGYfWNBgQU3VoA==
+X-Received: by 2002:a17:906:3556:: with SMTP id s22mr9154916eja.85.1613761806017;
+        Fri, 19 Feb 2021 11:10:06 -0800 (PST)
 Received: from [192.168.178.40] (ipbcc06d06.dynamic.kabel-deutschland.de. [188.192.109.6])
-        by smtp.gmail.com with ESMTPSA id h10sm5830614edk.45.2021.02.19.11.01.17
+        by smtp.gmail.com with ESMTPSA id u23sm5766625edt.87.2021.02.19.11.10.05
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Feb 2021 11:01:18 -0800 (PST)
-Subject: Re: [PATCH 14/25] target: remove target_submit_cmd_map_sgls
+        Fri, 19 Feb 2021 11:10:05 -0800 (PST)
+Subject: Re: [PATCH 16/25] target: add workqueue based cmd submission
 To:     Mike Christie <michael.christie@oracle.com>, mst@redhat.com,
         stefanha@redhat.com, Chaitanya.Kulkarni@wdc.com, hch@lst.de,
         loberman@redhat.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 References: <20210217202811.5575-1-michael.christie@oracle.com>
- <20210217202811.5575-15-michael.christie@oracle.com>
+ <20210217202811.5575-17-michael.christie@oracle.com>
 From:   Bodo Stroesser <bostroesser@gmail.com>
-Message-ID: <f930f1f4-4e97-98fb-c013-d117764c265a@gmail.com>
-Date:   Fri, 19 Feb 2021 20:01:17 +0100
+Message-ID: <ed2a377c-8142-75a4-69aa-050a0fd18cbb@gmail.com>
+Date:   Fri, 19 Feb 2021 20:10:05 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210217202811.5575-15-michael.christie@oracle.com>
+In-Reply-To: <20210217202811.5575-17-michael.christie@oracle.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -79,16 +79,34 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 17.02.21 21:28, Mike Christie wrote:
-> Convert target_submit_cmd to do its own calls and then remove
-> target_submit_cmd_map_sgls since no one uses it.
+> loop and vhost-scsi do their target cmd submission from driver
+> workqueues. This allows them to avoid an issue where the backend may
+> block waiting for resources like tags/requests, mem/locks, etc
+> and that ends up blocking their entire submission path and for the
+> case of vhost-scsi both the submission and completion path.
+> 
+> This patch adds a helper drivers can use to submit from a lio
+> workqueue. This code will then be extended in the next patches to
+> fix the plugging of backend devices.
+> 
+> Note: I'm only converting vhost/loop initially, but the workqueue
+> based submission will work for other drivers and have similar
+> benefits where the main target loops will not end up blocking one
+> some backend resource. I'll port others when I have more time to
+> test as I think we might want to make it configurable for some
+> drivers.
 > 
 > Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > Tested-by: Laurence Oberman <loberman@redhat.com>
 > ---
->   drivers/target/target_core_transport.c | 76 ++++++--------------------
->   include/target/target_core_fabric.h    |  6 +-
->   2 files changed, 18 insertions(+), 64 deletions(-)
+>   drivers/target/target_core_device.c    | 10 ++++--
+>   drivers/target/target_core_internal.h  |  1 +
+>   drivers/target/target_core_transport.c | 42 +++++++++++++++++++++++++-
+>   include/target/target_core_base.h      |  8 ++++-
+>   include/target/target_core_fabric.h    |  2 ++
+>   5 files changed, 59 insertions(+), 4 deletions(-)
 > 
+
 
 Looks good.
 
