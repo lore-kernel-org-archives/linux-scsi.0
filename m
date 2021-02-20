@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87079C433E0
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF901C433E0
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:07:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60AFF64ED2
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:07:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C969464EBD
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:07:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230048AbhBTCHH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Feb 2021 21:07:07 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:43731 "EHLO smtp.infotech.no"
+        id S230152AbhBTCHN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Feb 2021 21:07:13 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:43738 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230185AbhBTCFC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Feb 2021 21:05:02 -0500
+        id S230154AbhBTCE6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 Feb 2021 21:04:58 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 6A1002041D7;
-        Sat, 20 Feb 2021 03:01:55 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 2668E2042BA;
+        Sat, 20 Feb 2021 03:01:48 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id JUcW5is8RseX; Sat, 20 Feb 2021 03:01:54 +0100 (CET)
+        with ESMTP id PYLzDvZauEGB; Sat, 20 Feb 2021 03:01:46 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 8851A2042B1;
-        Sat, 20 Feb 2021 03:01:49 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id 7F93A2041D7;
+        Sat, 20 Feb 2021 03:01:40 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v16 42/45] sg: remove unit attention check for device changed
-Date:   Fri, 19 Feb 2021 21:00:53 -0500
-Message-Id: <20210220020056.77483-43-dgilbert@interlog.com>
+Subject: [PATCH v16 34/45] sg: protect multiple receivers
+Date:   Fri, 19 Feb 2021 21:00:45 -0500
+Message-Id: <20210220020056.77483-35-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210220020056.77483-1-dgilbert@interlog.com>
 References: <20210220020056.77483-1-dgilbert@interlog.com>
@@ -44,98 +44,168 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The SCSI mid-layer now checks for SCSI UNIT ATTENTIONs and takes
-the appropriate actions. This means that the sg driver no longer
-needs to do this check.
+If two threads call ioctl(SG_IORECEIVE) [or read()] on the same
+file descriptor there is a potential race on the same request
+response. Use atomic bit operations to make sure only one thread
+gets each request response. [The other thread will either get
+another request response or nothing.]
+
+Also make sfp cleanup a bit more robust and report if the
+number of submitted requests (which are decremented when
+completed) is other than the expected value of zero.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 49 ++++++++++++-----------------------------------
- 1 file changed, 12 insertions(+), 37 deletions(-)
+ drivers/scsi/sg.c | 54 +++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 38 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 5f8c4fe38ce6..fdfa34c27e3e 100644
+index e049628bd575..d992c71a98ca 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -2454,39 +2454,6 @@ sg_rq_end_io_usercontext(struct work_struct *work)
- 	kref_put(&sfp->f_ref, sg_remove_sfp);
+@@ -109,6 +109,7 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
+ #define SG_FRQ_SYNC_INVOC	2	/* synchronous (blocking) invocation */
+ #define SG_FRQ_NO_US_XFER	3	/* no user space transfer of data */
+ #define SG_FRQ_DEACT_ORPHAN	6	/* not keeping orphan so de-activate */
++#define SG_FRQ_RECEIVING	7	/* guard against multiple receivers */
+ #define SG_FRQ_BLK_PUT_REQ	8	/* set when blk_put_request() called */
+ 
+ /* Bit positions (flags) for sg_fd::ffd_bm bitmask follow */
+@@ -1286,6 +1287,7 @@ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	SG_LOG(3, sfp, "%s: non_block(+IMMED)=%d\n", __func__, non_block);
+ 	/* read in part of v3 or v4 header for pack_id or tag based find */
+ 	id = pack_id;
++try_again:
+ 	srp = sg_find_srp_by_id(sfp, id);
+ 	if (!srp) {     /* nothing available so wait on packet or */
+ 		if (unlikely(SG_IS_DETACHING(sdp)))
+@@ -1300,6 +1302,10 @@ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 		if (res)
+ 			return res;	/* signal --> -ERESTARTSYS */
+ 	}	/* now srp should be valid */
++	if (test_and_set_bit(SG_FRQ_RECEIVING, srp->frq_bm)) {
++		cpu_relax();
++		goto try_again;
++	}
+ 	return sg_receive_v4(sfp, srp, p, h4p);
  }
  
--static void
--sg_check_sense(struct sg_device *sdp, struct sg_request *srp, int sense_len)
--{
--	int driver_stat;
--	u32 rq_res = srp->rq_result;
--	struct scsi_request *scsi_rp = scsi_req(srp->rq);
--	u8 *sbp = scsi_rp ? scsi_rp->sense : NULL;
+@@ -1336,7 +1342,7 @@ sg_ctl_ioreceive_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 
+ 	if (test_bit(SG_FFD_FORCE_PACKID, sfp->ffd_bm))
+ 		pack_id = h3p->pack_id;
 -
--	if (!sbp)
--		return;
--	driver_stat = driver_byte(rq_res);
--	if (driver_stat & DRIVER_SENSE) {
--		struct scsi_sense_hdr ssh;
++try_again:
+ 	srp = sg_find_srp_by_id(sfp, pack_id);
+ 	if (!srp) {     /* nothing available so wait on packet or */
+ 		if (unlikely(SG_IS_DETACHING(sdp)))
+@@ -1351,6 +1357,10 @@ sg_ctl_ioreceive_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 		if (unlikely(res))
+ 			return res;	/* signal --> -ERESTARTSYS */
+ 	}	/* now srp should be valid */
++	if (test_and_set_bit(SG_FRQ_RECEIVING, srp->frq_bm)) {
++		cpu_relax();
++		goto try_again;
++	}
+ 	return sg_receive_v3(sfp, srp, SZ_SG_IO_HDR, p);
+ }
+ 
+@@ -1503,6 +1513,7 @@ sg_read(struct file *filp, char __user *p, size_t count, loff_t *ppos)
+ 			want_id = h2p->pack_id;
+ 		}
+ 	}
++try_again:
+ 	srp = sg_find_srp_by_id(sfp, want_id);
+ 	if (!srp) {	/* nothing available so wait on packet to arrive or */
+ 		if (unlikely(SG_IS_DETACHING(sdp)))
+@@ -1518,6 +1529,10 @@ sg_read(struct file *filp, char __user *p, size_t count, loff_t *ppos)
+ 			return ret;
+ 		/* otherwise srp should be valid */
+ 	}
++	if (test_and_set_bit(SG_FRQ_RECEIVING, srp->frq_bm)) {
++		cpu_relax();
++		goto try_again;
++	}
+ 	if (srp->s_hdr3.interface_id == '\0')
+ 		ret = sg_read_v1v2(p, (int)count, sfp, srp);
+ 	else
+@@ -3044,32 +3059,33 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
+ 		atomic_dec(&sfp->submitted);
+ 		atomic_dec(&sfp->waiting);
+ 	}
+-	if (srp->bio) {
+-		bool us_xfer = !test_bit(SG_FRQ_NO_US_XFER, srp->frq_bm);
 -
--		if (scsi_normalize_sense(sbp, sense_len, &ssh)) {
--			if (!scsi_sense_is_deferred(&ssh)) {
--				if (ssh.sense_key == UNIT_ATTENTION) {
--					if (sdp->device->removable)
--						sdp->device->changed = 1;
--				}
+-		if (us_xfer) {
+-			ret = blk_rq_unmap_user(srp->bio);
+-			if (ret) {	/* -EINTR (-4) can be ignored */
+-				SG_LOG(6, sfp,
+-				       "%s: blk_rq_unmap_user() --> %d\n",
+-				       __func__, ret);
 -			}
 -		}
+-		srp->bio = NULL;
 -	}
--	if (test_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm) > 0) {
--		int scsi_stat = rq_res & 0xff;
--
--		if (scsi_stat == SAM_STAT_CHECK_CONDITION ||
--		    scsi_stat == SAM_STAT_COMMAND_TERMINATED)
--			__scsi_print_sense(sdp->device, __func__, sbp,
--					   sense_len);
--	}
--}
--
- /*
-  * This "bottom half" (soft interrupt) handler is called by the mid-level
-  * when a request has completed or failed. This callback is registered in a
-@@ -2498,6 +2465,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- {
- 	enum sg_rq_state rqq_state = SG_RS_AWAIT_RCV;
- 	int a_resid, slen;
-+	u32 rq_result;
- 	struct sg_request *srp = rq->end_io_data;
- 	struct scsi_request *scsi_rp = scsi_req(rq);
- 	struct sg_device *sdp;
-@@ -2511,7 +2479,8 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 	sfp = srp->parentfp;
- 	sdp = sfp->parentdp;
+-	/* In worst case READ data returned to user space by this point */
  
--	srp->rq_result = scsi_rp->result;
-+	rq_result = scsi_rp->result;
-+	srp->rq_result = rq_result;
- 	slen = min_t(int, scsi_rp->sense_len, SCSI_SENSE_BUFFERSIZE);
- 	a_resid = scsi_rp->resid_len;
+ 	/* Expect blk_put_request(rq) already called in sg_rq_end_io() */
+ 	if (unlikely(!test_and_set_bit(SG_FRQ_BLK_PUT_REQ, srp->frq_bm))) {
+ 		struct request *rq = srp->rq;
  
-@@ -2527,10 +2496,16 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
++		srp->rq = NULL;
+ 		if (rq) {       /* blk_get_request() may have failed */
+ 			if (scsi_req(rq))
+ 				scsi_req_free_cmd(scsi_req(rq));
+-			srp->rq = NULL;
+ 			blk_put_request(rq);
+ 		}
  	}
- 
- 	SG_LOG(6, sfp, "%s: pack_id=%d, res=0x%x\n", __func__, srp->pack_id,
--	       srp->rq_result);
-+	       rq_result);
- 	srp->duration = sg_calc_rq_dur(srp);
--	if (unlikely((srp->rq_result & SG_ML_RESULT_MSK) && slen > 0))
--		sg_check_sense(sdp, srp, slen);
-+	if (unlikely((rq_result & SG_ML_RESULT_MSK) && slen > 0 &&
-+		     test_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm))) {
-+		u32 scsi_stat = rq_result & 0xff;
++	if (srp->bio) {
++		bool us_xfer = !test_bit(SG_FRQ_NO_US_XFER, srp->frq_bm);
++		struct bio *bio = srp->bio;
 +
-+		if (scsi_stat == SAM_STAT_CHECK_CONDITION ||
-+		    scsi_stat == SAM_STAT_COMMAND_TERMINATED)
-+			__scsi_print_sense(sdp->device, __func__, scsi_rp->sense, slen);
++		srp->bio = NULL;
++		if (us_xfer && bio) {
++			ret = blk_rq_unmap_user(bio);
++			if (ret) {	/* -EINTR (-4) can be ignored */
++				SG_LOG(6, sfp,
++				       "%s: blk_rq_unmap_user() --> %d\n",
++				       __func__, ret);
++			}
++		}
 +	}
- 	if (slen > 0) {
- 		if (scsi_rp->sense && !srp->sense_bp) {
- 			srp->sense_bp = mempool_alloc(sg_sense_pool,
++	/* In worst case, READ data returned to user space by this point */
+ }
+ 
+ static int
+@@ -3499,6 +3515,7 @@ sg_deact_request(struct sg_fd *sfp, struct sg_request *srp)
+ 		return;
+ 	sbp = srp->sense_bp;
+ 	srp->sense_bp = NULL;
++	srp->frq_bm[0] = 0;
+ 	sg_rq_state_chg(srp, 0, SG_RS_INACTIVE, true /* force */, __func__);
+ 	/* maybe orphaned req, thus never read */
+ 	if (sbp)
+@@ -3631,6 +3648,7 @@ static void
+ sg_remove_sfp_usercontext(struct work_struct *work)
+ {
+ 	__maybe_unused int o_count;
++	int subm;
+ 	unsigned long idx, iflags;
+ 	struct sg_device *sdp;
+ 	struct sg_fd *sfp = container_of(work, struct sg_fd, ew_fd.work);
+@@ -3668,6 +3686,10 @@ sg_remove_sfp_usercontext(struct work_struct *work)
+ 		SG_LOG(6, sfp, "%s: kfree: srp=%pK --\n", __func__, srp);
+ 		kfree(srp);
+ 	}
++	subm = atomic_read(&sfp->submitted);
++	if (subm != 0)
++		SG_LOG(1, sfp, "%s: expected submitted=0 got %d\n",
++		       __func__, subm);
+ 	xa_destroy(xafp);
+ 	xa_lock_irqsave(xadp, iflags);
+ 	e_sfp = __xa_erase(xadp, sfp->idx);
 -- 
 2.25.1
 
