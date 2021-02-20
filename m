@@ -5,66 +5,66 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34AD4C433E0
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:39:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B834C433E9
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:40:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0BF3464ED7
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:39:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B7BC64E2F
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:40:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229944AbhBTVj6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 20 Feb 2021 16:39:58 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:38804 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229905AbhBTVj5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2021 16:39:57 -0500
+        id S229958AbhBTVkO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 20 Feb 2021 16:40:14 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:44367 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229945AbhBTVkK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2021 16:40:10 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1613857325; x=1645393325;
+  t=1613857209; x=1645393209;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=VJVhaN+b+7PEVqFWOIeibFiMvdKqcg9V0KTFySe1jX8=;
-  b=CUm+LVFU2/LXy2D+WdHE5pEb7RZ24WKUe7zKKMDQ8nqtB1L6a7KBr+of
-   ICSIZ9UejiFyjaCzyJ9shc1xmGvn4vSLbYiVePz9B3dVxUuCbmb3y37Zh
-   K0LPU6EYIlSoVO6taj29o6A8B3OS9az4e2edElGC/9k58DQ+aUvpc/XsB
-   /+SSmNOSWsWKgC49mMQmEOe8eFJ/WcHG2IXoKc3ljzC1fctu15usB5mXn
-   L5jBOHk0jn2s1q8okMdaq6Kzaat+c40yb+Ri61YK6phOLmmpxrDxoEUo6
-   WdcuKSYUAJmdky+qQZ3HDznVY9pBsTioC8wb7A30Pq43hynM+L5w70V9G
-   g==;
-IronPort-SDR: uR14brqhYca87mbe52daDEyCSRaXmVvnWGGtoCd7LR7Y1vrJQeRMqqTNUXKNI+vCAQQsz0ndIz
- AlOdyieNbHj1GQmUv2NNaAB7eX/a0zE0vF5mzK0Um+uhfu/h2AFVUwt5/DUQROXp1MzZ4kt9lF
- xv/ujHM/R+QybVST6Y257ptdf/HfyWNyw5RXMNSPrcDr9Ncnk2KaLc26+baIa3gTmAXpFJwJ9D
- JyfqzQGq3t5OPLcJ2lR73U6ZqFwZcaKEVegSi4whnG7/MtD0Dm5KJZYbArkApeTNcswrVL8Yne
- HY0=
+  bh=dkPKjCBqGhzrj49JVwhxDItCZsnR/tu5CdenH05pm8E=;
+  b=M1JlQLa3lDh2tR4hHZx9tCfk5PoCH2usSHpWIDdFT695lE1nlUY+MEMg
+   cQrVY4Fcgv7pFzf52yLfXzjxK+r9bu38h+DwTJ0DaGdqw+aw0ICm2h97y
+   qCo7SlZGlC7/2q/r35yP1RqTXTrk8TCspVbEpCkB0Uza5CMob6PhfE5oq
+   oSyuzhoB+HWt63LtdLBdEgsviEd+BnxrBwn9mAMlLRjj1sYe/tv5IVPsY
+   ery1TxRRYeSfOZkT6hnwzuVyrDFFthSYMW/TlbOiScOHPpLU5CTqOfDxC
+   zbdE6ZbEDB3gDlc1k1oUELpnbXwU24HZxxGJ1Qg5McUx3GfctuRqnwYvG
+   Q==;
+IronPort-SDR: 94lvgYRGsvKJLBHzidWcMceV23gEf6Xp04TsnyfNfeuTg48+l9zrdkFc3R4oLtR+BX5pDd0LVG
+ fzQvNUqzIHHdLfLeibxFLafqzaUZdNR6NoRkz+qGVFikiA8QQWeaV2O9Utw8q/2ZpiRjkk+eaE
+ P4pgLiFU0QGQABqGJ6dEriJPw7Xi1oMTv36okhXpmIpudR34pFad6kXgOyckX+50Z0QTmDv5Je
+ nV15rQOl/SV4lC0QqUjbDIa7vSR+PLum0IXH7arcBXDDSBAaq9J1Du9bB36JDvxn/ir+TABSBn
+ iww=
 X-IronPort-AV: E=Sophos;i="5.81,193,1610380800"; 
-   d="scan'208";a="264605653"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Feb 2021 05:40:12 +0800
-IronPort-SDR: +iV9XL2/WKwhAbGNQRh2bWzZrVT8Oh7TCVbCc256bBF3BaqH+M6QpNxXaHVTfWs1h9wsIS6Tz/
- v43nZwPpUblRzWuW+SSFTx12Mu/VRCoXS/qZ6dgI1ja1KNq/KHcTHkVWVK355yBCqrvu/ELPHg
- PpbaPzfol4jwm6W6JnQHAIVQJFZCk2JsmWVnmEbyKDjR5z8kBYJ4cVIXYL9kA+X4/hQlXouoqn
- IEJhdraLVfmT+3aerFV8QsJcr8gnEP8FZ49iPmpqEKwQA1ysN0ooWttrdDX5/LT2wvdZviaeb6
- hzodRC6B2Qk/LZPdBt40wNjE
+   d="scan'208";a="164901599"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Feb 2021 05:39:04 +0800
+IronPort-SDR: y6RkL/9nZxV2k01TSdjcZOJEo80dexmWhZXTJYomUh72F1nEsbQ4Kj7umhoxgZwf5il4wsd6Ex
+ yDk85E+q1E93nBmo+MPk+DUVZcaejFprFGxuQa7xkGnQ6QpDf20cfobyRzwzEReeOe3lKovYSk
+ Q9XwLFDLhIgssgKqJEsQUKRw4Uvt9AhkAivXJOx1/dJj3sBJ0gx8/HppwIhxHDSKUChmnboYJX
+ Ewmz9yvf5+GGS0YnU7l/gwo7sgrSQS04nvd1KgqYHaUWudrKVCGTGblFJDYMYj/RY9nkVno3ad
+ m9dgR1+wQrYAfoBhxcZJmGfs
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2021 13:20:16 -0800
-IronPort-SDR: cmjWuJrivO3UNPSmYQchr1RFRfKkrDhQMj3sZZMDyEDTpF1ZBPh2zSlFLNxlwopJrfUrp0PgKE
- 8+bkTCtkNEz0Lw/de7rNHvkQ7X+Pmg7M4FVvfIluB+doNyAjeaP042jd3mIKfG5tt3ElWlREJv
- 9rGHgFgeBpO5nEOoNJquy5gHMDmRXpoei1UJUiPznyIVg4DZFRtLIenYD+jxqY++UzPlpZ/yXD
- 8YWfRjBlFDIMK/aBj1PHQPom+lDYvP0JGD8idUi5xvzw8OSd/FUeOzcpFX52NwAn0N/+b+av4F
- M24=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2021 13:20:38 -0800
+IronPort-SDR: Q3LpWj3g9+0qMJKlrnZHsIrMzpmnQQhLrgveo6+dMRZ472AO4pvaDRP4eFk3nPxLsJk6kRVRJV
+ fXKq1lyAwHOHey1yPbd/p8crcaLuVhhI6IvZbu5370ETxtOtjDv8d5J5lbvqJvVFWZZzY5E2g/
+ Ib/pg1Yqs1C8RL/N+5kIwXqoThh+N0aP4eaS5xC31i4pTu8I+suV90r/lkmbpLuQJ2P32g0r9/
+ dlDjpkufCe17WuyxvCepVyxWdgLqTSmzq3FrMZzj5lkpUaWxcbYSx50vCKY/l35I8lj3AWe0b1
+ P6c=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip02.wdc.com with ESMTP; 20 Feb 2021 13:38:42 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 20 Feb 2021 13:39:04 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 Cc:     martin.petersen@oracle.com, hare@suse.de, jejb@linux.ibm.com,
         mlombard@redhat.com, michael.christie@oracle.com,
         houpu@bytedance.com,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [RFC PATCH 10/24] target/iscsi: remove unsed macro TEXT_LEN
-Date:   Sat, 20 Feb 2021 13:38:41 -0800
-Message-Id: <20210220213841.6787-1-chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 12/24] target/iscsi: remove the memset with declare-init
+Date:   Sat, 20 Feb 2021 13:39:02 -0800
+Message-Id: <20210220213902.6875-1-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1.dirty
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -74,21 +74,29 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- drivers/target/iscsi/iscsi_target_nego.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/target/iscsi/iscsi_target_configfs.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index 8b40f10976ff..151e2949bb75 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -28,7 +28,6 @@
- #include "iscsi_target_auth.h"
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index 0fa1d57b26fa..f4a24fa5058e 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -161,14 +161,13 @@ static struct se_tpg_np *lio_target_call_addnptotpg(
+ 	char *str, *str2, *ip_str, *port_str;
+ 	struct sockaddr_storage sockaddr = { };
+ 	int ret;
+-	char buf[MAX_PORTAL_LEN + 1];
++	char buf[MAX_PORTAL_LEN + 1] = { };
  
- #define MAX_LOGIN_PDUS  7
--#define TEXT_LEN	4096
+ 	if (strlen(name) > MAX_PORTAL_LEN) {
+ 		pr_err("strlen(name): %d exceeds MAX_PORTAL_LEN: %d\n",
+ 			(int)strlen(name), MAX_PORTAL_LEN);
+ 		return ERR_PTR(-EOVERFLOW);
+ 	}
+-	memset(buf, 0, MAX_PORTAL_LEN + 1);
+ 	snprintf(buf, MAX_PORTAL_LEN + 1, "%s", name);
  
- void convert_null_to_semi(char *buf, int len)
- {
+ 	str = strstr(buf, "[");
 -- 
 2.22.1
 
