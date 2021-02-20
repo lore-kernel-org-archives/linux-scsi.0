@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99ED9C433DB
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:40:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC66FC433E6
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:41:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7375A64ED6
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:40:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A512264E2F
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:41:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229918AbhBTVkn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 20 Feb 2021 16:40:43 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:43906 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229844AbhBTVkm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2021 16:40:42 -0500
+        id S230006AbhBTVlG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 20 Feb 2021 16:41:06 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:16730 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229983AbhBTVlE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2021 16:41:04 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1613857242; x=1645393242;
+  t=1613857263; x=1645393263;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=t+uWJ2/u6p0oAIiWW+m/7/RLXqMtQsWSoqAEYSXfJYg=;
-  b=I1MgMyYFmyVQLWb9Y8cUR+0kFlXqoeZfD+ZlSBh/5IUKHj4pGkt9mqzW
-   34ljelkWJWNBvcLBTxpcy38sRmZb7nhMs13kV9Vh9tp8IpWVsx3tZDSEs
-   vrIG/ctiSJOPK4KmLYucIqunmqKpo05/5dt1AmwxWaQZjm9QOf71bopKA
-   0Xe0cSelnB3mXvKKJ2E0ycEShK+3O1DhbAzyQHg1WvbSxOlAtddWIUVnd
-   XxTGr6XIfHjEB6KUmYqGI+BlDe2Q3oAuPEWFTRP+0/+cdKawQ8n7Bz5m+
-   EyWcdk2ieZFNW8XhT+vsH5QegPavkt8E5BZoqtv1gqgurEgExwFbmOzEF
-   w==;
-IronPort-SDR: /3HNxwWcmf6Wn05ncdWmVTBDSxbmNXqo7ZiI7QI/obufQpN+mTIPUubv1Cjh73Yhx2SxWOEXY8
- cQg7naSpA2v0uSCk+rzVOBZV2VrOYHBk4wulFGNmXiLAGLrLAzhmMwFKsEzYFshOSYdQOaJVQv
- F6vjpOqW+VESS4foFT2JKkxqpkYqdhI9erNZJLeaGhrjKTW5S8mIhEw+AXf6goUFjO2brtqT/I
- wZwSpwJpvqu/ssbQsCTjFCn4w7l6vnPAvmo5vcSnefbDt2cae+SDBFqTTkn4gekMObaKwnziw7
- 8ss=
+  bh=HBxVB6qCGQ11GplGDmSfQDtFEQ7HBcmHy4k41+SDWxg=;
+  b=Yu2cOkDjbre7d36mdbf3uOmge+bVW8AL7A/I/ElJGidDFQtnTNppnGxx
+   a8iNsEVUm6M3faN1/RZP1HsIRCXgYrMnRosO1tQkEcsPI/UDdObhfF82s
+   hP3gCWdHSqfWeheXLFPccPGz/FGiv2JHEIGRLUmv9dXd0pTIQk53scCGx
+   X0hgc/Aa034uOuIrAeHY93okvw/x64TMPNBMO+9VgLkN41pUg9uDcAJ8P
+   1lzLex5DCrbBnM/Dl2jv2TujQewdQKsDdzDa3nmb4hCEslWNYh3EWbjx9
+   ivGbLLwHcir2kAIsRLV9YsAk+DOnx/wS4MTEAEVRsz9iI+uz6iYnniuSK
+   Q==;
+IronPort-SDR: PCtgZK+NMBlrH/mSXB7H2WTfp8trRz0sIflgkWXiLtPfMbh9TeCDEfZxvNrPK6b6vD79Hzelp7
+ nz7t91PVMRfOVfNOktb04xCzlZtNDlHC7TmWYGmIlsFwzM+p06pII4TZ0kLvMYtf08ubgK5CsD
+ 0hySj8lgifio1bGRu4FT0tP3+d5NtjcP1rTJfElolrQYRASUL/+jGHdah+KxQ+HY13EvsqDbvM
+ Z6UslzX6J/26nOLBrYs0+kXx6eZDnuEGU0QIZg96/CNkwlpxedANismFR98YPBlGsVMigJRTTy
+ X/4=
 X-IronPort-AV: E=Sophos;i="5.81,193,1610380800"; 
-   d="scan'208";a="161591293"
+   d="scan'208";a="160432961"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Feb 2021 05:39:37 +0800
-IronPort-SDR: Hdi/VKpx0kvYO9QrHAzxMmmkRLUzb/6IjpZ7jW3wjqVuOZ9PjCyU98Q5NhjKHr8jpnCYrTE5RV
- oV931X5cWDb6cjyVInEDBMCB2FQegqh6MMGjZmQZpFC9EE9EteNmjq3XK3gZ7Nb+jDS2b/UBf5
- 54HQdwbaagzDsvjfDJViP85URZebxzNo5iZeBCCgYydkcH8WdXBOhPjPPqetixH7Ff0eJ2mv86
- KlziyBh7oBPPv0FTPaQpVLBJgtJUvHmfZYJ/0nTxxZQeNElJX0FcdfflJO0N0um34YKUH76Orl
- poSH8aNdamQ7BjbGyX+teBLl
+  by ob1.hgst.iphmx.com with ESMTP; 21 Feb 2021 05:39:58 +0800
+IronPort-SDR: u1CN8RMe28PzjjPKXMHjnYBd2G6LlTTxNZbhIc43cVqxw7keLn0xt2xl3SnAuSzVsCJP5b5otV
+ tnpeVzDc/R0MEHnfL9y4EbUX+N/Hd7nLnn18qutKL2l3IMO1sR0GrpWIAEhSTNmhMCAa+rZh+c
+ oh/N88LGwcmkfY8aUQORG4OvWmSJUp4DS/4FNxV/+kwBHM9hHXLaV8p5+Om7v5ejv7NRyCEEsy
+ HKOEnLpr2Vq+GlS4Q2z0Z7doAIMEUTog78jnGrUFa8llNB+cZugCr/6wvpIR5+RUOJmXyXw8IE
+ TEVtiBIv//fSUoJqPqafeMmb
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2021 13:21:10 -0800
-IronPort-SDR: ielavNkhAPhZ4LbGkQoEqArFC5Bm3wi9CMlYNoFR372SpX0hSzlatwI2EtWljX69cEREXCvOi8
- U70zakfTbJL5io0KyZTXPTyUm8YHa4inDHr3Q9xsoSfmgnzLsn2OOGl/ZqYyJv5gEewY15GA/e
- G6jAzZ4X4sA2234BBuX53TSXLs3q/RmasiFj4Kcowm2/zXzKgOGJ4aK85OVLxTIB5G0RgsY2cs
- qBuudkVtsAGUxul+9vgu/jVHVG/oiLXGBcMqaJM81PrLZ1Xa8yfAy0aaCVt9ZRJrQKYSOI8XCP
- z1I=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2021 13:21:32 -0800
+IronPort-SDR: OmzJfykDTQHGPrumUjLTPUSFIwqw3v75yRTVc1pwNF599H+Fe2yoiThvChDz/rMY/TuNli9psn
+ n3S53Ja5PEZP9PI/Gvnf7wI7E6VXKB/U26hdRCGkpvXaowGku+uLf7r8FX3hLGYFgSwLbijRNp
+ q9XH0Ju2bpAmdI2Muuo+1UGjeZ/ZAM5Ih5NQVxprenzOzVy5sTiGcJGzxt4ywz829ZxapHc7NS
+ QV3S/Q2C6xACvo0dw5/r3izg3ngOZ5NqE8oQjVpbzNP6cB+AeDSni5GfUgWKSBPOdReU0gGnXq
+ iIg=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip02.wdc.com with ESMTP; 20 Feb 2021 13:39:37 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 20 Feb 2021 13:39:58 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 Cc:     martin.petersen@oracle.com, hare@suse.de, jejb@linux.ibm.com,
         mlombard@redhat.com, michael.christie@oracle.com,
         houpu@bytedance.com,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [RFC PATCH 15/24] target/configfs: remove the memset with declare-init
-Date:   Sat, 20 Feb 2021 13:39:35 -0800
-Message-Id: <20210220213935.7026-1-chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 17/24] target/configfs: remove the memset with declare-init
+Date:   Sat, 20 Feb 2021 13:39:57 -0800
+Message-Id: <20210220213957.7114-1-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1.dirty
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -74,30 +74,24 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- drivers/target/target_core_configfs.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/target/target_core_configfs.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 4c60334a1e9f..315791b5554a 100644
+index ca5b083d2958..0ec9fe1ebade 100644
 --- a/drivers/target/target_core_configfs.c
 +++ b/drivers/target/target_core_configfs.c
-@@ -2283,7 +2283,7 @@ static ssize_t target_dev_alua_lu_gp_store(struct config_item *item,
- 	struct se_hba *hba = dev->se_hba;
- 	struct t10_alua_lu_gp *lu_gp = NULL, *lu_gp_new = NULL;
+@@ -2609,9 +2609,7 @@ static ssize_t target_lu_gp_members_show(struct config_item *item, char *page)
+ 	struct se_hba *hba;
  	struct t10_alua_lu_gp_member *lu_gp_mem;
+ 	ssize_t len = 0, cur_len;
 -	unsigned char buf[LU_GROUP_NAME_BUF];
-+	unsigned char buf[LU_GROUP_NAME_BUF] = { };
- 	int move = 0;
- 
- 	lu_gp_mem = dev->dev_alua_lu_gp_mem;
-@@ -2294,7 +2294,6 @@ static ssize_t target_dev_alua_lu_gp_store(struct config_item *item,
- 		pr_err("ALUA LU Group Alias too large!\n");
- 		return -EINVAL;
- 	}
+-
 -	memset(buf, 0, LU_GROUP_NAME_BUF);
- 	memcpy(buf, page, count);
- 	/*
- 	 * Any ALUA logical unit alias besides "NULL" means we will be
++	unsigned char buf[LU_GROUP_NAME_BUF] = { };
+ 
+ 	spin_lock(&lu_gp->lu_gp_lock);
+ 	list_for_each_entry(lu_gp_mem, &lu_gp->lu_gp_mem_list, lu_gp_mem_list) {
 -- 
 2.22.1
 
