@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A25FC433E9
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:03:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 961DDC433DB
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:04:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 49A6A64ED5
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:03:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6860264EBD
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:04:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230106AbhBTCDj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Feb 2021 21:03:39 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:43725 "EHLO smtp.infotech.no"
+        id S230119AbhBTCDq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Feb 2021 21:03:46 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:43726 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229999AbhBTCDA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Feb 2021 21:03:00 -0500
+        id S230001AbhBTCDB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 Feb 2021 21:03:01 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 647C020429C;
-        Sat, 20 Feb 2021 03:01:21 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 5FDEA2042A1;
+        Sat, 20 Feb 2021 03:01:24 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id m0K155LgqPMw; Sat, 20 Feb 2021 03:01:19 +0100 (CET)
+        with ESMTP id iNvcbNDmCFOX; Sat, 20 Feb 2021 03:01:22 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 8409F2041D7;
-        Sat, 20 Feb 2021 03:01:13 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id 3018B20418F;
+        Sat, 20 Feb 2021 03:01:17 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v16 11/45] sg: change rwlock to spinlock
-Date:   Fri, 19 Feb 2021 21:00:22 -0500
-Message-Id: <20210220020056.77483-12-dgilbert@interlog.com>
+Subject: [PATCH v16 14/45] sg: sg_common_write add structure for arguments
+Date:   Fri, 19 Feb 2021 21:00:25 -0500
+Message-Id: <20210220020056.77483-15-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210220020056.77483-1-dgilbert@interlog.com>
 References: <20210220020056.77483-1-dgilbert@interlog.com>
@@ -44,215 +44,143 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A reviewer suggested that the extra overhead associated with a
-rw lock compared to a spinlock was not worth it for short,
-oft-used critcal sections.
-
-So the rwlock on the request list/array is changed to a spinlock.
-The head of that list is in the owning sf file descriptor object.
+As the number of arguments to sg_common_write() starts to grow
+(more in later patches) add a structure to hold most of these
+arguments.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 52 +++++++++++++++++++++++------------------------
- 1 file changed, 26 insertions(+), 26 deletions(-)
+ drivers/scsi/sg.c | 47 ++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 32 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 352bdd51c34b..01e6961a9c0e 100644
+index 40e7bc1f0fbc..34670a8902ef 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -139,7 +139,7 @@ struct sg_fd {		/* holds the state of a file descriptor */
- 	struct list_head sfd_entry;	/* member sg_device::sfds list */
- 	struct sg_device *parentdp;	/* owning device */
- 	wait_queue_head_t read_wait;	/* queue read until command done */
--	rwlock_t rq_list_lock;	/* protect access to list in req_arr */
-+	spinlock_t rq_list_lock;	/* protect access to list in req_arr */
- 	struct mutex f_mutex;	/* protect against changes in this fd */
- 	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
- 	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
-@@ -742,17 +742,17 @@ sg_get_rq_mark(struct sg_fd *sfp, int pack_id)
- 	struct sg_request *resp;
- 	unsigned long iflags;
+@@ -174,6 +174,13 @@ struct sg_device { /* holds the state of each scsi generic device */
+ 	struct kref d_ref;
+ };
  
--	write_lock_irqsave(&sfp->rq_list_lock, iflags);
-+	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
- 	list_for_each_entry(resp, &sfp->rq_list, entry) {
- 		/* look for requests that are ready + not SG_IO owned */
- 		if (resp->done == 1 && !resp->sg_io_owned &&
- 		    (-1 == pack_id || resp->header.pack_id == pack_id)) {
- 			resp->done = 2;	/* guard against other readers */
--			write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+			spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 			return resp;
- 		}
++struct sg_comm_wr_t {  /* arguments to sg_common_write() */
++	int timeout;
++	int blocking;
++	struct sg_request *srp;
++	u8 *cmnd;
++};
++
+ /* tasklet or soft irq callback */
+ static void sg_rq_end_io(struct request *rq, blk_status_t status);
+ /* Declarations of other static functions used before they are defined */
+@@ -186,8 +193,7 @@ static ssize_t sg_submit(struct sg_fd *sfp, struct file *filp,
+ 			 const char __user *buf, size_t count, bool blocking,
+ 			 bool read_only, bool sg_io_owned,
+ 			 struct sg_request **o_srp);
+-static int sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+-			   u8 *cmnd, int timeout, int blocking);
++static int sg_common_write(struct sg_fd *sfp, struct sg_comm_wr_t *cwp);
+ static int sg_read_append(struct sg_request *srp, void __user *outp,
+ 			  int num_xfer);
+ static void sg_remove_scat(struct sg_fd *sfp, struct sg_scatter_hold *schp);
+@@ -487,6 +493,7 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
+ 	struct sg_io_hdr v3hdr;
+ 	struct sg_header *ohp = &ov2hdr;
+ 	struct sg_io_hdr *h3p = &v3hdr;
++	struct sg_comm_wr_t cwr;
+ 	u8 cmnd[SG_MAX_CDB_SIZE];
+ 
+ 	res = sg_check_file_access(filp, __func__);
+@@ -590,7 +597,11 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
+ 				   input_size, (unsigned int) cmnd[0],
+ 				   current->comm);
  	}
--	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 	return NULL;
+-	res = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
++	cwr.timeout = sfp->timeout;
++	cwr.blocking = blocking;
++	cwr.srp = srp;
++	cwr.cmnd = cmnd;
++	res = sg_common_write(sfp, &cwr);
+ 	return (res < 0) ? res : count;
  }
  
-@@ -806,9 +806,9 @@ srp_done(struct sg_fd *sfp, struct sg_request *srp)
- 	unsigned long flags;
- 	int ret;
- 
--	read_lock_irqsave(&sfp->rq_list_lock, flags);
-+	spin_lock_irqsave(&sfp->rq_list_lock, flags);
- 	ret = srp->done;
--	read_unlock_irqrestore(&sfp->rq_list_lock, flags);
-+	spin_unlock_irqrestore(&sfp->rq_list_lock, flags);
- 	return ret;
- }
- 
-@@ -1072,15 +1072,15 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
- 			(srp_done(sfp, srp) || SG_IS_DETACHING(sdp)));
- 		if (SG_IS_DETACHING(sdp))
- 			return -ENODEV;
--		write_lock_irq(&sfp->rq_list_lock);
-+		spin_lock_irq(&sfp->rq_list_lock);
- 		if (srp->done) {
- 			srp->done = 2;
--			write_unlock_irq(&sfp->rq_list_lock);
-+			spin_unlock_irq(&sfp->rq_list_lock);
- 			result = sg_new_read(sfp, p, SZ_SG_IO_HDR, srp);
- 			return (result < 0) ? result : 0;
- 		}
- 		srp->orphan = 1;
--		write_unlock_irq(&sfp->rq_list_lock);
-+		spin_unlock_irq(&sfp->rq_list_lock);
- 		return result;	/* -ERESTARTSYS because signal hit process */
- 	case SG_SET_TIMEOUT:
- 		result = get_user(val, ip);
-@@ -1132,15 +1132,15 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
- 		sfp->force_packid = val ? 1 : 0;
- 		return 0;
- 	case SG_GET_PACK_ID:
--		read_lock_irqsave(&sfp->rq_list_lock, iflags);
-+		spin_lock_irqsave(&sfp->rq_list_lock, iflags);
- 		list_for_each_entry(srp, &sfp->rq_list, entry) {
- 			if ((1 == srp->done) && (!srp->sg_io_owned)) {
--				read_unlock_irqrestore(&sfp->rq_list_lock,
-+				spin_unlock_irqrestore(&sfp->rq_list_lock,
- 						       iflags);
- 				return put_user(srp->header.pack_id, ip);
- 			}
- 		}
--		read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+		spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 		return put_user(-1, ip);
- 	case SG_GET_NUM_WAITING:
- 		return put_user(atomic_read(&sfp->waiting), ip);
-@@ -1209,9 +1209,9 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
- 					GFP_KERNEL);
- 			if (!rinfo)
- 				return -ENOMEM;
--			read_lock_irqsave(&sfp->rq_list_lock, iflags);
-+			spin_lock_irqsave(&sfp->rq_list_lock, iflags);
- 			sg_fill_request_table(sfp, rinfo);
--			read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+			spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 	#ifdef CONFIG_COMPAT
- 			if (in_compat_syscall())
- 				result = put_compat_request_table(p, rinfo);
-@@ -1531,7 +1531,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 	scsi_req_free_cmd(scsi_req(rq));
- 	blk_put_request(rq);
- 
--	write_lock_irqsave(&sfp->rq_list_lock, iflags);
-+	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
- 	if (unlikely(srp->orphan)) {
- 		if (sfp->keep_orphan)
- 			srp->sg_io_owned = 0;
-@@ -1539,7 +1539,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 			done = 0;
+@@ -613,6 +624,7 @@ sg_submit(struct sg_fd *sfp, struct file *filp, const char __user *buf,
+ 	int k;
+ 	struct sg_request *srp;
+ 	struct sg_io_hdr *hp;
++	struct sg_comm_wr_t cwr;
+ 	u8 cmnd[SG_MAX_CDB_SIZE];
+ 	int timeout;
+ 	unsigned long ul_timeout;
+@@ -663,23 +675,28 @@ sg_submit(struct sg_fd *sfp, struct file *filp, const char __user *buf,
+ 		sg_remove_request(sfp, srp);
+ 		return -EPERM;
  	}
- 	srp->done = done;
--	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 
- 	if (likely(done)) {
- 		/* Now wake up any sg_read() that is waiting for this
-@@ -2213,7 +2213,7 @@ sg_setup_req(struct sg_fd *sfp)
- 	unsigned long iflags;
- 	struct sg_request *rp = sfp->req_arr;
- 
--	write_lock_irqsave(&sfp->rq_list_lock, iflags);
-+	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
- 	if (!list_empty(&sfp->rq_list)) {
- 		if (!sfp->cmd_q)
- 			goto out_unlock;
-@@ -2229,10 +2229,10 @@ sg_setup_req(struct sg_fd *sfp)
- 	rp->parentfp = sfp;
- 	rp->header.duration = jiffies_to_msecs(jiffies);
- 	list_add_tail(&rp->entry, &sfp->rq_list);
--	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 	return rp;
- out_unlock:
--	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 	return NULL;
+-	k = sg_common_write(sfp, srp, cmnd, timeout, blocking);
++	cwr.timeout = timeout;
++	cwr.blocking = blocking;
++	cwr.srp = srp;
++	cwr.cmnd = cmnd;
++	k = sg_common_write(sfp, &cwr);
+ 	if (k < 0)
+ 		return k;
+ 	if (o_srp)
+-		*o_srp = srp;
++		*o_srp = cwr.srp;
+ 	return count;
  }
  
-@@ -2245,13 +2245,13 @@ sg_remove_request(struct sg_fd *sfp, struct sg_request *srp)
+ static int
+-sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+-		u8 *cmnd, int timeout, int blocking)
++sg_common_write(struct sg_fd *sfp, struct sg_comm_wr_t *cwrp)
+ {
+-	int k, at_head;
++	bool at_head;
++	int k;
+ 	struct sg_device *sdp = sfp->parentdp;
++	struct sg_request *srp = cwrp->srp;
+ 	struct sg_io_hdr *hp = &srp->header;
  
- 	if (!sfp || !srp || list_empty(&sfp->rq_list))
- 		return res;
--	write_lock_irqsave(&sfp->rq_list_lock, iflags);
-+	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
- 	if (!list_empty(&srp->entry)) {
- 		list_del(&srp->entry);
- 		srp->parentfp = NULL;
- 		res = 1;
+-	srp->data.cmd_opcode = cmnd[0];	/* hold opcode of command */
++	srp->data.cmd_opcode = cwrp->cmnd[0];	/* hold opcode of command */
+ 	hp->status = 0;
+ 	hp->masked_status = 0;
+ 	hp->msg_status = 0;
+@@ -688,14 +705,14 @@ sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+ 	hp->driver_status = 0;
+ 	hp->resid = 0;
+ 	SG_LOG(4, sfp, "%s:  opcode=0x%02x, cmd_sz=%d\n", __func__,
+-	       (int)cmnd[0], hp->cmd_len);
++	       (int)cwrp->cmnd[0], hp->cmd_len);
+ 
+ 	if (hp->dxfer_len >= SZ_256M) {
+ 		sg_remove_request(sfp, srp);
+ 		return -EINVAL;
  	}
--	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 	return res;
- }
  
-@@ -2267,7 +2267,7 @@ sg_add_sfp(struct sg_device *sdp)
- 		return ERR_PTR(-ENOMEM);
- 
- 	init_waitqueue_head(&sfp->read_wait);
--	rwlock_init(&sfp->rq_list_lock);
-+	spin_lock_init(&sfp->rq_list_lock);
- 	INIT_LIST_HEAD(&sfp->rq_list);
- 	kref_init(&sfp->f_ref);
- 	mutex_init(&sfp->f_mutex);
-@@ -2312,14 +2312,14 @@ sg_remove_sfp_usercontext(struct work_struct *work)
- 	unsigned long iflags;
- 
- 	/* Cleanup any responses which were never read(). */
--	write_lock_irqsave(&sfp->rq_list_lock, iflags);
-+	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
- 	while (!list_empty(&sfp->rq_list)) {
- 		srp = list_first_entry(&sfp->rq_list, struct sg_request, entry);
+-	k = sg_start_req(srp, cmnd);
++	k = sg_start_req(srp, cwrp->cmnd);
+ 	if (k) {
+ 		SG_LOG(1, sfp, "%s: start_req err=%d\n", __func__, k);
  		sg_finish_scsi_blk_rq(srp);
- 		list_del(&srp->entry);
- 		srp->parentfp = NULL;
- 	}
--	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+@@ -717,13 +734,13 @@ sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+ 	hp->duration = jiffies_to_msecs(jiffies);
+ 	if (hp->interface_id != '\0' &&	/* v3 (or later) interface */
+ 	    (SG_FLAG_Q_AT_TAIL & hp->flags))
+-		at_head = 0;
++		at_head = false;
+ 	else
+-		at_head = 1;
++		at_head = true;
  
- 	if (sfp->reserve.buflen > 0) {
- 		SG_LOG(6, sfp, "%s:    buflen=%d, num_sgat=%d\n", __func__,
-@@ -2641,7 +2641,7 @@ sg_proc_debug_helper(struct seq_file *s, struct sg_device *sdp)
- 	k = 0;
- 	list_for_each_entry(fp, &sdp->sfds, sfd_entry) {
- 		k++;
--		read_lock(&fp->rq_list_lock); /* irqs already disabled */
-+		spin_lock(&fp->rq_list_lock); /* irqs already disabled */
- 		seq_printf(s, "   FD(%d): timeout=%dms buflen=%d "
- 			   "(res)sgat=%d low_dma=%d\n", k,
- 			   jiffies_to_msecs(fp->timeout),
-@@ -2691,7 +2691,7 @@ sg_proc_debug_helper(struct seq_file *s, struct sg_device *sdp)
- 		}
- 		if (list_empty(&fp->rq_list))
- 			seq_puts(s, "     No requests active\n");
--		read_unlock(&fp->rq_list_lock);
-+		spin_unlock(&fp->rq_list_lock);
- 	}
- }
- 
+-	if (!blocking)
++	if (!srp->sg_io_owned)
+ 		atomic_inc(&sfp->submitted);
+-	srp->rq->timeout = timeout;
++	srp->rq->timeout = cwrp->timeout;
+ 	kref_get(&sfp->f_ref); /* sg_rq_end_io() does kref_put(). */
+ 	blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
+ 			      srp->rq, at_head, sg_rq_end_io);
 -- 
 2.25.1
 
