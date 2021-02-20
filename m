@@ -2,131 +2,196 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44272C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92088C433E9
 	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:38:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 083B564ECA
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:38:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F86264EB2
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:38:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229844AbhBTViB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 20 Feb 2021 16:38:01 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:14596 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229804AbhBTViA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2021 16:38:00 -0500
+        id S229862AbhBTViN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 20 Feb 2021 16:38:13 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:65529 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229804AbhBTViM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2021 16:38:12 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1613857080; x=1645393080;
+  t=1613857091; x=1645393091;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=Ximxbd4So5TBxiG6d7kSZxe1HGelbfcoEPLBr5LT/FE=;
-  b=Q2Ymn3eermu8PJ0d45BWHJbWlHnAgEBjpyX6Ky0M657WVh3W24unWfRy
-   CR7sExF890K+bu4jQPGAoB8rdFRKO9eTjrt0sB+C5CHjTb8kfWaAIcbhY
-   OsMved9ugpkeySnrxq09TFIC4qFMmpvu/gyiKoes3KaGErWOgwDFnWCp2
-   0SamXYnPLHZRSc9JmZSwNgHfV1yGaBiOVC+5lo+6t/+EUC7JRepcwXMxq
-   hk7r/1I0CakAuqE/Osc2RiT8zxU6peAwy9gSTSWYQsFmXxM2Yy30UZuSK
-   vX3+915EqYTJcWfaclJgglh18pNVd65GoLH8mk0GM2OpxesHs5P6Ivqru
-   A==;
-IronPort-SDR: xZuaM93h5XPffR60/Qr+vVj8MorefZ5fZIbKgjyCmW4ZwNTmZPoCR8HzU4t8rGDGW+/wmciivC
- JE6GRLR+QcihHfAFhCB62GBH8/Y9adrTfC3QY+YSEJ7w1bh47BAqYXIwXJwqRj4rcNJkXNnC8v
- i4M5tGMhS3w4l0bgA4oaH75YoRB5vEjsizU2JKVcg/fPc3G/ABqhKCV5ugspkseB55xjulhZoJ
- e5hHM3ISIkrXTuR2R2knvw9PL4fSC3CjAuhtO41N8n6GRYGpCgZ+09PpYVN7ReogXbNyiz15lz
- d6c=
+  bh=lrVqzjG3GG6vMX9gO62Yhk/jVAU1NUt7V7kganSmJYM=;
+  b=EixrUnqIZX1+rAb8W6r7tPIH5wrsaGZff/p8gRkJcgIejy3PUKOXiy7T
+   Y6q14PyYDmoFKWutCtmtLJhWE+WyA43+VVe+gYk9zhc6NEx1wtaFhhlVw
+   MoaEmBJB0fYqmL0fVgl3z+V4E6S5wCs2n4ygxgyImNRFwqrXUfvzfcTdi
+   +kAO3xX4Dg6U9pshEiwd+AK+YrIh+F3KfyoHJPpLP5UfH7QFeF5pL7y+v
+   ZVPqYtcqmsnQVhAPm5VN/RjuTlOlYcWSQHq7Ebs9Roe4a+qI6MZI+drMi
+   wkNxFLNNzzhR8GaVASD3o1C0zi/9Nx2YJhi7o+eMrZ8O4gz28IBYJp7Jb
+   Q==;
+IronPort-SDR: J+M1bHqF0NwDT5C0u8C+N+48s4iAMqjlvbXkT0jnTypIyEsk+gKee9me8/fndCTPRuKSDtGW7X
+ 0sCWrUWCEEIF1UAXzYmOKHywUj8CFTBZEYCdei0+JBeP8MfMu42zPr99DgIow0x/wOHS+VrCB+
+ xDpOKpcxtaeTyk6PXrkg7Ing9B1inmIintad2A5I0eVM5F1Vx0qkEPKQ8R94XnyI62HCz3e5gc
+ MoB61XMCjzx0oiyGVbmR1+VGtQFZOvy2yWnn9SZM96qbOVcmVr4TTwv8anziUZmtJ8pBM70Bwa
+ A+4=
 X-IronPort-AV: E=Sophos;i="5.81,193,1610380800"; 
-   d="scan'208";a="161591256"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Feb 2021 05:36:54 +0800
-IronPort-SDR: KiLq/GV+IASuiafKIp/Rs7ebgO3WY4OZ6PEOHok9aVkJgFGqcYjtGXXzedje0wbFdGfV3UaNBr
- FFktpxarjfiC3wjgnlwFJ+uOhuiTmOCBExMrsavOiJJ91L/5w0QC8BEktU/dE2sTx/2vjE1hV4
- CPK3y8ebE55GgJNFNF0mXkkV+7tdlSby3HQV0z+Mc2lOFto4S7RG02bCliS40dpcmXzKsOeF4x
- Rz1vMMdXLTLviikPu7R3E9nKR1rJEZU1Yo71Gq1VZprL0R8RLYB5+lzbVRB6uKnH4VxkLWnCFb
- gr3AZvkw+WNlRgRdCkjqCyhT
+   d="scan'208";a="164901568"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Feb 2021 05:37:05 +0800
+IronPort-SDR: LLNWU0s4jIX1sakbV2xxAalHMLof1zxxkjtqCeS/1G8iIfF226bB3+459TKMWOrrXOzFuJcJVC
+ IgWAT8pz2nGPs6FzU+sWT4AsldZ1flC/lup/5a0l1npQlvoZAxyGdxy+Ow2L9si/gcKolkZSSA
+ 4wSB7D60c2ov33wIYLrLLuMFN+/rUWClV6uRsLoRV5V5hNMpPXvwGhl+cXJ5QNek8fBOZNo84+
+ jmB2085L9G4ObOKtcrEqnjiBJ8BumkjtO7aSoKZT1tx/6+H51mGq3TFfE8qZ+fULcSnTy6yJjo
+ DwLWTGOQkowLF7TCxoFa6FC3
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2021 13:18:28 -0800
-IronPort-SDR: F3tB+vcxXTKbgYUz+ZG7zYUKsXG3rZxguGcMRmmVXMRf2oRr3w5VdkW79SBblBTxB3oevQtxxV
- vzKZ9MOLvy9b9JUf9ZfDdXMb7bbfnWe4OhunW45ki1hiC4e9JPhqgnEXROLI3I4fqHlxHMF97R
- DPqSZXlF7oTHeVtD2RH+bAwBjCtZyonMjyl94nocWaW9axszYXHzomkUFxE2oZC8e+uzGDIoxz
- omEj5FK8wNuOiqCwcltSFXlSDtNdhzbAyr+8iF0cfLgwkvpgc0LYr5//W+pxFZiVKmlmOtKwYa
- fVs=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2021 13:20:27 -0800
+IronPort-SDR: KOHPrM8J774qa6wApHhFE+sqkgQ0eIs5nn1nlD9NgGKIDFtutoX6G4ndnAbOonvNtMMU1942eU
+ J3iLJOQbHL0emspAxdaH74GVU23v+mu+9zJVZ+YEv4dQPv4Nvp+PaWH6ZmudSq2zdzMsWKiipR
+ 0Ibdg4gCDFyqvzl9cjj4mFf+lEOgg5Qe0e4pkKfT/9PQVmLfp59PNnnuJTAcbvBXYsmfwz0Fsk
+ N7BOIvz9TVo2KRs6d+EH/7Sah2PE5oUhkkfhzY2cHc8iTg9U6Rg8BymHDanv8mcarIMAcc5mN2
+ 8tk=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip02.wdc.com with ESMTP; 20 Feb 2021 13:36:54 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 20 Feb 2021 13:37:05 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 Cc:     martin.petersen@oracle.com, hare@suse.de, jejb@linux.ibm.com,
         mlombard@redhat.com, michael.christie@oracle.com,
         houpu@bytedance.com,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [RFC PATCH 00/24] target: code cleanup 
-Date:   Sat, 20 Feb 2021 13:36:52 -0800
-Message-Id: <20210220213652.6290-1-chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 01/24] target/iblock: remove an extra argument
+Date:   Sat, 20 Feb 2021 13:37:03 -0800
+Message-Id: <20210220213703.6334-1-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1.dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+The twp arguments to the functions op and opf which are REQ_OP_XXX and
+REQ_XXX flags are belongs to the two different namespaces, i.e. they
+can be combined safely given that REQ_OP_XXX takes 8bits of the flags
+and rest is available to REQ_XXX flags.
 
-This removes unused macros, various memsets, extra variable
-in the target/iblock for bio get and fixes some type mismatch for the
-same with fix for smatch warnings.
+Replace op and op_flag arguments with opf.
 
-Marking it as RFC as I don't know if these cleanups are acceptable or
-not.
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ drivers/target/target_core_iblock.c | 34 ++++++++++++++---------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-I've geterated this on the linux-block, we decided to move forward wicth
-this then I'll send series based on right repo.
-
--ck
-
-Chaitanya Kulkarni (24):
-  target/iblock: remove an extra argument
-  target/iblock: trim down line longer than 80 char
-  target/iblock: fix the type of the logs_per_phys
-  targe/pscsi: fix the warning in pscsi_complete_cmd
-  target/sbc: get rid of the warning in cmp & write
-  target/pscsi: remove unsed macro ISPRINT
-  target/stat: remove unsed macro ISPRINT
-  target/stat: remove unsed macro NONE
-  target/stat: remove unsed macro
-  target/iscsi: remove unsed macro TEXT_LEN
-  target/iscsi: remove unsed macro PRINT_BUF
-  target/iscsi: remove the memset with declare-init
-  target/configfs: remove the memset with declare-init
-  target/configfs: remove the memset with declare-init
-  target/configfs: remove the memset with declare-init
-  target/configfs: remove the memset with declare-init
-  target/configfs: remove the memset with declare-init
-  target/configfs: remove the memset with declare-init
-  target/configfs: remove the memset with declare-init
-  target/pr: remove the memset with declare-init
-  target/pr: remove the memset with declare-init
-  target/pr: remove the memset with declare-init
-  target/core: don't duplicate memset 0xff
-  target: mark __rcu to avoid warning
-
- drivers/target/iscsi/iscsi_target_configfs.c |  3 +-
- drivers/target/iscsi/iscsi_target_nego.c     |  1 -
- drivers/target/iscsi/iscsi_target_stat.c     |  1 -
- drivers/target/iscsi/iscsi_target_util.c     | 17 ---------
- drivers/target/target_core_configfs.c        | 25 ++++---------
- drivers/target/target_core_file.c            |  3 +-
- drivers/target/target_core_iblock.c          | 37 ++++++++++----------
- drivers/target/target_core_pr.c              | 36 +++++++------------
- drivers/target/target_core_pscsi.c           |  5 ++-
- drivers/target/target_core_sbc.c             |  4 +--
- drivers/target/target_core_stat.c            |  3 --
- include/scsi/libfc.h                         |  2 +-
- 12 files changed, 46 insertions(+), 91 deletions(-)
-
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 8ed93fd205c7..4bb34711bdc5 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -304,9 +304,8 @@ static void iblock_bio_done(struct bio *bio)
+ 	iblock_complete_cmd(cmd);
+ }
+ 
+-static struct bio *
+-iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int op,
+-	       int op_flags)
++static struct bio *iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num,
++				  unsigned int opf)
+ {
+ 	struct iblock_dev *ib_dev = IBLOCK_DEV(cmd->se_dev);
+ 	struct bio *bio;
+@@ -328,7 +327,7 @@ iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int op,
+ 	bio->bi_private = cmd;
+ 	bio->bi_end_io = &iblock_bio_done;
+ 	bio->bi_iter.bi_sector = lba;
+-	bio_set_op_attrs(bio, op, op_flags);
++	bio->bi_opf = opf;
+ 
+ 	return bio;
+ }
+@@ -479,7 +478,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 		goto fail;
+ 	cmd->priv = ibr;
+ 
+-	bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE, 0);
++	bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE);
+ 	if (!bio)
+ 		goto fail_free_ibr;
+ 
+@@ -492,8 +491,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
+ 				!= sg->length) {
+ 
+-			bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE,
+-					     0);
++			bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE);
+ 			if (!bio)
+ 				goto fail_put_bios;
+ 
+@@ -688,9 +686,11 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	struct bio_list list;
+ 	struct scatterlist *sg;
+ 	u32 sg_num = sgl_nents;
++	unsigned int opf;
+ 	unsigned bio_cnt;
+-	int i, rc, op, op_flags = 0;
++	int i, rc;
+ 	struct sg_mapping_iter prot_miter;
++	unsigned int miter_dir;
+ 
+ 	if (data_direction == DMA_TO_DEVICE) {
+ 		struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
+@@ -699,15 +699,17 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 		 * Force writethrough using REQ_FUA if a volatile write cache
+ 		 * is not enabled, or if initiator set the Force Unit Access bit.
+ 		 */
+-		op = REQ_OP_WRITE;
++		opf = REQ_OP_WRITE;
++		miter_dir = SG_MITER_TO_SG;
+ 		if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
+ 			if (cmd->se_cmd_flags & SCF_FUA)
+-				op_flags = REQ_FUA;
++				opf |= REQ_FUA;
+ 			else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
+-				op_flags = REQ_FUA;
++				opf |= REQ_FUA;
+ 		}
+ 	} else {
+-		op = REQ_OP_READ;
++		opf = REQ_OP_READ;
++		miter_dir = SG_MITER_FROM_SG;
+ 	}
+ 
+ 	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
+@@ -721,7 +723,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 		return 0;
+ 	}
+ 
+-	bio = iblock_get_bio(cmd, block_lba, sgl_nents, op, op_flags);
++	bio = iblock_get_bio(cmd, block_lba, sgl_nents, opf);
+ 	if (!bio)
+ 		goto fail_free_ibr;
+ 
+@@ -733,8 +735,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 
+ 	if (cmd->prot_type && dev->dev_attrib.pi_prot_type)
+ 		sg_miter_start(&prot_miter, cmd->t_prot_sg, cmd->t_prot_nents,
+-			       op == REQ_OP_READ ? SG_MITER_FROM_SG :
+-						   SG_MITER_TO_SG);
++			       miter_dir);
+ 
+ 	for_each_sg(sgl, sg, sgl_nents, i) {
+ 		/*
+@@ -755,8 +756,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 				bio_cnt = 0;
+ 			}
+ 
+-			bio = iblock_get_bio(cmd, block_lba, sg_num, op,
+-					     op_flags);
++			bio = iblock_get_bio(cmd, block_lba, sg_num, opf);
+ 			if (!bio)
+ 				goto fail_put_bios;
+ 
 -- 
 2.22.1
 
