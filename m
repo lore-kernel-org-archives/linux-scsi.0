@@ -2,97 +2,131 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7ED8C433DB
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 17:41:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44272C433DB
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:38:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A842C64DED
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 17:41:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 083B564ECA
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 21:38:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229879AbhBTRkU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 20 Feb 2021 12:40:20 -0500
-Received: from mail-pg1-f172.google.com ([209.85.215.172]:42666 "EHLO
-        mail-pg1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229784AbhBTRkU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2021 12:40:20 -0500
-Received: by mail-pg1-f172.google.com with SMTP id o38so7433054pgm.9
-        for <linux-scsi@vger.kernel.org>; Sat, 20 Feb 2021 09:40:04 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=bvsSeGT1Ij4m6aDK95swZgdlbn7Pbj0h+vKR6Q5qF2I=;
-        b=dhu8o8Yip30v4dbRMP2/KJm7nAoVGqGURRZmJrFV+63vtOQBMa81ST4TYuGsrqO52+
-         YnnZTLJZhsqWJFK7u4ujUap5U1JeRFt9TY8NUWcas490qaSDoAG6CTMg0Qo5FjsjZPPM
-         KlLotbgbTmWg55sJXV3+ZK37exLow57LaHqgBHyVjVz1woIvQAu3FSkeP3s7z7Jj8DbN
-         Kg/P0Zkh/iPYXUUYsVXE1urb1YXGQ9xSaMZG6dm038Ez7czFRPLRNBQOJ/eNyeI/9tgK
-         okuiKljlkjK9svhgHTGUEMmyFt2Y4s3TciO08JvUXdUzRYFrLBvqzIFKncIn+LHIZ0/Y
-         4stw==
-X-Gm-Message-State: AOAM530gnf++h41LFcRq8hlHIC+78v1TLMBL/d0rZCnG7otY67gkAeU+
-        aPM2A77O/777JUQIcP7WgFo=
-X-Google-Smtp-Source: ABdhPJzYX2eBZD/yx2Fz8GIopv7qAemoKbFb2ZIW/62Z0PKCt5gWgSHf8qIQ9Juow0N+4JNxYj6kGw==
-X-Received: by 2002:a63:e84f:: with SMTP id a15mr13098994pgk.249.1613842779263;
-        Sat, 20 Feb 2021 09:39:39 -0800 (PST)
-Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:a813:9a51:fed9:102b])
-        by smtp.gmail.com with ESMTPSA id 62sm13484763pfg.160.2021.02.20.09.39.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 20 Feb 2021 09:39:37 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        chriscjsus@yahoo.com, Christoph Hellwig <hch@lst.de>,
-        Jens Axboe <axboe@kernel.dk>,
-        Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] scsi/sd: Fix Opal support
-Date:   Sat, 20 Feb 2021 09:39:31 -0800
-Message-Id: <20210220173931.22155-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.30.0
+        id S229844AbhBTViB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 20 Feb 2021 16:38:01 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:14596 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229804AbhBTViA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2021 16:38:00 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1613857080; x=1645393080;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Ximxbd4So5TBxiG6d7kSZxe1HGelbfcoEPLBr5LT/FE=;
+  b=Q2Ymn3eermu8PJ0d45BWHJbWlHnAgEBjpyX6Ky0M657WVh3W24unWfRy
+   CR7sExF890K+bu4jQPGAoB8rdFRKO9eTjrt0sB+C5CHjTb8kfWaAIcbhY
+   OsMved9ugpkeySnrxq09TFIC4qFMmpvu/gyiKoes3KaGErWOgwDFnWCp2
+   0SamXYnPLHZRSc9JmZSwNgHfV1yGaBiOVC+5lo+6t/+EUC7JRepcwXMxq
+   hk7r/1I0CakAuqE/Osc2RiT8zxU6peAwy9gSTSWYQsFmXxM2Yy30UZuSK
+   vX3+915EqYTJcWfaclJgglh18pNVd65GoLH8mk0GM2OpxesHs5P6Ivqru
+   A==;
+IronPort-SDR: xZuaM93h5XPffR60/Qr+vVj8MorefZ5fZIbKgjyCmW4ZwNTmZPoCR8HzU4t8rGDGW+/wmciivC
+ JE6GRLR+QcihHfAFhCB62GBH8/Y9adrTfC3QY+YSEJ7w1bh47BAqYXIwXJwqRj4rcNJkXNnC8v
+ i4M5tGMhS3w4l0bgA4oaH75YoRB5vEjsizU2JKVcg/fPc3G/ABqhKCV5ugspkseB55xjulhZoJ
+ e5hHM3ISIkrXTuR2R2knvw9PL4fSC3CjAuhtO41N8n6GRYGpCgZ+09PpYVN7ReogXbNyiz15lz
+ d6c=
+X-IronPort-AV: E=Sophos;i="5.81,193,1610380800"; 
+   d="scan'208";a="161591256"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Feb 2021 05:36:54 +0800
+IronPort-SDR: KiLq/GV+IASuiafKIp/Rs7ebgO3WY4OZ6PEOHok9aVkJgFGqcYjtGXXzedje0wbFdGfV3UaNBr
+ FFktpxarjfiC3wjgnlwFJ+uOhuiTmOCBExMrsavOiJJ91L/5w0QC8BEktU/dE2sTx/2vjE1hV4
+ CPK3y8ebE55GgJNFNF0mXkkV+7tdlSby3HQV0z+Mc2lOFto4S7RG02bCliS40dpcmXzKsOeF4x
+ Rz1vMMdXLTLviikPu7R3E9nKR1rJEZU1Yo71Gq1VZprL0R8RLYB5+lzbVRB6uKnH4VxkLWnCFb
+ gr3AZvkw+WNlRgRdCkjqCyhT
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2021 13:18:28 -0800
+IronPort-SDR: F3tB+vcxXTKbgYUz+ZG7zYUKsXG3rZxguGcMRmmVXMRf2oRr3w5VdkW79SBblBTxB3oevQtxxV
+ vzKZ9MOLvy9b9JUf9ZfDdXMb7bbfnWe4OhunW45ki1hiC4e9JPhqgnEXROLI3I4fqHlxHMF97R
+ DPqSZXlF7oTHeVtD2RH+bAwBjCtZyonMjyl94nocWaW9axszYXHzomkUFxE2oZC8e+uzGDIoxz
+ omEj5FK8wNuOiqCwcltSFXlSDtNdhzbAyr+8iF0cfLgwkvpgc0LYr5//W+pxFZiVKmlmOtKwYa
+ fVs=
+WDCIronportException: Internal
+Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
+  by uls-op-cesaip02.wdc.com with ESMTP; 20 Feb 2021 13:36:54 -0800
+From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     martin.petersen@oracle.com, hare@suse.de, jejb@linux.ibm.com,
+        mlombard@redhat.com, michael.christie@oracle.com,
+        houpu@bytedance.com,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 00/24] target: code cleanup 
+Date:   Sat, 20 Feb 2021 13:36:52 -0800
+Message-Id: <20210220213652.6290-1-chaitanya.kulkarni@wdc.com>
+X-Mailer: git-send-email 2.22.1.dirty
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The SCSI core has been modified recently such that it only processes PM
-requests if rpm_status != RPM_ACTIVE. Since some Opal requests are
-submitted while rpm_status != RPM_ACTIVE, set flag RQF_PM for Opal
-requests.
+Hi,
 
-See also https://bugzilla.kernel.org/show_bug.cgi?id=211227.
+This removes unused macros, various memsets, extra variable
+in the target/iblock for bio get and fixes some type mismatch for the
+same with fix for smatch warnings.
 
-Fixes: d80210f25ff0 ("sd: add support for TCG OPAL self encrypting disks")
-Fixes: 271822bbf9fe ("scsi: core: Only process PM requests if rpm_status != RPM_ACTIVE")
-Reported-by: chriscjsus@yahoo.com
-Tested-by: chriscjsus@yahoo.com
-Cc: chriscjsus@yahoo.com
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/sd.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Marking it as RFC as I don't know if these cleanups are acceptable or
+not.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a3d2d4bc4a3d..aaebf166066a 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -707,9 +707,10 @@ static int sd_sec_submit(void *data, u16 spsp, u8 secp, void *buffer,
- 	put_unaligned_be16(spsp, &cdb[2]);
- 	put_unaligned_be32(len, &cdb[6]);
- 
--	ret = scsi_execute_req(sdev, cdb,
--			send ? DMA_TO_DEVICE : DMA_FROM_DEVICE,
--			buffer, len, NULL, SD_TIMEOUT, sdkp->max_retries, NULL);
-+	ret = scsi_execute(sdev, cdb,
-+		send ? DMA_TO_DEVICE : DMA_FROM_DEVICE, buffer, len,
-+		/*sense=*/NULL, /*sshdr=*/NULL, SD_TIMEOUT, sdkp->max_retries,
-+		/*flags=*/0, /*rq_flags=*/RQF_PM, /*resid=*/NULL);
- 	return ret <= 0 ? ret : -EIO;
- }
- #endif /* CONFIG_BLK_SED_OPAL */
+I've geterated this on the linux-block, we decided to move forward wicth
+this then I'll send series based on right repo.
+
+-ck
+
+Chaitanya Kulkarni (24):
+  target/iblock: remove an extra argument
+  target/iblock: trim down line longer than 80 char
+  target/iblock: fix the type of the logs_per_phys
+  targe/pscsi: fix the warning in pscsi_complete_cmd
+  target/sbc: get rid of the warning in cmp & write
+  target/pscsi: remove unsed macro ISPRINT
+  target/stat: remove unsed macro ISPRINT
+  target/stat: remove unsed macro NONE
+  target/stat: remove unsed macro
+  target/iscsi: remove unsed macro TEXT_LEN
+  target/iscsi: remove unsed macro PRINT_BUF
+  target/iscsi: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/pr: remove the memset with declare-init
+  target/pr: remove the memset with declare-init
+  target/pr: remove the memset with declare-init
+  target/core: don't duplicate memset 0xff
+  target: mark __rcu to avoid warning
+
+ drivers/target/iscsi/iscsi_target_configfs.c |  3 +-
+ drivers/target/iscsi/iscsi_target_nego.c     |  1 -
+ drivers/target/iscsi/iscsi_target_stat.c     |  1 -
+ drivers/target/iscsi/iscsi_target_util.c     | 17 ---------
+ drivers/target/target_core_configfs.c        | 25 ++++---------
+ drivers/target/target_core_file.c            |  3 +-
+ drivers/target/target_core_iblock.c          | 37 ++++++++++----------
+ drivers/target/target_core_pr.c              | 36 +++++++------------
+ drivers/target/target_core_pscsi.c           |  5 ++-
+ drivers/target/target_core_sbc.c             |  4 +--
+ drivers/target/target_core_stat.c            |  3 --
+ include/scsi/libfc.h                         |  2 +-
+ 12 files changed, 46 insertions(+), 91 deletions(-)
+
+-- 
+2.22.1
+
