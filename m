@@ -7,35 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA2E7C433E6
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:06:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C97CFC433E0
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:06:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6D7664ED2
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:06:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4C0E64ED2
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Feb 2021 02:06:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229914AbhBTCGY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Feb 2021 21:06:24 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:43735 "EHLO smtp.infotech.no"
+        id S229958AbhBTCG0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Feb 2021 21:06:26 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:43736 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230125AbhBTCEC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S230128AbhBTCEC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 19 Feb 2021 21:04:02 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id C7C3B2042B5;
-        Sat, 20 Feb 2021 03:01:41 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id A5BB92042B7;
+        Sat, 20 Feb 2021 03:01:44 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id mu2FCX-VLFSl; Sat, 20 Feb 2021 03:01:40 +0100 (CET)
+        with ESMTP id sQ77ecnMVFvC; Sat, 20 Feb 2021 03:01:42 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 9DA162042AD;
-        Sat, 20 Feb 2021 03:01:34 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id 2B71B2042AF;
+        Sat, 20 Feb 2021 03:01:37 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH v16 29/45] sg: add 8 byte SCSI LUN to sg_scsi_id
-Date:   Fri, 19 Feb 2021 21:00:40 -0500
-Message-Id: <20210220020056.77483-30-dgilbert@interlog.com>
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
+Subject: [PATCH v16 31/45] sg: add sg_iosubmit_v3 and sg_ioreceive_v3 ioctls
+Date:   Fri, 19 Feb 2021 21:00:42 -0500
+Message-Id: <20210220020056.77483-32-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210220020056.77483-1-dgilbert@interlog.com>
 References: <20210220020056.77483-1-dgilbert@interlog.com>
@@ -45,76 +44,155 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The existing ioctl(SG_GET_SCSI_ID) fills a object of type
-struct sg_scsi_id whose last field is int unused[2]. Add
-an anonymous union with u8 scsi_lun[8] sharing those last
-8 bytes. This patch will place the current device's full
-LUN in the scsi_lun array using T10's preferred LUN
-format (i.e. an array of 8 bytes) when
-ioctl(SG_GET_SCSI_ID) is called.
+Add ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3). These ioctls
+are meant to be (almost) drop-in replacements for the write()/read()
+async version 3 interface. They only accept the version 3 interface.
 
-Note that structure already contains a 'lun' field but that
-is a 32 bit integer. Users of this upgrade should choose
-the scsi_lun array field henceforth but existing code
-can remain as it is and will get the same 'lun' value with
-the version 3 or version 4 driver.
+See the webpage at: http://sg.danny.cz/sg/sg_v40.html
+specifically the table in the section titled: "13 SG interface
+support changes".
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+If sgv3 is a struct sg_io_hdr object, suitably configured, then
+    res = write(sg_fd, &sgv3, sizeof(sgv3));
+and
+    res = ioctl(sg_fd, SG_IOSUBMIT_V3, &sgv3);
+are equivalent. Dito for read() and ioctl(SG_IORECEIVE_V3).
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c      | 8 +++++---
- include/uapi/scsi/sg.h | 5 ++++-
- 2 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/scsi/sg.c      | 76 ++++++++++++++++++++++++++++++++++++++++++
+ include/uapi/scsi/sg.h |  6 ++++
+ 2 files changed, 82 insertions(+)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 3fc2dbee95cc..0eba01b040eb 100644
+index 89eb8856bfa3..4f5604e5b2ba 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -1226,7 +1226,7 @@ sg_receive_v4(struct sg_fd *sfp, struct sg_request *srp, void __user *p,
- 	h4p->din_resid = srp->in_resid;
- 	h4p->dout_resid = srp->s_hdr4.out_resid;
- 	h4p->usr_ptr = srp->s_hdr4.usr_ptr;
--	h4p->response = (u64)srp->s_hdr4.sbp;
-+	h4p->response = (uintptr_t)srp->s_hdr4.sbp;
- 	h4p->request_extra = srp->pack_id;
- 	if (p) {
- 		if (copy_to_user(p, h4p, SZ_SG_IO_V4))
-@@ -1839,6 +1839,7 @@ static int
- sg_ctl_scsi_id(struct scsi_device *sdev, struct sg_fd *sfp, void __user *p)
- {
- 	struct sg_scsi_id ss_id;
-+	struct scsi_lun lun8b;
+@@ -834,6 +834,24 @@ sg_ctl_iosubmit(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	return -EPERM;
+ }
  
- 	SG_LOG(3, sfp, "%s:    SG_GET_SCSI_ID\n", __func__);
- 	ss_id.host_no = sdev->host->host_no;
-@@ -1848,8 +1849,9 @@ sg_ctl_scsi_id(struct scsi_device *sdev, struct sg_fd *sfp, void __user *p)
- 	ss_id.scsi_type = sdev->type;
- 	ss_id.h_cmd_per_lun = sdev->host->cmd_per_lun;
- 	ss_id.d_queue_depth = sdev->queue_depth;
--	ss_id.unused[0] = 0;
--	ss_id.unused[1] = 0;
-+	int_to_scsilun(sdev->lun, &lun8b);
-+	/* ss_id.scsi_lun is in an anonymous union with 'int unused[2]' */
-+	memcpy(ss_id.scsi_lun, lun8b.scsi_lun, 8);
- 	if (copy_to_user(p, &ss_id, sizeof(struct sg_scsi_id)))
- 		return -EFAULT;
- 	return 0;
++static int
++sg_ctl_iosubmit_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
++{
++	int res;
++	u8 hdr_store[SZ_SG_IO_V4];      /* max(v3interface, v4interface) */
++	struct sg_io_hdr *h3p = (struct sg_io_hdr *)hdr_store;
++	struct sg_device *sdp = sfp->parentdp;
++
++	res = sg_allow_if_err_recovery(sdp, (filp->f_flags & O_NONBLOCK));
++	if (unlikely(res))
++		return res;
++	if (copy_from_user(h3p, p, SZ_SG_IO_HDR))
++		return -EFAULT;
++	if (h3p->interface_id == 'S')
++		return sg_v3_submit(filp, sfp, h3p, false, NULL);
++	return -EPERM;
++}
++
+ #if IS_ENABLED(SG_LOG_ACTIVE)
+ static void
+ sg_rq_state_fail_msg(struct sg_fd *sfp, enum sg_rq_state exp_old_st,
+@@ -1168,6 +1186,7 @@ sg_receive_v3(struct sg_fd *sfp, struct sg_request *srp, size_t count,
+ 	hp->sb_len_wr = srp->sense_len;
+ 	hp->info = srp->rq_info;
+ 	hp->resid = srp->in_resid;
++	hp->pack_id = srp->pack_id;
+ 	hp->duration = srp->duration;
+ 	hp->status = rq_result & 0xff;
+ 	hp->masked_status = status_byte(rq_result);
+@@ -1283,6 +1302,57 @@ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	return sg_receive_v4(sfp, srp, p, h4p);
+ }
+ 
++/*
++ * Called when ioctl(SG_IORECEIVE_V3) received. Expects a v3 interface.
++ * Checks if O_NONBLOCK file flag given, if not checks given flags field
++ * to see if SGV4_FLAG_IMMED is set. Either of these implies non blocking.
++ * When non-blocking and there is no request waiting, yields EAGAIN;
++ * otherwise it waits.
++ */
++static int
++sg_ctl_ioreceive_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
++{
++	bool non_block = !!(filp->f_flags & O_NONBLOCK);
++	int res;
++	int pack_id = SG_PACK_ID_WILDCARD;
++	u8 v3_holder[SZ_SG_IO_HDR];
++	struct sg_io_hdr *h3p = (struct sg_io_hdr *)v3_holder;
++	struct sg_device *sdp = sfp->parentdp;
++	struct sg_request *srp;
++
++	res = sg_allow_if_err_recovery(sdp, non_block);
++	if (unlikely(res))
++		return res;
++	/* Get first three 32 bit integers: guard, proto+subproto */
++	if (copy_from_user(h3p, p, SZ_SG_IO_HDR))
++		return -EFAULT;
++	/* for v3: interface_id=='S' (in a 32 bit int) */
++	if (h3p->interface_id != 'S')
++		return -EPERM;
++	if (h3p->flags & SGV4_FLAG_IMMED)
++		non_block = true;	/* set by either this or O_NONBLOCK */
++	SG_LOG(3, sfp, "%s: non_block(+IMMED)=%d\n", __func__, non_block);
++
++	if (test_bit(SG_FFD_FORCE_PACKID, sfp->ffd_bm))
++		pack_id = h3p->pack_id;
++
++	srp = sg_find_srp_by_id(sfp, pack_id);
++	if (!srp) {     /* nothing available so wait on packet or */
++		if (unlikely(SG_IS_DETACHING(sdp)))
++			return -ENODEV;
++		if (non_block)
++			return -EAGAIN;
++		res = wait_event_interruptible
++				(sfp->read_wait,
++				 sg_get_ready_srp(sfp, &srp, pack_id));
++		if (unlikely(SG_IS_DETACHING(sdp)))
++			return -ENODEV;
++		if (unlikely(res))
++			return res;	/* signal --> -ERESTARTSYS */
++	}	/* now srp should be valid */
++	return sg_receive_v3(sfp, srp, SZ_SG_IO_HDR, p);
++}
++
+ static int
+ sg_read_v1v2(void __user *buf, int count, struct sg_fd *sfp,
+ 	     struct sg_request *srp)
+@@ -1875,9 +1945,15 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 	case SG_IOSUBMIT:
+ 		SG_LOG(3, sfp, "%s:    SG_IOSUBMIT\n", __func__);
+ 		return sg_ctl_iosubmit(filp, sfp, p);
++	case SG_IOSUBMIT_V3:
++		SG_LOG(3, sfp, "%s:    SG_IOSUBMIT_V3\n", __func__);
++		return sg_ctl_iosubmit_v3(filp, sfp, p);
+ 	case SG_IORECEIVE:
+ 		SG_LOG(3, sfp, "%s:    SG_IORECEIVE\n", __func__);
+ 		return sg_ctl_ioreceive(filp, sfp, p);
++	case SG_IORECEIVE_V3:
++		SG_LOG(3, sfp, "%s:    SG_IORECEIVE_V3\n", __func__);
++		return sg_ctl_ioreceive_v3(filp, sfp, p);
+ 	case SG_GET_SCSI_ID:
+ 		return sg_ctl_scsi_id(sdev, sfp, p);
+ 	case SG_SET_FORCE_PACK_ID:
 diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
-index 75017cc49850..af14379d5dcb 100644
+index af14379d5dcb..6162a5d5995c 100644
 --- a/include/uapi/scsi/sg.h
 +++ b/include/uapi/scsi/sg.h
-@@ -136,7 +136,10 @@ typedef struct sg_scsi_id {
- 	int scsi_type;	/* TYPE_... defined in scsi/scsi.h */
- 	short h_cmd_per_lun;/* host (adapter) maximum commands per lun */
- 	short d_queue_depth;/* device (or adapter) maximum queue length */
--	int unused[2];
-+	union {
-+		int unused[2];  /* as per version 3 driver */
-+		__u8 scsi_lun[8];  /* full 8 byte SCSI LUN [in v4 driver] */
-+	};
- } sg_scsi_id_t;
+@@ -357,6 +357,12 @@ struct sg_header {
+ /* Gives some v4 identifying info to driver, receives associated response */
+ #define SG_IORECEIVE _IOWR(SG_IOCTL_MAGIC_NUM, 0x42, struct sg_io_v4)
  
- /* For backward compatibility v4 driver yields at most SG_MAX_QUEUE of these */
++/* Submits a v3 interface object to driver */
++#define SG_IOSUBMIT_V3 _IOWR(SG_IOCTL_MAGIC_NUM, 0x45, struct sg_io_hdr)
++
++/* Gives some v3 identifying info to driver, receives associated response */
++#define SG_IORECEIVE_V3 _IOWR(SG_IOCTL_MAGIC_NUM, 0x46, struct sg_io_hdr)
++
+ /* command queuing is always on when the v3 or v4 interface is used */
+ #define SG_DEF_COMMAND_Q 0
+ 
 -- 
 2.25.1
 
