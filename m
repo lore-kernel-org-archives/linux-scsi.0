@@ -7,31 +7,32 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C8D5C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:31:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 391C5C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:31:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0C6F64E5C
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:31:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C371164E40
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:31:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231924AbhBVNav (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Feb 2021 08:30:51 -0500
-Received: from mx2.suse.de ([195.135.220.15]:47796 "EHLO mx2.suse.de"
+        id S231936AbhBVNbB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Feb 2021 08:31:01 -0500
+Received: from mx2.suse.de ([195.135.220.15]:47844 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231260AbhBVN2R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Feb 2021 08:28:17 -0500
+        id S231270AbhBVN2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Feb 2021 08:28:18 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 4CD8FB01D;
+        by mx2.suse.de (Postfix) with ESMTP id 2C484B00D;
         Mon, 22 Feb 2021 13:24:16 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
         Christoph Hellwig <hch@lst.de>,
         John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 23/31] pm8001: kill 'dev' argument from pm8001_exec_internal_task_abort()
-Date:   Mon, 22 Feb 2021 14:23:57 +0100
-Message-Id: <20210222132405.91369-24-hare@suse.de>
+        Hannes Reinecke <hare@suse.de>,
+        Don Brace <don.brace@microchip.com>
+Subject: [PATCH 14/31] hpsa: use reserved commands
+Date:   Mon, 22 Feb 2021 14:23:48 +0100
+Message-Id: <20210222132405.91369-15-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210222132405.91369-1-hare@suse.de>
 References: <20210222132405.91369-1-hare@suse.de>
@@ -41,118 +42,511 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-'dev' is always pm8001_dev->sas_device, so we can kill it.
+Enable the use of reserved commands, and drop the hand-crafted
+command allocation.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Tested-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/pm8001/pm8001_sas.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+ drivers/scsi/hpsa.c | 204 +++++++++++++++++---------------------------
+ drivers/scsi/hpsa.h |   3 +-
+ 2 files changed, 78 insertions(+), 129 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 6e1c1bbbfdd9..01e91347eb41 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -791,9 +791,10 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 1603982dd5e8..506cd9faa7b9 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -245,10 +245,6 @@ static struct hpsa_scsi_dev_t
+ 	*hpsa_find_device_by_sas_rphy(struct ctlr_info *h,
+ 		struct sas_rphy *rphy);
  
- static int
- pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
--	struct pm8001_device *pm8001_dev, struct domain_device *dev, u32 flag,
-+	struct pm8001_device *pm8001_dev, u32 flag,
- 	u32 task_tag)
+-#define SCSI_CMD_BUSY ((struct scsi_cmnd *)&hpsa_cmd_busy)
+-static const struct scsi_cmnd hpsa_cmd_busy;
+-#define SCSI_CMD_IDLE ((struct scsi_cmnd *)&hpsa_cmd_idle)
+-static const struct scsi_cmnd hpsa_cmd_idle;
+ static int number_of_controllers;
+ 
+ static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
+@@ -266,7 +262,7 @@ static int hpsa_compat_ioctl(struct scsi_device *dev, unsigned int cmd,
+ #endif
+ 
+ static void cmd_free(struct ctlr_info *h, struct CommandList *c);
+-static struct CommandList *cmd_alloc(struct ctlr_info *h);
++static struct CommandList *cmd_alloc(struct ctlr_info *h, u8 direction);
+ static void cmd_tagged_free(struct ctlr_info *h, struct CommandList *c);
+ static struct CommandList *cmd_tagged_alloc(struct ctlr_info *h,
+ 					    struct scsi_cmnd *scmd);
+@@ -347,7 +343,7 @@ static inline struct ctlr_info *shost_to_hba(struct Scsi_Host *sh)
+ 
+ static inline bool hpsa_is_cmd_idle(struct CommandList *c)
  {
-+	struct domain_device *dev = pm8001_dev->sas_device;
- 	int res, retry;
- 	u32 ccb_tag;
- 	struct pm8001_ccb_info *ccb;
-@@ -879,8 +880,8 @@ static void pm8001_dev_gone_notify(struct domain_device *dev)
- 			   pm8001_dev->device_id, pm8001_dev->dev_type);
- 		if (atomic_read(&pm8001_dev->running_req)) {
- 			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
--			pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
--				dev, 1, 0);
-+			pm8001_exec_internal_task_abort(pm8001_ha,
-+				pm8001_dev, 1, 0);
- 			while (atomic_read(&pm8001_dev->running_req))
- 				msleep(20);
- 			spin_lock_irqsave(&pm8001_ha->lock, flags);
-@@ -1003,8 +1004,8 @@ int pm8001_I_T_nexus_reset(struct domain_device *dev)
- 			goto out;
- 		}
- 		msleep(2000);
--		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
--			dev, 1, 0);
-+		rc = pm8001_exec_internal_task_abort(pm8001_ha,
-+			pm8001_dev, 1, 0);
- 		if (rc) {
- 			pm8001_dbg(pm8001_ha, EH, "task abort failed %x\n"
- 				   "with rc %d\n", pm8001_dev->device_id, rc);
-@@ -1049,8 +1050,8 @@ int pm8001_I_T_nexus_event_handler(struct domain_device *dev)
- 			goto out;
- 		}
- 		/* send internal ssp/sata/smp abort command to FW */
--		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
--							dev, 1, 0);
-+		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
-+						     1, 0);
- 		msleep(100);
+-	return c->scsi_cmd == SCSI_CMD_IDLE;
++	return c->scsi_cmd == NULL;
+ }
  
- 		/* deregister the target device */
-@@ -1065,8 +1066,8 @@ int pm8001_I_T_nexus_event_handler(struct domain_device *dev)
- 		wait_for_completion(&completion_setstate);
- 	} else {
- 		/* send internal ssp/sata/smp abort command to FW */
--		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
--							dev, 1, 0);
-+		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
-+						     1, 0);
- 		msleep(100);
+ /* extract sense key, asc, and ascq from sense data.  -1 means invalid. */
+@@ -2459,7 +2455,12 @@ static void hpsa_cmd_resolve_events(struct ctlr_info *h,
+ 	 * this command has completed.  Then, check to see if the handler is
+ 	 * waiting for this command, and, if so, wake it.
+ 	 */
+-	c->scsi_cmd = SCSI_CMD_IDLE;
++	if (c->scsi_cmd && c->cmd_type == CMD_IOCTL_PEND) {
++		struct scsi_cmnd *scmd = c->scsi_cmd;
++
++		scsi_put_internal_cmd(scmd);
++	}
++	c->scsi_cmd = NULL;
+ 	mb();	/* Declare command idle before checking for pending events. */
+ 	if (dev) {
+ 		atomic_dec(&dev->commands_outstanding);
+@@ -3001,7 +3002,7 @@ static int hpsa_do_receive_diagnostic(struct ctlr_info *h, u8 *scsi3addr,
+ 	struct CommandList *c;
+ 	struct ErrorInfo *ei;
  
- 		/* deregister the target device */
-@@ -1094,8 +1095,8 @@ int pm8001_lu_reset(struct domain_device *dev, u8 *lun)
- 	DECLARE_COMPLETION_ONSTACK(completion_setstate);
- 	if (dev_is_sata(dev)) {
- 		struct sas_phy *phy = sas_get_local_phy(dev);
--		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
--			dev, 1, 0);
-+		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
-+			1, 0);
- 		rc = sas_phy_reset(phy, 1);
- 		sas_put_local_phy(phy);
- 		pm8001_dev->setds_completion = &completion_setstate;
-@@ -1210,7 +1211,7 @@ int pm8001_abort_task(struct sas_task *task)
- 						   &tmf_task);
- 		if (rc == TMF_RESP_FUNC_SUCC)
- 			pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
--				pm8001_dev->sas_device, 0, tag);
-+				0, tag);
- 	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
- 		task->task_proto & SAS_PROTOCOL_STP) {
- 		if (pm8001_ha->chip_id == chip_8006) {
-@@ -1279,7 +1280,7 @@ int pm8001_abort_task(struct sas_task *task)
- 			 * going to free the task.
- 			 */
- 			ret = pm8001_exec_internal_task_abort(pm8001_ha,
--				pm8001_dev, pm8001_dev->sas_device, 1, tag);
-+				pm8001_dev, 1, tag);
- 			if (ret)
- 				goto out;
- 			ret = wait_for_completion_timeout(
-@@ -1296,13 +1297,13 @@ int pm8001_abort_task(struct sas_task *task)
- 			wait_for_completion(&completion);
- 		} else {
- 			rc = pm8001_exec_internal_task_abort(pm8001_ha,
--				pm8001_dev, pm8001_dev->sas_device, 0, tag);
-+				pm8001_dev, 0, tag);
- 		}
- 		rc = TMF_RESP_FUNC_COMPLETE;
- 	} else if (task->task_proto & SAS_PROTOCOL_SMP) {
- 		/* SMP */
- 		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
--			pm8001_dev->sas_device, 0, tag);
-+			0, tag);
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_READ);
+ 	if (fill_cmd(c, RECEIVE_DIAGNOSTIC, h, buf, bufsize,
+ 			page, scsi3addr, TYPE_CMD)) {
+ 		rc = -1;
+@@ -3053,7 +3054,7 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	struct CommandList *c;
+ 	struct ErrorInfo *ei;
  
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_READ);
+ 
+ 	if (fill_cmd(c, HPSA_INQUIRY, h, buf, bufsize,
+ 			page, scsi3addr, TYPE_CMD)) {
+@@ -3081,7 +3082,7 @@ static int hpsa_send_reset(struct ctlr_info *h, struct hpsa_scsi_dev_t *dev,
+ 	struct CommandList *c;
+ 	struct ErrorInfo *ei;
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_NONE);
+ 	c->device = dev;
+ 
+ 	/* fill_cmd can't fail here, no data buffer to map. */
+@@ -3307,7 +3308,7 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
+ 	struct CommandList *c;
+ 	struct ErrorInfo *ei;
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_READ);
+ 
+ 	if (fill_cmd(c, HPSA_GET_RAID_MAP, h, &this_device->raid_map,
+ 			sizeof(this_device->raid_map), 0,
+@@ -3349,7 +3350,7 @@ static int hpsa_bmic_sense_subsystem_information(struct ctlr_info *h,
+ 	struct CommandList *c;
+ 	struct ErrorInfo *ei;
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_READ);
+ 
+ 	rc = fill_cmd(c, BMIC_SENSE_SUBSYSTEM_INFORMATION, h, buf, bufsize,
+ 		0, RAID_CTLR_LUNID, TYPE_CMD);
+@@ -3380,7 +3381,7 @@ static int hpsa_bmic_id_controller(struct ctlr_info *h,
+ 	struct CommandList *c;
+ 	struct ErrorInfo *ei;
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_READ);
+ 
+ 	rc = fill_cmd(c, BMIC_IDENTIFY_CONTROLLER, h, buf, bufsize,
+ 		0, RAID_CTLR_LUNID, TYPE_CMD);
+@@ -3409,7 +3410,7 @@ static int hpsa_bmic_id_physical_device(struct ctlr_info *h,
+ 	struct CommandList *c;
+ 	struct ErrorInfo *ei;
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_READ);
+ 	rc = fill_cmd(c, BMIC_IDENTIFY_PHYSICAL_DEVICE, h, buf, bufsize,
+ 		0, RAID_CTLR_LUNID, TYPE_CMD);
+ 	if (rc)
+@@ -3486,7 +3487,7 @@ static void hpsa_get_enclosure_info(struct ctlr_info *h,
+ 		goto out;
  	}
- out:
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_READ);
+ 
+ 	rc = fill_cmd(c, BMIC_SENSE_STORAGE_BOX_PARAMS, h, bssbp,
+ 			sizeof(*bssbp), 0, RAID_CTLR_LUNID, TYPE_CMD);
+@@ -3742,7 +3743,7 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
+ 	unsigned char scsi3addr[8];
+ 	struct ErrorInfo *ei;
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_READ);
+ 
+ 	/* address the controller */
+ 	memset(scsi3addr, 0, sizeof(scsi3addr));
+@@ -3883,7 +3884,7 @@ static unsigned char hpsa_volume_offline(struct ctlr_info *h,
+ #define ASCQ_LUN_NOT_READY_FORMAT_IN_PROGRESS 0x04
+ #define ASCQ_LUN_NOT_READY_INITIALIZING_CMD_REQ 0x02
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_NONE);
+ 
+ 	(void) fill_cmd(c, TEST_UNIT_READY, h, NULL, 0, 0, scsi3addr, TYPE_CMD);
+ 	rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE,
+@@ -5539,7 +5540,6 @@ static void hpsa_cmd_init(struct ctlr_info *h, int index,
+ 	c->ErrDesc.Addr = cpu_to_le64((u64) err_dma_handle);
+ 	c->ErrDesc.Len = cpu_to_le32((u32) sizeof(*c->err_info));
+ 	c->h = h;
+-	c->scsi_cmd = SCSI_CMD_IDLE;
+ }
+ 
+ static void hpsa_preinitialize_commands(struct ctlr_info *h)
+@@ -5834,12 +5834,12 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
+ 
+ 	sh->io_port = 0;
+ 	sh->n_io_port = 0;
+-	sh->this_id = -1;
+ 	sh->max_channel = 3;
+ 	sh->max_cmd_len = MAX_COMMAND_SIZE;
+ 	sh->max_lun = HPSA_MAX_LUN;
+ 	sh->max_id = HPSA_MAX_LUN;
+ 	sh->can_queue = h->nr_cmds - HPSA_NRESERVED_CMDS;
++	sh->nr_reserved_cmds = HPSA_NRESERVED_CMDS;
+ 	sh->cmd_per_lun = sh->can_queue;
+ 	sh->sg_tablesize = h->maxsgentries;
+ 	sh->transportt = hpsa_sas_transport_template;
+@@ -5876,30 +5876,18 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
+ 		dev_err(&h->pdev->dev, "scsi_add_host failed\n");
+ 		return rv;
+ 	}
+-
++	h->raid_ctrl_sdev = scsi_get_host_dev(h->scsi_host);
++	if (!h->raid_ctrl_sdev) {
++		dev_err(&h->pdev->dev,
++			"allocate raid controller device failed\n");
++		return -ENOMEM;
++	}
+ 	hpsa_hba_inquiry(h);
+ 
+ 	scsi_scan_host(h->scsi_host);
+ 	return 0;
+ }
+ 
+-/*
+- * The block layer has already gone to the trouble of picking out a unique,
+- * small-integer tag for this request.  We use an offset from that value as
+- * an index to select our command block.  (The offset allows us to reserve the
+- * low-numbered entries for our own uses.)
+- */
+-static int hpsa_get_cmd_index(struct scsi_cmnd *scmd)
+-{
+-	int idx = scmd->request->tag;
+-
+-	if (idx < 0)
+-		return idx;
+-
+-	/* Offset to leave space for internal cmds. */
+-	return idx += HPSA_NRESERVED_CMDS;
+-}
+-
+ /*
+  * Send a TEST_UNIT_READY command to the specified LUN using the specified
+  * reply queue; returns zero if the unit is ready, and non-zero otherwise.
+@@ -5983,7 +5971,7 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+ 	int rc = 0;
+ 	struct CommandList *c;
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_NONE);
+ 
+ 	/*
+ 	 * If no specific reply queue was requested, then send the TUR
+@@ -6056,7 +6044,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 	if (lockup_detected(h)) {
+ 		snprintf(msg, sizeof(msg),
+ 			 "cmd %d RESET FAILED, lockup detected",
+-			 hpsa_get_cmd_index(scsicmd));
++			 scsicmd->request->tag);
+ 		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+ 		rc = FAILED;
+ 		goto return_reset_status;
+@@ -6066,7 +6054,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 	if (detect_controller_lockup(h)) {
+ 		snprintf(msg, sizeof(msg),
+ 			 "cmd %d RESET FAILED, new lockup detected",
+-			 hpsa_get_cmd_index(scsicmd));
++			 scsicmd->request->tag);
+ 		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+ 		rc = FAILED;
+ 		goto return_reset_status;
+@@ -6128,12 +6116,12 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+ static struct CommandList *cmd_tagged_alloc(struct ctlr_info *h,
+ 					    struct scsi_cmnd *scmd)
+ {
+-	int idx = hpsa_get_cmd_index(scmd);
++	int idx = scmd->request->tag;
+ 	struct CommandList *c = h->cmd_pool + idx;
+ 
+-	if (idx < HPSA_NRESERVED_CMDS || idx >= h->nr_cmds) {
++	if (idx < 0 || idx >= h->nr_cmds) {
+ 		dev_err(&h->pdev->dev, "Bad block tag: %d not in [%d..%d]\n",
+-			idx, HPSA_NRESERVED_CMDS, h->nr_cmds - 1);
++			idx, 0, h->nr_cmds - 1);
+ 		/* The index value comes from the block layer, so if it's out of
+ 		 * bounds, it's probably not our bug.
+ 		 */
+@@ -6170,80 +6158,52 @@ static void cmd_tagged_free(struct ctlr_info *h, struct CommandList *c)
+ 	 * else to free it, because it is accessed by index.
+ 	 */
+ 	(void)atomic_dec(&c->refcount);
++	c->scsi_cmd = NULL;
+ }
+ 
+-/*
+- * For operations that cannot sleep, a command block is allocated at init,
+- * and managed by cmd_alloc() and cmd_free() using a simple bitmap to track
+- * which ones are free or in use.  Lock must be held when calling this.
+- * cmd_free() is the complement.
+- * This function never gives up and returns NULL.  If it hangs,
+- * another thread must call cmd_free() to free some tags.
+- */
+-
+-static struct CommandList *cmd_alloc(struct ctlr_info *h)
++static struct CommandList *cmd_alloc(struct ctlr_info *h, u8 direction)
+ {
++	struct scsi_cmnd *scmd;
+ 	struct CommandList *c;
+-	int refcount, i;
+-	int offset = 0;
+-
+-	/*
+-	 * There is some *extremely* small but non-zero chance that that
+-	 * multiple threads could get in here, and one thread could
+-	 * be scanning through the list of bits looking for a free
+-	 * one, but the free ones are always behind him, and other
+-	 * threads sneak in behind him and eat them before he can
+-	 * get to them, so that while there is always a free one, a
+-	 * very unlucky thread might be starved anyway, never able to
+-	 * beat the other threads.  In reality, this happens so
+-	 * infrequently as to be indistinguishable from never.
+-	 *
+-	 * Note that we start allocating commands before the SCSI host structure
+-	 * is initialized.  Since the search starts at bit zero, this
+-	 * all works, since we have at least one command structure available;
+-	 * however, it means that the structures with the low indexes have to be
+-	 * reserved for driver-initiated requests, while requests from the block
+-	 * layer will use the higher indexes.
+-	 */
+-
+-	for (;;) {
+-		i = find_next_zero_bit(h->cmd_pool_bits,
+-					HPSA_NRESERVED_CMDS,
+-					offset);
+-		if (unlikely(i >= HPSA_NRESERVED_CMDS)) {
+-			offset = 0;
+-			continue;
+-		}
+-		c = h->cmd_pool + i;
+-		refcount = atomic_inc_return(&c->refcount);
+-		if (unlikely(refcount > 1)) {
+-			cmd_free(h, c); /* already in use */
+-			offset = (i + 1) % HPSA_NRESERVED_CMDS;
+-			continue;
+-		}
+-		set_bit(i & (BITS_PER_LONG - 1),
+-			h->cmd_pool_bits + (i / BITS_PER_LONG));
+-		break; /* it's ours now. */
++	int idx;
++
++	scmd = scsi_get_internal_cmd(h->raid_ctrl_sdev,
++				     (direction & XFER_WRITE) ?
++				     DMA_TO_DEVICE : DMA_FROM_DEVICE,
++				     REQ_NOWAIT);
++	if (!scmd) {
++		dev_warn(&h->pdev->dev, "failed to allocate reserved cmd\n");
++		return NULL;
++	}
++	idx = scmd->request->tag;
++	c = cmd_tagged_alloc(h, scmd);
++	if (!c) {
++		dev_warn(&h->pdev->dev, "failed to allocate reserved cmd %u\n",
++			 idx);
++		scsi_put_internal_cmd(scmd);
++		return NULL;
+ 	}
+-	hpsa_cmd_partial_init(h, i, c);
++	hpsa_cmd_partial_init(h, idx, c);
++	c->scsi_cmd = scmd;
+ 	c->device = NULL;
++	c->cmd_type = CMD_IOCTL_PEND;
++	dev_dbg(&h->pdev->dev, "using reserved cmd %u\n", idx);
+ 	return c;
+ }
+ 
+-/*
+- * This is the complementary operation to cmd_alloc().  Note, however, in some
+- * corner cases it may also be used to free blocks allocated by
+- * cmd_tagged_alloc() in which case the ref-count decrement does the trick and
+- * the clear-bit is harmless.
+- */
+ static void cmd_free(struct ctlr_info *h, struct CommandList *c)
+ {
+-	if (atomic_dec_and_test(&c->refcount)) {
+-		int i;
++	struct scsi_cmnd *scmd = c->scsi_cmd;
+ 
+-		i = c - h->cmd_pool;
+-		clear_bit(i & (BITS_PER_LONG - 1),
+-			  h->cmd_pool_bits + (i / BITS_PER_LONG));
++	if (!scmd) {
++		dev_warn(&h->pdev->dev, "freeing idle cmd\n");
++		return;
++	}
++	cmd_tagged_free(h, c);
++	if (c->cmd_type == CMD_IOCTL_PEND) {
++		dev_dbg(&h->pdev->dev, "returning reserved cmd %u\n",
++			scmd->request->tag);
++		scsi_put_internal_cmd(scmd);
+ 	}
+ }
+ 
+@@ -6410,11 +6370,8 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h,
+ 			memset(buff, 0, iocommand->buf_size);
+ 		}
+ 	}
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, iocommand->Request.Type.Direction);
+ 
+-	/* Fill in the command type */
+-	c->cmd_type = CMD_IOCTL_PEND;
+-	c->scsi_cmd = SCSI_CMD_BUSY;
+ 	/* Fill in Command Header */
+ 	c->Header.ReplyQueue = 0; /* unused in simple mode */
+ 	if (iocommand->buf_size > 0) {	/* buffer to fill */
+@@ -6527,10 +6484,8 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h,
+ 		data_ptr += sz;
+ 		sg_used++;
+ 	}
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, ioc->Request.Type.Direction);
+ 
+-	c->cmd_type = CMD_IOCTL_PEND;
+-	c->scsi_cmd = SCSI_CMD_BUSY;
+ 	c->Header.ReplyQueue = 0;
+ 	c->Header.SGList = (u8) sg_used;
+ 	c->Header.SGTotal = cpu_to_le16(sg_used);
+@@ -6661,7 +6616,7 @@ static void hpsa_send_host_reset(struct ctlr_info *h, u8 reset_type)
+ {
+ 	struct CommandList *c;
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_NONE);
+ 
+ 	/* fill_cmd can't fail here, no data buffer to map */
+ 	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
+@@ -6682,8 +6637,6 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+ {
+ 	enum dma_data_direction dir = DMA_NONE;
+ 
+-	c->cmd_type = CMD_IOCTL_PEND;
+-	c->scsi_cmd = SCSI_CMD_BUSY;
+ 	c->Header.ReplyQueue = 0;
+ 	if (buff != NULL && size > 0) {
+ 		c->Header.SGList = 1;
+@@ -7995,8 +7948,6 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev, u32 board_id)
+ 
+ static void hpsa_free_cmd_pool(struct ctlr_info *h)
+ {
+-	kfree(h->cmd_pool_bits);
+-	h->cmd_pool_bits = NULL;
+ 	if (h->cmd_pool) {
+ 		dma_free_coherent(&h->pdev->dev,
+ 				h->nr_cmds * sizeof(struct CommandList),
+@@ -8017,17 +7968,13 @@ static void hpsa_free_cmd_pool(struct ctlr_info *h)
+ 
+ static int hpsa_alloc_cmd_pool(struct ctlr_info *h)
+ {
+-	h->cmd_pool_bits = kcalloc(DIV_ROUND_UP(h->nr_cmds, BITS_PER_LONG),
+-				   sizeof(unsigned long),
+-				   GFP_KERNEL);
+ 	h->cmd_pool = dma_alloc_coherent(&h->pdev->dev,
+ 		    h->nr_cmds * sizeof(*h->cmd_pool),
+ 		    &h->cmd_pool_dhandle, GFP_KERNEL);
+ 	h->errinfo_pool = dma_alloc_coherent(&h->pdev->dev,
+ 		    h->nr_cmds * sizeof(*h->errinfo_pool),
+ 		    &h->errinfo_pool_dhandle, GFP_KERNEL);
+-	if ((h->cmd_pool_bits == NULL)
+-	    || (h->cmd_pool == NULL)
++	if ((h->cmd_pool == NULL)
+ 	    || (h->errinfo_pool == NULL)) {
+ 		dev_err(&h->pdev->dev, "out of memory in %s", __func__);
+ 		goto clean_up;
+@@ -8908,7 +8855,7 @@ static void hpsa_flush_cache(struct ctlr_info *h)
+ 	if (!flush_buf)
+ 		return;
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_NONE);
+ 
+ 	if (fill_cmd(c, HPSA_CACHE_FLUSH, h, flush_buf, 4, 0,
+ 		RAID_CTLR_LUNID, TYPE_CMD)) {
+@@ -8943,7 +8890,7 @@ static void hpsa_disable_rld_caching(struct ctlr_info *h)
+ 	if (!options)
+ 		return;
+ 
+-	c = cmd_alloc(h);
++	c = cmd_alloc(h, XFER_READ);
+ 
+ 	/* first, get the current diag options settings */
+ 	if (fill_cmd(c, BMIC_SENSE_DIAG_OPTIONS, h, options, 4, 0,
+@@ -8993,11 +8940,10 @@ static void __hpsa_shutdown(struct pci_dev *pdev)
+ 	struct ctlr_info *h;
+ 
+ 	h = pci_get_drvdata(pdev);
+-	/* Turn board interrupts off  and send the flush cache command
+-	 * sendcmd will turn off interrupt, and send the flush...
+-	 * To write all data in the battery backed cache to disks
++	/*
++	 * Turn board interrupts off;
++	 * flush cache command has already been sent.
+ 	 */
+-	hpsa_flush_cache(h);
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
+ 	hpsa_free_irqs(h);			/* init_one 4 */
+ 	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
+@@ -9005,6 +8951,7 @@ static void __hpsa_shutdown(struct pci_dev *pdev)
+ 
+ static void hpsa_shutdown(struct pci_dev *pdev)
+ {
++	hpsa_flush_cache(pci_get_drvdata(pdev));
+ 	__hpsa_shutdown(pdev);
+ 	pci_disable_device(pdev);
+ }
+@@ -9049,6 +8996,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 	 * when multipath is enabled. There can be SYNCHRONIZE CACHE
+ 	 * operations which cannot complete and will hang the system.
+ 	 */
++	hpsa_flush_cache(h);
+ 	if (h->scsi_host)
+ 		scsi_remove_host(h->scsi_host);		/* init_one 8 */
+ 	/* includes hpsa_free_irqs - init_one 4 */
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 99b0750850b2..93e9fd9b931c 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -206,7 +206,6 @@ struct ctlr_info {
+ 	dma_addr_t		ioaccel2_cmd_pool_dhandle;
+ 	struct ErrorInfo 	*errinfo_pool;
+ 	dma_addr_t		errinfo_pool_dhandle;
+-	unsigned long  		*cmd_pool_bits;
+ 	int			scan_finished;
+ 	u8			scan_waiting : 1;
+ 	spinlock_t		scan_lock;
+@@ -216,6 +215,8 @@ struct ctlr_info {
+ 	spinlock_t devlock; /* to protect hba[ctlr]->dev[];  */
+ 	int ndevices; /* number of used elements in .dev[] array. */
+ 	struct hpsa_scsi_dev_t *dev[HPSA_MAX_DEVICES];
++	struct scsi_device *raid_ctrl_sdev;
++
+ 	/*
+ 	 * Performant mode tables.
+ 	 */
 -- 
 2.29.2
 
