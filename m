@@ -2,101 +2,65 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E582C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 02:11:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 418C1C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 06:47:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B075361494
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 02:11:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CBAA464EB4
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 06:47:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231586AbhBVCLh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 21 Feb 2021 21:11:37 -0500
-Received: from mail-pg1-f176.google.com ([209.85.215.176]:45787 "EHLO
-        mail-pg1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230454AbhBVCLg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Feb 2021 21:11:36 -0500
-Received: by mail-pg1-f176.google.com with SMTP id p21so9293576pgl.12;
-        Sun, 21 Feb 2021 18:11:14 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=kGQE4+8BxKuxGr67RgBvZgkchBVMotq6ozHayczju6s=;
-        b=A7AjDFopjZRqbCfYCinnnFBgoSEr0yrS+W5h6Jymie0NhwpycsIl8jaPiMNIrEe23k
-         xqPRuD7fp3XcW/gVHl74ERtsXATgdKyvq4Ie4uE0q9/26X1V/Rqgbpj7KjBkWpBUnnBW
-         BbiQ7QaDkSTRoAvXXtXWQVp0BxoO2m3+ki3gleWBiJC4wnofNhTKeAy/KwPcwYkdcL6g
-         R4ot71FMkvKdfayIWUqnAUMm14XugplmB0Teyfwc0juqJ1Ol5azEbyVsWzfZvcZ6Y0ZZ
-         joUWzurMstWB2OznLxLu3m2yBfhWTU1PPvS6tr7dk2xVTyCNyIym4jiSnfPh0qNxgQK0
-         olmA==
-X-Gm-Message-State: AOAM532wBUVRQAsLxgunpjD7RmNCzdTjDD8sVyV0H5uTZjJx8TwQbrRs
-        lgZfV19q5LD8NPDFgjEgey9LoghTGpk=
-X-Google-Smtp-Source: ABdhPJyMUcvdr0UJKRq+kXS8Hi92kmSr7KXTBjd7HoLhZ2uOMwQEuBsh/OYm5HcafhnSlU93MxUStQ==
-X-Received: by 2002:a65:4345:: with SMTP id k5mr14515168pgq.436.1613959849264;
-        Sun, 21 Feb 2021 18:10:49 -0800 (PST)
-Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:eb6d:74c2:f5f3:564c])
-        by smtp.gmail.com with ESMTPSA id f19sm17509640pgl.49.2021.02.21.18.10.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 21 Feb 2021 18:10:48 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        chriscjsus@yahoo.com, Christoph Hellwig <hch@lst.de>,
-        Jens Axboe <axboe@kernel.dk>,
-        Alan Stern <stern@rowland.harvard.edu>, stable@vger.kernel.org
-Subject: [PATCH v2] scsi/sd: Fix Opal support
-Date:   Sun, 21 Feb 2021 18:10:42 -0800
-Message-Id: <20210222021042.3534-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.30.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S229953AbhBVGr6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Feb 2021 01:47:58 -0500
+Received: from out30-132.freemail.mail.aliyun.com ([115.124.30.132]:58705 "EHLO
+        out30-132.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229913AbhBVGr4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Feb 2021 01:47:56 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R741e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=alimailimapcm10staff010182156082;MF=yang.lee@linux.alibaba.com;NM=1;PH=DS;RN=10;SR=0;TI=SMTPD_---0UPBjxZ._1613976431;
+Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:yang.lee@linux.alibaba.com fp:SMTPD_---0UPBjxZ._1613976431)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Mon, 22 Feb 2021 14:47:11 +0800
+From:   Yang Li <yang.lee@linux.alibaba.com>
+To:     martin.petersen@oracle.com
+Cc:     mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
+        jejb@linux.ibm.com, tyreld@linux.ibm.com,
+        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-kernel@vger.kernel.org, Yang Li <yang.lee@linux.alibaba.com>
+Subject: [PATCH] scsi: ibmvfc: Switch to using the new API kobj_to_dev()
+Date:   Mon, 22 Feb 2021 14:47:09 +0800
+Message-Id: <1613976429-89853-1-git-send-email-yang.lee@linux.alibaba.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The SCSI core has been modified recently such that it only processes PM
-requests if rpm_status != RPM_ACTIVE. Since some Opal requests are
-submitted while rpm_status != RPM_ACTIVE, set flag RQF_PM for Opal
-requests.
+fixed the following coccicheck:
+./drivers/scsi/ibmvscsi/ibmvfc.c:3161:60-61: WARNING opportunity for
+kobj_to_dev()
 
-See also https://bugzilla.kernel.org/show_bug.cgi?id=211227.
-
-Fixes: d80210f25ff0 ("sd: add support for TCG OPAL self encrypting disks")
-Fixes: 271822bbf9fe ("scsi: core: Only process PM requests if rpm_status != RPM_ACTIVE")
-Reported-by: chriscjsus@yahoo.com
-Tested-by: chriscjsus@yahoo.com
-Cc: chriscjsus@yahoo.com
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Cc: stable@vger.kernel.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
 ---
-Changes compared to v1:
-- Addressed Christoph's review comments.
-- Added Cc: stable.
----
- drivers/scsi/sd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a3d2d4bc4a3d..6a3a163b0706 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -707,9 +707,9 @@ static int sd_sec_submit(void *data, u16 spsp, u8 secp, void *buffer,
- 	put_unaligned_be16(spsp, &cdb[2]);
- 	put_unaligned_be32(len, &cdb[6]);
- 
--	ret = scsi_execute_req(sdev, cdb,
--			send ? DMA_TO_DEVICE : DMA_FROM_DEVICE,
--			buffer, len, NULL, SD_TIMEOUT, sdkp->max_retries, NULL);
-+	ret = scsi_execute(sdev, cdb, send ? DMA_TO_DEVICE : DMA_FROM_DEVICE,
-+		buffer, len, NULL, NULL, SD_TIMEOUT, sdkp->max_retries, 0,
-+		RQF_PM, NULL);
- 	return ret <= 0 ? ret : -EIO;
- }
- #endif /* CONFIG_BLK_SED_OPAL */
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 65f168c..e947149 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -3158,7 +3158,7 @@ static ssize_t ibmvfc_read_trace(struct file *filp, struct kobject *kobj,
+ 				 struct bin_attribute *bin_attr,
+ 				 char *buf, loff_t off, size_t count)
+ {
+-	struct device *dev = container_of(kobj, struct device, kobj);
++	struct device *dev = kobj_to_dev(kobj);
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct ibmvfc_host *vhost = shost_priv(shost);
+ 	unsigned long flags = 0;
+-- 
+1.8.3.1
+
