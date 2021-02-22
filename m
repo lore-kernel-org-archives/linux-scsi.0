@@ -2,150 +2,172 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F3B1C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 15:41:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4665C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 16:01:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F89C64E74
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 15:41:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54EB164ED6
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 16:01:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230412AbhBVPli (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Feb 2021 10:41:38 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:23826 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231598AbhBVPlZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Feb 2021 10:41:25 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1614008397;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=YVJvqqapXzMgsYgEljuBfWpFB4kMfVqiKtazRQyJIfY=;
-        b=Ei8cVEwChTImIBiHiVb3KtwCxqun+L1XaglSDoE/qIUNQMEybNASXUT6J/wPCR2FjuVZC9
-        AiSpkWftl8Ja9h5o9SPAuqvegjaoc6SGo3Uu8Xv/Li9qkabS4UPkqt2J4C/QtJt26eYPtF
-        YxkHT233r1qOjRSkZd1VqYj09Svn9Vw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-226-8GJtuswfNvuUxwxV0lkJbQ-1; Mon, 22 Feb 2021 10:39:53 -0500
-X-MC-Unique: 8GJtuswfNvuUxwxV0lkJbQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B6000195D560;
-        Mon, 22 Feb 2021 15:39:51 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.40.194.32])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 327195C255;
-        Mon, 22 Feb 2021 15:39:50 +0000 (UTC)
-Subject: Re: [PATCH 00/24] Introducing mpi3mr driver
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        steve.hagan@broadcom.com, peter.rivera@broadcom.com,
-        mpi3mr-linuxdrv.pdl@broadcom.com
-References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
-From:   Tomas Henzl <thenzl@redhat.com>
-Message-ID: <a5a9f0bc-30f9-04f7-9bff-cf2443bd6b05@redhat.com>
-Date:   Mon, 22 Feb 2021 16:39:49 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S230303AbhBVQBT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Feb 2021 11:01:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50276 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230207AbhBVQBO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2021 11:01:14 -0500
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD98DC061574;
+        Mon, 22 Feb 2021 08:00:33 -0800 (PST)
+Received: by mail-ed1-x530.google.com with SMTP id p2so22590386edm.12;
+        Mon, 22 Feb 2021 08:00:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=YGAvnzMESkS+Z4+Pab/L4bQLX/w0TQcH3GRn/tc/Ao8=;
+        b=t6+RmEOe0FcHDkuCBmi1GLuVNYPmR6YSKQpFB7gaqGDpIt+gI81BaiC1rEbKb7eJ7x
+         P84arTt3qW03ijOGcDQBeGh0uLgioBOz4UUkB4ENP3bSIgUmw2QTuWkKFOttZTjlycPo
+         ySQdI4AexC7BbWqmNr3tvSRVFhU9kxndhD5nwtpyDfjkkUL+t0V8LrGXHeReTbMdGkpo
+         cm9ODgV91GVJ4f8dVCQ9gu2yHvl2nDS9cwVALhWn4xnf0yyRFAiYPkp2tUD8DmRQZ1RB
+         2BteB6apH/4nk31r+ALfnyRphPPrg3z/BxEVf7AryNmPApcCaNYS3xZuJ1Yr3DQbZ8mi
+         ALtw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=YGAvnzMESkS+Z4+Pab/L4bQLX/w0TQcH3GRn/tc/Ao8=;
+        b=Qnj7+vTq1jhQZcC5GW2yUQCfkmOYAWY71KSI8Q2YhcsSInuEqz3WlJ+0kENudSg5lu
+         ADHp+t9TeFasTJCMa/d7JwU5LRgYFYe8WiKV+6HT0pN8zLZDwK37/GAyyJRQjIhZkIho
+         GwBJ0xmtt3N6S8mCk0VX2F4wSfZ0RkCJfHsI48xUbWa4N2ASI8p8+ksjqHa0o2cTo0r5
+         m3S4pEBa8enr2x6UMl2fa1hO7Zu0vn9JKkuJaXlghGkRlvEnXrNiHYMaFPw/pQNUbjCm
+         AnMxWbKcWTjPu1Rf2o8Xq1envUgYgI3ZA1bav12DBqfA17l90uVRsPR/ViuPVNh/VZHr
+         16/w==
+X-Gm-Message-State: AOAM533eQnO5dDr8/3515Km1pJeQsKwWmZp1gAOd8dcpiZGDnmuUqiQP
+        lAXdwEwa+NmX6NCK5NbYysSk1XN1nbc=
+X-Google-Smtp-Source: ABdhPJxz/wKuipbNFDoAiObiR8UrkysgBqsDub+EMSZUbWYn40+Og5eya8/Tr+lBWKfgZ2ySb0qY+w==
+X-Received: by 2002:aa7:dac7:: with SMTP id x7mr6672502eds.44.1614009631775;
+        Mon, 22 Feb 2021 08:00:31 -0800 (PST)
+Received: from [192.168.178.40] (ipbcc11466.dynamic.kabel-deutschland.de. [188.193.20.102])
+        by smtp.gmail.com with ESMTPSA id v12sm1792101edx.90.2021.02.22.08.00.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 22 Feb 2021 08:00:31 -0800 (PST)
+Subject: Re: [PATCH 14/20] target: Manual replacement of the deprecated
+ strlcpy() with return values
+To:     Romain Perier <romain.perier@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        kernel-hardening@lists.openwall.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20210222151231.22572-1-romain.perier@gmail.com>
+ <20210222151231.22572-15-romain.perier@gmail.com>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+Message-ID: <c296eb89-32e2-0866-34f1-0bdd00d80f82@gmail.com>
+Date:   Mon, 22 Feb 2021 17:00:30 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20201222101156.98308-1-kashyap.desai@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20210222151231.22572-15-romain.perier@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/22/20 11:11 AM, Kashyap Desai wrote:
-> This patch series covers logical patches of the new device driver for the
-> MPI3MR high performance storage I/O & RAID controllers (Avenger series).
-> The mpi3mr has true multiple h/w queue interfacing like nvme.
+On 22.02.21 16:12, Romain Perier wrote:
+> The strlcpy() reads the entire source buffer first, it is dangerous if
+> the source buffer lenght is unbounded or possibility non NULL-terminated.
+> It can lead to linear read overflows, crashes, etc...
 > 
-> See more info -
-> https://www.spinics.net/lists/linux-scsi/msg147868.html
+> As recommended in the deprecated interfaces [1], it should be replaced
+> by strscpy.
 > 
-> The controllers managed by the mpi3mr driver are capable of reaching a
-> very high performance numbers compared to existing controller due to the
-> new hardware architectures. This Driver is tested with the internal
-> versions of the MPI3MR I/O & RAID controllers.
+> This commit replaces all calls to strlcpy that handle the return values
+> by the corresponding strscpy calls with new handling of the return
+> values (as it is quite different between the two functions).
 > 
-> Patches are logical split mainly for better code review. Full patch set is
-> required for functional stability of this new driver.
+> [1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
 > 
-> You can find the source at - https://github.com/kadesai16/mpi3mr_v1
+> Signed-off-by: Romain Perier <romain.perier@gmail.com>
+> ---
+>   drivers/target/target_core_configfs.c |   33 +++++++++------------------------
+>   1 file changed, 9 insertions(+), 24 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+> index f04352285155..676215cd8847 100644
+> --- a/drivers/target/target_core_configfs.c
+> +++ b/drivers/target/target_core_configfs.c
+> @@ -1325,16 +1325,11 @@ static ssize_t target_wwn_vendor_id_store(struct config_item *item,
+>   	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
+>   	unsigned char buf[INQUIRY_VENDOR_LEN + 2];
+>   	char *stripped = NULL;
+> -	size_t len;
+> +	ssize_t len;
+>   	ssize_t ret;
+>   
+> -	len = strlcpy(buf, page, sizeof(buf));
+> -	if (len < sizeof(buf)) {
+> -		/* Strip any newline added from userspace. */
+> -		stripped = strstrip(buf);
+> -		len = strlen(stripped);
+> -	}
+> -	if (len > INQUIRY_VENDOR_LEN) {
+> +	len = strscpy(buf, page, sizeof(buf));
+> +	if (len == -E2BIG) {
+>   		pr_err("Emulated T10 Vendor Identification exceeds"
+>   			" INQUIRY_VENDOR_LEN: " __stringify(INQUIRY_VENDOR_LEN)
+>   			"\n");
+> @@ -1381,16 +1376,11 @@ static ssize_t target_wwn_product_id_store(struct config_item *item,
+>   	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
+>   	unsigned char buf[INQUIRY_MODEL_LEN + 2];
+>   	char *stripped = NULL;
+> -	size_t len;
+> +	ssize_t len;
+>   	ssize_t ret;
+>   
+> -	len = strlcpy(buf, page, sizeof(buf));
+> -	if (len < sizeof(buf)) {
+> -		/* Strip any newline added from userspace. */
+> -		stripped = strstrip(buf);
+> -		len = strlen(stripped);
+> -	}
+> -	if (len > INQUIRY_MODEL_LEN) {
+> +	len = strscpy(buf, page, sizeof(buf));
+> +	if (len == -E2BIG) {
+>   		pr_err("Emulated T10 Vendor exceeds INQUIRY_MODEL_LEN: "
+>   			 __stringify(INQUIRY_MODEL_LEN)
+>   			"\n");
+> @@ -1437,16 +1427,11 @@ static ssize_t target_wwn_revision_store(struct config_item *item,
+>   	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
+>   	unsigned char buf[INQUIRY_REVISION_LEN + 2];
+>   	char *stripped = NULL;
+> -	size_t len;
+> +	ssize_t len;
+>   	ssize_t ret;
+>   
+> -	len = strlcpy(buf, page, sizeof(buf));
+> -	if (len < sizeof(buf)) {
+> -		/* Strip any newline added from userspace. */
+> -		stripped = strstrip(buf);
+> -		len = strlen(stripped);
+> -	}
+> -	if (len > INQUIRY_REVISION_LEN) {
+> +	len = strscpy(buf, page, sizeof(buf));
+> +	if (len == -E2BIG) {
+>   		pr_err("Emulated T10 Revision exceeds INQUIRY_REVISION_LEN: "
+>   			 __stringify(INQUIRY_REVISION_LEN)
+>   			"\n");
+> 
 
-This was posted months ago, If I may suggest sort out the comments and
-post a V2 of  the set.
-Cheers,
-tomash
-> 
-> 
-> Kashyap Desai (24):
->   mpi3mr: add mpi30 Rev-R headers and Kconfig
->   mpi3mr: base driver code
->   mpi3mr: create operational request and reply queue pair
->   mpi3mr: add support of queue command processing
->   mpi3mr: add support of internal watchdog thread
->   mpi3mr: add support of event handling part-1
->   mpi3mr: add support of event handling pcie devices part-2
->   mpi3mr: add support of event handling part-3
->   mpi3mr: add support for recovering controller
->   mpi3mr: add support of timestamp sync with firmware
->   mpi3mr: print ioc info for debugging
->   mpi3mr: add bios_param shost template hook
->   mpi3mr: implement scsi error handler hooks
->   mpi3mr: add change queue depth support
->   mpi3mr: allow certain commands during pci-remove hook
->   mpi3mr: hardware workaround for UNMAP commands to nvme drives
->   mpi3mr: add support of threaded isr
->   mpi3mr: add complete support of soft reset
->   mpi3mr: print pending host ios for debug
->   mpi3mr: wait for pending IO completions upon detection of VD IO
->     timeout
->   mpi3mr: add support of PM suspend and resume
->   mpi3mr: add support of DSN secure fw check
->   mpi3mr: add eedp dif dix support
->   mpi3mr: add event handling debug prints
-> 
->  drivers/scsi/Kconfig                      |    1 +
->  drivers/scsi/Makefile                     |    1 +
->  drivers/scsi/mpi3mr/Kconfig               |    7 +
->  drivers/scsi/mpi3mr/Makefile              |    4 +
->  drivers/scsi/mpi3mr/mpi/mpi30_api.h       |   23 +
->  drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 2721 ++++++++++++++
->  drivers/scsi/mpi3mr/mpi/mpi30_image.h     |  285 ++
->  drivers/scsi/mpi3mr/mpi/mpi30_init.h      |  216 ++
->  drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       | 1423 +++++++
->  drivers/scsi/mpi3mr/mpi/mpi30_sas.h       |   46 +
->  drivers/scsi/mpi3mr/mpi/mpi30_transport.h |  675 ++++
->  drivers/scsi/mpi3mr/mpi/mpi30_type.h      |   89 +
->  drivers/scsi/mpi3mr/mpi3mr.h              |  906 +++++
->  drivers/scsi/mpi3mr/mpi3mr_debug.h        |   60 +
->  drivers/scsi/mpi3mr/mpi3mr_fw.c           | 3944 ++++++++++++++++++++
->  drivers/scsi/mpi3mr/mpi3mr_os.c           | 4148 +++++++++++++++++++++
->  16 files changed, 14549 insertions(+)
->  create mode 100644 drivers/scsi/mpi3mr/Kconfig
->  create mode 100644 drivers/scsi/mpi3mr/Makefile
->  create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_api.h
->  create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
->  create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_image.h
->  create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_init.h
->  create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
->  create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_sas.h
->  create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_transport.h
->  create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_type.h
->  create mode 100644 drivers/scsi/mpi3mr/mpi3mr.h
->  create mode 100644 drivers/scsi/mpi3mr/mpi3mr_debug.h
->  create mode 100644 drivers/scsi/mpi3mr/mpi3mr_fw.c
->  create mode 100644 drivers/scsi/mpi3mr/mpi3mr_os.c
-> 
+AFAICS, you are not only replacing strlcpy with strscpy, but also remove 
+stripping of possible trailing '\n', and remove the necessary length
+check of the remaining string.
 
+-Bodo
