@@ -7,30 +7,31 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEE87C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:33:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBF8AC43333
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:34:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5FD0164E32
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:33:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 873DA64DD0
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:33:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231262AbhBVNcn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Feb 2021 08:32:43 -0500
-Received: from mx2.suse.de ([195.135.220.15]:48680 "EHLO mx2.suse.de"
+        id S231358AbhBVNcx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Feb 2021 08:32:53 -0500
+Received: from mx2.suse.de ([195.135.220.15]:48670 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231602AbhBVN2n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S231402AbhBVN2n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 22 Feb 2021 08:28:43 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 9261AB113;
+        by mx2.suse.de (Postfix) with ESMTP id 265DAB009;
         Mon, 22 Feb 2021 13:24:16 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
         Christoph Hellwig <hch@lst.de>,
-        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH 28/31] scsi: hisi_sas: Use libsas slow task SCSI command
-Date:   Mon, 22 Feb 2021 14:24:02 +0100
-Message-Id: <20210222132405.91369-29-hare@suse.de>
+        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 22/31] pm8001: kill pm8001_issue_ssp_tmf()
+Date:   Mon, 22 Feb 2021 14:23:56 +0100
+Message-Id: <20210222132405.91369-23-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210222132405.91369-1-hare@suse.de>
 References: <20210222132405.91369-1-hare@suse.de>
@@ -40,94 +41,137 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: John Garry <john.garry@huawei.com>
+Just a wrapper around pm8001_exec_internal_tmf_task(), so call it
+directly and kill the wrapper.
 
-Now that a SCSI command can be allocated for a libsas slow tasks, make the
-task prep code use it.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 17 ++++++++++-------
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  5 +++--
- 2 files changed, 13 insertions(+), 9 deletions(-)
+ drivers/scsi/pm8001/pm8001_sas.c | 42 +++++++++++++-------------------
+ 1 file changed, 17 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 6a69a90a1b82..af653f4393ea 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -179,15 +179,11 @@ static void hisi_sas_slot_index_set(struct hisi_hba *hisi_hba, int slot_idx)
- 	set_bit(slot_idx, bitmap);
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index a98d4496ff8b..6e1c1bbbfdd9 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -697,16 +697,15 @@ static void pm8001_tmf_timedout(struct timer_list *t)
+ /**
+   * pm8001_exec_internal_tmf_task - execute some task management commands.
+   * @dev: the wanted device.
++  * @lun: the logical unit number of the device
+   * @tmf: which task management wanted to be take.
+-  * @para_len: para_len.
+-  * @parameter: ssp task parameter.
+   *
+   * when errors or exception happened, we may want to do something, for example
+   * abort the issued task which result in this execption, it is done by calling
+   * this function, note it is also with the task execute interface.
+   */
+ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
+-	void *parameter, u32 para_len, struct pm8001_tmf_task *tmf)
++	u8 *lun, struct pm8001_tmf_task *tmf)
+ {
+ 	int res, retry;
+ 	struct sas_task *task = NULL;
+@@ -714,6 +713,9 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
+ 	struct pm8001_device *pm8001_dev = dev->lldd_dev;
+ 	DECLARE_COMPLETION_ONSTACK(completion_setstate);
+ 
++	if (!(dev->tproto & SAS_PROTOCOL_SSP))
++		return TMF_RESP_FUNC_ESUPP;
++
+ 	for (retry = 0; retry < 3; retry++) {
+ 		task = sas_alloc_slow_task(GFP_KERNEL);
+ 		if (!task)
+@@ -721,7 +723,7 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
+ 
+ 		task->dev = dev;
+ 		task->task_proto = dev->tproto;
+-		memcpy(&task->ssp_task, parameter, para_len);
++		memcpy(task->ssp_task.LUN, lun, 8);
+ 		task->task_done = pm8001_task_done;
+ 		task->slow_task->timer.function = pm8001_tmf_timedout;
+ 		task->slow_task->timer.expires = jiffies + PM8001_TASK_TIMEOUT*HZ;
+@@ -897,18 +899,6 @@ void pm8001_dev_gone(struct domain_device *dev)
+ 	pm8001_dev_gone_notify(dev);
  }
  
--static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
--				     struct scsi_cmnd *scsi_cmnd)
-+static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba)
- {
- 	int index;
- 	void *bitmap = hisi_hba->slot_index_tags;
- 
--	if (scsi_cmnd)
--		return scsi_cmnd->request->tag;
+-static int pm8001_issue_ssp_tmf(struct domain_device *dev,
+-	u8 *lun, struct pm8001_tmf_task *tmf)
+-{
+-	struct sas_ssp_task ssp_task;
+-	if (!(dev->tproto & SAS_PROTOCOL_SSP))
+-		return TMF_RESP_FUNC_ESUPP;
 -
- 	spin_lock(&hisi_hba->lock);
- 	index = find_next_zero_bit(bitmap, hisi_hba->slot_index_count,
- 				   hisi_hba->last_slot_index + 1);
-@@ -444,6 +440,8 @@ static int hisi_sas_task_prep(struct sas_task *task,
- 		} else {
- 			scmd = task->uldd_task;
- 		}
-+	} else {
-+		scmd = task->slow_task->scmd;
- 	}
- 
- 	if (scmd) {
-@@ -484,8 +482,10 @@ static int hisi_sas_task_prep(struct sas_task *task,
- 
- 	if (hisi_hba->hw->slot_index_alloc)
- 		rc = hisi_hba->hw->slot_index_alloc(hisi_hba, device);
-+	else if (scmd)
-+		rc = scmd->request->tag;
- 	else
--		rc = hisi_sas_slot_index_alloc(hisi_hba, scmd);
-+		rc = hisi_sas_slot_index_alloc(hisi_hba);
- 
- 	if (rc < 0)
- 		goto err_out_dif_dma_unmap;
-@@ -1975,7 +1975,9 @@ hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, int device_id,
- 	port = to_hisi_sas_port(sas_port);
- 
- 	/* simply get a slot and send abort command */
--	rc = hisi_sas_slot_index_alloc(hisi_hba, NULL);
-+	rc = = task->tag;
-+	if (rc < 0)
-+		rc = hisi_sas_slot_index_alloc(hisi_hba);
- 	if (rc < 0)
- 		goto err_out;
- 
-@@ -2683,6 +2685,7 @@ int hisi_sas_probe(struct platform_device *pdev,
+-	memcpy((u8 *)&ssp_task.LUN, lun, 8);
+-	return pm8001_exec_internal_tmf_task(dev, &ssp_task, sizeof(ssp_task),
+-		tmf);
+-}
+-
+ /* retry commands by ha, by task and/or by device */
+ void pm8001_open_reject_retry(
+ 	struct pm8001_hba_info *pm8001_ha,
+@@ -1114,7 +1104,7 @@ int pm8001_lu_reset(struct domain_device *dev, u8 *lun)
+ 		wait_for_completion(&completion_setstate);
  	} else {
- 		shost->can_queue = HISI_SAS_UNRESERVED_IPTT;
- 		shost->cmd_per_lun = HISI_SAS_UNRESERVED_IPTT;
-+		shost->nr_reserved_cmds = HISI_SAS_RESERVED_IPTT;
+ 		tmf_task.tmf = TMF_LU_RESET;
+-		rc = pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
++		rc = pm8001_exec_internal_tmf_task(dev, lun, &tmf_task);
  	}
+ 	/* If failed, fall-through I_T_Nexus reset */
+ 	pm8001_dbg(pm8001_ha, EH, "for device[%x]:rc=%d\n",
+@@ -1145,10 +1135,10 @@ int pm8001_query_task(struct sas_task *task)
+ 			return rc;
+ 		}
+ 		pm8001_dbg(pm8001_ha, EH, "Query:[%16ph]\n", cmnd->cmnd);
+-		tmf_task.tmf = 	TMF_QUERY_TASK;
++		tmf_task.tmf =	TMF_QUERY_TASK;
+ 		tmf_task.tag_of_task_to_be_managed = tag;
  
- 	sha->sas_ha_name = DRV_NAME;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 4580e081e489..c728c782e21a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -4720,8 +4720,9 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	shost->max_lun = ~0;
- 	shost->max_channel = 1;
- 	shost->max_cmd_len = 16;
--	shost->can_queue = HISI_SAS_UNRESERVED_IPTT;
--	shost->cmd_per_lun = HISI_SAS_UNRESERVED_IPTT;
-+	shost->can_queue = HISI_SAS_MAX_COMMANDS;
-+	shost->cmd_per_lun = HISI_SAS_MAX_COMMANDS;
-+	shost->nr_reserved_cmds = HISI_SAS_RESERVED_IPTT;
+-		rc = pm8001_issue_ssp_tmf(dev, lun.scsi_lun, &tmf_task);
++		rc = pm8001_exec_internal_tmf_task(dev, lun.scsi_lun, &tmf_task);
+ 		switch (rc) {
+ 		/* The task is still in Lun, release it then */
+ 		case TMF_RESP_FUNC_SUCC:
+@@ -1216,9 +1206,11 @@ int pm8001_abort_task(struct sas_task *task)
+ 		int_to_scsilun(cmnd->device->lun, &lun);
+ 		tmf_task.tmf = TMF_ABORT_TASK;
+ 		tmf_task.tag_of_task_to_be_managed = tag;
+-		rc = pm8001_issue_ssp_tmf(dev, lun.scsi_lun, &tmf_task);
+-		pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
+-			pm8001_dev->sas_device, 0, tag);
++		rc = pm8001_exec_internal_tmf_task(dev, lun.scsi_lun,
++						   &tmf_task);
++		if (rc == TMF_RESP_FUNC_SUCC)
++			pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
++				pm8001_dev->sas_device, 0, tag);
+ 	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
+ 		task->task_proto & SAS_PROTOCOL_STP) {
+ 		if (pm8001_ha->chip_id == chip_8006) {
+@@ -1328,7 +1320,7 @@ int pm8001_abort_task_set(struct domain_device *dev, u8 *lun)
+ 	struct pm8001_tmf_task tmf_task;
  
- 	sha->sas_ha_name = DRV_NAME;
- 	sha->dev = dev;
+ 	tmf_task.tmf = TMF_ABORT_TASK_SET;
+-	return pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
++	return pm8001_exec_internal_tmf_task(dev, lun, &tmf_task);
+ }
+ 
+ int pm8001_clear_aca(struct domain_device *dev, u8 *lun)
+@@ -1336,7 +1328,7 @@ int pm8001_clear_aca(struct domain_device *dev, u8 *lun)
+ 	struct pm8001_tmf_task tmf_task;
+ 
+ 	tmf_task.tmf = TMF_CLEAR_ACA;
+-	return pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
++	return pm8001_exec_internal_tmf_task(dev, lun, &tmf_task);
+ }
+ 
+ int pm8001_clear_task_set(struct domain_device *dev, u8 *lun)
+@@ -1348,5 +1340,5 @@ int pm8001_clear_task_set(struct domain_device *dev, u8 *lun)
+ 	pm8001_dbg(pm8001_ha, EH, "I_T_L_Q clear task set[%x]\n",
+ 		   pm8001_dev->device_id);
+ 	tmf_task.tmf = TMF_CLEAR_TASK_SET;
+-	return pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
++	return pm8001_exec_internal_tmf_task(dev, lun, &tmf_task);
+ }
 -- 
 2.29.2
 
