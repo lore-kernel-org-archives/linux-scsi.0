@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A197C433E6
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:28:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BEA6C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:29:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1095564E27
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:28:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E045F64E27
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 13:29:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230206AbhBVN2p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Feb 2021 08:28:45 -0500
-Received: from mx2.suse.de ([195.135.220.15]:47948 "EHLO mx2.suse.de"
+        id S230454AbhBVN25 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Feb 2021 08:28:57 -0500
+Received: from mx2.suse.de ([195.135.220.15]:47950 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231691AbhBVN1s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Feb 2021 08:27:48 -0500
+        id S231672AbhBVN1r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Feb 2021 08:27:47 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id DE992AFF4;
+        by mx2.suse.de (Postfix) with ESMTP id E8B79AFF7;
         Mon, 22 Feb 2021 13:24:15 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
         Christoph Hellwig <hch@lst.de>,
         John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 18/31] aacraid: store target id in host_scribble
-Date:   Mon, 22 Feb 2021 14:23:52 +0100
-Message-Id: <20210222132405.91369-19-hare@suse.de>
+        Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Subject: [PATCH 16/31] hpsa: drop refcount field from CommandList
+Date:   Mon, 22 Feb 2021 14:23:50 +0100
+Message-Id: <20210222132405.91369-17-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210222132405.91369-1-hare@suse.de>
 References: <20210222132405.91369-1-hare@suse.de>
@@ -41,176 +41,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The probe_container mechanism requires a target id to be present,
-even if the device itself isn't present (yet).
-As we're now allocating internal commands the target id of the
-device is immutable, so store the requested target id in the
-host_scribble field.
+Field is now unused, so drop it.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/aacraid/aachba.c | 53 +++++++++++++++++++++++++----------
- 1 file changed, 38 insertions(+), 15 deletions(-)
+ drivers/scsi/hpsa.c     | 12 ++----------
+ drivers/scsi/hpsa_cmd.h |  1 -
+ 2 files changed, 2 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 4ca5e13a26a6..97967e4e904c 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -609,9 +609,11 @@ static int aac_get_container_name(struct scsi_cmnd * scsicmd)
- 
- static int aac_probe_container_callback2(struct scsi_cmnd * scsicmd)
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index c0f46f11789b..38f6a7589653 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -5530,8 +5530,8 @@ static void hpsa_cmd_init(struct ctlr_info *h, int index,
  {
--	struct fsa_dev_info *fsa_dev_ptr = ((struct aac_dev *)(scsicmd->device->host->hostdata))->fsa_dev;
-+	struct aac_dev *dev = (struct aac_dev *)(scsicmd->device->host->hostdata);
-+	struct fsa_dev_info *fsa_dev_ptr = dev->fsa_dev;
+ 	dma_addr_t cmd_dma_handle, err_dma_handle;
  
--	if ((fsa_dev_ptr[scmd_id(scsicmd)].valid & 1))
-+	if (scmd_id(scsicmd) < dev->maximum_num_containers &&
-+	    (fsa_dev_ptr[scmd_id(scsicmd)].valid & 1))
- 		return aac_scsi_cmd(scsicmd);
+-	/* Zero out all of commandlist except the last field, refcount */
+-	memset(c, 0, offsetof(struct CommandList, refcount));
++	/* Zero out all of commandlist */
++	memset(c, 0, sizeof(struct CommandList));
+ 	c->Header.tag = cpu_to_le64((u64) (index << DIRECT_LOOKUP_SHIFT));
+ 	cmd_dma_handle = h->cmd_pool_dhandle + index * sizeof(*c);
+ 	c->err_info = h->errinfo_pool + index;
+@@ -5553,7 +5553,6 @@ static void hpsa_preinitialize_commands(struct ctlr_info *h)
+ 		struct CommandList *c = h->cmd_pool + i;
  
- 	scsicmd->result = DID_NO_CONNECT << 16;
-@@ -624,6 +626,7 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
- 	struct fsa_dev_info *fsa_dev_ptr;
- 	int (*callback)(struct scsi_cmnd *);
- 	struct scsi_cmnd * scsicmd = (struct scsi_cmnd *)context;
-+	int cid = scmd_id(scsicmd);
- 	int i;
- 
- 
-@@ -631,12 +634,15 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
- 		return;
- 
- 	scsicmd->SCp.Status = 0;
-+	if (scsicmd->host_scribble)
-+		cid = *(int *)scsicmd->host_scribble;
-+
- 	fsa_dev_ptr = fibptr->dev->fsa_dev;
--	if (fsa_dev_ptr) {
-+	if (fsa_dev_ptr && cid < fibptr->dev->maximum_num_containers) {
- 		struct aac_mount * dresp = (struct aac_mount *) fib_data(fibptr);
- 		__le32 sup_options2;
- 
--		fsa_dev_ptr += scmd_id(scsicmd);
-+		fsa_dev_ptr += cid;
- 		sup_options2 =
- 			fibptr->dev->supplement_adapter_info.supported_options2;
- 
-@@ -671,7 +677,6 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
- 		scsicmd->SCp.Status = le32_to_cpu(dresp->count);
+ 		hpsa_cmd_init(h, i, c);
+-		atomic_set(&c->refcount, 0);
  	}
- 	aac_fib_complete(fibptr);
--	aac_fib_free(fibptr);
- 	callback = (int (*)(struct scsi_cmnd *))(scsicmd->SCp.ptr);
- 	scsicmd->SCp.ptr = NULL;
- 	(*callback)(scsicmd);
-@@ -683,6 +688,7 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
- 	struct scsi_cmnd * scsicmd;
- 	struct aac_mount * dresp;
- 	struct aac_query_mount *dinfo;
-+	int cid;
- 	int status;
- 
- 	dresp = (struct aac_mount *) fib_data(fibptr);
-@@ -695,10 +701,15 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
- 		}
- 	}
- 	scsicmd = (struct scsi_cmnd *) context;
--
- 	if (!aac_valid_context(scsicmd, fibptr))
- 		return;
--
-+	cid = scmd_id(scsicmd);
-+	if (scsicmd->host_scribble)
-+		cid = *(int *)scsicmd->host_scribble;
-+	if (cid >= fibptr->dev->maximum_num_containers) {
-+		_aac_probe_container2(context, fibptr);
-+		return;
-+	}
- 	aac_fib_init(fibptr);
- 
- 	dinfo = (struct aac_query_mount *)fib_data(fibptr);
-@@ -709,7 +720,7 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
- 	else
- 		dinfo->command = cpu_to_le32(VM_NameServe64);
- 
--	dinfo->count = cpu_to_le32(scmd_id(scsicmd));
-+	dinfo->count = cpu_to_le32(cid);
- 	dinfo->type = cpu_to_le32(FT_FILESYS);
- 	scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
- 
-@@ -732,10 +743,20 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
- 
- static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(struct scsi_cmnd *))
- {
-+	struct aac_dev * dev;
- 	struct fib * fibptr;
- 	int status = -ENOMEM;
-+	int cid = scmd_id(scsicmd);
- 
--	if ((fibptr = aac_fib_alloc((struct aac_dev *)scsicmd->device->host->hostdata))) {
-+	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
-+	if (scsicmd->host_scribble) {
-+		cid = *(int *)scsicmd->host_scribble;
-+		if (cid > dev->maximum_num_containers) {
-+			status = -ENODEV;
-+			goto out_status;
-+		}
-+	}
-+	if ((fibptr = aac_fib_alloc(dev))) {
- 		struct aac_query_mount *dinfo;
- 
- 		aac_fib_init(fibptr);
-@@ -748,7 +769,7 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
- 		else
- 			dinfo->command = cpu_to_le32(VM_NameServe);
- 
--		dinfo->count = cpu_to_le32(scmd_id(scsicmd));
-+		dinfo->count = cpu_to_le32(cid);
- 		dinfo->type = cpu_to_le32(FT_FILESYS);
- 		scsicmd->SCp.ptr = (char *)callback;
- 		scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
-@@ -772,10 +793,11 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
- 			aac_fib_free(fibptr);
- 		}
- 	}
-+out_status:
- 	if (status < 0) {
--		struct fsa_dev_info *fsa_dev_ptr = ((struct aac_dev *)(scsicmd->device->host->hostdata))->fsa_dev;
--		if (fsa_dev_ptr) {
--			fsa_dev_ptr += scmd_id(scsicmd);
-+		struct fsa_dev_info *fsa_dev_ptr = dev->fsa_dev;
-+		if (fsa_dev_ptr && cid < dev->maximum_num_containers) {
-+			fsa_dev_ptr += cid;
- 			if ((fsa_dev_ptr->valid & 1) == 0) {
- 				fsa_dev_ptr->valid = 0;
- 				return (*callback)(scsicmd);
-@@ -794,7 +816,7 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
-  */
- static int aac_probe_container_callback1(struct scsi_cmnd * scsicmd)
- {
--	scsicmd->device = NULL;
-+	scsicmd->host_scribble = NULL;
- 	return 0;
  }
  
-@@ -815,6 +837,7 @@ int aac_probe_container(struct aac_dev *dev, int cid)
- 		return -ENOMEM;
+@@ -6148,19 +6147,12 @@ static struct CommandList *cmd_tagged_alloc(struct ctlr_info *h,
+ 		return NULL;
  	}
- 	scsicmd->scsi_done = aac_probe_container_scsi_done;
-+	scsicmd->host_scribble = (unsigned char *)&cid;
  
- 	scsicmd->device = scsidev;
- 	scsidev->sdev_state = 0;
-@@ -822,7 +845,7 @@ int aac_probe_container(struct aac_dev *dev, int cid)
- 	scsidev->host = dev->scsi_host_ptr;
+-	atomic_inc(&c->refcount);
+-
+ 	hpsa_cmd_partial_init(h, idx, c);
+ 	return c;
+ }
  
- 	if (_aac_probe_container(scsicmd, aac_probe_container_callback1) == 0)
--		while (scsicmd->device == scsidev)
-+		while (scsicmd->host_scribble == (unsigned char *)&cid)
- 			schedule();
- 	kfree(scsidev);
- 	status = scsicmd->SCp.Status;
+ static void cmd_tagged_free(struct ctlr_info *h, struct CommandList *c)
+ {
+-	/*
+-	 * Release our reference to the block.  We don't need to do anything
+-	 * else to free it, because it is accessed by index.
+-	 */
+-	(void)atomic_dec(&c->refcount);
+ 	c->scsi_cmd = NULL;
+ }
+ 
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index 46df2e3ff89b..aaccb520b858 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -450,7 +450,6 @@ struct CommandList {
+ 
+ 	int abort_pending;
+ 	struct hpsa_scsi_dev_t *device;
+-	atomic_t refcount; /* Must be last to avoid memset in hpsa_cmd_init() */
+ } __aligned(COMMANDLIST_ALIGNMENT);
+ 
+ /* Max S/G elements in I/O accelerator command */
 -- 
 2.29.2
 
