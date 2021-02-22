@@ -7,42 +7,43 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13CB3C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 08:17:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6903FC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 08:21:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B78E164EC3
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 08:17:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1757B64E77
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 08:21:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229967AbhBVIRw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Feb 2021 03:17:52 -0500
-Received: from mailout3.samsung.com ([203.254.224.33]:27678 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229549AbhBVIRq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2021 03:17:46 -0500
+        id S229953AbhBVIV0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Feb 2021 03:21:26 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:50181 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229934AbhBVIVZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2021 03:21:25 -0500
 Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210222081702epoutp037f8db067646a414b6e92974c57618760~mA_qV5R0t0112701127epoutp03g
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Feb 2021 08:17:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210222081702epoutp037f8db067646a414b6e92974c57618760~mA_qV5R0t0112701127epoutp03g
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210222082041epoutp04500bb7ad0bc497ad519f15f8d509602e~mBB2lLwDB3140931409epoutp04W
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Feb 2021 08:20:41 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210222082041epoutp04500bb7ad0bc497ad519f15f8d509602e~mBB2lLwDB3140931409epoutp04W
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1613981822;
-        bh=RaZO9t9ohY1PMliAbeOJNK4HT74n3QKnCebIc+6OAPg=;
+        s=mail20170921; t=1613982041;
+        bh=R5xDEdqN/Z+6JVp7dPFjmzNfrjc/8QgieY2kBvhAJR0=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=s2dfT3CFYSu8TNvBChKbZSOEZobQ84cXoIQ6eG5V3UGLgQYwdfMv/p0PQTczcqoT3
-         gEfsyEk+18lljGlWSdUALy5FLhZ43XpsMHpfKfi3QeC9SNQvgmYYhUwEDQiJBGSC77
-         0Ci6TP+3V55fTks2An8r/xfUIjbs61LqfgW8+Xuk=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20210222081701epcas2p113f863ed909e1f861ff2c9f8099b02e2~mA_pdcg8E0770507705epcas2p1d;
-        Mon, 22 Feb 2021 08:17:01 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.40.184]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4DkZlv3FlKz4x9QH; Mon, 22 Feb
-        2021 08:16:59 +0000 (GMT)
-X-AuditID: b6c32a47-b81ff7000000148e-9f-6033687b93f5
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        1E.65.05262.B7863306; Mon, 22 Feb 2021 17:16:59 +0900 (KST)
+        b=llXShFnXh9Y8ZOTk357yU5dKLmb6Jv6jriNMGlgsYYBRVPTafQiIH7xh+aiSETNdJ
+         w5YNkflWK/4WRXL5JoocQLCTPqZih0stqEdF0OMo/pRS++eaTIUFh2jYESLOKruviC
+         KoG1/V1CdT6wM7caH9ke19W8pXo6TAliE2bmh10M=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20210222082040epcas2p4cb09bb3b84ea5605414e5c03400b7499~mBB1dhjU50301703017epcas2p47;
+        Mon, 22 Feb 2021 08:20:40 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.187]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4DkZr674W6z4x9Q1; Mon, 22 Feb
+        2021 08:20:38 +0000 (GMT)
+X-AuditID: b6c32a45-34dff7000001297d-fb-6033695623fd
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        34.90.10621.65963306; Mon, 22 Feb 2021 17:20:38 +0900 (KST)
 Mime-Version: 1.0
-Subject: RE: RE: [PATCH v21 2/4] scsi: ufs: L2P map management for HPB read
+Subject: RE: RE: [PATCH v21 3/4] scsi: ufs: Prepare HPB read for cached
+ sub-region
 Reply-To: daejun7.park@samsung.com
 Sender: Daejun Park <daejun7.park@samsung.com>
 From:   Daejun Park <daejun7.park@samsung.com>
@@ -68,95 +69,86 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         BoRam Shin <boram.shin@samsung.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <DM6PR04MB6575F5244F17B022E6E78DC7FC829@DM6PR04MB6575.namprd04.prod.outlook.com>
+In-Reply-To: <DM6PR04MB6575834A026CD5194E7A2EFAFC829@DM6PR04MB6575.namprd04.prod.outlook.com>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20210222081658epcms2p4dcc6bfa0da7b6222cc4262a36374d3ad@epcms2p4>
-Date:   Mon, 22 Feb 2021 17:16:58 +0900
-X-CMS-MailID: 20210222081658epcms2p4dcc6bfa0da7b6222cc4262a36374d3ad
+Message-ID: <20210222082038epcms2p761e3c08ed3ec77854a693d48dc9f1357@epcms2p7>
+Date:   Mon, 22 Feb 2021 17:20:38 +0900
+X-CMS-MailID: 20210222082038epcms2p761e3c08ed3ec77854a693d48dc9f1357
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrCJsWRmVeSWpSXmKPExsWy7bCmmW51hnGCwYaFYhYP5m1js9jbdoLd
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrCJsWRmVeSWpSXmKPExsWy7bCmuW5YpnGCwYe9MhYP5m1js9jbdoLd
         4uXPq2wWh2+/Y7eY9uEns8Wn9ctYLV4e0rRY9SDconnxejaLOWcbmCx6+7eyWTy+85ndYtGN
         bUwW/f/aWSwu75rDZtF9fQebxfLj/5gsbm/hsli69SajRef0NSwWixbuZnEQ9bh8xdvjcl8v
         k8fOWXfZPSYsOsDosX/uGnaPlpP7WTw+Pr3F4tG3ZRWjx+dNch7tB7qZAriicmwyUhNTUosU
         UvOS81My89JtlbyD453jTc0MDHUNLS3MlRTyEnNTbZVcfAJ03TJzgD5UUihLzCkFCgUkFhcr
-        6dvZFOWXlqQqZOQXl9gqpRak5BQYGhboFSfmFpfmpesl5+daGRoYGJkCVSbkZMx7vIyl4B5P
-        xfRn35gaGJdwdDFyckgImEhc27uNrYuRi0NIYAejxJ77x1i7GDk4eAUEJf7uEAapERbwllix
-        bT87iC0koCSx/uIsdoi4nsSth2sYQWw2AR2J6Sfus4PMERH4zSxx8e00VhCHWWAps8Tqpw3M
-        ENt4JWa0P2WBsKUlti/fCtbNKRArMWPeRKi4hsSPZb1Q9aISN1e/ZYex3x+bzwhhi0i03jsL
-        VSMo8eDnbqi4pMSx3R+YIOx6ia13fjGCHCEh0MMocXjnLVaIhL7EtY6NYMt4BXwlDj+/DjaI
-        RUBV4n/3EjaIGheJfc0fwBYzC8hLbH87hxkUKswCmhLrd+mDmBICyhJHbrHAvNWw8Tc7OptZ
-        gE+i4/BfuPiOeU+gTlOTWPdzPdMERuVZiKCehWTXLIRdCxiZVzGKpRYU56anFhsVGCPH7iZG
-        cHLXct/BOOPtB71DjEwcjIcYJTiYlUR42e4aJQjxpiRWVqUW5ccXleakFh9iNAX6ciKzlGhy
-        PjC/5JXEG5oamZkZWJpamJoZWSiJ8xYbPIgXEkhPLEnNTk0tSC2C6WPi4JRqYOrTeDqf6+3D
-        xms7og38T/kZ5jCG5DEUW1622hl99ae3LMf8x232kjEiqvbTHxSdP8Rrfe/W13jx3VvvLSkP
-        9vk/xcGOb6t+9avnOw+tCOibNemoktaec6LNmjOTtaeH3XtneHL2ofiXzKf1zyuLRTlWX1O5
-        vOLpe6XWk7P3nHxr99P2yPbr3h9zL//o+Gy9nvsa750k45Mbjq7xq6tZYX+mX7/401pBnWPL
-        Tu8UV2A+dcQt6uGLJPl0hrO2aTxRs2Qs/mSZqf3aydxc/I19f03tJGuRpP7mQC/VyvCpXZNO
-        2ddsrGj9XnZp8SfzPQuyQvoZlv244yJ+fENJdn3dGa+oHU+FeNXsJsY3HbRdFaTEUpyRaKjF
-        XFScCAAPtVs0dwQAAA==
+        6dvZFOWXlqQqZOQXl9gqpRak5BQYGhboFSfmFpfmpesl5+daGRoYGJkCVSbkZDyf9Iyx4AVX
+        RdPCrewNjO3sXYycHBICJhLP5vQxdTFycQgJ7GCUmHJ+DlCCg4NXQFDi7w5hkBphgRCJi5N+
+        M4LYQgJKEusvzmKHiOtJ3Hq4BizOJqAjMf3EfXaQOSICv5klLr6dxgriMAssZZZY/bSBGWIb
+        r8SM9qcsELa0xPblW8G6OQViJba9eApVoyHxY1kvlC0qcXP1W3YY+/2x+YwQtohE672zUDWC
+        Eg9+7oaKS0oc2/2BCcKul9h65xcjyBESAj2MEod33mKFSOhLXOvYCHYEr4CvxL4J28AaWARU
+        JS6c74SqcZE4fucUmM0sIC+x/e0cZlCoMAtoSqzfpQ9iSggoSxy5xQLzVsPG3+zobGYBPomO
+        w3/h4jvmPYE6TU1i3c/1TBMYlWchgnoWkl2zEHYtYGRexSiWWlCcm55abFRgiBy7mxjByV3L
+        dQfj5Lcf9A4xMnEwHmKU4GBWEuFlu2uUIMSbklhZlVqUH19UmpNafIjRFOjLicxSosn5wPyS
+        VxJvaGpkZmZgaWphamZkoSTOW2zwIF5IID2xJDU7NbUgtQimj4mDU6qByTJw+oo8QXdNrRlb
+        6i7qpXV7ZCxf5TwhxNLQZDvr6ehXy++Z7jFQXheZ/nytw6TJZ3p/T/Rzu7Cx4ed7I9PjfJJd
+        pesZVqSEiHilPZxfWW2sF/80MTLu6A82/Z2HOTxVuw4o1Ly4M2Xxq402kU9rQr9sfHF2+Wvv
+        i30reE46KUoclb2kvKReYpbsR4+rK+7EqbN9kW30dRFZtJFnae/Gwx+O+921Nyx/aqXNp+nw
+        Y9KjjXunPfx97+niMzxRX4s4GW+ZHIutecp0/eMN6aq4wgSP7gVHtm2ZePOXzoIzO9Zufci3
+        c1ewcK1J3hbx13oZ/5hmegQ1/itqd+08Iiq5aLGk45WNTEEyd3ffrts1e7sSS3FGoqEWc1Fx
+        IgCVcJcBdwQAAA==
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20210218090627epcms2p639c216ccebed773120121b1d53641d94
-References: <DM6PR04MB6575F5244F17B022E6E78DC7FC829@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <DM6PR04MB6575834A026CD5194E7A2EFAFC829@DM6PR04MB6575.namprd04.prod.outlook.com>
         <20210218090627epcms2p639c216ccebed773120121b1d53641d94@epcms2p6>
-        <20210218090747epcms2p8812c04126d57b789f471126055577ae8@epcms2p8>
-        <CGME20210218090627epcms2p639c216ccebed773120121b1d53641d94@epcms2p4>
+        <20210218090824epcms2p2d7edc0c79f0503033c1baf0ebd5e1a23@epcms2p2>
+        <CGME20210218090627epcms2p639c216ccebed773120121b1d53641d94@epcms2p7>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> +static bool ufshpb_is_hpb_rsp_valid(struct ufs_hba *hba,
-> > +                                        struct ufshcd_lrb *lrbp,
-> > +                                        struct utp_hpb_rsp *rsp_field)
+> +static u64 ufshpb_get_ppn(struct ufshpb_lu *hpb,
+> > +                         struct ufshpb_map_ctx *mctx, int pos, int *error)
 > > +{
-> > +       if (be16_to_cpu(rsp_field->sense_data_len) != DEV_SENSE_SEG_LEN ||
-> > +           rsp_field->desc_type != DEV_DES_TYPE ||
-> > +           rsp_field->additional_len != DEV_ADDITIONAL_LEN ||
-> > +           rsp_field->active_rgn_cnt > MAX_ACTIVE_NUM ||
-> > +           rsp_field->inactive_rgn_cnt > MAX_INACTIVE_NUM ||
-> > +           (rsp_field->hpb_op == HPB_RSP_REQ_REGION_UPDATE &&
-> > +            !rsp_field->active_rgn_cnt && !rsp_field->inactive_rgn_cnt))
-> > +               return false;
+> > +       u64 *ppn_table;
+> > +       struct page *page;
+> > +       int index, offset;
 > > +
-> > +       /* we cannot access HPB from other LU */
-> > +       if (lrbp->lun != rsp_field->lun)
-> > +               return false;
-> Why not?
-> Clearly this against the spec which allows to attach hpb sense crossed luns
->  
+> > +       index = pos / (PAGE_SIZE / HPB_ENTRY_SIZE);
+> > +       offset = pos % (PAGE_SIZE / HPB_ENTRY_SIZE);
 > > +
-> > +       if (!ufshpb_is_general_lun(lrbp->lun)) {
-> > +               dev_warn(hba->dev, "ufshpb: lun(%d) not supported\n",
-> > +                        lrbp->lun);
-> > +               return false;
+> > +       page = mctx->m_page[index];
+> > +       if (unlikely(!page)) {
+> > +               *error = -ENOMEM;
+> > +               dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+> > +                       "error. cannot find page in mctx\n");
+> > +               return 0;
 > > +       }
 > > +
-> > +       return true;
-> > +}
->  
->  
->  
->  
-> > +void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-> > +{
-> > +       struct ufshpb_lu *hpb = ufshpb_get_hpb_data(lrbp->cmd->device);
-> > +       struct utp_hpb_rsp *rsp_field;
-> > +       int data_seg_len;
+> > +       ppn_table = page_address(page);
+> > +       if (unlikely(!ppn_table)) {
+> > +               *error = -ENOMEM;
+> > +               dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+> > +                       "error. cannot get ppn_table\n");
+> > +               return 0;
+> > +       }
 > > +
-> > +       if (!hpb)
-> > +               return;
-> Ditto
-
-I fixed the code to support the crossed-hint.
+> > +       return ppn_table[offset];
+> How about memcpy here as well?
+> This way it is clear that the host is not manipulating the physical addresses in any way,
+> And you won't need to invent the new ufshpb_fill_ppn_from_page.
+>  
+I changed the code to use ufshpb_fill_ppn_from_page() because it is more
+genenal for use than ufshpb_get_ppn(). And I fixed to use memcpy for
+setting cdb of HPB read.
 
 Thanks,
 Daejun
