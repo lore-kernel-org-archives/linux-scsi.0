@@ -2,102 +2,179 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34607C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 01:34:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D52BC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 02:05:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0746B64EC8
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 01:34:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBFFA64ED7
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 02:05:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231757AbhBVBd7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 21 Feb 2021 20:33:59 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43684 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231747AbhBVBdo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 21 Feb 2021 20:33:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1613957537;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=N34hBKZHkXIxa+0JV+MfgWWrHN+GVw6/8nre7Mkust8=;
-        b=BJfyIfumHNc8YqdGK0DcPmxoW3zSy6OMjoCp12PjhNU9IfT1YsN0XJVT4Zi3YY9ogcYZuD
-        4x2A1KgQ92DoFj2zvNpDhL1l7RvjnbCrMs2h7jR6tzuL8hWeqcP7XRbastcU8sjUTjd5Nq
-        DOdMKBmyxKHvoQjul2Pj4jG3VY1G4Lc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-181-vCCu8_aQNUS3Y2da_gJthQ-1; Sun, 21 Feb 2021 20:32:00 -0500
-X-MC-Unique: vCCu8_aQNUS3Y2da_gJthQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EA26A79EC0;
-        Mon, 22 Feb 2021 01:31:57 +0000 (UTC)
-Received: from T590 (ovpn-12-196.pek2.redhat.com [10.72.12.196])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7972B1A867;
-        Mon, 22 Feb 2021 01:31:37 +0000 (UTC)
-Date:   Mon, 22 Feb 2021 09:31:33 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     SelvaKumar S <selvakuma.s1@samsung.com>
-Cc:     linux-nvme@lists.infradead.org, kbusch@kernel.org, axboe@kernel.dk,
-        damien.lemoal@wdc.com, hch@lst.de, sagi@grimberg.me,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        dm-devel@redhat.com, snitzer@redhat.com, selvajove@gmail.com,
-        joshiiitr@gmail.com, nj.shetty@samsung.com, joshi.k@samsung.com,
-        javier.gonz@samsung.com, kch@kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC PATCH v5 0/4] add simple copy support
-Message-ID: <YDMJdekWhy/Y1Y1r@T590>
-References: <CGME20210219124555epcas5p1334e7c4d64ada5dc4a2ca0feb48c1d44@epcas5p1.samsung.com>
- <20210219124517.79359-1-selvakuma.s1@samsung.com>
+        id S230200AbhBVCFM convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 21 Feb 2021 21:05:12 -0500
+Received: from szxga03-in.huawei.com ([45.249.212.189]:2906 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229973AbhBVCFK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Feb 2021 21:05:10 -0500
+Received: from DGGEMM401-HUB.china.huawei.com (unknown [172.30.72.55])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4DkQRk5Y3Hz5TwC;
+        Mon, 22 Feb 2021 10:02:26 +0800 (CST)
+Received: from dggemi762-chm.china.huawei.com (10.1.198.148) by
+ DGGEMM401-HUB.china.huawei.com (10.3.20.209) with Microsoft SMTP Server (TLS)
+ id 14.3.498.0; Mon, 22 Feb 2021 10:04:24 +0800
+Received: from dggemi761-chm.china.huawei.com (10.1.198.147) by
+ dggemi762-chm.china.huawei.com (10.1.198.148) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2106.2; Mon, 22 Feb 2021 10:04:24 +0800
+Received: from dggemi761-chm.china.huawei.com ([10.9.49.202]) by
+ dggemi761-chm.china.huawei.com ([10.9.49.202]) with mapi id 15.01.2106.006;
+ Mon, 22 Feb 2021 10:04:24 +0800
+From:   "Song Bao Hua (Barry Song)" <song.bao.hua@hisilicon.com>
+To:     Finn Thain <fthain@telegraphics.com.au>,
+        tanxiaofei <tanxiaofei@huawei.com>
+CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linuxarm@openeuler.org" <linuxarm@openeuler.org>,
+        "linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>
+Subject: RE: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage
+ optimization for SCSI drivers
+Thread-Topic: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage
+ optimization for SCSI drivers
+Thread-Index: AQHXBcVsHfRcgE5/oku9/SZGNaGMW6pf/eSAgANvFTA=
+Date:   Mon, 22 Feb 2021 02:04:24 +0000
+Message-ID: <8c99b5c060eb4e5aa5b604666a8db516@hisilicon.com>
+References: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com>
+ <31cd807d-3d0-ed64-60d-fde32cb3833c@telegraphics.com.au>
+ <e949a474a9284ac6951813bfc8b34945@hisilicon.com>
+ <f0a3339d-b1db-6571-fa2f-6765e150eb9d@telegraphics.com.au>
+ <7bc39d19-f4cc-8028-11e6-c0e45421a765@huawei.com>
+ <588a87f-ae42-0b7-749e-c780ce5c3e4f@telegraphics.com.au>
+In-Reply-To: <588a87f-ae42-0b7-749e-c780ce5c3e4f@telegraphics.com.au>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.126.202.172]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210219124517.79359-1-selvakuma.s1@samsung.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Feb 19, 2021 at 06:15:13PM +0530, SelvaKumar S wrote:
-> This patchset tries to add support for TP4065a ("Simple Copy Command"),
-> v2020.05.04 ("Ratified")
-> 
-> The Specification can be found in following link.
-> https://nvmexpress.org/wp-content/uploads/NVM-Express-1.4-Ratified-TPs-1.zip
-> 
-> Simple copy command is a copy offloading operation and is  used to copy
-> multiple contiguous ranges (source_ranges) of LBA's to a single destination
-> LBA within the device reducing traffic between host and device.
-> 
-> This implementation doesn't add native copy offload support for stacked
-> devices rather copy offload is done through emulation. Possible use
-> cases are F2FS gc and BTRFS relocation/balance.
-> 
-> *blkdev_issue_copy* takes source bdev, no of sources, array of source
-> ranges (in sectors), destination bdev and destination offset(in sectors).
-> If both source and destination block devices are same and copy_offload = 1,
-> then copy is done through native copy offloading. Copy emulation is used
-> in other cases.
-> 
-> As SCSI XCOPY can take two different block devices and no of source range is
-> equal to 1, this interface can be extended in future to support SCSI XCOPY.
-
-The patchset adds ioctl(BLKCOPY) and two userspace visible data
-struture(range_entry, and copy_range), all belong to kabi stuff, and the
-interface is generic block layer kabi.
-
-The API has to be allowed to extend for supporting SCSI XCOPY in future or similar
-block copy commands without breaking previous application, so please CC linux-scsi
-and scsi guys in your next post.
 
 
--- 
-Ming
+> -----Original Message-----
+> From: Finn Thain [mailto:fthain@telegraphics.com.au]
+> Sent: Saturday, February 20, 2021 6:18 PM
+> To: tanxiaofei <tanxiaofei@huawei.com>
+> Cc: Song Bao Hua (Barry Song) <song.bao.hua@hisilicon.com>; jejb@linux.ibm.com;
+> martin.petersen@oracle.com; linux-scsi@vger.kernel.org;
+> linux-kernel@vger.kernel.org; linuxarm@openeuler.org;
+> linux-m68k@vger.kernel.org
+> Subject: Re: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage optimization
+> for SCSI drivers
+> 
+> On Thu, 18 Feb 2021, Xiaofei Tan wrote:
+> 
+> > On 2021/2/9 13:06, Finn Thain wrote:
+> > > On Tue, 9 Feb 2021, Song Bao Hua (Barry Song) wrote:
+> > >
+> > > > > On Sun, 7 Feb 2021, Xiaofei Tan wrote:
+> > > > >
+> > > > > > Replace spin_lock_irqsave with spin_lock in hard IRQ of SCSI
+> > > > > > drivers. There are no function changes, but may speed up if
+> > > > > > interrupt happen too often.
+> > > > >
+> > > > > This change doesn't necessarily work on platforms that support
+> > > > > nested interrupts.
+> > > > >
+> > > > > Were you able to measure any benefit from this change on some
+> > > > > other platform?
+> > > >
+> > > > I think the code disabling irq in hardIRQ is simply wrong.
+> > > > Since this commit
+> > > >
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/
+> ?id=e58aa3d2d0cc
+> > > > genirq: Run irq handlers with interrupts disabled
+> > > >
+> > > > interrupt handlers are definitely running in a irq-disabled context
+> > > > unless irq handlers enable them explicitly in the handler to permit
+> > > > other interrupts.
+> > > >
+> > >
+> > > Repeating the same claim does not somehow make it true. If you put
+> > > your claim to the test, you'll see that that interrupts are not
+> > > disabled on m68k when interrupt handlers execute.
+> > >
+> > > The Interrupt Priority Level (IPL) can prevent any given irq handler
+> > > from being re-entered, but an irq with a higher priority level may be
+> > > handled during execution of a lower priority irq handler.
+> > >
+> > > sonic_interrupt() uses an irq lock within an interrupt handler to
+> > > avoid issues relating to this. This kind of locking may be needed in
+> > > the drivers you are trying to patch. Or it might not. Apparently,
+> > > no-one has looked.
+> > >
+> >
+> > According to your discussion with Barry, it seems that m68k is a little
+> > different from other architecture, and this kind of modification of this
+> > patch cannot be applied to m68k. So, could help to point out which
+> > driver belong to m68k architecture in this patch set of SCSI? I can
+> > remove them.
+> >
+> 
+> If you would claim that "there are no function changes" in your patches
+> (as above) then the onus is on you to support that claim.
+> 
+> I assume that there are some platforms on which your assumptions hold.
+> 
+> With regard to drivers for those platforms, you might want to explain why
+> your patches should be applied there, given that the existing code is
+> superior for being more portable.
+
+I don't think it has nothing to do with portability. In the case of
+sonic_interrupt() you pointed out, on m68k, there is a high-priority
+interrupt can preempt low-priority interrupt, they will result in
+access the same critical data. M68K's spin_lock_irqsave() can disable
+the high-priority interrupt and avoid the race condition of the data.
+So the case should not be touched. I'd like to accept the reality
+and leave sonic_interrupt() alone.
+
+However, even on m68k, spin_lock_irqsave is not needed for other
+ordinary cases.
+If there is no other irq handler coming to access same critical data,
+it is pointless to hold a redundant irqsave lock in irqhandler even
+on m68k.
+
+In thread contexts, we always need that if an irqhandler can preempt
+those threads and access the same data. In hardirq, if there is an
+high-priority which can jump out on m68k to access the critical data
+which needs protection, we use the spin_lock_irqsave as you have used
+in sonic_interrupt(). Otherwise, the irqsave is also redundant for
+m68k.
+
+> 
+> > BTW, sonic_interrupt() is from net driver natsemi, right?  It would be
+> > appreciative if only discuss SCSI drivers in this patch set. thanks.
+> >
+> 
+> The 'net' subsystem does have some different requirements than the 'scsi'
+> subsystem. But I don't see how that's relevant. Perhaps you can explain
+> it. Thanks.
+
+The difference is that if there are two co-existing interrupts which can
+access the same critical data on m68k. I don't think net and scsi matter.
+What really matters is the specific driver.
+
+Thanks
+Barry
 
