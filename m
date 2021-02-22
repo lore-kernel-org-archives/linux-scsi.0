@@ -2,208 +2,677 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 377E8C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 19:32:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2535C433E9
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 21:12:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EEDCD64E31
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 19:32:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C834F64E25
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 21:12:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233289AbhBVTcH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Feb 2021 14:32:07 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:18424 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233281AbhBVTa2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2021 14:30:28 -0500
+        id S230472AbhBVVM3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Feb 2021 16:12:29 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:22462 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230106AbhBVVM0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2021 16:12:26 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1614022227; x=1645558227;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=js95pTMoRTGcaUj9AopgksxxksqmnVR4BNiZnQ6c2sQ=;
-  b=bW6HR3VAwjeqlPmGIcPMxEuILt4SJqNi+V06C5jn6uuKz/WUKt5FiwzQ
-   2jvbQd7uRrM9k9SjFuh561GI3BmruiCODjexfQ7r88MsmGZ0WxH93YWaF
-   E6p5Oxkl5BO7GoxTAsb1GSgJzrhoSDPlX+SeLfekqMRR0SDzxZp+X/ULi
-   IsSzOqMRLySIw2EHaESsUINUFdgKe5O3ntgA5fS7tSINLhH01qgmAVz0b
-   25vGc1R7Ow/EcSlZOQ7Lfa/yWT/GFH3TMlFL0OwJ8H4gtTxnZgt/QJHFQ
-   FL6FyB7SqZP2XJ3NAGjMqcaNdSGvkAuUMgthFftygD6rgVYli2/3u9cPX
-   g==;
-IronPort-SDR: W3EzEGxpwDK7ABQbA/0r+UAJSVBJoITx4zMa2ux0cloGB7gpl5gi2GqoU/x0FUsJhKINU5rSSH
- nqfwwlyWpTxubHKnm/yd4cDUce0WbpnaPwJIgWaN9ndpaJvAcG4IfXBQSlVrpmMHJwXXoJzhke
- sx377VzV8A2Z+PVXPbI/VXc5jBMtLaw//z/v5xJnfy2giyrYgboJdtXqFmXIxuX+CAro5Gnu31
- vZSAhJURuGiQ/EbwE/hptggeBJ3vHXHwB5sqh8aA7UDZ4h6X4tsuTc/MS2aEi70t4YLrNZl4l0
- /0g=
+  t=1614028346; x=1645564346;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=fQJsmrOVKZ+usDbmlxoHPJRQf2kBhVhLBytnku04uoA=;
+  b=QK22m/TVGH7W3g3U0wIqRM7X+yr9iU5bYb8LUe3qtfXwfJMcuVs9RSEV
+   HigNmijv7elwTApuY1lVYHrk8A9TBYJ+N0uTV8hqiVuenH/TW1VU6u3dH
+   wigUa0uRvxLUk+DYB+kU53ZkiisbVaKQD8OT74ZnPw49dGD9TZh4DnDe9
+   N7kW6xRtfdBQkcUwO7/5vZv4Npc5y4vBL45LWQq+dRbBiO2BS5hSELpgW
+   AyBWWZkt2ENYpl9ugawNz7zxdYzGH7HDBJseDA7cgWoONZvTHVqvT9KIp
+   9VVP88ttJshNx0yOlYDKnsC+o98i4ezag8y+yriAyQ1jEszEKgSzob+JH
+   A==;
+IronPort-SDR: VAmHiYwLcDs/2ttr74Bj9CDMy313ds+2e7Fzs9paoTbniTLt5UFdbJKGH5Q9IcRhRX6cdG7g+H
+ kCsllWruhs0zpQLJUoG5fMrcKvPgdVo+xOYF/FmrSosUL9LC1WMlXzF7xkbBgKldoqT+4TbME2
+ hV1RhRZ4Az7+rfy6yezoe0XHf8am+uXzpkevhnapSdNWqWIqfIujtcyb5qIlS7/sQNZWGJ1cjw
+ IO/U0yl6/HdAXJUafRQSMkr5RMaZssr+HJ+7N4P5FA8LommC6TpQH1bPPDr4ICDBRHxLIoagxd
+ jno=
 X-IronPort-AV: E=Sophos;i="5.81,198,1610380800"; 
-   d="scan'208";a="160516159"
-Received: from mail-bn8nam11lp2170.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.170])
-  by ob1.hgst.iphmx.com with ESMTP; 23 Feb 2021 03:29:11 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Bv/QAjqyj2TN11NGL8cVV9f5+qmXZAkrbtEsWLs4BXXNJSdxxowwQ+fWVECCBrr3svXL/oCl3tnWWznk+SyhgYFwNCTN3dDGFV3BX9GrwUuXQ0ShUq4bZwdJLQah+gLyzHvnaxMHQM1wvea7Pd9CC+61XtQF1UxOMW19JC9POnH3xhI4UWUIrTWE15IBdz49LHQ/f3b2KWyFqvMe6/IW/TzcrYbVG7YaP8MYakIDFevzo29dCQrPgkTE6TkOaWkL6lddF99SlwgxgRgpkSBYlvHtP7LfuZB2jZeIFj06cb9TrX+hybwo1hYeyftXEplotIxhkl4qlp6e/gvXR7kXow==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=js95pTMoRTGcaUj9AopgksxxksqmnVR4BNiZnQ6c2sQ=;
- b=YDDF+iprEYw/8YAtWyhkxFdFKty4c8ck5k8asy1ETFBd+wTkTyVMzZrkHAtlBUgeGIPbaLWLNbt4yhGOrAzunwCTIoixvIMXm0AqXA09HCpjT7Qe31xgtp4irxsYvYCCOWPdqcwY4I9g4YMizu8/KkmeXC1YDTlioqsA3y13k3B4dVcdwR9srjibc4eksQlwngRawLDRWQS2+DJNt5FadDJj4qn8ND/zrPtBX07nH7AbwqcoGzN4uimCob7uIL9yXvy6qMZAbtdjlAAktUp641C7kKoQClhyoA2rTfHVEe1Mt2KImezJLZujrJtW5QWOKeMIP0Ir0V1qgEBcqIs1Gg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=js95pTMoRTGcaUj9AopgksxxksqmnVR4BNiZnQ6c2sQ=;
- b=XykXf8+v08E1PkYnTBulBr5VbL4V384uFbUMqDuEYVTe4Pe34PZUgykYyXkPCRmB++fCuMvcj1PnTNSsWQeZvM1X67UJVWKjBJja0AuvW3+RotIlWTDfKl86kIdbZrCguVNFxPuA0/B8TnbhOuCx+HJbdk2UeOC3E5d1K8SGpX0=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB7132.namprd04.prod.outlook.com (2603:10b6:5:247::7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3868.29; Mon, 22 Feb 2021 19:29:09 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::e824:f31b:38cf:ef66]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::e824:f31b:38cf:ef66%3]) with mapi id 15.20.3868.032; Mon, 22 Feb 2021
- 19:29:09 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        Javier Gonzalez <javier.gonz@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        JinHwan Park <jh.i.park@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-Subject: RE: [PATCH v22 4/4] scsi: ufs: Add HPB 2.0 support
-Thread-Topic: [PATCH v22 4/4] scsi: ufs: Add HPB 2.0 support
-Thread-Index: AQHXCP2Y/e9Fs0BGVk+8HmhkjtrqFapkfadA
-Date:   Mon, 22 Feb 2021 19:29:09 +0000
-Message-ID: <DM6PR04MB657588F1C76DC0D5BFC68862FC819@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20210222092957epcms2p728b0c563f3cfbecbf8692d7e86f9afed@epcms2p7>
-        <20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p3>
-        <CGME20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p1>
- <20210222093150epcms2p155352e2255e6bfd8f8d71c737ed05e76@epcms2p1>
-In-Reply-To: <20210222093150epcms2p155352e2255e6bfd8f8d71c737ed05e76@epcms2p1>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: samsung.com; dkim=none (message not signed)
- header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [77.138.4.172]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: a6e921db-25de-4f81-8e23-08d8d768206f
-x-ms-traffictypediagnostic: DM6PR04MB7132:
-x-microsoft-antispam-prvs: <DM6PR04MB71322B64B80196FC10364868FC819@DM6PR04MB7132.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: e92fTlGI/uI77uIR53J14hWRJP+DIhS/8bbaUpUxDkbYUp8+Ipw0lbS61kNWU5mHyiP8j5CC9tApAwUDYnARUtxE8wza+rYUYKbdf7jEfxF+3MX53XGiOk3E1bC0cwIiLPIq2Ia4n6RnwnuMP/9Gj55RnlpHTmYaGHaVL+sIf4M75UGwzpkEqvYcbBxPh2p/SRqvifiDjYmhKh8yPw0bH/hLDFtYb6IqGbYqQOyXYcgNfHYQmh1tEm1O/lc2U77HdxQsQww1iMniRa7LFj/71eU1ywlrSuGtWLlehe3Zwp4C9GEuJ/BcnQhTcyTz7h+YjKDEyWiR/9LMjiXh3RwyttOVsX4+pDtK9CESob5uj4SU8xd2vjIIAtFmhkPRk6JcnQrLY6kfkBWGD1DoUFHfzUU6Abyraqn/U+H0k/bqINMTBDq21PAhJioadvwd4CMRDUaKgJiDE8n8y7UmY2xbZM1hCdcYZ1/zZtyqXxRb73cL7M9zcrl3iwbUwzzJ/onUhYE67c4mCC/EWfpv/ZJEFoRdK66NmaBmPp9JXDuD6T7LH3aM+xmpf2ppgKo9TfyM
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(136003)(39860400002)(346002)(376002)(366004)(6506007)(66446008)(52536014)(66556008)(71200400001)(7696005)(478600001)(186003)(64756008)(66476007)(9686003)(55016002)(26005)(8936002)(4326008)(2906002)(316002)(7416002)(8676002)(76116006)(83380400001)(921005)(54906003)(33656002)(86362001)(110136005)(66946007)(5660300002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?utf-8?B?bkMzOEQ4T3p4RzhhMHJKYWJGb2dFUjB5bDlhK2VQc2NiSmNNaXB5VHdKMTZK?=
- =?utf-8?B?T1ZHNGV2bjA4cUV0NHF0VjJNMVVEVEk5S01vcy9YZVU1dXU2aHg2S3JmZEJT?=
- =?utf-8?B?ME5pbDlxcGNIMXZvVTBTMkoxUWJ0SjhxSC9yYUU5SzlNL3lpM1V5YVBnQkdD?=
- =?utf-8?B?TklLS3NjTG1WQTMvN1ZkOFJkYytYNnlWUWx0ZTMzY2dXRlpTMWtuQjVsdTFy?=
- =?utf-8?B?Q2RiVlVJaS9ZT1ROL1BYdy9MYWZwNWc2aXRTcWlGbXdkaS9GZHNVK1Zta1J6?=
- =?utf-8?B?eDVtTU1CQTQwdE43VlBBZzVSVDVNNnZHRm9VOVdQTVNMR2Q5SHo2eE1MWVR0?=
- =?utf-8?B?ZW5IejVjOVZRUnc5ZTJacEZURHJoei96dGdoTDc1a1gxQ29GQWlkYkpnZjh0?=
- =?utf-8?B?SXNQODNzU0hDQmxUR2Z1MDNGQmNDcnFSdUdUMm41UnVWZHFyNHI4Y3F3cmc3?=
- =?utf-8?B?S1BSVXFxalRwOWJFcnd5L0hwSy9RMlpqSW9XRzZpVDNBb3hjMFd1K0dpdDI4?=
- =?utf-8?B?anAvR1ZpdFFSc0pmZHZuZWUrUzRCRDVzd0lzVW81YTdDai9vQnlLZkR5cDhM?=
- =?utf-8?B?S2RHaW1aMzkxQ2paTVZwMGFRL1lEVElwZ1docW8zNGsxUGlHdnlOU2tXNjNQ?=
- =?utf-8?B?YnpaTVpSdkczTjFheHBWR3NHSmJZSnZKYUFISDFxRzJ6VDVEeXRNOFdDMm1m?=
- =?utf-8?B?M1BSKzk4RG9yaFJlbnZ6WmExQnFBc1IxMmVadnloQmlBc1J3bFU3WUx0aWcz?=
- =?utf-8?B?Q2tiVHR1ektjNEl3TTFrVnBRM2JzNW4yd2ZtbUtLVmJ4N2xkWTYzcThEbVgr?=
- =?utf-8?B?NGVRWHdTQ0QvaW9wdmoxN2d6czFHVXNjUjZSdERZQWRkTk1UQklHRFFZUEF3?=
- =?utf-8?B?a3dPeGZ6aTBPZnlGL1RlK2QyMkVWcVhhRFJaV1NtTWVNaVlSSmkrL3dQbER4?=
- =?utf-8?B?SnFOV2dGWTNxYmUvRjlJUXA4VWpwN0lEZTZsQW9JZFNUVVBMbkppN25yd0pF?=
- =?utf-8?B?ZElYajdlTGk4VThscGJCWlhFWUFFRm1zMVhLY05lRjduN1ZvVjhZbW4zM1FL?=
- =?utf-8?B?cnhiM3JXQUM0SSs4MU04d2hsenprOTMvSDVkc0ZpOWxSY05YWGJ5dkhtVlZO?=
- =?utf-8?B?UTljS3pPMVh4M1p0MkRJMU42ZlZ6YmRMM0hJOFNsaFVDa3hLS2NlMFNPWGxP?=
- =?utf-8?B?U3R1ZDF1Y0V0d2ZuTnM5MCs5bzF2SkFGd25GbmhTbUVpbzQvMjZVRnU4aDNj?=
- =?utf-8?B?a21BT1IxeHRQbDZxRWVGTDVGY0tqQW9UblZ2bHNiN3lpZSsyTlA0clk5bnpu?=
- =?utf-8?B?VWt4VGhKclNnbEdqZ3ZqTldHeVBRcXloRGc2VVpjYVBGME9GWjdwY3VlVU1u?=
- =?utf-8?B?Wi9kQkFOa3NVdmN4TTZtckpUVGtlVGFldjVaaU9sYmJWZTNSWTI3NUJ2eG9Q?=
- =?utf-8?B?a2YyOW15d1V6UVJVNWZBbEM2UnVINnhtZ1doMjVReTNrRDZaRGgwT1I3ei92?=
- =?utf-8?B?KzlNSzJaTWRhQUc3aUlONkpnZ2dnNG1ManUycVM1RW9NY3NBbDIxQ0NUR005?=
- =?utf-8?B?ay9qWE93dHV5N3E3ZkVsV2FQUUYvMVlaSndWUDlvVGVGbHpKN04xYktIcnpm?=
- =?utf-8?B?TTl6cW4yTlZiY2V2ZThmSXJyUW45MWtOTjhQZFpGbHN5aU85MSttWHBKYzB4?=
- =?utf-8?B?TmlXU0Zub2tFeW9vL0IwV2ZzNlEwQUJTZHc1amFDVmI3dnhBQ2RLejNEVmJN?=
- =?utf-8?Q?3g6brYmJyga6plmHtyZ3kqws5s5TjTa1N1FYnWU?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+   d="scan'208";a="160544568"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 23 Feb 2021 05:11:20 +0800
+IronPort-SDR: koDEnCddQN882VXL5jLjf7rUwERZ4cCLEOLsoJUB4FEAJYy+Cj31yg6e42ke1RAklNsiK7J59V
+ sZ0k7lUrKHvbGskfVVoVRMi/fppw1QtB5WlNlxr8vIhfVXgm9YWTi9tRefdI/dD5MH4lbHIB87
+ HB0xcDXaRLkskwgYU5OhObI20zz4tmLnH127AKcDWiY3byfh2I+14157fGnu2uCsPbx513lkse
+ VSXn6y8QAk1XyH/+QY9AChnNrjga5sv5isulqCfmsUkFELM4xQWNDj6Edlc16FqLKfu89xogKf
+ 6OtS/PjDm1c4oqsx3A9AWIie
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Feb 2021 12:54:39 -0800
+IronPort-SDR: fRfcqDGdkdW2oAob0INVPkDULHy7+ONF7bYg/WFeMyp4ZTsYLxwO5t5AsMobCB+iAJnTe+hSsV
+ RpYQpp97z4En5D6sT5iJ4fAB9bG/1B+bPRG1NbnOwN4/OhEyb3kmMTVEzGUl8hD9Kj+CD6oru3
+ ksK5mTMQzY/7FXlG0X2OQeEadwyEk+/OXCJ2zdSkcbAV89dpPklnd/7q1RTWV0V1sHjlwWEM41
+ 0/0lfUKBXQK5nHKuIwsVn4J0JP/NeZUdqGegDiGTcG2cZAf6+qUJpttLO42bRi5wHBp779dIwZ
+ KHY=
+WDCIronportException: Internal
+Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
+  by uls-op-cesaip02.wdc.com with ESMTP; 22 Feb 2021 13:11:20 -0800
+From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-block@vger.kernel.org, dm-devel@redhat.com
+Cc:     axboe@kernel.dk, fujita.tomonori@lab.ntt.co.jp, tim@cyberelk.net,
+        mst@redhat.com, jasowang@redhat.com, pbonzini@redhat.com,
+        stefanha@redhat.com, davem@davemloft.net, bp@alien8.de,
+        agk@redhat.com, snitzer@redhat.com, ulf.hansson@linaro.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        dgilbert@interlog.com, Kai.Makisara@kolumbus.fi,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bfields@fieldses.org,
+        chuck.lever@oracle.com, baolin.wang@linaro.org,
+        vbadigan@codeaurora.org, zliua@micron.com, richard.peng@oppo.com,
+        chaitanya.kulkarni@wdc.com, guoqing.jiang@cloud.ionos.com,
+        stanley.chu@mediatek.com, cang@codeaurora.org,
+        asutoshd@codeaurora.org, beanhuo@micron.com, jaegeuk@kernel.org
+Subject: [RFC PATCH] blk-core: remove blk_put_request()
+Date:   Mon, 22 Feb 2021 13:11:15 -0800
+Message-Id: <20210222211115.30416-1-chaitanya.kulkarni@wdc.com>
+X-Mailer: git-send-email 2.22.1.dirty
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a6e921db-25de-4f81-8e23-08d8d768206f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Feb 2021 19:29:09.2691
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: FzJo4zaNj5Frljl9fSVeNIVW5f98W0YMwRAcAktn9Vu6oP5/JBpu76wK+niSImFBKpgwzbkzl7Q/BTfa0pKpEw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB7132
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-DQo+IEBAIC03NDQ3LDggKzc0NTIsMTQgQEAgc3RhdGljIGludCB1ZnNfZ2V0X2RldmljZV9kZXNj
-KHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+IA0KPiAgICAgICAgIGlmIChkZXZfaW5mby0+d3NwZWN2
-ZXJzaW9uID49IFVGU19ERVZfSFBCX1NVUFBPUlRfVkVSU0lPTiAmJg0KPiAgICAgICAgICAgICAo
-Yl91ZnNfZmVhdHVyZV9zdXAgJiBVRlNfREVWX0hQQl9TVVBQT1JUKSkgew0KPiAtICAgICAgICAg
-ICAgICAgZGV2X2luZm8tPmhwYl9lbmFibGVkID0gdHJ1ZTsNCj4gLSAgICAgICAgICAgICAgIHVm
-c2hwYl9nZXRfZGV2X2luZm8oaGJhLCBkZXNjX2J1Zik7DQo+ICsgICAgICAgICAgICAgICBib29s
-IGhwYl9lbiA9IGZhbHNlOw0KPiArDQo+ICsgICAgICAgICAgICAgICBlcnIgPSB1ZnNoY2RfcXVl
-cnlfZmxhZ19yZXRyeShoYmEsDQo+IFVQSVVfUVVFUllfT1BDT0RFX1JFQURfRkxBRywNCj4gKyAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFFVRVJZX0ZMQUdfSURO
-X0hQQl9FTiwgMCwgJmhwYl9lbik7DQo+ICsgICAgICAgICAgICAgICBpZiAoIWVyciAmJiBocGJf
-ZW4pIHsNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgZGV2X2luZm8tPmhwYl9lbmFibGVkID0g
-dHJ1ZTsNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgdWZzaHBiX2dldF9kZXZfaW5mbyhoYmEs
-IGRlc2NfYnVmKTsNClFVRVJZX0ZMQUdfSUROX0hQQl9FTiBvbmx5IGFwcGx5IHRvIEhQQjIuMA0K
-DQo+ICsgICAgICAgICAgICAgICB9DQo+ICAgICAgICAgfQ0KPiANCj4gKw0KPiArLyoNCj4gKyAq
-IFdSSVRFX0JVRkZFUiBDTUQgc3VwcG9ydCAzNksgKGxlbj05KSB+IDUxMksgKGxlbj0xMjgpIGRl
-ZmF1bHQuDQo+ICsgKiBpdCBpcyBwb3NzaWJsZSB0byBjaGFuZ2UgcmFuZ2Ugb2YgdHJhbnNmZXJf
-bGVuIHRocm91Z2ggc3lzZnMuDQo+ICsgKi8NCkFjdHVhbGx5IHRoZSB0cmFuc2ZlciBsZW5ndGgg
-aXMgbGltaXRlZCBieSBpdHMgKGFuZCByZWFkIGlkKSBzaW5nbGUgYnl0ZS4NCkZpeGluZyBNQVhf
-SFBCX1JFQURfSUQgPSAxMjggIGlzIElNTyBhIHJlYXNvbmFibGUgY2hvaWNlLA0KQnV0IG5vdCBs
-aW1pdGVkIGJ5IHNwZWMuICBNYXliZSBtYWtlIG5vdGUgb2YgdGhhdCA/DQoNCj4gK3N0YXRpYyBp
-bmxpbmUgYm9vbCB1ZnNocGJfaXNfcmVxdWlyZWRfd2Ioc3RydWN0IHVmc2hwYl9sdSAqaHBiLCBp
-bnQgbGVuKQ0KPiArew0KPiArICAgICAgIHJldHVybiAobGVuID49IGhwYi0+cHJlX3JlcV9taW5f
-dHJfbGVuICYmDQo+ICsgICAgICAgICAgICAgICBsZW4gPD0gaHBiLT5wcmVfcmVxX21heF90cl9s
-ZW4pOw0KPiAgfQ0KTWF5YmUgYWxzbyBjaGVjayBIUEIyLjAgYXMgd2VsbD8NCg0KPiAtdm9pZCB1
-ZnNocGJfcHJlcChzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBzdHJ1Y3QgdWZzaGNkX2xyYiAqbHJicCkN
-Cj4gK2ludCB1ZnNocGJfcHJlcChzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBzdHJ1Y3QgdWZzaGNkX2xy
-YiAqbHJicCkNCj4gIHsNCj4gICAgICAgICBzdHJ1Y3QgdWZzaHBiX2x1ICpocGI7DQo+ICAgICAg
-ICAgc3RydWN0IHVmc2hwYl9yZWdpb24gKnJnbjsNCj4gQEAgLTI4MiwyNiArNTQ2LDI3IEBAIHZv
-aWQgdWZzaHBiX3ByZXAoc3RydWN0IHVmc19oYmEgKmhiYSwgc3RydWN0DQo+IHVmc2hjZF9scmIg
-KmxyYnApDQo+ICAgICAgICAgdTY0IHBwbjsNCj4gICAgICAgICB1bnNpZ25lZCBsb25nIGZsYWdz
-Ow0KPiAgICAgICAgIGludCB0cmFuc2Zlcl9sZW4sIHJnbl9pZHgsIHNyZ25faWR4LCBzcmduX29m
-ZnNldDsNCj4gKyAgICAgICBpbnQgcmVhZF9pZCA9IE1BWF9IUEJfUkVBRF9JRDsNClNob3VsZCBi
-ZSAwIGlmIHdiIGlzIG5vdCB1c2VkPw0KDQo+ICsNCj4gKyAgICAgICBocGItPnByZV9yZXEgPSBr
-Y2FsbG9jKHFkLCBzaXplb2Yoc3RydWN0IHVmc2hwYl9yZXEpLCBHRlBfS0VSTkVMKTsNCj4gKyAg
-ICAgICBocGItPnRocm90dGxlX3ByZV9yZXEgPSBxZDsNCldoYXQgaXMgdGhlIHBvaW50IGluIHRo
-cm90dGxpbmcgaWYgeW91IGFyZSBhbGxvd2luZyAzMiBzaW11bHRhbmVvdXMgY29tbWFuZHM/DQpU
-aGVyZSBjYW4ndCBiZSBtb3JlIHRoYW4gcWQvMiBhbnl3YXk/DQpPbiB0aGUgY29udHJhcnksIGl0
-IG1ha2VzIG11Y2ggbW9yZSBzZW5zZSB0byBjb250cm9sIHRoZSBpbmZsaWdodCBtYXAgcmVxdWVz
-dHMsIGluc3RlYWQ/DQoNCj4gKyAgICAgICBocGItPm51bV9pbmZsaWdodF9wcmVfcmVxID0gMDsN
-Cj4gKw0KDQo+IC0jZGVmaW5lIEhQQl9TVVBQT1JUX1ZFUlNJT04gICAgICAgICAgICAgICAgICAg
-IDB4MTAwDQo+ICsjZGVmaW5lIEhQQl9TVVBQT1JUX1ZFUlNJT04gICAgICAgICAgICAgICAgICAg
-IDB4MjAwDQpJbiB1ZnNocGJfZ2V0X2Rldl9pbmZvIHlvdSBhcmUgYmFpbGluZyBvdXQgaWYgdmVy
-c2lvbiAhPSBIUEJfU1VQUE9SVF9WRVJTSU9ODQpNZWFuaW5nIHlvdSBhcmUgbm8gbG9uZ2VyIGJh
-Y2t3YXJkIHN1cHBvcnRpbmcgSFBCMS4wPw0KDQpNYXliZSBpdCB3b3VsZCBiZSBtb3JlIGNvbnN0
-cnVjdGl2ZSB0byBhbGxvdyBhIGRheSBvciAyIGZvciBtb3JlIHBlb3BsZSB0byBjb21tZW50IHRo
-aXMgbmV3IHBhdGNoPw0KQWZ0ZXIgYWxsLCBpdCBpcyBhIGxvdCBvZiBjb2RlLg0KDQpUaGFua3Ms
-DQpBdnJpDQo=
+The function blk_put_request() is just a wrapper to
+blk_mq_free_request(), remove the unnecessary wrapper.
+
+Any feedback is welcome on this RFC.
+
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ block/blk-core.c                   |  6 ------
+ block/blk-merge.c                  |  2 +-
+ block/bsg-lib.c                    |  4 ++--
+ block/bsg.c                        |  4 ++--
+ block/scsi_ioctl.c                 |  6 +++---
+ drivers/block/paride/pd.c          |  2 +-
+ drivers/block/pktcdvd.c            |  2 +-
+ drivers/block/virtio_blk.c         |  2 +-
+ drivers/cdrom/cdrom.c              |  4 ++--
+ drivers/ide/ide-atapi.c            |  2 +-
+ drivers/ide/ide-cd.c               |  4 ++--
+ drivers/ide/ide-cd_ioctl.c         |  2 +-
+ drivers/ide/ide-devsets.c          |  2 +-
+ drivers/ide/ide-disk.c             |  2 +-
+ drivers/ide/ide-ioctls.c           |  4 ++--
+ drivers/ide/ide-park.c             |  2 +-
+ drivers/ide/ide-pm.c               |  4 ++--
+ drivers/ide/ide-tape.c             |  2 +-
+ drivers/ide/ide-taskfile.c         |  2 +-
+ drivers/md/dm-mpath.c              |  2 +-
+ drivers/mmc/core/block.c           | 10 +++++-----
+ drivers/scsi/scsi_error.c          |  2 +-
+ drivers/scsi/scsi_lib.c            |  2 +-
+ drivers/scsi/sg.c                  |  6 +++---
+ drivers/scsi/st.c                  |  4 ++--
+ drivers/scsi/ufs/ufshcd.c          |  6 +++---
+ drivers/target/target_core_pscsi.c |  4 ++--
+ fs/nfsd/blocklayout.c              |  4 ++--
+ include/linux/blkdev.h             |  1 -
+ 29 files changed, 46 insertions(+), 53 deletions(-)
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index fc60ff208497..1754f5e7cc80 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -642,12 +642,6 @@ struct request *blk_get_request(struct request_queue *q, unsigned int op,
+ }
+ EXPORT_SYMBOL(blk_get_request);
+ 
+-void blk_put_request(struct request *req)
+-{
+-	blk_mq_free_request(req);
+-}
+-EXPORT_SYMBOL(blk_put_request);
+-
+ static void handle_bad_sector(struct bio *bio, sector_t maxsector)
+ {
+ 	char b[BDEVNAME_SIZE];
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index ffb4aa0ea68b..f3493ee243fd 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -845,7 +845,7 @@ int blk_attempt_req_merge(struct request_queue *q, struct request *rq,
+ 
+ 	free = attempt_merge(q, rq, next);
+ 	if (free) {
+-		blk_put_request(free);
++		blk_mq_free_request(free);
+ 		return 1;
+ 	}
+ 
+diff --git a/block/bsg-lib.c b/block/bsg-lib.c
+index 330fede77271..8ea2b33783fb 100644
+--- a/block/bsg-lib.c
++++ b/block/bsg-lib.c
+@@ -67,7 +67,7 @@ static int bsg_transport_fill_hdr(struct request *rq, struct sg_io_v4 *hdr,
+ 
+ out_free_bidi_rq:
+ 	if (job->bidi_rq)
+-		blk_put_request(job->bidi_rq);
++		blk_mq_free_request(job->bidi_rq);
+ out:
+ 	kfree(job->request);
+ 	return ret;
+@@ -128,7 +128,7 @@ static void bsg_transport_free_rq(struct request *rq)
+ 
+ 	if (job->bidi_rq) {
+ 		blk_rq_unmap_user(job->bidi_bio);
+-		blk_put_request(job->bidi_rq);
++		blk_mq_free_request(job->bidi_rq);
+ 	}
+ 
+ 	kfree(job->request);
+diff --git a/block/bsg.c b/block/bsg.c
+index bd10922d5cbb..4ddc84aebecf 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -158,7 +158,7 @@ static int bsg_sg_io(struct request_queue *q, fmode_t mode, void __user *uarg)
+ 
+ 	ret = q->bsg_dev.ops->fill_hdr(rq, &hdr, mode);
+ 	if (ret) {
+-		blk_put_request(rq);
++		blk_mq_free_request(rq);
+ 		return ret;
+ 	}
+ 
+@@ -189,7 +189,7 @@ static int bsg_sg_io(struct request_queue *q, fmode_t mode, void __user *uarg)
+ 
+ out_free_rq:
+ 	rq->q->bsg_dev.ops->free_rq(rq);
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 	if (!ret && copy_to_user(uarg, &hdr, sizeof(hdr)))
+ 		return -EFAULT;
+ 	return ret;
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 6599bac0a78c..52cd3fd924fc 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -366,7 +366,7 @@ static int sg_io(struct request_queue *q, struct gendisk *bd_disk,
+ out_free_cdb:
+ 	scsi_req_free_cmd(req);
+ out_put_request:
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 	return ret;
+ }
+ 
+@@ -509,7 +509,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+ 	}
+ 	
+ error:
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 
+ error_free_buffer:
+ 	kfree(buffer);
+@@ -534,7 +534,7 @@ static int __blk_send_generic(struct request_queue *q, struct gendisk *bd_disk,
+ 	scsi_req(rq)->cmd_len = 6;
+ 	blk_execute_rq(bd_disk, rq, 0);
+ 	err = scsi_req(rq)->result ? -EIO : 0;
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 
+ 	return err;
+ }
+diff --git a/drivers/block/paride/pd.c b/drivers/block/paride/pd.c
+index 897acda20ac8..381fc0cf0b35 100644
+--- a/drivers/block/paride/pd.c
++++ b/drivers/block/paride/pd.c
+@@ -782,7 +782,7 @@ static int pd_special_command(struct pd_unit *disk,
+ 
+ 	req->func = func;
+ 	blk_execute_rq(disk->gd, rq, 0);
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
+index fc4b0f1aa86d..bb8d7ad52550 100644
+--- a/drivers/block/pktcdvd.c
++++ b/drivers/block/pktcdvd.c
+@@ -726,7 +726,7 @@ static int pkt_generic_packet(struct pktcdvd_device *pd, struct packet_command *
+ 	if (scsi_req(rq)->result)
+ 		ret = -EIO;
+ out:
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index b0285db7cf4f..691d6d7ab135 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -323,7 +323,7 @@ static int virtblk_get_id(struct gendisk *disk, char *id_str)
+ 	blk_execute_rq(vblk->disk, req, false);
+ 	err = blk_status_to_errno(virtblk_result(blk_mq_rq_to_pdu(req)));
+ out:
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ 	return err;
+ }
+ 
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 90ad34c6ef8e..9131438da983 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -2195,7 +2195,7 @@ static int cdrom_read_cdda_bpc(struct cdrom_device_info *cdi, __u8 __user *ubuf,
+ 
+ 		ret = blk_rq_map_user(q, rq, NULL, ubuf, len, GFP_KERNEL);
+ 		if (ret) {
+-			blk_put_request(rq);
++			blk_mq_free_request(rq);
+ 			break;
+ 		}
+ 
+@@ -2226,7 +2226,7 @@ static int cdrom_read_cdda_bpc(struct cdrom_device_info *cdi, __u8 __user *ubuf,
+ 
+ 		if (blk_rq_unmap_user(bio))
+ 			ret = -EFAULT;
+-		blk_put_request(rq);
++		blk_mq_free_request(rq);
+ 
+ 		if (ret)
+ 			break;
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index a1ce9f5ac3aa..0e8446189d67 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -110,7 +110,7 @@ int ide_queue_pc_tail(ide_drive_t *drive, struct gendisk *disk,
+ 	blk_execute_rq(disk, rq, 0);
+ 	error = scsi_req(rq)->result ? -EIO : 0;
+ put_req:
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 	return error;
+ }
+ EXPORT_SYMBOL_GPL(ide_queue_pc_tail);
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index cffbcc27a34c..c32022a40ce7 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -462,7 +462,7 @@ int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
+ 			error = blk_rq_map_kern(drive->queue, rq, buffer,
+ 						*bufflen, GFP_NOIO);
+ 			if (error) {
+-				blk_put_request(rq);
++				blk_mq_free_request(rq);
+ 				return error;
+ 			}
+ 		}
+@@ -501,7 +501,7 @@ int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
+ 			}
+ 			--retries;
+ 		}
+-		blk_put_request(rq);
++		blk_mq_free_request(rq);
+ 		if (delay)
+ 			ssleep(2);
+ 	} while (failed && retries >= 0);
+diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
+index 011eab9c69b7..83920542bdcb 100644
+--- a/drivers/ide/ide-cd_ioctl.c
++++ b/drivers/ide/ide-cd_ioctl.c
+@@ -301,7 +301,7 @@ int ide_cdrom_reset(struct cdrom_device_info *cdi)
+ 	rq->rq_flags = RQF_QUIET;
+ 	blk_execute_rq(cd->disk, rq, 0);
+ 	ret = scsi_req(rq)->result ? -EIO : 0;
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 	/*
+ 	 * A reset will unlock the door. If it was previously locked,
+ 	 * lock it again.
+diff --git a/drivers/ide/ide-devsets.c b/drivers/ide/ide-devsets.c
+index ca1d4b3d3878..3d09a17b0f93 100644
+--- a/drivers/ide/ide-devsets.c
++++ b/drivers/ide/ide-devsets.c
+@@ -175,7 +175,7 @@ int ide_devset_execute(ide_drive_t *drive, const struct ide_devset *setting,
+ 
+ 	blk_execute_rq(NULL, rq, 0);
+ 	ret = scsi_req(rq)->result;
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+index 8413731c6259..afa94ab8c7e3 100644
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -483,7 +483,7 @@ static int set_multcount(ide_drive_t *drive, int arg)
+ 	drive->mult_req = arg;
+ 	drive->special_flags |= IDE_SFLAG_SET_MULTMODE;
+ 	blk_execute_rq(NULL, rq, 0);
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 
+ 	return (drive->mult_count == arg) ? 0 : -EIO;
+ }
+diff --git a/drivers/ide/ide-ioctls.c b/drivers/ide/ide-ioctls.c
+index 43fbc37d85c3..8096f3afae12 100644
+--- a/drivers/ide/ide-ioctls.c
++++ b/drivers/ide/ide-ioctls.c
+@@ -139,7 +139,7 @@ static int ide_cmd_ioctl(ide_drive_t *drive, void __user *argp)
+ 		ide_req(rq)->type = ATA_PRIV_TASKFILE;
+ 		blk_execute_rq(NULL, rq, 0);
+ 		err = scsi_req(rq)->result ? -EIO : 0;
+-		blk_put_request(rq);
++		blk_mq_free_request(rq);
+ 
+ 		return err;
+ 	}
+@@ -237,7 +237,7 @@ static int generic_drive_reset(ide_drive_t *drive)
+ 	scsi_req(rq)->cmd[0] = REQ_DRIVE_RESET;
+ 	blk_execute_rq(NULL, rq, 1);
+ 	ret = scsi_req(rq)->result;
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/ide/ide-park.c b/drivers/ide/ide-park.c
+index a80a0f28f7b9..38e7194b69df 100644
+--- a/drivers/ide/ide-park.c
++++ b/drivers/ide/ide-park.c
+@@ -39,7 +39,7 @@ static void issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
+ 	ide_req(rq)->special = &timeout;
+ 	blk_execute_rq(NULL, rq, 1);
+ 	rc = scsi_req(rq)->result ? -EIO : 0;
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 	if (rc)
+ 		goto out;
+ 
+diff --git a/drivers/ide/ide-pm.c b/drivers/ide/ide-pm.c
+index d680b3e3295f..75105188b2b1 100644
+--- a/drivers/ide/ide-pm.c
++++ b/drivers/ide/ide-pm.c
+@@ -29,7 +29,7 @@ int generic_ide_suspend(struct device *dev, pm_message_t mesg)
+ 
+ 	blk_execute_rq(NULL, rq, 0);
+ 	ret = scsi_req(rq)->result ? -EIO : 0;
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 
+ 	if (ret == 0 && ide_port_acpi(hwif)) {
+ 		/* call ACPI _PS3 only after both devices are suspended */
+@@ -84,7 +84,7 @@ int generic_ide_resume(struct device *dev)
+ 	rqpm.pm_state = PM_EVENT_ON;
+ 
+ 	err = ide_pm_execute_rq(rq);
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 
+ 	if (err == 0 && dev->driver) {
+ 		struct ide_driver *drv = to_ide_driver(dev->driver);
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index fa05e7e7d609..696f175d565d 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -882,7 +882,7 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int size)
+ 	if (scsi_req(rq)->result == IDE_DRV_ERROR_GENERAL)
+ 		ret = -EIO;
+ out_put:
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+index 6665fc4724b9..b7624e0e9fb1 100644
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -446,7 +446,7 @@ int ide_raw_taskfile(ide_drive_t *drive, struct ide_cmd *cmd, u8 *buf,
+ 	blk_execute_rq(NULL, rq, 0);
+ 	error = scsi_req(rq)->result ? -EIO : 0;
+ put_req:
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 	return error;
+ }
+ EXPORT_SYMBOL(ide_raw_taskfile);
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index bced42f082b0..4189ddeb305e 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -579,7 +579,7 @@ static void multipath_release_clone(struct request *clone,
+ 						    clone->io_start_time_ns);
+ 	}
+ 
+-	blk_put_request(clone);
++	blk_mq_free_request(clone);
+ }
+ 
+ /*
+diff --git a/drivers/mmc/core/block.c b/drivers/mmc/core/block.c
+index a1d6b68320ae..64e889f702f7 100644
+--- a/drivers/mmc/core/block.c
++++ b/drivers/mmc/core/block.c
+@@ -255,7 +255,7 @@ static ssize_t power_ro_lock_store(struct device *dev,
+ 	req_to_mmc_queue_req(req)->drv_op = MMC_DRV_OP_BOOT_WP;
+ 	blk_execute_rq(NULL, req, 0);
+ 	ret = req_to_mmc_queue_req(req)->drv_op_result;
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ 
+ 	if (!ret) {
+ 		pr_info("%s: Locking boot partition ro until next power on\n",
+@@ -632,7 +632,7 @@ static int mmc_blk_ioctl_cmd(struct mmc_blk_data *md,
+ 	blk_execute_rq(NULL, req, 0);
+ 	ioc_err = req_to_mmc_queue_req(req)->drv_op_result;
+ 	err = mmc_blk_ioctl_copy_to_user(ic_ptr, idata);
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ 
+ cmd_done:
+ 	kfree(idata->buf);
+@@ -705,7 +705,7 @@ static int mmc_blk_ioctl_multi_cmd(struct mmc_blk_data *md,
+ 	for (i = 0; i < num_of_cmds && !err; i++)
+ 		err = mmc_blk_ioctl_copy_to_user(&cmds[i], idata[i]);
+ 
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ 
+ cmd_err:
+ 	for (i = 0; i < num_of_cmds; i++) {
+@@ -2728,7 +2728,7 @@ static int mmc_dbg_card_status_get(void *data, u64 *val)
+ 		*val = ret;
+ 		ret = 0;
+ 	}
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ 
+ 	return ret;
+ }
+@@ -2763,7 +2763,7 @@ static int mmc_ext_csd_open(struct inode *inode, struct file *filp)
+ 	req_to_mmc_queue_req(req)->drv_op_data = &ext_csd;
+ 	blk_execute_rq(NULL, req, 0);
+ 	err = req_to_mmc_queue_req(req)->drv_op_result;
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ 	if (err) {
+ 		pr_err("FAILED %d\n", err);
+ 		goto out_free;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index c00f06e9ecb0..9ae8a699b934 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1971,7 +1971,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 
+ static void eh_lock_door_done(struct request *req, blk_status_t status)
+ {
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 4d2280658559..48a0a2cbec6b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -288,7 +288,7 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 		scsi_normalize_sense(rq->sense, rq->sense_len, sshdr);
+ 	ret = rq->result;
+  out:
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 4383d93110f8..7fd52e117737 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -811,7 +811,7 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 	if (atomic_read(&sdp->detaching)) {
+ 		if (srp->bio) {
+ 			scsi_req_free_cmd(scsi_req(srp->rq));
+-			blk_put_request(srp->rq);
++			blk_mq_free_request(srp->rq);
+ 			srp->rq = NULL;
+ 		}
+ 
+@@ -1407,7 +1407,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 	 */
+ 	srp->rq = NULL;
+ 	scsi_req_free_cmd(scsi_req(rq));
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ 
+ 	write_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 	if (unlikely(srp->orphan)) {
+@@ -1862,7 +1862,7 @@ sg_finish_rem_req(Sg_request *srp)
+ 
+ 	if (srp->rq) {
+ 		scsi_req_free_cmd(scsi_req(srp->rq));
+-		blk_put_request(srp->rq);
++		blk_mq_free_request(srp->rq);
+ 	}
+ 
+ 	if (srp->res_used)
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 841ad2fc369a..4bc4e2318090 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -534,7 +534,7 @@ static void st_scsi_execute_end(struct request *req, blk_status_t status)
+ 		complete(SRpnt->waiting);
+ 
+ 	blk_rq_unmap_user(tmp);
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ }
+ 
+ static int st_scsi_execute(struct st_request *SRpnt, const unsigned char *cmd,
+@@ -561,7 +561,7 @@ static int st_scsi_execute(struct st_request *SRpnt, const unsigned char *cmd,
+ 		err = blk_rq_map_user(req->q, req, mdata, NULL, bufflen,
+ 				      GFP_KERNEL);
+ 		if (err) {
+-			blk_put_request(req);
++			blk_mq_free_request(req);
+ 			return DRIVER_ERROR << 24;
+ 		}
+ 	}
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index fb32d122f2e3..ff205fd3c555 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2871,7 +2871,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 			err ? "query_complete_err" : "query_complete");
+ 
+ out_put_tag:
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ out_unlock:
+ 	up_read(&hba->clk_scaling_lock);
+ 	return err;
+@@ -6409,7 +6409,7 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	__clear_bit(free_slot, &hba->outstanding_tasks);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ 
+ 	ufshcd_release(hba);
+ 	return err;
+@@ -6584,7 +6584,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 	}
+ 
+ out:
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ out_unlock:
+ 	up_read(&hba->clk_scaling_lock);
+ 	return err;
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index 33770e5808ce..3fa30a3d1d81 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -1006,7 +1006,7 @@ pscsi_execute_cmd(struct se_cmd *cmd)
+ 	return 0;
+ 
+ fail_put_request:
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ fail:
+ 	kfree(pt);
+ 	return ret;
+@@ -1061,7 +1061,7 @@ static void pscsi_req_done(struct request *req, blk_status_t status)
+ 		break;
+ 	}
+ 
+-	blk_put_request(req);
++	blk_mq_free_request(req);
+ 	kfree(pt);
+ }
+ 
+diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
+index 1058659a8d31..bd3ecdbeb3fe 100644
+--- a/fs/nfsd/blocklayout.c
++++ b/fs/nfsd/blocklayout.c
+@@ -265,7 +265,7 @@ static int nfsd4_scsi_identify_device(struct block_device *bdev,
+ 	len = (buf[2] << 8) + buf[3] + 4;
+ 	if (len > bufflen) {
+ 		if (len <= maxlen && retries--) {
+-			blk_put_request(rq);
++			blk_mq_free_request(rq);
+ 			kfree(buf);
+ 			bufflen = len;
+ 			goto again;
+@@ -308,7 +308,7 @@ static int nfsd4_scsi_identify_device(struct block_device *bdev,
+ 	}
+ 
+ out_put_request:
+-	blk_put_request(rq);
++	blk_mq_free_request(rq);
+ out_free_buf:
+ 	kfree(buf);
+ 	return error;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index c032cfe133c7..ed150b724015 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -914,7 +914,6 @@ extern int blk_register_queue(struct gendisk *disk);
+ extern void blk_unregister_queue(struct gendisk *disk);
+ blk_qc_t submit_bio_noacct(struct bio *bio);
+ extern void blk_rq_init(struct request_queue *q, struct request *rq);
+-extern void blk_put_request(struct request *);
+ extern struct request *blk_get_request(struct request_queue *, unsigned int op,
+ 				       blk_mq_req_flags_t flags);
+ extern int blk_lld_busy(struct request_queue *q);
+-- 
+2.22.1
+
