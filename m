@@ -2,157 +2,195 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD637C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 14:56:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BB5FC433E9
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 15:13:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D74664E83
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 14:56:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBCCB64E83
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 15:13:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230215AbhBVO4d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Feb 2021 09:56:33 -0500
-Received: from esa2.hc3370-68.iphmx.com ([216.71.145.153]:33564 "EHLO
-        esa2.hc3370-68.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229991AbhBVO4c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2021 09:56:32 -0500
-X-Greylist: delayed 314 seconds by postgrey-1.27 at vger.kernel.org; Mon, 22 Feb 2021 09:56:32 EST
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=citrix.com; s=securemail; t=1614005791;
-  h=date:from:to:cc:subject:message-id:references:
-   content-transfer-encoding:in-reply-to:mime-version;
-  bh=MJCxW3qNl1hPqMGc5zH16ZGY1J+V6SCxU2+Rwzu6njQ=;
-  b=QSTwtmjDxI5NxRAxwSqWBi9DMLQapgx42FXIqotbwewIWkvi/hNRaGNa
-   z1Wz9p4ZAJ12QW0Ur3oCqLrqlV7Ki0U3ImhTydylA0GGclNh5s+p4YZ/Z
-   ZCmcmtlChxA04ZpRBjjoHVKLbwbfmo6BGkaJDl5yh7UfZ4Ir9TMl7qlu6
-   Q=;
-Authentication-Results: esa2.hc3370-68.iphmx.com; dkim=pass (signature verified) header.i=@citrix.onmicrosoft.com
-IronPort-SDR: 4FTGYgDDVZVKUJiVByAJDO+Gq2ll4f3pfvbAQ5vnRiwBYIoOKobf2dCEXaGK+mCuIsvbbnw0jh
- gOfPGd9qOR+0f0FrmusWHV4F89lXZxGm4l31j4dP1u/AMBN+6lxL86wq1i/plBAHnCne7Ej3Sr
- wM7hp7+LtJBQ8V8S5RiKPie6sNmYMZ/a6pmW5lllLZi3b6bakS3pg8LiepHFqSfY4kB1iObfMW
- okuNPVnN/yDjm+rr0IGOMy1EmbCt2HXZ5e0SbMGPdPm2OIiCSZsvmuFivPVslOqHWxGFqCKU3O
- weg=
-X-SBRS: 5.2
-X-MesageID: 37761949
-X-Ironport-Server: esa2.hc3370-68.iphmx.com
-X-Remote-IP: 162.221.156.83
-X-Policy: $RELAYED
-X-IronPort-AV: E=Sophos;i="5.81,197,1610427600"; 
-   d="scan'208";a="37761949"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AXFgoFxid9SBdi90XzbWQoD7zc+/Z/oua60Zh0A6YTHNCQ2x19T4T/Wt8+9jSfzYjhjV59Aj5/Gq12L08nRDkZqyhORw0QyBNGJrZ/NiwvbReR4Lly7HPRPt+aZtEvgurXFsJcwaZ7AdzB//qEYCfMGnbIVLYWwbTEQQAOTKccTMBzoDeNz7hdJd4XVa9W3FTjZ3AP/2X8Fh7I18CLvJT+nf5zsZZ2kg7Rpknq5YTvgcc110WFPOBugoCcE22aAiRuaJcMR/2CKVU2A0PC1zqs1dVeRTVDocKmTX7A3ro74K1nNWs71kqIo3OkUb471LAaaZU2nw2IPK1ajBbJopfg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IHWIzam8C4gOjndBTLDHVX7Kab5zRN8V8acWF+pcAAs=;
- b=gIi/CBQye3wk8w2BE87B8aYZ9wpMuOuuMm2tED4AijYoGV/UzWAND7C+/md/XmESFRueKQCQg06ENEP8xDPvCutUjhGpgs8dcFOo5ZK1WMLdT6+66AmRUOaELTc/GSNtIrhets5EGItqEFQ/zqk71Kj4hBgGC1/ppB6uYXcoHZ0zfKxHQAlkqN1qqf4vIPsPHEMcz12BauywsNR7ZhLzr/XqMhHCzj+lwYLjfTjxBjULqEi2vli/CVAnyYi0TPCXAVSfDzciP/vLxEU+nIllXKeFGSLj7B7Ii3dlIl1JFZiMfPT4NgEr0HC2FE9R1JIRP5s2fAHpZGTrtXcT0k3Kjw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=citrix.com; dmarc=pass action=none header.from=citrix.com;
- dkim=pass header.d=citrix.com; arc=none
+        id S231173AbhBVPNm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Feb 2021 10:13:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39936 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230202AbhBVPNZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2021 10:13:25 -0500
+Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A172C061786;
+        Mon, 22 Feb 2021 07:12:43 -0800 (PST)
+Received: by mail-wm1-x333.google.com with SMTP id i9so3926085wml.5;
+        Mon, 22 Feb 2021 07:12:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=citrix.onmicrosoft.com; s=selector2-citrix-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IHWIzam8C4gOjndBTLDHVX7Kab5zRN8V8acWF+pcAAs=;
- b=YbJMCD2VfUmFtIGu7o4d6nBIqnOAG/Gcmjn+6ZeUPebwLlY7+qfUb9bN9tpVUjzfZ0uvrIMQP2GzhxwAxQcBhDgkmhJshg1aGDk4ZpvCAjY873MqQi2/mFBxwZBvKHXP/3g8fNzUvfpmJfOmVFYWKZgtaiYzHUXym271a/TOHE0=
-Date:   Mon, 22 Feb 2021 15:50:00 +0100
-From:   Roger Pau =?utf-8?B?TW9ubsOp?= <roger.pau@citrix.com>
-To:     Juergen Gross <jgross@suse.com>
-CC:     <xen-devel@lists.xenproject.org>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>, Wei Liu <wei.liu@kernel.org>,
-        Paul Durrant <paul@xen.org>,
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=W0TOeWb9HGAVOiFV96tO3iwrSfpr1HUMq4Lyw23rID8=;
+        b=FXji/u2iaXY+XOLURddZgd2B9Komiw4Zs+cHylXgLODWE9GujYAMZXOAJt49ncgKkj
+         KXasUXoXmvp4d8wnMqKd80kcI7te+i8Ssj5jDkgEWFuHlI+B6a2sASXp0MxfAR6JnXe8
+         PMBmzH05uvtN8ixL0Xf+EQKCWEzHPeryma2B8WEKKwAVtI0pXqr1NlCyNenHmBJpSL8S
+         /+oAK7AHbhG8Bp1qrmvN2UnpdRZab4b+NfCGuGFlZhbfGdnHHN2BEQP/z7fvhdeo8a9n
+         SKJFfnaPm0+G5TFN4ZPUDwZLEAxSLZT3kXUZZdZbgYAQSBq86aQw+eD/RGBp29tx1xWa
+         GH7Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=W0TOeWb9HGAVOiFV96tO3iwrSfpr1HUMq4Lyw23rID8=;
+        b=AiJa2u4ZYYG4cGGbUvDlKsPNrYsvn5sC3tbefZHBa1Fet7VYgmMduMZdM6UvoN1GPC
+         S5Z3ig8x9Qa5yh2+itwSGbSgnFMSj3sQQcJlLBHyTGB/o/sGGyxj0hyg1cJxe9jN3KTa
+         yWoiDNiT2DU/alDTIBxJBKNYfcHPbSlcUp4VBZ4obMKn1JzDiTCcKD2dp4bP6384QFVU
+         4UODJjq/Ebe8gqeo6wqkcKzxqh2Lvav9qQyC77kHNvop/ZnlBo6llZhXb7vaNPT2x+87
+         HclkeuZrk5h/tBIIsOGCOOugYCCWMjjxLP2/lbKyUO+v7iAEQMwjZb6LMpL4CZVyjw48
+         irbA==
+X-Gm-Message-State: AOAM531Y+q21hjEBnQGvbOWuWFArByIiEuZ4QoCeH6wPNcMuUr4lHDu1
+        xf9Si1zm2rbgoTrQSCoOO2eztQ63JJXBOhEpv9I=
+X-Google-Smtp-Source: ABdhPJwJjaqNTMZMEqWfwHu3GKPnp7PUpKeoIN2SSKme4SlDCBTSRJD1aRWbEX4S9qfmjT5mjltYPQ==
+X-Received: by 2002:a05:600c:26c4:: with SMTP id 4mr9157865wmv.126.1614006761746;
+        Mon, 22 Feb 2021 07:12:41 -0800 (PST)
+Received: from debby (176-141-241-253.abo.bbox.fr. [176.141.241.253])
+        by smtp.gmail.com with ESMTPSA id q25sm20952001wmq.15.2021.02.22.07.12.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 Feb 2021 07:12:41 -0800 (PST)
+From:   Romain Perier <romain.perier@gmail.com>
+To:     Kees Cook <keescook@chromium.org>,
+        kernel-hardening@lists.openwall.com, Tejun Heo <tj@kernel.org>,
+        Zefan Li <lizefan.x@bytedance.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>
-Subject: Re: [PATCH v3 5/8] xen/events: link interdomain events to associated
- xenbus device
-Message-ID: <YDPEmFaWQsBhvmb0@Air-de-Roger>
-References: <20210219154030.10892-1-jgross@suse.com>
- <20210219154030.10892-6-jgross@suse.com>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210219154030.10892-6-jgross@suse.com>
-X-ClientProxiedBy: MR2P264CA0047.FRAP264.PROD.OUTLOOK.COM (2603:10a6:500::35)
- To DS7PR03MB5608.namprd03.prod.outlook.com (2603:10b6:5:2c9::18)
+        Jiri Pirko <jiri@nvidia.com>,
+        Sumit Semwal <sumit.semwal@linaro.org>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Jessica Yu <jeyu@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        Benjamin Block <bblock@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Felipe Balbi <balbi@kernel.org>,
+        Valentina Manea <valentina.manea.m@gmail.com>,
+        Shuah Khan <shuah@kernel.org>,
+        Shuah Khan <skhan@linuxfoundation.org>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>
+Cc:     Romain Perier <romain.perier@gmail.com>, cgroups@vger.kernel.org,
+        linux-crypto@vger.kernel.org, netdev@vger.kernel.org,
+        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linaro-mm-sig@lists.linaro.org,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        linux-integrity@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-m68k@lists.linux-m68k.org, linux-hwmon@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, alsa-devel@alsa-project.org,
+        linux-usb@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 00/20] Manual replacement of all strlcpy in favor of strscpy
+Date:   Mon, 22 Feb 2021 16:12:11 +0100
+Message-Id: <20210222151231.22572-1-romain.perier@gmail.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 387c4e78-c9b3-4029-2c2f-08d8d7412459
-X-MS-TrafficTypeDiagnostic: DM5PR03MB3068:
-X-Microsoft-Antispam-PRVS: <DM5PR03MB3068FF543A6D78210C9E04EA8F819@DM5PR03MB3068.namprd03.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2958;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Je14NHuU8TTgtU49vAC30bDxawrIvvoOhuXCa5JPGzMcNPZ6Z3VE4gcwLorgev9+wHVhGb8x45OiYfdiZI23AWAUqMEXzi9oiDtrcXeoQnV7TUK/9kbmwTOGpOum9nkDQqzPeYrrU2CtuEXrUZODzyRBdNocVaKcJCGiemolY7Mo/oHwDRiZm+r6tr5Ql2hvFlRK8t4GnRiiweoXhJMM+DSoV+0umpQxFzkfNhYbPaDYi/D9J23gHKS/xxeA1+WQirHjDqZV/iG802YIF9AvrvYfuT/Oe4PzDcblohiBA1oEBonGI8qsoecU1Wa5f67pHMFroVscrlXSWKuKu6TDprZnQU8F3ZF7XCkzXse6y89FoCmGNQlBdZ4DdRPTnqfx5A9u4LRNkORAcBGynaD6gf+rfYDq/z/nyuKvtEgtzCFYkSk5oIoGzeozjYKpceU/Z7IVTrh7roCD10VqjrvGLAxt/kSCgxKNlBTbyJBg92BCsJHiz430/0+4BxsjQgmpuqNAMr2hOrV6UZJdEkVy4g==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR03MB5608.namprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(7916004)(39860400002)(346002)(366004)(376002)(396003)(136003)(6666004)(6496006)(7416002)(54906003)(8676002)(6486002)(8936002)(4326008)(4744005)(85182001)(6916009)(83380400001)(186003)(33716001)(66476007)(9686003)(26005)(66556008)(5660300002)(86362001)(316002)(16526019)(478600001)(66946007)(956004)(2906002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?S2Z1VFREOEJpdEdmU3Y4SVBndTY0WU1leGVtdUxaOGN4RythVkdJMmxMM0Jm?=
- =?utf-8?B?b0dmWlo2QnRhYUkwT0FMVlpOcXN6cDl5djFFUmlpZytCMVR6QnpZZXBtQ0xT?=
- =?utf-8?B?bGsrSHZ5N2xITmlBTlkvQjFzWlRXR1grS2h1M3NqVXFLY2lPT2VvVVFaWWNl?=
- =?utf-8?B?U0J4TUFudExLOFRmNnZmWndoWlQ2czBIbXBOM1ZsRlBUV3U1RnBuUG1KcHZC?=
- =?utf-8?B?Y0llaG15MjlLZ2orUU9SMkxzc3pPV3lpSlZqM0MzR2x3T2RWb2Q2b3c1MThq?=
- =?utf-8?B?US9pUEZOSExpNnFUR2toVmtqaUlHcFdkOE9UQXlkd2E2ZTRyNEJXbERUcFRr?=
- =?utf-8?B?VzRtbHlSRVE2QVh2RlVMeWlnNWY5V1VxV3NIU2Q1WnVzZjB2WDQwQ0xQbGpy?=
- =?utf-8?B?WjIrSEQyZU9hN0ZpRzFZZXRRRUpJRldEMjhyaktScnJzdzNSa0Y5dkhVRXRS?=
- =?utf-8?B?RU5UYXg5YVZiYytNekprRGJReG5ZT1dSYTlBSTNuSEpuQ3ZwTjFYY0JLOWcx?=
- =?utf-8?B?VWRlcWc3cWJnKzRINU96MGVaYUc4b1JrUHJDQkFRRkxxRCsvUkhER3FCalpl?=
- =?utf-8?B?UVFzYkdNYURGcGJMaTU5Nyt0djJEM0drMnpWc1E3aEptZVFVL3pYakJXMzcw?=
- =?utf-8?B?b01zaE8xVWZ3M0FNM2VVNDExRWJKYjBick8raGZsczdyUHRiRXovS1FLMXl3?=
- =?utf-8?B?TElyTTgraWcxMFZDQkFWeG5zTkJ0dndYd1pNazdwci9aKzFieTVtZjRaeUJu?=
- =?utf-8?B?RXAwZDdNUEtOV00waVlldUNXUmNJcGExYTc3bFNxeUVnT2RhZjJZTGJob1dh?=
- =?utf-8?B?NkZGL1A4b1JvWFo3dE5PTjRoNFZ6Zk9aZ292bDBtSG5KM0FoUXl2SXBIY3Zm?=
- =?utf-8?B?YVh4MVVUem1RN1l0RUExM2JUYU9EczRibTVmbnhnSTdOdnhTMEVsQXptWm5Q?=
- =?utf-8?B?QnJDOXlTOE01L2FwUkRuaW50Tm8zQSthdFAvTGlVbHEzbE8zTWJoeVZjMGZx?=
- =?utf-8?B?eUFnSndQK2tEMXA3RHpKT2NZWjRoeGNEdjIydTMzUDVTTWIxc1dHNWxISTVi?=
- =?utf-8?B?dUt4aDhXTGxBUzJQUHpicjU1UzlvVUNlSHZsZHNHRzE2WTdwQ3ZQY2Exd2Rv?=
- =?utf-8?B?SjIyOVJsS0VZbHlWeDNBd3hzYXRlR0lYSkNYdXdKYkNKTHo2NnN2cCsrNEU3?=
- =?utf-8?B?MXhPL05XUnZEVDFJaTdUUEVzdURqbGRXTEtScnVrb2FrMjMyY2owcDZaZmow?=
- =?utf-8?B?ck9yNCsvQzV6YU11WG9EN2VFZFoyR1R1UVFCN1VzUVhGUFlRcW83Rm9TR1Qw?=
- =?utf-8?B?Z2tCU1k5a0RmQ2lWMzVndXlXV1RSWDdVRE9PSDRtZDZITGJaTnM4Um9qWnhR?=
- =?utf-8?B?TjFaenF3WVkwYWcrVFZ1ZGtldXg2MHB6MThsRDlib2EwTUxLa2tZaGczMTBB?=
- =?utf-8?B?cnNYbHVpamZVNzNOY1Y1VlBIVGQzMXFYRzBwVmZOZ3NpWE5vbWpFaXdqZmZj?=
- =?utf-8?B?Y0JsZnhQWkZWdU9BUWw4WVNmcWJWd3FpejNwUDY2QVI4TDBPY2lyRkZqWVFp?=
- =?utf-8?B?V3pnWUtiYVBSUDl4Mm5GMFIyNkZsMGZSejN3RmZiaUtGc2I3MVJhOTJTcHhm?=
- =?utf-8?B?Q3o2YlpQSkFzK2M4eGRJdVVMRlJxZEh4ZzlxNHllSFhucGpManZhdjE1MTM4?=
- =?utf-8?B?ZmdkS1J5WjRLYk9PcTRha2x1VXpjblR0bk11Z0JkN2ZhY2pDb293Vk9HZWty?=
- =?utf-8?Q?5908sgLNKSbpSZwrIzUyMPAzJADEFhDtCUpvYjy?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 387c4e78-c9b3-4029-2c2f-08d8d7412459
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR03MB5608.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Feb 2021 14:50:05.8044
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 335836de-42ef-43a2-b145-348c2ee9ca5b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: gGVLEiKd4DwEUnfr+UjobNjiT+4qMmPV7Z85YSjlp9pypfFRv0P/YmxSFJsd/5YiOcV/hm7XibDc0TzXTguZYg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR03MB3068
-X-OriginatorOrg: citrix.com
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Feb 19, 2021 at 04:40:27PM +0100, Juergen Gross wrote:
-> In order to support the possibility of per-device event channel
-> settings (e.g. lateeoi spurious event thresholds) add a xenbus device
-> pointer to struct irq_info() and modify the related event channel
-> binding interfaces to take the pointer to the xenbus device as a
-> parameter instead of the domain id of the other side.
-> 
-> While at it remove the stale prototype of bind_evtchn_to_irq_lateeoi().
-> 
-> Signed-off-by: Juergen Gross <jgross@suse.com>
-> Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-> Reviewed-by: Wei Liu <wei.liu@kernel.org>
-> Reviewed-by: Paul Durrant <paul@xen.org>
-> ---
->  drivers/block/xen-blkback/xenbus.c  |  2 +-
+strlcpy() copy a C-String into a sized buffer, the result is always a
+valid NULL-terminated that fits in the buffer, howerver it has severals
+issues. It reads the source buffer first, which is dangerous if it is non
+NULL-terminated or if the corresponding buffer is unbounded. Its safe
+replacement is strscpy(), as suggested in the deprecated interface [1].
 
-Reviewed-by: Roger Pau Monné <roger.pau@citrix.com>
+We plan to make this contribution in two steps:
+- Firsly all cases of strlcpy's return value are manually replaced by the
+  corresponding calls of strscpy() with the new handling of the return
+  value (as the return code is different in case of error).
+- Then all other cases are automatically replaced by using coccinelle.
 
-Thanks, Roger.
+This series covers manual replacements.
+
+[1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
+
+Romain Perier (20):
+  cgroup: Manual replacement of the deprecated strlcpy() with return
+    values
+  crypto: Manual replacement of the deprecated strlcpy() with return
+    values
+  devlink: Manual replacement of the deprecated strlcpy() with return
+    values
+  dma-buf: Manual replacement of the deprecated strlcpy() with return
+    values
+  kobject: Manual replacement of the deprecated strlcpy() with return
+    values
+  ima: Manual replacement of the deprecated strlcpy() with return values
+  SUNRPC: Manual replacement of the deprecated strlcpy() with return
+    values
+  kernfs: Manual replacement of the deprecated strlcpy() with return
+    values
+  m68k/atari: Manual replacement of the deprecated strlcpy() with return
+    values
+  module: Manual replacement of the deprecated strlcpy() with return
+    values
+  hwmon: Manual replacement of the deprecated strlcpy() with return
+    values
+  s390/hmcdrv: Manual replacement of the deprecated strlcpy() with
+    return values
+  scsi: zfcp: Manual replacement of the deprecated strlcpy() with return
+    values
+  target: Manual replacement of the deprecated strlcpy() with return
+    values
+  ALSA: usb-audio: Manual replacement of the deprecated strlcpy() with
+    return values
+  tracing/probe: Manual replacement of the deprecated strlcpy() with
+    return values
+  vt: Manual replacement of the deprecated strlcpy() with return values
+  usb: gadget: f_midi: Manual replacement of the deprecated strlcpy()
+    with return values
+  usbip: usbip_host: Manual replacement of the deprecated strlcpy() with
+    return values
+  s390/watchdog: Manual replacement of the deprecated strlcpy() with
+    return values
+
+ arch/m68k/emu/natfeat.c                 |  6 +--
+ crypto/lrw.c                            |  6 +--
+ crypto/xts.c                            |  6 +--
+ drivers/dma-buf/dma-buf.c               |  4 +-
+ drivers/hwmon/pmbus/max20730.c          | 66 +++++++++++++------------
+ drivers/s390/char/diag_ftp.c            |  4 +-
+ drivers/s390/char/sclp_ftp.c            |  6 +--
+ drivers/s390/scsi/zfcp_fc.c             |  8 +--
+ drivers/target/target_core_configfs.c   | 33 ++++---------
+ drivers/tty/vt/keyboard.c               |  5 +-
+ drivers/usb/gadget/function/f_midi.c    |  4 +-
+ drivers/usb/gadget/function/f_printer.c |  8 +--
+ drivers/usb/usbip/stub_main.c           |  6 +--
+ drivers/watchdog/diag288_wdt.c          | 12 +++--
+ fs/kernfs/dir.c                         | 27 +++++-----
+ kernel/cgroup/cgroup.c                  |  2 +-
+ kernel/module.c                         |  4 +-
+ kernel/trace/trace_uprobe.c             | 11 ++---
+ lib/kobject_uevent.c                    |  6 +--
+ net/core/devlink.c                      |  6 +--
+ net/sunrpc/clnt.c                       |  6 ++-
+ security/integrity/ima/ima_policy.c     |  8 ++-
+ sound/usb/card.c                        |  4 +-
+ 23 files changed, 129 insertions(+), 119 deletions(-)
+
+-- 
+2.20.1
+
