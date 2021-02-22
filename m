@@ -2,195 +2,159 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BB5FC433E9
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 15:13:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BD3FC4332E
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 15:18:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBCCB64E83
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 15:13:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DAF364ED6
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Feb 2021 15:18:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231173AbhBVPNm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Feb 2021 10:13:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39936 "EHLO
+        id S230205AbhBVPR7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Feb 2021 10:17:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230202AbhBVPNZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2021 10:13:25 -0500
-Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A172C061786;
-        Mon, 22 Feb 2021 07:12:43 -0800 (PST)
-Received: by mail-wm1-x333.google.com with SMTP id i9so3926085wml.5;
-        Mon, 22 Feb 2021 07:12:43 -0800 (PST)
+        with ESMTP id S230474AbhBVPPd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2021 10:15:33 -0500
+Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B73E4C061A28;
+        Mon, 22 Feb 2021 07:13:00 -0800 (PST)
+Received: by mail-wm1-x335.google.com with SMTP id m1so14705764wml.2;
+        Mon, 22 Feb 2021 07:13:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=W0TOeWb9HGAVOiFV96tO3iwrSfpr1HUMq4Lyw23rID8=;
-        b=FXji/u2iaXY+XOLURddZgd2B9Komiw4Zs+cHylXgLODWE9GujYAMZXOAJt49ncgKkj
-         KXasUXoXmvp4d8wnMqKd80kcI7te+i8Ssj5jDkgEWFuHlI+B6a2sASXp0MxfAR6JnXe8
-         PMBmzH05uvtN8ixL0Xf+EQKCWEzHPeryma2B8WEKKwAVtI0pXqr1NlCyNenHmBJpSL8S
-         /+oAK7AHbhG8Bp1qrmvN2UnpdRZab4b+NfCGuGFlZhbfGdnHHN2BEQP/z7fvhdeo8a9n
-         SKJFfnaPm0+G5TFN4ZPUDwZLEAxSLZT3kXUZZdZbgYAQSBq86aQw+eD/RGBp29tx1xWa
-         GH7Q==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=AaIJGjhVZ09u/EP3bHxMgqdNAjXosc23vp6hWLR+1MA=;
+        b=UmcqE3lzOznpZPI93PnZsK+swpRu7m70pr3gta9k6ZAIq9lPUwIAP1G9soX57vzhSE
+         P/a0sNKNqSnFIIPV7MzCjU+UngDEfNkYIt1Ygt32naA/1AwNmtutkAmWt+cP5uyegNef
+         zE726RgSRt3elVe1YYwaEEYrhpNaIp3q1R/HZBsH0pBTATq61HxX2NdtCGsRw8xtKOvS
+         7zLaHvg7AsObv5YcMHfFoP3BZaymoqvShDHdx5v0vni/ynrG07sM5E3+GEUdzclERKOi
+         3vnvPl7WCz5W7zmqT1YjbquukYOHREJtRbP0rGS9D+SWNg+8POkwIaRGxb5jq0Ro4qqy
+         cXPw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=W0TOeWb9HGAVOiFV96tO3iwrSfpr1HUMq4Lyw23rID8=;
-        b=AiJa2u4ZYYG4cGGbUvDlKsPNrYsvn5sC3tbefZHBa1Fet7VYgmMduMZdM6UvoN1GPC
-         S5Z3ig8x9Qa5yh2+itwSGbSgnFMSj3sQQcJlLBHyTGB/o/sGGyxj0hyg1cJxe9jN3KTa
-         yWoiDNiT2DU/alDTIBxJBKNYfcHPbSlcUp4VBZ4obMKn1JzDiTCcKD2dp4bP6384QFVU
-         4UODJjq/Ebe8gqeo6wqkcKzxqh2Lvav9qQyC77kHNvop/ZnlBo6llZhXb7vaNPT2x+87
-         HclkeuZrk5h/tBIIsOGCOOugYCCWMjjxLP2/lbKyUO+v7iAEQMwjZb6LMpL4CZVyjw48
-         irbA==
-X-Gm-Message-State: AOAM531Y+q21hjEBnQGvbOWuWFArByIiEuZ4QoCeH6wPNcMuUr4lHDu1
-        xf9Si1zm2rbgoTrQSCoOO2eztQ63JJXBOhEpv9I=
-X-Google-Smtp-Source: ABdhPJwJjaqNTMZMEqWfwHu3GKPnp7PUpKeoIN2SSKme4SlDCBTSRJD1aRWbEX4S9qfmjT5mjltYPQ==
-X-Received: by 2002:a05:600c:26c4:: with SMTP id 4mr9157865wmv.126.1614006761746;
-        Mon, 22 Feb 2021 07:12:41 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=AaIJGjhVZ09u/EP3bHxMgqdNAjXosc23vp6hWLR+1MA=;
+        b=oCoBR44oYk8IjZXqmIqalIEKi1sIGRlx0Ufy9I4UiJCkVev3Dz1r2QS5vqrnGwNxud
+         L3UuPIgigakDRnIeMG5StqRTdvWTcqP2nRFU5jvMHLfGAsFN7DsudbyIrCC6JmEbVf/D
+         lRVNzUL5aW0F/20tff3KDjWtrPUb/PUQGobN5FOAVzE3E0VbPb7gZ5MP0Bs2tUE45p4T
+         13hHzF6Q9ww0uL7evZUC06CEnxqQ+2tZN/Ssar/5pLpv4vpdarKV4COvEAwDXFvwbrsZ
+         DHH5Ay3X1jnciiFiGHQ+1c+PpFZ7i7LrUkNyLAGFsNq0rGLTzZ3annpssD8BxFIEvlqb
+         /s2Q==
+X-Gm-Message-State: AOAM531vET1eio+Mem4NtDW7YWD22PVJMD8Xmj6r69kixPTTh/MlIQVI
+        gYiMqh432VntUwdDUNWEDujEc9/4EwTLNkrMTgA=
+X-Google-Smtp-Source: ABdhPJxPIIevSdHpq0bz8dkLKKzkdobBzKa6BG4pC9pZkFSwSrY4yq1GT/LnCNM1hIF4l39fbEWI4g==
+X-Received: by 2002:a1c:2090:: with SMTP id g138mr20574057wmg.137.1614006779236;
+        Mon, 22 Feb 2021 07:12:59 -0800 (PST)
 Received: from debby (176-141-241-253.abo.bbox.fr. [176.141.241.253])
-        by smtp.gmail.com with ESMTPSA id q25sm20952001wmq.15.2021.02.22.07.12.40
+        by smtp.gmail.com with ESMTPSA id h11sm24964006wmq.26.2021.02.22.07.12.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Feb 2021 07:12:41 -0800 (PST)
+        Mon, 22 Feb 2021 07:12:58 -0800 (PST)
 From:   Romain Perier <romain.perier@gmail.com>
 To:     Kees Cook <keescook@chromium.org>,
-        kernel-hardening@lists.openwall.com, Tejun Heo <tj@kernel.org>,
-        Zefan Li <lizefan.x@bytedance.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jiri Pirko <jiri@nvidia.com>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Jessica Yu <jeyu@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Felipe Balbi <balbi@kernel.org>,
-        Valentina Manea <valentina.manea.m@gmail.com>,
-        Shuah Khan <shuah@kernel.org>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>
-Cc:     Romain Perier <romain.perier@gmail.com>, cgroups@vger.kernel.org,
-        linux-crypto@vger.kernel.org, netdev@vger.kernel.org,
-        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linaro-mm-sig@lists.linaro.org,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        linux-integrity@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org, linux-hwmon@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, alsa-devel@alsa-project.org,
-        linux-usb@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        kernel-hardening@lists.openwall.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Romain Perier <romain.perier@gmail.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 00/20] Manual replacement of all strlcpy in favor of strscpy
-Date:   Mon, 22 Feb 2021 16:12:11 +0100
-Message-Id: <20210222151231.22572-1-romain.perier@gmail.com>
+Subject: [PATCH 14/20] target: Manual replacement of the deprecated strlcpy() with return values
+Date:   Mon, 22 Feb 2021 16:12:25 +0100
+Message-Id: <20210222151231.22572-15-romain.perier@gmail.com>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20210222151231.22572-1-romain.perier@gmail.com>
+References: <20210222151231.22572-1-romain.perier@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-strlcpy() copy a C-String into a sized buffer, the result is always a
-valid NULL-terminated that fits in the buffer, howerver it has severals
-issues. It reads the source buffer first, which is dangerous if it is non
-NULL-terminated or if the corresponding buffer is unbounded. Its safe
-replacement is strscpy(), as suggested in the deprecated interface [1].
+The strlcpy() reads the entire source buffer first, it is dangerous if
+the source buffer lenght is unbounded or possibility non NULL-terminated.
+It can lead to linear read overflows, crashes, etc...
 
-We plan to make this contribution in two steps:
-- Firsly all cases of strlcpy's return value are manually replaced by the
-  corresponding calls of strscpy() with the new handling of the return
-  value (as the return code is different in case of error).
-- Then all other cases are automatically replaced by using coccinelle.
+As recommended in the deprecated interfaces [1], it should be replaced
+by strscpy.
 
-This series covers manual replacements.
+This commit replaces all calls to strlcpy that handle the return values
+by the corresponding strscpy calls with new handling of the return
+values (as it is quite different between the two functions).
 
 [1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
 
-Romain Perier (20):
-  cgroup: Manual replacement of the deprecated strlcpy() with return
-    values
-  crypto: Manual replacement of the deprecated strlcpy() with return
-    values
-  devlink: Manual replacement of the deprecated strlcpy() with return
-    values
-  dma-buf: Manual replacement of the deprecated strlcpy() with return
-    values
-  kobject: Manual replacement of the deprecated strlcpy() with return
-    values
-  ima: Manual replacement of the deprecated strlcpy() with return values
-  SUNRPC: Manual replacement of the deprecated strlcpy() with return
-    values
-  kernfs: Manual replacement of the deprecated strlcpy() with return
-    values
-  m68k/atari: Manual replacement of the deprecated strlcpy() with return
-    values
-  module: Manual replacement of the deprecated strlcpy() with return
-    values
-  hwmon: Manual replacement of the deprecated strlcpy() with return
-    values
-  s390/hmcdrv: Manual replacement of the deprecated strlcpy() with
-    return values
-  scsi: zfcp: Manual replacement of the deprecated strlcpy() with return
-    values
-  target: Manual replacement of the deprecated strlcpy() with return
-    values
-  ALSA: usb-audio: Manual replacement of the deprecated strlcpy() with
-    return values
-  tracing/probe: Manual replacement of the deprecated strlcpy() with
-    return values
-  vt: Manual replacement of the deprecated strlcpy() with return values
-  usb: gadget: f_midi: Manual replacement of the deprecated strlcpy()
-    with return values
-  usbip: usbip_host: Manual replacement of the deprecated strlcpy() with
-    return values
-  s390/watchdog: Manual replacement of the deprecated strlcpy() with
-    return values
+Signed-off-by: Romain Perier <romain.perier@gmail.com>
+---
+ drivers/target/target_core_configfs.c |   33 +++++++++------------------------
+ 1 file changed, 9 insertions(+), 24 deletions(-)
 
- arch/m68k/emu/natfeat.c                 |  6 +--
- crypto/lrw.c                            |  6 +--
- crypto/xts.c                            |  6 +--
- drivers/dma-buf/dma-buf.c               |  4 +-
- drivers/hwmon/pmbus/max20730.c          | 66 +++++++++++++------------
- drivers/s390/char/diag_ftp.c            |  4 +-
- drivers/s390/char/sclp_ftp.c            |  6 +--
- drivers/s390/scsi/zfcp_fc.c             |  8 +--
- drivers/target/target_core_configfs.c   | 33 ++++---------
- drivers/tty/vt/keyboard.c               |  5 +-
- drivers/usb/gadget/function/f_midi.c    |  4 +-
- drivers/usb/gadget/function/f_printer.c |  8 +--
- drivers/usb/usbip/stub_main.c           |  6 +--
- drivers/watchdog/diag288_wdt.c          | 12 +++--
- fs/kernfs/dir.c                         | 27 +++++-----
- kernel/cgroup/cgroup.c                  |  2 +-
- kernel/module.c                         |  4 +-
- kernel/trace/trace_uprobe.c             | 11 ++---
- lib/kobject_uevent.c                    |  6 +--
- net/core/devlink.c                      |  6 +--
- net/sunrpc/clnt.c                       |  6 ++-
- security/integrity/ima/ima_policy.c     |  8 ++-
- sound/usb/card.c                        |  4 +-
- 23 files changed, 129 insertions(+), 119 deletions(-)
-
--- 
-2.20.1
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index f04352285155..676215cd8847 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -1325,16 +1325,11 @@ static ssize_t target_wwn_vendor_id_store(struct config_item *item,
+ 	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
+ 	unsigned char buf[INQUIRY_VENDOR_LEN + 2];
+ 	char *stripped = NULL;
+-	size_t len;
++	ssize_t len;
+ 	ssize_t ret;
+ 
+-	len = strlcpy(buf, page, sizeof(buf));
+-	if (len < sizeof(buf)) {
+-		/* Strip any newline added from userspace. */
+-		stripped = strstrip(buf);
+-		len = strlen(stripped);
+-	}
+-	if (len > INQUIRY_VENDOR_LEN) {
++	len = strscpy(buf, page, sizeof(buf));
++	if (len == -E2BIG) {
+ 		pr_err("Emulated T10 Vendor Identification exceeds"
+ 			" INQUIRY_VENDOR_LEN: " __stringify(INQUIRY_VENDOR_LEN)
+ 			"\n");
+@@ -1381,16 +1376,11 @@ static ssize_t target_wwn_product_id_store(struct config_item *item,
+ 	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
+ 	unsigned char buf[INQUIRY_MODEL_LEN + 2];
+ 	char *stripped = NULL;
+-	size_t len;
++	ssize_t len;
+ 	ssize_t ret;
+ 
+-	len = strlcpy(buf, page, sizeof(buf));
+-	if (len < sizeof(buf)) {
+-		/* Strip any newline added from userspace. */
+-		stripped = strstrip(buf);
+-		len = strlen(stripped);
+-	}
+-	if (len > INQUIRY_MODEL_LEN) {
++	len = strscpy(buf, page, sizeof(buf));
++	if (len == -E2BIG) {
+ 		pr_err("Emulated T10 Vendor exceeds INQUIRY_MODEL_LEN: "
+ 			 __stringify(INQUIRY_MODEL_LEN)
+ 			"\n");
+@@ -1437,16 +1427,11 @@ static ssize_t target_wwn_revision_store(struct config_item *item,
+ 	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
+ 	unsigned char buf[INQUIRY_REVISION_LEN + 2];
+ 	char *stripped = NULL;
+-	size_t len;
++	ssize_t len;
+ 	ssize_t ret;
+ 
+-	len = strlcpy(buf, page, sizeof(buf));
+-	if (len < sizeof(buf)) {
+-		/* Strip any newline added from userspace. */
+-		stripped = strstrip(buf);
+-		len = strlen(stripped);
+-	}
+-	if (len > INQUIRY_REVISION_LEN) {
++	len = strscpy(buf, page, sizeof(buf));
++	if (len == -E2BIG) {
+ 		pr_err("Emulated T10 Revision exceeds INQUIRY_REVISION_LEN: "
+ 			 __stringify(INQUIRY_REVISION_LEN)
+ 			"\n");
 
