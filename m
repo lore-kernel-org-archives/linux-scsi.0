@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E164C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 08:02:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3799C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 08:03:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63BCF64DE7
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 08:02:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CBDC64DE7
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 08:03:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232109AbhBWIB6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Feb 2021 03:01:58 -0500
-Received: from mailout3.samsung.com ([203.254.224.33]:58832 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232097AbhBWIBs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2021 03:01:48 -0500
+        id S232115AbhBWICv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Feb 2021 03:02:51 -0500
+Received: from mailout1.samsung.com ([203.254.224.24]:19032 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232122AbhBWICZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2021 03:02:25 -0500
 Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210223080104epoutp0351432cfed97d600fec06d058abdd8a90~mUaAG7jg22619126191epoutp03n
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2021 08:01:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210223080104epoutp0351432cfed97d600fec06d058abdd8a90~mUaAG7jg22619126191epoutp03n
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210223080142epoutp01d8f0915892968c325bdecf0c098c75ff~mUajrpLrP1505815058epoutp01b
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2021 08:01:42 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210223080142epoutp01d8f0915892968c325bdecf0c098c75ff~mUajrpLrP1505815058epoutp01b
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1614067264;
-        bh=iFl192zw7aIW1gOO4DWG4A2+m39kuiBmNdE5zInd9SQ=;
+        s=mail20170921; t=1614067302;
+        bh=BLM36x8dvCNr4CWXv/S8Fx4FBYxrQSVgZltEo2o1V+Q=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=UeP0hOTN+50IMoZ2gb9zSJH2Ty5zIMIXDONRbRTmMjGd6WM7IVbWmCmoW//aaoDOx
-         c1cilSlsxy10Yras+eP0ip921p4dgMM5UZ/1hFkfL6YZ6jgj0v4jB73bgPELugPhE4
-         7E8j68YLr4ndoCBJqoOGABWgciRSNPwGhCrypyBI=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20210223080053epcas2p3f347d14509ea5bf51b41512b97aa3a79~mUZ2bl1BV0968809688epcas2p3a;
-        Tue, 23 Feb 2021 08:00:53 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.40.181]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4DlBLq4MXFz4x9Ps; Tue, 23 Feb
-        2021 08:00:51 +0000 (GMT)
-X-AuditID: b6c32a47-b81ff7000000148e-67-6034b631cbe1
+        b=LBfheKyodtWOBxnM2ySZN5FH9esuyNkdP1EKiXgXxl+f1EaT0d9mhMZtECM40xM1e
+         oF7pOlbFBW7FL90jYvplWBjv/DOERG7HjS8G/g7T0U3vZ1AOdJVnqF1dDKj5hslkYc
+         i3bxK+MS9qfVBe2+aStcIlk+6wrfHPOGGgsxi+tQ=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20210223080138epcas2p2b11c5609ea8fcb9d7135bd9a6c6412c9~mUagdlAf43168131681epcas2p2r;
+        Tue, 23 Feb 2021 08:01:38 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.40.186]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4DlBMj5hhYz4x9Q2; Tue, 23 Feb
+        2021 08:01:37 +0000 (GMT)
+X-AuditID: b6c32a48-50fff7000000cd1f-50-6034b66014fd
 Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        99.90.05262.136B4306; Tue, 23 Feb 2021 17:00:49 +0900 (KST)
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E0.C8.52511.066B4306; Tue, 23 Feb 2021 17:01:36 +0900 (KST)
 Mime-Version: 1.0
 Subject: RE: RE: [PATCH v22 2/4] scsi: ufs: L2P map management for HPB read
 Reply-To: daejun7.park@samsung.com
@@ -68,125 +68,64 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         BoRam Shin <boram.shin@samsung.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <DM6PR04MB657508BC3F0D0240FDCBB043FC809@DM6PR04MB6575.namprd04.prod.outlook.com>
+In-Reply-To: <DM6PR04MB65754213307A31CE51C829D0FC809@DM6PR04MB6575.namprd04.prod.outlook.com>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20210223080043epcms2p83f813841174ade50ef97481b3f4cdef7@epcms2p8>
-Date:   Tue, 23 Feb 2021 17:00:43 +0900
-X-CMS-MailID: 20210223080043epcms2p83f813841174ade50ef97481b3f4cdef7
+Message-ID: <20210223080133epcms2p47e1585978cb3a2eb39e060272f8e8a1f@epcms2p4>
+Date:   Tue, 23 Feb 2021 17:01:33 +0900
+X-CMS-MailID: 20210223080133epcms2p47e1585978cb3a2eb39e060272f8e8a1f
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrMJsWRmVeSWpSXmKPExsWy7bCmha7hNpMEg493VSwezNvGZrG37QS7
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrEJsWRmVeSWpSXmKPExsWy7bCmhW7CNpMEg2XbtS0ezNvGZrG37QS7
         xcufV9ksDt9+x24x7cNPZotP65exWrw8pGmx6kG4RfPi9WwWc842MFn09m9ls3h85zO7xaIb
         25gs+v+1s1hc3jWHzaL7+g42i+XH/zFZ3N7CZbF0601Gi87pa1gsFi3czeIg6nH5irfH5b5e
         Jo+ds+6ye0xYdIDRY//cNeweLSf3s3h8fHqLxaNvyypGj8+b5DzaD3QzBXBF5dhkpCampBYp
         pOYl56dk5qXbKnkHxzvHm5oZGOoaWlqYKynkJeam2iq5+AToumXmAH2opFCWmFMKFApILC5W
-        0rezKcovLUlVyMgvLrFVSi1IySkwNCzQK07MLS7NS9dLzs+1MjQwMDIFqkzIyTh4ZwFbwXXR
-        iqM7T7E1MC7i62Lk4JAQMJG43m3XxcjFISSwg1Hi9YtLTCBxXgFBib87hLsYOTmEBbwlXp6b
-        wwJiCwkoSay/OIsdIq4ncevhGkYQm01AR2L6ifvsIHNEBFawSFz8dYkNxGEW+MUkceLxB7Aq
-        CQFeiRntT1kgbGmJ7cu3gsU5BWIlrh07ARXXkPixrJcZwhaVuLn6LTuM/f7YfKg5IhKt985C
-        1QhKPPi5GyouKXFs9wcmCLteYuudX4wgR0gI9DBKHN55ixUioS9xrWMj2DJeAV+JmbvvgjWz
-        CKhK7Lh4AWqZi8SmV//B4swC8hLb385hBoUKs4CmxPpd+pCAU5Y4cosF5q2Gjb/Z0dnMAnwS
-        HYf/wsV3zHsCdZqaxLqf65kmMCrPQgT1LCS7ZiHsWsDIvIpRLLWgODc9tdiowBg5cjcxglO7
-        lvsOxhlvP+gdYmTiYDzEKMHBrCTCy3bXKEGINyWxsiq1KD++qDQntfgQoynQlxOZpUST84HZ
-        Ja8k3tDUyMzMwNLUwtTMyEJJnLfY4EG8kEB6YklqdmpqQWoRTB8TB6dUA1PM1yY5U2WGJl6t
-        tvoeyb7+g/ZFva93L0pZ7KDBW6P04Skn835JppaZYc93bOIOKtza8ETNTPTRT4f52+//5dsq
-        u+FWxKvMBgNunaXcixJV1itHmiU37tvLHKLxzPTUwxgT9u83qxhSv87jd37ce3CzFcuuqN7A
-        OTvephiaayiZp8z5/rD33Q+t3NMbNR6fNcjn+8yjzbJXx+EMd5KjvuazNYlX0i2PL//UPsnG
-        8eA93iy7FeJHrsR2/jaYE3J4v2n5/P99+w7q3zjz6nZ+qITCquOfrgedrLL/IP+yu+TtfSax
-        KxM9i09W3arYvULzwh2bJ+yOHOmcs2d8rWWQDPq1auXtGxc/ftw08c65lCtKLMUZiYZazEXF
-        iQDc8/W2dgQAAA==
+        0rezKcovLUlVyMgvLrFVSi1IySkwNCzQK07MLS7NS9dLzs+1MjQwMDIFqkzIyXjQo1bwnqni
+        Q+dD5gbGZ4xdjJwcEgImEqsmXwCzhQR2MEo8nCHXxcjBwSsgKPF3hzBIWFjAW+LluTksECVK
+        EusvzmKHiOtJ3Hq4BqyVTUBHYvqJ+0BxLg4RgRUsEhd/XWIDcZgFfjFJnHj8AWoZr8SM9qcs
+        ELa0xPblW8HinAKxEkd3/GGGiGtI/FjWC2WLStxc/ZYdxn5/bD7UHBGJ1ntnoWoEJR783A0V
+        l5Q4tvsDE4RdL7H1zi9GkCMkBHoYJQ7vvMUKkdCXuNaxEewIXgFfiRfn+8AWsAioSvyfcg/q
+        OBeJtWeawWxmAXmJ7W/nMINChVlAU2L9Ln0QU0JAWeLILRaYtxo2/mZHZzML8El0HP4LF98x
+        7wnUaWoS636uZ5rAqDwLEdSzkOyahbBrASPzKkax1ILi3PTUYqMCE+S43cQITuxaHjsYZ7/9
+        oHeIkYmD8RCjBAezkggv212jBCHelMTKqtSi/Pii0pzU4kOMpkBfTmSWEk3OB+aWvJJ4Q1Mj
+        MzMDS1MLUzMjCyVx3iKDB/FCAumJJanZqakFqUUwfUwcnFINTDy/jiguvxd/yl/1/ZZ7U0oC
+        e3tM5HIWfdNZ6HToTG9bbYfCee+XxndPtFjoVTBv/LN09f9gETM+pbc+Vt/OPEzZ96iCm/X5
+        9+enOFMrLh+0EdrnzVBQISi41fLmHkmt098sWrbdr36Tu/4kQ9mTqdtXeyjV/Z98hSdJSE2/
+        L+m0C4ekC8/VqS+0vggeP7hKe5mdctGVxSHGd5i6xHMiV72esvzS0XiDFI91szlz+/UcVm2p
+        e7FRfEOYhPXZKaXzkuyui3/gsgrUe3f8jJCPYKz3m7OXmb/PYijL2Kw0Nz523bzdN999/Cax
+        5M+Jz/X35T6pPLmtZJLC15Sg+HqCdvmRDUd7Ln7bFT6v/JG/jacSS3FGoqEWc1FxIgCmZsqO
+        dQQAAA==
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20210222092907epcms2p307f3c4116349ebde6eed05c767287449
-References: <DM6PR04MB657508BC3F0D0240FDCBB043FC809@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <DM6PR04MB65754213307A31CE51C829D0FC809@DM6PR04MB6575.namprd04.prod.outlook.com>
         <20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p3>
         <20210222093050epcms2p6506a476c777785c6212cc80fc6158714@epcms2p6>
-        <CGME20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p8>
+        <CGME20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p4>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> +/*
-> > + * This function will parse recommended active subregion information in
-> > sense
-> > + * data field of response UPIU with SAM_STAT_GOOD state.
-> > + */
-> > +void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-> > +{
-> > +       struct ufshpb_lu *hpb;
-> > +       struct scsi_device *sdev;
-> > +       struct utp_hpb_rsp *rsp_field = &lrbp->ucd_rsp_ptr->hr;
-> > +       int data_seg_len;
-> > +       bool found = false;
-> > +
-> > +       __shost_for_each_device(sdev, hba->host) {
-> > +               hpb = ufshpb_get_hpb_data(sdev);
-> > +
-> > +               if (!hpb)
-> > +                       continue;
-> > +
-> > +               if (rsp_field->lun == hpb->lun) {
-> > +                       found = true;
-> > +                       break;
-> This piece of code looks awkward, although it is probably working.
-> Why not just having a reference to the hpb luns, e.g. something like:
-> struct ufshpb_lu *hpb_luns[8] in struct ufs_hba.
-> Less elegant - but much more effective than iterating the scsi host on every completion interrupt.
-
-OK,
-
-> > +               }
-> > +       }
-> > +
-> > +       if (!found)
-> > +               return;
-> > +
-> > +       if ((ufshpb_get_state(hpb) != HPB_PRESENT) &&
-> > +           (ufshpb_get_state(hpb) != HPB_SUSPEND)) {
-> > +               dev_notice(&hpb->sdev_ufs_lu->sdev_dev,
-> > +                          "%s: ufshpb state is not PRESENT/SUSPEND\n",
-> > +                          __func__);
-> > +               return;
-> > +       }
-> > +
-> > +       data_seg_len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2)
-> > +               & MASK_RSP_UPIU_DATA_SEG_LEN;
-> > +
-> > +       /* To flush remained rsp_list, we queue the map_work task */
-> > +       if (!data_seg_len) {
-> data_seg_len should be 0x14
-
-It is checking non-HPB hint UPIU. It is used for kicking map work.
-
-> > +               if (!ufshpb_is_general_lun(hpb->lun))
-> > +                       return;
-> > +
-> > +               ufshpb_kick_map_work(hpb);
-> > +               return;
-> > +       }
-> > +
-> > +       /* Check HPB_UPDATE_ALERT */
-> > +       if (!(lrbp->ucd_rsp_ptr->header.dword_2 &
-> > +             UPIU_HEADER_DWORD(0, 2, 0, 0)))
-> > +               return;
-> > +
-> > +       BUILD_BUG_ON(sizeof(struct utp_hpb_rsp) != UTP_HPB_RSP_SIZE);
-> > +
 > > +       if (!ufshpb_is_hpb_rsp_valid(hba, lrbp, rsp_field))
 > > +               return;
-> How about moving both the data_seg_len and alert bit checks into ufshpb_is_hpb_rsp_valid,
-> And moving ufshpb_is_hpb_rsp_valid to the beginning of the function?
-> This way you would save redundant stuff if not a valid response. 
+> > +
+> > +       hpb->stats.rb_noti_cnt++;
+>  
+> > +       switch (rsp_field->hpb_op) {
+> > +       case HPB_RSP_NONE:
+> > +               /* nothing to do */
+> > +               break;
+> Maybe checks this too in ufshpb_is_hpb_rsp_valid
 
-I will move alert bit check into ufshpb_is_hpb_rsp_valid.
+Sure
 
 Thanks,
 Daejun
