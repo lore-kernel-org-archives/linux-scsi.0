@@ -2,52 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4701C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 08:05:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD90FC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 08:29:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D00C64E4B
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 08:05:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CE16601FF
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 08:29:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232115AbhBWIFN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Feb 2021 03:05:13 -0500
-Received: from mailout4.samsung.com ([203.254.224.34]:21802 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232156AbhBWIE7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2021 03:04:59 -0500
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210223080414epoutp04761a908b0496409d74653d26ad2c3a85~mUcxNMcJ52601126011epoutp04j
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2021 08:04:14 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210223080414epoutp04761a908b0496409d74653d26ad2c3a85~mUcxNMcJ52601126011epoutp04j
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1614067454;
-        bh=VsArMim74poNxoH+XzW3dQThRgDRsxRhbvqOoz51HZo=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=cH7tIk251SnM5mLHPFiMX5jwCSm+RRNywojq0V/CPQ0hfKYC5am3rjFS+pW8cMFjD
-         E/r3Rh3qnjrFomBcxhERww+tm8SCXDNi0fGbNrCmqu67yz7bWwAlr4ygFNq4ut5xCV
-         psV5scDqJwMIKqDZG/rI+1rYGcCGFy6mcRVKiERY=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20210223080413epcas2p1605fefab10cece77bba17d10ca32168a~mUcwVpGeH0566705667epcas2p1B;
-        Tue, 23 Feb 2021 08:04:13 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.40.181]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4DlBQg73RLz4x9QP; Tue, 23 Feb
-        2021 08:04:11 +0000 (GMT)
-X-AuditID: b6c32a45-34dff7000001297d-1f-6034b6fb392a
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        81.CC.10621.BF6B4306; Tue, 23 Feb 2021 17:04:11 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE: RE: [PATCH v22 4/4] scsi: ufs: Add HPB 2.0 support
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Daejun Park <daejun7.park@samsung.com>,
+        id S232142AbhBWI24 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Feb 2021 03:28:56 -0500
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:29900 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231969AbhBWI2y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2021 03:28:54 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1614070135; x=1645606135;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=eooXjIzkvXvvs+NBvj+kRrzV3Hdrq8AVt1nkRX05T0E=;
+  b=V4/HEylS+3GRI0cu9DyyGHyGVDzwmKLUuklMvIBoFCXDZwsV+K49ZYaC
+   5GNC+Twu+zT+o6lSZ33+/8f2OQkRKy/4bwabXsqKCN2PMinMwxcJjVO+U
+   sOQ/ZayR1S+OBSndMiYNAyqlVX+d2FF/VCUpjn2VwqeSKvnUV9oyJbxGe
+   os5ymm/k7CPB5DtgXZgYSfPtfkfiisqWc5LYMgmN57JAdGAH5bi4HC1bu
+   uFIKEPnj5yAvSZbXLPNAYcGsEaBxE7vch88ndlLO/dPykVnk+VHHV0SR9
+   ZwJcBcqdmfNoz+8NOX1Wujyn87BHBOvJNX1krXjlU5UXwefD4dHaQFJ4m
+   w==;
+IronPort-SDR: YV2xjGFbzCCRsPQCpbGhU7/80J9Q4hG5QG0we8VCrx1iixdePE/rBPoGpJjbecMAA/vfCVEkE/
+ xZpZI7PrN+NADWnYAlHK70U1cTZ4Qgz7jqP4iD9egPWZxFRMte2srOJkwJSPXNCRdMRtcuzMJ9
+ HAlLCQsXxZXEgpH20uasY/RZFbqJ/pHt8ZlfM6ssVo365unohPx+igvE3zb++DCDoxuSZo0p7r
+ rWTJ7SASFSXWGSIj2gtx9db/1jV2BAYL35LHqKgtH8CatgBsSuzaSkQkYVuQeYS6SkC01g0Y91
+ JEs=
+X-IronPort-AV: E=Sophos;i="5.81,199,1610380800"; 
+   d="scan'208";a="264772034"
+Received: from mail-dm6nam11lp2168.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.168])
+  by ob1.hgst.iphmx.com with ESMTP; 23 Feb 2021 16:47:07 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=N+LG9Uk0QSUQhsUeX1Ak0iZlz8wIIzjzYBo3l5IDl3BY92gsMQq24+ETGVxUUE/sNnLQ3jp2WGicgZZ38Y2xRyYrPwezp7mBU8z31a4U1a4NkEk96CKOal+6U8rRboD6qT7MgRJFswcd1olCfOhK5W+6GywYUrPirHOQDPYRYckYiSzC3qT7Kr48ecOX8J1fErAJ7buGwDuj7fvCNFzqAq8ogYw5wT0um8pp8VvQHXLZjQl0m31uHWpbomq/63AWyJ2FxdVWmqYf6N1P6/YkFwyZNYExXnriG3xtrBfFRU9ZkPqSREAzlUh8CobadAJlf0L5liLh54zYJnOGUWy3iA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=eooXjIzkvXvvs+NBvj+kRrzV3Hdrq8AVt1nkRX05T0E=;
+ b=lRxKrnLhCbUsP7gi8XccYPk9eZqX+V1k2aMbMnW4RmQWg/sJ1iu0Es4gbzpibVmIzL83Gj/I4ivNbECrYk4l2SyVVIm2mZP5EIYYSlZKqQx8K860uZBZwONKz2WP4VUtG6YxwZePLWqGKCPRUurqEehS3Lfod25FRvqHkPT3rdgku+KPiaCzk1tQRRL6LA6E/qam6dyNjMil4TuiR5Q57qgBVC1xTpWhuXPkYJALgIk16dXW1Q3RHCInhQvFi7a/hQeDHzOOYCwZvRaEY/iDjSVGtgWmZYtcSe+AEUTYF8jBiRwZdinqUPNDjlIMX71K6qYsGFqYYK0y0PwBm2GBKg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=eooXjIzkvXvvs+NBvj+kRrzV3Hdrq8AVt1nkRX05T0E=;
+ b=nRgTQR+a2Tk8N9mlhWK8Y8mj/aiHrYZ9aYSHD94lJxn/ukkEpiQk1L9h4aE/gQe0mFMxP6m+IDw6AsKgdgIePDINLPBJ2solB7aRc9Xog0k7q8FJgjxMHIYz3be1aOgLqKHrV8SOJxu7R1x0vh28kKbwkXCUGEkR99+CvNLfcwc=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ DM6PR04MB5626.namprd04.prod.outlook.com (2603:10b6:5:167::24) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3868.27; Tue, 23 Feb 2021 08:27:34 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::e824:f31b:38cf:ef66]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::e824:f31b:38cf:ef66%3]) with mapi id 15.20.3868.033; Tue, 23 Feb 2021
+ 08:27:34 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
         Greg KH <gregkh@linuxfoundation.org>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
@@ -66,127 +83,93 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         yongmyung lee <ymhungry.lee@samsung.com>,
         Jinyoung CHOI <j-young.choi@samsung.com>,
         BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <DM6PR04MB657588F1C76DC0D5BFC68862FC819@DM6PR04MB6575.namprd04.prod.outlook.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20210223080410epcms2p4704a20bb74cbbc1c1d0af92386eda2c7@epcms2p4>
-Date:   Tue, 23 Feb 2021 17:04:10 +0900
-X-CMS-MailID: 20210223080410epcms2p4704a20bb74cbbc1c1d0af92386eda2c7
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrMJsWRmVeSWpSXmKPExsWy7bCmhe7vbSYJBvf3iVs8mLeNzWJv2wl2
-        i5c/r7JZHL79jt1i2oefzBaf1i9jtXh5SNNi1YNwi+bF69ks5pxtYLLo7d/KZvH4zmd2i0U3
-        tjFZ9P9rZ7G4vGsOm0X39R1sFsuP/2OyuL2Fy2Lp1puMFp3T17BYLFq4m8VB1OPyFW+Py329
-        TB47Z91l95iw6ACjx/65a9g9Wk7uZ/H4+PQWi0ffllWMHp83yXm0H+hmCuCKyrHJSE1MSS1S
-        SM1Lzk/JzEu3VfIOjneONzUzMNQ1tLQwV1LIS8xNtVVy8QnQdcvMAfpQSaEsMacUKBSQWFys
-        pG9nU5RfWpKqkJFfXGKrlFqQklNgaFigV5yYW1yal66XnJ9rZWhgYGQKVJmQk7H/+gnWgkWi
-        FX9aZjI2ML7h62Lk5JAQMJFYdW4+O4gtJLCDUaL1n1IXIwcHr4CgxN8dwiBhYQF7iTcti5kg
-        SpQk1l+cxQ4R15O49XANI4jNJqAjMf3EfaA4F4eIwAoWiYu/LrGBOMwCv5gkTjz+wAixjFdi
-        RvtTFghbWmL78q1gcU6BWIk9Vw8yQcQ1JH4s62WGsEUlbq5+yw5jvz82H2qOiETrvbNQNYIS
-        D37uhopLShzb/QFqTr3E1ju/GEGOkBDoYZQ4vPMWK0RCX+Jax0awI3gFfCXmP9gI1sAioCrR
-        1zcHaqiLxJOfB8CGMgvIS2x/CxLnALI1Jdbv0gcxJQSUJY7cYoF5q2Hjb3Z0NrMAn0TH4b9w
-        8R3znkCdpiax7ud6pgmMyrMQQT0Lya5ZCLsWMDKvYhRLLSjOTU8tNiowRI7cTYzg1K7luoNx
-        8tsPeocYmTgYDzFKcDArifCy3TVKEOJNSaysSi3Kjy8qzUktPsRoCvTlRGYp0eR8YHbJK4k3
-        NDUyMzOwNLUwNTOyUBLnLTZ4EC8kkJ5YkpqdmlqQWgTTx8TBKdXA1HKY23BV0eEGxpJ5t8/q
-        aXyUb+IR7JjM+uli71v3PLt117fd+dDm/XXz8fKfr569m654JOaOlEhmNEukIkeMV1aNRj7H
-        32VKjfKL3aZ/nxnw4+cmLbHLi1YWNH0NlHI4bccXIfezVSbuQM8+0ayXd+V+6x8yvCPHXHXu
-        W/ByoQ9s+3ZlMzJNLIitKo4R6/L/LOh75MMxlxD9nsmbZgSXHORemO7+W/ng3WmFnY/2HfKv
-        ad4iHlfF1eGytfKTkc3XyawX5HusDzgYikYb3quMm7mQS+bxhwVz3IJLT9RdnpVjlOTomt+v
-        uNFrhUWH3vZcnzVd/zY4rm+bx7v4yfN0njmzFinaTN3PJfnOP/2oEktxRqKhFnNRcSIAaHMa
-        WXYEAAA=
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210222092907epcms2p307f3c4116349ebde6eed05c767287449
-References: <DM6PR04MB657588F1C76DC0D5BFC68862FC819@DM6PR04MB6575.namprd04.prod.outlook.com>
-        <20210222092957epcms2p728b0c563f3cfbecbf8692d7e86f9afed@epcms2p7>
+Subject: RE: [PATCH v22 3/4] scsi: ufs: Prepare HPB read for cached sub-region
+Thread-Topic: [PATCH v22 3/4] scsi: ufs: Prepare HPB read for cached
+ sub-region
+Thread-Index: AQHXCP2AswDeSMp180uO0U3nTEujWqplaNAQ
+Date:   Tue, 23 Feb 2021 08:27:34 +0000
+Message-ID: <DM6PR04MB65754012DD7AC9EEF9D47D0FFC809@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20210222092957epcms2p728b0c563f3cfbecbf8692d7e86f9afed@epcms2p7>
         <20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p3>
-        <20210222093150epcms2p155352e2255e6bfd8f8d71c737ed05e76@epcms2p1>
-        <CGME20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p4>
+        <CGME20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p8>
+ <20210222093117epcms2p80c6904ac3ac7b10349265ed27e83eea4@epcms2p8>
+In-Reply-To: <20210222093117epcms2p80c6904ac3ac7b10349265ed27e83eea4@epcms2p8>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: samsung.com; dkim=none (message not signed)
+ header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: f14ba478-674f-4d02-5703-08d8d7d4df0b
+x-ms-traffictypediagnostic: DM6PR04MB5626:
+x-microsoft-antispam-prvs: <DM6PR04MB5626384B2AA29249604DF99DFC809@DM6PR04MB5626.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:7691;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: FxC83cWtI/ASdI0M8M9fFJ4QrwBLlbzVm4DH8K9QOkVylzTRZBaKKhNWHKGw4S+UPsbUQDti22jjOWfidi4aSBpw2RRNMcclg+7eT+W8wB4lIQqg9A4sgQ3NDo5BJygNOE9jf/Vb/dHT4Bxr45vtcGHhaDHwkhKPAbCwvuVD9RxWkdPrRRqDSGPlEltV9wxD9ZlXShAK5Ej6STnardFCbNeyPt6PXvSHpL3+JH2xCUc72Ay33ufioz0CofwfqaUfBynfADx9kURL6RSCpE1YRbyjTpZmuHLI3ylmLIBdPvB/GSNn9NYm1meux6Sw/bBEel6onF36LBcBRjZj979xJ7Ef3GR5ZQsCsjxEZrJIosKRzd48kJqbktixoWk8apn497HgG/1THGNRAd68Z/QD4zbqeesHhFyzxBL3V4W+KccGC+oJzHNQCK24I50EFejJYyfKJGpf9kdI+zlKVnyAFUw8TY2OuPX9S9njZX2gsaSCKjRqh9HMqxCoX41FlGSF9mm+mNc/RV3hT/D1nSKc6V7d89C6/bWnT8DczqAsKSCHe8Jw+WPAm5VtccwS/nl+
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(396003)(39860400002)(136003)(346002)(376002)(4744005)(66946007)(86362001)(55016002)(921005)(54906003)(186003)(8936002)(478600001)(6506007)(7696005)(8676002)(83380400001)(26005)(110136005)(4326008)(9686003)(5660300002)(7416002)(52536014)(2906002)(76116006)(66446008)(33656002)(66556008)(316002)(64756008)(71200400001)(66476007);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?utf-8?B?cklrTmhZMDZ5T0l4RWlmMnYwVXA3NGxIam9McjFzS3BJL2ZReE1tN2N2eVN6?=
+ =?utf-8?B?Y2xrdDFoeUIza29xcUNlNnY4YTVLU2U0NzlIcFBHNGdXR01URHNjeE51L216?=
+ =?utf-8?B?aWZ5ek1KTEJZSmU2VFR1cXlXQ3hFS3Y2RmtWRVVuL3dtcjNwQnYxNUhMWVo3?=
+ =?utf-8?B?M2Z0bnFCM3VmaDJnelJIcVRBaVZkd1lQazkwblplQnRGdlJlMzdtSG1ZY1ZR?=
+ =?utf-8?B?YzJ0OXQ3aHBQeGp5V2JLR29teGxzWXk4dnF2LytXcFRnR21DVWw0VmhpMWF5?=
+ =?utf-8?B?d1ZLaFF0Z2FHNHFycHppb2hPSFhDSzBXQ3R5SXdnYUVZVUhTZ3ltcnVNSHlq?=
+ =?utf-8?B?Q2VtL2NnWHppZXhURlV0Q3pENjN2SkFMNDR6aVd0TUdST3RFcW5BTUtobXZJ?=
+ =?utf-8?B?VVgybU1lNHROdUZ6VXFXMlB6elRrTlZJVVJsbmdpdUFJbHdiL0tnNmx6Vkxr?=
+ =?utf-8?B?V3pSSWRpaGJJNmZXOWJQU0Y3OWhyL3NXQk9nY29RU29ibnJFZ1RMclpUdm4y?=
+ =?utf-8?B?NzNLeEpJM2lXOHJ5N1RxdnVvakVCUWZQTUtrbVJzSDZwbGhDbzZtZWJ1bnJj?=
+ =?utf-8?B?RDZxM0FGU0ZBV3pXRVZ3a0xUbkRkREZ4RCsvajZHcmk1bDVvektWVk9raU1o?=
+ =?utf-8?B?Zm5SN0Q4WFJxd3p1cUEyUjFhWTdQSkdoaHlMY2loUlRvVDkrUGpDYWRBUXZR?=
+ =?utf-8?B?dDNaUnNuMk9BNXcrZlFLNkU5eVBNVjZSSzRSVmlsZzJYZGsvRFlyblRyVTBk?=
+ =?utf-8?B?eDhqM0xYa0dWRldBYWtlTGcxOW1rQms5RnVhUXRHYXRpOTl0eDQ1UzRiQnMy?=
+ =?utf-8?B?bVhFeTBXbFZycXQ0a0pnM0YySWFCbHluU3FIaVNoMnRLYmlDMWxyZmlRS1VX?=
+ =?utf-8?B?Mm9aUS83SnY3SS94eXI3ZFpIMVV4cG5PMVNjWWwrZElQM3N3VDZ4KzRJYnkr?=
+ =?utf-8?B?Y0FLR1RLL1g1b1ZaQnRiYmQrSHVOVk1SVnlrL2FTdWU0Q1dua2J2elNqNWZD?=
+ =?utf-8?B?b0hKbWpsN0oweXhUb3doOTlmTFVYTXpIU3F5TkdlQ0p0UDFWdUQxb2tjbUh6?=
+ =?utf-8?B?dWlla0wwcEtMYVoyU2wyc0JSbzI3R0EzN2Fud01jZEo0M29YUEZGeUs1NEVu?=
+ =?utf-8?B?bUZLMmxsT2JiMWNDeGlzcENxblRBQjNlMnJQd0N2UHZ2bkR1V2h5NVk4Y1M4?=
+ =?utf-8?B?cGVIcGxYVFFRSFZ6UjZKbEN3eGNaQk5WRGU0SlNDaXdXS2ZSaWdPa3czQnlx?=
+ =?utf-8?B?TGZDWFZvR2o1NzVUR2FuSmVpN0R0OWc5eU9NQ213YzRnUEVjMzR0bzdqazBr?=
+ =?utf-8?B?UVZMRThyVTRScyt3OG9WQURwRWR0dlp5RjVwN09zTnN0aXRQQ01NZFBMaFhT?=
+ =?utf-8?B?aVRVeGhxaVVoekU5UzFyOWRPZ2J4aVZuY0xzNHY4YzZ6VHhPYmRTbmtBdURU?=
+ =?utf-8?B?cWpvWUtzUTNSSXVMdi9KQzQ3UlozRll3ZHI2eGkrNlFyRmxnV0dZd1NwWnRG?=
+ =?utf-8?B?ZDRaTEhnSlI4dnE5ZDNxcUdDckFhTHVOSHRSR292YzVxS3BicHdScnU0ekg0?=
+ =?utf-8?B?bWJsRm1lUFB5MHgyU3N5Z3lyY2ZxWjY0NyttOWpBYlFxTm5KdEg0aWk0WmUy?=
+ =?utf-8?B?OGtIWVNRU0pFdVZDbjBlMXhESkI4Q1VOVDVJaHo3U0lRUEhxZ0JoNGpCVlBD?=
+ =?utf-8?B?ODEwWjUvWFRxK0NHNXpFT2hpeFgwTU8wL0EzZCtUdkpIamlIS0FaQ2V1azBl?=
+ =?utf-8?Q?CEoZ8PzEb6QkqqGQ6QfYaxIXANcK/7BZBBzagMd?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f14ba478-674f-4d02-5703-08d8d7d4df0b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Feb 2021 08:27:34.6871
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: T/dB8G/yW+eKTRDAkIw62ZBA/XjhayXHUnEEpGLsvGF2fn605sr4X/2am36Pmq6PaeLKJqNIP9vg3czb5MGYKQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB5626
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > @@ -7447,8 +7452,14 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
-> > 
-> >         if (dev_info->wspecversion >= UFS_DEV_HPB_SUPPORT_VERSION &&
-> >             (b_ufs_feature_sup & UFS_DEV_HPB_SUPPORT)) {
-> > -               dev_info->hpb_enabled = true;
-> > -               ufshpb_get_dev_info(hba, desc_buf);
-> > +               bool hpb_en = false;
-> > +
-> > +               err = ufshcd_query_flag_retry(hba,
-> > UPIU_QUERY_OPCODE_READ_FLAG,
-> > +                                             QUERY_FLAG_IDN_HPB_EN, 0, &hpb_en);
-> > +               if (!err && hpb_en) {
-> > +                       dev_info->hpb_enabled = true;
-> > +                       ufshpb_get_dev_info(hba, desc_buf);
-> QUERY_FLAG_IDN_HPB_EN only apply to HPB2.0
-
-OK,
-
-> > +               }
-> >         }
-> > 
-> > +
-> > +/*
-> > + * WRITE_BUFFER CMD support 36K (len=9) ~ 512K (len=128) default.
-> > + * it is possible to change range of transfer_len through sysfs.
-> > + */
-> Actually the transfer length is limited by its (and read id) single byte.
-> Fixing MAX_HPB_READ_ID = 128  is IMO a reasonable choice,
-> But not limited by spec.  Maybe make note of that ?
->  
-> > +static inline bool ufshpb_is_required_wb(struct ufshpb_lu *hpb, int len)
-> > +{
-> > +       return (len >= hpb->pre_req_min_tr_len &&
-> > +               len <= hpb->pre_req_max_tr_len);
-> >  }
-> Maybe also check HPB2.0 as well?
-
-OK,
-
-> > -void ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-> > +int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-> >  {
-> >         struct ufshpb_lu *hpb;
-> >         struct ufshpb_region *rgn;
-> > @@ -282,26 +546,27 @@ void ufshpb_prep(struct ufs_hba *hba, struct
-> > ufshcd_lrb *lrbp)
-> >         u64 ppn;
-> >         unsigned long flags;
-> >         int transfer_len, rgn_idx, srgn_idx, srgn_offset;
-> > +       int read_id = MAX_HPB_READ_ID;
-> Should be 0 if wb is not used?
-
-I will fix it.
-
-> > +
-> > +       hpb->pre_req = kcalloc(qd, sizeof(struct ufshpb_req), GFP_KERNEL);
-> > +       hpb->throttle_pre_req = qd;
-> What is the point in throttling if you are allowing 32 simultaneous commands?
-> There can't be more than qd/2 anyway?
-> On the contrary, it makes much more sense to control the inflight map requests, instead?
-
-OK, I will change it to qd/2.
- 
-> > +       hpb->num_inflight_pre_req = 0;
-> > +
->  
-> > -#define HPB_SUPPORT_VERSION                    0x100
-> > +#define HPB_SUPPORT_VERSION                    0x200
-> In ufshpb_get_dev_info you are bailing out if version != HPB_SUPPORT_VERSION
-> Meaning you are no longer backward supporting HPB1.0?
-
-I add to support legacy version of HPB.
-
-Thanks,
-Daejun
+DQo+ICsgICAgICAgZXJyID0gdWZzaHBiX2ZpbGxfcHBuX2Zyb21fcGFnZShocGIsIHNyZ24tPm1j
+dHgsIHNyZ25fb2Zmc2V0LCAxLCAmcHBuKTsNCj4gKyAgICAgICBzcGluX3VubG9ja19pcnFyZXN0
+b3JlKCZocGItPnJnbl9zdGF0ZV9sb2NrLCBmbGFncyk7DQo+ICsgICAgICAgaWYgKHVubGlrZWx5
+KGVyciA8IDApKSB7DQo+ICsgICAgICAgICAgICAgICAvKg0KPiArICAgICAgICAgICAgICAgICog
+SW4gdGhpcyBjYXNlLCB0aGUgcmVnaW9uIHN0YXRlIGlzIGFjdGl2ZSwNCj4gKyAgICAgICAgICAg
+ICAgICAqIGJ1dCB0aGUgcHBuIHRhYmxlIGlzIG5vdCBhbGxvY2F0ZWQuDQo+ICsgICAgICAgICAg
+ICAgICAgKiBNYWtlIHN1cmUgdGhhdCBwcG4gdGFibGUgbXVzdCBiZSBhbGxvY2F0ZWQgb24NCj4g
+KyAgICAgICAgICAgICAgICAqIGFjdGl2ZSBzdGF0ZS4NCj4gKyAgICAgICAgICAgICAgICAqLw0K
+PiArICAgICAgICAgICAgICAgV0FSTl9PTih0cnVlKTsNCj4gKyAgICAgICAgICAgICAgIGRldl9l
+cnIoaGJhLT5kZXYsICJnZXQgcHBuIGZhaWxlZC4gZXJyICVkXG4iLCBlcnIpOw0KTWF5YmUganVz
+dCBwcl93YXJuIGluc3RlYWQgb2Ygcmlza2luZyBjcmFzaGluZyB0aGUgbWFjaGluZSBvdmVyIHRo
+YXQ/DQoNCj4gKyAgICAgICAgICAgICAgIHJldHVybjsNCj4gKyAgICAgICB9DQo=
