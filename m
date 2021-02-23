@@ -2,266 +2,155 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F207FC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 22:51:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A136BC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 23:48:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9DCF64E5C
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 22:51:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FE3F64E02
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 23:48:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232339AbhBWWul (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Feb 2021 17:50:41 -0500
-Received: from mail-eopbgr690122.outbound.protection.outlook.com ([40.107.69.122]:51382
-        "EHLO NAM04-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232561AbhBWWqM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 Feb 2021 17:46:12 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FkKNZoBFTx91OzXqn2g1no0WFzlV8T7Ir3y5Io+iKiBTommOaqlYHUqhsyvrkHDreu5xjTi02IgIeBS6QwcsdwklL2lslem1wn/lawgnQa6UiNsQcc20Gk/0Rib/2rpgzulrJ05tu1z5H0PM8RsrBV2UT599XjZSF+k9GdBDAJDwtNH/FHDIgG6vaiF+MByEPZfpU+0+t5eE30CiyQl59RzRs7lW0V3NVBbZ+W2/rCy6VrGXd2E5iaAGdW5VyajGdTBmdqJqJexJNuDjTzvhyWdGqRmNzgtPuSsXwt1jqVqwWvsI3QfHVnqWIZOyycIi8laGH+Nn+jV917Uki8E4NA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bKdClBG3pv7WtEmdCpyflKBhHfVKfKdUPovSHvPWHeA=;
- b=M1GTJ0FzxNSRp1R40nTMZta01hNP3Pt5ai5Sd+VKJ3LpjYiEN6fKaXOwUzZfpjwuMMoAgfLg8P9EGidtDjabSJTvWZ7iuOhD7jHW7NsJdTRE4wwZuZoqrg1uTD4tXgzlgMVX9g8PDIr5c6GINVse4DkzrC1tLDrcw8uE+kxgng+EMutE3RhQkpxym9LDKBCwXP1IkG5q6NpG7K5JB4YR7a5baYXzDoeo5mhAmD4ogUot2h+pMlQO/f2cCMJLIDVfbFP/8pJb1aMkELO7QjBrKgQbljaMC4KC4bLAIbalmJWQVAIxJiT9aUyklY6VewdYt/Idv5sxYnYcsBtxO8WO1w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bKdClBG3pv7WtEmdCpyflKBhHfVKfKdUPovSHvPWHeA=;
- b=d2EhJOeRcreSeknTdJWWMZfEu9qIeHSd9Lu/Kd0gu2zKHA/wZhmbG4kwYuCpCbB+GALCf2pPyOiU5fG9Eg8bqIOIdfDxBnL5N8Xhz/qoV5KkBGqgY6Qhu0YPgi4nBXZgQe/3ZSx7gFzGbBUBI/VDeDcbnrU4eYxKNjLKCAz58fo=
-Authentication-Results: microsoft.com; dkim=none (message not signed)
- header.d=none;microsoft.com; dmarc=none action=none
- header.from=microsoft.com;
-Received: from DM6PR21MB1514.namprd21.prod.outlook.com (2603:10b6:5:22d::11)
- by DM6PR21MB1404.namprd21.prod.outlook.com (2603:10b6:5:25a::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.3; Tue, 23 Feb
- 2021 22:45:20 +0000
-Received: from DM6PR21MB1514.namprd21.prod.outlook.com
- ([fe80::1c32:e52a:6a36:3ff]) by DM6PR21MB1514.namprd21.prod.outlook.com
- ([fe80::1c32:e52a:6a36:3ff%5]) with mapi id 15.20.3890.002; Tue, 23 Feb 2021
- 22:45:20 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     kys@microsoft.com, martin.petersen@oracle.com,
-        longli@microsoft.com, wei.liu@kernel.org, jejb@linux.ibm.com,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     mikelley@microsoft.com
-Subject: [PATCH v2 1/1] scsi: storvsc: Enable scatterlist entry lengths > 4Kbytes
-Date:   Tue, 23 Feb 2021 14:44:54 -0800
-Message-Id: <1614120294-1930-1-git-send-email-mikelley@microsoft.com>
-X-Mailer: git-send-email 1.8.3.1
-Content-Type: text/plain
-X-Originating-IP: [131.107.174.144]
-X-ClientProxiedBy: MWHPR18CA0026.namprd18.prod.outlook.com
- (2603:10b6:320:31::12) To DM6PR21MB1514.namprd21.prod.outlook.com
- (2603:10b6:5:22d::11)
-MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from mhkdev.corp.microsoft.com (131.107.174.144) by MWHPR18CA0026.namprd18.prod.outlook.com (2603:10b6:320:31::12) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.19 via Frontend Transport; Tue, 23 Feb 2021 22:45:19 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: 6709807d-7003-4ff1-097a-08d8d84cb2ac
-X-MS-TrafficTypeDiagnostic: DM6PR21MB1404:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DM6PR21MB14043CAB76330BABE0BB396BD7809@DM6PR21MB1404.namprd21.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2803;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: tn4VCTdoB0D5B1IU0MlEskKT24ti1Hj+mmoOIlt+Bnv+fneU+GL7jhEwkKTLmMhPeBtF/LNG3VxPrsE60H7C8L4Oe+d3nXdtHtXqEkxhcurzbzZxRRZ7jP7GG8UXOGeZU7w+zMyoM3e+mKWHSMQVuMK8Yf5CwFAoWGpqAaCwc/HUTxF/gfJyG5i/qiCD07fTEt3kMiodyu7oGtb2aDR2V3Dk+Kffk4I216Tmd9Ro3c6xYVpp8m4HjINZmr7BdDu93Fuukhero1A86YBDvrlFF8ZrxCDH5wsVmOyh5ZL2txFekNKxYHv9Qd2V6KlrISZRP/81qAkS3q62V3zNkVY1pd4YeBkJqAvHY8srHl5uLygQDh+B4DL9/tmAzX/tn3YAHnTE3Cps5OYNSWlsR1mGycB44qqu/XuqMte17AX0+9pUxEz2NDZE6ZzSK+gNK1fxNVrHK85REUOQK2ItfAv5fxOGo4d3ySbZe4KBGteHLPN0QRPdUxHO7gDPnR+cCjP2Tgb/Arb1dNtX3sEnOpYdjg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1514.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(396003)(366004)(346002)(376002)(136003)(2616005)(82950400001)(2906002)(107886003)(5660300002)(4326008)(66946007)(8936002)(83380400001)(66556008)(16526019)(82960400001)(8676002)(7696005)(52116002)(86362001)(66476007)(956004)(186003)(26005)(36756003)(6486002)(478600001)(6666004)(316002)(10290500003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?+jC6AKuIViBvOEgSmVG5OdI+Q0vAg1a2uCYj9koOrDoPKC+3TZdR8iJiDLgs?=
- =?us-ascii?Q?EcnCaAAo+uou5uOrWvOc4VA3ynboo/LDXp/Tc1/S+oY6k+B6V9ZvovsHvv7Y?=
- =?us-ascii?Q?EpTJjxmhlqfQN5EV85+R0LUU2Ii632FoBDKBHvThrKH9B0NAjRR56KtUg0o2?=
- =?us-ascii?Q?q/vKcUhobg5UeVFluPm5OMc0hBjAfOkr8HDmw2fuDqbr09tQqEqVxB6ZAOm3?=
- =?us-ascii?Q?VFnZrNpeuaEscXu9C3GV1cnjM0EU30T6xqwzsUmh+rfZ8zSZMdBEQl+Yq22l?=
- =?us-ascii?Q?0sUVZSGD8vdoEod3b1t4ucFmK1Qxb9mYcyICA07C5u4ugx6VQ5PTJuwbsucH?=
- =?us-ascii?Q?vuo2z0US2LYrXZLqb8dfbMIoAvqjFYXNCRz32DBsYY0LgaBnaovrhd7uTGsd?=
- =?us-ascii?Q?a6Lqn1xU+GCXAvonueBolC3Nipv/N8CuON+x8yuMwA+di7LOE5BJOPhD2aBR?=
- =?us-ascii?Q?6dmXkLR5apTLzpouiWUQ881fAlh490ZR3+/Y4Tq116vsZ8dH8h4O0lEmDJxT?=
- =?us-ascii?Q?xcB41RWIPTBI1t/gXO109rpI345MyKlwiOwT10wwkBujak4iMCqu9L3UB53G?=
- =?us-ascii?Q?gSgE/AXN3fvejpxT/wSb/jEnA1EzhBFfgDqMlEFzoZjyVHiCYZbWgOLzCj+e?=
- =?us-ascii?Q?oYJwocPArVc30ycedJ32gXL8DMCy2clnrnx39LCOU4/1+P3mpFxzoPYQeD+C?=
- =?us-ascii?Q?JtroBpNsIHLZYLt0xzzfCC3AytVbnUbrOhhZb6eTmMDBO6V1E6Ui7ahLOJLe?=
- =?us-ascii?Q?ohZtdyA5HcCG5iWC1kaQadtrJsH4exdX97ezloU1NLnfsvzLNWxOof0Kh1FJ?=
- =?us-ascii?Q?78cn9UjmAZvf2R4a+j8FZkQVW7z4EMUcStYdvn853eLxM+/xSuUq8qqtTadf?=
- =?us-ascii?Q?6yOVN2BrJ8X3hA/q7lcwuCYQOEhfu8Jdpdx9dt0q01lVJCFDbuilG5r9SNXa?=
- =?us-ascii?Q?w2ZcdpMV4kTh/9THmIqCvdJU4xfo6Cq+NQ4XCj0mXpmVrD4B58EeZ9OaCulP?=
- =?us-ascii?Q?JB5w8R3AiRhG1jGf4BIP08BJYAWzrXj1b7PIviUyJoxdXAJorPozHudd02k2?=
- =?us-ascii?Q?aSJwpkvEbkPP0L6o0gwLl+PN6qBlWFOECQmxRAwFzAgNC16cpBI8tOvLZdzE?=
- =?us-ascii?Q?vdrBKquDwnPe2ERj19/U8ogdLrUCnhLa73i/8tsfMKkbBAeJ/BYqwcJO/wK2?=
- =?us-ascii?Q?QOk1k6rRygyzqFdAFxCBOF8eW9gVfv+F2YTHPmO8woxmkEmh4xiAZMkvE4b8?=
- =?us-ascii?Q?aiy+505XZC5m4PBTQwqd/h2oxQ/3/YtbAkw4gTWsIVAMdwFyn7IH4Y7EBXqv?=
- =?us-ascii?Q?INpKDvYc+tg9Gsp7+vNFRhGv?=
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6709807d-7003-4ff1-097a-08d8d84cb2ac
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1514.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Feb 2021 22:45:20.4088
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4aTFbZKbR31t7Vmt38WrMaZ4czQI4/WO6IQmmIYKVvewWd5bgTMc6/9SLKzb0G4UXM6Cd9m9DbpEOKJop+YQAA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR21MB1404
+        id S232600AbhBWXrJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Feb 2021 18:47:09 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:50958 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233573AbhBWXjZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2021 18:39:25 -0500
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210223233812epoutp043bfcb8f6f694c2ba76ee8faceda6a0d6~mhMOmxWu11756717567epoutp049
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2021 23:38:12 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210223233812epoutp043bfcb8f6f694c2ba76ee8faceda6a0d6~mhMOmxWu11756717567epoutp049
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1614123492;
+        bh=Cmg8gly31DwYa1wINVEhhyx2jlgSoA5nhTLbBh5scmY=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=u9bfjbHW2USj2S0G+unbzAmcDFCVmMqpgBpcw3rT11HY8fSulY4SwzecFUJWRV34y
+         ovn4m70OQwfRsw6Oqrbyf7Fql9Z/0DddYhWTqfBqJTeVx/Lss2xuZ29DWqjQ0F5txn
+         TknM4Lj7/FPdfxgcqjpFrGHFYkFAIIITeT7RyLs4=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20210223233811epcas2p4ed57f4c92f00d7d09ed707e6caaa8e01~mhMNvmyfY2813528135epcas2p4Q;
+        Tue, 23 Feb 2021 23:38:11 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.40.182]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4Dlb8L20t5z4x9Q5; Tue, 23 Feb
+        2021 23:38:10 +0000 (GMT)
+X-AuditID: b6c32a47-b81ff7000000148e-dc-603591e2f1a2
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        73.91.05262.2E195306; Wed, 24 Feb 2021 08:38:10 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE: RE: [PATCH v22 3/4] scsi: ufs: Prepare HPB read for cached
+ sub-region
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <DM6PR04MB6575E664773FFD81FB16EBF4FC809@DM6PR04MB6575.namprd04.prod.outlook.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20210223233809epcms2p1482aac5e531d692f00cf0fc5ee8c7f4a@epcms2p1>
+Date:   Wed, 24 Feb 2021 08:38:09 +0900
+X-CMS-MailID: 20210223233809epcms2p1482aac5e531d692f00cf0fc5ee8c7f4a
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA51Te0xbZRT3u7f0Qex2KeC+odF6CTLmKKVQ+NBVSdhck0WdC7qXC23KDSVC
+        291bCMMwGpmD8Z5mAzvGgCnTDqkjUB5VykseJgsgMqQMhhtgMGN2YsboHEofuMU//e/3/c7v
+        nN8558vh4oJOThA3VaOnaI0yjWT7siy9YSj81hmpQtzU5Ytmqy1s9N2pQQ5aXB1no96puxx0
+        zrGKoz/M9T5osScMmWYPoLxLZjaqumbAUElZCxvdvrHMQXU/WzBUtpbPQmMdVWxUNNHGRpcH
+        1jA01eyLvmiZBOh0RQML1dVaWfGB8rGf9srHSkswebtxmiMvr+sCctuFBo785JCNJb83b2fJ
+        S5tNQL7c9Lw8v6sI2+d72AB2KmmVOjWTElIalTY5VZMiI99NfCMckUK1ltHLyCORSCKKjJOK
+        ouNEktijr0SKxRIpKdQo0ykZmRXuzSaFtEq3rtZTjJ6mVNQ6RcczemUKJWKU6UyGJkWk0qaT
+        wkxlWsZ6Hhnx2k41pUymaKFiDqhHau0c3Tgvq9lWCQzAwC4EPC4koqH5wRCnEPhyBUQbgPed
+        03gh4HL5hB981Obv0vgTiXB4aga4sIAgoXnUyPHwImj/pcHNs4kdsGLwprtOAPElC446f2S7
+        HjjhxODgbQfwuPFhZf48y4Ofha2XW4DLjEcchb2TsR56G3xQX4J7cCCcvLLE2cC/91/0lgmA
+        H89c82r84Oyq1ctvhf1WB+bBubDlhhO4eoBEMYC97XYfTyACXi+46u6BT7wJu88Vuw1YRAg8
+        1THhTd4F8+x/ufU48QJsXapyLwUnwqC5I8IFIREM++ysjakMVx9y/otxYhMs6H30L99WPeet
+        /hJsXDVj5SDY+HjTxie8jI+9agBuAs9QOiY9hWIkuqgnP7oJuG9g+542ULnkEPUAjAt6AOTi
+        ZACfPS1RCPjJyuPZFK1NojPSKKYHZK9PeQYPClRp149Io0+KjBFLYqRR0VFR0mjp/6alkpgY
+        cZwUSWMkiNzCZ8SzSQIiRamnPqAoHUVvmGNcXpAB05WCSVNT447zCSOyfW+bsOOUoj+gI+Or
+        0N0RffA9A0/1iZ//BZxxpA07tJtz8g4W1nwb8nSBiAmZOjize+3u9YVtFvHor0V/atKf0tbf
+        v3TTyaO1dFBq2THzFTzs0Mlye2pnzsMTKwfqHd2KgMMjuXts1tk7C+VnP3MqxO9bu7vxhT5j
+        fMUxE2vv6RNS1eb9b4WaSs82HsloKf4evaj9OzhhOsGn+uss4LBYcmz0eay9XbQsIHf9MDG3
+        GLo/ufJiYI2t9vN3hl/Ojv9wq6Pk1qulnV0DDZ/2lSVSv82Pv34vTNu3ZVOCbEhd9Nwde07X
+        yoqPKXYgU5Zr/eibVknuWOYhksWolZHbcZpR/gM2cpbX0QQAAA==
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210222092907epcms2p307f3c4116349ebde6eed05c767287449
+References: <DM6PR04MB6575E664773FFD81FB16EBF4FC809@DM6PR04MB6575.namprd04.prod.outlook.com>
+        <20210222092957epcms2p728b0c563f3cfbecbf8692d7e86f9afed@epcms2p7>
+        <20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p3>
+        <20210222093117epcms2p80c6904ac3ac7b10349265ed27e83eea4@epcms2p8>
+        <CGME20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p1>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-storvsc currently sets .dma_boundary to limit scatterlist entries
-to 4 Kbytes, which is less efficient with huge pages that offer
-large chunks of contiguous physical memory. Improve the algorithm
-for creating the Hyper-V guest physical address PFN array so
-that scatterlist entries with lengths > 4Kbytes are handled.
-As a result, remove the .dma_boundary setting.
+> > +static int ufshpb_fill_ppn_from_page(struct ufshpb_lu *hpb,
+> > +                                    struct ufshpb_map_ctx *mctx, int pos,
+> > +                                    int len, u64 *ppn_buf)
+> > +{
+> > +       struct page *page;
+> > +       int index, offset;
+> > +       int copied;
+> > +
+> > +       index = pos / (PAGE_SIZE / HPB_ENTRY_SIZE);
+> > +       offset = pos % (PAGE_SIZE / HPB_ENTRY_SIZE);
+> Maybe cache hpb->entries_per_page in ufshpb_lu_parameter_init as well?
 
-The improved algorithm also adds support for scatterlist
-entries with offsets >= 4Kbytes, which is supported by many
-other SCSI low-level drivers.  And it retains support for
-architectures where possibly PAGE_SIZE != HV_HYP_PAGE_SIZE
-(such as ARM64).
+They are just defined constants and complier will optimize them.
 
-Signed-off-by: Michael Kelley <mikelley@microsoft.com>
----
+Thanks,
+Daejun
 
-Changes in v2:
-* Add HVPFN_DOWN() macro and use it instead of open coding
-  [Vitaly Kuznetsov]
-* Change loop that fills pfn array and its initialization
-  [Vitaly Kuznetsov]
-* Use offset_in_hvpage() instead of open coding
-
-
- drivers/scsi/storvsc_drv.c | 66 ++++++++++++++++------------------------------
- include/linux/hyperv.h     |  1 +
- 2 files changed, 24 insertions(+), 43 deletions(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 2e4fa77..5ba3145 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1678,9 +1678,8 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	struct storvsc_cmd_request *cmd_request = scsi_cmd_priv(scmnd);
- 	int i;
- 	struct scatterlist *sgl;
--	unsigned int sg_count = 0;
-+	unsigned int sg_count;
- 	struct vmscsi_request *vm_srb;
--	struct scatterlist *cur_sgl;
- 	struct vmbus_packet_mpb_array  *payload;
- 	u32 payload_sz;
- 	u32 length;
-@@ -1759,8 +1758,8 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	payload_sz = sizeof(cmd_request->mpb);
- 
- 	if (sg_count) {
--		unsigned int hvpgoff = 0;
--		unsigned long offset_in_hvpg = sgl->offset & ~HV_HYP_PAGE_MASK;
-+		unsigned int hvpgoff, hvpfns_to_add;
-+		unsigned long offset_in_hvpg = offset_in_hvpage(sgl->offset);
- 		unsigned int hvpg_count = HVPFN_UP(offset_in_hvpg + length);
- 		u64 hvpfn;
- 
-@@ -1773,51 +1772,34 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 				return SCSI_MLQUEUE_DEVICE_BUSY;
- 		}
- 
--		/*
--		 * sgl is a list of PAGEs, and payload->range.pfn_array
--		 * expects the page number in the unit of HV_HYP_PAGE_SIZE (the
--		 * page size that Hyper-V uses, so here we need to divide PAGEs
--		 * into HV_HYP_PAGE in case that PAGE_SIZE > HV_HYP_PAGE_SIZE.
--		 * Besides, payload->range.offset should be the offset in one
--		 * HV_HYP_PAGE.
--		 */
- 		payload->range.len = length;
- 		payload->range.offset = offset_in_hvpg;
--		hvpgoff = sgl->offset >> HV_HYP_PAGE_SHIFT;
- 
--		cur_sgl = sgl;
--		for (i = 0; i < hvpg_count; i++) {
-+
-+		for (i = 0; sgl != NULL; sgl = sg_next(sgl)) {
- 			/*
--			 * 'i' is the index of hv pages in the payload and
--			 * 'hvpgoff' is the offset (in hv pages) of the first
--			 * hv page in the the first page. The relationship
--			 * between the sum of 'i' and 'hvpgoff' and the offset
--			 * (in hv pages) in a payload page ('hvpgoff_in_page')
--			 * is as follow:
--			 *
--			 * |------------------ PAGE -------------------|
--			 * |   NR_HV_HYP_PAGES_IN_PAGE hvpgs in total  |
--			 * |hvpg|hvpg| ...              |hvpg|... |hvpg|
--			 * ^         ^                                 ^                 ^
--			 * +-hvpgoff-+                                 +-hvpgoff_in_page-+
--			 *           ^                                                   |
--			 *           +--------------------- i ---------------------------+
-+			 * Init values for the current sgl entry. hvpgoff
-+			 * and hvpfns_to_add are in units of Hyper-V size
-+			 * pages. Handling the PAGE_SIZE != HV_HYP_PAGE_SIZE
-+			 * case also handles values of sgl->offset that are
-+			 * larger than PAGE_SIZE. Such offsets are handled
-+			 * even on other than the first sgl entry, provided
-+			 * they are a multiple of PAGE_SIZE.
- 			 */
--			unsigned int hvpgoff_in_page =
--				(i + hvpgoff) % NR_HV_HYP_PAGES_IN_PAGE;
-+			hvpgoff = HVPFN_DOWN(sgl->offset);
-+			hvpfn = page_to_hvpfn(sg_page(sgl)) + hvpgoff;
-+			hvpfns_to_add =	HVPFN_UP(sgl->offset + sgl->length) -
-+						hvpgoff;
- 
- 			/*
--			 * Two cases that we need to fetch a page:
--			 * 1) i == 0, the first step or
--			 * 2) hvpgoff_in_page == 0, when we reach the boundary
--			 *    of a page.
-+			 * Fill the next portion of the PFN array with
-+			 * sequential Hyper-V PFNs for the continguous physical
-+			 * memory described by the sgl entry. The end of the
-+			 * last sgl should be reached at the same time that
-+			 * the PFN array is filled.
- 			 */
--			if (hvpgoff_in_page == 0 || i == 0) {
--				hvpfn = page_to_hvpfn(sg_page(cur_sgl));
--				cur_sgl = sg_next(cur_sgl);
--			}
--
--			payload->range.pfn_array[i] = hvpfn + hvpgoff_in_page;
-+			while (hvpfns_to_add--)
-+				payload->range.pfn_array[i++] =	hvpfn++;
- 		}
- 	}
- 
-@@ -1851,8 +1833,6 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	.slave_configure =	storvsc_device_configure,
- 	.cmd_per_lun =		2048,
- 	.this_id =		-1,
--	/* Make sure we dont get a sg segment crosses a page boundary */
--	.dma_boundary =		PAGE_SIZE-1,
- 	/* Ensure there are no gaps in presented sgls */
- 	.virt_boundary_mask =	PAGE_SIZE-1,
- 	.no_write_same =	1,
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 5ddb479..a1eed76 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1717,6 +1717,7 @@ static inline unsigned long virt_to_hvpfn(void *addr)
- #define NR_HV_HYP_PAGES_IN_PAGE	(PAGE_SIZE / HV_HYP_PAGE_SIZE)
- #define offset_in_hvpage(ptr)	((unsigned long)(ptr) & ~HV_HYP_PAGE_MASK)
- #define HVPFN_UP(x)	(((x) + HV_HYP_PAGE_SIZE-1) >> HV_HYP_PAGE_SHIFT)
-+#define HVPFN_DOWN(x)	((x) >> HV_HYP_PAGE_SHIFT)
- #define page_to_hvpfn(page)	(page_to_pfn(page) * NR_HV_HYP_PAGES_IN_PAGE)
- 
- #endif /* _HYPERV_H */
--- 
-1.8.3.1
-
+> > +
+> > +       if ((offset + len) <= (PAGE_SIZE / HPB_ENTRY_SIZE))
+> > +               copied = len;
+> > +       else
+> > +               copied = (PAGE_SIZE / HPB_ENTRY_SIZE) - offset;
+> > +
+> > +       page = mctx->m_page[index];
+> > +       if (unlikely(!page)) {
+> > +               dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+> > +                       "error. cannot find page in mctx\n");
+> > +               return -ENOMEM;
+> > +       }
+> > +
+> > +       memcpy(ppn_buf, page_address(page) + (offset * HPB_ENTRY_SIZE),
+> > +              copied * HPB_ENTRY_SIZE);
+> > +
+> > +       return copied;
+> > +}
+>  
+>  
+>   
