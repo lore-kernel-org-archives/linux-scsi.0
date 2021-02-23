@@ -2,235 +2,191 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 134DBC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 14:32:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5B50C433E6
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 15:47:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7C1364E58
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 14:32:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 986E964E68
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 15:47:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233059AbhBWObq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Feb 2021 09:31:46 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:38621 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232953AbhBWObl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 Feb 2021 09:31:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1614090613;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=9pO3T2cbJS4Rpm9OV6tjMBa2+TGmBBvLNzgN1PnGQzE=;
-        b=dknCD5kaw2OfL2ObXrUx9lWlqiw/6RiWz4kD4qaDYwugufa6eKRijuFmRMgP0IaXwNQvN9
-        x6eKxNtukR20UpXNNTmFLOvC5jG+4AWrsTWR+JKh2I7a/KpzcoE0UDK5E8cnW7J5G6ZVpn
-        n0HwecVGoYxUWn/V6lPCXDd6GpXqcM4=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-156-r-VeFg3EPt2SSeiUQFdn5g-1; Tue, 23 Feb 2021 09:30:11 -0500
-X-MC-Unique: r-VeFg3EPt2SSeiUQFdn5g-1
-Received: by mail-ed1-f71.google.com with SMTP id t9so8715589edd.3
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2021 06:30:11 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version;
-        bh=9pO3T2cbJS4Rpm9OV6tjMBa2+TGmBBvLNzgN1PnGQzE=;
-        b=Nj/pDwczLEs51dEAAPj2bYyRP2lkjLvn+srMCgv6Ya8HaBYgKozlr7O39tOsak19DN
-         cKqaKePL2+6AxpYUWxUg8Vu1ZggVHiWoJZh60FbnusWUbB0tQ7CNTJR/F91hBfpCpFmq
-         bURpcD8xx/GEYQYDYDAoH5yJ89HPoj566TY9meyxfxZ41fzFeO43VSsWHmPwBcYCyYuo
-         Ki4CBMiBTN5eDT5THP+LgOD24Coy4wq7HjEKHWLVtOX8t6r9EEweGWX9zth2/edpjkkD
-         Bmz7HTVUFRV9IYbsPcTknFBXROg3DVp6hXWFI0sSE7deOdVZ+l0t5mptE5NeJVt75mgD
-         xSVQ==
-X-Gm-Message-State: AOAM530yIvDILWf17UTipVuXn9Df1fNgfaBQyFaG4hm3P413zJXcTHmO
-        pomAVTJa9mBbqPG/FFyJtCVbwe4lVaxtzXgzbE+VHXbmDRk+yo1eAtQk3gNFazlZkaL6IlixYWY
-        Zig4KdQdG8CYcK3H+C5/B6FkveMR2O+D4aBGWYT/a4cgyKwpNDqtf25wbAnJtvhKyQv5D/VpYBA
-        ==
-X-Received: by 2002:a17:906:3881:: with SMTP id q1mr26294955ejd.490.1614090609628;
-        Tue, 23 Feb 2021 06:30:09 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxg5crHmlZHVNk8852FVic9/mZuxxr1Qu26zSap68yY9I5Spp0olcTGMtoK8GqInkBcdxFo7w==
-X-Received: by 2002:a17:906:3881:: with SMTP id q1mr26294590ejd.490.1614090607121;
-        Tue, 23 Feb 2021 06:30:07 -0800 (PST)
-Received: from vitty.brq.redhat.com (g-server-2.ign.cz. [91.219.240.2])
-        by smtp.gmail.com with ESMTPSA id x21sm6136096eds.9.2021.02.23.06.30.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Feb 2021 06:30:06 -0800 (PST)
-From:   Vitaly Kuznetsov <vkuznets@redhat.com>
-To:     Michael Kelley <mikelley@microsoft.com>
-Cc:     kys@microsoft.com, martin.petersen@oracle.com,
-        longli@microsoft.com, wei.liu@kernel.org, jejb@linux.ibm.com,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/1] scsi: storvsc: Enable scatterlist entry lengths >
- 4Kbytes
-In-Reply-To: <1613682087-102535-1-git-send-email-mikelley@microsoft.com>
-References: <1613682087-102535-1-git-send-email-mikelley@microsoft.com>
-Date:   Tue, 23 Feb 2021 15:30:05 +0100
-Message-ID: <874ki2yhzm.fsf@vitty.brq.redhat.com>
+        id S233399AbhBWPrD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Feb 2021 10:47:03 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:47026 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233356AbhBWPqN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2021 10:46:13 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11NFjH7s123659;
+        Tue, 23 Feb 2021 15:45:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=NtEUi/ZzaRq0ckwBefxzpmmUWbdZ5Kv+7+Dnxrn0dUw=;
+ b=YbZIRMyh9Hv9FgskCfQkcpmmA/Pe+qx2JOOqvfTLil+BUccb7taRiCsxMxRNW362Fe2K
+ OdBNhjNZoD6YrYF3NO42/oI2VKnMT0l+GC+sizImIX0D8xsiofm3j2iJDrJahBOgZssU
+ FkB7KM6cBRtbT3VWZj8s3wcs2g2Y4ibpgwmipRP+Cw4eW8RZ60UwcaotUvWXd6abgIGF
+ XwoPz/t+fzu6h3bMk3ZYH6OzenrVWQC/p4TJ61FhSl6XaISs44+AdOabW+WuofZH7sxl
+ XUzh+k/6CzMM47tF4N2UqkKCOCk+PAt88WaRb7z3oQlDNXT+fHTdX/RiccgghkkCm215 GA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 36tsuqyufq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 23 Feb 2021 15:45:17 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11NFQN1q108475;
+        Tue, 23 Feb 2021 15:45:17 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2041.outbound.protection.outlook.com [104.47.66.41])
+        by userp3020.oracle.com with ESMTP id 36uc6rvweb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 23 Feb 2021 15:45:16 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Yp4q6DXoQfeoxCYn55dJw69YvA0AIkX39xELR0l+RNzZTXMtkaXzoQaHd/ohuMYIqMzPXBWEM0gCA6K+7HhBUsnuCGSISzbA6f+gJQnYd1fvdSPrjwi5EJ8YovMOPZ9mStQNy+3iY/BuT/9H4PnwC2N1mRasiieycF9XodaPF0ziiJE9iqdN7ZGAQ17Ir7vvFLWJj2FHrIz03U5nzBlvo9uftcJ/kcQqSjFDs17rRLLKJtOuAJuWYcNFAYnOavcxjmEeDck3xKYz0Ed5wWO69wEtQEP0B7Ky9S8z0S7dPhjD53dabEN+Boay8vpXINnwIWGL9uAlUx9M0ReFhBW3xA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NtEUi/ZzaRq0ckwBefxzpmmUWbdZ5Kv+7+Dnxrn0dUw=;
+ b=GZ8gIb1DgwBKwRA9bXs646JY1fqNco/Cq366lHdDakJ09d5aDxYIc4k6E3v4WU1VnmwX3mTy12xuQtlKiwfc/q6fEWDO8WLUrawqhEEku4ZllQ+GWzjgh4JIO204x6gHDAJSs0WIcsDWx2XLt0lDp7tOIc7aKoDOUQFSvs8bE1B0Fs5CPk4Rgyx7O2O7L4AoCP3LV1rQX4wKOtpk4QKHm/0Ax/Ky4PZVUNiHe3QqbeiL7oX53qK2D4Zha4LM1x0cvu/0Qnol8KRE5ik2M//66k6rXvBdiIJAW+X7tpsF0CBZex3/x1EeHcGCUlBldJva1wi7hKiUlkRfY9TrphQLsQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NtEUi/ZzaRq0ckwBefxzpmmUWbdZ5Kv+7+Dnxrn0dUw=;
+ b=wkbxys8TDn6Zt4FD10XRKxZ7Itf1FsIRsh0RAklsIpEU1NoDFxsafzaxNLyxvy90RQypUofE6JrtpSXTrIKDzmteYY3sDKnNZYugDuVPXv0sYY+gO4NLeaRqqgQOrAjmXhyCw/XRDY+E+jNjaLcjJrHTZd/9WjPh/NWu1N8mswk=
+Authentication-Results: kernel.dk; dkim=none (message not signed)
+ header.d=none;kernel.dk; dmarc=none action=none header.from=oracle.com;
+Received: from BYAPR10MB3288.namprd10.prod.outlook.com (2603:10b6:a03:156::21)
+ by BY5PR10MB4129.namprd10.prod.outlook.com (2603:10b6:a03:210::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.32; Tue, 23 Feb
+ 2021 15:45:05 +0000
+Received: from BYAPR10MB3288.namprd10.prod.outlook.com
+ ([fe80::f489:4e25:63e0:c721]) by BYAPR10MB3288.namprd10.prod.outlook.com
+ ([fe80::f489:4e25:63e0:c721%7]) with mapi id 15.20.3868.031; Tue, 23 Feb 2021
+ 15:45:05 +0000
+Subject: Re: [PATCH v3 0/8] xen/events: bug fixes and some diagnostic aids
+To:     Juergen Gross <jgross@suse.com>, xen-devel@lists.xenproject.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     Stefano Stabellini <sstabellini@kernel.org>,
+        stable@vger.kernel.org, Wei Liu <wei.liu@kernel.org>,
+        Paul Durrant <paul@xen.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
+        Jens Axboe <axboe@kernel.dk>
+References: <20210219154030.10892-1-jgross@suse.com>
+From:   Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <67b7a01c-9de5-d520-d465-e4e3954302e2@oracle.com>
+Date:   Tue, 23 Feb 2021 10:44:58 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.7.1
+In-Reply-To: <20210219154030.10892-1-jgross@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Originating-IP: [138.3.200.52]
+X-ClientProxiedBy: SN4PR0701CA0031.namprd07.prod.outlook.com
+ (2603:10b6:803:2d::34) To BYAPR10MB3288.namprd10.prod.outlook.com
+ (2603:10b6:a03:156::21)
 MIME-Version: 1.0
-Content-Type: text/plain
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [10.74.102.180] (138.3.200.52) by SN4PR0701CA0031.namprd07.prod.outlook.com (2603:10b6:803:2d::34) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.28 via Frontend Transport; Tue, 23 Feb 2021 15:45:02 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 7cb1e208-8ac8-49c3-833e-08d8d811fd63
+X-MS-TrafficTypeDiagnostic: BY5PR10MB4129:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BY5PR10MB412999BBC5E10E7418CFF9288A809@BY5PR10MB4129.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: V6Eb2wugrSCpaJhdrDS7bhszSnHIg7n478K/s+yDrJmTn/QfuRwFgYOZHOTlifteaxnF1vSY0pZRL9jPNR9rXeJVLG0n5kg7cTtyzpGGwifgqUx+NF+DH2dYjZFlZLmwZ7SIHTYl7k+Ao9n5nRAHjVeyVsjN1/N1pR8N/GFKzzDpCp5jFF/H+lhUcVcqPAJYNiobF+5BDldb+tw64R8C8va5GHvEQPcHPTT5/+CTKbY2I/WYJ9NhA/F9aMTbqosPNHNuKceGXGFtwE9dKsKkeZoIctH9x6xfN1YxEXkfaojghHMrLkh5GsOlo3kBFPen5LlG2n7K4o4hJPzHsPF8dfbhXFBtXdeZCaWdw8Ujj7oveLLYIEnKwvha5UHS4aqQbOETzJq/qT3ya/13ca8IUf3fT47d6tuxmKKV86Hg4x26wqQTFR6LEw32MN7HctIIPvl/ZMVJsLqUomPF83iMpaOjTLyXSocbS+x6z0v1aWyhL654/CQjQ4Y94mc3gZ9HKOelKS8cnYOjTM4mcajTF2PruF3cE5KkCeJ78ecNtKIpyDG4QJcH3Tg3O0mNY2k5jQ7l3pp1wP2W9hx2JuB3SYXJM6uUSiysR7/mvbBrPNc=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB3288.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(366004)(376002)(39860400002)(136003)(396003)(31686004)(31696002)(316002)(478600001)(2906002)(66946007)(5660300002)(53546011)(16576012)(186003)(6666004)(8936002)(6486002)(54906003)(86362001)(36756003)(26005)(7416002)(16526019)(2616005)(66476007)(66556008)(44832011)(956004)(8676002)(4326008)(83380400001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?b2JGcjVWZUZRRzhPeVRQb0pPUHQ3dEZhcHFyWU1EeFFJR1d5aGdPNWMxNXJH?=
+ =?utf-8?B?QlhTVVpuNHdISVFTTitKUzZlQU54SHhZWW93TVJTLy9ZLzJqTEY3MkRncEw0?=
+ =?utf-8?B?RTE2azFKcDdiKzcxbkxhUnFIKzBkQzRLdEF3TXp4aGMwSlFmSytVLzR5S2hT?=
+ =?utf-8?B?KzVmcXNacTlua1BpbDMwOFhXN080L293UjBmaEwvYjFkMWt5VGhwcHJ5d0Vr?=
+ =?utf-8?B?NFpCTnU0MU41Q01Qc1JQM2V0a1ZxMjUxMHR2aWpVUDhESklNbzFUVnJqa1Rm?=
+ =?utf-8?B?RTJoQVM1ZEpNUlBrOGVSQ2xBNDRZMXpUSGsyeDNxSWtVSUNEUWthbkVZak9t?=
+ =?utf-8?B?dWJoMTNnQVdXbDM3YURoM28rQWJtK0RPNGIrTTFaTm00UkYvblQwbUVaQWZp?=
+ =?utf-8?B?djU0NU5oSTRmTDhXU0k3YVg2VGxLbFhxVjlDUWVPMVdtMlpOYlZ2VlhITXBj?=
+ =?utf-8?B?UkhlcDZRTjZ6QzQ2U3FoaTIzZzhRNWh1VG50OGFEM1dmdGRYOFdxQ1JkdlJ4?=
+ =?utf-8?B?cnBlSDFTTWpCOXYxRHk0a1h1UDd5Z1ZlVW1tTkRlTVBjYUJNSlFlQXJYaGxk?=
+ =?utf-8?B?bjBZREJ0VjY4NnlyZU4zbkhLTG9EMnNxZUthQjJvNVc1MUNzMlhWTGxaVGxs?=
+ =?utf-8?B?QlAyTTJ5dnc4M2t0WnFISlM5NksrWXl1d3U4djBXdUZQcXNFVnpZWlRuRUNR?=
+ =?utf-8?B?OHJ4MjdDSVFCdG9IaDlXV0o0YTAzdUdKWFd5QmtFNW5LUE5pV2Nld0lDY09U?=
+ =?utf-8?B?MGNxbzNqUEZ6OU9oejFCekVkcllOMHNZSEluNXdPaEVEcjYvZU5hTng0SFM3?=
+ =?utf-8?B?YzB0RkJySzhsb2FVZmhHRkE2WWNiMkJMNGtsNWFobS9SRkVneXJ1eE94SC9l?=
+ =?utf-8?B?OUVrZ2RqQm1xcXJuNEJXdXZpTkJUeVVyazB5TlF3MGRDejczMlR5WnlKNXIr?=
+ =?utf-8?B?QWd4TmlWOE5UY3g3WnpROFVaQlVyVEx0d3pSWEpEMFFsNVQyUGNtUFNjV0lN?=
+ =?utf-8?B?K0NmS2dsc1UwTElseml2R1ZmT3N6SHVPYjVpTWUxSnk3Z2Fja3IzaHFTSDhx?=
+ =?utf-8?B?SURjVUJNalNIVEFVNjgyY1Q3SXhIM0xpVlRqV1ZYQmRDL1IyL3lZb1RJcmY0?=
+ =?utf-8?B?VkFZQXZyc2pMakxzSDAxNEtVaFdablB6WTBSU24vZDgxNlVBanBoU01xUWo4?=
+ =?utf-8?B?K2ROZ3FpZmMxRnhIckpsTVZRTDFFSG1yVzZaZzJZVkI2YkxPZlI4MjVFSVVE?=
+ =?utf-8?B?bHI2VWhyclFuL3lPckJzMklES2hzdktnK1gveDJHOHlOSmtQWkJvR3kxSjlN?=
+ =?utf-8?B?RzNHVXc4U3BvNENQWm1GaFVTWkp4WWZPU21NSzkrZjB0S0t3Z0lMaG9lNXFM?=
+ =?utf-8?B?elRwQ1lEancvTjNkd0REU1U1Q2tIcTVrWWtBaURmZnVHa1Y0NS9KZWNteVRy?=
+ =?utf-8?B?MEhiTWdXR1ZlQUJabjVXc0lCVEpYWjU3VFNlWkhoR2NLWEdESE9rVC9lM3Rt?=
+ =?utf-8?B?ZUl0a1k0dm8yTVR0UE05bGp5TzBwNjU1R2g4clVubU03Ni9iTFZmS1lRL1J3?=
+ =?utf-8?B?R0o0YktLalZrSHZlV0JiOTdKdzRLMnkyZDZaL0MxU0txdFJyYkNnLzBZMFhw?=
+ =?utf-8?B?NlorNGRCaXRQVUFpQkdRaWpnQjQzQzQzSzhPZ01WcW56RVRTZWlndEhIRG9B?=
+ =?utf-8?B?R2grWmljTlhxU0tnd2dBUkgyUWdqSVI3a3ExUHRHSERTMDB5ODM2SUZNVmlr?=
+ =?utf-8?Q?8NtCBQedf8dDWzYL1fpF1PEe6S6e0zef30h/LLE?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7cb1e208-8ac8-49c3-833e-08d8d811fd63
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB3288.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Feb 2021 15:45:05.5493
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: fJFnGFw6Fzg0uuIts7hqMA+aPOoaI5fHd2m6wskw/EYB5UyL7tmmWqlTu9lrBpO+ZJAaPxHkxML9o9SikE0fT9Et7ZKr4BGIPNhH1sWiNGA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4129
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9903 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 spamscore=0
+ mlxlogscore=999 adultscore=0 bulkscore=0 malwarescore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2102230131
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9903 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
+ priorityscore=1501 impostorscore=0 bulkscore=0 mlxscore=0 malwarescore=0
+ clxscore=1011 phishscore=0 mlxlogscore=999 lowpriorityscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2102230132
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Michael Kelley <mikelley@microsoft.com> writes:
 
-> storvsc currently sets .dma_boundary to limit scatterlist entries
-> to 4 Kbytes, which is less efficient with huge pages that offer
-> large chunks of contiguous physical memory. Improve the algorithm
-> for creating the Hyper-V guest physical address PFN array so
-> that scatterlist entries with lengths > 4Kbytes are handled.
-> As a result, remove the .dma_boundary setting.
+On 2/19/21 10:40 AM, Juergen Gross wrote:
+> The first four patches are fixes for XSA-332. The avoid WARN splats
+> and a performance issue with interdomain events.
 >
-> The improved algorithm also adds support for scatterlist
-> entries with offsets >= 4Kbytes, which is supported by many
-> other SCSI low-level drivers.  And it retains support for
-> architectures where possibly PAGE_SIZE != HV_HYP_PAGE_SIZE
-> (such as ARM64).
+> Patches 5 and 6 are some additions to event handling in order to add
+> some per pv-device statistics to sysfs and the ability to have a per
+> backend device spurious event delay control.
 >
-> Signed-off-by: Michael Kelley <mikelley@microsoft.com>
-> ---
->  drivers/scsi/storvsc_drv.c | 63 ++++++++++++++++------------------------------
->  1 file changed, 22 insertions(+), 41 deletions(-)
+> Patches 7 and 8 are minor fixes I had lying around.
 >
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 2e4fa77..5d06061 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1678,9 +1678,8 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
->  	struct storvsc_cmd_request *cmd_request = scsi_cmd_priv(scmnd);
->  	int i;
->  	struct scatterlist *sgl;
-> -	unsigned int sg_count = 0;
-> +	unsigned int sg_count;
->  	struct vmscsi_request *vm_srb;
-> -	struct scatterlist *cur_sgl;
->  	struct vmbus_packet_mpb_array  *payload;
->  	u32 payload_sz;
->  	u32 length;
-> @@ -1759,7 +1758,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
->  	payload_sz = sizeof(cmd_request->mpb);
->  
->  	if (sg_count) {
-> -		unsigned int hvpgoff = 0;
-> +		unsigned int hvpgoff, sgl_size;
->  		unsigned long offset_in_hvpg = sgl->offset & ~HV_HYP_PAGE_MASK;
->  		unsigned int hvpg_count = HVPFN_UP(offset_in_hvpg + length);
->  		u64 hvpfn;
-> @@ -1773,51 +1772,35 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
->  				return SCSI_MLQUEUE_DEVICE_BUSY;
->  		}
->  
-> -		/*
-> -		 * sgl is a list of PAGEs, and payload->range.pfn_array
-> -		 * expects the page number in the unit of HV_HYP_PAGE_SIZE (the
-> -		 * page size that Hyper-V uses, so here we need to divide PAGEs
-> -		 * into HV_HYP_PAGE in case that PAGE_SIZE > HV_HYP_PAGE_SIZE.
-> -		 * Besides, payload->range.offset should be the offset in one
-> -		 * HV_HYP_PAGE.
-> -		 */
->  		payload->range.len = length;
->  		payload->range.offset = offset_in_hvpg;
-> -		hvpgoff = sgl->offset >> HV_HYP_PAGE_SHIFT;
->  
-> -		cur_sgl = sgl;
-> -		for (i = 0; i < hvpg_count; i++) {
-> +
-> +		for (i = 0; sgl != NULL; sgl = sg_next(sgl)) {
->  			/*
-> -			 * 'i' is the index of hv pages in the payload and
-> -			 * 'hvpgoff' is the offset (in hv pages) of the first
-> -			 * hv page in the the first page. The relationship
-> -			 * between the sum of 'i' and 'hvpgoff' and the offset
-> -			 * (in hv pages) in a payload page ('hvpgoff_in_page')
-> -			 * is as follow:
-> -			 *
-> -			 * |------------------ PAGE -------------------|
-> -			 * |   NR_HV_HYP_PAGES_IN_PAGE hvpgs in total  |
-> -			 * |hvpg|hvpg| ...              |hvpg|... |hvpg|
-> -			 * ^         ^                                 ^                 ^
-> -			 * +-hvpgoff-+                                 +-hvpgoff_in_page-+
-> -			 *           ^                                                   |
-> -			 *           +--------------------- i ---------------------------+
-> +			 * Init values for the current sgl entry. sgl_size
-> +			 * and hvpgoff are in units of Hyper-V size pages.
-> +			 * Handling the PAGE_SIZE != HV_HYP_PAGE_SIZE case
-> +			 * also handles values of sgl->offset that are
-> +			 * larger than PAGE_SIZE. Such offsets are handled
-> +			 * even on other than the first sgl entry, provided
-> +			 * they are a multiple of PAGE_SIZE.
->  			 */
-> -			unsigned int hvpgoff_in_page =
-> -				(i + hvpgoff) % NR_HV_HYP_PAGES_IN_PAGE;
-> +			sgl_size = HVPFN_UP(sgl->offset + sgl->length);
-> +			hvpgoff = sgl->offset >> HV_HYP_PAGE_SHIFT;
-> +			hvpfn = page_to_hvpfn(sg_page(sgl));
->  
->  			/*
-> -			 * Two cases that we need to fetch a page:
-> -			 * 1) i == 0, the first step or
-> -			 * 2) hvpgoff_in_page == 0, when we reach the boundary
-> -			 *    of a page.
-> +			 * Fill the next portion of the PFN array with
-> +			 * sequential Hyper-V PFNs for the continguous physical
-> +			 * memory described by the sgl entry. The end of the
-> +			 * last sgl should be reached at the same time that
-> +			 * the PFN array is filled.
->  			 */
-> -			if (hvpgoff_in_page == 0 || i == 0) {
-> -				hvpfn = page_to_hvpfn(sg_page(cur_sgl));
-> -				cur_sgl = sg_next(cur_sgl);
-> +			while (hvpgoff != sgl_size) {
-> +				payload->range.pfn_array[i++] =
-> +							hvpfn + hvpgoff++;
->  			}
+> Juergen Gross (8):
+>   xen/events: reset affinity of 2-level event when tearing it down
+>   xen/events: don't unmask an event channel when an eoi is pending
+>   xen/events: avoid handling the same event on two cpus at the same time
+>   xen/netback: fix spurious event detection for common event case
+>   xen/events: link interdomain events to associated xenbus device
+>   xen/events: add per-xenbus device event statistics and settings
+>   xen/evtchn: use smp barriers for user event ring
+>   xen/evtchn: use READ/WRITE_ONCE() for accessing ring indices
+>
 
-Minor nitpicking: while this seems to be correct I, personally, find it
-a bit hard to read: 'hvpgoff' stands for "'sgl->offset' measured in
-Hyper-V pages' but we immediately re-use it as a cycle counter.
+I am going to pick up the last 3 patches since Ross appears to be having some issues with #2 (and 4 and 5 went in via netdev tree)
 
-If I'm not mistaken, we can count right away how many entries we're
-going to add. Also, we could've introduced HVPFN_DOWN() to complement
-HVPFN_UP():
-...
-#define HVPFN_DOWN(x)	((x) >> HV_HYP_PAGE_SHIFT)
-...
 
-hvpgoff = HVPFN_DOWN(sgl->offset);
-hvpfn = page_to_hvpfn(sg_page(sgl)) + hvpgoff;
-hvpfns_to_add = HVPFN_UP(sgl->offset + sgl->length) - hvpgoff;
-
-and the cycle can look like:
-
-while (hvpfns_to_add) {
-	payload->range.pfn_array[i++] = hvpfn++;
-	hvpfns_to_add--;
-}
-
-> -
-> -			payload->range.pfn_array[i] = hvpfn + hvpgoff_in_page;
->  		}
-
-and then we can also make an explicit 
-
-BUG_ON(i != hvpg_count) after the cycle to prove our math is correct :-)
-
->  	}
->  
-> @@ -1851,8 +1834,6 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
->  	.slave_configure =	storvsc_device_configure,
->  	.cmd_per_lun =		2048,
->  	.this_id =		-1,
-> -	/* Make sure we dont get a sg segment crosses a page boundary */
-> -	.dma_boundary =		PAGE_SIZE-1,
->  	/* Ensure there are no gaps in presented sgls */
->  	.virt_boundary_mask =	PAGE_SIZE-1,
->  	.no_write_same =	1,
-
--- 
-Vitaly
+-boris
 
