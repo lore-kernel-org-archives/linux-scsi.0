@@ -2,214 +2,204 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA5F5C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 05:48:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EBEAC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 07:52:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90B5464DA8
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 05:48:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEA8364DAF
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 07:52:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230470AbhBWFsK convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Feb 2021 00:48:10 -0500
-Received: from szxga02-in.huawei.com ([45.249.212.188]:3032 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230014AbhBWFsH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2021 00:48:07 -0500
-Received: from DGGEMM403-HUB.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Dl7M96B29zRHsd;
-        Tue, 23 Feb 2021 13:45:57 +0800 (CST)
-Received: from dggemi759-chm.china.huawei.com (10.1.198.145) by
- DGGEMM403-HUB.china.huawei.com (10.3.20.211) with Microsoft SMTP Server (TLS)
- id 14.3.498.0; Tue, 23 Feb 2021 13:47:24 +0800
-Received: from dggemi761-chm.china.huawei.com (10.1.198.147) by
- dggemi759-chm.china.huawei.com (10.1.198.145) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2106.2; Tue, 23 Feb 2021 13:47:23 +0800
-Received: from dggemi761-chm.china.huawei.com ([10.9.49.202]) by
- dggemi761-chm.china.huawei.com ([10.9.49.202]) with mapi id 15.01.2106.006;
- Tue, 23 Feb 2021 13:47:23 +0800
-From:   "Song Bao Hua (Barry Song)" <song.bao.hua@hisilicon.com>
-To:     Finn Thain <fthain@telegraphics.com.au>
-CC:     tanxiaofei <tanxiaofei@huawei.com>,
+        id S232029AbhBWHwA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Feb 2021 02:52:00 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:4510 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232001AbhBWHvv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2021 02:51:51 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1614066711; x=1645602711;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=Y1JBeWW2EZ7CBQFu+F/CvsmKNLEZPMpPYkCh6TaSneI=;
+  b=lrsfTPCmU4beCIWZjtCsH5qBvPUMkQWdJoJjmXaPmsDn8GIy6cdz5toK
+   zuO+EWbh/5skhjdqSi2PeiL5HAFfSkbl+P5xNLefr+1Rwl3CX2RMTYBiP
+   FTBiAiCYaKv7d1K90nQN10ZKjyp4fz6TOCVC3Aac+UvgXVIXDaTbaP4pP
+   Kr6/cG7bTknBJeRoO4n56pTufjare4pioZMSKBTCpJkLyAF37FaiopFAU
+   b9HLckO+bMAR0tfe+Dy/H/CF7SePc8HJy/EpghRkeSAdX9r8g3rCJUdK8
+   fO2EzDpVHEshwhuqkf/zIzp6gaLHuBfbBxasQwzM8CUA3fukWC26zTwVQ
+   w==;
+IronPort-SDR: vfHoGd3CZA0X6zpza9hQHKhl8wOKPVs2reJPM081zlU7osuLE9XnIJgXiki8iO2XI4zL/rVKFn
+ 1Yp3EN/TpjiZjqhTWoS/MpGMl8vbT1t/+lpnDPwO89hU27FXgx+/1LSDJEdWq4MitlEJQPXx62
+ 9yPmIsHB0vbO155d24K9MOkzxjtzmMM7h99nNqpwnx07DlsgRG7piz2fl35ulbyMiHVYBzX2Yq
+ /9lf2aTMMnKk2qIoYmoOzCPbM9r89T3P/2kxZggUgAu+EhjrPhmAP7/KtQCTAmcMq/wWOHcc8D
+ zoo=
+X-IronPort-AV: E=Sophos;i="5.81,199,1610380800"; 
+   d="scan'208";a="161740666"
+Received: from mail-bn8nam12lp2176.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.176])
+  by ob1.hgst.iphmx.com with ESMTP; 23 Feb 2021 15:50:42 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=T0Tv01kSCpZyEEuc/ogveJDIwDZloj+dHZtACLlO8+Sn/op5lrqL/kaJOe3wDcAxZzSmIxrw4HKsqQsNc09IltiU3Y55MCMU5NOMLB7y+aDIYhp4ma7s4/4iM5S44enLJ3VeFfvd5GCqJL+3OaxW+M7OhBFd/PudozYAnbnnknSu/o2/keKY6ZfTiKspo2k9RrfZDYKik+OCtpNGSRjA8vLpMITxVn2HUsmByjSI3rUIzBbx09Wa4J8JjQyXzVcCqA36QiQMo1trlwomg3akY3anMiOxlJ4fszL/nVPxrWs3S+U77dpQEBbSgfAquVO2UFpnO98x+ut2f233aAkNCA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Y1JBeWW2EZ7CBQFu+F/CvsmKNLEZPMpPYkCh6TaSneI=;
+ b=JKTTxLb0wMWD4GjvciqFblOSmiqHApsQjLaxhyslIFp30zKyG9u2FNcplGPIPBBUik7R3/f95Osh7bZYIkPSQ3nPBI6l3oJ2alZ0J5xykYNhsRQag1kAibSzZpZoM4/lHKYtsMS2kyd8Wt3GiIe9GsYlpzKTc+um+AVwWS2tysoRiXzjQ5zDP0aP2rZwcZA5B2Z7S9BvLjIBsmycIHfJY7cZ3/YL614mk7OnzXXGzZHcBlJv6jQCxPMKDqz+SoD77ZlNmwfDQR9vgTXKl1du4fs1zWN2buDGElTzxrcpjQlm8symlt4rcj1P4oE/EebNyZ18NGQuDVqc2pK1+HUOoA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Y1JBeWW2EZ7CBQFu+F/CvsmKNLEZPMpPYkCh6TaSneI=;
+ b=vHcqJ1Yd2zJXESY/fAHLsTUqUtqS5eGAKoLYyxC0wsWKGEipT2FBy5rg3EhgwQfwRmf+a5JvK3VXideTpzR00hV5QlGvcyak1xSnu+zdNZQwWNDst5iQjvRBLwOouhx3GkqFeR7+Vy6Ck7dF1oIItgnAWKT+cDIFQKp/N4pztDc=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ DM5PR04MB1260.namprd04.prod.outlook.com (2603:10b6:4:40::23) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3868.31; Tue, 23 Feb 2021 07:50:39 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::e824:f31b:38cf:ef66]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::e824:f31b:38cf:ef66%3]) with mapi id 15.20.3868.033; Tue, 23 Feb 2021
+ 07:50:39 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linuxarm@openeuler.org" <linuxarm@openeuler.org>,
-        "linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>
-Subject: RE: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage
- optimization for SCSI drivers
-Thread-Topic: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage
- optimization for SCSI drivers
-Thread-Index: AQHXBcVsHfRcgE5/oku9/SZGNaGMW6pf/eSAgANvFTCAAUnngIAAhmHQ
-Date:   Tue, 23 Feb 2021 05:47:23 +0000
-Message-ID: <4d2f90d2157045a7b0800a4004f539ba@hisilicon.com>
-References: <1612697823-8073-1-git-send-email-tanxiaofei@huawei.com>
- <31cd807d-3d0-ed64-60d-fde32cb3833c@telegraphics.com.au>
- <e949a474a9284ac6951813bfc8b34945@hisilicon.com>
- <f0a3339d-b1db-6571-fa2f-6765e150eb9d@telegraphics.com.au>
- <7bc39d19-f4cc-8028-11e6-c0e45421a765@huawei.com>
- <588a87f-ae42-0b7-749e-c780ce5c3e4f@telegraphics.com.au>
- <8c99b5c060eb4e5aa5b604666a8db516@hisilicon.com>
- <f38b950-c76e-39da-f386-9e77cfcecb3@telegraphics.com.au>
-In-Reply-To: <f38b950-c76e-39da-f386-9e77cfcecb3@telegraphics.com.au>
-Accept-Language: en-GB, en-US
+        JinHwan Park <jh.i.park@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+Subject: RE: [PATCH v22 2/4] scsi: ufs: L2P map management for HPB read
+Thread-Topic: [PATCH v22 2/4] scsi: ufs: L2P map management for HPB read
+Thread-Index: AQHXCP10vlbegHFtDUeQMxctLbOIr6plWD3Q
+Date:   Tue, 23 Feb 2021 07:50:39 +0000
+Message-ID: <DM6PR04MB657508BC3F0D0240FDCBB043FC809@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p3>
+        <CGME20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p6>
+ <20210222093050epcms2p6506a476c777785c6212cc80fc6158714@epcms2p6>
+In-Reply-To: <20210222093050epcms2p6506a476c777785c6212cc80fc6158714@epcms2p6>
+Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-originating-ip: [10.126.201.86]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+authentication-results: samsung.com; dkim=none (message not signed)
+ header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 494c0d5c-299f-4510-47b0-08d8d7cfb6d2
+x-ms-traffictypediagnostic: DM5PR04MB1260:
+x-microsoft-antispam-prvs: <DM5PR04MB1260B8D18CC67459B6C4CE06FC809@DM5PR04MB1260.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:8273;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: C0JaWPbyu6Bt/UtWyn65cgd8Zk1HSnnTF8/lbkQK0hjGOeo5WUJ/7FI1QJOzI9Pbxn0selHqqBYqf7gBx88+lVfbPITpUT3xhk8EYuI29HUuyZVr2lmQi8VZQ4qJXgoOrW3OCMxRCKsX4QZEMqxKKPgO7p1fIxf3+Kokji4rg0tEKPVsM0RY8Xely1/CFZlwlScebiW7BYWS0Mq4owOygRhWiRoOoVRQPawiJ6pr5m73Ymw2qYg5skha6eXA4Z06Uzm5P670uU+l1A0hsa7AQkQ25GrWm08E6ppUesbWgsxw3eZKajYQ2v5057RhIaJfV/7pX/wj0pH7nrL6bMuSoR8rD6S+lCLTy6yNGsUzeKamYO0LwoU+XvRdt0PA2rwAA+OPOMUWCSl6IzKbBbRdqLn7jVKgp3nyg8MJbH6QZJ8JPC+ilji5TyF1p9K1oVTuzb+0uzliIPU4cA7tmi812e+vip0c82AMh2DgtLG+xjctky0QH/trPWvYoxVcL/o/qRgbP775qTgwKwRr2vWRCoTKXBcrjVS0ej2NVL0U/uuXx6NPqTB7hQGlxTdQTnLJ
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(396003)(346002)(39860400002)(136003)(366004)(478600001)(2906002)(316002)(33656002)(921005)(66446008)(66556008)(64756008)(66476007)(6506007)(55016002)(186003)(26005)(5660300002)(9686003)(76116006)(7416002)(54906003)(66946007)(8676002)(7696005)(86362001)(83380400001)(71200400001)(4326008)(52536014)(8936002)(110136005);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?utf-8?B?aUlLWHRoeS8yQjVFVUJKWm5vZFd3dmRKWUY5V1phNC9OU1VLekhEb3hrb2xV?=
+ =?utf-8?B?S3dzSTh0TGVoWnFNY0JybUVOMWc4ZHQ0cm1pZ2taaUJXcnQra0JVdE43Yk1N?=
+ =?utf-8?B?UEoxYUV6MWxITTRkNTMwam1NMFB1QnkwV29CMU9hS3pQWEd1UW4wTnp0K2tR?=
+ =?utf-8?B?OXhGbVgwd0hNU2xFTmp5cDhXdXZYRFpLVHZ6UFArOGZFRmRuY1YvR01HZGh0?=
+ =?utf-8?B?bmU3b2tuSHR6aHNtVEJCNEV6WWswWUFJZGRvUTdoUnhQcUxJRmkrWlNHdXVa?=
+ =?utf-8?B?cnNoeUd1aE5ESUJjM1cwbU16alAzei9PZmFvdFd2WmdjMjduZHBJWnJVaE1E?=
+ =?utf-8?B?V3RJVFYrMEVxZXdFenJCMjFhUXJtWEZTSTIvQUZMaG5VamtTZVRxek9NS2RL?=
+ =?utf-8?B?Vkk3TXUxRnhaVDF3dVczT3d4bVJ4b1hJWkU4eGo2eHJsaldjaDlTbk5tc1p2?=
+ =?utf-8?B?QVl4aVgzZk8rQ3ZMK2NSUHJ4ekFyeWRTajY0THF4dFBqSlhtbDlnTUhETlZ2?=
+ =?utf-8?B?YXdabU9CWFBPTWR6Ty8zNk1OKzBRS3l5VytINDNXTmlXNVVzQ05XYVBWZXp2?=
+ =?utf-8?B?VlMvclRINjJZREJsVkFHRUJ3VmVMWWEwelAzUkE0YmRJSHlJN1pNVHlnSmpN?=
+ =?utf-8?B?Vm1JMFU1dWhQTnZwOHlDU25lSkRGSWdkbHFYVE01VDNUckZiSXlCcW9BRkV2?=
+ =?utf-8?B?YjNQTURILy9hWVVuY3FHaktEVjFRTW84VW9zaWw0S0RBdkZ4eXpia3plRUNx?=
+ =?utf-8?B?dnlISnBZbjVNckVmZEJGMk1qaFMxU1BBM3V4N0twdDJvRWhKRTZuc1BpdjhV?=
+ =?utf-8?B?OXJmcEg0TUJsYUF1YjlWSFRMYzFrSldCNmI3UVVBd1MwaXAzNFA2WE53eStO?=
+ =?utf-8?B?Q2RZM0xiVkxqRW9xZzJ4R0xSWC8rK1d1c2xjYitncGU3cldIMDRCbGdlVzYv?=
+ =?utf-8?B?cmJKVGdncHVKWEN4cnRuT2JBbzFTQ1p4WGRmOHlndnZRRUJoRC9oTmdGMFNk?=
+ =?utf-8?B?OUlFZUxNRjQrejlhTmdNc05zejl2NE9SYkFoMDlJcmJpUnNUVnpWSGUzV2Jl?=
+ =?utf-8?B?MXRuMzZkWFo3cldPQjNuc0JKYU5DQm9MdkYxQ3habXg5cWJPc1pJRC8ySUtr?=
+ =?utf-8?B?SUFmYWE3cWNKKzRMWUh6M0R1SGhvaXB6WW1mOWtPeE1GUDcwK2sxMGVSYWV4?=
+ =?utf-8?B?L29keG1UWW54TWZIWlhvbHJrc2N5eFltekpiR09rNWpSK2tuUm94UHh2SENP?=
+ =?utf-8?B?S1VBdDRRWUVTNHlZUFBoMjZidFdkNlh0aWlxOENvK1JkOHczQ0dOWmIvMXIw?=
+ =?utf-8?B?RlRrMllvMUlwSHdac0lUVVlzVTNwejV5RFYvYWwrcVg5M1AwYm1DaWZuajJh?=
+ =?utf-8?B?NGFkd0VKbzZnYjZlU2lZeXlURFVHQWJlK2dVeHVNazFPT2MzWi9ZbGxnMlFN?=
+ =?utf-8?B?SUh6bXJYL2xhanFhOTZWQzZ3UXBpcFhZck05Q1VucmViKytGbytXODhUMks0?=
+ =?utf-8?B?aHdXYlJjY1hIemY1UHdya25wQW9yV0tieDZyMFZtMk1wc0R0KysrS1hXS3BP?=
+ =?utf-8?B?dTNJaGVPd1JZRFBPVUNBVmFMZmovTHR5MEZwRkxaYUhIeWI2dGlabEEvNlRh?=
+ =?utf-8?B?WGFFdm9IaUpGcEIyMGplMEkwTnU5dEJIbnZZTFFJNHFJYjRBcXhRdWRPbUpH?=
+ =?utf-8?B?R01EUmxaM2swdkoxcHlLWEluMHl2eVNiR2Y3Mng0eFN3aGc2VGxMTDVnY2V3?=
+ =?utf-8?Q?YpQThByQP1J6xB0H7/23BD9ww/9rOsgQ3Dyc3y6?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 494c0d5c-299f-4510-47b0-08d8d7cfb6d2
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Feb 2021 07:50:39.7166
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 0zegv9QFr61sKMuyJwRrfUf1R83gENX2m2BmFi5ndSqRmi/UpLwSh56Cji6mppeDc87+ueE5XtAsvs3WNZRLsw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR04MB1260
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Finn Thain [mailto:fthain@telegraphics.com.au]
-> Sent: Tuesday, February 23, 2021 6:25 PM
-> To: Song Bao Hua (Barry Song) <song.bao.hua@hisilicon.com>
-> Cc: tanxiaofei <tanxiaofei@huawei.com>; jejb@linux.ibm.com;
-> martin.petersen@oracle.com; linux-scsi@vger.kernel.org;
-> linux-kernel@vger.kernel.org; linuxarm@openeuler.org;
-> linux-m68k@vger.kernel.org
-> Subject: RE: [Linuxarm] Re: [PATCH for-next 00/32] spin lock usage optimization
-> for SCSI drivers
-> 
-> On Mon, 22 Feb 2021, Song Bao Hua (Barry Song) wrote:
-> 
-> > > On Thu, 18 Feb 2021, Xiaofei Tan wrote:
-> > >
-> > > > On 2021/2/9 13:06, Finn Thain wrote:
-> > > > > On Tue, 9 Feb 2021, Song Bao Hua (Barry Song) wrote:
-> > > > >
-> > > > > > > On Sun, 7 Feb 2021, Xiaofei Tan wrote:
-> > > > > > >
-> > > > > > > > Replace spin_lock_irqsave with spin_lock in hard IRQ of SCSI
-> > > > > > > > drivers. There are no function changes, but may speed up if
-> > > > > > > > interrupt happen too often.
-> > > > > > >
-> > > > > > > This change doesn't necessarily work on platforms that support
-> > > > > > > nested interrupts.
-> > > > > > >
-> > > > > > > Were you able to measure any benefit from this change on some
-> > > > > > > other platform?
-> > > > > >
-> > > > > > I think the code disabling irq in hardIRQ is simply wrong. Since
-> > > > > > this commit
-> > > > > >
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/
-> ?id=e58aa3d2d0cc
-> > > > > > genirq: Run irq handlers with interrupts disabled
-> > > > > >
-> > > > > > interrupt handlers are definitely running in a irq-disabled
-> > > > > > context unless irq handlers enable them explicitly in the
-> > > > > > handler to permit other interrupts.
-> > > > > >
-> > > > >
-> > > > > Repeating the same claim does not somehow make it true. If you put
-> > > > > your claim to the test, you'll see that that interrupts are not
-> > > > > disabled on m68k when interrupt handlers execute.
-> > > > >
-> > > > > The Interrupt Priority Level (IPL) can prevent any given irq
-> > > > > handler from being re-entered, but an irq with a higher priority
-> > > > > level may be handled during execution of a lower priority irq
-> > > > > handler.
-> > > > >
-> > > > > sonic_interrupt() uses an irq lock within an interrupt handler to
-> > > > > avoid issues relating to this. This kind of locking may be needed
-> > > > > in the drivers you are trying to patch. Or it might not.
-> > > > > Apparently, no-one has looked.
-> > > > >
-> > > >
-> > > > According to your discussion with Barry, it seems that m68k is a
-> > > > little different from other architecture, and this kind of
-> > > > modification of this patch cannot be applied to m68k. So, could help
-> > > > to point out which driver belong to m68k architecture in this patch
-> > > > set of SCSI? I can remove them.
-> > > >
-> > >
-> > > If you would claim that "there are no function changes" in your
-> > > patches (as above) then the onus is on you to support that claim.
-> > >
-> > > I assume that there are some platforms on which your assumptions hold.
-> > >
-> > > With regard to drivers for those platforms, you might want to explain
-> > > why your patches should be applied there, given that the existing code
-> > > is superior for being more portable.
-> >
-> > I don't think it has nothing to do with portability. In the case of
-> > sonic_interrupt() you pointed out, on m68k, there is a high-priority
-> > interrupt can preempt low-priority interrupt, they will result in access
-> > the same critical data. M68K's spin_lock_irqsave() can disable the
-> > high-priority interrupt and avoid the race condition of the data. So the
-> > case should not be touched. I'd like to accept the reality and leave
-> > sonic_interrupt() alone.
-> >
-> > However, even on m68k, spin_lock_irqsave is not needed for other
-> > ordinary cases.
-> > If there is no other irq handler coming to access same critical data,
-> > it is pointless to hold a redundant irqsave lock in irqhandler even
-> > on m68k.
-> >
-> > In thread contexts, we always need that if an irqhandler can preempt
-> > those threads and access the same data. In hardirq, if there is an
-> > high-priority which can jump out on m68k to access the critical data
-> > which needs protection, we use the spin_lock_irqsave as you have used in
-> > sonic_interrupt(). Otherwise, the irqsave is also redundant for m68k.
-> >
-> > >
-> > > > BTW, sonic_interrupt() is from net driver natsemi, right?  It would
-> > > > be appreciative if only discuss SCSI drivers in this patch set.
-> > > > thanks.
-> > > >
-> > >
-> > > The 'net' subsystem does have some different requirements than the
-> > > 'scsi' subsystem. But I don't see how that's relevant. Perhaps you can
-> > > explain it. Thanks.
-> >
-> > The difference is that if there are two co-existing interrupts which can
-> > access the same critical data on m68k. I don't think net and scsi
-> > matter. What really matters is the specific driver.
-> >
-> 
-> Regarding m68k, your analysis overlooks the timing issue. E.g. patch 11/32
-> could be a problem because removing the irqsave would allow PDMA transfers
-> to be interrupted. Aside from the timing issues, I agree with your
-> analysis above regarding m68k.
-
-You mentioned you need realtime so you want an interrupt to be able to
-preempt another one. Now you said you want an interrupt not to be preempted
-as it will make a timing issue. If this PDMA transfer will have some problem
-when it is preempted, I believe we need some enhanced ways to handle this,
-otherwise, once we enable preempt_rt or threaded_irq, it will get the timing
-issue. so here it needs a clear comment and IRQF_NO_THREAD if this is the
-case.
-
-> 
-> With regard to other architectures and platforms, in specific cases, e.g.
-> where there's never more than one IRQ involved, then I could agree that
-> your assumptions probably hold and an irqsave would be probably redundant.
-> 
-> When you find a redundant irqsave, to actually patch it would bring a risk
-> of regression with little or no reward. It's not my place to veto this
-> entire patch series on that basis but IMO this kind of churn is misguided.
-
-Nope.
-
-I would say the real misguidance is that the code adds one lock while it
-doesn't need the lock. Easily we can add redundant locks or exaggerate
-the coverage range of locks, but the smarter way is that people add
-locks only when they really need the lock by considering concurrency and
-realtime performance.
-
-Thanks
-Barry
+PiArLyoNCj4gKyAqIFRoaXMgZnVuY3Rpb24gd2lsbCBwYXJzZSByZWNvbW1lbmRlZCBhY3RpdmUg
+c3VicmVnaW9uIGluZm9ybWF0aW9uIGluDQo+IHNlbnNlDQo+ICsgKiBkYXRhIGZpZWxkIG9mIHJl
+c3BvbnNlIFVQSVUgd2l0aCBTQU1fU1RBVF9HT09EIHN0YXRlLg0KPiArICovDQo+ICt2b2lkIHVm
+c2hwYl9yc3BfdXBpdShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBzdHJ1Y3QgdWZzaGNkX2xyYiAqbHJi
+cCkNCj4gK3sNCj4gKyAgICAgICBzdHJ1Y3QgdWZzaHBiX2x1ICpocGI7DQo+ICsgICAgICAgc3Ry
+dWN0IHNjc2lfZGV2aWNlICpzZGV2Ow0KPiArICAgICAgIHN0cnVjdCB1dHBfaHBiX3JzcCAqcnNw
+X2ZpZWxkID0gJmxyYnAtPnVjZF9yc3BfcHRyLT5ocjsNCj4gKyAgICAgICBpbnQgZGF0YV9zZWdf
+bGVuOw0KPiArICAgICAgIGJvb2wgZm91bmQgPSBmYWxzZTsNCj4gKw0KPiArICAgICAgIF9fc2hv
+c3RfZm9yX2VhY2hfZGV2aWNlKHNkZXYsIGhiYS0+aG9zdCkgew0KPiArICAgICAgICAgICAgICAg
+aHBiID0gdWZzaHBiX2dldF9ocGJfZGF0YShzZGV2KTsNCj4gKw0KPiArICAgICAgICAgICAgICAg
+aWYgKCFocGIpDQo+ICsgICAgICAgICAgICAgICAgICAgICAgIGNvbnRpbnVlOw0KPiArDQo+ICsg
+ICAgICAgICAgICAgICBpZiAocnNwX2ZpZWxkLT5sdW4gPT0gaHBiLT5sdW4pIHsNCj4gKyAgICAg
+ICAgICAgICAgICAgICAgICAgZm91bmQgPSB0cnVlOw0KPiArICAgICAgICAgICAgICAgICAgICAg
+ICBicmVhazsNClRoaXMgcGllY2Ugb2YgY29kZSBsb29rcyBhd2t3YXJkLCBhbHRob3VnaCBpdCBp
+cyBwcm9iYWJseSB3b3JraW5nLg0KV2h5IG5vdCBqdXN0IGhhdmluZyBhIHJlZmVyZW5jZSB0byB0
+aGUgaHBiIGx1bnMsIGUuZy4gc29tZXRoaW5nIGxpa2U6DQpzdHJ1Y3QgdWZzaHBiX2x1ICpocGJf
+bHVuc1s4XSBpbiBzdHJ1Y3QgdWZzX2hiYS4NCkxlc3MgZWxlZ2FudCAtIGJ1dCBtdWNoIG1vcmUg
+ZWZmZWN0aXZlIHRoYW4gaXRlcmF0aW5nIHRoZSBzY3NpIGhvc3Qgb24gZXZlcnkgY29tcGxldGlv
+biBpbnRlcnJ1cHQuDQoNCj4gKyAgICAgICAgICAgICAgIH0NCj4gKyAgICAgICB9DQo+ICsNCj4g
+KyAgICAgICBpZiAoIWZvdW5kKQ0KPiArICAgICAgICAgICAgICAgcmV0dXJuOw0KPiArDQo+ICsg
+ICAgICAgaWYgKCh1ZnNocGJfZ2V0X3N0YXRlKGhwYikgIT0gSFBCX1BSRVNFTlQpICYmDQo+ICsg
+ICAgICAgICAgICh1ZnNocGJfZ2V0X3N0YXRlKGhwYikgIT0gSFBCX1NVU1BFTkQpKSB7DQo+ICsg
+ICAgICAgICAgICAgICBkZXZfbm90aWNlKCZocGItPnNkZXZfdWZzX2x1LT5zZGV2X2RldiwNCj4g
+KyAgICAgICAgICAgICAgICAgICAgICAgICAgIiVzOiB1ZnNocGIgc3RhdGUgaXMgbm90IFBSRVNF
+TlQvU1VTUEVORFxuIiwNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgX19mdW5jX18pOw0K
+PiArICAgICAgICAgICAgICAgcmV0dXJuOw0KPiArICAgICAgIH0NCj4gKw0KPiArICAgICAgIGRh
+dGFfc2VnX2xlbiA9IGJlMzJfdG9fY3B1KGxyYnAtPnVjZF9yc3BfcHRyLT5oZWFkZXIuZHdvcmRf
+MikNCj4gKyAgICAgICAgICAgICAgICYgTUFTS19SU1BfVVBJVV9EQVRBX1NFR19MRU47DQo+ICsN
+Cj4gKyAgICAgICAvKiBUbyBmbHVzaCByZW1haW5lZCByc3BfbGlzdCwgd2UgcXVldWUgdGhlIG1h
+cF93b3JrIHRhc2sgKi8NCj4gKyAgICAgICBpZiAoIWRhdGFfc2VnX2xlbikgew0KZGF0YV9zZWdf
+bGVuIHNob3VsZCBiZSAweDE0DQoNCj4gKyAgICAgICAgICAgICAgIGlmICghdWZzaHBiX2lzX2dl
+bmVyYWxfbHVuKGhwYi0+bHVuKSkNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuOw0K
+PiArDQo+ICsgICAgICAgICAgICAgICB1ZnNocGJfa2lja19tYXBfd29yayhocGIpOw0KPiArICAg
+ICAgICAgICAgICAgcmV0dXJuOw0KPiArICAgICAgIH0NCj4gKw0KPiArICAgICAgIC8qIENoZWNr
+IEhQQl9VUERBVEVfQUxFUlQgKi8NCj4gKyAgICAgICBpZiAoIShscmJwLT51Y2RfcnNwX3B0ci0+
+aGVhZGVyLmR3b3JkXzIgJg0KPiArICAgICAgICAgICAgIFVQSVVfSEVBREVSX0RXT1JEKDAsIDIs
+IDAsIDApKSkNCj4gKyAgICAgICAgICAgICAgIHJldHVybjsNCj4gKw0KPiArICAgICAgIEJVSUxE
+X0JVR19PTihzaXplb2Yoc3RydWN0IHV0cF9ocGJfcnNwKSAhPSBVVFBfSFBCX1JTUF9TSVpFKTsN
+Cj4gKw0KPiArICAgICAgIGlmICghdWZzaHBiX2lzX2hwYl9yc3BfdmFsaWQoaGJhLCBscmJwLCBy
+c3BfZmllbGQpKQ0KPiArICAgICAgICAgICAgICAgcmV0dXJuOw0KSG93IGFib3V0IG1vdmluZyBi
+b3RoIHRoZSBkYXRhX3NlZ19sZW4gYW5kIGFsZXJ0IGJpdCBjaGVja3MgaW50byB1ZnNocGJfaXNf
+aHBiX3JzcF92YWxpZCwNCkFuZCBtb3ZpbmcgdWZzaHBiX2lzX2hwYl9yc3BfdmFsaWQgdG8gdGhl
+IGJlZ2lubmluZyBvZiB0aGUgZnVuY3Rpb24/DQpUaGlzIHdheSB5b3Ugd291bGQgc2F2ZSByZWR1
+bmRhbnQgc3R1ZmYgaWYgbm90IGEgdmFsaWQgcmVzcG9uc2UuIA0KDQpUaGFua3MsDQpBdnJpDQo=
