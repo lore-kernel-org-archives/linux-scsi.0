@@ -2,164 +2,214 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66464C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 08:57:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ED74C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 09:00:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0BEB564DDA
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 08:57:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0F3664DDA
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Feb 2021 09:00:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231592AbhBWI4c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Feb 2021 03:56:32 -0500
-Received: from mailout4.samsung.com ([203.254.224.34]:26181 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231701AbhBWI4a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2021 03:56:30 -0500
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210223085547epoutp04fc95053bd6b6eaaa601124515c146e6e~mVJx0EGeH0113201132epoutp04N
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2021 08:55:47 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210223085547epoutp04fc95053bd6b6eaaa601124515c146e6e~mVJx0EGeH0113201132epoutp04N
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1614070547;
-        bh=d0gOIuQUPCQxZRJQkKwdEW+V7cqTiJ3TqS4Et/IoMh0=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=N4bhozeuwzxqXeZW26u1n+/z4gTOoWrYFW/aS9gqEu7fUOjuxp6R28MnzBgTw3NCR
-         X7LHb9/zA4Gre7WqqU+UdLbjXLAXG/8qSZ9Og5MmjgdA9RSAI1nLf2GgCHuTYG0Pff
-         05n8G8ubetl/nxGwAfdboUkfNEBdnV/sMIal+zO0=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20210223085546epcas2p33b74d382f135e0ff450998680399d4df~mVJw-Zg292016520165epcas2p3_;
-        Tue, 23 Feb 2021 08:55:46 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.40.190]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4DlCZ82xzRz4x9QB; Tue, 23 Feb
-        2021 08:55:44 +0000 (GMT)
-X-AuditID: b6c32a47-b97ff7000000148e-f9-6034c31019bf
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        C6.4F.05262.013C4306; Tue, 23 Feb 2021 17:55:44 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE: RE: RE: RE: [PATCH v22 2/4] scsi: ufs: L2P map management for
- HPB read
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        Javier Gonzalez <javier.gonz@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        JinHwan Park <jh.i.park@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <DM6PR04MB657522A864655988A1430E56FC809@DM6PR04MB6575.namprd04.prod.outlook.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20210223085543epcms2p32abd20cbc9dda715eab38a8a382d9057@epcms2p3>
-Date:   Tue, 23 Feb 2021 17:55:43 +0900
-X-CMS-MailID: 20210223085543epcms2p32abd20cbc9dda715eab38a8a382d9057
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrEJsWRmVeSWpSXmKPExsWy7bCmqa7AYZMEg1Vn2CwezNvGZrG37QS7
-        xcufV9ksDt9+x24x7cNPZotP65exWrw8pGmx6kG4RfPi9WwWc842MFn09m9ls3h85zO7xaIb
-        25gs+v+1s1hc3jWHzaL7+g42i+XH/zFZ3N7CZbF0601Gi87pa1gsFi3czeIg6nH5irfH5b5e
-        Jo+ds+6ye0xYdIDRY//cNeweLSf3s3h8fHqLxaNvyypGj8+b5DzaD3QzBXBF5dhkpCampBYp
-        pOYl56dk5qXbKnkHxzvHm5oZGOoaWlqYKynkJeam2iq5+AToumXmAH2opFCWmFMKFApILC5W
-        0rezKcovLUlVyMgvLrFVSi1IySkwNCzQK07MLS7NS9dLzs+1MjQwMDIFqkzIyTgw1aXgEW/F
-        y7fP2RoYz3J2MXJySAiYSJw8to6xi5GLQ0hgB6PE6Ql/mLsYOTh4BQQl/u4QBjGFBUIldl3T
-        AykXElCSWH9xFjuILSygJ3Hr4RpGEJtNQEdi+on77CBjRARWsEhc/HWJDcRhFvjFJHHi8QdG
-        iGW8EjPan7JA2NIS25dvBYtzCsRKnFm6lAkiriHxY1kvM4QtKnFz9Vt2GPv9sflQc0QkWu+d
-        haoRlHjwczdUXFLi2O4PUHPqJbbe+QX2mIRAD6PE4Z23WCES+hLXOjaCHcEr4Ctxv/UuWDOL
-        gKrE9VVXoJpdJPZ3LQOrZxaQl9j+dg44UJgFNCXW79IHMSUElCWO3GKBeath4292dDazAJ9E
-        x+G/cPEd855ATVeTWPdzPdMERuVZiJCehWTXLIRdCxiZVzGKpRYU56anFhsVGCPH7SZGcGLX
-        ct/BOOPtB71DjEwcjIcYJTiYlUR42e4aJQjxpiRWVqUW5ccXleakFh9iNAX6ciKzlGhyPjC3
-        5JXEG5oamZkZWJpamJoZWSiJ8xYbPIgXEkhPLEnNTk0tSC2C6WPi4JRqYJrVeuN7/UnDQp79
-        Z5vuPc9wknnp4iakXm97Ik66KV28KKRnjuKO3wV6hvl3pOwe6dSZRE2cc0N6zSXBUo01Voky
-        S9T5rSRX9Z9ZpKfIV1l8L66IfdeGylDmOoXJdkzzlXIeTm4JYpXe8sZVjinAVEOI7722y9/W
-        k2eSF/EcX+Em+GS2QbTXj2PpCS//ejDel5boWrr2femsNaanwrZEZS+IbW3ddL6A98r1aXKd
-        DE3JZ5MEH0Sz9vxaV3JiQoHoe5brKz3+zLmadYPhnr/B+x93vxUfUfa6cdB+oY/GlremQk3L
-        xXR2lB/ZeyXfVsIsuszLadYMk8Aau2DdzoYqz6bXa28YXHnidCCynydLiaU4I9FQi7moOBEA
-        QZfrAnUEAAA=
-DLP-Filter: Pass
+        id S230482AbhBWJAX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Feb 2021 04:00:23 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2595 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231143AbhBWJAV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2021 04:00:21 -0500
+Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DlCZ13ynYz67rv9;
+        Tue, 23 Feb 2021 16:55:37 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 23 Feb 2021 09:59:37 +0100
+Received: from [10.47.0.222] (10.47.0.222) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Tue, 23 Feb
+ 2021 08:59:36 +0000
+Subject: Re: [PATCH] scsi: scsi_host_queue_ready: increase busy count early
+To:     Roger Willcocks <roger@filmlight.ltd.uk>, <Don.Brace@microchip.com>
+CC:     <mwilck@suse.com>, <buczek@molgen.mpg.de>,
+        <martin.petersen@oracle.com>, <ming.lei@redhat.com>,
+        <jejb@linux.vnet.ibm.com>, <linux-scsi@vger.kernel.org>,
+        <hare@suse.de>, <Kevin.Barnett@microchip.com>,
+        <pmenzel@molgen.mpg.de>, <hare@suse.com>
+References: <20210120184548.20219-1-mwilck@suse.com>
+ <37579c64-1cdb-8864-6a30-4d912836f28a@huawei.com>
+ <231d9fcd-14f4-6abf-c41a-56315877a3dc@molgen.mpg.de>
+ <87b7f873-46c4-140b-ee45-f724b50b6aca@huawei.com>
+ <d48f98a9-77e3-dfe3-af5c-91b0ef45586b@molgen.mpg.de>
+ <361d5a2f-fb8e-c400-2818-29aea435aff2@huawei.com>
+ <SN6PR11MB2848BC0AF824B45CA39A6348E1B59@SN6PR11MB2848.namprd11.prod.outlook.com>
+ <2e4cca87aaa27220e186025573ae7c24579e8b7b.camel@suse.com>
+ <SN6PR11MB28482D89B75197B742459063E1B49@SN6PR11MB2848.namprd11.prod.outlook.com>
+ <0DB85ADC-B962-4AF9-B106-3F3B412CE4DB@filmlight.ltd.uk>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <4bff6232-6abd-dae8-c240-07a1a40178bf@huawei.com>
+Date:   Tue, 23 Feb 2021 08:57:49 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <0DB85ADC-B962-4AF9-B106-3F3B412CE4DB@filmlight.ltd.uk>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.47.0.222]
+X-ClientProxiedBy: lhreml742-chm.china.huawei.com (10.201.108.192) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210222092907epcms2p307f3c4116349ebde6eed05c767287449
-References: <DM6PR04MB657522A864655988A1430E56FC809@DM6PR04MB6575.namprd04.prod.outlook.com>
-        <20210223080043epcms2p83f813841174ade50ef97481b3f4cdef7@epcms2p8>
-        <DM6PR04MB657508BC3F0D0240FDCBB043FC809@DM6PR04MB6575.namprd04.prod.outlook.com>
-        <20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p3>
-        <20210222093050epcms2p6506a476c777785c6212cc80fc6158714@epcms2p6>
-        <20210223083136epcms2p89ada047f0da1fb700ace8b4e3e396697@epcms2p8>
-        <CGME20210222092907epcms2p307f3c4116349ebde6eed05c767287449@epcms2p3>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > > > +/*
-> > > > + * This function will parse recommended active subregion information in
-> > > > sense
-> > > > + * data field of response UPIU with SAM_STAT_GOOD state.
-> > > > + */
-> > > > +void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-> > > > +{
-> > > > +       struct ufshpb_lu *hpb;
-> > > > +       struct scsi_device *sdev;
-> > > > +       struct utp_hpb_rsp *rsp_field = &lrbp->ucd_rsp_ptr->hr;
-> > > > +       int data_seg_len;
-> > > > +       bool found = false;
-> > > > +
-> > > > +       __shost_for_each_device(sdev, hba->host) {
-> > > > +               hpb = ufshpb_get_hpb_data(sdev);
-> > > > +
-> > > > +               if (!hpb)
-> > > > +                       continue;
-> > > > +
-> > > > +               if (rsp_field->lun == hpb->lun) {
-> > > > +                       found = true;
-> > > > +                       break;
-> > > This piece of code looks awkward, although it is probably working.
-> > > Why not just having a reference to the hpb luns, e.g. something like:
-> > > struct ufshpb_lu *hpb_luns[8] in struct ufs_hba.
-> > > Less elegant - but much more effective than iterating the scsi host on every
-> > completion interrupt.
-> > 
-> > How about checking (cmd->lun == rsp->lun) before the iteration?
-> > Major case will be have same lun. And, it is hard to add struct ufshpb_lu
-> > *hpb_luns[128]
-> > in struct ufs_hba, because LUN can be upto 127.
-> Oh - yes, 8 is for write booster.
-> OK.  Whatever you think.
+On 22/02/2021 14:23, Roger Willcocks wrote:
+> FYI we have exactly this issue on a machine here running CentOS 8.3 (kernel 4.18.0-240.1.1) (so presumably this happens in RHEL 8 too.)
+> 
+> Controller is MSCC / Adaptec 3154-8i16e driving 60 x 12TB HGST drives configured as five x twelve-drive raid-6, software striped using md, and formatted with xfs.
+> 
+> Test software writes to the array using multiple threads in parallel.
+> 
+> The smartpqi driver would report controller offline within ten minutes or so, with status code 0x6100c
+> 
+> Changed the driver to set 'nr_hw_queues = 1’ and then tested by filling the array with random files (which took a couple of days), which completed fine, so it looks like that one-line change fixes it.
+> 
 
-Then, I want to keep this code with adding code that checking same LUN for
-fast path.
-  
-> However, I think there can be up to 32 regular luns,
-> meaning UFS_UPIU_MAX_UNIT_NUM_ID need to be fixed as well.
+That just makes the driver single-queue.
 
-OK, it can be fixed another patch.
+As such, since the driver uses blk_mq_unique_tag_to_hwq(), only hw queue 
+#0 will ever be used in the driver.
 
-Thanks,
-Daejun
+And then, since the driver still spreads MSI-X interrupt vectors over 
+all CPUs [from pci_alloc_vectors(PCI_IRQ_AFFINITY)], if CPUs associated 
+with HW queue #0 are offlined (probably just cpu0), there is no CPUs 
+available to service queue #0 interrupt. That's what I think would 
+happen, from a quick glance at the code.
+
+
+> Would, of course, be helpful if this was back-ported.
+> 
+> —
+> Roger
+> 
+> 
+> 
+>> On 3 Feb 2021, at 15:56, Don.Brace@microchip.com wrote:
+>>
+>> -----Original Message-----
+>> From: Martin Wilck [mailto:mwilck@suse.com]
+>> Subject: Re: [PATCH] scsi: scsi_host_queue_ready: increase busy count early
+>>
+>>>
+>>>
+>>> Confirmed my suspicions - it looks like the host is sent more commands
+>>> than it can handle. We would need many disks to see this issue though,
+>>> which you have.
+>>>
+>>> So for stable kernels, 6eb045e092ef is not in 5.4 . Next is 5.10, and
+>>> I suppose it could be simply fixed by setting .host_tagset in scsi
+>>> host template there.
+>>>
+>>> Thanks,
+>>> John
+>>> --
+>>> Don: Even though this works for current kernels, what would chances of
+>>> this getting back-ported to 5.9 or even further?
+>>>
+>>> Otherwise the original patch smartpqi_fix_host_qdepth_limit would
+>>> correct this issue for older kernels.
+>>
+>> True. However this is 5.12 material, so we shouldn't be bothered by that here. For 5.5 up to 5.9, you need a workaround. But I'm unsure whether smartpqi_fix_host_qdepth_limit would be the solution.
+>> You could simply divide can_queue by nr_hw_queues, as suggested before, or even simpler, set nr_hw_queues = 1.
+>>
+>> How much performance would that cost you?
+>>
+>> Don: For my HBA disk tests...
+>>
+>> Dividing can_queue / nr_hw_queues is about a 40% drop.
+>> ~380K - 400K IOPS
+>> Setting nr_hw_queues = 1 results in a 1.5 X gain in performance.
+>> ~980K IOPS
+>> Setting host_tagset = 1
+>> ~640K IOPS
+>>
+>> So, it seem that setting nr_hw_queues = 1 results in the best performance.
+>>
+>> Is this expected? Would this also be true for the future?
+>>
+>> Thanks,
+>> Don Brace
+>>
+>> Below is my setup.
+>> ---
+>> [3:0:0:0]    disk    HP       EG0900FBLSK      HPD7  /dev/sdd
+>> [3:0:1:0]    disk    HP       EG0900FBLSK      HPD7  /dev/sde
+>> [3:0:2:0]    disk    HP       EG0900FBLSK      HPD7  /dev/sdf
+>> [3:0:3:0]    disk    HP       EH0300FBQDD      HPD5  /dev/sdg
+>> [3:0:4:0]    disk    HP       EG0900FDJYR      HPD4  /dev/sdh
+>> [3:0:5:0]    disk    HP       EG0300FCVBF      HPD9  /dev/sdi
+>> [3:0:6:0]    disk    HP       EG0900FBLSK      HPD7  /dev/sdj
+>> [3:0:7:0]    disk    HP       EG0900FBLSK      HPD7  /dev/sdk
+>> [3:0:8:0]    disk    HP       EG0900FBLSK      HPD7  /dev/sdl
+>> [3:0:9:0]    disk    HP       MO0200FBRWB      HPD9  /dev/sdm
+>> [3:0:10:0]   disk    HP       MM0500FBFVQ      HPD8  /dev/sdn
+>> [3:0:11:0]   disk    ATA      MM0500GBKAK      HPGC  /dev/sdo
+>> [3:0:12:0]   disk    HP       EG0900FBVFQ      HPDC  /dev/sdp
+>> [3:0:13:0]   disk    HP       VO006400JWZJT    HP00  /dev/sdq
+>> [3:0:14:0]   disk    HP       VO015360JWZJN    HP00  /dev/sdr
+>> [3:0:15:0]   enclosu HP       D3700            5.04  -
+>> [3:0:16:0]   enclosu HP       D3700            5.04  -
+>> [3:0:17:0]   enclosu HPE      Smart Adapter    3.00  -
+>> [3:1:0:0]    disk    HPE      LOGICAL VOLUME   3.00  /dev/sds
+>> [3:2:0:0]    storage HPE      P408e-p SR Gen10 3.00  -
+>> -----
+>> [global]
+>> ioengine=libaio
+>> ; rw=randwrite
+>> ; percentage_random=40
+>> rw=write
+>> size=100g
+>> bs=4k
+>> direct=1
+>> ramp_time=15
+>> ; filename=/mnt/fio_test
+>> ; cpus_allowed=0-27
+>> iodepth=4096
+>>
+>> [/dev/sdd]
+>> [/dev/sde]
+>> [/dev/sdf]
+>> [/dev/sdg]
+>> [/dev/sdh]
+>> [/dev/sdi]
+>> [/dev/sdj]
+>> [/dev/sdk]
+>> [/dev/sdl]
+>> [/dev/sdm]
+>> [/dev/sdn]
+>> [/dev/sdo]
+>> [/dev/sdp]
+>> [/dev/sdq]
+>> [/dev/sdr]
+>>
+>>
+>> Distribution kernels would be yet another issue, distros can backport host_tagset and get rid of the issue.
+>>
+>> Regards
+>> Martin
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+> 
+> .
+> 
+
