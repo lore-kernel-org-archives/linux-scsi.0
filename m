@@ -2,137 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14FEFC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 16:11:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 261F0C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 16:50:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE7A764EDD
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 16:11:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D956F64F0B
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 16:50:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235460AbhBXQLS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Feb 2021 11:11:18 -0500
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:18228 "EHLO
-        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236897AbhBXPyX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Feb 2021 10:54:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1614182061; x=1645718061;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version;
-  bh=stIfhMc4/lme2/zXtnuz/DIVw9VyUA5VTfTReLh0opA=;
-  b=gF9vAT7yd81dORvc5nyP54GWYZ057FMu9qUaRsEeyWE7miYb1+kaBQsi
-   K1XjouFsiZ2Lmqg4wgIJwJIYle6mLbIwA/hjss1vDoVq/Pi1Vs/pKoLps
-   ktSRKBkUst7B20DEZnad9+FhdEdoJAgfGfbazJ8cskQNS/WAoLMumihrm
-   ZZqiVqkyg+FkbSqceHfhifWMpc+ZJodPp/MmWPw3pKwv8q8Kbb9AJKnws
-   5XZv7GIg/1oEIjOWh8A0NIRjxypFvZqY+fmSo6yd/X3y7ZM3JJQ8eTAg+
-   5NjhrrBLHvrpeAKrh3dqIWHpByI2pj5YMs2zDZmC29hdDVLhegIjarW+R
-   Q==;
-IronPort-SDR: bFtJYiqIHmYxsiXvGU3fq03R4qYRkH6Uw7bdql5Dkr7sXqZYluAOZbbBgPasaqzbUHDLTJ9bW3
- jl9mtTJzlo5oa5RHXTwYXJLdP91sFqUSKCosoguuPpxgzOWgXUYBHFx8tzrq6ZLeDH6OwE/hoI
- rpI5WyBf7r5mLYXhLD3AYaN5e4rSYudV//HLSQnY17Ourdr4jNqgoS4R+boC3MenVhfQkyi61d
- rzG/FS4Q+RxDnqp+90QeSYWYLBaGj6y/SiLB4v9grAju6AYgPbTU+rzNetnLSzR9fZG3tBvsqr
- gA4=
-X-IronPort-AV: E=Sophos;i="5.81,203,1610434800"; 
-   d="scan'208";a="107803947"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 24 Feb 2021 08:48:26 -0700
-Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Wed, 24 Feb 2021 08:48:20 -0700
-Received: from localhost (10.10.115.15) by chn-vm-ex04.mchp-main.com
- (10.10.85.152) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Wed, 24 Feb 2021 08:48:19 -0700
-From:   Viswas G <Viswas.G@microchip.com>
-To:     <linux-scsi@vger.kernel.org>
-CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Viswas.G@microchip.com>, <Ruksar.devadi@microchip.com>,
-        <vishakhavc@google.com>, <radha@google.com>,
-        <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH 2/7] pm80xx: Add sysfs attribute to track RAAE count
-Date:   Wed, 24 Feb 2021 21:27:57 +0530
-Message-ID: <20210224155802.13292-3-Viswas.G@microchip.com>
-X-Mailer: git-send-email 2.16.3
-In-Reply-To: <20210224155802.13292-1-Viswas.G@microchip.com>
-References: <20210224155802.13292-1-Viswas.G@microchip.com>
+        id S235537AbhBXQty (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Feb 2021 11:49:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57508 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235728AbhBXQtp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Feb 2021 11:49:45 -0500
+Received: from mail-io1-xd33.google.com (mail-io1-xd33.google.com [IPv6:2607:f8b0:4864:20::d33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED77DC06178C
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Feb 2021 08:48:23 -0800 (PST)
+Received: by mail-io1-xd33.google.com with SMTP id a7so2651924iok.12
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Feb 2021 08:48:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=1+mpX7zx0n4pKPlEw3hBAnsSTnEgaecbMXBQXh8Z37U=;
+        b=bJRnx9a0JrFxWlYgyk2jyiRpJPQJNXNMPWbL5EnUxyVSch3NY812m+zPkaOOeQG9gE
+         rs0rCo0fJuj/glleu3wdzyZ1sbMyHYwsV5BHTbcMpvcNSEN1VzYR9JpF1EJFbPokIpRP
+         pQFA9x0cFcUm+wj/d9C7MittCB6Pzu9NBrIWj0+f0KwN2z25gJ9NY8wag2SjQO0ua0ev
+         ZVb26i7aH9IF/twGU677bbnoqNxjoX/YznSaZOR126/+xhxo8OHS4QMUdKCTDjp0BRQo
+         RNRen7wNfFOzqDylSea/+a0RlJ08r6OWvecZNFxJhZUCe5oZYOK06fy2FnZ88SyWM37D
+         dX/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=1+mpX7zx0n4pKPlEw3hBAnsSTnEgaecbMXBQXh8Z37U=;
+        b=b/Xxc+mYj/xWzOlwEsehSk9jiVxR+qnTayV/pJhdsRALrCno30B8afqSm6U4ASO1ab
+         HJOLksFa3qFe/YcdU5ySAtOiWF0yXfbXoahAsECGJ1nUAACUOLJYFLA4WmpooKH9Zhye
+         b//tPnNDXG5JpyMlXrStkTBAgE+PodhQvZvQJcrA/og4zH3aLRPg0MDUQO/uPq0qU6lM
+         hURzNNm7YfDSiaUbDc2tHmZ4qKs+/pQThtrdpblKNEr4lVoMGA4HeFNXqCf/l2jfsqNk
+         8nmIfj6hn54RpcA2BNW8Z/v4NOy2kqzktj6fWnNzI7ohXtGxFO0+B5Sc+2thfYuSox50
+         J4iw==
+X-Gm-Message-State: AOAM533RH0enw3E/iyTJnLqI9/yiaCuouPKaSnCrz8h2Gd9lZcdNCbDj
+        Ex/rNLCg+5w6JrYeCpV3LigxZg==
+X-Google-Smtp-Source: ABdhPJwss97019ILy/7qQcv1GNjekopW38KQaiSTkiRj6pTu3XozM6UbMn7yxILO9vbNkFv7yo9ZjA==
+X-Received: by 2002:a02:1c49:: with SMTP id c70mr34122809jac.136.1614185303233;
+        Wed, 24 Feb 2021 08:48:23 -0800 (PST)
+Received: from [192.168.1.30] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id m15sm1760501ilh.6.2021.02.24.08.48.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 24 Feb 2021 08:48:22 -0800 (PST)
+Subject: Re: [RFC PATCH] blk-core: remove blk_put_request()
+To:     Stefan Hajnoczi <stefanha@redhat.com>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        fujita.tomonori@lab.ntt.co.jp, tim@cyberelk.net, mst@redhat.com,
+        jasowang@redhat.com, pbonzini@redhat.com, davem@davemloft.net,
+        bp@alien8.de, agk@redhat.com, snitzer@redhat.com,
+        ulf.hansson@linaro.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, dgilbert@interlog.com,
+        Kai.Makisara@kolumbus.fi, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, bfields@fieldses.org, chuck.lever@oracle.com,
+        baolin.wang@linaro.org, vbadigan@codeaurora.org, zliua@micron.com,
+        richard.peng@oppo.com, guoqing.jiang@cloud.ionos.com,
+        stanley.chu@mediatek.com, cang@codeaurora.org,
+        asutoshd@codeaurora.org, beanhuo@micron.com, jaegeuk@kernel.org
+References: <20210222211115.30416-1-chaitanya.kulkarni@wdc.com>
+ <YDY+ObNNiBMMuSEt@stefanha-x1.localdomain>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <f3141eb3-9938-a216-a9f8-cb193589a657@kernel.dk>
+Date:   Wed, 24 Feb 2021 09:48:21 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <YDY+ObNNiBMMuSEt@stefanha-x1.localdomain>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Vishakha Channapattan <vishakhavc@google.com>
+On 2/24/21 4:53 AM, Stefan Hajnoczi wrote:
+> On Mon, Feb 22, 2021 at 01:11:15PM -0800, Chaitanya Kulkarni wrote:
+>> The function blk_put_request() is just a wrapper to
+>> blk_mq_free_request(), remove the unnecessary wrapper.
+>>
+>> Any feedback is welcome on this RFC.
+>>
+>> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+>> ---
+>>  block/blk-core.c                   |  6 ------
+>>  block/blk-merge.c                  |  2 +-
+>>  block/bsg-lib.c                    |  4 ++--
+>>  block/bsg.c                        |  4 ++--
+>>  block/scsi_ioctl.c                 |  6 +++---
+>>  drivers/block/paride/pd.c          |  2 +-
+>>  drivers/block/pktcdvd.c            |  2 +-
+>>  drivers/block/virtio_blk.c         |  2 +-
+>>  drivers/cdrom/cdrom.c              |  4 ++--
+>>  drivers/ide/ide-atapi.c            |  2 +-
+>>  drivers/ide/ide-cd.c               |  4 ++--
+>>  drivers/ide/ide-cd_ioctl.c         |  2 +-
+>>  drivers/ide/ide-devsets.c          |  2 +-
+>>  drivers/ide/ide-disk.c             |  2 +-
+>>  drivers/ide/ide-ioctls.c           |  4 ++--
+>>  drivers/ide/ide-park.c             |  2 +-
+>>  drivers/ide/ide-pm.c               |  4 ++--
+>>  drivers/ide/ide-tape.c             |  2 +-
+>>  drivers/ide/ide-taskfile.c         |  2 +-
+>>  drivers/md/dm-mpath.c              |  2 +-
+>>  drivers/mmc/core/block.c           | 10 +++++-----
+>>  drivers/scsi/scsi_error.c          |  2 +-
+>>  drivers/scsi/scsi_lib.c            |  2 +-
+>>  drivers/scsi/sg.c                  |  6 +++---
+>>  drivers/scsi/st.c                  |  4 ++--
+>>  drivers/scsi/ufs/ufshcd.c          |  6 +++---
+>>  drivers/target/target_core_pscsi.c |  4 ++--
+>>  fs/nfsd/blocklayout.c              |  4 ++--
+>>  include/linux/blkdev.h             |  1 -
+>>  29 files changed, 46 insertions(+), 53 deletions(-)
+>>
+>> diff --git a/block/blk-core.c b/block/blk-core.c
+>> index fc60ff208497..1754f5e7cc80 100644
+>> --- a/block/blk-core.c
+>> +++ b/block/blk-core.c
+>> @@ -642,12 +642,6 @@ struct request *blk_get_request(struct request_queue *q, unsigned int op,
+>>  }
+>>  EXPORT_SYMBOL(blk_get_request);
+>>  
+>> -void blk_put_request(struct request *req)
+>> -{
+>> -	blk_mq_free_request(req);
+>> -}
+>> -EXPORT_SYMBOL(blk_put_request);
+> 
+> blk_get_request() still exists after this patch. A "get" API usually has
+> a corresponding "put" API. I'm not sure this patch helps the consistency
+> and clarity of the code.
+> 
+> If you do go ahead, please update the blk_get_request() doc comment
+> explicitly mentioning that blk_mq_free_request() needs to be called.
 
-A new sysfs variable 'ctl_raae_count' is being introduced that tells if
-the controller is alive by indicating controller ticks. If on subsequent
-run we see the ticks changing in RAAE count that indicates that
-controller
-is not dead.
+Would make sense to rename blk_get_request() to blk_mq_alloc_request()
+and then we have API symmetry. The get/put don't make sense when there
+are no references involved.
 
-Tested: Using 'ctl_raae_count' sysfs variable we can see ticks
-incrementing
-mvae14:~# cat  /sys/class/scsi_host/host*/ctl_raae_count
-MSGUTCNT=0x00002245
-MSGUTCNT=0x00002253
-MSGUTCNT=0x0000225e
+But it's a lot of churn for very little reward, which is always kind
+of annoying. Especially for the person that has to carry the patches.
 
-Signed-off-by: Vishakha Channapattan <vishakhavc@google.com>
-Signed-off-by: Viswas G <Viswas.G@microchip.com>
-Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
-Signed-off-by: Ashokkumar N <Ashokkumar.N@microchip.com>
-Signed-off-by: Radha Ramachandran <radha@google.com>
----
- drivers/scsi/pm8001/pm8001_ctl.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
-
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 035969ed1c2e..d415bb12718c 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -919,6 +919,30 @@ static ssize_t ctl_mpi_state_show(struct device *cdev,
- }
- static DEVICE_ATTR_RO(ctl_mpi_state);
- 
-+/**
-+ * ctl_raae_count_show - controller raae count check
-+ * @cdev: pointer to embedded class device
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' shost attribute.
-+ */
-+
-+static ssize_t ctl_raae_count_show(struct device *cdev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(cdev);
-+	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-+	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-+	unsigned int raaecnt = 0;
-+	int c;
-+
-+	pm8001_dbg(pm8001_ha, IOCTL, "%s\n", __func__);
-+	raaecnt = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 12);
-+	c = sprintf(buf, "MSGUTCNT=0x%08x\n", raaecnt);
-+	return c;
-+}
-+static DEVICE_ATTR_RO(ctl_raae_count);
-+
- struct device_attribute *pm8001_host_attrs[] = {
- 	&dev_attr_interface_rev,
- 	&dev_attr_controller_fatal_error,
-@@ -943,6 +967,7 @@ struct device_attribute *pm8001_host_attrs[] = {
- 	&dev_attr_ila_version,
- 	&dev_attr_inc_fw_ver,
- 	&dev_attr_ctl_mpi_state,
-+	&dev_attr_ctl_raae_count,
- 	NULL,
- };
- 
 -- 
-2.16.3
+Jens Axboe
 
