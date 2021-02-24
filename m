@@ -2,163 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 261F0C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 16:50:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE3D3C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 17:05:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D956F64F0B
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 16:50:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACBAD64F08
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 17:05:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235537AbhBXQty (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Feb 2021 11:49:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57508 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235728AbhBXQtp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Feb 2021 11:49:45 -0500
-Received: from mail-io1-xd33.google.com (mail-io1-xd33.google.com [IPv6:2607:f8b0:4864:20::d33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED77DC06178C
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Feb 2021 08:48:23 -0800 (PST)
-Received: by mail-io1-xd33.google.com with SMTP id a7so2651924iok.12
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Feb 2021 08:48:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=1+mpX7zx0n4pKPlEw3hBAnsSTnEgaecbMXBQXh8Z37U=;
-        b=bJRnx9a0JrFxWlYgyk2jyiRpJPQJNXNMPWbL5EnUxyVSch3NY812m+zPkaOOeQG9gE
-         rs0rCo0fJuj/glleu3wdzyZ1sbMyHYwsV5BHTbcMpvcNSEN1VzYR9JpF1EJFbPokIpRP
-         pQFA9x0cFcUm+wj/d9C7MittCB6Pzu9NBrIWj0+f0KwN2z25gJ9NY8wag2SjQO0ua0ev
-         ZVb26i7aH9IF/twGU677bbnoqNxjoX/YznSaZOR126/+xhxo8OHS4QMUdKCTDjp0BRQo
-         RNRen7wNfFOzqDylSea/+a0RlJ08r6OWvecZNFxJhZUCe5oZYOK06fy2FnZ88SyWM37D
-         dX/w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=1+mpX7zx0n4pKPlEw3hBAnsSTnEgaecbMXBQXh8Z37U=;
-        b=b/Xxc+mYj/xWzOlwEsehSk9jiVxR+qnTayV/pJhdsRALrCno30B8afqSm6U4ASO1ab
-         HJOLksFa3qFe/YcdU5ySAtOiWF0yXfbXoahAsECGJ1nUAACUOLJYFLA4WmpooKH9Zhye
-         b//tPnNDXG5JpyMlXrStkTBAgE+PodhQvZvQJcrA/og4zH3aLRPg0MDUQO/uPq0qU6lM
-         hURzNNm7YfDSiaUbDc2tHmZ4qKs+/pQThtrdpblKNEr4lVoMGA4HeFNXqCf/l2jfsqNk
-         8nmIfj6hn54RpcA2BNW8Z/v4NOy2kqzktj6fWnNzI7ohXtGxFO0+B5Sc+2thfYuSox50
-         J4iw==
-X-Gm-Message-State: AOAM533RH0enw3E/iyTJnLqI9/yiaCuouPKaSnCrz8h2Gd9lZcdNCbDj
-        Ex/rNLCg+5w6JrYeCpV3LigxZg==
-X-Google-Smtp-Source: ABdhPJwss97019ILy/7qQcv1GNjekopW38KQaiSTkiRj6pTu3XozM6UbMn7yxILO9vbNkFv7yo9ZjA==
-X-Received: by 2002:a02:1c49:: with SMTP id c70mr34122809jac.136.1614185303233;
-        Wed, 24 Feb 2021 08:48:23 -0800 (PST)
-Received: from [192.168.1.30] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id m15sm1760501ilh.6.2021.02.24.08.48.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 24 Feb 2021 08:48:22 -0800 (PST)
-Subject: Re: [RFC PATCH] blk-core: remove blk_put_request()
-To:     Stefan Hajnoczi <stefanha@redhat.com>,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        fujita.tomonori@lab.ntt.co.jp, tim@cyberelk.net, mst@redhat.com,
-        jasowang@redhat.com, pbonzini@redhat.com, davem@davemloft.net,
-        bp@alien8.de, agk@redhat.com, snitzer@redhat.com,
-        ulf.hansson@linaro.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, dgilbert@interlog.com,
-        Kai.Makisara@kolumbus.fi, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bfields@fieldses.org, chuck.lever@oracle.com,
-        baolin.wang@linaro.org, vbadigan@codeaurora.org, zliua@micron.com,
-        richard.peng@oppo.com, guoqing.jiang@cloud.ionos.com,
-        stanley.chu@mediatek.com, cang@codeaurora.org,
-        asutoshd@codeaurora.org, beanhuo@micron.com, jaegeuk@kernel.org
-References: <20210222211115.30416-1-chaitanya.kulkarni@wdc.com>
- <YDY+ObNNiBMMuSEt@stefanha-x1.localdomain>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <f3141eb3-9938-a216-a9f8-cb193589a657@kernel.dk>
-Date:   Wed, 24 Feb 2021 09:48:21 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <YDY+ObNNiBMMuSEt@stefanha-x1.localdomain>
-Content-Type: text/plain; charset=windows-1252
+        id S235221AbhBXRFM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Feb 2021 12:05:12 -0500
+Received: from mail-eopbgr760108.outbound.protection.outlook.com ([40.107.76.108]:2485
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S236006AbhBXREn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 Feb 2021 12:04:43 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=V5zxCrY3KnFJDmNHycXYvDeLfBgcZ6TP2CbyllmtGmqXVCwp2/VIyWE9QUqG9W0PXY5mZARVSDdqAAPk7NrToYsWM9f+PEoJBSDvuSUi87EHV0KHRCHkow1AWPPJ8LtIclUo3ryJRMQ6natgcylVpgX65yMwZb98EUguREFnrs19yxnaqAEeSZ2pRkmG9bAHF41otpTgcs5SM2tbCuvO3EHJxxTwQCNmad/wY4ErmgBUgD6IDeDfYOwRwyjJUGFdx6w7qFLqK53W5+T8dKGJZ9bVxV2wd1tKluMVZ8A1mgp9Xbtrdc6P1wU0HPmVUf0102MulDAqi+JWHzevg69TqQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9F8eC2iN9PwCO1E7xqrjDI187kE3+tzeuiVnM+ZWGnM=;
+ b=c+C9qjszdRs2ZlqYkLCUMWZs+bjMH5/Cpy3HEMCU/kbqHERp65sONZ1HDszqXc81ySNU1zSjW1V76CNULh+OZDrm6UO/F5l1YuHfX92jQhcGtpOzItYDxjsGc49A5vwz8fr5UmmhL7hrQAoifw/hw5EmctUF6pNhE40z9Ig/RpXHGiHUeSEihZat8Zocb1wWcVYkZ+nvpeGMNu/0lAla1DtpM7ufZPuwPdctJOsNkbpb9JFE7iNTlwwW8MuzOM+GnpRXjmmZakgaE95cwrAq9vSUpPXVSc2j+I21XmLHmL1KrFbQzNyasFZ/9uV5uKboYy3ycYeJCkM810SToxswOw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9F8eC2iN9PwCO1E7xqrjDI187kE3+tzeuiVnM+ZWGnM=;
+ b=Iq6KqpDTYNBLrMJflzquJtnSeXPVGxVMRYN7vVWiIi01Bj5m6tXWXQg8TtPCDyU7p0KGXDAvDxRGX8YmR3Aiv1GELHFV6XY+geitw6dWiW+G678mfSunfRpGLdtwZyGDnAh8W5Mr8598lA53j4z2vnh/wYYcmYBzqTivRnqeYWc=
+Received: from MWHPR21MB1593.namprd21.prod.outlook.com (2603:10b6:301:7c::11)
+ by MW2PR2101MB1818.namprd21.prod.outlook.com (2603:10b6:302:12::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.1; Wed, 24 Feb
+ 2021 17:03:59 +0000
+Received: from MWHPR21MB1593.namprd21.prod.outlook.com
+ ([fe80::9c8:94c9:faf1:17c2]) by MWHPR21MB1593.namprd21.prod.outlook.com
+ ([fe80::9c8:94c9:faf1:17c2%9]) with mapi id 15.20.3912.008; Wed, 24 Feb 2021
+ 17:03:59 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     Christoph Hellwig <hch@infradead.org>,
+        vkuznets <vkuznets@redhat.com>
+CC:     KY Srinivasan <kys@microsoft.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        Long Li <longli@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: RE: [PATCH 1/1] scsi: storvsc: Enable scatterlist entry lengths >
+ 4Kbytes
+Thread-Topic: [PATCH 1/1] scsi: storvsc: Enable scatterlist entry lengths >
+ 4Kbytes
+Thread-Index: AQHXBjlaeseUgmW2gEGnERM19Pp+w6pl1E6AgAGpaYCAABFJ0A==
+Date:   Wed, 24 Feb 2021 17:03:59 +0000
+Message-ID: <MWHPR21MB1593657F4149BAFBE041842BD79F9@MWHPR21MB1593.namprd21.prod.outlook.com>
+References: <1613682087-102535-1-git-send-email-mikelley@microsoft.com>
+ <874ki2yhzm.fsf@vitty.brq.redhat.com>
+ <20210224155241.GA2284544@infradead.org>
+In-Reply-To: <20210224155241.GA2284544@infradead.org>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-02-24T17:03:57Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=94038de8-be05-4172-9e82-dd0910107859;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0
+authentication-results: infradead.org; dkim=none (message not signed)
+ header.d=none;infradead.org; dmarc=none action=none
+ header.from=microsoft.com;
+x-originating-ip: [24.22.167.197]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 8af5013a-bf7f-4ec1-2cbe-08d8d8e62df1
+x-ms-traffictypediagnostic: MW2PR2101MB1818:
+x-ms-exchange-transport-forked: True
+x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
+x-microsoft-antispam-prvs: <MW2PR2101MB18180662D081C330FB82F150D79F9@MW2PR2101MB1818.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:4303;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: zAuuFfvtOf76ymR/Q/wNqHaTdFlehjB15GxO3o9erbUtYzn6yXRwchwFCl5R6dttdgK2aMTPEo/aeeeZWIfdad97cw6DV4wHlYagpQe26c3s3pD39+IGbQwYj3H+zMOek8IOriJjkWDqO9IahHBBLyJCi9CjYNDMsoxVY7uoZtq2l/HRmPavsNs9L3nO2WfisatuHXQ3TpE2dA4SS4ckvc5RbIJkE7cVoZ1Z5U3ByOlxJlLH4nq6tQlO/0H3M1LNvjaaXvEh6xm2nDqEqRxxU1730h9/mlw3SmZYbwjFXhddpuol8AMjXl49HtKiOGWolnDxGW4UqDcOBhGKxWych//mzE00moPhRfrDYSw1/yOvvlOLZA4CW17ibKLL/rnqPC5/rf6WioR+VHXODiWsvcF2gJRzi6/ckwwXpnTChZQ3xkikpqOFRGGij+29MbqPGmtVu1scQMRfJtQFsaqrZeMLP4JGfyiER0I5lNdojLcVIlzcNwQJ60CEYabYj9v0Xd0c1aEgalPg7GujAHwEIg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR21MB1593.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(136003)(396003)(376002)(39860400002)(346002)(9686003)(54906003)(4326008)(4744005)(8990500004)(7696005)(6506007)(478600001)(10290500003)(66946007)(71200400001)(2906002)(5660300002)(86362001)(52536014)(76116006)(110136005)(55016002)(316002)(82950400001)(186003)(8936002)(8676002)(82960400001)(66476007)(26005)(64756008)(66446008)(66556008)(33656002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?rEPx91B8nX14mKuL50EGX+F9eUU3D9jXxL+gF/h6A7HPrZvSghiXiPWoLZGZ?=
+ =?us-ascii?Q?ebUdTg6jzoGVweF1kTHKQS6P5jPBe9a89uQqtbe0U+xE+To+2pN2gHdxyU2m?=
+ =?us-ascii?Q?4NZyXP+Ohc4rv6f6+sTOz8qAJwyd96H8m18KdCccv3t9K6u+o/i8AQEMXf0A?=
+ =?us-ascii?Q?jN8rFsJn8Js8uZUaHMMD8tZrhrO33r3TLFmETUFU4Ly1RDNUYp1sxiBIfmEa?=
+ =?us-ascii?Q?bDWVUlSIYUKfehFU606vfGEwRl8ERfz5xrPT9p6H8LVSZ7+vN1ANdy3b3N/Z?=
+ =?us-ascii?Q?nqRM2M4Jo340m8J7U2Oc1KOVt/ydbKd37aec/UP+Tavq3HZgOH4ci2J9da/1?=
+ =?us-ascii?Q?b6G+vo2esCSxS2k4APH1DlBObkqm78cqjBoFZ1G6KmvGJ+NNbfM3g1yJTKmq?=
+ =?us-ascii?Q?1D3LKrSlRQvArSBnGnyLBbaE5/0nPoQRlrwO93QyimAwmxJmjXNoDowqtKmn?=
+ =?us-ascii?Q?CiqlXOAao439ANwpjC3heFF+9uvRPK+ObBl9hdS6w+J9+D7WuTMU7Hokhasp?=
+ =?us-ascii?Q?tTceq1bjQEW9YTtW1VdgtK76YB5d7AiEGrh/QBY9/KPaKcFq316hMdJ9of4J?=
+ =?us-ascii?Q?gdWGLf6sZKaKt+moyj6uEkH5GXuxFoqVIDZd6jekJfrjlItAo72jcHW5jUC9?=
+ =?us-ascii?Q?OV5he2A4rpmjmuMePkinvBDTR6+KJRnY44RtMTt4BHiV/F1hNpliJeG8Qiud?=
+ =?us-ascii?Q?hbYsjD4ldhB2FCA5sWsuEJLdsWaiMEtwZf6wULh02rNjca5EPJP63DDRKRsi?=
+ =?us-ascii?Q?I+WPTOwqPh/jDLKSVuMf6EC0+d1IdBRnzxJR5Y8cVSW3aB48BL8V8yL2n+tf?=
+ =?us-ascii?Q?GsX7xjSWfVyiCtqld1rx6q4KqKfcNoHakbdi8DYzSd17OrSMSGOA8aKgh4Fl?=
+ =?us-ascii?Q?BNSYE5kkQeMVII9e7dJ8xtIp3jpB47vtj2G6Nj629ysMRPUfP/1/Ly5KEH1o?=
+ =?us-ascii?Q?kiQi0g7asrMhup1n1ygDhGII5ehg45uaYSgNuZRDeyFpm4dbfAQlebcrtFM6?=
+ =?us-ascii?Q?tXf4HcfJE6gjiHhAFyKs5SpkShsqoCIXUILoQx1lNAT4yyORExTxSYQNUCkd?=
+ =?us-ascii?Q?cptnZzmiYQV/w+fTAXlAKjBuTqY0kuajzpiUhU+4BKMIiunNHwhOCt/KPeQN?=
+ =?us-ascii?Q?+82JwMitgsMp201k7ZQ7BvLEGTPzQZu66H/XR4ZVD7xIolvo7m9nc3fn27Bc?=
+ =?us-ascii?Q?v9059ISxudZ+wUksHRmX4WNBerk5pFBVntG8O90w6XddLQEexyIirk2dkkUl?=
+ =?us-ascii?Q?V/1dvOxH8+ln7OQW2AL7mJTDQ6tK8md+a6H02RkzE5RFlRMLZnB/mwPN2uw1?=
+ =?us-ascii?Q?zGblJ/9QZcwCC5VSpv+2+1fR?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR21MB1593.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8af5013a-bf7f-4ec1-2cbe-08d8d8e62df1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Feb 2021 17:03:59.6983
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: PqI7YffyBNx5G3T+s9WFqfNmotRLuOOtrfblUMC78X90pJvZt2tzyAMjuC5FBBEpql2lS2OCyD1eiu3TK9cMcA+vUFZCXDhfdwGWUZeslk0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW2PR2101MB1818
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/24/21 4:53 AM, Stefan Hajnoczi wrote:
-> On Mon, Feb 22, 2021 at 01:11:15PM -0800, Chaitanya Kulkarni wrote:
->> The function blk_put_request() is just a wrapper to
->> blk_mq_free_request(), remove the unnecessary wrapper.
->>
->> Any feedback is welcome on this RFC.
->>
->> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
->> ---
->>  block/blk-core.c                   |  6 ------
->>  block/blk-merge.c                  |  2 +-
->>  block/bsg-lib.c                    |  4 ++--
->>  block/bsg.c                        |  4 ++--
->>  block/scsi_ioctl.c                 |  6 +++---
->>  drivers/block/paride/pd.c          |  2 +-
->>  drivers/block/pktcdvd.c            |  2 +-
->>  drivers/block/virtio_blk.c         |  2 +-
->>  drivers/cdrom/cdrom.c              |  4 ++--
->>  drivers/ide/ide-atapi.c            |  2 +-
->>  drivers/ide/ide-cd.c               |  4 ++--
->>  drivers/ide/ide-cd_ioctl.c         |  2 +-
->>  drivers/ide/ide-devsets.c          |  2 +-
->>  drivers/ide/ide-disk.c             |  2 +-
->>  drivers/ide/ide-ioctls.c           |  4 ++--
->>  drivers/ide/ide-park.c             |  2 +-
->>  drivers/ide/ide-pm.c               |  4 ++--
->>  drivers/ide/ide-tape.c             |  2 +-
->>  drivers/ide/ide-taskfile.c         |  2 +-
->>  drivers/md/dm-mpath.c              |  2 +-
->>  drivers/mmc/core/block.c           | 10 +++++-----
->>  drivers/scsi/scsi_error.c          |  2 +-
->>  drivers/scsi/scsi_lib.c            |  2 +-
->>  drivers/scsi/sg.c                  |  6 +++---
->>  drivers/scsi/st.c                  |  4 ++--
->>  drivers/scsi/ufs/ufshcd.c          |  6 +++---
->>  drivers/target/target_core_pscsi.c |  4 ++--
->>  fs/nfsd/blocklayout.c              |  4 ++--
->>  include/linux/blkdev.h             |  1 -
->>  29 files changed, 46 insertions(+), 53 deletions(-)
->>
->> diff --git a/block/blk-core.c b/block/blk-core.c
->> index fc60ff208497..1754f5e7cc80 100644
->> --- a/block/blk-core.c
->> +++ b/block/blk-core.c
->> @@ -642,12 +642,6 @@ struct request *blk_get_request(struct request_queue *q, unsigned int op,
->>  }
->>  EXPORT_SYMBOL(blk_get_request);
->>  
->> -void blk_put_request(struct request *req)
->> -{
->> -	blk_mq_free_request(req);
->> -}
->> -EXPORT_SYMBOL(blk_put_request);
-> 
-> blk_get_request() still exists after this patch. A "get" API usually has
-> a corresponding "put" API. I'm not sure this patch helps the consistency
-> and clarity of the code.
-> 
-> If you do go ahead, please update the blk_get_request() doc comment
-> explicitly mentioning that blk_mq_free_request() needs to be called.
+From: Christoph Hellwig <hch@infradead.org>  Sent: Wednesday, February 24, =
+2021 7:53 AM
+>=20
+> Shouldn't storvsc just use blk_queue_virt_boundary instead of all this
+> mess?
 
-Would make sense to rename blk_get_request() to blk_mq_alloc_request()
-and then we have API symmetry. The get/put don't make sense when there
-are no references involved.
+The storvsc driver does set the virt boundary to PAGE_SIZE - 1.  But
+the driver still has to translate the scatterlist into a list of guest
+physical frame numbers (each representing 4K bytes) that the
+Hyper-V host understands so it can do the I/O.
 
-But it's a lot of churn for very little reward, which is always kind
-of annoying. Especially for the person that has to carry the patches.
+This patch improves that translation so it can handle a single
+scatterlist entry that represents more than PAGE_SIZE bytes of
+data.  Then the SCSI dma_boundary (which turns into the blk level
+segment_boundary) no longer needs to be set to restrict scatterlist
+entries to just PAGE_SIZE bytes.
 
--- 
-Jens Axboe
+We also have to preserve the ability to run guests on ARM64 with
+PAGE_SIZE of 16K or 64K, while Hyper-V still expects each PFN to
+represent only 4K bytes.
 
+Michael
