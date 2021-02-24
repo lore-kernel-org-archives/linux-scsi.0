@@ -2,87 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DECFC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 18:57:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5333FC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 20:24:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5822D64E90
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 18:57:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16D7364E60
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 20:24:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234745AbhBXS5T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Feb 2021 13:57:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56484 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235785AbhBXS4h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Feb 2021 13:56:37 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16BFDC06174A;
-        Wed, 24 Feb 2021 10:55:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=aSmBycH0uJ6bas2Xybb1KrzwdkDReh73b+85qbDRdQ4=; b=wDrxERWdH7aSgsyr5QwIDqAZ9y
-        oImtMcG8bftvnoTIalKWfhjsmoeEQiczbkbMnhBawibN5m3IZe+Ezn0jI0b3N7tECV/3HeXJAnUYd
-        W8o5Q+tHmoAEZcP7sSK80cahp6xqAHvfIjb4bN8Ah047kgyT5ZhaNeG0/jPTWlSqKyBU7etOCLtYN
-        UuRrWoJkFf/F6dQlZwdj9eyXoEsDUO4A6dKqDRIppjs9lgVMTw9xvCOlkTv9PjwkBjqGkds7hfBnX
-        k9uCfpbd5dSsERxkH6+KjD/pI/UT/wx5E8492nwTdjwfaMfUvAVVXreaqY7SB/05ZO8+FYmcicczo
-        a0ns1/qg==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lEzJh-009lGy-25; Wed, 24 Feb 2021 18:55:26 +0000
-Date:   Wed, 24 Feb 2021 18:55:21 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Stefan Hajnoczi <stefanha@redhat.com>,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        fujita.tomonori@lab.ntt.co.jp, tim@cyberelk.net, mst@redhat.com,
-        jasowang@redhat.com, pbonzini@redhat.com, davem@davemloft.net,
-        bp@alien8.de, agk@redhat.com, snitzer@redhat.com,
-        ulf.hansson@linaro.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, dgilbert@interlog.com,
-        Kai.Makisara@kolumbus.fi, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bfields@fieldses.org, chuck.lever@oracle.com,
-        baolin.wang@linaro.org, vbadigan@codeaurora.org, zliua@micron.com,
-        richard.peng@oppo.com, guoqing.jiang@cloud.ionos.com,
-        stanley.chu@mediatek.com, cang@codeaurora.org,
-        asutoshd@codeaurora.org, beanhuo@micron.com, jaegeuk@kernel.org
-Subject: Re: [RFC PATCH] blk-core: remove blk_put_request()
-Message-ID: <20210224185521.GA2326119@infradead.org>
-References: <20210222211115.30416-1-chaitanya.kulkarni@wdc.com>
- <YDY+ObNNiBMMuSEt@stefanha-x1.localdomain>
- <f3141eb3-9938-a216-a9f8-cb193589a657@kernel.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f3141eb3-9938-a216-a9f8-cb193589a657@kernel.dk>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+        id S235031AbhBXUYa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Feb 2021 15:24:30 -0500
+Received: from labrats.qualcomm.com ([199.106.110.90]:43036 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234496AbhBXUYa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Feb 2021 15:24:30 -0500
+IronPort-SDR: q36YWLywSEHxuLviwTlxswEXtwA9rIa6FytR93dBDK0jWFBwkTOEnLJjcYNfoKxTk1T/sW4oLs
+ J1Wke3uvzWHc0crFjzoVAOpVPKexyiKHcgVGKj8xEtZINVpLY4FPLzFUoud3lJ9RBaLXDDapl9
+ 5/YQLRfmRvilN2zNmWoFvlpKqmoDvo5CKD6p4Bd730jkDHHDEaBtmWkOI7tH8o9kgYDYfKdKob
+ s1NCgmIZQtOGhCTLzgbw5o09AQxEfD5xq67NPqOJdFAqRQ9C2TriwDBE1rH09OQWeKvGSwIAGd
+ b68=
+X-IronPort-AV: E=Sophos;i="5.81,203,1610438400"; 
+   d="scan'208";a="47789411"
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by labrats.qualcomm.com with ESMTP; 24 Feb 2021 12:23:50 -0800
+X-QCInternal: smtphost
+Received: from stor-presley.qualcomm.com ([192.168.140.85])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 24 Feb 2021 12:23:49 -0800
+Received: by stor-presley.qualcomm.com (Postfix, from userid 92687)
+        id 38D3C219CE; Wed, 24 Feb 2021 12:23:49 -0800 (PST)
+From:   Asutosh Das <asutoshd@codeaurora.org>
+To:     cang@codeaurora.org, martin.petersen@oracle.com,
+        adrian.hunter@intel.com, linux-scsi@vger.kernel.org
+Cc:     Asutosh Das <asutoshd@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support),
+        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support)
+Subject: [PATCH v6 0/2] Enable power management for ufs wlun 
+Date:   Wed, 24 Feb 2021 12:23:03 -0800
+Message-Id: <cover.1614198015.git.asutoshd@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Feb 24, 2021 at 09:48:21AM -0700, Jens Axboe wrote:
-> Would make sense to rename blk_get_request() to blk_mq_alloc_request()
-> and then we have API symmetry. The get/put don't make sense when there
-> are no references involved.
-> 
-> But it's a lot of churn for very little reward, which is always kind
-> of annoying. Especially for the person that has to carry the patches.
+This patch attempts to fix a deadlock in ufs while sending SSU.
+Recently, blk_queue_enter() added a check to not process requests if the
+queue is suspended. That leads to a resume of the associated device which
+is suspended. In ufs, that device is ufs device wlun and it's parent is
+ufs_hba. This resume tries to resume ufs device wlun which in turn tries
+to resume ufs_hba, which is already in the process of suspending, thus
+causing a deadlock.
 
-Let's do the following:
+This patch takes care of:
+* Suspending the ufs device lun only after all other luns are suspended
+* Sending SSU during ufs device wlun suspend
+* Clearing uac for rpmb and ufs device wlun
+* Not sending commands to the device during host suspend
 
- - move the initialize_rq_fn call from blk_get_request into
-   blk_mq_alloc_request and make the former a trivial alias for the
-   latter
- - migrate to the blk_mq_* versions on a per-driver/subsystem basis.
-   The scsi migration depends on the first item above, so it will have
-   to go with that or wait for the next merge window
- - don't migrate the legacy ide driver, as it is about to be removed and
-   has a huge number of blk_get_request calls
+v5 -> v6:
+- Addressed Adrian's comments
+  * Added complete() cb
+  * Added suspend_prepare() and complete() to all drivers
+  * Moved suspend_prepare() and complete() to ufshcd
+  * .poweroff() uses ufhcd_wl_poweroff()
+  * Removed several forward declarations
+  * Moved scsi_register_driver() to ufshcd_core_init()
+
+v4 -> v5:
+- Addressed Adrian's comments
+  * Used the rpmb driver contributed by Adrian
+  * Runtime-resume the ufs device during suspend to honor spm-lvl
+  * Unregister the scsi_driver in ufshcd_remove()
+  * Currently shutdown() puts the ufs device to power-down mode
+    so, just removed ufshcd_pci_poweroff()
+  * Quiesce the scsi device during shutdown instead of remove
+
+v3 RFC -> v4:
+- Addressed Bart's comments
+  * Except that I didn't get any checkpatch failures
+- Addressed Avri's comments
+- Addressed Adrian's comments
+  * Added a check for deepsleep power mode
+  * Removed a couple of forward declarations
+  * Didn't separate the scsi drivers because in rpmb case it just sends uac
+    in resume and it seemed pretty neat to me.
+- Added sysfs changes to resume the devices before accessing
+
+
+Asutosh Das (2):
+  scsi: ufs: Enable power management for wlun
+  ufs: sysfs: Resume the proper scsi device
+
+ drivers/scsi/ufs/cdns-pltfrm.c     |   2 +
+ drivers/scsi/ufs/tc-dwc-g210-pci.c |   2 +
+ drivers/scsi/ufs/ufs-exynos.c      |   2 +
+ drivers/scsi/ufs/ufs-hisi.c        |   2 +
+ drivers/scsi/ufs/ufs-mediatek.c    |   2 +
+ drivers/scsi/ufs/ufs-qcom.c        |   2 +
+ drivers/scsi/ufs/ufs-sysfs.c       |  26 +-
+ drivers/scsi/ufs/ufshcd-pci.c      |  26 +-
+ drivers/scsi/ufs/ufshcd.c          | 530 ++++++++++++++++++++++++++++++-------
+ drivers/scsi/ufs/ufshcd.h          |   7 +
+ include/trace/events/ufs.h         |  20 ++
+ 11 files changed, 489 insertions(+), 132 deletions(-)
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+
