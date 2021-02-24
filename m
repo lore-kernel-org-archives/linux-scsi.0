@@ -2,160 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92E88C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 11:56:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE85CC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 12:15:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3872D601FA
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 11:56:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EDA264E4B
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Feb 2021 12:15:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235192AbhBXL4I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Feb 2021 06:56:08 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49618 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234582AbhBXLzU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 Feb 2021 06:55:20 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1614167633;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=rL0rqJykzi+068H31HVXzImuu55OZFksWorJVNSie2w=;
-        b=fR/yDIqRTkiFGb6NTOsVr1uAvTHpDhEa2l9JWuPh5aEhi9zZ7Zdf8iyVFvTfh2mBaI/KSe
-        788/Su/JUOZ775XEmMexbTHJ2XwtEhHBtCOhcos1sug8GarKBvxhO580XZMRejwpfxo5Av
-        uzmwbhxsSb/HBMlb7zJTPQwS8Y2Us8w=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-525-f_kFJMjjM8aoNLA5ErJwfQ-1; Wed, 24 Feb 2021 06:53:48 -0500
-X-MC-Unique: f_kFJMjjM8aoNLA5ErJwfQ-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9EB0A18B6142;
-        Wed, 24 Feb 2021 11:53:42 +0000 (UTC)
-Received: from localhost (ovpn-115-137.ams2.redhat.com [10.36.115.137])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A20EE10016F0;
-        Wed, 24 Feb 2021 11:53:30 +0000 (UTC)
-Date:   Wed, 24 Feb 2021 11:53:29 +0000
-From:   Stefan Hajnoczi <stefanha@redhat.com>
-To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-block@vger.kernel.org, dm-devel@redhat.com, axboe@kernel.dk,
-        fujita.tomonori@lab.ntt.co.jp, tim@cyberelk.net, mst@redhat.com,
-        jasowang@redhat.com, pbonzini@redhat.com, davem@davemloft.net,
-        bp@alien8.de, agk@redhat.com, snitzer@redhat.com,
-        ulf.hansson@linaro.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, dgilbert@interlog.com,
-        Kai.Makisara@kolumbus.fi, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bfields@fieldses.org, chuck.lever@oracle.com,
-        baolin.wang@linaro.org, vbadigan@codeaurora.org, zliua@micron.com,
-        richard.peng@oppo.com, guoqing.jiang@cloud.ionos.com,
-        stanley.chu@mediatek.com, cang@codeaurora.org,
-        asutoshd@codeaurora.org, beanhuo@micron.com, jaegeuk@kernel.org
-Subject: Re: [RFC PATCH] blk-core: remove blk_put_request()
-Message-ID: <YDY+ObNNiBMMuSEt@stefanha-x1.localdomain>
-References: <20210222211115.30416-1-chaitanya.kulkarni@wdc.com>
+        id S233445AbhBXMPT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Feb 2021 07:15:19 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2601 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232564AbhBXMPS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Feb 2021 07:15:18 -0500
+Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DlvrV3jgrz67rny;
+        Wed, 24 Feb 2021 20:10:34 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Wed, 24 Feb 2021 13:14:36 +0100
+Received: from [10.47.6.193] (10.47.6.193) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 24 Feb
+ 2021 12:14:35 +0000
+Subject: Re: [PATCH 02/31] scsi: add scsi_{get,put}_internal_cmd() helper
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     James Bottomley <james.bottomley@hansenpartnership.com>,
+        Christoph Hellwig <hch@lst.de>, <linux-scsi@vger.kernel.org>
+References: <20210222132405.91369-1-hare@suse.de>
+ <20210222132405.91369-3-hare@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <e72c3d4a-a532-3d0f-172e-f323475ac0f1@huawei.com>
+Date:   Wed, 24 Feb 2021 12:12:48 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="nED3gpEEOc5iD8Dg"
-Content-Disposition: inline
-In-Reply-To: <20210222211115.30416-1-chaitanya.kulkarni@wdc.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20210222132405.91369-3-hare@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.6.193]
+X-ClientProxiedBy: lhreml723-chm.china.huawei.com (10.201.108.74) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 22/02/2021 13:23, Hannes Reinecke wrote:
+> Add helper functions to allow LLDDs to allocate and free
+> internal commands.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 
---nED3gpEEOc5iD8Dg
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+same comments as v6 apply :)
 
-On Mon, Feb 22, 2021 at 01:11:15PM -0800, Chaitanya Kulkarni wrote:
-> The function blk_put_request() is just a wrapper to
-> blk_mq_free_request(), remove the unnecessary wrapper.
->=20
-> Any feedback is welcome on this RFC.
->=20
-> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+As does RB tag
+
 > ---
->  block/blk-core.c                   |  6 ------
->  block/blk-merge.c                  |  2 +-
->  block/bsg-lib.c                    |  4 ++--
->  block/bsg.c                        |  4 ++--
->  block/scsi_ioctl.c                 |  6 +++---
->  drivers/block/paride/pd.c          |  2 +-
->  drivers/block/pktcdvd.c            |  2 +-
->  drivers/block/virtio_blk.c         |  2 +-
->  drivers/cdrom/cdrom.c              |  4 ++--
->  drivers/ide/ide-atapi.c            |  2 +-
->  drivers/ide/ide-cd.c               |  4 ++--
->  drivers/ide/ide-cd_ioctl.c         |  2 +-
->  drivers/ide/ide-devsets.c          |  2 +-
->  drivers/ide/ide-disk.c             |  2 +-
->  drivers/ide/ide-ioctls.c           |  4 ++--
->  drivers/ide/ide-park.c             |  2 +-
->  drivers/ide/ide-pm.c               |  4 ++--
->  drivers/ide/ide-tape.c             |  2 +-
->  drivers/ide/ide-taskfile.c         |  2 +-
->  drivers/md/dm-mpath.c              |  2 +-
->  drivers/mmc/core/block.c           | 10 +++++-----
->  drivers/scsi/scsi_error.c          |  2 +-
->  drivers/scsi/scsi_lib.c            |  2 +-
->  drivers/scsi/sg.c                  |  6 +++---
->  drivers/scsi/st.c                  |  4 ++--
->  drivers/scsi/ufs/ufshcd.c          |  6 +++---
->  drivers/target/target_core_pscsi.c |  4 ++--
->  fs/nfsd/blocklayout.c              |  4 ++--
->  include/linux/blkdev.h             |  1 -
->  29 files changed, 46 insertions(+), 53 deletions(-)
->=20
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index fc60ff208497..1754f5e7cc80 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -642,12 +642,6 @@ struct request *blk_get_request(struct request_queue=
- *q, unsigned int op,
->  }
->  EXPORT_SYMBOL(blk_get_request);
-> =20
-> -void blk_put_request(struct request *req)
-> -{
-> -	blk_mq_free_request(req);
-> -}
-> -EXPORT_SYMBOL(blk_put_request);
+>   drivers/scsi/scsi_lib.c    | 45 ++++++++++++++++++++++++++++++++++++++
+>   include/scsi/scsi_device.h |  4 ++++
+>   2 files changed, 49 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index d0ae586565f8..5cb464972682 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1934,6 +1934,51 @@ void scsi_mq_destroy_tags(struct Scsi_Host *shost)
+>   	blk_mq_free_tag_set(&shost->tag_set);
+>   }
+>   
+> +/**
+> + * scsi_get_internal_cmd - allocate an internal SCSI command
+> + * @sdev: SCSI device from which to allocate the command
+> + * @data_direction: Data direction for the allocated command
+> + * @op_flags: request allocation flags
+> + *
+> + * Allocates a SCSI command for internal LLDD use.
+> + */
+> +struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
+> +	enum dma_data_direction data_direction, int op_flags)
+> +{
+> +	struct request *rq;
+> +	struct scsi_cmnd *scmd;
+> +	blk_mq_req_flags_t flags = 0;
+> +	unsigned int op = REQ_INTERNAL | op_flags;
+> +
+> +	op |= (data_direction == DMA_TO_DEVICE) ?
+> +		REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN;
+> +	rq = blk_mq_alloc_request(sdev->request_queue, op, flags);
+> +	if (IS_ERR(rq))
+> +		return NULL;
+> +	scmd = blk_mq_rq_to_pdu(rq);
+> +	scmd->request = rq;
+> +	scmd->device = sdev;
+> +	return scmd;
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_get_internal_cmd);
+> +
+> +/**
+> + * scsi_put_internal_cmd - free an internal SCSI command
+> + * @scmd: SCSI command to be freed
+> + *
+> + * Check if @scmd is an internal command, and call
+> + * blk_mq_free_request() if true.
+> + */
+> +void scsi_put_internal_cmd(struct scsi_cmnd *scmd)
+> +{
+> +	struct request *rq = blk_mq_rq_from_pdu(scmd);
+> +
+> +	if (WARN_ON(!blk_rq_is_internal(rq)))
+> +		return;
 
-blk_get_request() still exists after this patch. A "get" API usually has
-a corresponding "put" API. I'm not sure this patch helps the consistency
-and clarity of the code.
-
-If you do go ahead, please update the blk_get_request() doc comment
-explicitly mentioning that blk_mq_free_request() needs to be called.
-
-Stefan
-
---nED3gpEEOc5iD8Dg
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmA2PjkACgkQnKSrs4Gr
-c8hCowf/apCHcJenx6DM1jzpYo1NNnpfJb2nifukyVLP2UVasntjvQM1WD7v1t84
-WZMQu4BXSLlqhke4oxGQpx0/dNYaC3vi0/XB4yedtojqiAeLYqUgZf17ZDRybfvo
-o0JmcTVjGtEm48hmt4kulUe9VTeIBaMh8c+IkEjxAEjFN45LgERG9YKRDdTVDCIg
-ozqQR2DJJDN7ND80Mu397WnT32WJAJnpU5fLYIKrp8Y3ZINRly5h9F6rn87RmbHq
-KdfZiGjiKMHIOnF1hP1oXi+a9xckj9US9MbvSBiMovQhs5zxuI0hBnpmsO1J6Pnl
-6OYJzeRg/xtmqSUt8yY53YS9Hur9zg==
-=4OR2
------END PGP SIGNATURE-----
-
---nED3gpEEOc5iD8Dg--
-
+Still not sure if we need this.... best cc jens on series in future for 
+view on complete changes
