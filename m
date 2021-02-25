@@ -2,209 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2555EC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 13:41:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E13DAC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 14:02:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC75C64F06
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 13:41:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A13CC64F06
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 14:02:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232746AbhBYNku (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Feb 2021 08:40:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43022 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229890AbhBYNkm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2021 08:40:42 -0500
-Received: from mail-qv1-xf29.google.com (mail-qv1-xf29.google.com [IPv6:2607:f8b0:4864:20::f29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F17FFC061574
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Feb 2021 05:40:01 -0800 (PST)
-Received: by mail-qv1-xf29.google.com with SMTP id dr7so2747569qvb.1
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Feb 2021 05:40:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=xDruiPHqtE/Ubb5IE1bb/oshsdNZ2+DiMneDYF/WSJk=;
-        b=HIGTw7TGmstch1h5pzO+FLPnO/9PpVjNiFMTObxGGPVTy5o6W29b9ouJ5alLn4StJ8
-         uss5gyWC9enlOs3CYiHM0AW0kxiGw189VaXFB94c+dQGLnCxDIulyPdGwjOmFXJTatSS
-         UNubWdUWrptunSXr7rAS6KWPgJkYaGqnpwGHY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=xDruiPHqtE/Ubb5IE1bb/oshsdNZ2+DiMneDYF/WSJk=;
-        b=Ppa/3o9JsGV/F96cEcScYGiva4jX6P62G+6nKlw5FY05rM/bM4o9/FPCS3f+EdykRO
-         7Xh99hWN5WYj1+KSBAclZFoX0D/siPeOJqh67OMFkckqH60g06FwcxrIdjnC/zSY8blF
-         RcdGNRQifK7wXqAe9ruWxxGW8uKwBBhIcbsRYHiobd7Hqr8CoW0+PoZhbsTfl2VG199E
-         Z8vWMWVPfrVbItgvHRnx7hCJhDdcQ4oBS8SMXzDbFufytE2o+DgPGSvHOwnOtHqMP20O
-         i0YZ78s6dkSYj0oprR2wmAPSTbcHcp2LF7+776qK6mdNsBfQ+hOAsb0iljGuY7G2cKvf
-         q7HQ==
-X-Gm-Message-State: AOAM533/Uy5pwaVmHJobg1WftHk1/eDP8+mtEsLbG1l11a+OQrf0AMCS
-        +9T7b6J/cv8x9wSPqb5IhNu8XTWvcxtH0ynaFWvRRQ==
-X-Google-Smtp-Source: ABdhPJxA5YqfkhqrCEBbh9vZ3bQH3IL4F3qlL64rJcMQwvJsJWD7ClLYjcB4iksuGkZufd7xPUhYoLpHYcNWbAEEirc=
-X-Received: by 2002:a05:6214:4ae:: with SMTP id w14mr2529933qvz.45.1614260401136;
- Thu, 25 Feb 2021 05:40:01 -0800 (PST)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
- <20201222101156.98308-24-kashyap.desai@broadcom.com> <68cd8c00-982a-fca6-c815-816d07938655@redhat.com>
-In-Reply-To: <68cd8c00-982a-fca6-c815-816d07938655@redhat.com>
+        id S231445AbhBYOC0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Feb 2021 09:02:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44314 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230467AbhBYOCY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 25 Feb 2021 09:02:24 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 33D3764F1B;
+        Thu, 25 Feb 2021 14:01:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614261702;
+        bh=gB6SQ75V2Rk37+UKLUfmsXNjtKCUUEXnmz4FEJPQVQY=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=iGKh9gRLvR8o04SWuKsCmipjtlzTrYuO47BWoJKHisDTteOpg/JDJDJJNnt+rGTTb
+         0rw4Z/+2u64PifagBhihDsPlyJ67Y3oQmsZn/oOul3KOK4yi2rGalMnkTSGw0hDAQu
+         5UCXh/aLF+AKNOXFFYPj9pbvUcZ+cJQXjOePkvmGZX37GfJUD/b8DZYdke/mmAKvZT
+         fAGvXP4lcs8maCpu0ckyrKPIoHkrpGb6cRtLNo09qQE/bWR08AfpprntjG9xmxGdei
+         eNSETbirr5t3ogcQ9xtRSswYiW1kh8gzy8rrgKIT9HRwylXF4qapcoQRRth0EghGpX
+         ctCpWU8hVtI2A==
+Received: by mail-oo1-f51.google.com with SMTP id x10so1389976oor.3;
+        Thu, 25 Feb 2021 06:01:42 -0800 (PST)
+X-Gm-Message-State: AOAM530YQNSUY6DI1p/w+oMByG+xrschcT2x6xk2C68fFUBMnyNwDQQJ
+        HRKQc6KM13zEsopqRnEASZN4oYZnOLKbfAR4rYM=
+X-Google-Smtp-Source: ABdhPJy0Z8oAC8F3qvd9r/HrjNWv0zSRZwzOF/sqWqHtbHpdIOPcLKBh4nK6FxEKGL+hdddWAENt07LK/yhwcmvgmrE=
+X-Received: by 2002:a4a:870c:: with SMTP id z12mr2391944ooh.15.1614261701193;
+ Thu, 25 Feb 2021 06:01:41 -0800 (PST)
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQIVk2r6yGrO96+nYWGuC86HruD4YwFtlUz1AO0dOnqp2Prq0A==
-Date:   Thu, 25 Feb 2021 19:09:59 +0530
-Message-ID: <a87bc16dea962882c951ce945568cf6f@mail.gmail.com>
-Subject: RE: [PATCH 23/24] mpi3mr: add eedp dif dix support
-To:     Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        Steve Hagan <steve.hagan@broadcom.com>,
-        Peter Rivera <peter.rivera@broadcom.com>,
-        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000cd835305bc294934"
+References: <20210224072516.74696-1-uwe@kleine-koenig.org> <87sg5ks6xp.fsf@mpe.ellerman.id.au>
+In-Reply-To: <87sg5ks6xp.fsf@mpe.ellerman.id.au>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Thu, 25 Feb 2021 15:01:25 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a1q=zqyOxBgV-nprpN3jBczZWexupkA1Wy6g+AEW6rQqw@mail.gmail.com>
+Message-ID: <CAK8P3a1q=zqyOxBgV-nprpN3jBczZWexupkA1Wy6g+AEW6rQqw@mail.gmail.com>
+Subject: Re: [PATCH v2] vio: make remove callback return void
+To:     Michael Ellerman <mpe@ellerman.id.au>
+Cc:     =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <uwe@kleine-koenig.org>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jens Axboe <axboe@kernel.dk>, Matt Mackall <mpm@selenic.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Peter Huewe <peterhuewe@gmx.de>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Haren Myneni <haren@us.ibm.com>,
+        =?UTF-8?Q?Breno_Leit=C3=A3o?= <leitao@debian.org>,
+        Nayna Jain <nayna@linux.ibm.com>,
+        Paulo Flabiano Smorigo <pfsmorigo@gmail.com>,
+        Steven Royer <seroyer@linux.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Cristobal Forno <cforno12@linux.ibm.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Dany Madden <drt@linux.ibm.com>, Lijun Pan <ljp@linux.ibm.com>,
+        Sukadev Bhattiprolu <sukadev@linux.ibm.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Michael Cyr <mikecyr@linux.ibm.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>, linux-integrity@vger.kernel.org,
+        Networking <netdev@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        target-devel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000cd835305bc294934
-Content-Type: text/plain; charset="UTF-8"
-
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Monday, February 22, 2021 9:07 PM
-> To: Kashyap Desai <kashyap.desai@broadcom.com>; linux-
-> scsi@vger.kernel.org
-> Cc: jejb@linux.ibm.com; martin.petersen@oracle.com;
-> steve.hagan@broadcom.com; peter.rivera@broadcom.com; mpi3mr-
-> linuxdrv.pdl@broadcom.com; sathya.prakash@broadcom.com
-> Subject: Re: [PATCH 23/24] mpi3mr: add eedp dif dix support
+On Thu, Feb 25, 2021 at 12:52 PM Michael Ellerman <mpe@ellerman.id.au> wrot=
+e:
 >
-> On 12/22/20 11:11 AM, Kashyap Desai wrote:
-> > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> > Cc: sathya.prakash@broadcom.com
-> > ---
-> >  drivers/scsi/mpi3mr/mpi3mr.h    |  18 +-
-> >  drivers/scsi/mpi3mr/mpi3mr_fw.c |   7 +
-> >  drivers/scsi/mpi3mr/mpi3mr_os.c | 303
-> > +++++++++++++++++++++++++++++++-
-> >  3 files changed, 321 insertions(+), 7 deletions(-)
+> Uwe Kleine-K=C3=B6nig <uwe@kleine-koenig.org> writes:
+> > The driver core ignores the return value of struct bus_type::remove()
+> > because there is only little that can be done. To simplify the quest to
+> > make this function return void, let struct vio_driver::remove() return
+> > void, too. All users already unconditionally return 0, this commit make=
+s
+> > it obvious that returning an error code is a bad idea and makes it
+> > obvious for future driver authors that returning an error code isn't
+> > intended.
 > >
-> > diff --git a/drivers/scsi/mpi3mr/mpi3mr.h
-> > b/drivers/scsi/mpi3mr/mpi3mr.h index f0ead83dc16c..acc5649bed5f
-> 100644
-> > --- a/drivers/scsi/mpi3mr/mpi3mr.h
-> > +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-> > @@ -118,6 +118,7 @@ extern struct list_head mrioc_list;
-> >  #define MPI3MR_SENSEBUF_SZ	256
-> >  #define MPI3MR_SENSEBUF_FACTOR	3
-> >  #define MPI3MR_CHAINBUF_FACTOR	3
-> > +#define MPI3MR_CHAINBUFDIX_FACTOR	2
-> >
-> >  /* Invalid target device handle */
-> >  #define MPI3MR_INVALID_DEV_HANDLE	0xFFFF
-> > @@ -145,6 +146,15 @@ extern struct list_head mrioc_list;
-> >  /* Default target device queue depth */
-> >  #define MPI3MR_DEFAULT_SDEV_QD	32
-> >
-> > +/* Definitions for the sector size for EEDP */
-> > +#define MPI3_SECTOR_SIZE_512_BYTE	(512)
-> > +#define MPI3_SECTOR_SIZE_520_BYTE	(520)
-> > +#define MPI3_SECTOR_SIZE_4080_BYTE	(4080)
-> > +#define MPI3_SECTOR_SIZE_4088_BYTE	(4088)
-> > +#define MPI3_SECTOR_SIZE_4096_BYTE	(4096)
-> > +#define MPI3_SECTOR_SIZE_4104_BYTE	(4104)
-> > +#define MPI3_SECTOR_SIZE_4160_BYTE	(4160)
-> > +
+> > Note there are two nominally different implementations for a vio bus:
+> > one in arch/sparc/kernel/vio.c and the other in
+> > arch/powerpc/platforms/pseries/vio.c. I didn't care to check which
+> > driver is using which of these busses (or if even some of them can be
+> > used with both) and simply adapt all drivers and the two bus codes in
+> > one go.
 >
-> This looks weird, please use the values directly instead of creating
-macros.
-
-I will change in V2.
+> I'm 99% sure there's no connection between the two implementations,
+> other than the name.
 >
-> tomash
+> So splitting the patch by arch would make it easier to merge. I'm
+> reluctant to merge changes to sparc code.
 
---000000000000cd835305bc294934
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+The sparc subsystem clearly started out as a copy of the powerpc
+version, and serves roughly the same purpose, but the communication
+with the hypervisor is quite different.
 
-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
-P3lSxcw4Cg90iKHqfpwLnGNc9AGXHMxUCukpnAHRlivljilKHMx1ymb180BLmtF+ZLm6KrFLQWzB
-4KeiUOMtKM13wJrQubqTeZgB1XA+89jeLYlxagVsMyksdwIDAQABo4IB2zCCAdcwDgYDVR0PAQH/
-BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9i
-YWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUF
-BzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
-MDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xv
-YmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
-Oi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAlBgNV
-HREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAf
-BgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUkTOZp9jXE3yPj4ieKeDT
-OiNyCtswDQYJKoZIhvcNAQELBQADggEBABG1KCh7cLjStywh4S37nKE1eE8KPyAxDzQCkhxYLBVj
-gnnhaLmEOayEucPAsM1hCRAm/vR3RQ27lMXBGveCHaq9RZkzTjGSbzr8adOGK3CluPrasNf5StX3
-GSk4HwCapA39BDUrhnc/qG5vHwLrgA1jwAvSy8e/vn4F4h+KPrPoFNd1OnCafedbuiEXTqTkn5Rk
-vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
-MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
-MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
-VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDx/pwu0i/ctRgo/tiWKj0eJxdw2
-NOAXXyO0in1Ctc6TMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDIyNTEzNDAwMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
-CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQCHPUmkyjiTM4Thqvtw4Y1UhFgO6Xvh5mYdkOoyPVUxrT3f
-IfHI5JLCxQaelgwpd4KOryhd8PFEhBCdcOhC2my5nt7hqW8URfqIfg+ih0dz85n0f65ONjgTo24/
-xqKAIhA0Uo2ehzR51ebuhffacAQQ1mzqZMJrBMeGMszW8AG5h+V1XdwBc4+dKDU8KIB24wJGCCf+
-3tcQUKifS6x6AJQ9b3vuzxv4mAgYPFftZmva2FYP84m+NRwIh+wQ5PBqBmkI4TIrRYCwidY8VKbM
-ajfXNHvQpN6i6kUNAGnqpZNFCOz3cBnf6BYS3lMO3aVL93rdZqXDzDCgm1w/bwSi9MJh
---000000000000cd835305bc294934--
+As there are only four drivers for the sparc vio subsystem:
+drivers/block/sunvdc.c
+drivers/net/ethernet/sun/ldmvsw.c
+drivers/net/ethernet/sun/sunvnet.c
+drivers/tty/vcc.c
+maybe it would make sense to rename those to use distinct
+identifiers now?
+
+       Arnd
