@@ -2,62 +2,62 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A000C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 13:26:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7B2CC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 13:37:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 376E864F06
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 13:26:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C84064EFA
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 13:37:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232812AbhBYN0h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Feb 2021 08:26:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39684 "EHLO
+        id S232394AbhBYNht (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Feb 2021 08:37:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229954AbhBYNZM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2021 08:25:12 -0500
-Received: from mail-qk1-x729.google.com (mail-qk1-x729.google.com [IPv6:2607:f8b0:4864:20::729])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC2B1C0617AA
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Feb 2021 05:24:12 -0800 (PST)
-Received: by mail-qk1-x729.google.com with SMTP id w19so5487099qki.13
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Feb 2021 05:24:12 -0800 (PST)
+        with ESMTP id S229644AbhBYNhj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2021 08:37:39 -0500
+Received: from mail-qv1-xf2b.google.com (mail-qv1-xf2b.google.com [IPv6:2607:f8b0:4864:20::f2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0585C061574
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Feb 2021 05:36:58 -0800 (PST)
+Received: by mail-qv1-xf2b.google.com with SMTP id k7so70238qvo.6
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Feb 2021 05:36:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:references:in-reply-to:mime-version:thread-index:date
          :message-id:subject:to:cc;
-        bh=MaSDJqvz/5k4qwi/qJSi7b59QqYGgrgi3NVEEtQQRmg=;
-        b=dO7V687+TyyIwie0km/4GFqLCr0JY0EY07ltcqsdk8r0Sj9w3V3gFjotvUSx8+v5kV
-         Tj+3+NUm3w/POZuItaMLRbRGUTu+hfuMT1tX147laCcRum265tMqvuNOAsPitsd6VAb7
-         ogJSaEaOT524KchwceuogUWiJ2m2nUakCDdAQ=
+        bh=cwHBSxQ8Bxd8fT5h4MpiLJHx9Zi1xTQU5RhLpMhRIbw=;
+        b=MMcZ7rwx5/prmTWbnpE2dIeCqp1f/9RtC6qm6A5FcMRL3A62ZTwC43A7k/A6TruHEH
+         gAwk1qrumC9jpK4EBlM+YhO7tLJ/iDaWQzcjPL/L0hgt1XQqBDqYe80V5YV+XD2KSIRZ
+         bu5uS4DhLCjTbnI3Y/STtUfqTUgPPEQAP2XZc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:references:in-reply-to:mime-version
          :thread-index:date:message-id:subject:to:cc;
-        bh=MaSDJqvz/5k4qwi/qJSi7b59QqYGgrgi3NVEEtQQRmg=;
-        b=MsZbMdh5uPKRdihgkFhz7mSFJ3dF718SI+1cDW8VCcpE7K8IacZujN9GL5+PLwfiOG
-         Rs48vNRRiyuOWbmftWmqAWsInjDU440WfAQtBcAHgVaeYuH7KuaekjPai0oy+aOePmeL
-         UqZgG6k7Iwl5+mJKM3lIQjE8Mi4HT47oLsq9RZ7unIf0DZma3VBdnQ7iMh9kp/jNU5Zs
-         0Kjo1RIw4IJfXo2Xf4TLfGUAm/4jnIwuHyOnmzP2gf6OSmMwfSwQlDLLj+306EDaLExA
-         0dnJV9QjzM4cbc9nBedPmNNUFxpqwWSYhn5Xhb80yv94Fll2eTzqDlNmW7F8R5Q77S/L
-         JU7Q==
-X-Gm-Message-State: AOAM530G4GJGsE9R4nbrgomgiSl4dTYK8vycC7SzCO/8EFGCpjb9B/rN
-        hZngj0jFL1MccQ5fCJXsTyUcBqS7jpsYDEMPW//0RXRpVA3mKQ==
-X-Google-Smtp-Source: ABdhPJxnAEIr9VMOiDXMqR+GbPWnEuy3UTdaZG8WDOpx2oTklFb8uyr1Rb7fMU3Lt4HNZOIS7uxb0inHQg2RDZUtJlI=
-X-Received: by 2002:a37:5943:: with SMTP id n64mr2623645qkb.127.1614259451957;
- Thu, 25 Feb 2021 05:24:11 -0800 (PST)
+        bh=cwHBSxQ8Bxd8fT5h4MpiLJHx9Zi1xTQU5RhLpMhRIbw=;
+        b=SZAGJzbEvUvIeLAJJemyFiDTwDK/Lm1rQKfDeDrVM+hqreX9QU6RPlCqy4gLaLxgMF
+         FcWAhQPQZg47OnGIxpw+8bkX8wi1SY34SwniNFO1wDctjo++yPxGQVm2xN+1kjqGdQDa
+         1dQ78XKmnSzNwly5NBX9GUrTo3//qJO4S3cbAlguwQWkF8dU3kD2atQ8gn2dF0lQcO+K
+         ZhEYuRFX6LFx+eP0ixqSPvKVaIkEW3UUIPITCv8Yq8oPoQo4i7Mk5GQZesX3funkot2d
+         FGrD79ksA7tr0JJEBNunkZ8coeQYoRhDNs1PnGO2zYcWmzTYEr1dD8x8apFO9ufJGzxQ
+         UTSg==
+X-Gm-Message-State: AOAM530akU9D1Ih6WhGXTT8QSkMSplRSkHqJKMDxHtrGA1hisD0D5bEm
+        ywsojcPaPcpaOljn42njJm7ZfweGimt4tIgp4UC/T3Qt//hMqQ==
+X-Google-Smtp-Source: ABdhPJw5szdadvoSPnyLlNnda+oVLP9K4FsV3uoHADbGSXSK8TsV32+/kgiBN335OsbzSx4XYqe8vSbm4SPIq9dnTq8=
+X-Received: by 2002:a0c:b92c:: with SMTP id u44mr2580155qvf.34.1614260217708;
+ Thu, 25 Feb 2021 05:36:57 -0800 (PST)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
- <20201222101156.98308-5-kashyap.desai@broadcom.com> <2faf0f39-67f5-a7c4-2e64-eb52d8da961f@redhat.com>
-In-Reply-To: <2faf0f39-67f5-a7c4-2e64-eb52d8da961f@redhat.com>
+ <20201222101156.98308-7-kashyap.desai@broadcom.com> <1d1e8644-85a3-6696-41d6-16bb0cf405bb@redhat.com>
+In-Reply-To: <1d1e8644-85a3-6696-41d6-16bb0cf405bb@redhat.com>
 MIME-Version: 1.0
 X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQIVk2r6yGrO96+nYWGuC86HruD4YwIZ+Yp5Aq2gOG+pxY2xkA==
-Date:   Thu, 25 Feb 2021 18:54:09 +0530
-Message-ID: <5c535a4374339ecf4521fb53a34e2823@mail.gmail.com>
-Subject: RE: [PATCH 04/24] mpi3mr: add support of queue command processing
+Thread-Index: AQIVk2r6yGrO96+nYWGuC86HruD4YwGvjN5aAeJypVCpzz9zMA==
+Date:   Thu, 25 Feb 2021 19:06:55 +0530
+Message-ID: <f3b51350c8e406f82f7f703f64466037@mail.gmail.com>
+Subject: RE: [PATCH 06/24] mpi3mr: add support of event handling part-1
 To:     Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         Steve Hagan <steve.hagan@broadcom.com>,
@@ -65,72 +65,60 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
         Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000003b167405bc29114c"
+        boundary="000000000000e108b805bc293efd"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000003b167405bc29114c
+--000000000000e108b805bc293efd
 Content-Type: text/plain; charset="UTF-8"
 
-> >   * mpi3mr_slave_destroy - Slave destroy callback handler
-> >   * @sdev: SCSI device reference
-> > @@ -126,10 +658,114 @@ static int mpi3mr_target_alloc(struct
-> > scsi_target *starget)  static int mpi3mr_qcmd(struct Scsi_Host *shost,
-> >  	struct scsi_cmnd *scmd)
-> >  {
-> > +	struct mpi3mr_ioc *mrioc = shost_priv(shost);
-> > +	struct mpi3mr_stgt_priv_data *stgt_priv_data;
-> > +	struct mpi3mr_sdev_priv_data *sdev_priv_data;
-> > +	struct scmd_priv *scmd_priv_data = NULL;
-> > +	Mpi3SCSIIORequest_t *scsiio_req = NULL;
-> > +	struct op_req_qinfo *op_req_q = NULL;
-> >  	int retval = 0;
-> > +	u16 dev_handle;
-> > +	u16 host_tag;
-> > +	u32 scsiio_flags = 0;
-> > +	struct request *rq = scmd->request;
-> > +	int iprio_class;
+> ...
+> > + */
+> > +void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc) {
+> > +	struct mpi3mr_fwevt *fwevt = NULL;
 > > +
-> > +	sdev_priv_data = scmd->device->hostdata;
-> > +	if (!sdev_priv_data || !sdev_priv_data->tgt_priv_data) {
-> > +		scmd->result = DID_NO_CONNECT << 16;
-> > +		scmd->scsi_done(scmd);
-> > +		goto out;
-> > +	}
-> >
-> > -	scmd->result = DID_NO_CONNECT << 16;
-> > -	scmd->scsi_done(scmd);
-> > +	if (mrioc->stop_drv_processing) {
-> > +		scmd->result = DID_NO_CONNECT << 16;
-> > +		scmd->scsi_done(scmd);
-> > +		goto out;
-> > +	}
-> Hi Kashyap,
-> for what is the above test needed (stop_drv_processing) it looks like
-other
-> drivers don't need to protect exit function in this was (for example
-mpt3sas).
-Tomas, This driver code Is still under active development and I will
-review this (marking as TBD).
-Not only this area, but there are many more optimization possible in
-mpi3mr driver.
-We want to start with stable version of driver and gradually improve.
-<mpi3mr> as multiple h/w queue support and mpt3sas is single queue h/w.
-Due to some h/w differences we have noticed some issue are very frequent
-for mp3mr vs mpt3sas.
+> > +	if ((list_empty(&mrioc->fwevt_list) && !mrioc->current_event) ||
+> > +	    !mrioc->fwevt_worker_thread || in_interrupt())
+> The in_interrup macro is deprecated and should not be used in new code.
+> Is it at all possible to call the mpi3mr_cleanup_fwevt_list from
+interrupt
+> context?
 
-We can opt other way around as well. We can remove this check now and when
-we find the bug we can add the fix with root cause details.
-Let me know if you are OK to keep this check now or add it whenever it is
-required.
+I agree with you. In_interrupt() check is safe to remove. I will take care
+while sending V2.
 
 Kashyap
+>
+> > +		return;
+> > +
+> > +	while ((fwevt = mpi3mr_dequeue_fwevt(mrioc)) ||
+> > +	    (fwevt = mrioc->current_event)) {
+> > +		/*
+> > +		 * Wait on the fwevt to complete. If this returns 1, then
+> > +		 * the event was never executed, and we need a put for the
+> > +		 * reference the work had on the fwevt.
+> > +		 *
+> > +		 * If it did execute, we wait for it to finish, and the
+put will
+> > +		 * happen from mpi3mr_process_fwevt()
+> > +		 */
+> > +		if (cancel_work_sync(&fwevt->work)) {
+> > +			/*
+> > +			 * Put fwevt reference count after
+> > +			 * dequeuing it from worker queue
+> > +			 */
+> > +			mpi3mr_fwevt_put(fwevt);
+> > +			/*
+> > +			 * Put fwevt reference count to neutralize
+> > +			 * kref_init increment
+> > +			 */
+> > +			mpi3mr_fwevt_put(fwevt);
+> > +		}
+> > +	}
+> > +}
 
-> Regards,
-> Tomash
-
---0000000000003b167405bc29114c
+--000000000000e108b805bc293efd
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -201,13 +189,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOWcIodfja68mIWMLUFPyqGMI2au
-mxA9egjhda4mldbYMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDIyNTEzMjQxMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICpj/Btpwe79zwRbfG2m4Q7qiJF6
+n2oY0i0AREVvnXmRMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDIyNTEzMzY1OFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQCbJQGEPoATvFvtfY3+gIWzlNdUs4ri8NbrQmI7Bos8Qu5i
-cINRZ4iLGeA21ZClpOroqCocqOKmOb/6HcnQyQii4F1F1Js/6OGydyCmZm/pNMFSmS7Pcj+xURBL
-hWJB1cL37UOHUE5bSNv3ty5RNoW4QiflDAx7q8xe0j+qYzBVnt0VoNWMyLCOpJCpO1X1iLD9e41/
-ZTvruxVjYvcap0Iax3PbE2BSTioKpZn33zDqw2SoJDY3k2rTUmaPDY2N2gp23YrsA3rRyF0JzYBI
-lPJcwNurvINzndmF9wQ1uY1tJeRk16ZI64hecrXfS8JnWHJcNRzR8ejyH+RG0A+67DNo
---0000000000003b167405bc29114c--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQDACtxqvhRUCDrqYE4LXExC1RqnRxYzKdINp/mSNUpYy+KH
+rJQLhuFLrPWK1pdS5xKnnnrnIo5iaw9WIdkwNrSBzNw3JAQQBXWElEq+cS1EpHzLTPeSO7LdERTJ
+fMuLcen/8Q07egQCaruV3+5pvDH0XBwtYf0leQB6U/khj5TVTVbIUjKcCDCxRY5JipJCmSS+7q9n
+5+tV/dLx3DqTvaTWswyFpjWKqcSfuytlvqKi4WhADX/3YlGKV2VVspsjTNpQzOb05HyVxynTDabk
+0ScepuFNjDZHnTGKoOcA+J73+DLdPqWZ+3jIXdobg5Zzd194nB+nTLMhPyMy9nBGTrQE
+--000000000000e108b805bc293efd--
