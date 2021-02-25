@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3469DC433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 14:39:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DA2BC433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 15:00:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB21664EC3
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 14:38:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E55D564EC3
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 15:00:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232538AbhBYOi7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Feb 2021 09:38:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55550 "EHLO
+        id S231818AbhBYPAB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Feb 2021 10:00:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231815AbhBYOi5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2021 09:38:57 -0500
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF218C061574;
-        Thu, 25 Feb 2021 06:38:16 -0800 (PST)
-Received: by mail-ej1-x62b.google.com with SMTP id n20so9259719ejb.5;
-        Thu, 25 Feb 2021 06:38:16 -0800 (PST)
+        with ESMTP id S229961AbhBYO7z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2021 09:59:55 -0500
+Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2D8FC06174A;
+        Thu, 25 Feb 2021 06:59:39 -0800 (PST)
+Received: by mail-ej1-x62e.google.com with SMTP id mm21so9076891ejb.12;
+        Thu, 25 Feb 2021 06:59:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=message-id:subject:from:to:cc:date:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=AGEE2575c0gJxe/ojj9iv1qzlHIKXvtl4Fpc/Q6GFGY=;
-        b=csrT8UvqNhfkzlrzmOgHLKaLKSvXagdgJkSte1UVBKonkXeMB2RG7FJ8cDx954OVCa
-         bUuq/IZruM+qx4qEz1aVilOUN5wKd/yICoW2ZOWv6oUIVXbOJ7iTiRzJHY010p1F1tfa
-         6bwDFy9tjYshwHnLmYhBJWtjM3UAQyfEoOOrTpGv4sQY0LiceSqhprTi17//WZN3EuDV
-         ep3r3KmBns3mPosJUzUerYD84lwZ0Y2aDZIxn/wi/M8a/PM5VIYRJ67y7+i88ikV6SmC
-         wmk2iJwtZ9qQAPUqUpjF/MgXVBCYNessl3DJ7ngMlHOf8z4YI2yIcT3xp3VqNw5dakXw
-         Y/hA==
+        bh=KdvCOoGwc01pWj3zqit8lvG+zKUB7O20UVPK03THNP4=;
+        b=aiB780fqG+lMV0qHVrbZKuWfDRwQ555saLIEqG9xmXTWW3j5ZH4bsrNLh2Ri8oKLqV
+         h1BSGhj53+kXfUuxLmHzE4aSeYBfbU1JTBC7VAesQM3d/wTaL302bwm6PMwH9Cfx8k8M
+         XnFSAJJ0RwsS/omDxOXcrcfO2DM/GhuUXsBdlpzszutJtBc9bwQ+hEglG+hj5d9hEjty
+         2ZgvEkJCJ21szGtlotNGWpGjy66gzWrnWBno4Wh/Ry087KSlSgGO0JbJS0iGT4sdxFD2
+         ajeuFBd48Bj/joqs9Ogzn7Zs/UcV+qLA8MoSz8E3R+q5Ylnbd71So7r20yWiTpuxiyHO
+         yXpg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=AGEE2575c0gJxe/ojj9iv1qzlHIKXvtl4Fpc/Q6GFGY=;
-        b=KW/9NKqmf8YguFckH2wxm5X+8dr5eV5le1DMIdMXNBxfK6TeP2Odtce3WScTFNQLvt
-         u5TD+4KikuM4txqd98VjRVGH+RaNeyqZucItR5mlNhxF8oFhehLDOab2QxmRlEYKDSgo
-         rY0ID/zjRB5ZGGIH/s4l0ey6597k5szJvnoheLJliW8hBOnsuPHAqQNORK8YAF526A5M
-         z1BrONBL5Kytu3JQwdbJHtEUGvmtqlbgdlNVhYGl/SZy374YBsPfawHzH4muJXvTgZO3
-         cbyldCl8uwGlc5bnee8KXy6JSf2bUlWs5pIXeBjiCP8GiXrJB0MgvX4+PRf/ji62PCU1
-         cwtg==
-X-Gm-Message-State: AOAM532F/ulwsa7Gorsh/0DQruoxdmmsWYK9y8Ez7RDzTdTfZNimiHKZ
-        7ZExVi2g6Bc0qbbRMtO2iZs=
-X-Google-Smtp-Source: ABdhPJxtdrjQgm8rYi9MIVGsRmgyWTLm2t1CSbgFHlYJ04QkWFdpirrWKutVzO98hDtxNMh0bZNQRw==
-X-Received: by 2002:a17:907:9688:: with SMTP id hd8mr2829798ejc.528.1614263895497;
-        Thu, 25 Feb 2021 06:38:15 -0800 (PST)
+        bh=KdvCOoGwc01pWj3zqit8lvG+zKUB7O20UVPK03THNP4=;
+        b=dQGtF6Ps0EqJK9ALFjZ8dyE49x0TTYSjzdtWRXmcH5bN1582FqD+NkhLhyLD/jjaqb
+         JFDZrSOqYXrgpdPoLItM1xfpaL9t/KNxiuV3daO0w2ZdYWCgGUyWj129MENrEDJJmxdg
+         XhvUstw7SE5Mqt3ksMpFuSRF2vAIgNmtyvzpnkm1gMQkUc6SNzG/waafzTdBCJ3RmW00
+         US27xxaDBwevAVg1R7Gv6a5vXopy5RwFqdtxdq1CMPzKTubFmZE3iIw7yqa6jyolLir+
+         tN1xJrzrAXQgVbiLp0LU9TWQsTscLz+qYzJHVqDbxbX3g7iz84w9pjeKKICtxbbnW1ou
+         ArrA==
+X-Gm-Message-State: AOAM530z/cqymxlDs5fa13kcuJQHNLBK9lBQKV/NB1YzkkjKmpiFff6z
+        NXjpVCmsJ6mU5Ms7a2Rln74=
+X-Google-Smtp-Source: ABdhPJyODUvvQvgTK6/qjd6qJbaxonWfMg0MxVfoP/KHn/A/kiMr3yFuH26yVr2ne5IwxpmO1rln5A==
+X-Received: by 2002:a17:906:6047:: with SMTP id p7mr3011865ejj.400.1614265178501;
+        Thu, 25 Feb 2021 06:59:38 -0800 (PST)
 Received: from ubuntu-laptop (ip5f5bec1d.dynamic.kabel-deutschland.de. [95.91.236.29])
-        by smtp.googlemail.com with ESMTPSA id r4sm3420879edv.27.2021.02.25.06.38.13
+        by smtp.googlemail.com with ESMTPSA id r5sm3141799ejx.96.2021.02.25.06.59.36
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 25 Feb 2021 06:38:15 -0800 (PST)
-Message-ID: <50f8a0963e887542a467e690b6d406675279a4e5.camel@gmail.com>
-Subject: Re: [PATCH v24 1/4] scsi: ufs: Introduce HPB feature
+        Thu, 25 Feb 2021 06:59:38 -0800 (PST)
+Message-ID: <23b7d59df2b83cdac53fdb4567c41c007257b436.camel@gmail.com>
+Subject: Re: [PATCH v24 2/4] scsi: ufs: L2P map management for HPB read
 From:   Bean Huo <huobean@gmail.com>
 To:     daejun7.park@samsung.com, Greg KH <gregkh@linuxfoundation.org>,
         "avri.altman@wdc.com" <avri.altman@wdc.com>,
@@ -76,11 +76,11 @@ Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         yongmyung lee <ymhungry.lee@samsung.com>,
         Jinyoung CHOI <j-young.choi@samsung.com>,
         BoRam Shin <boram.shin@samsung.com>
-Date:   Thu, 25 Feb 2021 15:38:12 +0100
-In-Reply-To: <20210224045405epcms2p2d05f8563b1f121d2c2cc79b343e5af77@epcms2p2>
+Date:   Thu, 25 Feb 2021 15:59:35 +0100
+In-Reply-To: <20210224045437epcms2p7ed0a41233d899337ddbd3525fddeb042@epcms2p7>
 References: <20210224045323epcms2p66cc6a4b73086621e050da37f12f432f0@epcms2p6>
-         <CGME20210224045323epcms2p66cc6a4b73086621e050da37f12f432f0@epcms2p2>
-         <20210224045405epcms2p2d05f8563b1f121d2c2cc79b343e5af77@epcms2p2>
+         <CGME20210224045323epcms2p66cc6a4b73086621e050da37f12f432f0@epcms2p7>
+         <20210224045437epcms2p7ed0a41233d899337ddbd3525fddeb042@epcms2p7>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 Mime-Version: 1.0
@@ -90,22 +90,30 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Wed, 2021-02-24 at 13:54 +0900, Daejun Park wrote:
-> 
-> +void ufshpb_init(struct ufs_hba *hba)
+> +static int ufshpb_init_mem_wq(void)
 > +{
-> +	struct ufshpb_dev_info *hpb_dev_info = &hba->ufshpb_dev;
-> +	int try;
-> +	int ret;
+> +       int ret;
+> +       unsigned int pool_size;
 > +
-> +	if (!ufshpb_is_allowed(hba))
-> +		return;
+> +       ufshpb_mctx_cache = kmem_cache_create("ufshpb_mctx_cache",
+> +                                       sizeof(struct
+> ufshpb_map_ctx),
+> +                                       0, 0, NULL);
+> +       if (!ufshpb_mctx_cache) {
+> +               pr_err("ufshpb: cannot init mctx cache\n");
+> +               return -ENOMEM;
+> +       }
+> +
+> +       pool_size = PAGE_ALIGN(ufshpb_host_map_kbytes * 1024) /
+> PAGE_SIZE;
+> +       pr_info("%s:%d ufshpb_host_map_kbytes %u pool_size %u\n",
+> +              __func__, __LINE__, ufshpb_host_map_kbytes,
+> pool_size);
 > +
 
-Here it is better to check "dev_info->hpb_enable", if HPB is not
-enabled from UFS device level,  doesn't need to create mempool and take
-other memory resource.
+I think print function name is not proper while booting.
+And one HPB is associated with one HBA, if there are two UFS
+controllers, how can I differentiate them? 
 
 Bean
-
-
 
