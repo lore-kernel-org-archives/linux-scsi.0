@@ -2,133 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41179C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 14:13:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3469DC433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 14:39:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1F9164F06
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 14:13:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB21664EC3
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Feb 2021 14:38:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232447AbhBYONO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Feb 2021 09:13:14 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:24823 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229596AbhBYONM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 25 Feb 2021 09:13:12 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1614262306;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=e42Bhcv/j7R1K+cvJUGVhipLrWMT4j0PHZxpZDxA2AM=;
-        b=Na7QVtisQnIDfyG9IJc6T2zPowg4qbnnjOuREDKWUlU0T/dSED+cBMe+L16eftave5X/zT
-        /uWYjwTKONi9pDbdb/IaIhWsYsmHXr6FUg4GoLHM0BZaiFofjcidP5XIvwp8CaT6eJ++Q7
-        FrKf0/J9e9QB8F9OgJeXBdGp60fIeYM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-584-uv69UIn1PUKN167oFleOOw-1; Thu, 25 Feb 2021 09:11:42 -0500
-X-MC-Unique: uv69UIn1PUKN167oFleOOw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 79A5C50741;
-        Thu, 25 Feb 2021 14:11:40 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.40.192.50])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D4C635C224;
-        Thu, 25 Feb 2021 14:11:38 +0000 (UTC)
-Subject: Re: [PATCH 04/24] mpi3mr: add support of queue command processing
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        Steve Hagan <steve.hagan@broadcom.com>,
-        Peter Rivera <peter.rivera@broadcom.com>,
-        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
- <20201222101156.98308-5-kashyap.desai@broadcom.com>
- <2faf0f39-67f5-a7c4-2e64-eb52d8da961f@redhat.com>
- <5c535a4374339ecf4521fb53a34e2823@mail.gmail.com>
-From:   Tomas Henzl <thenzl@redhat.com>
-Message-ID: <b7b9f72e-5678-6edd-5978-0e4933912b8b@redhat.com>
-Date:   Thu, 25 Feb 2021 15:11:37 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
-MIME-Version: 1.0
-In-Reply-To: <5c535a4374339ecf4521fb53a34e2823@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        id S232538AbhBYOi7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Feb 2021 09:38:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55550 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231815AbhBYOi5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2021 09:38:57 -0500
+Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF218C061574;
+        Thu, 25 Feb 2021 06:38:16 -0800 (PST)
+Received: by mail-ej1-x62b.google.com with SMTP id n20so9259719ejb.5;
+        Thu, 25 Feb 2021 06:38:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=AGEE2575c0gJxe/ojj9iv1qzlHIKXvtl4Fpc/Q6GFGY=;
+        b=csrT8UvqNhfkzlrzmOgHLKaLKSvXagdgJkSte1UVBKonkXeMB2RG7FJ8cDx954OVCa
+         bUuq/IZruM+qx4qEz1aVilOUN5wKd/yICoW2ZOWv6oUIVXbOJ7iTiRzJHY010p1F1tfa
+         6bwDFy9tjYshwHnLmYhBJWtjM3UAQyfEoOOrTpGv4sQY0LiceSqhprTi17//WZN3EuDV
+         ep3r3KmBns3mPosJUzUerYD84lwZ0Y2aDZIxn/wi/M8a/PM5VIYRJ67y7+i88ikV6SmC
+         wmk2iJwtZ9qQAPUqUpjF/MgXVBCYNessl3DJ7ngMlHOf8z4YI2yIcT3xp3VqNw5dakXw
+         Y/hA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=AGEE2575c0gJxe/ojj9iv1qzlHIKXvtl4Fpc/Q6GFGY=;
+        b=KW/9NKqmf8YguFckH2wxm5X+8dr5eV5le1DMIdMXNBxfK6TeP2Odtce3WScTFNQLvt
+         u5TD+4KikuM4txqd98VjRVGH+RaNeyqZucItR5mlNhxF8oFhehLDOab2QxmRlEYKDSgo
+         rY0ID/zjRB5ZGGIH/s4l0ey6597k5szJvnoheLJliW8hBOnsuPHAqQNORK8YAF526A5M
+         z1BrONBL5Kytu3JQwdbJHtEUGvmtqlbgdlNVhYGl/SZy374YBsPfawHzH4muJXvTgZO3
+         cbyldCl8uwGlc5bnee8KXy6JSf2bUlWs5pIXeBjiCP8GiXrJB0MgvX4+PRf/ji62PCU1
+         cwtg==
+X-Gm-Message-State: AOAM532F/ulwsa7Gorsh/0DQruoxdmmsWYK9y8Ez7RDzTdTfZNimiHKZ
+        7ZExVi2g6Bc0qbbRMtO2iZs=
+X-Google-Smtp-Source: ABdhPJxtdrjQgm8rYi9MIVGsRmgyWTLm2t1CSbgFHlYJ04QkWFdpirrWKutVzO98hDtxNMh0bZNQRw==
+X-Received: by 2002:a17:907:9688:: with SMTP id hd8mr2829798ejc.528.1614263895497;
+        Thu, 25 Feb 2021 06:38:15 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bec1d.dynamic.kabel-deutschland.de. [95.91.236.29])
+        by smtp.googlemail.com with ESMTPSA id r4sm3420879edv.27.2021.02.25.06.38.13
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 25 Feb 2021 06:38:15 -0800 (PST)
+Message-ID: <50f8a0963e887542a467e690b6d406675279a4e5.camel@gmail.com>
+Subject: Re: [PATCH v24 1/4] scsi: ufs: Introduce HPB feature
+From:   Bean Huo <huobean@gmail.com>
+To:     daejun7.park@samsung.com, Greg KH <gregkh@linuxfoundation.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+Date:   Thu, 25 Feb 2021 15:38:12 +0100
+In-Reply-To: <20210224045405epcms2p2d05f8563b1f121d2c2cc79b343e5af77@epcms2p2>
+References: <20210224045323epcms2p66cc6a4b73086621e050da37f12f432f0@epcms2p6>
+         <CGME20210224045323epcms2p66cc6a4b73086621e050da37f12f432f0@epcms2p2>
+         <20210224045405epcms2p2d05f8563b1f121d2c2cc79b343e5af77@epcms2p2>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/25/21 2:24 PM, Kashyap Desai wrote:
->>>   * mpi3mr_slave_destroy - Slave destroy callback handler
->>>   * @sdev: SCSI device reference
->>> @@ -126,10 +658,114 @@ static int mpi3mr_target_alloc(struct
->>> scsi_target *starget)  static int mpi3mr_qcmd(struct Scsi_Host *shost,
->>>  	struct scsi_cmnd *scmd)
->>>  {
->>> +	struct mpi3mr_ioc *mrioc = shost_priv(shost);
->>> +	struct mpi3mr_stgt_priv_data *stgt_priv_data;
->>> +	struct mpi3mr_sdev_priv_data *sdev_priv_data;
->>> +	struct scmd_priv *scmd_priv_data = NULL;
->>> +	Mpi3SCSIIORequest_t *scsiio_req = NULL;
->>> +	struct op_req_qinfo *op_req_q = NULL;
->>>  	int retval = 0;
->>> +	u16 dev_handle;
->>> +	u16 host_tag;
->>> +	u32 scsiio_flags = 0;
->>> +	struct request *rq = scmd->request;
->>> +	int iprio_class;
->>> +
->>> +	sdev_priv_data = scmd->device->hostdata;
->>> +	if (!sdev_priv_data || !sdev_priv_data->tgt_priv_data) {
->>> +		scmd->result = DID_NO_CONNECT << 16;
->>> +		scmd->scsi_done(scmd);
->>> +		goto out;
->>> +	}
->>>
->>> -	scmd->result = DID_NO_CONNECT << 16;
->>> -	scmd->scsi_done(scmd);
->>> +	if (mrioc->stop_drv_processing) {
->>> +		scmd->result = DID_NO_CONNECT << 16;
->>> +		scmd->scsi_done(scmd);
->>> +		goto out;
->>> +	}
->> Hi Kashyap,
->> for what is the above test needed (stop_drv_processing) it looks like
-> other
->> drivers don't need to protect exit function in this was (for example
-> mpt3sas).
-> Tomas, This driver code Is still under active development and I will
-> review this (marking as TBD).
-> Not only this area, but there are many more optimization possible in
-> mpi3mr driver.
-> We want to start with stable version of driver and gradually improve.
-> <mpi3mr> as multiple h/w queue support and mpt3sas is single queue h/w.
-> Due to some h/w differences we have noticed some issue are very frequent
-> for mp3mr vs mpt3sas.
+On Wed, 2021-02-24 at 13:54 +0900, Daejun Park wrote:
 > 
-> We can opt other way around as well. We can remove this check now and when
-> we find the bug we can add the fix with root cause details.
-> Let me know if you are OK to keep this check now or add it whenever it is
-> required.
+> +void ufshpb_init(struct ufs_hba *hba)
+> +{
+> +	struct ufshpb_dev_info *hpb_dev_info = &hba->ufshpb_dev;
+> +	int try;
+> +	int ret;
+> +
+> +	if (!ufshpb_is_allowed(hba))
+> +		return;
+> +
 
-You may keep it as it is and remove later if you think that it is safer.
-I was only curious how this could be triggered.
+Here it is better to check "dev_info->hpb_enable", if HPB is not
+enabled from UFS device level,  doesn't need to create mempool and take
+other memory resource.
+
+Bean
 
 
-> 
-> Kashyap
-> 
->> Regards,
->> Tomash
 
