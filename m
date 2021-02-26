@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 375EDC433DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Feb 2021 04:50:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91E1BC433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Feb 2021 04:54:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBFFE64ECE
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Feb 2021 04:50:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C2BF64E38
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Feb 2021 04:54:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229993AbhBZEuK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Feb 2021 23:50:10 -0500
-Received: from mailout3.samsung.com ([203.254.224.33]:24583 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229915AbhBZEuJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2021 23:50:09 -0500
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210226044926epoutp030894ec1384645286d3e64a7f0cd6f596~nMuia1F750399303993epoutp03O
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Feb 2021 04:49:26 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210226044926epoutp030894ec1384645286d3e64a7f0cd6f596~nMuia1F750399303993epoutp03O
+        id S229841AbhBZEya (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Feb 2021 23:54:30 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:50302 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229586AbhBZEyW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2021 23:54:22 -0500
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210226045339epoutp04ac2d9702ca151337e5ac27b986deff72~nMyOnbTas1505815058epoutp04P
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Feb 2021 04:53:39 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210226045339epoutp04ac2d9702ca151337e5ac27b986deff72~nMyOnbTas1505815058epoutp04P
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1614314966;
-        bh=tsfvXmtuiZ1/GT/n6PV0+9VfvhaOw8nxp2MALJ8W0P4=;
+        s=mail20170921; t=1614315219;
+        bh=pp03IT5nIzsMg+G9CsdDb48hXFNgkdc2RK6xVCNBuTg=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=GxVwhlsp5pF1elxg+1Hsw9H+qyAvp5DSstUQcf+YSOM+TodiB9O9NWS0GzJzdirUJ
-         Y1M1TXppkRWAjdk7nFNgbykBOGQXuyTDYR5EXtCitx8HeoOw8oAhaoetQMbFGTZ8t8
-         MDp7uTL6Zlvoo69RKRbUOh2WbNx28Xmbwo9snRDM=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20210226044925epcas2p2d8333adda2ed421d90fc60c5cee6a633~nMuhr8sYT1660116601epcas2p2a;
-        Fri, 26 Feb 2021 04:49:25 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.40.187]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4DmxyW73Ncz4x9Q8; Fri, 26 Feb
-        2021 04:49:23 +0000 (GMT)
-X-AuditID: b6c32a48-4f9ff7000000cd1f-1f-60387dd355da
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        1E.15.52511.3DD78306; Fri, 26 Feb 2021 13:49:23 +0900 (KST)
+        b=YkvEUgf6/STRSLk9xs48b0tWeI//4M0BkCfZfXYIXreX+2n2WVZMsyvzAEa9M5ZM6
+         MCcHdSdwBpYfvruKPYri+fHv4hAM6yWULbqQ/EVR05I4uoKOlxn6iN1awnn/Rb9dli
+         Fx8bJqruSkPs7sm647HxMoug3lSfMKJGBO1GqBuA=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20210226045338epcas2p3e231265800700dabfbae471ed9dbc204~nMyNcCmEg0322703227epcas2p36;
+        Fri, 26 Feb 2021 04:53:38 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.40.185]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4Dmy3N3Ph4z4x9Pv; Fri, 26 Feb
+        2021 04:53:36 +0000 (GMT)
+X-AuditID: b6c32a47-b81ff7000000148e-52-60387ecfe7b7
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C5.FF.05262.FCE78306; Fri, 26 Feb 2021 13:53:35 +0900 (KST)
 Mime-Version: 1.0
-Subject: RE: Re: [PATCH v24 1/4] scsi: ufs: Introduce HPB feature
+Subject: RE: Re: [PATCH v24 2/4] scsi: ufs: L2P map management for HPB read
 Reply-To: daejun7.park@samsung.com
 Sender: Daejun Park <daejun7.park@samsung.com>
 From:   Daejun Park <daejun7.park@samsung.com>
@@ -68,77 +68,83 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         BoRam Shin <boram.shin@samsung.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <50f8a0963e887542a467e690b6d406675279a4e5.camel@gmail.com>
+In-Reply-To: <23b7d59df2b83cdac53fdb4567c41c007257b436.camel@gmail.com>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20210226044923epcms2p1fa387ff8d1eaac09a8cce146d63ea205@epcms2p1>
-Date:   Fri, 26 Feb 2021 13:49:23 +0900
-X-CMS-MailID: 20210226044923epcms2p1fa387ff8d1eaac09a8cce146d63ea205
+Message-ID: <20210226045335epcms2p4beca6dda1e809534ac510926362e913c@epcms2p4>
+Date:   Fri, 26 Feb 2021 13:53:35 +0900
+X-CMS-MailID: 20210226045335epcms2p4beca6dda1e809534ac510926362e913c
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrEJsWRmVeSWpSXmKPExsWy7bCmue7lWosEg+3fjS0ezNvGZrG37QS7
-        xcufV9ksDt9+x24x7cNPZotP65exWrw8pGmx6kG4RfPi9WwWc842MFn09m9ls3h85zO7xaIb
-        25gs+v+1s1hc3jWHzaL7+g42i+XH/zFZ3N7CZbF0601Gi87pa1gsFi3czeIg6nH5irfH5b5e
-        Jo+ds+6ye0xYdIDRY//cNeweLSf3s3h8fHqLxaNvyypGj8+b5DzaD3QzBXBF5dhkpCampBYp
-        pOYl56dk5qXbKnkHxzvHm5oZGOoaWlqYKynkJeam2iq5+AToumXmAH2opFCWmFMKFApILC5W
-        0rezKcovLUlVyMgvLrFVSi1IySkwNCzQK07MLS7NS9dLzs+1MjQwMDIFqkzIydhwcwVLwS2W
-        inNPxRoYFzJ3MXJySAiYSFzYto+9i5GLQ0hgB6PE1R/HgBIcHLwCghJ/dwiD1AgLOErM3XaQ
-        EcQWElCSWH9xFjtEXE/i1sM1YHE2AR2J6Sfug80REfjFLLHr4XImEIdZYCmzxOqnDVDbeCVm
-        tD9lgbClJbYv3wrWzSngLnFq3womiLiGxI9lvVD1ohI3V79lh7HfH5vPCGGLSLTeOwtVIyjx
-        4OduqLikxLHdH6Dm1EtsvfOLEeQICYEeRonDO2+xQiT0Ja51bAQ7glfAV2LL5s9MIB+zCKhK
-        XF+sAVHiIvHrYDdYObOAvMT2t3PAgcIsoCmxfpc+iCkhoCxx5BYLzFcNG3+zo7OZBfgkOg7/
-        hYvvmPcE6jI1iXU/1zNNYFSehQjpWUh2zULYtYCReRWjWGpBcW56arFRgQly3G5iBCd2LY8d
-        jLPfftA7xMjEwXiIUYKDWUmEd/M/0wQh3pTEyqrUovz4otKc1OJDjKZAT05klhJNzgfmlryS
-        eENTIzMzA0tTC1MzIwslcd4igwfxQgLpiSWp2ampBalFMH1MHJxSDUx6Gdf553v6aXOt2CB9
-        OcI4INuaX2HtJKU1E5bmf+6eG33Nt8/G9FLdvcYV9/Zd4Tx5qejUNua5S8NPW6yRrbTefXB1
-        yMSj9303bnt441l4eU7DQrmb/YHtz2N4tcRNNAoXZmQrLF6hWm63e8WuN588fJR/J1yKWaZh
-        k6i+tHzFtEkv7pt94IoJePz6vWi0wq9zZaF/tvndbhZezrnwtOmxc/8nqTFN6N+6uObDnV+/
-        FT0jT0y71rTzn5JAQWWs6Nc85uvKy+qVd05mOPvixH/vSW3nJwlMjpfQsX/nf5yvuzilyUBo
-        8pt3BVcqTj1kZzdzY++eZMd6k3HlO8FQZ68Vlkf3VLxW39pR/1zdTrBDiaU4I9FQi7moOBEA
-        3KNLFXUEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA52TbUxTVxjHd+4tvRe2btfysiMk2F2iASN9oxcPDtQty+hG5liyjQRioJY7
+        SoDS9baEOaPdcIAo8pINsWEoECQBMoRZKKDAYCAsI5sgqMUJRPjADNIBblKFraVlmn3ct9/5
+        5/+c5/mfk4fEhT1EIJmuNbB6rSqT5vvw2gfCUPgvx1GK9J6VQTPV7Xx0LX+YQAtrE3w0MPWQ
+        QBX2NRwtt1zyQgv9YahxJgHl1bXwUdWoCUPFJRY+un93hUC1t9sxVLJRwEPjXVV8dPqWlY8a
+        rm9gaOqKD6q33AHo1LlmHqqt6eYd9FeO34xTjp8txpSd5t8IZWltH1D2fttMKE+O9PKUf8zb
+        eMqzVxqBcqUtWFnQdxqL90k0gWiVXq1Jz2FFrFadnZquTYuhP/rw7XBEizTZnCGGTpIhuVgW
+        xYgVUWL53sP7ZFKpnKFFWlUWG0PnhnuqaZFerXO6DSxn0LNq1inpD3IGVRor5lRZnFGbJlZn
+        Z9GiHFWm0VlHS/ZHa1hVKqsXpcwBzfLgIy/dLJHbYy0BJpDvVQS8SUgpoOPWNSf7kELKCuDM
+        r9NYESBJAbUNrlt9XR5fKg7al8oIFwspGrbcMBNuXQxts83AxXxqDzw3PE247vGjHDjsmm3A
+        XAecqsdh07wJd3cTwMqCeZ6bg2BHg2Wz2puKhefnqwm3HgofXyr2+P3hnaZFYouXhi4AN/vB
+        r+6Nejzb4Mxat0ffDoe67ZibT0DLXQdwDQGpMwAOdNo8kSVwsrB1cwgB9R5cddzAXYl51E5Y
+        ZRO4LW/B1dGNTQtO7YAdi1WbFpwKgy1dEhdCKgT+aONtpTK1PiH+yzj1MiwcWP9Xt1bPeSbb
+        Bb9ba8FKQYj52Uubn+tlftbrIsAbQQCr47LSWE6ui3j+o9vA5g7sjrWCykW7uB9gJOgHkMRp
+        P8H3G0yKUJCq+uwoq89O1hszWa4fHHWGLMMD/dXZziXSGpJlkVJ5JBOhiIhgFMz/lhl5ZKQ0
+        ikFMpBzRrwo46UyykEpTGdgMltWx+q3mGOkdaMLq4tsVo1UBMV8m7FF8ajheIRt794eLoSXv
+        9OQdwjtODj7s/dreU/7C9ZyA4fgH4cl6SeKxn3PNh6Mdc/kIlpXbrlJ/9pky4j/4KeKCpDGO
+        rFjN6QoqnMvNSNqePmncOzlx5OrN1I/La75pDWMO7HqwYNTknbJ/XvB3SPP65ds1jxKenni/
+        fipqRDjpMK6G9ZSSl4V1uV5H7PvH9qV3LYM3ExMbiZUv+rPmkxTnf5/OULw01BA7cgZLZsvp
+        T4LLbOuS4Ps7DhwKfS2/olan1mBN5qCxobYSmaayaJl8EruAXl86RuYg+dpO36eLL/411Twx
+        MVjaSTveGOBe4Vumh0cei6ZpHqdRyXbjek71D35EJy/RBAAA
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20210224045323epcms2p66cc6a4b73086621e050da37f12f432f0
-References: <50f8a0963e887542a467e690b6d406675279a4e5.camel@gmail.com>
+References: <23b7d59df2b83cdac53fdb4567c41c007257b436.camel@gmail.com>
         <20210224045323epcms2p66cc6a4b73086621e050da37f12f432f0@epcms2p6>
-        <20210224045405epcms2p2d05f8563b1f121d2c2cc79b343e5af77@epcms2p2>
-        <CGME20210224045323epcms2p66cc6a4b73086621e050da37f12f432f0@epcms2p1>
+        <20210224045437epcms2p7ed0a41233d899337ddbd3525fddeb042@epcms2p7>
+        <CGME20210224045323epcms2p66cc6a4b73086621e050da37f12f432f0@epcms2p4>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > 
-> > +void ufshpb_init(struct ufs_hba *hba)
+> > +static int ufshpb_init_mem_wq(void)
 > > +{
-> > +        struct ufshpb_dev_info *hpb_dev_info = &hba->ufshpb_dev;
-> > +        int try;
-> > +        int ret;
+> > +       int ret;
+> > +       unsigned int pool_size;
 > > +
-> > +        if (!ufshpb_is_allowed(hba))
-> > +                return;
+> > +       ufshpb_mctx_cache = kmem_cache_create("ufshpb_mctx_cache",
+> > +                                       sizeof(struct
+> > ufshpb_map_ctx),
+> > +                                       0, 0, NULL);
+> > +       if (!ufshpb_mctx_cache) {
+> > +               pr_err("ufshpb: cannot init mctx cache\n");
+> > +               return -ENOMEM;
+> > +       }
 > > +
->  
-> Here it is better to check "dev_info->hpb_enable", if HPB is not
-> enabled from UFS device level,  doesn't need to create mempool and take
-> other memory resource.
+> > +       pool_size = PAGE_ALIGN(ufshpb_host_map_kbytes * 1024) /
+> > PAGE_SIZE;
+> > +       pr_info("%s:%d ufshpb_host_map_kbytes %u pool_size %u\n",
+> > +              __func__, __LINE__, ufshpb_host_map_kbytes,
+> > pool_size);
+> > +
+> 
+> I think print function name is not proper while booting.
+> And one HPB is associated with one HBA, if there are two UFS
+> controllers, how can I differentiate them? 
 
-I will add checking dev_info->hpb_enable value.
-if (!ufshpb_is_allowed(hba) || !dev_info->hpb_enable)
+I will use dev_info instead of pr_info.
 
 Thanks,
 Daejun
 
 > Bean
->  
->  
->  
->  
->  
->   
+> 
+> 
+> 
