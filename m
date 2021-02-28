@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E11E6C433E6
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 06:01:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9703FC433E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 06:01:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B785F64E4A
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 06:01:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6962D64E51
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 06:01:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230248AbhB1GB0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 Feb 2021 01:01:26 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:23239 "EHLO
+        id S230298AbhB1GB2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Feb 2021 01:01:28 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:23195 "EHLO
         esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230101AbhB1GBA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Feb 2021 01:01:00 -0500
+        with ESMTP id S229638AbhB1GBJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Feb 2021 01:01:09 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1614492060; x=1646028060;
+  t=1614492068; x=1646028068;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Wng4eyKHQVoNSBh/6v3kyiCfAzNiavkALjRIlkS4Lyo=;
-  b=n0dPjJNCPe6e/CSiUpINUygFbIQyNzaDVCw5Cji+a7Fm4/AumlQDmdc2
-   6v7zHsnTeKfMlvwS5pVS2M7uDyChtQCiMIMGJF1rXRQbeQMsfx4gIsQKf
-   KehZrqp+UaX6aQmejbPX5wLRar7jvDhTbdGvZPrljTJCZV0EJULoLWkDF
-   kwCQkyo+ZKEi3cQFQH8T0s9rheRWalswT0XlGi9gmqYqCGoWz988MmSx/
-   2i/AVxKImjHXD83MGynhLUQ2zWvBgzuPbzK6IejDoGBZCtlTY+P1wsA68
-   hRGYKbTVr0qwLJNCxyzlmbY+mb6h6uic28AkL/q2u88wEu3fBfhRAwcyM
+  bh=mDfhgYvCsUBpfe6h7Sy6Z6rwnG2TX7oz1s2rwqccbKk=;
+  b=jhN+cYt64+1BfHU73uj7SiOYqZmSQ4+Y6nk7VM9FG3ql3WiJ19N9+vvW
+   vvzjZyhZLXf1YZLCwKSWBd+2scxHAuApo3OSsWAFgfX3+mmR1Eaq/taR8
+   A60ZJbf+qSIp+hgHZsvwZqV5NpNL+dvCt9RBh50J2UFGwjJ8HSVIWehuh
+   5O1DTHZibwKCulfKN06zRfush0xcFUoKVVXLspPBPaHzauZTwJ7dd8D5U
+   RHMj5CVj4dovyKN5k3/Rr7HNVukBv8uATG41DkSC4GnGA7WQ5qx4CvTyR
+   HeJMl2tQ6qkqDuahlg/ZQS8KnYnR4IVF1dLDpZsKTyoCiff6/NaYQXluT
    w==;
-IronPort-SDR: rZ8NYANNBtz47ya8W2EfC3mqe/XwLdLVJGyzxA09Hzy1faDEgkCejUZY5ZGQ2/F8HN3G8Va+l1
- uivVaZBq2g1tJWtfMqnNNMuy3na+2irW3IZHFGNk5GXD/xvo7/wsdm7jEu+CP/jTlBHvO/GsER
- IIezdXBMDX+THSgcfWWVSozyun4YZ+s98mmDSISRIssTu9lAKo1ARUAKczFnTGNxHg/ake3sbT
- c9thirQrcmAZMBq0KcMBBbamfkwagCsbWdEmY58F61WdGYrQuQIsaag/Xw9GbVgdtUUyw6WPJ6
- z9U=
+IronPort-SDR: sQ0H+IS+BljVkEG9SxBpGoh2fClbhI/wg86WX3Bbg56egah233Y+uTW5y5cbAetIWFv4U8zNTa
+ O3VFmmD7Rinhga2M9GZLx84AvVAA5/DcWzgRf5n03hlFMjy3pFU/THZYWRKbilBuFVST3Ff0hU
+ QJiinLbGng9JtzFckRHhXvli1HfDQ/RIZcpcSyb2CxEUFYYx0rwfXu7LdaDVYlmqfGB9zx5rM5
+ lXdx1DUL/+Kw4ZkrXDaROdN9u6QYfvHE88DdhIR21by3+Qg/tG7KFpgE+uO1idFRk9FXRQ2Ibb
+ 0NU=
 X-IronPort-AV: E=Sophos;i="5.81,211,1610380800"; 
-   d="scan'208";a="271564157"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Feb 2021 13:59:55 +0800
-IronPort-SDR: /dzT1vWvnsw8QgFFH2Uzz6cx9tvpXeGTnPRE7bCmWPmwDkT8aeKTkl9Nrbh8t+DtCCSRFs4jF8
- HVsz2gTBMkzf5/oQtwYL6+vN1TUxtNUtKv7Yq2ZAwIXIzZaeNgZ5gv3s0U6vqgViyifqkm+pkt
- ZBg4W/hxBlgB01AQ8THTB3Z8w0cN2asPEVUNcf9Tkid03HxoI03apIQozeDfzPYGqK48mzMQ+q
- kYaizZNkJrwddJarYlK1xp2h9CBQSBXZCuuglbbiZJwANLvzVXrpKtamEGQMG4bvNHBiAla3Hj
- quznifBGdsLEDxjd2C8z8rfR
+   d="scan'208";a="271564180"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Feb 2021 14:00:14 +0800
+IronPort-SDR: lp0ihUvwsgRbyJ/C7XrVDxyCNOR7V4cbzJjO02OsHM7WxLLJIhcOjkqsBQSlWcEHCJoQb31nPW
+ 6oXkwu0YB42g2Yll4lC/PIzrsOr5ThiVcYWRScHizOK0QAbh1CEZjQb6sUYnX7YoVR5k0zYrm6
+ xQyVgXIUFJmU2yDLtMf/zNiLklqylqX3WB89xEH9Vzx9FYOM7Bp9O9Px4Ehl1zUvpwogY6kFQO
+ 1HUiLi9WtAIgS7uzEV8MIjVbmMe7+saT9796WG5drBrMDtCNraPQnlZCn1CsDhWF039kLHsI65
+ PdDQ92UkZbkU10rgA4Ks3onk
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2021 21:41:13 -0800
-IronPort-SDR: nph52jcAk2WvGgXmmuguTs4rozAIt1x1piyNM+/Q76++gzd1dZyXTAGe/oZNCGiawkmf/UhoM0
- wIMJ6gzEslwWgdSG8Qfa/CAWtJlCxz046C7k+07zf3h+rCCS8XljsxXOTCqItJJzZgJdNP/9gp
- xlVCHp0x9tkdRzyhXFlcO2q3JLOaQQ/VnAZMDZUzh28GkCqWtCEtQpFE66afDxFZptaGORgfx8
- ujDZkhgq9p88ix0QfhRUQv2MlbPEjnyDekrIxNVPRqQOCHV7R+4J8Zz88henmd6yNfUuN255AD
- 4Ak=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2021 21:43:24 -0800
+IronPort-SDR: JXkKii/dA5B9Bd0EKSrhcb0usHXMbjDb9796XCctEJk9xgtHLlF10iCOa1MuNtLwJm7mcWCCIc
+ JJZStGnIiwUeQe3pKMpeFtgXOvJuCnRLKG3m8y9jpBSaLRhKIVGaYG8Zp2IFwKX4M33bcxLufs
+ Ss0l3iTvxJilx695aTBEDYdd+jXEllrWkoas/25dxe7oX4mHGzSKnrtPwAUtN5uykzoRwo5Ap/
+ t9yx2NxVZc2bmNveEkLyRLKGz3Gb4IzOLmwLgRQHoCgRqe3TVnmcr97dhWwlWNLbWY+hrjhMYI
+ wlI=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip01.wdc.com with ESMTP; 27 Feb 2021 21:59:55 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 27 Feb 2021 22:00:14 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 Cc:     martin.petersen@oracle.com, hare@suse.de, jejb@linux.ibm.com,
         mlombard@redhat.com, michael.christie@oracle.com,
         bvanassche@acm.org, houpu@bytedance.com,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [PATCH 19/23] target/configfs: remove the memset with declare-init
-Date:   Sat, 27 Feb 2021 21:56:41 -0800
-Message-Id: <20210228055645.22253-20-chaitanya.kulkarni@wdc.com>
+Subject: [PATCH 21/23] target/pr: remove the memset with declare-init
+Date:   Sat, 27 Feb 2021 21:56:43 -0800
+Message-Id: <20210228055645.22253-22-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1.dirty
 In-Reply-To: <20210228055645.22253-1-chaitanya.kulkarni@wdc.com>
 References: <20210228055645.22253-1-chaitanya.kulkarni@wdc.com>
@@ -80,26 +80,26 @@ the memset call.
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- drivers/target/target_core_configfs.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/target/target_core_pr.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index d6554468ef65..9cb1ca8421c8 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -3399,11 +3399,10 @@ static struct config_group *target_core_call_addhbatotarget(
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 942b93d12295..3644d2642929 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -1202,10 +1202,10 @@ static struct t10_pr_registration *core_scsi3_locate_pr_reg(
+ 	struct se_session *sess)
  {
- 	char *se_plugin_str, *str, *str2;
- 	struct se_hba *hba;
--	char buf[TARGET_CORE_NAME_MAX_LEN];
-+	char buf[TARGET_CORE_NAME_MAX_LEN] = { };
- 	unsigned long plugin_dep_id = 0;
- 	int ret;
+ 	struct se_portal_group *tpg = nacl->se_tpg;
+-	unsigned char buf[PR_REG_ISID_LEN], *isid_ptr = NULL;
++	unsigned char buf[PR_REG_ISID_LEN] = { };
++	unsigned char *isid_ptr = NULL;
  
--	memset(buf, 0, TARGET_CORE_NAME_MAX_LEN);
- 	if (strlen(name) >= TARGET_CORE_NAME_MAX_LEN) {
- 		pr_err("Passed *name strlen(): %d exceeds"
- 			" TARGET_CORE_NAME_MAX_LEN: %d\n", (int)strlen(name),
+ 	if (tpg->se_tpg_tfo->sess_get_initiator_sid != NULL) {
+-		memset(&buf[0], 0, PR_REG_ISID_LEN);
+ 		tpg->se_tpg_tfo->sess_get_initiator_sid(sess, &buf[0],
+ 					PR_REG_ISID_LEN);
+ 		isid_ptr = &buf[0];
 -- 
 2.22.1
 
