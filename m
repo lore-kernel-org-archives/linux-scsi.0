@@ -2,359 +2,278 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D05ACC4332E
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Feb 2021 17:18:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0672CC433DB
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 05:58:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D7E464EB7
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Feb 2021 17:18:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B01E264E51
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 05:58:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230237AbhB0RPy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 27 Feb 2021 12:15:54 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:47950 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230258AbhB0REH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Feb 2021 12:04:07 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11RGxcOU033030;
-        Sat, 27 Feb 2021 17:00:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2020-01-29; bh=88n/iaEqMlDdNWimYTScm0G2+2hTQhxw1NLa1CnNe7E=;
- b=TkiCBFHqDdMSqANTiWKJPUahkN9zWdbsedaPcjVSH/5FO9AOQ5sc4mKxuBUuheZ3/Rwy
- IQB3F0C8Z3P22Gr8E/AQne5Ne0JI/+B6vT8279K7B5QDa1xr4GtFpnTLYxyeQDSlng5B
- /EFT1xSgwWTKRqg5yZ4fqVUiINn3USc+S5lMsG1rApDBFWzILKSVApF27kDWjE9CdxLB
- kNgXsskqfDoaQaTpmc3UCIwVokqCtZZ/1aXU5moY3b2tS7MQgtIhJvCFUn9CPxdPbWOd
- BNMlvdDomWRCNf+Dgw1jSDC5ZreLtv3LrsEyQFNKlIj4g0od0/mEsqQEAi4Vh1oTaZ6v Jg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 36ybkb0v49-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 27 Feb 2021 17:00:31 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11RGsmDA041731;
-        Sat, 27 Feb 2021 17:00:31 GMT
-Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam08lp2048.outbound.protection.outlook.com [104.47.73.48])
-        by userp3030.oracle.com with ESMTP id 36yb6sam7c-4
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 27 Feb 2021 17:00:30 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=gM7ooBypX5IdPLQGoPthwd8USueoEiNAWVi8XONTlrTVKHQddbpJqKvlrCiiSmbd108S79Q0OfyNP5M6YAyf0TGo93CGLo9xKMMGinX77OyfzBueV0MFIS7xlgKIyU0PxVna/HWmrchRClam2oJOc0A++iI/TEavEfD2xzCXaw1woX8QtgI9OcwvIa9QcyHFwxa2QsJbeqL8/5Q5qDsNibyQbOw1u6q54C/xGxddRYa6LA26v509BzQigD5thHCsd+eiKT7eo0KIZrQuTGAC2XQHRv8RYVSgopXUhE1JF996I/H/0RdBzyrSibnXS7++Yxpb9s+e/D+ckFrfB/Ngaw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=88n/iaEqMlDdNWimYTScm0G2+2hTQhxw1NLa1CnNe7E=;
- b=lmQ71PgWaPIhLsRQ6WFVhQsOiVAACM9kxhwa3VULb1uOY442Mb4/Q0zZeQV042uc5/JVqK2WX6X9QasNrdmFM8gfJmGsMJLrdzxxX/bQ6DrTCEzgXV7w5o71VhKtc6FGSXUNXYjj8ddb5aUdNM5EZmNK5icHCeXU4zCJAg2VODtHFybkqbL8J78qsxwTOY3lvCxoaCv1oVZM8gBWK8Pn8vpLiBZK+/PN44hC9Z9U3pcSdu5kPjFG1I7jS5tjSZGINqP1+tCQ4iWltriN0AFraGn/ZhvLUN/4/aqnCuDOEPG89uyklVTnX5eoQNzCJi/Uaeh6rtE0cf7yJ1QJty3N6w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=88n/iaEqMlDdNWimYTScm0G2+2hTQhxw1NLa1CnNe7E=;
- b=ccdPfCJ/BiwZSELmerP1l4njrWPjuNx5tnILNVR9LmEI5TOU73vVnsEWRh3QYIrihpEfOCGwGx5EUK4JSnPM61Zq83MXzyN4pS1w1jTkQ4Ru5iOUcnJeBgiVhnBs9dGznlIROuj7QdwuJJOnMyoU7ThGjNQp0iLLFFb+ynmm8bs=
-Authentication-Results: gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=none action=none header.from=oracle.com;
-Received: from DM6PR10MB3577.namprd10.prod.outlook.com (2603:10b6:5:152::16)
- by DM6PR10MB3499.namprd10.prod.outlook.com (2603:10b6:5:178::31) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.22; Sat, 27 Feb
- 2021 17:00:28 +0000
-Received: from DM6PR10MB3577.namprd10.prod.outlook.com
- ([fe80::5120:8a97:3547:bc3b]) by DM6PR10MB3577.namprd10.prod.outlook.com
- ([fe80::5120:8a97:3547:bc3b%7]) with mapi id 15.20.3868.034; Sat, 27 Feb 2021
- 17:00:28 +0000
-From:   Mike Christie <michael.christie@oracle.com>
-To:     bostroesser@gmail.com, mst@redhat.com, stefanha@redhat.com,
-        Chaitanya.Kulkarni@wdc.com, hch@lst.de, loberman@redhat.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 15/25] target: add gfp_t arg to target_cmd_init_cdb
-Date:   Sat, 27 Feb 2021 10:59:56 -0600
-Message-Id: <20210227170006.5077-16-michael.christie@oracle.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210227170006.5077-1-michael.christie@oracle.com>
-References: <20210227170006.5077-1-michael.christie@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [73.88.28.6]
-X-ClientProxiedBy: CH0PR13CA0027.namprd13.prod.outlook.com
- (2603:10b6:610:b1::32) To DM6PR10MB3577.namprd10.prod.outlook.com
- (2603:10b6:5:152::16)
+        id S230190AbhB1F6B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Feb 2021 00:58:01 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:1300 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230181AbhB1F57 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Feb 2021 00:57:59 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1614491878; x=1646027878;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=l8ZQJQVzVcLtB2bnlud4aVbMuxVjQgazSjM/4AkOZDw=;
+  b=KQ8i28/BPoCSBHmBq1rtpkxg8lGcstuIoksi4zpekfDyeFWDoAaZ0dGo
+   cfMIFcGqP6GIerCUTGJn+OcjiCX+4jC9qdeLGouvlZKsPWnvnk2EuPyyv
+   DhsjBkZ1yRIgH7jL6z7mj8v6BCelZZ9Fl3z6NdETK3yY/ey5P3UbcnJn+
+   CzlqVvySeuAyRR1iAaBUcJgY7cpw9MD05mPwBjT5oa4fOEt9x5uJJSWIC
+   PRhPbYnJ2kMljU0EQYF8NpHv8HIlK5vXIe44y71iAblzWqBtqprhL2aC1
+   pBuyMBp+O0BAtPjCFpo+iIXJs852GRR5QsVplmDMAslMBnF+zw7DZBhjC
+   A==;
+IronPort-SDR: NHZGeW15SVOD4sZSSivrqcJXqOXkXX8rLmbiR6MaYFLskdOsSE2OTA/+UFt4a6RaCdHdqvTn/c
+ UYstIGi39niQwjey+tGES4pBzKCGMQLm7bLC8XOr0iZTBuNg0vHDMQsofgj7Owugs70f/1xsyT
+ 15W7CThB2tmWrF0XV+ZiXnYlzQcSh56sBXORv9tUA8CSZh6Z2EkS+IZNuYg0dz9A3Uo9SsoSb8
+ AawL2h11dFaiC593/Xirkf61R8DHWlLHD5jSgTxb9mkhniCI1KYA3xRFQp4/hLu0s7SwUvEuKs
+ VnM=
+X-IronPort-AV: E=Sophos;i="5.81,211,1610380800"; 
+   d="scan'208";a="271564035"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Feb 2021 13:56:53 +0800
+IronPort-SDR: pyLtltvTUpXwykIg4WMDXevL3rB95/VZYar67whe/Ud3BmgBkN90n6yAtQvruqt9Cy/KxWbrXm
+ 1cvOWMbFXjjZasnccAHbIA9rYONnv47+cZDO2ihfIB0ldwX8xGyHko/PaeqFJFVMuTuR+PajqA
+ 3O/hiiLNTodD7mI53Xkdy5aqknUywi5umbGA2Qof2a/H8P4Tp2NWQ1lSBZZRMd9UUAe1zZrqve
+ M3dIjTwi6ZX7JUmg6XMzlhLVoj/34VYeB2PDpRyUqmPzV7J0MKcZ79IABU0KdvcYpvYidPLfTd
+ ph9qZ74Ky6ur6esTaweiJFdP
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2021 21:38:12 -0800
+IronPort-SDR: RMuplQuTJZnxihlQni4VkDUYLWYoFLxinoRryklOpe+xFKneo7dx3O7LgUm4Wi3qqM/KGItvt7
+ t6C/w13XyVFNQh2eAuRyd9Cced6uRAwMGAG7YiMUnXKZGJeLQ0Ivg3mQmQ5mOB9H64sR3zgg2a
+ qP1TxPMeJ/Ke/PhYMsAtEzQqS/IbYDMSkB0MlY+qJpcAYRKjZdDIixvaX3msqESVy6tI9XMvP9
+ GZYJVPieMuEdF+cwUKNIkhSWsCBuzu5Y0m5t1I9YJUsvNq6RfX0XjpTbbhnRLbXzekme+MC9q0
+ nQY=
+WDCIronportException: Internal
+Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
+  by uls-op-cesaip01.wdc.com with ESMTP; 27 Feb 2021 21:56:53 -0800
+From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     martin.petersen@oracle.com, hare@suse.de, jejb@linux.ibm.com,
+        mlombard@redhat.com, michael.christie@oracle.com,
+        bvanassche@acm.org, houpu@bytedance.com,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Subject: [PATCH 00/23] target: code cleanup
+Date:   Sat, 27 Feb 2021 21:56:22 -0800
+Message-Id: <20210228055645.22253-1-chaitanya.kulkarni@wdc.com>
+X-Mailer: git-send-email 2.22.1.dirty
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (73.88.28.6) by CH0PR13CA0027.namprd13.prod.outlook.com (2603:10b6:610:b1::32) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.13 via Frontend Transport; Sat, 27 Feb 2021 17:00:28 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 75de0d46-29ea-4506-436c-08d8db412f45
-X-MS-TrafficTypeDiagnostic: DM6PR10MB3499:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DM6PR10MB349937C93AF25BF148BA744AF19C9@DM6PR10MB3499.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:3513;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: sKdW98JTV8csiD/l/tQ8ArkxsJOYblXhIuD/+D4Wt1B1V2pK0ICMBPKE70AFsNjI2FMCtqH7JPx9x9w1Y2et01AushkNR1+k7hL0WkG49XuY8f4DjkYIkxdf1oMjKa0hhPREZ/SmedWs+PE24W56LVvlrOY/N2ZB7QN+RyRuOTxH6KL6DTOnMw/67bMpRwtW30GS0kZaXnNA5LMLUNLtM/LvFcAPrQVIYnKC0WilkqBW0rm4YdIA+a6X9upyZLMZO/mQ1M4EmnKRNvQk8l3JfpgRNqhSQSA9FH00xdQxg5VQAOf5d1Myh2baYtTIfMXi8oAdnGfrRUaS4fNYjbwO3627x8qlh3H8Pcpn1n45uatle1dHcQD1qNJ3yIN3QUwLnLI6ZVOyo1ij4xhTgYsu0JsDVHUDQn65EoguEQRLGu204yKfVkjuXWIMoTyWVeUh7TBKNpu/o3Mu4X1NQsyjFEeW4vAACquq8xkjOPM8RJ0CnsTdbKHLGylmB8bDWdcnucbrOWl1GVfylonrIGzUFVCMxdfo05F+I3dUH79q/zT/2QXyQ15/o6uO6WWwAZENy3k7afUAcEFH+ysggtvJ1A==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB3577.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(39860400002)(376002)(396003)(366004)(346002)(6666004)(956004)(36756003)(316002)(6512007)(86362001)(69590400012)(6506007)(1076003)(8936002)(83380400001)(2616005)(478600001)(2906002)(4326008)(186003)(16526019)(66556008)(5660300002)(66946007)(6486002)(66476007)(8676002)(107886003)(26005)(52116002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?/GDuHgznm4K1VXLyMM43XKAwiGoeXCZ0ERUtb+Jk6x2kQ2eeNLP4kdm+8buM?=
- =?us-ascii?Q?bBC8BGDIlSkT9uW6+enWqUW7vzB6rpsjiDZ04Cb0Rhbrnnt2w9YgpUlqjW8l?=
- =?us-ascii?Q?tXb58CYi5PXQivlZ10dhIl5RoTHtZXDmtDsAKqt/vtamjXQo86SivlQOKFdo?=
- =?us-ascii?Q?TduoJteLBIUMMMTdh2elUov+DNsAenbSz/R1+J3raFldWJUwe5EBysbPeVnU?=
- =?us-ascii?Q?ZllDRfX2XyYBAJG/hM9Q6Fo6exRTu40ArU7mMcITTi+HsngJwGybZsx52xJl?=
- =?us-ascii?Q?e3t9cmhVf7SScsu2qZtQ0uRJ1NSkWJIACIZOCWsma+2Jl/dfJ1j/BRAQgLa2?=
- =?us-ascii?Q?LG15ARMuioz4pAvCzni4Ovw4jRnXsb0EvXFCDjSZrXdy2C0NP9P34tY63xEy?=
- =?us-ascii?Q?ep1DWHVOGHgRyUdRoYXkHAg7DxLPE4EhD9EdIfpyexs1G2ZyOUWr3bsnz+N2?=
- =?us-ascii?Q?BWTqOPn9jLXVDl78u7w7l5/DnES8LpA9kK+SbRZXeCDE9JCmYNKd9uikodgr?=
- =?us-ascii?Q?dOty7v3VMbMewoyEtuB6aG7DcgA17iL4jR4WWfQLq1Rl/2mUf/a8EK1XYhjk?=
- =?us-ascii?Q?V5Y2xTDB7VQk91xrLA6pNx99eayFoK5LtBqaSouBN2qAaQtcwJCptf0pVorZ?=
- =?us-ascii?Q?8VBCpeHPQoMJ0OMjSw6l1qVecfMOksLFKeTz7WbEXtKrT0twAx4mtFQr9gDI?=
- =?us-ascii?Q?RugCiiy9SpfR6wl/tZQlwxlF3NEwYijz4Q6wVZWC6AnDxCw/071hJ8qf/Nde?=
- =?us-ascii?Q?1OgeasGcD6gU1XGg1orEp6uyqzCa6ByrIuoXULVe1moP+IBJLXqNC0QU+gR8?=
- =?us-ascii?Q?fiDCih4YshJy7lg59b5zsYXMf+42bheENpczValgsBWHTKm0lNVGjdijwWT8?=
- =?us-ascii?Q?YdkecKGdG6UU7gHkXAPWDC/SEVH9kyBTXxTFgGpaCWdTrw+dpP1b3U7wN3rc?=
- =?us-ascii?Q?qkmtdkbC3d1uGKzfb5VwnM82I0W3NuxA3ARB2mAZvB2z02jp/o5DO+hKYd+e?=
- =?us-ascii?Q?ZzxEc/uKDWuqB458VmLDduhPanbAX9r3nXYYisvJNZAUaDD+x6IYTyYqZvKY?=
- =?us-ascii?Q?tj3whzJOLIr8s6aC3Hp1Fy0RTdQDw7CmQk2YtTbSf7o8ilqn/8a4Wksy0Tkd?=
- =?us-ascii?Q?CQ2ww76f6ERNbYfUUhMpRFFiDAur5CStyth1cJsKQ7ZwwdjnjuGDnPNDIrhP?=
- =?us-ascii?Q?pqDA8L/2BzB+GyqGAtembLzqzJzNDOUfdRqDLDZjeRhHgGoZQa7qIUwf9+/x?=
- =?us-ascii?Q?dpZeTjsvVdGBBdFCBX72G0jL29paxANOC0j4nlwWPRiv7F/4bEwYkoN9w+oK?=
- =?us-ascii?Q?JDfSFNjy8VF+tqrU6Sab0pqG?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 75de0d46-29ea-4506-436c-08d8db412f45
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB3577.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Feb 2021 17:00:28.7629
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pOo9iS8cCHKsqO4VYJ0/PBY7h2JfKT1QXa62RUVgbVeZlOF9YVgyvBRBB9TqHsv3DWqaKhyz4HbgpLSYJ0gxelrGSlctKjwW0klUN3l6Oo8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB3499
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9908 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0
- mlxlogscore=999 bulkscore=0 malwarescore=0 mlxscore=0 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2102270145
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9908 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 impostorscore=0
- suspectscore=0 phishscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0
- clxscore=1015 mlxlogscore=999 adultscore=0 malwarescore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2102270146
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-tcm_loop could be used like a normal block device, so we can't use
-GFP_KERNEL and should use GFP_NOIO. This adds a gfp_t arg to
-target_cmd_init_cdb and covnerts the users. For every driver but loop
-I kept GFP_KERNEL.
+Hi,
 
-This will also be useful in the later patches where loop needs to
-do target_submit_prep from interrupt context to get a ref to the
-se_device, and so it will need to use GFP_ATOMIC.
+This removes unused macros, various memset, extra variable in the 
+target/iblock for bio get and fixes type mismatch for the same.
 
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Tested-by: Laurence Oberman <loberman@redhat.com>
----
- drivers/infiniband/ulp/srpt/ib_srpt.c  |  3 ++-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  3 ++-
- drivers/target/iscsi/iscsi_target.c    |  3 ++-
- drivers/target/loopback/tcm_loop.c     |  3 ++-
- drivers/target/target_core_transport.c | 14 ++++++++------
- drivers/target/target_core_xcopy.c     |  2 +-
- drivers/target/tcm_fc/tfc_cmd.c        |  2 +-
- drivers/vhost/scsi.c                   |  2 +-
- drivers/xen/xen-scsiback.c             |  2 +-
- include/target/target_core_fabric.h    |  5 +++--
- 10 files changed, 23 insertions(+), 16 deletions(-)
+The unused macros warning are found at compile time and they are
+documented in each patch commit log. For memset removal, there are no
+warnings.
 
-diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
-index 87741e0b4bca..51c386a215f5 100644
---- a/drivers/infiniband/ulp/srpt/ib_srpt.c
-+++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
-@@ -1537,7 +1537,8 @@ static void srpt_handle_cmd(struct srpt_rdma_ch *ch,
- 		goto busy;
- 	}
- 
--	if (target_submit_prep(cmd, srp_cmd->cdb, sg, sg_cnt, NULL, 0, NULL, 0))
-+	if (target_submit_prep(cmd, srp_cmd->cdb, sg, sg_cnt, NULL, 0, NULL, 0,
-+			       GFP_KERNEL))
- 		return;
- 
- 	target_submit(cmd);
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 56394d901791..12a2265eb2de 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -492,7 +492,8 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
- 	if (rc)
- 		return rc;
- 
--	if (target_submit_prep(se_cmd, cdb, NULL, 0, NULL, 0, NULL, 0))
-+	if (target_submit_prep(se_cmd, cdb, NULL, 0, NULL, 0, NULL, 0,
-+			       GFP_KERNEL))
- 		return 0;
- 
- 	target_submit(se_cmd);
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index f2107705f2ea..566adfde1661 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1166,7 +1166,8 @@ int iscsit_setup_scsi_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
- 
- 	target_get_sess_cmd(&cmd->se_cmd, true);
- 
--	cmd->sense_reason = target_cmd_init_cdb(&cmd->se_cmd, hdr->cdb);
-+	cmd->sense_reason = target_cmd_init_cdb(&cmd->se_cmd, hdr->cdb,
-+						GFP_KERNEL);
- 	if (cmd->sense_reason) {
- 		if (cmd->sense_reason == TCM_OUT_OF_RESOURCES) {
- 			return iscsit_add_reject_cmd(cmd,
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 461f4125fcab..677e4b8f0642 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -156,7 +156,8 @@ static void tcm_loop_submission_work(struct work_struct *work)
- 
- 	if (target_submit_prep(se_cmd, sc->cmnd, scsi_sglist(sc),
- 			       scsi_sg_count(sc), sgl_bidi, sgl_bidi_count,
--			       scsi_prot_sglist(sc), scsi_prot_sg_count(sc)))
-+			       scsi_prot_sglist(sc), scsi_prot_sg_count(sc),
-+			       GFP_NOIO))
- 		return;
- 
- 	target_submit(se_cmd);
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 1f35cce6e92b..6c88ca832da6 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1427,7 +1427,7 @@ transport_check_alloc_task_attr(struct se_cmd *cmd)
- }
- 
- sense_reason_t
--target_cmd_init_cdb(struct se_cmd *cmd, unsigned char *cdb)
-+target_cmd_init_cdb(struct se_cmd *cmd, unsigned char *cdb, gfp_t gfp)
- {
- 	sense_reason_t ret;
- 
-@@ -1448,8 +1448,7 @@ target_cmd_init_cdb(struct se_cmd *cmd, unsigned char *cdb)
- 	 * setup the pointer from __t_task_cdb to t_task_cdb.
- 	 */
- 	if (scsi_command_size(cdb) > sizeof(cmd->__t_task_cdb)) {
--		cmd->t_task_cdb = kzalloc(scsi_command_size(cdb),
--						GFP_KERNEL);
-+		cmd->t_task_cdb = kzalloc(scsi_command_size(cdb), gfp);
- 		if (!cmd->t_task_cdb) {
- 			pr_err("Unable to allocate cmd->t_task_cdb"
- 				" %u > sizeof(cmd->__t_task_cdb): %lu ops\n",
-@@ -1638,6 +1637,7 @@ EXPORT_SYMBOL_GPL(target_init_cmd);
-  * @sgl_bidi_count: scatterlist count for bidirectional READ mapping
-  * @sgl_prot: struct scatterlist memory protection information
-  * @sgl_prot_count: scatterlist count for protection information
-+ * @gfp: gfp allocation type
-  *
-  * Returns:
-  *	- less than zero to signal failure.
-@@ -1648,11 +1648,12 @@ EXPORT_SYMBOL_GPL(target_init_cmd);
- int target_submit_prep(struct se_cmd *se_cmd, unsigned char *cdb,
- 		       struct scatterlist *sgl, u32 sgl_count,
- 		       struct scatterlist *sgl_bidi, u32 sgl_bidi_count,
--		       struct scatterlist *sgl_prot, u32 sgl_prot_count)
-+		       struct scatterlist *sgl_prot, u32 sgl_prot_count,
-+		       gfp_t gfp)
- {
- 	sense_reason_t rc;
- 
--	rc = target_cmd_init_cdb(se_cmd, cdb);
-+	rc = target_cmd_init_cdb(se_cmd, cdb, gfp);
- 	if (rc)
- 		goto send_cc_direct;
- 
-@@ -1788,7 +1789,8 @@ void target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
- 	if (rc)
- 		return;
- 
--	if (target_submit_prep(se_cmd, cdb, NULL, 0, NULL, 0, NULL, 0))
-+	if (target_submit_prep(se_cmd, cdb, NULL, 0, NULL, 0, NULL, 0,
-+			       GFP_KERNEL))
- 		return;
- 
- 	target_submit(se_cmd);
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index e86cc6135587..d31ed071cb08 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -554,7 +554,7 @@ static int target_xcopy_setup_pt_cmd(
- 	}
- 	cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
- 
--	if (target_cmd_init_cdb(cmd, cdb))
-+	if (target_cmd_init_cdb(cmd, cdb, GFP_KERNEL))
- 		return -EINVAL;
- 
- 	cmd->tag = 0;
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index 1376501ee3d0..410b723f9d79 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -555,7 +555,7 @@ static void ft_send_work(struct work_struct *work)
- 		goto err;
- 
- 	if (target_submit_prep(&cmd->se_cmd, fcp->fc_cdb, NULL, 0, NULL, 0,
--			       NULL, 0))
-+			       NULL, 0, GFP_KERNEL))
- 		return;
- 
- 	target_submit(&cmd->se_cmd);
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 76508d408bb3..93f5631b469c 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -811,7 +811,7 @@ static void vhost_scsi_submission_work(struct work_struct *work)
- 
- 	if (target_submit_prep(se_cmd, cmd->tvc_cdb, sg_ptr,
- 			       cmd->tvc_sgl_count, NULL, 0, sg_prot_ptr,
--			       cmd->tvc_prot_sgl_count))
-+			       cmd->tvc_prot_sgl_count, GFP_KERNEL))
- 		return;
- 
- 	target_submit(se_cmd);
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index 7bf9a6bede6d..eb3d8e35cbcd 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -368,7 +368,7 @@ static void scsiback_cmd_exec(struct vscsibk_pend *pending_req)
- 			pending_req->sc_data_direction, TARGET_SCF_ACK_KREF);
- 
- 	if (target_submit_prep(se_cmd, pending_req->cmnd, pending_req->sgl,
--			       pending_req->n_sg, NULL, 0, NULL, 0))
-+			       pending_req->n_sg, NULL, 0, NULL, 0, GFP_KERNEL))
- 		return;
- 
- 	target_submit(se_cmd);
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index 86b0d4a7df92..0543ab107723 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -157,10 +157,11 @@ int	target_init_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
- int	target_submit_prep(struct se_cmd *se_cmd, unsigned char *cdb,
- 		struct scatterlist *sgl, u32 sgl_count,
- 		struct scatterlist *sgl_bidi, u32 sgl_bidi_count,
--		struct scatterlist *sgl_prot, u32 sgl_prot_count);
-+		struct scatterlist *sgl_prot, u32 sgl_prot_count, gfp_t gfp);
- void	target_submit(struct se_cmd *se_cmd);
- sense_reason_t transport_lookup_cmd_lun(struct se_cmd *);
--sense_reason_t target_cmd_init_cdb(struct se_cmd *, unsigned char *);
-+sense_reason_t target_cmd_init_cdb(struct se_cmd *se_cmd, unsigned char *cdb,
-+				   gfp_t gfp);
- sense_reason_t target_cmd_parse_cdb(struct se_cmd *);
- void	target_submit_cmd(struct se_cmd *, struct se_session *, unsigned char *,
- 		unsigned char *, u64, u32, int, int, int);
+First four patches are target_core_iblock.c cleanup. The next six
+patches are removal of the unused macros followed by elevan patches to 
+remove the memset for local array buffers. The last patch is for
+removing the duplicate memset to initialize the buffer to 0xff.
+ 
+I've tested this patch series with creating target bdev backend with
+loop back transport, fio verification job seems to work fine.
+
+Any feedback is welcome.
+
+This is generated on today's linux-block for-next.
+
+-ck
+
+Chaitanya Kulkarni (23):
+  target/iblock: remove an extra argument
+  target/iblock: trim down line longer than 80 char
+  target/iblock: fix the type of the logs_per_phys
+  targe/pscsi: fix the warning in pscsi_complete_cmd
+  target/sbc: get rid of the warning in cmp & write
+  target/pscsi: remove unsed macro ISPRINT
+  target/stat: remove unsed macro ISPRINT
+  target/stat: remove unsed macro NONE
+  target/stat: remove unsed macro
+  target/iscsi: remove unsed macro TEXT_LEN
+  target/iscsi: remove unsed macro PRINT_BUF
+  target/iscsi: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/configfs: remove the memset with declare-init
+  target/pr: remove the memset with declare-init
+  target/pr: remove the memset with declare-init
+  target/pr: remove the memset with declare-init
+  target/core: don't duplicate memset 0xff
+
+ drivers/target/iscsi/iscsi_target_configfs.c |  3 +-
+ drivers/target/iscsi/iscsi_target_nego.c     |  1 -
+ drivers/target/iscsi/iscsi_target_stat.c     |  1 -
+ drivers/target/iscsi/iscsi_target_util.c     | 17 ---------
+ drivers/target/target_core_configfs.c        | 25 ++++---------
+ drivers/target/target_core_file.c            |  3 +-
+ drivers/target/target_core_iblock.c          | 37 ++++++++++----------
+ drivers/target/target_core_pr.c              | 36 +++++++------------
+ drivers/target/target_core_pscsi.c           |  5 ++-
+ drivers/target/target_core_sbc.c             |  4 +--
+ drivers/target/target_core_stat.c            |  3 --
+ 11 files changed, 45 insertions(+), 90 deletions(-)
+
+Test log for fio verification job with bdev backend with loop transport:-
+# ./create_lio.sh 
++ targetcli clearconfig confirm=True
++ clear_dmesg
+All configuration cleared
++ rmdir config/target/iscsi
++ rmdir config/target/loopback
++ modprobe -r iscsi_target_mod
++ modprobe -r tcm_loop
++ modprobe -r target_core_file
++ modprobe -r target_core_pscsi
++ modprobe -r target_core_iblock
++ modprobe -r target_core_user
++ modprobe -r target_core_mod
++ lsmod
++ grep target
+++ nproc
++ make -j 64 M=drivers/target modules
++ TARGET=drivers/target
+++ uname -r
++ TARGET_DEST=/lib/modules/5.11.0blk+/kernel/drivers/target/
++ TARGET_LOOPBACK=drivers/target/loopback
+++ uname -r
++ TARGET_LOOPBACK_DEST=/lib/modules/5.11.0blk+/kernel/drivers/target/loopback
++ TARGET_ISCSI=drivers/target/iscsi/
+++ uname -r
++ TARGET_ISCSI_DEST=/lib/modules/5.11.0blk+/kernel/drivers/target/iscsi
++ cp drivers/target/target_core_file.ko drivers/target/target_core_iblock.ko drivers/target/target_core_mod.ko drivers/target/target_core_pscsi.ko drivers/target/target_core_user.ko /lib/modules/5.11.0blk+/kernel/drivers/target//
++ cp drivers/target/loopback/tcm_loop.ko /lib/modules/5.11.0blk+/kernel/drivers/target/loopback/
++ cp drivers/target/iscsi//iscsi_target_mod.ko /lib/modules/5.11.0blk+/kernel/drivers/target/iscsi/
++ find /lib/modules/5.11.0blk+/kernel/drivers/target/ -name '*ko'
++ xargs ls -l
+-rw-r--r--. 1 root root 3650814 Feb 27 18:32 /lib/modules/5.11.0blk+/kernel/drivers/target/iscsi/cxgbit/cxgbit.ko
+-rw-r--r--. 1 root root 9502192 Feb 27 21:15 /lib/modules/5.11.0blk+/kernel/drivers/target/iscsi/iscsi_target_mod.ko
+-rw-r--r--. 1 root root 9502192 Feb 27 21:02 /lib/modules/5.11.0blk+/kernel/drivers/target/loopback/iscsi_target_mod.ko
+-rw-r--r--. 1 root root  610912 Feb 27 21:15 /lib/modules/5.11.0blk+/kernel/drivers/target/loopback/tcm_loop.ko
+-rw-r--r--. 1 root root  554664 Feb 27 21:15 /lib/modules/5.11.0blk+/kernel/drivers/target/target_core_file.ko
+-rw-r--r--. 1 root root  573760 Feb 27 21:15 /lib/modules/5.11.0blk+/kernel/drivers/target/target_core_iblock.ko
+-rw-r--r--. 1 root root 9450112 Feb 27 21:15 /lib/modules/5.11.0blk+/kernel/drivers/target/target_core_mod.ko
+-rw-r--r--. 1 root root  626880 Feb 27 21:15 /lib/modules/5.11.0blk+/kernel/drivers/target/target_core_pscsi.ko
+-rw-r--r--. 1 root root 1044992 Feb 27 21:15 /lib/modules/5.11.0blk+/kernel/drivers/target/target_core_user.ko
+-rw-r--r--. 1 root root 1808854 Feb 27 18:32 /lib/modules/5.11.0blk+/kernel/drivers/target/tcm_fc/tcm_fc.ko
++ modprobe target_core_file
++ modprobe target_core_pscsi
++ modprobe target_core_iblock
++ modprobe target_core_user
++ modprobe target_core_mod
++ lsmod
++ grep target_core
+target_core_user       57344  0 
+uio                    24576  1 target_core_user
+target_core_iblock     28672  0 
+target_core_pscsi      28672  0 
+target_core_file       28672  0 
+target_core_mod       450560  4 target_core_file,target_core_iblock,target_core_pscsi,target_core_user
++ tree config/target
+config/target
+├── core
+│   └── alua
+│       └── lu_gps
+│           └── default_lu_gp
+│               ├── lu_gp_id
+│               └── members
+├── dbroot
+└── version
+
+4 directories, 4 files
++ targetcli restoreconfig ./lio.json
+Configuration restored, 2 recoverable errors:
+Storage Object block/bdev: Cannot set attribute alua_support: [Errno 22] Invalid argument, skipped
+Storage Object block/bdev: Cannot set attribute pgr_support: [Errno 22] Invalid argument, skipped
++ lsscsi
+[0:0:0:0]    disk    ATA      QEMU HARDDISK    2.5+  /dev/sdc 
+[0:0:1:0]    disk    ATA      QEMU HARDDISK    2.5+  /dev/sdd 
+[1:0:0:0]    disk    ATA      QEMU HARDDISK    2.5+  /dev/sda 
+[1:0:1:0]    disk    ATA      QEMU HARDDISK    2.5+  /dev/sdb 
+[2:0:1:0]    disk    LIO-ORG  bdev             4.0   /dev/sde 
+# 
+# 
+# 
+# cat fio/verify.fio 
+[write-and-verify]
+rw=randwrite
+bs=4k
+direct=1
+ioengine=libaio
+iodepth=16
+norandommap
+randrepeat=0
+verify=crc32c
+size=500m
+group_reporting
+# lsblk | grep sde 
+sde                 8:64   0    2G  0 disk 
+# fio fio/verify.fio --filename=/dev/sde
+write-and-verify: (g=0): rw=randwrite, bs=(R) 4096B-4096B, (W) 4096B-4096B, (T) 4096B-4096B, ioengine=libaio, iodepth=16
+fio-3.8-5-g464b
+Starting 1 process
+Jobs: 1 (f=1): [V(1)][84.6%][r=81.2MiB/s,w=0KiB/s][r=20.8k,w=0 IOPS][eta 00m:02s]      
+write-and-verify: (groupid=0, jobs=1): err= 0: pid=20096: Sat Feb 27 21:17:35 2021
+   read: IOPS=21.3k, BW=83.3MiB/s (87.4MB/s)(316MiB/3796msec)
+    slat (usec): min=9, max=348, avg=11.37, stdev= 4.64
+    clat (usec): min=138, max=1946, avg=737.14, stdev=199.40
+     lat (usec): min=208, max=2273, avg=748.62, stdev=202.00
+    clat percentiles (usec):
+     |  1.00th=[  490],  5.00th=[  502], 10.00th=[  519], 20.00th=[  701],
+     | 30.00th=[  709], 40.00th=[  717], 50.00th=[  725], 60.00th=[  725],
+     | 70.00th=[  725], 80.00th=[  734], 90.00th=[  750], 95.00th=[ 1352],
+     | 99.00th=[ 1549], 99.50th=[ 1598], 99.90th=[ 1844], 99.95th=[ 1876],
+     | 99.99th=[ 1926]
+  write: IOPS=17.0k, BW=70.2MiB/s (73.6MB/s)(500MiB/7123msec)
+    slat (usec): min=10, max=420, avg=13.99, stdev= 5.67
+    clat (usec): min=103, max=2436, avg=875.65, stdev=233.59
+     lat (usec): min=116, max=2508, avg=889.75, stdev=236.91
+    clat percentiles (usec):
+     |  1.00th=[  498],  5.00th=[  611], 10.00th=[  709], 20.00th=[  791],
+     | 30.00th=[  807], 40.00th=[  816], 50.00th=[  824], 60.00th=[  832],
+     | 70.00th=[  848], 80.00th=[  906], 90.00th=[  996], 95.00th=[ 1516],
+     | 99.00th=[ 1795], 99.50th=[ 1876], 99.90th=[ 2073], 99.95th=[ 2147],
+     | 99.99th=[ 2343]
+   bw (  KiB/s): min=16864, max=90064, per=94.95%, avg=68247.93, stdev=15516.59, samples=15
+   iops        : min= 4216, max=22516, avg=17061.93, stdev=3879.14, samples=15
+  lat (usec)   : 250=0.01%, 500=2.09%, 750=40.08%, 1000=49.07%
+  lat (msec)   : 2=8.63%, 4=0.13%
+  cpu          : usr=5.50%, sys=26.40%, ctx=13071, majf=0, minf=1913
+  IO depths    : 1=0.1%, 2=0.1%, 4=0.1%, 8=0.1%, 16=100.0%, 32=0.0%, >=64=0.0%
+     submit    : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
+     complete  : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.1%, 32=0.0%, 64=0.0%, >=64=0.0%
+     issued rwts: total=80978,128000,0,0 short=0,0,0,0 dropped=0,0,0,0
+     latency   : target=0, window=0, percentile=100.00%, depth=16
+
+Run status group 0 (all jobs):
+   READ: bw=83.3MiB/s (87.4MB/s), 83.3MiB/s-83.3MiB/s (87.4MB/s-87.4MB/s), io=316MiB (332MB), run=3796-3796msec
+  WRITE: bw=70.2MiB/s (73.6MB/s), 70.2MiB/s-70.2MiB/s (73.6MB/s-73.6MB/s), io=500MiB (524MB), run=7123-7123msec
+
+Disk stats (read/write):
+  sde: ios=78668/128000, merge=0/0, ticks=47413/92827, in_queue=140240, util=99.16%
+# targetcli clearconfig confirm=True
+All configuration cleared
+#
 -- 
-2.25.1
+2.22.1
 
