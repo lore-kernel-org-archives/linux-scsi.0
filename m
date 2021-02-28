@@ -2,118 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 428C4C433E6
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 06:01:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56AA1C433DB
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 09:09:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13CF164E54
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 06:01:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20EFD64E4B
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 09:09:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230270AbhB1GBq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 Feb 2021 01:01:46 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:30790 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230190AbhB1GBg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Feb 2021 01:01:36 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1614492095; x=1646028095;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=xtQnv3V07SWR9jK26U/cYEcspOo5BaukAClUamTYQao=;
-  b=h9tLIlrhalIjxcqQ/Si/wxiUc2aBclpuoOlNiTVp5M2QqUpftN94JuoT
-   wZCCmOL1kxlVlTwAArj4EkSl43dEEZHIQ1dzOq6scy4lBHke/FBecY7fl
-   cUm6RbyjyrrieO1Ib7zfixysrb3xm1HQ9e1Zf0yWE/tkAuuVW4pzhTelD
-   bqDziA4NXbiEJnPU8zCOqQIIfQbgYB8YKL1qbiDG/ohcJjiFjRELZCCvo
-   1IMcqV4Oi9ystV0He+PTTk8FKvPIWppdaVtvWYFhi+tVaqeJQXS4GkUH+
-   cO1ANhldzAOMC3XlMNILO2rOil8Fw3yF9orudkaU3ratGbvvLIeFJcTQD
-   A==;
-IronPort-SDR: tOUScKfnEW/ZZ6LlKdvuoYfKu2X1UP8359z9PCcAu7g47BOnZuap+BjZ7KnVHqstmOzSSDOz/L
- K6wO739GNLRJBdPL2d8wSv9Zfdcr6mgSltqkrd1itvYwZLUSo1kF64t+MG8sODYLdq2vbENpWi
- F1y17AmB4NMFYa+k9BH9VaBCNY/Hzqiehp53KXZglivQet2GkGzEHSknhSB+mKqihJ9oLuSIC+
- NqOVxqrDfF9fJREyAxbEg3ZIQWAy9TWxCfXrX2DK3ZSk87JwBb0WwHi8544TMYIEEJa0WtNmd2
- 314=
-X-IronPort-AV: E=Sophos;i="5.81,211,1610380800"; 
-   d="scan'208";a="160973086"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Feb 2021 14:00:33 +0800
-IronPort-SDR: goUMcAYGdcCq3YsdCLKX02O2KC1L5A0c6nhC4q58lTehz463wcbGTmKNTa8OwfX53iDP7/LXbE
- dk3uTTAmv9TfHOMEebAY/KW6Gjl1ViZEBKkJDlpxgPcI7L8AVTsq8Rh/9cMk7Sbk4QIZPXGbbb
- Wz0+84HxK5Fm+NX0HSTgXGR2WKLVaWleGqDcrIJy//JHtfpR4DWvKL5R0CWvGvAHpsch8290pp
- dy7JyisJjTMBbKZlctBdumoPtrOHnCRM49Dht3REWv84YwOobmxRczjB4rlBxxPZbTy0TrCJlu
- C0NMz+YBvAXddsvAqEOeVGDF
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2021 21:41:51 -0800
-IronPort-SDR: JamS46YIsxrQudnalu4I0e/yXjsSucaG7mpJCvZac3RrtXAbFDsxx/ZelHF/QOQNQh19HR62J6
- v6kmcQsgMPkD7h2Hz7q5gSWyo8Awo2jIwlkveDQ1R6EfV4DikySY9yCqK5YvwVpjxIXILrPE2b
- gw4o9fT/Xs+O35ESZDGEYzaXetC0ewQqIoRxIGJ0xU2Iu5f6hkabMlfGQGzqk5QizrXu7RrcVg
- +UOXJqqscQ9vDpAoKnwzE5vZfm+BCP7Cnmg5HJoAyZFn0Dw+9A1tmhxWX1xRK+kU+mXlYTUfE0
- Egk=
-WDCIronportException: Internal
-Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip01.wdc.com with ESMTP; 27 Feb 2021 22:00:33 -0800
-From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     martin.petersen@oracle.com, hare@suse.de, jejb@linux.ibm.com,
-        mlombard@redhat.com, michael.christie@oracle.com,
-        bvanassche@acm.org, houpu@bytedance.com,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [PATCH 23/23] target/core: don't duplicate memset 0xff
-Date:   Sat, 27 Feb 2021 21:56:45 -0800
-Message-Id: <20210228055645.22253-24-chaitanya.kulkarni@wdc.com>
-X-Mailer: git-send-email 2.22.1.dirty
-In-Reply-To: <20210228055645.22253-1-chaitanya.kulkarni@wdc.com>
-References: <20210228055645.22253-1-chaitanya.kulkarni@wdc.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S230424AbhB1JJE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Feb 2021 04:09:04 -0500
+Received: from authsmtp20.register.it ([81.88.48.43]:51219 "EHLO
+        authsmtp.register.it" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230075AbhB1JJE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Feb 2021 04:09:04 -0500
+X-Greylist: delayed 392 seconds by postgrey-1.27 at vger.kernel.org; Sun, 28 Feb 2021 04:09:03 EST
+Received: from [192.168.43.2] ([151.47.221.112])
+        by cmsmtp with ESMTPSA
+        id GHxUlYwKnh1v8GHxUlnH8X; Sun, 28 Feb 2021 10:01:49 +0100
+X-Rid:  guido@trentalancia.com@151.47.221.112
+Message-ID: <1614502908.6594.6.camel@trentalancia.com>
+Subject: [PATCH RESEND v2] scsi: ignore Synchronize Cache command failures
+ to keep using drives not supporting it
+From:   Guido Trentalancia <guido@trentalancia.com>
+To:     linux-scsi@vger.kernel.org
+Date:   Sun, 28 Feb 2021 10:01:48 +0100
+X-Priority: 1
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-CMAE-Envelope: MS4xfKhi5SQh0KYqSRe32f2eO8bKVbgW8INWgj5x0RRqZGoGxBBgaDDaOWjE6XwcoH7DP8qClx+OZgXAC7dKEbGNdn6BExWZc/1qs34aaFAwXnNaaOjLQavf
+ Agf8DuAOtlszfwqo3D7elIuubFvJuKl/qm0T1aDK1cQINt+jMqVhITGVxIRc+t45ijyQo+di2cSIfUJD8jn8awjXww5SXN0Kxgk=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function fd_do_prot_fill() is called from two callers
-fd_do_prot_unmap() and fd_format_prot(). Both the callers initialize
-the passed buffer with memset to 0xff with its length.
+Many obsolete hard drives do not support the Synchronize Cache SCSI
+command. Such command is generally issued during fsync() calls which
+at the moment therefore fail with the ILLEGAL_REQUEST sense key.
 
-Instead of duplicating the memset call, move the memset call to the
-fd_do_prot_fill().
+Since this failure is currently treated as critical in the kernel SCSI
+disk driver, such obsolete hard drives cannot be used anymore: they
+cannot be formatted, mounted and/or checked using tools such as e2fsprogs.
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Because there is nothing which can be done if the drive does not support
+such command, such ILLEGAL_REQUEST should be treated as non-critical so
+that the underlying operation does not fail and the obsolete hard drive
+can be used normally.
+
+This patch disables the Write Cache feature and therefore the cache
+flushing functionality, as a precaution on hard drives which do not
+support the Synchronize Cache command.
+
+Fixes bug: https://bugzilla.kernel.org/show_bug.cgi?id=203635
+
+Signed-off-by: Guido Trentalancia <guido@trentalancia.com>
 ---
- drivers/target/target_core_file.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/sd.c |   29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 5a66854def95..ef4a8e189fba 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -498,6 +498,7 @@ fd_do_prot_fill(struct se_device *se_dev, sector_t lba, sector_t nolb,
- 
- 	prot_length = nolb * se_dev->prot_length;
- 
-+	memset(buf, 0xff, bufsize);
- 	for (prot = 0; prot < prot_length;) {
- 		sector_t len = min_t(sector_t, bufsize, prot_length - prot);
- 		ssize_t ret = kernel_write(prot_fd, buf, len, &pos);
-@@ -523,7 +524,6 @@ fd_do_prot_unmap(struct se_cmd *cmd, sector_t lba, sector_t nolb)
- 		pr_err("Unable to allocate FILEIO prot buf\n");
- 		return -ENOMEM;
+diff -pru linux-5.0.2-orig/drivers/scsi/sd.c linux-5.0.2/drivers/scsi/sd.c
+--- linux-5.0.2-orig/drivers/scsi/sd.c	2019-03-17 18:22:04.822720851 +0100
++++ linux-5.0.2/drivers/scsi/sd.c	2019-03-20 17:41:44.526957307 +0100
+@@ -22,6 +22,10 @@
+  *	 - Badari Pulavarty <pbadari@us.ibm.com>, Matthew Wilcox 
+  *	   <willy@debian.org>, Kurt Garloff <garloff@suse.de>: 
+  *	   Support 32k/1M disks.
++ *	 - Guido Trentalancia <guido@trentalancia.com> ignore Synchronize
++ *	   Cache command failures on hard-drives that do not support it
++ *	   and disable the Write Cache functionality on such devices as a
++ *	   precaution: this allows to keep using several obsolete drives.
+  *
+  *	Logging policy (needs CONFIG_SCSI_LOGGING defined):
+  *	 - setting up transfer: SCSI_LOG_HLQUEUE levels 1 and 2
+@@ -1633,6 +1637,20 @@ static int sd_sync_cache(struct scsi_dis
  	}
--	memset(buf, 0xff, PAGE_SIZE);
  
- 	rc = fd_do_prot_fill(cmd->se_dev, lba, nolb, buf, PAGE_SIZE);
+ 	if (res) {
++		/*
++		 * sshdr.sense_key == ILLEGAL_REQUEST means this drive
++		 * doesn't support sync. There's not much to do and
++		 * sync shouldn't fail.
++		 */
++		if (sshdr->sense_key == ILLEGAL_REQUEST && sshdr->asc == 0x20) {
++			if (sdkp->WCE) {
++				sdkp->WCE = 0;
++				sd_printk(KERN_NOTICE, sdkp, "Drive does not support Synchronize Cache(10) command: disabling write cache.\n");
++				sd_set_flush_flag(sdkp);
++			}
++			return 0;
++		}
++
+ 		sd_print_result(sdkp, "Synchronize Cache(10) failed", res);
  
-@@ -882,7 +882,6 @@ static int fd_format_prot(struct se_device *dev)
- 		 (unsigned long long)(dev->transport->get_blocks(dev) + 1) *
- 					dev->prot_length);
- 
--	memset(buf, 0xff, unit_size);
- 	ret = fd_do_prot_fill(dev, 0, dev->transport->get_blocks(dev) + 1,
- 			      buf, unit_size);
- 	vfree(buf);
--- 
-2.22.1
-
+ 		if (driver_byte(res) == DRIVER_SENSE)
+@@ -2022,6 +2040,17 @@ static int sd_done(struct scsi_cmnd *SCp
+ 					req->rq_flags |= RQF_QUIET;
+ 				}
+ 				break;
++			case SYNCHRONIZE_CACHE:
++				if (sshdr.asc == 0x20) {
++					if (sdkp->WCE) {
++						sdkp->WCE = 0;
++						sd_printk(KERN_NOTICE, sdkp, "Drive does not support Synchronize Cache(10) command: disabling write cache.\n");
++						sd_set_flush_flag(sdkp);
++					}
++					SCpnt->result = 0;
++					good_bytes = scsi_bufflen(SCpnt);
++				}
++				break;
+ 			}
+ 		}
+ 		break;
