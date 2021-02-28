@@ -5,69 +5,68 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7149DC433E6
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 15:06:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3D4CC433E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 15:06:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C21964E85
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 15:06:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5A6C64EAF
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 15:06:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231142AbhB1PGT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 Feb 2021 10:06:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50206 "EHLO
+        id S231154AbhB1PGZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Feb 2021 10:06:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230505AbhB1PFh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Feb 2021 10:05:37 -0500
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 624DBC061797;
-        Sun, 28 Feb 2021 07:04:19 -0800 (PST)
-Received: by mail-pg1-x535.google.com with SMTP id x29so1484754pgk.6;
-        Sun, 28 Feb 2021 07:04:19 -0800 (PST)
+        with ESMTP id S230496AbhB1PFj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Feb 2021 10:05:39 -0500
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D25B5C0617AA;
+        Sun, 28 Feb 2021 07:04:21 -0800 (PST)
+Received: by mail-pf1-x42c.google.com with SMTP id o188so3025539pfg.2;
+        Sun, 28 Feb 2021 07:04:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=IlP+UqaTTH6S778JlrTl0GossJzFFQBlG/jMumY6xKg=;
-        b=J0QoRw2N/2yfzZ3toJcfKV7iDJelt9eUQKb6RRq4Kd6ay2raOQT9S/TwUdFfypau8h
-         vjkHtPR1oSYaI4rJmrZaf6IUip0nmHA0rrHfe6CTGDCPXaLBZnsZ3grf0BrWLWMPbiCj
-         JHcYaTcEbMGmgQ17OPUu1z7YG4Gcz6hldTjKLlsW5QNTFZH0sNSUy1pqnR6uNsMhnChq
-         wRSgVqWI3aKKA1T4jXyBX0kT+HZfQVX+oeIXWwMhyAs3/jIXBA0rRl5df/erDwToudUm
-         zPi8NTk6eCUd+2cxVKP6i/4Mjr6QA85zeSp4eqkLMry2KrwuQTFlYt0s5cOBCq8Aw3Eg
-         6ikA==
+        bh=yOO4CxJRTj0ILG6kUCTIHN05nkW/mARc3jk1rfoAu18=;
+        b=K2lcx9nM7T2VHEIAbyzeDQJpMtgyBf3IYLAYs03/EGTZOuFiONpMdarScgMXi6TJF8
+         IM4/gElwbzjKBqoGmNjjMSNt01/C8TQzf8LghIzkBmpSDXsxqon4koI8TIET9GppicR4
+         y760uZvE4+8/N7iFxm75lwFs0XNXd3GE+/a3T8wylj+gJtdrDTiM0+TuJHTcbvvgpL23
+         sAI5q3FH508nLAWjUs+QlwPVIgAEeaB9pGKkYRupWzf+XILldMseMTs3GpPv4oTuIYaX
+         rcmH1zhZiu0ijoaoOuAagOtXRCcWEZ8WuElHgya6YTFZLW/C3BEV/VMXptKmxmDh+Pw9
+         qENA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=IlP+UqaTTH6S778JlrTl0GossJzFFQBlG/jMumY6xKg=;
-        b=PGzPaAfZFlOeQHX/NC0tGUeTwcyO7RGi99yTYRb1eNP4AWgqu63Vhm+GuQv3lbLkph
-         Z2gpn6yZR1sAhWp/GlTzeynuI2Bknpev5kDPXwkK4k8nfaLtCL8su43ncSR5956bBKjv
-         TdXVFkTvzoDf+Qmdsb946MKWVNzabgN9aKdaL+Zx1/JaiOODu8kzONUyp/ddHkHDKpT4
-         VegeK3dM5yVxRCLWHLWo4gZ18enRq/Tp90B+2+48DbHhK1NtMm/uVDEP3WP0T/aIEuIf
-         vaRGMEJrR6mmimLwM+kD2EtsgRIHm+iKPze+viO1WnJANmQyrJRLFUm6ZVkK3e7Z2bl4
-         28yw==
-X-Gm-Message-State: AOAM531sGMfxMJcggRiXDlKsMqzxxuzmqWjUSk2AXt132OCR4KKqpu0N
-        XDtsUyKZenocVdm4UkENJovcO9NeO05jIQ==
-X-Google-Smtp-Source: ABdhPJzt3j/jSpIF5FDNrIEGk8aix6RpyugpCS9ngRugRC+2zmIkhMDolzJWu2IRrQWYFPZmlfzD9g==
-X-Received: by 2002:a65:6107:: with SMTP id z7mr10290870pgu.435.1614524658971;
-        Sun, 28 Feb 2021 07:04:18 -0800 (PST)
+        bh=yOO4CxJRTj0ILG6kUCTIHN05nkW/mARc3jk1rfoAu18=;
+        b=tlFaFU5kqKNSklLN/oFBHiOZB/0SfelgiJEQ9lySOzyPAXxfXxu4ZddZQhRYN06OGV
+         0XTgZFiCIB2wDUVRL5m1NwL1Cdneud7cNxEuhvR36lpVp4KS+gu+DTmrV30k7T6aMBWZ
+         DcPSlR3ucbra+LZ/j3AJLeanBqy/n2Du+LCtHt4q6mhMr0JN3yC2kx9brYuL0pj4MnMz
+         FqKd89qGzvAHEPP9jZfytYpxBfczwlfr7mjVdo6oCN0ZM/RN1E69x61kile8fx1M6rna
+         LE/ysRISXj9xQrPtS6kzlwvT0VzcDSatHKaSgZCa+/zVv5hcqR0qY3FGNnz3Y8FKH4J7
+         h0Mw==
+X-Gm-Message-State: AOAM533/mOjUXGkySSNUWVhjjM/t/qLIbAS6ER4VNTQP+MRTnLsVW1Gx
+        9s6MDCoQpX5BnrF4IrcQ+SEKkENfJcFA8g==
+X-Google-Smtp-Source: ABdhPJy8xu36tZnoxa2BD/PA7L7y6Bh6U778WNnV2EsVhJugUaQ0W1Tm5FouNd2SqRVV1aqqU9HqFg==
+X-Received: by 2002:a63:2254:: with SMTP id t20mr10040743pgm.230.1614524661481;
+        Sun, 28 Feb 2021 07:04:21 -0800 (PST)
 Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:0:561f:afde:af07:8820])
-        by smtp.gmail.com with ESMTPSA id 142sm8391331pfz.196.2021.02.28.07.04.18
+        by smtp.gmail.com with ESMTPSA id 142sm8391331pfz.196.2021.02.28.07.04.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 28 Feb 2021 07:04:18 -0800 (PST)
+        Sun, 28 Feb 2021 07:04:21 -0800 (PST)
 From:   Tianyu Lan <ltykernel@gmail.com>
 To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
+        wei.liu@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
-        vkuznets@redhat.com, thomas.lendacky@amd.com,
-        brijesh.singh@amd.com, sunilmut@microsoft.com
-Subject: [RFC PATCH 9/12] x86/Hyper-V: Add new parameter for vmbus_sendpacket_pagebuffer()/mpb_desc()
-Date:   Sun, 28 Feb 2021 10:03:12 -0500
-Message-Id: <20210228150315.2552437-10-ltykernel@gmail.com>
+        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, vkuznets@redhat.com,
+        thomas.lendacky@amd.com, brijesh.singh@amd.com,
+        sunilmut@microsoft.com
+Subject: [RFC PATCH 12/12] HV/Storvsc: Add bounce buffer support for Storvsc
+Date:   Sun, 28 Feb 2021 10:03:15 -0500
+Message-Id: <20210228150315.2552437-13-ltykernel@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210228150315.2552437-1-ltykernel@gmail.com>
 References: <20210228150315.2552437-1-ltykernel@gmail.com>
@@ -79,225 +78,73 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-Add new parameter io_type and struct bounce_pkt for vmbus_sendpacket_pagebuffer()
-and vmbus_sendpacket_mpb_desc() in order to add bounce buffer support
-later.
+Storvsc driver needs to reverse additional bounce
+buffers to receive multipagebuffer packet and copy
+data from brounce buffer when get response messge
+from message.
 
 Signed-off-by: Sunil Muthuswamy <sunilmut@microsoft.com>
 Co-Developed-by: Sunil Muthuswamy <sunilmut@microsoft.com>
 Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
 ---
- drivers/hv/channel.c            |  7 +++++--
- drivers/hv/hyperv_vmbus.h       | 12 ++++++++++++
- drivers/net/hyperv/hyperv_net.h |  1 +
- drivers/net/hyperv/netvsc.c     |  5 ++++-
- drivers/scsi/storvsc_drv.c      | 23 +++++++++++++++++------
- include/linux/hyperv.h          | 16 ++++++++++++++--
- 6 files changed, 53 insertions(+), 11 deletions(-)
+ drivers/scsi/storvsc_drv.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/drivers/hv/channel.c b/drivers/hv/channel.c
-index 4c05b1488649..976ef99dda28 100644
---- a/drivers/hv/channel.c
-+++ b/drivers/hv/channel.c
-@@ -1044,7 +1044,8 @@ EXPORT_SYMBOL(vmbus_sendpacket);
- int vmbus_sendpacket_pagebuffer(struct vmbus_channel *channel,
- 				struct hv_page_buffer pagebuffers[],
- 				u32 pagecount, void *buffer, u32 bufferlen,
--				u64 requestid)
-+				u64 requestid, u8 io_type,
-+				struct hv_bounce_pkt **bounce_pkt)
- {
- 	int i;
- 	struct vmbus_channel_packet_page_buffer desc;
-@@ -1101,7 +1102,9 @@ EXPORT_SYMBOL_GPL(vmbus_sendpacket_pagebuffer);
- int vmbus_sendpacket_mpb_desc(struct vmbus_channel *channel,
- 			      struct vmbus_packet_mpb_array *desc,
- 			      u32 desc_size,
--			      void *buffer, u32 bufferlen, u64 requestid)
-+			      void *buffer, u32 bufferlen, u64 requestid,
-+			      u32 pfn_count, u8 io_type,
-+			      struct hv_bounce_pkt **bounce_pkt)
- {
- 	u32 packetlen;
- 	u32 packetlen_aligned;
-diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
-index 7edf2be60d2c..7677f083d33a 100644
---- a/drivers/hv/hyperv_vmbus.h
-+++ b/drivers/hv/hyperv_vmbus.h
-@@ -57,6 +57,18 @@ union hv_monitor_trigger_state {
- 	};
- };
- 
-+/*
-+ * Hyper-V bounce packet. Each in-use bounce packet is mapped to a vmbus
-+ * transaction and contains a list of bounce pages for that transaction.
-+ */
-+struct hv_bounce_pkt {
-+	/* Link to the next bounce packet, when it is in the free list */
-+	struct list_head link;
-+	struct list_head bounce_page_head;
-+	u32 flags;
-+};
-+
-+
- /*
-  * All vmbus channels initially start with zero bounce pages and are required
-  * to set any non-zero size, if needed.
-diff --git a/drivers/net/hyperv/hyperv_net.h b/drivers/net/hyperv/hyperv_net.h
-index b3a43c4ec8ab..11266b92bcf0 100644
---- a/drivers/net/hyperv/hyperv_net.h
-+++ b/drivers/net/hyperv/hyperv_net.h
-@@ -130,6 +130,7 @@ struct hv_netvsc_packet {
- 	u32 total_bytes;
- 	u32 send_buf_index;
- 	u32 total_data_buflen;
-+	struct hv_bounce_pkt *bounce_pkt;
- };
- 
- #define NETVSC_HASH_KEYLEN 40
-diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
-index 08d73401bb28..77657c5acc65 100644
---- a/drivers/net/hyperv/netvsc.c
-+++ b/drivers/net/hyperv/netvsc.c
-@@ -926,14 +926,17 @@ static inline int netvsc_send_pkt(
- 
- 	trace_nvsp_send_pkt(ndev, out_channel, rpkt);
- 
-+	packet->bounce_pkt = NULL;
- 	if (packet->page_buf_cnt) {
- 		if (packet->cp_partial)
- 			pb += packet->rmsg_pgcnt;
- 
-+		/* The I/O type is always 'write' for netvsc */
- 		ret = vmbus_sendpacket_pagebuffer(out_channel,
- 						  pb, packet->page_buf_cnt,
- 						  &nvmsg, sizeof(nvmsg),
--						  req_id);
-+						  req_id, IO_TYPE_WRITE,
-+						  &packet->bounce_pkt);
- 	} else {
- 		ret = vmbus_sendpacket(out_channel,
- 				       &nvmsg, sizeof(nvmsg),
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 2e4fa77445fd..c5b4974eb41f 100644
+index c5b4974eb41f..4ae8e2a427e4 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -31,6 +31,7 @@
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_transport_fc.h>
+@@ -33,6 +33,8 @@
  #include <scsi/scsi_transport.h>
-+#include <asm/mshyperv.h>
+ #include <asm/mshyperv.h>
  
++#include "../hv/hyperv_vmbus.h"
++
  /*
   * All wire protocol details (storage protocol between the guest and the host)
-@@ -427,6 +428,7 @@ struct storvsc_cmd_request {
- 	u32 payload_sz;
+  * are consolidated here.
+@@ -725,6 +727,10 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
+ 	/* Add the sub-channel to the array of available channels. */
+ 	stor_device->stor_chns[new_sc->target_cpu] = new_sc;
+ 	cpumask_set_cpu(new_sc->target_cpu, &stor_device->alloced_cpus);
++
++	if (hv_bounce_resources_reserve(device->channel,
++			stor_device->max_transfer_bytes))
++		pr_warn("Fail to reserve bounce buffer\n");
+ }
  
- 	struct vstor_packet vstor_packet;
-+	struct hv_bounce_pkt *bounce_pkt;
- };
+ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
+@@ -964,6 +970,18 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
+ 	stor_device->max_transfer_bytes =
+ 		vstor_packet->storage_channel_properties.max_transfer_bytes;
  
- 
-@@ -1390,7 +1392,8 @@ static struct vmbus_channel *get_og_chn(struct storvsc_device *stor_device,
- 
- 
- static int storvsc_do_io(struct hv_device *device,
--			 struct storvsc_cmd_request *request, u16 q_num)
-+			 struct storvsc_cmd_request *request, u16 q_num,
-+			 u32 pfn_count)
- {
- 	struct storvsc_device *stor_device;
- 	struct vstor_packet *vstor_packet;
-@@ -1493,14 +1496,18 @@ static int storvsc_do_io(struct hv_device *device,
- 
- 	vstor_packet->operation = VSTOR_OPERATION_EXECUTE_SRB;
- 
-+	request->bounce_pkt = NULL;
- 	if (request->payload->range.len) {
-+		struct vmscsi_request *vm_srb = &request->vstor_packet.vm_srb;
- 
- 		ret = vmbus_sendpacket_mpb_desc(outgoing_channel,
- 				request->payload, request->payload_sz,
- 				vstor_packet,
- 				(sizeof(struct vstor_packet) -
- 				vmscsi_size_delta),
--				(unsigned long)request);
-+				(unsigned long)request,
-+				pfn_count,
-+				vm_srb->data_in, &request->bounce_pkt);
- 	} else {
- 		ret = vmbus_sendpacket(outgoing_channel, vstor_packet,
- 			       (sizeof(struct vstor_packet) -
-@@ -1510,8 +1517,10 @@ static int storvsc_do_io(struct hv_device *device,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
- 	}
- 
--	if (ret != 0)
-+	if (ret != 0) {
-+		request->bounce_pkt = NULL;
- 		return ret;
++	/*
++	 * Reserve enough bounce resources to be able to support paging
++	 * operations under low memory conditions, that cannot rely on
++	 * additional resources to be allocated.
++	 */
++	ret =  hv_bounce_resources_reserve(device->channel,
++			stor_device->max_transfer_bytes);
++	if (ret < 0) {
++		pr_warn("Fail to reserve bounce buffer\n");
++		goto done;
 +	}
- 
- 	atomic_inc(&stor_device->num_outstanding_req);
- 
-@@ -1825,14 +1834,16 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	cmd_request->payload_sz = payload_sz;
- 
- 	/* Invokes the vsc to start an IO */
--	ret = storvsc_do_io(dev, cmd_request, get_cpu());
-+	ret = storvsc_do_io(dev, cmd_request, get_cpu(), sg_count);
- 	put_cpu();
- 
--	if (ret == -EAGAIN) {
-+	if (ret) {
- 		if (payload_sz > sizeof(cmd_request->mpb))
- 			kfree(payload);
- 		/* no more space */
--		return SCSI_MLQUEUE_DEVICE_BUSY;
-+		if (ret == -EAGAIN || ret == -ENOSPC)
-+			return SCSI_MLQUEUE_DEVICE_BUSY;
-+		return ret;
- 	}
- 
- 	return 0;
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index d518aba17565..d1a936091665 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1184,19 +1184,31 @@ extern int vmbus_sendpacket(struct vmbus_channel *channel,
- 				  enum vmbus_packet_type type,
- 				  u32 flags);
- 
-+#define IO_TYPE_WRITE	0
-+#define IO_TYPE_READ	1
-+#define IO_TYPE_UNKNOWN 2
 +
-+struct hv_bounce_pkt;
-+
- extern int vmbus_sendpacket_pagebuffer(struct vmbus_channel *channel,
- 					    struct hv_page_buffer pagebuffers[],
- 					    u32 pagecount,
- 					    void *buffer,
- 					    u32 bufferlen,
--					    u64 requestid);
-+					    u64 requestid,
-+					    u8 io_type,
-+					    struct hv_bounce_pkt **bounce_pkt);
+ 	if (!is_fc)
+ 		goto done;
  
- extern int vmbus_sendpacket_mpb_desc(struct vmbus_channel *channel,
- 				     struct vmbus_packet_mpb_array *mpb,
- 				     u32 desc_size,
- 				     void *buffer,
- 				     u32 bufferlen,
--				     u64 requestid);
-+				     u64 requestid,
-+				     u32 pfn_count,
-+				     u8 io_type,
-+				     struct hv_bounce_pkt **bounce_pkt);
-+
+@@ -1263,6 +1281,11 @@ static void storvsc_on_channel_callback(void *context)
  
- extern int vmbus_establish_gpadl(struct vmbus_channel *channel,
- 				      void *kbuffer,
+ 		request = (struct storvsc_cmd_request *)(unsigned long)cmd_rqst;
+ 
++		if (desc->type == VM_PKT_COMP && request->bounce_pkt) {
++			hv_pkt_bounce(channel, request->bounce_pkt);
++			request->bounce_pkt = NULL;
++		}
++
+ 		if (request == &stor_device->init_request ||
+ 		    request == &stor_device->reset_request) {
+ 			memcpy(&request->vstor_packet, packet,
 -- 
 2.25.1
 
