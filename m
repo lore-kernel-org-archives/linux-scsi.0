@@ -2,65 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C6D3C43381
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 20:14:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EF72C433DB
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 22:05:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B6F864F5E
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 20:14:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3184060238
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Feb 2021 22:05:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231292AbhB1UO5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 Feb 2021 15:14:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56770 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231267AbhB1UOv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 28 Feb 2021 15:14:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPS id C0CA564E56;
-        Sun, 28 Feb 2021 20:14:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614543250;
-        bh=bwpYvoUG/R82rdcLyck3wdoPaIEwaWZYM2zpDbKq7v4=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=uHWJWODvIczAezm8DZ7l5xuVealg5rJbFI13cabPGfJP1+V1bdFeOzQ7L68apKPuy
-         J9rDkF0sEWIBWzK55MovQgRM/Yt5jfGFrgyD6g10iQmNvusYTPC3zxB1rPuUWQ1wMf
-         +fFjlItY58x0kIXphRyOr0xAXFOpzAkV/OBEFxSssuSdBekV8veL3OzCkhYF9JbsXw
-         AxivRTkBoCIVOlO6MVESEhrWL4EjZL35L2JfdL65DgByd8ZrzIQ2UingdEHsQ4FKPZ
-         Yf2obwa2on8W/mcytsyeQ7mEBpUzxDQQ5asNY6W2TUIqgazJEwQ0vT5WB9FugCn5zv
-         +cy4a0q2LH0Yg==
-Subject: Re: [GIT PULL] final round of SCSI updates for the 5.11+ merge window
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <eadc15d02e4b01ed41de5bf0a8ea2594cfa288a8.camel@HansenPartnership.com>
-References: <eadc15d02e4b01ed41de5bf0a8ea2594cfa288a8.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <eadc15d02e4b01ed41de5bf0a8ea2594cfa288a8.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: f749d8b7a9896bc6e5ffe104cc64345037e0b152
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 0b311e34d5033fdcca4c9b5f2d9165b3604704d3
-Message-Id: <161454325076.2182.5109609372922700337.pr-tracker-bot@kernel.org>
-Date:   Sun, 28 Feb 2021 20:14:10 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S231467AbhB1WFJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Feb 2021 17:05:09 -0500
+Received: from mail-pf1-f174.google.com ([209.85.210.174]:45066 "EHLO
+        mail-pf1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231246AbhB1WFJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Feb 2021 17:05:09 -0500
+Received: by mail-pf1-f174.google.com with SMTP id j12so10167348pfj.12;
+        Sun, 28 Feb 2021 14:04:54 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=B7FKiKXAzqhJVBUKedXFnb556oEgUHUzV+54pjjDHGc=;
+        b=piBombvn7zFjetMjxaOdP2AtKNd9B7n6cYaDAB9dcscnoeNEH7OuHfTGVy2cVgHb6i
+         Pt/NN1Ccv9WJ7qy1qq5Km9sT+L2JfJW4Z9kJO12/t2pGPD+tiYTSzgzG+N1CXPXnPCr8
+         qudqkgB+cBHBmsIZCO6QCk8WX1T5YTh7MfeGSYIeu06T7TCHJIXn7H5pEC1Rox1A8SqZ
+         ONRHdHNGPk9RQ4lEqeCoBziPOBCLwq3v4ncoYQ/xA9aQjbFhnZSon9C35rfCNwngp3/I
+         xWU1acNTIDVqZ0OzP75MsFcA3nX8EO3PXfqQxI36N2YjzKVMgF92dAFEuBC9EyiWybGI
+         CW9A==
+X-Gm-Message-State: AOAM5330QVavhaThVOLAQEZz1l9S+1h6hJ3cXaAv6KsZFWJm+1R+Iz3d
+        x87kBpTrD8hfyqmxCUzCGW2iLrCdQB0=
+X-Google-Smtp-Source: ABdhPJxXWjyovkCVp5h+pXTqXjHy4EPeWmxSGIIuYAaqVMXL7cqaBns+4vXkaK/rCPVzFet507Ncqg==
+X-Received: by 2002:a65:6451:: with SMTP id s17mr2595344pgv.397.1614549867959;
+        Sun, 28 Feb 2021 14:04:27 -0800 (PST)
+Received: from ?IPv6:2601:647:4000:d7:33b2:579f:d8cd:be8a? ([2601:647:4000:d7:33b2:579f:d8cd:be8a])
+        by smtp.gmail.com with ESMTPSA id r20sm13843194pgb.3.2021.02.28.14.04.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 28 Feb 2021 14:04:27 -0800 (PST)
+Subject: Re: [bug report]null pointer at scsi_mq_exit_request+0x14 with
+ blktests srp/015
+To:     Yi Zhang <yi.zhang@redhat.com>, linux-scsi@vger.kernel.org,
+        linux-rdma@vger.kernel.org,
+        linux-block <linux-block@vger.kernel.org>
+References: <418155251.14154941.1614505772200.JavaMail.zimbra@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <2457b558-bbb7-b6b8-1cb7-94fd833fc1a8@acm.org>
+Date:   Sun, 28 Feb 2021 14:04:25 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
+MIME-Version: 1.0
+In-Reply-To: <418155251.14154941.1614505772200.JavaMail.zimbra@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sun, 28 Feb 2021 08:52:19 -0800:
+On 2/28/21 1:49 AM, Yi Zhang wrote:
+> I found this issue with blktests srp/015, could anyone help check it?
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+Which kernel tree has been used in your tests? One of Linus' trees or a
+for-next tree from a kernel maintainer?
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/0b311e34d5033fdcca4c9b5f2d9165b3604704d3
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Bart.
