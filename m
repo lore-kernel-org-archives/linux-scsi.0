@@ -2,96 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73553C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 13:14:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53022C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 13:20:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 323D964E13
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 13:14:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FA1A64D9F
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 13:20:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235495AbhCANOB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Mar 2021 08:14:01 -0500
-Received: from authsmtp41.register.it ([81.88.55.104]:49019 "EHLO
-        authsmtp.register.it" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235398AbhCANNH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2021 08:13:07 -0500
-Received: from [192.168.43.2] ([176.201.234.222])
-        by cmsmtp with ESMTPSA
-        id GiLVl1alDQ36QGiLVlKVCz; Mon, 01 Mar 2021 14:12:22 +0100
-X-Rid:  guido@trentalancia.com@176.201.234.222
-Message-ID: <1614604341.6918.28.camel@trentalancia.com>
-Subject: Re: [PATCH RESEND v2] scsi: ignore Synchronize Cache command
- failures to keep using drives not supporting it
-From:   Guido Trentalancia <guido@trentalancia.com>
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Date:   Mon, 01 Mar 2021 14:12:21 +0100
-In-Reply-To: <BL0PR04MB651464BF2CC7DAF8C6F812C4E79A9@BL0PR04MB6514.namprd04.prod.outlook.com>
-References: <1614502908.6594.6.camel@trentalancia.com>
-         <443d92dd844e329bcd40a1e59b7cc3784ed3db94.camel@HansenPartnership.com>
-         <1614582394.13266.11.camel@trentalancia.com>
-         <BL0PR04MB65146856C07649917652E540E79A9@BL0PR04MB6514.namprd04.prod.outlook.com>
-         <1614598394.4338.18.camel@trentalancia.com>
-         <BL0PR04MB651420859C04C068419711FDE79A9@BL0PR04MB6514.namprd04.prod.outlook.com>
-         <1614602388.6918.8.camel@trentalancia.com>
-         <BL0PR04MB6514A85C4B56E1370406B97BE79A9@BL0PR04MB6514.namprd04.prod.outlook.com>
-         <1614603429.6918.18.camel@trentalancia.com>
-         <BL0PR04MB651464BF2CC7DAF8C6F812C4E79A9@BL0PR04MB6514.namprd04.prod.outlook.com>
-X-Priority: 1
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-CMAE-Envelope: MS4xfMZjlmc6HKxeh9NpSHzlO4VoOMIa3s19fmx3iyXwI/KKhgMgEZ0xBD4CEIngcGikoeCfzti2hU/vTUmhVJIl1SuzA0DMj47RrtL8fT40pwqKSYHM1MG8
- ri3KyyYeiiwGmkpB0G35FSMWwkRNYXPoTNZt3mM8sOq8rlIkBXskXhXtVo02I7jTcLLUitmpIsJ3pLxbOwBKiUAgY6NMi2kBeHIADhzAbywHIjNw6+5i6qUp
- AE7Ohj2Hj5GHR94Zs7gtTQ==
+        id S235558AbhCANUr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Mar 2021 08:20:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52726 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235387AbhCANUe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2021 08:20:34 -0500
+Received: from mail-qk1-x729.google.com (mail-qk1-x729.google.com [IPv6:2607:f8b0:4864:20::729])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D0CAC061756;
+        Mon,  1 Mar 2021 05:19:54 -0800 (PST)
+Received: by mail-qk1-x729.google.com with SMTP id d20so15379169qkc.2;
+        Mon, 01 Mar 2021 05:19:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=XXw0zUB4V26WpLNROVKNFQyeOrOBkkYV5mywYnR1B9Q=;
+        b=VXKXSRJv/IMgWRmYoQQ8w0gvEbgimbxesZArfc8uSKyE/DMxFgWTWM8BY5F4xfpDGf
+         mhod3gbQQu46YlqVvViXyrQzRipsy9VbkIG8VmCIHo9VCX5I9wXCif9E819yd4bMTGT8
+         fxcI9vZ24Z8TYX/ve6OD11vdNN20cbYGr6cw4U41sraO2hEQDaNrnw9qC6uqx1ffIFue
+         qCpLInEMGugQrq4lnbkRrE1asqkYPSccixaf/9MXm+HRJlXNQk921hueF96PESKGwUcm
+         fvvVOz12mebSSmkkmOM+hEhd7cWmINTlCA5UY3eD93mtr5XXJ/n7B7eiDj/HLpmwHDjl
+         WRww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=XXw0zUB4V26WpLNROVKNFQyeOrOBkkYV5mywYnR1B9Q=;
+        b=ZnRlsujfozQpMfd75AHidOnRUYeUUSxR5G4UZEO/0NDGGjG/6Ipbo27NTRDvKGYNmS
+         WXpyhc8jWkw7fpRQiqt2ABnNy/g4P2QfYJaUJp/iZnw+Eck8GyxKEnrUaihRpXxj/3RH
+         5LAvy+R8y3ifI9R5dJ55dLqCChx+SwV1gACCljI7tN81vpfHn+mxndeCmIfXS09mvGun
+         XcCyEkWT37g5YwVnrbL+ad9U0UkWcHdOmMIuMWd/0JKhwC2ePlkjdB3n65YviJSTERNz
+         D+dP4gAlCPqj2CVyJMBnF30y5j9XLNFG6o1FDD3EwJFPNxBofgxa9f+w3DWPkTO5xuDJ
+         rrVw==
+X-Gm-Message-State: AOAM532XomPZB602r5pPYVf8DQ2LkbmKNHdOPCv/YBp/Rh2Zm+JtVPjh
+        ZYzQsDiGBCp2uOFZMKSJK0I=
+X-Google-Smtp-Source: ABdhPJxOQBN9h0/uEPnLp5sQ5q4sk0AmOIAnLqBZVXyi3USI21rSkcv+l4lPaJ4LbNuRkX7m4zF75A==
+X-Received: by 2002:a37:87c4:: with SMTP id j187mr14370357qkd.408.1614604793883;
+        Mon, 01 Mar 2021 05:19:53 -0800 (PST)
+Received: from localhost.localdomain ([138.199.13.198])
+        by smtp.gmail.com with ESMTPSA id o11sm10606159qta.1.2021.03.01.05.19.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 01 Mar 2021 05:19:53 -0800 (PST)
+From:   Bhaskar Chowdhury <unixbhaskar@gmail.com>
+To:     GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     rdunlap@infradead.org, Bhaskar Chowdhury <unixbhaskar@gmail.com>
+Subject: [PATCH] drivers: scsi: qla4xxx: Fix a spello in the file qla4xxx/ql4_os.c
+Date:   Mon,  1 Mar 2021 18:47:36 +0530
+Message-Id: <20210301131736.14236-1-unixbhaskar@gmail.com>
+X-Mailer: git-send-email 2.26.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 01/03/2021 at 13.04 +0000, Damien Le Moal wrote:
-> Yes, I believe that: your patch disables the write cache ! So no
-> synchronize
-> cache command, no caching, no data loss. All good.
 
-[...]
+s/circuting/circuiting/
 
-> Because the drive does not have synchronize cache while caching data,
-> which is
-> crazy.
+Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
+---
+ drivers/scsi/qla4xxx/ql4_os.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-[...]
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index a4b014e1cd8c..716a5827588c 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -6961,7 +6961,7 @@ static int qla4xxx_sess_conn_setup(struct scsi_qla_host *ha,
+ 	if (is_reset == RESET_ADAPTER) {
+ 		iscsi_block_session(cls_sess);
+ 		/* Use the relogin path to discover new devices
+-		 *  by short-circuting the logic of setting
++		 *  by short-circuiting the logic of setting
+ 		 *  timer to relogin - instead set the flags
+ 		 *  to initiate login right away.
+ 		 */
+--
+2.26.2
 
-> Sure, because you end up with WCE=0. All good.
-
-[...]
-
-> I understand the situation perfectly. I am not doubting your result.
-> I looked at
-> your patch and understand it. It is sensible, but does not plug all
-> the possible
-> holes with such weird drive. So that is not a good solution to me.
-
-It is the only possible solution to the best of my knowledge.
-
-> The alternative, safe this one, is a udev rule disabling your drive
-> write cache
-> or you setting the permanent drive config with WCE=0. That will have
-> *exactly*
-> the same effect as your patch: things will work just fine. Try that
-> solution
-> please. No need for a kernel patch.
-
-That is a cumbersome trick, not a safe and stable solution.
-
-The simplest point of failure of such trick is that an unexperienced
-user plugs in one of such drives without knowing the trick and data
-corruption occurs.
-
-Another very big disadvantage is that on multiple systems the same
-configuration needs to be replicated over and over on all systems.
-
-Guido
