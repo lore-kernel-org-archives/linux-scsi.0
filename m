@@ -2,214 +2,146 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B2E6C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 13:06:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64717C433E6
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 13:07:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5BF3E64E41
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 13:06:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2389264E6B
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 13:07:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234327AbhCANGG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Mar 2021 08:06:06 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:65197 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232272AbhCANGD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2021 08:06:03 -0500
+        id S235234AbhCANH3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Mar 2021 08:07:29 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:26261 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235404AbhCANHH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2021 08:07:07 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1614603962; x=1646139962;
-  h=from:to:subject:date:message-id:references:
+  t=1614604026; x=1646140026;
+  h=from:to:cc:subject:date:message-id:references:
    content-transfer-encoding:mime-version;
-  bh=pmC1S/dL9s/Fk1HF78+evaxvFPzvNLW7XUmTslmH9iw=;
-  b=k11P+a7IEej4+/aOq2mBXs113ctQmiP9gUxhAV5JotgYHnMv39eOCFnX
-   pj0FzuN2ChPNDzXelKV/TUmUGV0nt2+RRyLlifZw/mGvAWTB0XcIwYoN3
-   uqygdOgQMKlcDlmUryogxCXUjuWt3P4tpjOxw69BNuDmQRN8pMdvoXlP3
-   J8ZuhrR6kwrQ1VakkpxKeNso+fsOhnYUdkvPbFkGwxkYe0Jc7FmWSMfue
-   kjASmumH0ADt1cyBoBv9Yg90Gy1EUqx3qdX65g1hsrb/yk2NNbj+WC9UL
-   W1n1scV41OskSiadAfQx76oA1t2pBN6GhDHS3r1iyeo/md9W4XiPpy5jE
-   w==;
-IronPort-SDR: gtYDdjl4rcZoF7HAe7KTx7VMEfqZpRIUO0A/9hxujFhGd9uNdHY+i/Tx9sWILuGhJZetPy+yAL
- aMk6csRtTE+SiuKv8Ety3mWqZ7A/84Bnbq3lp69vxZLtrazufqJ7B9dCimjkYFOKYzqEmdmkbv
- ISAZGPhYR59t3Bdb+PE4OgBSmG+cHOAavLKFsW0BHGU6ttcjTDnqwfn/Tufpseb7Ps6kLCBxZm
- yxlc719cmsfaZAU+AdBXlaUVR0k7pgFHfxcU3RtqXGRJlCQ5MytAJXsczj6kD7cy+/iLD6HZgR
- VKI=
+  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+  b=CVbse2MHkbC4rwa95gcRRuIm9za2QWQm4OfU+BNwtnIF91IeWEhuaWE1
+   6y+4+sESd1tDX7kx4LRQ+14/Q6EKWwcEwlpcoW6cX74TqmjxyGS1oxBoT
+   Az71USAhSE9W0/koasAjvE9298mmBzoNfws2AglBurlyNx6Ks2x9yPxBg
+   dQm9Hxyhzsz5xwUEFdg8HmawF3FE3faNsCiGvk+vfc9nSknqAXgkDG2wa
+   Soj6i7S0fSUiBSasqy3tRJgmgjJYlioJGF4AMZPMDFYQadsrq7IAOwNQL
+   OIx3H6sA3ylF9xedf44jYFl993sEuLi/V9jT0xkc/Q4XRF3mGj5S1anYI
+   A==;
+IronPort-SDR: JPzy2c5CjGZZcPnyxlP8TW6JlyVlGThsfIg6tNCyb9RybCnEE1JmMW9Fzfo3TJDB04FKBZ6XiZ
+ yL7tGDS0NucLQCu90Jc9L6c4ELH5zGHxqaxZI3PQlp1Rlm4JV5u+Kwe09GxddsUFq3yxI7hv1b
+ 8lLJwQNy5gyWB5S8/n5kKaADcCumWlmM8kj5FXe12OPe/FSJdu7aNkfbxil3tM4+8XpCV9oxxE
+ uHSmdVGifdnMsNsA8NNvtJgkgcuVBTXB5iGtxMwY8Js7j2soIKLozRNtbuEYgb+uqUxE3fDnl+
+ l+s=
 X-IronPort-AV: E=Sophos;i="5.81,215,1610380800"; 
-   d="scan'208";a="161080358"
-Received: from mail-mw2nam10lp2103.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.103])
-  by ob1.hgst.iphmx.com with ESMTP; 01 Mar 2021 21:04:56 +0800
+   d="scan'208";a="271661123"
+Received: from mail-mw2nam12lp2048.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.48])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Mar 2021 21:06:00 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=V5uKS4SSE+vA8hv0s75+RSrOUrYfsPuWUD11VHV0U86VBGh3aRrO4X9Tbk1K9gIM4nxaKqubthVSRkOt52JDrx58tQ67cdHxRgTwRvG4heVz8HmLlMlcNcH3jhWANfy4N8DgRrU2sdjHmp1ZJNp/c07fqv+RNpKi7/8Qjw5Ln+a3w5HApdISigHzxRmFZfMRp7u64VGMWJVC1MWNjs5JCgSPfDePR4AQo3NQYClVb0JxfVuIjtiXWX6ArYtmf1guVKOBetSamK4nkiGpzF+lL/FNRKqBdjnsAkpVk77i2j/le0x5/PEpJbC09t/AvKUgWOIRdDbXpt9+7f+bdKdEQg==
+ b=L+bboL5IECkYbJQLcVp86QYERhIYbXmX/hOlkgJqwckVAX5mUKR4znJuV5il2+5WJ7vljqSXUGFTJO+B5vwGtt8facwJSnMiwkXSmqrXora+oNGtupDDX+QHGbXjzgeYl7upCl5BlfWai0sOi6cBCLe3Wh8C4LXr7zDaXlgd6BqjQPNZgA9yAWdxPMptijW6leRg+JegfhmZPniimkjhfnu4Ndb0TfuztWzK924pRDZmoDcg25FUYzwuS01G+idEfboVrbqoR/uNW1SHHyeLBVeftlgi4e7ZRlW468rV9BhWnGYiQlkSzJu/28VZ0T71PeFmqfi+c05GurHbwnjDPg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pmC1S/dL9s/Fk1HF78+evaxvFPzvNLW7XUmTslmH9iw=;
- b=oNLhgT0qx2ox9CAw4+7oMRTLNYPdjGbe+BjK+rEM5rCew55rRa3QDatYYNS0OhR6/tjMitVgF3kgPRfHTBtXnyFSX75qsTSTXXCiT9wPZo0qU3vuIrgJAfWPw0ygIlxIiTS1mdgJxM/vGKFnuyFNHrsGT1RyXmOyArTE4sXFjfSyVELV/o3QGaNxgK/ORB7zQ/qznP7xcOfBUI1gXz3gKAgc++M/+hoxPAjWRJ6OgXASFzCwbpMQ5oq0648w/OoOpsEp0rnLlYP1Af9JFv/J8uPd5TD3AiFNL6Q9Sc1jhV4XmGuZR96hL2IGOlF44S0hmlUQhfjsKkFBIvk74e6eGA==
+ bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+ b=LU1or2lAEW25xPhs5Zwq2QUUcqkKXDdUMP4dP4rW+qBVgaDQlKVza3VUS8F+ghG4lRlpyF9F53yoRqYt/FE171WD+nUAF2cJKJFtXdy4D8V5jsXYNKcL9RfhkWwS5Po7tQ3GjNz8sdVxx/8S0G0cNVB/UBTU4i7ecDHnEtRNsQNXa32vx1xl9vongl7LnEFYqGOS6Ith2jpYkCdyZn0EejM6wbRQig9tTQWG0/PgCoHkBDyAwIZbgpeC+4sveMIgmppxgzs8lQLCkP9AsNT7f4I+adeZruiFKIcG96vkQld2XoZz9AzoKYpeD4Cug2xyKoAjLnknhpnYyIzmH9l8cA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pmC1S/dL9s/Fk1HF78+evaxvFPzvNLW7XUmTslmH9iw=;
- b=WtCARyR67bWOw2NnYEIPqCc6Al3iq3bxN223FrRoICKEVV53R+sXH9gfd7tW4s28GLENKD87978G1kk4kIkip8VbLNYqdDsyjso1cQoM4dqwCxIxEFGGlEP+QFBeC0c7M0PB+H3O9iv0nmXhGx/xFYVDuDMfQTv+LfX2+t9v7WY=
-Received: from BL0PR04MB6514.namprd04.prod.outlook.com (2603:10b6:208:1ca::23)
- by BL0PR04MB6482.namprd04.prod.outlook.com (2603:10b6:208:1cf::10) with
+ bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+ b=BMipJW7e6sm2cyGCtx+aFaYKn2dTcBFvtKTrB0atcXtt3z7wHUJ59kn6OqhFdyMVYRoc5MD8Ww16+HavjnjxTQMuJXEZEswFl5+nTPbIRQ4vixGbQZI/ZGk45+kTXIdRCBuISTtkUHqnfEFKjSe2UkAvtGL6ETn505A+0b4mFeg=
+Received: from PH0PR04MB7416.namprd04.prod.outlook.com (2603:10b6:510:12::17)
+ by PH0PR04MB7256.namprd04.prod.outlook.com (2603:10b6:510:1a::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.25; Mon, 1 Mar
- 2021 13:04:55 +0000
-Received: from BL0PR04MB6514.namprd04.prod.outlook.com
- ([fe80::e9c5:588:89e:6887]) by BL0PR04MB6514.namprd04.prod.outlook.com
- ([fe80::e9c5:588:89e:6887%3]) with mapi id 15.20.3890.028; Mon, 1 Mar 2021
- 13:04:55 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Guido Trentalancia <guido@trentalancia.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH RESEND v2] scsi: ignore Synchronize Cache command failures
- to keep using drives not supporting it
-Thread-Topic: [PATCH RESEND v2] scsi: ignore Synchronize Cache command
- failures to keep using drives not supporting it
-Thread-Index: AQHXDbGOoQvSctH05k2iblGBdDcQpA==
-Date:   Mon, 1 Mar 2021 13:04:55 +0000
-Message-ID: <BL0PR04MB651464BF2CC7DAF8C6F812C4E79A9@BL0PR04MB6514.namprd04.prod.outlook.com>
-References: <1614502908.6594.6.camel@trentalancia.com>
- <443d92dd844e329bcd40a1e59b7cc3784ed3db94.camel@HansenPartnership.com>
- <1614582394.13266.11.camel@trentalancia.com>
- <BL0PR04MB65146856C07649917652E540E79A9@BL0PR04MB6514.namprd04.prod.outlook.com>
- <1614598394.4338.18.camel@trentalancia.com>
- <BL0PR04MB651420859C04C068419711FDE79A9@BL0PR04MB6514.namprd04.prod.outlook.com>
- <1614602388.6918.8.camel@trentalancia.com>
- <BL0PR04MB6514A85C4B56E1370406B97BE79A9@BL0PR04MB6514.namprd04.prod.outlook.com>
- <1614603429.6918.18.camel@trentalancia.com>
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.23; Mon, 1 Mar
+ 2021 13:05:56 +0000
+Received: from PH0PR04MB7416.namprd04.prod.outlook.com
+ ([fe80::3c7d:5381:1232:e725]) by PH0PR04MB7416.namprd04.prod.outlook.com
+ ([fe80::3c7d:5381:1232:e725%7]) with mapi id 15.20.3890.028; Mon, 1 Mar 2021
+ 13:05:56 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+CC:     "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "hare@suse.de" <hare@suse.de>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "mlombard@redhat.com" <mlombard@redhat.com>,
+        "michael.christie@oracle.com" <michael.christie@oracle.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "houpu@bytedance.com" <houpu@bytedance.com>
+Subject: Re: [PATCH 23/23] target/core: don't duplicate memset 0xff
+Thread-Topic: [PATCH 23/23] target/core: don't duplicate memset 0xff
+Thread-Index: AQHXDZdBp1c4eMNiMkifZM4DhG61qA==
+Date:   Mon, 1 Mar 2021 13:05:56 +0000
+Message-ID: <PH0PR04MB7416976C8BE425EB3BA1538C9B9A9@PH0PR04MB7416.namprd04.prod.outlook.com>
+References: <20210228055645.22253-1-chaitanya.kulkarni@wdc.com>
+ <20210228055645.22253-24-chaitanya.kulkarni@wdc.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: trentalancia.com; dkim=none (message not signed)
- header.d=none;trentalancia.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2400:2411:43c0:6000:347a:bb00:3286:307b]
+authentication-results: wdc.com; dkim=none (message not signed)
+ header.d=none;wdc.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [129.253.240.72]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 6c6f097d-bb17-4d2d-ef96-08d8dcb29c50
-x-ms-traffictypediagnostic: BL0PR04MB6482:
-x-microsoft-antispam-prvs: <BL0PR04MB6482B7E6F591C3801FFF182DE79A9@BL0PR04MB6482.namprd04.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: 852957e0-7471-4a3d-8dfc-08d8dcb2c054
+x-ms-traffictypediagnostic: PH0PR04MB7256:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <PH0PR04MB72566EDF294783640C2678FA9B9A9@PH0PR04MB7256.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:6430;
+x-ms-oob-tlc-oobclassifiers: OLM:1728;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: sUgV6m40yfnFDHN6DG6yJYcnoTdWGlIoqDFowkFSwL+Ndjv7+NXg/GNFoyRmz45TBRYvjU7+FZ0Jkq4e4OXDosZZj+CI1X6w/uv0Le/2Vq6Hl4Wix5bEZwUrtODM5PBVsPk545ntBJxkv7KcZzS4yPJJmVs8hTNfn0xm6my86ire6tV1zfZOpg8BAoEb2cwDoMYQF9uA2LcefGE3nWYPF0Go6UJugQlBOyPeoYJjZ4EK3DbHewNlocqjeXRD/82D10i6YGStgLhSTTFmKf9l1zUBYYS9lYfhoi76HBJcvGERa8USEZoDYU1TwsaiYcqGmYK99zXxdWAMgY0Qh9+/j8jSMd477y2SbcMnLTC62L0mgGGBeaUcmcGqfRWCUiEnHHk9qsdKhxR2bS5UiNuOtjc/mPGurPkyoRRHEPoVZ9l01hlrzFn4s7nRkOOWnHbLIwaXicspdwA9bXexMDob4xtl2bBugBKLI7JgX8YMYxhKWHTgzsVIFkXCDYK8U0k1/L/8YECIZvNeTKRvIsclAQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR04MB6514.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(136003)(396003)(39860400002)(346002)(366004)(66946007)(55016002)(76116006)(52536014)(316002)(478600001)(66476007)(91956017)(64756008)(66556008)(5660300002)(110136005)(66446008)(83380400001)(6506007)(53546011)(86362001)(33656002)(186003)(71200400001)(7696005)(9686003)(2906002)(8676002)(8936002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?cmVTxSke1TAcVdvY8kCDZiopFc4jN2qgdhIcUpdDjDNa3ER+RpTVU+CqKaPi?=
- =?us-ascii?Q?2z0rHCliXbY9w0VTq3yXA7oDtFtzGke+HE/Wg/7hd3qHArjNk2oEUBuuTfs8?=
- =?us-ascii?Q?QTq3t6efAYTtwpjBvwJZIMOs6yvC02p7KtBrmzpV4dsDyH4iuRQcRsHvhJqQ?=
- =?us-ascii?Q?huiKhWW5Cv5429aGkE97X/2q8JXXiXmZ4L9ZSFZt/Qq3p2bmFA8ubWc9pQQ9?=
- =?us-ascii?Q?OWuycLrea0RtumsfNA4HaUVD1HAwOfte5ecwbJk7lYnGFAL9cd8HtcCWqy/V?=
- =?us-ascii?Q?2LtrwMcY21CYOhK69BFC65RJRews4wQX9uTVOtxHXjif5S7qSdGbmi5wDdfA?=
- =?us-ascii?Q?vyxDbg53nlj+o9AFPKRSOMl/HgUQncwpIdHLmFCAfKejQb7MR/EHee4Xt4d8?=
- =?us-ascii?Q?qicK/1c85j7HDJh7L8EWjjYeFQWpCSd7Ee0xqvPPvGfA7hdZPJp3HV/PlY5Q?=
- =?us-ascii?Q?Qk3D01Xc5FDRUFs4qxEeQxAzFZmqeMOxfYXDngYotQ+08wpNeFcPKoiAf1rA?=
- =?us-ascii?Q?pbOHo7UsSXI9oairRLUeks4z/thnRt2jWrKPIqCAw/ZzpwrJvYYrPFGG/VHS?=
- =?us-ascii?Q?Ir32FEuT7yb7ecJCxV899n8OyPw0GZOJ0TQIZy8gVVb5fUrFhO7ZUiHeFtOg?=
- =?us-ascii?Q?P+Dn3JxTPfX/hyuBpk26nMDaQ+/JhrR6rBqIY0V69U1GjTft9dobBbWg0Oxw?=
- =?us-ascii?Q?Kr2HbLCpJwDu9PwU+YOKAd/aT4kwJj7X/Pxp4Cci06MNrdagq9nXlaXlmyi3?=
- =?us-ascii?Q?l9Ztz5W8iObYARZZeeua1wF7WeRfelUzyVVaOXE0oBytmhWNSRfVi6r0IL5j?=
- =?us-ascii?Q?4PP8jy2EhKA3XjuCfZXwGuIc/FYpP45EKqc8SGMWfgqdbXVcfzk4NAT7TN0P?=
- =?us-ascii?Q?roqEwfPWVJZYyIWvikEi7k+VwPbHKW4WvEgsQJD7NewmMOnl/odZ0IB8XbE0?=
- =?us-ascii?Q?IulJRDWO616qNispDYWKyLW3+NmVg7EjsyWwpo7CPtQX+6pAq+Tiat/CNwdq?=
- =?us-ascii?Q?vd4AKbKhEjOCOPdNI7LPpuLosKI1fBQ3O8AskihlHxK1/ARwt+qKFZwmvAx7?=
- =?us-ascii?Q?W/TDHgskzVrLonBOW1nKo6OFR9Ldcs6l0Ou1GzQ7/meCmIywrNpqd2DiUavf?=
- =?us-ascii?Q?nofwVn6gkS2Kp0OjV8y0XXxD0o++CwbVjXY4H2VApGyvRlnEl8HieQTt2Gcy?=
- =?us-ascii?Q?cxeTilF1/S5t4AAWBaA7/YCUvlC0imma1O0YijV9W/TNpqzFaKHoDheXJBxd?=
- =?us-ascii?Q?XZFh+AN/VsjtFWZ+spo87KsJjSXs4FvwX+LFTERon/FUULx2l3y+zdtpfrwK?=
- =?us-ascii?Q?j2k6MwpIPXnoIbftLw/S9p66Zox3nSyWRk1ai6R8D3jeobfr534Phy9lj1s4?=
- =?us-ascii?Q?tsWhqHsYpUswcNs0N/B+R18XnPol+FKbiJpPj7dAvchciaQlyQ=3D=3D?=
-x-ms-exchange-transport-forked: True
+x-microsoft-antispam-message-info: XZpzssa0A1IX0uXZDjnjPv1dTF3tL0f9HSTH/jP3kcmuc62Pwu1/Kj13wudl9FkD+GU1Uz0+HKhPwaJg5+r4grobRVzzpU3trRsCxzb2h9bh10kzw0jrkYudtAL/FDMFBCB57kIJYexdXm+yvnLLnSk9lQNvjlmnit1BI/EmxKOZKcx1zKeb6uow1UhcVdGCbsEL8OCqYIbGgxuZWJXaHmbjkLW1G/Qt4tWXSf1f/MBnDurTuKbWI3q0Rsz4wwXqiKE8cPIESBMTZwgfuZrlH3/AZFyBBwo+8H9p019KGV4gswfuGxu0FmVg0DSp4yyLJ1cid5398wBzHEK1z6G/PWKcE4+wy6wmjS/9EhCftwAO9FIgZbRQZQSBQirONnB6gnSGlSfd/U9jXdkfAHSHE360XL6jjse7ovgd0vVdfEtsJ05OYpj4Uagj5xK9TUzVHh2sbix8MWBbEBEIZGaBya3etrQGTPIT1F6wlt8j2NHvk5MDjuBdNotVuK1hAR1LboGtShVCZI/LyZkVDk/ClQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7416.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(39860400002)(346002)(396003)(376002)(136003)(110136005)(8936002)(186003)(71200400001)(33656002)(6506007)(316002)(8676002)(54906003)(7696005)(86362001)(52536014)(55016002)(66446008)(76116006)(558084003)(66556008)(66476007)(2906002)(66946007)(4326008)(64756008)(91956017)(26005)(19618925003)(4270600006)(5660300002)(478600001)(9686003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?PAboC5AlXDP0Dxh/xNEX6ncLAim1cieln2X2m3eE7+4zXUjZThrNam4xJIbv?=
+ =?us-ascii?Q?1piiwnhyj4HJUWay9/aElA4K96qSkiYptvZebiDvOamhFv24aYMfl26sVZHm?=
+ =?us-ascii?Q?i2oTKSxcjuX4fDlrKOCLDUgLpOW1/LJAlcB26tfHNgGrnhIxPciMqRWbwU1S?=
+ =?us-ascii?Q?G5AmftcInFTA7RSsXgavjvHXFywllkWB4ANGHgcSGyAToR9248HW+aOBF/dC?=
+ =?us-ascii?Q?uCzAfSwW5QotFK7OjrBLhEHY2gu6eo33dCZMOlBrDGAh1CxUb9kl+8lWpg8c?=
+ =?us-ascii?Q?6VqREU/bk0/tkBLTQ9+UM7X1ReMO047/D5afyuvgjA/Vo98QPIUEj6rWUZzI?=
+ =?us-ascii?Q?NnE5xysKD7pkp+pEohuzG/yfUPW58CjWCiHZCZ3S5P6MCEYQLLVvigyTt/Ez?=
+ =?us-ascii?Q?wkIZ0m4t6j0N8W/tgRtvKwbr4ar0BzDvU+GsP5XvgYSuF391FasMoXUT+6/c?=
+ =?us-ascii?Q?/NuAqKYRaf7DgNyLoYfMAkpkNpfVoECSzqV4YvTMCtpZrjrWUsuypdx2oHfP?=
+ =?us-ascii?Q?yIJQbZRofOgcK5pk5n97N+gaSkAD3jlmk8+yO0BubHnPiJN8Y1ohH/FqDoXd?=
+ =?us-ascii?Q?EDGA/g4zgZ7UDb5tdosjB8jOeagogT4oCxg3Z+wSVOjILf4o/9A6GJ6BAfwn?=
+ =?us-ascii?Q?xAfxrSxrCJoWK8HqJhkRHA1xgJnsZQDO//gIsYyCOMdCeMpOgEaTAW7mYFkP?=
+ =?us-ascii?Q?YI3pDJ+yeKA2D8BoIXYtq4B0uTgZKWjWUNAwzhmV1JAtWa6+ieMfdSbIpJ43?=
+ =?us-ascii?Q?L7hPB6Zw42t/bfBRf7Cwe6rT6NXzpL4alq+Zvi9IRfis5iRZl33m0S5tnhr1?=
+ =?us-ascii?Q?hjZwUxGPa50MV3bgmux9oDy/mfdh/+gjA6SP/81FAJ3WQKHYQcmmJP9FhZtF?=
+ =?us-ascii?Q?JZafuzXBQLbsslGgpWVqmYJKEBgo2B1yUplodqlAs3enHhUEN/hJRB61eYqV?=
+ =?us-ascii?Q?iWp4oecYKP01S9bEFOjQ5Xtbh7LNJSDTpNZB8A0kr/+CQH+hN/ypxfvlPWQs?=
+ =?us-ascii?Q?Vq0yLIPc9eB2/PSYv+9el0bN8ErVcPsCxjeUdIToBKXwz0SsOqJ8ePbUg4Bp?=
+ =?us-ascii?Q?w8vMHxUlTWQvTaSGFxjjSKXwdXtgGRlbNieOuj9s6JeRZlIzAQeutNFCxhfJ?=
+ =?us-ascii?Q?MK/eKc8gDBwDOLavy0dvZKLt76ppxI70hb0VebPjchJ8GpjN2NT3dkghCdD0?=
+ =?us-ascii?Q?EAOIEB/Sf9JXvF717OcrJ9CBuaSGnomLCh73KvhmfU6HRJsVQTHm+ZiCn+6i?=
+ =?us-ascii?Q?ngt4e3/GjnaYf1EtdL4fww3fBQdB+J1fqrM+WvW+pn8Sy87RJhvVcVcsCVKG?=
+ =?us-ascii?Q?MgPQZUVb2sWRrFv6dh6UkmbI6bZE2N+7XhtFnZ9pTFh9kg=3D=3D?=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR04MB6514.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6c6f097d-bb17-4d2d-ef96-08d8dcb29c50
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Mar 2021 13:04:55.7256
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7416.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 852957e0-7471-4a3d-8dfc-08d8dcb2c054
+X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Mar 2021 13:05:56.1055
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: WLrl8gRmK6hi6KuacD+FwH0RdhV4njwsPBzZGRH0Ih8u+fqQY46v0X5zMzyegHrD+18Ll7H7xVhoPkWPOP0JYA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR04MB6482
+X-MS-Exchange-CrossTenant-userprincipalname: woKkNbb0I0Rs+wyYen6kRPvbxGJP92MsHjilAZo0faxMDgJjJl7ruUVADBNBNiBi26jPIABWzANvu3tYC7M+KBh02qFq1igwz8FFGzBeYzI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR04MB7256
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/03/01 21:57, Guido Trentalancia wrote:=0A=
-> On Mon, 01/03/2021 at 12.51 +0000, Damien Le Moal wrote:=0A=
->> On 2021/03/01 21:39, Guido Trentalancia wrote:=0A=
->>> If the system is shut down before the sync or drive unmounting and=0A=
->>> the=0A=
->>> write cache is enabled, there might be the loss of data in the=0A=
->>> cache,=0A=
->>> but this is because of the way the drive is designed.=0A=
->>=0A=
->> That drive is not usable. Even the best journaling file system would=0A=
->> get corrupted.=0A=
-> =0A=
-> It is usable and an ext3 filesystem has not been causing any problem=0A=
-> for over a year now.=0A=
-=0A=
-Yes, I believe that: your patch disables the write cache ! So no synchroniz=
-e=0A=
-cache command, no caching, no data loss. All good.=0A=
-=0A=
-> =0A=
->>> I believe the kernel should support the drive as it is - plug and=0A=
->>> play=0A=
->>> - without requiring cumbersome configurations.=0A=
->>=0A=
->> No. That would be lying to the user. The user expect things to work.=0A=
->> Not data=0A=
->> corruptions.=0A=
-> =0A=
-> Data corruption is what occurs with the current kernel when one of such=
-=0A=
-> drives is mounted.=0A=
-=0A=
-Because the drive does not have synchronize cache while caching data, which=
- is=0A=
-crazy.=0A=
-=0A=
-> With the patch the drive can be used normally and no data corruption=0A=
-> occurs with the drive that I have tested.=0A=
-=0A=
-Sure, because you end up with WCE=3D0. All good.=0A=
-=0A=
-> This is a proposed patch and nobody is lying, I can report the specific=
-=0A=
-> drive model that I have tested and the tests can be easily replicated=0A=
-> to confirm my findings.=0A=
-=0A=
-I understand the situation perfectly. I am not doubting your result. I look=
-ed at=0A=
-your patch and understand it. It is sensible, but does not plug all the pos=
-sible=0A=
-holes with such weird drive. So that is not a good solution to me.=0A=
-=0A=
-The alternative, safe this one, is a udev rule disabling your drive write c=
-ache=0A=
-or you setting the permanent drive config with WCE=3D0. That will have *exa=
-ctly*=0A=
-the same effect as your patch: things will work just fine. Try that solutio=
-n=0A=
-please. No need for a kernel patch.=0A=
-=0A=
-> =0A=
-> Guido=0A=
-> =0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+Looks good,=0A=
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
