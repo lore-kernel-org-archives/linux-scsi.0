@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A68DEC433E9
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 07:01:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A0CBC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 07:02:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77EA760234
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 07:01:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F077464E31
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 07:02:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232216AbhCAHBW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Mar 2021 02:01:22 -0500
-Received: from mx2.suse.de ([195.135.220.15]:49268 "EHLO mx2.suse.de"
+        id S232239AbhCAHBf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Mar 2021 02:01:35 -0500
+Received: from mx2.suse.de ([195.135.220.15]:49674 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232187AbhCAHBR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 1 Mar 2021 02:01:17 -0500
+        id S232256AbhCAHBa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 1 Mar 2021 02:01:30 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id D0103AAC5;
-        Mon,  1 Mar 2021 06:59:53 +0000 (UTC)
-Subject: Re: [PATCH 11/24] mpi3mr: print ioc info for debugging
+        by mx2.suse.de (Postfix) with ESMTP id 0FB3BAE5C;
+        Mon,  1 Mar 2021 07:00:46 +0000 (UTC)
+Subject: Re: [PATCH 12/24] mpi3mr: add bios_param shost template hook
 To:     Kashyap Desai <kashyap.desai@broadcom.com>,
         linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         steve.hagan@broadcom.com, peter.rivera@broadcom.com,
         mpi3mr-linuxdrv.pdl@broadcom.com, sathya.prakash@broadcom.com
 References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
- <20201222101156.98308-12-kashyap.desai@broadcom.com>
+ <20201222101156.98308-13-kashyap.desai@broadcom.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <a784e6a1-622c-dfe3-d490-fcfa01b73526@suse.de>
-Date:   Mon, 1 Mar 2021 07:59:53 +0100
+Message-ID: <bf5265ac-1531-a8d3-abb4-d62d1bd72a5b@suse.de>
+Date:   Mon, 1 Mar 2021 08:00:45 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.7.0
 MIME-Version: 1.0
-In-Reply-To: <20201222101156.98308-12-kashyap.desai@broadcom.com>
+In-Reply-To: <20201222101156.98308-13-kashyap.desai@broadcom.com>
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -49,86 +49,72 @@ On 12/22/20 11:11 AM, Kashyap Desai wrote:
 > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 > Cc: sathya.prakash@broadcom.com
 > ---
->   drivers/scsi/mpi3mr/mpi3mr_fw.c | 63 +++++++++++++++++++++++++++++++++
->   1 file changed, 63 insertions(+)
+>   drivers/scsi/mpi3mr/mpi3mr_os.c | 40 +++++++++++++++++++++++++++++++++
+>   1 file changed, 40 insertions(+)
 > 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> index 10ff287e78db..aad0a2bd06b9 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> @@ -2540,6 +2540,68 @@ int mpi3mr_issue_port_enable(struct mpi3mr_ioc *mrioc, u8 async)
->   	return retval;
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> index 4d94352a4d48..7e0eacf45d84 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> @@ -2078,6 +2078,45 @@ static int mpi3mr_build_sg_scmd(struct mpi3mr_ioc *mrioc,
+>   	return ret;
 >   }
 >   
 > +/**
-> + * mpi3mr_print_ioc_info - Display controller information
-> + * @mrioc: Adapter instance reference
+> + * mpi3mr_bios_param - BIOS param callback
+> + * @sdev: SCSI device reference
+> + * @bdev: Block device reference
+> + * @capacity: Capacity in logical sectors
+> + * @params: Parameter array
 > + *
-> + * Display controller personalit, capability, supported
-> + * protocols etc.
+> + * Just the parameters with heads/secots/cylinders.
 > + *
-> + * Return: Nothing
+> + * Return: 0 always
 > + */
-> +static void
-> +mpi3mr_print_ioc_info(struct mpi3mr_ioc *mrioc)
+> +static int mpi3mr_bios_param(struct scsi_device *sdev,
+> +	struct block_device *bdev, sector_t capacity, int params[])
 > +{
-> +	int i = 0;
-> +	char personality[16];
-> +	struct mpi3mr_compimg_ver *fwver = &mrioc->facts.fw_ver;
+> +	int heads;
+> +	int sectors;
+> +	sector_t cylinders;
+> +	ulong dummy;
 > +
-> +	switch (mrioc->facts.personality) {
-> +	case MPI3_IOCFACTS_FLAGS_PERSONALITY_EHBA:
-> +		strcpy(personality, "Enhanced HBA");
-> +		break;
-> +	case MPI3_IOCFACTS_FLAGS_PERSONALITY_RAID_DDR:
-> +		strcpy(personality, "RAID");
-> +		break;
-> +	default:
-> +		strcpy(personality, "Unknown");
-> +		break;
+> +	heads = 64;
+> +	sectors = 32;
+> +
+> +	dummy = heads * sectors;
+> +	cylinders = capacity;
+> +	sector_div(cylinders, dummy);
+> +
+> +	if ((ulong)capacity >= 0x200000) {
+> +		heads = 255;
+> +		sectors = 63;
+> +		dummy = heads * sectors;
+> +		cylinders = capacity;
+> +		sector_div(cylinders, dummy);
 > +	}
 > +
-> +	ioc_info(mrioc, "Running in %s Personality", personality);
-> +
-> +	ioc_info(mrioc, "FW Version(%d.%d.%d.%d.%d.%d)\n",
-> +	fwver->gen_major, fwver->gen_minor, fwver->ph_major,
-> +	    fwver->ph_minor, fwver->cust_id, fwver->build_num);
-> +
-> +	ioc_info(mrioc, "Protocol=(");
-> +
-> +	if (mrioc->facts.protocol_flags &
-> +	    MPI3_IOCFACTS_PROTOCOL_SCSI_INITIATOR) {
-> +		pr_cont("Initiator");
-> +		i++;
-> +	}
-> +
-> +	if (mrioc->facts.protocol_flags &
-> +	    MPI3_IOCFACTS_PROTOCOL_SCSI_TARGET) {
-> +		pr_cont("%sTarget", i ? "," : "");
-> +		i++;
-> +	}
-> +
-> +	if (mrioc->facts.protocol_flags &
-> +	    MPI3_IOCFACTS_PROTOCOL_NVME) {
-> +		pr_cont("%sNVMe attachment", i ? "," : "");
-> +		i++;
-> +	}
-> +	pr_cont("), ");
-> +	pr_cont("Capabilities=(");
-> +
-> +	if (mrioc->facts.ioc_capabilities &
-> +	    MPI3_IOCFACTS_CAPABILITY_RAID_CAPABLE)
-> +		pr_cont("RAID");
-> +
-> +	pr_cont(")\n");
+> +	params[0] = heads;
+> +	params[1] = sectors;
+> +	params[2] = cylinders;
+> +	return 0;
 > +}
->  
-Yikes. Don't.
+>   
+>   /**
+>    * mpi3mr_map_queues - Map queues callback handler
+> @@ -2511,6 +2550,7 @@ static struct scsi_host_template mpi3mr_driver_template = {
+>   	.slave_destroy			= mpi3mr_slave_destroy,
+>   	.scan_finished			= mpi3mr_scan_finished,
+>   	.scan_start			= mpi3mr_scan_start,
+> +	.bios_param			= mpi3mr_bios_param,
+>   	.map_queues			= mpi3mr_map_queues,
+>   	.no_write_same			= 1,
+>   	.can_queue			= 1,
+> 
+OMG. I had hoped we could kill this eventually.
+Oh well.
 
-pr_cont() has the habit to be broken up into individual lines per call 
-if the system has to print out lots of messages.
-I would seriously advocate having just one pr_XX() call per line, and 
-use conditional statements to construct the arguments.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
