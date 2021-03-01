@@ -2,72 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E94C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 06:54:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5120CC433E6
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 06:55:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43F3260232
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 06:54:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 041DF64E40
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 06:55:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232091AbhCAGyJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Mar 2021 01:54:09 -0500
-Received: from mx2.suse.de ([195.135.220.15]:47800 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232229AbhCAGxr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 1 Mar 2021 01:53:47 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 0ED2AAA4F;
-        Mon,  1 Mar 2021 06:53:06 +0000 (UTC)
-Subject: Re: [PATCH 08/24] mpi3mr: add support of event handling part-3
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        steve.hagan@broadcom.com, peter.rivera@broadcom.com,
-        mpi3mr-linuxdrv.pdl@broadcom.com, sathya.prakash@broadcom.com
-References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
- <20201222101156.98308-9-kashyap.desai@broadcom.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <af8927f0-f387-679b-bb2c-bd2a2d9568b2@suse.de>
-Date:   Mon, 1 Mar 2021 07:53:05 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S232155AbhCAGz4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Mar 2021 01:55:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54642 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232113AbhCAGzx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2021 01:55:53 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF755C06174A;
+        Sun, 28 Feb 2021 22:55:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=gBs6DNze8G5n1XddfCf4tpaY7/fmzfb1f0K+dmwmvuc=; b=dfzfy5stjvI7W7v3XjXRUOXOvK
+        7J1UhRdmoct7nkH+fyCAiaaErmhozT+cKh3yHQaTBFeua10+89hUM7qzp490onUo2+Y9oyuBnlUYM
+        urGMQCa5w2sotJ+1g82Oq773SI7lOvR+EdMeuj67UU1PYhbqeBpbFu2RgI7GoFioC1U0XUAV2Pap6
+        /S7+aNK48TXenacgOF/kXY8swzIvAfK5CUbOyuAsUXZhZAyCdkon+0kpv7SlX5tpOvngNAQhYZ5FH
+        aJEOQfQQC3jk5O6Y5nNNlmTbafKjRxCM0LTb01xKHz7/KS7LxgFXK38RckQeqVpP300O8/PDYcUkq
+        GsBKIjQA==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lGcSE-00FOax-Gd; Mon, 01 Mar 2021 06:54:55 +0000
+Date:   Mon, 1 Mar 2021 06:54:54 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Tianyu Lan <ltykernel@gmail.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, vkuznets@redhat.com,
+        thomas.lendacky@amd.com, brijesh.singh@amd.com,
+        sunilmut@microsoft.com
+Subject: Re: [RFC PATCH 12/12] HV/Storvsc: Add bounce buffer support for
+ Storvsc
+Message-ID: <20210301065454.GA3669027@infradead.org>
+References: <20210228150315.2552437-1-ltykernel@gmail.com>
+ <20210228150315.2552437-13-ltykernel@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20201222101156.98308-9-kashyap.desai@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210228150315.2552437-13-ltykernel@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/22/20 11:11 AM, Kashyap Desai wrote:
-> Firmware can report various MPI Events.
-> Support for certain Events (as listed below) are enabled in the driver
-> and their processing in driver is covered in this patch.
-> 
-> MPI3_EVENT_SAS_BROADCAST_PRIMITIVE
-> MPI3_EVENT_CABLE_MGMT
-> MPI3_EVENT_ENERGY_PACK_CHANGE
-> 
-> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: sathya.prakash@broadcom.com
-> ---
->   drivers/scsi/mpi3mr/mpi3mr_fw.c |  3 +++
->   drivers/scsi/mpi3mr/mpi3mr_os.c | 37 +++++++++++++++++++++++++++++++++
->   2 files changed, 40 insertions(+)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+This should be handled by the DMA mapping layer, just like for native
+SEV support.
