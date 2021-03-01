@@ -2,78 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90A36C433E6
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 15:38:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65DE4C433E6
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 16:00:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5277364E01
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 15:38:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2293864D8F
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 16:00:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237360AbhCAPiP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Mar 2021 10:38:15 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:56868 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237282AbhCAPiI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2021 10:38:08 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1614613001;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=vLNNdUu1sjfy3lYGJToaIuw/3vCXTFj7Ta9EQpAP6XE=;
-        b=ahO79pVSuIVaQyi9abwOO5lHEBqHppefrZYC2LQbfRbz3dv0ZlQDh10xuWk2HFxB5ZG+Ro
-        EPBYMukagU8bPwGH2gv3FtqoC854sxeacvcvBajx1D/nSmydf4uHCxalilt0x9MliwUrVe
-        7Eu7YMAsdiHXk8DQ60RCIyG3UOUO6FQ=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-306-VskzaCcYNZSmXo48o-qECA-1; Mon, 01 Mar 2021 10:36:39 -0500
-X-MC-Unique: VskzaCcYNZSmXo48o-qECA-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6B76650742;
-        Mon,  1 Mar 2021 15:36:38 +0000 (UTC)
-Received: from localhost.localdomain (ovpn-12-197.pek2.redhat.com [10.72.12.197])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 379561002C10;
-        Mon,  1 Mar 2021 15:36:35 +0000 (UTC)
-Subject: Re: [bug report]null pointer at scsi_mq_exit_request+0x14 with
- blktests srp/015
-To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>
-References: <418155251.14154941.1614505772200.JavaMail.zimbra@redhat.com>
- <BYAPR04MB4965FDA9847096508E35FFB9869B9@BYAPR04MB4965.namprd04.prod.outlook.com>
-From:   Yi Zhang <yi.zhang@redhat.com>
-Message-ID: <8b1fc0cd-196a-ad78-71c6-a7515ffbb4ad@redhat.com>
-Date:   Mon, 1 Mar 2021 23:36:33 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S237464AbhCAQAK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Mar 2021 11:00:10 -0500
+Received: from netrider.rowland.org ([192.131.102.5]:50695 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S237445AbhCAQAI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2021 11:00:08 -0500
+Received: (qmail 1490911 invoked by uid 1000); 1 Mar 2021 10:59:27 -0500
+Date:   Mon, 1 Mar 2021 10:59:27 -0500
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Christoph Hellwig <hch@lst.de>, Hans de Goede <hdegoede@redhat.com>
+Cc:     Tom Yan <tom.ty89@gmail.com>,
+        linux-usb <linux-usb@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 2/2] usb-storage: revert from scsi_add_host_with_dma() to
+ scsi_add_host()
+Message-ID: <20210301155927.GB1490228@rowland.harvard.edu>
+References: <186eb035-4bc4-ff72-ee41-aeb6d81888e3@redhat.com>
+ <X8T0E2qvF2cgADl+@kroah.com>
+ <dd557c38-a919-5e5e-ab3b-17a235f17139@redhat.com>
+ <20201130172004.GA966032@rowland.harvard.edu>
+ <abb0a79d-63a0-6f3d-4812-f828283cd47c@redhat.com>
+ <CAGnHSEk1GixNK71CJMymwLE=MyedjCkiG5Ubq1=O_wFxBBM0GQ@mail.gmail.com>
+ <CAGnHSEmPpbDokAfGkeCkvo3JuYfnosVt8H+TK7ZWFNsdyWAfYQ@mail.gmail.com>
+ <20201130203618.GB975529@rowland.harvard.edu>
+ <20210225163557.GC1350993@rowland.harvard.edu>
+ <20210226055352.GA2996@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <BYAPR04MB4965FDA9847096508E35FFB9869B9@BYAPR04MB4965.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210226055352.GA2996@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This issue cannot be reproduced on latest 5.12.0-rc1.
+On Fri, Feb 26, 2021 at 06:53:52AM +0100, Christoph Hellwig wrote:
+> On Thu, Feb 25, 2021 at 11:35:57AM -0500, Alan Stern wrote:
+> > This thread seems to have fallen through the cracks.  Maybe now would be 
+> > a good time to address the problem (since we originally planned to fix 
+> > it in 5.11!).
+> > 
+> > The questions listed below are pretty self-contained, although the rest
+> > of the discussion isn't.  But I never received any answers.
+> 
+> usb-storage must use scsi_add_host_with_dma to use the right device
+> for DMA mapping and parameters.  The calls to set the DMA options
+> on the device are needed so that IOMMU merging doesn't change the
+> imposed requirements.  If these requirements slow you down you need
+> to relax them, as apparently the hardware is able to handle bigger
+> limits.
 
-Please ignore this report, sorry for the noise.
+Hans, don't you have the right equipment to test this approach?
 
-On 3/1/21 3:07 AM, Chaitanya Kulkarni wrote:
-> On 2/28/21 01:52, Yi Zhang wrote:
->> Hello
->>
->> I found this issue with blktests srp/015, could anyone help check it?
-> Until you get some reply you can try and bisect it.
->
->
-
+Alan Stern
