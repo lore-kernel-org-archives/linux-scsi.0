@@ -2,96 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A5F1C433E9
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 14:53:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90A36C433E6
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 15:38:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1192064DEF
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 14:53:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5277364E01
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 15:38:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236621AbhCAOwx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Mar 2021 09:52:53 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:33655 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S236572AbhCAOw0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 1 Mar 2021 09:52:26 -0500
-Received: from [192.168.0.7] (ip5f5aea9e.dynamic.kabel-deutschland.de [95.90.234.158])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S237360AbhCAPiP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Mar 2021 10:38:15 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:56868 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237282AbhCAPiI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2021 10:38:08 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1614613001;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=vLNNdUu1sjfy3lYGJToaIuw/3vCXTFj7Ta9EQpAP6XE=;
+        b=ahO79pVSuIVaQyi9abwOO5lHEBqHppefrZYC2LQbfRbz3dv0ZlQDh10xuWk2HFxB5ZG+Ro
+        EPBYMukagU8bPwGH2gv3FtqoC854sxeacvcvBajx1D/nSmydf4uHCxalilt0x9MliwUrVe
+        7Eu7YMAsdiHXk8DQ60RCIyG3UOUO6FQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-306-VskzaCcYNZSmXo48o-qECA-1; Mon, 01 Mar 2021 10:36:39 -0500
+X-MC-Unique: VskzaCcYNZSmXo48o-qECA-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id D8D4820647913;
-        Mon,  1 Mar 2021 15:51:41 +0100 (CET)
-Subject: Re: [PATCH] scsi: scsi_host_queue_ready: increase busy count early
-To:     Roger Willcocks <roger@filmlight.ltd.uk>, Don.Brace@microchip.com
-Cc:     mwilck@suse.com, john.garry@huawei.com, buczek@molgen.mpg.de,
-        martin.petersen@oracle.com, ming.lei@redhat.com,
-        jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, hare@suse.de,
-        Kevin.Barnett@microchip.com, hare@suse.com,
-        linux-scsi@vger.kernel.org
-References: <20210120184548.20219-1-mwilck@suse.com>
- <37579c64-1cdb-8864-6a30-4d912836f28a@huawei.com>
- <231d9fcd-14f4-6abf-c41a-56315877a3dc@molgen.mpg.de>
- <87b7f873-46c4-140b-ee45-f724b50b6aca@huawei.com>
- <d48f98a9-77e3-dfe3-af5c-91b0ef45586b@molgen.mpg.de>
- <361d5a2f-fb8e-c400-2818-29aea435aff2@huawei.com>
- <SN6PR11MB2848BC0AF824B45CA39A6348E1B59@SN6PR11MB2848.namprd11.prod.outlook.com>
- <2e4cca87aaa27220e186025573ae7c24579e8b7b.camel@suse.com>
- <SN6PR11MB28482D89B75197B742459063E1B49@SN6PR11MB2848.namprd11.prod.outlook.com>
- <0DB85ADC-B962-4AF9-B106-3F3B412CE4DB@filmlight.ltd.uk>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-Message-ID: <19037a33-da34-3a4b-c326-f97a26e251b1@molgen.mpg.de>
-Date:   Mon, 1 Mar 2021 15:51:41 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6B76650742;
+        Mon,  1 Mar 2021 15:36:38 +0000 (UTC)
+Received: from localhost.localdomain (ovpn-12-197.pek2.redhat.com [10.72.12.197])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 379561002C10;
+        Mon,  1 Mar 2021 15:36:35 +0000 (UTC)
+Subject: Re: [bug report]null pointer at scsi_mq_exit_request+0x14 with
+ blktests srp/015
+To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>
+References: <418155251.14154941.1614505772200.JavaMail.zimbra@redhat.com>
+ <BYAPR04MB4965FDA9847096508E35FFB9869B9@BYAPR04MB4965.namprd04.prod.outlook.com>
+From:   Yi Zhang <yi.zhang@redhat.com>
+Message-ID: <8b1fc0cd-196a-ad78-71c6-a7515ffbb4ad@redhat.com>
+Date:   Mon, 1 Mar 2021 23:36:33 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <0DB85ADC-B962-4AF9-B106-3F3B412CE4DB@filmlight.ltd.uk>
+In-Reply-To: <BYAPR04MB4965FDA9847096508E35FFB9869B9@BYAPR04MB4965.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This issue cannot be reproduced on latest 5.12.0-rc1.
 
-Dear Roger,
+Please ignore this report, sorry for the noise.
 
+On 3/1/21 3:07 AM, Chaitanya Kulkarni wrote:
+> On 2/28/21 01:52, Yi Zhang wrote:
+>> Hello
+>>
+>> I found this issue with blktests srp/015, could anyone help check it?
+> Until you get some reply you can try and bisect it.
+>
+>
 
-Am 22.02.21 um 15:23 schrieb Roger Willcocks:
-> FYI we have exactly this issue on a machine here running CentOS 8.3
-> (kernel 4.18.0-240.1.1) (so presumably this happens in RHEL 8 too.)
-
-What driver version do you use?
-
-> Controller is MSCC / Adaptec 3154-8i16e driving 60 x 12TB HGST drives
-> configured as five x twelve-drive raid-6, software striped using md,
-> and formatted with xfs.
-> 
-> Test software writes to the array using multiple threads in
-> parallel.
-> 
-> The smartpqi driver would report controller offline within ten
-> minutes or so, with status code 0x6100c
-> 
-> Changed the driver to set 'nr_hw_queues = 1’ and then tested by
-> filling the array with random files (which took a couple of days),
-> which completed fine, so it looks like that one-line change fixes
-> it.
-> 
-> Would, of course, be helpful if this was back-ported.
-We only noticed the issue starting with Linux 5.5 (commit 6eb045e092ef 
-("scsi: core: avoid host-wide host_busy counter for scsi_mq").
-
-So I am curious how this problem can be in CentOS 8.3 (Linux kernel 4.18.x).
-
-> —
-> Roger
-
-Apple Mail mangled your signature delimiter (-- ).
-
-
-Kind regards,
-
-Paul
