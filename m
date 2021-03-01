@@ -2,108 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC1F3C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 17:16:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91367C433E9
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 17:21:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC291651B9
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 17:16:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67FF365207
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Mar 2021 17:21:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237873AbhCARPn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Mar 2021 12:15:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47630 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237728AbhCARNI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 1 Mar 2021 12:13:08 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5848964EE7;
-        Mon,  1 Mar 2021 16:43:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1614617029;
-        bh=EM+Wqcb0VfnGORtrM6ZqObuFYdx4JuuV92yGw2kEbpc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GQOvT4R8VBqzRL50+t8qcvf0yCnG/F3qajc3OMn1nBbqRBS9pCiMEsVcV6I3ehaJn
-         YxduQ6+d/m7049Y/xCXI1cuCN2Vz1hjvnAP9dkSEiSdzxRIZmbquyfFAVi2wFTLLFW
-         AlYM02yUqQBsDQp8vZjvdn1KkGw3Ycdpwb8bSNqI=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel test robot <lkp@intel.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 4.19 177/247] scsi: bnx2fc: Fix Kconfig warning & CNIC build errors
-Date:   Mon,  1 Mar 2021 17:13:17 +0100
-Message-Id: <20210301161040.317469047@linuxfoundation.org>
-X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210301161031.684018251@linuxfoundation.org>
-References: <20210301161031.684018251@linuxfoundation.org>
-User-Agent: quilt/0.66
+        id S238015AbhCARVh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Mar 2021 12:21:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47506 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235375AbhCARTI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2021 12:19:08 -0500
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D8B0C061788
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Mar 2021 09:18:26 -0800 (PST)
+Received: by mail-pj1-x1031.google.com with SMTP id e9so12343532pjj.0
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Mar 2021 09:18:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=tsMgbI4EVDLlR5EHAMWEzUzYh+oxfclLRO1UIFJZgDw=;
+        b=uSG01UZkDKj9LvsEwtJMmUAL0Lv245tr7nH67/pN5azalBA0USJdxDMT+pwnADeIB4
+         PibghqL2gsiMOm0B1k3nGuEadhLo6tCFyFy3jDsVKx02d5xk8JQFFkkSFPMFh6jLuM+0
+         GG5bhw4iE6pTN7AqWoKkdpjSFYX0e/3G2NQtnZKKQnlXUBNI2CnParV78der2IZb7tQY
+         ZsTnlBl3VFrB9vf0S/yK16pl/3PlQHMckECbYZDL/5lWzotIZHjCSgHeKUgcUj+IPgnv
+         wkUglifCp5DOCBS70T5qGM6du+i5iXgx3337B1imz2qpQSaKNHVSIPYS3y6LhR7VEbYd
+         cLAw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=tsMgbI4EVDLlR5EHAMWEzUzYh+oxfclLRO1UIFJZgDw=;
+        b=a9jvi1MoTcq9bkeCb67C6eOseb6yhSOg345QQI4HZFS8mVQ+nS2+jlgG+UIZRgnXO3
+         g5R+NitJFR9e0r8pOlHGiddqqYc+g7K8fhwwrsBrVtrYDagQ29yduwcVVFYjx0WNyoyd
+         EDlq8DctHBvgwwAFGSfQtl4+GhTtFUVc9SGEB1xvXtSb/TiNdGY4mBvB3W8DL55wS7fs
+         +171CNnojKYbvYgst0KBeoGwy2OO0d/ovwgWq1iBG+OwB7rAwSXC1f01VuY2w1nknhpJ
+         gl6J4V5Tpha5WhGlrSUGOYe4H7E3H80avUB0lGE+X1WnqDSZeViFDc6pY9trG8a9Rjcm
+         3SgQ==
+X-Gm-Message-State: AOAM533qeuif1ObAaxj+zUl+HhrHvBSsopMRRpWeziB3Yi8dJLxd5kQ7
+        H99WK/l3zCLZvkOx5bNlsruTNAYHbBg=
+X-Google-Smtp-Source: ABdhPJx2fbMgBUXcI/vmK9k/JOAOuH6Q2V7sJ2OXGlavssIuuvW22LXBuPQuHy0Um0mSesgq4LSjbA==
+X-Received: by 2002:a17:90a:6383:: with SMTP id f3mr18112338pjj.14.1614619105748;
+        Mon, 01 Mar 2021 09:18:25 -0800 (PST)
+Received: from localhost.localdomain ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id t19sm10133602pgj.8.2021.03.01.09.18.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 01 Mar 2021 09:18:25 -0800 (PST)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>
+Subject: [PATCH v2 00/22] lpfc: Update lpfc to revision 12.8.0.8
+Date:   Mon,  1 Mar 2021 09:17:59 -0800
+Message-Id: <20210301171821.3427-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@infradead.org>
+Update lpfc to revision 12.8.0.8
 
-[ Upstream commit eefb816acb0162e94a85a857f3a55148f671d5a5 ]
+This patch set contains fixes and a cleanup patches.
 
-CNIC depends on MMU, but since 'select' does not follow any dependency
-chains, SCSI_BNX2X_FCOE also needs to depend on MMU, so that erroneous
-configs are not generated, which cause build errors in cnic.
+The patches were cut against Martin's 5.11/scsi-queue tree
 
-WARNING: unmet direct dependencies detected for CNIC
-  Depends on [n]: NETDEVICES [=y] && ETHERNET [=y] && NET_VENDOR_BROADCOM [=y] && PCI [=y] && (IPV6 [=n] || IPV6 [=n]=n) && MMU [=n]
-  Selected by [y]:
-  - SCSI_BNX2X_FCOE [=y] && SCSI_LOWLEVEL [=y] && SCSI [=y] && PCI [=y] && (IPV6 [=n] || IPV6 [=n]=n) && LIBFC [=y] && LIBFCOE [=y]
+v2:
+  lpfc: Fix reftag generation sizing errors
+    replace lpfc_scsi_get_reftag() with the system routine
+    t10_pi_ref_tag()
 
-riscv64-linux-ld: drivers/net/ethernet/broadcom/cnic.o: in function `.L154':
-cnic.c:(.text+0x1094): undefined reference to `uio_event_notify'
-riscv64-linux-ld: cnic.c:(.text+0x10bc): undefined reference to `uio_event_notify'
-riscv64-linux-ld: drivers/net/ethernet/broadcom/cnic.o: in function `.L1442':
-cnic.c:(.text+0x96a8): undefined reference to `__uio_register_device'
-riscv64-linux-ld: drivers/net/ethernet/broadcom/cnic.o: in function `.L0 ':
-cnic.c:(.text.unlikely+0x68): undefined reference to `uio_unregister_device'
 
-Link: https://lore.kernel.org/r/20210213192428.22537-1-rdunlap@infradead.org
-Fixes: 853e2bd2103a ("[SCSI] bnx2fc: Broadcom FCoE offload driver")
-Cc: Saurav Kashyap <skashyap@marvell.com>
-Cc: Javed Hasan <jhasan@marvell.com>
-Cc: GR-QLogic-Storage-Upstream@marvell.com
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/bnx2fc/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+James Smart (22):
+  lpfc: Fix incorrect dbde assignment when building target abts wqe
+  lpfc: Fix vport indices in lpfc_find_vport_by_vpid()
+  lpfc: Fix reftag generation sizing errors
+  lpfc: Fix stale node accesses on stale RRQ request
+  lpfc: Fix FLOGI failure due to accessing a freed node
+  lpfc: Fix lpfc_els_retry() possible null pointer dereference
+  lpfc: Fix pt2pt connection does not recover after LOGO
+  lpfc: Fix unnecessary null check in lpfc_release_scsi_buf
+  lpfc: Fix null pointer dereference in lpfc_prep_els_iocb()
+  lpfc: Fix use after free in lpfc_els_free_iocb
+  lpfc: Fix status returned in lpfc_els_retry() error exit path
+  lpfc: Fix dropped FLOGI during pt2pt discovery recovery
+  lpfc: Fix PLOGI ACC to be transmit after REG_LOGIN
+  lpfc: Fix ADISC handling that never frees nodes
+  lpfc: Fix nodeinfo debugfs output
+  lpfc: Fix pt2pt state transition causing rmmod hang
+  lpfc: Fix crash caused by switch reboot
+  lpfc: Change wording of invalid pci reset log message
+  lpfc: Reduce LOG_TRACE_EVENT logging for vports
+  lpfc: Correct function header comments related to ndlp reference
+    counting
+  lpfc: Update lpfc version to 12.8.0.8
+  lpfc: update copyrights for 12.8.0.7 and 12.8.0.8 changes
 
-diff --git a/drivers/scsi/bnx2fc/Kconfig b/drivers/scsi/bnx2fc/Kconfig
-index d401a096dfc7e..2eb2476852b11 100644
---- a/drivers/scsi/bnx2fc/Kconfig
-+++ b/drivers/scsi/bnx2fc/Kconfig
-@@ -4,6 +4,7 @@ config SCSI_BNX2X_FCOE
- 	depends on (IPV6 || IPV6=n)
- 	depends on LIBFC
- 	depends on LIBFCOE
-+	depends on MMU
- 	select NETDEVICES
- 	select ETHERNET
- 	select NET_VENDOR_BROADCOM
+ drivers/scsi/lpfc/lpfc.h           |   3 +-
+ drivers/scsi/lpfc/lpfc_attr.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_crtn.h      |   4 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c   |  13 +-
+ drivers/scsi/lpfc/lpfc_disc.h      |   3 +-
+ drivers/scsi/lpfc/lpfc_els.c       | 639 ++++++++++++++---------------
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |   6 +-
+ drivers/scsi/lpfc/lpfc_init.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 272 +++++-------
+ drivers/scsi/lpfc/lpfc_nvme.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_nvmet.c     |   5 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      |  98 +++--
+ drivers/scsi/lpfc/lpfc_sli.c       |  29 +-
+ drivers/scsi/lpfc/lpfc_version.h   |   6 +-
+ drivers/scsi/lpfc/lpfc_vport.c     |  10 +-
+ 15 files changed, 497 insertions(+), 597 deletions(-)
+
 -- 
-2.27.0
-
-
+2.26.2
 
