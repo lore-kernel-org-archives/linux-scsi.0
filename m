@@ -2,156 +2,73 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52F8AC432C3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26AD7C43332
 	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19E2E60232
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E623264F25
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1581605AbhCBS7f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:59:35 -0500
-Received: from m42-2.mailgun.net ([69.72.42.2]:30497 "EHLO m42-2.mailgun.net"
+        id S1581599AbhCBS7T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:59:19 -0500
+Received: from mx2.suse.de ([195.135.220.15]:36928 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1580064AbhCBRWz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Mar 2021 12:22:55 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1614705725; h=In-Reply-To: Content-Type: MIME-Version:
- References: Message-ID: Subject: Cc: To: From: Date: Sender;
- bh=i6HWitAvfuibUOrEhE9hWqjcYM7rHuJywCh3nQMG6cA=; b=P75gxfee+KISkKX+PZOFiiOXExoVsZKAIrb60kOGrIpSWi/2M+lVQlcDcVfpyZzmA7jaLXx7
- OxFCLiIkhHrjD16hLyzxb22RZnJVqij+na/mKSQo01eTCaX/AxS4HbNyJiQr/qBLtJLb+iui
- eTwNWuKCAJHyt7AHHVfzmXNy61Y=
-X-Mailgun-Sending-Ip: 69.72.42.2
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 603e65bf4fd7814d5f8c7568 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 02 Mar 2021 16:20:15
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id BC0CCC4346F; Tue,  2 Mar 2021 16:20:14 +0000 (UTC)
-Received: from stor-presley.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1E9ACC433C6;
-        Tue,  2 Mar 2021 16:20:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1E9ACC433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
-Date:   Tue, 2 Mar 2021 08:20:10 -0800
-From:   Asutosh Das <asutoshd@codeaurora.org>
-To:     Adrian Hunter <adrian.hunter@intel.com>
-Cc:     cang@codeaurora.org, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-samsung-soc@vger.kernel.org>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH v9 1/2] scsi: ufs: Enable power management for wlun
-Message-ID: <20210302162010.GH12147@stor-presley.qualcomm.com>
-References: <cover.1614655058.git.asutoshd@codeaurora.org>
- <b291bb65fadc9c828cbcb4ffb81cfa1ee47b82be.1614655058.git.asutoshd@codeaurora.org>
- <d17e52e0-cb50-50ee-accb-458b318014e5@intel.com>
+        id S1839691AbhCBQhv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Mar 2021 11:37:51 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id F3CF2AE79;
+        Tue,  2 Mar 2021 16:37:07 +0000 (UTC)
+Subject: Re: [PATCH v5 15/31] elx: libefc: Extended link Service IO handling
+To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
+Cc:     Ram Vegesna <ram.vegesna@broadcom.com>
+References: <20210103171134.39878-1-jsmart2021@gmail.com>
+ <20210103171134.39878-16-jsmart2021@gmail.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <28cedfd0-fb84-9e3c-ff1b-66be408d293e@suse.de>
+Date:   Tue, 2 Mar 2021 17:37:07 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <d17e52e0-cb50-50ee-accb-458b318014e5@intel.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20210103171134.39878-16-jsmart2021@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Mar 02 2021 at 06:14 -0800, Adrian Hunter wrote:
->On 2/03/21 5:21 am, Asutosh Das wrote:
->> During runtime-suspend of ufs host, the scsi devices are
->> already suspended and so are the queues associated with them.
->> But the ufs host sends SSU to wlun during its runtime-suspend.
->> During the process blk_queue_enter checks if the queue is not in
->> suspended state. If so, it waits for the queue to resume, and never
->> comes out of it.
->> The commit
->> (d55d15a33: scsi: block: Do not accept any requests while suspended)
->> adds the check if the queue is in suspended state in blk_queue_enter().
->>
->> Call trace:
->>  __switch_to+0x174/0x2c4
->>  __schedule+0x478/0x764
->>  schedule+0x9c/0xe0
->>  blk_queue_enter+0x158/0x228
->>  blk_mq_alloc_request+0x40/0xa4
->>  blk_get_request+0x2c/0x70
->>  __scsi_execute+0x60/0x1c4
->>  ufshcd_set_dev_pwr_mode+0x124/0x1e4
->>  ufshcd_suspend+0x208/0x83c
->>  ufshcd_runtime_suspend+0x40/0x154
->>  ufshcd_pltfrm_runtime_suspend+0x14/0x20
->>  pm_generic_runtime_suspend+0x28/0x3c
->>  __rpm_callback+0x80/0x2a4
->>  rpm_suspend+0x308/0x614
->>  rpm_idle+0x158/0x228
->>  pm_runtime_work+0x84/0xac
->>  process_one_work+0x1f0/0x470
->>  worker_thread+0x26c/0x4c8
->>  kthread+0x13c/0x320
->>  ret_from_fork+0x10/0x18
->>
->> Fix this by registering ufs device wlun as a scsi driver and
->> registering it for block runtime-pm. Also make this as a
->> supplier for all other luns. That way, this device wlun
->> suspends after all the consumers and resumes after
->> hba resumes.
->>
->> Co-developed-by: Can Guo <cang@codeaurora.org>
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->> ---
->
->Now we need either to move the suspend/resume vops from
->ufshcd_suspend/resume to __ufshcd_wl_suspend/resume, assuming that
->would work for existing implementations of those callbacks,
->or otherwise create new vops ->wl_suspend() / ->wl_resume(), and
->then split the existing implementations of those callbacks.
->
->ufs_intel_resume() now needs to be invoked from __ufshcd_wl_resume().
->I am not sure about the others:
->
->	exynos_ufs_suspend()
->	exynos_ufs_resume()
->	ufs_hisi_suspend()
->	ufs_hisi_resume()
->	ufs_mtk_suspend()
->	ufs_mtk_resume()
->	ufs_qcom_suspend()
->	ufs_qcom_resume()
->
+On 1/3/21 6:11 PM, James Smart wrote:
+> This patch continues the libefc library population.
+> 
+> This patch adds library interface definitions for:
+> Functions to build and send ELS/CT/BLS commands and responses.
+> 
+> Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
+> Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
+> 
+> ---
+> v5:
+>   ELS IO mempool changes.
+> ---
+>   drivers/scsi/elx/libefc/efc_els.c | 1131 +++++++++++++++++++++++++++++
+>   drivers/scsi/elx/libefc/efc_els.h |  107 +++
+>   2 files changed, 1238 insertions(+)
+>   create mode 100644 drivers/scsi/elx/libefc/efc_els.c
+>   create mode 100644 drivers/scsi/elx/libefc/efc_els.h
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Thanks. I'll change this in the next version.
+Cheers,
 
--asd
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
