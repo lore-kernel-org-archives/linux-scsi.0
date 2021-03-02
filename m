@@ -4,113 +4,135 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1263C4332B
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE8BC43331
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8401D64F25
+	by mail.kernel.org (Postfix) with ESMTP id B78B664F2D
 	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1581593AbhCBS7P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:59:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56646 "EHLO
+        id S1581595AbhCBS7Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:59:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1839026AbhCBP4M (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 10:56:12 -0500
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CC17C0617A7;
-        Tue,  2 Mar 2021 06:32:28 -0800 (PST)
-Received: by mail-ed1-x533.google.com with SMTP id bd6so12198568edb.10;
-        Tue, 02 Mar 2021 06:32:28 -0800 (PST)
+        with ESMTP id S1449078AbhCBQEC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 11:04:02 -0500
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0E86C061356;
+        Tue,  2 Mar 2021 08:03:16 -0800 (PST)
+Received: by mail-pl1-x630.google.com with SMTP id g20so12294012plo.2;
+        Tue, 02 Mar 2021 08:03:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Am1a6SP1lIBYmPhsqzqN/wdobE8TF1PX/9qBt9ePMdE=;
-        b=qPtUCPCo1olJ3B9E9rwQl3QrypoiL2tKAnbCXopbsVVBvw6fdTNtawzozZGwFXz9iD
-         nkNmfJBtOt0HAx1f5PQcv2NihpNJOlvlihR8p1m/IM3pVH569sQLwLPFCUCuUWsEfdCF
-         O31nNIGaHoyyyg5I1+2lsMGm+JiELOeE5H2FW0FkcMn/ci+wwD+SVB8y2wFXldhx5HAe
-         6tb/a0SLA1S3UHWpp9LA+X+j3o4gsoO5JrDE5aJMhXSeIO3esejgrc4NSgr1TSqbgTPV
-         IWaZOXr1KGhthoVJwBftWZZxkJ0cX8Dr0SZ4gSDW026KtIUbeXWp01oTUl5uGkT7TA2A
-         7eog==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=d4SmVPMKiOaafY7J/CIyGIRDsi1j+B4Mv91x//6bmzU=;
+        b=D3uaZJ+uI8cWtUSLALwm1aenlxmUQ2LQW9fPy5EoOJY3AVlqCjj4HPn1qunaRUl9FR
+         IxwLFIkHqU99ZQLxyZA6YEqGEsp3HNd9gFQnaILPzvhYBwx8DoQPaeL2R7xz1C8cDBpr
+         UuxHpOB4ySqwVfAQS4YP3+NINJOwNsJ8bD5n+MJ0+sZQIJ19RwduJcrfNaeqlXx39MhV
+         DZh/kWL3TGbLljXX36nwCw6YK+fgzSFrQkXDniJFyYkw90FWbJu9B7B7QeTz4PeU32/v
+         iKsSgDNsBHON9zagiLXm7Z5febn2j39nX/gDpbTrKvQ9eTv6jG5jQk7Wd1kTT/qjvMBA
+         ttZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Am1a6SP1lIBYmPhsqzqN/wdobE8TF1PX/9qBt9ePMdE=;
-        b=SjK/UYGf7Uib20J2c9Ca4Fsai9QJ0YFnajwFqcKpE104J6cRuOEal1IziaV+6IvSkv
-         l0Ce2oaqVCXSPylJtnHE3ebxxlhgVr+/Z4wUifSeyuBKGEjwPOzW+pihMAHbQ/P59Mvp
-         0IOHq4i28+gaegRRxpz2lUdMk3D4UD2HdNI28vuD2CAi8f8cq2Jxpbewp59sr5J4V6bN
-         iH1tDBbOE8o/knkTtA4MuacQgVSlra/6lg3u4sjlZr76Jyr9OAfTtScjvYTghA86FPvb
-         AzRXsKQBj/0JMIcpLe+ckcEWMvtW01G9ksy6Ru1ijH/o1tQ1i3bN3lq1Xuh9aggImLMJ
-         5qUA==
-X-Gm-Message-State: AOAM532K24Bz8eZyaevVr3tPMwsuU9wjNVMKwLJD+b28CqXMyLkAeoHk
-        hzH00MURrEcjcovK7qOE62M=
-X-Google-Smtp-Source: ABdhPJxTPYjmiTLFJ/xr+8hRvlCShkvbocmTzo0rrgQEVYCzRgTmO4kwRNJxOTG7nk/s8afYethq0w==
-X-Received: by 2002:a50:a086:: with SMTP id 6mr20503152edo.70.1614695547654;
-        Tue, 02 Mar 2021 06:32:27 -0800 (PST)
-Received: from ubuntu-laptop (ip5f5bec5d.dynamic.kabel-deutschland.de. [95.91.236.93])
-        by smtp.googlemail.com with ESMTPSA id s13sm17250242edr.86.2021.03.02.06.32.26
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 02 Mar 2021 06:32:27 -0800 (PST)
-Message-ID: <1988de01138118e8361b90acce25332adb2c1e24.camel@gmail.com>
-Subject: Re: [PATCH v25 4/4] scsi: ufs: Add HPB 2.0 support
-From:   Bean Huo <huobean@gmail.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=d4SmVPMKiOaafY7J/CIyGIRDsi1j+B4Mv91x//6bmzU=;
+        b=LpzI6BiAEHOqm45KM8/bBCjURtB9fSibvUtcaYC4EcLnn/GcDDPfyG5Nd3bwtfLTU0
+         KIN6K07mVYw9QnFtqLGfa/H8Qwsrmu8HsI0/PZTJPCrxzMaufse2qdd2imVE7EB0ijYl
+         XCWo1/QPYjuFTAIutDCsmb/QMX49JjHxcQOzGun2aw+hJvGS7jP8g2vEaFlMmYAqRkj+
+         A20se2Qx6kgO1K8ZXuWyTgM3Soj94quW3QbMnYjoAfrXDgsuTtT6vaLGxV44WD00tX26
+         gpa+rQctAevt1iUp1eqLx7V3o54dFxB7XKQfWq+RD4JTLD6nlZUhx/WWE8xxhOUr+g/s
+         /QzA==
+X-Gm-Message-State: AOAM530WZUVWtUrCqJKgHcnhLJr24m1EB9WsYZQDT83dlDl2j0JQdECA
+        QDMcwob2C52weTPOnCwpm64=
+X-Google-Smtp-Source: ABdhPJyBBfZPiS5stkHqGOo/Crjxg70pPquR1pYJCP4fsQGEGW+qyvr3JhHs3nhlYiRGBssLtnPkxA==
+X-Received: by 2002:a17:902:8b86:b029:e5:bef6:56b0 with SMTP id ay6-20020a1709028b86b02900e5bef656b0mr921109plb.76.1614700995852;
+        Tue, 02 Mar 2021 08:03:15 -0800 (PST)
+Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
+        by smtp.gmail.com with ESMTPSA id d7sm11231196pfh.73.2021.03.02.08.03.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 02 Mar 2021 08:03:14 -0800 (PST)
+Subject: Re: [EXTERNAL] Re: [RFC PATCH 12/12] HV/Storvsc: Add bounce buffer
+ support for Storvsc
+To:     Sunil Muthuswamy <sunilmut@microsoft.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        Javier Gonzalez <javier.gonz@samsung.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        JinHwan Park <jh.i.park@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-Date:   Tue, 02 Mar 2021 15:32:25 +0100
-In-Reply-To: <DM6PR04MB6575372560ACA643845C891CFC999@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20210226073233epcms2p80fca2dffabea03143a9414838f757633@epcms2p8>
-         <CGME20210226073233epcms2p80fca2dffabea03143a9414838f757633@epcms2p5>
-         <20210226073525epcms2p5e7ddd6e92b2f76b2b3dcded49f8ff256@epcms2p5>
-         <fb70bf48fab65474bf2f15a436852ccf9a3db026.camel@gmail.com>
-         <DM6PR04MB6575372560ACA643845C891CFC999@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
+        vkuznets <vkuznets@redhat.com>,
+        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
+        "brijesh.singh@amd.com" <brijesh.singh@amd.com>
+References: <20210228150315.2552437-1-ltykernel@gmail.com>
+ <20210228150315.2552437-13-ltykernel@gmail.com>
+ <20210301065454.GA3669027@infradead.org>
+ <9a5d3809-f1e1-0f4a-8249-9ce1c6df6453@gmail.com>
+ <SN4PR2101MB088022E836AEC0838266A8C6C09A9@SN4PR2101MB0880.namprd21.prod.outlook.com>
+From:   Tianyu Lan <ltykernel@gmail.com>
+Message-ID: <726ac959-de27-62f8-bcd1-d194d685f16b@gmail.com>
+Date:   Wed, 3 Mar 2021 00:03:08 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
+MIME-Version: 1.0
+In-Reply-To: <SN4PR2101MB088022E836AEC0838266A8C6C09A9@SN4PR2101MB0880.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2021-03-02 at 13:15 +0000, Avri Altman wrote:
-> > 
-> > On Fri, 2021-02-26 at 16:35 +0900, Daejun Park wrote:
-> > > +static void ufshpb_set_unmap_cmd(unsigned char *cdb, struct
-> > > ufshpb_region *rgn)
-> > > +{
-> > > +       cdb[0] = UFSHPB_WRITE_BUFFER;
-> > > +       cdb[1] = rgn ? UFSHPB_WRITE_BUFFER_INACT_SINGLE_ID :
-> > > +                         UFSHPB_WRITE_BUFFER_INACT_ALL_ID;
-> > 
-> > Here is wrong,
-> > Valid HPB Region is (0 ~ (Ceiling( Region size calculated by
-> > bHPBRegionSize )- 1) ). how do you know the region==0 is not
-> > a single normal region?
-> 
-> Please note that rgn  here is a ufshpb_region *rgn
-> 
-I see, thanks. 
+Hi Sunil:
+      Thanks for your review.
 
-> Thanks,
-> Avri
+On 3/2/2021 3:45 AM, Sunil Muthuswamy wrote:
+>> Hi Christoph:
+>>        Thanks a lot for your review. There are some reasons.
+>>        1) Vmbus drivers don't use DMA API now.
+> What is blocking us from making the Hyper-V drivers use the DMA API's? They
+> will be a null-op generally, when there is no bounce buffer support needed.
+> 
+>>        2) Hyper-V Vmbus channel ring buffer already play bounce buffer
+>> role for most vmbus drivers. Just two kinds of packets from
+>> netvsc/storvsc are uncovered.
+> How does this make a difference here?
+> 
+>>        3) In AMD SEV-SNP based Hyper-V guest, the access physical address
+>> of shared memory should be bounce buffer memory physical address plus
+>> with a shared memory boundary(e.g, 48bit) reported Hyper-V CPUID. It's
+>> called virtual top of memory(vTom) in AMD spec and works as a watermark.
+>> So it needs to ioremap/memremap the associated physical address above
+>> the share memory boundary before accessing them. swiotlb_bounce() uses
+>> low end physical address to access bounce buffer and this doesn't work
+>> in this senario. If something wrong, please help me correct me.
+>>
+> There are alternative implementations of swiotlb on top of the core swiotlb
+> API's. One option is to have Hyper-V specific swiotlb wrapper DMA API's with
+> the custom logic above.
 
+Agree. Hyper-V should have its own DMA ops and put Hyper-V bounce buffer
+code in DMA API callback. For vmbus channel ring buffer, it doesn't need 
+additional bounce buffer and there are two options. 1) Not call DMA API 
+around them 2) pass a flag in DMA API to notify Hyper-V DMA callback
+and not allocate bounce buffer for them.
+
+> 
+>> Thanks.
+>>
+>>
+>> On 3/1/2021 2:54 PM, Christoph Hellwig wrote:
+>>> This should be handled by the DMA mapping layer, just like for native
+>>> SEV support.
+> I agree with Christoph's comment that in principle, this should be handled using
+> the DMA API's
+> 
