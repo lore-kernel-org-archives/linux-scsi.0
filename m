@@ -2,113 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DDDBC43381
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFFE9C433E6
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33B9164F1E
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8222C64F25
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1835335AbhCBSwG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:52:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44722 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350810AbhCBMue (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 07:50:34 -0500
-Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09DADC06178C;
-        Tue,  2 Mar 2021 04:49:51 -0800 (PST)
-Received: by mail-ed1-x52e.google.com with SMTP id w21so25019018edc.7;
-        Tue, 02 Mar 2021 04:49:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=QLU9bSmbJly6ESDXXMGZpe5ejk+FdLMiYAyttQ2v9vQ=;
-        b=Jd7+gtNV675ZKYR0E2HjtgZkxCvAyvArpx74jdtbV/8lpnr8URroZayAKCS03MuZZx
-         r1W3whOsl7kTqWCoYmTx8EBQNTBH2KzbAWsDRgXUmVUz8TnDOj547U4rspsWzZCNgoq/
-         WMmNcAti1t/fbE717yG1RXxRt8CufkD9L7zwV/B7mXyn2TF2SwnhoN67FeyaTP8iTR1q
-         CnVNlkUJtI0hfcX8/NSl7gw74evK4Wm2sPpSCR9bpwR0zRJ9sLK6sjgvnYxD8oXuYVCw
-         b1Hp1aN7Q1Rdp/IqgJUhOylvKysl8kzVtFBLOAvM1yBO8qmKotPb7BsSDrj9dfdAAJVu
-         6pOg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=QLU9bSmbJly6ESDXXMGZpe5ejk+FdLMiYAyttQ2v9vQ=;
-        b=lTlft1eiNSuAlOz2obRG+/wzyakpZy6J6nrr8ot4CkRJomJqsvuNf/mXn6Zu4DXK16
-         jBvxQSdHx5i0KRnkbPtGzHI68cSCWDFgDq7H4lfeMrFXYWPwP+TW8u5LEajBTKMfp1Ki
-         RRFqOIRxlXmwWKoGjCGdnQYC65Xw0Ywf0ZBeg2maEXCgnGK6MMnxF3vcdaO2zG2HrZD9
-         tpxjisel1npJ8amxX1htF+Z/S8OMpgyWGJeYfe1/4sFungbIqFJZ97J4cW7G8gg5UYK9
-         c9n+SH52bwjyuRpIZbHh9y3yIBhYZimk3wfo0MG3DW/DZbVSjseNXR8/FreVtJAGi9kI
-         bEUg==
-X-Gm-Message-State: AOAM532hFup/ZN/2PWNLd6ZjV3lfRjQGlYbNEHlo+XhX4qp/1n4V7IWa
-        UV6P8TIsKXyW+MgtB49L147j14gRN0R+hA==
-X-Google-Smtp-Source: ABdhPJwnNphDvpTn8ddSATgB8AtiOSrAkr4I4UwJ8o8LT8S1sOULdF9paDHAMZ2dJBxgJ7BtqcRJrw==
-X-Received: by 2002:a05:6402:4d3:: with SMTP id n19mr20449431edw.2.1614689389814;
-        Tue, 02 Mar 2021 04:49:49 -0800 (PST)
-Received: from ubuntu-laptop (ip5f5bec5d.dynamic.kabel-deutschland.de. [95.91.236.93])
-        by smtp.googlemail.com with ESMTPSA id a12sm5543437edx.91.2021.03.02.04.49.47
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 02 Mar 2021 04:49:49 -0800 (PST)
-Message-ID: <fb70bf48fab65474bf2f15a436852ccf9a3db026.camel@gmail.com>
-Subject: Re: [PATCH v25 4/4] scsi: ufs: Add HPB 2.0 support
-From:   Bean Huo <huobean@gmail.com>
-To:     daejun7.park@samsung.com, Greg KH <gregkh@linuxfoundation.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        Javier Gonzalez <javier.gonz@samsung.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        JinHwan Park <jh.i.park@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-Date:   Tue, 02 Mar 2021 13:49:47 +0100
-In-Reply-To: <20210226073525epcms2p5e7ddd6e92b2f76b2b3dcded49f8ff256@epcms2p5>
-References: <20210226073233epcms2p80fca2dffabea03143a9414838f757633@epcms2p8>
-         <CGME20210226073233epcms2p80fca2dffabea03143a9414838f757633@epcms2p5>
-         <20210226073525epcms2p5e7ddd6e92b2f76b2b3dcded49f8ff256@epcms2p5>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1835327AbhCBSwF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:52:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50740 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S245500AbhCBMht (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Mar 2021 07:37:49 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 53B0E64F47;
+        Tue,  2 Mar 2021 11:56:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614686212;
+        bh=BzsHpu7mem8X9CxLyj1Y7OhM159EdGOJvJMFQJKmLvU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Lx7rN2Szw9UaNwdFKfoKhd2JE0ZH5kimCoTX0TAxd5MemHsGcOaBopDBkU94kHhl0
+         OgkjvbSzxRiB4ZFiQENYoGD42vGPPS4jWARkH4rm5VK6K8tjKVv1uN/jqctHFsXITW
+         Pi/RlKqgoRuOCuexrnuhEk460LcOMW5/86y0q4nDaicQVMKsR9z2P5eaPx1bvfJHCQ
+         GYYBNNkzSPTXLx4rc8ENNZvSPHhuC0NQkGeEPyi7sTN9yCXxrOErFzQclxj7wmA9ZI
+         +1R/uL4yYop12MtBwxKOBBSqz8QtJptJ4WNcaVaf6tKlTrp0/jZPI6LkSxxM3E7gEj
+         AO1bZU2VP1N5w==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 03/47] scsi: ufs: Add a quirk to permit overriding UniPro defaults
+Date:   Tue,  2 Mar 2021 06:56:02 -0500
+Message-Id: <20210302115646.62291-3-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210302115646.62291-1-sashal@kernel.org>
+References: <20210302115646.62291-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2021-02-26 at 16:35 +0900, Daejun Park wrote:
-> +static void ufshpb_set_unmap_cmd(unsigned char *cdb, struct
-> ufshpb_region *rgn)
-> +{
-> +       cdb[0] = UFSHPB_WRITE_BUFFER;
-> +       cdb[1] = rgn ? UFSHPB_WRITE_BUFFER_INACT_SINGLE_ID :
-> +                         UFSHPB_WRITE_BUFFER_INACT_ALL_ID;
+From: Kiwoong Kim <kwmad.kim@samsung.com>
 
-Here is wrong, 
-Valid HPB Region is (0 ~ (Ceiling( Region size calculated by
-bHPBRegionSize )- 1) ). how do you know the region==0 is not 
-a single normal region?
+[ Upstream commit b1d0d2eb89d4e3a25b212a9d836587503537067e ]
 
-Bean
+The UniPro specification states that attribute IDs of the following
+parameters are vendor-specific so some SoCs could have no regions at the
+defined addresses:
 
+ - DME_LocalFC0ProtectionTimeOutVal
+ - DME_LocalTC0ReplayTimeOutVal
+ - DME_LocalAFC0ReqTimeOutVal
 
-> +       if (rgn)
-> +               put_unaligned_be16(rgn->rgn_idx, &cdb[2]);
-> +       cdb[9] = 0x00;
-> +}
+In addition, the following parameters should be set considering the
+compatibility between host and device.
 
+ - PA_PWRMODEUSERDATA0
+ - PA_PWRMODEUSERDATA1
+ - PA_PWRMODEUSERDATA2
+ - PA_PWRMODEUSERDATA3
+ - PA_PWRMODEUSERDATA4
+ - PA_PWRMODEUSERDATA5
 
+Introduce a quirk to allow vendor drivers to override the UniPro defaults.
+
+Link: https://lore.kernel.org/r/1fedd3dea0ccc980913a5995a10510d86a5b01b9.1608513782.git.kwmad.kim@samsung.com
+Acked-by: Avri Altman <Avri.Altman@wdc.com>
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 40 ++++++++++++++++++++-------------------
+ drivers/scsi/ufs/ufshcd.h |  6 ++++++
+ 2 files changed, 27 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 813289328467..379d44d6b9eb 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4153,25 +4153,27 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+ 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES),
+ 						pwr_mode->hs_rate);
+ 
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA0),
+-			DL_FC0ProtectionTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA1),
+-			DL_TC0ReplayTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA2),
+-			DL_AFC0ReqTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA3),
+-			DL_FC1ProtectionTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA4),
+-			DL_TC1ReplayTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA5),
+-			DL_AFC1ReqTimeOutVal_Default);
+-
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalFC0ProtectionTimeOutVal),
+-			DL_FC0ProtectionTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalTC0ReplayTimeOutVal),
+-			DL_TC0ReplayTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalAFC0ReqTimeOutVal),
+-			DL_AFC0ReqTimeOutVal_Default);
++	if (!(hba->quirks & UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING)) {
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA0),
++				DL_FC0ProtectionTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA1),
++				DL_TC0ReplayTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA2),
++				DL_AFC0ReqTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA3),
++				DL_FC1ProtectionTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA4),
++				DL_TC1ReplayTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA5),
++				DL_AFC1ReqTimeOutVal_Default);
++
++		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalFC0ProtectionTimeOutVal),
++				DL_FC0ProtectionTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalTC0ReplayTimeOutVal),
++				DL_TC0ReplayTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalAFC0ReqTimeOutVal),
++				DL_AFC0ReqTimeOutVal_Default);
++	}
+ 
+ 	ret = ufshcd_uic_change_pwr_mode(hba, pwr_mode->pwr_rx << 4
+ 			| pwr_mode->pwr_tx);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 6c62a281c863..fcca4e15c8cd 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -544,6 +544,12 @@ enum ufshcd_quirks {
+ 	 */
+ 	UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL		= 1 << 12,
+ 
++	/*
++	 * This quirk needs to disable unipro timeout values
++	 * before power mode change
++	 */
++	UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING = 1 << 13,
++
+ };
+ 
+ enum ufshcd_caps {
+-- 
+2.30.1
 
