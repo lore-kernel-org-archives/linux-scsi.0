@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58FF1C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2ADFC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 15A8764F1D
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7803B64F1D
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1581374AbhCBSu5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:50:57 -0500
-Received: from mailout2.samsung.com ([203.254.224.25]:29752 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1837821AbhCBI7E (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 03:59:04 -0500
-Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20210302082803epoutp0211d9838547baf47fc1de5d6f251b6650~oeSkcOw3-0225702257epoutp02U
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Mar 2021 08:28:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20210302082803epoutp0211d9838547baf47fc1de5d6f251b6650~oeSkcOw3-0225702257epoutp02U
+        id S1581382AbhCBSvB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:51:01 -0500
+Received: from mailout3.samsung.com ([203.254.224.33]:29578 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1378826AbhCBJAz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 04:00:55 -0500
+Received: from epcas3p2.samsung.com (unknown [182.195.41.20])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210302090003epoutp03ff8b608dd3b9e70c8ed681a5557f0ff6~oeufyf99I1317413174epoutp037
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Mar 2021 09:00:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210302090003epoutp03ff8b608dd3b9e70c8ed681a5557f0ff6~oeufyf99I1317413174epoutp037
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1614673683;
-        bh=7skspc6R+OWIcd2Nt3lRmZny23gnAZ+tKdkuAkGkBi8=;
+        s=mail20170921; t=1614675603;
+        bh=0lpjwPgu5Hj4CVMTV/29n5W4CRheI+0IpyiHnQi3AU4=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=IN3n1geYYkojaEZ4HIYWQIK7tzBMPjOTiq8EX8O7GSjBbTfM0DZHLcWYQA5tKtsI6
-         SQ3Sl9EbllgzEra/lXHTesrefInc0Q9CugqmJO0t8bbmacQYN/GZzPhUSfx0pxS+hA
-         Mjble6rW9uNAqtsjsld4zuwvpGQpW7xA8oExQy8I=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas3p1.samsung.com (KnoxPortal) with ESMTP id
-        20210302082803epcas3p16f4072a14ab5ea91ca477c183e3a9faa~oeSkCjqBo1935019350epcas3p1S;
-        Tue,  2 Mar 2021 08:28:03 +0000 (GMT)
-Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp1.localdomain
-        (Postfix) with ESMTP id 4DqVcz2zMmz4x9QN; Tue,  2 Mar 2021 08:28:03 +0000
+        b=lbnrIekrYDQ051mHqoq9W++fCu//Sl0I1eI3q8GqwIez49Qkmgpn/+RTPZFxoqNPb
+         UR4ZjvhEZdY/KhCyGVaZ3b6ixfNK5jl/ykQkeBjYuveXj1E/b0r4VbTByIxMpZBl6v
+         v05YeFtk8FlcC6ufEUc1tUGVGK+y1UKcfQv0JqAo=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas3p4.samsung.com (KnoxPortal) with ESMTP id
+        20210302090001epcas3p41b991dc965986cbbc7fd1b797fec4111~oeuesNSlR0891708917epcas3p4O;
+        Tue,  2 Mar 2021 09:00:01 +0000 (GMT)
+Received: from epcpadp3 (unknown [182.195.40.17]) by epsnrtp4.localdomain
+        (Postfix) with ESMTP id 4DqWKs5q5qz4x9Pq; Tue,  2 Mar 2021 09:00:01 +0000
         (GMT)
 Mime-Version: 1.0
-Subject: RE: [PATCH v4 7/9] scsi: ufshpb: Add "Cold" regions timer
+Subject: RE: [PATCH v4 3/9] scsi: ufshpb: Add region's reads counter
 Reply-To: daejun7.park@samsung.com
 Sender: Daejun Park <daejun7.park@samsung.com>
 From:   Daejun Park <daejun7.park@samsung.com>
@@ -60,60 +60,67 @@ CC:     "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
         Avri Altman <avri.altman@wdc.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <20210226083300.30934-8-avri.altman@wdc.com>
+In-Reply-To: <20210226083300.30934-4-avri.altman@wdc.com>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <878274034.81614673683390.JavaMail.epsvc@epcpadp4>
-Date:   Tue, 02 Mar 2021 17:26:28 +0900
-X-CMS-MailID: 20210302082628epcms2p7d6e8a9b4b119e795ee097b3ec63ce69c
+Message-ID: <1891546521.01614675601803.JavaMail.epsvc@epcpadp3>
+Date:   Tue, 02 Mar 2021 17:31:10 +0900
+X-CMS-MailID: 20210302083110epcms2p5551cd399aef0217d7cd9b58ae9834bcb
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 X-Hop-Count: 3
-X-CMS-RootMailID: 20210226083459epcas2p1862e3e2c18208074336cc9faf14a7139
-References: <20210226083300.30934-8-avri.altman@wdc.com>
+X-CMS-RootMailID: 20210226083422epcas2p2d39acff666e2cb9ed97bc2d5c7a8df6f
+References: <20210226083300.30934-4-avri.altman@wdc.com>
         <20210226083300.30934-1-avri.altman@wdc.com>
-        <CGME20210226083459epcas2p1862e3e2c18208074336cc9faf14a7139@epcms2p7>
+        <CGME20210226083422epcas2p2d39acff666e2cb9ed97bc2d5c7a8df6f@epcms2p5>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Avri,
 
-> +static void ufshpb_read_to_handler(struct work_struct *work)
+> +static void ufshpb_normalization_work_handler(struct work_struct *work)
 > +{
-> +        struct delayed_work *dwork = to_delayed_work(work);
 > +        struct ufshpb_lu *hpb;
-> +        struct victim_select_info *lru_info;
-> +        struct ufshpb_region *rgn;
-> +        unsigned long flags;
-> +        LIST_HEAD(expired_list);
+> +        int rgn_idx;
 > +
-> +        hpb = container_of(dwork, struct ufshpb_lu, ufshpb_read_to_work);
+> +        hpb = container_of(work, struct ufshpb_lu, ufshpb_normalization_work);
 > +
-> +        if (test_and_set_bit(TIMEOUT_WORK_PENDING, &hpb->work_data_bits))
-> +                return;
-> +
-> +        spin_lock_irqsave(&hpb->rgn_state_lock, flags);
-> +
-> +        lru_info = &hpb->lru_info;
-> +
-> +        list_for_each_entry(rgn, &lru_info->lh_lru_rgn, list_lru_rgn) {
-> +                bool timedout = ktime_after(ktime_get(), rgn->read_timeout);
-> +
-> +                if (timedout) {
+> +        for (rgn_idx = 0; rgn_idx < hpb->rgns_per_lu; rgn_idx++) {
+> +                struct ufshpb_region *rgn = hpb->rgn_tbl + rgn_idx;
 
-It is important not just to check the timeout, but how much time has passed.
-If the time exceeded is twice the threshold, the read_timeout_expiries
-value should be reduced by 2 instead of 1.
+*HERE*
+> +                if (rgn->reads) {
+> +                        unsigned long flags;
+> +
+> +                        spin_lock_irqsave(&rgn->rgn_lock, flags);
 
-> +                        rgn->read_timeout_expiries--;
+I thinks this lock should protect rgn->reads when it is accessed.
+
+> +                        rgn->reads = (rgn->reads >> 1);
+> +                        spin_unlock_irqrestore(&rgn->rgn_lock, flags);
+> +                }
+*HERE*
+
+> +
+> +                if (rgn->rgn_state != HPB_RGN_ACTIVE || rgn->reads)
+> +                        continue;
+> +
+> +                /* if region is active but has no reads - inactivate it */
+> +                spin_lock(&hpb->rsp_list_lock);
+> +                ufshpb_update_inactive_info(hpb, rgn->rgn_idx);
+> +                spin_unlock(&hpb->rsp_list_lock);
+> +        }
+> +
+> +        clear_bit(WORK_PENDING, &hpb->work_data_bits);
+
+Why we use work_data_bits? It may be checked by worker API.
 
 Thanks,
 Daejun
-
