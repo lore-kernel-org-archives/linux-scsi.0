@@ -2,151 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31E6EC4332D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD2B4C43332
 	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:52:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07BB764F2D
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:52:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87CFA60232
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:52:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1581557AbhCBS6f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:58:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36438 "EHLO mail.kernel.org"
+        id S1581566AbhCBS6m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:58:42 -0500
+Received: from mga02.intel.com ([134.134.136.20]:44265 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1351144AbhCBNco (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Mar 2021 08:32:44 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9F79964F4B;
-        Tue,  2 Mar 2021 11:56:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614686205;
-        bh=y0x9B8pMroUr/mtbNoIMXDfkPYGw2rtyWXJpGqO9l/E=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JTiB7YARVgrnPoej2CGn219MJe7p3O2My30R4IpEpsUUQbpKO2K/htcZErFPJ+Doi
-         RSdztSnb3rOnfWRhCL4dEcm/X5IYu9BawEwtXJHzC04YgcxBDkVezZcjkHHONsZcRy
-         KUJEh4IcSbNmA5uqMzwH9xYZqMPo1wwE1By42uriQyWcG1HpmW2pETTymskQuC4q5d
-         NOcUja38ssLUFk1F6iwNy9h9TDKvQ7K3AVU4Q2I/8CcNdDKSsPn5jEKP/MOe5fqYgR
-         IUbWY2xv9ujAgdNGFtKsusj524ySoI4lXaY9P/LBY2LPKywazIED7l+PwK1LAHh51d
-         1wk+c6f8O6kpQ==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Aleksandr Miloserdov <a.miloserdov@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        Bodo Stroesser <bostroesser@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 52/52] scsi: target: core: Prevent underflow for service actions
-Date:   Tue,  2 Mar 2021 06:55:33 -0500
-Message-Id: <20210302115534.61800-52-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210302115534.61800-1-sashal@kernel.org>
-References: <20210302115534.61800-1-sashal@kernel.org>
+        id S1351349AbhCBORT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Mar 2021 09:17:19 -0500
+IronPort-SDR: pMHKt0AAko+IUB3LODBkcdV1Kj17ZuZz3QB2U6Q/VlxuZy+MyFW16N8jRhTKWlUo/Kfb1Eaht7
+ PJEbDI915WSQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9910"; a="173964363"
+X-IronPort-AV: E=Sophos;i="5.81,216,1610438400"; 
+   d="scan'208";a="173964363"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2021 06:14:19 -0800
+IronPort-SDR: XsTTl1bvinkrhr7HkvJW8Mx35RMJU4Z9LNHPZV1ptjWnpLJg2E517DX3NDo03/LbzpRIqg94RZ
+ tEFORZFpH4ZA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,216,1610438400"; 
+   d="scan'208";a="399037378"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
+  by fmsmga008.fm.intel.com with ESMTP; 02 Mar 2021 06:14:10 -0800
+Subject: Re: [PATCH v9 1/2] scsi: ufs: Enable power management for wlun
+To:     Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>
+References: <cover.1614655058.git.asutoshd@codeaurora.org>
+ <b291bb65fadc9c828cbcb4ffb81cfa1ee47b82be.1614655058.git.asutoshd@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <d17e52e0-cb50-50ee-accb-458b318014e5@intel.com>
+Date:   Tue, 2 Mar 2021 16:14:23 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <b291bb65fadc9c828cbcb4ffb81cfa1ee47b82be.1614655058.git.asutoshd@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Aleksandr Miloserdov <a.miloserdov@yadro.com>
+On 2/03/21 5:21 am, Asutosh Das wrote:
+> During runtime-suspend of ufs host, the scsi devices are
+> already suspended and so are the queues associated with them.
+> But the ufs host sends SSU to wlun during its runtime-suspend.
+> During the process blk_queue_enter checks if the queue is not in
+> suspended state. If so, it waits for the queue to resume, and never
+> comes out of it.
+> The commit
+> (d55d15a33: scsi: block: Do not accept any requests while suspended)
+> adds the check if the queue is in suspended state in blk_queue_enter().
+> 
+> Call trace:
+>  __switch_to+0x174/0x2c4
+>  __schedule+0x478/0x764
+>  schedule+0x9c/0xe0
+>  blk_queue_enter+0x158/0x228
+>  blk_mq_alloc_request+0x40/0xa4
+>  blk_get_request+0x2c/0x70
+>  __scsi_execute+0x60/0x1c4
+>  ufshcd_set_dev_pwr_mode+0x124/0x1e4
+>  ufshcd_suspend+0x208/0x83c
+>  ufshcd_runtime_suspend+0x40/0x154
+>  ufshcd_pltfrm_runtime_suspend+0x14/0x20
+>  pm_generic_runtime_suspend+0x28/0x3c
+>  __rpm_callback+0x80/0x2a4
+>  rpm_suspend+0x308/0x614
+>  rpm_idle+0x158/0x228
+>  pm_runtime_work+0x84/0xac
+>  process_one_work+0x1f0/0x470
+>  worker_thread+0x26c/0x4c8
+>  kthread+0x13c/0x320
+>  ret_from_fork+0x10/0x18
+> 
+> Fix this by registering ufs device wlun as a scsi driver and
+> registering it for block runtime-pm. Also make this as a
+> supplier for all other luns. That way, this device wlun
+> suspends after all the consumers and resumes after
+> hba resumes.
+> 
+> Co-developed-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> ---
 
-[ Upstream commit 14d24e2cc77411301e906a8cf41884739de192de ]
+Now we need either to move the suspend/resume vops from
+ufshcd_suspend/resume to __ufshcd_wl_suspend/resume, assuming that
+would work for existing implementations of those callbacks,
+or otherwise create new vops ->wl_suspend() / ->wl_resume(), and
+then split the existing implementations of those callbacks.
 
-TCM buffer length doesn't necessarily equal 8 + ADDITIONAL LENGTH which
-might be considered an underflow in case of Data-In size being greater than
-8 + ADDITIONAL LENGTH. So truncate buffer length to prevent underflow.
+ufs_intel_resume() now needs to be invoked from __ufshcd_wl_resume().
+I am not sure about the others:
 
-Link: https://lore.kernel.org/r/20210209072202.41154-3-a.miloserdov@yadro.com
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
-Signed-off-by: Aleksandr Miloserdov <a.miloserdov@yadro.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/target/target_core_pr.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 14db5e568f22..d4cc43afe05b 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -3739,6 +3739,7 @@ core_scsi3_pri_read_keys(struct se_cmd *cmd)
- 	spin_unlock(&dev->t10_pr.registration_lock);
- 
- 	put_unaligned_be32(add_len, &buf[4]);
-+	target_set_cmd_data_length(cmd, 8 + add_len);
- 
- 	transport_kunmap_data_sg(cmd);
- 
-@@ -3757,7 +3758,7 @@ core_scsi3_pri_read_reservation(struct se_cmd *cmd)
- 	struct t10_pr_registration *pr_reg;
- 	unsigned char *buf;
- 	u64 pr_res_key;
--	u32 add_len = 16; /* Hardcoded to 16 when a reservation is held. */
-+	u32 add_len = 0;
- 
- 	if (cmd->data_length < 8) {
- 		pr_err("PRIN SA READ_RESERVATIONS SCSI Data Length: %u"
-@@ -3775,8 +3776,9 @@ core_scsi3_pri_read_reservation(struct se_cmd *cmd)
- 	pr_reg = dev->dev_pr_res_holder;
- 	if (pr_reg) {
- 		/*
--		 * Set the hardcoded Additional Length
-+		 * Set the Additional Length to 16 when a reservation is held
- 		 */
-+		add_len = 16;
- 		put_unaligned_be32(add_len, &buf[4]);
- 
- 		if (cmd->data_length < 22)
-@@ -3812,6 +3814,8 @@ core_scsi3_pri_read_reservation(struct se_cmd *cmd)
- 			  (pr_reg->pr_res_type & 0x0f);
- 	}
- 
-+	target_set_cmd_data_length(cmd, 8 + add_len);
-+
- err:
- 	spin_unlock(&dev->dev_reservation_lock);
- 	transport_kunmap_data_sg(cmd);
-@@ -3830,7 +3834,7 @@ core_scsi3_pri_report_capabilities(struct se_cmd *cmd)
- 	struct se_device *dev = cmd->se_dev;
- 	struct t10_reservation *pr_tmpl = &dev->t10_pr;
- 	unsigned char *buf;
--	u16 add_len = 8; /* Hardcoded to 8. */
-+	u16 len = 8; /* Hardcoded to 8. */
- 
- 	if (cmd->data_length < 6) {
- 		pr_err("PRIN SA REPORT_CAPABILITIES SCSI Data Length:"
-@@ -3842,7 +3846,7 @@ core_scsi3_pri_report_capabilities(struct se_cmd *cmd)
- 	if (!buf)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
--	put_unaligned_be16(add_len, &buf[0]);
-+	put_unaligned_be16(len, &buf[0]);
- 	buf[2] |= 0x10; /* CRH: Compatible Reservation Hanlding bit. */
- 	buf[2] |= 0x08; /* SIP_C: Specify Initiator Ports Capable bit */
- 	buf[2] |= 0x04; /* ATP_C: All Target Ports Capable bit */
-@@ -3871,6 +3875,8 @@ core_scsi3_pri_report_capabilities(struct se_cmd *cmd)
- 	buf[4] |= 0x02; /* PR_TYPE_WRITE_EXCLUSIVE */
- 	buf[5] |= 0x01; /* PR_TYPE_EXCLUSIVE_ACCESS_ALLREG */
- 
-+	target_set_cmd_data_length(cmd, len);
-+
- 	transport_kunmap_data_sg(cmd);
- 
- 	return 0;
-@@ -4031,6 +4037,7 @@ core_scsi3_pri_read_full_status(struct se_cmd *cmd)
- 	 * Set ADDITIONAL_LENGTH
- 	 */
- 	put_unaligned_be32(add_len, &buf[4]);
-+	target_set_cmd_data_length(cmd, 8 + add_len);
- 
- 	transport_kunmap_data_sg(cmd);
- 
--- 
-2.30.1
-
+	exynos_ufs_suspend()
+	exynos_ufs_resume()
+	ufs_hisi_suspend()
+	ufs_hisi_resume()
+	ufs_mtk_suspend()
+	ufs_mtk_resume()
+	ufs_qcom_suspend()
+	ufs_qcom_resume()
