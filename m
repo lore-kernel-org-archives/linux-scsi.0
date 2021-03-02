@@ -2,44 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF349C433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FB16C433E0
 	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1E0760201
+	by mail.kernel.org (Postfix) with ESMTP id 177DB64F07
 	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1581434AbhCBSva (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:51:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39614 "EHLO mail.kernel.org"
+        id S1581427AbhCBSv2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:51:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38730 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1443476AbhCBL5y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Mar 2021 06:57:54 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 787CD64F16;
-        Tue,  2 Mar 2021 11:55:41 +0000 (UTC)
+        id S1383603AbhCBL4d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Mar 2021 06:56:33 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 27F5564F14;
+        Tue,  2 Mar 2021 11:55:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614686142;
-        bh=lJRnnl7zW0U/qSD4/YLZ7F3hQipUFBP0Yzf7bmNyQGs=;
+        s=k20201202; t=1614686139;
+        bh=Cd0eVel9AGZGGertR3fyXI4RXhCQuYVAsF2IOVW2H00=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=l5F+R159ba0PjNi8eZZKhpxC+npzPi6nONhvXwW+blk3+ioS9dzNSfeBt8BWNtjKA
-         Tc0fyznNm0goYFx1KkAo7Y8IU3OaXnzWGC218LrtrrqGqRqDgnp3sejzvCndQMZZoy
-         Sj8A3BDOWZ9V1byFLKkAicqWyf165Vdg/ZE6ndRqkMmraZVUVoR2vHt2ujr1T25Sgg
-         GmhN++6OOEPFCOP+B1c6lyDG2biD3Gh/JrWbB5d320DtkOhvXDdcW6pYD1H7A9WdRc
-         DBWYBet1HSjjbk+LsOtvtk2vIR3HUxF4PUTFc7pt6T1F13dY2mTJ/wW0zfcLm0Btw0
-         jdx2BjyfyyEhQ==
+        b=l2B3gwYdOng46a8niq2RGSfuewLWcC6FPhTbMbh5xtnRBr5mBt+hljwYqnmHqeVOB
+         MHS6fRTZAunSwArc6P3uJL6KxCts3jBsHs490C8N82rhXAwmLUhv06mEYr/+nXsbSb
+         1idd6li1X33QbSq3/CgSg/JMTQsDrAW0rVa5AgnecszTEJPrRGe+vunn4pVa2rWUtw
+         ql2iNfy5HCM0q9vBK72/BhvcfRpRpTRxghe1yoa4+3SeqqrNqFN1qaoDI49ccrk2uq
+         COLrxheVEheRsM84xJyhujvMHMEsAsp+UpIayVi+NNxxMtfiluSK+AOrM7zmhFlqUF
+         Qy5+IQd0ZWlgQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 05/52] scsi: ufs: WB is only available on LUN #0 to #7
-Date:   Tue,  2 Mar 2021 06:54:46 -0500
-Message-Id: <20210302115534.61800-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.11 03/52] scsi: ufs: Add a quirk to permit overriding UniPro defaults
+Date:   Tue,  2 Mar 2021 06:54:44 -0500
+Message-Id: <20210302115534.61800-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210302115534.61800-1-sashal@kernel.org>
 References: <20210302115534.61800-1-sashal@kernel.org>
@@ -51,96 +52,108 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jaegeuk Kim <jaegeuk@kernel.org>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
 
-[ Upstream commit a2fca52ee640a04112ed9d9a137c940ea6ad288e ]
+[ Upstream commit b1d0d2eb89d4e3a25b212a9d836587503537067e ]
 
-Kernel stack violation when getting unit_descriptor/wb_buf_alloc_units from
-rpmb LUN. The reason is that the unit descriptor length is different per
-LU.
+The UniPro specification states that attribute IDs of the following
+parameters are vendor-specific so some SoCs could have no regions at the
+defined addresses:
 
-The length of Normal LU is 45 while the one of rpmb LU is 35.
+ - DME_LocalFC0ProtectionTimeOutVal
+ - DME_LocalTC0ReplayTimeOutVal
+ - DME_LocalAFC0ReqTimeOutVal
 
-int ufshcd_read_desc_param(struct ufs_hba *hba, ...)
-{
-	param_offset=41;
-	param_size=4;
-	buff_len=45;
-	...
-	buff_len=35 by rpmb LU;
+In addition, the following parameters should be set considering the
+compatibility between host and device.
 
-	if (is_kmalloc) {
-		/* Make sure we don't copy more data than available */
-		if (param_offset + param_size > buff_len)
-			param_size = buff_len - param_offset;
-			--> param_size = 250;
-		memcpy(param_read_buf, &desc_buf[param_offset], param_size);
-		--> memcpy(param_read_buf, desc_buf+41, 250);
+ - PA_PWRMODEUSERDATA0
+ - PA_PWRMODEUSERDATA1
+ - PA_PWRMODEUSERDATA2
+ - PA_PWRMODEUSERDATA3
+ - PA_PWRMODEUSERDATA4
+ - PA_PWRMODEUSERDATA5
 
-[  141.868974][ T9174] Kernel panic - not syncing: stack-protector: Kernel stack is corrupted in: wb_buf_alloc_units_show+0x11c/0x11c
-	}
-}
+Introduce a quirk to allow vendor drivers to override the UniPro defaults.
 
-Link: https://lore.kernel.org/r/20210111095927.1830311-1-jaegeuk@kernel.org
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+Link: https://lore.kernel.org/r/1fedd3dea0ccc980913a5995a10510d86a5b01b9.1608513782.git.kwmad.kim@samsung.com
+Acked-by: Avri Altman <Avri.Altman@wdc.com>
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufs-sysfs.c | 3 ++-
- drivers/scsi/ufs/ufs.h       | 6 ++++--
- drivers/scsi/ufs/ufshcd.c    | 2 +-
- 3 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 40 ++++++++++++++++++++-------------------
+ drivers/scsi/ufs/ufshcd.h |  6 ++++++
+ 2 files changed, 27 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 08e72b7eef6a..50e90416262b 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -792,7 +792,8 @@ static ssize_t _pname##_show(struct device *dev,			\
- 	struct scsi_device *sdev = to_scsi_device(dev);			\
- 	struct ufs_hba *hba = shost_priv(sdev->host);			\
- 	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);			\
--	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun))		\
-+	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun,		\
-+				_duname##_DESC_PARAM##_puname))		\
- 		return -EINVAL;						\
- 	return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
- 		lun, _duname##_DESC_PARAM##_puname, buf, _size);	\
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 14dfda735adf..580aa56965d0 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -552,13 +552,15 @@ struct ufs_dev_info {
-  * @return: true if the lun has a matching unit descriptor, false otherwise
-  */
- static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info,
--		u8 lun)
-+		u8 lun, u8 param_offset)
- {
- 	if (!dev_info || !dev_info->max_lu_supported) {
- 		pr_err("Max General LU supported by UFS isn't initialized\n");
- 		return false;
- 	}
--
-+	/* WB is available only for the logical unit from 0 to 7 */
-+	if (param_offset == UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS)
-+		return lun < UFS_UPIU_MAX_WB_LUN_ID;
- 	return lun == UFS_UPIU_RPMB_WLUN || (lun < dev_info->max_lu_supported);
- }
- 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2a715f13fe1d..48cbd4f294dd 100644
+index fb32d122f2e3..2a715f13fe1d 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3425,7 +3425,7 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
- 	 * Unit descriptors are only available for general purpose LUs (LUN id
- 	 * from 0 to 7) and RPMB Well known LU.
- 	 */
--	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun))
-+	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun, param_offset))
- 		return -EOPNOTSUPP;
+@@ -4218,25 +4218,27 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+ 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES),
+ 						pwr_mode->hs_rate);
  
- 	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA0),
+-			DL_FC0ProtectionTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA1),
+-			DL_TC0ReplayTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA2),
+-			DL_AFC0ReqTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA3),
+-			DL_FC1ProtectionTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA4),
+-			DL_TC1ReplayTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA5),
+-			DL_AFC1ReqTimeOutVal_Default);
+-
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalFC0ProtectionTimeOutVal),
+-			DL_FC0ProtectionTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalTC0ReplayTimeOutVal),
+-			DL_TC0ReplayTimeOutVal_Default);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalAFC0ReqTimeOutVal),
+-			DL_AFC0ReqTimeOutVal_Default);
++	if (!(hba->quirks & UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING)) {
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA0),
++				DL_FC0ProtectionTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA1),
++				DL_TC0ReplayTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA2),
++				DL_AFC0ReqTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA3),
++				DL_FC1ProtectionTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA4),
++				DL_TC1ReplayTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA5),
++				DL_AFC1ReqTimeOutVal_Default);
++
++		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalFC0ProtectionTimeOutVal),
++				DL_FC0ProtectionTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalTC0ReplayTimeOutVal),
++				DL_TC0ReplayTimeOutVal_Default);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalAFC0ReqTimeOutVal),
++				DL_AFC0ReqTimeOutVal_Default);
++	}
+ 
+ 	ret = ufshcd_uic_change_pwr_mode(hba, pwr_mode->pwr_rx << 4
+ 			| pwr_mode->pwr_tx);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index aa9ea3552323..85f9d0fbfbd9 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -551,6 +551,12 @@ enum ufshcd_quirks {
+ 	 */
+ 	UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL		= 1 << 12,
+ 
++	/*
++	 * This quirk needs to disable unipro timeout values
++	 * before power mode change
++	 */
++	UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING = 1 << 13,
++
+ };
+ 
+ enum ufshcd_caps {
 -- 
 2.30.1
 
