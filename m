@@ -2,137 +2,156 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE8BC43331
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52F8AC432C3
 	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B78B664F2D
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19E2E60232
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1581595AbhCBS7Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:59:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58342 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1449078AbhCBQEC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 11:04:02 -0500
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0E86C061356;
-        Tue,  2 Mar 2021 08:03:16 -0800 (PST)
-Received: by mail-pl1-x630.google.com with SMTP id g20so12294012plo.2;
-        Tue, 02 Mar 2021 08:03:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=d4SmVPMKiOaafY7J/CIyGIRDsi1j+B4Mv91x//6bmzU=;
-        b=D3uaZJ+uI8cWtUSLALwm1aenlxmUQ2LQW9fPy5EoOJY3AVlqCjj4HPn1qunaRUl9FR
-         IxwLFIkHqU99ZQLxyZA6YEqGEsp3HNd9gFQnaILPzvhYBwx8DoQPaeL2R7xz1C8cDBpr
-         UuxHpOB4ySqwVfAQS4YP3+NINJOwNsJ8bD5n+MJ0+sZQIJ19RwduJcrfNaeqlXx39MhV
-         DZh/kWL3TGbLljXX36nwCw6YK+fgzSFrQkXDniJFyYkw90FWbJu9B7B7QeTz4PeU32/v
-         iKsSgDNsBHON9zagiLXm7Z5febn2j39nX/gDpbTrKvQ9eTv6jG5jQk7Wd1kTT/qjvMBA
-         ttZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=d4SmVPMKiOaafY7J/CIyGIRDsi1j+B4Mv91x//6bmzU=;
-        b=LpzI6BiAEHOqm45KM8/bBCjURtB9fSibvUtcaYC4EcLnn/GcDDPfyG5Nd3bwtfLTU0
-         KIN6K07mVYw9QnFtqLGfa/H8Qwsrmu8HsI0/PZTJPCrxzMaufse2qdd2imVE7EB0ijYl
-         XCWo1/QPYjuFTAIutDCsmb/QMX49JjHxcQOzGun2aw+hJvGS7jP8g2vEaFlMmYAqRkj+
-         A20se2Qx6kgO1K8ZXuWyTgM3Soj94quW3QbMnYjoAfrXDgsuTtT6vaLGxV44WD00tX26
-         gpa+rQctAevt1iUp1eqLx7V3o54dFxB7XKQfWq+RD4JTLD6nlZUhx/WWE8xxhOUr+g/s
-         /QzA==
-X-Gm-Message-State: AOAM530WZUVWtUrCqJKgHcnhLJr24m1EB9WsYZQDT83dlDl2j0JQdECA
-        QDMcwob2C52weTPOnCwpm64=
-X-Google-Smtp-Source: ABdhPJyBBfZPiS5stkHqGOo/Crjxg70pPquR1pYJCP4fsQGEGW+qyvr3JhHs3nhlYiRGBssLtnPkxA==
-X-Received: by 2002:a17:902:8b86:b029:e5:bef6:56b0 with SMTP id ay6-20020a1709028b86b02900e5bef656b0mr921109plb.76.1614700995852;
-        Tue, 02 Mar 2021 08:03:15 -0800 (PST)
-Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
-        by smtp.gmail.com with ESMTPSA id d7sm11231196pfh.73.2021.03.02.08.03.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 Mar 2021 08:03:14 -0800 (PST)
-Subject: Re: [EXTERNAL] Re: [RFC PATCH 12/12] HV/Storvsc: Add bounce buffer
- support for Storvsc
-To:     Sunil Muthuswamy <sunilmut@microsoft.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>
-References: <20210228150315.2552437-1-ltykernel@gmail.com>
- <20210228150315.2552437-13-ltykernel@gmail.com>
- <20210301065454.GA3669027@infradead.org>
- <9a5d3809-f1e1-0f4a-8249-9ce1c6df6453@gmail.com>
- <SN4PR2101MB088022E836AEC0838266A8C6C09A9@SN4PR2101MB0880.namprd21.prod.outlook.com>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <726ac959-de27-62f8-bcd1-d194d685f16b@gmail.com>
-Date:   Wed, 3 Mar 2021 00:03:08 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        id S1581605AbhCBS7f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:59:35 -0500
+Received: from m42-2.mailgun.net ([69.72.42.2]:30497 "EHLO m42-2.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1580064AbhCBRWz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Mar 2021 12:22:55 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1614705725; h=In-Reply-To: Content-Type: MIME-Version:
+ References: Message-ID: Subject: Cc: To: From: Date: Sender;
+ bh=i6HWitAvfuibUOrEhE9hWqjcYM7rHuJywCh3nQMG6cA=; b=P75gxfee+KISkKX+PZOFiiOXExoVsZKAIrb60kOGrIpSWi/2M+lVQlcDcVfpyZzmA7jaLXx7
+ OxFCLiIkhHrjD16hLyzxb22RZnJVqij+na/mKSQo01eTCaX/AxS4HbNyJiQr/qBLtJLb+iui
+ eTwNWuKCAJHyt7AHHVfzmXNy61Y=
+X-Mailgun-Sending-Ip: 69.72.42.2
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 603e65bf4fd7814d5f8c7568 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 02 Mar 2021 16:20:15
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id BC0CCC4346F; Tue,  2 Mar 2021 16:20:14 +0000 (UTC)
+Received: from stor-presley.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1E9ACC433C6;
+        Tue,  2 Mar 2021 16:20:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1E9ACC433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
+Date:   Tue, 2 Mar 2021 08:20:10 -0800
+From:   Asutosh Das <asutoshd@codeaurora.org>
+To:     Adrian Hunter <adrian.hunter@intel.com>
+Cc:     cang@codeaurora.org, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH v9 1/2] scsi: ufs: Enable power management for wlun
+Message-ID: <20210302162010.GH12147@stor-presley.qualcomm.com>
+References: <cover.1614655058.git.asutoshd@codeaurora.org>
+ <b291bb65fadc9c828cbcb4ffb81cfa1ee47b82be.1614655058.git.asutoshd@codeaurora.org>
+ <d17e52e0-cb50-50ee-accb-458b318014e5@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <SN4PR2101MB088022E836AEC0838266A8C6C09A9@SN4PR2101MB0880.namprd21.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <d17e52e0-cb50-50ee-accb-458b318014e5@intel.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Sunil:
-      Thanks for your review.
-
-On 3/2/2021 3:45 AM, Sunil Muthuswamy wrote:
->> Hi Christoph:
->>        Thanks a lot for your review. There are some reasons.
->>        1) Vmbus drivers don't use DMA API now.
-> What is blocking us from making the Hyper-V drivers use the DMA API's? They
-> will be a null-op generally, when there is no bounce buffer support needed.
-> 
->>        2) Hyper-V Vmbus channel ring buffer already play bounce buffer
->> role for most vmbus drivers. Just two kinds of packets from
->> netvsc/storvsc are uncovered.
-> How does this make a difference here?
-> 
->>        3) In AMD SEV-SNP based Hyper-V guest, the access physical address
->> of shared memory should be bounce buffer memory physical address plus
->> with a shared memory boundary(e.g, 48bit) reported Hyper-V CPUID. It's
->> called virtual top of memory(vTom) in AMD spec and works as a watermark.
->> So it needs to ioremap/memremap the associated physical address above
->> the share memory boundary before accessing them. swiotlb_bounce() uses
->> low end physical address to access bounce buffer and this doesn't work
->> in this senario. If something wrong, please help me correct me.
+On Tue, Mar 02 2021 at 06:14 -0800, Adrian Hunter wrote:
+>On 2/03/21 5:21 am, Asutosh Das wrote:
+>> During runtime-suspend of ufs host, the scsi devices are
+>> already suspended and so are the queues associated with them.
+>> But the ufs host sends SSU to wlun during its runtime-suspend.
+>> During the process blk_queue_enter checks if the queue is not in
+>> suspended state. If so, it waits for the queue to resume, and never
+>> comes out of it.
+>> The commit
+>> (d55d15a33: scsi: block: Do not accept any requests while suspended)
+>> adds the check if the queue is in suspended state in blk_queue_enter().
 >>
-> There are alternative implementations of swiotlb on top of the core swiotlb
-> API's. One option is to have Hyper-V specific swiotlb wrapper DMA API's with
-> the custom logic above.
-
-Agree. Hyper-V should have its own DMA ops and put Hyper-V bounce buffer
-code in DMA API callback. For vmbus channel ring buffer, it doesn't need 
-additional bounce buffer and there are two options. 1) Not call DMA API 
-around them 2) pass a flag in DMA API to notify Hyper-V DMA callback
-and not allocate bounce buffer for them.
-
-> 
->> Thanks.
+>> Call trace:
+>>  __switch_to+0x174/0x2c4
+>>  __schedule+0x478/0x764
+>>  schedule+0x9c/0xe0
+>>  blk_queue_enter+0x158/0x228
+>>  blk_mq_alloc_request+0x40/0xa4
+>>  blk_get_request+0x2c/0x70
+>>  __scsi_execute+0x60/0x1c4
+>>  ufshcd_set_dev_pwr_mode+0x124/0x1e4
+>>  ufshcd_suspend+0x208/0x83c
+>>  ufshcd_runtime_suspend+0x40/0x154
+>>  ufshcd_pltfrm_runtime_suspend+0x14/0x20
+>>  pm_generic_runtime_suspend+0x28/0x3c
+>>  __rpm_callback+0x80/0x2a4
+>>  rpm_suspend+0x308/0x614
+>>  rpm_idle+0x158/0x228
+>>  pm_runtime_work+0x84/0xac
+>>  process_one_work+0x1f0/0x470
+>>  worker_thread+0x26c/0x4c8
+>>  kthread+0x13c/0x320
+>>  ret_from_fork+0x10/0x18
 >>
+>> Fix this by registering ufs device wlun as a scsi driver and
+>> registering it for block runtime-pm. Also make this as a
+>> supplier for all other luns. That way, this device wlun
+>> suspends after all the consumers and resumes after
+>> hba resumes.
 >>
->> On 3/1/2021 2:54 PM, Christoph Hellwig wrote:
->>> This should be handled by the DMA mapping layer, just like for native
->>> SEV support.
-> I agree with Christoph's comment that in principle, this should be handled using
-> the DMA API's
-> 
+>> Co-developed-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>> ---
+>
+>Now we need either to move the suspend/resume vops from
+>ufshcd_suspend/resume to __ufshcd_wl_suspend/resume, assuming that
+>would work for existing implementations of those callbacks,
+>or otherwise create new vops ->wl_suspend() / ->wl_resume(), and
+>then split the existing implementations of those callbacks.
+>
+>ufs_intel_resume() now needs to be invoked from __ufshcd_wl_resume().
+>I am not sure about the others:
+>
+>	exynos_ufs_suspend()
+>	exynos_ufs_resume()
+>	ufs_hisi_suspend()
+>	ufs_hisi_resume()
+>	ufs_mtk_suspend()
+>	ufs_mtk_resume()
+>	ufs_qcom_suspend()
+>	ufs_qcom_resume()
+>
+
+Thanks. I'll change this in the next version.
+
+-asd
