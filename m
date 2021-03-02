@@ -2,62 +2,62 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42C2DC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C7A1C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0856864F25
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8E3B64F16
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:56:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1581616AbhCBS7t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:59:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60980 "EHLO
+        id S1581618AbhCBS7x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:59:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244125AbhCBS06 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 13:26:58 -0500
-Received: from mail-qt1-x834.google.com (mail-qt1-x834.google.com [IPv6:2607:f8b0:4864:20::834])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0E44C061793
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Mar 2021 10:11:34 -0800 (PST)
-Received: by mail-qt1-x834.google.com with SMTP id 2so6373866qtw.1
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Mar 2021 10:11:34 -0800 (PST)
+        with ESMTP id S1581052AbhCBSh6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 13:37:58 -0500
+Received: from mail-qt1-x836.google.com (mail-qt1-x836.google.com [IPv6:2607:f8b0:4864:20::836])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B1B7C0617A7
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Mar 2021 10:36:59 -0800 (PST)
+Received: by mail-qt1-x836.google.com with SMTP id b3so15490593qtj.10
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Mar 2021 10:36:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:references:in-reply-to:mime-version:thread-index:date
          :message-id:subject:to:cc;
-        bh=iIZ76uHOX39xaOig73yIc4asv+BYoaj+aoQq5sFumuE=;
-        b=gCQVqkGMPwwOPnYO7b5HYZGfyVYCtTEI/CFva2UoXgybIFCIxov0zL3knY8722gU/l
-         YrLHGKZL9APGT0ZDKZ6AcC4W5snXK4vqFvqA7qOZxgOPRHccSkZXiSbw9eYu9tMXSHmJ
-         65sB8MwG0F5jg0hEf/gwHLT6+ag9Dyr0hg7Ig=
+        bh=dPVlsjwD+9sm3PGP3Y8ScEkTSGP/yd0sqiN6W6JmMhU=;
+        b=Y3RnDH2e2pP1t71RP4DvjMiRGHeXsLBg+OpYj6HIreePN6K07+Op+EfVuYg0uOWi5h
+         +hrx1IdaNlivM0mKWTQ1CD10pKTorYLB4QwUevLubBQ4V+/ZPAONI8ju/U1RBIg1MHrb
+         Gp6l3zGd9AHWOVFuTyLsuQOnFW98TtMYUPk6g=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:references:in-reply-to:mime-version
          :thread-index:date:message-id:subject:to:cc;
-        bh=iIZ76uHOX39xaOig73yIc4asv+BYoaj+aoQq5sFumuE=;
-        b=oQmUsg/cEdRM+0NmYQ0Uvbk8p+xJdW3T0b/2AibCNKFN7C8RrDn2We6pyCtjAnK01y
-         1SLj1uqOGThb1ZGz2xg8cFz+8FIsR/d8iTXaDCNiAGWgkxacfcwzYA6c4m/0dZAw+AOZ
-         t2rDQ4p9HuMnJe0wcPiYwWe6OSBgjOXLwa+mZYIXC24Ao5k4oRCuOJ8oheFYtNhJQYFj
-         b3N9NnE2/BVDekNIjdTlb+aCYsJc0w9wHn0FSxXI24UoV43ohb7OcpOaEyCbXPIdpTUa
-         hvZFPsKdAo8Kp4dYyZXqR/mFxym2FLdcLbpEE7vzwU1dQdUWUGhiRmbwDMEKHSwwhvF4
-         9ADw==
-X-Gm-Message-State: AOAM531Io/ASyoID9RTsOVX5OBOT2TPIHCl6ZI9iAAEpOR+iG8zpYb1P
-        sKaQkKUBQB9L/U1wIFqwQMmzmedCkQm5QkWIqmftAg==
-X-Google-Smtp-Source: ABdhPJxzPL4NhFKDQN0rmRd50POT2kYCMq4uyXmbIMiZIky3jrvM1tZuDmZwKvE0hDW0i38fON264YDZawO8GBxDXrI=
-X-Received: by 2002:a05:622a:2c4:: with SMTP id a4mr19073636qtx.201.1614708693910;
- Tue, 02 Mar 2021 10:11:33 -0800 (PST)
+        bh=dPVlsjwD+9sm3PGP3Y8ScEkTSGP/yd0sqiN6W6JmMhU=;
+        b=Yb8u2rVJAv1y+P8xAg47pDgLm2WVcJDozThooEI816hd7MyLNq1tOIper/KoSI0mLP
+         ZysXVA+/Y/8xx1XfDQEbihQlVIX7hzohJ7t88QsnuQgYgAG4+Gw5GyK8Fh4piibvSS/R
+         OeyeyZ5u6zj3OoBEt/BYxrFuFRxm1h3U8r1+/wIALr1GXg7ESNWSWeZ77sPlgzinHLB3
+         n/FLC1D3QQcDwAA1EoxwPsloFG1Dl++a5YYE6047INRDdd5WjIprunBc0nIzmx3d3wWO
+         sGQsFPUBYLv8p+eCQ2JKKMFFToi0vhqO9dcTmAuqLI10ru+YFXwORfMJ5ySDY5Hnvi1s
+         pBUg==
+X-Gm-Message-State: AOAM532g2fI+8mIXAkb+QFQRL6imsVoOicx+CjIBHYabmkDhX4ElcQVf
+        zpPDcFJyhmxMgTWSHyhm9KiaIvBUP9cXatIMFdJu4g==
+X-Google-Smtp-Source: ABdhPJzk+dWGn1Qa0ViU33/FMoDv4Hh73y/lrW2r3gIAAgBZVXZG3ri96ghP6JrncHY5qO8Xyn1SO9IKV3NeePqhqcw=
+X-Received: by 2002:ac8:6796:: with SMTP id b22mr19264682qtp.101.1614710218655;
+ Tue, 02 Mar 2021 10:36:58 -0800 (PST)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 References: <20201222101156.98308-1-kashyap.desai@broadcom.com>
- <20201222101156.98308-2-kashyap.desai@broadcom.com> <3c325481-753c-d2e0-9110-c08cf747ed8f@suse.de>
-In-Reply-To: <3c325481-753c-d2e0-9110-c08cf747ed8f@suse.de>
+ <20201222101156.98308-3-kashyap.desai@broadcom.com> <86097522-6d52-c336-b41c-fc2b4ad8701b@suse.de>
+In-Reply-To: <86097522-6d52-c336-b41c-fc2b4ad8701b@suse.de>
 MIME-Version: 1.0
 X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQIVk2r6yGrO96+nYWGuC86HruD4YwJ+nQ82AqgAOqOpyr5ygA==
-Date:   Tue, 2 Mar 2021 23:41:30 +0530
-Message-ID: <49f794c98f2c62f717f143271bb0ef84@mail.gmail.com>
-Subject: RE: [PATCH 01/24] mpi3mr: add mpi30 Rev-R headers and Kconfig
+Thread-Index: AQIVk2r6yGrO96+nYWGuC86HruD4YwK+swt7AnLHlBipymz/MA==
+Date:   Wed, 3 Mar 2021 00:06:53 +0530
+Message-ID: <b1140b05cb2ab8a1c4fccbb33920ea38@mail.gmail.com>
+Subject: RE: [PATCH 02/24] mpi3mr: base driver code
 To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         Steve Hagan <steve.hagan@broadcom.com>,
@@ -65,251 +65,255 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
         Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000024c19a05bc91aa5d"
+        boundary="00000000000006051305bc9205cc"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000024c19a05bc91aa5d
+--00000000000006051305bc9205cc
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-> > +++ b/drivers/scsi/mpi3mr/mpi/mpi30_api.h
-> > @@ -0,0 +1,21 @@
-> > +/* SPDX-License-Identifier: GPL-2.0-or-later */
-> > +/*
-> > + *  Copyright 2019-2020 Broadcom Inc. All rights reserved.
+> > +struct mpi3mr_ioc {
+> > +	struct list_head list;
+> > +	struct pci_dev *pdev;
+> > +	struct Scsi_Host *shost;
+> > +	u8 id;
+> > +	int cpu_count;
+> > +
+> > +	char name[MPI3MR_NAME_LENGTH];
+> > +	char driver_name[MPI3MR_NAME_LENGTH];
+> > +
+> > +	Mpi3SysIfRegs_t __iomem *sysif_regs;
+> > +	resource_size_t sysif_regs_phys;
+> > +	int bars;
+> > +	u64 dma_mask;
+> > +
+> > +	u16 msix_count;
+> > +	u8 intr_enabled;
+> > +
+> > +	u16 num_admin_req;
+> > +	u32 admin_req_q_sz;
+> > +	u16 admin_req_pi;
+> > +	u16 admin_req_ci;
+> > +	void *admin_req_base;
+> > +	dma_addr_t admin_req_dma;
+> > +	spinlock_t admin_req_lock;
+> > +
+> > +	u16 num_admin_replies;
+> > +	u32 admin_reply_q_sz;
+> > +	u16 admin_reply_ci;
+> > +	u8 admin_reply_ephase;
+> > +	void *admin_reply_base;
+> > +	dma_addr_t admin_reply_dma;
+> > +
+> > +	u32 ready_timeout;
+> > +
+> > +	struct mpi3mr_intr_info *intr_info;
+>
+> Please, be consistent.
+> If you must introduce typedefs for your internal structures, okay.
+> But then introduce typedefs for _all_ internal structures.
+> Or leave the typedefs and just use 'struct XXX'; which actually is the
+> recommended way for linux.
+
+Are you referring " typedef struct mpi3mr_drv_" ?. This is because of some
+inter-operability issue of different kernel version. I will remove this
+typedef in my V2.
+Usually, our goal is not to have typedef in drivers except mpi3.0 header
+files. I will scan such instances in and will update all the places.
+
+>
+> > +	u16 intr_info_count;
+> > +
+> > +	u16 num_queues;
+> > +	u16 num_op_req_q;
+> > +	struct op_req_qinfo *req_qinfo;
+> > +
+> > +	u16 num_op_reply_q;
+> > +	struct op_reply_qinfo *op_reply_qinfo;
+> > +
+> > +	struct mpi3mr_drv_cmd init_cmds;
+> > +	struct mpi3mr_ioc_facts facts;
+> > +	u16 op_reply_desc_sz;
+> > +
+> > +	u32 num_reply_bufs;
+> > +	struct dma_pool *reply_buf_pool;
+> > +	u8 *reply_buf;
+> > +	dma_addr_t reply_buf_dma;
+> > +	dma_addr_t reply_buf_dma_max_address;
+> > +
+> > +	u16 reply_free_qsz;
+> > +	struct dma_pool *reply_free_q_pool;
+> > +	U64 *reply_free_q;
+> > +	dma_addr_t reply_free_q_dma;
+> > +	spinlock_t reply_free_queue_lock;
+> > +	u32 reply_free_queue_host_index;
+> > +
+> > +	u32 num_sense_bufs;
+> > +	struct dma_pool *sense_buf_pool;
+> > +	u8 *sense_buf;
+> > +	dma_addr_t sense_buf_dma;
+> > +
+> > +	u16 sense_buf_q_sz;
+> > +	struct dma_pool *sense_buf_q_pool;
+> > +	U64 *sense_buf_q;
+> > +	dma_addr_t sense_buf_q_dma;
+> > +	spinlock_t sbq_lock;
+> > +	u32 sbq_host_index;
+> > +
+> > +	u8 is_driver_loading;
+> > +
+> > +	u16 max_host_ios;
+> > +
+> > +	u32 chain_buf_count;
+> > +	struct dma_pool *chain_buf_pool;
+> > +	struct chain_element *chain_sgl_list;
+> > +	u16  chain_bitmap_sz;
+> > +	void *chain_bitmap;
+> > +
+> > +	u8 reset_in_progress;
+> > +	u8 unrecoverable;
+> > +
+> > +	int logging_level;
+> > +
+> > +	struct mpi3mr_fwevt *current_event;
+> > +	Mpi3DriverInfoLayout_t driver_info;
+>
+> See my comment about struct typedefs above.
+
+I will remove this typedef and similar instances.
+
+> > +static inline int mpi3mr_request_irq(struct mpi3mr_ioc *mrioc, u16
+index)
+> > +{
+> > +	struct pci_dev *pdev =3D mrioc->pdev;
+> > +	struct mpi3mr_intr_info *intr_info =3D mrioc->intr_info + index;
+> > +	int retval =3D 0;
+> > +
+> > +	intr_info->mrioc =3D mrioc;
+> > +	intr_info->msix_index =3D index;
+> > +	intr_info->op_reply_q =3D NULL;
+> > +
+> > +	snprintf(intr_info->name, MPI3MR_NAME_LENGTH, "%s%d-msix%d",
+> > +	    mrioc->driver_name, mrioc->id, index);
+> > +
+> > +	retval =3D request_threaded_irq(pci_irq_vector(pdev, index),
+> mpi3mr_isr,
+> > +	    mpi3mr_isr_poll, IRQF_ONESHOT, intr_info->name, intr_info);
+> > +	if (retval) {
+> > +		ioc_err(mrioc, "%s: Unable to allocate interrupt %d!\n",
+> > +		    intr_info->name, pci_irq_vector(pdev, index));
+> > +		return retval;
+> > +	}
+> > +
+>
+> The point of having 'mpi3mr_isr_poll()' here is what exactly?
+
+This is a place holder and actual use case is handled in " [17/24] mpi3mr:
+add support of threaded isr"
+For easy review, I have created separate patch " [17/24] mpi3mr: add
+support of threaded isr"
+> > +	areq_entry =3D (u8 *)mrioc->admin_req_base +
+> > +	    (areq_pi * MPI3MR_ADMIN_REQ_FRAME_SZ);
+> > +	memset(areq_entry, 0, MPI3MR_ADMIN_REQ_FRAME_SZ);
+> > +	memcpy(areq_entry, (u8 *)admin_req, admin_req_sz);
+> > +
+> > +	if (++areq_pi =3D=3D max_entries)
+> > +		areq_pi =3D 0;
+> > +	mrioc->admin_req_pi =3D areq_pi;
+> > +
+> > +	writel(mrioc->admin_req_pi, &mrioc->sysif_regs-
+> >AdminRequestQueuePI);
+> > +
+> > +out:
+> > +	spin_unlock_irqrestore(&mrioc->admin_req_lock, flags);
+> > +
+> > +	return retval;
+> > +}
+> > +
+>
+> It might be an idea to have an 'admin' queue structure; keeping the
+> values all within the main IOC structure might cause cache misses and a
+> degraded performance.
+
+Noted your point. We can do it in future update. I think it make sense for
+code readability as well.
+
+> > +int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+> > +{
+> > +	int retval =3D 0;
+> > +	enum mpi3mr_iocstate ioc_state;
+> > +	u64 base_info;
+> > +	u32 timeout;
+> > +	u32 ioc_status, ioc_config;
+> > +	Mpi3IOCFactsData_t facts_data;
+> > +
+> > +	mrioc->change_count =3D 0;
+> > +	mrioc->cpu_count =3D num_online_cpus();
+>
+> What about CPU hotplug?
+
+
+We have to use num_available_cpus() to get benefit of cpu hotplug. In next
+update it will be available.
+
+> > +
+> > +/* global driver scop variables */
+> > +LIST_HEAD(mrioc_list);
+> > +DEFINE_SPINLOCK(mrioc_list_lock);
+> > +static int mrioc_ids;
+> > +static int warn_non_secure_ctlr;
+> > +
+> > +MODULE_AUTHOR(MPI3MR_DRIVER_AUTHOR);
+> > +MODULE_DESCRIPTION(MPI3MR_DRIVER_DESC);
+> > +MODULE_LICENSE(MPI3MR_DRIVER_LICENSE);
+> > +MODULE_VERSION(MPI3MR_DRIVER_VERSION);
+> > +
+> > +/* Module parameters*/
+> > +int logging_level;
+> > +module_param(logging_level, int, 0);
+> > +MODULE_PARM_DESC(logging_level,
+> > +	" bits for enabling additional logging info (default=3D0)");
+> > +
+> > +
+> > +/**
+> > + * mpi3mr_map_queues - Map queues callback handler
+> > + * @shost: SCSI host reference
 > > + *
->
-> 2020? Sure you don't want to update it to 2021?
-This file is common for application, firmware, driver and UEFI driver and
-we are consumer of this file. Further update on this driver will have
-updated revision whenever maintainer of this header file post the new
-update.
-
-> > +typedef struct _MPI3_SCSI_IO_CDB_EEDP32 {
-> > +    U8              CDB[20];                            /* 0x00 */
-> > +    __be32          PrimaryReferenceTag;                /* 0x14 */
-> > +    U16             PrimaryApplicationTag;              /* 0x18 */
-> > +    U16             PrimaryApplicationTagMask;          /* 0x1A */
-> > +    U32             TransferLength;                     /* 0x1C */
-> > +} MPI3_SCSI_IO_CDB_EEDP32, MPI3_POINTER
-> PTR_MPI3_SCSI_IO_CDB_EEDP32,
-> > +  Mpi3ScsiIoCdbEedp32_t, MPI3_POINTER pMpi3ScsiIoCdbEedp32_t;
-> > +
->
-> As noted by Bart, this is a bit naff.
-> I can live with having driver-specific typedefs, but having
-> driver-specific typedefs _just_ for little endian is pushing it.
-> (And incidentally also cancels your argument that you need the
-> driver-specific types for cross-development.)
-> So please, be consistent, and either use driver-specific typedefs
-> throughout or revert to use basic linux types.
-
-As explained earlier - This file is common for application, firmware,
-driver and UEFI driver and we are consumer of this file.
-Please consider header file as an exception.
-
->
-> > +typedef union _MPI3_SCSO_IO_CDB_UNION {
-> > +    U8                      CDB32[32];
-> > +    MPI3_SCSI_IO_CDB_EEDP32 EEDP32;
-> > +    MPI3_SGE_SIMPLE         SGE;
-> > +} MPI3_SCSO_IO_CDB_UNION, MPI3_POINTER
-> PTR_MPI3_SCSO_IO_CDB_UNION,
-> > +  Mpi3ScsiIoCdb_t, MPI3_POINTER pMpi3ScsiIoCdb_t;
-> > +
-> > +typedef struct _MPI3_SCSI_IO_REQUEST {
-> > +    U16                     HostTag;                        /* 0x00
-*/
-> > +    U8                      IOCUseOnly02;                   /* 0x02
-*/
-> > +    U8                      Function;                       /* 0x03
-*/
-> > +    U16                     IOCUseOnly04;                   /* 0x04
-*/
-> > +    U8                      IOCUseOnly06;                   /* 0x06
-*/
-> > +    U8                      MsgFlags;                       /* 0x07
-*/
-> > +    U16                     ChangeCount;                    /* 0x08
-*/
-> > +    U16                     DevHandle;                      /* 0x0A
-*/
-> > +    U32                     Flags;                          /* 0x0C
-*/
-> > +    U32                     SkipCount;                      /* 0x10
-*/
-> > +    U32                     DataLength;                     /* 0x14
-*/
-> > +    U8                      LUN[8];                         /* 0x18
-*/
-> > +    MPI3_SCSO_IO_CDB_UNION  CDB;                            /* 0x20
-*/
-> > +    MPI3_SGE_UNION          SGL[4];                         /* 0x40
-*/
-> > +} MPI3_SCSI_IO_REQUEST, MPI3_POINTER PTR_MPI3_SCSI_IO_REQUEST,
-> > +  Mpi3SCSIIORequest_t, MPI3_POINTER pMpi3SCSIIORequest_t;
-> > +
->
-> Ho-hum.
-> What happens if you have SGLs with more than 4 entries?
-
-It is dynamic array. SGL[3] is primarily used in driver and you can notice
-that it is for DIF/DIX metadata. Driver will fill simple SGLs in main
-frame if there is a room.
-Usually MPT Frame size is 128 byte, but another size can be defined by FW
-as well. If there are more than 4 SGLs and driver cannot accommodate in
-main frame, it will use chain frame which will have remaining SGLs.
-Chain frame logic is same as generic mpt3sas interface (with slight
-modification in fields based on hardware interface.)
-
-> > diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_type.h
-> b/drivers/scsi/mpi3mr/mpi/mpi30_type.h
-> > new file mode 100644
-> > index 000000000000..5de35e7a660f
-> > --- /dev/null
-> > +++ b/drivers/scsi/mpi3mr/mpi/mpi30_type.h
-> > @@ -0,0 +1,89 @@
-> > +/* SPDX-License-Identifier: GPL-2.0-or-later */
-> > +/*
-> > + *  Copyright 2016-2020 Broadcom Inc. All rights reserved.
+> > + * Call the blk_mq_pci_map_queues with from which operational
+> > + * queue the mapping has to be done
 > > + *
-> > + *           Name: mpi30_type.h
-> > + *    Description: MPI basic type definitions
-> > + *  Creation Date: 10/07/2016
-> > + *        Version: 03.00.00
+> > + * Return: return of blk_mq_pci_map_queues
 > > + */
-> > +#ifndef MPI30_TYPE_H
-> > +#define MPI30_TYPE_H     1
+> > +static int mpi3mr_map_queues(struct Scsi_Host *shost)
+> > +{
+> > +	struct mpi3mr_ioc *mrioc =3D shost_priv(shost);
 > > +
-> >
-> +/***************************************************************
-> **************
-> > + * Define MPI3_POINTER if it has not already been defined. By default
-*
-> > + * MPI3_POINTER is defined to be a near pointer. MPI3_POINTER can be
-> defined *
-> > + * as a far pointer by defining MPI3_POINTER as "far *" before this
-header
-> *
-> > + * file is included.
-*
-> > +
-> *****************************************************************
-> ***********/
-> > +#ifndef MPI3_POINTER
-> > +#define MPI3_POINTER    *
-> > +#endif  /* MPI3_POINTER */
-> > +
-> > +/* The basic types may have already been included by mpi_type.h or
-> mpi2_type.h*/
-> > +#if !defined(MPI_TYPE_H) && !defined(MPI2_TYPE_H)
-> > +#if 1
-> >
-> +/***************************************************************
-> **************
-> > +*
-> > +*               Basic Types
-> > +*
-> >
-> +****************************************************************
-> *************/
-> > +
-> > +typedef u8 U8;
-> > +typedef __le16 U16;
-> > +typedef __le32 U32;
-> > +typedef __le64 U64 __aligned(4);
-> > +
-> >
-> +/***************************************************************
-> **************
-> > +*
-> > +*               Pointer Types
-> > +*
-> >
-> +****************************************************************
-> *************/
-> > +
-> > +typedef U8 * PU8;
-> > +typedef U16 * PU16;
-> > +typedef U32 * PU32;
-> > +typedef U64 * PU64;
-> > +#else
-> >
-> +/***************************************************************
-> **************
-> > + *              Basic Types
-*
-> > +
-> *****************************************************************
-> ***********/
-> > +typedef int8_t      S8;
-> > +typedef uint8_t     U8;
-> > +typedef int16_t     S16;
-> > +typedef uint16_t    U16;
-> > +typedef int32_t     S32;
-> > +typedef uint32_t    U32;
-> > +typedef int64_t     S64;
-> > +typedef uint64_t    U64;
-> > +
-> >
-> +/***************************************************************
-> **************
-> > + *              Structure Types
-*
-> > +
-> *****************************************************************
-> ***********/
-> > +typedef struct _S64struct {
-> > +    U32         Low;
-> > +    S32         High;
-> > +} S64struct;
-> > +
-> > +typedef struct _U64struct {
-> > +    U32         Low;
-> > +    U32         High;
-> > +} U64struct;
+> > +	return blk_mq_pci_map_queues(&shost-
+> >tag_set.map[HCTX_TYPE_DEFAULT],
+> > +	    mrioc->pdev, 0);
+> > +}
 > > +
 >
-> I wonder why you need these structures on a 64-bit system ...
+> What happened to polling?
+> You did some patches for megaraid_sas, so I would have expected them to
+> be here, too ...
 
-Please consider all such things in header file as an exception since
-header files are common and created to all platforms and users must use
-without modified version to avoid API compatibility issues.
-Mpi3mr linux driver is not using this but some other users like UEFI
-driver, windows drivers etc might be a consumer of it.
+Internally, Io_uring iopoll is also completed for this driver as well, but
+it is under testing and may be available in next update.
 
->
+> > +module_init(mpi3mr_init);
+> > +module_exit(mpi3mr_exit);
 > >
-> +/***************************************************************
-> **************
-> > + *              Pointer Types
-*
-> > +
-> *****************************************************************
-> ***********/
-> > +typedef S8 * PS8;
-> > +typedef U8 * PU8;
-> > +typedef S16 * PS16;
-> > +typedef U16 * PU16;
-> > +typedef S32         *PS32;
-> > +typedef U32         *PU32;
-> > +typedef S64 * PS64;
-> > +typedef U64 * PU64;
-> > +typedef S64struct * PS64struct;
-> > +typedef U64struct * PU64struct;
-> > +#endif
-> > +#endif  /* MPI_TYPE_H && MPI2_TYPE_H */
-> > +
-> > +#endif  /* MPI30_TYPE_H */
-> >
-> And I do agree with Bart, please kill the pointer types.
-> It's not serving any purpose whatsoever.
-
-Same as above.
->
 > Cheers,
+
+Hannes -
+
+Thanks for the feedback. I am working on all the comments and soon I will
+be posting V2.
+
+Kashyap
 >
 > Hannes
 > --
@@ -318,7 +322,7 @@ Same as above.
 > SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
 > HRB 36809 (AG N=C3=BCrnberg), GF: Felix Imend=C3=B6rffer
 
---00000000000024c19a05bc91aa5d
+--00000000000006051305bc9205cc
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -389,13 +393,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMF+lhyz2R/nwxtWc39VG7XamrJf
-IRX8L1wzv+/AtsmLMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDMwMjE4MTEzNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMHbvOUpdNa51Lb3/lDe2OIBSr8v
+7DUbyBfbQaKLgiLsMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDMwMjE4MzY1OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQB+YIN3sNJlP7o7Nfzu36wGQL4IMNY79M89/R1/zZ3+QDql
-xeu8sso3SR51/3T+nS8HWta2+x+sjDc4NmXkwKW7vQcgdvMoWG2tt0PKZq3A+Yi2yLQP26eE56ei
-SQGmFez9s9pM2E2AUmF+49zsYKXPfglV2Aae1ALxK0iuFibCrOfBfZS7c993ohgUpvbPujdHu7+M
-ugvpxsvP/t1/C7p9wlSKRHxp411ryG8q7f4RLs79ErKKj0VRET+7aM6i/XVPFoO5JlXR/uo1n9ze
-tkNZSepQXcROst0OW2kvYqG2svPH4z0Xkl7H0OO6qRhWUInlQ/fIff1PwWzh4ndYO+QP
---00000000000024c19a05bc91aa5d--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQC8ebthn+cNEevam0bwVr9NSi0nyVa1dRZPF27X4lUii7mu
+916Wgz7KDAUSFYvRQq1thQYHqk14xhlmVNXnBhpbmrwLNoeZ4pqqTOQLywGbusGyQmhzBj9l7jw6
+GNy/EzUpOdYc2Cw4KKh+sdiTr498aBQSUyafK9oXmjcKCw8AtNYDTIsTvcY2C0OfoyNF9b/Pbo5z
+MokPs4FjkWhb66CJ3I2RXcijOLygIKBWaujrq0XonFYcvnpNRFXh1AdXVGnOz09BnIWBC7khLr4G
+hkgg0zDaDtOhlTfPEAsqRbqLRHBdMQtOPBJt18xxzidS6U1TjrL0mYHXYonhoBZPiiZJ
+--00000000000006051305bc9205cc--
