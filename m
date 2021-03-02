@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED913C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51B9FC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B60E264F21
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CC9864F21
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1835269AbhCBSvs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:51:48 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48568 "EHLO mail.kernel.org"
+        id S1835276AbhCBSvt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:51:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49008 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1350405AbhCBMVN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Mar 2021 07:21:13 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B318B64F9D;
-        Tue,  2 Mar 2021 11:58:28 +0000 (UTC)
+        id S1350704AbhCBMXu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Mar 2021 07:23:50 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id CE67564FAD;
+        Tue,  2 Mar 2021 11:58:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614686310;
-        bh=qboEmKhWfnNJk9fI2ExYxkQRvqpx5+d8UdHhmH29LO0=;
+        s=k20201202; t=1614686339;
+        bh=oap7bOATnTIpSYA5jF+rqLslb7OueLkQ5ML12WlOnwA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=l223sHXE2C4QR5ts4vF5GXFzR2u0GhLWJc7kQWn9Y7j8/CQ0kT08so6/MUFiCdHzX
-         11KIyPhZPdCoCURyBuCci8WDmmFTMg+kNM4Paq11mXQ5vvYvaH/nqmhHTHKLwCnf0H
-         4X7uo3D/2hOlxcBNfr4f+5eMbklJZm3vBjVaphgnqNsRRFUnPc6p6CsDuun3SxCD4U
-         d1Ah7vRehv72lU2+4wTc+OqoEVQSNNQgsdiIBi6+WNLB+R/Fh3f3zaT3ESuqV4gT6E
-         9FNZ5AUJuxEYgXQ8d9qlr9JT9DSGmb7ca2sllg7iUYi7NILD1o1bDOmKh0Z8JAs6N6
-         v9748zI5yZHtw==
+        b=qwUhzQgKedkO9tsGLoGwqhYlM7fJLbjBtkv5TY3H+om0one9/qME4FI9fV2TNNX04
+         /G1bpBLbE0AjPRtKN4Cg3xiDa/ql7VOBamgHWDFbTy8bOYYnGRqDu4yVALRrJAwm4J
+         xRWsGEKTIDXNlLHQ3aHN94t8IOf4u4vmUi/LSjSXkPfxZ+P2IcHFaFWohhF5iDm2cE
+         9opgPd98mauthCLgKKHq7+dU3dRK4ynOrtTVJE1ypq05E3jkk+pvkA0lqiPK7B7M8b
+         EavbJy1S6IrYm2hxfVbnfOiJKOKWdsSZP1WSimHjfomsMj7L4HbE82WVUCmgduktI6
+         JEpUHbTXaZE0A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mike Christie <michael.christie@oracle.com>,
@@ -38,12 +38,12 @@ Cc:     Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 30/33] scsi: libiscsi: Fix iscsi_prep_scsi_cmd_pdu() error handling
-Date:   Tue,  2 Mar 2021 06:57:46 -0500
-Message-Id: <20210302115749.62653-30-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 19/21] scsi: libiscsi: Fix iscsi_prep_scsi_cmd_pdu() error handling
+Date:   Tue,  2 Mar 2021 06:58:33 -0500
+Message-Id: <20210302115835.63269-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210302115749.62653-1-sashal@kernel.org>
-References: <20210302115749.62653-1-sashal@kernel.org>
+In-Reply-To: <20210302115835.63269-1-sashal@kernel.org>
+References: <20210302115835.63269-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -73,10 +73,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index f954be3d5ee2..0b7449de1b53 100644
+index 1c69515e870c..5e373a3752ba 100644
 --- a/drivers/scsi/libiscsi.c
 +++ b/drivers/scsi/libiscsi.c
-@@ -1532,14 +1532,9 @@ check_mgmt:
+@@ -1569,14 +1569,9 @@ check_mgmt:
  		}
  		rc = iscsi_prep_scsi_cmd_pdu(conn->task);
  		if (rc) {
