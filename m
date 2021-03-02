@@ -2,194 +2,133 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C733BC2BA1A
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Mar 2021 13:06:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E32AC41518
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Mar 2021 13:06:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8754C64EE7
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Mar 2021 13:06:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34D1564EE8
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Mar 2021 13:06:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1447011AbhCCMra (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Mar 2021 07:47:30 -0500
-Received: from z11.mailgun.us ([104.130.96.11]:60434 "EHLO z11.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1442530AbhCCKTy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 Mar 2021 05:19:54 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1614766773; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=bfCTWDQxGsoJJN+YSMUDZDqMyYOjzCwqvQuLqpjmVfE=;
- b=Gqs35W7y278D5ieiftHo2BC4++MRIMNuUJmYrp553HwEbnr792OsUmecB8Pz8xr4N5OxNUGD
- nvDyVbMjiNnbHy2mcprjLYveRj8lgzsXEHkgADIUwXo12TBSDL5NmaCJsnVKhyy6xFDtpCt2
- 60RP42M/QFBDyxnz5sMsIsPT9pg=
-X-Mailgun-Sending-Ip: 104.130.96.11
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 603f5faf7b9e2700a3d2a328 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 03 Mar 2021 10:06:39
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 11F7EC43463; Wed,  3 Mar 2021 10:06:38 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C99BBC433C6;
-        Wed,  3 Mar 2021 10:06:37 +0000 (UTC)
+        id S239565AbhCCMqd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Mar 2021 07:46:33 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:46518 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2360935AbhCBXIF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 18:08:05 -0500
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 122N3RO6085202;
+        Tue, 2 Mar 2021 18:07:19 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=Owsg7r6i09zRTjczmkzjnuSkxpwtC+uMxU9OVC0fK1M=;
+ b=C3vS/cZ9Pl33I7WlaVyjOMiZtwiZi6Xntb/hZxCYXX3f9VOYFT9VPVgYkPPn9XUzur7q
+ V0ezDabgFnavsUpCg3PbT1kt90OthZKo9XWUzqHdYN2WBE4L9OYoCK1xGFat3RAdZBY4
+ JFfGm09IXCmHjB9FXpIl0w6DluMFFLaN2Bz386bqqMgmmqDEP7sP4PmfGv/L4AjGpjon
+ EBx137c6OEM6ftd+Pj/qmK+3gYl7WPLE/nWdUAYbFVApmecavDMy+HMdQ8BX2Vqn6Jtl
+ 9uNRorst2LkcvuzMafvh2+ZJ4n3t6ne2ZUFD6DfKDbWEh2nZv/k4QL3H+aQPtHeVGiUc UQ== 
+Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 371xmwrg9u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 02 Mar 2021 18:07:18 -0500
+Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
+        by ppma01wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 122MwJVW029519;
+        Tue, 2 Mar 2021 23:05:49 GMT
+Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
+        by ppma01wdc.us.ibm.com with ESMTP id 36ydq92hv6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 02 Mar 2021 23:05:49 +0000
+Received: from b03ledav001.gho.boulder.ibm.com (b03ledav001.gho.boulder.ibm.com [9.17.130.232])
+        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 122N5lgv10617524
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 2 Mar 2021 23:05:47 GMT
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 605516E050;
+        Tue,  2 Mar 2021 23:05:47 +0000 (GMT)
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 020606E04C;
+        Tue,  2 Mar 2021 23:05:47 +0000 (GMT)
+Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
+        by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Tue,  2 Mar 2021 23:05:46 +0000 (GMT)
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+To:     james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH v5 5/5] ibmvfc: reinitialize sub-CRQs and perform channel enquiry after LPM
+Date:   Tue,  2 Mar 2021 17:05:43 -0600
+Message-Id: <20210302230543.9905-6-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20210302230543.9905-1-tyreld@linux.ibm.com>
+References: <20210302230543.9905-1-tyreld@linux.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 03 Mar 2021 18:06:37 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/3] scsi: ufs: Minor adjustments to error handling
-In-Reply-To: <3c6df42fef5a1e52e655753aadec4a11@codeaurora.org>
-References: <1614145010-36079-1-git-send-email-cang@codeaurora.org>
- <1614145010-36079-2-git-send-email-cang@codeaurora.org>
- <DM6PR04MB657549A42A64963CA134609CFC989@DM6PR04MB6575.namprd04.prod.outlook.com>
- <3c6df42fef5a1e52e655753aadec4a11@codeaurora.org>
-Message-ID: <43928e58a5e93fe10487d30bddbf994a@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
+ definitions=2021-03-02_08:2021-03-01,2021-03-02 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 suspectscore=0
+ adultscore=0 mlxscore=0 phishscore=0 impostorscore=0 lowpriorityscore=0
+ priorityscore=1501 malwarescore=0 bulkscore=0 mlxlogscore=999
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2103020170
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-03-03 18:03, Can Guo wrote:
-> Hi Avri,
-> 
-> On 2021-03-03 15:22, Avri Altman wrote:
->>> 
->>> 
->>> In error handling prepare stage, after SCSI requests are blocked, do 
->>> a
->>> down/up_write(clk_scaling_lock) to clean up the queuecommand() path.
->>> Meanwhile, stop eeh_work in case it disturbs error recovery. 
->>> Moreover,
->>> reset ufshcd_state at the entrance of ufshcd_probe_hba(), since it 
->>> may be
->>> called multiple times during error recovery.
->>> 
->>> Signed-off-by: Can Guo <cang@codeaurora.org>
->> I noticed that you tagged Adrian's patch -
->> https://lore.kernel.org/lkml/20210301191940.15247-1-adrian.hunter@intel.com/
->> So this patch needs to be adjusted accordingly?
-> 
-> Thanks for pointing me to that one, I will rebase mine.
-> 
-> Regards,
-> Can Guo.
-> 
+A live partition migration (LPM) results in a CRQ disconnect similar to
+a hard reset. In this LPM case the hypervisor moslty perserves the CRQ
+transport such that it simply needs to be reenabled. However, the
+capabilities may have changed such as fewer channels, or no channels at
+all. Further, its possible that there may be sub-CRQ support, but no
+channel support. The CRQ reenable path currently doesn't take any of
+this into consideration.
 
-Just noticed that Adrian's change comes later than mine, so I may not 
-need to
-adjust mine.
+For simpilicty release and reinitialize sub-CRQs during reenable, and
+set do_enquiry and using_channels with the appropriate values to trigger
+channel renegotiation.
 
-Thanks,
-Can Guo.
+fixes: 3034ebe26389 ("ibmvfc: add alloc/dealloc routines for SCSI Sub-CRQ Channels")
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Reviewed-by: Brian King <brking@linux.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
->> 
->> Thanks,
->> Avri
->> 
->>> ---
->>>  drivers/scsi/ufs/ufshcd.c | 18 ++++++++++++------
->>>  1 file changed, 12 insertions(+), 6 deletions(-)
->>> 
->>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index 80620c8..013eb73 100644
->>> --- a/drivers/scsi/ufs/ufshcd.c
->>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -4987,6 +4987,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
->>> struct ufshcd_lrb *lrbp)
->>>                          * UFS device needs urgent BKOPs.
->>>                          */
->>>                         if (!hba->pm_op_in_progress &&
->>> +                           !ufshcd_eh_in_progress(hba) &&
->>>                             
->>> ufshcd_is_exception_event(lrbp->ucd_rsp_ptr) &&
->>>                             schedule_work(&hba->eeh_work)) {
->>>                                 /*
->>> @@ -5784,13 +5785,20 @@ static void 
->>> ufshcd_err_handling_prepare(struct
->>> ufs_hba *hba)
->>>                         ufshcd_suspend_clkscaling(hba);
->>>                 ufshcd_clk_scaling_allow(hba, false);
->>>         }
->>> +       ufshcd_scsi_block_requests(hba);
->>> +       /* Drain ufshcd_queuecommand() */
->>> +       down_write(&hba->clk_scaling_lock);
->>> +       up_write(&hba->clk_scaling_lock);
->>> +       cancel_work_sync(&hba->eeh_work);
->>>  }
->>> 
->>>  static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
->>>  {
->>> +       ufshcd_scsi_unblock_requests(hba);
->>>         ufshcd_release(hba);
->>>         if (ufshcd_is_clkscaling_supported(hba))
->>>                 ufshcd_clk_scaling_suspend(hba, false);
->>> +       ufshcd_clear_ua_wluns(hba);
->>>         pm_runtime_put(hba->dev);
->>>  }
->>> 
->>> @@ -5882,8 +5890,8 @@ static void ufshcd_err_handler(struct 
->>> work_struct
->>> *work)
->>>         spin_unlock_irqrestore(hba->host->host_lock, flags);
->>>         ufshcd_err_handling_prepare(hba);
->>>         spin_lock_irqsave(hba->host->host_lock, flags);
->>> -       ufshcd_scsi_block_requests(hba);
->>> -       hba->ufshcd_state = UFSHCD_STATE_RESET;
->>> +       if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
->>> +               hba->ufshcd_state = UFSHCD_STATE_RESET;
->>> 
->>>         /* Complete requests that have door-bell cleared by h/w */
->>>         ufshcd_complete_requests(hba);
->>> @@ -6042,12 +6050,8 @@ static void ufshcd_err_handler(struct 
->>> work_struct
->>> *work)
->>>         }
->>>         ufshcd_clear_eh_in_progress(hba);
->>>         spin_unlock_irqrestore(hba->host->host_lock, flags);
->>> -       ufshcd_scsi_unblock_requests(hba);
->>>         ufshcd_err_handling_unprepare(hba);
->>>         up(&hba->host_sem);
->>> -
->>> -       if (!err && needs_reset)
->>> -               ufshcd_clear_ua_wluns(hba);
->>>  }
->>> 
->>>  /**
->>> @@ -7858,6 +7862,8 @@ static int ufshcd_probe_hba(struct ufs_hba 
->>> *hba,
->>> bool async)
->>>         unsigned long flags;
->>>         ktime_t start = ktime_get();
->>> 
->>> +       hba->ufshcd_state = UFSHCD_STATE_RESET;
->>> +
->>>         ret = ufshcd_link_startup(hba);
->>>         if (ret)
->>>                 goto out;
->>> --
->>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
->>> Linux
->>> Foundation Collaborative Project.
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index ef03fa559433..1e2ea21713ad 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -903,6 +903,9 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_host *vhost)
+ {
+ 	int rc = 0;
+ 	struct vio_dev *vdev = to_vio_dev(vhost->dev);
++	unsigned long flags;
++
++	ibmvfc_release_sub_crqs(vhost);
+ 
+ 	/* Re-enable the CRQ */
+ 	do {
+@@ -914,6 +917,15 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_host *vhost)
+ 	if (rc)
+ 		dev_err(vhost->dev, "Error enabling adapter (rc=%d)\n", rc);
+ 
++	spin_lock_irqsave(vhost->host->host_lock, flags);
++	spin_lock(vhost->crq.q_lock);
++	vhost->do_enquiry = 1;
++	vhost->using_channels = 0;
++	spin_unlock(vhost->crq.q_lock);
++	spin_unlock_irqrestore(vhost->host->host_lock, flags);
++
++	ibmvfc_init_sub_crqs(vhost);
++
+ 	return rc;
+ }
+ 
+-- 
+2.27.0
+
