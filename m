@@ -2,45 +2,43 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FB16C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA6D8C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 177DB64F07
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A561B64F07
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1581427AbhCBSv2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:51:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38730 "EHLO mail.kernel.org"
+        id S1581441AbhCBSvd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:51:33 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39616 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1383603AbhCBL4d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Mar 2021 06:56:33 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 27F5564F14;
-        Tue,  2 Mar 2021 11:55:38 +0000 (UTC)
+        id S1443473AbhCBL5y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Mar 2021 06:57:54 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A86A164F18;
+        Tue,  2 Mar 2021 11:55:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614686139;
-        bh=Cd0eVel9AGZGGertR3fyXI4RXhCQuYVAsF2IOVW2H00=;
+        s=k20201202; t=1614686143;
+        bh=7g8UtlJwsXJhtU+uw66xDGlPqPQWabpsfn0k+UZabfU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=l2B3gwYdOng46a8niq2RGSfuewLWcC6FPhTbMbh5xtnRBr5mBt+hljwYqnmHqeVOB
-         MHS6fRTZAunSwArc6P3uJL6KxCts3jBsHs490C8N82rhXAwmLUhv06mEYr/+nXsbSb
-         1idd6li1X33QbSq3/CgSg/JMTQsDrAW0rVa5AgnecszTEJPrRGe+vunn4pVa2rWUtw
-         ql2iNfy5HCM0q9vBK72/BhvcfRpRpTRxghe1yoa4+3SeqqrNqFN1qaoDI49ccrk2uq
-         COLrxheVEheRsM84xJyhujvMHMEsAsp+UpIayVi+NNxxMtfiluSK+AOrM7zmhFlqUF
-         Qy5+IQd0ZWlgQ==
+        b=HEUDs5/Gap+yHxolgdSOSQ/Unwax71XG3mLSPp6hryNaFGE5NPZOblpUGnsI5yHFQ
+         4uKnb2jLDSf1lWhH+LsAbm4C/vJDhHB9/y46xXteAlSAcsjBmBOUPrbRgNGv80cH5C
+         UXNSDfnvj39VOAQkDrDbhOtpE3uuifYd6y9PUF5e0vOmcpwdqasG1xpX/qYsx6czIi
+         +TjHsdnNTTSb/9ai0ACA0Eb+s732Tdu30xVWuQWpns7Xj4ILmYeMXxdQw3rKV8/k4l
+         RisyebXWFqYA+5bR6ws8RGt+n7WIVA1izW9vpWyOiY6o08j50hOf5HCLyU3HVEc96V
+         Ervz4PiNttC0A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Kiwoong Kim <kwmad.kim@samsung.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 03/52] scsi: ufs: Add a quirk to permit overriding UniPro defaults
-Date:   Tue,  2 Mar 2021 06:54:44 -0500
-Message-Id: <20210302115534.61800-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.11 06/52] scsi: ufs: Introduce a quirk to allow only page-aligned sg entries
+Date:   Tue,  2 Mar 2021 06:54:47 -0500
+Message-Id: <20210302115534.61800-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210302115534.61800-1-sashal@kernel.org>
 References: <20210302115534.61800-1-sashal@kernel.org>
@@ -54,103 +52,60 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Kiwoong Kim <kwmad.kim@samsung.com>
 
-[ Upstream commit b1d0d2eb89d4e3a25b212a9d836587503537067e ]
+[ Upstream commit 2b2bfc8aa519f696087475ed8e8c61850c673272 ]
 
-The UniPro specification states that attribute IDs of the following
-parameters are vendor-specific so some SoCs could have no regions at the
-defined addresses:
+Some SoCs require a single scatterlist entry for smaller than page size,
+i.e. 4KB. When dispatching commands with more than one scatterlist entry
+under 4KB in size the following behavior is observed:
 
- - DME_LocalFC0ProtectionTimeOutVal
- - DME_LocalTC0ReplayTimeOutVal
- - DME_LocalAFC0ReqTimeOutVal
+A command to read a block range is dispatched with two scatterlist entries
+that are named AAA and BBB. After dispatching, the host builds two PRDT
+entries and during transmission, device sends just one DATA IN because
+device doesn't care about host DMA. The host then transfers the combined
+amount of data from start address of the area named AAA. As a consequence,
+the area that follows AAA in memory would be corrupted.
 
-In addition, the following parameters should be set considering the
-compatibility between host and device.
+    |<------------->|
+    +-------+------------         +-------+
+    +  AAA  + (corrupted)   ...   +  BBB  +
+    +-------+------------         +-------+
 
- - PA_PWRMODEUSERDATA0
- - PA_PWRMODEUSERDATA1
- - PA_PWRMODEUSERDATA2
- - PA_PWRMODEUSERDATA3
- - PA_PWRMODEUSERDATA4
- - PA_PWRMODEUSERDATA5
+To avoid this we need to enforce page size alignment for sg entries.
 
-Introduce a quirk to allow vendor drivers to override the UniPro defaults.
-
-Link: https://lore.kernel.org/r/1fedd3dea0ccc980913a5995a10510d86a5b01b9.1608513782.git.kwmad.kim@samsung.com
-Acked-by: Avri Altman <Avri.Altman@wdc.com>
+Link: https://lore.kernel.org/r/56dddef94f60bd9466fd77e69f64bbbd657ed2a1.1611026909.git.kwmad.kim@samsung.com
 Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 40 ++++++++++++++++++++-------------------
- drivers/scsi/ufs/ufshcd.h |  6 ++++++
- 2 files changed, 27 insertions(+), 19 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 2 ++
+ drivers/scsi/ufs/ufshcd.h | 4 ++++
+ 2 files changed, 6 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index fb32d122f2e3..2a715f13fe1d 100644
+index 48cbd4f294dd..3ab1702e5b04 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4218,25 +4218,27 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES),
- 						pwr_mode->hs_rate);
+@@ -4829,6 +4829,8 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+ 	struct request_queue *q = sdev->request_queue;
  
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA0),
--			DL_FC0ProtectionTimeOutVal_Default);
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA1),
--			DL_TC0ReplayTimeOutVal_Default);
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA2),
--			DL_AFC0ReqTimeOutVal_Default);
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA3),
--			DL_FC1ProtectionTimeOutVal_Default);
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA4),
--			DL_TC1ReplayTimeOutVal_Default);
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA5),
--			DL_AFC1ReqTimeOutVal_Default);
--
--	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalFC0ProtectionTimeOutVal),
--			DL_FC0ProtectionTimeOutVal_Default);
--	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalTC0ReplayTimeOutVal),
--			DL_TC0ReplayTimeOutVal_Default);
--	ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalAFC0ReqTimeOutVal),
--			DL_AFC0ReqTimeOutVal_Default);
-+	if (!(hba->quirks & UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING)) {
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA0),
-+				DL_FC0ProtectionTimeOutVal_Default);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA1),
-+				DL_TC0ReplayTimeOutVal_Default);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA2),
-+				DL_AFC0ReqTimeOutVal_Default);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA3),
-+				DL_FC1ProtectionTimeOutVal_Default);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA4),
-+				DL_TC1ReplayTimeOutVal_Default);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA5),
-+				DL_AFC1ReqTimeOutVal_Default);
-+
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalFC0ProtectionTimeOutVal),
-+				DL_FC0ProtectionTimeOutVal_Default);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalTC0ReplayTimeOutVal),
-+				DL_TC0ReplayTimeOutVal_Default);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalAFC0ReqTimeOutVal),
-+				DL_AFC0ReqTimeOutVal_Default);
-+	}
+ 	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
++	if (hba->quirks & UFSHCD_QUIRK_ALIGN_SG_WITH_PAGE_SIZE)
++		blk_queue_update_dma_alignment(q, PAGE_SIZE - 1);
  
- 	ret = ufshcd_uic_change_pwr_mode(hba, pwr_mode->pwr_rx << 4
- 			| pwr_mode->pwr_tx);
+ 	if (ufshcd_is_rpm_autosuspend_allowed(hba))
+ 		sdev->rpm_autosuspend = 1;
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index aa9ea3552323..85f9d0fbfbd9 100644
+index 85f9d0fbfbd9..8cb64ae95462 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -551,6 +551,12 @@ enum ufshcd_quirks {
+@@ -557,6 +557,10 @@ enum ufshcd_quirks {
  	 */
- 	UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL		= 1 << 12,
+ 	UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING = 1 << 13,
  
 +	/*
-+	 * This quirk needs to disable unipro timeout values
-+	 * before power mode change
++	 * This quirk allows only sg entries aligned with page size.
 +	 */
-+	UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING = 1 << 13,
-+
++	UFSHCD_QUIRK_ALIGN_SG_WITH_PAGE_SIZE		= 1 << 13,
  };
  
  enum ufshcd_caps {
