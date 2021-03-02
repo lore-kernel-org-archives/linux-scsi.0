@@ -2,89 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43C27C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81325C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09D0364F1D
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43B9660201
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:50:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1581413AbhCBSvQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:51:16 -0500
-Received: from out30-45.freemail.mail.aliyun.com ([115.124.30.45]:58265 "EHLO
-        out30-45.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1382684AbhCBJlg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 04:41:36 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R961e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=alimailimapcm10staff010182156082;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0UQ4Q0Ci_1614678045;
-Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0UQ4Q0Ci_1614678045)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Tue, 02 Mar 2021 17:40:52 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     lduncan@suse.com
-Cc:     cleech@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Subject: [PATCH] scsi: iscsi: Switch to using the new API kobj_to_dev()
-Date:   Tue,  2 Mar 2021 17:40:44 +0800
-Message-Id: <1614678044-5635-1-git-send-email-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S1581420AbhCBSv1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:51:27 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38738 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1383604AbhCBL4d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Mar 2021 06:56:33 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 81C3A64F0D;
+        Tue,  2 Mar 2021 11:55:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614686141;
+        bh=Z44VBan+ciMPBEAO8gcJLdPEjd8Og8yZJ1Bf26BE4Ck=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=bMXAIALzbzyRHqiPwBMNodjscDpCa+hFwyoYmQSlicc72KeW5TEwuk+4IdrjKHWnB
+         6GpFxh1YDcmDHhDzn9xj5FYptS1njRBwL71C4CtwTFVt2YGC0BlU8PCRxIcnr0tguX
+         rpvNtEd5RZobfnJ0v+SNBZkWy6dEM7XpwEtpwhyGVH2Hh5FSyj4hQAYq6tp864FYSw
+         MHOgwM+IDwhqr0j1wpfF+AKzRBa1Ofy9mXRsV1vQQGqOllK8iHKUZs7ESp/0DjB+nZ
+         9MsDffVz6kSYexdmvNgPN8Hz96A4lyyXJkzLHAVmg9Zt0cnrnTkAb6KQUIn4dukfen
+         Eu+lUE56zNYxg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     akshatzen <akshatzen@google.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        Viswas G <Viswas.G@microchip.com>,
+        Ruksar Devadi <Ruksar.devadi@microchip.com>,
+        Radha Ramachandran <radha@google.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, pmchba@pmcs.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.11 04/52] scsi: pm80xx: Fix missing tag_free in NVMD DATA req
+Date:   Tue,  2 Mar 2021 06:54:45 -0500
+Message-Id: <20210302115534.61800-4-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210302115534.61800-1-sashal@kernel.org>
+References: <20210302115534.61800-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following coccicheck warnings:
+From: akshatzen <akshatzen@google.com>
 
-./drivers/scsi/scsi_transport_iscsi.c:4453:61-62: WARNING opportunity
-for kobj_to_dev().
+[ Upstream commit 5d28026891c7041deec08cc5ddd8f3abd90195e1 ]
 
-./drivers/scsi/scsi_transport_iscsi.c:4309:61-62: WARNING opportunity
-for kobj_to_dev().
+Tag was not freed in NVMD get/set data request failure scenario. This
+caused a tag leak each time a request failed.
 
-./drivers/scsi/scsi_transport_iscsi.c:4040:61-62: WARNING opportunity
-for kobj_to_dev().
-
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Link: https://lore.kernel.org/r/20210109123849.17098-5-Viswas.G@microchip.com
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Signed-off-by: akshatzen <akshatzen@google.com>
+Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
+Signed-off-by: Radha Ramachandran <radha@google.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 969d24d..debedcd 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -4037,7 +4037,7 @@ static ISCSI_CLASS_ATTR(conn, field, S_IRUGO,				\
- static umode_t iscsi_conn_attr_is_visible(struct kobject *kobj,
- 					 struct attribute *attr, int i)
- {
--	struct device *cdev = container_of(kobj, struct device, kobj);
-+	struct device *cdev = kobj_to_dev(kobj);
- 	struct iscsi_cls_conn *conn = transport_class_to_conn(cdev);
- 	struct iscsi_transport *t = conn->transport;
- 	int param;
-@@ -4306,7 +4306,7 @@ static ISCSI_CLASS_ATTR(priv_sess, field, S_IRUGO | S_IWUSR,		\
- static umode_t iscsi_session_attr_is_visible(struct kobject *kobj,
- 					    struct attribute *attr, int i)
- {
--	struct device *cdev = container_of(kobj, struct device, kobj);
-+	struct device *cdev = kobj_to_dev(kobj);
- 	struct iscsi_cls_session *session = transport_class_to_session(cdev);
- 	struct iscsi_transport *t = session->transport;
- 	int param;
-@@ -4450,7 +4450,7 @@ static ISCSI_CLASS_ATTR(host, field, S_IRUGO, show_host_param_##param,	\
- static umode_t iscsi_host_attr_is_visible(struct kobject *kobj,
- 					 struct attribute *attr, int i)
- {
--	struct device *cdev = container_of(kobj, struct device, kobj);
-+	struct device *cdev = kobj_to_dev(kobj);
- 	struct Scsi_Host *shost = transport_class_to_shost(cdev);
- 	struct iscsi_internal *priv = to_iscsi_internal(shost->transportt);
- 	int param;
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index c8d4d87c5473..fc721d616f43 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -3038,8 +3038,8 @@ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	complete(pm8001_ha->nvmd_completion);
+ 	pm8001_dbg(pm8001_ha, MSG, "Set nvm data complete!\n");
+ 	if ((dlen_status & NVMD_STAT) != 0) {
+-		pm8001_dbg(pm8001_ha, FAIL, "Set nvm data error!\n");
+-		return;
++		pm8001_dbg(pm8001_ha, FAIL, "Set nvm data error %x\n",
++				dlen_status);
+ 	}
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+@@ -3062,11 +3062,17 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 
+ 	pm8001_dbg(pm8001_ha, MSG, "Get nvm data complete!\n");
+ 	if ((dlen_status & NVMD_STAT) != 0) {
+-		pm8001_dbg(pm8001_ha, FAIL, "Get nvm data error!\n");
++		pm8001_dbg(pm8001_ha, FAIL, "Get nvm data error %x\n",
++				dlen_status);
+ 		complete(pm8001_ha->nvmd_completion);
++		/* We should free tag during failure also, the tag is not being
++		 * freed by requesting path anywhere.
++		 */
++		ccb->task = NULL;
++		ccb->ccb_tag = 0xFFFFFFFF;
++		pm8001_tag_free(pm8001_ha, tag);
+ 		return;
+ 	}
+-
+ 	if (ir_tds_bn_dps_das_nvm & IPMode) {
+ 		/* indirect mode - IR bit set */
+ 		pm8001_dbg(pm8001_ha, MSG, "Get NVMD success, IR=1\n");
 -- 
-1.8.3.1
+2.30.1
 
