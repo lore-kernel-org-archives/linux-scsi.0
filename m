@@ -2,149 +2,188 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C539C4332B
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5467C4332D
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4274764F1E
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79D8564F25
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Mar 2021 19:51:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381111AbhCBS4P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Mar 2021 13:56:15 -0500
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:19087 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1446197AbhCBN2y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 08:28:54 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1614691734; x=1646227734;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=waigJLGe+aCgbuib6LdVYw7L5S248c/bP/DF2YgcfCA=;
-  b=gbKhXDdn3Gnq7FZbdpzUUV9wQLaCdnJp4Pv/U0Jtzljj2KoAsOmWFpjd
-   st3hHLfhOJPm5e9srevHLIOY7S70KP2QzYYZYe+rvsp5XsxDODkdxci3v
-   QpQYJpcLru8h7pTOjij3QaXGCwA15RAEIxVLgfdjL6h5hB0DMtoDUyKLp
-   y63lP4lfAwHs/9x2tYvYnSYtS0HR8/NNTAAWVdwy2gLbjD5vwXrAqIDIH
-   uOoSDnQb575jLzfOSN4D5SoBRWwLTp2CwBVZYClaLY4bJHQv4xDZT2Wfa
-   zFn1dNLkRUfKnKMBj6JkoImT1xPPqNmaRSK8n9bDuN6GoAc1KwsiqtQsy
-   g==;
-IronPort-SDR: uOw+JiB99itxMPbjTZw9hMgKtZ8CqIPTAbcYI0862+dDGM8E+wt+U8/SMoC20cV0x+dDG959MY
- 9HtMz4oCGvpJvj7zsdZubGLS6oMWlQJaeYDhwXu11WJUR0xsuIiVAUAI0prWLNzlbzlsvJ/sVU
- gzY7zRET2Bf/nLL3XBYNmwwJggBUQpBIsYcKm7L0lrDmBjbqVnBLRXhKLIk1SRvVJmiAAcm6pN
- JwDk4u+qncGRUoPNZx/hz2awB0lwWILAp1j4xjtGYfoBVvoXuXUEpkYQ8DPgEy5mfUWOMHZP9P
- kEg=
-X-IronPort-AV: E=Sophos;i="5.81,216,1610380800"; 
-   d="scan'208";a="165637146"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Mar 2021 21:26:54 +0800
-IronPort-SDR: 8bzjK3gCNuEzLSRYJMDrEUNHh9qjx8gUnrHwsHBqyGSpjhjseMf5PujWZhquv6+cgCZ6koyhLx
- LhqXkmF8csSAwB6LxIEHmo2aLsxg4FVxk+vhkPSw1E3LnIQLB25LNwxVVMUmV8fh8Gzw88TK/q
- 8V0otNYJVlDyUiBTVW+yVLIJxoC/dLmGLeb4UB+OH8lZTeBoO88TqA0oiLPzLdsmoU+qakkHDT
- Ej8jpZ0BMT3BSucmpKfAEdWY2BmGFEVnfZrrpkFqzk3a5JRFgfWseK71qNoCgerKlT/eGWNaDT
- ORh2gfaEVI9QkSVMsyMqJDZ4
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2021 05:10:00 -0800
-IronPort-SDR: NPhnFLu4BlcUed2FRu5b3AdXAnZK+fPfIkxA7l1f3AJWlhwWcgrWEEEsXj75NUfmEsrGYE6ugr
- QdW72hyIXAmJVfZJhge4TvRP8t6OgsGVYgKuXwNj3mugoGwb2sVblA5B48xdZXZLFD1Nc7W5K/
- R72zG0vnDNkt7Py0KRCMqp60c2THm5Gg63IiYIF+DKOd7mo2C4fVF/UnmcZwrAMwKtnh5nmQCN
- gJr01SgaBaER6bNR3VRtlkPetXrZ2r24fcn/GvKzikZeBqjtDP36oXWbcVNdEw9MHs0tYXrxoE
- S1U=
-WDCIronportException: Internal
-Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
-  by uls-op-cesaip01.wdc.com with ESMTP; 02 Mar 2021 05:26:51 -0800
-From:   Avri Altman <avri.altman@wdc.com>
-To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
+        id S245312AbhCBSwY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Mar 2021 13:52:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50238 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1446121AbhCBNQl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2021 08:16:41 -0500
+Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8235BC061221;
+        Tue,  2 Mar 2021 05:02:33 -0800 (PST)
+Received: by mail-ej1-x634.google.com with SMTP id hs11so35089278ejc.1;
+        Tue, 02 Mar 2021 05:02:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=03fMenL1JcVf3REoLCDjJM5wD7/kclW1skBkKJBLspM=;
+        b=qyQ8NZko5e0fbSww/SDJz7zYoihVR2YZ+NQ0eET1ITBoQ2gDtVgbSTlwxTR4co/1mM
+         rC/nNLykdjjbNcQdwqexR8M8GaZV5bcB5E7yuW3gMmGBoMqFvUMgqswWjt12MJNmog4L
+         2+oeC5yXbdnN5P6ttJLvs1zZZrR393kIDwoejSfcS6v+jFL930nP+30Ib8J3UIe2ZJGs
+         HWSJl1T/H5c+t7QiBbMPqZ0tgVDmf7kMwtm5Hlibd5qe1SJgZZzHvqKA8IQL910/NsFw
+         gPU7FNnVthipk5mGshnygFQ+dj28yCjhUsIW5Bm5pr+eE1m9Gfp9Cr7up60f5nT/j67F
+         NCAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=03fMenL1JcVf3REoLCDjJM5wD7/kclW1skBkKJBLspM=;
+        b=jK8iOGkSVgAA14+ozisOSoR3qTDYtowA6rpoQU7StXnE+v1S48sSHipIIvprmPVues
+         A3RAFrOsJ7uduq+IvE7sx4J1VXU4G6jgL6Dm0lQkyzPIG843wh6CRdyMdVrVPwEtuWgL
+         gCDEUGhhnLkLBfFxOurlnZVhDuHjwM7AGl6HVqNtx+jREaZAzmCYQzJEZHVE7yunjCD9
+         FVuoRZ3GJcnu81/Lh+HyaoakUrqMUSJWsmw0yu+lxkSevhXMcS4kBSVRb/9Y+racMYOH
+         gwcKmiageO0f2CwoNGl75GS2TWg1tEUBrH8EwcAylCj0Ou+3FytF+WOavWoG8svfkkPP
+         4uVg==
+X-Gm-Message-State: AOAM532wIHuNmFakz2JB86UVVvox+zXvb/+Xgj/BRM/Cbdqf3YbZfBiO
+        RRBV1X9pdEnS+X1ssdkTjr0=
+X-Google-Smtp-Source: ABdhPJz9gdq9wuFle+WX2DcfIqDowLQm8M9JTLewXzkqXffSR3xEchGQoJyEK8JD36+iUD+rTm2/2w==
+X-Received: by 2002:a17:907:1b06:: with SMTP id mp6mr20782239ejc.408.1614690152275;
+        Tue, 02 Mar 2021 05:02:32 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bec5d.dynamic.kabel-deutschland.de. [95.91.236.93])
+        by smtp.googlemail.com with ESMTPSA id l18sm9486088ejk.86.2021.03.02.05.02.30
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 02 Mar 2021 05:02:32 -0800 (PST)
+Message-ID: <f5cb5a04dd25984c4ddf7713ce0ffbbbbb969ea4.camel@gmail.com>
+Subject: Re: [PATCH v25 4/4] scsi: ufs: Add HPB 2.0 support
+From:   Bean Huo <huobean@gmail.com>
+To:     daejun7.park@samsung.com, Greg KH <gregkh@linuxfoundation.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
         yongmyung lee <ymhungry.lee@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        alim.akhtar@samsung.com, asutoshd@codeaurora.org,
-        Zang Leigang <zangleigang@hisilicon.com>,
-        Avi Shchislowski <avi.shchislowski@wdc.com>,
-        Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
-        stanley.chu@mediatek.com, Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v5 08/10] scsi: ufshpb: Limit the number of inflight map requests
-Date:   Tue,  2 Mar 2021 15:25:01 +0200
-Message-Id: <20210302132503.224670-9-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210302132503.224670-1-avri.altman@wdc.com>
-References: <20210302132503.224670-1-avri.altman@wdc.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+Date:   Tue, 02 Mar 2021 14:02:29 +0100
+In-Reply-To: <20210226073525epcms2p5e7ddd6e92b2f76b2b3dcded49f8ff256@epcms2p5>
+References: <20210226073233epcms2p80fca2dffabea03143a9414838f757633@epcms2p8>
+         <CGME20210226073233epcms2p80fca2dffabea03143a9414838f757633@epcms2p5>
+         <20210226073525epcms2p5e7ddd6e92b2f76b2b3dcded49f8ff256@epcms2p5>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-in host control mode the host is the originator of map requests. To not
-flood the device with map requests, use a simple throttling mechanism
-that limits the number of inflight map requests.
+On Fri, 2021-02-26 at 16:35 +0900, Daejun Park wrote:
+> 
+> 
+>  static void __ufshpb_evict_region(struct ufshpb_lu *hpb,
+>  				  struct ufshpb_region *rgn)
+>  {
+> @@ -1209,6 +1579,16 @@ static void ufshpb_lu_parameter_init(struct
+> ufs_hba *hba,
+>  	u32 entries_per_rgn;
+>  	u64 rgn_mem_size, tmp;
+>  
+> +	/* for pre_req */
+> +	if (hpb_dev_info->max_hpb_single_cmd)
+> +		hpb->pre_req_min_tr_len = hpb_dev_info-
+> >max_hpb_single_cmd;
+> +	else
+> +		hpb->pre_req_min_tr_len = HPB_MULTI_CHUNK_LOW;
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/scsi/ufs/ufshpb.c | 11 +++++++++++
- drivers/scsi/ufs/ufshpb.h |  1 +
- 2 files changed, 12 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index 89a930e72cff..74da69727340 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -21,6 +21,7 @@
- #define READ_TO_MS 1000
- #define READ_TO_EXPIRIES 100
- #define POLLING_INTERVAL_MS 200
-+#define THROTTLE_MAP_REQ_DEFAULT 1
- 
- /* memory management */
- static struct kmem_cache *ufshpb_mctx_cache;
-@@ -750,6 +751,14 @@ static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
- 	struct ufshpb_req *map_req;
- 	struct bio *bio;
- 
-+	if (hpb->is_hcm &&
-+	    hpb->num_inflight_map_req >= THROTTLE_MAP_REQ_DEFAULT) {
-+		dev_info(&hpb->sdev_ufs_lu->sdev_dev,
-+			 "map_req throttle. inflight %d throttle %d",
-+			 hpb->num_inflight_map_req, THROTTLE_MAP_REQ_DEFAULT);
-+		return NULL;
-+	}
-+
- 	map_req = ufshpb_get_req(hpb, srgn->rgn_idx, REQ_OP_SCSI_IN);
- 	if (!map_req)
- 		return NULL;
-@@ -764,6 +773,7 @@ static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
- 
- 	map_req->rb.srgn_idx = srgn->srgn_idx;
- 	map_req->rb.mctx = srgn->mctx;
-+	hpb->num_inflight_map_req++;
- 
- 	return map_req;
- }
-@@ -773,6 +783,7 @@ static void ufshpb_put_map_req(struct ufshpb_lu *hpb,
- {
- 	bio_put(map_req->bio);
- 	ufshpb_put_req(hpb, map_req);
-+	hpb->num_inflight_map_req--;
- }
- 
- static int ufshpb_clear_dirty_bitmap(struct ufshpb_lu *hpb,
-diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-index b49e9a34267f..d83ab488688a 100644
---- a/drivers/scsi/ufs/ufshpb.h
-+++ b/drivers/scsi/ufs/ufshpb.h
-@@ -212,6 +212,7 @@ struct ufshpb_lu {
- 	struct ufshpb_req *pre_req;
- 	int num_inflight_pre_req;
- 	int throttle_pre_req;
-+	int num_inflight_map_req;
- 	struct list_head lh_pre_req_free;
- 	int cur_read_id;
- 	int pre_req_min_tr_len;
--- 
-2.25.1
+Here is not correct. according to Spec:
+
+The size is calculated as ( bMAX_DATA_SIZE_FOR_HPB_SINGLE_CMD +1 )*4KB.
+00h: 4KB
+01h: 8KB
+02h: 12KB
+03h: 16KB
+...
+FEh: 1020KB
+FFh: 1024KB
+
+so, here if hpb_dev_info->max_hpb_single_cmd is 0x00, means 4KB, not
+36KB.
+
+
+
+> +	hpb->pre_req_max_tr_len = max(HPB_MULTI_CHUNK_HIGH,
+> +				      hpb->pre_req_min_tr_len);
+> +
+> 
+>  out:
+>  	/* All LUs are initialized */
+>  	if (atomic_dec_and_test(&hba->ufshpb_dev.slave_conf_cnt))
+> @@ -1812,8 +2307,9 @@ void ufshpb_get_geo_info(struct ufs_hba *hba,
+> u8 *geo_buf)
+>  void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf)
+>  {
+>  	struct ufshpb_dev_info *hpb_dev_info = &hba->ufshpb_dev;
+> -	int version;
+> +	int version, ret;
+>  	u8 hpb_mode;
+> +	u32 max_hpb_sigle_cmd = 0;
+>  
+>  	hpb_mode = desc_buf[DEVICE_DESC_PARAM_HPB_CONTROL];
+>  	if (hpb_mode == HPB_HOST_CONTROL) {
+> @@ -1824,13 +2320,27 @@ void ufshpb_get_dev_info(struct ufs_hba *hba,
+> u8 *desc_buf)
+>  	}
+>  
+>  	version = get_unaligned_be16(desc_buf +
+> DEVICE_DESC_PARAM_HPB_VER);
+> -	if (version != HPB_SUPPORT_VERSION) {
+> +	if ((version != HPB_SUPPORT_VERSION) &&
+> +	    (version != HPB_SUPPORT_LEGACY_VERSION)) {
+>  		dev_err(hba->dev, "%s: HPB %x version is not
+> supported.\n",
+>  			__func__, version);
+>  		hpb_dev_info->hpb_disabled = true;
+>  		return;
+>  	}
+>  
+> +	if (version == HPB_SUPPORT_LEGACY_VERSION)
+> +		hpb_dev_info->is_legacy = true;
+> +
+> +	pm_runtime_get_sync(hba->dev);
+> +	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +		QUERY_ATTR_IDN_MAX_HPB_SINGLE_CMD, 0, 0,
+> &max_hpb_sigle_cmd);
+> +	pm_runtime_put_sync(hba->dev);
+> +
+> +	if (ret)
+> +		dev_err(hba->dev, "%s: idn: read max size of single hpb
+> cmd query request failed",
+> +			__func__);
+> +	hpb_dev_info->max_hpb_single_cmd = max_hpb_sigle_cmd;
+> +
+
+Here you didn't add 1, if you read out the
+QUERY_ATTR_IDN_MAX_HPB_SINGLE_CMD == 7, means device can support
+maximum HPB Data size for using single HPB command is 7+1
+((7+1)*4=32KB), not 7.
+
+
+Bean
+
+
+
 
