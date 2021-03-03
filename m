@@ -2,290 +2,212 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 571A1C2BA12
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Mar 2021 13:06:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AEC9C2BA19
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Mar 2021 13:06:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2BB1B60234
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Mar 2021 13:06:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EFBC64E02
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Mar 2021 13:06:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1446827AbhCCMrM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Mar 2021 07:47:12 -0500
-Received: from mailout1.samsung.com ([203.254.224.24]:26969 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355215AbhCCG1Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 01:27:25 -0500
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210303062639epoutp018006ce07bf593f66ae48655d252d81f0~owR29R0WX0796407964epoutp01G
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Mar 2021 06:26:39 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210303062639epoutp018006ce07bf593f66ae48655d252d81f0~owR29R0WX0796407964epoutp01G
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1614752799;
-        bh=mR61ZBgTUmBvrMqVkU/3F+UG4SQJmMPqKc6kM+2E+FE=;
-        h=Subject:Reply-To:From:To:CC:Date:References:From;
-        b=KRGG/ivGJMMzvyy9jZKipIQMMkFa3Qg47nEBvcgnsn8yeEs0Jh5+mz1iRixNDvpi/
-         Bvzhg/ATAcDFpeMGmJznQH4/VrtTqP3eiG/vSm9skITBG2a2lG+8h4Hh/FUUgI7eqM
-         UbgM4CnW49SALEpGKPuwLSKSdA3JR9T+WQ+Ert20=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20210303062638epcas2p29416ac5e369eb6565608a7c6449dc488~owR190D0h2298522985epcas2p2M;
-        Wed,  3 Mar 2021 06:26:38 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.40.189]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4Dr3tL4LHnz4x9Py; Wed,  3 Mar
-        2021 06:26:34 +0000 (GMT)
-X-AuditID: b6c32a48-50fff7000000cd1f-d3-603f2c19552f
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        CB.89.52511.91C2F306; Wed,  3 Mar 2021 15:26:33 +0900 (KST)
-Mime-Version: 1.0
-Subject: [PATCH v26 0/4] scsi: ufs: Add Host Performance Booster Support
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Greg KH <gregkh@linuxfoundation.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        JinHwan Park <jh.i.park@samsung.com>,
-        Javier Gonzalez <javier.gonz@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20210303062633epcms2p252227acd30ad15c1ca821d7e3f547b9e@epcms2p2>
-Date:   Wed, 03 Mar 2021 15:26:33 +0900
-X-CMS-MailID: 20210303062633epcms2p252227acd30ad15c1ca821d7e3f547b9e
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrHJsWRmVeSWpSXmKPExsWy7bCmha6kjn2CwaomLYsH87axWextO8Fu
-        8fLnVTaLw7ffsVtM+/CT2eLT+mWsFi8PaVqsehBu0bx4PZvFnLMNTBa9/VvZLB7f+cxusejG
-        NiaL/n/tLBaXd81hs+i+voPNYvnxf0wWt7dwWSzdepPRonP6GhYHEY/LV7w9Lvf1MnnsnHWX
-        3WPCogOMHvvnrmH3aDm5n8Xj49NbLB59W1YxenzeJOfRfqCbKYArKscmIzUxJbVIITUvOT8l
-        My/dVsk7ON453tTMwFDX0NLCXEkhLzE31VbJxSdA1y0zB+g5JYWyxJxSoFBAYnGxkr6dTVF+
-        aUmqQkZ+cYmtUmpBSk6BoWGBXnFibnFpXrpecn6ulaGBgZEpUGVCTsa7SbPZCr4ZVKz9upW5
-        gfGEWhcjJ4eEgInE+oV3WbsYuTiEBHYwSvTfPMDexcjBwSsgKPF3hzBIjbCAh8SsAxPYQGwh
-        ASWJ9RdnsUPE9SRuPVzDCGKzCehITD9xnx1kjohAK4vEtm8XwRxmgd9MEotP/meD2MYrMaP9
-        KQuELS2xfflWRghbQ+LHsl5mCFtU4ubqt+ww9vtj86FqRCRa752FqhGUePBzN1RcUuLY7g9M
-        EHa9xNY7vxhBFksI9DBKHN55ixUioS9xrWMj2GJeAV+JW0c3gjWwCKhKHF++DmqZi8SF//1g
-        NrOAvMT2t3OYQSHBLKApsX6XPogpIaAsceQWC8wrDRt/s6OzmQX4JDoO/4WL75j3BOo0NYl1
-        P9czQYyRkbg1j3ECo9IsREjPQrJ2FsLaBYzMqxjFUguKc9NTi40KTJAjdxMjOKFreexgnP32
-        g94hRiYOxkOMEhzMSiK84i9tE4R4UxIrq1KL8uOLSnNSiw8xmgI9PJFZSjQ5H5hT8kriDU2N
-        zMwMLE0tTM2MLJTEeYsMHsQLCaQnlqRmp6YWpBbB9DFxcEo1MM3zlWm+x79pXZKFfHuuDv/t
-        Bw/MIr6/q9bI3TkzsPRe6p8jv8Prkrv+nZpQEXut4Kld0VmZmRcn/jGa+SdB+o1eyozKhZsq
-        mOSXKaXo/Nq4Tz60XSwktaTt38FHAvIn/p7K3+t7K3eikX6Li9Dm55N+bjFz3M39eOnGjgtF
-        7C928khIL5YTDo4/vyooo+9s2sSWri2Swd9Xv2lzt29JnftB75hUzO4cO6n12+NvSG7uteS/
-        dOeHo6O+qLJJlXCn0fT+b58WmEZuTS5Z21fA2btJLC8xPezqSvnlf1wdyuav8r0QZu8cVnn4
-        rHrhiZJ/J0qPlMbdfbv7c2d8/IbdXmvvs/MtEKqzXcP29eIhXyWW4oxEQy3mouJEAPh+LzFx
-        BAAA
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210303062633epcms2p252227acd30ad15c1ca821d7e3f547b9e
-References: <CGME20210303062633epcms2p252227acd30ad15c1ca821d7e3f547b9e@epcms2p2>
+        id S1446951AbhCCMrZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Mar 2021 07:47:25 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:54582 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1449277AbhCCHTo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 02:19:44 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1614755983; x=1646291983;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=jFOYEqUOOAnl/kpNcNpzWfTSVq4huD+CdsdbzSAz/Lo=;
+  b=l1Q6zo/K/2jox6IT24XpeCbwLA0tzHeOWgI9HCz2XwehMqqb721K6y8D
+   M1Jl9MCywld3KXRp9VnBoOiOhyZDaWeDGWn4W2D5pMktKsHbhK87XQ+pZ
+   ZAZhuB/IzRnTA8Vk5TShCnAKLB53y+AoyZdTHWOW2Ndt8mnoN083YAHZc
+   VpdvgMu+bPigQ/GDvZxWbddH29dfdrmgHg/mB9875GhMc9oeQSDD56Xyh
+   jf3ZjPEAuujFnEnp5S0oeaHlTQhI0kdgh9mWpOBbswNFRbhSiRzgpMCkh
+   NJpeYTOr0r9ZJ/HWcnEECaFms3XhFxgQZ7K1jNIYYRyCCb7Nf5Hv9gcZA
+   A==;
+IronPort-SDR: CY42w2rmYCAIHPoQSuCA28e00dKF92hEq8ziF1WJPfKZcYGhNEyvcN2AEKj1BtVsguKPLx0r3W
+ xoxaSNwMKstcEjPONWauY2yYN4HwJtUHnDnXeq028W84cyYRFqVVZuHUPbuj7o3Z5zZ1YKmLQQ
+ HDfopSYzdcBWWB/HzfgJHk/FvRiD8Oqp6ZpiM5ZRkwnS6cC3h+Hi3DRRMOMo5vUdkF6q76MNEz
+ jVLk7OXdvPbmO5CKVtfyBDALWFDKrUscu5YXaNT8NXXnFMnqQySI6IiSKvj6T8RKNWPWN4EZP8
+ kYY=
+X-IronPort-AV: E=Sophos;i="5.81,219,1610380800"; 
+   d="scan'208";a="161220462"
+Received: from mail-sn1nam02lp2052.outbound.protection.outlook.com (HELO NAM02-SN1-obe.outbound.protection.outlook.com) ([104.47.36.52])
+  by ob1.hgst.iphmx.com with ESMTP; 03 Mar 2021 15:18:31 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=LKRIsF9d1wAPznnGj0Qji45aR5Uyjvx44ZHOvkIWKfFZhSBjX/yTidJkUG4wgPGKkqJNzjXez0ySIUEwkZdVfL8mifnNRNm+MVp26oXavthpgRPKYvZFFj0ZGia5rzag5CT3w6JV0rPwIX3iED7qWM+6aoSFOHqIA09A+NP7ROfacYdWmMZ6o7rV5ozxgP6zUMXkiglYpldRafy3PCxIp7lmav3D9NkZbuwzGoQcTBO7BCKy/ic6ofTfQor2VTK1/bp7eyxHKOPgaN+5C50RRuQx6do1mULziclerZMrqLwqYW04WPHsqS2slOSLElkFQDf4zSJ9/BKeb3f0u96Bgw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=GGHC02C/c2A9biw8oqaOfs0Or4YxxSNiDbVSBxlTZdE=;
+ b=UIdwaXZx7FMsGqmOG6KU67NUPoF7gqJoFybXtNYc7STkX1ZMGs7RvOZNk0iKqQl5C6CpNviaT62ENBtlOooAZLNY1f8ilS9l8HsN6ltKgvmHIb0BDAGoX+tO3GFHtJqAl0LPgTx7Ppt38VMztMHrtqjQP5kKX7TzjxyVeUMbv1U0YzTUHPh1Bo32bNxjKZibdGfz07JxbWaCyx+lHwt64suLSv1OzGLMkHx3qBIXfAzdyzUH3fDCcGf/gSQlUjE2LwuFQzkZt/x37zkhxOqP/JRqg27uXv4fK/FeizW10U91SHsIgK/vXq//9OWjpQymabynmdrMu0HgGSH1Yz7tCQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=GGHC02C/c2A9biw8oqaOfs0Or4YxxSNiDbVSBxlTZdE=;
+ b=EoBZ+XT2pv0n0c0RNpliTW+Tt/jWuEFngOYirazcxxxdaq5M/U5s/z4Xd/zCk97QbEl+FpYQkc/NjWk5Ns7Dn/vJNYb9JGZR4OffDeK9h9sfbCUvpy+KXi4sozkOJBHi5j/SRODkPxaKmgeTrXxGlpS4572N7wrVkXntsNc6aUU=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ DM5PR04MB0970.namprd04.prod.outlook.com (2603:10b6:4:47::28) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3890.19; Wed, 3 Mar 2021 07:18:29 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::e824:f31b:38cf:ef66]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::e824:f31b:38cf:ef66%3]) with mapi id 15.20.3890.030; Wed, 3 Mar 2021
+ 07:18:29 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Can Guo <cang@codeaurora.org>
+CC:     "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
+        "hongwus@codeaurora.org" <hongwus@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>,
+        Nitin Rawat <nitirawa@codeaurora.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v2 2/3] scsi: ufs-qcom: Disable interrupt in reset path
+Thread-Topic: [PATCH v2 2/3] scsi: ufs-qcom: Disable interrupt in reset path
+Thread-Index: AQHXCm8WN+YhHnByLUS9jf8kgHZH/KptpKGwgAQL7YCAADUxUA==
+Date:   Wed, 3 Mar 2021 07:18:29 +0000
+Message-ID: <DM6PR04MB65756A436EF1004976E183B3FC989@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <1614145010-36079-1-git-send-email-cang@codeaurora.org>
+ <1614145010-36079-3-git-send-email-cang@codeaurora.org>
+ <DM6PR04MB65753665BA9BF63ABF20656FFC9B9@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <96fbfe6fba7a7cd4d2d764186bb8650b@codeaurora.org>
+In-Reply-To: <96fbfe6fba7a7cd4d2d764186bb8650b@codeaurora.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 904914db-84da-4e01-feee-08d8de148ba7
+x-ms-traffictypediagnostic: DM5PR04MB0970:
+x-microsoft-antispam-prvs: <DM5PR04MB0970ED452C25F8AF578085CFFC989@DM5PR04MB0970.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:1122;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: M3bqmIjxlnboofYLGl4FStcZCLVmPcydHgfkWsx2TQx2G4v+7tX+VdyKAaswn08rfNbc+ivwe7RodYxjVqIPFWGK8qI0VgstQ4EwF7SIeAik9uqyBwI8PKR0lqQo5yCIpka6q33f1FS1AAN5jW7JGuxXAW7Jf4sxUoGAVLgvkjcO5Ga/51Wl/Sh+XNjgaw2yGcRUGvbHMYVfqIXDYWlcUG79BcJyWziVGe6yWd7zgy0WIvYM82lWncNQw2UYxTUHk1iJM4YXqkXqu6u15c1n9jTpZu+sm0bVLVj9KPIE7ZsBLdurdEHT5JYAAu8HGMB75VA4k0mMRpLOMfcwUc5885gRMSqlTEROR+Il8nlRsdIN3YVOf0WHovRqeYqepscrhH4PbkytFOydUyBjTlHCsUAaLpp2+THrZKtGuGl/ZI4AsXvFN/eqQRjhQPqj7lnr72RRlDBchkZh7qUVrJgWEczCsuVbVqOyeR79yuIZx/mkBibLVU2Iw3EdL0vLij0ryiMdu91fkfhlezb517HhAw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(39860400002)(396003)(376002)(366004)(136003)(71200400001)(54906003)(7416002)(26005)(6506007)(86362001)(52536014)(186003)(53546011)(8936002)(9686003)(2906002)(5660300002)(8676002)(55016002)(64756008)(7696005)(33656002)(6916009)(66476007)(4326008)(66446008)(316002)(478600001)(66946007)(76116006)(66556008)(83380400001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?ROQyXtLvxZy5VHGnkEEMj6WoWQC+5zc93FLBDL56wUlSYYwRDr0zydjNet/u?=
+ =?us-ascii?Q?k0As3/vBAdeqWhXS0/ueCyVF7f0HdSTKjPtifiCbjiPenzWf+yHAu/QmX7kj?=
+ =?us-ascii?Q?m7dcS6+beLi/tEfKHcalOuvJRESvLdwk/yuesEHEKYxmtBUYsBMfEU7H0izo?=
+ =?us-ascii?Q?zjGIONw3iH65PnlHDwnfmWNNMTQmBc0h45y/3BZGVDqLWFcogKO5UFupy3/e?=
+ =?us-ascii?Q?CYP2bRh54Pmnog9vyYiUlMj7nfaV6CZdwGf3B1EFJ/eXUjsZynoNDwzQlQ6U?=
+ =?us-ascii?Q?b5e3XDqGnd/d4PYUWr3jT5zb2s9QIyokXvs8efzBIuyNePIE5Iw6BCGO6JQH?=
+ =?us-ascii?Q?XXf/jXBqpu6gu1c8FTMbJu20IjyAGAdBvzGcoYzJH8Th/bHqMp5Ia798mff8?=
+ =?us-ascii?Q?Bv1toYR9p/Rl8iwTnkL5sNjfiSF8kRHXkDtQ/zNgAVXQqrD2se0PA69j8tGf?=
+ =?us-ascii?Q?agwu1prjyvNsvyx0BlrqtIqLo831DmZXtro1ATx+7QpS1Wqjkb3UJ7hsk5VJ?=
+ =?us-ascii?Q?HDRqU1/XCzZhfTSjN2InNfCwdK6vvnq4Bp2U34COucJsBS6RLn+sWbrlPu8J?=
+ =?us-ascii?Q?Yt3s0ra57QNPwTXoXhdiAIdCV/iJEdurfJmSKOEVwYOdi8vpNGACzOGZb6nO?=
+ =?us-ascii?Q?oNFukBON1cofiSnLswctCu0edEweyjPJDNowdJaW6Vf+QoMOaRE4G27AkENe?=
+ =?us-ascii?Q?FE7YIfXZKmRFhPZQ376H9K1wNFZMw1Pepdb8W0VxdpgygHzpV5qSRkDpNGBF?=
+ =?us-ascii?Q?FgkLgbzCFMznnNyWKAJz0eu+ud3bXEeUYN6A3XDXKtIXNWHx6pwYu//7c/4T?=
+ =?us-ascii?Q?wW65jsXtuZyRfhvLG8XdLvO9WbfwfQRF+32OK+dN1IVdjhJuQuhdZFF3kWwK?=
+ =?us-ascii?Q?Vi9yB5/yzvK0IMaCW8QP4hWJ3fwbkzChSKMQSZ3EZayKfK6dCldw7S2AZksF?=
+ =?us-ascii?Q?BVxrTAHlI9CtEijIZaTiYQ1cWX6F06eJz85VXUZidRRZf+IR2uqLZTKcIorD?=
+ =?us-ascii?Q?qrK7E2Scb/vzGSmVzWuOUp9JtcUCBovgzkv2bf8rNxEDanT33r7G4eKHkZV0?=
+ =?us-ascii?Q?f1dFrIusqxG2mme9ZZfU5x7y1edYY/1dziVvFBglMjxvsKaz27tET7G2u6LZ?=
+ =?us-ascii?Q?i6T2NaZ7I7tIk99JgkStvgDBo7G2h56GOuFZHk14HzqJhWFeE3Gua3vKQV6q?=
+ =?us-ascii?Q?k8FBBxOjZ8fBJR/XUE8gdxjwDUlRxu7TXIJuvp/C9A4m7Oi9u7ndqSsHpcLZ?=
+ =?us-ascii?Q?cjLYSXLNv537ymZ82F7wAELZnqjEKLlGExOckyVovJkJ1RCkCFBpl5X3mL5Y?=
+ =?us-ascii?Q?Z/6PHIoSpPNZCTxDDNI61Snv?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 904914db-84da-4e01-feee-08d8de148ba7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Mar 2021 07:18:29.5196
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 4n0Sne9eynFrcZOYIz0wCQm1C+Wwi1xBkWFmBHwkhDO3fePWhEPZLFmYvnNdj85ZrWncyXpijUncbO4WJICuZA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR04MB0970
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Changelog:
+>=20
+> On 2021-02-28 22:23, Avri Altman wrote:
+> >>
+> >> From: Nitin Rawat <nitirawa@codeaurora.org>
+> >>
+> >> Disable interrupt in reset path to flush pending IRQ handler in order
+> >> to
+> >> avoid possible NoC issues.
+> >>
+> >> Signed-off-by: Nitin Rawat <nitirawa@codeaurora.org>
+> >> Signed-off-by: Can Guo <cang@codeaurora.org>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
 
-v25 -> v26
-1. Fix wrong chunk size checking for HPB 1.0.
-2. Fix wrong max data size for HPB single command.
-3. Fix typo error
 
-v24 -> v25
-1. Change write buffer API for unmap region.
-2. Add checking hpb_enable for avoiding unnecessary memory allocation.
-3. Change pr_info to dev_info.
-4. Change default requeue timeout value for HPB read.
-5. Fix wrong offset manipulation on ufshpb_prep_entry.
-
-v23 -> v24
-1. Fix build error reported by kernel test robot.
-
-v22 -> v23
-1. Add support compatibility of HPB 1.0.
-2. Fix read id for single HPB read command.
-3. Fix number of pre-allocated requests for write buffer.
-4. Add fast path for response UPIU that has same LUN in sense data.
-5. Remove WARN_ON for preventing kernel crash.
-7. Fix wrong argument for read buffer command.
-
-v21 -> v22
-1. Add support processing response UPIU in suspend state.
-2. Add support HPB hint from other LU.
-3. Add sending write buffer with 0x03 after HPB init.
-
-v20 -> v21
-1. Add bMAX_DATA_SIZE_FOR_HPB_SINGLE_CMD attr. and fHPBen flag support.
-
-v19 -> v20
-1. Add documentation for sysfs entries of hpb->stat.
-2. Fix read buffer command for under-sized sub-region.
-3. Fix wrong condition checking for kick map work.
-4. Delete redundant response UPIU checking.
-5. Add LUN checking in response UPIU.
-6. Fix possible deadlock problem due to runtime PM.
-7. Add instant changing of sub-region state from response UPIU.
-8. Fix endian problem in prefetched PPN.
-9. Add JESD220-3A (HPB v2.0) support.
-
-v18 -> 19
-1. Fix null pointer error when printing sysfs from non-HPB LU.
-2. Apply HPB read opcode in lrbp->cmd->cmnd (from Can Guo's review).
-3. Rebase the patch on 5.12/scsi-queue.
-
-v17 -> v18
-Fix build error which reported by kernel test robot.
-
-v16 -> v17
-1. Rename hpb_state_lock to rgn_state_lock and move it to corresponding
-patch.
-2. Remove redundant information messages.
-
-v15 -> v16
-1. Add missed sysfs ABI documentation.
-
-v14 -> v15
-1. Remove duplicated sysfs ABI entries in documentation.
-2. Add experiment result of HPB performance testing with iozone.
-
-v13 -> v14
-1. Cleanup codes by commentted in Greg's review.
-2. Add documentation for sysfs entries (from Greg's review).
-3. Add experiment result of HPB performance testing.
-
-v12 -> v13
-1. Cleanup codes by comments from Can Guo.
-2. Add HPB related descriptor/flag/attributes in sysfs.
-3. Change base commit from 5.10/scsi-queue to 5.11/scsi-queue.
-
-v11 -> v12
-1. Fixed to return error value when HPB fails to initialize pinned active 
-region.
-2. Fixed to disable HPB feature if HPB fails to allocate essential memory
-and workqueue.
-3. Fixed to change proper sub-region state when region is already evicted.
-
-v10 -> v11
-Add a newline at end the last line on Kconfig file.
-
-v9 -> v10
-1. Fixed 64-bit division error
-2. Fixed problems commentted in Bart's review.
-
-v8 -> v9
-1. Change sysfs initialization.
-2. Change reading descriptor during HPB initialization
-3. Fixed problems commentted in Bart's review.
-4. Change base commit from 5.9/scsi-queue to 5.10/scsi-queue.
-
-v7 -> v8
-Remove wrongly added tags.
-
-v6 -> v7
-1. Remove UFS feature layer.
-2. Cleanup for sparse error.
-
-v5 -> v6
-Change base commit to b53293fa662e28ae0cdd40828dc641c09f133405
-
-v4 -> v5
-Delete unused macro define.
-
-v3 -> v4
-1. Cleanup.
-
-v2 -> v3
-1. Add checking input module parameter value.
-2. Change base commit from 5.8/scsi-queue to 5.9/scsi-queue.
-3. Cleanup for unused variables and label.
-
-v1 -> v2
-1. Change the full boilerplate text to SPDX style.
-2. Adopt dynamic allocation for sub-region data structure.
-3. Cleanup.
-
-NAND flash memory-based storage devices use Flash Translation Layer (FTL)
-to translate logical addresses of I/O requests to corresponding flash
-memory addresses. Mobile storage devices typically have RAM with
-constrained size, thus lack in memory to keep the whole mapping table.
-Therefore, mapping tables are partially retrieved from NAND flash on
-demand, causing random-read performance degradation.
-
-To improve random read performance, JESD220-3 (HPB v1.0) proposes HPB
-(Host Performance Booster) which uses host system memory as a cache for the
-FTL mapping table. By using HPB, FTL data can be read from host memory
-faster than from NAND flash memory. 
-
-The current version only supports the DCM (device control mode).
-This patch consists of 3 parts to support HPB feature.
-
-1) HPB probe and initialization process
-2) READ -> HPB READ using cached map information
-3) L2P (logical to physical) map management
-
-In the HPB probe and init process, the device information of the UFS is
-queried. After checking supported features, the data structure for the HPB
-is initialized according to the device information.
-
-A read I/O in the active sub-region where the map is cached is changed to
-HPB READ by the HPB.
-
-The HPB manages the L2P map using information received from the
-device. For active sub-region, the HPB caches through ufshpb_map
-request. For the in-active region, the HPB discards the L2P map.
-When a write I/O occurs in an active sub-region area, associated dirty
-bitmap checked as dirty for preventing stale read.
-
-HPB is shown to have a performance improvement of 58 - 67% for random read
-workload. [1]
-
-[1]:
-https://www.usenix.org/conference/hotstorage17/program/presentation/jeong
-
-Daejun Park (4):
-  scsi: ufs: Introduce HPB feature
-  scsi: ufs: L2P map management for HPB read
-  scsi: ufs: Prepare HPB read for cached sub-region
-  scsi: ufs: Add HPB 2.0 support
-
- Documentation/ABI/testing/sysfs-driver-ufs |  150 ++
- drivers/scsi/ufs/Kconfig                   |    9 +
- drivers/scsi/ufs/Makefile                  |    1 +
- drivers/scsi/ufs/ufs-sysfs.c               |   20 +
- drivers/scsi/ufs/ufs.h                     |   54 +-
- drivers/scsi/ufs/ufshcd.c                  |   73 +-
- drivers/scsi/ufs/ufshcd.h                  |   29 +
- drivers/scsi/ufs/ufshpb.c                  | 2385 ++++++++++++++++++++
- drivers/scsi/ufs/ufshpb.h                  |  276 +++
- 9 files changed, 2995 insertions(+), 2 deletions(-)
- create mode 100644 drivers/scsi/ufs/ufshpb.c
- create mode 100644 drivers/scsi/ufs/ufshpb.h
-
--- 
-2.25.1
-
+> >> ---
+> >>  drivers/scsi/ufs/ufs-qcom.c | 10 ++++++++++
+> >>  1 file changed, 10 insertions(+)
+> >>
+> >> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> >> index f97d7b0..a9dc8d7 100644
+> >> --- a/drivers/scsi/ufs/ufs-qcom.c
+> >> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> >> @@ -253,12 +253,17 @@ static int ufs_qcom_host_reset(struct ufs_hba
+> >> *hba)
+> >>  {
+> >>         int ret =3D 0;
+> >>         struct ufs_qcom_host *host =3D ufshcd_get_variant(hba);
+> >> +       bool reenable_intr =3D false;
+> >>
+> >>         if (!host->core_reset) {
+> >>                 dev_warn(hba->dev, "%s: reset control not set\n",
+> >> __func__);
+> >>                 goto out;
+> >>         }
+> >>
+> >> +       reenable_intr =3D hba->is_irq_enabled;
+> >> +       disable_irq(hba->irq);
+> >> +       hba->is_irq_enabled =3D false;
+> >> +
+> >>         ret =3D reset_control_assert(host->core_reset);
+> >>         if (ret) {
+> >>                 dev_err(hba->dev, "%s: core_reset assert failed, err =
+=3D
+> >> %d\n",
+> >> @@ -280,6 +285,11 @@ static int ufs_qcom_host_reset(struct ufs_hba
+> >> *hba)
+> >>
+> >>         usleep_range(1000, 1100);
+> >>
+> >> +       if (reenable_intr) {
+> >> +               enable_irq(hba->irq);
+> >> +               hba->is_irq_enabled =3D true;
+> >> +       }
+> >> +
+> > If in the future, you will enable UFSHCI_QUIRK_BROKEN_HCE on your
+> > platform (currently only for Exynos),
+> > Will this code still work?
+>=20
+> Yes, it still works.
+>=20
+> Thanks,
+> Can Guo.
