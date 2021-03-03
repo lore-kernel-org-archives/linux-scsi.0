@@ -7,64 +7,67 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEAE5C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06530C4332D
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B915864E62
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0C5764EBB
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355636AbhCDAcM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Mar 2021 19:32:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38556 "EHLO
+        id S1348203AbhCDAcP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Mar 2021 19:32:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359507AbhCCOsv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 09:48:51 -0500
-Received: from mail-wr1-x42e.google.com (mail-wr1-x42e.google.com [IPv6:2a00:1450:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DF7AC0613AD
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Mar 2021 06:47:19 -0800 (PST)
-Received: by mail-wr1-x42e.google.com with SMTP id l12so23970470wry.2
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Mar 2021 06:47:19 -0800 (PST)
+        with ESMTP id S1359542AbhCCOtN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 09:49:13 -0500
+Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD37AC0613AE
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Mar 2021 06:47:20 -0800 (PST)
+Received: by mail-wr1-x432.google.com with SMTP id e10so23731354wro.12
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Mar 2021 06:47:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=fC33Zk0ZyYtHJeu4W5SBQTBQUeiPwdCaCHRN8M5tXzo=;
-        b=DwK5Dwt6nm/K8A2h+SM7y1TVazpE7jM04zdOA6+fAjDaE24o4gNxKo0p47FOYZmr5p
-         7tz4IncFdVyJWF34XsqHuofmvBXLxB0VAuFNK5Oarknakq8yfMUTidNNUttmss0O8dd2
-         LEBuwpPwAa1vCL9qmlwDs04zTKm1W+O1XnxL559HFLhUE87HM/kKOm4AeqUvHaKjPpd8
-         5QVrXrzwZMt9Jtn+JncyrKUh1LJ4L1EtZBsq+SiAJT78Kq71lCH2cWHhn3EZ1j+TYLgI
-         NEVaoCHNezYapYZl+Jk0ZxYtfYtqV3+m+EikoTtv6hzQJawGtJ4cWul13WUXMTXEc+Hw
-         GKUg==
+        bh=03tsdJPhWuYiSI0vJFPWzGstz88JASegtGpotthaiZA=;
+        b=fxop5XSojvd0qLVyjl9NSYYbfO289XRBh7TnVKZ8AUP7qlQqhkVMDCsaBbmh1o8N1m
+         IZTj/mkXgBPTbgHCOzPwMYut7OGfeTAOa9Fwj5DTRahGmahmNp885YfS+9T7Ja7hlRth
+         gNpliWedUAWddaYJVPX+f6aJ/8Paqa0l14ml083Y4hOE8e00Ecmm1mMkd3H59Sj/zTHR
+         BXbCWL0jp5xZpzXPR+cdCxDL9LVTlh3J/gl8lzL87CY7TVfAw+BSPInONJe5ANgh41ID
+         PnIDFaUSnAvxuVNJe8fTyKhiz7rlJjnDXG5mrvRV8Z3OkHtwivQzK4VuzJ2CBaPKYjD5
+         plBA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=fC33Zk0ZyYtHJeu4W5SBQTBQUeiPwdCaCHRN8M5tXzo=;
-        b=KK2C7uRAJBn+E2raRHAxnzikbTohOvJtIAoLONpXbNZt28jo/kXMHNgwMIPUlfuIWC
-         XILXpeWFeAhuDFeemiozUGsrcrPXO97eXaKX5hBf1xflQvrd8g0YvUU3lb+78E/By7oU
-         RRbShKxc8GY1sjydT0zZei9MSOwbO0xxPUaxs9cGHkAHrIPAwiI8uCEVXDK2VxHFFcRi
-         LJ5sQGqtYUVGuLXBFvzv5vn/56Bhm5OZTD6nL83pvGX0kIWf8ZtBbkFy/eYvHzfhtYHR
-         RF6d1+tvGCRro1NhU2Vmh1au05FyllB2rykm2fd/txiRXnp11lHyp7WiGvbltAgo6Vo0
-         4YGA==
-X-Gm-Message-State: AOAM532fa1atxqT+bOKYR5F5eYJbGBK03RHZHrrKjgskKnrBHcoG8Dpb
-        VTEZExdUpKjTwQ9TrGVqfE+Vig==
-X-Google-Smtp-Source: ABdhPJxA1ca38hEZOIyWn15165I5rGmv6LMTG2ybwsHKfb9NP+M/DFJfic2d7l229KukE2tLKHBKfA==
-X-Received: by 2002:adf:eec5:: with SMTP id a5mr12420188wrp.303.1614782838134;
-        Wed, 03 Mar 2021 06:47:18 -0800 (PST)
+        bh=03tsdJPhWuYiSI0vJFPWzGstz88JASegtGpotthaiZA=;
+        b=USyIMomD3LH/qmE3LC3m9kPnJqkUYlDHmjZDhZnuNGZuQ0aMX9PgDJ5g0yjRDw2rjE
+         x1uPuC/9fb5+PYl9v8j9Mfvd4iVSXqP0W4Lynz88qxMhcvA7F2m1GjRw4aGV1qMwS35H
+         qYVjbOvHbv3oqmizSklW0qTH19cmBRVCEJENBCDumtuo635XSrKzFRaAMdSW96sXWNQ7
+         gXP322HzjGlE9fzN7YCwF0EVwDzipDs7HaAHlwyfI5eCmORzc27fWlw3zzrFO6Az8ygN
+         Q6ZqtL/jesfeyb8KZYcgvOVMdVwDW2Tak5F2xawbEY0nM7KBRLoP9ToaNu0Ztx6wlhJP
+         CHCA==
+X-Gm-Message-State: AOAM530CpYb5BBcmBVhQhNvZJCdikvLNNke3SOa/rTTFfsyhACIQipce
+        BeXLPOlk4SyNdiSLWZAh+TdeLQ==
+X-Google-Smtp-Source: ABdhPJxvyd/Qrr/gP4Z+wpquuQecyDRePOIyvznf9CTCYZ5472NrUWvunZfzpLhAklmGcrL1V5fIwQ==
+X-Received: by 2002:adf:8445:: with SMTP id 63mr28130475wrf.222.1614782839508;
+        Wed, 03 Mar 2021 06:47:19 -0800 (PST)
 Received: from dell.default ([91.110.221.155])
-        by smtp.gmail.com with ESMTPSA id a14sm36567233wrg.84.2021.03.03.06.47.17
+        by smtp.gmail.com with ESMTPSA id a14sm36567233wrg.84.2021.03.03.06.47.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Mar 2021 06:47:17 -0800 (PST)
+        Wed, 03 Mar 2021 06:47:18 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        John Garry <john.garry@huawei.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Luben Tuikov <luben_tuikov@adaptec.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 13/30] scsi: pm8001: pm8001_ctl: Fix incorrectly named functions in headers
-Date:   Wed,  3 Mar 2021 14:46:14 +0000
-Message-Id: <20210303144631.3175331-14-lee.jones@linaro.org>
+Subject: [PATCH 14/30] scsi: aic94xx: aic94xx_sds: Fix asd_erase_nv_sector()'s header
+Date:   Wed,  3 Mar 2021 14:46:15 +0000
+Message-Id: <20210303144631.3175331-15-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210303144631.3175331-1-lee.jones@linaro.org>
 References: <20210303144631.3175331-1-lee.jones@linaro.org>
@@ -76,40 +79,33 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/pm8001/pm8001_ctl.c:313: warning: expecting prototype for pm8001_ctl_sas_address_show(). Prototype was for pm8001_ctl_host_sas_address_show() instead
- drivers/scsi/pm8001/pm8001_ctl.c:530: warning: expecting prototype for pm8001_ctl_aap_log_show(). Prototype was for pm8001_ctl_iop_log_show() instead
+ drivers/scsi/aic94xx/aic94xx_sds.c:1253: warning: expecting prototype for asd_hwi_erase_nv_sector(). Prototype was for asd_erase_nv_sector() instead
 
-Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jason Yan <yanaijie@huawei.com>
+Cc: John Garry <john.garry@huawei.com>
+Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/pm8001/pm8001_ctl.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_sds.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 12035baf0997b..1921e69bc2328 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -299,7 +299,7 @@ static DEVICE_ATTR(sas_spec_support, S_IRUGO,
- 		   pm8001_ctl_sas_spec_support_show, NULL);
+diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/aic94xx_sds.c
+index 105adba559a1e..297a66770260c 100644
+--- a/drivers/scsi/aic94xx/aic94xx_sds.c
++++ b/drivers/scsi/aic94xx/aic94xx_sds.c
+@@ -1244,7 +1244,7 @@ int asd_chk_write_status(struct asd_ha_struct *asd_ha,
+ }
  
  /**
-- * pm8001_ctl_sas_address_show - sas address
-+ * pm8001_ctl_host_sas_address_show - sas address
-  * @cdev: pointer to embedded class device
-  * @attr: device attribute (unused)
-  * @buf: the buffer returned
-@@ -518,7 +518,7 @@ static ssize_t event_log_size_show(struct device *cdev,
- }
- static DEVICE_ATTR_RO(event_log_size);
- /**
-- * pm8001_ctl_aap_log_show - IOP event log
-+ * pm8001_ctl_iop_log_show - IOP event log
-  * @cdev: pointer to embedded class device
-  * @attr: device attribute (unused)
-  * @buf: the buffer returned
+- * asd_hwi_erase_nv_sector - Erase the flash memory sectors.
++ * asd_erase_nv_sector - Erase the flash memory sectors.
+  * @asd_ha: pointer to the host adapter structure
+  * @flash_addr: pointer to offset from flash memory
+  * @size: total bytes to erase.
 -- 
 2.27.0
 
