@@ -7,65 +7,67 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D53FC15502
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A9E2C15503
 	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0281364E51
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DFAA64E62
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240351AbhCDAcC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Mar 2021 19:32:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38524 "EHLO
+        id S1355606AbhCDAcF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Mar 2021 19:32:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345212AbhCCOsd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 09:48:33 -0500
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24B40C0613A5
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Mar 2021 06:46:56 -0800 (PST)
-Received: by mail-wr1-x433.google.com with SMTP id u16so5967843wrt.1
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Mar 2021 06:46:56 -0800 (PST)
+        with ESMTP id S1345260AbhCCOsf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 09:48:35 -0500
+Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FFC3C0613EF
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Mar 2021 06:46:53 -0800 (PST)
+Received: by mail-wm1-x334.google.com with SMTP id o7-20020a05600c4fc7b029010a0247d5f0so2974050wmq.1
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Mar 2021 06:46:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=6dlf3qjgdWUqI4rrG7I4PZpuEcemDbJUwXNtCIJSW+Q=;
-        b=VRFsB6LsxDa4mu0P/0q40CbV2aqVAxp2BphRbLYBE2Pw1hA9l5ZafJhY3iNKUGG5C4
-         0hoWWOPblsjroACqkfasVgWPXak7sJccOkIkEmY7unpV/qhaqfUn+f0mEQnnxu14GzYF
-         yppzBvbbUnnvfsiuXKYuORDg8l5QD67qqGW1bSBt1ne/kzScXjELVwEKJKWHFRZlb6SR
-         8JXmS/BdZ93z2rqJSj+9rb4muhY1VH0z86KzPtMyJg1TLeeiah5QXRZbWPNxJiuJlHDP
-         NJsg1rr46qF/21OCg0E84/VAh0l2/B+gWWjWIr7IXfD221Q3AHgz8Gi4DFUju0jBQHBz
-         rzrA==
+        bh=nK4eefo6NrFTl4crSl1/DHJIw7UTb4L0OHxeSI3Uc2E=;
+        b=ML8ij0NytYJdYa1UhFHNKItuAT7SeWi4ZjzKZ0lUoHQamtkkVYhMwjU9x0r0j5nBI5
+         O08WuH9ercltleOgu7V92WnWMunllo5s4r9gedetm3BRxkMWRRPJKR8nb5a7YdnWGDVF
+         vb73w39mKLlaeYHr7hAAx46giWMELjHP2vf9qTpwBZUabhLhUHmfqJM1nL45R2OE7GhE
+         XXp+NoL8fu8iNML10qDc42jkuzWvhhKWn901TJWhVY6HDZPDNM2ZlSEeQQn7qfX7WUuH
+         FghJDjqoVbUVhK9345mMChpriaCPV7mqBWMVB6mHKixI1Pxn+n3/wjXBoHNnpSHjPvAt
+         7Ryg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=6dlf3qjgdWUqI4rrG7I4PZpuEcemDbJUwXNtCIJSW+Q=;
-        b=DfS6GAtmR6ZnFfrYPhOK8JF3outbz25thE46K+s6DkL0m2u/xtLiNIBw+NzDYcQpcL
-         GJyKqYANrbLL94CcQ729U5DwhKocmFX+Fe5QqY43HIuZtymRnxPOfxCDwfraU+gKkPiL
-         njbr78FjPiq92uF2RyCG7JNhpX812lVLrhYddrS1TkT5skXOjp/vhp4RmVc4qDzoOWUO
-         Oz4M+bTevDdcQovtQO1Iy1A0jrCN7Kfkhhjd44c9AT80IjXFlb1OoKUsjdW5gDfq9SXL
-         NUqZqJgahrRCst5JPbiJHsH1lWwZlkmBlXkNZIyaQkB7p6Rh3c/hgjG2/B1bMp+6hwC+
-         ZfCA==
-X-Gm-Message-State: AOAM530tjoNu2qq6573UpNhw/BaZ4g12vayCfaJ+DzXDCA7A66RESNyh
-        wP3k+ILrqIIfFx8ziGhrxDVH5w==
-X-Google-Smtp-Source: ABdhPJz/WYxvodqQ21nmeRvaNQXvGsQcURiK2zDbxI1ZoOdOVNEurMuEUdeHxSFNQjt0l7/GWMQ+Sg==
-X-Received: by 2002:adf:a2d3:: with SMTP id t19mr27315610wra.299.1614782814810;
-        Wed, 03 Mar 2021 06:46:54 -0800 (PST)
+        bh=nK4eefo6NrFTl4crSl1/DHJIw7UTb4L0OHxeSI3Uc2E=;
+        b=eF/H7NcyZWeDZ++lRt1DFSeDUqxlElSri/bn6gBd76h2REqWYset8rFhjM5Zo/vS1t
+         yYai9XS1NFTYxpYUNxmuS4GkpnbLmp6AuB7WrHosDgKxAI8GjXNFcQfeZHg8RhvaXidd
+         /1yQVJZJ+HA/DnmzITDIyf8yOBzbnPpz2r3Zn1XO9/gIH975anJu9F0hnkWr7lnF7t31
+         f7YOrhnKvMtp4A9DATHgQBkym8VP/Ej2bCfm1ZVdmYuUarR76riyS+2DSZEcnWjFiO4Z
+         T9XUtSgqOApMTzTSD/GmOHL349WO+LdyCHlwR9qANiOBRDnaIMPkwHOhitU7rMkwglVP
+         bf3Q==
+X-Gm-Message-State: AOAM533PWpTWXumPTMEObK35Y++KtZp/Uj9aHEMkaqC6/H50IfPxKduu
+        58pT4SwVAGHsRz9BWK/EsLtJUQ==
+X-Google-Smtp-Source: ABdhPJz3HUn1iV4Mr3ACScTkwR7ze/a6od0APWdQI8cJupILZPBEJcNfDu4EJ/WCQKO9jNkbxq8r2g==
+X-Received: by 2002:a1c:7210:: with SMTP id n16mr9171547wmc.13.1614782811891;
+        Wed, 03 Mar 2021 06:46:51 -0800 (PST)
 Received: from dell.default ([91.110.221.155])
-        by smtp.gmail.com with ESMTPSA id a14sm36567233wrg.84.2021.03.03.06.46.52
+        by smtp.gmail.com with ESMTPSA id a14sm36567233wrg.84.2021.03.03.06.46.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Mar 2021 06:46:54 -0800 (PST)
+        Wed, 03 Mar 2021 06:46:49 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "PMC-Sierra, Inc" <aacraid@pmc-sierra.com>,
+        Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>,
+        Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>,
+        Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 09/30] scsi: aacraid: commctrl: Fix incorrect spelling of aac_send_raw_srb()
-Date:   Wed,  3 Mar 2021 14:46:10 +0000
-Message-Id: <20210303144631.3175331-10-lee.jones@linaro.org>
+Subject: [PATCH 08/30] scsi: pm8001: pm8001_init: Provide function name and fix a misspelling
+Date:   Wed,  3 Mar 2021 14:46:09 +0000
+Message-Id: <20210303144631.3175331-9-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210303144631.3175331-1-lee.jones@linaro.org>
 References: <20210303144631.3175331-1-lee.jones@linaro.org>
@@ -77,31 +79,43 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/aacraid/commctrl.c:480: warning: expecting prototype for aac_send_raw_scb(). Prototype was for aac_send_raw_srb() instead
+ drivers/scsi/pm8001/pm8001_init.c:192: warning: expecting prototype for tasklet for 64 msi(). Prototype was for pm8001_tasklet() instead
+ drivers/scsi/pm8001/pm8001_init.c:872: warning: expecting prototype for pm8001_set_phy_settings_ven_117c_12Gb(). Prototype was for pm8001_set_phy_settings_ven_117c_12G() instead
 
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "PMC-Sierra, Inc" <aacraid@pmc-sierra.com>
+Cc: Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
+Cc: Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>
+Cc: Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/aacraid/commctrl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/pm8001/pm8001_init.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 1b1da162f5f6b..e7cc927ed952d 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -472,7 +472,7 @@ static int check_revision(struct aac_dev *dev, void __user *arg)
- 
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index bd626ef876dac..bbb6b23aa6b1c 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -184,7 +184,7 @@ static void pm8001_free(struct pm8001_hba_info *pm8001_ha)
+ #ifdef PM8001_USE_TASKLET
  
  /**
-- * aac_send_raw_scb
-+ * aac_send_raw_srb()
-  *	@dev:	adapter is being processed
-  *	@arg:	arguments to the send call
+- * tasklet for 64 msi-x interrupt handler
++ * pm8001_tasklet() - tasklet for 64 msi-x interrupt handler
+  * @opaque: the passed general host adapter struct
+  * Note: pm8001_tasklet is common for pm8001 & pm80xx
   */
+@@ -864,7 +864,7 @@ void pm8001_get_phy_mask(struct pm8001_hba_info *pm8001_ha, int *phymask)
+ }
+ 
+ /**
+- * pm8001_set_phy_settings_ven_117c_12Gb : Configure ATTO 12Gb PHY settings
++ * pm8001_set_phy_settings_ven_117c_12G() : Configure ATTO 12Gb PHY settings
+  * @pm8001_ha : our adapter
+  */
+ static
 -- 
 2.27.0
 
