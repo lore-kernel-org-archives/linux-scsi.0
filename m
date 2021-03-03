@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85CFCC433DB
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D074C433E9
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 61F3864E62
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 318AA64EEC
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351766AbhCDAc4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Mar 2021 19:32:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39858 "EHLO
+        id S1351819AbhCDAc5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Mar 2021 19:32:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237996AbhCCOxX (ORCPT
+        with ESMTP id S237968AbhCCOxX (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 09:53:23 -0500
-Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B17BFC061760
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Mar 2021 06:48:16 -0800 (PST)
-Received: by mail-wm1-x32f.google.com with SMTP id u187so5394230wmg.4
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Mar 2021 06:48:16 -0800 (PST)
+Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B47E0C0610E1
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Mar 2021 06:47:47 -0800 (PST)
+Received: by mail-wr1-x433.google.com with SMTP id 7so23993354wrz.0
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Mar 2021 06:47:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=nA9wVETTE+l5uPS+DZDdIXSJ2iBKhK6p+7XSOzWKHSU=;
-        b=hlS4E2IDwIa1PMDMgxwXk7gU4hEHRXkOuLGlqiLu4q8Vnuj6pH7JtS/qQLVXpnKl90
-         jnGBdcO/Gr4aSLGNkDEUBG8KLMfkXL2zN6cOZp73fWqZ0o+YTbhOcJE8ED7cHKeemwqw
-         w3cBksK1PxnCZnTJgzjSLZ5+B/h5Rn4kOFnHn3XDR4h9TnP80XIoIoxZ/hrQM2RU6z3r
-         faXhSuWnEe89E/lKDVJYBfI6yXz5XWNzg4EDOrlv7ubnqClNVacBehfpGyFoJ4uG13KW
-         iWEvpR4Xp21nuOsQnDaCMSp+CAIFQiWhrj2uw/U1x+Z5ddWrHb+z3Cyb8CNWnm5JU0wH
-         UDxg==
+        bh=3nQ26BmiCafa3FcoFatnT2ebufwkcfecUnddyGMPtQw=;
+        b=ekehDAxn4FmhM98+yYpuGr+pA1hZiyxKHaz1+qp1m9jcuqFRBZQsPLha7siQv0+1AI
+         UcB0fGztuRW2T/+vypyQ2fF/flUEcLr2YxVrw7NGWFB8Qc5kOp/lUj/AlXGGLz0ozNRU
+         2v6vt12cwVQbyoKU1wSUPesepL8hNle0APTEXZEVgDmrwhnz6OSv+d1p0yjI7AjykTXs
+         hYq6AckV1NKVnpq7gUULvwJje5EYarukB0/FBNMnqFknQdDpKgkScPj6lQDSeyw/LDtJ
+         4X/A1PmKxfjass0cgIkKvsDDyPl+7qYdUwiMpstxELNBsc1SWI269fZ8fL0PnuCH9g5d
+         5XIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=nA9wVETTE+l5uPS+DZDdIXSJ2iBKhK6p+7XSOzWKHSU=;
-        b=sGa23fH+uHJQIspNuizspXebT1HGhmlfdPSFLuOjRWr9w7m/rym53fCZTOkPWZ4ydJ
-         H8y2m2NnKFoBBpGPY4acNQ/S81AHNS2xVpb8ajRrIUZ9OKjhi+QeOtYFHoQIWF/A2nIJ
-         qhmo2mmLiOb6yjxs1NQXzOgc+1ubb4W9Xhe3cPkFbioP/eAtFpFZZAJ6QO+9wVHFG1KQ
-         0gq0fK8LvtPJRu/WyjzQgr4n3Tehp0DOnP5D41EmK4AZCP4YDQATHGNMSXRhm8GcHUlu
-         /SJvb8Tr7GrtWLuEONOlsqB+QnU63E7v3YWlt2gDmvCap9b1NQyRgrnZp/YieVZRZxgw
-         kiOQ==
-X-Gm-Message-State: AOAM530Isu0iqT71yPdynbjAp8R1lthd/wYzuiHTNfdRmIYhEnNsnSIl
-        QceNNC0tNTIeAPuk3LwRgj79UQ==
-X-Google-Smtp-Source: ABdhPJxDDcx0g9CaC/EPknkMQfkF94FQ1DT/mhH9ELNTWFxUSu+zitclXAEe8hBFA3H3IpwbEltmTQ==
-X-Received: by 2002:a1c:8005:: with SMTP id b5mr9580831wmd.130.1614782878600;
-        Wed, 03 Mar 2021 06:47:58 -0800 (PST)
+        bh=3nQ26BmiCafa3FcoFatnT2ebufwkcfecUnddyGMPtQw=;
+        b=DM1/3wLlihlgnNh8i2gBgUVpbJjX3vx0sqAAbutT5IQ6HGlmqv3GTolkplHxLl/VcY
+         wmfhHzAbR3dkhg9J0Uzq+EkTtMnI8d/VPmADvOYoqTMyO+xe3pkASfV5YzEFwg319oyI
+         dFP5KQa62sd4RxL0Z/LzqjoIo9qO2G8O3GF9xIcALf/K+2O/wsb08hfLG08fm7nMW7iG
+         EC8CntPahy8pHa24K+s4+AQuQAiSQiqyAMuKetKFNKkvaJfYlxIV8/HcY0Auk1OR/X3c
+         2ZOacnrbDXI1XlfGGntyL5FJpKU2TIJH+DwCC26hu0gjvw5HtR+kSZ4BLW5R61sAAGmD
+         zoRQ==
+X-Gm-Message-State: AOAM5320LkA7irduWH6ZKNNpQhDUDaV+DGGzsEXItXOwy+T+yUWk9ZAE
+        S1HpkpcoA6HPtIaiawoC3dEPmg==
+X-Google-Smtp-Source: ABdhPJwRp4SUIDdZh0ks87Egn0EpEVb1DjR0onSjQk0goGxGTDAmM9M6831gGZ3GEUPi/6eeuMGsNg==
+X-Received: by 2002:a5d:544c:: with SMTP id w12mr28465741wrv.310.1614782866386;
+        Wed, 03 Mar 2021 06:47:46 -0800 (PST)
 Received: from dell.default ([91.110.221.155])
-        by smtp.gmail.com with ESMTPSA id a14sm36567233wrg.84.2021.03.03.06.47.50
+        by smtp.gmail.com with ESMTPSA id a14sm36567233wrg.84.2021.03.03.06.47.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Mar 2021 06:47:50 -0800 (PST)
+        Wed, 03 Mar 2021 06:47:45 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org,
@@ -66,14 +66,13 @@ Cc:     linux-kernel@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         MPT-FusionLinux.pdl@avagotech.com,
         MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH 30/30] scsi: mpt3sas: mpt3sas_scs: Move a little data from the stack onto the heap
-Date:   Wed,  3 Mar 2021 14:46:31 +0000
-Message-Id: <20210303144631.3175331-31-lee.jones@linaro.org>
+Subject: [PATCH 28/30] scsi: mpt3sas: mpt3sas_base: Fix misspelling of _base_put_smid_default_atomic()
+Date:   Wed,  3 Mar 2021 14:46:29 +0000
+Message-Id: <20210303144631.3175331-29-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210303144631.3175331-1-lee.jones@linaro.org>
 References: <20210303144631.3175331-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -81,8 +80,7 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/mpt3sas/mpt3sas_scsih.c: In function ‘_scsih_scan_for_devices_after_reset’:
- drivers/scsi/mpt3sas/mpt3sas_scsih.c:10473:1: warning: the frame size of 1064 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+ drivers/scsi/mpt3sas/mpt3sas_base.c:4185: warning: expecting prototype for _base_put_smid_default(). Prototype was for _base_put_smid_default_atomic() instead
 
 Cc: Sathya Prakash <sathya.prakash@broadcom.com>
 Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
@@ -94,104 +92,22 @@ Cc: MPT-FusionLinux.pdl@broadcom.com
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 38 +++++++++++++++++++---------
- 1 file changed, 26 insertions(+), 12 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 7bd0a57e5b928..945531e94d7e4 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -10219,8 +10219,8 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 	Mpi2ExpanderPage0_t expander_pg0;
- 	Mpi2SasDevicePage0_t sas_device_pg0;
- 	Mpi26PCIeDevicePage0_t pcie_device_pg0;
--	Mpi2RaidVolPage1_t volume_pg1;
--	Mpi2RaidVolPage0_t volume_pg0;
-+	Mpi2RaidVolPage1_t *volume_pg1;
-+	Mpi2RaidVolPage0_t *volume_pg0;
- 	Mpi2RaidPhysDiskPage0_t pd_pg0;
- 	Mpi2EventIrConfigElement_t element;
- 	Mpi2ConfigReply_t mpi_reply;
-@@ -10235,6 +10235,16 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 	u8 retry_count;
- 	unsigned long flags;
- 
-+	volume_pg0 = kzalloc(sizeof(*volume_pg0), GFP_KERNEL);
-+	if (!volume_pg0)
-+		return;
-+
-+	volume_pg1 = kzalloc(sizeof(*volume_pg1), GFP_KERNEL);
-+	if (!volume_pg1) {
-+		kfree(volume_pg0);
-+		return;
-+	}
-+
- 	ioc_info(ioc, "scan devices: start\n");
- 
- 	_scsih_sas_host_refresh(ioc);
-@@ -10344,7 +10354,7 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 	/* volumes */
- 	handle = 0xFFFF;
- 	while (!(mpt3sas_config_get_raid_volume_pg1(ioc, &mpi_reply,
--	    &volume_pg1, MPI2_RAID_VOLUME_PGAD_FORM_GET_NEXT_HANDLE, handle))) {
-+	    volume_pg1, MPI2_RAID_VOLUME_PGAD_FORM_GET_NEXT_HANDLE, handle))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
-@@ -10352,15 +10362,15 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 				 ioc_status, le32_to_cpu(mpi_reply.IOCLogInfo));
- 			break;
- 		}
--		handle = le16_to_cpu(volume_pg1.DevHandle);
-+		handle = le16_to_cpu(volume_pg1->DevHandle);
- 		spin_lock_irqsave(&ioc->raid_device_lock, flags);
- 		raid_device = _scsih_raid_device_find_by_wwid(ioc,
--		    le64_to_cpu(volume_pg1.WWID));
-+		    le64_to_cpu(volume_pg1->WWID));
- 		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
- 		if (raid_device)
- 			continue;
- 		if (mpt3sas_config_get_raid_volume_pg0(ioc, &mpi_reply,
--		    &volume_pg0, MPI2_RAID_VOLUME_PGAD_FORM_HANDLE, handle,
-+		    volume_pg0, MPI2_RAID_VOLUME_PGAD_FORM_HANDLE, handle,
- 		     sizeof(Mpi2RaidVolPage0_t)))
- 			continue;
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
-@@ -10370,17 +10380,17 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 				 ioc_status, le32_to_cpu(mpi_reply.IOCLogInfo));
- 			break;
- 		}
--		if (volume_pg0.VolumeState == MPI2_RAID_VOL_STATE_OPTIMAL ||
--		    volume_pg0.VolumeState == MPI2_RAID_VOL_STATE_ONLINE ||
--		    volume_pg0.VolumeState == MPI2_RAID_VOL_STATE_DEGRADED) {
-+		if (volume_pg0->VolumeState == MPI2_RAID_VOL_STATE_OPTIMAL ||
-+		    volume_pg0->VolumeState == MPI2_RAID_VOL_STATE_ONLINE ||
-+		    volume_pg0->VolumeState == MPI2_RAID_VOL_STATE_DEGRADED) {
- 			memset(&element, 0, sizeof(Mpi2EventIrConfigElement_t));
- 			element.ReasonCode = MPI2_EVENT_IR_CHANGE_RC_ADDED;
--			element.VolDevHandle = volume_pg1.DevHandle;
-+			element.VolDevHandle = volume_pg1->DevHandle;
- 			ioc_info(ioc, "\tBEFORE adding volume: handle (0x%04x)\n",
--				 volume_pg1.DevHandle);
-+				 volume_pg1->DevHandle);
- 			_scsih_sas_volume_add(ioc, &element);
- 			ioc_info(ioc, "\tAFTER adding volume: handle (0x%04x)\n",
--				 volume_pg1.DevHandle);
-+				 volume_pg1->DevHandle);
- 		}
- 	}
- 
-@@ -10468,6 +10478,10 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 		ioc_info(ioc, "\tAFTER adding pcie end device: handle (0x%04x), wwid(0x%016llx)\n",
- 			 handle, (u64)le64_to_cpu(pcie_device_pg0.WWID));
- 	}
-+
-+	kfree(volume_pg0);
-+	kfree(volume_pg1);
-+
- 	ioc_info(ioc, "\tpcie devices: pcie end devices complete\n");
- 	ioc_info(ioc, "scan devices: complete\n");
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 504ed856d4797..69586ab16cb65 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -4172,7 +4172,7 @@ _base_put_smid_hi_priority_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
  }
+ 
+ /**
+- * _base_put_smid_default - Default, primarily used for config pages
++ * _base_put_smid_default_atomic - Default, primarily used for config pages
+  * use Atomic Request Descriptor
+  * @ioc: per adapter object
+  * @smid: system request message index
 -- 
 2.27.0
 
