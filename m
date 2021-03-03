@@ -7,64 +7,65 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CFEDC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B2ACC433E6
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A89364EBA
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0576A64E51
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355672AbhCDAcj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Mar 2021 19:32:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38556 "EHLO
+        id S1359761AbhCDAck (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Mar 2021 19:32:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359761AbhCCOuu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 09:50:50 -0500
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F520C0611BF
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Mar 2021 06:47:42 -0800 (PST)
-Received: by mail-wm1-x331.google.com with SMTP id u187so5392691wmg.4
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Mar 2021 06:47:42 -0800 (PST)
+        with ESMTP id S231959AbhCCOv1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 09:51:27 -0500
+Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95AE2C0610CF
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Mar 2021 06:47:43 -0800 (PST)
+Received: by mail-wr1-x436.google.com with SMTP id e10so23732720wro.12
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Mar 2021 06:47:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=GU8Y2fU2IPGLTocyu2Vs2OyGQon6ldafbekOMqUJ5SM=;
-        b=M3q0WIe1Cnzq0w/d7Q+kHBzw27f0RuiCBJB7Xim0oB03tMl0FA88FSXO1wH9QA14vW
-         ZIU/xJ/wRJ5rZhQZtn9lh7hX5c55tSVUjEC5klSItz8DIdMkaL/1SwBrYh+iYJuNbrLN
-         bdeQtFltgGxvi0M/mlMz2HrhV41uRDfSm7hhF6aYRnqf5/SqoIsltPrcwdI4SRtzyCi7
-         JoJ3j6k7bE+BxykdsZIqsMPT+83RmowzJ6Md5gzsRQ1kRMb/3fxRupK1jBDN4gLKzcV0
-         zR4dKzovB+xi9fqFZ4uW488cbMynrswf5XQlCZfS3Et8rODuprLxP2CSA2jCkb5f+fAO
-         c6hg==
+        bh=JU+OzGlISHB+ge1qgBUvVjRrdCnCO3htiJjDL9pREeI=;
+        b=HMc50qQh9cd09cYIG6QD01/h5niTz8bCPw+HzI7Uoq2lfsa5UdM82wOWPB4CaMvNCB
+         D12iH/DnSU77N2Wqbifg4N4gogw7biGBujJaDOOOiGZhRwfOO9/+QwDOIsjZ3A2D39sd
+         AGaYWCydcZHeKZSrddaxPyCsL15QNbl9PodDCfhfbujtibFR27Sz7pNwfQX8x9JWpuTY
+         jhpgpYvM0NrNPI3eRk3SCJRj4XKVTE9doLezAu3T3lLtPAXeZwbKnc64RqecWYidCBTK
+         OOluURq+Rj5P4br22cS8LNl8wuFHlc6nCUh5hVplBTIqdybzDQH22lNeleZDOjJULbAO
+         /DTg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=GU8Y2fU2IPGLTocyu2Vs2OyGQon6ldafbekOMqUJ5SM=;
-        b=ij1hyT17N6Mk83yWqvyjii2Fom3x/Yae2tMTJomF4F1fTlyLCwdBrZf5a10M1IKTcJ
-         97YYSbMQcSqnhU/GFjkw4S49PoyiT3PvLv39+AovxgP7yUSYCnTQRDpr/+AI4AypbDqw
-         R3Ul9qlg6HuJfEBzUO7+lmxT1LxTNjuExv3fpkZKSjueP5qatZW6Nwo6Of6JeNeNqFF7
-         vECo2dhuR1DUUHns24J45TMeQWmKK+WoNLbOGWTwKk078d52ut+rEgfBSVBQ2rUEYhyL
-         qEN9ex4QjbM3ibodGl05yOUCLcYR6bQPld8Uzjl+ygGlkKOm+sxn54FOLwulGDU8sSmm
-         oUPg==
-X-Gm-Message-State: AOAM532Yh3wL8etB4+pYvod1BGNL2gbEcKCgBxmykpYy2u/XAQF3M0zk
-        Tch3A1U8BYQ2RFQARsLSd6FioVGgtSjgHQ==
-X-Google-Smtp-Source: ABdhPJw4ZS6vhz895/y/q1aE97JtZo5BnoyyQUg+XtYLIs3G9VcdEShToaonr7xYVVEHHh4yAYKUDg==
-X-Received: by 2002:a1c:730a:: with SMTP id d10mr9233099wmb.53.1614782860947;
-        Wed, 03 Mar 2021 06:47:40 -0800 (PST)
+        bh=JU+OzGlISHB+ge1qgBUvVjRrdCnCO3htiJjDL9pREeI=;
+        b=AaUX7fVWJpTP63WP/XT+rsLE58rvM7VuIJo2BK71oBXRIC0BMc8XXrf2ILCMknu7j8
+         6MAjz8N6hjcFwUTHog1kAgW/+AM+AB+EGlJffQxKV3RO9G8S/BK4DxbuvHUNfpvYut0p
+         7IYcJ6ou7xaRvbwEngK0uVWjs3x1C0sT6ySUEq8S9EruSqdV4qrvd+pnZsPYQ9mDuf4Z
+         s51EB5fCRiw53zuOu2rIYknd9KvLJd7lze56FCCwaQbBQP0dlri9VEABEmv8uBkV7G2t
+         a8A0seA4cWM9M+s9qmex1PJzGxcJmDMVRzA+Z3RppH1O/hNOuSWI0CvNndzLprqaUs8F
+         /4Lw==
+X-Gm-Message-State: AOAM532nVkx+UPnf+LSC7F76sLtkEh/ff9kHzNppxiQJJFMMOXqmh+Fw
+        g21KqqqcGtvz2/Uoth43W24hbA==
+X-Google-Smtp-Source: ABdhPJxhtMo2M6F/ShADs7uYEfBexSffsMa/v3IkcujKLhJKFjIkQau6EXGVtp2IPZS/6KsyLAriMg==
+X-Received: by 2002:adf:80c8:: with SMTP id 66mr28035909wrl.344.1614782862246;
+        Wed, 03 Mar 2021 06:47:42 -0800 (PST)
 Received: from dell.default ([91.110.221.155])
-        by smtp.gmail.com with ESMTPSA id a14sm36567233wrg.84.2021.03.03.06.47.40
+        by smtp.gmail.com with ESMTPSA id a14sm36567233wrg.84.2021.03.03.06.47.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Mar 2021 06:47:40 -0800 (PST)
+        Wed, 03 Mar 2021 06:47:41 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
-Cc:     linux-kernel@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
+Cc:     linux-kernel@vger.kernel.org,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "PMC-Sierra, Inc" <aacraid@pmc-sierra.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 23/30] scsi: qla2xxx: qla_gs: Fix some incorrect formatting/spelling issues
-Date:   Wed,  3 Mar 2021 14:46:24 +0000
-Message-Id: <20210303144631.3175331-24-lee.jones@linaro.org>
+Subject: [PATCH 24/30] scsi: aacraid: rx: Fix misspelling of _aac_rx_init()
+Date:   Wed,  3 Mar 2021 14:46:25 +0000
+Message-Id: <20210303144631.3175331-25-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210303144631.3175331-1-lee.jones@linaro.org>
 References: <20210303144631.3175331-1-lee.jones@linaro.org>
@@ -76,71 +77,31 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/qla2xxx/qla_gs.c:1259: warning: expecting prototype for qla2x00_snd_rft_id(). Prototype was for qla2x00_sns_rft_id() instead
- drivers/scsi/qla2xxx/qla_gs.c:1492: warning: expecting prototype for qla2x00_prep_ct_req(). Prototype was for qla2x00_prep_ct_fdmi_req() instead
- drivers/scsi/qla2xxx/qla_gs.c:1596: warning: expecting prototype for perform HBA attributes registration(). Prototype was for qla2x00_hba_attributes() instead
- drivers/scsi/qla2xxx/qla_gs.c:1851: warning: expecting prototype for perform Port attributes registration(). Prototype was for qla2x00_port_attributes() instead
- drivers/scsi/qla2xxx/qla_gs.c:2284: warning: expecting prototype for perform RPRT registration(). Prototype was for qla2x00_fdmi_rprt() instead
+ drivers/scsi/aacraid/rx.c:544: warning: expecting prototype for aac_rx_init(). Prototype was for _aac_rx_init() instead
 
-Cc: Nilesh Javali <njavali@marvell.com>
-Cc: GR-QLogic-Storage-Upstream@marvell.com
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "PMC-Sierra, Inc" <aacraid@pmc-sierra.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/qla2xxx/qla_gs.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/aacraid/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 517d358b0031a..8e126afe61b11 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -1247,7 +1247,7 @@ qla2x00_sns_gnn_id(scsi_qla_host_t *vha, sw_info_t *list)
+diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c
+index cdccf9abcdc40..e06ff83b69ce2 100644
+--- a/drivers/scsi/aacraid/rx.c
++++ b/drivers/scsi/aacraid/rx.c
+@@ -532,7 +532,7 @@ int aac_rx_select_comm(struct aac_dev *dev, int comm)
  }
  
  /**
-- * qla2x00_snd_rft_id() - SNS Register FC-4 TYPEs (RFT_ID) supported by the HBA.
-+ * qla2x00_sns_rft_id() - SNS Register FC-4 TYPEs (RFT_ID) supported by the HBA.
-  * @vha: HA context
+- *	aac_rx_init	-	initialize an i960 based AAC card
++ *	_aac_rx_init	-	initialize an i960 based AAC card
+  *	@dev: device to configure
   *
-  * This command uses the old Exectute SNS Command mailbox routine.
-@@ -1479,7 +1479,7 @@ qla2x00_update_ms_fdmi_iocb(scsi_qla_host_t *vha, uint32_t req_size)
- }
- 
- /**
-- * qla2x00_prep_ct_req() - Prepare common CT request fields for SNS query.
-+ * qla2x00_prep_ct_fdmi_req() - Prepare common CT request fields for SNS query.
-  * @p: CT request buffer
-  * @cmd: GS command
-  * @rsp_size: response size in bytes
-@@ -1582,7 +1582,7 @@ qla25xx_fdmi_port_speed_currently(struct qla_hw_data *ha)
- }
- 
- /**
-- * qla2x00_hba_attributes() perform HBA attributes registration
-+ * qla2x00_hba_attributes() - perform HBA attributes registration
-  * @vha: HA context
-  * @entries: number of entries to use
-  * @callopt: Option to issue extended or standard FDMI
-@@ -1837,7 +1837,7 @@ qla2x00_hba_attributes(scsi_qla_host_t *vha, void *entries,
- }
- 
- /**
-- * qla2x00_port_attributes() perform Port attributes registration
-+ * qla2x00_port_attributes() - perform Port attributes registration
-  * @vha: HA context
-  * @entries: number of entries to use
-  * @callopt: Option to issue extended or standard FDMI
-@@ -2272,7 +2272,7 @@ qla2x00_fdmi_dhba(scsi_qla_host_t *vha)
- }
- 
- /**
-- * qla2x00_fdmi_rprt() perform RPRT registration
-+ * qla2x00_fdmi_rprt() - perform RPRT registration
-  * @vha: HA context
-  * @callopt: Option to issue extended or standard FDMI
-  *           command parameter
+  *	Allocate and set up resources for the i960 based AAC variants. The 
 -- 
 2.27.0
 
