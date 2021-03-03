@@ -7,67 +7,64 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06530C4332D
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BF74C43381
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0C5764EBB
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E33286146D
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 00:32:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348203AbhCDAcP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Mar 2021 19:32:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38282 "EHLO
+        id S1355646AbhCDAcQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Mar 2021 19:32:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359542AbhCCOtN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 09:49:13 -0500
-Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD37AC0613AE
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Mar 2021 06:47:20 -0800 (PST)
-Received: by mail-wr1-x432.google.com with SMTP id e10so23731354wro.12
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Mar 2021 06:47:20 -0800 (PST)
+        with ESMTP id S1359583AbhCCOti (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 09:49:38 -0500
+Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17845C0613B0
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Mar 2021 06:47:22 -0800 (PST)
+Received: by mail-wm1-x333.google.com with SMTP id o2so6076447wme.5
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Mar 2021 06:47:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=03tsdJPhWuYiSI0vJFPWzGstz88JASegtGpotthaiZA=;
-        b=fxop5XSojvd0qLVyjl9NSYYbfO289XRBh7TnVKZ8AUP7qlQqhkVMDCsaBbmh1o8N1m
-         IZTj/mkXgBPTbgHCOzPwMYut7OGfeTAOa9Fwj5DTRahGmahmNp885YfS+9T7Ja7hlRth
-         gNpliWedUAWddaYJVPX+f6aJ/8Paqa0l14ml083Y4hOE8e00Ecmm1mMkd3H59Sj/zTHR
-         BXbCWL0jp5xZpzXPR+cdCxDL9LVTlh3J/gl8lzL87CY7TVfAw+BSPInONJe5ANgh41ID
-         PnIDFaUSnAvxuVNJe8fTyKhiz7rlJjnDXG5mrvRV8Z3OkHtwivQzK4VuzJ2CBaPKYjD5
-         plBA==
+        bh=KhH1xvkfKyHob/JVHWX/WPbUcPF6tAGWDv8dCHz7P4Y=;
+        b=aztHD8iVRoFpmuHKdT4/MeQg+lOMUbxq/ZfeR5CxyTLSl8NBTnotat+PqLnXumvZlp
+         M+vVkh7tXtuB0HvlDcyuWo3828I0feAqCoa8oftRH2OTGIVMR9ZuFfWCRXJ5mLkSXGnl
+         rg/6YZC9jab/1cJLDlGL9Dw+VwEOe5ezTNVfBksLOE+d3pFsTL8T50cCxDzjrJPeBQ2W
+         x7/ZthhURKXRI99h3ospu68ZisK+qWkvVRPczXuKofg362I5Vh9D2bGkXacfj07yj7Qg
+         vMbqfaw1jq/WYEytpGSn5Uw8wLY2Pi+zh7Dohp/J0DY//GJJ+w/AFzWo8VFB+yQOsq6P
+         aB7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=03tsdJPhWuYiSI0vJFPWzGstz88JASegtGpotthaiZA=;
-        b=USyIMomD3LH/qmE3LC3m9kPnJqkUYlDHmjZDhZnuNGZuQ0aMX9PgDJ5g0yjRDw2rjE
-         x1uPuC/9fb5+PYl9v8j9Mfvd4iVSXqP0W4Lynz88qxMhcvA7F2m1GjRw4aGV1qMwS35H
-         qYVjbOvHbv3oqmizSklW0qTH19cmBRVCEJENBCDumtuo635XSrKzFRaAMdSW96sXWNQ7
-         gXP322HzjGlE9fzN7YCwF0EVwDzipDs7HaAHlwyfI5eCmORzc27fWlw3zzrFO6Az8ygN
-         Q6ZqtL/jesfeyb8KZYcgvOVMdVwDW2Tak5F2xawbEY0nM7KBRLoP9ToaNu0Ztx6wlhJP
-         CHCA==
-X-Gm-Message-State: AOAM530CpYb5BBcmBVhQhNvZJCdikvLNNke3SOa/rTTFfsyhACIQipce
-        BeXLPOlk4SyNdiSLWZAh+TdeLQ==
-X-Google-Smtp-Source: ABdhPJxvyd/Qrr/gP4Z+wpquuQecyDRePOIyvznf9CTCYZ5472NrUWvunZfzpLhAklmGcrL1V5fIwQ==
-X-Received: by 2002:adf:8445:: with SMTP id 63mr28130475wrf.222.1614782839508;
-        Wed, 03 Mar 2021 06:47:19 -0800 (PST)
+        bh=KhH1xvkfKyHob/JVHWX/WPbUcPF6tAGWDv8dCHz7P4Y=;
+        b=l6U2Y2tDqEEwlEjLbHIS0gxJog2W0sLVNy3FkIVU6uPkoUl/uO75gysJqj6xm0EtAb
+         HQ5ZX+zhkfqw4eT2PdEQmqZN7mXyCjtpvNjOY1AsIXdCkZoL7DcLIxarK7UMHS8070GM
+         UygJ0GYawPp017qVjQ8ugvJdQxaXZsBHMmaBXDqFB69udy9Fe708ToL/DVA2MrcXd1ru
+         Mn36R6tbsTQRnhflBjDiXYDAi4s14ck2NM26APJwxIJYPlu/jpzUFWSZC5sadmkShqTj
+         o5jmxFHzGVl5XH2w0p+IuHCWbkLfFl/U6MFPlkQ1omp3kXrYDwxeWmRNs3POt6tHISth
+         0waQ==
+X-Gm-Message-State: AOAM533vo/lpZ9XcDSV1E3EQN4kZ0vBkNUeAao1cqUHzwPffNa6TrFjy
+        BuMTFHnIFT0alZecpRDybDFaaQ==
+X-Google-Smtp-Source: ABdhPJwMrWETbcDsqW4KaMV/belvEGPoi8GPHErlEc6coWhJiwt+46GaHhzZ22UTHQ8ul4iKRosikA==
+X-Received: by 2002:a1c:8041:: with SMTP id b62mr9856101wmd.0.1614782840669;
+        Wed, 03 Mar 2021 06:47:20 -0800 (PST)
 Received: from dell.default ([91.110.221.155])
-        by smtp.gmail.com with ESMTPSA id a14sm36567233wrg.84.2021.03.03.06.47.18
+        by smtp.gmail.com with ESMTPSA id a14sm36567233wrg.84.2021.03.03.06.47.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Mar 2021 06:47:18 -0800 (PST)
+        Wed, 03 Mar 2021 06:47:20 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
-Cc:     linux-kernel@vger.kernel.org,
+Cc:     linux-kernel@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        John Garry <john.garry@huawei.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Luben Tuikov <luben_tuikov@adaptec.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 14/30] scsi: aic94xx: aic94xx_sds: Fix asd_erase_nv_sector()'s header
-Date:   Wed,  3 Mar 2021 14:46:15 +0000
-Message-Id: <20210303144631.3175331-15-lee.jones@linaro.org>
+Subject: [PATCH 15/30] scsi: qla2xxx: qla_iocb: Replace __qla2x00_marker()'s missing underscores
+Date:   Wed,  3 Mar 2021 14:46:16 +0000
+Message-Id: <20210303144631.3175331-16-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210303144631.3175331-1-lee.jones@linaro.org>
 References: <20210303144631.3175331-1-lee.jones@linaro.org>
@@ -79,33 +76,31 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/aic94xx/aic94xx_sds.c:1253: warning: expecting prototype for asd_hwi_erase_nv_sector(). Prototype was for asd_erase_nv_sector() instead
+ drivers/scsi/qla2xxx/qla_iocb.c:508: warning: expecting prototype for qla2x00_marker(). Prototype was for __qla2x00_marker() instead
 
+Cc: Nilesh Javali <njavali@marvell.com>
+Cc: GR-QLogic-Storage-Upstream@marvell.com
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jason Yan <yanaijie@huawei.com>
-Cc: John Garry <john.garry@huawei.com>
-Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/aic94xx/aic94xx_sds.c | 2 +-
+ drivers/scsi/qla2xxx/qla_iocb.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/aic94xx_sds.c
-index 105adba559a1e..297a66770260c 100644
---- a/drivers/scsi/aic94xx/aic94xx_sds.c
-+++ b/drivers/scsi/aic94xx/aic94xx_sds.c
-@@ -1244,7 +1244,7 @@ int asd_chk_write_status(struct asd_ha_struct *asd_ha,
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 8b41cbaf8535b..e765ee4ce162a 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -491,7 +491,7 @@ qla2x00_start_iocbs(struct scsi_qla_host *vha, struct req_que *req)
  }
  
  /**
-- * asd_hwi_erase_nv_sector - Erase the flash memory sectors.
-+ * asd_erase_nv_sector - Erase the flash memory sectors.
-  * @asd_ha: pointer to the host adapter structure
-  * @flash_addr: pointer to offset from flash memory
-  * @size: total bytes to erase.
+- * qla2x00_marker() - Send a marker IOCB to the firmware.
++ * __qla2x00_marker() - Send a marker IOCB to the firmware.
+  * @vha: HA context
+  * @qpair: queue pair pointer
+  * @loop_id: loop ID
 -- 
 2.27.0
 
