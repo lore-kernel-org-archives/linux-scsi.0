@@ -2,183 +2,330 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_SANE_2 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A39BAC433DB
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 09:55:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63BE6C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 10:01:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6232A64F2D
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 09:55:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B40F64F23
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 10:01:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238125AbhCDJyj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Mar 2021 04:54:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59924 "EHLO
+        id S237466AbhCDKBD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Mar 2021 05:01:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238169AbhCDJya (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2021 04:54:30 -0500
-Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67709C061756
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Mar 2021 01:53:50 -0800 (PST)
-Received: by mail-ej1-x634.google.com with SMTP id c10so21645011ejx.9
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Mar 2021 01:53:50 -0800 (PST)
+        with ESMTP id S231805AbhCDKAj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2021 05:00:39 -0500
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88C3AC061756;
+        Thu,  4 Mar 2021 01:59:58 -0800 (PST)
+Received: by mail-ed1-x530.google.com with SMTP id bd6so20721510edb.10;
+        Thu, 04 Mar 2021 01:59:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ugRBwM9gJLad1zr51OTw4cYfsieSlu5IQWtZrKEHGZo=;
-        b=P4UXZElxC7FR8hbUmh5nKKoxPmEbLhw+1vymP1zTF0Ze1+snWE0ZtnF3b9TjLyNl8C
-         /6F8yAE+M1IRu7dEf4qRleL9rNDTRzXxdnFLoU5fqDdg7dqo7ae79iXU7Jx848dyot1J
-         U1S61dd85jn9V/OLUhGuClroVGxXcCXj6kvpmONcuvqGcFVBjhLXNxeHbyheLTzttOEA
-         hd3/C2k58j/09ePRirZyvT6HDJsdK8f1hmDfK8k61PvGJPuw/jvrKGWlv8yttPs8xAM8
-         pAWe0I6SWXLbRfbU2sARTVKFATnDIQ12yp0CiMmL7ejm17Z60NDfO1n0a+uIIF+R8HYr
-         10Rg==
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=QO2U8n7VLVtOJdfm5GM29eksy0RQwsKOS6VHIcEvuf4=;
+        b=Gj3sa1sI7yDqxZts7fU37dsBsaeJYgrRAPhHDAif3sg6sAkam9aXaJnhR1bNKSmns3
+         JH0+pUCYqDvMy5/afRKfdy2bKCrmErj9/fPou0e8k+wAcoZTPgUgLKMmmW9JDa7VaiTu
+         WLzOrN/w9wSX9KR5ITtgCr2a/PuKHv8WWWdlPlLv8C1T4zXjGUkgBCzL1yvZF2h/TkKs
+         +gY3eZu6zv4fNVt8Cp5Q0wyq9juOb2LLCjULPbD5WPb5br4Srp1GxHe5svdgaw3LBKl2
+         +8Qa3W/CWBh1yM+V5ufXiGh3T6IgDwDCS2/k+o3YSutnbr69F3duHm2NgibPWWgvnYxM
+         gdLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ugRBwM9gJLad1zr51OTw4cYfsieSlu5IQWtZrKEHGZo=;
-        b=PnLhIFUSBWKLNjPeyfbMbIUwuSnu/g0zuXrKx+emAYBBdLZ7LYyBmjKLCaBQ0ACgVL
-         ISk/UoIqjwWMlyFxsboX2POkEtXjJTgGuD2qrbajJM6RN7Nno35+n0IJUcbkw+fPh/ae
-         IIZkXW3TwWwRKz3QveqvDxwdyB8Yd/ruao5QRwJHn4R7Y+KEn8YhaynCXmiNL1LfftjY
-         2tORyt/ofpXsPMLGMbC80NibisfH6lSztdW1N3i6KUoraz2GDddXpTLEurMXZ5uoMePH
-         4K6pvG3Rm1DnXyPI0DR4uprpKpnEldR4eLDo+CUxvsXaYzo/Vt5MfkwDlZ0cTvlIAg25
-         a+Nw==
-X-Gm-Message-State: AOAM531j5C9b/j2uCuMn0ItSdTBdqYi4ZVfUbYT4na3SxLZ2f/8M0nyn
-        aLYoQqRddVK2+M43lww6tFuSidh+2xwXIW+p2X9LWQ==
-X-Google-Smtp-Source: ABdhPJzwN+5nAIY776KqrS7O2Kj9hbFeOWWOvbjcDhO+EKShcukA95wTe/rNp6QzE9cy8o+SBy2zuQ8VVXZ9RsszEzw=
-X-Received: by 2002:a17:906:d18e:: with SMTP id c14mr3199851ejz.62.1614851629202;
- Thu, 04 Mar 2021 01:53:49 -0800 (PST)
-MIME-Version: 1.0
-References: <20210303144631.3175331-1-lee.jones@linaro.org> <20210303144631.3175331-23-lee.jones@linaro.org>
-In-Reply-To: <20210303144631.3175331-23-lee.jones@linaro.org>
-From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Thu, 4 Mar 2021 10:53:38 +0100
-Message-ID: <CAMGffEm8aK-D0pn-ED9pAuaE2X-eY3E2sTHQGg1-socM=RGz9g@mail.gmail.com>
-Subject: Re: [PATCH 22/30] scsi: pm8001: pm80xx_hwi: Fix a bunch of doc-rotted
- function headers
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     open list <linux-kernel@vger.kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=QO2U8n7VLVtOJdfm5GM29eksy0RQwsKOS6VHIcEvuf4=;
+        b=HmOkW71sagbYyNozsMUvtLG2EAdiVTwW6Xt3pNYt3qgvI+mNTU0q+RxJw3QQn3ozFA
+         KsRxj1j0BV1pfeXy552NSIjG3Yutnw2dR56BBSq+8s3GW/nMUX58BaWeRl0BMBpArM5h
+         L8WKB++et+1cRtOVuPdNJS0WO/d9Lc3AcqnUbHHIa0XlqsuSuIJE68ol5YBPSdqw3A3v
+         4ZNRPHqXM8C44h/OtxpF0zKkZZrx9EKcGWrA8bV+p0dHYy1u3bXYxGSUFjqSFG7h571E
+         T2hmNyJgJ7bzQyEjeIF/0R5xjcj9VpX8+IRxcyKWAD/a2pvtMe4aiJHORxFFHbInprGi
+         7/Hg==
+X-Gm-Message-State: AOAM530u2pIKaYAtKqBQVfKcLRFFA594HhMFD3+/lb5EDjkhTWKIeTSQ
+        K4yT0OxCSZ4eNKEfjADY4Lw=
+X-Google-Smtp-Source: ABdhPJx7Be59CS4Jz3cuhD/DDFmjxCPgjLfpLB4Nh9q9B0A/m8JGsdEev0WAmhnX7g0GLHQoaMPlDw==
+X-Received: by 2002:a50:d71e:: with SMTP id t30mr3418285edi.58.1614851997254;
+        Thu, 04 Mar 2021 01:59:57 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bec5d.dynamic.kabel-deutschland.de. [95.91.236.93])
+        by smtp.googlemail.com with ESMTPSA id be27sm8590157edb.47.2021.03.04.01.59.55
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 04 Mar 2021 01:59:56 -0800 (PST)
+Message-ID: <0242e4ab10acff9a7d71c2f956ba4624bf95add2.camel@gmail.com>
+Subject: Re: [PATCH v26 4/4] scsi: ufs: Add HPB 2.0 support
+From:   Bean Huo <huobean@gmail.com>
+To:     daejun7.park@samsung.com, Greg KH <gregkh@linuxfoundation.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+Date:   Thu, 04 Mar 2021 10:59:55 +0100
+In-Reply-To: <20210303062926epcms2p6aa6737e5ed3916eed9ab80011aad3d83@epcms2p6>
+References: <20210303062633epcms2p252227acd30ad15c1ca821d7e3f547b9e@epcms2p2>
+         <CGME20210303062633epcms2p252227acd30ad15c1ca821d7e3f547b9e@epcms2p6>
+         <20210303062926epcms2p6aa6737e5ed3916eed9ab80011aad3d83@epcms2p6>
 Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 3, 2021 at 3:47 PM Lee Jones <lee.jones@linaro.org> wrote:
->
-> Fixes the following W=1 kernel build warning(s):
->
->  drivers/scsi/pm8001/pm80xx_hwi.c:1427: warning: expecting prototype for pm8001_chip_init(). Prototype was for pm80xx_chip_init() instead
->  drivers/scsi/pm8001/pm80xx_hwi.c:1584: warning: expecting prototype for pm8001_chip_soft_rst(). Prototype was for pm80xx_chip_soft_rst() instead
->  drivers/scsi/pm8001/pm80xx_hwi.c:1711: warning: expecting prototype for pm8001_chip_interrupt_enable(). Prototype was for pm80xx_chip_intx_interrupt_enable() instead
->  drivers/scsi/pm8001/pm80xx_hwi.c:1722: warning: expecting prototype for pm8001_chip_intx_interrupt_disable(). Prototype was for pm80xx_chip_intx_interrupt_disable() instead
->  drivers/scsi/pm8001/pm80xx_hwi.c:1733: warning: expecting prototype for pm8001_chip_interrupt_enable(). Prototype was for pm80xx_chip_interrupt_enable() instead
->  drivers/scsi/pm8001/pm80xx_hwi.c:1752: warning: expecting prototype for pm8001_chip_interrupt_disable(). Prototype was for pm80xx_chip_interrupt_disable() instead
->  drivers/scsi/pm8001/pm80xx_hwi.c:4192: warning: expecting prototype for pm8001_chip_smp_req(). Prototype was for pm80xx_chip_smp_req() instead
->  drivers/scsi/pm8001/pm80xx_hwi.c:4775: warning: expecting prototype for pm8001_chip_phy_stop_req(). Prototype was for pm80xx_chip_phy_stop_req() instead
->  drivers/scsi/pm8001/pm80xx_hwi.c:4907: warning: expecting prototype for pm8001_chip_isr(). Prototype was for pm80xx_chip_isr() instead
->
-> Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Lee Jones <lee.jones@linaro.org>
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
-Thanks
-> ---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 84315560e8e1a..74ed072209f47 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -1420,7 +1420,7 @@ static int pm80xx_encrypt_update(struct pm8001_hba_info *pm8001_ha)
->  }
->
->  /**
-> - * pm8001_chip_init - the main init function that initialize whole PM8001 chip.
-> + * pm80xx_chip_init - the main init function that initialize whole PM8001 chip.
->   * @pm8001_ha: our hba card information
+On Wed, 2021-03-03 at 15:29 +0900, Daejun Park wrote:
+> +
+> +static inline int ufshpb_get_read_id(struct ufshpb_lu *hpb)
+> +{
+> +       if (++hpb->cur_read_id >= MAX_HPB_READ_ID)
+> +               hpb->cur_read_id = 0;
+> +       return hpb->cur_read_id;
+> +}
+> +
+> +static int ufshpb_execute_pre_req(struct ufshpb_lu *hpb, struct
+> scsi_cmnd *cmd,
+> +                                 struct ufshpb_req *pre_req, int
+> read_id)
+> +{
+> +       struct scsi_device *sdev = cmd->device;
+> +       struct request_queue *q = sdev->request_queue;
+> +       struct request *req;
+> +       struct scsi_request *rq;
+> +       struct bio *bio = pre_req->bio;
+> +
+> +       pre_req->hpb = hpb;
+> +       pre_req->wb.lpn = sectors_to_logical(cmd->device,
+> +                                            blk_rq_pos(cmd-
+> >request));
+> +       pre_req->wb.len = sectors_to_logical(cmd->device,
+> +                                            blk_rq_sectors(cmd-
+> >request));
+> +       if (ufshpb_pre_req_add_bio_page(hpb, q, pre_req))
+> +               return -ENOMEM;
+> +
+> +       req = pre_req->req;
+> +
+> +       /* 1. request setup */
+> +       blk_rq_append_bio(req, &bio);
+> +       req->rq_disk = NULL;
+> +       req->end_io_data = (void *)pre_req;
+> +       req->end_io = ufshpb_pre_req_compl_fn;
+> +
+> +       /* 2. scsi_request setup */
+> +       rq = scsi_req(req);
+> +       rq->retries = 1;
+> +
+> +       ufshpb_set_write_buf_cmd(rq->cmd, pre_req->wb.lpn, pre_req-
+> >wb.len,
+> +                                read_id);
+> +       rq->cmd_len = scsi_command_size(rq->cmd);
+> +
+> +       if (blk_insert_cloned_request(q, req) != BLK_STS_OK)
+> +               return -EAGAIN;
+> +
+> +       hpb->stats.pre_req_cnt++;
+> +
+> +       return 0;
+> +}
+> +
+> +static int ufshpb_issue_pre_req(struct ufshpb_lu *hpb, struct
+> scsi_cmnd *cmd,
+> +                               int *read_id)
+> +{
+> +       struct ufshpb_req *pre_req;
+> +       struct request *req = NULL;
+> +       struct bio *bio = NULL;
+> +       unsigned long flags;
+> +       int _read_id;
+> +       int ret = 0;
+> +
+> +       req = blk_get_request(cmd->device->request_queue,
+> +                             REQ_OP_SCSI_OUT | REQ_SYNC,
+> BLK_MQ_REQ_NOWAIT);
+> +       if (IS_ERR(req))
+> +               return -EAGAIN;
+> +
+> +       bio = bio_alloc(GFP_ATOMIC, 1);
+> +       if (!bio) {
+> +               blk_put_request(req);
+> +               return -EAGAIN;
+> +       }
+> +
+> +       spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+> +       pre_req = ufshpb_get_pre_req(hpb);
+> +       if (!pre_req) {
+> +               ret = -EAGAIN;
+> +               goto unlock_out;
+> +       }
+> +       _read_id = ufshpb_get_read_id(hpb);
+> +       spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> +
+> +       pre_req->req = req;
+> +       pre_req->bio = bio;
+> +
+> +       ret = ufshpb_execute_pre_req(hpb, cmd, pre_req, _read_id);
+> +       if (ret)
+> +               goto free_pre_req;
+> +
+> +       *read_id = _read_id;
+> +
+> +       return ret;
+> +free_pre_req:
+> +       spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+> +       ufshpb_put_pre_req(hpb, pre_req);
+> +unlock_out:
+> +       spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> +       bio_put(bio);
+> +       blk_put_request(req);
+> +       return ret;
+> +}
+> +
+>  /*
+>   * This function will set up HPB read command using host-side L2P
+> map data.
+> - * In HPB v1.0, maximum size of HPB read command is 4KB.
 >   */
->  static int pm80xx_chip_init(struct pm8001_hba_info *pm8001_ha)
-> @@ -1574,7 +1574,7 @@ pm80xx_fatal_errors(struct pm8001_hba_info *pm8001_ha)
+> -void ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+> +int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>  {
+>         struct ufshpb_lu *hpb;
+>         struct ufshpb_region *rgn;
+> @@ -291,26 +560,27 @@ void ufshpb_prep(struct ufs_hba *hba, struct
+> ufshcd_lrb *lrbp)
+>         u64 ppn;
+>         unsigned long flags;
+>         int transfer_len, rgn_idx, srgn_idx, srgn_offset;
+> +       int read_id = 0;
+>         int err = 0;
+>  
+>         hpb = ufshpb_get_hpb_data(cmd->device);
+>         if (!hpb)
+> -               return;
+> +               return -ENODEV;
+>  
+>         if (ufshpb_get_state(hpb) != HPB_PRESENT) {
+>                 dev_notice(&hpb->sdev_ufs_lu->sdev_dev,
+>                            "%s: ufshpb state is not PRESENT",
+> __func__);
+> -               return;
+> +               return -ENODEV;
+>         }
+>  
+>         if (!ufshpb_is_write_or_discard_cmd(cmd) &&
+>             !ufshpb_is_read_cmd(cmd))
+> -               return;
+> +               return 0;
+>  
+>         transfer_len = sectors_to_logical(cmd->device,
+>                                           blk_rq_sectors(cmd-
+> >request));
+>         if (unlikely(!transfer_len))
+> -               return;
+> +               return 0;
+>  
+>         lpn = sectors_to_logical(cmd->device, blk_rq_pos(cmd-
+> >request));
+>         ufshpb_get_pos_from_lpn(hpb, lpn, &rgn_idx, &srgn_idx,
+> &srgn_offset);
+> @@ -323,18 +593,19 @@ void ufshpb_prep(struct ufs_hba *hba, struct
+> ufshcd_lrb *lrbp)
+>                 ufshpb_set_ppn_dirty(hpb, rgn_idx, srgn_idx,
+> srgn_offset,
+>                                  transfer_len);
+>                 spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> -               return;
+> +               return 0;
+>         }
+>  
+> -       if (!ufshpb_is_support_chunk(transfer_len))
+> -               return;
+> +       if (!ufshpb_is_support_chunk(hpb, transfer_len) &&
+> +           (ufshpb_is_legacy(hba) && (transfer_len !=
+> HPB_LEGACY_CHUNK_HIGH)))
+> +               return 0;
+>  
+>         spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+>         if (ufshpb_test_ppn_dirty(hpb, rgn_idx, srgn_idx,
+> srgn_offset,
+>                                    transfer_len)) {
+>                 hpb->stats.miss_cnt++;
+>                 spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> -               return;
+> +               return 0;
+>         }
+>  
+>         err = ufshpb_fill_ppn_from_page(hpb, srgn->mctx, srgn_offset,
+> 1, &ppn);
+> @@ -347,28 +618,46 @@ void ufshpb_prep(struct ufs_hba *hba, struct
+> ufshcd_lrb *lrbp)
+>                  * active state.
+>                  */
+>                 dev_err(hba->dev, "get ppn failed. err %d\n", err);
+> -               return;
+> +               return err;
+> +       }
+> +
+> +       if (!ufshpb_is_legacy(hba) &&
+> +           ufshpb_is_required_wb(hpb, transfer_len)) {
+> +               err = ufshpb_issue_pre_req(hpb, cmd, &read_id);
+> +               if (err) {
+> +                       unsigned long timeout;
+> +
+> +                       timeout = cmd->jiffies_at_alloc +
+> msecs_to_jiffies(
+> +                                 hpb->params.requeue_timeout_ms);
+> +
+> +                       if (time_before(jiffies, timeout))
+> +                               return -EAGAIN;
+> +
+> +                       hpb->stats.miss_cnt++;
+> +                       return 0;
+> +               }
+>         }
+>  
+> -       ufshpb_set_hpb_read_to_upiu(hpb, lrbp, lpn, ppn,
+> transfer_len);
+> +       ufshpb_set_hpb_read_to_upiu(hpb, lrbp, lpn, ppn,
+> transfer_len, read_id);
+>  
+>         hpb->stats.hit_cnt++;
+> +       return 0;
 >  }
->
->  /**
-> - * pm8001_chip_soft_rst - soft reset the PM8001 chip, so that the clear all
-> + * pm80xx_chip_soft_rst - soft reset the PM8001 chip, so that the clear all
->   * the FW register status to the originated status.
->   * @pm8001_ha: our hba card information
->   */
-> @@ -1703,7 +1703,7 @@ static void pm80xx_hw_chip_rst(struct pm8001_hba_info *pm8001_ha)
->  }
->
->  /**
-> - * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
-> + * pm80xx_chip_intx_interrupt_enable - enable PM8001 chip interrupt
->   * @pm8001_ha: our hba card information
->   */
->  static void
-> @@ -1714,7 +1714,7 @@ pm80xx_chip_intx_interrupt_enable(struct pm8001_hba_info *pm8001_ha)
->  }
->
->  /**
-> - * pm8001_chip_intx_interrupt_disable- disable PM8001 chip interrupt
-> + * pm80xx_chip_intx_interrupt_disable - disable PM8001 chip interrupt
->   * @pm8001_ha: our hba card information
->   */
->  static void
-> @@ -1724,7 +1724,7 @@ pm80xx_chip_intx_interrupt_disable(struct pm8001_hba_info *pm8001_ha)
->  }
->
->  /**
-> - * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
-> + * pm80xx_chip_interrupt_enable - enable PM8001 chip interrupt
->   * @pm8001_ha: our hba card information
->   * @vec: interrupt number to enable
->   */
-> @@ -1743,7 +1743,7 @@ pm80xx_chip_interrupt_enable(struct pm8001_hba_info *pm8001_ha, u8 vec)
->  }
->
->  /**
-> - * pm8001_chip_interrupt_disable- disable PM8001 chip interrupt
-> + * pm80xx_chip_interrupt_disable - disable PM8001 chip interrupt
->   * @pm8001_ha: our hba card information
->   * @vec: interrupt number to disable
->   */
-> @@ -4183,7 +4183,7 @@ static void build_smp_cmd(u32 deviceID, __le32 hTag,
->  }
->
->  /**
-> - * pm8001_chip_smp_req - send a SMP task to FW
-> + * pm80xx_chip_smp_req - send a SMP task to FW
->   * @pm8001_ha: our hba card information.
->   * @ccb: the ccb information this request used.
->   */
-> @@ -4766,7 +4766,7 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *pm8001_ha, u8 phy_id)
->  }
->
->  /**
-> - * pm8001_chip_phy_stop_req - start phy via PHY_STOP COMMAND
-> + * pm80xx_chip_phy_stop_req - start phy via PHY_STOP COMMAND
->   * @pm8001_ha: our hba card information.
->   * @phy_id: the phy id which we wanted to start up.
->   */
-> @@ -4898,7 +4898,7 @@ static u32 pm80xx_chip_is_our_interrupt(struct pm8001_hba_info *pm8001_ha)
->  }
->
->  /**
-> - * pm8001_chip_isr - PM8001 isr handler.
-> + * pm80xx_chip_isr - PM8001 isr handler.
->   * @pm8001_ha: our hba card information.
->   * @vec: irq number.
->   */
-> --
-> 2.27.0
->
+
+
+
+BUG!!!
+
+
+Please read HPB 2.0 Spec carefully, and check how to correctly use HPB
+READ ID. you are assigning 0 for HPB write buffer. how can you expect
+the HPB READ be paired???
+
+
+
+HPB READ ID
+• If this value is 0, then HPB READ ID mode is not used, in which case
+the physical addresses, except for the first LBA, needed to read the
+data should be calculated or searched for by the device. If this value
+is not 0, then HPB READ ID mode is used, in which case the device
+returns the data corresponding to the HPB entries that are bound to
+the HPB READ ID value.
+
+Bean
+
