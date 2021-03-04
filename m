@@ -2,271 +2,156 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE247C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 02:10:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EDC8C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 03:29:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9757A64FA5
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 02:10:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EC7764EEE
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 03:29:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231152AbhCDCKZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Mar 2021 21:10:25 -0500
-Received: from mailout.easymail.ca ([64.68.200.34]:41028 "EHLO
-        mailout.easymail.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230491AbhCDCKY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 21:10:24 -0500
-X-Greylist: delayed 352 seconds by postgrey-1.27 at vger.kernel.org; Wed, 03 Mar 2021 21:10:24 EST
-Received: from localhost (localhost [127.0.0.1])
-        by mailout.easymail.ca (Postfix) with ESMTP id A0729C0F37;
-        Thu,  4 Mar 2021 02:03:51 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at emo04-pco.easydns.vpn
-Received: from mailout.easymail.ca ([127.0.0.1])
-        by localhost (emo04-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 25SS77Zl1U44; Thu,  4 Mar 2021 02:03:51 +0000 (UTC)
-Received: from mail.gonehiking.org (c-24-9-64-241.hsd1.co.comcast.net [24.9.64.241])
-        by mailout.easymail.ca (Postfix) with ESMTPA id B9AB6C0F1F;
-        Thu,  4 Mar 2021 02:03:49 +0000 (UTC)
-Received: from [192.168.1.4] (rhapsody.internal [192.168.1.4])
-        by mail.gonehiking.org (Postfix) with ESMTP id C4C0C3EF3B;
-        Wed,  3 Mar 2021 19:03:48 -0700 (MST)
-Subject: Re: BusLogic driver with spurious logical units
-To:     tasleson@redhat.com, linux-scsi@vger.kernel.org
-References: <5a74cc0b-65e7-c5f8-edc5-80746fc38be7@redhat.com>
-From:   Khalid Aziz <khalid@gonehiking.org>
-Message-ID: <5484bbc9-8660-5458-6414-142aef40fa3b@gonehiking.org>
-Date:   Wed, 3 Mar 2021 19:03:48 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        id S232358AbhCDD3B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Mar 2021 22:29:01 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:39266 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232312AbhCDD2i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2021 22:28:38 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1243LU4J079468;
+        Thu, 4 Mar 2021 03:27:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=d8CnOw44iNM3bPPfsh5mRkWQ7IZKyZw+V1Os2ij2c4c=;
+ b=IiWwN2A4g/wqFBDDs2nRMWDPFKp5CB7X54Vrq8TwnvFmCYjHk3xCaJfEudcd1wqdYBou
+ 4GNP5QIda0rISJU7lQEMSUOSdm1/W6lOzPQF/9kgW92FWioH3SrziJyy7NRrKIFc40Vw
+ RRSCHnNlDVFrJ1Ma+s1d9VgS+foTlxwbkwwZZBlytjRGumdqXAfBZ/Q1t+2pd38COels
+ T4IA5Nh3LILsr+OhGo3fiTMPKz51MJj3LlGIbuWL25b21Qst31vAtdulPK7YJB7jq5GY
+ b/jxjSBmJWWtxMir6SBqC+5/g/MbbHeiQfKAEK+LPvjGV3R2gjOyuFwPfocZ9rKz0JZq fQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 371hhc711y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 04 Mar 2021 03:27:56 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1243L5Ax040254;
+        Thu, 4 Mar 2021 03:27:55 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2108.outbound.protection.outlook.com [104.47.55.108])
+        by aserp3030.oracle.com with ESMTP id 36yynrbm4x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 04 Mar 2021 03:27:55 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=fz/uTJBTdpYhbiC3Rq+I73lFU1FWIzMyk0LilvOPqHJmEjo++3DRWvNGPwNPWrSvKcVV3PJJvgs+ETWXGuowcVHmW2pTarv/+VMWnz1os5T+FSvFA9inKFTcxXoz+lyckhYfHYw6N+phr6R2B6/aY+Vf5uob7Lx8V4fTfmASVhww5vxIiWMKNtC3Hn/ZogjpAqu55MQntMcSTWwHquLMpSbrXi0KijMX8hQMDzvcgJW5YNDynI9eUBu1MCYBcOV3M7b3uHosaQEz7+93xpik7DMgCpJl+4vmQ2T41DgJVg35+MRzDTckn/YL6e8S2+e7fVJ0c790XGqXatCb3c2enA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=d8CnOw44iNM3bPPfsh5mRkWQ7IZKyZw+V1Os2ij2c4c=;
+ b=PmplcRQibdXujslk5r3nbGWGe3qNkcPqe6ztKrO1k80PexhuIX5JRQwpEiyByCffztdBHON/YKPcSdFGVDMCXJH3GdReafh8dKrZ8aRe/kNgL6H8WBIYbMOQhBwm3p2wycAcdSbvwka9aLC14MM7amgoZZL3od+AvYA0+MM8Td+0024E7iO+7vg8nvluOd4PcG5co3ytFPog1AdehxFrUSGM3EK3q4GsYgJULpIbUCYLAIJ9QB+QDuab7h22yR9a1pO0WglTtizZdlTeO01ekvPdkOIijFFZBqXA1Jyi0Yisa3H9G1Adz4fOIq0exV2LO9MzS7gXzc9dCrzJYxhm7g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=d8CnOw44iNM3bPPfsh5mRkWQ7IZKyZw+V1Os2ij2c4c=;
+ b=G9Dhdv8sqyyp6+7AzsTqlP+5wmReNscaRASOjQ3ua2PxJp+lAAQsMeCjPZU26twEySm+MhheseGOjhkvorK4frJNL+hsUVwrwcZBIDx9uh3dQ1f/o9w8VMLLDxfvo+GvUAS7lYL5uQ9r6jwUN8lacz6f1iRgkr5LESEIkAP1UMA=
+Authentication-Results: broadcom.com; dkim=none (message not signed)
+ header.d=none;broadcom.com; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB4423.namprd10.prod.outlook.com (2603:10b6:510:40::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.23; Thu, 4 Mar
+ 2021 03:27:53 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::dc39:c9fa:7365:8c8e]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::dc39:c9fa:7365:8c8e%5]) with mapi id 15.20.3912.018; Thu, 4 Mar 2021
+ 03:27:53 +0000
+To:     Kashyap Desai <kashyap.desai@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v4 0/5] io_uring iopoll in scsi layer
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1sg5bha3t.fsf@ca-mkp.ca.oracle.com>
+References: <20210215074048.19424-1-kashyap.desai@broadcom.com>
+Date:   Wed, 03 Mar 2021 22:27:49 -0500
+In-Reply-To: <20210215074048.19424-1-kashyap.desai@broadcom.com> (Kashyap
+        Desai's message of "Mon, 15 Feb 2021 13:10:43 +0530")
+Content-Type: text/plain
+X-Originating-IP: [138.3.200.58]
+X-ClientProxiedBy: CY4PR08CA0028.namprd08.prod.outlook.com
+ (2603:10b6:903:151::14) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-In-Reply-To: <5a74cc0b-65e7-c5f8-edc5-80746fc38be7@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by CY4PR08CA0028.namprd08.prod.outlook.com (2603:10b6:903:151::14) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.17 via Frontend Transport; Thu, 4 Mar 2021 03:27:52 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: bf61c276-8d9e-41f6-7477-08d8debd7ee5
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4423:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB442386B71D15AD75479011088E979@PH0PR10MB4423.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2803;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: vn2mc7nb63ZK/QLPCMxZCZ+LsqwjWXNfD0G15gZ/qoq+rJ9mx/XRp2vNJUQVznsi9oTkMPPUI5h7uO+ZHuRnQqQrz2NF07AIIR9UCFR7Z2coIqQo1hcKHX/1Tkwq8s2mRtMwARs8oUjD5PWT6+RfGAkinjvy8UJOgZxAt8/9g//U2mGr/snEnACJYmfiXsad89dQ3icCgrPoA7SPEFLlw32Rg5vljYb6Ky1MB2QG+b4VMaSdYb18w232cZQr+nMEPsBb4HQvEhCVnlBZ/t8IaRr459lLFld3W3vzhzXzOR+QG6uqANommZLsDesUN02oht0K6H1OWBuMej1pTfov0Qb8mlLUq2R7RgwfoiZQexrR1MFWJyu9eESshfCCmWGpfg6cfR5tgCWXJDKCxxMtIhdDSCLwjVJ/tiagWVMW42zYNcSsi3waTGjaBb+Y/8gNoZgzTTbWVQgSuQdX5U8GMoEp6q686dl+HMnM/RcsD1bl42pqKf9A2nyIfWyoieZ4m+cbyJk4lVsi8wUaBQqu6g==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(396003)(376002)(346002)(136003)(39860400002)(2906002)(316002)(8936002)(558084003)(8676002)(55016002)(4326008)(956004)(478600001)(86362001)(6666004)(36916002)(66556008)(66946007)(66476007)(7696005)(26005)(52116002)(5660300002)(186003)(16526019)(6916009);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?lUTpYl97ISygzF9JbCPs0t0DRWaVLXUvX2OKVzmxzzr+9S3pWP1cnihF6ZyJ?=
+ =?us-ascii?Q?p0/9LdDL70ApgOTMHV388Hao5+qwYaXpHywu+wGdjtnE31hDQMglDr3+ueYO?=
+ =?us-ascii?Q?h/3bPinqHAmX/1uLuC8jj7i9fY517ywAvBBvf/dZoV+TVw0ufCyJRIq8jliP?=
+ =?us-ascii?Q?tNDd6efnfuhnu0vn1CV0UdtqoLLN0rJiFEhjtufNTsKjRTzg4QHo3Y3RryYx?=
+ =?us-ascii?Q?VXLC2dVubOXCA5uddD3KguVDNlfmVUjZLoVnz902uvwV385X4WBtxm9JXuFO?=
+ =?us-ascii?Q?MMFQJ5i4drb5vrB9gYWXvhzkBq8viE1uNSI20xylVjeBxX0FgYhTSI58eror?=
+ =?us-ascii?Q?8EwWD7GeCqeG0A1C68aVnAcw3LKoG4AhYHttBQ1J//oB5UuOgRhaAbdcheVa?=
+ =?us-ascii?Q?3j8FNrBB+2wkCaomGKg2Hq50Nk8UqDNpEQMnyAPXaqS8V5kmvhVRA4KpKX4o?=
+ =?us-ascii?Q?R1HNNTUUgWMWgYwbPG1BDg49dSrLS4ss1zHrBATLPMo5mJA+nQ26A9u1DVrm?=
+ =?us-ascii?Q?Aima2OVX9xs4ex0JXufs5u7DdlsUX3VO0UDsKxzq3KpGpJ8Q0K5VP5FMq4gg?=
+ =?us-ascii?Q?wgxBy59oyb9GV1uTysbT8H03cDD9P95KaRZH8v1LJKeeZSu/RKb6RfJZ6nXx?=
+ =?us-ascii?Q?C3EQlC3JArxQ67t72igWPIasu0AMXDizaPaK7LvE1JJ+Or2iEHTBMsM/1fPT?=
+ =?us-ascii?Q?HldxO49a2Hq8RqCO3WbQ/pjVSPXoDMn/dO7jbhzVLRgxXz6ibtjhSTpAtwYW?=
+ =?us-ascii?Q?7QMBie/l73auTQ21jwcqH505N7i7VRfO95eSGi46ucEllcjbGllvYCvcLCYC?=
+ =?us-ascii?Q?KWk6XGNkCfRf6THmQ1orz/6CUWfwm1xnLSe7pT69khs8v/57NXj6hIN6KsIk?=
+ =?us-ascii?Q?7RuCrzBoBlggEJ9FDsEl1kBl8UO5Qb/5DzLNbEz8L4EEOauAKMYJSgp9tRyG?=
+ =?us-ascii?Q?V2QkYBga1kTimtldfiPlmEeIvQDobikUTCUztYiKrg0XEBzunL5pclfGATrC?=
+ =?us-ascii?Q?O0Z3t/PBIbSAG3YZUPuIVXEck7wzz59GBoXgvhptD2tPmaNvhd2xUeZk5DtJ?=
+ =?us-ascii?Q?y6oSQ1KcDNqFWG9MDDRSNL2bmxhDgGMLETWKqbHVCJG5bKAGqSyEO17tUtpC?=
+ =?us-ascii?Q?ZMu1gTAchm3RyOMkW4nxQ2nAs4m0VFGBASfgIwXkoZWc6BnT7/Q0SNfowHCB?=
+ =?us-ascii?Q?9Ybm9ZJkchhdPZ1Tf/KHC3b4Hiu+7CuVYNKvrdMxHLjoMsQULGR85yCGH5xE?=
+ =?us-ascii?Q?1srnIakYFvNOHgeY7+bWgoyxltFwEn9ciXjlcDJkqqgLfHcrEdH79ga7Rr11?=
+ =?us-ascii?Q?hP3tQ1Bnrb397DvEMgpxcTtS?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bf61c276-8d9e-41f6-7477-08d8debd7ee5
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Mar 2021 03:27:53.4685
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: zFTN6V1sL7Unwsx194tJB7PPa2po/Msugkkoi/Yi9gIhWoSuOBu3U1mjvFLkzCff1jzvHJNEe4TKd+xnVKCEY4cP1jexYDQaaE9zQl17Vts=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4423
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9912 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 spamscore=0
+ bulkscore=0 suspectscore=0 mlxlogscore=976 phishscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103040012
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9912 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 malwarescore=0
+ mlxlogscore=999 spamscore=0 phishscore=0 lowpriorityscore=0
+ impostorscore=0 mlxscore=0 suspectscore=0 bulkscore=0 adultscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2103040012
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Tony,
 
-Thanks for the bug report. I am just starting to look at it. I am going
-to work on reproducing it first.
+Kashyap,
 
---
-Khalid
+> This patch series is to support io_uring iopoll feature in scsi
+> stack. This patch set requires shared hosttag support.
 
-On 2/18/21 2:57 PM, Tony Asleson wrote:
-> Using Virtualbox (6.1.18 r142142) with Buslogic & IDE, I booted a fedora
-> 33 (5.10.15-200.fc33.x86_64) server ISO and I find *many* targets with
-> size 512 bytes which is incorrect.  To get another data point, I used
-> same VM and a NetBSD 9.1 ISO and that booted with the expected
-> configuration.  Although, it still could be a VM hardware model issue.
-> 
-> Expected:
-> 1 80GB IDE disk & CDROM
-> 1 2GB SCSI buslogic attached disk
-> 
-> Found:
-> 1 80GB IDE disk & CDROM
-> 120 512-byte SCSI disks
-> 
-> 
-> snippet of dmesg
-> ...
-> [    2.910331] scsi: ***** BusLogic SCSI Driver Version 2.1.17 of 12
-> September 2013 *****
-> [    2.910332] scsi: Copyright 1995-1998 by Leonard N. Zubkoff
-> <lnz@dandelion.com>
-> [    2.935623] scsi3: Configuring BusLogic Model BT-958D PCI Wide Ultra
-> SCSI Host Adapter
-> [    2.935625] scsi3:   Firmware Version: 5.07B, I/O Address: 0xD280,
-> IRQ Channel: 21/Level
-> [    2.935626] scsi3:   PCI Bus: 0, Device: 21, Address:
-> [    2.935627] 0xF0808000,
-> [    2.935627] Host Adapter SCSI ID: 7
-> [    2.935628] scsi3:   Parity Checking: Enabled, Extended Translation:
-> Enabled
-> [    2.935629] scsi3:   Synchronous Negotiation: Ultra, Wide
-> Negotiation: Enabled
-> [    2.935629] scsi3:   Disconnect/Reconnect: Enabled, Tagged Queuing:
-> Enabled
-> [    2.935634] scsi3:   Scatter/Gather Limit: 128 of 8192 segments,
-> Mailboxes: 211
-> [    2.935635] scsi3:   Driver Queue Depth: 211, Host Adapter Queue
-> Depth: 192
-> [    2.935636] scsi3:   Tagged Queue Depth:
-> [    2.935636] Automatic
-> [    2.935639] , Untagged Queue Depth: 3
-> [    2.935639] scsi3:   SCSI Bus Termination: Both Enabled
-> 
-> [    2.939422] Adding 2009084k swap on /dev/zram0.  Priority:100
-> extents:1 across:2009084k SSFS
-> [    3.049353] scsi3: *** BusLogic BT-958D Initialized Successfully ***
-> [    5.106302] RAPL PMU: API unit is 2^-32 Joules, 0 fixed counters,
-> 10737418240 ms ovfl timer
-> [    5.748255] snd_intel8x0 0000:00:05.0: allow list rate for 1028:0177
-> is 48000
-> [    5.839188] scsi host3: BusLogic BT-958D
-> [    5.839661] scsi host3: scsi scan: INQUIRY result too short (5), using 36
-> [    5.839663] scsi 3:0:0:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.839723] scsi 3:0:0:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.839788] scsi 3:0:0:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.839875] scsi 3:0:0:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.840351] scsi 3:0:0:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.840723] scsi 3:0:0:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.840929] scsi 3:0:0:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.841139] scsi 3:0:0:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.841213] scsi 3:0:1:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.841274] scsi 3:0:1:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.841329] scsi 3:0:1:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.841378] scsi 3:0:1:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.841425] scsi 3:0:1:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.841974] scsi 3:0:1:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.842047] scsi 3:0:1:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.842494] scsi 3:0:1:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.842555] scsi 3:0:2:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.842704] scsi 3:0:2:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.842837] scsi 3:0:2:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.842933] scsi 3:0:2:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.842993] scsi 3:0:2:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.843050] scsi 3:0:2:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.843164] scsi 3:0:2:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.843600] scsi 3:0:2:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.843870] scsi 3:0:3:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.844043] scsi 3:0:3:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.844202] scsi 3:0:3:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.844321] scsi 3:0:3:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.844394] scsi 3:0:3:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.844457] scsi 3:0:3:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.844536] scsi 3:0:3:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.844740] scsi 3:0:3:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.844799] scsi 3:0:4:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.844851] scsi 3:0:4:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.844915] scsi 3:0:4:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.845640] scsi 3:0:4:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.845776] scsi 3:0:4:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.845833] scsi 3:0:4:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846214] scsi 3:0:4:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846285] scsi 3:0:4:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846349] scsi 3:0:5:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846410] scsi 3:0:5:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846466] scsi 3:0:5:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846517] scsi 3:0:5:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846566] scsi 3:0:5:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846626] scsi 3:0:5:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846681] scsi 3:0:5:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846736] scsi 3:0:5:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846792] scsi 3:0:6:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846843] scsi 3:0:6:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.846906] scsi 3:0:6:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.847436] scsi 3:0:6:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.847494] scsi 3:0:6:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.847549] scsi 3:0:6:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.847596] scsi 3:0:6:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.847659] scsi 3:0:6:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.847723] scsi 3:0:8:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.847785] scsi 3:0:8:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.848173] scsi 3:0:8:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.848226] scsi 3:0:8:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.848325] scsi 3:0:8:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.848389] scsi 3:0:8:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.848445] scsi 3:0:8:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.848498] scsi 3:0:8:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.849166] scsi 3:0:9:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.849220] scsi 3:0:9:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.849991] scsi 3:0:9:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.850055] scsi 3:0:9:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.850274] scsi 3:0:9:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.850380] scsi 3:0:9:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.850477] scsi 3:0:9:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.850602] scsi 3:0:9:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.852462] scsi 3:0:10:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.857171] scsi 3:0:10:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.858541] scsi 3:0:10:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.858661] scsi 3:0:10:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.858762] scsi 3:0:10:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.858864] scsi 3:0:10:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.858958] scsi 3:0:10:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.859020] scsi 3:0:10:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.863336] scsi 3:0:11:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.863438] scsi 3:0:11:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.863536] scsi 3:0:11:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.863793] scsi 3:0:11:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.864117] scsi 3:0:11:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.864224] scsi 3:0:11:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.864388] scsi 3:0:11:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.864485] scsi 3:0:11:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.864567] scsi 3:0:12:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.864812] scsi 3:0:12:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.864879] scsi 3:0:12:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.865400] scsi 3:0:12:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.865509] scsi 3:0:12:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.865770] scsi 3:0:12:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.865865] scsi 3:0:12:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.866851] scsi 3:0:12:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.867193] scsi 3:0:13:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.867312] scsi 3:0:13:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.867417] scsi 3:0:13:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.867660] scsi 3:0:13:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.867719] scsi 3:0:13:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.867824] scsi 3:0:13:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.868226] scsi 3:0:13:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.868328] scsi 3:0:13:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.868420] scsi 3:0:14:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.868507] scsi 3:0:14:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.868599] scsi 3:0:14:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.868653] scsi 3:0:14:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.868733] scsi 3:0:14:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.869178] scsi 3:0:14:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.869311] scsi 3:0:14:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.869378] scsi 3:0:14:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.869472] scsi 3:0:15:0: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.870097] scsi 3:0:15:1: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.870849] scsi 3:0:15:2: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.871028] scsi 3:0:15:3: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.871138] scsi 3:0:15:4: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.871229] scsi 3:0:15:5: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.871319] scsi 3:0:15:6: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.871744] scsi 3:0:15:7: Direct-Access                 PQ: 0 ANSI: 0
-> [    5.871998] sd 3:0:0:0: [sdb] Sector size 0 reported, assuming 512.
-> [    5.872000] sd 3:0:0:0: [sdb] 1 512-byte logical blocks: (512 B/512 B)
-> [    5.872001] sd 3:0:0:0: [sdb] 0-byte physical blocks
-> [    5.872026] sd 3:0:0:0: [sdb] Write Protect is off
-> [    5.872027] sd 3:0:0:0: [sdb] Mode Sense: 00 00 00 00
-> [    5.872051] sd 3:0:0:0: [sdb] Asking for cache data failed
-> [    5.872052] sd 3:0:0:0: [sdb] Assuming drive cache: write through
-> [    5.872836] Dev sdb: unable to read RDB block 1
-> [    5.872838]  sdb: unable to read partition table
-> [    5.872840] sdb: partition table beyond EOD, enabling native capacity
-> [    5.872873] sd 3:0:0:0: Attached scsi generic sg2 type 0
-> [    5.872922] Dev sdb: unable to read RDB block 1
-> [    5.872923]  sdb: unable to read partition table
-> [    5.872925] sdb: partition table beyond EOD, truncated
-> [    5.873051] sd 3:0:0:0: [sdb] Sector size 0 reported, assuming 512.
-> [    5.873177] sd 3:0:0:1: [sdc] Sector size 0 reported, assuming 512.
-> [    5.873179] sd 3:0:0:1: [sdc] 1 512-byte logical blocks: (512 B/512 B)
-> [    5.873180] sd 3:0:0:1: [sdc] 0-byte physical blocks
-> [    5.873201] sd 3:0:0:0: [sdb] Attached SCSI disk
-> [    5.873210] sd 3:0:0:1: [sdc] Write Protect is off
-> [    5.873211] sd 3:0:0:1: [sdc] Mode Sense: 00 00 00 00
-> [    5.873236] sd 3:0:0:1: [sdc] Asking for cache data failed
-> [    5.873237] sd 3:0:0:1: [sdc] Assuming drive cache: write through
-> [    5.873362] Dev sdc: unable to read RDB block 1
-> [    5.873364]  sdc: unable to read partition table
-> [    5.873365] sdc: partition table beyond EOD, enabling native capacity
-> [    5.873405] Dev sdc: unable to read RDB block 1
-> [    5.873407]  sdc: unable to read partition table
-> [    5.873408] sdc: partition table beyond EOD, truncated
-> [    5.873507] sd 3:0:0:1: Attached scsi generic sg3 type 0
-> [    5.873525] sd 3:0:0:1: [sdc] Sector size 0 reported, assuming 512.
-> [    5.873594] sd 3:0:0:1: [sdc] Attached SCSI disk'
-> 
-> ...
-> 
-> -Tony
-> 
-> 
+Applied to 5.13/scsi-staging, thanks!
 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
