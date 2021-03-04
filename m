@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E69C6C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 09:54:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7258C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 09:54:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B720B64F09
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 09:54:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A0C464F2B
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 09:54:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238043AbhCDJxf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Mar 2021 04:53:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59696 "EHLO
+        id S238148AbhCDJyI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Mar 2021 04:54:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238052AbhCDJx3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2021 04:53:29 -0500
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 530CEC06175F
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Mar 2021 01:52:49 -0800 (PST)
-Received: by mail-ej1-x630.google.com with SMTP id mm21so47819083ejb.12
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Mar 2021 01:52:49 -0800 (PST)
+        with ESMTP id S238142AbhCDJyG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2021 04:54:06 -0500
+Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4538C061762
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Mar 2021 01:53:25 -0800 (PST)
+Received: by mail-ed1-x529.google.com with SMTP id bd6so20700348edb.10
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Mar 2021 01:53:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cloud.ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=yTv8ns99iDjsNYF6DJGXhF2BaQsgZOApT0z1Peuz2dM=;
-        b=Olt3Fh0oAHXVbOPOyfZu3Fkf63T9Bzgd3CIQpPpECW9DIM3bVgp09fgRlgjy/VGncp
-         M1O8ARLFKdgOCjwhXz3nJm1QqLbOiW9xQz7Hz/X8IjEW8e9EWQ+QqpH1aGsrLXg00Bwz
-         eqEiRuC7fz5YoGjmXDKVpIQRdbvH8JposY7mFgmi2vqWtSlQprnzz0QTt06hqTjXtntZ
-         6CC4qAB0Jk8HknkJYrRqXgHiha6iiq5OS2Xz8OH8atniceinZvvVrR2+6XSiIfZQWYtK
-         tVjIluJENE73Ds6lGvYhXZ4QEkIt+Yzk/CL/7j3yJyIdJBeEUMf51S+Ccp1TpZzjCjRY
-         Fegw==
+        bh=OTcQ8HgK4xyfwhINSgp1y1iTr9PgQDJ2c/607cyGHGo=;
+        b=IsM7FCFoOX7Ne2WFWvbKg3XJeuCz6uhuQFOyWd7YtBYuo33lgKCxql1VghtgcyVFNA
+         XU+jKyjednPG8tBJl/lJCnxgtAGQamTleQ/CqD4pcrqfhyhaz2t1zo2tW8XR3Z3Blh/U
+         WbTiYo1+yMyCndKQWvw3+gpdX8+JbQQS5WAwqVB16b81gock5Ktq1OfvsPnOB53+MsCa
+         qSSRna6d+Ukz8LDZWSsEi4vTabbWQHjV185FbVgoP75cw2hoOXiP9M7p4nJ2b0tf8LaK
+         qReCWTuAgZUkH3lKGMzZzTYiDwxpA1bWMDBYZI5q2QbKG7ZJoKKWpyuNMg3tI9ehfKn4
+         DDYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=yTv8ns99iDjsNYF6DJGXhF2BaQsgZOApT0z1Peuz2dM=;
-        b=uBQFNutHhTcE/Tk981PdRInfrfHwem+fVfRcsn3Sq8fIZKkUdzBITly47Pv6XB4oP5
-         M0XZkPT+Nkyn0Xe3mehmcnr6rkcBz/E8ICm2S9kKP1nKW1tZ5VxOCmckguM0NO1QMoNN
-         e0ZGdZ3fxyWS0pb9QWPGTeDTvlSFVlRzdonDQXo6EhdvlVAA+2492+hHeWFZYQCCLg9I
-         apQVov93PYbmUHF7F2iIyBGCVmq4HjqyEjdIpZK3fI8TxfE3VKDafv5cNwV0qj8vKAsB
-         TcwiUQ9+NdJ/xCaCjipXkTouiGRXcBGIia0cUj/mI+H8w+B+6dHXHoH12VuujO97etcM
-         odMw==
-X-Gm-Message-State: AOAM530lnFj1VVI9kuL1FcTNTAcXsytMIMgBIxhb/Ho1JhhjQA+CjUXH
-        VUCG/S8HJFM1+5NJ0yGVMYiUpTnxhHQDSJx4V7kHcva3Me2KWg==
-X-Google-Smtp-Source: ABdhPJw9+UMEHt8R+CuVGe8UGeZKwjPXUG67gkw6+jSuXcXepDwqzaZg8BmKaTSe3lCLDc3HwcrYqCSkWpZss4Irzv4=
-X-Received: by 2002:a17:906:cf90:: with SMTP id um16mr3302448ejb.389.1614851568111;
- Thu, 04 Mar 2021 01:52:48 -0800 (PST)
+        bh=OTcQ8HgK4xyfwhINSgp1y1iTr9PgQDJ2c/607cyGHGo=;
+        b=MfKNwPUChqPuoHZyJM7y6HF99o/w1P/o0MIwSyj4QF8x1Vapz68yXeHGZ2TWgDxkTT
+         EqvFNaczncLgNgKNVbDplXZuu68/X50zYiCmV7H+17iiAQpVufoGpiPvFOR6/VLOBZXx
+         SL0umcLoo4+Alr46xxKevQxI2gAgnhkXyFtFQOklym2i4JQBkJ5oy2rdvHb1+/hx3NfH
+         C3Vhx0ASJKZQ0WkqVoMRSgLVDf+3EG3AskqF7oxDYqIy5QTZ7flL8HMZOE5t3nCn01ja
+         21Ve55H3sD/A6UHDNpf53HQlKpxluZP121DjOu1MZ9V8nGmEWCSkTCCWQ4RTwyC3xrr1
+         7ngw==
+X-Gm-Message-State: AOAM5329c2UwuKsP+bKIEyWvVKlVjcojuT/plRws1oOtjlOXLKLJTk4m
+        nEa530JWNiHmBsL8J+ynxjrQbVcG39Q45s2aYrA6Vg==
+X-Google-Smtp-Source: ABdhPJz6Dj0a0IikbpQXchtVdO8tIE2nsniGPcwwE+9AaiI73lLIy5D97wzFfkMITMwrpAcRZtd/LijwTg43rmnqzWE=
+X-Received: by 2002:a05:6402:ce:: with SMTP id i14mr3439724edu.42.1614851604560;
+ Thu, 04 Mar 2021 01:53:24 -0800 (PST)
 MIME-Version: 1.0
-References: <20210303144631.3175331-1-lee.jones@linaro.org> <20210303144631.3175331-14-lee.jones@linaro.org>
-In-Reply-To: <20210303144631.3175331-14-lee.jones@linaro.org>
+References: <20210303144631.3175331-1-lee.jones@linaro.org> <20210303144631.3175331-19-lee.jones@linaro.org>
+In-Reply-To: <20210303144631.3175331-19-lee.jones@linaro.org>
 From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Thu, 4 Mar 2021 10:52:37 +0100
-Message-ID: <CAMGffEkigSZ8TqM0Q5mi7Q6d7oU_+Bzzzp9S87jgjqOWMEqjaQ@mail.gmail.com>
-Subject: Re: [PATCH 13/30] scsi: pm8001: pm8001_ctl: Fix incorrectly named
- functions in headers
+Date:   Thu, 4 Mar 2021 10:53:13 +0100
+Message-ID: <CAMGffEkGT0tRSM51pikNc3d+w1mYJCN-oWzRxFA_wPRXE+d=Ow@mail.gmail.com>
+Subject: Re: [PATCH 18/30] scsi: pm8001: pm8001_hwi: Fix some misnamed
+ function descriptions
 To:     Lee Jones <lee.jones@linaro.org>
 Cc:     open list <linux-kernel@vger.kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -73,8 +73,10 @@ On Wed, Mar 3, 2021 at 3:47 PM Lee Jones <lee.jones@linaro.org> wrote:
 >
 > Fixes the following W=1 kernel build warning(s):
 >
->  drivers/scsi/pm8001/pm8001_ctl.c:313: warning: expecting prototype for pm8001_ctl_sas_address_show(). Prototype was for pm8001_ctl_host_sas_address_show() instead
->  drivers/scsi/pm8001/pm8001_ctl.c:530: warning: expecting prototype for pm8001_ctl_aap_log_show(). Prototype was for pm8001_ctl_iop_log_show() instead
+>  drivers/scsi/pm8001/pm8001_hwi.c:1183: warning: expecting prototype for pm8001_chip_interrupt_enable(). Prototype was for pm8001_chip_intx_interrupt_enable() instead
+>  drivers/scsi/pm8001/pm8001_hwi.c:1257: warning: expecting prototype for pm8001_chip_intx_interrupt_disable(). Prototype was for pm8001_chip_interrupt_disable() instead
+>  drivers/scsi/pm8001/pm8001_hwi.c:3235: warning: expecting prototype for asd_get_attached_sas_addr(). Prototype was for pm8001_get_attached_sas_addr() instead
+>  drivers/scsi/pm8001/pm8001_hwi.c:3555: warning: expecting prototype for fw_flash_update_resp(). Prototype was for pm8001_mpi_fw_flash_update_resp() instead
 >
 > Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
 > Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
@@ -84,31 +86,49 @@ On Wed, Mar 3, 2021 at 3:47 PM Lee Jones <lee.jones@linaro.org> wrote:
 Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 Thanks
 > ---
->  drivers/scsi/pm8001/pm8001_ctl.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/scsi/pm8001/pm8001_hwi.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 >
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index 12035baf0997b..1921e69bc2328 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -299,7 +299,7 @@ static DEVICE_ATTR(sas_spec_support, S_IRUGO,
->                    pm8001_ctl_sas_spec_support_show, NULL);
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+> index 49bf2f70a470e..6b600e33e9e8d 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -1175,7 +1175,7 @@ void pm8001_chip_iounmap(struct pm8001_hba_info *pm8001_ha)
 >
+>  #ifndef PM8001_USE_MSIX
 >  /**
-> - * pm8001_ctl_sas_address_show - sas address
-> + * pm8001_ctl_host_sas_address_show - sas address
->   * @cdev: pointer to embedded class device
->   * @attr: device attribute (unused)
->   * @buf: the buffer returned
-> @@ -518,7 +518,7 @@ static ssize_t event_log_size_show(struct device *cdev,
+> - * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
+> + * pm8001_chip_intx_interrupt_enable - enable PM8001 chip interrupt
+>   * @pm8001_ha: our hba card information
+>   */
+>  static void
+> @@ -1248,7 +1248,7 @@ pm8001_chip_interrupt_enable(struct pm8001_hba_info *pm8001_ha, u8 vec)
 >  }
->  static DEVICE_ATTR_RO(event_log_size);
+>
 >  /**
-> - * pm8001_ctl_aap_log_show - IOP event log
-> + * pm8001_ctl_iop_log_show - IOP event log
->   * @cdev: pointer to embedded class device
->   * @attr: device attribute (unused)
->   * @buf: the buffer returned
+> - * pm8001_chip_intx_interrupt_disable- disable PM8001 chip interrupt
+> + * pm8001_chip_interrupt_disable - disable PM8001 chip interrupt
+>   * @pm8001_ha: our hba card information
+>   * @vec: unused
+>   */
+> @@ -3219,7 +3219,7 @@ void pm8001_get_lrate_mode(struct pm8001_phy *phy, u8 link_rate)
+>  }
+>
+>  /**
+> - * asd_get_attached_sas_addr -- extract/generate attached SAS address
+> + * pm8001_get_attached_sas_addr - extract/generate attached SAS address
+>   * @phy: pointer to asd_phy
+>   * @sas_addr: pointer to buffer where the SAS address is to be written
+>   *
+> @@ -3546,7 +3546,7 @@ int pm8001_mpi_dereg_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>  }
+>
+>  /**
+> - * fw_flash_update_resp - Response from FW for flash update command.
+> + * pm8001_mpi_fw_flash_update_resp - Response from FW for flash update command.
+>   * @pm8001_ha: our hba card information
+>   * @piomb: IO message buffer
+>   */
 > --
 > 2.27.0
 >
