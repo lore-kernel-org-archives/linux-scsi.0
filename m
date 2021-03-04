@@ -5,60 +5,60 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7258C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 09:54:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A39BAC433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 09:55:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A0C464F2B
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 09:54:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6232A64F2D
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 09:55:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238148AbhCDJyI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Mar 2021 04:54:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59834 "EHLO
+        id S238125AbhCDJyj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Mar 2021 04:54:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238142AbhCDJyG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2021 04:54:06 -0500
-Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4538C061762
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Mar 2021 01:53:25 -0800 (PST)
-Received: by mail-ed1-x529.google.com with SMTP id bd6so20700348edb.10
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Mar 2021 01:53:25 -0800 (PST)
+        with ESMTP id S238169AbhCDJya (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2021 04:54:30 -0500
+Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67709C061756
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Mar 2021 01:53:50 -0800 (PST)
+Received: by mail-ej1-x634.google.com with SMTP id c10so21645011ejx.9
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Mar 2021 01:53:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cloud.ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=OTcQ8HgK4xyfwhINSgp1y1iTr9PgQDJ2c/607cyGHGo=;
-        b=IsM7FCFoOX7Ne2WFWvbKg3XJeuCz6uhuQFOyWd7YtBYuo33lgKCxql1VghtgcyVFNA
-         XU+jKyjednPG8tBJl/lJCnxgtAGQamTleQ/CqD4pcrqfhyhaz2t1zo2tW8XR3Z3Blh/U
-         WbTiYo1+yMyCndKQWvw3+gpdX8+JbQQS5WAwqVB16b81gock5Ktq1OfvsPnOB53+MsCa
-         qSSRna6d+Ukz8LDZWSsEi4vTabbWQHjV185FbVgoP75cw2hoOXiP9M7p4nJ2b0tf8LaK
-         qReCWTuAgZUkH3lKGMzZzTYiDwxpA1bWMDBYZI5q2QbKG7ZJoKKWpyuNMg3tI9ehfKn4
-         DDYg==
+        bh=ugRBwM9gJLad1zr51OTw4cYfsieSlu5IQWtZrKEHGZo=;
+        b=P4UXZElxC7FR8hbUmh5nKKoxPmEbLhw+1vymP1zTF0Ze1+snWE0ZtnF3b9TjLyNl8C
+         /6F8yAE+M1IRu7dEf4qRleL9rNDTRzXxdnFLoU5fqDdg7dqo7ae79iXU7Jx848dyot1J
+         U1S61dd85jn9V/OLUhGuClroVGxXcCXj6kvpmONcuvqGcFVBjhLXNxeHbyheLTzttOEA
+         hd3/C2k58j/09ePRirZyvT6HDJsdK8f1hmDfK8k61PvGJPuw/jvrKGWlv8yttPs8xAM8
+         pAWe0I6SWXLbRfbU2sARTVKFATnDIQ12yp0CiMmL7ejm17Z60NDfO1n0a+uIIF+R8HYr
+         10Rg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=OTcQ8HgK4xyfwhINSgp1y1iTr9PgQDJ2c/607cyGHGo=;
-        b=MfKNwPUChqPuoHZyJM7y6HF99o/w1P/o0MIwSyj4QF8x1Vapz68yXeHGZ2TWgDxkTT
-         EqvFNaczncLgNgKNVbDplXZuu68/X50zYiCmV7H+17iiAQpVufoGpiPvFOR6/VLOBZXx
-         SL0umcLoo4+Alr46xxKevQxI2gAgnhkXyFtFQOklym2i4JQBkJ5oy2rdvHb1+/hx3NfH
-         C3Vhx0ASJKZQ0WkqVoMRSgLVDf+3EG3AskqF7oxDYqIy5QTZ7flL8HMZOE5t3nCn01ja
-         21Ve55H3sD/A6UHDNpf53HQlKpxluZP121DjOu1MZ9V8nGmEWCSkTCCWQ4RTwyC3xrr1
-         7ngw==
-X-Gm-Message-State: AOAM5329c2UwuKsP+bKIEyWvVKlVjcojuT/plRws1oOtjlOXLKLJTk4m
-        nEa530JWNiHmBsL8J+ynxjrQbVcG39Q45s2aYrA6Vg==
-X-Google-Smtp-Source: ABdhPJz6Dj0a0IikbpQXchtVdO8tIE2nsniGPcwwE+9AaiI73lLIy5D97wzFfkMITMwrpAcRZtd/LijwTg43rmnqzWE=
-X-Received: by 2002:a05:6402:ce:: with SMTP id i14mr3439724edu.42.1614851604560;
- Thu, 04 Mar 2021 01:53:24 -0800 (PST)
+        bh=ugRBwM9gJLad1zr51OTw4cYfsieSlu5IQWtZrKEHGZo=;
+        b=PnLhIFUSBWKLNjPeyfbMbIUwuSnu/g0zuXrKx+emAYBBdLZ7LYyBmjKLCaBQ0ACgVL
+         ISk/UoIqjwWMlyFxsboX2POkEtXjJTgGuD2qrbajJM6RN7Nno35+n0IJUcbkw+fPh/ae
+         IIZkXW3TwWwRKz3QveqvDxwdyB8Yd/ruao5QRwJHn4R7Y+KEn8YhaynCXmiNL1LfftjY
+         2tORyt/ofpXsPMLGMbC80NibisfH6lSztdW1N3i6KUoraz2GDddXpTLEurMXZ5uoMePH
+         4K6pvG3Rm1DnXyPI0DR4uprpKpnEldR4eLDo+CUxvsXaYzo/Vt5MfkwDlZ0cTvlIAg25
+         a+Nw==
+X-Gm-Message-State: AOAM531j5C9b/j2uCuMn0ItSdTBdqYi4ZVfUbYT4na3SxLZ2f/8M0nyn
+        aLYoQqRddVK2+M43lww6tFuSidh+2xwXIW+p2X9LWQ==
+X-Google-Smtp-Source: ABdhPJzwN+5nAIY776KqrS7O2Kj9hbFeOWWOvbjcDhO+EKShcukA95wTe/rNp6QzE9cy8o+SBy2zuQ8VVXZ9RsszEzw=
+X-Received: by 2002:a17:906:d18e:: with SMTP id c14mr3199851ejz.62.1614851629202;
+ Thu, 04 Mar 2021 01:53:49 -0800 (PST)
 MIME-Version: 1.0
-References: <20210303144631.3175331-1-lee.jones@linaro.org> <20210303144631.3175331-19-lee.jones@linaro.org>
-In-Reply-To: <20210303144631.3175331-19-lee.jones@linaro.org>
+References: <20210303144631.3175331-1-lee.jones@linaro.org> <20210303144631.3175331-23-lee.jones@linaro.org>
+In-Reply-To: <20210303144631.3175331-23-lee.jones@linaro.org>
 From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Thu, 4 Mar 2021 10:53:13 +0100
-Message-ID: <CAMGffEkGT0tRSM51pikNc3d+w1mYJCN-oWzRxFA_wPRXE+d=Ow@mail.gmail.com>
-Subject: Re: [PATCH 18/30] scsi: pm8001: pm8001_hwi: Fix some misnamed
- function descriptions
+Date:   Thu, 4 Mar 2021 10:53:38 +0100
+Message-ID: <CAMGffEm8aK-D0pn-ED9pAuaE2X-eY3E2sTHQGg1-socM=RGz9g@mail.gmail.com>
+Subject: Re: [PATCH 22/30] scsi: pm8001: pm80xx_hwi: Fix a bunch of doc-rotted
+ function headers
 To:     Lee Jones <lee.jones@linaro.org>
 Cc:     open list <linux-kernel@vger.kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -73,10 +73,15 @@ On Wed, Mar 3, 2021 at 3:47 PM Lee Jones <lee.jones@linaro.org> wrote:
 >
 > Fixes the following W=1 kernel build warning(s):
 >
->  drivers/scsi/pm8001/pm8001_hwi.c:1183: warning: expecting prototype for pm8001_chip_interrupt_enable(). Prototype was for pm8001_chip_intx_interrupt_enable() instead
->  drivers/scsi/pm8001/pm8001_hwi.c:1257: warning: expecting prototype for pm8001_chip_intx_interrupt_disable(). Prototype was for pm8001_chip_interrupt_disable() instead
->  drivers/scsi/pm8001/pm8001_hwi.c:3235: warning: expecting prototype for asd_get_attached_sas_addr(). Prototype was for pm8001_get_attached_sas_addr() instead
->  drivers/scsi/pm8001/pm8001_hwi.c:3555: warning: expecting prototype for fw_flash_update_resp(). Prototype was for pm8001_mpi_fw_flash_update_resp() instead
+>  drivers/scsi/pm8001/pm80xx_hwi.c:1427: warning: expecting prototype for pm8001_chip_init(). Prototype was for pm80xx_chip_init() instead
+>  drivers/scsi/pm8001/pm80xx_hwi.c:1584: warning: expecting prototype for pm8001_chip_soft_rst(). Prototype was for pm80xx_chip_soft_rst() instead
+>  drivers/scsi/pm8001/pm80xx_hwi.c:1711: warning: expecting prototype for pm8001_chip_interrupt_enable(). Prototype was for pm80xx_chip_intx_interrupt_enable() instead
+>  drivers/scsi/pm8001/pm80xx_hwi.c:1722: warning: expecting prototype for pm8001_chip_intx_interrupt_disable(). Prototype was for pm80xx_chip_intx_interrupt_disable() instead
+>  drivers/scsi/pm8001/pm80xx_hwi.c:1733: warning: expecting prototype for pm8001_chip_interrupt_enable(). Prototype was for pm80xx_chip_interrupt_enable() instead
+>  drivers/scsi/pm8001/pm80xx_hwi.c:1752: warning: expecting prototype for pm8001_chip_interrupt_disable(). Prototype was for pm80xx_chip_interrupt_disable() instead
+>  drivers/scsi/pm8001/pm80xx_hwi.c:4192: warning: expecting prototype for pm8001_chip_smp_req(). Prototype was for pm80xx_chip_smp_req() instead
+>  drivers/scsi/pm8001/pm80xx_hwi.c:4775: warning: expecting prototype for pm8001_chip_phy_stop_req(). Prototype was for pm80xx_chip_phy_stop_req() instead
+>  drivers/scsi/pm8001/pm80xx_hwi.c:4907: warning: expecting prototype for pm8001_chip_isr(). Prototype was for pm80xx_chip_isr() instead
 >
 > Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
 > Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
@@ -86,48 +91,93 @@ On Wed, Mar 3, 2021 at 3:47 PM Lee Jones <lee.jones@linaro.org> wrote:
 Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 Thanks
 > ---
->  drivers/scsi/pm8001/pm8001_hwi.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
 >
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 49bf2f70a470e..6b600e33e9e8d 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -1175,7 +1175,7 @@ void pm8001_chip_iounmap(struct pm8001_hba_info *pm8001_ha)
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index 84315560e8e1a..74ed072209f47 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -1420,7 +1420,7 @@ static int pm80xx_encrypt_update(struct pm8001_hba_info *pm8001_ha)
+>  }
 >
->  #ifndef PM8001_USE_MSIX
+>  /**
+> - * pm8001_chip_init - the main init function that initialize whole PM8001 chip.
+> + * pm80xx_chip_init - the main init function that initialize whole PM8001 chip.
+>   * @pm8001_ha: our hba card information
+>   */
+>  static int pm80xx_chip_init(struct pm8001_hba_info *pm8001_ha)
+> @@ -1574,7 +1574,7 @@ pm80xx_fatal_errors(struct pm8001_hba_info *pm8001_ha)
+>  }
+>
+>  /**
+> - * pm8001_chip_soft_rst - soft reset the PM8001 chip, so that the clear all
+> + * pm80xx_chip_soft_rst - soft reset the PM8001 chip, so that the clear all
+>   * the FW register status to the originated status.
+>   * @pm8001_ha: our hba card information
+>   */
+> @@ -1703,7 +1703,7 @@ static void pm80xx_hw_chip_rst(struct pm8001_hba_info *pm8001_ha)
+>  }
+>
 >  /**
 > - * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
-> + * pm8001_chip_intx_interrupt_enable - enable PM8001 chip interrupt
+> + * pm80xx_chip_intx_interrupt_enable - enable PM8001 chip interrupt
 >   * @pm8001_ha: our hba card information
 >   */
 >  static void
-> @@ -1248,7 +1248,7 @@ pm8001_chip_interrupt_enable(struct pm8001_hba_info *pm8001_ha, u8 vec)
+> @@ -1714,7 +1714,7 @@ pm80xx_chip_intx_interrupt_enable(struct pm8001_hba_info *pm8001_ha)
 >  }
 >
 >  /**
 > - * pm8001_chip_intx_interrupt_disable- disable PM8001 chip interrupt
-> + * pm8001_chip_interrupt_disable - disable PM8001 chip interrupt
+> + * pm80xx_chip_intx_interrupt_disable - disable PM8001 chip interrupt
 >   * @pm8001_ha: our hba card information
->   * @vec: unused
 >   */
-> @@ -3219,7 +3219,7 @@ void pm8001_get_lrate_mode(struct pm8001_phy *phy, u8 link_rate)
+>  static void
+> @@ -1724,7 +1724,7 @@ pm80xx_chip_intx_interrupt_disable(struct pm8001_hba_info *pm8001_ha)
 >  }
 >
 >  /**
-> - * asd_get_attached_sas_addr -- extract/generate attached SAS address
-> + * pm8001_get_attached_sas_addr - extract/generate attached SAS address
->   * @phy: pointer to asd_phy
->   * @sas_addr: pointer to buffer where the SAS address is to be written
->   *
-> @@ -3546,7 +3546,7 @@ int pm8001_mpi_dereg_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  }
->
->  /**
-> - * fw_flash_update_resp - Response from FW for flash update command.
-> + * pm8001_mpi_fw_flash_update_resp - Response from FW for flash update command.
+> - * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
+> + * pm80xx_chip_interrupt_enable - enable PM8001 chip interrupt
 >   * @pm8001_ha: our hba card information
->   * @piomb: IO message buffer
+>   * @vec: interrupt number to enable
+>   */
+> @@ -1743,7 +1743,7 @@ pm80xx_chip_interrupt_enable(struct pm8001_hba_info *pm8001_ha, u8 vec)
+>  }
+>
+>  /**
+> - * pm8001_chip_interrupt_disable- disable PM8001 chip interrupt
+> + * pm80xx_chip_interrupt_disable - disable PM8001 chip interrupt
+>   * @pm8001_ha: our hba card information
+>   * @vec: interrupt number to disable
+>   */
+> @@ -4183,7 +4183,7 @@ static void build_smp_cmd(u32 deviceID, __le32 hTag,
+>  }
+>
+>  /**
+> - * pm8001_chip_smp_req - send a SMP task to FW
+> + * pm80xx_chip_smp_req - send a SMP task to FW
+>   * @pm8001_ha: our hba card information.
+>   * @ccb: the ccb information this request used.
+>   */
+> @@ -4766,7 +4766,7 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *pm8001_ha, u8 phy_id)
+>  }
+>
+>  /**
+> - * pm8001_chip_phy_stop_req - start phy via PHY_STOP COMMAND
+> + * pm80xx_chip_phy_stop_req - start phy via PHY_STOP COMMAND
+>   * @pm8001_ha: our hba card information.
+>   * @phy_id: the phy id which we wanted to start up.
+>   */
+> @@ -4898,7 +4898,7 @@ static u32 pm80xx_chip_is_our_interrupt(struct pm8001_hba_info *pm8001_ha)
+>  }
+>
+>  /**
+> - * pm8001_chip_isr - PM8001 isr handler.
+> + * pm80xx_chip_isr - PM8001 isr handler.
+>   * @pm8001_ha: our hba card information.
+>   * @vec: irq number.
 >   */
 > --
 > 2.27.0
