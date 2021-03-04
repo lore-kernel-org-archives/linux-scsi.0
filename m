@@ -2,65 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E836C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 10:21:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2DDBC433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 10:35:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F7C164F2B
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 10:21:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9303064F35
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 10:35:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238439AbhCDKUP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Mar 2021 05:20:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37170 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238430AbhCDKUL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2021 05:20:11 -0500
-Received: from mail-wr1-x42e.google.com (mail-wr1-x42e.google.com [IPv6:2a00:1450:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A918CC061574
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Mar 2021 02:19:30 -0800 (PST)
-Received: by mail-wr1-x42e.google.com with SMTP id e10so26750786wro.12
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Mar 2021 02:19:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:references:date:in-reply-to:message-id
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=eDaPuuOndUpHWWzdrDfo7z1SmigNM9/I6xaIGmybIEc=;
-        b=heHG1GUDaH2kCCtL8A17wrjThMZ/trLyA2dPiGm0jSuvJAQyLuLpvUUt0NheC4kQgG
-         ZkHRaxz275dEvGK/VlMNHWgyUSmM2B9l2oVMBezFQL2TMANrVJUzqKTleK/BnakN/mxY
-         jzvp9E8UOsSjOb+/wat8TKmaKgs+CXq5UrQ8HAJDY9psalzaPV5YHoqQ8KiIgqgA5MFf
-         CIO7K8/SEhGqcF9tZZ0+jIOqfqvsacwXGkY9SQ1ldlihMDJiolNxFOcalY6WLht7V1wF
-         5jooIO98fHcj7/F8QAwmqc0vQbSQWNfTuitU5zGX3umYXxgirIyCw+p4uqPultB+1rVM
-         9U3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:references:date:in-reply-to
-         :message-id:user-agent:mime-version:content-transfer-encoding;
-        bh=eDaPuuOndUpHWWzdrDfo7z1SmigNM9/I6xaIGmybIEc=;
-        b=N200Xu4qwdjE3ZdroNo+jMeFfeP0eaPJZb1CIuA/q0jUmTbDySTvGi4COpkZ4oyWSc
-         4iZu5qNVkWU1yvn5ouSNLtmWBbxIxYr3UzmHaMGKGWCH8xROP4xCJL8POFdONzWaHCL/
-         7rMKT8Rqpedy4tl2MLlyz0As2Ruxd4tRBdsZN+xxfc+5et1xpmeyQ45X5U61wSSypnxz
-         HQN1Ej3lzuIAdAY9J2q/LyFEt3xQgs6701Dj6MYbOAZhHF9DpEoEFoitRBgJjG6iFo1i
-         m3Lh3AsI9FEY9sjCTd1DnjSlQAMhS09x3jZlVPyVMy5Athob174Gj6WUI2Khnb9Or6Sn
-         e8kQ==
-X-Gm-Message-State: AOAM530syTNVdO07cIUFd2kisdd3YNRKIL890znEaTYRneJL+yaNnZ1F
-        3HPhzCFcWHENaTCdDPi12VnKAg==
-X-Google-Smtp-Source: ABdhPJxJc9utgKlctPldWOr7euiNLEGxxJgmoKwRh0nyIGDozSjacHHEgktXrG6NHlWqbQKL8uOeVw==
-X-Received: by 2002:adf:82af:: with SMTP id 44mr3047867wrc.279.1614853169255;
-        Thu, 04 Mar 2021 02:19:29 -0800 (PST)
-Received: from zen.linaroharston ([51.148.130.216])
-        by smtp.gmail.com with ESMTPSA id b15sm35174960wrr.47.2021.03.04.02.19.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Mar 2021 02:19:28 -0800 (PST)
-Received: from zen (localhost [127.0.0.1])
-        by zen.linaroharston (Postfix) with ESMTP id 54A751FF7E;
-        Thu,  4 Mar 2021 10:19:27 +0000 (GMT)
-From:   =?utf-8?Q?Alex_Benn=C3=A9e?= <alex.bennee@linaro.org>
-To:     "Winkler, Tomas" <tomas.winkler@intel.com>
-Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        id S238775AbhCDKfM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Mar 2021 05:35:12 -0500
+Received: from mga18.intel.com ([134.134.136.126]:28804 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238867AbhCDKey (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 Mar 2021 05:34:54 -0500
+IronPort-SDR: 45fi5LfXqqHUUCXnzNztO5FSMvuTDEqkGLpbmyHwnEBBCwru3AY+N2YRSNfoawutHUrcNUW46t
+ /JK8oJnpkmdQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9912"; a="175021664"
+X-IronPort-AV: E=Sophos;i="5.81,222,1610438400"; 
+   d="scan'208";a="175021664"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2021 02:34:27 -0800
+IronPort-SDR: K+iakJSHEw6+n7aFTl2itL45ZTvIsPub3dm0H8I0dynVJvV99IVw0YwABO28PbmFJF/9P7FI8w
+ bAkAA02BAwlA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,222,1610438400"; 
+   d="scan'208";a="428617805"
+Received: from fmsmsx606.amr.corp.intel.com ([10.18.126.86])
+  by fmsmga004.fm.intel.com with ESMTP; 04 Mar 2021 02:34:27 -0800
+Received: from lcsmsx602.ger.corp.intel.com (10.109.210.11) by
+ fmsmsx606.amr.corp.intel.com (10.18.126.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Thu, 4 Mar 2021 02:34:26 -0800
+Received: from hasmsx602.ger.corp.intel.com (10.184.107.142) by
+ LCSMSX602.ger.corp.intel.com (10.109.210.11) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Thu, 4 Mar 2021 12:34:24 +0200
+Received: from hasmsx602.ger.corp.intel.com ([10.184.107.142]) by
+ HASMSX602.ger.corp.intel.com ([10.184.107.142]) with mapi id 15.01.2106.013;
+ Thu, 4 Mar 2021 12:34:24 +0200
+From:   "Winkler, Tomas" <tomas.winkler@intel.com>
+To:     =?utf-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "maxim.uvarov@linaro.org" <maxim.uvarov@linaro.org>,
         "joakim.bech@linaro.org" <joakim.bech@linaro.org>,
         "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
@@ -74,590 +60,381 @@ Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-nvme@vger.kernel.org" <linux-nvme@vger.kernel.org>,
         Ulf Hansson <ulf.hansson@linaro.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        "Arnd Bergmann" <arnd.bergmann@linaro.org>,
+        "Linus Walleij" <linus.walleij@linaro.org>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>,
         "Usyskin, Alexander" <alexander.usyskin@intel.com>,
         Avri Altman <avri.altman@sandisk.com>
-Subject: Re: [RFC PATCH  2/5] char: rpmb: provide a user space interface
+Subject: RE: [RFC PATCH  2/5] char: rpmb: provide a user space interface
+Thread-Topic: [RFC PATCH  2/5] char: rpmb: provide a user space interface
+Thread-Index: AQHXEDTT25yAi+/ZF0eKGUVirNKsxapzZSEQgAA6NFiAAACVkA==
+Date:   Thu, 4 Mar 2021 10:34:24 +0000
+Message-ID: <590e0157d6c44d55aa166ccad6355db5@intel.com>
 References: <20210303135500.24673-1-alex.bennee@linaro.org>
         <20210303135500.24673-3-alex.bennee@linaro.org>
-        <ff78164cc13b4855911116c2d48929a2@intel.com>
-Date:   Thu, 04 Mar 2021 10:19:27 +0000
-In-Reply-To: <ff78164cc13b4855911116c2d48929a2@intel.com> (Tomas Winkler's
-        message of "Thu, 4 Mar 2021 07:01:14 +0000")
-Message-ID: <87eegvgr0w.fsf@linaro.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.0.50 (gnu/linux)
+        <ff78164cc13b4855911116c2d48929a2@intel.com> <87eegvgr0w.fsf@linaro.org>
+In-Reply-To: <87eegvgr0w.fsf@linaro.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+dlp-product: dlpe-windows
+dlp-reaction: no-action
+dlp-version: 11.5.1.3
+x-originating-ip: [10.184.70.1]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-"Winkler, Tomas" <tomas.winkler@intel.com> writes:
-
->> The user space API is achieved via a number of synchronous IOCTLs.
->>=20
->>   * RPMB_IOC_VER_CMD - simple versioning API
->>   * RPMB_IOC_CAP_CMD - query of underlying capabilities
->>   * RPMB_IOC_PKEY_CMD - one time programming of access key
->>   * RPMB_IOC_COUNTER_CMD - query the write counter
->>   * RPMB_IOC_WBLOCKS_CMD - write blocks to device
->>   * RPMB_IOC_RBLOCKS_CMD - read blocks from device
->>=20
->> The keys used for programming and writing blocks to the device are
->> key_serial_t handles as provided by the keyctl() interface.
->>=20
->> [AJB: here there are two key differences between this and the original
->> proposal. The first is the dropping of the sequence of preformated frame=
-s in
->> favour of explicit actions. The second is the introduction of key_serial=
-_t and
->> the keyring API for referencing the key to use]
->
-> Putting it gently I'm not sure this is good idea, from the security point=
- of view.
-> The key has to be possession of the one that signs the frames as they are=
-, it doesn't mean it is linux kernel keyring, it can be other party on diff=
-erent system.
-> With this approach you will make the other usecases not applicable. It
-> is less then trivial to move key securely from one system to another.
-
-OK I can understand the desire for such a use-case but it does constrain
-the interface on the kernel with access to the hardware to purely
-providing a pipe to the raw hardware while also having to expose the
-details of the HW to userspace. Also doesn't this break down after a
-PROGRAM_KEY event as the key will have had to traverse into the
-"untrusted" kernel?
-
-I wonder if virtio-rpmb may be of help here? You could wrap up up the
-front-end in the security domain that has the keys although I don't know
-how easy it would be for a backend to work with real hardware?
-
-> We all wished it can be abstracted more but the frames has to come alread=
-y signed, and the key material is inside the frame.=20
-> Thanks
-> Tomas
->
->
->>=20
->> Signed-off-by: Alex Benn=C3=A9e <alex.bennee@linaro.org>
->> Cc: Ulf Hansson <ulf.hansson@linaro.org>
->> Cc: Linus  Walleij <linus.walleij@linaro.org>
->> Cc: Arnd Bergmann <arnd.bergmann@linaro.org>
->> Cc: Ilias Apalodimas <ilias.apalodimas@linaro.org>
->> Cc: Tomas Winkler <tomas.winkler@intel.com>
->> Cc: Alexander Usyskin <alexander.usyskin@intel.com>
->> Cc: Avri Altman <avri.altman@sandisk.com>
->> ---
->>  .../userspace-api/ioctl/ioctl-number.rst      |   1 +
->>  MAINTAINERS                                   |   1 +
->>  drivers/char/rpmb/Kconfig                     |   7 +
->>  drivers/char/rpmb/Makefile                    |   1 +
->>  drivers/char/rpmb/cdev.c                      | 246 ++++++++++++++++++
->>  drivers/char/rpmb/core.c                      |  10 +-
->>  drivers/char/rpmb/rpmb-cdev.h                 |  17 ++
->>  include/linux/rpmb.h                          |  10 +
->>  include/uapi/linux/rpmb.h                     |  68 +++++
->>  9 files changed, 357 insertions(+), 4 deletions(-)  create mode 100644
->> drivers/char/rpmb/cdev.c  create mode 100644 drivers/char/rpmb/rpmb-
->> cdev.h  create mode 100644 include/uapi/linux/rpmb.h
->>=20
->> diff --git a/Documentation/userspace-api/ioctl/ioctl-number.rst
->> b/Documentation/userspace-api/ioctl/ioctl-number.rst
->> index a4c75a28c839..0ff2d4d81bb0 100644
->> --- a/Documentation/userspace-api/ioctl/ioctl-number.rst
->> +++ b/Documentation/userspace-api/ioctl/ioctl-number.rst
->> @@ -344,6 +344,7 @@ Code  Seq#    Include File
->> Comments
->>  0xB5  00-0F  uapi/linux/rpmsg.h                                      <m=
-ailto:linux-
->> remoteproc@vger.kernel.org>
->>  0xB6  all    linux/fpga-dfl.h
->>  0xB7  all    uapi/linux/remoteproc_cdev.h                            <m=
-ailto:linux-
->> remoteproc@vger.kernel.org>
->> +0xB8  80-8F  uapi/linux/rpmb.h                                       <m=
-ailto:linux-
->> mmc@vger.kernel.org>
->>  0xC0  00-0F  linux/usb/iowarrior.h
->>  0xCA  00-0F  uapi/misc/cxl.h
->>  0xCA  10-2F  uapi/misc/ocxl.h
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index 076f3983526c..c60b41b6e6bd 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -15374,6 +15374,7 @@ M:	?
->>  L:	linux-kernel@vger.kernel.org
->>  S:	Supported
->>  F:	drivers/char/rpmb/*
->> +F:	include/uapi/linux/rpmb.h
->>  F:	include/linux/rpmb.h
->>=20
->>  RTL2830 MEDIA DRIVER
->> diff --git a/drivers/char/rpmb/Kconfig b/drivers/char/rpmb/Kconfig index
->> 431c2823cf70..9068664a399a 100644
->> --- a/drivers/char/rpmb/Kconfig
->> +++ b/drivers/char/rpmb/Kconfig
->> @@ -9,3 +9,10 @@ config RPMB
->>  	  access RPMB partition.
->>=20
->>  	  If unsure, select N.
->> +
->> +config RPMB_INTF_DEV
->> +	bool "RPMB character device interface /dev/rpmbN"
->> +	depends on RPMB && KEYS
->> +	help
->> +	  Say yes here if you want to access RPMB from user space
->> +	  via character device interface /dev/rpmb%d
->> diff --git a/drivers/char/rpmb/Makefile b/drivers/char/rpmb/Makefile ind=
-ex
->> 24d4752a9a53..f54b3f30514b 100644
->> --- a/drivers/char/rpmb/Makefile
->> +++ b/drivers/char/rpmb/Makefile
->> @@ -3,5 +3,6 @@
->>=20
->>  obj-$(CONFIG_RPMB) +=3D rpmb.o
->>  rpmb-objs +=3D core.o
->> +rpmb-$(CONFIG_RPMB_INTF_DEV) +=3D cdev.o
->>=20
->>  ccflags-y +=3D -D__CHECK_ENDIAN__
->> diff --git a/drivers/char/rpmb/cdev.c b/drivers/char/rpmb/cdev.c new file
->> mode 100644 index 000000000000..55f66720fd03
->> --- /dev/null
->> +++ b/drivers/char/rpmb/cdev.c
->> @@ -0,0 +1,246 @@
->> +// SPDX-License-Identifier: GPL-2.0
->> +/*
->> + * Copyright(c) 2015 - 2019 Intel Corporation.
->> + */
->> +#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
->> +
->> +#include <linux/fs.h>
->> +#include <linux/uaccess.h>
->> +#include <linux/compat.h>
->> +#include <linux/slab.h>
->> +#include <linux/capability.h>
->> +
->> +#include <linux/rpmb.h>
->> +
->> +#include "rpmb-cdev.h"
->> +
->> +static dev_t rpmb_devt;
->> +#define RPMB_MAX_DEVS  MINORMASK
->> +
->> +#define RPMB_DEV_OPEN    0  /** single open bit (position) */
->> +
->> +/**
->> + * rpmb_open - the open function
->> + *
->> + * @inode: pointer to inode structure
->> + * @fp: pointer to file structure
->> + *
->> + * Return: 0 on success, <0 on error
->> + */
->> +static int rpmb_open(struct inode *inode, struct file *fp) {
->> +	struct rpmb_dev *rdev;
->> +
->> +	rdev =3D container_of(inode->i_cdev, struct rpmb_dev, cdev);
->> +	if (!rdev)
->> +		return -ENODEV;
->> +
->> +	/* the rpmb is single open! */
->> +	if (test_and_set_bit(RPMB_DEV_OPEN, &rdev->status))
->> +		return -EBUSY;
->> +
->> +	mutex_lock(&rdev->lock);
->> +
->> +	fp->private_data =3D rdev;
->> +
->> +	mutex_unlock(&rdev->lock);
->> +
->> +	return nonseekable_open(inode, fp);
->> +}
->> +
->> +/**
->> + * rpmb_release - the cdev release function
->> + *
->> + * @inode: pointer to inode structure
->> + * @fp: pointer to file structure
->> + *
->> + * Return: 0 always.
->> + */
->> +static int rpmb_release(struct inode *inode, struct file *fp) {
->> +	struct rpmb_dev *rdev =3D fp->private_data;
->> +
->> +	clear_bit(RPMB_DEV_OPEN, &rdev->status);
->> +
->> +	return 0;
->> +}
->> +
->> +static long rpmb_ioctl_ver_cmd(struct rpmb_dev *rdev,
->> +			       struct rpmb_ioc_ver_cmd __user *ptr) {
->> +	struct rpmb_ioc_ver_cmd ver =3D {
->> +		.api_version =3D RPMB_API_VERSION,
->> +	};
->> +
->> +	return copy_to_user(ptr, &ver, sizeof(ver)) ? -EFAULT : 0; }
->> +
->> +static long rpmb_ioctl_cap_cmd(struct rpmb_dev *rdev,
->> +			       struct rpmb_ioc_cap_cmd __user *ptr) {
->> +	struct rpmb_ioc_cap_cmd cap;
->> +
->> +	cap.target      =3D rdev->target;
->> +	cap.block_size  =3D rdev->ops->block_size;
->> +	cap.wr_cnt_max  =3D rdev->ops->wr_cnt_max;
->> +	cap.rd_cnt_max  =3D rdev->ops->rd_cnt_max;
->> +	cap.auth_method =3D rdev->ops->auth_method;
->> +	cap.capacity    =3D rpmb_get_capacity(rdev);
->> +	cap.reserved    =3D 0;
->> +
->> +	return copy_to_user(ptr, &cap, sizeof(cap)) ? -EFAULT : 0; }
->> +
->> +static long rpmb_ioctl_pkey_cmd(struct rpmb_dev *rdev, key_serial_t
->> +__user *k) {
->> +	key_serial_t keyid;
->> +
->> +	if (get_user(keyid, k))
->> +		return -EFAULT;
->> +	else
->> +		return rpmb_program_key(rdev, keyid); }
->> +
->> +static long rpmb_ioctl_counter_cmd(struct rpmb_dev *rdev, int __user
->> +*ptr) {
->> +	int count =3D rpmb_get_write_count(rdev);
->> +
->> +	if (count > 0)
->> +		return put_user(count, ptr);
->> +	else
->> +		return count;
->> +}
->> +
->> +static long rpmb_ioctl_wblocks_cmd(struct rpmb_dev *rdev,
->> +				   struct rpmb_ioc_blocks_cmd __user *ptr) {
->> +	struct rpmb_ioc_blocks_cmd wblocks;
->> +	int sz;
->> +	long ret;
->> +	u8 *data;
->> +
->> +	if (copy_from_user(&wblocks, ptr, sizeof(struct
->> rpmb_ioc_blocks_cmd)))
->> +		return -EFAULT;
->> +
->> +	/* Don't write more blocks device supports */
->> +	if (wblocks.count > rdev->ops->wr_cnt_max)
->> +		return -EINVAL;
->> +
->> +	sz =3D wblocks.count * 256;
->> +	data =3D kmalloc(sz, GFP_KERNEL);
->> +
->> +	if (!data)
->> +		return -ENOMEM;
->> +
->> +	if (copy_from_user(data, wblocks.data, sz))
->> +		ret =3D -EFAULT;
->> +	else
->> +		ret =3D rpmb_write_blocks(rdev, wblocks.key, wblocks.addr,
->> +wblocks.count, data);
->> +
->> +	kfree(data);
->> +	return ret;
->> +}
->> +
->> +static long rpmb_ioctl_rblocks_cmd(struct rpmb_dev *rdev,
->> +				   struct rpmb_ioc_blocks_cmd __user *ptr) {
->> +	struct rpmb_ioc_blocks_cmd rblocks;
->> +	int sz;
->> +	long ret;
->> +	u8 *data;
->> +
->> +	if (copy_from_user(&rblocks, ptr, sizeof(struct
->> rpmb_ioc_blocks_cmd)))
->> +		return -EFAULT;
->> +
->> +	if (rblocks.count > rdev->ops->rd_cnt_max)
->> +		return -EINVAL;
->> +
->> +	sz =3D rblocks.count * 256;
->> +	data =3D kmalloc(sz, GFP_KERNEL);
->> +
->> +	if (!data)
->> +		return -ENOMEM;
->> +
->> +	ret =3D rpmb_read_blocks(rdev, rblocks.addr, rblocks.count, data);
->> +
->> +	if (ret =3D=3D 0)
->> +		ret =3D copy_to_user(rblocks.data, data, sz);
->> +
->> +	kfree(data);
->> +	return ret;
->> +}
->> +
->> +/**
->> + * rpmb_ioctl - rpmb ioctl dispatcher
->> + *
->> + * @fp: a file pointer
->> + * @cmd: ioctl command RPMB_IOC_SEQ_CMD RPMB_IOC_VER_CMD
->> +RPMB_IOC_CAP_CMD
->> + * @arg: ioctl data: rpmb_ioc_ver_cmd rpmb_ioc_cap_cmd
->> pmb_ioc_seq_cmd
->> + *
->> + * Return: 0 on success; < 0 on error
->> + */
->> +static long rpmb_ioctl(struct file *fp, unsigned int cmd, unsigned long
->> +arg) {
->> +	struct rpmb_dev *rdev =3D fp->private_data;
->> +	void __user *ptr =3D (void __user *)arg;
->> +
->> +	switch (cmd) {
->> +	case RPMB_IOC_VER_CMD:
->> +		return rpmb_ioctl_ver_cmd(rdev, ptr);
->> +	case RPMB_IOC_CAP_CMD:
->> +		return rpmb_ioctl_cap_cmd(rdev, ptr);
->> +	case RPMB_IOC_PKEY_CMD:
->> +		return rpmb_ioctl_pkey_cmd(rdev, ptr);
->> +	case RPMB_IOC_COUNTER_CMD:
->> +		return rpmb_ioctl_counter_cmd(rdev, ptr);
->> +	case RPMB_IOC_WBLOCKS_CMD:
->> +		return rpmb_ioctl_wblocks_cmd(rdev, ptr);
->> +	case RPMB_IOC_RBLOCKS_CMD:
->> +		return rpmb_ioctl_rblocks_cmd(rdev, ptr);
->> +	default:
->> +		dev_err(&rdev->dev, "unsupported ioctl 0x%x.\n", cmd);
->> +		return -ENOIOCTLCMD;
->> +	}
->> +}
->> +
->> +static const struct file_operations rpmb_fops =3D {
->> +	.open           =3D rpmb_open,
->> +	.release        =3D rpmb_release,
->> +	.unlocked_ioctl =3D rpmb_ioctl,
->> +	.owner          =3D THIS_MODULE,
->> +	.llseek         =3D noop_llseek,
->> +};
->> +
->> +void rpmb_cdev_prepare(struct rpmb_dev *rdev) {
->> +	rdev->dev.devt =3D MKDEV(MAJOR(rpmb_devt), rdev->id);
->> +	rdev->cdev.owner =3D THIS_MODULE;
->> +	cdev_init(&rdev->cdev, &rpmb_fops);
->> +}
->> +
->> +void rpmb_cdev_add(struct rpmb_dev *rdev) {
->> +	cdev_add(&rdev->cdev, rdev->dev.devt, 1); }
->> +
->> +void rpmb_cdev_del(struct rpmb_dev *rdev) {
->> +	if (rdev->dev.devt)
->> +		cdev_del(&rdev->cdev);
->> +}
->> +
->> +int __init rpmb_cdev_init(void)
->> +{
->> +	int ret;
->> +
->> +	ret =3D alloc_chrdev_region(&rpmb_devt, 0, RPMB_MAX_DEVS,
->> "rpmb");
->> +	if (ret < 0)
->> +		pr_err("unable to allocate char dev region\n");
->> +
->> +	return ret;
->> +}
->> +
->> +void __exit rpmb_cdev_exit(void)
->> +{
->> +	unregister_chrdev_region(rpmb_devt, RPMB_MAX_DEVS); }
->> diff --git a/drivers/char/rpmb/core.c b/drivers/char/rpmb/core.c index
->> a2e21c14986a..e26d605e48e1 100644
->> --- a/drivers/char/rpmb/core.c
->> +++ b/drivers/char/rpmb/core.c
->> @@ -12,6 +12,7 @@
->>  #include <linux/slab.h>
->>=20
->>  #include <linux/rpmb.h>
->> +#include "rpmb-cdev.h"
->>=20
->>  static DEFINE_IDA(rpmb_ida);
->>=20
->> @@ -277,6 +278,7 @@ int rpmb_dev_unregister(struct rpmb_dev *rdev)
->>  		return -EINVAL;
->>=20
->>  	mutex_lock(&rdev->lock);
->> +	rpmb_cdev_del(rdev);
->>  	device_del(&rdev->dev);
->>  	mutex_unlock(&rdev->lock);
->>=20
->> @@ -371,9 +373,6 @@ struct rpmb_dev *rpmb_dev_register(struct device
->> *dev, u8 target,
->>  	if (!ops->read_blocks)
->>  		return ERR_PTR(-EINVAL);
->>=20
->> -	if (ops->type =3D=3D RPMB_TYPE_ANY || ops->type >
->> RPMB_TYPE_MAX)
->> -		return ERR_PTR(-EINVAL);
->> -
->>  	rdev =3D kzalloc(sizeof(*rdev), GFP_KERNEL);
->>  	if (!rdev)
->>  		return ERR_PTR(-ENOMEM);
->> @@ -396,6 +395,8 @@ struct rpmb_dev *rpmb_dev_register(struct device
->> *dev, u8 target,
->>  	if (ret)
->>  		goto exit;
->>=20
->> +	rpmb_cdev_add(rdev);
->> +
->>  	dev_dbg(&rdev->dev, "registered device\n");
->>=20
->>  	return rdev;
->> @@ -412,11 +413,12 @@ static int __init rpmb_init(void)  {
->>  	ida_init(&rpmb_ida);
->>  	class_register(&rpmb_class);
->> -	return 0;
->> +	return rpmb_cdev_init();
->>  }
->>=20
->>  static void __exit rpmb_exit(void)
->>  {
->> +	rpmb_cdev_exit();
->>  	class_unregister(&rpmb_class);
->>  	ida_destroy(&rpmb_ida);
->>  }
->> diff --git a/drivers/char/rpmb/rpmb-cdev.h b/drivers/char/rpmb/rpmb-
->> cdev.h new file mode 100644 index 000000000000..e59ff0c05e9d
->> --- /dev/null
->> +++ b/drivers/char/rpmb/rpmb-cdev.h
->> @@ -0,0 +1,17 @@
->> +/* SPDX-License-Identifier: BSD-3-Clause OR GPL-2.0 */
->> +/*
->> + * Copyright (C) 2015-2018 Intel Corp. All rights reserved  */ #ifdef
->> +CONFIG_RPMB_INTF_DEV int __init rpmb_cdev_init(void); void __exit
->> +rpmb_cdev_exit(void); void rpmb_cdev_prepare(struct rpmb_dev *rdev);
->> +void rpmb_cdev_add(struct rpmb_dev *rdev); void rpmb_cdev_del(struct
->> +rpmb_dev *rdev); #else static inline int __init rpmb_cdev_init(void) {
->> +return 0; } static inline void __exit rpmb_cdev_exit(void) {} static
->> +inline void rpmb_cdev_prepare(struct rpmb_dev *rdev) {} static inline
->> +void rpmb_cdev_add(struct rpmb_dev *rdev) {} static inline void
->> +rpmb_cdev_del(struct rpmb_dev *rdev) {} #endif /*
->> CONFIG_RPMB_INTF_DEV
->> +*/
->> diff --git a/include/linux/rpmb.h b/include/linux/rpmb.h index
->> 718ba7c91ecd..fe44f60efe31 100644
->> --- a/include/linux/rpmb.h
->> +++ b/include/linux/rpmb.h
->> @@ -8,9 +8,13 @@
->>=20
->>  #include <linux/types.h>
->>  #include <linux/device.h>
->> +#include <linux/cdev.h>
->> +#include <uapi/linux/rpmb.h>
->>  #include <linux/kref.h>
->>  #include <linux/key.h>
->>=20
->> +#define RPMB_API_VERSION 0x80000001
->> +
->>  /**
->>   * struct rpmb_ops - RPMB ops to be implemented by underlying block
->> device
->>   *
->> @@ -51,6 +55,8 @@ struct rpmb_ops {
->>   * @dev        : device
->>   * @id         : device id
->>   * @target     : RPMB target/region within the physical device
->> + * @cdev       : character dev
->> + * @status     : device status
->>   * @ops        : operation exported by block layer
->>   */
->>  struct rpmb_dev {
->> @@ -58,6 +64,10 @@ struct rpmb_dev {
->>  	struct device dev;
->>  	int id;
->>  	u8 target;
->> +#ifdef CONFIG_RPMB_INTF_DEV
->> +	struct cdev cdev;
->> +	unsigned long status;
->> +#endif /* CONFIG_RPMB_INTF_DEV */
->>  	const struct rpmb_ops *ops;
->>  };
->>=20
->> diff --git a/include/uapi/linux/rpmb.h b/include/uapi/linux/rpmb.h new f=
-ile
->> mode 100644 index 000000000000..3957b785cdd5
->> --- /dev/null
->> +++ b/include/uapi/linux/rpmb.h
->> @@ -0,0 +1,68 @@
->> +/* SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR
->> +BSD-3-Clause) */
->> +/*
->> + * Copyright (C) 2015-2018 Intel Corp. All rights reserved
->> + * Copyright (C) 2021 Linaro Ltd
->> + */
->> +#ifndef _UAPI_LINUX_RPMB_H_
->> +#define _UAPI_LINUX_RPMB_H_
->> +
->> +#include <linux/types.h>
->> +
->> +/**
->> + * struct rpmb_ioc_ver_cmd - rpmb api version
->> + *
->> + * @api_version: rpmb API version.
->> + */
->> +struct rpmb_ioc_ver_cmd {
->> +	__u32 api_version;
->> +} __packed;
->> +
->> +enum rpmb_auth_method {
->> +	RPMB_HMAC_ALGO_SHA_256 =3D 0,
->> +};
->> +
->> +/**
->> + * struct rpmb_ioc_cap_cmd - rpmb capabilities
->> + *
->> + * @target: rpmb target/region within RPMB partition.
->> + * @capacity: storage capacity (in units of 128K)
->> + * @block_size: storage data block size (in units of 256B)
->> + * @wr_cnt_max: maximal number of block that can be written in a single
->> request.
->> + * @rd_cnt_max: maximal number of block that can be read in a single
->> request.
->> + * @auth_method: authentication method: currently always
->> HMAC_SHA_256
->> + * @reserved: reserved to align to 4 bytes.
->> + */
->> +struct rpmb_ioc_cap_cmd {
->> +	__u16 target;
->> +	__u16 capacity;
->> +	__u16 block_size;
->> +	__u16 wr_cnt_max;
->> +	__u16 rd_cnt_max;
->> +	__u16 auth_method;
->> +	__u16 reserved;
->> +} __attribute__((packed));
->> +
->> +/**
->> + * struct rpmb_ioc_blocks_cmd - read/write blocks to/from RPMB
->> + *
->> + * @keyid: key_serial_t of key to use
->> + * @addr: index into device (units of 256B blocks)
->> + * @count: number of 256B blocks
->> + * @data: pointer to data to write/read  */ struct rpmb_ioc_blocks_cmd
->> +{
->> +	__s32 key; /* key_serial_t */
->> +	__u32 addr;
->> +	__u32 count;
->> +	__u8 __user *data;
->> +} __attribute__((packed));
->> +
->> +
->> +#define RPMB_IOC_VER_CMD     _IOR(0xB8, 80, struct rpmb_ioc_ver_cmd)
->> +#define RPMB_IOC_CAP_CMD     _IOR(0xB8, 81, struct rpmb_ioc_cap_cmd)
->> +#define RPMB_IOC_PKEY_CMD    _IOW(0xB8, 82, key_serial_t)
->> +#define RPMB_IOC_COUNTER_CMD _IOR(0xB8, 84, int) #define
->> +RPMB_IOC_WBLOCKS_CMD _IOW(0xB8, 85, struct rpmb_ioc_blocks_cmd)
->> #define
->> +RPMB_IOC_RBLOCKS_CMD _IOR(0xB8, 86, struct rpmb_ioc_blocks_cmd)
->> +
->> +#endif /* _UAPI_LINUX_RPMB_H_ */
->> --
->> 2.20.1
->
-
---=20
-Alex Benn=C3=A9e
+DQo+ICJXaW5rbGVyLCBUb21hcyIgPHRvbWFzLndpbmtsZXJAaW50ZWwuY29tPiB3cml0ZXM6DQo+
+IA0KPiA+PiBUaGUgdXNlciBzcGFjZSBBUEkgaXMgYWNoaWV2ZWQgdmlhIGEgbnVtYmVyIG9mIHN5
+bmNocm9ub3VzIElPQ1RMcy4NCj4gPj4NCj4gPj4gICAqIFJQTUJfSU9DX1ZFUl9DTUQgLSBzaW1w
+bGUgdmVyc2lvbmluZyBBUEkNCj4gPj4gICAqIFJQTUJfSU9DX0NBUF9DTUQgLSBxdWVyeSBvZiB1
+bmRlcmx5aW5nIGNhcGFiaWxpdGllcw0KPiA+PiAgICogUlBNQl9JT0NfUEtFWV9DTUQgLSBvbmUg
+dGltZSBwcm9ncmFtbWluZyBvZiBhY2Nlc3Mga2V5DQo+ID4+ICAgKiBSUE1CX0lPQ19DT1VOVEVS
+X0NNRCAtIHF1ZXJ5IHRoZSB3cml0ZSBjb3VudGVyDQo+ID4+ICAgKiBSUE1CX0lPQ19XQkxPQ0tT
+X0NNRCAtIHdyaXRlIGJsb2NrcyB0byBkZXZpY2UNCj4gPj4gICAqIFJQTUJfSU9DX1JCTE9DS1Nf
+Q01EIC0gcmVhZCBibG9ja3MgZnJvbSBkZXZpY2UNCj4gPj4NCj4gPj4gVGhlIGtleXMgdXNlZCBm
+b3IgcHJvZ3JhbW1pbmcgYW5kIHdyaXRpbmcgYmxvY2tzIHRvIHRoZSBkZXZpY2UgYXJlDQo+ID4+
+IGtleV9zZXJpYWxfdCBoYW5kbGVzIGFzIHByb3ZpZGVkIGJ5IHRoZSBrZXljdGwoKSBpbnRlcmZh
+Y2UuDQo+ID4+DQo+ID4+IFtBSkI6IGhlcmUgdGhlcmUgYXJlIHR3byBrZXkgZGlmZmVyZW5jZXMg
+YmV0d2VlbiB0aGlzIGFuZCB0aGUNCj4gPj4gb3JpZ2luYWwgcHJvcG9zYWwuIFRoZSBmaXJzdCBp
+cyB0aGUgZHJvcHBpbmcgb2YgdGhlIHNlcXVlbmNlIG9mDQo+ID4+IHByZWZvcm1hdGVkIGZyYW1l
+cyBpbiBmYXZvdXIgb2YgZXhwbGljaXQgYWN0aW9ucy4gVGhlIHNlY29uZCBpcyB0aGUNCj4gPj4g
+aW50cm9kdWN0aW9uIG9mIGtleV9zZXJpYWxfdCBhbmQgdGhlIGtleXJpbmcgQVBJIGZvciByZWZl
+cmVuY2luZyB0aGUNCj4gPj4ga2V5IHRvIHVzZV0NCj4gPg0KPiA+IFB1dHRpbmcgaXQgZ2VudGx5
+IEknbSBub3Qgc3VyZSB0aGlzIGlzIGdvb2QgaWRlYSwgZnJvbSB0aGUgc2VjdXJpdHkgcG9pbnQg
+b2YNCj4gdmlldy4NCj4gPiBUaGUga2V5IGhhcyB0byBiZSBwb3NzZXNzaW9uIG9mIHRoZSBvbmUg
+dGhhdCBzaWducyB0aGUgZnJhbWVzIGFzIHRoZXkgYXJlLA0KPiBpdCBkb2Vzbid0IG1lYW4gaXQg
+aXMgbGludXgga2VybmVsIGtleXJpbmcsIGl0IGNhbiBiZSBvdGhlciBwYXJ0eSBvbiBkaWZmZXJl
+bnQNCj4gc3lzdGVtLg0KPiA+IFdpdGggdGhpcyBhcHByb2FjaCB5b3Ugd2lsbCBtYWtlIHRoZSBv
+dGhlciB1c2VjYXNlcyBub3QgYXBwbGljYWJsZS4gSXQNCj4gPiBpcyBsZXNzIHRoZW4gdHJpdmlh
+bCB0byBtb3ZlIGtleSBzZWN1cmVseSBmcm9tIG9uZSBzeXN0ZW0gdG8gYW5vdGhlci4NCj4gDQo+
+IE9LIEkgY2FuIHVuZGVyc3RhbmQgdGhlIGRlc2lyZSBmb3Igc3VjaCBhIHVzZS1jYXNlIGJ1dCBp
+dCBkb2VzIGNvbnN0cmFpbiB0aGUNCj4gaW50ZXJmYWNlIG9uIHRoZSBrZXJuZWwgd2l0aCBhY2Nl
+c3MgdG8gdGhlIGhhcmR3YXJlIHRvIHB1cmVseSBwcm92aWRpbmcgYQ0KPiBwaXBlIHRvIHRoZSBy
+YXcgaGFyZHdhcmUgd2hpbGUgYWxzbyBoYXZpbmcgdG8gZXhwb3NlIHRoZSBkZXRhaWxzIG9mIHRo
+ZSBIVw0KPiB0byB1c2Vyc3BhY2UuIA0KVGhpcyBpcyB0aGUgdXNlIGNhc2UgaW4gQW5kcm9pZC4g
+VGhlIGtleSBpcyBpbiB0aGUgInRydXN0eSIgd2hpY2ggZGlmZmVyZW50IG9zIHJ1bm5pbmcgaW4g
+YSAJIHZpcnR1YWwgZW52aXJvbm1lbnQuIFRoZSBmaWxlIHN0b3JhZ2UgYWJzdHJhY3Rpb24gaXMg
+aW1wbGVtZW50ZWQgdGhlcmUuDQpJJ20gbm90IHN1cmUgdGhlIHBvaW50IG9mIGNvbnN0cmFpbmlu
+ZyB0aGUga2VybmVsLCBjYW4geW91IHBsZWFzZSBlbGFib3JhdGUgb24gdGhhdC4NCg0KQWxzbyBk
+b2Vzbid0IHRoaXMgYnJlYWsgZG93biBhZnRlciBhIFBST0dSQU1fS0VZIGV2ZW50IGFzDQo+IHRo
+ZSBrZXkgd2lsbCBoYXZlIGhhZCB0byB0cmF2ZXJzZSBpbnRvIHRoZSAidW50cnVzdGVkIiBrZXJu
+ZWw/DQoNClRoaXMgaXMgb25lIGluIGEgbGlmZSBldmVudCBvZiB0aGUgY2FyZCBoYXBwZW5pbmcg
+b24gdGhlIG1hbnVmYWN0dXJpbmcgZmxvb3IsIG1heWJlIGV2ZW4gbm90IHBlcmZvcm1lZCBvbiBM
+aW51eC4NCg0KPiBJIHdvbmRlciBpZiB2aXJ0aW8tcnBtYiBtYXkgYmUgb2YgaGVscCBoZXJlPyBZ
+b3UgY291bGQgd3JhcCB1cCB1cCB0aGUgZnJvbnQtDQo+IGVuZCBpbiB0aGUgc2VjdXJpdHkgZG9t
+YWluIHRoYXQgaGFzIHRoZSBrZXlzIGFsdGhvdWdoIEkgZG9uJ3Qga25vdyBob3cgZWFzeQ0KPiBp
+dCB3b3VsZCBiZSBmb3IgYSBiYWNrZW5kIHRvIHdvcmsgd2l0aCByZWFsIGhhcmR3YXJlPw0KDQpJ
+J20gb3BlbiB0byBzZWUgYW55IHByb3Bvc2FsLCBub3Qgc3VyZSBJIGNhbiB3cmFwIG1heSBoZWFk
+IGFib3V0IGl0IHJpZ2h0IG5vdy4gDQoNCkFueXdheSBJIHdhcyBhYm91dCB0byBzZW5kIHRoZSBu
+ZXcgcm91bmQgb2YgbXkgY29kZSwgIGJ1dCBsZXQncyBjb21lIHRvIGNvbW1vbiBncm91bmQgZmly
+c3QuIA0KDQpUaGFua3MNClRvbWFzDQoNCj4gDQo+ID4gV2UgYWxsIHdpc2hlZCBpdCBjYW4gYmUg
+YWJzdHJhY3RlZCBtb3JlIGJ1dCB0aGUgZnJhbWVzIGhhcyB0byBjb21lDQo+IGFscmVhZHkgc2ln
+bmVkLCBhbmQgdGhlIGtleSBtYXRlcmlhbCBpcyBpbnNpZGUgdGhlIGZyYW1lLg0KPiA+IFRoYW5r
+cw0KPiA+IFRvbWFzDQo+ID4NCj4gPg0KPiA+Pg0KPiA+PiBTaWduZWQtb2ZmLWJ5OiBBbGV4IEJl
+bm7DqWUgPGFsZXguYmVubmVlQGxpbmFyby5vcmc+DQo+ID4+IENjOiBVbGYgSGFuc3NvbiA8dWxm
+LmhhbnNzb25AbGluYXJvLm9yZz4NCj4gPj4gQ2M6IExpbnVzICBXYWxsZWlqIDxsaW51cy53YWxs
+ZWlqQGxpbmFyby5vcmc+DQo+ID4+IENjOiBBcm5kIEJlcmdtYW5uIDxhcm5kLmJlcmdtYW5uQGxp
+bmFyby5vcmc+DQo+ID4+IENjOiBJbGlhcyBBcGFsb2RpbWFzIDxpbGlhcy5hcGFsb2RpbWFzQGxp
+bmFyby5vcmc+DQo+ID4+IENjOiBUb21hcyBXaW5rbGVyIDx0b21hcy53aW5rbGVyQGludGVsLmNv
+bT4NCj4gPj4gQ2M6IEFsZXhhbmRlciBVc3lza2luIDxhbGV4YW5kZXIudXN5c2tpbkBpbnRlbC5j
+b20+DQo+ID4+IENjOiBBdnJpIEFsdG1hbiA8YXZyaS5hbHRtYW5Ac2FuZGlzay5jb20+DQo+ID4+
+IC0tLQ0KPiA+PiAgLi4uL3VzZXJzcGFjZS1hcGkvaW9jdGwvaW9jdGwtbnVtYmVyLnJzdCAgICAg
+IHwgICAxICsNCj4gPj4gIE1BSU5UQUlORVJTICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICB8ICAgMSArDQo+ID4+ICBkcml2ZXJzL2NoYXIvcnBtYi9LY29uZmlnICAgICAgICAgICAg
+ICAgICAgICAgfCAgIDcgKw0KPiA+PiAgZHJpdmVycy9jaGFyL3JwbWIvTWFrZWZpbGUgICAgICAg
+ICAgICAgICAgICAgIHwgICAxICsNCj4gPj4gIGRyaXZlcnMvY2hhci9ycG1iL2NkZXYuYyAgICAg
+ICAgICAgICAgICAgICAgICB8IDI0NiArKysrKysrKysrKysrKysrKysNCj4gPj4gIGRyaXZlcnMv
+Y2hhci9ycG1iL2NvcmUuYyAgICAgICAgICAgICAgICAgICAgICB8ICAxMCArLQ0KPiA+PiAgZHJp
+dmVycy9jaGFyL3JwbWIvcnBtYi1jZGV2LmggICAgICAgICAgICAgICAgIHwgIDE3ICsrDQo+ID4+
+ICBpbmNsdWRlL2xpbnV4L3JwbWIuaCAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMTAgKw0K
+PiA+PiAgaW5jbHVkZS91YXBpL2xpbnV4L3JwbWIuaCAgICAgICAgICAgICAgICAgICAgIHwgIDY4
+ICsrKysrDQo+ID4+ICA5IGZpbGVzIGNoYW5nZWQsIDM1NyBpbnNlcnRpb25zKCspLCA0IGRlbGV0
+aW9ucygtKSAgY3JlYXRlIG1vZGUNCj4gPj4gMTAwNjQ0IGRyaXZlcnMvY2hhci9ycG1iL2NkZXYu
+YyAgY3JlYXRlIG1vZGUgMTAwNjQ0DQo+ID4+IGRyaXZlcnMvY2hhci9ycG1iL3JwbWItIGNkZXYu
+aCAgY3JlYXRlIG1vZGUgMTAwNjQ0DQo+ID4+IGluY2x1ZGUvdWFwaS9saW51eC9ycG1iLmgNCj4g
+Pj4NCj4gPj4gZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vdXNlcnNwYWNlLWFwaS9pb2N0bC9p
+b2N0bC1udW1iZXIucnN0DQo+ID4+IGIvRG9jdW1lbnRhdGlvbi91c2Vyc3BhY2UtYXBpL2lvY3Rs
+L2lvY3RsLW51bWJlci5yc3QNCj4gPj4gaW5kZXggYTRjNzVhMjhjODM5Li4wZmYyZDRkODFiYjAg
+MTAwNjQ0DQo+ID4+IC0tLSBhL0RvY3VtZW50YXRpb24vdXNlcnNwYWNlLWFwaS9pb2N0bC9pb2N0
+bC1udW1iZXIucnN0DQo+ID4+ICsrKyBiL0RvY3VtZW50YXRpb24vdXNlcnNwYWNlLWFwaS9pb2N0
+bC9pb2N0bC1udW1iZXIucnN0DQo+ID4+IEBAIC0zNDQsNiArMzQ0LDcgQEAgQ29kZSAgU2VxIyAg
+ICBJbmNsdWRlIEZpbGUNCj4gPj4gQ29tbWVudHMNCj4gPj4gIDB4QjUgIDAwLTBGICB1YXBpL2xp
+bnV4L3JwbXNnLmggICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxtYWlsdG86
+bGludXgtDQo+ID4+IHJlbW90ZXByb2NAdmdlci5rZXJuZWwub3JnPg0KPiA+PiAgMHhCNiAgYWxs
+ICAgIGxpbnV4L2ZwZ2EtZGZsLmgNCj4gPj4gIDB4QjcgIGFsbCAgICB1YXBpL2xpbnV4L3JlbW90
+ZXByb2NfY2Rldi5oICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxtYWlsdG86bGludXgtDQo+
+ID4+IHJlbW90ZXByb2NAdmdlci5rZXJuZWwub3JnPg0KPiA+PiArMHhCOCAgODAtOEYgIHVhcGkv
+bGludXgvcnBtYi5oICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPG1haWx0
+bzpsaW51eC0NCj4gPj4gbW1jQHZnZXIua2VybmVsLm9yZz4NCj4gPj4gIDB4QzAgIDAwLTBGICBs
+aW51eC91c2IvaW93YXJyaW9yLmgNCj4gPj4gIDB4Q0EgIDAwLTBGICB1YXBpL21pc2MvY3hsLmgN
+Cj4gPj4gIDB4Q0EgIDEwLTJGICB1YXBpL21pc2Mvb2N4bC5oDQo+ID4+IGRpZmYgLS1naXQgYS9N
+QUlOVEFJTkVSUyBiL01BSU5UQUlORVJTIGluZGV4DQo+ID4+IDA3NmYzOTgzNTI2Yy4uYzYwYjQx
+YjZlNmJkIDEwMDY0NA0KPiA+PiAtLS0gYS9NQUlOVEFJTkVSUw0KPiA+PiArKysgYi9NQUlOVEFJ
+TkVSUw0KPiA+PiBAQCAtMTUzNzQsNiArMTUzNzQsNyBAQCBNOgk/DQo+ID4+ICBMOglsaW51eC1r
+ZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+ID4+ICBTOglTdXBwb3J0ZWQNCj4gPj4gIEY6CWRyaXZl
+cnMvY2hhci9ycG1iLyoNCj4gPj4gK0Y6CWluY2x1ZGUvdWFwaS9saW51eC9ycG1iLmgNCj4gPj4g
+IEY6CWluY2x1ZGUvbGludXgvcnBtYi5oDQo+ID4+DQo+ID4+ICBSVEwyODMwIE1FRElBIERSSVZF
+Ug0KPiA+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9jaGFyL3JwbWIvS2NvbmZpZyBiL2RyaXZlcnMv
+Y2hhci9ycG1iL0tjb25maWcNCj4gPj4gaW5kZXggNDMxYzI4MjNjZjcwLi45MDY4NjY0YTM5OWEg
+MTAwNjQ0DQo+ID4+IC0tLSBhL2RyaXZlcnMvY2hhci9ycG1iL0tjb25maWcNCj4gPj4gKysrIGIv
+ZHJpdmVycy9jaGFyL3JwbWIvS2NvbmZpZw0KPiA+PiBAQCAtOSwzICs5LDEwIEBAIGNvbmZpZyBS
+UE1CDQo+ID4+ICAJICBhY2Nlc3MgUlBNQiBwYXJ0aXRpb24uDQo+ID4+DQo+ID4+ICAJICBJZiB1
+bnN1cmUsIHNlbGVjdCBOLg0KPiA+PiArDQo+ID4+ICtjb25maWcgUlBNQl9JTlRGX0RFVg0KPiA+
+PiArCWJvb2wgIlJQTUIgY2hhcmFjdGVyIGRldmljZSBpbnRlcmZhY2UgL2Rldi9ycG1iTiINCj4g
+Pj4gKwlkZXBlbmRzIG9uIFJQTUIgJiYgS0VZUw0KPiA+PiArCWhlbHANCj4gPj4gKwkgIFNheSB5
+ZXMgaGVyZSBpZiB5b3Ugd2FudCB0byBhY2Nlc3MgUlBNQiBmcm9tIHVzZXIgc3BhY2UNCj4gPj4g
+KwkgIHZpYSBjaGFyYWN0ZXIgZGV2aWNlIGludGVyZmFjZSAvZGV2L3JwbWIlZA0KPiA+PiBkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9jaGFyL3JwbWIvTWFrZWZpbGUgYi9kcml2ZXJzL2NoYXIvcnBtYi9N
+YWtlZmlsZQ0KPiA+PiBpbmRleCAyNGQ0NzUyYTlhNTMuLmY1NGIzZjMwNTE0YiAxMDA2NDQNCj4g
+Pj4gLS0tIGEvZHJpdmVycy9jaGFyL3JwbWIvTWFrZWZpbGUNCj4gPj4gKysrIGIvZHJpdmVycy9j
+aGFyL3JwbWIvTWFrZWZpbGUNCj4gPj4gQEAgLTMsNSArMyw2IEBADQo+ID4+DQo+ID4+ICBvYmot
+JChDT05GSUdfUlBNQikgKz0gcnBtYi5vDQo+ID4+ICBycG1iLW9ianMgKz0gY29yZS5vDQo+ID4+
+ICtycG1iLSQoQ09ORklHX1JQTUJfSU5URl9ERVYpICs9IGNkZXYubw0KPiA+Pg0KPiA+PiAgY2Nm
+bGFncy15ICs9IC1EX19DSEVDS19FTkRJQU5fXw0KPiA+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9j
+aGFyL3JwbWIvY2Rldi5jIGIvZHJpdmVycy9jaGFyL3JwbWIvY2Rldi5jIG5ldw0KPiA+PiBmaWxl
+IG1vZGUgMTAwNjQ0IGluZGV4IDAwMDAwMDAwMDAwMC4uNTVmNjY3MjBmZDAzDQo+ID4+IC0tLSAv
+ZGV2L251bGwNCj4gPj4gKysrIGIvZHJpdmVycy9jaGFyL3JwbWIvY2Rldi5jDQo+ID4+IEBAIC0w
+LDAgKzEsMjQ2IEBADQo+ID4+ICsvLyBTUERYLUxpY2Vuc2UtSWRlbnRpZmllcjogR1BMLTIuMA0K
+PiA+PiArLyoNCj4gPj4gKyAqIENvcHlyaWdodChjKSAyMDE1IC0gMjAxOSBJbnRlbCBDb3Jwb3Jh
+dGlvbi4NCj4gPj4gKyAqLw0KPiA+PiArI2RlZmluZSBwcl9mbXQoZm10KSBLQlVJTERfTU9ETkFN
+RSAiOiAiIGZtdA0KPiA+PiArDQo+ID4+ICsjaW5jbHVkZSA8bGludXgvZnMuaD4NCj4gPj4gKyNp
+bmNsdWRlIDxsaW51eC91YWNjZXNzLmg+DQo+ID4+ICsjaW5jbHVkZSA8bGludXgvY29tcGF0Lmg+
+DQo+ID4+ICsjaW5jbHVkZSA8bGludXgvc2xhYi5oPg0KPiA+PiArI2luY2x1ZGUgPGxpbnV4L2Nh
+cGFiaWxpdHkuaD4NCj4gPj4gKw0KPiA+PiArI2luY2x1ZGUgPGxpbnV4L3JwbWIuaD4NCj4gPj4g
+Kw0KPiA+PiArI2luY2x1ZGUgInJwbWItY2Rldi5oIg0KPiA+PiArDQo+ID4+ICtzdGF0aWMgZGV2
+X3QgcnBtYl9kZXZ0Ow0KPiA+PiArI2RlZmluZSBSUE1CX01BWF9ERVZTICBNSU5PUk1BU0sNCj4g
+Pj4gKw0KPiA+PiArI2RlZmluZSBSUE1CX0RFVl9PUEVOICAgIDAgIC8qKiBzaW5nbGUgb3BlbiBi
+aXQgKHBvc2l0aW9uKSAqLw0KPiA+PiArDQo+ID4+ICsvKioNCj4gPj4gKyAqIHJwbWJfb3BlbiAt
+IHRoZSBvcGVuIGZ1bmN0aW9uDQo+ID4+ICsgKg0KPiA+PiArICogQGlub2RlOiBwb2ludGVyIHRv
+IGlub2RlIHN0cnVjdHVyZQ0KPiA+PiArICogQGZwOiBwb2ludGVyIHRvIGZpbGUgc3RydWN0dXJl
+DQo+ID4+ICsgKg0KPiA+PiArICogUmV0dXJuOiAwIG9uIHN1Y2Nlc3MsIDwwIG9uIGVycm9yICAq
+LyBzdGF0aWMgaW50IHJwbWJfb3BlbihzdHJ1Y3QNCj4gPj4gK2lub2RlICppbm9kZSwgc3RydWN0
+IGZpbGUgKmZwKSB7DQo+ID4+ICsJc3RydWN0IHJwbWJfZGV2ICpyZGV2Ow0KPiA+PiArDQo+ID4+
+ICsJcmRldiA9IGNvbnRhaW5lcl9vZihpbm9kZS0+aV9jZGV2LCBzdHJ1Y3QgcnBtYl9kZXYsIGNk
+ZXYpOw0KPiA+PiArCWlmICghcmRldikNCj4gPj4gKwkJcmV0dXJuIC1FTk9ERVY7DQo+ID4+ICsN
+Cj4gPj4gKwkvKiB0aGUgcnBtYiBpcyBzaW5nbGUgb3BlbiEgKi8NCj4gPj4gKwlpZiAodGVzdF9h
+bmRfc2V0X2JpdChSUE1CX0RFVl9PUEVOLCAmcmRldi0+c3RhdHVzKSkNCj4gPj4gKwkJcmV0dXJu
+IC1FQlVTWTsNCj4gPj4gKw0KPiA+PiArCW11dGV4X2xvY2soJnJkZXYtPmxvY2spOw0KPiA+PiAr
+DQo+ID4+ICsJZnAtPnByaXZhdGVfZGF0YSA9IHJkZXY7DQo+ID4+ICsNCj4gPj4gKwltdXRleF91
+bmxvY2soJnJkZXYtPmxvY2spOw0KPiA+PiArDQo+ID4+ICsJcmV0dXJuIG5vbnNlZWthYmxlX29w
+ZW4oaW5vZGUsIGZwKTsgfQ0KPiA+PiArDQo+ID4+ICsvKioNCj4gPj4gKyAqIHJwbWJfcmVsZWFz
+ZSAtIHRoZSBjZGV2IHJlbGVhc2UgZnVuY3Rpb24NCj4gPj4gKyAqDQo+ID4+ICsgKiBAaW5vZGU6
+IHBvaW50ZXIgdG8gaW5vZGUgc3RydWN0dXJlDQo+ID4+ICsgKiBAZnA6IHBvaW50ZXIgdG8gZmls
+ZSBzdHJ1Y3R1cmUNCj4gPj4gKyAqDQo+ID4+ICsgKiBSZXR1cm46IDAgYWx3YXlzLg0KPiA+PiAr
+ICovDQo+ID4+ICtzdGF0aWMgaW50IHJwbWJfcmVsZWFzZShzdHJ1Y3QgaW5vZGUgKmlub2RlLCBz
+dHJ1Y3QgZmlsZSAqZnApIHsNCj4gPj4gKwlzdHJ1Y3QgcnBtYl9kZXYgKnJkZXYgPSBmcC0+cHJp
+dmF0ZV9kYXRhOw0KPiA+PiArDQo+ID4+ICsJY2xlYXJfYml0KFJQTUJfREVWX09QRU4sICZyZGV2
+LT5zdGF0dXMpOw0KPiA+PiArDQo+ID4+ICsJcmV0dXJuIDA7DQo+ID4+ICt9DQo+ID4+ICsNCj4g
+Pj4gK3N0YXRpYyBsb25nIHJwbWJfaW9jdGxfdmVyX2NtZChzdHJ1Y3QgcnBtYl9kZXYgKnJkZXYs
+DQo+ID4+ICsJCQkgICAgICAgc3RydWN0IHJwbWJfaW9jX3Zlcl9jbWQgX191c2VyICpwdHIpIHsN
+Cj4gPj4gKwlzdHJ1Y3QgcnBtYl9pb2NfdmVyX2NtZCB2ZXIgPSB7DQo+ID4+ICsJCS5hcGlfdmVy
+c2lvbiA9IFJQTUJfQVBJX1ZFUlNJT04sDQo+ID4+ICsJfTsNCj4gPj4gKw0KPiA+PiArCXJldHVy
+biBjb3B5X3RvX3VzZXIocHRyLCAmdmVyLCBzaXplb2YodmVyKSkgPyAtRUZBVUxUIDogMDsgfQ0K
+PiA+PiArDQo+ID4+ICtzdGF0aWMgbG9uZyBycG1iX2lvY3RsX2NhcF9jbWQoc3RydWN0IHJwbWJf
+ZGV2ICpyZGV2LA0KPiA+PiArCQkJICAgICAgIHN0cnVjdCBycG1iX2lvY19jYXBfY21kIF9fdXNl
+ciAqcHRyKSB7DQo+ID4+ICsJc3RydWN0IHJwbWJfaW9jX2NhcF9jbWQgY2FwOw0KPiA+PiArDQo+
+ID4+ICsJY2FwLnRhcmdldCAgICAgID0gcmRldi0+dGFyZ2V0Ow0KPiA+PiArCWNhcC5ibG9ja19z
+aXplICA9IHJkZXYtPm9wcy0+YmxvY2tfc2l6ZTsNCj4gPj4gKwljYXAud3JfY250X21heCAgPSBy
+ZGV2LT5vcHMtPndyX2NudF9tYXg7DQo+ID4+ICsJY2FwLnJkX2NudF9tYXggID0gcmRldi0+b3Bz
+LT5yZF9jbnRfbWF4Ow0KPiA+PiArCWNhcC5hdXRoX21ldGhvZCA9IHJkZXYtPm9wcy0+YXV0aF9t
+ZXRob2Q7DQo+ID4+ICsJY2FwLmNhcGFjaXR5ICAgID0gcnBtYl9nZXRfY2FwYWNpdHkocmRldik7
+DQo+ID4+ICsJY2FwLnJlc2VydmVkICAgID0gMDsNCj4gPj4gKw0KPiA+PiArCXJldHVybiBjb3B5
+X3RvX3VzZXIocHRyLCAmY2FwLCBzaXplb2YoY2FwKSkgPyAtRUZBVUxUIDogMDsgfQ0KPiA+PiAr
+DQo+ID4+ICtzdGF0aWMgbG9uZyBycG1iX2lvY3RsX3BrZXlfY21kKHN0cnVjdCBycG1iX2RldiAq
+cmRldiwga2V5X3NlcmlhbF90DQo+ID4+ICtfX3VzZXIgKmspIHsNCj4gPj4gKwlrZXlfc2VyaWFs
+X3Qga2V5aWQ7DQo+ID4+ICsNCj4gPj4gKwlpZiAoZ2V0X3VzZXIoa2V5aWQsIGspKQ0KPiA+PiAr
+CQlyZXR1cm4gLUVGQVVMVDsNCj4gPj4gKwllbHNlDQo+ID4+ICsJCXJldHVybiBycG1iX3Byb2dy
+YW1fa2V5KHJkZXYsIGtleWlkKTsgfQ0KPiA+PiArDQo+ID4+ICtzdGF0aWMgbG9uZyBycG1iX2lv
+Y3RsX2NvdW50ZXJfY21kKHN0cnVjdCBycG1iX2RldiAqcmRldiwgaW50IF9fdXNlcg0KPiA+PiAr
+KnB0cikgew0KPiA+PiArCWludCBjb3VudCA9IHJwbWJfZ2V0X3dyaXRlX2NvdW50KHJkZXYpOw0K
+PiA+PiArDQo+ID4+ICsJaWYgKGNvdW50ID4gMCkNCj4gPj4gKwkJcmV0dXJuIHB1dF91c2VyKGNv
+dW50LCBwdHIpOw0KPiA+PiArCWVsc2UNCj4gPj4gKwkJcmV0dXJuIGNvdW50Ow0KPiA+PiArfQ0K
+PiA+PiArDQo+ID4+ICtzdGF0aWMgbG9uZyBycG1iX2lvY3RsX3dibG9ja3NfY21kKHN0cnVjdCBy
+cG1iX2RldiAqcmRldiwNCj4gPj4gKwkJCQkgICBzdHJ1Y3QgcnBtYl9pb2NfYmxvY2tzX2NtZCBf
+X3VzZXIgKnB0cikgew0KPiA+PiArCXN0cnVjdCBycG1iX2lvY19ibG9ja3NfY21kIHdibG9ja3M7
+DQo+ID4+ICsJaW50IHN6Ow0KPiA+PiArCWxvbmcgcmV0Ow0KPiA+PiArCXU4ICpkYXRhOw0KPiA+
+PiArDQo+ID4+ICsJaWYgKGNvcHlfZnJvbV91c2VyKCZ3YmxvY2tzLCBwdHIsIHNpemVvZihzdHJ1
+Y3QNCj4gPj4gcnBtYl9pb2NfYmxvY2tzX2NtZCkpKQ0KPiA+PiArCQlyZXR1cm4gLUVGQVVMVDsN
+Cj4gPj4gKw0KPiA+PiArCS8qIERvbid0IHdyaXRlIG1vcmUgYmxvY2tzIGRldmljZSBzdXBwb3J0
+cyAqLw0KPiA+PiArCWlmICh3YmxvY2tzLmNvdW50ID4gcmRldi0+b3BzLT53cl9jbnRfbWF4KQ0K
+PiA+PiArCQlyZXR1cm4gLUVJTlZBTDsNCj4gPj4gKw0KPiA+PiArCXN6ID0gd2Jsb2Nrcy5jb3Vu
+dCAqIDI1NjsNCj4gPj4gKwlkYXRhID0ga21hbGxvYyhzeiwgR0ZQX0tFUk5FTCk7DQo+ID4+ICsN
+Cj4gPj4gKwlpZiAoIWRhdGEpDQo+ID4+ICsJCXJldHVybiAtRU5PTUVNOw0KPiA+PiArDQo+ID4+
+ICsJaWYgKGNvcHlfZnJvbV91c2VyKGRhdGEsIHdibG9ja3MuZGF0YSwgc3opKQ0KPiA+PiArCQly
+ZXQgPSAtRUZBVUxUOw0KPiA+PiArCWVsc2UNCj4gPj4gKwkJcmV0ID0gcnBtYl93cml0ZV9ibG9j
+a3MocmRldiwgd2Jsb2Nrcy5rZXksIHdibG9ja3MuYWRkciwNCj4gPj4gK3dibG9ja3MuY291bnQs
+IGRhdGEpOw0KPiA+PiArDQo+ID4+ICsJa2ZyZWUoZGF0YSk7DQo+ID4+ICsJcmV0dXJuIHJldDsN
+Cj4gPj4gK30NCj4gPj4gKw0KPiA+PiArc3RhdGljIGxvbmcgcnBtYl9pb2N0bF9yYmxvY2tzX2Nt
+ZChzdHJ1Y3QgcnBtYl9kZXYgKnJkZXYsDQo+ID4+ICsJCQkJICAgc3RydWN0IHJwbWJfaW9jX2Js
+b2Nrc19jbWQgX191c2VyICpwdHIpIHsNCj4gPj4gKwlzdHJ1Y3QgcnBtYl9pb2NfYmxvY2tzX2Nt
+ZCByYmxvY2tzOw0KPiA+PiArCWludCBzejsNCj4gPj4gKwlsb25nIHJldDsNCj4gPj4gKwl1OCAq
+ZGF0YTsNCj4gPj4gKw0KPiA+PiArCWlmIChjb3B5X2Zyb21fdXNlcigmcmJsb2NrcywgcHRyLCBz
+aXplb2Yoc3RydWN0DQo+ID4+IHJwbWJfaW9jX2Jsb2Nrc19jbWQpKSkNCj4gPj4gKwkJcmV0dXJu
+IC1FRkFVTFQ7DQo+ID4+ICsNCj4gPj4gKwlpZiAocmJsb2Nrcy5jb3VudCA+IHJkZXYtPm9wcy0+
+cmRfY250X21heCkNCj4gPj4gKwkJcmV0dXJuIC1FSU5WQUw7DQo+ID4+ICsNCj4gPj4gKwlzeiA9
+IHJibG9ja3MuY291bnQgKiAyNTY7DQo+ID4+ICsJZGF0YSA9IGttYWxsb2Moc3osIEdGUF9LRVJO
+RUwpOw0KPiA+PiArDQo+ID4+ICsJaWYgKCFkYXRhKQ0KPiA+PiArCQlyZXR1cm4gLUVOT01FTTsN
+Cj4gPj4gKw0KPiA+PiArCXJldCA9IHJwbWJfcmVhZF9ibG9ja3MocmRldiwgcmJsb2Nrcy5hZGRy
+LCByYmxvY2tzLmNvdW50LCBkYXRhKTsNCj4gPj4gKw0KPiA+PiArCWlmIChyZXQgPT0gMCkNCj4g
+Pj4gKwkJcmV0ID0gY29weV90b191c2VyKHJibG9ja3MuZGF0YSwgZGF0YSwgc3opOw0KPiA+PiAr
+DQo+ID4+ICsJa2ZyZWUoZGF0YSk7DQo+ID4+ICsJcmV0dXJuIHJldDsNCj4gPj4gK30NCj4gPj4g
+Kw0KPiA+PiArLyoqDQo+ID4+ICsgKiBycG1iX2lvY3RsIC0gcnBtYiBpb2N0bCBkaXNwYXRjaGVy
+DQo+ID4+ICsgKg0KPiA+PiArICogQGZwOiBhIGZpbGUgcG9pbnRlcg0KPiA+PiArICogQGNtZDog
+aW9jdGwgY29tbWFuZCBSUE1CX0lPQ19TRVFfQ01EIFJQTUJfSU9DX1ZFUl9DTUQNCj4gPj4gK1JQ
+TUJfSU9DX0NBUF9DTUQNCj4gPj4gKyAqIEBhcmc6IGlvY3RsIGRhdGE6IHJwbWJfaW9jX3Zlcl9j
+bWQgcnBtYl9pb2NfY2FwX2NtZA0KPiA+PiBwbWJfaW9jX3NlcV9jbWQNCj4gPj4gKyAqDQo+ID4+
+ICsgKiBSZXR1cm46IDAgb24gc3VjY2VzczsgPCAwIG9uIGVycm9yICAqLyBzdGF0aWMgbG9uZw0K
+PiA+PiArcnBtYl9pb2N0bChzdHJ1Y3QgZmlsZSAqZnAsIHVuc2lnbmVkIGludCBjbWQsIHVuc2ln
+bmVkIGxvbmcNCj4gPj4gK2FyZykgew0KPiA+PiArCXN0cnVjdCBycG1iX2RldiAqcmRldiA9IGZw
+LT5wcml2YXRlX2RhdGE7DQo+ID4+ICsJdm9pZCBfX3VzZXIgKnB0ciA9ICh2b2lkIF9fdXNlciAq
+KWFyZzsNCj4gPj4gKw0KPiA+PiArCXN3aXRjaCAoY21kKSB7DQo+ID4+ICsJY2FzZSBSUE1CX0lP
+Q19WRVJfQ01EOg0KPiA+PiArCQlyZXR1cm4gcnBtYl9pb2N0bF92ZXJfY21kKHJkZXYsIHB0cik7
+DQo+ID4+ICsJY2FzZSBSUE1CX0lPQ19DQVBfQ01EOg0KPiA+PiArCQlyZXR1cm4gcnBtYl9pb2N0
+bF9jYXBfY21kKHJkZXYsIHB0cik7DQo+ID4+ICsJY2FzZSBSUE1CX0lPQ19QS0VZX0NNRDoNCj4g
+Pj4gKwkJcmV0dXJuIHJwbWJfaW9jdGxfcGtleV9jbWQocmRldiwgcHRyKTsNCj4gPj4gKwljYXNl
+IFJQTUJfSU9DX0NPVU5URVJfQ01EOg0KPiA+PiArCQlyZXR1cm4gcnBtYl9pb2N0bF9jb3VudGVy
+X2NtZChyZGV2LCBwdHIpOw0KPiA+PiArCWNhc2UgUlBNQl9JT0NfV0JMT0NLU19DTUQ6DQo+ID4+
+ICsJCXJldHVybiBycG1iX2lvY3RsX3dibG9ja3NfY21kKHJkZXYsIHB0cik7DQo+ID4+ICsJY2Fz
+ZSBSUE1CX0lPQ19SQkxPQ0tTX0NNRDoNCj4gPj4gKwkJcmV0dXJuIHJwbWJfaW9jdGxfcmJsb2Nr
+c19jbWQocmRldiwgcHRyKTsNCj4gPj4gKwlkZWZhdWx0Og0KPiA+PiArCQlkZXZfZXJyKCZyZGV2
+LT5kZXYsICJ1bnN1cHBvcnRlZCBpb2N0bCAweCV4LlxuIiwgY21kKTsNCj4gPj4gKwkJcmV0dXJu
+IC1FTk9JT0NUTENNRDsNCj4gPj4gKwl9DQo+ID4+ICt9DQo+ID4+ICsNCj4gPj4gK3N0YXRpYyBj
+b25zdCBzdHJ1Y3QgZmlsZV9vcGVyYXRpb25zIHJwbWJfZm9wcyA9IHsNCj4gPj4gKwkub3BlbiAg
+ICAgICAgICAgPSBycG1iX29wZW4sDQo+ID4+ICsJLnJlbGVhc2UgICAgICAgID0gcnBtYl9yZWxl
+YXNlLA0KPiA+PiArCS51bmxvY2tlZF9pb2N0bCA9IHJwbWJfaW9jdGwsDQo+ID4+ICsJLm93bmVy
+ICAgICAgICAgID0gVEhJU19NT0RVTEUsDQo+ID4+ICsJLmxsc2VlayAgICAgICAgID0gbm9vcF9s
+bHNlZWssDQo+ID4+ICt9Ow0KPiA+PiArDQo+ID4+ICt2b2lkIHJwbWJfY2Rldl9wcmVwYXJlKHN0
+cnVjdCBycG1iX2RldiAqcmRldikgew0KPiA+PiArCXJkZXYtPmRldi5kZXZ0ID0gTUtERVYoTUFK
+T1IocnBtYl9kZXZ0KSwgcmRldi0+aWQpOw0KPiA+PiArCXJkZXYtPmNkZXYub3duZXIgPSBUSElT
+X01PRFVMRTsNCj4gPj4gKwljZGV2X2luaXQoJnJkZXYtPmNkZXYsICZycG1iX2ZvcHMpOyB9DQo+
+ID4+ICsNCj4gPj4gK3ZvaWQgcnBtYl9jZGV2X2FkZChzdHJ1Y3QgcnBtYl9kZXYgKnJkZXYpIHsN
+Cj4gPj4gKwljZGV2X2FkZCgmcmRldi0+Y2RldiwgcmRldi0+ZGV2LmRldnQsIDEpOyB9DQo+ID4+
+ICsNCj4gPj4gK3ZvaWQgcnBtYl9jZGV2X2RlbChzdHJ1Y3QgcnBtYl9kZXYgKnJkZXYpIHsNCj4g
+Pj4gKwlpZiAocmRldi0+ZGV2LmRldnQpDQo+ID4+ICsJCWNkZXZfZGVsKCZyZGV2LT5jZGV2KTsN
+Cj4gPj4gK30NCj4gPj4gKw0KPiA+PiAraW50IF9faW5pdCBycG1iX2NkZXZfaW5pdCh2b2lkKQ0K
+PiA+PiArew0KPiA+PiArCWludCByZXQ7DQo+ID4+ICsNCj4gPj4gKwlyZXQgPSBhbGxvY19jaHJk
+ZXZfcmVnaW9uKCZycG1iX2RldnQsIDAsIFJQTUJfTUFYX0RFVlMsDQo+ID4+ICJycG1iIik7DQo+
+ID4+ICsJaWYgKHJldCA8IDApDQo+ID4+ICsJCXByX2VycigidW5hYmxlIHRvIGFsbG9jYXRlIGNo
+YXIgZGV2IHJlZ2lvblxuIik7DQo+ID4+ICsNCj4gPj4gKwlyZXR1cm4gcmV0Ow0KPiA+PiArfQ0K
+PiA+PiArDQo+ID4+ICt2b2lkIF9fZXhpdCBycG1iX2NkZXZfZXhpdCh2b2lkKQ0KPiA+PiArew0K
+PiA+PiArCXVucmVnaXN0ZXJfY2hyZGV2X3JlZ2lvbihycG1iX2RldnQsIFJQTUJfTUFYX0RFVlMp
+OyB9DQo+ID4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2NoYXIvcnBtYi9jb3JlLmMgYi9kcml2ZXJz
+L2NoYXIvcnBtYi9jb3JlLmMNCj4gPj4gaW5kZXgNCj4gPj4gYTJlMjFjMTQ5ODZhLi5lMjZkNjA1
+ZTQ4ZTEgMTAwNjQ0DQo+ID4+IC0tLSBhL2RyaXZlcnMvY2hhci9ycG1iL2NvcmUuYw0KPiA+PiAr
+KysgYi9kcml2ZXJzL2NoYXIvcnBtYi9jb3JlLmMNCj4gPj4gQEAgLTEyLDYgKzEyLDcgQEANCj4g
+Pj4gICNpbmNsdWRlIDxsaW51eC9zbGFiLmg+DQo+ID4+DQo+ID4+ICAjaW5jbHVkZSA8bGludXgv
+cnBtYi5oPg0KPiA+PiArI2luY2x1ZGUgInJwbWItY2Rldi5oIg0KPiA+Pg0KPiA+PiAgc3RhdGlj
+IERFRklORV9JREEocnBtYl9pZGEpOw0KPiA+Pg0KPiA+PiBAQCAtMjc3LDYgKzI3OCw3IEBAIGlu
+dCBycG1iX2Rldl91bnJlZ2lzdGVyKHN0cnVjdCBycG1iX2RldiAqcmRldikNCj4gPj4gIAkJcmV0
+dXJuIC1FSU5WQUw7DQo+ID4+DQo+ID4+ICAJbXV0ZXhfbG9jaygmcmRldi0+bG9jayk7DQo+ID4+
+ICsJcnBtYl9jZGV2X2RlbChyZGV2KTsNCj4gPj4gIAlkZXZpY2VfZGVsKCZyZGV2LT5kZXYpOw0K
+PiA+PiAgCW11dGV4X3VubG9jaygmcmRldi0+bG9jayk7DQo+ID4+DQo+ID4+IEBAIC0zNzEsOSAr
+MzczLDYgQEAgc3RydWN0IHJwbWJfZGV2ICpycG1iX2Rldl9yZWdpc3RlcihzdHJ1Y3QNCj4gZGV2
+aWNlDQo+ID4+ICpkZXYsIHU4IHRhcmdldCwNCj4gPj4gIAlpZiAoIW9wcy0+cmVhZF9ibG9ja3Mp
+DQo+ID4+ICAJCXJldHVybiBFUlJfUFRSKC1FSU5WQUwpOw0KPiA+Pg0KPiA+PiAtCWlmIChvcHMt
+PnR5cGUgPT0gUlBNQl9UWVBFX0FOWSB8fCBvcHMtPnR5cGUgPg0KPiA+PiBSUE1CX1RZUEVfTUFY
+KQ0KPiA+PiAtCQlyZXR1cm4gRVJSX1BUUigtRUlOVkFMKTsNCj4gPj4gLQ0KPiA+PiAgCXJkZXYg
+PSBremFsbG9jKHNpemVvZigqcmRldiksIEdGUF9LRVJORUwpOw0KPiA+PiAgCWlmICghcmRldikN
+Cj4gPj4gIAkJcmV0dXJuIEVSUl9QVFIoLUVOT01FTSk7DQo+ID4+IEBAIC0zOTYsNiArMzk1LDgg
+QEAgc3RydWN0IHJwbWJfZGV2ICpycG1iX2Rldl9yZWdpc3RlcihzdHJ1Y3QNCj4gZGV2aWNlDQo+
+ID4+ICpkZXYsIHU4IHRhcmdldCwNCj4gPj4gIAlpZiAocmV0KQ0KPiA+PiAgCQlnb3RvIGV4aXQ7
+DQo+ID4+DQo+ID4+ICsJcnBtYl9jZGV2X2FkZChyZGV2KTsNCj4gPj4gKw0KPiA+PiAgCWRldl9k
+YmcoJnJkZXYtPmRldiwgInJlZ2lzdGVyZWQgZGV2aWNlXG4iKTsNCj4gPj4NCj4gPj4gIAlyZXR1
+cm4gcmRldjsNCj4gPj4gQEAgLTQxMiwxMSArNDEzLDEyIEBAIHN0YXRpYyBpbnQgX19pbml0IHJw
+bWJfaW5pdCh2b2lkKSAgew0KPiA+PiAgCWlkYV9pbml0KCZycG1iX2lkYSk7DQo+ID4+ICAJY2xh
+c3NfcmVnaXN0ZXIoJnJwbWJfY2xhc3MpOw0KPiA+PiAtCXJldHVybiAwOw0KPiA+PiArCXJldHVy
+biBycG1iX2NkZXZfaW5pdCgpOw0KPiA+PiAgfQ0KPiA+Pg0KPiA+PiAgc3RhdGljIHZvaWQgX19l
+eGl0IHJwbWJfZXhpdCh2b2lkKQ0KPiA+PiAgew0KPiA+PiArCXJwbWJfY2Rldl9leGl0KCk7DQo+
+ID4+ICAJY2xhc3NfdW5yZWdpc3RlcigmcnBtYl9jbGFzcyk7DQo+ID4+ICAJaWRhX2Rlc3Ryb3ko
+JnJwbWJfaWRhKTsNCj4gPj4gIH0NCj4gPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvY2hhci9ycG1i
+L3JwbWItY2Rldi5oIGIvZHJpdmVycy9jaGFyL3JwbWIvcnBtYi0NCj4gPj4gY2Rldi5oIG5ldyBm
+aWxlIG1vZGUgMTAwNjQ0IGluZGV4IDAwMDAwMDAwMDAwMC4uZTU5ZmYwYzA1ZTlkDQo+ID4+IC0t
+LSAvZGV2L251bGwNCj4gPj4gKysrIGIvZHJpdmVycy9jaGFyL3JwbWIvcnBtYi1jZGV2LmgNCj4g
+Pj4gQEAgLTAsMCArMSwxNyBAQA0KPiA+PiArLyogU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IEJT
+RC0zLUNsYXVzZSBPUiBHUEwtMi4wICovDQo+ID4+ICsvKg0KPiA+PiArICogQ29weXJpZ2h0IChD
+KSAyMDE1LTIwMTggSW50ZWwgQ29ycC4gQWxsIHJpZ2h0cyByZXNlcnZlZCAgKi8NCj4gPj4gKyNp
+ZmRlZiBDT05GSUdfUlBNQl9JTlRGX0RFViBpbnQgX19pbml0IHJwbWJfY2Rldl9pbml0KHZvaWQp
+OyB2b2lkDQo+ID4+ICtfX2V4aXQgcnBtYl9jZGV2X2V4aXQodm9pZCk7IHZvaWQgcnBtYl9jZGV2
+X3ByZXBhcmUoc3RydWN0DQo+IHJwbWJfZGV2DQo+ID4+ICsqcmRldik7IHZvaWQgcnBtYl9jZGV2
+X2FkZChzdHJ1Y3QgcnBtYl9kZXYgKnJkZXYpOyB2b2lkDQo+ID4+ICtycG1iX2NkZXZfZGVsKHN0
+cnVjdCBycG1iX2RldiAqcmRldik7ICNlbHNlIHN0YXRpYyBpbmxpbmUgaW50IF9faW5pdA0KPiA+
+PiArcnBtYl9jZGV2X2luaXQodm9pZCkgeyByZXR1cm4gMDsgfSBzdGF0aWMgaW5saW5lIHZvaWQg
+X19leGl0DQo+ID4+ICtycG1iX2NkZXZfZXhpdCh2b2lkKSB7fSBzdGF0aWMgaW5saW5lIHZvaWQg
+cnBtYl9jZGV2X3ByZXBhcmUoc3RydWN0DQo+ID4+ICtycG1iX2RldiAqcmRldikge30gc3RhdGlj
+IGlubGluZSB2b2lkIHJwbWJfY2Rldl9hZGQoc3RydWN0IHJwbWJfZGV2DQo+ID4+ICsqcmRldikg
+e30gc3RhdGljIGlubGluZSB2b2lkIHJwbWJfY2Rldl9kZWwoc3RydWN0IHJwbWJfZGV2ICpyZGV2
+KSB7fQ0KPiA+PiArI2VuZGlmIC8qDQo+ID4+IENPTkZJR19SUE1CX0lOVEZfREVWDQo+ID4+ICsq
+Lw0KPiA+PiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9ycG1iLmggYi9pbmNsdWRlL2xpbnV4
+L3JwbWIuaCBpbmRleA0KPiA+PiA3MThiYTdjOTFlY2QuLmZlNDRmNjBlZmUzMSAxMDA2NDQNCj4g
+Pj4gLS0tIGEvaW5jbHVkZS9saW51eC9ycG1iLmgNCj4gPj4gKysrIGIvaW5jbHVkZS9saW51eC9y
+cG1iLmgNCj4gPj4gQEAgLTgsOSArOCwxMyBAQA0KPiA+Pg0KPiA+PiAgI2luY2x1ZGUgPGxpbnV4
+L3R5cGVzLmg+DQo+ID4+ICAjaW5jbHVkZSA8bGludXgvZGV2aWNlLmg+DQo+ID4+ICsjaW5jbHVk
+ZSA8bGludXgvY2Rldi5oPg0KPiA+PiArI2luY2x1ZGUgPHVhcGkvbGludXgvcnBtYi5oPg0KPiA+
+PiAgI2luY2x1ZGUgPGxpbnV4L2tyZWYuaD4NCj4gPj4gICNpbmNsdWRlIDxsaW51eC9rZXkuaD4N
+Cj4gPj4NCj4gPj4gKyNkZWZpbmUgUlBNQl9BUElfVkVSU0lPTiAweDgwMDAwMDAxDQo+ID4+ICsN
+Cj4gPj4gIC8qKg0KPiA+PiAgICogc3RydWN0IHJwbWJfb3BzIC0gUlBNQiBvcHMgdG8gYmUgaW1w
+bGVtZW50ZWQgYnkgdW5kZXJseWluZyBibG9jaw0KPiA+PiBkZXZpY2UNCj4gPj4gICAqDQo+ID4+
+IEBAIC01MSw2ICs1NSw4IEBAIHN0cnVjdCBycG1iX29wcyB7DQo+ID4+ICAgKiBAZGV2ICAgICAg
+ICA6IGRldmljZQ0KPiA+PiAgICogQGlkICAgICAgICAgOiBkZXZpY2UgaWQNCj4gPj4gICAqIEB0
+YXJnZXQgICAgIDogUlBNQiB0YXJnZXQvcmVnaW9uIHdpdGhpbiB0aGUgcGh5c2ljYWwgZGV2aWNl
+DQo+ID4+ICsgKiBAY2RldiAgICAgICA6IGNoYXJhY3RlciBkZXYNCj4gPj4gKyAqIEBzdGF0dXMg
+ICAgIDogZGV2aWNlIHN0YXR1cw0KPiA+PiAgICogQG9wcyAgICAgICAgOiBvcGVyYXRpb24gZXhw
+b3J0ZWQgYnkgYmxvY2sgbGF5ZXINCj4gPj4gICAqLw0KPiA+PiAgc3RydWN0IHJwbWJfZGV2IHsN
+Cj4gPj4gQEAgLTU4LDYgKzY0LDEwIEBAIHN0cnVjdCBycG1iX2RldiB7DQo+ID4+ICAJc3RydWN0
+IGRldmljZSBkZXY7DQo+ID4+ICAJaW50IGlkOw0KPiA+PiAgCXU4IHRhcmdldDsNCj4gPj4gKyNp
+ZmRlZiBDT05GSUdfUlBNQl9JTlRGX0RFVg0KPiA+PiArCXN0cnVjdCBjZGV2IGNkZXY7DQo+ID4+
+ICsJdW5zaWduZWQgbG9uZyBzdGF0dXM7DQo+ID4+ICsjZW5kaWYgLyogQ09ORklHX1JQTUJfSU5U
+Rl9ERVYgKi8NCj4gPj4gIAljb25zdCBzdHJ1Y3QgcnBtYl9vcHMgKm9wczsNCj4gPj4gIH07DQo+
+ID4+DQo+ID4+IGRpZmYgLS1naXQgYS9pbmNsdWRlL3VhcGkvbGludXgvcnBtYi5oIGIvaW5jbHVk
+ZS91YXBpL2xpbnV4L3JwbWIuaA0KPiA+PiBuZXcgZmlsZSBtb2RlIDEwMDY0NCBpbmRleCAwMDAw
+MDAwMDAwMDAuLjM5NTdiNzg1Y2RkNQ0KPiA+PiAtLS0gL2Rldi9udWxsDQo+ID4+ICsrKyBiL2lu
+Y2x1ZGUvdWFwaS9saW51eC9ycG1iLmgNCj4gPj4gQEAgLTAsMCArMSw2OCBAQA0KPiA+PiArLyog
+U1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6ICgoR1BMLTIuMCBXSVRIIExpbnV4LXN5c2NhbGwtbm90
+ZSkgT1INCj4gPj4gK0JTRC0zLUNsYXVzZSkgKi8NCj4gPj4gKy8qDQo+ID4+ICsgKiBDb3B5cmln
+aHQgKEMpIDIwMTUtMjAxOCBJbnRlbCBDb3JwLiBBbGwgcmlnaHRzIHJlc2VydmVkDQo+ID4+ICsg
+KiBDb3B5cmlnaHQgKEMpIDIwMjEgTGluYXJvIEx0ZA0KPiA+PiArICovDQo+ID4+ICsjaWZuZGVm
+IF9VQVBJX0xJTlVYX1JQTUJfSF8NCj4gPj4gKyNkZWZpbmUgX1VBUElfTElOVVhfUlBNQl9IXw0K
+PiA+PiArDQo+ID4+ICsjaW5jbHVkZSA8bGludXgvdHlwZXMuaD4NCj4gPj4gKw0KPiA+PiArLyoq
+DQo+ID4+ICsgKiBzdHJ1Y3QgcnBtYl9pb2NfdmVyX2NtZCAtIHJwbWIgYXBpIHZlcnNpb24NCj4g
+Pj4gKyAqDQo+ID4+ICsgKiBAYXBpX3ZlcnNpb246IHJwbWIgQVBJIHZlcnNpb24uDQo+ID4+ICsg
+Ki8NCj4gPj4gK3N0cnVjdCBycG1iX2lvY192ZXJfY21kIHsNCj4gPj4gKwlfX3UzMiBhcGlfdmVy
+c2lvbjsNCj4gPj4gK30gX19wYWNrZWQ7DQo+ID4+ICsNCj4gPj4gK2VudW0gcnBtYl9hdXRoX21l
+dGhvZCB7DQo+ID4+ICsJUlBNQl9ITUFDX0FMR09fU0hBXzI1NiA9IDAsDQo+ID4+ICt9Ow0KPiA+
+PiArDQo+ID4+ICsvKioNCj4gPj4gKyAqIHN0cnVjdCBycG1iX2lvY19jYXBfY21kIC0gcnBtYiBj
+YXBhYmlsaXRpZXMNCj4gPj4gKyAqDQo+ID4+ICsgKiBAdGFyZ2V0OiBycG1iIHRhcmdldC9yZWdp
+b24gd2l0aGluIFJQTUIgcGFydGl0aW9uLg0KPiA+PiArICogQGNhcGFjaXR5OiBzdG9yYWdlIGNh
+cGFjaXR5IChpbiB1bml0cyBvZiAxMjhLKQ0KPiA+PiArICogQGJsb2NrX3NpemU6IHN0b3JhZ2Ug
+ZGF0YSBibG9jayBzaXplIChpbiB1bml0cyBvZiAyNTZCKQ0KPiA+PiArICogQHdyX2NudF9tYXg6
+IG1heGltYWwgbnVtYmVyIG9mIGJsb2NrIHRoYXQgY2FuIGJlIHdyaXR0ZW4gaW4gYQ0KPiA+PiAr
+c2luZ2xlDQo+ID4+IHJlcXVlc3QuDQo+ID4+ICsgKiBAcmRfY250X21heDogbWF4aW1hbCBudW1i
+ZXIgb2YgYmxvY2sgdGhhdCBjYW4gYmUgcmVhZCBpbiBhIHNpbmdsZQ0KPiA+PiByZXF1ZXN0Lg0K
+PiA+PiArICogQGF1dGhfbWV0aG9kOiBhdXRoZW50aWNhdGlvbiBtZXRob2Q6IGN1cnJlbnRseSBh
+bHdheXMNCj4gPj4gSE1BQ19TSEFfMjU2DQo+ID4+ICsgKiBAcmVzZXJ2ZWQ6IHJlc2VydmVkIHRv
+IGFsaWduIHRvIDQgYnl0ZXMuDQo+ID4+ICsgKi8NCj4gPj4gK3N0cnVjdCBycG1iX2lvY19jYXBf
+Y21kIHsNCj4gPj4gKwlfX3UxNiB0YXJnZXQ7DQo+ID4+ICsJX191MTYgY2FwYWNpdHk7DQo+ID4+
+ICsJX191MTYgYmxvY2tfc2l6ZTsNCj4gPj4gKwlfX3UxNiB3cl9jbnRfbWF4Ow0KPiA+PiArCV9f
+dTE2IHJkX2NudF9tYXg7DQo+ID4+ICsJX191MTYgYXV0aF9tZXRob2Q7DQo+ID4+ICsJX191MTYg
+cmVzZXJ2ZWQ7DQo+ID4+ICt9IF9fYXR0cmlidXRlX18oKHBhY2tlZCkpOw0KPiA+PiArDQo+ID4+
+ICsvKioNCj4gPj4gKyAqIHN0cnVjdCBycG1iX2lvY19ibG9ja3NfY21kIC0gcmVhZC93cml0ZSBi
+bG9ja3MgdG8vZnJvbSBSUE1CDQo+ID4+ICsgKg0KPiA+PiArICogQGtleWlkOiBrZXlfc2VyaWFs
+X3Qgb2Yga2V5IHRvIHVzZQ0KPiA+PiArICogQGFkZHI6IGluZGV4IGludG8gZGV2aWNlICh1bml0
+cyBvZiAyNTZCIGJsb2NrcykNCj4gPj4gKyAqIEBjb3VudDogbnVtYmVyIG9mIDI1NkIgYmxvY2tz
+DQo+ID4+ICsgKiBAZGF0YTogcG9pbnRlciB0byBkYXRhIHRvIHdyaXRlL3JlYWQgICovIHN0cnVj
+dA0KPiA+PiArcnBtYl9pb2NfYmxvY2tzX2NtZCB7DQo+ID4+ICsJX19zMzIga2V5OyAvKiBrZXlf
+c2VyaWFsX3QgKi8NCj4gPj4gKwlfX3UzMiBhZGRyOw0KPiA+PiArCV9fdTMyIGNvdW50Ow0KPiA+
+PiArCV9fdTggX191c2VyICpkYXRhOw0KPiA+PiArfSBfX2F0dHJpYnV0ZV9fKChwYWNrZWQpKTsN
+Cj4gPj4gKw0KPiA+PiArDQo+ID4+ICsjZGVmaW5lIFJQTUJfSU9DX1ZFUl9DTUQgICAgIF9JT1Io
+MHhCOCwgODAsIHN0cnVjdA0KPiBycG1iX2lvY192ZXJfY21kKQ0KPiA+PiArI2RlZmluZSBSUE1C
+X0lPQ19DQVBfQ01EICAgICBfSU9SKDB4QjgsIDgxLCBzdHJ1Y3QNCj4gcnBtYl9pb2NfY2FwX2Nt
+ZCkNCj4gPj4gKyNkZWZpbmUgUlBNQl9JT0NfUEtFWV9DTUQgICAgX0lPVygweEI4LCA4Miwga2V5
+X3NlcmlhbF90KQ0KPiA+PiArI2RlZmluZSBSUE1CX0lPQ19DT1VOVEVSX0NNRCBfSU9SKDB4Qjgs
+IDg0LCBpbnQpICNkZWZpbmUNCj4gPj4gK1JQTUJfSU9DX1dCTE9DS1NfQ01EIF9JT1coMHhCOCwg
+ODUsIHN0cnVjdA0KPiBycG1iX2lvY19ibG9ja3NfY21kKQ0KPiA+PiAjZGVmaW5lDQo+ID4+ICtS
+UE1CX0lPQ19SQkxPQ0tTX0NNRCBfSU9SKDB4QjgsIDg2LCBzdHJ1Y3QNCj4gcnBtYl9pb2NfYmxv
+Y2tzX2NtZCkNCj4gPj4gKw0KPiA+PiArI2VuZGlmIC8qIF9VQVBJX0xJTlVYX1JQTUJfSF8gKi8N
+Cj4gPj4gLS0NCj4gPj4gMi4yMC4xDQo+ID4NCj4gDQo+IC0tDQo+IEFsZXggQmVubsOpZQ0K
