@@ -2,76 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF61BC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 06:15:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B29E7C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 06:26:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BE8564EFD
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 06:15:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73EC564E84
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 06:26:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234799AbhCDGOu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Mar 2021 01:14:50 -0500
-Received: from out4436.biz.mail.alibaba.com ([47.88.44.36]:35048 "EHLO
-        out4436.biz.mail.alibaba.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234733AbhCDGOp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2021 01:14:45 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04423;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0UQK2Dg0_1614838438;
-Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0UQK2Dg0_1614838438)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Thu, 04 Mar 2021 14:14:04 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Subject: [PATCH] arcmsr: Switch to using the new API kobj_to_dev()
-Date:   Thu,  4 Mar 2021 14:13:57 +0800
-Message-Id: <1614838437-98814-1-git-send-email-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S235149AbhCDG0I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Mar 2021 01:26:08 -0500
+Received: from m42-2.mailgun.net ([69.72.42.2]:53275 "EHLO m42-2.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235153AbhCDG0F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 Mar 2021 01:26:05 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1614839144; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=mfsvHB9fDbs1Qdb97UhB6YQLLdl8ZqvKH01Jl/iGVFA=;
+ b=R7Cxq/wUaeFgFtU6H9s/T/pEaQeGQXplzCVL6tCl+5Nl9y3Snuv+ExSkx2QwqabxX6BpetZP
+ ZMZk3qBMvp8xu/ZflLzTUfo2Nic6R2uMT/NQ+MQmSND87FRvv9Aq4s8pIqENmqxszZBUFnqg
+ 54+A5MJmmKdAKyrx2Bjrnop5ZJM=
+X-Mailgun-Sending-Ip: 69.72.42.2
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 60407d4d64e0747df94e11a9 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 04 Mar 2021 06:25:17
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 23CE1C43467; Thu,  4 Mar 2021 06:25:16 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 895AEC433CA;
+        Thu,  4 Mar 2021 06:25:15 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 04 Mar 2021 14:25:15 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     daejun7.park@samsung.com
+Cc:     Greg KH <gregkh@linuxfoundation.org>, avri.altman@wdc.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        asutoshd@codeaurora.org, stanley.chu@mediatek.com,
+        bvanassche@acm.org, huobean@gmail.com,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+Subject: Re: [PATCH v26 4/4] scsi: ufs: Add HPB 2.0 support
+In-Reply-To: <20210303062926epcms2p6aa6737e5ed3916eed9ab80011aad3d83@epcms2p6>
+References: <20210303062633epcms2p252227acd30ad15c1ca821d7e3f547b9e@epcms2p2>
+ <CGME20210303062633epcms2p252227acd30ad15c1ca821d7e3f547b9e@epcms2p6>
+ <20210303062926epcms2p6aa6737e5ed3916eed9ab80011aad3d83@epcms2p6>
+Message-ID: <94311b42ef6ee34ba5908fcefefa4010@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following coccicheck warnings:
+> 
+> -	if (!ufshpb_is_support_chunk(transfer_len))
+> -		return;
+> +	if (!ufshpb_is_support_chunk(hpb, transfer_len) &&
+> +	    (ufshpb_is_legacy(hba) && (transfer_len != 
+> HPB_LEGACY_CHUNK_HIGH)))
+> +		return 0;
+> 
 
-./drivers/scsi/arcmsr/arcmsr_attr.c:164:58-59: WARNING opportunity for
-kobj_to_dev().
+This is looks awkward, can we put the checks in 
+ufshpb_is_support_chunk()?
 
-./drivers/scsi/arcmsr/arcmsr_attr.c:116:58-59: WARNING opportunity for
-kobj_to_dev().
+Thanks,
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- drivers/scsi/arcmsr/arcmsr_attr.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/arcmsr/arcmsr_attr.c b/drivers/scsi/arcmsr/arcmsr_attr.c
-index 57be960..e03326e 100644
---- a/drivers/scsi/arcmsr/arcmsr_attr.c
-+++ b/drivers/scsi/arcmsr/arcmsr_attr.c
-@@ -113,7 +113,7 @@ static ssize_t arcmsr_sysfs_iop_message_write(struct file *filp,
- 					      char *buf, loff_t off,
- 					      size_t count)
- {
--	struct device *dev = container_of(kobj,struct device,kobj);
-+	struct device *dev = kobj_to_dev(kobj);
- 	struct Scsi_Host *host = class_to_shost(dev);
- 	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
- 	int32_t user_len, cnt2end;
-@@ -161,7 +161,7 @@ static ssize_t arcmsr_sysfs_iop_message_clear(struct file *filp,
- 					      char *buf, loff_t off,
- 					      size_t count)
- {
--	struct device *dev = container_of(kobj,struct device,kobj);
-+	struct device *dev = kobj_to_dev(kobj);
- 	struct Scsi_Host *host = class_to_shost(dev);
- 	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
- 	uint8_t *pQbuffer;
--- 
-1.8.3.1
-
+Can Guo.
