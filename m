@@ -2,178 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	TVD_SUBJ_ACC_NUM,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BC7FC433DB
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 10:30:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52CCFC4332D
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 10:30:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5ACB864F5F
+	by mail.kernel.org (Postfix) with ESMTP id 1D00D65017
 	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 10:30:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229829AbhCEK34 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Mar 2021 05:29:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39524 "EHLO
+        id S229716AbhCEK3x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Mar 2021 05:29:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229801AbhCEK3u (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2021 05:29:50 -0500
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6110FC061574
-        for <linux-scsi@vger.kernel.org>; Fri,  5 Mar 2021 02:29:50 -0800 (PST)
-Received: by mail-pj1-x1032.google.com with SMTP id i4-20020a17090a7184b02900bfb60fbc6bso5932128pjk.0
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Mar 2021 02:29:50 -0800 (PST)
+        with ESMTP id S229791AbhCEK3h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2021 05:29:37 -0500
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E550FC061574
+        for <linux-scsi@vger.kernel.org>; Fri,  5 Mar 2021 02:29:36 -0800 (PST)
+Received: by mail-pl1-x632.google.com with SMTP id d11so1183859plo.8
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Mar 2021 02:29:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version;
-        bh=MNQ0p7DmBXWzhJgrfabCIaFjarVQxG+9oLywzjV5HKw=;
-        b=aoStOUj62mlSRbMscPaRyUZAjwP/K4Hmqpu0VD9juilTOrhv/H30Fub9tCAyVfw6HZ
-         mRm69r9jpKX71cNIXYVxEwfwWWxNnyWhFBU0d3zSVUOirMvdnqtMydqBd9hlayM/KJ1i
-         mNzl2w3ql9THNCtHPhHoRV8B5mzcBFgugUqs4=
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=hAMWuZLku9yQEPxZD9BV5MUIVhvt121ld1IIDoq6blw=;
+        b=LL+pcpNOEKUFfRrJ0Pqhb4Q3kPCMskiWFTteSCE2+Ti2812qB+UuAp4uEjphNt6Cq9
+         JtWpCE7NKHUJpehFJpw6aWxsX9ZlA/qlRb1yFQcWm8Myd8PoOtv7sq96C0AYR/WrTVjn
+         Juac8hiV/IAG7Ul5vHqULAfWBIeHCeyBpSC90=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version;
-        bh=MNQ0p7DmBXWzhJgrfabCIaFjarVQxG+9oLywzjV5HKw=;
-        b=gyyFH8L0f0UpA3S1Hdh2k38yNY5+P3uq0LR+uaSMpH4oA3Njjx32RxvSuFO9BqFi0b
-         RkLdHihfIUJ0mb8qwARyVmSFkstd3lSZuJ6DSs65utaBWfqOhvySwaGb4MfjfPev4MZq
-         lGvKk4SEr4n90f3461wUO65u/rfnSV0mPH+QT9CSy5xEyEO6HidsUE/0m/xmEFH8Kt86
-         k72nn1EiQ3nzB901/6vL7hUEW43dAHCZblb9EUg9pdNx+BXIOnlFlKtt6ZYiLiUHj6RO
-         MvQslTMfbrTQkowQdvky5XJ/3l4JGoiH85ccIrR8P7Ha8mgVa8VlL0L5rnFNC9OWgExr
-         9mSQ==
-X-Gm-Message-State: AOAM532IA2MxNrpojZcJJeWeA+tA5GgfMRO0VAMQGPbz1a2dwTTFB2pl
-        zBQYorfiXj6zHMBGElziikqJwoZw8/JlVNg/6POyvvqWqr4fuZ+2k/mfdxr3jmG4vA24meLeQyA
-        19WpFQrw4tRQuEFH/pjOG26GkgzZ5l0Kj7sKSQrpXKdKxrMug0DCjp4YeSlHGsC9ZfZBWxXKwjQ
-        IzRx8GcChDQeM2zHgel+WU
-X-Google-Smtp-Source: ABdhPJz9+4luxktRwJVwOFTzNlTpj/QqQLDkKYJcQygt6rgZBrh46geDGbxgLdoA69klX0aN53SGsg==
-X-Received: by 2002:a17:90a:f98e:: with SMTP id cq14mr9310670pjb.60.1614940188726;
-        Fri, 05 Mar 2021 02:29:48 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=hAMWuZLku9yQEPxZD9BV5MUIVhvt121ld1IIDoq6blw=;
+        b=uIiWS318xXBn8HY4lXGr80pHNFNqBlNMeZ617I0ucQVeHoSv8LuhwmTKwXeWD1Adyy
+         C7CDNNxFo3COaCZrd4psMew0Eku8WaPVcyTJ++UTfF1F160uz2P2VnSs5W2AUzLB6iyG
+         qci9r10vvBUU9vqvnc9V36PGAGR9gyucxeudfCCQbtsZM74ots2Az6Hym5UYZYL/7ahg
+         ybaAHeFT1qhKg/sc2RO0QGpZbHfkHOeq1NjzJLn29rIoiioJlZUJtHa2r1VuwADyuBlR
+         XIe9Vb5pKMqkcCxT/TadvkYSDjYT1AtiWEMQUMEglAe33ap8MaRvOFbFdhydOa5/cXqv
+         Y0xA==
+X-Gm-Message-State: AOAM532vzfGsKhPz965IOqeR+LJ9MUe7V0gKzVPPR0hk/ZU4vV4Oqvat
+        auiuiD1RLXQg/GP4WiQgjNox9W2W6LB0ufXUOH58rF2GGl6QfDmUFM6FoVWshy1cp5l8qitJ8fe
+        bzgYgjhsibHwTHnBWN5PAWF1RSyxzdoiieYm3rps/PhauQv9B5KzLabH8UbNiwD0Xbyj0kJRW9r
+        mks9nHcowBhvXEZLQdf8iT
+X-Google-Smtp-Source: ABdhPJw0q4CSx4bpiMVczQAw38qux0z//K4NWIzZ19HQ34U2+zufjV3eLo8d2ghbIjGEzrz2Ig6jyQ==
+X-Received: by 2002:a17:902:c009:b029:e5:d01d:5bb1 with SMTP id v9-20020a170902c009b02900e5d01d5bb1mr8157435plx.28.1614940175445;
+        Fri, 05 Mar 2021 02:29:35 -0800 (PST)
 Received: from dhcp-10-123-20-76.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id v15sm2015983pgl.44.2021.03.05.02.29.46
+        by smtp.gmail.com with ESMTPSA id v15sm2015983pgl.44.2021.03.05.02.29.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Mar 2021 02:29:48 -0800 (PST)
+        Fri, 05 Mar 2021 02:29:34 -0800 (PST)
 From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com,
         Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 5/7] mpt3sas: Handle Reply post queue DMA allocations in same  4G region
-Date:   Fri,  5 Mar 2021 15:59:02 +0530
-Message-Id: <20210305102904.7560-6-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 0/7] Handle DMA allocations in same 4G region.
+Date:   Fri,  5 Mar 2021 15:58:57 +0530
+Message-Id: <20210305102904.7560-1-suganath-prabu.subramani@broadcom.com>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210305102904.7560-1-suganath-prabu.subramani@broadcom.com>
-References: <20210305102904.7560-1-suganath-prabu.subramani@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000051486005bcc790a4"
+        boundary="0000000000008c647e05bcc78fa5"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000051486005bcc790a4
+--0000000000008c647e05bcc78fa5
 Content-Transfer-Encoding: 8bit
 
-According to MPI Specification Reply Post buffers should not cross
-4GB boundary. So while allocating Reply Post buffers, if any buffer
-crosses the 4GB boundary then,
+According to MPI Specification PCIe SGL, Sense pool, Chain pool,
+reply pool, reply post pool & reply post array buffers should not cross
+4GB boundary. So while allocating these buffers, if any of these
+pool buffer crosses the 4GB boundary then,
 * Release the already allocated memory pools and
 * Reallocate them by changing the DMA coherent mask to 32 bit.
 
-Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 59 ++++++++++++++++++++---------
- 1 file changed, 42 insertions(+), 17 deletions(-)
+Suganath Prabu S (7):
+  mpt3sas: Handle PCIe sgl's in same 4G region.
+  mpt3sas: Handle chain buffer DMA allocations in same 4G  region
+  mpt3sas: Handle sense buffer DMA allocations in same 4G  region
+  mpt3sas: Handle reply pool DMA allocations in same 4G  region
+  mpt3sas: Handle Reply post queue DMA allocations in same  4G region
+  mpt3sas: Handle reply post array DMA allocations in same  4G region
+  mpt3sas : Update driver version to 37.101.00.00
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index e94abce..bd180db 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -5594,6 +5594,42 @@ _base_allocate_reply_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
- 	return 0;
- }
- 
-+/**
-+ * _base_allocate_reply_free_dma_pool - Allocating DMA'able memory
-+ *			for reply free dma pool.
-+ * @ioc: Adapter object
-+ * @sz: DMA Pool size
-+ * Return: 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_allocate_reply_free_dma_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
-+{
-+	/* reply free queue, 16 byte align */
-+	ioc->reply_free_dma_pool = dma_pool_create(
-+	    "reply_free pool", &ioc->pdev->dev, sz, 16, 0);
-+	if (!ioc->reply_free_dma_pool)
-+		return -ENOMEM;
-+	ioc->reply_free = dma_pool_alloc(ioc->reply_free_dma_pool,
-+	    GFP_KERNEL, &ioc->reply_free_dma);
-+	if (!ioc->reply_free)
-+		return -EAGAIN;
-+	if (!mpt3sas_check_same_4gb_region((long)ioc->reply_free, sz)) {
-+		dinitprintk(ioc,
-+		    pr_err("Bad Reply Free Pool! Reply Free (0x%p) Reply Free dma = (0x%llx)\n",
-+		    ioc->reply_free, (unsigned long long) ioc->reply_free_dma));
-+		ioc->use_32bit_dma = true;
-+		return -EAGAIN;
-+	}
-+	memset(ioc->reply_free, 0, sz);
-+	dinitprintk(ioc, ioc_info(ioc,
-+	    "reply_free pool(0x%p): depth(%d), element_size(%d), pool_size(%d kB)\n",
-+	    ioc->reply_free, ioc->reply_free_queue_depth, 4, sz/1024));
-+	dinitprintk(ioc, ioc_info(ioc,
-+	    "reply_free_dma (0x%llx)\n",
-+	    (unsigned long long)ioc->reply_free_dma));
-+	return 0;
-+}
-+
- /**
-  * base_alloc_rdpq_dma_pool - Allocating DMA'able memory
-  *                     for reply queues.
-@@ -6051,29 +6087,18 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	else if (rc == -EAGAIN)
- 		goto try_32bit_dma;
- 	total_sz += sz;
-+
- 	/* reply free queue, 16 byte align */
- 	sz = ioc->reply_free_queue_depth * 4;
--	ioc->reply_free_dma_pool = dma_pool_create("reply_free pool",
--	    &ioc->pdev->dev, sz, 16, 0);
--	if (!ioc->reply_free_dma_pool) {
--		ioc_err(ioc, "reply_free pool: dma_pool_create failed\n");
--		goto out;
--	}
--	ioc->reply_free = dma_pool_zalloc(ioc->reply_free_dma_pool, GFP_KERNEL,
--	    &ioc->reply_free_dma);
--	if (!ioc->reply_free) {
--		ioc_err(ioc, "reply_free pool: dma_pool_alloc failed\n");
--		goto out;
--	}
--	dinitprintk(ioc,
--		    ioc_info(ioc, "reply_free pool(0x%p): depth(%d), element_size(%d), pool_size(%d kB)\n",
--			     ioc->reply_free, ioc->reply_free_queue_depth,
--			     4, sz / 1024));
-+	rc = _base_allocate_reply_free_dma_pool(ioc, sz);
-+	if (rc  == -ENOMEM)
-+		return -ENOMEM;
-+	else if (rc == -EAGAIN)
-+		goto try_32bit_dma;
- 	dinitprintk(ioc,
- 		    ioc_info(ioc, "reply_free_dma (0x%llx)\n",
- 			     (unsigned long long)ioc->reply_free_dma));
- 	total_sz += sz;
--
- 	if (ioc->rdpq_array_enable) {
- 		reply_post_free_array_sz = ioc->reply_queue_count *
- 		    sizeof(Mpi2IOCInitRDPQArrayEntry);
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 503 ++++++++++++++++++----------
+ drivers/scsi/mpt3sas/mpt3sas_base.h |   5 +-
+ 2 files changed, 332 insertions(+), 176 deletions(-)
+
 -- 
 2.27.0
 
 
---00000000000051486005bcc790a4
+--0000000000008c647e05bcc78fa5
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -245,13 +166,13 @@ dDLaJg39U0ikF3NHtNMaXXHgh6TMs3OsWhH4+zlvkC0eSC6dvasGxmpPQPQe/0huBB8gDbzGrRg/
 cRn2ctMmNHxZO4EBJ5SzsV/lHimTk+5K39lzkzYxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJF
 MRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQ
 ZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwgHNo/eviKB1udONIwDQYJYIZIAWUDBAIBBQCggdQwLwYJ
-KoZIhvcNAQkEMSIEII2w26R8CJf2NvqTGrWYqXGMAvN7RsyaoNBduhN7M05wMBgGCSqGSIb3DQEJ
-AzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDMwNTEwMjk0OVowaQYJKoZIhvcNAQkP
+KoZIhvcNAQkEMSIEIGEm3gzHfcwOW/1VeHLNH9ctktmI+pv8Rf9W8eic264/MBgGCSqGSIb3DQEJ
+AzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDMwNTEwMjkzNlowaQYJKoZIhvcNAQkP
 MVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzAL
-BgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCH
-JgVq9V/E93pdN6yZY8UEQ/RiF3zLrDxoiXyBiGK4iVBA123rh+68JIPV71lwbK0faGGbu4yRlLx1
-TIKmN2q/edW7boPOp8h2Mqgge1mpXtmTpglymAiusFyqVQxAD0puNZ9hx9oGUpmub1ipTe/Tfu9+
-dHIM5C6lGqOQLUMHNU7IhMi/R8mwu2SNAQdukdns0540aC8EXu0L7vjZ1bW7yG9mpFd0z91QNeK8
-CiI7zqo27mgup394WHf4D9yeXa2wbO9jdTajkuwbVOl3rVjxePiUVtavGsnUUoCTCpwXczNVMmEo
-N9REkTST0pFDCHSpa145r3zwHH++NP7vt4K6
---00000000000051486005bcc790a4--
+BgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQA8
+hJhUEQ2/yS7YYxAYAuMcQ1GD+AR+2gNyKW4myAJz63QBa/y2CjnMYWvLRGDJf/RibvX0ky4SD5Iu
+d+66YM5XMjWqAMf4omGPN1+9t5yvpI3GPujaLJcF+sfDW8Lr7bwJIugkCzUlHnO5TGQl5oWRyf6q
+gsXgdXnDxZ9pUbytochYVGzx3MfReoh/C5EXOIDjcG+VjxpkgLCxCLHmk6WiTp3+Lp1zkojgF8P5
+NjHCwnyI2astnMulk9g/VbKVfQ3kCTtsTpa4cwuRCUP2yAnT9gI5F24IHbGFbOoxTji83hXjrpAs
+UMf9e/FKb2whndWfjUsPPpbAAJytic1XSnUg
+--0000000000008c647e05bcc78fa5--
