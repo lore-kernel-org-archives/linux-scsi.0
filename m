@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD982C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 12:48:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3D0EC433DB
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 12:54:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FDDA64F44
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 12:48:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8215460233
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 12:54:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229615AbhCEMsJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Mar 2021 07:48:09 -0500
-Received: from mx2.suse.de ([195.135.220.15]:52510 "EHLO mx2.suse.de"
+        id S229631AbhCEMyB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Mar 2021 07:54:01 -0500
+Received: from mx2.suse.de ([195.135.220.15]:56920 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233933AbhCEMrh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 5 Mar 2021 07:47:37 -0500
+        id S230087AbhCEMxd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 5 Mar 2021 07:53:33 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 3A6DEACCF;
-        Fri,  5 Mar 2021 12:47:36 +0000 (UTC)
-Subject: Re: [PATCH v5 29/31] elx: efct: scsi_transport_fc host interface
- support
+        by mx2.suse.de (Postfix) with ESMTP id 8B772AD73;
+        Fri,  5 Mar 2021 12:53:32 +0000 (UTC)
+Subject: Re: [PATCH v5 20/31] elx: efct: RQ buffer, memory pool allocation and
+ deallocation APIs
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     Ram Vegesna <ram.vegesna@broadcom.com>
 References: <20210103171134.39878-1-jsmart2021@gmail.com>
- <20210103171134.39878-30-jsmart2021@gmail.com>
+ <20210103171134.39878-21-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <cabd77c9-f677-c2be-c1ce-05e2467759af@suse.de>
-Date:   Fri, 5 Mar 2021 13:47:35 +0100
+Message-ID: <b4670350-431f-c7d5-8747-5e5ca8f99c23@suse.de>
+Date:   Fri, 5 Mar 2021 13:53:32 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.7.0
 MIME-Version: 1.0
-In-Reply-To: <20210103171134.39878-30-jsmart2021@gmail.com>
+In-Reply-To: <20210103171134.39878-21-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -47,537 +47,457 @@ On 1/3/21 6:11 PM, James Smart wrote:
 > This patch continues the efct driver population.
 > 
 > This patch adds driver definitions for:
-> Integration with the scsi_fc_transport host interfaces
+> RQ data buffer allocation and deallocate.
+> Memory pool allocation and deallocation APIs.
+> Mailbox command submission and completion routines.
 > 
 > Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: James Smart <jsmart2021@gmail.com>
 > ---
->   drivers/scsi/elx/efct/efct_xport.c | 500 +++++++++++++++++++++++++++++
->   1 file changed, 500 insertions(+)
+>   drivers/scsi/elx/efct/efct_hw.c | 404 ++++++++++++++++++++++++++++++++
+>   drivers/scsi/elx/efct/efct_hw.h |   9 +
+>   2 files changed, 413 insertions(+)
 > 
-> diff --git a/drivers/scsi/elx/efct/efct_xport.c b/drivers/scsi/elx/efct/efct_xport.c
-> index 0cf558c03547..bee13337afbc 100644
-> --- a/drivers/scsi/elx/efct/efct_xport.c
-> +++ b/drivers/scsi/elx/efct/efct_xport.c
-> @@ -778,3 +778,503 @@ int efct_scsi_del_device(struct efct *efct)
->   	}
->   	return EFC_SUCCESS;
+> diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
+> index 242fd3e50912..ee010bdd8cab 100644
+> --- a/drivers/scsi/elx/efct/efct_hw.c
+> +++ b/drivers/scsi/elx/efct/efct_hw.c
+> @@ -1156,3 +1156,407 @@ efct_get_wwpn(struct efct_hw *hw)
+>   	memcpy(p, sli->wwpn, sizeof(p));
+>   	return get_unaligned_be64(p);
 >   }
 > +
-> +static void
-> +efct_get_host_port_id(struct Scsi_Host *shost)
+> +static struct efc_hw_rq_buffer *
+> +efct_hw_rx_buffer_alloc(struct efct_hw *hw, u32 rqindex, u32 count,
+> +			u32 size)
 > +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	struct efc *efc = efct->efcport;
-> +	struct efc_nport *nport;
+> +	struct efct *efct = hw->os;
+> +	struct efc_hw_rq_buffer *rq_buf = NULL;
+> +	struct efc_hw_rq_buffer *prq;
+> +	u32 i;
 > +
-> +	if (efc->domain && efc->domain->nport) {
-> +		nport = efc->domain->nport;
-> +		fc_host_port_id(shost) = nport->fc_id;
-> +	}
-> +}
+> +	if (count != 0) {
+> +		rq_buf = kmalloc_array(count, sizeof(*rq_buf), GFP_KERNEL);
+> +		if (!rq_buf)
+> +			return NULL;
+> +		memset(rq_buf, 0, sizeof(*rq_buf) * count);
 > +
-> +static void
-> +efct_get_host_port_type(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	struct efc *efc = efct->efcport;
-> +	int type = FC_PORTTYPE_UNKNOWN;
-> +
-> +	if (efc->domain && efc->domain->nport) {
-> +		if (efc->domain->is_loop) {
-> +			type = FC_PORTTYPE_LPORT;
-> +		} else {
-> +			struct efc_nport *nport = efc->domain->nport;
-> +
-> +			if (nport->is_vport)
-> +				type = FC_PORTTYPE_NPIV;
-> +			else if (nport->topology == EFC_NPORT_TOPO_P2P)
-> +				type = FC_PORTTYPE_PTP;
-> +			else if (nport->topology == EFC_NPORT_TOPO_UNKNOWN)
-> +				type = FC_PORTTYPE_UNKNOWN;
-> +			else
-> +				type = FC_PORTTYPE_NPORT;
+> +		for (i = 0, prq = rq_buf; i < count; i ++, prq++) {
+> +			prq->rqindex = rqindex;
+> +			prq->dma.size = size;
+> +			prq->dma.virt = dma_alloc_coherent(&efct->pci->dev,
+> +							   prq->dma.size,
+> +							   &prq->dma.phys,
+> +							   GFP_DMA);
+> +			if (!prq->dma.virt) {
+> +				efc_log_err(hw->os, "DMA allocation failed\n");
+> +				kfree(rq_buf);
+> +				rq_buf = NULL;
+> +				break;
+> +			}
 > +		}
 > +	}
-> +	fc_host_port_type(shost) = type;
+> +	return rq_buf;
 > +}
 > +
 > +static void
-> +efct_get_host_vport_type(struct Scsi_Host *shost)
+> +efct_hw_rx_buffer_free(struct efct_hw *hw,
+> +		       struct efc_hw_rq_buffer *rq_buf,
+> +			u32 count)
 > +{
-> +	fc_host_port_type(shost) = FC_PORTTYPE_NPIV;
-> +}
+> +	struct efct *efct = hw->os;
+> +	u32 i;
+> +	struct efc_hw_rq_buffer *prq;
 > +
-> +static void
-> +efct_get_host_port_state(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	struct efc *efc = efct->efcport;
+> +	if (rq_buf) {
+> +		for (i = 0, prq = rq_buf; i < count; i++, prq++) {
+> +			dma_free_coherent(&efct->pci->dev,
+> +					  prq->dma.size, prq->dma.virt,
+> +					  prq->dma.phys);
+> +			memset(&prq->dma, 0, sizeof(struct efc_dma));
+> +		}
 > +
-> +	if (efc->domain)
-> +		fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
-> +	else
-> +		fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
-> +}
-
-Doesn't this need some kind of synchronisation?
-And just checking if the 'domain' pointer is present looks a tad off.
-What abort 'blocked', which is typically set when RSCN are processed?
-Or linkdown?
-
-> +
-> +static void
-> +efct_get_host_speed(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	struct efc *efc = efct->efcport;
-> +	union efct_xport_stats_u speed;
-> +	u32 fc_speed = FC_PORTSPEED_UNKNOWN;
-> +	int rc;
-> +
-> +	if (!efc->domain || !efc->domain->nport) {
-> +		fc_host_speed(shost) = fc_speed;
-> +		return;
+> +		kfree(rq_buf);
 > +	}
+> +}
 > +
-> +	rc = efct_xport_status(efct->xport, EFCT_XPORT_LINK_SPEED, &speed);
-> +	if (rc == 0) {
-> +		switch (speed.value) {
-> +		case 1000:
-> +			fc_speed = FC_PORTSPEED_1GBIT;
-> +			break;
-> +		case 2000:
-> +			fc_speed = FC_PORTSPEED_2GBIT;
-> +			break;
-> +		case 4000:
-> +			fc_speed = FC_PORTSPEED_4GBIT;
-> +			break;
-> +		case 8000:
-> +			fc_speed = FC_PORTSPEED_8GBIT;
-> +			break;
-> +		case 10000:
-> +			fc_speed = FC_PORTSPEED_10GBIT;
-> +			break;
-> +		case 16000:
-> +			fc_speed = FC_PORTSPEED_16GBIT;
-> +			break;
-> +		case 32000:
-> +			fc_speed = FC_PORTSPEED_32GBIT;
+> +enum efct_hw_rtn
+> +efct_hw_rx_allocate(struct efct_hw *hw)
+> +{
+> +	struct efct *efct = hw->os;
+> +	u32 i;
+> +	int rc = EFCT_HW_RTN_SUCCESS;
+> +	u32 rqindex = 0;
+> +	u32 hdr_size = EFCT_HW_RQ_SIZE_HDR;
+> +	u32 payload_size = hw->config.rq_default_buffer_size;
+> +
+> +	rqindex = 0;
+> +
+> +	for (i = 0; i < hw->hw_rq_count; i++) {
+> +		struct hw_rq *rq = hw->hw_rq[i];
+> +
+> +		/* Allocate header buffers */
+> +		rq->hdr_buf = efct_hw_rx_buffer_alloc(hw, rqindex,
+> +						      rq->entry_count,
+> +						      hdr_size);
+> +		if (!rq->hdr_buf) {
+> +			efc_log_err(efct,
+> +				     "efct_hw_rx_buffer_alloc hdr_buf failed\n");
+> +			rc = EFCT_HW_RTN_ERROR;
 > +			break;
 > +		}
+> +
+> +		efc_log_debug(hw->os,
+> +			       "rq[%2d] rq_id %02d header  %4d by %4d bytes\n",
+> +			      i, rq->hdr->id, rq->entry_count, hdr_size);
+> +
+> +		rqindex++;
+> +
+> +		/* Allocate payload buffers */
+> +		rq->payload_buf = efct_hw_rx_buffer_alloc(hw, rqindex,
+> +							  rq->entry_count,
+> +							  payload_size);
+> +		if (!rq->payload_buf) {
+> +			efc_log_err(efct,
+> +				     "efct_hw_rx_buffer_alloc fb_buf failed\n");
+> +			rc = EFCT_HW_RTN_ERROR;
+> +			break;
+> +		}
+> +		efc_log_debug(hw->os,
+> +			       "rq[%2d] rq_id %02d default %4d by %4d bytes\n",
+> +			      i, rq->data->id, rq->entry_count, payload_size);
+> +		rqindex++;
 > +	}
 > +
-
-Why not 64G and 128G?
-You already have definitions for it, so why not put them in here?
-
-
-> +	fc_host_speed(shost) = fc_speed;
+> +	return rc ? EFCT_HW_RTN_ERROR : EFCT_HW_RTN_SUCCESS;
 > +}
 > +
-> +static void
-> +efct_get_host_fabric_name(struct Scsi_Host *shost)
+> +enum efct_hw_rtn
+> +efct_hw_rx_post(struct efct_hw *hw)
 > +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	struct efc *efc = efct->efcport;
+> +	u32 i;
+> +	u32 idx;
+> +	u32 rq_idx;
+> +	int rc = 0;
 > +
-> +	if (efc->domain) {
-> +		struct fc_els_flogi  *sp =
-> +			(struct fc_els_flogi  *)
-> +				efc->domain->flogi_service_params;
+> +	if (!hw->seq_pool) {
+> +		u32 count = 0;
 > +
-> +		fc_host_fabric_name(shost) = be64_to_cpu(sp->fl_wwnn);
-> +	}
-> +}
+> +		for (i = 0; i < hw->hw_rq_count; i++)
+> +			count += hw->hw_rq[i]->entry_count;
 > +
-> +static struct fc_host_statistics *
-> +efct_get_stats(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	union efct_xport_stats_u stats;
-> +	struct efct_xport *xport = efct->xport;
-> +	u32 rc = 1;
-> +
-> +	rc = efct_xport_status(xport, EFCT_XPORT_LINK_STATISTICS, &stats);
-> +	if (rc != 0) {
-> +		pr_err("efct_xport_status returned non 0 - %d\n", rc);
-> +		return NULL;
-> +	}
-> +
-> +	vport->fc_host_stats.loss_of_sync_count =
-> +		stats.stats.link_stats.loss_of_sync_error_count;
-> +	vport->fc_host_stats.link_failure_count =
-> +		stats.stats.link_stats.link_failure_error_count;
-> +	vport->fc_host_stats.prim_seq_protocol_err_count =
-> +		stats.stats.link_stats.primitive_sequence_error_count;
-> +	vport->fc_host_stats.invalid_tx_word_count =
-> +		stats.stats.link_stats.invalid_transmission_word_error_count;
-> +	vport->fc_host_stats.invalid_crc_count =
-> +		stats.stats.link_stats.crc_error_count;
-> +	/* mbox returns kbyte count so we need to convert to words */
-> +	vport->fc_host_stats.tx_words =
-> +		stats.stats.host_stats.transmit_kbyte_count * 256;
-> +	/* mbox returns kbyte count so we need to convert to words */
-> +	vport->fc_host_stats.rx_words =
-> +		stats.stats.host_stats.receive_kbyte_count * 256;
-> +	vport->fc_host_stats.tx_frames =
-> +		stats.stats.host_stats.transmit_frame_count;
-> +	vport->fc_host_stats.rx_frames =
-> +		stats.stats.host_stats.receive_frame_count;
-> +
-> +	vport->fc_host_stats.fcp_input_requests =
-> +			xport->fcp_stats.input_requests;
-> +	vport->fc_host_stats.fcp_output_requests =
-> +			xport->fcp_stats.output_requests;
-> +	vport->fc_host_stats.fcp_output_megabytes =
-> +			xport->fcp_stats.output_bytes >> 20;
-> +	vport->fc_host_stats.fcp_input_megabytes =
-> +			xport->fcp_stats.input_bytes >> 20;
-> +	vport->fc_host_stats.fcp_control_requests =
-> +			xport->fcp_stats.control_requests;
-> +
-> +	return &vport->fc_host_stats;
-> +}
-> +
-> +static void
-> +efct_reset_stats(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	/* argument has no purpose for this action */
-> +	union efct_xport_stats_u dummy;
-> +	u32 rc = 0;
-> +
-> +	rc = efct_xport_status(efct->xport, EFCT_XPORT_LINK_STAT_RESET, &dummy);
-> +	if (rc != 0)
-> +		pr_err("efct_xport_status returned non 0 - %d\n", rc);
-> +}
-> +
-> +static void
-> +efct_get_starget_port_id(struct scsi_target *starget)
-> +{
-> +	pr_err("%s\n", __func__);
-> +}
-> +
-> +static void
-> +efct_get_starget_node_name(struct scsi_target *starget)
-> +{
-> +	pr_err("%s\n", __func__);
-> +}
-> +
-> +static void
-> +efct_get_starget_port_name(struct scsi_target *starget)
-> +{
-> +	pr_err("%s\n", __func__);
-> +}
-> +
-> +static void
-> +efct_set_vport_symbolic_name(struct fc_vport *fc_vport)
-> +{
-> +	pr_err("%s\n", __func__);
-> +}
-
-I'm pretty certain you don't need these stubs...
-
-> +
-> +static int
-> +efct_issue_lip(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport =
-> +			shost ? (struct efct_vport *)shost->hostdata : NULL;
-> +	struct efct *efct = vport ? vport->efct : NULL;
-> +
-> +	if (!shost || !vport || !efct) {
-> +		pr_err("%s: shost=%p vport=%p efct=%p\n", __func__,
-> +		       shost, vport, efct);
-> +		return -EPERM;
+> +		hw->seq_pool = kmalloc_array(count,
+> +				sizeof(struct efc_hw_sequence),	GFP_KERNEL);
+> +		if (!hw->seq_pool)
+> +			return EFCT_HW_RTN_NO_MEMORY;
 > +	}
 > +
 > +	/*
-> +	 * Bring the link down gracefully then re-init the link.
-> +	 * The firmware will re-initialize the Fibre Channel interface as
-> +	 * required. It does not issue a LIP.
+> +	 * In RQ pair mode, we MUST post the header and payload buffer at the
+> +	 * same time.
+> +	 */
+> +	for (rq_idx = 0, idx = 0; rq_idx < hw->hw_rq_count; rq_idx++) {
+> +		struct hw_rq *rq = hw->hw_rq[rq_idx];
+> +
+> +		for (i = 0; i < rq->entry_count - 1; i++) {
+> +			struct efc_hw_sequence *seq;
+> +
+> +			seq = hw->seq_pool + idx;
+> +			idx++;
+> +			seq->header = &rq->hdr_buf[i];
+> +			seq->payload = &rq->payload_buf[i];
+> +			rc = efct_hw_sequence_free(hw, seq);
+> +			if (rc)
+> +				break;
+> +		}
+> +		if (rc)
+> +			break;
+> +	}
+> +
+> +	if (rc && hw->seq_pool)
+> +		kfree(hw->seq_pool);
+> +
+> +	return rc;
+> +}
+> +
+> +void
+> +efct_hw_rx_free(struct efct_hw *hw)
+> +{
+> +	u32 i;
+> +
+> +	/* Free hw_rq buffers */
+> +	for (i = 0; i < hw->hw_rq_count; i++) {
+> +		struct hw_rq *rq = hw->hw_rq[i];
+> +
+> +		if (rq) {
+> +			efct_hw_rx_buffer_free(hw, rq->hdr_buf,
+> +					       rq->entry_count);
+> +			rq->hdr_buf = NULL;
+> +			efct_hw_rx_buffer_free(hw, rq->payload_buf,
+> +					       rq->entry_count);
+> +			rq->payload_buf = NULL;
+> +		}
+> +	}
+> +}
+> +
+> +static int
+> +efct_hw_cmd_submit_pending(struct efct_hw *hw)
+> +{
+> +	struct efct_command_ctx *ctx = NULL;
+> +	int rc = 0;
+> +
+> +	/* Assumes lock held */
+> +
+> +	/* Only submit MQE if there's room */
+> +	while (hw->cmd_head_count < (EFCT_HW_MQ_DEPTH - 1) &&
+> +	       !list_empty(&hw->cmd_pending)) {
+> +		ctx = list_first_entry(&hw->cmd_pending,
+> +				       struct efct_command_ctx, list_entry);
+> +		if (!ctx)
+> +			break;
+> +
+> +		list_del_init(&ctx->list_entry);
+> +
+> +		list_add_tail(&ctx->list_entry, &hw->cmd_head);
+> +		hw->cmd_head_count++;
+> +		if (sli_mq_write(&hw->sli, hw->mq, ctx->buf) < 0) {
+> +			efc_log_debug(hw->os,
+> +				      "sli_queue_write failed: %d\n", rc);
+> +			rc = -1;
+> +			break;
+> +		}
+> +	}
+> +	return rc;
+> +}
+
+Shouldn't this be of type 'enum efct_hw_rtn' ?
+
+> +
+> +enum efct_hw_rtn
+> +efct_hw_command(struct efct_hw *hw, u8 *cmd, u32 opts, void *cb, void *arg)
+> +{
+> +	enum efct_hw_rtn rc = EFCT_HW_RTN_ERROR;
+> +	unsigned long flags = 0;
+> +	void *bmbx = NULL;
+> +
+> +	/*
+> +	 * If the chip is in an error state (UE'd) then reject this mailbox
+> +	 * command.
+> +	 */
+> +	if (sli_fw_error_status(&hw->sli) > 0) {
+> +		efc_log_crit(hw->os,
+> +			      "Chip is in an error state - reset needed\n");
+> +		efc_log_crit(hw->os,
+> +			      "status=%#x error1=%#x error2=%#x\n",
+> +			sli_reg_read_status(&hw->sli),
+> +			sli_reg_read_err1(&hw->sli),
+> +			sli_reg_read_err2(&hw->sli));
+> +
+> +		return EFCT_HW_RTN_ERROR;
+> +	}
+> +
+> +	/*
+> +	 * Send a mailbox command to the hardware, and either wait for
+> +	 * a completion (EFCT_CMD_POLL) or get an optional asynchronous
+> +	 * completion (EFCT_CMD_NOWAIT).
 > +	 */
 > +
-> +	if (efct_xport_control(efct->xport, EFCT_XPORT_PORT_OFFLINE))
-> +		efc_log_debug(efct, "EFCT_XPORT_PORT_OFFLINE failed\n");
+> +	if (opts == EFCT_CMD_POLL) {
+> +		mutex_lock(&hw->bmbx_lock);
+> +		bmbx = hw->sli.bmbx.virt;
 > +
-> +	if (efct_xport_control(efct->xport, EFCT_XPORT_PORT_ONLINE))
-> +		efc_log_debug(efct, "EFCT_XPORT_PORT_ONLINE failed\n");
+> +		memset(bmbx, 0, SLI4_BMBX_SIZE);
+> +		memcpy(bmbx, cmd, SLI4_BMBX_SIZE);
 > +
-> +	return EFC_SUCCESS;
-> +}
+> +		if (sli_bmbx_command(&hw->sli) == 0) {
+> +			rc = EFCT_HW_RTN_SUCCESS;
+> +			memcpy(cmd, bmbx, SLI4_BMBX_SIZE);
+> +		}
+> +		mutex_unlock(&hw->bmbx_lock);
+> +	} else if (opts == EFCT_CMD_NOWAIT) {
+> +		struct efct_command_ctx	*ctx = NULL;
 > +
-> +struct efct_vport *
-> +efct_scsi_new_vport(struct efct *efct, struct device *dev)
-> +{
-> +	struct Scsi_Host *shost = NULL;
-> +	int error = 0;
-> +	struct efct_vport *vport = NULL;
-> +	union efct_xport_stats_u speed;
-> +	u32 supported_speeds = 0;
+> +		if (hw->state != EFCT_HW_STATE_ACTIVE) {
+> +			efc_log_err(hw->os,
+> +				     "Can't send command, HW state=%d\n",
+> +				    hw->state);
+> +			return EFCT_HW_RTN_ERROR;
+> +		}
 > +
-> +	shost = scsi_host_alloc(&efct_template, sizeof(*vport));
-> +	if (!shost) {
-> +		efc_log_err(efct, "failed to allocate Scsi_Host struct\n");
-> +		return NULL;
+> +		ctx = mempool_alloc(hw->cmd_ctx_pool, GFP_ATOMIC);
+> +		if (!ctx)
+> +			return EFCT_HW_RTN_NO_RESOURCES;
+> +
+> +		memset(ctx, 0, sizeof(struct efct_command_ctx));
+> +
+> +		if (cb) {
+> +			ctx->cb = cb;
+> +			ctx->arg = arg;
+> +		}
+> +
+> +		memcpy(ctx->buf, cmd, SLI4_BMBX_SIZE);
+> +		ctx->ctx = hw;
+> +
+> +		spin_lock_irqsave(&hw->cmd_lock, flags);
+> +
+> +		/* Add to pending list */
+> +		INIT_LIST_HEAD(&ctx->list_entry);
+> +		list_add_tail(&ctx->list_entry, &hw->cmd_pending);
+> +
+> +		/* Submit as much of the pending list as we can */
+> +		rc = efct_hw_cmd_submit_pending(hw);
+> +
+> +		spin_unlock_irqrestore(&hw->cmd_lock, flags);
 > +	}
-> +
-> +	/* save efct information to shost LLD-specific space */
-> +	vport = (struct efct_vport *)shost->hostdata;
-> +	vport->efct = efct;
-> +	vport->is_vport = true;
-> +
-> +	shost->can_queue = efct->hw.config.n_io;
-> +	shost->max_cmd_len = 16; /* 16-byte CDBs */
-> +	shost->max_id = 0xffff;
-> +	shost->max_lun = 0xffffffff;
-> +
-> +	/* can only accept (from mid-layer) as many SGEs as we've pre-regited*/
-> +	shost->sg_tablesize = sli_get_max_sgl(&efct->hw.sli);
-> +
-> +	/* attach FC Transport template to shost */
-> +	shost->transportt = efct_vport_fc_tt;
-> +	efc_log_debug(efct, "vport transport template=%p\n",
-> +		       efct_vport_fc_tt);
-> +
-> +	/* get pci_dev structure and add host to SCSI ML */
-> +	error = scsi_add_host_with_dma(shost, dev, &efct->pci->dev);
-> +	if (error) {
-> +		efc_log_debug(efct, "failed scsi_add_host_with_dma\n");
-> +		return NULL;
-> +	}
-> +
-> +	/* Set symbolic name for host port */
-> +	snprintf(fc_host_symbolic_name(shost),
-> +		 sizeof(fc_host_symbolic_name(shost)),
-> +		 "Emulex %s FV%s DV%s", efct->model, efct->hw.sli.fw_name[0],
-> +		 EFCT_DRIVER_VERSION);
-> +
-> +	/* Set host port supported classes */
-> +	fc_host_supported_classes(shost) = FC_COS_CLASS3;
-> +
-> +	speed.value = 1000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_1GBIT;
-> +	}
-> +	speed.value = 2000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_2GBIT;
-> +	}
-> +	speed.value = 4000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_4GBIT;
-> +	}
-> +	speed.value = 8000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_8GBIT;
-> +	}
-> +	speed.value = 10000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_10GBIT;
-> +	}
-> +	speed.value = 16000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_16GBIT;
-> +	}
-> +	speed.value = 32000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_32GBIT;
-> +	}
-> +
-> +	fc_host_supported_speeds(shost) = supported_speeds;
-> +	vport->shost = shost;
-> +
-> +	return vport;
-> +}
-> +
-> +int efct_scsi_del_vport(struct efct *efct, struct Scsi_Host *shost)
-> +{
-> +	if (shost) {
-> +		efc_log_debug(efct,
-> +				"Unregistering vport with Transport Layer\n");
-> +		efct_xport_remove_host(shost);
-> +		efc_log_debug(efct, "Unregistering vport with SCSI Midlayer\n");
-> +		scsi_remove_host(shost);
-> +		scsi_host_put(shost);
-> +		return EFC_SUCCESS;
-> +	}
-> +	return EFC_FAIL;
-> +}
-> +
-> +static int
-> +efct_vport_create(struct fc_vport *fc_vport, bool disable)
-> +{
-> +	struct Scsi_Host *shost = fc_vport ? fc_vport->shost : NULL;
-> +	struct efct_vport *pport = shost ?
-> +					(struct efct_vport *)shost->hostdata :
-> +					NULL;
-> +	struct efct *efct = pport ? pport->efct : NULL;
-> +	struct efct_vport *vport = NULL;
-> +
-> +	if (!fc_vport || !shost || !efct)
-> +		goto fail;
-> +
-> +	vport = efct_scsi_new_vport(efct, &fc_vport->dev);
-> +	if (!vport) {
-> +		efc_log_err(efct, "failed to create vport\n");
-> +		goto fail;
-> +	}
-> +
-> +	vport->fc_vport = fc_vport;
-> +	vport->npiv_wwpn = fc_vport->port_name;
-> +	vport->npiv_wwnn = fc_vport->node_name;
-> +	fc_host_node_name(vport->shost) = vport->npiv_wwnn;
-> +	fc_host_port_name(vport->shost) = vport->npiv_wwpn;
-> +	*(struct efct_vport **)fc_vport->dd_data = vport;
-> +
-> +	return EFC_SUCCESS;
-> +
-> +fail:
-> +	return EFC_FAIL;
-> +}
-> +
-> +static int
-> +efct_vport_delete(struct fc_vport *fc_vport)
-> +{
-> +	struct efct_vport *vport = *(struct efct_vport **)fc_vport->dd_data;
-> +	struct Scsi_Host *shost = vport ? vport->shost : NULL;
-> +	struct efct *efct = vport ? vport->efct : NULL;
-> +	int rc = -1;
-> +
-> +	rc = efct_scsi_del_vport(efct, shost);
-> +
-> +	if (rc)
-> +		pr_err("%s: vport delete failed\n", __func__);
 > +
 > +	return rc;
 > +}
 > +
 > +static int
-> +efct_vport_disable(struct fc_vport *fc_vport, bool disable)
+> +efct_hw_command_process(struct efct_hw *hw, int status, u8 *mqe,
+> +			size_t size)
 > +{
+> +	struct efct_command_ctx *ctx = NULL;
+> +	unsigned long flags = 0;
+> +
+> +	spin_lock_irqsave(&hw->cmd_lock, flags);
+> +	if (!list_empty(&hw->cmd_head)) {
+> +		ctx = list_first_entry(&hw->cmd_head,
+> +				       struct efct_command_ctx, list_entry);
+> +		list_del_init(&ctx->list_entry);
+> +	}
+> +	if (!ctx) {
+> +		efc_log_err(hw->os, "no command context?!?\n");
+> +		spin_unlock_irqrestore(&hw->cmd_lock, flags);
+> +		return EFC_FAIL;
+> +	}
+> +
+> +	hw->cmd_head_count--;
+> +
+> +	/* Post any pending requests */
+> +	efct_hw_cmd_submit_pending(hw);
+> +
+> +	spin_unlock_irqrestore(&hw->cmd_lock, flags);
+> +
+> +	if (ctx->cb) {
+> +		memcpy(ctx->buf, mqe, size);
+> +		ctx->cb(hw, status, ctx->buf, ctx->arg);
+> +	}
+> +
+> +	mempool_free(ctx, hw->cmd_ctx_pool);
+> +
 > +	return EFC_SUCCESS;
 > +}
 > +
-> +static struct fc_function_template efct_xport_functions = {
-> +	.get_starget_node_name = efct_get_starget_node_name,
-> +	.get_starget_port_name = efct_get_starget_port_name,
-> +	.get_starget_port_id  = efct_get_starget_port_id,
+> +static int
+> +efct_hw_mq_process(struct efct_hw *hw,
+> +		   int status, struct sli4_queue *mq)
+> +{
+> +	u8 mqe[SLI4_BMBX_SIZE];
 > +
-> +	.get_host_port_id = efct_get_host_port_id,
-> +	.get_host_port_type = efct_get_host_port_type,
-> +	.get_host_port_state = efct_get_host_port_state,
-> +	.get_host_speed = efct_get_host_speed,
-> +	.get_host_fabric_name = efct_get_host_fabric_name,
+> +	if (!sli_mq_read(&hw->sli, mq, mqe))
+> +		efct_hw_command_process(hw, status, mqe, mq->size);
+
+Error checking?
+
 > +
-> +	.get_fc_host_stats = efct_get_stats,
-> +	.reset_fc_host_stats = efct_reset_stats,
+> +	return EFC_SUCCESS;
+> +}
 > +
-> +	.issue_fc_host_lip = efct_issue_lip,
+> +static int
+> +efct_hw_command_cancel(struct efct_hw *hw)
+> +{
+> +	unsigned long flags = 0;
 > +
-> +	.set_vport_symbolic_name = efct_set_vport_symbolic_name,
-> +	.vport_disable = efct_vport_disable,
+> +	spin_lock_irqsave(&hw->cmd_lock, flags);
 > +
-> +	/* allocation lengths for host-specific data */
-> +	.dd_fcrport_size = sizeof(struct efct_rport_data),
-> +	.dd_fcvport_size = 128, /* should be sizeof(...) */
+> +	/*
+> +	 * Manually clean up remaining commands. Note: since this calls
+> +	 * efct_hw_command_process(), we'll also process the cmd_pending
+> +	 * list, so no need to manually clean that out.
+> +	 */
+> +	while (!list_empty(&hw->cmd_head)) {
+> +		u8		mqe[SLI4_BMBX_SIZE] = { 0 };
+> +		struct efct_command_ctx *ctx =
+> +	list_first_entry(&hw->cmd_head, struct efct_command_ctx, list_entry);
 > +
-> +	/* remote port fixed attributes */
-> +	.show_rport_maxframe_size = 1,
-> +	.show_rport_supported_classes = 1,
-> +	.show_rport_dev_loss_tmo = 1,
+> +		efc_log_debug(hw->os, "hung command %08x\n",
+> +			      !ctx ? U32_MAX :
+> +			      (!ctx->buf ? U32_MAX :
+> +			       *((u32 *)ctx->buf)));
+> +		spin_unlock_irqrestore(&hw->cmd_lock, flags);
+> +		efct_hw_command_process(hw, -1, mqe, SLI4_BMBX_SIZE);
+
+Error checking?
+
+> +		spin_lock_irqsave(&hw->cmd_lock, flags);
+> +	}
 > +
-> +	/* target dynamic attributes */
-> +	.show_starget_node_name = 1,
-> +	.show_starget_port_name = 1,
-> +	.show_starget_port_id = 1,
+> +	spin_unlock_irqrestore(&hw->cmd_lock, flags);
 > +
-> +	/* host fixed attributes */
-> +	.show_host_node_name = 1,
-> +	.show_host_port_name = 1,
-> +	.show_host_supported_classes = 1,
-> +	.show_host_supported_fc4s = 1,
-> +	.show_host_supported_speeds = 1,
-> +	.show_host_maxframe_size = 1,
+> +	return EFC_SUCCESS;
+> +}
 > +
-> +	/* host dynamic attributes */
-> +	.show_host_port_id = 1,
-> +	.show_host_port_type = 1,
-> +	.show_host_port_state = 1,
-> +	/* active_fc4s is shown but doesn't change (thus no get function) */
-> +	.show_host_active_fc4s = 1,
-> +	.show_host_speed = 1,
-> +	.show_host_fabric_name = 1,
-> +	.show_host_symbolic_name = 1,
-> +	.vport_create = efct_vport_create,
-> +	.vport_delete = efct_vport_delete,
-> +};
+> +static void
+> +efct_mbox_rsp_cb(struct efct_hw *hw, int status, u8 *mqe, void *arg)
+> +{
+> +	struct efct_mbox_rqst_ctx *ctx = arg;
 > +
-> +static struct fc_function_template efct_vport_functions = {
-> +	.get_starget_node_name = efct_get_starget_node_name,
-> +	.get_starget_port_name = efct_get_starget_port_name,
-> +	.get_starget_port_id  = efct_get_starget_port_id,
+> +	if (ctx) {
+> +		if (ctx->callback)
+> +			(*ctx->callback)(hw->os->efcport, status, mqe,
+> +					 ctx->arg);
 > +
-> +	.get_host_port_id = efct_get_host_port_id,
-> +	.get_host_port_type = efct_get_host_vport_type,
-> +	.get_host_port_state = efct_get_host_port_state,
-> +	.get_host_speed = efct_get_host_speed,
-> +	.get_host_fabric_name = efct_get_host_fabric_name,
+> +		mempool_free(ctx, hw->mbox_rqst_pool);
+> +	}
+> +}
 > +
-> +	.get_fc_host_stats = efct_get_stats,
-> +	.reset_fc_host_stats = efct_reset_stats,
+> +int
+> +efct_issue_mbox_rqst(void *base, void *cmd, void *cb, void *arg)
+> +{
+> +	int rc = 0;
+> +	struct efct_mbox_rqst_ctx *ctx;
+> +	struct efct *efct = base;
+> +	struct efct_hw *hw = &efct->hw;
 > +
-> +	.issue_fc_host_lip = efct_issue_lip,
-> +	.set_vport_symbolic_name = efct_set_vport_symbolic_name,
+> +	/*
+> +	 * Allocate a callback context (which includes the mbox cmd buffer),
+> +	 * we need this to be persistent as the mbox cmd submission may be
+> +	 * queued and executed later execution.
+> +	 */
+> +	ctx = mempool_alloc(hw->mbox_rqst_pool, GFP_ATOMIC);
+> +	if (!ctx)
+> +		return EFC_FAIL;
 > +
-> +	/* allocation lengths for host-specific data */
-> +	.dd_fcrport_size = sizeof(struct efct_rport_data),
-> +	.dd_fcvport_size = 128, /* should be sizeof(...) */
+> +	ctx->callback = cb;
+> +	ctx->arg = arg;
 > +
-> +	/* remote port fixed attributes */
-> +	.show_rport_maxframe_size = 1,
-> +	.show_rport_supported_classes = 1,
-> +	.show_rport_dev_loss_tmo = 1,
+> +	if (efct_hw_command(hw, cmd, EFCT_CMD_NOWAIT, efct_mbox_rsp_cb, ctx)) {
+> +		efc_log_err(efct, "issue mbox rqst failure\n");
+> +		mempool_free(ctx, hw->mbox_rqst_pool);
+> +		rc = -1;
+> +	}
+> +	return rc;
+> +}
+> diff --git a/drivers/scsi/elx/efct/efct_hw.h b/drivers/scsi/elx/efct/efct_hw.h
+> index aba0581d0ee8..931ff082ee8a 100644
+> --- a/drivers/scsi/elx/efct/efct_hw.h
+> +++ b/drivers/scsi/elx/efct/efct_hw.h
+> @@ -619,4 +619,13 @@ efct_get_wwnn(struct efct_hw *hw);
+>   uint64_t
+>   efct_get_wwpn(struct efct_hw *hw);
+>   
+> +enum efct_hw_rtn efct_hw_rx_allocate(struct efct_hw *hw);
+> +enum efct_hw_rtn efct_hw_rx_post(struct efct_hw *hw);
+> +void efct_hw_rx_free(struct efct_hw *hw);
+> +enum efct_hw_rtn
+> +efct_hw_command(struct efct_hw *hw, u8 *cmd, u32 opts, void *cb,
+> +		void *arg);
+> +int
+> +efct_issue_mbox_rqst(void *base, void *cmd, void *cb, void *arg);
 > +
-> +	/* target dynamic attributes */
-> +	.show_starget_node_name = 1,
-> +	.show_starget_port_name = 1,
-> +	.show_starget_port_id = 1,
-> +
-> +	/* host fixed attributes */
-> +	.show_host_node_name = 1,
-> +	.show_host_port_name = 1,
-> +	.show_host_supported_classes = 1,
-> +	.show_host_supported_fc4s = 1,
-> +	.show_host_supported_speeds = 1,
-> +	.show_host_maxframe_size = 1,
-> +
-> +	/* host dynamic attributes */
-> +	.show_host_port_id = 1,
-> +	.show_host_port_type = 1,
-> +	.show_host_port_state = 1,
-> +	/* active_fc4s is shown but doesn't change (thus no get function) */
-> +	.show_host_active_fc4s = 1,
-> +	.show_host_speed = 1,
-> +	.show_host_fabric_name = 1,
-> +	.show_host_symbolic_name = 1,
-> +};
+>   #endif /* __EFCT_H__ */
 > 
 Cheers,
 
