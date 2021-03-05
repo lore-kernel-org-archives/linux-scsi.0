@@ -8,52 +8,52 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13FD3C433DB
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 09:59:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F9EBC433E6
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 10:04:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B393E64FEA
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 09:59:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFD3D64F59
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 10:04:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229601AbhCEJ6a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Mar 2021 04:58:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60864 "EHLO
+        id S229648AbhCEKDy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Mar 2021 05:03:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229615AbhCEJ6Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2021 04:58:16 -0500
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71556C061574;
-        Fri,  5 Mar 2021 01:58:16 -0800 (PST)
-Received: by mail-pf1-x42d.google.com with SMTP id j12so1627819pfj.12;
-        Fri, 05 Mar 2021 01:58:16 -0800 (PST)
+        with ESMTP id S229701AbhCEKDv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2021 05:03:51 -0500
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3A7AC061574;
+        Fri,  5 Mar 2021 02:03:51 -0800 (PST)
+Received: by mail-pf1-x431.google.com with SMTP id w18so1690288pfu.9;
+        Fri, 05 Mar 2021 02:03:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id;
-        bh=INlAlYygcCr8qFIw5Y+aGmBMuUbzyX/B9XRXD/oolTA=;
-        b=IdODdt96RTZyyooVjpTz93+P0LMMsTXlm0eZU9AuBwtMERFZ2xtpzVHsMCLFFQqIAV
-         8DqDEWPUoEoBw5EbbCEeFGlWpoyiphtM259DTpauGd9tJATvPI2qj+7T6lUIOznK+665
-         8jUJ0V1iQ4vCMYkuZzMzZGRCdMDu1xXn6Ub8PluxF3HTQ1wGnCBWzNWKH+USmcjn975U
-         ZpLutmb1hk6kI/gJM/1iGZPQNmgu9vXtSNUSU4h+icbJzxaEKy83KMDr9/nWfUyA8tk6
-         YeG8v2FM+YJc3d7qjf7GC5Uf9J/QBTBNWMamiAZB1V/JKtwv9ZLHkboo5a6UrZXLkdY1
-         t9WQ==
+        bh=hVEmTxN1/mqLbJZhppTs1tBr9kKu33Faj7BxFWSzlek=;
+        b=N+rGjt01Tn1WTdwZpzph0jO9N5UCT0sCWUKQWqRZy8aQq+5CNTKTLkR8VDduBwgDsL
+         6b1FBDK5gYpiyYRHWYVW0KVWT2tNF5sfTeYVcePwclq8nQ7HNVB6adEMkjt4443mE5Eu
+         DK3jmf03Ph4vueHWPyo2BspEgINGALJdHE1Zqry6ZIjvfHK1f4D//BKjOwRnc4km3dBJ
+         iuyRalT/pj1hvBz23OfTQ6/lYXn7gi+fhEN0EoZhD+VNxKPf2cqzC4QkddJd8X/DTudG
+         hobXR+bD3XNEAzNPplqfJPfDfNFMutWuZjcAusf1BF+ZMAW111L5pEo4fzvPV5V6A3Tf
+         vGZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=INlAlYygcCr8qFIw5Y+aGmBMuUbzyX/B9XRXD/oolTA=;
-        b=nHSb5ej0TgVYSRQ0OXXwAPuLe7ntQTt9sJO6litbRb3X8iEDVk/o+6Rg85W8HfulyY
-         RnPs5n9hT8ErsSdcnxK9PUvziDlzYHuuJt4bgfDxxQAq9W8JdBLxBS3jMR9vmPbqwEye
-         KzbPxkWWkN4k81bL3xUErGfB7MzafZ4RX+kCoMMioHMrmMxwbTEKSqVRk3nhZ5FGmsZZ
-         SuT73OgIzoliotIkKuMeqxNrP8gV9F/OB+vnlrDizmUfq5UyRJ0P0FInEdT3XKlRYZ5X
-         2FEDDktyU6Wl48mvmDrEbwhRUVhOJwO2HgXRMCiVlRusMQVzebh+Y003ro3FmHQb7wiq
-         Cckg==
-X-Gm-Message-State: AOAM5331E0aaA1CYuVIlTDQlUdL6fNwfUep5DRxhiODw9RUzgEQPO2cx
-        5/99qEKtEeo9fefIfsHAYK8=
-X-Google-Smtp-Source: ABdhPJyMuRf+cpk5pKHXlHgHBpG6eV399lzhZDsO+lyz7OAT/99v+UL9vovetCwr7FrLSy1W79Z1jQ==
-X-Received: by 2002:a63:5c23:: with SMTP id q35mr7926120pgb.418.1614938296114;
-        Fri, 05 Mar 2021 01:58:16 -0800 (PST)
+        bh=hVEmTxN1/mqLbJZhppTs1tBr9kKu33Faj7BxFWSzlek=;
+        b=uiMAWWx4938bURD96mDQsMvoy/5/6sS3J7opi+2LHhCSxnsOzDsjFoZYSmirwKEiKc
+         1gip9VkFzNptbBNHUOvMCQ0+C198qW7CRKSkoYogwxmgupLmb5DU8ac2fUbcSmpjpTso
+         94j6GpN+brie2e38f2LTqTPgFLn1Nz3fgDL/yD3E0WqF2YTEDZ33JrZoJNu2Z3/9Avcl
+         qBPzoKp4pAyMaZfFUacmSUc6ZcSk1elwm3LgSO6QdWtP4REudSaeqXXfrAeGbrSShqvw
+         KlcpAbem9rlaTbQZMlnNIhT3RcO2xMfmSs7uKRbqz6wACu/j2X2T489mjI039ehHxwsQ
+         TL1Q==
+X-Gm-Message-State: AOAM533VJiFaHuSVKtV+9iDCzCVrLTcLC9jU/0IylzCo7L7p2IjM4D8b
+        eiodndFay7XdvMmp5qoRl+A+nqJoR0O36j+J
+X-Google-Smtp-Source: ABdhPJzo/tq44YXAVV3Je4T7SeOQMl6BhPMjup2b758SP37zBidxhkOyoG4VHDde242grVWAJL7CXg==
+X-Received: by 2002:a63:ce15:: with SMTP id y21mr7886969pgf.4.1614938631331;
+        Fri, 05 Mar 2021 02:03:51 -0800 (PST)
 Received: from localhost.localdomain ([45.135.186.129])
-        by smtp.gmail.com with ESMTPSA id c193sm2193231pfc.180.2021.03.05.01.58.13
+        by smtp.gmail.com with ESMTPSA id e1sm1829137pjm.12.2021.03.05.02.03.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Mar 2021 01:58:15 -0800 (PST)
+        Fri, 05 Mar 2021 02:03:50 -0800 (PST)
 From:   Jia-Ju Bai <baijiaju1990@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
@@ -61,36 +61,40 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         asutoshd@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] scsi: ufs: fix error return code of ufshcd_devfreq_target()
-Date:   Fri,  5 Mar 2021 01:58:08 -0800
-Message-Id: <20210305095808.14119-1-baijiaju1990@gmail.com>
+Subject: [PATCH] scsi: ufs: fix error return code of ufshcd_set_clk_freq()
+Date:   Fri,  5 Mar 2021 02:03:43 -0800
+Message-Id: <20210305100343.14304-1-baijiaju1990@gmail.com>
 X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When the list of clk_list is empty, no error return code of
-ufshcd_devfreq_target() is assigned.
+When the list of head is empty, no error return code of
+ufshcd_set_clk_freq() is assigned.
 To fix this bug, ret is assigned with -ENOENT as error return code.
 
 Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
 Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/ufs/ufshcd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 77161750c9fb..d31aae56fd96 100644
+index 77161750c9fb..79899acb3ef6 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1337,6 +1337,7 @@ static int ufshcd_devfreq_target(struct device *dev,
+@@ -970,8 +970,10 @@ static int ufshcd_set_clk_freq(struct ufs_hba *hba, bool scale_up)
+ 	struct ufs_clk_info *clki;
+ 	struct list_head *head = &hba->clk_list_head;
  
- 	if (list_empty(clk_list)) {
- 		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
+-	if (list_empty(head))
++	if (list_empty(head)) {
 +		ret = -ENOENT;
  		goto out;
- 	}
++	}
  
+ 	list_for_each_entry(clki, head, list) {
+ 		if (!IS_ERR_OR_NULL(clki->clk)) {
 -- 
 2.17.1
 
