@@ -2,104 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D74C433E9
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 08:48:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55CC3C433E6
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 09:14:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EEEB465015
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 08:48:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1ABE764F69
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 09:14:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229526AbhCEIsD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Mar 2021 03:48:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45668 "EHLO
+        id S229629AbhCEJON (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Mar 2021 04:14:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229589AbhCEIr1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2021 03:47:27 -0500
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF9B0C061574;
-        Fri,  5 Mar 2021 00:47:27 -0800 (PST)
-Received: by mail-pf1-x436.google.com with SMTP id d12so1594708pfo.7;
-        Fri, 05 Mar 2021 00:47:27 -0800 (PST)
+        with ESMTP id S229520AbhCEJOF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2021 04:14:05 -0500
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 913BDC061574;
+        Fri,  5 Mar 2021 01:14:05 -0800 (PST)
+Received: by mail-pf1-x435.google.com with SMTP id j12so1548544pfj.12;
+        Fri, 05 Mar 2021 01:14:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=iXKUWbmSLel/CjieMrQtXA0OopXZ8i0L9q59UfEsA0s=;
-        b=skX3ruyx3cB6ZanqDYCAHTQzs+jzI4cnVjOOexKNwYf5usKc8EbUNNMoJGI/3KR7dC
-         +9QnguEddejP6D60EtKXdYKgHejnXZbHHZOiyUq7hpdpmp2Pcfu8xpWSQsBQ0Ng/Knq3
-         PEQBDGsOz5ZQXdQb0pWHw5602hr7ICNobyzdDnWBJrED/bMVbEQsEd2n/sdwi21QqB5Y
-         +9KGQaQ1U6G7pD8qqZLVrRruFbHIQLfHKr9I8Izse9DoPMUbsNsw5N2NJXsCIihUanjO
-         Z45AjsJ5j6Wz3vxsdsNKigadJUpyDq+sAMWwv6GFEhyjre5ZuecAWkaamN46wMqbVdXK
-         8KQA==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=4zEE7rqrK3goJLrxJadwawdflEcIk4A0CqTQec6iyds=;
+        b=Kx4x3Cc3LsPrKyHpdcTnHmDMM1eHkVYfQnKItph3uxOwNmd6qVQgw651IpyCCk6bJD
+         GVfzi5DFVZpJcE/9lvNN4I9vpgecFoDU6U/aILIJsFC8Rp3DOZ570QjE7mEkuRf+swyJ
+         brqcwgZAxuHqqzZycGhDQAmv/v250lpLQNb8dVgx8/Xae0o7nAr63Zo3c66UkhTPPjBo
+         BM5fMoA5zuOTQIvVBGbCJw8g46mkja1dsu5wJYK/eYKRCumY4AL46Q/RHDd4O6/uXqb5
+         WjwHq7g5iMH4FMPOajkFY9uV0XYSd8B7etynSSVjLETforv9hVCe5uc5cW3g167+Wl9Q
+         mxZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=iXKUWbmSLel/CjieMrQtXA0OopXZ8i0L9q59UfEsA0s=;
-        b=rdcQaao0XBNbN5ZMTMQ0nozXei4CGBBc1QZQDJTQg2bQXdfbzYf1axGFmAHwDykLCo
-         Legjo3j2qEKmi+n/ngLszPQnVsgnpqKsHOaSzCJ9iZlwmESTjx2jFkyc3kLtJ1bJfji9
-         oKeylA4iWdAVnj8k7rqRBtsEbZ0aeu4aij4lU5ds/bvc7IE3iGdSixNkCP9ntnwdstYS
-         mGNC0LIi0Do6UYY93gAxWUuHqsUhzAbTQUJY3+H09zgLizhtYM9Vft06sVXZLzOaWXNe
-         JxXgfQ293gOceq6CViYtzVAOK/zhzu1UKHtVmZloBrr7Eh3V6w9eyzOuS8lm5e44vYlD
-         mtJw==
-X-Gm-Message-State: AOAM530ff83v2p49ikmBx1KznedcZEJVaciEnfaUJd5iX1ejBkwv4j+j
-        sbfYMHcNDXejE6JonaPmtEE=
-X-Google-Smtp-Source: ABdhPJy7+djtqogavZnlVRBFra1BNaxIq3rv16L8ZDRVEHRYdhxWaAozpsxz4/f+Csk+HDM8H8S8Rw==
-X-Received: by 2002:a05:6a00:886:b029:1ed:b546:6d1f with SMTP id q6-20020a056a000886b02901edb5466d1fmr8202804pfj.22.1614934047345;
-        Fri, 05 Mar 2021 00:47:27 -0800 (PST)
-Received: from localhost.localdomain ([45.135.186.129])
-        by smtp.gmail.com with ESMTPSA id js16sm1664393pjb.21.2021.03.05.00.47.23
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=4zEE7rqrK3goJLrxJadwawdflEcIk4A0CqTQec6iyds=;
+        b=Awn29SW7McLaDeeWzuOuBzXnuxhEOCAcZZypv3rb1mT7h5GWPOC5ZepEinfinUVAX0
+         fIesvO//1wZtGjC6u2UVTq2wAa/BEVoLUqbIKa2E3pMMn45GGWDtxbvv7BoDVUokaTmX
+         tpJEdTy3cpjtZdDNLVdSm1kKzPMo2REfo662VVLjyTo5oZgSap+Pm57IqqYSdpBHIfzj
+         2b4NOf9ElzypOhUhkmFosOTlGFbNy0vB9ucglBqridd8SUpSVp719ofv77HDFtbFeokQ
+         VGwgXf44elydZFoaQpjU6pSurtnXyImhMR0HFkVApu2wn4yuMs2doxD0DZPpPRpdnL8o
+         KCtw==
+X-Gm-Message-State: AOAM533kc8qW5QGmYqVmKnE8Jk1lVRbm2NpHt+CMVE1Tov+19a5/+zPC
+        0ct5Gz586y6NU5fdcjh2/K0=
+X-Google-Smtp-Source: ABdhPJwEBq+wJr2WgZsr2R5XNMcQXCEmmZcnKDrXvixiB7fslPTCQ7eG/vQrapqM2CuZRGi+IYll8w==
+X-Received: by 2002:a62:1997:0:b029:1ed:5de5:5f1c with SMTP id 145-20020a6219970000b02901ed5de55f1cmr7984327pfz.14.1614935645227;
+        Fri, 05 Mar 2021 01:14:05 -0800 (PST)
+Received: from tj.ccdomain.com ([103.220.76.197])
+        by smtp.gmail.com with ESMTPSA id gz12sm1717617pjb.33.2021.03.05.01.14.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Mar 2021 00:47:26 -0800 (PST)
-From:   Jia-Ju Bai <baijiaju1990@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        stanley.chu@mediatek.com, cang@codeaurora.org,
-        tomas.winkler@intel.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] scsi: ufs: fix error return code of ufshcd_populate_vreg()
-Date:   Fri,  5 Mar 2021 00:47:18 -0800
-Message-Id: <20210305084718.12108-1-baijiaju1990@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        Fri, 05 Mar 2021 01:14:04 -0800 (PST)
+From:   Yue Hu <zbestahu@gmail.com>
+To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        stanley.chu@mediatek.com, cang@codeaurora.org, beanhuo@micron.com,
+        jaegeuk@kernel.org, asutoshd@codeaurora.org,
+        linux-kernel@vger.kernel.org, huyue2@yulong.com,
+        zhangwen@yulong.com, zbestahu@163.com
+Subject: [PATCH] scsi: ufs: Remove redundant WB enabling check in ufshcd_wb_toggle_flush()
+Date:   Fri,  5 Mar 2021 17:12:53 +0800
+Message-Id: <20210305091253.314-1-zbestahu@gmail.com>
+X-Mailer: git-send-email 2.29.2.windows.3
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When np is NULL or of_parse_phandle() returns NULL, no error return code
-of ufshcd_populate_vreg() is assigned.
-To fix this bug, ret is assigned with -EINVAL or -ENOENT as error return
-code.
+From: Yue Hu <huyue2@yulong.com>
 
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+Note that ufshcd_wb_toggle_flush() will be called only in
+ufshcd_wb_config() which have already checked if WB is allowed.
+
+Signed-off-by: Yue Hu <huyue2@yulong.com>
 ---
- drivers/scsi/ufs/ufshcd-pltfrm.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 1a69949a4ea1..9f11c416a919 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -113,6 +113,7 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 721f55d..2c49344 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5484,8 +5484,7 @@ static inline int ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
+ 	u8 index;
+ 	enum query_opcode opcode;
  
- 	if (!np) {
- 		dev_err(dev, "%s: non DT initialization\n", __func__);
-+		ret = -EINVAL;
- 		goto out;
- 	}
+-	if (!ufshcd_is_wb_allowed(hba) ||
+-	    hba->dev_info.wb_buf_flush_enabled == enable)
++	if (hba->dev_info.wb_buf_flush_enabled == enable)
+ 		return 0;
  
-@@ -120,6 +121,7 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 	if (!of_parse_phandle(np, prop_name, 0)) {
- 		dev_info(dev, "%s: Unable to find %s regulator, assuming enabled\n",
- 				__func__, prop_name);
-+		ret = -ENOENT;
- 		goto out;
- 	}
- 
+ 	if (enable)
 -- 
-2.17.1
+1.9.1
 
