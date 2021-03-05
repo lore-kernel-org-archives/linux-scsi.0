@@ -2,165 +2,166 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40A94C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 21:45:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8475BC433DB
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 00:24:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1241464F84
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Mar 2021 21:45:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3826E6500D
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 00:24:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241346AbhCDVon (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Mar 2021 16:44:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44294 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241198AbhCDVo2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2021 16:44:28 -0500
-Received: from mail-ot1-x332.google.com (mail-ot1-x332.google.com [IPv6:2607:f8b0:4864:20::332])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0B1DC061756
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Mar 2021 13:43:48 -0800 (PST)
-Received: by mail-ot1-x332.google.com with SMTP id e45so28779962ote.9
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Mar 2021 13:43:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Q7tBXV4lZRcDzR1WeLqLPxHv84GSFkk+SyKZ277C1YA=;
-        b=BBwDnQyKyqeYcC+rrb3errHEavPdPrQzuH20BcbkwwSkN4sOmjPaHs3qZkHfw3LPxf
-         AXPK4CFmZ17nm3gnZoT2Brknojh08y/pQegZL+u4+6Cmz3jRrAkZQwCEfq/THW2YxdtB
-         D1JWY8tKCCWgDZsRdnWTJmWGyMCdbLNa6XsceoabVl1IrwZku+HFIV8lnJ9b2gtExOat
-         2wQweKIDkUDK7iiTX02F1M8X/ggX0ur2426JxvUK82PsmLZRENvpvb35XC5p9FV5cPhU
-         85ROecKQqDuatcFd0RbMUbPspXl0d1zSKXOId8XTESy039ZfA32fP5fbWSzXPc60ry1k
-         g8ZA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Q7tBXV4lZRcDzR1WeLqLPxHv84GSFkk+SyKZ277C1YA=;
-        b=E2YBTeU7cT5fPKu/fo+CjKmA7pNuQek1H3PMxc6CVd9NMwEjnYD7imMGuUIMIq3k96
-         JB3B03c+3dqPq2bSeOxpIaYT9oBpRbnbHS9MknXhRK9Enm1vtnmd0xT9/JBJ5yaVL+oJ
-         i2ZtgNzHJqfQh9CdM8B9Dw1VAKTz20fH8OuurYvXl0ppwvdZ3wqlUS/zqM3PmfVFsW8H
-         61cfmPVqDRxA8WdSpBuf6HpGPUkd69aPVmLzlS9dZUkK8C0svIb5CJC3rUdPdJ/GeIHr
-         eoZyJZzj5Fiyn++0DpwZEKnJ/beFoxVa316grJcPtGsmmYZuvUVRLZqqNz9j2upYyUp+
-         bpeQ==
-X-Gm-Message-State: AOAM533UaIL6rzowIOlJqjApUqCjcpychyCbIfjgiv6fNLIThtMwGS1V
-        A1/s0nTlG/xngE05pjk7JcV39h21LqJr/gOo7fQ=
-X-Google-Smtp-Source: ABdhPJy4VH9hTVyRKwcTVnfoTCpeZU1NhCuy3a0Xs9hBMHD5RUVuGcDc9VrE5aEbF00ZzxYZhVADVg==
-X-Received: by 2002:a9d:7481:: with SMTP id t1mr5180625otk.208.1614894228086;
-        Thu, 04 Mar 2021 13:43:48 -0800 (PST)
-Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com. [209.85.167.169])
-        by smtp.gmail.com with ESMTPSA id b21sm119052oot.34.2021.03.04.13.43.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 04 Mar 2021 13:43:47 -0800 (PST)
-Received: by mail-oi1-f169.google.com with SMTP id w65so86996oie.7;
-        Thu, 04 Mar 2021 13:43:47 -0800 (PST)
-X-Received: by 2002:aca:5e85:: with SMTP id s127mr4293199oib.67.1614894226912;
- Thu, 04 Mar 2021 13:43:46 -0800 (PST)
-MIME-Version: 1.0
-References: <20210303135500.24673-1-alex.bennee@linaro.org>
- <20210303135500.24673-3-alex.bennee@linaro.org> <ff78164cc13b4855911116c2d48929a2@intel.com>
- <87eegvgr0w.fsf@linaro.org> <590e0157d6c44d55aa166ccad6355db5@intel.com>
- <87wnumg5oe.fsf@linaro.org> <baa46857daba4bb685491ea9323fe45f@intel.com>
-In-Reply-To: <baa46857daba4bb685491ea9323fe45f@intel.com>
-From:   Arnd Bergmann <arnd@linaro.org>
-Date:   Thu, 4 Mar 2021 22:43:30 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a0ATHxzS02_5kypbGwHYLaWZmEPG8xtZchWuuM-93o8CA@mail.gmail.com>
-Message-ID: <CAK8P3a0ATHxzS02_5kypbGwHYLaWZmEPG8xtZchWuuM-93o8CA@mail.gmail.com>
-Subject: Re: [RFC PATCH 2/5] char: rpmb: provide a user space interface
-To:     "Winkler, Tomas" <tomas.winkler@intel.com>
-Cc:     =?UTF-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>,
+        id S231129AbhCEAYq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Mar 2021 19:24:46 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:20011 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230427AbhCEAYq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2021 19:24:46 -0500
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210305002444epoutp044528595a1906491f7113bc75d2beaada~pSobR14jm1437914379epoutp04R
+        for <linux-scsi@vger.kernel.org>; Fri,  5 Mar 2021 00:24:44 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210305002444epoutp044528595a1906491f7113bc75d2beaada~pSobR14jm1437914379epoutp04R
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1614903884;
+        bh=N+pGuJiY61brma0e6fQCuI3hojqJVS9Ib6piupBN2j8=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=sUMlUa26X34cGlXAVk4CmiOKCXf1NvkSParZ9C2h/meNhF0gL+FX/5YlH9xysbtD/
+         BUW9x93iPpAgXNM0FqTjZem0Q5b7oTQNPSLf9XEFrEWRXrCRmAGS1VyeeZEC9ZQjIR
+         567t45a2wYu7KfKOYdo+CnqaG19+dIguQsr+S0+8=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20210305002442epcas2p111bce47a4fed2ace73926512c3627516~pSoZxueUL1084710847epcas2p1I;
+        Fri,  5 Mar 2021 00:24:42 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.40.181]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4Ds7lr5lBsz4x9Q6; Fri,  5 Mar
+        2021 00:24:40 +0000 (GMT)
+X-AuditID: b6c32a47-b81ff7000000148e-00-60417a48b7f8
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        A7.CE.05262.84A71406; Fri,  5 Mar 2021 09:24:40 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE: Re: [PATCH v26 4/4] scsi: ufs: Add HPB 2.0 support
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Bean Huo <huobean@gmail.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "maxim.uvarov@linaro.org" <maxim.uvarov@linaro.org>,
-        "joakim.bech@linaro.org" <joakim.bech@linaro.org>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "ruchika.gupta@linaro.org" <ruchika.gupta@linaro.org>,
-        "Huang, Yang" <yang.huang@intel.com>,
-        "Zhu, Bing" <bing.zhu@intel.com>,
-        "Matti.Moell@opensynergy.com" <Matti.Moell@opensynergy.com>,
-        "hmo@opensynergy.com" <hmo@opensynergy.com>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Arnd Bergmann <arnd.bergmann@linaro.org>,
-        "Usyskin, Alexander" <alexander.usyskin@intel.com>,
-        Avri Altman <avri.altman@sandisk.com>
-Content-Type: text/plain; charset="UTF-8"
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <2f1b8ff5aec540ef731bf5b2c3691dd23ea2e6b0.camel@gmail.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20210305002440epcms2p2205c56a96f6f8426fc1cb2d0cb7c16a3@epcms2p2>
+Date:   Fri, 05 Mar 2021 09:24:40 +0900
+X-CMS-MailID: 20210305002440epcms2p2205c56a96f6f8426fc1cb2d0cb7c16a3
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrPJsWRmVeSWpSXmKPExsWy7bCmua5HlWOCQcs7dYsH87axWextO8Fu
+        8fLnVTaLw7ffsVtM+/CT2eLT+mWsFi8PaVqsehBu0bx4PZvFnLMNTBa9/VvZLB7f+cxusejG
+        NiaL/n/tLBaXd81hs+i+voPNYvnxf0wWt7dwWSzdepPRonP6GhYHEY/LV7w9Lvf1MnnsnHWX
+        3WPCogOMHvvnrmH3aDm5n8Xj49NbLB59W1YxenzeJOfRfqCbKYArKscmIzUxJbVIITUvOT8l
+        My/dVsk7ON453tTMwFDX0NLCXEkhLzE31VbJxSdA1y0zB+g5JYWyxJxSoFBAYnGxkr6dTVF+
+        aUmqQkZ+cYmtUmpBSk6BoWGBXnFibnFpXrpecn6ulaGBgZEpUGVCTsa8S7vZCp7yVZycO5e9
+        gfEVZxcjJ4eEgInEggWTWboYuTiEBHYwSqxsv8nWxcjBwSsgKPF3hzBIjbCAvcTL96uYQGwh
+        ASWJ9RdnsUPE9SRuPVzDCGKzCehITD9xnx1kjojAL2aJXQ+XM4E4zAK/mSQWn/zPBrGNV2JG
+        +1MWCFtaYvvyrWDdnALuElvbt0LFNSR+LOtlhrBFJW6ufssOY78/Np8RwhaRaL13FqpGUOLB
+        z91QcUmJY7s/MEHY9RJb7/xiBDlCQqCHUeLwzlusEAl9iWsdG8GW8Qr4Slza8xxsAYuAqsSM
+        W0+hlrlI/N/ZDlbPLCAvsf3tHGZQqDALaEqs36UPYkoIKEscucUC81bDxt/s6GxmAT6JjsN/
+        4eI75j2BOk1NYt3P9UwTGJVnIYJ6FpJdsxB2LWBkXsUollpQnJueWmxUYIwcu5sYwSldy30H
+        44y3H/QOMTJxMB5ilOBgVhLhFX9pmyDEm5JYWZValB9fVJqTWnyI0RToy4nMUqLJ+cCsklcS
+        b2hqZGZmYGlqYWpmZKEkzlts8CBeSCA9sSQ1OzW1ILUIpo+Jg1Oqgcm9rWVPScvzX4G3RCb2
+        GnP0TZvwe9OkjtgL9e3HBTfWysj7skSvSlevuVV88TyXnWX61rVW5vsbX4btVDj6a++xM1f+
+        v8x+klTL/PnP7k0lWdNWeSq/ellnsMUm0YJX+KYW1+eWxL2Su7onztK+1p8UsE+nQS+Q06Wn
+        0UXKTUAhKM521cvIhHZDbdun9xmWbvz38IfmW8WSNrmwgANWEY/MyqbdPu47oU30pr8dM6/e
+        B8cv2/fb3pt8S8+7Vu2u2Rvmx5Yv3yQX75f/f35P1ucjT9ltNJb2WPPKxF26Xao96b5daq0B
+        x32p++pHN85snew0a23E3h/zX5u+di+cnbT9a2zMppwpSs51Vzcz1SqxFGckGmoxFxUnAgAs
+        UfuzcgQAAA==
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210303062633epcms2p252227acd30ad15c1ca821d7e3f547b9e
+References: <2f1b8ff5aec540ef731bf5b2c3691dd23ea2e6b0.camel@gmail.com>
+        <20210303062633epcms2p252227acd30ad15c1ca821d7e3f547b9e@epcms2p2>
+        <20210303062926epcms2p6aa6737e5ed3916eed9ab80011aad3d83@epcms2p6>
+        <CGME20210303062633epcms2p252227acd30ad15c1ca821d7e3f547b9e@epcms2p2>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 4, 2021 at 8:54 PM Winkler, Tomas <tomas.winkler@intel.com> wrote:
-> > Winkler, Tomas <tomas.winkler@intel.com> writes:
-> > >> "Winkler, Tomas" <tomas.winkler@intel.com> writes:
-> > >>
-> > >> >> The user space API is achieved via a number of synchronous IOCTLs.
-> > >> >>
-> > >> >>   * RPMB_IOC_VER_CMD - simple versioning API
-> > >> >>   * RPMB_IOC_CAP_CMD - query of underlying capabilities
-> > >> >>   * RPMB_IOC_PKEY_CMD - one time programming of access key
-> > >> >>   * RPMB_IOC_COUNTER_CMD - query the write counter
-> > >> >>   * RPMB_IOC_WBLOCKS_CMD - write blocks to device
-> > >> >>   * RPMB_IOC_RBLOCKS_CMD - read blocks from device
-> > >> >>
-> > >> >> The keys used for programming and writing blocks to the device are
-> > >> >> key_serial_t handles as provided by the keyctl() interface.
-> > >> >>
-> > >> >> [AJB: here there are two key differences between this and the
-> > >> >> original proposal. The first is the dropping of the sequence of
-> > >> >> preformated frames in favour of explicit actions. The second is
-> > >> >> the introduction of key_serial_t and the keyring API for
-> > >> >> referencing the key to use]
-> > >> >
-> > >> > Putting it gently I'm not sure this is good idea, from the security
-> > >> > point of
-> > >> view.
-> > >> > The key has to be possession of the one that signs the frames as
-> > >> > they are,
-> > >> it doesn't mean it is linux kernel keyring, it can be other party on
-> > >> different system.
-> > >> > With this approach you will make the other usecases not applicable.
-> > >> > It is less then trivial to move key securely from one system to another.
-> > >>
-> > >> OK I can understand the desire for such a use-case but it does
-> > >> constrain the interface on the kernel with access to the hardware to
-> > >> purely providing a pipe to the raw hardware while also having to
-> > >> expose the details of the HW to userspace.
-> > > This is the use case in Android. The key is in the "trusty" which
-> > > different os running in a virtual environment. The file storage
-> > > abstraction is implemented there. I'm not sure the point of
-> > > constraining the kernel, can you please elaborate on that.
-> >
-> > Well the kernel is all about abstracting differences not baking in assumptions.
-> > However can I ask a bit more about this security model?
-> > Is the secure enclave just a separate userspace process or is it in a separate
-> > virtual machine? Is it accessible at all by the kernel running the driver?
->
-> It's not an assumption this is working for few years already (https://source.android.com/security/trusty#application_services)
-> The model is that you have a trusted environment (TEE)  in which can be in any of the form you described above.
-> And there is established agreement via the RPMB key that TEE is only entity that can produce content to be stored on RPBM,
-> The RPMB hardware also ensure that nobody can catch it in the middle and replay that storage event.
->
-> My point is that interface you are suggesting is not covering all possible usages of RPMB, actually usages that are already in place.
+Hi Bean,
 
-It turned out that the application that we (Linaro) need does have the
-same requirements and needs to store the key in a TEE, transferring
-the message with the MAC into the kernel, rather than keeping the
-key stored in user space or kernel.
+> > +
+> > +static inline void ufshpb_put_pre_req(struct ufshpb_lu *hpb,
+> > +                                     struct ufshpb_req *pre_req)
+> > +{
+> > +       pre_req->req = NULL;
+> > +       pre_req->bio = NULL;
+> > +       list_add_tail(&pre_req->list_req, &hpb->lh_pre_req_free);
+> > +       hpb->num_inflight_pre_req--;
+> > +}
+> > +
+> > +static void ufshpb_pre_req_compl_fn(struct request *req,
+> > blk_status_t error)
+> > +{
+> > +       struct ufshpb_req *pre_req = (struct ufshpb_req *)req-
+> > >end_io_data;
+> > +       struct ufshpb_lu *hpb = pre_req->hpb;
+> > +       unsigned long flags;
+> > +       struct scsi_sense_hdr sshdr;
+> > +
+> > +       if (error) {
+> > +               dev_err(&hpb->sdev_ufs_lu->sdev_dev, "block status
+> > %d", error);
+> > +               scsi_normalize_sense(pre_req->sense,
+> > SCSI_SENSE_BUFFERSIZE,
+> > +                                    &sshdr);
+> > +               dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+> > +                       "code %x sense_key %x asc %x ascq %x",
+> > +                       sshdr.response_code,
+> > +                       sshdr.sense_key, sshdr.asc, sshdr.ascq);
+> > +               dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+> > +                       "byte4 %x byte5 %x byte6 %x additional_len
+> > %x",
+> > +                       sshdr.byte4, sshdr.byte5,
+> > +                       sshdr.byte6, sshdr.additional_length);
+> > +       }
+>  
+>  
+> How can you print out sense_key and sense code here? sense code will
+> not be copied to pre_req->sense. you should directly use
+> scsi_request->sense or let pre_req->sense point to scsi_request->sense.
 
-However, after I had a look at the nvme-rpmb user space implementation,
-I found that this is different, and always expects the key to be stored
-in a local file:
-https://github.com/linux-nvme/nvme-cli/blob/master/nvme-rpmb.c#L878
+OK, I will fix it.
 
-This both works with the same kernel interface though, as the kernel
-would still get the data along with the HMAC, rather than having the key
-stored in the kernel, but it does mean that the frame gets passed to
-the kernel in a device specific layout, with at least nvme using an incompatible
-layout from everything else.
+> You update the new version patch so quickly. In another word, I am
+> wondering if you tested your patch before submitting?
 
-        Arnd
+I will check more carefully for the next patch.
+
+Thanks,
+Daejun
