@@ -2,126 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACD82C433E9
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 08:45:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D74C433E9
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 08:48:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F8576501C
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 08:45:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEEB465015
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Mar 2021 08:48:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229512AbhCEIpR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Mar 2021 03:45:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45086 "EHLO
+        id S229526AbhCEIsD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Mar 2021 03:48:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229489AbhCEIor (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2021 03:44:47 -0500
-Received: from mail-oi1-x22e.google.com (mail-oi1-x22e.google.com [IPv6:2607:f8b0:4864:20::22e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4128CC06175F
-        for <linux-scsi@vger.kernel.org>; Fri,  5 Mar 2021 00:44:46 -0800 (PST)
-Received: by mail-oi1-x22e.google.com with SMTP id z126so1688481oiz.6
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Mar 2021 00:44:46 -0800 (PST)
+        with ESMTP id S229589AbhCEIr1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2021 03:47:27 -0500
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF9B0C061574;
+        Fri,  5 Mar 2021 00:47:27 -0800 (PST)
+Received: by mail-pf1-x436.google.com with SMTP id d12so1594708pfo.7;
+        Fri, 05 Mar 2021 00:47:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=KB08yorhtcB6bwnYQdEUiilQWgj+qvMuWqAWFcX/SDg=;
-        b=ZxLlJnE23vDFkH/RI149rtpJ6Rb1DuzsbCYGBoepoSLkhoigkzcZQUrThOEJZMZwXg
-         g1v7bO3IE1yzgG9XgDolnIsjLiFud25gSY/WXkSrUQ33M9yrvaC+DmEwk9uROs2DEDYZ
-         UeOvLWSeWGxxNp8UchPjXELvxDG+jSq+E/C9Z8SMTDaDbNjhI98yvEQ5EqBlK3Ac87vk
-         NSlDPFWK49JH8UMthr1MOgrwDRFUjDlDss3egSdIyPYv1PPdvhoq7JyduB4XShz7Lwso
-         6/33LAwukxq1jS0D82bC9rlW937dDemOUMjOVCjpBBHS2XaVb4B7qqTdOJU7Kbe3tA6L
-         fTXg==
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=iXKUWbmSLel/CjieMrQtXA0OopXZ8i0L9q59UfEsA0s=;
+        b=skX3ruyx3cB6ZanqDYCAHTQzs+jzI4cnVjOOexKNwYf5usKc8EbUNNMoJGI/3KR7dC
+         +9QnguEddejP6D60EtKXdYKgHejnXZbHHZOiyUq7hpdpmp2Pcfu8xpWSQsBQ0Ng/Knq3
+         PEQBDGsOz5ZQXdQb0pWHw5602hr7ICNobyzdDnWBJrED/bMVbEQsEd2n/sdwi21QqB5Y
+         +9KGQaQ1U6G7pD8qqZLVrRruFbHIQLfHKr9I8Izse9DoPMUbsNsw5N2NJXsCIihUanjO
+         Z45AjsJ5j6Wz3vxsdsNKigadJUpyDq+sAMWwv6GFEhyjre5ZuecAWkaamN46wMqbVdXK
+         8KQA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=KB08yorhtcB6bwnYQdEUiilQWgj+qvMuWqAWFcX/SDg=;
-        b=KNUo1L5T4Clx38Hfkcy9GVuAJ1VHom3W/eYD3zFHrPDZaEZ5psuJzTu4JEL3QBBsrX
-         wbY0XcgOxVf4WWppWksE2AZfRgbfxHgAY+U2BuBK97l6md9lLhpPQqUNZjUk3m7v3BXk
-         UJvXJabrSiV4XVN2/Q72v+BUmnHSRZRpRLmxCVK91i43ZJ23E4oVCqGBeYeCuEKNQ3F1
-         NswZFgWlAgkY+aiKKw72mIyaZtMedJtQ9FTHmxP7SEMuQ58+14xYdTSQnYEJwcVuD5Hi
-         wdqV+U0yGJ5v94CScuC0Pmo2JfKbd3Kl9FahiKz0xuKl2LKHZFZmbcTTwJzl658GmXpb
-         uuWw==
-X-Gm-Message-State: AOAM530/Pe3XW+w0TdEiPaNZCKdctNTmTg/Ovl7SfUWAHoVL7H1hsxtk
-        m7zXKQ8GUL1+vPGdytMS5EFnxxNQPlPtO1d8x8c=
-X-Google-Smtp-Source: ABdhPJxR8UD4zmwPWma3pzbK8QCYZjGc7PejnTVLeCvE+CW5nhVqP0j0e5s2Np4XhDKntGZwQKsI0w==
-X-Received: by 2002:aca:4d8f:: with SMTP id a137mr1610818oib.132.1614933885443;
-        Fri, 05 Mar 2021 00:44:45 -0800 (PST)
-Received: from mail-ot1-f46.google.com (mail-ot1-f46.google.com. [209.85.210.46])
-        by smtp.gmail.com with ESMTPSA id g6sm432421ooh.29.2021.03.05.00.44.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 05 Mar 2021 00:44:44 -0800 (PST)
-Received: by mail-ot1-f46.google.com with SMTP id d9so1044401ote.12;
-        Fri, 05 Mar 2021 00:44:44 -0800 (PST)
-X-Received: by 2002:a9d:12e1:: with SMTP id g88mr3706815otg.305.1614933884478;
- Fri, 05 Mar 2021 00:44:44 -0800 (PST)
-MIME-Version: 1.0
-References: <20210303135500.24673-1-alex.bennee@linaro.org>
- <20210303135500.24673-2-alex.bennee@linaro.org> <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com>
- <20210305075131.GA15940@goby>
-In-Reply-To: <20210305075131.GA15940@goby>
-From:   Arnd Bergmann <arnd@linaro.org>
-Date:   Fri, 5 Mar 2021 09:44:28 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
-Message-ID: <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB) subsystem
-To:     Joakim Bech <joakim.bech@linaro.org>
-Cc:     =?UTF-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Maxim Uvarov <maxim.uvarov@linaro.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        ruchika.gupta@linaro.org,
-        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
-        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
-        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Arnd Bergmann <arnd.bergmann@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=iXKUWbmSLel/CjieMrQtXA0OopXZ8i0L9q59UfEsA0s=;
+        b=rdcQaao0XBNbN5ZMTMQ0nozXei4CGBBc1QZQDJTQg2bQXdfbzYf1axGFmAHwDykLCo
+         Legjo3j2qEKmi+n/ngLszPQnVsgnpqKsHOaSzCJ9iZlwmESTjx2jFkyc3kLtJ1bJfji9
+         oKeylA4iWdAVnj8k7rqRBtsEbZ0aeu4aij4lU5ds/bvc7IE3iGdSixNkCP9ntnwdstYS
+         mGNC0LIi0Do6UYY93gAxWUuHqsUhzAbTQUJY3+H09zgLizhtYM9Vft06sVXZLzOaWXNe
+         JxXgfQ293gOceq6CViYtzVAOK/zhzu1UKHtVmZloBrr7Eh3V6w9eyzOuS8lm5e44vYlD
+         mtJw==
+X-Gm-Message-State: AOAM530ff83v2p49ikmBx1KznedcZEJVaciEnfaUJd5iX1ejBkwv4j+j
+        sbfYMHcNDXejE6JonaPmtEE=
+X-Google-Smtp-Source: ABdhPJy7+djtqogavZnlVRBFra1BNaxIq3rv16L8ZDRVEHRYdhxWaAozpsxz4/f+Csk+HDM8H8S8Rw==
+X-Received: by 2002:a05:6a00:886:b029:1ed:b546:6d1f with SMTP id q6-20020a056a000886b02901edb5466d1fmr8202804pfj.22.1614934047345;
+        Fri, 05 Mar 2021 00:47:27 -0800 (PST)
+Received: from localhost.localdomain ([45.135.186.129])
+        by smtp.gmail.com with ESMTPSA id js16sm1664393pjb.21.2021.03.05.00.47.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Mar 2021 00:47:26 -0800 (PST)
+From:   Jia-Ju Bai <baijiaju1990@gmail.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        stanley.chu@mediatek.com, cang@codeaurora.org,
+        tomas.winkler@intel.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH] scsi: ufs: fix error return code of ufshcd_populate_vreg()
+Date:   Fri,  5 Mar 2021 00:47:18 -0800
+Message-Id: <20210305084718.12108-1-baijiaju1990@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Mar 5, 2021 at 8:52 AM Joakim Bech <joakim.bech@linaro.org> wrote:
-> On Thu, Mar 04, 2021 at 09:56:24PM +0100, Arnd Bergmann wrote:
-> > On Wed, Mar 3, 2021 at 2:54 PM Alex Benn=C3=A9e <alex.bennee@linaro.org=
-> wrote:
-> > That said, I can also imagine use cases where we do want to
-> > store the key in the kernel's keyring, so maybe we end up needing
-> > both.
-> >
-> The concern I have in those cases is that you need to share the RPMB key
-> in some way if you need to access the RPMB device from secure side as
-> well as from the non-secure side. Technically doable I guess, but in
-> practice and in terms of security it doesn't seem like a good approach.
->
-> In a shared environment like that you also have the problem that you
-> need to agree on how to actually store files on the RPMB device. OP-TEE
-> has it's own "FAT-look-a-like" implementation when using RPMB. But if
-> you need mutual access, then you need to get into agreement on where to
-> actually store the files in the RPMB.
->
-> However, if secure side for some reason doesn't use RPMB at all, then
-> kernel could of course take control of it and use it.
->
-> I would probably not spend too much time on taking that use case into
-> account until we actually see a real need for it.
+When np is NULL or of_parse_phandle() returns NULL, no error return code
+of ufshcd_populate_vreg() is assigned.
+To fix this bug, ret is assigned with -EINVAL or -ENOENT as error return
+code.
 
-I think the scenario for the 'nvme-rpmb' tool that does the signing in user
-space does not involve any TEE at the moment, because PCs usually
-don't have one.
+Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+---
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-I agree that sharing the RPMB is not a great idea, so if you have a TEE
-in the system that requires an RPMB for storage, it won't be usable by
-anything else. However, you can have multiple RPMB partitions with separate
-keys on an NVMe drive, and you can easily have multiple emulated
-virtio-rpmb devices  in a guest and use them for purposes other than the
-TEE.
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 1a69949a4ea1..9f11c416a919 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -113,6 +113,7 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 
+ 	if (!np) {
+ 		dev_err(dev, "%s: non DT initialization\n", __func__);
++		ret = -EINVAL;
+ 		goto out;
+ 	}
+ 
+@@ -120,6 +121,7 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 	if (!of_parse_phandle(np, prop_name, 0)) {
+ 		dev_info(dev, "%s: Unable to find %s regulator, assuming enabled\n",
+ 				__func__, prop_name);
++		ret = -ENOENT;
+ 		goto out;
+ 	}
+ 
+-- 
+2.17.1
 
-      Arnd
