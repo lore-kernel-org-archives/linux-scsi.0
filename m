@@ -2,177 +2,211 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D9B6C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Mar 2021 17:18:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9162C433E9
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Mar 2021 17:57:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D12CE6522C
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Mar 2021 17:18:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89CAD64D73
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Mar 2021 17:57:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229972AbhCHRSB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Mar 2021 12:18:01 -0500
-Received: from mail-ot1-f47.google.com ([209.85.210.47]:44394 "EHLO
-        mail-ot1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229646AbhCHRRs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Mar 2021 12:17:48 -0500
-Received: by mail-ot1-f47.google.com with SMTP id f33so9885673otf.11;
-        Mon, 08 Mar 2021 09:17:47 -0800 (PST)
+        id S229459AbhCHR4x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Mar 2021 12:56:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45488 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229730AbhCHR4X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Mar 2021 12:56:23 -0500
+Received: from mail-qt1-x834.google.com (mail-qt1-x834.google.com [IPv6:2607:f8b0:4864:20::834])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4F15C06174A;
+        Mon,  8 Mar 2021 09:56:22 -0800 (PST)
+Received: by mail-qt1-x834.google.com with SMTP id 2so8210481qtw.1;
+        Mon, 08 Mar 2021 09:56:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mail-followup-to:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=0m8CHhLcUbX1L0n34fq2jhUA8O0HIx6xnmSmWybWykk=;
+        b=Uu7C0+3FPBuhHvrg5d9nmKpNDe7JFfTyu4T3jbk0IX+zQ0sApuvPgU4ee8KG+VkznP
+         19Nmhb0ADvG186q3JRwCs9XttMjOu/j58+aWsepQ0nZKtcC6IYNn2x70Vu4i49T9mRSB
+         DksfLv9vjonqp15jrpJRNswi/XyWGye/wvIY4RYWaWnAwG5iiiaeGnZdk7yqCYN6H8mv
+         nbXO+V/Ud/GbNf9GDfIAL7fiTxEoRowN77+pYI6aJo2EM+dYJEjROcbkhlVfXKE3lkr3
+         QNPM5oY3No387KncclE9cmBZjmejjlU+lcmfWgAobbY9hYyb7nb+JFikeWjyMwBRZMSU
+         KPCQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=LLAuJN9s4HTUz+X3eqpXsgn6nsnEDUj7ZWPMggJ9UkQ=;
-        b=IVQgnNgoE6v5ns7VFLQAOwO/rli2DbxArjKyxZYCHjdpSuaHYi1mWM9Ryo5Yv5/pQg
-         9VkqSb4o0YOwKGOm+KtEnpSmomGGJ6dWC5kw/AXt8B7kGRqmtsPmehUUv+5035U8ofyR
-         MH9/SNAqbu3vAidAjJNOTF0JuDXcTA8h6twgvn9e5Yrp678HBoY1GPGbNzhB0ltSEt31
-         NNVyGwOWVIyDaQxihxLUZnCuLdkp8qPdoXt9/x8tLmK/lCNXmP26b52wgM18n/6O6RZN
-         KYobZbAGgO3zgbEvEKZ1Fm7JOkfdnPlvtL7QVOb36P6rbum03/+N2flIsxEQJLe8y2rL
-         ovIw==
-X-Gm-Message-State: AOAM530p52QLixSdHksXVgZKeIFeMKGuYra6xLG+Wm9F3rxdDC2y8G4b
-        zYI/bKeFolrt0lJd5fbjxFO61FMbuh2nJasX4PY=
-X-Google-Smtp-Source: ABdhPJy3ixyulNXbgWmf58jGUR8/00MLlyH/pcH6DEyialh2MI6c5M/QGmRiA25J/arfLKcbGIBnHzQ42xcfMZe/12s=
-X-Received: by 2002:a05:6830:1e03:: with SMTP id s3mr10129409otr.321.1615223867208;
- Mon, 08 Mar 2021 09:17:47 -0800 (PST)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=0m8CHhLcUbX1L0n34fq2jhUA8O0HIx6xnmSmWybWykk=;
+        b=KlUlXVuFijQ2EDNIRvhKSL7s8lie7Oa2ckJZ6MMroG/p8NSQmYfZ0hu6cxek0ZMtzh
+         6E+IZRNsqu5pLx+7/sDZ8hHj9zxuiP9E6fn/+fob6cXxRJtK4/AUDMMKsMoEimDDzK69
+         VJH8fFkbPvOBC6JowH7GMth7WC8ZKGZ0WO1DE/wKsG9xSDR8GOCekfQX13Y6t6cxpfbT
+         q8Ufow2pXyPidcCoUep71DV1SpcOyn9GTE4HjnwIBy0Ieq+yacECQnTBNvNRWcCtsm4m
+         XcILYkM73qhk49j5Tv+shn9VySAnjzOhhfSof7l+EoMMc0zSjQ0bvWf/oXOcxdfPU+gb
+         EIhw==
+X-Gm-Message-State: AOAM533SFzpJvYd1qeHB+GcqTHGjlDEY8yruHgW+zzTDWWttgywFSWay
+        ljtk1YMmacYTdnjkYAVN1KA=
+X-Google-Smtp-Source: ABdhPJzO9wLO43QAi1OgGSn/xqvHdgfa2/BrTgPnV4G6jt9wIu+bSd+HJTfQ4ZkFvr6bv0sruhrl5g==
+X-Received: by 2002:ac8:5908:: with SMTP id 8mr21583583qty.66.1615226181717;
+        Mon, 08 Mar 2021 09:56:21 -0800 (PST)
+Received: from goldwasser (pool-96-245-155-29.phlapa.fios.verizon.net. [96.245.155.29])
+        by smtp.gmail.com with ESMTPSA id j26sm1499652qtp.30.2021.03.08.09.56.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 08 Mar 2021 09:56:20 -0800 (PST)
+Date:   Mon, 8 Mar 2021 12:56:18 -0500
+From:   Melanie Plageman <melanieplageman@gmail.com>
+To:     Michael Kelley <mikelley@microsoft.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "andres@anarazel.de" <andres@anarazel.de>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>
+Subject: Re: [PATCH v1] scsi: storvsc: Cap cmd_per_lun at can_queue
+Message-ID: <20210308175618.GA2376@goldwasser>
+Mail-Followup-To: Michael Kelley <mikelley@microsoft.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "andres@anarazel.de" <andres@anarazel.de>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>
+References: <20210305232151.1531-1-melanieplageman@gmail.com>
+ <MWHPR21MB1593078007256C5155ED5A86D7939@MWHPR21MB1593.namprd21.prod.outlook.com>
 MIME-Version: 1.0
-References: <cover.1614725302.git.asutoshd@codeaurora.org> <0576d6eae15486740c25767e2d8805f7e94eb79d.1614725302.git.asutoshd@codeaurora.org>
- <85086647-7292-b0a2-d842-290818bd2858@intel.com> <6e98724d-2e75-d1fe-188f-a7010f86c509@codeaurora.org>
- <20210306161616.GC74411@rowland.harvard.edu> <CAJZ5v0ihJe8rNjWRwNic_BQUvKbALNcjx8iiPAh5nxLhOV9duw@mail.gmail.com>
-In-Reply-To: <CAJZ5v0ihJe8rNjWRwNic_BQUvKbALNcjx8iiPAh5nxLhOV9duw@mail.gmail.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Mon, 8 Mar 2021 18:17:35 +0100
-Message-ID: <CAJZ5v0iJ4yqRTt=mTCC930HULNFNTgvO4f9ToVO6pNz53kxFkw@mail.gmail.com>
-Subject: Re: [PATCH v10 1/2] scsi: ufs: Enable power management for wlun
-To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Adrian Hunter <adrian.hunter@intel.com>, cang@codeaurora.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Dinghao Liu <dinghao.liu@zju.edu.cn>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-samsung-soc@vger.kernel.org>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>,
-        Linux-PM mailing list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <MWHPR21MB1593078007256C5155ED5A86D7939@MWHPR21MB1593.namprd21.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 8, 2021 at 5:21 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
->
-> On Sat, Mar 6, 2021 at 5:17 PM Alan Stern <stern@rowland.harvard.edu> wrote:
-> >
-> > On Fri, Mar 05, 2021 at 06:54:24PM -0800, Asutosh Das (asd) wrote:
-> >
-> > > Now during my testing I see a weird issue sometimes (1 in 7).
-> > > Scenario - bootups
-> > >
-> > > Issue:
-> > > The supplier 'ufs_device_wlun 0:0:0:49488' goes into runtime suspend even
-> > > when one/more of its consumers are in RPM_ACTIVE state.
-> > >
-> > > *Log:
-> > > [   10.056379][  T206] sd 0:0:0:1: [sdb] Synchronizing SCSI cache
-> > > [   10.062497][  T113] sd 0:0:0:5: [sdf] Synchronizing SCSI cache
-> > > [   10.356600][   T32] sd 0:0:0:7: [sdh] Synchronizing SCSI cache
-> > > [   10.362944][  T174] sd 0:0:0:3: [sdd] Synchronizing SCSI cache
-> > > [   10.696627][   T83] sd 0:0:0:2: [sdc] Synchronizing SCSI cache
-> > > [   10.704562][  T170] sd 0:0:0:6: [sdg] Synchronizing SCSI cache
-> > > [   10.980602][    T5] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> > >
-> > > /** Printing all the consumer nodes of supplier **/
-> > > [   10.987327][    T5] ufs_device_wlun 0:0:0:49488: usage-count @ suspend: 0
-> > > <-- this is the usage_count
-> > > [   10.994440][    T5] ufs_rpmb_wlun 0:0:0:49476: PM state - 2
-> > > [   11.000402][    T5] scsi 0:0:0:49456: PM state - 2
-> > > [   11.005453][    T5] sd 0:0:0:0: PM state - 2
-> > > [   11.009958][    T5] sd 0:0:0:1: PM state - 2
-> > > [   11.014469][    T5] sd 0:0:0:2: PM state - 2
-> > > [   11.019072][    T5] sd 0:0:0:3: PM state - 2
-> > > [   11.023595][    T5] sd 0:0:0:4: PM state - 0 << RPM_ACTIVE
-> > > [   11.353298][    T5] sd 0:0:0:5: PM state - 2
-> > > [   11.357726][    T5] sd 0:0:0:6: PM state - 2
-> > > [   11.362155][    T5] sd 0:0:0:7: PM state - 2
-> > > [   11.366584][    T5] ufshcd-qcom 1d84000.ufshc: __ufshcd_wl_suspend - 8709
-> > > [   11.374366][    T5] ufs_device_wlun 0:0:0:49488: __ufshcd_wl_suspend -
-> > > (0) has rpm_active flags
->
-> Do you mean that rpm_active of the link between the consumer and the
-> supplier is greater than 0 at this point and the consumer is
+On Mon, Mar 08, 2021 at 02:37:40PM +0000, Michael Kelley wrote:
+> From: Melanie Plageman (Microsoft) <melanieplageman@gmail.com> Sent: Friday, March 5, 2021 3:22 PM
+> > 
+> > The scsi_device->queue_depth is set to Scsi_Host->cmd_per_lun during
+> > allocation.
+> > 
+> > Cap cmd_per_lun at can_queue to avoid dispatch errors.
+> > 
+> > Signed-off-by: Melanie Plageman (Microsoft) <melanieplageman@gmail.com>
+> > ---
+> >  drivers/scsi/storvsc_drv.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> > index 6bc5453cea8a..d7953a6e00e6 100644
+> > --- a/drivers/scsi/storvsc_drv.c
+> > +++ b/drivers/scsi/storvsc_drv.c
+> > @@ -1946,6 +1946,8 @@ static int storvsc_probe(struct hv_device *device,
+> >  				(max_sub_channels + 1) *
+> >  				(100 - ring_avail_percent_lowater) / 100;
+> > 
+> > +	scsi_driver.cmd_per_lun = min_t(u32, scsi_driver.cmd_per_lun, scsi_driver.can_queue);
+> > +
+> 
+> I'm not sure what you mean by "avoid dispatch errors".  Can you elaborate?
 
-I mean is rpm_active of the link greater than 1 (because 1 means "no
-active references to the supplier")?
+The scsi_driver.cmd_per_lun is set to 2048. Which is then used to set
+Scsi_Host->cmd_per_lun in storvsc_probe().
 
-> RPM_ACTIVE, but the supplier suspends successfully nevertheless?
->
-> > > [   11.383376][    T5] ufs_device_wlun 0:0:0:49488:
-> > > ufshcd_wl_runtime_suspend <-- Supplier suspends fine.
-> > > [   12.977318][  T174] sd 0:0:0:4: [sde] Synchronizing SCSI cache
-> > >
-> > > And the the suspend of sde is stuck now:
-> > > schedule+0x9c/0xe0
-> > > schedule_timeout+0x40/0x128
-> > > io_schedule_timeout+0x44/0x68
-> > > wait_for_common_io+0x7c/0x100
-> > > wait_for_completion_io+0x14/0x20
-> > > blk_execute_rq+0x90/0xcc
-> > > __scsi_execute+0x104/0x1c4
-> > > sd_sync_cache+0xf8/0x2a0
-> > > sd_suspend_common+0x74/0x11c
-> > > sd_suspend_runtime+0x14/0x20
-> > > scsi_runtime_suspend+0x64/0x94
-> > > __rpm_callback+0x80/0x2a4
-> > > rpm_suspend+0x308/0x614
-> > > pm_runtime_work+0x98/0xa8
-> > >
-> > > I added 'DL_FLAG_RPM_ACTIVE' while creating links.
-> > >       if (hba->sdev_ufs_device) {
-> > >               link = device_link_add(&sdev->sdev_gendev,
-> > >                                   &hba->sdev_ufs_device->sdev_gendev,
-> > >                                  DL_FLAG_PM_RUNTIME|DL_FLAG_RPM_ACTIVE);
-> > > I didn't expect this to resolve the issue anyway and it didn't.
-> > >
-> > > Another interesting point here is when I resume any of the above suspended
-> > > consumers, it all goes back to normal, which is kind of expected. I tried
-> > > resuming the consumer and the supplier is resumed and the supplier is
-> > > suspended when all the consumers are suspended.
-> > >
-> > > Any pointers on this issue please?
-> > >
-> > > @Bart/@Alan - Do you've any pointers please?
-> >
-> > It's very noticeable that although you seem to have isolated a bug in
-> > the power management subsystem (supplier goes into runtime suspend
-> > even when one of its consumers is still active), you did not CC the
-> > power management maintainer or mailing list.
-> >
-> > I have added the appropriate CC's.
->
-> Thanks Alan!
+In storvsc_probe(), when doing scsi_scan_host(), scsi_alloc_sdev() is
+called and sets the scsi_device->queue_depth to the Scsi_Host's
+cmd_per_lun with this code:
+    
+scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun ?    
+                                        sdev->host->cmd_per_lun : 1);
+
+During dispatch, the scsi_device->queue_depth is used in
+scsi_dev_queue_ready(), called by scsi_mq_get_budget() to determine
+whether or not the device can queue another command.    
+
+On some machines, with the 2048 value of cmd_per_lun that was used to
+set the initial scsi_device->queue_depth, commands can be queued that
+are later not able to be dispatched after running out of space in the
+ringbuffer.
+
+On an 8 core Azure VM with 16GB of memory with a single 1 TiB SSD
+(running an fio workload that I can provide if needed), storvsc_do_io()
+ends up often returning SCSI_MLQUEUE_DEVICE_BUSY.
+                                                                      
+This is the call stack: 
+    
+hv_get_bytes_to_write
+hv_ringbuffer_write    
+vmbus_send_packet      
+storvsc_dio_io      
+storvsc_queuecommand
+scsi_dispatch_cmd    
+scsi_queue_rq       
+dispatch_rq_list
+
+> Be aware that the calculation of "can_queue" in this driver is somewhat
+> flawed -- it should not be based on the size of the ring buffer, but instead on
+> the maximum number of requests Hyper-V will queue.  And even then,
+> can_queue doesn't provide the cap you might expect because the blk-mq layer
+> allocates can_queue tags for each HW queue, not as a total.
+
+
+The docs for scsi_mid_low_api document Scsi_Host can_queue this way:
+
+  can_queue    
+  - must be greater than 0; do not send more than can_queue    
+    commands to the adapter. 
+        
+I did notice that in scsi_host.h, the comment for can_queue does say
+can_queue is the "maximum number of simultaneous commands a single hw
+queue in HBA will accept." However, I don't see it being used this way
+in the code.
+                                                                            
+During dispatch, In scsi_target_queue_ready(), there is this code:
+
+        if (busy >= starget->can_queue)
+                goto starved;
+
+And the scsi_target->can_queue value should be coming from Scsi_host as
+mentioned in the scsi_target definition in scsi_device.h
+    /*
+      * LLDs should set this in the slave_alloc host template callout.
+      * If set to zero then there is not limit.
+      */
+    unsigned int            can_queue;
+
+So, I don't really see how this would be per hardware queue.
+
+> 
+> I agree that the cmd_per_lun setting is also too big, but we should fix that in
+> the context of getting all of these different settings working together correctly,
+> and not piecemeal.
+> 
+
+Capping Scsi_Host->cmd_per_lun to scsi_driver.can_queue during probe
+will also prevent the LUN queue_depth from being set to a value that is
+higher than it can ever be set to again by the user when
+storvsc_change_queue_depth() is invoked. 
+
+Also in scsi_sysfs sdev_store_queue_depth() there is this check:
+
+          if (depth < 1 || depth > sdev->host->can_queue)
+                return -EINVAL;
+
+I would also note that VirtIO SCSI in virtscsi_probe(), Scsi_Host->cmd_per_lun
+is set to the min of the configured cmd_per_lun and
+Scsi_Host->can_queue:
+
+    shost->cmd_per_lun = min_t(u32, cmd_per_lun, shost->can_queue);
+
+Best,
+Melanie
