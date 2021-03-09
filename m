@@ -6,60 +6,56 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3ACFC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 17:16:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05A30C4332B
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 17:16:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95CEE64FCF
+	by mail.kernel.org (Postfix) with ESMTP id D36EE64FCF
 	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 17:16:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231187AbhCIRPl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S231414AbhCIRPl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 9 Mar 2021 12:15:41 -0500
-Received: from mail-pg1-f179.google.com ([209.85.215.179]:39893 "EHLO
-        mail-pg1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231264AbhCIRPL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2021 12:15:11 -0500
-Received: by mail-pg1-f179.google.com with SMTP id x29so9210204pgk.6;
-        Tue, 09 Mar 2021 09:15:11 -0800 (PST)
+Received: from mail-pj1-f49.google.com ([209.85.216.49]:40742 "EHLO
+        mail-pj1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230425AbhCIRPd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2021 12:15:33 -0500
+Received: by mail-pj1-f49.google.com with SMTP id a22-20020a17090aa516b02900c1215e9b33so5353146pjq.5;
+        Tue, 09 Mar 2021 09:15:33 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=IhwVS2D8UkJ+LBQWdC/ly8SR5Kmt1JsG8/atOpjGQbA=;
-        b=gkCO13k7dlxsWmlh11f3zA60/77CRKstkI+JxK3xsmPs74r4rCGg+kpgBNuqYS9LXw
-         Ol5ZW9cZaCGTkVh2ZNlQ3YT799O4kZjKZmjdoSBjrZcN9i6BNdTE3Qgh12IC0fbVAVl1
-         rceb7MfUnNxKnfjsIuKnaWfSVLyy7D1r79fDOvYd56oOKGnoTeU6qG9YZxzcrAQJjDQo
-         xwakJPn68SNbWf/SCLYLPRoqWRKVnGMPU5KMmmxTXpUqXJiN54TCdKnxXJNaBaSrebGr
-         PfObb2baarWiNvNQCrtaxQhWKgK9J7Xj7I0WDuU+W6z2hViAo0aWnSWnJ10Xi05iBcmM
-         sEHQ==
-X-Gm-Message-State: AOAM530MddsIdMe7jUCcAL+sa6ATsZi5UKOxmXCdLQHQEdC2FgonNSIn
-        8jX5AXncEvayPz+D+FF/kOY=
-X-Google-Smtp-Source: ABdhPJzbbLwoRBqhwNq46k1/pwq7NVyXufzhaLG4TQ/R62OiDGbUpv+vsa5eH0J974mp36HNzX0gzA==
-X-Received: by 2002:aa7:9145:0:b029:1ed:d58b:e276 with SMTP id 5-20020aa791450000b02901edd58be276mr26199953pfi.25.1615310111275;
-        Tue, 09 Mar 2021 09:15:11 -0800 (PST)
+        bh=alSe8NHdrm3lyNmy/FOWhW9jXK+b+/HNwLuDL+B52JU=;
+        b=YIDwezu9XtZHmQ9DcunteaPnvkFQJTn3YCQsKTvjqThjy/n+3Ufk2f8qD04Ca/dTes
+         UniJVV5MK4NzdhXRTPAlafrCDBnnlkRm5Z7V3ZItnToaE49oEPINLc6wlfLoyvrTU192
+         FjtuDrNZIR9OHHECnFpe8ckjcCZKTWzRQGnBxrcInIrIoNQVnigoMon6x0HL/s9i3wOA
+         ks6WPJwGfwKigMxe8vU1Bm/OQYDxBu+gbKLpn0pSbJBsb7tenWjl89uoCcHvrqoFjMKX
+         iUzKHmW1+6kQD8IMgb2Xh7kAxpcu5UN4g8NMYvqvsDn0HVpnMQI3nV6LdyJW1lYU7T43
+         sTJQ==
+X-Gm-Message-State: AOAM531yhD/4tSwjy/ujvpJRNMT8bdu81bW4PCx6ZC4cOpneBDnjNkl1
+        xlWTOCZz0Bn6ZGl+fudhuaw=
+X-Google-Smtp-Source: ABdhPJwspxhU0wsGuv/Z/nSW5xY3iYKTZEe9ErRS+Acbysoj/VMc9gIMhnm4PGdmsOwgmoFMbvRBPw==
+X-Received: by 2002:a17:902:ed41:b029:e5:c92d:ec24 with SMTP id y1-20020a170902ed41b02900e5c92dec24mr26046670plb.57.1615310132899;
+        Tue, 09 Mar 2021 09:15:32 -0800 (PST)
 Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id k11sm13022739pfc.22.2021.03.09.09.15.09
+        by smtp.gmail.com with ESMTPSA id z2sm11232136pfq.198.2021.03.09.09.15.31
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 09 Mar 2021 09:15:10 -0800 (PST)
-Subject: Re: [PATCH 00/23] target: code cleanup
-To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "hare@suse.de" <hare@suse.de>
-Cc:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "mlombard@redhat.com" <mlombard@redhat.com>,
-        "michael.christie@oracle.com" <michael.christie@oracle.com>,
-        "houpu@bytedance.com" <houpu@bytedance.com>
+        Tue, 09 Mar 2021 09:15:32 -0800 (PST)
+Subject: Re: [PATCH 01/23] target/iblock: remove an extra argument
+To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     martin.petersen@oracle.com, hare@suse.de, jejb@linux.ibm.com,
+        mlombard@redhat.com, michael.christie@oracle.com,
+        houpu@bytedance.com
 References: <20210228055645.22253-1-chaitanya.kulkarni@wdc.com>
- <BYAPR04MB496548D9C37AD2AFCB2974E886929@BYAPR04MB4965.namprd04.prod.outlook.com>
+ <20210228055645.22253-2-chaitanya.kulkarni@wdc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <9680a154-d360-39ba-1da5-717ec2ebe458@acm.org>
-Date:   Tue, 9 Mar 2021 09:15:08 -0800
+Message-ID: <9996fa8d-8861-0888-b9ba-d0dbac94073b@acm.org>
+Date:   Tue, 9 Mar 2021 09:15:30 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.7.1
 MIME-Version: 1.0
-In-Reply-To: <BYAPR04MB496548D9C37AD2AFCB2974E886929@BYAPR04MB4965.namprd04.prod.outlook.com>
+In-Reply-To: <20210228055645.22253-2-chaitanya.kulkarni@wdc.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -67,38 +63,9 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/8/21 9:04 PM, Chaitanya Kulkarni wrote:
-> Bart, Martin, Hannes,
-> 
-> On 2/27/21 21:56, Chaitanya Kulkarni wrote:
->> Hi,
->>
->> This removes unused macros, various memset, extra variable in the
->> target/iblock for bio get and fixes type mismatch for the same.
->>
->> The unused macros warning are found at compile time and they are
->> documented in each patch commit log. For memset removal, there are no
->> warnings.
->>
->> First four patches are target_core_iblock.c cleanup. The next six
->> patches are removal of the unused macros followed by elevan patches to
->> remove the memset for local array buffers. The last patch is for
->> removing the duplicate memset to initialize the buffer to 0xff.
->>   
->> I've tested this patch series with creating target bdev backend with
->> loop back transport, fio verification job seems to work fine.
->>
->> Any feedback is welcome.
->>
->> This is generated on today's linux-block for-next.
->>
->> -ck
-> 
-> any comments on this ?
+On 2/27/21 9:56 PM, Chaitanya Kulkarni wrote:
+> The twp arguments to the functions op and opf which are REQ_OP_XXX and
+       ^^^
 
-Although I'm not sure all patches in this series are useful, the patches 
-in this series look good to me.
-
-Bart.
-
+typo?
 
