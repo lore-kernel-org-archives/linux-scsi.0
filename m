@@ -2,58 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E043EC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 09:33:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C25A5C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 09:39:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD7426523D
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 09:33:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77F2865252
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 09:39:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229599AbhCIJcc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Mar 2021 04:32:32 -0500
-Received: from verein.lst.de ([213.95.11.211]:59117 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229901AbhCIJcc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Mar 2021 04:32:32 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 1B70868B05; Tue,  9 Mar 2021 10:32:27 +0100 (CET)
-Date:   Tue, 9 Mar 2021 10:32:26 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Caleb Connolly <caleb@connolly.tech>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        ejb@linux.ibm.com, stanley.chu@mediatek.com, cang@codeaurora.org,
-        beanhuo@micron.com, jaegeuk@kernel.org, asutoshd@codeaurora.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] scsi: ufshcd: switch to a version macro
-Message-ID: <20210309093226.GA6320@lst.de>
-References: <20210308005739.1998483-1-caleb@connolly.tech> <20210308005739.1998483-2-caleb@connolly.tech> <20210308080013.GE983@lst.de> <0c6cff2b-8d56-2b34-837d-b3d8f1fa5ad9@connolly.tech>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0c6cff2b-8d56-2b34-837d-b3d8f1fa5ad9@connolly.tech>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+        id S230081AbhCIJie (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Mar 2021 04:38:34 -0500
+Received: from out30-133.freemail.mail.aliyun.com ([115.124.30.133]:50979 "EHLO
+        out30-133.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230047AbhCIJiB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2021 04:38:01 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e01424;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=10;SR=0;TI=SMTPD_---0UR53sNl_1615282671;
+Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0UR53sNl_1615282671)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Tue, 09 Mar 2021 17:37:57 +0800
+From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     jejb@linux.ibm.com
+Cc:     martin.petersen@oracle.com, sumit.semwal@linaro.org,
+        christian.koenig@amd.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Subject: [PATCH] scsi: csiostor: Assign boolean values to a bool variable
+Date:   Tue,  9 Mar 2021 17:37:48 +0800
+Message-Id: <1615282668-36935-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 08, 2021 at 10:42:43AM +0000, Caleb Connolly wrote:
-> >> +#define UFSHCI_VER(major, minor) \
-> >> +	((major << 8) + (minor << 4))
-> > This needs braces around major and minor.  Or better just convert it
-> > to an inline function (and use a lower case name).
-> 
-> Other (similar) implementations, like NVME_VS() use a macro here, is an 
-> inline function just personal preference?
-> 
-> I'm perfectly happy either way, so I'll switch to your suggestion.
+Fix the following coccicheck warnings:
 
-In general inline functions are always preferred over non-trivial
-macros.  Macros are required for a few cases where e.g. otherwise the
-include dependencies would turn into a nightmare.
+./drivers/scsi/csiostor/csio_scsi.c:150:9-10: WARNING: return of 0/1 in
+function 'csio_scsi_itnexus_loss_error' with return type bool.
+
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+---
+ drivers/scsi/csiostor/csio_scsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 55e74da..56b9ad0 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -147,9 +147,9 @@ static int csio_do_abrt_cls(struct csio_hw *,
+ 	case FW_ERR_RDEV_LOST:
+ 	case FW_ERR_RDEV_LOGO:
+ 	case FW_ERR_RDEV_IMPL_LOGO:
+-		return 1;
++		return true;
+ 	}
+-	return 0;
++	return false;
+ }
+ 
+ /*
+-- 
+1.8.3.1
+
