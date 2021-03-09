@@ -2,93 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1BDFC433E6
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 20:51:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C986C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 21:17:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6AF66523A
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 20:51:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FA9A65259
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 21:17:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231790AbhCIUuf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Mar 2021 15:50:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56780 "EHLO
+        id S231941AbhCIVR1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Mar 2021 16:17:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231719AbhCIUuU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2021 15:50:20 -0500
-Received: from mail-il1-x12e.google.com (mail-il1-x12e.google.com [IPv6:2607:f8b0:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9F38C061761
-        for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2021 12:50:20 -0800 (PST)
-Received: by mail-il1-x12e.google.com with SMTP id s1so13416966ilh.12
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Mar 2021 12:50:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=T8Beol1vwvugLcX6dyhYM7QV2XmUWY2CELTq49rlsJk=;
-        b=D4CmLh/h2w/J1i0VPcOxlMFzEuqzUjkpZtNtGOHi/2VTPRS7Z4qe8S9++KSJqtONh2
-         GOPmuiR+6JbHCGHAK13IqjCjXyDgT+XXLFglPrNmHuLwPgKTq7CqhnBpQJQ70AMRdJjx
-         9AcgAFs/YLmF9GzqzhmbtkFISp6+3GH3IngohIJDFQBaAml64P+bL1kaBQDvjiHAD+nZ
-         ylIvnP/ECzkcH6FTu/Eq8i3heCzxDc+WojQ+JLZxZg36GU20orXdHOUYWfHzCBedmaED
-         sMWf4IbjzJFW7nkYDaVelbHDETMOt1gMYXO8haqGobcIHTaasa4OPllmCpVlfRC4Ix3c
-         YTuQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=T8Beol1vwvugLcX6dyhYM7QV2XmUWY2CELTq49rlsJk=;
-        b=FJ2EjJUj93A/l7WKdf79aHKJhIlzsuSgo+SHsaQjHST0GKkqasvrrINFKFKhWHOiiC
-         2VOl96OtnwQKNHASD8KQ6Sp3H8yhC8GUpSYXZ4bVI/8CreSjuipBDAKVTa1c4KmQ1g7m
-         Yk/r1txtvIF0465t+IxCQBSXX64KoIWjb1ExD/lpFrNufwaAJC3FXFzqFajn9x2alJsp
-         4CwzF25b9AsI7Xa36j5KzLEryuTETUNe8D1tdxSkT5D0m/ABLb4Y8z9Yu1i65QPXJfRi
-         2V58inxEaR3w8k0hZIvV5XCTdGYUHXqapECHUVlGZ0Oc1+UeBC0xQsEcqzwGkqK+6WX0
-         jsow==
-X-Gm-Message-State: AOAM532RhIhWlaP2fUObjSmt921AO46dFTrgpF+9zz8T0QpudF81D+g+
-        T5WDWcKVd3KFRN8oaGeHQeT2y57GoMHrLg==
-X-Google-Smtp-Source: ABdhPJzL4us6wU9N46CCAROdfi7JEXE1HxM1m4J4+Smd3ru46Jtr3H8nfy06m2kjHYjK9tiAsRTGag==
-X-Received: by 2002:a92:ddd0:: with SMTP id d16mr45367ilr.52.1615323019838;
-        Tue, 09 Mar 2021 12:50:19 -0800 (PST)
-Received: from [192.168.1.30] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id c19sm8079624ile.17.2021.03.09.12.50.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 09 Mar 2021 12:50:19 -0800 (PST)
-Subject: Re: [PATCH v2] include: Remove pagemap.h from blkdev.h
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-bcache@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-scsi@vger.kernel.org
-References: <20210309195747.283796-1-willy@infradead.org>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <b4d3285a-e1a2-1381-2bfd-ceeaf5ab55c9@kernel.dk>
-Date:   Tue, 9 Mar 2021 13:50:18 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        with ESMTP id S231616AbhCIVRD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2021 16:17:03 -0500
+X-Greylist: delayed 422 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 09 Mar 2021 13:17:02 PST
+Received: from mail.marcansoft.com (marcansoft.com [IPv6:2a01:298:fe:f::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3143C06174A;
+        Tue,  9 Mar 2021 13:17:02 -0800 (PST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
+        (No client certificate requested)
+        (Authenticated sender: marcan@marcan.st)
+        by mail.marcansoft.com (Postfix) with ESMTPSA id 1C1D141982;
+        Tue,  9 Mar 2021 21:09:35 +0000 (UTC)
+To:     Linus Walleij <linus.walleij@linaro.org>,
+        Arnd Bergmann <arnd@linaro.org>, keyrings@vger.kernel.org,
+        David Howells <dhowells@redhat.com>,
+        Jarkko Sakkinen <jarkko@kernel.org>
+Cc:     Joakim Bech <joakim.bech@linaro.org>,
+        =?UTF-8?Q?Alex_Benn=c3=a9e?= <alex.bennee@linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Maxim Uvarov <maxim.uvarov@linaro.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        ruchika.gupta@linaro.org,
+        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
+        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
+        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>
+References: <20210303135500.24673-1-alex.bennee@linaro.org>
+ <20210303135500.24673-2-alex.bennee@linaro.org>
+ <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com>
+ <20210305075131.GA15940@goby>
+ <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
+ <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
+From:   Hector Martin <marcan@marcan.st>
+Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB)
+ subsystem
+Message-ID: <6c542548-cc16-af68-c755-df52bd13b209@marcan.st>
+Date:   Wed, 10 Mar 2021 06:09:34 +0900
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-In-Reply-To: <20210309195747.283796-1-willy@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: es-ES
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/9/21 12:57 PM, Matthew Wilcox (Oracle) wrote:
-> My UEK-derived config has 1030 files depending on pagemap.h before
-> this change.  Afterwards, just 326 files need to be rebuilt when I
-> touch pagemap.h.  I think blkdev.h is probably included too widely,
-> but untangling that dependency is harder and this solves my problem.
-> x86 allmodconfig builds, but there may be implicit include problems
-> on other architectures.
+On 09/03/2021 01.20, Linus Walleij wrote:
+> I suppose it would be a bit brutal if the kernel would just go in and
+> appropriate any empty RPMB it finds, but I suspect it is the right way
+> to make use of this facility given that so many of them are just sitting
+> there unused. Noone will run $CUSTOM_UTILITY any more than they
+> run the current RPMB tools in mmc-tools.
 
-For the block bits:
+AIUI the entire thing relies on a shared key that is programmed once 
+into the RPMB device, which is a permanent operation. This key has to be 
+secure, usually stored on CPU fuses or derived based on such a root of 
+trust. To me it would seem ill-advised to attempt to automate this 
+process and have the kernel do a permanent take-over of any RPMBs it 
+finds (with what key, for one?) :)
 
-Acked-by: Jens Axboe <axboe@kernel.dk>
+For what it's worth, these days I think Apple uses a separate, dedicated 
+secure element for replay protected storage, not RPMB. That seems like a 
+sane approach, given that obviously Flash storage vendors cannot be 
+trusted to write security-critical firmware. But if all you have is 
+RPMB, using it is better than nothing.
+
+The main purpose of the RPMB is, as the name implies, replay protection. 
+You can do secure storage on any random flash with encryption, and even 
+do full authentication with hash trees, but the problem is no matter how 
+fancy your scheme is, attackers can always dump all memory and roll your 
+device back to the past. This defeats stuff like PIN code attempt 
+limits. So it isn't so much for storing crypto keys or such, but rather 
+a way to prevent these attacks.
 
 -- 
-Jens Axboe
-
+Hector Martin (marcan@marcan.st)
+Public Key: https://mrcn.st/pub
