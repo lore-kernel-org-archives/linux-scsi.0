@@ -2,92 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C65EC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 17:13:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3ACFC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 17:16:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 017F765237
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 17:13:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95CEE64FCF
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 17:16:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231572AbhCIRNC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Mar 2021 12:13:02 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:29335 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231631AbhCIRMy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2021 12:12:54 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1615309973;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=QDiWkJUtFaM48IgTP2YitIoq9fuTHCd8wn8lOzbyjb4=;
-        b=aLAbWZSg7SqHBz8HQjqrwrGEsYlXFcUb7oF1+qidAjuG05qUuJRu+o3M2Nkv9DUr/OeDFi
-        wBqiJsGRh25d+gbba4SlKAtWxm0DdJ5oC+PJm0vyFJNV1QCc6Mhr4yoBRwQxwXl8+qm0TW
-        QmLlNF7UAsJ+zLMtcZP1B6UAuLiPNJg=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-517-rOiZa9gJOXOA9wVIVbv71w-1; Tue, 09 Mar 2021 12:12:49 -0500
-X-MC-Unique: rOiZa9gJOXOA9wVIVbv71w-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8C77784BA40;
-        Tue,  9 Mar 2021 17:12:46 +0000 (UTC)
-Received: from warthog.procyon.org.uk (ovpn-118-152.rdu2.redhat.com [10.10.118.152])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4E13F5D6D7;
-        Tue,  9 Mar 2021 17:12:42 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-        Kingdom.
-        Registered in England and Wales under Company Registration No. 3798903
-From:   David Howells <dhowells@redhat.com>
-In-Reply-To: <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
-References: <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com> <20210303135500.24673-1-alex.bennee@linaro.org> <20210303135500.24673-2-alex.bennee@linaro.org> <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com> <20210305075131.GA15940@goby> <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
-To:     Linus Walleij <linus.walleij@linaro.org>
-Cc:     dhowells@redhat.com, Arnd Bergmann <arnd@linaro.org>,
-        keyrings@vger.kernel.org, Jarkko Sakkinen <jarkko@kernel.org>,
-        Joakim Bech <joakim.bech@linaro.org>,
-        =?UTF-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Maxim Uvarov <maxim.uvarov@linaro.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        ruchika.gupta@linaro.org,
-        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
-        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
-        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
-        Arnd Bergmann <arnd.bergmann@linaro.org>,
-        Hector Martin <marcan@marcan.st>
-Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB) subsystem
+        id S231187AbhCIRPl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Mar 2021 12:15:41 -0500
+Received: from mail-pg1-f179.google.com ([209.85.215.179]:39893 "EHLO
+        mail-pg1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231264AbhCIRPL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2021 12:15:11 -0500
+Received: by mail-pg1-f179.google.com with SMTP id x29so9210204pgk.6;
+        Tue, 09 Mar 2021 09:15:11 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=IhwVS2D8UkJ+LBQWdC/ly8SR5Kmt1JsG8/atOpjGQbA=;
+        b=gkCO13k7dlxsWmlh11f3zA60/77CRKstkI+JxK3xsmPs74r4rCGg+kpgBNuqYS9LXw
+         Ol5ZW9cZaCGTkVh2ZNlQ3YT799O4kZjKZmjdoSBjrZcN9i6BNdTE3Qgh12IC0fbVAVl1
+         rceb7MfUnNxKnfjsIuKnaWfSVLyy7D1r79fDOvYd56oOKGnoTeU6qG9YZxzcrAQJjDQo
+         xwakJPn68SNbWf/SCLYLPRoqWRKVnGMPU5KMmmxTXpUqXJiN54TCdKnxXJNaBaSrebGr
+         PfObb2baarWiNvNQCrtaxQhWKgK9J7Xj7I0WDuU+W6z2hViAo0aWnSWnJ10Xi05iBcmM
+         sEHQ==
+X-Gm-Message-State: AOAM530MddsIdMe7jUCcAL+sa6ATsZi5UKOxmXCdLQHQEdC2FgonNSIn
+        8jX5AXncEvayPz+D+FF/kOY=
+X-Google-Smtp-Source: ABdhPJzbbLwoRBqhwNq46k1/pwq7NVyXufzhaLG4TQ/R62OiDGbUpv+vsa5eH0J974mp36HNzX0gzA==
+X-Received: by 2002:aa7:9145:0:b029:1ed:d58b:e276 with SMTP id 5-20020aa791450000b02901edd58be276mr26199953pfi.25.1615310111275;
+        Tue, 09 Mar 2021 09:15:11 -0800 (PST)
+Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id k11sm13022739pfc.22.2021.03.09.09.15.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 09 Mar 2021 09:15:10 -0800 (PST)
+Subject: Re: [PATCH 00/23] target: code cleanup
+To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "hare@suse.de" <hare@suse.de>
+Cc:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "mlombard@redhat.com" <mlombard@redhat.com>,
+        "michael.christie@oracle.com" <michael.christie@oracle.com>,
+        "houpu@bytedance.com" <houpu@bytedance.com>
+References: <20210228055645.22253-1-chaitanya.kulkarni@wdc.com>
+ <BYAPR04MB496548D9C37AD2AFCB2974E886929@BYAPR04MB4965.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <9680a154-d360-39ba-1da5-717ec2ebe458@acm.org>
+Date:   Tue, 9 Mar 2021 09:15:08 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <178478.1615309961.1@warthog.procyon.org.uk>
-Date:   Tue, 09 Mar 2021 17:12:41 +0000
-Message-ID: <178479.1615309961@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <BYAPR04MB496548D9C37AD2AFCB2974E886929@BYAPR04MB4965.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Linus Walleij <linus.walleij@linaro.org> wrote:
+On 3/8/21 9:04 PM, Chaitanya Kulkarni wrote:
+> Bart, Martin, Hannes,
+> 
+> On 2/27/21 21:56, Chaitanya Kulkarni wrote:
+>> Hi,
+>>
+>> This removes unused macros, various memset, extra variable in the
+>> target/iblock for bio get and fixes type mismatch for the same.
+>>
+>> The unused macros warning are found at compile time and they are
+>> documented in each patch commit log. For memset removal, there are no
+>> warnings.
+>>
+>> First four patches are target_core_iblock.c cleanup. The next six
+>> patches are removal of the unused macros followed by elevan patches to
+>> remove the memset for local array buffers. The last patch is for
+>> removing the duplicate memset to initialize the buffer to 0xff.
+>>   
+>> I've tested this patch series with creating target bdev backend with
+>> loop back transport, fio verification job seems to work fine.
+>>
+>> Any feedback is welcome.
+>>
+>> This is generated on today's linux-block for-next.
+>>
+>> -ck
+> 
+> any comments on this ?
 
-> As it seems neither Microsoft nor Apple is paying it much attention
-> (+/- new facts) it will be up to the community to define use cases
-> for RPMB. I don't know what would make most sense, but the
-> kernel keyring seems to make a bit of sense as it is a well maintained
-> keyring project.
+Although I'm not sure all patches in this series are useful, the patches 
+in this series look good to me.
 
-I'm afraid I don't know a whole lot about the RPMB.  I've just been and read
-https://lwn.net/Articles/682276/ about it.
+Bart.
 
-What is it you envision the keyring API doing with regard to this?  Being used
-to represent the key needed to access the RPMB or being used to represent an
-RPMB entry (does it have entries?)?
-
-David
 
