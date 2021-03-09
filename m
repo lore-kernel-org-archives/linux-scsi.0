@@ -4,32 +4,30 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3143EC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5213FC433E9
 	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 12:04:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD33E6526C
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 12:04:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 152C36526E
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Mar 2021 12:04:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230452AbhCIMDg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Mar 2021 07:03:36 -0500
-Received: from mail-40134.protonmail.ch ([185.70.40.134]:52185 "EHLO
-        mail-40134.protonmail.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230425AbhCIMDF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2021 07:03:05 -0500
-Date:   Tue, 09 Mar 2021 12:02:58 +0000
+        id S230462AbhCIMDh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Mar 2021 07:03:37 -0500
+Received: from mail-40136.protonmail.ch ([185.70.40.136]:13457 "EHLO
+        mail-40136.protonmail.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229900AbhCIMDT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2021 07:03:19 -0500
+Date:   Tue, 09 Mar 2021 12:03:09 +0000
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=connolly.tech;
-        s=protonmail; t=1615291384;
-        bh=VAaoHzPUuviXWZuHpXivJNsABEQ935p5HTpQ7ZaoB2w=;
+        s=protonmail; t=1615291398;
+        bh=HiWqG/wJGrdIv4mglu2FebUtS099/QUoKTgH5H0mxEc=;
         h=Date:To:From:Cc:Reply-To:Subject:In-Reply-To:References:From;
-        b=dml3LGZyeSkN3ieSDygpByB9UfG4IpSme5l+dJFUoiSqgr8nC+D3S6xdcHDXTr3sm
-         RRsiUftt4r9RB0nHGZlin5Nj6PrIjNg3PRyz0q3ZZs2SvvfY+LB2fg2hqBJM/E5cQl
-         q7sqf/GAyHkWaDdFGzWtwmeRlW/loSLflx21qfOk=
-To:     caleb@connolly.tech, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        b=aENeeXV/ntlfcuBIwX20VJ5A8L/u9+IDT/+I6yV77Hd1kdh1NZ1losiuEwIWNszka
+         dV/ofjmr7FQIR2ZlVGNLW4JhYxNobwcPFGpyjLkTJQD0IZxsou9fpvVO4HuvaLkVhD
+         qPQB9k2bJKyKP/IsaWnu8vT77G26xYL4Ca4i8JMw=
+To:     caleb@connolly.tech, Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -37,10 +35,10 @@ From:   Caleb Connolly <caleb@connolly.tech>
 Cc:     ejb@linux.ibm.com, stanley.chu@mediatek.com, cang@codeaurora.org,
         beanhuo@micron.com, jaegeuk@kernel.org, asutoshd@codeaurora.org,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
+        Nitin Rawat <nitirawa@codeaurora.org>
 Reply-To: Caleb Connolly <caleb@connolly.tech>
-Subject: [RESEND PATCH v2 2/3] scsi: ufs: qcom: use ufshci_version function
-Message-ID: <20210309120212.119451-3-caleb@connolly.tech>
+Subject: [RESEND PATCH v2 3/3] scsi: ufshcd: remove version check
+Message-ID: <20210309120212.119451-4-caleb@connolly.tech>
 In-Reply-To: <20210309120212.119451-1-caleb@connolly.tech>
 References: <20210309120212.119451-1-caleb@connolly.tech>
 MIME-Version: 1.0
@@ -50,30 +48,30 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace the UFSHCI_VERSION_xy macros.
+This check is redundant as all UFS versions are currently supported.
 
+Signed-off-by: Nitin Rawat <nitirawa@codeaurora.org>
 Signed-off-by: Caleb Connolly <caleb@connolly.tech>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index f97d7b0ae3b6..2d54dce0eeda 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -809,9 +809,9 @@ static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba =
-*hba)
- =09struct ufs_qcom_host *host =3D ufshcd_get_variant(hba);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index f4d4b885d4df..a6f317f0dc9b 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -9291,10 +9291,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *m=
+mio_base, unsigned int irq)
+ =09/* Get UFS version supported by the controller */
+ =09hba->ufs_version =3D ufshcd_get_ufs_version(hba);
 =20
- =09if (host->hw_ver.major =3D=3D 0x1)
--=09=09return UFSHCI_VERSION_11;
-+=09=09return ufshci_version(1, 1);
- =09else
--=09=09return UFSHCI_VERSION_20;
-+=09=09return ufshci_version(2, 0);
- }
+-=09if (hba->ufs_version < ufshci_version(1, 0))
+-=09=09dev_err(hba->dev, "invalid UFS version 0x%x\n",
+-=09=09=09hba->ufs_version);
+-
+ =09/* Get Interrupt bit mask per version */
+ =09hba->intr_mask =3D ufshcd_get_intr_mask(hba);
 =20
- /**
 --=20
 2.29.2
 
