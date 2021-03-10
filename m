@@ -2,153 +2,151 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B32DCC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 10:30:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DE3EC433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 10:51:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6690664F76
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 10:30:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F29264FE4
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 10:51:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232518AbhCJK34 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Mar 2021 05:29:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35930 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232481AbhCJK3j (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 05:29:39 -0500
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE997C061761
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2021 02:29:38 -0800 (PST)
-Received: by mail-lf1-x12d.google.com with SMTP id m22so32555145lfg.5
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2021 02:29:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=hZu8kYWcUsjJZQZLgu1XKiWKVJDy+c+Bw7NCUyMv0Bc=;
-        b=RJH9YJ4ctf1i7yh5gwJmVZ6iIZEtaOi4hcZsPJS+3fHl6JJRW9vQcHUJuIbxI7ELPW
-         4WWZ7RYqXaZCBUAmpCBQibq4rGpusj9qpj7lq4rIsorl11VcXQWfGJ/1U8KC/nXVH0lC
-         X5enEIdvBbbV7lC+KCEhzTEZxen86rsiL5tYoCOGGj56VETxgkV3iU/jxhh+EA3a9RPu
-         3rzJnssS2eVBVNTlQRd/h34engsUMq7A63Zn5Va3+VeF/B5tGfVPWLfn5WR4G2Mtxn0I
-         9Ry+cNgqM6c5mrkJFQS4CxtCLc91eV+wfOLKMTeAdLbtGmTT4WDXeKYQ2R9eZ1bsyD1g
-         Y35A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=hZu8kYWcUsjJZQZLgu1XKiWKVJDy+c+Bw7NCUyMv0Bc=;
-        b=f5IUkZJP8/5Y4ZmkbiGv/LLVAYt649vTw8vrNExnuDZvN5ww3sssL1+nsQpQd4MkdW
-         ux+Rth+RljFFLVXjK8Ih4hMaezV5KXtiFhfQyFm74VKVmcFKQrFmeiY0pUCsg2aPoYvF
-         dq/1A8P4a3Yrf8wgQGgD9GG1COmeEcMmf+g11Z/Eg2VHpqi8Q8rkiV7w3yBT9ZvS1aok
-         tM8KIInfNGqnhels85SfzhXlqSFt3Qk1VM4o90wgKQXZgwvGdgW4bLS4qa3nF04xDXvZ
-         JIuzbolPwhm6VjK1N4i2XQXlLpmT5T5N+dFpNcA5J4ptDP4LvI5k+tn2svqDlU1Ew6tE
-         r5rQ==
-X-Gm-Message-State: AOAM531jdVYPK8Pjdlz/1Of+EG8132beJdpYykcXFs6927ykkcfUWCTw
-        60JNTk7ML0zHYgOprt69/vhpdqhda/sjAYhnuNlzy56mlHbHsw==
-X-Google-Smtp-Source: ABdhPJzV5rCJIjqxQ3LiucCut2xv+IIf2U8hV+WxjX4O6mNhhvyogQZlfhPtOtXXp1t/ll9omuk+MAkZGnu5Q6bJfH0=
-X-Received: by 2002:ac2:46db:: with SMTP id p27mr1639785lfo.396.1615372177245;
- Wed, 10 Mar 2021 02:29:37 -0800 (PST)
-MIME-Version: 1.0
-References: <20210303135500.24673-1-alex.bennee@linaro.org>
- <20210303135500.24673-2-alex.bennee@linaro.org> <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com>
- <20210305075131.GA15940@goby> <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
- <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
- <6c542548-cc16-af68-c755-df52bd13b209@marcan.st> <CAFA6WYOYmTgguVDwpyjnt3gLssqW48qzAkRD_nyPYg0nNhxT2A@mail.gmail.com>
- <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st>
-In-Reply-To: <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st>
-From:   Sumit Garg <sumit.garg@linaro.org>
-Date:   Wed, 10 Mar 2021 15:59:25 +0530
-Message-ID: <CAFA6WYMSJxK2CjmoLJ6mdNNEfOQOMVXZPbbFRfah7KLeZNfguw@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB) subsystem
-To:     Hector Martin <marcan@marcan.st>
-Cc:     Linus Walleij <linus.walleij@linaro.org>,
-        Arnd Bergmann <arnd@linaro.org>,
-        "open list:ASYMMETRIC KEYS" <keyrings@vger.kernel.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Joakim Bech <joakim.bech@linaro.org>,
-        =?UTF-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Maxim Uvarov <maxim.uvarov@linaro.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        Ruchika Gupta <ruchika.gupta@linaro.org>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
-        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
-        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
-        Arnd Bergmann <arnd.bergmann@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+        id S230450AbhCJKv2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Mar 2021 05:51:28 -0500
+Received: from mail.zju.edu.cn ([61.164.42.155]:36260 "EHLO zju.edu.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229706AbhCJKvR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 Mar 2021 05:51:17 -0500
+Received: from localhost.localdomain (unknown [10.192.85.18])
+        by mail-app2 (Coremail) with SMTP id by_KCgB3XomDpEhgYxkiAg--.43318S4;
+        Wed, 10 Mar 2021 18:50:48 +0800 (CST)
+From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
+To:     dinghao.liu@zju.edu.cn, kjlu@umn.edu
+Cc:     Hannes Reinecke <hare@suse.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: aic7xxx: aic79xx: Add missing check in ahc_handle_seqint
+Date:   Wed, 10 Mar 2021 18:50:42 +0800
+Message-Id: <20210310105042.31660-1-dinghao.liu@zju.edu.cn>
+X-Mailer: git-send-email 2.17.1
+X-CM-TRANSID: by_KCgB3XomDpEhgYxkiAg--.43318S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxWrWrCFW3GrykGr43Aw1UJrb_yoW5Arykp3
+        Z7K392krs5ur4jy3y8Xw4vqa15Jr4xtasIyF1xG3s2kr43Ca45u3WIgFyaqF1kWr92qrya
+        gas09rWDJr4UWwUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkq1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
+        w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
+        IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2
+        z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcV
+        Aq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j
+        6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64
+        vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxAIw28IcVCjz48v
+        1sIEY20_GFWkJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r
+        18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vI
+        r41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr
+        1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAI
+        cVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgUTBlZdtSrQTAANsX
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 10 Mar 2021 at 14:17, Hector Martin <marcan@marcan.st> wrote:
->
-> On 10/03/2021 14.14, Sumit Garg wrote:
-> > On Wed, 10 Mar 2021 at 02:47, Hector Martin <marcan@marcan.st> wrote:
-> >>
-> >> On 09/03/2021 01.20, Linus Walleij wrote:
-> >>> I suppose it would be a bit brutal if the kernel would just go in and
-> >>> appropriate any empty RPMB it finds, but I suspect it is the right way
-> >>> to make use of this facility given that so many of them are just sitting
-> >>> there unused. Noone will run $CUSTOM_UTILITY any more than they
-> >>> run the current RPMB tools in mmc-tools.
-> >>
-> >> AIUI the entire thing relies on a shared key that is programmed once
-> >> into the RPMB device, which is a permanent operation. This key has to be
-> >> secure, usually stored on CPU fuses or derived based on such a root of
-> >> trust. To me it would seem ill-advised to attempt to automate this
-> >> process and have the kernel do a permanent take-over of any RPMBs it
-> >> finds (with what key, for one?) :)
-> >>
-> >
-> > Wouldn't it be a good idea to use DT here to represent whether a
-> > particular RPMB is used as a TEE backup or is available for normal
-> > kernel usage?
-> >
-> > In case of normal kernel usage, I think the RPMB key can come from
-> > trusted and encrypted keys subsystem.
->
-> Remember that if the key is ever lost, the RPMB is now completely
-> useless forever.
->
-> This is why, as far as I know, most sane platforms will use hard fused
-> values to derive this kind of thing, not any kind of key stored in
-> erasable storage.
+ahc_lookup_scb() may return a null pointer and further lead to
+null-pointer-dereference in case DATA_OVERRUN. Fix this by adding
+a null check.
 
-AFAIK, trusted and encrypted keys are generally loaded from initramfs
-(as an encrypted blob) which happens during boot and if an attacker is
-able to erase initramfs then it's already able to make the device
-non-bootable (DoS attack which is hard to prevent against).
+Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+---
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 72 +++++++++++++++--------------
+ 1 file changed, 37 insertions(+), 35 deletions(-)
 
-Although, I agree with you that fuses are the preferred way to store
-RPMB key but not every platform may possess it and vendors may decide
-to re-flash a bricked device via recovery image.
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index 4b04ab8908f8..3a1cd6a0334e 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -1382,43 +1382,45 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ 		u_int i;
+ 
+ 		scb = ahc_lookup_scb(ahc, scbindex);
+-		for (i = 0; i < num_phases; i++) {
+-			if (lastphase == ahc_phase_table[i].phase)
+-				break;
+-		}
+-		ahc_print_path(ahc, scb);
+-		printk("data overrun detected %s."
+-		       "  Tag == 0x%x.\n",
+-		       ahc_phase_table[i].phasemsg,
+-		       scb->hscb->tag);
+-		ahc_print_path(ahc, scb);
+-		printk("%s seen Data Phase.  Length = %ld.  NumSGs = %d.\n",
+-		       ahc_inb(ahc, SEQ_FLAGS) & DPHASE ? "Have" : "Haven't",
+-		       ahc_get_transfer_length(scb), scb->sg_count);
+-		if (scb->sg_count > 0) {
+-			for (i = 0; i < scb->sg_count; i++) {
+-
+-				printk("sg[%d] - Addr 0x%x%x : Length %d\n",
+-				       i,
+-				       (ahc_le32toh(scb->sg_list[i].len) >> 24
+-					& SG_HIGH_ADDR_BITS),
+-				       ahc_le32toh(scb->sg_list[i].addr),
+-				       ahc_le32toh(scb->sg_list[i].len)
+-				       & AHC_SG_LEN_MASK);
++		if (scb != NULL) {
++			for (i = 0; i < num_phases; i++) {
++				if (lastphase == ahc_phase_table[i].phase)
++					break;
+ 			}
++			ahc_print_path(ahc, scb);
++			printk("data overrun detected %s."
++				"  Tag == 0x%x.\n",
++				ahc_phase_table[i].phasemsg,
++				scb->hscb->tag);
++			ahc_print_path(ahc, scb);
++			printk("%s seen Data Phase.  Length = %ld.  NumSGs = %d.\n",
++				ahc_inb(ahc, SEQ_FLAGS) & DPHASE ? "Have" : "Haven't",
++				ahc_get_transfer_length(scb), scb->sg_count);
++			if (scb->sg_count > 0) {
++				for (i = 0; i < scb->sg_count; i++) {
++
++					printk("sg[%d] - Addr 0x%x%x : Length %d\n",
++						i,
++						(ahc_le32toh(scb->sg_list[i].len) >> 24
++						& SG_HIGH_ADDR_BITS),
++						ahc_le32toh(scb->sg_list[i].addr),
++						ahc_le32toh(scb->sg_list[i].len)
++						& AHC_SG_LEN_MASK);
++				}
++			}
++			/*
++			* Set this and it will take effect when the
++			* target does a command complete.
++			*/
++			ahc_freeze_devq(ahc, scb);
++			if ((scb->flags & SCB_SENSE) == 0) {
++				ahc_set_transaction_status(scb, CAM_DATA_RUN_ERR);
++			} else {
++				scb->flags &= ~SCB_SENSE;
++				ahc_set_transaction_status(scb, CAM_AUTOSENSE_FAIL);
++			}
++			ahc_freeze_scb(scb);
+ 		}
+-		/*
+-		 * Set this and it will take effect when the
+-		 * target does a command complete.
+-		 */
+-		ahc_freeze_devq(ahc, scb);
+-		if ((scb->flags & SCB_SENSE) == 0) {
+-			ahc_set_transaction_status(scb, CAM_DATA_RUN_ERR);
+-		} else {
+-			scb->flags &= ~SCB_SENSE;
+-			ahc_set_transaction_status(scb, CAM_AUTOSENSE_FAIL);
+-		}
+-		ahc_freeze_scb(scb);
+ 
+ 		if ((ahc->features & AHC_ULTRA2) != 0) {
+ 			/*
+-- 
+2.17.1
 
->
-> Also, newly provisioned keys are sent in plain text, which means that
-> any kind of "if the RPMB is blank, take it over" automation equates to
-> handing over your key who an attacker who removes the RPMB and replaces
-> it with a blank one, and then they can go access anything they want on
-> the old RPMB device (assuming the key hasn't changed; and if it has
-> changed that's conversely a recipe for data loss if something goes wrong).
->
-> I really think trying to automate any kind of "default" usage of an RPMB
-> is a terrible idea. It needs to be a conscious decision on a
-> per-platform basis.
->
-
-Agree and via DT method I only meant to assign already provisioned
-RPMB device/s either to TEE or Linux kernel. And RPMB key provisioning
-being a one time process should be carried out carefully during device
-manufacturing only.
-
--Sumit
-
-> --
-> Hector Martin (marcan@marcan.st)
-> Public Key: https://mrcn.st/pub
