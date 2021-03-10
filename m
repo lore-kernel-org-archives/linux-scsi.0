@@ -2,239 +2,168 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F103DC433E9
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 15:34:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C03FFC433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 16:28:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD64E64FBB
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 15:34:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A11C64FBB
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 16:28:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232965AbhCJPeW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Mar 2021 10:34:22 -0500
-Received: from mail1.protonmail.ch ([185.70.40.18]:30520 "EHLO
-        mail1.protonmail.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232952AbhCJPdv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 10:33:51 -0500
-Date:   Wed, 10 Mar 2021 15:33:42 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=connolly.tech;
-        s=protonmail; t=1615390428;
-        bh=320cKvuVaKlGbye6rg58bbKr6zQJ45smReIpjNO3hP0=;
-        h=Date:To:From:Cc:Reply-To:Subject:In-Reply-To:References:From;
-        b=OiSaHTd6hvuoLbyVzTLlqILnrERxeDigGsNmcq9np4PfSuum0rGlv+ZdutCxHHHkT
-         O0127FiVF3f60wGpuVlrms2jRhEM1BtXiTUiA/YUkyT8GUxHxKW68kvLz4aSjasfwG
-         nlQH5k3y0pMhZMknCNatoL0zD9eVcZxfyKE3vAVA=
-To:     caleb@connolly.tech, Alim Akhtar <alim.akhtar@samsung.com>,
+        id S232489AbhCJQ1t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Mar 2021 11:27:49 -0500
+Received: from netrider.rowland.org ([192.131.102.5]:50789 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S229574AbhCJQ1b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 11:27:31 -0500
+Received: (qmail 223764 invoked by uid 1000); 10 Mar 2021 11:27:30 -0500
+Date:   Wed, 10 Mar 2021 11:27:30 -0500
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     "Asutosh Das \(asd\)" <asutoshd@codeaurora.org>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>, cang@codeaurora.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-From:   Caleb Connolly <caleb@connolly.tech>
-Cc:     ejb@linux.ibm.com, stanley.chu@mediatek.com, cang@codeaurora.org,
-        beanhuo@micron.com, jaegeuk@kernel.org, asutoshd@codeaurora.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Reply-To: Caleb Connolly <caleb@connolly.tech>
-Subject: [PATCH v3 1/3] scsi: ufshcd: use a function to calculate versions
-Message-ID: <20210310153215.371227-2-caleb@connolly.tech>
-In-Reply-To: <20210310153215.371227-1-caleb@connolly.tech>
-References: <20210310153215.371227-1-caleb@connolly.tech>
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>,
+        Linux-PM mailing list <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH v10 1/2] scsi: ufs: Enable power management for wlun
+Message-ID: <20210310162730.GB221857@rowland.harvard.edu>
+References: <0576d6eae15486740c25767e2d8805f7e94eb79d.1614725302.git.asutoshd@codeaurora.org>
+ <85086647-7292-b0a2-d842-290818bd2858@intel.com>
+ <6e98724d-2e75-d1fe-188f-a7010f86c509@codeaurora.org>
+ <20210306161616.GC74411@rowland.harvard.edu>
+ <CAJZ5v0ihJe8rNjWRwNic_BQUvKbALNcjx8iiPAh5nxLhOV9duw@mail.gmail.com>
+ <CAJZ5v0iJ4yqRTt=mTCC930HULNFNTgvO4f9ToVO6pNz53kxFkw@mail.gmail.com>
+ <f1e9b21d-1722-d20b-4bae-df7e6ce50bbc@codeaurora.org>
+ <2bd90336-18a9-9acd-5abb-5b52b27fc535@codeaurora.org>
+ <20210310031438.GB203516@rowland.harvard.edu>
+ <6b985880-f23a-adb3-8b7a-7ee1b56e6fa7@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6b985880-f23a-adb3-8b7a-7ee1b56e6fa7@codeaurora.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update the driver to use a function for referencing the UFS version.
-This replaces the UFSHCI_VERSION_xy macros, and supports comparisons
-where they did not.
+On Tue, Mar 09, 2021 at 08:04:53PM -0800, Asutosh Das (asd) wrote:
+> On 3/9/2021 7:14 PM, Alan Stern wrote:
+> > On Tue, Mar 09, 2021 at 07:04:34PM -0800, Asutosh Das (asd) wrote:
+> > > Hello
+> > > I & Can (thanks CanG) debugged this further:
+> > > 
+> > > Looks like this issue can occur if the sd probe is asynchronous.
+> > > 
+> > > Essentially, the sd_probe() is done asynchronously and driver_probe_device()
+> > > invokes pm_runtime_get_suppliers() before invoking sd_probe().
+> > > 
+> > > But scsi_probe_and_add_lun() runs in a separate context.
+> > > So the scsi_autopm_put_device() invoked from scsi_scan_host() context
+> > > reduces the link->rpm_active to 1. And sd_probe() invokes
+> > > scsi_autopm_put_device() and starts a timer. And then driver_probe_device()
+> > > invoked from __device_attach_async_helper context reduces the
+> > > link->rpm_active to 1 thus enabling the supplier to suspend before the
+> > > consumer suspends.
+> > 
+> > > I don't see a way around this. Please let me know if you
+> > > (@Alan/@Bart/@Adrian) have any thoughts on this.
+> > 
+> > How about changing the SCSI core so that it does a runtime_get before
+> > starting an async probe, and the async probe routine does a
+> > runtime_put when it is finished?  In other words, don't allow a device
+> > to go into runtime suspend while it is waiting to be probed.
+> > 
+> > I don't think that would be too intrusive.
+> > 
+> > Alan Stern
+> > 
+> 
+> Hi Alan
+> Thanks for the suggestion.
+> 
+> Am trying to understand:
+> 
+> Do you mean something like this:
+> 
+> int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+> {
+> 	
+> 	scsi_autopm_get_device(sdev);
+> 	pm_runtime_get_noresume(&sdev->sdev_gendev);
+> 	[...]
+> 	scsi_autopm_put_device(sdev);
+> 	[...]
+> }
+> 
+> static int sd_probe(struct device *dev)
+> {
+> 	[...]
+> 	pm_runtime_put_noidle(dev);
+> 	scsi_autopm_put_device(sdp);
+> 	[...]
+> }
+> 
+> This may work (I'm limited by my imagination in scsi layer :) ).
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Caleb Connolly <caleb@connolly.tech>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/ufs/ufshcd.c | 64 +++++++++++++++++----------------------
- drivers/scsi/ufs/ufshci.h | 18 ++++++-----
- 2 files changed, 38 insertions(+), 44 deletions(-)
+I'm not sure about this.  To be honest, I did not read the entirety of 
+your last message; it had way too much detail.  THere's a time and place 
+for that, but when you're brainstorming to figure out the underlying 
+cause of a problem and come up with a strategy to fix it, you want to 
+concentrate on the overall picture, not the details.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 77161750c9fb..f4d4b885d4df 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -669,23 +669,12 @@ int ufshcd_wait_for_register(struct ufs_hba *hba, u32=
- reg, u32 mask,
-  */
- static inline u32 ufshcd_get_intr_mask(struct ufs_hba *hba)
- {
--=09u32 intr_mask =3D 0;
-+=09if (hba->ufs_version =3D=3D ufshci_version(1, 0))
-+=09=09return INTERRUPT_MASK_ALL_VER_10;
-+=09if (hba->ufs_version <=3D ufshci_version(2, 0))
-+=09=09return INTERRUPT_MASK_ALL_VER_11;
-=20
--=09switch (hba->ufs_version) {
--=09case UFSHCI_VERSION_10:
--=09=09intr_mask =3D INTERRUPT_MASK_ALL_VER_10;
--=09=09break;
--=09case UFSHCI_VERSION_11:
--=09case UFSHCI_VERSION_20:
--=09=09intr_mask =3D INTERRUPT_MASK_ALL_VER_11;
--=09=09break;
--=09case UFSHCI_VERSION_21:
--=09default:
--=09=09intr_mask =3D INTERRUPT_MASK_ALL_VER_21;
--=09=09break;
--=09}
--
--=09return intr_mask;
-+=09return INTERRUPT_MASK_ALL_VER_21;
- }
-=20
- /**
-@@ -696,10 +685,22 @@ static inline u32 ufshcd_get_intr_mask(struct ufs_hba=
- *hba)
-  */
- static inline u32 ufshcd_get_ufs_version(struct ufs_hba *hba)
- {
-+=09u32 ufshci_ver;
-+
- =09if (hba->quirks & UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION)
--=09=09return ufshcd_vops_get_ufs_hci_version(hba);
-+=09=09ufshci_ver =3D ufshcd_vops_get_ufs_hci_version(hba);
-+=09else
-+=09=09ufshci_ver =3D ufshcd_readl(hba, REG_UFS_VERSION);
-=20
--=09return ufshcd_readl(hba, REG_UFS_VERSION);
-+=09/*
-+=09 * UFSHCI v1.x uses a different version scheme, in order
-+=09 * to allow the use of comparisons with the ufshci_version
-+=09 * function, we convert it to the same scheme as ufs 2.0+.
-+=09 */
-+=09if (ufshci_ver & 0x00010000)
-+=09=09return ufshci_version(1, ufshci_ver & 0x00000100);
-+
-+=09return ufshci_ver;
- }
-=20
- /**
-@@ -931,8 +932,7 @@ static inline bool ufshcd_is_hba_active(struct ufs_hba =
-*hba)
- u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba)
- {
- =09/* HCI version 1.0 and 1.1 supports UniPro 1.41 */
--=09if ((hba->ufs_version =3D=3D UFSHCI_VERSION_10) ||
--=09    (hba->ufs_version =3D=3D UFSHCI_VERSION_11))
-+=09if (hba->ufs_version <=3D ufshci_version(1, 1))
- =09=09return UFS_UNIPRO_VER_1_41;
- =09else
- =09=09return UFS_UNIPRO_VER_1_6;
-@@ -2335,7 +2335,7 @@ static void ufshcd_enable_intr(struct ufs_hba *hba, u=
-32 intrs)
- {
- =09u32 set =3D ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
-=20
--=09if (hba->ufs_version =3D=3D UFSHCI_VERSION_10) {
-+=09if (hba->ufs_version =3D=3D ufshci_version(1, 0)) {
- =09=09u32 rw;
- =09=09rw =3D set & INTERRUPT_MASK_RW_VER_10;
- =09=09set =3D rw | ((set ^ intrs) & intrs);
-@@ -2355,7 +2355,7 @@ static void ufshcd_disable_intr(struct ufs_hba *hba, =
-u32 intrs)
- {
- =09u32 set =3D ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
-=20
--=09if (hba->ufs_version =3D=3D UFSHCI_VERSION_10) {
-+=09if (hba->ufs_version =3D=3D ufshci_version(1, 0)) {
- =09=09u32 rw;
- =09=09rw =3D (set & INTERRUPT_MASK_RW_VER_10) &
- =09=09=09~(intrs & INTERRUPT_MASK_RW_VER_10);
-@@ -2518,8 +2518,7 @@ static int ufshcd_compose_devman_upiu(struct ufs_hba =
-*hba,
- =09u8 upiu_flags;
- =09int ret =3D 0;
-=20
--=09if ((hba->ufs_version =3D=3D UFSHCI_VERSION_10) ||
--=09    (hba->ufs_version =3D=3D UFSHCI_VERSION_11))
-+=09if (hba->ufs_version <=3D ufshci_version(1, 1))
- =09=09lrbp->command_type =3D UTP_CMD_TYPE_DEV_MANAGE;
- =09else
- =09=09lrbp->command_type =3D UTP_CMD_TYPE_UFS_STORAGE;
-@@ -2546,8 +2545,7 @@ static int ufshcd_comp_scsi_upiu(struct ufs_hba *hba,=
- struct ufshcd_lrb *lrbp)
- =09u8 upiu_flags;
- =09int ret =3D 0;
-=20
--=09if ((hba->ufs_version =3D=3D UFSHCI_VERSION_10) ||
--=09    (hba->ufs_version =3D=3D UFSHCI_VERSION_11))
-+=09if (hba->ufs_version <=3D ufshci_version(1, 1))
- =09=09lrbp->command_type =3D UTP_CMD_TYPE_SCSI;
- =09else
- =09=09lrbp->command_type =3D UTP_CMD_TYPE_UFS_STORAGE;
-@@ -6561,15 +6559,10 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_=
-hba *hba,
- =09ufshcd_prepare_lrbp_crypto(NULL, lrbp);
- =09hba->dev_cmd.type =3D cmd_type;
-=20
--=09switch (hba->ufs_version) {
--=09case UFSHCI_VERSION_10:
--=09case UFSHCI_VERSION_11:
-+=09if (hba->ufs_version <=3D ufshci_version(1, 1))
- =09=09lrbp->command_type =3D UTP_CMD_TYPE_DEV_MANAGE;
--=09=09break;
--=09default:
-+=09else
- =09=09lrbp->command_type =3D UTP_CMD_TYPE_UFS_STORAGE;
--=09=09break;
--=09}
-=20
- =09/* update the task tag in the request upiu */
- =09req_upiu->header.dword_0 |=3D cpu_to_be32(tag);
-@@ -9298,10 +9291,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *m=
-mio_base, unsigned int irq)
- =09/* Get UFS version supported by the controller */
- =09hba->ufs_version =3D ufshcd_get_ufs_version(hba);
-=20
--=09if ((hba->ufs_version !=3D UFSHCI_VERSION_10) &&
--=09    (hba->ufs_version !=3D UFSHCI_VERSION_11) &&
--=09    (hba->ufs_version !=3D UFSHCI_VERSION_20) &&
--=09    (hba->ufs_version !=3D UFSHCI_VERSION_21))
-+=09if (hba->ufs_version < ufshci_version(1, 0))
- =09=09dev_err(hba->dev, "invalid UFS version 0x%x\n",
- =09=09=09hba->ufs_version);
-=20
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 6795e1f0e8f8..335ff7b5a935 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -74,13 +74,17 @@ enum {
- #define MINOR_VERSION_NUM_MASK=09=09UFS_MASK(0xFFFF, 0)
- #define MAJOR_VERSION_NUM_MASK=09=09UFS_MASK(0xFFFF, 16)
-=20
--/* Controller UFSHCI version */
--enum {
--=09UFSHCI_VERSION_10 =3D 0x00010000, /* 1.0 */
--=09UFSHCI_VERSION_11 =3D 0x00010100, /* 1.1 */
--=09UFSHCI_VERSION_20 =3D 0x00000200, /* 2.0 */
--=09UFSHCI_VERSION_21 =3D 0x00000210, /* 2.1 */
--};
-+/*
-+ * Controller UFSHCI version
-+ * - 2.x and newer use the following scheme:
-+ *   major << 8 + minor << 4
-+ * - 1.x has been converted to match this in
-+ *   ufshcd_get_ufs_version()
-+ */
-+static inline u32 ufshci_version(u32 major, u32 minor)
-+{
-+=09return (major << 8) + (minor << 4);
-+}
-=20
- /*
-  * HCDDID - Host Controller Identification Descriptor
---=20
-2.29.2
+As I understand the situation, you've get a SCSI target with multiple 
+logical units, let's say A and B, and you need to make sure that A never 
+goes into runtime suspend unless B is already suspended.  In other 
+words, B always has to suspend before A and resume after A.
 
+To do this, you register a device link with A as the supplier and B as 
+the consumer.  Then the PM core takes care of the ordering for you.
 
+But I don't understand when you set up the device link.  If the timing 
+is wrong then, thanks to async SCSI probing, you may have a situation 
+where A is registered before B and before the link is set up.  Then 
+there's temporarily nothing to stop A from suspending before B.
+
+You also need to prevent each device from suspending before it is 
+probed.  That's the easy part I was trying to address before (although 
+it may not be so easy if the drivers are in loadable modules and not 
+present in the kernel).
+
+You need to think through these issues before proposing actual changes.
+
+> But the pm_runtime_put_noidle() would have to be added to all registered
+> scsi_driver{}, perhaps? Or may be I can check for sdp->type?
+
+Like this; it's too early to worry about this sort of thing.
+
+Alan Stern
