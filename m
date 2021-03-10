@@ -2,218 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D92AC433E6
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 09:49:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E94F0C4332D
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 09:50:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1E2A64FE8
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 09:49:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E17764FE3
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 09:50:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232449AbhCJJtF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Mar 2021 04:49:05 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:56389 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232318AbhCJJsK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 04:48:10 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1615369689; x=1646905689;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=nBvMeMVIq6Fc4QIoPBCdDIKvFqo3XAJEo/NWmVxLzUs=;
-  b=MQ4tgY04ST7K70WJ43tkgHdj2yGLQ2MkPwphCrWfwQyhEfhcYcapuWer
-   JH+mQ7oeKdCQO8VUqjKK15H+JQBoUbLvSqiwvaWJDRgpGYD7VTVhRz5Mn
-   P5C365WurX82xvYZVOQiqp9Me5XZH6uR+D9+EROsJqlFH9MXP2Ltj3j7/
-   fhQ0+EinrPG6PnLxLn05uHBdokK+ZS9hV0mYzgI9+sKR1VL8Mfk5fLEWA
-   u7AXj6pNmPSG+OaxFzm66pjrOsqqqkF3KCg7G4t9ms/oLTZOKdZqwYoDt
-   k9NtChacDh25+yw5pC77ZGfTE0d87ASPShiD3wuEWsU4MJFAVC0JK0YYy
-   A==;
-IronPort-SDR: aD5XqCcLfFsqtPLfgjDElD0kKczboP6pFwVdUQ2dGr2fSy+Jv/t12erYJ2p4j+O/GGNT1QEyKH
- o5DFKfRRPY+ZQPcsM5ND/kbRehaSb6onrefkFEcdkXMZs2beUtZKxvwcu9OoAUXv7hmaLloykA
- H9XNja5hLbcUnfKCIHvdFCVpXXUSqzrzez3ts/b8E/NljOanyJMczjZ2copHBgyB0XuIoKNSv3
- oENzZ0WsU6K+PaAXokEtjH/6V5m/xpcAiwlPSjAI3yxITWS2WDeigXqXZ247tDO0rJhuF0nxjI
- Gzw=
-X-IronPort-AV: E=Sophos;i="5.81,237,1610380800"; 
-   d="scan'208";a="161798511"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 10 Mar 2021 17:48:09 +0800
-IronPort-SDR: oytX486L85N94KGLMr7Jg4nqDOCkzN0T63FUzSVAuMD6WXrumMxfF5vWOiOeWGoxAQTRCWHjGa
- Rx2K9CDdzU5YeWRQ/QG5gsdzdp2pwL33YXufzMZUm9kprvkiIv2fL7unDuDfYnKffucP7zYSpb
- SUHpf13P62+i5fau78c6DJcj1T7A4Oywme6Z54B6aghsYQtMHDL4cmoGDIl2nXvwcT+V5OoVJe
- IXZh+LfVC+rOtmZTv+M5GqXilG2+0VwLc2hdLKlGgaTV+43v8zVGNv3tPenMnZGQ0G+IzDZmyB
- G5iNpJJtZ1jLuNKLtfC+RXaW
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2021 01:29:06 -0800
-IronPort-SDR: GCAxJ6xyIfWCPN7wfgaUbUDOu+ZxD+F5KVnOktOHmj+9LirfyTP5p2KZmBrzv8GOZXQHQPHqhU
- agWbteU4k8xbv8D+1SoPymdq3WD95sNw30IODRwXga9puVSNz8VgW16aFP0zwzWwKYuXP/bU7W
- RgO60qUtfm0elBK5Me7+6EUbyWsu+7yr8fEcIJI04qhXFI58VjrhptVVCx+Ru0M5BlRfNUFIAU
- BDBDM+r7wVYcYnimbQsUzcc6rBsZD1W93uaiDMWgTuYiE9UprzuYTx8VTrGdSXT152u4rC1pTQ
- ZzQ=
-WDCIronportException: Internal
-Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip02.wdc.com with ESMTP; 10 Mar 2021 01:48:09 -0800
-From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        linux-scsi@vger.kernel.org,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH] scsi: sd_zbc: update write pointer offset cache
-Date:   Wed, 10 Mar 2021 18:48:06 +0900
-Message-Id: <3cfebe48d09db73041b7849be71ffbcec7ee40b3.1615369586.git.johannes.thumshirn@wdc.com>
-X-Mailer: git-send-email 2.30.0
+        id S231197AbhCJJtk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Mar 2021 04:49:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55266 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231899AbhCJJtH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 04:49:07 -0500
+Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EC39C061763
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2021 01:48:50 -0800 (PST)
+Received: by mail-lj1-x232.google.com with SMTP id k12so24735780ljg.9
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2021 01:48:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=XtHA2WDlEgIkr4gPC6h7Fo/UqIYBpPKwlhK+eaqepyw=;
+        b=tY/zIW4Jt+MrodIYY2WZdIiCNb/lU3TrDkCWVH1GC0ZPyU8Fx0CiEb9Y0y6cWNwv7U
+         3+UQ4tj0HCbX1WI9IIyo1VQinhXuWm4yZ4/FrglyModxavmcD8ic3hi8VDuL0mu7sjvO
+         r5E3kNoy61v/83xcWywtQVUii/xoonAa4J0vcuc4IIrtgr+1XAGhb6OW3Mi4t5bvbWxc
+         GIgozN4dt2GxWFomJxp6BI7YoAy/xPboNJQTdjjKnrHxVFj4+9L5cBB9ed/Szln9egGk
+         D9vT9z4k3NfBlpCqmdhXbTHzIRr2dVJNtXzUNIocr7litDYcpUQG9qfLgvf2bTY4K7bC
+         /Isw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=XtHA2WDlEgIkr4gPC6h7Fo/UqIYBpPKwlhK+eaqepyw=;
+        b=PU3yzdedDrVXoMF1q0zZF8NQSzZ8S0i2A4HVLmAWpezHQGNV0toZLiwPwyMgis6Ku/
+         Thl+/tYyC1sO8cwUQ+Fn8Yv6WvVmSEmSLtbItkpsMGTvOrtlxsi9ViB2BjicgB9JIuBs
+         M4tW+UFvQFH8AseL/CuwRvpxcXqo5Is12jTAVm8RzZzLhDUMX74ETj9puVL53SWO2qU3
+         +5si56npSeyrn6vBhwno5NJuWH2MBdMP/pmctMR0ZWskHVXrgDRVyJzHoqyiLd14pJkZ
+         AEHdhjXfNDVkkMsQuP58OxduD6XsqM4U7YnMOLdF7O3RtgDOGqtRPRgA2vuHWPu62vtg
+         JBPw==
+X-Gm-Message-State: AOAM5328qTkUioFlPDRTzcEFg2FkdQyGIOW5qmcXKY41t1TEOr4AJhBk
+        lMyDhGoLeccEZ4WHeAc5YzyL6yPS21X2+MVcodcWHQ==
+X-Google-Smtp-Source: ABdhPJy+6iVKLlhEs9ytjE2yJ6jzfWyAjkcYGwRmlv2dADiCXewf+sSTgUSixyA6cjqoVwsnHGvaAVVLYVVNGU7AOWM=
+X-Received: by 2002:a2e:864a:: with SMTP id i10mr1268524ljj.467.1615369729068;
+ Wed, 10 Mar 2021 01:48:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20210303135500.24673-1-alex.bennee@linaro.org>
+ <20210303135500.24673-2-alex.bennee@linaro.org> <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com>
+ <20210305075131.GA15940@goby> <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
+ <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
+ <6c542548-cc16-af68-c755-df52bd13b209@marcan.st> <CAFA6WYOYmTgguVDwpyjnt3gLssqW48qzAkRD_nyPYg0nNhxT2A@mail.gmail.com>
+ <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st>
+In-Reply-To: <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Wed, 10 Mar 2021 10:48:38 +0100
+Message-ID: <CACRpkdbQks5pRFNHkNLVvLHCBhh0XCv7pHYq25EVAbU60PcwsA@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB) subsystem
+To:     Hector Martin <marcan@marcan.st>,
+        David Howells <dhowells@redhat.com>, keyrings@vger.kernel.org,
+        Jarkko Sakkinen <jarkko@kernel.org>
+Cc:     Sumit Garg <sumit.garg@linaro.org>,
+        Arnd Bergmann <arnd@linaro.org>,
+        Joakim Bech <joakim.bech@linaro.org>,
+        =?UTF-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Maxim Uvarov <maxim.uvarov@linaro.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        Ruchika Gupta <ruchika.gupta@linaro.org>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
+        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
+        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Recent changes changed the completion of SCSI commands from Soft-IRQ
-context to IRQ context. This triggers the following warning, when we're
-completing writes to zoned block devices that go through the zone append
-emulation:
+On Wed, Mar 10, 2021 at 9:47 AM Hector Martin <marcan@marcan.st> wrote:
 
- CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.12.0-rc2+ #2
- Hardware name: Supermicro Super Server/X10SRL-F, BIOS 2.0 12/17/2015
- RIP: 0010:__local_bh_disable_ip+0x3f/0x50
- RSP: 0018:ffff8883e1409ba8 EFLAGS: 00010006
- RAX: 0000000080010001 RBX: 0000000000000001 RCX: 0000000000000013
- RDX: ffff888129e4d200 RSI: 0000000000000201 RDI: ffffffff915b9dbd
- RBP: ffff888113e9a540 R08: ffff888113e9a540 R09: 00000000000077f0
- R10: 0000000000080000 R11: 0000000000000001 R12: ffff888129e4d200
- R13: 0000000000001000 R14: 00000000000077f0 R15: ffff888129e4d218
- FS:  0000000000000000(0000) GS:ffff8883e1400000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 00007f2f8418ebc0 CR3: 000000021202a006 CR4: 00000000001706f0
- Call Trace:
-  <IRQ>
-  _raw_spin_lock_bh+0x18/0x40
-  sd_zbc_complete+0x43d/0x1150
-  sd_done+0x631/0x1040
-  ? mark_lock+0xe4/0x2fd0
-  ? provisioning_mode_store+0x3f0/0x3f0
-  scsi_finish_command+0x31b/0x5c0
-  _scsih_io_done+0x960/0x29e0 [mpt3sas]
-  ? mpt3sas_scsih_scsi_lookup_get+0x1c7/0x340 [mpt3sas]
-  ? __lock_acquire+0x166b/0x58b0
-  ? _get_st_from_smid+0x4a/0x80 [mpt3sas]
-  _base_process_reply_queue+0x23f/0x26e0 [mpt3sas]
-  ? lock_is_held_type+0x98/0x110
-  ? find_held_lock+0x2c/0x110
-  ? mpt3sas_base_sync_reply_irqs+0x360/0x360 [mpt3sas]
-  _base_interrupt+0x8d/0xd0 [mpt3sas]
-  ? rcu_read_lock_sched_held+0x3f/0x70
-  __handle_irq_event_percpu+0x24d/0x600
-  handle_irq_event+0xef/0x240
-  ? handle_irq_event_percpu+0x110/0x110
-  handle_edge_irq+0x1f6/0xb60
-  __common_interrupt+0x75/0x160
-  common_interrupt+0x7b/0xa0
-  </IRQ>
-  asm_common_interrupt+0x1e/0x40
+> Remember that if the key is ever lost, the RPMB is now completely
+> useless forever.
+>
+> This is why, as far as I know, most sane platforms will use hard fused
+> values to derive this kind of thing, not any kind of key stored in
+> erasable storage.
 
-Don't use spin_lock_bh() to protect the update of the write pointer offset
-cache, but use spin_lock_irqsave() for it.
+You're right. In the mobile phone world this is a given fact.
 
-Reported-by: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- drivers/scsi/sd_zbc.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+If we are thinking devices are to be repurposed or reinstalled
+from scratch for example, like ordinary desktops or servers,
+RPMB does not make generic sense: it is not for
+"generic computing" but rather for protecting devices that you
+carry around and can be lost: mobile phones, chromebooks,
+maybe laptops.
 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index ee558675eab4..994f1b8e3504 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -280,27 +280,28 @@ static int sd_zbc_update_wp_offset_cb(struct blk_zone *zone, unsigned int idx,
- static void sd_zbc_update_wp_offset_workfn(struct work_struct *work)
- {
- 	struct scsi_disk *sdkp;
-+	unsigned long flags;
- 	unsigned int zno;
- 	int ret;
- 
- 	sdkp = container_of(work, struct scsi_disk, zone_wp_offset_work);
- 
--	spin_lock_bh(&sdkp->zones_wp_offset_lock);
-+	spin_lock_irqsave(&sdkp->zones_wp_offset_lock, flags);
- 	for (zno = 0; zno < sdkp->nr_zones; zno++) {
- 		if (sdkp->zones_wp_offset[zno] != SD_ZBC_UPDATING_WP_OFST)
- 			continue;
- 
--		spin_unlock_bh(&sdkp->zones_wp_offset_lock);
-+		spin_unlock_irqrestore(&sdkp->zones_wp_offset_lock, flags);
- 		ret = sd_zbc_do_report_zones(sdkp, sdkp->zone_wp_update_buf,
- 					     SD_BUF_SIZE,
- 					     zno * sdkp->zone_blocks, true);
--		spin_lock_bh(&sdkp->zones_wp_offset_lock);
-+		spin_lock_irqsave(&sdkp->zones_wp_offset_lock, flags);
- 		if (!ret)
- 			sd_zbc_parse_report(sdkp, sdkp->zone_wp_update_buf + 64,
- 					    zno, sd_zbc_update_wp_offset_cb,
- 					    sdkp);
- 	}
--	spin_unlock_bh(&sdkp->zones_wp_offset_lock);
-+	spin_unlock_irqrestore(&sdkp->zones_wp_offset_lock, flags);
- 
- 	scsi_device_put(sdkp->device);
- }
-@@ -324,6 +325,7 @@ blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd, sector_t *lba,
- 	struct request *rq = cmd->request;
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 	unsigned int wp_offset, zno = blk_rq_zone_no(rq);
-+	unsigned long flags;
- 	blk_status_t ret;
- 
- 	ret = sd_zbc_cmnd_checks(cmd);
-@@ -337,7 +339,7 @@ blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd, sector_t *lba,
- 	if (!blk_req_zone_write_trylock(rq))
- 		return BLK_STS_ZONE_RESOURCE;
- 
--	spin_lock_bh(&sdkp->zones_wp_offset_lock);
-+	spin_lock_irqsave(&sdkp->zones_wp_offset_lock, flags);
- 	wp_offset = sdkp->zones_wp_offset[zno];
- 	switch (wp_offset) {
- 	case SD_ZBC_INVALID_WP_OFST:
-@@ -366,7 +368,7 @@ blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd, sector_t *lba,
- 
- 		*lba += wp_offset;
- 	}
--	spin_unlock_bh(&sdkp->zones_wp_offset_lock);
-+	spin_unlock_irqrestore(&sdkp->zones_wp_offset_lock, flags);
- 	if (ret)
- 		blk_req_zone_write_unlock(rq);
- 	return ret;
-@@ -445,6 +447,7 @@ static unsigned int sd_zbc_zone_wp_update(struct scsi_cmnd *cmd,
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 	unsigned int zno = blk_rq_zone_no(rq);
- 	enum req_opf op = req_op(rq);
-+	unsigned long flags;
- 
- 	/*
- 	 * If we got an error for a command that needs updating the write
-@@ -452,7 +455,7 @@ static unsigned int sd_zbc_zone_wp_update(struct scsi_cmnd *cmd,
- 	 * invalid to force an update from disk the next time a zone append
- 	 * command is issued.
- 	 */
--	spin_lock_bh(&sdkp->zones_wp_offset_lock);
-+	spin_lock_irqsave(&sdkp->zones_wp_offset_lock, flags);
- 
- 	if (result && op != REQ_OP_ZONE_RESET_ALL) {
- 		if (op == REQ_OP_ZONE_APPEND) {
-@@ -496,7 +499,7 @@ static unsigned int sd_zbc_zone_wp_update(struct scsi_cmnd *cmd,
- 	}
- 
- unlock_wp_offset:
--	spin_unlock_bh(&sdkp->zones_wp_offset_lock);
-+	spin_unlock_irqrestore(&sdkp->zones_wp_offset_lock, flags);
- 
- 	return good_bytes;
- }
--- 
-2.30.0
+If and only if the user so desires, I would say, but sometimes
+the vendors decide policy...
 
+(+/- the fact that some recent supply chain attacks for server
+software may actually make cloud people start thinking like this
+about their servers integrity, what do I know.)
+
+> Also, newly provisioned keys are sent in plain text, which means that
+> any kind of "if the RPMB is blank, take it over" automation equates to
+> handing over your key who an attacker who removes the RPMB and replaces
+> it with a blank one, and then they can go access anything they want on
+> the old RPMB device (assuming the key hasn't changed; and if it has
+> changed that's conversely a recipe for data loss if something goes wrong).
+>
+> I really think trying to automate any kind of "default" usage of an RPMB
+> is a terrible idea. It needs to be a conscious decision on a
+> per-platform basis.
+
+OK sorry for my bad ideas, what was I thinking :D
+
+For a laptop or so, I would say, a user who is paranoid that their
+device gets stolen and used by someone else, should be able to
+set their device up, with some tool, such that a secret key from
+somewhere and RPMB is used to lock down the machine so that
+attackers cannot get into it and get the data out.
+
+Disk is encrypted, and RPMB is there to block any exhaustive
+password or other authentication token search.
+
+Ideally: the only way to make use of the hardware again would
+be to solder off the eMMC, if eMMC is used for RPMB.
+If we have RPMB on an NVME or UFS drive, the idea is
+to lock that thing such that it becomes useless and need to
+be replaced with a new part in this scenario.
+
+In practice: make it hard, because we know no such jail is
+perfect. Make it not worth the effort, make it cheaper for thieves
+to just buy a new harddrive to use a stolen laptop, locking
+the data that was in it away forever by making the drive
+useless for any practical attacks.
+
+Maybe it will be possible to blank the drive and use without
+RPMB since that is now locked with a key they can no longer
+acces: the end result is the same: RPMB protected the data
+of the original user. So a one-time user protection such
+as a seal, once broken this seal cannot be reused to seal
+anything again and that is OK.
+
+Yours,
+Linus Walleij
