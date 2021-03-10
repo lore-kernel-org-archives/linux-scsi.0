@@ -2,108 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0FE3C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 23:02:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0632C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 00:00:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8856B64FC6
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 23:02:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A353364FC5
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 00:00:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232571AbhCJXBw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Mar 2021 18:01:52 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2683 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231935AbhCJXBk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 18:01:40 -0500
-Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DwnVH1wH1z67sKs;
-        Thu, 11 Mar 2021 06:55:35 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Thu, 11 Mar 2021 00:01:34 +0100
-Received: from [10.47.10.26] (10.47.10.26) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 10 Mar
- 2021 23:01:33 +0000
-Subject: Re: [PATCH V4 01/31] smartpqi: use host wide tagspace
-To:     Don Brace <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
-        <scott.teel@microchip.com>, <Justin.Lindley@microchip.com>,
-        <scott.benesh@microchip.com>, <gerry.morong@microchip.com>,
-        <mahesh.rajashekhara@microchip.com>, <mike.mcgowen@microchip.com>,
-        <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
-        <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
-CC:     <linux-scsi@vger.kernel.org>
-References: <161540568064.19430.11157730901022265360.stgit@brunhilda>
- <161540645071.19430.854884194228600277.stgit@brunhilda>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <df5ccaba-fb70-e2f8-2cd1-8e3b4e299aa5@huawei.com>
-Date:   Wed, 10 Mar 2021 22:59:31 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S229538AbhCKAAE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Mar 2021 19:00:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44174 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229732AbhCJX7x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 Mar 2021 18:59:53 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DB9C764F8B;
+        Wed, 10 Mar 2021 23:59:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1615420793;
+        bh=DtyWon8YLRRlkYslhTTrdUCKlpz16BXEUxu8TcoudZ8=;
+        h=Date:From:To:Cc:Subject:From;
+        b=jQXHNOYwR1jI9T9PVbwQC2eSsLfE+GAZK4OCebnlBPhGDCPBVgNE3dehQug76lgwG
+         03NL2l4RYBSsu/jgrfbLJJuFqIVq4ts+gqI/kWdC4H5axIbYJX+j+JCI+srL4Pax0B
+         MdQlUdkOkLhCqMAZDmNHILDM6fJMD1Edad3LdQ+P/G4feUt+MgSepgFReomsH/8vZz
+         UgU0gT79MtA/IBoX54M+GA/Fe/DnG8P47zjh7awlRohAKEm0WAstmPAwM9Qf7L5nbi
+         xRh4R0599EZwgTagRsf4FlEL+0RhI/h572n+HBqrZ4opFjS2dAVpDoqYxiUxQ48YmZ
+         DGrx4GymN1WWw==
+Date:   Wed, 10 Mar 2021 17:59:51 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH][next] scsi: mpt3sas: Replace unnecessary dynamic allocation
+ with a static one
+Message-ID: <20210310235951.GA108661@embeddedor>
 MIME-Version: 1.0
-In-Reply-To: <161540645071.19430.854884194228600277.stgit@brunhilda>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.10.26]
-X-ClientProxiedBy: lhreml742-chm.china.huawei.com (10.201.108.192) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/03/2021 20:00, Don Brace wrote:
-> Correct scsi-mid-layer sending more requests than
-> exposed host Q depth causing firmware ASSERT and lockup
-> issue by enabling host wide tags and setting nr_hw_queues
-> to 1.
-> 
-> Note: this also results in better performance.
-> 
-> Suggested-by: Ming Lei <ming.lei@redhat.com>
-> Suggested-by: John Gary <john.gary@huawei.com>
+Dynamic memory allocation isn't actually needed and it can be
+replaced by statically allocating memory for struct object
+io_unit_pg3 with 36 hardcoded entries for its GPIOVal array.
 
-misspelled name
+Also, this helps the with ongoing efforts to enable -Warray-bounds
+by fixing the following warning:
 
-> Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-> Reviewed-by: Scott Teel <scott.teel@microchip.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-> Signed-off-by: Don Brace <don.brace@microchip.com>
-> ---
->   drivers/scsi/smartpqi/smartpqi_init.c |    3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-> index c53f456fbd09..c154e4578e55 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -6598,7 +6598,8 @@ static int pqi_register_scsi(struct pqi_ctrl_info *ctrl_info)
->   	shost->transportt = pqi_sas_transport_template;
->   	shost->irq = pci_irq_vector(ctrl_info->pci_dev, 0);
->   	shost->unique_id = shost->irq;
-> -	shost->nr_hw_queues = ctrl_info->num_queue_groups;
-> +	shost->nr_hw_queues = 1;
-> +	shost->host_tagset = 1;
+drivers/scsi/mpt3sas/mpt3sas_ctl.c: In function ‘BRM_status_show’:
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:3257:63: warning: array subscript 24 is above array bounds of ‘U16[1]’ {aka ‘short unsigned int[1]’} [-Warray-bounds]
+ 3257 |  backup_rail_monitor_status = le16_to_cpu(io_unit_pg3->GPIOVal[24]);
+./include/uapi/linux/byteorder/little_endian.h:36:51: note: in definition of macro ‘__le16_to_cpu’
+   36 | #define __le16_to_cpu(x) ((__force __u16)(__le16)(x))
+      |                                                   ^
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:3257:31: note: in expansion of macro ‘le16_to_cpu’
+ 3257 |  backup_rail_monitor_status = le16_to_cpu(io_unit_pg3->GPIOVal[24]);
 
-If nr_hw_queues = 1, then there is no point in setting host_tagset.
+Link: https://github.com/KSPP/linux/issues/109
+Link: https://lore.kernel.org/lkml/202103101058.16ED27BE3@keescook/
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 24 ++++++++----------------
+ 2 files changed, 9 insertions(+), 17 deletions(-)
 
-Apart from that, I'm concerned with the issue mentioned here:
-
-https://lore.kernel.org/linux-scsi/4bff6232-6abd-dae8-c240-07a1a40178bf@huawei.com/
-
-Thanks,
-John
-
->   	shost->hostdata[0] = (unsigned long)ctrl_info;
->   
->   	rc = scsi_add_host(shost, &ctrl_info->pci_dev->dev);
-> 
-> .
-> 
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index 43a3bf8ff428..d00431f553e1 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -992,7 +992,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1 {
+  *one and check the value returned for GPIOCount at runtime.
+  */
+ #ifndef MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX
+-#define MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX    (1)
++#define MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX    (36)
+ #endif
+ 
+ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_3 {
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 44f9a05db94e..bc56e058a523 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -3203,7 +3203,7 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ {
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+-	Mpi2IOUnitPage3_t *io_unit_pg3 = NULL;
++	Mpi2IOUnitPage3_t io_unit_pg3;
+ 	Mpi2ConfigReply_t mpi_reply;
+ 	u16 backup_rail_monitor_status = 0;
+ 	u16 ioc_status;
+@@ -3220,17 +3220,10 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 	if (ioc->pci_error_recovery || ioc->remove_host)
+ 		goto out;
+ 
+-	/* allocate upto GPIOVal 36 entries */
+-	sz = offsetof(Mpi2IOUnitPage3_t, GPIOVal) + (sizeof(u16) * 36);
+-	io_unit_pg3 = kzalloc(sz, GFP_KERNEL);
+-	if (!io_unit_pg3) {
+-		rc = -ENOMEM;
+-		ioc_err(ioc, "%s: failed allocating memory for iounit_pg3: (%d) bytes\n",
+-			__func__, sz);
+-		goto out;
+-	}
++	sz = sizeof(io_unit_pg3);
++	memset(&io_unit_pg3, 0, sz);
+ 
+-	if (mpt3sas_config_get_iounit_pg3(ioc, &mpi_reply, io_unit_pg3, sz) !=
++	if (mpt3sas_config_get_iounit_pg3(ioc, &mpi_reply, &io_unit_pg3, sz) !=
+ 	    0) {
+ 		ioc_err(ioc, "%s: failed reading iounit_pg3\n",
+ 			__func__);
+@@ -3246,19 +3239,18 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 		goto out;
+ 	}
+ 
+-	if (io_unit_pg3->GPIOCount < 25) {
+-		ioc_err(ioc, "%s: iounit_pg3->GPIOCount less than 25 entries, detected (%d) entries\n",
+-			__func__, io_unit_pg3->GPIOCount);
++	if (io_unit_pg3.GPIOCount < 25) {
++		ioc_err(ioc, "%s: iounit_pg3.GPIOCount less than 25 entries, detected (%d) entries\n",
++			__func__, io_unit_pg3.GPIOCount);
+ 		rc = -EINVAL;
+ 		goto out;
+ 	}
+ 
+ 	/* BRM status is in bit zero of GPIOVal[24] */
+-	backup_rail_monitor_status = le16_to_cpu(io_unit_pg3->GPIOVal[24]);
++	backup_rail_monitor_status = le16_to_cpu(io_unit_pg3.GPIOVal[24]);
+ 	rc = snprintf(buf, PAGE_SIZE, "%d\n", (backup_rail_monitor_status & 1));
+ 
+  out:
+-	kfree(io_unit_pg3);
+ 	mutex_unlock(&ioc->pci_access_mutex);
+ 	return rc;
+ }
+-- 
+2.27.0
 
