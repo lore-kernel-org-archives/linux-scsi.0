@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB635C43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B08EEC433E9
 	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 20:02:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B71C64FCE
+	by mail.kernel.org (Postfix) with ESMTP id 87DC264FD3
 	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 20:02:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231418AbhCJUBy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Mar 2021 15:01:54 -0500
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:51721 "EHLO
+        id S232132AbhCJUBw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Mar 2021 15:01:52 -0500
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:51678 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232153AbhCJUBj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 15:01:39 -0500
+        with ESMTP id S232099AbhCJUBV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 15:01:21 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1615406499; x=1646942499;
+  t=1615406481; x=1646942481;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=tMCzC3Q3iDeH6DQ2jGC5uD7JGpK/Qp0g2SAYaK7qHGU=;
-  b=BCeMaJLjv8ruccEIq3b3YrrYMeYV1CDigaeCX0Nru8iSre+8DMjWJc3D
-   E8Rwb1GDRwvcA4dpOF6oCpYcA8CyM9kvtC6Peui7Jow6ylNDk4YiESaBK
-   ysrVL8kpDq98wd2j37ZBL/j5EGOzqkfG6peQU1t4EUiniaSAABRqbI9Yt
-   ZnjGx1bcGFiLpTHYfxRH3tSYFkzJe4GPgPev9Bw8lfvzdd6tNJqMyuUZp
-   V3lq8m1S7HUF7u9bSFH4jEtq8+IutiLl+VGj2lLSEP3UVe12LYPDeSzWm
-   RcBrwmY96/OgRvnWQW9++6us+LkOcW7P8EgCEekwPtdmY76REdw+smfI/
-   g==;
-IronPort-SDR: CyXdQoK++BNIZoXkz9GXb2bV/ByUmlvrKIYvdm1N1ZfMZY2TVLxW2TWNCE0Pct23Pev3HBPJ4M
- dmHvFoV+fRZwMR+wYzOMzsk/hoh6P25sA6m+PyqpW/d6pKNjMgKwTH/V5tQXJ2khSZ+38vgYVk
- Ckdpgnclg05mYS7YcQnbtlEqMCbV9KFMh6dUwiq4ZfZwOWIjs8CgDu/5dP70kNtK4Clvdqe/Ff
- JRzRqFGEDBl6Zp6igPI4LSNYs339I2KyjnYJRk7t4mJRvaZcmc0Vve7TBLkMVIh9lhVf4O6T7M
- GmA=
+  bh=8QGCBZjbNQqoow6H34vhWINN1jQie6zVTS+vTpUj5/0=;
+  b=Ha69Uz15W5bqLQIWtr2MqgSHm2IlIcRoDo46Mr+vew3/nHy7Ee/2rjFT
+   hWH6ufDnaIXNuy/tqQ7N8msG1N2GXYexD743LrpJLhZB+Haz6deVHmBy4
+   lHKwNO2cb1NAGTz6Qt3qtOpE77mrz0ZlRMHK8YsYBB/n6bFCfvwXWZRkd
+   rqpNwgT023GXN4xOVAsdX7Eey1/dftiI76zh21OGU/xZDktBdwjZR1yE/
+   GIwiZThUsGNWtsVBWBQcqEWBwsUFciigGz8h7FTAoB+xtWZAOc5nazjqs
+   4DNtLQf71eaBbBkjBVjjcdSL+7etp8DB3xpXynMKAUKTb2anmJvL9EV7U
+   Q==;
+IronPort-SDR: kEUS9EZDDU9S9rZqsjWQxfI0/l7c8+jNkKWzHW3V2K3yS87plHplLj1Foo9Ina9pJPoOfRYqET
+ Opzk9zK+XE588iu90Veyupb+ye+wrylW1BE5Kre3lr4mBt3FhQLEfqg3HOEkN/xOi5egPPsSZt
+ tiotgkIgptN5LCBRYdmBfiQNk9Th5/ZFS65gHzWmsiLMd8mX15ji4ZwC47H3lK4Cd8wPEnrAnD
+ u8oK0d0+6AqRSojq0/JuvCq3Vt9FnLs8Q1D3RfWdG67XkM74DQd1Clb/tBF9lY9g0MNmOq2GVa
+ +6c=
 X-IronPort-AV: E=Sophos;i="5.81,238,1610434800"; 
-   d="scan'208";a="47022470"
+   d="scan'208";a="47022295"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 10 Mar 2021 13:01:38 -0700
-Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 10 Mar 2021 13:01:20 -0700
+Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 10 Mar 2021 13:01:38 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex03.mchp-main.com
- (10.10.85.151) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
- Transport; Wed, 10 Mar 2021 13:01:37 -0700
-Subject: [PATCH V4 09/31] smartpqi: add support for long firmware version
+ 15.1.2176.2; Wed, 10 Mar 2021 13:01:20 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex02.mchp-main.com
+ (10.10.85.144) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
+ Transport; Wed, 10 Mar 2021 13:01:20 -0700
+Subject: [PATCH V4 06/31] smartpqi: add support for raid5 and raid6 writes
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -57,8 +57,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
         <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Wed, 10 Mar 2021 14:01:37 -0600
-Message-ID: <161540649762.19430.3798320865695298307.stgit@brunhilda>
+Date:   Wed, 10 Mar 2021 14:01:20 -0600
+Message-ID: <161540647998.19430.11643451239576796932.stgit@brunhilda>
 In-Reply-To: <161540568064.19430.11157730901022265360.stgit@brunhilda>
 References: <161540568064.19430.11157730901022265360.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -69,122 +69,428 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@microchip.com>
-
-* Add support for new "long" firmware version which requires
-  minor driver changes to expose.
+* Add in new IU definition.
+* Add in support raid5 and raid6 writes.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |   14 +++++++++---
- drivers/scsi/smartpqi/smartpqi_init.c |   37 ++++++++++++++++++++++++++-------
- 2 files changed, 39 insertions(+), 12 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |   37 +++++
+ drivers/scsi/smartpqi/smartpqi_init.c |  237 ++++++++++++++++++++++++++++++++-
+ 2 files changed, 268 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 35e892579773..aaafaced596b 100644
+index 01e18da139e3..a2fd246c8ae8 100644
 --- a/drivers/scsi/smartpqi/smartpqi.h
 +++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -1226,7 +1226,7 @@ struct pqi_event {
- struct pqi_ctrl_info {
- 	unsigned int	ctrl_id;
- 	struct pci_dev	*pci_dev;
--	char		firmware_version[11];
-+	char		firmware_version[32];
- 	char		serial_number[17];
- 	char		model[17];
- 	char		vendor[9];
-@@ -1404,7 +1404,7 @@ enum pqi_ctrl_mode {
- struct bmic_identify_controller {
- 	u8	configured_logical_drive_count;
- 	__le32	configuration_signature;
--	u8	firmware_version[4];
-+	u8	firmware_version_short[4];
- 	u8	reserved[145];
- 	__le16	extended_logical_unit_count;
- 	u8	reserved1[34];
-@@ -1412,11 +1412,17 @@ struct bmic_identify_controller {
- 	u8	reserved2[8];
- 	u8	vendor_id[8];
- 	u8	product_id[16];
--	u8	reserved3[68];
-+	u8	reserved3[62];
-+	__le32	extra_controller_flags;
-+	u8	reserved4[2];
- 	u8	controller_mode;
--	u8	reserved4[32];
-+	u8	spare_part_number[32];
-+	u8	firmware_version_long[32];
+@@ -257,6 +257,7 @@ struct pqi_device_capability {
  };
  
-+/* constants for extra_controller_flags field of bmic_identify_controller */
-+#define BMIC_IDENTIFY_EXTRA_FLAGS_LONG_FW_VERSION_SUPPORTED	0x20000000
+ #define PQI_MAX_EMBEDDED_SG_DESCRIPTORS		4
++#define PQI_MAX_EMBEDDED_R56_SG_DESCRIPTORS	3
+ 
+ struct pqi_raid_path_request {
+ 	struct pqi_iu_header header;
+@@ -312,6 +313,37 @@ struct pqi_aio_path_request {
+ 		sg_descriptors[PQI_MAX_EMBEDDED_SG_DESCRIPTORS];
+ };
+ 
++struct pqi_aio_r56_path_request {
++	struct pqi_iu_header header;
++	__le16	request_id;
++	__le16	volume_id;		/* ID of the RAID volume */
++	__le32	data_it_nexus;		/* IT nexus for the data drive */
++	__le32	p_parity_it_nexus;	/* IT nexus for the P parity drive */
++	__le32	q_parity_it_nexus;	/* IT nexus for the Q parity drive */
++	__le32	data_length;		/* total bytes to read/write */
++	u8	data_direction : 2;
++	u8	partial : 1;
++	u8	mem_type : 1;		/* 0 = PCIe, 1 = DDR */
++	u8	fence : 1;
++	u8	encryption_enable : 1;
++	u8	reserved : 2;
++	u8	task_attribute : 3;
++	u8	command_priority : 4;
++	u8	reserved1 : 1;
++	__le16	data_encryption_key_index;
++	u8	cdb[16];
++	__le16	error_index;
++	u8	num_sg_descriptors;
++	u8	cdb_length;
++	u8	xor_multiplier;
++	u8	reserved2[3];
++	__le32	encrypt_tweak_lower;
++	__le32	encrypt_tweak_upper;
++	__le64	row;			/* row = logical LBA/blocks per row */
++	u8	reserved3[8];
++	struct pqi_sg_descriptor sg_descriptors[PQI_MAX_EMBEDDED_R56_SG_DESCRIPTORS];
++};
 +
- struct bmic_sense_subsystem_info {
- 	u8	reserved[44];
- 	u8	ctrl_serial_number[16];
+ struct pqi_io_response {
+ 	struct pqi_iu_header header;
+ 	__le16	request_id;
+@@ -484,6 +516,8 @@ struct pqi_raid_error_info {
+ #define PQI_REQUEST_IU_TASK_MANAGEMENT			0x13
+ #define PQI_REQUEST_IU_RAID_PATH_IO			0x14
+ #define PQI_REQUEST_IU_AIO_PATH_IO			0x15
++#define PQI_REQUEST_IU_AIO_PATH_RAID5_IO		0x18
++#define PQI_REQUEST_IU_AIO_PATH_RAID6_IO		0x19
+ #define PQI_REQUEST_IU_GENERAL_ADMIN			0x60
+ #define PQI_REQUEST_IU_REPORT_VENDOR_EVENT_CONFIG	0x72
+ #define PQI_REQUEST_IU_SET_VENDOR_EVENT_CONFIG		0x73
+@@ -1179,6 +1213,7 @@ struct pqi_ctrl_info {
+ 	u16		max_inbound_iu_length_per_firmware;
+ 	u16		max_inbound_iu_length;
+ 	unsigned int	max_sg_per_iu;
++	unsigned int	max_sg_per_r56_iu;
+ 	void		*admin_queue_memory_base;
+ 	u32		admin_queue_memory_length;
+ 	dma_addr_t	admin_queue_memory_base_dma_handle;
+@@ -1210,6 +1245,8 @@ struct pqi_ctrl_info {
+ 	u8		soft_reset_handshake_supported : 1;
+ 	u8		raid_iu_timeout_supported: 1;
+ 	u8		tmf_iu_timeout_supported: 1;
++	u8		enable_r5_writes : 1;
++	u8		enable_r6_writes : 1;
+ 
+ 	struct list_head scsi_device_list;
+ 	spinlock_t	scsi_device_list_lock;
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 5aae36e4cdf3..051bece31f83 100644
+index 5d65464040df..42fd082f8b5c 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -7228,13 +7228,24 @@ static int pqi_get_ctrl_product_details(struct pqi_ctrl_info *ctrl_info)
- 	if (rc)
- 		goto out;
+@@ -67,6 +67,10 @@ static int pqi_aio_submit_io(struct pqi_ctrl_info *ctrl_info,
+ 	struct scsi_cmnd *scmd, u32 aio_handle, u8 *cdb,
+ 	unsigned int cdb_length, struct pqi_queue_group *queue_group,
+ 	struct pqi_encryption_info *encryption_info, bool raid_bypass);
++static int pqi_aio_submit_r56_write_io(struct pqi_ctrl_info *ctrl_info,
++	struct scsi_cmnd *scmd, struct pqi_queue_group *queue_group,
++	struct pqi_encryption_info *encryption_info, struct pqi_scsi_dev *device,
++	struct pqi_scsi_dev_raid_map_data *rmd);
+ static void pqi_ofa_ctrl_quiesce(struct pqi_ctrl_info *ctrl_info);
+ static void pqi_ofa_ctrl_unquiesce(struct pqi_ctrl_info *ctrl_info);
+ static int pqi_ofa_ctrl_restart(struct pqi_ctrl_info *ctrl_info);
+@@ -2237,7 +2241,8 @@ static inline void pqi_set_encryption_info(
+  * Attempt to perform RAID bypass mapping for a logical volume I/O.
+  */
  
--	memcpy(ctrl_info->firmware_version, identify->firmware_version,
--		sizeof(identify->firmware_version));
--	ctrl_info->firmware_version[sizeof(identify->firmware_version)] = '\0';
--	snprintf(ctrl_info->firmware_version +
--		strlen(ctrl_info->firmware_version),
--		sizeof(ctrl_info->firmware_version),
--		"-%u", get_unaligned_le16(&identify->firmware_build_number));
-+	if (get_unaligned_le32(&identify->extra_controller_flags) &
-+		BMIC_IDENTIFY_EXTRA_FLAGS_LONG_FW_VERSION_SUPPORTED) {
-+		memcpy(ctrl_info->firmware_version,
-+			identify->firmware_version_long,
-+			sizeof(identify->firmware_version_long));
-+	} else {
-+		memcpy(ctrl_info->firmware_version,
-+			identify->firmware_version_short,
-+			sizeof(identify->firmware_version_short));
-+		ctrl_info->firmware_version
-+			[sizeof(identify->firmware_version_short)] = '\0';
-+		snprintf(ctrl_info->firmware_version +
-+			strlen(ctrl_info->firmware_version),
-+			sizeof(ctrl_info->firmware_version) -
-+			sizeof(identify->firmware_version_short),
-+			"-%u",
-+			get_unaligned_le16(&identify->firmware_build_number));
+-static bool pqi_aio_raid_level_supported(struct pqi_scsi_dev_raid_map_data *rmd)
++static bool pqi_aio_raid_level_supported(struct pqi_ctrl_info *ctrl_info,
++	struct pqi_scsi_dev_raid_map_data *rmd)
+ {
+ 	bool is_supported = true;
+ 
+@@ -2249,9 +2254,11 @@ static bool pqi_aio_raid_level_supported(struct pqi_scsi_dev_raid_map_data *rmd)
+ 			is_supported = false;
+ 		break;
+ 	case SA_RAID_5:
+-		fallthrough;
++		if (rmd->is_write && !ctrl_info->enable_r5_writes)
++			is_supported = false;
++		break;
+ 	case SA_RAID_6:
+-		if (rmd->is_write)
++		if (rmd->is_write && !ctrl_info->enable_r6_writes)
+ 			is_supported = false;
+ 		break;
+ 	case SA_RAID_ADM:
+@@ -2526,6 +2533,38 @@ static int pqi_calc_aio_r5_or_r6(struct pqi_scsi_dev_raid_map_data *rmd,
+ 		rmd->total_disks_per_row)) +
+ 		(rmd->map_row * rmd->total_disks_per_row) + rmd->first_column;
+ 
++	if (rmd->is_write) {
++		u32 index;
++
++		/*
++		 * p_parity_it_nexus and q_parity_it_nexus are pointers to the
++		 * parity entries inside the device's raid_map.
++		 *
++		 * A device's RAID map is bounded by: number of RAID disks squared.
++		 *
++		 * The devices RAID map size is checked during device
++		 * initialization.
++		 */
++		index = DIV_ROUND_UP(rmd->map_index + 1, rmd->total_disks_per_row);
++		index *= rmd->total_disks_per_row;
++		index -= get_unaligned_le16(&raid_map->metadata_disks_per_row);
++
++		rmd->p_parity_it_nexus = raid_map->disk_data[index].aio_handle;
++		if (rmd->raid_level == SA_RAID_6) {
++			rmd->q_parity_it_nexus = raid_map->disk_data[index + 1].aio_handle;
++			rmd->xor_mult = raid_map->disk_data[rmd->map_index].xor_mult[1];
++		}
++		if (rmd->blocks_per_row == 0)
++			return PQI_RAID_BYPASS_INELIGIBLE;
++#if BITS_PER_LONG == 32
++		tmpdiv = rmd->first_block;
++		do_div(tmpdiv, rmd->blocks_per_row);
++		rmd->row = tmpdiv;
++#else
++		rmd->row = rmd->first_block / rmd->blocks_per_row;
++#endif
 +	}
++
+ 	return 0;
+ }
  
- 	memcpy(ctrl_info->model, identify->product_id,
- 		sizeof(identify->product_id));
-@@ -9612,13 +9623,23 @@ static void __attribute__((unused)) verify_structures(void)
- 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
- 		configuration_signature) != 1);
- 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
--		firmware_version) != 5);
-+		firmware_version_short) != 5);
- 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
- 		extended_logical_unit_count) != 154);
- 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
- 		firmware_build_number) != 190);
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
-+		vendor_id) != 200);
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
-+		product_id) != 208);
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
-+		extra_controller_flags) != 286);
- 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
- 		controller_mode) != 292);
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
-+		spare_part_number) != 293);
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
-+		firmware_version_long) != 325);
+@@ -2567,7 +2606,7 @@ static int pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
  
- 	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
- 		phys_bay_in_box) != 115);
+ 	rmd.raid_level = device->raid_level;
+ 
+-	if (!pqi_aio_raid_level_supported(&rmd))
++	if (!pqi_aio_raid_level_supported(ctrl_info, &rmd))
+ 		return PQI_RAID_BYPASS_INELIGIBLE;
+ 
+ 	if (unlikely(rmd.block_cnt == 0))
+@@ -2587,7 +2626,8 @@ static int pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
+ 	} else if (device->raid_level == SA_RAID_ADM) {
+ 		rc = pqi_calc_aio_raid_adm(&rmd, device);
+ 	} else if ((device->raid_level == SA_RAID_5 ||
+-		device->raid_level == SA_RAID_6) && rmd.layout_map_count > 1) {
++		device->raid_level == SA_RAID_6) &&
++		(rmd.layout_map_count > 1 || rmd.is_write)) {
+ 		rc = pqi_calc_aio_r5_or_r6(&rmd, raid_map);
+ 		if (rc)
+ 			return PQI_RAID_BYPASS_INELIGIBLE;
+@@ -2622,9 +2662,27 @@ static int pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
+ 		encryption_info_ptr = NULL;
+ 	}
+ 
+-	return pqi_aio_submit_io(ctrl_info, scmd, rmd.aio_handle,
++	if (rmd.is_write) {
++		switch (device->raid_level) {
++		case SA_RAID_0:
++			return pqi_aio_submit_io(ctrl_info, scmd, rmd.aio_handle,
+ 				rmd.cdb, rmd.cdb_length, queue_group,
+ 				encryption_info_ptr, true);
++		case SA_RAID_5:
++		case SA_RAID_6:
++			return pqi_aio_submit_r56_write_io(ctrl_info, scmd, queue_group,
++					encryption_info_ptr, device, &rmd);
++		default:
++			return pqi_aio_submit_io(ctrl_info, scmd, rmd.aio_handle,
++				rmd.cdb, rmd.cdb_length, queue_group,
++				encryption_info_ptr, true);
++		}
++	} else {
++		return pqi_aio_submit_io(ctrl_info, scmd, rmd.aio_handle,
++			rmd.cdb, rmd.cdb_length, queue_group,
++			encryption_info_ptr, true);
++	}
++
+ }
+ 
+ #define PQI_STATUS_IDLE		0x0
+@@ -4844,6 +4902,12 @@ static void pqi_calculate_queue_resources(struct pqi_ctrl_info *ctrl_info)
+ 		PQI_OPERATIONAL_IQ_ELEMENT_LENGTH) /
+ 		sizeof(struct pqi_sg_descriptor)) +
+ 		PQI_MAX_EMBEDDED_SG_DESCRIPTORS;
++
++	ctrl_info->max_sg_per_r56_iu =
++		((ctrl_info->max_inbound_iu_length -
++		PQI_OPERATIONAL_IQ_ELEMENT_LENGTH) /
++		sizeof(struct pqi_sg_descriptor)) +
++		PQI_MAX_EMBEDDED_R56_SG_DESCRIPTORS;
+ }
+ 
+ static inline void pqi_set_sg_descriptor(
+@@ -4931,6 +4995,42 @@ static int pqi_build_raid_sg_list(struct pqi_ctrl_info *ctrl_info,
+ 	return 0;
+ }
+ 
++static int pqi_build_aio_r56_sg_list(struct pqi_ctrl_info *ctrl_info,
++	struct pqi_aio_r56_path_request *request, struct scsi_cmnd *scmd,
++	struct pqi_io_request *io_request)
++{
++	u16 iu_length;
++	int sg_count;
++	bool chained;
++	unsigned int num_sg_in_iu;
++	struct scatterlist *sg;
++	struct pqi_sg_descriptor *sg_descriptor;
++
++	sg_count = scsi_dma_map(scmd);
++	if (sg_count < 0)
++		return sg_count;
++
++	iu_length = offsetof(struct pqi_aio_r56_path_request, sg_descriptors) -
++		PQI_REQUEST_HEADER_LENGTH;
++	num_sg_in_iu = 0;
++
++	if (sg_count != 0) {
++		sg = scsi_sglist(scmd);
++		sg_descriptor = request->sg_descriptors;
++
++		num_sg_in_iu = pqi_build_sg_list(sg_descriptor, sg, sg_count, io_request,
++			ctrl_info->max_sg_per_r56_iu, &chained);
++
++		request->partial = chained;
++		iu_length += num_sg_in_iu * sizeof(*sg_descriptor);
++	}
++
++	put_unaligned_le16(iu_length, &request->header.iu_length);
++	request->num_sg_descriptors = num_sg_in_iu;
++
++	return 0;
++}
++
+ static int pqi_build_aio_sg_list(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_aio_path_request *request, struct scsi_cmnd *scmd,
+ 	struct pqi_io_request *io_request)
+@@ -5335,6 +5435,71 @@ static int pqi_aio_submit_io(struct pqi_ctrl_info *ctrl_info,
+ 	return 0;
+ }
+ 
++static int pqi_aio_submit_r56_write_io(struct pqi_ctrl_info *ctrl_info,
++	struct scsi_cmnd *scmd, struct pqi_queue_group *queue_group,
++	struct pqi_encryption_info *encryption_info, struct pqi_scsi_dev *device,
++	struct pqi_scsi_dev_raid_map_data *rmd)
++{
++	int rc;
++	struct pqi_io_request *io_request;
++	struct pqi_aio_r56_path_request *r56_request;
++
++	io_request = pqi_alloc_io_request(ctrl_info);
++	io_request->io_complete_callback = pqi_aio_io_complete;
++	io_request->scmd = scmd;
++	io_request->raid_bypass = true;
++
++	r56_request = io_request->iu;
++	memset(r56_request, 0, offsetof(struct pqi_aio_r56_path_request, sg_descriptors));
++
++	if (device->raid_level == SA_RAID_5 || device->raid_level == SA_RAID_51)
++		r56_request->header.iu_type = PQI_REQUEST_IU_AIO_PATH_RAID5_IO;
++	else
++		r56_request->header.iu_type = PQI_REQUEST_IU_AIO_PATH_RAID6_IO;
++
++	put_unaligned_le16(*(u16 *)device->scsi3addr & 0x3fff, &r56_request->volume_id);
++	put_unaligned_le32(rmd->aio_handle, &r56_request->data_it_nexus);
++	put_unaligned_le32(rmd->p_parity_it_nexus, &r56_request->p_parity_it_nexus);
++	if (rmd->raid_level == SA_RAID_6) {
++		put_unaligned_le32(rmd->q_parity_it_nexus, &r56_request->q_parity_it_nexus);
++		r56_request->xor_multiplier = rmd->xor_mult;
++	}
++	put_unaligned_le32(scsi_bufflen(scmd), &r56_request->data_length);
++	r56_request->task_attribute = SOP_TASK_ATTRIBUTE_SIMPLE;
++	put_unaligned_le64(rmd->row, &r56_request->row);
++
++	put_unaligned_le16(io_request->index, &r56_request->request_id);
++	r56_request->error_index = r56_request->request_id;
++
++	if (rmd->cdb_length > sizeof(r56_request->cdb))
++		rmd->cdb_length = sizeof(r56_request->cdb);
++	r56_request->cdb_length = rmd->cdb_length;
++	memcpy(r56_request->cdb, rmd->cdb, rmd->cdb_length);
++
++	/* The direction is always write. */
++	r56_request->data_direction = SOP_READ_FLAG;
++
++	if (encryption_info) {
++		r56_request->encryption_enable = true;
++		put_unaligned_le16(encryption_info->data_encryption_key_index,
++				&r56_request->data_encryption_key_index);
++		put_unaligned_le32(encryption_info->encrypt_tweak_lower,
++				&r56_request->encrypt_tweak_lower);
++		put_unaligned_le32(encryption_info->encrypt_tweak_upper,
++				&r56_request->encrypt_tweak_upper);
++	}
++
++	rc = pqi_build_aio_r56_sg_list(ctrl_info, r56_request, scmd, io_request);
++	if (rc) {
++		pqi_free_io_request(io_request);
++		return SCSI_MLQUEUE_HOST_BUSY;
++	}
++
++	pqi_start_io(ctrl_info, queue_group, AIO_PATH, io_request);
++
++	return 0;
++}
++
+ static inline u16 pqi_get_hw_queue(struct pqi_ctrl_info *ctrl_info,
+ 	struct scsi_cmnd *scmd)
+ {
+@@ -6302,6 +6467,60 @@ static ssize_t pqi_lockup_action_store(struct device *dev,
+ 	return -EINVAL;
+ }
+ 
++static ssize_t pqi_host_enable_r5_writes_show(struct device *dev,
++	struct device_attribute *attr, char *buffer)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct pqi_ctrl_info *ctrl_info = shost_to_hba(shost);
++
++	return scnprintf(buffer, 10, "%x\n", ctrl_info->enable_r5_writes);
++}
++
++static ssize_t pqi_host_enable_r5_writes_store(struct device *dev,
++	struct device_attribute *attr, const char *buffer, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct pqi_ctrl_info *ctrl_info = shost_to_hba(shost);
++	u8 set_r5_writes = 0;
++
++	if (kstrtou8(buffer, 0, &set_r5_writes))
++		return -EINVAL;
++
++	if (set_r5_writes > 0)
++		set_r5_writes = 1;
++
++	ctrl_info->enable_r5_writes = set_r5_writes;
++
++	return count;
++}
++
++static ssize_t pqi_host_enable_r6_writes_show(struct device *dev,
++	struct device_attribute *attr, char *buffer)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct pqi_ctrl_info *ctrl_info = shost_to_hba(shost);
++
++	return scnprintf(buffer, 10, "%x\n", ctrl_info->enable_r6_writes);
++}
++
++static ssize_t pqi_host_enable_r6_writes_store(struct device *dev,
++	struct device_attribute *attr, const char *buffer, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct pqi_ctrl_info *ctrl_info = shost_to_hba(shost);
++	u8 set_r6_writes = 0;
++
++	if (kstrtou8(buffer, 0, &set_r6_writes))
++		return -EINVAL;
++
++	if (set_r6_writes > 0)
++		set_r6_writes = 1;
++
++	ctrl_info->enable_r6_writes = set_r6_writes;
++
++	return count;
++}
++
+ static DEVICE_ATTR(driver_version, 0444, pqi_driver_version_show, NULL);
+ static DEVICE_ATTR(firmware_version, 0444, pqi_firmware_version_show, NULL);
+ static DEVICE_ATTR(model, 0444, pqi_model_show, NULL);
+@@ -6310,6 +6529,10 @@ static DEVICE_ATTR(vendor, 0444, pqi_vendor_show, NULL);
+ static DEVICE_ATTR(rescan, 0200, NULL, pqi_host_rescan_store);
+ static DEVICE_ATTR(lockup_action, 0644,
+ 	pqi_lockup_action_show, pqi_lockup_action_store);
++static DEVICE_ATTR(enable_r5_writes, 0644,
++	pqi_host_enable_r5_writes_show, pqi_host_enable_r5_writes_store);
++static DEVICE_ATTR(enable_r6_writes, 0644,
++	pqi_host_enable_r6_writes_show, pqi_host_enable_r6_writes_store);
+ 
+ static struct device_attribute *pqi_shost_attrs[] = {
+ 	&dev_attr_driver_version,
+@@ -6319,6 +6542,8 @@ static struct device_attribute *pqi_shost_attrs[] = {
+ 	&dev_attr_vendor,
+ 	&dev_attr_rescan,
+ 	&dev_attr_lockup_action,
++	&dev_attr_enable_r5_writes,
++	&dev_attr_enable_r6_writes,
+ 	NULL
+ };
+ 
 
