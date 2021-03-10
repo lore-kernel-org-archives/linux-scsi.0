@@ -2,99 +2,210 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A532C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 18:46:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AE9DC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 19:06:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3DC8E61601
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 18:46:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E53A664F9F
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 19:06:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233576AbhCJSpa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Mar 2021 13:45:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58962 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233257AbhCJSpP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 13:45:15 -0500
-Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D4C6C061760;
-        Wed, 10 Mar 2021 10:45:15 -0800 (PST)
-Received: by mail-ej1-x634.google.com with SMTP id mm21so40723173ejb.12;
-        Wed, 10 Mar 2021 10:45:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=F4UjQbhKYU2VqHSu0Zfac1os9kgjl7Y8/tyWFDYx5sE=;
-        b=aThQHTEykges9z2Nq9ZU1A5HKuge7XBI+MX3Ov5oWhpT2fbpl15txm2ubW2A1YSPRn
-         KxtIyDcdzCG80x6Q7rby5O40nWp1+CSch5KC/UUQYyRNqGDvzKrpP9pg8Q1Q5zXrNcsh
-         arPAjNmVmPDjmnvMtbGiJuSJSEqcFQIwlqA9PeqxQS3d1KsibSsVrV+LxdxxmNpZJ7gT
-         QWw7oy+6frgxSZ+apu1/6qA4U35jzJksMnIrGhJJ5nE/5QarbOb1bbdVItcLhNP5spsr
-         iGtHEXeQhw5dV8JLdNzWZ/1/WV+M6iEsgO7Zocrnfg5eiO0j1HjPyvwxfxJqr9QxV6Cv
-         v2JQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=F4UjQbhKYU2VqHSu0Zfac1os9kgjl7Y8/tyWFDYx5sE=;
-        b=ahzdBbuQRWH9NJlMAmr70nXA74WaXIbYEl/eIy7iPSM/H3CFm+ii/MvCnRvOqBp0PM
-         nSVQhlHRUVPLQ1bva9IGHytORV3GwovrmmMzUKE2bf5sIZW2qtLUQTCA5nvKVvmoUMKB
-         tBH1EjJqABya6KmTj31SrgTPw9v7/ePMJlT337G6cK6PYRuCJMJe34YpdIbcwlPkaGhm
-         +qs+1GDurOfW8NCX/S1gk2zDV+bD/Hz9CwwZgSxKNbrLUAS1utnbdzrB6ZWrKzSQTtS9
-         2Gp7eZN4rg9X08ag9u7FoZejkEGbk408dSTE7u7JF0xEZHb+AisM5yFSjxZFmedoMKeh
-         N7uQ==
-X-Gm-Message-State: AOAM531OKRJbUvooiooYMD7g915JT/yD0r2Khl1jS00D+FuFMltaU5sA
-        t+BnvHX8D47Rha7UiXcS2dEuqU5SVb0=
-X-Google-Smtp-Source: ABdhPJyVd72b1ky1LfRQTrpZj3FHlkQ9KAYE722u1OTMlW/8BaFtYeCVBpzBIpX3MbTO15Esn39xLA==
-X-Received: by 2002:a17:906:f283:: with SMTP id gu3mr5010838ejb.91.1615401914113;
-        Wed, 10 Mar 2021 10:45:14 -0800 (PST)
-Received: from localhost (ipbcc11466.dynamic.kabel-deutschland.de. [188.193.20.102])
-        by smtp.gmail.com with ESMTPSA id rs24sm153645ejb.75.2021.03.10.10.45.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 Mar 2021 10:45:13 -0800 (PST)
-From:   Bodo Stroesser <bostroesser@gmail.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>
-Cc:     Bodo Stroesser <bostroesser@gmail.com>
-Subject: [PATCH] scsi: target: tcmu: Adjust parameter in call to tcmu_blocks_release
-Date:   Wed, 10 Mar 2021 19:44:58 +0100
-Message-Id: <20210310184458.10741-1-bostroesser@gmail.com>
-X-Mailer: git-send-email 2.12.3
+        id S232544AbhCJTGZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Mar 2021 14:06:25 -0500
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:32842 "EHLO
+        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233946AbhCJTGQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 14:06:16 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1615403176; x=1646939176;
+  h=subject:from:to:cc:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=rdvveZD4rQxDmWVDDFo9BTrvpscE0jxmmT7CsSZDcJQ=;
+  b=AhtrwVcrHbFThln0FhNXr3n401EvUJxhRAeG9PqBhprqjTVeE9uICjBi
+   w0N5xo57M2ntmQWF25TO0Eel9wl0xv8C5vYrf15a1C0I7g2XrB+tkpSE2
+   /snj4c+WLfGzSTJ+KH8BtKKERnUg46Ddk+yIKy3kLI6K5S77Wk68ksjis
+   H4Sejd7sdz/UhES/jKcTaVzycR5+SdLchGl2uQUeQTUfKggwwQ3xmWL2U
+   BvbKJ1a2EEDJHAteV6flNvPMGmDXkqkHrIgdzq/hEmiDQbJYsxf1Szdd2
+   DtXj+cuV9omeaUgQl3MeYQ04aK2Mnfp3VR2xyUb9Cyw5KGLp8IfQGJ9Ru
+   g==;
+IronPort-SDR: oPbOEY+QfxDZHGoiQw9p0fyLswdH4yOy4wSWrdYFFj3yL3zwD0uQugfmr716RxxtJvLmvBA6Q4
+ AVcFvMj+4BXhB4Q0M5aS47dZZv9bNBauMkhwseUbtYaClafCYp/YK7CvtckeBp4U8JM22IISDx
+ wee3PD6z+Q76r97f9fc86y4tFmuoq2DWA/3GDffvSlmFHaOeUxE0VcEwmEa48VJ0xQ9+OH1VQ2
+ vE2xnhEP4xUE2XmGlOcqVRPm3oBq7qaSGrFHkmKL7NtUdUw4MH/tEK0OIXc71CwJPCbhPcpoTq
+ yso=
+X-IronPort-AV: E=Sophos;i="5.81,238,1610434800"; 
+   d="scan'208";a="47016504"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 10 Mar 2021 12:06:15 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Wed, 10 Mar 2021 12:06:12 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex04.mchp-main.com
+ (10.10.85.152) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
+ Transport; Wed, 10 Mar 2021 12:06:12 -0700
+Subject: [PATCH] hpsa: fix regression issue for old controllers
+From:   Don Brace <don.brace@microchip.com>
+To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
+        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
+        <gerry.morong@microchip.com>, <mahesh.rajashekhara@microchip.com>,
+        <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
+        <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
+CC:     <linux-scsi@vger.kernel.org>
+Date:   Wed, 10 Mar 2021 13:06:12 -0600
+Message-ID: <161540317205.18786.5821926127237311408.stgit@brunhilda>
+User-Agent: StGit/0.23-dirty
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In patch
- "scsi: target: tcmu: Replace radix_tree with XArray"
-meaning of last parameter of tcmu_blocks_release was changed.
-So in the callers we should subtract 1 from the previous
-parameter.
+Fix CommandList alignment issues for old and
+unsupported controllers.
 
-Unfortunately that change got lost at one of the two places
-where tcmu_blocks_release is called. That does not lead to any
-problems, but we should adjust it anyway.
+This patch fixes the alignment issue reported for patch
+'commit f749d8b7a989
+     ("scsi: hpsa: Correct dev cmds outstanding for retried cmds")'
+reported in https://lkml.org/lkml/2021/3/3/243
 
-Signed-off-by: Bodo Stroesser <bostroesser@gmail.com>
+Patch 'commit f749d8b7a989
+     ("scsi: hpsa: Correct dev cmds outstanding for retried cmds")'
+removed an 'int' member field "abort_pending" and replaced it with
+a 'bool' field "retry_pending". This was tested and verified both
+by me and several others outside of Microchip.
+  * It should be noted that the patch changed the alignment of an
+    atomic_t shown in my pahole analysis below.
+
+However, when the cciss block driver was removed from the
+kernel, some old legacy cciss controllers were added into the
+hpsa driver in patch 'commit 135ae6edeb51
+     ("scsi: hpsa: add support for legacy boards")'
+
+Changing the field from 'int' to 'bool' caused a command alignment
+issue on these legacy controllers (reported on IA64 architectures)
+but went unnoticed because we no longer have any functional test
+systems supporting these controllers and also these controller
+are not included in our out-of-box driver.
+
+This patch corrects the CommandList alignment issue on
+the legacy controllers by changing the 'bool' back to
+an 'int'. I ran pahole against the original driver, current driver,
+and on the driver built using the updated patch to verify
+the alignment.
+
+I changed setting retry_pending in the driver accordingly.
+
+Before patch 'f749d8b7a989
+     ("scsi: hpsa: Correct dev cmds outstanding for retried cmds")
+   /* --- cacheline 10 boundary (640 bytes) was 4 bytes ago --- */
+   struct hpsa_scsi_dev_t *   phys_disk;            /*   644     8 */
+   int                        abort_pending;        /*   652     4 */
+   struct hpsa_scsi_dev_t *   device;               /*   656     8 */
+   atomic_t                   refcount;             /*   664     4 */
+
+   /* size: 768, cachelines: 12, members: 16 */
+   /* padding: 100 */
+} __attribute__((__aligned__(128)));
+
+Current patch 'f749d8b7a989
+     ("scsi: hpsa: Correct dev cmds outstanding for retried cmds")
+   /* --- cacheline 10 boundary (640 bytes) was 4 bytes ago --- */
+   struct hpsa_scsi_dev_t *   phys_disk;            /*   644     8 */
+   bool                       retry_pending;        /*   652     1 */
+   struct hpsa_scsi_dev_t *   device;               /*   653     8 */
+   atomic_t                   refcount;             /*   661     4 */
+
+   /* size: 768, cachelines: 12, members: 16 */
+   /* padding: 103 */
+} __attribute__((__aligned__(128)));
+
+After proposed patch applied:
+   /* --- cacheline 10 boundary (640 bytes) was 4 bytes ago --- */
+   struct hpsa_scsi_dev_t *   phys_disk;            /*   644     8 */
+   int                        retry_pending;        /*   652     4 */
+   struct hpsa_scsi_dev_t *   device;               /*   656     8 */
+   atomic_t                   refcount;             /*   664     4 */
+
+   /* size: 768, cachelines: 12, members: 16 */
+   /* padding: 100 */
+} __attribute__((__aligned__(128)));
+
+Reported-by: Sergei Trofimovich <slyich@gmail.com>
+Tested-by: Sergei Trofimovich <slyich@gmail.com>
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/target/target_core_user.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hpsa.c     |   10 +++++-----
+ drivers/scsi/hpsa_cmd.h |    2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 9e1b115cb032..bdfc057f000c 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1658,7 +1658,7 @@ static void tcmu_dev_kref_release(struct kref *kref)
- 	xa_destroy(&udev->commands);
- 	WARN_ON(!all_expired);
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 38369766511c..96f26e250dae 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -5593,7 +5593,7 @@ static int hpsa_ioaccel_submit(struct ctlr_info *h,
+ 		c->scsi_cmd = cmd;
+ 		c->device = dev;
+ 		if (retry) /* Resubmit but do not increment device->commands_outstanding. */
+-			c->retry_pending = true;
++			c->retry_pending = 1;
+ 		rc = hpsa_scsi_ioaccel_raid_map(h, c);
+ 		if (rc < 0)     /* scsi_dma_map failed. */
+ 			rc = SCSI_MLQUEUE_HOST_BUSY;
+@@ -5603,7 +5603,7 @@ static int hpsa_ioaccel_submit(struct ctlr_info *h,
+ 		c->scsi_cmd = cmd;
+ 		c->device = dev;
+ 		if (retry) /* Resubmit but do not increment device->commands_outstanding. */
+-			c->retry_pending = true;
++			c->retry_pending = 1;
+ 		rc = hpsa_scsi_ioaccel_direct_map(h, c);
+ 		if (rc < 0)     /* scsi_dma_map failed. */
+ 			rc = SCSI_MLQUEUE_HOST_BUSY;
+@@ -5661,7 +5661,7 @@ static void hpsa_command_resubmit_worker(struct work_struct *work)
+ 	 * Note: hpsa_ciss_submit does not zero out the command fields like
+ 	 *       ioaccel submit does.
+ 	 */
+-	c->retry_pending = true;
++	c->retry_pending = 1;
+ 	if (hpsa_ciss_submit(c->h, c, cmd, dev)) {
+ 		/*
+ 		 * If we get here, it means dma mapping failed. Try
+@@ -6169,7 +6169,7 @@ static struct CommandList *cmd_tagged_alloc(struct ctlr_info *h,
+ 	 * This is a new command obtained from queue_command so
+ 	 * there have not been any driver initiated retry attempts.
+ 	 */
+-	c->retry_pending = false;
++	c->retry_pending = 0;
  
--	tcmu_blocks_release(&udev->data_blocks, 0, udev->dbi_max + 1);
-+	tcmu_blocks_release(&udev->data_blocks, 0, udev->dbi_max);
- 	bitmap_free(udev->data_bitmap);
- 	mutex_unlock(&udev->cmdr_lock);
+ 	return c;
+ }
+@@ -6243,7 +6243,7 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+ 	 * cmd_alloc is for "internal" commands and they are never
+ 	 * retried.
+ 	 */
+-	c->retry_pending = false;
++	c->retry_pending = 0;
  
--- 
-2.12.3
+ 	return c;
+ }
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index d126bb877250..e86af4e9eef0 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -448,7 +448,7 @@ struct CommandList {
+ 	 */
+ 	struct hpsa_scsi_dev_t *phys_disk;
+ 
+-	bool retry_pending;
++	int retry_pending;
+ 	struct hpsa_scsi_dev_t *device;
+ 	atomic_t refcount; /* Must be last to avoid memset in hpsa_cmd_init() */
+ } __aligned(COMMANDLIST_ALIGNMENT);
 
