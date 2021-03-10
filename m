@@ -2,210 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00B3EC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 01:56:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F34E5C433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 02:35:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B301964FFB
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 01:56:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF76864F83
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 02:35:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231824AbhCJBzb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Mar 2021 20:55:31 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:13899 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231464AbhCJBzJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2021 20:55:09 -0500
-Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4DwFVB5hMlzjVT7;
-        Wed, 10 Mar 2021 09:53:38 +0800 (CST)
-Received: from [127.0.0.1] (10.40.192.131) by DGGEMS406-HUB.china.huawei.com
- (10.3.19.206) with Microsoft SMTP Server id 14.3.498.0; Wed, 10 Mar 2021
- 09:54:55 +0800
-Subject: Re: [PATCH 29/31] hisi_sas: use task tag to reference the slot
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     James Bottomley <james.bottomley@hansenpartnership.com>,
-        Christoph Hellwig <hch@lst.de>,
-        John Garry <john.garry@huawei.com>,
-        <linux-scsi@vger.kernel.org>
-References: <20210222132405.91369-1-hare@suse.de>
- <20210222132405.91369-30-hare@suse.de>
-From:   luojiaxing <luojiaxing@huawei.com>
-Message-ID: <2202707d-a1de-f1d1-3484-92989ff5c4f4@huawei.com>
-Date:   Wed, 10 Mar 2021 09:54:55 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        id S231228AbhCJCfR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Mar 2021 21:35:17 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:47524 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231235AbhCJCfL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2021 21:35:11 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12A2YevV005012;
+        Wed, 10 Mar 2021 02:34:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=7bz4zK5e1mu+KDdWtzrzEONuk9/0y5GV18NdT3oVe7o=;
+ b=Y4cI59JBMOdZY6yHDTm9Wd4Wu5VcN9WIDgcc2pa+PthvH6V5XO3jqTi5CrucqdXQEjgv
+ cuVcRnHlQm5CcPv+KlmPp0rReeaH+a5gCklbDDqjgRftgcB4prQC6AiKa6b2HnQriLc7
+ xdQeWiiIyxXJ9CfkuOrqz0gQXFKf142UP4rz2wjgcX7r6H7nmQO4maNB4mpf4y7R+/hd
+ RevC7NkJP6Ah50+Xp/OcFdIL3ohFoqBWiu1H2+qd5cfpQZ+QldZcsV8DLtSKZGem/ipY
+ 1qERe3ujKx3RbbJQ2DijjVwr3VYHhKI+JoBYxLUnB7FxtJEXJPsecKmQqHo87kYnBrgb 3Q== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 3741pmhfbv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 10 Mar 2021 02:34:40 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12A2PU4b163029;
+        Wed, 10 Mar 2021 02:34:36 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
+        by aserp3020.oracle.com with ESMTP id 374kn09p16-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 10 Mar 2021 02:34:36 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=FCdeaDIe0y5QU+81RUmh960BsOUal71t8s0ZofIXzSDqoHZUfJDn5KWkjJQoXXjz0BXzEEL3eT6scP/Ocy+xaWZasYJgZI4zH9GyCo9D1Z0uEEizm34PXiQCqkgu7AdhHwkSmEnCpe8n/lYuXcJLLkQm+v2Ba7l/IWb7eCZIQTDZkbeHnaOv/oG+K8tRIhb3Qh6gi0Qk3hLoSS0LXgb/ncXYVNed2K7XkI8fZ0DHYTaN0VZoryKZn0NfNRJdUj42LB/Qh3//j71d0KAsdmqJ4OR42i9tlkrqE3SSselu/C8ATvsOKcRQkRoLz71Ts2IB7DFYeDZmAE5YJwi0zWltVg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7bz4zK5e1mu+KDdWtzrzEONuk9/0y5GV18NdT3oVe7o=;
+ b=fm38eydYr+vdY7XHnu+XRg7CSXG64xDP81NZDC6PdBpMQD87GN9HPLW/cRzA9DIAvh0LFM4ouqVI0Cb/4S66z4qxOXT/a9OlmpIdkvk1yxZqpabu2YrG+OfV39TigohNHQgcOsOHTQ5eceZdQIixxvwXOIfx21pLB/ZjU0Xbyt4/QxOv+oMfGV7huma7aowF1MtxJDmpjddeZA1OUguy2UCWKesJwil5PbaoMnk8phPcULzFps2cLYAnsX2350BRRvnJRJZGq7FM1Z2NeXXoEGs7YDU/zltRq8OTbxegH2XbUf2opksqGsROahnZdghu+VEhz3AlytfoJh2v1j9hVg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7bz4zK5e1mu+KDdWtzrzEONuk9/0y5GV18NdT3oVe7o=;
+ b=pGivDdJteWbsGqLgZ/kVJCF3wTOLPtTSeIart51iSABst7SL5vZmuoZlsN96+CG99UbQgE8D9eppY064r1mK19OeGzs91dnCMFQrCpH6u2oIiq8ycwyUgiw002B+jcgqLPTyv5ack1MfLGPzg1iTIRrycyJkQzF+NPsxmzvQeMw=
+Authentication-Results: gmail.com; dkim=none (message not signed)
+ header.d=none;gmail.com; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB4710.namprd10.prod.outlook.com (2603:10b6:510:3e::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.18; Wed, 10 Mar
+ 2021 02:34:34 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::dc39:c9fa:7365:8c8e]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::dc39:c9fa:7365:8c8e%5]) with mapi id 15.20.3912.029; Wed, 10 Mar 2021
+ 02:34:34 +0000
+To:     Bodo Stroesser <bostroesser@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 0/2] scsi: target: tcmu: Replace IDR and radix_tree with
+ XArray
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1sg53buu6.fsf@ca-mkp.ca.oracle.com>
+References: <20210224185335.13844-1-bostroesser@gmail.com>
+Date:   Tue, 09 Mar 2021 21:34:31 -0500
+In-Reply-To: <20210224185335.13844-1-bostroesser@gmail.com> (Bodo Stroesser's
+        message of "Wed, 24 Feb 2021 19:53:33 +0100")
+Content-Type: text/plain
+X-Originating-IP: [138.3.200.58]
+X-ClientProxiedBy: SJ0PR05CA0088.namprd05.prod.outlook.com
+ (2603:10b6:a03:332::33) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-In-Reply-To: <20210222132405.91369-30-hare@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Originating-IP: [10.40.192.131]
-X-CFilter-Loop: Reflected
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SJ0PR05CA0088.namprd05.prod.outlook.com (2603:10b6:a03:332::33) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3933.23 via Frontend Transport; Wed, 10 Mar 2021 02:34:34 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: a1258185-c8fd-45a8-ac5f-08d8e36d0ad3
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4710:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB471027D7323E4B68DBA20E718E919@PH0PR10MB4710.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Hnqx15QBVEct5us+NrZaR8YFbzOW+2UhlQ69X/riBZtSVTWUf6/uTLkkFGszkWrup3UpJUO+PuLRY7AT9myHmBsFZ39/z3caeSrPk0hBfSMjGz6rzo+UgLe2z6dRM7b+dtDzFtvbe4siDAbcfz/KdE+otkCye0DxjN37cIJBaZxpB0/WVonxJEmzBpofz0sUAtP5FZnDgXKcemG5QBzgPZtaR+CyiFzRmNTK7sUBiMxcLObTDeq6Z/5q6nKJ5YtSKfCNUA87nkwKDMyKO3jCAbVLzwtEnn0rRGmqcIR5GJzJJH1aNjXqDGeERcjbV3QyYy0c+B5QY9udAb0AgRylqF/JAM9Gcn7UzoNPGysihrAVn4WebHDQNepDrZ8I2f2HNDtW4CrJ3jt6krDWgxn8dUiFK3o6NUFbZ7srIy26glaVWLF7NOAFUphejyuPFx8N4oAl9xdo4GULQNpP0io6M4Bjl6bPB9a2Uo21EyFWitExcyIbN+OFH6A6+spPaKQQy5XODE2WDbRiAqelbYDDVA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(39860400002)(366004)(346002)(376002)(396003)(136003)(4326008)(4744005)(86362001)(52116002)(2906002)(8936002)(5660300002)(36916002)(66556008)(7696005)(6916009)(55016002)(66476007)(66946007)(26005)(6666004)(316002)(16526019)(54906003)(478600001)(956004)(186003)(8676002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?cLkVRs8+7G6inml867nC7S6rrEPcuz6txgad18TtgbeTB1BaodQ59Gy41T1N?=
+ =?us-ascii?Q?R2DERjwlEK25G9ciIsY4MQzhJsQjlpQW4ei3PBVr0guZ0rQTTG0B1UikiFgd?=
+ =?us-ascii?Q?nSgq2m5ViDZR0PpqLgH7YeFOMzcqDnVR7kJKHQJZ76B8ISvJFHrAPaxHjcG/?=
+ =?us-ascii?Q?j9PZlhXiukP/7AJvN5JupSgsuYQUMvSIP6ykg0KxYWnS4KKuzkcKlAXBC30f?=
+ =?us-ascii?Q?+9ITglxwDKvSkhPI3BwFpgTMk2RV/wWAXxLXKRnvXjX2P/KDgF28WTwKuf3r?=
+ =?us-ascii?Q?wDlce1HoPGhojERn/FSnNAtkOBVmgR3KJcIQ0Jp6Dg8VgUy96DjfHxacuwvS?=
+ =?us-ascii?Q?6CpmkMhPcJUoDGQut9p0M3QG6E+/hows5APdWFCnPNKVCCvX1EVDR08YbuLP?=
+ =?us-ascii?Q?5ehPEZ1MZyWgusY3UZJXIrXKQC2iLajBRMbp4zq9S+wBe2/rI+KOKTkn0p9L?=
+ =?us-ascii?Q?6naeVtz/qUx4pF04Yq/OMFaEO7mtCWkKTzIiqddDTrWmQYt9lz0Y45cn9GtU?=
+ =?us-ascii?Q?lnQRrTFLRY8QMkWsnAXVxJDuJBbjmjiz+QUNUa8NaqWQRu81fr8NZt+Q3S/O?=
+ =?us-ascii?Q?wFoSMnlhYZqs4XvkHAwF4HKbwq0NuZPNyM4Iy24MeWm9vkl5xE/vf/KfQAIs?=
+ =?us-ascii?Q?RvvDKlhCFWWrooqxtouZcfqFCbUu4pl6T272fl5yiTJtxipHGM95Y4H7BY6c?=
+ =?us-ascii?Q?rcvstjIXFkMN+E0aFir0YdFEKuLq7znOs0k2XdjlCObj82GEJAznyFYSKnLQ?=
+ =?us-ascii?Q?WkAHKrM8yUCLIlTol/5Dj+UTlgtuTYfHcx03NjPM3PJDHtDjvZVzEa+A8Uk5?=
+ =?us-ascii?Q?bbXveI0yrd7MBcslxr/SutOrb4ExdeaOyj4K55PKm77eUNR2j0+Eeh5g5oW4?=
+ =?us-ascii?Q?ILL2q5MoxdGgj5uXujAOG8ba3bNfvt4qLyOJNyG7R0a6EQrF5i6OOo/9HcaF?=
+ =?us-ascii?Q?5QvgailQvQghmzEWTm7aU2tLoUmZr2agnpikDUTJTLQ7fO/5C6rOJzqkZTDa?=
+ =?us-ascii?Q?0jK/6YohJ9hk+OiCQptHuYjcDM+81csMzrVKcIi+FjW33i+8jp8NZlalqgZP?=
+ =?us-ascii?Q?tZJ/4sQLbwMeJDK/ff8/naSE+L8tmZMtST2opOFPzQSgf68ZPFDkOGHFZvEh?=
+ =?us-ascii?Q?t1oavtDa3M8Ztw/Q2bBjyR6RrqVOya89B27wAnZhvqhJ7jCFR80WF9iR3u1K?=
+ =?us-ascii?Q?YOJkeWvNuww9NovUDZ1LtG4lXHXa+0UMtbGlACY/LZtdvZgK68qwHylUnWAW?=
+ =?us-ascii?Q?O7FRgQAw86QbffI22ItmZPKnaupRHdkWKyiH33l7LTzo6Q5vRilAFJ243SQm?=
+ =?us-ascii?Q?ROTPHORcULsrUCQDhoT+EjKm?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a1258185-c8fd-45a8-ac5f-08d8e36d0ad3
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Mar 2021 02:34:34.7083
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: aY64KARkpPTBUBPE4XgeDvTwBW0kv31bQLP4r234CFmdfMzI0ZLqn1YXVB7QwtBktxy/fERqQ/hKcgxgXeOV2mvz6FpR9GcVT1CfUqIRwIE=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4710
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9918 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 malwarescore=0
+ spamscore=0 mlxlogscore=999 phishscore=0 adultscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103100010
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9918 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 mlxlogscore=999
+ adultscore=0 impostorscore=0 suspectscore=0 clxscore=1015 malwarescore=0
+ priorityscore=1501 phishscore=0 spamscore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103100011
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-On 2021/2/22 21:24, Hannes Reinecke wrote:
-> Use the task task to reference the command slot and drop the
-> internal slot bitmap.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/scsi/hisi_sas/hisi_sas.h      |  1 -
->   drivers/scsi/hisi_sas/hisi_sas_main.c | 78 ++-------------------------
->   2 files changed, 5 insertions(+), 74 deletions(-)
->
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-> index 2401a9575215..6efe980789ee 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas.h
-> +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-> @@ -419,7 +419,6 @@ struct hisi_hba {
->   	struct workqueue_struct *wq;
->   
->   	int slot_index_count;
-> -	int last_slot_index;
->   	int last_dev_id;
->   	unsigned long *slot_index_tags;
->   	unsigned long reject_stp_links_msk;
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> index af653f4393ea..6402c4e4befa 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -155,62 +155,6 @@ void hisi_sas_stop_phys(struct hisi_hba *hisi_hba)
->   }
->   EXPORT_SYMBOL_GPL(hisi_sas_stop_phys);
->   
-> -static void hisi_sas_slot_index_clear(struct hisi_hba *hisi_hba, int slot_idx)
-> -{
-> -	void *bitmap = hisi_hba->slot_index_tags;
-> -
-> -	clear_bit(slot_idx, bitmap);
-> -}
-> -
-> -static void hisi_sas_slot_index_free(struct hisi_hba *hisi_hba, int slot_idx)
-> -{
-> -	if (hisi_hba->hw->slot_index_alloc ||
-> -	    slot_idx >= HISI_SAS_UNRESERVED_IPTT) {
-> -		spin_lock(&hisi_hba->lock);
-> -		hisi_sas_slot_index_clear(hisi_hba, slot_idx);
-> -		spin_unlock(&hisi_hba->lock);
-> -	}
-> -}
-> -
-> -static void hisi_sas_slot_index_set(struct hisi_hba *hisi_hba, int slot_idx)
-> -{
-> -	void *bitmap = hisi_hba->slot_index_tags;
-> -
-> -	set_bit(slot_idx, bitmap);
-> -}
-> -
-> -static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba)
-> -{
-> -	int index;
-> -	void *bitmap = hisi_hba->slot_index_tags;
-> -
-> -	spin_lock(&hisi_hba->lock);
-> -	index = find_next_zero_bit(bitmap, hisi_hba->slot_index_count,
-> -				   hisi_hba->last_slot_index + 1);
-> -	if (index >= hisi_hba->slot_index_count) {
-> -		index = find_next_zero_bit(bitmap,
-> -				hisi_hba->slot_index_count,
-> -				HISI_SAS_UNRESERVED_IPTT);
-> -		if (index >= hisi_hba->slot_index_count) {
-> -			spin_unlock(&hisi_hba->lock);
-> -			return -SAS_QUEUE_FULL;
-> -		}
-> -	}
-> -	hisi_sas_slot_index_set(hisi_hba, index);
-> -	hisi_hba->last_slot_index = index;
-> -	spin_unlock(&hisi_hba->lock);
-> -
-> -	return index;
-> -}
-> -
-> -static void hisi_sas_slot_index_init(struct hisi_hba *hisi_hba)
-> -{
-> -	int i;
-> -
-> -	for (i = 0; i < hisi_hba->slot_index_count; ++i)
-> -		hisi_sas_slot_index_clear(hisi_hba, i);
-> -}
-> -
->   void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
->   			     struct hisi_sas_slot *slot)
->   {
-> @@ -246,8 +190,6 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
->   	spin_unlock(&sas_dev->lock);
->   
->   	memset(slot, 0, offsetof(struct hisi_sas_slot, buf));
-> -
-> -	hisi_sas_slot_index_free(hisi_hba, slot->idx);
->   }
->   EXPORT_SYMBOL_GPL(hisi_sas_slot_task_free);
->   
-> @@ -482,10 +424,8 @@ static int hisi_sas_task_prep(struct sas_task *task,
->   
->   	if (hisi_hba->hw->slot_index_alloc)
->   		rc = hisi_hba->hw->slot_index_alloc(hisi_hba, device);
-> -	else if (scmd)
-> -		rc = scmd->request->tag;
->   	else
-> -		rc = hisi_sas_slot_index_alloc(hisi_hba);
-> +		rc = scmd->request->tag;
->   
->   	if (rc < 0)
->   		goto err_out_dif_dma_unmap;
-> @@ -1975,9 +1915,10 @@ hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, int device_id,
->   	port = to_hisi_sas_port(sas_port);
->   
->   	/* simply get a slot and send abort command */
-> -	rc = = task->tag;
-> -	if (rc < 0)
-> -		rc = hisi_sas_slot_index_alloc(hisi_hba);
-> +	if (hisi_hha->hw->slot_index_alloc)
+Bodo,
 
+> Future patches will need something like the - meanwhile removed -
+> radix_tree_for_each_contig macro.  Since general direction is to use
+> xarray as replacement for radix_tree and IDR, instead of
+> re-introducing or open coding the removed macro, with this series we
+> switch over to xarray API.  Based on xarray a future patch easily can
+> implement an analog to radix_tree_for_each_contig.
 
-hisi_hha is wrong , it should be hisi_hba
+Applied to 5.13/scsi-staging, thanks!
 
-
-> +		rc = hisi_hba->hw->slot_index_alloc(hisi_hba, device);
-> +	else
-> +		rc = = task->tag;
-
-
-Delete unnecessary "="
-
-
->   	if (rc < 0)
->   		goto err_out;
->   
-> @@ -2440,12 +2381,6 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba)
->   	if (!hisi_hba->breakpoint)
->   		goto err_out;
->   
-> -	hisi_hba->slot_index_count = max_command_entries;
-> -	s = hisi_hba->slot_index_count / BITS_PER_BYTE;
-> -	hisi_hba->slot_index_tags = devm_kzalloc(dev, s, GFP_KERNEL);
-> -	if (!hisi_hba->slot_index_tags)
-> -		goto err_out;
-> -
->   	s = sizeof(struct hisi_sas_initial_fis) * HISI_SAS_MAX_PHYS;
->   	hisi_hba->initial_fis = dmam_alloc_coherent(dev, s,
->   						    &hisi_hba->initial_fis_dma,
-> @@ -2460,9 +2395,6 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba)
->   	if (!hisi_hba->sata_breakpoint)
->   		goto err_out;
->   
-> -	hisi_sas_slot_index_init(hisi_hba);
-> -	hisi_hba->last_slot_index = HISI_SAS_UNRESERVED_IPTT;
-> -
->   	hisi_hba->wq = create_singlethread_workqueue(dev_name(dev));
->   	if (!hisi_hba->wq) {
->   		dev_err(dev, "sas_alloc: failed to create workqueue\n");
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
