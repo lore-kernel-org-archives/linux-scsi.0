@@ -2,168 +2,211 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E2BBC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 16:35:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F630C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 16:40:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03AD664FC8
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 16:35:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FE7B64FC1
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 16:40:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231295AbhCJQe7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Mar 2021 11:34:59 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:10764 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231244AbhCJQeg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 11:34:36 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1615394094; x=1646930094;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=WYxo34Uwhvfvg7JmsxlOAmOvW3kGPI2ZcrMyhgbuFYw=;
-  b=W8oyz0Xc2GFuefekgsWflmRHD5h2W6TwOGCvLG/08eJvAOeXv1UonUuV
-   +MekSe2wdloCXxO11Y8IFMZ+wS2V3tPuBg983UkXNposnA3/a8wi2HNr8
-   ZNtnjQPOwkYn2gcKe2y/eQMZbRbDOVyS4adVbDUPfFeSvO+Uppxlnguij
-   Fqgqz0NkA8INx5HxiQ0mGVbB1XF4IL1psUzTuOBu2B452ksQOe/F4l5kM
-   SqGkOYo11eDwKj+gVem6SLRX98l9mRwDSLjDsKaSyh03oEyf1KQCtvu5D
-   S7mnup6TeFfMQEgXNYLj/7fj2uPKI8urafo392BYos3vcEzKKt7aJOurj
-   w==;
-IronPort-SDR: 91/bNpor5l23thP010VYLpSAcNPVhrYTdoCDP4i9lbAkrRol3IcF3x4depR87EPEU6gy4ZYo/A
- QuRNsqvHhn/nfL+44+cjZcX3SoupjxhtDae4O2cLnoWpwmYHJqspRjwZIcyoQJGc3Darv84krS
- OI174MBjH/VNaF9YUnQGFDWHUGRKojXN4mZZGr5whOhJPX1eYEQgtwNhl0529nv88YbNCS70S/
- iiewrVG97WRclC7gVkMrxDaE/CfI5dB3L4FtWkEU91eVXjZ8hBkA7/hDFNWsFmd5gM9x8UobEL
- TC4=
-X-IronPort-AV: E=Sophos;i="5.81,237,1610380800"; 
-   d="scan'208";a="266173583"
-Received: from mail-bn8nam12lp2168.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.168])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Mar 2021 00:34:50 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WApdz0JbriGmoKE98dPLRDI0HwbnyM5+RK7pgc0ziY0IUHBgeoUicKlrLe1KHteWS9BfNsipy2SH1+hkhS69q5faaW00GR7f92UKKDSQzylZ6lv3AU2T4hwpoT/FU+myXX1lFSr8HWTYrAYiXgN5qeUvG1xC/56fmjRrWQXDGT66la4iSirntSF9lgeTE7VK7Jlqd6yCVMtbq4du+TXpaA0Rm145Xs+HJ8sC/BSu/vVkoESoNrtYQcUD54ulcYNbZ+Nrkx+2roGADcRq5z5EGN3SDlAQLgMkxiB/sLHupHXIYYwB3Dbz1wh6Mb9gExWFQXuUFbT4QKh3qSATZEQzOg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WYxo34Uwhvfvg7JmsxlOAmOvW3kGPI2ZcrMyhgbuFYw=;
- b=NChlgO+f7ySSxur8pKQ6GWui0oYcHnBxdBPtFE22YzG7z50FlY5nqVbaMVP72+ih6gperPOTPC7QYP1O7PkLVDYCswM0puBgdHeEWUVshrCscogezY1cx2fxUygb5o/cRzWy84LoTZUpZHKMMeTbFMTQabsN9NIpuwKH7KPWeWcpqtWIJ7dzOJ6CQE1Ykp9bmguLO/DW6ASPC7jfldl908vY6CGUwG9RhFqN7FSgqLT96VZr9pgxzcy53GXiAFfwbtqZr5rSUblWI1lVAUpzyd8vmDulerZMiHIBG2ivkKAtmO4FcUiez0QzD8oXW5YYXVo0USZrmkvHx8AyjG9knQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WYxo34Uwhvfvg7JmsxlOAmOvW3kGPI2ZcrMyhgbuFYw=;
- b=WPtyaBju3ACQ6Fd971GpidkbQRw8Dw4K0DyTcYbf9CLYlDL4EnhobE7md0Aa/pAW88kaxtcD7HcqDcmVsCLE4B8EHgjo4ZygkReX8dvIj1foIS1aD0JmLCO2dSjSz7FvyJowZRmDXugvHD5+nYB2EiPiZuAV6Yo9JgJ7KAbyzG4=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM5PR04MB0267.namprd04.prod.outlook.com (2603:10b6:3:6f::16) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3912.17; Wed, 10 Mar 2021 16:34:32 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::e824:f31b:38cf:ef66]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::e824:f31b:38cf:ef66%3]) with mapi id 15.20.3890.039; Wed, 10 Mar 2021
- 16:34:32 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Caleb Connolly <caleb@connolly.tech>,
+        id S229784AbhCJQkZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Mar 2021 11:40:25 -0500
+Received: from m42-2.mailgun.net ([69.72.42.2]:14335 "EHLO m42-2.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231625AbhCJQkD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 Mar 2021 11:40:03 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1615394403; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=A3hXmK2V9BzYBLeUgSG9YZi0trl61aWRPGcB/gnH5c4=; b=DaiNB02wbpfnDbeHUK2ofvvPxNmxZt41m/7BcZr3PhSPfwj/7juww+eD1R/+0TlOaTNobfzP
+ 1g+Ls+4FFob8i595hKCjy5ADA5/jTYDqjOgpqN63AmMUOPDfoWnuIKkXKwSXp32j09q3HTdf
+ 0oO4wkIZ8zzEyg2FnW8YFmOrqiU=
+X-Mailgun-Sending-Ip: 69.72.42.2
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
+ 6048f65c0c7cf0f56c76696c (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 10 Mar 2021 16:39:56
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 899ABC4346D; Wed, 10 Mar 2021 16:39:55 +0000 (UTC)
+Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 10C6EC433C6;
+        Wed, 10 Mar 2021 16:39:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 10C6EC433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v10 1/2] scsi: ufs: Enable power management for wlun
+To:     Alan Stern <stern@rowland.harvard.edu>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>, cang@codeaurora.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     "ejb@linux.ibm.com" <ejb@linux.ibm.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "jaegeuk@kernel.org" <jaegeuk@kernel.org>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: RE: [PATCH v3 1/3] scsi: ufshcd: use a function to calculate versions
-Thread-Topic: [PATCH v3 1/3] scsi: ufshcd: use a function to calculate
- versions
-Thread-Index: AQHXFcLILBOEKkzP8UyE0CzAmv03v6p9af6w
-Date:   Wed, 10 Mar 2021 16:34:32 +0000
-Message-ID: <DM6PR04MB65757AE022DFB7C1DA9B6D87FC919@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20210310153215.371227-1-caleb@connolly.tech>
- <20210310153215.371227-2-caleb@connolly.tech>
-In-Reply-To: <20210310153215.371227-2-caleb@connolly.tech>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: connolly.tech; dkim=none (message not signed)
- header.d=none;connolly.tech; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [77.138.4.172]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 89967592-ad99-4646-a91f-08d8e3e26235
-x-ms-traffictypediagnostic: DM5PR04MB0267:
-x-microsoft-antispam-prvs: <DM5PR04MB026785CB121EC03C654F8A5EFC919@DM5PR04MB0267.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:626;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: fkzle4Z5RmvAWXEJ1JsD8EWWWffFhR7lqa+KLxRVDiMoOo6wo5rtOPCxuhJKx/iAv14ThemaXxBwoqwVZ39uzJy3jEjpiHFI+ti3iidViH/5V7ZutQ8V0SlHvOSb3Yt5h599N+p5OjpaYOMfxD9GtcM5qkKQXzasCg+5Fc7O0jdhYqaQBMcENZeKVI//GNrsFiB8e/1chRcOzuFXdasf4d+rOU5wfUA9rIjOj0N51WId252nhbM4mZFSc5eTZ/kQEpNVDbLvuxZCXux/Wndp0EL9tY5UbFnxhuwm4D6Ghx4bIU8w+PG5Hi9vEINnTi9YqfxlZ9+hRIvz3N7UxlNidJJuCtOxRhH2bsJeroXLRi7ZlGZC0NMgQjWjrFkdL5WWcCI/Dr/qQA5xcGVjVbLEszQ6LI6k1OmdTODrfK+dYX00Oj/15xazvrS1EYKscr6UrPcPCXrROK8NQjqGQPVgQkcjxTALA/dOVI9QO51QIFaCqRlsPW1eMPPsGm/3wRQLGDTfxZRZ0SFWkA2LTvp/Mg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(136003)(396003)(39860400002)(376002)(366004)(5660300002)(86362001)(8676002)(83380400001)(66556008)(64756008)(66476007)(186003)(2906002)(55016002)(66446008)(4326008)(6506007)(478600001)(7416002)(66946007)(76116006)(110136005)(9686003)(26005)(33656002)(7696005)(316002)(4744005)(8936002)(71200400001)(52536014)(54906003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?utf-8?B?aEUxNXlnT1dBcFl0b3JZU1BjNUpmSEpYZDkzKzVwMFo1bjIxZTVuS05JaFJa?=
- =?utf-8?B?S20xaGJKZDlEOG5GVWMzcjFEN0kwR3YxZ1h5S2dXOWxCajllR3NjcVp5YWNG?=
- =?utf-8?B?QW9jQVRGczBoYnJmNlR1UVU1ZFIzaUhzcG05K3h4ZmVQQlJlS0ZEVHpzM0wy?=
- =?utf-8?B?TUxyRWpLdXZtaVk4TDl1TFlucnp1QlFuN0JacW5lNDlpendFMXpZcjRuTXZ3?=
- =?utf-8?B?NmdqUWw4bVpmT2VzWUNEL08xN05OMVFUL0VGbkdkMVhid0w0VzkzNnY5MUFk?=
- =?utf-8?B?cmdERUdDYzVyRUl6ZndQZ0l5ZE9BRDZKWkZaSmJUcGYwUm14NmdTYmpxbjhv?=
- =?utf-8?B?R1VHMldILzJ2NnFycWhuVlFjZk5NQkU0VGkzVHl2UDRZTzdlT3FRQlZHR2tq?=
- =?utf-8?B?NkdqQ1o0SHNHYm10LzVRL3lpT3RYd09uY3FQUHZoLzB2c24wSHA1Qk5JdTNE?=
- =?utf-8?B?U0NWRjJha0wyQi9yazFhMkRkMHZoWTV0S3VxaitnUE5sb1JoeVZ4OW5tbnln?=
- =?utf-8?B?STI4YXF5citkSTFPUllWNVJ6ajFidE9FZXREZEdrVVNSTkFmajRVL2Z3WVBX?=
- =?utf-8?B?RGtCc1NKa3VUUCsyRm1LTGlUaE15aWVVNVJZbVRxc1VFWmdCVDVQeDRnRkVz?=
- =?utf-8?B?YkRKRG90RHl1YzFaczBkRUNBUFd4SXVaeEJnTFJYT2RLU1pJMFZYVDN5ZkI0?=
- =?utf-8?B?OE9US2xzeERXZENKZlpTTDloMXlPZld6YlUwUW1wZE04NVEyTEtubUNUMUlV?=
- =?utf-8?B?MzhTMDAwVjlGR2wvVFlVZVhNSzRWaWdlY2JaSXh3WHBUMXQ5TlBRT2lRcHBI?=
- =?utf-8?B?N21OOWg2Y0UrZUV5d0NrTWFMWEpvQjJ5bzJQVW1rM1ZVdkZWc2x1aExrSG5m?=
- =?utf-8?B?N291Um03Z29jZGdqRUVsa011amM4UGI2SkExN1hBb1doakJIakg4UHh0bEMy?=
- =?utf-8?B?cVRzakJmUjkwaGI0N0w4ekJPYzZLM1dPQS9PUU51L3A1STVWa2kwTG1kVGc2?=
- =?utf-8?B?NGRUbXFJTERzZTBET2V4UVhXTUw0OTFTUTh4eFR5OUdaSG9Yc3R4TWhITU5n?=
- =?utf-8?B?K3BEcWo2ZWhORUE4WXNVRlJmb3hna3hWYTBKOFZ1MmNoUVB2OWJzVzI2dFgv?=
- =?utf-8?B?b01Pb0tjVkdCbHJrc25zWWk2ajNvRjJXajVmeklYazN4U29KbVFlRVprVUxE?=
- =?utf-8?B?WGhUa3J6Nlc1SmIzWlNMUWdVK1ErZFdvNmdYSmxndkFWYWVkLzlnaFIrYVlu?=
- =?utf-8?B?Y0MwaElpeitTM3FhVG1yL3RMck5NSFpJYlY1Wm8rUjZHZjgyL3ZxZFNaY3J3?=
- =?utf-8?B?Z2N3R2VLQkQrMFZ5MDN2a3Y1SG4xS0pzNENkaERkYUorYkFZc2FhOFhYbitn?=
- =?utf-8?B?cm9JZjNKemVNbm1kcm03RDNBVjgzVGp5NGs3bUhYVlVOSUMrUnJVSDRRUW1T?=
- =?utf-8?B?STdqemFHcFhGTDl3VWtFc1o0R0Z4TzRwSWpWSzNRS1RHek5pMyszcnNUT2h4?=
- =?utf-8?B?dUVENFhLRkhwWTlyaVdhZGhaVzIyeDBvcG5RdXJObStUeFQ2NG00NXVNOEE0?=
- =?utf-8?B?b2daaU54eFE2RG1NVDg0K3ZKL1FpZndiS1B5TTYrZjZINE9MUTlZalErMFhu?=
- =?utf-8?B?L3U4bzFnL3R0cDZjLy9ZK1l0cURwNFNGUTh3RGZUbm1nOWQ3U3ZMNjNTRWNi?=
- =?utf-8?B?WXlqdlNqMStoTmlnOWhmK2R2eFJDcmpPY0JDckM3Z3FpS1lUbS82Q0FGM3Zq?=
- =?utf-8?Q?rQhJEtQxio6L9EnLxg=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>,
+        Linux-PM mailing list <linux-pm@vger.kernel.org>
+References: <0576d6eae15486740c25767e2d8805f7e94eb79d.1614725302.git.asutoshd@codeaurora.org>
+ <85086647-7292-b0a2-d842-290818bd2858@intel.com>
+ <6e98724d-2e75-d1fe-188f-a7010f86c509@codeaurora.org>
+ <20210306161616.GC74411@rowland.harvard.edu>
+ <CAJZ5v0ihJe8rNjWRwNic_BQUvKbALNcjx8iiPAh5nxLhOV9duw@mail.gmail.com>
+ <CAJZ5v0iJ4yqRTt=mTCC930HULNFNTgvO4f9ToVO6pNz53kxFkw@mail.gmail.com>
+ <f1e9b21d-1722-d20b-4bae-df7e6ce50bbc@codeaurora.org>
+ <2bd90336-18a9-9acd-5abb-5b52b27fc535@codeaurora.org>
+ <20210310031438.GB203516@rowland.harvard.edu>
+ <6b985880-f23a-adb3-8b7a-7ee1b56e6fa7@codeaurora.org>
+ <20210310162730.GB221857@rowland.harvard.edu>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <a89ad647-6c0c-b45e-cff3-a205bed034cf@codeaurora.org>
+Date:   Wed, 10 Mar 2021 08:39:51 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 89967592-ad99-4646-a91f-08d8e3e26235
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Mar 2021 16:34:32.1239
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 2GDLPEChqMsm6Vi2QghmOto39f+7UQ+P3FgQNkPegB7sPPFjkrQJlNKwqXX341fsdHITgx+XNiJo01MQaipVlg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR04MB0267
+In-Reply-To: <20210310162730.GB221857@rowland.harvard.edu>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiBAQCAtOTI5OCwxMCArOTI5MSw3IEBAIGludCB1ZnNoY2RfaW5pdChzdHJ1Y3QgdWZzX2hiYSAq
-aGJhLCB2b2lkIF9faW9tZW0NCj4gKm1taW9fYmFzZSwgdW5zaWduZWQgaW50IGlycSkNCj4gICAg
-ICAgICAvKiBHZXQgVUZTIHZlcnNpb24gc3VwcG9ydGVkIGJ5IHRoZSBjb250cm9sbGVyICovDQo+
-ICAgICAgICAgaGJhLT51ZnNfdmVyc2lvbiA9IHVmc2hjZF9nZXRfdWZzX3ZlcnNpb24oaGJhKTsN
-Cj4gDQo+IC0gICAgICAgaWYgKChoYmEtPnVmc192ZXJzaW9uICE9IFVGU0hDSV9WRVJTSU9OXzEw
-KSAmJg0KPiAtICAgICAgICAgICAoaGJhLT51ZnNfdmVyc2lvbiAhPSBVRlNIQ0lfVkVSU0lPTl8x
-MSkgJiYNCj4gLSAgICAgICAgICAgKGhiYS0+dWZzX3ZlcnNpb24gIT0gVUZTSENJX1ZFUlNJT05f
-MjApICYmDQo+IC0gICAgICAgICAgIChoYmEtPnVmc192ZXJzaW9uICE9IFVGU0hDSV9WRVJTSU9O
-XzIxKSkNCj4gKyAgICAgICBpZiAoaGJhLT51ZnNfdmVyc2lvbiA8IHVmc2hjaV92ZXJzaW9uKDEs
-IDApKQ0KPiAgICAgICAgICAgICAgICAgZGV2X2VycihoYmEtPmRldiwgImludmFsaWQgVUZTIHZl
-cnNpb24gMHgleFxuIiwNCj4gICAgICAgICAgICAgICAgICAgICAgICAgaGJhLT51ZnNfdmVyc2lv
-bik7DQpIZXJlIHlvdSByZXBsYWNlcyB0aGUgc3BlY2lmaWMgYWxsb3dhYmxlIHZhbHVlcywgd2l0
-aCBhbiBleHByZXNzaW9uDQpUaGF0IGRvZXNuJ3QgcmVhbGx5IHJlZmxlY3RzIHRob3NlIHZhbHVl
-cy4NCg==
+On 3/10/2021 8:27 AM, Alan Stern wrote:
+> On Tue, Mar 09, 2021 at 08:04:53PM -0800, Asutosh Das (asd) wrote:
+>> On 3/9/2021 7:14 PM, Alan Stern wrote:
+>>> On Tue, Mar 09, 2021 at 07:04:34PM -0800, Asutosh Das (asd) wrote:
+>>>> Hello
+>>>> I & Can (thanks CanG) debugged this further:
+>>>>
+>>>> Looks like this issue can occur if the sd probe is asynchronous.
+>>>>
+>>>> Essentially, the sd_probe() is done asynchronously and driver_probe_device()
+>>>> invokes pm_runtime_get_suppliers() before invoking sd_probe().
+>>>>
+>>>> But scsi_probe_and_add_lun() runs in a separate context.
+>>>> So the scsi_autopm_put_device() invoked from scsi_scan_host() context
+>>>> reduces the link->rpm_active to 1. And sd_probe() invokes
+>>>> scsi_autopm_put_device() and starts a timer. And then driver_probe_device()
+>>>> invoked from __device_attach_async_helper context reduces the
+>>>> link->rpm_active to 1 thus enabling the supplier to suspend before the
+>>>> consumer suspends.
+>>>
+>>>> I don't see a way around this. Please let me know if you
+>>>> (@Alan/@Bart/@Adrian) have any thoughts on this.
+>>>
+>>> How about changing the SCSI core so that it does a runtime_get before
+>>> starting an async probe, and the async probe routine does a
+>>> runtime_put when it is finished?  In other words, don't allow a device
+>>> to go into runtime suspend while it is waiting to be probed.
+>>>
+>>> I don't think that would be too intrusive.
+>>>
+>>> Alan Stern
+>>>
+>>
+>> Hi Alan
+>> Thanks for the suggestion.
+>>
+>> Am trying to understand:
+>>
+>> Do you mean something like this:
+>>
+>> int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+>> {
+>> 	
+>> 	scsi_autopm_get_device(sdev);
+>> 	pm_runtime_get_noresume(&sdev->sdev_gendev);
+>> 	[...]
+>> 	scsi_autopm_put_device(sdev);
+>> 	[...]
+>> }
+>>
+>> static int sd_probe(struct device *dev)
+>> {
+>> 	[...]
+>> 	pm_runtime_put_noidle(dev);
+>> 	scsi_autopm_put_device(sdp);
+>> 	[...]
+>> }
+>>
+>> This may work (I'm limited by my imagination in scsi layer :) ).
+> 
+> I'm not sure about this.  To be honest, I did not read the entirety of
+> your last message; it had way too much detail.  THere's a time and place
+> for that, but when you're brainstorming to figure out the underlying
+> cause of a problem and come up with a strategy to fix it, you want to
+> concentrate on the overall picture, not the details.
+> 
+> As I understand the situation, you've get a SCSI target with multiple
+> logical units, let's say A and B, and you need to make sure that A never
+> goes into runtime suspend unless B is already suspended.  In other
+> words, B always has to suspend before A and resume after A.
+> 
+> To do this, you register a device link with A as the supplier and B as
+> the consumer.  Then the PM core takes care of the ordering for you.
+> 
+> But I don't understand when you set up the device link.  If the timing
+> is wrong then, thanks to async SCSI probing, you may have a situation
+> where A is registered before B and before the link is set up.  Then
+> there's temporarily nothing to stop A from suspending before B.
+> 
+> You also need to prevent each device from suspending before it is
+> probed.  That's the easy part I was trying to address before (although
+> it may not be so easy if the drivers are in loadable modules and not
+> present in the kernel).
+> 
+> You need to think through these issues before proposing actual changes.
+> 
+>> But the pm_runtime_put_noidle() would have to be added to all registered
+>> scsi_driver{}, perhaps? Or may be I can check for sdp->type?
+> 
+> Like this; it's too early to worry about this sort of thing.
+> 
+> Alan Stern
+> 
+Hi Alan
+Thanks. Understood.
+
+I will check the details and see if I can come up with something.
+I'll propose an alternate fix otherwise and drop this change altogether.
+
+Thanks!
+-asd
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
