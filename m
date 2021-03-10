@@ -2,73 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23FECC433E9
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 08:45:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AEA3C433E6
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 08:48:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D60F364FF1
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 08:45:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08FE564FEE
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 08:48:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232427AbhCJIo2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Mar 2021 03:44:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40948 "EHLO
+        id S232356AbhCJIsP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Mar 2021 03:48:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231278AbhCJIn6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 03:43:58 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36DBBC06174A;
-        Wed, 10 Mar 2021 00:43:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=vuo0YO0EmNV+mXqkprYzB4nCqf8LGaGX/f4JDhgk+/c=; b=p5AuWvLaCuU/C/3qq+kaSkAvEX
-        vKtvFB/7Pp0l8OQ3Hjlgt+Gdlmojl2GcVfJbK4oNDb9uSkjuuv+5a031m7RPru5IcZ4nDfGvAcPLP
-        /o4zZS1IoPw8SJiu9OZJ0Faw4XwOc/+hE7aaJPNXsN38Rncqkt3JkXuCv1yFBvP3t3Fnwn8PMRTSb
-        fOURb9Y8kLuFYaShP/FZCe6WHdluCvBaxzGooPslnZlVQyZzqVgJTgt6AMwprhJyZWlwvJYkLMIMC
-        d2+KDFOGqNEsTMq2HRRaKT0CRvQEdZ3/Z/YXqWFBshlfHqLYe81+af++AJslw0/Tk8BFBQVLYj/+a
-        FrK7yhRA==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lJuR7-002uDa-4t; Wed, 10 Mar 2021 08:43:24 +0000
-Date:   Wed, 10 Mar 2021 08:43:21 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc:     Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-bcache@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2] include: Remove pagemap.h from blkdev.h
-Message-ID: <20210310084321.GA682482@infradead.org>
-References: <20210309195747.283796-1-willy@infradead.org>
+        with ESMTP id S232336AbhCJIry (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 03:47:54 -0500
+Received: from mail.marcansoft.com (marcansoft.com [IPv6:2a01:298:fe:f::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16C9EC06174A;
+        Wed, 10 Mar 2021 00:47:54 -0800 (PST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
+        (No client certificate requested)
+        (Authenticated sender: marcan@marcan.st)
+        by mail.marcansoft.com (Postfix) with ESMTPSA id 138FD3FA1B;
+        Wed, 10 Mar 2021 08:47:46 +0000 (UTC)
+To:     Sumit Garg <sumit.garg@linaro.org>,
+        Linus Walleij <linus.walleij@linaro.org>
+Cc:     Arnd Bergmann <arnd@linaro.org>,
+        "open list:ASYMMETRIC KEYS" <keyrings@vger.kernel.org>,
+        David Howells <dhowells@redhat.com>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Joakim Bech <joakim.bech@linaro.org>,
+        =?UTF-8?Q?Alex_Benn=c3=a9e?= <alex.bennee@linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Maxim Uvarov <maxim.uvarov@linaro.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        Ruchika Gupta <ruchika.gupta@linaro.org>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
+        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
+        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>
+References: <20210303135500.24673-1-alex.bennee@linaro.org>
+ <20210303135500.24673-2-alex.bennee@linaro.org>
+ <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com>
+ <20210305075131.GA15940@goby>
+ <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
+ <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
+ <6c542548-cc16-af68-c755-df52bd13b209@marcan.st>
+ <CAFA6WYOYmTgguVDwpyjnt3gLssqW48qzAkRD_nyPYg0nNhxT2A@mail.gmail.com>
+From:   Hector Martin <marcan@marcan.st>
+Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB)
+ subsystem
+Message-ID: <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st>
+Date:   Wed, 10 Mar 2021 17:47:45 +0900
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210309195747.283796-1-willy@infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <CAFA6WYOYmTgguVDwpyjnt3gLssqW48qzAkRD_nyPYg0nNhxT2A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: es-ES
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Mar 09, 2021 at 07:57:47PM +0000, Matthew Wilcox (Oracle) wrote:
-> My UEK-derived config has 1030 files depending on pagemap.h before
-> this change.  Afterwards, just 326 files need to be rebuilt when I
-> touch pagemap.h.  I think blkdev.h is probably included too widely,
-> but untangling that dependency is harder and this solves my problem.
-> x86 allmodconfig builds, but there may be implicit include problems
-> on other architectures.
+On 10/03/2021 14.14, Sumit Garg wrote:
+> On Wed, 10 Mar 2021 at 02:47, Hector Martin <marcan@marcan.st> wrote:
+>>
+>> On 09/03/2021 01.20, Linus Walleij wrote:
+>>> I suppose it would be a bit brutal if the kernel would just go in and
+>>> appropriate any empty RPMB it finds, but I suspect it is the right way
+>>> to make use of this facility given that so many of them are just sitting
+>>> there unused. Noone will run $CUSTOM_UTILITY any more than they
+>>> run the current RPMB tools in mmc-tools.
+>>
+>> AIUI the entire thing relies on a shared key that is programmed once
+>> into the RPMB device, which is a permanent operation. This key has to be
+>> secure, usually stored on CPU fuses or derived based on such a root of
+>> trust. To me it would seem ill-advised to attempt to automate this
+>> process and have the kernel do a permanent take-over of any RPMBs it
+>> finds (with what key, for one?) :)
+>>
 > 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> ---
-> v2: Fix CONFIG_SWAP=n implicit use of pagemap.h by swap.h.  Increases
->     the number of files from 240, but that's still a big win -- 68%
->     reduction instead of 77%.
+> Wouldn't it be a good idea to use DT here to represent whether a
+> particular RPMB is used as a TEE backup or is available for normal
+> kernel usage?
+> 
+> In case of normal kernel usage, I think the RPMB key can come from
+> trusted and encrypted keys subsystem.
 
-Looks good.  I suspect blkdev.h also has penty of other includes that
-aren't needed either..
+Remember that if the key is ever lost, the RPMB is now completely 
+useless forever.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This is why, as far as I know, most sane platforms will use hard fused 
+values to derive this kind of thing, not any kind of key stored in 
+erasable storage.
 
+Also, newly provisioned keys are sent in plain text, which means that 
+any kind of "if the RPMB is blank, take it over" automation equates to 
+handing over your key who an attacker who removes the RPMB and replaces 
+it with a blank one, and then they can go access anything they want on 
+the old RPMB device (assuming the key hasn't changed; and if it has 
+changed that's conversely a recipe for data loss if something goes wrong).
+
+I really think trying to automate any kind of "default" usage of an RPMB 
+is a terrible idea. It needs to be a conscious decision on a 
+per-platform basis.
+
+-- 
+Hector Martin (marcan@marcan.st)
+Public Key: https://mrcn.st/pub
