@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E66C1C433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2303C43381
 	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 20:04:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B200464FD0
+	by mail.kernel.org (Postfix) with ESMTP id C73B164FD2
 	for <linux-scsi@archiver.kernel.org>; Wed, 10 Mar 2021 20:04:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231221AbhCJUEB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Mar 2021 15:04:01 -0500
+        id S231822AbhCJUEA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Mar 2021 15:04:00 -0500
 Received: from esa.microchip.iphmx.com ([68.232.154.123]:38591 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232874AbhCJUD6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 15:03:58 -0500
+        with ESMTP id S232069AbhCJUDy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 15:03:54 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1615406638; x=1646942638;
+  t=1615406633; x=1646942633;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=JwSmG3ZiIwgUnLcBN0Ht8SlAh76d5EGYaLwouFqGumA=;
-  b=daqlkAC6Ck6kPKiQwO27aSHFnfXcAH1ftyX+7bu/Mimv6yZtTlwZVItd
-   cuZQbKJoqOdaAxNz4kzgyZJa+UYMfRerxzsvCR6t/wjPHq+y1IC+cx51K
-   SnT7xv3WkaT1icPwVU1EcrxRMC5MDBj0G1/w6NBLlknZFHchUBc+yRVeh
-   KIw9p9tE7IeK5V/GCOBUSPLcwMiAmzRRLZrgXnu2HCvv1/s2q5qZywo4N
-   RXeD152xyuc+JYx4VCk9WAMyP3zHS1E7KDFnLo79Q3BsFUZyt/UQTuTBD
-   jljUO4uHRK4ewEFB81S8AcdyiKa0x0ME2sUvI9y+R/9s/GrDSE9Dkc7H6
-   Q==;
-IronPort-SDR: DGTvae+o7cj4RtrUnpN1OkVXQ4aAtf4nXPFetreZvG5rig9WHfuGM277FVLcj+8u6zU79tSKyv
- ah4sUxrSeWrGzydoxPG7TT0u/xufdURpXsrbvHRnwmTay6BD26Ache6jiH65PMsq6lXwtinySh
- wsg6c4hBk1o5lW4lBO0pyTI7GamTOX/k+6cOMYMzBOxICVLKGC4bAwzjqnqK+D49v1OBQIraGO
- eHcdrDrUZqIR+v4zRaXCB0tAIp/A230o8DgtFlhngLz7yUzTCpu5btJlEQ8ge2uIH6VgpbYcJe
- 4mI=
+  bh=libaO7361Fie9I0PS+qJ50MdjBQBa0J8Ak+x0QGKWdo=;
+  b=ci5fdOc+fnMlwsoydY0vvTJWdpOW+2uRHBCI9nkDmBXzdpcC2BLRUfSu
+   Y6xSbTOWsvl/m/CnJNG5smLomp8I5vAxcGbh3cMuxrrtMGzyoBVSIx32r
+   JP+0sdX2qPx3Dw9fa8/2NpFVLz+CLT0z2ME6apJmyWGnKdJJSe9VVvUlj
+   Rcv+qBaXuJbRCieRNpTf+Ont7qDQ0u2ZDDkxpsay7Zerh5xLig6ahj7AR
+   D4cDyPIeOa2ZVFCywJ9MiCoLap26jNvfBxafRsug+3UYCLj7Cg3ge1EPo
+   Ov4HylSbWqew8+G/rkQooM+8dMBotwBsHy97qDrl4HjkW5T/H/VJOHCML
+   w==;
+IronPort-SDR: Rg9q+vg7ooZ4/jeFoe64tPZFvBgTsLQE7F/Q0B9iMPdupD4yICpw64UflHVH+2lt/gtUkvCvGl
+ bjNksnHh2ZUDZM9EmFcBA/TpabVVdMhazAVAENbr6V2erCBX9LgNU/uocMqrDfhZbDVx0S47c0
+ v8fqyEvGXvHu8xHiBn9/IxlGX+DshqrLvcHCUmAZ1MLakb5njDZlc9DWNvVNPZgAk4vm2A+FvZ
+ ET/IibpKRdLV30xYeJ7ZQD1ATmy4jcn60OjSnUdQ9BneB0x12874tT70kqHAVl8bxVqIqQeA4Z
+ BT8=
 X-IronPort-AV: E=Sophos;i="5.81,238,1610434800"; 
-   d="scan'208";a="106699655"
+   d="scan'208";a="106699618"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 10 Mar 2021 13:03:57 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 10 Mar 2021 13:03:53 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
  chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 10 Mar 2021 13:03:46 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex01.mchp-main.com
- (10.10.85.143) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
- Transport; Wed, 10 Mar 2021 13:03:46 -0700
-Subject: [PATCH V4 31/31] smartpqi: update version to 2.1.8-045
+ 15.1.2176.2; Wed, 10 Mar 2021 13:03:35 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex03.mchp-main.com
+ (10.10.85.151) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
+ Transport; Wed, 10 Mar 2021 13:03:34 -0700
+Subject: [PATCH V4 29/31] smartpqi: correct system hangs when resuming from
+ hibernation
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -57,8 +58,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
         <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Wed, 10 Mar 2021 14:03:46 -0600
-Message-ID: <161540662617.19430.10431993267130810890.stgit@brunhilda>
+Date:   Wed, 10 Mar 2021 14:03:34 -0600
+Message-ID: <161540661452.19430.1006952941211641788.stgit@brunhilda>
 In-Reply-To: <161540568064.19430.11157730901022265360.stgit@brunhilda>
 References: <161540568064.19430.11157730901022265360.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -69,38 +70,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-* Update version for tracking
+From: Kevin Barnett <kevin.barnett@microchip.com>
+
+* Correct system hangs when resuming from hibernation after
+  first successful hibernation/resume cycle.
+  * Rare condition involving OFA.
+
+Note: suspend/resume is not supported on many platforms.
+      It was originally intended for workstations. This patch
+      is already in our out-of-box driver and has undergone a
+      lot of testing.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Gerry Morong <gerry.morong@microchip.com>
-Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Reviewed-by: Martin Wilck <mwilck@suse.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index ec1859e2e420..ff4ee8aed5ec 100644
+index 330688c32808..48eddfdf0a08 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -33,11 +33,11 @@
- #define BUILD_TIMESTAMP
- #endif
+@@ -8651,14 +8651,21 @@ static __maybe_unused int pqi_resume(struct pci_dev *pci_dev)
+ 				pci_dev->irq, rc);
+ 			return rc;
+ 		}
++		pqi_ctrl_unblock_device_reset(ctrl_info);
+ 		pqi_ctrl_unblock_requests(ctrl_info);
+ 		pqi_scsi_unblock_requests(ctrl_info);
++		pqi_ctrl_unblock_scan(ctrl_info);
+ 		return 0;
+ 	}
  
--#define DRIVER_VERSION		"1.2.16-012"
--#define DRIVER_MAJOR		1
--#define DRIVER_MINOR		2
--#define DRIVER_RELEASE		16
--#define DRIVER_REVISION		12
-+#define DRIVER_VERSION		"2.1.8-045"
-+#define DRIVER_MAJOR		2
-+#define DRIVER_MINOR		1
-+#define DRIVER_RELEASE		8
-+#define DRIVER_REVISION		45
+ 	pci_set_power_state(pci_dev, PCI_D0);
+ 	pci_restore_state(pci_dev);
  
- #define DRIVER_NAME		"Microsemi PQI Driver (v" \
- 				DRIVER_VERSION BUILD_TIMESTAMP ")"
++	pqi_ctrl_unblock_device_reset(ctrl_info);
++	pqi_ctrl_unblock_requests(ctrl_info);
++	pqi_scsi_unblock_requests(ctrl_info);
++	pqi_ctrl_unblock_scan(ctrl_info);
++
+ 	return pqi_ctrl_init_resume(ctrl_info);
+ }
+ 
 
