@@ -3,139 +3,103 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B5F2C43381
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 09:46:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8E42C433E6
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 10:00:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3107964FDE
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 09:46:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C9E164E28
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 10:00:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232129AbhCKJqA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Mar 2021 04:46:00 -0500
-Received: from [212.63.208.185] ([212.63.208.185]:49688 "EHLO
-        mail.marcansoft.com" rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S232152AbhCKJpp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 04:45:45 -0500
-X-Greylist: delayed 71604 seconds by postgrey-1.27 at vger.kernel.org; Thu, 11 Mar 2021 04:45:44 EST
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits))
-        (No client certificate requested)
-        (Authenticated sender: marcan@marcan.st)
-        by mail.marcansoft.com (Postfix) with ESMTPSA id D365C4246F;
-        Thu, 11 Mar 2021 09:45:32 +0000 (UTC)
-To:     Linus Walleij <linus.walleij@linaro.org>,
-        Sumit Garg <sumit.garg@linaro.org>
-Cc:     Arnd Bergmann <arnd@linaro.org>,
-        "open list:ASYMMETRIC KEYS" <keyrings@vger.kernel.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Joakim Bech <joakim.bech@linaro.org>,
-        =?UTF-8?Q?Alex_Benn=c3=a9e?= <alex.bennee@linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Maxim Uvarov <maxim.uvarov@linaro.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        Ruchika Gupta <ruchika.gupta@linaro.org>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
-        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
-        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
-        Arnd Bergmann <arnd.bergmann@linaro.org>
-References: <20210303135500.24673-1-alex.bennee@linaro.org>
- <20210303135500.24673-2-alex.bennee@linaro.org>
- <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com>
- <20210305075131.GA15940@goby>
- <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
- <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
- <6c542548-cc16-af68-c755-df52bd13b209@marcan.st>
- <CAFA6WYOYmTgguVDwpyjnt3gLssqW48qzAkRD_nyPYg0nNhxT2A@mail.gmail.com>
- <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st>
- <CAFA6WYMSJxK2CjmoLJ6mdNNEfOQOMVXZPbbFRfah7KLeZNfguw@mail.gmail.com>
- <CACRpkdZb5UMyq5qSJE==3ZnH-7fh92q_t4AnE8mPm0oFEJxqpQ@mail.gmail.com>
-From:   Hector Martin <marcan@marcan.st>
-Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB)
- subsystem
-Message-ID: <e5d3f4b5-748e-0700-b897-393187b2bb1a@marcan.st>
-Date:   Thu, 11 Mar 2021 18:45:30 +0900
+        id S232050AbhCKKA0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Mar 2021 05:00:26 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:52573 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232001AbhCKKAX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 05:00:23 -0500
+Received: from 1.general.cking.uk.vpn ([10.172.193.212])
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <colin.king@canonical.com>)
+        id 1lKI7C-0004di-0C; Thu, 11 Mar 2021 10:00:22 +0000
+To:     Douglas Gilbert <dgilbert@interlog.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-scsi@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From:   Colin Ian King <colin.king@canonical.com>
+Subject: re: scsi: sg: NO_DXFER move to/from kernel buffers
+Message-ID: <4375985d-7e0e-b76c-9fdf-5430d2951d51@canonical.com>
+Date:   Thu, 11 Mar 2021 10:00:21 +0000
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-In-Reply-To: <CACRpkdZb5UMyq5qSJE==3ZnH-7fh92q_t4AnE8mPm0oFEJxqpQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: es-ES
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/03/2021 09.49, Linus Walleij wrote:
-> The use case for TPM on laptops is similar: it can be used by a
-> provider to lock down a machine, but it can also be used by the
-> random user to store keys. Very few users beside James
-> Bottomley are capable of doing that (I am not) but they exist.
-> https://blog.hansenpartnership.com/using-your-tpm-as-a-secure-key-store/
+Hi,
 
-I've used a TPM as an SSH key keystore in the past (these days I use 
-YubiKeys, but same idea). TPMs are useful because they *do* implement 
-policy and cryptographic operations. So you can, in fact, get security 
-guarantees out of a TPM without secureboot.
+Static analysis on linux-next with Coverity has detected an issue in
+drivers/scsi/sg.c with the following recent commit:
 
-For example, assuming the TPM is secure, it is impossible to clone an 
-SSH key private key managed by a TPM. This means that any usage has to 
-be on-device, which provides inherent rate-limiting. Then, the TPM can 
-gate access to the key based on a passphrase, which again provides 
-inherent rate-limits on cracking attempts. TPM 2.0 devices also provide 
-explicit count limits and time-based throttling for unlocking attempts.
+commit b32ac463cb59e758b4560260fd168a2b4ea6e81a
+Author: Douglas Gilbert <dgilbert@interlog.com>
+Date:   Fri Feb 19 21:00:54 2021 -0500
 
-We have much the same story with the Secure Enclave Processor on Apple 
-Silicon machines (which I'm working on porting Linux to) - it provides 
-policy, and can even authenticate with fingerprints (there is a hardware 
-secure channel between the reader and the SEP) as well as passphrases. 
-For all intents and purposes it is an Apple-managed TPM (with its own 
-secureboot). So it is similarly useful for us to support the SEP for key 
-storage, and perhaps even integrate it with kernel subsystems at some 
-point. It's useful for our regular users, even though they are unlikely 
-to be running with full secureboot on the main CPU (though Apple's 
-implementation does allow for a user-controlled secureboot subset, and 
-it should be possible to provide hard guarantees there as well, but I 
-digress).
+    scsi: sg: NO_DXFER move to/from kernel buffers
 
-All of these things make putting keys into TPMs, YubiKeys, the SEP, etc 
-a useful thing for anyone, regardless of whether their machine is locked 
-down or not.
+The analysis is as follows:
 
-This is not the case for RPMB. RPMB *relies* on the software running on 
-the other side being trusted. RPMB, alone, provides zero new security 
-guarantees, without trusted software communicating with it.
+2973 sg_rq_map_kern(struct sg_request *srp, struct request_queue *q,
+struct request *rqq, int rw_ind)
+2974 {
+2975        struct sg_scatter_hold *schp = &srp->sgat_h;
+2976        struct bio *bio;
 
-The key initialization story is also a lot thornier in RPMB. TPMs, the 
-SEP, and YubiKeys are all designed so that they can be factory-reset 
-(losing all key material in the process) by a user with physical access, 
-which means that provisioning operations and experiments are risk-free, 
-and the only danger is data loss, not making the hardware less useful. 
-With the MAC key provisioning for RPMB being a one-time process, it is 
-inherently a very risky operation that a user must commit to with great 
-care, as they only get one chance, ever. Better have that key backed up 
-somewhere (but not somewhere an attacker can get to... see the 
-problem?). This is like fusing secureboot keys on SoCs (I remember being 
-*very* nervous about hitting <enter> on the command to fuse a Tegra X1 
-board with a secureboot key for some experiments... these kinds of 
-irreversible things are no joke).
+    1. var_decl: Declaring variable k without initializer.
 
-Basically, TPMs, SEP, YubiKeys, etc were designed to be generally useful 
-and flexible devices for various crypto and authentication use cases. 
-RPMB was designed for the sole purpose of plugging the secure storage 
-replay exploit for Android phones running TrustZone secure monitors. It 
-doesn't really do anything else; it's just a single low-level primitive 
-and you need to already have an equivalent design that is only missing 
-that piece to get anything from it. And its provisioning model assumes a 
-typical OEM device production pipeline and integration with CPU fusing; 
-it isn't friendly to Linux hackers messing around with securing LUKS 
-unlock attempt counters.
+2977        int k, ln;
+2978        int op_flags = 0;
+2979        int num_sgat = schp->num_sgat;
+2980        int dlen = schp->dlen;
+2981        int pg_sz = 1 << (PAGE_SHIFT + schp->page_order);
+2982        int num_segs = (1 << schp->page_order) * num_sgat;
+2983        int res = 0;
+2984
 
--- 
-Hector Martin (marcan@marcan.st)
-Public Key: https://mrcn.st/pub
+    2. Condition _sdp, taking true branch.
+    3. Condition _sdp->disk, taking true branch.
+    4. Condition !!(_sdp && _sdp->disk), taking true branch.
+    5. Condition !!(((scsi_logging_level >> 3) & 7U /* (1 << 3) - 1 */)
+> 4), taking true branch.
+    6. Condition !!(((scsi_logging_level >> 3) & 7U /* (1 << 3) - 1 */)
+> 4), taking true branch.
+    7. Falling through to end of if statement.
+
+2985        SG_LOG(4, srp->parentfp, "%s: dlen=%d, pg_sz=%d\n",
+__func__, dlen, pg_sz);
+
+    8. Condition num_sgat <= 0, taking false branch.
+
+2986        if (num_sgat <= 0)
+2987                return 0;
+
+    9. Condition rw_ind == 1, taking true branch.
+
+2988        if (rw_ind == WRITE)
+2989                op_flags = REQ_SYNC | REQ_IDLE;
+    Uninitialized scalar variable
+    10. uninit_use: Using uninitialized value k.
+
+2990        bio = sg_mk_kern_bio(num_sgat - k);
+2991        if (!bio)
+
+Variable k is not initialized, however it is being read when it contains
+a garbage value.
+
+Colin
