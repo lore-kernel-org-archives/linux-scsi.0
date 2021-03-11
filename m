@@ -2,219 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28C9FC433E9
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:03:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C153EC433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:15:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDA1264F84
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:03:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6900B64F88
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:15:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230094AbhCKUCq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Mar 2021 15:02:46 -0500
-Received: from [212.63.208.185] ([212.63.208.185]:43780 "EHLO
-        mail.marcansoft.com" rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229796AbhCKUCh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 15:02:37 -0500
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: marcan@marcan.st)
-        by mail.marcansoft.com (Postfix) with ESMTPSA id 7A616424D9;
-        Thu, 11 Mar 2021 20:02:24 +0000 (UTC)
-To:     Linus Walleij <linus.walleij@linaro.org>
-Cc:     David Howells <dhowells@redhat.com>,
-        "open list:ASYMMETRIC KEYS" <keyrings@vger.kernel.org>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Sumit Garg <sumit.garg@linaro.org>,
-        Arnd Bergmann <arnd@linaro.org>,
-        Joakim Bech <joakim.bech@linaro.org>,
-        =?UTF-8?Q?Alex_Benn=c3=a9e?= <alex.bennee@linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Maxim Uvarov <maxim.uvarov@linaro.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        Ruchika Gupta <ruchika.gupta@linaro.org>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
-        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
-        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
-        Arnd Bergmann <arnd.bergmann@linaro.org>
-References: <20210303135500.24673-1-alex.bennee@linaro.org>
- <20210303135500.24673-2-alex.bennee@linaro.org>
- <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com>
- <20210305075131.GA15940@goby>
- <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
- <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
- <6c542548-cc16-af68-c755-df52bd13b209@marcan.st>
- <CAFA6WYOYmTgguVDwpyjnt3gLssqW48qzAkRD_nyPYg0nNhxT2A@mail.gmail.com>
- <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st>
- <CACRpkdbQks5pRFNHkNLVvLHCBhh0XCv7pHYq25EVAbU60PcwsA@mail.gmail.com>
- <0a26713a-8988-1713-4358-bc62364b9e25@marcan.st>
- <CACRpkda9f-BNmu-CaNsghnDoOcSXvvvji=tag2Xos+tg_nNZ0w@mail.gmail.com>
- <32bdceb1-e70d-7481-96e3-a064a7108eb9@marcan.st>
- <CACRpkdZ_-rqGBUOxUcBPeqVkLzX=Q9pjO9M+zY20-S9tNXAE0Q@mail.gmail.com>
-From:   Hector Martin <marcan@marcan.st>
-Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB)
- subsystem
-Message-ID: <d7f8a732-7a44-f609-52dc-3ba824a3d192@marcan.st>
-Date:   Fri, 12 Mar 2021 05:02:22 +0900
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S229900AbhCKUPR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Mar 2021 15:15:17 -0500
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:63181 "EHLO
+        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229520AbhCKUPF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 15:15:05 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1615493706; x=1647029706;
+  h=subject:from:to:cc:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=3I8hSmkZc0dJj3ouykY4nZ/d9LU7kmRKzLpSV7CIWKw=;
+  b=kdd1wQ/o0RLnNT96ZugV5mQJSl7h3QUwVHpX+osDzwWjHDyfXuFygpXb
+   Qh+765uC5REjmsKsXsf6J2JoztzepQqHozgMYZoYZzdj/ZCvW4cVTNJhT
+   7G3cNDb75AASrz0pJ2I2iwee5KwFS8jD1Dp8XiyFiIJafeOJn0EC1Cdyp
+   RQQJ93XrUkqRz1QZaWB5HH+xhswRkVXrsZ+4FXD9oFJ8FemIq6Cs0QjVk
+   A++AnjnF4CewsUN62PSo9kzYiOTYF4zFvHStcGd+vXy/GhPCiTSfZ5OmF
+   eKAkuO2eHAK3jvZu5qJtzmJVyO0pqdcUd2rV4nhenPptSW5PkseaXdMAv
+   A==;
+IronPort-SDR: MFNwNU65ihDRG30dpcdRyf88EERz0V2EBKsn2E7ozSK3sf0tVx6gNIXudlXc6C2Tx9h184Oi6n
+ ZwTtptZ50X8vLXdVZDGbtsph8EkkQLdnqdhYNiz3CKg5eYidLYS0z1QeFSU9rXUf2ysGQzVizR
+ LcD8hwBTe9B6rJ562Fv/+RG6rR6CjaHMlE04rDBS4LqaVbIjzQ23d4R+ksa1znov5NFFPQg9/Y
+ zYDfeYIRNIknwKDnZvA1PglFJw1cN/KMN47FLlxLb0I16o4XtV/urJTzJwfT9g6Th5VmZFl2kZ
+ oVo=
+X-IronPort-AV: E=Sophos;i="5.81,241,1610434800"; 
+   d="scan'208";a="112405931"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 11 Mar 2021 13:15:06 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Thu, 11 Mar 2021 13:14:58 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex03.mchp-main.com
+ (10.10.85.151) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
+ Transport; Thu, 11 Mar 2021 13:14:58 -0700
+Subject: [PATCH V5 01/31] smartpqi: use host wide tagspace
+From:   Don Brace <don.brace@microchip.com>
+To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
+        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
+        <gerry.morong@microchip.com>, <mahesh.rajashekhara@microchip.com>,
+        <mike.mcgowen@microchip.com>, <murthy.bhat@microchip.com>,
+        <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
+        <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
+CC:     <linux-scsi@vger.kernel.org>
+Date:   Thu, 11 Mar 2021 14:14:57 -0600
+Message-ID: <161549369787.25025.8975999483518581619.stgit@brunhilda>
+In-Reply-To: <161549045434.25025.17473629602756431540.stgit@brunhilda>
+References: <161549045434.25025.17473629602756431540.stgit@brunhilda>
+User-Agent: StGit/0.23-dirty
 MIME-Version: 1.0
-In-Reply-To: <CACRpkdZ_-rqGBUOxUcBPeqVkLzX=Q9pjO9M+zY20-S9tNXAE0Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: es-ES
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/03/2021 23.06, Linus Walleij wrote:
-> Yes. And this is what mobile phone vendors typically did.
-> 
-> But the nature of different electrical attacks made them worried
-> about different schemes involving cutting power and disturbing
-> signals with different probes, so they wanted this counter
-> implemented in hardware and that is why RPMB exists at all
-> (IIUC).
+Correct scsi-mid-layer sending more requests than
+exposed host Q depth causing firmware ASSERT and lockup
+issue by enabling host wide tags.
 
-No, prior to RPMB there was no such secure counter at all. The problem 
-is that non-volatile erasable storage (i.e. EEPROM/Flash) is 
-incompatible with modern SoC manufacturing processes, so there is no way 
-to embed a secure counter into the main SoC. And once your counter needs 
-to be external, there needs to be a secure communications protocol to 
-access it. This is what RPMB implements.
+Note: this also results in better performance.
 
-For preventing software downgrades, especially of bootloader code, this 
-can be implemented with one-time fuses embedded in the SoC, but there is 
-a limited supply of those. So this doesn't work for things like PIN 
-attempt counters. For that you need a secure external counter.
+Suggested-by: Ming Lei <ming.lei@redhat.com>
+Suggested-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-> It is fine to be of the opinion that this entire piece of hardware
-> is pointless because the same can be achieved using
-> well written software.
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index c53f456fbd09..61e3a5afaf07 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6599,6 +6599,7 @@ static int pqi_register_scsi(struct pqi_ctrl_info *ctrl_info)
+ 	shost->irq = pci_irq_vector(ctrl_info->pci_dev, 0);
+ 	shost->unique_id = shost->irq;
+ 	shost->nr_hw_queues = ctrl_info->num_queue_groups;
++	shost->host_tagset = 1;
+ 	shost->hostdata[0] = (unsigned long)ctrl_info;
+ 
+ 	rc = scsi_add_host(shost, &ctrl_info->pci_dev->dev);
 
-You've misunderstood me. RPMB isn't pointless; what I am saying is that 
-if you strip away everything but the counter functionality, you can 
-still build equivalent security guarantees. You still need the counter. 
-There is no way to get that counter without RPMB or something like it 
-(another option is e.g. to use a smartcard IC as a secure element; AIUI 
-modern Apple devices do this). Software alone doesn't work. This is why 
-I wrote that article about how the FBI cracks iPhones; that works 
-because they weren't using a secure rollback-protected storage/counter 
-chip of any kind.
-
-> The position that the kernel community shall just ignore this
-> hardware is a possible outcome of this discussion, but we need
-> to have the discussion anyway, because now a RPMB framework
-> is being promoted. The people who want it will need to sell it to
-> us.
-
-Again, you're kind of misunderstanding me here. I'm not saying the 
-feature is useless. What I'm saying is that, to understand *how* it is 
-useful, it helps if you forget about the read/write commands and treat 
-it as a simple counter.
-
-Once you do that, you'll realize that e.g. putting keys in RPMB doesn't 
-really make sense as a kernel primitive. The usefulness of RPMB is 
-purely in the integration of that counter (which is equivalent to 
-rollback-protected storage) with a policy system. Everything else is 
-icing on the cake; it doesn't create new use cases.
-
-Consider this:
-
-* You have RPMB, but you will use it as a counter only.
-* To use RPMB, you need to have a secure shared key.
-* You use the RPMB key (or a hash, or whatever) to encrypt a GPG key in 
-your filesystem
-* You have a Git repo. This is your secure rollback-protected storage.
-* We assume the filesystem can be potentially read, written, and 
-intercepted.
-
-To read from your rollback-protected storage, you:
-
-* Read the RPMB counter securely
-* Fetch the Git tag named "v%d" with the counter value
-* Ensure the Git tag is correctly signed with your secure GPG key
-* Ensure the commit description of the signed commit is also "v%d"
-
-To write to your rollback protected storage, you:
-
-* Commit your changes to the repository (as a child of the current known 
-good commit, which you know is secure via the prevous read process) with 
-the commit message "v%d" with the counter value + 1
-* Tag it "v%d" with the current counter value + 1, signing the tag with 
-your GPG private key
-* Ensure all changes are flushed to disk
-* Perform an increment operation on the RPMB counter
-
-You have now built a secure, rollback-protected Git repository, with 
-similar security properties to RPMB storage, without using RPMB storage; 
-just a counter.
-
-Just like RPMB storage, the repo is readable without a key.
-Just like RPMB storage, you need to have a secured master key stored 
-somewhere; if the attacker gets your key it is game over.
-Just like RPMB storage, the repo can only be updated (in a way that 
-would be accepted) with the key available
-Just like RPMB storage, the repo cannot be rolled back to a prior 
-version (because it would not match the counter value)
-
-Thus, we can conclude that the storage features of RPMB do not provide 
-additional security properties that cannot be derived from a simple counter.
-
-* Disclaimer: please don't actually deploy this; I'm trying to make a 
-point here, it's 5AM and I'm not claiming this is a perfectly secure 
-design and I haven't missed anything. Please don't design 
-rollback-protected Git repositories without expert review. I am assuming 
-filesystem mutations only happen between operations and handwaving away 
-active attacks, which I doubt Git is designed to be robust against. A 
-scheme like this can be implemented securely with care, but not naively.
-
->>> With RPMB this can be properly protected against because
->>> the next attempt can not be made until after the RPMB
->>> monotonic counter has been increased.
->>
->> But this is only enforced by software. If you do not have secure boot,
->> you can just patch software to allow infinite tries without touching the
->> RPMB. The RPMB doesn't check PINs for you, it doesn't even gate read
->> access to data in any way. All it does is promise you cannot make the
->> counter count down, or make the data stored within go back in time.
-> 
-> This is true, I guess the argument is something along the
-> line that if one link in the chain is weaker, why harden
-> any other link, the chain will break anyway?
-
-This is how security works, yes :-)
-
-I'm not saying hardening a link in the chain is pointless in every case, 
-but in this case it's like heat treating one link in the chain, then 
-joining it to the next one with a ziptie. Only once you at least have 
-the entire chain of steel does it make sense to start thinking about 
-heat treatment.
-
-> I am more of the position let's harden this link if we can
-> and then deal with the others when they come up, i.e.
-> my concern is this piece of the puzzle, even if it is not
-> the centerpiece (maybe the centerpiece is secure boot
-> what do I know).
-
-Well, that's what I'm saying, you do need secureboot for this to make 
-sense :-)
-
-RPMB isn't useless and some systems should implement it; but there's no 
-real way for the kernel to transparently use it to improve security in 
-general (for anyone) without the user being aware. Since any security 
-benefit from RPMB must come from integration with user policy, it 
-doesn't make sense to "well, just do something else with RPMB because 
-it's better than nothing"; just doing "something" doesn't make systems 
-more secure. There needs to be a specific, practical use case that we'd 
-be trying to solve with RPMB here.
-
--- 
-Hector Martin (marcan@marcan.st)
-Public Key: https://mrcn.st/pub
