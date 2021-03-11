@@ -2,176 +2,175 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43E92C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 09:04:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88B48C433E9
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 09:23:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DCC4464FDA
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 09:04:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A85B64FB8
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 09:23:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231786AbhCKJEM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Mar 2021 04:04:12 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:13009 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231147AbhCKJDt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 04:03:49 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1615453429; x=1646989429;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=AWl26UQozjatNQn8DEcthBc8lMSVN+ULkVZTW7nRUu0=;
-  b=OljHudHPVwXuC7EMUJczxruHnfx2IMPT5aJ0A3kacSp2qVQS0Oe2CAmy
-   BMaFo+6NeVsU4+nhuikapTs8/4jnQh4fnOuvsLMO+0QToTgiSj28w8+Jr
-   tiMSWqEwFjus81PnfZBQOyZc7C/ARCCbo2gu1gskPbXaSVgzUTP9HMNji
-   rwFLZUcCl+C/govuVvgJ2La9qRA/FA50fJYM7t4Ft69b+bY32FZSQKD7C
-   ihzRAaosl6YfIzLNEMpsI4cQAc//in2trIWKDY0niwyjhjuWgF8eW782P
-   Z7hFuPIW0GD5/W+4sMd4HboeBBtjPNtRNms6yJ2XYBJzPR0FxQbdgGDjx
-   Q==;
-IronPort-SDR: xmo3TX9tTj4PcgC6x/xawHgiPeLYxp7N2D1VtQxm+pRphRDeO3pbFn44TsbhjEIBSzdHq9Lfv1
- G/GdKPuhk71ryr6QUCVezxtLdw2LeoCpFik43GRZyMf1dCSvF3H5WgAd+kEE9IQq/T5muq/owc
- 7bPVTnNaUN5ytP/a/2JtITOSJdmsujCo7YGub8Iu6dO2wOgCAh4fejVwankxfN9WKWR5MvOaNu
- 9D0C2psNKknVJ8yx+H2efbykIIieX3w0B8JkEHA839JO/01CIMq5j9L5hexeDzX2gX2LFXIwRS
- v0U=
-X-IronPort-AV: E=Sophos;i="5.81,239,1610380800"; 
-   d="scan'208";a="272586095"
-Received: from mail-dm3nam07lp2042.outbound.protection.outlook.com (HELO NAM02-DM3-obe.outbound.protection.outlook.com) ([104.47.56.42])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Mar 2021 17:03:48 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YUoWqe2Ts54QASQDIpncfvrBayIu/GHGekkZ5d/11cA4ZayAOQz2ISYov0pCtcDyhhTUdBEiMdgoV3/joEtvY090MQT2w4Inw5jxyQAzGsEuebP+JTz9UhIQnVQHh83duR7lbCc0BDlhMV3naerK6y2YYofBr92oCD4dZMEiz16uhv6MpwqTrrUuEvqObTeoiTNfwmwhfg4GSizNkiFyc7oy/ptWdBkrWFNH5D4q1YjoZX1XeyIsEjrJLVAT3xQ7bOhX9TMaF7RQ7zck72eJKXzmf7xqKsS/tOMwA6wEO9jqCnNJQPN5nxk6Hbk6OybtCcjtBTZZIQGmhReJ4mhEOg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XJlhEkiKulqm6QBX/z+L9xWWG30CQ2WjPjWnlpGfDSg=;
- b=RKy751VkjWiY0G9kztHV8+LpRb6rxpegzOrpUwLBT3OkpvHhkBztEgYh0ermjlJ3nclSt8aBsLoB1r+3E71Xzx0fLLbQAG7JaF9e599DRnr3ZkY50qXDUxXVKFeFIon7BYWNseKmBIbnVfROEs0uQQ31OyaA1EeMDGFlm9eNE+ah/lSsDOJ3uNfFISn6D810ZlNGtjwoTWrhQsh9rBcsezXcd6lameoUVtvm9GyncM5/m5E8ght5A/niCaOuyIVDIFeMzyBL5iUGe32wDOCiQXyYOvgm96oAdvjUuCZmQaoPsW0BNVBEhxYOXiAQdlAYf7UwyeUR0bIy0ONYsw7QMA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XJlhEkiKulqm6QBX/z+L9xWWG30CQ2WjPjWnlpGfDSg=;
- b=yQtpXuNmeWKRJgxog7jaoNu3Rb5e5PubEIW1hc2BOGfKAkpdqpaJ1fMsHPcr7OQ8ghXpGptw2vb19L76oeA63qlVNkvja7M7B/sw5q+UMvw8j/pTeESvDKtY6SC9UOtqgF3CT39v8B9lhxVzxY8WSWbhMyIwlNHmJqMsjNKCkoM=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB6795.namprd04.prod.outlook.com (2603:10b6:5:24f::21) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3933.31; Thu, 11 Mar 2021 09:03:47 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::e824:f31b:38cf:ef66]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::e824:f31b:38cf:ef66%3]) with mapi id 15.20.3890.039; Thu, 11 Mar 2021
- 09:03:47 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Can Guo <cang@codeaurora.org>
-CC:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        id S231882AbhCKJW5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Mar 2021 04:22:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49946 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231759AbhCKJWw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 04:22:52 -0500
+Received: from mail.marcansoft.com (marcansoft.com [IPv6:2a01:298:fe:f::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FA5AC061574;
+        Thu, 11 Mar 2021 01:22:51 -0800 (PST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: marcan@marcan.st)
+        by mail.marcansoft.com (Postfix) with ESMTPSA id CD16C41ECC;
+        Thu, 11 Mar 2021 09:22:43 +0000 (UTC)
+To:     Linus Walleij <linus.walleij@linaro.org>
+Cc:     David Howells <dhowells@redhat.com>, keyrings@vger.kernel.org,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Sumit Garg <sumit.garg@linaro.org>,
+        Arnd Bergmann <arnd@linaro.org>,
+        Joakim Bech <joakim.bech@linaro.org>,
+        =?UTF-8?Q?Alex_Benn=c3=a9e?= <alex.bennee@linaro.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        Zang Leigang <zangleigang@hisilicon.com>,
-        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
-Subject: RE: [PATCH v5 05/10] scsi: ufshpb: Region inactivation in host mode
-Thread-Topic: [PATCH v5 05/10] scsi: ufshpb: Region inactivation in host mode
-Thread-Index: AQHXD2erjujwThfcjE6SijSHmiAch6p+gBiAgAALj9A=
-Date:   Thu, 11 Mar 2021 09:03:47 +0000
-Message-ID: <DM6PR04MB65757E2F546C185A1687CFD4FC909@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20210302132503.224670-1-avri.altman@wdc.com>
- <20210302132503.224670-6-avri.altman@wdc.com>
- <8c2b310299c0ca57bfd445cfca87fb28@codeaurora.org>
-In-Reply-To: <8c2b310299c0ca57bfd445cfca87fb28@codeaurora.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: codeaurora.org; dkim=none (message not signed)
- header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 21791542-5a9e-482c-34f5-08d8e46c948d
-x-ms-traffictypediagnostic: DM6PR04MB6795:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM6PR04MB6795431947D403AAEC52AD46FC909@DM6PR04MB6795.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:6430;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: XXIQQ7AZwlsx2FuAswAAti6hHxwDmJmr7zZnLkRUJeYuOfmd/IENbTByCL3muQmn9A3Cd88ahEpuB+Uj6VkcZL4EGeSwOPovGalI4snfFZFgaI9UKmI6V2KqNoMSzpLbjPKUhatZ0vNhkY8rk3+Eg9r7842drgd6l1ezwgQVhLR6pnozIXvZjnZk8T5uAE+244PYfGlomqxi5rDkfTFQkBpgbwlA1cqoYGdu53VCPWsIcizsf6+wfiQ5T0xMiszeqXnvrKjnCjKmdP56qohQSFye9tYm2YvUApi0zOzJprGhTSBQ+137J1o8pWOBw56lsSa0caTH+p8yx8WXxyNC8LGkrbItwsFvrheCX25msXoMWtHI0OqErvD6opeFoWqyqa0Mzf5Mz958ooFoVoXY0r8zfwo6Ldi36ObjpzQyK6MyqLinXwAPpGP0mrpDeR5ro9tZPtJsh1H67LBXURHJKzttU7HgL7cpSYiuJEPShVLryHQYsyQBEmhBaDX0ScUBWpqhGMYJIZhivChQ9fgTonOjRcLGK1Cge11Fxu3/4wQl+l4JP7faGYji11DQk4Ax
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(39860400002)(366004)(376002)(346002)(136003)(9686003)(186003)(26005)(66446008)(64756008)(7696005)(316002)(8936002)(55016002)(86362001)(33656002)(53546011)(6916009)(5660300002)(2906002)(6506007)(478600001)(76116006)(71200400001)(54906003)(8676002)(52536014)(4326008)(7416002)(66946007)(66556008)(66476007)(4744005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?eQYUn1qSnpyjzMAN2IlYEYVz+PKvTrWO8bkMfbOCWVTc0Gf6OgZbzPY9Lyrq?=
- =?us-ascii?Q?yZCDtI2zMCf52a76WWRjks+2wct9R70fNXyvf5M24vxtWR4fOuomQhiFyx4e?=
- =?us-ascii?Q?OzRVelwX/w4qPQClQrjfg1IKf0wqJesuRjmfKxg5MjnjYHpPKnvRKxRXSV9A?=
- =?us-ascii?Q?XknKGZLfI42sqea83SEF0I+BU0SIs/cY7YNWuKKfQaPHRder3tSBQVaWvn/2?=
- =?us-ascii?Q?PfIpGrwSvFlxADRjMkW6DyK6g80I+oQXjZewAsZETfL9xTrvCRuU/VKD6zXB?=
- =?us-ascii?Q?zQGzRPL7PTvy3hAMmjywce6GvujqnypYZP++QX/0uNXMaCSp1dggTO8mNwlh?=
- =?us-ascii?Q?sdNZoukeXi4J/WH+GF/LeDORwo757niOaf3wdf4XyGktJEAtcPFt609kCfIr?=
- =?us-ascii?Q?vK+NvFyv/psLSnKN5MhTkxsg/sNcOFoKRXKCDX6W7FgsX6T2WLdcBNIiAwYN?=
- =?us-ascii?Q?3A2f7R0BWvqWegvyFUMUe9z3mrRE39Cuj/e/yan7nry6E+YcmzCGWEqiarZ8?=
- =?us-ascii?Q?55S3ZUqsZZLmkRZmT6NTvTMX9+LlVSsNzPuC0kdfbWFYEPW0vkfwRsaZcsD1?=
- =?us-ascii?Q?HLZTVOIAgqf3p5mLpQ4dhKjmEchFeCfPpqH8I6bTsIR/8/gBUQSaRdb08YOY?=
- =?us-ascii?Q?NAJNRa5QPi86EslWNZVdf9sAQHsB9iE/hbsyRCQan5YU498WHHKfvNbUqrMu?=
- =?us-ascii?Q?Lm5qt9ETrF2TMxZJ2RG+HdXqwv6NId0ksyTvR7BZ+EYqde5dd79QvnDUwb8F?=
- =?us-ascii?Q?iqMbFVoAtHB+nqA/jkaR++uYHhJP/ZvkvMPhZJ+75R+jwzqaFARDaPWFyK/+?=
- =?us-ascii?Q?lyp1W7N2G8grv2CNy2fakK/LT6CJUGJwxTAbfw9whPLJ+RB9BI/Bd3O5cHKG?=
- =?us-ascii?Q?KCnRupNNk8dXv8q7O86GisCdhvEdjtVzf8EQzJhg5lyjZEFRcD50nPWW6EDP?=
- =?us-ascii?Q?TMDGcjFtxYSjlMRspxvYEJuET/dQ4SwwcDbQID5Op49WfjDh8a+3Wv+vsHxk?=
- =?us-ascii?Q?h+kA0cORhHrurWqd9/GfEuZ4gzFwgnYb+Jbys6CVNPvMdpgDuiIA7eQOCnNa?=
- =?us-ascii?Q?VBCxsbBZXd44EtZyfOavVY+TP+BYmHpp8EVfSWPEG9d6SZHTmnMyPMYW1yqS?=
- =?us-ascii?Q?VWgEcnRmUY4EaJ8Mboa83Ip6UbX1wjmFjpq5mGgTWYS3wRq/1kkTruNdnwpf?=
- =?us-ascii?Q?RsAWFYXik0DhA+DM1JH7EuaNZbXw1Yg8ripAKhvYbuvYYUZrRitUy8d6eOiJ?=
- =?us-ascii?Q?7GDOr63hLSozyX8VxXcAKs7Z6qtx+OHyrnDexAjsuq51XZuWATSFy0SjPeRK?=
- =?us-ascii?Q?jWm+BWi5X9wAdbUG7qSsBhLl?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        Maxim Uvarov <maxim.uvarov@linaro.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        Ruchika Gupta <ruchika.gupta@linaro.org>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
+        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
+        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>
+References: <20210303135500.24673-1-alex.bennee@linaro.org>
+ <20210303135500.24673-2-alex.bennee@linaro.org>
+ <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com>
+ <20210305075131.GA15940@goby>
+ <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
+ <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
+ <6c542548-cc16-af68-c755-df52bd13b209@marcan.st>
+ <CAFA6WYOYmTgguVDwpyjnt3gLssqW48qzAkRD_nyPYg0nNhxT2A@mail.gmail.com>
+ <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st>
+ <CACRpkdbQks5pRFNHkNLVvLHCBhh0XCv7pHYq25EVAbU60PcwsA@mail.gmail.com>
+ <0a26713a-8988-1713-4358-bc62364b9e25@marcan.st>
+ <CACRpkda9f-BNmu-CaNsghnDoOcSXvvvji=tag2Xos+tg_nNZ0w@mail.gmail.com>
+From:   Hector Martin <marcan@marcan.st>
+Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB)
+ subsystem
+Message-ID: <32bdceb1-e70d-7481-96e3-a064a7108eb9@marcan.st>
+Date:   Thu, 11 Mar 2021 18:22:41 +0900
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 21791542-5a9e-482c-34f5-08d8e46c948d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2021 09:03:47.1722
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Ga6pKEqL2TBNIR16HSzzckC4KtHDd8Q7hyHbEAni38bOzOs2fwskokg12Uco2+Jv2JvgKAD/pS3f/242kkI+7Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB6795
+In-Reply-To: <CACRpkda9f-BNmu-CaNsghnDoOcSXvvvji=tag2Xos+tg_nNZ0w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: es-ES
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->=20
-> On 2021-03-02 21:24, Avri Altman wrote:
-> > I host mode, the host is expected to send HPB-WRITE-BUFFER with
->=20
-> In host mode,
-Done.
+On 11/03/2021 09.36, Linus Walleij wrote:
+>> It is not intended to store keys in a way that is somehow safer than
+>> other mechanisms. After all, you need to securely store the RPMB key to
+>> begin with; you might as well use that to encrypt a keystore on any
+>> random block device.
+> 
+> The typical use-case mentioned in one reference is to restrict
+> the number of password/pin attempts and  combine that with
+> secure time to make sure that longer and longer intervals are
+> required between password attempts.
+> 
+> This seems pretty neat to me.
 
-> >  static int ufshpb_issue_umap_all_req(struct ufshpb_lu *hpb)
-> >  {
-> >       return ufshpb_issue_umap_req(hpb, NULL);
-> > @@ -1115,6 +1122,10 @@ static void __ufshpb_evict_region(struct
-> > ufshpb_lu *hpb,
-> >       struct ufshpb_subregion *srgn;
-> >       int srgn_idx;
-> >
-> > +
->=20
-> No need of this blank line.
-Done.
+Yes, but to implement that you don't need any secure storage *at all*. 
+If all the RPMB did was authenticate an incrementing counter, you could 
+just store the <last timestamp, attempts remaining> tuple inside a blob 
+of secure (encrypted and MACed) storage on any random Flash device, 
+along with the counter value, and thus prevent rollbacks that way (some 
+finer design points are needed to deal with power loss protection and 
+ordering, but the theory holds).
 
-Thanks,
-Avri
+Basically what I'm saying is that for security *guarantee* purposes, 
+AFAICT the storage part of RPMB makes no difference. It is useful in 
+practical implementations for various reasons, but if you think you can 
+use that secure storage to provide security properties which you 
+couldn't do otherwise, you are probably being misled. If you're trying 
+to understand what having RPMB gets you over not having it, it helps if 
+you ignore all the storage stuff and just view it as a single secure, 
+increment-only counter.
 
->=20
-> Regards,
-> Can Guo.
+> 
+>> But RPMB does not enforce any of this policy for you. RPMB only gives
+>> you a primitive: the ability to have storage that cannot be externally
+>> rolled back. So none of this works unless the entire system is set up to
+>> securely boot all the way until the drive unlock happens, and there are
+>> no other blatant code execution avenues.
+> 
+> This is true for firmware anti-rollback or say secure boot.
+> 
+> But RPMB can also be used for example for restricting the
+> number of PIN attempts.
+> 
+> A typical attack vector on phones (I think candybar phones
+> even) was a robot that was punching PIN codes to unlock
+> the phone, combined with an electronic probe that would
+> cut the WE (write enable) signal to the flash right after
+> punching a code. The counter was stored in the flash.
+> 
+> (A bit silly example as this can be countered by reading back
+> the counter from flash and checking etc, but you get the idea,
+> various versions of this attack is possible,)
+> 
+> With RPMB this can be properly protected against because
+> the next attempt can not be made until after the RPMB
+> monotonic counter has been increased.
+
+But this is only enforced by software. If you do not have secure boot, 
+you can just patch software to allow infinite tries without touching the 
+RPMB. The RPMB doesn't check PINs for you, it doesn't even gate read 
+access to data in any way. All it does is promise you cannot make the 
+counter count down, or make the data stored within go back in time.
+
+> Of course the system can be compromised in other ways,
+> (like, maybe it doesn't even have secure boot or even
+> no encrypted drive) but this is one of the protection
+> mechanisms that can plug one hole.
+
+This is hot how security systems are designed though; you do not "plug 
+holes", what you do is cover more attack scenarios, and you do that in 
+the order from simplest to hardest.
+
+If we are trying to crack the PIN on a device we have physical access 
+to, the simplest and most effective attack is to just run your own 
+software on the machine, extract whatever hash or material you need to 
+validate PINs, and do it offline.
+
+To protect against that, you first need to move the PIN checking into a 
+trust domain where an attacker with physical access can't easily break 
+in, which means secure boot.
+
+*Then* the next simplest attack is a secure storage rollback attack, 
+which is what I described in that blog post about iOS. And *now* it 
+makes sense to start thinking about the RPMB.
+
+But RPMB alone doesn't make any sense on a system without secure boot. 
+It doesn't change anything; in both cases the simplest attack is to just 
+run your own software.
+
+> It is thus a countermeasure to keyboard emulators and other
+> evil hardware trying to brute force their way past screen
+> locks and passwords. Such devices exist, sadly.
+
+If you're trying to protect against a "dumb" attack with a keyboard 
+emulator that doesn't consider access to physical storage, then you 
+don't need RPMB either; you can just put the PIN unlock counter in a 
+random file.
+
+-- 
+Hector Martin (marcan@marcan.st)
+Public Key: https://mrcn.st/pub
