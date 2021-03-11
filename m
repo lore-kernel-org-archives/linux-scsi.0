@@ -2,154 +2,184 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0632C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 00:00:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EFEEC433E9
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 00:37:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A353364FC5
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 00:00:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F47B64FBA
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 00:37:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229538AbhCKAAE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Mar 2021 19:00:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44174 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229732AbhCJX7x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 Mar 2021 18:59:53 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DB9C764F8B;
-        Wed, 10 Mar 2021 23:59:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615420793;
-        bh=DtyWon8YLRRlkYslhTTrdUCKlpz16BXEUxu8TcoudZ8=;
-        h=Date:From:To:Cc:Subject:From;
-        b=jQXHNOYwR1jI9T9PVbwQC2eSsLfE+GAZK4OCebnlBPhGDCPBVgNE3dehQug76lgwG
-         03NL2l4RYBSsu/jgrfbLJJuFqIVq4ts+gqI/kWdC4H5axIbYJX+j+JCI+srL4Pax0B
-         MdQlUdkOkLhCqMAZDmNHILDM6fJMD1Edad3LdQ+P/G4feUt+MgSepgFReomsH/8vZz
-         UgU0gT79MtA/IBoX54M+GA/Fe/DnG8P47zjh7awlRohAKEm0WAstmPAwM9Qf7L5nbi
-         xRh4R0599EZwgTagRsf4FlEL+0RhI/h572n+HBqrZ4opFjS2dAVpDoqYxiUxQ48YmZ
-         DGrx4GymN1WWw==
-Date:   Wed, 10 Mar 2021 17:59:51 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH][next] scsi: mpt3sas: Replace unnecessary dynamic allocation
- with a static one
-Message-ID: <20210310235951.GA108661@embeddedor>
+        id S230139AbhCKAhQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Mar 2021 19:37:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50156 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231128AbhCKAgx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 19:36:53 -0500
+Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBC9DC061762
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2021 16:36:52 -0800 (PST)
+Received: by mail-lf1-x136.google.com with SMTP id v2so23755064lft.9
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2021 16:36:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EEzbsSCDR9QboIA8OrN63K5HZEwShS0wIkxT1lrzd0Y=;
+        b=riZjyH1NfHDCunME5Ebgwcbph2FiEIMHDSKKFitpNg0U8iOTWuJwtB6GzHL3vNfxn3
+         bKC6k1jMXjsf5GoCwsYzyYIe9V8eRGIjZxbtrzAHA4cWo/kfcaVq0a2yxRHziD/UHYtL
+         KrJVPIzP09ibIN4SoXEEPVGDtIxaHre5IZ2sYsYyR9ToplAng35DTKF6bOubx+i39R1f
+         Dyh6YNTaIYGkqNxapf4Gtw75AiC382TPw8+LxMz+fxeVGy15sf7k73kyLEtXBsVNkWpt
+         etsNBpGlXtrr7f+X+XS+9XGQN3Nqb1sTEg7ly23GPExeT193DJfFsQE4BqchIm93na3Z
+         gRrw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EEzbsSCDR9QboIA8OrN63K5HZEwShS0wIkxT1lrzd0Y=;
+        b=WV2aaFI21JESU0S5pTOycDpI9wKwACAZxJHlNiFsAc1LwvRjPNoNJjwCHhFYALa+1a
+         baLyO/QndZtHeJHU9xVjOnBr+OL2RdQPpXw1l6L/kuY/ZtqZVou8Id3Q0R2x/PPbXFFe
+         9HzPvt9UyujNnZmRHvrfMXBTeS6l/0hkMvGI899Iz0KwLT8SkJg46o9AEzSa5TdNDBUy
+         7iyhZmt7CCPVpxmNsug/8iDOJAN08GBKO2BX9DCaPU34DD9dcu/PzAFBtfzWcucgWOMx
+         ivcpMOVoTmt2Lo3Jm9JTTtqmN2LsREwuCLCZVl1JSTYvKsOI1uuJoUusXUBeX8GMMPbi
+         oxYg==
+X-Gm-Message-State: AOAM532rPoQ6MYzlo8VS/fJItdX6Gj6pbL3joqsKMjXn/Qv1CtN9OQzC
+        FEVFvTUXF+Kdenx5/P8E0kmVr2MsPdNreZOzmec0NA==
+X-Google-Smtp-Source: ABdhPJxPA73QJEO2P06IeIm6xha2IwSe1nk/jxmy8+2H6YjUfx61sOITuBIwpepPUOCRRsAhsWRrIoW1PKscdwIJ+Vc=
+X-Received: by 2002:a19:4c08:: with SMTP id z8mr638983lfa.157.1615423011194;
+ Wed, 10 Mar 2021 16:36:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+References: <20210303135500.24673-1-alex.bennee@linaro.org>
+ <20210303135500.24673-2-alex.bennee@linaro.org> <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com>
+ <20210305075131.GA15940@goby> <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
+ <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
+ <6c542548-cc16-af68-c755-df52bd13b209@marcan.st> <CAFA6WYOYmTgguVDwpyjnt3gLssqW48qzAkRD_nyPYg0nNhxT2A@mail.gmail.com>
+ <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st> <CACRpkdbQks5pRFNHkNLVvLHCBhh0XCv7pHYq25EVAbU60PcwsA@mail.gmail.com>
+ <0a26713a-8988-1713-4358-bc62364b9e25@marcan.st>
+In-Reply-To: <0a26713a-8988-1713-4358-bc62364b9e25@marcan.st>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Thu, 11 Mar 2021 01:36:39 +0100
+Message-ID: <CACRpkda9f-BNmu-CaNsghnDoOcSXvvvji=tag2Xos+tg_nNZ0w@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB) subsystem
+To:     Hector Martin <marcan@marcan.st>
+Cc:     David Howells <dhowells@redhat.com>, keyrings@vger.kernel.org,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Sumit Garg <sumit.garg@linaro.org>,
+        Arnd Bergmann <arnd@linaro.org>,
+        Joakim Bech <joakim.bech@linaro.org>,
+        =?UTF-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Maxim Uvarov <maxim.uvarov@linaro.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        Ruchika Gupta <ruchika.gupta@linaro.org>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
+        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
+        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dynamic memory allocation isn't actually needed and it can be
-replaced by statically allocating memory for struct object
-io_unit_pg3 with 36 hardcoded entries for its GPIOVal array.
+On Wed, Mar 10, 2021 at 2:52 PM Hector Martin <marcan@marcan.st> wrote:
 
-Also, this helps the with ongoing efforts to enable -Warray-bounds
-by fixing the following warning:
+> This relies on having a secure boot chain to start with (otherwise you
+> can just bypass policy that way; the RPMB is merely storage to give you
+> anti-rollback properties, it can't enforce anything itself). So you
+> would have to have a laptop with a fully locked down secure boot, which
+> can only boot some version of Linux signed by you until, say, LUKS
+> decryption. And then the tooling around that needs to be integrated with
+> RPMB, to use it as an attempt counter.
 
-drivers/scsi/mpt3sas/mpt3sas_ctl.c: In function ‘BRM_status_show’:
-drivers/scsi/mpt3sas/mpt3sas_ctl.c:3257:63: warning: array subscript 24 is above array bounds of ‘U16[1]’ {aka ‘short unsigned int[1]’} [-Warray-bounds]
- 3257 |  backup_rail_monitor_status = le16_to_cpu(io_unit_pg3->GPIOVal[24]);
-./include/uapi/linux/byteorder/little_endian.h:36:51: note: in definition of macro ‘__le16_to_cpu’
-   36 | #define __le16_to_cpu(x) ((__force __u16)(__le16)(x))
-      |                                                   ^
-drivers/scsi/mpt3sas/mpt3sas_ctl.c:3257:31: note: in expansion of macro ‘le16_to_cpu’
- 3257 |  backup_rail_monitor_status = le16_to_cpu(io_unit_pg3->GPIOVal[24]);
+Yes and no. For secure boot yes. For other use cases it can
+still be useful.
 
-Link: https://github.com/KSPP/linux/issues/109
-Link: https://lore.kernel.org/lkml/202103101058.16ED27BE3@keescook/
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
- drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h |  2 +-
- drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 24 ++++++++----------------
- 2 files changed, 9 insertions(+), 17 deletions(-)
+The way I understand it, there are people (not me) with secure boot
+ambitions but I wouldn't say that is the only use case, see below.
 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-index 43a3bf8ff428..d00431f553e1 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-@@ -992,7 +992,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1 {
-  *one and check the value returned for GPIOCount at runtime.
-  */
- #ifndef MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX
--#define MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX    (1)
-+#define MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX    (36)
- #endif
- 
- typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_3 {
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 44f9a05db94e..bc56e058a523 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -3203,7 +3203,7 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
- {
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
--	Mpi2IOUnitPage3_t *io_unit_pg3 = NULL;
-+	Mpi2IOUnitPage3_t io_unit_pg3;
- 	Mpi2ConfigReply_t mpi_reply;
- 	u16 backup_rail_monitor_status = 0;
- 	u16 ioc_status;
-@@ -3220,17 +3220,10 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
- 	if (ioc->pci_error_recovery || ioc->remove_host)
- 		goto out;
- 
--	/* allocate upto GPIOVal 36 entries */
--	sz = offsetof(Mpi2IOUnitPage3_t, GPIOVal) + (sizeof(u16) * 36);
--	io_unit_pg3 = kzalloc(sz, GFP_KERNEL);
--	if (!io_unit_pg3) {
--		rc = -ENOMEM;
--		ioc_err(ioc, "%s: failed allocating memory for iounit_pg3: (%d) bytes\n",
--			__func__, sz);
--		goto out;
--	}
-+	sz = sizeof(io_unit_pg3);
-+	memset(&io_unit_pg3, 0, sz);
- 
--	if (mpt3sas_config_get_iounit_pg3(ioc, &mpi_reply, io_unit_pg3, sz) !=
-+	if (mpt3sas_config_get_iounit_pg3(ioc, &mpi_reply, &io_unit_pg3, sz) !=
- 	    0) {
- 		ioc_err(ioc, "%s: failed reading iounit_pg3\n",
- 			__func__);
-@@ -3246,19 +3239,18 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
- 		goto out;
- 	}
- 
--	if (io_unit_pg3->GPIOCount < 25) {
--		ioc_err(ioc, "%s: iounit_pg3->GPIOCount less than 25 entries, detected (%d) entries\n",
--			__func__, io_unit_pg3->GPIOCount);
-+	if (io_unit_pg3.GPIOCount < 25) {
-+		ioc_err(ioc, "%s: iounit_pg3.GPIOCount less than 25 entries, detected (%d) entries\n",
-+			__func__, io_unit_pg3.GPIOCount);
- 		rc = -EINVAL;
- 		goto out;
- 	}
- 
- 	/* BRM status is in bit zero of GPIOVal[24] */
--	backup_rail_monitor_status = le16_to_cpu(io_unit_pg3->GPIOVal[24]);
-+	backup_rail_monitor_status = le16_to_cpu(io_unit_pg3.GPIOVal[24]);
- 	rc = snprintf(buf, PAGE_SIZE, "%d\n", (backup_rail_monitor_status & 1));
- 
-  out:
--	kfree(io_unit_pg3);
- 	mutex_unlock(&ioc->pci_access_mutex);
- 	return rc;
- }
--- 
-2.27.0
+> But now this ends up having to involve userspace anyway; the kernel key
+> stuff doesn't support policy like this, does it? So having the kernel
+> automagically use RPMB wouldn't get us there.
 
+Yes, you are right, I had the wrong idea. It needs to be something
+the user (or the users agent such as an organization) decides to
+make use of, and it is policy so it should be in userspace. We
+may standardize the key format on the device though.
+
+> I may be wrong on the details here, but as far as I know RPMB is
+> strictly equivalent to a simple secure increment-only counter in what it
+> buys you. The stuff about writing data to it securely is all a red
+> herring - you can implement secure storage elsewhere, and with secure
+> storage + a single secure counter, you can implement anti-rollback.
+>
+> It is not intended to store keys in a way that is somehow safer than
+> other mechanisms. After all, you need to securely store the RPMB key to
+> begin with; you might as well use that to encrypt a keystore on any
+> random block device.
+
+The typical use-case mentioned in one reference is to restrict
+the number of password/pin attempts and  combine that with
+secure time to make sure that longer and longer intervals are
+required between password attempts.
+
+This seems pretty neat to me.
+
+> But RPMB does not enforce any of this policy for you. RPMB only gives
+> you a primitive: the ability to have storage that cannot be externally
+> rolled back. So none of this works unless the entire system is set up to
+> securely boot all the way until the drive unlock happens, and there are
+> no other blatant code execution avenues.
+
+This is true for firmware anti-rollback or say secure boot.
+
+But RPMB can also be used for example for restricting the
+number of PIN attempts.
+
+A typical attack vector on phones (I think candybar phones
+even) was a robot that was punching PIN codes to unlock
+the phone, combined with an electronic probe that would
+cut the WE (write enable) signal to the flash right after
+punching a code. The counter was stored in the flash.
+
+(A bit silly example as this can be countered by reading back
+the counter from flash and checking etc, but you get the idea,
+various versions of this attack is possible,)
+
+With RPMB this can be properly protected against because
+the next attempt can not be made until after the RPMB
+monotonic counter has been increased.
+
+Of course the system can be compromised in other ways,
+(like, maybe it doesn't even have secure boot or even
+no encrypted drive) but this is one of the protection
+mechanisms that can plug one hole.
+
+It is thus a countermeasure to keyboard emulators and other
+evil hardware trying to brute force their way past screen
+locks and passwords. Such devices exist, sadly.
+
+> There isn't even any encryption involved in the protocol, so all the
+> data stored in the RPMB is public and available to any attacker.
+
+You need to pass the symmetric key to increase a counter
+and store a new "key" (data chunk, 256 bytes). But as you say
+one can read it without the symmetric key.
+
+AFAICT that is not a problem for any use case for RPMB.
+
+> So unless the kernel grows a subsystem/feature to enforce complex key
+> policies (with things like use counts, retry times, etc), I don't think
+> there's a place to integrate RPMB kernel-side. You still need a trusted
+> userspace tool to glue it all together.
+
+Yes, I understand such ambitions may exist and pretty much why
+I CC the keyring people. So the question is whether they think
+that is something they would go and use for e.g. passphrase
+retries.
+
+Yours,
+Linus Walleij
