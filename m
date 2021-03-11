@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 998E0C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0C6EC433DB
 	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:18:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 648F264F88
+	by mail.kernel.org (Postfix) with ESMTP id 9997C64F8B
 	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:18:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229490AbhCKUR6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S230016AbhCKUR6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 11 Mar 2021 15:17:58 -0500
 Received: from esa.microchip.iphmx.com ([68.232.153.233]:49199 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230439AbhCKURY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 15:17:24 -0500
+        with ESMTP id S230047AbhCKUR1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 15:17:27 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1615493844; x=1647029844;
+  t=1615493847; x=1647029847;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=sItFnv8InDTCK+FrYZVZp96L4CvRZ3UGQD8p49XbwPA=;
-  b=FHCpDhKUYmzAteIKDHX9wHVDNURVG4PeGWpKIDgLfiJP3EUIneEzXhab
-   HTkZvioioT1Pqq5j8ykZjHRUVppYDO8O72Ah61jYUFuN4UR0Bcxh1avnW
-   Cx4STG145MXgI0SV9BmN2qx0nYJSYbHtIAaVmsFQoVRM+U+YrHyIa6jTV
-   NhU3OiJRvIm/tJ5Kh1sC10lNJ1pfi5fBcqZtI+E78FkizgmS6j4CCsgOZ
-   K9/lXJyMhivuKpB1ATorrM7Fd/kn2ACaZqmrixOiNhh7+5U6ohHAXoHqM
-   mIJCTx5v/cIeJAPopImzWBqA/iJg9DPJR2QRQqY/SKlGPs1NUbTnLgo/d
-   A==;
-IronPort-SDR: NJpg8DmUWMCzjaL79ZWxFnk5BvIDXp+KODj1Mrkgh1hCTwSU0GqmVVyAiOTKDY8QvaBMqhWpg4
- qitPxt/HzAg0efvxNGSo+iEk+5iHVsJE/kQVWvRNVX5dRPbAB9w8oBb+60yEGGy8wN9MUiViAu
- ET+zEpmFZ47KN95kP7kwr/8mfgYATZhKuR4CpPFm5NP+t14l6kRdontjdAa4KezgdrnSIe6f0b
- CtBgp/XQHoz19AajVk5wCi8wvARtFIq7eQhu9yN/pVYz+mkcAl+PD+IuzqiD6s2IGOqleFZuC1
- 0KM=
+  bh=Lbdri0mPjq54DXS3WGahfh2719IxrvUSSzfsv5d3Btg=;
+  b=BJ+kboA7XovFXiyw4Ye8KlY5+sapUs+eHaX1M2Lsp2JnoJt85VJnMVNq
+   ZtI+WXpwx+VRQm9WVXDP+l/Il1oD7FN5S25aLEVaNjzoqnQNQ4HNOLmMo
+   ZNLPVLV/1nhAuWvaONOoQYERN6v0WRjfsMhLx3uiiEbUr0T/M+k/kbVIn
+   1o474SgcpSFXNuI6Ju3OU3FGRxAeqVH9s5k1Pe/uWr+7mJm5X7WQaLVe5
+   F1P05dLht9DqPURW9RQLAOGpNA/0IMhYTKNMoZYYygV9ZtfZxfCrpS9yn
+   BpBJIBbB0X5VdxvOabw6UDwdZjAnKQ4BhUeWbeJfQ6wH7crpeSG4EgGhp
+   Q==;
+IronPort-SDR: rf7o4FeAn6LKRIOG0nUsxjDmyIuZ5c8tpU44HRta6PlazRHFMjQAAjQz/mT1H2Dp2nsRZMCusV
+ vGFMAcxfUsPpAIoNN2g5Ab9vJfQHg6Tr8C2q/Oa8H2TYjpwh7T8dySdL+oQ6kjDmHKUKpMHoqU
+ YjEA6i8NpFQxUwhxKb++EVYSMwxKC6HgDEKRsfYZ4hWhNx7cEo9tK9qmiX3NC71iYL+0Vopp/+
+ MsYa9/jYVrnTM47ay+q0F7j60qajI/Tsn+4VLdSC4NAdJnCqLX5/aKfvghZnh8+zNVrjUStLtH
+ 1QY=
 X-IronPort-AV: E=Sophos;i="5.81,241,1610434800"; 
-   d="scan'208";a="118559157"
+   d="scan'208";a="118559172"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 11 Mar 2021 13:17:24 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 11 Mar 2021 13:17:26 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
  chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Thu, 11 Mar 2021 13:17:14 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
- Transport; Thu, 11 Mar 2021 13:17:13 -0700
-Subject: [PATCH V5 24/31] smartpqi: convert snprintf to scnprintf
+ 15.1.2176.2; Thu, 11 Mar 2021 13:17:20 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex04.mchp-main.com
+ (10.10.85.152) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
+ Transport; Thu, 11 Mar 2021 13:17:19 -0700
+Subject: [PATCH V5 25/31] smartpqi: add phy id support for the physical
+ drives
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -57,8 +58,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Thu, 11 Mar 2021 14:17:13 -0600
-Message-ID: <161549383357.25025.12363435617789964291.stgit@brunhilda>
+Date:   Thu, 11 Mar 2021 14:17:19 -0600
+Message-ID: <161549383947.25025.16977895345376485056.stgit@brunhilda>
 In-Reply-To: <161549045434.25025.17473629602756431540.stgit@brunhilda>
 References: <161549045434.25025.17473629602756431540.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -69,123 +70,82 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@microchip.com>
+From: Murthy Bhat <Murthy.Bhat@microchip.com>
 
-The entire Linux kernel has been slowly migrating from snprintf
-to scnprintf, so we are doing our part. This article explains
-the rationale for this change:
-    https: //lwn.net/Articles/69419/
+* Display topology using PHY numbers.
+* PHY(both local and remote) numbers corresponding to physical drives
+    are read from BMIC_IDENTIFY_PHYSICAL_DEVICE.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
 Reviewed-by: Martin Wilck <mwilck@suse.com>
-Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
+Signed-off-by: Murthy Bhat <Murthy.Bhat@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h               |    1 +
+ drivers/scsi/smartpqi/smartpqi_init.c          |   10 ++++++++++
+ drivers/scsi/smartpqi/smartpqi_sas_transport.c |    1 +
+ 3 files changed, 12 insertions(+)
 
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index 0b94c755a74c..d7dac5572274 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -1089,6 +1089,7 @@ struct pqi_scsi_dev {
+ 	u8	phy_connected_dev_type;
+ 	u8	box[8];
+ 	u16	phys_connector[8];
++	u8	phy_id;
+ 	bool	raid_bypass_configured;	/* RAID bypass configured */
+ 	bool	raid_bypass_enabled;	/* RAID bypass enabled */
+ 	u32	next_bypass_group;
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 8b512f39f9d9..761d7ec6d2b2 100644
+index 761d7ec6d2b2..0e433223aea4 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -1749,7 +1749,7 @@ static void pqi_dev_info(struct pqi_ctrl_info *ctrl_info,
- 	ssize_t count;
- 	char buffer[PQI_DEV_INFO_BUFFER_LENGTH];
- 
--	count = snprintf(buffer, PQI_DEV_INFO_BUFFER_LENGTH,
-+	count = scnprintf(buffer, PQI_DEV_INFO_BUFFER_LENGTH,
- 		"%d:%d:", ctrl_info->scsi_host->host_no, device->bus);
- 
- 	if (device->target_lun_valid)
-@@ -6382,14 +6382,13 @@ static ssize_t pqi_firmware_version_show(struct device *dev,
- 	shost = class_to_shost(dev);
- 	ctrl_info = shost_to_hba(shost);
- 
--	return snprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->firmware_version);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->firmware_version);
+@@ -1434,6 +1434,8 @@ static void pqi_get_volume_status(struct pqi_ctrl_info *ctrl_info,
+ 	device->volume_offline = volume_offline;
  }
  
- static ssize_t pqi_driver_version_show(struct device *dev,
- 	struct device_attribute *attr, char *buffer)
- {
--	return snprintf(buffer, PAGE_SIZE, "%s\n",
--			DRIVER_VERSION BUILD_TIMESTAMP);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", DRIVER_VERSION BUILD_TIMESTAMP);
++#define PQI_DEVICE_PHY_MAP_SUPPORTED	0x10
++
+ static int pqi_get_physical_device_info(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_scsi_dev *device,
+ 	struct bmic_identify_physical_device *id_phys)
+@@ -1473,6 +1475,13 @@ static int pqi_get_physical_device_info(struct pqi_ctrl_info *ctrl_info,
+ 	memcpy(&device->page_83_identifier, &id_phys->page_83_identifier,
+ 		sizeof(device->page_83_identifier));
+ 
++	if ((id_phys->even_more_flags & PQI_DEVICE_PHY_MAP_SUPPORTED) &&
++		id_phys->phy_count)
++		device->phy_id =
++			id_phys->phy_to_phy_map[device->active_path_index];
++	else
++		device->phy_id = 0xFF;
++
+ 	return 0;
  }
  
- static ssize_t pqi_serial_number_show(struct device *dev,
-@@ -6401,7 +6400,7 @@ static ssize_t pqi_serial_number_show(struct device *dev,
- 	shost = class_to_shost(dev);
- 	ctrl_info = shost_to_hba(shost);
+@@ -1839,6 +1848,7 @@ static void pqi_scsi_update_device(struct pqi_scsi_dev *existing_device,
+ 	existing_device->aio_handle = new_device->aio_handle;
+ 	existing_device->volume_status = new_device->volume_status;
+ 	existing_device->active_path_index = new_device->active_path_index;
++	existing_device->phy_id = new_device->phy_id;
+ 	existing_device->path_map = new_device->path_map;
+ 	existing_device->bay = new_device->bay;
+ 	existing_device->box_index = new_device->box_index;
+diff --git a/drivers/scsi/smartpqi/smartpqi_sas_transport.c b/drivers/scsi/smartpqi/smartpqi_sas_transport.c
+index 77923c6ec2c6..71e83d5fdd02 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sas_transport.c
++++ b/drivers/scsi/smartpqi/smartpqi_sas_transport.c
+@@ -92,6 +92,7 @@ static int pqi_sas_port_add_rphy(struct pqi_sas_port *pqi_sas_port,
  
--	return snprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->serial_number);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->serial_number);
- }
+ 	identify = &rphy->identify;
+ 	identify->sas_address = pqi_sas_port->sas_address;
++	identify->phy_identifier = pqi_sas_port->device->phy_id;
  
- static ssize_t pqi_model_show(struct device *dev,
-@@ -6413,7 +6412,7 @@ static ssize_t pqi_model_show(struct device *dev,
- 	shost = class_to_shost(dev);
- 	ctrl_info = shost_to_hba(shost);
- 
--	return snprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->model);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->model);
- }
- 
- static ssize_t pqi_vendor_show(struct device *dev,
-@@ -6425,7 +6424,7 @@ static ssize_t pqi_vendor_show(struct device *dev,
- 	shost = class_to_shost(dev);
- 	ctrl_info = shost_to_hba(shost);
- 
--	return snprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->vendor);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->vendor);
- }
- 
- static ssize_t pqi_host_rescan_store(struct device *dev,
-@@ -6619,7 +6618,7 @@ static ssize_t pqi_unique_id_show(struct device *dev,
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
--	return snprintf(buffer, PAGE_SIZE,
-+	return scnprintf(buffer, PAGE_SIZE,
- 		"%02X%02X%02X%02X%02X%02X%02X%02X"
- 		"%02X%02X%02X%02X%02X%02X%02X%02X\n",
- 		unique_id[0], unique_id[1], unique_id[2], unique_id[3],
-@@ -6652,7 +6651,7 @@ static ssize_t pqi_lunid_show(struct device *dev,
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
--	return snprintf(buffer, PAGE_SIZE, "0x%8phN\n", lunid);
-+	return scnprintf(buffer, PAGE_SIZE, "0x%8phN\n", lunid);
- }
- 
- #define MAX_PATHS	8
-@@ -6764,7 +6763,7 @@ static ssize_t pqi_sas_address_show(struct device *dev,
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
--	return snprintf(buffer, PAGE_SIZE, "0x%016llx\n", sas_address);
-+	return scnprintf(buffer, PAGE_SIZE, "0x%016llx\n", sas_address);
- }
- 
- static ssize_t pqi_ssd_smart_path_enabled_show(struct device *dev,
-@@ -6822,7 +6821,7 @@ static ssize_t pqi_raid_level_show(struct device *dev,
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
--	return snprintf(buffer, PAGE_SIZE, "%s\n", raid_level);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", raid_level);
- }
- 
- static ssize_t pqi_raid_bypass_cnt_show(struct device *dev,
-@@ -6849,7 +6848,7 @@ static ssize_t pqi_raid_bypass_cnt_show(struct device *dev,
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
--	return snprintf(buffer, PAGE_SIZE, "0x%x\n", raid_bypass_cnt);
-+	return scnprintf(buffer, PAGE_SIZE, "0x%x\n", raid_bypass_cnt);
- }
- 
- static DEVICE_ATTR(lunid, 0444, pqi_lunid_show, NULL);
+ 	if (pqi_sas_port->device &&
+ 		pqi_sas_port->device->is_expander_smp_device) {
 
