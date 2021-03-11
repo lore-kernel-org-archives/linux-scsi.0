@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4D68C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:16:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B3A6C4332D
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:16:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C91D64F87
+	by mail.kernel.org (Postfix) with ESMTP id F1EE764F8E
 	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:16:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230266AbhCKUPw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Mar 2021 15:15:52 -0500
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:62147 "EHLO
+        id S230094AbhCKUQA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Mar 2021 15:16:00 -0500
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:58776 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229868AbhCKUPa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 15:15:30 -0500
+        with ESMTP id S230162AbhCKUPt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 15:15:49 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1615493730; x=1647029730;
+  t=1615493750; x=1647029750;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=hxhvfAVv3kyEYn3HGRJ/Y4GmOWCb/SoC0/OZX0pLWCI=;
-  b=dy0beqrrlibsWGxLMcZ/bo09q52GYFkpxIgBH1ws3sGPJQ9KN5k0YKnD
-   yM/Dc7xxBYLLOwM0+eqI4EZnesT4Ez/PNQ99LqjZeLzvO/C2nuYN50nd4
-   9eVReuYZzfsfGE6LoPulMb/btZNBf9lZBJrkEWBYJZrOK26TzQ6zwU5Fl
-   fvDmvvAn55wgXZtcfiUknDfWzBnIA8PEmXdPL3j4mqXRiVTCJKKAapRvs
-   OWvkWi6epS43K6Z2D/PlutVv8Ez7Z4sCisHDVu6/6dj0CnDdjDGMzEv+d
-   bePuOQWeZZXv0wZ/NTLD+MXPN8Ec0K5I5eIuWlkGrbvLXiss+vuPcmMTS
-   g==;
-IronPort-SDR: slA3BWaOrcyLGp8epUrCjRhcNPRzRsrZT5vBphSfasyWoQo/E0W2F7qKPJ8fq2pO1Px+hxlOcm
- ac8nj3dKzl7D5WJCPCXdDlYDq4En9EjYHBH/j26DveTMaY/Qu5dHrI53H9M7NgRjxw14YME8QS
- i7Guqunq4o4BMXVnHjJchYDEVHXj5Gp4ihNYllncqElEDdStkckXP1W6/E8wrfN29sq2wKMbeY
- BxDIsnX19oQyJAxcTREUc95Xk3bI9rT4q/g/kfJNxC+HVZg+zADulHiKIB29N4Zi0a9xe+ijaE
- UZU=
+  bh=qlVwfCGacsuVoXpaTmBJUJG3+PhbC/SzDM0RydTmF3A=;
+  b=jJT1FGO5vf3qLOtYn3wiejYIjll2A4oSQbIL2Rl8ofLx1Vrupvt5Z0yZ
+   T4ZNzVlZg+zFjKCFLR+FlLqE4OH1Vpuzcs9i9vINipIb6PkRdCV4pj06W
+   oR2L2vcJYhi2VItgmPHd1E65zLvo3FYCmu/0SxT5GYw+j1uX80WJr1RfV
+   6EsrBAxxNc1/bsUtrbbJYOcV9A9/ooGd/b2m3TnSvRSclMEpkhVTV1HkH
+   qXFGlt8oEu8vEYFu99kyvhsw7KaRFozLBpe7FTGG4cZx3zgoBq1iACrmn
+   zRZsKKt0EEogAb1KKFqghLfjMFOH4nwKAQBzCJIfvhmTzA7nvM9A09k9f
+   w==;
+IronPort-SDR: 91lWM3bmf9WRT4H0nGTYHacLMJP2n7wi+Pe54a9mPS0Dx3KhexB4ZxcqlYtkkCKR0p2Kjrgnhn
+ VycC3IaP6GXuyn44Srer1ovhFDUCm42AbYSN0Q88pb5HOLaAu4tVC1Vtfe52g8VQc6g2dJQD3E
+ Npb9HDd/gIx23GkdvaaAxes5/uyIxtEi2tS2bYReo26lcwLcsLkn9ToKpJ0/suxGJDcrzPEaPM
+ 57Awgu/rtpKw8TeytCsRABWxmgOClmtSIX9zv7TEg7gj6kEE35Gs6Cjd9ElJR5rDSYmga0ZeSs
+ +AY=
 X-IronPort-AV: E=Sophos;i="5.81,241,1610434800"; 
-   d="scan'208";a="112888303"
+   d="scan'208";a="109660022"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 11 Mar 2021 13:15:30 -0700
-Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 11 Mar 2021 13:15:49 -0700
+Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Thu, 11 Mar 2021 13:15:16 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex04.mchp-main.com
- (10.10.85.152) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
- Transport; Thu, 11 Mar 2021 13:15:15 -0700
-Subject: [PATCH V5 04/31] smartpqi: refactor aio submission code
+ 15.1.2176.2; Thu, 11 Mar 2021 13:15:45 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex01.mchp-main.com
+ (10.10.85.143) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
+ Transport; Thu, 11 Mar 2021 13:15:45 -0700
+Subject: [PATCH V5 09/31] smartpqi: add support for long firmware version
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -57,8 +57,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Thu, 11 Mar 2021 14:15:15 -0600
-Message-ID: <161549371553.25025.8840958689316611074.stgit@brunhilda>
+Date:   Thu, 11 Mar 2021 14:15:45 -0600
+Message-ID: <161549374508.25025.15467221395888158022.stgit@brunhilda>
 In-Reply-To: <161549045434.25025.17473629602756431540.stgit@brunhilda>
 References: <161549045434.25025.17473629602756431540.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -69,731 +69,122 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-* No functional changes.
-  * Refactor aio submission code:
-    1. break-up function pqi_raid_bypass_submit_scsi_cmd
-       into smaller functions.
-    2. add common block (rmd - raid_map_data) to carry around
-       into newly added functions.
-    3. Prepare for new AIO functionality.
+From: Kevin Barnett <kevin.barnett@microchip.com>
+
+* Add support for new "long" firmware version which requires
+  minor driver changes to expose.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Reviewed-by: Martin Wilck <mwilck@suse.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |   52 +++
- drivers/scsi/smartpqi/smartpqi_init.c |  554 ++++++++++++++++++---------------
- 2 files changed, 360 insertions(+), 246 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |   14 +++++++++---
+ drivers/scsi/smartpqi/smartpqi_init.c |   37 ++++++++++++++++++++++++++-------
+ 2 files changed, 39 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 7d3f956e949f..01e18da139e3 100644
+index 35e892579773..aaafaced596b 100644
 --- a/drivers/scsi/smartpqi/smartpqi.h
 +++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -908,6 +908,58 @@ struct raid_map {
+@@ -1226,7 +1226,7 @@ struct pqi_event {
+ struct pqi_ctrl_info {
+ 	unsigned int	ctrl_id;
+ 	struct pci_dev	*pci_dev;
+-	char		firmware_version[11];
++	char		firmware_version[32];
+ 	char		serial_number[17];
+ 	char		model[17];
+ 	char		vendor[9];
+@@ -1404,7 +1404,7 @@ enum pqi_ctrl_mode {
+ struct bmic_identify_controller {
+ 	u8	configured_logical_drive_count;
+ 	__le32	configuration_signature;
+-	u8	firmware_version[4];
++	u8	firmware_version_short[4];
+ 	u8	reserved[145];
+ 	__le16	extended_logical_unit_count;
+ 	u8	reserved1[34];
+@@ -1412,11 +1412,17 @@ struct bmic_identify_controller {
+ 	u8	reserved2[8];
+ 	u8	vendor_id[8];
+ 	u8	product_id[16];
+-	u8	reserved3[68];
++	u8	reserved3[62];
++	__le32	extra_controller_flags;
++	u8	reserved4[2];
+ 	u8	controller_mode;
+-	u8	reserved4[32];
++	u8	spare_part_number[32];
++	u8	firmware_version_long[32];
+ };
  
- #pragma pack()
- 
-+struct pqi_scsi_dev_raid_map_data {
-+	bool	is_write;
-+	u8	raid_level;
-+	u32	map_index;
-+	u64	first_block;
-+	u64	last_block;
-+	u32	data_length;
-+	u32	block_cnt;
-+	u32	blocks_per_row;
-+	u64	first_row;
-+	u64	last_row;
-+	u32	first_row_offset;
-+	u32	last_row_offset;
-+	u32	first_column;
-+	u32	last_column;
-+	u64	r5or6_first_row;
-+	u64	r5or6_last_row;
-+	u32	r5or6_first_row_offset;
-+	u32	r5or6_last_row_offset;
-+	u32	r5or6_first_column;
-+	u32	r5or6_last_column;
-+	u16	data_disks_per_row;
-+	u32	total_disks_per_row;
-+	u16	layout_map_count;
-+	u32	stripesize;
-+	u16	strip_size;
-+	u32	first_group;
-+	u32	last_group;
-+	u32	current_group;
-+	u32	map_row;
-+	u32	aio_handle;
-+	u64	disk_block;
-+	u32	disk_block_cnt;
-+	u8	cdb[16];
-+	u8	cdb_length;
-+	int	offload_to_mirror;
++/* constants for extra_controller_flags field of bmic_identify_controller */
++#define BMIC_IDENTIFY_EXTRA_FLAGS_LONG_FW_VERSION_SUPPORTED	0x20000000
 +
-+	/* RAID1 specific */
-+#define NUM_RAID1_MAP_ENTRIES	3
-+	u32	num_it_nexus_entries;
-+	u32	it_nexus[NUM_RAID1_MAP_ENTRIES];
-+
-+	/* RAID5 RAID6 specific */
-+	u32	p_parity_it_nexus;	/* aio_handle */
-+	u32	q_parity_it_nexus;	/* aio_handle */
-+	u8	xor_mult;
-+	u64	row;
-+	u64	stripe_lba;
-+	u32	p_index;
-+	u32	q_index;
-+};
-+
- #define RAID_CTLR_LUNID		"\0\0\0\0\0\0\0\0"
- 
- struct pqi_scsi_dev {
+ struct bmic_sense_subsystem_info {
+ 	u8	reserved[44];
+ 	u8	ctrl_serial_number[16];
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index f388ef36cb3f..c895d32952c1 100644
+index 82f75a6be71c..6cc953dd9961 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2237,332 +2237,394 @@ static inline void pqi_set_encryption_info(
-  * Attempt to perform RAID bypass mapping for a logical volume I/O.
-  */
+@@ -7228,13 +7228,24 @@ static int pqi_get_ctrl_product_details(struct pqi_ctrl_info *ctrl_info)
+ 	if (rc)
+ 		goto out;
  
-+static bool pqi_aio_raid_level_supported(struct pqi_scsi_dev_raid_map_data *rmd)
-+{
-+	bool is_supported = true;
-+
-+	switch (rmd->raid_level) {
-+	case SA_RAID_0:
-+		break;
-+	case SA_RAID_1:
-+		if (rmd->is_write)
-+			is_supported = false;
-+		break;
-+	case SA_RAID_5:
-+		fallthrough;
-+	case SA_RAID_6:
-+		if (rmd->is_write)
-+			is_supported = false;
-+		break;
-+	case SA_RAID_ADM:
-+		if (rmd->is_write)
-+			is_supported = false;
-+		break;
-+	default:
-+		is_supported = false;
-+	}
-+
-+	return is_supported;
-+}
-+
- #define PQI_RAID_BYPASS_INELIGIBLE	1
- 
--static int pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
--	struct pqi_scsi_dev *device, struct scsi_cmnd *scmd,
--	struct pqi_queue_group *queue_group)
-+static int pqi_get_aio_lba_and_block_count(struct scsi_cmnd *scmd,
-+			struct pqi_scsi_dev_raid_map_data *rmd)
- {
--	struct raid_map *raid_map;
--	bool is_write = false;
--	u32 map_index;
--	u64 first_block;
--	u64 last_block;
--	u32 block_cnt;
--	u32 blocks_per_row;
--	u64 first_row;
--	u64 last_row;
--	u32 first_row_offset;
--	u32 last_row_offset;
--	u32 first_column;
--	u32 last_column;
--	u64 r0_first_row;
--	u64 r0_last_row;
--	u32 r5or6_blocks_per_row;
--	u64 r5or6_first_row;
--	u64 r5or6_last_row;
--	u32 r5or6_first_row_offset;
--	u32 r5or6_last_row_offset;
--	u32 r5or6_first_column;
--	u32 r5or6_last_column;
--	u16 data_disks_per_row;
--	u32 total_disks_per_row;
--	u16 layout_map_count;
--	u32 stripesize;
--	u16 strip_size;
--	u32 first_group;
--	u32 last_group;
--	u32 current_group;
--	u32 map_row;
--	u32 aio_handle;
--	u64 disk_block;
--	u32 disk_block_cnt;
--	u8 cdb[16];
--	u8 cdb_length;
--	int offload_to_mirror;
--	struct pqi_encryption_info *encryption_info_ptr;
--	struct pqi_encryption_info encryption_info;
--#if BITS_PER_LONG == 32
--	u64 tmpdiv;
--#endif
--
- 	/* Check for valid opcode, get LBA and block count. */
- 	switch (scmd->cmnd[0]) {
- 	case WRITE_6:
--		is_write = true;
-+		rmd->is_write = true;
- 		fallthrough;
- 	case READ_6:
--		first_block = (u64)(((scmd->cmnd[1] & 0x1f) << 16) |
-+		rmd->first_block = (u64)(((scmd->cmnd[1] & 0x1f) << 16) |
- 			(scmd->cmnd[2] << 8) | scmd->cmnd[3]);
--		block_cnt = (u32)scmd->cmnd[4];
--		if (block_cnt == 0)
--			block_cnt = 256;
-+		rmd->block_cnt = (u32)scmd->cmnd[4];
-+		if (rmd->block_cnt == 0)
-+			rmd->block_cnt = 256;
- 		break;
- 	case WRITE_10:
--		is_write = true;
-+		rmd->is_write = true;
- 		fallthrough;
- 	case READ_10:
--		first_block = (u64)get_unaligned_be32(&scmd->cmnd[2]);
--		block_cnt = (u32)get_unaligned_be16(&scmd->cmnd[7]);
-+		rmd->first_block = (u64)get_unaligned_be32(&scmd->cmnd[2]);
-+		rmd->block_cnt = (u32)get_unaligned_be16(&scmd->cmnd[7]);
- 		break;
- 	case WRITE_12:
--		is_write = true;
-+		rmd->is_write = true;
- 		fallthrough;
- 	case READ_12:
--		first_block = (u64)get_unaligned_be32(&scmd->cmnd[2]);
--		block_cnt = get_unaligned_be32(&scmd->cmnd[6]);
-+		rmd->first_block = (u64)get_unaligned_be32(&scmd->cmnd[2]);
-+		rmd->block_cnt = get_unaligned_be32(&scmd->cmnd[6]);
- 		break;
- 	case WRITE_16:
--		is_write = true;
-+		rmd->is_write = true;
- 		fallthrough;
- 	case READ_16:
--		first_block = get_unaligned_be64(&scmd->cmnd[2]);
--		block_cnt = get_unaligned_be32(&scmd->cmnd[10]);
-+		rmd->first_block = get_unaligned_be64(&scmd->cmnd[2]);
-+		rmd->block_cnt = get_unaligned_be32(&scmd->cmnd[10]);
- 		break;
- 	default:
- 		/* Process via normal I/O path. */
- 		return PQI_RAID_BYPASS_INELIGIBLE;
- 	}
- 
--	/* Check for write to non-RAID-0. */
--	if (is_write && device->raid_level != SA_RAID_0)
--		return PQI_RAID_BYPASS_INELIGIBLE;
-+	put_unaligned_le32(scsi_bufflen(scmd), &rmd->data_length);
- 
--	if (unlikely(block_cnt == 0))
--		return PQI_RAID_BYPASS_INELIGIBLE;
-+	return 0;
-+}
- 
--	last_block = first_block + block_cnt - 1;
--	raid_map = device->raid_map;
-+static int pci_get_aio_common_raid_map_values(struct pqi_ctrl_info *ctrl_info,
-+					struct pqi_scsi_dev_raid_map_data *rmd,
-+					struct raid_map *raid_map)
-+{
-+#if BITS_PER_LONG == 32
-+	u64 tmpdiv;
-+#endif
-+
-+	rmd->last_block = rmd->first_block + rmd->block_cnt - 1;
- 
- 	/* Check for invalid block or wraparound. */
--	if (last_block >= get_unaligned_le64(&raid_map->volume_blk_cnt) ||
--		last_block < first_block)
-+	if (rmd->last_block >=
-+		get_unaligned_le64(&raid_map->volume_blk_cnt) ||
-+		rmd->last_block < rmd->first_block)
- 		return PQI_RAID_BYPASS_INELIGIBLE;
- 
--	data_disks_per_row = get_unaligned_le16(&raid_map->data_disks_per_row);
--	strip_size = get_unaligned_le16(&raid_map->strip_size);
--	layout_map_count = get_unaligned_le16(&raid_map->layout_map_count);
-+	rmd->data_disks_per_row =
-+			get_unaligned_le16(&raid_map->data_disks_per_row);
-+	rmd->strip_size = get_unaligned_le16(&raid_map->strip_size);
-+	rmd->layout_map_count = get_unaligned_le16(&raid_map->layout_map_count);
- 
- 	/* Calculate stripe information for the request. */
--	blocks_per_row = data_disks_per_row * strip_size;
-+	rmd->blocks_per_row = rmd->data_disks_per_row * rmd->strip_size;
- #if BITS_PER_LONG == 32
--	tmpdiv = first_block;
--	do_div(tmpdiv, blocks_per_row);
--	first_row = tmpdiv;
--	tmpdiv = last_block;
--	do_div(tmpdiv, blocks_per_row);
--	last_row = tmpdiv;
--	first_row_offset = (u32)(first_block - (first_row * blocks_per_row));
--	last_row_offset = (u32)(last_block - (last_row * blocks_per_row));
--	tmpdiv = first_row_offset;
--	do_div(tmpdiv, strip_size);
--	first_column = tmpdiv;
--	tmpdiv = last_row_offset;
--	do_div(tmpdiv, strip_size);
--	last_column = tmpdiv;
-+	tmpdiv = rmd->first_block;
-+	do_div(tmpdiv, rmd->blocks_per_row);
-+	rmd->first_row = tmpdiv;
-+	tmpdiv = rmd->last_block;
-+	do_div(tmpdiv, rmd->blocks_per_row);
-+	rmd->last_row = tmpdiv;
-+	rmd->first_row_offset = (u32)(rmd->first_block - (rmd->first_row * rmd->blocks_per_row));
-+	rmd->last_row_offset = (u32)(rmd->last_block - (rmd->last_row * rmd->blocks_per_row));
-+	tmpdiv = rmd->first_row_offset;
-+	do_div(tmpdiv, rmd->strip_size);
-+	rmd->first_column = tmpdiv;
-+	tmpdiv = rmd->last_row_offset;
-+	do_div(tmpdiv, rmd->strip_size);
-+	rmd->last_column = tmpdiv;
- #else
--	first_row = first_block / blocks_per_row;
--	last_row = last_block / blocks_per_row;
--	first_row_offset = (u32)(first_block - (first_row * blocks_per_row));
--	last_row_offset = (u32)(last_block - (last_row * blocks_per_row));
--	first_column = first_row_offset / strip_size;
--	last_column = last_row_offset / strip_size;
-+	rmd->first_row = rmd->first_block / rmd->blocks_per_row;
-+	rmd->last_row = rmd->last_block / rmd->blocks_per_row;
-+	rmd->first_row_offset = (u32)(rmd->first_block -
-+				(rmd->first_row * rmd->blocks_per_row));
-+	rmd->last_row_offset = (u32)(rmd->last_block - (rmd->last_row *
-+				rmd->blocks_per_row));
-+	rmd->first_column = rmd->first_row_offset / rmd->strip_size;
-+	rmd->last_column = rmd->last_row_offset / rmd->strip_size;
- #endif
- 
- 	/* If this isn't a single row/column then give to the controller. */
--	if (first_row != last_row || first_column != last_column)
-+	if (rmd->first_row != rmd->last_row ||
-+			rmd->first_column != rmd->last_column)
- 		return PQI_RAID_BYPASS_INELIGIBLE;
- 
- 	/* Proceeding with driver mapping. */
--	total_disks_per_row = data_disks_per_row +
-+	rmd->total_disks_per_row = rmd->data_disks_per_row +
- 		get_unaligned_le16(&raid_map->metadata_disks_per_row);
--	map_row = ((u32)(first_row >> raid_map->parity_rotation_shift)) %
-+	rmd->map_row = ((u32)(rmd->first_row >>
-+		raid_map->parity_rotation_shift)) %
- 		get_unaligned_le16(&raid_map->row_cnt);
--	map_index = (map_row * total_disks_per_row) + first_column;
-+	rmd->map_index = (rmd->map_row * rmd->total_disks_per_row) +
-+			rmd->first_column;
- 
--	/* RAID 1 */
--	if (device->raid_level == SA_RAID_1) {
--		if (device->offload_to_mirror)
--			map_index += data_disks_per_row;
--		device->offload_to_mirror = !device->offload_to_mirror;
--	} else if (device->raid_level == SA_RAID_ADM) {
--		/* RAID ADM */
--		/*
--		 * Handles N-way mirrors  (R1-ADM) and R10 with # of drives
--		 * divisible by 3.
--		 */
--		offload_to_mirror = device->offload_to_mirror;
--		if (offload_to_mirror == 0)  {
--			/* use physical disk in the first mirrored group. */
--			map_index %= data_disks_per_row;
--		} else {
--			do {
--				/*
--				 * Determine mirror group that map_index
--				 * indicates.
--				 */
--				current_group = map_index / data_disks_per_row;
--
--				if (offload_to_mirror != current_group) {
--					if (current_group <
--						layout_map_count - 1) {
--						/*
--						 * Select raid index from
--						 * next group.
--						 */
--						map_index += data_disks_per_row;
--						current_group++;
--					} else {
--						/*
--						 * Select raid index from first
--						 * group.
--						 */
--						map_index %= data_disks_per_row;
--						current_group = 0;
--					}
-+	return 0;
-+}
-+
-+static int pqi_calc_aio_raid_adm(struct pqi_scsi_dev_raid_map_data *rmd,
-+				struct pqi_scsi_dev *device)
-+{
-+	/* RAID ADM */
-+	/*
-+	 * Handles N-way mirrors  (R1-ADM) and R10 with # of drives
-+	 * divisible by 3.
-+	 */
-+	rmd->offload_to_mirror = device->offload_to_mirror;
-+
-+	if (rmd->offload_to_mirror == 0)  {
-+		/* use physical disk in the first mirrored group. */
-+		rmd->map_index %= rmd->data_disks_per_row;
+-	memcpy(ctrl_info->firmware_version, identify->firmware_version,
+-		sizeof(identify->firmware_version));
+-	ctrl_info->firmware_version[sizeof(identify->firmware_version)] = '\0';
+-	snprintf(ctrl_info->firmware_version +
+-		strlen(ctrl_info->firmware_version),
+-		sizeof(ctrl_info->firmware_version),
+-		"-%u", get_unaligned_le16(&identify->firmware_build_number));
++	if (get_unaligned_le32(&identify->extra_controller_flags) &
++		BMIC_IDENTIFY_EXTRA_FLAGS_LONG_FW_VERSION_SUPPORTED) {
++		memcpy(ctrl_info->firmware_version,
++			identify->firmware_version_long,
++			sizeof(identify->firmware_version_long));
 +	} else {
-+		do {
-+			/*
-+			 * Determine mirror group that map_index
-+			 * indicates.
-+			 */
-+			rmd->current_group =
-+				rmd->map_index / rmd->data_disks_per_row;
-+
-+			if (rmd->offload_to_mirror !=
-+					rmd->current_group) {
-+				if (rmd->current_group <
-+					rmd->layout_map_count - 1) {
-+					/*
-+					 * Select raid index from
-+					 * next group.
-+					 */
-+					rmd->map_index += rmd->data_disks_per_row;
-+					rmd->current_group++;
-+				} else {
-+					/*
-+					 * Select raid index from first
-+					 * group.
-+					 */
-+					rmd->map_index %= rmd->data_disks_per_row;
-+					rmd->current_group = 0;
- 				}
--			} while (offload_to_mirror != current_group);
--		}
-+			}
-+		} while (rmd->offload_to_mirror != rmd->current_group);
++		memcpy(ctrl_info->firmware_version,
++			identify->firmware_version_short,
++			sizeof(identify->firmware_version_short));
++		ctrl_info->firmware_version
++			[sizeof(identify->firmware_version_short)] = '\0';
++		snprintf(ctrl_info->firmware_version +
++			strlen(ctrl_info->firmware_version),
++			sizeof(ctrl_info->firmware_version) -
++			sizeof(identify->firmware_version_short),
++			"-%u",
++			get_unaligned_le16(&identify->firmware_build_number));
 +	}
  
--		/* Set mirror group to use next time. */
--		offload_to_mirror =
--			(offload_to_mirror >= layout_map_count - 1) ?
--				0 : offload_to_mirror + 1;
--		device->offload_to_mirror = offload_to_mirror;
--		/*
--		 * Avoid direct use of device->offload_to_mirror within this
--		 * function since multiple threads might simultaneously
--		 * increment it beyond the range of device->layout_map_count -1.
--		 */
--	} else if ((device->raid_level == SA_RAID_5 ||
--		device->raid_level == SA_RAID_6) && layout_map_count > 1) {
--		/* RAID 50/60 */
--		/* Verify first and last block are in same RAID group */
--		r5or6_blocks_per_row = strip_size * data_disks_per_row;
--		stripesize = r5or6_blocks_per_row * layout_map_count;
-+	/* Set mirror group to use next time. */
-+	rmd->offload_to_mirror =
-+		(rmd->offload_to_mirror >= rmd->layout_map_count - 1) ?
-+			0 : rmd->offload_to_mirror + 1;
-+	device->offload_to_mirror = rmd->offload_to_mirror;
-+	/*
-+	 * Avoid direct use of device->offload_to_mirror within this
-+	 * function since multiple threads might simultaneously
-+	 * increment it beyond the range of device->layout_map_count -1.
-+	 */
-+
-+	return 0;
-+}
-+
-+static int pqi_calc_aio_r5_or_r6(struct pqi_scsi_dev_raid_map_data *rmd,
-+				struct raid_map *raid_map)
-+{
-+#if BITS_PER_LONG == 32
-+	u64 tmpdiv;
-+#endif
-+	/* RAID 50/60 */
-+	/* Verify first and last block are in same RAID group */
-+	rmd->stripesize = rmd->blocks_per_row * rmd->layout_map_count;
- #if BITS_PER_LONG == 32
--		tmpdiv = first_block;
--		first_group = do_div(tmpdiv, stripesize);
--		tmpdiv = first_group;
--		do_div(tmpdiv, r5or6_blocks_per_row);
--		first_group = tmpdiv;
--		tmpdiv = last_block;
--		last_group = do_div(tmpdiv, stripesize);
--		tmpdiv = last_group;
--		do_div(tmpdiv, r5or6_blocks_per_row);
--		last_group = tmpdiv;
-+	tmpdiv = rmd->first_block;
-+	rmd->first_group = do_div(tmpdiv, rmd->stripesize);
-+	tmpdiv = rmd->first_group;
-+	do_div(tmpdiv, rmd->blocks_per_row);
-+	rmd->first_group = tmpdiv;
-+	tmpdiv = rmd->last_block;
-+	rmd->last_group = do_div(tmpdiv, rmd->stripesize);
-+	tmpdiv = rmd->last_group;
-+	do_div(tmpdiv, rmd->blocks_per_row);
-+	rmd->last_group = tmpdiv;
- #else
--		first_group = (first_block % stripesize) / r5or6_blocks_per_row;
--		last_group = (last_block % stripesize) / r5or6_blocks_per_row;
-+	rmd->first_group = (rmd->first_block % rmd->stripesize) / rmd->blocks_per_row;
-+	rmd->last_group = (rmd->last_block % rmd->stripesize) / rmd->blocks_per_row;
- #endif
--		if (first_group != last_group)
--			return PQI_RAID_BYPASS_INELIGIBLE;
-+	if (rmd->first_group != rmd->last_group)
-+		return PQI_RAID_BYPASS_INELIGIBLE;
+ 	memcpy(ctrl_info->model, identify->product_id,
+ 		sizeof(identify->product_id));
+@@ -9612,13 +9623,23 @@ static void __attribute__((unused)) verify_structures(void)
+ 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
+ 		configuration_signature) != 1);
+ 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
+-		firmware_version) != 5);
++		firmware_version_short) != 5);
+ 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
+ 		extended_logical_unit_count) != 154);
+ 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
+ 		firmware_build_number) != 190);
++	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
++		vendor_id) != 200);
++	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
++		product_id) != 208);
++	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
++		extra_controller_flags) != 286);
+ 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
+ 		controller_mode) != 292);
++	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
++		spare_part_number) != 293);
++	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
++		firmware_version_long) != 325);
  
--		/* Verify request is in a single row of RAID 5/6 */
-+	/* Verify request is in a single row of RAID 5/6 */
- #if BITS_PER_LONG == 32
--		tmpdiv = first_block;
--		do_div(tmpdiv, stripesize);
--		first_row = r5or6_first_row = r0_first_row = tmpdiv;
--		tmpdiv = last_block;
--		do_div(tmpdiv, stripesize);
--		r5or6_last_row = r0_last_row = tmpdiv;
-+	tmpdiv = rmd->first_block;
-+	do_div(tmpdiv, rmd->stripesize);
-+	rmd->first_row = tmpdiv;
-+	rmd->r5or6_first_row = tmpdiv;
-+	tmpdiv = rmd->last_block;
-+	do_div(tmpdiv, rmd->stripesize);
-+	rmd->r5or6_last_row = tmpdiv;
- #else
--		first_row = r5or6_first_row = r0_first_row =
--			first_block / stripesize;
--		r5or6_last_row = r0_last_row = last_block / stripesize;
-+	rmd->first_row = rmd->r5or6_first_row =
-+		rmd->first_block / rmd->stripesize;
-+	rmd->r5or6_last_row = rmd->last_block / rmd->stripesize;
- #endif
--		if (r5or6_first_row != r5or6_last_row)
--			return PQI_RAID_BYPASS_INELIGIBLE;
-+	if (rmd->r5or6_first_row != rmd->r5or6_last_row)
-+		return PQI_RAID_BYPASS_INELIGIBLE;
- 
--		/* Verify request is in a single column */
-+	/* Verify request is in a single column */
- #if BITS_PER_LONG == 32
--		tmpdiv = first_block;
--		first_row_offset = do_div(tmpdiv, stripesize);
--		tmpdiv = first_row_offset;
--		first_row_offset = (u32)do_div(tmpdiv, r5or6_blocks_per_row);
--		r5or6_first_row_offset = first_row_offset;
--		tmpdiv = last_block;
--		r5or6_last_row_offset = do_div(tmpdiv, stripesize);
--		tmpdiv = r5or6_last_row_offset;
--		r5or6_last_row_offset = do_div(tmpdiv, r5or6_blocks_per_row);
--		tmpdiv = r5or6_first_row_offset;
--		do_div(tmpdiv, strip_size);
--		first_column = r5or6_first_column = tmpdiv;
--		tmpdiv = r5or6_last_row_offset;
--		do_div(tmpdiv, strip_size);
--		r5or6_last_column = tmpdiv;
-+	tmpdiv = rmd->first_block;
-+	rmd->first_row_offset = do_div(tmpdiv, rmd->stripesize);
-+	tmpdiv = rmd->first_row_offset;
-+	rmd->first_row_offset = (u32)do_div(tmpdiv, rmd->blocks_per_row);
-+	rmd->r5or6_first_row_offset = rmd->first_row_offset;
-+	tmpdiv = rmd->last_block;
-+	rmd->r5or6_last_row_offset = do_div(tmpdiv, rmd->stripesize);
-+	tmpdiv = rmd->r5or6_last_row_offset;
-+	rmd->r5or6_last_row_offset = do_div(tmpdiv, rmd->blocks_per_row);
-+	tmpdiv = rmd->r5or6_first_row_offset;
-+	do_div(tmpdiv, rmd->strip_size);
-+	rmd->first_column = rmd->r5or6_first_column = tmpdiv;
-+	tmpdiv = rmd->r5or6_last_row_offset;
-+	do_div(tmpdiv, rmd->strip_size);
-+	rmd->r5or6_last_column = tmpdiv;
- #else
--		first_row_offset = r5or6_first_row_offset =
--			(u32)((first_block % stripesize) %
--			r5or6_blocks_per_row);
-+	rmd->first_row_offset = rmd->r5or6_first_row_offset =
-+		(u32)((rmd->first_block %
-+				rmd->stripesize) %
-+				rmd->blocks_per_row);
-+
-+	rmd->r5or6_last_row_offset =
-+		(u32)((rmd->last_block % rmd->stripesize) %
-+		rmd->blocks_per_row);
-+
-+	rmd->first_column =
-+			rmd->r5or6_first_row_offset / rmd->strip_size;
-+	rmd->r5or6_first_column = rmd->first_column;
-+	rmd->r5or6_last_column = rmd->r5or6_last_row_offset / rmd->strip_size;
-+#endif
-+	if (rmd->r5or6_first_column != rmd->r5or6_last_column)
-+		return PQI_RAID_BYPASS_INELIGIBLE;
-+
-+	/* Request is eligible */
-+	rmd->map_row =
-+		((u32)(rmd->first_row >> raid_map->parity_rotation_shift)) %
-+		get_unaligned_le16(&raid_map->row_cnt);
- 
--		r5or6_last_row_offset =
--			(u32)((last_block % stripesize) %
--			r5or6_blocks_per_row);
-+	rmd->map_index = (rmd->first_group *
-+		(get_unaligned_le16(&raid_map->row_cnt) *
-+		rmd->total_disks_per_row)) +
-+		(rmd->map_row * rmd->total_disks_per_row) + rmd->first_column;
- 
--		first_column = r5or6_first_row_offset / strip_size;
--		r5or6_first_column = first_column;
--		r5or6_last_column = r5or6_last_row_offset / strip_size;
--#endif
--		if (r5or6_first_column != r5or6_last_column)
--			return PQI_RAID_BYPASS_INELIGIBLE;
-+	return 0;
-+}
-+
-+static void pqi_set_aio_cdb(struct pqi_scsi_dev_raid_map_data *rmd)
-+{
-+	/* Build the new CDB for the physical disk I/O. */
-+	if (rmd->disk_block > 0xffffffff) {
-+		rmd->cdb[0] = rmd->is_write ? WRITE_16 : READ_16;
-+		rmd->cdb[1] = 0;
-+		put_unaligned_be64(rmd->disk_block, &rmd->cdb[2]);
-+		put_unaligned_be32(rmd->disk_block_cnt, &rmd->cdb[10]);
-+		rmd->cdb[14] = 0;
-+		rmd->cdb[15] = 0;
-+		rmd->cdb_length = 16;
-+	} else {
-+		rmd->cdb[0] = rmd->is_write ? WRITE_10 : READ_10;
-+		rmd->cdb[1] = 0;
-+		put_unaligned_be32((u32)rmd->disk_block, &rmd->cdb[2]);
-+		rmd->cdb[6] = 0;
-+		put_unaligned_be16((u16)rmd->disk_block_cnt, &rmd->cdb[7]);
-+		rmd->cdb[9] = 0;
-+		rmd->cdb_length = 10;
-+	}
-+}
-+
-+static int pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
-+	struct pqi_scsi_dev *device, struct scsi_cmnd *scmd,
-+	struct pqi_queue_group *queue_group)
-+{
-+	struct raid_map *raid_map;
-+	int rc;
-+	struct pqi_encryption_info *encryption_info_ptr;
-+	struct pqi_encryption_info encryption_info;
-+	struct pqi_scsi_dev_raid_map_data rmd = {0};
-+
-+	rc = pqi_get_aio_lba_and_block_count(scmd, &rmd);
-+	if (rc)
-+		return PQI_RAID_BYPASS_INELIGIBLE;
-+
-+	rmd.raid_level = device->raid_level;
-+
-+	if (!pqi_aio_raid_level_supported(&rmd))
-+		return PQI_RAID_BYPASS_INELIGIBLE;
-+
-+	if (unlikely(rmd.block_cnt == 0))
-+		return PQI_RAID_BYPASS_INELIGIBLE;
-+
-+	raid_map = device->raid_map;
- 
--		/* Request is eligible */
--		map_row =
--			((u32)(first_row >> raid_map->parity_rotation_shift)) %
--			get_unaligned_le16(&raid_map->row_cnt);
-+	rc = pci_get_aio_common_raid_map_values(ctrl_info, &rmd, raid_map);
-+	if (rc)
-+		return PQI_RAID_BYPASS_INELIGIBLE;
- 
--		map_index = (first_group *
--			(get_unaligned_le16(&raid_map->row_cnt) *
--			total_disks_per_row)) +
--			(map_row * total_disks_per_row) + first_column;
-+	/* RAID 1 */
-+	if (device->raid_level == SA_RAID_1) {
-+		if (device->offload_to_mirror)
-+			rmd.map_index += rmd.data_disks_per_row;
-+		device->offload_to_mirror = !device->offload_to_mirror;
-+	} else if (device->raid_level == SA_RAID_ADM) {
-+		rc = pqi_calc_aio_raid_adm(&rmd, device);
-+	} else if ((device->raid_level == SA_RAID_5 ||
-+		device->raid_level == SA_RAID_6) && rmd.layout_map_count > 1) {
-+		rc = pqi_calc_aio_r5_or_r6(&rmd, raid_map);
-+		if (rc)
-+			return PQI_RAID_BYPASS_INELIGIBLE;
- 	}
- 
--	aio_handle = raid_map->disk_data[map_index].aio_handle;
--	disk_block = get_unaligned_le64(&raid_map->disk_starting_blk) +
--		first_row * strip_size +
--		(first_row_offset - first_column * strip_size);
--	disk_block_cnt = block_cnt;
-+	if (unlikely(rmd.map_index >= RAID_MAP_MAX_ENTRIES))
-+		return PQI_RAID_BYPASS_INELIGIBLE;
-+
-+	rmd.aio_handle = raid_map->disk_data[rmd.map_index].aio_handle;
-+	rmd.disk_block = get_unaligned_le64(&raid_map->disk_starting_blk) +
-+		rmd.first_row * rmd.strip_size +
-+		(rmd.first_row_offset - rmd.first_column * rmd.strip_size);
-+	rmd.disk_block_cnt = rmd.block_cnt;
- 
- 	/* Handle differing logical/physical block sizes. */
- 	if (raid_map->phys_blk_shift) {
--		disk_block <<= raid_map->phys_blk_shift;
--		disk_block_cnt <<= raid_map->phys_blk_shift;
-+		rmd.disk_block <<= raid_map->phys_blk_shift;
-+		rmd.disk_block_cnt <<= raid_map->phys_blk_shift;
- 	}
- 
--	if (unlikely(disk_block_cnt > 0xffff))
-+	if (unlikely(rmd.disk_block_cnt > 0xffff))
- 		return PQI_RAID_BYPASS_INELIGIBLE;
- 
--	/* Build the new CDB for the physical disk I/O. */
--	if (disk_block > 0xffffffff) {
--		cdb[0] = is_write ? WRITE_16 : READ_16;
--		cdb[1] = 0;
--		put_unaligned_be64(disk_block, &cdb[2]);
--		put_unaligned_be32(disk_block_cnt, &cdb[10]);
--		cdb[14] = 0;
--		cdb[15] = 0;
--		cdb_length = 16;
--	} else {
--		cdb[0] = is_write ? WRITE_10 : READ_10;
--		cdb[1] = 0;
--		put_unaligned_be32((u32)disk_block, &cdb[2]);
--		cdb[6] = 0;
--		put_unaligned_be16((u16)disk_block_cnt, &cdb[7]);
--		cdb[9] = 0;
--		cdb_length = 10;
--	}
-+	pqi_set_aio_cdb(&rmd);
- 
- 	if (get_unaligned_le16(&raid_map->flags) &
- 		RAID_MAP_ENCRYPTION_ENABLED) {
- 		pqi_set_encryption_info(&encryption_info, raid_map,
--			first_block);
-+			rmd.first_block);
- 		encryption_info_ptr = &encryption_info;
- 	} else {
- 		encryption_info_ptr = NULL;
- 	}
- 
--	return pqi_aio_submit_io(ctrl_info, scmd, aio_handle,
--		cdb, cdb_length, queue_group, encryption_info_ptr, true);
-+	return pqi_aio_submit_io(ctrl_info, scmd, rmd.aio_handle,
-+				rmd.cdb, rmd.cdb_length, queue_group,
-+				encryption_info_ptr, true);
- }
- 
- #define PQI_STATUS_IDLE		0x0
+ 	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
+ 		phys_bay_in_box) != 115);
 
