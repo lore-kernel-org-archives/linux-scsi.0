@@ -2,105 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7BA6C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:19:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 562DAC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:30:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E43A64E6B
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:19:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05A7A64ECD
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 20:30:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230286AbhCKUSa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Mar 2021 15:18:30 -0500
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:62359 "EHLO
-        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230436AbhCKUSB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 15:18:01 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1615493881; x=1647029881;
-  h=subject:from:to:cc:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=vj9K0BmEfP46Tn8aMogNqj82TlA9TBM0hl73CfRp7eo=;
-  b=zKWBJ1o2/3F3rROc9jdN5U2MihPrIZCBDXjpu0dl2vmcn00jPVBwRddv
-   gnXO3jdWMAJjYv6M8hTtC8SCulPi5ve7rrvb9feAV4gDPa35CIpvos5zO
-   ZIzqbOZOq5uPQIwceEeVLQxGeLZk94OcJQEbLjaMUYMDPWBfXD7fo/Bla
-   GvTBzUe+MFQs2VbjeiIQc0sDJ6WzgV50V/zwU6UHPusLMPaYqas1HpFkY
-   s7SDmkG1VtzhGKj2EbLvMyMoMq7MlqCATDtqBsSlSNyXfjAzebKrogKT/
-   ebYOdIrVaHt+R1uvGgfmnLqE4yGjonOm5/txTT8eY8ua6LEi6Iq+smdkd
-   A==;
-IronPort-SDR: 0IMXRhbpvxAH+GcY1HdD59drGpv05mtBCM7mFFyu+1OW6HsGFcyo3EB8x7a59T4FxoJxScYoK8
- gjjzLXs1Au4Tpw75bQ2f2qi8CKQYcm/OxZsCnOPoPA9ZqBCsU1vL5ukeJGHKAswensMaEl2z4F
- 32anr3cu0U+OxObSwEOL3733dNmrPLApLN3fUzpU7QJydb5GNOq+nrs9xgNwfeDxeFZgDrfDxs
- t5v/DOsW8jB+u6dQiLwsTUmQKnxmKpGTn7+ldJywhZDPnF5UFqt3pVhT/LsDQJf7X8df18BXa3
- nPc=
-X-IronPort-AV: E=Sophos;i="5.81,241,1610434800"; 
-   d="scan'208";a="112888473"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 11 Mar 2021 13:17:57 -0700
-Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Thu, 11 Mar 2021 13:17:55 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex03.mchp-main.com
- (10.10.85.151) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
- Transport; Thu, 11 Mar 2021 13:17:54 -0700
-Subject: [PATCH V5 31/31] smartpqi: update version to 2.1.8-045
-From:   Don Brace <don.brace@microchip.com>
-To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
-        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
-        <gerry.morong@microchip.com>, <mahesh.rajashekhara@microchip.com>,
-        <mike.mcgowen@microchip.com>, <murthy.bhat@microchip.com>,
-        <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
-        <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
-CC:     <linux-scsi@vger.kernel.org>
-Date:   Thu, 11 Mar 2021 14:17:54 -0600
-Message-ID: <161549387469.25025.12859568843576080076.stgit@brunhilda>
-In-Reply-To: <161549045434.25025.17473629602756431540.stgit@brunhilda>
-References: <161549045434.25025.17473629602756431540.stgit@brunhilda>
-User-Agent: StGit/0.23-dirty
+        id S229900AbhCKU3m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Mar 2021 15:29:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52640 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229555AbhCKU3e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 15:29:34 -0500
+Received: from mail.marcansoft.com (marcansoft.com [IPv6:2a01:298:fe:f::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E474C061574;
+        Thu, 11 Mar 2021 12:29:33 -0800 (PST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
+        (No client certificate requested)
+        (Authenticated sender: marcan@marcan.st)
+        by mail.marcansoft.com (Postfix) with ESMTPSA id B5444425BB;
+        Thu, 11 Mar 2021 20:29:25 +0000 (UTC)
+To:     Linus Walleij <linus.walleij@linaro.org>
+Cc:     Sumit Garg <sumit.garg@linaro.org>,
+        Arnd Bergmann <arnd@linaro.org>,
+        "open list:ASYMMETRIC KEYS" <keyrings@vger.kernel.org>,
+        David Howells <dhowells@redhat.com>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Joakim Bech <joakim.bech@linaro.org>,
+        =?UTF-8?Q?Alex_Benn=c3=a9e?= <alex.bennee@linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Maxim Uvarov <maxim.uvarov@linaro.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        Ruchika Gupta <ruchika.gupta@linaro.org>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
+        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
+        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>
+References: <20210303135500.24673-1-alex.bennee@linaro.org>
+ <20210303135500.24673-2-alex.bennee@linaro.org>
+ <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com>
+ <20210305075131.GA15940@goby>
+ <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
+ <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
+ <6c542548-cc16-af68-c755-df52bd13b209@marcan.st>
+ <CAFA6WYOYmTgguVDwpyjnt3gLssqW48qzAkRD_nyPYg0nNhxT2A@mail.gmail.com>
+ <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st>
+ <CAFA6WYMSJxK2CjmoLJ6mdNNEfOQOMVXZPbbFRfah7KLeZNfguw@mail.gmail.com>
+ <CACRpkdZb5UMyq5qSJE==3ZnH-7fh92q_t4AnE8mPm0oFEJxqpQ@mail.gmail.com>
+ <e5d3f4b5-748e-0700-b897-393187b2bb1a@marcan.st>
+ <CACRpkdYxMGN3N-jFt1Uw4AkBR-x=dRj6HEvDp6g+2ku7+qCLwg@mail.gmail.com>
+From:   Hector Martin <marcan@marcan.st>
+Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB)
+ subsystem
+Message-ID: <02d035ca-697d-1634-a434-a43b9c01f4a9@marcan.st>
+Date:   Fri, 12 Mar 2021 05:29:23 +0900
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CACRpkdYxMGN3N-jFt1Uw4AkBR-x=dRj6HEvDp6g+2ku7+qCLwg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: es-ES
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-* Update version for tracking
+On 11/03/2021 23.31, Linus Walleij wrote:
+> I understand your argument, is your position such that the nature
+> of the hardware is such that community should leave this hardware
+> alone and not try to make use of RPMB  for say ordinary (self-installed)
+> Linux distributions?
 
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Gerry Morong <gerry.morong@microchip.com>
-Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Reviewed-by: Martin Wilck <mwilck@suse.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+It's not really that the community should leave this hardware alone, so 
+much that I think there is a very small subset of users who will be able 
+to benefit from it, and that subset will be happy with a usable 
+kernel/userspace interface and some userspace tooling for this purpose, 
+including provisioning and such.
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 99c24599b2c8..3b0f281daa2b 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -33,11 +33,11 @@
- #define BUILD_TIMESTAMP
- #endif
- 
--#define DRIVER_VERSION		"1.2.16-012"
--#define DRIVER_MAJOR		1
--#define DRIVER_MINOR		2
--#define DRIVER_RELEASE		16
--#define DRIVER_REVISION		12
-+#define DRIVER_VERSION		"2.1.8-045"
-+#define DRIVER_MAJOR		2
-+#define DRIVER_MINOR		1
-+#define DRIVER_RELEASE		8
-+#define DRIVER_REVISION		45
- 
- #define DRIVER_NAME		"Microsemi PQI Driver (v" \
- 				DRIVER_VERSION BUILD_TIMESTAMP ")"
+Consider the prerequisites for using RPMB usefully here:
 
+* You need (user-controlled) secureboot
+* You need secret key storage - so either some kind of CPU-fused key, or 
+one protected by a TPM paired with the secureboot (key sealed to PCR 
+values and such)
+* But if you have a TPM, that can handle secure counters for you already 
+AIUI, so you don't need RPMB
+* So this means you must be running a non-TPM secureboot system
+
+And so we're back to embedded platforms like Android phones and other 
+SoC stuff... user-controlled secureboot is already somewhat rare here, 
+and even rarer are the cases where the user controls the whole chain 
+including the TEE if any (otherwise it'll be using RPMB already); this 
+pretty much excludes all production Android phones except for a few 
+designed as completely open systems; we're left with those and a subset 
+of dev boards (e.g. the Jetson TX1 I did fuse experiments on). In the 
+end, those systems will probably end up with fairly bespoke set-ups for 
+any given device or SoC family, for using RPMB.
+
+But then again, if you have a full secureboot system where you control 
+the TEE level, wouldn't you want to put the RPMB shenanigans there and 
+get some semblance of secure TPM/keystore/attempt throttling 
+functionality that is robust against Linux exploits and has a smaller 
+attack surface? Systems without EL3 are rare (Apple M1 :-)) so it makes 
+more sense to do this on those that do have it. If you're paranoid 
+enough to be getting into building your own secure system with 
+anti-rollback for retry counters, you should be heading in that directly 
+anyway.
+
+And now Linux's RPMB code is useless because you're running the stack in 
+the secure monitor instead :-)
+
+-- 
+Hector Martin (marcan@marcan.st)
+Public Key: https://mrcn.st/pub
