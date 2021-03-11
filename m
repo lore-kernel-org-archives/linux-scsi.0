@@ -2,137 +2,171 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C5F1C433E6
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 08:20:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 592BAC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 08:22:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E17864FEB
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 08:20:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04A5864EAE
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 08:21:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231301AbhCKITx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Mar 2021 03:19:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36436 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231157AbhCKITs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 03:19:48 -0500
-Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CF27C061574;
-        Thu, 11 Mar 2021 00:19:48 -0800 (PST)
-Received: by mail-ed1-x534.google.com with SMTP id e7so1402809edu.10;
-        Thu, 11 Mar 2021 00:19:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=JBkeGpB+eWcXhx4gy2dRtgu8ZT120IY/LnQIA5/kUxU=;
-        b=Iw1OSl6Zd9Y5xk2PiGCEzlaRQP0Rr45+4k4xnShOmdVQUmLNQP+723QsO7c4Wtcjq7
-         lRWcG0/hhJWpJWKLQGEaOZ+mEQVTotQ3zfXtTdHTQTnFfESCU2FjE+s3YNBxQ767hSFy
-         ubvBbGVB2zQb8BNkHo7RGn10ftyOxX9wHCtsCWEHXOrCGz9VmXI1iSjZ9FQ5sXPLmY80
-         kbiqdLEARHlyHI/1dxvXMI1Yiy5vbMutLFbcXadbzRIAEYyZS++kRt/tIlyAiyMUGhtg
-         533oIhHYDVjflcRlbkGdJlq7WLDX4gkYGqonSuXZR1ZhGlpPYZO4JZo0BebEDiIS94DE
-         BSCA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=JBkeGpB+eWcXhx4gy2dRtgu8ZT120IY/LnQIA5/kUxU=;
-        b=TdKbU8qBL7ti2dnboYitir/28g/++61ZHiKkSMDt5DvRUB2kdkqrl0/Uwehu/m0g2B
-         kgadsQJ7ped5lTmOnyo9hfglMGmDd1R6l6OMXIWhRASa7syep2FQr7UA88F9FgEDyNLE
-         eDof57u6L0v8xqToz6HKOONqW4YCpf+ybYBhKedUdnSkAGJxq92c0srlpq9eHvvQDcsw
-         KftFb9pnQBjQOCXJ4VZExFvFK/8QAkcw1RaFarfSAFmfJTyTQtClgLHJUy1R7LPdkKGS
-         XB6UZbjhqszuEEtZ1ZhwmNy6AaKCQ1PlACufBKP/vTJ2zYEfkVg2y5JkrCudoh+OecOY
-         F02g==
-X-Gm-Message-State: AOAM5326d2CHu2eYPOEiNmdg1uRKtyDwR4pFpz7ZgredFnRjwMB7eUz+
-        VnlR63U8gfiGEg0hBdCYdKw=
-X-Google-Smtp-Source: ABdhPJxRzXMdhHiC/RZkQxL6XEJN1B9PML6IDoY4fU0PNAfFkn2+xN+i2I9q7lWGwQlGLPTML4qsSQ==
-X-Received: by 2002:a05:6402:1c98:: with SMTP id cy24mr7321315edb.296.1615450787250;
-        Thu, 11 Mar 2021 00:19:47 -0800 (PST)
-Received: from ubuntu-laptop (ip5f5bec5d.dynamic.kabel-deutschland.de. [95.91.236.93])
-        by smtp.googlemail.com with ESMTPSA id oy8sm874331ejb.58.2021.03.11.00.19.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Mar 2021 00:19:46 -0800 (PST)
-Message-ID: <3a5c555cb69ee24f56e986097ebf2a212dd017f8.camel@gmail.com>
-Subject: Re: v3: scsi: ufshcd: use a macro for UFS versions
-From:   Bean Huo <huobean@gmail.com>
-To:     Caleb Connolly <caleb@connolly.tech>
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, ejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        cang@codeaurora.org, beanhuo@micron.com, jaegeuk@kernel.org,
-        asutoshd@codeaurora.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Thu, 11 Mar 2021 09:19:45 +0100
-In-Reply-To: <20210310153215.371227-1-caleb@connolly.tech>
-References: <20210310153215.371227-1-caleb@connolly.tech>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.4-0ubuntu1 
+        id S231375AbhCKIV1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Mar 2021 03:21:27 -0500
+Received: from z11.mailgun.us ([104.130.96.11]:40336 "EHLO z11.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231549AbhCKIVR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 11 Mar 2021 03:21:17 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1615450876; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=FcBNlfOXSoNxm2y83jgoG0XJMJEpboYwvXHkJwO65uM=;
+ b=l/wr7ak9QGs/lnoTQST+5+8NTXVwciOPFb7v6hHKNrktre17N6eK6Bgy2bvT+2n7BKQigifD
+ P421+DeSKsG3FKtQTE8eV5PiNdOuyOsZj9mdecqWMFCUx4f/Utjt+oUrEzrfBxqZo7ERHZ+H
+ we5cZOiMJfqZ0LOlk6Ai6P09fQA=
+X-Mailgun-Sending-Ip: 104.130.96.11
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 6049d2e76e1c22bc8dbd9ea3 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 11 Mar 2021 08:20:55
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id D2284C43461; Thu, 11 Mar 2021 08:20:55 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1D7A5C43465;
+        Thu, 11 Mar 2021 08:20:54 +0000 (UTC)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date:   Thu, 11 Mar 2021 16:20:53 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Avri Altman <avri.altman@wdc.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        alim.akhtar@samsung.com, asutoshd@codeaurora.org,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <avi.shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>, stanley.chu@mediatek.com
+Subject: Re: [PATCH v5 05/10] scsi: ufshpb: Region inactivation in host mode
+In-Reply-To: <20210302132503.224670-6-avri.altman@wdc.com>
+References: <20210302132503.224670-1-avri.altman@wdc.com>
+ <20210302132503.224670-6-avri.altman@wdc.com>
+Message-ID: <8c2b310299c0ca57bfd445cfca87fb28@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2021-03-10 at 15:33 +0000, Caleb Connolly wrote:
-> When using a device with UFS > 2.1 the error "invalid UFS version" is
-> misleadingly printed. There was a patch for this almost a year
-> ago to which this solution was suggested.
+On 2021-03-02 21:24, Avri Altman wrote:
+> I host mode, the host is expected to send HPB-WRITE-BUFFER with
+
+In host mode,
+
+> buffer-id = 0x1 when it inactivates a region.
 > 
-> This series replaces the use of the growing UFSHCI_VERSION_xy macros
-> with
-> an inline function to encode a major and minor version into the
-> scheme
-> used on devices, that being:
+> Use the map-requests pool as there is no point in assigning a
+> designated cache for umap-requests.
 > 
->         (major << 8) + (minor << 4)
-> 
-> I dealt with the different encoding used for UFS 1.x by converting it
-> to match the newer versions in ufshcd_get_ufs_version(). That means
-> it's
-> possible to use comparisons for version checks, e.g.
-> 
->         if (hba->ufs_version < ufshci_version(3, 0))
->                 ...
-> 
-> I've also dropped the "invalid UFS version" check entirely as it
-> seems to
-> be more misleading than useful, and hasn't been accurate for a long
-> time.
-> 
-> This has been tested on a device with UFS 3.0 and a device with UFS
-> 2.1,
-> however I don't own any older devices to test with.
-> 
->         Caleb
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
 > ---
-> Changes since v1:
->  * Switch from macro to static inline function
->  * Address Christoph's formatting comments
->  * Add Nitin's signoff on patch 3 ("scsi: ufshcd: remove version
-> check")
-> Resend:
->  * Fix patches 1/3 referencing the macro from v1
->    instead of the new inline function
-> Changes since v2:
->  * Remove excessive parentheses from ufshci_version()
->  * Pick up Christoph's Reviewed-by
+>  drivers/scsi/ufs/ufshpb.c | 14 ++++++++++++++
+>  drivers/scsi/ufs/ufshpb.h |  1 +
+>  2 files changed, 15 insertions(+)
 > 
-> Caleb Connolly (3):
->       scsi: ufshcd: use a function to calculate versions
->       scsi: ufs: qcom: use ufshci_version function
->       scsi: ufshcd: remove version check
+> diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+> index 6f4fd22eaf2f..0744feb4d484 100644
+> --- a/drivers/scsi/ufs/ufshpb.c
+> +++ b/drivers/scsi/ufs/ufshpb.c
+> @@ -907,6 +907,7 @@ static int ufshpb_execute_umap_req(struct ufshpb_lu 
+> *hpb,
 > 
->  drivers/scsi/ufs/ufs-qcom.c |  4 +--
->  drivers/scsi/ufs/ufshcd.c   | 66 ++++++++++++++++++-----------------
-> ----------
->  drivers/scsi/ufs/ufshci.h   | 17 +++++++-----
->  3 files changed, 38 insertions(+), 49 deletions(-)
+>  	blk_execute_rq_nowait(q, NULL, req, 1, ufshpb_umap_req_compl_fn);
 > 
+> +	hpb->stats.umap_req_cnt++;
+>  	return 0;
+>  }
 > 
-Thanks for your patch, good look to me.
+> @@ -1103,6 +1104,12 @@ static int ufshpb_issue_umap_req(struct 
+> ufshpb_lu *hpb,
+>  	return -EAGAIN;
+>  }
+> 
+> +static int ufshpb_issue_umap_single_req(struct ufshpb_lu *hpb,
+> +					struct ufshpb_region *rgn)
+> +{
+> +	return ufshpb_issue_umap_req(hpb, rgn);
+> +}
+> +
+>  static int ufshpb_issue_umap_all_req(struct ufshpb_lu *hpb)
+>  {
+>  	return ufshpb_issue_umap_req(hpb, NULL);
+> @@ -1115,6 +1122,10 @@ static void __ufshpb_evict_region(struct 
+> ufshpb_lu *hpb,
+>  	struct ufshpb_subregion *srgn;
+>  	int srgn_idx;
+> 
+> +
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+No need of this blank line.
 
+Regards,
+Can Guo.
+
+> +	if (hpb->is_hcm && ufshpb_issue_umap_single_req(hpb, rgn))
+> +		return;
+> +
+>  	lru_info = &hpb->lru_info;
+> 
+>  	dev_dbg(&hpb->sdev_ufs_lu->sdev_dev, "evict region %d\n", 
+> rgn->rgn_idx);
+> @@ -1855,6 +1866,7 @@ ufshpb_sysfs_attr_show_func(rb_noti_cnt);
+>  ufshpb_sysfs_attr_show_func(rb_active_cnt);
+>  ufshpb_sysfs_attr_show_func(rb_inactive_cnt);
+>  ufshpb_sysfs_attr_show_func(map_req_cnt);
+> +ufshpb_sysfs_attr_show_func(umap_req_cnt);
+> 
+>  static struct attribute *hpb_dev_stat_attrs[] = {
+>  	&dev_attr_hit_cnt.attr,
+> @@ -1863,6 +1875,7 @@ static struct attribute *hpb_dev_stat_attrs[] = {
+>  	&dev_attr_rb_active_cnt.attr,
+>  	&dev_attr_rb_inactive_cnt.attr,
+>  	&dev_attr_map_req_cnt.attr,
+> +	&dev_attr_umap_req_cnt.attr,
+>  	NULL,
+>  };
+> 
+> @@ -1978,6 +1991,7 @@ static void ufshpb_stat_init(struct ufshpb_lu 
+> *hpb)
+>  	hpb->stats.rb_active_cnt = 0;
+>  	hpb->stats.rb_inactive_cnt = 0;
+>  	hpb->stats.map_req_cnt = 0;
+> +	hpb->stats.umap_req_cnt = 0;
+>  }
+> 
+>  static void ufshpb_param_init(struct ufshpb_lu *hpb)
+> diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+> index bd4308010466..84598a317897 100644
+> --- a/drivers/scsi/ufs/ufshpb.h
+> +++ b/drivers/scsi/ufs/ufshpb.h
+> @@ -186,6 +186,7 @@ struct ufshpb_stats {
+>  	u64 rb_inactive_cnt;
+>  	u64 map_req_cnt;
+>  	u64 pre_req_cnt;
+> +	u64 umap_req_cnt;
+>  };
+> 
+>  struct ufshpb_lu {
