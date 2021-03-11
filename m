@@ -2,159 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5331AC4332B
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 00:54:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9AA6C433E9
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 01:08:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 157BF64FCE
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 00:54:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9369264E92
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 01:08:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229696AbhCKAx4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Mar 2021 19:53:56 -0500
-Received: from gateway22.websitewelcome.com ([192.185.46.187]:32875 "EHLO
-        gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229646AbhCKAxs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 Mar 2021 19:53:48 -0500
-Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
-        by gateway22.websitewelcome.com (Postfix) with ESMTP id AA1F714A8B
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2021 18:06:53 -0600 (CST)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id K8qrlH7ljkscSK8qrlEOd9; Wed, 10 Mar 2021 18:06:53 -0600
-X-Authority-Reason: nr=8
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=tnn1NfTKvXdkVIEGC71LezrIsubA1kaJf3yIpzYvmrw=; b=e+baLI1+wGugzndicla0y8r6ra
-        Bh3nfj10AzCJsqYjoN3r84Wk6xyuLEXoiaw54rMwj7wxfrfvRmaYcpNvCqgxHIPZ6FxplUcaHmrx/
-        tUPUTJRLDTRcTWViV6FYLZucybJA1V4fs9ePe8EEAk9yM3n1PMNMpjAxNdyw4gQEnfaSWbfhKOBpl
-        1MSEqsPSDcp98MDr9o1ENaAD21P9lG+Q8D/XAx61Lvt6P+ySxUz6QNHU7QEdSRFta8+9ogP95yN1X
-        oztU4tiHrCeOShRuorn/P0H2HpoQwJDRD79wzaz8rQFSFQ6gL4DWeVfoVCuva0CsBfQtqw+f2gZjl
-        lgm3fhLQ==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:36282 helo=[192.168.15.8])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.93)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1lK8qr-004JNM-72; Wed, 10 Mar 2021 18:06:53 -0600
-Subject: Re: [PATCH v2][next] scsi: mpt3sas: Replace one-element array with
- flexible-array in struct _MPI2_CONFIG_PAGE_IO_UNIT_3
-To:     Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     James Bottomley <jejb@linux.ibm.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-References: <20210202235118.GA314410@embeddedor>
- <20210308193237.GA212624@embeddedor>
- <88d9dda39a70df25b48e72247b9752d3dc5e2e8d.camel@linux.ibm.com>
- <20210308204129.GA214076@embeddedor> <202103101058.16ED27BE3@keescook>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <855e73f8-9b84-25b9-01e3-8ce368165b25@embeddedor.com>
-Date:   Wed, 10 Mar 2021 18:06:52 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        id S229641AbhCKBII (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Mar 2021 20:08:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56764 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229520AbhCKBHj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2021 20:07:39 -0500
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D29DDC061574;
+        Wed, 10 Mar 2021 17:07:38 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id D65C61280622;
+        Wed, 10 Mar 2021 17:07:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1615424856;
+        bh=rPT+VYV1+Cvgf3klr7B1cClAbrNcSs/uscoE5EBQ0nc=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=p12GzutZqy8xcUa2GnBy4AOa+gxAVmux6akGb/gVO8WcPowOFQyN5jmyE52Lyz7/r
+         BnDxvXjx8FggJ+nr1mNWUTNHncvcWJIEcSSWGK5if6n5S5UvFcoGs9xCV/aH6Zx5oI
+         cLwFa94vi+9FtHBA27LQV/mVFHIhmeEXGaeMba6U=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id gW20K4LJnFMI; Wed, 10 Mar 2021 17:07:36 -0800 (PST)
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:600:8280:66d1::527])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id AA7E31280610;
+        Wed, 10 Mar 2021 17:07:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1615424856;
+        bh=rPT+VYV1+Cvgf3klr7B1cClAbrNcSs/uscoE5EBQ0nc=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=p12GzutZqy8xcUa2GnBy4AOa+gxAVmux6akGb/gVO8WcPowOFQyN5jmyE52Lyz7/r
+         BnDxvXjx8FggJ+nr1mNWUTNHncvcWJIEcSSWGK5if6n5S5UvFcoGs9xCV/aH6Zx5oI
+         cLwFa94vi+9FtHBA27LQV/mVFHIhmeEXGaeMba6U=
+Message-ID: <d93321502a3df2f7afa42da417137d79f6e49961.camel@HansenPartnership.com>
+Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB)
+ subsystem
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Linus Walleij <linus.walleij@linaro.org>,
+        Sumit Garg <sumit.garg@linaro.org>
+Cc:     Hector Martin <marcan@marcan.st>, Arnd Bergmann <arnd@linaro.org>,
+        "open list:ASYMMETRIC KEYS" <keyrings@vger.kernel.org>,
+        David Howells <dhowells@redhat.com>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Joakim Bech <joakim.bech@linaro.org>,
+        Alex =?ISO-8859-1?Q?Benn=E9e?= <alex.bennee@linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Maxim Uvarov <maxim.uvarov@linaro.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        Ruchika Gupta <ruchika.gupta@linaro.org>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>, yang.huang@intel.com,
+        bing.zhu@intel.com, Matti.Moell@opensynergy.com,
+        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>
+Date:   Wed, 10 Mar 2021 17:07:34 -0800
+In-Reply-To: <CACRpkdZb5UMyq5qSJE==3ZnH-7fh92q_t4AnE8mPm0oFEJxqpQ@mail.gmail.com>
+References: <20210303135500.24673-1-alex.bennee@linaro.org>
+         <20210303135500.24673-2-alex.bennee@linaro.org>
+         <CAK8P3a0W5X8Mvq0tDrz7d67SfQA=PqthpnGDhn8w1Xhwa030-A@mail.gmail.com>
+         <20210305075131.GA15940@goby>
+         <CAK8P3a0qtByN4Fnutr1yetdVZkPJn87yK+w+_DAUXOMif-13aA@mail.gmail.com>
+         <CACRpkdb4RkQvDBgTMW_+7yYBsHNRyJZiT5bn04uQJgk7tKGDOA@mail.gmail.com>
+         <6c542548-cc16-af68-c755-df52bd13b209@marcan.st>
+         <CAFA6WYOYmTgguVDwpyjnt3gLssqW48qzAkRD_nyPYg0nNhxT2A@mail.gmail.com>
+         <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st>
+         <CAFA6WYMSJxK2CjmoLJ6mdNNEfOQOMVXZPbbFRfah7KLeZNfguw@mail.gmail.com>
+         <CACRpkdZb5UMyq5qSJE==3ZnH-7fh92q_t4AnE8mPm0oFEJxqpQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-In-Reply-To: <202103101058.16ED27BE3@keescook>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1lK8qr-004JNM-72
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.8]) [187.162.31.110]:36282
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 9
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Thu, 2021-03-11 at 01:49 +0100, Linus Walleij wrote:
+> The use case for TPM on laptops is similar: it can be used by a
+> provider to lock down a machine, but it can also be used by the
+> random user to store keys. Very few users beside James
+> Bottomley are capable of doing that (I am not)
+
+Yes, that's the problem with the TPM: pretty much no-one other than
+someone prepared to become an expert in the subject can use it.  This
+means that enabling RPMB is unlikely to be useful ... you have to
+develop easy use cases for it as well.
+
+>  but they exist.
+> https://blog.hansenpartnership.com/using-your-tpm-as-a-secure-key-store/
+
+It's the difficulty of actually *using* the thing as a keystore which
+causes the problem.   The trick to expanding use it to make it simple.
+Not to derail the thread, but this should hopefully become a whole lot
+easier soon.  Gnupg-2.3 will release with easy to use TPM support for
+all your gpg keys:
+
+https://git.gnupg.org/cgi-bin/gitweb.cgi?p=gnupg.git;a=log;h=6720f1343aef9342127380b155c19e12c92d65ac
+
+It's not the end of the road by any means, but hopefully it will become
+a beach head of sorts for more uses.
+
+James
 
 
-On 3/10/21 13:07, Kees Cook wrote:
-
->> diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
->> index 43a3bf8ff428..d00431f553e1 100644
->> --- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
->> +++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
->> @@ -992,7 +992,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1 {
->>   *one and check the value returned for GPIOCount at runtime.
->>   */
->>  #ifndef MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX
->> -#define MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX    (1)
->> +#define MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX    (36)
->>  #endif
->>
->>  typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_3 {
->> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
->> index 44f9a05db94e..23fcf29bfd67 100644
->> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
->> @@ -3203,7 +3203,7 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
->>  {
->>         struct Scsi_Host *shost = class_to_shost(cdev);
->>         struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
->> -       Mpi2IOUnitPage3_t *io_unit_pg3 = NULL;
->> +       Mpi2IOUnitPage3_t io_unit_pg3;
->>         Mpi2ConfigReply_t mpi_reply;
->>         u16 backup_rail_monitor_status = 0;
->>         u16 ioc_status;
->> @@ -3221,16 +3221,10 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
->>                 goto out;
->>
->>         /* allocate upto GPIOVal 36 entries */
->> -       sz = offsetof(Mpi2IOUnitPage3_t, GPIOVal) + (sizeof(u16) * 36);
->> -       io_unit_pg3 = kzalloc(sz, GFP_KERNEL);
->> -       if (!io_unit_pg3) {
->> -               rc = -ENOMEM;
->> -               ioc_err(ioc, "%s: failed allocating memory for iounit_pg3: (%d) bytes\n",
->> -                       __func__, sz);
->> -               goto out;
->> -       }
->> +       sz = sizeof(io_unit_pg3);
->> +       memset(&io_unit_pg3, 0, sz);
-> 
-> I like this a lot. It makes the code way simpler.
-> 
-> Putting this on the stack makes it faster, and it's less than 100 bytes,
-> which seems entirely reasonable.
-> 
->>
->> -       if (mpt3sas_config_get_iounit_pg3(ioc, &mpi_reply, io_unit_pg3, sz) !=
->> +       if (mpt3sas_config_get_iounit_pg3(ioc, &mpi_reply, &io_unit_pg3, sz) !=
-> 
-> The only thing I can imagine is if this ends up doing DMA, which isn't
-> allowed on the stack. However, in looking down through the call path,
-> it's _copied_ into DMA memory, so this appears entirely safe.
->  
-> Can you send this as a "normal" patch? Feel free to include:
-> 
-> Reviewed-by: Kees Cook <keescook@chromium.org>
-
-Done: https://lore.kernel.org/lkml/20210310235951.GA108661@embeddedor/
-
-Thanks for the comments!
---
-Gustavo
