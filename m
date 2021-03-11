@@ -2,166 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4F8FC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 18:43:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0171C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 19:05:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74E4964FE0
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 18:43:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABBF264FE0
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 19:05:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229774AbhCKSmt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Mar 2021 13:42:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35974 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230137AbhCKSmo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 11 Mar 2021 13:42:44 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPS id 5C14C64DEE
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Mar 2021 18:42:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615488164;
-        bh=J/326Z5F+TLnIDvzpLWG1y3I4FM1LoHdUndQeowGCwA=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=bFI8DCNa2Qama8SspGhS3fMwZtFNUoCbJqqKN/DP9MJmES8b3I/TKHIHqOvLlQCCw
-         E9kAUXOm3AsZtA/5j27vFmPCmuM/C2YfWNG8lKK2N0p34l5uRUuFCS3hAuVBEq9WHx
-         e4mV3D5LPO5yB2iAYhZJ6kqjyM3apea7YXpEYLvf+i0HS5PDeNmHZcFU+Hj0wpTyBp
-         4ZzD1qE1A3LxyCpJrRkdlzY0IhA7ycNHwEffvfRYsB2jC3oufBYFDU+0fBW4BwL9cM
-         CE5aLUtKfL0kN0e3o/Cgq5Rnuw8JqSXnObECIRYsJzK9/bmNIylt4XkCXSud+BuDg2
-         WfZthRlvVzNjw==
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 212183] st read statistics inaccurate when requested and
- physical block mismatch
-Date:   Thu, 11 Mar 2021 18:42:44 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: low
-X-Bugzilla-Who: kai.makisara@kolumbus.fi
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-212183-11613-dbRt4d1VIG@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-212183-11613@https.bugzilla.kernel.org/>
-References: <bug-212183-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
-MIME-Version: 1.0
+        id S230047AbhCKTEq convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Mar 2021 14:04:46 -0500
+Received: from fgw20-4.mail.saunalahti.fi ([62.142.5.107]:49113 "EHLO
+        fgw20-4.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229938AbhCKTEb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 11 Mar 2021 14:04:31 -0500
+Received: from imac.makisara.private (87-92-207-71.rev.dnainternet.fi [87.92.207.71])
+        by fgw20.mail.saunalahti.fi (Halon) with ESMTPSA
+        id 9b8aa21e-829c-11eb-ba24-005056bd6ce9;
+        Thu, 11 Mar 2021 21:04:30 +0200 (EET)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.60.0.2.21\))
+Subject: Re: [PATCH] st: reject MTIOCTOP mt_count values out of range for the
+ SPACE(6) scsi command
+From:   =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= 
+        <kai.makisara@kolumbus.fi>
+In-Reply-To: <CA+-=Uwah2MS_aD+PeSBkQa_=1wCD+3=g6W4PvLnbJ_-px8G97g@mail.gmail.com>
+Date:   Thu, 11 Mar 2021 21:04:27 +0200
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Content-Transfer-Encoding: 8BIT
+Message-Id: <ECFDF4C4-C716-4174-8493-B325851CC28B@kolumbus.fi>
+References: <CA+-=Uwah2MS_aD+PeSBkQa_=1wCD+3=g6W4PvLnbJ_-px8G97g@mail.gmail.com>
+To:     Patrick Strateman <patrick.strateman@gmail.com>
+X-Mailer: Apple Mail (2.3654.60.0.2.21)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D212183
+I am sorry that this is response has taken too long…
 
---- Comment #1 from Kai M=C3=A4kisara (kai.makisara@kolumbus.fi) ---
-> On 9. Mar 2021, at 16.34, bugzilla-daemon@bugzilla.kernel.org wrote:
->=20
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D212183
->=20
->            Bug ID: 212183
->           Summary: st read statistics inaccurate when requested and
->                    physical block mismatch
->           Product: IO/Storage
->           Version: 2.5
->    Kernel Version: 5.3.1
->          Hardware: All
->                OS: Linux
->              Tree: Mainline
->            Status: NEW
->          Severity: low
->          Priority: P1
->         Component: SCSI
->          Assignee: linux-scsi@vger.kernel.org
->          Reporter: etienne.mollier@cgg.com
->        Regression: No
->=20
-> Created attachment 295769
->  --> https://bugzilla.kernel.org/attachment.cgi?id=3D295769&action=3Dedit
-> st.c patch working around stats issue when blocks size mismatch
->=20
-> Greetings,
->=20
-> when reading from tape with requested blocks larger than physical, statis=
-tics
-> go wrong as using the requested size for the calculation, instead of the
-> actual
+Martin suggested adding support for SPACE(16) and you said that you are willing to implement
+that. I think this is the correct direction. I think that there are still in use old drives that don’t
+support SPACE(16) and it is good if these are not forgotten.
 
-=E2=80=A6
-
-The code around your suggested patch looks like this:
-
-                if (scsi_req(req)->result) {
-                        atomic64_add(atomic_read(&STp->stats->last_read_siz=
-e)
-                                - STp->buffer->cmdstat.residual,
-                                &STp->stats->read_byte_cnt);
-                        if (STp->buffer->cmdstat.residual > 0)
-                                atomic64_inc(&STp->stats->resid_cnt);
-                } else
-                        atomic64_add(atomic_read(&STp->stats->last_read_siz=
-e),
-                                &STp->stats->read_byte_cnt);
-
-Your patch makes the else branch look like the first command in the
-if branch. If the SILI option bit is not set, the command result should be
-non-zero when the read block is shorter than the requested size. If the
-SILI bit is set, this is not considered error and the else part is executed.
-Your patch applies to this case?
-
-If we trust that the residual (resid_len) is set correctly, the conditional
-branches could be omitted and the residual could be subtracted always:
------
--diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 841ad2fc369a..4f1f2abfbca3 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -498,15 +498,11 @@ static void st_do_stats(struct scsi_tape *STp, struct
-request *req)
-                atomic64_add(ktime_to_ns(now), &STp->stats->tot_read_time);
-                atomic64_add(ktime_to_ns(now), &STp->stats->tot_io_time);
-                atomic64_inc(&STp->stats->read_cnt);
--               if (scsi_req(req)->result) {
--                       atomic64_add(atomic_read(&STp->stats->last_read_siz=
-e)
--                               - STp->buffer->cmdstat.residual,
--                               &STp->stats->read_byte_cnt);
--                       if (STp->buffer->cmdstat.residual > 0)
--                               atomic64_inc(&STp->stats->resid_cnt);
--               } else
--                       atomic64_add(atomic_read(&STp->stats->last_read_siz=
-e),
--                               &STp->stats->read_byte_cnt);
-+               atomic64_add(atomic_read(&STp->stats->last_read_size)
-+                            - STp->buffer->cmdstat.residual,
-+                            &STp->stats->read_byte_cnt);
-+               if (STp->buffer->cmdstat.residual > 0)
-+                       atomic64_inc(&STp->stats->resid_cnt);
-        } else {
-                now =3D ktime_sub(now, STp->stats->other_time);
-                atomic64_add(ktime_to_ns(now), &STp->stats->tot_io_time);
-----
-
-Opinions? (I don=E2=80=99t nowadays have access to any reasonable SCSI tape=
- drive to
-test
-this.)
+In case you want the interim patch applied to prevent incorrect results with SPACE(6), I support that.
 
 Thanks,
 Kai
 
---=20
-You may reply to this email to add a comment.
 
-You are receiving this mail because:
-You are the assignee for the bug.=
+> On 13. Jan 2021, at 4.24, Patrick Strateman <patrick.strateman@gmail.com> wrote:
+> 
+> Values greater than 0x7FFFFF do not fit in the 24 bit big endian two's
+> complement integer for the underlying scsi SPACE(6) command.
+> 
+> Signed-off-by: Patrick Strateman <patrick.strateman@gmail.com>
+
+Acked-by: Kai Mäkisara <kai.makisara@kolumbus.fi>
+
+> ---
+> drivers/scsi/st.c | 16 ++++++++++++++++
+> 1 file changed, 16 insertions(+)
+> 
+> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+> index 43f7624508a9..190fa678d149 100644
+> --- a/drivers/scsi/st.c
+> +++ b/drivers/scsi/st.c
+> @@ -2719,6 +2719,22 @@ static int st_int_ioctl(struct scsi_tape *STp,
+> unsigned int cmd_in, unsigned lon
+>     blkno = STps->drv_block;
+>     at_sm = STps->at_sm;
+> 
+> +    switch (cmd_in) {
+> +    case MTFSFM:
+> +    case MTFSF:
+> +    case MTBSFM:
+> +    case MTBSF:
+> +    case MTFSR:
+> +    case MTBSR:
+> +    case MTFSS:
+> +    case MTBSS:
+> +        // count field for SPACE(6) is a 24 bit big endian two's
+> complement integer
+> +        if (arg > 0x7FFFFF) {
+> +            st_printk(ST_DEB_MSG, STp, "Cannot space more than
+> 0x7FFFFF units.\n");
+> +            return (-EINVAL);
+> +        }
+> +    }
+> +
+>     memset(cmd, 0, MAX_COMMAND_SIZE);
+>     switch (cmd_in) {
+>     case MTFSFM:
+
