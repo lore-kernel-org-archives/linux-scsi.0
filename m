@@ -4,36 +4,34 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88B48C433E9
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 09:23:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B5F2C43381
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 09:46:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A85B64FB8
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 09:23:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3107964FDE
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Mar 2021 09:46:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231882AbhCKJW5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Mar 2021 04:22:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49946 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231759AbhCKJWw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 04:22:52 -0500
-Received: from mail.marcansoft.com (marcansoft.com [IPv6:2a01:298:fe:f::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FA5AC061574;
-        Thu, 11 Mar 2021 01:22:51 -0800 (PST)
+        id S232129AbhCKJqA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Mar 2021 04:46:00 -0500
+Received: from [212.63.208.185] ([212.63.208.185]:49688 "EHLO
+        mail.marcansoft.com" rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S232152AbhCKJpp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2021 04:45:45 -0500
+X-Greylist: delayed 71604 seconds by postgrey-1.27 at vger.kernel.org; Thu, 11 Mar 2021 04:45:44 EST
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
         (No client certificate requested)
         (Authenticated sender: marcan@marcan.st)
-        by mail.marcansoft.com (Postfix) with ESMTPSA id CD16C41ECC;
-        Thu, 11 Mar 2021 09:22:43 +0000 (UTC)
-To:     Linus Walleij <linus.walleij@linaro.org>
-Cc:     David Howells <dhowells@redhat.com>, keyrings@vger.kernel.org,
+        by mail.marcansoft.com (Postfix) with ESMTPSA id D365C4246F;
+        Thu, 11 Mar 2021 09:45:32 +0000 (UTC)
+To:     Linus Walleij <linus.walleij@linaro.org>,
+        Sumit Garg <sumit.garg@linaro.org>
+Cc:     Arnd Bergmann <arnd@linaro.org>,
+        "open list:ASYMMETRIC KEYS" <keyrings@vger.kernel.org>,
+        David Howells <dhowells@redhat.com>,
         Jarkko Sakkinen <jarkko@kernel.org>,
-        Sumit Garg <sumit.garg@linaro.org>,
-        Arnd Bergmann <arnd@linaro.org>,
         Joakim Bech <joakim.bech@linaro.org>,
         =?UTF-8?Q?Alex_Benn=c3=a9e?= <alex.bennee@linaro.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
@@ -55,18 +53,17 @@ References: <20210303135500.24673-1-alex.bennee@linaro.org>
  <6c542548-cc16-af68-c755-df52bd13b209@marcan.st>
  <CAFA6WYOYmTgguVDwpyjnt3gLssqW48qzAkRD_nyPYg0nNhxT2A@mail.gmail.com>
  <beca6bc8-8970-bd01-8de0-6ded1fb69be2@marcan.st>
- <CACRpkdbQks5pRFNHkNLVvLHCBhh0XCv7pHYq25EVAbU60PcwsA@mail.gmail.com>
- <0a26713a-8988-1713-4358-bc62364b9e25@marcan.st>
- <CACRpkda9f-BNmu-CaNsghnDoOcSXvvvji=tag2Xos+tg_nNZ0w@mail.gmail.com>
+ <CAFA6WYMSJxK2CjmoLJ6mdNNEfOQOMVXZPbbFRfah7KLeZNfguw@mail.gmail.com>
+ <CACRpkdZb5UMyq5qSJE==3ZnH-7fh92q_t4AnE8mPm0oFEJxqpQ@mail.gmail.com>
 From:   Hector Martin <marcan@marcan.st>
 Subject: Re: [RFC PATCH 1/5] rpmb: add Replay Protected Memory Block (RPMB)
  subsystem
-Message-ID: <32bdceb1-e70d-7481-96e3-a064a7108eb9@marcan.st>
-Date:   Thu, 11 Mar 2021 18:22:41 +0900
+Message-ID: <e5d3f4b5-748e-0700-b897-393187b2bb1a@marcan.st>
+Date:   Thu, 11 Mar 2021 18:45:30 +0900
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.6.0
 MIME-Version: 1.0
-In-Reply-To: <CACRpkda9f-BNmu-CaNsghnDoOcSXvvvji=tag2Xos+tg_nNZ0w@mail.gmail.com>
+In-Reply-To: <CACRpkdZb5UMyq5qSJE==3ZnH-7fh92q_t4AnE8mPm0oFEJxqpQ@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: es-ES
 Content-Transfer-Encoding: 8bit
@@ -74,102 +71,70 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/03/2021 09.36, Linus Walleij wrote:
->> It is not intended to store keys in a way that is somehow safer than
->> other mechanisms. After all, you need to securely store the RPMB key to
->> begin with; you might as well use that to encrypt a keystore on any
->> random block device.
-> 
-> The typical use-case mentioned in one reference is to restrict
-> the number of password/pin attempts and  combine that with
-> secure time to make sure that longer and longer intervals are
-> required between password attempts.
-> 
-> This seems pretty neat to me.
+On 11/03/2021 09.49, Linus Walleij wrote:
+> The use case for TPM on laptops is similar: it can be used by a
+> provider to lock down a machine, but it can also be used by the
+> random user to store keys. Very few users beside James
+> Bottomley are capable of doing that (I am not) but they exist.
+> https://blog.hansenpartnership.com/using-your-tpm-as-a-secure-key-store/
 
-Yes, but to implement that you don't need any secure storage *at all*. 
-If all the RPMB did was authenticate an incrementing counter, you could 
-just store the <last timestamp, attempts remaining> tuple inside a blob 
-of secure (encrypted and MACed) storage on any random Flash device, 
-along with the counter value, and thus prevent rollbacks that way (some 
-finer design points are needed to deal with power loss protection and 
-ordering, but the theory holds).
+I've used a TPM as an SSH key keystore in the past (these days I use 
+YubiKeys, but same idea). TPMs are useful because they *do* implement 
+policy and cryptographic operations. So you can, in fact, get security 
+guarantees out of a TPM without secureboot.
 
-Basically what I'm saying is that for security *guarantee* purposes, 
-AFAICT the storage part of RPMB makes no difference. It is useful in 
-practical implementations for various reasons, but if you think you can 
-use that secure storage to provide security properties which you 
-couldn't do otherwise, you are probably being misled. If you're trying 
-to understand what having RPMB gets you over not having it, it helps if 
-you ignore all the storage stuff and just view it as a single secure, 
-increment-only counter.
+For example, assuming the TPM is secure, it is impossible to clone an 
+SSH key private key managed by a TPM. This means that any usage has to 
+be on-device, which provides inherent rate-limiting. Then, the TPM can 
+gate access to the key based on a passphrase, which again provides 
+inherent rate-limits on cracking attempts. TPM 2.0 devices also provide 
+explicit count limits and time-based throttling for unlocking attempts.
 
-> 
->> But RPMB does not enforce any of this policy for you. RPMB only gives
->> you a primitive: the ability to have storage that cannot be externally
->> rolled back. So none of this works unless the entire system is set up to
->> securely boot all the way until the drive unlock happens, and there are
->> no other blatant code execution avenues.
-> 
-> This is true for firmware anti-rollback or say secure boot.
-> 
-> But RPMB can also be used for example for restricting the
-> number of PIN attempts.
-> 
-> A typical attack vector on phones (I think candybar phones
-> even) was a robot that was punching PIN codes to unlock
-> the phone, combined with an electronic probe that would
-> cut the WE (write enable) signal to the flash right after
-> punching a code. The counter was stored in the flash.
-> 
-> (A bit silly example as this can be countered by reading back
-> the counter from flash and checking etc, but you get the idea,
-> various versions of this attack is possible,)
-> 
-> With RPMB this can be properly protected against because
-> the next attempt can not be made until after the RPMB
-> monotonic counter has been increased.
+We have much the same story with the Secure Enclave Processor on Apple 
+Silicon machines (which I'm working on porting Linux to) - it provides 
+policy, and can even authenticate with fingerprints (there is a hardware 
+secure channel between the reader and the SEP) as well as passphrases. 
+For all intents and purposes it is an Apple-managed TPM (with its own 
+secureboot). So it is similarly useful for us to support the SEP for key 
+storage, and perhaps even integrate it with kernel subsystems at some 
+point. It's useful for our regular users, even though they are unlikely 
+to be running with full secureboot on the main CPU (though Apple's 
+implementation does allow for a user-controlled secureboot subset, and 
+it should be possible to provide hard guarantees there as well, but I 
+digress).
 
-But this is only enforced by software. If you do not have secure boot, 
-you can just patch software to allow infinite tries without touching the 
-RPMB. The RPMB doesn't check PINs for you, it doesn't even gate read 
-access to data in any way. All it does is promise you cannot make the 
-counter count down, or make the data stored within go back in time.
+All of these things make putting keys into TPMs, YubiKeys, the SEP, etc 
+a useful thing for anyone, regardless of whether their machine is locked 
+down or not.
 
-> Of course the system can be compromised in other ways,
-> (like, maybe it doesn't even have secure boot or even
-> no encrypted drive) but this is one of the protection
-> mechanisms that can plug one hole.
+This is not the case for RPMB. RPMB *relies* on the software running on 
+the other side being trusted. RPMB, alone, provides zero new security 
+guarantees, without trusted software communicating with it.
 
-This is hot how security systems are designed though; you do not "plug 
-holes", what you do is cover more attack scenarios, and you do that in 
-the order from simplest to hardest.
+The key initialization story is also a lot thornier in RPMB. TPMs, the 
+SEP, and YubiKeys are all designed so that they can be factory-reset 
+(losing all key material in the process) by a user with physical access, 
+which means that provisioning operations and experiments are risk-free, 
+and the only danger is data loss, not making the hardware less useful. 
+With the MAC key provisioning for RPMB being a one-time process, it is 
+inherently a very risky operation that a user must commit to with great 
+care, as they only get one chance, ever. Better have that key backed up 
+somewhere (but not somewhere an attacker can get to... see the 
+problem?). This is like fusing secureboot keys on SoCs (I remember being 
+*very* nervous about hitting <enter> on the command to fuse a Tegra X1 
+board with a secureboot key for some experiments... these kinds of 
+irreversible things are no joke).
 
-If we are trying to crack the PIN on a device we have physical access 
-to, the simplest and most effective attack is to just run your own 
-software on the machine, extract whatever hash or material you need to 
-validate PINs, and do it offline.
-
-To protect against that, you first need to move the PIN checking into a 
-trust domain where an attacker with physical access can't easily break 
-in, which means secure boot.
-
-*Then* the next simplest attack is a secure storage rollback attack, 
-which is what I described in that blog post about iOS. And *now* it 
-makes sense to start thinking about the RPMB.
-
-But RPMB alone doesn't make any sense on a system without secure boot. 
-It doesn't change anything; in both cases the simplest attack is to just 
-run your own software.
-
-> It is thus a countermeasure to keyboard emulators and other
-> evil hardware trying to brute force their way past screen
-> locks and passwords. Such devices exist, sadly.
-
-If you're trying to protect against a "dumb" attack with a keyboard 
-emulator that doesn't consider access to physical storage, then you 
-don't need RPMB either; you can just put the PIN unlock counter in a 
-random file.
+Basically, TPMs, SEP, YubiKeys, etc were designed to be generally useful 
+and flexible devices for various crypto and authentication use cases. 
+RPMB was designed for the sole purpose of plugging the secure storage 
+replay exploit for Android phones running TrustZone secure monitors. It 
+doesn't really do anything else; it's just a single low-level primitive 
+and you need to already have an equivalent design that is only missing 
+that piece to get anything from it. And its provisioning model assumes a 
+typical OEM device production pipeline and integration with CPU fusing; 
+it isn't friendly to Linux hackers messing around with securing LUKS 
+unlock attempt counters.
 
 -- 
 Hector Martin (marcan@marcan.st)
