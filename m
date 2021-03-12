@@ -2,116 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36B72C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65B8AC433E9
 	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 07:44:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA03464F80
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 07:44:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CA5C64F85
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 07:44:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231485AbhCLHns (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Mar 2021 02:43:48 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:36536 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230117AbhCLHn0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2021 02:43:26 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12C7dc86071233;
-        Fri, 12 Mar 2021 07:43:24 GMT
+        id S229756AbhCLHoU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Mar 2021 02:44:20 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:40502 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231601AbhCLHoD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2021 02:44:03 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12C7eJMw112996;
+        Fri, 12 Mar 2021 07:43:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=8qXFKuT6IO1m5uaet8RXKHu+iCUWOWC2quXJZUDlw7I=;
- b=B++dp3bCy+i5GbpnQdM45is/1AxuqCQQGBrBqROG37sUTd4WDNInDzO91tCjl/0Vr+sr
- PbNCQ7Xrj2jIHc6n80W5/l6kE4AKj9oSFcoXyKjYluV0/j5/2gIIQf5zz0/TESI7LpmA
- uyeHnb8JlS5bc/GTc43Z2O7nEo0H5TNiaErnkUZRhqIi4yYQKghBThA2V0ST4dfCPg9W
- liM3kWFNmNzCL/H1iYXfU3QVf0mCAaAaOyPZB09qY0vlk0G1XB6IaGUwlONT6W9FamTo
- yvuIue6ZXGNhZZ0i3GZw1kArD1XTmWM8UKLOQo86MRTjOLihjjwxkhAsxJIiQRC5ACHN AQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 373y8c18b6-1
+ bh=x7/XZdway8tgcNq4aGiDhubXVJpHeywX62/iMwMuNN4=;
+ b=SYqe5tYmZt1U6Xkd4fky9p2d5osxD9Ie21bR5m7N+PXWqFgMckAmZn3M0zL2lv+Pnc8N
+ oQ0RRk7KeOH54AjeV7hnf9eaVTZegbo2iKYRzjTSfxaFmSy4kHMzP8E1Q4m1npQbTzB4
+ gdNgVtNXMvnhtyTiXPI8gWwxOptBBGqzQxeMp2hKPEvk6OO6wNiKXz35nt7LWkhlCWO5
+ MSbZS3shMNSpe+mFypbcTSerscTlCDH/QQiEEeOfdeoi58x0G67qB5DtqrPJ/tuGHhCP
+ VFHah8Wb/toEsfkieGYMb+S9mRRHEhXJakGEzkDVQtOAdwc/syYcB406+spmOyx5H+iU RQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 37415rh3ft-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 12 Mar 2021 07:43:24 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12C7ddpM075640;
-        Fri, 12 Mar 2021 07:43:23 GMT
+        Fri, 12 Mar 2021 07:43:56 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12C7dYfX095626;
+        Fri, 12 Mar 2021 07:43:54 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 374kn3q6tx-1
+        by aserp3030.oracle.com with ESMTP id 374kasx9bd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 12 Mar 2021 07:43:22 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 12C7hLC9017303;
-        Fri, 12 Mar 2021 07:43:21 GMT
+        Fri, 12 Mar 2021 07:43:54 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 12C7hqsa017552;
+        Fri, 12 Mar 2021 07:43:52 GMT
 Received: from mwanda (/102.36.221.92)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 12 Mar 2021 07:43:21 +0000
-Date:   Fri, 12 Mar 2021 10:43:14 +0300
+        with ESMTP ; Thu, 11 Mar 2021 23:43:51 -0800
+Date:   Fri, 12 Mar 2021 10:43:44 +0300
 From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     dgilbert@interlog.com
-Cc:     linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: sg: NO_DXFER move to/from kernel buffers
-Message-ID: <YEsbkuW/CoaDxl0L@mwanda>
+To:     Doug Gilbert <dgilbert@interlog.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: sg: Fix a use after free on error in sg_add_sfp()
+Message-ID: <YEsbsPDfYSWbUaqJ@mwanda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
 X-Proofpoint-IMR: 1
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9920 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 malwarescore=0
- spamscore=0 mlxlogscore=999 phishscore=0 adultscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2103120051
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
+ spamscore=0 phishscore=0 bulkscore=0 malwarescore=0 adultscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2103120051
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9920 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 mlxscore=0 phishscore=0
- lowpriorityscore=0 malwarescore=0 suspectscore=0 adultscore=0
- mlxlogscore=999 spamscore=0 bulkscore=0 priorityscore=1501 impostorscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 lowpriorityscore=0
+ impostorscore=0 mlxlogscore=999 malwarescore=0 suspectscore=0 adultscore=0
+ phishscore=0 spamscore=0 priorityscore=1501 bulkscore=0 clxscore=1015
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2103120051
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Douglas Gilbert,
+The SG_LOG() error message dereferences "sfp" so move the kfree down a
+couple lines.
 
-The patch b32ac463cb59: "scsi: sg: NO_DXFER move to/from kernel
-buffers" from Feb 19, 2021, leads to the following static checker
-warning:
+Fixes: af1fc95db445 ("scsi: sg: Replace rq array with xarray")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+ drivers/scsi/sg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	drivers/scsi/sg.c:2990 sg_rq_map_kern()
-	error: uninitialized symbol 'k'.
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 2d4bbc1a1727..79f05afa4407 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -3799,10 +3799,10 @@ sg_add_sfp(struct sg_device *sdp)
+ 	if (rbuf_len > 0) {
+ 		srp = sg_build_reserve(sfp, rbuf_len);
+ 		if (IS_ERR(srp)) {
+-			kfree(sfp);
+ 			err = PTR_ERR(srp);
+ 			SG_LOG(1, sfp, "%s: build reserve err=%ld\n", __func__,
+ 			       -err);
++			kfree(sfp);
+ 			return ERR_PTR(err);
+ 		}
+ 		if (srp->sgat_h.buflen < rbuf_len) {
+-- 
+2.30.1
 
-drivers/scsi/sg.c
-  2972  static int
-  2973  sg_rq_map_kern(struct sg_request *srp, struct request_queue *q, struct request *rqq, int rw_ind)
-  2974  {
-  2975          struct sg_scatter_hold *schp = &srp->sgat_h;
-  2976          struct bio *bio;
-  2977          int k, ln;
-  2978          int op_flags = 0;
-  2979          int num_sgat = schp->num_sgat;
-  2980          int dlen = schp->dlen;
-  2981          int pg_sz = 1 << (PAGE_SHIFT + schp->page_order);
-  2982          int num_segs = (1 << schp->page_order) * num_sgat;
-  2983          int res = 0;
-  2984  
-  2985          SG_LOG(4, srp->parentfp, "%s: dlen=%d, pg_sz=%d\n", __func__, dlen, pg_sz);
-  2986          if (num_sgat <= 0)
-  2987                  return 0;
-  2988          if (rw_ind == WRITE)
-  2989                  op_flags = REQ_SYNC | REQ_IDLE;
-  2990          bio = sg_mk_kern_bio(num_sgat - k);
-                                                ^
-"k" isn't initialized.
-
-  2991          if (!bio)
-  2992                  return -ENOMEM;
-  2993          bio->bi_opf = req_op(rqq) | op_flags;
-  2994  
-  2995          for (k = 0; k < num_sgat && dlen > 0; ++k, dlen -= ln) {
-  2996                  ln = min_t(int, dlen, pg_sz);
-  2997                  if (bio_add_pc_page(q, bio, schp->pages[k], ln, 0) < ln) {
-  2998                          bio_put(bio);
-
-regards,
-dan carpenter
