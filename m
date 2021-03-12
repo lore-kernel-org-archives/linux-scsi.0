@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFEF3C43603
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 09:49:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D0DCC4361B
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 09:49:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1BF264F00
+	by mail.kernel.org (Postfix) with ESMTP id EFA536502A
 	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 09:49:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232988AbhCLJsj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Mar 2021 04:48:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54506 "EHLO
+        id S233215AbhCLJsn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Mar 2021 04:48:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233086AbhCLJsG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2021 04:48:06 -0500
-Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 121F4C061765
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2021 01:48:06 -0800 (PST)
-Received: by mail-wr1-x435.google.com with SMTP id 7so4443978wrz.0
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2021 01:48:05 -0800 (PST)
+        with ESMTP id S233100AbhCLJsJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2021 04:48:09 -0500
+Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB113C061765
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2021 01:48:08 -0800 (PST)
+Received: by mail-wm1-x32d.google.com with SMTP id g8so3402961wmd.4
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2021 01:48:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=eMNrAANtdSm/KApZn99Iy+ukBxQxfETDJsJVLnxM0ss=;
-        b=spXmC2/JKBd/fcKoBaLN9rUOh2lrc8tlt/Qu9hmPrnaeLvL63dpxTr1rk3azNkhEJp
-         llosrA2xyN1pBe3gTj9enA2OyaeYkUPSOl12KZuF7jtIIvQImi/x2W6oFgn9LXvkuF4u
-         82utRDsAJEKoRbxoQxP7mNunsoW+/4xMr6xo3QnXC9Wp5pQbqj4dCD9ENN2J6lhyXr4p
-         9CVAGqSGvuP1Nj3MDNGt218pVtsI0f+zbDmiHSR6Xu5zkt7oMDTUI/qu4wlh2k7Rivl5
-         w3ZCdNiaeo1iCB2fNiYzA6WQXnXxRfmMwJ9J65DSZnq6+LBbBu7472RsKhT30KGSxzjq
-         zU1g==
+        bh=KspmBqbjk4SwVrkpMki278CpteugIPA4FRqHSDe0Ld8=;
+        b=PfGNhCuiylvRyEiNZbO3LIdrXW/jc8eL59kkSyl0fViEKSTvsMn788NKa9LkvSHVLH
+         4FoPEU09JiF2MA2h1DJYFfxnkP1qKskNvqzfBDULEjOXaBiPIAbd9KAsZYtf50acv42U
+         KQO2+3lXXPHEQOnxhf8KMTySQQKLrWDgGjUc2wVPvb6+oFWCSXYxn39ljfOAxVyKSyXE
+         LPG2cZ+0LPQPtEkZAB8jrfbqi3I59gQw1yI1y/8C4evLcB/FPOGPGcLIOA7ncUlrILxv
+         K4hRklub2FTrgHEVXdYEhqHkl7q6ZVG2D/lAw2qpgNCXd8AZaE3yHfvnWwiPUMof3izN
+         Sstg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=eMNrAANtdSm/KApZn99Iy+ukBxQxfETDJsJVLnxM0ss=;
-        b=gWSQNIC1IVe/fOllv/RESQO8ZVpL8uV4P4ek8ViKZe0JE+pUcRr4+KnQgfCEIPDIE9
-         pBinVhgQVGFr9JNzq8A7t/56SONEO+mQdR/7dTV7tYWgcyDC2jljDDwI0kit1hhZrbku
-         MQ9klOIghyI0hYBi/kyANKPzWFx5hcioWKYWNRoCzob00dCSbAPWDpPYBGS03DTPNxnr
-         8+zEfuBpFdhAMAFEVozciLvAU6TqFNpZPjypiP9yB1OEQr4Am+aOSJed32Hg956PxlrY
-         d4kMnlp0toycpLoyM/Wm/ciSrGisjNFkEWk0oMhvoEkVyXDzAATtZ5RYr+pl0GTqN9w0
-         bZ1g==
-X-Gm-Message-State: AOAM532jI8sLhBWIUdEqaK1LyFyYHJNUTwcZWRGWyR4VPt/S1ytSpSn7
-        3uYrcg0jfJv0BauXIT3ujTS/PQ==
-X-Google-Smtp-Source: ABdhPJz+tnrsV1zdhCqwNcgmv8npJAuDGV5x5Q9B4Ny0XY8vHHMg9Ea6dY2WeSjB6/3frN5TEVKzBw==
-X-Received: by 2002:a5d:4521:: with SMTP id j1mr12820216wra.354.1615542484778;
-        Fri, 12 Mar 2021 01:48:04 -0800 (PST)
+        bh=KspmBqbjk4SwVrkpMki278CpteugIPA4FRqHSDe0Ld8=;
+        b=Q55d1bCM1fXlLK8DB8Yf5BXmXCV/DcNeh0yA2CjB8a31dDJGtYjSmy2/GpouUKH69g
+         CvMZiYKCYZuElU9D5h+tjObWUlNS11mD5W25xzOML4t3YupSPG3RWzgiOr3TeI/akikF
+         tfx+ZaaEOe83+7V44JsQx4fNO69t+U5QRwFTLLL48OGrm0SHpRpXr/UTCwT1oLXf8PiA
+         pnxZB9+udodvrx8CJosjg0eYt92ulB8xnM5LPg34l9L5Mo8I1TtRycL2JjCLx4oBAXbE
+         voJTo1ESCiXKeeipNkQSKfpILquJx84DlLM3rIB8HwyDrqPUFoMnW1bmuiFaxRPRitrH
+         xYmw==
+X-Gm-Message-State: AOAM533xHst8JVojkKb16B8qTubU5Pvdy7u79JfCqLwmXeEUlJjrgqYS
+        x0b7MmtdZwmXkC6WMIXMu46fh/USNG1FSw==
+X-Google-Smtp-Source: ABdhPJxEJ4kH9AI7TGyWx1qdbaHektoIOh8enAFviuPK++9j/6n683lyESUY0h4BrPuidfioDst4XQ==
+X-Received: by 2002:a7b:c209:: with SMTP id x9mr12178799wmi.92.1615542487458;
+        Fri, 12 Mar 2021 01:48:07 -0800 (PST)
 Received: from dell.default ([91.110.221.204])
-        by smtp.gmail.com with ESMTPSA id f7sm1539536wmq.11.2021.03.12.01.48.03
+        by smtp.gmail.com with ESMTPSA id f7sm1539536wmq.11.2021.03.12.01.48.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Mar 2021 01:48:04 -0800 (PST)
+        Fri, 12 Mar 2021 01:48:07 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Bradley Grove <linuxdrivers@attotech.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 15/30] scsi: lpfc: lpfc_nvme: Fix kernel-doc formatting issue
-Date:   Fri, 12 Mar 2021 09:47:23 +0000
-Message-Id: <20210312094738.2207817-16-lee.jones@linaro.org>
+Subject: [PATCH 18/30] scsi: esas2r: esas2r_log: Supply __printf(x, y) formatting for esas2r_log_master()
+Date:   Fri, 12 Mar 2021 09:47:26 +0000
+Message-Id: <20210312094738.2207817-19-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210312094738.2207817-1-lee.jones@linaro.org>
 References: <20210312094738.2207817-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -77,31 +77,43 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/lpfc/lpfc_nvme.c:2021: warning: Function parameter or member 'vport' not described in 'lpfc_nvme_create_localport'
+ drivers/scsi/esas2r/esas2r_log.c: In function ‘esas2r_log_master’:
+ drivers/scsi/esas2r/esas2r_log.c:155:3: warning: function ‘esas2r_log_master’ might be a candidate for ‘gnu_printf’ format attribute [-Wsuggest-attribute=format]
 
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: Bradley Grove <linuxdrivers@attotech.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/esas2r/esas2r_log.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 5fe4e93fe984e..4d78eadb65c0a 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2002,7 +2002,7 @@ lpfc_release_nvme_buf(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_ncmd)
+diff --git a/drivers/scsi/esas2r/esas2r_log.c b/drivers/scsi/esas2r/esas2r_log.c
+index b545798e400c4..d6c87a0bae098 100644
+--- a/drivers/scsi/esas2r/esas2r_log.c
++++ b/drivers/scsi/esas2r/esas2r_log.c
+@@ -101,6 +101,11 @@ static const char *translate_esas2r_event_level_to_kernel(const long level)
+ 	}
+ }
  
- /**
-  * lpfc_nvme_create_localport - Create/Bind an nvme localport instance.
-- * @vport - the lpfc_vport instance requesting a localport.
-+ * @vport: the lpfc_vport instance requesting a localport.
++#pragma GCC diagnostic push
++#ifndef __clang__
++#pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
++#endif
++
+ /*
+  * the master logging function.  this function will format the message as
+  * outlined by the formatting string, the input device information and the
+@@ -170,6 +175,8 @@ static int esas2r_log_master(const long level,
+ 	return 0;
+ }
+ 
++#pragma GCC diagnostic pop
++
+ /*
+  * formats and logs a message to the system log.
   *
-  * This routine is invoked to create an nvme localport instance to bind
-  * to the nvme_fc_transport.  It is called once during driver load
 -- 
 2.27.0
 
