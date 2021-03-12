@@ -2,295 +2,301 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C9EDC433DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 08:07:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 040D4C433E9
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 08:07:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D65F64F81
+	by mail.kernel.org (Postfix) with ESMTP id D340164F86
 	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 08:07:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231769AbhCLIG1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S231883AbhCLIG1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 12 Mar 2021 03:06:27 -0500
-Received: from mailout2.samsung.com ([203.254.224.25]:46429 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231477AbhCLIGG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2021 03:06:06 -0500
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20210312080604epoutp0236e110d7e057517a402f6b045b685dbc~ricOkBjZ30714907149epoutp02M
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2021 08:06:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20210312080604epoutp0236e110d7e057517a402f6b045b685dbc~ricOkBjZ30714907149epoutp02M
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1615536364;
-        bh=Sd2qH063k5RDdnf+F4rPAKDiBiRdG11Nwfvv1Q33aUg=;
-        h=Subject:Reply-To:From:To:CC:Date:References:From;
-        b=LeuRgI/jYWbMCeyMUNz9GfHYRQ7D7AAxmbNok2+71l4sIT/naNxKdn43aI55MSCKa
-         k6Vt5bkvc7mGNzExmvok/Ibi7P0GHTl58HzF4s3Bn0D1XJwwG+tSbNEStI8w39amWr
-         P51sR4JcaJTLmoTBx3277l8Y5zcsvoSsDuPUFLUM=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20210312080603epcas2p33c4304c1870a05d1acf519270a4bccdb~ricNtVwxq1756817568epcas2p3U;
-        Fri, 12 Mar 2021 08:06:03 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.40.182]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4Dxdfw4PdDz4x9Q7; Fri, 12 Mar
-        2021 08:06:00 +0000 (GMT)
-X-AuditID: b6c32a46-1efff7000000dbf8-82-604b20e8b1a5
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        5F.90.56312.8E02B406; Fri, 12 Mar 2021 17:06:00 +0900 (KST)
-Mime-Version: 1.0
-Subject: [PATCH v27 0/4] scsi: ufs: Add Host Performance Booster Support
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Greg KH <gregkh@linuxfoundation.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        JinHwan Park <jh.i.park@samsung.com>,
-        Javier Gonzalez <javier.gonz@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20210312080600epcms2p3f04061fbf25f2afb1588fa005541fbce@epcms2p3>
-Date:   Fri, 12 Mar 2021 17:06:00 +0900
-X-CMS-MailID: 20210312080600epcms2p3f04061fbf25f2afb1588fa005541fbce
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDJsWRmVeSWpSXmKPExsWy7bCmme4LBe8Eg8U7FSwezNvGZrG37QS7
-        xcufV9ksDt9+x24x7cNPZotP65exWrw8pGmx6kG4RfPi9WwWc842MFn09m9ls3h85zO7xaIb
-        25gs+v+1s1hc3jWHzaL7+g42i+XH/zFZ3N7CZbF0601Gi87pa1gcRDwuX/H2uNzXy+Sxc9Zd
-        do8Jiw4weuyfu4bdo+XkfhaPj09vsXj0bVnF6PF5k5xH+4FupgCuqBybjNTElNQihdS85PyU
-        zLx0WyXv4HjneFMzA0NdQ0sLcyWFvMTcVFslF58AXbfMHKDnlBTKEnNKgUIBicXFSvp2NkX5
-        pSWpChn5xSW2SqkFKTkFhoYFesWJucWleel6yfm5VoYGBkamQJUJORnnL2UUHDaqWHp3OnMD
-        41v1LkZODgkBE4mjz66zdDFycQgJ7GCU6OmcwdbFyMHBKyAo8XeHMEiNsICHxJs9/1hAbCEB
-        JYn1F2exQ8T1JG49XMMIYrMJ6EhMP3GfHWSOiEAri8S2bxfBHGaB30wSi0/+Z4PYxisxo/0p
-        C4QtLbF9+VZGCFtD4seyXmYIW1Ti5uq37DD2+2PzoWpEJFrvnYWqEZR48HM3VFxS4tjuD0wQ
-        dr3E1ju/GEEWSwj0MEoc3nmLFSKhL3GtYyMLxGe+Eov+OYOEWQRUJabdeAdV4iJxsmM92G3M
-        AvIS29/OYQYpZxbQlFi/Sx/ElBBQljhyiwXmk4aNv9nR2cwCfBIdh//CxXfMewJ1mZrEup/r
-        mSDGyEjcmsc4gVFpFiKgZyFZOwth7QJG5lWMYqkFxbnpqcVGBUbIUbuJEZzMtdx2ME55+0Hv
-        ECMTB+MhRgkOZiUR3gsvvRKEeFMSK6tSi/Lji0pzUosPMZoCPTyRWUo0OR+YT/JK4g1NjczM
-        DCxNLUzNjCyUxHmLDR7ECwmkJ5akZqemFqQWwfQxcXBKNTCplWiLlpT1Xtz4+Zzssn2hYppb
-        AtXYXrXtuZS78rxbbfWuWfISh/Yf8+ipc076OfeF4xIG49da0ys0K1z3378VEn9A75LuvoKg
-        kJwbdeazmzplqp/0ivkmLuRy+6yRk/Uk9b1ZRmNpI9u/RGv20JT6sAdNv3e5+T0yuDpra3eV
-        zgtujg8tS5ZE9TgJL2nqXHsrwufKvdZXTw3jp7/zd+MrPyufp7zzpadduVf0VM8/x47WvruR
-        sD7a+lv5ox8cmgfjM3k3XbWc/UP524os/5t7T15daMNkNuPZmmN5QjcC9lUeljYKKs6c/2RF
-        1kFZ296PXMYnpjivvb7OPSRex6A9zj0j4KbRmQxJNS8PLiWW4oxEQy3mouJEAHdhPq5vBAAA
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210312080600epcms2p3f04061fbf25f2afb1588fa005541fbce
-References: <CGME20210312080600epcms2p3f04061fbf25f2afb1588fa005541fbce@epcms2p3>
+Received: from mga11.intel.com ([192.55.52.93]:26158 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231379AbhCLIGP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 12 Mar 2021 03:06:15 -0500
+IronPort-SDR: wGzF89r+Uk4Hqr4ixcsQHHkwoI4MAMG4r8OMb4a+BclSA5uWnuv92b/zusKQ+DBKHosrfFGwwP
+ +0d1TeUJOgYg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9920"; a="185445881"
+X-IronPort-AV: E=Sophos;i="5.81,242,1610438400"; 
+   d="scan'208";a="185445881"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Mar 2021 00:06:14 -0800
+IronPort-SDR: n2vta9C5gd0SvtO6JCj1byaejDfiiDk264LGZcrd5+Nb4ahnZYa9yy9GENQ0eOTGDh37HYiRCJ
+ AV5DHjpTKyuA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,242,1610438400"; 
+   d="scan'208";a="409779481"
+Received: from ahunter-desktop.fi.intel.com ([10.237.72.76])
+  by orsmga007.jf.intel.com with ESMTP; 12 Mar 2021 00:06:11 -0800
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>, Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH] scsi: ufs-pci: Add support for Intel LKF
+Date:   Fri, 12 Mar 2021 10:06:20 +0200
+Message-Id: <20210312080620.13311-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.17.1
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Changelog:
+Add PCI ID and callbacks to support Intel LKF.
 
-v26 -> v27
-1. Fix wrong refernce of sense buffer in pre_req complete function.
-2. Fix read_id error.
-3. Fix chunk size checking for HPB 1.0.
-4. Mute unnecessary messages before HPB initialization.
+This includes the ability to use an ACPI device-specific method (DSM) to
+perform a UFS device reset.
 
-v25 -> v26
-1. Fix wrong chunk size checking for HPB 1.0.
-2. Fix wrong max data size for HPB single command.
-3. Fix typo error.
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+---
+ drivers/scsi/ufs/ufshcd-pci.c | 169 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 169 insertions(+)
 
-v24 -> v25
-1. Change write buffer API for unmap region.
-2. Add checking hpb_enable for avoiding unnecessary memory allocation.
-3. Change pr_info to dev_info.
-4. Change default requeue timeout value for HPB read.
-5. Fix wrong offset manipulation on ufshpb_prep_entry.
-
-v23 -> v24
-1. Fix build error reported by kernel test robot.
-
-v22 -> v23
-1. Add support compatibility of HPB 1.0.
-2. Fix read id for single HPB read command.
-3. Fix number of pre-allocated requests for write buffer.
-4. Add fast path for response UPIU that has same LUN in sense data.
-5. Remove WARN_ON for preventing kernel crash.
-7. Fix wrong argument for read buffer command.
-
-v21 -> v22
-1. Add support processing response UPIU in suspend state.
-2. Add support HPB hint from other LU.
-3. Add sending write buffer with 0x03 after HPB init.
-
-v20 -> v21
-1. Add bMAX_DATA_SIZE_FOR_HPB_SINGLE_CMD attr. and fHPBen flag support.
-
-v19 -> v20
-1. Add documentation for sysfs entries of hpb->stat.
-2. Fix read buffer command for under-sized sub-region.
-3. Fix wrong condition checking for kick map work.
-4. Delete redundant response UPIU checking.
-5. Add LUN checking in response UPIU.
-6. Fix possible deadlock problem due to runtime PM.
-7. Add instant changing of sub-region state from response UPIU.
-8. Fix endian problem in prefetched PPN.
-9. Add JESD220-3A (HPB v2.0) support.
-
-v18 -> 19
-1. Fix null pointer error when printing sysfs from non-HPB LU.
-2. Apply HPB read opcode in lrbp->cmd->cmnd (from Can Guo's review).
-3. Rebase the patch on 5.12/scsi-queue.
-
-v17 -> v18
-Fix build error which reported by kernel test robot.
-
-v16 -> v17
-1. Rename hpb_state_lock to rgn_state_lock and move it to corresponding
-patch.
-2. Remove redundant information messages.
-
-v15 -> v16
-1. Add missed sysfs ABI documentation.
-
-v14 -> v15
-1. Remove duplicated sysfs ABI entries in documentation.
-2. Add experiment result of HPB performance testing with iozone.
-
-v13 -> v14
-1. Cleanup codes by commentted in Greg's review.
-2. Add documentation for sysfs entries (from Greg's review).
-3. Add experiment result of HPB performance testing.
-
-v12 -> v13
-1. Cleanup codes by comments from Can Guo.
-2. Add HPB related descriptor/flag/attributes in sysfs.
-3. Change base commit from 5.10/scsi-queue to 5.11/scsi-queue.
-
-v11 -> v12
-1. Fixed to return error value when HPB fails to initialize pinned active 
-region.
-2. Fixed to disable HPB feature if HPB fails to allocate essential memory
-and workqueue.
-3. Fixed to change proper sub-region state when region is already evicted.
-
-v10 -> v11
-Add a newline at end the last line on Kconfig file.
-
-v9 -> v10
-1. Fixed 64-bit division error
-2. Fixed problems commentted in Bart's review.
-
-v8 -> v9
-1. Change sysfs initialization.
-2. Change reading descriptor during HPB initialization
-3. Fixed problems commentted in Bart's review.
-4. Change base commit from 5.9/scsi-queue to 5.10/scsi-queue.
-
-v7 -> v8
-Remove wrongly added tags.
-
-v6 -> v7
-1. Remove UFS feature layer.
-2. Cleanup for sparse error.
-
-v5 -> v6
-Change base commit to b53293fa662e28ae0cdd40828dc641c09f133405
-
-v4 -> v5
-Delete unused macro define.
-
-v3 -> v4
-1. Cleanup.
-
-v2 -> v3
-1. Add checking input module parameter value.
-2. Change base commit from 5.8/scsi-queue to 5.9/scsi-queue.
-3. Cleanup for unused variables and label.
-
-v1 -> v2
-1. Change the full boilerplate text to SPDX style.
-2. Adopt dynamic allocation for sub-region data structure.
-3. Cleanup.
-
-NAND flash memory-based storage devices use Flash Translation Layer (FTL)
-to translate logical addresses of I/O requests to corresponding flash
-memory addresses. Mobile storage devices typically have RAM with
-constrained size, thus lack in memory to keep the whole mapping table.
-Therefore, mapping tables are partially retrieved from NAND flash on
-demand, causing random-read performance degradation.
-
-To improve random read performance, JESD220-3 (HPB v1.0) proposes HPB
-(Host Performance Booster) which uses host system memory as a cache for the
-FTL mapping table. By using HPB, FTL data can be read from host memory
-faster than from NAND flash memory. 
-
-The current version only supports the DCM (device control mode).
-This patch consists of 3 parts to support HPB feature.
-
-1) HPB probe and initialization process
-2) READ -> HPB READ using cached map information
-3) L2P (logical to physical) map management
-
-In the HPB probe and init process, the device information of the UFS is
-queried. After checking supported features, the data structure for the HPB
-is initialized according to the device information.
-
-A read I/O in the active sub-region where the map is cached is changed to
-HPB READ by the HPB.
-
-The HPB manages the L2P map using information received from the
-device. For active sub-region, the HPB caches through ufshpb_map
-request. For the in-active region, the HPB discards the L2P map.
-When a write I/O occurs in an active sub-region area, associated dirty
-bitmap checked as dirty for preventing stale read.
-
-HPB is shown to have a performance improvement of 58 - 67% for random read
-workload. [1]
-
-[1]:
-https://www.usenix.org/conference/hotstorage17/program/presentation/jeong
-
-Daejun Park (4):
-  scsi: ufs: Introduce HPB feature
-  scsi: ufs: L2P map management for HPB read
-  scsi: ufs: Prepare HPB read for cached sub-region
-  scsi: ufs: Add HPB 2.0 support
-
- Documentation/ABI/testing/sysfs-driver-ufs |  162 ++
- drivers/scsi/ufs/Kconfig                   |    9 +
- drivers/scsi/ufs/Makefile                  |    1 +
- drivers/scsi/ufs/ufs-sysfs.c               |   22 +
- drivers/scsi/ufs/ufs.h                     |   54 +-
- drivers/scsi/ufs/ufshcd.c                  |   74 +-
- drivers/scsi/ufs/ufshcd.h                  |   29 +
- drivers/scsi/ufs/ufshpb.c                  | 2396 ++++++++++++++++++++
- drivers/scsi/ufs/ufshpb.h                  |  276 +++
- 9 files changed, 3021 insertions(+), 2 deletions(-)
- create mode 100644 drivers/scsi/ufs/ufshpb.c
- create mode 100644 drivers/scsi/ufs/ufshpb.h
-
+diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+index fadd566025b8..23ee828747e2 100644
+--- a/drivers/scsi/ufs/ufshcd-pci.c
++++ b/drivers/scsi/ufs/ufshcd-pci.c
+@@ -15,13 +15,89 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/pm_qos.h>
+ #include <linux/debugfs.h>
++#include <linux/uuid.h>
++#include <linux/acpi.h>
++#include <linux/gpio/consumer.h>
++
++struct ufs_host {
++	void (*late_init)(struct ufs_hba *hba);
++};
++
++enum {
++	INTEL_DSM_FNS		=  0,
++	INTEL_DSM_RESET		=  1,
++};
+ 
+ struct intel_host {
++	struct ufs_host ufs_host;
++	u32		dsm_fns;
+ 	u32		active_ltr;
+ 	u32		idle_ltr;
+ 	struct dentry	*debugfs_root;
++	struct gpio_desc *reset_gpio;
+ };
+ 
++static const guid_t intel_dsm_guid =
++	GUID_INIT(0x1A4832A0, 0x7D03, 0x43CA,
++		  0xB0, 0x20, 0xF6, 0xDC, 0xD1, 0x2A, 0x19, 0x50);
++
++static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
++		       unsigned int fn, u32 *result)
++{
++	union acpi_object *obj;
++	int err = 0;
++	size_t len;
++
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(dev), &intel_dsm_guid, 0, fn, NULL);
++	if (!obj)
++		return -EOPNOTSUPP;
++
++	if (obj->type != ACPI_TYPE_BUFFER || obj->buffer.length < 1) {
++		err = -EINVAL;
++		goto out;
++	}
++
++	len = min_t(size_t, obj->buffer.length, 4);
++
++	*result = 0;
++	memcpy(result, obj->buffer.pointer, len);
++out:
++	ACPI_FREE(obj);
++
++	return err;
++}
++
++static int intel_dsm(struct intel_host *intel_host, struct device *dev,
++		     unsigned int fn, u32 *result)
++{
++	if (fn > 31 || !(intel_host->dsm_fns & (1 << fn)))
++		return -EOPNOTSUPP;
++
++	return __intel_dsm(intel_host, dev, fn, result);
++}
++
++static void intel_dsm_init(struct intel_host *intel_host, struct device *dev)
++{
++	int err;
++
++	err = __intel_dsm(intel_host, dev, INTEL_DSM_FNS, &intel_host->dsm_fns);
++	dev_dbg(dev, "DSM fns %#x, error %d\n", intel_host->dsm_fns, err);
++}
++
++static int ufs_intel_hce_enable_notify(struct ufs_hba *hba,
++				       enum ufs_notify_change_status status)
++{
++	/* Cannot enable ICE until after HC enable */
++	if (status == POST_CHANGE && hba->caps & UFSHCD_CAP_CRYPTO) {
++		u32 hce = ufshcd_readl(hba, REG_CONTROLLER_ENABLE);
++
++		hce |= CRYPTO_GENERAL_ENABLE;
++		ufshcd_writel(hba, hce, REG_CONTROLLER_ENABLE);
++	}
++
++	return 0;
++}
++
+ static int ufs_intel_disable_lcc(struct ufs_hba *hba)
+ {
+ 	u32 attr = UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE);
+@@ -144,6 +220,41 @@ static void intel_remove_debugfs(struct ufs_hba *hba)
+ 	debugfs_remove_recursive(host->debugfs_root);
+ }
+ 
++static int ufs_intel_device_reset(struct ufs_hba *hba)
++{
++	struct intel_host *host = ufshcd_get_variant(hba);
++
++	if (host->dsm_fns & INTEL_DSM_RESET) {
++		u32 result = 0;
++		int err;
++
++		err = intel_dsm(host, hba->dev, INTEL_DSM_RESET, &result);
++		if (!err && !result)
++			err = -EIO;
++		if (err)
++			dev_err(hba->dev, "%s: DSM error %d result %u\n",
++				__func__, err, result);
++		return err;
++	}
++
++	if (!host->reset_gpio)
++		return -EOPNOTSUPP;
++
++	gpiod_set_value_cansleep(host->reset_gpio, 1);
++	usleep_range(10, 15);
++
++	gpiod_set_value_cansleep(host->reset_gpio, 0);
++	usleep_range(10, 15);
++
++	return 0;
++}
++
++static struct gpio_desc *ufs_intel_get_reset_gpio(struct device *dev)
++{
++	/* GPIO in _DSD has active low setting */
++	return devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
++}
++
+ static int ufs_intel_common_init(struct ufs_hba *hba)
+ {
+ 	struct intel_host *host;
+@@ -154,6 +265,23 @@ static int ufs_intel_common_init(struct ufs_hba *hba)
+ 	if (!host)
+ 		return -ENOMEM;
+ 	ufshcd_set_variant(hba, host);
++	intel_dsm_init(host, hba->dev);
++	if (host->dsm_fns & INTEL_DSM_RESET) {
++		if (hba->vops->device_reset)
++			hba->caps |= UFSHCD_CAP_DEEPSLEEP;
++	} else {
++		if (hba->vops->device_reset)
++			host->reset_gpio = ufs_intel_get_reset_gpio(hba->dev);
++		if (IS_ERR(host->reset_gpio)) {
++			dev_err(hba->dev, "%s: failed to get reset GPIO, error %ld\n",
++				__func__, PTR_ERR(host->reset_gpio));
++			host->reset_gpio = NULL;
++		}
++		if (host->reset_gpio) {
++			gpiod_set_value_cansleep(host->reset_gpio, 0);
++			hba->caps |= UFSHCD_CAP_DEEPSLEEP;
++		}
++	}
+ 	intel_ltr_expose(hba->dev);
+ 	intel_add_debugfs(hba);
+ 	return 0;
+@@ -206,6 +334,31 @@ static int ufs_intel_ehl_init(struct ufs_hba *hba)
+ 	return ufs_intel_common_init(hba);
+ }
+ 
++static void ufs_intel_lkf_late_init(struct ufs_hba *hba)
++{
++	/* LKF always needs a full reset, so set PM accordingly */
++	if (hba->caps & UFSHCD_CAP_DEEPSLEEP) {
++		hba->spm_lvl = UFS_PM_LVL_6;
++		hba->rpm_lvl = UFS_PM_LVL_6;
++	} else {
++		hba->spm_lvl = UFS_PM_LVL_5;
++		hba->rpm_lvl = UFS_PM_LVL_5;
++	}
++}
++
++static int ufs_intel_lkf_init(struct ufs_hba *hba)
++{
++	struct ufs_host *ufs_host;
++	int err;
++
++	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
++	hba->caps |= UFSHCD_CAP_CRYPTO;
++	err = ufs_intel_common_init(hba);
++	ufs_host = ufshcd_get_variant(hba);
++	ufs_host->late_init = ufs_intel_lkf_late_init;
++	return err;
++}
++
+ static struct ufs_hba_variant_ops ufs_intel_cnl_hba_vops = {
+ 	.name                   = "intel-pci",
+ 	.init			= ufs_intel_common_init,
+@@ -222,6 +375,16 @@ static struct ufs_hba_variant_ops ufs_intel_ehl_hba_vops = {
+ 	.resume			= ufs_intel_resume,
+ };
+ 
++static struct ufs_hba_variant_ops ufs_intel_lkf_hba_vops = {
++	.name                   = "intel-pci",
++	.init			= ufs_intel_lkf_init,
++	.exit			= ufs_intel_common_exit,
++	.hce_enable_notify	= ufs_intel_hce_enable_notify,
++	.link_startup_notify	= ufs_intel_link_startup_notify,
++	.resume			= ufs_intel_resume,
++	.device_reset		= ufs_intel_device_reset,
++};
++
+ #ifdef CONFIG_PM_SLEEP
+ /**
+  * ufshcd_pci_suspend - suspend power management function
+@@ -321,6 +484,7 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
+ static int
+ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
++	struct ufs_host *ufs_host;
+ 	struct ufs_hba *hba;
+ 	void __iomem *mmio_base;
+ 	int err;
+@@ -358,6 +522,10 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		return err;
+ 	}
+ 
++	ufs_host = ufshcd_get_variant(hba);
++	if (ufs_host && ufs_host->late_init)
++		ufs_host->late_init(hba);
++
+ 	pm_runtime_put_noidle(&pdev->dev);
+ 	pm_runtime_allow(&pdev->dev);
+ 
+@@ -383,6 +551,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x9DFA), (kernel_ulong_t)&ufs_intel_cnl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x4B41), (kernel_ulong_t)&ufs_intel_ehl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x4B43), (kernel_ulong_t)&ufs_intel_ehl_hba_vops },
++	{ PCI_VDEVICE(INTEL, 0x98FA), (kernel_ulong_t)&ufs_intel_lkf_hba_vops },
+ 	{ }	/* terminate list */
+ };
+ 
 -- 
-2.25.1
+2.17.1
 
