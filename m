@@ -2,65 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3580C433E6
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 21:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 399DEC43381
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 22:28:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C511664FD6
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 21:53:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C1AA64F6A
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 22:28:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235371AbhCLVwh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Mar 2021 16:52:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48204 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235347AbhCLVwb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 12 Mar 2021 16:52:31 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPS id 084CE64F73;
-        Fri, 12 Mar 2021 21:52:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615585950;
-        bh=DmeIx9BwxAyci4fTOWp6uYyGctOd9rLpAOz0oaNZw6w=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=KLaCaGEuq2tvxoh4HCcQ/5MePyD8bfro3HVs0guIkI+6UXSI4OwxjSpDVmPwVHein
-         uJiZFWNfK2sWGg4Eapruu1Q+J7v8TrBYe3y/Q2Q1RQAdQ/hi3M6u/Uit3ILEouofKp
-         HX9LqXtFgsj3/RNnIegw7isg6KVbQ6OSxst/1rGPiTxfeuR2EIHBjfirybHz4gFAJe
-         TfaF63bA99m0gpZdLZCQM4SbeTOqphls58RJzvyownKyn8KMgjqM/jinnnjWEnph6Z
-         PJXS89Yge8ihPUjF0uc5xxCO42q2lLaOTQQYG9alzEFNBdlVSEVC1kw9i/2y5zTrUp
-         iqpubiKb1VO3A==
-Subject: Re: [GIT PULL] SCSI fixes for 5.12-rc2
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <a139e36ef462b5a9678edd0e97477ff187d6f1d9.camel@HansenPartnership.com>
-References: <a139e36ef462b5a9678edd0e97477ff187d6f1d9.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <a139e36ef462b5a9678edd0e97477ff187d6f1d9.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 1112963427d6d186f8729cf36fefb70d5ca5a84a
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 9afc1163794707a304f107bf21b8b37e5c6c34f4
-Message-Id: <161558594987.23578.431083380474158862.pr-tracker-bot@kernel.org>
-Date:   Fri, 12 Mar 2021 21:52:29 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S235568AbhCLW1v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Mar 2021 17:27:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49720 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235560AbhCLW1i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2021 17:27:38 -0500
+Received: from smtp.gentoo.org (woodpecker.gentoo.org [IPv6:2001:470:ea4a:1:5054:ff:fec7:86e4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 054A4C061574;
+        Fri, 12 Mar 2021 14:27:38 -0800 (PST)
+Received: by sf.home (Postfix, from userid 1000)
+        id 9FDD95A22061; Fri, 12 Mar 2021 22:27:32 +0000 (GMT)
+From:   Sergei Trofimovich <slyfox@gentoo.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Sergei Trofimovich <slyfox@gentoo.org>, linux-ia64@vger.kernel.org,
+        storagedev@microchip.com, linux-scsi@vger.kernel.org,
+        Joe Szczypek <jszczype@redhat.com>,
+        Scott Benesh <scott.benesh@microchip.com>,
+        Scott Teel <scott.teel@microchip.com>,
+        Tomas Henzl <thenzl@redhat.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Don Brace <don.brace@microchip.com>,
+        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Subject: [PATCH] hpsa: fix boot on ia64 (atomic_t alignment)
+Date:   Fri, 12 Mar 2021 22:27:18 +0000
+Message-Id: <20210312222718.4117508-1-slyfox@gentoo.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <5532f9ab-7555-d51b-f4d5-f9b72a61f248@redhat.com>
+References: <5532f9ab-7555-d51b-f4d5-f9b72a61f248@redhat.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 12 Mar 2021 11:05:45 -0800:
+The failure initially observed as boot failure on rx3600 ia64 machine
+with RAID bus controller: Hewlett-Packard Company Smart Array P600:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+    kernel unaligned access to 0xe000000105dd8b95, ip=0xa000000100b87551
+    kernel unaligned access to 0xe000000105dd8e95, ip=0xa000000100b87551
+    hpsa 0000:14:01.0: Controller reports max supported commands of 0 Using 16 instead. Ensure that firmware is up to date.
+    swapper/0[1]: error during unaligned kernel access
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/9afc1163794707a304f107bf21b8b37e5c6c34f4
+Here unaligned access comes from 'struct CommandList' that happens
+to be packed. The change f749d8b7a ("scsi: hpsa: Correct dev cmds
+outstanding for retried cmds") introduced unexpected padding and
+un-aligned atomic_t from natural alignment to something else.
 
-Thank you!
+This change does not remove packing annotation from struct but only
+restores alignment of atomic variable.
 
+The change is tested on the same rx3600 machine.
+
+CC: linux-ia64@vger.kernel.org
+CC: storagedev@microchip.com
+CC: linux-scsi@vger.kernel.org
+CC: Joe Szczypek <jszczype@redhat.com>
+CC: Scott Benesh <scott.benesh@microchip.com>
+CC: Scott Teel <scott.teel@microchip.com>
+CC: Tomas Henzl <thenzl@redhat.com>
+CC: "Martin K. Petersen" <martin.petersen@oracle.com>
+CC: Don Brace <don.brace@microchip.com>
+Reported-by: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Suggested-by: Don Brace <don.brace@microchip.com>
+Fixes: f749d8b7a "scsi: hpsa: Correct dev cmds outstanding for retried cmds"
+Signed-off-by: Sergei Trofimovich <slyfox@gentoo.org>
+---
+ drivers/scsi/hpsa_cmd.h | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index d126bb877250..617bdae9a7de 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -20,6 +20,9 @@
+ #ifndef HPSA_CMD_H
+ #define HPSA_CMD_H
+ 
++#include <linux/build_bug.h> /* static_assert */
++#include <linux/stddef.h> /* offsetof */
++
+ /* general boundary defintions */
+ #define SENSEINFOBYTES          32 /* may vary between hbas */
+ #define SG_ENTRIES_IN_CMD	32 /* Max SG entries excluding chain blocks */
+@@ -448,11 +451,20 @@ struct CommandList {
+ 	 */
+ 	struct hpsa_scsi_dev_t *phys_disk;
+ 
+-	bool retry_pending;
++	int retry_pending;
+ 	struct hpsa_scsi_dev_t *device;
+ 	atomic_t refcount; /* Must be last to avoid memset in hpsa_cmd_init() */
+ } __aligned(COMMANDLIST_ALIGNMENT);
+ 
++/*
++ * Make sure our embedded atomic variable is aligned. Otherwise we break atomic
++ * operations on architectures that don't support unaligned atomics like IA64.
++ *
++ * Ideally this header should be cleaned up to only mark individual structs as
++ * packed.
++ */
++static_assert(offsetof(struct CommandList, refcount) % __alignof__(atomic_t) == 0);
++
+ /* Max S/G elements in I/O accelerator command */
+ #define IOACCEL1_MAXSGENTRIES           24
+ #define IOACCEL2_MAXSGENTRIES		28
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.30.2
+
