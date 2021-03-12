@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F335C43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E67C4332E
 	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 09:49:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EBA5164FFB
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 09:49:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F47464FB9
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Mar 2021 09:49:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232930AbhCLJse (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Mar 2021 04:48:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54504 "EHLO
+        id S233187AbhCLJsi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Mar 2021 04:48:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233036AbhCLJsE (ORCPT
+        with ESMTP id S233049AbhCLJsE (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2021 04:48:04 -0500
-Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E0D0C061765
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2021 01:48:03 -0800 (PST)
-Received: by mail-wm1-x32d.google.com with SMTP id j4-20020a05600c4104b029010c62bc1e20so14792030wmi.3
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2021 01:48:03 -0800 (PST)
+Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41FC5C0613D7
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2021 01:48:04 -0800 (PST)
+Received: by mail-wm1-x335.google.com with SMTP id y124-20020a1c32820000b029010c93864955so15387224wmy.5
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2021 01:48:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=JI6G3CFZx8fwaZ+wMXfyA1uTc9sykYtKryE0jb27AH8=;
-        b=LvZZjQqh+hYVHovFbGfa2YimjbNcopAKf2FZ41k0JafVuhVFK5teA3JpIbZo04IirG
-         T3FE3HwLMHe3hRd4f1e7pYFuzKcngzqClIHRJv58wKOf6YLyHr3oW4NEZFrlvIPqiAAD
-         umvPHJzcpzO3EazANHiX3Z7AWtRY+KMq52oDleuaqE9FW91NrAZefDoeKN0dTnaSosX7
-         2x2qTmSphRDpvMTdnfVqbdq2Tp0ry+NQoyXkK+cxZOn14bKVik5jWKcbf0LTIfBpgqwi
-         qvPSsYPc25e6pL72RE1CUAk1N+qZT0yk5IYUEdanwW0Ul3rymue2UDxEZXoyyu9DE5ab
-         7TXA==
+        bh=LUTl6374hjxEzzjAtH58mHOxzvcGWyfAK+Rs8bCebzw=;
+        b=Hh6zFui7TwDn62/fwoASFc2WJnZn7cfVhnggojLiwpEHU6m48GwA0Lnx70kBF5ANG1
+         20F+vJb7p5+wSCdx945D/L5JHQutDAnvsfvQIvQ3nFS8dC2MhtOzyApGrceHEjti/RMb
+         XFfHi6yUPyANab+8/0QfMzKjdkxj/iyG9YVFreuTjGV9+B0YKbHV0QmZYD2x6PFIxfcA
+         2mUd2ivVz9n13uBEkKatPUtdhkdjL2BZeoPc5u/DR41wJZfAm4ynWx0gLig0uR4OFZp3
+         JeUfFBr+fVAriffDt7K+/1352rpnWyWDUQPfVwP9SsNTVzKH3MfrTtKJOBdWpdaPQgBD
+         9VsQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=JI6G3CFZx8fwaZ+wMXfyA1uTc9sykYtKryE0jb27AH8=;
-        b=mbJr13CPrVOoYFSy2PXwxha8IxmbxeOHS++4rRKKTqKScKWPaso+4Gdyv0nUG+10FI
-         gcafGQRisUlkZq+c5RmI+usdikrzruKNgvItIjMMSBGr18D4UjF3J7AcVWEU6Dg5p4WA
-         izN4WVvTtNF5emtCS6XgF3F35qoMH3sJX6EWWwfacWx9HXcd+tIg6Aslv+7w6sBRIgVq
-         9DGWw3u2eB6EaRMn6d3SAU9Tp0dvHcbRQ0QcSsgwceDXYMVeTc1flwIzI+nEQDeJYYY2
-         1D+QcFZL5hhjlV9er3GpANKaCC0RI4ziKQ5+6oLncoaHk/GwfXiK69BRoSJvJ0IMjNZS
-         3ERA==
-X-Gm-Message-State: AOAM530jdWo4RAoGFF9pnQV4z9PlVZ8g6jHRHFB5HKFQmNL7rieIfd8y
-        GulIGZ/585mmWYNERW9WQn3OSg==
-X-Google-Smtp-Source: ABdhPJwgu+dYkUSJIPzhrkavhgPa19SJxwU7Gw7kkrY+EIpO5oTC5zDDwsUJvZSioQsoR2R3olJXOQ==
-X-Received: by 2002:a1c:9817:: with SMTP id a23mr12073936wme.57.1615542482068;
+        bh=LUTl6374hjxEzzjAtH58mHOxzvcGWyfAK+Rs8bCebzw=;
+        b=nOeMbVzuAwQuMId0GLO5QKOlVoUp5EGg92UBp3z77t5wD19FW1haP841aaycfDOQgB
+         WDKoirJd4/EwHEt4b1G85sxbL4X/PeQ4ARMvhkqbh/qJ4bCJuUxT0jwJgZo/wgzQ7iJM
+         rqwESJeeFEt2z658YC3o9fGTpz1qqLr8IagP4OQIJPCFj8YxdsuexRbf0alcdfiFw+WY
+         SBYr/Cg0y2qsGZsVe9bHtRYCBio5IYeQRHoHxMGulY0QLnWvbFayJ2wEPAfa0yzyCzpG
+         ZtYHqEJPWsMJYZE3gd8A1lOIm0WltlPz5fCJP/2IShf+gzIpSrZ6rAThT8koyu3ZC0Lb
+         IgsA==
+X-Gm-Message-State: AOAM533Kv1LdN7KB2kCmfvjrxadRWKAK1fNMJf3UTnruZucFtOS8ttzf
+        6bEdVQCZzS7T8g0Opy1rsZ2Kjg==
+X-Google-Smtp-Source: ABdhPJzn/shtTEA5v/Qw1hr7rVbUOF0K5gx7TDUttgAS1sUo633Z1joLB92r7MaR0cdeyDjNVXN09g==
+X-Received: by 2002:a05:600c:4a06:: with SMTP id c6mr12177115wmp.35.1615542482970;
         Fri, 12 Mar 2021 01:48:02 -0800 (PST)
 Received: from dell.default ([91.110.221.204])
-        by smtp.gmail.com with ESMTPSA id f7sm1539536wmq.11.2021.03.12.01.48.00
+        by smtp.gmail.com with ESMTPSA id f7sm1539536wmq.11.2021.03.12.01.48.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Mar 2021 01:48:01 -0800 (PST)
+        Fri, 12 Mar 2021 01:48:02 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org,
@@ -63,9 +63,9 @@ Cc:     linux-kernel@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 12/30] scsi: lpfc: lpfc_debugfs: Fix incorrectly documented function lpfc_debugfs_commonxripools_data()
-Date:   Fri, 12 Mar 2021 09:47:20 +0000
-Message-Id: <20210312094738.2207817-13-lee.jones@linaro.org>
+Subject: [PATCH 13/30] scsi: lpfc: lpfc_bsg: Fix a few incorrectly named functions
+Date:   Fri, 12 Mar 2021 09:47:21 +0000
+Message-Id: <20210312094738.2207817-14-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210312094738.2207817-1-lee.jones@linaro.org>
 References: <20210312094738.2207817-1-lee.jones@linaro.org>
@@ -77,7 +77,9 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/lpfc/lpfc_debugfs.c:405: warning: expecting prototype for lpfc_debugfs_common_xri_data(). Prototype was for lpfc_debugfs_commonxripools_data() instead
+ drivers/scsi/lpfc/lpfc_bsg.c:3591: warning: expecting prototype for lpfc_bsg_mbox_ext_cleanup(). Prototype was for lpfc_bsg_mbox_ext_session_reset() instead
+ drivers/scsi/lpfc/lpfc_bsg.c:3885: warning: expecting prototype for lpfc_bsg_sli_cfg_mse_read_cmd_ext(). Prototype was for lpfc_bsg_sli_cfg_read_cmd_ext() instead
+ drivers/scsi/lpfc/lpfc_bsg.c:4371: warning: expecting prototype for lpfc_bsg_mbox_ext_abort_req(). Prototype was for lpfc_bsg_mbox_ext_abort() instead
 
 Cc: James Smart <james.smart@broadcom.com>
 Cc: Dick Kennedy <dick.kennedy@broadcom.com>
@@ -86,22 +88,40 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/lpfc/lpfc_debugfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_bsg.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index ec5328f7f1d41..c23a535ac89ac 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -381,7 +381,7 @@ lpfc_debugfs_hbqinfo_data(struct lpfc_hba *phba, char *buf, int size)
- static int lpfc_debugfs_last_xripool;
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index b974d39d233b8..503540cf20414 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -3580,7 +3580,7 @@ static int lpfc_bsg_check_cmd_access(struct lpfc_hba *phba,
+ }
  
  /**
-- * lpfc_debugfs_common_xri_data - Dump Hardware Queue info to a buffer
-+ * lpfc_debugfs_commonxripools_data - Dump Hardware Queue info to a buffer
-  * @phba: The HBA to gather host buffer info from.
-  * @buf: The buffer to dump log into.
-  * @size: The maximum amount of data to process.
+- * lpfc_bsg_mbox_ext_cleanup - clean up context of multi-buffer mbox session
++ * lpfc_bsg_mbox_ext_session_reset - clean up context of multi-buffer mbox session
+  * @phba: Pointer to HBA context object.
+  *
+  * This is routine clean up and reset BSG handling of multi-buffer mbox
+@@ -3869,7 +3869,7 @@ lpfc_bsg_sli_cfg_dma_desc_setup(struct lpfc_hba *phba, enum nemb_type nemb_tp,
+ }
+ 
+ /**
+- * lpfc_bsg_sli_cfg_mse_read_cmd_ext - sli_config non-embedded mailbox cmd read
++ * lpfc_bsg_sli_cfg_read_cmd_ext - sli_config non-embedded mailbox cmd read
+  * @phba: Pointer to HBA context object.
+  * @job: Pointer to the job object.
+  * @nemb_tp: Enumerate of non-embedded mailbox command type.
+@@ -4360,7 +4360,7 @@ lpfc_bsg_handle_sli_cfg_mbox(struct lpfc_hba *phba, struct bsg_job *job,
+ }
+ 
+ /**
+- * lpfc_bsg_mbox_ext_abort_req - request to abort mbox command with ext buffers
++ * lpfc_bsg_mbox_ext_abort - request to abort mbox command with ext buffers
+  * @phba: Pointer to HBA context object.
+  *
+  * This routine is for requesting to abort a pass-through mailbox command with
 -- 
 2.27.0
 
