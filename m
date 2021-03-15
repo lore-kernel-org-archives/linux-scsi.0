@@ -2,191 +2,366 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E79C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Mar 2021 19:47:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E19CFC43381
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Mar 2021 22:23:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CE8664F2F
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Mar 2021 19:47:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF4C164F51
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Mar 2021 22:23:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233725AbhCOTrF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Mar 2021 15:47:05 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:48460 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231855AbhCOTqj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Mar 2021 15:46:39 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12FJkT1u046682;
-        Mon, 15 Mar 2021 19:46:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=LbjHobQ6RtHHRnNICspPL3mCzjpgfdpVjTrdvgfkt9w=;
- b=knT7pirQq8BvfVtoi80nTe3JlgN13kCSeyGnDKmSw+eqBMFXqXeyKoktrvJxJMValI8T
- J0tAWfOYwAAXH0EUySu/G/zzgN7b+a4eHfSdw1tnA3gbVxZyVyzEwiVOgXBSsV+XfxzY
- V54LB4s/oL57sEVnQ9MFxif9T1ki4fNp/a7/ODR0zwdMDp1KODxSYPqV42L4j332nA5C
- WVCSICZv7h7gAk08iiMUA2Bcfkr6jfA5nkQsUtp6pAt2fCM0f/nF+wC/EMVubiUwXWMF
- FhGsvmcs3a5i32pSP9Mf8jDGc5B9mrHNaXY9YSreQPoEsxe6MEmZfadiBMBIpNgbdhDH 2A== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 378p1nn880-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 15 Mar 2021 19:46:35 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12FJeXNW160853;
-        Mon, 15 Mar 2021 19:46:34 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2107.outbound.protection.outlook.com [104.47.55.107])
-        by aserp3030.oracle.com with ESMTP id 3796yshyb4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 15 Mar 2021 19:46:34 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XD7H0pNJN1tRhzWR3ucyGKQ17jxIIzvRypDmz+KyrQ7As8kt9cWd5NTbgO1GmumIqB7iuNrsC2Qvj0F9yTxp578wYzZ/pwz6b1/34Nmjvs0YhiuLvOy468D6rxPmEbrpaNtSdDmRB4HEUTu53R/0uOxT/WS76sNibbYbE6pVWKVdyT7fj29MIO70htNcXhfDk7NSAL5tpG2Yl2Vqu8OLTPiPn6+AJeh5+D2wUc6I5s4T/1KcQ0J0YZIFU+Ny7esiBccMgSto6S2we6H2Fz6uu1UPMeOXVi0+f6VWkPY+8D7i9NbCFB4CKoKCeW7H6VLOQNdgOVd9g+8WkL6VS/3bTA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LbjHobQ6RtHHRnNICspPL3mCzjpgfdpVjTrdvgfkt9w=;
- b=aEYH6iGWUBkkhtt95hShwXmiikwbM6OolgbaVNGJp7SaPrSXEyLZ7/7lXE86lBvlSoWDlMt4Zho/dnxGBS42cTVSR6w9+mpoysJPSs+4j7tf4n8S5gEqPgspvdhwG2lt/lXasGgVF4wB9iFeDStLdnuuNOY+9efeycH56q8XIb+7huIoGtoiBOP+wuloj89o2ueUYFsURKX/iX9UW1paFbXLrkDLnNGMdM5na7QfSx4kTwqi4iP0gyup586qILdM/pOavzEkCo+LLwX1HZ59QV/XfEJfusaSi5BSgfbDhV7OlRYNnCx7AdyWGnac1lK13XfyAJx5ypXWuPZ+7v/D4g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LbjHobQ6RtHHRnNICspPL3mCzjpgfdpVjTrdvgfkt9w=;
- b=bSm6JFuTl8b04HiwBcU9kaKVKvCuV2wv49vsSktb3StSqKB5l2xNM+LwxmxMm6IbbbTZCXkOpRvUmVI4jjyY1Qv3WTDMJQMAMcT3EMrKwM+iXRf6Z4ugYsRnBnzjTY6XIdrJg1unP2K+ReL+TvzufHsNMhlQuHxolTI1nlfTkHc=
-Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by SA2PR10MB4459.namprd10.prod.outlook.com (2603:10b6:806:11f::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3933.31; Mon, 15 Mar
- 2021 19:46:32 +0000
-Received: from SN6PR10MB2943.namprd10.prod.outlook.com
- ([fe80::20c7:193:d737:7ab1]) by SN6PR10MB2943.namprd10.prod.outlook.com
- ([fe80::20c7:193:d737:7ab1%4]) with mapi id 15.20.3933.032; Mon, 15 Mar 2021
- 19:46:32 +0000
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-To:     Alexey Dobriyan <adobriyan@gmail.com>
-CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "njavali@marvell.com" <njavali@marvell.com>
-Subject: Re: [PATCH] qla2xxx: fix broken #endif placement
-Thread-Topic: [PATCH] qla2xxx: fix broken #endif placement
-Thread-Index: AQHXGOdkxuaVMSkd1UGk+ikaMVb2rKqFdfyA
-Date:   Mon, 15 Mar 2021 19:46:32 +0000
-Message-ID: <04F8D192-2569-45F5-8F6A-53EA135F0CE0@oracle.com>
-References: <YE4snvoW1SuwcXAn@localhost.localdomain>
-In-Reply-To: <YE4snvoW1SuwcXAn@localhost.localdomain>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3608.120.23.2.4)
-authentication-results: gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=none action=none header.from=oracle.com;
-x-originating-ip: [70.114.128.235]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 67d9104d-122d-4b54-75c3-08d8e7eb08b4
-x-ms-traffictypediagnostic: SA2PR10MB4459:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SA2PR10MB4459B03BF46DF3462CAB9840E66C9@SA2PR10MB4459.namprd10.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:517;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: m8VhGcI5ihjlir1ovlkvgX0fWb7KA1Du/U4nakfHMTXufbD+DNFMh02vP4mX4lZkmcB/ps1xmbqhJ56T1+sy0tM21D4y6YOsv07eYk+/As7pNr4TKhidyCEBj4SIn4HMW+sqYWyvgLCKUoq+Z1UDPQsA+xpqTuVWerHUCfCLzQdHS1tU9FhV9+AfanI4ohdB6ETfWAy39sGbMWCIjSMJdSqFkddpqXDn2Mvq0goqy7Ac9x1C8QURe13BFV7ZnJuBeusW21ydf/DmBIoNiGOgplN4Tl2I+ukySwceAeOtXmqsKJx7f4dpyjG/7SXLp/tVoSTY7P/0eFTDK77ZnZ9MW8ClBJtQvs9T3A2/g5tgmiszpHwTV/jc7dYF469MnTL6TiTICaYvd6kg28CmJuu3kOdGEpb0H00qbcNAejFeAGTgTrcvCeHB38WmI0wNNUoIK5T/69TR6uY8fVIJAWpCL1bG6eYr6mEqQzpJ7bLJUDx+Ofo9NlGx/8/6SFI7XNhEwE2Ba0zSRrjKKrq0kZjAobIxbLtMCGASCXlE7koAO2aM5NomJMtGKA7kTGTWoOw+uhmRyynIJXzBN+VbTJsyZQA+XJhaOXGeQINwv39QHqN3RLaZES2CG9RhQMkX2/GB
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(366004)(396003)(376002)(346002)(39860400002)(2906002)(6486002)(186003)(6916009)(6512007)(8676002)(44832011)(26005)(316002)(54906003)(71200400001)(76116006)(53546011)(86362001)(83380400001)(66556008)(64756008)(66946007)(66446008)(66476007)(8936002)(5660300002)(4744005)(36756003)(478600001)(6506007)(33656002)(4326008)(2616005)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?VF2QrWC3cQFZ/GGWmDSUpeh7qOLDMEr+TCX2oDYKfE1hULCC6pxW3aqD09BQ?=
- =?us-ascii?Q?ka6YKJzWtYgCtgrivuNUexpC4i2588G3lInTgk9riaOmdb2e+37ya20bNWUc?=
- =?us-ascii?Q?XI4WHNz4xwLENMsGN/x9HcIBNAvDSiNZo3moIZuDCE9uOQtulTCeh1Ddj3yz?=
- =?us-ascii?Q?h75+QSIiKtwfGmnsy6CPqnaYdDddegIWuMiZH/NAb+5N8x1twPOsh8ROG0Vh?=
- =?us-ascii?Q?M01BPdCV6+N1ZYaYhw+cAg10irZwIo4WNJu2ZC1gluexE5CEeVtlccxg7Bsn?=
- =?us-ascii?Q?4E8mcgGeBzXzqOoyEBRSmrE5CWIC/I+qSwq0KIdt6duxXuFNe3Y1H7T3DvWU?=
- =?us-ascii?Q?ttG6kF2s2k2UsXRx0Ke/1gWZExjdjEl70k3ZHWyakaXhZHZPylK207f9DZMc?=
- =?us-ascii?Q?5onnd1kf0u1IV7Z+SfyavSMGHH3HZJ34IY+6kWRF5NPDtxpzqDRDWpFVNWJn?=
- =?us-ascii?Q?7yBAU4OxXOnD8x3DcjWQrT9az1wqbjkdS6LoWmV80jXciZq83pMtWDuJC+RC?=
- =?us-ascii?Q?OAd+UXONhbtgtHLGlmuaqgQTUKyw1HBff0B+6rkbE8n9p9vIOR8FtVjXi3VK?=
- =?us-ascii?Q?ti+mj3BrAx2le5w+Vzad0cy4+9aK5sYvenrAugWCWTmPMh2N6aIVTMEWh5nn?=
- =?us-ascii?Q?pn/KBMtEdeSgT2xtqirdDwgcKZXqHyeD6QHq8vEGO6BR24QrgC8B/Q1oqnwd?=
- =?us-ascii?Q?0eJKELYPKrzkasBGjjiWzXnqAHGaPN2oVHxSiuO9vTfJv2VkTx50GDTH3inY?=
- =?us-ascii?Q?Fx4aU3YgtufBh22LJRkSHSwVYWvy1wlifxKELyxtG83VuQ6sjORTYnaFKBJB?=
- =?us-ascii?Q?9l6hcdGvvn+Vj1j5pkX0UVP65paUegcfe8O6jvXLf3dXI2wRSKcQ3bsl7DgZ?=
- =?us-ascii?Q?DW6v8D3Lik/3mgEPiaF4rKTm3zAK8eXMf7ijmwZZqlvHzvdMUORwUOJgqi01?=
- =?us-ascii?Q?hzR1GEyZ4uLNQ0h8hIUNlVe+NHgc8rB2nfTJY+aZobY0aiPHut0VyvHGFvYo?=
- =?us-ascii?Q?yExmd/ubVe+1tTYkrxZq81hx5cgWy1A+9/qVh0JqudehtcOJ2xmCLT2v4p2S?=
- =?us-ascii?Q?IsMJPiLpDk2YVGq9PGiHncvDu9flQ1DIGBuvAKM2jd0XuwabQwiu7oLP95hA?=
- =?us-ascii?Q?WzYMGZzZlz+J69bWwbjz/SXCTXjLKawzNjvFMfdhv6LLq00FQhgZSJipIPr5?=
- =?us-ascii?Q?c94a6NTf92cgR6xBkIiX71oDoIVENhOJSZswnkYQ3WgdrzodoRoDwxqxqx0c?=
- =?us-ascii?Q?DpnX7tnYExZk/PIF8yaqtmkeIxPT1Vv+e8dso2DSyg4dL8B4iJ/P78ygO/yR?=
- =?us-ascii?Q?07PESXpNNEdV6Ik+2I36pRx4EJ+b/xmOljXbzPO0a1U8Bg=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <6942048E53E12C43B6E81CF2C2AC865E@namprd10.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        id S229608AbhCOWW5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Mar 2021 18:22:57 -0400
+Received: from z11.mailgun.us ([104.130.96.11]:45733 "EHLO z11.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229761AbhCOWWi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 15 Mar 2021 18:22:38 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1615846958; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=/eTc1f8KRlT9esAEG1OWbWJsVv7TpznbM2XNZDL0FtA=; b=Wav5rDb7H9pLHRPcTVMdMF+y2z+6Uq+vh+Dw6AHY62RPX+VlxljN9uKxah6ES6V+58LgeMa1
+ /0dkmF1mX8V2j9nA1Vn9eMRJVD1VcnOJftukTTYD+OJhD8YCotB28tYNCEwH31h9GQtwaXuP
+ ZZpbvRgCcsgIz5UagOpo40ZfcNE=
+X-Mailgun-Sending-Ip: 104.130.96.11
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 604fde19e3fca7d0a6ef0e5f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 15 Mar 2021 22:22:17
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id DA417C4346B; Mon, 15 Mar 2021 22:22:15 +0000 (UTC)
+Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5F7D3C433C6;
+        Mon, 15 Mar 2021 22:22:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5F7D3C433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v10 1/2] scsi: ufs: Enable power management for wlun
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     "Rafael J. Wysocki" <rafael@kernel.org>, cang@codeaurora.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>,
+        Linux-PM mailing list <linux-pm@vger.kernel.org>
+References: <cover.1614725302.git.asutoshd@codeaurora.org>
+ <0576d6eae15486740c25767e2d8805f7e94eb79d.1614725302.git.asutoshd@codeaurora.org>
+ <85086647-7292-b0a2-d842-290818bd2858@intel.com>
+ <6e98724d-2e75-d1fe-188f-a7010f86c509@codeaurora.org>
+ <20210306161616.GC74411@rowland.harvard.edu>
+ <CAJZ5v0ihJe8rNjWRwNic_BQUvKbALNcjx8iiPAh5nxLhOV9duw@mail.gmail.com>
+ <CAJZ5v0iJ4yqRTt=mTCC930HULNFNTgvO4f9ToVO6pNz53kxFkw@mail.gmail.com>
+ <f1e9b21d-1722-d20b-4bae-df7e6ce50bbc@codeaurora.org>
+ <2bd90336-18a9-9acd-5abb-5b52b27fc535@codeaurora.org>
+ <b13086f3-eea1-51a7-2117-579d520f21fc@intel.com>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <20cbd52d-7254-3e1c-06a3-712326c99f75@codeaurora.org>
+Date:   Mon, 15 Mar 2021 15:22:09 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 67d9104d-122d-4b54-75c3-08d8e7eb08b4
-X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Mar 2021 19:46:32.1111
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: YsydhTLPPAnXixS4pbm/mAXkcr5vEn0jfpV7fdF/DjAy/9l0YHgJloq9x0HO9wNA0YmFXMV6Hz+QCPKBqIavtErKMjNPwXA1o7q0dBnz168=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4459
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9924 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0 spamscore=0
- bulkscore=0 mlxlogscore=999 mlxscore=0 suspectscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2103150132
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9924 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0 adultscore=0
- spamscore=0 clxscore=1011 phishscore=0 malwarescore=0 priorityscore=1501
- bulkscore=0 mlxlogscore=999 lowpriorityscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2103150132
+In-Reply-To: <b13086f3-eea1-51a7-2117-579d520f21fc@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 3/14/2021 1:11 AM, Adrian Hunter wrote:
+> On 10/03/21 5:04 am, Asutosh Das (asd) wrote:
+>> On 3/9/2021 7:56 AM, Asutosh Das (asd) wrote:
+>>> On 3/8/2021 9:17 AM, Rafael J. Wysocki wrote:
+>>>> On Mon, Mar 8, 2021 at 5:21 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
+>>>>>
+>>>>> On Sat, Mar 6, 2021 at 5:17 PM Alan Stern <stern@rowland.harvard.edu> wrote:
+>>>>>>
+>>>>>> On Fri, Mar 05, 2021 at 06:54:24PM -0800, Asutosh Das (asd) wrote:
+>>>>>>
+>>>>>>> Now during my testing I see a weird issue sometimes (1 in 7).
+>>>>>>> Scenario - bootups
+>>>>>>>
+>>>>>>> Issue:
+>>>>>>> The supplier 'ufs_device_wlun 0:0:0:49488' goes into runtime suspend even
+>>>>>>> when one/more of its consumers are in RPM_ACTIVE state.
+>>>>>>>
+>>>>>>> *Log:
+>>>>>>> [   10.056379][  T206] sd 0:0:0:1: [sdb] Synchronizing SCSI cache
+>>>>>>> [   10.062497][  T113] sd 0:0:0:5: [sdf] Synchronizing SCSI cache
+>>>>>>> [   10.356600][   T32] sd 0:0:0:7: [sdh] Synchronizing SCSI cache
+>>>>>>> [   10.362944][  T174] sd 0:0:0:3: [sdd] Synchronizing SCSI cache
+>>>>>>> [   10.696627][   T83] sd 0:0:0:2: [sdc] Synchronizing SCSI cache
+>>>>>>> [   10.704562][  T170] sd 0:0:0:6: [sdg] Synchronizing SCSI cache
+>>>>>>> [   10.980602][    T5] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+>>>>>>>
+>>>>>>> /** Printing all the consumer nodes of supplier **/
+>>>>>>> [   10.987327][    T5] ufs_device_wlun 0:0:0:49488: usage-count @ suspend: 0
+>>>>>>> <-- this is the usage_count
+>>>>>>> [   10.994440][    T5] ufs_rpmb_wlun 0:0:0:49476: PM state - 2
+>>>>>>> [   11.000402][    T5] scsi 0:0:0:49456: PM state - 2
+>>>>>>> [   11.005453][    T5] sd 0:0:0:0: PM state - 2
+>>>>>>> [   11.009958][    T5] sd 0:0:0:1: PM state - 2
+>>>>>>> [   11.014469][    T5] sd 0:0:0:2: PM state - 2
+>>>>>>> [   11.019072][    T5] sd 0:0:0:3: PM state - 2
+>>>>>>> [   11.023595][    T5] sd 0:0:0:4: PM state - 0 << RPM_ACTIVE
+>>>>>>> [   11.353298][    T5] sd 0:0:0:5: PM state - 2
+>>>>>>> [   11.357726][    T5] sd 0:0:0:6: PM state - 2
+>>>>>>> [   11.362155][    T5] sd 0:0:0:7: PM state - 2
+>>>>>>> [   11.366584][    T5] ufshcd-qcom 1d84000.ufshc: __ufshcd_wl_suspend - 8709
+>>>>>>> [   11.374366][    T5] ufs_device_wlun 0:0:0:49488: __ufshcd_wl_suspend -
+>>>>>>> (0) has rpm_active flags
+>>>>>
+>>>>> Do you mean that rpm_active of the link between the consumer and the
+>>>>> supplier is greater than 0 at this point and the consumer is
+>>>>
+>>>> I mean is rpm_active of the link greater than 1 (because 1 means "no
+>>>> active references to the supplier")?
+>>> Hi Rafael:
+>>> No - it is not greater than 1.
+>>>
+>>> I'm trying to understand what's going on in it; will update when I've something.
+>>>
+>>>>
+>>>>> RPM_ACTIVE, but the supplier suspends successfully nevertheless?
+>>>>>
+>>>>>>> [   11.383376][    T5] ufs_device_wlun 0:0:0:49488:
+>>>>>>> ufshcd_wl_runtime_suspend <-- Supplier suspends fine.
+>>>>>>> [   12.977318][  T174] sd 0:0:0:4: [sde] Synchronizing SCSI cache
+>>>>>>>
+>>>>>>> And the the suspend of sde is stuck now:
+>>>>>>> schedule+0x9c/0xe0
+>>>>>>> schedule_timeout+0x40/0x128
+>>>>>>> io_schedule_timeout+0x44/0x68
+>>>>>>> wait_for_common_io+0x7c/0x100
+>>>>>>> wait_for_completion_io+0x14/0x20
+>>>>>>> blk_execute_rq+0x90/0xcc
+>>>>>>> __scsi_execute+0x104/0x1c4
+>>>>>>> sd_sync_cache+0xf8/0x2a0
+>>>>>>> sd_suspend_common+0x74/0x11c
+>>>>>>> sd_suspend_runtime+0x14/0x20
+>>>>>>> scsi_runtime_suspend+0x64/0x94
+>>>>>>> __rpm_callback+0x80/0x2a4
+>>>>>>> rpm_suspend+0x308/0x614
+>>>>>>> pm_runtime_work+0x98/0xa8
+>>>>>>>
+>>>>>>> I added 'DL_FLAG_RPM_ACTIVE' while creating links.
+>>>>>>>         if (hba->sdev_ufs_device) {
+>>>>>>>                 link = device_link_add(&sdev->sdev_gendev,
+>>>>>>>                                     &hba->sdev_ufs_device->sdev_gendev,
+>>>>>>>                                    DL_FLAG_PM_RUNTIME|DL_FLAG_RPM_ACTIVE);
+>>>>>>> I didn't expect this to resolve the issue anyway and it didn't.
+>>>>>>>
+>>>>>>> Another interesting point here is when I resume any of the above suspended
+>>>>>>> consumers, it all goes back to normal, which is kind of expected. I tried
+>>>>>>> resuming the consumer and the supplier is resumed and the supplier is
+>>>>>>> suspended when all the consumers are suspended.
+>>>>>>>
+>>>>>>> Any pointers on this issue please?
+>>>>>>>
+>>>>>>> @Bart/@Alan - Do you've any pointers please?
+>>>>>>
+>>>>>> It's very noticeable that although you seem to have isolated a bug in
+>>>>>> the power management subsystem (supplier goes into runtime suspend
+>>>>>> even when one of its consumers is still active), you did not CC the
+>>>>>> power management maintainer or mailing list.
+>>>>>>
+>>>>>> I have added the appropriate CC's.
+>>>>>
+>>>>> Thanks Alan!
+>>>
+>>>
+>>
+>> Hello
+>> I & Can (thanks CanG) debugged this further:
+>>
+>> Looks like this issue can occur if the sd probe is asynchronous.
+>>
+>> Essentially, the sd_probe() is done asynchronously and driver_probe_device() invokes pm_runtime_get_suppliers() before invoking sd_probe().
+>>
+>> But scsi_probe_and_add_lun() runs in a separate context.
+>> So the scsi_autopm_put_device() invoked from scsi_scan_host() context reduces the link->rpm_active to 1. And sd_probe() invokes scsi_autopm_put_device() and starts a timer. And then driver_probe_device() invoked from __device_attach_async_helper context reduces the link->rpm_active to 1 thus enabling the supplier to suspend before the consumer suspends.
+>>
+>> So if:
+>> Context T1:
+>> [1] scsi_probe_and_add_lun()
+>> [2]    |- scsi_autopm_put_device() - reduce the link->rpm_active to 1
+>>
+>> Context T2:
+>> __device_attach_async_helper()
+>>      |- driver_probe_device()
+>>          |- sd_probe()
+>> In between [1] and [2] say, driver_probe_device() -> sd_probe() is invoked in a separate context from __device_attach_async_helper().
+>> The driver_probe_device() -> pm_runtime_get_suppliers() but [2] would reduce link->rpm_active to 1.
+>> Then sd_probe() would invoke rpm_resume() and proceed as is.
+>> When sd_probe() invokes scsi_autopm_put_device() it'd start a timer, dev->power.timer_autosuspends = 1.
+>>
+>> Now then, pm_runtime_put_suppliers() is invoked from driver_probe_device() and that makes the link->rpm_active = 1.
+>> But by now, the corresponding 'sd dev' (consumer) usage_count = 0, state = RPM_ACTIVE and link->rpm_active = 1.
+>> At this point of time, all other 'sd dev' (consumers) _may_ be suspended or active but would have the link->rpm_active = 1.
+> 
+> Is this with DL_FLAG_RPM_ACTIVE?  In that case, wouldn't active
+> consumers have link->rpm_active = 2 and also have incremented
+> the supplier's usage_count?
+> 
+> Another outstanding issue that comes to mind, is to ensure
+> hba->sdev_ufs_device does not runtime suspend before it is probed.
+> I suggest changing ufshcd_slave_configure() so it does not set
+> sdev->rpm_autosuspend for hba->sdev_ufs_device, and instead do
+> pm_runtime_allow / pm_runtime_forbid() in ufshcd_wl_probe() /
+> ufshcd_wl_remove() respectively.
+> 
+> However we still want to stop hba->sdev_ufs_device runtime
+> suspending while consumers are being added.  With that in mind,
+> I would expect pm_runtime_get_noresume(&hba->sdev_ufs_device->sdev_gendev)
+> in ufshcd_scsi_add_wlus() to come *before*
+> ufshcd_blk_pm_runtime_init(hba->sdev_ufs_device).  In fact, it would
+> be more logical to make it, pm_runtime_get_sync() since we require
+> hba->sdev_ufs_device to be active at that point.
+> 
+> 
+
+Hi Adrian,
+I think the v11 that I pushed can handle this.
+runtime-suspend is forbidden at probe and is re-enabled after probe is 
+done. Please take a look and let me know if I'm missing something.
+
+>>
+>> Since the supplier has 0 auto-suspend delay, it now suspends!
+>>
+>>
+>> Context [T1]
+>> Call trace:
+>> dump_backtrace+0x0/0x1d4
+>> show_stack+0x18/0x24
+>> dump_stack+0xc4/0x144
+>> __pm_runtime_idle+0xb4/0x184
+>> scsi_autopm_put_device+0x18/0x24
+>> scsi_sysfs_add_sdev+0x26c/0x278
+>> scsi_probe_and_add_lun+0xbac/0xd48
+>> __scsi_scan_target+0x38c/0x510
+>> scsi_scan_host_selected+0x14c/0x1e4
+>> scsi_scan_host+0x1e0/0x228
+>> ufshcd_async_scan+0x39c/0x408
+>> async_run_entry_fn+0x48/0x128
+>> process_one_work+0x1f0/0x470
+>> worker_thread+0x26c/0x4c8
+>> kthread+0x13c/0x320
+>> ret_from_fork+0x10/0x18
+>>
+>>
+>> Context [T2]
+>> Call trace:
+>> dump_backtrace+0x0/0x1d4
+>> show_stack+0x18/0x24
+>> dump_stack+0xc4/0x144
+>> rpm_get_suppliers+0x48/0x1ac
+>> __rpm_callback+0x58/0x12c
+>> rpm_resume+0x3a4/0x618
+>> __pm_runtime_resume+0x50/0x80
+>> scsi_autopm_get_device+0x20/0x54
+>> sd_probe+0x40/0x3d0
+>> really_probe+0x1bc/0x4a0
+>> driver_probe_device+0x84/0xf0
+>> __device_attach_driver+0x114/0x138
+>> bus_for_each_drv+0x84/0xd0
+>> __device_attach_async_helper+0x7c/0xf0
+>> async_run_entry_fn+0x48/0x128
+>> process_one_work+0x1f0/0x470
+>> worker_thread+0x26c/0x4c8
+>> kthread+0x13c/0x320
+>> ret_from_fork+0x10/0x18
+>>
+>> Below prints show how link->rpm_active becomes 1 for sd 0:0:0:4
+>> [    7.574654][  T212] Call trace:
+>> [    7.574657][  T212]  dump_backtrace+0x0/0x1d4
+>> [    7.574661][  T212]  show_stack+0x18/0x24
+>> [    7.574665][  T212]  dump_stack+0xc4/0x144
+>> [    7.574668][  T212]  __pm_runtime_idle+0xb4/0x184
+>> [    7.574671][  T212]  scsi_autopm_put_device+0x18/0x24
+>> [    7.574675][  T212]  sd_probe+0x314/0x3d0
+>> [    7.574677][  T212]  really_probe+0x1bc/0x4a0
+>> [    7.574680][  T212]  driver_probe_device+0x84/0xf0
+>> [    7.574683][  T212]  __device_attach_driver+0x114/0x138
+>> [    7.574686][  T212]  bus_for_each_drv+0x84/0xd0
+>> [    7.574689][  T212]  __device_attach_async_helper+0x7c/0xf0
+>> [    7.574692][  T212]  async_run_entry_fn+0x48/0x128
+>> [    7.574695][  T212]  process_one_work+0x1f0/0x470
+>> [    7.574698][  T212]  worker_thread+0x26c/0x4c8
+>> [    7.574700][  T212]  kthread+0x13c/0x320
+>> [    7.574703][  T212]  ret_from_fork+0x10/0x18
+>> [    7.574706][  T212] sd 0:0:0:4: scsi_runtime_idle
+>> [    7.574712][  T212] sd 0:0:0:4: __pm_runtime_idle: aft: [UFSDBG]: pwr.timer_autosuspends: 1 pwr.request_pending: 0 retval: -16 pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
+>> [    7.574715][  T212] sd 0:0:0:4: sd_probe: [UFSDBG]: Exit
+>> [    7.574738][  T212] sd 0:0:0:4: __pm_runtime_idle: b4: [UFSDBG]: pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
+>>
+>> [    7.574752][  T212] Workqueue: events_unbound async_run_entry_fn
+>> [    7.574754][  T212] Call trace:
+>> [    7.574758][  T212]  dump_backtrace+0x0/0x1d4
+>> [    7.574761][  T212]  show_stack+0x18/0x24
+>> [    7.574765][  T212]  dump_stack+0xc4/0x144
+>> [    7.574767][  T212]  __pm_runtime_idle+0xb4/0x184
+>> [    7.574770][  T212]  driver_probe_device+0x94/0xf0
+>> [    7.574773][  T212]  __device_attach_driver+0x114/0x138
+>> [    7.574775][  T212]  bus_for_each_drv+0x84/0xd0
+>> [    7.574778][  T212]  __device_attach_async_helper+0x7c/0xf0
+>> [    7.574781][  T212]  async_run_entry_fn+0x48/0x128
+>> [    7.574783][  T212]  process_one_work+0x1f0/0x470
+>> [    7.574786][  T212]  worker_thread+0x26c/0x4c8
+>> [    7.574788][  T212]  kthread+0x13c/0x320
+>> [    7.574791][  T212]  ret_from_fork+0x10/0x18
+>> [    7.574848][   T80] sd 0:0:0:4: scsi_runtime_idle
+>> [    7.574858][  T212] sd 0:0:0:4: __pm_runtime_idle: aft: [UFSDBG]: pwr.timer_autosuspends: 1 pwr.request_pending: 0 retval: 0 pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
+>> [    7.574863][  T212] sd 0:0:0:4: pm_runtime_put_suppliers: [UFSDBG]: rpm_status: 0 link-rpm_active:1
+>> [    7.574866][  T212] sd 0:0:0:4: async probe completed
+>> [    7.574870][  T212] sd 0:0:0:4: __pm_runtime_idle: b4: [UFSDBG]: pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:1
+>>
+>>
+>> So, from the above it looks like when async probe is enabled this is a possibility.
+>>
+>> I don't see a way around this. Please let me know if you (@Alan/@Bart/@Adrian) have any thoughts on this.
+>>
+>> Thanks,
+>> -asd
+>>
+> 
 
 
-> On Mar 14, 2021, at 10:32 AM, Alexey Dobriyan <adobriyan@gmail.com> wrote=
-:
->=20
-> Only half of the file is under include guard because terminating #endif
-> is placed too early.
->=20
-> Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
-> ---
->=20
-> drivers/scsi/qla2xxx/qla_target.h |    2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> --- a/drivers/scsi/qla2xxx/qla_target.h
-> +++ b/drivers/scsi/qla2xxx/qla_target.h
-> @@ -116,7 +116,6 @@
-> 	(min(1270, ((ql) > 0) ? (QLA_TGT_DATASEGS_PER_CMD_24XX + \
-> 		QLA_TGT_DATASEGS_PER_CONT_24XX*((ql) - 1)) : 0))
-> #endif
-> -#endif
->=20
-> #define GET_TARGET_ID(ha, iocb) ((HAS_EXTENDED_IDS(ha))			\
-> 			 ? le16_to_cpu((iocb)->u.isp2x.target.extended)	\
-> @@ -244,6 +243,7 @@ struct ctio_to_2xxx {
-> #ifndef CTIO_RET_TYPE
-> #define CTIO_RET_TYPE	0x17		/* CTIO return entry */
-> #define ATIO_TYPE7 0x06 /* Accept target I/O entry for 24xx */
-> +#endif
->=20
-> struct fcp_hdr {
-> 	uint8_t  r_ctl;
-
-Looks Good.
-
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-
---
-Himanshu Madhani	 Oracle Linux Engineering
-
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
