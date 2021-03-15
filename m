@@ -2,236 +2,193 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE4EC433E9
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Mar 2021 06:41:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7D21C433E9
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Mar 2021 07:08:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E03A64E46
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Mar 2021 06:41:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9558364E6C
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Mar 2021 07:08:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230094AbhCOGlV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Mar 2021 02:41:21 -0400
-Received: from z11.mailgun.us ([104.130.96.11]:24042 "EHLO z11.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230080AbhCOGlB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 Mar 2021 02:41:01 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1615790461; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=Eh+zXNDaC2MynIN0OjXzWVKeG6TXNvkytir5AC33S4Y=;
- b=qrLj7levO9t9boQCDqYM0wUuqKq5rUXd2V7dW/3dySjngq7To3oJ3IfdFHrz90Pot+evr2Pb
- vQkHv4xz2nisQOL5aW+EeLqWRhqqK5RCcUdzEhvAfdEBlnDM0sriIHcoLqpbGMosXGaQJKnP
- kQIwquJ1y0v8HOfQs7Z4SgEodDI=
-X-Mailgun-Sending-Ip: 104.130.96.11
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 604f017be2200c0a0df39d4b (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 15 Mar 2021 06:40:59
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E911BC4346D; Mon, 15 Mar 2021 06:40:58 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6FF3EC43467;
-        Mon, 15 Mar 2021 06:40:56 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+        id S230045AbhCOHH7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Mar 2021 03:07:59 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:51385 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230151AbhCOHHd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Mar 2021 03:07:33 -0400
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20210315070731epoutp02965ac5b8b8554e188987338531ddbdd4~sck9XW3RE2939629396epoutp02i
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Mar 2021 07:07:31 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20210315070731epoutp02965ac5b8b8554e188987338531ddbdd4~sck9XW3RE2939629396epoutp02i
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1615792051;
+        bh=TDL/0xmZeCwq9eL4cssseC+KS9L28vgGn3FnFLDSSOY=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=bVz15ghoT1cLBiybtMFolsUX+Sq29xK49BfpPkkeSm6YMrMXOxYN7edfZMD5U9WMH
+         3k/TvYX8fGmIFP29uy+aaVGtOqHuyqXBDO67yVsiFX5A+yYovDqJ6ritbUO+JvSAIp
+         Og17AWUSoTNxxhc/0kZJokH/bLMtYCG/63VjPEOI=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20210315070730epcas2p389b5beb74012f958ecabfc50be60db1f~sck8tUhAF1054010540epcas2p3n;
+        Mon, 15 Mar 2021 07:07:30 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.40.185]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4DzSD11Mpjz4x9Q3; Mon, 15 Mar
+        2021 07:07:29 +0000 (GMT)
+X-AuditID: b6c32a46-1d9ff7000000dbf8-1b-604f07b1d649
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        5E.1D.56312.1B70F406; Mon, 15 Mar 2021 16:07:29 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE: Re: [PATCH v29 4/4] scsi: ufs: Add HPB 2.0 support
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Can Guo <cang@codeaurora.org>,
+        Daejun Park <daejun7.park@samsung.com>
+CC:     Greg KH <gregkh@linuxfoundation.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <2da1c963bd3ff5f682d18a251ed08989@codeaurora.org>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20210315070728epcms2p87136c86803afa85a441ead524130245c@epcms2p8>
+Date:   Mon, 15 Mar 2021 16:07:28 +0900
+X-CMS-MailID: 20210315070728epcms2p87136c86803afa85a441ead524130245c
 Content-Transfer-Encoding: 7bit
-Date:   Mon, 15 Mar 2021 14:40:56 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Avri Altman <avri.altman@wdc.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        alim.akhtar@samsung.com, asutoshd@codeaurora.org,
-        Zang Leigang <zangleigang@hisilicon.com>,
-        Avi Shchislowski <avi.shchislowski@wdc.com>,
-        Bean Huo <beanhuo@micron.com>, stanley.chu@mediatek.com
-Subject: Re: [PATCH v5 06/10] scsi: ufshpb: Add hpb dev reset response
-In-Reply-To: <9d9237bc77332bd1f9ff17aaf98718a8@codeaurora.org>
-References: <20210302132503.224670-1-avri.altman@wdc.com>
- <20210302132503.224670-7-avri.altman@wdc.com>
- <9d9237bc77332bd1f9ff17aaf98718a8@codeaurora.org>
-Message-ID: <8b4e8dc1fd91f52a191d681b7096ef48@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrBLsWRmVeSWpSXmKPExsWy7bCmqe5Gdv8Eg/YD7BYP5m1js9jbdoLd
+        4uXPq2wWh2+/Y7eY9uEns8Wn9ctYLV4e0rRY9SDconnxejaLOWcbmCx6+7eyWTy+85ndYtGN
+        bUwW/f/aWSwu75rDZtF9fQebxfLj/5gsbm/hsli69SajRef0NSwOIh6Xr3h7XO7rZfLYOesu
+        u8eERQcYPfbPXcPu0XJyP4vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBXVAOjTWJRckZmWapCal5y
+        fkpmXrqtUmiIm66FkkJGfnGJrVK0oYWRnqGlqZ6JpZ6ReayVoYGBkamSQl5ibqqtUoUuVLeS
+        QlFyAVB1SWpxSVFqcipQqMihuCQxPVWvODG3uDQvXS85P1dJoSwxpxSoT0nfziYjNTEltUgh
+        4Qljxt4bU1gKFolUvHh7nrGBsYOvi5GTQ0LARGLzjJ8sXYxcHEICOxglei5OZO9i5ODgFRCU
+        +LtDGKRGWMBe4uuGbawgtpCAksT6i7PYIeJ6ErcermEEsdkEdCSmn7gPFhcR8JT4Onk1K8hM
+        ZoHlbBKNy/azQizjlZjR/pQFwpaW2L58K1gzp4CdxMOjZ5gh4hoSP5b1QtmiEjdXv2WHsd8f
+        m88IYYtItN47C1UjKPHg526ouKTEsd0fmCDseomtd34xghwhIdDDKHF45y2oI/QlrnVsBDuC
+        V8BXYtX0v2ALWARUJfomLmUGeV5CwEXiy8lqkDCzgLzE9rdzwMLMApoS63fpQ1QoSxy5xQLz
+        VcPG3+zobGYBPomOw3/h4jvmPYG6TE1i3c/1TBMYlWchAnoWkl2zEHYtYGRexSiWWlCcm55a
+        bFRghBzPmxjBqV/LbQfjlLcf9A4xMnEwHmKU4GBWEuH9rOObIMSbklhZlVqUH19UmpNafIix
+        CujJicxSosn5wOyTVxJvaGZgZGZqbGJsbGpiSrawqZGZmYGlqYWpmZGFkjhvscGDeCGB9MSS
+        1OzU1ILUIpjlTBycUg1MTif2PGlVmsAQJzVjSbuEUxmzYcDt9dp/69dmPqiaInfI8e6mmfFt
+        dwMMz4o+Mp2V9eTeIrHEOw43xaZP4la/XvbqRnVyyWvth6Ir/rsecG0VDl28x786Ujvr4R3n
+        B06nwv/6GkglzGCzOCBYsyFujvqrtYFHo/pKNP37PE99ddrhetHrbZNrjK0/F6+I552GXz63
+        JFsbLede/aWgeCV1o6phczDjrbfvP0u8Pv3ZeLrhDZW+sBczQhW7dAPur5nfdTLC0+WF58tp
+        X9w4/GuOSEp3r8rJfDO35Pd26fOtnnNn165k1/RyN5NXY3VM43/DuDlcinfqda8YPdP3DyI8
+        /z2Y+fr3BZWvHCa9ZXpKLMUZiYZazEXFiQD7fcKkywQAAA==
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210315012850epcms2p361447b689e925561c48aa9ca54434eb5
+References: <2da1c963bd3ff5f682d18a251ed08989@codeaurora.org>
+        <20210315012850epcms2p361447b689e925561c48aa9ca54434eb5@epcms2p3>
+        <20210315013137epcms2p861f06e66be9faff32b6648401778434a@epcms2p8>
+        <CGME20210315012850epcms2p361447b689e925561c48aa9ca54434eb5@epcms2p8>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-03-15 09:34, Can Guo wrote:
-> On 2021-03-02 21:24, Avri Altman wrote:
->> The spec does not define what is the host's recommended response when
->> the device send hpb dev reset response (oper 0x2).
+>> This patch supports the HPB 2.0.
 >> 
->> We will update all active hpb regions: mark them and do that on the 
->> next
->> read.
+>> The HPB 2.0 supports read of varying sizes from 4KB to 512KB.
+>> In the case of Read (<= 32KB) is supported as single HPB read.
+>> In the case of Read (36KB ~ 512KB) is supported by as a combination of
+>> write buffer command and HPB read command to deliver more PPN.
+>> The write buffer commands may not be issued immediately due to busy 
+>> tags.
+>> To use HPB read more aggressively, the driver can requeue the write 
+>> buffer
+>> command. The requeue threshold is implemented as timeout and can be
+>> modified with requeue_timeout_ms entry in sysfs.
 >> 
->> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+>> Signed-off-by: Daejun Park <daejun7.park@samsung.com>
 >> ---
->>  drivers/scsi/ufs/ufshpb.c | 47 
->> ++++++++++++++++++++++++++++++++++++---
->>  drivers/scsi/ufs/ufshpb.h |  2 ++
->>  2 files changed, 46 insertions(+), 3 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
->> index 0744feb4d484..0034fa03fdc6 100644
->> --- a/drivers/scsi/ufs/ufshpb.c
->> +++ b/drivers/scsi/ufs/ufshpb.c
->> @@ -642,7 +642,8 @@ int ufshpb_prep(struct ufs_hba *hba, struct
->> ufshcd_lrb *lrbp)
->>  		if (rgn->reads == ACTIVATION_THRESHOLD)
->>  			activate = true;
->>  		spin_unlock_irqrestore(&rgn->rgn_lock, flags);
->> -		if (activate) {
->> +		if (activate ||
->> +		    test_and_clear_bit(RGN_FLAG_UPDATE, &rgn->rgn_flags)) {
->>  			spin_lock_irqsave(&hpb->rsp_list_lock, flags);
->>  			ufshpb_update_active_info(hpb, rgn_idx, srgn_idx);
->>  			hpb->stats.rb_active_cnt++;
->> @@ -1480,6 +1481,20 @@ void ufshpb_rsp_upiu(struct ufs_hba *hba,
->> struct ufshcd_lrb *lrbp)
->>  	case HPB_RSP_DEV_RESET:
->>  		dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
->>  			 "UFS device lost HPB information during PM.\n");
+>> +static struct attribute *hpb_dev_param_attrs[] = {
+>> +        &dev_attr_requeue_timeout_ms.attr,
+>> +        NULL,
+>> +};
 >> +
->> +		if (hpb->is_hcm) {
->> +			struct scsi_device *sdev;
->                         bool need_reset = false;
+>> +struct attribute_group ufs_sysfs_hpb_param_group = {
+>> +        .name = "hpb_param_sysfs",
+>> +        .attrs = hpb_dev_param_attrs,
+>> +};
 >> +
->> +			__shost_for_each_device(sdev, hba->host) {
->> +				struct ufshpb_lu *h = sdev->hostdata;
->> +
->> +				if (!h)
->> +					continue;
->> +
->> +				need_reset = true;
->> +			}
-> 
->                         if (need_reset)
->                             schedule_work(&hpb->ufshpb_lun_reset_work);
-> 
-> At last, scheduling only one reset work shall be enough, otherwise 
-> multiple
-> reset work can be flying in parallel, so maybe above changes?
-
-Forget about this one, I misunderstood it - reset work is for each 
-ufshpb_lu...
-
-Regards,
-Can Guo.
-
-> 
->> +		}
->> +
->>  		break;
->>  	default:
->>  		dev_notice(&hpb->sdev_ufs_lu->sdev_dev,
->> @@ -1594,6 +1609,25 @@ static void
->> ufshpb_run_inactive_region_list(struct ufshpb_lu *hpb)
->>  	spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
->>  }
->> 
->> +static void ufshpb_reset_work_handler(struct work_struct *work)
+>> +static int ufshpb_pre_req_mempool_init(struct ufshpb_lu *hpb)
 >> +{
->> +	struct ufshpb_lu *hpb;
-> 
->         struct ufshpb_lu *hpb = container_of(work, struct ufshpb_lu,
-> ufshpb_lun_reset_work);
-> 
->> +	struct victim_select_info *lru_info;
-> 
->         struct victim_select_info *lru_info = &hpb->lru_info;
-> 
-> This can save some lines.
-> 
-> Thanks,
-> Can Guo.
-> 
->> +	struct ufshpb_region *rgn;
->> +	unsigned long flags;
+>> +        struct ufshpb_req *pre_req = NULL;
+>> +        int qd = hpb->sdev_ufs_lu->queue_depth / 2;
+>> +        int i, j;
 >> +
->> +	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+>> +        INIT_LIST_HEAD(&hpb->lh_pre_req_free);
 >> +
->> +	list_for_each_entry(rgn, &lru_info->lh_lru_rgn, list_lru_rgn)
->> +		set_bit(RGN_FLAG_UPDATE, &rgn->rgn_flags);
+>> +        hpb->pre_req = kcalloc(qd, sizeof(struct ufshpb_req), GFP_KERNEL);
+>> +        hpb->throttle_pre_req = qd;
+>> +        hpb->num_inflight_pre_req = 0;
 >> +
->> +	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+>> +        if (!hpb->pre_req)
+>> +                goto release_mem;
+>> +
+>> +        for (i = 0; i < qd; i++) {
+>> +                pre_req = hpb->pre_req + i;
+>> +                INIT_LIST_HEAD(&pre_req->list_req);
+>> +                pre_req->req = NULL;
+>> +                pre_req->bio = NULL;
+> 
+>Why don't prepare bio as same as wb.m_page? Won't that save more time
+>for ufshpb_issue_pre_req()?
+
+It is pre_req pool. So although we prepare bio at this time, it just only for first pre_req.
+After use it, it should be prepared bio at issue phase.
+
+Thanks,
+Daejun
+
+> 
+>Thanks,
+>Can Guo.
+> 
+>> +
+>> +                pre_req->wb.m_page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+>> +                if (!pre_req->wb.m_page) {
+>> +                        for (j = 0; j < i; j++)
+>> +                                __free_page(hpb->pre_req[j].wb.m_page);
+>> +
+>> +                        goto release_mem;
+>> +                }
+>> +                list_add_tail(&pre_req->list_req, &hpb->lh_pre_req_free);
+>> +        }
+>> +
+>> +        return 0;
+>> +release_mem:
+>> +        kfree(hpb->pre_req);
+>> +        return -ENOMEM;
 >> +}
 >> +
->>  static void ufshpb_normalization_work_handler(struct work_struct 
->> *work)
->>  {
->>  	struct ufshpb_lu *hpb;
->> @@ -1798,6 +1832,8 @@ static int ufshpb_alloc_region_tbl(struct
->> ufs_hba *hba, struct ufshpb_lu *hpb)
->>  		} else {
->>  			rgn->rgn_state = HPB_RGN_INACTIVE;
->>  		}
->> +
->> +		rgn->rgn_flags = 0;
->>  	}
->> 
->>  	return 0;
->> @@ -2012,9 +2048,12 @@ static int ufshpb_lu_hpb_init(struct ufs_hba
->> *hba, struct ufshpb_lu *hpb)
->>  	INIT_LIST_HEAD(&hpb->list_hpb_lu);
->> 
->>  	INIT_WORK(&hpb->map_work, ufshpb_map_work_handler);
->> -	if (hpb->is_hcm)
->> +	if (hpb->is_hcm) {
->>  		INIT_WORK(&hpb->ufshpb_normalization_work,
->>  			  ufshpb_normalization_work_handler);
->> +		INIT_WORK(&hpb->ufshpb_lun_reset_work,
->> +			  ufshpb_reset_work_handler);
->> +	}
->> 
->>  	hpb->map_req_cache = kmem_cache_create("ufshpb_req_cache",
->>  			  sizeof(struct ufshpb_req), 0, 0, NULL);
->> @@ -2114,8 +2153,10 @@ static void ufshpb_discard_rsp_lists(struct
->> ufshpb_lu *hpb)
->> 
->>  static void ufshpb_cancel_jobs(struct ufshpb_lu *hpb)
->>  {
->> -	if (hpb->is_hcm)
->> +	if (hpb->is_hcm) {
->> +		cancel_work_sync(&hpb->ufshpb_lun_reset_work);
->>  		cancel_work_sync(&hpb->ufshpb_normalization_work);
->> +	}
->>  	cancel_work_sync(&hpb->map_work);
->>  }
->> 
->> diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
->> index 84598a317897..37c1b0ea0c0a 100644
->> --- a/drivers/scsi/ufs/ufshpb.h
->> +++ b/drivers/scsi/ufs/ufshpb.h
->> @@ -121,6 +121,7 @@ struct ufshpb_region {
->>  	struct list_head list_lru_rgn;
->>  	unsigned long rgn_flags;
->>  #define RGN_FLAG_DIRTY 0
->> +#define RGN_FLAG_UPDATE 1
->> 
->>  	/* region reads - for host mode */
->>  	spinlock_t rgn_lock;
->> @@ -217,6 +218,7 @@ struct ufshpb_lu {
->>  	/* for selecting victim */
->>  	struct victim_select_info lru_info;
->>  	struct work_struct ufshpb_normalization_work;
->> +	struct work_struct ufshpb_lun_reset_work;
->> 
->>  	/* pinned region information */
->>  	u32 lu_pinned_start;
+> 
+> 
+>  
