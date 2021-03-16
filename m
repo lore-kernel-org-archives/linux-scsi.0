@@ -2,147 +2,366 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 181A1C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 07:18:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B16DCC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 07:49:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2FF564F80
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 07:18:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A78D64FED
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 07:49:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231575AbhCPHSB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Mar 2021 03:18:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43044 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231564AbhCPHR3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Mar 2021 03:17:29 -0400
-Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DAA3C061756
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Mar 2021 00:17:29 -0700 (PDT)
-Received: by mail-wm1-x32f.google.com with SMTP id r10-20020a05600c35cab029010c946c95easo810270wmq.4
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Mar 2021 00:17:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=oZuUvGFA5U2S6/itOAzxPtROAaukApCNjMGTGxgU3HQ=;
-        b=GJE1ydr9bcaCTx5Zg7jSOp9KA8TA4vgJxxjqgfzCx7lM7vzrcDp7DDJaxo5y19IuLe
-         Wa6PJP0fKG2kna4IxKVLtxAeAUxUEusGQsxm9VZKT9m6MSXGmJTjd48RluFRz06T0QB2
-         Hcgc5LtxahnTIEuPlzeiGFtPhNcYnOX0ghkeHQsKF78wm55qmtLuZVteLbliM+HfEQDV
-         nmfplYMjeE0EnvtZgIGMpJCHZSwcmz7S4gGK5JXeUBBBsE194HsqEDwuwsYhzmV5b1EM
-         IJLV+K5kwqqP3PE66f84iyg3jdylWaFRj+3OBmb+BwhWcgL2RbxCg9IE7OEYZd8SpFTi
-         vYyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=oZuUvGFA5U2S6/itOAzxPtROAaukApCNjMGTGxgU3HQ=;
-        b=KwhdDIh2vx/XSxrn6PuAjblkwvP0guQVstzB4fJottA3OwUIUCZMhLSxm/s3boEnVr
-         bcRRTdkfcyrHrnBLH/6ywDu/o6NhPYZFbSGV7f8mANwpsf+l+9mkexg14uwbuSYRGgcD
-         TxyZZRAiSjTsVq97OA36VSf9rWcZHvbK92SGVleQXj9dnNrvc8V5sZ3YrdZbWuTN/DPo
-         6t9yYOmR4kaJUZkurR/m5oIAHrW1yvzFz9FVidgqCvop1cCBED3rLOlQvJF+7sBdjKbc
-         iumsyW5MBK8SyHrq1P0wO6Va70q2VTPZeE/GXRXqzJx3xFkr72egf+R1Tu2bLnqPXWi7
-         nPiA==
-X-Gm-Message-State: AOAM533Gmewq2uxoP6GY+oOrVPeukJEy95GMh3Yh1ysFe4HwPCu+z95q
-        o5g9XuQjFCOmWsac165mzteM6w==
-X-Google-Smtp-Source: ABdhPJzgV7Xt6PwMLLbkmCtGY7U3PeWH7Ot13DkNSrnIYuATbE7mWyPIaCkR7zcFI+EbI0VbJyiYxw==
-X-Received: by 2002:a7b:c2f7:: with SMTP id e23mr1578338wmk.30.1615879047977;
-        Tue, 16 Mar 2021 00:17:27 -0700 (PDT)
-Received: from dell ([91.110.221.243])
-        by smtp.gmail.com with ESMTPSA id w11sm22538094wrv.88.2021.03.16.00.17.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Mar 2021 00:17:27 -0700 (PDT)
-Date:   Tue, 16 Mar 2021 07:17:25 +0000
-From:   Lee Jones <lee.jones@linaro.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-kernel@vger.kernel.org, Adam Radford <aradford@gmail.com>,
-        Alan Cox <alan@lxorguk.ukuu.org.uk>,
-        Ali Akcaagac <aliakc@web.de>,
+        id S232483AbhCPHs5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Mar 2021 03:48:57 -0400
+Received: from mga07.intel.com ([134.134.136.100]:44107 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231724AbhCPHsh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 16 Mar 2021 03:48:37 -0400
+IronPort-SDR: wvEzSpTsVDBE/kjm2qLLkprBsZm01YYR6XogO9pgyHfwxI/evBrl9LW4ujkt1FNaduYDA1qu7W
+ qcwR0SiCzvwA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9924"; a="253233000"
+X-IronPort-AV: E=Sophos;i="5.81,251,1610438400"; 
+   d="scan'208";a="253233000"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2021 00:48:36 -0700
+IronPort-SDR: DG9fgwNUmjmgIBNszHawH3Sgo0KAIyW+W61qFHEGthrW0tQIV0yTx5GLeA+YtKVcKa6lck7/+A
+ k29+bF7DjeyQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,251,1610438400"; 
+   d="scan'208";a="590569277"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
+  by orsmga005.jf.intel.com with ESMTP; 16 Mar 2021 00:48:28 -0700
+Subject: Re: [PATCH v10 1/2] scsi: ufs: Enable power management for wlun
+To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     "Rafael J. Wysocki" <rafael@kernel.org>, cang@codeaurora.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
-        Andre Hedrick <andre@suse.com>,
-        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Anil Veerabhadrappa <anilgv@broadcom.com>,
         Avri Altman <avri.altman@wdc.com>,
-        Bas Vermeulen <bvermeul@blackstar.xs4all.nl>,
-        Bradley Grove <linuxdrivers@attotech.com>,
-        Brian Macy <bmacy@sunshinecomputing.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "C.L. Huang" <ching@tekram.com.tw>, dc395x@twibble.org,
-        de Melo <acme@conectiva.com.br>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Dimitris Michailidis <dm@chelsio.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Eddie Wai <eddie.wai@broadcom.com>,
-        Erich Chen <erich@tekram.com.tw>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Hannes Reinecke <hare@kernel.org>,
-        Hannes Reinecke <hare@suse.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        James Smart <james.smart@broadcom.com>,
-        Jamie Lenehan <lenehan@twibble.org>,
-        Jan Kotas <jank@cadence.com>,
-        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
-        Joel Jacobson <linux@3ware.com>, Karen Xie <kxie@chelsio.com>,
-        Ketan Mukadam <ketan.mukadam@broadcom.com>,
-        Kurt Garloff <garloff@suse.de>,
-        "Leonard N. Zubkoff" <lnz@dandelion.com>,
-        linux-drivers@broadcom.com, Linux GmbH <hare@suse.com>,
-        linux-scsi@vger.kernel.org,
-        Manish Rangankar <mrangankar@marvell.com>,
-        Marcelo Tosatti <marcelo@conectiva.com.br>,
-        MPT-FusionLinux.pdl@avagotech.com,
-        MPT-FusionLinux.pdl@broadcom.com,
-        Nathaniel Clark <nate@misrule.us>,
-        "Nicholas A. Bellinger" <nab@kernel.org>,
-        Nilesh Javali <njavali@marvell.com>,
-        Oliver Neukum <oliver@neukum.org>,
-        QLogic-Storage-Upstream@qlogic.com,
-        Santosh Yaraganavi <santosh.sy@samsung.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Vinayak Holikatti <h.vinayak@samsung.com>,
-        Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH 00/30] [Set 2] Rid W=1 warnings in SCSI
-Message-ID: <20210316071725.GZ701493@dell>
-References: <20210312094738.2207817-1-lee.jones@linaro.org>
- <yq15z1r6db8.fsf@ca-mkp.ca.oracle.com>
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>,
+        Linux-PM mailing list <linux-pm@vger.kernel.org>
+References: <cover.1614725302.git.asutoshd@codeaurora.org>
+ <0576d6eae15486740c25767e2d8805f7e94eb79d.1614725302.git.asutoshd@codeaurora.org>
+ <85086647-7292-b0a2-d842-290818bd2858@intel.com>
+ <6e98724d-2e75-d1fe-188f-a7010f86c509@codeaurora.org>
+ <20210306161616.GC74411@rowland.harvard.edu>
+ <CAJZ5v0ihJe8rNjWRwNic_BQUvKbALNcjx8iiPAh5nxLhOV9duw@mail.gmail.com>
+ <CAJZ5v0iJ4yqRTt=mTCC930HULNFNTgvO4f9ToVO6pNz53kxFkw@mail.gmail.com>
+ <f1e9b21d-1722-d20b-4bae-df7e6ce50bbc@codeaurora.org>
+ <2bd90336-18a9-9acd-5abb-5b52b27fc535@codeaurora.org>
+ <b13086f3-eea1-51a7-2117-579d520f21fc@intel.com>
+ <20cbd52d-7254-3e1c-06a3-712326c99f75@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <c1b38327-fece-4e31-709b-84ec775c6e18@intel.com>
+Date:   Tue, 16 Mar 2021 09:48:45 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
+In-Reply-To: <20cbd52d-7254-3e1c-06a3-712326c99f75@codeaurora.org>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <yq15z1r6db8.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 15 Mar 2021, Martin K. Petersen wrote:
+On 16/03/21 12:22 am, Asutosh Das (asd) wrote:
+> On 3/14/2021 1:11 AM, Adrian Hunter wrote:
+>> On 10/03/21 5:04 am, Asutosh Das (asd) wrote:
+>>> On 3/9/2021 7:56 AM, Asutosh Das (asd) wrote:
+>>>> On 3/8/2021 9:17 AM, Rafael J. Wysocki wrote:
+>>>>> On Mon, Mar 8, 2021 at 5:21 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
+>>>>>>
+>>>>>> On Sat, Mar 6, 2021 at 5:17 PM Alan Stern <stern@rowland.harvard.edu> wrote:
+>>>>>>>
+>>>>>>> On Fri, Mar 05, 2021 at 06:54:24PM -0800, Asutosh Das (asd) wrote:
+>>>>>>>
+>>>>>>>> Now during my testing I see a weird issue sometimes (1 in 7).
+>>>>>>>> Scenario - bootups
+>>>>>>>>
+>>>>>>>> Issue:
+>>>>>>>> The supplier 'ufs_device_wlun 0:0:0:49488' goes into runtime suspend even
+>>>>>>>> when one/more of its consumers are in RPM_ACTIVE state.
+>>>>>>>>
+>>>>>>>> *Log:
+>>>>>>>> [   10.056379][  T206] sd 0:0:0:1: [sdb] Synchronizing SCSI cache
+>>>>>>>> [   10.062497][  T113] sd 0:0:0:5: [sdf] Synchronizing SCSI cache
+>>>>>>>> [   10.356600][   T32] sd 0:0:0:7: [sdh] Synchronizing SCSI cache
+>>>>>>>> [   10.362944][  T174] sd 0:0:0:3: [sdd] Synchronizing SCSI cache
+>>>>>>>> [   10.696627][   T83] sd 0:0:0:2: [sdc] Synchronizing SCSI cache
+>>>>>>>> [   10.704562][  T170] sd 0:0:0:6: [sdg] Synchronizing SCSI cache
+>>>>>>>> [   10.980602][    T5] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+>>>>>>>>
+>>>>>>>> /** Printing all the consumer nodes of supplier **/
+>>>>>>>> [   10.987327][    T5] ufs_device_wlun 0:0:0:49488: usage-count @ suspend: 0
+>>>>>>>> <-- this is the usage_count
+>>>>>>>> [   10.994440][    T5] ufs_rpmb_wlun 0:0:0:49476: PM state - 2
+>>>>>>>> [   11.000402][    T5] scsi 0:0:0:49456: PM state - 2
+>>>>>>>> [   11.005453][    T5] sd 0:0:0:0: PM state - 2
+>>>>>>>> [   11.009958][    T5] sd 0:0:0:1: PM state - 2
+>>>>>>>> [   11.014469][    T5] sd 0:0:0:2: PM state - 2
+>>>>>>>> [   11.019072][    T5] sd 0:0:0:3: PM state - 2
+>>>>>>>> [   11.023595][    T5] sd 0:0:0:4: PM state - 0 << RPM_ACTIVE
+>>>>>>>> [   11.353298][    T5] sd 0:0:0:5: PM state - 2
+>>>>>>>> [   11.357726][    T5] sd 0:0:0:6: PM state - 2
+>>>>>>>> [   11.362155][    T5] sd 0:0:0:7: PM state - 2
+>>>>>>>> [   11.366584][    T5] ufshcd-qcom 1d84000.ufshc: __ufshcd_wl_suspend - 8709
+>>>>>>>> [   11.374366][    T5] ufs_device_wlun 0:0:0:49488: __ufshcd_wl_suspend -
+>>>>>>>> (0) has rpm_active flags
+>>>>>>
+>>>>>> Do you mean that rpm_active of the link between the consumer and the
+>>>>>> supplier is greater than 0 at this point and the consumer is
+>>>>>
+>>>>> I mean is rpm_active of the link greater than 1 (because 1 means "no
+>>>>> active references to the supplier")?
+>>>> Hi Rafael:
+>>>> No - it is not greater than 1.
+>>>>
+>>>> I'm trying to understand what's going on in it; will update when I've something.
+>>>>
+>>>>>
+>>>>>> RPM_ACTIVE, but the supplier suspends successfully nevertheless?
+>>>>>>
+>>>>>>>> [   11.383376][    T5] ufs_device_wlun 0:0:0:49488:
+>>>>>>>> ufshcd_wl_runtime_suspend <-- Supplier suspends fine.
+>>>>>>>> [   12.977318][  T174] sd 0:0:0:4: [sde] Synchronizing SCSI cache
+>>>>>>>>
+>>>>>>>> And the the suspend of sde is stuck now:
+>>>>>>>> schedule+0x9c/0xe0
+>>>>>>>> schedule_timeout+0x40/0x128
+>>>>>>>> io_schedule_timeout+0x44/0x68
+>>>>>>>> wait_for_common_io+0x7c/0x100
+>>>>>>>> wait_for_completion_io+0x14/0x20
+>>>>>>>> blk_execute_rq+0x90/0xcc
+>>>>>>>> __scsi_execute+0x104/0x1c4
+>>>>>>>> sd_sync_cache+0xf8/0x2a0
+>>>>>>>> sd_suspend_common+0x74/0x11c
+>>>>>>>> sd_suspend_runtime+0x14/0x20
+>>>>>>>> scsi_runtime_suspend+0x64/0x94
+>>>>>>>> __rpm_callback+0x80/0x2a4
+>>>>>>>> rpm_suspend+0x308/0x614
+>>>>>>>> pm_runtime_work+0x98/0xa8
+>>>>>>>>
+>>>>>>>> I added 'DL_FLAG_RPM_ACTIVE' while creating links.
+>>>>>>>>         if (hba->sdev_ufs_device) {
+>>>>>>>>                 link = device_link_add(&sdev->sdev_gendev,
+>>>>>>>>                                     &hba->sdev_ufs_device->sdev_gendev,
+>>>>>>>>                                    DL_FLAG_PM_RUNTIME|DL_FLAG_RPM_ACTIVE);
+>>>>>>>> I didn't expect this to resolve the issue anyway and it didn't.
+>>>>>>>>
+>>>>>>>> Another interesting point here is when I resume any of the above suspended
+>>>>>>>> consumers, it all goes back to normal, which is kind of expected. I tried
+>>>>>>>> resuming the consumer and the supplier is resumed and the supplier is
+>>>>>>>> suspended when all the consumers are suspended.
+>>>>>>>>
+>>>>>>>> Any pointers on this issue please?
+>>>>>>>>
+>>>>>>>> @Bart/@Alan - Do you've any pointers please?
+>>>>>>>
+>>>>>>> It's very noticeable that although you seem to have isolated a bug in
+>>>>>>> the power management subsystem (supplier goes into runtime suspend
+>>>>>>> even when one of its consumers is still active), you did not CC the
+>>>>>>> power management maintainer or mailing list.
+>>>>>>>
+>>>>>>> I have added the appropriate CC's.
+>>>>>>
+>>>>>> Thanks Alan!
+>>>>
+>>>>
+>>>
+>>> Hello
+>>> I & Can (thanks CanG) debugged this further:
+>>>
+>>> Looks like this issue can occur if the sd probe is asynchronous.
+>>>
+>>> Essentially, the sd_probe() is done asynchronously and driver_probe_device() invokes pm_runtime_get_suppliers() before invoking sd_probe().
+>>>
+>>> But scsi_probe_and_add_lun() runs in a separate context.
+>>> So the scsi_autopm_put_device() invoked from scsi_scan_host() context reduces the link->rpm_active to 1. And sd_probe() invokes scsi_autopm_put_device() and starts a timer. And then driver_probe_device() invoked from __device_attach_async_helper context reduces the link->rpm_active to 1 thus enabling the supplier to suspend before the consumer suspends.
+>>>
+>>> So if:
+>>> Context T1:
+>>> [1] scsi_probe_and_add_lun()
+>>> [2]    |- scsi_autopm_put_device() - reduce the link->rpm_active to 1
+>>>
+>>> Context T2:
+>>> __device_attach_async_helper()
+>>>      |- driver_probe_device()
+>>>          |- sd_probe()
+>>> In between [1] and [2] say, driver_probe_device() -> sd_probe() is invoked in a separate context from __device_attach_async_helper().
+>>> The driver_probe_device() -> pm_runtime_get_suppliers() but [2] would reduce link->rpm_active to 1.
+>>> Then sd_probe() would invoke rpm_resume() and proceed as is.
+>>> When sd_probe() invokes scsi_autopm_put_device() it'd start a timer, dev->power.timer_autosuspends = 1.
+>>>
+>>> Now then, pm_runtime_put_suppliers() is invoked from driver_probe_device() and that makes the link->rpm_active = 1.
+>>> But by now, the corresponding 'sd dev' (consumer) usage_count = 0, state = RPM_ACTIVE and link->rpm_active = 1.
+>>> At this point of time, all other 'sd dev' (consumers) _may_ be suspended or active but would have the link->rpm_active = 1.
+>>
+>> Is this with DL_FLAG_RPM_ACTIVE?  In that case, wouldn't active
+>> consumers have link->rpm_active = 2 and also have incremented
+>> the supplier's usage_count?
+>>
+>> Another outstanding issue that comes to mind, is to ensure
+>> hba->sdev_ufs_device does not runtime suspend before it is probed.
+>> I suggest changing ufshcd_slave_configure() so it does not set
+>> sdev->rpm_autosuspend for hba->sdev_ufs_device, and instead do
+>> pm_runtime_allow / pm_runtime_forbid() in ufshcd_wl_probe() /
+>> ufshcd_wl_remove() respectively.
+>>
+>> However we still want to stop hba->sdev_ufs_device runtime
+>> suspending while consumers are being added.  With that in mind,
+>> I would expect pm_runtime_get_noresume(&hba->sdev_ufs_device->sdev_gendev)
+>> in ufshcd_scsi_add_wlus() to come *before*
+>> ufshcd_blk_pm_runtime_init(hba->sdev_ufs_device).  In fact, it would
+>> be more logical to make it, pm_runtime_get_sync() since we require
+>> hba->sdev_ufs_device to be active at that point.
+>>
+>>
+> 
+> Hi Adrian,
+> I think the v11 that I pushed can handle this.
+> runtime-suspend is forbidden at probe and is re-enabled after probe is done. Please take a look and let me know if I'm missing something.
+
+If the PM APIs are being used correctly, the usage and active
+counts should never be wrong.  If they were, then that would
+be an issue for the PM framework.
+
+However, it is hard to tell what the issues are until all the
+UFS driver changes have been completed, such as the ones I
+suggested above above.
+
+v11 could be hiding issues rather than fixing them.
 
 > 
-> Lee,
+>>>
+>>> Since the supplier has 0 auto-suspend delay, it now suspends!
+>>>
+>>>
+>>> Context [T1]
+>>> Call trace:
+>>> dump_backtrace+0x0/0x1d4
+>>> show_stack+0x18/0x24
+>>> dump_stack+0xc4/0x144
+>>> __pm_runtime_idle+0xb4/0x184
+>>> scsi_autopm_put_device+0x18/0x24
+>>> scsi_sysfs_add_sdev+0x26c/0x278
+>>> scsi_probe_and_add_lun+0xbac/0xd48
+>>> __scsi_scan_target+0x38c/0x510
+>>> scsi_scan_host_selected+0x14c/0x1e4
+>>> scsi_scan_host+0x1e0/0x228
+>>> ufshcd_async_scan+0x39c/0x408
+>>> async_run_entry_fn+0x48/0x128
+>>> process_one_work+0x1f0/0x470
+>>> worker_thread+0x26c/0x4c8
+>>> kthread+0x13c/0x320
+>>> ret_from_fork+0x10/0x18
+>>>
+>>>
+>>> Context [T2]
+>>> Call trace:
+>>> dump_backtrace+0x0/0x1d4
+>>> show_stack+0x18/0x24
+>>> dump_stack+0xc4/0x144
+>>> rpm_get_suppliers+0x48/0x1ac
+>>> __rpm_callback+0x58/0x12c
+>>> rpm_resume+0x3a4/0x618
+>>> __pm_runtime_resume+0x50/0x80
+>>> scsi_autopm_get_device+0x20/0x54
+>>> sd_probe+0x40/0x3d0
+>>> really_probe+0x1bc/0x4a0
+>>> driver_probe_device+0x84/0xf0
+>>> __device_attach_driver+0x114/0x138
+>>> bus_for_each_drv+0x84/0xd0
+>>> __device_attach_async_helper+0x7c/0xf0
+>>> async_run_entry_fn+0x48/0x128
+>>> process_one_work+0x1f0/0x470
+>>> worker_thread+0x26c/0x4c8
+>>> kthread+0x13c/0x320
+>>> ret_from_fork+0x10/0x18
+>>>
+>>> Below prints show how link->rpm_active becomes 1 for sd 0:0:0:4
+>>> [    7.574654][  T212] Call trace:
+>>> [    7.574657][  T212]  dump_backtrace+0x0/0x1d4
+>>> [    7.574661][  T212]  show_stack+0x18/0x24
+>>> [    7.574665][  T212]  dump_stack+0xc4/0x144
+>>> [    7.574668][  T212]  __pm_runtime_idle+0xb4/0x184
+>>> [    7.574671][  T212]  scsi_autopm_put_device+0x18/0x24
+>>> [    7.574675][  T212]  sd_probe+0x314/0x3d0
+>>> [    7.574677][  T212]  really_probe+0x1bc/0x4a0
+>>> [    7.574680][  T212]  driver_probe_device+0x84/0xf0
+>>> [    7.574683][  T212]  __device_attach_driver+0x114/0x138
+>>> [    7.574686][  T212]  bus_for_each_drv+0x84/0xd0
+>>> [    7.574689][  T212]  __device_attach_async_helper+0x7c/0xf0
+>>> [    7.574692][  T212]  async_run_entry_fn+0x48/0x128
+>>> [    7.574695][  T212]  process_one_work+0x1f0/0x470
+>>> [    7.574698][  T212]  worker_thread+0x26c/0x4c8
+>>> [    7.574700][  T212]  kthread+0x13c/0x320
+>>> [    7.574703][  T212]  ret_from_fork+0x10/0x18
+>>> [    7.574706][  T212] sd 0:0:0:4: scsi_runtime_idle
+>>> [    7.574712][  T212] sd 0:0:0:4: __pm_runtime_idle: aft: [UFSDBG]: pwr.timer_autosuspends: 1 pwr.request_pending: 0 retval: -16 pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
+>>> [    7.574715][  T212] sd 0:0:0:4: sd_probe: [UFSDBG]: Exit
+>>> [    7.574738][  T212] sd 0:0:0:4: __pm_runtime_idle: b4: [UFSDBG]: pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
+>>>
+>>> [    7.574752][  T212] Workqueue: events_unbound async_run_entry_fn
+>>> [    7.574754][  T212] Call trace:
+>>> [    7.574758][  T212]  dump_backtrace+0x0/0x1d4
+>>> [    7.574761][  T212]  show_stack+0x18/0x24
+>>> [    7.574765][  T212]  dump_stack+0xc4/0x144
+>>> [    7.574767][  T212]  __pm_runtime_idle+0xb4/0x184
+>>> [    7.574770][  T212]  driver_probe_device+0x94/0xf0
+>>> [    7.574773][  T212]  __device_attach_driver+0x114/0x138
+>>> [    7.574775][  T212]  bus_for_each_drv+0x84/0xd0
+>>> [    7.574778][  T212]  __device_attach_async_helper+0x7c/0xf0
+>>> [    7.574781][  T212]  async_run_entry_fn+0x48/0x128
+>>> [    7.574783][  T212]  process_one_work+0x1f0/0x470
+>>> [    7.574786][  T212]  worker_thread+0x26c/0x4c8
+>>> [    7.574788][  T212]  kthread+0x13c/0x320
+>>> [    7.574791][  T212]  ret_from_fork+0x10/0x18
+>>> [    7.574848][   T80] sd 0:0:0:4: scsi_runtime_idle
+>>> [    7.574858][  T212] sd 0:0:0:4: __pm_runtime_idle: aft: [UFSDBG]: pwr.timer_autosuspends: 1 pwr.request_pending: 0 retval: 0 pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
+>>> [    7.574863][  T212] sd 0:0:0:4: pm_runtime_put_suppliers: [UFSDBG]: rpm_status: 0 link-rpm_active:1
+>>> [    7.574866][  T212] sd 0:0:0:4: async probe completed
+>>> [    7.574870][  T212] sd 0:0:0:4: __pm_runtime_idle: b4: [UFSDBG]: pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:1
+>>>
+>>>
+>>> So, from the above it looks like when async probe is enabled this is a possibility.
+>>>
+>>> I don't see a way around this. Please let me know if you (@Alan/@Bart/@Adrian) have any thoughts on this.
+>>>
+>>> Thanks,
+>>> -asd
+>>>
+>>
 > 
-> > This set is part of a larger effort attempting to clean-up W=1 kernel
-> > builds, which are currently overwhelmingly riddled with niggly little
-> > warnings.
 > 
-> Applied to 5.13/scsi-staging, thanks!
 
-Superstar!  Thanks Martin.
-
-Just FYI, there are more 44 more patches left until clean.
-
-Would you like them in 1 or 2 sets?
-
--- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
