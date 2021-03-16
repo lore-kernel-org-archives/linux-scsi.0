@@ -2,242 +2,207 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7CCDC433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 16:30:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53C77C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 16:31:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6133665101
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 16:30:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1163E65108
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 16:31:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237704AbhCPQaH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Mar 2021 12:30:07 -0400
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:56402 "EHLO
-        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238716AbhCPQaF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Mar 2021 12:30:05 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1615912205; x=1647448205;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=EV1GsPche4ShBWGnAvR+lKlw9JRAzvqU9GRlcunKq1Y=;
-  b=SpIzqe4jUyKrSgxmRryBAaRatNfzJ4+shpnu8VSlZic0mZirR790QnJ/
-   jd4W98uRudLdf5TuxiX4fx4EH+EiPS/tlw/ye1Sa4UhyFHbJW4yipWLQi
-   ZNBQ7DuLfYhEbvetUHUDq9OYUH5m9bBm0/bi1Z7yOzFuUIuul7h2wsA/3
-   ESj4Y879XRGHpZCn8Vcwl4EZKAG38frdni7m9mkgJtVylUt7XdWr2MuaD
-   Iaqw1o31viX+/VpAt2oH4eXgRGJJ4OTeYqn4QAISG3RcOCul65IOy9Ggi
-   yIyL0cSsIAqveABiDj9LrHlONCdI2n3dapDOkomSCtbuxho/FWvAo9ycq
-   g==;
-IronPort-SDR: LEuxF0n67h5ZIIffNwoN62Qh4lH7RVg22EV7oRCY2S+MixvbyzNGz2+gIBOt/bFAFwu4ArMvVi
- auketdcUXObBM58MSdWQs/RhqcbK/QrApK1DWl/ljuImaMFw6/z8qkI7COEwy36xF16C47DLAQ
- +LVhCtlmufn9GhTLetpZpYMbZMBaN2TruX36HlDLW5PRpxKtQ3ZWnGQPl+6gwnR11JEXzOqr24
- DG6VnRPZMTx+e+Y72yRu+TD0suCHzJMcHTcOKdLc2td4L5MLcNOdDfSVPsyGp6fbFmNqFXW1Re
- RqI=
-X-IronPort-AV: E=Sophos;i="5.81,254,1610434800"; 
-   d="scan'208";a="113434774"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 16 Mar 2021 09:30:04 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.87.72) by
- chn-vm-ex02.mchp-main.com (10.10.87.72) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Tue, 16 Mar 2021 09:30:04 -0700
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.72) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2 via Frontend
- Transport; Tue, 16 Mar 2021 09:30:03 -0700
+        id S237754AbhCPQak (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Mar 2021 12:30:40 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:38342 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237749AbhCPQaN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Mar 2021 12:30:13 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12GGJKt7111488;
+        Tue, 16 Mar 2021 16:30:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=8e3DcjcmZ0uq0OrC3r+bRaRxotrtOiEanf4EiXrvojc=;
+ b=ndF4a9YlxlRcu+z4TkdL3q6bsoJt2oT5IXYIuzBpUBITRMQah6IMSyZpoqQ2OEPRRPdI
+ FTxomD6KfIrgM4TET8QtASPcxN/RMbW80RkKwz24wu8V2oO3sxVK6s4GoBq2vzGcxRyp
+ iZQuc5Yg/yC8NhdJIkhN6FlZDzTAvFvOyG+XAQzgPOPkskI5GwKcpF9mUF6lqfgosEcb
+ y67hiq0qqBo9DFjENvzMWLSMaiLkTQQ/1IS7eXGujIJ8h3hUGA8oUKQ8WYdd0eENnX8P
+ tjR228LNSUZ9dUZ1+ujsdq1c4DG26qBlNh/8ZfJrGWEd8oBwsnryXOBJQjnJRjdRr8+A 8g== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 378nbm8vxs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 16 Mar 2021 16:30:05 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12GGKxiI184205;
+        Tue, 16 Mar 2021 16:30:05 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2040.outbound.protection.outlook.com [104.47.66.40])
+        by aserp3030.oracle.com with ESMTP id 3796ytp56q-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 16 Mar 2021 16:30:05 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VS4g9eIBQyQxT9GBiXWkcPHpeD3xEHTsMsdeEZZ9REC4yBgizcgTVRBbp2YaCaRsTYivqxoIIRrY2NRfj5z3YlzoABFEjmYvfiR8YOlpHTe7dqNFa+qZMqbzjkVdjxvDh4l1ySiPqb1+51aNGoL1eKRsQcc3m3b3vYifqOXigl8L94SaSvD0Izx7R93G+upMaHCns3LKvqjnopGs9+C6OVMG7gEZrlMBEkcQuJe67SSuDEH+KtMMRqKLF5v/zJhJuEJZtTgoGzPUZyBgmK5ZMvwgeBP6Vy1KzOrOGvy35CxkMKD0L5dYiQi54dA2RriEYASbfNXOs+M8CWZp4Lrtyw==
+ b=OubVEHe0sgbkstnnkl0YgKd8vJpNornSzJYZn38frDKTnsTvGGrsDGjl5RlfbGnJk8xcVBpgX5hOG+TK1jmK+WxcmpvvXrGOvj1ZbSjuf09bVF+qCB7mv+6wBhIAAoY4FML208EAE9K2/howrMJP+XmV03O746RCAhzm6bx66Ln1EFzViwL4BIm2pDAHGiwaMsWfxnYxYc6ASWyZhUMjebyBUEZGOTr0bAN0V5OOmHRznlnC3G41xjE3MwbFytRLDwQ4tOBradrbbhgggqy1vNrXLqbyCo6gLGmo0tzyZzED0tuwIfbSrtCBh7TswfFMaDICaroyoeKB4e5T+nN7fw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5oya9Mxn5lrIkzZi/5DUT8Y5MdmZjTFsigjS+b5kvFQ=;
- b=mNDX7sRgU6l0Y6q2BIGO5uzy+Ij4Al2hZATxhAy0jZnqTiU+QP1CKfSn+i1QwOq23ipqXZh9EqhK8Myd+7w5+pK8E21MT5jvvnGIhF3ZaL7qO73TBv2KZK48oH1sI99T4Hzhjoh99wYULTl8SuD8MGtv4WiSBIfuoA/SncAg9fUEKg0N8TIOvT4rWTUcy8UzcPXLBGI7wVhnlP9aXiHCtv98UTK6FyBhk7x7sD6VOTEEW4qxgRSgyWuCSYbEA1+UvlIKiMmlJnkO/vo3IFAU/Vj16fQRpsnSBnO+IfJvBFJJaP+E2m7FsFiMlz2yg3C99PCAMwmuMj3RTqR2Q6HAuQ==
+ bh=8e3DcjcmZ0uq0OrC3r+bRaRxotrtOiEanf4EiXrvojc=;
+ b=UIFSXdx95M14NuBOKAMH+61v5xnKjEvAyB6Ijv6pX4Cl8aLITTtHtco2Uh1j0xDducqTmT3t9kpDNmjteaP82lzkMEaZgduNbLxiaK8H5AsB0lsOUIyTguJ03taDDjJv2nhh/tST1B+Xm6ivGOYG0+NHX1u9oLf1HxcTwyzQ50WoKG8YrUKW+53RiEKFwk5i/XEdBEnjLzo+TuNdKW1hBPFkhU2bJjmwe2U1K1jZwosxY/slgRtEFFFdyOAV31LGqqPHu8JP4En2BXx9Xbl6itmz9Aime2nPnfIBJMmbTixi3vlYxE0hvf6GJrBrWOWXN5zsbMnN2wrKOX8qbMEIig==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5oya9Mxn5lrIkzZi/5DUT8Y5MdmZjTFsigjS+b5kvFQ=;
- b=LGUFAdGBXwy63RC0eXa0HjqxbNMXxFVy4IcuEW3jVGuQpci20+VHa6K6EaE8hNGBkCph37TAINlk7EhKBBtnqVNnPQwloCI3/cSk/LmzJvJITgdml+zzR6SrtMqpPUnaAgA/YYMHiyv8ZhFXsMB5yRG01TCWw1c5Zn+03q+NJnI=
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
- by SN6PR11MB2703.namprd11.prod.outlook.com (2603:10b6:805:59::18) with
+ bh=8e3DcjcmZ0uq0OrC3r+bRaRxotrtOiEanf4EiXrvojc=;
+ b=W1Lt4oon7iu0KP3Ev+ZrJVW52YPF76+h1pUssa+LuOuTo+4Vw4a8S/voNF2VMCPYCddhtnHeClmi1qkCB35ieTXJoAKf2NOAMieJ0RXnxYfwTDou4iIMK03tMEQMj14x/q8soqlwJ801TCueI6GmG0eXoZT7iqk10LAFu7hKDNk=
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
+ by SN6PR10MB2911.namprd10.prod.outlook.com (2603:10b6:805:d7::27) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3933.32; Tue, 16 Mar
- 2021 16:30:00 +0000
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::ccd1:992c:7bc5:4b00]) by SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::ccd1:992c:7bc5:4b00%3]) with mapi id 15.20.3933.032; Tue, 16 Mar 2021
- 16:30:00 +0000
-From:   <Don.Brace@microchip.com>
-To:     <slyfox@gentoo.org>, <linux-kernel@vger.kernel.org>
-CC:     <linux-ia64@vger.kernel.org>, <storagedev@microchip.com>,
-        <linux-scsi@vger.kernel.org>, <jszczype@redhat.com>,
-        <Scott.Benesh@microchip.com>, <Scott.Teel@microchip.com>,
-        <thenzl@redhat.com>, <martin.petersen@oracle.com>,
-        <glaubitz@physik.fu-berlin.de>
-Subject: RE: [PATCH] hpsa: fix boot on ia64 (atomic_t alignment)
-Thread-Topic: [PATCH] hpsa: fix boot on ia64 (atomic_t alignment)
-Thread-Index: AQHXF4722AqRbCqQukSHQNjL/VV846qGzRcg
-Date:   Tue, 16 Mar 2021 16:30:00 +0000
-Message-ID: <SN6PR11MB2848561E3D85A8F55EB86977E16B9@SN6PR11MB2848.namprd11.prod.outlook.com>
-References: <5532f9ab-7555-d51b-f4d5-f9b72a61f248@redhat.com>
- <20210312222718.4117508-1-slyfox@gentoo.org>
-In-Reply-To: <20210312222718.4117508-1-slyfox@gentoo.org>
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3933.31; Tue, 16 Mar
+ 2021 16:30:02 +0000
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::20c7:193:d737:7ab1]) by SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::20c7:193:d737:7ab1%4]) with mapi id 15.20.3933.032; Tue, 16 Mar 2021
+ 16:30:02 +0000
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Quinn Tran <qutran@marvell.com>,
+        Michael Christie <michael.christie@oracle.com>,
+        Daniel Wagner <dwagner@suse.de>
+Subject: Re: [PATCH 7/7] qla2xxx: Always check the return value of
+ qla24xx_get_isp_stats()
+Thread-Topic: [PATCH 7/7] qla2xxx: Always check the return value of
+ qla24xx_get_isp_stats()
+Thread-Index: AQHXGhh0ZGxMUORwjES/RLVlTQLw7KqGzwiA
+Date:   Tue, 16 Mar 2021 16:30:02 +0000
+Message-ID: <E7BBFB34-AA1B-4A5D-8E54-07D44057D623@oracle.com>
+References: <20210316035655.2835-1-bvanassche@acm.org>
+ <20210316035655.2835-8-bvanassche@acm.org>
+In-Reply-To: <20210316035655.2835-8-bvanassche@acm.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: gentoo.org; dkim=none (message not signed)
- header.d=none;gentoo.org; dmarc=none action=none header.from=microchip.com;
-x-originating-ip: [76.30.208.15]
+x-mailer: Apple Mail (2.3608.120.23.2.4)
+authentication-results: acm.org; dkim=none (message not signed)
+ header.d=none;acm.org; dmarc=none action=none header.from=oracle.com;
+x-originating-ip: [70.114.128.235]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 58f613ef-0047-424b-d963-08d8e898becb
-x-ms-traffictypediagnostic: SN6PR11MB2703:
+x-ms-office365-filtering-correlation-id: a1ebc0d4-ac47-4918-116e-08d8e898bfa9
+x-ms-traffictypediagnostic: SN6PR10MB2911:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR11MB270350C4F51D21B9324CB77AE16B9@SN6PR11MB2703.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-microsoft-antispam-prvs: <SN6PR10MB2911F0414694C29359B323CCE66B9@SN6PR10MB2911.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:428;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: A32ELwSnY6KAJV6H/xH0QyIZpo1D4K4P9IK0ETMHW/RybijxSZswnE3YGG0ad1XBIjkhiHJGXBBsPcu82Mouqgl+zM5l5Q0TBOfFeuHSmBmBj+Mg77GdyseImDGGVb/qtvJycnrc7DHBbmwQyHzEkTUFwBsehAKNeTmrghttkv8n7mpUAi/4g9inV102FpjBdIkLFDjH583G1IdrhewHIho86s59fQEDwpJ0+0IWISpgpngg8kX3zplDeUubdou9YK6CVqdACNF67LfUNStHbxAWcQzVE0IOW5ph32hWBk0unYeaMh+lHwNCumO95VnrBPJFldtw1ddIiTx9p7mtGRJyM/DBxDnM5LmbrL/EcVOldi1yh7x8zGKWp2C71lZFosdOX/FgvF5AJ4tJL2jDxVEdhTcwk7eZYB0Oo6FoQ/TKQuRLXbK/QS/nugn7mDxAOhs+XRvWt5bR3KFxuc4sm1JqQY8lGuNgqBr49J7tAxuc+DMDh41UEY1pfe6eOnLY0oi4rh52YTiHejIOZXWu+34cuosVOzhZHES6sgsspC/wd0EIqudWXq4850y6uEsi4f0RPMwXitJSzskj6VJGApWr7Ehv3seFFkMnmBcb/VCY8VKQSJiezVCoImyylPAnoBXXFgxXu7A3Grx7SELegg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(39850400004)(136003)(346002)(396003)(366004)(966005)(6506007)(5660300002)(71200400001)(54906003)(26005)(76116006)(52536014)(4326008)(110136005)(2906002)(64756008)(66476007)(66946007)(316002)(7696005)(9686003)(66556008)(66446008)(55016002)(33656002)(86362001)(8936002)(83380400001)(478600001)(8676002)(186003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?66SJxaad/qk8mUtGzZMp0HrUuda4l44yUEvR9YjEYgoprrz/rhV6GyL6x+XM?=
- =?us-ascii?Q?/WGGUn6WHVcNiIX8T8yQB7Do8KFH0EaVCm5UVcloY9QhWZprRqjxxKIrJuvP?=
- =?us-ascii?Q?V+m8mOEmYd6wNuFHD1IZOKkbaZDYgPO2gujid+uAYYc63La7WxfGDBUNiyU5?=
- =?us-ascii?Q?Sh3tGNmEjxMkBMVf+sECCEI3Juer1X4SbqwFR3WozvEFlB8WKn8gZViLhz+i?=
- =?us-ascii?Q?xC/xp23G/ZPE6rDpc2nNg6QYKpxVW8kgK20KoPqLdu4Ez0QtPKZnitaX/3BE?=
- =?us-ascii?Q?WEvraPHeDOWyPXfE6TnsEq8Usxw37gC1h1sI+zKHR3UQkK3UklSklmobfrvs?=
- =?us-ascii?Q?KckMX2267apfT5FXEhGK0hVRyLwflfreGve3uq8DPDLgqFmc8fs3JCqVWLHk?=
- =?us-ascii?Q?8yyiBiHZZ1GWZN81Yc6qWtA5OQJjCULIxh8xQpum22WJwPk6o+xGtFLgpVw1?=
- =?us-ascii?Q?7juaXic6tO95iIVQaVP1LO6Z37QWzZomdUzkCH/iYFi0e1LP790WlX0ZX6R7?=
- =?us-ascii?Q?1tbPQf2Ktx+2VvqFcIMIdF9U3qYx95WLlk3EDuTYlnKMCZURt6jNsiegNIbP?=
- =?us-ascii?Q?V7m/B5QvDzTqmv4kgSmLo5l9RJC1mFNNZ9vKb+VtTcNbya/WDspTzlUd+HzX?=
- =?us-ascii?Q?Tuic0d7/UzcADlcu2PMJJ14qZ7o6fdp/I63RuvwaDf9+B7VSAwhhQIhucXUJ?=
- =?us-ascii?Q?BzENI9T5i+6ZZUvU8eAcpg9/vDGXhiTljjDOQuUZGFzIWScQN0O7DmRK06qS?=
- =?us-ascii?Q?caNUw+YO/BNRXQHMltT+pqtJJuT8bq+sROg3kmdS3JN4rWwmqr4N8N3zcYTE?=
- =?us-ascii?Q?YhTTkZoHLiU+UZfc3s17Tpvz6NOaKoIQbbF7XTyMGFrZyyBnN93ytf4CRTw6?=
- =?us-ascii?Q?oHIatp5k6V7fNKC1svwpzqAbiJplwAMVTrc3B+xOW0LUzIUKNpK06c6Nmx2a?=
- =?us-ascii?Q?JW8ND9LzPyijEZIG025KxJWibVu/aIaBULe9ovfBCUGvX1DMw3qvCOU6ZWV7?=
- =?us-ascii?Q?wl/D7m1O4ca05Hk9GqQxtr9B9FPs9jqVpMyi1iLiDdrLxnKNvljTOK7uaPK0?=
- =?us-ascii?Q?zGb6xJoPUmh52XQh2s0/z1QnNgIiMslOONiBbRCbL/ZkwZgbyAzkoOvZVapu?=
- =?us-ascii?Q?3QU9kqfF9vlKaa/P8QyU+AfBv2aype/dz5CPlMvAzTkGZuMDOe6MY1hX5u7n?=
- =?us-ascii?Q?cEMSXcKeDDCl5ryg4J+yTScGGnZDqGfLzejVr+DVmRoapW+YZT4NnkY56E2s?=
- =?us-ascii?Q?dJLlcP/EM37TDjnSnBdIUeXmDX7z6ZzPY/43kbZwUUUBK7zEsAfJsPebAkQP?=
- =?us-ascii?Q?7fI=3D?=
+x-microsoft-antispam-message-info: ULSXbAk1O9jGx6Od+ytC3LQMj+biLLl/jn1zDYnqBsG/X3CYgX+XE+oxLyWSLzP9A3SKbGWIXNf+yspw9uPPaAJLvuD2ZhmxIAIv9TNNzglZ5KJXNTzwNAv4mYBnkqgpWDFk4eQ7Ci1SF/8rQa3/YSu3kcREQx3EyDmnSJK7rq0T8dcnLMX27Lj5xg7DFOLhF5v0dwYRIdCunTeOkCbLNnv9ja2pZvzs9FNOoQuahIdr7x+1LPgvs4ElJEROeBAUXkDAVTjHielbVVoEVFIaqxYcvh1/q5OjvdmZ2PyV7ISrsal1Y5uN8sg62aSA2+nzA2n7w/9ZiliYeO1lLIq9ygHKhSJqN+a02On4Kjo25RybFCcCzw8LraHDOrYaGIr41CfEfwirvZSKl9D/wTIFYMSEG9LDqYfz0Cn9LHEGaMyPiHZDtUIxgRtZlgRfHNUAT+GH+/Jpg8RaXKNqYtESBUQmHrzMSkXKDwIz4PKiEK2QZo/y6MeEdMvKyxHo1EamiyqDRLdcke9GraF7T4fw5l7vUXZzCyqqoxfq79+M2E5BUlJP9jxaq7nNYoOx5HTLrtN6P+Su5w8ru1Wkwoy7Hz7OBJUq4hcrdRfiJdki82ECB1KkmmQRjaTA102igraE
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(346002)(376002)(396003)(136003)(39860400002)(6916009)(4326008)(478600001)(36756003)(66476007)(5660300002)(64756008)(316002)(66946007)(66446008)(66556008)(26005)(76116006)(44832011)(186003)(2906002)(86362001)(6512007)(8936002)(8676002)(2616005)(71200400001)(6506007)(53546011)(83380400001)(33656002)(54906003)(6486002)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?KotraxlHbCc41ZnuDDpU4fjdxhwOVTuHAUya4zCSqsP382NAzqPsDJ4jO5/4?=
+ =?us-ascii?Q?p5GfquewAs7giqcXdaL3PwJqUnaBrwp+Yow+fH9Y/CPkJ4N6mIoVmDjGA6qF?=
+ =?us-ascii?Q?Sh7S6p4sy3urfv0JeEMEN526CC3NCEhcQfFp4MGmew/QC1Xd2znxXoKnqy8h?=
+ =?us-ascii?Q?lcRYcvXEh6Su67KLvQA+Mysn906mGlcBuYTp3WlZOSdgn34QO8HTqH0Uw5wk?=
+ =?us-ascii?Q?YLHwWdbVsSvaWIk7Vig2qdadQeYzfet+HXldnUY/pxwDBgkfrII5jrQxOC+/?=
+ =?us-ascii?Q?5eO7f/JV6jwovexXvQxn2vckLAbaITIja5p0BSer5kh8Jn6XW04GX2lGzamB?=
+ =?us-ascii?Q?xOLARfnWNllwFxygWFc1ro8EYPQ/bzv/ZjuK486t2W5t7ShgVBSkUfkHqjgV?=
+ =?us-ascii?Q?S51Zbvr9BE4L9raIWH+IocKvAOKgz3LRR5GVkurEu2cSxMsAbu1emavGjAo0?=
+ =?us-ascii?Q?/dSZbuETOdO48BolaaIek+lbu3O4eU+FN+DVcTzfhS+2l73bQRfJL/2xbVyv?=
+ =?us-ascii?Q?2OmOhALU/AvBv97wzfzwsoNdx2/8zmWKwqMqzKrWRd6+80rOFTTLsZhKEszE?=
+ =?us-ascii?Q?9rIwq03WQJbaaiH8/sOpJu4TmJePgWTOGk6rwIrgz+P9YmdJofs9pDil01C9?=
+ =?us-ascii?Q?X6uSimZpcXl8JNUbcCbxuIDvJvLXweil2mkFijB1wzAQICGKLlNfEXoEGhG0?=
+ =?us-ascii?Q?resSk0B75U5tL0FfPhrr1TXGwzVOlS/s6hE7QTf9aF1pZyHU8//emcz5Jdfn?=
+ =?us-ascii?Q?ikvwW9e+x9vOpJNq8dVuVSxtaDBt+L15UL2+HKSA1BFY6nh0tRK7qMqcFDTc?=
+ =?us-ascii?Q?a0RrxfPREm4jz6hNqm7/0f0VJZ68CE8j6oCVizpjHvnC1V2NP9XhY96T+2rD?=
+ =?us-ascii?Q?s+Wz9HMG/El13rW9WzBDU9vFg7SPJPHEu+N+XSUM7IELSshs6bl9wr56ia7B?=
+ =?us-ascii?Q?MHZQrBTf9rJ9vudPipFCHQv8qCep40iTuFJBRqcG4M+ch8POEncwNDTvjd6e?=
+ =?us-ascii?Q?ns6wVaNkFop71XuuPRjKV1kkNuBU9BjC5uRajbWh+V4OXpQYtT9NyAa7z7lX?=
+ =?us-ascii?Q?/g8LYZRKilTWpLq1hBYsdqQO/zB9x7it64Ntva9OCdbIBwo5o6swua8CrxXX?=
+ =?us-ascii?Q?GOh1uZy+vtaQ04E7YCAt/78fcAqnqMi6KiLbi54P4iIihkI+UuqYzPl63RhZ?=
+ =?us-ascii?Q?AW4VG++vRWW7mWu0Qi3MC0jq8dtsLRYObR5SK4RJxZcdjU9AoXYJGBIEzbSh?=
+ =?us-ascii?Q?E0bR3IG2wd6WaxX3zFBUljLW5jgaDspDkyPzoClPYV4AgURZNlMsMJlBgeBC?=
+ =?us-ascii?Q?uU4Dg8Cdv+kHSAabcn50Hx9gf2tLc4rShq0GLXLRwC95DA=3D=3D?=
 Content-Type: text/plain; charset="us-ascii"
+Content-ID: <769CBFBF83BCBA46B3D3615782145F0E@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
+X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2848.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 58f613ef-0047-424b-d963-08d8e898becb
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Mar 2021 16:30:00.5789
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a1ebc0d4-ac47-4918-116e-08d8e898bfa9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Mar 2021 16:30:02.0436
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: rACOBv81SIDME/i//ZIPrCk2ohSbeQocXoz8Qcx7d0bgBklEw7ybb1n9FU3FQ/39Wj3bbCh7mqWIlnykGnoaQQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB2703
+X-MS-Exchange-CrossTenant-userprincipalname: SZHPRld+ywcUnghzhG3hel1n4d9QZw/4GiotL4MxHadKaTZN4H7+EhT5M4Rw2tq0GmsGNdrK36zHZpUOrA7vPWFvKAjKTLH891toHVgaEv0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR10MB2911
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9925 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0 spamscore=0
+ bulkscore=0 mlxlogscore=999 mlxscore=0 suspectscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103160107
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9925 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 impostorscore=0
+ malwarescore=0 adultscore=0 mlxscore=0 clxscore=1015 mlxlogscore=999
+ lowpriorityscore=0 phishscore=0 priorityscore=1501 spamscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103160107
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
------Original Message-----
-From: Sergei Trofimovich [mailto:slyfox@gentoo.org]=20
-Subject: [PATCH] hpsa: fix boot on ia64 (atomic_t alignment)
 
-The failure initially observed as boot failure on rx3600 ia64 machine with =
-RAID bus controller: Hewlett-Packard Company Smart Array P600:
 
-    kernel unaligned access to 0xe000000105dd8b95, ip=3D0xa000000100b87551
-    kernel unaligned access to 0xe000000105dd8e95, ip=3D0xa000000100b87551
-    hpsa 0000:14:01.0: Controller reports max supported commands of 0 Using=
- 16 instead. Ensure that firmware is up to date.
-    swapper/0[1]: error during unaligned kernel access
+> On Mar 15, 2021, at 10:56 PM, Bart Van Assche <bvanassche@acm.org> wrote:
+>=20
+> This patch fixes the following Coverity warning:
+>=20
+>    CID 361199 (#1 of 1): Unchecked return value (CHECKED_RETURN)
+>    3. check_return: Calling qla24xx_get_isp_stats without checking return
+>    value (as is done elsewhere 4 out of 5 times).
+>=20
+> Cc: Quinn Tran <qutran@marvell.com>
+> Cc: Mike Christie <michael.christie@oracle.com>
+> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Cc: Daniel Wagner <dwagner@suse.de>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+> drivers/scsi/qla2xxx/qla_attr.c | 5 ++++-
+> 1 file changed, 4 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_a=
+ttr.c
+> index 63391c9be05d..ad57111f8cb9 100644
+> --- a/drivers/scsi/qla2xxx/qla_attr.c
+> +++ b/drivers/scsi/qla2xxx/qla_attr.c
+> @@ -2864,6 +2864,8 @@ qla2x00_reset_host_stats(struct Scsi_Host *shost)
+> 	vha->qla_stats.jiffies_at_last_reset =3D get_jiffies_64();
+>=20
+> 	if (IS_FWI2_CAPABLE(ha)) {
+> +		int rval;
+> +
+> 		stats =3D dma_alloc_coherent(&ha->pdev->dev,
+> 		    sizeof(*stats), &stats_dma, GFP_KERNEL);
+> 		if (!stats) {
+> @@ -2873,7 +2875,8 @@ qla2x00_reset_host_stats(struct Scsi_Host *shost)
+> 		}
+>=20
+> 		/* reset firmware statistics */
+> -		qla24xx_get_isp_stats(base_vha, stats, stats_dma, BIT_0);
+> +		rval =3D qla24xx_get_isp_stats(base_vha, stats, stats_dma, BIT_0);
+> +		WARN_ONCE(rval !=3D QLA_SUCCESS, "rval =3D %d\n", rval);
+>=20
+> 		dma_free_coherent(&ha->pdev->dev, sizeof(*stats),
+> 		    stats, stats_dma);
 
-Here unaligned access comes from 'struct CommandList' that happens to be pa=
-cked. The change f749d8b7a ("scsi: hpsa: Correct dev cmds outstanding for r=
-etried cmds") introduced unexpected padding and un-aligned atomic_t from na=
-tural alignment to something else.
+Looks Good.
 
-This change does not remove packing annotation from struct but only restore=
-s alignment of atomic variable.
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
-The change is tested on the same rx3600 machine.
-
-CC: linux-ia64@vger.kernel.org
-CC: storagedev@microchip.com
-CC: linux-scsi@vger.kernel.org
-CC: Joe Szczypek <jszczype@redhat.com>
-CC: Scott Benesh <scott.benesh@microchip.com>
-CC: Scott Teel <scott.teel@microchip.com>
-CC: Tomas Henzl <thenzl@redhat.com>
-CC: "Martin K. Petersen" <martin.petersen@oracle.com>
-CC: Don Brace <don.brace@microchip.com>
-Reported-by: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Suggested-by: Don Brace <don.brace@microchip.com>
-Fixes: f749d8b7a "scsi: hpsa: Correct dev cmds outstanding for retried cmds=
-"
-Signed-off-by: Sergei Trofimovich <slyfox@gentoo.org>
----
- drivers/scsi/hpsa_cmd.h | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h index d126bb=
-877250..617bdae9a7de 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -20,6 +20,9 @@
- #ifndef HPSA_CMD_H
- #define HPSA_CMD_H
-
-+#include <linux/build_bug.h> /* static_assert */ #include=20
-+<linux/stddef.h> /* offsetof */
-+
- /* general boundary defintions */
- #define SENSEINFOBYTES          32 /* may vary between hbas */
- #define SG_ENTRIES_IN_CMD      32 /* Max SG entries excluding chain blocks=
- */
-@@ -448,11 +451,20 @@ struct CommandList {
-         */
-        struct hpsa_scsi_dev_t *phys_disk;
-
--       bool retry_pending;
-+       int retry_pending;
-        struct hpsa_scsi_dev_t *device;
-        atomic_t refcount; /* Must be last to avoid memset in hpsa_cmd_init=
-() */  } __aligned(COMMANDLIST_ALIGNMENT);
-
-+/*
-+ * Make sure our embedded atomic variable is aligned. Otherwise we=20
-+break atomic
-+ * operations on architectures that don't support unaligned atomics like I=
-A64.
-+ *
-+ * Ideally this header should be cleaned up to only mark individual=20
-+structs as
-+ * packed.
-+ */
-+static_assert(offsetof(struct CommandList, refcount) %=20
-+__alignof__(atomic_t) =3D=3D 0);
-+
- /* Max S/G elements in I/O accelerator command */
- #define IOACCEL1_MAXSGENTRIES           24
- #define IOACCEL2_MAXSGENTRIES          28
 --
-2.30.2
-
-Thank-you for your testing.
-I would rather you add the atomic_t alignment check only. The current patch=
- under review has other changes...
-https://patchwork.kernel.org/project/linux-scsi/patch/161540317205.18786.58=
-21926127237311408.stgit@brunhilda/
-
-
-
-
+Himanshu Madhani	 Oracle Linux Engineering
 
