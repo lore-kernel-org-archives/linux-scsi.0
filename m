@@ -2,68 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ADFAC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 08:31:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D42BCC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 08:32:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6498F64FF9
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 08:31:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98D5365001
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 08:32:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234733AbhCPIaj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Mar 2021 04:30:39 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:64430 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231922AbhCPIaJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Mar 2021 04:30:09 -0400
+        id S234865AbhCPIcP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Mar 2021 04:32:15 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:57701 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234943AbhCPIcM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Mar 2021 04:32:12 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1615883409; x=1647419409;
+  t=1615883532; x=1647419532;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=qkW88P68q2jGnI99ZDOU5kFoqcEglUhH9RukgB9Hyu8=;
-  b=F3NjJ2A8ILZo9Wc8eoxDRKLwtMPhKyPN3W14F1PXNryMlamjGZOe69pC
-   bFWn1l/vpq+6asUSCJMvzlqdxU/9n++z8Sy4uya8va5lvb+PUha1Pf5QU
-   2IDavxSBJsDHhHOx2yaahdYhkWSIz6wWALr3rkK0kd1vLIAAqVLCBKaZ2
-   Qj9udRn6OwqGlXV8BTLVpDDQBa4lLAum1fVugs/QWuuUaEHpf8vsSZ9q1
-   BTs+4cUQJ1sJ+L/jYk8izDhvJ4gzmXxSdO5StKllfrCzyfk9hY4b/4TdS
-   I+KQ6fssDltCsdUhfFEEOMoK3bjY7l7nv2eQZoyUVpqS2BEi3S6TopUie
-   g==;
-IronPort-SDR: UtHwOUsXTLCXXlDM80oxgmYqGYFLrlNbZCMIv3kOqNKcTySv6aicBiI0zNZ3lgf3zZ2GSYTjyB
- vrHOwzfKQx5XujyxgqtHyG4+1MsxMbZxpn9VBP9FE39fJI93eIdMRnNR4SBA3WPctX9y2ixQMQ
- GlGPu5/oz6cAB3aHZYu9l3qN2o0iwm5g8HkY5GGSLReyMT93IDYmsf0zpb4lo5kuwTnLYurlVC
- +QqvTzPPEiagwKT4KLkqGnz2XLCYqO1BS/C2UiQAKOhnq9yba6s7afn/BExFUxLyvsS/ZSj/q+
- 7NM=
+  bh=vB+GjnMVsWzt8zXAmqN4C7mP9WS1bVk/XGNXHfHoUuE=;
+  b=X+A9vIXOzFoqH4KnpLR/0kn1jVwuawsy4TKBN2vgs+i/7j3k14Srs+tF
+   QDidGyva8lR5d/CLHZokUsnm/QcpVr4ST7S3y470fKbCBzWizc5x4LWRL
+   HLIK8K4qJtLlhIFkoEamUQA21gIagiZhNEliTRxJU/E2DIY/yRI26fvc8
+   uGOLiu7c5Li+bM3I4hpZ79AhrEIsxkUM/TOxkyMHhQxdnWiBnLEysxoo9
+   qaxcpEeCauIm7aR1WW6XXUFuSqXMs7/uaALxjmS/CxHfqO6OFZsjYK6M6
+   lF/5zAWHgPboDAiHQ0xAIqglxFhKgHUEGCuUPtVm47FAxfkHD4d5Zr2Jt
+   w==;
+IronPort-SDR: 0xn7W0cftMULqxNY+lutSZoLf49VDlq2dhrqoY0wlose9AIq9vWxp7lrea0KQLODiCYXwjW0cY
+ evBDcL2WbKmsglKzSvhdq23zMDmpR6C27NcCIN8c+Ue3dn19LM+0oejrKv0GbEWZ1ROcXcJHde
+ PFlBDqCr+zXwDVAoLnpd2paXPJ57NM5zjbYIHJ4SDLOnJvlzDStWf90yF+lLtRhCPKtAS+ZhGB
+ RBzZ5hKXinA4eyp1/kyAbdlKOl3/gTE2v/RflGas2qJeXSTCmD05Qc+Ycx4sJ01KQjv+U6n5xQ
+ 4Ro=
 X-IronPort-AV: E=Sophos;i="5.81,251,1610380800"; 
-   d="scan'208";a="162254322"
-Received: from mail-sn1nam04lp2058.outbound.protection.outlook.com (HELO NAM04-SN1-obe.outbound.protection.outlook.com) ([104.47.44.58])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Mar 2021 16:30:07 +0800
+   d="scan'208";a="272962565"
+Received: from mail-dm6nam10lp2106.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.106])
+  by ob1.hgst.iphmx.com with ESMTP; 16 Mar 2021 16:32:11 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AlCYEycs1kHbTj6DveGWrMAgBGk1ZR95TV3gzU/xIbK1408NsDge/0htgYkBPMQI6uasZAqYtp1zygVnwic1mPWzX4K8WnC/IfvorGOYbGIwFjuGO4+Qt7mDaM1BUc280oXV4a36vmRio0S8m1yrrf20+SRS/RUU3THLBOK7gKT7H0yOSOZCha7F2VDS97O4QLHvP52QfuyigIdOi4kZoLxsM+TsrPKPARu7JnXxgNzlj6Nqyp3Gz1mQN6FejYzUGqql7InpnxCpX/HeWIvPzd1qumMf9/WLgmYlnGiqFObJnDit7O3rJVfXAbJSZEHQWgng+Q9cq6Sz6ZhDKIlG4A==
+ b=GYk+rfFshEiZee37fr2ur0L3+Ja5VLzSnyrZCQMoQuGXPaOs9dq41ZF3msjSm7NvA6O5sNlepommZ8NUVpuaKH7BLEiD6+//QlPznPIGvK+YJAk+CMUdO3n71A09bm/KaIn92ewydeB8WhvIvomEMds8WV8WpkEz1C3R0WGvctZzGNqX7g7ic8yL7pEXMu4sm43bKUgiSku7tKrz/PyG2AvNpwnVw3KCdnRmvrrZZbLneFIEqYf2B5cc0nMZC6l3pq3GDjUP0CgxuHNrfiHAooSZk0jDDmahyMIRhCnKWAJWTvTQywKzH3B0WO33aEFCzHp0lchSTNhpd2rFuKsN7A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5OpOdMg5rb6LlLSCrX4WKssD68vWcdcyl7xKVOevMBE=;
- b=Tx+JUNFhhFainG8sfEyntyD5F3ghQXWeqCCJAUIzJWY4fDRbj/Xfb999AtYn1l7E0898QYayFxNVi/X1sfSQOUpclN+A5kmkX2AietAvNlG0KfmMf52I50jlfZ4wFuyFUaSfBwdB2N0k+itnJs+y1vMJqwjPpcHRrH1HBnLl2zV/jcMoO5RLzDNbvsxEDY2Kyn8L/qr/D7tmmehTVbfGlpkz5yLguF1+d2YyK4D/kv1mVV70CyM5QET3l09CZP3nat+2Ehm/regfaVJOglETwnHerRazRpqiwBvefht+V8x8Rlmd37lzJVsYUYkIs7442HV3bxap99ZxRjezJE46sA==
+ bh=upTBf8ia+UnjGjdQkboDibSXeGCFRB2w+nCWJ20Pbzo=;
+ b=F6UXbbLu6idIsxu55plpkArgtdid6OzpvnKzn1nehiTztLnr4TQvSjwzRm/mf2979/scvyDzz/aj8Jrgy9ypONuyDYNrkS3CTO3enQ7v8D6+vXj8jvmGU6XqLcXHEa1bszux6MWNvV0hq+4+xcWflJIPhSIsMx8bce9YGM1ae3InX1eN9+N9W/72Idnznyxqpfwv51Hrw60YkmKBfpoCVwmHj4Idl66s8mO+7OIC+f42ccnDHo2z5qvc3vBqDpMyxnlLBVurfcepCRWPqaqvYKwBcnItiQBjZCMkFXK1ygs8zoDvDX9MNDgBWsVkxy5AjFt2xzXa4S1qYv2t1ObqzQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5OpOdMg5rb6LlLSCrX4WKssD68vWcdcyl7xKVOevMBE=;
- b=sFfq4s48JF/FlmeYVPkd32JWJl4Q97pVIRKNyuAnTG6745TLdmdjm9O2BXYNMMKFxRtE1kchcZaADRG/ZurlXoVJo06W0w/tKdh1wWbgn/gnVKYrrwuhAC8vgYYBw5+caPKrtbHV0cMvxPUR9jkLLqzvnlaBCurOQZulO3LKW2s=
+ bh=upTBf8ia+UnjGjdQkboDibSXeGCFRB2w+nCWJ20Pbzo=;
+ b=RgGqWJIg83HC9NYkWAYAaHWizHkNlgPZ+2Ybs3/TywqHMy1/bwhGex5OT0fbcj1dmEb1K62xL7uLNnqL0MWnmg/t5MX0PN9q8sXEmkSA+xz/HOCO4L49JaDLOWqmgEWMDnYqb+KUeJRGe0WN1iRnMGvXw0+uW1dQ8d1LREq7x4w=
 Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB5019.namprd04.prod.outlook.com (2603:10b6:5:11::32) with Microsoft
+ DM6PR04MB6511.namprd04.prod.outlook.com (2603:10b6:5:1bf::17) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3933.32; Tue, 16 Mar 2021 08:30:06 +0000
+ 15.20.3933.32; Tue, 16 Mar 2021 08:32:10 +0000
 Received: from DM6PR04MB6575.namprd04.prod.outlook.com
  ([fe80::e824:f31b:38cf:ef66]) by DM6PR04MB6575.namprd04.prod.outlook.com
  ([fe80::e824:f31b:38cf:ef66%3]) with mapi id 15.20.3933.032; Tue, 16 Mar 2021
- 08:30:06 +0000
+ 08:32:10 +0000
 From:   Avri Altman <Avri.Altman@wdc.com>
 To:     Can Guo <cang@codeaurora.org>
 CC:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
@@ -80,16 +80,17 @@ CC:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         Avi Shchislowski <Avi.Shchislowski@wdc.com>,
         Bean Huo <beanhuo@micron.com>,
         "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
-Subject: RE: [PATCH v5 05/10] scsi: ufshpb: Region inactivation in host mode
-Thread-Topic: [PATCH v5 05/10] scsi: ufshpb: Region inactivation in host mode
-Thread-Index: AQHXD2erjujwThfcjE6SijSHmiAch6qEgT8AgAA66gCAAaEBwA==
-Date:   Tue, 16 Mar 2021 08:30:06 +0000
-Message-ID: <DM6PR04MB65751EE32D25C7E57A6BABE8FC6B9@DM6PR04MB6575.namprd04.prod.outlook.com>
+Subject: RE: [PATCH v5 08/10] scsi: ufshpb: Limit the number of inflight map
+ requests
+Thread-Topic: [PATCH v5 08/10] scsi: ufshpb: Limit the number of inflight map
+ requests
+Thread-Index: AQHXD2e6DWAKegtAn0e36hwDoDJuGKqEzEgAgAGSiwA=
+Date:   Tue, 16 Mar 2021 08:32:09 +0000
+Message-ID: <DM6PR04MB65755CF477FC3C10AADB9006FC6B9@DM6PR04MB6575.namprd04.prod.outlook.com>
 References: <20210302132503.224670-1-avri.altman@wdc.com>
- <20210302132503.224670-6-avri.altman@wdc.com>
- <25da7378d5bf4c52443ae9b47f3fd778@codeaurora.org>
- <57afb2b5d7edda61a40493d8545785b1@codeaurora.org>
-In-Reply-To: <57afb2b5d7edda61a40493d8545785b1@codeaurora.org>
+ <20210302132503.224670-9-avri.altman@wdc.com>
+ <b71279bee1cc9b2ffba5e4f8c90fdce9@codeaurora.org>
+In-Reply-To: <b71279bee1cc9b2ffba5e4f8c90fdce9@codeaurora.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -99,174 +100,134 @@ authentication-results: codeaurora.org; dkim=none (message not signed)
 x-originating-ip: [212.25.79.133]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 2fafa841-f2ce-482d-5e20-08d8e855b422
-x-ms-traffictypediagnostic: DM6PR04MB5019:
+x-ms-office365-filtering-correlation-id: e9b270d0-60ac-497c-5b39-08d8e855fdcd
+x-ms-traffictypediagnostic: DM6PR04MB6511:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM6PR04MB50196DCF895D2E730412D416FC6B9@DM6PR04MB5019.namprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <DM6PR04MB65111324F8F776E7DB51600CFC6B9@DM6PR04MB6511.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7691;
+x-ms-oob-tlc-oobclassifiers: OLM:1388;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: ClFbzoxgSXX5eOwdV1I0nWIoXSwDEcOrGBuBQKZV8Hvc3kymFO7ISUN5X9FeYNfy1x6kwVHRhFgFD1pFnaUcYIPTroLQtZ/XqDkJqsWh6LY8QmC/z68XywssRgFuzOXSd8RqH9moStNnD+IhyQhCJW98pEdN5BFbmbTpfZ+q3oenFK8D5iXurbYneFxfqSZF2ZaXOlmoOKCigFZmJpRtGFsMuaEaYSUZduPcyuv3nknKl+e/AQR+gUP000PQdZFinEx3M1OfEfpC+vfBblwEHy9EAyNtDIzOODIb7TTycR1Rr5mUVm8jlE41oZyuK/CNwZ2JcEfQ7HgbM408VAwIuMQl12Q4P+JJQE5pYpFDV2Bk5cqreX4WTX+IVoaYkvppbwFF5EQWW8njD7qznPA81TNZQbM8CsMyk7ioyBoqA2l6k8V9nweR3vGlUIrNQW5mdhC0figa3/iwVGUiasi2pNgIv4IKMbkMd1OkPXQWLqBR5aofUkVSk3cQOfMinO6tKNrCMJ1yMG0BB7tElsfn3lClCKUKlNyNaSnRSANhxe/GKbc6XIzQdUta7MrPOpaU
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(376002)(136003)(346002)(39860400002)(366004)(5660300002)(9686003)(66946007)(8936002)(6506007)(55016002)(7696005)(64756008)(8676002)(33656002)(66476007)(66446008)(52536014)(6916009)(4326008)(7416002)(76116006)(86362001)(71200400001)(2906002)(26005)(66556008)(54906003)(83380400001)(186003)(316002)(478600001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?9nP9SgpQF7vusz+UXeD25Irj9r3pUY+7dezSWrOv4eNwMjEMWzXWr1ExfrzF?=
- =?us-ascii?Q?+kwq/n8qfqEm0AwqPZFKohzYvmYHAIbsnM16oFGBbUiJZaGciphgUxYYXR5o?=
- =?us-ascii?Q?JddpX7pOYQdYmV15kmud2JVIEhcswB1LuAHGi8RqVOd3J2hNWixKM4p7lIyM?=
- =?us-ascii?Q?C93hbhKdGhn2MEu473zvOlEw1R5YJb/SnnMQMVtgS0926FlnT+Um6O5NAUW8?=
- =?us-ascii?Q?HxKSRpe4JERE45R6sdjbjeWu804gf279T/HUlQVU4v36zlTtiYZa6dQz980t?=
- =?us-ascii?Q?9MCAEMRfJAZDH3gFSCV5BEBUgTgH8YNVOAUX4N4WnrMHiGhPyQJeTMIibflQ?=
- =?us-ascii?Q?UDxryDb+8RWKfK3zir6zT3uycXgWJ3qFfEQ4KRQd1BBShvotd7iMTmpu4znY?=
- =?us-ascii?Q?4Uc86pTxShiJGDMf5ijdn/6CNoATUIpKzDk4oGVPzKBbntoVjEHamEfgMWrE?=
- =?us-ascii?Q?tNERZT2OerwDAfv+IqZrEgHYpKl08Fs8QxSmtEn/+UGJe3w+Z7Rjvz9kc+RQ?=
- =?us-ascii?Q?pNGtynQZPzBmIg5VHWVoCv2PBmsZ7Nb/UxJSEyyhAEzkTBRMfMAdgeMElSah?=
- =?us-ascii?Q?hN5FFYlBYrwvFnG29iLYX0M+p8rMOM3+1/rPEQXTnvy3s+W29y5k9LKWmLsO?=
- =?us-ascii?Q?fNSGVKmRHt+6p7/ktm+sHYa6FZAU5vctIBL17N2BCj6iEudVmip/zg2xU0u6?=
- =?us-ascii?Q?t6NG/z6dqYva68E7aFLvZYpUhNemzHhe6oQ4eh252r6ruU371YegLbg7kIRn?=
- =?us-ascii?Q?02UJVknbyo8c57itHApAzY41E8/4CHFJecO5dmUBbCsDZhHLYtYxrG9F09LZ?=
- =?us-ascii?Q?7PL7FAQLyS5z/uHu+P/XkTO12Vq/6TIRaXjCuQvDJMrTaYdsgxeaoE3y/pAU?=
- =?us-ascii?Q?atxETf7nFH2ENpADRnGFHIIyhtiIuiCQS061dWW/qfdNHtHI4S74pUGdPeg0?=
- =?us-ascii?Q?vGfbk8qIDGYxLzAz/WegBVnmDHRr6D0HMnaieccT3jYCDfQm+uNViyqKzl2d?=
- =?us-ascii?Q?baIOq19sqXyO7zPix4Yd88EDcBbF6xX0lYWDu3bsvqtrHlTW3G3uAjmQt0vu?=
- =?us-ascii?Q?YJq4jkGc23+RUw821E1DR/WNDxMP5ezNIZ4gAOyeHR+rZe7XilN+Sha4nyym?=
- =?us-ascii?Q?5KwvJK+9PFU1hXYIgdliA/pcPggeGdICFahP1vvOpRWqwN12U2u2zHfJI6gn?=
- =?us-ascii?Q?dog8es9GQFTF3iUF4kSkTpyIQGjNel4HkWDJcmYjjZDg+09tniqcQ69ewXuQ?=
- =?us-ascii?Q?IaWM75ZFqwyqPR/raPyIsxpqs4qgEukiDy9+HcfqPoTHFCncmnyEtwhePUDc?=
- =?us-ascii?Q?qyWkq/7IrIE/sV2VSmeVjh/W?=
+x-microsoft-antispam-message-info: lFaXd1K4ZftgDu2/43xht4rxwMHC7/ZFWVLb5r3jU0wUZZ+rwl17GxCM0DB9WBDRplpcp0fBDKddhB+8uYih3E5eXyx6TwRfSQ+M/XnMgKRPqoT1At84nXGURFrV7cshqm7Lc9ZgfB3jinBphNF3+5vd+GeZgOTFn2Y11gn4DM2BJH1lhDx4X6Mapi1Bi8lM0O/C/Oh3op+XvGZpxdtsLxlHfm50DF47CspzCL0pkfPQM5WaANdtt1xFfLsi7+VBRP+dIQ8AGST7wCSZSsGAfI+Toei505IwBLTDqVFCHxe0z7zwe+fkJybf6Wy11C/SDBeKi7pUNyDuQzJze18ynXYnRRM3ZFO2pXPEVuIOd96yWaYj7gePj6IeQBGmHuOYTScqabl/eNxbYLRIBSHOCV5b5Jqfyv10ZDt9KLu10HkRMGsgXCSoZ/KPaTYqW98MflLvVS6GDWSD8Q73Yns873C3en5jvSJolj6SfI6yR0mb96VVm+F2m/KKGorviGnxYtZHrpWlUcCxTB4Dfu1QVD91aeRbIajP0qmC7TB+t+u7RtoNMzx5faFvuW0xDUU8
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(376002)(396003)(39860400002)(346002)(366004)(7696005)(52536014)(6506007)(8676002)(9686003)(66556008)(4326008)(71200400001)(54906003)(7416002)(55016002)(2906002)(66476007)(53546011)(8936002)(83380400001)(5660300002)(316002)(186003)(86362001)(6916009)(66946007)(64756008)(26005)(76116006)(478600001)(66446008)(33656002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?O6Ko6ttAiNMnMuCfvocDk5FIzICuMzOAESY3CmW0wZdG2LNz8tzMp1nvfofR?=
+ =?us-ascii?Q?pYJSjlTZb9wJNprDxFGYGi98n0K+bVy44QQEltiAjL+jeQ9Q6bnc9BrzBna0?=
+ =?us-ascii?Q?dy7meaOJnX1xkoZ5RmEM3uRSTPKEhgppki0tzq7BZuRwgjSnjlQvXOViOdoG?=
+ =?us-ascii?Q?v675kcCGB1XZEIAnj0T7qX2huB2+liwv39LQrd21tZmC10rMpwA4D6Zv6eZL?=
+ =?us-ascii?Q?gPYeXYVz63XVHVe+ARr6mgto7IiV0iy/7J8UaXW2vA6gIvoIS5coimXgUFMc?=
+ =?us-ascii?Q?zdO+c7740giefty1grhtzgj8BVNTMymT6XPI8atCVEJVej+ko34U0iTBqqJp?=
+ =?us-ascii?Q?fZcd3f8hrbmicggCkfRqyww8u0tHyiWyu2s6oWc98v1FOLt2fMUYX39OB/lP?=
+ =?us-ascii?Q?WU0g2LmGYcjyg44uVoTU8YB7JE40VJxuwvoNcpQAGfa21greHocQhK8bFogB?=
+ =?us-ascii?Q?wivP+DAhZSpW2Rp+KTuwbddQG6uaDljRHHL7LvFiSU62q7kAY1FVw/ONYwuz?=
+ =?us-ascii?Q?PrqBANf247rbH8/8kVoKaq33KL8fXINfqjTgT8rxhIVJeIWg8/C9YAhfZnP6?=
+ =?us-ascii?Q?fRtef0bLH3PbR5FGoDsq7cWh8B2M6jRXqFIAlW70Z09I9n2QAyWhRcpMhD+x?=
+ =?us-ascii?Q?v/Do43EAlZ5mJylTGOb7zbP1HvuwWtsrBACY7iasMm/cMNynJGrSlwnkIBH/?=
+ =?us-ascii?Q?Uykv/9A/Jx5mHmqS5d7mF8gxPxc2H5ahbGtS3qjZh/GRONgXs2B5O23K6N80?=
+ =?us-ascii?Q?hOlvMDJR+osNZ8alKDqH/ksnK9E7GMVMevDGXrF2q/GuJL6689a4BSPaDlnF?=
+ =?us-ascii?Q?r7QmLoLSE2SFxQtTu4RA8oHj0+kr5D84yEWXS8ascggYQq6Q05/zJgkmxz1u?=
+ =?us-ascii?Q?k1eJElBWFYq3USSuVewpKwvobxCJH/GNO1MsSYOW1IEjL6XapJprMyGA3rfH?=
+ =?us-ascii?Q?ldxe2hvPEv0Wg0BjHrgoE4FnS4meRD1UBgzZil4x8FoUVbntLm7dZLD9xb6C?=
+ =?us-ascii?Q?jcRSFDNKIoInV8jBAM17jrmUI6mVqD++yNfXrqIRqBfXAfMvpNtLio265Ptt?=
+ =?us-ascii?Q?X5+dsfOmZ9uBvMZriic2Ah7TQlXPXPfNrLpw8RgWzyWUvLbLPncolacP0Kl2?=
+ =?us-ascii?Q?mOvyuJZgxFdBhxJMybxT0oh2UtGrxU5SaTMPnxG1gnBy3QOvYLsz2238UlxI?=
+ =?us-ascii?Q?oM8MChzxRatVmlAY/P/di2wvJhpjANBuqxY1yXebwAsBIUEI2Md1ZC36wDOA?=
+ =?us-ascii?Q?tziPUzFAhtdeT5p+G5ShpaWPqs9ZIkXUWN9PLqhMVzjMQCNPGaMv7TRVh2Fl?=
+ =?us-ascii?Q?Av92JOm2XOjwa6f1q9SWzPKm?=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2fafa841-f2ce-482d-5e20-08d8e855b422
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Mar 2021 08:30:06.3546
+X-MS-Exchange-CrossTenant-Network-Message-Id: e9b270d0-60ac-497c-5b39-08d8e855fdcd
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Mar 2021 08:32:09.8941
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: IGRmNvfeAmUKdE8qkt8sozqzZIiNGHNZTyt94dCWqSGVQ6b+8bKNV3aAVlb+z08nsm8dfYz8Q6iWnkNSSdTf1A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB5019
+X-MS-Exchange-CrossTenant-userprincipalname: XIw/8JjMvqzTsgoQCzCeo5IJzzJDn7IAHeMCFrRBR5CwYdBaQdRnwlNKXoDVBBDXUquNaHt1VmLvKV//qFiUyg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB6511
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> >> ---
-> >>  drivers/scsi/ufs/ufshpb.c | 14 ++++++++++++++
-> >>  drivers/scsi/ufs/ufshpb.h |  1 +
-> >>  2 files changed, 15 insertions(+)
-> >>
-> >> diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-> >> index 6f4fd22eaf2f..0744feb4d484 100644
-> >> --- a/drivers/scsi/ufs/ufshpb.c
-> >> +++ b/drivers/scsi/ufs/ufshpb.c
-> >> @@ -907,6 +907,7 @@ static int ufshpb_execute_umap_req(struct
-> >> ufshpb_lu *hpb,
-> >>
-> >>      blk_execute_rq_nowait(q, NULL, req, 1, ufshpb_umap_req_compl_fn);
-> >>
-> >> +    hpb->stats.umap_req_cnt++;
-> >>      return 0;
-> >>  }
-> >>
-> >> @@ -1103,6 +1104,12 @@ static int ufshpb_issue_umap_req(struct
-> >> ufshpb_lu *hpb,
-> >>      return -EAGAIN;
-> >>  }
-> >>
-> >> +static int ufshpb_issue_umap_single_req(struct ufshpb_lu *hpb,
-> >> +                                    struct ufshpb_region *rgn)
-> >> +{
-> >> +    return ufshpb_issue_umap_req(hpb, rgn);
-> >> +}
-> >> +
-> >>  static int ufshpb_issue_umap_all_req(struct ufshpb_lu *hpb)
-> >>  {
-> >>      return ufshpb_issue_umap_req(hpb, NULL);
-> >> @@ -1115,6 +1122,10 @@ static void __ufshpb_evict_region(struct
-> >> ufshpb_lu *hpb,
-> >>      struct ufshpb_subregion *srgn;
-> >>      int srgn_idx;
-> >>
-> >> +
-> >> +    if (hpb->is_hcm && ufshpb_issue_umap_single_req(hpb, rgn))
-> >
-> > __ufshpb_evict_region() is called with rgn_state_lock held and IRQ
-> > disabled,
-> > when ufshpb_issue_umap_single_req() invokes blk_execute_rq_nowait(),
-> > below
-> > warning shall pop up every time, fix it?
-> >
-> > void blk_execute_rq_nowait(struct request_queue *q, struct gendisk
-> > *bd_disk,
-> >                  struct request *rq, int at_head,
-> >                          rq_end_io_fn *done)
-> > {
-> >       WARN_ON(irqs_disabled());
-> > ...
-> >
 >=20
-> Moreover, since we are here with rgn_state_lock held and IRQ disabled,
-> in ufshpb_get_req(), rq =3D kmem_cache_alloc(hpb->map_req_cache,
-> GFP_KERNEL)
-> has the GFP_KERNEL flag, scheduling while atomic???
-I think your comment applies to  ufshpb_issue_umap_all_req as well,
-Which is called from slave_configure/scsi_add_lun.
-
-Since the host-mode series is utilizing the framework laid by the device-mo=
-de,
-Maybe you can add this comment to  Daejun's last version?
-
-Thanks,
-Avri
+>=20
+> On 2021-03-02 21:25, Avri Altman wrote:
+> > in host control mode the host is the originator of map requests. To not
+>=20
+> in -> In
+Done.
 
 >=20
+> Thanks,
 > Can Guo.
 >=20
-> > Thanks.
-> > Can Guo.
+> > flood the device with map requests, use a simple throttling mechanism
+> > that limits the number of inflight map requests.
 > >
-> >> +            return;
-> >> +
-> >>      lru_info =3D &hpb->lru_info;
-> >>
-> >>      dev_dbg(&hpb->sdev_ufs_lu->sdev_dev, "evict region %d\n",
-> >> rgn->rgn_idx);
-> >> @@ -1855,6 +1866,7 @@ ufshpb_sysfs_attr_show_func(rb_noti_cnt);
-> >>  ufshpb_sysfs_attr_show_func(rb_active_cnt);
-> >>  ufshpb_sysfs_attr_show_func(rb_inactive_cnt);
-> >>  ufshpb_sysfs_attr_show_func(map_req_cnt);
-> >> +ufshpb_sysfs_attr_show_func(umap_req_cnt);
-> >>
-> >>  static struct attribute *hpb_dev_stat_attrs[] =3D {
-> >>      &dev_attr_hit_cnt.attr,
-> >> @@ -1863,6 +1875,7 @@ static struct attribute *hpb_dev_stat_attrs[] =
-=3D
-> >> {
-> >>      &dev_attr_rb_active_cnt.attr,
-> >>      &dev_attr_rb_inactive_cnt.attr,
-> >>      &dev_attr_map_req_cnt.attr,
-> >> +    &dev_attr_umap_req_cnt.attr,
-> >>      NULL,
-> >>  };
-> >>
-> >> @@ -1978,6 +1991,7 @@ static void ufshpb_stat_init(struct ufshpb_lu
-> >> *hpb)
-> >>      hpb->stats.rb_active_cnt =3D 0;
-> >>      hpb->stats.rb_inactive_cnt =3D 0;
-> >>      hpb->stats.map_req_cnt =3D 0;
-> >> +    hpb->stats.umap_req_cnt =3D 0;
-> >>  }
-> >>
-> >>  static void ufshpb_param_init(struct ufshpb_lu *hpb)
-> >> diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-> >> index bd4308010466..84598a317897 100644
-> >> --- a/drivers/scsi/ufs/ufshpb.h
-> >> +++ b/drivers/scsi/ufs/ufshpb.h
-> >> @@ -186,6 +186,7 @@ struct ufshpb_stats {
-> >>      u64 rb_inactive_cnt;
-> >>      u64 map_req_cnt;
-> >>      u64 pre_req_cnt;
-> >> +    u64 umap_req_cnt;
-> >>  };
-> >>
-> >>  struct ufshpb_lu {
+> > Signed-off-by: Avri Altman <avri.altman@wdc.com>
+> > ---
+> >  drivers/scsi/ufs/ufshpb.c | 11 +++++++++++
+> >  drivers/scsi/ufs/ufshpb.h |  1 +
+> >  2 files changed, 12 insertions(+)
+> >
+> > diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+> > index 89a930e72cff..74da69727340 100644
+> > --- a/drivers/scsi/ufs/ufshpb.c
+> > +++ b/drivers/scsi/ufs/ufshpb.c
+> > @@ -21,6 +21,7 @@
+> >  #define READ_TO_MS 1000
+> >  #define READ_TO_EXPIRIES 100
+> >  #define POLLING_INTERVAL_MS 200
+> > +#define THROTTLE_MAP_REQ_DEFAULT 1
+> >
+> >  /* memory management */
+> >  static struct kmem_cache *ufshpb_mctx_cache;
+> > @@ -750,6 +751,14 @@ static struct ufshpb_req
+> > *ufshpb_get_map_req(struct ufshpb_lu *hpb,
+> >       struct ufshpb_req *map_req;
+> >       struct bio *bio;
+> >
+> > +     if (hpb->is_hcm &&
+> > +         hpb->num_inflight_map_req >=3D THROTTLE_MAP_REQ_DEFAULT) {
+> > +             dev_info(&hpb->sdev_ufs_lu->sdev_dev,
+> > +                      "map_req throttle. inflight %d throttle %d",
+> > +                      hpb->num_inflight_map_req, THROTTLE_MAP_REQ_DEFA=
+ULT);
+> > +             return NULL;
+> > +     }
+> > +
+> >       map_req =3D ufshpb_get_req(hpb, srgn->rgn_idx, REQ_OP_SCSI_IN);
+> >       if (!map_req)
+> >               return NULL;
+> > @@ -764,6 +773,7 @@ static struct ufshpb_req
+> > *ufshpb_get_map_req(struct ufshpb_lu *hpb,
+> >
+> >       map_req->rb.srgn_idx =3D srgn->srgn_idx;
+> >       map_req->rb.mctx =3D srgn->mctx;
+> > +     hpb->num_inflight_map_req++;
+> >
+> >       return map_req;
+> >  }
+> > @@ -773,6 +783,7 @@ static void ufshpb_put_map_req(struct ufshpb_lu
+> > *hpb,
+> >  {
+> >       bio_put(map_req->bio);
+> >       ufshpb_put_req(hpb, map_req);
+> > +     hpb->num_inflight_map_req--;
+> >  }
+> >
+> >  static int ufshpb_clear_dirty_bitmap(struct ufshpb_lu *hpb,
+> > diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+> > index b49e9a34267f..d83ab488688a 100644
+> > --- a/drivers/scsi/ufs/ufshpb.h
+> > +++ b/drivers/scsi/ufs/ufshpb.h
+> > @@ -212,6 +212,7 @@ struct ufshpb_lu {
+> >       struct ufshpb_req *pre_req;
+> >       int num_inflight_pre_req;
+> >       int throttle_pre_req;
+> > +     int num_inflight_map_req;
+> >       struct list_head lh_pre_req_free;
+> >       int cur_read_id;
+> >       int pre_req_min_tr_len;
