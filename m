@@ -2,366 +2,213 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E19CFC43381
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Mar 2021 22:23:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B837C433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 01:59:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF4C164F51
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Mar 2021 22:23:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8F0A6500D
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 01:59:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229608AbhCOWW5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Mar 2021 18:22:57 -0400
-Received: from z11.mailgun.us ([104.130.96.11]:45733 "EHLO z11.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229761AbhCOWWi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 Mar 2021 18:22:38 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1615846958; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=/eTc1f8KRlT9esAEG1OWbWJsVv7TpznbM2XNZDL0FtA=; b=Wav5rDb7H9pLHRPcTVMdMF+y2z+6Uq+vh+Dw6AHY62RPX+VlxljN9uKxah6ES6V+58LgeMa1
- /0dkmF1mX8V2j9nA1Vn9eMRJVD1VcnOJftukTTYD+OJhD8YCotB28tYNCEwH31h9GQtwaXuP
- ZZpbvRgCcsgIz5UagOpo40ZfcNE=
-X-Mailgun-Sending-Ip: 104.130.96.11
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
- 604fde19e3fca7d0a6ef0e5f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 15 Mar 2021 22:22:17
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id DA417C4346B; Mon, 15 Mar 2021 22:22:15 +0000 (UTC)
-Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5F7D3C433C6;
-        Mon, 15 Mar 2021 22:22:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5F7D3C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v10 1/2] scsi: ufs: Enable power management for wlun
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>, cang@codeaurora.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Dinghao Liu <dinghao.liu@zju.edu.cn>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-samsung-soc@vger.kernel.org>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>,
-        Linux-PM mailing list <linux-pm@vger.kernel.org>
-References: <cover.1614725302.git.asutoshd@codeaurora.org>
- <0576d6eae15486740c25767e2d8805f7e94eb79d.1614725302.git.asutoshd@codeaurora.org>
- <85086647-7292-b0a2-d842-290818bd2858@intel.com>
- <6e98724d-2e75-d1fe-188f-a7010f86c509@codeaurora.org>
- <20210306161616.GC74411@rowland.harvard.edu>
- <CAJZ5v0ihJe8rNjWRwNic_BQUvKbALNcjx8iiPAh5nxLhOV9duw@mail.gmail.com>
- <CAJZ5v0iJ4yqRTt=mTCC930HULNFNTgvO4f9ToVO6pNz53kxFkw@mail.gmail.com>
- <f1e9b21d-1722-d20b-4bae-df7e6ce50bbc@codeaurora.org>
- <2bd90336-18a9-9acd-5abb-5b52b27fc535@codeaurora.org>
- <b13086f3-eea1-51a7-2117-579d520f21fc@intel.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <20cbd52d-7254-3e1c-06a3-712326c99f75@codeaurora.org>
-Date:   Mon, 15 Mar 2021 15:22:09 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        id S233565AbhCPB7U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Mar 2021 21:59:20 -0400
+Received: from mail-il1-f197.google.com ([209.85.166.197]:54469 "EHLO
+        mail-il1-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229817AbhCPB7P (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Mar 2021 21:59:15 -0400
+Received: by mail-il1-f197.google.com with SMTP id w8so25643406ilg.21
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Mar 2021 18:59:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
+        bh=R6Uw28w5orVwVt3fDtgWk1USLUmusEnOKl/UcqFTeVQ=;
+        b=YoKgptjoa/KB/mDx/7x7g+Py4foL8Q8vw3pKvPUNFxqcIhRNjOUyu0DOAa3CIbEq3M
+         U0VGInl5/wJ8iXKBp0gNb6HNDIAdEiLPdBhimVoOektsKXuvkuXg3SzAbCIDtGaCe95D
+         dhsxA9hYMzWMbLGzsSKlBi5oOLwfMoN7MB1ol61BIBRKapFEfvS+fsxmIsOgfPdLl5VJ
+         uaX//5q2Et/J8lnrKycXaVl/gnJS8s1N/rHl1azV9Dzmdnqn/ag368viEP/exGspBPrD
+         L78GdnoATwTcOeqZl3TUb+9CsjRppvwCz70D3yDH+yJgI/RRVIsk/JWzkWnhh46IWLYc
+         II9A==
+X-Gm-Message-State: AOAM533uzPGZdNB5S/t1LtZ6/uOvFOvs7vEiiWdKY/LlPzh4UJnFA5KF
+        rR+Z2TZrnppsDCWWuwBTH6btv1oSaDuNNkjZ+TNU1qqYQ/ec
+X-Google-Smtp-Source: ABdhPJyi6YR7kyFETILMo6mpRwzvqTgKyJP6DGWX0ecuVsKMz9nvTyjvzIXWdqPavkNbThRlZwiAeheGJxM8GSif93JWu1a5jimA
 MIME-Version: 1.0
-In-Reply-To: <b13086f3-eea1-51a7-2117-579d520f21fc@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-Received: by 2002:a02:9083:: with SMTP id x3mr11850000jaf.17.1615859955448;
+ Mon, 15 Mar 2021 18:59:15 -0700 (PDT)
+Date:   Mon, 15 Mar 2021 18:59:15 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000a6bf1605bd9db661@google.com>
+Subject: [syzbot] KASAN: invalid-free in sg_finish_scsi_blk_rq
+From:   syzbot <syzbot+0a0e8ecea895d38332e6@syzkaller.appspotmail.com>
+To:     dgilbert@interlog.com, jejb@linux.ibm.com,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/14/2021 1:11 AM, Adrian Hunter wrote:
-> On 10/03/21 5:04 am, Asutosh Das (asd) wrote:
->> On 3/9/2021 7:56 AM, Asutosh Das (asd) wrote:
->>> On 3/8/2021 9:17 AM, Rafael J. Wysocki wrote:
->>>> On Mon, Mar 8, 2021 at 5:21 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
->>>>>
->>>>> On Sat, Mar 6, 2021 at 5:17 PM Alan Stern <stern@rowland.harvard.edu> wrote:
->>>>>>
->>>>>> On Fri, Mar 05, 2021 at 06:54:24PM -0800, Asutosh Das (asd) wrote:
->>>>>>
->>>>>>> Now during my testing I see a weird issue sometimes (1 in 7).
->>>>>>> Scenario - bootups
->>>>>>>
->>>>>>> Issue:
->>>>>>> The supplier 'ufs_device_wlun 0:0:0:49488' goes into runtime suspend even
->>>>>>> when one/more of its consumers are in RPM_ACTIVE state.
->>>>>>>
->>>>>>> *Log:
->>>>>>> [   10.056379][  T206] sd 0:0:0:1: [sdb] Synchronizing SCSI cache
->>>>>>> [   10.062497][  T113] sd 0:0:0:5: [sdf] Synchronizing SCSI cache
->>>>>>> [   10.356600][   T32] sd 0:0:0:7: [sdh] Synchronizing SCSI cache
->>>>>>> [   10.362944][  T174] sd 0:0:0:3: [sdd] Synchronizing SCSI cache
->>>>>>> [   10.696627][   T83] sd 0:0:0:2: [sdc] Synchronizing SCSI cache
->>>>>>> [   10.704562][  T170] sd 0:0:0:6: [sdg] Synchronizing SCSI cache
->>>>>>> [   10.980602][    T5] sd 0:0:0:0: [sda] Synchronizing SCSI cache
->>>>>>>
->>>>>>> /** Printing all the consumer nodes of supplier **/
->>>>>>> [   10.987327][    T5] ufs_device_wlun 0:0:0:49488: usage-count @ suspend: 0
->>>>>>> <-- this is the usage_count
->>>>>>> [   10.994440][    T5] ufs_rpmb_wlun 0:0:0:49476: PM state - 2
->>>>>>> [   11.000402][    T5] scsi 0:0:0:49456: PM state - 2
->>>>>>> [   11.005453][    T5] sd 0:0:0:0: PM state - 2
->>>>>>> [   11.009958][    T5] sd 0:0:0:1: PM state - 2
->>>>>>> [   11.014469][    T5] sd 0:0:0:2: PM state - 2
->>>>>>> [   11.019072][    T5] sd 0:0:0:3: PM state - 2
->>>>>>> [   11.023595][    T5] sd 0:0:0:4: PM state - 0 << RPM_ACTIVE
->>>>>>> [   11.353298][    T5] sd 0:0:0:5: PM state - 2
->>>>>>> [   11.357726][    T5] sd 0:0:0:6: PM state - 2
->>>>>>> [   11.362155][    T5] sd 0:0:0:7: PM state - 2
->>>>>>> [   11.366584][    T5] ufshcd-qcom 1d84000.ufshc: __ufshcd_wl_suspend - 8709
->>>>>>> [   11.374366][    T5] ufs_device_wlun 0:0:0:49488: __ufshcd_wl_suspend -
->>>>>>> (0) has rpm_active flags
->>>>>
->>>>> Do you mean that rpm_active of the link between the consumer and the
->>>>> supplier is greater than 0 at this point and the consumer is
->>>>
->>>> I mean is rpm_active of the link greater than 1 (because 1 means "no
->>>> active references to the supplier")?
->>> Hi Rafael:
->>> No - it is not greater than 1.
->>>
->>> I'm trying to understand what's going on in it; will update when I've something.
->>>
->>>>
->>>>> RPM_ACTIVE, but the supplier suspends successfully nevertheless?
->>>>>
->>>>>>> [   11.383376][    T5] ufs_device_wlun 0:0:0:49488:
->>>>>>> ufshcd_wl_runtime_suspend <-- Supplier suspends fine.
->>>>>>> [   12.977318][  T174] sd 0:0:0:4: [sde] Synchronizing SCSI cache
->>>>>>>
->>>>>>> And the the suspend of sde is stuck now:
->>>>>>> schedule+0x9c/0xe0
->>>>>>> schedule_timeout+0x40/0x128
->>>>>>> io_schedule_timeout+0x44/0x68
->>>>>>> wait_for_common_io+0x7c/0x100
->>>>>>> wait_for_completion_io+0x14/0x20
->>>>>>> blk_execute_rq+0x90/0xcc
->>>>>>> __scsi_execute+0x104/0x1c4
->>>>>>> sd_sync_cache+0xf8/0x2a0
->>>>>>> sd_suspend_common+0x74/0x11c
->>>>>>> sd_suspend_runtime+0x14/0x20
->>>>>>> scsi_runtime_suspend+0x64/0x94
->>>>>>> __rpm_callback+0x80/0x2a4
->>>>>>> rpm_suspend+0x308/0x614
->>>>>>> pm_runtime_work+0x98/0xa8
->>>>>>>
->>>>>>> I added 'DL_FLAG_RPM_ACTIVE' while creating links.
->>>>>>>         if (hba->sdev_ufs_device) {
->>>>>>>                 link = device_link_add(&sdev->sdev_gendev,
->>>>>>>                                     &hba->sdev_ufs_device->sdev_gendev,
->>>>>>>                                    DL_FLAG_PM_RUNTIME|DL_FLAG_RPM_ACTIVE);
->>>>>>> I didn't expect this to resolve the issue anyway and it didn't.
->>>>>>>
->>>>>>> Another interesting point here is when I resume any of the above suspended
->>>>>>> consumers, it all goes back to normal, which is kind of expected. I tried
->>>>>>> resuming the consumer and the supplier is resumed and the supplier is
->>>>>>> suspended when all the consumers are suspended.
->>>>>>>
->>>>>>> Any pointers on this issue please?
->>>>>>>
->>>>>>> @Bart/@Alan - Do you've any pointers please?
->>>>>>
->>>>>> It's very noticeable that although you seem to have isolated a bug in
->>>>>> the power management subsystem (supplier goes into runtime suspend
->>>>>> even when one of its consumers is still active), you did not CC the
->>>>>> power management maintainer or mailing list.
->>>>>>
->>>>>> I have added the appropriate CC's.
->>>>>
->>>>> Thanks Alan!
->>>
->>>
->>
->> Hello
->> I & Can (thanks CanG) debugged this further:
->>
->> Looks like this issue can occur if the sd probe is asynchronous.
->>
->> Essentially, the sd_probe() is done asynchronously and driver_probe_device() invokes pm_runtime_get_suppliers() before invoking sd_probe().
->>
->> But scsi_probe_and_add_lun() runs in a separate context.
->> So the scsi_autopm_put_device() invoked from scsi_scan_host() context reduces the link->rpm_active to 1. And sd_probe() invokes scsi_autopm_put_device() and starts a timer. And then driver_probe_device() invoked from __device_attach_async_helper context reduces the link->rpm_active to 1 thus enabling the supplier to suspend before the consumer suspends.
->>
->> So if:
->> Context T1:
->> [1] scsi_probe_and_add_lun()
->> [2]    |- scsi_autopm_put_device() - reduce the link->rpm_active to 1
->>
->> Context T2:
->> __device_attach_async_helper()
->>      |- driver_probe_device()
->>          |- sd_probe()
->> In between [1] and [2] say, driver_probe_device() -> sd_probe() is invoked in a separate context from __device_attach_async_helper().
->> The driver_probe_device() -> pm_runtime_get_suppliers() but [2] would reduce link->rpm_active to 1.
->> Then sd_probe() would invoke rpm_resume() and proceed as is.
->> When sd_probe() invokes scsi_autopm_put_device() it'd start a timer, dev->power.timer_autosuspends = 1.
->>
->> Now then, pm_runtime_put_suppliers() is invoked from driver_probe_device() and that makes the link->rpm_active = 1.
->> But by now, the corresponding 'sd dev' (consumer) usage_count = 0, state = RPM_ACTIVE and link->rpm_active = 1.
->> At this point of time, all other 'sd dev' (consumers) _may_ be suspended or active but would have the link->rpm_active = 1.
-> 
-> Is this with DL_FLAG_RPM_ACTIVE?  In that case, wouldn't active
-> consumers have link->rpm_active = 2 and also have incremented
-> the supplier's usage_count?
-> 
-> Another outstanding issue that comes to mind, is to ensure
-> hba->sdev_ufs_device does not runtime suspend before it is probed.
-> I suggest changing ufshcd_slave_configure() so it does not set
-> sdev->rpm_autosuspend for hba->sdev_ufs_device, and instead do
-> pm_runtime_allow / pm_runtime_forbid() in ufshcd_wl_probe() /
-> ufshcd_wl_remove() respectively.
-> 
-> However we still want to stop hba->sdev_ufs_device runtime
-> suspending while consumers are being added.  With that in mind,
-> I would expect pm_runtime_get_noresume(&hba->sdev_ufs_device->sdev_gendev)
-> in ufshcd_scsi_add_wlus() to come *before*
-> ufshcd_blk_pm_runtime_init(hba->sdev_ufs_device).  In fact, it would
-> be more logical to make it, pm_runtime_get_sync() since we require
-> hba->sdev_ufs_device to be active at that point.
-> 
-> 
+Hello,
 
-Hi Adrian,
-I think the v11 that I pushed can handle this.
-runtime-suspend is forbidden at probe and is re-enabled after probe is 
-done. Please take a look and let me know if I'm missing something.
+syzbot found the following issue on:
 
->>
->> Since the supplier has 0 auto-suspend delay, it now suspends!
->>
->>
->> Context [T1]
->> Call trace:
->> dump_backtrace+0x0/0x1d4
->> show_stack+0x18/0x24
->> dump_stack+0xc4/0x144
->> __pm_runtime_idle+0xb4/0x184
->> scsi_autopm_put_device+0x18/0x24
->> scsi_sysfs_add_sdev+0x26c/0x278
->> scsi_probe_and_add_lun+0xbac/0xd48
->> __scsi_scan_target+0x38c/0x510
->> scsi_scan_host_selected+0x14c/0x1e4
->> scsi_scan_host+0x1e0/0x228
->> ufshcd_async_scan+0x39c/0x408
->> async_run_entry_fn+0x48/0x128
->> process_one_work+0x1f0/0x470
->> worker_thread+0x26c/0x4c8
->> kthread+0x13c/0x320
->> ret_from_fork+0x10/0x18
->>
->>
->> Context [T2]
->> Call trace:
->> dump_backtrace+0x0/0x1d4
->> show_stack+0x18/0x24
->> dump_stack+0xc4/0x144
->> rpm_get_suppliers+0x48/0x1ac
->> __rpm_callback+0x58/0x12c
->> rpm_resume+0x3a4/0x618
->> __pm_runtime_resume+0x50/0x80
->> scsi_autopm_get_device+0x20/0x54
->> sd_probe+0x40/0x3d0
->> really_probe+0x1bc/0x4a0
->> driver_probe_device+0x84/0xf0
->> __device_attach_driver+0x114/0x138
->> bus_for_each_drv+0x84/0xd0
->> __device_attach_async_helper+0x7c/0xf0
->> async_run_entry_fn+0x48/0x128
->> process_one_work+0x1f0/0x470
->> worker_thread+0x26c/0x4c8
->> kthread+0x13c/0x320
->> ret_from_fork+0x10/0x18
->>
->> Below prints show how link->rpm_active becomes 1 for sd 0:0:0:4
->> [    7.574654][  T212] Call trace:
->> [    7.574657][  T212]  dump_backtrace+0x0/0x1d4
->> [    7.574661][  T212]  show_stack+0x18/0x24
->> [    7.574665][  T212]  dump_stack+0xc4/0x144
->> [    7.574668][  T212]  __pm_runtime_idle+0xb4/0x184
->> [    7.574671][  T212]  scsi_autopm_put_device+0x18/0x24
->> [    7.574675][  T212]  sd_probe+0x314/0x3d0
->> [    7.574677][  T212]  really_probe+0x1bc/0x4a0
->> [    7.574680][  T212]  driver_probe_device+0x84/0xf0
->> [    7.574683][  T212]  __device_attach_driver+0x114/0x138
->> [    7.574686][  T212]  bus_for_each_drv+0x84/0xd0
->> [    7.574689][  T212]  __device_attach_async_helper+0x7c/0xf0
->> [    7.574692][  T212]  async_run_entry_fn+0x48/0x128
->> [    7.574695][  T212]  process_one_work+0x1f0/0x470
->> [    7.574698][  T212]  worker_thread+0x26c/0x4c8
->> [    7.574700][  T212]  kthread+0x13c/0x320
->> [    7.574703][  T212]  ret_from_fork+0x10/0x18
->> [    7.574706][  T212] sd 0:0:0:4: scsi_runtime_idle
->> [    7.574712][  T212] sd 0:0:0:4: __pm_runtime_idle: aft: [UFSDBG]: pwr.timer_autosuspends: 1 pwr.request_pending: 0 retval: -16 pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
->> [    7.574715][  T212] sd 0:0:0:4: sd_probe: [UFSDBG]: Exit
->> [    7.574738][  T212] sd 0:0:0:4: __pm_runtime_idle: b4: [UFSDBG]: pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
->>
->> [    7.574752][  T212] Workqueue: events_unbound async_run_entry_fn
->> [    7.574754][  T212] Call trace:
->> [    7.574758][  T212]  dump_backtrace+0x0/0x1d4
->> [    7.574761][  T212]  show_stack+0x18/0x24
->> [    7.574765][  T212]  dump_stack+0xc4/0x144
->> [    7.574767][  T212]  __pm_runtime_idle+0xb4/0x184
->> [    7.574770][  T212]  driver_probe_device+0x94/0xf0
->> [    7.574773][  T212]  __device_attach_driver+0x114/0x138
->> [    7.574775][  T212]  bus_for_each_drv+0x84/0xd0
->> [    7.574778][  T212]  __device_attach_async_helper+0x7c/0xf0
->> [    7.574781][  T212]  async_run_entry_fn+0x48/0x128
->> [    7.574783][  T212]  process_one_work+0x1f0/0x470
->> [    7.574786][  T212]  worker_thread+0x26c/0x4c8
->> [    7.574788][  T212]  kthread+0x13c/0x320
->> [    7.574791][  T212]  ret_from_fork+0x10/0x18
->> [    7.574848][   T80] sd 0:0:0:4: scsi_runtime_idle
->> [    7.574858][  T212] sd 0:0:0:4: __pm_runtime_idle: aft: [UFSDBG]: pwr.timer_autosuspends: 1 pwr.request_pending: 0 retval: 0 pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
->> [    7.574863][  T212] sd 0:0:0:4: pm_runtime_put_suppliers: [UFSDBG]: rpm_status: 0 link-rpm_active:1
->> [    7.574866][  T212] sd 0:0:0:4: async probe completed
->> [    7.574870][  T212] sd 0:0:0:4: __pm_runtime_idle: b4: [UFSDBG]: pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:1
->>
->>
->> So, from the above it looks like when async probe is enabled this is a possibility.
->>
->> I don't see a way around this. Please let me know if you (@Alan/@Bart/@Adrian) have any thoughts on this.
->>
->> Thanks,
->> -asd
->>
-> 
+HEAD commit:    d98f554b Add linux-next specific files for 20210312
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=1189318ad00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=e362835d2e58cef6
+dashboard link: https://syzkaller.appspot.com/bug?extid=0a0e8ecea895d38332e6
+
+Unfortunately, I don't have any reproducer for this issue yet.
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+0a0e8ecea895d38332e6@syzkaller.appspotmail.com
+
+==================================================================
+BUG: KASAN: double-free or invalid-free in slab_free mm/slub.c:3161 [inline]
+BUG: KASAN: double-free or invalid-free in kfree+0xe5/0x7f0 mm/slub.c:4215
+
+CPU: 0 PID: 10481 Comm: syz-executor.5 Not tainted 5.12.0-rc2-next-20210312-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+Call Trace:
+ __dump_stack lib/dump_stack.c:79 [inline]
+ dump_stack+0x141/0x1d7 lib/dump_stack.c:120
+ print_address_description.constprop.0.cold+0x5b/0x2f8 mm/kasan/report.c:232
+ kasan_report_invalid_free+0x51/0x80 mm/kasan/report.c:357
+ ____kasan_slab_free mm/kasan/common.c:340 [inline]
+ __kasan_slab_free+0x118/0x130 mm/kasan/common.c:367
+ kasan_slab_free include/linux/kasan.h:200 [inline]
+ slab_free_hook mm/slub.c:1562 [inline]
+ slab_free_freelist_hook+0x92/0x210 mm/slub.c:1600
+ slab_free mm/slub.c:3161 [inline]
+ kfree+0xe5/0x7f0 mm/slub.c:4215
+ scsi_req_free_cmd include/scsi/scsi_request.h:28 [inline]
+ sg_finish_scsi_blk_rq+0x690/0x810 drivers/scsi/sg.c:3224
+ sg_common_write+0xa07/0xe70 drivers/scsi/sg.c:1132
+ sg_v3_submit+0x3b1/0x530 drivers/scsi/sg.c:797
+ sg_ctl_sg_io drivers/scsi/sg.c:1785 [inline]
+ sg_ioctl_common+0x3c86/0x97f0 drivers/scsi/sg.c:2014
+ sg_ioctl+0x7c/0x110 drivers/scsi/sg.c:2229
+ vfs_ioctl fs/ioctl.c:48 [inline]
+ __do_sys_ioctl fs/ioctl.c:753 [inline]
+ __se_sys_ioctl fs/ioctl.c:739 [inline]
+ __x64_sys_ioctl+0x193/0x200 fs/ioctl.c:739
+ do_syscall_64+0x2d/0x70 arch/x86/entry/common.c:46
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x465f69
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f8413efa188 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 000000000056bf60 RCX: 0000000000465f69
+RDX: 0000000020001780 RSI: 0000000000002285 RDI: 0000000000000003
+RBP: 00000000004bfa8f R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 000000000056bf60
+R13: 00007ffe20e16e2f R14: 00007f8413efa300 R15: 0000000000022000
+
+Allocated by task 10481:
+ kasan_save_stack+0x1b/0x40 mm/kasan/common.c:38
+ kasan_set_track mm/kasan/common.c:46 [inline]
+ set_alloc_info mm/kasan/common.c:427 [inline]
+ ____kasan_kmalloc mm/kasan/common.c:506 [inline]
+ ____kasan_kmalloc mm/kasan/common.c:465 [inline]
+ __kasan_kmalloc+0x99/0xc0 mm/kasan/common.c:515
+ kmalloc include/linux/slab.h:561 [inline]
+ kzalloc include/linux/slab.h:686 [inline]
+ sg_start_req+0x16f/0x24e0 drivers/scsi/sg.c:3044
+ sg_common_write+0x5fd/0xe70 drivers/scsi/sg.c:1109
+ sg_v3_submit+0x3b1/0x530 drivers/scsi/sg.c:797
+ sg_ctl_sg_io drivers/scsi/sg.c:1785 [inline]
+ sg_ioctl_common+0x3c86/0x97f0 drivers/scsi/sg.c:2014
+ sg_ioctl+0x7c/0x110 drivers/scsi/sg.c:2229
+ vfs_ioctl fs/ioctl.c:48 [inline]
+ __do_sys_ioctl fs/ioctl.c:753 [inline]
+ __se_sys_ioctl fs/ioctl.c:739 [inline]
+ __x64_sys_ioctl+0x193/0x200 fs/ioctl.c:739
+ do_syscall_64+0x2d/0x70 arch/x86/entry/common.c:46
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+Freed by task 10481:
+ kasan_save_stack+0x1b/0x40 mm/kasan/common.c:38
+ kasan_set_track+0x1c/0x30 mm/kasan/common.c:46
+ kasan_set_free_info+0x20/0x30 mm/kasan/generic.c:357
+ ____kasan_slab_free mm/kasan/common.c:360 [inline]
+ ____kasan_slab_free mm/kasan/common.c:325 [inline]
+ __kasan_slab_free+0xf5/0x130 mm/kasan/common.c:367
+ kasan_slab_free include/linux/kasan.h:200 [inline]
+ slab_free_hook mm/slub.c:1562 [inline]
+ slab_free_freelist_hook+0x92/0x210 mm/slub.c:1600
+ slab_free mm/slub.c:3161 [inline]
+ kfree+0xe5/0x7f0 mm/slub.c:4215
+ sg_start_req+0x1b33/0x24e0 drivers/scsi/sg.c:3106
+ sg_common_write+0x5fd/0xe70 drivers/scsi/sg.c:1109
+ sg_v3_submit+0x3b1/0x530 drivers/scsi/sg.c:797
+ sg_ctl_sg_io drivers/scsi/sg.c:1785 [inline]
+ sg_ioctl_common+0x3c86/0x97f0 drivers/scsi/sg.c:2014
+ sg_ioctl+0x7c/0x110 drivers/scsi/sg.c:2229
+ vfs_ioctl fs/ioctl.c:48 [inline]
+ __do_sys_ioctl fs/ioctl.c:753 [inline]
+ __se_sys_ioctl fs/ioctl.c:739 [inline]
+ __x64_sys_ioctl+0x193/0x200 fs/ioctl.c:739
+ do_syscall_64+0x2d/0x70 arch/x86/entry/common.c:46
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+Last potentially related work creation:
+ kasan_save_stack+0x1b/0x40 mm/kasan/common.c:38
+ kasan_record_aux_stack+0xe5/0x110 mm/kasan/generic.c:345
+ kvfree_call_rcu+0x74/0x8c0 kernel/rcu/tree.c:3597
+ drop_sysctl_table+0x3c0/0x4e0 fs/proc/proc_sysctl.c:1646
+ unregister_sysctl_table fs/proc/proc_sysctl.c:1684 [inline]
+ unregister_sysctl_table+0xc2/0x190 fs/proc/proc_sysctl.c:1659
+ mpls_dev_sysctl_unregister net/mpls/af_mpls.c:1442 [inline]
+ mpls_dev_notify+0x64d/0x8b0 net/mpls/af_mpls.c:1632
+ notifier_call_chain+0xb5/0x200 kernel/notifier.c:83
+ call_netdevice_notifiers_info+0xb5/0x130 net/core/dev.c:2063
+ call_netdevice_notifiers_extack net/core/dev.c:2075 [inline]
+ call_netdevice_notifiers net/core/dev.c:2089 [inline]
+ dev_change_name+0x447/0x690 net/core/dev.c:1346
+ do_setlink+0x2c1f/0x3a70 net/core/rtnetlink.c:2688
+ __rtnl_newlink+0xdc6/0x1710 net/core/rtnetlink.c:3376
+ rtnl_newlink+0x64/0xa0 net/core/rtnetlink.c:3491
+ rtnetlink_rcv_msg+0x44e/0xad0 net/core/rtnetlink.c:5553
+ netlink_rcv_skb+0x153/0x420 net/netlink/af_netlink.c:2502
+ netlink_unicast_kernel net/netlink/af_netlink.c:1312 [inline]
+ netlink_unicast+0x533/0x7d0 net/netlink/af_netlink.c:1338
+ netlink_sendmsg+0x856/0xd90 net/netlink/af_netlink.c:1927
+ sock_sendmsg_nosec net/socket.c:654 [inline]
+ sock_sendmsg+0xcf/0x120 net/socket.c:674
+ __sys_sendto+0x21c/0x320 net/socket.c:1977
+ __do_sys_sendto net/socket.c:1989 [inline]
+ __se_sys_sendto net/socket.c:1985 [inline]
+ __x64_sys_sendto+0xdd/0x1b0 net/socket.c:1985
+ do_syscall_64+0x2d/0x70 arch/x86/entry/common.c:46
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+The buggy address belongs to the object at ffff88802ae5f400
+ which belongs to the cache kmalloc-256 of size 256
+The buggy address is located 0 bytes inside of
+ 256-byte region [ffff88802ae5f400, ffff88802ae5f500)
+The buggy address belongs to the page:
+page:ffffea0000ab9780 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x2ae5e
+head:ffffea0000ab9780 order:1 compound_mapcount:0
+flags: 0xfff00000010200(slab|head)
+raw: 00fff00000010200 0000000000000000 0000000600000001 ffff888010841b40
+raw: 0000000000000000 0000000080100010 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff88802ae5f300: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88802ae5f380: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88802ae5f400: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                   ^
+ ffff88802ae5f480: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88802ae5f500: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================
 
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
