@@ -5,66 +5,70 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5EF9C433E6
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFAA9C2BA82
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA29964D5D
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A77CB64F51
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231173AbhCQJNr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 05:13:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42750 "EHLO
+        id S231217AbhCQJNv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 05:13:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230307AbhCQJNL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:13:11 -0400
-Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C675EC06175F
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:10 -0700 (PDT)
-Received: by mail-wr1-x436.google.com with SMTP id 61so992215wrm.12
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:10 -0700 (PDT)
+        with ESMTP id S230401AbhCQJNR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:13:17 -0400
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 960D9C061762
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:16 -0700 (PDT)
+Received: by mail-wr1-x431.google.com with SMTP id e9so997507wrw.10
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=hdrx4ZDIqWWXCMIUIHjqy5M6xHh5UviAprBwzcqZnso=;
-        b=ADMZ9cq3UjXb3mFr70/P7f/svyjPjcoI6pNxsw1Z1In3b/CCiehItfmDGj8ShIivIK
-         sqy6mFvwDowypd8BjJdYzyNHlfOODXxH4ib+zKFotJmkyDk1TtlCP9FxCXd1KkVXFkWq
-         o3vGEzMNGbkrur5BODNFI8Y7taNO03DnMXv94iTr22aM4s6jshxXVQcaOswE+f7ujBqQ
-         CshP9pNxx6hBEOd0Ax9ftbmnyyWwZ7gksmrOrcHBcF4ZJljDletomLYVyIe+I1Dqh6AV
-         EUdgHWw/dUTY+Hi7+fz9ehbY4/3g1vElEs4m3fnHjEEl2JDohvhaxoDrje99Tx0eSPZ7
-         pRUQ==
+        bh=vbchzHiCvuybExCdVEvNdwmkJDXghXDN62HPrZ8RY5o=;
+        b=c+MHb1JQmfOXLDV+3WNH4O28BETw2lg0J/MTZ4AxVEqcxNEkyvb1/0GvTJoY9jbaHQ
+         mGRlki8xCC2lbvr7VJK3gfJfAzG11KyjxUQS/d8wv5Y6k/hYiorMwF7zIEXdykm7Yiq9
+         IOLE/HHhZXw8zg/3K34Abk9Girs63O3H8tobZKe1jaj6aDfbXJQ7VIbdasc1wYgP/qEb
+         bkqwZeFQMQ2Wl8xXFAWrZ1yymbORIzjB35OfgA3DBQkFtOQXT+3DyRFLPmUS4Bt99rzw
+         LvMVAyNK2pdPCb5gIjmoTo+ytglgomWYrPt75ZgQiugft2u6eu5INCug6q0fP+ipTmyO
+         KaqA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=hdrx4ZDIqWWXCMIUIHjqy5M6xHh5UviAprBwzcqZnso=;
-        b=tNCqyh68sfDM4rhqEEWfGigIToGehSlyoEVjtGVpgBM7SNUe9+SiH4QTXqhCuVpHiU
-         1GtzQkmHpcEfXUBq4WKhzX4u1l3l2bsstlrtIcCQ+kBEwZmnHfEBQogLpUymysNLPxZy
-         4N7c2+mC6FAERTVOFeFzD7pl1ra4jatQKn8PoHvZCBAMuc2apbipCGj7KTgnoyUzaEG/
-         XSz6K9rVZVNYc1YGBFRRrzJiDaGnUh1KJnkKXpAAPAHpi72PbcCwDUjN9Lsp/aoLdB8f
-         2KepDiWx1K3IEOlnkYitBLwqQNats8Pb6n4MqozOQD/mymHRczWWuhNwzIa3THb3oVy9
-         ydKg==
-X-Gm-Message-State: AOAM532Cs7ghasADqmmSwnLo0TGoT7ZUdAUFu1epALrk2CGzC3A+Pnwz
-        yyocipv6myZm3fWvqzoMIgyWWg==
-X-Google-Smtp-Source: ABdhPJyce6n27wI17PtQ5IRp7saOtwmxNB3UD47OIgyBOc+bS91ofdwq9UrHv3TIgOn7PvWLJ8/jDg==
-X-Received: by 2002:a5d:5088:: with SMTP id a8mr3404299wrt.294.1615972389604;
-        Wed, 17 Mar 2021 02:13:09 -0700 (PDT)
+        bh=vbchzHiCvuybExCdVEvNdwmkJDXghXDN62HPrZ8RY5o=;
+        b=rDziCjAdvpF32XRvFJk5RJyDG/GZpEMZcwP0L3feQWFISmX3kTwGBtxbFSVUNCCdKk
+         BmtLqsAIe5xZYI/Jwrwjnm/Y16QEyrjGsT/IQnL/mLXJMLGqDhIeUGoKB/SHF2zPrYzH
+         8r2ua+11JkaY7000jNkQPR+bmfSCyrafxgdZIXb7+iF7WBMNy3dJyZqKD6YHDLKdJxSZ
+         PBVTLIF99wJHLpGMXwFirGJDuSGeIb2t0R+cyQSeqI794VnKHOdyIJI9UMezytnqoOs9
+         fFPhmkgz4Oa21oWQAEYWRnUii5oMqnuyCvTCifzq1QA1VVx7HoepKHtOzo4rAJwrXt4b
+         7cWQ==
+X-Gm-Message-State: AOAM533KBfVaRDm6Yw7HIX7t1imyWTAThWbkqk6SvZHQmYXvOiFCqkkV
+        FsSpV5BvFhAiOw6gn0LSySvNDg==
+X-Google-Smtp-Source: ABdhPJwDbrsb4UQMLL0mRYdouDzxdsekpPMAQLftKnrUTc6dcOZm4Ge7DdcbnNX5ybF2uM2jUh4thw==
+X-Received: by 2002:adf:fac1:: with SMTP id a1mr3452780wrs.98.1615972395408;
+        Wed, 17 Mar 2021 02:13:15 -0700 (PDT)
 Received: from dell.default ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id e18sm12695886wru.73.2021.03.17.02.13.08
+        by smtp.gmail.com with ESMTPSA id e18sm12695886wru.73.2021.03.17.02.13.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 02:13:09 -0700 (PDT)
+        Wed, 17 Mar 2021 02:13:14 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
-Cc:     linux-kernel@vger.kernel.org,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+Cc:     linux-kernel@vger.kernel.org, Michael Cyr <mikecyr@linux.ibm.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH 29/36] scsi: isci: remote_node_context: Demote kernel-doc abuse
-Date:   Wed, 17 Mar 2021 09:12:23 +0000
-Message-Id: <20210317091230.2912389-30-lee.jones@linaro.org>
+        Dave Boutcher <boutcher@us.ibm.com>,
+        Santiago Leon <santil@us.ibm.com>, Linda Xie <lxie@us.ibm.com>,
+        FUJITA Tomonori <tomof@acm.org>,
+        "Nicholas A. Bellinger" <nab@kernel.org>,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: [PATCH 35/36] scsi: ibmvscsi_tgt: ibmvscsi_tgt: Remove duplicate section 'NOTE'
+Date:   Wed, 17 Mar 2021 09:12:29 +0000
+Message-Id: <20210317091230.2912389-36-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210317091230.2912389-1-lee.jones@linaro.org>
 References: <20210317091230.2912389-1-lee.jones@linaro.org>
@@ -76,31 +80,43 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/isci/remote_node_context.c:206: warning: Function parameter or member 'rnc' not described in 'sci_remote_node_context_notify_user'
- drivers/scsi/isci/remote_node_context.c:206: warning: expecting prototype for This method just calls the user callback function and then resets the(). Prototype was for sci_remote_node_context_notify_user() instead
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:136: warning: duplicate section name 'NOTE'
 
-Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: Michael Cyr <mikecyr@linux.ibm.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Dave Boutcher <boutcher@us.ibm.com>
+Cc: Santiago Leon <santil@us.ibm.com>
+Cc: Linda Xie <lxie@us.ibm.com>
+Cc: FUJITA Tomonori <tomof@acm.org>
+Cc: "Nicholas A. Bellinger" <nab@kernel.org>
+Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
 Cc: linux-scsi@vger.kernel.org
+Cc: target-devel@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/isci/remote_node_context.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
-index 7a576b995afae..77ba0291134e2 100644
---- a/drivers/scsi/isci/remote_node_context.c
-+++ b/drivers/scsi/isci/remote_node_context.c
-@@ -197,7 +197,7 @@ static void sci_remote_node_context_setup_to_destroy(
- 	wake_up(&ihost->eventq);
- }
- 
--/**
-+/*
-  * This method just calls the user callback function and then resets the
-  * callback.
-  */
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index b65d50d03428a..41ac9477df7ad 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -128,10 +128,10 @@ static bool connection_broken(struct scsi_info *vscsi)
+  * This function calls h_free_q then frees the interrupt bit etc.
+  * It must release the lock before doing so because of the time it can take
+  * for h_free_crq in PHYP
+- * NOTE: the caller must make sure that state and or flags will prevent
+- *	 interrupt handler from scheduling work.
+- * NOTE: anyone calling this function may need to set the CRQ_CLOSED flag
+- *	 we can't do it here, because we don't have the lock
++ * NOTE: * the caller must make sure that state and or flags will prevent
++ *	   interrupt handler from scheduling work.
++ *       * anyone calling this function may need to set the CRQ_CLOSED flag
++ *	   we can't do it here, because we don't have the lock
+  *
+  * EXECUTION ENVIRONMENT:
+  *	Process level
 -- 
 2.27.0
 
