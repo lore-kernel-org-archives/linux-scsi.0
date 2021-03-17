@@ -2,85 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBA44C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 20:41:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A7CFC2BBDA
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 00:57:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B8E8464F80
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Mar 2021 20:41:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45F3164F9F
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 00:57:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231375AbhCPUkc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Mar 2021 16:40:32 -0400
-Received: from mail-pf1-f174.google.com ([209.85.210.174]:36030 "EHLO
-        mail-pf1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231463AbhCPUkE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Mar 2021 16:40:04 -0400
-Received: by mail-pf1-f174.google.com with SMTP id x21so8335825pfa.3
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Mar 2021 13:40:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=Okvb8hMlwqk0l3HamdbXOJzinK2go0wx3mk69axSKiA=;
-        b=BCcc0eL2W2JH9SfEi4iRKmERy4n3cOQ9LRt7I+5u4Yl5DxY/RmS96wh+vDlu5iJJQy
-         hQ1U74+b5V2YknzIcNMVVwbUK0e6mG8E5kaEhFzCbLI6E99F2DZtmya8gGxJldx/RB+a
-         X1bB38Ff9rdYyA1DcZ1wmx3dmDfta4KEZLmMgq1selAGpsapRGGwsQwnM6ro14/+40gi
-         VQ4fBST/3KBrEFBrhZUErTHf3Z/AsPWCQm4HvN5vRt/O9mSKcrDM6uVrDRbneE+VAGYS
-         0KHSbABSooVTjuFfBvJgOj/HMsn7McJaVdHgYJowxDMApMY3xVUVEhE1TIirqDWmydwx
-         VvJw==
-X-Gm-Message-State: AOAM533VpINZHQKO62Bcuudbolvtf9njrECSthhkwry4N9/h1iijJ0RS
-        O2f1IJ+beMBmlwOYHkgf1nA=
-X-Google-Smtp-Source: ABdhPJzsPhq4x76vZTGXm9UbXaViL0LYTNye5tZ+GLYHn42TLMlVH4ajEAs6B4B5fAFM9HMIA2tqYA==
-X-Received: by 2002:a63:fa4c:: with SMTP id g12mr1303552pgk.205.1615927203929;
-        Tue, 16 Mar 2021 13:40:03 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:b6b5:afbd:6ae4:8f83? ([2601:647:4000:d7:b6b5:afbd:6ae4:8f83])
-        by smtp.gmail.com with ESMTPSA id m21sm17440426pff.61.2021.03.16.13.40.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 16 Mar 2021 13:40:03 -0700 (PDT)
-Subject: Re: [PATCH 7/7] qla2xxx: Always check the return value of
- qla24xx_get_isp_stats()
-To:     Daniel Wagner <dwagner@suse.de>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Quinn Tran <qutran@marvell.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>
-References: <20210316035655.2835-1-bvanassche@acm.org>
- <20210316035655.2835-8-bvanassche@acm.org>
- <20210316084803.67if66dxxqs475f5@beryllium.lan>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <43062f93-20a9-9e38-8b17-b26c034d6072@acm.org>
-Date:   Tue, 16 Mar 2021 13:40:01 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+        id S230035AbhCQA4A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Mar 2021 20:56:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60964 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229866AbhCQAzv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 16 Mar 2021 20:55:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 23A4164F92;
+        Wed, 17 Mar 2021 00:55:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1615942551;
+        bh=Yeveyd6K8wPDqF/jDYmnasW/ztGVc7aRaNgrufzhjag=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=tFjvg2xc/+Yx8sfANVKJI1H3uycyfON+gimFcuPW4aLeDBrdw+unto5FmmRVOf7yi
+         UadFSeQuPxNyqaOdqApzWJlJYPa4bAlboVetARb0rF2ffnswZN4Czjdwh0xlD/R3/s
+         WRg5QZyiUzNC/S/Zvm6a8kiCS0TCeBSy0xn91PE6OcYR1Y+hlGvAOGQw5Q1oz1btX5
+         MvSUS+KsYFkTlZq7ArEJuQpgOrhXc7j6j08ecYYa+FuHyqtjJt7fHDL87waYvhlnJn
+         FoAmSEXN2vZk7Ho4p8I61m7fGUGIzcb1JAKFB1ovY8hR/Mx8KdrTBz8ThweGb+taqN
+         O3NVz8dqnVpyw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Nitin Rawat <nitirawa@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.11 11/61] scsi: ufs: ufs-qcom: Disable interrupt in reset path
+Date:   Tue, 16 Mar 2021 20:54:45 -0400
+Message-Id: <20210317005536.724046-11-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210317005536.724046-1-sashal@kernel.org>
+References: <20210317005536.724046-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20210316084803.67if66dxxqs475f5@beryllium.lan>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/16/21 1:48 AM, Daniel Wagner wrote:
-> On Mon, Mar 15, 2021 at 08:56:55PM -0700, Bart Van Assche wrote:
->>  		/* reset firmware statistics */
->> -		qla24xx_get_isp_stats(base_vha, stats, stats_dma, BIT_0);
->> +		rval = qla24xx_get_isp_stats(base_vha, stats, stats_dma, BIT_0);
->> +		WARN_ONCE(rval != QLA_SUCCESS, "rval = %d\n", rval);
-> 
-> ql_log() instead of WARN_ONCE? The function uses ql_log() if
-> dma_alloc_coherrent() fails a few lines above.
+From: Nitin Rawat <nitirawa@codeaurora.org>
 
-Hi Daniel,
+[ Upstream commit 4a791574a0ccf36eb3a0a46fbd71d2768df3eef9 ]
 
-I will make that change.
+Disable interrupt in reset path to flush pending IRQ handler in order to
+avoid possible NoC issues.
 
-Thanks,
+Link: https://lore.kernel.org/r/1614145010-36079-3-git-send-email-cang@codeaurora.org
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Signed-off-by: Nitin Rawat <nitirawa@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/ufs/ufs-qcom.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Bart.
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 2206b1e4b774..e55201f64c10 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -253,12 +253,17 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
+ {
+ 	int ret = 0;
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++	bool reenable_intr = false;
+ 
+ 	if (!host->core_reset) {
+ 		dev_warn(hba->dev, "%s: reset control not set\n", __func__);
+ 		goto out;
+ 	}
+ 
++	reenable_intr = hba->is_irq_enabled;
++	disable_irq(hba->irq);
++	hba->is_irq_enabled = false;
++
+ 	ret = reset_control_assert(host->core_reset);
+ 	if (ret) {
+ 		dev_err(hba->dev, "%s: core_reset assert failed, err = %d\n",
+@@ -280,6 +285,11 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
+ 
+ 	usleep_range(1000, 1100);
+ 
++	if (reenable_intr) {
++		enable_irq(hba->irq);
++		hba->is_irq_enabled = true;
++	}
++
+ out:
+ 	return ret;
+ }
+-- 
+2.30.1
 
