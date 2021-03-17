@@ -2,175 +2,217 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09FE0C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 02:26:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BD99C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 02:48:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CAE4064F92
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 02:26:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0896F64F97
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 02:48:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231140AbhCQC0C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Mar 2021 22:26:02 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:52832 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231484AbhCQCZr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Mar 2021 22:25:47 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12H2NIsB014079;
-        Wed, 17 Mar 2021 02:25:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2020-01-29;
- bh=4wkneazeRjRq4wlcAOI/O7ad8+OlmRPxS2mDgBuYF9U=;
- b=Q1WsTXNRRFpwrspID1P95IVZd6TeLDFAMzyiVxVReai0WCdgCArJApWRNJHEPf2G1z+Z
- y4szHcsl3YL2gD8Bm7X5dtHiD7Yzzl0O9ksb/xfDY1hplyof+rHgU0RiWj9Or8m5Uvni
- rQilZTIb3y4z7FBLy9AvPVVLFHbEryqfpepYJ7nwLoWDi1oamkFXn2nWLO995ObLUDwy
- ye965tCeadGkXLXwCgHOWDou88kGZZ7zUfqOZc1TIbwxVQrf7JpKoTyvHefbu3ozISeg
- 4Rc+oqRr7wyV0sk0EK2isL23vo+egduvSAZCG5y9EFajRtiBc5nVfY0xjpDXseFvtoFJ sA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 378jwbjnua-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 17 Mar 2021 02:25:35 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12H2Jkdj078305;
-        Wed, 17 Mar 2021 02:25:35 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2101.outbound.protection.outlook.com [104.47.58.101])
-        by aserp3020.oracle.com with ESMTP id 3797a20jr9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 17 Mar 2021 02:25:35 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LXM8pE4V3Tg4J0DPboLTrsZzNjUqokmnVNA++HMXFCt8LJmbFwnvqUkKW30Q56Jek7m+D1aytDp5Zw3lKJzjg/60GVG1y/sn5Om0+eAA0IcLRk0tRGe2qmjnuQXeoKAJOHwP4HzgfycmMBDI6c3YP2kO3ppNJsSs6kQshy7GfSMocXge660Qa0iH5uokNAImBJ/I200go1/pgid6Xh9kckN3EmcvsOU11LGiJEbtcStej7NPs0yA43B8Dpu9bI1JztxQVFuueasqMrHddzZiH0I0nPV16/uakddlOtvgqFurZ4CJAfnD/kB3IbugbqahfqCvp5HFU8ncUroizWxncg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4wkneazeRjRq4wlcAOI/O7ad8+OlmRPxS2mDgBuYF9U=;
- b=cpvkPV3C8PFgCRsOgUWvQXgT5UYh3ij4nGE6GK7pDlXfwCoTaYr7e6DYDhjRRgm6MmAw6AIl9g0iiPg4h72tKa66+ioxKNlrLqICL1hCa40HDMwyEqL5XIaTN8+XiH2TWzuPkeZ3D+EH+MorJQZzpcloWYpuyRnHD1YkVW88pQQ41mISb1xdx2rJqQ4wruyEW9F5MT00ezrfPATVVmHS7AEsXu07S8u9y1S05v/HuXWKHqmYlNwrHp7rlDLLKLGeqcF+ESvEWqJY4/0siLnbW9Myq92Rfsf/RlXxOnCJoBs+z7hiPU7IobXmbT1kr8jehRp8THRoXtTElG+S/7so3Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4wkneazeRjRq4wlcAOI/O7ad8+OlmRPxS2mDgBuYF9U=;
- b=JzF73pUNo85H1OIx9J/sVkHpsWUOQoKoJNdjMc+klBQO+90eeLYJW/GXZH9P3rTf5AlhVKSkBfJzMRhgc+z1UyE45JZ89bfCUidEYGPA9E4/DR59Kg8gYl4/uEvshWeKDL3l2vGmKBIODZN899lA0Ku2985M9wC8zTHJ5LkNpsU=
-Authentication-Results: kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=none action=none header.from=oracle.com;
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH0PR10MB4725.namprd10.prod.outlook.com (2603:10b6:510:3e::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3955.18; Wed, 17 Mar
- 2021 02:25:32 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::dc39:c9fa:7365:8c8e]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::dc39:c9fa:7365:8c8e%5]) with mapi id 15.20.3933.032; Wed, 17 Mar 2021
- 02:25:32 +0000
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     Don.Brace@microchip.com, Sergei Trofimovich <slyfox@gentoo.org>,
+        id S229660AbhCQCsJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Mar 2021 22:48:09 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:33201 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229526AbhCQCsF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Mar 2021 22:48:05 -0400
+Received: from epcas3p1.samsung.com (unknown [182.195.41.19])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210317024803epoutp01ef90d54072cdfbe27dff553c87d83ee6~tAU-RDeD50301703017epoutp01R
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:48:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210317024803epoutp01ef90d54072cdfbe27dff553c87d83ee6~tAU-RDeD50301703017epoutp01R
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1615949283;
+        bh=bfExUxnKegOWp6W/y7hdz5ArFPx8jVEPrZCmuu0WVDs=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=Pa6p8HHJo4m2RMUKtg5pUnpNEYAv1aYOVAV5iwyWYEEQC4+gBJbZWEmCJtU2pbzzk
+         m2Ek9ahLq2rFs1Bcj7BH13oRTB1m5Ct5rLMZbph+siQZijW1kCMW34ti5iWUCrV5b2
+         Q5+jRVC16XLcjzsnWuviWMtypLmNtyWHymrmAXPA=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas3p4.samsung.com (KnoxPortal) with ESMTP id
+        20210317024803epcas3p4e31b63ad570b303cc4296439e8617aa1~tAU_t3xJ_0166101661epcas3p4A;
+        Wed, 17 Mar 2021 02:48:03 +0000 (GMT)
+Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp4.localdomain
+        (Postfix) with ESMTP id 4F0ZMk71GVz4x9QH; Wed, 17 Mar 2021 02:48:02 +0000
+        (GMT)
+Mime-Version: 1.0
+Subject: RE: RE: [PATCH v5 05/10] scsi: ufshpb: Region inactivation in host
+ mode
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Avri Altman <Avri.Altman@wdc.com>, Can Guo <cang@codeaurora.org>
+CC:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-ia64@vger.kernel.org, storagedev@microchip.com,
-        linux-scsi <linux-scsi@vger.kernel.org>, jszczype@redhat.com,
-        Scott.Benesh@microchip.com, Scott.Teel@microchip.com,
-        thenzl@redhat.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Subject: Re: [PATCH] hpsa: fix boot on ia64 (atomic_t alignment)
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1zgz21rkz.fsf@ca-mkp.ca.oracle.com>
-References: <5532f9ab-7555-d51b-f4d5-f9b72a61f248@redhat.com>
-        <20210312222718.4117508-1-slyfox@gentoo.org>
-        <SN6PR11MB2848561E3D85A8F55EB86977E16B9@SN6PR11MB2848.namprd11.prod.outlook.com>
-        <CAK8P3a3JYmhbN3TXB2cWGfXGKgsUa9Hg=ZvWckTaL_31OMgbtQ@mail.gmail.com>
-Date:   Tue, 16 Mar 2021 22:25:30 -0400
-In-Reply-To: <CAK8P3a3JYmhbN3TXB2cWGfXGKgsUa9Hg=ZvWckTaL_31OMgbtQ@mail.gmail.com>
-        (Arnd Bergmann's message of "Tue, 16 Mar 2021 19:28:22 +0100")
-Content-Type: text/plain
-X-Originating-IP: [138.3.200.58]
-X-ClientProxiedBy: BY5PR04CA0001.namprd04.prod.outlook.com
- (2603:10b6:a03:1d0::11) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
-MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from ca-mkp.ca.oracle.com (138.3.200.58) by BY5PR04CA0001.namprd04.prod.outlook.com (2603:10b6:a03:1d0::11) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3955.18 via Frontend Transport; Wed, 17 Mar 2021 02:25:32 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d0004bc5-985a-4086-8f68-08d8e8ebf0a3
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4725:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <PH0PR10MB472553000EF697CBDF03722B8E6A9@PH0PR10MB4725.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: pp6Sl5tsiSXY9pZaEWsVyuXF2ZiWaK/XgAynWjrp2YquVvVIa4xEQfkN1qfeEnU9s5rWxIwWTIVOyT/XI77hsOK/VFl079IsFXSpm1o40Bst7R1tRHftnZm2cwmszV4l4D+K2se2q80aq44xWeYIbRvuXWACSGazjTCv5Efc69pEIAlmNcBVxXFYIMLpXehUnvk3mrF5j7fTjEz0wTnovNRchKpmRJG6+IdI9cwjCvwRrMGQ8GUG4PLI0i+G0d2BO2U29FiiKFAa75BoE7QihgRG12wyBBCZSMRyfRdJ+k4any0TLvQJ8X6eK2QvzvEKplXxLH6C4CZ+fltzukTMJaJiEmK+dYXn87lXUebD72rH1MGjchi3H3ttpaLW8AR1dQ+QwTXrHZpHdK9h7qWpWEF7KjXCbJ4cIkWbO19yoR4MS8+akyCULY5j/NRogrPf+OqdxbgxDVJRKO9b+DmSCyZ9mOrNezfalESYWHvMJspNW1jWwwoOFH4rDORUKTfW/MEM2me+03ZUDKOdeqOw4Q+SuBR/wAery6a3DuGUcFhaKrU2Fcr/k8zel6Rlmwrb
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(136003)(376002)(366004)(346002)(39860400002)(66476007)(66946007)(36916002)(66556008)(83380400001)(8936002)(4744005)(6916009)(5660300002)(7696005)(4326008)(55016002)(52116002)(7416002)(86362001)(956004)(26005)(316002)(8676002)(186003)(16526019)(478600001)(54906003)(2906002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?rey8vu2GdFuP/V4MgfT1V4PuRW5BHLoz0AD/QOQid07eTZYV8nE7a7cRbx9U?=
- =?us-ascii?Q?YrkL+SlxEwSgyR/S7iwU1QN5+mNqYLti9pmZv8DYDGgn8dwsnBC1AmMLc0Zx?=
- =?us-ascii?Q?VBgCK88bSH/qVA8oUQ9E/xr8WEK37VCCQ7y0pZwEHHfwCiiDJ2SsObWloLDq?=
- =?us-ascii?Q?LQ1Vqd146SdWQfzlqo2a4Ca1Y/L/YPrVUUYEj/qlJKutlIfna7508w//qFn6?=
- =?us-ascii?Q?fwM+Wa+W7VWVAttKz+pP9v6QgIi1mXewcDsd7kJYuCIuLuEfX08UEZjGzElc?=
- =?us-ascii?Q?FmkNsBKGXG7CWS2GIzm9mzTk2euCC38bu2D/gOt0DYe9h3ZM+FKQIv/Hg5Sg?=
- =?us-ascii?Q?ynruUthwHHpOeRoNZubjSuVSjFbIFjTvViz/GSlCFtdAC9UESQ+B5/DQAiAj?=
- =?us-ascii?Q?oGRQQQLHJps7qDJGGA5I3+qMQ7VsG9ysE6/egBnKoU85fW5E+cy3v/hfVkK9?=
- =?us-ascii?Q?Vq/BnWaXvfKGoJ6V1ofeT6/YXxbLwTOSru7j35s8b77q4lOr+/RgtnV7l0Qg?=
- =?us-ascii?Q?5WwEIlwR8UDV2DW9lHJnVrNwD3yCBeAUw7/nASX5OVflKl73drpvRx80t/H6?=
- =?us-ascii?Q?4oU2A8rcUp5IkChoDkXOjuOtRSWn4NdlONzptdZshU9i5/lbCI1a1sDk7HY/?=
- =?us-ascii?Q?GwX60cRxtDY5BdhBVF4Sk8cFf84FWtujztDCRPyKZ6+b68V9GvwO3pf1Burm?=
- =?us-ascii?Q?+RJddTlKQq6sTqgeEZILUc9x/17tYooGDY6G6jerP07u5rGi1hVPtp3y69b2?=
- =?us-ascii?Q?JuoVcPaBPxNVR7ZfGukLbfWrV3wkAheHMLV4sVihn9Sjn45p8OQ+7cmSRFP4?=
- =?us-ascii?Q?h+tJ+p5ePtiC8Gj4Xo0w37loucTUako1U8LAFJCkmNl7KyjZgRDgVUWKsDdg?=
- =?us-ascii?Q?MPxziM6daIpBmvW4hciAjxaEcOB6G6ToQPY+vzYup4DXEkvo6uwBzmypwcGG?=
- =?us-ascii?Q?aUkNsta6t1IPyyJ6XR37YLG1DOEIpkwsOKmj6mRTsu7SAxvOaSrpn4QnIRXq?=
- =?us-ascii?Q?WXw8tGb+eqaTyplZRp8hqrbq3czH+YWvOdpEtGZfzrPbfigpJY6ULXNFs/CY?=
- =?us-ascii?Q?XXULa7zUCrstSzL/ac9ABeMVjWd9J0ahGEvjiyzbhT8mEsLBggT8YMQcN2sr?=
- =?us-ascii?Q?HubiD9hyA8pFK2SV0P2ZyAVkEfmpTZl2/bxV3A5wsXfjaTy5uTKReQWE5o+z?=
- =?us-ascii?Q?wdCxGm5xUnnKWpF4MPz1wJY2fmZtx0xAF3+qTR4ZLpPq2623/faeA+we0rIq?=
- =?us-ascii?Q?83w6ymQI+R+6570bANHDrdQPc0HL5cUCnQUPZPbl6l+NtlXUSGzdwz1AAhbq?=
- =?us-ascii?Q?3Y+S6BM2vGdpBrTqQFavf08L?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d0004bc5-985a-4086-8f68-08d8e8ebf0a3
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Mar 2021 02:25:32.6000
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Id1HQ8OmXAGVeEBxJv6EWph8kpIuaAoI4+xR1F+uomg6MEih7Cy4XUIMdcrWQ7X7zCjei/MUFswMvUhnIqjV6OAmbdu3R5jFCCOSK4lHsNk=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4725
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9925 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 spamscore=0
- mlxlogscore=999 bulkscore=0 malwarescore=0 phishscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2103170017
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9925 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- spamscore=0 mlxscore=0 bulkscore=0 suspectscore=0 priorityscore=1501
- lowpriorityscore=0 clxscore=1011 adultscore=0 phishscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2103170017
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <DM6PR04MB65751EE32D25C7E57A6BABE8FC6B9@DM6PR04MB6575.namprd04.prod.outlook.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <2038148563.21615949282962.JavaMail.epsvc@epcpadp4>
+Date:   Wed, 17 Mar 2021 11:28:48 +0900
+X-CMS-MailID: 20210317022848epcms2p3e17fe87903f54d520bef8c4a815afa59
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20210316083014epcas2p32d6b84e689cdbe06ee065c870b236d65
+References: <DM6PR04MB65751EE32D25C7E57A6BABE8FC6B9@DM6PR04MB6575.namprd04.prod.outlook.com>
+        <20210302132503.224670-1-avri.altman@wdc.com>
+        <20210302132503.224670-6-avri.altman@wdc.com>
+        <25da7378d5bf4c52443ae9b47f3fd778@codeaurora.org>
+        <57afb2b5d7edda61a40493d8545785b1@codeaurora.org>
+        <CGME20210316083014epcas2p32d6b84e689cdbe06ee065c870b236d65@epcms2p3>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+>> >> ---
+>> >>  drivers/scsi/ufs/ufshpb.c | 14 ++++++++++++++
+>> >>  drivers/scsi/ufs/ufshpb.h |  1 +
+>> >>  2 files changed, 15 insertions(+)
+>> >>
+>> >> diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+>> >> index 6f4fd22eaf2f..0744feb4d484 100644
+>> >> --- a/drivers/scsi/ufs/ufshpb.c
+>> >> +++ b/drivers/scsi/ufs/ufshpb.c
+>> >> @@ -907,6 +907,7 @@ static int ufshpb_execute_umap_req(struct
+>> >> ufshpb_lu *hpb,
+>> >>
+>> >>      blk_execute_rq_nowait(q, NULL, req, 1, ufshpb_umap_req_compl_fn);
+>> >>
+>> >> +    hpb->stats.umap_req_cnt++;
+>> >>      return 0;
+>> >>  }
+>> >>
+>> >> @@ -1103,6 +1104,12 @@ static int ufshpb_issue_umap_req(struct
+>> >> ufshpb_lu *hpb,
+>> >>      return -EAGAIN;
+>> >>  }
+>> >>
+>> >> +static int ufshpb_issue_umap_single_req(struct ufshpb_lu *hpb,
+>> >> +                                    struct ufshpb_region *rgn)
+>> >> +{
+>> >> +    return ufshpb_issue_umap_req(hpb, rgn);
+>> >> +}
+>> >> +
+>> >>  static int ufshpb_issue_umap_all_req(struct ufshpb_lu *hpb)
+>> >>  {
+>> >>      return ufshpb_issue_umap_req(hpb, NULL);
+>> >> @@ -1115,6 +1122,10 @@ static void __ufshpb_evict_region(struct
+>> >> ufshpb_lu *hpb,
+>> >>      struct ufshpb_subregion *srgn;
+>> >>      int srgn_idx;
+>> >>
+>> >> +
+>> >> +    if (hpb->is_hcm && ufshpb_issue_umap_single_req(hpb, rgn))
+>> >
+>> > __ufshpb_evict_region() is called with rgn_state_lock held and IRQ
+>> > disabled,
+>> > when ufshpb_issue_umap_single_req() invokes blk_execute_rq_nowait(),
+>> > below
+>> > warning shall pop up every time, fix it?
+>> >
+>> > void blk_execute_rq_nowait(struct request_queue *q, struct gendisk
+>> > *bd_disk,
+>> >                  struct request *rq, int at_head,
+>> >                          rq_end_io_fn *done)
+>> > {
+>> >       WARN_ON(irqs_disabled());
+>> > ...
+>> >
+>> 
+>> Moreover, since we are here with rgn_state_lock held and IRQ disabled,
+>> in ufshpb_get_req(), rq = kmem_cache_alloc(hpb->map_req_cache,
+>> GFP_KERNEL)
+>> has the GFP_KERNEL flag, scheduling while atomic???
+>I think your comment applies to  ufshpb_issue_umap_all_req as well,
+>Which is called from slave_configure/scsi_add_lun.
+> 
+>Since the host-mode series is utilizing the framework laid by the device-mode,
+>Maybe you can add this comment to  Daejun's last version?
 
-Arnd,
+Hi Avri, Can Guo
 
-> Actually that still feels wrong: the annotation of the struct is to
-> pack every member, which causes the access to be done in byte units on
-> architectures that do not have hardware unaligned load/store
-> instructions, at least for things like atomic_read() that does not go
-> through a cmpxchg() or ll/sc cycle.
+I think ufshpb_issue_umap_single_req() can be moved to end of ufshpb_evict_region().
+Then we can avoid rgn_state_lock when it sends unmap command.
 
-> This change may fix itanium, but it's still not correct. Other
-> architectures would have already been broken before the recent change,
-> but that's not a reason against fixing them now.
+Thanks,
+Daejun
 
-I agree. I understand why there are restrictions on fields consumed by
-the hardware. But for fields internal to the driver the packing doesn't
-make sense to me.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+>Thanks,
+>Avri
+> 
+>> 
+>> Can Guo.
+>> 
+>> > Thanks.
+>> > Can Guo.
+>> >
+>> >> +            return;
+>> >> +
+>> >>      lru_info = &hpb->lru_info;
+>> >>
+>> >>      dev_dbg(&hpb->sdev_ufs_lu->sdev_dev, "evict region %d\n",
+>> >> rgn->rgn_idx);
+>> >> @@ -1855,6 +1866,7 @@ ufshpb_sysfs_attr_show_func(rb_noti_cnt);
+>> >>  ufshpb_sysfs_attr_show_func(rb_active_cnt);
+>> >>  ufshpb_sysfs_attr_show_func(rb_inactive_cnt);
+>> >>  ufshpb_sysfs_attr_show_func(map_req_cnt);
+>> >> +ufshpb_sysfs_attr_show_func(umap_req_cnt);
+>> >>
+>> >>  static struct attribute *hpb_dev_stat_attrs[] = {
+>> >>      &dev_attr_hit_cnt.attr,
+>> >> @@ -1863,6 +1875,7 @@ static struct attribute *hpb_dev_stat_attrs[] =
+>> >> {
+>> >>      &dev_attr_rb_active_cnt.attr,
+>> >>      &dev_attr_rb_inactive_cnt.attr,
+>> >>      &dev_attr_map_req_cnt.attr,
+>> >> +    &dev_attr_umap_req_cnt.attr,
+>> >>      NULL,
+>> >>  };
+>> >>
+>> >> @@ -1978,6 +1991,7 @@ static void ufshpb_stat_init(struct ufshpb_lu
+>> >> *hpb)
+>> >>      hpb->stats.rb_active_cnt = 0;
+>> >>      hpb->stats.rb_inactive_cnt = 0;
+>> >>      hpb->stats.map_req_cnt = 0;
+>> >> +    hpb->stats.umap_req_cnt = 0;
+>> >>  }
+>> >>
+>> >>  static void ufshpb_param_init(struct ufshpb_lu *hpb)
+>> >> diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+>> >> index bd4308010466..84598a317897 100644
+>> >> --- a/drivers/scsi/ufs/ufshpb.h
+>> >> +++ b/drivers/scsi/ufs/ufshpb.h
+>> >> @@ -186,6 +186,7 @@ struct ufshpb_stats {
+>> >>      u64 rb_inactive_cnt;
+>> >>      u64 map_req_cnt;
+>> >>      u64 pre_req_cnt;
+>> >> +    u64 umap_req_cnt;
+>> >>  };
+>> >>
+>> >>  struct ufshpb_lu {
+> 
+> 
+>  
