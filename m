@@ -2,280 +2,171 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3257C433E6
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC186C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:20:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2DD964F37
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3B6764F42
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:20:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231246AbhCQJN6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 05:13:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42750 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230449AbhCQJN0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:13:26 -0400
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CDF3C06174A
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:15 -0700 (PDT)
-Received: by mail-wr1-x433.google.com with SMTP id e18so1004590wrt.6
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:15 -0700 (PDT)
+        id S229705AbhCQJUX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 05:20:23 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:13624 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229730AbhCQJT7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:19:59 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1615972800; x=1647508800;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=uyOInxMX590ETuy+GQzZv8CJFxdZh9SlrpvgnSRW4Rw=;
+  b=HyDp3FaEVN4aqUFgl6ywtWlLrYhHcsOEEcSagaUEhpgPpDcuuL6/n1qA
+   ABK+vzd9x9oxU3bsADSFtvpazY1zAvq8w815f/JEeZTgzwCVsHrJbt0wH
+   gUH9V6LNtMBns1mQu9+EZtP3QeZEUp6lwD/+1usbznnsrHuIpCcXkbIhB
+   wZECUQUV0H516QRHcCzoDEbaVv3OYAsyWr4VACHWR7Rlei7O2V437k9yY
+   L98K0RIGg2bb8HoI23elL/cla9pSFZOCF7SLKhtHeoG08/IW4Pi0hlsOf
+   v9K8udmsI6Tn5lHI6FtKRkOzEgueNcwSrzKTzB+hmXdW9W2G5ZQvY2/If
+   A==;
+IronPort-SDR: WZfzYMq0BVSKN0rAVDJ8ULKl2tilpsYO5Sd/x5JyyiIvBmtTC0VQYlMliY59cZJwMpa4IvDLVj
+ JVXO9rLLS4TqyTWesQD7F4y7I5iRD6llLIzOMUspyx7wiF2CBhCInWIxncUVClbjjb2asXtxMV
+ +RWzhZeNd5ftiykzlrleDXpB2lNl15KjN7MTG/KRtbN4B0dKFnp8eIT5dv/arILnGsWZ/9Dl7y
+ 3zXURnDnyOy1r9ox7Td1VhEumbXLCht39O4wWWMSOI2ALuJeazujzXdi0lQC39RJ09qfHCP7em
+ rZc=
+X-IronPort-AV: E=Sophos;i="5.81,255,1610380800"; 
+   d="scan'208";a="163492311"
+Received: from mail-co1nam11lp2168.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.168])
+  by ob1.hgst.iphmx.com with ESMTP; 17 Mar 2021 17:19:58 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=bhYbbwDgs/AqJjcuTx0iCejLiExUfl2P2ArX/3qLmn0nOYAVOTOGkQ7LB6gxmf78E1dDNmEbcpoVmdrLaLZIX3UVvkYU86HybRXkGWvGUybTr934l91hgMbfC3gDxy3nDpKiSom5SSBklAKHWc8c00xqf2Z4+ffNtyUK47FWbGCVM2lsc+YBGvcMTG826S5Os4muxDACIW4DRkx5xvfQj7ZMgCvntRgBQ9T+u2yh+JR+yI4R43O2H7pw4Oj6cII8l5ZSoqKt5UqSValIsZJ8eHndlyv1ZcCqH2J+gmGbJvJoQw4Wq8B7YZL7IC5Lj7BBVOS4Xmf8OCZQ6xgNGl8q6A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2vemDPiFFr2NqJkKkwmAXZlcgc7GYbAe988Mhvr5LoA=;
+ b=V8wKb8DALoVHmGp2tdvtcANb6s1cvboTgE2Y+uEZ8FZPNehEkndSOTzpCSebM8Mj9gRzIGxLNeSQW6buykxZxqTo73Nbyna+gq47jUajPVvzSBx/ez+B3JITZaoLm7Ol2QrJNjMLPswfkVbA6ektPX23mX4IP6O9suFaOu2jmQLaY/FygroxbIKkDgDseP6dRNIAq7E34Q172ngzZ79Uds0ZvEoQLvPtpzTFAIHbj1OhpPJXeDdJu+zW7mSs78K/bc5gFUpktmmFv/Fm92w2boi4kgGy4IJms13+cVpi8fd/AgdFLNBNKiHmt3gtrfEvkGuzmEpsxHiqyTaiRuCBcg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=zjBaHIzTXXyZcZh/hf2ALRdddAT/JJaP6MXXLDQdjD4=;
-        b=frmeAnhM5BxXjSAAx4w5jrrgvPMVg8We5PR8YNRtrjrjou/kpY0eN5VlPyUt1uMBwz
-         5pgCukGPGRBr3JtgaRtGLTn5Dm/eRNxjiWR+3fyrGaOmB+7c+d8hWn/QZQC3nD2YPcip
-         zcawozUVl6RKLbffmVFc8rn3WvIY/pWmUKIALM/4j6BC3nc9IfFL96cPz5dzB/Q44aig
-         Je7wqAWY+rkVoE0f38VC/07pxs8smswPJAvo/2Xob6wyxaeMM5fBDq7eeWpWpmwIdeVk
-         ec/7dJzxwW5XhSiUD4ReJc1xd/DG9Ze8uisLDncjEZt+ZQbbQ8pUuS4TAHr3zLhA8nUg
-         mQjw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=zjBaHIzTXXyZcZh/hf2ALRdddAT/JJaP6MXXLDQdjD4=;
-        b=jUOzxxjzQlZHemmO0s2qoErvfSsstJU+lvLd4PZBh+i/rcQWH7XW/07mP2yHyFEAqX
-         keQcK2QcqjDYLNhM5NChR0Rs0w9HZBGxSX3/1nGcp4AFJlp/x79WBfNPDmWCfuWOrViP
-         ldQduZIGx15uIK8WUSqZmxj5ZXqmaE/XiXN+Hxi80cCRzpVGsq2jGkoyR+QXAM0mgBws
-         mxKeb58xDsKa+WZQWzeZuNP756lXzd1BjhfVXohuCrUbNPGHznQm5zArWnbuh1hF7cnW
-         uITsebiHpz5hmgRtlEv81dpGQ6gOvl7ha1HE/wRvrnx5zXECKusf931FXlQDG9rESFLR
-         LY6A==
-X-Gm-Message-State: AOAM5317tJtpCWpr8a9EC3cVUvLpqHD67Xy20B05CdU/zcTWTzTb/NAC
-        IZpzgmDIFzrKlKpYVuDcP8Dh9Q==
-X-Google-Smtp-Source: ABdhPJxd2Igfnc0ZThXmRgnk6il2w5yk2KnyRALWuqCYxKTzjp9t0UMVPqDP7EJ1pMn5YEfJL7tisw==
-X-Received: by 2002:a5d:6c67:: with SMTP id r7mr1165491wrz.373.1615972394340;
-        Wed, 17 Mar 2021 02:13:14 -0700 (PDT)
-Received: from dell.default ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id e18sm12695886wru.73.2021.03.17.02.13.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 02:13:13 -0700 (PDT)
-From:   Lee Jones <lee.jones@linaro.org>
-To:     lee.jones@linaro.org
-Cc:     linux-kernel@vger.kernel.org,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Brian King <brking@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 34/36] scsi: ibmvscsi: ibmvfc: Fix a bunch of misdocumentation
-Date:   Wed, 17 Mar 2021 09:12:28 +0000
-Message-Id: <20210317091230.2912389-35-lee.jones@linaro.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210317091230.2912389-1-lee.jones@linaro.org>
-References: <20210317091230.2912389-1-lee.jones@linaro.org>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2vemDPiFFr2NqJkKkwmAXZlcgc7GYbAe988Mhvr5LoA=;
+ b=Ft8ELxv2ckdhlvgc1Cj0ck1/lcav9nXuN7vNALdLK5doK+u9jy/yQEF3FPu/DkCorumhPwaVHuHlpVMS0vKXcjZqaKHeCVzm+45IQ2j4bYdgR7HZtaVLeNgpnvnEw8Ac5ZH3vy/PI/PtsnWM01oQE05biKpX+NNaYKBUB80xe6Q=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ DM6PR04MB4156.namprd04.prod.outlook.com (2603:10b6:5:98::33) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3933.32; Wed, 17 Mar 2021 09:19:55 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::e824:f31b:38cf:ef66]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::e824:f31b:38cf:ef66%3]) with mapi id 15.20.3933.032; Wed, 17 Mar 2021
+ 09:19:55 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Can Guo <cang@codeaurora.org>
+CC:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
+Subject: RE: [PATCH v5 03/10] scsi: ufshpb: Add region's reads counter
+Thread-Topic: [PATCH v5 03/10] scsi: ufshpb: Add region's reads counter
+Thread-Index: AQHXD2ei7j8moNyDbkOuTIbGJCHBHqqEdEEAgABlUmCAAAN7AIADIMEw
+Date:   Wed, 17 Mar 2021 09:19:54 +0000
+Message-ID: <DM6PR04MB65751E20BCECAF49FB7912ACFC6A9@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20210302132503.224670-1-avri.altman@wdc.com>
+ <20210302132503.224670-4-avri.altman@wdc.com>
+ <343d6b0d7802b58bec6e3c06e6f9be57@codeaurora.org>
+ <DM6PR04MB6575A58446F1EB9ABDFBB7A6FC6C9@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <aa82d7011c102b5d0991cad8908ac9ee@codeaurora.org>
+In-Reply-To: <aa82d7011c102b5d0991cad8908ac9ee@codeaurora.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 2193903f-2418-4ce4-b032-08d8e925d3d6
+x-ms-traffictypediagnostic: DM6PR04MB4156:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <DM6PR04MB415624427F5FCCE1780EA124FC6A9@DM6PR04MB4156.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:6790;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 05pA6WGBMeygp5JtHXPel/IMqn2vF1UQZTZ1e8WhAatMYSNkt1tGwz50Qiuvo04wBuLTBqQ7cLVtgkaJ5F2rZo+OgI+6yw0uvqO7KAX2b6uCmtI45G1+YH4t0fLhZTzIumgPHVatJmtqJta/HXakL1z33OCyP//TzQbb2Fj5ptmSbkuoCcXTA+O7JZCiItip+JKYkpGy84eW0arDCUmJ33d3XEYiWuwGQ/XSGT0FEFhgCq0VH5ayfh0gBv9tdMF5Wsr/u8SEnm/0qQ7Vm/NelfIBreT35ifErs8xyNSL6ms0wDqvciRFkQDWkMW+PLp2d00YJC4uE6SyjuI9Ia6dtOvRW/8KqcTlvcmEOmhnUOgYplSmGtr53tSB9IN/OjJ5ZZqUx7ck0ic0x4Mty8WN3Upx02oyFcF1hw9JCR9FtORC8PoyvSWqcSFO3jlR1UB1xYUchb0sWdOL9oQWhTxSW0FvlvNkxf9WwIJBMWZtBJPgHOZ4qTZcqGAVK+1IvNcBeL2sQ/b1UKJYnj4Reli/EO90CgxaJ8LzcsS87AsRlPhBY/+kb+MfaCXmb0/HGZ5r
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(39860400002)(376002)(346002)(366004)(136003)(54906003)(66946007)(7696005)(8936002)(33656002)(71200400001)(2906002)(6916009)(26005)(5660300002)(8676002)(55016002)(316002)(52536014)(9686003)(186003)(478600001)(66446008)(66556008)(4744005)(66476007)(64756008)(4326008)(7416002)(86362001)(83380400001)(76116006)(6506007);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?7b7GOAaEci3Jj2azDBaXjKeoWZ9p5llgMQKhK11VCMMjoxntmtPh+nk1L2SS?=
+ =?us-ascii?Q?EcokV9BLQ67MLpwtI+GkkkMAcPaXssTRINkX6S9bciXYd7CRob6eIuEJ5QvC?=
+ =?us-ascii?Q?X5m0n3gO2u5OFhQnlSLtiSHAyxmcmLZcZI741eay2CW72G1T2urSfOiz+MqE?=
+ =?us-ascii?Q?4u3R6zYk14/eTtGIzJs+jas2N2RGXB8R7feMHYxJuGuxaP/nnO/IIIbu3sFv?=
+ =?us-ascii?Q?XYqVrxRQbtjnQCp/s+DOLLih6g0ods+yoMqKvtK4Qi8ExcX1rITfjkvDc5L4?=
+ =?us-ascii?Q?Znnnc2xuU7kjaFv255yRDDAEGJf1C+lo0fbcr4FN4Ig071Qj+EYb/rTQzv6C?=
+ =?us-ascii?Q?ry2A/Xg7SyFFdfUzD6EKHLhKMFrmFs3nyXYbELP2z8qyWzC8+gyrHBtarnfp?=
+ =?us-ascii?Q?+909C/i6noDt4gjQPCmj4QCtJWRCsHAxKk3urc6PqxPHfBauArw+hObfHQAe?=
+ =?us-ascii?Q?keAYGgOfEwpk4djQNo4EEdFFw9yVEWRQFlexit1b0+tkF1UrjUHkv7yk/7nB?=
+ =?us-ascii?Q?ovXJprp0BId736rPjHK589cxHOsgKlgml0GHg278EEVP8QmCk6Il3zSKn5/J?=
+ =?us-ascii?Q?nIyqT30mqbTAXCuNpmI0hBLokdnVYz5ojaBuOjQWTjZV26F+Jc5NqtY1HsRU?=
+ =?us-ascii?Q?jyyKuFDgAV0guCTNTpYy+YTuyTGeiN0/4D87ym1wT/vQ7skui5VWaahTeMry?=
+ =?us-ascii?Q?XWIHpGFUHtzwZNFKl6ykzq7dNqNZOytFvQlvCJ3KDMCYLeth3oQexd3qYjac?=
+ =?us-ascii?Q?IwLxTvLVON6ObQ/xOsTU46RMqlHEE9Lz9C8DscFWP+kHkNWzNsynerbx6Ge1?=
+ =?us-ascii?Q?iTBmS23u3+At9rY5EkuQZJEkC55VQfaQx2Wcdx6wagR2J6CG5osaKuj/ikKd?=
+ =?us-ascii?Q?gdWlrlFfqrlbhkx0FQFy+HVQ16tw8O59IOSczelPD63ANNJHM84LjnZVQ0Et?=
+ =?us-ascii?Q?T+SgPPY7SvG8ihu9QL8a6fPd0ZNeibqCZsrgfNWCxnBFkagNIK/zhcN7PAQX?=
+ =?us-ascii?Q?WIyLViHX+fDfKdW0TVYRDN0XV+ByhNLjmFac42RmNo9q2c7ZzYtPTsZNal4T?=
+ =?us-ascii?Q?6WZ81c6I0rnZyaQOhS3XAncVUodHulgIjvoQsTuIHatSPJpKsf/5acI7p+Rj?=
+ =?us-ascii?Q?+WnUlUlq96tgAI25gcjl3Vuo3XtNVgdl0jy9CS4AXknSmQGhSGUiCimy6Coa?=
+ =?us-ascii?Q?iD8zOnkbWdDAUDb6RVF/w0DEl790XVh/aw1Rq3Hxfx6VoB6ZRL3nxobYkT/B?=
+ =?us-ascii?Q?1xrXwr6WDSKhydgwzkxjFizGBKScV4J9f+3UHuPvEvIBiK8qZF96a6R6tghe?=
+ =?us-ascii?Q?z8t6D6HIH9HKXXAjjOX2A7pR?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2193903f-2418-4ce4-b032-08d8e925d3d6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Mar 2021 09:19:54.8446
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: VcnTG3ub1IP7p5KhAxYuyn7xB2lo8almZUI5YInokeYLbjzk6hKhGPN9ZL1GiAwHAm/safaL065kIv8q/bziQg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB4156
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fixes the following W=1 kernel build warning(s):
+> >> > @@ -1079,6 +1113,14 @@ static void __ufshpb_evict_region(struct
+> >> > ufshpb_lu *hpb,
+> >> >
+> >> >       ufshpb_cleanup_lru_info(lru_info, rgn);
+> >> >
+> >> > +     if (hpb->is_hcm) {
+> >> > +             unsigned long flags;
+> >> > +
+> >> > +             spin_lock_irqsave(&rgn->rgn_lock, flags);
+> >> > +             rgn->reads =3D 0;
+> >> > +             spin_unlock_irqrestore(&rgn->rgn_lock, flags);
+> >> > +     }
+> >> > +
+While at it, Following your comments concerning the unmap request,
+Better move this as well outside of __ufshpb_evict_region while rgn_state_l=
+ock is not held.
 
- drivers/scsi/ibmvscsi/ibmvfc.c:331: warning: Function parameter or member 'vhost' not described in 'ibmvfc_get_err_result'
- drivers/scsi/ibmvscsi/ibmvfc.c:653: warning: Excess function parameter 'job_step' description in 'ibmvfc_del_tgt'
- drivers/scsi/ibmvscsi/ibmvfc.c:773: warning: Function parameter or member 'queue' not described in 'ibmvfc_init_event_pool'
- drivers/scsi/ibmvscsi/ibmvfc.c:773: warning: Function parameter or member 'size' not described in 'ibmvfc_init_event_pool'
- drivers/scsi/ibmvscsi/ibmvfc.c:823: warning: Function parameter or member 'queue' not described in 'ibmvfc_free_event_pool'
- drivers/scsi/ibmvscsi/ibmvfc.c:1413: warning: Function parameter or member 'vhost' not described in 'ibmvfc_gather_partition_info'
- drivers/scsi/ibmvscsi/ibmvfc.c:1483: warning: Function parameter or member 'queue' not described in 'ibmvfc_get_event'
- drivers/scsi/ibmvscsi/ibmvfc.c:1483: warning: Excess function parameter 'vhost' description in 'ibmvfc_get_event'
- drivers/scsi/ibmvscsi/ibmvfc.c:1630: warning: Function parameter or member 't' not described in 'ibmvfc_timeout'
- drivers/scsi/ibmvscsi/ibmvfc.c:1630: warning: Excess function parameter 'evt' description in 'ibmvfc_timeout'
- drivers/scsi/ibmvscsi/ibmvfc.c:1893: warning: Function parameter or member 'shost' not described in 'ibmvfc_queuecommand'
- drivers/scsi/ibmvscsi/ibmvfc.c:1893: warning: Excess function parameter 'done' description in 'ibmvfc_queuecommand'
- drivers/scsi/ibmvscsi/ibmvfc.c:2324: warning: Function parameter or member 'rport' not described in 'ibmvfc_match_rport'
- drivers/scsi/ibmvscsi/ibmvfc.c:2324: warning: Excess function parameter 'device' description in 'ibmvfc_match_rport'
- drivers/scsi/ibmvscsi/ibmvfc.c:3133: warning: Function parameter or member 'evt_doneq' not described in 'ibmvfc_handle_crq'
- drivers/scsi/ibmvscsi/ibmvfc.c:3317: warning: Excess function parameter 'reason' description in 'ibmvfc_change_queue_depth'
- drivers/scsi/ibmvscsi/ibmvfc.c:3390: warning: Function parameter or member 'attr' not described in 'ibmvfc_show_log_level'
- drivers/scsi/ibmvscsi/ibmvfc.c:3413: warning: Function parameter or member 'attr' not described in 'ibmvfc_store_log_level'
- drivers/scsi/ibmvscsi/ibmvfc.c:3413: warning: Function parameter or member 'count' not described in 'ibmvfc_store_log_level'
- drivers/scsi/ibmvscsi/ibmvfc.c:4121: warning: Function parameter or member 'done' not described in '__ibmvfc_tgt_get_implicit_logout_evt'
- drivers/scsi/ibmvscsi/ibmvfc.c:4438: warning: Function parameter or member 't' not described in 'ibmvfc_adisc_timeout'
- drivers/scsi/ibmvscsi/ibmvfc.c:4438: warning: Excess function parameter 'tgt' description in 'ibmvfc_adisc_timeout'
- drivers/scsi/ibmvscsi/ibmvfc.c:4641: warning: Function parameter or member 'target' not described in 'ibmvfc_alloc_target'
- drivers/scsi/ibmvscsi/ibmvfc.c:4641: warning: Excess function parameter 'scsi_id' description in 'ibmvfc_alloc_target'
- drivers/scsi/ibmvscsi/ibmvfc.c:5068: warning: Function parameter or member 'evt' not described in 'ibmvfc_npiv_logout_done'
- drivers/scsi/ibmvscsi/ibmvfc.c:5068: warning: Excess function parameter 'vhost' description in 'ibmvfc_npiv_logout_done'
-
-Cc: Tyrel Datwyler <tyreld@linux.ibm.com>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Lee Jones <lee.jones@linaro.org>
----
- drivers/scsi/ibmvscsi/ibmvfc.c | 29 ++++++++++++++++++-----------
- 1 file changed, 18 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index a38d9d5d90ba3..a7a9b647ea178 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -326,6 +326,7 @@ static const char *ibmvfc_get_cmd_error(u16 status, u16 error)
- 
- /**
-  * ibmvfc_get_err_result - Find the scsi status to return for the fcp response
-+ * @vhost:      ibmvfc host struct
-  * @vfc_cmd:	ibmvfc command struct
-  *
-  * Return value:
-@@ -650,8 +651,6 @@ static void ibmvfc_reinit_host(struct ibmvfc_host *vhost)
- /**
-  * ibmvfc_del_tgt - Schedule cleanup and removal of the target
-  * @tgt:		ibmvfc target struct
-- * @job_step:	job step to perform
-- *
-  **/
- static void ibmvfc_del_tgt(struct ibmvfc_target *tgt)
- {
-@@ -768,6 +767,8 @@ static int ibmvfc_send_crq_init_complete(struct ibmvfc_host *vhost)
- /**
-  * ibmvfc_init_event_pool - Allocates and initializes the event pool for a host
-  * @vhost:	ibmvfc host who owns the event pool
-+ * @queue:      ibmvfc queue struct
-+ * @size:       pool size
-  *
-  * Returns zero on success.
-  **/
-@@ -820,6 +821,7 @@ static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost,
- /**
-  * ibmvfc_free_event_pool - Frees memory of the event pool of a host
-  * @vhost:	ibmvfc host who owns the event pool
-+ * @queue:      ibmvfc queue struct
-  *
-  **/
- static void ibmvfc_free_event_pool(struct ibmvfc_host *vhost,
-@@ -1414,6 +1416,7 @@ static int ibmvfc_issue_fc_host_lip(struct Scsi_Host *shost)
- 
- /**
-  * ibmvfc_gather_partition_info - Gather info about the LPAR
-+ * @vhost:      ibmvfc host struct
-  *
-  * Return value:
-  *	none
-@@ -1484,7 +1487,7 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
- 
- /**
-  * ibmvfc_get_event - Gets the next free event in pool
-- * @vhost:	ibmvfc host struct
-+ * @queue:      ibmvfc queue struct
-  *
-  * Returns a free event from the pool.
-  **/
-@@ -1631,7 +1634,7 @@ static int ibmvfc_map_sg_data(struct scsi_cmnd *scmd,
- 
- /**
-  * ibmvfc_timeout - Internal command timeout handler
-- * @evt:	struct ibmvfc_event that timed out
-+ * @t:	struct ibmvfc_event that timed out
-  *
-  * Called when an internally generated command times out
-  **/
-@@ -1892,8 +1895,8 @@ static struct ibmvfc_cmd *ibmvfc_init_vfc_cmd(struct ibmvfc_event *evt, struct s
- 
- /**
-  * ibmvfc_queuecommand - The queuecommand function of the scsi template
-+ * @shost:	scsi host struct
-  * @cmnd:	struct scsi_cmnd to be executed
-- * @done:	Callback function to be called when cmnd is completed
-  *
-  * Returns:
-  *	0 on success / other on failure
-@@ -2324,7 +2327,7 @@ static int ibmvfc_reset_device(struct scsi_device *sdev, int type, char *desc)
- /**
-  * ibmvfc_match_rport - Match function for specified remote port
-  * @evt:	ibmvfc event struct
-- * @device:	device to match (rport)
-+ * @rport:	device to match
-  *
-  * Returns:
-  *	1 if event matches rport / 0 if event does not match rport
-@@ -3135,8 +3138,9 @@ static void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
-  * ibmvfc_handle_crq - Handles and frees received events in the CRQ
-  * @crq:	Command/Response queue
-  * @vhost:	ibmvfc host struct
-+ * @evt_doneq:	Event done queue
-  *
-- **/
-+**/
- static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost,
- 			      struct list_head *evt_doneq)
- {
-@@ -3317,7 +3321,6 @@ static int ibmvfc_slave_configure(struct scsi_device *sdev)
-  * ibmvfc_change_queue_depth - Change the device's queue depth
-  * @sdev:	scsi device struct
-  * @qdepth:	depth to set
-- * @reason:	calling context
-  *
-  * Return value:
-  * 	actual depth set
-@@ -3389,6 +3392,7 @@ static ssize_t ibmvfc_show_host_capabilities(struct device *dev,
- /**
-  * ibmvfc_show_log_level - Show the adapter's error logging level
-  * @dev:	class device struct
-+ * @attr:	unused
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -3411,7 +3415,9 @@ static ssize_t ibmvfc_show_log_level(struct device *dev,
- /**
-  * ibmvfc_store_log_level - Change the adapter's error logging level
-  * @dev:	class device struct
-+ * @attr:	unused
-  * @buf:	buffer
-+ * @count:      buffer size
-  *
-  * Return value:
-  * 	number of bytes printed to buffer
-@@ -4121,6 +4127,7 @@ static void ibmvfc_tgt_implicit_logout_done(struct ibmvfc_event *evt)
- /**
-  * __ibmvfc_tgt_get_implicit_logout_evt - Allocate and init an event for implicit logout
-  * @tgt:		ibmvfc target struct
-+ * @done:		Routine to call when the event is responded to
-  *
-  * Returns:
-  *	Allocated and initialized ibmvfc_event struct
-@@ -4437,7 +4444,7 @@ static void ibmvfc_tgt_adisc_cancel_done(struct ibmvfc_event *evt)
- 
- /**
-  * ibmvfc_adisc_timeout - Handle an ADISC timeout
-- * @tgt:		ibmvfc target struct
-+ * @t:		ibmvfc target struct
-  *
-  * If an ADISC times out, send a cancel. If the cancel times
-  * out, reset the CRQ. When the ADISC comes back as cancelled,
-@@ -4640,7 +4647,7 @@ static void ibmvfc_tgt_query_target(struct ibmvfc_target *tgt)
- /**
-  * ibmvfc_alloc_target - Allocate and initialize an ibmvfc target
-  * @vhost:		ibmvfc host struct
-- * @scsi_id:	SCSI ID to allocate target for
-+ * @target:		Holds SCSI ID to allocate target forand the WWPN
-  *
-  * Returns:
-  *	0 on success / other on failure
-@@ -5070,7 +5077,7 @@ static void ibmvfc_npiv_login(struct ibmvfc_host *vhost)
- 
- /**
-  * ibmvfc_npiv_logout_done - Completion handler for NPIV Logout
-- * @vhost:		ibmvfc host struct
-+ * @evt:		ibmvfc event struct
-  *
-  **/
- static void ibmvfc_npiv_logout_done(struct ibmvfc_event *evt)
--- 
-2.27.0
-
+Thanks,
+Avri
