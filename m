@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CACCEC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:12:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF733C433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:12:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9853964EF3
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:12:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F97264F33
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:12:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229878AbhCQJLx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 05:11:53 -0400
+        id S229873AbhCQJLw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 05:11:52 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229824AbhCQJLc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:11:32 -0400
-Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61A00C061760
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:11:32 -0700 (PDT)
-Received: by mail-wr1-x431.google.com with SMTP id e9so991890wrw.10
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:11:32 -0700 (PDT)
+        with ESMTP id S229813AbhCQJLa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:11:30 -0400
+Received: from mail-wr1-x42e.google.com (mail-wr1-x42e.google.com [IPv6:2a00:1450:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8972FC061760
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:11:30 -0700 (PDT)
+Received: by mail-wr1-x42e.google.com with SMTP id j7so1008325wrd.1
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:11:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Yq9LdtQSeW2MqRbyRwlDutR9JIDqTpE5NVbsv5LbNbg=;
-        b=tpXmr/3C3OcqQCVeq61T0tdQB5GGsCi1oEXXqsBAHnj1+8fWfYQ3PnETf0ZT0/Wwc3
-         FYgaiWmZdQW7HwXia9kpjpa3xGpM4zOxqAH5iraA9ZzjIfnS+mBosrDEfQTlonv83DoM
-         jcFR93qm3o4tD7sWSCWizMLul9CH0tkp3hSUO822Q+Rn2YsAsWF7pdHyOz/RIutRMkSu
-         hbam9GlxyOV34SBHXze1iGCQcyn1z2eAEtPANih19rc7lKHWmCpy9IqSjpZB0/btrrCL
-         RfdydvVYMCG2CCl4clrCbv7c6haoLrVpQsFrTU7bpptlqKCz2SBvOF/m11j86/Iysviu
-         wf1g==
+        bh=bN4fpSzo8exezj3x7f+Hv5XSvvEKZvIRblLuzQg15wk=;
+        b=VkIJrz36/HXe6e+FwdGdkS73nKnV9YjVMOH/+Im9wrZJGKMfaBStj8UO2zNOyszrOp
+         Ed2mZ2zpbuY9dhE691tTGxUlMhqhqIT7skBo/1fYeJMmJW2DK3sEAELLkp/LYusolm3f
+         qmZfeXwtXHlClMgZj0QD9srG9K1zDtA0c4OpcnrMWuCaABq1Qe3zprGSzyW3T9HfqgD6
+         44cy8CqbD9mS+An7QASyBFPFeIjJP43lZxtQ7/HuaaNM32FNB3qvIZiFbpxsZf3+amiX
+         ncJ7V/aBdKh6lDFrfxoYDitOTcj1HNcfYzrYqjLmEVIbkKmmgN40lGxV7OKQkupECLlJ
+         8EIQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Yq9LdtQSeW2MqRbyRwlDutR9JIDqTpE5NVbsv5LbNbg=;
-        b=RCKpBEZW9J9BNT9GO5pmPXTyq1+JTl2ZuREO7rPmZFMHmUo4gdDWaPTX6bItZSGcir
-         O/Lc7QU0X754c4/N6HpWn8Pv3fIzpz40LN4+vhLzuJSZbPKSSrR0A7cXdvcAtC7r9cfr
-         yh6psZX9GFRWl7q7p/liMXia8HpsUqCJXIQnFb1QzLcbY3tHWnJt+VC3SkSHF6b7T4g3
-         +feQ0PevvNaY7HisMRG/dnCf0dUUItZrWBKgj0S2wdDFXC/r0YEXWueGrpUQ7sARIxxp
-         GuuWo5CiMIeItcYFQHSf/33kPFfv1+7g6LOq/45i9cSa+/2a56oCRCRfh7M2Gqsp4jPz
-         z9eg==
-X-Gm-Message-State: AOAM530sB94r/N4VLcrq8A/JeZ4z0Ev3aQ+5S7hh8N2VvblI+CF/WydT
-        0jBKHwZ84vQYzoaTY8XBH7zAoQ==
-X-Google-Smtp-Source: ABdhPJyME/VIATukQgzalo6A4MWfZ4MkMVX/KZMJJ8cyrNXbbBEYgNE9Qz1bcMh+mR9Dbxdnl2wh2A==
-X-Received: by 2002:a5d:5250:: with SMTP id k16mr3311603wrc.309.1615972291167;
-        Wed, 17 Mar 2021 02:11:31 -0700 (PDT)
+        bh=bN4fpSzo8exezj3x7f+Hv5XSvvEKZvIRblLuzQg15wk=;
+        b=uXv/d4CNKUG8Ona7QDnCsQhrgJLEwziD60IQYKQGrBrMNbwzUlp4o/w9qU3Xn1A0KW
+         QdFnLJBrItVdsHI431BRSc4JceMi3mV2i7C8MjkZx0rRjPv5dDi2u8KqK1LabjhyDdqb
+         CYjxAEDPJudrZq/a44ZjD6Wga0GzTuXjPXncvc9lkwlQyjf9m7KN894xwVX8SlrTOKfH
+         oLjrG79pEuSJ0S5Q9OLpMAb/CwE199qlP+Bt9AG0w5fQZV1lUur75nBrZCLuwDYfrEQD
+         OUW+ZK9zKolUuOW199FZEggG1jJ12jXR63SeRZ8rlMHAcsOvP4TIyBOA0j/RU7M8kBgl
+         UGow==
+X-Gm-Message-State: AOAM531sC5AjJimfQU9LjTOWW2HTIehMLCYm+6G2oSW60mM5Eq4fAeA+
+        oavGyIV206h/uSBGeCJMz6JQKQ==
+X-Google-Smtp-Source: ABdhPJzdUfSyxp16Fxr4les5oIJRzRmIzCuQsiDIzk7b0x1kydxLSr8PnX+L9g67uz/0ILyGmTdSGQ==
+X-Received: by 2002:a5d:5906:: with SMTP id v6mr3335177wrd.137.1615972289312;
+        Wed, 17 Mar 2021 02:11:29 -0700 (PDT)
 Received: from dell.default ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id s83sm1709279wms.16.2021.03.17.02.11.30
+        by smtp.gmail.com with ESMTPSA id s83sm1709279wms.16.2021.03.17.02.11.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 02:11:30 -0700 (PDT)
+        Wed, 17 Mar 2021 02:11:28 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
-Cc:     linux-kernel@vger.kernel.org, GOTO Masanori <gotom@debian.or.jp>,
-        YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
+Cc:     linux-kernel@vger.kernel.org, Khalid Aziz <khalid@gonehiking.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        gotom@debian.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 3/8] scsi: nsp32: Remove or exclude unused variables
-Date:   Wed, 17 Mar 2021 09:11:20 +0000
-Message-Id: <20210317091125.2910058-4-lee.jones@linaro.org>
+        "Leonard N. Zubkoff" <lnz@dandelion.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH 1/8] scsi: BusLogic: Supply __printf(x, y) formatting for blogic_msg()
+Date:   Wed, 17 Mar 2021 09:11:18 +0000
+Message-Id: <20210317091125.2910058-2-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210317091125.2910058-1-lee.jones@linaro.org>
 References: <20210317091125.2910058-1-lee.jones@linaro.org>
@@ -77,112 +77,33 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/nsp32.c: In function ‘nsp32_selection_autoscsi’:
- drivers/scsi/nsp32.c:584:17: warning: variable ‘execph’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/nsp32.c: In function ‘nsp32_msgout_occur’:
- drivers/scsi/nsp32.c:1785:7: warning: variable ‘new_sgtp’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/nsp32.c: In function ‘nsp32_analyze_sdtr’:
- drivers/scsi/nsp32.c:2227:20: warning: variable ‘syncnum’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/nsp32.c:2223:20: warning: variable ‘synct’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/nsp32.c: In function ‘nsp32_do_bus_reset’:
- drivers/scsi/nsp32.c:2841:17: warning: variable ‘intrdat’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/nsp32.c: In function ‘nsp32_getprom_param’:
- drivers/scsi/nsp32.c:2912:11: warning: variable ‘val’ set but not used [-Wunused-but-set-variable]
+ In file included from drivers/scsi/BusLogic.c:51:
+ drivers/scsi/BusLogic.c: In function ‘blogic_msg’:
+ drivers/scsi/BusLogic.c:3591:2: warning: function ‘blogic_msg’ might be a candidate for ‘gnu_printf’ format attribute [-Wsuggest-attribute=format]
 
-Cc: GOTO Masanori <gotom@debian.or.jp>
-Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: Khalid Aziz <khalid@gonehiking.org>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: gotom@debian.org
+Cc: "Leonard N. Zubkoff" <lnz@dandelion.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/nsp32.c | 23 ++++-------------------
- 1 file changed, 4 insertions(+), 19 deletions(-)
+ drivers/scsi/BusLogic.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-index d5aa96f05bce4..54abda4d07c64 100644
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -581,7 +581,6 @@ static int nsp32_selection_autoscsi(struct scsi_cmnd *SCpnt)
- 	int		status;
- 	unsigned short	command	= 0;
- 	unsigned int	msgout  = 0;
--	unsigned short	execph;
- 	int		i;
- 
- 	nsp32_dbg(NSP32_DEBUG_AUTOSCSI, "in");
-@@ -605,7 +604,7 @@ static int nsp32_selection_autoscsi(struct scsi_cmnd *SCpnt)
- 	/*
- 	 * clear execph
- 	 */
--	execph = nsp32_read2(base, SCSI_EXECUTE_PHASE);
-+	nsp32_read2(base, SCSI_EXECUTE_PHASE);
- 
- 	/*
- 	 * clear FIFO counter to set CDBs
-@@ -1781,8 +1780,6 @@ static void nsp32_msgout_occur(struct scsi_cmnd *SCpnt)
- {
- 	nsp32_hw_data *data = (nsp32_hw_data *)SCpnt->device->host->hostdata;
- 	unsigned int base   = SCpnt->device->host->io_port;
--	//unsigned short command;
--	long new_sgtp;
- 	int i;
- 	
- 	nsp32_dbg(NSP32_DEBUG_MSGOUTOCCUR,
-@@ -1796,14 +1793,6 @@ static void nsp32_msgout_occur(struct scsi_cmnd *SCpnt)
- 		nsp32_build_nop(SCpnt);
- 	}
- 
--	/*
--	 * Set SGTP ADDR current entry for restarting AUTOSCSI, 
--	 * because SGTP is incremented next point.
--	 * There is few statement in the specification...
--	 */
-- 	new_sgtp = data->cur_lunt->sglun_paddr + 
--		   (data->cur_lunt->cur_entry * sizeof(nsp32_sgtable));
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index ccb061ab0a0ad..0ac3f713fc212 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -3578,7 +3578,7 @@ Target	Requested Completed  Requested Completed  Requested Completed\n\
+ /*
+   blogic_msg prints Driver Messages.
+ */
 -
- 	/*
- 	 * send messages
- 	 */
-@@ -2220,17 +2209,12 @@ static void nsp32_analyze_sdtr(struct scsi_cmnd *SCpnt)
++__printf(2, 4)
+ static void blogic_msg(enum blogic_msglevel msglevel, char *fmt,
+ 			struct blogic_adapter *adapter, ...)
  {
- 	nsp32_hw_data   *data = (nsp32_hw_data *)SCpnt->device->host->hostdata;
- 	nsp32_target     *target     = data->cur_target;
--	nsp32_sync_table *synct;
- 	unsigned char     get_period = data->msginbuf[3];
- 	unsigned char     get_offset = data->msginbuf[4];
- 	int               entry;
--	int               syncnum;
- 
- 	nsp32_dbg(NSP32_DEBUG_MSGINOCCUR, "enter");
- 
--	synct   = data->synct;
--	syncnum = data->syncnum;
--
- 	/*
- 	 * If this inititor sent the SDTR message, then target responds SDTR,
- 	 * initiator SYNCREG, ACKWIDTH from SDTR parameter.
-@@ -2838,8 +2822,8 @@ static int nsp32_eh_abort(struct scsi_cmnd *SCpnt)
- static void nsp32_do_bus_reset(nsp32_hw_data *data)
- {
- 	unsigned int   base = data->BaseAddress;
--	unsigned short intrdat;
- 	int i;
-+	unsigned short __maybe_unused intrdat;
- 
- 	nsp32_dbg(NSP32_DEBUG_BUSRESET, "in");
- 
-@@ -2909,7 +2893,8 @@ static int nsp32_getprom_param(nsp32_hw_data *data)
- {
- 	int vendor = data->pci_devid->vendor;
- 	int device = data->pci_devid->device;
--	int ret, val, i;
-+	int ret, i;
-+	int __maybe_unused val;
- 
- 	/*
- 	 * EEPROM checking.
 -- 
 2.27.0
 
