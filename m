@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56D4DC4332B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EC8BC432C3
 	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:12:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32DBC64F73
+	by mail.kernel.org (Postfix) with ESMTP id 66CB264F44
 	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:12:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229914AbhCQJL5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 05:11:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42382 "EHLO
+        id S229926AbhCQJL6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 05:11:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229847AbhCQJLh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:11:37 -0400
-Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F14BC061763
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:11:37 -0700 (PDT)
-Received: by mail-wm1-x333.google.com with SMTP id r10-20020a05600c35cab029010c946c95easo829872wmq.4
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:11:37 -0700 (PDT)
+        with ESMTP id S229863AbhCQJLq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:11:46 -0400
+Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A09CAC061762
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:11:34 -0700 (PDT)
+Received: by mail-wr1-x42d.google.com with SMTP id e18so999522wrt.6
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:11:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=PdNAYGEf3HErZd1qMy9Fio2Q6mTHXUXt55dWtvm2uqs=;
-        b=KoI4pQgLlCN8e9y0ULjwArxZGVHgE65tgmu+pIBdoAfjkPAL3ETIwM5PA8C8HqEj5i
-         OmAmH+Cja8knY9rm+oohq/XjrAyFZ+P1xuNAvAvSKdzq5v+J3O8q0+oj5wxMb1/vtC52
-         b7p4uHR6Ba3P7Kg9KGScByrPQh/Hph7zja8aQvLMGzs5ddXwZ2deqKiHCrOGPd/m/6Fp
-         KfS1/9KbSe9sH7DaL7l64Vsbx0vsrKX01XDy5vT0eHLLwUPGYI/2wRPHxPehm8RF4l5R
-         15LzwLhmvGUw3qQ+FV7JDEJUhJQnfbupA2HA+ivw8zt4lFm83z45Kdw/nrCliL/iMTX2
-         6tNA==
+        bh=uknjZgyKbyTHbovaIRwNwS9vIyXMZbr0zBj7lwglxO0=;
+        b=xFn8GvAUxi6WQSIWeNqixwpfKw+XBtKnS8kgljV6CdV2A2sdS7J9yWgXRgTFOKy09Y
+         vETvO9WEHu1Zid6vcWuhSQBKIuIPNhbOlHXpm9EG5tw/oqKyGigGAlRvzX+rMIeq7Bbk
+         qvKL84UQudO+SoX856yKs8+nAR8KeYl2AERaO8NnfJUezD3x/6yVOMXYoDmt/Vtcbec7
+         4nD0n0mzZit+6NSh3Hn7C9t1Cf2qvx3mZMYf1ptDutayOnL5I+4rG/H9TacCu7SnQYwg
+         R9NdzaY5S6rjzkBfwSjfWEkP0K5zv2WYnlpQB2hGnmV1wvoDMPJvXCgNjfeazitgEOWh
+         bILQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=PdNAYGEf3HErZd1qMy9Fio2Q6mTHXUXt55dWtvm2uqs=;
-        b=C23d1RaIP61yomueOz3e6V5og2sp01/u0eBvcKq3mek03PxDMA4bq8/TZhpjhssffS
-         0wbCkGEP5UqLz5URDjGOEbvU8PyvMalwHrQQxPZIwyqIivxunXB/NaJ39TUgoEcKv2ls
-         ndcsSFgnawiCH02EMung3ycQ5dKR4DiFcvFcLJ7niRQQ8OU2K8gRUQcZpYraKG+YmuMR
-         GGZ6u8/EwACPfJ7P07yakOAVGG7rCRfjvpW2cI6GXI3fXFN1obffZTO5BBeB7YEp9dm+
-         V6sre4KM23W1dsrS3fZjskseUSvLEwutHMl4UAdiIXuYwlfMQYn0unbFd6XXPRNLEqbf
-         xA9Q==
-X-Gm-Message-State: AOAM531O1t+tqs2AVR3rHXn611e11LlOZYjr8N5n3FAudm0pXj8NyGqa
-        Dzv+lDl347nZFE4pqtoOSr2s4Q==
-X-Google-Smtp-Source: ABdhPJwKnx+JQa5kLVp55k1jrbwyMuKQk8QBlnUzaKW+0g0lPwZTWljk9O1RUtO4MIuVoV3n8ds4KA==
-X-Received: by 2002:a05:600c:3546:: with SMTP id i6mr2682279wmq.104.1615972296229;
-        Wed, 17 Mar 2021 02:11:36 -0700 (PDT)
+        bh=uknjZgyKbyTHbovaIRwNwS9vIyXMZbr0zBj7lwglxO0=;
+        b=ILYkJio4OQ8/rBTWENtF0C4oAQ+oZTOIB9adT3Rnk8oeLgSJTNFvtlOy7QkxHFOer1
+         lTJ7g2xALJ5U1CA57fDykXmHBl4KVmzNOl3eFH22OPQKSbLCPWqZw3rRRhK9q91X/0Uv
+         /ZRH1icMehd/tr+iuFS13o1pIt6hyGOeLOjgUU3LHeETswdM9XlbqlhOGZ4bJTw/iTNd
+         TDs3wnlhvvH16Vy5nDm6SvVnNr4z0HZZiZ55CzpZxDY3R8yXfOOUQ4YDRLUgHQtDypEb
+         ZT3mAs4BCLVWOGOkW5UQrXb+Gl9VOkZb9LWAK1zMuvp/OiK19UhjEqueypo4qWZ3SFEi
+         t8qg==
+X-Gm-Message-State: AOAM533xTStTBAUqtBuWVSZ8FZFnGw8yZ8RXWYOJzvV+Klkhw05kAulE
+        23nxY4cbrFPWaAn/q/eZnQTMnw==
+X-Google-Smtp-Source: ABdhPJw6hfssnv5UFSts4luL840X801w+At+C+ThmbOOYK68pR/uhhHWMSTaztumqohAobiGDMdE7g==
+X-Received: by 2002:adf:ec46:: with SMTP id w6mr3237005wrn.213.1615972293434;
+        Wed, 17 Mar 2021 02:11:33 -0700 (PDT)
 Received: from dell.default ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id s83sm1709279wms.16.2021.03.17.02.11.35
+        by smtp.gmail.com with ESMTPSA id s83sm1709279wms.16.2021.03.17.02.11.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 02:11:35 -0700 (PDT)
+        Wed, 17 Mar 2021 02:11:33 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
-Cc:     linux-kernel@vger.kernel.org, GOTO Masanori <gotom@debian.or.jp>,
-        YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
+Cc:     linux-kernel@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        gotom@debian.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 8/8] scsi: nsp32: Correct expected types in debug print formatting
-Date:   Wed, 17 Mar 2021 09:11:25 +0000
-Message-Id: <20210317091125.2910058-9-lee.jones@linaro.org>
+        Richard Hirst <richard@sleepie.demon.co.uk>,
+        c by <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH 5/8] scsi: sim710: Remove unused variable 'err' from sim710_init()
+Date:   Wed, 17 Mar 2021 09:11:22 +0000
+Message-Id: <20210317091125.2910058-6-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210317091125.2910058-1-lee.jones@linaro.org>
 References: <20210317091125.2910058-1-lee.jones@linaro.org>
@@ -75,67 +75,55 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Take the opportunity to rework the comment a little.
+
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/nsp32.c: In function ‘nsp32_setup_sg_table’:
- drivers/scsi/nsp32.c:879:6: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 5 has type ‘unsigned int’ [-Wformat=]
- drivers/scsi/nsp32.c:280:69: note: in definition of macro ‘nsp32_msg’
- drivers/scsi/nsp32.c:879:52: note: format string is defined here
- drivers/scsi/nsp32.c: In function ‘nsp32_detect’:
- drivers/scsi/nsp32.c:2719:6: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 5 has type ‘int’ [-Wformat=]
- drivers/scsi/nsp32.c:280:69: note: in definition of macro ‘nsp32_msg’
- drivers/scsi/nsp32.c:2719:22: note: format string is defined here
- drivers/scsi/nsp32.c:2719:6: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 6 has type ‘int’ [-Wformat=]
- drivers/scsi/nsp32.c:280:69: note: in definition of macro ‘nsp32_msg’
- drivers/scsi/nsp32.c:2719:28: note: format string is defined here
- drivers/scsi/nsp32.c: In function ‘nsp32_suspend’:
- drivers/scsi/nsp32.c:3267:23: warning: format ‘%ld’ expects argument of type ‘long int’, but argument 6 has type ‘pm_message_t’ {aka ‘struct pm_message’} [-Wformat=]
- drivers/scsi/nsp32.c:280:69: note: in definition of macro ‘nsp32_msg’
- drivers/scsi/nsp32.c:3267:56: note: format string is defined here
+ drivers/scsi/sim710.c: In function ‘sim710_init’:
+ drivers/scsi/sim710.c:216:6: warning: variable ‘err’ set but not used [-Wunused-but-set-variable]
 
-Cc: GOTO Masanori <gotom@debian.or.jp>
-Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: gotom@debian.org
+Cc: Richard Hirst <richard@sleepie.demon.co.uk>
+Cc: c by <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/nsp32.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/sim710.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-index 54abda4d07c64..134bbd2d8b667 100644
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -876,7 +876,7 @@ static int nsp32_setup_sg_table(struct scsi_cmnd *SCpnt)
+diff --git a/drivers/scsi/sim710.c b/drivers/scsi/sim710.c
+index 22302612e032b..e519df68d603d 100644
+--- a/drivers/scsi/sim710.c
++++ b/drivers/scsi/sim710.c
+@@ -213,21 +213,19 @@ static struct eisa_driver sim710_eisa_driver = {
  
- 			if (le32_to_cpu(sgt[i].len) > 0x10000) {
- 				nsp32_msg(KERN_ERR,
--					"can't transfer over 64KB at a time, size=0x%lx", le32_to_cpu(sgt[i].len));
-+					"can't transfer over 64KB at a time, size=0x%x", le32_to_cpu(sgt[i].len));
- 				return FALSE;
- 			}
- 			nsp32_dbg(NSP32_DEBUG_SGLIST,
-@@ -2716,7 +2716,7 @@ static int nsp32_detect(struct pci_dev *pdev)
- 	res = request_region(host->io_port, host->n_io_port, "nsp32");
- 	if (res == NULL) {
- 		nsp32_msg(KERN_ERR, 
--			  "I/O region 0x%lx+0x%lx is already used",
-+			  "I/O region 0x%x+0x%x is already used",
- 			  data->BaseAddress, data->NumAddress);
- 		goto free_irq;
-         }
-@@ -3264,7 +3264,8 @@ static int nsp32_suspend(struct pci_dev *pdev, pm_message_t state)
+ static int __init sim710_init(void)
  {
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
+-	int err = -ENODEV;
+-
+ #ifdef MODULE
+ 	if (sim710)
+ 		param_setup(sim710);
+ #endif
  
--	nsp32_msg(KERN_INFO, "pci-suspend: pdev=0x%p, state=%ld, slot=%s, host=0x%p", pdev, state, pci_name(pdev), host);
-+	nsp32_msg(KERN_INFO, "pci-suspend: pdev=0x%p, state.event=%x, slot=%s, host=0x%p",
-+		  pdev, state.event, pci_name(pdev), host);
+ #ifdef CONFIG_EISA
+-	err = eisa_driver_register(&sim710_eisa_driver);
++	/*
++	 * FIXME: We'd really like to return -ENODEV if no devices have actually
++	 * been found.  However eisa_driver_register() only reports problems
++	 * with kobject_register() so simply return success for now.
++	 */
++	eisa_driver_register(&sim710_eisa_driver);
+ #endif
+-	/* FIXME: what we'd really like to return here is -ENODEV if
+-	 * no devices have actually been found.  Instead, the err
+-	 * above actually only reports problems with kobject_register,
+-	 * so for the moment return success */
+-
+ 	return 0;
+ }
  
- 	pci_save_state     (pdev);
- 	pci_disable_device (pdev);
 -- 
 2.27.0
 
