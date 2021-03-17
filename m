@@ -2,150 +2,187 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0916CC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:06:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CACCEC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:12:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C40A964EEC
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:06:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9853964EF3
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:12:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229792AbhCQJFx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 05:05:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41028 "EHLO
+        id S229878AbhCQJLx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 05:11:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229863AbhCQJF1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:05:27 -0400
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B454C06174A
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:05:16 -0700 (PDT)
-Received: by mail-wr1-x433.google.com with SMTP id 61so968690wrm.12
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:05:16 -0700 (PDT)
+        with ESMTP id S229824AbhCQJLc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:11:32 -0400
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61A00C061760
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:11:32 -0700 (PDT)
+Received: by mail-wr1-x431.google.com with SMTP id e9so991890wrw.10
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:11:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=date:from:to:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=OcOkwCkyvLuke/iNw2LLAogSWUiyJtcxO/hC/X9eTec=;
-        b=YYc0KLEbBxgH+ZUG7LiDYEtZcpBX4RqAPYmaegxRr+9NyuAkGQTaj9vShjjBp1kz4G
-         xRjTbxsmGrK2E+8mvtXdJ/1lYYdR/lE/s5YzOBGfvtH/p2nb3GgXN9avsy/spkxpqP8l
-         q1K4fnyloW5Al7EXVqZXBQKueUdoEM1Wl+9IUQMyiCCozmQjeXudZHHFEJZ1/3dVvyXi
-         ZBSGjq8Wwq2ZoRTgheOFZV8Hjw9BT7LMD4gr6AlaCmCCqxHkHgWBKmnee6Wr0dHG31wD
-         NYvtj0e9xx5DXQt+3YuFkZlKKNHMvZZSECEc+Ng5H8w55K2qTxzKie+GWL63tSdTMVfN
-         mnhg==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Yq9LdtQSeW2MqRbyRwlDutR9JIDqTpE5NVbsv5LbNbg=;
+        b=tpXmr/3C3OcqQCVeq61T0tdQB5GGsCi1oEXXqsBAHnj1+8fWfYQ3PnETf0ZT0/Wwc3
+         FYgaiWmZdQW7HwXia9kpjpa3xGpM4zOxqAH5iraA9ZzjIfnS+mBosrDEfQTlonv83DoM
+         jcFR93qm3o4tD7sWSCWizMLul9CH0tkp3hSUO822Q+Rn2YsAsWF7pdHyOz/RIutRMkSu
+         hbam9GlxyOV34SBHXze1iGCQcyn1z2eAEtPANih19rc7lKHWmCpy9IqSjpZB0/btrrCL
+         RfdydvVYMCG2CCl4clrCbv7c6haoLrVpQsFrTU7bpptlqKCz2SBvOF/m11j86/Iysviu
+         wf1g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=OcOkwCkyvLuke/iNw2LLAogSWUiyJtcxO/hC/X9eTec=;
-        b=JuNWphdGBbo0T4/JpnTryUVdnYN1sSy+d1GiI8L0wRtSGR8KT/OEEEdU6riQQsjIZN
-         UpNooosSo8vgC/jUfGunIO+B5i9s4x1n9IVt0+1ru5NUspfUVyHeSQETqYhSnTmdhc2u
-         OiabqhrpLyFuroA4CRV+iP6qbVuCshRvqOaz30CWsfeS2/CZcr30VweaId3R4k33ZjgC
-         nBCwbLAJ/3MxOUWnWhpAOpI5wA/1pvcu3z/t80iS7eoQ6TV78Bw6e9Vdzb5F7J+/HDuj
-         WCvOil05dwN92C9MUdMRtBESlt1X2Oyy21heAXAsMOvBe4REplLmwbY5b9Jc2FHKSmHe
-         zCbg==
-X-Gm-Message-State: AOAM532VFKRCPR45FZn29WYozlCgCUFDNsequlT+UV9vGzNmY+qNmXxF
-        dw/ld8Ld/XaSJXcypeNLgT4QKA==
-X-Google-Smtp-Source: ABdhPJxlU7tk/HVjonZcyAbzBtH+m2MESpX+2byaucGFATA64RJfU7n4jVMSy1FWKxWcitvmtWV8KA==
-X-Received: by 2002:adf:f3c2:: with SMTP id g2mr3331553wrp.300.1615971915310;
-        Wed, 17 Mar 2021 02:05:15 -0700 (PDT)
-Received: from dell ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id o7sm24710724wrs.16.2021.03.17.02.05.14
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Yq9LdtQSeW2MqRbyRwlDutR9JIDqTpE5NVbsv5LbNbg=;
+        b=RCKpBEZW9J9BNT9GO5pmPXTyq1+JTl2ZuREO7rPmZFMHmUo4gdDWaPTX6bItZSGcir
+         O/Lc7QU0X754c4/N6HpWn8Pv3fIzpz40LN4+vhLzuJSZbPKSSrR0A7cXdvcAtC7r9cfr
+         yh6psZX9GFRWl7q7p/liMXia8HpsUqCJXIQnFb1QzLcbY3tHWnJt+VC3SkSHF6b7T4g3
+         +feQ0PevvNaY7HisMRG/dnCf0dUUItZrWBKgj0S2wdDFXC/r0YEXWueGrpUQ7sARIxxp
+         GuuWo5CiMIeItcYFQHSf/33kPFfv1+7g6LOq/45i9cSa+/2a56oCRCRfh7M2Gqsp4jPz
+         z9eg==
+X-Gm-Message-State: AOAM530sB94r/N4VLcrq8A/JeZ4z0Ev3aQ+5S7hh8N2VvblI+CF/WydT
+        0jBKHwZ84vQYzoaTY8XBH7zAoQ==
+X-Google-Smtp-Source: ABdhPJyME/VIATukQgzalo6A4MWfZ4MkMVX/KZMJJ8cyrNXbbBEYgNE9Qz1bcMh+mR9Dbxdnl2wh2A==
+X-Received: by 2002:a5d:5250:: with SMTP id k16mr3311603wrc.309.1615972291167;
+        Wed, 17 Mar 2021 02:11:31 -0700 (PDT)
+Received: from dell.default ([91.110.221.194])
+        by smtp.gmail.com with ESMTPSA id s83sm1709279wms.16.2021.03.17.02.11.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 02:05:14 -0700 (PDT)
-Date:   Wed, 17 Mar 2021 09:05:12 +0000
+        Wed, 17 Mar 2021 02:11:30 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
-To:     linux-kernel@vger.kernel.org, Adam Radford <aradford@gmail.com>,
-        Alan Cox <alan@lxorguk.ukuu.org.uk>,
-        Andre Hedrick <andre@suse.com>,
-        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-        Bas Vermeulen <bvermeul@blackstar.xs4all.nl>,
-        Bradley Grove <linuxdrivers@attotech.com>,
-        Brian Macy <bmacy@sunshinecomputing.com>,
-        c by <James.Bottomley@steeleye.com>,
-        Christoph Hellwig <hch@lst.de>,
-        David Chaw <david_chaw@adaptec.com>,
-        de Melo <acme@conectiva.com.br>,
-        Doug Ledford <dledford@redhat.com>,
-        GOTO Masanori <gotom@debian.or.jp>, gotom@debian.org,
-        Hannes Reinecke <hare@kernel.org>,
+To:     lee.jones@linaro.org
+Cc:     linux-kernel@vger.kernel.org, GOTO Masanori <gotom@debian.or.jp>,
+        YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Joel Jacobson <linux@3ware.com>,
-        Khalid Aziz <khalid@gonehiking.org>,
-        "Leonard N. Zubkoff" <lnz@dandelion.com>,
-        Linux GmbH <hare@suse.com>, linux-scsi@vger.kernel.org,
-        Luben Tuikov <luben_tuikov@adaptec.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        MPT-FusionLinux.pdl@avagotech.com,
-        MPT-FusionLinux.pdl@broadcom.com,
-        Richard Hirst <richard@sleepie.demon.co.uk>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-Subject: Re: [PATCH 00/18] [Set 3] Rid W=1 warnings in SCSI
-Message-ID: <20210317090512.GI701493@dell>
-References: <20210317085701.2891231-1-lee.jones@linaro.org>
+        gotom@debian.org, linux-scsi@vger.kernel.org
+Subject: [PATCH 3/8] scsi: nsp32: Remove or exclude unused variables
+Date:   Wed, 17 Mar 2021 09:11:20 +0000
+Message-Id: <20210317091125.2910058-4-lee.jones@linaro.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20210317091125.2910058-1-lee.jones@linaro.org>
+References: <20210317091125.2910058-1-lee.jones@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210317085701.2891231-1-lee.jones@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 17 Mar 2021, Lee Jones wrote:
+Fixes the following W=1 kernel build warning(s):
 
-> MIME-Version: 1.0
-> Content-Type: text/plain; charset=UTF-8
-> Content-Transfer-Encoding: 8bit
-> 
-> This set contains functional changes.
-> 
-> This set is part of a larger effort attempting to clean-up W=1
-> kernel builds, which are currently overwhelmingly riddled with
-> niggly little warnings.
-> 
-> Lee Jones (18):
->   scsi: aic94xx: aic94xx_dump: Remove code that has been unused for at
->     least 13 years
->   scsi: mpt3sas: mpt3sas_scs: Move a little data from the stack onto the
->     heap
->   scsi: bfa: bfa_fcs_lport: Move a large struct from the stack onto the
->     heap
->   scsi: esas2r: esas2r_log: Supply __printf(x, y) formatting for
->     esas2r_log_master()
->   scsi: BusLogic: Supply __printf(x, y) formatting for blogic_msg()
->   scsi: nsp32: Supply __printf(x, y) formatting for nsp32_message()
->   scsi: initio: Remove unused variable 'prev'
->   scsi: a100u2w: Remove unused variable 'bios_phys'
->   scsi: myrs: Remove a couple of unused 'status' variables
->   scsi: 3w-xxxx: Remove 2 unused variables 'response_que_value' and
->     'tw_dev'
->   scsi: 3w-9xxx: Remove a few set but unused variables
->   scsi: 3w-sas: Remove unused variables 'sglist' and 'tw_dev'
->   scsi: nsp32: Remove or exclude unused variables
->   scsi: FlashPoint: Remove unused variable 'TID' from
->     'FlashPoint_AbortCCB()'
->   scsi: sim710: Remove unused variable 'err' from sim710_init()
->   scsi: isci: port: Make local function 'port_state_name()' static
->   scsi: isci: remote_device: Make local function
->     isci_remote_device_wait_for_resume_from_abort() static
->   scsi: nsp32: Correct expected types in debug print formatting
+ drivers/scsi/nsp32.c: In function ‘nsp32_selection_autoscsi’:
+ drivers/scsi/nsp32.c:584:17: warning: variable ‘execph’ set but not used [-Wunused-but-set-variable]
+ drivers/scsi/nsp32.c: In function ‘nsp32_msgout_occur’:
+ drivers/scsi/nsp32.c:1785:7: warning: variable ‘new_sgtp’ set but not used [-Wunused-but-set-variable]
+ drivers/scsi/nsp32.c: In function ‘nsp32_analyze_sdtr’:
+ drivers/scsi/nsp32.c:2227:20: warning: variable ‘syncnum’ set but not used [-Wunused-but-set-variable]
+ drivers/scsi/nsp32.c:2223:20: warning: variable ‘synct’ set but not used [-Wunused-but-set-variable]
+ drivers/scsi/nsp32.c: In function ‘nsp32_do_bus_reset’:
+ drivers/scsi/nsp32.c:2841:17: warning: variable ‘intrdat’ set but not used [-Wunused-but-set-variable]
+ drivers/scsi/nsp32.c: In function ‘nsp32_getprom_param’:
+ drivers/scsi/nsp32.c:2912:11: warning: variable ‘val’ set but not used [-Wunused-but-set-variable]
 
-Oh dear! Looks like I also took functional patches from sets that
-have already been sent out.
+Cc: GOTO Masanori <gotom@debian.or.jp>
+Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: gotom@debian.org
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Lee Jones <lee.jones@linaro.org>
+---
+ drivers/scsi/nsp32.c | 23 ++++-------------------
+ 1 file changed, 4 insertions(+), 19 deletions(-)
 
-Please silently disregard this set. Sorry for the noise.
-
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index d5aa96f05bce4..54abda4d07c64 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -581,7 +581,6 @@ static int nsp32_selection_autoscsi(struct scsi_cmnd *SCpnt)
+ 	int		status;
+ 	unsigned short	command	= 0;
+ 	unsigned int	msgout  = 0;
+-	unsigned short	execph;
+ 	int		i;
+ 
+ 	nsp32_dbg(NSP32_DEBUG_AUTOSCSI, "in");
+@@ -605,7 +604,7 @@ static int nsp32_selection_autoscsi(struct scsi_cmnd *SCpnt)
+ 	/*
+ 	 * clear execph
+ 	 */
+-	execph = nsp32_read2(base, SCSI_EXECUTE_PHASE);
++	nsp32_read2(base, SCSI_EXECUTE_PHASE);
+ 
+ 	/*
+ 	 * clear FIFO counter to set CDBs
+@@ -1781,8 +1780,6 @@ static void nsp32_msgout_occur(struct scsi_cmnd *SCpnt)
+ {
+ 	nsp32_hw_data *data = (nsp32_hw_data *)SCpnt->device->host->hostdata;
+ 	unsigned int base   = SCpnt->device->host->io_port;
+-	//unsigned short command;
+-	long new_sgtp;
+ 	int i;
+ 	
+ 	nsp32_dbg(NSP32_DEBUG_MSGOUTOCCUR,
+@@ -1796,14 +1793,6 @@ static void nsp32_msgout_occur(struct scsi_cmnd *SCpnt)
+ 		nsp32_build_nop(SCpnt);
+ 	}
+ 
+-	/*
+-	 * Set SGTP ADDR current entry for restarting AUTOSCSI, 
+-	 * because SGTP is incremented next point.
+-	 * There is few statement in the specification...
+-	 */
+- 	new_sgtp = data->cur_lunt->sglun_paddr + 
+-		   (data->cur_lunt->cur_entry * sizeof(nsp32_sgtable));
+-
+ 	/*
+ 	 * send messages
+ 	 */
+@@ -2220,17 +2209,12 @@ static void nsp32_analyze_sdtr(struct scsi_cmnd *SCpnt)
+ {
+ 	nsp32_hw_data   *data = (nsp32_hw_data *)SCpnt->device->host->hostdata;
+ 	nsp32_target     *target     = data->cur_target;
+-	nsp32_sync_table *synct;
+ 	unsigned char     get_period = data->msginbuf[3];
+ 	unsigned char     get_offset = data->msginbuf[4];
+ 	int               entry;
+-	int               syncnum;
+ 
+ 	nsp32_dbg(NSP32_DEBUG_MSGINOCCUR, "enter");
+ 
+-	synct   = data->synct;
+-	syncnum = data->syncnum;
+-
+ 	/*
+ 	 * If this inititor sent the SDTR message, then target responds SDTR,
+ 	 * initiator SYNCREG, ACKWIDTH from SDTR parameter.
+@@ -2838,8 +2822,8 @@ static int nsp32_eh_abort(struct scsi_cmnd *SCpnt)
+ static void nsp32_do_bus_reset(nsp32_hw_data *data)
+ {
+ 	unsigned int   base = data->BaseAddress;
+-	unsigned short intrdat;
+ 	int i;
++	unsigned short __maybe_unused intrdat;
+ 
+ 	nsp32_dbg(NSP32_DEBUG_BUSRESET, "in");
+ 
+@@ -2909,7 +2893,8 @@ static int nsp32_getprom_param(nsp32_hw_data *data)
+ {
+ 	int vendor = data->pci_devid->vendor;
+ 	int device = data->pci_devid->device;
+-	int ret, val, i;
++	int ret, i;
++	int __maybe_unused val;
+ 
+ 	/*
+ 	 * EEPROM checking.
 -- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+2.27.0
+
