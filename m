@@ -2,111 +2,233 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D34C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 04:02:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF512C433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 04:42:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6BD264F99
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 04:02:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8472764F9F
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 04:42:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229713AbhCQECD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 00:02:03 -0400
-Received: from gateway36.websitewelcome.com ([192.185.196.23]:32100 "EHLO
-        gateway36.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229537AbhCQEB5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Mar 2021 00:01:57 -0400
-X-Greylist: delayed 1232 seconds by postgrey-1.27 at vger.kernel.org; Wed, 17 Mar 2021 00:01:57 EDT
-Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
-        by gateway36.websitewelcome.com (Postfix) with ESMTP id 8FD1F400CF46B
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Mar 2021 22:41:23 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id MN3jlhwWHmJLsMN3jlWLtI; Tue, 16 Mar 2021 22:41:23 -0500
-X-Authority-Reason: nr=8
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=/sZG3o7bmfQMeV8ZtSlTyo3QgbzHhviO3Gw8P9Lg0T0=; b=L6WeIS/ZZGmAWcRpydJ4g0+0eX
-        1O8GR11G+9gyFvVN66KjWDWCxBfctGT1RdJMupOs1AIYstL3gcgOzvxXkyyq3cKhifIlFlBVgJBQ+
-        JHHrwEe4EvQJXusSGZ2cqBYLq9tM7KpwjCYx80BXEoVvkVzEwOAa4TSHDFSrjFQh2RQOQDQyum/RN
-        tl73Ku7l4RFkiZhqyz2LPFnfIBQCdcHPQjz6QGGEU3RKwRX++ytDi+h2posIFQB9vh8PzqFI+lWoN
-        8I44w3WyVIakJ5XbtagHV6Fri7/xh0iOGsEbRZiI6sLi+BOZH0MloDrxB51LSHTf222/mi8MeH2Dr
-        sv4zJmCw==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:46638 helo=[192.168.15.8])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.93)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1lMN3j-000pjB-5C; Tue, 16 Mar 2021 22:41:23 -0500
-Subject: Re: [PATCH][next] scsi: mpt3sas: Replace unnecessary dynamic
- allocation with a static one
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-References: <20210310235951.GA108661@embeddedor>
- <yq1eege1mlt.fsf@ca-mkp.ca.oracle.com>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <62fa8461-23d3-5602-2897-f2b28344bedf@embeddedor.com>
-Date:   Tue, 16 Mar 2021 21:41:08 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        id S229564AbhCQElr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 00:41:47 -0400
+Received: from m42-10.mailgun.net ([69.72.42.10]:37078 "EHLO
+        m42-10.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229469AbhCQElZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 00:41:25 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1615956085; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=eGTA0+I6gJJJ1efJFiJ/1XC/rmCP98XQ3G6teytT6zA=;
+ b=pQa3rlBgGSzImKoL9Bpza77ShDAVqoWq2kyvffgJ/2ZleqHctDeWFrRcbTtY+Dmq9K5fTX0j
+ KAW43NuMKsAjqFrmMUaPi7w+0xuxefVGBCM8cmq/0znyw7BS/1ACM37VUK4RFdm4BDcFdrvY
+ eigv3sdnml9iJ7S8y2JW0MbV2jk=
+X-Mailgun-Sending-Ip: 69.72.42.10
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 605188704db3bb68016708af (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 17 Mar 2021 04:41:20
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 1147EC43463; Wed, 17 Mar 2021 04:41:19 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E73C9C433C6;
+        Wed, 17 Mar 2021 04:41:18 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <yq1eege1mlt.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1lMN3j-000pjB-5C
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.8]) [187.162.31.110]:46638
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 8
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Date:   Wed, 17 Mar 2021 12:41:18 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     daejun7.park@samsung.com
+Cc:     Avri Altman <Avri.Altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>, asutoshd@codeaurora.org,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>, stanley.chu@mediatek.com
+Subject: Re: [PATCH v5 05/10] scsi: ufshpb: Region inactivation in host mode
+In-Reply-To: <2038148563.21615949282962.JavaMail.epsvc@epcpadp4>
+References: <DM6PR04MB65751EE32D25C7E57A6BABE8FC6B9@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <20210302132503.224670-1-avri.altman@wdc.com>
+ <20210302132503.224670-6-avri.altman@wdc.com>
+ <25da7378d5bf4c52443ae9b47f3fd778@codeaurora.org>
+ <57afb2b5d7edda61a40493d8545785b1@codeaurora.org>
+ <CGME20210316083014epcas2p32d6b84e689cdbe06ee065c870b236d65@epcms2p3>
+ <2038148563.21615949282962.JavaMail.epsvc@epcpadp4>
+Message-ID: <064483451ff0d9ef8703871332ea5c3b@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
-
-On 3/16/21 22:32, Martin K. Petersen wrote:
+On 2021-03-17 10:28, Daejun Park wrote:
+>>> >> ---
+>>> >>  drivers/scsi/ufs/ufshpb.c | 14 ++++++++++++++
+>>> >>  drivers/scsi/ufs/ufshpb.h |  1 +
+>>> >>  2 files changed, 15 insertions(+)
+>>> >>
+>>> >> diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+>>> >> index 6f4fd22eaf2f..0744feb4d484 100644
+>>> >> --- a/drivers/scsi/ufs/ufshpb.c
+>>> >> +++ b/drivers/scsi/ufs/ufshpb.c
+>>> >> @@ -907,6 +907,7 @@ static int ufshpb_execute_umap_req(struct
+>>> >> ufshpb_lu *hpb,
+>>> >>
+>>> >>      blk_execute_rq_nowait(q, NULL, req, 1, ufshpb_umap_req_compl_fn);
+>>> >>
+>>> >> +    hpb->stats.umap_req_cnt++;
+>>> >>      return 0;
+>>> >>  }
+>>> >>
+>>> >> @@ -1103,6 +1104,12 @@ static int ufshpb_issue_umap_req(struct
+>>> >> ufshpb_lu *hpb,
+>>> >>      return -EAGAIN;
+>>> >>  }
+>>> >>
+>>> >> +static int ufshpb_issue_umap_single_req(struct ufshpb_lu *hpb,
+>>> >> +                                    struct ufshpb_region *rgn)
+>>> >> +{
+>>> >> +    return ufshpb_issue_umap_req(hpb, rgn);
+>>> >> +}
+>>> >> +
+>>> >>  static int ufshpb_issue_umap_all_req(struct ufshpb_lu *hpb)
+>>> >>  {
+>>> >>      return ufshpb_issue_umap_req(hpb, NULL);
+>>> >> @@ -1115,6 +1122,10 @@ static void __ufshpb_evict_region(struct
+>>> >> ufshpb_lu *hpb,
+>>> >>      struct ufshpb_subregion *srgn;
+>>> >>      int srgn_idx;
+>>> >>
+>>> >> +
+>>> >> +    if (hpb->is_hcm && ufshpb_issue_umap_single_req(hpb, rgn))
+>>> >
+>>> > __ufshpb_evict_region() is called with rgn_state_lock held and IRQ
+>>> > disabled,
+>>> > when ufshpb_issue_umap_single_req() invokes blk_execute_rq_nowait(),
+>>> > below
+>>> > warning shall pop up every time, fix it?
+>>> >
+>>> > void blk_execute_rq_nowait(struct request_queue *q, struct gendisk
+>>> > *bd_disk,
+>>> >                  struct request *rq, int at_head,
+>>> >                          rq_end_io_fn *done)
+>>> > {
+>>> >       WARN_ON(irqs_disabled());
+>>> > ...
+>>> >
+>>> 
+>>> Moreover, since we are here with rgn_state_lock held and IRQ 
+>>> disabled,
+>>> in ufshpb_get_req(), rq = kmem_cache_alloc(hpb->map_req_cache,
+>>> GFP_KERNEL)
+>>> has the GFP_KERNEL flag, scheduling while atomic???
+>> I think your comment applies to  ufshpb_issue_umap_all_req as well,
+>> Which is called from slave_configure/scsi_add_lun.
+>> 
+>> Since the host-mode series is utilizing the framework laid by the 
+>> device-mode,
+>> Maybe you can add this comment to  Daejun's last version?
 > 
-> Gustavo,
+> Hi Avri, Can Guo
 > 
->> Dynamic memory allocation isn't actually needed and it can be replaced
->> by statically allocating memory for struct object io_unit_pg3 with 36
->> hardcoded entries for its GPIOVal array.
+> I think ufshpb_issue_umap_single_req() can be moved to end of
+> ufshpb_evict_region().
+> Then we can avoid rgn_state_lock when it sends unmap command.
+
+I am not the expert here, please you two fix it. I am just reporting
+what can be wrong. Anyways, ufshpb_issue_umap_single_req() should not
+be called with rgn_state_lock held - think about below (another deadly)
+scenario.
+
+lock(rgn_state_lock)
+   ufshpb_issue_umap_single_req()
+     ufshpb_prep()
+        lock(rgn_state_lock)   <---------- recursive spin_lock
+
+BTW, @Daejun shouldn't we stop passthrough cmds from stepping
+into ufshpb_prep()? In current code, you are trying to use below
+check to block cmds other than write/discard/read, but a passthrough
+cmd can not be blocked by the check.
+
+          if (!ufshpb_is_write_or_discard_cmd(cmd) &&
+              !ufshpb_is_read_cmd(cmd))
+                  return 0;
+
+Thanks,
+Can Guo.
+
 > 
-> Applied to 5.13/scsi-staging, thanks!
-
-Awesome. :)
-
-I wonder if you can take a look at this one, too, please:
-
-https://lore.kernel.org/lkml/20210304203822.GA102218@embeddedor/
-
-Thanks!
---
-Gustavo
+> Thanks,
+> Daejun
+> 
+> 
+>> Thanks,
+>> Avri
+>> 
+>>> 
+>>> Can Guo.
+>>> 
+>>> > Thanks.
+>>> > Can Guo.
+>>> >
+>>> >> +            return;
+>>> >> +
+>>> >>      lru_info = &hpb->lru_info;
+>>> >>
+>>> >>      dev_dbg(&hpb->sdev_ufs_lu->sdev_dev, "evict region %d\n",
+>>> >> rgn->rgn_idx);
+>>> >> @@ -1855,6 +1866,7 @@ ufshpb_sysfs_attr_show_func(rb_noti_cnt);
+>>> >>  ufshpb_sysfs_attr_show_func(rb_active_cnt);
+>>> >>  ufshpb_sysfs_attr_show_func(rb_inactive_cnt);
+>>> >>  ufshpb_sysfs_attr_show_func(map_req_cnt);
+>>> >> +ufshpb_sysfs_attr_show_func(umap_req_cnt);
+>>> >>
+>>> >>  static struct attribute *hpb_dev_stat_attrs[] = {
+>>> >>      &dev_attr_hit_cnt.attr,
+>>> >> @@ -1863,6 +1875,7 @@ static struct attribute *hpb_dev_stat_attrs[] =
+>>> >> {
+>>> >>      &dev_attr_rb_active_cnt.attr,
+>>> >>      &dev_attr_rb_inactive_cnt.attr,
+>>> >>      &dev_attr_map_req_cnt.attr,
+>>> >> +    &dev_attr_umap_req_cnt.attr,
+>>> >>      NULL,
+>>> >>  };
+>>> >>
+>>> >> @@ -1978,6 +1991,7 @@ static void ufshpb_stat_init(struct ufshpb_lu
+>>> >> *hpb)
+>>> >>      hpb->stats.rb_active_cnt = 0;
+>>> >>      hpb->stats.rb_inactive_cnt = 0;
+>>> >>      hpb->stats.map_req_cnt = 0;
+>>> >> +    hpb->stats.umap_req_cnt = 0;
+>>> >>  }
+>>> >>
+>>> >>  static void ufshpb_param_init(struct ufshpb_lu *hpb)
+>>> >> diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+>>> >> index bd4308010466..84598a317897 100644
+>>> >> --- a/drivers/scsi/ufs/ufshpb.h
+>>> >> +++ b/drivers/scsi/ufs/ufshpb.h
+>>> >> @@ -186,6 +186,7 @@ struct ufshpb_stats {
+>>> >>      u64 rb_inactive_cnt;
+>>> >>      u64 map_req_cnt;
+>>> >>      u64 pre_req_cnt;
+>>> >> +    u64 umap_req_cnt;
+>>> >>  };
+>>> >>
+>>> >>  struct ufshpb_lu {
+>> 
+>> 
+>> 
