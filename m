@@ -7,63 +7,64 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4726C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 08:58:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CD69C433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 08:58:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA9B964E33
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 08:58:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69FB264E33
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 08:58:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229921AbhCQI56 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 04:57:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39280 "EHLO
+        id S229943AbhCQI6C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 04:58:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229735AbhCQI5V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 04:57:21 -0400
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B86CC06174A
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 01:57:20 -0700 (PDT)
-Received: by mail-wr1-x430.google.com with SMTP id x16so960535wrn.4
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 01:57:20 -0700 (PDT)
+        with ESMTP id S229767AbhCQI5Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 04:57:24 -0400
+Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B6C0C06175F
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 01:57:23 -0700 (PDT)
+Received: by mail-wm1-x32d.google.com with SMTP id g25so1022079wmh.0
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 01:57:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=RHS0YjWdwFJSN1VWVbYNsptYDs5Fwc3UmjtJJxuBnoI=;
-        b=bd2kG5EPTmQJeA6t8WaOQnFRXKkDR3BMi8kDcQikR5twG4YRU3gLdOjJDKAoej7ZGL
-         wZwGwuS6cWBS81PFhdOHVoQ7Oljwl88rHPcre4OcRLOHZwlSXHmEUJ4hSTxFOiRoBwjB
-         QpqGk74mim16Za7N+MVQrY5SBbtJNkB28Z3/FJtEXQyY/W0FV69s/uSl74HmJxzVYUg0
-         NMJVuqubf2JLrHVLNaC4rW7xWh1JoWKbWJYCcTyp66H2SJpwWlqXWcvZT8Y+5Bg+9kCC
-         efO2hQ6/rbEVfQGOW05A7XwV0Qazx5BbzjQpUtvzKfQHsdIk2BkWl9XvvlqP3FZzv7yR
-         b1mw==
+        bh=omHoCGEAHHfzGsCXWaSPZZFL53Kydw/eMLAhlkpH1KI=;
+        b=G22gc9eNVnSkGmoUYNFy4wacYM1Maa4UM98OSYfR32gD/HkmzQQWbgY4P4UFvjX9q5
+         1/K4tKYkgq+Tyz3T4Y8Mgze3tuG2JcwIvk9CWMjQuhvsY23GVjfNmJ0aem8lw+qe5UN7
+         FPVmfjzgOicF0uFBQf6QL3Vj1K77BtaL/xksuNliBeu5VB6q6r30sr+Bkh6BrsKtV71N
+         UnXMXD6kbvh09KJOuR8zcUy4hvQu11++xqFYTYuhf4q1E4zbXFNqkxjwgVsmqzqHBz4Y
+         BDz3TZqJ4293Xc0y6RflScVaLt9bBm9iP0S+qSk34h7Cz46M4A8WS6I3GSOT+Wlls5BQ
+         vKXQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=RHS0YjWdwFJSN1VWVbYNsptYDs5Fwc3UmjtJJxuBnoI=;
-        b=kms5ZISL0mnU0X1RBG2on3dy/x2K7DQcnfm7Lb4ckJzkpKvqOCIfkaQSAg/drSVfPp
-         D2zLVJR+aAoHyBFk5t+SDxmkF9AWhar5FEC0LJWQIHqezBvOPqBB0vwg/SasuaDHwsWQ
-         7vgFuYAqYWbIGVQRrBVTwQ+1WRDGeo6oaFJQgTl3V/LSbOOFzSHHoOHQxjaIWRDssYhL
-         WVGxQk4gq6LmyOvUI6zGzc8ime2QiuIQcdGMleWnYEAtU+ek0yczMGg6xGFYlMaoYfCP
-         agGNFZEaxeyj3BPfvaL6FpET0QlHy4H4D/KpSJIBs62TgAAow62LUj8qUgun5qfDrPy0
-         eK6A==
-X-Gm-Message-State: AOAM533kPiF650nXcGyzToQrkl+fYK3t8D09IOosBNxL2qGHRu+F54QP
-        0dFhHgLg7QlraEPTv0uB2pLrCA==
-X-Google-Smtp-Source: ABdhPJw7IDG/Hu+h6a5Wu25E5StVwC8pvUyd1nxG8QhvDpv4nG2qOmqcsEVTeYDANh7nkWJteGYFsQ==
-X-Received: by 2002:adf:ea47:: with SMTP id j7mr3121325wrn.377.1615971439380;
-        Wed, 17 Mar 2021 01:57:19 -0700 (PDT)
+        bh=omHoCGEAHHfzGsCXWaSPZZFL53Kydw/eMLAhlkpH1KI=;
+        b=OwDoZC7Ik5gmkOsQR0ByqYvKzWK1wupgi1utDfve1vXI5NvblIqevgone9dO410x7o
+         NrOGPgjzIhklqdWdQde4bMzag744iVYuM/zRhhFScXOeki4zxS6lgwXEQ4v8AawbRHBx
+         JgfcFTsCfTzv4IGQXH0p5OsgN10IIO7WyihZOLwMH8xWrNFmj5KqRZLq4s3J6m2RaXjw
+         O4Sk1PST08OSpdp2H7Ik4j7pVq5/03MbXmYkYR1gSPNJ3+zuugc5W+/AhJDcb0K4jVk/
+         bDWblCGzoFnMUdb8X9gpxzGp3uJJVaJDaWh76IaUHrBrx/hrvYnQ4MoYqHChR8JwNvA/
+         ms8w==
+X-Gm-Message-State: AOAM530QrUtODP1lcToxzXv+W/9SeWb4SKXGKRL1t1NFQyoPgmUY4kp9
+        /2ab2x6tEmO0YgFsr6rY5H5J8g==
+X-Google-Smtp-Source: ABdhPJw8Ddp7YdzjeheW5smSSk4SsocDHz5sUQEXKz8atEvBpoI8V+wWuKLJ2mg9P8iILIz+DV1vuA==
+X-Received: by 2002:a1c:3c8a:: with SMTP id j132mr683090wma.127.1615971442290;
+        Wed, 17 Mar 2021 01:57:22 -0700 (PDT)
 Received: from dell.default ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id j123sm1807243wmb.1.2021.03.17.01.57.18
+        by smtp.gmail.com with ESMTPSA id j123sm1807243wmb.1.2021.03.17.01.57.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 01:57:18 -0700 (PDT)
+        Wed, 17 Mar 2021 01:57:21 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
-Cc:     linux-kernel@vger.kernel.org, Khalid Aziz <khalid@gonehiking.org>,
+Cc:     linux-kernel@vger.kernel.org,
+        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 14/18] scsi: FlashPoint: Remove unused variable 'TID' from 'FlashPoint_AbortCCB()'
-Date:   Wed, 17 Mar 2021 08:56:57 +0000
-Message-Id: <20210317085701.2891231-15-lee.jones@linaro.org>
+Subject: [PATCH 17/18] scsi: isci: remote_device: Make local function isci_remote_device_wait_for_resume_from_abort() static
+Date:   Wed, 17 Mar 2021 08:57:00 +0000
+Message-Id: <20210317085701.2891231-18-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210317085701.2891231-1-lee.jones@linaro.org>
 References: <20210317085701.2891231-1-lee.jones@linaro.org>
@@ -76,40 +77,30 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/FlashPoint.c: In function ‘FlashPoint_AbortCCB’:
- drivers/scsi/FlashPoint.c:1618:16: warning: variable ‘TID’ set but not used [-Wunused-but-set-variable]
+ drivers/scsi/isci/remote_device.c:1387:6: warning: no previous prototype for ‘isci_remote_device_wait_for_resume_from_abort’ [-Wmissing-prototypes]
 
-Cc: Khalid Aziz <khalid@gonehiking.org>
+Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/FlashPoint.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/isci/remote_device.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/FlashPoint.c b/drivers/scsi/FlashPoint.c
-index f479c542e787c..0464e37c806a4 100644
---- a/drivers/scsi/FlashPoint.c
-+++ b/drivers/scsi/FlashPoint.c
-@@ -1615,7 +1615,6 @@ static int FlashPoint_AbortCCB(void *pCurrCard, struct sccb *p_Sccb)
+diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
+index c3f540b556895..b1276f7e49c89 100644
+--- a/drivers/scsi/isci/remote_device.c
++++ b/drivers/scsi/isci/remote_device.c
+@@ -1384,7 +1384,7 @@ static bool isci_remote_device_test_resume_done(
+ 	return done;
+ }
  
- 	unsigned char thisCard;
- 	CALL_BK_FN callback;
--	unsigned char TID;
- 	struct sccb *pSaveSCCB;
- 	struct sccb_mgr_tar_info *currTar_Info;
- 
-@@ -1652,9 +1651,6 @@ static int FlashPoint_AbortCCB(void *pCurrCard, struct sccb *p_Sccb)
- 			}
- 
- 			else {
--
--				TID = p_Sccb->TargID;
--
- 				if (p_Sccb->Sccb_tag) {
- 					MDISABLE_INT(ioport);
- 					if (((struct sccb_card *)pCurrCard)->
+-void isci_remote_device_wait_for_resume_from_abort(
++static void isci_remote_device_wait_for_resume_from_abort(
+ 	struct isci_host *ihost,
+ 	struct isci_remote_device *idev)
+ {
 -- 
 2.27.0
 
