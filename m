@@ -2,97 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0401DC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 10:13:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2B08C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 10:47:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5C8264E83
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 10:13:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF1B864F45
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 10:47:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229591AbhCQKNG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 06:13:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55658 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbhCQKM6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 06:12:58 -0400
-Received: from mail-qt1-x830.google.com (mail-qt1-x830.google.com [IPv6:2607:f8b0:4864:20::830])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE98FC06174A;
-        Wed, 17 Mar 2021 03:12:57 -0700 (PDT)
-Received: by mail-qt1-x830.google.com with SMTP id 73so919833qtg.13;
-        Wed, 17 Mar 2021 03:12:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=qq+6rnjwZUXy0xdppfbPndd57JZCgaq/YgQkJLINgHE=;
-        b=SMyHqGTntvVj5VKZDTgIz1os+brbsz83qBFt1WcKY5bTmCQE5jG+8Mrs+m2jpVGXw/
-         7mAPxEUMN/wIij8N/z/pOYkHUCAPZnsFp/GK1CtWBfr8+tuJCNQoHeN0OeC9PnYuPaXy
-         18hhN/xf1WiyUhB7igEmukBaewXBsx85EL3gltLHf6n8NI9N7r9wX8J+hm2i/msnLhkd
-         AL+o9Pcho2ah7uHkGZ1kcm0jA0Ts2dnFqaA1edB0SukKpTn1V+msBRDlgy7P625674LN
-         uFwSV+RAQ79Dmo4wN0m+y2ATuPibX92vGe7IhZcv5GCF0fucSKCed0RXc7ydrl2fdTey
-         d+Ag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=qq+6rnjwZUXy0xdppfbPndd57JZCgaq/YgQkJLINgHE=;
-        b=K5qhe7DPhXcxcB+b96tOKLftdorPXWa5yd2k4ToSogezo/dJmxKQHqsZ0ICbqnFa3i
-         sM1rQINoBgGB1ijgqZnXe5feyTXmsPnBV5I6ycAs7IXu8RiIObLaJRHICfqtJl3bXUC9
-         sVLsJ0Dn65NKCEPwxXsWewJOVqwbDA33M9xCwzq7BsanWwQsySG8Axl2Nc+LJyXSk5ht
-         OWbEXY/j0Q7A8AjXcoqXOVos1z2lwBAQbKK+9flrc5qFIp4n28/GTvzDy62IM2r2I3g6
-         KsMYgD2NgkTuFhBJa+t1G0DdG8wrcukBkJWjSHNjrElK/6wL1/uDqgp47ucuj9TqnYFR
-         2C3w==
-X-Gm-Message-State: AOAM532nSR/3YcLpD6u2U/Uq4Y5yQssY6MqmZ5Wkmoi8Y4M3isOpmRi7
-        KjLYETqwYui2UON851d9UyU=
-X-Google-Smtp-Source: ABdhPJzbEuLCgLKH92IsbHHtuY9C5ljyRO7REUBh+cjhdsDoJJpvaGIsGT0582g7xK0Q4nkHvC6L1w==
-X-Received: by 2002:ac8:5448:: with SMTP id d8mr3112813qtq.392.1615975977108;
-        Wed, 17 Mar 2021 03:12:57 -0700 (PDT)
-Received: from localhost.localdomain ([37.19.198.48])
-        by smtp.gmail.com with ESMTPSA id i89sm13802871qtb.95.2021.03.17.03.12.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 03:12:56 -0700 (PDT)
-From:   Bhaskar Chowdhury <unixbhaskar@gmail.com>
-To:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     rdunlap@infradead.org, Bhaskar Chowdhury <unixbhaskar@gmail.com>
-Subject: [PATCH] message: fusion: Fix a typo in the file mptbase.h
-Date:   Wed, 17 Mar 2021 15:42:38 +0530
-Message-Id: <20210317101238.2627574-1-unixbhaskar@gmail.com>
-X-Mailer: git-send-email 2.30.2
+        id S230129AbhCQKqj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 06:46:39 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:48226 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229943AbhCQKqb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Mar 2021 06:46:31 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 0A0A7412C6;
+        Wed, 17 Mar 2021 10:46:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received; s=mta-01; t=1615977989; x=
+        1617792390; bh=nb8csPQ8iMIogmDOGg3leOgLRI4ytO+5nOwpnQObBK4=; b=r
+        Zgs7ykBUep0P4x9Cg3UpF6HZWc1S5abPCGLVS1dnrC1hS45GWI7SPOxzfJk+WbNO
+        mjzeTPpAHw3sqErnFTBYCk66cJdIr6XDQqJecLQTJZx9NTpqWyedvPAU/3w3RefY
+        BQTfchYwBxDKpeYO7XbEQlT3tr8mga889bkwzc4aZ8=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id j4kdlqFoviTy; Wed, 17 Mar 2021 13:46:29 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 53B314124F;
+        Wed, 17 Mar 2021 13:46:27 +0300 (MSK)
+Received: from NB-591.corp.yadro.com (10.199.0.54) by T-EXCH-03.corp.yadro.com
+ (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Wed, 17
+ Mar 2021 13:46:27 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>
+CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Chris Boot <bootc@bootc.net>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>
+Subject: [PATCH 0/4] target: make tpg/enable attribute
+Date:   Wed, 17 Mar 2021 13:46:05 +0300
+Message-ID: <20210317104609.25236-1-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.199.0.54]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-03.corp.yadro.com (172.17.100.103)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+All target transport drivers have its own 'tpg/enable' attribute
+implementation. This produces unnecessary code duplication.
+Also it makes difficult to control that attribute and to depend on that
+attribute inside of target core module.
 
-s/contets/contents/
+Replace tpg/enable attribute implementation of each transport to a
+common implementation for all transports. Move enabling target logic to
+a new fabric_ops callback.
 
-Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
----
- drivers/message/fusion/mptbase.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patchset is intended for scsi-queue.
 
-diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
-index 813d46311f6a..b9e0376be723 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -274,7 +274,7 @@ typedef union _MPT_FRAME_TRACKER {
- 	} linkage;
- 	/*
- 	 * NOTE: When request frames are free, on the linkage structure
--	 * contets are valid.  All other values are invalid.
-+	 * contents are valid.  All other values are invalid.
- 	 * In particular, do NOT reply on offset [2]
- 	 * (in words) being the * message context.
- 	 * The message context must be reset (computed via base address
---
-2.30.2
+Dmitry Bogdanov (4):
+  target: core: add common tpg/enable attribute
+  target: iscsi: replace enable attr to ops.enable
+  target: qla2xx: replace enable attr to ops.enable
+  target: sbp: replace enable attr to ops.enable
+
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c           | 73 +++-------------
+ drivers/target/iscsi/iscsi_target_configfs.c | 91 +++++++-------------
+ drivers/target/sbp/sbp_target.c              | 30 ++-----
+ drivers/target/target_core_configfs.c        |  1 +
+ drivers/target/target_core_fabric_configfs.c | 38 +++++++-
+ drivers/target/target_core_internal.h        |  1 +
+ drivers/target/target_core_tpg.c             | 42 +++++++++
+ include/target/target_core_base.h            |  1 +
+ include/target/target_core_fabric.h          |  1 +
+ 9 files changed, 129 insertions(+), 147 deletions(-)
+
+-- 
+2.25.1
 
