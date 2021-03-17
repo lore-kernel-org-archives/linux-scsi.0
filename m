@@ -7,64 +7,65 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27A0BC4361B
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4834C43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06B5A64F72
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9885364F67
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231142AbhCQJNn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 05:13:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42750 "EHLO
+        id S230393AbhCQJNh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 05:13:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230241AbhCQJNF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:13:05 -0400
-Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E261C061760
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:05 -0700 (PDT)
-Received: by mail-wr1-x436.google.com with SMTP id x16so1010298wrn.4
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:05 -0700 (PDT)
+        with ESMTP id S230039AbhCQJNB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:13:01 -0400
+Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0776AC0613DB
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:12:59 -0700 (PDT)
+Received: by mail-wm1-x332.google.com with SMTP id r10-20020a05600c35cab029010c946c95easo832025wmq.4
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:12:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=MQ2nUtCGw1bWUZ6dO/5J8SDUuDM4eCtKGGa2VlanAmM=;
-        b=d2Ja2o6tgRGuZu/1gD3cCuRyuA6S6GgUOdhpFLU7iMpXFvkyR0pN3bcibvKm5/vjJT
-         YZgukf4UNqYRhDxIpmHDYNPSp07nFKO58rgOk6dR2BMf8HESOZ+DSdkz866QBjDNtzKL
-         gC7yavFODON/KcwZduZibWrosEZTVcu1tRBMngCMsXt+55z9TnN5Wp103xRnXcEF0fDf
-         RoyiXMRtKLQ8K9sTSsp+qF/HpqpsnjRQ+1wFHZmUXBMKBpLPj2K0gb/rudm9/Ro6PdA1
-         yWw9jfy5qs/HQa5xNrMLNReG0nUDtCcRvke6d/OZYJZfhv2Mel8Kawnyeh1QBdkZAHs6
-         0vMA==
+        bh=2WzJnbFL63fAV5MF42unVnj6zPztfqCHzahd4B5nEa4=;
+        b=jZUCRs8H69Csf5GhLrFIyA4rweatwr5fIlLJsoTfOZCevrPenu0dFtLGuORdXc2276
+         2Jkd2Ts0hUStkN6TbwYXKHElcc00A3iOyZ68bsVRYT9ohIaBIYri9u/kClPJPP9LXDsE
+         R7riR2wJUO1CGCWXqFtnMzjImY/oPqxtL406B6FX7pHyM8UnhI3vjV931tGiXRh1FKRM
+         ZH+0/sNADp74b6brzumnXVo+PMTF2snqJqE9qmHykwBnTPIv6bTrC3Fc2brOZMBuj4RK
+         2EJK9JccG0CyvMBYRmw1yei1MUr6x5WPwzlfPuo4K+gea1JdHh81fDketrOqFQ0Sum5U
+         IXvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=MQ2nUtCGw1bWUZ6dO/5J8SDUuDM4eCtKGGa2VlanAmM=;
-        b=kPS7eTw1PnfWhxArlJTYvAhKy6y0PF38lkkTu3QA720JXJGmHgeUf2TXywb7wR2YP2
-         gmV70/eewcD1QNavvbLKAUu4YSQH1AnRNeEIuxsuMUCSl0h5mZJ9j3z2oIIq+Aj1MEzm
-         OADrfcbXO75jI4H62qjLSdp73srwJXvJERgxNugFBXfw/hrS86tDYlP9hLkFkeRz/9Ar
-         YeSwUxp2FtMH+q2bXaxSKKUVVjlUaCkzFB1XZ6c3rpt+S6wc7JHDKWP4Y1cJSC3hAHAF
-         0McIAXR8kaj3g3/XJUv3fQgmP/qRGi2Nz5M5sr2ybUu71DYA0QTeZ9iaxbzCzjnhNS3i
-         xjUw==
-X-Gm-Message-State: AOAM530qE5BO/6clKijpd3j0D7djq88XguL8rzBFmmjrXzM091sdMy8Y
-        aq5cc0KxPq5H/HtllXd98uujXA==
-X-Google-Smtp-Source: ABdhPJzR8BmRIRcZ128t7v/YyGXxw48N5CaIKvpt5OSTSELrl5gNmzdel2YmItSBmal7vekMwK6VJg==
-X-Received: by 2002:adf:fac1:: with SMTP id a1mr3451873wrs.98.1615972383807;
-        Wed, 17 Mar 2021 02:13:03 -0700 (PDT)
+        bh=2WzJnbFL63fAV5MF42unVnj6zPztfqCHzahd4B5nEa4=;
+        b=d+DKEcx91jsC4py1FTXmxPt8oUud7azPnasgoVDJIAzpYFLg/LK9S9+KxhEWt2+1ia
+         j0AH+dxtrRwNi2Wu5dz26Er3GUr4NBLrtpEZAdllfogL8u9B1E6sgt2Y7Z2QEbsvy5nY
+         WlywEw9MQwJJPW56doTKW+xKcGEFNAspks2L7tOfSAxoMk4+YrQYqVzCGSLNRsztDxkY
+         +UbS+WpP00y/J4eFsfDAezyeN99K5ZH/0I1oyV+MiE3aoir3+VztF0+RSObMf7XgI15H
+         ypq0SeR/5MVV/ZgKDu8AnIzqbbBmLfzr+vC3hFQuVskyW7V7P8ENWi3mCka4CguGVxMw
+         7pJQ==
+X-Gm-Message-State: AOAM533CzaMqcWoafEHt7F7JqJw3Nr8r2P3dpVflUPh/Y/KAuPqCUlT5
+        e0nrhDH33K1DYsaVTW8uyu5Utw==
+X-Google-Smtp-Source: ABdhPJy4Rc8DlJvoxcqDMdMNTBb6d2JmTTrCLlkVJiCcC6wkRqqi0PABaVpBSQLbvZO8sgkBKM/WUg==
+X-Received: by 2002:a05:600c:198c:: with SMTP id t12mr2650590wmq.183.1615972377801;
+        Wed, 17 Mar 2021 02:12:57 -0700 (PDT)
 Received: from dell.default ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id e18sm12695886wru.73.2021.03.17.02.13.02
+        by smtp.gmail.com with ESMTPSA id e18sm12695886wru.73.2021.03.17.02.12.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 02:13:03 -0700 (PDT)
+        Wed, 17 Mar 2021 02:12:57 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
-Cc:     linux-kernel@vger.kernel.org,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+Cc:     linux-kernel@vger.kernel.org, Satish Kharat <satishkh@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 23/36] scsi: isci: remote_node_table: Fix a bunch of kernel-doc misdemeanours
-Date:   Wed, 17 Mar 2021 09:12:17 +0000
-Message-Id: <20210317091230.2912389-24-lee.jones@linaro.org>
+Subject: [PATCH 17/36] scsi: fnic: fnic_scsi: Demote non-conformant kernel-doc headers
+Date:   Wed, 17 Mar 2021 09:12:11 +0000
+Message-Id: <20210317091230.2912389-18-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210317091230.2912389-1-lee.jones@linaro.org>
 References: <20210317091230.2912389-1-lee.jones@linaro.org>
@@ -76,201 +77,56 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/isci/remote_node_table.c:66: warning: Incorrect use of kernel-doc format:  *
- drivers/scsi/isci/remote_node_table.c:80: warning: Function parameter or member 'remote_node_table' not described in 'sci_remote_node_table_get_group_index'
- drivers/scsi/isci/remote_node_table.c:80: warning: Function parameter or member 'group_table_index' not described in 'sci_remote_node_table_get_group_index'
- drivers/scsi/isci/remote_node_table.c:80: warning: expecting prototype for This file contains the implementation of the SCIC_SDS_REMOTE_NODE_TABLE(). Prototype was for sci_remote_node_table_get_group_index() instead
- drivers/scsi/isci/remote_node_table.c:101: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:131: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:161: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:194: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:227: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:256: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:283: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:310: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:368: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:428: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:465: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:508: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:553: warning: Cannot understand  *
- drivers/scsi/isci/remote_node_table.c:576: warning: Cannot understand  *
+ drivers/scsi/fnic/fnic_scsi.c:183: warning: Function parameter or member 'fnic' not described in '__fnic_set_state_flags'
+ drivers/scsi/fnic/fnic_scsi.c:183: warning: Function parameter or member 'st_flags' not described in '__fnic_set_state_flags'
+ drivers/scsi/fnic/fnic_scsi.c:183: warning: Function parameter or member 'clearbits' not described in '__fnic_set_state_flags'
+ drivers/scsi/fnic/fnic_scsi.c:2296: warning: Function parameter or member 'fnic' not described in 'fnic_scsi_host_start_tag'
+ drivers/scsi/fnic/fnic_scsi.c:2296: warning: Function parameter or member 'sc' not described in 'fnic_scsi_host_start_tag'
+ drivers/scsi/fnic/fnic_scsi.c:2316: warning: Function parameter or member 'fnic' not described in 'fnic_scsi_host_end_tag'
+ drivers/scsi/fnic/fnic_scsi.c:2316: warning: Function parameter or member 'sc' not described in 'fnic_scsi_host_end_tag'
 
-Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: Satish Kharat <satishkh@cisco.com>
+Cc: Sesidhar Baddela <sebaddel@cisco.com>
+Cc: Karan Tilak Kumar <kartilak@cisco.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/isci/remote_node_table.c | 51 +++++++++++++--------------
- 1 file changed, 25 insertions(+), 26 deletions(-)
+ drivers/scsi/fnic/fnic_scsi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/isci/remote_node_table.c b/drivers/scsi/isci/remote_node_table.c
-index 301b3141945ec..1036ab936626e 100644
---- a/drivers/scsi/isci/remote_node_table.c
-+++ b/drivers/scsi/isci/remote_node_table.c
-@@ -53,17 +53,15 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  */
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 36744968378ff..e619a82f921b1 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -173,7 +173,7 @@ static int free_wq_copy_descs(struct fnic *fnic, struct vnic_wq_copy *wq)
+ }
+ 
  
 -/**
 +/*
-  * This file contains the implementation of the SCIC_SDS_REMOTE_NODE_TABLE
-  *    public, protected, and private methods.
-- *
-- *
-  */
- #include "remote_node_table.h"
- #include "remote_node_context.h"
- 
- /**
-- *
-+ * sci_remote_node_table_get_group_index()
-  * @remote_node_table: This is the remote node index table from which the
-  *    selection will be made.
-  * @group_table_index: This is the index to the group table from which to
-@@ -98,8 +96,8 @@ static u32 sci_remote_node_table_get_group_index(
+  * __fnic_set_state_flags
+  * Sets/Clears bits in fnic's state_flags
+  **/
+@@ -2287,7 +2287,7 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
+ 	return ret;
  }
  
- /**
-- *
-- * @out]: remote_node_table This the remote node table in which to clear the
-+ * sci_remote_node_table_clear_group_index()
-+ * @remote_node_table: This the remote node table in which to clear the
-  *    selector.
-  * @set_index: This is the remote node selector in which the change will be
-  *    made.
-@@ -128,8 +126,8 @@ static void sci_remote_node_table_clear_group_index(
+-/**
++/*
+  * fnic_scsi_host_start_tag
+  * Allocates tagid from host's tag list
+  **/
+@@ -2307,7 +2307,7 @@ fnic_scsi_host_start_tag(struct fnic *fnic, struct scsi_cmnd *sc)
+ 	return dummy->tag;
  }
  
- /**
-- *
-- * @out]: remote_node_table This the remote node table in which to set the
-+ * sci_remote_node_table_set_group_index()
-+ * @remote_node_table: This the remote node table in which to set the
-  *    selector.
-  * @group_table_index: This is the remote node selector in which the change
-  *    will be made.
-@@ -158,8 +156,8 @@ static void sci_remote_node_table_set_group_index(
- }
- 
- /**
-- *
-- * @out]: remote_node_table This is the remote node table in which to modify
-+ * sci_remote_node_table_set_node_index()
-+ * @remote_node_table: This is the remote node table in which to modify
-  *    the remote node availability.
-  * @remote_node_index: This is the remote node index that is being returned to
-  *    the table.
-@@ -191,8 +189,8 @@ static void sci_remote_node_table_set_node_index(
- }
- 
- /**
-- *
-- * @out]: remote_node_table This is the remote node table from which to clear
-+ * sci_remote_node_table_clear_node_index()
-+ * @remote_node_table: This is the remote node table from which to clear
-  *    the available remote node bit.
-  * @remote_node_index: This is the remote node index which is to be cleared
-  *    from the table.
-@@ -224,8 +222,8 @@ static void sci_remote_node_table_clear_node_index(
- }
- 
- /**
-- *
-- * @out]: remote_node_table The remote node table from which the slot will be
-+ * sci_remote_node_table_clear_group()
-+ * @remote_node_table: The remote node table from which the slot will be
-  *    cleared.
-  * @group_index: The index for the slot that is to be cleared.
-  *
-@@ -253,7 +251,7 @@ static void sci_remote_node_table_clear_group(
- }
- 
- /**
-- *
-+ * sci_remote_node_table_set_group()
-  * @remote_node_table:
-  *
-  * THis method sets an entire remote node group in the remote node table.
-@@ -280,7 +278,7 @@ static void sci_remote_node_table_set_group(
- }
- 
- /**
-- *
-+ * sci_remote_node_table_get_group_value()
-  * @remote_node_table: This is the remote node table that for which the group
-  *    value is to be returned.
-  * @group_index: This is the group index to use to find the group value.
-@@ -307,8 +305,8 @@ static u8 sci_remote_node_table_get_group_value(
- }
- 
- /**
-- *
-- * @out]: remote_node_table The remote that which is to be initialized.
-+ * sci_remote_node_table_initialize()
-+ * @remote_node_table: The remote that which is to be initialized.
-  * @remote_node_entries: The number of entries to put in the table.
-  *
-  * This method will initialize the remote node table for use. none
-@@ -365,8 +363,8 @@ void sci_remote_node_table_initialize(
- }
- 
- /**
-- *
-- * @out]: remote_node_table The remote node table from which to allocate a
-+ * sci_remote_node_table_allocate_single_remote_node()
-+ * @remote_node_table: The remote node table from which to allocate a
-  *    remote node.
-  * @table_index: The group index that is to be used for the search.
-  *
-@@ -425,7 +423,7 @@ static u16 sci_remote_node_table_allocate_single_remote_node(
- }
- 
- /**
-- *
-+ * sci_remote_node_table_allocate_triple_remote_node()
-  * @remote_node_table: This is the remote node table from which to allocate the
-  *    remote node entries.
-  * @group_table_index: THis is the group table index which must equal two (2)
-@@ -462,7 +460,7 @@ static u16 sci_remote_node_table_allocate_triple_remote_node(
- }
- 
- /**
-- *
-+ * sci_remote_node_table_allocate_remote_node()
-  * @remote_node_table: This is the remote node table from which the remote node
-  *    allocation is to take place.
-  * @remote_node_count: This is ther remote node count which is one of
-@@ -505,8 +503,9 @@ u16 sci_remote_node_table_allocate_remote_node(
- }
- 
- /**
-- *
-- * @remote_node_table:
-+ * sci_remote_node_table_release_single_remote_node()
-+ * @remote_node_table: This is the remote node table from which the remote node
-+ *    release is to take place.
-  *
-  * This method will free a single remote node index back to the remote node
-  * table.  This routine will update the remote node groups
-@@ -550,7 +549,7 @@ static void sci_remote_node_table_release_single_remote_node(
- }
- 
- /**
-- *
-+ * sci_remote_node_table_release_triple_remote_node()
-  * @remote_node_table: This is the remote node table to which the remote node
-  *    index is to be freed.
-  *
-@@ -573,7 +572,7 @@ static void sci_remote_node_table_release_triple_remote_node(
- }
- 
- /**
-- *
-+ * sci_remote_node_table_release_remote_node_index()
-  * @remote_node_table: The remote node table to which the remote node index is
-  *    to be freed.
-  * @remote_node_count: This is the count of consecutive remote nodes that are
+-/**
++/*
+  * fnic_scsi_host_end_tag
+  * frees tag allocated by fnic_scsi_host_start_tag.
+  **/
 -- 
 2.27.0
 
