@@ -2,109 +2,299 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 166A0C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 13:20:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE24FC433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 13:52:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BFE3464F45
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 13:20:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8805F64F5E
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 13:52:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230518AbhCQNUC convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 09:20:02 -0400
-Received: from eu-smtp-delivery-151.mimecast.com ([185.58.86.151]:43015 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230507AbhCQNTc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Mar 2021 09:19:32 -0400
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- uk-mta-55-3sGq2adXMGirCyN93jbuVw-1; Wed, 17 Mar 2021 13:19:24 +0000
-X-MC-Unique: 3sGq2adXMGirCyN93jbuVw-1
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) with Microsoft SMTP
- Server (TLS) id 15.0.1497.2; Wed, 17 Mar 2021 13:19:23 +0000
-Received: from AcuMS.Aculab.com ([fe80::994c:f5c2:35d6:9b65]) by
- AcuMS.aculab.com ([fe80::994c:f5c2:35d6:9b65%12]) with mapi id
- 15.00.1497.012; Wed, 17 Mar 2021 13:19:23 +0000
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     "'Martin K. Petersen'" <martin.petersen@oracle.com>,
-        Arnd Bergmann <arnd@kernel.org>
-CC:     "Don.Brace@microchip.com" <Don.Brace@microchip.com>,
-        Sergei Trofimovich <slyfox@gentoo.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-        "storagedev@microchip.com" <storagedev@microchip.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "jszczype@redhat.com" <jszczype@redhat.com>,
-        "Scott.Benesh@microchip.com" <Scott.Benesh@microchip.com>,
-        "Scott.Teel@microchip.com" <Scott.Teel@microchip.com>,
-        "thenzl@redhat.com" <thenzl@redhat.com>,
-        "John Paul Adrian Glaubitz" <glaubitz@physik.fu-berlin.de>
-Subject: RE: [PATCH] hpsa: fix boot on ia64 (atomic_t alignment)
-Thread-Topic: [PATCH] hpsa: fix boot on ia64 (atomic_t alignment)
-Thread-Index: AQHXGtT0rSNa450uZ0SMu8nCYRzH7aqIKWKQ
-Date:   Wed, 17 Mar 2021 13:19:23 +0000
-Message-ID: <4b2a64d91c4c478f881d9713cac5001b@AcuMS.aculab.com>
-References: <5532f9ab-7555-d51b-f4d5-f9b72a61f248@redhat.com>
-        <20210312222718.4117508-1-slyfox@gentoo.org>
-        <SN6PR11MB2848561E3D85A8F55EB86977E16B9@SN6PR11MB2848.namprd11.prod.outlook.com>
-        <CAK8P3a3JYmhbN3TXB2cWGfXGKgsUa9Hg=ZvWckTaL_31OMgbtQ@mail.gmail.com>
- <yq1zgz21rkz.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1zgz21rkz.fsf@ca-mkp.ca.oracle.com>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        id S229809AbhCQNvk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 09:51:40 -0400
+Received: from m42-10.mailgun.net ([69.72.42.10]:16478 "EHLO
+        m42-10.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231576AbhCQNv3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 09:51:29 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1615989089; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=Mzkt4+ygckGeHqgzzhqSkOlUJPZ8QaPY0VafD7LRqcY=;
+ b=UOXB6oxqC+O8qn4RFV+RcCZwqTVwIR1sJsSdyS3MXsJKiQ0w3N6ckjxgQ82h3oRGyEZ0ASIe
+ V+tEVuwT8bUE1Lx7/behVt2epkD2K8kouVI7+iDauA5RPmJlWL9lT6OFjvxpKIjl828ZjXBU
+ KgTHF/Hn2sXtWG8G6vBzhw/hCR8=
+X-Mailgun-Sending-Ip: 69.72.42.10
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 605209473f267701a47c588c (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 17 Mar 2021 13:51:03
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id DD4DCC433ED; Wed, 17 Mar 2021 13:51:02 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5533DC43463;
+        Wed, 17 Mar 2021 13:50:59 +0000 (UTC)
 MIME-Version: 1.0
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 17 Mar 2021 21:50:59 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        alim.akhtar@samsung.com, asutoshd@codeaurora.org,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>, stanley.chu@mediatek.com
+Subject: Re: [PATCH v5 06/10] scsi: ufshpb: Add hpb dev reset response
+In-Reply-To: <DM6PR04MB65750C0AE1F1EDB41EDEE491FC6A9@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20210302132503.224670-1-avri.altman@wdc.com>
+ <20210302132503.224670-7-avri.altman@wdc.com>
+ <59a62fc17ec9229a8498e696eb0474be@codeaurora.org>
+ <DM6PR04MB6575006E0682C3D11F54965DFC6A9@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <1d0e3c5441ecf14b6614ec0af0d30af6@codeaurora.org>
+ <DM6PR04MB65750C0AE1F1EDB41EDEE491FC6A9@DM6PR04MB6575.namprd04.prod.outlook.com>
+Message-ID: <37d0a4f115ad5d08ab12a76e6cbe17a5@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Martin K. Petersen 
-> Sent: 17 March 2021 02:26
+On 2021-03-17 20:22, Avri Altman wrote:
+>> 
+>> On 2021-03-17 19:23, Avri Altman wrote:
+>> >>
+>> >> On 2021-03-02 21:24, Avri Altman wrote:
+>> >> > The spec does not define what is the host's recommended response when
+>> >> > the device send hpb dev reset response (oper 0x2).
+>> >> >
+>> >> > We will update all active hpb regions: mark them and do that on the
+>> >> > next
+>> >> > read.
+>> >> >
+>> >> > Signed-off-by: Avri Altman <avri.altman@wdc.com>
+>> >> > ---
+>> >> >  drivers/scsi/ufs/ufshpb.c | 47
+>> >> ++++++++++++++++++++++++++++++++++++---
+>> >> >  drivers/scsi/ufs/ufshpb.h |  2 ++
+>> >> >  2 files changed, 46 insertions(+), 3 deletions(-)
+>> >> >
+>> >> > diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+>> >> > index 0744feb4d484..0034fa03fdc6 100644
+>> >> > --- a/drivers/scsi/ufs/ufshpb.c
+>> >> > +++ b/drivers/scsi/ufs/ufshpb.c
+>> >> > @@ -642,7 +642,8 @@ int ufshpb_prep(struct ufs_hba *hba, struct
+>> >> > ufshcd_lrb *lrbp)
+>> >> >               if (rgn->reads == ACTIVATION_THRESHOLD)
+>> >> >                       activate = true;
+>> >> >               spin_unlock_irqrestore(&rgn->rgn_lock, flags);
+>> >> > -             if (activate) {
+>> >> > +             if (activate ||
+>> >> > +                 test_and_clear_bit(RGN_FLAG_UPDATE, &rgn->rgn_flags)) {
+
+Other than this place, do we also need to clear this bit in places like
+ufshpb_map_req_compl_fn() and/or ufshpb_cleanup_lru_info()? Otherwise,
+this flag may be left there even after the rgn is inactivated.
+
+>> >> >                       spin_lock_irqsave(&hpb->rsp_list_lock, flags);
+>> >> >                       ufshpb_update_active_info(hpb, rgn_idx, srgn_idx);
+>> >> >                       hpb->stats.rb_active_cnt++;
+>> >> > @@ -1480,6 +1481,20 @@ void ufshpb_rsp_upiu(struct ufs_hba *hba,
+>> >> > struct ufshcd_lrb *lrbp)
+>> >> >       case HPB_RSP_DEV_RESET:
+>> >> >               dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
+>> >> >                        "UFS device lost HPB information during PM.\n");
+>> >> > +
+>> >> > +             if (hpb->is_hcm) {
+>> >> > +                     struct scsi_device *sdev;
+>> >> > +
+>> >> > +                     __shost_for_each_device(sdev, hba->host) {
+>> >> > +                             struct ufshpb_lu *h = sdev->hostdata;
+>> >> > +
+>> >> > +                             if (!h)
+>> >> > +                                     continue;
+>> >> > +
+>> >> > +                             schedule_work(&hpb->ufshpb_lun_reset_work);
+>> >> > +                     }
+>> >> > +             }
+>> >> > +
+>> >> >               break;
+>> >> >       default:
+>> >> >               dev_notice(&hpb->sdev_ufs_lu->sdev_dev,
+>> >> > @@ -1594,6 +1609,25 @@ static void
+>> >> > ufshpb_run_inactive_region_list(struct ufshpb_lu *hpb)
+>> >> >       spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
+>> >> >  }
+>> >> >
+>> >> > +static void ufshpb_reset_work_handler(struct work_struct *work)
+>> >>
+>> >> Just curious, directly doing below things inside ufshpb_rsp_upiu()
+>> >> does
+>> >> not
+>> >> seem a problem to me, does this really deserve a separate work?
+>> > I don't know, I never even consider of doing this.
+>> > The active region list may contain up to few thousands of regions -
+>> > It is not rare to see configurations that covers the entire device.
+>> >
+>> 
+>> Yes, true, it can be a huge list. But what does the ops
+>> "HPB_RSP_DEV_RESET"
+>> really mean? The specs says "Device reset HPB Regions information", 
+>> but
+>> I
+>> don't know what is really happening. Could you please elaborate?
+> It means that the device informs the host that the L2P cache is no 
+> longer valid.
+> The spec doesn't say what to do in that case.
+
+Then it means that all the clean (without DIRTY flag set) HPB entries 
+(ppns)
+in active rgns in host memory side may not be valid to the device 
+anymore.
+Please correct me if I am wrong.
+
+> We thought that in host mode, it make sense to update all the active 
+> regions.
+
+But current logic does not set the state of the sub-regions (in active 
+regions) to
+INVALID, it only marks all active regions as UPDATE.
+
+Although one of subsequent read cmds shall put the sub-region back to 
+activate_list,
+ufshpb_test_ppn_dirty() can still return false, thus these read cmds 
+still think the
+ppns are valid and they shall move forward to send HPB Write Buffer 
+(buffer id = 0x2,
+in case of HPB2.0) and HPB Read cmds.
+
+HPB Read cmds with invalid ppns will be treated as normal Read cmds by 
+device as the
+specs says, but what would happen to HPB Write Buffer cmds (buffer id = 
+0x2, in case
+of HPB2.0) with invalid ppns? Can this be a real problem?
+
 > 
-> Arnd,
+> I think I will go with your suggestion.
+> Effectively, in host mode, since it is deactivating "cold" regions,
+> the lru list is kept relatively small, and contains only "hot" regions.
+
+hmm... I don't really have a idea on this, please go with whatever you 
+and Daejun think is fine here.
+
+Thanks,
+Can Guo.
+
 > 
-> > Actually that still feels wrong: the annotation of the struct is to
-> > pack every member, which causes the access to be done in byte units on
-> > architectures that do not have hardware unaligned load/store
-> > instructions, at least for things like atomic_read() that does not go
-> > through a cmpxchg() or ll/sc cycle.
+> Thanks,
+> Avri
 > 
-> > This change may fix itanium, but it's still not correct. Other
-> > architectures would have already been broken before the recent change,
-> > but that's not a reason against fixing them now.
-> 
-> I agree. I understand why there are restrictions on fields consumed by
-> the hardware. But for fields internal to the driver the packing doesn't
-> make sense to me.
-
-Jeepers -- that global #pragma pack(1) is bollocks.
-
-I think there are a couple of __u64 that are 32bit aligned.
-Just marking those field __packed __aligned(4) should have
-the desired effect.
-Or use a typedef for '__u64 with 32bit alignment'.
-(There probably ought to be one in types.h)
-
-Then add compile-time asserts that any non-trivial structures
-the hardware accesses are the right size.
-
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
+>> 
+>> Thanks,
+>> Can Guo.
+>> 
+>> > But yes, I can do that.
+>> > Better to get ack from Daejun first.
+>> >
+>> > Thanks,
+>> > Avri
+>> >
+>> >>
+>> >> Thanks,
+>> >> Can Guo.
+>> >>
+>> >> > +{
+>> >> > +     struct ufshpb_lu *hpb;
+>> >> > +     struct victim_select_info *lru_info;
+>> >> > +     struct ufshpb_region *rgn;
+>> >> > +     unsigned long flags;
+>> >> > +
+>> >> > +     hpb = container_of(work, struct ufshpb_lu, ufshpb_lun_reset_work);
+>> >> > +
+>> >> > +     lru_info = &hpb->lru_info;
+>> >> > +
+>> >> > +     spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+>> >> > +
+>> >> > +     list_for_each_entry(rgn, &lru_info->lh_lru_rgn, list_lru_rgn)
+>> >> > +             set_bit(RGN_FLAG_UPDATE, &rgn->rgn_flags);
+>> >> > +
+>> >> > +     spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+>> >> > +}
+>> >> > +
+>> >> >  static void ufshpb_normalization_work_handler(struct work_struct
+>> >> > *work)
+>> >> >  {
+>> >> >       struct ufshpb_lu *hpb;
+>> >> > @@ -1798,6 +1832,8 @@ static int ufshpb_alloc_region_tbl(struct
+>> >> > ufs_hba *hba, struct ufshpb_lu *hpb)
+>> >> >               } else {
+>> >> >                       rgn->rgn_state = HPB_RGN_INACTIVE;
+>> >> >               }
+>> >> > +
+>> >> > +             rgn->rgn_flags = 0;
+>> >> >       }
+>> >> >
+>> >> >       return 0;
+>> >> > @@ -2012,9 +2048,12 @@ static int ufshpb_lu_hpb_init(struct ufs_hba
+>> >> > *hba, struct ufshpb_lu *hpb)
+>> >> >       INIT_LIST_HEAD(&hpb->list_hpb_lu);
+>> >> >
+>> >> >       INIT_WORK(&hpb->map_work, ufshpb_map_work_handler);
+>> >> > -     if (hpb->is_hcm)
+>> >> > +     if (hpb->is_hcm) {
+>> >> >               INIT_WORK(&hpb->ufshpb_normalization_work,
+>> >> >                         ufshpb_normalization_work_handler);
+>> >> > +             INIT_WORK(&hpb->ufshpb_lun_reset_work,
+>> >> > +                       ufshpb_reset_work_handler);
+>> >> > +     }
+>> >> >
+>> >> >       hpb->map_req_cache = kmem_cache_create("ufshpb_req_cache",
+>> >> >                         sizeof(struct ufshpb_req), 0, 0, NULL);
+>> >> > @@ -2114,8 +2153,10 @@ static void ufshpb_discard_rsp_lists(struct
+>> >> > ufshpb_lu *hpb)
+>> >> >
+>> >> >  static void ufshpb_cancel_jobs(struct ufshpb_lu *hpb)
+>> >> >  {
+>> >> > -     if (hpb->is_hcm)
+>> >> > +     if (hpb->is_hcm) {
+>> >> > +             cancel_work_sync(&hpb->ufshpb_lun_reset_work);
+>> >> >               cancel_work_sync(&hpb->ufshpb_normalization_work);
+>> >> > +     }
+>> >> >       cancel_work_sync(&hpb->map_work);
+>> >> >  }
+>> >> >
+>> >> > diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+>> >> > index 84598a317897..37c1b0ea0c0a 100644
+>> >> > --- a/drivers/scsi/ufs/ufshpb.h
+>> >> > +++ b/drivers/scsi/ufs/ufshpb.h
+>> >> > @@ -121,6 +121,7 @@ struct ufshpb_region {
+>> >> >       struct list_head list_lru_rgn;
+>> >> >       unsigned long rgn_flags;
+>> >> >  #define RGN_FLAG_DIRTY 0
+>> >> > +#define RGN_FLAG_UPDATE 1
+>> >> >
+>> >> >       /* region reads - for host mode */
+>> >> >       spinlock_t rgn_lock;
+>> >> > @@ -217,6 +218,7 @@ struct ufshpb_lu {
+>> >> >       /* for selecting victim */
+>> >> >       struct victim_select_info lru_info;
+>> >> >       struct work_struct ufshpb_normalization_work;
+>> >> > +     struct work_struct ufshpb_lun_reset_work;
+>> >> >
+>> >> >       /* pinned region information */
+>> >> >       u32 lu_pinned_start;
