@@ -5,68 +5,70 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19667C41621
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3257C433E6
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF66864F37
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2DD964F37
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230401AbhCQJNw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 05:13:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42792 "EHLO
+        id S231246AbhCQJN6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 05:13:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230416AbhCQJNR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:13:17 -0400
-Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88A52C06175F
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:17 -0700 (PDT)
-Received: by mail-wr1-x42c.google.com with SMTP id e18so1004702wrt.6
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:17 -0700 (PDT)
+        with ESMTP id S230449AbhCQJN0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:13:26 -0400
+Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CDF3C06174A
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:15 -0700 (PDT)
+Received: by mail-wr1-x433.google.com with SMTP id e18so1004590wrt.6
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:13:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=nCn5H1/QIbfIGeplEbT1o6zOISUD7vSXkO5mBkf4PfU=;
-        b=Z23F2lfnZHIs7s7AqP3HTgAl6LmZWclA5RVsNpn8IsUOzzgA/Y1G/xEywmR5rTZURj
-         LDpoYlz/DT9LnOkK4VHUBY8u/JOiy1wseCY0kEvoUZFQzK8ZKAH+8s59Q594l0parmKx
-         +v4E3ZWFOhNfyFKUy+nR7yoiiF/mfTN/WyzKrT6oQ73Q58UgHO/s4RfXPO+qvl25fLp1
-         F9S6AwqR/ziE3kPa/lVy8JPH/buY0YVMY/9NlGibqSWEe4r4h4dVaZi5RanB89O+LHvw
-         tqPpZGm4wZm3TKj6qDr0inGpBV8zRZ/rpx3yHxRxAgfLdghkBFMzOzR4W55xvI1MrOFl
-         pnYA==
+        bh=zjBaHIzTXXyZcZh/hf2ALRdddAT/JJaP6MXXLDQdjD4=;
+        b=frmeAnhM5BxXjSAAx4w5jrrgvPMVg8We5PR8YNRtrjrjou/kpY0eN5VlPyUt1uMBwz
+         5pgCukGPGRBr3JtgaRtGLTn5Dm/eRNxjiWR+3fyrGaOmB+7c+d8hWn/QZQC3nD2YPcip
+         zcawozUVl6RKLbffmVFc8rn3WvIY/pWmUKIALM/4j6BC3nc9IfFL96cPz5dzB/Q44aig
+         Je7wqAWY+rkVoE0f38VC/07pxs8smswPJAvo/2Xob6wyxaeMM5fBDq7eeWpWpmwIdeVk
+         ec/7dJzxwW5XhSiUD4ReJc1xd/DG9Ze8uisLDncjEZt+ZQbbQ8pUuS4TAHr3zLhA8nUg
+         mQjw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=nCn5H1/QIbfIGeplEbT1o6zOISUD7vSXkO5mBkf4PfU=;
-        b=LS533IkxG8wMSiEq4t2LXzbN1eSuaXdfF9CU7GSD2B+0DCdcJSqhYqpEyuYhQk15wT
-         zF/puDXgwh59mX0bzg9BDIG6Tu9EjbGVMxoBR7hfLQ+0Zpu3D6ZHjcgXT+l9+QhcKEus
-         Mj6wyvVWCUrKzkp29/JzZte9nXOaixPuJS4wXrEnqMUT+mHKfLnQVVL9UL7COMl1cjTa
-         RUmDzgtQoPi5UROZvXQ3iOzYiRWkSLRIZWgINL6/mR4NFwbL/waPIw3A2JZAtD+jszWX
-         3JzuYUpRPaF6W4+9YymcNhcVsi8hvGCAC9XfrdjqywbvF+zZpX26hS3agoKfJnrptsP4
-         q6lA==
-X-Gm-Message-State: AOAM531GTRxEhPDdPJ86Cal4VnPoU+mB5Ws8hc6tFM4lBiR0MOHiEyaE
-        iHAiMuD6fsAU/BgEcr0bgCu5Pg==
-X-Google-Smtp-Source: ABdhPJxRav9dSnwsd2DWKrGi/Awk4vHnMvcslJTEsCpGHU6jEtb1uuH3ikGUKdTXwYpH5pu1l+qP2g==
-X-Received: by 2002:adf:ecca:: with SMTP id s10mr3196351wro.324.1615972396331;
-        Wed, 17 Mar 2021 02:13:16 -0700 (PDT)
+        bh=zjBaHIzTXXyZcZh/hf2ALRdddAT/JJaP6MXXLDQdjD4=;
+        b=jUOzxxjzQlZHemmO0s2qoErvfSsstJU+lvLd4PZBh+i/rcQWH7XW/07mP2yHyFEAqX
+         keQcK2QcqjDYLNhM5NChR0Rs0w9HZBGxSX3/1nGcp4AFJlp/x79WBfNPDmWCfuWOrViP
+         ldQduZIGx15uIK8WUSqZmxj5ZXqmaE/XiXN+Hxi80cCRzpVGsq2jGkoyR+QXAM0mgBws
+         mxKeb58xDsKa+WZQWzeZuNP756lXzd1BjhfVXohuCrUbNPGHznQm5zArWnbuh1hF7cnW
+         uITsebiHpz5hmgRtlEv81dpGQ6gOvl7ha1HE/wRvrnx5zXECKusf931FXlQDG9rESFLR
+         LY6A==
+X-Gm-Message-State: AOAM5317tJtpCWpr8a9EC3cVUvLpqHD67Xy20B05CdU/zcTWTzTb/NAC
+        IZpzgmDIFzrKlKpYVuDcP8Dh9Q==
+X-Google-Smtp-Source: ABdhPJxd2Igfnc0ZThXmRgnk6il2w5yk2KnyRALWuqCYxKTzjp9t0UMVPqDP7EJ1pMn5YEfJL7tisw==
+X-Received: by 2002:a5d:6c67:: with SMTP id r7mr1165491wrz.373.1615972394340;
+        Wed, 17 Mar 2021 02:13:14 -0700 (PDT)
 Received: from dell.default ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id e18sm12695886wru.73.2021.03.17.02.13.15
+        by smtp.gmail.com with ESMTPSA id e18sm12695886wru.73.2021.03.17.02.13.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 02:13:15 -0700 (PDT)
+        Wed, 17 Mar 2021 02:13:13 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org,
-        "Manoj N. Kumar" <manoj@linux.ibm.com>,
-        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
-        Uma Krishnan <ukrishn@linux.ibm.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH 36/36] scsi: cxlflash: vlun: Fix some misnaming related doc-rot
-Date:   Wed, 17 Mar 2021 09:12:30 +0000
-Message-Id: <20210317091230.2912389-37-lee.jones@linaro.org>
+        Brian King <brking@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH 34/36] scsi: ibmvscsi: ibmvfc: Fix a bunch of misdocumentation
+Date:   Wed, 17 Mar 2021 09:12:28 +0000
+Message-Id: <20210317091230.2912389-35-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210317091230.2912389-1-lee.jones@linaro.org>
 References: <20210317091230.2912389-1-lee.jones@linaro.org>
@@ -78,66 +80,202 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/cxlflash/vlun.c:48: warning: Function parameter or member 'release' not described in 'marshal_clone_to_rele'
- drivers/scsi/cxlflash/vlun.c:48: warning: Excess function parameter 'rele' description in 'marshal_clone_to_rele'
- drivers/scsi/cxlflash/vlun.c:238: warning: Function parameter or member 'bali' not described in 'validate_alloc'
- drivers/scsi/cxlflash/vlun.c:238: warning: Excess function parameter 'ba_lun_info' description in 'validate_alloc'
- drivers/scsi/cxlflash/vlun.c:308: warning: Function parameter or member 'to_clone' not described in 'ba_clone'
- drivers/scsi/cxlflash/vlun.c:308: warning: Excess function parameter 'to_free' description in 'ba_clone'
- drivers/scsi/cxlflash/vlun.c:369: warning: Function parameter or member 'lli' not described in 'init_vlun'
- drivers/scsi/cxlflash/vlun.c:369: warning: Excess function parameter 'lun_info' description in 'init_vlun'
+ drivers/scsi/ibmvscsi/ibmvfc.c:331: warning: Function parameter or member 'vhost' not described in 'ibmvfc_get_err_result'
+ drivers/scsi/ibmvscsi/ibmvfc.c:653: warning: Excess function parameter 'job_step' description in 'ibmvfc_del_tgt'
+ drivers/scsi/ibmvscsi/ibmvfc.c:773: warning: Function parameter or member 'queue' not described in 'ibmvfc_init_event_pool'
+ drivers/scsi/ibmvscsi/ibmvfc.c:773: warning: Function parameter or member 'size' not described in 'ibmvfc_init_event_pool'
+ drivers/scsi/ibmvscsi/ibmvfc.c:823: warning: Function parameter or member 'queue' not described in 'ibmvfc_free_event_pool'
+ drivers/scsi/ibmvscsi/ibmvfc.c:1413: warning: Function parameter or member 'vhost' not described in 'ibmvfc_gather_partition_info'
+ drivers/scsi/ibmvscsi/ibmvfc.c:1483: warning: Function parameter or member 'queue' not described in 'ibmvfc_get_event'
+ drivers/scsi/ibmvscsi/ibmvfc.c:1483: warning: Excess function parameter 'vhost' description in 'ibmvfc_get_event'
+ drivers/scsi/ibmvscsi/ibmvfc.c:1630: warning: Function parameter or member 't' not described in 'ibmvfc_timeout'
+ drivers/scsi/ibmvscsi/ibmvfc.c:1630: warning: Excess function parameter 'evt' description in 'ibmvfc_timeout'
+ drivers/scsi/ibmvscsi/ibmvfc.c:1893: warning: Function parameter or member 'shost' not described in 'ibmvfc_queuecommand'
+ drivers/scsi/ibmvscsi/ibmvfc.c:1893: warning: Excess function parameter 'done' description in 'ibmvfc_queuecommand'
+ drivers/scsi/ibmvscsi/ibmvfc.c:2324: warning: Function parameter or member 'rport' not described in 'ibmvfc_match_rport'
+ drivers/scsi/ibmvscsi/ibmvfc.c:2324: warning: Excess function parameter 'device' description in 'ibmvfc_match_rport'
+ drivers/scsi/ibmvscsi/ibmvfc.c:3133: warning: Function parameter or member 'evt_doneq' not described in 'ibmvfc_handle_crq'
+ drivers/scsi/ibmvscsi/ibmvfc.c:3317: warning: Excess function parameter 'reason' description in 'ibmvfc_change_queue_depth'
+ drivers/scsi/ibmvscsi/ibmvfc.c:3390: warning: Function parameter or member 'attr' not described in 'ibmvfc_show_log_level'
+ drivers/scsi/ibmvscsi/ibmvfc.c:3413: warning: Function parameter or member 'attr' not described in 'ibmvfc_store_log_level'
+ drivers/scsi/ibmvscsi/ibmvfc.c:3413: warning: Function parameter or member 'count' not described in 'ibmvfc_store_log_level'
+ drivers/scsi/ibmvscsi/ibmvfc.c:4121: warning: Function parameter or member 'done' not described in '__ibmvfc_tgt_get_implicit_logout_evt'
+ drivers/scsi/ibmvscsi/ibmvfc.c:4438: warning: Function parameter or member 't' not described in 'ibmvfc_adisc_timeout'
+ drivers/scsi/ibmvscsi/ibmvfc.c:4438: warning: Excess function parameter 'tgt' description in 'ibmvfc_adisc_timeout'
+ drivers/scsi/ibmvscsi/ibmvfc.c:4641: warning: Function parameter or member 'target' not described in 'ibmvfc_alloc_target'
+ drivers/scsi/ibmvscsi/ibmvfc.c:4641: warning: Excess function parameter 'scsi_id' description in 'ibmvfc_alloc_target'
+ drivers/scsi/ibmvscsi/ibmvfc.c:5068: warning: Function parameter or member 'evt' not described in 'ibmvfc_npiv_logout_done'
+ drivers/scsi/ibmvscsi/ibmvfc.c:5068: warning: Excess function parameter 'vhost' description in 'ibmvfc_npiv_logout_done'
 
-Cc: "Manoj N. Kumar" <manoj@linux.ibm.com>
-Cc: "Matthew R. Ochs" <mrochs@linux.ibm.com>
-Cc: Uma Krishnan <ukrishn@linux.ibm.com>
+Cc: Tyrel Datwyler <tyreld@linux.ibm.com>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>
 Cc: linux-scsi@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/cxlflash/vlun.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 29 ++++++++++++++++++-----------
+ 1 file changed, 18 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
-index f1406ac77b0d5..01917b28cdb65 100644
---- a/drivers/scsi/cxlflash/vlun.c
-+++ b/drivers/scsi/cxlflash/vlun.c
-@@ -41,7 +41,7 @@ static void marshal_virt_to_resize(struct dk_cxlflash_uvirtual *virt,
- /**
-  * marshal_clone_to_rele() - translate clone to release structure
-  * @clone:	Source structure from which to translate/copy.
-- * @rele:	Destination structure for the translate/copy.
-+ * @release:	Destination structure for the translate/copy.
-  */
- static void marshal_clone_to_rele(struct dk_cxlflash_clone *clone,
- 				  struct dk_cxlflash_release *release)
-@@ -229,7 +229,7 @@ static u64 ba_alloc(struct ba_lun *ba_lun)
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index a38d9d5d90ba3..a7a9b647ea178 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -326,6 +326,7 @@ static const char *ibmvfc_get_cmd_error(u16 status, u16 error)
  
  /**
-  * validate_alloc() - validates the specified block has been allocated
-- * @ba_lun_info:	LUN info owning the block allocator.
-+ * @bali:		LUN info owning the block allocator.
-  * @aun:		Block to validate.
+  * ibmvfc_get_err_result - Find the scsi status to return for the fcp response
++ * @vhost:      ibmvfc host struct
+  * @vfc_cmd:	ibmvfc command struct
   *
-  * Return: 0 on success, -1 on failure
-@@ -300,7 +300,7 @@ static int ba_free(struct ba_lun *ba_lun, u64 to_free)
+  * Return value:
+@@ -650,8 +651,6 @@ static void ibmvfc_reinit_host(struct ibmvfc_host *vhost)
  /**
-  * ba_clone() - Clone a chunk of the block allocation table
-  * @ba_lun:	Block allocator from which to allocate a block.
-- * @to_free:	Block to free.
-+ * @to_clone:	Block to clone.
+  * ibmvfc_del_tgt - Schedule cleanup and removal of the target
+  * @tgt:		ibmvfc target struct
+- * @job_step:	job step to perform
+- *
+  **/
+ static void ibmvfc_del_tgt(struct ibmvfc_target *tgt)
+ {
+@@ -768,6 +767,8 @@ static int ibmvfc_send_crq_init_complete(struct ibmvfc_host *vhost)
+ /**
+  * ibmvfc_init_event_pool - Allocates and initializes the event pool for a host
+  * @vhost:	ibmvfc host who owns the event pool
++ * @queue:      ibmvfc queue struct
++ * @size:       pool size
   *
-  * Return: 0 on success, -1 on failure
-  */
-@@ -361,7 +361,7 @@ void cxlflash_ba_terminate(struct ba_lun *ba_lun)
+  * Returns zero on success.
+  **/
+@@ -820,6 +821,7 @@ static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost,
+ /**
+  * ibmvfc_free_event_pool - Frees memory of the event pool of a host
+  * @vhost:	ibmvfc host who owns the event pool
++ * @queue:      ibmvfc queue struct
+  *
+  **/
+ static void ibmvfc_free_event_pool(struct ibmvfc_host *vhost,
+@@ -1414,6 +1416,7 @@ static int ibmvfc_issue_fc_host_lip(struct Scsi_Host *shost)
  
  /**
-  * init_vlun() - initializes a LUN for virtual use
-- * @lun_info:	LUN information structure that owns the block allocator.
-+ * @lli:	LUN information structure that owns the block allocator.
+  * ibmvfc_gather_partition_info - Gather info about the LPAR
++ * @vhost:      ibmvfc host struct
   *
-  * Return: 0 on success, -errno on failure
-  */
+  * Return value:
+  *	none
+@@ -1484,7 +1487,7 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+ 
+ /**
+  * ibmvfc_get_event - Gets the next free event in pool
+- * @vhost:	ibmvfc host struct
++ * @queue:      ibmvfc queue struct
+  *
+  * Returns a free event from the pool.
+  **/
+@@ -1631,7 +1634,7 @@ static int ibmvfc_map_sg_data(struct scsi_cmnd *scmd,
+ 
+ /**
+  * ibmvfc_timeout - Internal command timeout handler
+- * @evt:	struct ibmvfc_event that timed out
++ * @t:	struct ibmvfc_event that timed out
+  *
+  * Called when an internally generated command times out
+  **/
+@@ -1892,8 +1895,8 @@ static struct ibmvfc_cmd *ibmvfc_init_vfc_cmd(struct ibmvfc_event *evt, struct s
+ 
+ /**
+  * ibmvfc_queuecommand - The queuecommand function of the scsi template
++ * @shost:	scsi host struct
+  * @cmnd:	struct scsi_cmnd to be executed
+- * @done:	Callback function to be called when cmnd is completed
+  *
+  * Returns:
+  *	0 on success / other on failure
+@@ -2324,7 +2327,7 @@ static int ibmvfc_reset_device(struct scsi_device *sdev, int type, char *desc)
+ /**
+  * ibmvfc_match_rport - Match function for specified remote port
+  * @evt:	ibmvfc event struct
+- * @device:	device to match (rport)
++ * @rport:	device to match
+  *
+  * Returns:
+  *	1 if event matches rport / 0 if event does not match rport
+@@ -3135,8 +3138,9 @@ static void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
+  * ibmvfc_handle_crq - Handles and frees received events in the CRQ
+  * @crq:	Command/Response queue
+  * @vhost:	ibmvfc host struct
++ * @evt_doneq:	Event done queue
+  *
+- **/
++**/
+ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost,
+ 			      struct list_head *evt_doneq)
+ {
+@@ -3317,7 +3321,6 @@ static int ibmvfc_slave_configure(struct scsi_device *sdev)
+  * ibmvfc_change_queue_depth - Change the device's queue depth
+  * @sdev:	scsi device struct
+  * @qdepth:	depth to set
+- * @reason:	calling context
+  *
+  * Return value:
+  * 	actual depth set
+@@ -3389,6 +3392,7 @@ static ssize_t ibmvfc_show_host_capabilities(struct device *dev,
+ /**
+  * ibmvfc_show_log_level - Show the adapter's error logging level
+  * @dev:	class device struct
++ * @attr:	unused
+  * @buf:	buffer
+  *
+  * Return value:
+@@ -3411,7 +3415,9 @@ static ssize_t ibmvfc_show_log_level(struct device *dev,
+ /**
+  * ibmvfc_store_log_level - Change the adapter's error logging level
+  * @dev:	class device struct
++ * @attr:	unused
+  * @buf:	buffer
++ * @count:      buffer size
+  *
+  * Return value:
+  * 	number of bytes printed to buffer
+@@ -4121,6 +4127,7 @@ static void ibmvfc_tgt_implicit_logout_done(struct ibmvfc_event *evt)
+ /**
+  * __ibmvfc_tgt_get_implicit_logout_evt - Allocate and init an event for implicit logout
+  * @tgt:		ibmvfc target struct
++ * @done:		Routine to call when the event is responded to
+  *
+  * Returns:
+  *	Allocated and initialized ibmvfc_event struct
+@@ -4437,7 +4444,7 @@ static void ibmvfc_tgt_adisc_cancel_done(struct ibmvfc_event *evt)
+ 
+ /**
+  * ibmvfc_adisc_timeout - Handle an ADISC timeout
+- * @tgt:		ibmvfc target struct
++ * @t:		ibmvfc target struct
+  *
+  * If an ADISC times out, send a cancel. If the cancel times
+  * out, reset the CRQ. When the ADISC comes back as cancelled,
+@@ -4640,7 +4647,7 @@ static void ibmvfc_tgt_query_target(struct ibmvfc_target *tgt)
+ /**
+  * ibmvfc_alloc_target - Allocate and initialize an ibmvfc target
+  * @vhost:		ibmvfc host struct
+- * @scsi_id:	SCSI ID to allocate target for
++ * @target:		Holds SCSI ID to allocate target forand the WWPN
+  *
+  * Returns:
+  *	0 on success / other on failure
+@@ -5070,7 +5077,7 @@ static void ibmvfc_npiv_login(struct ibmvfc_host *vhost)
+ 
+ /**
+  * ibmvfc_npiv_logout_done - Completion handler for NPIV Logout
+- * @vhost:		ibmvfc host struct
++ * @evt:		ibmvfc event struct
+  *
+  **/
+ static void ibmvfc_npiv_logout_done(struct ibmvfc_event *evt)
 -- 
 2.27.0
 
