@@ -2,57 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-18.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,MIME_NO_TEXT,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18B1AC433E9
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 19:09:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EAB5C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 19:10:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC73364F53
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 19:09:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E926364F26
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 19:10:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232964AbhCQTJH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 15:09:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59194 "EHLO
+        id S232996AbhCQTJl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 15:09:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232207AbhCQTIn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 15:08:43 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31B16C06174A
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 12:08:43 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id z5so1242282plg.3
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 12:08:43 -0700 (PDT)
+        with ESMTP id S233077AbhCQTJV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 15:09:21 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89DC2C06174A
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 12:09:21 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id l3so1803756pfc.7
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 12:09:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=xLYvuPoW4vB7uFqf5ny2dg4MXZE/HYnKFSiDcGPxYeQ=;
-        b=N8ITJhIQcjpBPqQN+BYq1UNv3FG6idlM/ivP9qscijU3LvEKsfg2mF9e7B0TeOao69
-         wf267oQQj5gH7/LhjqOZrr8U5nmBspuM4jtIjJOlHZypX0k3dLdufqOaWKp8efl5KIye
-         oeTJJQW5KCAbDIq92znJFlBt+H3L4D9+d8984=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=lH22rRiKdd/8JzUmI1iuB5JVs6A77Il6ygiTKT2K8eI=;
+        b=ObsgGxHpgXW2DLD9MCPRpS9pox7WcI4e0w1LRcSKArcaLRw571opGEsh/WhrxknXFg
+         ijiOAR6AV/7nhGi1blucFxvwPCj79pejPxD01jseXHShuLp9IqP/ACJGWLrJvPGblPNB
+         7H5CqseAA1UJgRSflQHPMMZjOvDNp75qfB3u8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=xLYvuPoW4vB7uFqf5ny2dg4MXZE/HYnKFSiDcGPxYeQ=;
-        b=ak7+l4l/PSZDHWLiSyDR2jpNFpUfvdm7Xbr8zvnv0uojHzvhP0PXHTgxdIqNurBoSF
-         Kn7mAVEAnT06oaGq6bFwI5EPsUX8wLipbAJpfPyUrat+BHS0WxR63p+DcURGdZ72tVQT
-         g667KD7Uedq6DBLlB4tAPLL8MyMjl427GhUD4KBN3HYHG5YFIPhBPRXLziWV+KHQwCYW
-         Qo3tjLp2ji/b4rG9Aoc8ub7MM9dgDr8d5z21us6HlijUsdZk6l/3iYNhxVdm2vCQa4GG
-         Y5qkk0+vT2f9nSnyeNJTFt09koypCsL4C6jp0OQBkCk4hn4VqqyWXPbQnOwvRKuLX1Tj
-         Tpvg==
-X-Gm-Message-State: AOAM532Lj7yvXE233cHyzci0EXkoE4wwOXRmk7oUJIcoPNzfV8fa2sGO
-        YmTJu3gXItGl03R3zPR5Ez/VbzKrre/Id4BNdrw/p/dx9yO7y4ZN/KgP8IrI1PnhoAJDdc1SIfh
-        TXepPNpcnIGQEKiy02a9HwNeM0C9otl15WSdNfqsZJh9KufNjBJyE4JKUqxdSuwHEJkolmk4/2k
-        Ms0J0kPEUAMQYM
-X-Google-Smtp-Source: ABdhPJwBDSsuoke7elH8tAib4UbRiygSlucagI119cx5gTrMZJ4ETPzZE7lsQMdhShPtp9DEljAYcQ==
-X-Received: by 2002:a17:90a:c257:: with SMTP id d23mr343593pjx.102.1616008122125;
-        Wed, 17 Mar 2021 12:08:42 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=lH22rRiKdd/8JzUmI1iuB5JVs6A77Il6ygiTKT2K8eI=;
+        b=NlhSpCZT6nw8BrH1Mcl21my9Cpcwbsb0uJuwl765+nWRkvZxDu75o3aFzCgSFHipJU
+         qwIv5PoGtAu9ijMP6sUgFbJJ0UfVW8H+ExVmnWGj5AOL5iglmU3rYbRlCr77CAb/A6s1
+         MOb56G8/RRPh79z2tDm96k2NmFe0leWxnkEm3vg4lY9KUZmrRhIvfP6wbpEL8wKsPX31
+         UkkqNHEAmPSxTt8sBlaAlaliQzdyxOZJxUPnrutxqxqFTTPDuYSrdHCrzQDgnm9QU5P/
+         oR4SybcXRdBL16BEtGlRWzv8yQM7Khd9zvbLqWrXNbK14SBt3e+w7HwywTan8fmflPC6
+         wtoQ==
+X-Gm-Message-State: AOAM531Dv3/6+YTOhRx6EdyJ1mgGb4cigsSbr/+rBBZEULuXM/AjQ1a5
+        6R/C7w0Q2p+1P5mokcP8CeaTsR5HYyeCSwkoF5ds6+DUNfXraqZS5c0xBVOVeGcrobULBQ7r0M6
+        XBUXYSHUVeygnXE8xJ52Ef5hCt1I+ne6RKZ6IOyx8LA73RqBux05YI9FgQCwvbarOkuTTkMWO2J
+        2yPCZvvDNMJ1em
+X-Google-Smtp-Source: ABdhPJxoQfkr2wyiVLt8p23ouX63OuH3SY0eyDspqWt45ACTCbi/jj6uk3kzp1zLoD2XyeaVK1U3Xg==
+X-Received: by 2002:a63:d70e:: with SMTP id d14mr3731475pgg.291.1616008160434;
+        Wed, 17 Mar 2021 12:09:20 -0700 (PDT)
 Received: from dhcp-10-123-20-75.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id w2sm20569437pgh.54.2021.03.17.12.08.38
+        by smtp.gmail.com with ESMTPSA id w2sm20569437pgh.54.2021.03.17.12.09.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 12:08:40 -0700 (PDT)
+        Wed, 17 Mar 2021 12:09:19 -0700 (PDT)
 From:   Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
@@ -60,39 +61,205 @@ Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
         sasikumar.pc@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
         anand.lodnoor@broadcom.com,
         Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH 0/5] megaraid_sas: Update driver version to 07.717.01.00-rc1
-Date:   Thu, 18 Mar 2021 00:38:19 +0530
-Message-Id: <20210317190824.3050-1-chandrakanth.patil@broadcom.com>
+Subject: [PATCH 3/5] megaraid_sas: Early detection of VD deletion through RaidMap update
+Date:   Thu, 18 Mar 2021 00:38:22 +0530
+Message-Id: <20210317190824.3050-4-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.18.1
+In-Reply-To: <20210317190824.3050-1-chandrakanth.patil@broadcom.com>
+References: <20210317190824.3050-1-chandrakanth.patil@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000019cecc05bdc03665"
+        boundary="00000000000062183705bdc0380d"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000019cecc05bdc03665
+--00000000000062183705bdc0380d
 
-This patchset contains few critical fixes and enhancements.
+Consider in a case, when a VD is deleted and the targetID of
+that VD is assigned to a newly created VD. If the sequence of
+deletion/addition of VD happens very quickly, there is a possibility
+that second event(VD add) occurs even before the driver processes the
+first event(VD delete).
+As event processing is done in deferred context the device list
+remains same(but targetID is re-used) so driver will not learn the
+VD deletion/additon and IOs meant for older VD will be directed to
+new VD which may lead to data corruption.
 
-Chandrakanth Patil (5):
-  megaraid_sas: Send all non-RW IOs for TYPE_ENCLOSURE device through
-    firmware
-  megaraid_sas: Fix the resource leak in case of probe failure
-  megaraid_sas: Early detection of VD deletion through RaidMap update
-  megaraid_sas: Handle missing interrupts while re-enabling IRQs
-  megaraid_sas: Update driver version to 07.717.01.00-rc1
+In new design, driver will detect the deleted VD as soon as possible
+based on the RaidMap update and blocks further IOs to that device.
 
- drivers/scsi/megaraid/megaraid_sas.h        |  8 ++-
- drivers/scsi/megaraid/megaraid_sas_base.c   | 76 ++++++++++++++++++++-
- drivers/scsi/megaraid/megaraid_sas_fp.c     |  6 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 33 ++++++---
- 4 files changed, 110 insertions(+), 13 deletions(-)
+Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+---
+ drivers/scsi/megaraid/megaraid_sas.h      |  3 ++
+ drivers/scsi/megaraid/megaraid_sas_base.c | 61 ++++++++++++++++++++++-
+ drivers/scsi/megaraid/megaraid_sas_fp.c   |  6 ++-
+ 3 files changed, 67 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 0f808d63580e..d7185aa21eb5 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2023,6 +2023,7 @@ union megasas_frame {
+ struct MR_PRIV_DEVICE {
+ 	bool is_tm_capable;
+ 	bool tm_busy;
++	bool device_removed_by_fw;
+ 	atomic_t r1_ldio_hint;
+ 	u8 interface_type;
+ 	u8 task_abort_tmo;
+@@ -2323,6 +2324,8 @@ struct megasas_instance {
+ 	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
+ 	struct megasas_pd_list          local_pd_list[MEGASAS_MAX_PD];
+ 	u8 ld_ids[MEGASAS_MAX_LD_IDS];
++	u8 ld_ids_prev[MEGASAS_MAX_LD_IDS];
++	u8 ld_ids_from_raidmap[MEGASAS_MAX_LD_IDS];
+ 	s8 init_id;
+ 
+ 	u16 max_num_sge;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 7ab741f03b84..f3716f7e1d10 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -426,6 +426,12 @@ megasas_decode_evt(struct megasas_instance *instance)
+ 			(class_locale.members.locale),
+ 			format_class(class_locale.members.class),
+ 			evt_detail->description);
++
++	if (megasas_dbg_lvl & LD_PD_DEBUG)
++		dev_info(&instance->pdev->dev,
++			 "evt_detail.args.ld.target_id/index %d/%d\n",
++			 evt_detail->args.ld.target_id, evt_detail->args.ld.ld_index);
++
+ }
+ 
+ /*
+@@ -1802,7 +1808,8 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	}
+ 
+ 	mr_device_priv_data = scmd->device->hostdata;
+-	if (!mr_device_priv_data) {
++	if (!mr_device_priv_data ||
++	    mr_device_priv_data->device_removed_by_fw) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
+ 		return 0;
+@@ -3491,6 +3498,39 @@ megasas_complete_abort(struct megasas_instance *instance,
+ 	}
+ }
+ 
++void
++megasas_set_sdev_removed_by_fw(struct megasas_instance *instance)
++{
++	struct scsi_device *sdev;
++	struct MR_PRIV_DEVICE *mr_device_priv_data;
++	uint channel, id, i;
++
++	for (i = 0; (i < MEGASAS_MAX_LD_IDS); i++) {
++		if (instance->ld_ids_prev[i] != 0xff &&
++		    instance->ld_ids_from_raidmap[i] == 0xff) {
++			channel = MEGASAS_MAX_PD_CHANNELS +
++					(instance->ld_ids_prev[i] /
++					MEGASAS_MAX_DEV_PER_CHANNEL);
++			id = (instance->ld_ids_prev[i] %
++				MEGASAS_MAX_DEV_PER_CHANNEL);
++
++			if (megasas_dbg_lvl & LD_PD_DEBUG)
++				dev_info(&instance->pdev->dev,
++					 "index %d old 0x%x new 0x%x from %s\n",
++					 i, instance->ld_ids_prev[i],
++					 instance->ld_ids_from_raidmap[i],
++					 __func__);
++
++			sdev = scsi_device_lookup(instance->host, channel, id, 0);
++			if (sdev) {
++				mr_device_priv_data = sdev->hostdata;
++				mr_device_priv_data->device_removed_by_fw = true;
++				scsi_device_put(sdev);
++			}
++		}
++	}
++}
++
+ /**
+  * megasas_complete_cmd -	Completes a command
+  * @instance:			Adapter soft state
+@@ -3656,6 +3696,10 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
+ 			megasas_sync_map_info(instance);
+ 			spin_unlock_irqrestore(instance->host->host_lock,
+ 					       flags);
++
++			if (instance->adapter_type >= INVADER_SERIES)
++				megasas_set_sdev_removed_by_fw(instance);
++
+ 			break;
+ 		}
+ 		if (opcode == MR_DCMD_CTRL_EVENT_GET_INFO ||
+@@ -8764,8 +8808,10 @@ megasas_aen_polling(struct work_struct *work)
+ 	union megasas_evt_class_locale class_locale;
+ 	int event_type = 0;
+ 	u32 seq_num;
++	u16 ld_target_id;
+ 	int error;
+ 	u8  dcmd_ret = DCMD_SUCCESS;
++	struct scsi_device *sdev1;
+ 
+ 	if (!instance) {
+ 		printk(KERN_ERR "invalid instance!\n");
+@@ -8788,12 +8834,23 @@ megasas_aen_polling(struct work_struct *work)
+ 			break;
+ 
+ 		case MR_EVT_LD_OFFLINE:
+-		case MR_EVT_CFG_CLEARED:
+ 		case MR_EVT_LD_DELETED:
++			ld_target_id = instance->evt_detail->args.ld.target_id;
++			sdev1 = scsi_device_lookup(instance->host,
++						   MEGASAS_MAX_PD_CHANNELS +
++						   (ld_target_id / MEGASAS_MAX_DEV_PER_CHANNEL),
++						   (ld_target_id - MEGASAS_MAX_DEV_PER_CHANNEL),
++						   0);
++			if (sdev1)
++				megasas_remove_scsi_device(sdev1);
++
++			event_type = SCAN_VD_CHANNEL;
++			break;
+ 		case MR_EVT_LD_CREATED:
+ 			event_type = SCAN_VD_CHANNEL;
+ 			break;
+ 
++		case MR_EVT_CFG_CLEARED:
+ 		case MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED:
+ 		case MR_EVT_FOREIGN_CFG_IMPORTED:
+ 		case MR_EVT_LD_STATE_CHANGE:
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+index b6c08d620033..470b9797dd65 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fp.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+@@ -349,6 +349,10 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance, u64 map_id)
+ 
+ 	num_lds = le16_to_cpu(drv_map->raidMap.ldCount);
+ 
++	memcpy(instance->ld_ids_prev,
++	       instance->ld_ids_from_raidmap,
++	       sizeof(instance->ld_ids_from_raidmap));
++	memset(instance->ld_ids_from_raidmap, 0xff, MEGASAS_MAX_LD_IDS);
+ 	/*Convert Raid capability values to CPU arch */
+ 	for (i = 0; (num_lds > 0) && (i < MAX_LOGICAL_DRIVES_EXT); i++) {
+ 		ld = MR_TargetIdToLdGet(i, drv_map);
+@@ -359,7 +363,7 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance, u64 map_id)
+ 
+ 		raid = MR_LdRaidGet(ld, drv_map);
+ 		le32_to_cpus((u32 *)&raid->capability);
+-
++		instance->ld_ids_from_raidmap[ld] = i;
+ 		num_lds--;
+ 	}
+ 
 -- 
 2.18.1
 
 
---00000000000019cecc05bdc03665
+--00000000000062183705bdc0380d
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -163,14 +330,14 @@ Zpnb0pToIvDm+Ur3N2MiX3nSNdXYjeMdwB0OAs05pMciX6VfrXagLKEdSRHtOo/W/JA7fToB0eJS
 Ky1ZxnSRQGTL4yIIMw43kd0GQyTIM6KyMy8uprn32g7HcYJf07P/tjC196OWjB5Qr7dSv3vtjU8N
 2J0Xc13/AGfXSZ8xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgxLE6Al5lQBqzmVPS8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIB0N6+Dt
-Gkjq2x3ry9H/zHLY/6Vi+MA4hxmcxH41/1qhMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIxMDMxNzE5MDg0MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgxLE6Al5lQBqzmVPS8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINxNog8Z
+0JiubkVJVIKK1oO5ODlEfG1MUHFrEgwoJpOkMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIxMDMxNzE5MDkyMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAaw8i7AYiPUz0sR108vXlL3T+S
-ZwatCfFybPH5lXFK9fHZUd4xijhGlrwu0n3CU416vZt+/3BhxVreY8kJRI2yQ8XAujnceqkq3vAy
-5cRqt9GThIwZA3mkQjXMJcJCp3OLyJARv6GTLBUXKj9OAgvuOfdqRwJAfCnv84C2x1+htTwb3UUq
-mwq8+jRHtTqHbf8Ys3uV5/nL/YYRKv5xgiLdY+1IIvKylgVKQG0DijJbU0wifA4vMkM4T6/mTHgL
-avmBkoRItAyYAgrkT+205UrGefqJ/xesj47X73YDxP46OL68PlcSNp7hyTAwQYS0KENyDod+hY0Q
-mqZpPc9iz3iz
---00000000000019cecc05bdc03665--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC4oNMkdIkjVkqlpTWRGgeuQqXa
+8y/vW8w5wcvR/0Nx29TTwDl24ZW10O4w3w4BcKCz+PY55vRO8oBfi+I9Tc2gMX+8ioZoCkQJz6oj
+1k2ytQd72pEpMEZ4bhDYtwfeFVt6X0UIS8YOzR7ZS30ZzkWRKJp96EGEEKz+bLOO+wJ21O1R+42Y
+Dz8MmKZzz4uyvmmVeBR9gi2XuXEv9TG7xXBAw+bxKoB1qqQjg04H+kMTrN1MW410tG30oWipJHuh
+QwGCNH9JqTul/HUESuDHwqKhbVRlIAzAWl7PK1PYSViKnRTTrVbKaxQCLjf9s2lvkjWLtPebHith
+OrZ9WfefKQ7R
+--00000000000062183705bdc0380d--
