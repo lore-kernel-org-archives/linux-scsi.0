@@ -7,391 +7,408 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0D72C433E6
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 14:03:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6288C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 14:23:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74E3C64F67
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 14:03:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95C3164F21
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 14:23:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231450AbhCQOC4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 10:02:56 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:55158 "EHLO
+        id S231396AbhCQOWv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 10:22:51 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:34546 "EHLO
         esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229809AbhCQOC1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 10:02:27 -0400
+        with ESMTP id S230438AbhCQOWr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 10:22:47 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1615989748; x=1647525748;
+  t=1615990968; x=1647526968;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=m2FacuBUTADm58nxdI+02zr9kfTLgsIaGE6/CWrFQEI=;
-  b=Jyc5aLt7/cSb03foBJmkNjlE9zdIv4w3nE701qhEsBV7QN3RvQzOCw/S
-   I2sancoWpGWRPTFONQmUzTxnYHNt1fFdrkbcKwUCkb3LbVxSzEf7ROpTI
-   A1JZt4nlBYvLTfLLoyIkerIirnUJJO1lWzVhSRYTfkigS9ZW0UNqsLAFK
-   5PJhZb69LRNmWV5ltk/ZP/lcqOw/6VdMeLhhti4jkAtnmAcvF4VFx2N5E
-   gNpZSNYZqL/8fr2T/C6KpNR3dA1l6Ll2elTP3eHOKiHdbun4QhlUBU6ad
-   Uqi/a5UGvbKT4xyE6wN2NfapqNdCd+neAgyXdAlVYC5j0juRw1wTHlP4A
+  bh=aERoXEb0J10683SV6t7cHw/ssRa9wLW52tmUY65KSNo=;
+  b=fiAzo61cj55DHrRsE4czUENLG6n/rTQBotQN4yM14z2MlqVAv0hIcXmO
+   f7dTCC0H5YeknB/ct6zW19nL6xFFesmmvKlzQOpvR5swDqjMMMSYgWaZH
+   sAj6phgRsSZWOJu735p/qKML3G4aoNRlfJczACLZm1p2n29swsw5Ap47A
+   AMZdifR581GujEZycjj9VtctcUhGSL+L/1zQF7eWNsL05qm+tVzlJktI8
+   WkslG2g1k70aQwHDlkwukczOCHQhnSIxHe42va4iHpLL3yyHpvvpvYlgx
+   sQkbwUuP7S89sa1iaD5+iPV/oi1MVySz5m8CDK8MEBhuc61Yogb9xyBfv
    A==;
-IronPort-SDR: g46nm0mCGWTph2MfCxYy0jeJkpDy8EKKn4wPOE6WPST3e+P2yrqUd6fhx+8/v0V1e53Or5qe9C
- P8qXWDai//cKUOUWfT2yLsRcFCSVSPzV4zN8kyzj/+N0KVUuj/oydia3ai3Ig+vctnTEfUMSHy
- IRThzdYWdO+luoZDat8+CfJ4WqVvmtyw5sKuSoScIE3xfzBx+UiL8uIpzDKSSMp0aiWdYVoi3M
- La6+dQeOAJrDQ4kGP9ViiUVtZ+wR2F4FLtNCgzs84IyaJtpOG5Q4wEpII7iBbvdi+2wp8CIii6
- ttg=
+IronPort-SDR: NBRXwod9b6tYeeklOdMw3bFfGrWrJwkIirR3L8ByY1uTKnQhlEEcUZMRQGRLv5pp6CyjR2vFN/
+ xPfxzLcJOx2x96li3IjJQDTOb3E6hkew5dKKNpxdwf6z9tta6EkQzU1Pk8I8QarRzcoptVe7Dl
+ LsC6DtsaSEmN807Wa85awte4Qhsuu+MsiEOBQCwCMiF0MkmF7HU6dwFaOV21Qtw32khhvThyjx
+ e9UngPpUzgyRiTiQECGAtLV9LAsB/1ofbx7AaLK16TmXME5Ovv+KxZuULJbNBUQBzAePvtmCOV
+ zsw=
 X-IronPort-AV: E=Sophos;i="5.81,256,1610380800"; 
-   d="scan'208";a="163509455"
-Received: from mail-co1nam11lp2175.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.175])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Mar 2021 22:02:26 +0800
+   d="scan'208";a="163511067"
+Received: from mail-mw2nam12lp2041.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.41])
+  by ob1.hgst.iphmx.com with ESMTP; 17 Mar 2021 22:22:46 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lmbJN3DkRFcufj4HOdr2TqMsFchy84WBOEOk1wWqBmqm0OpYVSERpVm8gdTgqDaL7VMyqe3xPyF7LgyT4Q9ewrFuYITUd/aaStmzRDxJWs1F1kBz/iMEH1mjSe3JJDeazHGGy7aJqUUtwRLanBSXbX1hNQ886wNDCawXpyU2/uAdOKjekRV1trF+QsWds/QNGSjqCkbe0EDILs121KH18DaNnHaOXxlDdhl37ek227IMp8H2DUOuBDMF4VP+QiblUqRv1oY2hehPQMU41DrYEFYdSYP71syRKajjOKawRm0SUYTnxdpBDSmnjhULXAJ7ESxNK8fSvvi3N6m1s7E4mw==
+ b=oZBxGaG7jRijqWnHCCGdBsx1xUD+dHQNHU2fdsZXkeRIJPPmWQIe3xSnAoDXF0bB3m5e/FvU7zweSt/vxvNJKrMhAyrcNn1eQ3dbQU49oW8R1ozkfYNiFrXatDGX1fHc8pUOHXzFMDBhCIPI6C0fEzyxrVZZeUohVm69b6sCpqAT5I2N7bwOscKbyNbwyz0CJG8WnQDLNAYmsX+rkUKPvIdn2ZbX+WddwreN7e0I1KC2GbI8c1dJdYyJiqwatvI89K2IPsRxvrpUAHtwk/IoqnHZzgbBMxwsPudtAknTdepvK3Y8v7DFdVf4DwMKbzVfCnHhsRSQwSP13KQE3fwA4g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=261xfYSeDoaGbxCy0IC5+RBT0LNAAUeKp6Fk36YUnOg=;
- b=CFPp94bFOr67+6YMbl8qRgyf8RiSgRfux7+2T1HQjKV/CXgM3oG+JQ/LAG7Fgbq3ZGI4TBq1dvCFKMNIrxveEnzy/hLTzY0onNOyCdJiprhfcITS1GHl+Sa1snMTIXzsD7a6FqFoY3MOWLdZUBXSLKwq0yr7d/9N3ig4sapYpeaS1bR8Qkr1/b3QZhozDa8dWsRMOjiesda9ITwXL+vxU7cBzhOy6rFreZTlw+fNZ2qO9D4KGB+m2KVZPo2yzGsv/VnccFSWfnMr4pbIPtu/AS3CcBpYUJm8rvoj1ov1cn9xWTzMiEtDAkGy9Ik7v3OF449qZKykTDdIpyWvi2NPsQ==
+ bh=LqrCw9hCCvJln4RB6K3dK4ncMBg0sy0NrZ44xPBdbc0=;
+ b=XIuqSRIiQq9XlP+hP0S9kyGMk1q6tD+ej41CHBsNHtjhcrXnQ2OHUHBbwV3To5o97uHMRQ1RfBPD4PY073ddThJzVjsOOeovKRlbpJXPmxJzOnocNpp8tHZNr6OKmmx4T/sNp1/ZNHxvANPC80Iq9GTpgZO4etUNvNoNl1q596/wp4oH/aHSeAVR1UJIIts9IjaMmdNeZ1HDShkWV2MkSa0bLWqGbc7nsXQ1UlsNJRjf9QIqJEavIUqRixWYWfoBMazI2SXGOVN8Y4BRL8dHtbAlRIP7CuAiStkzprd7KcunbHgZdIZazglJjXNh7InRkzUtbdVxZmmYdeuCsRnPAg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=261xfYSeDoaGbxCy0IC5+RBT0LNAAUeKp6Fk36YUnOg=;
- b=N4ySEwxCkxWPMNN98bw8RBsXfufzjWGvML27veEhdioQFrfzE/ZE7f0hmGAZxsaWaEK5gdRilblAIr+ldvjCLlPsul/VXfFzNnvO8MoNzJh9RW5GnsHgLxEv7txClZe1nX/UqtRsaCuMnsVgg/qPtifxedbp5wOE+YPO2DpTYsY=
+ bh=LqrCw9hCCvJln4RB6K3dK4ncMBg0sy0NrZ44xPBdbc0=;
+ b=nn6XHFXYzjcNywhP/yLjDDBB0S90cDhriRljVIV8TefHqhLay1DTLZcqA5GjG9KYIhCCSQwYxjN+LfDPl7DlTBSiCGqFd+DsQiXvSmbKL7QUd0HiLOQKkABHQJt44Yt3cHAZAE7ZtRbPTushyhJKbJ1Q/28s2tGoR8euu7ZJDc8=
 Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB6589.namprd04.prod.outlook.com (2603:10b6:5:1ba::18) with Microsoft
+ DM5PR04MB0973.namprd04.prod.outlook.com (2603:10b6:4:41::33) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3933.32; Wed, 17 Mar 2021 14:02:24 +0000
+ 15.20.3933.32; Wed, 17 Mar 2021 14:22:43 +0000
 Received: from DM6PR04MB6575.namprd04.prod.outlook.com
  ([fe80::e824:f31b:38cf:ef66]) by DM6PR04MB6575.namprd04.prod.outlook.com
  ([fe80::e824:f31b:38cf:ef66%3]) with mapi id 15.20.3933.032; Wed, 17 Mar 2021
- 14:02:23 +0000
+ 14:22:42 +0000
 From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Yue Hu <zbestahu@gmail.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+To:     Can Guo <cang@codeaurora.org>
+CC:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>,
         "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "huyue2@yulong.com" <huyue2@yulong.com>,
-        "zbestahu@163.com" <zbestahu@163.com>
-Subject: RE: [PATCH] scsi: ufs: Tidy up WB configuration code
-Thread-Topic: [PATCH] scsi: ufs: Tidy up WB configuration code
-Thread-Index: AQHXGyL1yhoIcuBDj0CLUEAEsuuMt6qINPAA
-Date:   Wed, 17 Mar 2021 14:02:23 +0000
-Message-ID: <DM6PR04MB6575F4023FAC6600288A8973FC6A9@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20210317114438.1900-1-zbestahu@gmail.com>
-In-Reply-To: <20210317114438.1900-1-zbestahu@gmail.com>
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
+Subject: RE: [PATCH v5 06/10] scsi: ufshpb: Add hpb dev reset response
+Thread-Topic: [PATCH v5 06/10] scsi: ufshpb: Add hpb dev reset response
+Thread-Index: AQHXD2ex1y1f5g2rP02e5lIjKmzR26qIGY0AgAAGPJCAAA7hAIAAAEIAgAAbY4CAAAQzAA==
+Date:   Wed, 17 Mar 2021 14:22:42 +0000
+Message-ID: <DM6PR04MB65755C69AD3D64BC5B1E93D8FC6A9@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20210302132503.224670-1-avri.altman@wdc.com>
+ <20210302132503.224670-7-avri.altman@wdc.com>
+ <59a62fc17ec9229a8498e696eb0474be@codeaurora.org>
+ <DM6PR04MB6575006E0682C3D11F54965DFC6A9@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <1d0e3c5441ecf14b6614ec0af0d30af6@codeaurora.org>
+ <DM6PR04MB65750C0AE1F1EDB41EDEE491FC6A9@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <37d0a4f115ad5d08ab12a76e6cbe17a5@codeaurora.org>
+In-Reply-To: <37d0a4f115ad5d08ab12a76e6cbe17a5@codeaurora.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=none action=none header.from=wdc.com;
+authentication-results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
 x-originating-ip: [212.25.79.133]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 4d488d65-e9ca-4414-25a0-08d8e94d49f6
-x-ms-traffictypediagnostic: DM6PR04MB6589:
-x-microsoft-antispam-prvs: <DM6PR04MB6589812E141E2C0DB7F92C4AFC6A9@DM6PR04MB6589.namprd04.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: a47269b3-5b60-4bb0-598d-08d8e95020c7
+x-ms-traffictypediagnostic: DM5PR04MB0973:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <DM5PR04MB0973809DC8A8982B71762072FC6A9@DM5PR04MB0973.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:466;
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: H6JLcEfItb/nZXczv97H5vgDkDizZZO2tWdIh63Fcsv/640eaNdG6uAfRjSyljHcgwozBbTvCi14Sm+GmU69r7ksdHLF8ax6v71de5cuvFXfXWEavGvfH+k8WbdhAbhbIHUoYXVc6kNK4OU4Qw1+wMonKN7rphLiZs/bq5Jjjb6DYJTOVWLfwNExbkQbvSDVzcI7T9P+eWKCnbS1AwUzr7e1xKOUZawvcZR7nSYWz4kDccdUiHwrdaiApDWoNso0tzaD2JgdlUlQKvzwK5a/Gp5/UNpFL21dap5mXmXr7BX/c0YMAKzP9L97GJy15u9H4P0uHSgR0VlwDPcg7Ke1iC/00KpZfYj1wQzEROitrcnCb3S+xKayzGPJzO/1wck1HkgRk8EORBLsnXTYyHepyEf5hXksMe24ORv+wDTZKMnEm8p2z40/v4c/fT3D0KQBwUwJxVL9i0kf15yB615qLts41O7ugqYo16zJLz/mcDUlBAzG/m5UXKpzH98Mlu/qA+0EdX9tLXbVZayMODFo4SNDMVyg1tu8q8FfYhTd9e3QwNaJYbYWZK7wEYFkF0g0
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(396003)(39860400002)(376002)(366004)(346002)(52536014)(83380400001)(66556008)(54906003)(6506007)(66446008)(26005)(2906002)(66476007)(8936002)(7696005)(71200400001)(8676002)(9686003)(316002)(55016002)(76116006)(110136005)(186003)(86362001)(5660300002)(64756008)(33656002)(66946007)(4326008)(478600001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?VOkwvNGD6wAQNRR1z7w8G9bZ4iDSTcekFkUHf02hJxzfuZOG19QNL+rL+jhx?=
- =?us-ascii?Q?dNBaoYj6m5zhJhdKXqolNg67XUsxLMT9mcf3OvnGO7II6ykSRUgZpkRHQaFm?=
- =?us-ascii?Q?53tTklMedFl90dBzlidfoSU8+rd4yuvrDJRtqWNxt6WjDAZ2cVETW+BnO9uY?=
- =?us-ascii?Q?k+l6MZScjoz4Zwdo4kXEXRrRT/UxZPC0lmb2r91v/lASEs5qeVmrkwEWNyQU?=
- =?us-ascii?Q?zFR4Ygg/FdRn+osucQUwjbumPOUdPo9KQBw6kuC5L3qiR5cIp5t0xr6EngJJ?=
- =?us-ascii?Q?aUtmKzysC84nPctOV7tj+ou2Vz/TtBSvyHBGJIrgw8aatsWXKQwwTl1pT+Eq?=
- =?us-ascii?Q?YjyckxsyLcEm9T2KCn2/30xXTgHdBkEtGn6ZtM7i4+XmCT/pSG1SK+MQrZLm?=
- =?us-ascii?Q?u5uOyobWbcvgcBNbaoU5QtlUSfIt7ssNNotijyZ8mvVlEdDYrAPypDcSsRVm?=
- =?us-ascii?Q?S8y8CAvv0t+/hI4hOulyCW4JJDVqflnVfWMSUk4/jkKGlEPj+13YqJWwAPDJ?=
- =?us-ascii?Q?/3AL42h+Ekg9hf2o7q1+QPsDI5LlbN7pDIkZ0cIJqgptHmWJ3dRPifCH8CjC?=
- =?us-ascii?Q?SUqguJACPkV4p13evcL26COGcHeaRc/8a1FETXXznhs15YvJ4SGNF/1CzDA4?=
- =?us-ascii?Q?fklm8Wi2W9jSsf90yug4wv4XA+dQ+zYuZZkXCVY4Br7Si5NC5zvuk3cN4QQf?=
- =?us-ascii?Q?lVKWVlrlS+HG2VpC62A96uP+KQJa5GFBWosJl0vGb6fFYqWZFlBTMXnoOCiM?=
- =?us-ascii?Q?wa6ISPJ+VXnvRjJowdy5sfuPoSih9YjSdj8HQLIR6nPwJoHuAK6XYXz6xPUx?=
- =?us-ascii?Q?qzoXPJ5LtKSLFPGFwQOh6i1BranGpqfgFRHZEdvyMHo/pN+RRoSL8jUODTUE?=
- =?us-ascii?Q?SsZRHQ6tY8lY9IsULOOkE27hKUOM0I8Kv0yHA8KULwqRQlrEZYhnk17PvYNz?=
- =?us-ascii?Q?CgEp1Ec6HVDWy0YfluLJSi3HME1ZRKoE4oil/XFvdQls2oUzxiYbeGpx98W+?=
- =?us-ascii?Q?AMI1BA+eghLMz4y3BM8rDBPiJ09+9OEm8ytbzPeiaEtvP8IbYTYs+k4cl3jx?=
- =?us-ascii?Q?Vl/0eSRNzI5SS1wWCg8owyjlKEa0tDs6h/BsE5aZ+Yl0dfBnSr67AbmcfiEF?=
- =?us-ascii?Q?slzD2I83wWmjp9aK9/YjzmlLeVQ05m5w4JT0QJvfAaEb/cu9L6zzDXRq8AUY?=
- =?us-ascii?Q?6UhHtPNO+5q2/04P1f4E9rwQk/ta6Iv1HZ79OXYB4nBhtVlpQNcccQN6F6ls?=
- =?us-ascii?Q?iCvuHxL2LjeKWqTTToxaUHjNS9oTHuhgQMfSBYNyPQ/X6Jh5862N90x1RJD3?=
- =?us-ascii?Q?0ejiDWcKO5/b4XKkJdVJzCjF?=
-x-ms-exchange-transport-forked: True
+x-microsoft-antispam-message-info: TR8AxtEqEH/Z10RmqLlMIf2TK+li6ACP5kN0ZCmpLbBzwLHs8ZH8zOIFTtkhR7YWQwAELJK8936P8QpP7W9se9hHib7vdXzaB0tMmJpSie1AAXP20pTNkbMa6OOaAzAg6m7Lc07ha1c2I1eAoHXN//ooOyTEDCLCYDjIMgqPBZCiotfDqXrcCy35V68EXZU3WT8iPH7WOA1Mp+IgnWsJetRwMVWWw+fUgO1l1ibcWAG+SVDLDolzTIljNj59GeXjC9eKRCp0PPfT/rBOLvJxx/pP0F4I5bhV+yM4AIh9esPkd1shyegLIWc1Q93TWdReBOLqZ+D7pPomM7+SteqfIts40407b6csksfv1tO66AoDET0pkz6j8CIgaFADNzW339qlqdP2VVOC5KQpZtAv7Kxw08BRttbNw+qeJhm7kWxk5dZW4WI9hB10xI+OxfHFdQGk+39oFzkIqAgH55XgSa/LreJRs/ah8z6Rhr1acRFErfpEpz/be1f9xQ0aJEFVEgh8hdSAO+kRZn4hEiubxVctGqX+ospi+K1EPiKzImZFTRdHifEZuzC5NAgSllLl
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(39860400002)(366004)(376002)(136003)(346002)(64756008)(66556008)(66476007)(66946007)(7696005)(5660300002)(66446008)(71200400001)(54906003)(76116006)(86362001)(8676002)(33656002)(478600001)(4326008)(6506007)(2906002)(316002)(53546011)(26005)(55016002)(83380400001)(186003)(7416002)(6916009)(8936002)(9686003)(52536014);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?8pVxAEyvdjtDrMpCjKpJWMXu/psc+lbnFY7ihTaRVaH1MEKJn8KVdJC2G/50?=
+ =?us-ascii?Q?hlZ/O32ixv6HuAf8E5pKL/gjpoDovhjmwpbfTQC5SzPtfCu7AT7jGX0gSmAO?=
+ =?us-ascii?Q?Uw6t1UvgtxL3FStwHpmzQjhTXbvz1BrulBs1kbe2a549Sy/xKBeRYLDZSvia?=
+ =?us-ascii?Q?4PkYQ29XnYiD0agWMekcPfqKtJyOekil2gse9yc9LnheXFwW0AQFTHF93xP/?=
+ =?us-ascii?Q?+fsTVJmU6TLZY7BW/3/ZLlNS2CyMXD4Lhc4slf7K02Q1YOEuZ/qTLnM7QYk3?=
+ =?us-ascii?Q?lEvqgA4h8RRYovAjijsXXKDkt7WhvBoN/iQ15aTJICvEdihtL/326iydsvhb?=
+ =?us-ascii?Q?fXbE4lf7KN3MNP2sqlKOvQVuSyZ9e6tuQSUYrbUjSlgm6W7SwFRwTVqxhyfT?=
+ =?us-ascii?Q?/fO88ylEcUdfVAhe9n+I+AOlRA4M8AdsgSF66Blme7TnALC9PHu63ZQvnH6q?=
+ =?us-ascii?Q?Kt7aPt5nxu8KfoBvkWXe8sE4t1HXRoqvNCwugNW9Ncjb3DFEZa8EmQoQjAO5?=
+ =?us-ascii?Q?72haRjXIvuUmmnbgbN9GTJE9ijnxMPod3tKqfOWw3+YMm4j9o2Kqu6Wc7Zeo?=
+ =?us-ascii?Q?2UR70tUpQQE2iSTxPt9GI0AqeawwHJV/D545w3dJf996bhmr8smVzPhdeo6g?=
+ =?us-ascii?Q?FMwG3iQmigLhvatwYRWza7hUsC8LLg4krKsMzRLSzB5dBEVC76VtjV1UZZCL?=
+ =?us-ascii?Q?bVxwI6fqNseVHolX2PA0XuikaZ9BKDtmTtsJIpnz4cTZ4o/uotWDsIPFFfn6?=
+ =?us-ascii?Q?XbSxmbIrLD1yZECPfYLjVQUdw5m+R6oZMozRY9vv+c3L8LCqU3boTfjpaOkn?=
+ =?us-ascii?Q?+YUYknjDCq0dgHlvdBs6f2KrECJChoFDGhunoHafxofHSMnob8cNCMSH5naL?=
+ =?us-ascii?Q?t/TevUmmQ46yBgKLWJtKrDxpQ5RAmmwjRTfjSfTogq9CENq2+g4RPqyUubtD?=
+ =?us-ascii?Q?cODO55dSCnw7UMhex2XFcP9U4HgGwthq8bLel7lkerWj3uOqWGF50/S5NvwJ?=
+ =?us-ascii?Q?Cn4e41AnHS3xlkaNRu4n9MwvPllek78sk5vaOOfnTB5fthUhtzxNBBR9zTxE?=
+ =?us-ascii?Q?VF+R2LOqJDkU/nQqkPNmYdSx1qf8PI2LPm/v9DR8jRWTZv17vkMfT90keoG+?=
+ =?us-ascii?Q?AgH5lCz5d5ZDpYURBw76uh5J3ZhZAH7pQycPQHTmomr5aw1eRkO6WVzQpVmC?=
+ =?us-ascii?Q?GjxA9/l2WoDd/7xYzwawsDw/jm8BnN+r4cPCd5+VHAIZgYAxTmRdKO8ca8b3?=
+ =?us-ascii?Q?kxbRCZ442n4nTFrWogPW3lESA2/37IABl5ZjwOcdlQKuzxVeIic20XwMe2Zx?=
+ =?us-ascii?Q?jUJmSm04ZRXed4pHC1i1Kunc?=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4d488d65-e9ca-4414-25a0-08d8e94d49f6
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Mar 2021 14:02:23.4392
+X-MS-Exchange-CrossTenant-Network-Message-Id: a47269b3-5b60-4bb0-598d-08d8e95020c7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Mar 2021 14:22:42.7734
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Z/6WhU6PLrr22kR2TVBgE4ftn3zwaTJ8ljmhJcowlDeiH2MAi3M3R89SyggWYb63GEM2VPIg8sT7yH7nIZVOUw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB6589
+X-MS-Exchange-CrossTenant-userprincipalname: 9L237KpKE0qVXBsv2T1QG1Xtgif5uwaJo858pZ40z9L7c1MdjR60d5qCSdaxgC9TLeniD4BH6uR0Kh8/zV6yZQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR04MB0973
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+=20
 >=20
-> From: Yue Hu <huyue2@yulong.com>
+> On 2021-03-17 20:22, Avri Altman wrote:
+> >>
+> >> On 2021-03-17 19:23, Avri Altman wrote:
+> >> >>
+> >> >> On 2021-03-02 21:24, Avri Altman wrote:
+> >> >> > The spec does not define what is the host's recommended response
+> when
+> >> >> > the device send hpb dev reset response (oper 0x2).
+> >> >> >
+> >> >> > We will update all active hpb regions: mark them and do that on t=
+he
+> >> >> > next
+> >> >> > read.
+> >> >> >
+> >> >> > Signed-off-by: Avri Altman <avri.altman@wdc.com>
+> >> >> > ---
+> >> >> >  drivers/scsi/ufs/ufshpb.c | 47
+> >> >> ++++++++++++++++++++++++++++++++++++---
+> >> >> >  drivers/scsi/ufs/ufshpb.h |  2 ++
+> >> >> >  2 files changed, 46 insertions(+), 3 deletions(-)
+> >> >> >
+> >> >> > diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.=
+c
+> >> >> > index 0744feb4d484..0034fa03fdc6 100644
+> >> >> > --- a/drivers/scsi/ufs/ufshpb.c
+> >> >> > +++ b/drivers/scsi/ufs/ufshpb.c
+> >> >> > @@ -642,7 +642,8 @@ int ufshpb_prep(struct ufs_hba *hba, struct
+> >> >> > ufshcd_lrb *lrbp)
+> >> >> >               if (rgn->reads =3D=3D ACTIVATION_THRESHOLD)
+> >> >> >                       activate =3D true;
+> >> >> >               spin_unlock_irqrestore(&rgn->rgn_lock, flags);
+> >> >> > -             if (activate) {
+> >> >> > +             if (activate ||
+> >> >> > +                 test_and_clear_bit(RGN_FLAG_UPDATE, &rgn->rgn_f=
+lags)) {
 >=20
-> There are similar code implemetentions for WB configurations in
-> ufshcd_wb_{ctrl, toggle_flush_during_h8, toggle_flush}. We can
-> extract the part to create a new helper with a flag parameter to
-> reduce code duplication.
->=20
-> Meanwhile, change ufshcd_wb_ctrl() -> ufshcd_wb_toggle() for better
-> readability.
->=20
-> And remove unnecessary log messages from ufshcd_wb_config() since
-> relevant toggle function will spew log respectively. Also change
-> ufshcd_wb_toggle_flush{__during_h8} to void type accordingly.
->=20
-> Signed-off-by: Yue Hu <huyue2@yulong.com>
-A small nit below, otherwise - looks good to me.
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+> Other than this place, do we also need to clear this bit in places like
+> ufshpb_map_req_compl_fn() and/or ufshpb_cleanup_lru_info()? Otherwise,
+> this flag may be left there even after the rgn is inactivated.
+I don't think so - may cause a race if device reset arrives when map reques=
+t just finished.
+Better to be in one place.
 
-> ---
->  drivers/scsi/ufs/ufs-sysfs.c |  2 +-
->  drivers/scsi/ufs/ufshcd.c    | 99 +++++++++++++++++++-------------------=
-------
->  drivers/scsi/ufs/ufshcd.h    |  2 +-
->  3 files changed, 44 insertions(+), 59 deletions(-)
 >=20
-> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-> index acc54f5..d7c3cff 100644
-> --- a/drivers/scsi/ufs/ufs-sysfs.c
-> +++ b/drivers/scsi/ufs/ufs-sysfs.c
-> @@ -246,7 +246,7 @@ static ssize_t wb_on_store(struct device *dev, struct
-> device_attribute *attr,
->         }
->=20
->         pm_runtime_get_sync(hba->dev);
-> -       res =3D ufshcd_wb_ctrl(hba, wb_enable);
-> +       res =3D ufshcd_wb_toggle(hba, wb_enable);
->         pm_runtime_put_sync(hba->dev);
->  out:
->         up(&hba->host_sem);
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 7716175..1368f9e 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -247,8 +247,8 @@ static int ufshcd_change_power_mode(struct ufs_hba
+> >> >> >                       spin_lock_irqsave(&hpb->rsp_list_lock, flag=
+s);
+> >> >> >                       ufshpb_update_active_info(hpb, rgn_idx, srg=
+n_idx);
+> >> >> >                       hpb->stats.rb_active_cnt++;
+> >> >> > @@ -1480,6 +1481,20 @@ void ufshpb_rsp_upiu(struct ufs_hba
 > *hba,
->  static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
->                                          struct ufs_vreg *vreg);
->  static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
-> -static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool se=
-t);
-> -static inline int ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enabl=
-e);
-> +static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool s=
-et);
-> +static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enab=
-le);
->  static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
->  static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
+> >> >> > struct ufshcd_lrb *lrbp)
+> >> >> >       case HPB_RSP_DEV_RESET:
+> >> >> >               dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
+> >> >> >                        "UFS device lost HPB information during PM=
+.\n");
+> >> >> > +
+> >> >> > +             if (hpb->is_hcm) {
+> >> >> > +                     struct scsi_device *sdev;
+> >> >> > +
+> >> >> > +                     __shost_for_each_device(sdev, hba->host) {
+> >> >> > +                             struct ufshpb_lu *h =3D sdev->hostd=
+ata;
+> >> >> > +
+> >> >> > +                             if (!h)
+> >> >> > +                                     continue;
+> >> >> > +
+> >> >> > +                             schedule_work(&hpb->ufshpb_lun_rese=
+t_work);
+> >> >> > +                     }
+> >> >> > +             }
+> >> >> > +
+> >> >> >               break;
+> >> >> >       default:
+> >> >> >               dev_notice(&hpb->sdev_ufs_lu->sdev_dev,
+> >> >> > @@ -1594,6 +1609,25 @@ static void
+> >> >> > ufshpb_run_inactive_region_list(struct ufshpb_lu *hpb)
+> >> >> >       spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
+> >> >> >  }
+> >> >> >
+> >> >> > +static void ufshpb_reset_work_handler(struct work_struct *work)
+> >> >>
+> >> >> Just curious, directly doing below things inside ufshpb_rsp_upiu()
+> >> >> does
+> >> >> not
+> >> >> seem a problem to me, does this really deserve a separate work?
+> >> > I don't know, I never even consider of doing this.
+> >> > The active region list may contain up to few thousands of regions -
+> >> > It is not rare to see configurations that covers the entire device.
+> >> >
+> >>
+> >> Yes, true, it can be a huge list. But what does the ops
+> >> "HPB_RSP_DEV_RESET"
+> >> really mean? The specs says "Device reset HPB Regions information",
+> >> but
+> >> I
+> >> don't know what is really happening. Could you please elaborate?
+> > It means that the device informs the host that the L2P cache is no
+> > longer valid.
+> > The spec doesn't say what to do in that case.
 >=20
-> @@ -275,20 +275,12 @@ static inline void ufshcd_disable_irq(struct ufs_hb=
-a
-> *hba)
+> Then it means that all the clean (without DIRTY flag set) HPB entries
+> (ppns)
+> in active rgns in host memory side may not be valid to the device
+> anymore.
+> Please correct me if I am wrong.
 >=20
->  static inline void ufshcd_wb_config(struct ufs_hba *hba)
->  {
-> -       int ret;
-> -
->         if (!ufshcd_is_wb_allowed(hba))
->                 return;
+> > We thought that in host mode, it make sense to update all the active
+> > regions.
 >=20
-> -       ret =3D ufshcd_wb_ctrl(hba, true);
-> -       if (ret)
-> -               dev_err(hba->dev, "%s: Enable WB failed: %d\n", __func__,=
- ret);
-> -       else
-> -               dev_info(hba->dev, "%s: Write Booster Configured\n", __fu=
-nc__);
-> -       ret =3D ufshcd_wb_toggle_flush_during_h8(hba, true);
-> -       if (ret)
-> -               dev_err(hba->dev, "%s: En WB flush during H8: failed: %d\=
-n",
-> -                       __func__, ret);
-> +       ufshcd_wb_toggle(hba, true);
-> +
-> +       ufshcd_wb_toggle_flush_during_h8(hba, true);
->         if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
->                 ufshcd_wb_toggle_flush(hba, true);
->  }
-> @@ -1268,7 +1260,7 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba=
+> But current logic does not set the state of the sub-regions (in active
+> regions) to
+> INVALID, it only marks all active regions as UPDATE.
+>=20
+> Although one of subsequent read cmds shall put the sub-region back to
+> activate_list,
+> ufshpb_test_ppn_dirty() can still return false, thus these read cmds
+> still think the
+> ppns are valid and they shall move forward to send HPB Write Buffer
+> (buffer id =3D 0x2,
+> in case of HPB2.0) and HPB Read cmds.
+>=20
+> HPB Read cmds with invalid ppns will be treated as normal Read cmds by
+> device as the
+> specs says, but what would happen to HPB Write Buffer cmds (buffer id =3D
+> 0x2, in case
+> of HPB2.0) with invalid ppns? Can this be a real problem?
+No need to control the ppn dirty / invalid state for this case.
+The device send device reset so it is aware that all the L2P cache is inval=
+id.
+Any HPB_READ is treated like normal READ10.
+
+Only once HPB-READ-BUFFER is completed,
+the device will relate back to the physical address.
+
+>=20
+> >
+> > I think I will go with your suggestion.
+> > Effectively, in host mode, since it is deactivating "cold" regions,
+> > the lru list is kept relatively small, and contains only "hot" regions.
+>=20
+> hmm... I don't really have a idea on this, please go with whatever you
+> and Daejun think is fine here.
+I will take your advice and remove the worker.
+
+
+Thanks,
+Avri
+
+>=20
+> Thanks,
+> Can Guo.
+>=20
+> >
+> > Thanks,
+> > Avri
+> >
+> >>
+> >> Thanks,
+> >> Can Guo.
+> >>
+> >> > But yes, I can do that.
+> >> > Better to get ack from Daejun first.
+> >> >
+> >> > Thanks,
+> >> > Avri
+> >> >
+> >> >>
+> >> >> Thanks,
+> >> >> Can Guo.
+> >> >>
+> >> >> > +{
+> >> >> > +     struct ufshpb_lu *hpb;
+> >> >> > +     struct victim_select_info *lru_info;
+> >> >> > +     struct ufshpb_region *rgn;
+> >> >> > +     unsigned long flags;
+> >> >> > +
+> >> >> > +     hpb =3D container_of(work, struct ufshpb_lu,
+> ufshpb_lun_reset_work);
+> >> >> > +
+> >> >> > +     lru_info =3D &hpb->lru_info;
+> >> >> > +
+> >> >> > +     spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+> >> >> > +
+> >> >> > +     list_for_each_entry(rgn, &lru_info->lh_lru_rgn, list_lru_rg=
+n)
+> >> >> > +             set_bit(RGN_FLAG_UPDATE, &rgn->rgn_flags);
+> >> >> > +
+> >> >> > +     spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> >> >> > +}
+> >> >> > +
+> >> >> >  static void ufshpb_normalization_work_handler(struct work_struct
+> >> >> > *work)
+> >> >> >  {
+> >> >> >       struct ufshpb_lu *hpb;
+> >> >> > @@ -1798,6 +1832,8 @@ static int ufshpb_alloc_region_tbl(struct
+> >> >> > ufs_hba *hba, struct ufshpb_lu *hpb)
+> >> >> >               } else {
+> >> >> >                       rgn->rgn_state =3D HPB_RGN_INACTIVE;
+> >> >> >               }
+> >> >> > +
+> >> >> > +             rgn->rgn_flags =3D 0;
+> >> >> >       }
+> >> >> >
+> >> >> >       return 0;
+> >> >> > @@ -2012,9 +2048,12 @@ static int ufshpb_lu_hpb_init(struct
+> ufs_hba
+> >> >> > *hba, struct ufshpb_lu *hpb)
+> >> >> >       INIT_LIST_HEAD(&hpb->list_hpb_lu);
+> >> >> >
+> >> >> >       INIT_WORK(&hpb->map_work, ufshpb_map_work_handler);
+> >> >> > -     if (hpb->is_hcm)
+> >> >> > +     if (hpb->is_hcm) {
+> >> >> >               INIT_WORK(&hpb->ufshpb_normalization_work,
+> >> >> >                         ufshpb_normalization_work_handler);
+> >> >> > +             INIT_WORK(&hpb->ufshpb_lun_reset_work,
+> >> >> > +                       ufshpb_reset_work_handler);
+> >> >> > +     }
+> >> >> >
+> >> >> >       hpb->map_req_cache =3D kmem_cache_create("ufshpb_req_cache"=
 ,
-> bool scale_up)
->         /* Enable Write Booster if we have scaled up else disable it */
->         downgrade_write(&hba->clk_scaling_lock);
->         is_writelock =3D false;
-> -       ufshcd_wb_ctrl(hba, scale_up);
-> +       ufshcd_wb_toggle(hba, scale_up);
->=20
->  out_unprepare:
->         ufshcd_clock_scaling_unprepare(hba, is_writelock);
-> @@ -5432,85 +5424,78 @@ static void
-> ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
->                                 __func__, err);
->  }
->=20
-> -int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable)
-> +static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_i=
-dn
-> idn)
->  {
-> -       int ret;
-> +       int val;
-Use turnery here?
-
-
->         u8 index;
-> -       enum query_opcode opcode;
-> +
-> +       if (set)
-> +               val =3D UPIU_QUERY_OPCODE_SET_FLAG;
-> +       else
-> +               val =3D UPIU_QUERY_OPCODE_CLEAR_FLAG;
-> +
-> +       index =3D ufshcd_wb_get_query_index(hba);
-> +       return ufshcd_query_flag_retry(hba, val, idn, index, NULL);
-> +}
-> +
-> +int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
-> +{
-> +       int ret;
->=20
->         if (!ufshcd_is_wb_allowed(hba))
->                 return 0;
->=20
->         if (!(enable ^ hba->dev_info.wb_enabled))
->                 return 0;
-> -       if (enable)
-> -               opcode =3D UPIU_QUERY_OPCODE_SET_FLAG;
-> -       else
-> -               opcode =3D UPIU_QUERY_OPCODE_CLEAR_FLAG;
->=20
-> -       index =3D ufshcd_wb_get_query_index(hba);
-> -       ret =3D ufshcd_query_flag_retry(hba, opcode,
-> -                                     QUERY_FLAG_IDN_WB_EN, index, NULL);
-> +       ret =3D __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
->         if (ret) {
-> -               dev_err(hba->dev, "%s write booster %s failed %d\n",
-> +               dev_err(hba->dev, "%s Write Booster %s failed %d\n",
->                         __func__, enable ? "enable" : "disable", ret);
->                 return ret;
->         }
->=20
->         hba->dev_info.wb_enabled =3D enable;
-> -       dev_dbg(hba->dev, "%s write booster %s %d\n",
-> -                       __func__, enable ? "enable" : "disable", ret);
-> +       dev_info(hba->dev, "%s Write Booster %s\n",
-> +                       __func__, enable ? "enabled" : "disabled");
->=20
->         return ret;
->  }
->=20
-> -static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool se=
-t)
-> +static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool s=
-et)
->  {
-> -       int val;
-> -       u8 index;
-> -
-> -       if (set)
-> -               val =3D  UPIU_QUERY_OPCODE_SET_FLAG;
-> -       else
-> -               val =3D UPIU_QUERY_OPCODE_CLEAR_FLAG;
-> +       int ret;
->=20
-> -       index =3D ufshcd_wb_get_query_index(hba);
-> -       return ufshcd_query_flag_retry(hba, val,
-> -                               QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBER=
-N8,
-> -                               index, NULL);
-> +       ret =3D __ufshcd_wb_toggle(hba, set,
-> +                       QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8);
-> +       if (ret) {
-> +               dev_err(hba->dev, "%s: WB-Buf Flush during H8 %s failed: =
-%d\n",
-> +                       __func__, set ? "enable" : "disable", ret);
-> +               return;
-> +       }
-> +       dev_dbg(hba->dev, "%s WB-Buf Flush during H8 %s\n",
-> +                       __func__, set ? "enabled" : "disabled");
->  }
->=20
-> -static inline int ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enabl=
-e)
-> +static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enab=
-le)
->  {
->         int ret;
-> -       u8 index;
-> -       enum query_opcode opcode;
->=20
->         if (!ufshcd_is_wb_allowed(hba) ||
->             hba->dev_info.wb_buf_flush_enabled =3D=3D enable)
-> -               return 0;
-> -
-> -       if (enable)
-> -               opcode =3D UPIU_QUERY_OPCODE_SET_FLAG;
-> -       else
-> -               opcode =3D UPIU_QUERY_OPCODE_CLEAR_FLAG;
-> +               return;
->=20
-> -       index =3D ufshcd_wb_get_query_index(hba);
-> -       ret =3D ufshcd_query_flag_retry(hba, opcode,
-> -                                     QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, in=
-dex,
-> -                                     NULL);
-> +       ret =3D __ufshcd_wb_toggle(hba, enable,
-> QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN);
->         if (ret) {
->                 dev_err(hba->dev, "%s WB-Buf Flush %s failed %d\n", __fun=
-c__,
->                         enable ? "enable" : "disable", ret);
-> -               goto out;
-> +               return;
->         }
->=20
->         hba->dev_info.wb_buf_flush_enabled =3D enable;
->=20
-> -       dev_dbg(hba->dev, "WB-Buf Flush %s\n", enable ? "enabled" : "disa=
-bled");
-> -out:
-> -       return ret;
-> -
-> +       dev_dbg(hba->dev, "%s WB-Buf Flush %s\n",
-> +                       __func__, enable ? "enabled" : "disabled");
->  }
->=20
->  static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 18e56c1..eddc819 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -1099,7 +1099,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba
-> *hba,
->                              u8 *desc_buff, int *buff_len,
->                              enum query_opcode desc_op);
->=20
-> -int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
-> +int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
->=20
->  /* Wrapper functions for safely calling variant operations */
->  static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
-> --
-> 1.9.1
-
+> >> >> >                         sizeof(struct ufshpb_req), 0, 0, NULL);
+> >> >> > @@ -2114,8 +2153,10 @@ static void ufshpb_discard_rsp_lists(struc=
+t
+> >> >> > ufshpb_lu *hpb)
+> >> >> >
+> >> >> >  static void ufshpb_cancel_jobs(struct ufshpb_lu *hpb)
+> >> >> >  {
+> >> >> > -     if (hpb->is_hcm)
+> >> >> > +     if (hpb->is_hcm) {
+> >> >> > +             cancel_work_sync(&hpb->ufshpb_lun_reset_work);
+> >> >> >               cancel_work_sync(&hpb->ufshpb_normalization_work);
+> >> >> > +     }
+> >> >> >       cancel_work_sync(&hpb->map_work);
+> >> >> >  }
+> >> >> >
+> >> >> > diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.=
+h
+> >> >> > index 84598a317897..37c1b0ea0c0a 100644
+> >> >> > --- a/drivers/scsi/ufs/ufshpb.h
+> >> >> > +++ b/drivers/scsi/ufs/ufshpb.h
+> >> >> > @@ -121,6 +121,7 @@ struct ufshpb_region {
+> >> >> >       struct list_head list_lru_rgn;
+> >> >> >       unsigned long rgn_flags;
+> >> >> >  #define RGN_FLAG_DIRTY 0
+> >> >> > +#define RGN_FLAG_UPDATE 1
+> >> >> >
+> >> >> >       /* region reads - for host mode */
+> >> >> >       spinlock_t rgn_lock;
+> >> >> > @@ -217,6 +218,7 @@ struct ufshpb_lu {
+> >> >> >       /* for selecting victim */
+> >> >> >       struct victim_select_info lru_info;
+> >> >> >       struct work_struct ufshpb_normalization_work;
+> >> >> > +     struct work_struct ufshpb_lun_reset_work;
+> >> >> >
+> >> >> >       /* pinned region information */
+> >> >> >       u32 lu_pinned_start;
