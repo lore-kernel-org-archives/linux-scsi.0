@@ -7,65 +7,68 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B994CC433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:13:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C4DDC433E6
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C25464F18
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:13:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B9C464F37
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Mar 2021 09:14:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230453AbhCQJN0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 05:13:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42668 "EHLO
+        id S229889AbhCQJN2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 05:13:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230205AbhCQJMy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:12:54 -0400
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB429C06175F
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:12:53 -0700 (PDT)
-Received: by mail-wr1-x430.google.com with SMTP id b9so999260wrt.8
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:12:53 -0700 (PDT)
+        with ESMTP id S229970AbhCQJM4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 05:12:56 -0400
+Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9771CC061765
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:12:55 -0700 (PDT)
+Received: by mail-wr1-x42f.google.com with SMTP id k8so1005279wrc.3
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 02:12:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=+TrWWm0u4bkRuEOT45xP86ethIB2XLy+WRaBoR2YJ+Y=;
-        b=VIU7VFuz5FaJXnrl9FYPf3rxVYPBQWgLnoJoYBjIu9hzCiLb2B7JVy56eYs6thk9pp
-         nh8uALrJCoQWEGtoLIqMttVd2Gsig45UXefS1V8Dz6B4oPieaTqX8td379g90niYUFbJ
-         goG0QarAtS3jmh6e5kQmM+C6LHSBySWO7ovtr3QSVC21mDhxEIgSFY7Uzb0GMeb5Vt51
-         K1zcE86PVNtkzSMJjp0c1Ba/1iClc4t/qBAVz5PPxLKbMZPJp0Elc2TonTJREObJc3Hi
-         JFngZUqZhXxF8RS+wR8kjCNsZi7mfDYTaQDlgCnkV6bAsIsEvcMnSRdzBJdcjFI7Pbb8
-         As0g==
+        bh=bKVcoII/VExWgJlUv7/sN5c60FiIBMpvmlinKRnJimA=;
+        b=MxXKhto9q9aaLM4LCO+LShWyhOUYRtAJedAKRvWFVJ4lyEZrFWIQDR7Cuhk1eUJrTz
+         suzen/yOMRsiTSkMEzH3O79wsm9zWNVKldu0eGmN6WUhQOtfIJ1eHxggcJbluxeOP314
+         Sq8r97Qego7DsLELU/HaMEr3KCt10tqRS3Mgu8s74sIl4htXqCk0hAUvnMpmOTIsh9wv
+         u2xXkQBnHRnnuxhAYjKF8gOBdyKJEIjvLK0K8wV0EKaYTJRgfcToSL0YtwLGkwZY/ia7
+         B358sXL6rbbgVIBaPmoScZTJonU4vYEblWpjJo2XjGaL1RdMnR7ATEaUdtk0dyfNRWSz
+         OOkw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=+TrWWm0u4bkRuEOT45xP86ethIB2XLy+WRaBoR2YJ+Y=;
-        b=CX/iw3fbl580spI6XhT/EhHg3dGl1Tcoif9pg6OXR9uF9TtDK+h7/CbKn6FiZjjRLT
-         SQEBjuDeuw3GIHLpV5nAdor09EUwUebaH/IUHvOax6tGukKdzgAIHufEusPIRQqdJFT1
-         T+ZcyBeItMjplQv3oExKK3zIvW0IUCeg/zqTSbcGrhrJKhQdMIZB4f0iveTjMkW2QWpX
-         iqWvsd6EJzbgFFIl5Ae50DZr5hmPFfFMKQhAXWqiR+xyUlyh82nKHarLwl4VGD7FjXaE
-         59fe77wGFnMoTcnyqLgMBLoB+gTYVQG4/bDhi4OSvoXOQVej+dnuhMamjfUx2o3vs0Sm
-         ZNUA==
-X-Gm-Message-State: AOAM531zEddhxkGQ840e0yrpNoPveQBuV8CyLXf1BrVfY6CvuxVaG2nN
-        OerhJKWYpu0jmuxghO6kS7R/FA==
-X-Google-Smtp-Source: ABdhPJwBBf2pDosK0iW19obpUhKOTMSrb6xpMCOntwaCTpUr7GR90px+cj4jvKue9GwRILV9AXevtQ==
-X-Received: by 2002:adf:e7cf:: with SMTP id e15mr3375157wrn.346.1615972372441;
-        Wed, 17 Mar 2021 02:12:52 -0700 (PDT)
+        bh=bKVcoII/VExWgJlUv7/sN5c60FiIBMpvmlinKRnJimA=;
+        b=ZcSu/jlZLfyogllh2YqtvcpRKAm09ZxzEZZekeAk+6O2eM7d6svazd2kraFVQjMZbd
+         DB/ti37qNCKfQT1+IT0RIOKZCf9fJSaf/cJNWRGUx6D3+s2W8ysxYp+01UkANBfOiLgx
+         rnN5n7sh4TZf0V0Vy5n/dbCQm6i8+2ShsWLBSPwoBUgAvHFZatQBztGq7Ad4ZCyOep9q
+         6Cj4oCJL58u0ci49JmrXH/JRJvhbDo7EFfRHRZR62me+ikxipn7/W8N3qznwrES5IKDt
+         LBPifp1nbBPm6v6whE4YVaxPWRMjnmwhTzfwLxrAONnpXMc3A9LPiKAOi/hdMgSwYWH7
+         gPeA==
+X-Gm-Message-State: AOAM533I8cuySAhC9zuu+6HRSw9FF5egTC7hPADgEakAuJZL5tgaisTp
+        HVjHIf2mDbJ9H1Qr4XFDWTRJbQ==
+X-Google-Smtp-Source: ABdhPJy4yS9D+aRU+N7H1kM68hnBC65Lc89Pi0NeqE56kh4j9u8k26hfS9Pt7vrAoBiI1ZBoTCQm5A==
+X-Received: by 2002:a5d:5088:: with SMTP id a8mr3403129wrt.294.1615972374378;
+        Wed, 17 Mar 2021 02:12:54 -0700 (PDT)
 Received: from dell.default ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id e18sm12695886wru.73.2021.03.17.02.12.51
+        by smtp.gmail.com with ESMTPSA id e18sm12695886wru.73.2021.03.17.02.12.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 02:12:52 -0700 (PDT)
+        Wed, 17 Mar 2021 02:12:53 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
-Cc:     linux-kernel@vger.kernel.org, Hannes Reinecke <hare@kernel.org>,
+Cc:     linux-kernel@vger.kernel.org,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Linux GmbH <hare@suse.com>,
-        "Leonard N. Zubkoff" <lnz@dandelion.com>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH 12/36] scsi: myrs: Add missing ':' to make the kernel-doc checker happy
-Date:   Wed, 17 Mar 2021 09:12:06 +0000
-Message-Id: <20210317091230.2912389-13-lee.jones@linaro.org>
+        MPT-FusionLinux.pdl@avagotech.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH 14/36] scsi: mpt3sas: mpt3sas_scs: Fix a few kernel-doc issues
+Date:   Wed, 17 Mar 2021 09:12:08 +0000
+Message-Id: <20210317091230.2912389-15-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210317091230.2912389-1-lee.jones@linaro.org>
 References: <20210317091230.2912389-1-lee.jones@linaro.org>
@@ -77,52 +80,104 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/myrs.c:1965: warning: Function parameter or member 'dev' not described in 'myrs_is_raid'
- drivers/scsi/myrs.c:1978: warning: Function parameter or member 'dev' not described in 'myrs_get_resync'
- drivers/scsi/myrs.c:2002: warning: Function parameter or member 'dev' not described in 'myrs_get_state'
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:763: warning: Function parameter or member 'sas_address' not described in '__mpt3sas_get_sdev_by_addr'
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:763: warning: expecting prototype for mpt3sas_get_sdev_by_addr(). Prototype was for __mpt3sas_get_sdev_by_addr() instead
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:4535: warning: expecting prototype for _scsih_check_for_pending_internal_cmds(). Prototype was for mpt3sas_check_for_pending_internal_cmds() instead
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:6188: warning: Function parameter or member 'port_entry' not described in '_scsih_look_and_get_matched_port_entry'
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:6188: warning: Function parameter or member 'matched_port_entry' not described in '_scsih_look_and_get_matched_port_entry'
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:6188: warning: Function parameter or member 'count' not described in '_scsih_look_and_get_matched_port_entry'
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:6959: warning: Function parameter or member 'port' not described in 'mpt3sas_expander_remove'
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:10494: warning: expecting prototype for mpt3sas_scsih_reset_handler(). Prototype was for mpt3sas_scsih_pre_reset_handler() instead
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:10536: warning: expecting prototype for mpt3sas_scsih_reset_handler(). Prototype was for mpt3sas_scsih_reset_done_handler() instead
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:12303: warning: expecting prototype for scsih__ncq_prio_supp(). Prototype was for scsih_ncq_prio_supp() instead
 
-Cc: Hannes Reinecke <hare@kernel.org>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Linux GmbH <hare@suse.com>
-Cc: "Leonard N. Zubkoff" <lnz@dandelion.com>
+Cc: MPT-FusionLinux.pdl@avagotech.com
+Cc: MPT-FusionLinux.pdl@broadcom.com
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/myrs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
-index 48e399f057d5c..588c0de006b02 100644
---- a/drivers/scsi/myrs.c
-+++ b/drivers/scsi/myrs.c
-@@ -1958,7 +1958,7 @@ static struct myrs_hba *myrs_alloc_host(struct pci_dev *pdev,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 945531e94d7e4..23ecf2750ec79 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -749,9 +749,10 @@ __mpt3sas_get_sdev_by_rphy(struct MPT3SAS_ADAPTER *ioc,
+ }
  
  /**
-  * myrs_is_raid - return boolean indicating device is raid volume
-- * @dev the device struct object
-+ * @dev: the device struct object
-  */
- static int
- myrs_is_raid(struct device *dev)
-@@ -1971,7 +1971,7 @@ myrs_is_raid(struct device *dev)
+- * mpt3sas_get_sdev_by_addr - get _sas_device object corresponding to provided
++ * __mpt3sas_get_sdev_by_addr - get _sas_device object corresponding to provided
+  *				sas address from sas_device_list list
+  * @ioc: per adapter object
++ * @sas_address: device sas address
+  * @port: port number
+  *
+  * Search for _sas_device object corresponding to provided sas address,
+@@ -4518,7 +4519,7 @@ _scsih_issue_delayed_sas_io_unit_ctrl(struct MPT3SAS_ADAPTER *ioc,
+ }
  
  /**
-  * myrs_get_resync - get raid volume resync percent complete
-- * @dev the device struct object
-+ * @dev: the device struct object
+- * _scsih_check_for_pending_internal_cmds - check for pending internal messages
++ * mpt3sas_check_for_pending_internal_cmds - check for pending internal messages
+  * @ioc: per adapter object
+  * @smid: system request message index
+  *
+@@ -6174,10 +6175,10 @@ enum hba_port_matched_codes {
+  * _scsih_look_and_get_matched_port_entry - Get matched hba port entry
+  *					from HBA port table
+  * @ioc: per adapter object
+- * @port_entry - hba port entry from temporary port table which needs to be
++ * @port_entry: hba port entry from temporary port table which needs to be
+  *		searched for matched entry in the HBA port table
+- * @matched_port_entry - save matched hba port entry here
+- * @count - count of matched entries
++ * @matched_port_entry: save matched hba port entry here
++ * @count: count of matched entries
+  *
+  * return type of matched entry found.
   */
- static void
- myrs_get_resync(struct device *dev)
-@@ -1995,7 +1995,7 @@ myrs_get_resync(struct device *dev)
+@@ -6952,6 +6953,7 @@ _scsih_expander_add(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+  * mpt3sas_expander_remove - removing expander object
+  * @ioc: per adapter object
+  * @sas_address: expander sas_address
++ * @port: hba port entry
+  */
+ void
+ mpt3sas_expander_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
+@@ -10487,7 +10489,7 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
+ }
  
  /**
-  * myrs_get_state - get raid volume status
-- * @dev the device struct object
-+ * @dev: the device struct object
-  */
- static void
- myrs_get_state(struct device *dev)
+- * mpt3sas_scsih_reset_handler - reset callback handler (for scsih)
++ * mpt3sas_scsih_pre_reset_handler - reset callback handler (for scsih)
+  * @ioc: per adapter object
+  *
+  * The handler for doing any required cleanup or initialization.
+@@ -10528,7 +10530,7 @@ mpt3sas_scsih_clear_outstanding_scsi_tm_commands(struct MPT3SAS_ADAPTER *ioc)
+ }
+ 
+ /**
+- * mpt3sas_scsih_reset_handler - reset callback handler (for scsih)
++ * mpt3sas_scsih_reset_done_handler - reset callback handler (for scsih)
+  * @ioc: per adapter object
+  *
+  * The handler for doing any required cleanup or initialization.
+@@ -12295,7 +12297,7 @@ scsih_pci_mmio_enabled(struct pci_dev *pdev)
+ }
+ 
+ /**
+- * scsih__ncq_prio_supp - Check for NCQ command priority support
++ * scsih_ncq_prio_supp - Check for NCQ command priority support
+  * @sdev: scsi device struct
+  *
+  * This is called when a user indicates they would like to enable
 -- 
 2.27.0
 
