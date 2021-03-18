@@ -2,524 +2,1061 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 164B8C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 17:33:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8233EC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 17:39:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6D9964F1C
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 17:33:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4311164F1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 17:39:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230173AbhCRRdE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Mar 2021 13:33:04 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:41879 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229681AbhCRRcx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 13:32:53 -0400
-X-Greylist: delayed 302 seconds by postgrey-1.27 at vger.kernel.org; Thu, 18 Mar 2021 13:32:53 EDT
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1616088772; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=FDL1Xga8+HxGR7j4ysw+pVXBcFTRx9twtellwdkQX/w=; b=Eqh81Gx67uAIQqEaYuWTsylK6bQAm1i2jSVs4bv5DbXdTvldGKiHZKSEjIWQ7IuIR5MyOQmg
- szuxd3IDT+srrjLl9DSq06aD+pqzGmsAFn0zOBwAw3QP4pjvGyGwhtqcoJDtXg28uAgZsJUA
- T0cR+H9T0XOAQS4jK14CzKSFR2k=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
- 60538d95e3fca7d0a6a6c2f8 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 18 Mar 2021 17:27:49
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 33767C4346B; Thu, 18 Mar 2021 17:27:47 +0000 (UTC)
-Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4457BC43464;
-        Thu, 18 Mar 2021 17:27:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4457BC43464
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v10 1/2] scsi: ufs: Enable power management for wlun
-To:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        Bart Van Assche <bvanassche@acm.org>, cang@codeaurora.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Dinghao Liu <dinghao.liu@zju.edu.cn>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-samsung-soc@vger.kernel.org>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>,
-        Linux-PM mailing list <linux-pm@vger.kernel.org>
-References: <cover.1614725302.git.asutoshd@codeaurora.org>
- <0576d6eae15486740c25767e2d8805f7e94eb79d.1614725302.git.asutoshd@codeaurora.org>
- <85086647-7292-b0a2-d842-290818bd2858@intel.com>
- <6e98724d-2e75-d1fe-188f-a7010f86c509@codeaurora.org>
- <20210306161616.GC74411@rowland.harvard.edu>
- <CAJZ5v0ihJe8rNjWRwNic_BQUvKbALNcjx8iiPAh5nxLhOV9duw@mail.gmail.com>
- <CAJZ5v0iJ4yqRTt=mTCC930HULNFNTgvO4f9ToVO6pNz53kxFkw@mail.gmail.com>
- <f1e9b21d-1722-d20b-4bae-df7e6ce50bbc@codeaurora.org>
- <2bd90336-18a9-9acd-5abb-5b52b27fc535@codeaurora.org>
- <b13086f3-eea1-51a7-2117-579d520f21fc@intel.com>
- <20cbd52d-7254-3e1c-06a3-712326c99f75@codeaurora.org>
- <c1b38327-fece-4e31-709b-84ec775c6e18@intel.com>
- <ae871d38-4865-5836-d370-e5f9b7be762c@codeaurora.org>
- <24dfb6fc-5d54-6ee2-9195-26428b7ecf8a@intel.com>
- <CAJZ5v0iOT4oi8Ez5xgN9LE0E7J=_Vb7G8a-9etmu+QTvQ1j9ew@mail.gmail.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <d9ea43fd-b065-0e6e-07cb-d6ec6ef97bae@codeaurora.org>
-Date:   Thu, 18 Mar 2021 10:27:39 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        id S229591AbhCRRi3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Mar 2021 13:38:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52488 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230057AbhCRRiR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 18 Mar 2021 13:38:17 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 599E964F1D
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 17:38:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616089097;
+        bh=E5rcNc0hEys6I7pii/m0Vxznfr3tDD6f0niPsxUbHC0=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=RltC6j5RmYtKEbjSnqVdfafnrrrJd5tKCabmSYLT8lSlq207LkpTJMbNANGi9CSNa
+         4zjMoN0EKuR5c9hpXFYyEEPMHHJakBB36noM4UThLHRrcDxNTsboM7tNd25Ac21YVp
+         0o258V7N4zHpndzaKv2uNll0aXPcuqLbKSx+z74COMRTVNFNbQAxZ4VUH9uBeWMrB0
+         T6JyUF+R13rDtq5iD/Lf1R2EZ8kOXcmU0VUZB1Wty5J65rY9vG0cuwu0R4YCX+E2qC
+         JqlGRLUSb4K8hbIr0L3FYgY1V+1Wm2hwhuwxo3snWaJFQdxwX2bl2CYu2DYzKIzONa
+         /EcE7Vl/B/dew==
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 212337] scsi_debug: race at module load and module unload
+Date:   Thu, 18 Mar 2021 17:38:16 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: mcgrof@kernel.org
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: WILL_NOT_FIX
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_status resolution
+Message-ID: <bug-212337-11613-BobYNlW3hA@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-212337-11613@https.bugzilla.kernel.org/>
+References: <bug-212337-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0iOT4oi8Ez5xgN9LE0E7J=_Vb7G8a-9etmu+QTvQ1j9ew@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/18/2021 7:00 AM, Rafael J. Wysocki wrote:
-> On Wed, Mar 17, 2021 at 7:37 AM Adrian Hunter <adrian.hunter@intel.com> wrote:
->>
->> On 16/03/21 10:35 pm, Asutosh Das (asd) wrote:
->>> On 3/16/2021 12:48 AM, Adrian Hunter wrote:
->>>> On 16/03/21 12:22 am, Asutosh Das (asd) wrote:
->>>>> On 3/14/2021 1:11 AM, Adrian Hunter wrote:
->>>>>> On 10/03/21 5:04 am, Asutosh Das (asd) wrote:
->>>>>>> On 3/9/2021 7:56 AM, Asutosh Das (asd) wrote:
->>>>>>>> On 3/8/2021 9:17 AM, Rafael J. Wysocki wrote:
->>>>>>>>> On Mon, Mar 8, 2021 at 5:21 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
->>>>>>>>>>
->>>>>>>>>> On Sat, Mar 6, 2021 at 5:17 PM Alan Stern <stern@rowland.harvard.edu> wrote:
->>>>>>>>>>>
->>>>>>>>>>> On Fri, Mar 05, 2021 at 06:54:24PM -0800, Asutosh Das (asd) wrote:
->>>>>>>>>>>
->>>>>>>>>>>> Now during my testing I see a weird issue sometimes (1 in 7).
->>>>>>>>>>>> Scenario - bootups
->>>>>>>>>>>>
->>>>>>>>>>>> Issue:
->>>>>>>>>>>> The supplier 'ufs_device_wlun 0:0:0:49488' goes into runtime suspend even
->>>>>>>>>>>> when one/more of its consumers are in RPM_ACTIVE state.
->>>>>>>>>>>>
->>>>>>>>>>>> *Log:
->>>>>>>>>>>> [   10.056379][  T206] sd 0:0:0:1: [sdb] Synchronizing SCSI cache
->>>>>>>>>>>> [   10.062497][  T113] sd 0:0:0:5: [sdf] Synchronizing SCSI cache
->>>>>>>>>>>> [   10.356600][   T32] sd 0:0:0:7: [sdh] Synchronizing SCSI cache
->>>>>>>>>>>> [   10.362944][  T174] sd 0:0:0:3: [sdd] Synchronizing SCSI cache
->>>>>>>>>>>> [   10.696627][   T83] sd 0:0:0:2: [sdc] Synchronizing SCSI cache
->>>>>>>>>>>> [   10.704562][  T170] sd 0:0:0:6: [sdg] Synchronizing SCSI cache
->>>>>>>>>>>> [   10.980602][    T5] sd 0:0:0:0: [sda] Synchronizing SCSI cache
->>>>>>>>>>>>
->>>>>>>>>>>> /** Printing all the consumer nodes of supplier **/
->>>>>>>>>>>> [   10.987327][    T5] ufs_device_wlun 0:0:0:49488: usage-count @ suspend: 0
->>>>>>>>>>>> <-- this is the usage_count
->>>>>>>>>>>> [   10.994440][    T5] ufs_rpmb_wlun 0:0:0:49476: PM state - 2
->>>>>>>>>>>> [   11.000402][    T5] scsi 0:0:0:49456: PM state - 2
->>>>>>>>>>>> [   11.005453][    T5] sd 0:0:0:0: PM state - 2
->>>>>>>>>>>> [   11.009958][    T5] sd 0:0:0:1: PM state - 2
->>>>>>>>>>>> [   11.014469][    T5] sd 0:0:0:2: PM state - 2
->>>>>>>>>>>> [   11.019072][    T5] sd 0:0:0:3: PM state - 2
->>>>>>>>>>>> [   11.023595][    T5] sd 0:0:0:4: PM state - 0 << RPM_ACTIVE
->>>>>>>>>>>> [   11.353298][    T5] sd 0:0:0:5: PM state - 2
->>>>>>>>>>>> [   11.357726][    T5] sd 0:0:0:6: PM state - 2
->>>>>>>>>>>> [   11.362155][    T5] sd 0:0:0:7: PM state - 2
->>>>>>>>>>>> [   11.366584][    T5] ufshcd-qcom 1d84000.ufshc: __ufshcd_wl_suspend - 8709
->>>>>>>>>>>> [   11.374366][    T5] ufs_device_wlun 0:0:0:49488: __ufshcd_wl_suspend -
->>>>>>>>>>>> (0) has rpm_active flags
->>>>>>>>>>
->>>>>>>>>> Do you mean that rpm_active of the link between the consumer and the
->>>>>>>>>> supplier is greater than 0 at this point and the consumer is
->>>>>>>>>
->>>>>>>>> I mean is rpm_active of the link greater than 1 (because 1 means "no
->>>>>>>>> active references to the supplier")?
->>>>>>>> Hi Rafael:
->>>>>>>> No - it is not greater than 1.
->>>>>>>>
->>>>>>>> I'm trying to understand what's going on in it; will update when I've something.
->>>>>>>>
->>>>>>>>>
->>>>>>>>>> RPM_ACTIVE, but the supplier suspends successfully nevertheless?
->>>>>>>>>>
->>>>>>>>>>>> [   11.383376][    T5] ufs_device_wlun 0:0:0:49488:
->>>>>>>>>>>> ufshcd_wl_runtime_suspend <-- Supplier suspends fine.
->>>>>>>>>>>> [   12.977318][  T174] sd 0:0:0:4: [sde] Synchronizing SCSI cache
->>>>>>>>>>>>
->>>>>>>>>>>> And the the suspend of sde is stuck now:
->>>>>>>>>>>> schedule+0x9c/0xe0
->>>>>>>>>>>> schedule_timeout+0x40/0x128
->>>>>>>>>>>> io_schedule_timeout+0x44/0x68
->>>>>>>>>>>> wait_for_common_io+0x7c/0x100
->>>>>>>>>>>> wait_for_completion_io+0x14/0x20
->>>>>>>>>>>> blk_execute_rq+0x90/0xcc
->>>>>>>>>>>> __scsi_execute+0x104/0x1c4
->>>>>>>>>>>> sd_sync_cache+0xf8/0x2a0
->>>>>>>>>>>> sd_suspend_common+0x74/0x11c
->>>>>>>>>>>> sd_suspend_runtime+0x14/0x20
->>>>>>>>>>>> scsi_runtime_suspend+0x64/0x94
->>>>>>>>>>>> __rpm_callback+0x80/0x2a4
->>>>>>>>>>>> rpm_suspend+0x308/0x614
->>>>>>>>>>>> pm_runtime_work+0x98/0xa8
->>>>>>>>>>>>
->>>>>>>>>>>> I added 'DL_FLAG_RPM_ACTIVE' while creating links.
->>>>>>>>>>>>           if (hba->sdev_ufs_device) {
->>>>>>>>>>>>                   link = device_link_add(&sdev->sdev_gendev,
->>>>>>>>>>>>                                       &hba->sdev_ufs_device->sdev_gendev,
->>>>>>>>>>>>                                      DL_FLAG_PM_RUNTIME|DL_FLAG_RPM_ACTIVE);
->>>>>>>>>>>> I didn't expect this to resolve the issue anyway and it didn't.
->>>>>>>>>>>>
->>>>>>>>>>>> Another interesting point here is when I resume any of the above suspended
->>>>>>>>>>>> consumers, it all goes back to normal, which is kind of expected. I tried
->>>>>>>>>>>> resuming the consumer and the supplier is resumed and the supplier is
->>>>>>>>>>>> suspended when all the consumers are suspended.
->>>>>>>>>>>>
->>>>>>>>>>>> Any pointers on this issue please?
->>>>>>>>>>>>
->>>>>>>>>>>> @Bart/@Alan - Do you've any pointers please?
->>>>>>>>>>>
->>>>>>>>>>> It's very noticeable that although you seem to have isolated a bug in
->>>>>>>>>>> the power management subsystem (supplier goes into runtime suspend
->>>>>>>>>>> even when one of its consumers is still active), you did not CC the
->>>>>>>>>>> power management maintainer or mailing list.
->>>>>>>>>>>
->>>>>>>>>>> I have added the appropriate CC's.
->>>>>>>>>>
->>>>>>>>>> Thanks Alan!
->>>>>>>>
->>>>>>>>
->>>>>>>
->>>>>>> Hello
->>>>>>> I & Can (thanks CanG) debugged this further:
->>>>>>>
->>>>>>> Looks like this issue can occur if the sd probe is asynchronous.
->>>>>>>
->>>>>>> Essentially, the sd_probe() is done asynchronously and driver_probe_device() invokes pm_runtime_get_suppliers() before invoking sd_probe().
->>>>>>>
->>>>>>> But scsi_probe_and_add_lun() runs in a separate context.
->>>>>>> So the scsi_autopm_put_device() invoked from scsi_scan_host() context reduces the link->rpm_active to 1. And sd_probe() invokes scsi_autopm_put_device() and starts a timer. And then driver_probe_device() invoked from __device_attach_async_helper context reduces the link->rpm_active to 1 thus enabling the supplier to suspend before the consumer suspends.
->>>>>>>
->>>>>>> So if:
->>>>>>> Context T1:
->>>>>>> [1] scsi_probe_and_add_lun()
->>>>>>> [2]    |- scsi_autopm_put_device() - reduce the link->rpm_active to 1
->>>>>>>
->>>>>>> Context T2:
->>>>>>> __device_attach_async_helper()
->>>>>>>        |- driver_probe_device()
->>>>>>>            |- sd_probe()
->>>>>>> In between [1] and [2] say, driver_probe_device() -> sd_probe() is invoked in a separate context from __device_attach_async_helper().
->>>>>>> The driver_probe_device() -> pm_runtime_get_suppliers() but [2] would reduce link->rpm_active to 1.
->>>>>>> Then sd_probe() would invoke rpm_resume() and proceed as is.
->>>>>>> When sd_probe() invokes scsi_autopm_put_device() it'd start a timer, dev->power.timer_autosuspends = 1.
->>>>>>>
->>>>>>> Now then, pm_runtime_put_suppliers() is invoked from driver_probe_device() and that makes the link->rpm_active = 1.
->>>>>>> But by now, the corresponding 'sd dev' (consumer) usage_count = 0, state = RPM_ACTIVE and link->rpm_active = 1.
->>>>>>> At this point of time, all other 'sd dev' (consumers) _may_ be suspended or active but would have the link->rpm_active = 1.
->>>>>>
->>>>>> Is this with DL_FLAG_RPM_ACTIVE?  In that case, wouldn't active
->>>>>> consumers have link->rpm_active = 2 and also have incremented
->>>>>> the supplier's usage_count?
->>>
->>> Yes this is with DL_FLAG_RPM_ACTIVE.
->>>
->>> Please let me share a log here:
->>> BEF means - Before, AFT means After.
->>>
->>> [    6.843445][    T7] scsi 0:0:0:4: [UFSDBG]: ufshcd_setup_links:4779:  supp: usage_cnt: 3 Link - 0:0:0:49488 link-rpm_active: 2 avail_luns: 5
->>> [    6.892545][    T7] scsi 0:0:0:4: pm_runtime_get_suppliers: (0:0:0:49488): supp: usage_count: 5 rpm_active: 4
->>>
->>> In the above log, T7 is the context in which this scsi device is being added - scsi_sysfs_add_sdev()
->>>
->>> [    6.931846][    T7] ufs_rpmb_wlun 0:0:0:4: [UFSDBG]: ufshcd_rpmb_probe:9692: invoked
->>> [    6.941246][    T7] scsi 0:0:0:4: pm_runtime_put_suppliers: rpm_active: 4
->>>
->>> [    6.941246][    T7] scsi 0:0:0:4: pm_runtime_put_suppliers: (0:0:0:49488) [BEF] usage_count: 5
->>> [    6.941247][    T7] scsi 0:0:0:4: pm_runtime_put_suppliers: (0:0:0:49488) [AFT] usage_count: 4 rpm_active: 3
->>>
->>> [    6.941267][    T7] scsi 0:0:0:4: rpm_put_suppliers: [BEF] Supp (0:0:0:49488) usage_count: 4 rpm_active: 3
->>>
->>> ------ T196 Context comes in while T7 is running ----------
->>> [    6.941466][  T196] scsi 0:0:0:4: pm_runtime_get_suppliers: (0:0:0:49488): supp: usage_count: 5 rpm_active: 4
->>> --------------------------------------------------------------
->>>
->>> [    7.788397][    T7] scsi 0:0:0:4: rpm_put_suppliers: [AFT] Supp (0:0:0:49488) usage_count: 2 rpm_active: 1
->>
->>
->>
->>>
->>> --
->>>
->>> T196 is the context in which sd_probe() is invoked for this scsi device.
->>>
->>> [    7.974410][  T196] sd 0:0:0:4: [sde] Attached SCSI disk
->>> [    7.984188][  T196] sd 0:0:0:4: pm_runtime_put_suppliers: rpm_active: 2
->>> [    7.998424][  T196] sd 0:0:0:4: pm_runtime_put_suppliers: (0:0:0:49488) [BEF] usage_count: 4
->>> [    8.017320][  T196] sd 0:0:0:4: pm_runtime_put_suppliers: (0:0:0:49488) [AFT] usage_count: 1 rpm_active: 1
->>>
->>> The reference to the link is released after sd_probe() is completed.
->>> At this point, the rpm_active should be 2. And the rpm_active should become 1 when sd 0:0:0:4 actually suspends. But at the end of sd_probe() the suspend is only scheduled. However the supplier is now free to suspend.
->>>
->>> In this log, the usage_count of supplier becomes 0 here:
->>> [   11.963885][  T117] sd 0:0:0:7: rpm_put_suppliers: [BEF] Supp (0:0:0:49488) usage_count: 1 rpm_active: 2
->>> [   11.973821][  T117] sd 0:0:0:7: rpm_put_suppliers: [AFT] Supp (0:0:0:49488) usage_count: 0 rpm_active: 1
->>>
->>> However, the consumer sd 0:0:0:4 is still active but has released the reference to the supplier:
->>
->> If that is the case, then it is an error in PM not UFS.
->>
->> A second look at the code around rpm_put_suppliers() does look
->> potentially racy, since there does not appear to be anything
->> stopping the runtime_status changing between
->> spin_unlock_irq(&dev->power.lock) and device_links_read_lock().
->>
->> Rafael, can you comment?
-> 
-> Indeed, if the device is suspending, changing its PM-runtime status to
-> RPM_SUSPENDED and dropping its power.lock allows a concurrent
-> rpm_resume() to run and resume the device before the suppliers can be
-> suspended.
-> 
-> That's incorrect and has been introduced by commit 44cc89f76464 ("PM:
-> runtime: Update device status before letting suppliers suspend").
-> 
-> It is probably better to revert that commit and address the original
-> issue in a different way.
-> 
-Hello,
-One approach to address the original issue could be to prevent the scsi 
-devices from suspending until the probe is completed, perhaps?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D212337
 
-Please let me know if there's a better way to handle this.
-Else I'd address all other comments from Adrian and push a change with 
-the above approach.
+Luis Chamberlain (mcgrof@kernel.org) changed:
 
->>          /*
->>           * If the device is suspending and the callback has returned success,
->>           * drop the usage counters of the suppliers that have been reference
->>           * counted on its resume.
->>           *
->>           * Do that if the resume fails too.
->>           */
->>          put = dev->power.runtime_status == RPM_SUSPENDING && !retval;
->>          if (put)
->>                  __update_runtime_status(dev, RPM_SUSPENDED);
->>          else
->>                  put = get && retval;
->>
->>          if (put) {
->>                  spin_unlock_irq(&dev->power.lock);
->>
->>                  idx = device_links_read_lock();
->>
->> fail:
->>                  rpm_put_suppliers(dev);
->>
->>                  device_links_read_unlock(idx);
->>
->>                  spin_lock_irq(&dev->power.lock);
->>          }
->>
->>
->>
->>
->>> [   12.002792][  T117] scsi 0:0:0:49456: rpm_status - 2
->>> [   12.002806][  T117] sd 0:0:0:0: rpm_status - 2
->>> [   12.002834][  T117] sd 0:0:0:1: rpm_status - 2
->>> [   12.017730][  T117] sd 0:0:0:2: rpm_status - 2
->>> [   12.041317][  T117] sd 0:0:0:3: rpm_status - 2
->>> [   12.045953][  T117] sd 0:0:0:4: rpm_status - 0
->>>
->>> And sd 0:0:0:4 tries to suspend here:
->>> [   15.465914][  T117] sd 0:0:0:4: [sde] Synchronizing SCSI cache
->>>
->>>>>>
->>>>>> Another outstanding issue that comes to mind, is to ensure
->>>>>> hba->sdev_ufs_device does not runtime suspend before it is probed.
->>>>>> I suggest changing ufshcd_slave_configure() so it does not set
->>>>>> sdev->rpm_autosuspend for hba->sdev_ufs_device, and instead do
->>>>>> pm_runtime_allow / pm_runtime_forbid() in ufshcd_wl_probe() /
->>>>>> ufshcd_wl_remove() respectively.
->>>>>>
->>> If pm_runtime_allow() is invoked from ufshcd_wl_probe() it'd invoke runtime_suspend on hba->sdev_ufs_device before exiting scsi_sysfs_add_sdev(). So I think pm_runtime_allow() should be invoked in ufshcd_scsi_add_wlus().
->>>
->>>>>> However we still want to stop hba->sdev_ufs_device runtime
->>>>>> suspending while consumers are being added.  With that in mind,
->>>>>> I would expect pm_runtime_get_noresume(&hba->sdev_ufs_device->sdev_gendev)
->>>>>> in ufshcd_scsi_add_wlus() to come *before*
->>>>>> ufshcd_blk_pm_runtime_init(hba->sdev_ufs_device).  In fact, it would
->>>>>> be more logical to make it, pm_runtime_get_sync() since we require
->>>>>> hba->sdev_ufs_device to be active at that point.
->>>>>>
->>> Correct, scsi_autopm_get_device(hba->sdev_ufs_device) should be invoked before ufshcd_blk_pm_runtime_init(hba->sdev_ufs_device).
->>> Now a corresponding scsi_autopm_put_device(hba->sdev_ufs_device) is invoked after the consumers are added in ufshcd_setup_links().
->>> Even then I think this issue would still pop up.
->>>
->>>>>>
->>>>>
->>>>> Hi Adrian,
->>>>> I think the v11 that I pushed can handle this.
->>>>> runtime-suspend is forbidden at probe and is re-enabled after probe is done. Please take a look and let me know if I'm missing something.
->>>>
->>>> If the PM APIs are being used correctly, the usage and active
->>>> counts should never be wrong.  If they were, then that would
->>>> be an issue for the PM framework.
->>>> It is more likely that I'm using it incorrectly :).
->>>
->>>> However, it is hard to tell what the issues are until all the
->>>> UFS driver changes have been completed, such as the ones I
->>>> suggested above above.
->>>>
->>> Ok, understood.
->>>
->>>> v11 could be hiding issues rather than fixing them.
->>>>
->>> Based on the logs, in v11, I tried to forbid any runtime-suspend until sd_probe() is done.
->>> I could be misunderstanding the whole thing though.
->>>
->>> Having said that, I will make the changes as per your suggestions and push a v12. I will test with v12 as well and see if this issue is seen.
->>>
->>>>>
->>>>>>>
->>>>>>> Since the supplier has 0 auto-suspend delay, it now suspends!
->>>>>>>
->>>>>>>
->>>>>>> Context [T1]
->>>>>>> Call trace:
->>>>>>> dump_backtrace+0x0/0x1d4
->>>>>>> show_stack+0x18/0x24
->>>>>>> dump_stack+0xc4/0x144
->>>>>>> __pm_runtime_idle+0xb4/0x184
->>>>>>> scsi_autopm_put_device+0x18/0x24
->>>>>>> scsi_sysfs_add_sdev+0x26c/0x278
->>>>>>> scsi_probe_and_add_lun+0xbac/0xd48
->>>>>>> __scsi_scan_target+0x38c/0x510
->>>>>>> scsi_scan_host_selected+0x14c/0x1e4
->>>>>>> scsi_scan_host+0x1e0/0x228
->>>>>>> ufshcd_async_scan+0x39c/0x408
->>>>>>> async_run_entry_fn+0x48/0x128
->>>>>>> process_one_work+0x1f0/0x470
->>>>>>> worker_thread+0x26c/0x4c8
->>>>>>> kthread+0x13c/0x320
->>>>>>> ret_from_fork+0x10/0x18
->>>>>>>
->>>>>>>
->>>>>>> Context [T2]
->>>>>>> Call trace:
->>>>>>> dump_backtrace+0x0/0x1d4
->>>>>>> show_stack+0x18/0x24
->>>>>>> dump_stack+0xc4/0x144
->>>>>>> rpm_get_suppliers+0x48/0x1ac
->>>>>>> __rpm_callback+0x58/0x12c
->>>>>>> rpm_resume+0x3a4/0x618
->>>>>>> __pm_runtime_resume+0x50/0x80
->>>>>>> scsi_autopm_get_device+0x20/0x54
->>>>>>> sd_probe+0x40/0x3d0
->>>>>>> really_probe+0x1bc/0x4a0
->>>>>>> driver_probe_device+0x84/0xf0
->>>>>>> __device_attach_driver+0x114/0x138
->>>>>>> bus_for_each_drv+0x84/0xd0
->>>>>>> __device_attach_async_helper+0x7c/0xf0
->>>>>>> async_run_entry_fn+0x48/0x128
->>>>>>> process_one_work+0x1f0/0x470
->>>>>>> worker_thread+0x26c/0x4c8
->>>>>>> kthread+0x13c/0x320
->>>>>>> ret_from_fork+0x10/0x18
->>>>>>>
->>>>>>> Below prints show how link->rpm_active becomes 1 for sd 0:0:0:4
->>>>>>> [    7.574654][  T212] Call trace:
->>>>>>> [    7.574657][  T212]  dump_backtrace+0x0/0x1d4
->>>>>>> [    7.574661][  T212]  show_stack+0x18/0x24
->>>>>>> [    7.574665][  T212]  dump_stack+0xc4/0x144
->>>>>>> [    7.574668][  T212]  __pm_runtime_idle+0xb4/0x184
->>>>>>> [    7.574671][  T212]  scsi_autopm_put_device+0x18/0x24
->>>>>>> [    7.574675][  T212]  sd_probe+0x314/0x3d0
->>>>>>> [    7.574677][  T212]  really_probe+0x1bc/0x4a0
->>>>>>> [    7.574680][  T212]  driver_probe_device+0x84/0xf0
->>>>>>> [    7.574683][  T212]  __device_attach_driver+0x114/0x138
->>>>>>> [    7.574686][  T212]  bus_for_each_drv+0x84/0xd0
->>>>>>> [    7.574689][  T212]  __device_attach_async_helper+0x7c/0xf0
->>>>>>> [    7.574692][  T212]  async_run_entry_fn+0x48/0x128
->>>>>>> [    7.574695][  T212]  process_one_work+0x1f0/0x470
->>>>>>> [    7.574698][  T212]  worker_thread+0x26c/0x4c8
->>>>>>> [    7.574700][  T212]  kthread+0x13c/0x320
->>>>>>> [    7.574703][  T212]  ret_from_fork+0x10/0x18
->>>>>>> [    7.574706][  T212] sd 0:0:0:4: scsi_runtime_idle
->>>>>>> [    7.574712][  T212] sd 0:0:0:4: __pm_runtime_idle: aft: [UFSDBG]: pwr.timer_autosuspends: 1 pwr.request_pending: 0 retval: -16 pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
->>>>>>> [    7.574715][  T212] sd 0:0:0:4: sd_probe: [UFSDBG]: Exit
->>>>>>> [    7.574738][  T212] sd 0:0:0:4: __pm_runtime_idle: b4: [UFSDBG]: pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
->>>>>>>
->>>>>>> [    7.574752][  T212] Workqueue: events_unbound async_run_entry_fn
->>>>>>> [    7.574754][  T212] Call trace:
->>>>>>> [    7.574758][  T212]  dump_backtrace+0x0/0x1d4
->>>>>>> [    7.574761][  T212]  show_stack+0x18/0x24
->>>>>>> [    7.574765][  T212]  dump_stack+0xc4/0x144
->>>>>>> [    7.574767][  T212]  __pm_runtime_idle+0xb4/0x184
->>>>>>> [    7.574770][  T212]  driver_probe_device+0x94/0xf0
->>>>>>> [    7.574773][  T212]  __device_attach_driver+0x114/0x138
->>>>>>> [    7.574775][  T212]  bus_for_each_drv+0x84/0xd0
->>>>>>> [    7.574778][  T212]  __device_attach_async_helper+0x7c/0xf0
->>>>>>> [    7.574781][  T212]  async_run_entry_fn+0x48/0x128
->>>>>>> [    7.574783][  T212]  process_one_work+0x1f0/0x470
->>>>>>> [    7.574786][  T212]  worker_thread+0x26c/0x4c8
->>>>>>> [    7.574788][  T212]  kthread+0x13c/0x320
->>>>>>> [    7.574791][  T212]  ret_from_fork+0x10/0x18
->>>>>>> [    7.574848][   T80] sd 0:0:0:4: scsi_runtime_idle
->>>>>>> [    7.574858][  T212] sd 0:0:0:4: __pm_runtime_idle: aft: [UFSDBG]: pwr.timer_autosuspends: 1 pwr.request_pending: 0 retval: 0 pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:2
->>>>>>> [    7.574863][  T212] sd 0:0:0:4: pm_runtime_put_suppliers: [UFSDBG]: rpm_status: 0 link-rpm_active:1
->>>>>>> [    7.574866][  T212] sd 0:0:0:4: async probe completed
->>>>>>> [    7.574870][  T212] sd 0:0:0:4: __pm_runtime_idle: b4: [UFSDBG]: pwr.request: 0 usage_count: 0 rpm_status: 0 link-rpm_active:1
->>>>>>>
->>>>>>>
->>>>>>> So, from the above it looks like when async probe is enabled this is a possibility.
->>>>>>>
->>>>>>> I don't see a way around this. Please let me know if you (@Alan/@Bart/@Adrian) have any thoughts on this.
->>>>>>>
->>>>>>> Thanks,
->>>>>>> -asd
->>>>>>>
->>>>>>
->>>>>
->>>>>
->>>>
->>>
->>>
->>> --
->>> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
->>> Linux Foundation Collaborative Project
->>
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|---                         |WILL_NOT_FIX
+
+--- Comment #1 from Luis Chamberlain (mcgrof@kernel.org) ---
+
+At first glance this might seem like a problem with scsi's async probe, and=
+ so
+one might believe disabling CONFIG_SCSI_SCAN_ASYNC could help, however it d=
+oes
+not. Linux scsi doesn't have semantics to allow only one driver to prefer to
+probe asynchronously, but we can shoe-horn this in as follows:
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 3cdeaeb92933..d970050ae866 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -857,6 +857,8 @@ static const int device_qfull_result =3D
+
+ static const int condition_met_result =3D SAM_STAT_CONDITION_MET;
+
++MODULE_IMPORT_NS(SCSI_PRIVATE);
++int scsi_complete_async_scans(void);
+
+ /* Only do the extra work involved in logical block provisioning if one or
+  * more of the lbpu, lbpws or lbpws10 parameters are given and we are doing
+@@ -6851,6 +6853,7 @@ static int __init scsi_debug_init(void)
+                        }
+                }
+        }
++       scsi_complete_async_scans();
+        if (sdebug_verbose)
+                pr_info("built %d host(s)\n", sdebug_num_hosts);
+
+Even with this present though we still have he refcnt issue. A better way to
+see what is going on is to trace the kernel module calls after boot and see=
+ why
+perhaps certain refcounts for the module are high at times and why they are=
+ not
+in most other cases.
+
+Enable module tracing
+
+# for i in $(sudo find /sys/kernel/debug/tracing/events/module/ -name
+"enable"); do echo 1 > $i; done
+
+Run a loop to test modprobe / rmmod, and fail if either fails. In this case
+let's assume a success of rmmod once and then a failure on the second remov=
+al.
+We get the following ftrace, I'll provide some comments in areas where this=
+ may
+be useful
+
+# cat trace /sys/kernel/tracing
+# tracer: nop
+#
+# entries-in-buffer/entries-written: 355/355   #P:8
+#
+#                                _-----=3D> irqs-off
+#                               / _----=3D> need-resched
+#                              | / _---=3D> hardirq/softirq
+#                              || / _--=3D> preempt-depth
+#                              ||| /     delay
+#           TASK-PID     CPU#  ||||   TIMESTAMP  FUNCTION
+#              | |         |   ||||      |         |
+        modprobe-902     [005] ....    45.731217: module_get: scsi_mod
+call_site=3Dresolve_symbol refcnt=3D6
+        modprobe-902     [005] ....    45.732844: module_load: scsi_debug E
+        modprobe-902     [005] ....    45.732850: module_get: scsi_debug
+call_site=3Dsdebug_add_store [scsi_debug] refcnt=3D3
+        modprobe-902     [005] ....    45.733589: module_put: scsi_debug
+call_site=3Dsdebug_add_store [scsi_debug] refcnt=3D2
+        modprobe-902     [005] ....    45.733963: module_get: scsi_debug
+call_site=3Dsdebug_driver_probe [scsi_debug] refcnt=3D3
+        modprobe-902     [001] ....    45.738246: module_put: scsi_debug
+call_site=3Dsdebug_driver_probe [scsi_debug] refcnt=3D2
+   kworker/u16:3-173     [002] ....    45.738790: module_get: scsi_debug
+call_site=3Dscsi_debug_slave_alloc [scsi_debug] refcnt=3D3
+   kworker/u16:3-173     [002] ....    45.739943: module_put: scsi_debug
+call_site=3Dscsi_debug_slave_alloc [scsi_debug] refcnt=3D2
+   kworker/u16:3-173     [007] ....    45.748555: module_get: scsi_debug
+call_site=3Dscsi_debug_slave_configure [scsi_debug] refcnt=3D3
+   kworker/u16:3-173     [007] .N..    45.749962: module_put: scsi_debug
+call_site=3Dscsi_debug_slave_configure [scsi_debug] refcnt=3D2
+   kworker/u16:3-173     [000] d...    45.766235: module_get: scsi_debug
+call_site=3Dscsi_device_get [scsi_mod] refcnt=3D3
+   kworker/u16:3-173     [000] d...    45.769197: module_get: scsi_debug
+call_site=3Dscsi_device_get [scsi_mod] refcnt=3D4
+   kworker/u16:3-173     [000] ....    45.769197: module_put: scsi_debug
+call_site=3Dscsi_device_put [scsi_mod] refcnt=3D3
+   kworker/u16:3-173     [000] ....    45.769198: module_put: scsi_debug
+call_site=3Dscsi_device_put [scsi_mod] refcnt=3D2
+   kworker/u16:3-173     [000] d...    45.769199: module_get: scsi_debug
+call_site=3Dscsi_device_get [scsi_mod] refcnt=3D3
+   kworker/u16:3-173     [000] ....    45.769785: module_put: scsi_debug
+call_site=3D__scsi_iterate_devices [scsi_mod] refcnt=3D2
+        modprobe-902     [001] ....    45.773492: module_put: scsi_debug
+call_site=3Ddo_init_module refcnt=3D1
+
+So we can escape initialization early in one case as sg module is not yet
+available.
+
+   systemd-udevd-907     [001] ....    45.773818: module_get: scsi_mod
+call_site=3Dresolve_symbol refcnt=3D7
+   systemd-udevd-907     [001] ....    45.774708: module_load: sg E
+   systemd-udevd-907     [001] ....    45.776173: module_put: sg
+call_site=3Ddo_init_module refcnt=3D1
+   systemd-udevd-907     [001] ....    45.778501: module_get: scsi_mod
+call_site=3Dresolve_symbol refcnt=3D8
+   systemd-udevd-907     [001] ....    45.778569: module_get: t10_pi
+call_site=3Dresolve_symbol refcnt=3D3
+   systemd-udevd-907     [001] ....    45.779733: module_load: sd_mod E
+   systemd-udevd-907     [001] ....    45.828660: module_put: sd_mod
+call_site=3Ddo_init_module refcnt=3D1
+           rmmod-908     [003] ....    45.921238: module_free: scsi_debug
+
+We remove the scsi_debug module here fine before systemd-udevd has opened t=
+he
+device.
+
+           rmmod-908     [003] ....    45.921442: module_put: scsi_mod
+call_site=3Dmodule_unload_free refcnt=3D7
+        modprobe-914     [006] ....    45.944276: module_get: scsi_mod
+call_site=3Dresolve_symbol refcnt=3D8
+
+        modprobe-914     [006] ....    45.945820: module_load: scsi_debug E
+        modprobe-914     [006] ....    45.945825: module_get: scsi_debug
+call_site=3Dsdebug_add_store [scsi_debug] refcnt=3D3
+        modprobe-914     [006] ....    45.946553: module_put: scsi_debug
+call_site=3Dsdebug_add_store [scsi_debug] refcnt=3D2
+        modprobe-914     [006] ....    45.947044: module_get: scsi_debug
+call_site=3Dsdebug_driver_probe [scsi_debug] refcnt=3D3
+        modprobe-914     [006] ....    45.952509: module_put: scsi_debug
+call_site=3Dsdebug_driver_probe [scsi_debug] refcnt=3D2
+   kworker/u16:3-173     [006] ....    45.953257: module_get: scsi_debug
+call_site=3Dscsi_debug_slave_alloc [scsi_debug] refcnt=3D3
+   kworker/u16:3-173     [006] .N..    45.954616: module_put: scsi_debug
+call_site=3Dscsi_debug_slave_alloc [scsi_debug] refcnt=3D2
+   kworker/u16:3-173     [006] ....    45.964402: module_get: scsi_debug
+call_site=3Dscsi_debug_slave_configure [scsi_debug] refcnt=3D3
+   kworker/u16:3-173     [006] .N..    45.965695: module_put: scsi_debug
+call_site=3Dscsi_debug_slave_configure [scsi_debug] refcnt=3D2
+   kworker/u16:3-173     [005] d...    46.213491: module_get: scsi_debug
+call_site=3Dscsi_device_get [scsi_mod] refcnt=3D3
+   kworker/u16:3-173     [005] d...    46.215346: module_get: scsi_debug
+call_site=3Dscsi_device_get [scsi_mod] refcnt=3D4
+   kworker/u16:3-173     [005] ....    46.215347: module_put: scsi_debug
+call_site=3Dscsi_device_put [scsi_mod] refcnt=3D3
+   kworker/u16:3-173     [005] ....    46.215348: module_put: scsi_debug
+call_site=3Dscsi_device_put [scsi_mod] refcnt=3D2
+   kworker/u16:3-173     [005] d...    46.215350: module_get: scsi_debug
+call_site=3Dscsi_device_get [scsi_mod] refcnt=3D3
+   kworker/u16:3-173     [005] ....    46.220794: module_put: scsi_debug
+call_site=3D__scsi_iterate_devices [scsi_mod] refcnt=3D2
+   kworker/u16:4-174     [004] ....    46.224892: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+   kworker/u16:4-174     [004] ....    46.224893: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [004] ....    46.224894: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.228906: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [004] d.h.    46.228907: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.228907: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D2
+   kworker/u16:4-174     [004] ....    46.230926: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+   kworker/u16:4-174     [004] ....    46.230926: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [004] ....    46.230927: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.234937: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [004] d.h.    46.234938: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.234938: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D2
+   kworker/u16:4-174     [004] .N..    46.246062: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+   kworker/u16:4-174     [004] .N..    46.246064: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [004] .N..    46.246065: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.250071: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [004] d.h.    46.250072: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.250072: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D2
+   kworker/u16:4-174     [004] ....    46.252943: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+   kworker/u16:4-174     [004] ....    46.252943: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [004] ....    46.252944: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.256956: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [004] d.h.    46.256957: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.256957: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D2
+   kworker/u16:4-174     [004] ....    46.258547: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+   kworker/u16:4-174     [004] ....    46.258547: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [004] ....    46.258548: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.262558: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [004] d.h.    46.262558: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.262559: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D2
+   kworker/u16:4-174     [004] .N..    46.266484: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+   kworker/u16:4-174     [004] .N..    46.266484: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [004] .N..    46.266485: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.270492: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [004] d.h.    46.270492: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.270493: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D2
+   kworker/u16:4-174     [004] ....    46.272381: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+   kworker/u16:4-174     [004] ....    46.272382: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [004] ....    46.272382: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.276393: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [004] d.h.    46.276393: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.276394: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D2
+   kworker/u16:4-174     [004] ....    46.278258: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+   kworker/u16:4-174     [004] ....    46.278259: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [004] ....    46.278259: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.282269: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [004] d.h.    46.282270: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+          <idle>-0       [004] d.h.    46.282270: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D2
+   kworker/u16:4-174     [004] ....    46.374616: module_get: sd_mod
+call_site=3Dblkdev_get_no_open refcnt=3D2
+   kworker/u16:4-174     [004] ....    46.374617: module_get: scsi_debug
+call_site=3Dscsi_device_get [scsi_mod] refcnt=3D3
+    kworker/4:1H-189     [004] ....    46.376457: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+    kworker/4:1H-189     [004] ....    46.376457: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+    kworker/4:1H-189     [004] ....    46.376458: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+     kworker/4:1-62      [004] d.h.    46.380469: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+     kworker/4:1-62      [004] d.h.    46.380470: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+     kworker/4:1-62      [004] d.h.    46.380470: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+    kworker/0:1H-89      [000] ....    46.383278: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+    kworker/0:1H-89      [000] ....    46.383279: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+    kworker/0:1H-89      [000] ....    46.383280: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [000] d.h.    46.387291: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [000] d.h.    46.387292: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [000] d.h.    46.387292: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+    kworker/0:1H-89      [000] ....    46.389080: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+    kworker/0:1H-89      [000] ....    46.389081: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+    kworker/0:1H-89      [000] ....    46.389081: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [000] d.h.    46.393090: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [000] d.h.    46.393091: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [000] d.h.    46.393091: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   kworker/u16:4-174     [000] ....    46.393170: module_put: scsi_debug
+call_site=3Dscsi_device_put [scsi_mod] refcnt=3D2
+   kworker/u16:4-174     [000] ....    46.393171: module_put: sd_mod
+call_site=3Dblkdev_put refcnt=3D1
+   systemd-udevd-907     [003] ....    46.393476: module_get: sd_mod
+call_site=3Dblkdev_get_no_open refcnt=3D2
+   systemd-udevd-907     [003] ....    46.393477: module_get: scsi_debug
+call_site=3Dscsi_device_get [scsi_mod] refcnt=3D3
+   kworker/u16:4-174     [000] ....    46.395771: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [000] ....    46.395772: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   kworker/u16:4-174     [000] ....    46.395773: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [000] d.h.    46.399789: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [000] d.h.    46.399790: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [000] d.h.    46.399790: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   kworker/u16:4-174     [000] ....    46.402067: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [000] ....    46.402068: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   kworker/u16:4-174     [000] ....    46.402069: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [000] d.h.    46.406078: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [000] d.h.    46.406079: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [000] d.h.    46.406079: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+       multipath-926     [005] ....    46.409545: module_get: sd_mod
+call_site=3Dblkdev_get_no_open refcnt=3D3
+       multipath-926     [005] ....    46.409547: module_get: scsi_debug
+call_site=3Dscsi_device_get [scsi_mod] refcnt=3D4
+       multipath-926     [005] ....    46.409649: module_get: dm_mod
+call_site=3Dmisc_open refcnt=3D2
+       multipath-926     [005] ....    46.409773: module_put: dm_mod
+call_site=3D__fput refcnt=3D1
+       multipath-926     [005] ....    46.410096: module_put: scsi_debug
+call_site=3Dscsi_device_put [scsi_mod] refcnt=3D3
+       multipath-926     [005] ....    46.410097: module_put: sd_mod
+call_site=3Dblkdev_put refcnt=3D2
+   systemd-udevd-907     [003] ....    46.410279: module_get: sd_mod
+call_site=3Dblkdev_get_no_open refcnt=3D3
+   systemd-udevd-907     [003] ....    46.410280: module_get: scsi_debug
+call_site=3Dscsi_device_get [scsi_mod] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.413760: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.413760: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   systemd-udevd-907     [003] ....    46.413760: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.417764: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [003] d.h.    46.417764: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.417764: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [000] ....    46.438981: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   kworker/u16:4-174     [000] ....    46.438981: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   kworker/u16:4-174     [000] ....    46.438982: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.439875: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   systemd-udevd-907     [003] ....    46.439875: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D7
+   systemd-udevd-907     [003] ....    46.439876: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.442992: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D7
+          <idle>-0       [000] d.h.    46.442993: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.442994: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.443880: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [003] d.h.    46.443880: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.443880: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [000] ....    46.444546: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   kworker/u16:4-174     [000] ....    46.444547: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   kworker/u16:4-174     [000] ....    46.444548: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.445450: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   systemd-udevd-907     [003] ....    46.445450: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D7
+   systemd-udevd-907     [003] ....    46.445450: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.448558: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D7
+          <idle>-0       [000] d.h.    46.448559: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.448559: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.449452: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [003] d.h.    46.449453: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.449453: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [000] ....    46.450135: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   kworker/u16:4-174     [000] ....    46.450136: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   kworker/u16:4-174     [000] ....    46.450136: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.451003: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   systemd-udevd-907     [003] ....    46.451003: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D7
+   systemd-udevd-907     [003] ....    46.451004: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.454147: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D7
+          <idle>-0       [000] d.h.    46.454148: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.454148: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.455008: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [003] d.h.    46.455008: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.455008: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [000] ....    46.455910: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   kworker/u16:4-174     [000] ....    46.455910: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   kworker/u16:4-174     [000] ....    46.455911: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.456804: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   systemd-udevd-907     [003] ....    46.456805: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D7
+   systemd-udevd-907     [003] ....    46.456805: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.459920: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D7
+          <idle>-0       [000] d.h.    46.459921: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.459921: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.460808: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [003] d.h.    46.460809: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.460809: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [000] ....    46.461664: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   kworker/u16:4-174     [000] ....    46.461664: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   kworker/u16:4-174     [000] ....    46.461665: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.462544: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   systemd-udevd-907     [003] ....    46.462545: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D7
+   systemd-udevd-907     [003] ....    46.462545: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.465674: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D7
+          <idle>-0       [000] d.h.    46.465675: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.465675: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.466547: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [003] d.h.    46.466548: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.466548: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+   kworker/u16:4-174     [000] ....    46.467413: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   kworker/u16:4-174     [000] ....    46.467413: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   kworker/u16:4-174     [000] ....    46.467414: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.468319: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   systemd-udevd-907     [003] ....    46.468319: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D7
+   systemd-udevd-907     [003] ....    46.468319: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.471425: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D7
+          <idle>-0       [000] d.h.    46.471426: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [000] d.h.    46.471426: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.472322: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D6
+          <idle>-0       [003] d.h.    46.472323: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.472323: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.473538: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.473538: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D6
+   systemd-udevd-907     [003] ....    46.473538: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+        modprobe-914     [006] ....    46.474870: module_put: scsi_debug
+call_site=3Ddo_init_module refcnt=3D4
+
+          <idle>-0       [003] d.h.    46.477540: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.477541: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.477541: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.478789: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.478789: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.478790: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.482795: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.482796: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.482796: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.483713: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.483713: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.483714: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.487723: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.487723: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.487724: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.488736: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.488737: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.488737: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.492740: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.492741: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.492741: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.493621: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.493621: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.493621: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.497627: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.497628: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.497628: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.498631: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.498632: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.498632: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.502634: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.502635: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.502635: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.503506: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.503507: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.503507: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.507513: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.507513: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.507514: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.508540: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.508540: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.508541: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.512543: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.512543: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.512543: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.513421: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.513421: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.513421: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.517425: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.517425: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.517425: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.518504: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.518505: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.518505: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.522509: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.522509: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.522509: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.523418: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.523418: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.523418: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.527420: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.527420: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.527420: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.528436: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.528437: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.528437: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.532440: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.532441: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.532441: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.533324: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.533324: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.533324: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.537329: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.537330: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.537330: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.538373: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.538374: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.538374: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.542376: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.542377: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.542377: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.543259: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.543260: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.543260: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.547268: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.547269: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.547269: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.548246: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.548246: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.548247: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.552251: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.552251: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.552251: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.553258: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.553258: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.553258: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.557264: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.557264: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.557264: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.558294: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.558295: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.558295: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.562299: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.562300: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.562300: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.563242: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.563242: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.563242: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.567248: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.567248: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.567249: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.568196: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.568196: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.568197: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.572204: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.572205: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.572205: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.573125: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.573125: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.573126: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.577132: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.577133: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.577133: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.578070: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.578071: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.578071: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.582079: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.582080: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.582080: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.583013: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+   systemd-udevd-907     [003] ....    46.583013: module_get: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D5
+   systemd-udevd-907     [003] ....    46.583014: module_put: scsi_debug
+call_site=3Dschedule_resp [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.587025: module_get: scsi_debug
+call_site=3Dsdebug_q_cmd_complete [scsi_debug] refcnt=3D5
+          <idle>-0       [003] d.h.    46.587026: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D4
+          <idle>-0       [003] d.h.    46.587026: module_put: scsi_debug
+call_site=3Dsdebug_q_cmd_hrt_complete [scsi_debug] refcnt=3D3
+   systemd-udevd-907     [003] ....    46.587080: module_put: scsi_debug
+call_site=3Dscsi_device_put [scsi_mod] refcnt=3D2
+   systemd-udevd-907     [003] ....    46.587081: module_put: sd_mod
+call_site=3Dblkdev_put refcnt=3D2
+   systemd-udevd-907     [003] ....    46.588154: module_put: scsi_debug
+call_site=3Dscsi_device_put [scsi_mod] refcnt=3D1
+   systemd-udevd-907     [003] ....    46.588155: module_put: sd_mod
+call_site=3Dblkdev_put refcnt=3D1
+
+One might be at first motivated to implment sledge hammers as follows:
+
+static void sdebug_wait_empty_num_in_q(void)
+{
+        struct sdebug_host_info *sdbg_host;
+        struct Scsi_Host *shost;
+        struct scsi_device *sdev;
+        struct sdebug_dev_info *devip;
+        int count, max_wait =3D 5, k;
+        bool busy;
+
+        while (true) {
+                busy =3D false;
+                spin_lock(&sdebug_host_list_lock);
+                list_for_each_entry(sdbg_host, &sdebug_host_list, host_list=
+) {
+                        shost =3D sdbg_host->shost;
+                        shost_for_each_device(sdev, shost) {
+                                devip =3D (struct sdebug_dev_info
+*)sdev->hostdata;
+                                if (atomic_read(&devip->num_in_q) !=3D 0)
+                                        busy =3D true;
+                                k =3D find_first_bit(devip->uas_bm,
+SDEBUG_NUM_UAS);
+                                if (k !=3D SDEBUG_NUM_UAS)
+                                        busy =3D true;
+                        }
+                }
+                spin_unlock(&sdebug_host_list_lock);
+                if (!busy || count >=3D max_wait) {
+                        break;
+                }
+                ssleep(1);
+                count++;
+        }
+}
+
+/* Waits for all pending commands to complete. */
+static void wait_all_queued(void)
+{
+        int j, k;
+        struct sdebug_queue *sqp;
+        bool busy;
+
+        while (true) {
+                busy =3D false;
+                for (j =3D 0, sqp =3D sdebug_q_arr; j < submit_queues; ++j,=
+ ++sqp)
+{
+                        k =3D find_first_bit(sqp->in_use_bm, sdebug_max_que=
+ue);
+                        if (k !=3D sdebug_max_queue)
+                                busy =3D true;
+                }
+                if (!busy)
+                        break;
+                ssleep(1);
+        }
+}
+
+static void sync_qc_helper(struct sdebug_defer *sd_dp,
+                           enum sdeb_defer_type defer_t)
+{
+        if (!sd_dp)
+                return;
+        if (defer_t =3D=3D SDEB_DEFER_HRT) {
+                hrtimer_forward_now(&sd_dp->hrt, 2 *
+hrtimer_get_remaining(&sd_dp->hrt));
+        } else if (defer_t =3D=3D SDEB_DEFER_WQ) {
+                flush_work(&sd_dp->ew.work);
+        }
+}
+
+static void scsi_debug_sync_queued_cmnd(void)
+{
+        unsigned long iflags;
+        int j, k, qmax, r_qmax;
+        enum sdeb_defer_type l_defer_t;
+        struct sdebug_queue *sqp;
+        struct sdebug_queued_cmd *sqcp;
+        struct sdebug_defer *sd_dp;
+
+        for (j =3D 0, sqp =3D sdebug_q_arr; j < submit_queues; ++j, ++sqp) {
+                spin_lock_irqsave(&sqp->qc_lock, iflags);
+                qmax =3D sdebug_max_queue;
+                r_qmax =3D atomic_read(&retired_max_queue);
+                if (r_qmax > qmax)
+                        qmax =3D r_qmax;
+                for (k =3D 0; k < qmax; ++k) {
+                        if (test_bit(k, sqp->in_use_bm)) {
+                                sqcp =3D &sqp->qc_arr[k];
+                                sd_dp =3D sqcp->sd_dp;
+                                if (sd_dp)
+                                        l_defer_t =3D sd_dp->defer_t;
+                                else
+                                        l_defer_t =3D SDEB_DEFER_NONE;
+                                spin_unlock_irqrestore(&sqp->qc_lock, iflag=
+s);
+                                sync_qc_helper(sd_dp, l_defer_t);
+                                spin_lock_irqsave(&sqp->qc_lock, iflags);
+                        }
+                }
+                spin_unlock_irqrestore(&sqp->qc_lock, iflags);
+        }
+}
+
+static void wait_for_ready(void)
+{
+        struct scsi_sense_hdr sense_hdr;
+        struct sdebug_host_info *sdbg_host;
+        struct Scsi_Host *shost;
+        struct scsi_device *sdev;
+        int ret;
+        bool all_ready;
+
+        spin_lock(&sdebug_host_list_lock);
+        while (true) {
+                all_ready =3D true;
+                list_for_each_entry(sdbg_host, &sdebug_host_list, host_list=
+) {
+                        shost =3D sdbg_host->shost;
+                        shost_for_each_device(sdev, shost) {
+                                ret =3D scsi_internal_device_block_nowait(s=
+dev);
+                                if (ret)
+                                        all_ready =3D false;
+                                ret =3D scsi_internal_device_unblock_nowait=
+(sdev,
+SDEV_RUNNING);
+                                if (ret)
+                                        all_ready =3D false;
+                                ret =3D scsi_test_unit_ready(sdev, 5 * HZ, =
+100,
+&sense_hdr);
+                                if (ret !=3D 0)
+                                        all_ready =3D false;
+                        }
+                }
+                if (all_ready)
+                        break;
+                ssleep(1);
+        }
+        spin_unlock(&sdebug_host_list_lock);
+}
+
+And use these on scsi_debug_init() but that does not suffice, and the reaso=
+n is
+that userspace can open the scsi devices after initialization, namely in th=
+is
+case we see evidence of userspace processes such as systemd-udevd and multi=
+path
+which will try to open the device.
+
+There are a few solutions possible, using sync, or sg_sync is not one of th=
+em
+as we have to ensure we have no userspace application accessing the devices
+still.
+
+You can use lsof for this purpose. Below is an example script which can be
+used.
+
+#!/bin/bash
+
+LOOP=3D1
+
+while true; do
+        modprobe scsi_debug
+        if [[ $? -ne 0 ]]; then
+                echo "scsi_debug modprobe failed at count $LOOP"
+                exit 1
+        fi
+        while true; do
+                # Let other modules which scsi_debug depends on like sg
+                # and t10_pi load first to ensure any commands sent to
+                # the device are sent.
+                sleep 1
+
+                # Now wait until userspace such as systemd-udevd and multip=
+ath
+                # are done inspecting the newly exposed devices.
+                COUNT=3D$(lsof /dev/sda | wc -l)
+                if [[ $COUNT -ne 0 ]]; then
+                        echo "Sleeping ..."
+                        sleep 1;
+                fi
+                break
+        done
+        # Now you are safe to use scsi_debug exposed devices.
+
+        # You are also free to remove it.
+        rmmod scsi_debug
+        if [[ $? -ne 0 ]]; then
+                echo "scsi_debug rmmod failed at count $LOOP"
+                exit 1
+        else
+                echo "Loop $LOOP: OK!"
+        fi
+        let LOOP=3D$LOOP+1
+done
 
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+Marking this bug as resolved and won't fix as this should hopefully suffice=
+ to
+document why we can't wait on scsi_debug_init() to fix this issue, and it m=
+ust
+be addressed in userspace.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
