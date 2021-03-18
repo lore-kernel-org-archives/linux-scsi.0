@@ -2,78 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4782FC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 17:44:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54132C433E9
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 17:55:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E457764E99
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 17:44:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3000C64F30
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 17:55:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230173AbhCRRn6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Mar 2021 13:43:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55624 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231847AbhCRRns (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 Mar 2021 13:43:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 06D7D64DFB
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 17:43:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616089428;
-        bh=h9NGR0S5hjJXKR3i2z+99GqVgzKjZuy2vK+oOp7JWYA=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=CCVlMlgj2/lrNN+lZvEe+A9ikHwxlt5Nol2VKaOm0TVTlEhfEvVydWCGzobQOHoz1
-         3NKDif0M7QNfvcUZOm2dBzaOsCkJ7lf11Nb5tdazZqEuZvCrxBjyClzyEUaxJvUZAx
-         CmsOqi3i+XxH8EVF/uJQ/gAGlfAzQOFwlkg/zK2PbI/M2zM/IkfsFx3hJKY7gt3rcx
-         8EJ8oWabJqPFSTBQ0Jp+FBz412Hqhr1qrJXqCl5M//Nve3GsptLuYyTHPf9YZ+pbO6
-         nfdX+QpzGuwp9oOSjISL18wn/7+uoSsveGu/9N3p49g4ucjWN+MP0Q1CpWzf68gnTd
-         GDdTATJpskWwg==
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 212337] scsi_debug: race at module load and module unload
-Date:   Thu, 18 Mar 2021 17:43:47 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: mcgrof@kernel.org
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: WILL_NOT_FIX
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: attachments.created
-Message-ID: <bug-212337-11613-LRRFliE88y@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-212337-11613@https.bugzilla.kernel.org/>
-References: <bug-212337-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S232402AbhCRRyt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Mar 2021 13:54:49 -0400
+Received: from mail-pf1-f176.google.com ([209.85.210.176]:45584 "EHLO
+        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232355AbhCRRy0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 13:54:26 -0400
+Received: by mail-pf1-f176.google.com with SMTP id h3so4010489pfr.12;
+        Thu, 18 Mar 2021 10:54:26 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=zw9NDxhZI9qzGWmlzDIZRAJNmsg1FVsGW1vH7/3lAzE=;
+        b=Uov5OHL0eXHyfEHVhZCeCACF4bIG4jlTj8VtVvfzrGu5btOKbi3O5piYbBxoUHcLqT
+         WJjkXihnma+c88xNRn3O+MYV4TgmEGvtjcVtwwTMseI6JjgtwP30QkYhv0Ct0S/huEje
+         zI7BIvKNBu7juvRljsnZmi6YXSlVT3dS62Pyf0VN+9+CLYnMSRDHEtbWlxQJEaHkQmLp
+         tIOYJe2i7/RgrsnorKzgvZ3iyOpphuUXkXhW0TTtdoklNxpYnntbgA4GVYpR4cttT4Su
+         k7ZP6Xrdb5cO/JECplAfo1CsJeaj0cCx/ptm9aq+ov4Z+hpIni44Xoc8vM/6ln/XV+8s
+         Cn/g==
+X-Gm-Message-State: AOAM533RxF1vnDaZPMvHVeqnIYwJ+W382P93wm3yavtckjJFHMDLzDC6
+        WDmzAzwBCt6bUdg6c+LkkZOCHy85uMZTPg==
+X-Google-Smtp-Source: ABdhPJxEZsgqX5znjy5cHX8VUcyqPfqRya34MwqfUBV/oA0KXRbq+gFLGOZDV+d4RYHUWWgu2TmJ/w==
+X-Received: by 2002:a62:fc10:0:b029:1ef:141f:609 with SMTP id e16-20020a62fc100000b02901ef141f0609mr5077001pfh.78.1616090066177;
+        Thu, 18 Mar 2021 10:54:26 -0700 (PDT)
+Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
+        by smtp.gmail.com with ESMTPSA id u22sm2812190pgh.20.2021.03.18.10.54.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 18 Mar 2021 10:54:25 -0700 (PDT)
+Received: by 42.do-not-panic.com (Postfix, from userid 1000)
+        id 3A27740244; Thu, 18 Mar 2021 17:54:24 +0000 (UTC)
+Date:   Thu, 18 Mar 2021 17:54:24 +0000
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     linux-block@vger.kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: blktests: block/009 next-20210304 failure rate average of 1/448
+Message-ID: <20210318175424.GR13911@42.do-not-panic.com>
+References: <20210316174645.GI4332@42.do-not-panic.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210316174645.GI4332@42.do-not-panic.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D212337
+Adding linux-fsdevel as folks working on fstests might be
+interested.
 
---- Comment #2 from Luis Chamberlain (mcgrof@kernel.org) ---
-Created attachment 295929
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D295929&action=3Dedit
-Dealing with scsi_debug module removal / load races
+On Tue, Mar 16, 2021 at 05:46:45PM +0000, Luis Chamberlain wrote:
+> My personal suspicion is not on the block layer but on scsi_debug
+> because this can fail:
+> 
+> modprobe scsi_debug; rmmod scsi_debug
+> 
+> This second issue may be a secondary separate issue, but I figured 
+> I'd mention it. To fix this later issue I've looked at ways to
+> make scsi_debug_init() wait until its scsi devices are probed,
+> however its not clear how to do this correctly. If someone has
+> an idea let me know. If that fixes this issue then we know it was
+> that.
 
-Just for document ion purposes, providing a simple script which demos what =
-can
-be done to properly deal with the scsi_debug module load / unload races.
+OK so this other issue with scsi_debug indeed deserves its own tracking
+so I filed a bug for it but also looked into it and tried to see how to
+resolve it.
 
---=20
-You may reply to this email to add a comment.
+Someone who works on scsi should revise my work as I haven't touched
+scsi before except for the recent block layer work I had done for the
+blktrace races, however, my own analysis is that this should not be
+fixed in scsi_debug but instead in the users of scsi_debug.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+The rationale for that is here:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=212337
+
+The skinny of it is that we have no control over when userspace may muck
+with the newly exposed devices as they are being initialized, and
+shoe-horning a solution in scsi_debug_init() is prone to always be allow
+a race with userspace never letting scsi_debug_init() complete.
+
+So best we can do is just use something like lsof on the tools which
+use scsi_debug *prior* to mucking with the devices and / or removal of
+the module.
+
+I'll follow up with respective blktests / fstests patches, which I
+suspect may address a few false positives.
+
+  Luis
