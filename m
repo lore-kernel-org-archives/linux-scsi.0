@@ -4,37 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EA11C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FE35C43381
 	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 06:41:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D31964F53
+	by mail.kernel.org (Postfix) with ESMTP id 4DB6664E90
 	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 06:41:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229660AbhCRGlF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Mar 2021 02:41:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38024 "EHLO
+        id S229708AbhCRGlG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Mar 2021 02:41:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229512AbhCRGkb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 02:40:31 -0400
+        with ESMTP id S229540AbhCRGkt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 02:40:49 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAE1AC06174A;
-        Wed, 17 Mar 2021 23:40:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31A49C06174A;
+        Wed, 17 Mar 2021 23:40:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=X0mTB17u4X56qha0KVy3ncQBqzZpXhHbkl0cffm7+as=; b=Bom9eGjgxgcp8sQ7FJJvhwqZ2b
-        fqU9ZdNbcU1vdVGQ9iDPtH26jBvGiS17APgy+kUcOSTmjsyFkUjG/3ijXMJcuhX1uBqxqfVPdWkYA
-        8XSpeNaCxxSXZhHY65jN1Dl8jKxmwdnkJ2czrhJfAu57exueGmYk7z7WszbC3MsJ2PuBAVt3K+6KB
-        RR3mm2cVOOaD5AWuqdkOV3twLAY6fqfCeyztBEEQvcdVGIq4yrl4C+YHApEcqCWywY/Pd9r1Bq/ye
-        3u1aUKcqfHBrQI6+HJ3+fJO8BXb89DHW0OrmSHSK7LnmqcZsYi5YCNVz50F2B39m02x2xUCuZQvUJ
-        2aF83VmA==;
+        bh=+iNA/jUBtD9ad7fvpdzwdl5FTP9+Ef6OiLqm4hZqb9s=; b=OGKHQ6Pz3gLc6NIv6xCFkU0Ngi
+        sfaUN7X7RODfC6lkP+jPetEecxSututPCj7Nx4Zlxd3iEnj/hJKSBQG7cSqv4SJtDmTa7PV3zophR
+        bntMvWxa1Bl2bVSfzK9BWSNG1Rbg7FHQwyAz05hc1iSjYdybfnwWhoVpqHisjrbEA/5QOG0X26nza
+        VE/Rar946dlBSNCwHe7iZKTsSBNrI5jqKxciiUcVZsB+hI9//PZ4IMiiXSS1ZjsCGUUL69BVR+to0
+        eRsvv/Pd2MmFktf6JAC+2WpHJuMQOQ6frqLLzLldpaNDvq5vmDYSOGeTMTZQFyat78lKR45JrJwLG
+        K5/s8ivw==;
 Received: from [2001:4bb8:18c:bb3:e1cf:ad2f:7ff7:7a0b] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lMmJm-002ewB-Nd; Thu, 18 Mar 2021 06:39:42 +0000
+        id 1lMmK5-002ewc-IV; Thu, 18 Mar 2021 06:40:01 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -42,9 +42,9 @@ To:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
         Hannes Reinecke <hare@suse.com>,
         Ondrej Zary <linux@rainbow-software.org>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 1/8] aha1542: use a local bounce buffer
-Date:   Thu, 18 Mar 2021 07:39:16 +0100
-Message-Id: <20210318063923.302738-2-hch@lst.de>
+Subject: [PATCH 2/8] Buslogic: remove ISA support
+Date:   Thu, 18 Mar 2021 07:39:17 +0100
+Message-Id: <20210318063923.302738-3-hch@lst.de>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210318063923.302738-1-hch@lst.de>
 References: <20210318063923.302738-1-hch@lst.de>
@@ -55,190 +55,306 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-To remove the last user of the unchecked_isa_dma flag and thus the block
-layer ISA bounce buffering switch this driver to use its own local bounce
-buffer.  This has the effect of not needing the chain indirection and
-supporting and unlimited number of segments.  It does however limit the
-transfer size for each command to something that can be reasonable
-allocated by dma_alloc_coherent like 8K.
+The ISA support in Buslogic has been broken for a long time, as all
+the I/O path expects a struct device for DMA mapping that is derived from
+the PCI device, which would simply crash for ISA adapters.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/aha1542.c | 105 ++++++++++++++++++++++-------------------
- 1 file changed, 57 insertions(+), 48 deletions(-)
+ drivers/scsi/BusLogic.c | 156 ++--------------------------------------
+ drivers/scsi/BusLogic.h |   3 -
+ drivers/scsi/Kconfig    |   2 +-
+ 3 files changed, 6 insertions(+), 155 deletions(-)
 
-diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-index 21aab9f5b1172a..1210e61afb1838 100644
---- a/drivers/scsi/aha1542.c
-+++ b/drivers/scsi/aha1542.c
-@@ -65,9 +65,12 @@ struct aha1542_hostdata {
- 	dma_addr_t ccb_handle;
- };
- 
-+#define AHA1542_MAX_SECTORS       16
-+
- struct aha1542_cmd {
--	struct chain *chain;
--	dma_addr_t chain_handle;
-+	/* bounce buffer */
-+	void *data_buffer;
-+	dma_addr_t data_buffer_handle;
- };
- 
- static inline void aha1542_intr_reset(u16 base)
-@@ -257,15 +260,19 @@ static int aha1542_test_port(struct Scsi_Host *sh)
- static void aha1542_free_cmd(struct scsi_cmnd *cmd)
- {
- 	struct aha1542_cmd *acmd = scsi_cmd_priv(cmd);
--	struct device *dev = cmd->device->host->dma_dev;
--	size_t len = scsi_sg_count(cmd) * sizeof(struct chain);
- 
--	if (acmd->chain) {
--		dma_unmap_single(dev, acmd->chain_handle, len, DMA_TO_DEVICE);
--		kfree(acmd->chain);
-+	if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
-+		void *buf = acmd->data_buffer;
-+		struct req_iterator iter;
-+		struct bio_vec bv;
-+
-+		rq_for_each_segment(bv, cmd->request, iter) {
-+			memcpy_to_page(bv.bv_page, bv.bv_offset, buf,
-+				       bv.bv_len);
-+			buf += bv.bv_len;
-+		}
- 	}
- 
--	acmd->chain = NULL;
- 	scsi_dma_unmap(cmd);
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index ccb061ab0a0ad2..c3ed03c4b3f5cb 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -561,60 +561,6 @@ static int blogic_cmd(struct blogic_adapter *adapter, enum blogic_opcode opcode,
  }
  
-@@ -416,7 +423,7 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 	u8 lun = cmd->device->lun;
- 	unsigned long flags;
- 	int bufflen = scsi_bufflen(cmd);
--	int mbo, sg_count;
-+	int mbo;
- 	struct mailbox *mb = aha1542->mb;
- 	struct ccb *ccb = aha1542->ccb;
  
-@@ -438,17 +445,17 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 		print_hex_dump_bytes("command: ", DUMP_PREFIX_NONE, cmd->cmnd, cmd->cmd_len);
- 	}
- #endif
--	sg_count = scsi_dma_map(cmd);
--	if (sg_count) {
--		size_t len = sg_count * sizeof(struct chain);
+-/*
+-  blogic_add_probeaddr_isa appends a single ISA I/O Address to the list
+-  of I/O Address and Bus Probe Information to be checked for potential BusLogic
+-  Host Adapters.
+-*/
 -
--		acmd->chain = kmalloc(len, GFP_DMA);
--		if (!acmd->chain)
--			goto out_unmap;
--		acmd->chain_handle = dma_map_single(sh->dma_dev, acmd->chain,
--				len, DMA_TO_DEVICE);
--		if (dma_mapping_error(sh->dma_dev, acmd->chain_handle))
--			goto out_free_chain;
-+
-+	if (cmd->sc_data_direction == DMA_TO_DEVICE) {
-+		void *buf = acmd->data_buffer;
-+		struct req_iterator iter;
-+		struct bio_vec bv;
-+
-+		rq_for_each_segment(bv, cmd->request, iter) {
-+			memcpy_from_page(buf, bv.bv_page, bv.bv_offset,
-+					 bv.bv_len);
-+			buf += bv.bv_len;
-+		}
- 	}
- 
+-static void __init blogic_add_probeaddr_isa(unsigned long io_addr)
+-{
+-	struct blogic_probeinfo *probeinfo;
+-	if (blogic_probeinfo_count >= BLOGIC_MAX_ADAPTERS)
+-		return;
+-	probeinfo = &blogic_probeinfo_list[blogic_probeinfo_count++];
+-	probeinfo->adapter_type = BLOGIC_MULTIMASTER;
+-	probeinfo->adapter_bus_type = BLOGIC_ISA_BUS;
+-	probeinfo->io_addr = io_addr;
+-	probeinfo->pci_device = NULL;
+-}
+-
+-
+-/*
+-  blogic_init_probeinfo_isa initializes the list of I/O Address and
+-  Bus Probe Information to be checked for potential BusLogic SCSI Host Adapters
+-  only from the list of standard BusLogic MultiMaster ISA I/O Addresses.
+-*/
+-
+-static void __init blogic_init_probeinfo_isa(struct blogic_adapter *adapter)
+-{
+-	/*
+-	   If BusLogic Driver Options specifications requested that ISA
+-	   Bus Probes be inhibited, do not proceed further.
+-	 */
+-	if (blogic_probe_options.noprobe_isa)
+-		return;
+-	/*
+-	   Append the list of standard BusLogic MultiMaster ISA I/O Addresses.
+-	 */
+-	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe330)
+-		blogic_add_probeaddr_isa(0x330);
+-	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe334)
+-		blogic_add_probeaddr_isa(0x334);
+-	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe230)
+-		blogic_add_probeaddr_isa(0x230);
+-	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe234)
+-		blogic_add_probeaddr_isa(0x234);
+-	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe130)
+-		blogic_add_probeaddr_isa(0x130);
+-	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe134)
+-		blogic_add_probeaddr_isa(0x134);
+-}
+-
+-
+-#ifdef CONFIG_PCI
+-
+-
+ /*
+   blogic_sort_probeinfo sorts a section of blogic_probeinfo_list in order
+   of increasing PCI Bus and Device Number.
+@@ -667,14 +613,11 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
+ 	int nonpr_mmcount = 0, mmcount = 0;
+ 	bool force_scan_order = false;
+ 	bool force_scan_order_checked = false;
+-	bool addr_seen[6];
+ 	struct pci_dev *pci_device = NULL;
+ 	int i;
+ 	if (blogic_probeinfo_count >= BLOGIC_MAX_ADAPTERS)
+ 		return 0;
+ 	blogic_probeinfo_count++;
+-	for (i = 0; i < 6; i++)
+-		addr_seen[i] = false;
  	/*
-@@ -496,27 +503,12 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 		direction = 16;
- 
- 	memcpy(ccb[mbo].cdb, cmd->cmnd, ccb[mbo].cdblen);
--
--	if (bufflen) {
--		struct scatterlist *sg;
--		int i;
--
--		ccb[mbo].op = 2;	/* SCSI Initiator Command  w/scatter-gather */
--		scsi_for_each_sg(cmd, sg, sg_count, i) {
--			any2scsi(acmd->chain[i].dataptr, sg_dma_address(sg));
--			any2scsi(acmd->chain[i].datalen, sg_dma_len(sg));
--		};
--		any2scsi(ccb[mbo].datalen, sg_count * sizeof(struct chain));
--		any2scsi(ccb[mbo].dataptr, acmd->chain_handle);
--#ifdef DEBUG
--		shost_printk(KERN_DEBUG, sh, "cptr %p: ", acmd->chain);
--		print_hex_dump_bytes("cptr: ", DUMP_PREFIX_NONE, acmd->chain, 18);
--#endif
+ 	   Iterate over the MultiMaster PCI Host Adapters.  For each
+ 	   enumerated host adapter, determine whether its ISA Compatible
+@@ -744,11 +687,8 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
+ 		host_adapter->io_addr = io_addr;
+ 		blogic_intreset(host_adapter);
+ 		if (blogic_cmd(host_adapter, BLOGIC_INQ_PCI_INFO, NULL, 0,
+-				&adapter_info, sizeof(adapter_info)) ==
+-				sizeof(adapter_info)) {
+-			if (adapter_info.isa_port < 6)
+-				addr_seen[adapter_info.isa_port] = true;
+-		} else
++				&adapter_info, sizeof(adapter_info)) !=
++				sizeof(adapter_info))
+ 			adapter_info.isa_port = BLOGIC_IO_DISABLE;
+ 		/*
+ 		   Issue the Modify I/O Address command to disable the
+@@ -835,45 +775,6 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
+ 	if (force_scan_order)
+ 		blogic_sort_probeinfo(&blogic_probeinfo_list[nonpr_mmindex],
+ 					nonpr_mmcount);
+-	/*
+-	   If no PCI MultiMaster Host Adapter is assigned the Primary
+-	   I/O Address, then the Primary I/O Address must be probed
+-	   explicitly before any PCI host adapters are probed.
+-	 */
+-	if (!blogic_probe_options.noprobe_isa)
+-		if (pr_probeinfo->io_addr == 0 &&
+-				(!blogic_probe_options.limited_isa ||
+-				 blogic_probe_options.probe330)) {
+-			pr_probeinfo->adapter_type = BLOGIC_MULTIMASTER;
+-			pr_probeinfo->adapter_bus_type = BLOGIC_ISA_BUS;
+-			pr_probeinfo->io_addr = 0x330;
+-		}
+-	/*
+-	   Append the list of standard BusLogic MultiMaster ISA I/O Addresses,
+-	   omitting the Primary I/O Address which has already been handled.
+-	 */
+-	if (!blogic_probe_options.noprobe_isa) {
+-		if (!addr_seen[1] &&
+-				(!blogic_probe_options.limited_isa ||
+-				 blogic_probe_options.probe334))
+-			blogic_add_probeaddr_isa(0x334);
+-		if (!addr_seen[2] &&
+-				(!blogic_probe_options.limited_isa ||
+-				 blogic_probe_options.probe230))
+-			blogic_add_probeaddr_isa(0x230);
+-		if (!addr_seen[3] &&
+-				(!blogic_probe_options.limited_isa ||
+-				 blogic_probe_options.probe234))
+-			blogic_add_probeaddr_isa(0x234);
+-		if (!addr_seen[4] &&
+-				(!blogic_probe_options.limited_isa ||
+-				 blogic_probe_options.probe130))
+-			blogic_add_probeaddr_isa(0x130);
+-		if (!addr_seen[5] &&
+-				(!blogic_probe_options.limited_isa ||
+-				 blogic_probe_options.probe134))
+-			blogic_add_probeaddr_isa(0x134);
+-	}
+ 	/*
+ 	   Iterate over the older non-compliant MultiMaster PCI Host Adapters,
+ 	   noting the PCI bus location and assigned IRQ Channel.
+@@ -1078,18 +979,10 @@ static void __init blogic_init_probeinfo_list(struct blogic_adapter *adapter)
+ 				}
+ 			}
+ 		}
 -	} else {
--		ccb[mbo].op = 0;	/* SCSI Initiator Command */
--		any2scsi(ccb[mbo].datalen, 0);
-+	ccb[mbo].op = 0;	/* SCSI Initiator Command */
-+	any2scsi(ccb[mbo].datalen, bufflen);
-+	if (bufflen)
-+		any2scsi(ccb[mbo].dataptr, acmd->data_buffer_handle);
-+	else
- 		any2scsi(ccb[mbo].dataptr, 0);
--	};
- 	ccb[mbo].idlun = (target & 7) << 5 | direction | (lun & 7);	/*SCSI Target Id */
- 	ccb[mbo].rsalen = 16;
- 	ccb[mbo].linkptr[0] = ccb[mbo].linkptr[1] = ccb[mbo].linkptr[2] = 0;
-@@ -531,12 +523,6 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 	spin_unlock_irqrestore(sh->host_lock, flags);
- 
- 	return 0;
--out_free_chain:
--	kfree(acmd->chain);
--	acmd->chain = NULL;
--out_unmap:
--	scsi_dma_unmap(cmd);
--	return SCSI_MLQUEUE_HOST_BUSY;
+-		blogic_init_probeinfo_isa(adapter);
+ 	}
  }
  
- /* Initialize mailboxes */
-@@ -1027,6 +1013,27 @@ static int aha1542_biosparam(struct scsi_device *sdev,
- }
- MODULE_LICENSE("GPL");
  
-+static int aha1542_init_cmd_priv(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
-+{
-+	struct aha1542_cmd *acmd = scsi_cmd_priv(cmd);
-+
-+	acmd->data_buffer = dma_alloc_coherent(shost->dma_dev,
-+			SECTOR_SIZE * AHA1542_MAX_SECTORS,
-+			&acmd->data_buffer_handle, GFP_KERNEL);
-+	if (!acmd->data_buffer)
-+		return -ENOMEM;
-+	return 0;
-+}
-+
-+static int aha1542_exit_cmd_priv(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
-+{
-+	struct aha1542_cmd *acmd = scsi_cmd_priv(cmd);
-+
-+	dma_free_coherent(shost->dma_dev, SECTOR_SIZE * AHA1542_MAX_SECTORS,
-+			acmd->data_buffer, acmd->data_buffer_handle);
-+	return 0;
-+}
-+
- static struct scsi_host_template driver_template = {
- 	.module			= THIS_MODULE,
- 	.proc_name		= "aha1542",
-@@ -1037,10 +1044,12 @@ static struct scsi_host_template driver_template = {
- 	.eh_bus_reset_handler	= aha1542_bus_reset,
- 	.eh_host_reset_handler	= aha1542_host_reset,
- 	.bios_param		= aha1542_biosparam,
-+	.init_cmd_priv		= aha1542_init_cmd_priv,
-+	.exit_cmd_priv		= aha1542_exit_cmd_priv,
- 	.can_queue		= AHA1542_MAILBOXES,
- 	.this_id		= 7,
--	.sg_tablesize		= 16,
--	.unchecked_isa_dma	= 1,
-+	.max_sectors		= AHA1542_MAX_SECTORS,
-+	.sg_tablesize		= SG_ALL,
- };
+-#else
+-#define blogic_init_probeinfo_list(adapter) \
+-		blogic_init_probeinfo_isa(adapter)
+-#endif				/* CONFIG_PCI */
+-
+-
+ /*
+   blogic_failure prints a standardized error message, and then returns false.
+ */
+@@ -1539,14 +1432,6 @@ static bool __init blogic_rdconfig(struct blogic_adapter *adapter)
+ 		else if (config.irq_ch15)
+ 			adapter->irq_ch = 15;
+ 	}
+-	if (adapter->adapter_bus_type == BLOGIC_ISA_BUS) {
+-		if (config.dma_ch5)
+-			adapter->dma_ch = 5;
+-		else if (config.dma_ch6)
+-			adapter->dma_ch = 6;
+-		else if (config.dma_ch7)
+-			adapter->dma_ch = 7;
+-	}
+ 	/*
+ 	   Determine whether Extended Translation is enabled and save it in
+ 	   the Host Adapter structure.
+@@ -1686,8 +1571,7 @@ static bool __init blogic_rdconfig(struct blogic_adapter *adapter)
+ 	if (adapter->fw_ver[0] == '5')
+ 		adapter->adapter_qdepth = 192;
+ 	else if (adapter->fw_ver[0] == '4')
+-		adapter->adapter_qdepth = (adapter->adapter_bus_type !=
+-						BLOGIC_ISA_BUS ? 100 : 50);
++		adapter->adapter_qdepth = 100;
+ 	else
+ 		adapter->adapter_qdepth = 30;
+ 	if (strcmp(adapter->fw_ver, "3.31") >= 0) {
+@@ -1727,13 +1611,6 @@ static bool __init blogic_rdconfig(struct blogic_adapter *adapter)
+ 	   bios_addr is 0.
+ 	 */
+ 	adapter->bios_addr = ext_setupinfo.bios_addr << 12;
+-	/*
+-	   ISA Host Adapters require Bounce Buffers if there is more than
+-	   16MB memory.
+-	 */
+-	if (adapter->adapter_bus_type == BLOGIC_ISA_BUS &&
+-			(void *) high_memory > (void *) MAX_DMA_ADDRESS)
+-		adapter->need_bouncebuf = true;
+ 	/*
+ 	   BusLogic BT-445S Host Adapters prior to board revision E have a
+ 	   hardware bug whereby when the BIOS is enabled, transfers to/from
+@@ -1839,11 +1716,7 @@ static bool __init blogic_reportconfig(struct blogic_adapter *adapter)
+ 	blogic_info("Configuring BusLogic Model %s %s%s%s%s SCSI Host Adapter\n", adapter, adapter->model, blogic_adapter_busnames[adapter->adapter_bus_type], (adapter->wide ? " Wide" : ""), (adapter->differential ? " Differential" : ""), (adapter->ultra ? " Ultra" : ""));
+ 	blogic_info("  Firmware Version: %s, I/O Address: 0x%lX, IRQ Channel: %d/%s\n", adapter, adapter->fw_ver, adapter->io_addr, adapter->irq_ch, (adapter->level_int ? "Level" : "Edge"));
+ 	if (adapter->adapter_bus_type != BLOGIC_PCI_BUS) {
+-		blogic_info("  DMA Channel: ", adapter);
+-		if (adapter->dma_ch > 0)
+-			blogic_info("%d, ", adapter, adapter->dma_ch);
+-		else
+-			blogic_info("None, ", adapter);
++		blogic_info("  DMA Channel: None, ", adapter);
+ 		if (adapter->bios_addr > 0)
+ 			blogic_info("BIOS Address: 0x%lX, ", adapter,
+ 					adapter->bios_addr);
+@@ -1995,18 +1868,6 @@ static bool __init blogic_getres(struct blogic_adapter *adapter)
+ 		return false;
+ 	}
+ 	adapter->irq_acquired = true;
+-	/*
+-	   Acquire exclusive access to the DMA Channel.
+-	 */
+-	if (adapter->dma_ch > 0) {
+-		if (request_dma(adapter->dma_ch, adapter->full_model) < 0) {
+-			blogic_err("UNABLE TO ACQUIRE DMA CHANNEL %d - DETACHING\n", adapter, adapter->dma_ch);
+-			return false;
+-		}
+-		set_dma_mode(adapter->dma_ch, DMA_MODE_CASCADE);
+-		enable_dma(adapter->dma_ch);
+-		adapter->dma_chan_acquired = true;
+-	}
+ 	/*
+ 	   Indicate the System Resource Acquisition completed successfully,
+ 	 */
+@@ -2026,11 +1887,6 @@ static void blogic_relres(struct blogic_adapter *adapter)
+ 	 */
+ 	if (adapter->irq_acquired)
+ 		free_irq(adapter->irq_ch, adapter);
+-	/*
+-	   Release exclusive access to the DMA Channel.
+-	 */
+-	if (adapter->dma_chan_acquired)
+-		free_dma(adapter->dma_ch);
+ 	/*
+ 	   Release any allocated memory structs not released elsewhere
+ 	 */
+@@ -3694,9 +3550,7 @@ static int __init blogic_parseopts(char *options)
+ 					blogic_err("BusLogic: Invalid Driver Options (invalid I/O Address 0x%lX)\n", NULL, io_addr);
+ 					return 0;
+ 				}
+-			} else if (blogic_parse(&options, "NoProbeISA"))
+-				blogic_probe_options.noprobe_isa = true;
+-			else if (blogic_parse(&options, "NoProbePCI"))
++			} else if (blogic_parse(&options, "NoProbePCI"))
+ 				blogic_probe_options.noprobe_pci = true;
+ 			else if (blogic_parse(&options, "NoProbe"))
+ 				blogic_probe_options.noprobe = true;
+diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
+index 6182cc8a0344a8..6eaddc009b5c55 100644
+--- a/drivers/scsi/BusLogic.h
++++ b/drivers/scsi/BusLogic.h
+@@ -237,7 +237,6 @@ struct blogic_probeinfo {
  
- static int aha1542_isa_match(struct device *pdev, unsigned int ndev)
+ struct blogic_probe_options {
+ 	bool noprobe:1;			/* Bit 0 */
+-	bool noprobe_isa:1;		/* Bit 1 */
+ 	bool noprobe_pci:1;		/* Bit 2 */
+ 	bool nosort_pci:1;		/* Bit 3 */
+ 	bool multimaster_first:1;	/* Bit 4 */
+@@ -997,10 +996,8 @@ struct blogic_adapter {
+ 	unsigned char bus;
+ 	unsigned char dev;
+ 	unsigned char irq_ch;
+-	unsigned char dma_ch;
+ 	unsigned char scsi_id;
+ 	bool irq_acquired:1;
+-	bool dma_chan_acquired:1;
+ 	bool ext_trans_enable:1;
+ 	bool parity:1;
+ 	bool reset_enabled:1;
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 06b87c7f6babd3..3d114be5b662df 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -497,7 +497,7 @@ config SCSI_HPTIOP
+ 
+ config SCSI_BUSLOGIC
+ 	tristate "BusLogic SCSI support"
+-	depends on (PCI || ISA) && SCSI && ISA_DMA_API && VIRT_TO_BUS
++	depends on PCI && SCSI && VIRT_TO_BUS
+ 	help
+ 	  This is support for BusLogic MultiMaster and FlashPoint SCSI Host
+ 	  Adapters. Consult the SCSI-HOWTO, available from
 -- 
 2.30.1
 
