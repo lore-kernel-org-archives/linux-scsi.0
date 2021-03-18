@@ -2,82 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D100C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 11:31:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5BECC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 12:32:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0ACFA64F24
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 11:31:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1B0B64F4D
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 12:32:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229908AbhCRLap (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Mar 2021 07:30:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44072 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229987AbhCRLae (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 07:30:34 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DE3BC06174A;
-        Thu, 18 Mar 2021 04:30:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=lMeDLmyG5bjRtOO5ITinr/ZiktpkdDw1zgsC8f+PGgc=; b=CozYDPOuPOw7f/I9TDCAi+jSfN
-        DMDk9wzh6NBox+YCQlb6C/oV1o7DBPt1lulw/SHwwb1xK0vzKARwrzZ9Fbn2BkuDhJkt/ZMTNbQJ+
-        P06zz5DEMBt9jwbaVmeP3AdM5pEmZjbWX+cP039J2LvYbm56yfobSiN42f/RaI7yuAKJLyfuZOB8d
-        jSB4XslANaoeO/AsLSJ6++z41LtuwVR2ZD14PxVnJNcvvURs+2aqh1SNCFh+Xb1aheCPIOpeo6IxA
-        L0+LuXSHJX9MxX3zwGyxt1lMmr+Fk3HTBNHNLBF9hcK2KEUlnaa1ha24du4iVPdWyy2fIDIS1fLcW
-        52vHn9VA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lMqqc-002twM-Hn; Thu, 18 Mar 2021 11:29:58 +0000
-Date:   Thu, 18 Mar 2021 11:29:50 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Ondrej Zary <linux@rainbow-software.org>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 7/8] block: refactor the bounce buffering code
-Message-ID: <20210318112950.GL3420@casper.infradead.org>
-References: <20210318063923.302738-1-hch@lst.de>
- <20210318063923.302738-8-hch@lst.de>
+        id S229508AbhCRMcW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Mar 2021 08:32:22 -0400
+Received: from mail-m17635.qiye.163.com ([59.111.176.35]:39232 "EHLO
+        mail-m17635.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229943AbhCRMbz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 08:31:55 -0400
+Received: from [0.0.0.0] (unknown [14.154.29.151])
+        by mail-m17635.qiye.163.com (Hmail) with ESMTPA id C37BD400325;
+        Thu, 18 Mar 2021 20:31:49 +0800 (CST)
+Subject: Re: [PATCH] scsi: ses: Fix crash caused by kfree an invalid pointer
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable <stable@vger.kernel.org>
+References: <20201128122302.9490-1-dinghui@sangfor.com.cn>
+ <c5deac044ac409e32d9ad9968ce0dcbc996bfc7a.camel@linux.ibm.com>
+From:   Ding Hui <dinghui@sangfor.com.cn>
+Message-ID: <34c15b48-c131-abd5-d4a5-1c273d25c0bf@sangfor.com.cn>
+Date:   Thu, 18 Mar 2021 20:31:45 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210318063923.302738-8-hch@lst.de>
+In-Reply-To: <c5deac044ac409e32d9ad9968ce0dcbc996bfc7a.camel@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgYFAkeWUFZS1VLWVdZKFlBSE83V1ktWUFJV1kPCR
+        oVCBIfWUFZTUNIGhlJGBgaHUNCVkpNSk1LTEtMSktLQkpVEwETFhoSFyQUDg9ZV1kWGg8SFR0UWU
+        FZT0tIVUpKS0hKTFVLWQY+
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Kzo6Lhw*Vj8SLU4yKAEzSxIO
+        ShEKFEJVSlVKTUpNS0xLTEpLT0lNVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
+        QVlKT1VKTk9VSUJVSk5KWVdZCAFZQUlDTU43Bg++
+X-HM-Tid: 0a7845521313d991kuwsc37bd400325
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 18, 2021 at 07:39:22AM +0100, Christoph Hellwig wrote:
-> @@ -536,7 +518,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
->  					b->max_write_zeroes_sectors);
->  	t->max_zone_append_sectors = min(t->max_zone_append_sectors,
->  					b->max_zone_append_sectors);
-> -	t->bounce_pfn = min_not_zero(t->bounce_pfn, b->bounce_pfn);
-> +	t->bounce = min_not_zero(t->bounce, b->bounce);
-
-I see how min_not_zero() made sense when it was a pfn.  Does it still
-make sense now it's an enum?  I would have thought it'd now be 'max()',
-given the definitions later on.
-
-> +/*
-> + * BLK_BOUNCE_NONE:	never bounce (default)
-> + * BLK_BOUNCE_HIGH:	bounce all highmem pages
-> + */
-> +enum blk_bounce {
-> +	BLK_BOUNCE_NONE,
-> +	BLK_BOUNCE_HIGH,
-> +};
+On 2020/11/29 7:27, James Bottomley wrote:
+> ---8>8>8><8<8<8--------
+> From: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Subject: [PATCH] scsi: ses: don't attach if enclosure has no components
+> 
+> An enclosure with no components can't usefully be operated by the
+> driver (since effectively it has nothing to manage), so report the
+> problem and don't attach.  Not attaching also fixes an oops which
+> could occur if the driver tries to manage a zero component enclosure.
+> 
+> Reported-by: Ding Hui <dinghui@sangfor.com.cn>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> ---
+>   drivers/scsi/ses.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+> index c2afba2a5414..9624298b9c89 100644
+> --- a/drivers/scsi/ses.c
+> +++ b/drivers/scsi/ses.c
+> @@ -690,6 +690,11 @@ static int ses_intf_add(struct device *cdev,
+>   		    type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE)
+>   			components += type_ptr[1];
+>   	}
+> +	if (components == 0) {
+> +		sdev_printk(KERN_ERR, sdev, "enclosure has no enumerated components\n");
+> +		goto err_free;
+> +	}
 > +
->  struct queue_limits {
-> -	unsigned long		bounce_pfn;
-> +	enum blk_bounce		bounce;
->  	unsigned long		seg_boundary_mask;
->  	unsigned long		virt_boundary_mask;
->  
+>   	ses_dev->page1 = buf;
+>   	ses_dev->page1_len = len;
+>   	buf = NULL;
+> 
+Can I ask you to resubmit your patch ("scsi: ses: don't attach if 
+enclosure has no components") to kernel, thanks
+
+-- 
+Thanks,
+- Ding Hui
