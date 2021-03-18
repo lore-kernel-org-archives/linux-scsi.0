@@ -7,341 +7,173 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50927C4332D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC102C4332E
 	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 09:13:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0354B64F18
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 09:13:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B22B64D96
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 09:13:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229512AbhCRJMZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Mar 2021 05:12:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42532 "EHLO
+        id S229792AbhCRJM0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Mar 2021 05:12:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229643AbhCRJMJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 05:12:09 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A91FC06174A
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 02:12:09 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id x7-20020a17090a2b07b02900c0ea793940so4682159pjc.2
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 02:12:09 -0700 (PDT)
+        with ESMTP id S229640AbhCRJMS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 05:12:18 -0400
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63ACFC06174A
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 02:12:18 -0700 (PDT)
+Received: by mail-pg1-x52e.google.com with SMTP id e33so1028531pgm.13
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 02:12:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=YAmAOHK31R6/RwMTRAYDP1Lp216tbQiYdyZBXO4uE3c=;
-        b=aFtDHQe76wk0jUjdtjlaTh6eR5q9RkCRBlIWB0d8OkxBkeLvxxP4ZPw15KKMEVc0ip
-         N60AsLueLgn1PTuu+8f6tPa3BHbFfWkQ6qmt7CIS790xjUMv/eA7NsM2z2psZac9t8WX
-         9qysQijzokivyFoVI/MCLPrhqQXoPckTw7kk4=
+        bh=8D1/QuNripT2HONeexac5qUMB6JWK8nqKhOXc8I5xOw=;
+        b=BKkku96/yqG0U0QWpBhFgpLYXVY7fN1X31ZLwqiTsvCFkzrFGi266+f2QVbnMWzy7M
+         48y39zZLzjg6k4h//yTbdpwVjXVjTpeNxlclLG8E6NJo9V+QXo7OEB7zJNFGskYJ/H7/
+         6SikeR7RU+D/u1pKr5jqFHLnmoGoQZhv0oRY0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=YAmAOHK31R6/RwMTRAYDP1Lp216tbQiYdyZBXO4uE3c=;
-        b=Rr77jXOX5Bk1d3SxtWcmmEzH27YafnKfQ50PnbIyTSSg2/QyTAI9oQywW057U9G0/h
-         JUy4/gzkmRFBM/8jfA+bByjW3PMpK/tSzXysS7Gt1cOk5oBD/p3QuKxx40F+uFOPt80U
-         6ntzTnjiUQxzTpplJ/Yglqe+pelRCzS2pIrKfKvEKX4xVdO+ViZo8vEKlAqNW8Y1zr6J
-         729TzANp74+gPjWl+tajCPB1/EhT4umJzxboC40OUZW1Dyki+FXkucpGdF3crbCLzNkw
-         9tFeYkH9+m+gwXi8DhHt5Exl6gAOIep1ZAA3IPA4gZXgTwRR6SS6bIJgbTu/cQOw1SAL
-         PrpA==
-X-Gm-Message-State: AOAM533c7JeNJa6vhUucZJlmUzAC4kV1NVfww3N/43OQFjPVpHrLe1PC
-        BNazlSi7cgR4UxvJoy8qqMUmV1EHtStlXq52y9jwdvZ+DhX7ql7vFt1Rh79UhDGfEiGEKe6zKOM
-        FanvKRn2Qs6+rYF8zfSJHIxGU9nYYI9SumOZuB1HpWxRq1qyoklIn8vNeB5m+BVD/Bv4mkKRrKe
-        lt81iCuQwwAanZ44ALh1Gt
-X-Google-Smtp-Source: ABdhPJxoqSauc5WukHreEmHhVXuAe7CCyzQal6v+GhqaBNOCwgKtZHnFdQj8Oju3/htl8dwTTToM5g==
-X-Received: by 2002:a17:90b:3449:: with SMTP id lj9mr3399916pjb.55.1616058727719;
-        Thu, 18 Mar 2021 02:12:07 -0700 (PDT)
+        bh=8D1/QuNripT2HONeexac5qUMB6JWK8nqKhOXc8I5xOw=;
+        b=X9wEBfDzi6ojgtB1M/UqKr4I9dym4lJzQTGo4y85Uh75ZVTHxappoyzt1+2hlzI+7n
+         n1Cd3ybSzBTIlO32bbBHNRZnPmH7GO50RK3X4/5bkdsLMTQB42Z47ogfudqYlySh4M01
+         tmb36PdaUyGQroMRm8eliysUHus+v2xqZGwg5r6Donfgbkd4fbl88WY4pD3EcKvkfEo4
+         oRHNQnOv19QJJBVKj2ggSTumQBDRxYWpV+Rj7KQ3dvPTC/j99tRjaeaRl0MhiMhorhBe
+         VhQ80UB9MuQRhAUeEiQahAT2NOZTy8JqYcmXJRbfCRTZsNEyJrngKfPpQAqvSpR0I78y
+         5O5A==
+X-Gm-Message-State: AOAM530ISOiIaMcElpY5cPPRHIh4Lrswu5/eYEmtx45kb9d8h6qk+Bp+
+        VB+CtlFcSG2LL2xWS/KFMWDL3xSZwx7bPGxEJ2Xina81LWK3xpsbmMajISNoK0bGWkaFKW1nCat
+        HORoDLccVPmInk/kj3pSl243AMV4xJPLouS1ottEQ5d9rcV5CTt/ai5Bi/LooIUefsc2D40MPNH
+        I31Dj3biHoQlxTexTSIOWT
+X-Google-Smtp-Source: ABdhPJwr0LHkSvanWe/VvRK0Of1JAhmlXPR84Ie1QS8sXutbKyB1ODVK1kZI1ZytLt7GPpZRfugJbA==
+X-Received: by 2002:a65:4347:: with SMTP id k7mr6229320pgq.88.1616058737072;
+        Thu, 18 Mar 2021 02:12:17 -0700 (PDT)
 Received: from dhcp-10-123-20-76.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 11sm1413350pgt.83.2021.03.18.02.12.04
+        by smtp.gmail.com with ESMTPSA id 11sm1413350pgt.83.2021.03.18.02.12.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Mar 2021 02:12:07 -0700 (PDT)
+        Thu, 18 Mar 2021 02:12:16 -0700 (PDT)
 From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com,
         Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH V2 1/7] mpt3sas: Handle PCIe sgl's in same 4G region.
-Date:   Thu, 18 Mar 2021 14:41:45 +0530
-Message-Id: <20210318091151.39349-2-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH V2 4/7] mpt3sas: Handle reply pool DMA allocations in same 4G region
+Date:   Thu, 18 Mar 2021 14:41:48 +0530
+Message-Id: <20210318091151.39349-5-suganath-prabu.subramani@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210318091151.39349-1-suganath-prabu.subramani@broadcom.com>
 References: <20210318091151.39349-1-suganath-prabu.subramani@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000772a1205bdcbfe4b"
+        boundary="000000000000019c7d05bdcbff6b"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000772a1205bdcbfe4b
+--000000000000019c7d05bdcbff6b
 Content-Transfer-Encoding: 8bit
 
-According to MPI Specification PCIe SGL buffers should not cross
-4GB boundary. So while allocating PCIe SGL buffers, if any buffer
+According to MPI Specification Reply buffers should not cross
+4GB boundary. So while allocating Reply buffers, if any buffer
 crosses the 4GB boundary then,
 * Release the already allocated memory pools and
-* Reallocate them by changing the DMA coherent mask to 32 bit.
+* Reallocate them by changing the DMA coherent mask to 32 bit
 
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 159 ++++++++++++++++++++--------
- drivers/scsi/mpt3sas/mpt3sas_base.h |   1 +
- 2 files changed, 113 insertions(+), 47 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 63 ++++++++++++++++++-----------
+ 1 file changed, 40 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index ac066f8..f9e6f8e 100644
+index 308d817..e8b2930 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2905,23 +2905,22 @@ static int
- _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
- {
- 	struct sysinfo s;
--	int dma_mask;
- 
- 	if (ioc->is_mcpu_endpoint ||
- 	    sizeof(dma_addr_t) == 4 || ioc->use_32bit_dma ||
- 	    dma_get_required_mask(&pdev->dev) <= 32)
--		dma_mask = 32;
-+		ioc->dma_mask = 32;
- 	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
- 	else if (ioc->hba_mpi_version_belonged > MPI2_VERSION)
--		dma_mask = 63;
-+		ioc->dma_mask = 63;
- 	else
--		dma_mask = 64;
-+		ioc->dma_mask = 64;
- 
--	if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(dma_mask)) ||
--	    dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(dma_mask)))
-+	if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(ioc->dma_mask)) ||
-+	    dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(ioc->dma_mask)))
- 		return -ENODEV;
- 
--	if (dma_mask > 32) {
-+	if (ioc->dma_mask > 32) {
- 		ioc->base_add_sg_single = &_base_add_sg_single_64;
- 		ioc->sge_size = sizeof(Mpi2SGESimple64_t);
- 	} else {
-@@ -2931,7 +2930,7 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
- 
- 	si_meminfo(&s);
- 	ioc_info(ioc, "%d BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (%ld kB)\n",
--		dma_mask, convert_to_kb(s.totalram));
-+		ioc->dma_mask, convert_to_kb(s.totalram));
- 
+@@ -5559,6 +5559,41 @@ _base_allocate_sense_dma_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
  	return 0;
  }
-@@ -5338,10 +5337,10 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 			dma_pool_free(ioc->pcie_sgl_dma_pool,
- 					ioc->pcie_sg_lookup[i].pcie_sgl,
- 					ioc->pcie_sg_lookup[i].pcie_sgl_dma);
-+			ioc->pcie_sg_lookup[i].pcie_sgl = NULL;
- 		}
- 		dma_pool_destroy(ioc->pcie_sgl_dma_pool);
- 	}
--
- 	if (ioc->config_page) {
- 		dexitprintk(ioc,
- 			    ioc_info(ioc, "config_page(0x%p): free\n",
-@@ -5399,6 +5398,89 @@ mpt3sas_check_same_4gb_region(long reply_pool_start_address, u32 pool_sz)
- 		return 0;
- }
  
 +/**
-+ * _base_reduce_hba_queue_depth- Retry with reduced queue depth
-+ * @ioc: Adapter object
-+ *
-+ * Return: 0 for success, non-zero for failure.
-+ **/
-+static inline int
-+_base_reduce_hba_queue_depth(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	int reduce_sz = 64;
-+
-+	if ((ioc->hba_queue_depth - reduce_sz) >
-+	    (ioc->internal_depth + INTERNAL_SCSIIO_CMDS_COUNT)) {
-+		ioc->hba_queue_depth -= reduce_sz;
-+		return 0;
-+	} else
-+		return -ENOMEM;
-+}
-+
-+/**
-+ * _base_allocate_pcie_sgl_pool - Allocating DMA'able memory
-+ *			for pcie sgl pools.
++ * _base_allocate_reply_pool - Allocating DMA'able memory
++ *			for reply pool.
 + * @ioc: Adapter object
 + * @sz: DMA Pool size
-+ * @ct: Chain tracker
 + * Return: 0 for success, non-zero for failure.
 + */
-+
 +static int
-+_base_allocate_pcie_sgl_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
++_base_allocate_reply_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
 +{
-+	int i = 0, j = 0;
-+	struct chain_tracker *ct;
-+
-+	ioc->pcie_sgl_dma_pool =
-+	    dma_pool_create("PCIe SGL pool", &ioc->pdev->dev, sz,
-+	    ioc->page_size, 0);
-+	if (!ioc->pcie_sgl_dma_pool) {
-+		ioc_err(ioc, "PCIe SGL pool: dma_pool_create failed\n");
++	/* reply pool, 4 byte align */
++	ioc->reply_dma_pool = dma_pool_create("reply pool",
++	    &ioc->pdev->dev, sz, 4, 0);
++	if (!ioc->reply_dma_pool)
 +		return -ENOMEM;
++	ioc->reply = dma_pool_alloc(ioc->reply_dma_pool, GFP_KERNEL,
++	    &ioc->reply_dma);
++	if (!ioc->reply)
++		return -EAGAIN;
++	if (!mpt3sas_check_same_4gb_region((long)ioc->reply_free, sz)) {
++		dinitprintk(ioc, pr_err(
++		    "Bad Reply Pool! Reply (0x%p) Reply dma = (0x%llx)\n",
++		    ioc->reply, (unsigned long long) ioc->reply_dma));
++		ioc->use_32bit_dma = true;
++		return -EAGAIN;
 +	}
-+
-+	ioc->chains_per_prp_buffer = sz/ioc->chain_segment_sz;
-+	ioc->chains_per_prp_buffer =
-+	    min(ioc->chains_per_prp_buffer, ioc->chains_needed_per_io);
-+	for (i = 0; i < ioc->scsiio_depth; i++) {
-+		ioc->pcie_sg_lookup[i].pcie_sgl =
-+		    dma_pool_alloc(ioc->pcie_sgl_dma_pool, GFP_KERNEL,
-+		    &ioc->pcie_sg_lookup[i].pcie_sgl_dma);
-+		if (!ioc->pcie_sg_lookup[i].pcie_sgl) {
-+			ioc_err(ioc, "PCIe SGL pool: dma_pool_alloc failed\n");
-+			return -EAGAIN;
-+		}
-+
-+		if (!mpt3sas_check_same_4gb_region(
-+		    (long)ioc->pcie_sg_lookup[i].pcie_sgl, sz)) {
-+			ioc_err(ioc, "PCIE SGLs are not in same 4G !! pcie sgl (0x%p) dma = (0x%llx)\n",
-+			    ioc->pcie_sg_lookup[i].pcie_sgl,
-+			    (unsigned long long)
-+			    ioc->pcie_sg_lookup[i].pcie_sgl_dma);
-+			ioc->use_32bit_dma = true;
-+			return -EAGAIN;
-+		}
-+
-+		for (j = 0; j < ioc->chains_per_prp_buffer; j++) {
-+			ct = &ioc->chain_lookup[i].chains_per_smid[j];
-+			ct->chain_buffer =
-+			    ioc->pcie_sg_lookup[i].pcie_sgl +
-+			    (j * ioc->chain_segment_sz);
-+			ct->chain_buffer_dma =
-+			    ioc->pcie_sg_lookup[i].pcie_sgl_dma +
-+			    (j * ioc->chain_segment_sz);
-+		}
-+	}
-+	dinitprintk(ioc, ioc_info(ioc,
-+	    "PCIe sgl pool depth(%d), element_size(%d), pool_size(%d kB)\n",
-+	    ioc->scsiio_depth, sz, (sz * ioc->scsiio_depth)/1024));
-+	dinitprintk(ioc, ioc_info(ioc,
-+	    "Number of chains can fit in a PRP page(%d)\n",
-+	    ioc->chains_per_prp_buffer));
++	ioc->reply_dma_min_address = (u32)(ioc->reply_dma);
++	ioc->reply_dma_max_address = (u32)(ioc->reply_dma) + sz;
++	ioc_info(ioc,
++	    "reply pool(0x%p) - dma(0x%llx): depth(%d), frame_size(%d), pool_size(%d kB)\n",
++	    ioc->reply, (unsigned long long)ioc->reply_dma,
++	    ioc->reply_free_queue_depth, ioc->reply_sz, sz/1024);
 +	return 0;
 +}
 +
  /**
   * base_alloc_rdpq_dma_pool - Allocating DMA'able memory
   *                     for reply queues.
-@@ -5497,7 +5579,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	unsigned short sg_tablesize;
- 	u16 sge_size;
- 	int i, j;
--	int ret = 0;
-+	int ret = 0, rc = 0;
- 	struct chain_tracker *ct;
- 
- 	dinitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
-@@ -5802,6 +5884,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	 * be required for NVMe PRP's, only each set of NVMe blocks will be
- 	 * contiguous, so a new set is allocated for each possible I/O.
- 	 */
-+
- 	ioc->chains_per_prp_buffer = 0;
- 	if (ioc->facts.ProtocolFlags & MPI2_IOCFACTS_PROTOCOL_NVME_DEVICES) {
- 		nvme_blocks_needed =
-@@ -5816,43 +5899,11 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 			goto out;
- 		}
- 		sz = nvme_blocks_needed * ioc->page_size;
--		ioc->pcie_sgl_dma_pool =
--			dma_pool_create("PCIe SGL pool", &ioc->pdev->dev, sz, 16, 0);
--		if (!ioc->pcie_sgl_dma_pool) {
--			ioc_info(ioc, "PCIe SGL pool: dma_pool_create failed\n");
--			goto out;
--		}
+@@ -6008,32 +6043,14 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 	    "element_size(%d), pool_size(%d kB)\n",
+ 	    ioc->sense, (unsigned long long)ioc->sense_dma, ioc->scsiio_depth,
+ 	    SCSI_SENSE_BUFFERSIZE, sz / 1024);
 -
--		ioc->chains_per_prp_buffer = sz/ioc->chain_segment_sz;
--		ioc->chains_per_prp_buffer = min(ioc->chains_per_prp_buffer,
--						ioc->chains_needed_per_io);
--
--		for (i = 0; i < ioc->scsiio_depth; i++) {
--			ioc->pcie_sg_lookup[i].pcie_sgl = dma_pool_alloc(
--				ioc->pcie_sgl_dma_pool, GFP_KERNEL,
--				&ioc->pcie_sg_lookup[i].pcie_sgl_dma);
--			if (!ioc->pcie_sg_lookup[i].pcie_sgl) {
--				ioc_info(ioc, "PCIe SGL pool: dma_pool_alloc failed\n");
--				goto out;
--			}
--			for (j = 0; j < ioc->chains_per_prp_buffer; j++) {
--				ct = &ioc->chain_lookup[i].chains_per_smid[j];
--				ct->chain_buffer =
--				    ioc->pcie_sg_lookup[i].pcie_sgl +
--				    (j * ioc->chain_segment_sz);
--				ct->chain_buffer_dma =
--				    ioc->pcie_sg_lookup[i].pcie_sgl_dma +
--				    (j * ioc->chain_segment_sz);
--			}
--		}
--
--		dinitprintk(ioc,
--			    ioc_info(ioc, "PCIe sgl pool depth(%d), element_size(%d), pool_size(%d kB)\n",
--				     ioc->scsiio_depth, sz,
--				     (sz * ioc->scsiio_depth) / 1024));
--		dinitprintk(ioc,
--			    ioc_info(ioc, "Number of chains can fit in a PRP page(%d)\n",
--				     ioc->chains_per_prp_buffer));
-+		rc = _base_allocate_pcie_sgl_pool(ioc, sz);
-+		if (rc == -ENOMEM)
-+			return -ENOMEM;
-+		else if (rc == -EAGAIN)
-+			goto try_32bit_dma;
- 		total_sz += sz * ioc->scsiio_depth;
- 	}
- 
-@@ -6022,6 +6073,19 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 		 ioc->shost->sg_tablesize);
- 	return 0;
- 
-+try_32bit_dma:
-+	_base_release_memory_pools(ioc);
-+	if (ioc->use_32bit_dma && (ioc->dma_mask > 32)) {
-+		/* Change dma coherent mask to 32 bit and reallocate */
-+		if (_base_config_dma_addressing(ioc, ioc->pdev) != 0) {
-+			pr_err("Setting 32 bit coherent DMA mask Failed %s\n",
-+			    pci_name(ioc->pdev));
-+			return -ENODEV;
-+		}
-+	} else if (_base_reduce_hba_queue_depth(ioc) != 0)
+ 	/* reply pool, 4 byte align */
+ 	sz = ioc->reply_free_queue_depth * ioc->reply_sz;
+-	ioc->reply_dma_pool = dma_pool_create("reply pool", &ioc->pdev->dev, sz,
+-					      4, 0);
+-	if (!ioc->reply_dma_pool) {
+-		ioc_err(ioc, "reply pool: dma_pool_create failed\n");
+-		goto out;
+-	}
+-	ioc->reply = dma_pool_alloc(ioc->reply_dma_pool, GFP_KERNEL,
+-	    &ioc->reply_dma);
+-	if (!ioc->reply) {
+-		ioc_err(ioc, "reply pool: dma_pool_alloc failed\n");
+-		goto out;
+-	}
+-	ioc->reply_dma_min_address = (u32)(ioc->reply_dma);
+-	ioc->reply_dma_max_address = (u32)(ioc->reply_dma) + sz;
+-	dinitprintk(ioc,
+-		    ioc_info(ioc, "reply pool(0x%p): depth(%d), frame_size(%d), pool_size(%d kB)\n",
+-			     ioc->reply, ioc->reply_free_queue_depth,
+-			     ioc->reply_sz, sz / 1024));
+-	dinitprintk(ioc,
+-		    ioc_info(ioc, "reply_dma(0x%llx)\n",
+-			     (unsigned long long)ioc->reply_dma));
++	rc = _base_allocate_reply_pool(ioc, sz);
++	if (rc == -ENOMEM)
 +		return -ENOMEM;
-+	goto retry_allocation;
-+
-  out:
- 	return -ENOMEM;
- }
-@@ -7682,6 +7746,7 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 
- 	ioc->rdpq_array_enable_assigned = 0;
- 	ioc->use_32bit_dma = false;
-+	ioc->dma_mask = 64;
- 	if (ioc->is_aero_ioc)
- 		ioc->base_readl = &_base_readl_aero;
- 	else
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 315aee6..b86eced 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1371,6 +1371,7 @@ struct MPT3SAS_ADAPTER {
- 	u16		thresh_hold;
- 	u8		high_iops_queues;
- 	u32		drv_support_bitmap;
-+	u32             dma_mask;
- 	bool		enable_sdev_max_qd;
- 	bool		use_32bit_dma;
- 
++	else if (rc == -EAGAIN)
++		goto try_32bit_dma;
+ 	total_sz += sz;
+-
+ 	/* reply free queue, 16 byte align */
+ 	sz = ioc->reply_free_queue_depth * 4;
+ 	ioc->reply_free_dma_pool = dma_pool_create("reply_free pool",
 -- 
 2.27.0
 
 
---000000000000772a1205bdcbfe4b
+--000000000000019c7d05bdcbff6b
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -413,13 +245,13 @@ dDLaJg39U0ikF3NHtNMaXXHgh6TMs3OsWhH4+zlvkC0eSC6dvasGxmpPQPQe/0huBB8gDbzGrRg/
 cRn2ctMmNHxZO4EBJ5SzsV/lHimTk+5K39lzkzYxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJF
 MRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQ
 ZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwgHNo/eviKB1udONIwDQYJYIZIAWUDBAIBBQCggdQwLwYJ
-KoZIhvcNAQkEMSIEIPPzfLxwSoB8/0B0WDdEiAaUJQvdO96th9iRmrcU0UIoMBgGCSqGSIb3DQEJ
-AzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDMxODA5MTIwOFowaQYJKoZIhvcNAQkP
+KoZIhvcNAQkEMSIEID9ZGd39QqBgybv1gbVifhswOAhPnhNorntQjnkXqYweMBgGCSqGSIb3DQEJ
+AzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDMxODA5MTIxN1owaQYJKoZIhvcNAQkP
 MVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzAL
-BgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBb
-KtMcI8plnViGEa1NWR4SriZMLoV9SbGJo6mzTAXKTpo8+ZdCzEAby9utsX3xfp4Pp9xMTlfxUQ50
-WcheeMRfU5LdNUTtuwaqm/dSC/IVWfYFXH3MNqcZghVuulbuDnw13MPvF2g2syUlPhDuecRPFpI1
-3ZDmeNgkaqnzV0MgEmMJPxpd5+MBlegCpypEQrq1omiq5banJOmgkdYLvwEJZjUr3MC3vGjtPLcL
-xTds1jsSYyjU3WW4ZrZs+RIyoyOP/8/gzNUq5Yk5vXObCEtvCgbVBOb7yDABlB0aztN0czEPyXI9
-k+qEtxwTYitTTupik9mK3rVbLXCSCMV5sZV9
---000000000000772a1205bdcbfe4b--
+BgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAT
+50xqfYlT9vQgXEMgBxx6MUnscD0n78K+yGhxtzFBk6U+YXiITed5kra+P51AtXTDIBvkLPRDuq4i
+LHJOHKou+6y7fDt1i+UNkyfrs+oUlmXf433UqOFgsa6IY/67aSXu9/DrjMfcmh7RfNEYzBVjhk4V
+Snhvj1fi8GmAmvVStCoMXZeABZFArBntpf0Cq4zEPokfTJJczfNntb3ZVMTOOA4tmFmMkzbBDKuJ
+WtWpmdDdHjMQWfQZixaJgjmBPZttDqcsXQgLlQM7OYIDAmyXh+E3xcByP9Hu8Q3bbpHJk5otuv3B
+12tAGZ57VuSsgZzDMbnGyJyizRW2xa8vRDix
+--000000000000019c7d05bdcbff6b--
