@@ -2,102 +2,212 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB068C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 09:13:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10124C433E6
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 09:13:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9D5464F33
+	by mail.kernel.org (Postfix) with ESMTP id CF4D764F3B
 	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 09:13:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229600AbhCRJMZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Mar 2021 05:12:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42516 "EHLO
+        id S229646AbhCRJM0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Mar 2021 05:12:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229618AbhCRJMF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 05:12:05 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3D7CC06174A
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 02:12:05 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id o2so969757plg.1
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 02:12:05 -0700 (PDT)
+        with ESMTP id S229698AbhCRJMP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 05:12:15 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D1C8C06174A
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 02:12:15 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id e14so971253plj.2
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 02:12:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=5LMLMVJmPnO72BFPKwLMdAGyE5oeNq+0s3LDkmWCmjk=;
-        b=PUTj4K1DBDlRUdf3FmykkmMLvVGlof4VdUP8o3AAmVEpA68wVyObVzoS0L6TWiYcq9
-         uRES2LO4Pchxepb39P1Q9p3rTFSGCED6kWJ2N25qEGh9GnSnIvzvXL5pSg3tXPpic8p/
-         YF5TwQ0VsCP2jHdVj+uLzTi9cexpGUvRUcjqA=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version;
+        bh=bZjkyZdXdUM3lDrp1fM7wN7uD1zP1IXTKlRDw8EGdFM=;
+        b=gcPGFnp+y96uzeMBcszyiNAdqvSisyFQYN1ADnnat2PrWvW2rAyWz+cZJ/njzjZKX/
+         g8aiQ0KfcEnKawGwz3xEblZd7EAxFgmVVFYppr/QzUdXfWqKs8fysFee308jpV0Mb+0G
+         7zJ1mkLrbHjuayhtd3VCrT84aazKOvkKTgqQ4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=5LMLMVJmPnO72BFPKwLMdAGyE5oeNq+0s3LDkmWCmjk=;
-        b=HySbOwm2X1rwg9WW6eFC8hDScG/3pVqLhtTDcxRpFVZs3akk/e1QBdKPF0cchrqCov
-         LC2RmQMoKdiYdm1Hz503uSri4surZJKcLv1qSScWNxj80Uda9328AsRkbTrTwLAftGjY
-         bg+gBQwLIxg/wMWrl83NFCz9QsDyKsBE7JzC8ha44hMIrbPQjsiF3djvppbLfZ4ET412
-         6HWNxVjAoLuKcXwGT/b1Skec+WYeUSGWD+8QFVNH+1D2V3vCBtkiGP8yjHLjFX7mPH+h
-         z3Lo82C0KyJfSfnPLubfln8TRn8T+y6pAfssrQNrKDYv/jqF4enEOS61aTCeFPoVf/Lz
-         8Liw==
-X-Gm-Message-State: AOAM5320ZoCnx+N3UDzB3xmSBhZVBrABnia6wv/aUVV/d4H8YwgTs3ch
-        SPT5bRFTmd9GbgFPcCeF6Oj5jZHmuFgVo1PmIzWv8V8XezVuf4v8TvZlgb/8YeHzGV5TFM/E13C
-        vSYsm5486QCQNNJtNiiGJuajcuFA48JIqvGqF2nxyslZQEB7zuIkZNlNy0XsdWBtY9jCipO4l6Z
-        RuREQLmX6IB8+rD55QGja+
-X-Google-Smtp-Source: ABdhPJwHLrSjWlZ0uPF+rhQLRmdDve3fFYRaCxYNkh/jKMn3nr7iADTUqWeCnhKpPMHp4S2Mghhh3w==
-X-Received: by 2002:a17:90a:e298:: with SMTP id d24mr3260550pjz.171.1616058724454;
-        Thu, 18 Mar 2021 02:12:04 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version;
+        bh=bZjkyZdXdUM3lDrp1fM7wN7uD1zP1IXTKlRDw8EGdFM=;
+        b=DOoLc3Y91p/YuRgAPFeyEWm5JNq5m/cxqSyQmhY+66CyE8uS/dpjWF1Uaviq6GfNpx
+         VdZFB8++tVE8aVC/yW/WTetOYM5Fh3/QONbDLRbY6lYLIOAq2sergFIzMcyIfObbcReZ
+         7LNE9g1FK7PWE1Lt+gdpVyM5VdFCz7tYyB0wEImjPEABeMOx+KxnQnmk/HgutQFOpBMS
+         VTmAiY7uevAG46bldbZ+ctxv05K+C8/z7efDmOjhZOVfeO7Vu8lIVYHdH6fSDVtSgCno
+         iin0HL7pQksLXCWKFdH3GhPk9ntKT6Tn8ohE6dCuCL/viYgIdSw30a3I5d2PBGe3gPwB
+         lUAw==
+X-Gm-Message-State: AOAM5323I7cunpgGdawFu6hgJzZUr+Og1dv870Sgd+ue1A9E4CNLETdn
+        7hJGupRu5UPtyJpU9wlbFO37kkAlpEvlgJdca3pKNKae59RGXEIM4VkKHi2JqQpiJu8HHee+Xo2
+        hHL1Ugh7fYGFGWYFxcRlSZt7+CdZ95cFH/LZAMx0d0lJqSKGhNPs0y3SFe2MkB+Z1lR/apvPjcI
+        gTdYJ49wWZSRunTe1BkdWP
+X-Google-Smtp-Source: ABdhPJxRLYLNMSiSw+1JkicWHqSjYzNaPOD5vtV2I3c2LGU+91p+AeGsLaEJsRXpNoBm0nKuxvkk1g==
+X-Received: by 2002:a17:902:d888:b029:e6:1ca1:d7f9 with SMTP id b8-20020a170902d888b02900e61ca1d7f9mr8804070plz.17.1616058734103;
+        Thu, 18 Mar 2021 02:12:14 -0700 (PDT)
 Received: from dhcp-10-123-20-76.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 11sm1413350pgt.83.2021.03.18.02.12.01
+        by smtp.gmail.com with ESMTPSA id 11sm1413350pgt.83.2021.03.18.02.12.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Mar 2021 02:12:03 -0700 (PDT)
+        Thu, 18 Mar 2021 02:12:13 -0700 (PDT)
 From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com,
         Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 0/7] Handle DMA allocations in same 4G region.
-Date:   Thu, 18 Mar 2021 14:41:44 +0530
-Message-Id: <20210318091151.39349-1-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH V2 3/7] mpt3sas: Handle sense buffer DMA allocations in same 4G region
+Date:   Thu, 18 Mar 2021 14:41:47 +0530
+Message-Id: <20210318091151.39349-4-suganath-prabu.subramani@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20210318091151.39349-1-suganath-prabu.subramani@broadcom.com>
+References: <20210318091151.39349-1-suganath-prabu.subramani@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000003e51c705bdcbfef5"
+        boundary="000000000000d1366c05bdcbfe99"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000003e51c705bdcbfef5
+--000000000000d1366c05bdcbfe99
 Content-Transfer-Encoding: 8bit
 
-According to MPI Specification PCIe SGL, Sense pool, Chain pool,
-reply pool, reply post pool & reply post array buffers should not cross
-4GB boundary. So while allocating these buffers, if any of these
-pool buffer crosses the 4GB boundary then,
+According to MPI Specification Sense buffers should not cross
+4GB boundary. So while allocating Sense buffers, if any buffer
+crosses the 4GB boundary then,
 * Release the already allocated memory pools and
 * Reallocate them by changing the DMA coherent mask to 32 bit.
 
-Patch V2:
-Fixed inconsistent indenting warning in patch 0002 
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 86 ++++++++++++++---------------
+ 1 file changed, 40 insertions(+), 46 deletions(-)
 
-Suganath Prabu S (7):
-  mpt3sas: Handle PCIe sgl's in same 4G region.
-  mpt3sas: Handle chain buffer DMA allocations in same 4G region
-  mpt3sas: Handle sense buffer DMA allocations in same 4G region
-  mpt3sas: Handle reply pool DMA allocations in same 4G region
-  mpt3sas: Handle Reply post queue DMA allocations in same 4G region
-  mpt3sas: Handle reply post array DMA allocations in same 4G region
-  mpt3sas : Update driver version to 37.101.00.00
-
- drivers/scsi/mpt3sas/mpt3sas_base.c | 503 ++++++++++++++++++----------
- drivers/scsi/mpt3sas/mpt3sas_base.h |   5 +-
- 2 files changed, 332 insertions(+), 176 deletions(-)
-
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index d3cadad..308d817 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -5527,6 +5527,38 @@ _base_allocate_chain_dma_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
+ 	return 0;
+ }
+ 
++/**
++ * _base_allocate_sense_dma_pool - Allocating DMA'able memory
++ *			for sense dma pool.
++ * @ioc: Adapter object
++ * @sz: DMA Pool size
++ * Return: 0 for success, non-zero for failure.
++ */
++static int
++_base_allocate_sense_dma_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
++{
++	ioc->sense_dma_pool =
++	    dma_pool_create("sense pool", &ioc->pdev->dev, sz, 4, 0);
++	if (!ioc->sense_dma_pool)
++		return -ENOMEM;
++	ioc->sense = dma_pool_alloc(ioc->sense_dma_pool,
++	    GFP_KERNEL, &ioc->sense_dma);
++	if (!ioc->sense)
++		return -EAGAIN;
++	if (!mpt3sas_check_same_4gb_region((long)ioc->sense, sz)) {
++		dinitprintk(ioc, pr_err(
++		    "Bad Sense Pool! sense (0x%p) sense_dma = (0x%llx)\n",
++		    ioc->sense, (unsigned long long) ioc->sense_dma));
++		ioc->use_32bit_dma = true;
++		return -EAGAIN;
++	}
++	ioc_info(ioc,
++	    "sense pool(0x%p) - dma(0x%llx): depth(%d), element_size(%d), pool_size (%d kB)\n",
++	    ioc->sense, (unsigned long long)ioc->sense_dma,
++	    ioc->scsiio_depth, SCSI_SENSE_BUFFERSIZE, sz/1024);
++	return 0;
++}
++
+ /**
+  * base_alloc_rdpq_dma_pool - Allocating DMA'able memory
+  *                     for reply queues.
+@@ -5620,7 +5652,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 	u16 chains_needed_per_io;
+ 	u32 sz, total_sz, reply_post_free_sz, reply_post_free_array_sz;
+ 	u32 retry_sz;
+-	u32 rdpq_sz = 0;
++	u32 rdpq_sz = 0, sense_sz = 0;
+ 	u16 max_request_credit, nvme_blocks_needed;
+ 	unsigned short sg_tablesize;
+ 	u16 sge_size;
+@@ -5963,58 +5995,20 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 	    ioc_info(ioc, "chain pool depth(%d), frame_size(%d), pool_size(%d kB)\n",
+ 	    ioc->chain_depth, ioc->chain_segment_sz,
+ 	    (ioc->chain_depth * ioc->chain_segment_sz) / 1024));
+-
+ 	/* sense buffers, 4 byte align */
+-	sz = ioc->scsiio_depth * SCSI_SENSE_BUFFERSIZE;
+-	ioc->sense_dma_pool = dma_pool_create("sense pool", &ioc->pdev->dev, sz,
+-					      4, 0);
+-	if (!ioc->sense_dma_pool) {
+-		ioc_err(ioc, "sense pool: dma_pool_create failed\n");
+-		goto out;
+-	}
+-	ioc->sense = dma_pool_alloc(ioc->sense_dma_pool, GFP_KERNEL,
+-	    &ioc->sense_dma);
+-	if (!ioc->sense) {
+-		ioc_err(ioc, "sense pool: dma_pool_alloc failed\n");
+-		goto out;
+-	}
+-	/* sense buffer requires to be in same 4 gb region.
+-	 * Below function will check the same.
+-	 * In case of failure, new pci pool will be created with updated
+-	 * alignment. Older allocation and pool will be destroyed.
+-	 * Alignment will be used such a way that next allocation if
+-	 * success, will always meet same 4gb region requirement.
+-	 * Actual requirement is not alignment, but we need start and end of
+-	 * DMA address must have same upper 32 bit address.
+-	 */
+-	if (!mpt3sas_check_same_4gb_region((long)ioc->sense, sz)) {
+-		//Release Sense pool & Reallocate
+-		dma_pool_free(ioc->sense_dma_pool, ioc->sense, ioc->sense_dma);
+-		dma_pool_destroy(ioc->sense_dma_pool);
+-		ioc->sense = NULL;
+-
+-		ioc->sense_dma_pool =
+-			dma_pool_create("sense pool", &ioc->pdev->dev, sz,
+-						roundup_pow_of_two(sz), 0);
+-		if (!ioc->sense_dma_pool) {
+-			ioc_err(ioc, "sense pool: pci_pool_create failed\n");
+-			goto out;
+-		}
+-		ioc->sense = dma_pool_alloc(ioc->sense_dma_pool, GFP_KERNEL,
+-				&ioc->sense_dma);
+-		if (!ioc->sense) {
+-			ioc_err(ioc, "sense pool: pci_pool_alloc failed\n");
+-			goto out;
+-		}
+-	}
++	sense_sz = ioc->scsiio_depth * SCSI_SENSE_BUFFERSIZE;
++	rc = _base_allocate_sense_dma_pool(ioc, sense_sz);
++	if (rc  == -ENOMEM)
++		return -ENOMEM;
++	else if (rc == -EAGAIN)
++		goto try_32bit_dma;
++	total_sz += sense_sz;
+ 	ioc_info(ioc,
+ 	    "sense pool(0x%p)- dma(0x%llx): depth(%d),"
+ 	    "element_size(%d), pool_size(%d kB)\n",
+ 	    ioc->sense, (unsigned long long)ioc->sense_dma, ioc->scsiio_depth,
+ 	    SCSI_SENSE_BUFFERSIZE, sz / 1024);
+ 
+-	total_sz += sz;
+-
+ 	/* reply pool, 4 byte align */
+ 	sz = ioc->reply_free_queue_depth * ioc->reply_sz;
+ 	ioc->reply_dma_pool = dma_pool_create("reply pool", &ioc->pdev->dev, sz,
 -- 
 2.27.0
 
 
---0000000000003e51c705bdcbfef5
+--000000000000d1366c05bdcbfe99
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -169,13 +279,13 @@ dDLaJg39U0ikF3NHtNMaXXHgh6TMs3OsWhH4+zlvkC0eSC6dvasGxmpPQPQe/0huBB8gDbzGrRg/
 cRn2ctMmNHxZO4EBJ5SzsV/lHimTk+5K39lzkzYxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJF
 MRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQ
 ZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwgHNo/eviKB1udONIwDQYJYIZIAWUDBAIBBQCggdQwLwYJ
-KoZIhvcNAQkEMSIEIBpFzijzoV3ZAoKzQZ8ricrlCM+T4K7/TvQAnqUQcdj+MBgGCSqGSIb3DQEJ
-AzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDMxODA5MTIwNVowaQYJKoZIhvcNAQkP
+KoZIhvcNAQkEMSIEIFRkk1mfmVyfwd5KqBMI4PSZxILgG7GNzwK/hU2r3GYnMBgGCSqGSIb3DQEJ
+AzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDMxODA5MTIxNFowaQYJKoZIhvcNAQkP
 MVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzAL
-BgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAe
-zCPJ5NGvrmE7t5JgZuLuGsF4tNWsry+VF+uZEBiLt17qivPSETZDtN4+YRmpAdIPYnNaTnegsl60
-4bhF164TIlug96C6oWIIVAbTiiE52XWLm8ClPYm81SEKC2fvglOAXqGtDYHGSh20QcRr2s6AorEv
-uKsQG/2eEKpNkTZJ+w+b6E+ziEJpDo4lZiv3MRLdPyuP0wK3R9BQnDr8rqBzPTCmRCJPY86labVl
-kDaui+ztGUKETmlinPRBNZMj0+FzRL8UA0Jmyem9qr5B00Yv3mqn8lx7e4agshDeZHb/CnkG6/5z
-HBiIbOZ+NESdnELwlfSUV9Aq5UYBG2d8yOXW
---0000000000003e51c705bdcbfef5--
+BgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAn
+dMAyoOqUWAdBuCuaXiq6/81BTPbOGsGZKgki36qHnCf4KsyDv0WPXSMtHq5RLqZqP+PfQRzOi21B
+I06gcYeOj2G+GfRoMoyAMRIIO07e78wJuqVbeOTRNo6e2jW88wpIiBAMe5Rcee53fn8hWXKyeyR/
+pIWnFBdZpo1LuOaDy05Wq+CRBo2Q2s097M6/nkhNOo51lLd4xSJ1K1Sgfq0+6MtPxtrS+jpp84x3
+bfqewInOmIGdu03fstisEqfZWdYaK8UnTK9A4xpDjBUyV8wsEbdQTMS4L2G7KCVES2xaMAPx8LRx
+owh9fR2CCd3ZFPh7GpPoi/K+XVVPGfSwshKI
+--000000000000d1366c05bdcbfe99--
