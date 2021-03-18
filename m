@@ -2,135 +2,348 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D2AC43332
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 03:29:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23BF5C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 04:50:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D6E5664F09
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 03:29:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB89C64EF2
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 04:50:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231240AbhCRD3I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 23:29:08 -0400
-Received: from mail-pj1-f44.google.com ([209.85.216.44]:54886 "EHLO
-        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230493AbhCRD2x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 23:28:53 -0400
-Received: by mail-pj1-f44.google.com with SMTP id w8so2175109pjf.4
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2021 20:28:53 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=TbYHENiZ2NxNmIK42cPP4InnrTTNciDDGhfK/nYZBv4=;
-        b=GiXJ5FxP1ZbLCmnzW/z8qTnqFsjqW3FYmCOniXAvzkv9L369vwr6WFOVAVj8fdk2U7
-         2zyYuiX/LJG2iPakoxnFVI8dcuXjagNWoolTfAhcg417vy5JLzyoYKYw45WbOKDOPli6
-         rvVcrKD/EsBVNo+E0bntD33MX0UozF5J4g2v7VEY4hMA2uFAdXyyerI4dBIhg2CCDy+/
-         ZTY7saj3FtMccEnetOpNc76lpfuH4RjQ19cpSmNpjWsMkux/RhKZNW3gCBkeXZSmjx5z
-         fYW/tCgeq2xFVZs4L6hvDF/0jiGpa8T6ZXtbLeali6erDaYx/U4H2znRUvS1yZGcWe0/
-         zjlA==
-X-Gm-Message-State: AOAM530x4Ss5S9THbW4mzK3fCXLjeFnNRXAJet78IXdFIktDRfIX+27t
-        zU+Wqqin8iHqbghPlCwJSYI=
-X-Google-Smtp-Source: ABdhPJxm9QeD45ZJckgEZCvy31CUqZUDp+Qm1P+0bidH8W1I78Fp9fxiRk09sLnTiIfDi9Ibj3S5dA==
-X-Received: by 2002:a17:902:bf01:b029:e6:6b59:a48b with SMTP id bi1-20020a170902bf01b02900e66b59a48bmr7589959plb.55.1616038133348;
-        Wed, 17 Mar 2021 20:28:53 -0700 (PDT)
-Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:7fb2:1f41:ab33:bae6])
-        by smtp.gmail.com with ESMTPSA id y68sm473687pgy.5.2021.03.17.20.28.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 20:28:52 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Quinn Tran <qutran@marvell.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>
-Subject: [PATCH v2 4/6] qla2xxx: Suppress Coverity complaints about dseg_r*
-Date:   Wed, 17 Mar 2021 20:28:38 -0700
-Message-Id: <20210318032840.7611-5-bvanassche@acm.org>
-X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210318032840.7611-1-bvanassche@acm.org>
-References: <20210318032840.7611-1-bvanassche@acm.org>
+        id S229610AbhCREuP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Mar 2021 00:50:15 -0400
+Received: from a0.mail.mailgun.net ([198.61.254.59]:28757 "EHLO
+        a0.mail.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229559AbhCREtr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 00:49:47 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1616042987; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=qhiT71mOvbZ3n89HS4mHPqpjG6J01G8u5BG2DECJTvw=;
+ b=bNAYNi0ENgEX0Tk2Dv0K2au9sm+46NN3DM57cr+wog0frHa5w3XKLxyS4mB62J8WtUSmsjt7
+ drjb9RmLP07Y+QsDJYr/oFweytNLzbHHrlRq4rgUOCq52bvsAjuY2opxVZSgKO6JU0DMPpmT
+ vkIDoHgSZsQPXY97b0BJLy6r14c=
+X-Mailgun-Sending-Ip: 198.61.254.59
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 6052dbdf6dc1045b7d53586a (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 18 Mar 2021 04:49:35
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 3C27BC433C6; Thu, 18 Mar 2021 04:49:35 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 473A9C433CA;
+        Thu, 18 Mar 2021 04:49:33 +0000 (UTC)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 18 Mar 2021 12:49:33 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     daejun7.park@samsung.com
+Cc:     Greg KH <gregkh@linuxfoundation.org>, avri.altman@wdc.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        asutoshd@codeaurora.org, stanley.chu@mediatek.com,
+        bvanassche@acm.org, huobean@gmail.com,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+Subject: Re: [PATCH v29 4/4] scsi: ufs: Add HPB 2.0 support
+In-Reply-To: <20210318020243epcms2p8259fa1d5e99e3c463c6b9e9106693476@epcms2p8>
+References: <79aea8a80c1be2ff7f05683c2f4918ce@codeaurora.org>
+ <a18909e8f4db023455b7513bf6c60312@codeaurora.org>
+ <2da1c963bd3ff5f682d18a251ed08989@codeaurora.org>
+ <20210315012850epcms2p361447b689e925561c48aa9ca54434eb5@epcms2p3>
+ <20210315013137epcms2p861f06e66be9faff32b6648401778434a@epcms2p8>
+ <20210315070728epcms2p87136c86803afa85a441ead524130245c@epcms2p8>
+ <d6a4511fd85e6e47c5aef22e335bb253@codeaurora.org>
+ <20210317014253epcms2p1f45db6a281645282e1540e0070999d73@epcms2p1>
+ <CGME20210315012850epcms2p361447b689e925561c48aa9ca54434eb5@epcms2p8>
+ <20210318020243epcms2p8259fa1d5e99e3c463c6b9e9106693476@epcms2p8>
+Message-ID: <4f34cad55311137d1b28d897187a69df@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Change dseq_rq and dseg_rsp from scalar structure members into
-single-element arrays such that Coverity does not complain about the
-(*cur_dsd)++ statement in append_dsd64().
+On 2021-03-18 10:02, Daejun Park wrote:
+>> On 2021-03-17 09:42, Daejun Park wrote:
+>>>> On 2021-03-15 15:23, Can Guo wrote:
+>>>>> On 2021-03-15 15:07, Daejun Park wrote:
+>>>>>>>> This patch supports the HPB 2.0.
+>>>>>>>> 
+>>>>>>>> The HPB 2.0 supports read of varying sizes from 4KB to 512KB.
+>>>>>>>> In the case of Read (<= 32KB) is supported as single HPB read.
+>>>>>>>> In the case of Read (36KB ~ 512KB) is supported by as a
+>>>>>>>> combination
+>>>>>>>> of
+>>>>>>>> write buffer command and HPB read command to deliver more PPN.
+>>>>>>>> The write buffer commands may not be issued immediately due to
+>>>>>>>> busy
+>>>>>>>> tags.
+>>>>>>>> To use HPB read more aggressively, the driver can requeue the
+>>>>>>>> write
+>>>>>>>> buffer
+>>>>>>>> command. The requeue threshold is implemented as timeout and can
+>>>>>>>> be
+>>>>>>>> modified with requeue_timeout_ms entry in sysfs.
+>>>>>>>> 
+>>>>>>>> Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+>>>>>>>> ---
+>>>>>>>> +static struct attribute *hpb_dev_param_attrs[] = {
+>>>>>>>> +        &dev_attr_requeue_timeout_ms.attr,
+>>>>>>>> +        NULL,
+>>>>>>>> +};
+>>>>>>>> +
+>>>>>>>> +struct attribute_group ufs_sysfs_hpb_param_group = {
+>>>>>>>> +        .name = "hpb_param_sysfs",
+>>>>>>>> +        .attrs = hpb_dev_param_attrs,
+>>>>>>>> +};
+>>>>>>>> +
+>>>>>>>> +static int ufshpb_pre_req_mempool_init(struct ufshpb_lu *hpb)
+>>>>>>>> +{
+>>>>>>>> +        struct ufshpb_req *pre_req = NULL;
+>>>>>>>> +        int qd = hpb->sdev_ufs_lu->queue_depth / 2;
+>>>>>>>> +        int i, j;
+>>>>>>>> +
+>>>>>>>> +        INIT_LIST_HEAD(&hpb->lh_pre_req_free);
+>>>>>>>> +
+>>>>>>>> +        hpb->pre_req = kcalloc(qd, sizeof(struct ufshpb_req),
+>>>>>>>> GFP_KERNEL);
+>>>>>>>> +        hpb->throttle_pre_req = qd;
+>>>>>>>> +        hpb->num_inflight_pre_req = 0;
+>>>>>>>> +
+>>>>>>>> +        if (!hpb->pre_req)
+>>>>>>>> +                goto release_mem;
+>>>>>>>> +
+>>>>>>>> +        for (i = 0; i < qd; i++) {
+>>>>>>>> +                pre_req = hpb->pre_req + i;
+>>>>>>>> +                INIT_LIST_HEAD(&pre_req->list_req);
+>>>>>>>> +                pre_req->req = NULL;
+>>>>>>>> +                pre_req->bio = NULL;
+>>>>>>> 
+>>>>>>> Why don't prepare bio as same as wb.m_page? Won't that save more
+>>>>>>> time
+>>>>>>> for ufshpb_issue_pre_req()?
+>>>>>> 
+>>>>>> It is pre_req pool. So although we prepare bio at this time, it 
+>>>>>> just
+>>>>>> only for first pre_req.
+>>>>> 
+>>>>> I meant removing the bio_alloc() in ufshpb_issue_pre_req() and
+>>>>> bio_put()
+>>>>> in ufshpb_pre_req_compl_fn(). bios, in pre_req's case, just hold a
+>>>>> page.
+>>>>> So, prepare 16 (if queue depth is 32) bios here, just use them 
+>>>>> along
+>>>>> with
+>>>>> wb.m_page and call bio_reset() in ufshpb_pre_req_compl_fn(). Shall 
+>>>>> it
+>>>>> work?
+>>>>> 
+>>>> 
+>>>> If it works, you can even have the bio_add_pc_page() called here.
+>>>> Later
+>>>> in
+>>>> ufshpb_execute_pre_req(), you don't need to call
+>>>> ufshpb_pre_req_add_bio_page(),
+>>>> just call ufshpb_prep_entry() once instead - it save many repeated
+>>>> steps
+>>>> for a
+>>>> pre_req, and you don't even need to call bio_reset() in this case,
+>>>> since
+>>>> for a
+>>>> bio, nothing changes after it is binded with a specific page...
+>>> 
+>>> Hi, Can Guo
+>>> 
+>>> I tried the idea that you suggested, but it doesn't work properly.
+>>> This optimization should be done next time for enhancement.
+>> 
+>> Can you elaborate please? Any error seen?
+>> 
+>> Per my understanding, in the case for pre_reqs, a bio is no different
+>> from a page. Here it can reserve 16 pages for later use, which can be
+>> done the same for bios.
+> 
+> I found some problem with re-using pre allocated bio.
+> 
+> The following kernel message is related with problem.
+> [    2.750530] ------------[ cut here ]------------
+> [    2.751404] WARNING: CPU: 4 PID: 170 at
+> drivers/scsi/scsi_lib.c:1020 scsi_alloc_sgtables+0x253/0x2b0
+> [    2.753054] Modules linked in:
+> [    2.753651] CPU: 4 PID: 170 Comm: mount Not tainted 5.12.0-rc1+ #331
+> [    2.754752] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+> BIOS rel-1.13.0-0-gf21b5a4aeb02-prebuilt.qemu.org 04/01/2014
+> [    2.756813] RIP: 0010:scsi_alloc_sgtables+0x253/0x2b0
+> [    2.757699] Code: 85 c0 74 19 41 0f b6 44 24 18 8d 50 e0 83 fa 03
+> 76 30 41 bd 01 00 00 00 e9 1f fe ff ff be 01 00 00 00 45 31 ed e9 19
+> fe ff ff <0f> 0b b8 0a f
+> [    2.761021] RSP: 0018:ffffb06e0027f538 EFLAGS: 00010246
+> [    2.761902] RAX: 0000000000000000 RBX: ffff9c3a42d424d0 RCX: 
+> ffffb06e0027f5e0
+> [    2.763184] RDX: ffff9c3a42d426a8 RSI: 0000000000000000 RDI: 
+> ffff9c3a42d424d0
+> [    2.764446] RBP: ffffb06e0027f570 R08: 0000000000000000 R09: 
+> 0000000000000000
+> [    2.765704] R10: ffffffff8eb0dda0 R11: 00000000fffb7675 R12: 
+> ffff9c3a42d423c0
+> [    2.766976] R13: 0000000000000000 R14: ffff9c3a41bed000 R15: 
+> ffff9c3a420f4000
+> [    2.768225] FS:  00007f42d1eab100(0000) GS:ffff9c3b77c00000(0000)
+> knlGS:0000000000000000
+> [    2.769666] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [    2.770719] CR2: 00007f42d1ac1000 CR3: 0000000104bee006 CR4: 
+> 0000000000370ee0
+> [    2.771997] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 
+> 0000000000000000
+> [    2.773288] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 
+> 0000000000000400
+> [    2.774543] Call Trace:
+> [    2.775092]  scsi_queue_rq+0x9b6/0xb20
+> [    2.775754]  __blk_mq_try_issue_directly+0x150/0x1f0
+> [    2.776636]  blk_mq_request_issue_directly+0x49/0x80
+> [    2.777616]  blk_insert_cloned_request+0x85/0xd0
+> [    2.778470]  ufshpb_prep.cold+0x793/0x7be
+> [    2.779179]  ufshcd_queuecommand+0x114/0x690
+> [    2.779986]  scsi_queue_rq+0x38a/0xb20
+> [    2.780755]  blk_mq_dispatch_rq_list+0x13d/0x760
+> [    2.781605]  ? dd_dispatch_request+0x67/0x1c0
+> [    2.782337]  __blk_mq_do_dispatch_sched+0xb5/0x2c0
+> [    2.783291]  __blk_mq_sched_dispatch_requests+0x13c/0x180
+> [    2.784209]  blk_mq_sched_dispatch_requests+0x30/0x60
+> [    2.785195]  __blk_mq_run_hw_queue+0x49/0x90
+> [    2.786024]  __blk_mq_delay_run_hw_queue+0x162/0x180
+> [    2.786890]  blk_mq_run_hw_queue+0x85/0xe0
+> [    2.787590]  blk_mq_sched_insert_requests+0xdf/0x2b0
+> [    2.788558]  blk_mq_flush_plug_list+0x118/0x240
+> [    2.789405]  blk_flush_plug_list+0xde/0x110
+> [    2.790225]  blk_finish_plug+0x21/0x30
+> [    2.790878]  read_pages+0x16a/0x1d0
+> [    2.791534]  page_cache_ra_unbounded+0x123/0x1c0
+> [    2.792392]  do_page_cache_ra+0x38/0x40
+> [    2.793183]  force_page_cache_ra+0x97/0x110
+> [    2.793875]  page_cache_sync_ra+0x26/0x50
+> [    2.794671]  filemap_get_pages+0xc8/0x4b0
+> [    2.795482]  filemap_read+0xc9/0x340
+> [    2.796144]  ? find_held_lock+0x31/0x90
+> [    2.796809]  generic_file_read_iter+0xcc/0x130
+> [    2.797644]  blkdev_read_iter+0x30/0x40
+> [    2.798436]  new_sync_read+0x10e/0x190
+> [    2.799112]  vfs_read+0x178/0x1d0
+> [    2.799732]  ksys_read+0x6b/0xf0
+> [    2.800361]  __x64_sys_read+0x15/0x20
+> [    2.801027]  do_syscall_64+0x38/0x50
+> [    2.801770]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> [    2.802655] RIP: 0033:0x7f42d209a461
+> [    2.803313] Code: fe ff ff 50 48 8d 3d fe d0 09 00 e8 e9 03 02 00
+> 66 0f 1f 84 00 00 00 00 00 48 8d 05 99 62 0d 00 8b 00 85 c0 75 13 31
+> c0 0f 05 <48> 3d 00 f0 8
+> [    2.806632] RSP: 002b:00007ffe7b88bc88 EFLAGS: 00000246 ORIG_RAX:
+> 0000000000000000
+> [    2.807942] RAX: ffffffffffffffda RBX: 000055ccb2e070d0 RCX: 
+> 00007f42d209a461
+> [    2.809218] RDX: 0000000000040000 RSI: 00007f42d1ac1038 RDI: 
+> 0000000000000004
+> [    2.810482] RBP: 000055ccb2e07120 R08: 00007f42d1ac1010 R09: 
+> 0000000000000000
+> [    2.811729] R10: 0000000000000022 R11: 0000000000000246 R12: 
+> 0000003b95fc0000
+> [    2.813005] R13: 0000000000040000 R14: 00007f42d1ac1028 R15: 
+> 00007f42d1ac1010
+> [    2.814276] irq event stamp: 9319
+> [    2.814868] hardirqs last  enabled at (9327): [<ffffffff8c4d2033>]
+> console_unlock+0x4d3/0x5e0
+> [    2.816349] hardirqs last disabled at (9336): [<ffffffff8c4d1fa6>]
+> console_unlock+0x446/0x5e0
+> [    2.817837] softirqs last  enabled at (8674): [<ffffffff8d4002ec>]
+> __do_softirq+0x2ec/0x40f
+> [    2.819298] softirqs last disabled at (8669): [<ffffffff8c46ad9e>]
+> irq_exit_rcu+0xae/0xb0
+> [    2.820744] ---[ end trace af3986a7787eeecf ]---
+> 
+> It is related to bi_iter value of bio is changed after use it.
 
-Cc: Quinn Tran <qutran@marvell.com>
-Cc: Mike Christie <michael.christie@oracle.com>
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/qla2xxx/qla_mr.c | 12 ++++++------
- drivers/scsi/qla2xxx/qla_mr.h |  4 ++--
- 2 files changed, 8 insertions(+), 8 deletions(-)
+Understood the problem now, let's take the 1st way -
+1. prepare bios in ufshpb_pre_req_mempool_init() (leave 
+bio_add_pc_page() where it was)
+2. call bio_reset() in ufshpb_put_pre_req()
 
-diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index ca7306685325..61eaf6c4ac47 100644
---- a/drivers/scsi/qla2xxx/qla_mr.c
-+++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -3266,8 +3266,8 @@ qlafx00_fxdisc_iocb(srb_t *sp, struct fxdisc_entry_fx00 *pfxiocb)
- 			fx_iocb.req_xfrcnt =
- 			    cpu_to_le16(fxio->u.fxiocb.req_len);
- 			put_unaligned_le64(fxio->u.fxiocb.req_dma_handle,
--					   &fx_iocb.dseg_rq.address);
--			fx_iocb.dseg_rq.length =
-+					   &fx_iocb.dseg_rq[0].address);
-+			fx_iocb.dseg_rq[0].length =
- 			    cpu_to_le32(fxio->u.fxiocb.req_len);
- 		}
- 
-@@ -3276,8 +3276,8 @@ qlafx00_fxdisc_iocb(srb_t *sp, struct fxdisc_entry_fx00 *pfxiocb)
- 			fx_iocb.rsp_xfrcnt =
- 			    cpu_to_le16(fxio->u.fxiocb.rsp_len);
- 			put_unaligned_le64(fxio->u.fxiocb.rsp_dma_handle,
--					   &fx_iocb.dseg_rsp.address);
--			fx_iocb.dseg_rsp.length =
-+					   &fx_iocb.dseg_rsp[0].address);
-+			fx_iocb.dseg_rsp[0].length =
- 			    cpu_to_le32(fxio->u.fxiocb.rsp_len);
- 		}
- 
-@@ -3314,7 +3314,7 @@ qlafx00_fxdisc_iocb(srb_t *sp, struct fxdisc_entry_fx00 *pfxiocb)
- 			    cpu_to_le16(bsg_job->request_payload.sg_cnt);
- 			tot_dsds =
- 			    bsg_job->request_payload.sg_cnt;
--			cur_dsd = &fx_iocb.dseg_rq;
-+			cur_dsd = &fx_iocb.dseg_rq[0];
- 			avail_dsds = 1;
- 			for_each_sg(bsg_job->request_payload.sg_list, sg,
- 			    tot_dsds, index) {
-@@ -3369,7 +3369,7 @@ qlafx00_fxdisc_iocb(srb_t *sp, struct fxdisc_entry_fx00 *pfxiocb)
- 			fx_iocb.rsp_dsdcnt =
- 			   cpu_to_le16(bsg_job->reply_payload.sg_cnt);
- 			tot_dsds = bsg_job->reply_payload.sg_cnt;
--			cur_dsd = &fx_iocb.dseg_rsp;
-+			cur_dsd = &fx_iocb.dseg_rsp[0];
- 			avail_dsds = 1;
- 
- 			for_each_sg(bsg_job->reply_payload.sg_list, sg,
-diff --git a/drivers/scsi/qla2xxx/qla_mr.h b/drivers/scsi/qla2xxx/qla_mr.h
-index 73be8348402a..eefbae9d7547 100644
---- a/drivers/scsi/qla2xxx/qla_mr.h
-+++ b/drivers/scsi/qla2xxx/qla_mr.h
-@@ -176,8 +176,8 @@ struct fxdisc_entry_fx00 {
- 	uint8_t flags;
- 	uint8_t reserved_1;
- 
--	struct dsd64 dseg_rq;
--	struct dsd64 dseg_rsp;
-+	struct dsd64 dseg_rq[1];
-+	struct dsd64 dseg_rsp[1];
- 
- 	__le32 dataword;
- 	__le32 adapid;
+This should work.
+
+Thanks,
+Can Guo.
+
+> 
+> Thanks,
+> Daejun
+> 
+>> This is not an enhancement, but a doubt - why not? Unless it is not
+>> doable.
+>> 
+>> Thanks,
+>> Can Guo.
+>> 
+>>> 
+>>> Thanks
+>>> Daejun
+>>> 
+>>>> Can Guo.
+>>>> 
+>>>>> Thanks,
+>>>>> Can Guo.
+>>>>> 
+>>>>>> After use it, it should be prepared bio at issue phase.
+>>>>>> 
+>>>>>> Thanks,
+>>>>>> Daejun
+>>>>>> 
+>>>>>>> 
+>>>>>>> Thanks,
+>>>>>>> Can Guo.
+>>>>>>> 
+>>>>>>>> +
+>>>>>>>> +                pre_req->wb.m_page = alloc_page(GFP_KERNEL |
+>>>>>>>> __GFP_ZERO);
+>>>>>>>> +                if (!pre_req->wb.m_page) {
+>>>>>>>> +                        for (j = 0; j < i; j++)
+>>>>>>>> +
+>>>>>>>> __free_page(hpb->pre_req[j].wb.m_page);
+>>>>>>>> +
+>>>>>>>> +                        goto release_mem;
+>>>>>>>> +                }
+>>>>>>>> +                list_add_tail(&pre_req->list_req,
+>>>>>>>> &hpb->lh_pre_req_free);
+>>>>>>>> +        }
+>>>>>>>> +
+>>>>>>>> +        return 0;
+>>>>>>>> +release_mem:
+>>>>>>>> +        kfree(hpb->pre_req);
+>>>>>>>> +        return -ENOMEM;
+>>>>>>>> +}
+>>>>>>>> +
+>>>>>>> 
+>>>>>>> 
+>>>>>>> 
+>>>> 
+>>>> 
+>>>> 
+>> 
+>> 
+>> 
