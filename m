@@ -2,64 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54398C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9BC7C43381
 	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 19:11:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C32A64EB9
+	by mail.kernel.org (Postfix) with ESMTP id 90E2464EB9
 	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 19:11:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232651AbhCRTLM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S232706AbhCRTLM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 18 Mar 2021 15:11:12 -0400
-Received: from mail-pf1-f169.google.com ([209.85.210.169]:43941 "EHLO
-        mail-pf1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232689AbhCRTKr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 15:10:47 -0400
-Received: by mail-pf1-f169.google.com with SMTP id q5so4164532pfh.10
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 12:10:47 -0700 (PDT)
+Received: from mail-pj1-f48.google.com ([209.85.216.48]:44971 "EHLO
+        mail-pj1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232685AbhCRTLJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 15:11:09 -0400
+Received: by mail-pj1-f48.google.com with SMTP id kk2-20020a17090b4a02b02900c777aa746fso3619338pjb.3
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 12:11:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=ewjX2VaCx6Ynh0BXSyMQ1cAi6993ibBty1C0yHyHLyI=;
-        b=Kp9dqhD16p6IcUfnrdtWEOtd6+Z1MYOJQKFhAIz4EiMcx2GXvQtpWON+aV1h3S47t9
-         m8pCqfxBYLLA0L2K7zSQ8XoegrKx5nUkdnTEdzok+eZtmX6brWYARQoU0bHAxC2O2r0y
-         HOjTwonvxHXrUuMrr02bx+NqOgiVVcNHgyQSW4HeiCsRXiGYPXffVHN1lULp3HcS8Vd4
-         WolF7jrGr7lAH3ov3zZwTZnOk+f/OZXutdS0bt6lyY0P+CVqPj/s4pUB+bZgFJOxwbki
-         p+3TrnjDwvOBtd6f5drULFeFu7nezf6+uXDNyczEKlGiai916A9RAcSJgr+4vhrN6qIq
-         Cmew==
-X-Gm-Message-State: AOAM5332nWhjd0D3Ug6dKrCQpb9WssEROXrI20TbS+rhixIxrVHlcF65
-        Ku0FegolNgsngJQdoLXbjhQ=
-X-Google-Smtp-Source: ABdhPJwgzgn3/apViQcZhxEkHfg7Keharr5fz9zy+WbaKn2itXEzbjuxz9/SWvJZR7b6FPTPUtZV2g==
-X-Received: by 2002:a05:6a00:47:b029:1f7:ff05:c771 with SMTP id i7-20020a056a000047b02901f7ff05c771mr5572942pfk.29.1616094646781;
-        Thu, 18 Mar 2021 12:10:46 -0700 (PDT)
+        bh=jAih+WZwOR16pW9SR3AUNWLZSpj/icFIYz7NkN2IFeE=;
+        b=rGvvHuQvnDlq7NuETtANEMEyPsmIUn0l0+uNLQTrggyh/zfgwgc3JRhhcUY6gmxrI/
+         LTlhSSCcTtCEQADQ6LmlTUGkdoTUR6dI1/z5U/tdiJx5uOTZhYBHjNXDRSs1iqD3dVmM
+         DrCFbN3EQMkJfvK59RTp66ZzovAb29DQ2mJR1JN6u85OniVaJueGX4Ft01w4rc13rKd5
+         j1dpgMpQPsSzzaaSxRpMgNLDIvrG2aLENpEJdnRESByp5azd6PEHuDSCDSBLfKuvYSlU
+         g61/Ou5hemmatF7tCaBETNNYHcwJ+kK7uEufhtLPYzAker4VPB69koQ1TU+gKaZmiVCp
+         ag5w==
+X-Gm-Message-State: AOAM533GoEQ11AjqMhnALdLAX+pemhp0z++zyybbQh8LfUsKjbxnfCXV
+        SeQ9ZMzLpBNCiyNNMF8+8U2UiIpVBNM=
+X-Google-Smtp-Source: ABdhPJzKzjyudzrgRfrSnFDTvEkWfL4FiiZCxbEn8YB1eHde22chD3zD1JAea2Zq20R81Mj+vGRMwg==
+X-Received: by 2002:a17:90a:bd90:: with SMTP id z16mr6046188pjr.123.1616094668598;
+        Thu, 18 Mar 2021 12:11:08 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:e363:cf60:5c8:c27b? ([2601:647:4000:d7:e363:cf60:5c8:c27b])
-        by smtp.gmail.com with ESMTPSA id 25sm3131690pfh.199.2021.03.18.12.10.44
+        by smtp.gmail.com with ESMTPSA id i10sm7862496pjm.1.2021.03.18.12.11.06
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 18 Mar 2021 12:10:45 -0700 (PDT)
-Subject: Re: [PATCH v2 4/6] qla2xxx: Suppress Coverity complaints about
- dseg_r*
-To:     Lee Duncan <lduncan@suse.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Quinn Tran <qutran@marvell.com>,
+        Thu, 18 Mar 2021 12:11:07 -0700 (PDT)
+Subject: Re: [PATCH v2 6/6] qla2xxx: Always check the return value of
+ qla24xx_get_isp_stats()
+To:     Daniel Wagner <dwagner@suse.de>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Quinn Tran <qutran@marvell.com>,
         Mike Christie <michael.christie@oracle.com>,
-        Daniel Wagner <dwagner@suse.de>,
         Himanshu Madhani <himanshu.madhani@oracle.com>
 References: <20210318032840.7611-1-bvanassche@acm.org>
- <20210318032840.7611-5-bvanassche@acm.org>
- <b04f8794-caa7-a21a-0c5f-363dd4ea6e43@suse.com>
+ <20210318032840.7611-7-bvanassche@acm.org>
+ <20210318080816.a2fkja2ovlry4qxc@beryllium.lan>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <4f784043-1ea3-0aee-d927-ce9ccaeeeb09@acm.org>
-Date:   Thu, 18 Mar 2021 12:10:43 -0700
+Message-ID: <c288c2a8-4acb-7cb2-421e-56b212d9a57a@acm.org>
+Date:   Thu, 18 Mar 2021 12:11:05 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.0
 MIME-Version: 1.0
-In-Reply-To: <b04f8794-caa7-a21a-0c5f-363dd4ea6e43@suse.com>
+In-Reply-To: <20210318080816.a2fkja2ovlry4qxc@beryllium.lan>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -67,10 +67,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/18/21 9:00 AM, Lee Duncan wrote:
-> I dislike such an uncommented change just to keep a tool happy. Could
-> you add a comment in qla_mr.h saying why these are one-element-long
-> arrays, just so nobody optimizes those out later?
-I will add a comment. Thanks for the feedback.
+On 3/18/21 1:08 AM, Daniel Wagner wrote:
+> On Wed, Mar 17, 2021 at 08:28:40PM -0700, Bart Van Assche wrote:
+>> @@ -2873,7 +2875,9 @@ qla2x00_reset_host_stats(struct Scsi_Host *shost)
+>>  		}
+>>  
+>>  		/* reset firmware statistics */
+>> -		qla24xx_get_isp_stats(base_vha, stats, stats_dma, BIT_0);
+>> +		rval = qla24xx_get_isp_stats(base_vha, stats, stats_dma, BIT_0);
+>> +		ql_log(ql_log_warn, vha, 0x70d9,
+>> +		       "Resetting ISP statistics failed: rval = %d\n", rval);
+> 
+> Is there not an 'if' missing?
+> 
+> 	if (rval)
+> 		ql_log(...)
+
+Right, I will add an if-statement.
+
+Thanks,
 
 Bart.
+
+
