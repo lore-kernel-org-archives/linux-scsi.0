@@ -5,36 +5,36 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB09BC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 06:42:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E905C433E9
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 06:42:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B51E164E90
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 06:42:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 296A864F04
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 06:42:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229734AbhCRGmK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Mar 2021 02:42:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38314 "EHLO
+        id S229824AbhCRGmL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Mar 2021 02:42:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229660AbhCRGls (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 02:41:48 -0400
+        with ESMTP id S229708AbhCRGl7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 02:41:59 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E23EC06174A;
-        Wed, 17 Mar 2021 23:41:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27CB1C06174A;
+        Wed, 17 Mar 2021 23:41:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=aYvjegl3ascq2CV1FDkLsEhkfB7pCJEATLWYWXl4YXA=; b=rDEeIiPDQHKfJolLOAcH9CkvYq
-        lyx3BGHzPFzm/+wTEfwjXmIpAIAtat2PkKTKEM5ACsJfGn2DsBZRrmcLVpFGbyj08DDA0O+Nezi+S
-        W3n4lHzQdw5Mm54nb22rb6njVi2bWa4MLd6cbCIcYyOaU+IWMjGBd6Og2YXamjuUSDvdTQmRkg5OU
-        Olsyn1rjS0Zmd2lBJkk4lW0FmTD+gNPHuM/8Skul2Fhkp2wK9MK2JL+IXnOuEQt7n+aOfJpvcpq+f
-        n5utJgCH3rPqK3qq2LMBOaF6n49LdPCDMsWgwwsvf/xKTCGHYk439vnH1MylR3sfPQtTAE3MHy6sr
-        TcHkyOhA==;
+        bh=H4Dtrbj4H6gmQ0NyhNB1Ua+zBbZw+6zj61B3DLC3WTA=; b=kZyAMMB3tMgUnjJ8FejxWgD3UG
+        g+/gA9pEaeb/qNleC7F3ezHtVq0z/tV2zh1OUJEBk+UUz2TpaDkrF/pOWnr4ol31TiBkJa74kWZbj
+        AD6Xzg8hV9GvYE7cUgLfzl9eTfY0Kkhm4z9CqB3y776/nT5kLrGMPjFxEMP/CdOfToIB58t5Zi5Bi
+        NObULf5PzjwmhOEC016BqgKFkLJS444vmVM8oJt2nj4d00WVE/NsaNnMZfB91dTeCRdVckfCLgReW
+        o5KS9Tta2PsiBK8Z+IghGs1/2eUwiHVC5exZ7vcwZd3I0I0HeMLdWiwZ+JG3plzAafLf8IK6wSEUO
+        zeEhLtVg==;
 Received: from [2001:4bb8:18c:bb3:e1cf:ad2f:7ff7:7a0b] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lMmLI-002f4p-HA; Thu, 18 Mar 2021 06:41:13 +0000
+        id 1lMmLO-002f5H-Hf; Thu, 18 Mar 2021 06:41:20 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -42,9 +42,9 @@ To:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
         Hannes Reinecke <hare@suse.com>,
         Ondrej Zary <linux@rainbow-software.org>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 7/8] block: refactor the bounce buffering code
-Date:   Thu, 18 Mar 2021 07:39:22 +0100
-Message-Id: <20210318063923.302738-8-hch@lst.de>
+Subject: [PATCH 8/8] block: stop calling blk_queue_bounce for passthrough requests
+Date:   Thu, 18 Mar 2021 07:39:23 +0100
+Message-Id: <20210318063923.302738-9-hch@lst.de>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210318063923.302738-1-hch@lst.de>
 References: <20210318063923.302738-1-hch@lst.de>
@@ -55,314 +55,332 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Get rid of all the PFN arithmetics and just use an enum for the two
-remaining options, and use PageHighMem for the actual bounce decision.
-
-Add a fast path to entirely avoid the call for the common case of a queue
-not using the legacy bouncing code.
+Instead of overloading the passthrough fast path with the deprecated
+block layer bounce buffering let the users that combine an old
+undermaintained driver with a highmem system pay the price by always
+falling back to copies in that case.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-core.c       |  6 ++----
- block/blk-settings.c   | 42 ++++++++----------------------------------
- block/blk.h            | 16 ++++++++++++----
- block/bounce.c         | 35 +++++------------------------------
- include/linux/blkdev.h | 29 +++++++++++------------------
- 5 files changed, 38 insertions(+), 90 deletions(-)
+ block/blk-map.c                    | 116 ++++++++---------------------
+ block/bounce.c                     |  11 +--
+ drivers/nvme/host/lightnvm.c       |   2 +-
+ drivers/target/target_core_pscsi.c |   4 +-
+ include/linux/blkdev.h             |   2 +-
+ 5 files changed, 36 insertions(+), 99 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index fc60ff20849738..9bcdae93f6d4f7 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1161,10 +1161,8 @@ static blk_status_t blk_cloned_rq_check_limits(struct request_queue *q,
+diff --git a/block/blk-map.c b/block/blk-map.c
+index b62b52dcb61d97..dac78376acc899 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -123,7 +123,6 @@ static int bio_uncopy_user(struct bio *bio)
+ 			bio_free_pages(bio);
  	}
+ 	kfree(bmd);
+-	bio_put(bio);
+ 	return ret;
+ }
  
- 	/*
--	 * queue's settings related to segment counting like q->bounce_pfn
--	 * may differ from that of other stacking queues.
--	 * Recalculate it to check the request correctly on this queue's
--	 * limitation.
-+	 * The queue settings related to segment counting may differ from the
-+	 * original queue.
- 	 */
- 	rq->nr_phys_segments = blk_recalc_rq_segments(rq);
- 	if (rq->nr_phys_segments > queue_max_segments(q)) {
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index f9937dd2810e25..c7e26d16c59c0e 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -7,7 +7,6 @@
- #include <linux/init.h>
- #include <linux/bio.h>
- #include <linux/blkdev.h>
--#include <linux/memblock.h>	/* for max_pfn/max_low_pfn */
- #include <linux/gcd.h>
- #include <linux/lcm.h>
- #include <linux/jiffies.h>
-@@ -17,11 +16,6 @@
- #include "blk.h"
- #include "blk-wbt.h"
+@@ -132,7 +131,7 @@ static int bio_copy_user_iov(struct request *rq, struct rq_map_data *map_data,
+ {
+ 	struct bio_map_data *bmd;
+ 	struct page *page;
+-	struct bio *bio, *bounce_bio;
++	struct bio *bio;
+ 	int i = 0, ret;
+ 	int nr_pages;
+ 	unsigned int len = iter->count;
+@@ -218,16 +217,9 @@ static int bio_copy_user_iov(struct request *rq, struct rq_map_data *map_data,
  
--unsigned long blk_max_low_pfn;
--EXPORT_SYMBOL(blk_max_low_pfn);
+ 	bio->bi_private = bmd;
+ 
+-	bounce_bio = bio;
+-	ret = blk_rq_append_bio(rq, &bounce_bio);
++	ret = blk_rq_append_bio(rq, bio);
+ 	if (ret)
+ 		goto cleanup;
 -
--unsigned long blk_max_pfn;
--
- void blk_queue_rq_timeout(struct request_queue *q, unsigned int timeout)
- {
- 	q->rq_timeout = timeout;
-@@ -55,7 +49,7 @@ void blk_set_default_limits(struct queue_limits *lim)
- 	lim->discard_alignment = 0;
- 	lim->discard_misaligned = 0;
- 	lim->logical_block_size = lim->physical_block_size = lim->io_min = 512;
--	lim->bounce_pfn = (unsigned long)(BLK_BOUNCE_ANY >> PAGE_SHIFT);
-+	lim->bounce = BLK_BOUNCE_NONE;
- 	lim->alignment_offset = 0;
- 	lim->io_opt = 0;
- 	lim->misaligned = 0;
-@@ -92,28 +86,16 @@ EXPORT_SYMBOL(blk_set_stacking_limits);
- /**
-  * blk_queue_bounce_limit - set bounce buffer limit for queue
-  * @q: the request queue for the device
-- * @max_addr: the maximum address the device can handle
-+ * @bounce: bounce limit to enforce
-  *
-  * Description:
-- *    Different hardware can have different requirements as to what pages
-- *    it can do I/O directly to. A low level driver can call
-- *    blk_queue_bounce_limit to have lower memory pages allocated as bounce
-- *    buffers for doing I/O to pages residing above @max_addr.
-+ *    Force bouncing for ISA DMA ranges or highmem.
-+ *
-+ *    DEPRECATED, don't use in new code.
-  **/
--void blk_queue_bounce_limit(struct request_queue *q, u64 max_addr)
-+void blk_queue_bounce_limit(struct request_queue *q, enum blk_bounce bounce)
- {
--	unsigned long b_pfn = max_addr >> PAGE_SHIFT;
--
--#if BITS_PER_LONG == 64
 -	/*
--	 * Assume anything <= 4GB can be handled by IOMMU.  Actually
--	 * some IOMMUs can handle everything, but I don't know of a
--	 * way to test this here.
+-	 * We link the bounce buffer in and could have to traverse it later, so
+-	 * we have to get a ref to prevent it from being freed
 -	 */
--	q->limits.bounce_pfn = max(max_low_pfn, b_pfn);
--#else
--	q->limits.bounce_pfn = b_pfn;
--#endif
-+	q->limits.bounce = bounce;
- }
- EXPORT_SYMBOL(blk_queue_bounce_limit);
- 
-@@ -536,7 +518,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 					b->max_write_zeroes_sectors);
- 	t->max_zone_append_sectors = min(t->max_zone_append_sectors,
- 					b->max_zone_append_sectors);
--	t->bounce_pfn = min_not_zero(t->bounce_pfn, b->bounce_pfn);
-+	t->bounce = min_not_zero(t->bounce, b->bounce);
- 
- 	t->seg_boundary_mask = min_not_zero(t->seg_boundary_mask,
- 					    b->seg_boundary_mask);
-@@ -916,11 +898,3 @@ void blk_queue_set_zoned(struct gendisk *disk, enum blk_zoned_model model)
- 	}
- }
- EXPORT_SYMBOL_GPL(blk_queue_set_zoned);
--
--static int __init blk_settings_init(void)
--{
--	blk_max_low_pfn = max_low_pfn - 1;
--	blk_max_pfn = max_pfn - 1;
--	return 0;
--}
--subsys_initcall(blk_settings_init);
-diff --git a/block/blk.h b/block/blk.h
-index 895c9f4a5182a7..8f4337c5a9e66c 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -6,6 +6,7 @@
- #include <linux/blk-mq.h>
- #include <linux/part_stat.h>
- #include <linux/blk-crypto.h>
-+#include <linux/memblock.h>	/* for max_pfn/max_low_pfn */
- #include <xen/xen.h>
- #include "blk-crypto-internal.h"
- #include "blk-mq.h"
-@@ -311,13 +312,20 @@ static inline void blk_throtl_bio_endio(struct bio *bio) { }
- static inline void blk_throtl_stat_add(struct request *rq, u64 time) { }
- #endif
- 
--#ifdef CONFIG_BOUNCE
--extern void blk_queue_bounce(struct request_queue *q, struct bio **bio);
--#else
-+void __blk_queue_bounce(struct request_queue *q, struct bio **bio);
-+
-+static inline bool blk_queue_may_bounce(struct request_queue *q)
-+{
-+	return IS_ENABLED(CONFIG_BOUNCE) &&
-+		q->limits.bounce == BLK_BOUNCE_HIGH &&
-+		max_low_pfn >= max_pfn;
-+}
-+
- static inline void blk_queue_bounce(struct request_queue *q, struct bio **bio)
+-	bio_get(bounce_bio);
+ 	return 0;
+ cleanup:
+ 	if (!map_data)
+@@ -242,7 +234,7 @@ static int bio_map_user_iov(struct request *rq, struct iov_iter *iter,
+ 		gfp_t gfp_mask)
  {
-+	if (unlikely(blk_queue_may_bounce(q) && bio_has_data(*bio)))
-+		__blk_queue_bounce(q, bio);	
- }
--#endif /* CONFIG_BOUNCE */
+ 	unsigned int max_sectors = queue_max_hw_sectors(rq->q);
+-	struct bio *bio, *bounce_bio;
++	struct bio *bio;
+ 	int ret;
+ 	int j;
  
- #ifdef CONFIG_BLK_CGROUP_IOLATENCY
- extern int blk_iolatency_init(struct request_queue *q);
+@@ -304,49 +296,17 @@ static int bio_map_user_iov(struct request *rq, struct iov_iter *iter,
+ 			break;
+ 	}
+ 
+-	/*
+-	 * Subtle: if we end up needing to bounce a bio, it would normally
+-	 * disappear when its bi_end_io is run.  However, we need the original
+-	 * bio for the unmap, so grab an extra reference to it
+-	 */
+-	bio_get(bio);
+-
+-	bounce_bio = bio;
+-	ret = blk_rq_append_bio(rq, &bounce_bio);
++	ret = blk_rq_append_bio(rq, bio);
+ 	if (ret)
+-		goto out_put_orig;
+-
+-	/*
+-	 * We link the bounce buffer in and could have to traverse it
+-	 * later, so we have to get a ref to prevent it from being freed
+-	 */
+-	bio_get(bounce_bio);
++		goto out_unmap;
+ 	return 0;
+ 
+- out_put_orig:
+-	bio_put(bio);
+  out_unmap:
+ 	bio_release_pages(bio, false);
+ 	bio_put(bio);
+ 	return ret;
+ }
+ 
+-/**
+- *	bio_unmap_user	-	unmap a bio
+- *	@bio:		the bio being unmapped
+- *
+- *	Unmap a bio previously mapped by bio_map_user_iov(). Must be called from
+- *	process context.
+- *
+- *	bio_unmap_user() may sleep.
+- */
+-static void bio_unmap_user(struct bio *bio)
+-{
+-	bio_release_pages(bio, bio_data_dir(bio) == READ);
+-	bio_put(bio);
+-	bio_put(bio);
+-}
+-
+ static void bio_invalidate_vmalloc_pages(struct bio *bio)
+ {
+ #ifdef ARCH_HAS_FLUSH_KERNEL_DCACHE_PAGE
+@@ -519,33 +479,27 @@ static struct bio *bio_copy_kern(struct request_queue *q, void *data,
+  * Append a bio to a passthrough request.  Only works if the bio can be merged
+  * into the request based on the driver constraints.
+  */
+-int blk_rq_append_bio(struct request *rq, struct bio **bio)
++int blk_rq_append_bio(struct request *rq, struct bio *bio)
+ {
+-	struct bio *orig_bio = *bio;
+ 	struct bvec_iter iter;
+ 	struct bio_vec bv;
+ 	unsigned int nr_segs = 0;
+ 
+-	blk_queue_bounce(rq->q, bio);
++	if (WARN_ON_ONCE(rq->q->limits.bounce != BLK_BOUNCE_NONE))
++		return -EINVAL;
+ 
+-	bio_for_each_bvec(bv, *bio, iter)
++	bio_for_each_bvec(bv, bio, iter)
+ 		nr_segs++;
+ 
+ 	if (!rq->bio) {
+-		blk_rq_bio_prep(rq, *bio, nr_segs);
++		blk_rq_bio_prep(rq, bio, nr_segs);
+ 	} else {
+-		if (!ll_back_merge_fn(rq, *bio, nr_segs)) {
+-			if (orig_bio != *bio) {
+-				bio_put(*bio);
+-				*bio = orig_bio;
+-			}
++		if (!ll_back_merge_fn(rq, bio, nr_segs))
+ 			return -EINVAL;
+-		}
+-
+-		rq->biotail->bi_next = *bio;
+-		rq->biotail = *bio;
+-		rq->__data_len += (*bio)->bi_iter.bi_size;
+-		bio_crypt_free_ctx(*bio);
++		rq->biotail->bi_next = bio;
++		rq->biotail = bio;
++		rq->__data_len += (bio)->bi_iter.bi_size;
++		bio_crypt_free_ctx(bio);
+ 	}
+ 
+ 	return 0;
+@@ -566,12 +520,6 @@ EXPORT_SYMBOL(blk_rq_append_bio);
+  *
+  *    A matching blk_rq_unmap_user() must be issued at the end of I/O, while
+  *    still in process context.
+- *
+- *    Note: The mapped bio may need to be bounced through blk_queue_bounce()
+- *    before being submitted to the device, as pages mapped may be out of
+- *    reach. It's the callers responsibility to make sure this happens. The
+- *    original bio must be passed back in to blk_rq_unmap_user() for proper
+- *    unmapping.
+  */
+ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+ 			struct rq_map_data *map_data,
+@@ -588,6 +536,8 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+ 
+ 	if (map_data)
+ 		copy = true;
++	else if (blk_queue_may_bounce(q))
++		copy = true;
+ 	else if (iov_iter_alignment(iter) & align)
+ 		copy = true;
+ 	else if (queue_virt_boundary(q))
+@@ -641,25 +591,21 @@ EXPORT_SYMBOL(blk_rq_map_user);
+  */
+ int blk_rq_unmap_user(struct bio *bio)
+ {
+-	struct bio *mapped_bio;
++	struct bio *next_bio;
+ 	int ret = 0, ret2;
+ 
+ 	while (bio) {
+-		mapped_bio = bio;
+-		if (unlikely(bio_flagged(bio, BIO_BOUNCED)))
+-			mapped_bio = bio->bi_private;
+-
+ 		if (bio->bi_private) {
+-			ret2 = bio_uncopy_user(mapped_bio);
++			ret2 = bio_uncopy_user(bio);
+ 			if (ret2 && !ret)
+ 				ret = ret2;
+ 		} else {
+-			bio_unmap_user(mapped_bio);
++			bio_release_pages(bio, bio_data_dir(bio) == READ);
+ 		}
+ 
+-		mapped_bio = bio;
++		next_bio = bio;
+ 		bio = bio->bi_next;
+-		bio_put(mapped_bio);
++		bio_put(next_bio);
+ 	}
+ 
+ 	return ret;
+@@ -684,7 +630,7 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+ {
+ 	int reading = rq_data_dir(rq) == READ;
+ 	unsigned long addr = (unsigned long) kbuf;
+-	struct bio *bio, *orig_bio;
++	struct bio *bio;
+ 	int ret;
+ 
+ 	if (len > (queue_max_hw_sectors(q) << 9))
+@@ -692,7 +638,8 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+ 	if (!len || !kbuf)
+ 		return -EINVAL;
+ 
+-	if (!blk_rq_aligned(q, addr, len) || object_is_on_stack(kbuf))
++	if (!blk_rq_aligned(q, addr, len) || object_is_on_stack(kbuf) ||
++	    blk_queue_may_bounce(q))
+ 		bio = bio_copy_kern(q, kbuf, len, gfp_mask, reading);
+ 	else
+ 		bio = bio_map_kern(q, kbuf, len, gfp_mask);
+@@ -703,14 +650,9 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+ 	bio->bi_opf &= ~REQ_OP_MASK;
+ 	bio->bi_opf |= req_op(rq);
+ 
+-	orig_bio = bio;
+-	ret = blk_rq_append_bio(rq, &bio);
+-	if (unlikely(ret)) {
+-		/* request is too big */
+-		bio_put(orig_bio);
+-		return ret;
+-	}
+-
+-	return 0;
++	ret = blk_rq_append_bio(rq, bio);
++	if (unlikely(ret))
++		bio_put(bio);
++	return ret;
+ }
+ EXPORT_SYMBOL(blk_rq_map_kern);
 diff --git a/block/bounce.c b/block/bounce.c
-index debd5b0bd31890..6bafc0d1f867a1 100644
+index 6bafc0d1f867a1..94081e013c58cc 100644
 --- a/block/bounce.c
 +++ b/block/bounce.c
-@@ -18,7 +18,6 @@
- #include <linux/init.h>
- #include <linux/hash.h>
- #include <linux/highmem.h>
--#include <linux/memblock.h>
- #include <linux/printk.h>
- #include <asm/tlbflush.h>
- 
-@@ -49,11 +48,11 @@ static void init_bounce_bioset(void)
- 	bounce_bs_setup = true;
- }
- 
--#if defined(CONFIG_HIGHMEM)
- static __init int init_emergency_pool(void)
- {
- 	int ret;
--#if defined(CONFIG_HIGHMEM) && !defined(CONFIG_MEMORY_HOTPLUG)
-+
-+#ifndef CONFIG_MEMORY_HOTPLUG
- 	if (max_pfn <= max_low_pfn)
- 		return 0;
- #endif
-@@ -67,9 +66,7 @@ static __init int init_emergency_pool(void)
- }
- 
- __initcall(init_emergency_pool);
--#endif
- 
--#ifdef CONFIG_HIGHMEM
- /*
-  * highmem version, map in to vec
-  */
-@@ -82,13 +79,6 @@ static void bounce_copy_vec(struct bio_vec *to, unsigned char *vfrom)
- 	kunmap_atomic(vto);
- }
- 
--#else /* CONFIG_HIGHMEM */
--
--#define bounce_copy_vec(to, vfrom)	\
--	memcpy(page_address((to)->bv_page) + (to)->bv_offset, vfrom, (to)->bv_len)
--
--#endif /* CONFIG_HIGHMEM */
--
- /*
-  * Simple bounce buffer support for highmem pages. Depending on the
-  * queue gfp mask set, *to may or may not be a highmem page. kmap it
-@@ -236,8 +226,7 @@ static struct bio *bounce_clone_bio(struct bio *bio_src)
- 	return NULL;
- }
- 
--
--void blk_queue_bounce(struct request_queue *q, struct bio **bio_orig)
-+void __blk_queue_bounce(struct request_queue *q, struct bio **bio_orig)
- {
- 	struct bio *bio;
- 	int rw = bio_data_dir(*bio_orig);
-@@ -247,24 +236,10 @@ void blk_queue_bounce(struct request_queue *q, struct bio **bio_orig)
- 	bool bounce = false;
- 	int sectors = 0;
- 
--	/*
--	 * Data-less bio, nothing to bounce
--	 */
--	if (!bio_has_data(*bio_orig))
--		return;
--
--	/*
--	 * Just check if the bounce pfn is equal to or bigger than the highest
--	 * pfn in the system -- in that case, don't waste time iterating over
--	 * bio segments
--	 */
--	if (q->limits.bounce_pfn >= blk_max_pfn)
--		return;
--
- 	bio_for_each_segment(from, *bio_orig, iter) {
- 		if (i++ < BIO_MAX_VECS)
- 			sectors += from.bv_len >> 9;
--		if (page_to_pfn(from.bv_page) > q->limits.bounce_pfn)
-+		if (PageHighMem(from.bv_page))
- 			bounce = true;
- 	}
+@@ -180,12 +180,8 @@ static struct bio *bounce_clone_bio(struct bio *bio_src)
+ 	 *    asking for trouble and would force extra work on
+ 	 *    __bio_clone_fast() anyways.
+ 	 */
+-	if (bio_is_passthrough(bio_src))
+-		bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL,
+-				  bio_segments(bio_src));
+-	else
+-		bio = bio_alloc_bioset(GFP_NOIO, bio_segments(bio_src),
+-				       &bounce_bio_set);
++	bio = bio_alloc_bioset(GFP_NOIO, bio_segments(bio_src),
++			       &bounce_bio_set);
+ 	bio->bi_bdev		= bio_src->bi_bdev;
+ 	if (bio_flagged(bio_src, BIO_REMAPPED))
+ 		bio_set_flag(bio, BIO_REMAPPED);
+@@ -245,8 +241,7 @@ void __blk_queue_bounce(struct request_queue *q, struct bio **bio_orig)
  	if (!bounce)
-@@ -287,7 +262,7 @@ void blk_queue_bounce(struct request_queue *q, struct bio **bio_orig)
- 	for (i = 0, to = bio->bi_io_vec; i < bio->bi_vcnt; to++, i++) {
- 		struct page *page = to->bv_page;
+ 		return;
  
--		if (page_to_pfn(page) <= q->limits.bounce_pfn)
-+		if (!PageHighMem(page))
- 			continue;
+-	if (!bio_is_passthrough(*bio_orig) &&
+-	    sectors < bio_sectors(*bio_orig)) {
++	if (sectors < bio_sectors(*bio_orig)) {
+ 		bio = bio_split(*bio_orig, sectors, GFP_NOIO, &bounce_bio_split);
+ 		bio_chain(bio, *bio_orig);
+ 		submit_bio_noacct(*bio_orig);
+diff --git a/drivers/nvme/host/lightnvm.c b/drivers/nvme/host/lightnvm.c
+index b705988629f224..f6ca2fbb711e98 100644
+--- a/drivers/nvme/host/lightnvm.c
++++ b/drivers/nvme/host/lightnvm.c
+@@ -660,7 +660,7 @@ static struct request *nvme_nvm_alloc_request(struct request_queue *q,
+ 	rq->cmd_flags &= ~REQ_FAILFAST_DRIVER;
  
- 		to->bv_page = mempool_alloc(&page_pool, GFP_NOIO);
+ 	if (rqd->bio)
+-		blk_rq_append_bio(rq, &rqd->bio);
++		blk_rq_append_bio(rq, rqd->bio);
+ 	else
+ 		rq->ioprio = IOPRIO_PRIO_VALUE(IOPRIO_CLASS_BE, IOPRIO_NORM);
+ 
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index 3cbc074992bc86..7df4a9c9c7ffaa 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -911,7 +911,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 					" %d i: %d bio: %p, allocating another"
+ 					" bio\n", bio->bi_vcnt, i, bio);
+ 
+-				rc = blk_rq_append_bio(req, &bio);
++				rc = blk_rq_append_bio(req, bio);
+ 				if (rc) {
+ 					pr_err("pSCSI: failed to append bio\n");
+ 					goto fail;
+@@ -930,7 +930,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	}
+ 
+ 	if (bio) {
+-		rc = blk_rq_append_bio(req, &bio);
++		rc = blk_rq_append_bio(req, bio);
+ 		if (rc) {
+ 			pr_err("pSCSI: failed to append bio\n");
+ 			goto fail;
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 0dbb72ea373529..55cc8b96c84427 100644
+index 55cc8b96c84427..d5d320da51f8bf 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -313,8 +313,17 @@ enum blk_zoned_model {
- 	BLK_ZONED_HM,		/* Host-managed zoned block device */
- };
- 
-+/*
-+ * BLK_BOUNCE_NONE:	never bounce (default)
-+ * BLK_BOUNCE_HIGH:	bounce all highmem pages
-+ */
-+enum blk_bounce {
-+	BLK_BOUNCE_NONE,
-+	BLK_BOUNCE_HIGH,
-+};
-+
- struct queue_limits {
--	unsigned long		bounce_pfn;
-+	enum blk_bounce		bounce;
- 	unsigned long		seg_boundary_mask;
- 	unsigned long		virt_boundary_mask;
- 
-@@ -835,22 +844,6 @@ static inline unsigned int blk_queue_depth(struct request_queue *q)
- 	return q->nr_requests;
- }
- 
--extern unsigned long blk_max_low_pfn, blk_max_pfn;
--
--/*
-- * standard bounce addresses:
-- *
-- * BLK_BOUNCE_HIGH	: bounce all highmem pages
-- * BLK_BOUNCE_ANY	: don't bounce anything
-- */
--
--#if BITS_PER_LONG == 32
--#define BLK_BOUNCE_HIGH		((u64)blk_max_low_pfn << PAGE_SHIFT)
--#else
--#define BLK_BOUNCE_HIGH		-1ULL
--#endif
--#define BLK_BOUNCE_ANY		(-1ULL)
--
- /*
-  * default timeout for SG_IO if none specified
-  */
-@@ -1134,7 +1127,7 @@ extern void blk_abort_request(struct request *);
-  * Access functions for manipulating queue properties
-  */
- extern void blk_cleanup_queue(struct request_queue *);
--extern void blk_queue_bounce_limit(struct request_queue *, u64);
-+void blk_queue_bounce_limit(struct request_queue *q, enum blk_bounce limit);
- extern void blk_queue_max_hw_sectors(struct request_queue *, unsigned int);
- extern void blk_queue_chunk_sectors(struct request_queue *, unsigned int);
- extern void blk_queue_max_segments(struct request_queue *, unsigned short);
+@@ -909,7 +909,7 @@ extern int blk_rq_prep_clone(struct request *rq, struct request *rq_src,
+ extern void blk_rq_unprep_clone(struct request *rq);
+ extern blk_status_t blk_insert_cloned_request(struct request_queue *q,
+ 				     struct request *rq);
+-extern int blk_rq_append_bio(struct request *rq, struct bio **bio);
++int blk_rq_append_bio(struct request *rq, struct bio *bio);
+ extern void blk_queue_split(struct bio **);
+ extern int scsi_verify_blk_ioctl(struct block_device *, unsigned int);
+ extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
 -- 
 2.30.1
 
