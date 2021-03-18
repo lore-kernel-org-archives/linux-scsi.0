@@ -2,293 +2,345 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_NONE,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74E60C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 01:49:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FAB1C433DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 02:03:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10D7264E89
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 01:49:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A789464E99
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Mar 2021 02:03:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229721AbhCRBql (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Mar 2021 21:46:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59712 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229472AbhCRBp7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 21:45:59 -0400
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7564FC06174A;
-        Wed, 17 Mar 2021 18:45:59 -0700 (PDT)
-Received: by mail-pf1-x429.google.com with SMTP id y200so2375887pfb.5;
-        Wed, 17 Mar 2021 18:45:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=+4QecddGm1oCsJmGxj3sjZrZwCNdElev9/Z68880k9o=;
-        b=LdcsIqd9dPam2t/DikWSH5CErzKpmaYGOBIpfEL5EzVZDu5yzoY3mOSz1DHK5jxchi
-         EDeb4GpObdTm077SgzHmHs0WbqjMxyac+TZfhP1u53SgC/uwHTxzxw68CCbOyMQ53nAJ
-         JqsaiDd6qIay9I2FGn4CwZxEF6J8mNoF9iY4bWJ+jXc1+IcwOTBXlwWnIe0f+XKJX+js
-         rf6Mq8yqf42hpko5/XS4KvKlWCDIhqhoQv93A0ARV6WJB5A3GkEAZWi4TVwgiz+y03cu
-         HOXO+cP7z57CSPJD5Jjl1D3slJbZx9KhmT4UOZY5PVBWE6qYzyHkPvR9dfZSkGYsXHtw
-         emSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=+4QecddGm1oCsJmGxj3sjZrZwCNdElev9/Z68880k9o=;
-        b=uWjwQHZ4mGSFKwUl8o4BFTGuhwoBjM/VI0HFO7+Of75Bof8NU0CMTviDBKOKr/Ed90
-         4vBJBYziT0P/PjFa99PP4RYYt88pnaJdR6klnZdzhDh0SaFSFmP4mNZv/NrBUYaeTJIU
-         krxXHKuGcsDk5KaPNcfcHwNMf6w+lESYNPtKJhYZcHA61OLG9AMl6uBmIYtJRTuwYmZq
-         /GLf8IcfYFeLqrc/o3h3BzhRB+valDrbQ4ox7CVFA/iZQYgXQqMkN4doFoIeFknnpcQ1
-         3xG7gnGz4RwNr4IQJz0GzEtGicWchhT9U72h+THWgE46lJAP5xm1+Pu2g0wsobSm3EmZ
-         QZdQ==
-X-Gm-Message-State: AOAM531XnTZ1xxS60wY20ROH3D0NgOVk6hwDPd1KxGw2QdcG6y4kPswh
-        XtOpnMgQHRDl2rJSgkuqBao=
-X-Google-Smtp-Source: ABdhPJxzyvnPfSJXe8U+4QTRPuzkMHohyukraGikm4vsySqCLuUBN0GwSR4Eh1CSvOmJzSj/kemfDw==
-X-Received: by 2002:a63:d94d:: with SMTP id e13mr5022822pgj.160.1616031958856;
-        Wed, 17 Mar 2021 18:45:58 -0700 (PDT)
-Received: from tj.ccdomain.com ([103.220.76.197])
-        by smtp.gmail.com with ESMTPSA id r186sm309320pfr.124.2021.03.17.18.45.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 18:45:58 -0700 (PDT)
-From:   Yue Hu <zbestahu@gmail.com>
-To:     avri.altman@wdc.com, alim.akhtar@samsung.com,
-        martin.petersen@oracle.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, huyue2@yulong.com, zbestahu@163.com
-Subject: [PATCH v2] scsi: ufs: Tidy up WB configuration code
-Date:   Thu, 18 Mar 2021 09:45:44 +0800
-Message-Id: <20210318014544.1976-1-zbestahu@gmail.com>
-X-Mailer: git-send-email 2.29.2.windows.3
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S230020AbhCRCDB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Mar 2021 22:03:01 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:46141 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230119AbhCRCCt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2021 22:02:49 -0400
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210318020247epoutp047b7910bfb3234237ad9e1616ed1bedc0~tTWvrlfvQ1338413384epoutp04P
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2021 02:02:47 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210318020247epoutp047b7910bfb3234237ad9e1616ed1bedc0~tTWvrlfvQ1338413384epoutp04P
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1616032967;
+        bh=wRJM2/xFWL9ciIi7cnYzzpB47FlJSwjPbunHYyimtrI=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=OZZRi5OhFX63+e/i72XIfVFZ9C+MRIvyawjqzTVpVr2lTKzkugVlz1YWI4wOw30zG
+         6JE4p1NlWPGLsMYnpsgMoBgYeZy01DQVBPzbFTI27Rz73SoD3v6hIS6oG3ROHroPXB
+         ISeUc8y/ZjnTS2cMahVyhadwp1fQqmUUxZycz/H0=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20210318020245epcas2p3a4e6c736b6e84eb5dde525e6ec9b99ed~tTWuLMsTy1663116631epcas2p3u;
+        Thu, 18 Mar 2021 02:02:45 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.182]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4F19Jz62WMz4x9QC; Thu, 18 Mar
+        2021 02:02:43 +0000 (GMT)
+X-AuditID: b6c32a45-337ff7000001297d-84-6052b4c30ae5
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        DB.B6.10621.3C4B2506; Thu, 18 Mar 2021 11:02:43 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE: Re: [PATCH v29 4/4] scsi: ufs: Add HPB 2.0 support
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Can Guo <cang@codeaurora.org>,
+        Daejun Park <daejun7.park@samsung.com>
+CC:     Greg KH <gregkh@linuxfoundation.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <79aea8a80c1be2ff7f05683c2f4918ce@codeaurora.org>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20210318020243epcms2p8259fa1d5e99e3c463c6b9e9106693476@epcms2p8>
+Date:   Thu, 18 Mar 2021 11:02:43 +0900
+X-CMS-MailID: 20210318020243epcms2p8259fa1d5e99e3c463c6b9e9106693476
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDJsWRmVeSWpSXmKPExsWy7bCmme7hLUEJBus69SwezNvGZrG37QS7
+        xcufV9ksDt9+x24x7cNPZotP65exWrw8pGmx6kG4RfPi9WwWc842MFn09m9ls3h85zO7xaIb
+        25gs+v+1s1hc3jWHzaL7+g42i+XH/zFZ3N7CZbF0601Gi87pa1gcRDwuX/H2uNzXy+Sxc9Zd
+        do8Jiw4weuyfu4bdo+XkfhaPj09vsXj0bVnF6PF5k5xH+4FupgCuqBybjNTElNQihdS85PyU
+        zLx0WyXv4HjneFMzA0NdQ0sLcyWFvMTcVFslF58AXbfMHKDnlBTKEnNKgUIBicXFSvp2NkX5
+        pSWpChn5xSW2SqkFKTkFhoYFesWJucWleel6yfm5VoYGBkamQJUJORnPl31lK/jlXnHl4Sqm
+        BsYHFl2MnBwSAiYS0/tnM4PYQgI7GCW+H3PqYuTg4BUQlPi7QxgkLCxgL/F1wzZWiBIlifUX
+        Z7FDxPUkbj1cwwhiswnoSEw/cR8sLiLgKfF18mqgei4OZoHlbBKNy/azQuzilZjR/pQFwpaW
+        2L58KyPILk4BO4mtr0ogwhoSP5b1MkPYohI3V79lh7HfH5vPCGGLSLTeOwtVIyjx4OduqLik
+        xLHdH5gg7HqJrXd+MYLcICHQwyhxeOctqBv0Ja51bAS7gVfAV2Le/5lgcRYBVYlrM35BNbtI
+        tNzsYAOxmQXkJba/ncMMciezgKbE+l36IKaEgLLEkVssMF81bPzNjs5mFuCT6Dj8Fy6+Y94T
+        qOlqEut+rmeawKg8CxHQs5DsmoWwawEj8ypGsdSC4tz01GKjAkPkqN3ECE7mWq47GCe//aB3
+        iJGJg/EQowQHs5IIr2leQIIQb0piZVVqUX58UWlOavEhRlOgLycyS4km5wPzSV5JvKGpkZmZ
+        gaWphamZkYWSOG+xwYN4IYH0xJLU7NTUgtQimD4mDk6pBiYZm4iDU1v28u5zvXSjlXl3+76P
+        nXe2bLdJmWu8+56P+NvVvpGcht/kL5Q57/12SiO0dan0wxWKXX7r45fEaZS0hU17ES//x4Ph
+        NJ/hoTmHGR+0sew7XXYkdc8Jtid6e/nuHGTkFa+T/zUz73vOvPSsp/sk3dhbD/eH1/Bk3pXW
+        OX4181a69/OFf7e3qbg/+b+tXtw5Onuz243768J50m9H7Uv6a/NvckvumZDrO4vOGM7a2d5X
+        u7YnJ2jSpONs/nNPOR5l3Zns9ti2/kLidD/XDX/+W5fM/sS5r+zVVYMfPdOFzJ895io3PHfy
+        jHvy97Vfg3i/JAlp7FgwlfsGd/2yr90T5NJ8FsU+Ymi7/NVViaU4I9FQi7moOBEAzKRvIm8E
+        AAA=
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210315012850epcms2p361447b689e925561c48aa9ca54434eb5
+References: <79aea8a80c1be2ff7f05683c2f4918ce@codeaurora.org>
+        <a18909e8f4db023455b7513bf6c60312@codeaurora.org>
+        <2da1c963bd3ff5f682d18a251ed08989@codeaurora.org>
+        <20210315012850epcms2p361447b689e925561c48aa9ca54434eb5@epcms2p3>
+        <20210315013137epcms2p861f06e66be9faff32b6648401778434a@epcms2p8>
+        <20210315070728epcms2p87136c86803afa85a441ead524130245c@epcms2p8>
+        <d6a4511fd85e6e47c5aef22e335bb253@codeaurora.org>
+        <20210317014253epcms2p1f45db6a281645282e1540e0070999d73@epcms2p1>
+        <CGME20210315012850epcms2p361447b689e925561c48aa9ca54434eb5@epcms2p8>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yue Hu <huyue2@yulong.com>
+>On 2021-03-17 09:42, Daejun Park wrote:
+>>> On 2021-03-15 15:23, Can Guo wrote:
+>>>> On 2021-03-15 15:07, Daejun Park wrote:
+>>>>>>> This patch supports the HPB 2.0.
+>>>>>>> 
+>>>>>>> The HPB 2.0 supports read of varying sizes from 4KB to 512KB.
+>>>>>>> In the case of Read (<= 32KB) is supported as single HPB read.
+>>>>>>> In the case of Read (36KB ~ 512KB) is supported by as a 
+>>>>>>> combination
+>>>>>>> of
+>>>>>>> write buffer command and HPB read command to deliver more PPN.
+>>>>>>> The write buffer commands may not be issued immediately due to 
+>>>>>>> busy
+>>>>>>> tags.
+>>>>>>> To use HPB read more aggressively, the driver can requeue the 
+>>>>>>> write
+>>>>>>> buffer
+>>>>>>> command. The requeue threshold is implemented as timeout and can 
+>>>>>>> be
+>>>>>>> modified with requeue_timeout_ms entry in sysfs.
+>>>>>>> 
+>>>>>>> Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+>>>>>>> ---
+>>>>>>> +static struct attribute *hpb_dev_param_attrs[] = {
+>>>>>>> +        &dev_attr_requeue_timeout_ms.attr,
+>>>>>>> +        NULL,
+>>>>>>> +};
+>>>>>>> +
+>>>>>>> +struct attribute_group ufs_sysfs_hpb_param_group = {
+>>>>>>> +        .name = "hpb_param_sysfs",
+>>>>>>> +        .attrs = hpb_dev_param_attrs,
+>>>>>>> +};
+>>>>>>> +
+>>>>>>> +static int ufshpb_pre_req_mempool_init(struct ufshpb_lu *hpb)
+>>>>>>> +{
+>>>>>>> +        struct ufshpb_req *pre_req = NULL;
+>>>>>>> +        int qd = hpb->sdev_ufs_lu->queue_depth / 2;
+>>>>>>> +        int i, j;
+>>>>>>> +
+>>>>>>> +        INIT_LIST_HEAD(&hpb->lh_pre_req_free);
+>>>>>>> +
+>>>>>>> +        hpb->pre_req = kcalloc(qd, sizeof(struct ufshpb_req),
+>>>>>>> GFP_KERNEL);
+>>>>>>> +        hpb->throttle_pre_req = qd;
+>>>>>>> +        hpb->num_inflight_pre_req = 0;
+>>>>>>> +
+>>>>>>> +        if (!hpb->pre_req)
+>>>>>>> +                goto release_mem;
+>>>>>>> +
+>>>>>>> +        for (i = 0; i < qd; i++) {
+>>>>>>> +                pre_req = hpb->pre_req + i;
+>>>>>>> +                INIT_LIST_HEAD(&pre_req->list_req);
+>>>>>>> +                pre_req->req = NULL;
+>>>>>>> +                pre_req->bio = NULL;
+>>>>>> 
+>>>>>> Why don't prepare bio as same as wb.m_page? Won't that save more 
+>>>>>> time
+>>>>>> for ufshpb_issue_pre_req()?
+>>>>> 
+>>>>> It is pre_req pool. So although we prepare bio at this time, it just
+>>>>> only for first pre_req.
+>>>> 
+>>>> I meant removing the bio_alloc() in ufshpb_issue_pre_req() and
+>>>> bio_put()
+>>>> in ufshpb_pre_req_compl_fn(). bios, in pre_req's case, just hold a
+>>>> page.
+>>>> So, prepare 16 (if queue depth is 32) bios here, just use them along
+>>>> with
+>>>> wb.m_page and call bio_reset() in ufshpb_pre_req_compl_fn(). Shall it
+>>>> work?
+>>>> 
+>>> 
+>>> If it works, you can even have the bio_add_pc_page() called here. 
+>>> Later
+>>> in
+>>> ufshpb_execute_pre_req(), you don't need to call
+>>> ufshpb_pre_req_add_bio_page(),
+>>> just call ufshpb_prep_entry() once instead - it save many repeated 
+>>> steps
+>>> for a
+>>> pre_req, and you don't even need to call bio_reset() in this case, 
+>>> since
+>>> for a
+>>> bio, nothing changes after it is binded with a specific page...
+>> 
+>> Hi, Can Guo
+>> 
+>> I tried the idea that you suggested, but it doesn't work properly.
+>> This optimization should be done next time for enhancement.
+> 
+>Can you elaborate please? Any error seen?
+> 
+>Per my understanding, in the case for pre_reqs, a bio is no different
+>from a page. Here it can reserve 16 pages for later use, which can be
+>done the same for bios.
 
-There are similar code implementations for WB configuration in
-ufshcd_wb_{ctrl, toggle_flush_during_h8, toggle_flush}. We can
-extract the part to create a new helper with a flag parameter to
-reduce code duplication.
+I found some problem with re-using pre allocated bio.
 
-Meanwhile, rename ufshcd_wb_ctrl() to ufshcd_wb_toggle() for better
-readability.
+The following kernel message is related with problem.
+[    2.750530] ------------[ cut here ]------------
+[    2.751404] WARNING: CPU: 4 PID: 170 at drivers/scsi/scsi_lib.c:1020 scsi_alloc_sgtables+0x253/0x2b0
+[    2.753054] Modules linked in:
+[    2.753651] CPU: 4 PID: 170 Comm: mount Not tainted 5.12.0-rc1+ #331
+[    2.754752] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.13.0-0-gf21b5a4aeb02-prebuilt.qemu.org 04/01/2014
+[    2.756813] RIP: 0010:scsi_alloc_sgtables+0x253/0x2b0
+[    2.757699] Code: 85 c0 74 19 41 0f b6 44 24 18 8d 50 e0 83 fa 03 76 30 41 bd 01 00 00 00 e9 1f fe ff ff be 01 00 00 00 45 31 ed e9 19 fe ff ff <0f> 0b b8 0a f
+[    2.761021] RSP: 0018:ffffb06e0027f538 EFLAGS: 00010246
+[    2.761902] RAX: 0000000000000000 RBX: ffff9c3a42d424d0 RCX: ffffb06e0027f5e0
+[    2.763184] RDX: ffff9c3a42d426a8 RSI: 0000000000000000 RDI: ffff9c3a42d424d0
+[    2.764446] RBP: ffffb06e0027f570 R08: 0000000000000000 R09: 0000000000000000
+[    2.765704] R10: ffffffff8eb0dda0 R11: 00000000fffb7675 R12: ffff9c3a42d423c0
+[    2.766976] R13: 0000000000000000 R14: ffff9c3a41bed000 R15: ffff9c3a420f4000
+[    2.768225] FS:  00007f42d1eab100(0000) GS:ffff9c3b77c00000(0000) knlGS:0000000000000000
+[    2.769666] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    2.770719] CR2: 00007f42d1ac1000 CR3: 0000000104bee006 CR4: 0000000000370ee0
+[    2.771997] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[    2.773288] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[    2.774543] Call Trace:
+[    2.775092]  scsi_queue_rq+0x9b6/0xb20
+[    2.775754]  __blk_mq_try_issue_directly+0x150/0x1f0
+[    2.776636]  blk_mq_request_issue_directly+0x49/0x80
+[    2.777616]  blk_insert_cloned_request+0x85/0xd0
+[    2.778470]  ufshpb_prep.cold+0x793/0x7be
+[    2.779179]  ufshcd_queuecommand+0x114/0x690
+[    2.779986]  scsi_queue_rq+0x38a/0xb20
+[    2.780755]  blk_mq_dispatch_rq_list+0x13d/0x760
+[    2.781605]  ? dd_dispatch_request+0x67/0x1c0
+[    2.782337]  __blk_mq_do_dispatch_sched+0xb5/0x2c0
+[    2.783291]  __blk_mq_sched_dispatch_requests+0x13c/0x180
+[    2.784209]  blk_mq_sched_dispatch_requests+0x30/0x60
+[    2.785195]  __blk_mq_run_hw_queue+0x49/0x90
+[    2.786024]  __blk_mq_delay_run_hw_queue+0x162/0x180
+[    2.786890]  blk_mq_run_hw_queue+0x85/0xe0
+[    2.787590]  blk_mq_sched_insert_requests+0xdf/0x2b0
+[    2.788558]  blk_mq_flush_plug_list+0x118/0x240
+[    2.789405]  blk_flush_plug_list+0xde/0x110
+[    2.790225]  blk_finish_plug+0x21/0x30
+[    2.790878]  read_pages+0x16a/0x1d0
+[    2.791534]  page_cache_ra_unbounded+0x123/0x1c0
+[    2.792392]  do_page_cache_ra+0x38/0x40
+[    2.793183]  force_page_cache_ra+0x97/0x110
+[    2.793875]  page_cache_sync_ra+0x26/0x50
+[    2.794671]  filemap_get_pages+0xc8/0x4b0
+[    2.795482]  filemap_read+0xc9/0x340
+[    2.796144]  ? find_held_lock+0x31/0x90
+[    2.796809]  generic_file_read_iter+0xcc/0x130
+[    2.797644]  blkdev_read_iter+0x30/0x40
+[    2.798436]  new_sync_read+0x10e/0x190
+[    2.799112]  vfs_read+0x178/0x1d0
+[    2.799732]  ksys_read+0x6b/0xf0
+[    2.800361]  __x64_sys_read+0x15/0x20
+[    2.801027]  do_syscall_64+0x38/0x50
+[    2.801770]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[    2.802655] RIP: 0033:0x7f42d209a461
+[    2.803313] Code: fe ff ff 50 48 8d 3d fe d0 09 00 e8 e9 03 02 00 66 0f 1f 84 00 00 00 00 00 48 8d 05 99 62 0d 00 8b 00 85 c0 75 13 31 c0 0f 05 <48> 3d 00 f0 8
+[    2.806632] RSP: 002b:00007ffe7b88bc88 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+[    2.807942] RAX: ffffffffffffffda RBX: 000055ccb2e070d0 RCX: 00007f42d209a461
+[    2.809218] RDX: 0000000000040000 RSI: 00007f42d1ac1038 RDI: 0000000000000004
+[    2.810482] RBP: 000055ccb2e07120 R08: 00007f42d1ac1010 R09: 0000000000000000
+[    2.811729] R10: 0000000000000022 R11: 0000000000000246 R12: 0000003b95fc0000
+[    2.813005] R13: 0000000000040000 R14: 00007f42d1ac1028 R15: 00007f42d1ac1010
+[    2.814276] irq event stamp: 9319
+[    2.814868] hardirqs last  enabled at (9327): [<ffffffff8c4d2033>] console_unlock+0x4d3/0x5e0
+[    2.816349] hardirqs last disabled at (9336): [<ffffffff8c4d1fa6>] console_unlock+0x446/0x5e0
+[    2.817837] softirqs last  enabled at (8674): [<ffffffff8d4002ec>] __do_softirq+0x2ec/0x40f
+[    2.819298] softirqs last disabled at (8669): [<ffffffff8c46ad9e>] irq_exit_rcu+0xae/0xb0
+[    2.820744] ---[ end trace af3986a7787eeecf ]---
 
-And remove unnecessary log messages from ufshcd_wb_config() since
-relevant toggle function will spew log respectively. Also change
-ufshcd_wb_toggle_flush{__during_h8} to void type accordingly.
+It is related to bi_iter value of bio is changed after use it.
 
-Signed-off-by: Yue Hu <huyue2@yulong.com>
----
-v2: use opcode instead of val, update minor log words
+Thanks,
+Daejun
 
- drivers/scsi/ufs/ufs-sysfs.c |  2 +-
- drivers/scsi/ufs/ufshcd.c    | 97 +++++++++++++++++++-------------------------
- drivers/scsi/ufs/ufshcd.h    |  2 +-
- 3 files changed, 43 insertions(+), 58 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index acc54f5..d7c3cff 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -246,7 +246,7 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
- 	}
- 
- 	pm_runtime_get_sync(hba->dev);
--	res = ufshcd_wb_ctrl(hba, wb_enable);
-+	res = ufshcd_wb_toggle(hba, wb_enable);
- 	pm_runtime_put_sync(hba->dev);
- out:
- 	up(&hba->host_sem);
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7716175..866e73b 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -247,8 +247,8 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg);
- static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
--static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
--static inline int ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
-+static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
-+static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
- static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
- static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
- 
-@@ -275,20 +275,12 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
- 
- static inline void ufshcd_wb_config(struct ufs_hba *hba)
- {
--	int ret;
--
- 	if (!ufshcd_is_wb_allowed(hba))
- 		return;
- 
--	ret = ufshcd_wb_ctrl(hba, true);
--	if (ret)
--		dev_err(hba->dev, "%s: Enable WB failed: %d\n", __func__, ret);
--	else
--		dev_info(hba->dev, "%s: Write Booster Configured\n", __func__);
--	ret = ufshcd_wb_toggle_flush_during_h8(hba, true);
--	if (ret)
--		dev_err(hba->dev, "%s: En WB flush during H8: failed: %d\n",
--			__func__, ret);
-+	ufshcd_wb_toggle(hba, true);
-+
-+	ufshcd_wb_toggle_flush_during_h8(hba, true);
- 	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
- 		ufshcd_wb_toggle_flush(hba, true);
- }
-@@ -1268,7 +1260,7 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
- 	/* Enable Write Booster if we have scaled up else disable it */
- 	downgrade_write(&hba->clk_scaling_lock);
- 	is_writelock = false;
--	ufshcd_wb_ctrl(hba, scale_up);
-+	ufshcd_wb_toggle(hba, scale_up);
- 
- out_unprepare:
- 	ufshcd_clock_scaling_unprepare(hba, is_writelock);
-@@ -5432,85 +5424,78 @@ static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
- 				__func__, err);
- }
- 
--int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable)
-+static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_idn idn)
- {
--	int ret;
- 	u8 index;
- 	enum query_opcode opcode;
- 
-+	if (set)
-+		opcode = UPIU_QUERY_OPCODE_SET_FLAG;
-+	else
-+		opcode = UPIU_QUERY_OPCODE_CLEAR_FLAG;
-+
-+	index = ufshcd_wb_get_query_index(hba);
-+	return ufshcd_query_flag_retry(hba, opcode, idn, index, NULL);
-+}
-+
-+int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
-+{
-+	int ret;
-+
- 	if (!ufshcd_is_wb_allowed(hba))
- 		return 0;
- 
- 	if (!(enable ^ hba->dev_info.wb_enabled))
- 		return 0;
--	if (enable)
--		opcode = UPIU_QUERY_OPCODE_SET_FLAG;
--	else
--		opcode = UPIU_QUERY_OPCODE_CLEAR_FLAG;
- 
--	index = ufshcd_wb_get_query_index(hba);
--	ret = ufshcd_query_flag_retry(hba, opcode,
--				      QUERY_FLAG_IDN_WB_EN, index, NULL);
-+	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
- 	if (ret) {
--		dev_err(hba->dev, "%s write booster %s failed %d\n",
-+		dev_err(hba->dev, "%s Write Booster %s failed %d\n",
- 			__func__, enable ? "enable" : "disable", ret);
- 		return ret;
- 	}
- 
- 	hba->dev_info.wb_enabled = enable;
--	dev_dbg(hba->dev, "%s write booster %s %d\n",
--			__func__, enable ? "enable" : "disable", ret);
-+	dev_info(hba->dev, "%s Write Booster %s\n",
-+			__func__, enable ? "enabled" : "disabled");
- 
- 	return ret;
- }
- 
--static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
-+static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
- {
--	int val;
--	u8 index;
--
--	if (set)
--		val =  UPIU_QUERY_OPCODE_SET_FLAG;
--	else
--		val = UPIU_QUERY_OPCODE_CLEAR_FLAG;
-+	int ret;
- 
--	index = ufshcd_wb_get_query_index(hba);
--	return ufshcd_query_flag_retry(hba, val,
--				QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8,
--				index, NULL);
-+	ret = __ufshcd_wb_toggle(hba, set,
-+			QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8);
-+	if (ret) {
-+		dev_err(hba->dev, "%s: WB-Buf Flush during H8 %s failed: %d\n",
-+			__func__, set ? "enable" : "disable", ret);
-+		return;
-+	}
-+	dev_dbg(hba->dev, "%s WB-Buf Flush during H8 %s\n",
-+			__func__, set ? "enabled" : "disabled");
- }
- 
--static inline int ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
-+static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
- {
- 	int ret;
--	u8 index;
--	enum query_opcode opcode;
- 
- 	if (!ufshcd_is_wb_allowed(hba) ||
- 	    hba->dev_info.wb_buf_flush_enabled == enable)
--		return 0;
--
--	if (enable)
--		opcode = UPIU_QUERY_OPCODE_SET_FLAG;
--	else
--		opcode = UPIU_QUERY_OPCODE_CLEAR_FLAG;
-+		return;
- 
--	index = ufshcd_wb_get_query_index(hba);
--	ret = ufshcd_query_flag_retry(hba, opcode,
--				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, index,
--				      NULL);
-+	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN);
- 	if (ret) {
- 		dev_err(hba->dev, "%s WB-Buf Flush %s failed %d\n", __func__,
- 			enable ? "enable" : "disable", ret);
--		goto out;
-+		return;
- 	}
- 
- 	hba->dev_info.wb_buf_flush_enabled = enable;
- 
--	dev_dbg(hba->dev, "WB-Buf Flush %s\n", enable ? "enabled" : "disabled");
--out:
--	return ret;
--
-+	dev_dbg(hba->dev, "%s WB-Buf Flush %s\n",
-+			__func__, enable ? "enabled" : "disabled");
- }
- 
- static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 18e56c1..eddc819 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1099,7 +1099,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 			     u8 *desc_buff, int *buff_len,
- 			     enum query_opcode desc_op);
- 
--int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
-+int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
- 
- /* Wrapper functions for safely calling variant operations */
- static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
--- 
-1.9.1
-
+>This is not an enhancement, but a doubt - why not? Unless it is not 
+>doable.
+> 
+>Thanks,
+>Can Guo.
+> 
+>> 
+>> Thanks
+>> Daejun
+>> 
+>>> Can Guo.
+>>> 
+>>>> Thanks,
+>>>> Can Guo.
+>>>> 
+>>>>> After use it, it should be prepared bio at issue phase.
+>>>>> 
+>>>>> Thanks,
+>>>>> Daejun
+>>>>> 
+>>>>>> 
+>>>>>> Thanks,
+>>>>>> Can Guo.
+>>>>>> 
+>>>>>>> +
+>>>>>>> +                pre_req->wb.m_page = alloc_page(GFP_KERNEL |
+>>>>>>> __GFP_ZERO);
+>>>>>>> +                if (!pre_req->wb.m_page) {
+>>>>>>> +                        for (j = 0; j < i; j++)
+>>>>>>> +
+>>>>>>> __free_page(hpb->pre_req[j].wb.m_page);
+>>>>>>> +
+>>>>>>> +                        goto release_mem;
+>>>>>>> +                }
+>>>>>>> +                list_add_tail(&pre_req->list_req,
+>>>>>>> &hpb->lh_pre_req_free);
+>>>>>>> +        }
+>>>>>>> +
+>>>>>>> +        return 0;
+>>>>>>> +release_mem:
+>>>>>>> +        kfree(hpb->pre_req);
+>>>>>>> +        return -ENOMEM;
+>>>>>>> +}
+>>>>>>> +
+>>>>>> 
+>>>>>> 
+>>>>>> 
+>>> 
+>>> 
+>>> 
+> 
+> 
+>  
