@@ -2,96 +2,259 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80E9EC433DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 09:26:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE0B7C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 11:22:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C3F464F6D
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 09:26:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 800A364F69
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 11:22:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229519AbhCSJ0F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Mar 2021 05:26:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46138 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229770AbhCSJZc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2021 05:25:32 -0400
-Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FE80C06174A;
-        Fri, 19 Mar 2021 02:25:32 -0700 (PDT)
-Received: by mail-qk1-x72e.google.com with SMTP id c4so2150371qkg.3;
-        Fri, 19 Mar 2021 02:25:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=FRCh2wX8tgMUCklcnZV+Qo3HupS3FlJjITrZLEDGD4g=;
-        b=q1nJjhnRV5OcbsC6B50JNzLkKnOZ/oVBGivWeTPwJJ5GqDoRwdF2z3g8Wilo811rL9
-         oBth0jmpWFdNtvphQ7HWLB0F5yz40y/R74tDysE/9+0EFRDzbTZVHjkhzPlDGfJcLy29
-         SwrG/zsckK7yrJzq7gZiodZEaPY6h8rDIcWMZOr8R1uKUnS6UQnE1VF8+MlgHrapEPP+
-         kfPkt1eSbv/FjoAWk+1dH7I9YclYxde3A43i3uMfmDQQIb7mF++fAsXAeC35DEpeCMjB
-         9GbZ5q7JvDEtodMYnpRkDD4ZKIi4xl0RErxBAjG5uZUJisM454L7vQ0TRm1dYAEQObWq
-         UrwA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=FRCh2wX8tgMUCklcnZV+Qo3HupS3FlJjITrZLEDGD4g=;
-        b=cGoWfWvSvYsMq7FBWeT7oHDBFupbqyPwpCB5UFf7PYGORpsKPc0WMI5EZ9J5OPo+Sn
-         NW2F3ItkCdi1Rai1iqeYKGuPAo25hFW95pkug9d0YoWBR0GnCN9xMOboDdP0SSKNTZ9U
-         N3XjY1c1YrZXVmFMCCwFM2uetgFQ74BRNbYDY/4slNwmsnhm2SiBx8rwcqo7xa94QFum
-         sJX46WLhP2UlhmGyFsY+o51ADX41noQTLGpW8f+fGN8JmNld8v+u9XdUP036CTbuSy7T
-         5D3+MV1vlXT6cEcpbXZcqfoV43bwmmG7w6H0I4xO9ssoupVibYVQIdexWUygPozW3LmE
-         slRA==
-X-Gm-Message-State: AOAM530FY/4xXpuaVE2g+4bS9GzE/RCGYKE+O5U4tNBd2N7iIcUhczUs
-        TJqWFzHyejfhwQ5oUy0DMEkEkNbtcNYMD/qM
-X-Google-Smtp-Source: ABdhPJwA+QL6CEKzMcSjMX02ysy42INTYOMwQEteAeSMuRLORWfY/QCg3BHwJb/HSO3yMcxFYyxhSg==
-X-Received: by 2002:a37:bc43:: with SMTP id m64mr1397070qkf.186.1616145931321;
-        Fri, 19 Mar 2021 02:25:31 -0700 (PDT)
-Received: from localhost.localdomain ([37.19.198.87])
-        by smtp.gmail.com with ESMTPSA id r2sm3318539qti.4.2021.03.19.02.25.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Mar 2021 02:25:30 -0700 (PDT)
-From:   Bhaskar Chowdhury <unixbhaskar@gmail.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        unixbhaskar@gmail.com, lee.jones@linaro.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     rdunlap@infradead.org
-Subject: [PATCH] scsi: csiostor: Fix a typo
-Date:   Fri, 19 Mar 2021 14:53:11 +0530
-Message-Id: <20210319092311.31776-1-unixbhaskar@gmail.com>
-X-Mailer: git-send-email 2.26.2
+        id S229877AbhCSLWO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Mar 2021 07:22:14 -0400
+Received: from 1.mo4.mail-out.ovh.net ([178.33.248.196]:50077 "EHLO
+        1.mo4.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229903AbhCSLWA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2021 07:22:00 -0400
+X-Greylist: delayed 346 seconds by postgrey-1.27 at vger.kernel.org; Fri, 19 Mar 2021 07:21:59 EDT
+Received: from player794.ha.ovh.net (unknown [10.110.208.43])
+        by mo4.mail-out.ovh.net (Postfix) with ESMTP id 193FB2706CE
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Mar 2021 12:16:03 +0100 (CET)
+Received: from ai0.uk (host-92-7-103-66.as43234.net [92.7.103.66])
+        (Authenticated sender: ash@ai0.uk)
+        by player794.ha.ovh.net (Postfix) with ESMTPSA id 729F919164BF4;
+        Fri, 19 Mar 2021 11:16:02 +0000 (UTC)
+Authentication-Results: garm.ovh; auth=pass (GARM-98R00253c19835-2787-442d-ab17-885eeb3dbca7,
+                    F8F6588E40AA5C2F10766E4406AD178973278B1B) smtp.auth=ash@ai0.uk
+X-OVh-ClientIp: 92.7.103.66
+From:   <ash@ai0.uk>
+To:     <jinpu.wang@cloud.ionos.com>
+Cc:     <linux-scsi@vger.kernel.org>
+Subject: [REGRESSION] pm8001: Adaptec 6805H fails to initialize after v5.10.0
+Date:   Fri, 19 Mar 2021 11:16:01 -0000
+Message-ID: <009d01d71cb1$3fbd5200$bf37f600$@ai0.uk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+        charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Content-Language: en-gb
+Thread-Index: AdccsOoV6l0V6jOlQ7GdljdrRJ4Qvw==
+X-Ovh-Tracer-Id: 9796173617021838491
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: 0
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduledrudefkedgvdejucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucenucfjughrpefhvffufffkgggtgffothesthejghdtvddtvdenucfhrhhomhepoegrshhhsegrihdtrdhukheqnecuggftrfgrthhtvghrnhepkedvveehhfeiveegjeefiedtvddtleefveekhffgteffvefhvdeugeevhffhfeevnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucfkpheptddrtddrtddrtddpledvrdejrddutdefrdeiieenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhhouggvpehsmhhtphdqohhuthdphhgvlhhopehplhgrhigvrhejleegrdhhrgdrohhvhhdrnhgvthdpihhnvghtpedtrddtrddtrddtpdhmrghilhhfrhhomheprghshhesrghitddruhhkpdhrtghpthhtoheplhhinhhugidqshgtshhisehvghgvrhdrkhgvrhhnvghlrdhorhhg
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From kernel version 5.10 onwards, none of the drives attached to an Adaptec
+6805H HBA appear.
 
-s/boudaries/boundaries/
+Building and installing the mainline kernel (5.12-rc3) does not fix the
+issue, neither does the latest longterm (5.10.24).
 
-Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
----
- drivers/scsi/csiostor/csio_hw_t5.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+'dmesg | grep pm8' shows:
+[    0.810874] pm80xx 0000:01:00.0: pm80xx: driver version 0.1.40
+[    0.811542] pm80xx 0000:01:00.0: enabling device (0000 -> 0002)
+[    0.812309] :: pm8001_pci_alloc  525:Setting link rate to default value
+[    3.239584] pm80xx0:: pm8001_pci_probe  1112:chip_init failed [ret: -16]
+[    3.262231] pm80xx: probe of 0000:01:00.0 failed with error -16
 
-diff --git a/drivers/scsi/csiostor/csio_hw_t5.c b/drivers/scsi/csiostor/csio_hw_t5.c
-index 1df8891d3725..86fded97d799 100644
---- a/drivers/scsi/csiostor/csio_hw_t5.c
-+++ b/drivers/scsi/csiostor/csio_hw_t5.c
-@@ -244,7 +244,7 @@ csio_t5_edc_read(struct csio_hw *hw, int idx, uint32_t addr, __be32 *data,
-  *
-  * Reads/writes an [almost] arbitrary memory region in the firmware: the
-  * firmware memory address, length and host buffer must be aligned on
-- * 32-bit boudaries.  The memory is transferred as a raw byte sequence
-+ * 32-bit boundaries.  The memory is transferred as a raw byte sequence
-  * from/to the firmware's memory.  If this memory contains data
-  * structures which contain multi-byte integers, it's the callers
-  * responsibility to perform appropriate byte order conversions.
---
-2.26.2
+A bisection reveals the issue appears with the commit show below, with this
+commit reverted, the drives attached to a 6805H appear once again.
+
+> commit 05c6c029a44d9f43715577e33e95eba87f44d285
+> Author: Viswas G <Viswas.G@microchip.com>
+> Date:   Mon Oct 5 20:20:08 2020 +0530
+> 
+>     scsi: pm80xx: Increase number of supported queues
+>
+>     Current driver uses fixed number of Inbound and Outbound queues and
+all of
+>     the I/O, TMF and internal requests are submitted through those. A
+global
+>     spin lock is used to control the shared access. This can create a lock
+>     contention and it is real bottleneck in the I/O path.
+> 
+>     To avoid this, the number of supported Inbound and Outbound queues is
+>     increased to 64, and the number of queues used is decided based on
+number
+>     of CPU cores online and number of MSI-X vectors allocated. Also add
+locks
+>     per queue instead of using the global lock.
+> 
+>     Link:
+https://lore.kernel.org/r/20201005145011.23674-2-Viswas.G@microchip.com.com
+>     Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+>     Signed-off-by: Viswas G <Viswas.G@microchip.com>
+>     Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
+>     Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+'lspci -vvv' on working kernel:
+
+> 01:00.0 Serial Attached SCSI controller: Adaptec PMC-Sierra PM8001 SAS HBA
+[Series 6H] (rev 05)
+>         Subsystem: Adaptec PMC-Sierra PM8001 SAS HBA [Series 6H]
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr+ Stepping- SERR+ FastB2B- DisINTx+
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0, Cache Line Size: 64 bytes
+>         Interrupt: pin A routed to IRQ 16
+>         Region 0: Memory at f7d60000 (64-bit, non-prefetchable) [size=64K]
+>         Region 2: Memory at f7d50000 (64-bit, non-prefetchable) [size=64K]
+>         Region 4: Memory at f7d40000 (32-bit, non-prefetchable) [size=64K]
+>         Region 5: Memory at f7d00000 (32-bit, non-prefetchable)
+[size=256K]
+>         Expansion ROM at f7c00000 [disabled] [size=1M]
+>         Capabilities: [40] Power Management version 3
+>                 Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA
+PME(D0+,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+>                 Address: 0000000000000000  Data: 0000
+>         Capabilities: [70] Express (v2) Endpoint, MSI 00
+>                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s
+<1us, L1 <8us
+>                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+SlotPowerLimit 0.000W
+>                 DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+>                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+
+>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr+ NonFatalErr- FatalErr- UnsupReq+ AuxPwr-
+TransPend-
+>                 LnkCap: Port #0, Speed 5GT/s, Width x8, ASPM L0s L1, Exit
+Latency L0s <512ns, L1 <64us
+>                         ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk+
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed 5GT/s (ok), Width x4 (downgraded)
+>                         TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>                 DevCap2: Completion Timeout: Not Supported, TimeoutDis+
+NROPrPrP- LTR-
+>                          10BitTagComp- 10BitTagReq- OBFF Not Supported,
+ExtFmt- EETLPPrefix-
+>                          EmergencyPowerReduction Not Supported,
+EmergencyPowerReductionInit-
+>                          FRS- TPHComp- ExtTPHComp-
+>                          AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+>                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
+LTR- OBFF Disabled,
+>                          AtomicOpsCtl: ReqEn-
+>                 LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance-
+SpeedDis-
+>                          Transmit Margin: Normal Operating Range,
+EnterModifiedCompliance- ComplianceSOS-
+>                          Compliance De-emphasis: -6dB
+>                 LnkSta2: Current De-emphasis Level: -3.5dB,
+EqualizationComplete- EqualizationPhase1-
+>                          EqualizationPhase2- EqualizationPhase3-
+LinkEqualizationRequest-
+>                          Retimer- 2Retimers- CrosslinkRes: unsupported
+>         Capabilities: [ac] MSI-X: Enable+ Count=16 Masked-
+>                 Vector table: BAR=0 offset=00002000
+>                 PBA: BAR=0 offset=00004000
+>         Capabilities: [100 v1] Advanced Error Reporting
+>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
+RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+AdvNonFatalErr-
+>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+AdvNonFatalErr+
+>                 AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn-
+ECRCChkCap+ ECRCChkEn-
+>                         MultHdrRecCap- MultHdrRecEn- TLPPfxPres-
+HdrLogCap-
+>                 HeaderLog: 00000000 00000000 00000000 00000000
+>         Kernel driver in use: pm80xx
+>         Kernel modules: pm80xx
+
+'lspci -vvv' on non-working kernel (5.12-rc3):
+
+> 01:00.0 Serial Attached SCSI controller: Adaptec PMC-Sierra PM8001 SAS HBA
+[Series 6H] (rev 05)
+>         Subsystem: Adaptec PMC-Sierra PM8001 SAS HBA [Series 6H]
+>         Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop-
+ParErr+ Stepping- SERR+ FastB2B- DisINTx+
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Interrupt: pin A routed to IRQ 16
+>         Region 0: Memory at f7d60000 (64-bit, non-prefetchable) [size=64K]
+>         Region 2: Memory at f7d50000 (64-bit, non-prefetchable) [size=64K]
+>         Region 4: Memory at f7d40000 (32-bit, non-prefetchable) [size=64K]
+>         Region 5: Memory at f7d00000 (32-bit, non-prefetchable)
+[size=256K]
+>         Expansion ROM at f7c00000 [disabled] [size=1M]
+>         Capabilities: [40] Power Management version 3
+>                 Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA
+PME(D0+,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+>                 Address: 0000000000000000  Data: 0000
+>         Capabilities: [70] Express (v2) Endpoint, MSI 00
+>                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s
+<1us, L1 <8us
+>                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+SlotPowerLimit 116.000W
+>                 DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+>                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+
+>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr+ NonFatalErr- FatalErr- UnsupReq+ AuxPwr-
+TransPend-
+>                 LnkCap: Port #0, Speed 5GT/s, Width x8, ASPM L0s L1, Exit
+Latency L0s <512ns, L1 <64us
+>                         ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk+
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed 5GT/s (ok), Width x4 (downgraded)
+>                         TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>                 DevCap2: Completion Timeout: Not Supported, TimeoutDis+
+NROPrPrP- LTR-
+>                          10BitTagComp- 10BitTagReq- OBFF Not Supported,
+ExtFmt- EETLPPrefix-
+>                          EmergencyPowerReduction Not Supported,
+EmergencyPowerReductionInit-
+>                          FRS- TPHComp- ExtTPHComp-
+>                          AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+>                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
+LTR- OBFF Disabled,
+>                          AtomicOpsCtl: ReqEn-
+>                 LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance-
+SpeedDis-
+>                          Transmit Margin: Normal Operating Range,
+EnterModifiedCompliance- ComplianceSOS-
+>                          Compliance De-emphasis: -6dB
+>                 LnkSta2: Current De-emphasis Level: -3.5dB,
+EqualizationComplete- EqualizationPhase1-
+>                          EqualizationPhase2- EqualizationPhase3-
+LinkEqualizationRequest-
+>                          Retimer- 2Retimers- CrosslinkRes: unsupported
+>         Capabilities: [ac] MSI-X: Enable+ Count=16 Masked-
+>                 Vector table: BAR=0 offset=00002000
+>                 PBA: BAR=0 offset=00004000
+>         Capabilities: [100 v1] Advanced Error Reporting
+>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
+RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+AdvNonFatalErr-
+>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+AdvNonFatalErr+
+>                 AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn-
+ECRCChkCap+ ECRCChkEn-
+>                         MultHdrRecCap- MultHdrRecEn- TLPPfxPres-
+HdrLogCap-
+>                 HeaderLog: 00000000 00000000 00000000 00000000
+>         Kernel modules: pm80xx
 
