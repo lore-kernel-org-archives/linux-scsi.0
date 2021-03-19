@@ -2,112 +2,184 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 611F3C433DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 19:49:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A0FFC433C1
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 20:51:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D615961977
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 19:49:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1768C6197B
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 20:51:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230142AbhCSTs6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Mar 2021 15:48:58 -0400
-Received: from mail-pf1-f175.google.com ([209.85.210.175]:44619 "EHLO
-        mail-pf1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230335AbhCSTsy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2021 15:48:54 -0400
-Received: by mail-pf1-f175.google.com with SMTP id b184so6626645pfa.11
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Mar 2021 12:48:43 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=cswbEhHHO5JTsfmsgN+ByV0GrBegM7x8SKwEBff3xCE=;
-        b=dNtr7c0kPIHgQMEXzyPqQdr5fOINJrMDT1CCbgZowyU45k66BSw+qKRDuHwvkfTz4w
-         K2+c++kP7uqKV1hxAjinrLP6TGi5lfBhi5x1aomVPwUe78U9zhX6PHTOfMinWwxlevq+
-         TSGTyLjTB43Ixyj7sJK3QjNej/QdZSRaaK9NUphHKW8HZr1uwY7pY/XQIC7LAwqCohbw
-         ctfR+cNv/bBlZffiFyt/Tyh7Qtrw1d9V5uNDTd09ii7M8J5/5Z31GIOYyvdk/SgeWaAI
-         BXRJcO81EE86fgmR/YH+/g3IYg3VRAy31RM1x8A9urHJfTfq6YteTqUOo44Vjs/YSCQZ
-         cmhA==
-X-Gm-Message-State: AOAM530N0jCAXRHVCJNWSovV9YcxgABjsNYwxK5xWHb/4OzC4iherpTJ
-        onPkKhNq4Y+AWUvg1BuWR2gLNkXIsImesA==
-X-Google-Smtp-Source: ABdhPJzhSDqYQiAgNxTGRlXbfA12ldlmu+EtTOeBg/ibzEUwL3kPHwmPT2exxaCuDJUu4XRUvZEegg==
-X-Received: by 2002:a62:7b83:0:b029:1f1:5ef3:b4d9 with SMTP id w125-20020a627b830000b02901f15ef3b4d9mr10688945pfc.65.1616183322987;
-        Fri, 19 Mar 2021 12:48:42 -0700 (PDT)
-Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
-        by smtp.gmail.com with ESMTPSA id t125sm2792024pgt.71.2021.03.19.12.48.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Mar 2021 12:48:42 -0700 (PDT)
-Received: by 42.do-not-panic.com (Postfix, from userid 1000)
-        id 9019F40317; Fri, 19 Mar 2021 19:48:41 +0000 (UTC)
-Date:   Fri, 19 Mar 2021 19:48:41 +0000
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Douglas Gilbert <dgilbert@interlog.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        hare@suse.de
-Subject: Re: [RFC] scsi_debug: add hosts initialization --> worker
-Message-ID: <20210319194841.GL4332@42.do-not-panic.com>
-References: <20210319150514.17083-1-dgilbert@interlog.com>
+        id S230317AbhCSUvO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Mar 2021 16:51:14 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:23698 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229912AbhCSUul (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 Mar 2021 16:50:41 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 12JKX5Hw107235;
+        Fri, 19 Mar 2021 16:50:34 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=5nc+PQngE6lzm5zp/Hxo1++AIj63sWSpfvhPQP6Ke4w=;
+ b=UM1ZDOvpdgRglxow24e4CbSdc/UCSKaJHrw/BUDHFRqLoaR8+CRSKDr0EW1BuK6X0dRY
+ lCb0WE3dgmMtWn4oBV6yqlpd6uNZK2p52rlBuVVAgIIWMSTTDSo9n+AqOUpbYeWLtd2V
+ 3M9mHMat6FUJPTfENcBSY8IBxOjZ4wsllceoFEgjJ8N3x3F0o5kNx2aIGoNterWtAmy0
+ 2pV1CUgxT98I1dIpo6QhZVfc719EfcWvazMmrQFSbWsHKn8xcmRXnXbcb8gXmTItM+tH
+ r8qSYUuMHXcVL/Unh/mgc10uw6rY8E56Ze8uPNF5YKB8ruebif8ppYcJ5gcVDWsFhZF3 ng== 
+Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 37c7m762ct-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 19 Mar 2021 16:50:34 -0400
+Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
+        by ppma04dal.us.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 12JKlDpp005276;
+        Fri, 19 Mar 2021 20:50:33 GMT
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+        by ppma04dal.us.ibm.com with ESMTP id 37a3gdbtu8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 19 Mar 2021 20:50:33 +0000
+Received: from b03ledav001.gho.boulder.ibm.com (b03ledav001.gho.boulder.ibm.com [9.17.130.232])
+        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 12JKoWtb14483870
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 19 Mar 2021 20:50:32 GMT
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E32FF6E054;
+        Fri, 19 Mar 2021 20:50:31 +0000 (GMT)
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 972F36E04C;
+        Fri, 19 Mar 2021 20:50:31 +0000 (GMT)
+Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
+        by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Fri, 19 Mar 2021 20:50:31 +0000 (GMT)
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+To:     james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH 2/2] ibmvfc: make ibmvfc_wait_for_ops MQ aware
+Date:   Fri, 19 Mar 2021 14:50:29 -0600
+Message-Id: <20210319205029.312969-3-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20210319205029.312969-1-tyreld@linux.ibm.com>
+References: <20210319205029.312969-1-tyreld@linux.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210319150514.17083-1-dgilbert@interlog.com>
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
+ definitions=2021-03-19_10:2021-03-19,2021-03-19 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 spamscore=0
+ suspectscore=0 adultscore=0 mlxlogscore=999 lowpriorityscore=0
+ priorityscore=1501 clxscore=1015 bulkscore=0 impostorscore=0
+ malwarescore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2103190140
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Mar 19, 2021 at 11:05:14AM -0400, Douglas Gilbert wrote:
-> Adding (pseudo) SCSI hosts has been done in the scsi_debug_init()
-> function. Each added SCSI host triggers an (async) scan and for
-> every LUN found, the host environment can trigger a lot of work.
-> On a recent Ubuntu/Debian distribution a lot of this "work" seems
-> to involve udev and its scripts. The result of this work can be
-> seconds elapsed before scsi_debug_init() returns.
-> 
-> This experimental code places the function to add those SCSI hosts
-> in its own thread. This allows scsi_debug_init() to complete a lot
-> faster. To impede malevolent user space code that might try to send
-> a 'rmmod scsi_debug', an extra module_get() reference is taken
-> before the worker thread starts and that worker gives back that
-> reference when it completes.
-> 
-> This patch is against MKP's repository and its 5.13/scsi-queue
-> branch which is sitting at lk 5.12.0-rc1. It should apply to later
-> release candidates in that series.
-> 
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+During MQ enablement of the ibmvfc driver ibmvfc_wait_for_ops() was
+missed. This function is responsible for waiting on commands to complete
+that match a certain criteria such as LUN or cancel key. The
+implementation as is only scans the CRQ for events ignoring any
+sub-queues and as a result will exit successfully without doing
+anything when operating in MQ channelized mode.
 
-This is a good idea in general in terms of module design, however given
-current users include fstests and blktests I think as-is it would
-introduce a few false positives. So we either decide to not care about
-those users and force a check on version moving forward.. or we keep
-and the existing behaviour and bite the bullet long term.
+Check the mq and channel use flags to determine which queues are
+applicable, and scan each queue accordingly. Note in MQ mode scsi
+commands are only issued down sub-queues and the CRQ is only used for
+driver specific management commands. As such the CRQ events are ignored
+when operating in MQ mode with channels.
 
-Also, in terms of design an alternative is a load/unload sysfs file.
-But we'd still punt the same issue of "are we ready to use these devices
-after load" to when this file completes writing to.
+Fixes: 9000cb998bcf ("scsi: ibmvfc: Enable MQ and set reasonable defaults")
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c | 51 ++++++++++++++++++++++------------
+ 1 file changed, 34 insertions(+), 17 deletions(-)
 
-FWIW, blktets users udevadm settle to try to ensure udev stuff completes
-its work, but if folks are using blktests to test things they may also
-have multipath installed, and for whatever reason that userspace
-application loves to tickle scsi devices upon load, and that is a
-random example of another user of of scsi devices which would prevent
-unload. Granted, the use of that application of opening the device is
-quick, but it still reveals an issue with testing. Perhaps all we can
-do is just use scsi_complete_async_scans() in a private module namespace
-as suggested in the bug report *and* perhaps setting TEST UNIT READY as
-you suggested? If setting TEST UNIT READY for until we're ready, perhaps
-that really suffices completely, and that would give parity with what
-other userspace applications would use for prepping for a test on a
-target scsi device.
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 5414b465a92f..61831f2fdb30 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -2403,41 +2403,58 @@ static int ibmvfc_wait_for_ops(struct ibmvfc_host *vhost, void *device,
+ {
+ 	struct ibmvfc_event *evt;
+ 	DECLARE_COMPLETION_ONSTACK(comp);
+-	int wait, i;
++	int wait, i, q_index, q_size;
+ 	unsigned long flags;
+ 	signed long timeout = IBMVFC_ABORT_WAIT_TIMEOUT * HZ;
++	struct ibmvfc_queue *queues;
+ 
+ 	ENTER;
++	if (vhost->mq_enabled && vhost->using_channels) {
++		queues = vhost->scsi_scrqs.scrqs;
++		q_size = vhost->scsi_scrqs.active_queues;
++	} else {
++		queues = &vhost->crq;
++		q_size = 1;
++	}
++
+ 	do {
+ 		wait = 0;
+-		spin_lock_irqsave(&vhost->crq.l_lock, flags);
+-		for (i = 0; i < vhost->crq.evt_pool.size; i++) {
+-			evt = &vhost->crq.evt_pool.events[i];
+-			if (!ibmvfc_event_is_free(evt)) {
+-				if (match(evt, device)) {
+-					evt->eh_comp = &comp;
+-					wait++;
++		spin_lock_irqsave(vhost->host->host_lock, flags);
++		for (q_index = 0; q_index < q_size; q_index++) {
++			spin_lock(&queues[q_index].l_lock);
++			for (i = 0; i < queues[q_index].evt_pool.size; i++) {
++				evt = &queues[q_index].evt_pool.events[i];
++				if (!ibmvfc_event_is_free(evt)) {
++					if (match(evt, device)) {
++						evt->eh_comp = &comp;
++						wait++;
++					}
+ 				}
+ 			}
++			spin_unlock(&queues[q_index].l_lock);
+ 		}
+-		spin_unlock_irqrestore(&vhost->crq.l_lock, flags);
++		spin_unlock_irqrestore(vhost->host->host_lock, flags);
+ 
+ 		if (wait) {
+ 			timeout = wait_for_completion_timeout(&comp, timeout);
+ 
+ 			if (!timeout) {
+ 				wait = 0;
+-				spin_lock_irqsave(&vhost->crq.l_lock, flags);
+-				for (i = 0; i < vhost->crq.evt_pool.size; i++) {
+-					evt = &vhost->crq.evt_pool.events[i];
+-					if (!ibmvfc_event_is_free(evt)) {
+-						if (match(evt, device)) {
+-							evt->eh_comp = NULL;
+-							wait++;
++				spin_lock_irqsave(vhost->host->host_lock, flags);
++				for (q_index = 0; q_index < q_size; q_index++) {
++					spin_lock(&queues[q_index].l_lock);
++					for (i = 0; i < queues[q_index].evt_pool.size; i++) {
++						evt = &queues[q_index].evt_pool.events[i];
++						if (!ibmvfc_event_is_free(evt)) {
++							if (match(evt, device)) {
++								evt->eh_comp = NULL;
++								wait++;
++							}
+ 						}
+ 					}
++					spin_unlock(&queues[q_index].l_lock);
+ 				}
+-				spin_unlock_irqrestore(&vhost->crq.l_lock, flags);
++				spin_unlock_irqrestore(vhost->host->host_lock, flags);
+ 				if (wait)
+ 					dev_err(vhost->dev, "Timed out waiting for aborted commands\n");
+ 				LEAVE;
+-- 
+2.27.0
 
-I'll soon test what you recommended of
-
-modprobe scsi_debug tur_ms_to_ready=20000
-
-If more devices are used, perhaps the thing to do there is to
-multiply per numbef of devices requested?
-
-  Luis
