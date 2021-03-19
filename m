@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34700C433DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 13:31:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D2FEC433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 13:31:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09B2564F3B
+	by mail.kernel.org (Postfix) with ESMTP id E56AD64F10
 	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 13:31:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230231AbhCSNal (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Mar 2021 09:30:41 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:14020 "EHLO
+        id S230241AbhCSNap (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Mar 2021 09:30:45 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:14018 "EHLO
         szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230250AbhCSNaT (ORCPT
+        with ESMTP id S230251AbhCSNaT (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2021 09:30:19 -0400
 Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4F24T26YgmzPkdk;
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4F24T25scqzPkWX;
         Fri, 19 Mar 2021 21:27:50 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS403-HUB.china.huawei.com (10.3.19.203) with Microsoft SMTP Server id
@@ -32,9 +32,9 @@ To:     <joro@8bytes.org>, <will@kernel.org>, <jejb@linux.ibm.com>,
 CC:     <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH 4/6] iommu: Add iommu_dma_set_opt_size()
-Date:   Fri, 19 Mar 2021 21:25:46 +0800
-Message-ID: <1616160348-29451-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 2/6] iova: Add a per-domain count of reserved nodes
+Date:   Fri, 19 Mar 2021 21:25:44 +0800
+Message-ID: <1616160348-29451-3-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1616160348-29451-1-git-send-email-john.garry@huawei.com>
 References: <1616160348-29451-1-git-send-email-john.garry@huawei.com>
@@ -46,39 +46,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a function which allows the max optimised IOMMU DMA size to be set.
+To help learn if the domain has regular IOVA nodes, add a count of
+reserved nodes, calculated at init time.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/iommu/dma-iommu.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/iommu/iova.c | 2 ++
+ include/linux/iova.h | 1 +
+ 2 files changed, 3 insertions(+)
 
-diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-index 15b7270a5c2a..a5dfbd6c0496 100644
---- a/drivers/iommu/dma-iommu.c
-+++ b/drivers/iommu/dma-iommu.c
-@@ -447,6 +447,21 @@ static dma_addr_t iommu_dma_alloc_iova(struct iommu_domain *domain,
- 	return (dma_addr_t)iova << shift;
- }
+diff --git a/drivers/iommu/iova.c b/drivers/iommu/iova.c
+index e62e9e30b30c..cecc74fb8663 100644
+--- a/drivers/iommu/iova.c
++++ b/drivers/iommu/iova.c
+@@ -717,6 +717,8 @@ reserve_iova(struct iova_domain *iovad,
+ 	 * or need to insert remaining non overlap addr range
+ 	 */
+ 	iova = __insert_new_range(iovad, pfn_lo, pfn_hi);
++	if (iova)
++		iovad->reserved_node_count++;
+ finish:
  
-+__maybe_unused
-+static void iommu_dma_set_opt_size(struct device *dev, size_t size)
-+{
-+	struct iommu_domain *domain = iommu_get_dma_domain(dev);
-+	struct iommu_dma_cookie *cookie = domain->iova_cookie;
-+	struct iova_domain *iovad = &cookie->iovad;
-+	unsigned long shift, iova_len;
-+
-+	shift = iova_shift(iovad);
-+	iova_len = size >> shift;
-+	iova_len = roundup_pow_of_two(iova_len);
-+
-+	iova_rcache_set_upper_limit(iovad, iova_len);
-+}
-+
- static void iommu_dma_free_iova(struct iommu_dma_cookie *cookie,
- 		dma_addr_t iova, size_t size, struct page *freelist)
- {
+ 	spin_unlock_irqrestore(&iovad->iova_rbtree_lock, flags);
+diff --git a/include/linux/iova.h b/include/linux/iova.h
+index c834c01c0a5b..fd3217a605b2 100644
+--- a/include/linux/iova.h
++++ b/include/linux/iova.h
+@@ -95,6 +95,7 @@ struct iova_domain {
+ 						   flush-queues */
+ 	atomic_t fq_timer_on;			/* 1 when timer is active, 0
+ 						   when not */
++	int reserved_node_count;
+ };
+ 
+ static inline unsigned long iova_size(struct iova *iova)
 -- 
 2.26.2
 
