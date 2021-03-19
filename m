@@ -2,109 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8609C433DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 08:23:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80E9EC433DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 09:26:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 749D064F74
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 08:23:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C3F464F6D
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 09:26:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234280AbhCSIWq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Mar 2021 04:22:46 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:14402 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233819AbhCSIWZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2021 04:22:25 -0400
-Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4F1xfk6Gfhzkc5D;
-        Fri, 19 Mar 2021 16:20:46 +0800 (CST)
-Received: from [10.174.179.92] (10.174.179.92) by
- DGGEMS411-HUB.china.huawei.com (10.3.19.211) with Microsoft SMTP Server id
- 14.3.498.0; Fri, 19 Mar 2021 16:22:15 +0800
-Subject: Re: [PATCH 2/3] scsi: only copy data to user when the whole result is
- good
-To:     Hannes Reinecke <hare@suse.de>, <axboe@kernel.dk>,
-        <ming.lei@redhat.com>, <hch@lst.de>, <keescook@chromium.org>,
-        <kbusch@kernel.org>, <linux-block@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <jejb@linux.vnet.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>
-References: <20210319030128.1345061-1-yanaijie@huawei.com>
- <20210319030128.1345061-3-yanaijie@huawei.com>
- <7279b268-0b57-c78a-b189-75e1515c7166@suse.de>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <ce784b08-b020-f67e-d902-a15affbdb1ca@huawei.com>
-Date:   Fri, 19 Mar 2021 16:22:15 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.2
+        id S229519AbhCSJ0F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Mar 2021 05:26:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46138 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229770AbhCSJZc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2021 05:25:32 -0400
+Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FE80C06174A;
+        Fri, 19 Mar 2021 02:25:32 -0700 (PDT)
+Received: by mail-qk1-x72e.google.com with SMTP id c4so2150371qkg.3;
+        Fri, 19 Mar 2021 02:25:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=FRCh2wX8tgMUCklcnZV+Qo3HupS3FlJjITrZLEDGD4g=;
+        b=q1nJjhnRV5OcbsC6B50JNzLkKnOZ/oVBGivWeTPwJJ5GqDoRwdF2z3g8Wilo811rL9
+         oBth0jmpWFdNtvphQ7HWLB0F5yz40y/R74tDysE/9+0EFRDzbTZVHjkhzPlDGfJcLy29
+         SwrG/zsckK7yrJzq7gZiodZEaPY6h8rDIcWMZOr8R1uKUnS6UQnE1VF8+MlgHrapEPP+
+         kfPkt1eSbv/FjoAWk+1dH7I9YclYxde3A43i3uMfmDQQIb7mF++fAsXAeC35DEpeCMjB
+         9GbZ5q7JvDEtodMYnpRkDD4ZKIi4xl0RErxBAjG5uZUJisM454L7vQ0TRm1dYAEQObWq
+         UrwA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=FRCh2wX8tgMUCklcnZV+Qo3HupS3FlJjITrZLEDGD4g=;
+        b=cGoWfWvSvYsMq7FBWeT7oHDBFupbqyPwpCB5UFf7PYGORpsKPc0WMI5EZ9J5OPo+Sn
+         NW2F3ItkCdi1Rai1iqeYKGuPAo25hFW95pkug9d0YoWBR0GnCN9xMOboDdP0SSKNTZ9U
+         N3XjY1c1YrZXVmFMCCwFM2uetgFQ74BRNbYDY/4slNwmsnhm2SiBx8rwcqo7xa94QFum
+         sJX46WLhP2UlhmGyFsY+o51ADX41noQTLGpW8f+fGN8JmNld8v+u9XdUP036CTbuSy7T
+         5D3+MV1vlXT6cEcpbXZcqfoV43bwmmG7w6H0I4xO9ssoupVibYVQIdexWUygPozW3LmE
+         slRA==
+X-Gm-Message-State: AOAM530FY/4xXpuaVE2g+4bS9GzE/RCGYKE+O5U4tNBd2N7iIcUhczUs
+        TJqWFzHyejfhwQ5oUy0DMEkEkNbtcNYMD/qM
+X-Google-Smtp-Source: ABdhPJwA+QL6CEKzMcSjMX02ysy42INTYOMwQEteAeSMuRLORWfY/QCg3BHwJb/HSO3yMcxFYyxhSg==
+X-Received: by 2002:a37:bc43:: with SMTP id m64mr1397070qkf.186.1616145931321;
+        Fri, 19 Mar 2021 02:25:31 -0700 (PDT)
+Received: from localhost.localdomain ([37.19.198.87])
+        by smtp.gmail.com with ESMTPSA id r2sm3318539qti.4.2021.03.19.02.25.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Mar 2021 02:25:30 -0700 (PDT)
+From:   Bhaskar Chowdhury <unixbhaskar@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        unixbhaskar@gmail.com, lee.jones@linaro.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     rdunlap@infradead.org
+Subject: [PATCH] scsi: csiostor: Fix a typo
+Date:   Fri, 19 Mar 2021 14:53:11 +0530
+Message-Id: <20210319092311.31776-1-unixbhaskar@gmail.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <7279b268-0b57-c78a-b189-75e1515c7166@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.92]
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Hannes,
 
-在 2021/3/19 15:56, Hannes Reinecke 写道:
-> On 3/19/21 4:01 AM, Jason Yan wrote:
->> When the scsi device status is offline, mode sense command will return a
->> result with only DID_NO_CONNECT set. Then in sg_scsi_ioctl(),
->> only status byte of the result is checked, and because of
->> bug [1], garbage data is copied to the userspace.
->>
->> Only copy the buffer to userspace when the whole result is good.
->>
->> [1] 
->> https://patchwork.kernel.org/project/linux-block/patch/20210318122621.330010-1-yanaijie@huawei.com/ 
->>
->>
->> Signed-off-by: Jason Yan <yanaijie@huawei.com>
->> ---
->>   block/scsi_ioctl.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
->> index 6599bac0a78c..359bf0003af4 100644
->> --- a/block/scsi_ioctl.c
->> +++ b/block/scsi_ioctl.c
->> @@ -503,7 +503,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct 
->> gendisk *disk, fmode_t mode,
->>               if (copy_to_user(sic->data, req->sense, bytes))
->>                   err = -EFAULT;
->>           }
->> -    } else {
->> +    } else if (scsi_result_is_good(req->result)) {
->>           if (copy_to_user(sic->data, buffer, out_len))
->>               err = -EFAULT;
->>       }
->>
-> Hmm. Not sure about this one.
-> The prime motivator behind sg is to get _precisely_ all flags of the 
-> command, and not do in-kernel error handling.
-> So one could argue that this behaviour is intentional, and would break 
-> existing use-cases.
-> 
+s/boudaries/boundaries/
 
-Thanks for the review.
+Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
+---
+ drivers/scsi/csiostor/csio_hw_t5.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The existing usersapce can do nothing with the uninitialized data. Or 
-the driver or disk may fill some data and at the same time set host_byte 
-or driver_byte to non-zero? I'm not sure about this. And the return 
-value of sg_scsi_ioctl() just get the status byte(only 8 bit), how can 
-the users know about this situation?
+diff --git a/drivers/scsi/csiostor/csio_hw_t5.c b/drivers/scsi/csiostor/csio_hw_t5.c
+index 1df8891d3725..86fded97d799 100644
+--- a/drivers/scsi/csiostor/csio_hw_t5.c
++++ b/drivers/scsi/csiostor/csio_hw_t5.c
+@@ -244,7 +244,7 @@ csio_t5_edc_read(struct csio_hw *hw, int idx, uint32_t addr, __be32 *data,
+  *
+  * Reads/writes an [almost] arbitrary memory region in the firmware: the
+  * firmware memory address, length and host buffer must be aligned on
+- * 32-bit boudaries.  The memory is transferred as a raw byte sequence
++ * 32-bit boundaries.  The memory is transferred as a raw byte sequence
+  * from/to the firmware's memory.  If this memory contains data
+  * structures which contain multi-byte integers, it's the callers
+  * responsibility to perform appropriate byte order conversions.
+--
+2.26.2
 
-Thanks,
-Jason
-
-> Doug?
-> 
-> Cheers,
-> 
-> Hannes
