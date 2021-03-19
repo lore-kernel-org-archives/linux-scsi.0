@@ -2,151 +2,174 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ABAAC433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 00:36:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC005C433DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 00:37:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D58664F33
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 00:36:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAB3164F1C
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 00:37:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231365AbhCSAgN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Mar 2021 20:36:13 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:16578 "EHLO
+        id S231989AbhCSAgp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Mar 2021 20:36:45 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:4243 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230136AbhCSAgE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 20:36:04 -0400
-IronPort-SDR: 03aydDPFXj7xwLRsBsaZINtGEQ2ISrnFTxS6uohOfI2OdKvp4c3wEpy8Bbqw/zjjmvD0eu7Xjs
- jjP3vU+eGY4o5n4Ndt7OyHYYLuOr8RymPfPmabe4yjhhezEPmyTheNqYntJPib7j3ZVUSU18Ax
- CJGS/Ke+lycL880+3ywEMP/TabD6iDTUXEO+16oZhRtN8LOYyKW+WqB+toJC0YGOLZam1vcczQ
- DeJnuqOrvF/RgjHU+A9HCB2c9DXv7/Byy/2AROzsLUhYFP+Ww3Xoj48X6giy6KZs3SkWynPX00
- ths=
+        with ESMTP id S231576AbhCSAg3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 20:36:29 -0400
+IronPort-SDR: mM8dWjpV5Magko4TaYirfjKuz7tYcSuevq3afBa1CYQ3sUrscw/dsmzp1gROalIxGxaE2b7oc4
+ 8kq62p4U1uZNeG/UwYT15bSONwQmWgD/961bCZLo8bvEc3uToP7i7/+rhs9YA39BqJ+LuoZwOu
+ moze/dQVoE/4bxllldfABa1kC6V+IrMxUFyZnDXvCXir8IgR35Uw0UkKDxeuE5Ty9SMmyS2Edh
+ eGt0ArYaBJb6tUuGCaDZa2nO37adibnTTbkRJe54YxIabkxQC5kkNXOjvBjbEQaEeATyKFdnvk
+ n3Q=
 X-IronPort-AV: E=Sophos;i="5.81,259,1610438400"; 
-   d="scan'208";a="29724612"
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by labrats.qualcomm.com with ESMTP; 18 Mar 2021 17:36:02 -0700
+   d="scan'208";a="47829473"
+Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
+  by labrats.qualcomm.com with ESMTP; 18 Mar 2021 17:36:30 -0700
 X-QCInternal: smtphost
-Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg04-sd.qualcomm.com with ESMTP; 18 Mar 2021 17:36:01 -0700
+Received: from stor-presley.qualcomm.com ([192.168.140.85])
+  by ironmsg05-sd.qualcomm.com with ESMTP; 18 Mar 2021 17:36:29 -0700
 Received: by stor-presley.qualcomm.com (Postfix, from userid 92687)
-        id 6E53920F87; Thu, 18 Mar 2021 17:36:01 -0700 (PDT)
+        id 2D39E20F87; Thu, 18 Mar 2021 17:36:29 -0700 (PDT)
 From:   Asutosh Das <asutoshd@codeaurora.org>
 To:     cang@codeaurora.org, martin.petersen@oracle.com,
         adrian.hunter@intel.com, linux-scsi@vger.kernel.org
 Cc:     Asutosh Das <asutoshd@codeaurora.org>,
         linux-arm-msm@vger.kernel.org,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support),
-        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support)
-Subject: [PATCH v12 0/2] Enable power management for ufs wlun 
-Date:   Thu, 18 Mar 2021 17:35:52 -0700
-Message-Id: <cover.1616113283.git.asutoshd@codeaurora.org>
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Nitin Rawat <nitirawa@codeaurora.org>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v12 2/2] ufs: sysfs: Resume the proper scsi device
+Date:   Thu, 18 Mar 2021 17:35:54 -0700
+Message-Id: <459395e590af6d76420cd004b38ce38b9fc0c502.1616113283.git.asutoshd@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1616113283.git.asutoshd@codeaurora.org>
+References: <cover.1616113283.git.asutoshd@codeaurora.org>
+In-Reply-To: <cover.1616113283.git.asutoshd@codeaurora.org>
+References: <cover.1616113283.git.asutoshd@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch attempts to fix a deadlock in ufs while sending SSU.
-Recently, blk_queue_enter() added a check to not process requests if the
-queue is suspended. That leads to a resume of the associated device which
-is suspended. In ufs, that device is ufs device wlun and it's parent is
-ufs_hba. This resume tries to resume ufs device wlun which in turn tries
-to resume ufs_hba, which is already in the process of suspending, thus
-causing a deadlock.
+Resumes the actual scsi device the unit descriptor of which
+is being accessed instead of the hba alone.
 
-This patch takes care of:
-* Suspending the ufs device lun only after all other luns are suspended
-* Sending SSU during ufs device wlun suspend
-* Clearing uac for rpmb and ufs device wlun
-* Not sending commands to the device during host suspend
+Reviewed-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+---
+ drivers/scsi/ufs/ufs-sysfs.c | 30 +++++++++++++++++-------------
+ 1 file changed, 17 insertions(+), 13 deletions(-)
 
-v11 -> v12:
-- Addressed Adrian's comments
-  * Fixed ahit for Mediatek driver
-  * Fixed error handling in ufshcd_core_init()
-  * Tested this patch and the issue is still seen.
-
-v10 -> v11:
-- Fixed supplier suspending before consumer race
-- Addressed Adrian's comments
-  * Added proper resume/suspend cb to ufshcd_auto_hibern8_update()
-  * Cosmetic changes to ufshcd-pci.c
-  * Cleaned up ufshcd_system_suspend()
-  * Added ufshcd_debugfs_eh_exit to ufshcd_core_init()
-
-v9 -> v10:
-- Addressed Adrian's comments
-  * Moved suspend/resume vops to __ufshcd_wl_[suspend/resume]()
-  * Added correct resume in ufs_bsg
-
-v8 -> v9:
-- Addressed Adrian's comments
-  * Moved link transition to __ufshcd_wl_[suspend/resume]()
-  * Fixed the other minor comments
-
-v7 -> v8:
-- Addressed Adrian's comments
-  * Removed separate autosuspend delay for ufs-device lun
-  * Fixed the ee handler getting scheduled during pm
-  * Always runtime resume in suspend_prepare()
-  * Added CONFIG_PM_SLEEP where needed
-  
-v6 -> v7:
-  * Resume the ufs device before shutting it down
-
-v5 -> v6:
-- Addressed Adrian's comments
-  * Added complete() cb
-  * Added suspend_prepare() and complete() to all drivers
-  * Moved suspend_prepare() and complete() to ufshcd
-  * .poweroff() uses ufhcd_wl_poweroff()
-  * Removed several forward declarations
-  * Moved scsi_register_driver() to ufshcd_core_init()
-
-v4 -> v5:
-- Addressed Adrian's comments
-  * Used the rpmb driver contributed by Adrian
-  * Runtime-resume the ufs device during suspend to honor spm-lvl
-  * Unregister the scsi_driver in ufshcd_remove()
-  * Currently shutdown() puts the ufs device to power-down mode
-    so, just removed ufshcd_pci_poweroff()
-  * Quiesce the scsi device during shutdown instead of remove
-
-v3 RFC -> v4:
-- Addressed Bart's comments
-  * Except that I didn't get any checkpatch failures
-- Addressed Avri's comments
-- Addressed Adrian's comments
-  * Added a check for deepsleep power mode
-  * Removed a couple of forward declarations
-  * Didn't separate the scsi drivers because in rpmb case it just sends uac
-    in resume and it seemed pretty neat to me.
-- Added sysfs changes to resume the devices before accessing
-
-Asutosh Das (2):
-  scsi: ufs: Enable power management for wlun
-  ufs: sysfs: Resume the proper scsi device
-
- drivers/scsi/ufs/cdns-pltfrm.c     |   2 +
- drivers/scsi/ufs/tc-dwc-g210-pci.c |   2 +
- drivers/scsi/ufs/ufs-debugfs.c     |   2 +-
- drivers/scsi/ufs/ufs-debugfs.h     |   2 +-
- drivers/scsi/ufs/ufs-exynos.c      |   2 +
- drivers/scsi/ufs/ufs-hisi.c        |   2 +
- drivers/scsi/ufs/ufs-mediatek.c    |  12 +-
- drivers/scsi/ufs/ufs-qcom.c        |   2 +
- drivers/scsi/ufs/ufs-sysfs.c       |  30 +-
- drivers/scsi/ufs/ufs_bsg.c         |   6 +-
- drivers/scsi/ufs/ufshcd-pci.c      |  36 +--
- drivers/scsi/ufs/ufshcd.c          | 622 ++++++++++++++++++++++++++-----------
- drivers/scsi/ufs/ufshcd.h          |   6 +
- include/trace/events/ufs.h         |  20 ++
- 14 files changed, 508 insertions(+), 238 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index acc54f5..3fc182b 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -245,9 +245,9 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
+ 		goto out;
+ 	}
+ 
+-	pm_runtime_get_sync(hba->dev);
++	scsi_autopm_get_device(hba->sdev_ufs_device);
+ 	res = ufshcd_wb_ctrl(hba, wb_enable);
+-	pm_runtime_put_sync(hba->dev);
++	scsi_autopm_put_device(hba->sdev_ufs_device);
+ out:
+ 	up(&hba->host_sem);
+ 	return res < 0 ? res : count;
+@@ -297,10 +297,10 @@ static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
+ 		goto out;
+ 	}
+ 
+-	pm_runtime_get_sync(hba->dev);
++	scsi_autopm_get_device(hba->sdev_ufs_device);
+ 	ret = ufshcd_read_desc_param(hba, desc_id, desc_index,
+ 				param_offset, desc_buf, param_size);
+-	pm_runtime_put_sync(hba->dev);
++	scsi_autopm_put_device(hba->sdev_ufs_device);
+ 	if (ret) {
+ 		ret = -EINVAL;
+ 		goto out;
+@@ -678,7 +678,7 @@ static ssize_t _name##_show(struct device *dev,				\
+ 		up(&hba->host_sem);					\
+ 		return -ENOMEM;						\
+ 	}								\
+-	pm_runtime_get_sync(hba->dev);					\
++	scsi_autopm_get_device(hba->sdev_ufs_device);			\
+ 	ret = ufshcd_query_descriptor_retry(hba,			\
+ 		UPIU_QUERY_OPCODE_READ_DESC, QUERY_DESC_IDN_DEVICE,	\
+ 		0, 0, desc_buf, &desc_len);				\
+@@ -695,7 +695,7 @@ static ssize_t _name##_show(struct device *dev,				\
+ 		goto out;						\
+ 	ret = sysfs_emit(buf, "%s\n", desc_buf);			\
+ out:									\
+-	pm_runtime_put_sync(hba->dev);					\
++	scsi_autopm_put_device(hba->sdev_ufs_device);			\
+ 	kfree(desc_buf);						\
+ 	up(&hba->host_sem);						\
+ 	return ret;							\
+@@ -744,10 +744,10 @@ static ssize_t _name##_show(struct device *dev,				\
+ 	}								\
+ 	if (ufshcd_is_wb_flags(QUERY_FLAG_IDN##_uname))			\
+ 		index = ufshcd_wb_get_query_index(hba);			\
+-	pm_runtime_get_sync(hba->dev);					\
++	scsi_autopm_get_device(hba->sdev_ufs_device);			\
+ 	ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,	\
+ 		QUERY_FLAG_IDN##_uname, index, &flag);			\
+-	pm_runtime_put_sync(hba->dev);					\
++	scsi_autopm_put_device(hba->sdev_ufs_device);			\
+ 	if (ret) {							\
+ 		ret = -EINVAL;						\
+ 		goto out;						\
+@@ -813,10 +813,10 @@ static ssize_t _name##_show(struct device *dev,				\
+ 	}								\
+ 	if (ufshcd_is_wb_attrs(QUERY_ATTR_IDN##_uname))			\
+ 		index = ufshcd_wb_get_query_index(hba);			\
+-	pm_runtime_get_sync(hba->dev);					\
++	scsi_autopm_get_device(hba->sdev_ufs_device);			\
+ 	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,	\
+ 		QUERY_ATTR_IDN##_uname, index, 0, &value);		\
+-	pm_runtime_put_sync(hba->dev);					\
++	scsi_autopm_put_device(hba->sdev_ufs_device);			\
+ 	if (ret) {							\
+ 		ret = -EINVAL;						\
+ 		goto out;						\
+@@ -899,11 +899,15 @@ static ssize_t _pname##_show(struct device *dev,			\
+ 	struct scsi_device *sdev = to_scsi_device(dev);			\
+ 	struct ufs_hba *hba = shost_priv(sdev->host);			\
+ 	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);			\
++	int ret;							\
+ 	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun,		\
+ 				_duname##_DESC_PARAM##_puname))		\
+ 		return -EINVAL;						\
+-	return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
++	scsi_autopm_get_device(sdev);					\
++	ret = ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
+ 		lun, _duname##_DESC_PARAM##_puname, buf, _size);	\
++	scsi_autopm_put_device(sdev);					\
++	return ret;							\
+ }									\
+ static DEVICE_ATTR_RO(_pname)
+ 
+@@ -964,10 +968,10 @@ static ssize_t dyn_cap_needed_attribute_show(struct device *dev,
+ 		goto out;
+ 	}
+ 
+-	pm_runtime_get_sync(hba->dev);
++	scsi_autopm_get_device(hba->sdev_ufs_device);
+ 	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+ 		QUERY_ATTR_IDN_DYN_CAP_NEEDED, lun, 0, &value);
+-	pm_runtime_put_sync(hba->dev);
++	scsi_autopm_put_device(hba->sdev_ufs_device);
+ 	if (ret) {
+ 		ret = -EINVAL;
+ 		goto out;
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
