@@ -2,209 +2,235 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98F90C433C1
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 15:06:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEFCEC433C1
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 15:09:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 692386191C
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 15:06:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C817461924
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 15:09:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230308AbhCSPGC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Mar 2021 11:06:02 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:41601 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231139AbhCSPFj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Mar 2021 11:05:39 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 7A2CC204269;
-        Fri, 19 Mar 2021 16:05:30 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id XcoPgPSA46M6; Fri, 19 Mar 2021 16:05:20 +0100 (CET)
-Received: from xtwo70.bingwo.ca (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        by smtp.infotech.no (Postfix) with ESMTPA id 94629204192;
-        Fri, 19 Mar 2021 16:05:18 +0100 (CET)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, mcgrof@kernel.org, hare@suse.de
-Subject: [RFC] scsi_debug: add hosts initialization --> worker
-Date:   Fri, 19 Mar 2021 11:05:14 -0400
-Message-Id: <20210319150514.17083-1-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
+        id S230096AbhCSPJP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Mar 2021 11:09:15 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:45062 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231193AbhCSPJD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2021 11:09:03 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1616166543; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=er9VP5xtbj1RcZoesk+6RSiuR+svOzZFsLimRNPx0Ig=; b=DEh6ROAKO82ZVUgVGSfv/B7pUjoKA3w3htNghtrQNN6Af50YvJpAPPPsETHnbO6zezXa8Jlb
+ 4UHmlramse7WllAzg5kR1hk/wOCoHkC+wGGVc7KHYhVGoub64Oxni6jpGQhPtv2iSuiPUeXh
+ UIVyactye8sa9WNxHyVxriV9EGw=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 6054be78c32ceb3a91998f7e (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 19 Mar 2021 15:08:40
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 564C2C4346A; Fri, 19 Mar 2021 15:08:40 +0000 (UTC)
+Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8A7E5C433C6;
+        Fri, 19 Mar 2021 15:08:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8A7E5C433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v12 1/2] scsi: ufs: Enable power management for wlun
+To:     Bart Van Assche <bvanassche@acm.org>, cang@codeaurora.org,
+        martin.petersen@oracle.com, adrian.hunter@intel.com,
+        linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>
+References: <cover.1616113283.git.asutoshd@codeaurora.org>
+ <56662082b6a17b448f40d87df7e52b45a5998c2a.1616113283.git.asutoshd@codeaurora.org>
+ <e9dc046d-3a88-9802-df58-60209ea8484f@acm.org>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <45101050-83de-6488-7b17-271e0acea87b@codeaurora.org>
+Date:   Fri, 19 Mar 2021 08:08:35 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <e9dc046d-3a88-9802-df58-60209ea8484f@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Adding (pseudo) SCSI hosts has been done in the scsi_debug_init()
-function. Each added SCSI host triggers an (async) scan and for
-every LUN found, the host environment can trigger a lot of work.
-On a recent Ubuntu/Debian distribution a lot of this "work" seems
-to involve udev and its scripts. The result of this work can be
-seconds elapsed before scsi_debug_init() returns.
+On 3/18/2021 8:12 PM, Bart Van Assche wrote:
+> On 3/18/21 5:35 PM, Asutosh Das wrote:
+>> During runtime-suspend of ufs host, the scsi devices are
+>> already suspended and so are the queues associated with them.
+>> But the ufs host sends SSU to wlun during its runtime-suspend.
+>> During the process blk_queue_enter checks if the queue is not in
+>> suspended state. If so, it waits for the queue to resume, and never
+>> comes out of it.
+>> The commit
+>> (d55d15a33: scsi: block: Do not accept any requests while suspended)
+>> adds the check if the queue is in suspended state in blk_queue_enter().
+> 
+Hi Bart,
+Thanks for the review comments.
 
-This experimental code places the function to add those SCSI hosts
-in its own thread. This allows scsi_debug_init() to complete a lot
-faster. To impede malevolent user space code that might try to send
-a 'rmmod scsi_debug', an extra module_get() reference is taken
-before the worker thread starts and that worker gives back that
-reference when it completes.
+> What is the role of the WLUN during runtime suspend and why does a
+> command need to be sent to the WLUN during runtime suspend? Although it
+> is possible to derive this from the source code, please explain this in
+> the patch description.
+> 
+Ok. Will explain it in the next version.
 
-This patch is against MKP's repository and its 5.13/scsi-queue
-branch which is sitting at lk 5.12.0-rc1. It should apply to later
-release candidates in that series.
+> What does the acronym SSU stand for? This doesn't seem like a commonly
+> used kernel acronym to me so please expand that acronym.
+>
+START STOP UNIT.
+Anyway, I'll expand it in the next version.
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
+>> Fix this by registering ufs device wlun as a scsi driver and
+>> registering it for block runtime-pm. Also make this as a
+>> supplier for all other luns. That way, this device wlun
+>> suspends after all the consumers and resumes after
+>> hba resumes.
+> 
+> That's an interesting solution.
+> 
+>> -void __exit ufs_debugfs_exit(void)
+>> +void ufs_debugfs_exit(void)
+> 
+> Is the above change related to the rest of this patch?
+> 
+Yes, it's used to handle an error in ufshcd_core_init() function.
 
-This RFC is in response to
-   https://bugzilla.kernel.org/show_bug.cgi?id=212337
-titled: "[Bug 212337] scsi_debug: race at module load and module
-unload" raised by Luis Chamberlain. It has been lightly tested and
-seems to work and make the 'modprobe scsi_debug ...' command 
-complete almost immediately. And this pair of commands causes no
-crash: 'modprobe scsi_debug ... ; rmmod scsi_debug' just a warning:
-   rmmod: ERROR: Module scsi_debug is in use
+>>   static struct platform_driver ufs_qcom_pltform = {
+>> diff --git a/drivers/scsi/ufs/ufs_bsg.c b/drivers/scsi/ufs/ufs_bsg.c
+>> index 5b2bc1a..cbb5a90 100644
+>> --- a/drivers/scsi/ufs/ufs_bsg.c
+>> +++ b/drivers/scsi/ufs/ufs_bsg.c
+>> @@ -97,7 +97,7 @@ static int ufs_bsg_request(struct bsg_job *job)
+>>   
+>>   	bsg_reply->reply_payload_rcv_len = 0;
+>>   
+>> -	pm_runtime_get_sync(hba->dev);
+>> +	scsi_autopm_get_device(hba->sdev_ufs_device);
+> 
+> Can the pm_runtime_get_sync() to scsi_autopm_get_device() changes be
+> moved into a separate patch?
+>
+I guess so. But then this patch would have issues when used independently.
 
- drivers/scsi/scsi_debug.c | 81 ++++++++++++++++++++++-----------------
- 1 file changed, 46 insertions(+), 35 deletions(-)
+>> +static inline bool is_rpmb_wlun(struct scsi_device *sdev)
+>> +{
+>> +	return (sdev->lun == ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN));
+>> +}
+> 
+> Has this patch been verified with checkpatch? Checkpatch should have
+> reported the following for the above code:
+> 
+> 	return is not a function, parentheses are not required
+> 
+Yes, it has been verified. But I didn't see any error reports.
+Below is the o/p of checkpatch:
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 70165be10f00..aa74bf59e827 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -361,6 +361,8 @@ static atomic_t sdebug_a_tsf;	     /* 'almost task set full' counter */
- static atomic_t sdeb_inject_pending;
- static atomic_t sdeb_mq_poll_count;  /* bumped when mq_poll returns > 0 */
- 
-+static struct execute_work ew_init;
-+
- struct opcode_info_t {
- 	u8 num_attached;	/* 0 if this is it (i.e. a leaf); use 0xff */
- 				/* for terminating element */
-@@ -6651,14 +6653,51 @@ static struct attribute *sdebug_drv_attrs[] = {
- };
- ATTRIBUTE_GROUPS(sdebug_drv);
- 
-+static void sdeb_add_hosts_thr(struct work_struct *work)
-+{
-+	bool want_store = (sdebug_fake_rw == 0);
-+	int k, ret, hosts_to_add;
-+	int idx = -1;
-+
-+	if (want_store) {
-+		idx = sdebug_add_store();
-+		if (idx < 0) {
-+			pr_warn("%s: unable to allocate any store\n", __func__);
-+			goto fini;
-+		}
-+	}
-+	hosts_to_add = READ_ONCE(sdebug_add_host);
-+	WRITE_ONCE(sdebug_add_host, 0);
-+
-+	for (k = 0; k < hosts_to_add; k++) {
-+		if (want_store && k == 0) {
-+			ret = sdebug_add_host_helper(idx);
-+			if (ret < 0) {
-+				pr_err("add_host_helper k=%d, error=%d\n",
-+				       k, -ret);
-+				break;
-+			}
-+		} else {
-+			ret = sdebug_do_add_host(want_store &&
-+						 sdebug_per_host_store);
-+			if (ret < 0) {
-+				pr_err("add_host k=%d error=%d\n", k, -ret);
-+				break;
-+			}
-+		}
-+	}
-+	if (sdebug_verbose)
-+		pr_info("built %d host(s)\n", sdebug_num_hosts);
-+fini:
-+	module_put(THIS_MODULE);
-+}
-+
- static struct device *pseudo_primary;
- 
- static int __init scsi_debug_init(void)
- {
--	bool want_store = (sdebug_fake_rw == 0);
- 	unsigned long sz;
--	int k, ret, hosts_to_add;
--	int idx = -1;
-+	int k, ret;
- 
- 	ramdisk_lck_a[0] = &atomic_rw;
- 	ramdisk_lck_a[1] = &atomic_rw2;
-@@ -6841,19 +6880,12 @@ static int __init scsi_debug_init(void)
- 		}
- 	}
- 	xa_init_flags(per_store_ap, XA_FLAGS_ALLOC | XA_FLAGS_LOCK_IRQ);
--	if (want_store) {
--		idx = sdebug_add_store();
--		if (idx < 0) {
--			ret = idx;
--			goto free_q_arr;
--		}
--	}
- 
- 	pseudo_primary = root_device_register("pseudo_0");
- 	if (IS_ERR(pseudo_primary)) {
- 		pr_warn("root_device_register() error\n");
- 		ret = PTR_ERR(pseudo_primary);
--		goto free_vm;
-+		goto free_q_arr;
- 	}
- 	ret = bus_register(&pseudo_lld_bus);
- 	if (ret < 0) {
-@@ -6866,28 +6898,9 @@ static int __init scsi_debug_init(void)
- 		goto bus_unreg;
- 	}
- 
--	hosts_to_add = sdebug_add_host;
--	sdebug_add_host = 0;
--
--	for (k = 0; k < hosts_to_add; k++) {
--		if (want_store && k == 0) {
--			ret = sdebug_add_host_helper(idx);
--			if (ret < 0) {
--				pr_err("add_host_helper k=%d, error=%d\n",
--				       k, -ret);
--				break;
--			}
--		} else {
--			ret = sdebug_do_add_host(want_store &&
--						 sdebug_per_host_store);
--			if (ret < 0) {
--				pr_err("add_host k=%d error=%d\n", k, -ret);
--				break;
--			}
--		}
--	}
--	if (sdebug_verbose)
--		pr_info("built %d host(s)\n", sdebug_num_hosts);
-+	__module_get(THIS_MODULE);	/* _put() at end of sdeb_add_hosts_thr() */
-+	INIT_WORK(&ew_init.work, sdeb_add_hosts_thr);
-+	schedule_work(&ew_init.work);
- 
- 	return 0;
- 
-@@ -6895,8 +6908,6 @@ static int __init scsi_debug_init(void)
- 	bus_unregister(&pseudo_lld_bus);
- dev_unreg:
- 	root_device_unregister(pseudo_primary);
--free_vm:
--	sdebug_erase_store(idx, NULL);
- free_q_arr:
- 	kfree(sdebug_q_arr);
- 	return ret;
+$ ./scripts/checkpatch.pl /tmp/up/ufs-pm-v12/*
+------------------------------------------
+/tmp/up/ufs-pm-v12/0000-cover-letter.patch
+------------------------------------------
+WARNING: Possible unwrapped commit description (prefer a maximum 75 
+chars per line)
+#107:
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project.
+
+total: 0 errors, 1 warnings, 0 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+       mechanically convert to the typical style using --fix or 
+--fix-inplace.
+
+/tmp/up/ufs-pm-v12/0000-cover-letter.patch has style problems, please 
+review.
+-----------------------------------------------------------------------
+/tmp/up/ufs-pm-v12/0001-scsi-ufs-Enable-power-management-for-wlun.patch
+-----------------------------------------------------------------------
+total: 0 errors, 0 warnings, 1180 lines checked
+
+/tmp/up/ufs-pm-v12/0001-scsi-ufs-Enable-power-management-for-wlun.patch 
+has no obvious style problems and is ready for submission.
+---------------------------------------------------------------------
+/tmp/up/ufs-pm-v12/0002-ufs-sysfs-Resume-the-proper-scsi-device.patch
+---------------------------------------------------------------------
+total: 0 errors, 0 warnings, 91 lines checked
+
+/tmp/up/ufs-pm-v12/0002-ufs-sysfs-Resume-the-proper-scsi-device.patch 
+has no obvious style problems and is ready for submission.
+
+NOTE: If any of the errors are false positives, please report
+       them to the maintainer, see CHECKPATCH in MAINTAINERS.
+
+
+>> +static inline bool is_device_wlun(struct scsi_device *sdev)
+>> +{
+>> +	return (sdev->lun ==
+>> +		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN));
+>> +}
+> 
+> Same comment here.
+> 
+>>   		/*
+>> -		 * Don't assume anything of pm_runtime_get_sync(), if
+>> +		 * Don't assume anything of resume, if
+>>   		 * resume fails, irq and clocks can be OFF, and powers
+>>   		 * can be OFF or in LPM.
+>>   		 */
+> 
+> Please make better use of the horizontal space in the above comment by
+> making comment lines longer.
+> 
+Ok Sure.
+
+> Thanks,
+> 
+> Bart.
+> 
+
+-asd
+
 -- 
-2.25.1
-
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
