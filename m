@@ -2,111 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBCA0C433E9
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 07:11:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50E28C433E6
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 07:55:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87E4064EFC
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 07:11:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D46A64F69
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 07:55:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234077AbhCSHKe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Mar 2021 03:10:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45170 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233942AbhCSHKR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2021 03:10:17 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52BF2C06174A;
-        Fri, 19 Mar 2021 00:10:16 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id u19so3073260pgh.10;
-        Fri, 19 Mar 2021 00:10:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=KbV+SfCubtqdOftAIHCxJ7FznXZ3hV2iW/0IfhczYoA=;
-        b=mrjTG0bKDnGMn63RsmgXF4kywMFGGGFIHumcirUdgxnJ5JOFo+D826jm9WNXKFhnqM
-         xG0BtgoW4Bx95cvXviTpM/ZIXjpZeE1vATXCicVKLgA/Iawr75IzThR9SaI0Euw/Do3g
-         J+0JnU7ln4RDtC5keXGmdUn0zUiAtcuk5NfA4bB7RQWgUT8vU+YX1V/HMyOluINZm6QG
-         R8OVAcmJo3vUGi4IrwT+4VbXjrF5QXzL2AqjVY6Xd8kf1voGSXx/kXaRBZmKKW8uUAzU
-         1jdEsFkBPfwC+aJBTyUXjYgIYM01b3YpTa8jp4c0uRwE8oljyhexzbYTYvXBDqehZky+
-         M8oQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=KbV+SfCubtqdOftAIHCxJ7FznXZ3hV2iW/0IfhczYoA=;
-        b=GoHXreD0lM32q2G6xUeFNYOv/Kf9jfY1D5Bz9VzWVWCMmyKcu6bTmWTfbhN0BKsXo6
-         y2VmWxRZBiSbKcgLJWR6vIFFsCuAvVaFOaAQ7eXiprT1GB9c/qSFfWMgX6mnV5LT/IrU
-         sY2Zcm8g0n7xSnSg8pbZOU7yp28uqOlkYg5LgO25AA561clP0V83Ml5zDSMaCLanrnHb
-         KdsEP4EhOW2pBSjnV9wBnfB0nZh+qX7D3NR0uHqOH/FW1zl8p0cyncKotl//xkWlJ9PH
-         PmO8qv6GOAiJjh7xZvWjgE21VZDGVhX+wB3WMqAA7QWSElTUsq1/Xn0HaIjXV2hglIBU
-         5gXQ==
-X-Gm-Message-State: AOAM531l2vSg8MgLpIh07IB2CF7FMfst8ZPhxW7JZ1Xo3/DcslMqr0lB
-        M2TZz5AvX9Zkw3S+g0ld3II=
-X-Google-Smtp-Source: ABdhPJwHVCJtoTco45xuL06ppxWh7L0uLy90ierQExN5IGzD+Xvktg6+ujwF/s+WuWFyF5AsCNhMNQ==
-X-Received: by 2002:a62:35c4:0:b029:202:b2e5:132b with SMTP id c187-20020a6235c40000b0290202b2e5132bmr7849629pfa.64.1616137815789;
-        Fri, 19 Mar 2021 00:10:15 -0700 (PDT)
-Received: from tj.ccdomain.com ([103.220.76.197])
-        by smtp.gmail.com with ESMTPSA id ms21sm4425820pjb.5.2021.03.19.00.10.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Mar 2021 00:10:15 -0700 (PDT)
-From:   Yue Hu <zbestahu@gmail.com>
-To:     martin.petersen@oracle.com, avri.altman@wdc.com,
-        jejb@linux.ibm.com, alim.akhtar@samsung.com,
-        linux-scsi@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, huyue2@yulong.com, zbestahu@163.com
-Subject: [PATCH RESEND] scsi: ufs: Remove unnecessary null checks in ufshcd_find_max_sup_active_icc_level()
-Date:   Fri, 19 Mar 2021 15:09:16 +0800
-Message-Id: <20210319070916.2254-1-zbestahu@gmail.com>
-X-Mailer: git-send-email 2.29.2.windows.3
+        id S234181AbhCSHzN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Mar 2021 03:55:13 -0400
+Received: from mx2.suse.de ([195.135.220.15]:41438 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233993AbhCSHzF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 Mar 2021 03:55:05 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 91312AE04;
+        Fri, 19 Mar 2021 07:55:03 +0000 (UTC)
+Subject: Re: [PATCH 1/3] scsi: check the whole result for reading write
+ protect flag
+To:     Jason Yan <yanaijie@huawei.com>, axboe@kernel.dk,
+        ming.lei@redhat.com, hch@lst.de, keescook@chromium.org,
+        kbusch@kernel.org, linux-block@vger.kernel.org,
+        martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc:     linux-scsi@vger.kernel.org
+References: <20210319030128.1345061-1-yanaijie@huawei.com>
+ <20210319030128.1345061-2-yanaijie@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <078d47ac-907c-ec20-f600-7073bf375f1a@suse.de>
+Date:   Fri, 19 Mar 2021 08:55:02 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
+In-Reply-To: <20210319030128.1345061-2-yanaijie@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yue Hu <huyue2@yulong.com>
+On 3/19/21 4:01 AM, Jason Yan wrote:
+> When the scsi device status is offline, mode sense command will return a
+> result with only DID_NO_CONNECT set. Then in sd_read_write_protect_flag(),
+> only status byte of the result is checked, we still consider the command
+> returned good, and read sdkp->write_prot from the buffer. And because of
+> bug [1], garbage data is copied to the buffer, the disk sometimes
+> be set readonly. When the scsi device is set running again, users cannot
+> write data to the disk.
+> 
+> Fix this by check the whole result returned by the driver.
+> 
+> [1] https://patchwork.kernel.org/project/linux-block/patch/20210318122621.330010-1-yanaijie@huawei.com/
+> 
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> ---
+>   drivers/scsi/sd.c   |  6 +++---
+>   include/scsi/scsi.h | 13 +++++++++++++
+>   2 files changed, 16 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index ed0b1bb99f08..16f8cd2895fd 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2669,18 +2669,18 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
+>   		 * 5: Illegal Request, Sense Code 24: Invalid field in
+>   		 * CDB.
+>   		 */
+> -		if (!scsi_status_is_good(res))
+> +		if (!scsi_result_is_good(res))
+>   			res = sd_do_mode_sense(sdkp, 0, 0, buffer, 4, &data, NULL);
+>   
+>   		/*
+>   		 * Third attempt: ask 255 bytes, as we did earlier.
+>   		 */
+> -		if (!scsi_status_is_good(res))
+> +		if (!scsi_result_is_good(res))
+>   			res = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 255,
+>   					       &data, NULL);
+>   	}
+>   
+> -	if (!scsi_status_is_good(res)) {
+> +	if (!scsi_result_is_good(res)) {
+>   		sd_first_printk(KERN_WARNING, sdkp,
+>   			  "Test WP failed, assume Write Enabled\n");
+>   	} else {
+> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+> index e75cca25338a..db0f346a31b2 100644
+> --- a/include/scsi/scsi.h
+> +++ b/include/scsi/scsi.h
+> @@ -55,6 +55,19 @@ static inline int scsi_status_is_good(int status)
+>   		(status == SAM_STAT_COMMAND_TERMINATED));
+>   }
+>   
+> +/** scsi_result_is_good - check the result return.
+> + *
+> + * @result: the result passed up from the driver (including host and
+> + *          driver components)
+> + *
+> + * Drivers may only set other bytes but not status byte.
+> + * This checks both the status byte and other bytes.
+> + */
+> +static inline int scsi_result_is_good(int result)
+> +{
+> +	return scsi_status_is_good(result) && (result & ~0xff) == 0;
+> +}
+> +
+>   
+>   /*
+>    * standard mode-select header prepended to all mode-select commands
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Since vcc/vccq/vccq2 have already been null checked before using.
+Cheers,
 
-Signed-off-by: Yue Hu <huyue2@yulong.com>
----
- drivers/scsi/ufs/ufshcd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7b3267e..f941bc3 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7145,19 +7145,19 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
- 		goto out;
- 	}
- 
--	if (hba->vreg_info.vcc && hba->vreg_info.vcc->max_uA)
-+	if (hba->vreg_info.vcc->max_uA)
- 		icc_level = ufshcd_get_max_icc_level(
- 				hba->vreg_info.vcc->max_uA,
- 				POWER_DESC_MAX_ACTV_ICC_LVLS - 1,
- 				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCC_0]);
- 
--	if (hba->vreg_info.vccq && hba->vreg_info.vccq->max_uA)
-+	if (hba->vreg_info.vccq->max_uA)
- 		icc_level = ufshcd_get_max_icc_level(
- 				hba->vreg_info.vccq->max_uA,
- 				icc_level,
- 				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCCQ_0]);
- 
--	if (hba->vreg_info.vccq2 && hba->vreg_info.vccq2->max_uA)
-+	if (hba->vreg_info.vccq2->max_uA)
- 		icc_level = ufshcd_get_max_icc_level(
- 				hba->vreg_info.vccq2->max_uA,
- 				icc_level,
+Hannes
 -- 
-1.9.1
-
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
