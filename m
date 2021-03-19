@@ -2,103 +2,182 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C5D0C433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 18:36:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF6E1C433DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 19:21:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDE196198B
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 18:36:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61B176197A
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 19:21:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230232AbhCSSfl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Mar 2021 14:35:41 -0400
-Received: from mail-pl1-f177.google.com ([209.85.214.177]:46852 "EHLO
-        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229990AbhCSSfX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2021 14:35:23 -0400
-Received: by mail-pl1-f177.google.com with SMTP id t20so3360039plr.13;
-        Fri, 19 Mar 2021 11:35:23 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=xQw+L3RNfqCsT579pHnTD6SwVA6plQagWHOVeC6fOqA=;
-        b=qrRj85sHI4RbxPKvJBa+lwy0egeYrg2g2vsT5Ee5bt0+cSIG7+GwfTqK7mRRjxiqAP
-         3wrRWNUEo0mPGaUNIw/v+kXBsTkEeQkF77ALTHljxNb24QZEtMDjR2T89qId4ea67SvJ
-         LPNnJrldmEExOcBO7/J8VvfqEIx+M0jogVkzFD7Ox5I80CJ/kTFLQ/cNNELT/OWPTPYD
-         I7wX9gKLwzr9ceo315gx9LPj2/ulrsxPWvkBQGLCPYMydR0qvkN61AazMK2oJ2P0Nxo9
-         GBrtUc/wVPdkoklCNt2zquHFEj36S3V4oJGCyqvoFPdxBSm1k08mZLi6PQ2UP/5hdVPz
-         2fCQ==
-X-Gm-Message-State: AOAM531mDsI4jRm9jhpHDInoPAsZ9UmeIUqwlrPbchgdCwsn92+el/Xb
-        E6k6pBf5YdzlD813T7m4QZ4=
-X-Google-Smtp-Source: ABdhPJzFo7QHStjFhBxDOIaDuwYNxhKN1zCo26bd0Gn29vucjEp7hfSfrzJVXYZuNWDn7lAuUVKFfQ==
-X-Received: by 2002:a17:90a:c201:: with SMTP id e1mr10961474pjt.30.1616178922687;
-        Fri, 19 Mar 2021 11:35:22 -0700 (PDT)
-Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id f20sm6380016pfa.10.2021.03.19.11.35.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Mar 2021 11:35:22 -0700 (PDT)
-Subject: Re: [PATCH v12 1/2] scsi: ufs: Enable power management for wlun
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Dinghao Liu <dinghao.liu@zju.edu.cn>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-samsung-soc@vger.kernel.org>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>
-References: <cover.1616113283.git.asutoshd@codeaurora.org>
- <56662082b6a17b448f40d87df7e52b45a5998c2a.1616113283.git.asutoshd@codeaurora.org>
- <88730ac9-d9c5-d758-d761-8c549c488aab@intel.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <ed3b5ad6-4396-d861-9bb2-40c05f4a8ece@acm.org>
-Date:   Fri, 19 Mar 2021 11:35:18 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+        id S230468AbhCSTUu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Mar 2021 15:20:50 -0400
+Received: from foss.arm.com ([217.140.110.172]:33766 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230297AbhCSTUZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 Mar 2021 15:20:25 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 73E0831B;
+        Fri, 19 Mar 2021 12:20:24 -0700 (PDT)
+Received: from [10.57.50.37] (unknown [10.57.50.37])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B57573F718;
+        Fri, 19 Mar 2021 12:20:22 -0700 (PDT)
+Subject: Re: [PATCH 1/6] iommu: Move IOVA power-of-2 roundup into allocator
+To:     John Garry <john.garry@huawei.com>, joro@8bytes.org,
+        will@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        hch@lst.de, m.szyprowski@samsung.com
+Cc:     iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linuxarm@huawei.com
+References: <1616160348-29451-1-git-send-email-john.garry@huawei.com>
+ <1616160348-29451-2-git-send-email-john.garry@huawei.com>
+ <ee935a6d-a94c-313e-f0ed-e14cc6dac055@arm.com>
+ <73d459de-b5cc-e2f5-bcd7-2ee23c8d5075@huawei.com>
+From:   Robin Murphy <robin.murphy@arm.com>
+Message-ID: <afc2fc05-a799-cb14-debd-d36afed8f456@arm.com>
+Date:   Fri, 19 Mar 2021 19:20:16 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-In-Reply-To: <88730ac9-d9c5-d758-d761-8c549c488aab@intel.com>
+In-Reply-To: <73d459de-b5cc-e2f5-bcd7-2ee23c8d5075@huawei.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Language: en-GB
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/19/21 10:47 AM, Adrian Hunter wrote:
-> It would also be good if you could re-base on linux-next.
+On 2021-03-19 16:58, John Garry wrote:
+> On 19/03/2021 16:13, Robin Murphy wrote:
+>> On 2021-03-19 13:25, John Garry wrote:
+>>> Move the IOVA size power-of-2 rcache roundup into the IOVA allocator.
+>>>
+>>> This is to eventually make it possible to be able to configure the upper
+>>> limit of the IOVA rcache range.
+>>>
+>>> Signed-off-by: John Garry <john.garry@huawei.com>
+>>> ---
+>>>   drivers/iommu/dma-iommu.c |  8 ------
+>>>   drivers/iommu/iova.c      | 51 ++++++++++++++++++++++++++-------------
+>>>   2 files changed, 34 insertions(+), 25 deletions(-)
+>>>
+>>> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
+>>> index af765c813cc8..15b7270a5c2a 100644
+>>> --- a/drivers/iommu/dma-iommu.c
+>>> +++ b/drivers/iommu/dma-iommu.c
+>>> @@ -429,14 +429,6 @@ static dma_addr_t iommu_dma_alloc_iova(struct 
+>>> iommu_domain *domain,
+>>>       shift = iova_shift(iovad);
+>>>       iova_len = size >> shift;
+>>> -    /*
+>>> -     * Freeing non-power-of-two-sized allocations back into the IOVA 
+>>> caches
+>>> -     * will come back to bite us badly, so we have to waste a bit of 
+>>> space
+>>> -     * rounding up anything cacheable to make sure that can't 
+>>> happen. The
+>>> -     * order of the unadjusted size will still match upon freeing.
+>>> -     */
+>>> -    if (iova_len < (1 << (IOVA_RANGE_CACHE_MAX_SIZE - 1)))
+>>> -        iova_len = roundup_pow_of_two(iova_len);
+>>>       dma_limit = min_not_zero(dma_limit, dev->bus_dma_limit);
+>>> diff --git a/drivers/iommu/iova.c b/drivers/iommu/iova.c
+>>> index e6e2fa85271c..e62e9e30b30c 100644
+>>> --- a/drivers/iommu/iova.c
+>>> +++ b/drivers/iommu/iova.c
+>>> @@ -179,7 +179,7 @@ iova_insert_rbtree(struct rb_root *root, struct 
+>>> iova *iova,
+>>>   static int __alloc_and_insert_iova_range(struct iova_domain *iovad,
+>>>           unsigned long size, unsigned long limit_pfn,
+>>> -            struct iova *new, bool size_aligned)
+>>> +            struct iova *new, bool size_aligned, bool fast)
+>>>   {
+>>>       struct rb_node *curr, *prev;
+>>>       struct iova *curr_iova;
+>>> @@ -188,6 +188,15 @@ static int __alloc_and_insert_iova_range(struct 
+>>> iova_domain *iovad,
+>>>       unsigned long align_mask = ~0UL;
+>>>       unsigned long high_pfn = limit_pfn, low_pfn = iovad->start_pfn;
+>>> +    /*
+>>> +     * Freeing non-power-of-two-sized allocations back into the IOVA 
+>>> caches
+>>> +     * will come back to bite us badly, so we have to waste a bit of 
+>>> space
+>>> +     * rounding up anything cacheable to make sure that can't 
+>>> happen. The
+>>> +     * order of the unadjusted size will still match upon freeing.
+>>> +     */
+>>> +    if (fast && size < (1 << (IOVA_RANGE_CACHE_MAX_SIZE - 1)))
+>>> +        size = roundup_pow_of_two(size);
+>>
+>> If this transformation is only relevant to alloc_iova_fast(), and we 
+>> have to add a special parameter here to tell whether we were called 
+>> from alloc_iova_fast(), doesn't it seem more sensible to just do it in 
+>> alloc_iova_fast() rather than here?
+> 
+> We have the restriction that anything we put in the rcache needs be a 
+> power-of-2.
 
-Hmm ... my understanding is that patches should be prepared on top of 
-the for-next branch of the maintainer a patch is sent to, in this case 
-the for-next branch of 
-git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git.
+I was really only talking about the apparently silly structure of:
 
-Thanks,
+void foo(bool in_bar) {
+	if (in_bar)
+		//do thing
+	...
+}
+void bar() {
+	foo(true);
+}
 
-Bart.
+vs.:
+
+void foo() {
+	...
+}
+void bar() {
+	//do thing
+	foo();
+}
+
+> So then we have the issue of how to dynamically increase this rcache 
+> threshold. The problem is that we may have many devices associated with 
+> the same domain. So, in theory, we can't assume that when we increase 
+> the threshold that some other device will try to fast free an IOVA which 
+> was allocated prior to the increase and was not rounded up.
+> 
+> I'm very open to better (or less bad) suggestions on how to do this ...
+
+...but yes, regardless of exactly where it happens, rounding up or not 
+is the problem for rcaches in general. I've said several times that my 
+preferred approach is to not change it that dynamically at all, but 
+instead treat it more like we treat the default domain type.
+
+> I could say that we only allow this for a group with a single device, so 
+> these sort of things don't have to be worried about, but even then the 
+> iommu_group internals are not readily accessible here.
+> 
+>>
+>> But then the API itself has no strict requirement that a pfn passed to 
+>> free_iova_fast() wasn't originally allocated with alloc_iova(), so 
+>> arguably hiding the adjustment away makes it less clear that the 
+>> responsibility is really on any caller of free_iova_fast() to make 
+>> sure they don't get things wrong.
+>>
+> 
+> alloc_iova() doesn't roundup to pow-of-2, so wouldn't it be broken to do 
+> that?
+
+Well, right now neither call rounds up, which is why iommu-dma takes 
+care to avoid any issues by explicitly rounding up for itself 
+beforehand. I'm just concerned that giving the impression that the API 
+takes care of everything for itself will make it easier to write broken 
+code in future, if that impression is in fact not entirely true.
+
+I don't even think it's very likely that someone would manage to hit 
+that rather wacky alloc/free pattern either way, I just know that 
+getting wrong-sized things into the rcaches is an absolute sod to debug, 
+so...
+
+Robin.
