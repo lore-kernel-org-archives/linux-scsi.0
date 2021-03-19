@@ -2,104 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F707C433C1
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 18:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C5D0C433E1
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 18:36:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E6D661988
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 18:05:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDE196198B
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 18:36:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230223AbhCSSEk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Mar 2021 14:04:40 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2719 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230063AbhCSSEQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2021 14:04:16 -0400
-Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4F2BVc5JBFz681CR;
-        Sat, 20 Mar 2021 01:59:36 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Fri, 19 Mar 2021 19:04:14 +0100
-Received: from [10.47.10.104] (10.47.10.104) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Fri, 19 Mar
- 2021 18:04:13 +0000
-Subject: Re: [PATCH 5/6] dma-mapping/iommu: Add dma_set_max_opt_size()
-To:     Robin Murphy <robin.murphy@arm.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>
-CC:     <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
-References: <1616160348-29451-1-git-send-email-john.garry@huawei.com>
- <1616160348-29451-6-git-send-email-john.garry@huawei.com>
- <9ecb6980-7f40-0333-572f-f9d4b8238353@arm.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <e45a649f-f133-1f80-554a-3c5e955148e3@huawei.com>
-Date:   Fri, 19 Mar 2021 18:02:02 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S230232AbhCSSfl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Mar 2021 14:35:41 -0400
+Received: from mail-pl1-f177.google.com ([209.85.214.177]:46852 "EHLO
+        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229990AbhCSSfX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2021 14:35:23 -0400
+Received: by mail-pl1-f177.google.com with SMTP id t20so3360039plr.13;
+        Fri, 19 Mar 2021 11:35:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=xQw+L3RNfqCsT579pHnTD6SwVA6plQagWHOVeC6fOqA=;
+        b=qrRj85sHI4RbxPKvJBa+lwy0egeYrg2g2vsT5Ee5bt0+cSIG7+GwfTqK7mRRjxiqAP
+         3wrRWNUEo0mPGaUNIw/v+kXBsTkEeQkF77ALTHljxNb24QZEtMDjR2T89qId4ea67SvJ
+         LPNnJrldmEExOcBO7/J8VvfqEIx+M0jogVkzFD7Ox5I80CJ/kTFLQ/cNNELT/OWPTPYD
+         I7wX9gKLwzr9ceo315gx9LPj2/ulrsxPWvkBQGLCPYMydR0qvkN61AazMK2oJ2P0Nxo9
+         GBrtUc/wVPdkoklCNt2zquHFEj36S3V4oJGCyqvoFPdxBSm1k08mZLi6PQ2UP/5hdVPz
+         2fCQ==
+X-Gm-Message-State: AOAM531mDsI4jRm9jhpHDInoPAsZ9UmeIUqwlrPbchgdCwsn92+el/Xb
+        E6k6pBf5YdzlD813T7m4QZ4=
+X-Google-Smtp-Source: ABdhPJzFo7QHStjFhBxDOIaDuwYNxhKN1zCo26bd0Gn29vucjEp7hfSfrzJVXYZuNWDn7lAuUVKFfQ==
+X-Received: by 2002:a17:90a:c201:: with SMTP id e1mr10961474pjt.30.1616178922687;
+        Fri, 19 Mar 2021 11:35:22 -0700 (PDT)
+Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id f20sm6380016pfa.10.2021.03.19.11.35.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 19 Mar 2021 11:35:22 -0700 (PDT)
+Subject: Re: [PATCH v12 1/2] scsi: ufs: Enable power management for wlun
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>
+References: <cover.1616113283.git.asutoshd@codeaurora.org>
+ <56662082b6a17b448f40d87df7e52b45a5998c2a.1616113283.git.asutoshd@codeaurora.org>
+ <88730ac9-d9c5-d758-d761-8c549c488aab@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <ed3b5ad6-4396-d861-9bb2-40c05f4a8ece@acm.org>
+Date:   Fri, 19 Mar 2021 11:35:18 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-In-Reply-To: <9ecb6980-7f40-0333-572f-f9d4b8238353@arm.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <88730ac9-d9c5-d758-d761-8c549c488aab@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.10.104]
-X-ClientProxiedBy: lhreml717-chm.china.huawei.com (10.201.108.68) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 19/03/2021 17:00, Robin Murphy wrote:
-> On 2021-03-19 13:25, John Garry wrote:
->> Add a function to allow the max size which we want to optimise DMA 
->> mappings
->> for.
-> 
-> It seems neat in theory - particularly for packet-based interfaces that 
-> might have a known fixed size of data unit that they're working on at 
-> any given time - but aren't there going to be many cases where the 
-> driver has no idea because it depends on whatever size(s) of request 
-> userspace happens to throw at it? Even if it does know the absolute 
-> maximum size of thing it could ever transfer, that could be 
-> impractically large in areas like video/AI/etc., so it could still be 
-> hard to make a reasonable decision.
+On 3/19/21 10:47 AM, Adrian Hunter wrote:
+> It would also be good if you could re-base on linux-next.
 
-So if you consider the SCSI stack, which is my interest, we know the max 
-segment size and we know the max number of segments per request, so we 
-should know the theoretical upper limit of the actual IOVA length we can 
-get.
-
-Indeed, from my experiment on my SCSI host, max IOVA len is found to be 
-507904, which is PAGE_SIZE * 124 (that is max sg ents there). 
-Incidentally that means that we want RCACHE RANGE MAX of 8, not 6.
-
-> 
-> Being largely workload-dependent is why I still think this should be a 
-> command-line or sysfs tuneable - we could set the default based on how 
-> much total memory is available, but ultimately it's the end user who 
-> knows what the workload is going to be and what they care about 
-> optimising for.
-
-If that hardware is only found in a server, then the extra memory cost 
-would be trivial, so setting to max is standard approach.
-
-> 
-> Another thought (which I'm almost reluctant to share) is that I would 
-> *love* to try implementing a self-tuning strategy that can detect high 
-> contention on particular allocation sizes and adjust the caches on the 
-> fly, but I can easily imagine that having enough inherent overhead to 
-> end up being an impractical (but fun) waste of time.
-> 
-
-For now, I just want to recover the performance lost recently :)
+Hmm ... my understanding is that patches should be prepared on top of 
+the for-next branch of the maintainer a patch is sent to, in this case 
+the for-next branch of 
+git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git.
 
 Thanks,
-John
+
+Bart.
