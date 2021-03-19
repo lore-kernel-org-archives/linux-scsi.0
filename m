@@ -2,161 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52858C433DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 02:35:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E4B1C433DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 02:52:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27BFD61580
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 02:35:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63E6E64F18
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 02:52:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231599AbhCSCfR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Mar 2021 22:35:17 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:34716 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230332AbhCSCel (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 22:34:41 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12J2YSth147438;
-        Fri, 19 Mar 2021 02:34:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2020-01-29;
- bh=buG9q4VDja/Xk3LfotX4M3rTD5gvGWptbNF8jRa4yn4=;
- b=LJK7unjtX5zOGHT1qRJmzkLPJPGOxXgJUUKFRWdL4dSGXIEerPKJqQivZWdCM2T21tA0
- jOhiZBGHNcv/tlJ2mNG4y9EkKr/TobO4xQzfzinLfVk61VXgt5uNMHONxyqTouMmkS4q
- tbkxFNTdnmJx1o6Mhnr7pvLeingicMJ/w5jVAZS2ylmfCOW6OhR6f5AA6dU9m5y0Y/gy
- 3lZ4fn5nX3vrY4Kx9GEYERTBQOS63GzbeJshyB0xNST9DDDDDXOGWYVlzhuSzBSyN2Ry
- QaVBk6MOXzrF0OS4WLCqt4KUv2yifZVtmpDtcC6o+09E5Rit9YpPqOETvlQP8G/dwnJ5 fg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 37a4ekxc29-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 19 Mar 2021 02:34:28 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12J2PfVY033087;
-        Fri, 19 Mar 2021 02:34:28 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2103.outbound.protection.outlook.com [104.47.55.103])
-        by userp3020.oracle.com with ESMTP id 37cf2b7hm7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 19 Mar 2021 02:34:28 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OuugCctjUtMvuzWryC59Tvl9XBSQPIrthzwDvq1EmtMRlLnRCImKk/IN/KA8UFL4hshjcoJ9tUtaJOKQW9gIAPNIw7oBclfQ6opU3QcJZyBX5DYcFZiLyw54a78M6NNEVOiYNmpl/n/40pH/a87IBiCX1MvbMlItt7H1AAZXngJH7h74DlUzROe1SBfD1zySM3YVPaqRZn6Kmmb/QDFoQbgAVM8g+PdQdPvizdEisauyPXPOSBxD+Y/wE+uxUYjPxELEiCUAPBMpYyeTR9Nv0iSOswRPxPJ2jJ+jH6A+MRVSzrCmd2RL/emJyCLPijq+IaWpjj++MpiK8SRPtDyK0g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=buG9q4VDja/Xk3LfotX4M3rTD5gvGWptbNF8jRa4yn4=;
- b=aO0JyMuJvkKDkZsi660g231wo77WciFr1EhXJoTvpsiadEtnwqEiFiwaI8olsK9MReVaMthW1xN9eUBw7sIen/Wp/9yVMRf/X6RPUsnnrenBbhz6XHOYaskPlfjMm1keWFNWtlJmPXEou5EOdLAbnPn8c9uelW5G8bherSrOMfTGPbzLRUhpQMMX3cGyYjtBf0oZYkTjbw56Yy3c+YjZ5x3NATZMa9MnBCiNsAnRYhsLFAVQUB5vPj0jOlxS9/l0YrytAE1vlw8bYLOVi/Axo99KHC/GXrwKhxV3COyxZUR6yUmFuhtc4fawtrRX0QYXAmlEoRlJLH4OxBHD7q1ZNw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=buG9q4VDja/Xk3LfotX4M3rTD5gvGWptbNF8jRa4yn4=;
- b=d8cbPHgZQuyCuRxmCkpB5Vyz2iZAazzbj9nXDIdQjVWDKKWc2QuYM3bhmSo4dO33WZyUuYlW/V06EVq+rEBFgxoOBuFjT6AI/ZIg3c2bdpcV8jmh6TGhcYwOtiPBhhvFZadCZJYrDudx35PCVMu9hREclic26WTvcW5C6F75eg4=
-Authentication-Results: gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=none action=none header.from=oracle.com;
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH0PR10MB4488.namprd10.prod.outlook.com (2603:10b6:510:35::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3955.18; Fri, 19 Mar
- 2021 02:34:26 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::dc39:c9fa:7365:8c8e]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::dc39:c9fa:7365:8c8e%5]) with mapi id 15.20.3955.018; Fri, 19 Mar 2021
- 02:34:26 +0000
-To:     Yue Hu <zbestahu@gmail.com>
-Cc:     avri.altman@wdc.com, alim.akhtar@samsung.com,
-        martin.petersen@oracle.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        huyue2@yulong.com, zbestahu@163.com
-Subject: Re: [PATCH v3] scsi: ufs: Tidy up WB configuration code
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1h7l7q3bu.fsf@ca-mkp.ca.oracle.com>
-References: <20210318095536.2048-1-zbestahu@gmail.com>
-Date:   Thu, 18 Mar 2021 22:34:22 -0400
-In-Reply-To: <20210318095536.2048-1-zbestahu@gmail.com> (Yue Hu's message of
-        "Thu, 18 Mar 2021 17:55:36 +0800")
-Content-Type: text/plain
-X-Originating-IP: [138.3.200.58]
-X-ClientProxiedBy: BYAPR05CA0033.namprd05.prod.outlook.com
- (2603:10b6:a03:c0::46) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
-MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from ca-mkp.ca.oracle.com (138.3.200.58) by BYAPR05CA0033.namprd05.prod.outlook.com (2603:10b6:a03:c0::46) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3977.10 via Frontend Transport; Fri, 19 Mar 2021 02:34:25 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d32bd945-b6e0-4d6e-7a22-08d8ea7f838b
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4488:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <PH0PR10MB4488D74652EE4D1BF5026F398E689@PH0PR10MB4488.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:3968;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: PtyeH1gcsVHKcobIJvUq82N1nRVCLLRLcC5FD6MxmV+7Ukl46fi13xrIHqYeCzYg/pW+BjAYZAh5ZD086r9LxdlYC0zd7BQBDYkrW50nxH5cX0ZFxsnQ6eRwN3KvYXcKCO3PPmSUjbnu6FpHDBmSc92byR0jQnlVMZVfeM9Hwv8XAP3vYW1lHaz0z86MG3J401LB2VMoMY0jR1q+jUIgqKDZimv/ENYJhoecZ+hqVcP5R19wBd8CAJqKbYoekxOx4PcT50JmqybbD1oqfXKjoWA09QTFGQBQYDVDlaCROc1CKwjISvB8TEi6QyINGQpZAwGCbAVf4sp/qpcg/4D2Inb4LYAZDEAYlG1agu7ze3tgDwxRYY+725qHY75xfhZXNSDt/RIodXXaKNmnIDCR1Nw7i5oJRFj+/T4JKIviD1+2LxcGr+5LwI0NC4NDjUncE56qFYcQUter4Y+iC413rI/dI1UgTuhzjpxLd3A2/RfeD42PbDwZ20aOhNoG73UjY1qeGXwwl/wd4cB8eU27fgxT1deENDHkiKD/Dw8NC0GqfGkzIvGllf3QGx7iapWydn5sk8HLM4RZ3kLRZZ6fETjwz0kpRx+eBejXpE6sGrlT16t5hNxkuBS71sz0Z02XpYbXrKozx9esMFxRgwZXxuY+Tzg336r/Q7M/198UGL4=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(39860400002)(396003)(366004)(346002)(136003)(376002)(2906002)(4326008)(8936002)(55016002)(66946007)(66556008)(6916009)(8676002)(38100700001)(478600001)(66476007)(956004)(7696005)(4744005)(26005)(186003)(5660300002)(36916002)(52116002)(86362001)(6666004)(16526019)(316002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?gctdk5EkM9q39SCOTJvX5tMWH0sm92NjpipN/jp8Sgcdaugaf5tLj+NmKq+4?=
- =?us-ascii?Q?xROIWdc8b+LWbBo0uRlwHDl/Xr5kMrJxQa//8mMO/Y7KNQ4mQIUaUh2R0kNH?=
- =?us-ascii?Q?Hoq4YGBv84G9bkRSmpz96pVM/ybdCMEKy/XRe7oCDy5XWWb3i3/Zxg79IuXc?=
- =?us-ascii?Q?CIbvnrwcAhtqGtqh4J3faOUjYKXkW9KptL6AxKcLcfmJOFXWP5Sxg77Ku9MF?=
- =?us-ascii?Q?QjTRlKwCnZCYB6N1/5U/dwsS3hrYVHMZefzRumK4Cg4ZEr3XVzMFJAPM6tLJ?=
- =?us-ascii?Q?+VfDw+pFVnl0CSGbdR9PcmJpdCEEMcsL2eKcqzsD4wA7LD+e1UftewKdhWsn?=
- =?us-ascii?Q?nof9qCTw5agKxZCe7OBiVFemyajwHMyVjaNCL9SSaRAOHYhiJxiNJTtNiOIL?=
- =?us-ascii?Q?CFQegO6oGT7Ro+iMvsDoINY2bNcpF2rt8R76eTAMFB8+t4XjTUKGMffMIcOO?=
- =?us-ascii?Q?lVrErT+AMktf33y30UxXg5ECvFaKgv6PXSLP3kT3NK8a/cYZjMOYgwFF0Ead?=
- =?us-ascii?Q?eqKDZZAhZH+IMOgHQqUnzeRziwCyPWyqc2ypsHA9/3xu9RZk3RlfsXi3Dukk?=
- =?us-ascii?Q?hznFGYImx/hnRbBlf9n6UA+iefco1M7kG42O/OJlhQaEAB5jHioF3nHtDwre?=
- =?us-ascii?Q?BuYiHnmEk8CGFN1mT3rK3QrImTVSopIG4wzk8l9Js9Ud6Vr7piL7a8E1kvO9?=
- =?us-ascii?Q?ngVM8WWbYoX/tobzQlYrWvgUAWERkXTfkvaqzQJeEKiw6npcYAD8lEXx/bx2?=
- =?us-ascii?Q?Eegx8sqZ9oppLY5FZShI0njfIFmdmZC/lP+8cAbZ+K77nxfGARiwHnlCya8C?=
- =?us-ascii?Q?xTg3tUsDIoOECb/1xz/wS+vVw08Kyj6D6TtAFIaPY9eRgtexTCO/y8Vlmg1Y?=
- =?us-ascii?Q?yi/NssJ8WCYyCuX4Jtw1Wr/BurxoSCm7spoDE61cDEZ73Tn8lIUJLhYjJhJj?=
- =?us-ascii?Q?XgKkBbF3faSA5umYBAqOhHYU6/ZfFp39N2hg2DPmMq/pnIUmm97Fp0aL+TPO?=
- =?us-ascii?Q?oacE+8HDYrg2/o0Fg+qMz8QwHfK7dw8EhOLwZtmYmir9jbj8llXbZcWJcN6Z?=
- =?us-ascii?Q?omOwhRY3ysYFtehyuonJV7JOwnHI5nX3Y3NEsN/+RXfgpMvNqtDbKWKcYxsx?=
- =?us-ascii?Q?UGsSW0thwga1zO7t9dkMd672aFXi7SUaTWQj0g+ogp+EzWxUpTQkTfwbX0Yq?=
- =?us-ascii?Q?WmiR9KBBKRmt0T0y7GggcCmqA3CeesZH7Bs+k+IZGPMQfj4g4ZdB3V1xN5Nd?=
- =?us-ascii?Q?bd7eDFszO/48Ik1Xn4dl/G/fR2w8sGir+aRNnjweOCMx5dov0HLqiwwKFEXs?=
- =?us-ascii?Q?JhqxpX1PNAeaJegb8+6Ta44p?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d32bd945-b6e0-4d6e-7a22-08d8ea7f838b
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Mar 2021 02:34:26.2852
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: kddoAZiOj7ybqCzcDm0yoV4+vZJMnh7LNz0xZW94eGJAGzEeeg86JzkgjESWe0jVPXUAVnYwbbqEzhr1ypuf9OAg30/aDQNFGDORJ/8cNjc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4488
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9927 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 suspectscore=0
- adultscore=0 bulkscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2103190016
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9927 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
- impostorscore=0 lowpriorityscore=0 mlxlogscore=999 spamscore=0
- priorityscore=1501 adultscore=0 phishscore=0 suspectscore=0 clxscore=1011
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2103190017
+        id S233125AbhCSCvm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Mar 2021 22:51:42 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:48810 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233469AbhCSCvb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2021 22:51:31 -0400
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210319025128epoutp0104d5d220222d0cc35f2ae6bb92624008~tnqi6yOCX3078230782epoutp017
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Mar 2021 02:51:28 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210319025128epoutp0104d5d220222d0cc35f2ae6bb92624008~tnqi6yOCX3078230782epoutp017
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1616122288;
+        bh=CPoTBRobhhShDeEhgFsIF/X3ZgQia3gxElCclIbPevw=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=nKEcxWnYiloX2AyjuQbKfIi1Ff6oTJr52CH83tjGTAvFzBZ8kBbOB+W5eHYVpJjNg
+         YtrM8jwb4ynZMsF2ZBPSu85IIxcxmvhD94hsx8UCLs7DR8MecTCD8Wf8iWnG88Fv/E
+         simObtuLkaO0KFzdxwzjaVHHlYfmNaX+GCzoiF3E=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20210319025126epcas2p2d0218e7f386123b70991caeaabd0c9fe~tnqgyj8eW1722817228epcas2p29;
+        Fri, 19 Mar 2021 02:51:26 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.184]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4F1pLg4ghCz4x9QB; Fri, 19 Mar
+        2021 02:51:23 +0000 (GMT)
+X-AuditID: b6c32a45-34dff7000001297d-43-605411ab7ce6
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        92.EE.10621.BA114506; Fri, 19 Mar 2021 11:51:23 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE: Re: [PATCH] scsi: ufs: Add selector to ufshcd_query_flag* APIs
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Daejun Park <daejun7.park@samsung.com>
+CC:     "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <yq1mtuzq3tu.fsf@ca-mkp.ca.oracle.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20210319025121epcms2p54274eddaa64ae4d0868424df3dac11b2@epcms2p5>
+Date:   Fri, 19 Mar 2021 11:51:21 +0900
+X-CMS-MailID: 20210319025121epcms2p54274eddaa64ae4d0868424df3dac11b2
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrLJsWRmVeSWpSXmKPExsWy7bCmqe5qwZAEgxmLZC0ezNvGZrG37QS7
+        xcufV9ksDt9+x24x7cNPZotP65exWrw8pGmx6kG4xZyzDUwWvf1b2SwW3djGZNH/r53F4vKu
+        OWwW3dd3sFksP/6PyeL2Fi6LpVtvMlp0Tl/D4iDkcfmKt8flvl4mj52z7rJ7TFh0gNGj5eR+
+        Fo+PT2+xePRtWcXo8XmTnEf7gW6mAM6oHJuM1MSU1CKF1Lzk/JTMvHRbJe/geOd4UzMDQ11D
+        SwtzJYW8xNxUWyUXnwBdt8wcoG+UFMoSc0qBQgGJxcVK+nY2RfmlJakKGfnFJbZKqQUpOQWG
+        hgV6xYm5xaV56XrJ+blWhgYGRqZAlQk5GT07z7IVvGWt2HnzJEsD4z6WLkZODgkBE4mWw7MZ
+        uxi5OIQEdjBKHHn1G8jh4OAVEJT4u0MYpEZYwFviWMcEVhBbSEBJYv3FWewQcT2JWw/XMILY
+        bAI6EtNP3AeLiwhoScw8s5cZZCazQCubxOSpX6CW8UrMaH8KZUtLbF++FayZU8BY4uGrq+wQ
+        cQ2JH8t6mSFsUYmbq9+yw9jvj81nhLBFJFrvnYWqEZR48HM3VFxS4tjuD0wQdr3E1ju/wB6T
+        EOhhlDi88xYrREJf4lrHRhaIJ30lFnRngZgsAqoSsx4IQlS4SLw8ugysmllAXmL72znMICXM
+        ApoS63fpg5gSAsoSR27BPdWw8Tc7OptZgE+i4/BfuPiOeU+gDlOTWPdzPdMERuVZiHCehWTX
+        LIRdCxiZVzGKpRYU56anFhsVGCJH7SZGcLrWct3BOPntB71DjEwcjIcYJTiYlUR4TfMCEoR4
+        UxIrq1KL8uOLSnNSiw8xmgI9OZFZSjQ5H5gx8kriDU2NzMwMLE0tTM2MLJTEeYsNHsQLCaQn
+        lqRmp6YWpBbB9DFxcEo1MGn1Pfb6E3p/mv+81M8Gzp+4Pug8qVcqkOTZkXH11oH3T5ZeClx8
+        wa2v5NKVDz/tdKd4cC/2NJPu/XJlicte9j+Xq5fs4932Jlrv/Z/KyjnH/wl9UKiXXd5doSr1
+        d+amA21lK1mKZ563sWR+pGLCeZDBIDC5YWnvvF2n+3ObWLP+3vRbXKD6aQW3YujqDPn5y3Ne
+        qr+yCT//fVP16dPs0hV5ZrpzUqanhnh+mM7SUOHNdurp7a0Sv6Xm/Azb1nKc8ci1Kt0rJ04x
+        R85/4nZLfXpybO+iRIkHkYvf+VaF7W53CmDo2lrYfSRc473Q/8hwmU2PZV/nmp6cezgz8NaW
+        BafTWP1OMpXr1Ny6y7MxpFOJpTgj0VCLuag4EQAQJxroYAQAAA==
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210317033143epcms2p25b37bba2bb515c1ce85bf555656ca3f2
+References: <yq1mtuzq3tu.fsf@ca-mkp.ca.oracle.com>
+        <20210317033143epcms2p25b37bba2bb515c1ce85bf555656ca3f2@epcms2p2>
+        <CGME20210317033143epcms2p25b37bba2bb515c1ce85bf555656ca3f2@epcms2p5>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Martin
 
-Yue,
+> 
+>Daejun,
+> 
+>> Unlike other query APIs in UFS, ufshcd_query_flag has a fixed selector
+>> as 0. This patch allows ufshcd_query_flag API to choose selector value
+>> by parameter.
+> 
+>I don't see any users of the added parameter. Am I missing something?
 
-> There are similar code implementations for WB configuration in
-> ufshcd_wb_{ctrl, toggle_flush_during_h8, toggle_flush}. We can extract
-> the part to create a new helper with a flag parameter to reduce code
-> duplication.
+The JEDEC standard describes it as follows:
+The selector field may be needed to further identify a particular element of a flag.
 
-Applied to 5.13/scsi-staging, thanks!
+Other cannot used it because it is fixed as zero in the API.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks,
+Daejun
+
+The selector field may be needed to further identify a particular element of a flag. Selector field is not
+2218 used in this version of the standard and its value shall be zero.
+> 
+>-- 
+>Martin K. Petersen        Oracle Linux Engineering
+> 
+> 
+>  
