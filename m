@@ -2,95 +2,185 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05E72C433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 21:13:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF7E2C433C1
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Mar 2021 11:56:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B50116197F
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Mar 2021 21:13:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C1376197D
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Mar 2021 11:56:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230264AbhCSVNP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Mar 2021 17:13:15 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:64212 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230199AbhCSVM4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Mar 2021 17:12:56 -0400
-Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 12JL4mQN088318;
-        Fri, 19 Mar 2021 17:12:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=ix5xI4eV4ktS+Si1szwX06PnD5N08iIL8loUbC9USd4=;
- b=lImkiVKeFVRnWgKBYMLIxAe7GrKBucIwigZQG/12JQA7Mj6fqlu6aT+tCiWW60VdCHhP
- v7VEXP0AUzoyAQ9ksTPoDDRKw2W/sIWBYIq5/UsR1dLxy0ePldYQxIdxEWga0puNIe1F
- K0V7iUOIvXlJHIgCQIt7HhfnrXvLKhdwc0IJZlbbkeAV71gCkdUybpUIvdcqyAkobmlw
- mCToAEcqMK47s3IXXMOgBAQUChYHrB54cSlnLvZ19Db57dx4KNwkFCV2Da0XaiQEfZ/l
- GF6jLqtvvOf4S5nFkoAna4HaCjeqR/udZvM/XAoA27WAWiLg7dkog5SJRALjakcaabtQ lg== 
-Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 37cw5au3ts-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 19 Mar 2021 17:12:34 -0400
-Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
-        by ppma03wdc.us.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 12JL6xgA006134;
-        Fri, 19 Mar 2021 21:12:33 GMT
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-        by ppma03wdc.us.ibm.com with ESMTP id 378ubu72cc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 19 Mar 2021 21:12:33 +0000
-Received: from b03ledav005.gho.boulder.ibm.com (b03ledav005.gho.boulder.ibm.com [9.17.130.236])
-        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 12JLCWYK26804690
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 19 Mar 2021 21:12:32 GMT
-Received: from b03ledav005.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6587CBE04F;
-        Fri, 19 Mar 2021 21:12:32 +0000 (GMT)
-Received: from b03ledav005.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C91DDBE056;
-        Fri, 19 Mar 2021 21:12:31 +0000 (GMT)
-Received: from oc6034535106.ibm.com (unknown [9.211.33.183])
-        by b03ledav005.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Fri, 19 Mar 2021 21:12:31 +0000 (GMT)
-Subject: Re: [PATCH 2/2] ibmvfc: make ibmvfc_wait_for_ops MQ aware
-To:     Tyrel Datwyler <tyreld@linux.ibm.com>,
-        james.bottomley@hansenpartnership.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        brking@linux.ibm.com
-References: <20210319205029.312969-1-tyreld@linux.ibm.com>
- <20210319205029.312969-3-tyreld@linux.ibm.com>
-From:   Brian King <brking@linux.vnet.ibm.com>
-Message-ID: <757491ed-d151-91f5-abb6-da048d491c34@linux.vnet.ibm.com>
-Date:   Fri, 19 Mar 2021 16:12:31 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+        id S229849AbhCTLza (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 20 Mar 2021 07:55:30 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:14112 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230218AbhCTLzS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Mar 2021 07:55:18 -0400
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.60])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4F2XCS2qQyz16H17;
+        Sat, 20 Mar 2021 15:17:40 +0800 (CST)
+Received: from [127.0.0.1] (10.174.176.117) by DGGEMS408-HUB.china.huawei.com
+ (10.3.19.208) with Microsoft SMTP Server id 14.3.498.0; Sat, 20 Mar 2021
+ 15:19:26 +0800
+To:     <agk@redhat.com>, <snitzer@redhat.com>, <dm-devel@redhat.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC:     <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        linfeilong <linfeilong@huawei.com>,
+        lixiaokeng <lixiaokeng@huawei.com>,
+        "wubo (T)" <wubo40@huawei.com>, <liuzhiqiang26@huawei.com>
+From:   Zhiqiang Liu <liuzhiqiang26@huawei.com>
+Subject: [PATCH] md/dm-mpath: check whether all pgpaths have same uuid in
+ multipath_ctr()
+Message-ID: <c8f86351-3036-0945-90d2-2e020d68ccf2@huawei.com>
+Date:   Sat, 20 Mar 2021 15:19:23 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <20210319205029.312969-3-tyreld@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
- definitions=2021-03-19_12:2021-03-19,2021-03-19 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- adultscore=0 mlxscore=0 spamscore=0 bulkscore=0 impostorscore=0
- clxscore=1015 suspectscore=0 phishscore=0 mlxlogscore=999
- priorityscore=1501 malwarescore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2009150000 definitions=main-2103190144
+X-Originating-IP: [10.174.176.117]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
+From: Zhiqiang Liu <liuzhiqiang26@huawei.com>
 
+When we make IO stress test on multipath device, there will
+be a metadata err because of wrong path. In the test, we
+concurrent execute 'iscsi device login|logout' and
+'multipath -r' command with IO stress on multipath device.
+In some case, systemd-udevd may have not time to process
+uevents of iscsi device logout|login, and then 'multipath -r'
+command triggers multipathd daemon calls ioctl to load table
+with incorrect old device info from systemd-udevd.
+Then, one iscsi path may be incorrectly attached to another
+multipath which has different uuid. Finally, the metadata err
+occurs when umounting filesystem to down write metadata on
+the iscsi device which is actually not owned by the multipath
+device.
 
+So we need to check whether all pgpaths of one multipath have
+the same uuid, if not, we should throw a error.
+
+Signed-off-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+Signed-off-by: lixiaokeng <lixiaokeng@huawei.com>
+Signed-off-by: linfeilong <linfeilong@huawei.com>
+Signed-off-by: Wubo <wubo40@huawei.com>
+---
+ drivers/md/dm-mpath.c   | 52 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_lib.c |  1 +
+ 2 files changed, 53 insertions(+)
+
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index bced42f082b0..f0b995784b53 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -24,6 +24,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/delay.h>
+ #include <scsi/scsi_dh.h>
++#include <linux/dm-ioctl.h>
+ #include <linux/atomic.h>
+ #include <linux/blk-mq.h>
+
+@@ -1169,6 +1170,45 @@ static int parse_features(struct dm_arg_set *as, struct multipath *m)
+ 	return r;
+ }
+
++#define SCSI_VPD_LUN_ID_PREFIX_LEN 4
++#define MPATH_UUID_PREFIX_LEN 7
++static int check_pg_uuid(struct priority_group *pg, char *md_uuid)
++{
++	char pgpath_uuid[DM_UUID_LEN] = {0};
++	struct request_queue *q;
++	struct pgpath *pgpath;
++	struct scsi_device *sdev;
++	ssize_t count;
++	int r = 0;
++
++	list_for_each_entry(pgpath, &pg->pgpaths, list) {
++		q = bdev_get_queue(pgpath->path.dev->bdev);
++		sdev = scsi_device_from_queue(q);
++		if (!sdev) {
++			r = -EINVAL;
++			goto out;
++		}
++
++		count = scsi_vpd_lun_id(sdev, pgpath_uuid, DM_UUID_LEN);
++		if (count <= SCSI_VPD_LUN_ID_PREFIX_LEN) {
++			r = -EINVAL;
++			put_device(&sdev->sdev_gendev);
++			goto out;
++		}
++
++		if (strcmp(md_uuid + MPATH_UUID_PREFIX_LEN,
++			   pgpath_uuid + SCSI_VPD_LUN_ID_PREFIX_LEN)) {
++			r = -EINVAL;
++			put_device(&sdev->sdev_gendev);
++			goto out;
++		}
++		put_device(&sdev->sdev_gendev);
++	}
++
++out:
++	return r;
++}
++
+ static int multipath_ctr(struct dm_target *ti, unsigned argc, char **argv)
+ {
+ 	/* target arguments */
+@@ -1183,6 +1223,7 @@ static int multipath_ctr(struct dm_target *ti, unsigned argc, char **argv)
+ 	unsigned pg_count = 0;
+ 	unsigned next_pg_num;
+ 	unsigned long flags;
++	char md_uuid[DM_UUID_LEN] = {0};
+
+ 	as.argc = argc;
+ 	as.argv = argv;
+@@ -1220,6 +1261,11 @@ static int multipath_ctr(struct dm_target *ti, unsigned argc, char **argv)
+ 		goto bad;
+ 	}
+
++	if (dm_copy_name_and_uuid(dm_table_get_md(ti->table), NULL, md_uuid)) {
++		r = -ENXIO;
++		goto bad;
++	}
++
+ 	/* parse the priority groups */
+ 	while (as.argc) {
+ 		struct priority_group *pg;
+@@ -1231,6 +1277,12 @@ static int multipath_ctr(struct dm_target *ti, unsigned argc, char **argv)
+ 			goto bad;
+ 		}
+
++		if (check_pg_uuid(pg, md_uuid)) {
++			ti->error = "uuid of pgpaths mismatch";
++			r = -EINVAL;
++			goto bad;
++		}
++
+ 		nr_valid_paths += pg->nr_pgpaths;
+ 		atomic_set(&m->nr_valid_paths, nr_valid_paths);
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 7d52a11e1b61..fee82262a227 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1953,6 +1953,7 @@ struct scsi_device *scsi_device_from_queue(struct request_queue *q)
+
+ 	return sdev;
+ }
++EXPORT_SYMBOL(scsi_device_from_queue);
+
+ /**
+  * scsi_block_requests - Utility function used by low-level drivers to prevent
 -- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+2.19.1
+
 
