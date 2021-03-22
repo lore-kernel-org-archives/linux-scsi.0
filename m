@@ -2,249 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2A18C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 22:08:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6215CC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 22:43:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF5D961879
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 22:08:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37C1F61934
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 22:43:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230051AbhCVWIC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 18:08:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35378 "EHLO
+        id S230031AbhCVWnV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 18:43:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229730AbhCVWH4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 18:07:56 -0400
-Received: from mail-qt1-x82c.google.com (mail-qt1-x82c.google.com [IPv6:2607:f8b0:4864:20::82c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F9B1C061574;
-        Mon, 22 Mar 2021 15:07:56 -0700 (PDT)
-Received: by mail-qt1-x82c.google.com with SMTP id y2so11138275qtw.13;
-        Mon, 22 Mar 2021 15:07:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=bp6cadiLp9JG4ot8VD8DrNUhLvtl3tOiutuJ7QXWznQ=;
-        b=iaV83Ux9xBDgj/qom3Bk+Pnnd+Npq2g7l2Wcj4hhm0C9/Wqa5sWw8p1Jsa6IVtm0yS
-         TdIiUfQGXTD6NiCLV6NBiRXyZP2uVw+Q2q6lU7LXwrWQJ/Maefvj0xV0Uec18FcSeRXF
-         vIJU9u5du1ZOWFtkZrF5/qMHCMqhC93pFGIqrrKl6XUhkAUrPxcx4X0Batpu84izU0rl
-         6nUs9IEvPSvLgj3W8ej7UliIwlqDMHRm/QB8uQcgZsL5UpAnoTMEMr+Ed2fl6upuTDTk
-         ++B/wzn6EYS99xzPoQfKZFL2om7c/ZVOPmZEz09Ms8KU+NvgtrohB8esdB1kDZFPOvri
-         10Xw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=bp6cadiLp9JG4ot8VD8DrNUhLvtl3tOiutuJ7QXWznQ=;
-        b=jddVdzHLZz2NLlLHjp0TkxvOdobYmwIcsRfDz43S9CFMgwI6TEXRlThUYBHL7DFV9b
-         gOa92HNWwoDSRkqVYVlI0BKYvme8oTkIYrywMDwuDEZD+f7Nd+SgW2vMFPU2Y/ZgHGv9
-         8DcdPpLuvX/4QwJl/eheuOGhYjNqzD2KIPddxqKjxkXpojo3sx2MHAgXKHfAG5vdvl8q
-         gTh26lkjlS21BE/MxMOOpXmg3Fw12LsMjuu0FL9RGMZVLHpGJHK3OaCn/Oneo5TDlA81
-         SjFtjZKeXFt6gGKSdluw9RxLjVHv07zCPIOjWOd5byuVg2idPbZfrSZyASsQBeOVZ8wh
-         qFNg==
-X-Gm-Message-State: AOAM531+E1ZFq+tytPnVB1oAQCFhOqNCBR3sw/ZixFYdAtr+N7KAvVtF
-        mtiROIlC6hZ3TDVxxsn0+RE=
-X-Google-Smtp-Source: ABdhPJw2Q59a1ZLYugiGOh0k53LBnL3VNySQVKoaoySDrE/bFUhGmQDuP132X+ofXKkmUC96EG1Wbg==
-X-Received: by 2002:ac8:5281:: with SMTP id s1mr1870981qtn.293.1616450875002;
-        Mon, 22 Mar 2021 15:07:55 -0700 (PDT)
-Received: from [192.168.0.41] (71-218-23-248.hlrn.qwest.net. [71.218.23.248])
-        by smtp.gmail.com with ESMTPSA id y19sm12052651qky.111.2021.03.22.15.07.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 22 Mar 2021 15:07:54 -0700 (PDT)
-Subject: Re: [PATCH 02/11] x86: tboot: avoid Wstringop-overread-warning
-To:     Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
-        Ning Sun <ning.sun@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        x86@kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Simon Kelley <simon@thekelleys.org.uk>,
-        James Smart <james.smart@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
-        Serge Hallyn <serge@hallyn.com>,
-        Imre Deak <imre.deak@intel.com>,
-        linux-arm-kernel@lists.infradead.org,
-        tboot-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
-        linux-security-module@vger.kernel.org,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Will Deacon <will@kernel.org>
-References: <20210322160253.4032422-1-arnd@kernel.org>
- <20210322160253.4032422-3-arnd@kernel.org>
- <20210322202958.GA1955909@gmail.com>
-From:   Martin Sebor <msebor@gmail.com>
-Message-ID: <b944a853-0e4b-b767-0175-cc2c1edba759@gmail.com>
-Date:   Mon, 22 Mar 2021 16:07:50 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        with ESMTP id S229871AbhCVWnR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 18:43:17 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A911FC061574;
+        Mon, 22 Mar 2021 15:43:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:To:Subject:Sender:
+        Reply-To:Cc:Content-ID:Content-Description;
+        bh=9YTzv0k/0bqNaGXA3Rty/m7xcWWiXCK/jySxxAF8xE8=; b=nJzak8UpA+b/ADMuG7IP1dMbb9
+        x+pFVQM3dVMUps/rCCi18MlVTl26xTJ89QgD8tu6gML3aihBncnVqWa2EMxbXj5OxtB49tCSVMeKG
+        fOZz8kMq7IaVjVH4RV0SUM0Jv7Ly5TmkdJNadFGPSZvttXTTwcPtmRuaQbRSbZbQFlfLxK/oWN7uQ
+        HbNWK+nrHt+Wk7ggpN09mnNhCnLECb8/uECujxRbMRt41oRGKE/0oq6Ja6h+hgdQXyW5wU2LrXils
+        6pC06at4t9tsZPpNbgH9OeIxfG4Kj3jAFTLCckJavfIBVWqHQ4brv5gH/LfEsADfZ7XOp320Rzy2B
+        UdDoDzQA==;
+Received: from [2601:1c0:6280:3f0::3ba4]
+        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1lOTGK-009BPM-Cx; Mon, 22 Mar 2021 22:43:07 +0000
+Subject: Re: [PATCH] scsi: bfa: Fix a typo in two places
+To:     Bhaskar Chowdhury <unixbhaskar@gmail.com>,
+        anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20210322205821.1449844-1-unixbhaskar@gmail.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <d9f3d7e5-4a52-6f93-1db4-6ef9cf93b736@infradead.org>
+Date:   Mon, 22 Mar 2021 15:43:01 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-In-Reply-To: <20210322202958.GA1955909@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20210322205821.1449844-1-unixbhaskar@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/22/21 2:29 PM, Ingo Molnar wrote:
+On 3/22/21 1:58 PM, Bhaskar Chowdhury wrote:
 > 
-> * Arnd Bergmann <arnd@kernel.org> wrote:
+> s/defintions/definitions/  ....two different places.
 > 
->> From: Arnd Bergmann <arnd@arndb.de>
->>
->> gcc-11 warns about using string operations on pointers that are
->> defined at compile time as offsets from a NULL pointer. Unfortunately
->> that also happens on the result of fix_to_virt(), which is a
->> compile-time constant for a constantn input:
->>
->> arch/x86/kernel/tboot.c: In function 'tboot_probe':
->> arch/x86/kernel/tboot.c:70:13: error: '__builtin_memcmp_eq' specified bound 16 exceeds source size 0 [-Werror=stringop-overread]
->>     70 |         if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
->>        |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>
->> I hope this can get addressed in gcc-11 before the release.
->>
->> As a workaround, split up the tboot_probe() function in two halves
->> to separate the pointer generation from the usage. This is a bit
->> ugly, and hopefully gcc understands that the code is actually correct
->> before it learns to peek into the noinline function.
->>
->> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99578
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> ---
->>   arch/x86/kernel/tboot.c | 44 ++++++++++++++++++++++++-----------------
->>   1 file changed, 26 insertions(+), 18 deletions(-)
->>
->> diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
->> index 4c09ba110204..f9af561c3cd4 100644
->> --- a/arch/x86/kernel/tboot.c
->> +++ b/arch/x86/kernel/tboot.c
->> @@ -49,6 +49,30 @@ bool tboot_enabled(void)
->>   	return tboot != NULL;
->>   }
->>   
->> +/* noinline to prevent gcc from warning about dereferencing constant fixaddr */
->> +static noinline __init bool check_tboot_version(void)
->> +{
->> +	if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
->> +		pr_warn("tboot at 0x%llx is invalid\n", boot_params.tboot_addr);
->> +		return false;
->> +	}
->> +
->> +	if (tboot->version < 5) {
->> +		pr_warn("tboot version is invalid: %u\n", tboot->version);
->> +		return false;
->> +	}
->> +
->> +	pr_info("found shared page at phys addr 0x%llx:\n",
->> +		boot_params.tboot_addr);
->> +	pr_debug("version: %d\n", tboot->version);
->> +	pr_debug("log_addr: 0x%08x\n", tboot->log_addr);
->> +	pr_debug("shutdown_entry: 0x%x\n", tboot->shutdown_entry);
->> +	pr_debug("tboot_base: 0x%08x\n", tboot->tboot_base);
->> +	pr_debug("tboot_size: 0x%x\n", tboot->tboot_size);
->> +
->> +	return true;
->> +}
->> +
->>   void __init tboot_probe(void)
->>   {
->>   	/* Look for valid page-aligned address for shared page. */
->> @@ -66,25 +90,9 @@ void __init tboot_probe(void)
->>   
->>   	/* Map and check for tboot UUID. */
->>   	set_fixmap(FIX_TBOOT_BASE, boot_params.tboot_addr);
->> -	tboot = (struct tboot *)fix_to_virt(FIX_TBOOT_BASE);
->> -	if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
->> -		pr_warn("tboot at 0x%llx is invalid\n", boot_params.tboot_addr);
->> +	tboot = (void *)fix_to_virt(FIX_TBOOT_BASE);
->> +	if (!check_tboot_version())
->>   		tboot = NULL;
->> -		return;
->> -	}
->> -	if (tboot->version < 5) {
->> -		pr_warn("tboot version is invalid: %u\n", tboot->version);
->> -		tboot = NULL;
->> -		return;
->> -	}
->> -
->> -	pr_info("found shared page at phys addr 0x%llx:\n",
->> -		boot_params.tboot_addr);
->> -	pr_debug("version: %d\n", tboot->version);
->> -	pr_debug("log_addr: 0x%08x\n", tboot->log_addr);
->> -	pr_debug("shutdown_entry: 0x%x\n", tboot->shutdown_entry);
->> -	pr_debug("tboot_base: 0x%08x\n", tboot->tboot_base);
->> -	pr_debug("tboot_size: 0x%x\n", tboot->tboot_size);
+> Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
+
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+
+> ---
+>  drivers/scsi/bfa/bfa_fc.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> This is indeed rather ugly - and the other patch that removes a debug
-> check seems counterproductive as well.
+> diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
+> index d536270bbe9f..0314e4b9e1fb 100644
+> --- a/drivers/scsi/bfa/bfa_fc.h
+> +++ b/drivers/scsi/bfa/bfa_fc.h
+> @@ -1193,7 +1193,7 @@ enum {
+>  };
 > 
-> Do we know how many genuine bugs -Wstringop-overread-warning has
-> caught or is about to catch?
+>  /*
+> - * defintions for CT reason code
+> + * definitions for CT reason code
+>   */
+>  enum {
+>  	CT_RSN_INV_CMD		= 0x01,
+> @@ -1240,7 +1240,7 @@ enum {
+>  };
 > 
-> I.e. the real workaround might be to turn off the -Wstringop-overread-warning,
-> until GCC-11 gets fixed?
+>  /*
+> - * defintions for the explanation code for all servers
+> + * definitions for the explanation code for all servers
+>   */
+>  enum {
+>  	CT_EXP_AUTH_EXCEPTION		= 0xF1,
+> --
 
-In GCC 10 -Wstringop-overread is a subset of -Wstringop-overflow.
-GCC 11 breaks it out as a separate warning to make it easier to
-control.  Both warnings have caught some real bugs but they both
-have a nonzero rate of false positives.  Other than bug reports
-we don't have enough data to say what their S/N ratio might be
-but my sense is that it's fairly high in general.
 
-   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=wstringop-overread
-   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=wstringop-overflow
-
-In GCC 11, all access warnings expect objects to be either declared
-or allocated.  Pointers with constant values are taken to point to
-nothing valid (as Arnd mentioned above, this is to detect invalid
-accesses to members of structs at address zero).
-
-One possible solution to the known address problem is to extend GCC
-attributes address and io that pin an object to a hardwired address
-to all targets (at the moment they're supported on just one or two
-targets).  I'm not sure this can still happen before GCC 11 releases
-sometime in April or May.
-
-Until then, another workaround is to convert the fixed address to
-a volatile pointer before using it for the access, along the lines
-below.  It should have only a negligible effect on efficiency.
-
-diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
-index 4c09ba110204..76326b906010 100644
---- a/arch/x86/kernel/tboot.c
-+++ b/arch/x86/kernel/tboot.c
-@@ -67,7 +67,9 @@ void __init tboot_probe(void)
-         /* Map and check for tboot UUID. */
-         set_fixmap(FIX_TBOOT_BASE, boot_params.tboot_addr);
-         tboot = (struct tboot *)fix_to_virt(FIX_TBOOT_BASE);
--       if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
-+       if (memcmp(&tboot_uuid,
-+                  (*(struct tboot* volatile *)(&tboot))->uuid,
-+                  sizeof(tboot->uuid))) {
-                 pr_warn("tboot at 0x%llx is invalid\n", 
-boot_params.tboot_addr);
-                 tboot = NULL;
-                 return;
-
-Martin
-
-> 
-> Thanks,
-> 
-> 	Ingo
-> 
+-- 
+~Randy
 
