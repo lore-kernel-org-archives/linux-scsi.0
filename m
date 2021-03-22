@@ -2,87 +2,75 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B219BC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 11:45:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FA94C433EC
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 12:38:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84EE261990
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 11:45:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0C0A619C3
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 12:38:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229893AbhCVLpI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 07:45:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43992 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229728AbhCVLoq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Mar 2021 07:44:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BD98061974;
-        Mon, 22 Mar 2021 11:44:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616413485;
-        bh=bKmCS8aIsW9W0W9EIWXnZu063w0cBmbUMJ4RHWeTFrc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=o8kKuvhT9if9e6sthkLLZRkS5pHpEHIhZHMlr4uBE4qHDpiEYsoyFXg8J5HFMPWwP
-         OQul2/rHFZc5y9WmcznrqZ/sWO5JC0lFHL0zGKzRTwYiSCJUu/4qoQW4SrKSwhcoC/
-         8tHn9OUDN9Iz7CN5OCXrLP0QrH9Fiy4VkUsWBbnJxZmewmL5+F8NOkjcJ2r70j847/
-         HuJr6ytYrWA1/yYq9iSnZ/hKE/w5i96xeameQzxvmsFn0/EjCUrZ2NxitE4AGwmCm4
-         fjigmD/OK/VACv/0b2D2GCLQz+S45NvCwekCofU48wzAlB5GLQeKmC+mNOG3OiUDj2
-         hKp/C29pRSfGQ==
-From:   Arnd Bergmann <arnd@kernel.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Jens Axboe <axboe@kernel.dk>,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bodo Stroesser <bstroesser@ts.fujitsu.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] target: pscsi: avoid Wempty-body warning
-Date:   Mon, 22 Mar 2021 12:44:34 +0100
-Message-Id: <20210322114441.3479365-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.29.2
+        id S231479AbhCVMhp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 08:37:45 -0400
+Received: from mail-m17637.qiye.163.com ([59.111.176.37]:32904 "EHLO
+        mail-m17637.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231838AbhCVMgJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 08:36:09 -0400
+X-Greylist: delayed 405 seconds by postgrey-1.27 at vger.kernel.org; Mon, 22 Mar 2021 08:36:08 EDT
+Received: from wanjb-virtual-machine.localdomain (unknown [36.152.145.182])
+        by mail-m17637.qiye.163.com (Hmail) with ESMTPA id B629498078B;
+        Mon, 22 Mar 2021 20:29:19 +0800 (CST)
+From:   Wan Jiabing <wanjiabing@vivo.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>, Bean Huo <beanhuo@micron.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     kael_w@yeah.net, Wan Jiabing <wanjiabing@vivo.com>
+Subject: [PATCH] drivers: scsi: Remove duplicate include of blkdev.h
+Date:   Mon, 22 Mar 2021 20:28:43 +0800
+Message-Id: <20210322122847.128375-1-wanjiabing@vivo.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgYFAkeWUFZS1VLWVdZKFlBSE83V1ktWUFJV1kPCR
+        oVCBIfWUFZH01IHk9IQ05NH0sdVkpNSk1PSk1KTUtLSkpVEwETFhoSFyQUDg9ZV1kWGg8SFR0UWU
+        FZT0tIVUpKS09ISFVLWQY+
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MRg6Axw4Pz8TLUIiGTocSDEq
+        MUswCjVVSlVKTUpNT0pNSk1LSE1PVTMWGhIXVQwaFRESGhkSFRw7DRINFFUYFBZFWVdZEgtZQVlI
+        TVVKTklVSk9OVUpDSVlXWQgBWUFJS0lMNwY+
+X-HM-Tid: 0a7859e938bdd992kuwsb629498078b
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+linux/blkdev.h has been included at line 18, so remove
+the duplicate include at line 27.
 
-Building with 'make W=1' shows a harmless warning for pscsi:
-
-drivers/target/target_core_pscsi.c: In function 'pscsi_complete_cmd':
-drivers/target/target_core_pscsi.c:624:33: error: suggest braces around empty body in an 'if' statement [-Werror=empty-body]
-  624 |                                 ; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
-      |                                 ^
-
-Rework the coding style as suggested by gcc to avoid the warning.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
 ---
- drivers/target/target_core_pscsi.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 3cbc074992bc..913b092955f6 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -620,8 +620,9 @@ static void pscsi_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
- 			unsigned char *buf;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c86760788c72..e8aa7de17d0a 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -24,7 +24,6 @@
+ #include "ufs_bsg.h"
+ #include "ufshcd-crypto.h"
+ #include <asm/unaligned.h>
+-#include <linux/blkdev.h>
  
- 			buf = transport_kmap_data_sg(cmd);
--			if (!buf)
--				; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
-+			if (!buf) {
-+				/* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
-+			}
- 
- 			if (cdb[0] == MODE_SENSE_10) {
- 				if (!(buf[3] & 0x80))
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/ufs.h>
 -- 
-2.29.2
+2.25.1
 
