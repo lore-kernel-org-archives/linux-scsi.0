@@ -7,39 +7,41 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78508C433E3
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:06:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67331C433EC
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:07:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 610B4619DC
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:06:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A3FB619B6
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:07:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231768AbhCVQFn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 12:05:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52810 "EHLO mail.kernel.org"
+        id S232005AbhCVQGo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 12:06:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53560 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231801AbhCVQFH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Mar 2021 12:05:07 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2816A619AD;
-        Mon, 22 Mar 2021 16:05:02 +0000 (UTC)
+        id S231776AbhCVQFq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Mar 2021 12:05:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 49D21619CF;
+        Mon, 22 Mar 2021 16:05:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616429107;
-        bh=hZ+CAtng3yIYZIb+ah3e8qtw8iX8HVHsX0ExOcLMkVU=;
+        s=k20201202; t=1616429143;
+        bh=ppc9fZupOrjA6hpvzPGCige1HMZi82rKq0OzuPiwp30=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dwkY1GeSKE6uqnx1AxEi3VFdRhYPg81cUVXGmS7VFECNmiWnHG9H8Xs03DE5r5UkI
-         2VYRrKWZEbiYE/8Go+UBgggdeU5IHX8PCQyERsMz4uhXvD8S/WDGEhcAqel5lYAhxx
-         GH5OrCzsuWJ7MemQavOxq36ZBrGw8QsN0rHVPucenBu12gisEUNifGSz6+0j2xJ9ZZ
-         bEVaUqft+/YBHP8/oDZqfcdvztMrcHT8BJQ3udH192n6G7X4gUnHIGCuLP1ptF/QU4
-         TnlXa1Qe8PUzWprVm8njgDc/yGpNfz20AWAFmYDGGOfZtOuyJUs4ZC7Fgr12Ezshk/
-         OxLRDx1pnNY1A==
+        b=KfNQhB8I6TCilI9rWZIUvrD60VxxXK7zzzf2CzYQVcPCX4dTFC+5vrq57/HXue9eN
+         7bPBi+K09Uuo8FgLHJN5cLADDDnPtd+D6sEhJhO/VLvKBoLaRa1BESfKHtMpZuvnwh
+         D3Vc4uZU9Dcg74j9eeiZa4qkcbeOz2ZvcezhMcicUmJ4FzCGExiFKR4ER32CvaOaWV
+         akMTcdJNfGrFGH5JvGZ7qns0oNxpRTzGH0qZ76EqyoQfhjLJvxqyHurET1PBvf6svb
+         dBMESSwDo3iJsmPDGBQ1mVtfw03/ahNqDciEznfWOfvZZJNzU8YYxi4I1doMFPdTRo
+         oo8eGNoKcMUqQ==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
-        Simon Kelley <simon@thekelleys.org.uk>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>
 Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         Ning Sun <ning.sun@intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Simon Kelley <simon@thekelleys.org.uk>,
         James Smart <james.smart@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
@@ -51,12 +53,17 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
         linux-security-module@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>,
-        Pascal Terjan <pterjan@google.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Subject: [PATCH 08/11] atmel: avoid gcc -Wstringop-overflow warning
-Date:   Mon, 22 Mar 2021 17:02:46 +0100
-Message-Id: <20210322160253.4032422-9-arnd@kernel.org>
+        =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= 
+        <ville.syrjala@linux.intel.com>,
+        Manasi Navare <manasi.d.navare@intel.com>,
+        Uma Shankar <uma.shankar@intel.com>,
+        Ankit Nautiyal <ankit.k.nautiyal@intel.com>,
+        Gwan-gyeong Mun <gwan-gyeong.mun@intel.com>,
+        Animesh Manna <animesh.manna@intel.com>,
+        Sean Paul <seanpaul@chromium.org>
+Subject: [PATCH 11/11] [RFC] drm/i915/dp: fix array overflow warning
+Date:   Mon, 22 Mar 2021 17:02:49 +0100
+Message-Id: <20210322160253.4032422-12-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
 References: <20210322160253.4032422-1-arnd@kernel.org>
@@ -69,74 +76,42 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-gcc-11 notices that the fields as defined in the ass_req_format
-structure do not match the actual use of that structure:
+gcc-11 warns that intel_dp_check_mst_status() has a local array of
+fourteen bytes and passes the last four bytes into a function that
+expects a six-byte array:
 
-cc1: error: writing 4 bytes into a region of size between 18446744073709551613 and 2 [-Werror=stringop-overflow=]
-drivers/net/wireless/atmel/atmel.c:2884:20: note: at offset [4, 6] into destination object ‘ap’ of size 6
- 2884 |                 u8 ap[ETH_ALEN]; /* nothing after here directly accessible */
-      |                    ^~
-drivers/net/wireless/atmel/atmel.c:2885:20: note: at offset [4, 6] into destination object ‘ssid_el_id’ of size 1
- 2885 |                 u8 ssid_el_id;
-      |                    ^~~~~~~~~~
+drivers/gpu/drm/i915/display/intel_dp.c: In function ‘intel_dp_check_mst_status’:
+drivers/gpu/drm/i915/display/intel_dp.c:4556:22: error: ‘drm_dp_channel_eq_ok’ reading 6 bytes from a region of size 4 [-Werror=stringop-overread]
+ 4556 |                     !drm_dp_channel_eq_ok(&esi[10], intel_dp->lane_count)) {
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/gpu/drm/i915/display/intel_dp.c:4556:22: note: referencing argument 1 of type ‘const u8 *’ {aka ‘const unsigned char *’}
+In file included from drivers/gpu/drm/i915/display/intel_dp.c:38:
+include/drm/drm_dp_helper.h:1459:6: note: in a call to function ‘drm_dp_channel_eq_ok’
+ 1459 | bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE],
+      |      ^~~~~~~~~~~~~~~~~~~~
 
-This is expected here because the actual structure layout is variable.
-As the code does not actually access the individual fields, replace
-them with a comment and fixed-length array so prevent gcc from
-complaining about it.
+Clearly something is wrong here, but I can't quite figure out what.
+Changing the array size to 16 bytes avoids the warning, but is
+probably the wrong solution here.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/atmel/atmel.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+ drivers/gpu/drm/i915/display/intel_dp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
-index 707fe66727f8..ff9152d600e1 100644
---- a/drivers/net/wireless/atmel/atmel.c
-+++ b/drivers/net/wireless/atmel/atmel.c
-@@ -2881,13 +2881,18 @@ static void send_association_request(struct atmel_private *priv, int is_reassoc)
- 	struct ass_req_format {
- 		__le16 capability;
- 		__le16 listen_interval;
--		u8 ap[ETH_ALEN]; /* nothing after here directly accessible */
--		u8 ssid_el_id;
--		u8 ssid_len;
--		u8 ssid[MAX_SSID_LENGTH];
--		u8 sup_rates_el_id;
--		u8 sup_rates_len;
--		u8 rates[4];
-+		u8 ssid_el[ETH_ALEN + 2 + MAX_SSID_LENGTH + 2 + 4];
-+		/*
-+		 * nothing after here directly accessible:
-+		 *
-+		 * u8 ap[ETH_ALEN];
-+		 * u8 ssid_el_id;
-+		 * u8 ssid_len;
-+		 * u8 ssid[MAX_SSID_LENGTH];
-+		 * u8 sup_rates_el_id;
-+		 * u8 sup_rates_len;
-+		 * u8 rates[4];
-+		 */
- 	} body;
+diff --git a/drivers/gpu/drm/i915/display/intel_dp.c b/drivers/gpu/drm/i915/display/intel_dp.c
+index 8c12d5375607..830e2515f119 100644
+--- a/drivers/gpu/drm/i915/display/intel_dp.c
++++ b/drivers/gpu/drm/i915/display/intel_dp.c
+@@ -65,7 +65,7 @@
+ #include "intel_vdsc.h"
+ #include "intel_vrr.h"
  
- 	header.frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-@@ -2907,13 +2912,13 @@ static void send_association_request(struct atmel_private *priv, int is_reassoc)
+-#define DP_DPRX_ESI_LEN 14
++#define DP_DPRX_ESI_LEN 16
  
- 	body.listen_interval = cpu_to_le16(priv->listen_interval * priv->beacon_period);
- 
-+	ssid_el_p = body.ssid_el;
- 	/* current AP address - only in reassoc frame */
- 	if (is_reassoc) {
--		memcpy(body.ap, priv->CurrentBSSID, ETH_ALEN);
--		ssid_el_p = &body.ssid_el_id;
-+		memcpy(ssid_el_p, priv->CurrentBSSID, ETH_ALEN);
-+		ssid_el_p += ETH_ALEN;
- 		bodysize = 18 + priv->SSID_size;
- 	} else {
--		ssid_el_p = &body.ap[0];
- 		bodysize = 12 + priv->SSID_size;
- 	}
- 
+ /* DP DSC throughput values used for slice count calculations KPixels/s */
+ #define DP_DSC_PEAK_PIXEL_RATE			2720000
 -- 
 2.29.2
 
