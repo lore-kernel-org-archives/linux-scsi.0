@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AD22C433FB
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:05:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78508C433E3
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:06:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ECF21619B8
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:05:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 610B4619DC
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:06:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231267AbhCVQFD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 12:05:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52394 "EHLO mail.kernel.org"
+        id S231768AbhCVQFn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 12:05:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52810 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231815AbhCVQEQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Mar 2021 12:04:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 60C55619A7;
-        Mon, 22 Mar 2021 16:04:10 +0000 (UTC)
+        id S231801AbhCVQFH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Mar 2021 12:05:07 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2816A619AD;
+        Mon, 22 Mar 2021 16:05:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616429056;
-        bh=n4YjjyF/BQX1oLI53brWrn/ZFErJefAlbdz/B6a/LhI=;
+        s=k20201202; t=1616429107;
+        bh=hZ+CAtng3yIYZIb+ah3e8qtw8iX8HVHsX0ExOcLMkVU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PJL0qpPDqSs2z7UPLYK5QVJo9sc76O7NWlWo5JPHSsPqGyDVDF4pF7hWXIkB1JA75
-         QpQt35+7BgO8L8Mn3URqgy3oEgZ8mXFVdUTizaV6t4aX9h9ExQGoEX/rwcyz2jamB2
-         scTuPUkDJISJZufdWGtFTIeZztxCxD3lXQOLujQyrS4sySOSS+Y/vZY+qg8LWnqJQL
-         I/Aimz84KOYue+E+Dz/GzEJ2kjYrLgh/PeozYrKn1GELVG7ePD4iEbNB0WU3el9Rvz
-         crDXO284w80Ehtcr/BjQheDrwVIVIOc3LE73CNZdbBcsVLFqijc8sIiXIjFKbmSQwm
-         LtmW3NkvnLTfA==
+        b=dwkY1GeSKE6uqnx1AxEi3VFdRhYPg81cUVXGmS7VFECNmiWnHG9H8Xs03DE5r5UkI
+         2VYRrKWZEbiYE/8Go+UBgggdeU5IHX8PCQyERsMz4uhXvD8S/WDGEhcAqel5lYAhxx
+         GH5OrCzsuWJ7MemQavOxq36ZBrGw8QsN0rHVPucenBu12gisEUNifGSz6+0j2xJ9ZZ
+         bEVaUqft+/YBHP8/oDZqfcdvztMrcHT8BJQ3udH192n6G7X4gUnHIGCuLP1ptF/QU4
+         TnlXa1Qe8PUzWprVm8njgDc/yGpNfz20AWAFmYDGGOfZtOuyJUs4ZC7Fgr12Ezshk/
+         OxLRDx1pnNY1A==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
+        Simon Kelley <simon@thekelleys.org.uk>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
 Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         Ning Sun <ning.sun@intel.com>,
         Jani Nikula <jani.nikula@linux.intel.com>,
-        Simon Kelley <simon@thekelleys.org.uk>,
         James Smart <james.smart@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
@@ -51,21 +51,17 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
         linux-security-module@vger.kernel.org,
-        Carl Huang <cjhuang@codeaurora.org>,
-        Maharaja Kennadyrajan <mkenna@codeaurora.org>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Ritesh Singh <ritesi@codeaurora.org>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Aloka Dixit <alokad@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: [PATCH 04/11] ath11: Wstringop-overread warning
-Date:   Mon, 22 Mar 2021 17:02:42 +0100
-Message-Id: <20210322160253.4032422-5-arnd@kernel.org>
+        Lee Jones <lee.jones@linaro.org>,
+        Pascal Terjan <pterjan@google.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Subject: [PATCH 08/11] atmel: avoid gcc -Wstringop-overflow warning
+Date:   Mon, 22 Mar 2021 17:02:46 +0100
+Message-Id: <20210322160253.4032422-9-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
 References: <20210322160253.4032422-1-arnd@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -73,44 +69,73 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-gcc-11 with the kernel address sanitizer prints a warning for this
-driver:
+gcc-11 notices that the fields as defined in the ass_req_format
+structure do not match the actual use of that structure:
 
-In function 'ath11k_peer_assoc_h_vht',
-    inlined from 'ath11k_peer_assoc_prepare' at drivers/net/wireless/ath/ath11k/mac.c:1632:2:
-drivers/net/wireless/ath/ath11k/mac.c:1164:13: error: 'ath11k_peer_assoc_h_vht_masked' reading 16 bytes from a region of size 4 [-Werror=stringop-overread]
- 1164 |         if (ath11k_peer_assoc_h_vht_masked(vht_mcs_mask))
-      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/net/wireless/ath/ath11k/mac.c: In function 'ath11k_peer_assoc_prepare':
-drivers/net/wireless/ath/ath11k/mac.c:1164:13: note: referencing argument 1 of type 'const u16 *' {aka 'const short unsigned int *'}
-drivers/net/wireless/ath/ath11k/mac.c:969:1: note: in a call to function 'ath11k_peer_assoc_h_vht_masked'
-  969 | ath11k_peer_assoc_h_vht_masked(const u16 vht_mcs_mask[NL80211_VHT_NSS_MAX])
-      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cc1: error: writing 4 bytes into a region of size between 18446744073709551613 and 2 [-Werror=stringop-overflow=]
+drivers/net/wireless/atmel/atmel.c:2884:20: note: at offset [4, 6] into destination object ‘ap’ of size 6
+ 2884 |                 u8 ap[ETH_ALEN]; /* nothing after here directly accessible */
+      |                    ^~
+drivers/net/wireless/atmel/atmel.c:2885:20: note: at offset [4, 6] into destination object ‘ssid_el_id’ of size 1
+ 2885 |                 u8 ssid_el_id;
+      |                    ^~~~~~~~~~
 
-According to analysis from gcc developers, this is a glitch in the
-way gcc tracks the size of struct members. This should really get
-fixed in gcc, but it's also easy to work around this instance
-by changing the function prototype to no include the length of
-the array.
+This is expected here because the actual structure layout is variable.
+As the code does not actually access the individual fields, replace
+them with a comment and fixed-length array so prevent gcc from
+complaining about it.
 
-Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99673
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/atmel/atmel.c | 25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index b391169576e2..5cb7ed53f3c4 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -966,7 +966,7 @@ ath11k_peer_assoc_h_ht_masked(const u8 ht_mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
- }
+diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
+index 707fe66727f8..ff9152d600e1 100644
+--- a/drivers/net/wireless/atmel/atmel.c
++++ b/drivers/net/wireless/atmel/atmel.c
+@@ -2881,13 +2881,18 @@ static void send_association_request(struct atmel_private *priv, int is_reassoc)
+ 	struct ass_req_format {
+ 		__le16 capability;
+ 		__le16 listen_interval;
+-		u8 ap[ETH_ALEN]; /* nothing after here directly accessible */
+-		u8 ssid_el_id;
+-		u8 ssid_len;
+-		u8 ssid[MAX_SSID_LENGTH];
+-		u8 sup_rates_el_id;
+-		u8 sup_rates_len;
+-		u8 rates[4];
++		u8 ssid_el[ETH_ALEN + 2 + MAX_SSID_LENGTH + 2 + 4];
++		/*
++		 * nothing after here directly accessible:
++		 *
++		 * u8 ap[ETH_ALEN];
++		 * u8 ssid_el_id;
++		 * u8 ssid_len;
++		 * u8 ssid[MAX_SSID_LENGTH];
++		 * u8 sup_rates_el_id;
++		 * u8 sup_rates_len;
++		 * u8 rates[4];
++		 */
+ 	} body;
  
- static bool
--ath11k_peer_assoc_h_vht_masked(const u16 vht_mcs_mask[NL80211_VHT_NSS_MAX])
-+ath11k_peer_assoc_h_vht_masked(const u16 vht_mcs_mask[])
- {
- 	int nss;
+ 	header.frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+@@ -2907,13 +2912,13 @@ static void send_association_request(struct atmel_private *priv, int is_reassoc)
+ 
+ 	body.listen_interval = cpu_to_le16(priv->listen_interval * priv->beacon_period);
+ 
++	ssid_el_p = body.ssid_el;
+ 	/* current AP address - only in reassoc frame */
+ 	if (is_reassoc) {
+-		memcpy(body.ap, priv->CurrentBSSID, ETH_ALEN);
+-		ssid_el_p = &body.ssid_el_id;
++		memcpy(ssid_el_p, priv->CurrentBSSID, ETH_ALEN);
++		ssid_el_p += ETH_ALEN;
+ 		bodysize = 18 + priv->SSID_size;
+ 	} else {
+-		ssid_el_p = &body.ap[0];
+ 		bodysize = 12 + priv->SSID_size;
+ 	}
  
 -- 
 2.29.2
