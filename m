@@ -2,121 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5CB1C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFA39C433C1
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:08:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7336D619B8
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:07:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9972B6198C
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:08:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232000AbhCVQGo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 12:06:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53216 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230499AbhCVQFa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Mar 2021 12:05:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9E526619B3;
-        Mon, 22 Mar 2021 16:05:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616429130;
-        bh=Cz6Ib/Jy2MCBRG3RkrW7YxIgzj/6kEv+v4DuuyruVdM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YmX1KQkIWDTM9oL9SIaizhQuXBgId2TgjaOHRvpRa8ujB1Hj1aOwCgrCrMNJVi2gq
-         P8VgokfOwAmfnYZLX1rsRk4pLvkeDX2bspNuX1VYi25/JXoxXtnn7F2MgFWC0FsAFu
-         N+uQuJ3Me21QeU0KrCs4aFbaBIGeJwlctHwPj1pA51MBMY2ra+UvbFh+zl+P+BsSj9
-         1ElKemq6Wxa1TUdo/FGf/LywTMYZxZt3573Q+qI3GKdCXVd48krzSZHquQETNI++01
-         tCB8r6B7NO2iohCFFlGopnfYJGFYOD5rOpt+nJhCejnPW+cx72ztkTHm7tbHkrEoPf
-         S1/KeKBMSo8Ag==
-From:   Arnd Bergmann <arnd@kernel.org>
-To:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>
-Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
-        Ning Sun <ning.sun@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Simon Kelley <simon@thekelleys.org.uk>,
-        James Smart <james.smart@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
-        Serge Hallyn <serge@hallyn.com>,
-        Imre Deak <imre.deak@intel.com>,
-        linux-arm-kernel@lists.infradead.org,
-        tboot-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
-        linux-security-module@vger.kernel.org,
-        Chris Wilson <chris@chris-wilson.co.uk>,
-        =?UTF-8?q?Jos=C3=A9=20Roberto=20de=20Souza?= <jose.souza@intel.com>,
-        =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= 
-        <ville.syrjala@linux.intel.com>,
-        Matt Roper <matthew.d.roper@intel.com>,
-        Aditya Swarup <aditya.swarup@intel.com>
-Subject: [PATCH 10/11] drm/i915: avoid stringop-overread warning on pri_latency
-Date:   Mon, 22 Mar 2021 17:02:48 +0100
-Message-Id: <20210322160253.4032422-11-arnd@kernel.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
-References: <20210322160253.4032422-1-arnd@kernel.org>
+        id S230358AbhCVQIX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 12:08:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42596 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230300AbhCVQHr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 12:07:47 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3180C061574;
+        Mon, 22 Mar 2021 09:07:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=WnvXnJzljojS8tgnkv0qyX+4X9mX4IsbTi96GynIueY=; b=ArtuoRXw+MQxkBTgpMWQHo9aLO
+        Bqy+gGcBB7EpHPjwSB+HJ5qYLkF0Tf48XE/eZ+hhB0+9yxlcDDMa+c8iaS/fTcHZGnbyUNhP2uPTz
+        tXgNMwbNbKXU3diYnR/Vs1gdk3gtjXD4y7lCdx3jI7fVyXLBP6HMsa/SoxBj9XLPLZp5zkujykaP2
+        yACZiMrg2uRbPVcwlbmObfZDRLgrLtKNCp6PjH7Sbz1z93aHQCZaGzeuV3pPiscWylmYqA8MOvuCb
+        MjD8e4JWQAVY5b5glxuQ9Cma/iWupffbeA6Ib70uuoaOxOdAy/Bltik7aQuk/kAJmCrE+SSBVn9ih
+        gA9NWfsA==;
+Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lON4Z-008krr-Bd; Mon, 22 Mar 2021 16:06:48 +0000
+Date:   Mon, 22 Mar 2021 16:06:31 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Arnd Bergmann <arnd@arndb.de>, Jens Axboe <axboe@kernel.dk>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] target: pscsi: avoid Wempty-body warning
+Message-ID: <20210322160631.GQ1719932@casper.infradead.org>
+References: <20210322114441.3479365-1-arnd@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210322114441.3479365-1-arnd@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+On Mon, Mar 22, 2021 at 12:44:34PM +0100, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Building with 'make W=1' shows a harmless warning for pscsi:
+> 
+> drivers/target/target_core_pscsi.c: In function 'pscsi_complete_cmd':
+> drivers/target/target_core_pscsi.c:624:33: error: suggest braces around empty body in an 'if' statement [-Werror=empty-body]
+>   624 |                                 ; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
+>       |                                 ^
+> 
+> Rework the coding style as suggested by gcc to avoid the warning.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/target/target_core_pscsi.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+> index 3cbc074992bc..913b092955f6 100644
+> --- a/drivers/target/target_core_pscsi.c
+> +++ b/drivers/target/target_core_pscsi.c
+> @@ -620,8 +620,9 @@ static void pscsi_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
+>  			unsigned char *buf;
+>  
+>  			buf = transport_kmap_data_sg(cmd);
+> -			if (!buf)
+> -				; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
+> +			if (!buf) {
+> +				/* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
+> +			}
 
-gcc-11 warns about what appears to be an out-of-range array access:
+But why not just delete the code?
 
-In function ‘snb_wm_latency_quirk’,
-    inlined from ‘ilk_setup_wm_latency’ at drivers/gpu/drm/i915/intel_pm.c:3108:3:
-drivers/gpu/drm/i915/intel_pm.c:3057:9: error: ‘intel_print_wm_latency’ reading 16 bytes from a region of size 10 [-Werror=stringop-overread]
- 3057 |         intel_print_wm_latency(dev_priv, "Primary", dev_priv->wm.pri_latency);
-      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/gpu/drm/i915/intel_pm.c: In function ‘ilk_setup_wm_latency’:
-drivers/gpu/drm/i915/intel_pm.c:3057:9: note: referencing argument 3 of type ‘const u16 *’ {aka ‘const short unsigned int *’}
-drivers/gpu/drm/i915/intel_pm.c:2994:13: note: in a call to function ‘intel_print_wm_latency’
- 2994 | static void intel_print_wm_latency(struct drm_i915_private *dev_priv,
-      |             ^~~~~~~~~~~~~~~~~~~~~~
+			buf = transport_kmap_data_sg(cmd);
+			/* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
 
-My guess is that this code is actually safe because the size of the
-array depends on the hardware generation, and the function checks for
-that, but at the same time I would not expect the compiler to work it
-out correctly, and the code seems a little fragile with regards to
-future changes. Simply increasing the size of the array should help.
+I mean, this seems like a real warning here.  We're not actually
+handling the failure to allocate 'buf'.  It's not marked as __must_check,
+but watch the code flow:
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/gpu/drm/i915/i915_drv.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+                        buf = transport_kmap_data_sg(cmd);
+                        if (!buf)
+                                ; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
 
-diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index 26d69d06aa6d..3567602e0a35 100644
---- a/drivers/gpu/drm/i915/i915_drv.h
-+++ b/drivers/gpu/drm/i915/i915_drv.h
-@@ -1095,11 +1095,11 @@ struct drm_i915_private {
- 		 * in 0.5us units for WM1+.
- 		 */
- 		/* primary */
--		u16 pri_latency[5];
-+		u16 pri_latency[8];
- 		/* sprite */
--		u16 spr_latency[5];
-+		u16 spr_latency[8];
- 		/* cursor */
--		u16 cur_latency[5];
-+		u16 cur_latency[8];
- 		/*
- 		 * Raw watermark memory latency values
- 		 * for SKL for all 8 levels
--- 
-2.29.2
+                        if (cdb[0] == MODE_SENSE_10) {
+                                if (!(buf[3] & 0x80))
+                                        buf[3] |= 0x80;
+                        } else {
+                                if (!(buf[2] & 0x80))
+                                        buf[2] |= 0x80;
+                        }
 
+we're about to do a NULL ptr dereference.  So this should be handled
+somehow.
