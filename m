@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1387C433C1
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 20:10:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 293E6C433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 20:10:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 706436198E
+	by mail.kernel.org (Postfix) with ESMTP id EF41361993
 	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 20:10:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231180AbhCVUKZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 16:10:25 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:33772 "EHLO mta-01.yadro.com"
+        id S231373AbhCVUK0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 16:10:26 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:33786 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230060AbhCVUKB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Mar 2021 16:10:01 -0400
+        id S230070AbhCVUKD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Mar 2021 16:10:03 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 4DF0E41283;
-        Mon, 22 Mar 2021 20:10:00 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 5D3B9404CB;
+        Mon, 22 Mar 2021 20:10:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1616443799; x=1618258200; bh=jiapYNxEYgspNlicJ0C26XsAPFxvHbgODn0
-        Y5Fr/ACM=; b=J1M3YQbDaEfwQFNOLOfsRJdnJoiCvQ1/Qjr5XU1d+ughdNY4hkf
-        3QZkFBdzShOvqickvcuHw1w9BvALOWRn9t3t2UKMqooMlFItfwiVuAzIFi2RyZ9R
-        gi8Y+5Qk+G5ZwKagc/Gqym5x34/Cw+i8dGChNpfATd6T8q6Du9gvZvNo=
+        1616443800; x=1618258201; bh=jn0F44ilMeAVo9HVIpJDCwun5rsR+QxTPQ8
+        wDGOI4qM=; b=NgMWt+9HB7YDHXsxVa5w/bFRugs3X4r3nR9+oquMksewZhbtwcW
+        IKpqbHmST3vO8R3mHj2aC8FaiklbwxBmr60faGgSOn057Tx8ll7ufAoBRUVBxBaF
+        aTXIhzfgwhcakxFoVhYHhkYSjmnfn0CfypLUXFAt5T+ZDsHa8atyEMXI=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id o1EahC1DPHJs; Mon, 22 Mar 2021 23:09:59 +0300 (MSK)
+        with ESMTP id PYF5w0Jp6ZUt; Mon, 22 Mar 2021 23:10:00 +0300 (MSK)
 Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 7D30541243;
-        Mon, 22 Mar 2021 23:09:58 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 69DA841220;
+        Mon, 22 Mar 2021 23:09:59 +0300 (MSK)
 Received: from yadro.com (10.199.0.64) by T-EXCH-03.corp.yadro.com
  (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 22
- Mar 2021 23:09:57 +0300
+ Mar 2021 23:09:58 +0300
 From:   Konstantin Shelekhin <k.shelekhin@yadro.com>
 To:     Martin Petersen <martin.petersen@oracle.com>,
         Mike Christie <michael.christie@oracle.com>,
@@ -50,9 +50,9 @@ To:     Martin Petersen <martin.petersen@oracle.com>,
 CC:     <linux@yadro.com>, <linux-scsi@vger.kernel.org>,
         Konstantin Shelekhin <k.shelekhin@yadro.com>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH v2 1/2] target: Add the DUMMY flag to rd_mcp
-Date:   Mon, 22 Mar 2021 23:09:37 +0300
-Message-ID: <20210322200938.53300-2-k.shelekhin@yadro.com>
+Subject: [PATCH v2 2/2] target: Make the virtual LUN 0 device dummy
+Date:   Mon, 22 Mar 2021 23:09:38 +0300
+Message-ID: <20210322200938.53300-3-k.shelekhin@yadro.com>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210322200938.53300-1-k.shelekhin@yadro.com>
 References: <20210322200938.53300-1-k.shelekhin@yadro.com>
@@ -66,99 +66,54 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This commit adds the DUMMY flag to the rd_mcp backend that forces a
-logical unit to report itself as not connected device of an unknown
-type. Essentially this allows users to create devices identical to the
-device for the virtual LUN 0, making it possible to explicitly create a
-LUN 0 device and configure it's WWNs (e.g. vendor or product name).
+Create the device for the virtual LUN 0 using the DUMMY flag. This
+change makes it possible to remove some special-casing in the
+INQUIRY code.
 
 Signed-off-by: Konstantin Shelekhin <k.shelekhin@yadro.com>
 Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
 ---
- drivers/target/target_core_rd.c | 27 +++++++++++++++++++++++----
- drivers/target/target_core_rd.h |  1 +
- 2 files changed, 24 insertions(+), 4 deletions(-)
+ drivers/target/target_core_device.c | 2 +-
+ drivers/target/target_core_spc.c    | 6 +-----
+ 2 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index bf936bbeccfe..6648c1c90e19 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -530,12 +530,13 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- }
- 
- enum {
--	Opt_rd_pages, Opt_rd_nullio, Opt_err
-+	Opt_rd_pages, Opt_rd_nullio, Opt_rd_dummy, Opt_err
- };
- 
- static match_table_t tokens = {
- 	{Opt_rd_pages, "rd_pages=%d"},
- 	{Opt_rd_nullio, "rd_nullio=%d"},
-+	{Opt_rd_dummy, "rd_dummy=%d"},
- 	{Opt_err, NULL}
- };
- 
-@@ -574,6 +575,14 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
- 			pr_debug("RAMDISK: Setting NULLIO flag: %d\n", arg);
- 			rd_dev->rd_flags |= RDF_NULLIO;
- 			break;
-+		case Opt_rd_dummy:
-+			match_int(args, &arg);
-+			if (arg != 1)
-+				break;
-+
-+			pr_debug("RAMDISK: Setting DUMMY flag: %d\n", arg);
-+			rd_dev->rd_flags |= RDF_DUMMY;
-+			break;
- 		default:
- 			break;
- 		}
-@@ -590,12 +599,22 @@ static ssize_t rd_show_configfs_dev_params(struct se_device *dev, char *b)
- 	ssize_t bl = sprintf(b, "TCM RamDisk ID: %u  RamDisk Makeup: rd_mcp\n",
- 			rd_dev->rd_dev_id);
- 	bl += sprintf(b + bl, "        PAGES/PAGE_SIZE: %u*%lu"
--			"  SG_table_count: %u  nullio: %d\n", rd_dev->rd_page_count,
-+			"  SG_table_count: %u  nullio: %d dummy: %d\n",
-+			rd_dev->rd_page_count,
- 			PAGE_SIZE, rd_dev->sg_table_count,
--			!!(rd_dev->rd_flags & RDF_NULLIO));
-+			!!(rd_dev->rd_flags & RDF_NULLIO),
-+			!!(rd_dev->rd_flags & RDF_DUMMY));
- 	return bl;
- }
- 
-+static u32 rd_get_device_type(struct se_device *dev)
-+{
-+	if (RD_DEV(dev)->rd_flags & RDF_DUMMY)
-+		return 0x3f; /* Unknown device type, not connected */
-+	else
-+		return sbc_get_device_type(dev);
-+}
-+
- static sector_t rd_get_blocks(struct se_device *dev)
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 7787c527aad3..2d50da7840fc 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -1029,7 +1029,7 @@ int core_dev_setup_virtual_lun0(void)
  {
- 	struct rd_dev *rd_dev = RD_DEV(dev);
-@@ -647,7 +666,7 @@ static const struct target_backend_ops rd_mcp_ops = {
- 	.parse_cdb		= rd_parse_cdb,
- 	.set_configfs_dev_params = rd_set_configfs_dev_params,
- 	.show_configfs_dev_params = rd_show_configfs_dev_params,
--	.get_device_type	= sbc_get_device_type,
-+	.get_device_type	= rd_get_device_type,
- 	.get_blocks		= rd_get_blocks,
- 	.init_prot		= rd_init_prot,
- 	.free_prot		= rd_free_prot,
-diff --git a/drivers/target/target_core_rd.h b/drivers/target/target_core_rd.h
-index 8b88f9b14c3f..9ffda5c4b584 100644
---- a/drivers/target/target_core_rd.h
-+++ b/drivers/target/target_core_rd.h
-@@ -28,6 +28,7 @@ struct rd_dev_sg_table {
+ 	struct se_hba *hba;
+ 	struct se_device *dev;
+-	char buf[] = "rd_pages=8,rd_nullio=1";
++	char buf[] = "rd_pages=8,rd_nullio=1,rd_dummy=1";
+ 	int ret;
  
- #define RDF_HAS_PAGE_COUNT	0x01
- #define RDF_NULLIO		0x02
-+#define RDF_DUMMY		0x04
+ 	hba = core_alloc_hba("rd_mcp", 0, HBA_FLAGS_INTERNAL_USE);
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index ca5579ebc81d..70a661801cb9 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -701,7 +701,6 @@ static sense_reason_t
+ spc_emulate_inquiry(struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+-	struct se_portal_group *tpg = cmd->se_lun->lun_tpg;
+ 	unsigned char *rbuf;
+ 	unsigned char *cdb = cmd->t_task_cdb;
+ 	unsigned char *buf;
+@@ -715,10 +714,7 @@ spc_emulate_inquiry(struct se_cmd *cmd)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 	}
  
- struct rd_dev {
- 	struct se_device dev;
+-	if (dev == rcu_access_pointer(tpg->tpg_virt_lun0->lun_se_dev))
+-		buf[0] = 0x3f; /* Not connected */
+-	else
+-		buf[0] = dev->transport->get_device_type(dev);
++	buf[0] = dev->transport->get_device_type(dev);
+ 
+ 	if (!(cdb[1] & 0x1)) {
+ 		if (cdb[2]) {
 -- 
 2.31.0
 
