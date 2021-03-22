@@ -2,121 +2,166 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88150C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 08:14:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48772C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 08:41:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3757761973
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 08:14:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B70761973
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 08:41:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229728AbhCVINf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 04:13:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52506 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230131AbhCVIN2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 04:13:28 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7F43C061574;
-        Mon, 22 Mar 2021 01:13:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ZNtQiL6tIyqch+BmC79W/NJ6n9Wo/6qrrvbdpMthN14=; b=Z3czrzgs7g5m4PHydjpPMdqmv9
-        XAPLDRUQpzn10rX3V6rakbFpXs2+E53sFwZrExGGHF7yVLyUzCWK55lH+zkFkkfJpEkGLDHnh0HHp
-        1cLEcYc9ASJpHqon3wKbDQpm5U5S8AFs9UxC+MEq0XBMlhnP7vPY3YFCLBfaaAXyP3DHTsST9dFgh
-        9ce39twENQO+bQlzOg1krJL6200dlTDX1N1kYrw2TTxDB5FXnc1tSFCyd/jGYNJ4z9d58Lqj32KU2
-        LdosiNGSNlpu6SdPPlLT+4NyGvS1HcYi69HuA5WMpoH8LB1I68VV0a7Ewbj70iGWweya26MoPR2vW
-        gmhHNx/A==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lOFfH-008Btj-KA; Mon, 22 Mar 2021 08:12:09 +0000
-Date:   Mon, 22 Mar 2021 08:11:55 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Zhiqiang Liu <liuzhiqiang26@huawei.com>
-Cc:     agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linfeilong <linfeilong@huawei.com>,
-        lixiaokeng <lixiaokeng@huawei.com>,
-        "wubo (T)" <wubo40@huawei.com>
-Subject: Re: [PATCH] md/dm-mpath: check whether all pgpaths have same uuid in
- multipath_ctr()
-Message-ID: <20210322081155.GE1946905@infradead.org>
-References: <c8f86351-3036-0945-90d2-2e020d68ccf2@huawei.com>
+        id S229822AbhCVIkn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 04:40:43 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:13655 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229547AbhCVIkm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 04:40:42 -0400
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4F3nvM1KDtznV3M;
+        Mon, 22 Mar 2021 16:38:07 +0800 (CST)
+Received: from [127.0.0.1] (10.40.192.131) by DGGEMS407-HUB.china.huawei.com
+ (10.3.19.207) with Microsoft SMTP Server id 14.3.498.0; Mon, 22 Mar 2021
+ 16:40:26 +0800
+Subject: Re: [PATCH v2] scsi: libsas: Reset num_scatter if libata mark qc as
+ NODATA
+To:     John Garry <john.garry@huawei.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        "Jolly Shah" <jollys@google.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <a.darwish@linutronix.de>,
+        <dan.carpenter@oracle.com>, <b.zolnierkie@samsung.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20210318225632.2481291-1-jollys@google.com>
+ <5e7ea537-86ab-f654-1df4-765364116e18@huawei.com>
+ <993f97da-01f0-262b-3fbe-66fa1769698a@huawei.com>
+From:   luojiaxing <luojiaxing@huawei.com>
+Message-ID: <f74c0003-dbbf-5b4a-87f2-cd5571ea412e@huawei.com>
+Date:   Mon, 22 Mar 2021 16:40:26 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c8f86351-3036-0945-90d2-2e020d68ccf2@huawei.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <993f97da-01f0-262b-3fbe-66fa1769698a@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Originating-IP: [10.40.192.131]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Mar 20, 2021 at 03:19:23PM +0800, Zhiqiang Liu wrote:
-> From: Zhiqiang Liu <liuzhiqiang26@huawei.com>
-> 
-> When we make IO stress test on multipath device, there will
-> be a metadata err because of wrong path. In the test, we
-> concurrent execute 'iscsi device login|logout' and
-> 'multipath -r' command with IO stress on multipath device.
-> In some case, systemd-udevd may have not time to process
-> uevents of iscsi device logout|login, and then 'multipath -r'
-> command triggers multipathd daemon calls ioctl to load table
-> with incorrect old device info from systemd-udevd.
-> Then, one iscsi path may be incorrectly attached to another
-> multipath which has different uuid. Finally, the metadata err
-> occurs when umounting filesystem to down write metadata on
-> the iscsi device which is actually not owned by the multipath
-> device.
-> 
-> So we need to check whether all pgpaths of one multipath have
-> the same uuid, if not, we should throw a error.
-> 
-> Signed-off-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
-> Signed-off-by: lixiaokeng <lixiaokeng@huawei.com>
-> Signed-off-by: linfeilong <linfeilong@huawei.com>
-> Signed-off-by: Wubo <wubo40@huawei.com>
-> ---
->  drivers/md/dm-mpath.c   | 52 +++++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/scsi_lib.c |  1 +
->  2 files changed, 53 insertions(+)
-> 
-> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> index bced42f082b0..f0b995784b53 100644
-> --- a/drivers/md/dm-mpath.c
-> +++ b/drivers/md/dm-mpath.c
-> @@ -24,6 +24,7 @@
->  #include <linux/workqueue.h>
->  #include <linux/delay.h>
->  #include <scsi/scsi_dh.h>
-> +#include <linux/dm-ioctl.h>
->  #include <linux/atomic.h>
->  #include <linux/blk-mq.h>
-> 
-> @@ -1169,6 +1170,45 @@ static int parse_features(struct dm_arg_set *as, struct multipath *m)
->  	return r;
->  }
-> 
-> +#define SCSI_VPD_LUN_ID_PREFIX_LEN 4
-> +#define MPATH_UUID_PREFIX_LEN 7
-> +static int check_pg_uuid(struct priority_group *pg, char *md_uuid)
-> +{
-> +	char pgpath_uuid[DM_UUID_LEN] = {0};
-> +	struct request_queue *q;
-> +	struct pgpath *pgpath;
-> +	struct scsi_device *sdev;
-> +	ssize_t count;
-> +	int r = 0;
-> +
-> +	list_for_each_entry(pgpath, &pg->pgpaths, list) {
-> +		q = bdev_get_queue(pgpath->path.dev->bdev);
-> +		sdev = scsi_device_from_queue(q);
 
-Common dm-multipath code should never poke into scsi internals.  This
-is something for the device handler to check.  It probably also won't
-work for all older devices.
+On 2021/3/20 20:14, John Garry wrote:
+> On 19/03/2021 01:43, Jason Yan wrote:
+>>
+>>
+>> 在 2021/3/19 6:56, Jolly Shah 写道:
+>>> When the cache_type for the scsi device is changed, the scsi layer
+>>> issues a MODE_SELECT command. The caching mode details are communicated
+>>> via a request buffer associated with the scsi command with data
+>>> direction set as DMA_TO_DEVICE (scsi_mode_select). When this command
+>>> reaches the libata layer, as a part of generic initial setup, libata
+>>> layer sets up the scatterlist for the command using the scsi command
+>>> (ata_scsi_qc_new). This command is then translated by the libata layer
+>>> into ATA_CMD_SET_FEATURES (ata_scsi_mode_select_xlat). The libata layer
+>>> treats this as a non data command (ata_mselect_caching), since it only
+>>> needs an ata taskfile to pass the caching on/off information to the
+>>> device. It does not need the scatterlist that has been setup, so it 
+>>> does
+>>> not perform dma_map_sg on the scatterlist (ata_qc_issue). 
+>>> Unfortunately,
+>>> when this command reaches the libsas layer(sas_ata_qc_issue), libsas
+>>> layer sees it as a non data command with a scatterlist. It cannot
+>>> extract the correct dma length, since the scatterlist has not been
+>>> mapped with dma_map_sg for a DMA operation. When this partially
+>>> constructed SAS task reaches pm80xx LLDD, it results in below warning.
+>>>
+>>> "pm80xx_chip_sata_req 6058: The sg list address
+>>> start_addr=0x0000000000000000 data_len=0x0end_addr_high=0xffffffff
+>>> end_addr_low=0xffffffff has crossed 4G boundary"
+>>>
+>>> This patch updates code to handle ata non data commands separately so
+>>> num_scatter and total_xfer_len remain 0.
+>>>
+>>> Fixes: 53de092f47ff ("scsi: libsas: Set data_dir as DMA_NONE if 
+>>> libata marks qc as NODATA")
+>>> Signed-off-by: Jolly Shah <jollys@google.com>
+>
+> Reviewed-by: John Garry <john.garry@huawei.com>
+>
+> @luojiaxing, can you please test this?
+
+
+Sure, let me take a look, and reply the test result here later
+
+
+Thanks
+
+Jiaxing
+
+
+>
+>>> ---
+>>> v2:
+>>> - reorganized code to avoid setting num_scatter twice
+>>>
+>>>   drivers/scsi/libsas/sas_ata.c | 9 ++++-----
+>>>   1 file changed, 4 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/libsas/sas_ata.c 
+>>> b/drivers/scsi/libsas/sas_ata.c
+>>> index 024e5a550759..8b9a39077dba 100644
+>>> --- a/drivers/scsi/libsas/sas_ata.c
+>>> +++ b/drivers/scsi/libsas/sas_ata.c
+>>> @@ -201,18 +201,17 @@ static unsigned int sas_ata_qc_issue(struct 
+>>> ata_queued_cmd *qc)
+>>>           memcpy(task->ata_task.atapi_packet, qc->cdb, 
+>>> qc->dev->cdb_len);
+>>>           task->total_xfer_len = qc->nbytes;
+>>>           task->num_scatter = qc->n_elem;
+>>> +        task->data_dir = qc->dma_dir;
+>>> +    } else if (qc->tf.protocol == ATA_PROT_NODATA) {
+>>> +        task->data_dir = DMA_NONE;
+>>
+>> Hi Jolly & John,
+>>
+>> We only set DMA_NONE for ATA_PROT_NODATA, I'm curious about why 
+>> ATA_PROT_NCQ_NODATA and ATAPI_PROT_NODATA do not need to set DMA_NONE?
+>
+> So we can see something like atapi_eh_tur() -> ata_exec_internal(), 
+> which is a ATAPI NONDATA and has DMA_NONE, so should be ok.
+>
+> Other cases, like those using the xlate function on the qc for 
+> ATA_PROT_NCQ_NODATA, could be checked further.
+>
+> For now, we're just trying to fix the fix.
+>
+>>
+>> Thanks,
+>> Jason
+>>
+>>
+>>>       } else {
+>>>           for_each_sg(qc->sg, sg, qc->n_elem, si)
+>>>               xfer += sg_dma_len(sg);
+>>>           task->total_xfer_len = xfer;
+>>>           task->num_scatter = si;
+>>> -    }
+>>> -
+>>> -    if (qc->tf.protocol == ATA_PROT_NODATA)
+>>> -        task->data_dir = DMA_NONE;
+>>> -    else
+>>>           task->data_dir = qc->dma_dir;
+>>> +    }
+>>>       task->scatter = qc->sg;
+>>>       task->ata_task.retry_count = 1;
+>>>       task->task_state_flags = SAS_TASK_STATE_PENDING;
+>>>
+>> .
+>
+>
+> .
+>
+
