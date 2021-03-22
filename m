@@ -2,96 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6215CC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 22:43:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79C50C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 22:50:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37C1F61934
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 22:43:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50DB561972
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 22:50:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230031AbhCVWnV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 18:43:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42914 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229871AbhCVWnR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 18:43:17 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A911FC061574;
-        Mon, 22 Mar 2021 15:43:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:To:Subject:Sender:
-        Reply-To:Cc:Content-ID:Content-Description;
-        bh=9YTzv0k/0bqNaGXA3Rty/m7xcWWiXCK/jySxxAF8xE8=; b=nJzak8UpA+b/ADMuG7IP1dMbb9
-        x+pFVQM3dVMUps/rCCi18MlVTl26xTJ89QgD8tu6gML3aihBncnVqWa2EMxbXj5OxtB49tCSVMeKG
-        fOZz8kMq7IaVjVH4RV0SUM0Jv7Ly5TmkdJNadFGPSZvttXTTwcPtmRuaQbRSbZbQFlfLxK/oWN7uQ
-        HbNWK+nrHt+Wk7ggpN09mnNhCnLECb8/uECujxRbMRt41oRGKE/0oq6Ja6h+hgdQXyW5wU2LrXils
-        6pC06at4t9tsZPpNbgH9OeIxfG4Kj3jAFTLCckJavfIBVWqHQ4brv5gH/LfEsADfZ7XOp320Rzy2B
-        UdDoDzQA==;
-Received: from [2601:1c0:6280:3f0::3ba4]
-        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lOTGK-009BPM-Cx; Mon, 22 Mar 2021 22:43:07 +0000
-Subject: Re: [PATCH] scsi: bfa: Fix a typo in two places
-To:     Bhaskar Chowdhury <unixbhaskar@gmail.com>,
-        anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20210322205821.1449844-1-unixbhaskar@gmail.com>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <d9f3d7e5-4a52-6f93-1db4-6ef9cf93b736@infradead.org>
-Date:   Mon, 22 Mar 2021 15:43:01 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+        id S230245AbhCVWuU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 18:50:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34932 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230095AbhCVWuM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Mar 2021 18:50:12 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6CAA5619A3;
+        Mon, 22 Mar 2021 22:50:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616453410;
+        bh=uswimGLXSixuyDNhbT1lz8xZrWttoUKDID8KyDH0WG0=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=amyVtju7uIURiCWdHdQflKk1Uy5uaUl0jSM14IOTPFAohfgjX6aNW2KNuxCJtYCAo
+         Iq3iv0T/Fse0yOGtClBFW9lSZE7aaq5x8nvOG96GevRCer6irU7c+80RceV8EVJ5kx
+         MyABhKHnqgLkwgPjFUcsT9rt5Ch7AD6xkqPlfErTbnJ16VSW7CL/8voAWgmiYiZP+2
+         FNG8ibSI2xKBl+QJzXjnar4dGoW1lmiY/KAWQjWwKmqPmSQ5aiKJPzyqeCBCT+W6FE
+         laR6EilYtVT8DnV5kJgvUwfjeNkVR5uJLU421n3+vr2W/G1PBIgRrNWzYxZ4T75LGD
+         pwIqz5PKV+08w==
+Received: by mail-oo1-f42.google.com with SMTP id 125-20020a4a1a830000b02901b6a144a417so4486190oof.13;
+        Mon, 22 Mar 2021 15:50:10 -0700 (PDT)
+X-Gm-Message-State: AOAM530Is6+xMT8GC+di/OEQq91UzjDdPHSWYJHzwtOzWqKh7ymRYGdo
+        JBmX1Q0N/WSuxhw63jDmpzDyugLPdd0xKeqT0Us=
+X-Google-Smtp-Source: ABdhPJyFT7IMFvy91F/uYGCzlkCC/fHWW2uOMBKkCcSHVU9m95IK8d72cGqN72gkARj9tN7bu2YOUo8AE/gjduOBJeY=
+X-Received: by 2002:a4a:304a:: with SMTP id z10mr1380770ooz.26.1616453409742;
+ Mon, 22 Mar 2021 15:50:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20210322205821.1449844-1-unixbhaskar@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20210322160253.4032422-1-arnd@kernel.org> <20210322160253.4032422-3-arnd@kernel.org>
+ <20210322202958.GA1955909@gmail.com> <b944a853-0e4b-b767-0175-cc2c1edba759@gmail.com>
+In-Reply-To: <b944a853-0e4b-b767-0175-cc2c1edba759@gmail.com>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Mon, 22 Mar 2021 23:49:53 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a0JW0AqQmHXaveD8za1np+W=Q3D4PuHnYKRd8UJqiwhsw@mail.gmail.com>
+Message-ID: <CAK8P3a0JW0AqQmHXaveD8za1np+W=Q3D4PuHnYKRd8UJqiwhsw@mail.gmail.com>
+Subject: Re: [PATCH 02/11] x86: tboot: avoid Wstringop-overread-warning
+To:     Martin Sebor <msebor@gmail.com>
+Cc:     Ingo Molnar <mingo@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Martin Sebor <msebor@gcc.gnu.org>,
+        Ning Sun <ning.sun@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "the arch/x86 maintainers" <x86@kernel.org>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Simon Kelley <simon@thekelleys.org.uk>,
+        James Smart <james.smart@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
+        Serge Hallyn <serge@hallyn.com>,
+        Imre Deak <imre.deak@intel.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        tboot-devel@lists.sourceforge.net,
+        Intel Graphics <intel-gfx@lists.freedesktop.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        ath11k@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Cgroups <cgroups@vger.kernel.org>,
+        LSM List <linux-security-module@vger.kernel.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Will Deacon <will@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/22/21 1:58 PM, Bhaskar Chowdhury wrote:
-> 
-> s/defintions/definitions/  ....two different places.
-> 
-> Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
+On Mon, Mar 22, 2021 at 11:09 PM Martin Sebor <msebor@gmail.com> wrote:
+> On 3/22/21 2:29 PM, Ingo Molnar wrote:
+> > * Arnd Bergmann <arnd@kernel.org> wrote:
+> >
+> > I.e. the real workaround might be to turn off the -Wstringop-overread-warning,
+> > until GCC-11 gets fixed?
+>
+> In GCC 10 -Wstringop-overread is a subset of -Wstringop-overflow.
+> GCC 11 breaks it out as a separate warning to make it easier to
+> control.  Both warnings have caught some real bugs but they both
+> have a nonzero rate of false positives.  Other than bug reports
+> we don't have enough data to say what their S/N ratio might be
+> but my sense is that it's fairly high in general.
+>
+>    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=wstringop-overread
+>    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=wstringop-overflow
 
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
+Unfortunately, stringop-overflow is one of the warnings that is
+completely disabled in the kernel at the moment, rather than
+enabled at one of the user-selectable higher warning levels.
 
-> ---
->  drivers/scsi/bfa/bfa_fc.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
-> index d536270bbe9f..0314e4b9e1fb 100644
-> --- a/drivers/scsi/bfa/bfa_fc.h
-> +++ b/drivers/scsi/bfa/bfa_fc.h
-> @@ -1193,7 +1193,7 @@ enum {
->  };
-> 
->  /*
-> - * defintions for CT reason code
-> + * definitions for CT reason code
->   */
->  enum {
->  	CT_RSN_INV_CMD		= 0x01,
-> @@ -1240,7 +1240,7 @@ enum {
->  };
-> 
->  /*
-> - * defintions for the explanation code for all servers
-> + * definitions for the explanation code for all servers
->   */
->  enum {
->  	CT_EXP_AUTH_EXCEPTION		= 0xF1,
-> --
+I have a patch series to change that and to pull some of these
+into the lower W=1 or W=2 levels or even enable them by default.
 
+To do this though, I first need to ensure that the actual output
+is empty for the normal builds. I added -Wstringop-overflow to
+the list of warnings I wanted to address because it is a new
+warning and only has a dozen or so occurrences throughout the
+kernel.
 
--- 
-~Randy
+> In GCC 11, all access warnings expect objects to be either declared
+> or allocated.  Pointers with constant values are taken to point to
+> nothing valid (as Arnd mentioned above, this is to detect invalid
+> accesses to members of structs at address zero).
+>
+> One possible solution to the known address problem is to extend GCC
+> attributes address and io that pin an object to a hardwired address
+> to all targets (at the moment they're supported on just one or two
+> targets).  I'm not sure this can still happen before GCC 11 releases
+> sometime in April or May.
+>
+> Until then, another workaround is to convert the fixed address to
+> a volatile pointer before using it for the access, along the lines
+> below.  It should have only a negligible effect on efficiency.
+>
+> diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
+> index 4c09ba110204..76326b906010 100644
+> --- a/arch/x86/kernel/tboot.c
+> +++ b/arch/x86/kernel/tboot.c
+> @@ -67,7 +67,9 @@ void __init tboot_probe(void)
+>          /* Map and check for tboot UUID. */
+>          set_fixmap(FIX_TBOOT_BASE, boot_params.tboot_addr);
+>          tboot = (struct tboot *)fix_to_virt(FIX_TBOOT_BASE);
+> -       if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
+> +       if (memcmp(&tboot_uuid,
+> +                  (*(struct tboot* volatile *)(&tboot))->uuid,
+> +                  sizeof(tboot->uuid))) {
+>                  pr_warn("tboot at 0x%llx is invalid\n",
 
+I think a stray 'volatile' would raise too many red flags here, but
+I checked that the RELOC_HIDE() macro has the same effect, e.g.
+
+@@ -66,7 +67,8 @@ void __init tboot_probe(void)
+
+        /* Map and check for tboot UUID. */
+        set_fixmap(FIX_TBOOT_BASE, boot_params.tboot_addr);
+-       tboot = (struct tboot *)fix_to_virt(FIX_TBOOT_BASE);
++       /* RELOC_HIDE to prevent gcc warnings about NULL pointer */
++       tboot = RELOC_HIDE(NULL, fix_to_virt(FIX_TBOOT_BASE));
+        if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
+                pr_warn("tboot at 0x%llx is invalid\n", boot_params.tboot_addr);
+                tboot = NULL;
+
+     Arnd
