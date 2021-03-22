@@ -2,166 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48772C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 08:41:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C250FC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 09:12:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B70761973
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 08:41:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 786F161929
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 09:12:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229822AbhCVIkn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 04:40:43 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:13655 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229547AbhCVIkm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 04:40:42 -0400
-Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4F3nvM1KDtznV3M;
-        Mon, 22 Mar 2021 16:38:07 +0800 (CST)
-Received: from [127.0.0.1] (10.40.192.131) by DGGEMS407-HUB.china.huawei.com
- (10.3.19.207) with Microsoft SMTP Server id 14.3.498.0; Mon, 22 Mar 2021
- 16:40:26 +0800
-Subject: Re: [PATCH v2] scsi: libsas: Reset num_scatter if libata mark qc as
- NODATA
-To:     John Garry <john.garry@huawei.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        "Jolly Shah" <jollys@google.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <a.darwish@linutronix.de>,
-        <dan.carpenter@oracle.com>, <b.zolnierkie@samsung.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20210318225632.2481291-1-jollys@google.com>
- <5e7ea537-86ab-f654-1df4-765364116e18@huawei.com>
- <993f97da-01f0-262b-3fbe-66fa1769698a@huawei.com>
-From:   luojiaxing <luojiaxing@huawei.com>
-Message-ID: <f74c0003-dbbf-5b4a-87f2-cd5571ea412e@huawei.com>
-Date:   Mon, 22 Mar 2021 16:40:26 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        id S229647AbhCVJL4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 05:11:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36800 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229482AbhCVJLv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 05:11:51 -0400
+Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FDCAC061574;
+        Mon, 22 Mar 2021 02:11:51 -0700 (PDT)
+Received: by mail-ed1-x52b.google.com with SMTP id l18so10148811edc.9;
+        Mon, 22 Mar 2021 02:11:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:date:in-reply-to:references:user-agent
+         :mime-version:content-transfer-encoding;
+        bh=rt8sUmmGg6DRuuy6vkqqcgcTqYqiVw67z58kK2mPk5k=;
+        b=OatXRRt/5h2y97MmXC+3D/inte/KkcWSBr6mitISgSZTerBDbKFrna0w3LK3+9je9m
+         SN/aekaNnGmfoiNCW/u5OtsBccwoZN5m9snV8cIXVqvOigyJk5ut6BDlXr7SsgRr1okY
+         Upnp6Lheh8GNI/qBiL7z/4HZYxaKTZZHEEp6Bd3mh1k0+3HqMg3Hb5ijJ+Rq+7uGeAzZ
+         tA0zb2eHD2QDPLFixOk3qk/rCDSZms7q4MvCHMjPVVkW1L//T5mQ8rjj7/Ov3FFmw7px
+         X21pgC6rh8Cwowi3zrz3GYn9YkaAXYi6mq/0BxMAxo5KMqQYZMsq4dQrj7H2FRjfbI1l
+         oR5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=rt8sUmmGg6DRuuy6vkqqcgcTqYqiVw67z58kK2mPk5k=;
+        b=pcvQN2v6j7HdFCgB3eYl9sbokHdv4GRoHQaCLwhp9k00j54fLW5eAKx8+Ez1Y5k0IL
+         ODjGbRsXnDKdJ0cPdnhL0beKohCeTYBntSiwFkUBktXKYX7lYMDa5C8N+YIdy+APVIDp
+         tMBijRzKMW45u1xj0TKv+UNv0eOxyRbWI9/rSmbBqPS4JW520PT1d9Q4uB0wyxN0iqjc
+         hiTAq38YyZEEMgtU8W6gS8r6aBzYKC6ier0VGTErfKOjyYHnGhrdzai5TtQmhyQ3p3MJ
+         uZjAN4G9vqOefeYIbm1n/dVjokeJtFt2GFYSNzajS/XkFEImAQ8M5UVcFA7ar/cKOwgP
+         GnNQ==
+X-Gm-Message-State: AOAM533i4bpcWdKVsQa3S3PeVUJRkyueJYP+ioywdavQLgpALqA7q9VJ
+        n+4DBsrdseQBFOCLh1shDIo=
+X-Google-Smtp-Source: ABdhPJxbY7BWtWRsIpMstJfo2w4ibAysqWUtc+AlKq05EqWMM+k8lOjhI3T1DzmcPV1qyDuQ9MtBOA==
+X-Received: by 2002:a05:6402:484:: with SMTP id k4mr24154841edv.321.1616404309849;
+        Mon, 22 Mar 2021 02:11:49 -0700 (PDT)
+Received: from ubuntu-laptop (ip5f5bec5d.dynamic.kabel-deutschland.de. [95.91.236.93])
+        by smtp.googlemail.com with ESMTPSA id cb17sm11095458edb.10.2021.03.22.02.11.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 Mar 2021 02:11:49 -0700 (PDT)
+Message-ID: <75df140d2167eadf1089d014f571d711a9aeb6a5.camel@gmail.com>
+Subject: Re: [PATCH v31 2/4] scsi: ufs: L2P map management for HPB read
+From:   Bean Huo <huobean@gmail.com>
+To:     daejun7.park@samsung.com, Greg KH <gregkh@linuxfoundation.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Jaemyung Lee <jaemyung.lee@samsung.com>,
+        Jieon Seol <jieon.seol@samsung.com>
+Date:   Mon, 22 Mar 2021 10:11:47 +0100
+In-Reply-To: <20210322065410epcms2p431f73262f508e9e3e16bd4995db56a4b@epcms2p4>
+References: <20210322065127epcms2p5021a61416a6b427c62fcaf5d8b660860@epcms2p5>
+         <CGME20210322065127epcms2p5021a61416a6b427c62fcaf5d8b660860@epcms2p4>
+         <20210322065410epcms2p431f73262f508e9e3e16bd4995db56a4b@epcms2p4>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.4-0ubuntu1 
 MIME-Version: 1.0
-In-Reply-To: <993f97da-01f0-262b-3fbe-66fa1769698a@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Originating-IP: [10.40.192.131]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Mon, 2021-03-22 at 15:54 +0900, Daejun Park wrote:
+> +       switch (rsp_field->hpb_op) {
+> 
+> +       case HPB_RSP_REQ_REGION_UPDATE:
+> 
+> +               if (data_seg_len != DEV_DATA_SEG_LEN)
+> 
+> +                       dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
+> 
+> +                                "%s: data seg length is not
+> same.\n",
+> 
+> +                                __func__);
+> 
+> +               ufshpb_rsp_req_region_update(hpb, rsp_field);
+> 
+> +               break;
+> 
+> +       case HPB_RSP_DEV_RESET:
+> 
+> +               dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
+> 
+> +                        "UFS device lost HPB information during
+> PM.\n");
+> 
+> +               break;
 
-On 2021/3/20 20:14, John Garry wrote:
-> On 19/03/2021 01:43, Jason Yan wrote:
->>
->>
->> 在 2021/3/19 6:56, Jolly Shah 写道:
->>> When the cache_type for the scsi device is changed, the scsi layer
->>> issues a MODE_SELECT command. The caching mode details are communicated
->>> via a request buffer associated with the scsi command with data
->>> direction set as DMA_TO_DEVICE (scsi_mode_select). When this command
->>> reaches the libata layer, as a part of generic initial setup, libata
->>> layer sets up the scatterlist for the command using the scsi command
->>> (ata_scsi_qc_new). This command is then translated by the libata layer
->>> into ATA_CMD_SET_FEATURES (ata_scsi_mode_select_xlat). The libata layer
->>> treats this as a non data command (ata_mselect_caching), since it only
->>> needs an ata taskfile to pass the caching on/off information to the
->>> device. It does not need the scatterlist that has been setup, so it 
->>> does
->>> not perform dma_map_sg on the scatterlist (ata_qc_issue). 
->>> Unfortunately,
->>> when this command reaches the libsas layer(sas_ata_qc_issue), libsas
->>> layer sees it as a non data command with a scatterlist. It cannot
->>> extract the correct dma length, since the scatterlist has not been
->>> mapped with dma_map_sg for a DMA operation. When this partially
->>> constructed SAS task reaches pm80xx LLDD, it results in below warning.
->>>
->>> "pm80xx_chip_sata_req 6058: The sg list address
->>> start_addr=0x0000000000000000 data_len=0x0end_addr_high=0xffffffff
->>> end_addr_low=0xffffffff has crossed 4G boundary"
->>>
->>> This patch updates code to handle ata non data commands separately so
->>> num_scatter and total_xfer_len remain 0.
->>>
->>> Fixes: 53de092f47ff ("scsi: libsas: Set data_dir as DMA_NONE if 
->>> libata marks qc as NODATA")
->>> Signed-off-by: Jolly Shah <jollys@google.com>
->
-> Reviewed-by: John Garry <john.garry@huawei.com>
->
-> @luojiaxing, can you please test this?
+Hi Deajun,
+This series looks good to me. Just here I have one question. You didn't
+handle HPB_RSP_DEV_RESET, just a warning.  Based on your SS UFS, how to
+handle HPB_RSP_DEV_RESET from the host side? Do you think we shoud
+reset host side HPB entry as well or what else?
 
 
-Sure, let me take a look, and reply the test result here later
-
-
-Thanks
-
-Jiaxing
-
-
->
->>> ---
->>> v2:
->>> - reorganized code to avoid setting num_scatter twice
->>>
->>>   drivers/scsi/libsas/sas_ata.c | 9 ++++-----
->>>   1 file changed, 4 insertions(+), 5 deletions(-)
->>>
->>> diff --git a/drivers/scsi/libsas/sas_ata.c 
->>> b/drivers/scsi/libsas/sas_ata.c
->>> index 024e5a550759..8b9a39077dba 100644
->>> --- a/drivers/scsi/libsas/sas_ata.c
->>> +++ b/drivers/scsi/libsas/sas_ata.c
->>> @@ -201,18 +201,17 @@ static unsigned int sas_ata_qc_issue(struct 
->>> ata_queued_cmd *qc)
->>>           memcpy(task->ata_task.atapi_packet, qc->cdb, 
->>> qc->dev->cdb_len);
->>>           task->total_xfer_len = qc->nbytes;
->>>           task->num_scatter = qc->n_elem;
->>> +        task->data_dir = qc->dma_dir;
->>> +    } else if (qc->tf.protocol == ATA_PROT_NODATA) {
->>> +        task->data_dir = DMA_NONE;
->>
->> Hi Jolly & John,
->>
->> We only set DMA_NONE for ATA_PROT_NODATA, I'm curious about why 
->> ATA_PROT_NCQ_NODATA and ATAPI_PROT_NODATA do not need to set DMA_NONE?
->
-> So we can see something like atapi_eh_tur() -> ata_exec_internal(), 
-> which is a ATAPI NONDATA and has DMA_NONE, so should be ok.
->
-> Other cases, like those using the xlate function on the qc for 
-> ATA_PROT_NCQ_NODATA, could be checked further.
->
-> For now, we're just trying to fix the fix.
->
->>
->> Thanks,
->> Jason
->>
->>
->>>       } else {
->>>           for_each_sg(qc->sg, sg, qc->n_elem, si)
->>>               xfer += sg_dma_len(sg);
->>>           task->total_xfer_len = xfer;
->>>           task->num_scatter = si;
->>> -    }
->>> -
->>> -    if (qc->tf.protocol == ATA_PROT_NODATA)
->>> -        task->data_dir = DMA_NONE;
->>> -    else
->>>           task->data_dir = qc->dma_dir;
->>> +    }
->>>       task->scatter = qc->sg;
->>>       task->ata_task.retry_count = 1;
->>>       task->task_state_flags = SAS_TASK_STATE_PENDING;
->>>
->> .
->
->
-> .
->
+Bean
 
