@@ -5,35 +5,34 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14AA5C433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:05:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80541C433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:05:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E515F619AB
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:05:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48449619B5
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:05:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231819AbhCVQFE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 12:05:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52488 "EHLO mail.kernel.org"
+        id S231841AbhCVQFG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 12:05:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52708 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231818AbhCVQE0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Mar 2021 12:04:26 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D63E5619A4;
-        Mon, 22 Mar 2021 16:04:21 +0000 (UTC)
+        id S231228AbhCVQEy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Mar 2021 12:04:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C1F12619AA;
+        Mon, 22 Mar 2021 16:04:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616429066;
-        bh=nkpO3F9iV2LP9C5b1X1yN1ZVysmYmotRTLuBUWIaptM=;
+        s=k20201202; t=1616429094;
+        bh=xAtyylaIqASvvaS85ZKuu0hXHauLkQxCojv0RLX/Mb4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MU4IL9JNNK+J8U+vvpLpwovR+/suU+W9R4RhhhMaub4p/qt1HSm7/5H/LxJjfRA1v
-         f+dccndcC0t+6DndIOBCJbVJvgtAFbUO/Xj+Ad4PAK3HRVGVN0VmdJVzwNG2nWP60W
-         yoMi7GzhcMMul2Me0RQEOrAkh9+ikItIp0T7LrmMn4UxhxHfYhCqAAaad++VD478Ly
-         WRurbxWp7EoqaQbB5aDSFB4iZyCpOkFivtOdus8BKdINgwMELaIsTcoM1dTXGsBCvO
-         NUlZI47cRIaTlBnQpp36y5LIoHJRasVTH3KqfKgtuhF/A3Vph299qnut15q3EDnfE2
-         ATElHLu2Uchbw==
+        b=qF3TQ/qAB99dHQJQ17LkEWSGHzxXaa6ah0V394Zl3kvv8RzfyZLGR5LrTvWyC7H1A
+         Y/FGboTYdhxs+1JdIoA84vXMKDdcAhTrEkBBb0UQUQKweCwvIzhlEQaLj3V5+EtINN
+         TkIcf5XVjUiGPrExh51GxNaO8HstdwbBZt6yPypCRTLZ7dgkDLCsQKmQNcTUMokkXV
+         S8QQatAQDJMuuHsGK0sG76w09rCi8u76J/NCDygW1XdPiFPESnsqpJ4LRffqASyFiK
+         CjWew/HiP9HZ5pWACV/kafDp0YkSlO5krvl5NtQtLs6m/hkRHKNSKqc2U8LuhcidQu
+         4FzJ0OAQMgZGg==
 From:   Arnd Bergmann <arnd@kernel.org>
-To:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
-        Anders Larsen <al@alarsen.net>
+To:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>
 Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         Ning Sun <ning.sun@intel.com>,
         Jani Nikula <jani.nikula@linux.intel.com>,
@@ -41,17 +40,19 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         Simon Kelley <simon@thekelleys.org.uk>,
         James Smart <james.smart@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Tejun Heo <tj@kernel.org>, Serge Hallyn <serge@hallyn.com>,
+        Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
+        Serge Hallyn <serge@hallyn.com>,
         Imre Deak <imre.deak@intel.com>,
         linux-arm-kernel@lists.infradead.org,
         tboot-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
         dri-devel@lists.freedesktop.org, ath11k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
-        linux-security-module@vger.kernel.org
-Subject: [PATCH 05/11] qnx: avoid -Wstringop-overread warning
-Date:   Mon, 22 Mar 2021 17:02:43 +0100
-Message-Id: <20210322160253.4032422-6-arnd@kernel.org>
+        linux-security-module@vger.kernel.org,
+        Russell King <linux@armlinux.org.uk>
+Subject: [PATCH 07/11] ARM: sharpsl_param: work around -Wstringop-overread warning
+Date:   Mon, 22 Mar 2021 17:02:45 +0100
+Message-Id: <20210322160253.4032422-8-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
 References: <20210322160253.4032422-1-arnd@kernel.org>
@@ -64,62 +65,40 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-gcc-11 warns that the size of the link name is longer than the di_fname
-field:
+gcc warns that accessing a pointer based on a numeric constant may
+be an offset into a NULL pointer, and would therefore has zero
+accessible bytes:
 
-fs/qnx4/dir.c: In function ‘qnx4_readdir’:
-fs/qnx4/dir.c:51:32: error: ‘strnlen’ specified bound 48 exceeds source size 16 [-Werror=stringop-overread]
-   51 |                         size = strnlen(de->di_fname, size);
-      |                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-In file included from fs/qnx4/qnx4.h:3,
-                 from fs/qnx4/dir.c:16:
-include/uapi/linux/qnx4_fs.h:45:25: note: source object declared here
-   45 |         char            di_fname[QNX4_SHORT_NAME_MAX];
+arch/arm/common/sharpsl_param.c: In function ‘sharpsl_save_param’:
+arch/arm/common/sharpsl_param.c:43:9: error: ‘memcpy’ reading 64 bytes from a region of size 0 [-Werror=stringop-overread]
+   43 |         memcpy(&sharpsl_param, param_start(PARAM_BASE), sizeof(struct sharpsl_param_info));
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The problem here is that we access the same pointer using two different
-structure layouts, but gcc determines the object size based on
-whatever it encounters first.
-
-Change the strnlen to use the correct field size in each case, and
-change the first access to be on the longer field.
+In this particular case, the warning is bogus since this is the actual
+pointer, not an offset on a NULL pointer. Add a local variable to shut
+up the warning and hope it doesn't come back.
 
 Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99578
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- fs/qnx4/dir.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ arch/arm/common/sharpsl_param.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/fs/qnx4/dir.c b/fs/qnx4/dir.c
-index a6ee23aadd28..68046450e543 100644
---- a/fs/qnx4/dir.c
-+++ b/fs/qnx4/dir.c
-@@ -39,21 +39,20 @@ static int qnx4_readdir(struct file *file, struct dir_context *ctx)
- 		ix = (ctx->pos >> QNX4_DIR_ENTRY_SIZE_BITS) % QNX4_INODES_PER_BLOCK;
- 		for (; ix < QNX4_INODES_PER_BLOCK; ix++, ctx->pos += QNX4_DIR_ENTRY_SIZE) {
- 			offset = ix * QNX4_DIR_ENTRY_SIZE;
--			de = (struct qnx4_inode_entry *) (bh->b_data + offset);
--			if (!de->di_fname[0])
-+			le = (struct qnx4_link_info *)(bh->b_data + offset);
-+			de = (struct qnx4_inode_entry *)(bh->b_data + offset);
-+			if (!le->dl_fname[0])
- 				continue;
- 			if (!(de->di_status & (QNX4_FILE_USED|QNX4_FILE_LINK)))
- 				continue;
- 			if (!(de->di_status & QNX4_FILE_LINK))
--				size = QNX4_SHORT_NAME_MAX;
-+				size = strnlen(de->di_fname, sizeof(de->di_fname));
- 			else
--				size = QNX4_NAME_MAX;
--			size = strnlen(de->di_fname, size);
-+				size = strnlen(le->dl_fname, sizeof(le->dl_fname));
- 			QNX4DEBUG((KERN_INFO "qnx4_readdir:%.*s\n", size, de->di_fname));
- 			if (!(de->di_status & QNX4_FILE_LINK))
- 				ino = blknum * QNX4_INODES_PER_BLOCK + ix - 1;
- 			else {
--				le  = (struct qnx4_link_info*)de;
- 				ino = ( le32_to_cpu(le->dl_inode_blk) - 1 ) *
- 					QNX4_INODES_PER_BLOCK +
- 					le->dl_inode_ndx;
+diff --git a/arch/arm/common/sharpsl_param.c b/arch/arm/common/sharpsl_param.c
+index efeb5724d9e9..6237ede2f0c7 100644
+--- a/arch/arm/common/sharpsl_param.c
++++ b/arch/arm/common/sharpsl_param.c
+@@ -40,7 +40,9 @@ EXPORT_SYMBOL(sharpsl_param);
+ 
+ void sharpsl_save_param(void)
+ {
+-	memcpy(&sharpsl_param, param_start(PARAM_BASE), sizeof(struct sharpsl_param_info));
++	struct sharpsl_param_info *params = param_start(PARAM_BASE);
++
++	memcpy(&sharpsl_param, params, sizeof(*params));
+ 
+ 	if (sharpsl_param.comadj_keyword != COMADJ_MAGIC)
+ 		sharpsl_param.comadj=-1;
 -- 
 2.29.2
 
