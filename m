@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB679C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 08:12:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B253C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 08:12:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C133761973
+	by mail.kernel.org (Postfix) with ESMTP id E22DC61969
 	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 08:12:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229875AbhCVIMA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 04:12:00 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:12236 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229574AbhCVILg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 04:11:36 -0400
+        id S230009AbhCVIMC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 04:12:02 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:42789 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229952AbhCVILv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 04:11:51 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1616400696; x=1647936696;
+  t=1616400712; x=1647936712;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=zn4Hr1n/aB/9YN+9nD0vGeVhInuIDC2ZbF8Fk/h2p/I=;
-  b=Nzi0zBYjC3wj/ewLDneXUTnjQHKHt0JG+FZf5uWizvclL3lULzIukx/S
-   ZCd7NIsVJkoF83w+D3Mn0D/0gEnuss94SwvchCTTHWO/H+aZg1HkQxtab
-   3CV+91G4X9IxyJujnu+RM+6XCfrVdc9NN7TOytN2irLbzaCrxDY77WLd9
-   pcAUANerm1hLg1qZIzvJZQQCHJHPcFmVQSHvxTMzViSKBPs3ZBNksTU4K
-   IXesfhgWOPhOJeu4V6Luyse//YVoltzM9Oj4fAAIgqFRBz5QA9I3mVckj
-   ZJ47gQE1fOV3Kv3BbVx8cTEYH+0kHxN6kLBf0MqGpXcSQOaenOW/H3aTE
-   Q==;
-IronPort-SDR: U4qrDx7al659gvg4DgwlQov0N5i3PnQnXF2YbB8Vn5LnisVbJlkoAFLs3xAXfW9hwatzMiSCgD
- 4YzeOxy5Un/JmSK+HdlJ9BaJZMSqSJgO6VJZQi/aJvcikQjWSdkFlwQY5iw6Nbgh5bxQ6WmOci
- TNvuvP6Z36Uoqm+P8YN7PoiR0xagL/XG1eL9UnaxWhQSaJ9HGyzx5g6vphPjTuVLh4ltCo5QkM
- uoCkurACoqPu0t56dTRCD1l4uFFobwc8W5VL5C7INHpy0lMJaO/u3ykD8K0KhPp6yPrGBd1Mun
- kEc=
+  bh=fCxw34cMsIYMmemsyAok+SNjOklldfJqd7WsyeleVS8=;
+  b=A/K0gW6ep5B0MuUUpbr8SwTSrI2FEJERVzYoFmAgVnL7kW2Dm0WFTI11
+   2BVeI4TSWKjjfwzrqRM23ejfPI2IC3qjW3FR0FSXFxCm51jGwKcLAW3nt
+   zlhaGGVPMRtEyWE9eGNYUgqqLfORl/qMA65rR4dQs+9y+wTg5qgiu0rBu
+   ZZ8itWGSxaj5DqCS6gE7RUTeUopKm3YOaHkNrxK17m/qHa9gwGTFUowq8
+   mmSuZjn7kwK2+7eUnJRdiG5pBnHTFpSxS/JUxh2OC+WQuIUlAJRdw//lU
+   X+ez4MfHtXmdDP2LuHlB3c3R97fZDpjTvpsKXnbG/Mm3GiAMcfrhrt2I3
+   w==;
+IronPort-SDR: GaKNX7HiiR24tBWBR+E5Vlox5lj3vtLhoG3ANvCnV5GUj6mW1XbKTffu+G9Sy4MLJzVduZHGah
+ 5YinputEzFzJc5VeN9nOJaqFNxEyh+GCxz4mr0WTTL6WdQNE41Ct9LPpq6nJFh10HkUVueJ0T9
+ jVgI38aGx/dTvqCyLQyTNzgu3tzlXFadRsVfyjQqNvgfyCEbpyHiOGP81VGITlhFs0Jp4fYBfl
+ Tu9fjzSwR0n47MVX/2oIQaeGn2mj+XcUOVzKrXXoe7RVqQKGdbkbRepZN7+/MTGPmxnlJMJ8r3
+ tX0=
 X-IronPort-AV: E=Sophos;i="5.81,268,1610380800"; 
-   d="scan'208";a="162683002"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Mar 2021 16:11:36 +0800
-IronPort-SDR: cdl0WzM1fjp0DQG9TgfzNBIOvlkJI3acEisJ8yh9bXsvDLLal55kVaKMIqxcoxDLz/tSy/QsuN
- ZMvAdZ+pspGYD1uPO3o+FhLhxGIa7P4AeW06BLOi/2ZpDa/RLLdd4dRHMSYR2jblRKAG7AgNFE
- XMONcZ7T3j3+yP/uuq5G5GqRCdDhU+7LI16jWXZuY/hXV+7VggxH5QTbetNVrBFfNbQ5ZU0/1N
- C/Qcpa4C239L5ADVV9JRKsuy+UzQXVZK33E55GOw+WGAePoTr3wX52giT3GECR9unJWE1uY9GS
- HVqzjF1LmoKH0iki1ceLDn38
+   d="scan'208";a="163812193"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 22 Mar 2021 16:11:51 +0800
+IronPort-SDR: SdC/y/YDFK/q39fEKEKX/h+u17xGYFtKf9+agx0Nou0Hqyo5ixKEoMLBTVkjclRmTr4V6NYRJs
+ oSTgl1WLgQ28kzhcRolSkmYbZamCmh9KST7ek5FGgNbyjEIXJ123KPZA4p/ZHZ+peaY5T+v7Eo
+ ToZ6+XdNWRgJXfujTcaPg+eH6OvVSHFbzoOVGo0zpTeOptlpYAxms/QRiNwYTYurUqFj9rX5Yh
+ c7C8JKmxc1f7rW5GZxVWFtfJtkgWMZMEU0B3Dpo53pD8suq2wNZaOyrZMbhcqps22HDI0gcg84
+ sTVn3jznqHG1lCftKyTcPqfg
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 00:52:05 -0700
-IronPort-SDR: 4Q3XQXkSzNg+q+dwb7Yo/vJAex6svvYYCHhWmIXBDZz2OnAB8qhDYMZnry2Esk72bGNeGEPjQ+
- v6WI0ajn2VJUp3yJcNZJJlVh2rWpqZV9ME5GA2fbsZ++o4zBrLMx9bKnlvEtYN1vXjSlMGj8ru
- m+51YgMVjQmG59SCdEvtBGy6NA8L/somvy+Pp8jT1ftRdRCAaycJXaK0alzurg1bPYoh6lAS5v
- Mk3yLW3gMoK6CxztjQZFXgcHG0sd5jh4eh612DBMvx03IDwkVZyYLgFP3GFZuHhiY/5GY/SZyr
- yoc=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 00:52:20 -0700
+IronPort-SDR: yvpiEVtlsKHwjq504ZMTrr+w+IGaWU5egGkxPvZk6WYlCrOm9IFWft1kGaLXL8i+juB5pjkF9R
+ 1NrDczEXNa+PRvLyw9W5F21sGg06dgJUjC9zy3j7lbL8gf51KSAAanIu32kVqowseVUF0zxssE
+ UheGxY8U5ahq4mcXDtGxpiKnio/TxhGRqMCOf2cQfDlvkScPyDjDqMdUYxtWSxNlQJM+j9oBpe
+ 2iBirLn4Rx4hPim2aEGYK3gjd6qH+3lVa6gsd+w6p1hRweTs2XcBMQRaozjdGSHiIJPTuwwkY0
+ WNQ=
 WDCIronportException: Internal
 Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
-  by uls-op-cesaip01.wdc.com with ESMTP; 22 Mar 2021 01:11:32 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 22 Mar 2021 01:11:46 -0700
 From:   Avri Altman <avri.altman@wdc.com>
 To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -68,9 +68,9 @@ Cc:     gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
         Avi Shchislowski <avi.shchislowski@wdc.com>,
         Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
         stanley.chu@mediatek.com, Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v6 03/10] scsi: ufshpb: Add region's reads counter
-Date:   Mon, 22 Mar 2021 10:10:37 +0200
-Message-Id: <20210322081044.62003-4-avri.altman@wdc.com>
+Subject: [PATCH v6 05/10] scsi: ufshpb: Region inactivation in host mode
+Date:   Mon, 22 Mar 2021 10:10:39 +0200
+Message-Id: <20210322081044.62003-6-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210322081044.62003-1-avri.altman@wdc.com>
 References: <20210322081044.62003-1-avri.altman@wdc.com>
@@ -80,244 +80,135 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In host control mode, reads are the major source of activation trials.
-Keep track of those reads counters, for both active as well inactive
-regions.
+In host mode, the host is expected to send HPB-WRITE-BUFFER with
+buffer-id = 0x1 when it inactivates a region.
 
-We reset the read counter upon write - we are only interested in "clean"
-reads.
-
-Keep those counters normalized, as we are using those reads as a
-comparative score, to make various decisions.
-If during consecutive normalizations an active region has exhaust its
-reads - inactivate it.
-
-while at it, protect the {active,inactive}_count stats by adding them
-into the applicable handler.
+Use the map-requests pool as there is no point in assigning a
+designated cache for umap-requests.
 
 Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- drivers/scsi/ufs/ufshpb.c | 100 +++++++++++++++++++++++++++++++-------
- drivers/scsi/ufs/ufshpb.h |   5 ++
- 2 files changed, 88 insertions(+), 17 deletions(-)
+ drivers/scsi/ufs/ufshpb.c | 35 +++++++++++++++++++++++++++++++----
+ drivers/scsi/ufs/ufshpb.h |  1 +
+ 2 files changed, 32 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index d4f0bb6d8fa1..a1519cbb4ce0 100644
+index 5e757220d66a..1f0344eaa546 100644
 --- a/drivers/scsi/ufs/ufshpb.c
 +++ b/drivers/scsi/ufs/ufshpb.c
-@@ -16,6 +16,8 @@
- #include "ufshpb.h"
- #include "../sd.h"
+@@ -904,6 +904,7 @@ static int ufshpb_execute_umap_req(struct ufshpb_lu *hpb,
  
-+#define ACTIVATION_THRESHOLD 8 /* 8 IOs */
-+
- /* memory management */
- static struct kmem_cache *ufshpb_mctx_cache;
- static mempool_t *ufshpb_mctx_pool;
-@@ -546,6 +548,23 @@ static int ufshpb_issue_pre_req(struct ufshpb_lu *hpb, struct scsi_cmnd *cmd,
- 	return ret;
- }
+ 	blk_execute_rq_nowait(NULL, req, 1, ufshpb_umap_req_compl_fn);
  
-+static void ufshpb_update_active_info(struct ufshpb_lu *hpb, int rgn_idx,
-+				      int srgn_idx)
-+{
-+	struct ufshpb_region *rgn;
-+	struct ufshpb_subregion *srgn;
-+
-+	rgn = hpb->rgn_tbl + rgn_idx;
-+	srgn = rgn->srgn_tbl + srgn_idx;
-+
-+	list_del_init(&rgn->list_inact_rgn);
-+
-+	if (list_empty(&srgn->list_act_srgn))
-+		list_add_tail(&srgn->list_act_srgn, &hpb->lh_act_srgn);
-+
-+	hpb->stats.rb_active_cnt++;
-+}
-+
- /*
-  * This function will set up HPB read command using host-side L2P map data.
-  */
-@@ -596,12 +615,43 @@ int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 		ufshpb_set_ppn_dirty(hpb, rgn_idx, srgn_idx, srgn_offset,
- 				 transfer_len);
- 		spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
-+
-+		if (hpb->is_hcm) {
-+			spin_lock(&rgn->rgn_lock);
-+			rgn->reads = 0;
-+			spin_unlock(&rgn->rgn_lock);
-+		}
-+
- 		return 0;
- 	}
- 
- 	if (!ufshpb_is_support_chunk(hpb, transfer_len))
- 		return 0;
- 
-+	if (hpb->is_hcm) {
-+		bool activate = false;
-+		/*
-+		 * in host control mode, reads are the main source for
-+		 * activation trials.
-+		 */
-+		spin_lock(&rgn->rgn_lock);
-+		rgn->reads++;
-+		if (rgn->reads == ACTIVATION_THRESHOLD)
-+			activate = true;
-+		spin_unlock(&rgn->rgn_lock);
-+		if (activate) {
-+			spin_lock_irqsave(&hpb->rsp_list_lock, flags);
-+			ufshpb_update_active_info(hpb, rgn_idx, srgn_idx);
-+			spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
-+			dev_dbg(&hpb->sdev_ufs_lu->sdev_dev,
-+				"activate region %d-%d\n", rgn_idx, srgn_idx);
-+		}
-+
-+		/* keep those counters normalized */
-+		if (rgn->reads > hpb->entries_per_srgn)
-+			schedule_work(&hpb->ufshpb_normalization_work);
-+	}
-+
- 	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
- 	if (ufshpb_test_ppn_dirty(hpb, rgn_idx, srgn_idx, srgn_offset,
- 				   transfer_len)) {
-@@ -741,21 +791,6 @@ static int ufshpb_clear_dirty_bitmap(struct ufshpb_lu *hpb,
++	hpb->stats.umap_req_cnt++;
  	return 0;
  }
  
--static void ufshpb_update_active_info(struct ufshpb_lu *hpb, int rgn_idx,
--				      int srgn_idx)
--{
--	struct ufshpb_region *rgn;
--	struct ufshpb_subregion *srgn;
--
--	rgn = hpb->rgn_tbl + rgn_idx;
--	srgn = rgn->srgn_tbl + srgn_idx;
--
--	list_del_init(&rgn->list_inact_rgn);
--
--	if (list_empty(&srgn->list_act_srgn))
--		list_add_tail(&srgn->list_act_srgn, &hpb->lh_act_srgn);
--}
--
- static void ufshpb_update_inactive_info(struct ufshpb_lu *hpb, int rgn_idx)
- {
- 	struct ufshpb_region *rgn;
-@@ -769,6 +804,8 @@ static void ufshpb_update_inactive_info(struct ufshpb_lu *hpb, int rgn_idx)
- 
- 	if (list_empty(&rgn->list_inact_rgn))
- 		list_add_tail(&rgn->list_inact_rgn, &hpb->lh_inact_rgn);
-+
-+	hpb->stats.rb_inactive_cnt++;
+@@ -1100,18 +1101,37 @@ static int ufshpb_issue_umap_req(struct ufshpb_lu *hpb,
+ 	return -EAGAIN;
  }
  
- static void ufshpb_activate_subregion(struct ufshpb_lu *hpb,
-@@ -1089,6 +1126,7 @@ static int ufshpb_evict_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
- 			 rgn->rgn_idx);
- 		goto out;
- 	}
-+
- 	if (!list_empty(&rgn->list_lru_rgn)) {
- 		if (ufshpb_check_srgns_issue_state(hpb, rgn)) {
- 			ret = -EBUSY;
-@@ -1283,7 +1321,6 @@ static void ufshpb_rsp_req_region_update(struct ufshpb_lu *hpb,
- 		if (srgn->srgn_state == HPB_SRGN_VALID)
- 			srgn->srgn_state = HPB_SRGN_INVALID;
- 		spin_unlock(&hpb->rgn_state_lock);
--		hpb->stats.rb_active_cnt++;
- 	}
- 
- 	if (hpb->is_hcm) {
-@@ -1315,7 +1352,6 @@ static void ufshpb_rsp_req_region_update(struct ufshpb_lu *hpb,
- 		}
- 		spin_unlock(&hpb->rgn_state_lock);
- 
--		hpb->stats.rb_inactive_cnt++;
- 	}
- 
- out:
-@@ -1514,6 +1550,29 @@ static void ufshpb_run_inactive_region_list(struct ufshpb_lu *hpb)
- 	spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
- }
- 
-+static void ufshpb_normalization_work_handler(struct work_struct *work)
++static int ufshpb_issue_umap_single_req(struct ufshpb_lu *hpb,
++					struct ufshpb_region *rgn)
 +{
-+	struct ufshpb_lu *hpb = container_of(work, struct ufshpb_lu,
-+					     ufshpb_normalization_work);
-+	int rgn_idx;
-+
-+	for (rgn_idx = 0; rgn_idx < hpb->rgns_per_lu; rgn_idx++) {
-+		struct ufshpb_region *rgn = hpb->rgn_tbl + rgn_idx;
-+
-+		spin_lock(&rgn->rgn_lock);
-+		rgn->reads = (rgn->reads >> 1);
-+		spin_unlock(&rgn->rgn_lock);
-+
-+		if (rgn->rgn_state != HPB_RGN_ACTIVE || rgn->reads)
-+			continue;
-+
-+		/* if region is active but has no reads - inactivate it */
-+		spin_lock(&hpb->rsp_list_lock);
-+		ufshpb_update_inactive_info(hpb, rgn->rgn_idx);
-+		spin_unlock(&hpb->rsp_list_lock);
-+	}
++	return ufshpb_issue_umap_req(hpb, rgn, false);
 +}
 +
- static void ufshpb_map_work_handler(struct work_struct *work)
+ static int ufshpb_issue_umap_all_req(struct ufshpb_lu *hpb)
  {
- 	struct ufshpb_lu *hpb = container_of(work, struct ufshpb_lu, map_work);
-@@ -1673,6 +1732,8 @@ static int ufshpb_alloc_region_tbl(struct ufs_hba *hba, struct ufshpb_lu *hpb)
- 		rgn = rgn_table + rgn_idx;
- 		rgn->rgn_idx = rgn_idx;
- 
-+		spin_lock_init(&rgn->rgn_lock);
-+
- 		INIT_LIST_HEAD(&rgn->list_inact_rgn);
- 		INIT_LIST_HEAD(&rgn->list_lru_rgn);
- 
-@@ -1914,6 +1975,9 @@ static int ufshpb_lu_hpb_init(struct ufs_hba *hba, struct ufshpb_lu *hpb)
- 	INIT_LIST_HEAD(&hpb->list_hpb_lu);
- 
- 	INIT_WORK(&hpb->map_work, ufshpb_map_work_handler);
-+	if (hpb->is_hcm)
-+		INIT_WORK(&hpb->ufshpb_normalization_work,
-+			  ufshpb_normalization_work_handler);
- 
- 	hpb->map_req_cache = kmem_cache_create("ufshpb_req_cache",
- 			  sizeof(struct ufshpb_req), 0, 0, NULL);
-@@ -2013,6 +2077,8 @@ static void ufshpb_discard_rsp_lists(struct ufshpb_lu *hpb)
- 
- static void ufshpb_cancel_jobs(struct ufshpb_lu *hpb)
- {
-+	if (hpb->is_hcm)
-+		cancel_work_sync(&hpb->ufshpb_normalization_work);
- 	cancel_work_sync(&hpb->map_work);
+ 	return ufshpb_issue_umap_req(hpb, NULL, false);
  }
  
-diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-index 032672114881..32d72c46c57a 100644
---- a/drivers/scsi/ufs/ufshpb.h
-+++ b/drivers/scsi/ufs/ufshpb.h
-@@ -123,6 +123,10 @@ struct ufshpb_region {
- 	struct list_head list_lru_rgn;
- 	unsigned long rgn_flags;
- #define RGN_FLAG_DIRTY 0
+-static void __ufshpb_evict_region(struct ufshpb_lu *hpb,
+-				  struct ufshpb_region *rgn)
++static int __ufshpb_evict_region(struct ufshpb_lu *hpb,
++				 struct ufshpb_region *rgn)
+ {
+ 	struct victim_select_info *lru_info;
+ 	struct ufshpb_subregion *srgn;
+ 	int srgn_idx;
+ 
++	lockdep_assert_held(&hpb->rgn_state_lock);
 +
-+	/* region reads - for host mode */
-+	spinlock_t rgn_lock;
-+	unsigned int reads;
++	if (hpb->is_hcm) {
++		unsigned long flags;
++		int ret;
++
++		spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
++		ret = ufshpb_issue_umap_single_req(hpb, rgn);
++		spin_lock_irqsave(&hpb->rgn_state_lock, flags);
++		if (ret)
++			return ret;
++	}
++
+ 	lru_info = &hpb->lru_info;
+ 
+ 	dev_dbg(&hpb->sdev_ufs_lu->sdev_dev, "evict region %d\n", rgn->rgn_idx);
+@@ -1120,6 +1140,8 @@ static void __ufshpb_evict_region(struct ufshpb_lu *hpb,
+ 
+ 	for_each_sub_region(rgn, srgn_idx, srgn)
+ 		ufshpb_purge_active_subregion(hpb, srgn);
++
++	return 0;
+ }
+ 
+ static int ufshpb_evict_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
+@@ -1141,7 +1163,7 @@ static int ufshpb_evict_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
+ 			goto out;
+ 		}
+ 
+-		__ufshpb_evict_region(hpb, rgn);
++		ret = __ufshpb_evict_region(hpb, rgn);
+ 	}
+ out:
+ 	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+@@ -1275,7 +1297,9 @@ static int ufshpb_add_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
+ 				"LRU full (%d), choose victim %d\n",
+ 				atomic_read(&lru_info->active_cnt),
+ 				victim_rgn->rgn_idx);
+-			__ufshpb_evict_region(hpb, victim_rgn);
++			ret = __ufshpb_evict_region(hpb, victim_rgn);
++			if (ret)
++				goto out;
+ 		}
+ 
+ 		/*
+@@ -1839,6 +1863,7 @@ ufshpb_sysfs_attr_show_func(rb_noti_cnt);
+ ufshpb_sysfs_attr_show_func(rb_active_cnt);
+ ufshpb_sysfs_attr_show_func(rb_inactive_cnt);
+ ufshpb_sysfs_attr_show_func(map_req_cnt);
++ufshpb_sysfs_attr_show_func(umap_req_cnt);
+ 
+ static struct attribute *hpb_dev_stat_attrs[] = {
+ 	&dev_attr_hit_cnt.attr,
+@@ -1847,6 +1872,7 @@ static struct attribute *hpb_dev_stat_attrs[] = {
+ 	&dev_attr_rb_active_cnt.attr,
+ 	&dev_attr_rb_inactive_cnt.attr,
+ 	&dev_attr_map_req_cnt.attr,
++	&dev_attr_umap_req_cnt.attr,
+ 	NULL,
  };
  
- #define for_each_sub_region(rgn, i, srgn)				\
-@@ -212,6 +216,7 @@ struct ufshpb_lu {
+@@ -1971,6 +1997,7 @@ static void ufshpb_stat_init(struct ufshpb_lu *hpb)
+ 	hpb->stats.rb_active_cnt = 0;
+ 	hpb->stats.rb_inactive_cnt = 0;
+ 	hpb->stats.map_req_cnt = 0;
++	hpb->stats.umap_req_cnt = 0;
+ }
  
- 	/* for selecting victim */
- 	struct victim_select_info lru_info;
-+	struct work_struct ufshpb_normalization_work;
+ static void ufshpb_param_init(struct ufshpb_lu *hpb)
+diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+index 32d72c46c57a..7afc98e61c0a 100644
+--- a/drivers/scsi/ufs/ufshpb.h
++++ b/drivers/scsi/ufs/ufshpb.h
+@@ -187,6 +187,7 @@ struct ufshpb_stats {
+ 	u64 rb_inactive_cnt;
+ 	u64 map_req_cnt;
+ 	u64 pre_req_cnt;
++	u64 umap_req_cnt;
+ };
  
- 	/* pinned region information */
- 	u32 lu_pinned_start;
+ struct ufshpb_lu {
 -- 
 2.25.1
 
