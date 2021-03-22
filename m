@@ -2,121 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF95EC433E3
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:19:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16DC8C433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:24:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6058619A6
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:19:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3F5B61974
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Mar 2021 16:24:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231473AbhCVQSu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 12:18:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57452 "EHLO mail.kernel.org"
+        id S230284AbhCVQXf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Mar 2021 12:23:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58484 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229771AbhCVQSk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Mar 2021 12:18:40 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 870896197F;
-        Mon, 22 Mar 2021 16:18:40 +0000 (UTC)
+        id S231181AbhCVQXH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Mar 2021 12:23:07 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 1435F61974
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2021 16:23:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616429920;
-        bh=kSTU4aDsOvuAbAuUCXG/WhJB+C+wlLWVnpXMEQ1jxZ0=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=SpSi0kdOS0kxv1MsTetciTKKyrNHyjObZVRmx8C7LIiQrpYHzGtfjHU7ZXCYTyPK2
-         aWT/dAm62jjq5I5Pw9keDeFQR+CxFhcoHedF8v0TDINBG2tWMFais3v21plBIZNdAR
-         GHAu56/PRcyuTZAOjpQq10Aj57Ob4PPflbRaouyhAH0X9YCcXHAfE6Pp2zHMo3ahgy
-         DwdHQmDZApU2R3PHmJh6kw4Yx2NQL7FBxxyjRZb3lhv3w0zxMzwfoLeXH+eGZfCUlj
-         XlA3zQVkJxeFBqFv0h2kstNdIShA/M9NJTfUz/0/DvIfKa9dz3SG4ji87r3blhvjdk
-         1hjmpcFG6fWkg==
-Received: by mail-oo1-f46.google.com with SMTP id c12-20020a4ae24c0000b02901bad05f40e4so4231594oot.4;
-        Mon, 22 Mar 2021 09:18:40 -0700 (PDT)
-X-Gm-Message-State: AOAM533rtKEu4EuiKdnl90eGZFOs2PvTdzokZEqTxRvwLjGZS9aHo5si
-        rY7ByuhKBUxXecEJAYXQlD2BpoPJzzuuofMQbCg=
-X-Google-Smtp-Source: ABdhPJwJATAkvz6Hx4t7tPk8luQsFyzCoSamruM/CA7kbTtDRxjBf2ZNGWPmV0U+ze4BLpzCNUki46jerr63RaDhEzQ=
-X-Received: by 2002:a4a:244d:: with SMTP id v13mr287550oov.66.1616429919879;
- Mon, 22 Mar 2021 09:18:39 -0700 (PDT)
-MIME-Version: 1.0
-References: <20210322114441.3479365-1-arnd@kernel.org> <20210322154735.GA2079192@infradead.org>
- <20210322155344.GA23040@1wt.eu>
-In-Reply-To: <20210322155344.GA23040@1wt.eu>
-From:   Arnd Bergmann <arnd@kernel.org>
-Date:   Mon, 22 Mar 2021 17:18:23 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a1bb4QvNyM9kkt0KB9k70cdEZ-e+B-CHHtPhaPO6ouxeQ@mail.gmail.com>
-Message-ID: <CAK8P3a1bb4QvNyM9kkt0KB9k70cdEZ-e+B-CHHtPhaPO6ouxeQ@mail.gmail.com>
-Subject: Re: [PATCH] target: pscsi: avoid Wempty-body warning
-To:     Willy Tarreau <w@1wt.eu>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bodo Stroesser <bstroesser@ts.fujitsu.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        target-devel@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+        s=k20201202; t=1616430187;
+        bh=ZKwB75ptbCttiwIRdgph/tLNjfcVuvaUI5k0eZFFB38=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=nys4mxaOLcU9stvTJFYMUKNXTX9iyGE+2z2aC9uSOVBnoPM9zWEQVIuYyvSadrWxl
+         k5+a/ngMThDijMX6EiaxDaUnsIJnWb80ZFBYA7YZgmq44aoPxZ2sWuSVFh/PIeIeUm
+         BM0KVfuV5OfMsTjyDW7lN2nr/McEtkx0p8s6GlwO2dnOgfoS+FIgpbMwRIMnBZ3B/p
+         aypAOu4fe6+iDWq24Dtj//Z4v9pDEtQl23UoVlJ4bB9YzErG7Ris5kY880YnyO2vnj
+         1yPr1AAmPeM9ScEZc1nIJ3MiGYe9XUUd8h4oJVsPylVEscBPW7P0YwbpkJWm/H/BON
+         HAbZ5VpbsBWkw==
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 212337] scsi_debug: race at module load and module unload
+Date:   Mon, 22 Mar 2021 16:23:06 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: mcgrof@kernel.org
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: WILL_NOT_FIX
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-212337-11613-Db9cYci1Aw@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-212337-11613@https.bugzilla.kernel.org/>
+References: <bug-212337-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 22, 2021 at 4:53 PM Willy Tarreau <w@1wt.eu> wrote:
-> On Mon, Mar 22, 2021 at 03:47:35PM +0000, Christoph Hellwig wrote:
-> > On Mon, Mar 22, 2021 at 12:44:34PM +0100, Arnd Bergmann wrote:
-> > > From: Arnd Bergmann <arnd@arndb.de>
-> > >
-> > > Building with 'make W=1' shows a harmless warning for pscsi:
-> > >
-> > > drivers/target/target_core_pscsi.c: In function 'pscsi_complete_cmd':
-> > > drivers/target/target_core_pscsi.c:624:33: error: suggest braces around empty body in an 'if' statement [-Werror=empty-body]
-> > >   624 |                                 ; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
-> > >       |                                 ^
-> > >
-> > > Rework the coding style as suggested by gcc to avoid the warning.
-> >
-> > I would much, much prefer to drop the bogus warning;
-> >
-> >       if (foo)
-> >               ; /* comment */
-> >
-> > is a fairly usual and absolutely sensible style.  The warning on hte
-> > other hand is completely stupid.
->
-> Agreed!
->
-> These days it seems there is a competition for the stupidest warning
-> between compilers, and we've reached the point where working around
-> them manages to introduce real bugs :-(
->
-> I predict we'll soon see warning such as "this comment looks like valid
-> C code, if you really intended to comment it out, use #if 0 instead". Oh
-> well, let's hope I have not given a new idea here...
+https://bugzilla.kernel.org/show_bug.cgi?id=3D212337
 
-I agree that this instance of the warning is particularly stupid, but the
-I'd like to leave the warning option there and eventually enable it by
-default because it tends to find other more interesting cases, and this
-one is trivial to work around.
+--- Comment #9 from Luis Chamberlain (mcgrof@kernel.org) ---
+(In reply to d gilbert from comment #8)
 
-I remember previously fixing a few drivers that did obviously
-incorrect things like
+> >> The scsi_debug module option that is already in place is:
+> >>     tur_ms_to_ready: TEST UNIT READY millisecs before initial good sta=
+tus
+> >> (def=3D0)
+>=20
+> You asked how it works, try:
+>      modprobe scsi_debug tur_ms_to_ready=3D20000
+>=20
 
-    if (error); /* note the extra ';' */
-         return error;
+That does not resolve the rmmod race against insmod:
 
-and a lot mostly harmless code like
+scsi host2: scsi_debug: version 0190 [20200710]
+[   42.213400]   dev_size_mb=3D8, opts=3D0x0, submit_queues=3D1, statistics=
+=3D0
+[   42.217527] scsi 2:0:0:0: Direct-Access     Linux    scsi_debug       01=
+90
+PQ: 0 ANSI: 7
+[   42.223346] scsi 2:0:0:0: Attached scsi generic sg0 type 0
+[   42.282195] scsi host2: scsi_debug: version 0190 [20200710]
+[   42.282195]   dev_size_mb=3D8, opts=3D0x0, submit_queues=3D1, statistics=
+=3D0
+[   42.288169] scsi 2:0:0:0: Direct-Access     Linux    scsi_debug       01=
+90
+PQ: 0 ANSI: 7
+[   42.292122] sd 2:0:0:0: Attached scsi generic sg0 type 0
+[   42.292244] sd 2:0:0:0: Power-on or device reset occurred
+[   42.302288] sd 2:0:0:0: [sda] Spinning up disk...
 
-#ifdef DEBUG_THIS_DRIVER /* always disabled */
-#define dprintk(args...) printk(args)
-#else
-#define dprintk(args...)
-#endif
-    /* note the mismatched format string */
-    dprintk(KERN_WARNING "error %d\n", &object);
+Then we wait...
 
-Turning the empty dprintk() into no_printk() means we can catch
-the wrong format string during compile testing.
+[   44.308213] ...................ready
+[   62.748919] sd 2:0:0:0: [sda] 16384 512-byte logical blocks: (8.39 MB/8.=
+00
+MiB)
+[   62.754265] sd 2:0:0:0: [sda] Write Protect is off
+[   62.763253] sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled,
+supports DPO and FUA
+[   62.776965] sd 2:0:0:0: [sda] Optimal transfer size 524288 bytes
+[   62.883817] sd 2:0:0:0: [sda] Attached SCSI disk
 
-        Arnd
+And then rmmod still fails.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
