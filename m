@@ -2,100 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28E14C433C1
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 07:25:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FF9DC433C1
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 07:48:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE0F6619BA
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 07:25:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D52CB619BF
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 07:48:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230103AbhCWHYr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Mar 2021 03:24:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41590 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229494AbhCWHYU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Mar 2021 03:24:20 -0400
-Received: from mail-qt1-x82c.google.com (mail-qt1-x82c.google.com [IPv6:2607:f8b0:4864:20::82c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE2ABC061574;
-        Tue, 23 Mar 2021 00:24:20 -0700 (PDT)
-Received: by mail-qt1-x82c.google.com with SMTP id 94so14311410qtc.0;
-        Tue, 23 Mar 2021 00:24:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=FR181K9vED9jYA3wKRdAjKkm216lNGd88qtjMEThTfA=;
-        b=Nnm7PsdSc2Z66JalAEpbAotT6dWiZYmyk2PyJslK18qMuROkLqKZHIupoWLYkvgL+Z
-         P9Y1+XttyHwZvMFMJWQKpmYesaEH8y+q+/PT4V5secUmc40vBmnXw7Y8tBo4M7P4OE2j
-         0dYz7CdLWCNtX0WrSAJalzisTb+/J2e9D9r3VhMp8NUshUG4gNY48wZ/1W61ULJNJXpI
-         6ETsY/G0aQFBU2QH8E7SAbAzzd2XF+BI8ANiAfREdzgqWxTM9PlhORRAJe6dpfyHrEzI
-         DGvYfxVjDY5CRdq0NXdiHDCdY1Uf/DOmLZSoyYJMzJagYqxgzsG7K4h52PHOMBiat/J0
-         wLig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=FR181K9vED9jYA3wKRdAjKkm216lNGd88qtjMEThTfA=;
-        b=msd7sqMPyXwFrppKPreC+5f1sOUOXP7se04peRcJndsZ/s9y3Rde+eojmqqQ6kwrFu
-         dgFeRUSs5VXkbbR/dStfy6yh1/nJPPXNSoX+zpVK+fhjAp1uLtpTvDuXgdBs+GXnsjkd
-         RK7silfs4jVYvYWoWmkR1aUml89U017iNupNbmZZJ1Eoq6YTl9/MWXFLfJVSd+avpqDZ
-         pp/sY4exW1TFegtRxDjbzuYk5YYmnRHewW3nvzJsgekuYzyaOtPRSEQsWnBC+YX6fRNR
-         PVud5LcDSUYIjz9XGBcDErg3Q0hFNTb2uPaPqCCOV4i2dFZzvZvPqB6gDRvSohEMqoxX
-         s7yA==
-X-Gm-Message-State: AOAM5315CCCvEhA94ll42rrFlsszgHsDBZ3JRC2R1R+FbloiwjYYJRrt
-        W7j84v7hN08JnRKbe6DhMadnT77naMe41JuUHqM=
-X-Google-Smtp-Source: ABdhPJzEYfvSiCxdBnzf5XRhinZekJo3FbbGbttMqeobbZWA5tuODsu9T4NbuXuewf0s35OuyPZSv/1hNfE5UVtOS0o=
-X-Received: by 2002:ac8:7f4e:: with SMTP id g14mr3260607qtk.35.1616484259937;
- Tue, 23 Mar 2021 00:24:19 -0700 (PDT)
+        id S229591AbhCWHr2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Mar 2021 03:47:28 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:14011 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229658AbhCWHrO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Mar 2021 03:47:14 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4F4Ngt3qSGzrWks;
+        Tue, 23 Mar 2021 15:45:14 +0800 (CST)
+Received: from [10.174.178.113] (10.174.178.113) by
+ DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
+ 14.3.498.0; Tue, 23 Mar 2021 15:47:06 +0800
+Subject: Re: md/dm-mpath: check whether all pgpaths have same uuid in
+ multipath_ctr()
+To:     Mike Snitzer <snitzer@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Zhiqiang Liu <liuzhiqiang26@huawei.com>
+CC:     <agk@redhat.com>, <dm-devel@redhat.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        linfeilong <linfeilong@huawei.com>,
+        "wubo (T)" <wubo40@huawei.com>
+References: <c8f86351-3036-0945-90d2-2e020d68ccf2@huawei.com>
+ <20210322081155.GE1946905@infradead.org> <20210322142207.GB30698@redhat.com>
+From:   lixiaokeng <lixiaokeng@huawei.com>
+Message-ID: <a46013db-8143-7b41-95a8-182439b385f2@huawei.com>
+Date:   Tue, 23 Mar 2021 15:47:06 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-From:   Du Dengke <pinganddu90@gmail.com>
-Date:   Tue, 23 Mar 2021 15:24:08 +0800
-Message-ID: <CAKHP1duT_jQ6pA7WnHPiYvoQvu1vVmAgUDp1kjhnngRufgijgA@mail.gmail.com>
-Subject: __scsi_remove_device: fix comments minor error
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org
-Content-Type: multipart/mixed; boundary="00000000000019598005be2f12ba"
+In-Reply-To: <20210322142207.GB30698@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.113]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000019598005be2f12ba
-Content-Type: text/plain; charset="UTF-8"
 
-Hi experts:
-    When I read scsi kernel code, I found a spell error in
-__scsi_remove_device function comments. Patch was made in attach file.
-Thanks
-//dengke
 
---00000000000019598005be2f12ba
-Content-Type: text/x-patch; charset="US-ASCII"; 
-	name="0001-__scsi_remove_device-fix-comments-minor-error.patch"
-Content-Disposition: attachment; 
-	filename="0001-__scsi_remove_device-fix-comments-minor-error.patch"
-Content-Transfer-Encoding: base64
-Content-ID: <f_kmloymn70>
-X-Attachment-Id: f_kmloymn70
+On 2021/3/22 22:22, Mike Snitzer wrote:
+> On Mon, Mar 22 2021 at  4:11am -0400,
+> Christoph Hellwig <hch@infradead.org> wrote:
+> 
+>> On Sat, Mar 20, 2021 at 03:19:23PM +0800, Zhiqiang Liu wrote:
+>>> From: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+>>>
+>>> When we make IO stress test on multipath device, there will
+>>> be a metadata err because of wrong path. In the test, we
+>>> concurrent execute 'iscsi device login|logout' and
+>>> 'multipath -r' command with IO stress on multipath device.
+>>> In some case, systemd-udevd may have not time to process
+>>> uevents of iscsi device logout|login, and then 'multipath -r'
+>>> command triggers multipathd daemon calls ioctl to load table
+>>> with incorrect old device info from systemd-udevd.
+>>> Then, one iscsi path may be incorrectly attached to another
+>>> multipath which has different uuid. Finally, the metadata err
+>>> occurs when umounting filesystem to down write metadata on
+>>> the iscsi device which is actually not owned by the multipath
+>>> device.
+>>>
+>>> So we need to check whether all pgpaths of one multipath have
+>>> the same uuid, if not, we should throw a error.
+>>>
+>>> Signed-off-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+>>> Signed-off-by: lixiaokeng <lixiaokeng@huawei.com>
+>>> Signed-off-by: linfeilong <linfeilong@huawei.com>
+>>> Signed-off-by: Wubo <wubo40@huawei.com>
+>>> ---
+>>>  drivers/md/dm-mpath.c   | 52 +++++++++++++++++++++++++++++++++++++++++
+>>>  drivers/scsi/scsi_lib.c |  1 +
+>>>  2 files changed, 53 insertions(+)
+>>>
+>>> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+>>> index bced42f082b0..f0b995784b53 100644
+>>> --- a/drivers/md/dm-mpath.c
+>>> +++ b/drivers/md/dm-mpath.c
+>>> @@ -24,6 +24,7 @@
+>>>  #include <linux/workqueue.h>
+>>>  #include <linux/delay.h>
+>>>  #include <scsi/scsi_dh.h>
+>>> +#include <linux/dm-ioctl.h>
+>>>  #include <linux/atomic.h>
+>>>  #include <linux/blk-mq.h>
+>>>
+>>> @@ -1169,6 +1170,45 @@ static int parse_features(struct dm_arg_set *as, struct multipath *m)
+>>>  	return r;
+>>>  }
+>>>
+>>> +#define SCSI_VPD_LUN_ID_PREFIX_LEN 4
+>>> +#define MPATH_UUID_PREFIX_LEN 7
+>>> +static int check_pg_uuid(struct priority_group *pg, char *md_uuid)
+>>> +{
+>>> +	char pgpath_uuid[DM_UUID_LEN] = {0};
+>>> +	struct request_queue *q;
+>>> +	struct pgpath *pgpath;
+>>> +	struct scsi_device *sdev;
+>>> +	ssize_t count;
+>>> +	int r = 0;
+>>> +
+>>> +	list_for_each_entry(pgpath, &pg->pgpaths, list) {
+>>> +		q = bdev_get_queue(pgpath->path.dev->bdev);
+>>> +		sdev = scsi_device_from_queue(q);
+>>
+>> Common dm-multipath code should never poke into scsi internals.  This
+>> is something for the device handler to check.  It probably also won't
+>> work for all older devices.
+> 
+> Definitely.
+> 
+> But that aside, userspace (multipathd) _should_ be able to do extra
+> validation, _before_ pushing down a new table to the kernel, rather than
+> forcing the kernel to do it.
+> 
 
-RnJvbSA0MjBlMDUxYjYyNGM4MWQyOTg1NjRjNDE2YjVhOTYxODhkZDBiYjZhIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBkdWRlbmdrZSA8ZGVuZ2tlLmR1QHVjYXMuY29tLmNuPgpEYXRl
-OiBUdWUsIDIzIE1hciAyMDIxIDEwOjU3OjA3ICswODAwClN1YmplY3Q6IFtQQVRDSF0gX19zY3Np
-X3JlbW92ZV9kZXZpY2U6IGZpeCBjb21tZW50cyBtaW5vciBlcnJvcgoKU2lnbmVkLW9mZi1ieTog
-ZHVkZW5na2UgPGRlbmdrZS5kdUB1Y2FzLmNvbS5jbj4KLS0tCiBkcml2ZXJzL3Njc2kvc2NzaV9z
-eXNmcy5jIHwgMiArLQogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9u
-KC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYyBiL2RyaXZlcnMvc2Nz
-aS9zY3NpX3N5c2ZzLmMKaW5kZXggYjYzNzhjOGNhNzgzLi44NmU4ZDBiZjgyMWQgMTAwNjQ0Ci0t
-LSBhL2RyaXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMKKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfc3lz
-ZnMuYwpAQCAtMTQ1OCw3ICsxNDU4LDcgQEAgdm9pZCBfX3Njc2lfcmVtb3ZlX2RldmljZShzdHJ1
-Y3Qgc2NzaV9kZXZpY2UgKnNkZXYpCiAKIAkvKgogCSAqIFBhaXJlZCB3aXRoIHRoZSBrcmVmX2dl
-dCgpIGluIHNjc2lfc3lzZnNfaW5pdGlhbGl6ZSgpLiAgV2UgaGF2ZQotCSAqIHJlbW9lZCBzeXNm
-cyB2aXNpYmlsaXR5IGZyb20gdGhlIGRldmljZSwgc28gbWFrZSB0aGUgdGFyZ2V0CisJICogcmVt
-b3ZlZCBzeXNmcyB2aXNpYmlsaXR5IGZyb20gdGhlIGRldmljZSwgc28gbWFrZSB0aGUgdGFyZ2V0
-CiAJICogaW52aXNpYmxlIGlmIHRoaXMgd2FzIHRoZSBsYXN0IGRldmljZSB1bmRlcm5lYXRoIGl0
-LgogCSAqLwogCXNjc2lfdGFyZ2V0X3JlYXAoc2NzaV90YXJnZXQoc2RldikpOwotLSAKMi4yNS4x
-Cgo=
---00000000000019598005be2f12ba--
+Martin (committer of multipath-tools) said that:
+"Don't get me wrong, I don't argue against tough testing. But we should
+be aware that there are always time intervals during which multipathd's
+picture of the present devices is different from what the kernel sees."
+
+It is difficult to solve this in multipathd.
+
+Regards,
+Lixiaokeng
