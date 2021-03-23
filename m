@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2CD2C433C1
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 04:45:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91F4DC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 04:45:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2603619A5
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 04:45:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61DD461994
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 04:45:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229631AbhCWEo3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Mar 2021 00:44:29 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33380 "EHLO
+        id S229592AbhCWEpB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Mar 2021 00:45:01 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56822 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229592AbhCWEoN (ORCPT
+        by vger.kernel.org with ESMTP id S229590AbhCWEoh (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 Mar 2021 00:44:13 -0400
+        Tue, 23 Mar 2021 00:44:37 -0400
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 12N4gTD7012329
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2021 21:44:12 -0700
+        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 12N4fAOi010256
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2021 21:44:36 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=WIqAJjVKU7VkVONLtu8NvN1gCatQ49LD0J2QNUjo0eM=;
- b=RlzruETYTMwMzb+Zh48KvKgwW5SqzdMhFNmpYWE0EnI66JAYFLudH9QFyTfYXHq8q37+
- mGwpX0FHspx5Vn9Tg8Ayvn44uUiKHhuuK028Tt+1oZ4o4/0I7S6ogi3VbYGee0clRF3j
- /SNtFXxeBC6fX5Tv9tBmBV92b5M4dbjey0VGzR3XnylfJ5CGhhU9oez8qGaGM0xIjrfG
- x1gZmYqSWAX9j678z+NlyCyMD1ikiJxxAYiqzVxX9q2eAdBP88Yw0AIx5JbGs3mivj6Z
- agLPBugMi2x4Hla8+/1fSnUbnipvt/JpvYKdBYwzOPo+p+G+Xm5ZFOUsk8prdbbVDmt4 DQ== 
+ content-type; s=pfpt0220; bh=RxkZVSVNTiMWrhCwbvxfZ5lxjbS2fOoxl0/BOqISO2I=;
+ b=FwZ9GLVLxnZJxzmlSQ66uqT+wFGxZkHxh6RnUSvunDkeDEpO5NB07rKLl2XOXpUucZye
+ kNRPVNvSpXUda4TcwKhQ0Libw92njE9VC4ERInjKr3l8iiiKnEfVx0Mpblkq4C3dJZtz
+ QF6aptxKWUfQn4JBKD/heeEqY6xgHxnzfOkEdamVly6LuzVNxhqBQ2cmGGw5fvPl6py0
+ Y77zBh+/Qstaahy+C+sGXZwF8kfzReCX6f2CGE6xXV1mAhKOLHTKtglM67pjqlJNDKwc
+ fKvDeTkM8PiuTUx9lEs9s//ZJqO4zAI5RkkFDBcLmcsuZqX6cSegPu+98SYjpCDJBtTJ 1Q== 
 Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 37dgjnygun-1
+        by mx0b-0016f401.pphosted.com with ESMTP id 37dgjnygva-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2021 21:44:12 -0700
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2021 21:44:36 -0700
 Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
  (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 22 Mar
- 2021 21:44:10 -0700
+ 2021 21:44:34 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
  (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 22 Mar 2021 21:44:10 -0700
+ Transport; Mon, 22 Mar 2021 21:44:34 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 64F073F703F;
-        Mon, 22 Mar 2021 21:44:10 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 83B9F3F703F;
+        Mon, 22 Mar 2021 21:44:34 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 12N4iAQt026715;
-        Mon, 22 Mar 2021 21:44:10 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 12N4iYlL026720;
+        Mon, 22 Mar 2021 21:44:34 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 12N4iAxV026706;
-        Mon, 22 Mar 2021 21:44:10 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 12N4iYVf026718;
+        Mon, 22 Mar 2021 21:44:34 -0700
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 02/11] qla2xxx: Add H:C:T info in the log message for fc ports
-Date:   Mon, 22 Mar 2021 21:42:48 -0700
-Message-ID: <20210323044257.26664-3-njavali@marvell.com>
+Subject: [PATCH 03/11] qla2xxx: fix stuck session
+Date:   Mon, 22 Mar 2021 21:42:49 -0700
+Message-ID: <20210323044257.26664-4-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20210323044257.26664-1-njavali@marvell.com>
 References: <20210323044257.26664-1-njavali@marvell.com>
@@ -68,41 +68,44 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arun Easi <aeasi@marvell.com>
+From: Quinn Tran <qutran@marvell.com>
 
-The host:channel:scsi_target_id information is helpful in matching
-an fc port with a scsi device, so add it. For initiator fc ports,
-a -1 would be displayed for "target" part.
+Session was stuck due to explicit logout to target was timed out.
+The target was in an unresponsive state. This timeout induced an error
+to the GNL command from moving forward.
 
-Signed-off-by: Arun Easi <aeasi@marvell.com>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c   | 1 +
+ drivers/scsi/qla2xxx/qla_target.c | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index f01f07116bd3..af237c485389 100644
+index af237c485389..f6dc8166e7ba 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5512,13 +5512,14 @@ qla2x00_reg_remote_port(scsi_qla_host_t *vha, fc_port_t *fcport)
- 	if (fcport->port_type & FCT_NVME_DISCOVERY)
- 		rport_ids.roles |= FC_PORT_ROLE_NVME_DISCOVERY;
+@@ -718,6 +718,7 @@ static void qla24xx_handle_gnl_done_event(scsi_qla_host_t *vha,
+ 		ql_dbg(ql_dbg_disc, vha, 0x20e0,
+ 		    "%s %8phC login gen changed\n",
+ 		    __func__, fcport->port_name);
++		set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
+ 		return;
+ 	}
  
-+	fc_remote_port_rolechg(rport, rport_ids.roles);
-+
- 	ql_dbg(ql_dbg_disc, vha, 0x20ee,
--	    "%s %8phN. rport %p is %s mode\n",
--	    __func__, fcport->port_name, rport,
-+	    "%s: %8phN. rport %ld:0:%d (%p) is %s mode\n",
-+	    __func__, fcport->port_name, vha->host_no,
-+	    rport->scsi_target_id, rport,
- 	    (fcport->port_type == FCT_TARGET) ? "tgt" :
- 	    ((fcport->port_type & FCT_NVME) ? "nvme" : "ini"));
--
--	fc_remote_port_rolechg(rport, rport_ids.roles);
- }
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index c48daf52725d..fa8c4dae8dce 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1029,7 +1029,7 @@ void qlt_free_session_done(struct work_struct *work)
+ 			}
+ 			msleep(100);
+ 			cnt++;
+-			if (cnt > 200)
++			if (cnt > 230)
+ 				break;
+ 		}
  
- /*
 -- 
 2.19.0.rc0
 
