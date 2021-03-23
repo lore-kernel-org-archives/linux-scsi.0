@@ -2,100 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8C6AC433C1
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 02:59:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFD7EC433C1
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 04:23:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 859ED60200
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 02:59:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 927496198E
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 04:23:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229675AbhCWC7V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Mar 2021 22:59:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41380 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229482AbhCWC7H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2021 22:59:07 -0400
-Received: from ustc.edu.cn (email6.ustc.edu.cn [IPv6:2001:da8:d800::8])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 317B4C061574;
-        Mon, 22 Mar 2021 19:58:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mail.ustc.edu.cn; s=dkim; h=Received:From:To:Cc:Subject:Date:
-        Message-Id:MIME-Version:Content-Transfer-Encoding; bh=6nGflbw2M1
-        nIAUTSCNcXju9H6GH0cycjGJaL9m/nRSQ=; b=j2XvpBSWRPZBPZvAHsLRH6+C1W
-        fqDtDX3Z26z0fnwnPyDannxRz0TavFTWo8wG58SSkNH5QQrrYCAPnKvJMfuu8FWh
-        Rpx0CaH4knOASrlqcWSw0M0zTzWs+hjY63uOpd9/C9dnslqtqoDNstrva1gK8u0r
-        /dPkclKgSkvjXkX0s=
-Received: from ubuntu.localdomain (unknown [202.38.69.14])
-        by newmailweb.ustc.edu.cn (Coremail) with SMTP id LkAmygBHTkpuWVlgfX4ZAA--.517S4;
-        Tue, 23 Mar 2021 10:58:54 +0800 (CST)
-From:   Lv Yunlong <lyl2019@mail.ustc.edu.cn>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Lv Yunlong <lyl2019@mail.ustc.edu.cn>
-Subject: [PATCH] target: Fix a double put in transport_free_session
-Date:   Mon, 22 Mar 2021 19:58:51 -0700
-Message-Id: <20210323025851.11782-1-lyl2019@mail.ustc.edu.cn>
-X-Mailer: git-send-email 2.25.1
+        id S229464AbhCWEXT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Mar 2021 00:23:19 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:26250 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229437AbhCWEWf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 Mar 2021 00:22:35 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1616473355; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=/L/BZBLnsZxKc0CXc2DZzeIu4BfDOTaaxb2U6Ts43Ec=;
+ b=DrhtaflD0JZpkf5AUToWJ3DmvpjlLVGZpziehqYgR5+gVPdGd5lzgOqnBgaALe7YU+PJck8K
+ XHNy8R+jPYFp0DmldIPDkiLhutofX3hcFmjORqPAiyalO1zQNRznXT/MzFXlZcUHe/fdFVX2
+ iYDbZBrFOdw00lHXu4GmYGWLPTo=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 60596d056dc1045b7d29fa51 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 23 Mar 2021 04:22:29
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id D6404C433ED; Tue, 23 Mar 2021 04:22:28 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 52051C433CA;
+        Tue, 23 Mar 2021 04:22:28 +0000 (UTC)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: LkAmygBHTkpuWVlgfX4ZAA--.517S4
-X-Coremail-Antispam: 1UD129KBjvdXoWrtF17tr1xtrW5uFyxJr15XFb_yoWkAFb_CF
-        1F9wnrWF1Fgw4DKr47G3W3Xry2yF9Y9F1IvFs2k3yjgrykZF1rJrnrJFn3u34jkrWrZryF
-        yrnFyr1Dur4UXjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbVxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-        0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
-        1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IE
-        rcIFxwCY02Avz4vE14v_Gr1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr
-        1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE
-        14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7
-        IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY
-        6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa
-        73UjIFyTuYvjfUO6pBUUUUU
-X-CM-SenderInfo: ho1ojiyrz6zt1loo32lwfovvfxof0/
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 23 Mar 2021 12:22:28 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Bean Huo <huobean@gmail.com>
+Cc:     daejun7.park@samsung.com, Greg KH <gregkh@linuxfoundation.org>,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, asutoshd@codeaurora.org,
+        stanley.chu@mediatek.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Jaemyung Lee <jaemyung.lee@samsung.com>,
+        Jieon Seol <jieon.seol@samsung.com>
+Subject: Re: [PATCH v31 2/4] scsi: ufs: L2P map management for HPB read
+In-Reply-To: <75df140d2167eadf1089d014f571d711a9aeb6a5.camel@gmail.com>
+References: <20210322065127epcms2p5021a61416a6b427c62fcaf5d8b660860@epcms2p5>
+ <CGME20210322065127epcms2p5021a61416a6b427c62fcaf5d8b660860@epcms2p4>
+ <20210322065410epcms2p431f73262f508e9e3e16bd4995db56a4b@epcms2p4>
+ <75df140d2167eadf1089d014f571d711a9aeb6a5.camel@gmail.com>
+Message-ID: <d6a032261a642a4afed80188ea4772ee@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In transport_free_session, se_nacl is got from se_sess
-with the initial reference. If se_nacl->acl_sess_list is
-empty, se_nacl->dynamic_stop is set to true. Then the first
-target_put_nacl(se_nacl) will drop the initial reference
-and free se_nacl. Later there is a second target_put_nacl()
-to put se_nacl. It may cause error in race.
+On 2021-03-22 17:11, Bean Huo wrote:
+> On Mon, 2021-03-22 at 15:54 +0900, Daejun Park wrote:
+>> +       switch (rsp_field->hpb_op) {
+>> 
+>> +       case HPB_RSP_REQ_REGION_UPDATE:
+>> 
+>> +               if (data_seg_len != DEV_DATA_SEG_LEN)
+>> 
+>> +                       dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
+>> 
+>> +                                "%s: data seg length is not
+>> same.\n",
+>> 
+>> +                                __func__);
+>> 
+>> +               ufshpb_rsp_req_region_update(hpb, rsp_field);
+>> 
+>> +               break;
+>> 
+>> +       case HPB_RSP_DEV_RESET:
+>> 
+>> +               dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
+>> 
+>> +                        "UFS device lost HPB information during
+>> PM.\n");
+>> 
+>> +               break;
+> 
+> Hi Deajun,
+> This series looks good to me. Just here I have one question. You didn't
+> handle HPB_RSP_DEV_RESET, just a warning.  Based on your SS UFS, how to
+> handle HPB_RSP_DEV_RESET from the host side? Do you think we shoud
+> reset host side HPB entry as well or what else?
+> 
+> 
+> Bean
 
-My patch sets se_nacl->dynamic_stop to false to avoid the
-double put.
+Same question here - I am still collecting feedbacks from flash vendors 
+about
+what is recommanded host behavior on reception of HPB Op code 0x2, since 
+it
+is not cleared defined in HPB2.0 specs.
 
-Signed-off-by: Lv Yunlong <lyl2019@mail.ustc.edu.cn>
----
- drivers/target/target_core_transport.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 5ecb9f18a53d..c266defe694f 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -584,8 +584,10 @@ void transport_free_session(struct se_session *se_sess)
- 		}
- 		mutex_unlock(&se_tpg->acl_node_mutex);
- 
--		if (se_nacl->dynamic_stop)
-+		if (se_nacl->dynamic_stop) {
- 			target_put_nacl(se_nacl);
-+			se_nacl->dynamic_stop = false;
-+		}
- 
- 		target_put_nacl(se_nacl);
- 	}
--- 
-2.25.1
-
-
+Can Guo.
