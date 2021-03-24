@@ -2,159 +2,269 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75683C433C1
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 21:26:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8CA8C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 01:46:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4ADEB619CB
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Mar 2021 21:26:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2A45619E9
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 01:46:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233586AbhCWVZd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Mar 2021 17:25:33 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:36328 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233465AbhCWVZM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Mar 2021 17:25:12 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1616534712; x=1648070712;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=pTf+blGRkZXMGsXBqn5yXtwGUYCiuKA0yq2ykN2jKsQ=;
-  b=lTRo92wpxg4FUWS4cm8z/oun9QGT8Sy6ByQFHzbOfHW4am1eA3uLBAVI
-   dZCgHScC0ngUt1ix/FYjLIn/wFGTmBSQCo0OC19BFPCyLj8fVr2lS/l2G
-   FoUpqRk0VrjjihAXgi+JkegbzxYKqbGF9D1PrUXu/XIBJFEGe2w407wSc
-   l2o1r3xfQQoNO+zom4KJRH/BRzi1YVemZLbc+6490T2jGhePM7254ssJk
-   2szQ1I4wZUDt5b2AlM0CjhZIZuY6yOTqn62P0gFg7hxZHxu8ZGIC7dLwD
-   YJUT/LuX38fgIzdcLQhrHu6rfPZLAtpvVM+3Rils14PGp33zEAzKk27wV
-   Q==;
-IronPort-SDR: tVkb7ZsHMkiQUMzlSRCjBD2clAnPDlFJ84NuCCv6yg4qlqT+C8wm+8rIMkz5ooc54b+pTpNPvW
- KJvwOGISnyQOZYMwzxWDHOVYsZO82rIbXGwC+NcMTvtwwwD7qRSm0xi1SIPo7ytnaLLeY60Pmv
- m2dEqi4euz3w9ZbLtkfAUh527JvJnoiKlJw49dcPBMbkNOJbbFXGrEMxdB5CUM7m6a5aKWD4ZS
- 8KXkOKqRgDNhHaZSe2tcMDatO0GFygmjId1D/RrkrmlyyKZpx1UYMNB0cpaz4cZEDTa4LjD6ow
- CbY=
-X-IronPort-AV: E=Sophos;i="5.81,272,1610380800"; 
-   d="scan'208";a="167313705"
-Received: from mail-dm6nam10lp2103.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.103])
-  by ob1.hgst.iphmx.com with ESMTP; 24 Mar 2021 05:25:11 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YQ/Y3xeXo0Qm+HN5WE2aRLCRlh7lA3dRQyfcu3Givjg2ZvEKpGGYUAEFD1kCCViCca62GMMqAaVPswqwldLIzZWlfCSemkKS1pnojRI34VqyOZcW7DypccXdaqV0CeYnZ/hoskRUVOQLSoQlEveCq0eH0XORLU9G4yoNdTZSKvmkinIuT0vut4q690gSeXr09FxxwR/sm/uklLsi8JrsZwG1P52HvaChKnNo2BNiDDTaxymn8zutPxBubayxBc2a3qr5kjuts/XddK28FSjm/RphUzvNzPjXlOmZ9jE01ZCvo80flqZS0kaeJP5ovurJk+htKEdHgOEtMaov8xvvLQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pTf+blGRkZXMGsXBqn5yXtwGUYCiuKA0yq2ykN2jKsQ=;
- b=JAFsQbeU8EtezqLKlPxPuEIbF96ppSqsbKMbTGPygAgCYWen58co4pLaXrhKX6EBqRKBS3fKqHQKQd4NK6esZh2OtzuijOxCIv4WHI3M5yN630CTj6o178dpu86Z4SHTyBXaXzeEgXAIHIZJyBWBCH0J5enaCzcwmeLFKdPIk7wyuOG7RDDtNzCRgySWeQmQCxyig9+GQiDmqVSl9PpRiHXqSEZ1rounawk/cLYkf/yU14iCAOO8Us91qT9LqKmfDT68Tvznm3tJDnUwvyNokJf35/Uqx6E/Ggo3UbYrcQ5MCe8tdyaxTfjjQRgRcP9m2OZ/kKFMrfGRTmzvdg5kng==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pTf+blGRkZXMGsXBqn5yXtwGUYCiuKA0yq2ykN2jKsQ=;
- b=zlVUPOygdFu5FmT2tWUreosxeBZvtGTpZTjcekXrHbkI7um+aCvq6+G1odamRLe+ewJ9O+PrvvBCVMhw8BKOt6J+EmhTuYDUhbNJW8vcBPDMg/uOeAdD6/0mkb9MjJoJt5TkczGmSbzUmJZCLoDinto1Br12p7U/ImJYh5jyYhk=
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
- by BYAPR04MB5830.namprd04.prod.outlook.com (2603:10b6:a03:106::26) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3955.18; Tue, 23 Mar
- 2021 21:25:09 +0000
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::c897:a1f8:197a:706b]) by BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::c897:a1f8:197a:706b%5]) with mapi id 15.20.3955.027; Tue, 23 Mar 2021
- 21:25:09 +0000
-From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-To:     Martin Wilck <mwilck@suse.com>,
-        "hch@infradead.org" <hch@infradead.org>
-CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        David Disseldorp <ddiss@suse.com>,
-        =?iso-8859-1?Q?J=FCrgen_Gro=DF?= <jgross@suse.com>
-Subject: Re: [PATCH] target: pscsi: avoid OOM in pscsi_map_sg()
-Thread-Topic: [PATCH] target: pscsi: avoid OOM in pscsi_map_sg()
-Thread-Index: AQHXIADQ9AUBq2tQrUa5SFdtPvna+Q==
-Date:   Tue, 23 Mar 2021 21:25:09 +0000
-Message-ID: <BYAPR04MB496545980C9EDFB07AFE2A4186649@BYAPR04MB4965.namprd04.prod.outlook.com>
-References: <20210323162203.30942-1-mwilck@suse.com>
- <BYAPR04MB4965DC898570F11C1B4CF06D86649@BYAPR04MB4965.namprd04.prod.outlook.com>
- <225fe1d4a8d579308583fdad4f23221596355931.camel@suse.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: suse.com; dkim=none (message not signed)
- header.d=none;suse.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [199.255.45.62]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 24482799-ca7e-4584-a5b3-08d8ee4222de
-x-ms-traffictypediagnostic: BYAPR04MB5830:
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-x-microsoft-antispam-prvs: <BYAPR04MB58302D75D654E6F2AD9E95C186649@BYAPR04MB5830.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:374;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: MdnU0FZquL8z1mIGq0JGJ9xiTmBrjj14ntdGbS4fTM6BF1MaDOVQCVpF85WlWVRoym18vbKLQpBPkWTmxeAf96fVNBjDRSFasb7fAvqHyE6NvI2iyj1k0Nvu9BEsplFMdpjJR3/GHBBqtW5BTul/AejkLmKFw4BvFcJlcsSsvoM89UBljkNnqbvPQLV4Ctv1TMtP/kyouhCRwvY0uzGHAaLLQMHKQwYQUqzlHGUys+DRLSUWHFYtZDPmaQMk1oLZ1yEETWJ1xWFm7EayS1C/87fBbjObvmbQajdle+acs7crVnNAP9yC7jdSUcB54iV2zz1V20tKH3AVELlkhHreivldH3B82xbOLbAvInD+4QQrTxU7loUalZhe7jXH9Ob8kLPE73v237WS7SSe8jI8S7tn2gh/884Fg8U8Hbpi4nEGoofsWRD52Tsb4uzFVFLzZ0G+xWnr2wr3o+HWRhynEFfmcIMazPOZPicPMr4tTwWOGeVm2+98HSwwY6KvhovePg3JszUMNEPSHZoRtRtEAh52Seauuqo/gmiF/bbvss5EQPjcWBD3Y6yhIDWR4ySL217I4CFUxi7fjXRc7R3BhIHYr6mozM2bepm6rt08+VZlClbfsbcqewsLhy97N4jtTga7mRCX5KxDacG2Mw0GbBQesUZMpjUXEWVoBsDbLpU=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(136003)(396003)(346002)(39860400002)(366004)(9686003)(54906003)(71200400001)(55016002)(83380400001)(76116006)(478600001)(38100700001)(110136005)(7696005)(4744005)(33656002)(6506007)(53546011)(52536014)(26005)(66556008)(5660300002)(8936002)(86362001)(8676002)(4326008)(316002)(2906002)(186003)(66946007)(64756008)(66476007)(66446008);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?iso-8859-1?Q?f2U4mHdLtuFUaFtA7FTLjC3PS/ecvXLyuhf4uHtdepJfZjx8prcfeCDHiz?=
- =?iso-8859-1?Q?7c58cmF5ZPrw6c+X2LD/V7pOyAR1YtRpZkmTI2F273aBxohW7cbsBPtdP5?=
- =?iso-8859-1?Q?p4T6GKwIJ97OnOvYbTLsjM0p/n3w/z8u2k0usUm18zPfjXGN6q7WgdYiLL?=
- =?iso-8859-1?Q?sNnc9yC9k3r2+DVVVXTVSDN08LLCdzosHmccjpoxLT1NMIgTyBzKt5AH7h?=
- =?iso-8859-1?Q?5Wyzg6FqKnGmWI4KBLkrLScdwj+UkzU+M+NJ6aKvvxEh1SsWzGF5WjJMMd?=
- =?iso-8859-1?Q?f8pwM9ZhOYBu0t8BhazIDQ8p/2ifX8xJbQ4yR6Vx8PqBoL0cuzDY0bG7v3?=
- =?iso-8859-1?Q?j5goVBMlJLfBrLihaB8gmmvZiQmTF3YSPHR5GX8tNr/nwRLopxHJaoaqgO?=
- =?iso-8859-1?Q?GFpDwpUccbgA5t3VMtw7933IurlQc4mPYp1GKOwLIft7ctMBPIoQJj4pbh?=
- =?iso-8859-1?Q?kjXWc8Q/DY2bqoSDAJa2yL5ZN50XUI+RFKDJjjY6I3Bth4SnKxdRSgh8mn?=
- =?iso-8859-1?Q?hPvefLN5VC+3caiYHmHl1Y8nexcFFI2z3RIbWEDvSmDeEQ57aV3wqhSkt6?=
- =?iso-8859-1?Q?xTkjAjXSiVw8mnPBwMYkQWLXxFOpl0CeuOPx8w9sdN8D3rzyE3/u3ixNb9?=
- =?iso-8859-1?Q?/DnJnE6R2h/52zwNW+Xlf0AcmbeJY2PVk3mVkpC+xARE+o7y6Hy4RsY3LD?=
- =?iso-8859-1?Q?GmrQ84q4EdX2NhmLRWRS1zF2zJFsGv9TYKhDmTQzfX9dAzPGiKMCzz5g10?=
- =?iso-8859-1?Q?Q/JRJ5Jx2lwVFQ8JMOVS7IiZF7I7zAM7Rr+JnZz8cg5uv0c/wekBM1tJq7?=
- =?iso-8859-1?Q?XCmDKlYm4h5GKtK3VW6XeWruVD30DzHmz68s26BwEhDw98iUjXDE/6506W?=
- =?iso-8859-1?Q?0SoqfSkksFcllzj1PC0legGEo8i2oxenTv+BSNsj3tCbUmBrwoP272Ttvj?=
- =?iso-8859-1?Q?TRHTA+6FxkD9oLMeJI0grtF7LEjH/rZK7aaPGwxHr99Cu1nERss1fDN+YT?=
- =?iso-8859-1?Q?4jx/tmC3Z9ZcoKhucCV3Y+1F4/Y7gCsVWvTaHLiD0pb10+XdG36srIjhBJ?=
- =?iso-8859-1?Q?4mwC8HhGtN2Md+AAiT59eWWV0L598mvS68jY4qzbfks6X2KHBClayMoN3E?=
- =?iso-8859-1?Q?EZtPQJyaQ8z4WRmBzTIQJMeTdoQBvHBHaQmxeHwA7XupNH3eZDkeSzgOE7?=
- =?iso-8859-1?Q?vwX3Uwsj496pr1RLwTmNX5BHHQPHQihMuwozSrfrMhtkVC6IN1pZBEpE+6?=
- =?iso-8859-1?Q?5oeHs2pvQeU5eDjLiq19TLf/VvkBoF9OtTQIZGeQbWcDpxhLFlcqPNopfX?=
- =?iso-8859-1?Q?6a/s0xFHloZoCCALpOothNjdDUZumJ9omyshQT6fCzmfhKt8g9luhSe0AI?=
- =?iso-8859-1?Q?s/1GPmw+dl?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        id S231688AbhCXBqQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Mar 2021 21:46:16 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:25673 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231709AbhCXBp4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 Mar 2021 21:45:56 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1616550356; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=LF77Fb8g8D35F3nzQv0p179rDM8pO7IbyswGcBVEBEg=;
+ b=AUtF7mueIeG0j1nn/3xT6TukCfNMAj9asq2YLt+UdyIqmZJrvyWWzafsH89YJwx2uD94DJMw
+ nNiweDg6GV1SNL/rkEaR4eqSWF0oPAunNHoBPPZ82Cjy0NJGcXPcXOMRy/QWwXK3+QMgVBZM
+ GexFJdfLuTbAH/lkxC8QufUfXSQ=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 605a99cce3fca7d0a6cc73a8 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 24 Mar 2021 01:45:48
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 227F1C43465; Wed, 24 Mar 2021 01:45:47 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C5597C433ED;
+        Wed, 24 Mar 2021 01:45:45 +0000 (UTC)
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 24482799-ca7e-4584-a5b3-08d8ee4222de
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Mar 2021 21:25:09.1305
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: TUtX3c+kLUN2M1hr6utB78kfoHvgSEB8CzhIUMjsKjqC/IPpqqX4OWkTXcLSCQecvhq/+CSoQeH151HsOj5S7rMFYt7pdMPEprTKMbDdqnU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5830
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Wed, 24 Mar 2021 09:45:45 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     daejun7.park@samsung.com, Bean Huo <huobean@gmail.com>,
+        Greg KH <gregkh@linuxfoundation.org>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, asutoshd@codeaurora.org,
+        stanley.chu@mediatek.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Jaemyung Lee <jaemyung.lee@samsung.com>,
+        Jieon Seol <jieon.seol@samsung.com>
+Subject: Re: [PATCH v31 2/4] scsi: ufs: L2P map management for HPB read
+In-Reply-To: <DM6PR04MB657535F2F25BB41CAD191DB6FC649@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <f224bea78cf235ee94823528f07e28a6@codeaurora.org>
+ <1df7bb51dc481c3141cdcf85105d3a5b@codeaurora.org>
+ <e9b912bca9fd48c9b2fd76bea80439ae@codeaurora.org>
+ <20210322065127epcms2p5021a61416a6b427c62fcaf5d8b660860@epcms2p5>
+ <20210322065410epcms2p431f73262f508e9e3e16bd4995db56a4b@epcms2p4>
+ <75df140d2167eadf1089d014f571d711a9aeb6a5.camel@gmail.com>
+ <d6a032261a642a4afed80188ea4772ee@codeaurora.org>
+ <20210323053731epcms2p70788f357b546e9ca21248175a8884554@epcms2p7>
+ <20210323061922epcms2p739666492ebb458d70deab026d074caf4@epcms2p7>
+ <CGME20210322065127epcms2p5021a61416a6b427c62fcaf5d8b660860@epcms2p2>
+ <20210323063726epcms2p28aadb16bb96943ade1d2b288bb634811@epcms2p2>
+ <a9017bbb57618c5560b21c1cdadb4f80@codeaurora.org>
+ <DM6PR04MB657535F2F25BB41CAD191DB6FC649@DM6PR04MB6575.namprd04.prod.outlook.com>
+Message-ID: <dfb68d3632340c2ddffa487c69723aa3@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/23/21 14:21, Martin Wilck wrote:=0A=
->> I think BIO_MAX_PAGES is replaced by BIO_MAX_VECS with=0A=
->> commit a8affc03a9b3 ("block: rename BIO_MAX_PAGES to BIO_MAX_VECS").=0A=
-> Right. I made my patch against mkp/queue, which doesn't include this=0A=
-> commit yet. As this is just in the description, I don't think it=0A=
-> matters much, does it?=0A=
->=0A=
-> Martin=0A=
->=0A=
->=0A=
->=0A=
-=0A=
-I don't think it does, I'll let you decide that.=0A=
-=0A=
-=0A=
+On 2021-03-23 20:48, Avri Altman wrote:
+>> 
+>> On 2021-03-23 14:37, Daejun Park wrote:
+>> >> On 2021-03-23 14:19, Daejun Park wrote:
+>> >>>> On 2021-03-23 13:37, Daejun Park wrote:
+>> >>>>>> On 2021-03-23 12:22, Can Guo wrote:
+>> >>>>>>> On 2021-03-22 17:11, Bean Huo wrote:
+>> >>>>>>>> On Mon, 2021-03-22 at 15:54 +0900, Daejun Park wrote:
+>> >>>>>>>>> +       switch (rsp_field->hpb_op) {
+>> >>>>>>>>>
+>> >>>>>>>>> +       case HPB_RSP_REQ_REGION_UPDATE:
+>> >>>>>>>>>
+>> >>>>>>>>> +               if (data_seg_len != DEV_DATA_SEG_LEN)
+>> >>>>>>>>>
+>> >>>>>>>>> +                       dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
+>> >>>>>>>>>
+>> >>>>>>>>> +                                "%s: data seg length is not
+>> >>>>>>>>> same.\n",
+>> >>>>>>>>>
+>> >>>>>>>>> +                                __func__);
+>> >>>>>>>>>
+>> >>>>>>>>> +               ufshpb_rsp_req_region_update(hpb, rsp_field);
+>> >>>>>>>>>
+>> >>>>>>>>> +               break;
+>> >>>>>>>>>
+>> >>>>>>>>> +       case HPB_RSP_DEV_RESET:
+>> >>>>>>>>>
+>> >>>>>>>>> +               dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
+>> >>>>>>>>>
+>> >>>>>>>>> +                        "UFS device lost HPB information
+>> >>>>>>>>> during
+>> >>>>>>>>> PM.\n");
+>> >>>>>>>>>
+>> >>>>>>>>> +               break;
+>> >>>>>>>>
+>> >>>>>>>> Hi Deajun,
+>> >>>>>>>> This series looks good to me. Just here I have one question. You
+>> >>>>>>>> didn't
+>> >>>>>>>> handle HPB_RSP_DEV_RESET, just a warning.  Based on your SS UFS,
+>> >>>>>>>> how
+>> >>>>>>>> to
+>> >>>>>>>> handle HPB_RSP_DEV_RESET from the host side? Do you think we
+>> >>>>>>>> shoud
+>> >>>>>>>> reset host side HPB entry as well or what else?
+>> >>>>>>>>
+>> >>>>>>>>
+>> >>>>>>>> Bean
+>> >>>>>>>
+>> >>>>>>> Same question here - I am still collecting feedbacks from flash
+>> >>>>>>> vendors
+>> >>>>>>> about
+>> >>>>>>> what is recommanded host behavior on reception of HPB Op code
+>> >>>>>>> 0x2,
+>> >>>>>>> since it
+>> >>>>>>> is not cleared defined in HPB2.0 specs.
+>> >>>>>>>
+>> >>>>>>> Can Guo.
+>> >>>>>>
+>> >>>>>> I think the question should be asked in the HPB2.0 patch, since in
+>> >>>>>> HPB1.0 device
+>> >>>>>> control mode, a HPB reset in device side does not impact anything
+>> >>>>>> in
+>> >>>>>> host side -
+>> >>>>>> host is not writing back any HPB entries to device anyways and HPB
+>> >>>>>> Read
+>> >>>>>> cmd with
+>> >>>>>> invalid HPB entries shall be treated as normal Read(10) cmd
+>> >>>>>> without
+>> >>>>>> any
+>> >>>>>> problems.
+>> >>>>>
+>> >>>>> Yes, UFS device will process read command even the HPB entries are
+>> >>>>> valid or
+>> >>>>> not. So it is warning about read performance drop by dev reset.
+>> >>>>
+>> >>>> Yeah, but still I am 100% sure about what should host do in case of
+>> >>>> HPB2.0
+>> >>>> when it receives HPB Op code 0x2, I am waiting for feedbacks.
+>> >>>
+>> >>> I think the host has two choices when it receives 0x2.
+>> >>> One is nothing on host.
+>> >>> The other is discarding all HPB entries in the host.
+>> >>>
+>> >>> In the JEDEC HPB spec, it as follows:
+>> >>> When the device is powered off by the host, the device may restore
+>> >>> L2P
+>> >>> map
+>> >>> data upon power up or build from the host’s HPB READ command.
+>> >>>
+>> >>> If some UFS builds L2P map data from the host's HPB READ commands, we
+>> >>> don't
+>> >>> have to discard HPB entries in the host.
+>> >>>
+>> >>> So I thinks there is nothing to do when it receives 0x2.
+>> >>
+>> >> But in HPB2.0, if we do nothing to active regions in host side, host
+>> >> can
+>> >> write
+>> >> HPB entries (which host thinks valid, but actually invalid in device
+>> >> side since
+>> >> reset happened) back to device through HPB Write Buffer cmds (BUFFER
+>> >> ID
+>> >> = 0x2).
+>> >> My question is that are all UFSs OK with this?
+>> >
+>> > Yes, it must be OK.
+>> >
+>> > Please refer the following the HPB 2.0 spec:
+>> >
+>> > If the HPB Entries sent by HPB WRITE BUFFER are removed by the device,
+>> > for example, because they are not consumed for a long enough period of
+>> > time,
+>> > then the HPB READ command for the removed HPB entries shall be handled
+>> > as a
+>> > normal READ command.
+>> >
+>> 
+>> No, it is talking about the subsequent HPB READ cmd sent after a HPB
+>> WRITE BUFFER cmd,
+>> but not the HPB WRITE BUFFER cmd itself...
+> Looks like this discussion is going the same way as we had in host 
+> mode.
+> HPB-WRITE-BUFFER 0x2, if exist,  is always a companion to HPB-READ.
+> You shouldn't consider them separately.
+> 
+> The device is expected to handle invalid ppn by itself, and
+> specifically for this case,
+> As Daejun explained, Handle each HPB-READ (and its companion
+> HPB-WRITE-BUFFER) like READ10.
+> 
+> For device mode, doing nothing in case of dev reset, seems to me like
+> the right thing to do.
+
+I just got some feedbacks from other flash vendors, they all commit that
+their devices can work well in this scenario [1]. Some of them proposed
+even complicated (maybe better) principles of handling the "HPB reset",
+but since the device works well in [1], I am OK with current (simpler)
+handling of "HPB reset" - in device mode doing nothing, in host mode
+re-activate regions that host is trying to do a read to.
+
+Thanks,
+Can Guo.
+
+> 
+> Thanks,
+> Avri
+> 
+>> 
+>> Thanks,
+>> Can Guo.
+>> 
+>> > Thanks,
+>> > Daejun
+>> >
+>> >> Thanks,
+>> >> Can Guo.
+>> >>
+>> >>>
+>> >>> Thanks,
+>> >>> Daejun
+>> >>>
+>> >>>> Thanks,
+>> >>>> Can Guo.
+>> >>>>
+>> >>>>>
+>> >>>>> Thanks,
+>> >>>>> Daejun
+>> >>>>>
+>> >>>>>> Please correct me if I am wrong.
+>> >>>>>
+>> >>>>>
+>> >>>>>
+>> >>>>>> Thanks,
+>> >>>>>> Can Guo.
+>> >>>>>>
+>> >>>>>>
+>> >>>>>>
+>> >>>>
+>> >>>>
+>> >>>>
+>> >>
+>> >>
+>> >>
