@@ -7,81 +7,79 @@ X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 828B5C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 15:56:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FBACC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 15:57:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2CD3861A14
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 15:56:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46F0961A15
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 15:57:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236648AbhCXP4P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Mar 2021 11:56:15 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:38010 "EHLO
+        id S236892AbhCXP5V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Mar 2021 11:57:21 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38910 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236850AbhCXPzr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Mar 2021 11:55:47 -0400
+        with ESMTP id S236884AbhCXP5H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Mar 2021 11:57:07 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12OFs1EN135279;
-        Wed, 24 Mar 2021 15:55:45 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12OFs2Di135330;
+        Wed, 24 Mar 2021 15:57:05 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
  content-id : content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=YjI+IFaEcRcA3Dde8/r5i2OqoSAjB+qp+Ovkmc+IrC0=;
- b=Y712e1X3vqO32XaAypobqqOgEYvH2hw0HJcNsyAXYmu3GxJIJMdtazNLfL6k/i2PyaKx
- bcWJHvuU93vKL8lSDGcs3RL7/nHfazayl18oZ32sl820sF/lwqybEQwmmulpBafUK11D
- K0/AyjhLe1EqFWAFQDHBS83Pid5dQVGnPoiNgKiKJii2u0K8SrrAzSk0RQz0HJw4NKWW
- w5Ytw4bKA9IsNqyToxolu4EVI4IfhEpyqJI7eIlhhnEFjzNwxR3s6J2AJiOmDX40Acuv
- IRCUgmMY67lQ2CRuhPLNzQw34zJMQ0zsriFdg8fGXpryncoJw/gN/Po+EbQHN/GCOXjb jQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 37d9pn37fe-1
+ bh=mjAR1ZwsTfASCNEZewPLTnb32XegtljjdLkfw6IlaVY=;
+ b=JGRv8MyXabYxrswk0/rFaEizQ+yoqnk1v2FKL5Oynt2Bq19akIm7Yw1C7UYyq2ooHee/
+ QxVRrmmMluj3+x5vwm6jraeHoPRjVnMHG2z8uJF2fGhwTt9Klp7NFzKKbebwP0TD+j9Y
+ q5i8yhcKM/aRoKI37CkNggcFFezd+ZSuLAvS7VHvpDy0k+alGK8Q1yDIrx/5VXfeuZli
+ PiwJpj3+ezPga9/qTowAFdzc5JXo5lQl8CMgx9o9818nAOsNRkWlIR6wzUfqLD0yHSXm
+ ue++FabW/1kCBoDOuiOYsCaJ8SF6jvsQNEDKRMPrj+G6QGImT9tsnAJCsx5QRHfN/CEN NQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 37d9pn37pt-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 24 Mar 2021 15:55:45 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12OFaRAx044509;
-        Wed, 24 Mar 2021 15:55:44 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2170.outbound.protection.outlook.com [104.47.58.170])
-        by aserp3020.oracle.com with ESMTP id 37dty0rfta-1
+        Wed, 24 Mar 2021 15:57:05 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12OFsrTD043985;
+        Wed, 24 Mar 2021 15:57:05 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2102.outbound.protection.outlook.com [104.47.55.102])
+        by userp3030.oracle.com with ESMTP id 37du000fcc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 24 Mar 2021 15:55:44 +0000
+        Wed, 24 Mar 2021 15:57:05 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=MNpkcXqoibNzN9geHKfud5dFt9JsQvubaDSvnGEDw1/0cAJDlrL3Q7v4ZI+q2An3/dlczPi2L+3eyWKZjq9axkPSn+tiUZMRKQlO9PStHXjxeNeaqj5kNqwgxH4QUfuBCtnU4HLq8LSRWGt1EH9eqFKeFNv0cgc/f/OCl1vqMgANIjriRsHhXcGrynmmY6Ic8MgGdd9xDbJxmrncKIyJXZtOOtF5UN5JXjYj38dsInDtps4TqmDfsCtJTrc98HSM7WbDatYAAB7t0m2BuwKTUXMU1hweyjXK+ZakV2dd3CGcykKPQ4nzaDDy9O7UkAHgWfcmkp4KB/OkyEhWB9S8uA==
+ b=H+ddaOHQrF7DCGEt8wHHzzqsd+uphEHTLpxVawKuA7SWqKW652PpZdRvgm9gNfXnzkxd13I8IJkCgH8moVYZUE3YTbyjRsu8R981QI4VEt6NqPoTSV9PtMjRued/p4Y/8mN7OI2QKuoFKh+++o+n2vBPWICKZJ4c5ur7MSURIRrxV7slPiZ3zmYQl/RhviM6rqtCFNydoKPfy6XwuThCKo2Sc8mUooPUFgKe2s4DijVoVZ32AZjaCfl5318xy3ps20bz9sA8T4lctSvSa5fEK6Smpi/K/oKlRt270FE9CWiEkjHKjP7eYeoi3rhpk2X1RF0cDJn8VonA2R5SIsuGOg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YjI+IFaEcRcA3Dde8/r5i2OqoSAjB+qp+Ovkmc+IrC0=;
- b=gCshisAvJJK/YWTbSBaTxUiIrLQwFu0ZDIsH/qWC1HJkK9SMdZeSJUp8myL2DCG+8rg4m5e6XlGRr0okVmBdfLOnCwegGT1c/SmDsTXF0IGY/admRySWXHCnTLNInKtzVmYaiOVO9rYMeIsy2kOolWuJt1hWeIrSIVvAZ1TZDQ7+7/x6+IGcrbcnpk/TQVJsXXDhvmsG6tmJwqxTX7EUBnKGnMDFukk0hacUW61Z4qypiwxQXmw8JQqxw9n9NSCaGgdSAIXvM9wPtn7B2+oGQ2R0izbuAy5iKC1hM9JxuzJcPWoi5qs1+Ki/qWjPQrlL+KbKrRcFsxqXrk7KOyMc3w==
+ bh=mjAR1ZwsTfASCNEZewPLTnb32XegtljjdLkfw6IlaVY=;
+ b=hafVdGKrEmXUxRawaD30Hc/8n1SxmYz01onS3LrYE9+/OpMpW4nij3wCQ0vtTCbA267SLodrK3faljs1ooQ8+4RYngeNHOvigJPqS7efh7OcE7swJKm/HHMi9ozToMjD/iWaK8Yo6AxE6PMJ1054N5dFJsb5bnsQ9kbgx8CctpzfFsO8RMIN925QtV+OO0S+7xLNExeksnrJH0oMkz5asQua30tngNeZl5G6HWH+l0yFZXXEqvETd8a+0PJhOn0wlNCEBBTHnytP8a+kCbSN8FOEbhuJdPuCqj7vKLT5LB8pcn1UuTCSjIpnX+PeYrpwyWjoZqq6e46/4raQoUtZ4A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YjI+IFaEcRcA3Dde8/r5i2OqoSAjB+qp+Ovkmc+IrC0=;
- b=E9OIQGzOWsClJmPv28sTDW6r8b7rnD/mYx3Mp7EcxWc2JyMpBdSoMPmpyZ69/ZZ3yUFiq07vw7yTlRC9rqVQSyw9PrrVvidOGMf7mS7M4ZCOK6RIgWPUw2F+db1QrKqKgGtN7VkZHmgDWFfkS3+41FF28cOpUXRHhTvp4urAerY=
+ bh=mjAR1ZwsTfASCNEZewPLTnb32XegtljjdLkfw6IlaVY=;
+ b=HFpCVDYa5jlGrfSVQ+qJPAwJu9LTPqdMoCvHAonBdc0xatyxaX8nBUa65oCqW/xlOO7DaztukHaDJSiFK6GDyCIHAnnkKKpcsdp5JwsjNJ0ossnhRP4FTfz0knqSqo+qRpHNPUy58zhdc2Jk9O+15+PcSxsrnP+/nESa8dl9Zy0=
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by SA2PR10MB4601.namprd10.prod.outlook.com (2603:10b6:806:f9::20) with
+ by SN6PR10MB2464.namprd10.prod.outlook.com (2603:10b6:805:4d::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3977.26; Wed, 24 Mar
- 2021 15:55:42 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3955.18; Wed, 24 Mar
+ 2021 15:57:03 +0000
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::20c7:193:d737:7ab1]) by SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::20c7:193:d737:7ab1%4]) with mapi id 15.20.3977.024; Wed, 24 Mar 2021
- 15:55:42 +0000
+ 15:57:03 +0000
 From:   Himanshu Madhani <himanshu.madhani@oracle.com>
 To:     Nilesh Javali <njavali@marvell.com>
 CC:     Martin Petersen <martin.petersen@oracle.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "GR-QLogic-Storage-Upstream@marvell.com" 
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: Re: [PATCH 04/11] qla2xxx: consolidate zio threshold setting for both
- fcp & nvme
-Thread-Topic: [PATCH 04/11] qla2xxx: consolidate zio threshold setting for
- both fcp & nvme
-Thread-Index: AQHXH59gaoRd0z/+ukG3+AwnNGXJTqqTTQoA
-Date:   Wed, 24 Mar 2021 15:55:42 +0000
-Message-ID: <4E40DDBF-D024-4B15-8BCF-584BFAB5258E@oracle.com>
+Subject: Re: [PATCH 05/11] qla2xxx: Fix use after free in bsg
+Thread-Topic: [PATCH 05/11] qla2xxx: Fix use after free in bsg
+Thread-Index: AQHXH590vFTIBog6CESAkaTWc7sp8qqTTWkA
+Date:   Wed, 24 Mar 2021 15:57:03 +0000
+Message-ID: <B257AAA2-243F-45B2-91CB-DCE0A60A2548@oracle.com>
 References: <20210323044257.26664-1-njavali@marvell.com>
- <20210323044257.26664-5-njavali@marvell.com>
-In-Reply-To: <20210323044257.26664-5-njavali@marvell.com>
+ <20210323044257.26664-6-njavali@marvell.com>
+In-Reply-To: <20210323044257.26664-6-njavali@marvell.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -91,58 +89,58 @@ authentication-results: marvell.com; dkim=none (message not signed)
  header.d=none;marvell.com; dmarc=none action=none header.from=oracle.com;
 x-originating-ip: [71.42.68.90]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 257aa176-34dd-43b9-ec1b-08d8eedd4760
-x-ms-traffictypediagnostic: SA2PR10MB4601:
+x-ms-office365-filtering-correlation-id: 68d3ff38-e9f0-477d-4335-08d8eedd7785
+x-ms-traffictypediagnostic: SN6PR10MB2464:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SA2PR10MB460139C08375B2D036297CF1E6639@SA2PR10MB4601.namprd10.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-microsoft-antispam-prvs: <SN6PR10MB2464B81066CE9674FD9FD5D4E6639@SN6PR10MB2464.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:348;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: hJ8NgvwMOolS5v3pOhNgM3Y2W2xEjN6a1HRg6+Rc++NVDpEY5Xxf7lbnLhVCag631UisrianApKH/wM3V+RxGIff1RgvNarNJ9Y74BtRkqTCTABtTQUTZ9QNSn/T+dW6iLTgVuVg4D9iSb5AjHvZs39o7fRuWLJJBX/blnHF6zRRED2u67PGxslh8+bwG6fQoKRShV+ZY6r/DSrwwO1TyutjWmY6kavXPsxuboCkmtecPBu+GeYK0RL9yqhmE5KFg95OfIKaB39yjXrOF0agNhlRwulpu+5j5U4zyLR62LkiGUWTG2POILQ+vTbz9vdj05LRnjNWE16MKlaAj4ybfEf0XAMijm79NTzSv+pI7aLee1kO1ZsToxdWKDUTp/x4UP3Q6vWVrvARgBmNfvNqwb7c/sHx9y5oOhGum0padcZV9jRRnRtgx3Xf89IWA9NLoY55YOGg5/zTz2e6bsLt20qwhWaWt9wn8L6CdmDiP9hxgtWspIavjKPyUoE05gmQvJpkMyfM/rke/PWAyb84RMhJffgpMjyDDLMwdocH55POHcEiD/EduD2ElbpBgmrz81tO1Hz3VCQqjxVFDt02gQq88xhXa5stnrbspjpEYfBorsK5thA6JYSa+il7A20MR97MPNsA0IJ0r8dvjAxwLw/rAGErtfdJvCrFLYzsJiN2JKMWW0ruVS3+QZwC3/+W
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(136003)(396003)(39860400002)(366004)(346002)(64756008)(83380400001)(6486002)(186003)(53546011)(33656002)(66556008)(4326008)(2906002)(6506007)(6916009)(66946007)(26005)(5660300002)(8936002)(66476007)(44832011)(66446008)(36756003)(316002)(2616005)(8676002)(38100700001)(86362001)(76116006)(71200400001)(54906003)(6512007)(478600001)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?puxbWON67qReU+xd2PO6dWifjwbVyEgZVVxTz5g60ZbgFyOgqhKEBMrd2Lyx?=
- =?us-ascii?Q?HaFZNcAe8h4tUutZf1TaB2mKR1/KvQc0FAIJFWyrTCwx9qVXhw2Qb2macaqg?=
- =?us-ascii?Q?ZQDBJB+ueCoihq+T4uSzeYHo+CvRG33YaCTzu3M2S08q3QJlwk8GDkqZpDmo?=
- =?us-ascii?Q?yMp/oN0A1wUGE4fbXx1sb5dUYu9Wqs1zTE9qio/584znqLYwNbC5JeiPoQff?=
- =?us-ascii?Q?u2/uDbMIvI7BQcyolDC3HC0c5W2odtTCkGwVPoYZdK047kSetosNx9jRZNiq?=
- =?us-ascii?Q?D5OdftbA+L6prLwwwSGTNdhBgAGjALDeiV7X7asMdJGKjSow96KrdHCvJjCn?=
- =?us-ascii?Q?/80B0fpUXSeUVQf/BDzHt+Mi6SJDHvrGttBiqlOZfq1dVmlJU6BE1rCyV7AO?=
- =?us-ascii?Q?3B8Nl2PH1k/pb77UPF8z5RVM3F/K2ncQH4nmU/hI0Y67Cks2koN0f8Vj06Hj?=
- =?us-ascii?Q?SeUdSBgQVKRMej5DDYkwbMOAodP0T0fOLfSJFSbZDwmyRXHGWGo6obMXo2hp?=
- =?us-ascii?Q?TnRPxFCR1ItMZAffg/b/OidfngaBMSR/jcwihEU7ZB7AlD6plqucAsfuiGgA?=
- =?us-ascii?Q?GnERA+rjaNT8aG19iXyN/azRKJcTzT/u93X25LuRNFvGwgf4CTNVFvYQ2i8d?=
- =?us-ascii?Q?RcsUHu9lzmE2O2p6fFed9V9KDZs+VcRbgMr8ZHgZvhcLcd4NohMYCXrfTI4v?=
- =?us-ascii?Q?TuVY7ZKfXKNVfTSshx0oc/GLy8uMCOG8EgEY9+AFSMCOAP//DZowUFqKs9hb?=
- =?us-ascii?Q?ZUXqTrHg5LvyzAO5B0uvcpR/wMa3CsSJJVdjUBuxJBTNEaa8PxT4IwI8sJd6?=
- =?us-ascii?Q?YSKJTCD3AZq4N2k1Onhaq91cFAMakuaRI3+8LvMT3xGElY/uDC/TEwmGc6Ns?=
- =?us-ascii?Q?ivhTQf9LqOjBmfDZ1HU/tH25vUsDAcJpOroohN3U/vyGuZHXywFJLCn23v8u?=
- =?us-ascii?Q?jsUXxkY2G0o18dY6JdPGKbxQHpU51G1UD3cZWo3IBA+CaGTzretzUgnWaWQ+?=
- =?us-ascii?Q?rM7TANaRD7SiMJI1q5AVvsotA1Diarj1fGvIy5GzaXDqn0zGsANgJhDbNtMJ?=
- =?us-ascii?Q?ZYW576iCAStdj8XJtazJ7P3fMqWbjT6z8BF48hcld8dBv1okg5UAxjQyy3mw?=
- =?us-ascii?Q?SOlrjAvJiMQCK4dDvX5TooySX0e9n59usV5QUQ+3+RHByiQYWKwd3/gCfL2o?=
- =?us-ascii?Q?Uei/yfB4cy99W2aWY/oOjIVaMV6U2tTdB8/CeB4yg/RZcmCOI/tf8fYJ7LT8?=
- =?us-ascii?Q?FvhQRTacKx7Sm7HejqAf0QUOMXhP9nZ97MS89S/cYnjDno0PWTOLU5gG18b8?=
- =?us-ascii?Q?W+912Cy6vjUaiXqq5MnGorbc?=
+x-microsoft-antispam-message-info: zm9r1/G0iVbEcjFKGzHZ/AYK6HlsflGPD1ecxfoAGE5ulZMgBqOTbgDAOPrc/KBlc4+yhQmEcBZfMzmAaqCHGbfEix+crGOJWLCzq9zlVP4LBG3US6xuv4Ug8wAuCj0zAqLamsQfrkGJg2himRg38X2GWEXwXHFFQzKzt976TTBBHzs4YqHxeNFhzAgsLlTx5mHEN9e05bTaxKTWE4lzI37xWQdZQ3zm98nq6vG45puBmDtbGCkGYBHXLZO4IC/FHMEfTlpmuhpuKxwy/u3qa6ZRsQ7MNdwfd7jAnzgeHcPZ3Z+eRWH8HG5Qleu24ipyRoqE5cR1YorkdWXEO6dlye0uGg+DFJNkc1voj009+AkEUiwO8ATvlSUTPbFd1ZD0LizsCcweIROPDc2t8NEq/xCE6xTxj2K+ofmNLYNiK6S0ao4jOijSIPmR1U2/ppi+sQJjEfhqmTMJ3xAr1HDCyBpShNbpc7wSsayb7gAjE5K0SKZ1vUblvRFX4ToV1A+QThH/UMIPC6v0aFyoyQsXkLyjXfBD61+TuF2PGQzQzjXuntU9aFLtUUi5ePU0VoEm6cD+K9fl8JGi9wwLD8ehM+XY9iuyYUWHZ9oEff1M2AtuojSa54Bcpko2+o3pRRJAOPFj1iGPQaWfhv4dh+TgEqoLcZ3mBaKx7gPzlUfnPJ3XvzgoFsHEIK0VnTvhzfzN
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(39860400002)(396003)(376002)(366004)(136003)(346002)(4326008)(33656002)(66446008)(2616005)(8936002)(66946007)(6486002)(71200400001)(66476007)(38100700001)(66556008)(86362001)(44832011)(83380400001)(2906002)(64756008)(54906003)(316002)(36756003)(6506007)(76116006)(186003)(6916009)(8676002)(478600001)(5660300002)(6512007)(26005)(53546011)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?aWLO2CYJLloNOz5HyFYcfNDJt67NC1yqzUJpdyGFwaNmxL5uclyf6tnRtIHp?=
+ =?us-ascii?Q?RuhUWtS46CAjeYY/ULdTSeePFsPBiAtf5VPTrX2Z0qy/Lq+y1SpR+lX3shqW?=
+ =?us-ascii?Q?x31Vlv37cHJyBiydAKbHgW743I/RNrnep2lBqsadJiFIOvzsY+4fVvinH6Hj?=
+ =?us-ascii?Q?v3uDbgzXvMPaPOyWOUDBJ8RMxzgJIev7Rsgk6rDMIy+4c8+Fad9qxXB3S+Ik?=
+ =?us-ascii?Q?0bTgko1VQ8wuAT8zDqIKWFPW82MTCTA3VwL7X27BSQUbYh/zE/kRgImUmog1?=
+ =?us-ascii?Q?oF/GX1L3ksZ3M0RoBg1spu/HuqUNHIVrdcUWt/nHAxGfY/Y3ZegNTYBqgWox?=
+ =?us-ascii?Q?me6sx/uNu7tGeLgM4q4sJyqvCqWSSGszygLzs9nQhbLA5uUV5DIurJbvfhRu?=
+ =?us-ascii?Q?WrZtl4Afq3o0kUKUdaTubByZVpqEgwEqnmzTIec+XjsrOEWIp91JsbK1y3Fk?=
+ =?us-ascii?Q?CQ7r+6rZuCcWJqZnnrgALfAnXBTjGZAhjgTtN/039CuYIEOo0rBe12Py523a?=
+ =?us-ascii?Q?uxOz976lb5woPgVTD5MvN96A24BroUotACtsBRBy3JUm2GqBU8HIPG6ptjPc?=
+ =?us-ascii?Q?218y3MTeImJ8dAUI4lAYzHT4XWluo28jz46PQPMXUno5m0ajUzdtFMtjyahy?=
+ =?us-ascii?Q?OXaPwXThG2RwwZ3v5PZnzyxQ6fsYvw6eGgVORFGBm/tMta1w5kBFDUT0TT2H?=
+ =?us-ascii?Q?KU+WjfUychlb0yh9hTxqBR1+wMtXRX6bKqsbL+N6on93o9Glq6d7kGjANwrt?=
+ =?us-ascii?Q?LMPXbNqwqikiNucVm5wvPlsbOI/wPRA+a5hmLlRpzuTP/Etw/pFPeofqHKKL?=
+ =?us-ascii?Q?m9mgaMqNkQYIS/Sr0srghy2Z5GbkOTU1iMSbQ5URZi1GnK70IYg7ynSUui2R?=
+ =?us-ascii?Q?Wo9ybppTky2nDO+BdiEB4GHowm4l+7HeIrTKYYQsxv6VGo7TaMaINuu56XeT?=
+ =?us-ascii?Q?Bn1LwuruBOw8qIYY3ORw+8ifpTg6lfz88oADDm4hMIGboof0CTONz8m3UvOA?=
+ =?us-ascii?Q?0F1bh5U0u1Abz+0qtFxjD1x+Ui1NyETws+C5FDTHF6CuuFbFp/uE8O3RLN+J?=
+ =?us-ascii?Q?caSGiUA0OiwuqotoCLeyBjBpWOzZhipBNnIxfzWOH4I4aRrSAfq0gKlaMvQS?=
+ =?us-ascii?Q?SQAGELrUru7c8ehDZWxcn3Rb6IyjmMSsLSL+yegjg7FmmRLVQMjiDM/lFReK?=
+ =?us-ascii?Q?Zo8mwZ2GDBaaxcHd6NTUhL3NS43QR33T/2U8dVEtQNzCzMdzst+1c9zhObm9?=
+ =?us-ascii?Q?RWrwRBA73NisZw2cSUgc4bYO00aZCV1q4W7zIW+9QuvFRPjaVcSHEH+pFrgK?=
+ =?us-ascii?Q?oV1oOcZNkC2XMTBY3YsdS2BP?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <F91DBE8C1383D044A2C68BD61F260D50@namprd10.prod.outlook.com>
+Content-ID: <9A59F4686E5E51488AD8D46EE0CE0F41@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 257aa176-34dd-43b9-ec1b-08d8eedd4760
-X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Mar 2021 15:55:42.3943
+X-MS-Exchange-CrossTenant-Network-Message-Id: 68d3ff38-e9f0-477d-4335-08d8eedd7785
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Mar 2021 15:57:03.1911
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: q+H33tDxtGYX21CsDXwcXcsZdW153Jog9GFrYy4Ez/Av5IQRhjUX2xYm6jTDQ/x3nChAxvRPbzONtzhDkxsJfZSqt9Q1qeJ6tuyeUc8Ka8I=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4601
+X-MS-Exchange-CrossTenant-userprincipalname: 8S7B7mNwP533Ly67TS+4pjpoNpoYhmebLYXWHP7aQdFqbYrWw81uzrISY0XxNN7LSric8elCqziNH9DSE9E7t6vEz0RQw9g0Pv/0vJxwt10=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR10MB2464
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9933 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
- malwarescore=0 phishscore=0 bulkscore=0 mlxscore=0 suspectscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2103240116
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 phishscore=0
+ mlxlogscore=999 suspectscore=0 spamscore=0 malwarescore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103240117
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9933 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 phishscore=0
  mlxlogscore=999 priorityscore=1501 impostorscore=0 bulkscore=0 spamscore=0
@@ -159,97 +157,58 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 >=20
 > From: Quinn Tran <qutran@marvell.com>
 >=20
-> consolidate zio threshold setting for both fcp & nvme to prevent
-> one protocol from clobbering the setting of the other protocol.
+> On bsg command completion, bsg_job_done was called while
+> qla driver continue to access the bsg_job buffer. The bsg_job_done
+> can free up resources and reuse by other task, qla continue access
+> of the same resource can read garbage data.
+>=20
+> localhost kernel: BUG: KASAN: use-after-free in sg_next+0x64/0x80
+> localhost kernel: Read of size 8 at addr ffff8883228a3330 by task swapper=
+/26/0
+> localhost kernel:
+> localhost kernel: CPU: 26 PID: 0 Comm: swapper/26 Kdump:
+> loaded Tainted: G          OE    --------- -  - 4.18.0-193.el8.x86_64+deb=
+ug #1
+> localhost kernel: Hardware name: HP ProLiant DL360
+> Gen9/ProLiant DL360 Gen9, BIOS P89 08/12/2016
+> localhost kernel: Call Trace:
+> localhost kernel: <IRQ>
+> localhost kernel: dump_stack+0x9a/0xf0
+> localhost kernel: print_address_description.cold.3+0x9/0x23b
+> localhost kernel: kasan_report.cold.4+0x65/0x95
+> localhost kernel: debug_dma_unmap_sg.part.12+0x10d/0x2d0
+> localhost kernel: qla2x00_bsg_sp_free+0xaf6/0x1010 [qla2xxx]
 >=20
 > Signed-off-by: Quinn Tran <qutran@marvell.com>
+> Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
 > Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
-> drivers/scsi/qla2xxx/qla_def.h |  1 -
-> drivers/scsi/qla2xxx/qla_os.c  | 34 ++++++++++++++--------------------
-> 2 files changed, 14 insertions(+), 21 deletions(-)
+> drivers/scsi/qla2xxx/qla_bsg.c | 3 ++-
+> 1 file changed, 2 insertions(+), 1 deletion(-)
 >=20
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_de=
-f.h
-> index 49b42b430df4..3d09f31895e7 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -4727,7 +4727,6 @@ typedef struct scsi_qla_host {
-> #define FX00_CRITEMP_RECOVERY	25
-> #define FX00_HOST_INFO_RESEND	26
-> #define QPAIR_ONLINE_CHECK_NEEDED	27
-> -#define SET_NVME_ZIO_THRESHOLD_NEEDED	28
-> #define DETECT_SFP_CHANGE	29
-> #define N2N_LOGIN_NEEDED	30
-> #define IOCB_WORK_ACTIVE	31
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.=
-c
-> index 074392560f3d..6563d69706ba 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -6969,28 +6969,23 @@ qla2x00_do_dpc(void *data)
-> 			mutex_unlock(&ha->mq_lock);
-> 		}
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
+g.c
+> index bee8cf9f8123..d021e51344f5 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+> @@ -25,10 +25,11 @@ void qla2x00_bsg_job_done(srb_t *sp, int res)
+> 	struct bsg_job *bsg_job =3D sp->u.bsg_job;
+> 	struct fc_bsg_reply *bsg_reply =3D bsg_job->reply;
 >=20
-> -		if (test_and_clear_bit(SET_NVME_ZIO_THRESHOLD_NEEDED,
-> -		    &base_vha->dpc_flags)) {
-> +		if (test_and_clear_bit(SET_ZIO_THRESHOLD_NEEDED,
-> +				       &base_vha->dpc_flags)) {
-> +			u16 threshold =3D ha->nvme_last_rptd_aen + ha->last_zio_threshold;
+> +	sp->free(sp);
 > +
-> +			if (threshold > ha->orig_fw_xcb_count)
-> +				threshold =3D ha->orig_fw_xcb_count;
-> +
-> 			ql_log(ql_log_info, base_vha, 0xffffff,
-> -				"nvme: SET ZIO Activity exchange threshold to %d.\n",
-> -						ha->nvme_last_rptd_aen);
-> -			if (qla27xx_set_zio_threshold(base_vha,
-> -			    ha->nvme_last_rptd_aen)) {
-> +			       "SET ZIO Activity exchange threshold to %d.\n",
-> +			       threshold);
-> +			if (qla27xx_set_zio_threshold(base_vha, threshold)) {
-> 				ql_log(ql_log_info, base_vha, 0xffffff,
-> -				    "nvme: Unable to SET ZIO Activity exchange threshold to %d.\n",
-> -				    ha->nvme_last_rptd_aen);
-> +				       "Unable to SET ZIO Activity exchange threshold to %d.\n",
-> +				       threshold);
-> 			}
-> 		}
+> 	bsg_reply->result =3D res;
+> 	bsg_job_done(bsg_job, bsg_reply->result,
+> 		       bsg_reply->reply_payload_rcv_len);
+> -	sp->free(sp);
+> }
 >=20
-> -		if (test_and_clear_bit(SET_ZIO_THRESHOLD_NEEDED,
-> -		    &base_vha->dpc_flags)) {
-> -			ql_log(ql_log_info, base_vha, 0xffffff,
-> -			    "SET ZIO Activity exchange threshold to %d.\n",
-> -			    ha->last_zio_threshold);
-> -			qla27xx_set_zio_threshold(base_vha,
-> -			    ha->last_zio_threshold);
-> -		}
-> -
-> 		if (!IS_QLAFX00(ha))
-> 			qla2x00_do_dpc_all_vps(base_vha);
->=20
-> @@ -7218,14 +7213,13 @@ qla2x00_timer(struct timer_list *t)
-> 	index =3D atomic_read(&ha->nvme_active_aen_cnt);
-> 	if (!vha->vp_idx &&
-> 	    (index !=3D ha->nvme_last_rptd_aen) &&
-> -	    (index >=3D DEFAULT_ZIO_THRESHOLD) &&
-> 	    ha->zio_mode =3D=3D QLA_ZIO_MODE_6 &&
-> 	    !ha->flags.host_shutting_down) {
-> +		ha->nvme_last_rptd_aen =3D atomic_read(&ha->nvme_active_aen_cnt);
-> 		ql_log(ql_log_info, vha, 0x3002,
-> 		    "nvme: Sched: Set ZIO exchange threshold to %d.\n",
-> 		    ha->nvme_last_rptd_aen);
-> -		ha->nvme_last_rptd_aen =3D atomic_read(&ha->nvme_active_aen_cnt);
-> -		set_bit(SET_NVME_ZIO_THRESHOLD_NEEDED, &vha->dpc_flags);
-> +		set_bit(SET_ZIO_THRESHOLD_NEEDED, &vha->dpc_flags);
-> 		start_dpc++;
-> 	}
->=20
+> void qla2x00_bsg_sp_free(srb_t *sp)
 > --=20
 > 2.19.0.rc0
 >=20
 
-Looks good.
+Looks good.=20
 
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
