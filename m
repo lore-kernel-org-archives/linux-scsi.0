@@ -2,93 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFDDFC433C1
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 20:57:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76660C433DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 21:52:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9972661A18
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 20:57:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33B5B61A1F
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 21:52:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230292AbhCXUx6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Mar 2021 16:53:58 -0400
-Received: from namei.org ([65.99.196.166]:51310 "EHLO mail.namei.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230336AbhCXUx3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 Mar 2021 16:53:29 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by mail.namei.org (Postfix) with ESMTPS id 507624E1;
-        Wed, 24 Mar 2021 20:50:33 +0000 (UTC)
-Date:   Thu, 25 Mar 2021 07:50:33 +1100 (AEDT)
-From:   James Morris <jmorris@namei.org>
-To:     Arnd Bergmann <arnd@kernel.org>
-cc:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
-        Serge Hallyn <serge@hallyn.com>, Arnd Bergmann <arnd@arndb.de>,
-        x86@kernel.org, Ning Sun <ning.sun@intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Simon Kelley <simon@thekelleys.org.uk>,
-        James Smart <james.smart@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
-        Imre Deak <imre.deak@intel.com>,
-        linux-arm-kernel@lists.infradead.org,
-        tboot-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
-        linux-security-module@vger.kernel.org,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        Kees Cook <keescook@chromium.org>,
-        Miklos Szeredi <mszeredi@redhat.com>,
-        Tycho Andersen <tycho@tycho.pizza>
-Subject: Re: [PATCH 03/11] security: commoncap: fix -Wstringop-overread
- warning
-In-Reply-To: <20210322160253.4032422-4-arnd@kernel.org>
-Message-ID: <b8ebab59-1cec-42d-6fb9-44aa1a464ae2@namei.org>
-References: <20210322160253.4032422-1-arnd@kernel.org> <20210322160253.4032422-4-arnd@kernel.org>
+        id S231945AbhCXVva (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Mar 2021 17:51:30 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:39996 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S234578AbhCXVvV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 Mar 2021 17:51:21 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 657544131F;
+        Wed, 24 Mar 2021 21:51:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1616622679;
+         x=1618437080; bh=1xLhmrlm56CGNHui4+V1hNsy6UNkhH1NglMLyFHn0bs=; b=
+        DHnMYUfNCDXdRUC4HWiIXwjH5YXPw6kcy8BdrIIeUCfV73IPhRUXPEuWjhEfHghM
+        7pz/9puhVqY45Vk5lcuH9tfkTjOD3uJfIDLqqZBc6mO5pmf7UWDXPybwosWo2zks
+        KOtEvfXoHjA5EHEG9Ye++iSJJd0gsIiehUnMRaOJPK0=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id O0koYXOT_QBH; Thu, 25 Mar 2021 00:51:19 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 16772412ED;
+        Thu, 25 Mar 2021 00:51:17 +0300 (MSK)
+Received: from yadro.com (10.199.0.74) by T-EXCH-03.corp.yadro.com
+ (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 25
+ Mar 2021 00:51:17 +0300
+Date:   Thu, 25 Mar 2021 00:51:16 +0300
+From:   Konstantin Shelekhin <k.shelekhin@yadro.com>
+To:     Dmitry Bogdanov <d.bogdanov@yadro.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux@yadro.com>, Nilesh Javali <njavali@marvell.com>,
+        Chris Boot <bootc@bootc.net>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Michael Cyr <mikecyr@linux.ibm.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: Re: [PATCH v2 1/7] target: core: add common tpg/enable attribute
+Message-ID: <YFu0VFEJjUJy+vF9@yadro.com>
+References: <20210322080554.7611-1-d.bogdanov@yadro.com>
+ <20210322080554.7611-2-d.bogdanov@yadro.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="1665246916-699807841-1616619033=:3443171"
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20210322080554.7611-2-d.bogdanov@yadro.com>
+X-Originating-IP: [10.199.0.74]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-03.corp.yadro.com (172.17.100.103)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Mon, Mar 22, 2021 at 11:05:48AM +0300, Dmitry Bogdanov wrote:
+> +static int
+> +target_fabric_setup_tpg_base_cit(struct target_fabric_configfs *tf)
+> +{
+> +	int i, k, len = 0;
+> +	struct config_item_type *cit = &tf->tf_tpg_base_cit;
+> +	struct configfs_attribute **attrs;
+> +
+> +	if (tf->tf_ops->fabric_enable_tpg)
+> +		for (i = 0; core_tpg_base_enable_attrs[i]; i++)
+> +			len += sizeof(struct configfs_attribute *);
+...
+> +	if (tf->tf_ops->fabric_enable_tpg)
+> +		for (i = 0; core_tpg_base_enable_attrs[i]; i++)
+...
+>+CONFIGFS_ATTR(core_tpg_base_, enable);
+>+
+>+struct configfs_attribute *core_tpg_base_enable_attrs[] = {
+>+       &core_tpg_base_attr_enable,
+>+       NULL,
 
---1665246916-699807841-1616619033=:3443171
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-
-On Mon, 22 Mar 2021, Arnd Bergmann wrote:
-
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> gcc-11 introdces a harmless warning for cap_inode_getsecurity:
-> 
-> security/commoncap.c: In function ‘cap_inode_getsecurity’:
-> security/commoncap.c:440:33: error: ‘memcpy’ reading 16 bytes from a region of size 0 [-Werror=stringop-overread]
->   440 |                                 memcpy(&nscap->data, &cap->data, sizeof(__le32) * 2 * VFS_CAP_U32);
->       |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> The problem here is that tmpbuf is initialized to NULL, so gcc assumes
-> it is not accessible unless it gets set by vfs_getxattr_alloc().  This is
-> a legitimate warning as far as I can tell, but the code is correct since
-> it correctly handles the error when that function fails.
-> 
-> Add a separate NULL check to tell gcc about it as well.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-
-Applied to
-git://git.kernel.org/pub/scm/linux/kernel/git/jmorris/linux-security.git fixes-v5.12
-
--- 
-James Morris
-<jmorris@namei.org>
-
---1665246916-699807841-1616619033=:3443171--
+I believe that there is no real benefit in core_tpg_base_enable_attrs[]
+with only one attribute. Just use core_tpg_base_attr_enable directly.
