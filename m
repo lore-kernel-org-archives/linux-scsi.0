@@ -2,92 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76660C433DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 21:52:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E221C433C1
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 21:56:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33B5B61A1F
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 21:52:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 685D261A13
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 21:56:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231945AbhCXVva (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Mar 2021 17:51:30 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:39996 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S234578AbhCXVvV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 Mar 2021 17:51:21 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 657544131F;
-        Wed, 24 Mar 2021 21:51:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1616622679;
-         x=1618437080; bh=1xLhmrlm56CGNHui4+V1hNsy6UNkhH1NglMLyFHn0bs=; b=
-        DHnMYUfNCDXdRUC4HWiIXwjH5YXPw6kcy8BdrIIeUCfV73IPhRUXPEuWjhEfHghM
-        7pz/9puhVqY45Vk5lcuH9tfkTjOD3uJfIDLqqZBc6mO5pmf7UWDXPybwosWo2zks
-        KOtEvfXoHjA5EHEG9Ye++iSJJd0gsIiehUnMRaOJPK0=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id O0koYXOT_QBH; Thu, 25 Mar 2021 00:51:19 +0300 (MSK)
-Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 16772412ED;
-        Thu, 25 Mar 2021 00:51:17 +0300 (MSK)
-Received: from yadro.com (10.199.0.74) by T-EXCH-03.corp.yadro.com
- (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 25
- Mar 2021 00:51:17 +0300
-Date:   Thu, 25 Mar 2021 00:51:16 +0300
-From:   Konstantin Shelekhin <k.shelekhin@yadro.com>
-To:     Dmitry Bogdanov <d.bogdanov@yadro.com>
-CC:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux@yadro.com>, Nilesh Javali <njavali@marvell.com>,
-        Chris Boot <bootc@bootc.net>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Michael Cyr <mikecyr@linux.ibm.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH v2 1/7] target: core: add common tpg/enable attribute
-Message-ID: <YFu0VFEJjUJy+vF9@yadro.com>
-References: <20210322080554.7611-1-d.bogdanov@yadro.com>
- <20210322080554.7611-2-d.bogdanov@yadro.com>
+        id S234721AbhCXVzv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Mar 2021 17:55:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34262 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234670AbhCXVzt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Mar 2021 17:55:49 -0400
+Received: from desiato.infradead.org (desiato.infradead.org [IPv6:2001:8b0:10b:1:d65d:64ff:fe57:4e05])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BE27C06174A;
+        Wed, 24 Mar 2021 14:55:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=desiato.20200630; h=Content-Transfer-Encoding:Content-Type
+        :In-Reply-To:MIME-Version:Date:Message-ID:From:References:To:Subject:Sender:
+        Reply-To:Cc:Content-ID:Content-Description;
+        bh=XUb+BQanDBoDTDTC63k606fqfZtavrU2Q8tHp0ZZT2g=; b=J0CwAq6eEwi7Ph3FZkUtCZIBW7
+        v0HOzn9n3VL5O+v0lR7yu2WEw11rGGvz/LPf2kT3nnYLUW/b7m+gKydSODJTnxRmXGujpNen+Ooew
+        sQjYXK3uYAHorSeqdHs4Q22QF2To/5T7eEuWC9l9aSprXjki1jgBujNSsxnr2DB5TyvnfQ5vF39u6
+        JOxx7FUlDKwR21CkjWi4D98yYOPllsuRdegjEnSsRbGlb3ntmGi3SDkWB8U3WSi9YnMTfN29fizaV
+        MWZhYxGA2tk2XW/6J4WNNkGj+ksCGqcSkL0qnhjWp9wrUFOl69VSPIizG0d9mA2R1EZ0PkNqF8D4a
+        /YIB3q/g==;
+Received: from [2601:1c0:6280:3f0::3ba4]
+        by desiato.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1lPBTZ-000GGP-IT; Wed, 24 Mar 2021 21:55:46 +0000
+Subject: Re: [PATCH] scsi: esp_scsi: Trivial typo fixes
+To:     Bhaskar Chowdhury <unixbhaskar@gmail.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20210324061318.5744-1-unixbhaskar@gmail.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <3d732769-e4f3-e5d8-e848-101ccff9eab7@infradead.org>
+Date:   Wed, 24 Mar 2021 14:55:38 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20210322080554.7611-2-d.bogdanov@yadro.com>
-X-Originating-IP: [10.199.0.74]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-03.corp.yadro.com (172.17.100.103)
+In-Reply-To: <20210324061318.5744-1-unixbhaskar@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 22, 2021 at 11:05:48AM +0300, Dmitry Bogdanov wrote:
-> +static int
-> +target_fabric_setup_tpg_base_cit(struct target_fabric_configfs *tf)
-> +{
-> +	int i, k, len = 0;
-> +	struct config_item_type *cit = &tf->tf_tpg_base_cit;
-> +	struct configfs_attribute **attrs;
-> +
-> +	if (tf->tf_ops->fabric_enable_tpg)
-> +		for (i = 0; core_tpg_base_enable_attrs[i]; i++)
-> +			len += sizeof(struct configfs_attribute *);
-...
-> +	if (tf->tf_ops->fabric_enable_tpg)
-> +		for (i = 0; core_tpg_base_enable_attrs[i]; i++)
-...
->+CONFIGFS_ATTR(core_tpg_base_, enable);
->+
->+struct configfs_attribute *core_tpg_base_enable_attrs[] = {
->+       &core_tpg_base_attr_enable,
->+       NULL,
+On 3/23/21 11:13 PM, Bhaskar Chowdhury wrote:
+> 
+> s/conditon/condition/
+> s/pecularity/peculiarity/
+> 
+> Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
 
-I believe that there is no real benefit in core_tpg_base_enable_attrs[]
-with only one attribute. Just use core_tpg_base_attr_enable directly.
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+
+> ---
+>  drivers/scsi/esp_scsi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+> index 007ccef5d1e2..342535ac0570 100644
+> --- a/drivers/scsi/esp_scsi.c
+> +++ b/drivers/scsi/esp_scsi.c
+> @@ -647,7 +647,7 @@ static void esp_unmap_sense(struct esp *esp, struct esp_cmd_entry *ent)
+>  	ent->sense_ptr = NULL;
+>  }
+> 
+> -/* When a contingent allegiance conditon is created, we force feed a
+> +/* When a contingent allegiance condition is created, we force feed a
+>   * REQUEST_SENSE command to the device to fetch the sense data.  I
+>   * tried many other schemes, relying on the scsi error handling layer
+>   * to send out the REQUEST_SENSE automatically, but this was difficult
+> @@ -1341,7 +1341,7 @@ static int esp_data_bytes_sent(struct esp *esp, struct esp_cmd_entry *ent,
+>  	bytes_sent -= esp->send_cmd_residual;
+> 
+>  	/*
+> -	 * The am53c974 has a DMA 'pecularity'. The doc states:
+> +	 * The am53c974 has a DMA 'peculiarity'. The doc states:
+>  	 * In some odd byte conditions, one residual byte will
+>  	 * be left in the SCSI FIFO, and the FIFO Flags will
+>  	 * never count to '0 '. When this happens, the residual
+> --
+
+
+-- 
+~Randy
+
