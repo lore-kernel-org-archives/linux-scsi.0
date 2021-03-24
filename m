@@ -2,97 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6F5EC433C1
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 00:01:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B72DC433C1
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 00:15:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DDB161A17
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 00:01:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B35EE61A19
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 00:15:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234774AbhCYABP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Mar 2021 20:01:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40294 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231902AbhCYAAl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 Mar 2021 20:00:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3F67761A17;
-        Thu, 25 Mar 2021 00:00:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616630440;
-        bh=K81/gaPd1/oRumyOHJaV3oVbPfdIOv90xp84bd8VfCs=;
-        h=Date:From:To:Cc:Subject:From;
-        b=n6YYvtYEWq87wpBk1tbUH6m9gzcyVBZporsDb+RRMV8eTSfg1gmUJraTAwGjFw+ni
-         xMH22Afbe9Zk3a8bDTYWPi1wIC84oxQnHp1k8tOsAUWUSP3TFLhO0PYwjSjuk8kbRa
-         KB4W88rXfhc40BL2ybVhuecNmAnpftt2PvIwpI6qa1nV6rLuHKlwpDvLYc+U9964Z4
-         AXemqgpOGcWRTkjsxVmEgnguwBNuMKfcYOaNRpfTbT1zvY5lFCA88E8ZDCw2MbwuId
-         Gj963jGHaDp9CmE9ueeZ61BuMWR9cVbqL7guhi1qDPsuc5iADhei9B5gKIgRUYjRqy
-         mTSqZtM0AQxfQ==
-Date:   Wed, 24 Mar 2021 18:00:36 -0500
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH][next] SCSI: fusion: mpi_ioc.h: Replace one-element array
- with flexible-array member
-Message-ID: <20210324230036.GA67851@embeddedor>
+        id S232124AbhCYAPF convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Mar 2021 20:15:05 -0400
+Received: from 8.mo1.mail-out.ovh.net ([178.33.110.239]:36279 "EHLO
+        8.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231847AbhCYAPD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Mar 2021 20:15:03 -0400
+X-Greylist: delayed 4201 seconds by postgrey-1.27 at vger.kernel.org; Wed, 24 Mar 2021 20:15:02 EDT
+Received: from player774.ha.ovh.net (unknown [10.109.146.175])
+        by mo1.mail-out.ovh.net (Postfix) with ESMTP id 1E5531FC177
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Mar 2021 22:46:58 +0100 (CET)
+Received: from ai0.uk (host-92-7-103-66.as43234.net [92.7.103.66])
+        (Authenticated sender: ash@ai0.uk)
+        by player774.ha.ovh.net (Postfix) with ESMTPSA id 368F91C7B46C5;
+        Wed, 24 Mar 2021 21:46:53 +0000 (UTC)
+Authentication-Results: garm.ovh; auth=pass (GARM-98R002c8451615-4408-474f-92c3-dd969735d59a,
+                    709C8AB8CE36D75EAFFFA631B5D7D35D8760AF8E) smtp.auth=ash@ai0.uk
+X-OVh-ClientIp: 92.7.103.66
+From:   "Ash Izat" <ash@ai0.uk>
+To:     <Viswas.G@microchip.com>, <jinpu.wang@cloud.ionos.com>,
+        <Ruksar.devadi@microchip.com>,
+        <Vasanthalakshmi.Tharmarajan@microchip.com>
+Cc:     <linux-scsi@vger.kernel.org>
+References: <009d01d71cb1$3fbd5200$bf37f600$@ai0.uk> <CAMGffE=B9QRncb2UO3aCfbH9naYU6-pP_c6T3PuHNRKRpnkDJA@mail.gmail.com> <SN6PR11MB3488473F4D3CAEEBE583AB159D689@SN6PR11MB3488.namprd11.prod.outlook.com> <SN6PR11MB3488B82D4D39713C6AEE270F9D639@SN6PR11MB3488.namprd11.prod.outlook.com>
+In-Reply-To: <SN6PR11MB3488B82D4D39713C6AEE270F9D639@SN6PR11MB3488.namprd11.prod.outlook.com>
+Subject: RE: [REGRESSION] pm8001: Adaptec 6805H fails to initialize after v5.10.0
+Date:   Wed, 24 Mar 2021 21:46:51 -0000
+Message-ID: <012c01d720f7$361de9e0$a259bda0$@ai0.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+X-Mailer: Microsoft Outlook 16.0
+Content-Language: en-gb
+Thread-Index: AQIEZhkRl1DSEXCvKDGFO+KKzJoBugLdwgrCALmVbjUBf56YZqoQZ2jA
+X-Ovh-Tracer-Id: 12921108808251466907
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: 0
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduledrudegkedgudehfecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecunecujfgurhephffvfhgjufffkfggtgfgofhtsehtqhhgtddvtdejnecuhfhrohhmpedftehshhcukfiirghtfdcuoegrshhhsegrihdtrdhukheqnecuggftrfgrthhtvghrnhepvedtudfhueeffeevfefguddugfeuheffudehvedtfeffvdfhtdeijeegfeehleeknecukfhppedtrddtrddtrddtpdelvddrjedruddtfedrieeinecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmohguvgepshhmthhpqdhouhhtpdhhvghlohepphhlrgihvghrjeejgedrhhgrrdhovhhhrdhnvghtpdhinhgvtheptddrtddrtddrtddpmhgrihhlfhhrohhmpegrshhhsegrihdtrdhukhdprhgtphhtthhopehlihhnuhigqdhstghsihesvhhgvghrrdhkvghrnhgvlhdrohhrgh
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is a regular need in the kernel to provide a way to declare having
-a dynamically sized set of trailing elements in a structure. Kernel code
-should always use “flexible array members”[1] for these cases. The older
-style of one-element or zero-length arrays should no longer be used[2].
+Hi Viswas,
 
-Also, this helps with the ongoing efforts to enable -Warray-bounds by
-fixing the following warning:
+Patch applied on top of 5.12-rc4 and it is working perfectly now.
+Double checked and without the patch the issue is still present in 5.12-rc4.
 
-drivers/message/fusion/mptbase.c: In function ‘mptbase_reply’:
-drivers/message/fusion/mptbase.c:7747:62: warning: array subscript 1 is above array bounds of ‘U32[1]’ {aka ‘unsigned int[1]’} [-Warray-bounds]
- 7747 |     ioc->events[idx].data[ii] = le32_to_cpu(pEventReply->Data[ii]);
-./include/uapi/linux/byteorder/little_endian.h:34:51: note: in definition of macro ‘__le32_to_cpu’
-   34 | #define __le32_to_cpu(x) ((__force __u32)(__le32)(x))
-      |                                                   ^
-drivers/message/fusion/mptbase.c:7747:33: note: in expansion of macro ‘le32_to_cpu’
- 7747 |     ioc->events[idx].data[ii] = le32_to_cpu(pEventReply->Data[ii]);
-      | 
+Thank you very much for the prompt response.
 
-[1] https://en.wikipedia.org/wiki/Flexible_array_member
-[2] https://www.kernel.org/doc/html/v5.10/process/deprecated.html#zero-length-and-one-element-arrays
+Is there any chance this will be backported to longterm (5.10) once it is merged?
 
-Link: https://github.com/KSPP/linux/issues/79
-Link: https://github.com/KSPP/linux/issues/109
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
- drivers/message/fusion/lsi/mpi_ioc.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Cheers,
 
-diff --git a/drivers/message/fusion/lsi/mpi_ioc.h b/drivers/message/fusion/lsi/mpi_ioc.h
-index c249f2994fc1..1534460fd5b1 100644
---- a/drivers/message/fusion/lsi/mpi_ioc.h
-+++ b/drivers/message/fusion/lsi/mpi_ioc.h
-@@ -448,7 +448,7 @@ typedef struct _MSG_EVENT_NOTIFY_REPLY
-      U32                    IOCLogInfo;                 /* 10h */
-      U32                    Event;                      /* 14h */
-      U32                    EventContext;               /* 18h */
--     U32                    Data[1];                    /* 1Ch */
-+     U32                    Data[];			/* 1Ch */
- } MSG_EVENT_NOTIFY_REPLY, MPI_POINTER PTR_MSG_EVENT_NOTIFY_REPLY,
-   EventNotificationReply_t, MPI_POINTER pEventNotificationReply_t;
- 
--- 
-2.27.0
+Ash Izat
+
+> -----Original Message-----
+> From: Viswas.G@microchip.com <Viswas.G@microchip.com>
+> Sent: 24 March 2021 18:07
+> To: jinpu.wang@cloud.ionos.com; ash@ai0.uk; Ruksar.devadi@microchip.com;
+> Vasanthalakshmi.Tharmarajan@microchip.com
+> Cc: linux-scsi@vger.kernel.org
+> Subject: RE: [REGRESSION] pm8001: Adaptec 6805H fails to initialize after
+> v5.10.0
+> 
+> Hi Ash,
+> 
+> Can you please try this patch ?
+> 
+> Regards,
+> Viswas G
+
 
