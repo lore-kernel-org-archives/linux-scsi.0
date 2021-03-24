@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD89C433E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67178C433E3
 	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 16:55:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2979161A16
+	by mail.kernel.org (Postfix) with ESMTP id 4E8A161A13
 	for <linux-scsi@archiver.kernel.org>; Wed, 24 Mar 2021 16:55:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236883AbhCXQye (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Mar 2021 12:54:34 -0400
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:17488 "EHLO
+        id S236955AbhCXQyf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Mar 2021 12:54:35 -0400
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:17505 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236509AbhCXQyW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Mar 2021 12:54:22 -0400
+        with ESMTP id S236526AbhCXQya (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Mar 2021 12:54:30 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1616604862; x=1648140862;
+  t=1616604870; x=1648140870;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version;
-  bh=yAWd8gmP5eMRM29p10AtrxYxyb6TUyucLv05sC/FTi0=;
-  b=1nAhlimff5w58G/cSiE3I4sc/hW5scuo5cxvwJGL5vp3E6Ta08DfIJUS
-   OABVdo5AgkMYD19heoN7gyK24umptAyG29F3sBGx5WihmOUD6FV8sg0Ra
-   qF7SoiD2dzWBV6YJCfsQToJUEk1eq9laa3ygMlAjsIX6KUPsvJ/56ZrvD
-   lVqws+xsCXcKUiUyE5NLoLMr1IVp36yEghn7Ebm030sj3snTAAEIwsX9c
-   AfdRYMmNqW1JmAkBy3xT0c3DW24V4PlEtjqhwsnLpdw7DdXoauF9LJltc
-   tQkD6rFLaw48HTGHjsraJ7EQ63Ie5RAu721MaQZutK4aGhcKW7m5PrN6p
-   w==;
-IronPort-SDR: APJAmuf71tz6KYpIBI2LiPgqxk9wjfZMkt0D0MI12SJFqMHkQuXFmXJPOOYRbBM4OXUGgfdSKz
- JTNnGcey7iOUSVU+xJ5z4PafRsuAd6o8nnqehItlasQCaedI92qKKArojLGh7yIAqv2EXdDuyK
- ZZ2pg0PSQG0IsRn2T4Tten31g/BgsWq/aC9ldmdwVxqjHGfrpfq5c2QRkp2cmDIS/IMbHa2pbr
- MVV5D8Q2BaTD2RJ1Ca8XqDgOPcuhO24kJwu760FBMEqUPR5JEjKS8mW6lcdlBr1KA5HwNVqTfn
- 104=
+  bh=F7U3hSyJpp0WrlWE++luXzDfhrubQye8Sbqy2vCVHwY=;
+  b=NA2paaejsATSznoavFSQkx1wFsjrWgRqA87MDduLM5wN5txuwt9wvgI6
+   J9gVbqNunoAmv4lCxpNlcrTHUqW6ZACh5dfhmlmxEfxXVTQU11Ec4C66G
+   a/sBeznJsYmM8JHdwBk+Jcd04y0iu0pVvfch8ZMHpsVZ+cqZE6650W86t
+   6yf7hZRhw2odF2/kruVvT2knfwSQipprvTY0aiRGlCGHlTV2t9GejITxK
+   KRckGeT72tzcLUKXqqR8G2wIeoIs7pZnuNK5YUef+WxM0NZwfJNRk0TJb
+   BXF7qWgB0JU42nUipIxWvKb+5SYKulciZtlwaEaLoJ/ZxHxtMirQ28jsS
+   Q==;
+IronPort-SDR: ZEynz05vWKUuqUJGmqdnJQ6M2zjUS3IgmqUQLXHemeBzak2o15MrxmuBJTXRxbaAp3g9Ct9D+/
+ JNIuneAZAbNorr+v54VNvEntORY5TvMt+4IEgt2gz3qhs32+EmHqbcR6Tij4av/dMnVEnPlmMx
+ 1cgcYLKVfe9FCixFQqdsRjvmRcvjn3wsP5jXvVFGVQI8gMGYPsy+iJHgwTD1R9zxiBvr+Iguxu
+ mU0tRdgUkpbChgXt/HEWNHLCFiOYG3aSZhf36dIamRT//Tmaq8aGwx35qV2HFRm7OUoDKArJJI
+ MEI=
 X-IronPort-AV: E=Sophos;i="5.81,275,1610434800"; 
-   d="scan'208";a="111203603"
+   d="scan'208";a="111203619"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 24 Mar 2021 09:54:21 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
+  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 24 Mar 2021 09:54:29 -0700
+Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 24 Mar 2021 09:54:21 -0700
-Received: from localhost (10.10.115.15) by chn-vm-ex01.mchp-main.com
- (10.10.85.143) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
- Transport; Wed, 24 Mar 2021 09:54:21 -0700
+ 15.1.2176.2; Wed, 24 Mar 2021 09:54:29 -0700
+Received: from localhost (10.10.115.15) by chn-vm-ex02.mchp-main.com
+ (10.10.85.144) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
+ Transport; Wed, 24 Mar 2021 09:54:29 -0700
 From:   Viswas G <Viswas.G@microchip.com>
 To:     <linux-scsi@vger.kernel.org>
 CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
@@ -56,9 +56,9 @@ CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
         <jinpu.wang@cloud.ionos.com>,
         Ashokkumar N <Ashokkumar.N@microchip.com>,
         "John Garry" <john.garry@huawei.com>
-Subject: [PATCH v2 2/7] pm80xx: Add sysfs attribute to track RAAE count
-Date:   Wed, 24 Mar 2021 22:33:52 +0530
-Message-ID: <20210324170357.9765-3-Viswas.G@microchip.com>
+Subject: [PATCH v2 6/7] pm80xx: Reset PI and CI memory during re-initialize
+Date:   Wed, 24 Mar 2021 22:33:56 +0530
+Message-ID: <20210324170357.9765-7-Viswas.G@microchip.com>
 X-Mailer: git-send-email 2.16.3
 In-Reply-To: <20210324170357.9765-1-Viswas.G@microchip.com>
 References: <20210324170357.9765-1-Viswas.G@microchip.com>
@@ -68,71 +68,60 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Vishakha Channapattan <vishakhavc@google.com>
+Producer index(PI) outbound queue and consumer index(CI)
+for Outbound queue are in DMA memory. During resume(),
+the stale PI and CI Values will leads to unexpected behavior.
+These values should be reset to 0 during driver reinitialization.
 
-A new sysfs variable 'ctl_raae_count' is being introduced that tells if
-the controller is alive by indicating controller ticks. If on subsequent
-run we see the ticks changing in RAAE count that indicates that
-controller is not dead.
-
-Tested: Using 'ctl_raae_count' sysfs variable we can see ticks
-incrementing
-mvae14:~# cat  /sys/class/scsi_host/host*/ctl_raae_count
-0x00002245
-0x00002253
-0x0000225e
-
-Signed-off-by: Vishakha Channapattan <vishakhavc@google.com>
 Signed-off-by: Viswas G <Viswas.G@microchip.com>
 Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
 Signed-off-by: Ashokkumar N <Ashokkumar.N@microchip.com>
-Signed-off-by: Radha Ramachandran <radha@google.com>
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 ---
- drivers/scsi/pm8001/pm8001_ctl.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ drivers/scsi/pm8001/pm8001_hwi.c | 2 ++
+ drivers/scsi/pm8001/pm80xx_hwi.c | 2 ++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index ce4846b1377c..98e5b47b9bb7 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -918,6 +918,29 @@ static ssize_t ctl_mpi_state_show(struct device *cdev,
- }
- static DEVICE_ATTR_RO(ctl_mpi_state);
- 
-+/**
-+ * ctl_raae_count_show - controller raae count check
-+ * @cdev: pointer to embedded class device
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' shost attribute.
-+ */
-+
-+static ssize_t ctl_raae_count_show(struct device *cdev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(cdev);
-+	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-+	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-+	unsigned int raaecnt;
-+	int c;
-+
-+	raaecnt = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 12);
-+	c = sysfs_emit(buf, "0x%08x\n", raaecnt);
-+	return c;
-+}
-+static DEVICE_ATTR_RO(ctl_raae_count);
-+
- struct device_attribute *pm8001_host_attrs[] = {
- 	&dev_attr_interface_rev,
- 	&dev_attr_controller_fatal_error,
-@@ -942,6 +965,7 @@ struct device_attribute *pm8001_host_attrs[] = {
- 	&dev_attr_ila_version,
- 	&dev_attr_inc_fw_ver,
- 	&dev_attr_ctl_mpi_state,
-+	&dev_attr_ctl_raae_count,
- 	NULL,
- };
- 
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 4e0ce044ac69..783149b8b127 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -240,6 +240,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+ 			pm8001_ha->memoryMap.region[ci_offset + i].phys_addr_lo;
+ 		pm8001_ha->inbnd_q_tbl[i].ci_virt		=
+ 			pm8001_ha->memoryMap.region[ci_offset + i].virt_ptr;
++		pm8001_write_32(pm8001_ha->inbnd_q_tbl[i].ci_virt, 0, 0);
+ 		offsetib = i * 0x20;
+ 		pm8001_ha->inbnd_q_tbl[i].pi_pci_bar		=
+ 			get_pci_bar_index(pm8001_mr32(addressib,
+@@ -268,6 +269,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+ 			0 | (10 << 16) | (i << 24);
+ 		pm8001_ha->outbnd_q_tbl[i].pi_virt		=
+ 			pm8001_ha->memoryMap.region[pi_offset + i].virt_ptr;
++		pm8001_write_32(pm8001_ha->outbnd_q_tbl[i].pi_virt, 0, 0);
+ 		offsetob = i * 0x24;
+ 		pm8001_ha->outbnd_q_tbl[i].ci_pci_bar		=
+ 			get_pci_bar_index(pm8001_mr32(addressob,
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 1aa3a499c85a..0f2c57e054ac 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -787,6 +787,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+ 			pm8001_ha->memoryMap.region[ci_offset + i].phys_addr_lo;
+ 		pm8001_ha->inbnd_q_tbl[i].ci_virt		=
+ 			pm8001_ha->memoryMap.region[ci_offset + i].virt_ptr;
++		pm8001_write_32(pm8001_ha->inbnd_q_tbl[i].ci_virt, 0, 0);
+ 		offsetib = i * 0x20;
+ 		pm8001_ha->inbnd_q_tbl[i].pi_pci_bar		=
+ 			get_pci_bar_index(pm8001_mr32(addressib,
+@@ -820,6 +821,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+ 		pm8001_ha->outbnd_q_tbl[i].interrup_vec_cnt_delay = (i << 24);
+ 		pm8001_ha->outbnd_q_tbl[i].pi_virt		=
+ 			pm8001_ha->memoryMap.region[pi_offset + i].virt_ptr;
++		pm8001_write_32(pm8001_ha->outbnd_q_tbl[i].pi_virt, 0, 0);
+ 		offsetob = i * 0x24;
+ 		pm8001_ha->outbnd_q_tbl[i].ci_pci_bar		=
+ 			get_pci_bar_index(pm8001_mr32(addressob,
 -- 
 2.16.3
 
