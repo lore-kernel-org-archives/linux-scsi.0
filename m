@@ -2,214 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22EFCC433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 14:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 089C4C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 15:15:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F38B461A07
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 14:51:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D22C961A2D
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 15:15:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231246AbhCYOuf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Mar 2021 10:50:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55344 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229547AbhCYOuC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Mar 2021 10:50:02 -0400
-Received: from mail-qk1-x729.google.com (mail-qk1-x729.google.com [IPv6:2607:f8b0:4864:20::729])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28DCAC06174A;
-        Thu, 25 Mar 2021 07:50:02 -0700 (PDT)
-Received: by mail-qk1-x729.google.com with SMTP id z10so1962103qkz.13;
-        Thu, 25 Mar 2021 07:50:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=A01xU9scL5QHqCTcEARA+UZXhX3w6QfTLVjGvG0qhWs=;
-        b=fjIpx38pKKpF7tuHHnx+6bHTa8GIAr+gRLGjKt2x69P7v8gjKVe3W9dYqxgP9vSwI9
-         QihvfqnQepbko6JQmAIRW+EQAppxHtxDBVpKo/ulTx0XeTA+TsLT2XPd5R47EHfs/vL+
-         RcfmGpqKXdbxR340ysSTk2TR5aaFQcoTZCnFjyd/rFWDxI9wey0GlS/SNuFSvLhs+psi
-         0EVXYddJbSDWFSlhrUt5I6M67vOMO/RGQOVQ0jvf2R4mqWnxzVz/163P9EVlylTqlOyg
-         RuvSoLqCSa3d1HolOz0J7uXNfTUCd96jvr8FQ9pq7Hu06fFtmIslpU2LxY/2YEkWewFc
-         MUFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=A01xU9scL5QHqCTcEARA+UZXhX3w6QfTLVjGvG0qhWs=;
-        b=EQmldZIvRhPxIqCRsDdjkoQalzl6ePRtPbnagLaXFj9n1qaDLC3YoddTUlK4Dz4d7M
-         umjLrutpZZ4KIr5n9UskLKix4ub7sKQ1rIGV+ePI4LdZ3eK+PV0OKQJJ8BOOz10pXzZG
-         T8+mVmWb3LTBgbJaBApjkwH/Nl4PGoWC+r75qtQFrsY0Ljb4EaDE43zgqjCJO0mjzIoF
-         ypL2uDs5nsEjrEXqRyHCeHdfbl3kcTxm6au7dTHdp9rAS9T832ges3+Nu3HWJX0YmpMe
-         2yOqfhx8o/L27/4/IzotHC88Q5TCLBh7Wkp35V3j0WAhZxlvHu0cX4KqfUYlx1X43h42
-         8DnA==
-X-Gm-Message-State: AOAM532At6N0YPKEkz4ZjxO+iki9p6I2ImF18DH3oviJFRiJ8rR+RwQx
-        VTYLSnxwrQ+Uy7tQxZeBG/A=
-X-Google-Smtp-Source: ABdhPJx2RAnajmw8ltd8BDZCZjs+AmRvn2izOpJq6Wnqeic5eWA8Vk7CLaR0JiE3Cx4o6fmRuVGtdA==
-X-Received: by 2002:a05:620a:1369:: with SMTP id d9mr8566930qkl.378.1616683801356;
-        Thu, 25 Mar 2021 07:50:01 -0700 (PDT)
-Received: from [192.168.0.41] (71-218-23-248.hlrn.qwest.net. [71.218.23.248])
-        by smtp.gmail.com with ESMTPSA id y1sm4324368qki.9.2021.03.25.07.49.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 25 Mar 2021 07:50:00 -0700 (PDT)
-Subject: Re: [PATCH 11/11] [RFC] drm/i915/dp: fix array overflow warning
-To:     Arnd Bergmann <arnd@kernel.org>,
-        Jani Nikula <jani.nikula@linux.intel.com>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Martin Sebor <msebor@gcc.gnu.org>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        the arch/x86 maintainers <x86@kernel.org>,
-        Ning Sun <ning.sun@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Simon Kelley <simon@thekelleys.org.uk>,
-        James Smart <james.smart@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
-        Serge Hallyn <serge@hallyn.com>,
-        Imre Deak <imre.deak@intel.com>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        tboot-devel@lists.sourceforge.net,
-        Intel Graphics <intel-gfx@lists.freedesktop.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        ath11k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Cgroups <cgroups@vger.kernel.org>,
-        LSM List <linux-security-module@vger.kernel.org>,
-        =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-        Manasi Navare <manasi.d.navare@intel.com>,
-        Uma Shankar <uma.shankar@intel.com>,
-        Ankit Nautiyal <ankit.k.nautiyal@intel.com>,
-        Gwan-gyeong Mun <gwan-gyeong.mun@intel.com>,
-        Animesh Manna <animesh.manna@intel.com>,
-        Sean Paul <seanpaul@chromium.org>
-References: <20210322160253.4032422-1-arnd@kernel.org>
- <20210322160253.4032422-12-arnd@kernel.org> <87wntv3bgt.fsf@intel.com>
- <CAK8P3a0HGiPQ-k6t6roTgeUvVAMMY=fMnGV0+t48yJjz55XFAA@mail.gmail.com>
-From:   Martin Sebor <msebor@gmail.com>
-Message-ID: <44ad545d-cc07-2e5f-9ec8-ad848f39268a@gmail.com>
-Date:   Thu, 25 Mar 2021 08:49:56 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S231131AbhCYPOt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Mar 2021 11:14:49 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:43131 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229574AbhCYPOS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 25 Mar 2021 11:14:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1616685257;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=C00CdzusvAGi2U6TMJ7rYAJxzxg6IJ+1BL3U6X7eoPk=;
+        b=ITKdyausEufwoNx/fUL1pA4+BjBDpsbWUvTsAISBw8Nxm8uNx7FemynCpfTVmT0wW/13p7
+        qpQHpsQQHKCLzATLzKqAbu/POWZJroaCWvT9uHUKGEArlqA31EU7IHop7kKjixavrgWaQP
+        Wecos3i7rm+wbCEsHQm/+ruVARWWNrE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-16-PUiCKOryMKqns6LEMcbHYA-1; Thu, 25 Mar 2021 11:14:13 -0400
+X-MC-Unique: PUiCKOryMKqns6LEMcbHYA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 80A451009E29;
+        Thu, 25 Mar 2021 15:14:11 +0000 (UTC)
+Received: from localhost (unknown [10.18.25.174])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3EA0D5C3DF;
+        Thu, 25 Mar 2021 15:14:08 +0000 (UTC)
+Date:   Thu, 25 Mar 2021 11:14:07 -0400
+From:   Mike Snitzer <snitzer@redhat.com>
+To:     Zhiqiang Liu <liuzhiqiang26@huawei.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, agk@redhat.com,
+        dm-devel@redhat.com, "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linfeilong <linfeilong@huawei.com>,
+        lixiaokeng <lixiaokeng@huawei.com>,
+        "wubo (T)" <wubo40@huawei.com>
+Subject: Re: md/dm-mpath: check whether all pgpaths have same uuid in
+ multipath_ctr()
+Message-ID: <20210325151407.GA17059@redhat.com>
+References: <c8f86351-3036-0945-90d2-2e020d68ccf2@huawei.com>
+ <20210322081155.GE1946905@infradead.org>
+ <20210322142207.GB30698@redhat.com>
+ <cd71d0fa-31d1-5cd8-74a1-8b124724b3b1@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a0HGiPQ-k6t6roTgeUvVAMMY=fMnGV0+t48yJjz55XFAA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cd71d0fa-31d1-5cd8-74a1-8b124724b3b1@huawei.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/25/21 3:53 AM, Arnd Bergmann wrote:
-> On Thu, Mar 25, 2021 at 9:05 AM Jani Nikula <jani.nikula@linux.intel.com> wrote:
->>> Clearly something is wrong here, but I can't quite figure out what.
->>> Changing the array size to 16 bytes avoids the warning, but is
->>> probably the wrong solution here.
->>
->> Ugh. drm_dp_channel_eq_ok() does not actually require more than
->> DP_LINK_STATUS_SIZE - 2 elements in the link_status. It's some other
->> related functions that do, and in most cases it's convenient to read all
->> those DP_LINK_STATUS_SIZE bytes.
->>
->> However, here the case is slightly different for DP MST, and the change
->> causes reserved DPCD addresses to be read. Not sure it matters, but
->> really I think the problem is what drm_dp_channel_eq_ok() advertizes.
->>
->> I also don't like the array notation with sizes in function parameters
->> in general, because I think it's misleading. Would gcc-11 warn if a
->> function actually accesses the memory out of bounds of the size?
-> 
-> Yes, that is the point of the warning. Using an explicit length in an
-> array argument type tells gcc that the function will never access
-> beyond the end of that bound, and that passing a short array
-> is a bug.
-> 
-> I don't know if this /only/ means triggering a warning, or if gcc
-> is also able to make optimizations after classifying this as undefined
-> behavior that it would not make for an unspecified length.
-
-GCC uses the array parameter notation as a hint for warnings but
-it doesn't optimize on this basis and never will be able to because
-code that accesses more elements from the array isn't invalid.
-Adding static to the bound, as in void f (int[static N]) does
-imply that the function won't access more than N elements and
-C intends for optimizers to rely on it, although GCC doesn't yet.
-
-The warning for the array notation is a more portable alternative
-to explicitly annotating functions with attribute access, and to
--Wvla-parameter for VLA parameters.  The latter seem to be used
-relatively rarely, sometimes deliberately because of the bad rap
-of VLA objects, even though VLA parameters don't suffer from
-the same problems.
-
-Martin
+On Wed, Mar 24 2021 at  9:21pm -0400,
+Zhiqiang Liu <liuzhiqiang26@huawei.com> wrote:
 
 > 
->> Anyway. I don't think we're going to get rid of the array notation
->> anytime soon, if ever, no matter how much I dislike it, so I think the
->> right fix would be to at least state the correct required size in
->> drm_dp_channel_eq_ok().
 > 
-> Ok. Just to confirm: Changing the declaration to an unspecified length
-> avoids the warnings, as does the patch below:
+> On 2021/3/22 22:22, Mike Snitzer wrote:
+> > On Mon, Mar 22 2021 at  4:11am -0400,
+> > Christoph Hellwig <hch@infradead.org> wrote:
+> > 
+> >> On Sat, Mar 20, 2021 at 03:19:23PM +0800, Zhiqiang Liu wrote:
+> >>> From: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+> >>>
+> >>> When we make IO stress test on multipath device, there will
+> >>> be a metadata err because of wrong path. In the test, we
+> >>> concurrent execute 'iscsi device login|logout' and
+> >>> 'multipath -r' command with IO stress on multipath device.
+> >>> In some case, systemd-udevd may have not time to process
+> >>> uevents of iscsi device logout|login, and then 'multipath -r'
+> >>> command triggers multipathd daemon calls ioctl to load table
+> >>> with incorrect old device info from systemd-udevd.
+> >>> Then, one iscsi path may be incorrectly attached to another
+> >>> multipath which has different uuid. Finally, the metadata err
+> >>> occurs when umounting filesystem to down write metadata on
+> >>> the iscsi device which is actually not owned by the multipath
+> >>> device.
+> >>>
+> >>> So we need to check whether all pgpaths of one multipath have
+> >>> the same uuid, if not, we should throw a error.
+> >>>
+> >>> Signed-off-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+> >>> Signed-off-by: lixiaokeng <lixiaokeng@huawei.com>
+> >>> Signed-off-by: linfeilong <linfeilong@huawei.com>
+> >>> Signed-off-by: Wubo <wubo40@huawei.com>
+> >>> ---
+> >>>  drivers/md/dm-mpath.c   | 52 +++++++++++++++++++++++++++++++++++++++++
+> >>>  drivers/scsi/scsi_lib.c |  1 +
+> >>>  2 files changed, 53 insertions(+)
+> >>>
+> >>> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> >>> index bced42f082b0..f0b995784b53 100644
+> >>> --- a/drivers/md/dm-mpath.c
+> >>> +++ b/drivers/md/dm-mpath.c
+> >>> @@ -24,6 +24,7 @@
+> >>>  #include <linux/workqueue.h>
+> >>>  #include <linux/delay.h>
+> >>>  #include <scsi/scsi_dh.h>
+> >>> +#include <linux/dm-ioctl.h>
+> >>>  #include <linux/atomic.h>
+> >>>  #include <linux/blk-mq.h>
+> >>>
+> >>> @@ -1169,6 +1170,45 @@ static int parse_features(struct dm_arg_set *as, struct multipath *m)
+> >>>  	return r;
+> >>>  }
+> >>>
+> >>> +#define SCSI_VPD_LUN_ID_PREFIX_LEN 4
+> >>> +#define MPATH_UUID_PREFIX_LEN 7
+> >>> +static int check_pg_uuid(struct priority_group *pg, char *md_uuid)
+> >>> +{
+> >>> +	char pgpath_uuid[DM_UUID_LEN] = {0};
+> >>> +	struct request_queue *q;
+> >>> +	struct pgpath *pgpath;
+> >>> +	struct scsi_device *sdev;
+> >>> +	ssize_t count;
+> >>> +	int r = 0;
+> >>> +
+> >>> +	list_for_each_entry(pgpath, &pg->pgpaths, list) {
+> >>> +		q = bdev_get_queue(pgpath->path.dev->bdev);
+> >>> +		sdev = scsi_device_from_queue(q);
+> >>
+> >> Common dm-multipath code should never poke into scsi internals.  This
+> >> is something for the device handler to check.  It probably also won't
+> >> work for all older devices.
+> > 
+> > Definitely.
+> > 
+> > But that aside, userspace (multipathd) _should_ be able to do extra
+> > validation, _before_ pushing down a new table to the kernel, rather than
+> > forcing the kernel to do it.
 > 
-> diff --git a/drivers/gpu/drm/drm_dp_helper.c b/drivers/gpu/drm/drm_dp_helper.c
-> index eedbb48815b7..6ebeec3d88a7 100644
-> --- a/drivers/gpu/drm/drm_dp_helper.c
-> +++ b/drivers/gpu/drm/drm_dp_helper.c
-> @@ -46,12 +46,12 @@
->    */
+> As your said, it is better to do extra validation in userspace (multipathd).
+> However, in some cases, the userspace cannot see the real-time present devices
+> info as Martin (committer of multipath-tools) said.
+> In addition, the kernel can see right device info in the table at any time,
+> so the uuid check in kernel can ensure one multipath is composed with paths mapped to
+> the same device.
 > 
->   /* Helpers for DP link training */
-> -static u8 dp_link_status(const u8 link_status[DP_LINK_STATUS_SIZE], int r)
-> +static u8 dp_link_status(const u8 link_status[DP_LINK_STATUS_SIZE - 2], int r)
->   {
->          return link_status[r - DP_LANE0_1_STATUS];
->   }
-> 
-> -static u8 dp_get_lane_status(const u8 link_status[DP_LINK_STATUS_SIZE],
-> +static u8 dp_get_lane_status(const u8 link_status[DP_LINK_STATUS_SIZE - 2],
->                               int lane)
->   {
->          int i = DP_LANE0_1_STATUS + (lane >> 1);
-> @@ -61,7 +61,7 @@ static u8 dp_get_lane_status(const u8
-> link_status[DP_LINK_STATUS_SIZE],
->          return (l >> s) & 0xf;
->   }
-> 
-> -bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE],
-> +bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE - 2],
->                            int lane_count)
->   {
->          u8 lane_align;
-> diff --git a/include/drm/drm_dp_helper.h b/include/drm/drm_dp_helper.h
-> index edffd1dcca3e..160f7fd127b1 100644
-> --- a/include/drm/drm_dp_helper.h
-> +++ b/include/drm/drm_dp_helper.h
-> @@ -1456,7 +1456,7 @@ enum drm_dp_phy {
-> 
->   #define DP_LINK_CONSTANT_N_VALUE 0x8000
->   #define DP_LINK_STATUS_SIZE       6
-> -bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE],
-> +bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE - 2],
->                            int lane_count);
->   bool drm_dp_clock_recovery_ok(const u8 link_status[DP_LINK_STATUS_SIZE],
->                                int lane_count);
-> 
-> 
-> This obviously needs a good explanation in the code and the changelog text,
-> which I don't have, but if the above is what you had in mind, please take that
-> and add Reported-by/Tested-by: Arnd Bergmann <arnd@arndb.de>.
-> 
->         Arnd
-> 
+> Considering the severity of the wrong path in multipath, I think it worths more
+> checking.
+
+As already said: this should be fixable in userspace.  Please work with
+multipath-tools developers to address this.
+
+Mike
 
