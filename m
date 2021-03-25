@@ -2,149 +2,159 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BBE4C433DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 01:22:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 671D1C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 01:40:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2869C61A18
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 01:22:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B43261A1E
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 01:40:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230325AbhCYBWV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Mar 2021 21:22:21 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:14525 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239566AbhCYBWC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Mar 2021 21:22:02 -0400
-Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4F5S1r5WxszNmxN;
-        Thu, 25 Mar 2021 09:19:28 +0800 (CST)
-Received: from [127.0.0.1] (10.174.176.117) by DGGEMS403-HUB.china.huawei.com
- (10.3.19.203) with Microsoft SMTP Server id 14.3.498.0; Thu, 25 Mar 2021
- 09:21:51 +0800
-Subject: Re: md/dm-mpath: check whether all pgpaths have same uuid in
- multipath_ctr()
-To:     Mike Snitzer <snitzer@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>
-CC:     <agk@redhat.com>, <dm-devel@redhat.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        linfeilong <linfeilong@huawei.com>,
-        lixiaokeng <lixiaokeng@huawei.com>,
-        "wubo (T)" <wubo40@huawei.com>
-References: <c8f86351-3036-0945-90d2-2e020d68ccf2@huawei.com>
- <20210322081155.GE1946905@infradead.org> <20210322142207.GB30698@redhat.com>
-From:   Zhiqiang Liu <liuzhiqiang26@huawei.com>
-Message-ID: <cd71d0fa-31d1-5cd8-74a1-8b124724b3b1@huawei.com>
-Date:   Thu, 25 Mar 2021 09:21:50 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
-MIME-Version: 1.0
-In-Reply-To: <20210322142207.GB30698@redhat.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.176.117]
-X-CFilter-Loop: Reflected
+        id S232757AbhCYBjg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Mar 2021 21:39:36 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:18106 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232764AbhCYBjT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Mar 2021 21:39:19 -0400
+IronPort-SDR: PO+J/l3u1ddTYiE2rfL8hITjMBzEPkqyLhPfNSGmdq8FwcHiyxrzM557//Zc4clgyomBVbY1JT
+ oOqiovrY8iDB6WFk/HkNY70Z5xTqvU364ATI2/6XGi0h6AndsG8YFI/u+d59xlK26fyMCB3dWK
+ Vx0roAwQf9fHGgzBxEewThKqrJ0+6TpWUMtlsKFoj1W5o8Y5ccCoAEph9XOwKmFIYVVpXvb/kJ
+ qK05cJlw9VLQRLP2/otPvEFiTsh5uol0RBCO6wPfC0l55hTQnxWsOzHoztvl1HpxiiKTKNHMvo
+ +E8=
+X-IronPort-AV: E=Sophos;i="5.81,276,1610438400"; 
+   d="scan'208";a="47833098"
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by labrats.qualcomm.com with ESMTP; 24 Mar 2021 18:39:18 -0700
+X-QCInternal: smtphost
+Received: from stor-presley.qualcomm.com ([192.168.140.85])
+  by ironmsg04-sd.qualcomm.com with ESMTP; 24 Mar 2021 18:39:17 -0700
+Received: by stor-presley.qualcomm.com (Postfix, from userid 92687)
+        id 83AEF21038; Wed, 24 Mar 2021 18:39:17 -0700 (PDT)
+From:   Asutosh Das <asutoshd@codeaurora.org>
+To:     cang@codeaurora.org, martin.petersen@oracle.com,
+        adrian.hunter@intel.com, linux-scsi@vger.kernel.org
+Cc:     Asutosh Das <asutoshd@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support),
+        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support)
+Subject: [PATCH v13 0/2] Enable power management for ufs wlun 
+Date:   Wed, 24 Mar 2021 18:39:12 -0700
+Message-Id: <cover.1616633712.git.asutoshd@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This patch attempts to fix a deadlock in ufs while sending SSU.
+Recently, blk_queue_enter() added a check to not process requests if the
+queue is suspended. That leads to a resume of the associated device which
+is suspended. In ufs, that device is ufs device wlun and it's parent is
+ufs_hba. This resume tries to resume ufs device wlun which in turn tries
+to resume ufs_hba, which is already in the process of suspending, thus
+causing a deadlock.
 
+This patch takes care of:
+* Suspending the ufs device lun only after all other luns are suspended
+* Sending SSU during ufs device wlun suspend
+* Clearing uac for rpmb and ufs device wlun
+* Not sending commands to the device during host suspend
 
-On 2021/3/22 22:22, Mike Snitzer wrote:
-> On Mon, Mar 22 2021 at  4:11am -0400,
-> Christoph Hellwig <hch@infradead.org> wrote:
-> 
->> On Sat, Mar 20, 2021 at 03:19:23PM +0800, Zhiqiang Liu wrote:
->>> From: Zhiqiang Liu <liuzhiqiang26@huawei.com>
->>>
->>> When we make IO stress test on multipath device, there will
->>> be a metadata err because of wrong path. In the test, we
->>> concurrent execute 'iscsi device login|logout' and
->>> 'multipath -r' command with IO stress on multipath device.
->>> In some case, systemd-udevd may have not time to process
->>> uevents of iscsi device logout|login, and then 'multipath -r'
->>> command triggers multipathd daemon calls ioctl to load table
->>> with incorrect old device info from systemd-udevd.
->>> Then, one iscsi path may be incorrectly attached to another
->>> multipath which has different uuid. Finally, the metadata err
->>> occurs when umounting filesystem to down write metadata on
->>> the iscsi device which is actually not owned by the multipath
->>> device.
->>>
->>> So we need to check whether all pgpaths of one multipath have
->>> the same uuid, if not, we should throw a error.
->>>
->>> Signed-off-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
->>> Signed-off-by: lixiaokeng <lixiaokeng@huawei.com>
->>> Signed-off-by: linfeilong <linfeilong@huawei.com>
->>> Signed-off-by: Wubo <wubo40@huawei.com>
->>> ---
->>>  drivers/md/dm-mpath.c   | 52 +++++++++++++++++++++++++++++++++++++++++
->>>  drivers/scsi/scsi_lib.c |  1 +
->>>  2 files changed, 53 insertions(+)
->>>
->>> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
->>> index bced42f082b0..f0b995784b53 100644
->>> --- a/drivers/md/dm-mpath.c
->>> +++ b/drivers/md/dm-mpath.c
->>> @@ -24,6 +24,7 @@
->>>  #include <linux/workqueue.h>
->>>  #include <linux/delay.h>
->>>  #include <scsi/scsi_dh.h>
->>> +#include <linux/dm-ioctl.h>
->>>  #include <linux/atomic.h>
->>>  #include <linux/blk-mq.h>
->>>
->>> @@ -1169,6 +1170,45 @@ static int parse_features(struct dm_arg_set *as, struct multipath *m)
->>>  	return r;
->>>  }
->>>
->>> +#define SCSI_VPD_LUN_ID_PREFIX_LEN 4
->>> +#define MPATH_UUID_PREFIX_LEN 7
->>> +static int check_pg_uuid(struct priority_group *pg, char *md_uuid)
->>> +{
->>> +	char pgpath_uuid[DM_UUID_LEN] = {0};
->>> +	struct request_queue *q;
->>> +	struct pgpath *pgpath;
->>> +	struct scsi_device *sdev;
->>> +	ssize_t count;
->>> +	int r = 0;
->>> +
->>> +	list_for_each_entry(pgpath, &pg->pgpaths, list) {
->>> +		q = bdev_get_queue(pgpath->path.dev->bdev);
->>> +		sdev = scsi_device_from_queue(q);
->>
->> Common dm-multipath code should never poke into scsi internals.  This
->> is something for the device handler to check.  It probably also won't
->> work for all older devices.
-> 
-> Definitely.
-> 
-> But that aside, userspace (multipathd) _should_ be able to do extra
-> validation, _before_ pushing down a new table to the kernel, rather than
-> forcing the kernel to do it.
+v12 -> v13:
+- Addressed Adrian's comments
+  * Paired pm_runtime_get_noresume() with pm_runtime_put()
+  * no rpm_autosuspend for ufs device wlun
+  * Moved runtime-pm init functionality to ufshcd_wl_probe()
+- Addressed Bart's comments
+  * Expanded abbrevs in commit message
 
-As your said, it is better to do extra validation in userspace (multipathd).
-However, in some cases, the userspace cannot see the real-time present devices
-info as Martin (committer of multipath-tools) said.
-In addition, the kernel can see right device info in the table at any time,
-so the uuid check in kernel can ensure one multipath is composed with paths mapped to
-the same device.
+v11 -> v12:
+- Addressed Adrian's comments
+  * Fixed ahit for Mediatek driver
+  * Fixed error handling in ufshcd_core_init()
+  * Tested this patch and the issue is still seen.
 
-Considering the severity of the wrong path in multipath, I think it worths more
-checking.
+v10 -> v11:
+- Fixed supplier suspending before consumer race
+- Addressed Adrian's comments
+  * Added proper resume/suspend cb to ufshcd_auto_hibern8_update()
+  * Cosmetic changes to ufshcd-pci.c
+  * Cleaned up ufshcd_system_suspend()
+  * Added ufshcd_debugfs_eh_exit to ufshcd_core_init()
 
-Regards
-Zhiqiang Liu.
+v9 -> v10:
+- Addressed Adrian's comments
+  * Moved suspend/resume vops to __ufshcd_wl_[suspend/resume]()
+  * Added correct resume in ufs_bsg
 
+v8 -> v9:
+- Addressed Adrian's comments
+  * Moved link transition to __ufshcd_wl_[suspend/resume]()
+  * Fixed the other minor comments
 
-> 
-> .
-> 
+v7 -> v8:
+- Addressed Adrian's comments
+  * Removed separate autosuspend delay for ufs-device lun
+  * Fixed the ee handler getting scheduled during pm
+  * Always runtime resume in suspend_prepare()
+  * Added CONFIG_PM_SLEEP where needed
+  
+v6 -> v7:
+  * Resume the ufs device before shutting it down
+
+v5 -> v6:
+- Addressed Adrian's comments
+  * Added complete() cb
+  * Added suspend_prepare() and complete() to all drivers
+  * Moved suspend_prepare() and complete() to ufshcd
+  * .poweroff() uses ufhcd_wl_poweroff()
+  * Removed several forward declarations
+  * Moved scsi_register_driver() to ufshcd_core_init()
+
+v4 -> v5:
+- Addressed Adrian's comments
+  * Used the rpmb driver contributed by Adrian
+  * Runtime-resume the ufs device during suspend to honor spm-lvl
+  * Unregister the scsi_driver in ufshcd_remove()
+  * Currently shutdown() puts the ufs device to power-down mode
+    so, just removed ufshcd_pci_poweroff()
+  * Quiesce the scsi device during shutdown instead of remove
+
+v3 RFC -> v4:
+- Addressed Bart's comments
+  * Except that I didn't get any checkpatch failures
+- Addressed Avri's comments
+- Addressed Adrian's comments
+  * Added a check for deepsleep power mode
+  * Removed a couple of forward declarations
+  * Didn't separate the scsi drivers because in rpmb case it just sends uac
+    in resume and it seemed pretty neat to me.
+- Added sysfs changes to resume the devices before accessing
+
+Asutosh Das (2):
+  scsi: ufs: Enable power management for wlun
+  ufs: sysfs: Resume the proper scsi device
+
+ drivers/scsi/ufs/cdns-pltfrm.c     |   2 +
+ drivers/scsi/ufs/tc-dwc-g210-pci.c |   2 +
+ drivers/scsi/ufs/ufs-debugfs.c     |   2 +-
+ drivers/scsi/ufs/ufs-debugfs.h     |   2 +-
+ drivers/scsi/ufs/ufs-exynos.c      |   2 +
+ drivers/scsi/ufs/ufs-hisi.c        |   2 +
+ drivers/scsi/ufs/ufs-mediatek.c    |  12 +-
+ drivers/scsi/ufs/ufs-qcom.c        |   2 +
+ drivers/scsi/ufs/ufs-sysfs.c       |  30 +-
+ drivers/scsi/ufs/ufs_bsg.c         |   6 +-
+ drivers/scsi/ufs/ufshcd-pci.c      |  36 +--
+ drivers/scsi/ufs/ufshcd.c          | 627 ++++++++++++++++++++++++++-----------
+ drivers/scsi/ufs/ufshcd.h          |   6 +
+ include/trace/events/ufs.h         |  20 ++
+ 14 files changed, 513 insertions(+), 238 deletions(-)
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
