@@ -4,45 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EDAAC433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 11:32:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C38C433C1
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 11:33:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5570061A1F
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 11:32:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2988B61A23
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 11:33:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230361AbhCYLb4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Mar 2021 07:31:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35294 "EHLO mail.kernel.org"
+        id S230372AbhCYLdY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Mar 2021 07:33:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41320 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231739AbhCYL3b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 25 Mar 2021 07:29:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 08A0161A85;
-        Thu, 25 Mar 2021 11:27:40 +0000 (UTC)
+        id S231187AbhCYLb0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 25 Mar 2021 07:31:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ECE6F61A73;
+        Thu, 25 Mar 2021 11:28:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616671661;
-        bh=dYFPrqF9QeI9Yq5VHdYVsI4HQn3dS2qEKnFI0wciVnA=;
+        s=k20201202; t=1616671686;
+        bh=nXoYognAgYL6klut8TMdNteBomnnKW3sKoRjwvaPPMY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iYo9Ioufp4szMoIDcbPufHvDoVyDz+QuyVAWaQPvVRJMMun6IdOZJosEptI5pGBvy
-         ARu+xrszGPh898n6YTLBPdkyzl9Y2iaMWtFw15pJjSjX9YyChuCE8DNgwb5V6ur3f+
-         qyMgw3fhxwkCyO8CZuRcTjChwEkVBk3l7d1/byIpN4egUtMQil9Y5nR+MjVzz4S6+W
-         eUoCDHlGUL6ARyMic+mlQRfbLmNzcBUbwn/xIseX4dAdvTpWh/6J2uyA1vuerm3OqQ
-         Qa3dxXywoPlz48dr/bzwdg7gdjVzC87suXgVgLSIK25RpI8oQFuQUkaFLpoiOQWehY
-         cPPqaKdYEcmjQ==
+        b=J/BPTOPPKMla7f6lq3dGbI5XqJyPqe+TZ7CW1u8G2nlOBJyYEaH7WQRI4mP4sPT9f
+         /eqcLclLXFhIk/Eo3CzzWdj6G2EWctU4j4t7fwiThi0X9/Pe9SDngNMxP8GKpvlevM
+         ZDFvaEpJH0yfxwzMFUJpL9xLkldq0n2imfQWNYnUUtGrl2J9mpM4cJfoS9u1eEwdzm
+         gafVGh1lqXDGN4SCbbjZYN9HBTUYK3sRVsUAq/eORObF9zUt3ztwzBJQ+TckYcVu1Q
+         c79l2Hb49UZJTxhuecFcBXTTAnL+faf5ojrOvRIP86PT0gdX1h+uKgcNikPtUtERaT
+         Sb8wdsqB4Obiw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Lv Yunlong <lyl2019@mail.ustc.edu.cn>,
         =?UTF-8?q?Kai=20M=C3=A4kisara?= <kai.makisara@kolumbus.fi>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 13/20] scsi: st: Fix a use after free in st_open()
-Date:   Thu, 25 Mar 2021 07:27:17 -0400
-Message-Id: <20210325112724.1928174-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 11/16] scsi: st: Fix a use after free in st_open()
+Date:   Thu, 25 Mar 2021 07:27:46 -0400
+Message-Id: <20210325112751.1928421-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210325112724.1928174-1-sashal@kernel.org>
-References: <20210325112724.1928174-1-sashal@kernel.org>
+In-Reply-To: <20210325112751.1928421-1-sashal@kernel.org>
+References: <20210325112751.1928421-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
@@ -70,10 +70,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 307df2fa39a3..5078db7743cd 100644
+index 94e402ed30f6..6497a6f12a6f 100644
 --- a/drivers/scsi/st.c
 +++ b/drivers/scsi/st.c
-@@ -1265,8 +1265,8 @@ static int st_open(struct inode *inode, struct file *filp)
+@@ -1268,8 +1268,8 @@ static int st_open(struct inode *inode, struct file *filp)
  	spin_lock(&st_use_lock);
  	if (STp->in_use) {
  		spin_unlock(&st_use_lock);
