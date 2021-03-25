@@ -2,163 +2,216 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 089C4C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 15:15:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C51FC433C1
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 15:46:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D22C961A2D
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 15:15:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 258AF61A1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 15:46:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231131AbhCYPOt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Mar 2021 11:14:49 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:43131 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229574AbhCYPOS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 25 Mar 2021 11:14:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1616685257;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=C00CdzusvAGi2U6TMJ7rYAJxzxg6IJ+1BL3U6X7eoPk=;
-        b=ITKdyausEufwoNx/fUL1pA4+BjBDpsbWUvTsAISBw8Nxm8uNx7FemynCpfTVmT0wW/13p7
-        qpQHpsQQHKCLzATLzKqAbu/POWZJroaCWvT9uHUKGEArlqA31EU7IHop7kKjixavrgWaQP
-        Wecos3i7rm+wbCEsHQm/+ruVARWWNrE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-16-PUiCKOryMKqns6LEMcbHYA-1; Thu, 25 Mar 2021 11:14:13 -0400
-X-MC-Unique: PUiCKOryMKqns6LEMcbHYA-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 80A451009E29;
-        Thu, 25 Mar 2021 15:14:11 +0000 (UTC)
-Received: from localhost (unknown [10.18.25.174])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3EA0D5C3DF;
-        Thu, 25 Mar 2021 15:14:08 +0000 (UTC)
-Date:   Thu, 25 Mar 2021 11:14:07 -0400
-From:   Mike Snitzer <snitzer@redhat.com>
-To:     Zhiqiang Liu <liuzhiqiang26@huawei.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, agk@redhat.com,
-        dm-devel@redhat.com, "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linfeilong <linfeilong@huawei.com>,
-        lixiaokeng <lixiaokeng@huawei.com>,
-        "wubo (T)" <wubo40@huawei.com>
-Subject: Re: md/dm-mpath: check whether all pgpaths have same uuid in
- multipath_ctr()
-Message-ID: <20210325151407.GA17059@redhat.com>
-References: <c8f86351-3036-0945-90d2-2e020d68ccf2@huawei.com>
- <20210322081155.GE1946905@infradead.org>
- <20210322142207.GB30698@redhat.com>
- <cd71d0fa-31d1-5cd8-74a1-8b124724b3b1@huawei.com>
+        id S231414AbhCYPqJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Mar 2021 11:46:09 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:55230 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230322AbhCYPpj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Mar 2021 11:45:39 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12PFZ1Y6133693;
+        Thu, 25 Mar 2021 15:45:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=JPwyAKbKpI76OVGLD+gBlqwFD47fweQczvo3bG+jV9o=;
+ b=h20hdyGqA2Neirx2ZMBK3pmXaW9ZCoUh2edzeD/2VZqCqyGZmokNevbx21QHRMsjxuG6
+ W8GKaYot4XdVpmsZnGiVhPPUQ8wzhtyENMlGVv6KoyleAvb84hs+8zlEfgMB3W8bUPTP
+ JVSAkPGqUGwtb8ppNrbl5bvTmjF12gqFgvgN1P/WrliO7arULn4zS5Ps0R/85LlMuCYA
+ OFJOozNqe+X3ErUXlakDkh53ZoXxz2GU4McDK+sfIDTSkWwaDH5A0PRjQWKUpkQS73rm
+ obCuDXoJzgyUrtVAnXXmw2ivfDkg9Nlux+W/QC6FB1EuqP++GwfS1nCItUigqZ7xHOcr Xg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 37d8fresyr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 25 Mar 2021 15:45:32 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12PFaWLo144466;
+        Thu, 25 Mar 2021 15:45:32 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2172.outbound.protection.outlook.com [104.47.57.172])
+        by userp3020.oracle.com with ESMTP id 37dttuu5bf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 25 Mar 2021 15:45:32 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=imWFIMn4GN/ufD6Z+Omq8uiRsK3jfRjlreH+xil5imYB/j3u6oRhqDswrb/gy0eKKwRYOofSaJbCUu9azvqawz4PWk5Fa1kyu4IgPOkmFxAdQnxRM4hczd1mW5K4vaxEnsJ7h9qSJg4Ri6DNdKmObkXHsToMTDfKmEMLcNqBwn4LwVPfd2X43vyh80bdAqnnySqarl2ai/SxDMcpelj4//4MvB1R3IR7CsP/zTh7Rt3a5B+66RPjKm4zF9jYA+dZVEeFAcZHstpqyabb3op8hWlB74kz3Mr08y+Zq+RNxbxdim/vUnwQvqz1AB5oM/4uTp2IjnsnFp+kMGz03F4xig==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=JPwyAKbKpI76OVGLD+gBlqwFD47fweQczvo3bG+jV9o=;
+ b=jZyqJmoj6JKMVg9+F/wAHLtvVET1OXHT5YgKmsaNLmVmqp1JQNjmPx7PHexD1RKcF/ibOMSrvr9w6gvpDDTl/qA9NDcNeXegR8gzRRR/jD1SRN3DHHbbkARRdcpZb0jdbe3URpYLVT7j62xZKMjbFF/zllTlqKXUV7ma0SEb4z6aDUbzDQkfax2DOD6iqv+QU9XF7oNm/O4GhIsbZ8V+M39N8xZbi+NTJcf8+YZhjPP4BGICx5QGl3txz2Hi2WEWNzINbms767t0zTO3YRUYf01TqVmyuBTLE+9M+e+sNtGNgX+WOPouMyWz218QUoknTiBhnhHM9a0Z7uZsDvvYpA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=JPwyAKbKpI76OVGLD+gBlqwFD47fweQczvo3bG+jV9o=;
+ b=bG2wInpsd15H/NZgCFTguxmUQRae7h/VMGwyu089riT+MWEIjcjkdqaNDP4eQOrPNLIZczgm6t1CLnca9fpI1hEZyqWX8hz4yW1eDhpJ+Em+mffqokitdP4RN837OgEn9pA6KCBXe1IewCmsJUT6E8djIJiz/r1L0zvlDXeLHbQ=
+Authentication-Results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
+Received: from BYAPR10MB3573.namprd10.prod.outlook.com (2603:10b6:a03:11e::32)
+ by BYAPR10MB3429.namprd10.prod.outlook.com (2603:10b6:a03:81::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3977.25; Thu, 25 Mar
+ 2021 15:45:30 +0000
+Received: from BYAPR10MB3573.namprd10.prod.outlook.com
+ ([fe80::50bb:7b66:35ee:4a4]) by BYAPR10MB3573.namprd10.prod.outlook.com
+ ([fe80::50bb:7b66:35ee:4a4%7]) with mapi id 15.20.3977.026; Thu, 25 Mar 2021
+ 15:45:30 +0000
+Subject: Re: [PATCH V5] iscsi: Do Not set param when sock is NULL
+To:     Gulam Mohamed <gulam.mohamed@oracle.com>, lduncan@suse.com,
+        cleech@redhat.com, martin.petersen@oracle.com,
+        junxiao.bi@oracle.com, linux-scsi@vger.kernel.org
+References: <20210325093248.284678-1-gulam.mohamed@oracle.com>
+From:   michael.christie@oracle.com
+Message-ID: <30410504-9616-ba2b-2ed1-6a40b0a788ba@oracle.com>
+Date:   Thu, 25 Mar 2021 10:45:27 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.9.0
+In-Reply-To: <20210325093248.284678-1-gulam.mohamed@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [73.88.28.6]
+X-ClientProxiedBy: DS7PR03CA0115.namprd03.prod.outlook.com
+ (2603:10b6:5:3b7::30) To BYAPR10MB3573.namprd10.prod.outlook.com
+ (2603:10b6:a03:11e::32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cd71d0fa-31d1-5cd8-74a1-8b124724b3b1@huawei.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [20.15.0.5] (73.88.28.6) by DS7PR03CA0115.namprd03.prod.outlook.com (2603:10b6:5:3b7::30) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3977.24 via Frontend Transport; Thu, 25 Mar 2021 15:45:29 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 8a9f11ce-b383-4cac-6ee7-08d8efa504f3
+X-MS-TrafficTypeDiagnostic: BYAPR10MB3429:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BYAPR10MB3429A2793BCAA3E0E47ABE08F1629@BYAPR10MB3429.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: BtxW9VJ/XEbki1BZv0m3gh0sV0Ad5G0z3fwgURP2Oql06Q+0OLGPhMM+TnQRafjxFe71Geb5vE58QKvvtIFp3IOTIoebbNPQKtjft8vRUP18aRQpAJ6u+EPLfZHfOsGwQQmfWrN0gDu43jHk5oYr7eJBjg9ws9Q+NMDkXRQ6cV5K67AXBGYiNbSUedNkXNxFotmqq+oLxDtUbF64kApc8qMQf94RFyey3KxE+OJiRF+nnJq9Pb7eWbpiQc3mpoKvW3rzIPq1JSSorwbsRbJuTmSiufxBoGxWgoiQWKf+Tl6/DQFbAqY3kICc3NKEM8umlECj8HLtDMPwZPPkGQuqN8gcyQ8FoA8xJ6rP1e7A9igI6BfX2hc1555w0DhDQj9iom2R4S6nV3VuLYwTTcvN8nax9vijkYlrtP/h/TF10mqV1ASmg7zTERuIKojG2h6GP+9dwkCUrwLN7JN56IFHoq/ysj+kPO6D2T6Ej76KD7MlwMyneSHM8QaM9quqTe2+ArrjHbwE66ek0THUv0lBUr+yfoQlToXPIjCwRE/UU9LGYaIHATgZ1YoVmRW5A3pz/qMpO+r9Zv0ESTC57JCU5V0+GmE4DmZ9AkyYxvCH4T/Djh6Gq5hLCHJ6pANIfRP0TjQ6ySotUxQnpv9V4ppS1n8W/e9AovvSPFPVj4YAvRi4CqgELGguxjdT9Q55QTa1/XIIjviTRi9gMYO2JtO7gw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB3573.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(346002)(366004)(39860400002)(396003)(136003)(31686004)(5660300002)(6706004)(2906002)(66476007)(9686003)(8936002)(6486002)(53546011)(66556008)(16576012)(8676002)(66946007)(956004)(2616005)(26005)(16526019)(38100700001)(478600001)(83380400001)(316002)(186003)(31696002)(36756003)(86362001)(78286007)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?YjBzUnJSZVhFakhMbFZaTzc2OE5DT0FCdU80QnYzdm1tdmJVSkpvTzJoYjJm?=
+ =?utf-8?B?cmp6S0xwSkVDR3o2K2dKZzFReDllUmQ5dGhIajZXUzRJUFBnRHZReXBhRFRv?=
+ =?utf-8?B?TERZZDVNVnFGV1lDbWN1WjIrK3EvWU91ZFhDbGcvanFmVGU1UkFIVndKTU82?=
+ =?utf-8?B?S1NFZHV5SmtVRVJUby9uRFpLR1VLcUwwN2E2SmhWRDU4dlVMVVIxRTM2SUZ1?=
+ =?utf-8?B?bEVZQXhwUEp1ZjljSTl0ZXF6b1ZyYWhVcVhPcjh1U0l1SS9zTTFaOUZWR0FP?=
+ =?utf-8?B?blY2Lys1SFpMVElHb1pkcEdOVEY5am9SQU5mZWpKaml4clNjNGJXYmdSQ0s2?=
+ =?utf-8?B?Nnl1ajQrMk1YbWlhaDdjM0FvZGoyU0VJdkFQR2x1UU9PM0NaRFNhaUhUbGFZ?=
+ =?utf-8?B?SytWV0sxREVFSTdsbjVZRVNhdExsSzcyMHNDSUpZZkxkRC9wRCtwb0tmN2ph?=
+ =?utf-8?B?cWlnUm92djBzMjhITGsvNnBDNnBtdmFmOHJjejhTejA0UDZ5NnBrb0JkU3g1?=
+ =?utf-8?B?OHdyczdIUjE0WEVlVmhORTJORnBEd3dsTm1iUzNOelZQSXhHWHI1bkNTa0JZ?=
+ =?utf-8?B?ditBU2hxeG9RM0M5ei9iVGlJZkNUS3lYNEloNERJaGFndUUwcXNaWEc2UDI1?=
+ =?utf-8?B?Rm9ES042N25jL21iTnV6clBZdXdSZ0N5VE56cU9rRzFDeGZ2V2NndXhrcGZ0?=
+ =?utf-8?B?alZCWlRmZ1NkMTVNN05LeUxIaS95OUdudmszOHpJTnFYU3NGVGJzMkw1TUIr?=
+ =?utf-8?B?RXhqL2IzbWpzY1Y1WjJXbnFQbXMzM0hDTCtPTHFZZ05TK3BqZUZ4UU9SaXFr?=
+ =?utf-8?B?U2VRTXdSNkZmZkRTdThkVXpHVk1oZ0xtQzFRdStzTVAyWjJMZzJ1QW9BaWZl?=
+ =?utf-8?B?WmJvZFJ0VzNKK0V4UXdpVThSUDJUa09BdWlWdXN1QTd5RmNONmtma0ZvVjV6?=
+ =?utf-8?B?R0dUZlVMTDNhQVhpUXF5WDBEeU91VjdPY1RCOTZQOExWeElLUUZwTU5nUzd2?=
+ =?utf-8?B?dVZpUUZ1eE5Dc0FJa2hUY0twbFIxdUhsMHJHeE93bDJ4MlRwcmN1RXpqMEU5?=
+ =?utf-8?B?bWI4TWZtWDFva3BLeXZuTWpFTVVXaCtBVElCd2I0Y1hQRjlJTTJYNm1sQ2pq?=
+ =?utf-8?B?M3p4TG1YQlNvQk5jQThhQXlYbVI1MWRhQXlUL1I0RFV4OGFyQnc0TXp6ajkz?=
+ =?utf-8?B?bk9KUGFzaUVPSG9kR1Z2YnRVcDlyMTU2Y09OY1AzYjFrMHk1eXc0eWkzUnFB?=
+ =?utf-8?B?WkdscGViMExWL0h0TzNzbkhuajh1SkVCWnorRFNiWWg5YXUraXJIazIyTXBN?=
+ =?utf-8?B?VTNOSklaR05GeTlha2p1TnRQZjNsVXBESDRTZU9GU01SUzIvdHh3QjBWV3Fk?=
+ =?utf-8?B?MW9zM2dITnNqYVREK2RWN0xMNFZjc0ViTVg3Rjkzb1pEVWN6NW5yclNSTXph?=
+ =?utf-8?B?Q3R3TzBoNlRtZ2pZWUFobVFmeWlkOE1oNXJrQi9oZkNlVEwwcFpLVkZhWDlP?=
+ =?utf-8?B?Tk9QZGFMWjhvVzJpNCtRSVRCdXBhdE9rUk1PcXJzVlFzcGV3dGF3WHZ5ZFBL?=
+ =?utf-8?B?dHJnWW1nOVlYL3A0Wjc2bmp5bHU3dm1FRDNaZUIvRkROdGRCT2owTmZndXdE?=
+ =?utf-8?B?OUxBdlM2Smd0SGc4R3h4S1RzbXYwZ1VYYkEySHFabDFGeENLNmJ4Z3l5NzRy?=
+ =?utf-8?B?aDNSSm4rdVJ3T3VoVDZScWFxQVgrWlduKy9iaXBmemxCRU9nUllHRXM1LzFE?=
+ =?utf-8?Q?oCqtG8Z7zRnH0mH1GndWqvLJZJqkhKGg6j+A4wn?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8a9f11ce-b383-4cac-6ee7-08d8efa504f3
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB3573.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Mar 2021 15:45:30.6668
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 94XHEdxDInYUwQKnMkL7a46w21LFQwfd+vm9sD3rgjIrA/rtpoKGhsH8QEAYD3IoUmET+eDvzEIg+cERqxDZKU97YTyZIfey0tFAeqNn0w0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3429
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9934 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 spamscore=0
+ mlxscore=0 phishscore=0 suspectscore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103250112
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9934 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
+ impostorscore=0 spamscore=0 mlxscore=0 suspectscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 adultscore=0 malwarescore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103250112
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 24 2021 at  9:21pm -0400,
-Zhiqiang Liu <liuzhiqiang26@huawei.com> wrote:
-
+On 3/25/21 4:32 AM, Gulam Mohamed wrote:
+> Description
+> ===========
+> 1. This Kernel panic could be due to a timing issue when there is a
+>    race between the sync thread and the initiator was processing of
+>    a login response from the target. The session re-open can be invoked
+>    from two places:
+>     a. Sessions sync thread when the iscsid restart
+>     b. From iscsid through iscsi error handler
+> 2. The session reopen sequence is as follows in user-space
+>         a. Disconnect the connection
+>         b. Then send the stop connection request to the kernel
+>            which releases the connection (releases the socket)
+>         c. Queues the reopen for 2 seconds delay
+>         d. Once the delay expires, create the TCP connection again by
+>            calling the connect() call
+>         e. Poll for the connection
+>         f. When poll is successful i.e when the TCP connection is
+>            established, it performs:
+>                i. Creation of session and connection data structures
+>               ii. Bind the connection to the session. This is the place
+>                   where we assign the sock to tcp_sw_conn->sock
+>              iii. Sets parameters like target name, persistent address
+>               iv. Creates the login pdu
+>                v. Sends the login pdu to kernel
+>               vi. Returns to the main loop to process further events.
+>                   The kernel then sends the login request over to the
+>                   target node
+>         g. Once login response with success is received, it enters full
+>            feature phase and sets the negotiable parameters like
+>            max_recv_data_length,max_transmit_length, data_digest etc.
+> 3. While setting the negotiable parameters by calling
+>    "iscsi_session_set_neg_params()", kernel panicked as sock was NULL
 > 
+> What happened here is
+> ---------------------
+> 1. Before initiator received the login response mentioned in above
+>    point 2.f.v, another reopen request was sent from the error
+>    handler/sync session for the same session, as the initiator utils
+>    was in main loop to process further events (as mentioned in point
+>    2.f.vi above).
+> 2. While processing this reopen, it stopped the connection which
+>    released the socket and queued this connection and at this point
+>    of time the login response was received for the earlier one
 > 
-> On 2021/3/22 22:22, Mike Snitzer wrote:
-> > On Mon, Mar 22 2021 at  4:11am -0400,
-> > Christoph Hellwig <hch@infradead.org> wrote:
-> > 
-> >> On Sat, Mar 20, 2021 at 03:19:23PM +0800, Zhiqiang Liu wrote:
-> >>> From: Zhiqiang Liu <liuzhiqiang26@huawei.com>
-> >>>
-> >>> When we make IO stress test on multipath device, there will
-> >>> be a metadata err because of wrong path. In the test, we
-> >>> concurrent execute 'iscsi device login|logout' and
-> >>> 'multipath -r' command with IO stress on multipath device.
-> >>> In some case, systemd-udevd may have not time to process
-> >>> uevents of iscsi device logout|login, and then 'multipath -r'
-> >>> command triggers multipathd daemon calls ioctl to load table
-> >>> with incorrect old device info from systemd-udevd.
-> >>> Then, one iscsi path may be incorrectly attached to another
-> >>> multipath which has different uuid. Finally, the metadata err
-> >>> occurs when umounting filesystem to down write metadata on
-> >>> the iscsi device which is actually not owned by the multipath
-> >>> device.
-> >>>
-> >>> So we need to check whether all pgpaths of one multipath have
-> >>> the same uuid, if not, we should throw a error.
-> >>>
-> >>> Signed-off-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
-> >>> Signed-off-by: lixiaokeng <lixiaokeng@huawei.com>
-> >>> Signed-off-by: linfeilong <linfeilong@huawei.com>
-> >>> Signed-off-by: Wubo <wubo40@huawei.com>
-> >>> ---
-> >>>  drivers/md/dm-mpath.c   | 52 +++++++++++++++++++++++++++++++++++++++++
-> >>>  drivers/scsi/scsi_lib.c |  1 +
-> >>>  2 files changed, 53 insertions(+)
-> >>>
-> >>> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> >>> index bced42f082b0..f0b995784b53 100644
-> >>> --- a/drivers/md/dm-mpath.c
-> >>> +++ b/drivers/md/dm-mpath.c
-> >>> @@ -24,6 +24,7 @@
-> >>>  #include <linux/workqueue.h>
-> >>>  #include <linux/delay.h>
-> >>>  #include <scsi/scsi_dh.h>
-> >>> +#include <linux/dm-ioctl.h>
-> >>>  #include <linux/atomic.h>
-> >>>  #include <linux/blk-mq.h>
-> >>>
-> >>> @@ -1169,6 +1170,45 @@ static int parse_features(struct dm_arg_set *as, struct multipath *m)
-> >>>  	return r;
-> >>>  }
-> >>>
-> >>> +#define SCSI_VPD_LUN_ID_PREFIX_LEN 4
-> >>> +#define MPATH_UUID_PREFIX_LEN 7
-> >>> +static int check_pg_uuid(struct priority_group *pg, char *md_uuid)
-> >>> +{
-> >>> +	char pgpath_uuid[DM_UUID_LEN] = {0};
-> >>> +	struct request_queue *q;
-> >>> +	struct pgpath *pgpath;
-> >>> +	struct scsi_device *sdev;
-> >>> +	ssize_t count;
-> >>> +	int r = 0;
-> >>> +
-> >>> +	list_for_each_entry(pgpath, &pg->pgpaths, list) {
-> >>> +		q = bdev_get_queue(pgpath->path.dev->bdev);
-> >>> +		sdev = scsi_device_from_queue(q);
-> >>
-> >> Common dm-multipath code should never poke into scsi internals.  This
-> >> is something for the device handler to check.  It probably also won't
-> >> work for all older devices.
-> > 
-> > Definitely.
-> > 
-> > But that aside, userspace (multipathd) _should_ be able to do extra
-> > validation, _before_ pushing down a new table to the kernel, rather than
-> > forcing the kernel to do it.
+> Fix
+> ---
+> 1. Add new connection state ISCSI_CONN_BOUND in "enum iscsi_connection
+>    _state"
+> 2. Set the connection state value to ISCSI_CONN_DOWN upon
+>    iscsi_if_ep_disconnect() and iscsi_if_stop_conn()
+> 3. Set the connection state to the newly created value ISCSI_CONN_BOUND
+>    after bind connection (transport->bind_conn())
+> 4. In iscsi_set_param, return -ENOTCONN if the connection state is not
+>    either ISCSI_CONN_BOUND or ISCSI_CONN_UP
 > 
-> As your said, it is better to do extra validation in userspace (multipathd).
-> However, in some cases, the userspace cannot see the real-time present devices
-> info as Martin (committer of multipath-tools) said.
-> In addition, the kernel can see right device info in the table at any time,
-> so the uuid check in kernel can ensure one multipath is composed with paths mapped to
-> the same device.
-> 
-> Considering the severity of the wrong path in multipath, I think it worths more
-> checking.
+> Signed-off-by: Gulam Mohamed <gulam.mohamed@oracle.com>
+>
 
-As already said: this should be fixable in userspace.  Please work with
-multipath-tools developers to address this.
-
-Mike
-
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
