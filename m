@@ -2,299 +2,164 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB6CC433C1
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 02:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07B5DC433C1
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 02:22:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2CA2961A1A
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 02:15:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3C8661A1A
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Mar 2021 02:22:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234111AbhCYCPC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Mar 2021 22:15:02 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:53365 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232040AbhCYCO6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Mar 2021 22:14:58 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1616638498; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=FGpXY2NdzTsPPbXNozOx92efrSaEJvejPaySL2FCurA=; b=ItvOmDW+5K1cr+4e7f4Y+rbwp6GcyccopcL49vi81jn+wRt9zvEniVH716SKvqDdfSXzUNIk
- JJHRAi7NRTuvrxgSX0/IwTOl3TFSDuqJEjxR8eq7c5Fji7IdutGMR4lDySyDrTvT+sOVE3du
- RXxDwXJK1wvxj2D8wmyRTJa54G4=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 605bf2222b0e10a0ba46778b (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 25 Mar 2021 02:14:58
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 13C06C43464; Thu, 25 Mar 2021 02:14:57 +0000 (UTC)
-Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 19158C433CA;
-        Thu, 25 Mar 2021 02:14:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 19158C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v12 1/2] scsi: ufs: Enable power management for wlun
-To:     Adrian Hunter <adrian.hunter@intel.com>, cang@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        id S234773AbhCYCWE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Mar 2021 22:22:04 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:46628 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234515AbhCYCWB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Mar 2021 22:22:01 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12P2Fsp3165623;
+        Thu, 25 Mar 2021 02:21:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=53TdSzgPUcy+hcQ7B+Rl2lAnJTsAHtKkxigO4I3Eye4=;
+ b=jQu+uJz0WQPmHVSWD9fzCdKkn8NRe1H/r5F5blUF595f6zmtR2ViebJScAXnSfKfNZme
+ Czot/g0uZCScmOFbfjbcH3rlg3gDO5R4BNWHR/p8ytyihoX/FV7bMF/wfxxoNmuYEWlN
+ ZWxPvZzqBIjy89DM8aOQpo6emzkd9hWyfoFU4XelC8DZdsAHDDnIVKbyQlV9CuinEyRo
+ THAqSz1mJXWvTomUSFTdjji2Dh6wrt0OC9vttSRcOnNpnh0q/POSsWdcIpwVXee3hL+Q
+ SPUJDAMuXoH02mXS4mBSfTqvDeFoprC/DGj31C6JORa6TMr6K21ioxtBkTAJtg7S8t7e Yw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 37d90mmrme-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 25 Mar 2021 02:21:57 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12P2KEIx196593;
+        Thu, 25 Mar 2021 02:21:56 GMT
+Received: from nam02-cy1-obe.outbound.protection.outlook.com (mail-cys01nam02lp2058.outbound.protection.outlook.com [104.47.37.58])
+        by userp3020.oracle.com with ESMTP id 37dttu3krw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 25 Mar 2021 02:21:56 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=F9AZOBzDCMDB/Gs+MmrwzFilyf7JDRNQaoJPclwaz194ZNcfVIcJk48TL+oQGqan2jBO9+/xBOwScQ0sm7O73GUxjZL3lNuYs5xYCKHy02ohkNWYkSa+reQaVeq25eQX9D5rHnm8Bbi7/sGHRh+Wsvq1DLBP8FI3k4TFAHBlfb67/1+O1xjSJvP7LTzpj6ePuCBTZfk9OxU/7yhSPFhexC4YBXty+wOqdvRF3kp+28Rbp3m3zGKcBndOVHoIb9Dz6w7wZ/hG5cpESCjS/v5B2JSbC1eBK+mJFYsKSnz4/aDowotaU05wP/NX8lAJLxyRNl56q8DgDpUs/AeNzvXbGg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=53TdSzgPUcy+hcQ7B+Rl2lAnJTsAHtKkxigO4I3Eye4=;
+ b=RFrAntQ8u/JwUnFBU1BTt0UygOkF4VcLXzrOdHUdm+6NWVJf5xbr+NI6AImQJWRz7L3CHxcCWmxEnXKVB+OLZX/yMAeM0SuoB/Z950gIbplZAhmENDEiTeeF472sRAMdqJ09yIEEdecLITQLansUr8UYIUB4AL0LOs69ddAeqedy71zB8Elek0ZzHEmh3H+/Kocht9H1644PjnH2QYHPrZHctyK4KcigrC5ieOy6BLTu9PvTsfIe7Uh5iz4hRH+TSRv4fvqfAsJ36MdtgJ8b8tNvs1aHuGe0kmq+KyY2Foya2tZYBliBV6uXkNnHcDZPdoyslpJ5wricwt16z+BIlA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=53TdSzgPUcy+hcQ7B+Rl2lAnJTsAHtKkxigO4I3Eye4=;
+ b=jvZ/69fFrstjPzf3LSwnbi51pmkS+icIZNoPgjTw1NjzLCinZnpB2ab9grFfnBhRWux8cZzwlzU8mzMzu4yfaYOYLKfWZlUAr15hdUP7ayw7yJa+qCEVxAfr+JaebiWj9LeGSRJXoK6jAibvR2hxn6xTfksMZv7X1l+T0IZGDp8=
+Authentication-Results: rasmusvillemoes.dk; dkim=none (message not signed)
+ header.d=none;rasmusvillemoes.dk; dmarc=none action=none
+ header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB5465.namprd10.prod.outlook.com (2603:10b6:510:e7::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3977.24; Thu, 25 Mar
+ 2021 02:21:54 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::dc39:c9fa:7365:8c8e]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::dc39:c9fa:7365:8c8e%5]) with mapi id 15.20.3977.025; Thu, 25 Mar 2021
+ 02:21:54 +0000
+To:     Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc:     Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Dinghao Liu <dinghao.liu@zju.edu.cn>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-samsung-soc@vger.kernel.org>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>
-References: <cover.1616113283.git.asutoshd@codeaurora.org>
- <56662082b6a17b448f40d87df7e52b45a5998c2a.1616113283.git.asutoshd@codeaurora.org>
- <88730ac9-d9c5-d758-d761-8c549c488aab@intel.com>
- <3268f1d9-03ae-17dd-87be-04bd6531334b@codeaurora.org>
- <e324d78e-f383-30e2-1a08-b98d442df206@intel.com>
- <834cec94-f4fc-606e-df69-853644f3d88e@codeaurora.org>
- <c92bec14-8457-7992-6714-398b467b67e3@intel.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <974c14d9-fbeb-0106-0f8a-9293e7db85bf@codeaurora.org>
-Date:   Wed, 24 Mar 2021 19:14:53 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: bnx2i: make bnx2i_process_iscsi_error simpler and
+ more robust
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1r1k4km6e.fsf@ca-mkp.ca.oracle.com>
+References: <20210310221602.2494422-1-linux@rasmusvillemoes.dk>
+Date:   Wed, 24 Mar 2021 22:21:51 -0400
+In-Reply-To: <20210310221602.2494422-1-linux@rasmusvillemoes.dk> (Rasmus
+        Villemoes's message of "Wed, 10 Mar 2021 23:16:02 +0100")
+Content-Type: text/plain
+X-Originating-IP: [138.3.200.58]
+X-ClientProxiedBy: BYAPR06CA0048.namprd06.prod.outlook.com
+ (2603:10b6:a03:14b::25) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-In-Reply-To: <c92bec14-8457-7992-6714-398b467b67e3@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by BYAPR06CA0048.namprd06.prod.outlook.com (2603:10b6:a03:14b::25) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3977.26 via Frontend Transport; Thu, 25 Mar 2021 02:21:53 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 6bbfff6b-c512-4b3e-4dd4-08d8ef34c1c0
+X-MS-TrafficTypeDiagnostic: PH0PR10MB5465:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB54657378109B417F0DC6B9788E629@PH0PR10MB5465.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2803;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: QPFrfPpXK01ku7L7ZSjU/bD7dA5IOgAuWnVxUNjN74Bli27BhZIzafztOxTwyD2iARnhr+NuixaftY8yM854z0sIDcyoDAa8mBJNJkTWVfUSxpGN4dW9U97kTH7MMzObTFRzyLn6q1O5ticswNZLQiTlaGoP/h2neNwYy8kMcaHze/hJ1EHvczArnt2zp+Oej5nGaGbYeydHGIKWSQKfIQkSpYNzJGixp4hL779bpttszBQg1RtKmSYg5UGq4gyMt5qgE6xHOqeN7ALSo4dOcnXpj57xqoiin7I205ke7JaBRoPxqxCh0nuQtIR5tUlXV426PmAlg3Wl3Q30lMn2xunPLS3QQIym2EbY4sqGT/FAitEfzW7ri4Ckdc18Q42bX5O+b3dd2Ex36ulnweLdpMCdrgO5azW30kfjNgedXPqRqCwQUQHlKw6J42bpNI5DoYhGnSc68uxRe3TPf3qaz36yElQc7KxKEv+b7yAyemiK+ayo4eyaP4hsuydmfsKtfMNSikJVYjAt1bpkA51O1C4RlGZTkUdS2azbkRg4jD0ko9SEqCVQBsUZy2loWzvg5eTA8U1G8rsGA5eFbJ9Yfuv+pKMPFkMcfKl9eZlKRgnZmBqVLadt+7czD+qQYnzQX1c6K3PY5s4p9WLmEfLsVfqFcpN3ysRJSkceM0vjoVA=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(376002)(366004)(39860400002)(396003)(136003)(7696005)(52116002)(66946007)(316002)(38100700001)(558084003)(6916009)(36916002)(86362001)(2906002)(5660300002)(956004)(16526019)(54906003)(186003)(83380400001)(478600001)(66556008)(66476007)(55016002)(8676002)(4326008)(26005)(8936002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?5+Xq+pRiZ/muhoIu7h+7J95tea0xaVuSm8wOS4cTvmw22gIDggCKhXmNkV60?=
+ =?us-ascii?Q?LB765uTtWo/J7TQzhJXLoAF+v7pXOQOUStmb/zgzm02hs8UxBA34TMHZJVtq?=
+ =?us-ascii?Q?tJajX/7+EjMH2FZEMAOr31uQ7EPAfPoGLGcQzezlZg2Qi4vG431qdo7KRzb7?=
+ =?us-ascii?Q?OZpO3m8YjMSpLbnUi+uvfvQnXIbdYVyjpZ/doaIensoCnQB6zLdAbsaewLTo?=
+ =?us-ascii?Q?VAyjImEn6SAewRxrijL6sC1ROAk9w3tRfMDUEACXuKM2uc4TQUEklrwibOeq?=
+ =?us-ascii?Q?7JoqqhEemEDKaUE0QlyT9dk/PDvUq55n2K/zNdq57iXAzVSzttrvgOdN7s1p?=
+ =?us-ascii?Q?hO5aa6BDRVLv0GL3q9b7FItjorf8TFkO/wMmAAznJRR5ceqLAoWbt2+Uz8M9?=
+ =?us-ascii?Q?B94l6nDWOdYEFYgewqkY58yMW6QjK5oFG4xIueks+ER0A2fkgX6XR8EWSy2l?=
+ =?us-ascii?Q?g70xTfDlWpTRWdcyNQCcjSQOmbWSVNu9tcaI1Y8NimwSJ1k6cPdvvTjRaq1A?=
+ =?us-ascii?Q?wzHlEzFifG1MetMwWyb3SoA82Fm0IFWfM+37COMJorlNB1QydX5xL92GkqXd?=
+ =?us-ascii?Q?lpnShZ9JnVlZkZPVZ3y/8NbQa932gaTumA7meUOlICjVzaAB1H/o42MFnJ7L?=
+ =?us-ascii?Q?CtW3LvhpXqVVq4hO8I2PqIuAFeDsyjTW3tOf/wEta8jD5rIS83/LTZzGxAzY?=
+ =?us-ascii?Q?VOLk1ilCSdsw6bb9TZHcFMi2IMZIGlpI+Mkomi/zZapAETC80ihrw6YWxPEQ?=
+ =?us-ascii?Q?W1sxc5SYSpXtwUote/1SXHWw5g74/G3IAn6ugCrLXRNtlZyDdnJ1J99zom5L?=
+ =?us-ascii?Q?iGiUQDgFDZdCs1CFZLEoHa8Q7l0aMQAFoZ0mYZxU53ReC2BV/xSYQI9elCm8?=
+ =?us-ascii?Q?VSsXTNEXUUld2PPsIiIUK7v34oy94j8wRD/IxGV/X6246sDG083XZriEBKK3?=
+ =?us-ascii?Q?mryrAwulV5w9HKRtAM7JjvbHkJ0I/qEtiPCmjPQ3yNnxE79zwQPWkHH0FrqB?=
+ =?us-ascii?Q?Fh+qHvFwqukyggbgUqhRqLMcfnEKdZTzvzgeSZYc0UKSFVXV9NkXLnD4WOnz?=
+ =?us-ascii?Q?HXI0SawWpXs54iNPkD4JkPzrC+SMeh3SY986CFIFI1h3stL8e7QlIU9IE5Lo?=
+ =?us-ascii?Q?7Mwtkc82KSDh6iYYc/nRrirzMuZTOQCA3I1oVaJVwjMN54XQyt3sLhJdNrvV?=
+ =?us-ascii?Q?Wi6+jca/Iqni1cROXFpm1oJ3vTz9voBwhI6HD49DifSjBoD6RZc62JdYOhlo?=
+ =?us-ascii?Q?Lch+rPEo3MeYy0sqew6Hs0DMB1RqX3Ak38YnCUZ24rdSPiKs3CRlaRo3Vay5?=
+ =?us-ascii?Q?2w3j4R2nPsT4pkf+3S8KWmtF?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6bbfff6b-c512-4b3e-4dd4-08d8ef34c1c0
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Mar 2021 02:21:54.2222
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: haO6Y/edVRV4SvuTCdEGhEX7c46TdrOmwJxjzzuvXHkECKmrwwjZ2VmQKlGZGaWjpnt8zMIS51lemlV9pmoL3aQ6kGPFMpAydE8I2HsCmrA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5465
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9933 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 spamscore=0
+ mlxscore=0 phishscore=0 suspectscore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103250016
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9933 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
+ priorityscore=1501 bulkscore=0 impostorscore=0 lowpriorityscore=0
+ phishscore=0 mlxlogscore=999 suspectscore=0 clxscore=1011 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103250015
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/23/2021 12:19 PM, Adrian Hunter wrote:
-> On 23/03/21 5:13 pm, Asutosh Das (asd) wrote:
->> On 3/22/2021 11:12 PM, Adrian Hunter wrote:
->>> On 22/03/21 9:53 pm, Asutosh Das (asd) wrote:
->>>> On 3/19/2021 10:47 AM, Adrian Hunter wrote:
->>>>> On 19/03/21 2:35 am, Asutosh Das wrote:
->>>>>> During runtime-suspend of ufs host, the scsi devices are
->>>>>> already suspended and so are the queues associated with them.
->>>>>> But the ufs host sends SSU to wlun during its runtime-suspend.
->>>>>> During the process blk_queue_enter checks if the queue is not in
->>>>>> suspended state. If so, it waits for the queue to resume, and never
->>>>>> comes out of it.
->>>>>> The commit
->>>>>> (d55d15a33: scsi: block: Do not accept any requests while suspended)
->>>>>> adds the check if the queue is in suspended state in blk_queue_enter().
->>>>>>
->>>>>> Call trace:
->>>>>>     __switch_to+0x174/0x2c4
->>>>>>     __schedule+0x478/0x764
->>>>>>     schedule+0x9c/0xe0
->>>>>>     blk_queue_enter+0x158/0x228
->>>>>>     blk_mq_alloc_request+0x40/0xa4
->>>>>>     blk_get_request+0x2c/0x70
->>>>>>     __scsi_execute+0x60/0x1c4
->>>>>>     ufshcd_set_dev_pwr_mode+0x124/0x1e4
->>>>>>     ufshcd_suspend+0x208/0x83c
->>>>>>     ufshcd_runtime_suspend+0x40/0x154
->>>>>>     ufshcd_pltfrm_runtime_suspend+0x14/0x20
->>>>>>     pm_generic_runtime_suspend+0x28/0x3c
->>>>>>     __rpm_callback+0x80/0x2a4
->>>>>>     rpm_suspend+0x308/0x614
->>>>>>     rpm_idle+0x158/0x228
->>>>>>     pm_runtime_work+0x84/0xac
->>>>>>     process_one_work+0x1f0/0x470
->>>>>>     worker_thread+0x26c/0x4c8
->>>>>>     kthread+0x13c/0x320
->>>>>>     ret_from_fork+0x10/0x18
->>>>>>
->>>>>> Fix this by registering ufs device wlun as a scsi driver and
->>>>>> registering it for block runtime-pm. Also make this as a
->>>>>> supplier for all other luns. That way, this device wlun
->>>>>> suspends after all the consumers and resumes after
->>>>>> hba resumes.
->>>>>>
->>>>>> Co-developed-by: Can Guo <cang@codeaurora.org>
->>>>>> Signed-off-by: Can Guo <cang@codeaurora.org>
->>>>>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->>>>>
->>>>> I have some more comments that may help straighten things out.
->>>>>
->>>>> Also please look at ufs_debugfs_get_user_access() and
->>>>> ufs_debugfs_put_user_access() that now need to scsi_autopm_get/put_device
->>>>> sdev_ufs_device.
->>>>>
->>>>> It would also be good if you could re-base on linux-next.
->>>>>
->>>>
->>>> Hi Adrian
->>>> Thanks for the comments.
->>>>
->>>> I agree moving the code to wlun probe and other changes.
->>>> But it looks to me that it may not fully solve the issue.
->>>>
->>>> Please let me explain my understanding on this:
->>>>
->>>> (Please refer to the logs in v10)
->>>> scsi_autopm_*() are invoked on a sdev.
->>>> pm_runtime_get_suppliers()/rpm_put_suppliers() are on the supplier device.
->>>>
->>>> For the device wlun:
->>>>       slave_configure():
->>>>           - doesn't set the rpm_autosuspend
->>>>           - pm_runtime_getnoresume()
->>>>       scsi_sysfs_add_sdev():
->>>>           - pm_runtime_forbid()
->>>>           - scsi_autopm_get_device()
->>>>           - device_add()
->>>>               - ufshcd_wl_probe()
->>>>           - scsi_autopm_put_device()
->>>>
->>>> For all other scsi devices:
->>>>       slave_alloc():
->>>>           - ufshcd_setup_links()
->>>> Say all link_add: pm_runtime_put(&hba->sdev_ufs_device->sdev_gendev);
->>>
->>> With DL_FLAG_RPM_ACTIVE, links will 'get' not 'put'
->>>
->> I'm referring to the pm_runtime_put(sdev_ufs_device) after all the links are setup, that you suggested to add.
-> 
-> Ok
-> 
->>>>       slave_configure():
->>>>           - set rpm_autosuspend
->>>>       scsi_sysfs_add_sdev():
->>>>           - scsi_autopm_get_device()
->>>>           - device_add() -> schedules an async probe()
->>>>           - scsi_autopm_put_device() - (1)
->>>>
->>>> Now the rpm_put_suppliers() can be invoked *after* pm_runtime_get_suppliers() of the async probe(), since both are running in different contexts.
->>>
->>> Only if the sd device suspends.
->>>
->> Correct. What'd stop the sd device from suspending?
->> We should be stopping the sd device from suspending here - imho.
-> 
 
-Hi Adrian,
-Thanks for the comments.
+Rasmus,
 
-> You mean for performance reasons.  That is something we can
-> look at, but let's get it working first.
-> 
-Not for performance reasons. I meant to say that this issue can be fixed 
-if we stop the sd devices from suspending until the sd_probe() is completed.
->>
->>>> In that case, the usage_count of supplier would be decremented until rpm_active of this link becomes 1.
->>>
->>> Right, because the sd device suspended.
->>>
->>>> Now the pm_runtime_get_suppliers() expects the link_active to be more than 1.
->>>
->>> Not sure what you mean here. pm_runtime_*put*_suppliers() won't do anything if the link count is 1.
->> I'm referring to the logs that I pasted before:
->> [    6.941267][    T7] scsi 0:0:0:4: rpm_put_suppliers: [BEF] Supp (0:0:0:49488) usage_count: 4 rpm_active: 3
->>
->> ------ T196 Context comes in while T7 is running ----------
->> [    6.941466][  T196] scsi 0:0:0:4: pm_runtime_get_suppliers: (0:0:0:49488): supp: usage_count: 5 rpm_active: 4
->> --------------------------------------------------------------
->>
->> [    7.788397][    T7] scsi 0:0:0:4: rpm_put_suppliers: [AFT] Supp (0:0:0:49488) usage_count: 2 rpm_active: 1
->>
->> I meant to say that, if the rpm_put_suppliers() is invoked after the pm_runtime_get_suppliers() as is seen above then the link_active may become 1 even *after* pm_runtime_get_suppliers() is invoked.
->>
->> I'm referring to the pm_runtime_get_suppliers() invoked from:
->> driver_probe_device() - say for, sd 0:0:0:x
->>      |- pm_runtime_get_suppliers() - for sd 0:0:0:49488
-> 
-> I am hoping that was the problem that Rafael's revert dealt with.
-> 
-I think the issue is in the sequence of events.
-If rpm_put_suppliers() runs after pm_runtime_get_suppliers() this issue 
-can occur.
+> Instead of strcpy'ing into a stack buffer, just let additional_notice
+> point to a string literal living in .rodata. This is better in a few
+> ways:
 
->>>
->>>> Now then, there comes a time, that when sd_probe() schedules a suspend, the supplier usage_count becomes 0 and the link_active becomes 1.
->>>> And the supplier suspends before the consumer.
->>>
->>> sd probe first resumes the sd device which will resume the supplier.
->>>
->> Correct, but it'd again schedule a suspend (since autosuspend is enabled now) at the end of the sd_probe().
->> Thereafter, pm_runtime_put_suppliers()(sd 0:0:0:49488) is invoked from driver_probe_device() which had actually invoked sd_probe().
->> That'd make the link_active to 1 even when sd 0:0:0:x is active.
-> 
-> If sd 0:0:0:x is active then rpm_get_suppliers() still has +1 rpm_active. pm_runtime_get_suppliers() also has +1 rpm_active.
-> i.e. rpm_active is 3. If rpm_put_suppliers() is called, it means sd 0:0:0:x has really runtime suspended (not just waiting for autosuspend.  Otherwise when the probe ends pm_runtime_put_suppliers() will drop rpm_active from 3 to 2.
-In the good case it'd drop from 3 to 2. But in the bad case, I see that 
-it drops to 1. That's when the supplier suspends before the consumer.
-That would happen when rpm_put_suppliers() runs after the 
-pm_runtime_get_suppliers() is completed and decrements the usage_count 
-of supplier until link_active is 1. At that point yes, sd 0:0:0:x has 
-really runtime-suspended. sd_probe() would resume it and schedule a 
-suspend at the end of probe.
-
-IIUC, below is the sequence of events that can lead to this issue:
-1. sd 0:0:0:x schedules an async probe
-2. sd 0:0:0:x invokes scsi_autopm_put_device()
-3. async probe completes pm_runtime_get_suppliers() increments the 
-rpm_active.
-4. suspend of sd 0:0:0:x is invoked and rpm_put_suppliers() is invoked 
-which decrements the link_active (this was incremented in 3 above)
-5. sd_probe() is invoked which resumes it and schedules a suspend
-6. pm_runtime_put_suppliers() is invoked which decreases the link_active 
-to 1 and supplier suspends before the consumer.
-
-So my solution was to stop sd 0:0:0:x from runtime suspending until the 
-sd_probe() is done.
-
-> 
-> But it is a bit theoretical.  Let's try it and see.
-> 
->>
->>>>
->>>> So I was wondering, what'd make sure that the pm_runtime_get_suppliers() from driver_probe_device() is invoked after scsi_autopm_put_device() (1) finishes the rpm_put_suppliers().
->>>>
->>>> Am not sure if I'm missing something in this.
->>>> Do you think, the current changes alone can fix the above issue?
->>>
->>> Yes, but let's see.
->>>
->> Essentially, we should stop the sd device from runtime suspending until it's probe is done. Then allow the same. Does it make sense?
->> Please let me know what you think.
-> 
-> I really think it would be good to try the changes that have been identified and see how it behaves.
-> 
-> Then go from there.
-> 
-Sure, I've pushed the changes v13 today.
-I will test it after the changes are finalized.
+Applied to 5.13/scsi-staging, thanks!
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+Martin K. Petersen	Oracle Linux Engineering
