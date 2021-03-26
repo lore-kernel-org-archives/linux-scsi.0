@@ -2,213 +2,570 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 525D7C433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Mar 2021 17:54:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43966C433E4
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Mar 2021 21:27:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D96F619F8
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Mar 2021 17:54:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3019061A48
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Mar 2021 21:27:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230213AbhCZRxu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Mar 2021 13:53:50 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:44802 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230294AbhCZRxq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Mar 2021 13:53:46 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12QHmvdZ107718;
-        Fri, 26 Mar 2021 17:53:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=qz8DrYJo1TzE+Sm1+wEAGIRBiFPKuuobS/93c2x2fqE=;
- b=MZhOUoKHHY3uUFaHJPKee+ixyNQvoqg6XcG6PUMj3Du/kCgMAypzD2ZPW3nRPxBpyMzL
- MDutMDYWbQBBISVpcYPzK1gY1VF8Se7Qo6glPIYJJ3CtWA7bSb7dDIpNOhsQDsCxl28Y
- MbrV++MKLEvyOoOX0xm0XodUBXJNeUuECHW4MtzrMFooMLFDWSi45wt+e+o8XfIk1+Ch
- FBd2QPRiT3GfC5l2CLgqbC/D2rRWcJjjHn+adGyz5HFn53KrSUpa4h838qZlOz9WA2Oz
- VdvRU8FjEtgGRAICMuM8MQE022RoGyCMU7/FZR74z0lyCWobSIp0yiYvvLyLF70HH6oP Lg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 37h13htwsm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 26 Mar 2021 17:53:40 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12QHkZdj083463;
-        Fri, 26 Mar 2021 17:53:40 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2168.outbound.protection.outlook.com [104.47.59.168])
-        by aserp3020.oracle.com with ESMTP id 37h14ndrd3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 26 Mar 2021 17:53:40 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XE2hHYIHDXNzONpiYMedjDnrDmQ8nQKn4XB3oe9gsP5sZNk0xbo8NX21Yp7lxHIoxP8ztE4HhQ1AG7LwRMqKERQDuTz0gV6xLZC80mpzNMUrSGUS3EQL8Y1tmRHZ/Z3196t0KXC12vbm+ihV4G3OJDdq7NmqhrnUcaDXzXurFTSGRD7oX8tbeEZnT7zBe7cxGG/gblvJq0ULxDcMRCRw6614QWUIDtLECqAOjie82g09SzMqP/H9YL6vp40xjHQFH8RUdd2RIilRcHo7iEM5akpUk/xm0QUjI/1d/kSN+FvTE9RIiqlJlUtZziKbuA/PrDhmURFTAqoJs/8Khyxcfw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qz8DrYJo1TzE+Sm1+wEAGIRBiFPKuuobS/93c2x2fqE=;
- b=I3H2JLsvBeh4us7GrIEY+0lHXXw78pxtz8GWe3qA/S8dbA3SGu42AlujZKBjf2osDhStbj4j+NK8wxSYGWL9ntfx2XNYQSm6DUuZb5RvlM/rITbE2OzsAkALAhKy7lgOUjxV091PWgmlYglmZI9n40BKi4NP5D2x5zJpviaJyZV3+pNfrA556CgBNj8VRsV7JeksrIt1V1OxQ6MmoOHbJ9xlvK1/uZH9tfbcp6jBSp5400t5+7GPSnd1T17JHrjd8hqPZdz1otmoMUOfNtrYBgChZZlvsP3Gv4OqN8GLtdvVkV781jJM7EDLmE0Xp9ZTlZswIvPPngO5EWaucrRJ5A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qz8DrYJo1TzE+Sm1+wEAGIRBiFPKuuobS/93c2x2fqE=;
- b=XuRkrJCDWfMs4YFE8z6wuUENCHewD5x4d/qX7buel2PdQsQoe0gIcPeQzWFqVs6zZZV07fLlgQYJB1pX4Ny79SeR9sGqi48j+DiyfhlxD/yPdGs8gBMix10NOQjxrupLS9FfFY9IwaqmEhiwJ+VvqTNBiRHTQ0AbCd4QA34eCQw=
-Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by SN6PR10MB2462.namprd10.prod.outlook.com (2603:10b6:805:47::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3955.18; Fri, 26 Mar
- 2021 17:53:38 +0000
-Received: from SN6PR10MB2943.namprd10.prod.outlook.com
- ([fe80::20c7:193:d737:7ab1]) by SN6PR10MB2943.namprd10.prod.outlook.com
- ([fe80::20c7:193:d737:7ab1%4]) with mapi id 15.20.3977.024; Fri, 26 Mar 2021
- 17:53:38 +0000
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-To:     Quinn Tran <qutran@marvell.com>
-CC:     Nilesh Javali <njavali@marvell.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: Re: [PATCH 03/11] qla2xxx: fix stuck session
-Thread-Topic: [PATCH 03/11] qla2xxx: fix stuck session
-Thread-Index: AQHXH59eHd5CtoHkrUakRJF4FqUzAqqRxLoAgAGHmoCAA0R0AIAAAd8A
-Date:   Fri, 26 Mar 2021 17:53:38 +0000
-Message-ID: <4788993C-2E43-4A60-8424-1E47A7CEBDF9@oracle.com>
-References: <20210323044257.26664-1-njavali@marvell.com>
- <20210323044257.26664-4-njavali@marvell.com>
- <bd9dd526-776b-87a4-9b81-634ce687e393@acm.org>
- <97BE89B8-9B44-4AAB-AF5F-62E7E3A6D622@oracle.com>
- <BY5PR18MB3345D49A244A704C3C70EE2CD5619@BY5PR18MB3345.namprd18.prod.outlook.com>
-In-Reply-To: <BY5PR18MB3345D49A244A704C3C70EE2CD5619@BY5PR18MB3345.namprd18.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3608.120.23.2.4)
-authentication-results: marvell.com; dkim=none (message not signed)
- header.d=none;marvell.com; dmarc=none action=none header.from=oracle.com;
-x-originating-ip: [70.114.128.235]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 347350a4-6580-4d99-a6a6-08d8f08015ba
-x-ms-traffictypediagnostic: SN6PR10MB2462:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR10MB2462069EF8750B416D0EFFF6E6619@SN6PR10MB2462.namprd10.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:4941;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: kz53GOamttrhYiquv++Kf123VPrk80RJbmXt3BkMu6requTgEAXEFuvICnC+lmCfiMzaLcPllLQjiKjs8Dw3zfOQ0b28yJw5ZjFNJEg8eqXXVdDVWA5gfDdxgVcpErEHfy0FzDLdfkiLd6ph4rr3zh6uCyWstFTzP0TbprQKLhg4KJ1f0cc+3wAzx0cdTOosj5BLw2LmYUNnxqYTmSk1PmPKvjtejE9WAiOWburHPsMqTIyPmOt2YSGrBXKRLGsuowOM+hiqp4MYMeNpRsU4mHoa31wMPU04eeO3cveDOytYwhMhUiK3CnBQezrKugT1BXMRuMN2oBZYEC1BVr2sl98NI964qaXYOcyiE/smZc2aL/PakYrkmZ9DhQkKdR8sQSNVwE6q6yGvfcHD0Qar+Nk9vzxwP7c8Bh5ykQfXIyqwdRj83ILgT728tCZzphIUbC34JCnDjNkjtcDXJSNXjOKII/FQbzKw7jS7EyagWnZ+TUPPjvAuBNAsncTerIOXBsp5af8zy+XBvA2EkKLcZvpxxvHTi3dEbU5t7ywPgJMEbTBUERDz7kvX69s0dcoukJ6txqxmK+rJt8JRGM1Eib3c8TaeGPlZtGNdZ3Ti80D5qFsJdYsaLF8Db7rLo42SjiRiblvS5JphgZO8OOf4K1WBcKWytcEXT2buaNcDCA5HVh0KyRY42UURYCp00uXX
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(396003)(136003)(366004)(39860400002)(376002)(26005)(54906003)(2616005)(316002)(36756003)(6486002)(8936002)(8676002)(4326008)(2906002)(6916009)(86362001)(44832011)(64756008)(33656002)(66556008)(6512007)(66946007)(478600001)(38100700001)(6506007)(76116006)(186003)(71200400001)(66476007)(66446008)(53546011)(83380400001)(5660300002)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?PErguRk3KwEwpr+66V5VjKoHtc4nUSQ8BYyQyDA1vqJbOPZlDgoJyjJgt57s?=
- =?us-ascii?Q?PXMY0fgM3Lk0yuEIj28W8KHjzLdOpzr01P8ryWpTFSuDWQ1uEGIpC5nsBD1e?=
- =?us-ascii?Q?3/C9a/i5qd294YZNrNV6ds0HhyBQ4+TjBL/kcPTIQy506+o0eg5S8R18IBjb?=
- =?us-ascii?Q?g+9Cv4JIma08Pk25ccPLFK5iuPbQVym0OKJ/iKCcyksolQcsfQolBhCA0c3r?=
- =?us-ascii?Q?3JJoUxsIGEiBeRnZKPoaoXJUC6wG2t/XRP6XtTY5n9ZlnHsiW+MkuaTw06Fx?=
- =?us-ascii?Q?KMwIRPOxjHCpG2Sy8Ld9V7zLd2yeQXKX8gP8uwGIAfwj4nmCauAy8Oxi9ACU?=
- =?us-ascii?Q?YOezGpN2xTJ7dHi9dYlSr1BSCunwZRbCz7Ku7QkJd97I6xltoMFKWny+t2LT?=
- =?us-ascii?Q?QKNNAh2S332KrK8qQYxfatzAb3FQrWF6tl8PbUTS0myE0dYy5cJiMYeBQ/yi?=
- =?us-ascii?Q?p53DD1kjrMnx9wJXfHo2x01S+lNWCeCU7HLPpgWM7jx19YhUKSSnXGgG4Jwo?=
- =?us-ascii?Q?myZK0o0CMu4c6XZThGS0fMti48jx+kUFbEEJlYJ6LvAr/52ieXA7J8Cl0oWs?=
- =?us-ascii?Q?YkxGwTEDfnuYhaO3eI/mvQagRdUYu0yQAP4zTEGXzP2Y7rJbb1dO71viFAnb?=
- =?us-ascii?Q?0SZMxJ7Cq5D8qSiI0x2xTPf43Zr7YCoP9pEUmMtmq9PTRXUGuAjYGGyKVzu9?=
- =?us-ascii?Q?FokZ5yRt/JB+88qg+MgC3CLf3wytCM50qBlvb5VSsKDKsC4rA/PI6ik2UK9B?=
- =?us-ascii?Q?j8Az0BgMbWBe5Zv34Jv5l+EjSsjzrPCr6N7Ylohpl/qvD7Rs/cHULgqOOmPx?=
- =?us-ascii?Q?Ce/n+4LHnBpHHNbQbNGdQj2TOJN1J6nyRz8ykmAr5Fj4BuDkxWxjoOrwnrWH?=
- =?us-ascii?Q?rdJyBgWDc940ExW+y2yiCdE5mAPqPIbpeQjyE1zQHgf6n78WEm+vBQRFbesm?=
- =?us-ascii?Q?X/zo3do+GRY7vZatrZUZJlLPl7rUXB2pAhrwJnq6lygLQi+uWQ1KfXvEJGdn?=
- =?us-ascii?Q?po7aKk1biKbF2gCUE30evuOZaFbugCYXsMWjEqRWQYjJ1rZx2Cnho9uwUZVl?=
- =?us-ascii?Q?PaYT37Bxo3h/KO+F7fyQeg567had9gu03rRKdQF4jHl9e25K7Q5nSGVHELLn?=
- =?us-ascii?Q?S+aM/IglOePnU7YQyOKZoCLlfDJTYm11uivmFr318sH+Fcvbz6BBJJ3QbATk?=
- =?us-ascii?Q?9vZ0yzMQh00bMw116XeMRM9dhfC0RffDPc4Uz/Z4BFIxgqGcdafP37t8Eu+4?=
- =?us-ascii?Q?9CfGfXkqkLbqTFPgOMLtm51QsJgTjJuQei6tYiD3MrPZjKKumRDOQDKkQ81i?=
- =?us-ascii?Q?AqZybIdHVItz8y2fQe2j9lOmeefPdjAD9ecNcPb7LnpqJw=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <63D97D562B0876418D8480FB545F3626@namprd10.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        id S229969AbhCZV1M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Mar 2021 17:27:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39196 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230134AbhCZV06 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Mar 2021 17:26:58 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 80AB661A21;
+        Fri, 26 Mar 2021 21:26:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616794017;
+        bh=7O/qnfEfgENe5RwTuOKe0g9oml2abEFSHFzw4/w7xns=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=Fq26EzALm532RA5d5wziuixDOvJwleER4h9BiWKqNxEFrqUeUt//Zq0tflLSda2dt
+         rckTEiaIZvsfvsJd9cjLt0Q5OSDaxfZP5ZT1NIm/L7p9THNWjvY5+AZh+Fef4vGQ3w
+         kBRlLA+ese6Pq/El/PGL/5M66cmGiIpqQQBfgY5eCbFeYQU+lD/0Ky8+mrEKr4EqRn
+         6MB0tiaC09Qf3nHvIOSrImPG7J9Vp5nlV/uLS89VQx1wKvT2LEHnRrzkC+SC8sIwTZ
+         7ztH5hDD18CYTM75wNYzhoHVzxxafxZCzOOKGtrigQHUpN5+Qb92axR7SS9cZ4J1LB
+         uiXX4mBRbSy9g==
+Date:   Fri, 26 Mar 2021 16:26:55 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Heiner Kallweit <hkallweit1@gmail.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
+        Viresh Kumar <vireshk@kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        David Miller <davem@davemloft.net>,
+        Lee Jones <lee.jones@linaro.org>,
+        Ion Badulescu <ionut@badula.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Lino Sanfilippo <LinoSanfilippo@gmx.de>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Adam Radford <aradford@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Peter Chen <Peter.Chen@nxp.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        linux-doc@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-ide@vger.kernel.org, dmaengine@vger.kernel.org,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        linux-parisc@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        linux-serial@vger.kernel.org,
+        Linux USB Mailing List <linux-usb@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] PCI: Remove pci_try_set_mwi
+Message-ID: <20210326212655.GA912670@bjorn-Precision-5520>
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 347350a4-6580-4d99-a6a6-08d8f08015ba
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Mar 2021 17:53:38.2929
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 2XubWncDZvSxNiXi0T2HaGpaJ7SaVQ+/gFJSiQzh5L+HEwOlWlOVyTrq3Vd/GABnKj/CeRx0xOyI+0/FT/C889FpAEaJlJ4kpQsnktBf298=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR10MB2462
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9935 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
- mlxlogscore=999 spamscore=0 adultscore=0 malwarescore=0 mlxscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2103250000 definitions=main-2103260132
-X-Proofpoint-GUID: GxfW_4OApj9Npkad4DqQk1Ea-wTixGfk
-X-Proofpoint-ORIG-GUID: GxfW_4OApj9Npkad4DqQk1Ea-wTixGfk
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9935 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 mlxscore=0
- spamscore=0 impostorscore=0 malwarescore=0 lowpriorityscore=0
- suspectscore=0 clxscore=1015 adultscore=0 phishscore=0 mlxlogscore=999
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2103250000 definitions=main-2103260132
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4d535d35-6c8c-2bd8-812b-2b53194ce0ec@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+[+cc Randy, Andrew (though I'm sure you have zero interest in this
+ancient question :))]
 
+On Wed, Dec 09, 2020 at 09:31:21AM +0100, Heiner Kallweit wrote:
+> pci_set_mwi() and pci_try_set_mwi() do exactly the same, just that the
+> former one is declared as __must_check. However also some callers of
+> pci_set_mwi() have a comment that it's an optional feature. I don't
+> think there's much sense in this separation and the use of
+> __must_check. Therefore remove pci_try_set_mwi() and remove the
+> __must_check attribute from pci_set_mwi().
+> I don't expect either function to be used in new code anyway.
 
-> On Mar 26, 2021, at 12:46 PM, Quinn Tran <qutran@marvell.com> wrote:
->=20
->=20
->=20
->> On Mar 23, 2021, at 11:31 AM, Bart Van Assche <bvanassche@acm.org> wrote=
-:
->>=20
->> On 3/22/21 9:42 PM, Nilesh Javali wrote:
->>> diff --git a/drivers/scsi/qla2xxx/qla_target.c=20
->>> b/drivers/scsi/qla2xxx/qla_target.c
->>> index c48daf52725d..fa8c4dae8dce 100644
->>> --- a/drivers/scsi/qla2xxx/qla_target.c
->>> +++ b/drivers/scsi/qla2xxx/qla_target.c
->>> @@ -1029,7 +1029,7 @@ void qlt_free_session_done(struct work_struct *wo=
-rk)
->>> 			}
->>> 			msleep(100);
->>> 			cnt++;
->>> -			if (cnt > 200)
->>> +			if (cnt > 230)
->>> 				break;
->>> 		}
->>=20
->> One magic constant is changed into another magic constant and that is=20
->> sufficient to fix a bug? Please add a comment that explains the=20
->> meaning of that constant.
->>=20
->=20
-> Agree with Bart here.=20
->=20
-> How did you come up with this new count value?  Some more details (either=
- in commit message or actual comment in code) would definitely help underst=
-and. If you have some log message snippet or stack trace add that to commit=
- message.
->=20
-> QT:  FW timeout is 20seconds (cnt=3D200).  Driver time out is set at 22 s=
-econds (220) to monitor the logout (2 seconds pad for worst case).   Changi=
-ng from 200 -> 230 to allow the logout thread to finish its sequence before=
- advancing the state.   Previous setting at 200/20s create a race condition=
- where driver was allow to advance to relogin, while the logout completion =
-straddles behind and modifies fields that interfere with the relogin.  This=
- led to session being stuck.
->=20
+There's not much I like better than removing things.  But some
+significant thought went into adding pci_try_set_mwi() in the first
+place, so I need a little more convincing about why it's safe to
+remove it.
 
-Would you add this as a comment above the if() statement for the future wou=
-ld be nice.
+The argument should cite the discussion about adding it.  I think one
+of the earliest conversations is here:
+https://lore.kernel.org/linux-ide/20070404213704.224128ec.randy.dunlap@oracle.com/
 
-You can add my R-B to the patch =20
->=20
-
---
-Himanshu Madhani	 Oracle Linux Engineering
-
+> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+> ---
+> patch applies on top of pci/misc for v5.11
+> ---
+>  Documentation/PCI/pci.rst                     |  5 +----
+>  drivers/ata/pata_cs5530.c                     |  2 +-
+>  drivers/ata/sata_mv.c                         |  2 +-
+>  drivers/dma/dw/pci.c                          |  2 +-
+>  drivers/dma/hsu/pci.c                         |  2 +-
+>  drivers/ide/cs5530.c                          |  2 +-
+>  drivers/mfd/intel-lpss-pci.c                  |  2 +-
+>  drivers/net/ethernet/adaptec/starfire.c       |  2 +-
+>  drivers/net/ethernet/alacritech/slicoss.c     |  2 +-
+>  drivers/net/ethernet/dec/tulip/tulip_core.c   |  5 +----
+>  drivers/net/ethernet/sun/cassini.c            |  4 ++--
+>  drivers/net/wireless/intersil/p54/p54pci.c    |  2 +-
+>  .../intersil/prism54/islpci_hotplug.c         |  3 +--
+>  .../wireless/realtek/rtl818x/rtl8180/dev.c    |  2 +-
+>  drivers/pci/pci.c                             | 19 -------------------
+>  drivers/scsi/3w-9xxx.c                        |  4 ++--
+>  drivers/scsi/3w-sas.c                         |  4 ++--
+>  drivers/scsi/csiostor/csio_init.c             |  2 +-
+>  drivers/scsi/lpfc/lpfc_init.c                 |  2 +-
+>  drivers/scsi/qla2xxx/qla_init.c               |  8 ++++----
+>  drivers/scsi/qla2xxx/qla_mr.c                 |  2 +-
+>  drivers/tty/serial/8250/8250_lpss.c           |  2 +-
+>  drivers/usb/chipidea/ci_hdrc_pci.c            |  2 +-
+>  drivers/usb/gadget/udc/amd5536udc_pci.c       |  2 +-
+>  drivers/usb/gadget/udc/net2280.c              |  2 +-
+>  drivers/usb/gadget/udc/pch_udc.c              |  2 +-
+>  include/linux/pci.h                           |  5 ++---
+>  27 files changed, 33 insertions(+), 60 deletions(-)
+> 
+> diff --git a/Documentation/PCI/pci.rst b/Documentation/PCI/pci.rst
+> index 814b40f83..120362cc9 100644
+> --- a/Documentation/PCI/pci.rst
+> +++ b/Documentation/PCI/pci.rst
+> @@ -226,10 +226,7 @@ If the PCI device can use the PCI Memory-Write-Invalidate transaction,
+>  call pci_set_mwi().  This enables the PCI_COMMAND bit for Mem-Wr-Inval
+>  and also ensures that the cache line size register is set correctly.
+>  Check the return value of pci_set_mwi() as not all architectures
+> -or chip-sets may support Memory-Write-Invalidate.  Alternatively,
+> -if Mem-Wr-Inval would be nice to have but is not required, call
+> -pci_try_set_mwi() to have the system do its best effort at enabling
+> -Mem-Wr-Inval.
+> +or chip-sets may support Memory-Write-Invalidate.
+>  
+>  
+>  Request MMIO/IOP resources
+> diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
+> index ad75d02b6..8654b3ae1 100644
+> --- a/drivers/ata/pata_cs5530.c
+> +++ b/drivers/ata/pata_cs5530.c
+> @@ -214,7 +214,7 @@ static int cs5530_init_chip(void)
+>  	}
+>  
+>  	pci_set_master(cs5530_0);
+> -	pci_try_set_mwi(cs5530_0);
+> +	pci_set_mwi(cs5530_0);
+>  
+>  	/*
+>  	 * Set PCI CacheLineSize to 16-bytes:
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index 664ef658a..ee37755ea 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -4432,7 +4432,7 @@ static int mv_pci_init_one(struct pci_dev *pdev,
+>  	mv_print_info(host);
+>  
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  	return ata_host_activate(host, pdev->irq, mv_interrupt, IRQF_SHARED,
+>  				 IS_GEN_I(hpriv) ? &mv5_sht : &mv6_sht);
+>  }
+> diff --git a/drivers/dma/dw/pci.c b/drivers/dma/dw/pci.c
+> index 1142aa6f8..1c20b7485 100644
+> --- a/drivers/dma/dw/pci.c
+> +++ b/drivers/dma/dw/pci.c
+> @@ -30,7 +30,7 @@ static int dw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
+>  	}
+>  
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+>  	if (ret)
+> diff --git a/drivers/dma/hsu/pci.c b/drivers/dma/hsu/pci.c
+> index 07cc7320a..420dd3706 100644
+> --- a/drivers/dma/hsu/pci.c
+> +++ b/drivers/dma/hsu/pci.c
+> @@ -73,7 +73,7 @@ static int hsu_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	}
+>  
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+>  	if (ret)
+> diff --git a/drivers/ide/cs5530.c b/drivers/ide/cs5530.c
+> index 5bb46e713..5d2c421ab 100644
+> --- a/drivers/ide/cs5530.c
+> +++ b/drivers/ide/cs5530.c
+> @@ -168,7 +168,7 @@ static int init_chipset_cs5530(struct pci_dev *dev)
+>  	 */
+>  
+>  	pci_set_master(cs5530_0);
+> -	pci_try_set_mwi(cs5530_0);
+> +	pci_set_mwi(cs5530_0);
+>  
+>  	/*
+>  	 * Set PCI CacheLineSize to 16-bytes:
+> diff --git a/drivers/mfd/intel-lpss-pci.c b/drivers/mfd/intel-lpss-pci.c
+> index 2d7c588ef..a0c3be750 100644
+> --- a/drivers/mfd/intel-lpss-pci.c
+> +++ b/drivers/mfd/intel-lpss-pci.c
+> @@ -39,7 +39,7 @@ static int intel_lpss_pci_probe(struct pci_dev *pdev,
+>  
+>  	/* Probably it is enough to set this for iDMA capable devices only */
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	ret = intel_lpss_probe(&pdev->dev, info);
+>  	if (ret)
+> diff --git a/drivers/net/ethernet/adaptec/starfire.c b/drivers/net/ethernet/adaptec/starfire.c
+> index 555299737..1dbff34c4 100644
+> --- a/drivers/net/ethernet/adaptec/starfire.c
+> +++ b/drivers/net/ethernet/adaptec/starfire.c
+> @@ -679,7 +679,7 @@ static int starfire_init_one(struct pci_dev *pdev,
+>  	pci_set_master(pdev);
+>  
+>  	/* enable MWI -- it vastly improves Rx performance on sparc64 */
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  #ifdef ZEROCOPY
+>  	/* Starfire can do TCP/UDP checksumming */
+> diff --git a/drivers/net/ethernet/alacritech/slicoss.c b/drivers/net/ethernet/alacritech/slicoss.c
+> index 696517eae..544510f57 100644
+> --- a/drivers/net/ethernet/alacritech/slicoss.c
+> +++ b/drivers/net/ethernet/alacritech/slicoss.c
+> @@ -1749,7 +1749,7 @@ static int slic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  	}
+>  
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	slic_configure_pci(pdev);
+>  
+> diff --git a/drivers/net/ethernet/dec/tulip/tulip_core.c b/drivers/net/ethernet/dec/tulip/tulip_core.c
+> index c1dcd6ca1..4f6debb24 100644
+> --- a/drivers/net/ethernet/dec/tulip/tulip_core.c
+> +++ b/drivers/net/ethernet/dec/tulip/tulip_core.c
+> @@ -1193,10 +1193,7 @@ static void tulip_mwi_config(struct pci_dev *pdev, struct net_device *dev)
+>  	/* if we have any cache line size at all, we can do MRM and MWI */
+>  	csr0 |= MRM | MWI;
+>  
+> -	/* Enable MWI in the standard PCI command bit.
+> -	 * Check for the case where MWI is desired but not available
+> -	 */
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	/* read result from hardware (in case bit refused to enable) */
+>  	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
+> diff --git a/drivers/net/ethernet/sun/cassini.c b/drivers/net/ethernet/sun/cassini.c
+> index 9ff894ba8..9a95ec989 100644
+> --- a/drivers/net/ethernet/sun/cassini.c
+> +++ b/drivers/net/ethernet/sun/cassini.c
+> @@ -4933,14 +4933,14 @@ static int cas_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  	pci_cmd &= ~PCI_COMMAND_SERR;
+>  	pci_cmd |= PCI_COMMAND_PARITY;
+>  	pci_write_config_word(pdev, PCI_COMMAND, pci_cmd);
+> -	if (pci_try_set_mwi(pdev))
+> +	if (pci_set_mwi(pdev))
+>  		pr_warn("Could not enable MWI for %s\n", pci_name(pdev));
+>  
+>  	cas_program_bridge(pdev);
+>  
+>  	/*
+>  	 * On some architectures, the default cache line size set
+> -	 * by pci_try_set_mwi reduces perforamnce.  We have to increase
+> +	 * by pci_set_mwi reduces performance.  We have to increase
+>  	 * it for this case.  To start, we'll print some configuration
+>  	 * data.
+>  	 */
+> diff --git a/drivers/net/wireless/intersil/p54/p54pci.c b/drivers/net/wireless/intersil/p54/p54pci.c
+> index e97ee547b..c76326d1e 100644
+> --- a/drivers/net/wireless/intersil/p54/p54pci.c
+> +++ b/drivers/net/wireless/intersil/p54/p54pci.c
+> @@ -583,7 +583,7 @@ static int p54p_probe(struct pci_dev *pdev,
+>  	}
+>  
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	pci_write_config_byte(pdev, 0x40, 0);
+>  	pci_write_config_byte(pdev, 0x41, 0);
+> diff --git a/drivers/net/wireless/intersil/prism54/islpci_hotplug.c b/drivers/net/wireless/intersil/prism54/islpci_hotplug.c
+> index 31a1e6132..e8087d9a5 100644
+> --- a/drivers/net/wireless/intersil/prism54/islpci_hotplug.c
+> +++ b/drivers/net/wireless/intersil/prism54/islpci_hotplug.c
+> @@ -153,8 +153,7 @@ prism54_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	DEBUG(SHOW_TRACING, "%s: pci_set_master(pdev)\n", DRV_NAME);
+>  	pci_set_master(pdev);
+>  
+> -	/* enable MWI */
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	/* setup the network device interface and its structure */
+>  	if (!(ndev = islpci_setup(pdev))) {
+> diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
+> index 2477e18c7..b259b0b58 100644
+> --- a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
+> +++ b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
+> @@ -1871,7 +1871,7 @@ static int rtl8180_probe(struct pci_dev *pdev,
+>  
+>  	if (priv->chip_family != RTL818X_CHIP_FAMILY_RTL8180) {
+>  		priv->band.n_bitrates = ARRAY_SIZE(rtl818x_rates);
+> -		pci_try_set_mwi(pdev);
+> +		pci_set_mwi(pdev);
+>  	}
+>  
+>  	if (priv->chip_family != RTL818X_CHIP_FAMILY_RTL8180)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 9a5500287..f0ab432d2 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4389,25 +4389,6 @@ int pcim_set_mwi(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL(pcim_set_mwi);
+>  
+> -/**
+> - * pci_try_set_mwi - enables memory-write-invalidate PCI transaction
+> - * @dev: the PCI device for which MWI is enabled
+> - *
+> - * Enables the Memory-Write-Invalidate transaction in %PCI_COMMAND.
+> - * Callers are not required to check the return value.
+> - *
+> - * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
+> - */
+> -int pci_try_set_mwi(struct pci_dev *dev)
+> -{
+> -#ifdef PCI_DISABLE_MWI
+> -	return 0;
+> -#else
+> -	return pci_set_mwi(dev);
+> -#endif
+> -}
+> -EXPORT_SYMBOL(pci_try_set_mwi);
+> -
+>  /**
+>   * pci_clear_mwi - disables Memory-Write-Invalidate for device dev
+>   * @dev: the PCI device to disable
+> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+> index b4718a1b2..d869485e2 100644
+> --- a/drivers/scsi/3w-9xxx.c
+> +++ b/drivers/scsi/3w-9xxx.c
+> @@ -2018,7 +2018,7 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>  	}
+>  
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+>  	if (retval)
+> @@ -2227,7 +2227,7 @@ static int __maybe_unused twa_resume(struct device *dev)
+>  
+>  	printk(KERN_WARNING "3w-9xxx: Resuming host %d.\n", tw_dev->host->host_no);
+>  
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+>  	if (retval)
+> diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
+> index b8f1848ec..49ca153b8 100644
+> --- a/drivers/scsi/3w-sas.c
+> +++ b/drivers/scsi/3w-sas.c
+> @@ -1571,7 +1571,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>  	}
+>  
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+>  	if (retval)
+> @@ -1790,7 +1790,7 @@ static int __maybe_unused twl_resume(struct device *dev)
+>  	TW_Device_Extension *tw_dev = (TW_Device_Extension *)host->hostdata;
+>  
+>  	printk(KERN_WARNING "3w-sas: Resuming host %d.\n", tw_dev->host->host_no);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+>  	if (retval)
+> diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
+> index 390b07bf9..c20bf44c6 100644
+> --- a/drivers/scsi/csiostor/csio_init.c
+> +++ b/drivers/scsi/csiostor/csio_init.c
+> @@ -201,7 +201,7 @@ csio_pci_init(struct pci_dev *pdev, int *bars)
+>  		goto err_disable_device;
+>  
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	rv = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+>  	if (rv)
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index ac67f420e..b4833c0f8 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -6119,7 +6119,7 @@ lpfc_enable_pci_dev(struct lpfc_hba *phba)
+>  		goto out_disable_device;
+>  	/* Set up device as PCI master and save state for EEH */
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  	pci_save_state(pdev);
+>  
+>  	/* PCIe EEH recovery on powerpc platforms needs fundamental reset */
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+> index 5626e9b69..76019dc2e 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -2356,7 +2356,7 @@ qla2100_pci_config(scsi_qla_host_t *vha)
+>  	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+>  
+>  	pci_set_master(ha->pdev);
+> -	pci_try_set_mwi(ha->pdev);
+> +	pci_set_mwi(ha->pdev);
+>  
+>  	pci_read_config_word(ha->pdev, PCI_COMMAND, &w);
+>  	w |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+> @@ -2388,7 +2388,7 @@ qla2300_pci_config(scsi_qla_host_t *vha)
+>  	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+>  
+>  	pci_set_master(ha->pdev);
+> -	pci_try_set_mwi(ha->pdev);
+> +	pci_set_mwi(ha->pdev);
+>  
+>  	pci_read_config_word(ha->pdev, PCI_COMMAND, &w);
+>  	w |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+> @@ -2469,7 +2469,7 @@ qla24xx_pci_config(scsi_qla_host_t *vha)
+>  	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+>  
+>  	pci_set_master(ha->pdev);
+> -	pci_try_set_mwi(ha->pdev);
+> +	pci_set_mwi(ha->pdev);
+>  
+>  	pci_read_config_word(ha->pdev, PCI_COMMAND, &w);
+>  	w |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+> @@ -2511,7 +2511,7 @@ qla25xx_pci_config(scsi_qla_host_t *vha)
+>  	struct qla_hw_data *ha = vha->hw;
+>  
+>  	pci_set_master(ha->pdev);
+> -	pci_try_set_mwi(ha->pdev);
+> +	pci_set_mwi(ha->pdev);
+>  
+>  	pci_read_config_word(ha->pdev, PCI_COMMAND, &w);
+>  	w |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+> diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+> index ca7306685..e9763d8e3 100644
+> --- a/drivers/scsi/qla2xxx/qla_mr.c
+> +++ b/drivers/scsi/qla2xxx/qla_mr.c
+> @@ -499,7 +499,7 @@ qlafx00_pci_config(scsi_qla_host_t *vha)
+>  	struct qla_hw_data *ha = vha->hw;
+>  
+>  	pci_set_master(ha->pdev);
+> -	pci_try_set_mwi(ha->pdev);
+> +	pci_set_mwi(ha->pdev);
+>  
+>  	pci_read_config_word(ha->pdev, PCI_COMMAND, &w);
+>  	w |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+> diff --git a/drivers/tty/serial/8250/8250_lpss.c b/drivers/tty/serial/8250/8250_lpss.c
+> index 4dee8a9e0..8acc1e5c9 100644
+> --- a/drivers/tty/serial/8250/8250_lpss.c
+> +++ b/drivers/tty/serial/8250/8250_lpss.c
+> @@ -193,7 +193,7 @@ static void qrk_serial_setup_dma(struct lpss8250 *lpss, struct uart_port *port)
+>  	if (ret)
+>  		return;
+>  
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	/* Special DMA address for UART */
+>  	dma->rx_dma_addr = 0xfffff000;
+> diff --git a/drivers/usb/chipidea/ci_hdrc_pci.c b/drivers/usb/chipidea/ci_hdrc_pci.c
+> index d63479e1a..d412fa910 100644
+> --- a/drivers/usb/chipidea/ci_hdrc_pci.c
+> +++ b/drivers/usb/chipidea/ci_hdrc_pci.c
+> @@ -78,7 +78,7 @@ static int ci_hdrc_pci_probe(struct pci_dev *pdev,
+>  	}
+>  
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	/* register a nop PHY */
+>  	ci->phy = usb_phy_generic_register();
+> diff --git a/drivers/usb/gadget/udc/amd5536udc_pci.c b/drivers/usb/gadget/udc/amd5536udc_pci.c
+> index 8d387e0e4..9630ce8d3 100644
+> --- a/drivers/usb/gadget/udc/amd5536udc_pci.c
+> +++ b/drivers/usb/gadget/udc/amd5536udc_pci.c
+> @@ -151,7 +151,7 @@ static int udc_pci_probe(
+>  	dev->chiprev = pdev->revision;
+>  
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	/* init dma pools */
+>  	if (use_dma) {
+> diff --git a/drivers/usb/gadget/udc/net2280.c b/drivers/usb/gadget/udc/net2280.c
+> index fc9f99fe7..e15520698 100644
+> --- a/drivers/usb/gadget/udc/net2280.c
+> +++ b/drivers/usb/gadget/udc/net2280.c
+> @@ -3761,7 +3761,7 @@ static int net2280_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  			&dev->pci->pcimstctl);
+>  	/* erratum 0115 shouldn't appear: Linux inits PCI_LATENCY_TIMER */
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	/* ... also flushes any posted pci writes */
+>  	dev->chiprev = get_idx_reg(dev->regs, REG_CHIPREV) & 0xffff;
+> diff --git a/drivers/usb/gadget/udc/pch_udc.c b/drivers/usb/gadget/udc/pch_udc.c
+> index a3c1fc924..4a0484a0c 100644
+> --- a/drivers/usb/gadget/udc/pch_udc.c
+> +++ b/drivers/usb/gadget/udc/pch_udc.c
+> @@ -3100,7 +3100,7 @@ static int pch_udc_probe(struct pci_dev *pdev,
+>  	}
+>  
+>  	pci_set_master(pdev);
+> -	pci_try_set_mwi(pdev);
+> +	pci_set_mwi(pdev);
+>  
+>  	/* device struct setup */
+>  	spin_lock_init(&dev->lock);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index de75f6a4d..c590f616d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1191,9 +1191,8 @@ void pci_clear_master(struct pci_dev *dev);
+>  
+>  int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
+>  int pci_set_cacheline_size(struct pci_dev *dev);
+> -int __must_check pci_set_mwi(struct pci_dev *dev);
+> -int __must_check pcim_set_mwi(struct pci_dev *dev);
+> -int pci_try_set_mwi(struct pci_dev *dev);
+> +int pci_set_mwi(struct pci_dev *dev);
+> +int pcim_set_mwi(struct pci_dev *dev);
+>  void pci_clear_mwi(struct pci_dev *dev);
+>  void pci_intx(struct pci_dev *dev, int enable);
+>  bool pci_check_and_mask_intx(struct pci_dev *dev);
+> -- 
+> 2.29.2
+> 
