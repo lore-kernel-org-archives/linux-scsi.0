@@ -5,36 +5,36 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E11F3C433ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Mar 2021 05:59:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06B42C433F4
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Mar 2021 05:59:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C72BE61A50
+	by mail.kernel.org (Postfix) with ESMTP id DD24961A49
 	for <linux-scsi@archiver.kernel.org>; Fri, 26 Mar 2021 05:59:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229981AbhCZF7T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Mar 2021 01:59:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54172 "EHLO
+        id S229969AbhCZF7S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Mar 2021 01:59:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229758AbhCZF6x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Mar 2021 01:58:53 -0400
+        with ESMTP id S229812AbhCZF6y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Mar 2021 01:58:54 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98246C0613B0;
-        Thu, 25 Mar 2021 22:58:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 259BCC0613B1;
+        Thu, 25 Mar 2021 22:58:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=+iNA/jUBtD9ad7fvpdzwdl5FTP9+Ef6OiLqm4hZqb9s=; b=a88Mq07y7JU9IPwIB2TIrnDIUK
-        wV/S3SzZsjI9VRFSUvd8VLzusIux60t6AjA6AWn2fEgb7OE+PPFiZ1C9DMQgDaX7wSC9BTjqrzHH4
-        mnz7oL0b7ioK5xxMkDlaDWhGX1Zkz2svcgUqcI/9rYNYNUypoYv9UqAupkrM/xzHXKHWwABY5i2gZ
-        ArND46kT43wPt5IdkK6lUtIUsueM893lh1qX4E48dZjN0gsV3lh4IJTMRScokfWmsLx5OTIQh/iYx
-        A7uKHxfzYRawSmWtS/XEjfWZAe4TU/B29EMk8ElMIZP5KCcieFP00gD/PItkhNvU0EeR0e+GF+puG
-        8SdOoyxw==;
+        bh=fuhzdoCilY2lylMn5SQaAKUTSZPcSjw8lmoex6MyGCA=; b=DjcsTF34SfeKIMUCv1lVomJoGi
+        Iz2aKzBKOLD47lXGI4p050HRlqKM0vwOc4p64StXJ9ErTtJpM5IHNRGKuZHVdwAxbqcOMChgcp8Q4
+        nErGEh3iiM2+2tup2m2So5VWilgffZ+e9dnlQyMFST18ASXdYacwhQr8t+VEEKVh054IZlqMOnqFb
+        rFnN0R4pCsTBlYHjRVc6LVh5gz+vBMhvKyrhKWqiULni57lugEyUTY3L9rBSa+i1EAfXJCQl7fcG0
+        757pWd1ehyE4zjv1yZfGVXginQ1DBtmZmzkchKZOarDno3B4n6U1WdJBoO5rbiUabuCY1gPt9Lc1N
+        Vg2uSbXA==;
 Received: from [2001:4bb8:191:f692:97ff:1e47:aee2:c7e5] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lPfUL-005AOL-En; Fri, 26 Mar 2021 05:58:29 +0000
+        id 1lPfUQ-005AOf-C8; Fri, 26 Mar 2021 05:58:34 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -42,9 +42,9 @@ To:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
         Hannes Reinecke <hare@suse.com>,
         Ondrej Zary <linux@rainbow-software.org>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 2/8] Buslogic: remove ISA support
-Date:   Fri, 26 Mar 2021 06:58:16 +0100
-Message-Id: <20210326055822.1437471-3-hch@lst.de>
+Subject: [PATCH 4/8] advansys: remove ISA support
+Date:   Fri, 26 Mar 2021 06:58:18 +0100
+Message-Id: <20210326055822.1437471-5-hch@lst.de>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210326055822.1437471-1-hch@lst.de>
 References: <20210326055822.1437471-1-hch@lst.de>
@@ -55,306 +55,488 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The ISA support in Buslogic has been broken for a long time, as all
-the I/O path expects a struct device for DMA mapping that is derived from
-the PCI device, which would simply crash for ISA adapters.
+This is the last piece in the kernel requiring the block layer ISA
+bounce buffering, and it does not actually look used.  So remove it
+to see if anyone screams, in which case we'll need to find a solution
+to fix it back up.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- drivers/scsi/BusLogic.c | 156 ++--------------------------------------
- drivers/scsi/BusLogic.h |   3 -
- drivers/scsi/Kconfig    |   2 +-
- 3 files changed, 6 insertions(+), 155 deletions(-)
+ drivers/scsi/advansys.c | 283 ++++------------------------------------
+ 1 file changed, 25 insertions(+), 258 deletions(-)
 
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index ccb061ab0a0ad2..c3ed03c4b3f5cb 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -561,60 +561,6 @@ static int blogic_cmd(struct blogic_adapter *adapter, enum blogic_opcode opcode,
- }
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index ec5627890809e6..ccdd78ac7abd95 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -84,8 +84,6 @@ typedef unsigned char uchar;
  
+ #define ASC_CS_TYPE  unsigned short
  
--/*
--  blogic_add_probeaddr_isa appends a single ISA I/O Address to the list
--  of I/O Address and Bus Probe Information to be checked for potential BusLogic
--  Host Adapters.
--*/
--
--static void __init blogic_add_probeaddr_isa(unsigned long io_addr)
--{
--	struct blogic_probeinfo *probeinfo;
--	if (blogic_probeinfo_count >= BLOGIC_MAX_ADAPTERS)
--		return;
--	probeinfo = &blogic_probeinfo_list[blogic_probeinfo_count++];
--	probeinfo->adapter_type = BLOGIC_MULTIMASTER;
--	probeinfo->adapter_bus_type = BLOGIC_ISA_BUS;
--	probeinfo->io_addr = io_addr;
--	probeinfo->pci_device = NULL;
--}
--
--
--/*
--  blogic_init_probeinfo_isa initializes the list of I/O Address and
--  Bus Probe Information to be checked for potential BusLogic SCSI Host Adapters
--  only from the list of standard BusLogic MultiMaster ISA I/O Addresses.
--*/
--
--static void __init blogic_init_probeinfo_isa(struct blogic_adapter *adapter)
--{
--	/*
--	   If BusLogic Driver Options specifications requested that ISA
--	   Bus Probes be inhibited, do not proceed further.
--	 */
--	if (blogic_probe_options.noprobe_isa)
--		return;
--	/*
--	   Append the list of standard BusLogic MultiMaster ISA I/O Addresses.
--	 */
--	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe330)
--		blogic_add_probeaddr_isa(0x330);
--	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe334)
--		blogic_add_probeaddr_isa(0x334);
--	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe230)
--		blogic_add_probeaddr_isa(0x230);
--	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe234)
--		blogic_add_probeaddr_isa(0x234);
--	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe130)
--		blogic_add_probeaddr_isa(0x130);
--	if (!blogic_probe_options.limited_isa || blogic_probe_options.probe134)
--		blogic_add_probeaddr_isa(0x134);
--}
--
--
--#ifdef CONFIG_PCI
--
--
- /*
-   blogic_sort_probeinfo sorts a section of blogic_probeinfo_list in order
-   of increasing PCI Bus and Device Number.
-@@ -667,14 +613,11 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
- 	int nonpr_mmcount = 0, mmcount = 0;
- 	bool force_scan_order = false;
- 	bool force_scan_order_checked = false;
--	bool addr_seen[6];
- 	struct pci_dev *pci_device = NULL;
- 	int i;
- 	if (blogic_probeinfo_count >= BLOGIC_MAX_ADAPTERS)
- 		return 0;
- 	blogic_probeinfo_count++;
--	for (i = 0; i < 6; i++)
--		addr_seen[i] = false;
- 	/*
- 	   Iterate over the MultiMaster PCI Host Adapters.  For each
- 	   enumerated host adapter, determine whether its ISA Compatible
-@@ -744,11 +687,8 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
- 		host_adapter->io_addr = io_addr;
- 		blogic_intreset(host_adapter);
- 		if (blogic_cmd(host_adapter, BLOGIC_INQ_PCI_INFO, NULL, 0,
--				&adapter_info, sizeof(adapter_info)) ==
--				sizeof(adapter_info)) {
--			if (adapter_info.isa_port < 6)
--				addr_seen[adapter_info.isa_port] = true;
--		} else
-+				&adapter_info, sizeof(adapter_info)) !=
-+				sizeof(adapter_info))
- 			adapter_info.isa_port = BLOGIC_IO_DISABLE;
- 		/*
- 		   Issue the Modify I/O Address command to disable the
-@@ -835,45 +775,6 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
- 	if (force_scan_order)
- 		blogic_sort_probeinfo(&blogic_probeinfo_list[nonpr_mmindex],
- 					nonpr_mmcount);
--	/*
--	   If no PCI MultiMaster Host Adapter is assigned the Primary
--	   I/O Address, then the Primary I/O Address must be probed
--	   explicitly before any PCI host adapters are probed.
--	 */
--	if (!blogic_probe_options.noprobe_isa)
--		if (pr_probeinfo->io_addr == 0 &&
--				(!blogic_probe_options.limited_isa ||
--				 blogic_probe_options.probe330)) {
--			pr_probeinfo->adapter_type = BLOGIC_MULTIMASTER;
--			pr_probeinfo->adapter_bus_type = BLOGIC_ISA_BUS;
--			pr_probeinfo->io_addr = 0x330;
--		}
--	/*
--	   Append the list of standard BusLogic MultiMaster ISA I/O Addresses,
--	   omitting the Primary I/O Address which has already been handled.
--	 */
--	if (!blogic_probe_options.noprobe_isa) {
--		if (!addr_seen[1] &&
--				(!blogic_probe_options.limited_isa ||
--				 blogic_probe_options.probe334))
--			blogic_add_probeaddr_isa(0x334);
--		if (!addr_seen[2] &&
--				(!blogic_probe_options.limited_isa ||
--				 blogic_probe_options.probe230))
--			blogic_add_probeaddr_isa(0x230);
--		if (!addr_seen[3] &&
--				(!blogic_probe_options.limited_isa ||
--				 blogic_probe_options.probe234))
--			blogic_add_probeaddr_isa(0x234);
--		if (!addr_seen[4] &&
--				(!blogic_probe_options.limited_isa ||
--				 blogic_probe_options.probe130))
--			blogic_add_probeaddr_isa(0x130);
--		if (!addr_seen[5] &&
--				(!blogic_probe_options.limited_isa ||
--				 blogic_probe_options.probe134))
--			blogic_add_probeaddr_isa(0x134);
--	}
- 	/*
- 	   Iterate over the older non-compliant MultiMaster PCI Host Adapters,
- 	   noting the PCI bus location and assigned IRQ Channel.
-@@ -1078,18 +979,10 @@ static void __init blogic_init_probeinfo_list(struct blogic_adapter *adapter)
- 				}
+-#define ASC_IS_ISA          (0x0001)
+-#define ASC_IS_ISAPNP       (0x0081)
+ #define ASC_IS_EISA         (0x0002)
+ #define ASC_IS_PCI          (0x0004)
+ #define ASC_IS_PCI_ULTRA    (0x0104)
+@@ -2415,8 +2413,8 @@ static void asc_prt_scsi_host(struct Scsi_Host *s)
+ 	printk(" dma_channel %d, this_id %d, can_queue %d,\n",
+ 	       s->dma_channel, s->this_id, s->can_queue);
+ 
+-	printk(" cmd_per_lun %d, sg_tablesize %d, unchecked_isa_dma %d\n",
+-	       s->cmd_per_lun, s->sg_tablesize, s->unchecked_isa_dma);
++	printk(" cmd_per_lun %d, sg_tablesize %d\n",
++	       s->cmd_per_lun, s->sg_tablesize);
+ 
+ 	if (ASC_NARROW_BOARD(boardp)) {
+ 		asc_prt_asc_dvc_var(&boardp->dvc_var.asc_dvc_var);
+@@ -2632,42 +2630,28 @@ static const char *advansys_info(struct Scsi_Host *shost)
+ 	if (ASC_NARROW_BOARD(boardp)) {
+ 		asc_dvc_varp = &boardp->dvc_var.asc_dvc_var;
+ 		ASC_DBG(1, "begin\n");
+-		if (asc_dvc_varp->bus_type & ASC_IS_ISA) {
+-			if ((asc_dvc_varp->bus_type & ASC_IS_ISAPNP) ==
+-			    ASC_IS_ISAPNP) {
+-				busname = "ISA PnP";
++
++		if (asc_dvc_varp->bus_type & ASC_IS_VL) {
++			busname = "VL";
++		} else if (asc_dvc_varp->bus_type & ASC_IS_EISA) {
++			busname = "EISA";
++		} else if (asc_dvc_varp->bus_type & ASC_IS_PCI) {
++			if ((asc_dvc_varp->bus_type & ASC_IS_PCI_ULTRA)
++			    == ASC_IS_PCI_ULTRA) {
++				busname = "PCI Ultra";
+ 			} else {
+-				busname = "ISA";
++				busname = "PCI";
  			}
+-			sprintf(info,
+-				"AdvanSys SCSI %s: %s: IO 0x%lX-0x%lX, IRQ 0x%X, DMA 0x%X",
+-				ASC_VERSION, busname,
+-				(ulong)shost->io_port,
+-				(ulong)shost->io_port + ASC_IOADR_GAP - 1,
+-				boardp->irq, shost->dma_channel);
+ 		} else {
+-			if (asc_dvc_varp->bus_type & ASC_IS_VL) {
+-				busname = "VL";
+-			} else if (asc_dvc_varp->bus_type & ASC_IS_EISA) {
+-				busname = "EISA";
+-			} else if (asc_dvc_varp->bus_type & ASC_IS_PCI) {
+-				if ((asc_dvc_varp->bus_type & ASC_IS_PCI_ULTRA)
+-				    == ASC_IS_PCI_ULTRA) {
+-					busname = "PCI Ultra";
+-				} else {
+-					busname = "PCI";
+-				}
+-			} else {
+-				busname = "?";
+-				shost_printk(KERN_ERR, shost, "unknown bus "
+-					"type %d\n", asc_dvc_varp->bus_type);
+-			}
+-			sprintf(info,
+-				"AdvanSys SCSI %s: %s: IO 0x%lX-0x%lX, IRQ 0x%X",
+-				ASC_VERSION, busname, (ulong)shost->io_port,
+-				(ulong)shost->io_port + ASC_IOADR_GAP - 1,
+-				boardp->irq);
++			busname = "?";
++			shost_printk(KERN_ERR, shost, "unknown bus "
++				"type %d\n", asc_dvc_varp->bus_type);
  		}
--	} else {
--		blogic_init_probeinfo_isa(adapter);
- 	}
++		sprintf(info,
++			"AdvanSys SCSI %s: %s: IO 0x%lX-0x%lX, IRQ 0x%X",
++			ASC_VERSION, busname, (ulong)shost->io_port,
++			(ulong)shost->io_port + ASC_IOADR_GAP - 1,
++			boardp->irq);
+ 	} else {
+ 		/*
+ 		 * Wide Adapter Information
+@@ -2873,12 +2857,7 @@ static void asc_prt_asc_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
+ 	ASCEEP_CONFIG *ep;
+ 	int i;
+ 	uchar serialstr[13];
+-#ifdef CONFIG_ISA
+-	ASC_DVC_VAR *asc_dvc_varp;
+-	int isa_dma_speed[] = { 10, 8, 7, 6, 5, 4, 3, 2 };
+ 
+-	asc_dvc_varp = &boardp->dvc_var.asc_dvc_var;
+-#endif /* CONFIG_ISA */
+ 	ep = &boardp->eep_config.asc_eep;
+ 
+ 	seq_printf(m,
+@@ -2926,14 +2905,6 @@ static void asc_prt_asc_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
+ 		seq_printf(m, " %c",
+ 			   (ep->init_sdtr & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
+ 	seq_putc(m, '\n');
+-
+-#ifdef CONFIG_ISA
+-	if (asc_dvc_varp->bus_type & ASC_IS_ISA) {
+-		seq_printf(m,
+-			   " Host ISA DMA speed:   %d MB/S\n",
+-			   isa_dma_speed[ASC_EEP_GET_DMA_SPD(ep)]);
+-	}
+-#endif /* CONFIG_ISA */
  }
  
+ /*
+@@ -3180,10 +3151,6 @@ static void asc_prt_driver_conf(struct seq_file *m, struct Scsi_Host *shost)
+ 		   shost->unique_id, shost->can_queue, shost->this_id,
+ 		   shost->sg_tablesize, shost->cmd_per_lun);
  
--#else
--#define blogic_init_probeinfo_list(adapter) \
--		blogic_init_probeinfo_isa(adapter)
--#endif				/* CONFIG_PCI */
+-	seq_printf(m,
+-		   " unchecked_isa_dma %d\n",
+-		   shost->unchecked_isa_dma);
 -
+ 	seq_printf(m,
+ 		   " flags 0x%x, last_reset 0x%lx, jiffies 0x%lx, asc_n_io_port 0x%x\n",
+ 		   boardp->flags, shost->last_reset, jiffies,
+@@ -8563,12 +8530,6 @@ static unsigned short AscGetChipBiosAddress(PortAddr iop_base,
+ 	}
+ 
+ 	cfg_lsw = AscGetChipCfgLsw(iop_base);
+-
+-	/*
+-	 *  ISA PnP uses the top bit as the 32K BIOS flag
+-	 */
+-	if (bus_type == ASC_IS_ISAPNP)
+-		cfg_lsw &= 0x7FFF;
+ 	bios_addr = ASC_BIOS_MIN_ADDR + (cfg_lsw >> 12) * ASC_BIOS_BANK_SIZE;
+ 	return bios_addr;
+ }
+@@ -8611,19 +8572,6 @@ static unsigned char AscGetChipVersion(PortAddr iop_base,
+ 	return AscGetChipVerNo(iop_base);
+ }
+ 
+-#ifdef CONFIG_ISA
+-static void AscEnableIsaDma(uchar dma_channel)
+-{
+-	if (dma_channel < 4) {
+-		outp(0x000B, (ushort)(0xC0 | dma_channel));
+-		outp(0x000A, dma_channel);
+-	} else if (dma_channel < 8) {
+-		outp(0x00D6, (ushort)(0xC0 | (dma_channel - 4)));
+-		outp(0x00D4, (ushort)(dma_channel - 4));
+-	}
+-}
+-#endif /* CONFIG_ISA */
+-
+ static int AscStopQueueExe(PortAddr iop_base)
+ {
+ 	int count = 0;
+@@ -8644,65 +8592,11 @@ static int AscStopQueueExe(PortAddr iop_base)
+ 
+ static unsigned int AscGetMaxDmaCount(ushort bus_type)
+ {
+-	if (bus_type & ASC_IS_ISA)
+-		return ASC_MAX_ISA_DMA_COUNT;
+-	else if (bus_type & (ASC_IS_EISA | ASC_IS_VL))
++	if (bus_type & (ASC_IS_EISA | ASC_IS_VL))
+ 		return ASC_MAX_VL_DMA_COUNT;
+ 	return ASC_MAX_PCI_DMA_COUNT;
+ }
+ 
+-#ifdef CONFIG_ISA
+-static ushort AscGetIsaDmaChannel(PortAddr iop_base)
+-{
+-	ushort channel;
+-
+-	channel = AscGetChipCfgLsw(iop_base) & 0x0003;
+-	if (channel == 0x03)
+-		return (0);
+-	else if (channel == 0x00)
+-		return (7);
+-	return (channel + 4);
+-}
+-
+-static ushort AscSetIsaDmaChannel(PortAddr iop_base, ushort dma_channel)
+-{
+-	ushort cfg_lsw;
+-	uchar value;
+-
+-	if ((dma_channel >= 5) && (dma_channel <= 7)) {
+-		if (dma_channel == 7)
+-			value = 0x00;
+-		else
+-			value = dma_channel - 4;
+-		cfg_lsw = AscGetChipCfgLsw(iop_base) & 0xFFFC;
+-		cfg_lsw |= value;
+-		AscSetChipCfgLsw(iop_base, cfg_lsw);
+-		return (AscGetIsaDmaChannel(iop_base));
+-	}
+-	return 0;
+-}
+-
+-static uchar AscGetIsaDmaSpeed(PortAddr iop_base)
+-{
+-	uchar speed_value;
+-
+-	AscSetBank(iop_base, 1);
+-	speed_value = AscReadChipDmaSpeed(iop_base);
+-	speed_value &= 0x07;
+-	AscSetBank(iop_base, 0);
+-	return speed_value;
+-}
+-
+-static uchar AscSetIsaDmaSpeed(PortAddr iop_base, uchar speed_value)
+-{
+-	speed_value &= 0x07;
+-	AscSetBank(iop_base, 1);
+-	AscWriteChipDmaSpeed(iop_base, speed_value);
+-	AscSetBank(iop_base, 0);
+-	return AscGetIsaDmaSpeed(iop_base);
+-}
+-#endif /* CONFIG_ISA */
+-
+ static void AscInitAscDvcVar(ASC_DVC_VAR *asc_dvc)
+ {
+ 	int i;
+@@ -8712,7 +8606,7 @@ static void AscInitAscDvcVar(ASC_DVC_VAR *asc_dvc)
+ 	iop_base = asc_dvc->iop_base;
+ 	asc_dvc->err_code = 0;
+ 	if ((asc_dvc->bus_type &
+-	     (ASC_IS_ISA | ASC_IS_PCI | ASC_IS_EISA | ASC_IS_VL)) == 0) {
++	     (ASC_IS_PCI | ASC_IS_EISA | ASC_IS_VL)) == 0) {
+ 		asc_dvc->err_code |= ASC_IERR_NO_BUS_TYPE;
+ 	}
+ 	AscSetChipControl(iop_base, CC_HALT);
+@@ -8768,16 +8662,6 @@ static void AscInitAscDvcVar(ASC_DVC_VAR *asc_dvc)
+ 	}
+ 
+ 	asc_dvc->cfg->isa_dma_speed = ASC_DEF_ISA_DMA_SPEED;
+-#ifdef CONFIG_ISA
+-	if ((asc_dvc->bus_type & ASC_IS_ISA) != 0) {
+-		if (chip_version >= ASC_CHIP_MIN_VER_ISA_PNP) {
+-			AscSetChipIFC(iop_base, IFC_INIT_DEFAULT);
+-			asc_dvc->bus_type = ASC_IS_ISAPNP;
+-		}
+-		asc_dvc->cfg->isa_dma_channel =
+-		    (uchar)AscGetIsaDmaChannel(iop_base);
+-	}
+-#endif /* CONFIG_ISA */
+ 	for (i = 0; i <= ASC_MAX_TID; i++) {
+ 		asc_dvc->cur_dvc_qng[i] = 0;
+ 		asc_dvc->max_dvc_qng[i] = ASC_MAX_SCSI1_QNG;
+@@ -9314,22 +9198,10 @@ static int AscInitSetConfig(struct pci_dev *pdev, struct Scsi_Host *shost)
+ 		}
+ 	} else
+ #endif /* CONFIG_PCI */
+-	if (asc_dvc->bus_type == ASC_IS_ISAPNP) {
+-		if (AscGetChipVersion(iop_base, asc_dvc->bus_type)
+-		    == ASC_CHIP_VER_ASYN_BUG) {
+-			asc_dvc->bug_fix_cntl |= ASC_BUG_FIX_ASYN_USE_SYN;
+-		}
+-	}
+ 	if (AscSetChipScsiID(iop_base, asc_dvc->cfg->chip_scsi_id) !=
+ 	    asc_dvc->cfg->chip_scsi_id) {
+ 		asc_dvc->err_code |= ASC_IERR_SET_SCSI_ID;
+ 	}
+-#ifdef CONFIG_ISA
+-	if (asc_dvc->bus_type & ASC_IS_ISA) {
+-		AscSetIsaDmaChannel(iop_base, asc_dvc->cfg->isa_dma_channel);
+-		AscSetIsaDmaSpeed(iop_base, asc_dvc->cfg->isa_dma_speed);
+-	}
+-#endif /* CONFIG_ISA */
+ 
+ 	asc_dvc->init_state |= ASC_INIT_STATE_END_SET_CFG;
+ 
+@@ -10752,12 +10624,6 @@ static struct scsi_host_template advansys_template = {
+ 	.eh_host_reset_handler = advansys_reset,
+ 	.bios_param = advansys_biosparam,
+ 	.slave_configure = advansys_slave_configure,
+-	/*
+-	 * Because the driver may control an ISA adapter 'unchecked_isa_dma'
+-	 * must be set. The flag will be cleared in advansys_board_found
+-	 * for non-ISA adapters.
+-	 */
+-	.unchecked_isa_dma = true,
+ };
+ 
+ static int advansys_wide_init_chip(struct Scsi_Host *shost)
+@@ -10923,29 +10789,21 @@ static int advansys_board_found(struct Scsi_Host *shost, unsigned int iop,
+ 		 */
+ 		switch (asc_dvc_varp->bus_type) {
+ #ifdef CONFIG_ISA
+-		case ASC_IS_ISA:
+-			shost->unchecked_isa_dma = true;
+-			share_irq = 0;
+-			break;
+ 		case ASC_IS_VL:
+-			shost->unchecked_isa_dma = false;
+ 			share_irq = 0;
+ 			break;
+ 		case ASC_IS_EISA:
+-			shost->unchecked_isa_dma = false;
+ 			share_irq = IRQF_SHARED;
+ 			break;
+ #endif /* CONFIG_ISA */
+ #ifdef CONFIG_PCI
+ 		case ASC_IS_PCI:
+-			shost->unchecked_isa_dma = false;
+ 			share_irq = IRQF_SHARED;
+ 			break;
+ #endif /* CONFIG_PCI */
+ 		default:
+ 			shost_printk(KERN_ERR, shost, "unknown adapter type: "
+ 					"%d\n", asc_dvc_varp->bus_type);
+-			shost->unchecked_isa_dma = false;
+ 			share_irq = 0;
+ 			break;
+ 		}
+@@ -10964,7 +10822,6 @@ static int advansys_board_found(struct Scsi_Host *shost, unsigned int iop,
+ 		 * For Wide boards set PCI information before calling
+ 		 * AdvInitGetConfig().
+ 		 */
+-		shost->unchecked_isa_dma = false;
+ 		share_irq = IRQF_SHARED;
+ 		ASC_DBG(2, "AdvInitGetConfig()\n");
+ 
+@@ -11228,22 +11085,6 @@ static int advansys_board_found(struct Scsi_Host *shost, unsigned int iop,
+ 
+ 	/* Register DMA Channel for Narrow boards. */
+ 	shost->dma_channel = NO_ISA_DMA;	/* Default to no ISA DMA. */
+-#ifdef CONFIG_ISA
+-	if (ASC_NARROW_BOARD(boardp)) {
+-		/* Register DMA channel for ISA bus. */
+-		if (asc_dvc_varp->bus_type & ASC_IS_ISA) {
+-			shost->dma_channel = asc_dvc_varp->cfg->isa_dma_channel;
+-			ret = request_dma(shost->dma_channel, DRV_NAME);
+-			if (ret) {
+-				shost_printk(KERN_ERR, shost, "request_dma() "
+-						"%d failed %d\n",
+-						shost->dma_channel, ret);
+-				goto err_unmap;
+-			}
+-			AscEnableIsaDma(shost->dma_channel);
+-		}
+-	}
+-#endif /* CONFIG_ISA */
+ 
+ 	/* Register IRQ Number. */
+ 	ASC_DBG(2, "request_irq(%d, %p)\n", boardp->irq, shost);
+@@ -11366,79 +11207,13 @@ static PortAddr _asc_def_iop_base[ASC_IOADR_TABLE_MAX_IX] = {
+ 	0x0210, 0x0230, 0x0250, 0x0330
+ };
+ 
+-/*
+- * The ISA IRQ number is found in bits 2 and 3 of the CfgLsw.  It decodes as:
+- * 00: 10
+- * 01: 11
+- * 10: 12
+- * 11: 15
+- */
+-static unsigned int advansys_isa_irq_no(PortAddr iop_base)
+-{
+-	unsigned short cfg_lsw = AscGetChipCfgLsw(iop_base);
+-	unsigned int chip_irq = ((cfg_lsw >> 2) & 0x03) + 10;
+-	if (chip_irq == 13)
+-		chip_irq = 15;
+-	return chip_irq;
+-}
+-
+-static int advansys_isa_probe(struct device *dev, unsigned int id)
+-{
+-	int err = -ENODEV;
+-	PortAddr iop_base = _asc_def_iop_base[id];
+-	struct Scsi_Host *shost;
+-	struct asc_board *board;
+-
+-	if (!request_region(iop_base, ASC_IOADR_GAP, DRV_NAME)) {
+-		ASC_DBG(1, "I/O port 0x%x busy\n", iop_base);
+-		return -ENODEV;
+-	}
+-	ASC_DBG(1, "probing I/O port 0x%x\n", iop_base);
+-	if (!AscFindSignature(iop_base))
+-		goto release_region;
+-	if (!(AscGetChipVersion(iop_base, ASC_IS_ISA) & ASC_CHIP_VER_ISA_BIT))
+-		goto release_region;
+-
+-	err = -ENOMEM;
+-	shost = scsi_host_alloc(&advansys_template, sizeof(*board));
+-	if (!shost)
+-		goto release_region;
+-
+-	board = shost_priv(shost);
+-	board->irq = advansys_isa_irq_no(iop_base);
+-	board->dev = dev;
+-	board->shost = shost;
+-
+-	err = advansys_board_found(shost, iop_base, ASC_IS_ISA);
+-	if (err)
+-		goto free_host;
+-
+-	dev_set_drvdata(dev, shost);
+-	return 0;
+-
+- free_host:
+-	scsi_host_put(shost);
+- release_region:
+-	release_region(iop_base, ASC_IOADR_GAP);
+-	return err;
+-}
+-
+-static void advansys_isa_remove(struct device *dev, unsigned int id)
++static void advansys_vlb_remove(struct device *dev, unsigned int id)
+ {
+ 	int ioport = _asc_def_iop_base[id];
+ 	advansys_release(dev_get_drvdata(dev));
+ 	release_region(ioport, ASC_IOADR_GAP);
+ }
+ 
+-static struct isa_driver advansys_isa_driver = {
+-	.probe		= advansys_isa_probe,
+-	.remove		= advansys_isa_remove,
+-	.driver = {
+-		.owner	= THIS_MODULE,
+-		.name	= DRV_NAME,
+-	},
+-};
 -
  /*
-   blogic_failure prints a standardized error message, and then returns false.
- */
-@@ -1539,14 +1432,6 @@ static bool __init blogic_rdconfig(struct blogic_adapter *adapter)
- 		else if (config.irq_ch15)
- 			adapter->irq_ch = 15;
- 	}
--	if (adapter->adapter_bus_type == BLOGIC_ISA_BUS) {
--		if (config.dma_ch5)
--			adapter->dma_ch = 5;
--		else if (config.dma_ch6)
--			adapter->dma_ch = 6;
--		else if (config.dma_ch7)
--			adapter->dma_ch = 7;
--	}
- 	/*
- 	   Determine whether Extended Translation is enabled and save it in
- 	   the Host Adapter structure.
-@@ -1686,8 +1571,7 @@ static bool __init blogic_rdconfig(struct blogic_adapter *adapter)
- 	if (adapter->fw_ver[0] == '5')
- 		adapter->adapter_qdepth = 192;
- 	else if (adapter->fw_ver[0] == '4')
--		adapter->adapter_qdepth = (adapter->adapter_bus_type !=
--						BLOGIC_ISA_BUS ? 100 : 50);
-+		adapter->adapter_qdepth = 100;
- 	else
- 		adapter->adapter_qdepth = 30;
- 	if (strcmp(adapter->fw_ver, "3.31") >= 0) {
-@@ -1727,13 +1611,6 @@ static bool __init blogic_rdconfig(struct blogic_adapter *adapter)
- 	   bios_addr is 0.
- 	 */
- 	adapter->bios_addr = ext_setupinfo.bios_addr << 12;
--	/*
--	   ISA Host Adapters require Bounce Buffers if there is more than
--	   16MB memory.
--	 */
--	if (adapter->adapter_bus_type == BLOGIC_ISA_BUS &&
--			(void *) high_memory > (void *) MAX_DMA_ADDRESS)
--		adapter->need_bouncebuf = true;
- 	/*
- 	   BusLogic BT-445S Host Adapters prior to board revision E have a
- 	   hardware bug whereby when the BIOS is enabled, transfers to/from
-@@ -1839,11 +1716,7 @@ static bool __init blogic_reportconfig(struct blogic_adapter *adapter)
- 	blogic_info("Configuring BusLogic Model %s %s%s%s%s SCSI Host Adapter\n", adapter, adapter->model, blogic_adapter_busnames[adapter->adapter_bus_type], (adapter->wide ? " Wide" : ""), (adapter->differential ? " Differential" : ""), (adapter->ultra ? " Ultra" : ""));
- 	blogic_info("  Firmware Version: %s, I/O Address: 0x%lX, IRQ Channel: %d/%s\n", adapter, adapter->fw_ver, adapter->io_addr, adapter->irq_ch, (adapter->level_int ? "Level" : "Edge"));
- 	if (adapter->adapter_bus_type != BLOGIC_PCI_BUS) {
--		blogic_info("  DMA Channel: ", adapter);
--		if (adapter->dma_ch > 0)
--			blogic_info("%d, ", adapter, adapter->dma_ch);
--		else
--			blogic_info("None, ", adapter);
-+		blogic_info("  DMA Channel: None, ", adapter);
- 		if (adapter->bios_addr > 0)
- 			blogic_info("BIOS Address: 0x%lX, ", adapter,
- 					adapter->bios_addr);
-@@ -1995,18 +1868,6 @@ static bool __init blogic_getres(struct blogic_adapter *adapter)
- 		return false;
- 	}
- 	adapter->irq_acquired = true;
--	/*
--	   Acquire exclusive access to the DMA Channel.
--	 */
--	if (adapter->dma_ch > 0) {
--		if (request_dma(adapter->dma_ch, adapter->full_model) < 0) {
--			blogic_err("UNABLE TO ACQUIRE DMA CHANNEL %d - DETACHING\n", adapter, adapter->dma_ch);
--			return false;
--		}
--		set_dma_mode(adapter->dma_ch, DMA_MODE_CASCADE);
--		enable_dma(adapter->dma_ch);
--		adapter->dma_chan_acquired = true;
--	}
- 	/*
- 	   Indicate the System Resource Acquisition completed successfully,
- 	 */
-@@ -2026,11 +1887,6 @@ static void blogic_relres(struct blogic_adapter *adapter)
- 	 */
- 	if (adapter->irq_acquired)
- 		free_irq(adapter->irq_ch, adapter);
--	/*
--	   Release exclusive access to the DMA Channel.
--	 */
--	if (adapter->dma_chan_acquired)
--		free_dma(adapter->dma_ch);
- 	/*
- 	   Release any allocated memory structs not released elsewhere
- 	 */
-@@ -3694,9 +3550,7 @@ static int __init blogic_parseopts(char *options)
- 					blogic_err("BusLogic: Invalid Driver Options (invalid I/O Address 0x%lX)\n", NULL, io_addr);
- 					return 0;
- 				}
--			} else if (blogic_parse(&options, "NoProbeISA"))
--				blogic_probe_options.noprobe_isa = true;
--			else if (blogic_parse(&options, "NoProbePCI"))
-+			} else if (blogic_parse(&options, "NoProbePCI"))
- 				blogic_probe_options.noprobe_pci = true;
- 			else if (blogic_parse(&options, "NoProbe"))
- 				blogic_probe_options.noprobe = true;
-diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
-index 6182cc8a0344a8..6eaddc009b5c55 100644
---- a/drivers/scsi/BusLogic.h
-+++ b/drivers/scsi/BusLogic.h
-@@ -237,7 +237,6 @@ struct blogic_probeinfo {
+  * The VLB IRQ number is found in bits 2 to 4 of the CfgLsw.  It decodes as:
+  * 000: invalid
+@@ -11507,7 +11282,7 @@ static int advansys_vlb_probe(struct device *dev, unsigned int id)
  
- struct blogic_probe_options {
- 	bool noprobe:1;			/* Bit 0 */
--	bool noprobe_isa:1;		/* Bit 1 */
- 	bool noprobe_pci:1;		/* Bit 2 */
- 	bool nosort_pci:1;		/* Bit 3 */
- 	bool multimaster_first:1;	/* Bit 4 */
-@@ -997,10 +996,8 @@ struct blogic_adapter {
- 	unsigned char bus;
- 	unsigned char dev;
- 	unsigned char irq_ch;
--	unsigned char dma_ch;
- 	unsigned char scsi_id;
- 	bool irq_acquired:1;
--	bool dma_chan_acquired:1;
- 	bool ext_trans_enable:1;
- 	bool parity:1;
- 	bool reset_enabled:1;
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 06b87c7f6babd3..3d114be5b662df 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -497,7 +497,7 @@ config SCSI_HPTIOP
+ static struct isa_driver advansys_vlb_driver = {
+ 	.probe		= advansys_vlb_probe,
+-	.remove		= advansys_isa_remove,
++	.remove		= advansys_vlb_remove,
+ 	.driver = {
+ 		.owner	= THIS_MODULE,
+ 		.name	= "advansys_vlb",
+@@ -11757,15 +11532,10 @@ static int __init advansys_init(void)
+ {
+ 	int error;
  
- config SCSI_BUSLOGIC
- 	tristate "BusLogic SCSI support"
--	depends on (PCI || ISA) && SCSI && ISA_DMA_API && VIRT_TO_BUS
-+	depends on PCI && SCSI && VIRT_TO_BUS
- 	help
- 	  This is support for BusLogic MultiMaster and FlashPoint SCSI Host
- 	  Adapters. Consult the SCSI-HOWTO, available from
+-	error = isa_register_driver(&advansys_isa_driver,
+-				    ASC_IOADR_TABLE_MAX_IX);
+-	if (error)
+-		goto fail;
+-
+ 	error = isa_register_driver(&advansys_vlb_driver,
+ 				    ASC_IOADR_TABLE_MAX_IX);
+ 	if (error)
+-		goto unregister_isa;
++		goto fail;
+ 
+ 	error = eisa_driver_register(&advansys_eisa_driver);
+ 	if (error)
+@@ -11781,8 +11551,6 @@ static int __init advansys_init(void)
+ 	eisa_driver_unregister(&advansys_eisa_driver);
+  unregister_vlb:
+ 	isa_unregister_driver(&advansys_vlb_driver);
+- unregister_isa:
+-	isa_unregister_driver(&advansys_isa_driver);
+  fail:
+ 	return error;
+ }
+@@ -11792,7 +11560,6 @@ static void __exit advansys_exit(void)
+ 	pci_unregister_driver(&advansys_pci_driver);
+ 	eisa_driver_unregister(&advansys_eisa_driver);
+ 	isa_unregister_driver(&advansys_vlb_driver);
+-	isa_unregister_driver(&advansys_isa_driver);
+ }
+ 
+ module_init(advansys_init);
 -- 
 2.30.1
 
