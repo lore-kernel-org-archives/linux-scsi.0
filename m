@@ -4,69 +4,87 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C6CCC433C1
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Mar 2021 02:14:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39472C433DB
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Mar 2021 03:09:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D096461A27
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Mar 2021 02:14:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03A2361A13
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Mar 2021 03:09:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230266AbhC0COJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Mar 2021 22:14:09 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:14918 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230121AbhC0CNu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Mar 2021 22:13:50 -0400
-Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4F6j5c3Q2Qzkj7T;
-        Sat, 27 Mar 2021 10:12:04 +0800 (CST)
-Received: from thunder-town.china.huawei.com (10.174.179.202) by
- DGGEMS404-HUB.china.huawei.com (10.3.19.204) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 27 Mar 2021 10:13:36 +0800
-From:   Zhen Lei <thunder.leizhen@huawei.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-CC:     Zhen Lei <thunder.leizhen@huawei.com>
-Subject: [PATCH 1/1] scsi: ufs: Remove duplicated header file inclusion
-Date:   Sat, 27 Mar 2021 10:13:16 +0800
-Message-ID: <20210327021316.2021-1-thunder.leizhen@huawei.com>
-X-Mailer: git-send-email 2.26.0.windows.1
+        id S231340AbhC0DJQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Mar 2021 23:09:16 -0400
+Received: from mail-m17637.qiye.163.com ([59.111.176.37]:21874 "EHLO
+        mail-m17637.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231354AbhC0DJL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Mar 2021 23:09:11 -0400
+Received: from wanjb-virtual-machine.localdomain (unknown [36.152.145.182])
+        by mail-m17637.qiye.163.com (Hmail) with ESMTPA id 324EE980117;
+        Sat, 27 Mar 2021 11:09:08 +0800 (CST)
+From:   Wan Jiabing <wanjiabing@vivo.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     kael_w@yeah.net, Wan Jiabing <wanjiabing@vivo.com>
+Subject: [PATCH] scsi: scsi_priv: Remove duplicate declaration
+Date:   Sat, 27 Mar 2021 11:08:50 +0800
+Message-Id: <20210327030850.918018-1-wanjiabing@vivo.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.174.179.202]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgYFAkeWUFZS1VLWVdZKFlBSE83V1ktWUFJV1kPCR
+        oVCBIfWUFZQklCTx1DSB8eSRpIVkpNSk1DSk9OT0NITEJVEwETFhoSFyQUDg9ZV1kWGg8SFR0UWU
+        FZT0tIVUpKS0hKTFVLWQY+
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Mio6Cxw4SD8cGjMhPUNCDlZD
+        GU8KCzFVSlVKTUpNQ0pPTk9DTUJOVTMWGhIXVQwaFRESGhkSFRw7DRINFFUYFBZFWVdZEgtZQVlI
+        TVVKTklVSk9OVUpDSVlXWQgBWUFJSkpLNwY+
+X-HM-Tid: 0a7871a8255ad992kuws324ee980117
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The header file <linux/blkdev.h> is already included above and can be
-removed here.
+struct request and struct request_queue have been
+declared at forward struct declaration.
+Remove the duplicate and reorder the forward declaration
+to be in alphabetic order.
 
-Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
+Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/scsi_priv.h | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c86760788c72c9a..e8aa7de17d0accd 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -24,7 +24,6 @@
- #include "ufs_bsg.h"
- #include "ufshcd-crypto.h"
- #include <asm/unaligned.h>
--#include <linux/blkdev.h>
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 180636d54982..811abc86f6d6 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -6,14 +6,14 @@
+ #include <linux/async.h>
+ #include <scsi/scsi_device.h>
  
- #define CREATE_TRACE_POINTS
- #include <trace/events/ufs.h>
+-struct request_queue;
+ struct request;
++struct request_queue;
++struct Scsi_Host;
+ struct scsi_cmnd;
+ struct scsi_device;
+-struct scsi_target;
+ struct scsi_host_template;
+-struct Scsi_Host;
+ struct scsi_nl_hdr;
++struct scsi_target;
+ 
+ #define SCSI_CMD_RETRIES_NO_LIMIT -1
+ 
+@@ -96,8 +96,6 @@ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+ extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
+ extern void scsi_exit_queue(void);
+ extern void scsi_evt_thread(struct work_struct *work);
+-struct request_queue;
+-struct request;
+ 
+ /* scsi_proc.c */
+ #ifdef CONFIG_SCSI_PROC_FS
 -- 
-1.8.3
-
+2.25.1
 
