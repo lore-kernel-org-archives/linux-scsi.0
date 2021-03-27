@@ -2,89 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39472C433DB
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Mar 2021 03:09:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D96C433DB
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Mar 2021 06:58:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03A2361A13
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Mar 2021 03:09:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 506AF6197C
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Mar 2021 06:58:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231340AbhC0DJQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Mar 2021 23:09:16 -0400
-Received: from mail-m17637.qiye.163.com ([59.111.176.37]:21874 "EHLO
-        mail-m17637.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231354AbhC0DJL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Mar 2021 23:09:11 -0400
-Received: from wanjb-virtual-machine.localdomain (unknown [36.152.145.182])
-        by mail-m17637.qiye.163.com (Hmail) with ESMTPA id 324EE980117;
-        Sat, 27 Mar 2021 11:09:08 +0800 (CST)
-From:   Wan Jiabing <wanjiabing@vivo.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     kael_w@yeah.net, Wan Jiabing <wanjiabing@vivo.com>
-Subject: [PATCH] scsi: scsi_priv: Remove duplicate declaration
-Date:   Sat, 27 Mar 2021 11:08:50 +0800
-Message-Id: <20210327030850.918018-1-wanjiabing@vivo.com>
-X-Mailer: git-send-email 2.25.1
+        id S231442AbhC0G6Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 27 Mar 2021 02:58:16 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:14629 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230427AbhC0G5p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Mar 2021 02:57:45 -0400
+Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.60])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4F6qNt4Xknz1BJr5;
+        Sat, 27 Mar 2021 14:55:42 +0800 (CST)
+Received: from [10.174.179.92] (10.174.179.92) by
+ DGGEMS403-HUB.china.huawei.com (10.3.19.203) with Microsoft SMTP Server id
+ 14.3.498.0; Sat, 27 Mar 2021 14:57:43 +0800
+Subject: Re: [PATCH 1/3] scsi: check the whole result for reading write
+ protect flag
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     <axboe@kernel.dk>, <ming.lei@redhat.com>, <hch@lst.de>,
+        <keescook@chromium.org>, <kbusch@kernel.org>,
+        <linux-block@vger.kernel.org>, <jejb@linux.vnet.ibm.com>,
+        <linux-scsi@vger.kernel.org>
+References: <20210319030128.1345061-1-yanaijie@huawei.com>
+ <20210319030128.1345061-2-yanaijie@huawei.com>
+ <yq1a6qskl3j.fsf@ca-mkp.ca.oracle.com>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <5fc4fa59-cbdc-190b-8c7b-4be1a4f37557@huawei.com>
+Date:   Sat, 27 Mar 2021 14:57:43 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.2
 MIME-Version: 1.0
+In-Reply-To: <yq1a6qskl3j.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgYFAkeWUFZS1VLWVdZKFlBSE83V1ktWUFJV1kPCR
-        oVCBIfWUFZQklCTx1DSB8eSRpIVkpNSk1DSk9OT0NITEJVEwETFhoSFyQUDg9ZV1kWGg8SFR0UWU
-        FZT0tIVUpKS0hKTFVLWQY+
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Mio6Cxw4SD8cGjMhPUNCDlZD
-        GU8KCzFVSlVKTUpNQ0pPTk9DTUJOVTMWGhIXVQwaFRESGhkSFRw7DRINFFUYFBZFWVdZEgtZQVlI
-        TVVKTklVSk9OVUpDSVlXWQgBWUFJSkpLNwY+
-X-HM-Tid: 0a7871a8255ad992kuws324ee980117
+X-Originating-IP: [10.174.179.92]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-struct request and struct request_queue have been
-declared at forward struct declaration.
-Remove the duplicate and reorder the forward declaration
-to be in alphabetic order.
+Hi Martin,
 
-Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
----
- drivers/scsi/scsi_priv.h | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ÔÚ 2021/3/25 10:50, Martin K. Petersen Ð´µÀ:
+> 
+> Hi Jason!
+> 
+>> @@ -55,6 +55,19 @@ static inline int scsi_status_is_good(int status)
+>>   		(status == SAM_STAT_COMMAND_TERMINATED));
+>>   }
+>>   
+>> +/** scsi_result_is_good - check the result return.
+>> + *
+>> + * @result: the result passed up from the driver (including host and
+>> + *          driver components)
+>> + *
+>> + * Drivers may only set other bytes but not status byte.
+>> + * This checks both the status byte and other bytes.
+>> + */
+>> +static inline int scsi_result_is_good(int result)
+>> +{
+>> +	return scsi_status_is_good(result) && (result & ~0xff) == 0;
+>> +}
+>> +
+>>   
+>>   /*
+>>    * standard mode-select header prepended to all mode-select commands
+> 
+> Instead of introducing a "don't be broken" variant of
+> scsi_status_is_good(), I'd prefer you to fix the latter to do the right
+> thing wrt. offline devices.
+> 
+> There aren't a ton of scsi_result_is_good() call sites to check. And I
+> suspect that most of them wouldn't actually consider the DID_NO_CONNECT
+> scenario to be "good".
+> 
 
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 180636d54982..811abc86f6d6 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -6,14 +6,14 @@
- #include <linux/async.h>
- #include <scsi/scsi_device.h>
- 
--struct request_queue;
- struct request;
-+struct request_queue;
-+struct Scsi_Host;
- struct scsi_cmnd;
- struct scsi_device;
--struct scsi_target;
- struct scsi_host_template;
--struct Scsi_Host;
- struct scsi_nl_hdr;
-+struct scsi_target;
- 
- #define SCSI_CMD_RETRIES_NO_LIMIT -1
- 
-@@ -96,8 +96,6 @@ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
- extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
- extern void scsi_exit_queue(void);
- extern void scsi_evt_thread(struct work_struct *work);
--struct request_queue;
--struct request;
- 
- /* scsi_proc.c */
- #ifdef CONFIG_SCSI_PROC_FS
--- 
-2.25.1
+OK, I'll have a try and check if it works for most of the call sites.
 
+Thanks,
+Jason
