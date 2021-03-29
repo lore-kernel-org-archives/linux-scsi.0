@@ -2,136 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E2E5C433C1
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 08:08:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE8FBC43446
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 08:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54FE061969
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 08:08:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB1DE61879
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 08:55:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232547AbhC2IHu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Mar 2021 04:07:50 -0400
-Received: from comms.puri.sm ([159.203.221.185]:46964 "EHLO comms.puri.sm"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231849AbhC2IGM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Mar 2021 04:06:12 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by comms.puri.sm (Postfix) with ESMTP id 31C1BDFD66;
-        Mon, 29 Mar 2021 01:05:37 -0700 (PDT)
-Received: from comms.puri.sm ([127.0.0.1])
-        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id i8V-yNlrLhxp; Mon, 29 Mar 2021 01:05:35 -0700 (PDT)
-Message-ID: <e7a4d08fd3dba4fd22a1907476fad4334a4fbe10.camel@puri.sm>
-Subject: Re: [PATCH v3 1/4] scsi: add expecting_media_change flag to error
- path
-From:   Martin Kepplinger <martin.kepplinger@puri.sm>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
-        martin.petersen@oracle.com, stern@rowland.harvard.edu
-Date:   Mon, 29 Mar 2021 10:05:30 +0200
-In-Reply-To: <22533564-9f21-df1a-8cab-7996ccadc788@acm.org>
-References: <20210328102531.1114535-1-martin.kepplinger@puri.sm>
-         <20210328102531.1114535-2-martin.kepplinger@puri.sm>
-         <22533564-9f21-df1a-8cab-7996ccadc788@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.38.3-1 
-Content-Transfer-Encoding: 8bit
+        id S234088AbhC2IzI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Mar 2021 04:55:08 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:31300 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236187AbhC2Iw6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Mar 2021 04:52:58 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 12T8o9IE025196;
+        Mon, 29 Mar 2021 01:52:56 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=+tLqqWeHyZUp4r6FsA4qPB2YMGfbtofSkOSxz+JGk0o=;
+ b=KGiRn51eE+stOw9CfT6dg1ZWYJ6ejqhlZQVeXVVMXenpVMHZyfsX+KsWugse5MC+eMBa
+ giMvAoO/ZdWUUAcmDPfYeuDkbaehWdwH/NTvbRz709HGNwgw8AOXDS6cC/bwESPm5orG
+ on/SRQj9gu32Y8JCK6/o112Y26p7WMvHPFgjg9hKHqsmxw/gppkuHigTWzD1tGSz78k3
+ WuzUGycjJTBjDTsbCF/yKMptp5hY+Fy7gEyodurG8cp7tQ2CfThLKRV9T+LJBNRSsYvI
+ Y3xBGvXwQiC1lW/Ado3Gf2Bkm4Scwa7npSAIkTx2b+DgCmTxAWGTMyC2IV+NNDsRdckH Zg== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 37j47p4ar2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 29 Mar 2021 01:52:56 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 29 Mar
+ 2021 01:52:54 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 29 Mar 2021 01:52:54 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 2410A3F703F;
+        Mon, 29 Mar 2021 01:52:54 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 12T8qrW8004410;
+        Mon, 29 Mar 2021 01:52:53 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 12T8qrPS004401;
+        Mon, 29 Mar 2021 01:52:53 -0700
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <loberman@redhat.com>
+Subject: [PATCH v2 00/12] qla2xxx driver bug fixes
+Date:   Mon, 29 Mar 2021 01:52:17 -0700
+Message-ID: <20210329085229.4367-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Proofpoint-GUID: INJELZyVuCvzI0bZHatJDLMGbPU6zXEt
+X-Proofpoint-ORIG-GUID: INJELZyVuCvzI0bZHatJDLMGbPU6zXEt
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
+ definitions=2021-03-29_04:2021-03-26,2021-03-29 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Am Sonntag, dem 28.03.2021 um 09:53 -0700 schrieb Bart Van Assche:
-> On 3/28/21 3:25 AM, Martin Kepplinger wrote:
-> > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> > index 08c06c56331c..c62915d34ba4 100644
-> > --- a/drivers/scsi/scsi_error.c
-> > +++ b/drivers/scsi/scsi_error.c
-> > @@ -585,6 +585,18 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
-> >                                 return NEEDS_RETRY;
-> >                         }
-> >                 }
-> > +               if (scmd->device->expecting_media_change) {
-> > +                       if (sshdr.asc == 0x28 && sshdr.ascq ==
-> > 0x00) {
-> > +                               /*
-> > +                                * clear the expecting_media_change
-> > in
-> > +                                * scsi_decide_disposition()
-> > because we
-> > +                                * need to catch possible "fail
-> > fast" overrides
-> > +                                * that block readahead can cause.
-> > +                                */
-> > +                               return NEEDS_RETRY;
-> > +                       }
-> > +               }
-> 
-> Introducing a new state variable carries some risk, namely that a
-> path
-> that should set or clear the state variable is overlooked. Is there
-> an
-> approach that does not require to introduce a new state variable,
-> e.g.
-> to send a REQUEST SENSE command after a resume?
-> 
-> Thanks,
-> 
-> Bart.
+Martin,
 
-wow, thanks for that. Indeed my first tests succeed with the below
-change, that doesn't use the error-path additions at all (not setting
-expecting_media_change), and sends a request sense instead.
+Please apply the qla2xxx driver bug fixes to the scsi tree at your
+earliest convenience.
 
-I'm just too little of a scsi developer that I know whether the below
-change correctly does what you had in mind. Does it?
+v2:
+Fixed multi-line comment format
+Created new helper routine qla_pci_disconnected()
+Added new commit "qla2xxx: Do logout even if fabric scan retries got
+exhausted"
+Added Reviewed-by, Tested-by tags
+
+Thanks,
+Nilesh
+
+Arun Easi (3):
+  qla2xxx: Fix IOPS drop seen in some adapters
+  qla2xxx: Add H:C:T info in the log message for fc ports
+  qla2xxx: Fix crash in qla2xxx_mqueuecommand
+
+Nilesh Javali (1):
+  qla2xxx: Update version to 10.02.00.106-k
+
+Quinn Tran (8):
+  qla2xxx: fix stuck session
+  qla2xxx: consolidate zio threshold setting for both fcp & nvme
+  qla2xxx: Fix use after free in bsg
+  qla2xxx: fix RISC RESET completion polling
+  qla2xxx: fix crash in PCIe error handling
+  qla2xxx: fix mailbox recovery during PCIe error
+  qla2xxx: include AER debug mask to default
+  qla2xxx: Do logout even if fabric scan retries got exhausted
+
+ drivers/scsi/qla2xxx/qla_bsg.c     |   3 +-
+ drivers/scsi/qla2xxx/qla_dbg.c     |  16 ++-
+ drivers/scsi/qla2xxx/qla_dbg.h     |   2 +-
+ drivers/scsi/qla2xxx/qla_def.h     |  11 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   3 +
+ drivers/scsi/qla2xxx/qla_gs.c      |   4 +
+ drivers/scsi/qla2xxx/qla_init.c    | 115 ++++++++++++----
+ drivers/scsi/qla2xxx/qla_inline.h  |  46 +++++++
+ drivers/scsi/qla2xxx/qla_iocb.c    |  79 +++++++++--
+ drivers/scsi/qla2xxx/qla_isr.c     |   9 +-
+ drivers/scsi/qla2xxx/qla_mbx.c     |  38 +++--
+ drivers/scsi/qla2xxx/qla_nvme.c    |  10 +-
+ drivers/scsi/qla2xxx/qla_os.c      | 214 ++++++++++++++++-------------
+ drivers/scsi/qla2xxx/qla_target.c  |   6 +-
+ drivers/scsi/qla2xxx/qla_version.h |   4 +-
+ 15 files changed, 405 insertions(+), 155 deletions(-)
 
 
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3707,6 +3707,10 @@ static int sd_resume_runtime(struct device *dev)
- {
-        struct scsi_disk *sdkp = dev_get_drvdata(dev);
-        struct scsi_device *sdp = sdkp->device;
-+       const int timeout = sdp->request_queue->rq_timeout
-+               * SD_FLUSH_TIMEOUT_MULTIPLIER;
-+       int retries, res;
-+       struct scsi_sense_hdr my_sshdr;
-        int ret;
- 
-        if (!sdkp)      /* E.g.: runtime resume at the start of
-sd_probe() */
-@@ -3714,10 +3718,25 @@ static int sd_resume_runtime(struct device
-*dev)
- 
-        /*
-         * This devices issues a MEDIA CHANGE unit attention when
--        * resuming from suspend. Ignore the next one now.
-+        * resuming from suspend.
-         */
--       if (sdp->sdev_bflags & BLIST_MEDIA_CHANGE)
--               sdkp->device->expecting_media_change = 1;
-+       if (sdp->sdev_bflags & BLIST_MEDIA_CHANGE) {
-+               for (retries = 3; retries > 0; --retries) {
-+                       unsigned char cmd[10] = { 0 };
-+
-+                       cmd[0] = REQUEST_SENSE;
-+                       /*
-+                        * Leave the rest of the command zero to
-indicate
-+                        * flush everything.
-+                        */
-+                       res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0,
-NULL, &my_sshdr,
-+                                       timeout, sdkp->max_retries, 0,
-RQF_PM, NULL);
-+                       if (res == 0)
-+                               break;
-+               }
-+       }
- 
-        return sd_resume(dev);
+base-commit: f749d8b7a9896bc6e5ffe104cc64345037e0b152
+-- 
+2.19.0.rc0
 
