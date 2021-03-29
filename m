@@ -2,74 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A6CDC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 06:38:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E2E5C433C1
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 08:08:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F9F861964
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 06:38:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54FE061969
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 08:08:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230282AbhC2Ghe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Mar 2021 02:37:34 -0400
-Received: from mx2.suse.de ([195.135.220.15]:36356 "EHLO mx2.suse.de"
+        id S232547AbhC2IHu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Mar 2021 04:07:50 -0400
+Received: from comms.puri.sm ([159.203.221.185]:46964 "EHLO comms.puri.sm"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230226AbhC2GhC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Mar 2021 02:37:02 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 582F1B13D;
-        Mon, 29 Mar 2021 06:37:01 +0000 (UTC)
-Subject: Re: [PATCH 8/8] block: stop calling blk_queue_bounce for passthrough
- requests
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Khalid Aziz <khalid@gonehiking.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Hannes Reinecke <hare@suse.com>,
-        Ondrej Zary <linux@rainbow-software.org>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20210326055822.1437471-1-hch@lst.de>
- <20210326055822.1437471-9-hch@lst.de>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <0a39278a-f585-8b33-ea7b-16fe7f6c7ebd@suse.de>
-Date:   Mon, 29 Mar 2021 08:37:01 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
-MIME-Version: 1.0
-In-Reply-To: <20210326055822.1437471-9-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        id S231849AbhC2IGM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Mar 2021 04:06:12 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by comms.puri.sm (Postfix) with ESMTP id 31C1BDFD66;
+        Mon, 29 Mar 2021 01:05:37 -0700 (PDT)
+Received: from comms.puri.sm ([127.0.0.1])
+        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id i8V-yNlrLhxp; Mon, 29 Mar 2021 01:05:35 -0700 (PDT)
+Message-ID: <e7a4d08fd3dba4fd22a1907476fad4334a4fbe10.camel@puri.sm>
+Subject: Re: [PATCH v3 1/4] scsi: add expecting_media_change flag to error
+ path
+From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+        martin.petersen@oracle.com, stern@rowland.harvard.edu
+Date:   Mon, 29 Mar 2021 10:05:30 +0200
+In-Reply-To: <22533564-9f21-df1a-8cab-7996ccadc788@acm.org>
+References: <20210328102531.1114535-1-martin.kepplinger@puri.sm>
+         <20210328102531.1114535-2-martin.kepplinger@puri.sm>
+         <22533564-9f21-df1a-8cab-7996ccadc788@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.3-1 
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/26/21 6:58 AM, Christoph Hellwig wrote:
-> Instead of overloading the passthrough fast path with the deprecated
-> block layer bounce buffering let the users that combine an old
-> undermaintained driver with a highmem system pay the price by always
-> falling back to copies in that case.
+Am Sonntag, dem 28.03.2021 um 09:53 -0700 schrieb Bart Van Assche:
+> On 3/28/21 3:25 AM, Martin Kepplinger wrote:
+> > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> > index 08c06c56331c..c62915d34ba4 100644
+> > --- a/drivers/scsi/scsi_error.c
+> > +++ b/drivers/scsi/scsi_error.c
+> > @@ -585,6 +585,18 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
+> >                                 return NEEDS_RETRY;
+> >                         }
+> >                 }
+> > +               if (scmd->device->expecting_media_change) {
+> > +                       if (sshdr.asc == 0x28 && sshdr.ascq ==
+> > 0x00) {
+> > +                               /*
+> > +                                * clear the expecting_media_change
+> > in
+> > +                                * scsi_decide_disposition()
+> > because we
+> > +                                * need to catch possible "fail
+> > fast" overrides
+> > +                                * that block readahead can cause.
+> > +                                */
+> > +                               return NEEDS_RETRY;
+> > +                       }
+> > +               }
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/blk-map.c                    | 116 ++++++++---------------------
->  block/bounce.c                     |  11 +--
->  drivers/nvme/host/lightnvm.c       |   2 +-
->  drivers/target/target_core_pscsi.c |   4 +-
->  include/linux/blkdev.h             |   2 +-
->  5 files changed, 36 insertions(+), 99 deletions(-)
+> Introducing a new state variable carries some risk, namely that a
+> path
+> that should set or clear the state variable is overlooked. Is there
+> an
+> approach that does not require to introduce a new state variable,
+> e.g.
+> to send a REQUEST SENSE command after a resume?
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Thanks,
+> 
+> Bart.
 
-Cheers,
+wow, thanks for that. Indeed my first tests succeed with the below
+change, that doesn't use the error-path additions at all (not setting
+expecting_media_change), and sends a request sense instead.
 
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+I'm just too little of a scsi developer that I know whether the below
+change correctly does what you had in mind. Does it?
+
+
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3707,6 +3707,10 @@ static int sd_resume_runtime(struct device *dev)
+ {
+        struct scsi_disk *sdkp = dev_get_drvdata(dev);
+        struct scsi_device *sdp = sdkp->device;
++       const int timeout = sdp->request_queue->rq_timeout
++               * SD_FLUSH_TIMEOUT_MULTIPLIER;
++       int retries, res;
++       struct scsi_sense_hdr my_sshdr;
+        int ret;
+ 
+        if (!sdkp)      /* E.g.: runtime resume at the start of
+sd_probe() */
+@@ -3714,10 +3718,25 @@ static int sd_resume_runtime(struct device
+*dev)
+ 
+        /*
+         * This devices issues a MEDIA CHANGE unit attention when
+-        * resuming from suspend. Ignore the next one now.
++        * resuming from suspend.
+         */
+-       if (sdp->sdev_bflags & BLIST_MEDIA_CHANGE)
+-               sdkp->device->expecting_media_change = 1;
++       if (sdp->sdev_bflags & BLIST_MEDIA_CHANGE) {
++               for (retries = 3; retries > 0; --retries) {
++                       unsigned char cmd[10] = { 0 };
++
++                       cmd[0] = REQUEST_SENSE;
++                       /*
++                        * Leave the rest of the command zero to
+indicate
++                        * flush everything.
++                        */
++                       res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0,
+NULL, &my_sshdr,
++                                       timeout, sdkp->max_retries, 0,
+RQF_PM, NULL);
++                       if (res == 0)
++                               break;
++               }
++       }
+ 
+        return sd_resume(dev);
+
