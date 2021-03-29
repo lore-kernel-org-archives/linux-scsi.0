@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B50C1C433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 20:19:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C400C433C1
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 20:20:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8484A61929
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 20:19:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F250D61987
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 20:20:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231956AbhC2USb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Mar 2021 16:18:31 -0400
-Received: from mxout04.lancloud.ru ([45.84.86.114]:35946 "EHLO
+        id S230346AbhC2UUG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Mar 2021 16:20:06 -0400
+Received: from mxout04.lancloud.ru ([45.84.86.114]:35976 "EHLO
         mxout04.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230395AbhC2US2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Mar 2021 16:18:28 -0400
+        with ESMTP id S231967AbhC2UTv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Mar 2021 16:19:51 -0400
 Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 9EC58212B659
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 1ADE52131923
 Received: from LanCloud
 Received: from LanCloud
 Received: from LanCloud
-Subject: [PATCH v2 2/3] scsi: sun3x_esp: fix IRQ check
+Subject: [PATCH v2 3/3] scsi: sni_53c710: fix IRQ check
 From:   Sergey Shtylyov <s.shtylyov@omprussia.ru>
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>
 References: <ef3823c1-ee4a-5e9a-0a56-85f401ffa9dd@omprussia.ru>
 Organization: Open Mobile Platform, LLC
-Message-ID: <83ea8949-d5a8-b931-9bbd-d3800b5f5ed6@omprussia.ru>
-Date:   Mon, 29 Mar 2021 23:18:26 +0300
+Message-ID: <c57aea0f-caa9-fb5a-089b-4342a254bab6@omprussia.ru>
+Date:   Mon, 29 Mar 2021 23:19:48 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.0
 MIME-Version: 1.0
@@ -49,31 +49,39 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 The driver neglects to check the result of platform_get_irq()'s call and
 blithely passes the negative error codes to request_irq() (which takes
-*unsigned* IRQ #), causing it to fail with -EINVAL, overriding the real
-error code.  Stop  calling request_irq() with the invalid IRQ #s.
+*unsigned* IRQ #s), causing it to fail with -EINVAL (overridden by -ENODEV
+further below).  Stop  calling request_irq() with the invalid IRQ #s.
 
-Fixes: 0bb67f181834 ("[SCSI] sun3x_esp: convert to esp_scsi")
+Fixes: c27d85f3f3c5 ("[SCSI] SNI RM 53c710 driver")
 Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
 
 ---
 Changes in version 2:
-- clarified the description.
+- new patch.
 
- drivers/scsi/sun3x_esp.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/sni_53c710.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Index: scsi/drivers/scsi/sun3x_esp.c
+Index: scsi/drivers/scsi/sni_53c710.c
 ===================================================================
---- scsi.orig/drivers/scsi/sun3x_esp.c
-+++ scsi/drivers/scsi/sun3x_esp.c
-@@ -206,7 +206,9 @@ static int esp_sun3x_probe(struct platfo
- 	if (!esp->command_block)
- 		goto fail_unmap_regs_dma;
+--- scsi.orig/drivers/scsi/sni_53c710.c
++++ scsi/drivers/scsi/sni_53c710.c
+@@ -58,6 +58,7 @@ static int snirm710_probe(struct platfor
+ 	struct NCR_700_Host_Parameters *hostdata;
+ 	struct Scsi_Host *host;
+ 	struct  resource *res;
++	int rc;
  
+ 	res = platform_get_resource(dev, IORESOURCE_MEM, 0);
+ 	if (!res)
+@@ -83,7 +84,9 @@ static int snirm710_probe(struct platfor
+ 		goto out_kfree;
+ 	host->this_id = 7;
+ 	host->base = base;
 -	host->irq = platform_get_irq(dev, 0);
-+	host->irq = err = platform_get_irq(dev, 0);
-+	if (err < 0)
-+		goto fail_unmap_command_block;
- 	err = request_irq(host->irq, scsi_esp_intr, IRQF_SHARED,
- 			  "SUN3X ESP", esp);
- 	if (err < 0)
++	host->irq = rc = platform_get_irq(dev, 0);
++	if (rc < 0)
++		goto out_put_host;
+ 	if(request_irq(host->irq, NCR_700_intr, IRQF_SHARED, "snirm710", host)) {
+ 		printk(KERN_ERR "snirm710: request_irq failed!\n");
+ 		goto out_put_host;
