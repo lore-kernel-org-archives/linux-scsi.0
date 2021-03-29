@@ -5,25 +5,26 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECD2FC433DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 06:35:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A6CDC433DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 06:38:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9FA476196B
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 06:35:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F9F861964
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 06:38:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230411AbhC2Geu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Mar 2021 02:34:50 -0400
-Received: from mx2.suse.de ([195.135.220.15]:35900 "EHLO mx2.suse.de"
+        id S230282AbhC2Ghe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Mar 2021 02:37:34 -0400
+Received: from mx2.suse.de ([195.135.220.15]:36356 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230305AbhC2Gen (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Mar 2021 02:34:43 -0400
+        id S230226AbhC2GhC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Mar 2021 02:37:02 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id D36EAB13D;
-        Mon, 29 Mar 2021 06:34:41 +0000 (UTC)
-Subject: Re: [PATCH 7/8] block: refactor the bounce buffering code
+        by mx2.suse.de (Postfix) with ESMTP id 582F1B13D;
+        Mon, 29 Mar 2021 06:37:01 +0000 (UTC)
+Subject: Re: [PATCH 8/8] block: stop calling blk_queue_bounce for passthrough
+ requests
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Khalid Aziz <khalid@gonehiking.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -32,14 +33,14 @@ To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Ondrej Zary <linux@rainbow-software.org>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 References: <20210326055822.1437471-1-hch@lst.de>
- <20210326055822.1437471-8-hch@lst.de>
+ <20210326055822.1437471-9-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <5bf65977-046f-41b3-de54-f72d235b753d@suse.de>
-Date:   Mon, 29 Mar 2021 08:34:41 +0200
+Message-ID: <0a39278a-f585-8b33-ea7b-16fe7f6c7ebd@suse.de>
+Date:   Mon, 29 Mar 2021 08:37:01 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.7.1
 MIME-Version: 1.0
-In-Reply-To: <20210326055822.1437471-8-hch@lst.de>
+In-Reply-To: <20210326055822.1437471-9-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -48,20 +49,19 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 3/26/21 6:58 AM, Christoph Hellwig wrote:
-> Get rid of all the PFN arithmetics and just use an enum for the two
-> remaining options, and use PageHighMem for the actual bounce decision.
-> 
-> Add a fast path to entirely avoid the call for the common case of a queue
-> not using the legacy bouncing code.
+> Instead of overloading the passthrough fast path with the deprecated
+> block layer bounce buffering let the users that combine an old
+> undermaintained driver with a highmem system pay the price by always
+> falling back to copies in that case.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  block/blk-core.c       |  6 ++----
->  block/blk-settings.c   | 42 ++++++++----------------------------------
->  block/blk.h            | 16 ++++++++++++----
->  block/bounce.c         | 35 +++++------------------------------
->  include/linux/blkdev.h | 29 +++++++++++------------------
->  5 files changed, 38 insertions(+), 90 deletions(-)
+>  block/blk-map.c                    | 116 ++++++++---------------------
+>  block/bounce.c                     |  11 +--
+>  drivers/nvme/host/lightnvm.c       |   2 +-
+>  drivers/target/target_core_pscsi.c |   4 +-
+>  include/linux/blkdev.h             |   2 +-
+>  5 files changed, 36 insertions(+), 99 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
