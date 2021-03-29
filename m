@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E25BBC43600
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 22:22:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7318CC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 22:24:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFF0661996
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 22:22:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55490619E9
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 22:24:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232148AbhC2WWf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Mar 2021 18:22:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46176 "EHLO mail.kernel.org"
+        id S232630AbhC2WXq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Mar 2021 18:23:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47066 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231964AbhC2WWM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Mar 2021 18:22:12 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B386661990;
-        Mon, 29 Mar 2021 22:22:10 +0000 (UTC)
+        id S232263AbhC2WWy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Mar 2021 18:22:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 558BF61994;
+        Mon, 29 Mar 2021 22:22:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617056531;
-        bh=ifP7GrAvdHy3PvqZQPZ0OgZ30TQlGNsg5g+sx/xnfZI=;
+        s=k20201202; t=1617056574;
+        bh=axNQmBo8k1SXEw2pPx30CVmuPCu5/l56hZ7A1hlAKp0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=P5Iq+4JaYvOAWqqToT2P2RQpjBBkpk6+BKh0gnFyB2jNDs+pbqN4Wi3O6rcN01fZX
-         cGwDsKKsHstY/VIutPMCWV2U7qEp5U5moNzoG005Pc6abcOXpwTosDkPkVthlcrSrk
-         EDfPIASNt8XMLncA5FdvfY+4Megk/4isoRGHXMvDlkXxRsUzB9jCIUQYQMCH8NX8ab
-         V/Mpyc5krIbhERkLnlXOOpaJjjDj17Twnpuq4PwGsdaRHcgJjHnBv2WutAmTdVJpHT
-         SoiKQUykdTkXEgHfTimpBTohJEVXhfTnHsvM/ZU0h3fSa1hPBuaxMo/esYlZbBv5qt
-         dVQ7kPQzVDoDA==
+        b=Rwjqt/YNBpPIoLTmysOMNUPM20NkIaEiwsHKebCo+8zstwjd0OxquPJUfmt0tVaIB
+         onyRNwyNJd939X3ZDatvMRgWrjbGsPvB1XVDEFreFwZZlcIjIL6ZjgqgsgBCcPjqO5
+         0t0IbYsIijryDdLddwjrd4zvrmjTDqPXV/D1xd06NkIyh8ZGAuWedWfaj5deODICQo
+         r7+RyCPBZmvo3xF1RRqQOb5UHl5bvpgGuOW2gvDILBiwl88YKNJvexTa3dkfCKbcnh
+         uuATl102PXcHHHViSzj0iYNxbMJvHooDXRGmwVNIYmk+8VCtCW+9YZblLZzWgrL83I
+         kTVNTbmnlRwlw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Martin Wilck <mwilck@suse.com>, Christoph Hellwig <hch@lst.de>,
@@ -38,12 +38,12 @@ Cc:     Martin Wilck <mwilck@suse.com>, Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 30/38] scsi: target: pscsi: Clean up after failure in pscsi_map_sg()
-Date:   Mon, 29 Mar 2021 18:21:25 -0400
-Message-Id: <20210329222133.2382393-30-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 26/33] scsi: target: pscsi: Clean up after failure in pscsi_map_sg()
+Date:   Mon, 29 Mar 2021 18:22:14 -0400
+Message-Id: <20210329222222.2382987-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210329222133.2382393-1-sashal@kernel.org>
-References: <20210329222133.2382393-1-sashal@kernel.org>
+In-Reply-To: <20210329222222.2382987-1-sashal@kernel.org>
+References: <20210329222222.2382987-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -70,7 +70,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 8 insertions(+)
 
 diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 7994f27e4527..0689d550c37a 100644
+index 4e37fa9b409d..723a51a3f431 100644
 --- a/drivers/target/target_core_pscsi.c
 +++ b/drivers/target/target_core_pscsi.c
 @@ -939,6 +939,14 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
