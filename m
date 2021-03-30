@@ -2,74 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A6A7C433E6
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 13:12:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67A5BC433DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 14:38:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 635196190A
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 13:12:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30C73619CF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 14:38:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232230AbhC3NLl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Mar 2021 09:11:41 -0400
-Received: from elvis.franken.de ([193.175.24.41]:37693 "EHLO elvis.franken.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231971AbhC3NLi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 Mar 2021 09:11:38 -0400
-Received: from uucp (helo=alpha)
-        by elvis.franken.de with local-bsmtp (Exim 3.36 #1)
-        id 1lRE9U-000488-00; Tue, 30 Mar 2021 15:11:24 +0200
-Received: by alpha.franken.de (Postfix, from userid 1000)
-        id 405B2C1DF5; Tue, 30 Mar 2021 15:07:40 +0200 (CEST)
-Date:   Tue, 30 Mar 2021 15:07:40 +0200
-From:   Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-To:     Wang Qing <wangqing@vivo.com>
-Cc:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Luis de Bethencourt <luisbg@kernel.org>,
-        Salah Triki <salah.triki@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Richard Weinberger <richard@nod.at>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, linux-mips@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-hams@vger.kernel.org,
-        netdev@vger.kernel.org, linux-decnet-user@lists.sourceforge.net,
-        gregkh@linuxfoundation.org
-Subject: Re: [PATCH 1/6] mips/sgi-ip27: Delete obsolete TODO file
-Message-ID: <20210330130740.GA11217@alpha.franken.de>
-References: <1617087773-7183-1-git-send-email-wangqing@vivo.com>
- <1617087773-7183-2-git-send-email-wangqing@vivo.com>
+        id S231730AbhC3Ohl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Mar 2021 10:37:41 -0400
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:60297 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S231783AbhC3Ohj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 30 Mar 2021 10:37:39 -0400
+Received: from [192.168.0.5] (ip5f5aed0a.dynamic.kabel-deutschland.de [95.90.237.10])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 8F7FC206473C1;
+        Tue, 30 Mar 2021 16:37:33 +0200 (CEST)
+Subject: Re: [PATCH V3 15/25] smartpqi: fix host qdepth limit
+To:     Paul Menzel <pmenzel@molgen.mpg.de>, Don.Brace@microchip.com,
+        john.garry@huawei.com, mwilck@suse.com,
+        Kevin.Barnett@microchip.com, Scott.Teel@microchip.com,
+        Justin.Lindley@microchip.com, Scott.Benesh@microchip.com,
+        Gerry.Morong@microchip.com, Mahesh.Rajashekhara@microchip.com,
+        hch@infradead.org, joseph.szczypek@hpe.com, POSWALD@suse.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, it+linux-scsi@molgen.mpg.de,
+        gregkh@linuxfoundation.org, ming.lei@redhat.com
+References: <160763241302.26927.17487238067261230799.stgit@brunhilda>
+ <160763254769.26927.9249430312259308888.stgit@brunhilda>
+ <ddd8bca4-2ae7-a2dc-cca6-0a2ff85a7d35@molgen.mpg.de>
+ <SN6PR11MB28487527276CEBC75D36A732E1C60@SN6PR11MB2848.namprd11.prod.outlook.com>
+ <85c6e1705c55fb930ac13bc939279f0d1faa526f.camel@suse.com>
+ <SN6PR11MB2848C1195C65F87C910E979BE1A70@SN6PR11MB2848.namprd11.prod.outlook.com>
+ <b3e4e597-779b-7c1e-0d3c-07bc3dab1bb5@huawei.com>
+ <SN6PR11MB2848ECDD666F0BF867AE04DFE18D9@SN6PR11MB2848.namprd11.prod.outlook.com>
+ <6fea70bb-1718-ad02-789b-8e908f57951e@huawei.com>
+ <SN6PR11MB2848D1442DE98A85A7B8B89EE18D9@SN6PR11MB2848.namprd11.prod.outlook.com>
+ <c0d94b4d-b8d8-0b1a-a096-81eac68b4af4@molgen.mpg.de>
+ <00a52885-62d8-7bfd-cc78-3321a717b5ca@molgen.mpg.de>
+From:   Donald Buczek <buczek@molgen.mpg.de>
+Message-ID: <8072d5a6-dee9-e8e4-68be-8cf554b48b55@molgen.mpg.de>
+Date:   Tue, 30 Mar 2021 16:37:33 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1617087773-7183-2-git-send-email-wangqing@vivo.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <00a52885-62d8-7bfd-cc78-3321a717b5ca@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Mar 30, 2021 at 03:02:44PM +0800, Wang Qing wrote:
-> The TODO file here has not been updated for 15 years, and the function 
-> development described in the file have been implemented or abandoned.
+Dear Paul,
+
+On 29.03.21 23:16, Paul Menzel wrote:
+> [Resent from correct address.]
 > 
-> Its existence will mislead developers seeking to view outdated information.
-> 
-> Signed-off-by: Wang Qing <wangqing@vivo.com>
-> ---
->  arch/mips/sgi-ip27/TODO | 19 -------------------
->  1 file changed, 19 deletions(-)
->  delete mode 100644 arch/mips/sgi-ip27/TODO
+> Am 29.03.21 um 23:15 schrieb Paul Menzel:
+>> Dear Linüx folks,
+>>
+>>
+>> Am 10.02.21 um 17:29 schrieb Don.Brace@microchip.com:
+>>> -----Original Message-----
+>>> From: John Garry [mailto:john.garry@huawei.com]
+>>> Subject: Re: [PATCH V3 15/25] smartpqi: fix host qdepth limit
+>>>
+>>>> I think that this can alternatively be solved by setting .host_tagset flag.
+>>>>
+>>>> Thanks,
+>>>> John
+>>>>
+>>>> Don: John, can I add a Suggested-by tag for you for my new patch smartpqi-use-host-wide-tagspace?
+>>>
+>>> I don't mind. And I think that Ming had the same idea.
+>>
+>>> Don: Thanks for reminding me. Ming, can I add your Suggested-by tag?
+>>
+>> It looks like, iterations 4 and 5 of the patch series have been posted in the meantime. Unfortunately without the reporters and discussion participants in Cc. Linux upstream is still broken since version 5.5.
 
-applied to mips-next.
+When "smartpqi: use host wide tagspace" [1] goes into mainline, we can submit it to stable, if nobody else does. This fixes the original problem and we got a patch with the same code change running in our 5.10 kernels.
 
-Thomas.
+Best
+   Donald
 
--- 
-Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
-good idea.                                                [ RFC1925, 2.3 ]
+[1]: https://lore.kernel.org/linux-scsi/161549369787.25025.8975999483518581619.stgit@brunhilda/
+
+>>
+>>
+>> Kind regards,
+>>
+>> Paul
+>>
+>>
+>> [1]: https://lore.kernel.org/linux-scsi/161540568064.19430.11157730901022265360.stgit@brunhilda/
+>> [2]: https://lore.kernel.org/linux-scsi/161549045434.25025.17473629602756431540.stgit@brunhilda/
