@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08595C433E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CDB4C433E0
 	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 16:19:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8D4C619D0
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 16:19:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 354D9619C7
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 16:19:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232386AbhC3QSk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Mar 2021 12:18:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40922 "EHLO
+        id S232395AbhC3QSn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Mar 2021 12:18:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232134AbhC3QSI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2021 12:18:08 -0400
+        with ESMTP id S232286AbhC3QSM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2021 12:18:12 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 967FFC061574;
-        Tue, 30 Mar 2021 09:18:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3D78C061574;
+        Tue, 30 Mar 2021 09:18:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=DR3bXdoncb3KtK31aymdGf021lSb+B3vycacX+odNEI=; b=v9lNyRvjEg3vEVykjmUbcYxEWb
-        X2j1HSB1aBr+6sn3gnSUEpFezPocqVgYDehDr9BffT+atPjQYFau+lpRGBczJN1fwe85gakG8an+J
-        +xon6a2wZ4Kamg0mD4oOPS3vBFS8JRwc1az8dCBCAyTFTciZV5hIMJZRPLQFR1fU2LhEpMNX0vKld
-        wZw4PLuO3OL3kDGQbENWvk3yCdJX0Y7WtPSAn1NKFrLS3lCJoF+U5adPDH/neQZjS4rJzP7j+D/2U
-        Pee4Ywf9wCA4ondXAD3fVYOvaw7IAVUFWGXpdf0XSJBoTAx41bmQbSYrSDa3jVwI5CDpq6UtYFd2f
-        WMFJ/Y9A==;
+        bh=clkaBMHqFEToWoG3RDL6mkbv+bLYy50wIeoj77viXRA=; b=c3AcMH2v35AJV6QxSMjXVIjS3c
+        xMGVOnpEA1YpVnz6WJU3lezlXMW0RilNWPUgV7xmP2S1UmvywCdmpnhUngNhTlr593ZbiaZt3kOXx
+        1tRbtPGxTu4NTDfMciddtxSaYmSgx09AvUYjZQsuuZs5udhMxbC9Oq39h8diYJ6rgLeBT4HtlVi5D
+        idX2moOu2jO7BFNsBTBUyl9O2H0t0Sg0wgpsIH9CA0Duv4evm4Fvv43krUoIxBIdU9bgLow67TYM4
+        BAAhZV597MjoXiqzCYf2+FyFVjBaKBUAkszJTV+1NJC9Mejda6jwlNMoKNIcDJoIeWy/lJUStHbNL
+        BOuCjqGA==;
 Received: from [185.12.131.45] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lRH48-008aM8-0Q; Tue, 30 Mar 2021 16:18:04 +0000
+        id 1lRH4A-008aMG-LY; Tue, 30 Mar 2021 16:18:07 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>
 Cc:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
@@ -45,9 +45,9 @@ Cc:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
         Jan Hoeppner <hoeppner@linux.ibm.com>,
         linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 12/15] block: split __blkdev_put
-Date:   Tue, 30 Mar 2021 18:17:24 +0200
-Message-Id: <20210330161727.2297292-13-hch@lst.de>
+Subject: [PATCH 13/15] block: move bd_part_count to struct gendisk
+Date:   Tue, 30 Mar 2021 18:17:25 +0200
+Message-Id: <20210330161727.2297292-14-hch@lst.de>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210330161727.2297292-1-hch@lst.de>
 References: <20210330161727.2297292-1-hch@lst.de>
@@ -58,117 +58,78 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Split __blkdev_put into one helper for the whole device, and one for
-partitions as well as another shared helper for flushing the block
-device inode mapping.
+The bd_part_count value only makes sense for whole devices, so move it
+to struct gendisk and give it a more descriptive name.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/block_dev.c | 58 ++++++++++++++++++++++++++++----------------------
- 1 file changed, 32 insertions(+), 26 deletions(-)
+ block/partitions/core.c   | 2 +-
+ fs/block_dev.c            | 4 ++--
+ include/linux/blk_types.h | 3 ---
+ include/linux/genhd.h     | 1 +
+ 4 files changed, 4 insertions(+), 6 deletions(-)
 
+diff --git a/block/partitions/core.c b/block/partitions/core.c
+index 60388a41ff92a3..162b9b35c53171 100644
+--- a/block/partitions/core.c
++++ b/block/partitions/core.c
+@@ -527,7 +527,7 @@ int blk_drop_partitions(struct block_device *bdev)
+ 	struct disk_part_iter piter;
+ 	struct block_device *part;
+ 
+-	if (bdev->bd_part_count)
++	if (bdev->bd_disk->open_partitions)
+ 		return -EBUSY;
+ 
+ 	sync_blockdev(bdev);
 diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 044e9200783e2d..ade5a180ff62d3 100644
+index ade5a180ff62d3..6d7e3bd7cb7ce3 100644
 --- a/fs/block_dev.c
 +++ b/fs/block_dev.c
-@@ -1230,7 +1230,13 @@ void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
- EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
- #endif
+@@ -1339,7 +1339,7 @@ static int blkdev_get_part(struct block_device *part, fmode_t mode)
+ 	if (!(disk->flags & GENHD_FL_UP) || !bdev_nr_sectors(part))
+ 		goto out_blkdev_put;
  
--static void __blkdev_put(struct block_device *bdev, fmode_t mode);
-+static void blkdev_flush_mapping(struct block_device *bdev)
-+{
-+	WARN_ON_ONCE(bdev->bd_holders);
-+	sync_blockdev(bdev);
-+	kill_bdev(bdev);
-+	bdev_write_inode(bdev);
-+}
- 
- int bdev_disk_changed(struct block_device *bdev, bool invalidate)
- {
-@@ -1307,6 +1313,14 @@ static int blkdev_get_whole(struct block_device *bdev, fmode_t mode)
- 	return 0;;
- }
- 
-+static void blkdev_put_whole(struct block_device *bdev, fmode_t mode)
-+{
-+	if (!--bdev->bd_openers)
-+		blkdev_flush_mapping(bdev);
-+	if (bdev->bd_disk->fops->release)
-+		bdev->bd_disk->fops->release(bdev->bd_disk, mode);
-+}
-+
- static int blkdev_get_part(struct block_device *part, fmode_t mode)
- {
- 	struct gendisk *disk = part->bd_disk;
-@@ -1334,12 +1348,24 @@ static int blkdev_get_part(struct block_device *part, fmode_t mode)
- 	return 0;
- 
- out_blkdev_put:
--	__blkdev_put(whole, mode);
-+	blkdev_put_whole(whole, mode);
- out_put_whole:
+-	whole->bd_part_count++;
++	disk->open_partitions++;
+ 	set_init_blocksize(part);
+ 	if (part->bd_bdi == &noop_backing_dev_info)
+ 		part->bd_bdi = bdi_get(disk->queue->backing_dev_info);
+@@ -1361,7 +1361,7 @@ static void blkdev_put_part(struct block_device *part, fmode_t mode)
+ 	if (--part->bd_openers)
+ 		return;
+ 	blkdev_flush_mapping(part);
+-	whole->bd_part_count--;
++	whole->bd_disk->open_partitions--;
+ 	blkdev_put_whole(whole, mode);
  	bdput(whole);
- 	return ret;
  }
- 
-+static void blkdev_put_part(struct block_device *part, fmode_t mode)
-+{
-+	struct block_device *whole = bdev_whole(part);
-+
-+	if (--part->bd_openers)
-+		return;
-+	blkdev_flush_mapping(part);
-+	whole->bd_part_count--;
-+	blkdev_put_whole(whole, mode);
-+	bdput(whole);
-+}
-+
- struct block_device *blkdev_get_no_open(dev_t dev)
- {
- 	struct block_device *bdev;
-@@ -1537,29 +1563,6 @@ static int blkdev_open(struct inode * inode, struct file * filp)
- 	return 0;
- }
- 
--static void __blkdev_put(struct block_device *bdev, fmode_t mode)
--{
--	struct gendisk *disk = bdev->bd_disk;
--	struct block_device *victim = NULL;
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index a09660671fa47e..fd3860d18d7ed7 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -39,9 +39,6 @@ struct block_device {
+ #endif
+ 	struct kobject		*bd_holder_dir;
+ 	u8			bd_partno;
+-	/* number of times partitions within this device have been opened. */
+-	unsigned		bd_part_count;
 -
--	if (!--bdev->bd_openers) {
--		WARN_ON_ONCE(bdev->bd_holders);
--		sync_blockdev(bdev);
--		kill_bdev(bdev);
--		bdev_write_inode(bdev);
--		if (bdev_is_partition(bdev))
--			victim = bdev_whole(bdev);
--	}
--
--	if (!bdev_is_partition(bdev) && disk->fops->release)
--		disk->fops->release(disk, mode);
--	if (victim) {
--		victim->bd_part_count--;
--		__blkdev_put(victim, mode);
--		bdput(victim);
--	}
--}
--
- void blkdev_put(struct block_device *bdev, fmode_t mode)
- {
- 	struct gendisk *disk = bdev->bd_disk;
-@@ -1613,7 +1616,10 @@ void blkdev_put(struct block_device *bdev, fmode_t mode)
- 	 */
- 	disk_flush_events(disk, DISK_EVENT_MEDIA_CHANGE);
+ 	spinlock_t		bd_size_lock; /* for bd_inode->i_size updates */
+ 	struct gendisk *	bd_disk;
+ 	struct backing_dev_info *bd_bdi;
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 02ea04144ece7b..146d2dafdccd58 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -155,6 +155,7 @@ struct gendisk {
+ #define GD_READ_ONLY			1
  
--	__blkdev_put(bdev, mode);
-+	if (bdev_is_partition(bdev))
-+		blkdev_put_part(bdev, mode);
-+	else
-+		blkdev_put_whole(bdev, mode);
- 	mutex_unlock(&disk->open_mutex);
+ 	struct mutex open_mutex;	/* open/close mutex */
++	unsigned open_partitions;	/* number of open partitions */
  
- 	blkdev_put_no_open(bdev);
+ 	struct kobject *slave_dir;
+ 
 -- 
 2.30.1
 
