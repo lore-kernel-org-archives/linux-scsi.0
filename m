@@ -2,39 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4D90C433C1
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 17:41:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDFEDC433C1
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 17:42:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B616619B1
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 17:41:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A41F961987
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 17:42:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231952AbhC3RlF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Mar 2021 13:41:05 -0400
-Received: from mxout03.lancloud.ru ([45.84.86.113]:39976 "EHLO
+        id S232333AbhC3RmQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Mar 2021 13:42:16 -0400
+Received: from mxout03.lancloud.ru ([45.84.86.113]:40036 "EHLO
         mxout03.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232417AbhC3Rkp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2021 13:40:45 -0400
+        with ESMTP id S232336AbhC3Rl7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2021 13:41:59 -0400
 Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru 1B24520601AD
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru 8578820601B3
 Received: from LanCloud
 Received: from LanCloud
 Received: from LanCloud
+Subject: [PATCH v3 1/3: scsi: jazz_esp: add IRQ check
 From:   Sergey Shtylyov <s.shtylyov@omprussia.ru>
-Subject: [PATCH v3 0/3] Stop calling request_irq() with invalid IRQs
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>
+References: <137b9e4d-391f-3163-2e6f-9e21aeb6bf34@omprussia.ru>
 Organization: Open Mobile Platform, LLC
-Message-ID: <137b9e4d-391f-3163-2e6f-9e21aeb6bf34@omprussia.ru>
-Date:   Tue, 30 Mar 2021 20:40:35 +0300
+Message-ID: <61218d82-cf49-cb75-2f54-f7a1a4e91242@omprussia.ru>
+Date:   Tue, 30 Mar 2021 20:41:53 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.0
 MIME-Version: 1.0
+In-Reply-To: <137b9e4d-391f-3163-2e6f-9e21aeb6bf34@omprussia.ru>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -45,11 +47,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Here are 3 patches against the 'fixes' branch of Martin Petersen's 'scsi.git' repo.
-The affected drivers call platform_get_irq() but ignore its result -- they blithely
-pass the negative error codes to request_irq() which expects *unsinged* IRQ #s. Stop
-doing that by checking what platform_get_irq() returns.
+The driver neglects to check the result of platform_get_irq()'s call and
+blithely passes the negative error codes to request_irq() (which takes
+*unsigned* IRQ #), causing it to fail with -EINVAL, overriding the real
+error code.  Stop  calling request_irq() with the invalid IRQ #s.
 
-[1/3: scsi: jazz_esp: add IRQ check
-[2/3] scsi: sun3x_esp: add IRQ check
-[3/3] scsi: sni_53c710: add IRQ check
+Fixes: 352e921f0dd4 ("[SCSI] jazz_esp: converted to use esp_core")
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
+
+---
+Changes in version 2:
+- clarified the description.
+
+ drivers/scsi/jazz_esp.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+Index: scsi/drivers/scsi/jazz_esp.c
+===================================================================
+--- scsi.orig/drivers/scsi/jazz_esp.c
++++ scsi/drivers/scsi/jazz_esp.c
+@@ -143,7 +143,9 @@ static int esp_jazz_probe(struct platfor
+ 	if (!esp->command_block)
+ 		goto fail_unmap_regs;
+ 
+-	host->irq = platform_get_irq(dev, 0);
++	host->irq = err = platform_get_irq(dev, 0);
++	if (err < 0)
++		goto fail_unmap_command_block;
+ 	err = request_irq(host->irq, scsi_esp_intr, IRQF_SHARED, "ESP", esp);
+ 	if (err < 0)
+ 		goto fail_unmap_command_block;
