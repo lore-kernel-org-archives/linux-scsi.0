@@ -2,110 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18DC6C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 09:01:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA5B3C433C1
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 09:09:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D116361994
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 09:01:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0BDA6195C
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 09:09:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231512AbhC3JBP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Mar 2021 05:01:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48496 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231626AbhC3JAw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 Mar 2021 05:00:52 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 69DB5619AD;
-        Tue, 30 Mar 2021 09:00:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617094851;
-        bh=7BKJpJRJJea7jWMl80W5EN9UAj8omc2Cs2r3GAQepzo=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Wsuslf1aShoCKyVO6hEvzEdZFMLQDIu2sbrH3x69Zj3fzv+Ssz4//dpuMEbWngOUq
-         Zjq5v+sm416E8eDL5lOizTzEa7Erwc/f8fCuW75qsYfDXgJ3oE6b4i2kQYeYtPZd4I
-         FK+fITjA3iXC63XWANkkhj4NvYlqDfeUjJbbuVDoJnM3Z/9egQRLEp8Koxo3BlExlm
-         KJf0GkZPfII5XV5fPTrpbDnwtlOxinHOG65Ikgkmm49iP6nf4qHit/q0d/LnVY5qb5
-         qa+2M5n3XKCJv1Wm+mrJgHL5nAHA2YFzyo0MHv0A+yCW12hqtwqifDnY1PrNFQltR4
-         2Y+g7lZslykhg==
-Received: by mail-oo1-f53.google.com with SMTP id j10-20020a4ad18a0000b02901b677a0ba98so3616658oor.1;
-        Tue, 30 Mar 2021 02:00:51 -0700 (PDT)
-X-Gm-Message-State: AOAM531q1tUjYttWC1Plkfc9XuItgOGcA+fFv0WHfXrMBQvc7MswRNus
-        E9i6o0x2QMgnTmzWwbDN6fRjkSuusGeFcFzGuws=
-X-Google-Smtp-Source: ABdhPJzpNNBXFi0zlX+fSlV+iQuwxA7n7pfSwfoGiIinCD5YA1YpFSD4jDETbIF3gyjCIllkPcG9Qx+cRKe7U+THggk=
-X-Received: by 2002:a4a:304a:: with SMTP id z10mr25148861ooz.26.1617094850520;
- Tue, 30 Mar 2021 02:00:50 -0700 (PDT)
-MIME-Version: 1.0
-References: <20210322160253.4032422-1-arnd@kernel.org> <20210322160253.4032422-7-arnd@kernel.org>
- <YGLkPjSBdgpriC0E@blackbook>
-In-Reply-To: <YGLkPjSBdgpriC0E@blackbook>
-From:   Arnd Bergmann <arnd@kernel.org>
-Date:   Tue, 30 Mar 2021 11:00:36 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a3nUCGwPpE+E820DniY8Haz1Xx72pA38P6s5MWsbi0iAQ@mail.gmail.com>
-Message-ID: <CAK8P3a3nUCGwPpE+E820DniY8Haz1Xx72pA38P6s5MWsbi0iAQ@mail.gmail.com>
-Subject: Re: [PATCH 06/11] cgroup: fix -Wzero-length-bounds warnings
-To:     =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Martin Sebor <msebor@gcc.gnu.org>, Tejun Heo <tj@kernel.org>,
-        Zefan Li <lizefan.x@bytedance.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        "the arch/x86 maintainers" <x86@kernel.org>,
-        Ning Sun <ning.sun@intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Simon Kelley <simon@thekelleys.org.uk>,
-        James Smart <james.smart@broadcom.com>,
+        id S231709AbhC3JIt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Mar 2021 05:08:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60478 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231844AbhC3JI0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2021 05:08:26 -0400
+Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8E0EC061762;
+        Tue, 30 Mar 2021 02:08:25 -0700 (PDT)
+Received: by mail-ed1-x534.google.com with SMTP id e7so17278421edu.10;
+        Tue, 30 Mar 2021 02:08:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=JopkR36qP9iYAEOIFtxNujqvc003NWZkBhmUZm75cOM=;
+        b=IWh+xP0+Cah9/2eZ5h8CB+WdAzjNJgF3LvZT/J69iyISkhndXPSsuck6jThJw1jDi4
+         94VM4rkPcS3e/GUyawO2a8/vJvx/62n0lyD8LGJVHrhnu9AzvZLWX51BB1KxBSWmyMSY
+         atfHiMRy24a/rOvymm/5vPJ1GmHja+dR8Z39wh3QVgvyWldd/Eko8iTdFvgQN/hzNAgo
+         klCSuIpXU8qReX584PrLWpYBkNdqC0R507hWxNkn1scF9VI2ATUAgAX0o6sJMy4RBDq+
+         CAC0B4QKexnRfss4wdOTY61iLhcbCJNfAXMIT5qxtN+26p2P08bUfNEU8EppKnvPYom2
+         C86Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=JopkR36qP9iYAEOIFtxNujqvc003NWZkBhmUZm75cOM=;
+        b=g+ZmcLwtvMvWGo6ixsLVMrE0aulbRpmjSOdzHCF6BRjgi8UVFuPgbOV/egpAsSHvBW
+         BTllppiHsqGsdpJhXZMIfEJgZGRaD9iJsKZMLx7LT3uWdj+17QEvfjFCxbhbckEhcNb6
+         VEir83YQcGhgYgO6FrXYzOsg3X/W/1hcO/FhYQAHFQqqSkgtf8IjrRvKXC1Fk5IHuxgn
+         OoMCCL5N0tfeHZTZAvF8I8J68D8uPWB7UO5P3J+XPeVV8HtUB9eYL4Xu0Rt47K35PvTC
+         DIK7PksAB8DGlOILgYiWqfzWE+T5NvTrlzVYsYV+U911uDx6zyk0sMxu81Q2spi6rR1p
+         Gsyw==
+X-Gm-Message-State: AOAM532wykFYq0tadoIlX3cN9vFLNfVOqIMHRZIgmpsjGsYLLKYCdIFM
+        Rt4noyi52UvJMUfu1pyOkUNM4qXDcF7cqQ==
+X-Google-Smtp-Source: ABdhPJzlzmpKwFgdz3z2MefSCBqgcQiLSKJVGJuycrRnBEYKxfpwiIRJ9hKB4WKLnfDCx4uGB8Zpnw==
+X-Received: by 2002:a05:6402:34d5:: with SMTP id w21mr32417401edc.14.1617095304521;
+        Tue, 30 Mar 2021 02:08:24 -0700 (PDT)
+Received: from anparri (host-95-232-15-7.retail.telecomitalia.it. [95.232.15.7])
+        by smtp.gmail.com with ESMTPSA id t6sm10362417edq.48.2021.03.30.02.08.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Mar 2021 02:08:24 -0700 (PDT)
+Date:   Tue, 30 Mar 2021 11:08:15 +0200
+From:   Andrea Parri <parri.andrea@gmail.com>
+To:     Olaf Hering <olaf@aepfle.de>
+Cc:     linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        "K . Y . Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        Saruhan Karademir <skarade@microsoft.com>,
+        Juan Vazquez <juvazq@microsoft.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Anders Larsen <al@alarsen.net>,
-        Serge Hallyn <serge@hallyn.com>,
-        Imre Deak <imre.deak@intel.com>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        tboot-devel@lists.sourceforge.net,
-        Intel Graphics <intel-gfx@lists.freedesktop.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        ath11k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Cgroups <cgroups@vger.kernel.org>,
-        LSM List <linux-security-module@vger.kernel.org>,
-        Roman Gushchin <guro@fb.com>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Andrii Nakryiko <andriin@fb.com>, Odin Ugedal <odin@uged.al>,
-        Cong Wang <xiyou.wangcong@gmail.com>,
-        Bhaskar Chowdhury <unixbhaskar@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 3/3] scsi: storvsc: Validate length of incoming packet in
+ storvsc_on_channel_callback()
+Message-ID: <20210330090815.GA1897@anparri>
+References: <20201217203321.4539-1-parri.andrea@gmail.com>
+ <20201217203321.4539-4-parri.andrea@gmail.com>
+ <YGICQc6HaYw8+uES@aepfle.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YGICQc6HaYw8+uES@aepfle.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Mar 30, 2021 at 10:41 AM Michal Koutn=C3=BD <mkoutny@suse.com> wrot=
-e:
->
-> On Mon, Mar 22, 2021 at 05:02:44PM +0100, Arnd Bergmann <arnd@kernel.org>=
- wrote:
-> > I'm not sure what is expected to happen for such a configuration,
-> > presumably these functions are never calls in that case.
-> Yes, the functions you patched would only be called from subsystems or
-> there should be no way to obtain a struct cgroup_subsys reference
-> anyway (hence it's ok to always branch as if ss=3D=3DNULL).
->
-> I'd prefer a variant that wouldn't compile the affected codepaths when
-> there are no subsystems registered, however, I couldn't come up with a
-> way how to do it without some preprocessor ugliness.
+Hi Olaf,
 
-Would it be possible to enclose most or all of kernel/cgroup/cgroup.c
-in an #ifdef CGROUP_SUBSYS_COUNT block? I didn't try that
-myself, but this might be a way to guarantee that there cannot
-be any callers (it would cause a link error).
+On Mon, Mar 29, 2021 at 06:37:21PM +0200, Olaf Hering wrote:
+> On Thu, Dec 17, Andrea Parri (Microsoft) wrote:
+> 
+> > Check that the packet is of the expected size at least, don't copy data
+> > past the packet.
+> 
+> > +		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) -
+> > +				stor_device->vmscsi_size_delta) {
+> > +			dev_err(&device->device, "Invalid packet len\n");
+> > +			continue;
+> > +		}
+> > +
+> 
+> Sorry for being late:
+> 
+> It might be just cosmetic, but should this check be done prior the call to vmbus_request_addr()?
 
-> Reviewed-by: Michal Koutn=C3=BD <mkoutny@suse.com>
+TBH, I'm not immediately seeing why it 'should'; it could make sense to move
+the check on the packet data length.
 
-Thanks
 
-        Arnd
+> Unrelated: my copy of vmbus_request_addr() can return 0, which is apparently not handled by this loop in storvsc_on_channel_callback().
+
+Indeed, IDs of 0 are reserved for so called unsolicited messages; I think we
+should check that storvsc_on_io_completion() is not called on such messages.
+
+Thanks,
+  Andrea
