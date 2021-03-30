@@ -2,73 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43992C433DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 12:26:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABB7CC433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 12:47:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 05A8F619BC
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 12:26:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85E38619C4
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 12:47:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231823AbhC3M0Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Mar 2021 08:26:16 -0400
-Received: from mxout02.lancloud.ru ([45.84.86.82]:45496 "EHLO
-        mxout02.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231749AbhC3MZz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2021 08:25:55 -0400
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru C45062313EF1
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH] scsi: ufshcd-pltfrm: fix deferred probing
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-References: <420364ca-614a-45e3-4e35-0e0653c7bc53@omprussia.ru>
- <52c081b2-2f66-ee7b-4dcd-d106106dfd3d@acm.org>
-From:   Sergey Shtylyov <s.shtylyov@omprussia.ru>
-Organization: Open Mobile Platform, LLC
-Message-ID: <481ba2ec-8480-7f87-1d75-15b11e87e2ad@omprussia.ru>
-Date:   Tue, 30 Mar 2021 15:25:47 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
-MIME-Version: 1.0
-In-Reply-To: <52c081b2-2f66-ee7b-4dcd-d106106dfd3d@acm.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1908.lancloud.ru (fd00:f066::208)
+        id S232040AbhC3Mq3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Mar 2021 08:46:29 -0400
+Received: from mail-m17635.qiye.163.com ([59.111.176.35]:35856 "EHLO
+        mail-m17635.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232059AbhC3MqL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2021 08:46:11 -0400
+Received: from ubuntu.localdomain (unknown [36.152.145.182])
+        by mail-m17635.qiye.163.com (Hmail) with ESMTPA id 3B904400486;
+        Tue, 30 Mar 2021 20:46:08 +0800 (CST)
+From:   zhouchuangao <zhouchuangao@vivo.com>
+To:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     zhouchuangao <zhouchuangao@vivo.com>
+Subject: [PATCH] message/fusion: Use BUG_ON instead of if condition followed by BUG.
+Date:   Tue, 30 Mar 2021 05:46:01 -0700
+Message-Id: <1617108361-6870-1-git-send-email-zhouchuangao@vivo.com>
+X-Mailer: git-send-email 2.7.4
+X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgYFAkeWUFZS1VLWVdZKFlBSE83V1ktWUFJV1kPCR
+        oVCBIfWUFZTRoaH0NNS0pNGUIaVkpNSkxKS0NITUNPQ0tVEwETFhoSFyQUDg9ZV1kWGg8SFR0UWU
+        FZT0tIVUpKS0hKTFVLWQY+
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6NiI6GRw6Tj8UAjcNQyw5KSsV
+        Kx8wCQJVSlVKTUpMSktDSE1DTEhOVTMWGhIXVQETFA4YEw4aFRwaFDsNEg0UVRgUFkVZV1kSC1lB
+        WUhNVUpOSVVKT05VSkNJWVdZCAFZQUlKTU83Bg++
+X-HM-Tid: 0a78832b7c1bd991kuws3b904400486
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/30/21 12:06 AM, Bart Van Assche wrote:
+BUG_ON() uses unlikely in if(), which can be optimized at compile time.
 
->> The driver overrides the error codes returned by platform_get_irq() to
->> -ENODEV, so if it returns -EPROBE_DEFER, the driver would fail the probe
->> permanently instead of the deferred probing.  Propagate the error code
->> upstream, as it should have been done from the start...
->>
->> Fixes: 2953f850c3b8 ("[SCSI] ufs: use devres functions for ufshcd")
->> Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
-> 
-> Hi Sergey,
-> 
-> How has this patch been tested?
+Signed-off-by: zhouchuangao <zhouchuangao@vivo.com>
+---
+ drivers/message/fusion/mptsas.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-   Only build-tested.
-   Misusing platfrom_get_irq() appears a common issue. :-(
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 5eb0b33..5e425fd 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -3442,14 +3442,12 @@ mptsas_expander_event_add(MPT_ADAPTER *ioc,
+ 	__le64 sas_address;
+ 
+ 	port_info = kzalloc(sizeof(struct mptsas_portinfo), GFP_KERNEL);
+-	if (!port_info)
+-		BUG();
++	BUG_ON(!port_info);
+ 	port_info->num_phys = (expander_data->NumPhys) ?
+ 	    expander_data->NumPhys : 1;
+ 	port_info->phy_info = kcalloc(port_info->num_phys,
+ 	    sizeof(struct mptsas_phyinfo), GFP_KERNEL);
+-	if (!port_info->phy_info)
+-		BUG();
++	BUG_ON(!port_info->phy_info);
+ 	memcpy(&sas_address, &expander_data->SASAddress, sizeof(__le64));
+ 	for (i = 0; i < port_info->num_phys; i++) {
+ 		port_info->phy_info[i].portinfo = port_info;
+-- 
+2.7.4
 
-> Thanks,
-> 
-> Bart.
-
-MBR, Sergei
