@@ -2,192 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F11FBC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 22:49:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54E81C433C1
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 02:04:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C609861959
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Mar 2021 22:49:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CAEA61989
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 02:04:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231372AbhC2Wsm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Mar 2021 18:48:42 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:60861 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231135AbhC2WsK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Mar 2021 18:48:10 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1617058090; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=E8U/p0YUCQ19hXMs982l3kIBDR50pE0cs5ppK/R+zKE=; b=orZNlm9JJ3qE5bvGgSRRhcMaT23EY177d3MxS3Lclgl2LFqcwh/ls5LZzPSu5U2QjOsOZIDi
- 3QtKTkd8rvzXd5nr5LlX2egvKbqbwJIlORBhRmbkIoPdY2ZyciQVjOYwOM9+YcVgW/0LvAgH
- 3yrCfQo/ggxUUIsuiCQChoW980s=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 6062592887ce1fbb56437d71 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 29 Mar 2021 22:48:08
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E5F75C43465; Mon, 29 Mar 2021 22:48:07 +0000 (UTC)
-Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S230435AbhC3CE1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Mar 2021 22:04:27 -0400
+Received: from mail-1.ca.inter.net ([208.85.220.69]:54394 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230391AbhC3CEX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Mar 2021 22:04:23 -0400
+Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 9B9832EA05F;
+        Mon, 29 Mar 2021 22:04:22 -0400 (EDT)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
+        with ESMTP id 72nIxq-x7jFJ; Mon, 29 Mar 2021 21:46:06 -0400 (EDT)
+Received: from [192.168.48.23] (host-45-58-219-4.dyn.295.ca [45.58.219.4])
+        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 895E1C433ED;
-        Mon, 29 Mar 2021 22:48:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 895E1C433ED
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v13 0/2] Enable power management for ufs wlun
-To:     cang@codeaurora.org, martin.petersen@oracle.com,
-        adrian.hunter@intel.com, linux-scsi@vger.kernel.org
-Cc:     linux-arm-msm@vger.kernel.org,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-References: <cover.1616633712.git.asutoshd@codeaurora.org>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <e2aec2ba-b0ed-a478-7c01-1784f755a805@codeaurora.org>
-Date:   Mon, 29 Mar 2021 15:48:05 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id E13A12EA050;
+        Mon, 29 Mar 2021 22:04:20 -0400 (EDT)
+Reply-To: dgilbert@interlog.com
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] sg3_utils-1.46 available
+To:     SCSI development list <linux-scsi@vger.kernel.org>
+Cc:     =?UTF-8?B?VG9tw6HFoSBCxb5hdGVr?= <tbzatek@redhat.com>,
+        Martin Pitt <mpitt@debian.org>, Hannes Reinecke <hare@suse.de>,
+        Ritesh Raj Sarraf <rrs@researchut.com>,
+        "Robin H. Johnson" <robbat2@gentoo.org>
+Message-ID: <c54c62ff-33fd-267f-6828-4636e9968cf4@interlog.com>
+Date:   Mon, 29 Mar 2021 22:04:20 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <cover.1616633712.git.asutoshd@codeaurora.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/24/2021 6:39 PM, Asutosh Das wrote:
-> This patch attempts to fix a deadlock in ufs while sending SSU.
-> Recently, blk_queue_enter() added a check to not process requests if the
-> queue is suspended. That leads to a resume of the associated device which
-> is suspended. In ufs, that device is ufs device wlun and it's parent is
-> ufs_hba. This resume tries to resume ufs device wlun which in turn tries
-> to resume ufs_hba, which is already in the process of suspending, thus
-> causing a deadlock.
-> 
-> This patch takes care of:
-> * Suspending the ufs device lun only after all other luns are suspended
-> * Sending SSU during ufs device wlun suspend
-> * Clearing uac for rpmb and ufs device wlun
-> * Not sending commands to the device during host suspend
-> 
-> v12 -> v13:
-> - Addressed Adrian's comments
->    * Paired pm_runtime_get_noresume() with pm_runtime_put()
->    * no rpm_autosuspend for ufs device wlun
->    * Moved runtime-pm init functionality to ufshcd_wl_probe()
-> - Addressed Bart's comments
->    * Expanded abbrevs in commit message
-> 
+sg3_utils is a package of command line utilities for sending SCSI commands
+to storage devices. It some contexts it can send ATA and NVMe commands.
+The package targets the Linux 5, 4, 3, 2.6 and 2.4 kernel series. It has
+ports to FreeBSD, Android, Solaris, and Windows (cygwin and MinGW).
 
-Hi Adrian
-I did a limited testing on your fix in the pm framework along with this 
-v13 patchset. I couldn't reproduce the issue.
+For an overview of sg3_utils and downloads see either of these pages:
+     http://sg.danny.cz/sg/sg3_utils.html
+     https://doug-gilbert.github.io/sg3_utils.html
+The sg_ses utility (for enclosure devices) is discussed at:
+     http://sg.danny.cz/sg/sg_ses.html
+A full changelog can be found at:
+     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
+     https://doug-gilbert.github.io/p/sg3_utils.ChangeLog
+This github mirror needs to be updated:
+     https://github.com/hreinecke/sg3_utils
+Plus the author's own github mirror:
+     https://github.com/doug-gilbert/sg3_utils
 
-I'd appreciate if you can please take a look at the v13 changes.
-If all looks good in that, I'd do an extensive testing.
-
-Thanks,
--asd
-
-> v11 -> v12:
-> - Addressed Adrian's comments
->    * Fixed ahit for Mediatek driver
->    * Fixed error handling in ufshcd_core_init()
->    * Tested this patch and the issue is still seen.
-> 
-> v10 -> v11:
-> - Fixed supplier suspending before consumer race
-> - Addressed Adrian's comments
->    * Added proper resume/suspend cb to ufshcd_auto_hibern8_update()
->    * Cosmetic changes to ufshcd-pci.c
->    * Cleaned up ufshcd_system_suspend()
->    * Added ufshcd_debugfs_eh_exit to ufshcd_core_init()
-> 
-> v9 -> v10:
-> - Addressed Adrian's comments
->    * Moved suspend/resume vops to __ufshcd_wl_[suspend/resume]()
->    * Added correct resume in ufs_bsg
-> 
-> v8 -> v9:
-> - Addressed Adrian's comments
->    * Moved link transition to __ufshcd_wl_[suspend/resume]()
->    * Fixed the other minor comments
-> 
-> v7 -> v8:
-> - Addressed Adrian's comments
->    * Removed separate autosuspend delay for ufs-device lun
->    * Fixed the ee handler getting scheduled during pm
->    * Always runtime resume in suspend_prepare()
->    * Added CONFIG_PM_SLEEP where needed
->    
-> v6 -> v7:
->    * Resume the ufs device before shutting it down
-> 
-> v5 -> v6:
-> - Addressed Adrian's comments
->    * Added complete() cb
->    * Added suspend_prepare() and complete() to all drivers
->    * Moved suspend_prepare() and complete() to ufshcd
->    * .poweroff() uses ufhcd_wl_poweroff()
->    * Removed several forward declarations
->    * Moved scsi_register_driver() to ufshcd_core_init()
-> 
-> v4 -> v5:
-> - Addressed Adrian's comments
->    * Used the rpmb driver contributed by Adrian
->    * Runtime-resume the ufs device during suspend to honor spm-lvl
->    * Unregister the scsi_driver in ufshcd_remove()
->    * Currently shutdown() puts the ufs device to power-down mode
->      so, just removed ufshcd_pci_poweroff()
->    * Quiesce the scsi device during shutdown instead of remove
-> 
-> v3 RFC -> v4:
-> - Addressed Bart's comments
->    * Except that I didn't get any checkpatch failures
-> - Addressed Avri's comments
-> - Addressed Adrian's comments
->    * Added a check for deepsleep power mode
->    * Removed a couple of forward declarations
->    * Didn't separate the scsi drivers because in rpmb case it just sends uac
->      in resume and it seemed pretty neat to me.
-> - Added sysfs changes to resume the devices before accessing
-> 
-> Asutosh Das (2):
->    scsi: ufs: Enable power management for wlun
->    ufs: sysfs: Resume the proper scsi device
-> 
->   drivers/scsi/ufs/cdns-pltfrm.c     |   2 +
->   drivers/scsi/ufs/tc-dwc-g210-pci.c |   2 +
->   drivers/scsi/ufs/ufs-debugfs.c     |   2 +-
->   drivers/scsi/ufs/ufs-debugfs.h     |   2 +-
->   drivers/scsi/ufs/ufs-exynos.c      |   2 +
->   drivers/scsi/ufs/ufs-hisi.c        |   2 +
->   drivers/scsi/ufs/ufs-mediatek.c    |  12 +-
->   drivers/scsi/ufs/ufs-qcom.c        |   2 +
->   drivers/scsi/ufs/ufs-sysfs.c       |  30 +-
->   drivers/scsi/ufs/ufs_bsg.c         |   6 +-
->   drivers/scsi/ufs/ufshcd-pci.c      |  36 +--
->   drivers/scsi/ufs/ufshcd.c          | 627 ++++++++++++++++++++++++++-----------
->   drivers/scsi/ufs/ufshcd.h          |   6 +
->   include/trace/events/ufs.h         |  20 ++
->   14 files changed, 513 insertions(+), 238 deletions(-)
-> 
+That last mirror is up-to-date and has git tags going back to "r1.20"
+which is sg3_utils 1.20 released nearly 15 years ago.
 
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+Here is the top of that ChangeLog, stopping at the previous release:
+
+Changelog for released sg3_utils-1.46 [20210329] [svn: r891]
+   - sg_rep_pip: new utility: report provisioning initialization
+     pattern command
+   - sg_turs: estimated time-to-ready [spc6r03]
+     - add --delay=MS option
+   - sg_requests: substantial cleanup
+   - sg_vpd: add Format presets and Concurrent positioning ranges
+     - add hot-pluggable field in standard Inquiry [spc6r05]
+     - fix vendor struct opts_t alignment
+   - sg_inq: add hot-pluggable field in standard Inquiry
+   - sg_dd: --verify : separate category for miscompare errors
+     - --verify : oflag=coe continue on miscompares, counts them
+     - add cdl= operand for command duration limit indexes
+     - add oflag=nocreat and conv=nocreat : OFILE must exist
+     - add iflag=00, ff, random flags
+     - setup conditional auto rule for getrandom()
+     - add command timeout after comma in time= operand
+   - sg_get_elem_status: add ralwd bit sbc4r20a
+   - sg_write_x: add dld bits to write(32) [sbc4r19a]
+   - sg_rep_zones: print invalid write pointer LBA as -1 rather
+     than 16 "f"s
+   - sg_opcodes: improve handling of RWCDLP field
+   - sg_ses: use fan speed factor field for calculation [ses4r04]
+     - add --all (-a) option, same action as --join
+   - sg_compare_and_write: add examples section to its manpage
+   - sg_modes: document '-s' option (same as '-6')
+   - sg_sanitize + sg_format: when --verbose given once report
+     probable success; without --verbose 'no news is good news'
+   - sg_zone: add Remove element and modify zones command
+   - sg_raw: increase maximum data-in and data-out buffer size
+     from 64 KB to 1 MB
+     - fix --cmdfile= handling
+     - add --nvm option to send commands from the NVM command set
+     - add --cmdset option to bypass cdb heuristic
+     - add --scan= first_opcode,last_opcode
+   - sg_pt_freebsd: allow device names without leading /dev/
+     thus fix for regression introduced in rev 731 (ver: 1.43)
+   - sg_pt_solaris+sg_pt_osf1: fix problem with clear_scsi_pt_obj()
+     which needs to remember is_nvme and dev_fd values
+   - sg_lib: add ZBC (2020) feature set entries
+   - sg_lib: restore elements and rebuild command added
+   - sg_lib,sg_pt: add partial_clear_scsi_pt_obj(),
+     get_scsi_pt_cdb_len() and get_scsi_pt_cdb_buf()
+     - add do_nvm_pt() for the NVM (sub-)command set
+     - tweak transport error handling in Linux
+   - sg_lib: Linux NVMe SNTL: add read, write and verify;
+     synchronize cache and write same translations
+     - add dummy start stop unit and test unit ready commands
+     - wire cache mpage's WCE to nvme 'volatile write cache'
+     - fix crash in sg_f2hex_arr() when fname not found
+   - sg_lib: reprint cdb with illegal request sense key
+     - asc/ascq match asc-num.txt @t10 20200708 [spc6r02]
+   - gcc-10: suppress warnings
+   - autoconf: upgrade version 2.69 to 2.70
+   - remove space from end of source lines for git-svn
+   - testing/sg_mrq_testing: new, for blocking mrq usage
+   - testing/sgs_dd: add evfd flags and eventfd processing
+   - testing: remove master-slave terminology for sgv4
+   - examples: add nvme_read_ctl.hex and nvme_write_ctl.hex
+
+Changelog for released sg3_utils-1.45 [20200229] [svn: r843]
+....
+
+Doug Gilbert
