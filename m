@@ -8,111 +8,95 @@ X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65239C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 10:47:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E88CCC433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 10:48:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2BE7D61985
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 10:47:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4AC361985
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Mar 2021 10:48:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231637AbhC3Kqu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Mar 2021 06:46:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53546 "EHLO
+        id S231842AbhC3Krz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Mar 2021 06:47:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231675AbhC3Kqt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2021 06:46:49 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0008C061574
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Mar 2021 03:46:48 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id v8so5948849plz.10
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Mar 2021 03:46:48 -0700 (PDT)
+        with ESMTP id S231622AbhC3Krc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2021 06:47:32 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E041FC061574
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Mar 2021 03:47:31 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id x126so11840580pfc.13
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Mar 2021 03:47:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:mime-version;
-        bh=itNGqfzjBjsXKHftKXGJ56052ylA1QwACNB8iPOgTwk=;
-        b=K69dBeRhM9K3OmGHBglafmmEwaqI/wdXI3PMfiwEKQ5lAwOelwbk+RwRZ+OjagZqaq
-         f2Rbt8hOPMomTECjVaqeoJrfb92yjb0iaXi86KcxQc686zjYUjSitBkVC0VIim1Ulu0l
-         LS4h1KZDWx3j02VcliNT5AkfzqV9AaehEpt70=
+        bh=l5lKv2/rKUQklui5yOvy65/6xVOB3BtHzkocGipo9mA=;
+        b=SSdJQxqJdMr7JVLlKTXqxwd3pKGWTnp3O0/m0wJBR/oI8pkZIBozkAiwRl2osQ3g+K
+         A0BILOuUhVQouV//S5LOzZt7yX/+ybOpoqUriPqWb6n6ZjOQ2e9VX6lW0yVysLhYuDZr
+         rHMYa2xmOXRMkvxmT73r+RJkH2q1uSJ/Q6Ve0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=itNGqfzjBjsXKHftKXGJ56052ylA1QwACNB8iPOgTwk=;
-        b=ay2yscW9CS2Z7PGEiZukYYmXJB3UVQvVxnhGqpAEveV1+CXyONEZCJ75E4EoEONAxK
-         mz38oL9RQCyTCN3UpSgCLkAIZESX02FDWJ1Eeb18qDVzVN2tw1bA1bxoNqmkFTZQ+So2
-         djBUiQ1PWe6KOiG4pczZVXbH6CRahr7UlrjbSjGjyjQWEPEFXZwNliWDuL1UlPyFliEC
-         1w8mf2IHmaHSEyZLB/x+jhlAS95py5knBt162RaPJEJH9GgnuUrgDZzEcCGSvJ5Zz4E/
-         Be/r6oZBKmSklE2Yumt0UqaZU1oaKW5l2S16NAvmKcqWcJYZbEvcNqWQ7Z4B14Smbu2e
-         q6iw==
-X-Gm-Message-State: AOAM533KjaGpIrhI8WVJw89a32jF2W/bgOa+n/6GiHD41vXzrms0PPJU
-        W/v/lm4qBT5T/miw9XrLdI7I8TMSv4c1Lw==
-X-Google-Smtp-Source: ABdhPJzzrwf6DcR51UtuY0kdz8zepbTCCNWt1xTNxpp5q3mOxXL4U8sNaW1jArL8usjurLjyRDTppA==
-X-Received: by 2002:a17:902:7c0d:b029:e6:f006:fd02 with SMTP id x13-20020a1709027c0db02900e6f006fd02mr32003554pll.46.1617101208304;
-        Tue, 30 Mar 2021 03:46:48 -0700 (PDT)
+        bh=l5lKv2/rKUQklui5yOvy65/6xVOB3BtHzkocGipo9mA=;
+        b=EMl7DpTjXpHf77DQY7dyzjElr2ZxWzv7UxVqb6QA4CrRQ9/ufaGtBoVgFTpKoIU3qX
+         kkWQS0/EmFzYo3FBkrLRbcEh/wshz4CIqSWNwBomsupC6NBkOmRPo7CZabMBwxShGMWF
+         iLpfXQSfB/nOw+hv8aQfTFwssW2mkRehpPCGcJWy+MLpdROlenVL7ZL6Ns35yRyULMlk
+         1828ZBZRJnwZMRdCmRn14PKM3WZ95Eixxuf6yUVXoiAxrELUh/KhSNp3SanBMEoppF7P
+         ZiEKKLzH7Zs9kDBZnMRN5iibtLZFcK6PFYi2cLX+aezKAMMgAH8xfuyNEgMDRTOy17eg
+         SLQg==
+X-Gm-Message-State: AOAM531UZj4QdsxOvY5sTuitwj/32EA7BcBHqB0CsiJ+nBFvwsnFh+ms
+        TAmBH2vwcF9bXBOum9iLBD1K0w==
+X-Google-Smtp-Source: ABdhPJxA0DQHr51OEN0H/cqs/p1Cq4+RHWWGlABd5RY9Uf5qe9jwJN/hhWelUblyE8Hl6Z9ErxlAqw==
+X-Received: by 2002:a63:3507:: with SMTP id c7mr3836013pga.204.1617101251317;
+        Tue, 30 Mar 2021 03:47:31 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id g10sm18913963pgh.36.2021.03.30.03.46.44
+        by smtp.gmail.com with ESMTPSA id l4sm20437674pgn.77.2021.03.30.03.47.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Mar 2021 03:46:47 -0700 (PDT)
+        Tue, 30 Mar 2021 03:47:30 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
         suganath-prabu.subramani@broadcom.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        stable@vger.kernel.org
-Subject: [PATCH] mpt3sas: only one vSES is handy even IOC has multi vSES
-Date:   Tue, 30 Mar 2021 16:20:04 +0530
-Message-Id: <20210330105004.20413-1-sreekanth.reddy@broadcom.com>
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: Fix ActiveCablePowerRequirement's endianness
+Date:   Tue, 30 Mar 2021 16:21:06 +0530
+Message-Id: <20210330105106.20569-1-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000001c5f6805bebeb7e8"
+        boundary="000000000000ac5bf105bebeb95d"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000001c5f6805bebeb7e8
+--000000000000ac5bf105bebeb95d
 Content-Transfer-Encoding: 8bit
 
-Whenever the driver is adding the vSES to virtual-phys list then
-the driver is reinitializing this list every time. Hence those
-vSES devices which were added earlier to this same list are lost.
-So, Even though multiple vSES devices are configured in IOC;
-but while scanning the vSES devices driver finds only one vSES device
-in the list and hence adds only that device to SML.
-So, don't reinitialize this list every time a new vSES device is
-added to it.
+Covert ActiveCablePowerRequirement's value to target CPU endian
+before displaying it.
 
-Cc: stable@vger.kernel.org #v5.11.10+
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 6aa6de729187..ae1973878cc7 100644
+index ae1973878cc7..1423dfb0cb93 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -6483,6 +6483,9 @@ _scsih_alloc_vphy(struct MPT3SAS_ADAPTER *ioc, u8 port_id, u8 phy_num)
- 		if (!vphy)
- 			return NULL;
+@@ -10804,7 +10804,8 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 			pr_notice("cannot be powered and devices connected\n");
+ 			pr_notice("to this active cable will not be seen\n");
+ 			pr_notice("This active cable requires %d mW of power\n",
+-			     ActiveCableEventData->ActiveCablePowerRequirement);
++			    le32_to_cpu(
++			    ActiveCableEventData->ActiveCablePowerRequirement));
+ 			break;
  
-+		if (!port->vphys_mask)
-+			INIT_LIST_HEAD(&port->vphys_list);
-+
- 		/*
- 		 * Enable bit corresponding to HBA phy number on its
- 		 * parent hba_port object's vphys_mask field.
-@@ -6490,7 +6493,6 @@ _scsih_alloc_vphy(struct MPT3SAS_ADAPTER *ioc, u8 port_id, u8 phy_num)
- 		port->vphys_mask |= (1 << phy_num);
- 		vphy->phy_mask |= (1 << phy_num);
- 
--		INIT_LIST_HEAD(&port->vphys_list);
- 		list_add_tail(&vphy->list, &port->vphys_list);
- 
- 		ioc_info(ioc,
+ 		case MPI26_EVENT_ACTIVE_CABLE_DEGRADED:
 -- 
 2.27.0
 
 
---0000000000001c5f6805bebeb7e8
+--000000000000ac5bf105bebeb95d
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -183,13 +167,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPIpYjoC+zQrdPoWyeO/
-fwu6+5S4BeCxODNdLcNs/dhUMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMDMzMDEwNDY0OFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGVIB1Idv4STz4BzV+U5
+TEvBhpzVjDeigFX74NbfTSCwMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMDMzMDEwNDczMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCuJMnNUl6IaLjN4SUXNY+xAyhcUDtZMoqq0Igd
-ekGNdhreOd1SvzSos/wK8F0/EaFrcW6qi6LcNe2eFic1TSwGhiqUAZ0t58CE/niKYNYeIOERIi2O
-f5U2KgP0cxauNp45nHmGSGfv4bKFGoezqaSDywqEk1aalwon9FSV/qpXVmJwszsVksfPEVwPC7VO
-x+xBWV6Ctd9WIFTNo3YubHTy8F8PgwmFOj9uZY2r9MrIVChyoNq0VJ6Es/ZrslcSfz6ta6WT35Hn
-ahubADYfHm1X7N/nOlCkuz+o7n6qGXTd+2Z6ETyOmtgf5XMnFyg+cQbx1f3BJmDAq/04ySRNRAnE
---0000000000001c5f6805bebeb7e8--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCB9u1FRJ1hlMLEuOvTuoEDPbVAlxokpZXTvQZl
+pZx/5cJo3tffgBlGBHvhGabOUSQopAx6DmfYp+v6Bgvw+FDdgQJzH4uqID92dYUBFEFMTW+I44qt
+NxvslZEVbhJrM8D/zYv+R3+/RBpU9WgMSAXT/EIpsb8L64udwbxJj8s7KyaC1K0MwX3dh+Shorl1
+k6lBj32pU1DjHL5pZslCG05FnetulkC2n4X6PRBVh7IS7VT9iraBlXpES9CCSvWEJjV+Ts92Cs7V
+E3UpLKvRQ9SEoH7ld076RhxakhgrtUWrcAaO/LUtBVjorn+X/sPd4iko9R6CiTyBa1LQTvtLHyT9
+--000000000000ac5bf105bebeb95d--
