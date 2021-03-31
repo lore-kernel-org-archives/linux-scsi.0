@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27D07C433E2
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 07:42:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A03EC433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 07:42:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 031AE619B1
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 07:41:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B13C619D3
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 07:42:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234230AbhCaHla (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 Mar 2021 03:41:30 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:64389 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234109AbhCaHlO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Mar 2021 03:41:14 -0400
+        id S234042AbhCaHmQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 Mar 2021 03:42:16 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:22972 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234138AbhCaHlj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Mar 2021 03:41:39 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1617176474; x=1648712474;
+  t=1617176511; x=1648712511;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=ZZ0gmRBKCk+915yC+OTsRwaUxNIsnWdddXjW/YlqA48=;
-  b=kNeUtWtt2aezI4f1xSsRU5cECGEjsfgcd9WjlTZd6Q7aYR3UJLgQdU+a
-   LWewWWSJts3cVX3AyNuWM5X2vhlc0VouwOdZM17tdspe4u0HUY/UFX4j4
-   diVSa36VQaA9LOC921nVoGflM5DCxE7jwYIDIjvp7NJayUmKIqIUj4DZQ
-   UpinaBwFZqFiaOuFNa2m00IwuYiwIY4rUsK+TlAm1eWSqDaqUEiS7Xk/h
-   L8/5yZuvQYDEfKt8nrVM+YRg4l5oDx0KxLBWW3hA5HCYRw8LoXmIsnAAc
-   4Mw4zf600m35paez2zhF/ZRPf5tMJfpaVdyTusan/m2XV0EZfnnkzdG6A
-   g==;
-IronPort-SDR: xUinNZUZ7Lb7gN1FCJJI2uBrwYpQPafpYkYPVLw4Ltmrrllw4oyn4fbOJ17djmdfVu98qsmyVt
- hYHR9kEah9WL5ECfK3/DVqmQ+pZhOXdtUb+uemQrGZOeW7F2X1bblcRUKnD9upO+V7qM7in1U0
- GuTmpo8aY+rDiww6l/UnuJgrJe2IbnOWjtmrgbQ9BsLh4NGiQAB80IAiUOvOx1dTz3ZEOhfxnb
- D4caCKw+YPqR8cSfdyLURsSwKE5EuejW5Fw4Evm9QjL/BAL1Xede7y6mP81CS2BRn1U3Exohdn
- udw=
+  bh=Kw0n9qy43sV6k7GArTQnIOeZqCNtAeuHTWn+7jmRqIE=;
+  b=WvjxCUIwGxRI1K/5TnQam3MyM1lVHf2xtgaw1CzXjWixMc4/5iNI2Rr1
+   LG5EbY18jQbWygI/BbQes4fgk6GsKLuwQSIddbv69SP/PeN60WhOkE7l9
+   ZJuFMVTHx8SCQQj/3jbniiOpMc7aUGqR84T4fjDML/ztOobqqlZGmkpcM
+   P49fVO91XmmXeqsJPX9GKA8cXviQbSiywV8IZYEi8mrzwITZhkGnPBZSQ
+   EDWN5kbFjgSCWoXjE5UJkW4bZ2eRDdK5x0twcjqNT6j1pz/KNH77hrlei
+   9OUPTpa1kpHtgMlHDz5MIzagJrDbkyaecZ2df3XY80ydjcqnTWhDAceZ6
+   w==;
+IronPort-SDR: N2kqZbMRZpOAo1b4bwUfjNs/cD5PKhsWY67LdTvH8t+YWKyXIrfsAvSBnEVIbMTuty3W5Mh9/r
+ QtA/ZqNhu1mYN16KVa48BKRChvD6cSHB/KSnmWqzPBqtAK6JWrQf8wrkug9oLwzS4PIb7HBQ/S
+ mkNVeYexzTb8PrKZlovs4S/Z2ONT793XKCGQdZ9Bnq+EZZQC6DITEkMeWZJEYB4JACBrkULnlZ
+ UgkGoK2lHH+kbtASJgZvNA60S69/GK27yJ4ePpugD0//MZWzAI9LfWfDM2XdoNgNOTKAiX7ijy
+ tZo=
 X-IronPort-AV: E=Sophos;i="5.81,293,1610380800"; 
-   d="scan'208";a="167902128"
+   d="scan'208";a="267851382"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 31 Mar 2021 15:41:13 +0800
-IronPort-SDR: qMHdxrIdx9v3/ua8qxJLxfTG6TPvh4cptu7xzMXJydOvRw2Sp7Q9cW1x6I/KzKZT2cYztQHQKL
- vwEAxcJPXZmyHuDOHg23N8zpZvOfx3ffFhUi+sSRQzzRZCvKsqluaMpxvD1UScHt1aocwMp606
- UY/dmOVs8yvThYbBh1XHR55sLj47r5pvVYBHMhaDH0L0+MKvpvd+swK22u/D4UDMNGl9RrLB9Y
- qzK3fMQxaVlp65Nei/HM+wcsykb6B7cjjxMekIhOz0TGbNc1KbzmqMLP3h/RYVci3m3Z1IgdAw
- 6rWRI3wP5jGSVxl+a5YUAlJc
+  by ob1.hgst.iphmx.com with ESMTP; 31 Mar 2021 15:41:35 +0800
+IronPort-SDR: DZ6nUOQgKTEWlHZIY16t8W70nnX3Li34PKGI151R1kcnSrfjiBuAGO1grnrdfSs6Ny5g2hl72W
+ w5rULhbVr44Rw2BXaAlG+s92NgBAgywVUG53y/IUXwm/xwnmbCpgoKBh+wLp3i2lb8f9zKoWOH
+ cMcatVwepwAcEWiTR3yFRs8sm6BWNckRxBlGfELEgLhGrf+zuhrES9Gu7dfXShlAlhgWsOqJba
+ 5+kJm24s+NGFhXQ/REJ5tTORVrYElSUnA92eg2WNhR6mpbDBLJ86vmhVeeCtiYcOA1tR47JPFT
+ xTFZ2ajydtYf72Mp/6njoJva
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2021 00:21:26 -0700
-IronPort-SDR: zHZS082WZFoanmfroRZ/zNylL4aA4Zauz4RJ7v7d1VnqbLLZIlljwnXH/zgLOSU4zdkHvAKzhT
- aoHGzsN57nR/cakGM6baD7zh5ki/GZPY5h1715DSMKhXut7wKdJPi9xDH1rPoAG8Fbo8CeRVYf
- REGLijSRnoYkbRUNOHQD4z+4PKH58+S9TE7Ig3SmqD0y4I5uiSy5Tkku62HGNTSjJ+l3HALp6F
- Ottcy+3KUDCg+iM01pgJ+rGPFUNgHbt81T2+g0UMbY9jn0dShAtvVAMjonRj99qGCDSCH7N+Oo
- i5c=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2021 00:21:33 -0700
+IronPort-SDR: snXp5J+M9D0iDvEYXWMLakipiRRIVXJMl14DJ+9QHcTK39TMGSvcUDSCE4lJ5Mu3lStMrvlazN
+ qJEU3XlxbNGFUNt5hT2X7bl5sArnGtAPcya1BRfTofDTtECaFnCib89Zov2gJWf7S0bwQ02VDt
+ WqK6uMDwDE+8aqS+xtYHVsg9NyFaY63HA9EBeBxCfeR3H/9EomC5Q3QGX8v8Skg+bGPws6wVGk
+ WWE8cChDVJ+KY65JJQjccqAORMUzWlMHyn6SdWJ7kLODRnorHqMKan6r9VNxpVqJJl1E3PND7Y
+ 8W0=
 WDCIronportException: Internal
 Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
-  by uls-op-cesaip01.wdc.com with ESMTP; 31 Mar 2021 00:41:09 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 31 Mar 2021 00:41:17 -0700
 From:   Avri Altman <avri.altman@wdc.com>
 To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -68,9 +68,9 @@ Cc:     gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
         Avi Shchislowski <avi.shchislowski@wdc.com>,
         Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
         stanley.chu@mediatek.com, Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v7 09/11] scsi: ufshpb: Limit the number of inflight map requests
-Date:   Wed, 31 Mar 2021 10:39:50 +0300
-Message-Id: <20210331073952.102162-10-avri.altman@wdc.com>
+Subject: [PATCH v7 10/11] scsi: ufshpb: Add support for host control mode
+Date:   Wed, 31 Mar 2021 10:39:51 +0300
+Message-Id: <20210331073952.102162-11-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210331073952.102162-1-avri.altman@wdc.com>
 References: <20210331073952.102162-1-avri.altman@wdc.com>
@@ -80,71 +80,30 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In host control mode the host is the originator of map requests. To not
-flood the device with map requests, use a simple throttling mechanism
-that limits the number of inflight map requests.
+Support devices that report they are using host control mode.
 
 Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- drivers/scsi/ufs/ufshpb.c | 11 +++++++++++
- drivers/scsi/ufs/ufshpb.h |  1 +
- 2 files changed, 12 insertions(+)
+ drivers/scsi/ufs/ufshpb.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index 8dbeaf948afa..c07da481ff4e 100644
+index c07da481ff4e..08066bb6da65 100644
 --- a/drivers/scsi/ufs/ufshpb.c
 +++ b/drivers/scsi/ufs/ufshpb.c
-@@ -21,6 +21,7 @@
- #define READ_TO_MS 1000
- #define READ_TO_EXPIRIES 100
- #define POLLING_INTERVAL_MS 200
-+#define THROTTLE_MAP_REQ_DEFAULT 1
+@@ -2582,12 +2582,6 @@ void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf)
+ 	u32 max_hpb_single_cmd = HPB_MULTI_CHUNK_LOW;
  
- /* memory management */
- static struct kmem_cache *ufshpb_mctx_cache;
-@@ -740,6 +741,14 @@ static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
- 	struct ufshpb_req *map_req;
- 	struct bio *bio;
+ 	hpb_dev_info->control_mode = desc_buf[DEVICE_DESC_PARAM_HPB_CONTROL];
+-	if (hpb_dev_info->control_mode == HPB_HOST_CONTROL) {
+-		dev_err(hba->dev, "%s: host control mode is not supported.\n",
+-			__func__);
+-		hpb_dev_info->hpb_disabled = true;
+-		return;
+-	}
  
-+	if (hpb->is_hcm &&
-+	    hpb->num_inflight_map_req >= THROTTLE_MAP_REQ_DEFAULT) {
-+		dev_info(&hpb->sdev_ufs_lu->sdev_dev,
-+			 "map_req throttle. inflight %d throttle %d",
-+			 hpb->num_inflight_map_req, THROTTLE_MAP_REQ_DEFAULT);
-+		return NULL;
-+	}
-+
- 	map_req = ufshpb_get_req(hpb, srgn->rgn_idx, REQ_OP_SCSI_IN);
- 	if (!map_req)
- 		return NULL;
-@@ -754,6 +763,7 @@ static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
- 
- 	map_req->rb.srgn_idx = srgn->srgn_idx;
- 	map_req->rb.mctx = srgn->mctx;
-+	hpb->num_inflight_map_req++;
- 
- 	return map_req;
- }
-@@ -763,6 +773,7 @@ static void ufshpb_put_map_req(struct ufshpb_lu *hpb,
- {
- 	bio_put(map_req->bio);
- 	ufshpb_put_req(hpb, map_req);
-+	hpb->num_inflight_map_req--;
- }
- 
- static int ufshpb_clear_dirty_bitmap(struct ufshpb_lu *hpb,
-diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-index 448062a94760..cfa0abac21db 100644
---- a/drivers/scsi/ufs/ufshpb.h
-+++ b/drivers/scsi/ufs/ufshpb.h
-@@ -217,6 +217,7 @@ struct ufshpb_lu {
- 	struct ufshpb_req *pre_req;
- 	int num_inflight_pre_req;
- 	int throttle_pre_req;
-+	int num_inflight_map_req;
- 	struct list_head lh_pre_req_free;
- 	int cur_read_id;
- 	int pre_req_min_tr_len;
+ 	version = get_unaligned_be16(desc_buf + DEVICE_DESC_PARAM_HPB_VER);
+ 	if ((version != HPB_SUPPORT_VERSION) &&
 -- 
 2.25.1
 
