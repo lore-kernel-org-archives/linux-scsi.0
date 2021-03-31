@@ -2,129 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C528C433ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 18:17:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98AC1C433ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 18:20:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3DA561029
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 18:17:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C4C761076
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 18:20:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234627AbhCaSRZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 Mar 2021 14:17:25 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:20725 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234932AbhCaSRE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Mar 2021 14:17:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1617214624;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=lIZzc8ZQurVPn2Ph3lR/wsP8/a7vK3JqsZ63HSYRdwc=;
-        b=cTYx8Papv//cXOe0W+Xp2fe2aFNo4yGdCuAVCOAprRDEJrrcfr23oju36dOa7lqA1E44VE
-        BjFXZld7enoUyrZ6qulxFE9Ec+iwA3xYrfBf+gqtyKI4z1ezcZuscWjzvS2Dx/T+EY/kZm
-        PID8JJp15mH8H/ddUKh66rlZZjlJYq0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-226-anBMTqUKNtSX7i3kzZ7YDw-1; Wed, 31 Mar 2021 14:17:02 -0400
-X-MC-Unique: anBMTqUKNtSX7i3kzZ7YDw-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 10269801814;
-        Wed, 31 Mar 2021 18:17:01 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-116-141.rdu2.redhat.com [10.10.116.141])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DAEE65D720;
-        Wed, 31 Mar 2021 18:16:59 +0000 (UTC)
-From:   John Pittman <jpittman@redhat.com>
-To:     martin.petersen@oracle.com
-Cc:     jejb@linux.ibm.com, hare@suse.de, emilne@redhat.com,
-        loberman@redhat.com, djeffery@redhat.com,
-        linux-scsi@vger.kernel.org, John Pittman <jpittman@redhat.com>
-Subject: [PATCH] scsi: scsi_dh_alua: prevent duplicate pg info print in alua_rtpg()
-Date:   Wed, 31 Mar 2021 14:16:56 -0400
-Message-Id: <20210331181656.5046-1-jpittman@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+        id S234910AbhCaSTf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 Mar 2021 14:19:35 -0400
+Received: from mga01.intel.com ([192.55.52.88]:26881 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234872AbhCaSTQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Mar 2021 14:19:16 -0400
+IronPort-SDR: DU7cG7JjQfSkEo6QzxYPMMki9eO6hH25ogPfDxe4MFaHMc9g+5vtndHwRqXOpOUxl8bZthy2AL
+ tQb3/ai/ZQrg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9940"; a="212309563"
+X-IronPort-AV: E=Sophos;i="5.81,293,1610438400"; 
+   d="scan'208";a="212309563"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2021 11:19:15 -0700
+IronPort-SDR: vSE+UHfnln8DPEc+WfQ9eFpbV2ybYU/2+5zCjUOJey4fP6ozlko0sZMmWZW7Xv5ulWPSCl4r1l
+ LHupYmGwxxyA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,293,1610438400"; 
+   d="scan'208";a="377379108"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
+  by orsmga003.jf.intel.com with ESMTP; 31 Mar 2021 11:19:03 -0700
+Subject: Re: [PATCH v14 1/2] scsi: ufs: Enable power management for wlun
+To:     Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Yue Hu <huyue2@yulong.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>
+References: <cover.1617143113.git.asutoshd@codeaurora.org>
+ <16f1bcf76ff411c70fe0e3e13f84e4b0fa7d9063.1617143113.git.asutoshd@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <a385141d-324b-680e-a19c-ab6121bd6c5d@intel.com>
+Date:   Wed, 31 Mar 2021 21:19:13 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
+MIME-Version: 1.0
+In-Reply-To: <16f1bcf76ff411c70fe0e3e13f84e4b0fa7d9063.1617143113.git.asutoshd@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Due to the frequency that alua_rtpg() is called, the path group
-info print within can print the same info multiple times in the
-logs, subsequent prints adding no new information or value.
+On 31/03/21 1:31 am, Asutosh Das wrote:
+> During runtime-suspend of ufs host, the scsi devices are
+> already suspended and so are the queues associated with them.
+> But the ufs host sends SSU (START_STOP_UNIT) to wlun
+> during its runtime-suspend.
+> During the process blk_queue_enter checks if the queue is not in
+> suspended state. If so, it waits for the queue to resume, and never
+> comes out of it.
+> The commit
+> (d55d15a33: scsi: block: Do not accept any requests while suspended)
+> adds the check if the queue is in suspended state in blk_queue_enter().
+> 
+> Call trace:
+>  __switch_to+0x174/0x2c4
+>  __schedule+0x478/0x764
+>  schedule+0x9c/0xe0
+>  blk_queue_enter+0x158/0x228
+>  blk_mq_alloc_request+0x40/0xa4
+>  blk_get_request+0x2c/0x70
+>  __scsi_execute+0x60/0x1c4
+>  ufshcd_set_dev_pwr_mode+0x124/0x1e4
+>  ufshcd_suspend+0x208/0x83c
+>  ufshcd_runtime_suspend+0x40/0x154
+>  ufshcd_pltfrm_runtime_suspend+0x14/0x20
+>  pm_generic_runtime_suspend+0x28/0x3c
+>  __rpm_callback+0x80/0x2a4
+>  rpm_suspend+0x308/0x614
+>  rpm_idle+0x158/0x228
+>  pm_runtime_work+0x84/0xac
+>  process_one_work+0x1f0/0x470
+>  worker_thread+0x26c/0x4c8
+>  kthread+0x13c/0x320
+>  ret_from_fork+0x10/0x18
+> 
+> Fix this by registering ufs device wlun as a scsi driver and
+> registering it for block runtime-pm. Also make this as a
+> supplier for all other luns. That way, this device wlun
+> suspends after all the consumers and resumes after
+> hba resumes.
+> 
+> Co-developed-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> ---
 
-To reproduce:
+Looks good but still doesn't seem to based on the latest tree.
 
-    # modprobe scsi_debug vpd_use_hostno=0
-    # systemctl start multipathd.service
+Also came across the issue below:
 
-To fix, check stored values, only printing at alua attach/activate
-and if any of the values change.
+<SNIP>
 
-Signed-off-by: John Pittman <jpittman@redhat.com>
-Reviewed-by: David Jeffery <djeffery@redhat.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c | 30 ++++++++++++++--------
- 1 file changed, 19 insertions(+), 11 deletions(-)
+> +#ifdef CONFIG_PM_SLEEP
+> +static int ufshcd_wl_poweroff(struct device *dev)
+> +{
+> +	ufshcd_wl_shutdown(dev);
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index ea436a14087f..7438ed491681 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -515,6 +515,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 	struct scsi_sense_hdr sense_hdr;
- 	struct alua_port_group *tmp_pg;
- 	int len, k, off, bufflen = ALUA_RTPG_SIZE;
-+	int group_id_old, state_old, pref_old, valid_states_old;
- 	unsigned char *desc, *buff;
- 	unsigned err, retval;
- 	unsigned int tpg_desc_tbl_off;
-@@ -522,6 +523,11 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 	unsigned long flags;
- 	bool transitioning_sense = false;
- 
-+	group_id_old = pg->group_id;
-+	state_old = pg->state;
-+	pref_old = pg->pref;
-+	valid_states_old = pg->valid_states;
-+
- 	if (!pg->expiry) {
- 		unsigned long transition_tmo = ALUA_FAILOVER_TIMEOUT * HZ;
- 
-@@ -686,17 +692,19 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 	if (transitioning_sense)
- 		pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
- 
--	sdev_printk(KERN_INFO, sdev,
--		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
--		    ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
--		    pg->pref ? "preferred" : "non-preferred",
--		    pg->valid_states&TPGS_SUPPORT_TRANSITION?'T':'t',
--		    pg->valid_states&TPGS_SUPPORT_OFFLINE?'O':'o',
--		    pg->valid_states&TPGS_SUPPORT_LBA_DEPENDENT?'L':'l',
--		    pg->valid_states&TPGS_SUPPORT_UNAVAILABLE?'U':'u',
--		    pg->valid_states&TPGS_SUPPORT_STANDBY?'S':'s',
--		    pg->valid_states&TPGS_SUPPORT_NONOPTIMIZED?'N':'n',
--		    pg->valid_states&TPGS_SUPPORT_OPTIMIZED?'A':'a');
-+	if (group_id_old != pg->group_id || state_old != pg->state ||
-+		pref_old != pg->pref || valid_states_old != pg->valid_states)
-+		sdev_printk(KERN_INFO, sdev,
-+			"%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
-+			ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
-+			pg->pref ? "preferred" : "non-preferred",
-+			pg->valid_states&TPGS_SUPPORT_TRANSITION?'T':'t',
-+			pg->valid_states&TPGS_SUPPORT_OFFLINE?'O':'o',
-+			pg->valid_states&TPGS_SUPPORT_LBA_DEPENDENT?'L':'l',
-+			pg->valid_states&TPGS_SUPPORT_UNAVAILABLE?'U':'u',
-+			pg->valid_states&TPGS_SUPPORT_STANDBY?'S':'s',
-+			pg->valid_states&TPGS_SUPPORT_NONOPTIMIZED?'N':'n',
-+			pg->valid_states&TPGS_SUPPORT_OPTIMIZED?'A':'a');
- 
- 	switch (pg->state) {
- 	case SCSI_ACCESS_STATE_TRANSITIONING:
--- 
-2.17.2
+This turned out to be wrong.  This is a PM op and SCSI has already
+quiesced the sdev's.  All that is needed is:
 
+	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
+
+> +	return 0;
+> +}
+> +#endif
