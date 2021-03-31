@@ -2,573 +2,155 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE60DC4160E
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 07:31:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0194C433C1
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 07:40:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B5842619D9
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 07:31:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D57B619B9
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 07:40:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233830AbhCaHay (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 Mar 2021 03:30:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39572 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234151AbhCaHai (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Mar 2021 03:30:38 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1980C061574;
-        Wed, 31 Mar 2021 00:30:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=27LKhtgGu1y7j20iULAnYuk6XFg/LzKplOxpf7sDBB8=; b=OjUklTARbPUUutCBchF8uJBCwQ
-        dn5tibViTntYynvC0+6iBRmoEf+5hx11cbKSPmNigD4Rzp5ybB9ZdOAmVdE+LIawAiFG9U3X4ElAQ
-        7NaBecyovQZb6UWJENfMk77Yko2hBaA1ygiS8aFL+npmHt4+YrjEj+k0NM8goKbLbFGps6mx4MzyL
-        1TnNDPPWm3c5Yw/ss2kjg/9FE7fvsQ09OngspWOy1V5rsDiqLqNWkfcmjzx90iC/cKekcKsd0+56/
-        4CvkhWFz4l6Gsbhf4hnbsEE+djJdBKUizSFzdfp1avI5KisQjSuWyp5hAgXTCs/sO6QC+Xr/b5bqR
-        VTGDM/8Q==;
-Received: from [2001:4bb8:180:7517:3f75:91d7:136b:f8e1] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lRVIv-009dF6-L5; Wed, 31 Mar 2021 07:30:18 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Hannes Reinecke <hare@suse.com>,
-        Ondrej Zary <linux@rainbow-software.org>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 5/8] scsi: remove the unchecked_isa_dma flag
-Date:   Wed, 31 Mar 2021 09:29:58 +0200
-Message-Id: <20210331073001.46776-6-hch@lst.de>
-X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210331073001.46776-1-hch@lst.de>
-References: <20210331073001.46776-1-hch@lst.de>
+        id S233999AbhCaHkX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 Mar 2021 03:40:23 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:44523 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234074AbhCaHkK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Mar 2021 03:40:10 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1617176410; x=1648712410;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=xR7BmbkW2ps4Me2oZXCQOwYznBQj5YfqtZ49LQFVlVk=;
+  b=NDkJi0UYP7QQl2cs8HVak7jx7PPLoNAXKVKIdHE5+K8tW29NqpUAVazu
+   IL7M5KAwUGoojB9eTD+lgBgSD9MS2YZdiXvxsmq/WQf4Ik9Rvgudb/kdX
+   TMt7cvody+WzCGUKnvgWb5IddQZ1biwNMB1sJLkhAMpES3iAaeHwrSu5F
+   gYgknGdIUCMDsFnCBGKo7lm/XfcjcUsQRDu+5E2svEDh/4XQIQG7vR5NR
+   8ZetGkj2G9jNT3V7nMfHXRdLkEjujQMMuz0MW54HcQQrVXuy6o2wjHqrc
+   jAWUfw7sJup6Y7EOXlg9SPu6BXj7NONfzVPQ/hXhxUuGWPDNM+BKIgemm
+   w==;
+IronPort-SDR: d5hlt+bT/57y9CJ6wDipTxOin28pJq6isAlGbq/gJM0rKPj+38yzKZG2UoJsfuq/siGDZ2cq6W
+ aIoWH/s5OIUQYoRfmsw0YfsJUsYrVEBG8U+mmLq+Gu86JSOntz7dtSawqLLq5HZmZe81f2s/pZ
+ LfSryb5z1pVAkol++OmKjJv4tdLmbcw8NiODgodwnhf0XTyLiNucrYUXEKZAE9xkQBPCEBMzmo
+ 6PMEjRPsgs36lEyT4f4+rjuRtFZ6kXgAFFWGIfnA0yj8ltbYTzD52QOXzsR7O/aeEBLuvl3um0
+ ujY=
+X-IronPort-AV: E=Sophos;i="5.81,293,1610380800"; 
+   d="scan'208";a="163422235"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Mar 2021 15:40:09 +0800
+IronPort-SDR: ljXb5pPMfMYTyllauoCVn7+xEQeBa360pzoaDHYqqyMBEyw5kG9oqgw05MhTS7wWQWZEzWI2fK
+ s/BP7ghn/g3Yv9FOkoMu1DHHyUbFjmn6lIFZ9S11Oq95EmdN9ptY8vQzgh8vnbO9N8d0/NVTyC
+ /3W8WIl0JKk4upFPYBhaIDY4oAQIpmFJmP+gZHCNS69/ArrQIFAu/auEI/WE0BInWjkn4iu/vw
+ JWgvOrauTmjFlQtpmpNM95KtrT1fr4NK2dr52YxInEBZi8hdlbRsS1njMat+s5HFBA12wOonRG
+ xi+Y4L/ARUVq4AskmqJ/IaRR
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2021 00:20:22 -0700
+IronPort-SDR: q1/3aMUa2Cvb2QpLUU8z5ZLD8D555kj5XgX39+xcEwPfaJfu+xByli25WCpKBVZ3NQY2AoaW6M
+ JsV73Jg4+B7EOBMCl8bPu0wQ3EEIuCEt4Dt02M5j6Mzuag2anJrpfmvk4nsheeHbsusIJEYW6/
+ CoCDx9mdK/3oIq45Nl5prFz1Uh3vSc5y4wNIpn2nwALiqf4xZwYx5uu38BYA3+LOBg6DFw6qQu
+ usC8Mu+uDho8nmxjTlCYGbz43UYpyeU4BC1tRgEh8U3Hhg7f++lpwQUGBHEjYc/oPEZk5mzAHK
+ Z+I=
+WDCIronportException: Internal
+Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
+  by uls-op-cesaip01.wdc.com with ESMTP; 31 Mar 2021 00:40:05 -0700
+From:   Avri Altman <avri.altman@wdc.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        alim.akhtar@samsung.com, asutoshd@codeaurora.org,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <avi.shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
+        stanley.chu@mediatek.com, Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v7 01/11] scsi: ufshpb: Cache HPB Control mode on init
+Date:   Wed, 31 Mar 2021 10:39:42 +0300
+Message-Id: <20210331073952.102162-2-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210331073952.102162-1-avri.altman@wdc.com>
+References: <20210331073952.102162-1-avri.altman@wdc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove the unchecked_isa_dma now that all users are gone.
+We will use it later, when we'll need to differentiate between device
+and host control modes.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- Documentation/scsi/scsi_mid_low_api.rst |  4 --
- drivers/scsi/esas2r/esas2r_main.c       |  1 -
- drivers/scsi/hosts.c                    |  7 +---
- drivers/scsi/scsi_debugfs.c             |  1 -
- drivers/scsi/scsi_lib.c                 | 52 +++----------------------
- drivers/scsi/scsi_scan.c                |  6 +--
- drivers/scsi/scsi_sysfs.c               |  2 -
- drivers/scsi/sg.c                       | 10 +----
- drivers/scsi/sr_ioctl.c                 | 12 ++----
- drivers/scsi/st.c                       | 20 ++++------
- drivers/scsi/st.h                       |  2 -
- include/scsi/scsi_cmnd.h                |  7 ++--
- include/scsi/scsi_host.h                |  6 ---
- 13 files changed, 25 insertions(+), 105 deletions(-)
+ drivers/scsi/ufs/ufshcd.h | 2 ++
+ drivers/scsi/ufs/ufshpb.c | 8 +++++---
+ drivers/scsi/ufs/ufshpb.h | 2 ++
+ 3 files changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/scsi/scsi_mid_low_api.rst b/Documentation/scsi/scsi_mid_low_api.rst
-index 5bc17d012b2560..096ffe9cae0e04 100644
---- a/Documentation/scsi/scsi_mid_low_api.rst
-+++ b/Documentation/scsi/scsi_mid_low_api.rst
-@@ -1095,10 +1095,6 @@ of interest:
- 		 - maximum number of commands that can be queued on devices
-                    controlled by the host. Overridden by LLD calls to
-                    scsi_change_queue_depth().
--    unchecked_isa_dma
--		 - 1=>only use bottom 16 MB of ram (ISA DMA addressing
--                   restriction), 0=>can use full 32 bit (or better) DMA
--                   address space
-     no_async_abort
- 		 - 1=>Asynchronous aborts are not supported
- 		 - 0=>Timed-out commands will be aborted asynchronously
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index a9dd6345f064c9..5d9eeac6717abd 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -249,7 +249,6 @@ static struct scsi_host_template driver_template = {
- 	.cmd_per_lun			=
- 		ESAS2R_DEFAULT_CMD_PER_LUN,
- 	.present			= 0,
--	.unchecked_isa_dma		= 0,
- 	.emulated			= 0,
- 	.proc_name			= ESAS2R_DRVR_NAME,
- 	.change_queue_depth		= scsi_change_queue_depth,
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 2f162603876f9e..697c09ef259b3f 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -371,13 +371,9 @@ static struct device_type scsi_host_type = {
- struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- {
- 	struct Scsi_Host *shost;
--	gfp_t gfp_mask = GFP_KERNEL;
- 	int index;
- 
--	if (sht->unchecked_isa_dma && privsize)
--		gfp_mask |= __GFP_DMA;
--
--	shost = kzalloc(sizeof(struct Scsi_Host) + privsize, gfp_mask);
-+	shost = kzalloc(sizeof(struct Scsi_Host) + privsize, GFP_KERNEL);
- 	if (!shost)
- 		return NULL;
- 
-@@ -419,7 +415,6 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	shost->sg_tablesize = sht->sg_tablesize;
- 	shost->sg_prot_tablesize = sht->sg_prot_tablesize;
- 	shost->cmd_per_lun = sht->cmd_per_lun;
--	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
- 	shost->no_write_same = sht->no_write_same;
- 	shost->host_tagset = sht->host_tagset;
- 
-diff --git a/drivers/scsi/scsi_debugfs.c b/drivers/scsi/scsi_debugfs.c
-index c19ea7ab54cbd2..d9109771f274d1 100644
---- a/drivers/scsi/scsi_debugfs.c
-+++ b/drivers/scsi/scsi_debugfs.c
-@@ -8,7 +8,6 @@
- #define SCSI_CMD_FLAG_NAME(name)[const_ilog2(SCMD_##name)] = #name
- static const char *const scsi_cmd_flags[] = {
- 	SCSI_CMD_FLAG_NAME(TAGGED),
--	SCSI_CMD_FLAG_NAME(UNCHECKED_ISA_DMA),
- 	SCSI_CMD_FLAG_NAME(INITIALIZED),
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 4dbe9bc60e85..c01f75963750 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -656,6 +656,7 @@ struct ufs_hba_variant_params {
+  * @hpb_disabled: flag to check if HPB is disabled
+  * @max_hpb_single_cmd: maximum size of single HPB command
+  * @is_legacy: flag to check HPB 1.0
++ * @control_mode: either host or device
+  */
+ struct ufshpb_dev_info {
+ 	int num_lu;
+@@ -665,6 +666,7 @@ struct ufshpb_dev_info {
+ 	bool hpb_disabled;
+ 	int max_hpb_single_cmd;
+ 	bool is_legacy;
++	u8 control_mode;
  };
- #undef SCSI_CMD_FLAG_NAME
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 7d52a11e1b6115..c289991ffaed2f 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -53,49 +53,16 @@
  #endif
  
- static struct kmem_cache *scsi_sense_cache;
--static struct kmem_cache *scsi_sense_isadma_cache;
- static DEFINE_MUTEX(scsi_sense_cache_mutex);
+diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+index 86805af9abe7..5285a50b05dd 100644
+--- a/drivers/scsi/ufs/ufshpb.c
++++ b/drivers/scsi/ufs/ufshpb.c
+@@ -1615,6 +1615,9 @@ static void ufshpb_lu_parameter_init(struct ufs_hba *hba,
+ 				 % (hpb->srgn_mem_size / HPB_ENTRY_SIZE);
  
- static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd);
- 
--static inline struct kmem_cache *
--scsi_select_sense_cache(bool unchecked_isa_dma)
--{
--	return unchecked_isa_dma ? scsi_sense_isadma_cache : scsi_sense_cache;
--}
--
--static void scsi_free_sense_buffer(bool unchecked_isa_dma,
--				   unsigned char *sense_buffer)
--{
--	kmem_cache_free(scsi_select_sense_cache(unchecked_isa_dma),
--			sense_buffer);
--}
--
--static unsigned char *scsi_alloc_sense_buffer(bool unchecked_isa_dma,
--	gfp_t gfp_mask, int numa_node)
--{
--	return kmem_cache_alloc_node(scsi_select_sense_cache(unchecked_isa_dma),
--				     gfp_mask, numa_node);
--}
--
- int scsi_init_sense_cache(struct Scsi_Host *shost)
- {
--	struct kmem_cache *cache;
- 	int ret = 0;
- 
- 	mutex_lock(&scsi_sense_cache_mutex);
--	cache = scsi_select_sense_cache(shost->unchecked_isa_dma);
--	if (cache)
--		goto exit;
--
--	if (shost->unchecked_isa_dma) {
--		scsi_sense_isadma_cache =
--			kmem_cache_create("scsi_sense_cache(DMA)",
--				SCSI_SENSE_BUFFERSIZE, 0,
--				SLAB_HWCACHE_ALIGN | SLAB_CACHE_DMA, NULL);
--		if (!scsi_sense_isadma_cache)
--			ret = -ENOMEM;
--	} else {
-+	if (!scsi_sense_cache) {
- 		scsi_sense_cache =
- 			kmem_cache_create_usercopy("scsi_sense_cache",
- 				SCSI_SENSE_BUFFERSIZE, 0, SLAB_HWCACHE_ALIGN,
-@@ -103,7 +70,6 @@ int scsi_init_sense_cache(struct Scsi_Host *shost)
- 		if (!scsi_sense_cache)
- 			ret = -ENOMEM;
- 	}
-- exit:
- 	mutex_unlock(&scsi_sense_cache_mutex);
- 	return ret;
- }
-@@ -1748,15 +1714,12 @@ static int scsi_mq_init_request(struct blk_mq_tag_set *set, struct request *rq,
- 				unsigned int hctx_idx, unsigned int numa_node)
- {
- 	struct Scsi_Host *shost = set->driver_data;
--	const bool unchecked_isa_dma = shost->unchecked_isa_dma;
- 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
- 	struct scatterlist *sg;
- 	int ret = 0;
- 
--	if (unchecked_isa_dma)
--		cmd->flags |= SCMD_UNCHECKED_ISA_DMA;
--	cmd->sense_buffer = scsi_alloc_sense_buffer(unchecked_isa_dma,
--						    GFP_KERNEL, numa_node);
-+	cmd->sense_buffer =
-+		kmem_cache_alloc_node(scsi_sense_cache, GFP_KERNEL, numa_node);
- 	if (!cmd->sense_buffer)
- 		return -ENOMEM;
- 	cmd->req.sense = cmd->sense_buffer;
-@@ -1770,8 +1733,7 @@ static int scsi_mq_init_request(struct blk_mq_tag_set *set, struct request *rq,
- 	if (shost->hostt->init_cmd_priv) {
- 		ret = shost->hostt->init_cmd_priv(shost, cmd);
- 		if (ret < 0)
--			scsi_free_sense_buffer(unchecked_isa_dma,
--					       cmd->sense_buffer);
-+			kmem_cache_free(scsi_sense_cache, cmd->sense_buffer);
- 	}
- 
- 	return ret;
-@@ -1785,8 +1747,7 @@ static void scsi_mq_exit_request(struct blk_mq_tag_set *set, struct request *rq,
- 
- 	if (shost->hostt->exit_cmd_priv)
- 		shost->hostt->exit_cmd_priv(shost, cmd);
--	scsi_free_sense_buffer(cmd->flags & SCMD_UNCHECKED_ISA_DMA,
--			       cmd->sense_buffer);
-+	kmem_cache_free(scsi_sense_cache, cmd->sense_buffer);
+ 	hpb->pages_per_srgn = DIV_ROUND_UP(hpb->srgn_mem_size, PAGE_SIZE);
++
++	if (hpb_dev_info->control_mode == HPB_HOST_CONTROL)
++		hpb->is_hcm = true;
  }
  
- static int scsi_map_queues(struct blk_mq_tag_set *set)
-@@ -1821,8 +1782,6 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
- 				dma_max_mapping_size(dev) >> SECTOR_SHIFT);
- 	}
- 	blk_queue_max_hw_sectors(q, shost->max_sectors);
--	if (shost->unchecked_isa_dma)
--		blk_queue_bounce_limit(q, BLK_BOUNCE_ISA);
- 	blk_queue_segment_boundary(q, shost->dma_boundary);
- 	dma_set_seg_boundary(dev, shost->dma_boundary);
- 
-@@ -1988,7 +1947,6 @@ EXPORT_SYMBOL(scsi_unblock_requests);
- void scsi_exit_queue(void)
+ static int ufshpb_alloc_region_tbl(struct ufs_hba *hba, struct ufshpb_lu *hpb)
+@@ -2308,11 +2311,10 @@ void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf)
  {
- 	kmem_cache_destroy(scsi_sense_cache);
--	kmem_cache_destroy(scsi_sense_isadma_cache);
- }
+ 	struct ufshpb_dev_info *hpb_dev_info = &hba->ufshpb_dev;
+ 	int version, ret;
+-	u8 hpb_mode;
+ 	u32 max_hpb_single_cmd = HPB_MULTI_CHUNK_LOW;
  
- /**
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 9af50e6f94c4c4..9b73aa506382ea 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1078,8 +1078,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	if (!sdev)
- 		goto out;
+-	hpb_mode = desc_buf[DEVICE_DESC_PARAM_HPB_CONTROL];
+-	if (hpb_mode == HPB_HOST_CONTROL) {
++	hpb_dev_info->control_mode = desc_buf[DEVICE_DESC_PARAM_HPB_CONTROL];
++	if (hpb_dev_info->control_mode == HPB_HOST_CONTROL) {
+ 		dev_err(hba->dev, "%s: host control mode is not supported.\n",
+ 			__func__);
+ 		hpb_dev_info->hpb_disabled = true;
+diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+index b1128b0ce486..7df30340386a 100644
+--- a/drivers/scsi/ufs/ufshpb.h
++++ b/drivers/scsi/ufs/ufshpb.h
+@@ -228,6 +228,8 @@ struct ufshpb_lu {
+ 	u32 entries_per_srgn_shift;
+ 	u32 pages_per_srgn;
  
--	result = kmalloc(result_len, GFP_KERNEL |
--			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
-+	result = kmalloc(result_len, GFP_KERNEL);
- 	if (!result)
- 		goto out_free_sdev;
++	bool is_hcm;
++
+ 	struct ufshpb_stats stats;
+ 	struct ufshpb_params params;
  
-@@ -1336,8 +1335,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, blist_flags_t bflag
- 	 */
- 	length = (511 + 1) * sizeof(struct scsi_lun);
- retry:
--	lun_data = kmalloc(length, GFP_KERNEL |
--			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
-+	lun_data = kmalloc(length, GFP_KERNEL);
- 	if (!lun_data) {
- 		printk(ALLOC_FAILURE_MSG, __func__);
- 		goto out;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index b6378c8ca783ea..b71ea1a69c8b60 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -373,7 +373,6 @@ shost_rd_attr(cmd_per_lun, "%hd\n");
- shost_rd_attr(can_queue, "%d\n");
- shost_rd_attr(sg_tablesize, "%hu\n");
- shost_rd_attr(sg_prot_tablesize, "%hu\n");
--shost_rd_attr(unchecked_isa_dma, "%d\n");
- shost_rd_attr(prot_capabilities, "%u\n");
- shost_rd_attr(prot_guard_type, "%hd\n");
- shost_rd_attr2(proc_name, hostt->proc_name, "%s\n");
-@@ -411,7 +410,6 @@ static struct attribute *scsi_sysfs_shost_attrs[] = {
- 	&dev_attr_can_queue.attr,
- 	&dev_attr_sg_tablesize.attr,
- 	&dev_attr_sg_prot_tablesize.attr,
--	&dev_attr_unchecked_isa_dma.attr,
- 	&dev_attr_proc_name.attr,
- 	&dev_attr_scan.attr,
- 	&dev_attr_hstate.attr,
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 4383d93110f835..70f38715641eec 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -974,7 +974,7 @@ sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
- 		 */
- 		return 0;
- 	case SG_GET_LOW_DMA:
--		return put_user((int) sdp->device->host->unchecked_isa_dma, ip);
-+		return put_user(0, ip);
- 	case SG_GET_SCSI_ID:
- 		{
- 			sg_scsi_id_t v;
-@@ -1777,7 +1777,6 @@ sg_start_req(Sg_request *srp, unsigned char *cmd)
- 
- 	if (sg_allow_dio && hp->flags & SG_FLAG_DIRECT_IO &&
- 	    dxfer_dir != SG_DXFER_UNKNOWN && !iov_count &&
--	    !sfp->parentdp->device->host->unchecked_isa_dma &&
- 	    blk_rq_aligned(q, (unsigned long)hp->dxferp, dxfer_len))
- 		md = NULL;
- 	else
-@@ -1893,7 +1892,6 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- 	int sg_tablesize = sfp->parentdp->sg_tablesize;
- 	int blk_size = buff_size, order;
- 	gfp_t gfp_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN | __GFP_ZERO;
--	struct sg_device *sdp = sfp->parentdp;
- 
- 	if (blk_size < 0)
- 		return -EFAULT;
-@@ -1919,9 +1917,6 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- 			scatter_elem_sz_prev = num;
- 	}
- 
--	if (sdp->device->host->unchecked_isa_dma)
--		gfp_mask |= GFP_DMA;
--
- 	order = get_order(num);
- retry:
- 	ret_sz = 1 << (PAGE_SHIFT + order);
-@@ -2547,8 +2542,7 @@ static void sg_proc_debug_helper(struct seq_file *s, Sg_device * sdp)
- 			   "(res)sgat=%d low_dma=%d\n", k,
- 			   jiffies_to_msecs(fp->timeout),
- 			   fp->reserve.bufflen,
--			   (int) fp->reserve.k_use_sg,
--			   (int) sdp->device->host->unchecked_isa_dma);
-+			   (int) fp->reserve.k_use_sg, 0);
- 		seq_printf(s, "   cmd_q=%d f_packid=%d k_orphan=%d closed=0\n",
- 			   (int) fp->cmd_q, (int) fp->force_packid,
- 			   (int) fp->keep_orphan);
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index 5703f8400b73ca..15c305283b6cc1 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -33,10 +33,6 @@ static int xa_test = 0;
- 
- module_param(xa_test, int, S_IRUGO | S_IWUSR);
- 
--/* primitive to determine whether we need to have GFP_DMA set based on
-- * the status of the unchecked_isa_dma flag in the host structure */
--#define SR_GFP_DMA(cd) (((cd)->device->host->unchecked_isa_dma) ? GFP_DMA : 0)
--
- static int sr_read_tochdr(struct cdrom_device_info *cdi,
- 		struct cdrom_tochdr *tochdr)
- {
-@@ -45,7 +41,7 @@ static int sr_read_tochdr(struct cdrom_device_info *cdi,
- 	int result;
- 	unsigned char *buffer;
- 
--	buffer = kmalloc(32, GFP_KERNEL | SR_GFP_DMA(cd));
-+	buffer = kmalloc(32, GFP_KERNEL);
- 	if (!buffer)
- 		return -ENOMEM;
- 
-@@ -75,7 +71,7 @@ static int sr_read_tocentry(struct cdrom_device_info *cdi,
- 	int result;
- 	unsigned char *buffer;
- 
--	buffer = kmalloc(32, GFP_KERNEL | SR_GFP_DMA(cd));
-+	buffer = kmalloc(32, GFP_KERNEL);
- 	if (!buffer)
- 		return -ENOMEM;
- 
-@@ -384,7 +380,7 @@ int sr_get_mcn(struct cdrom_device_info *cdi, struct cdrom_mcn *mcn)
- {
- 	Scsi_CD *cd = cdi->handle;
- 	struct packet_command cgc;
--	char *buffer = kmalloc(32, GFP_KERNEL | SR_GFP_DMA(cd));
-+	char *buffer = kmalloc(32, GFP_KERNEL);
- 	int result;
- 
- 	if (!buffer)
-@@ -567,7 +563,7 @@ int sr_is_xa(Scsi_CD *cd)
- 	if (!xa_test)
- 		return 0;
- 
--	raw_sector = kmalloc(2048, GFP_KERNEL | SR_GFP_DMA(cd));
-+	raw_sector = kmalloc(2048, GFP_KERNEL);
- 	if (!raw_sector)
- 		return -ENOMEM;
- 	if (0 == sr_read_sector(cd, cd->ms_offset + 16,
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 9ca536aae78491..3b1afe1d5b2708 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -188,7 +188,7 @@ static int st_max_sg_segs = ST_MAX_SG;
- 
- static int modes_defined;
- 
--static int enlarge_buffer(struct st_buffer *, int, int);
-+static int enlarge_buffer(struct st_buffer *, int);
- static void clear_buffer(struct st_buffer *);
- static void normalize_buffer(struct st_buffer *);
- static int append_to_buffer(const char __user *, struct st_buffer *, int);
-@@ -1289,7 +1289,7 @@ static int st_open(struct inode *inode, struct file *filp)
- 	}
- 
- 	/* See that we have at least a one page buffer available */
--	if (!enlarge_buffer(STp->buffer, PAGE_SIZE, STp->restr_dma)) {
-+	if (!enlarge_buffer(STp->buffer, PAGE_SIZE)) {
- 		st_printk(KERN_WARNING, STp,
- 			  "Can't allocate one page tape buffer.\n");
- 		retval = (-EOVERFLOW);
-@@ -1586,7 +1586,7 @@ static int setup_buffering(struct scsi_tape *STp, const char __user *buf,
- 		}
- 
- 		if (bufsize > STbp->buffer_size &&
--		    !enlarge_buffer(STbp, bufsize, STp->restr_dma)) {
-+		    !enlarge_buffer(STbp, bufsize)) {
- 			st_printk(KERN_WARNING, STp,
- 				  "Can't allocate %d byte tape buffer.\n",
- 				  bufsize);
-@@ -3894,7 +3894,7 @@ static long st_compat_ioctl(struct file *file, unsigned int cmd_in, unsigned lon
- 
- /* Try to allocate a new tape buffer. Calling function must not hold
-    dev_arr_lock. */
--static struct st_buffer *new_tape_buffer(int need_dma, int max_sg)
-+static struct st_buffer *new_tape_buffer(int max_sg)
- {
- 	struct st_buffer *tb;
- 
-@@ -3905,7 +3905,6 @@ static struct st_buffer *new_tape_buffer(int need_dma, int max_sg)
- 	}
- 	tb->frp_segs = 0;
- 	tb->use_sg = max_sg;
--	tb->dma = need_dma;
- 	tb->buffer_size = 0;
- 
- 	tb->reserved_pages = kcalloc(max_sg, sizeof(struct page *),
-@@ -3922,7 +3921,7 @@ static struct st_buffer *new_tape_buffer(int need_dma, int max_sg)
- /* Try to allocate enough space in the tape buffer */
- #define ST_MAX_ORDER 6
- 
--static int enlarge_buffer(struct st_buffer * STbuffer, int new_size, int need_dma)
-+static int enlarge_buffer(struct st_buffer * STbuffer, int new_size)
- {
- 	int segs, max_segs, b_size, order, got;
- 	gfp_t priority;
-@@ -3936,8 +3935,6 @@ static int enlarge_buffer(struct st_buffer * STbuffer, int new_size, int need_dm
- 	max_segs = STbuffer->use_sg;
- 
- 	priority = GFP_KERNEL | __GFP_NOWARN;
--	if (need_dma)
--		priority |= GFP_DMA;
- 
- 	if (STbuffer->cleared)
- 		priority |= __GFP_ZERO;
-@@ -3957,7 +3954,7 @@ static int enlarge_buffer(struct st_buffer * STbuffer, int new_size, int need_dm
- 		if (order == ST_MAX_ORDER)
- 			return 0;
- 		normalize_buffer(STbuffer);
--		return enlarge_buffer(STbuffer, new_size, need_dma);
-+		return enlarge_buffer(STbuffer, new_size);
- 	}
- 
- 	for (segs = STbuffer->frp_segs, got = STbuffer->buffer_size;
-@@ -4296,7 +4293,7 @@ static int st_probe(struct device *dev)
- 	i = queue_max_segments(SDp->request_queue);
- 	if (st_max_sg_segs < i)
- 		i = st_max_sg_segs;
--	buffer = new_tape_buffer((SDp->host)->unchecked_isa_dma, i);
-+	buffer = new_tape_buffer(i);
- 	if (buffer == NULL) {
- 		sdev_printk(KERN_ERR, SDp,
- 			    "st: Can't allocate new tape buffer. "
-@@ -4340,7 +4337,6 @@ static int st_probe(struct device *dev)
- 	tpnt->dirty = 0;
- 	tpnt->in_use = 0;
- 	tpnt->drv_buffer = 1;	/* Try buffering if no mode sense */
--	tpnt->restr_dma = (SDp->host)->unchecked_isa_dma;
- 	tpnt->use_pf = (SDp->scsi_level >= SCSI_2);
- 	tpnt->density = 0;
- 	tpnt->do_auto_lock = ST_AUTO_LOCK;
-@@ -4358,7 +4354,7 @@ static int st_probe(struct device *dev)
- 	tpnt->nbr_partitions = 0;
- 	blk_queue_rq_timeout(tpnt->device->request_queue, ST_TIMEOUT);
- 	tpnt->long_timeout = ST_LONG_TIMEOUT;
--	tpnt->try_dio = try_direct_io && !SDp->host->unchecked_isa_dma;
-+	tpnt->try_dio = try_direct_io;
- 
- 	for (i = 0; i < ST_NBR_MODES; i++) {
- 		STm = &(tpnt->modes[i]);
-diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index 95d2e7a7988dea..9d3c38bb0794ab 100644
---- a/drivers/scsi/st.h
-+++ b/drivers/scsi/st.h
-@@ -35,7 +35,6 @@ struct st_request {
- 
- /* The tape buffer descriptor. */
- struct st_buffer {
--	unsigned char dma;	/* DMA-able buffer */
- 	unsigned char cleared;  /* internal buffer cleared after open? */
- 	unsigned short do_dio;  /* direct i/o set up? */
- 	int buffer_size;
-@@ -133,7 +132,6 @@ struct scsi_tape {
- 	unsigned char two_fm;
- 	unsigned char fast_mteom;
- 	unsigned char immediate;
--	unsigned char restr_dma;
- 	unsigned char scsi2_logical;
- 	unsigned char default_drvbuffer;	/* 0xff = don't touch, value 3 bits */
- 	unsigned char cln_mode;			/* 0 = none, otherwise sense byte nbr */
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index ace15b5dc956da..0fd17a5344bd3c 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -55,11 +55,10 @@ struct scsi_pointer {
- 
- /* for scmd->flags */
- #define SCMD_TAGGED		(1 << 0)
--#define SCMD_UNCHECKED_ISA_DMA	(1 << 1)
--#define SCMD_INITIALIZED	(1 << 2)
--#define SCMD_LAST		(1 << 3)
-+#define SCMD_INITIALIZED	(1 << 1)
-+#define SCMD_LAST		(1 << 2)
- /* flags preserved across unprep / reprep */
--#define SCMD_PRESERVED_FLAGS	(SCMD_UNCHECKED_ISA_DMA | SCMD_INITIALIZED)
-+#define SCMD_PRESERVED_FLAGS	(SCMD_INITIALIZED)
- 
- /* for scmd->state */
- #define SCMD_STATE_COMPLETE	0
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index e30fd963b97d0c..8343c6f9fec19e 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -424,11 +424,6 @@ struct scsi_host_template {
- 	 */
- 	unsigned supported_mode:2;
- 
--	/*
--	 * True if this host adapter uses unchecked DMA onto an ISA bus.
--	 */
--	unsigned unchecked_isa_dma:1;
--
- 	/*
- 	 * True for emulated SCSI host adapters (e.g. ATAPI).
- 	 */
-@@ -617,7 +612,6 @@ struct Scsi_Host {
- 	 */
- 	unsigned nr_hw_queues;
- 	unsigned active_mode:2;
--	unsigned unchecked_isa_dma:1;
- 
- 	/*
- 	 * Host has requested that no further requests come through for the
 -- 
-2.30.1
+2.25.1
 
