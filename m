@@ -2,163 +2,150 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E871EC433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 17:32:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 373F0C43462
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 18:01:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B65B561026
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 17:32:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0360B61073
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 18:01:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233934AbhCaRcD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 Mar 2021 13:32:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56910 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229615AbhCaRbc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Mar 2021 13:31:32 -0400
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D642C061574
-        for <linux-scsi@vger.kernel.org>; Wed, 31 Mar 2021 10:31:31 -0700 (PDT)
-Received: by mail-ej1-x629.google.com with SMTP id e14so31220905ejz.11
-        for <linux-scsi@vger.kernel.org>; Wed, 31 Mar 2021 10:31:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=QpifQQEpvkV/06N3VyEOksnviAFVtmLBYUDM+GpQil4=;
-        b=ez34K6WQryCmaKEgyxBL7DxKZgcz6JMIr8RbSw7xnlaAVDt0MoA0qkAD6DHfOyVaS9
-         mCMIb2EylbXkERqoFZriqiyoO5HHe3DRkwcQ0YM6/I+za6zWexhBI7qm2dRCIlS919LF
-         m/OJwLa2a0VufE4XoHxPUxaLWZXXTKrdrAPmqYJyx2l3AFoHhhxPmsxvFyl9DKtPqswF
-         1Z3X+tw/4CCH4sAXRbEAMHEyxOWUjRE+vbKoepDdMFpXxeRQGFUqc3oTpNY2vmkAm8lw
-         JGmY7XumLqgWwPUX7Trj2UibRJzfQ9r2zMAEk+e2163KF5qK6DvXxpWJakq17MGPb1cB
-         4k5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=QpifQQEpvkV/06N3VyEOksnviAFVtmLBYUDM+GpQil4=;
-        b=hXLFc0iTnAUqFnKyAKVRayImTHqI2J3PdFg3OfPMG5aLoWS/pn9gr62BdSsK2ASVHt
-         wN/YU4UMr8zDeiqmPdKeWSdACKXBd9T8re+mNHNmZsHkduIrFQ206NHiZJ+aSE0uYXct
-         10+lCzq1zGTLckdC20d1+uZh6UxvLYz4VJ4Ya1q5+l2Btt0/BUCSWxEMDdsT1yZE6aIC
-         3ko5TXdB+cZ58onNq39mLs2kjZryowhoorcoMyabFR9d9sjB+M91zrNKElKavAS4WifE
-         4AS6FkMysxm9MKHkThY+N/VbIgK3fAucT4uzUPlUuXis3TjQzx9hNR5dG+l+e18VHvFN
-         Ij8w==
-X-Gm-Message-State: AOAM533r9HCL6NcrN1v1x48XQ3LJDO6AWj6/sDj5oeKWIOevxZWMxujW
-        DPrTmCWEglILQJlkZXmbab1SMOQto2tCKRJ6glmtlA==
-X-Google-Smtp-Source: ABdhPJzx+nknyxSv5Tzr3/4cwhsII1AkDayx9I+jvp0Dy9nXKdHJ4sizysxKMZjInsHXi77InoNXKZX8r4+4ihFOSfE=
-X-Received: by 2002:a17:906:18a1:: with SMTP id c1mr4626941ejf.62.1617211890239;
- Wed, 31 Mar 2021 10:31:30 -0700 (PDT)
+        id S234627AbhCaSAa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 Mar 2021 14:00:30 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:53888 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234661AbhCaSA3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Mar 2021 14:00:29 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1617213629; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=mYdCYC/FPImOY3Dj4Qxijet1JbSBWQXVRBoquvOZPb8=; b=dmfn9crM/LTgdIVFwtbGA8YXr33Zb7TYm45PmyF5UckSqMrE/tZcOfKIquySmbZXSevvMcY2
+ uFosTNPp2dpUgbDMDq1D5o4EDcewkHAvU1JOXHIiH4vCovA97LpPx4/p0CUcDiRZe+cxqNx2
+ WtQH5yLSlPlpvaI80okcopgj5Fg=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 6064b8abfebcffa80fe61ba3 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 31 Mar 2021 18:00:11
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 09775C43466; Wed, 31 Mar 2021 18:00:11 +0000 (UTC)
+Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7C840C433ED;
+        Wed, 31 Mar 2021 18:00:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7C840C433ED
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH V2 2/3] scsi: ufs: add a vops to configure VCC voltage
+ level
+To:     Nitin Rawat <nitirawa@codeaurora.org>, cang@codeaurora.org,
+        stummala@codeaurora.org, vbadigan@codeaurora.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bjorn.andersson@linaro.org,
+        adrian.hunter@intel.com, bvanassche@acm.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <1616363857-26760-1-git-send-email-nitirawa@codeaurora.org>
+ <1616363857-26760-3-git-send-email-nitirawa@codeaurora.org>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <80f681a6-165f-0610-dfea-6b66ce4abddc@codeaurora.org>
+Date:   Wed, 31 Mar 2021 11:00:07 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
-References: <20210330064008.9666-1-Viswas.G@microchip.com> <20210330064008.9666-2-Viswas.G@microchip.com>
-In-Reply-To: <20210330064008.9666-2-Viswas.G@microchip.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Wed, 31 Mar 2021 19:31:19 +0200
-Message-ID: <CAMGffE=kZFHPWwwqjkUSZM0hRqiHpJY7NssKePHCsGUKAbABbA@mail.gmail.com>
-Subject: Re: [PATCH v3 1/7] pm80xx: Add sysfs attribute to check mpi state
-To:     Viswas G <Viswas.G@microchip.com>
-Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
-        Vasanthalakshmi.Tharmarajan@microchip.com,
-        Ruksar Devadi <Ruksar.devadi@microchip.com>,
-        Vishakha Channapattan <vishakhavc@google.com>,
-        Radha Ramachandran <radha@google.com>,
-        Jinpu Wang <jinpu.wang@cloud.ionos.com>,
-        Ashokkumar N <Ashokkumar.N@microchip.com>,
-        John Garry <john.garry@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1616363857-26760-3-git-send-email-nitirawa@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Mar 30, 2021 at 8:30 AM Viswas G <Viswas.G@microchip.com> wrote:
->
-> From: Vishakha Channapattan <vishakhavc@google.com>
->
-> A new sysfs variable 'ctl_mpi_state' is being introduced to
-> check the state of mpi.
->
-> Tested: Using 'ctl_mpi_state' sysfs variable we check the mpi state
-> mvae14:~# cat /sys/class/scsi_host/host*/ctl_mpi_state
-> MPI-S=MPI is successfully initialized   HMI_ERR=0
-> MPI-S=MPI is successfully initialized   HMI_ERR=0
->
-> Reported-by: kernel test robot <lkp@intel.com>
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Vishakha Channapattan <vishakhavc@google.com>
-> Signed-off-by: Viswas G <Viswas.G@microchip.com>
-> Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
-> Signed-off-by: Ashokkumar N <Ashokkumar.N@microchip.com>
-> Signed-off-by: Radha Ramachandran <radha@google.com>
-> Signed-off-by: kernel test robot <lkp@intel.com>
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
+On 3/21/2021 2:57 PM, Nitin Rawat wrote:
+> Add a vops to configure VCC voltage VCC voltage level
+> for platform supporting both ufs2.x and ufs 3.x devices.
+> 
+> Suggested-by: Stanley Chu <stanley.chu@mediatek.com>
+> Suggested-by: Asutosh Das <asutoshd@codeaurora.org>
+> Suggested-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Signed-off-by: Nitin Rawat <nitirawa@codeaurora.org>
+> Signed-off-by: Veerabhadrarao Badiganti <vbadigan@codeaurora.org>
 > ---
->  drivers/scsi/pm8001/pm8001_ctl.c | 35 ++++++++++++++++++++++++++++++++++-
->  1 file changed, 34 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index 12035baf0997..6b6b774c455e 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -41,6 +41,7 @@
->  #include <linux/slab.h>
->  #include "pm8001_sas.h"
->  #include "pm8001_ctl.h"
-> +#include "pm8001_chips.h"
->
->  /* scsi host attributes */
->
-> @@ -883,9 +884,40 @@ static ssize_t pm8001_show_update_fw(struct device *cdev,
->                         flash_error_table[i].err_code,
->                         flash_error_table[i].reason);
->  }
-> -
->  static DEVICE_ATTR(update_fw, S_IRUGO|S_IWUSR|S_IWGRP,
->         pm8001_show_update_fw, pm8001_store_update_fw);
-> +
-> +/**
-> + * ctl_mpi_state_show - controller MPI state check
-> + * @cdev: pointer to embedded class device
-> + * @buf: the buffer returned
-> + *
-> + * A sysfs 'read-only' shost attribute.
-> + */
-> +
-> +static char mpiStateText[][80] = {
-> +       "MPI is not initialized",
-> +       "MPI is successfully initialized",
-> +       "MPI termination is in progress",
-> +       "MPI initialization failed with error in [31:16]"
-> +};
-> +
-> +static ssize_t ctl_mpi_state_show(struct device *cdev,
-> +               struct device_attribute *attr, char *buf)
+>   drivers/scsi/ufs/ufshcd.c |  4 ++++
+>   drivers/scsi/ufs/ufshcd.h | 10 ++++++++++
+>   2 files changed, 14 insertions(+)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 633ca8e..5bfe987 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -7763,6 +7763,10 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+>   		goto out;
+> 
+>   	ufshcd_clear_ua_wluns(hba);
+> +	if (ufshcd_vops_setup_vcc_regulators(hba))
+This would be invoked even for platforms that don't support both 2.x and 
+3.x and don't need to set the voltages in the driver.
+I guess platforms that support both 2.x and 3.x and can't set the 
+regulator voltages from dts due to different voltage requirements of 2.x 
+and 3.x, should request the driver to set the voltages. And the driver 
+may do so after determining the device version.
+
+> +		dev_err(hba->dev,
+> +			"%s: Failed to set the VCC regulator values, continue with 2.7v\n",
+> +			__func__);
+> 
+>   	/* Initialize devfreq after UFS device is detected */
+>   	if (ufshcd_is_clkscaling_supported(hba)) {
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 0db796a..8f0945d 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -324,6 +324,7 @@ struct ufs_pwr_mode_info {
+>    * @device_reset: called to issue a reset pulse on the UFS device
+>    * @program_key: program or evict an inline encryption key
+>    * @event_notify: called to notify important events
+> + * @setup_vcc_regulators : update vcc regulator level
+>    */
+>   struct ufs_hba_variant_ops {
+>   	const char *name;
+> @@ -360,6 +361,7 @@ struct ufs_hba_variant_ops {
+>   			       const union ufs_crypto_cfg_entry *cfg, int slot);
+>   	void	(*event_notify)(struct ufs_hba *hba,
+>   				enum ufs_event_type evt, void *data);
+> +	int    (*setup_vcc_regulators)(struct ufs_hba *hba);
+>   };
+> 
+>   /* clock gating state  */
+> @@ -1269,6 +1271,14 @@ static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
+>   		hba->vops->config_scaling_param(hba, profile, data);
+>   }
+> 
+> +static inline int ufshcd_vops_setup_vcc_regulators(struct ufs_hba *hba)
 > +{
-> +       struct Scsi_Host *shost = class_to_shost(cdev);
-> +       struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +       struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +       unsigned int mpidw0;
-> +       int c;
+> +	if (hba->vops && hba->vops->setup_vcc_regulators)
+> +		return hba->vops->setup_vcc_regulators(hba);
 > +
-> +       mpidw0 = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 0);
-> +       c = sysfs_emit(buf, "MPI-S=%s\t HMI_ERR=%x\n", mpiStateText[mpidw0 & 0x0003],
-> +                       (mpidw0 >> 16));
-> +       return c;
+> +	return 0;
 > +}
-> +static DEVICE_ATTR_RO(ctl_mpi_state);
 > +
->  struct device_attribute *pm8001_host_attrs[] = {
->         &dev_attr_interface_rev,
->         &dev_attr_controller_fatal_error,
-> @@ -909,6 +941,7 @@ struct device_attribute *pm8001_host_attrs[] = {
->         &dev_attr_ob_log,
->         &dev_attr_ila_version,
->         &dev_attr_inc_fw_ver,
-> +       &dev_attr_ctl_mpi_state,
->         NULL,
->  };
->
+>   extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+> 
+>   /*
 > --
-> 2.16.3
->
+> 2.7.4
+> 
+
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
