@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92446C4321A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C52C0C43600
 	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 07:31:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7EB96619F0
+	by mail.kernel.org (Postfix) with ESMTP id B4631619DF
 	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 07:31:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234198AbhCaHaw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 Mar 2021 03:30:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39548 "EHLO
+        id S234194AbhCaHav (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 Mar 2021 03:30:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234139AbhCaHaf (ORCPT
+        with ESMTP id S234141AbhCaHaf (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Mar 2021 03:30:35 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F995C061760;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4430C061761;
         Wed, 31 Mar 2021 00:30:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=HMrQFdEqTyBg/M3ifvGlP4fPPi7g5iRJWi3abdZV+WU=; b=uVzsdRrF8Mh0G/EfnrmZ7r5A1U
-        YZpZrjENorE6CqrV6efm81e2mle9uAMDyxRRf7wC/XScrUSWExcNIGUcaHyEL7XAoD8MkRtGFtXp/
-        j3qDoJRzigrBdiRqBTaSuqLTJ6OH3KfOS8H/Fc0RBpDuSaeO/nPx4JuOEaXNdqR8s7VG1STfnBi3A
-        O/4F7u/0U8S7AJoC782tJdKLmjmHSJnsPBpLgs07EYj8olE2WTKNwqwDumxO0VSejZdccTvNLqNG8
-        G8q2eiHHMYMrllO2q2a1zv613DokZgJCX5wwtkNEjtJPULQbwEmP8WgCHfKc6QmNy799ngeBvIEZw
-        Km/S63tw==;
+        bh=+8sqlz6UDxice4fpNhBHxr6Uk/iH10JvyahxIew8J9c=; b=SwZqtz5sLTZgX61AjgmB0eZD/L
+        s/znPYg5EgR+jXZnOHreurqcJruZ8Z5lztKNbXEFCzi0hlR903ZE3j2Pq9C4z69PvNEUU3kFSkpmY
+        +VVtLkK94HGbjVvLWFeqnn+oJSHOeRx2uQaXtX+5p/eKuefeUnLeicMGTbOOq60QdV0QtrJpm9ZPB
+        O14KJrcjJ58/iBTkvMCq9LurameybEU3bQ+k7LM/Sw3xNU3NIYR6t7sIW/PhDFwwp56vAeC332pb8
+        v+spFIkuldVj/kSqRY2QGlp4/yIdO+dizh2HvvRrmQbxXWy/SOlafKs004Vwd2t9ZwUUGzSSPuDs3
+        GrwhNrFg==;
 Received: from [2001:4bb8:180:7517:3f75:91d7:136b:f8e1] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lRVIq-009dEm-Eq; Wed, 31 Mar 2021 07:30:12 +0000
+        id 1lRVIy-009dFE-8A; Wed, 31 Mar 2021 07:30:20 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -43,9 +43,9 @@ To:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
         Ondrej Zary <linux@rainbow-software.org>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/8] BusLogic: reject broken old firmware that requires ISA-style bounce buffering
-Date:   Wed, 31 Mar 2021 09:29:56 +0200
-Message-Id: <20210331073001.46776-4-hch@lst.de>
+Subject: [PATCH 6/8] block: remove BLK_BOUNCE_ISA support
+Date:   Wed, 31 Mar 2021 09:29:59 +0200
+Message-Id: <20210331073001.46776-7-hch@lst.de>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210331073001.46776-1-hch@lst.de>
 References: <20210331073001.46776-1-hch@lst.de>
@@ -56,86 +56,398 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Warn on and don't support adapters that have a DMA bug that forces ISA-style
-bounce buffering.
+Remove the BLK_BOUNCE_ISA support now that all users are gone.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Khalid Aziz <khalid@gonehiking.org>
 Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/BusLogic.c | 21 ++++++---------------
- drivers/scsi/BusLogic.h |  1 -
- 2 files changed, 6 insertions(+), 16 deletions(-)
+ block/bio-integrity.c     |   3 +-
+ block/blk-map.c           |   4 +-
+ block/blk-settings.c      |  11 ----
+ block/blk.h               |   5 --
+ block/bounce.c            | 124 ++++++++------------------------------
+ block/scsi_ioctl.c        |   2 +-
+ drivers/ata/libata-scsi.c |   3 +-
+ include/linux/blkdev.h    |   7 ---
+ mm/Kconfig                |   9 ++-
+ 9 files changed, 35 insertions(+), 133 deletions(-)
 
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index 25ca2f9383462c..69068081f4396b 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -1616,14 +1616,12 @@ static bool __init blogic_rdconfig(struct blogic_adapter *adapter)
- 	   hardware bug whereby when the BIOS is enabled, transfers to/from
- 	   the same address range the BIOS occupies modulo 16MB are handled
- 	   incorrectly.  Only properly functioning BT-445S Host Adapters
--	   have firmware version 3.37, so require that ISA Bounce Buffers
--	   be used for the buggy BT-445S models if there is more than 16MB
--	   memory.
-+	   have firmware version 3.37.
- 	 */
--	if (adapter->bios_addr > 0 && strcmp(adapter->model, "BT-445S") == 0 &&
--			strcmp(adapter->fw_ver, "3.37") < 0 &&
--			(void *) high_memory > (void *) MAX_DMA_ADDRESS)
--		adapter->need_bouncebuf = true;
-+	if (adapter->bios_addr > 0 &&
-+	    strcmp(adapter->model, "BT-445S") == 0 &&
-+	    strcmp(adapter->fw_ver, "3.37") < 0)
-+		return blogic_failure(adapter, "Too old firmware");
+diff --git a/block/bio-integrity.c b/block/bio-integrity.c
+index dfa652122a2dc8..4b4eb8964a6f98 100644
+--- a/block/bio-integrity.c
++++ b/block/bio-integrity.c
+@@ -204,7 +204,6 @@ bool bio_integrity_prep(struct bio *bio)
+ {
+ 	struct bio_integrity_payload *bip;
+ 	struct blk_integrity *bi = blk_get_integrity(bio->bi_bdev->bd_disk);
+-	struct request_queue *q = bio->bi_bdev->bd_disk->queue;
+ 	void *buf;
+ 	unsigned long start, end;
+ 	unsigned int len, nr_pages;
+@@ -238,7 +237,7 @@ bool bio_integrity_prep(struct bio *bio)
+ 
+ 	/* Allocate kernel buffer for protection data */
+ 	len = intervals * bi->tuple_size;
+-	buf = kmalloc(len, GFP_NOIO | q->bounce_gfp);
++	buf = kmalloc(len, GFP_NOIO);
+ 	status = BLK_STS_RESOURCE;
+ 	if (unlikely(buf == NULL)) {
+ 		printk(KERN_ERR "could not allocate integrity buffer\n");
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 1ffef782fcf2dd..b62b52dcb61d97 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -181,7 +181,7 @@ static int bio_copy_user_iov(struct request *rq, struct rq_map_data *map_data,
+ 
+ 			i++;
+ 		} else {
+-			page = alloc_page(rq->q->bounce_gfp | gfp_mask);
++			page = alloc_page(GFP_NOIO | gfp_mask);
+ 			if (!page) {
+ 				ret = -ENOMEM;
+ 				goto cleanup;
+@@ -486,7 +486,7 @@ static struct bio *bio_copy_kern(struct request_queue *q, void *data,
+ 		if (bytes > len)
+ 			bytes = len;
+ 
+-		page = alloc_page(q->bounce_gfp | gfp_mask);
++		page = alloc_page(GFP_NOIO | gfp_mask);
+ 		if (!page)
+ 			goto cleanup;
+ 
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index b4aa2f37fab6f5..f9937dd2810e25 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -103,28 +103,17 @@ EXPORT_SYMBOL(blk_set_stacking_limits);
+ void blk_queue_bounce_limit(struct request_queue *q, u64 max_addr)
+ {
+ 	unsigned long b_pfn = max_addr >> PAGE_SHIFT;
+-	int dma = 0;
+ 
+-	q->bounce_gfp = GFP_NOIO;
+ #if BITS_PER_LONG == 64
  	/*
- 	   Initialize parameters common to MultiMaster and FlashPoint
- 	   Host Adapters.
-@@ -1646,14 +1644,9 @@ static bool __init blogic_rdconfig(struct blogic_adapter *adapter)
- 		if (adapter->drvr_opts != NULL &&
- 				adapter->drvr_opts->qdepth[tgt_id] > 0)
- 			qdepth = adapter->drvr_opts->qdepth[tgt_id];
--		else if (adapter->need_bouncebuf)
--			qdepth = BLOGIC_TAG_DEPTH_BB;
- 		adapter->qdepth[tgt_id] = qdepth;
+ 	 * Assume anything <= 4GB can be handled by IOMMU.  Actually
+ 	 * some IOMMUs can handle everything, but I don't know of a
+ 	 * way to test this here.
+ 	 */
+-	if (b_pfn < (min_t(u64, 0xffffffffUL, BLK_BOUNCE_HIGH) >> PAGE_SHIFT))
+-		dma = 1;
+ 	q->limits.bounce_pfn = max(max_low_pfn, b_pfn);
+ #else
+-	if (b_pfn < blk_max_low_pfn)
+-		dma = 1;
+ 	q->limits.bounce_pfn = b_pfn;
+ #endif
+-	if (dma) {
+-		init_emergency_isa_pool();
+-		q->bounce_gfp = GFP_NOIO | GFP_DMA;
+-		q->limits.bounce_pfn = b_pfn;
+-	}
+ }
+ EXPORT_SYMBOL(blk_queue_bounce_limit);
+ 
+diff --git a/block/blk.h b/block/blk.h
+index 3b53e44b967e4e..895c9f4a5182a7 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -312,13 +312,8 @@ static inline void blk_throtl_stat_add(struct request *rq, u64 time) { }
+ #endif
+ 
+ #ifdef CONFIG_BOUNCE
+-extern int init_emergency_isa_pool(void);
+ extern void blk_queue_bounce(struct request_queue *q, struct bio **bio);
+ #else
+-static inline int init_emergency_isa_pool(void)
+-{
+-	return 0;
+-}
+ static inline void blk_queue_bounce(struct request_queue *q, struct bio **bio)
+ {
+ }
+diff --git a/block/bounce.c b/block/bounce.c
+index 6c441f4f1cd4aa..debd5b0bd31890 100644
+--- a/block/bounce.c
++++ b/block/bounce.c
+@@ -29,7 +29,7 @@
+ #define ISA_POOL_SIZE	16
+ 
+ static struct bio_set bounce_bio_set, bounce_bio_split;
+-static mempool_t page_pool, isa_page_pool;
++static mempool_t page_pool;
+ 
+ static void init_bounce_bioset(void)
+ {
+@@ -89,41 +89,6 @@ static void bounce_copy_vec(struct bio_vec *to, unsigned char *vfrom)
+ 
+ #endif /* CONFIG_HIGHMEM */
+ 
+-/*
+- * allocate pages in the DMA region for the ISA pool
+- */
+-static void *mempool_alloc_pages_isa(gfp_t gfp_mask, void *data)
+-{
+-	return mempool_alloc_pages(gfp_mask | GFP_DMA, data);
+-}
+-
+-static DEFINE_MUTEX(isa_mutex);
+-
+-/*
+- * gets called "every" time someone init's a queue with BLK_BOUNCE_ISA
+- * as the max address, so check if the pool has already been created.
+- */
+-int init_emergency_isa_pool(void)
+-{
+-	int ret;
+-
+-	mutex_lock(&isa_mutex);
+-
+-	if (mempool_initialized(&isa_page_pool)) {
+-		mutex_unlock(&isa_mutex);
+-		return 0;
+-	}
+-
+-	ret = mempool_init(&isa_page_pool, ISA_POOL_SIZE, mempool_alloc_pages_isa,
+-			   mempool_free_pages, (void *) 0);
+-	BUG_ON(ret);
+-
+-	pr_info("isa pool size: %d pages\n", ISA_POOL_SIZE);
+-	init_bounce_bioset();
+-	mutex_unlock(&isa_mutex);
+-	return 0;
+-}
+-
+ /*
+  * Simple bounce buffer support for highmem pages. Depending on the
+  * queue gfp mask set, *to may or may not be a highmem page. kmap it
+@@ -159,7 +124,7 @@ static void copy_to_high_bio_irq(struct bio *to, struct bio *from)
  	}
--	if (adapter->need_bouncebuf)
--		adapter->untag_qdepth = BLOGIC_UNTAG_DEPTH_BB;
--	else
--		adapter->untag_qdepth = BLOGIC_UNTAG_DEPTH;
-+	adapter->untag_qdepth = BLOGIC_UNTAG_DEPTH;
- 	if (adapter->drvr_opts != NULL)
- 		adapter->common_qdepth = adapter->drvr_opts->common_qdepth;
- 	if (adapter->common_qdepth > 0 &&
-@@ -2155,7 +2148,6 @@ static void __init blogic_inithoststruct(struct blogic_adapter *adapter,
- 	host->this_id = adapter->scsi_id;
- 	host->can_queue = adapter->drvr_qdepth;
- 	host->sg_tablesize = adapter->drvr_sglimit;
--	host->unchecked_isa_dma = adapter->need_bouncebuf;
- 	host->cmd_per_lun = adapter->untag_qdepth;
  }
  
-@@ -3677,7 +3669,6 @@ static struct scsi_host_template blogic_template = {
- #if 0
- 	.eh_abort_handler = blogic_abort,
- #endif
--	.unchecked_isa_dma = 1,
- 	.max_sectors = 128,
- };
+-static void bounce_end_io(struct bio *bio, mempool_t *pool)
++static void bounce_end_io(struct bio *bio)
+ {
+ 	struct bio *bio_orig = bio->bi_private;
+ 	struct bio_vec *bvec, orig_vec;
+@@ -173,7 +138,7 @@ static void bounce_end_io(struct bio *bio, mempool_t *pool)
+ 		orig_vec = bio_iter_iovec(bio_orig, orig_iter);
+ 		if (bvec->bv_page != orig_vec.bv_page) {
+ 			dec_zone_page_state(bvec->bv_page, NR_BOUNCE);
+-			mempool_free(bvec->bv_page, pool);
++			mempool_free(bvec->bv_page, &page_pool);
+ 		}
+ 		bio_advance_iter(bio_orig, &orig_iter, orig_vec.bv_len);
+ 	}
+@@ -185,33 +150,17 @@ static void bounce_end_io(struct bio *bio, mempool_t *pool)
  
-diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
-index 2eedeaa47970f0..a8e4a19788a776 100644
---- a/drivers/scsi/BusLogic.h
-+++ b/drivers/scsi/BusLogic.h
-@@ -1003,7 +1003,6 @@ struct blogic_adapter {
- 	bool terminfo_valid:1;
- 	bool low_term:1;
- 	bool high_term:1;
--	bool need_bouncebuf:1;
- 	bool strict_rr:1;
- 	bool scam_enabled:1;
- 	bool scam_lev2:1;
+ static void bounce_end_io_write(struct bio *bio)
+ {
+-	bounce_end_io(bio, &page_pool);
+-}
+-
+-static void bounce_end_io_write_isa(struct bio *bio)
+-{
+-
+-	bounce_end_io(bio, &isa_page_pool);
++	bounce_end_io(bio);
+ }
+ 
+-static void __bounce_end_io_read(struct bio *bio, mempool_t *pool)
++static void bounce_end_io_read(struct bio *bio)
+ {
+ 	struct bio *bio_orig = bio->bi_private;
+ 
+ 	if (!bio->bi_status)
+ 		copy_to_high_bio_irq(bio_orig, bio);
+ 
+-	bounce_end_io(bio, pool);
+-}
+-
+-static void bounce_end_io_read(struct bio *bio)
+-{
+-	__bounce_end_io_read(bio, &page_pool);
+-}
+-
+-static void bounce_end_io_read_isa(struct bio *bio)
+-{
+-	__bounce_end_io_read(bio, &isa_page_pool);
++	bounce_end_io(bio);
+ }
+ 
+ static struct bio *bounce_clone_bio(struct bio *bio_src)
+@@ -287,8 +236,8 @@ static struct bio *bounce_clone_bio(struct bio *bio_src)
+ 	return NULL;
+ }
+ 
+-static void __blk_queue_bounce(struct request_queue *q, struct bio **bio_orig,
+-			       mempool_t *pool)
++
++void blk_queue_bounce(struct request_queue *q, struct bio **bio_orig)
+ {
+ 	struct bio *bio;
+ 	int rw = bio_data_dir(*bio_orig);
+@@ -298,6 +247,20 @@ static void __blk_queue_bounce(struct request_queue *q, struct bio **bio_orig,
+ 	bool bounce = false;
+ 	int sectors = 0;
+ 
++	/*
++	 * Data-less bio, nothing to bounce
++	 */
++	if (!bio_has_data(*bio_orig))
++		return;
++
++	/*
++	 * Just check if the bounce pfn is equal to or bigger than the highest
++	 * pfn in the system -- in that case, don't waste time iterating over
++	 * bio segments
++	 */
++	if (q->limits.bounce_pfn >= blk_max_pfn)
++		return;
++
+ 	bio_for_each_segment(from, *bio_orig, iter) {
+ 		if (i++ < BIO_MAX_VECS)
+ 			sectors += from.bv_len >> 9;
+@@ -327,7 +290,7 @@ static void __blk_queue_bounce(struct request_queue *q, struct bio **bio_orig,
+ 		if (page_to_pfn(page) <= q->limits.bounce_pfn)
+ 			continue;
+ 
+-		to->bv_page = mempool_alloc(pool, q->bounce_gfp);
++		to->bv_page = mempool_alloc(&page_pool, GFP_NOIO);
+ 		inc_zone_page_state(to->bv_page, NR_BOUNCE);
+ 
+ 		if (rw == WRITE) {
+@@ -346,46 +309,11 @@ static void __blk_queue_bounce(struct request_queue *q, struct bio **bio_orig,
+ 
+ 	bio->bi_flags |= (1 << BIO_BOUNCED);
+ 
+-	if (pool == &page_pool) {
++	if (rw == READ)
++		bio->bi_end_io = bounce_end_io_read;
++	else
+ 		bio->bi_end_io = bounce_end_io_write;
+-		if (rw == READ)
+-			bio->bi_end_io = bounce_end_io_read;
+-	} else {
+-		bio->bi_end_io = bounce_end_io_write_isa;
+-		if (rw == READ)
+-			bio->bi_end_io = bounce_end_io_read_isa;
+-	}
+ 
+ 	bio->bi_private = *bio_orig;
+ 	*bio_orig = bio;
+ }
+-
+-void blk_queue_bounce(struct request_queue *q, struct bio **bio_orig)
+-{
+-	mempool_t *pool;
+-
+-	/*
+-	 * Data-less bio, nothing to bounce
+-	 */
+-	if (!bio_has_data(*bio_orig))
+-		return;
+-
+-	/*
+-	 * for non-isa bounce case, just check if the bounce pfn is equal
+-	 * to or bigger than the highest pfn in the system -- in that case,
+-	 * don't waste time iterating over bio segments
+-	 */
+-	if (!(q->bounce_gfp & GFP_DMA)) {
+-		if (q->limits.bounce_pfn >= blk_max_pfn)
+-			return;
+-		pool = &page_pool;
+-	} else {
+-		BUG_ON(!mempool_initialized(&isa_page_pool));
+-		pool = &isa_page_pool;
+-	}
+-
+-	/*
+-	 * slow path
+-	 */
+-	__blk_queue_bounce(q, bio_orig, pool);
+-}
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 6599bac0a78cb0..1048b09255678c 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -431,7 +431,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+ 
+ 	bytes = max(in_len, out_len);
+ 	if (bytes) {
+-		buffer = kzalloc(bytes, q->bounce_gfp | GFP_USER| __GFP_NOWARN);
++		buffer = kzalloc(bytes, GFP_NOIO | GFP_USER | __GFP_NOWARN);
+ 		if (!buffer)
+ 			return -ENOMEM;
+ 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 48b8934970f36a..fd8b6febbf70c4 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1043,8 +1043,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
+ 		blk_queue_max_segments(q, queue_max_segments(q) - 1);
+ 
+ 		sdev->dma_drain_len = ATAPI_MAX_DRAIN;
+-		sdev->dma_drain_buf = kmalloc(sdev->dma_drain_len,
+-				q->bounce_gfp | GFP_KERNEL);
++		sdev->dma_drain_buf = kmalloc(sdev->dma_drain_len, GFP_NOIO);
+ 		if (!sdev->dma_drain_buf) {
+ 			ata_dev_err(dev, "drain buffer allocation failed\n");
+ 			return -ENOMEM;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index bc6bc8383b434e..0dbb72ea373529 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -436,11 +436,6 @@ struct request_queue {
+ 	 */
+ 	int			id;
+ 
+-	/*
+-	 * queue needs bounce pages for pages above this limit
+-	 */
+-	gfp_t			bounce_gfp;
+-
+ 	spinlock_t		queue_lock;
+ 
+ 	/*
+@@ -847,7 +842,6 @@ extern unsigned long blk_max_low_pfn, blk_max_pfn;
+  *
+  * BLK_BOUNCE_HIGH	: bounce all highmem pages
+  * BLK_BOUNCE_ANY	: don't bounce anything
+- * BLK_BOUNCE_ISA	: bounce pages above ISA DMA boundary
+  */
+ 
+ #if BITS_PER_LONG == 32
+@@ -856,7 +850,6 @@ extern unsigned long blk_max_low_pfn, blk_max_pfn;
+ #define BLK_BOUNCE_HIGH		-1ULL
+ #endif
+ #define BLK_BOUNCE_ANY		(-1ULL)
+-#define BLK_BOUNCE_ISA		(DMA_BIT_MASK(24))
+ 
+ /*
+  * default timeout for SG_IO if none specified
+diff --git a/mm/Kconfig b/mm/Kconfig
+index 24c045b24b9506..d0808a23e54bc8 100644
+--- a/mm/Kconfig
++++ b/mm/Kconfig
+@@ -283,12 +283,11 @@ config PHYS_ADDR_T_64BIT
+ config BOUNCE
+ 	bool "Enable bounce buffers"
+ 	default y
+-	depends on BLOCK && MMU && (ZONE_DMA || HIGHMEM)
++	depends on BLOCK && MMU && HIGHMEM
+ 	help
+-	  Enable bounce buffers for devices that cannot access
+-	  the full range of memory available to the CPU. Enabled
+-	  by default when ZONE_DMA or HIGHMEM is selected, but you
+-	  may say n to override this.
++	  Enable bounce buffers for devices that cannot access the full range of
++	  memory available to the CPU. Enabled by default when HIGHMEM is
++	  selected, but you may say n to override this.
+ 
+ config VIRT_TO_BUS
+ 	bool
 -- 
 2.30.1
 
