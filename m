@@ -2,456 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE674C433E1
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 03:16:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 328B4C433C1
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 03:22:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C4F9F619D6
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 03:16:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01958619A7
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 03:22:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233360AbhCaDPb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Mar 2021 23:15:31 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:8843 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233396AbhCaDPV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2021 23:15:21 -0400
-IronPort-SDR: doUpK3Hq3e3fXOVsJ0K4HGHZFy8UKLTh8eJEpJ33ABdo49p7Ekg7ZKntQk2fmGnQIqLtiR4IgE
- cTp9yGyNoSIgRNGbzp9W9bfZ0S4gaRFCE3RuYzd0hfbcNX08Um4MO9ZxKj71LHn982Y8ZDgMiL
- LHkxXivymwWoBhok5Oym9rTZa5WaE/9gTLOL58w0zi5rY+MbHzqJSYFY2bi6uNfSURjLGJizXK
- rId4hMTz6S43BL42PcduqqYBaZXRsDnAJJ/bqBNN1SY+6jRFeAnJ/U/PYnqWrgZklVTuT8m72a
- NZw=
-X-IronPort-AV: E=Sophos;i="5.81,291,1610438400"; 
-   d="scan'208";a="29735511"
-Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
-  by labrats.qualcomm.com with ESMTP; 30 Mar 2021 20:15:21 -0700
-X-QCInternal: smtphost
-Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg02-sd.qualcomm.com with ESMTP; 30 Mar 2021 20:15:20 -0700
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 5771D210A6; Tue, 30 Mar 2021 20:15:20 -0700 (PDT)
+        id S230160AbhCaDV4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Mar 2021 23:21:56 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:41512 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233431AbhCaDVt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2021 23:21:49 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1617160909; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=ivUpf+CR1j921S+V2zzG1O7pU102BuBZciI4i8H1+m0=;
+ b=R2alvtBmbdzPMqdNIvcnIpY5OOasnAmalYHzuR1jmKE+enY1EUxiEDNZqGVA90CB2Er3ZdR7
+ L97qz50fIbyQLrdWtWL2d7KjVpEoKOxDqQdmgqPoS53eYqIueWTPQCxvaZh1hjj6yJzq6LWy
+ kSJw2R+pmrFuNNSPkz9FgzhJhps=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 6063eacc8166b7eff7b51dae (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 31 Mar 2021 03:21:48
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 13AFFC43462; Wed, 31 Mar 2021 03:21:48 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id EB476C433CA;
+        Wed, 31 Mar 2021 03:21:46 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 31 Mar 2021 11:21:46 +0800
 From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 1/2] scsi: ufs: Introduce hba performance monitor sysfs nodes
-Date:   Tue, 30 Mar 2021 20:14:33 -0700
-Message-Id: <1617160475-1550-2-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1617160475-1550-1-git-send-email-cang@codeaurora.org>
-References: <1617160475-1550-1-git-send-email-cang@codeaurora.org>
+To:     daejun7.park@samsung.com
+Cc:     Greg KH <gregkh@linuxfoundation.org>, avri.altman@wdc.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        asutoshd@codeaurora.org, stanley.chu@mediatek.com,
+        bvanassche@acm.org, huobean@gmail.com,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Jaemyung Lee <jaemyung.lee@samsung.com>,
+        Jieon Seol <jieon.seol@samsung.com>
+Subject: Re: [PATCH v32 4/4] scsi: ufs: Add HPB 2.0 support
+In-Reply-To: <20210331011839epcms2p45d3d059fcd9e85a548014a79c3f388bc@epcms2p4>
+References: <20210331011526epcms2p37684869a9781d1eb45bfcbfe9babd217@epcms2p3>
+ <CGME20210331011526epcms2p37684869a9781d1eb45bfcbfe9babd217@epcms2p4>
+ <20210331011839epcms2p45d3d059fcd9e85a548014a79c3f388bc@epcms2p4>
+Message-ID: <0c05e460470d2b9f5aebd9b6935ef42d@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a new sysfs group which has nodes to monitor data/request transfer
-performance. This sysfs group has nodes showing total sectors/requests
-transferred, total busy time spent and max/min/avg/sum latencies. This
-group can be enhanced later to show more UFS driver layer performance
-statistics data during runtime.
+On 2021-03-31 09:18, Daejun Park wrote:
+> This patch supports the HPB 2.0.
+> 
+> The HPB 2.0 supports read of varying sizes from 4KB to 512KB.
+> In the case of Read (<= 32KB) is supported as single HPB read.
+> In the case of Read (36KB ~ 512KB) is supported by as a combination of
+> write buffer command and HPB read command to deliver more PPN.
+> The write buffer commands may not be issued immediately due to busy 
+> tags.
+> To use HPB read more aggressively, the driver can requeue the write 
+> buffer
+> command. The requeue threshold is implemented as timeout and can be
+> modified with requeue_timeout_ms entry in sysfs.
+> 
+> Reviewed-by: Can Guo <cang@codeaurora.org>
+> Reviewed-by: Bean Huo <beanhuo@micron.com>
+> Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+> ---
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
----
- drivers/scsi/ufs/ufs-sysfs.c | 237 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.c    |  62 +++++++++++
- drivers/scsi/ufs/ufshcd.h    |  21 ++++
- 3 files changed, 320 insertions(+)
+Please allow me a few more days in April to have this whole series
+tested one more time.
 
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index acc54f5..1f93f3e 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -278,6 +278,242 @@ static const struct attribute_group ufs_sysfs_default_group = {
- 	.attrs = ufs_sysfs_ufshcd_attrs,
- };
- 
-+static ssize_t monitor_enable_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%d\n", hba->monitor.enabled);
-+}
-+
-+static ssize_t monitor_enable_store(struct device *dev,
-+				    struct device_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	unsigned long value, flags;
-+
-+	if (kstrtoul(buf, 0, &value))
-+		return -EINVAL;
-+
-+	value = !!value;
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (value == hba->monitor.enabled)
-+		goto out_unlock;
-+
-+	if (!value) {
-+		memset(&hba->monitor, 0, sizeof(hba->monitor));
-+	} else {
-+		hba->monitor.enabled = true;
-+		hba->monitor.enabled_ts = ktime_get();
-+	}
-+
-+out_unlock:
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	return count;
-+}
-+
-+static ssize_t monitor_chunk_size_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%lu\n", hba->monitor.chunk_size);
-+}
-+
-+static ssize_t monitor_chunk_size_store(struct device *dev,
-+				    struct device_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	unsigned long value, flags;
-+
-+	if (kstrtoul(buf, 0, &value))
-+		return -EINVAL;
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	/* Only allow chunk size change when monitor is disabled */
-+	if (!hba->monitor.enabled)
-+		hba->monitor.chunk_size = value;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	return count;
-+}
-+
-+static ssize_t read_total_sectors_show(struct device *dev,
-+				       struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%lu\n", hba->monitor.nr_sec_rw[READ]);
-+}
-+
-+static ssize_t read_total_busy_show(struct device *dev,
-+				    struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%llu\n",
-+			  ktime_to_us(hba->monitor.total_busy[READ]));
-+}
-+
-+static ssize_t read_nr_requests_show(struct device *dev,
-+				     struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%lu\n", hba->monitor.nr_req[READ]);
-+}
-+
-+static ssize_t read_req_latency_avg_show(struct device *dev,
-+					 struct device_attribute *attr,
-+					 char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	struct ufs_hba_monitor *m = &hba->monitor;
-+
-+	return sysfs_emit(buf, "%llu\n",
-+			  ktime_to_us(m->lat_sum[READ]) / m->nr_req[READ]);
-+}
-+
-+static ssize_t read_req_latency_max_show(struct device *dev,
-+					 struct device_attribute *attr,
-+					 char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%llu\n",
-+			  ktime_to_us(hba->monitor.lat_max[READ]));
-+}
-+
-+static ssize_t read_req_latency_min_show(struct device *dev,
-+					 struct device_attribute *attr,
-+					 char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%llu\n",
-+			  ktime_to_us(hba->monitor.lat_min[READ]));
-+}
-+
-+static ssize_t read_req_latency_sum_show(struct device *dev,
-+					 struct device_attribute *attr,
-+					 char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%llu\n",
-+			  ktime_to_us(hba->monitor.lat_sum[READ]));
-+}
-+
-+static ssize_t write_total_sectors_show(struct device *dev,
-+					struct device_attribute *attr,
-+					char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%lu\n", hba->monitor.nr_sec_rw[WRITE]);
-+}
-+
-+static ssize_t write_total_busy_show(struct device *dev,
-+				     struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%llu\n",
-+			  ktime_to_us(hba->monitor.total_busy[WRITE]));
-+}
-+
-+static ssize_t write_nr_requests_show(struct device *dev,
-+				      struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%lu\n", hba->monitor.nr_req[WRITE]);
-+}
-+
-+static ssize_t write_req_latency_avg_show(struct device *dev,
-+					  struct device_attribute *attr,
-+					  char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	struct ufs_hba_monitor *m = &hba->monitor;
-+
-+	return sysfs_emit(buf, "%llu\n",
-+			  ktime_to_us(m->lat_sum[WRITE]) / m->nr_req[WRITE]);
-+}
-+
-+static ssize_t write_req_latency_max_show(struct device *dev,
-+					  struct device_attribute *attr,
-+					  char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%llu\n",
-+			  ktime_to_us(hba->monitor.lat_max[WRITE]));
-+}
-+
-+static ssize_t write_req_latency_min_show(struct device *dev,
-+					  struct device_attribute *attr,
-+					  char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%llu\n",
-+			  ktime_to_us(hba->monitor.lat_min[WRITE]));
-+}
-+
-+static ssize_t write_req_latency_sum_show(struct device *dev,
-+					  struct device_attribute *attr,
-+					  char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%llu\n",
-+			  ktime_to_us(hba->monitor.lat_sum[WRITE]));
-+}
-+
-+static DEVICE_ATTR_RW(monitor_enable);
-+static DEVICE_ATTR_RW(monitor_chunk_size);
-+static DEVICE_ATTR_RO(read_total_sectors);
-+static DEVICE_ATTR_RO(read_total_busy);
-+static DEVICE_ATTR_RO(read_nr_requests);
-+static DEVICE_ATTR_RO(read_req_latency_avg);
-+static DEVICE_ATTR_RO(read_req_latency_max);
-+static DEVICE_ATTR_RO(read_req_latency_min);
-+static DEVICE_ATTR_RO(read_req_latency_sum);
-+static DEVICE_ATTR_RO(write_total_sectors);
-+static DEVICE_ATTR_RO(write_total_busy);
-+static DEVICE_ATTR_RO(write_nr_requests);
-+static DEVICE_ATTR_RO(write_req_latency_avg);
-+static DEVICE_ATTR_RO(write_req_latency_max);
-+static DEVICE_ATTR_RO(write_req_latency_min);
-+static DEVICE_ATTR_RO(write_req_latency_sum);
-+
-+static struct attribute *ufs_sysfs_monitor_attrs[] = {
-+	&dev_attr_monitor_enable.attr,
-+	&dev_attr_monitor_chunk_size.attr,
-+	&dev_attr_read_total_sectors.attr,
-+	&dev_attr_read_total_busy.attr,
-+	&dev_attr_read_nr_requests.attr,
-+	&dev_attr_read_req_latency_avg.attr,
-+	&dev_attr_read_req_latency_max.attr,
-+	&dev_attr_read_req_latency_min.attr,
-+	&dev_attr_read_req_latency_sum.attr,
-+	&dev_attr_write_total_sectors.attr,
-+	&dev_attr_write_total_busy.attr,
-+	&dev_attr_write_nr_requests.attr,
-+	&dev_attr_write_req_latency_avg.attr,
-+	&dev_attr_write_req_latency_max.attr,
-+	&dev_attr_write_req_latency_min.attr,
-+	&dev_attr_write_req_latency_sum.attr,
-+	NULL
-+};
-+
-+static const struct attribute_group ufs_sysfs_monitor_group = {
-+	.name = "monitor",
-+	.attrs = ufs_sysfs_monitor_attrs,
-+};
-+
- static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
- 				  enum desc_idn desc_id,
- 				  u8 desc_index,
-@@ -881,6 +1117,7 @@ static const struct attribute_group ufs_sysfs_attributes_group = {
- 
- static const struct attribute_group *ufs_sysfs_groups[] = {
- 	&ufs_sysfs_default_group,
-+	&ufs_sysfs_monitor_group,
- 	&ufs_sysfs_device_descriptor_group,
- 	&ufs_sysfs_interconnect_descriptor_group,
- 	&ufs_sysfs_geometry_descriptor_group,
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 80620c8..b49555fa 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2028,6 +2028,64 @@ static void ufshcd_clk_scaling_update_busy(struct ufs_hba *hba)
- 		scaling->is_busy_started = false;
- 	}
- }
-+
-+static inline int ufshcd_monitor_opcode2dir(u8 opcode)
-+{
-+	if (opcode == READ_6 || opcode == READ_10 || opcode == READ_16)
-+		return READ;
-+	else if (opcode == WRITE_6 || opcode == WRITE_10 || opcode == WRITE_16)
-+		return WRITE;
-+	else
-+		return -EINVAL;
-+}
-+
-+static inline bool ufshcd_should_inform_monitor(struct ufs_hba *hba,
-+						struct ufshcd_lrb *lrbp)
-+{
-+	struct ufs_hba_monitor *m = &hba->monitor;
-+
-+	return (m->enabled && lrbp && lrbp->cmd &&
-+		(!m->chunk_size || m->chunk_size == lrbp->cmd->sdb.length) &&
-+		ktime_before(hba->monitor.enabled_ts, lrbp->issue_time_stamp));
-+}
-+
-+static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+{
-+	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
-+
-+	if (dir >= 0 && hba->monitor.nr_queued[dir]++ == 0)
-+		hba->monitor.busy_start_ts[dir] = ktime_get();
-+}
-+
-+static void ufshcd_update_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+{
-+	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
-+
-+	if (dir >= 0 && hba->monitor.nr_queued[dir] > 0) {
-+		struct request *req = lrbp->cmd->request;
-+		struct ufs_hba_monitor *m = &hba->monitor;
-+		ktime_t now, inc, lat;
-+
-+		now = ktime_get();
-+		inc = ktime_sub(now, m->busy_start_ts[dir]);
-+		m->total_busy[dir] = ktime_add(m->total_busy[dir], inc);
-+		m->nr_sec_rw[dir] += blk_rq_sectors(req);
-+
-+		/* Update latencies */
-+		m->nr_req[dir]++;
-+		lat = ktime_sub(now, lrbp->issue_time_stamp);
-+		m->lat_sum[dir] += lat;
-+		if (m->lat_max[dir] < lat || !m->lat_max[dir])
-+			m->lat_max[dir] = lat;
-+		if (m->lat_min[dir] > lat || !m->lat_min[dir])
-+			m->lat_min[dir] = lat;
-+
-+		m->nr_queued[dir]--;
-+		/* Push forward the busy start of monitor */
-+		m->busy_start_ts[dir] = now;
-+	}
-+}
-+
- /**
-  * ufshcd_send_command - Send SCSI or device management commands
-  * @hba: per adapter instance
-@@ -2044,6 +2102,8 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
- 	ufshcd_add_command_trace(hba, task_tag, UFS_CMD_SEND);
- 	ufshcd_clk_scaling_start_busy(hba);
- 	__set_bit(task_tag, &hba->outstanding_reqs);
-+	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
-+		ufshcd_start_monitor(hba, lrbp);
- 	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
- 	/* Make sure that doorbell is committed immediately */
- 	wmb();
-@@ -5098,6 +5158,8 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
- 		lrbp->compl_time_stamp = ktime_get();
- 		cmd = lrbp->cmd;
- 		if (cmd) {
-+			if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
-+				ufshcd_update_monitor(hba, lrbp);
- 			ufshcd_add_command_trace(hba, index, UFS_CMD_COMP);
- 			result = ufshcd_transfer_rsp_status(hba, lrbp);
- 			scsi_dma_unmap(cmd);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 18e56c1..2bfe20e 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -645,6 +645,25 @@ struct ufs_hba_variant_params {
- 	u32 wb_flush_threshold;
- };
- 
-+struct ufs_hba_monitor {
-+	unsigned long chunk_size;
-+
-+	unsigned long nr_sec_rw[2];
-+	ktime_t total_busy[2];
-+
-+	unsigned long nr_req[2];
-+	/* latencies*/
-+	ktime_t lat_sum[2];
-+	ktime_t lat_max[2];
-+	ktime_t lat_min[2];
-+
-+	u32 nr_queued[2];
-+	ktime_t busy_start_ts[2];
-+
-+	ktime_t enabled_ts;
-+	bool enabled;
-+};
-+
- /**
-  * struct ufs_hba - per adapter private structure
-  * @mmio_base: UFSHCI base register address
-@@ -832,6 +851,8 @@ struct ufs_hba {
- 	struct request_queue	*bsg_queue;
- 	struct delayed_work rpm_dev_flush_recheck_work;
- 
-+	struct ufs_hba_monitor	monitor;
-+
- #ifdef CONFIG_SCSI_UFS_CRYPTO
- 	union ufs_crypto_capabilities crypto_capabilities;
- 	union ufs_crypto_cap_entry *crypto_cap_array;
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
-
+Thanks,
+Can Guo.
