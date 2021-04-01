@@ -7,46 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2038C43460
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA28BC43462
 	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 06:12:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 799D561057
+	by mail.kernel.org (Postfix) with ESMTP id 8CE1C6105A
 	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 06:12:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233303AbhDAGMM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S233286AbhDAGMM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 1 Apr 2021 02:12:12 -0400
 Received: from labrats.qualcomm.com ([199.106.110.90]:26806 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232994AbhDAGLz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2021 02:11:55 -0400
-IronPort-SDR: ca9twiqKulQAzBUC6YO7RY/dWsrnhcsupaDqHE+2HFWFEQjTtcnEm8KQIpZIvd3bUZy9hpIkdH
- ZIxrjPhm1SHu59FiGjAhquaRh3r61zRHZxjahUxQRbnEiPxYYTVmjc7KyWq+uNhHJrU40tKlYw
- TUtM7vh/gXfrOgUDyCSFsB5O1kgpdQ7IaY1phUnE0MrM5BBBqdF43eE6WSq3hcyeWD1KF0DsDc
- NO2lFGjqQxpxlu1lrP/Pjx/fhjft2xbBLQ0HJSK+vH3BL/NhBuZ62Nk5yMpBbIo4GpK6uliyjk
- ykE=
+        with ESMTP id S232951AbhDAGLw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2021 02:11:52 -0400
+IronPort-SDR: NCiXOScWvAlruBMpKbMHTsMX8nDBUqQ0VWRO5mfms+nlKdnJtNMt3uxAkZ1H615FKPOW7a4U7v
+ KuGqbGIWjGfCE/O4463fuZfl5Dsx0yx4wjp1JhQtAUermQptO2J4IIn7Ehenrn0j1aMbpMHyCs
+ x+scq1R/UFtBFw2h/rqlMJq3W5WojpSeBPH0YUXh4jhy3RRsWveRklKSLzftGW6skfmvtjZei4
+ AN7F/CVs1XlMaaMh7o9/pz0DND0AoOvgAyYL5eDVNZ9LvKXMfGktQDd2EA6kg+p1LHX6jLcTQN
+ Dtk=
 X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
-   d="scan'208";a="47836544"
-Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
-  by labrats.qualcomm.com with ESMTP; 31 Mar 2021 23:11:55 -0700
+   d="scan'208";a="47836543"
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by labrats.qualcomm.com with ESMTP; 31 Mar 2021 23:11:52 -0700
 X-QCInternal: smtphost
 Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg03-sd.qualcomm.com with ESMTP; 31 Mar 2021 23:11:54 -0700
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 31 Mar 2021 23:11:51 -0700
 Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 3907C210A9; Wed, 31 Mar 2021 23:11:54 -0700 (PDT)
+        id D6810210A9; Wed, 31 Mar 2021 23:11:51 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, cang@codeaurora.org
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 2/2] scsi: ufs: Add support for hba performance monitor
-Date:   Wed, 31 Mar 2021 23:11:42 -0700
-Message-Id: <1617257503-669-3-git-send-email-cang@codeaurora.org>
+Subject: [PATCH 1/2] scsi: ufs: Introduce hba performance monitor sysfs nodes
+Date:   Wed, 31 Mar 2021 23:11:41 -0700
+Message-Id: <1617257503-669-2-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1617257503-669-1-git-send-email-cang@codeaurora.org>
 References: <1617257503-669-1-git-send-email-cang@codeaurora.org>
@@ -56,147 +59,393 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Add a new sysfs group which has nodes to monitor data/request transfer
 performance. This sysfs group has nodes showing total sectors/requests
-transferred, total busy time spent and max/min/avg/sum latencies.
+transferred, total busy time spent and max/min/avg/sum latencies. This
+group can be enhanced later to show more UFS driver layer performance
+statistics data during runtime.
 
 Signed-off-by: Can Guo <cang@codeaurora.org>
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index d1bc23c..8380866 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -995,6 +995,132 @@ Description:	This entry shows the target state of an UFS UIC link
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index acc54f5..1f93f3e 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -278,6 +278,242 @@ static const struct attribute_group ufs_sysfs_default_group = {
+ 	.attrs = ufs_sysfs_ufshcd_attrs,
+ };
  
- 		The file is read only.
++static ssize_t monitor_enable_show(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%d\n", hba->monitor.enabled);
++}
++
++static ssize_t monitor_enable_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	unsigned long value, flags;
++
++	if (kstrtoul(buf, 0, &value))
++		return -EINVAL;
++
++	value = !!value;
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	if (value == hba->monitor.enabled)
++		goto out_unlock;
++
++	if (!value) {
++		memset(&hba->monitor, 0, sizeof(hba->monitor));
++	} else {
++		hba->monitor.enabled = true;
++		hba->monitor.enabled_ts = ktime_get();
++	}
++
++out_unlock:
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	return count;
++}
++
++static ssize_t monitor_chunk_size_show(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%lu\n", hba->monitor.chunk_size);
++}
++
++static ssize_t monitor_chunk_size_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	unsigned long value, flags;
++
++	if (kstrtoul(buf, 0, &value))
++		return -EINVAL;
++
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	/* Only allow chunk size change when monitor is disabled */
++	if (!hba->monitor.enabled)
++		hba->monitor.chunk_size = value;
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	return count;
++}
++
++static ssize_t read_total_sectors_show(struct device *dev,
++				       struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%lu\n", hba->monitor.nr_sec_rw[READ]);
++}
++
++static ssize_t read_total_busy_show(struct device *dev,
++				    struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%llu\n",
++			  ktime_to_us(hba->monitor.total_busy[READ]));
++}
++
++static ssize_t read_nr_requests_show(struct device *dev,
++				     struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%lu\n", hba->monitor.nr_req[READ]);
++}
++
++static ssize_t read_req_latency_avg_show(struct device *dev,
++					 struct device_attribute *attr,
++					 char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	struct ufs_hba_monitor *m = &hba->monitor;
++
++	return sysfs_emit(buf, "%llu\n",
++			  ktime_to_us(m->lat_sum[READ]) / m->nr_req[READ]);
++}
++
++static ssize_t read_req_latency_max_show(struct device *dev,
++					 struct device_attribute *attr,
++					 char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%llu\n",
++			  ktime_to_us(hba->monitor.lat_max[READ]));
++}
++
++static ssize_t read_req_latency_min_show(struct device *dev,
++					 struct device_attribute *attr,
++					 char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%llu\n",
++			  ktime_to_us(hba->monitor.lat_min[READ]));
++}
++
++static ssize_t read_req_latency_sum_show(struct device *dev,
++					 struct device_attribute *attr,
++					 char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%llu\n",
++			  ktime_to_us(hba->monitor.lat_sum[READ]));
++}
++
++static ssize_t write_total_sectors_show(struct device *dev,
++					struct device_attribute *attr,
++					char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%lu\n", hba->monitor.nr_sec_rw[WRITE]);
++}
++
++static ssize_t write_total_busy_show(struct device *dev,
++				     struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%llu\n",
++			  ktime_to_us(hba->monitor.total_busy[WRITE]));
++}
++
++static ssize_t write_nr_requests_show(struct device *dev,
++				      struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%lu\n", hba->monitor.nr_req[WRITE]);
++}
++
++static ssize_t write_req_latency_avg_show(struct device *dev,
++					  struct device_attribute *attr,
++					  char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	struct ufs_hba_monitor *m = &hba->monitor;
++
++	return sysfs_emit(buf, "%llu\n",
++			  ktime_to_us(m->lat_sum[WRITE]) / m->nr_req[WRITE]);
++}
++
++static ssize_t write_req_latency_max_show(struct device *dev,
++					  struct device_attribute *attr,
++					  char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%llu\n",
++			  ktime_to_us(hba->monitor.lat_max[WRITE]));
++}
++
++static ssize_t write_req_latency_min_show(struct device *dev,
++					  struct device_attribute *attr,
++					  char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%llu\n",
++			  ktime_to_us(hba->monitor.lat_min[WRITE]));
++}
++
++static ssize_t write_req_latency_sum_show(struct device *dev,
++					  struct device_attribute *attr,
++					  char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%llu\n",
++			  ktime_to_us(hba->monitor.lat_sum[WRITE]));
++}
++
++static DEVICE_ATTR_RW(monitor_enable);
++static DEVICE_ATTR_RW(monitor_chunk_size);
++static DEVICE_ATTR_RO(read_total_sectors);
++static DEVICE_ATTR_RO(read_total_busy);
++static DEVICE_ATTR_RO(read_nr_requests);
++static DEVICE_ATTR_RO(read_req_latency_avg);
++static DEVICE_ATTR_RO(read_req_latency_max);
++static DEVICE_ATTR_RO(read_req_latency_min);
++static DEVICE_ATTR_RO(read_req_latency_sum);
++static DEVICE_ATTR_RO(write_total_sectors);
++static DEVICE_ATTR_RO(write_total_busy);
++static DEVICE_ATTR_RO(write_nr_requests);
++static DEVICE_ATTR_RO(write_req_latency_avg);
++static DEVICE_ATTR_RO(write_req_latency_max);
++static DEVICE_ATTR_RO(write_req_latency_min);
++static DEVICE_ATTR_RO(write_req_latency_sum);
++
++static struct attribute *ufs_sysfs_monitor_attrs[] = {
++	&dev_attr_monitor_enable.attr,
++	&dev_attr_monitor_chunk_size.attr,
++	&dev_attr_read_total_sectors.attr,
++	&dev_attr_read_total_busy.attr,
++	&dev_attr_read_nr_requests.attr,
++	&dev_attr_read_req_latency_avg.attr,
++	&dev_attr_read_req_latency_max.attr,
++	&dev_attr_read_req_latency_min.attr,
++	&dev_attr_read_req_latency_sum.attr,
++	&dev_attr_write_total_sectors.attr,
++	&dev_attr_write_total_busy.attr,
++	&dev_attr_write_nr_requests.attr,
++	&dev_attr_write_req_latency_avg.attr,
++	&dev_attr_write_req_latency_max.attr,
++	&dev_attr_write_req_latency_min.attr,
++	&dev_attr_write_req_latency_sum.attr,
++	NULL
++};
++
++static const struct attribute_group ufs_sysfs_monitor_group = {
++	.name = "monitor",
++	.attrs = ufs_sysfs_monitor_attrs,
++};
++
+ static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
+ 				  enum desc_idn desc_id,
+ 				  u8 desc_index,
+@@ -881,6 +1117,7 @@ static const struct attribute_group ufs_sysfs_attributes_group = {
  
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/monitor_enable
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows the status of performance monitor enablement
-+		and it can be used to start/stop the monitor. When the monitor
-+		is stopped, the performance data collected is also cleared.
+ static const struct attribute_group *ufs_sysfs_groups[] = {
+ 	&ufs_sysfs_default_group,
++	&ufs_sysfs_monitor_group,
+ 	&ufs_sysfs_device_descriptor_group,
+ 	&ufs_sysfs_interconnect_descriptor_group,
+ 	&ufs_sysfs_geometry_descriptor_group,
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 80620c8..b49555fa 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2028,6 +2028,64 @@ static void ufshcd_clk_scaling_update_busy(struct ufs_hba *hba)
+ 		scaling->is_busy_started = false;
+ 	}
+ }
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/monitor_chunk_size
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file tells the monitor to focus on requests transferring
-+		data of specific chunk size (in Bytes). 0 means any chunk size.
-+		It can only be changed when monitor is disabled.
++static inline int ufshcd_monitor_opcode2dir(u8 opcode)
++{
++	if (opcode == READ_6 || opcode == READ_10 || opcode == READ_16)
++		return READ;
++	else if (opcode == WRITE_6 || opcode == WRITE_10 || opcode == WRITE_16)
++		return WRITE;
++	else
++		return -EINVAL;
++}
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/read_total_sectors
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows how many sectors (in 512 Bytes) have been
-+		sent from device to host after monitor gets started.
++static inline bool ufshcd_should_inform_monitor(struct ufs_hba *hba,
++						struct ufshcd_lrb *lrbp)
++{
++	struct ufs_hba_monitor *m = &hba->monitor;
 +
-+		The file is read only.
++	return (m->enabled && lrbp && lrbp->cmd &&
++		(!m->chunk_size || m->chunk_size == lrbp->cmd->sdb.length) &&
++		ktime_before(hba->monitor.enabled_ts, lrbp->issue_time_stamp));
++}
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/read_total_busy
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows how long (in micro seconds) has been spent
-+		sending data from device to host after monitor gets started.
++static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
++{
++	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
 +
-+		The file is read only.
++	if (dir >= 0 && hba->monitor.nr_queued[dir]++ == 0)
++		hba->monitor.busy_start_ts[dir] = ktime_get();
++}
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/read_nr_requests
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows how many read requests have been sent after
-+		monitor gets started.
++static void ufshcd_update_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
++{
++	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
 +
-+		The file is read only.
++	if (dir >= 0 && hba->monitor.nr_queued[dir] > 0) {
++		struct request *req = lrbp->cmd->request;
++		struct ufs_hba_monitor *m = &hba->monitor;
++		ktime_t now, inc, lat;
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/read_req_latency_max
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows the maximum latency (in micro seconds) of
-+		read requests after monitor gets started.
++		now = ktime_get();
++		inc = ktime_sub(now, m->busy_start_ts[dir]);
++		m->total_busy[dir] = ktime_add(m->total_busy[dir], inc);
++		m->nr_sec_rw[dir] += blk_rq_sectors(req);
 +
-+		The file is read only.
++		/* Update latencies */
++		m->nr_req[dir]++;
++		lat = ktime_sub(now, lrbp->issue_time_stamp);
++		m->lat_sum[dir] += lat;
++		if (m->lat_max[dir] < lat || !m->lat_max[dir])
++			m->lat_max[dir] = lat;
++		if (m->lat_min[dir] > lat || !m->lat_min[dir])
++			m->lat_min[dir] = lat;
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/read_req_latency_min
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows the minimum latency (in micro seconds) of
-+		read requests after monitor gets started.
++		m->nr_queued[dir]--;
++		/* Push forward the busy start of monitor */
++		m->busy_start_ts[dir] = now;
++	}
++}
 +
-+		The file is read only.
+ /**
+  * ufshcd_send_command - Send SCSI or device management commands
+  * @hba: per adapter instance
+@@ -2044,6 +2102,8 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+ 	ufshcd_add_command_trace(hba, task_tag, UFS_CMD_SEND);
+ 	ufshcd_clk_scaling_start_busy(hba);
+ 	__set_bit(task_tag, &hba->outstanding_reqs);
++	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
++		ufshcd_start_monitor(hba, lrbp);
+ 	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	/* Make sure that doorbell is committed immediately */
+ 	wmb();
+@@ -5098,6 +5158,8 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+ 		lrbp->compl_time_stamp = ktime_get();
+ 		cmd = lrbp->cmd;
+ 		if (cmd) {
++			if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
++				ufshcd_update_monitor(hba, lrbp);
+ 			ufshcd_add_command_trace(hba, index, UFS_CMD_COMP);
+ 			result = ufshcd_transfer_rsp_status(hba, lrbp);
+ 			scsi_dma_unmap(cmd);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 18e56c1..2bfe20e 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -645,6 +645,25 @@ struct ufs_hba_variant_params {
+ 	u32 wb_flush_threshold;
+ };
+ 
++struct ufs_hba_monitor {
++	unsigned long chunk_size;
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/read_req_latency_avg
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows the average latency (in micro seconds) of
-+		read requests after monitor gets started.
++	unsigned long nr_sec_rw[2];
++	ktime_t total_busy[2];
 +
-+		The file is read only.
++	unsigned long nr_req[2];
++	/* latencies*/
++	ktime_t lat_sum[2];
++	ktime_t lat_max[2];
++	ktime_t lat_min[2];
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/read_req_latency_sum
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows the total latency (in micro seconds) of
-+		read requests sent after monitor gets started.
++	u32 nr_queued[2];
++	ktime_t busy_start_ts[2];
 +
-+		The file is read only.
++	ktime_t enabled_ts;
++	bool enabled;
++};
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/write_total_sectors
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows how many sectors (in 512 Bytes) have been sent
-+		from host to device after monitor gets started.
+ /**
+  * struct ufs_hba - per adapter private structure
+  * @mmio_base: UFSHCI base register address
+@@ -832,6 +851,8 @@ struct ufs_hba {
+ 	struct request_queue	*bsg_queue;
+ 	struct delayed_work rpm_dev_flush_recheck_work;
+ 
++	struct ufs_hba_monitor	monitor;
 +
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/write_total_busy
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows how long (in micro seconds) has been spent
-+		sending data from host to device after monitor gets started.
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/write_nr_requests
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows how many write requests have been sent after
-+		monitor gets started.
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/write_req_latency_max
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows the maximum latency (in micro seconds) of write
-+		requests after monitor gets started.
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/write_req_latency_min
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows the minimum latency (in micro seconds) of write
-+		requests after monitor gets started.
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/write_req_latency_avg
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows the average latency (in micro seconds) of write
-+		requests after monitor gets started.
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/monitor/write_req_latency_sum
-+Date:		January 2021
-+Contact:	Can Guo <cang@codeaurora.org>
-+Description:	This file shows the total latency (in micro seconds) of write
-+		requests after monitor gets started.
-+
-+		The file is read only.
-+
- What:		/sys/bus/platform/drivers/ufshcd/*/device_descriptor/wb_presv_us_en
- Date:		June 2020
- Contact:	Asutosh Das <asutoshd@codeaurora.org>
+ #ifdef CONFIG_SCSI_UFS_CRYPTO
+ 	union ufs_crypto_capabilities crypto_capabilities;
+ 	union ufs_crypto_cap_entry *crypto_cap_array;
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
