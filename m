@@ -2,154 +2,177 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A467BC43461
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 07:39:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01B16C433ED
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 07:45:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6281161029
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 07:39:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2E4361029
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 07:45:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233514AbhDAHjV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Apr 2021 03:39:21 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:49605 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233333AbhDAHjT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2021 03:39:19 -0400
-IronPort-SDR: 8c/4DlzNUVTVW++bi9+7zr/C0IjCn2JApRFb+d5p6C4rxVECcHAhIsqPaykgbKrbojIKSSAQYK
- yabaRsM8KRt0XNZmCuE52BB5XD2+95QQU69JS8GYVFH9/tqfbRkSmGe5tKc4T3epQOvp/WRvw7
- ePDhr03Ze2l5TnYSwHG9an5GrNfYZXz3nivV6IKJY/2Y2uHW73lDNF/Ez8L82AZJ90eLWnk6Z5
- swmwDVr8RLLLbbFBVQMX5ASLrh+mlIEWnwRigUOEyUR4uLSk62Ut/iEYiIfoI3IG5WeKEnE8wP
- Meg=
+        id S232310AbhDAHp2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Apr 2021 03:45:28 -0400
+Received: from mga07.intel.com ([134.134.136.100]:2550 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230284AbhDAHpK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 1 Apr 2021 03:45:10 -0400
+IronPort-SDR: AozoHmkV2Kuj+SszmoaH6YXXMfIzJA/FuY+l0a7przeTicEXJZvrqRkd8WN52X6FhSm4Ms9Ir5
+ nBKnyh3W3xqA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9940"; a="256160553"
 X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
-   d="scan'208";a="29736677"
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by labrats.qualcomm.com with ESMTP; 01 Apr 2021 00:39:19 -0700
-X-QCInternal: smtphost
-Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 01 Apr 2021 00:39:18 -0700
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 73F5C210A9; Thu,  1 Apr 2021 00:39:18 -0700 (PDT)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+   d="scan'208";a="256160553"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 00:45:07 -0700
+IronPort-SDR: lsbWgO8aRTgEJJiGUMpmyaRbtmcauxhMmNapB9ei3jfvohdyrNPtGYFBZQe67fxtzdYtxYWhU7
+ 9g+tDZ9olIrw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
+   d="scan'208";a="377598402"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
+  by orsmga003.jf.intel.com with ESMTP; 01 Apr 2021 00:45:00 -0700
+Subject: Re: [PATCH v14 1/2] scsi: ufs: Enable power management for wlun
+To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lee Jones <lee.jones@linaro.org>,
         Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Yue Hu <huyue2@yulong.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
-        Sujit Reddy Thumma <sthumma@codeaurora.org>,
-        Vinayak Holikatti <vinholikatti@gmail.com>,
-        Yaniv Gardi <ygardi@codeaurora.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v5 2/2] scsi: ufs: Fix wrong Task Tag used in task management request UPIUs
-Date:   Thu,  1 Apr 2021 00:39:09 -0700
-Message-Id: <1617262750-4864-3-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1617262750-4864-1-git-send-email-cang@codeaurora.org>
-References: <1617262750-4864-1-git-send-email-cang@codeaurora.org>
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>
+References: <cover.1617143113.git.asutoshd@codeaurora.org>
+ <16f1bcf76ff411c70fe0e3e13f84e4b0fa7d9063.1617143113.git.asutoshd@codeaurora.org>
+ <a385141d-324b-680e-a19c-ab6121bd6c5d@intel.com>
+ <dbac8ce8-83c6-49a5-9f4d-f5ea19d7a883@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <612d0f35-89a2-947b-9fa4-608624c4c032@intel.com>
+Date:   Thu, 1 Apr 2021 10:45:10 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
+MIME-Version: 1.0
+In-Reply-To: <dbac8ce8-83c6-49a5-9f4d-f5ea19d7a883@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In __ufshcd_issue_tm_cmd(), it is not right to use hba->nutrs + req->tag as
-the Task Tag in one TMR UPIU. Directly use req->tag as the Task Tag.
+On 1/04/21 4:40 am, Asutosh Das (asd) wrote:
+> On 3/31/2021 11:19 AM, Adrian Hunter wrote:
+>> On 31/03/21 1:31 am, Asutosh Das wrote:
+>>> During runtime-suspend of ufs host, the scsi devices are
+>>> already suspended and so are the queues associated with them.
+>>> But the ufs host sends SSU (START_STOP_UNIT) to wlun
+>>> during its runtime-suspend.
+>>> During the process blk_queue_enter checks if the queue is not in
+>>> suspended state. If so, it waits for the queue to resume, and never
+>>> comes out of it.
+>>> The commit
+>>> (d55d15a33: scsi: block: Do not accept any requests while suspended)
+>>> adds the check if the queue is in suspended state in blk_queue_enter().
+>>>
+>>> Call trace:
+>>>   __switch_to+0x174/0x2c4
+>>>   __schedule+0x478/0x764
+>>>   schedule+0x9c/0xe0
+>>>   blk_queue_enter+0x158/0x228
+>>>   blk_mq_alloc_request+0x40/0xa4
+>>>   blk_get_request+0x2c/0x70
+>>>   __scsi_execute+0x60/0x1c4
+>>>   ufshcd_set_dev_pwr_mode+0x124/0x1e4
+>>>   ufshcd_suspend+0x208/0x83c
+>>>   ufshcd_runtime_suspend+0x40/0x154
+>>>   ufshcd_pltfrm_runtime_suspend+0x14/0x20
+>>>   pm_generic_runtime_suspend+0x28/0x3c
+>>>   __rpm_callback+0x80/0x2a4
+>>>   rpm_suspend+0x308/0x614
+>>>   rpm_idle+0x158/0x228
+>>>   pm_runtime_work+0x84/0xac
+>>>   process_one_work+0x1f0/0x470
+>>>   worker_thread+0x26c/0x4c8
+>>>   kthread+0x13c/0x320
+>>>   ret_from_fork+0x10/0x18
+>>>
+>>> Fix this by registering ufs device wlun as a scsi driver and
+>>> registering it for block runtime-pm. Also make this as a
+>>> supplier for all other luns. That way, this device wlun
+>>> suspends after all the consumers and resumes after
+>>> hba resumes.
+>>>
+>>> Co-developed-by: Can Guo <cang@codeaurora.org>
+>>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>>> ---
+>>
+> Hi Adrian
+> Thanks for the comments.
+>> Looks good but still doesn't seem to based on the latest tree.
+>>
+> Umm, it's based on the below:
+> git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+> Branch: refs/heads/for-next
+> 
+> The top most change is e27f3c8 on 27th March'21.
+> Which tree are you referring to that'd be latest?
 
-Fixes: e293313262d3 ("scsi: ufs: Fix broken task management command implementation")
+Dunno, but that seems to be missing:
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 30 +++++++++++++-----------------
- 1 file changed, 13 insertions(+), 17 deletions(-)
+  commit aa53f580e67b49ec5f4d9bd1de81eb9eb0dc079f
+  Author: Can Guo <cang@codeaurora.org>
+  Date:   Tue Feb 23 21:36:47 2021 -0800
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d4f8cb2..ce5f3fea 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6446,38 +6446,34 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	struct request *req;
- 	unsigned long flags;
--	int free_slot, task_tag, err;
-+	int task_tag, err;
- 
- 	/*
--	 * Get free slot, sleep if slots are unavailable.
--	 * Even though we use wait_event() which sleeps indefinitely,
--	 * the maximum wait time is bounded by %TM_CMD_TIMEOUT.
-+	 * blk_get_request() is used here only to get a free tag.
- 	 */
- 	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
- 	if (IS_ERR(req))
- 		return PTR_ERR(req);
- 
- 	req->end_io_data = &wait;
--	free_slot = req->tag;
--	WARN_ON_ONCE(free_slot < 0 || free_slot >= hba->nutmrs);
- 	ufshcd_hold(hba, false);
- 
- 	spin_lock_irqsave(host->host_lock, flags);
--	task_tag = hba->nutrs + free_slot;
- 	blk_mq_start_request(req);
- 
-+	task_tag = req->tag;
- 	treq->req_header.dword_0 |= cpu_to_be32(task_tag);
- 
--	memcpy(hba->utmrdl_base_addr + free_slot, treq, sizeof(*treq));
--	ufshcd_vops_setup_task_mgmt(hba, free_slot, tm_function);
-+	memcpy(hba->utmrdl_base_addr + task_tag, treq, sizeof(*treq));
-+	ufshcd_vops_setup_task_mgmt(hba, task_tag, tm_function);
- 
- 	/* send command to the controller */
--	__set_bit(free_slot, &hba->outstanding_tasks);
-+	__set_bit(task_tag, &hba->outstanding_tasks);
- 
- 	/* Make sure descriptors are ready before ringing the task doorbell */
- 	wmb();
- 
--	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
-+	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TASK_REQ_DOOR_BELL);
- 	/* Make sure that doorbell is committed immediately */
- 	wmb();
- 
-@@ -6497,24 +6493,24 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 		ufshcd_add_tm_upiu_trace(hba, task_tag, UFS_TM_ERR);
- 		dev_err(hba->dev, "%s: task management cmd 0x%.2x timed-out\n",
- 				__func__, tm_function);
--		if (ufshcd_clear_tm_cmd(hba, free_slot))
--			dev_WARN(hba->dev, "%s: unable clear tm cmd (slot %d) after timeout\n",
--					__func__, free_slot);
-+		if (ufshcd_clear_tm_cmd(hba, task_tag))
-+			dev_WARN(hba->dev, "%s: unable to clear tm cmd (slot %d) after timeout\n",
-+					__func__, task_tag);
- 		err = -ETIMEDOUT;
- 	} else {
- 		err = 0;
--		memcpy(treq, hba->utmrdl_base_addr + free_slot, sizeof(*treq));
-+		memcpy(treq, hba->utmrdl_base_addr + task_tag, sizeof(*treq));
- 
- 		ufshcd_add_tm_upiu_trace(hba, task_tag, UFS_TM_COMP);
- 	}
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	__clear_bit(free_slot, &hba->outstanding_tasks);
-+	__clear_bit(task_tag, &hba->outstanding_tasks);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
-+	ufshcd_release(hba);
- 	blk_put_request(req);
- 
--	ufshcd_release(hba);
- 	return err;
- }
- 
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+    scsi: ufs: Minor adjustments to error handling
+
+which is in v5.12-rc3
+
+> 
+>> Also came across the issue below:
+>>
+>> <SNIP>
+>>
+>>> +#ifdef CONFIG_PM_SLEEP
+>>> +static int ufshcd_wl_poweroff(struct device *dev)
+>>> +{
+>>> +    ufshcd_wl_shutdown(dev);
+>>
+>> This turned out to be wrong.  This is a PM op and SCSI has already
+>> quiesced the sdev's.  All that is needed isOk. I'll fix it in the next version.
+> 
+>>
+>>     __ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
+>>
+>>> +    return 0;
+>>> +}
+>>> +#endif
+> 
+> 
 
