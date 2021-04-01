@@ -2,88 +2,71 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 716FEC433ED
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 07:18:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BE07C433B4
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 07:30:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D3ED610CA
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 07:18:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DED9610CB
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 07:30:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233024AbhDAHSQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Apr 2021 03:18:16 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:22873 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229850AbhDAHSA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2021 03:18:00 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1617261480; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=vlZ+vMQlZRuL8LM8chZeMjq7xPyflEjD//VALE5QuZ8=;
- b=WFS/SqLjGOWmc71G7q+jewe6FZGw/68RVRt8f/4/m7clhb+OI3/+ZsjPQBSU8P2givmi9Um4
- EawY7j925U9eIMQW0EymztU1nR7W/ZSB54Pnu8waKSCVURHuYARncqLpoC/wpAp5xoB7OanE
- gUGDYSFNgVpq/QpGmlNkzUoY9kM=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 6065739c0a4a07ffda8cb161 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 01 Apr 2021 07:17:48
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id AA19FC43462; Thu,  1 Apr 2021 07:17:47 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 170D0C433CA;
-        Thu,  1 Apr 2021 07:17:47 +0000 (UTC)
+        id S232661AbhDAH3U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Apr 2021 03:29:20 -0400
+Received: from mx2.suse.de ([195.135.220.15]:44132 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230284AbhDAH3E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 1 Apr 2021 03:29:04 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 2A9A5AF5A;
+        Thu,  1 Apr 2021 07:29:03 +0000 (UTC)
+To:     dgilbert@interlog.com, "Ewan D. Milne" <emilne@redhat.com>,
+        linux-scsi@vger.kernel.org
+References: <20210331201154.20348-1-emilne@redhat.com>
+ <2c505c60-9ba0-9ce6-46a6-e6edea2ada03@interlog.com>
+From:   Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_dh_alua: remove check for ASC 24h when
+ ILLEGAL_REQUEST returned on RTPG w/extended header
+Message-ID: <a7bbfb39-653e-29d9-f7f8-acf37c2e9b1d@suse.de>
+Date:   Thu, 1 Apr 2021 09:29:02 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 01 Apr 2021 15:17:46 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     daejun7.park@samsung.com
-Cc:     ALIM AKHTAR <alim.akhtar@samsung.com>, asutoshd@codeaurora.org,
-        avri.altman@wdc.com, beanhuo@micron.com, hongwus@codeaurora.org,
-        jaegeuk@kernel.org, jejb@linux.ibm.com, kernel-team@android.com,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, nguyenb@codeaurora.org,
-        stanley.chu@mediatek.com, sthumma@codeaurora.org,
-        vinholikatti@gmail.com, ygardi@codeaurora.org
-Subject: Re: [PATCH v4 2/2] scsi: ufs: Fix wrong Task Tag used in task
- management request UPIUs
-In-Reply-To: <1891546521.01617260402234.JavaMail.epsvc@epcpadp3>
-References: <CGME20210401064419epcms2p6b289c9ba573d15883e3e92ddcd233e11@epcms2p6>
- <1891546521.01617260402234.JavaMail.epsvc@epcpadp3>
-Message-ID: <f49aadb6083a0e4623e06dcc4b07acde@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+In-Reply-To: <2c505c60-9ba0-9ce6-46a6-e6edea2ada03@interlog.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-04-01 14:44, Daejun Park wrote:
-> Hi, Can Guo
+On 4/1/21 6:24 AM, Douglas Gilbert wrote:
+> On 2021-03-31 4:11 p.m., Ewan D. Milne wrote:
+>> Some arrays return ILLEGAL_REQUEST with ASC 00h if they don't support the
+>> extended header, so remove the check for INVALID FIELD IN CDB.
 > 
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> ...
->> 
->>  	req->end_io_data = &wait;
->> -	free_slot = req->tag;
->>  	WARN_ON_ONCE(free_slot < 0 || free_slot >= hba->nutmrs);
-> I think this line should be removed.
+> Wow. Referring to the 18 byte sense buffer as an extended header sounds
+> like it comes from the transition of SCSI-1 to SCSI-2, about 30 years ago.
+> Those arrays need to be named and shamed.
+> 
+> Doug Gilbert
+> Hmm, it is April first ...
 > 
 
-Oh, yes, will remove it in next version.
+Hey, it took us some time to even _get_ this header; originally
+the specification didn't have that, requiring us to second-guess how
+long the array might take for a transition.
 
-Thanks,
-Can Guo.
+But still, April the first :-)
 
-> Thanks,
-> Daejun
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
