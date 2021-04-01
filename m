@@ -2,204 +2,177 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0B9CC433ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 23:44:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4967FC433B4
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 01:41:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A76B61076
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Mar 2021 23:44:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E5226105A
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Apr 2021 01:41:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232565AbhCaXoD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 Mar 2021 19:44:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39758 "EHLO mail.kernel.org"
+        id S232892AbhDABk2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 Mar 2021 21:40:28 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:47943 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229486AbhCaXng (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Mar 2021 19:43:36 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2BBB760C3E;
-        Wed, 31 Mar 2021 23:43:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617234216;
-        bh=y9REhSnSTBr9I8rgkZ3Ma5J00fwbHmJxEfLgak8mJKU=;
-        h=Date:From:To:Cc:Subject:From;
-        b=QGejDCJapO204hq/HX5MNq1WHOclMyy6AqHcLAu74CLi816sbHVUXKGEW543lmu3s
-         CwFGh/wK1737ywIRXHSdQTV7RtxZX87I+r2lpHhAHk2yR03t6wd894lMFwiman1+AD
-         x/3uPUCM9z/7oRVGvxA4KuilfLQEW01bQXojpsJ83GuksxOUd77O1C84pZiquJ7HIj
-         FG/8q4agFMCKzW3BBK0SZ7eZkDz7gCdwQyFznt9CAtPRkghK2Y+TMa3Czai5e8R41O
-         OXwmWBDXzrbY3zn+2BZ/w4Ei9K2DwlE8T6y5Vlgye3vEW2r3+cvXT/DDeFqFYD6+RN
-         ZRluM44BFaWzA==
-Date:   Wed, 31 Mar 2021 17:43:38 -0500
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        id S230385AbhDABkN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Mar 2021 21:40:13 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1617241212; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=188ScI7IN9TQ0IjdtTR3Qyp8g6FQy45LVuXM62ZjqjU=; b=ibkrNR0zKeZHFfaqs9BSDoHGvaQyL2AEAXYqj6PFChxqLhV/8h8lQSRiwEdUaOTBVl4QTSms
+ xMLRB7+9VoP3dDQ3+69G/yNBz5vQlLmlEETokzNz7bhkolXQAy38kCAyznwmQLGIXcZDgkm9
+ KDmPHz2moAaJAWldwrMrurLlgdo=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 6065247c0a4a07ffdaf061f2 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 01 Apr 2021 01:40:12
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id ACCEFC43461; Thu,  1 Apr 2021 01:40:11 +0000 (UTC)
+Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 661EAC433CA;
+        Thu,  1 Apr 2021 01:40:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 661EAC433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v14 1/2] scsi: ufs: Enable power management for wlun
+To:     Adrian Hunter <adrian.hunter@intel.com>, cang@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Yue Hu <huyue2@yulong.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Bart van Assche <bvanassche@acm.org>,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH][next] scsi: ufs: Fix out-of-bounds warnings in
- ufshcd_exec_raw_upiu_cmd
-Message-ID: <20210331224338.GA347171@embeddedor>
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>
+References: <cover.1617143113.git.asutoshd@codeaurora.org>
+ <16f1bcf76ff411c70fe0e3e13f84e4b0fa7d9063.1617143113.git.asutoshd@codeaurora.org>
+ <a385141d-324b-680e-a19c-ab6121bd6c5d@intel.com>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <dbac8ce8-83c6-49a5-9f4d-f5ea19d7a883@codeaurora.org>
+Date:   Wed, 31 Mar 2021 18:40:06 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <a385141d-324b-680e-a19c-ab6121bd6c5d@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following out-of-bounds warnings by enclosing
-some structure members into new structure objects upiu_req
-and upiu_rsp:
+On 3/31/2021 11:19 AM, Adrian Hunter wrote:
+> On 31/03/21 1:31 am, Asutosh Das wrote:
+>> During runtime-suspend of ufs host, the scsi devices are
+>> already suspended and so are the queues associated with them.
+>> But the ufs host sends SSU (START_STOP_UNIT) to wlun
+>> during its runtime-suspend.
+>> During the process blk_queue_enter checks if the queue is not in
+>> suspended state. If so, it waits for the queue to resume, and never
+>> comes out of it.
+>> The commit
+>> (d55d15a33: scsi: block: Do not accept any requests while suspended)
+>> adds the check if the queue is in suspended state in blk_queue_enter().
+>>
+>> Call trace:
+>>   __switch_to+0x174/0x2c4
+>>   __schedule+0x478/0x764
+>>   schedule+0x9c/0xe0
+>>   blk_queue_enter+0x158/0x228
+>>   blk_mq_alloc_request+0x40/0xa4
+>>   blk_get_request+0x2c/0x70
+>>   __scsi_execute+0x60/0x1c4
+>>   ufshcd_set_dev_pwr_mode+0x124/0x1e4
+>>   ufshcd_suspend+0x208/0x83c
+>>   ufshcd_runtime_suspend+0x40/0x154
+>>   ufshcd_pltfrm_runtime_suspend+0x14/0x20
+>>   pm_generic_runtime_suspend+0x28/0x3c
+>>   __rpm_callback+0x80/0x2a4
+>>   rpm_suspend+0x308/0x614
+>>   rpm_idle+0x158/0x228
+>>   pm_runtime_work+0x84/0xac
+>>   process_one_work+0x1f0/0x470
+>>   worker_thread+0x26c/0x4c8
+>>   kthread+0x13c/0x320
+>>   ret_from_fork+0x10/0x18
+>>
+>> Fix this by registering ufs device wlun as a scsi driver and
+>> registering it for block runtime-pm. Also make this as a
+>> supplier for all other luns. That way, this device wlun
+>> suspends after all the consumers and resumes after
+>> hba resumes.
+>>
+>> Co-developed-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>> ---
+> 
+Hi Adrian
+Thanks for the comments.
+> Looks good but still doesn't seem to based on the latest tree.
+> 
+Umm, it's based on the below:
+git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+Branch: refs/heads/for-next
 
-include/linux/fortify-string.h:20:29: warning: '__builtin_memcpy' offset [29, 48] from the object at 'treq' is out of the bounds of referenced subobject 'req_header' with type 'struct utp_upiu_header' at offset 16 [-Warray-bounds]
-include/linux/fortify-string.h:20:29: warning: '__builtin_memcpy' offset [61, 80] from the object at 'treq' is out of the bounds of referenced subobject 'rsp_header' with type 'struct utp_upiu_header' at offset 48 [-Warray-bounds]
-arch/m68k/include/asm/string.h:72:25: warning: '__builtin_memcpy' offset [29, 48] from the object at 'treq' is out of the bounds of referenced subobject 'req_header' with type 'struct utp_upiu_header' at offset 16 [-Warray-bounds]
-arch/m68k/include/asm/string.h:72:25: warning: '__builtin_memcpy' offset [61, 80] from the object at 'treq' is out of the bounds of referenced subobject 'rsp_header' with type 'struct utp_upiu_header' at offset 48 [-Warray-bounds]
+The top most change is e27f3c8 on 27th March'21.
+Which tree are you referring to that'd be latest?
 
-Refactor the code by making it more structured.
+> Also came across the issue below:
+> 
+> <SNIP>
+> 
+>> +#ifdef CONFIG_PM_SLEEP
+>> +static int ufshcd_wl_poweroff(struct device *dev)
+>> +{
+>> +	ufshcd_wl_shutdown(dev);
+> 
+> This turned out to be wrong.  This is a PM op and SCSI has already
+> quiesced the sdev's.  All that is needed isOk. I'll fix it in the next version.
 
-The problem is that the original code is trying to copy data into a
-bunch of struct members adjacent to each other in a single call to
-memcpy(). Now that a new struct _upiu_req_ enclosing all those adjacent
-members is introduced, memcpy() doesn't overrun the length of
-&treq.req_header, because the address of the new struct object
-_upiu_req_ is used as the destination, instead. The same problem
-is present when memcpy() overruns the length of the source
-&treq.rsp_header; in this case the address of the new struct
-object _upiu_rsp_ is used, instead.
+> 
+> 	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
+> 
+>> +	return 0;
+>> +}
+>> +#endif
 
-Also, this helps with the ongoing efforts to enable -Warray-bounds
-and avoid confusing the compiler.
 
-Link: https://github.com/KSPP/linux/issues/109
-Reported-by: kernel test robot <lkp@intel.com>
-Build-tested-by: kernel test robot <lkp@intel.com>
-Link: https://lore.kernel.org/lkml/60640558.lsAxiK6otPwTo9rv%25lkp@intel.com/
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
- drivers/scsi/ufs/ufshcd.c | 28 ++++++++++++++++------------
- drivers/scsi/ufs/ufshci.h | 22 +++++++++++++---------
- 2 files changed, 29 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7539a4ee9494..324eb641e66f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -336,11 +336,15 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
- 		return;
- 
- 	if (str_t == UFS_TM_SEND)
--		trace_ufshcd_upiu(dev_name(hba->dev), str_t, &descp->req_header,
--				  &descp->input_param1, UFS_TSF_TM_INPUT);
-+		trace_ufshcd_upiu(dev_name(hba->dev), str_t,
-+				  &descp->upiu_req.req_header,
-+				  &descp->upiu_req.input_param1,
-+				  UFS_TSF_TM_INPUT);
- 	else
--		trace_ufshcd_upiu(dev_name(hba->dev), str_t, &descp->rsp_header,
--				  &descp->output_param1, UFS_TSF_TM_OUTPUT);
-+		trace_ufshcd_upiu(dev_name(hba->dev), str_t,
-+				  &descp->upiu_rsp.rsp_header,
-+				  &descp->upiu_rsp.output_param1,
-+				  UFS_TSF_TM_OUTPUT);
- }
- 
- static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
-@@ -6420,7 +6424,7 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 	spin_lock_irqsave(host->host_lock, flags);
- 	task_tag = hba->nutrs + free_slot;
- 
--	treq->req_header.dword_0 |= cpu_to_be32(task_tag);
-+	treq->upiu_req.req_header.dword_0 |= cpu_to_be32(task_tag);
- 
- 	memcpy(hba->utmrdl_base_addr + free_slot, treq, sizeof(*treq));
- 	ufshcd_vops_setup_task_mgmt(hba, free_slot, tm_function);
-@@ -6493,16 +6497,16 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
- 	treq.header.dword_2 = cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
- 
- 	/* Configure task request UPIU */
--	treq.req_header.dword_0 = cpu_to_be32(lun_id << 8) |
-+	treq.upiu_req.req_header.dword_0 = cpu_to_be32(lun_id << 8) |
- 				  cpu_to_be32(UPIU_TRANSACTION_TASK_REQ << 24);
--	treq.req_header.dword_1 = cpu_to_be32(tm_function << 16);
-+	treq.upiu_req.req_header.dword_1 = cpu_to_be32(tm_function << 16);
- 
- 	/*
- 	 * The host shall provide the same value for LUN field in the basic
- 	 * header and for Input Parameter.
- 	 */
--	treq.input_param1 = cpu_to_be32(lun_id);
--	treq.input_param2 = cpu_to_be32(task_id);
-+	treq.upiu_req.input_param1 = cpu_to_be32(lun_id);
-+	treq.upiu_req.input_param2 = cpu_to_be32(task_id);
- 
- 	err = __ufshcd_issue_tm_cmd(hba, &treq, tm_function);
- 	if (err == -ETIMEDOUT)
-@@ -6513,7 +6517,7 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
- 		dev_err(hba->dev, "%s: failed, ocs = 0x%x\n",
- 				__func__, ocs_value);
- 	else if (tm_response)
--		*tm_response = be32_to_cpu(treq.output_param1) &
-+		*tm_response = be32_to_cpu(treq.upiu_rsp.output_param1) &
- 				MASK_TM_SERVICE_RESP;
- 	return err;
- }
-@@ -6693,7 +6697,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 		treq.header.dword_0 = cpu_to_le32(UTP_REQ_DESC_INT_CMD);
- 		treq.header.dword_2 = cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
- 
--		memcpy(&treq.req_header, req_upiu, sizeof(*req_upiu));
-+		memcpy(&treq.upiu_req, req_upiu, sizeof(*req_upiu));
- 
- 		err = __ufshcd_issue_tm_cmd(hba, &treq, tm_f);
- 		if (err == -ETIMEDOUT)
-@@ -6706,7 +6710,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 			break;
- 		}
- 
--		memcpy(rsp_upiu, &treq.rsp_header, sizeof(*rsp_upiu));
-+		memcpy(rsp_upiu, &treq.upiu_rsp, sizeof(*rsp_upiu));
- 
- 		break;
- 	default:
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 6795e1f0e8f8..235236859285 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -482,17 +482,21 @@ struct utp_task_req_desc {
- 	struct request_desc_header header;
- 
- 	/* DW 4-11 - Task request UPIU structure */
--	struct utp_upiu_header	req_header;
--	__be32			input_param1;
--	__be32			input_param2;
--	__be32			input_param3;
--	__be32			__reserved1[2];
-+	struct {
-+		struct utp_upiu_header	req_header;
-+		__be32			input_param1;
-+		__be32			input_param2;
-+		__be32			input_param3;
-+		__be32			__reserved1[2];
-+	} upiu_req;
- 
- 	/* DW 12-19 - Task Management Response UPIU structure */
--	struct utp_upiu_header	rsp_header;
--	__be32			output_param1;
--	__be32			output_param2;
--	__be32			__reserved2[3];
-+	struct {
-+		struct utp_upiu_header	rsp_header;
-+		__be32			output_param1;
-+		__be32			output_param2;
-+		__be32			__reserved2[3];
-+	} upiu_rsp;
- };
- 
- #endif /* End of Header */
 -- 
-2.27.0
-
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
