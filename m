@@ -6,42 +6,42 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BCF9C433ED
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Apr 2021 03:49:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E59C433ED
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Apr 2021 03:50:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D8325610E7
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Apr 2021 03:49:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D00DD610E7
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Apr 2021 03:50:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233786AbhDBDtp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Apr 2021 23:49:45 -0400
-Received: from mail-pf1-f181.google.com ([209.85.210.181]:43940 "EHLO
-        mail-pf1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233701AbhDBDtp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2021 23:49:45 -0400
-Received: by mail-pf1-f181.google.com with SMTP id q5so2819051pfh.10
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Apr 2021 20:49:44 -0700 (PDT)
+        id S233781AbhDBDu4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Apr 2021 23:50:56 -0400
+Received: from mail-pf1-f178.google.com ([209.85.210.178]:46789 "EHLO
+        mail-pf1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233701AbhDBDuz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2021 23:50:55 -0400
+Received: by mail-pf1-f178.google.com with SMTP id x126so2812222pfc.13
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Apr 2021 20:50:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=o56Mza2lmvXVo5BWhW9vqAcWpahryb8RHFwjpjAK7ts=;
-        b=k11wGyQjzqirN6D/0w5+x62RKeDgkjhV4c7Xh1pEIbcuyRzLK/iI9NgTUkZvTIbaFf
-         J+Knmm1xgbnwoP8MWz9J1cGgO+aMO35Pn354KvCo6F+MtjqY2QxvYGuYABwOFTQhLcMK
-         m83sxMvDYAkR071pDM3SJ+7tnxiThUvQqUpcAINybVzXdtIeaX6gEHxwCpxmazK4Ok9/
-         7IfRC2U/zjhOdXCevo0w1wO4yIGaW/1C5i8m/ARMXxFSieHTWnaGK95uuWy9LdUHfS2H
-         GO2HATRFChwUFqUaDvh3xq9eBMmMJT8MGkbE8P6hxr7YRXbX3oO/Ui/h3i6Id4FstxcD
-         GBDw==
-X-Gm-Message-State: AOAM530oWxvO6TK3bhF2zmeNVzT4TaQJQqAWSoQn9gKTflds0ht62FTN
-        PgF3/jtM7wxOBZKMxHefbz4=
-X-Google-Smtp-Source: ABdhPJyoPjbCeaPONx7xK7aTR2RYPUFT2vgfehjQZU0nVwY7soD4ngYXpF/a9CLlj/Ydg4Kap8wn4Q==
-X-Received: by 2002:a63:5004:: with SMTP id e4mr10200196pgb.61.1617335384389;
-        Thu, 01 Apr 2021 20:49:44 -0700 (PDT)
+        bh=QUb/FmmYUQcls2AlSeeNxNu28IZbwQI8YIrAtqcRurQ=;
+        b=dt8WOarVpawTAaH5gwD6quLI+C51b5Y+AGraP1EaONBNQShRJ8SIO1yLtjKlx+gWsO
+         AvxOqAN/aDqo40GT9LFqWMeUzC0SJpz+7NOmI0xdPCCt0V1iFR5I2FbkUqnI2Kcc2Nst
+         di+WCvqOmKcO9gQ009AhXJ+33VqvcIfp8oVJDSW8M26nZODRDCPdj2XcAcX9PObe6F0v
+         7ytD4+axr3RNPjkh+9TGbxnpbdXp1HMBQAkDitdV7f5Mwb78jJM2+/IyL1BNXs0a7eow
+         /+MYqcvMRT5FQ9g3mNJ1t6XZHM8TEByXuO6QwBOofQB/rD71119vg+cWuQQuIXYBAVZH
+         fcFw==
+X-Gm-Message-State: AOAM530FnExYBndXGl7/CxCm+vXKERz/rdqIBkbdTmA+OpePI9IEV6Gy
+        j3p9rUkxi30yLxEnvNTpyMI=
+X-Google-Smtp-Source: ABdhPJxB4sU40QWvQuj9wDtcm6F12eyKccegsKVGVQyu5+b1659ekAwDcoMDDqbQwxuvibKokb9dcQ==
+X-Received: by 2002:a63:6fc1:: with SMTP id k184mr10567389pgc.292.1617335455216;
+        Thu, 01 Apr 2021 20:50:55 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:2046:e611:bcdf:eb50? ([2601:647:4000:d7:2046:e611:bcdf:eb50])
-        by smtp.gmail.com with ESMTPSA id p11sm6690617pjo.48.2021.04.01.20.49.43
+        by smtp.gmail.com with ESMTPSA id l10sm6191723pfc.125.2021.04.01.20.50.53
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Apr 2021 20:49:43 -0700 (PDT)
-Subject: Re: [PATCH v3 1/7] pm80xx: Add sysfs attribute to check mpi state
+        Thu, 01 Apr 2021 20:50:54 -0700 (PDT)
+Subject: Re: [PATCH v3 2/7] pm80xx: Add sysfs attribute to track RAAE count
 To:     Viswas G <Viswas.G@microchip.com>, linux-scsi@vger.kernel.org
 Cc:     Vasanthalakshmi.Tharmarajan@microchip.com,
         Ruksar.devadi@microchip.com, vishakhavc@google.com,
@@ -49,14 +49,14 @@ Cc:     Vasanthalakshmi.Tharmarajan@microchip.com,
         Ashokkumar N <Ashokkumar.N@microchip.com>,
         John Garry <john.garry@huawei.com>
 References: <20210330064008.9666-1-Viswas.G@microchip.com>
- <20210330064008.9666-2-Viswas.G@microchip.com>
+ <20210330064008.9666-3-Viswas.G@microchip.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <91bcde85-1cae-8767-4dc4-75ae88d3903c@acm.org>
-Date:   Thu, 1 Apr 2021 20:49:42 -0700
+Message-ID: <29fe3ddd-83c0-75fd-585c-3d33bd8fd723@acm.org>
+Date:   Thu, 1 Apr 2021 20:50:53 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.1
 MIME-Version: 1.0
-In-Reply-To: <20210330064008.9666-2-Viswas.G@microchip.com>
+In-Reply-To: <20210330064008.9666-3-Viswas.G@microchip.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -65,9 +65,22 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 3/29/21 11:40 PM, Viswas G wrote:
-> +static char mpiStateText[][80] = {
+> +static ssize_t ctl_raae_count_show(struct device *cdev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	struct Scsi_Host *shost = class_to_shost(cdev);
+> +	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+> +	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
+> +	unsigned int raaecnt;
+> +	int c;
+> +
+> +	raaecnt = pm8001_mr32(pm8001_ha->general_stat_tbl_addr, 12);
+> +	c = sysfs_emit(buf, "0x%08x\n", raaecnt);
+> +	return c;
+> +}
 
-Can this be changed into static const char *mpiStateText[]?
+Please remove the variable 'c' from this patch and also from subsequent
+patches.
 
 Thanks,
 
