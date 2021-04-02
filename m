@@ -4,270 +4,94 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E09DBC433ED
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Apr 2021 09:08:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 528A1C433ED
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Apr 2021 09:22:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B453361008
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Apr 2021 09:08:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19D2B61105
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Apr 2021 09:22:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234170AbhDBJIg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Apr 2021 05:08:36 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:15592 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235040AbhDBJI0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Apr 2021 05:08:26 -0400
-Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FBZ0l0kSQz1BG8Q;
-        Fri,  2 Apr 2021 17:06:15 +0800 (CST)
-Received: from huawei.com (10.69.192.56) by DGGEMS410-HUB.china.huawei.com
- (10.3.19.210) with Microsoft SMTP Server id 14.3.498.0; Fri, 2 Apr 2021
- 17:08:13 +0800
-From:   Luo Jiaxing <luojiaxing@huawei.com>
-To:     <jinpu.wang@cloud.ionos.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <luojiaxing@huawei.com>
-Subject: [PATCH v1 1/2] scsi: pm8001: clean up for white space
-Date:   Fri, 2 Apr 2021 17:08:41 +0800
-Message-ID: <1617354522-17113-2-git-send-email-luojiaxing@huawei.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1617354522-17113-1-git-send-email-luojiaxing@huawei.com>
-References: <1617354522-17113-1-git-send-email-luojiaxing@huawei.com>
+        id S234652AbhDBJWP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Apr 2021 05:22:15 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:15469 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229599AbhDBJWP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Apr 2021 05:22:15 -0400
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4FBZJk11jBzyNjd;
+        Fri,  2 Apr 2021 17:20:06 +0800 (CST)
+Received: from huawei.com (10.175.103.91) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.498.0; Fri, 2 Apr 2021
+ 17:22:10 +0800
+From:   Yang Yingliang <yangyingliang@huawei.com>
+To:     <linux-kernel@vger.kernel.org>, <target-devel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>
+CC:     <martin.petersen@oracle.com>
+Subject: [PATCH -next] scsi: target: iscsi: Switch to kmemdup_nul()
+Date:   Fri, 2 Apr 2021 17:25:17 +0800
+Message-ID: <20210402092517.2445595-1-yangyingliang@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.56]
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Many error are found like below when run checkpatch.pl
+Use kmemdup_nul() helper instead of open-coding to
+simplify the code.
 
-ERROR: space prohibited before that ',' (ctx:WxW)
-+int pm8001_mpi_general_event(struct pm8001_hba_info *pm8001_ha , void *piomb);
-
-It all about white space, so fix them.
-
-Signed-off-by: Jianqin Xie <xiejianqin@hisilicon.com>
-Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 ---
- drivers/scsi/pm8001/pm8001_ctl.c |  2 +-
- drivers/scsi/pm8001/pm8001_hwi.c | 14 +++++++-------
- drivers/scsi/pm8001/pm8001_sas.c | 20 ++++++++++----------
- drivers/scsi/pm8001/pm8001_sas.h |  2 +-
- drivers/scsi/pm8001/pm80xx_hwi.c | 14 +++++++-------
- 5 files changed, 26 insertions(+), 26 deletions(-)
+ drivers/target/iscsi/iscsi_target_nego.c       | 4 +---
+ drivers/target/iscsi/iscsi_target_parameters.c | 4 +---
+ 2 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 12035ba..ffb4387 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -371,7 +371,7 @@ static ssize_t pm8001_ctl_aap_log_show(struct device *cdev,
- 	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
- 	int i;
- #define AAP1_MEMMAP(r, c) \
--	(*(u32 *)((u8*)pm8001_ha->memoryMap.region[AAP1].virt_ptr + (r) * 32 \
-+	(*(u32 *)((u8 *)pm8001_ha->memoryMap.region[AAP1].virt_ptr + (r) * 32 \
- 	+ (c)))
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index 151e2949bb75..9a4a632f631d 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -1082,14 +1082,12 @@ int iscsi_target_locate_portal(
+ 	login_req = (struct iscsi_login_req *) login->req;
+ 	payload_length = ntoh24(login_req->dlength);
  
- 	char *str = buf;
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 49bf2f7..6887fa3 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1826,7 +1826,7 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
-  * that the task has been finished.
-  */
- static void
--mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha , void *piomb)
-+mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- {
- 	struct sas_task *t;
- 	struct pm8001_ccb_info *ccb;
-@@ -2058,7 +2058,7 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha , void *piomb)
- }
+-	tmpbuf = kzalloc(payload_length + 1, GFP_KERNEL);
++	tmpbuf = kmemdup_nul(login->req_buf, payload_length, GFP_KERNEL);
+ 	if (!tmpbuf) {
+ 		pr_err("Unable to allocate memory for tmpbuf.\n");
+ 		return -1;
+ 	}
  
- /*See the comments for mpi_ssp_completion */
--static void mpi_ssp_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
-+static void mpi_ssp_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- {
- 	struct sas_task *t;
- 	unsigned long flags;
-@@ -2294,9 +2294,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		(status != IO_UNDERFLOW)) {
- 		if (!((t->dev->parent) &&
- 			(dev_is_expander(t->dev->parent->dev_type)))) {
--			for (i = 0 , j = 4; j <= 7 && i <= 3; i++ , j++)
-+			for (i = 0, j = 4; j <= 7 && i <= 3; i++, j++)
- 				sata_addr_low[i] = pm8001_ha->sas_addr[j];
--			for (i = 0 , j = 0; j <= 3 && i <= 3; i++ , j++)
-+			for (i = 0, j = 0; j <= 3 && i <= 3; i++, j++)
- 				sata_addr_hi[i] = pm8001_ha->sas_addr[j];
- 			memcpy(&temp_sata_addr_low, sata_addr_low,
- 				sizeof(sata_addr_low));
-@@ -2625,7 +2625,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- }
+-	memcpy(tmpbuf, login->req_buf, payload_length);
+-	tmpbuf[payload_length] = '\0';
+ 	start = tmpbuf;
+ 	end = (start + payload_length);
  
- /*See the comments for mpi_ssp_completion */
--static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
-+static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- {
- 	struct sas_task *t;
- 	struct task_status_struct *ts;
-@@ -3602,7 +3602,7 @@ int pm8001_mpi_fw_flash_update_resp(struct pm8001_hba_info *pm8001_ha,
- 	return 0;
- }
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+index 7a461fbb1566..6bc3aaf655fc 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.c
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -1357,14 +1357,12 @@ int iscsi_decode_text_input(
+ 	struct iscsi_param_list *param_list = conn->param_list;
+ 	char *tmpbuf, *start = NULL, *end = NULL;
  
--int pm8001_mpi_general_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
-+int pm8001_mpi_general_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- {
- 	u32 status;
- 	int i;
-@@ -3685,7 +3685,7 @@ int pm8001_mpi_task_abort_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
-  * @pm8001_ha: our hba card information
-  * @piomb: IO message buffer
-  */
--static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void* piomb)
-+static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- {
- 	unsigned long flags;
- 	struct hw_event_resp *pPayload =
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index a98d449..43b77ac 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -877,8 +877,8 @@ static void pm8001_dev_gone_notify(struct domain_device *dev)
- 			   pm8001_dev->device_id, pm8001_dev->dev_type);
- 		if (atomic_read(&pm8001_dev->running_req)) {
- 			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
--			pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
--				dev, 1, 0);
-+			pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
-+							dev, 1, 0);
- 			while (atomic_read(&pm8001_dev->running_req))
- 				msleep(20);
- 			spin_lock_irqsave(&pm8001_ha->lock, flags);
-@@ -1013,8 +1013,8 @@ int pm8001_I_T_nexus_reset(struct domain_device *dev)
- 			goto out;
- 		}
- 		msleep(2000);
--		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
--			dev, 1, 0);
-+		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
-+						     dev, 1, 0);
- 		if (rc) {
- 			pm8001_dbg(pm8001_ha, EH, "task abort failed %x\n"
- 				   "with rc %d\n", pm8001_dev->device_id, rc);
-@@ -1059,8 +1059,8 @@ int pm8001_I_T_nexus_event_handler(struct domain_device *dev)
- 			goto out;
- 		}
- 		/* send internal ssp/sata/smp abort command to FW */
--		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
--							dev, 1, 0);
-+		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
-+						     dev, 1, 0);
- 		msleep(100);
+-	tmpbuf = kzalloc(length + 1, GFP_KERNEL);
++	tmpbuf = kmemdup_nul(textbuf, length, GFP_KERNEL);
+ 	if (!tmpbuf) {
+ 		pr_err("Unable to allocate %u + 1 bytes for tmpbuf.\n", length);
+ 		return -ENOMEM;
+ 	}
  
- 		/* deregister the target device */
-@@ -1075,8 +1075,8 @@ int pm8001_I_T_nexus_event_handler(struct domain_device *dev)
- 		wait_for_completion(&completion_setstate);
- 	} else {
- 		/* send internal ssp/sata/smp abort command to FW */
--		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
--							dev, 1, 0);
-+		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
-+						     dev, 1, 0);
- 		msleep(100);
+-	memcpy(tmpbuf, textbuf, length);
+-	tmpbuf[length] = '\0';
+ 	start = tmpbuf;
+ 	end = (start + length);
  
- 		/* deregister the target device */
-@@ -1104,8 +1104,8 @@ int pm8001_lu_reset(struct domain_device *dev, u8 *lun)
- 	DECLARE_COMPLETION_ONSTACK(completion_setstate);
- 	if (dev_is_sata(dev)) {
- 		struct sas_phy *phy = sas_get_local_phy(dev);
--		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
--			dev, 1, 0);
-+		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
-+						     dev, 1, 0);
- 		rc = sas_phy_reset(phy, 1);
- 		sas_put_local_phy(phy);
- 		pm8001_dev->setds_completion = &completion_setstate;
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 039ed91..e7f693a 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -705,7 +705,7 @@ int pm8001_mpi_reg_resp(struct pm8001_hba_info *pm8001_ha, void *piomb);
- int pm8001_mpi_dereg_resp(struct pm8001_hba_info *pm8001_ha, void *piomb);
- int pm8001_mpi_fw_flash_update_resp(struct pm8001_hba_info *pm8001_ha,
- 							void *piomb);
--int pm8001_mpi_general_event(struct pm8001_hba_info *pm8001_ha , void *piomb);
-+int pm8001_mpi_general_event(struct pm8001_hba_info *pm8001_ha, void *piomb);
- int pm8001_mpi_task_abort_resp(struct pm8001_hba_info *pm8001_ha, void *piomb);
- struct sas_task *pm8001_alloc_task(void);
- void pm8001_task_done(struct sas_task *task);
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 8431556..5e02446 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -90,7 +90,7 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
- 	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
- 	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
- 	void __iomem *fatal_table_address = pm8001_ha->fatal_tbl_addr;
--	u32 accum_len , reg_val, index, *temp;
-+	u32 accum_len, reg_val, index, *temp;
- 	u32 status = 1;
- 	unsigned long start;
- 	u8 *direct_data;
-@@ -1904,7 +1904,7 @@ static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
-  * that the task has been finished.
-  */
- static void
--mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha , void *piomb)
-+mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- {
- 	struct sas_task *t;
- 	struct pm8001_ccb_info *ccb;
-@@ -2194,7 +2194,7 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha , void *piomb)
- }
- 
- /*See the comments for mpi_ssp_completion */
--static void mpi_ssp_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
-+static void mpi_ssp_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- {
- 	struct sas_task *t;
- 	unsigned long flags;
-@@ -2444,9 +2444,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		(status != IO_UNDERFLOW)) {
- 		if (!((t->dev->parent) &&
- 			(dev_is_expander(t->dev->parent->dev_type)))) {
--			for (i = 0 , j = 4; i <= 3 && j <= 7; i++ , j++)
-+			for (i = 0, j = 4; i <= 3 && j <= 7; i++, j++)
- 				sata_addr_low[i] = pm8001_ha->sas_addr[j];
--			for (i = 0 , j = 0; i <= 3 && j <= 3; i++ , j++)
-+			for (i = 0, j = 0; i <= 3 && j <= 3; i++, j++)
- 				sata_addr_hi[i] = pm8001_ha->sas_addr[j];
- 			memcpy(&temp_sata_addr_low, sata_addr_low,
- 				sizeof(sata_addr_low));
-@@ -2788,7 +2788,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- }
- 
- /*See the comments for mpi_ssp_completion */
--static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
-+static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- {
- 	struct sas_task *t;
- 	struct task_status_struct *ts;
-@@ -4918,7 +4918,7 @@ static void mpi_set_phy_profile_req(struct pm8001_hba_info *pm8001_ha,
- 				    u32 operation, u32 phyid,
- 				    u32 length, u32 *buf)
- {
--	u32 tag , i, j = 0;
-+	u32 tag, i, j = 0;
- 	int rc;
- 	struct set_phy_profile_req payload;
- 	struct inbound_queue_table *circularQ;
 -- 
-2.7.4
+2.25.1
 
