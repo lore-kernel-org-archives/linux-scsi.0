@@ -2,151 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2D12C433ED
-	for <linux-scsi@archiver.kernel.org>; Sat,  3 Apr 2021 00:34:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E634FC433ED
+	for <linux-scsi@archiver.kernel.org>; Sat,  3 Apr 2021 06:40:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6172D611B0
-	for <linux-scsi@archiver.kernel.org>; Sat,  3 Apr 2021 00:34:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B230E611CE
+	for <linux-scsi@archiver.kernel.org>; Sat,  3 Apr 2021 06:40:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235559AbhDCAec (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Apr 2021 20:34:32 -0400
-Received: from bedivere.hansenpartnership.com ([96.44.175.130]:36658 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234821AbhDCAeb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Apr 2021 20:34:31 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 1394E1280398;
-        Fri,  2 Apr 2021 17:34:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1617410070;
-        bh=rlNH0yVuAuGR2mrl4bZ9TjpwdheZ+lwL1j7b+0NZA3k=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=oFu7+dVfijfxPVLY+ziFCPwtVfS/UPyX+z0eaCHlwLgDUbSG9gtnyw01Q5AzILUHQ
-         QoJTkto7EKS4vUFe3kGON+rsHyA08Y8awU6gKgizF06871zEY4sABUGiw2VjbdU7Ar
-         M4oaFf1snCcY3fv+WWVQydPa4Hb6nQVl2VuwCTzM=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id R9DrTCxj4oc2; Fri,  2 Apr 2021 17:34:30 -0700 (PDT)
-Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:600:8280:66d1::527])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id ABDC91280397;
-        Fri,  2 Apr 2021 17:34:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1617410069;
-        bh=rlNH0yVuAuGR2mrl4bZ9TjpwdheZ+lwL1j7b+0NZA3k=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=FKH8AKacgBWAV7/1CKc3eCOtL2eS4GNJ7FddLLndLdTwHblUQxr+GT9bP198uHwag
-         yszAs9WbCSyOSUQMdxm4z4/81GbEfRVlxOrZKwGOIrFA/DnIz9M13rWf1YptdiQOEM
-         yzaSfUSuHSuztbFrKzun3kPt3mEgn8WRopYWM4so=
-Message-ID: <9aa8b614478d74ee0cb37dec9e20270c94d7f7c4.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.12-rc
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 02 Apr 2021 17:34:28 -0700
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        id S232200AbhDCGkr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 3 Apr 2021 02:40:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57260 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232140AbhDCGkq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Apr 2021 02:40:46 -0400
+Received: from ustc.edu.cn (email6.ustc.edu.cn [IPv6:2001:da8:d800::8])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0D523C0613E6;
+        Fri,  2 Apr 2021 23:40:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mail.ustc.edu.cn; s=dkim; h=Received:From:To:Cc:Subject:Date:
+        Message-Id:MIME-Version:Content-Transfer-Encoding; bh=wWw/XBjY5V
+        L8TFNyvy6yE86/G3l3Tzkz04ZUjZ/7vf0=; b=ui3x58DwvRdpOPvdK0w2Xv2yPY
+        LZFxD+a5fqMpyuXSwrSUTapJkeFsiYhQlZoWXBKVLAIgSe7ZA2D7N5kyIa/nA151
+        BFFmYVw0HeB78L4uJM29LZX99p57TOn0GVKcVYTBv7QWpvXg8e4f7taRc0M58B6W
+        f9eXppkwXXngApCus=
+Received: from ubuntu.localdomain (unknown [202.38.69.14])
+        by newmailweb.ustc.edu.cn (Coremail) with SMTP id LkAmygAXHKTjDWhgMpyPAA--.610S4;
+        Sat, 03 Apr 2021 14:40:35 +0800 (CST)
+From:   Lv Yunlong <lyl2019@mail.ustc.edu.cn>
+To:     subbu.seetharaman@broadcom.com, ketan.mukadam@broadcom.com,
+        jitendra.bhivare@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lv Yunlong <lyl2019@mail.ustc.edu.cn>
+Subject: [PATCH] scsi: be2iscsi: Fix a use after free in beiscsi_if_clr_ip
+Date:   Fri,  2 Apr 2021 23:40:31 -0700
+Message-Id: <20210403064031.5949-1-lyl2019@mail.ustc.edu.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: LkAmygAXHKTjDWhgMpyPAA--.610S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zr17Wr48Cw1kKw4fKw4DJwb_yoW8Xw18pa
+        4UX3WjyaykGF40kFnrAFWS9rnI9ayFy342vFy2g3yruFn5urWj9r98Ga4j9FnFkrZ5Jry7
+        JF4kJr98GF48taUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+        F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+        4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I
+        648v4I1lc2xSY4AK67AK6r47MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r
+        4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF
+        67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2I
+        x0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAI
+        cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kf
+        nxnUUI43ZEXa7VUjylk7UUUUU==
+X-CM-SenderInfo: ho1ojiyrz6zt1loo32lwfovvfxof0/
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Single fix to iscsi for a rare race condition which can cause a kernel
-panic.
+In the free_cmd error path of callee beiscsi_exec_nemb_cmd(),
+nonemb_cmd->va is freed by dma_free_coherent().
+As req = nonemb_cmd.va, we can see that the freed nonemb_cmd.va
+is still dereferenced and used by req->ip_params.ip_record.status.
 
-The patch is available here:
+My patch uses status to replace req->ip_params.ip_record.status
+to avoid the uaf.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Gulam Mohamed (1):
-      scsi: iscsi: Fix race condition between login and sync thread
-
-And the diffstat:
-
- drivers/scsi/scsi_transport_iscsi.c | 14 +++++++++++++-
- include/scsi/scsi_transport_iscsi.h |  1 +
- 2 files changed, 14 insertions(+), 1 deletion(-)
-
-With full diff below.
-
-James
-
+Signed-off-by: Lv Yunlong <lyl2019@mail.ustc.edu.cn>
 ---
+ drivers/scsi/be2iscsi/be_mgmt.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 969d24d580e2..bebfb355abdf 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2471,6 +2471,7 @@ static void iscsi_if_stop_conn(struct iscsi_cls_conn *conn, int flag)
- 	 */
- 	mutex_lock(&conn_mutex);
- 	conn->transport->stop_conn(conn, flag);
-+	conn->state = ISCSI_CONN_DOWN;
- 	mutex_unlock(&conn_mutex);
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 0d4928567265..b93b1a8c6c81 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -509,6 +509,7 @@ beiscsi_if_clr_ip(struct beiscsi_hba *phba,
+ {
+ 	struct be_cmd_set_ip_addr_req *req;
+ 	struct be_dma_mem nonemb_cmd;
++	u32 status;
+ 	int rc;
  
+ 	rc = beiscsi_prep_nemb_cmd(phba, &nonemb_cmd, CMD_SUBSYSTEM_ISCSI,
+@@ -531,11 +532,12 @@ beiscsi_if_clr_ip(struct beiscsi_hba *phba,
+ 	memcpy(req->ip_params.ip_record.ip_addr.subnet_mask,
+ 	       if_info->ip_addr.subnet_mask,
+ 	       sizeof(if_info->ip_addr.subnet_mask));
++	status = req->ip_params.ip_record.status;
+ 	rc = beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, NULL, NULL, 0);
+-	if (rc < 0 || req->ip_params.ip_record.status) {
++	if (rc < 0 || status) {
+ 		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
+ 			    "BG_%d : failed to clear IP: rc %d status %d\n",
+-			    rc, req->ip_params.ip_record.status);
++			    rc, status);
+ 	}
+ 	return rc;
  }
-@@ -2894,6 +2895,13 @@ iscsi_set_param(struct iscsi_transport *transport, struct iscsi_uevent *ev)
- 	default:
- 		err = transport->set_param(conn, ev->u.set_param.param,
- 					   data, ev->u.set_param.len);
-+		if ((conn->state == ISCSI_CONN_BOUND) ||
-+			(conn->state == ISCSI_CONN_UP)) {
-+			err = transport->set_param(conn, ev->u.set_param.param,
-+					data, ev->u.set_param.len);
-+		} else {
-+			return -ENOTCONN;
-+		}
- 	}
- 
- 	return err;
-@@ -2953,6 +2961,7 @@ static int iscsi_if_ep_disconnect(struct iscsi_transport *transport,
- 		mutex_lock(&conn->ep_mutex);
- 		conn->ep = NULL;
- 		mutex_unlock(&conn->ep_mutex);
-+		conn->state = ISCSI_CONN_DOWN;
- 	}
- 
- 	transport->ep_disconnect(ep);
-@@ -3713,6 +3722,8 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- 		ev->r.retcode =	transport->bind_conn(session, conn,
- 						ev->u.b_conn.transport_eph,
- 						ev->u.b_conn.is_leading);
-+		if (!ev->r.retcode)
-+			conn->state = ISCSI_CONN_BOUND;
- 		mutex_unlock(&conn_mutex);
- 
- 		if (ev->r.retcode || !transport->ep_connect)
-@@ -3944,7 +3955,8 @@ iscsi_conn_attr(local_ipaddr, ISCSI_PARAM_LOCAL_IPADDR);
- static const char *const connection_state_names[] = {
- 	[ISCSI_CONN_UP] = "up",
- 	[ISCSI_CONN_DOWN] = "down",
--	[ISCSI_CONN_FAILED] = "failed"
-+	[ISCSI_CONN_FAILED] = "failed",
-+	[ISCSI_CONN_BOUND] = "bound"
- };
- 
- static ssize_t show_conn_state(struct device *dev,
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 8a26a2ffa952..fc5a39839b4b 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -193,6 +193,7 @@ enum iscsi_connection_state {
- 	ISCSI_CONN_UP = 0,
- 	ISCSI_CONN_DOWN,
- 	ISCSI_CONN_FAILED,
-+	ISCSI_CONN_BOUND,
- };
- 
- struct iscsi_cls_conn {
+-- 
+2.25.1
+
 
