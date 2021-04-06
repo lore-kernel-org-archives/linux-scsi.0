@@ -2,173 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
+	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08FD4C43460
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 17:53:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2D71C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 18:05:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DCB86613DE
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 17:53:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BF0A613D0
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 18:05:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347085AbhDFRxn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Apr 2021 13:53:43 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:62920 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244669AbhDFRxl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 13:53:41 -0400
-IronPort-SDR: YUbCRbb7K56xTeUv5CHgiKsjexFJ5EVLxiopRBPitq7MI7pyySATn1YYe9aurtB/W3VMfpWkBE
- iIGGxOXyEBgn7PylKh2Qth6zFH1IIMtqSLiX0wiZ+DtAQilOdfU+/qQddKXe6NhuzcYNaRHWIc
- wKqjl1OSRQdi04onaHeYgWJf0Czm2cj5Op6JQUHJZGWpV21oG6BJN+VSwYVq7t19N5xxkYd9f8
- i80m+V5H/p8plj9NVpKFWBausZgkOJ06oh7Xk/tpAcP8kIOX0BeaTxpwnxstKmFXS/R469asLb
- 5W8=
-X-IronPort-AV: E=Sophos;i="5.82,201,1613462400"; 
-   d="scan'208";a="29742117"
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by labrats.qualcomm.com with ESMTP; 06 Apr 2021 10:53:32 -0700
-X-QCInternal: smtphost
-Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg04-sd.qualcomm.com with ESMTP; 06 Apr 2021 10:53:32 -0700
-Received: by stor-presley.qualcomm.com (Postfix, from userid 92687)
-        id 724EE210FD; Tue,  6 Apr 2021 10:53:32 -0700 (PDT)
-From:   Asutosh Das <asutoshd@codeaurora.org>
-To:     cang@codeaurora.org, martin.petersen@oracle.com,
-        adrian.hunter@intel.com, linux-scsi@vger.kernel.org
-Cc:     Asutosh Das <asutoshd@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        id S237312AbhDFSF5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Apr 2021 14:05:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34682 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232876AbhDFSF5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 14:05:57 -0400
+Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 090AAC06174A
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Apr 2021 11:05:48 -0700 (PDT)
+Received: by mail-yb1-xb4a.google.com with SMTP id q14so5995078ybk.22
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Apr 2021 11:05:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=PLqnTqrW97CAndoy42UHRBOSBlVatBc00ZpHafZzpTk=;
+        b=ixyRum8wjrei3S42dV3PN5EBbIaoG3rCP9yTTqwIIhS/7MRRJcvfi8xygHu+gws3em
+         IhZvxM/fZ3HVb2s6SGmZzIPO0NMYwDvOR+kx8AGSGqE88u5PzK6gXbsmNPVwBG0LKT0B
+         XerGnJ6FxE+5FvtIbO4ZLaOk9CoAtK3R5elDsEsNPTPHqdpK4EOmrT4sPDmiYlrpT8YL
+         sT1L7PXhgpOMPhZoLrEn/64VcmbKHke2JtnVGf+Q6m7eH60vmOCPTXv+cIlPPiT4cm17
+         6PLuXJPVSCT4Qyebm1mveHlk0+WXUWcb9s5aEWNX9nXIsGn0WYdWDYTj9Pm+Ftw+bL29
+         18Rw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
+        bh=PLqnTqrW97CAndoy42UHRBOSBlVatBc00ZpHafZzpTk=;
+        b=k5qNREOoQVNtSpyHyvY375taO5fEcRef7DG3brfUraYAWt5MPRdIixLFKP0uJoJ39M
+         scCQ7xB2b10Rf5tVaBldj2pp0zOSpC2GORxlYnYekTb9A8cI5QpjRgq72TDYbivtHCBk
+         HsnoEWXuGqSS4qghv8QIjEXEcBKp97RYsjuH6aR1le4tutZG7j0pZHRLI7PHh+5gju3v
+         e5q8JRjpVjarX9ruxoC/CwXdG4Djymo3waAx9wct3jr/YL4O/3nARomL6Tq0Nmm6IrsF
+         vIi+pO8pOb9n8prl/8xQVDFou/IStYyNbxMnXj6nSmVjs9KurMFB4oZ9qxdWV2m9tY2f
+         ssKA==
+X-Gm-Message-State: AOAM530N4QK0qNDr0HYgVAQOITifuZsBsF8RcqPvnHMoQrMfdBY6kuHl
+        tupHHZ3Yd67iMOlw/cfgfWsMVAyzJLV5xg==
+X-Google-Smtp-Source: ABdhPJwCjSYBj/UVPEhi34n9mMFiT5CvnSMJfuVmw4/k0ch9nHjLV/1n1oC8Xh+1jCcFGjMWyY4+w7cf4b50+w==
+X-Received: from ipylypiv.svl.corp.google.com ([2620:15c:2c5:11:ff2:f4b8:7c38:13d7])
+ (user=ipylypiv job=sendgmr) by 2002:a25:cc54:: with SMTP id
+ l81mr31878211ybf.281.1617732347297; Tue, 06 Apr 2021 11:05:47 -0700 (PDT)
+Date:   Tue,  6 Apr 2021 11:05:32 -0700
+Message-Id: <20210406180534.1924345-1-ipylypiv@google.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.31.1.295.g9ea45b61b8-goog
+Subject: [PATCH v2 0/2] pm80xx mpi_uninit_check() fixes
+From:   Igor Pylypiv <ipylypiv@google.com>
+To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v15 2/2] ufs: sysfs: Resume the proper scsi device
-Date:   Tue,  6 Apr 2021 10:52:43 -0700
-Message-Id: <cc1d7dca1140e411e33c2f66258e5184928058ce.1617731442.git.asutoshd@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1617731442.git.asutoshd@codeaurora.org>
-References: <cover.1617731442.git.asutoshd@codeaurora.org>
-In-Reply-To: <cover.1617731442.git.asutoshd@codeaurora.org>
-References: <cover.1617731442.git.asutoshd@codeaurora.org>
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Vishakha Channapattan <vishakhavc@google.com>,
+        Akshat Jain <akshatzen@google.com>,
+        Jolly Shah <jollys@google.com>, Yu Zheng <yuuzheng@google.com>,
+        linux-scsi@vger.kernel.org, Viswas G <Viswas.G@microchip.com>,
+        Deepak Ukey <deepak.ukey@microchip.com>,
+        Igor Pylypiv <ipylypiv@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Resumes the actual scsi device the unit descriptor of which
-is being accessed instead of the hba alone.
+Changes from v1:
+ - Added missing semicolons
+ - Removed redundant parentheses
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
----
- drivers/scsi/ufs/ufs-sysfs.c | 30 +++++++++++++++++-------------
- 1 file changed, 17 insertions(+), 13 deletions(-)
+This patch series changes the wait time handling in mpi_uninit_check() to
+make it similar to mpi_init_check().
 
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index d7c3cff..fa57bac 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -245,9 +245,9 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
- 		goto out;
- 	}
- 
--	pm_runtime_get_sync(hba->dev);
-+	scsi_autopm_get_device(hba->sdev_ufs_device);
- 	res = ufshcd_wb_toggle(hba, wb_enable);
--	pm_runtime_put_sync(hba->dev);
-+	scsi_autopm_put_device(hba->sdev_ufs_device);
- out:
- 	up(&hba->host_sem);
- 	return res < 0 ? res : count;
-@@ -297,10 +297,10 @@ static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
- 		goto out;
- 	}
- 
--	pm_runtime_get_sync(hba->dev);
-+	scsi_autopm_get_device(hba->sdev_ufs_device);
- 	ret = ufshcd_read_desc_param(hba, desc_id, desc_index,
- 				param_offset, desc_buf, param_size);
--	pm_runtime_put_sync(hba->dev);
-+	scsi_autopm_put_device(hba->sdev_ufs_device);
- 	if (ret) {
- 		ret = -EINVAL;
- 		goto out;
-@@ -678,7 +678,7 @@ static ssize_t _name##_show(struct device *dev,				\
- 		up(&hba->host_sem);					\
- 		return -ENOMEM;						\
- 	}								\
--	pm_runtime_get_sync(hba->dev);					\
-+	scsi_autopm_get_device(hba->sdev_ufs_device);			\
- 	ret = ufshcd_query_descriptor_retry(hba,			\
- 		UPIU_QUERY_OPCODE_READ_DESC, QUERY_DESC_IDN_DEVICE,	\
- 		0, 0, desc_buf, &desc_len);				\
-@@ -695,7 +695,7 @@ static ssize_t _name##_show(struct device *dev,				\
- 		goto out;						\
- 	ret = sysfs_emit(buf, "%s\n", desc_buf);			\
- out:									\
--	pm_runtime_put_sync(hba->dev);					\
-+	scsi_autopm_put_device(hba->sdev_ufs_device);			\
- 	kfree(desc_buf);						\
- 	up(&hba->host_sem);						\
- 	return ret;							\
-@@ -744,10 +744,10 @@ static ssize_t _name##_show(struct device *dev,				\
- 	}								\
- 	if (ufshcd_is_wb_flags(QUERY_FLAG_IDN##_uname))			\
- 		index = ufshcd_wb_get_query_index(hba);			\
--	pm_runtime_get_sync(hba->dev);					\
-+	scsi_autopm_get_device(hba->sdev_ufs_device);			\
- 	ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,	\
- 		QUERY_FLAG_IDN##_uname, index, &flag);			\
--	pm_runtime_put_sync(hba->dev);					\
-+	scsi_autopm_put_device(hba->sdev_ufs_device);			\
- 	if (ret) {							\
- 		ret = -EINVAL;						\
- 		goto out;						\
-@@ -813,10 +813,10 @@ static ssize_t _name##_show(struct device *dev,				\
- 	}								\
- 	if (ufshcd_is_wb_attrs(QUERY_ATTR_IDN##_uname))			\
- 		index = ufshcd_wb_get_query_index(hba);			\
--	pm_runtime_get_sync(hba->dev);					\
-+	scsi_autopm_get_device(hba->sdev_ufs_device);			\
- 	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,	\
- 		QUERY_ATTR_IDN##_uname, index, 0, &value);		\
--	pm_runtime_put_sync(hba->dev);					\
-+	scsi_autopm_put_device(hba->sdev_ufs_device);			\
- 	if (ret) {							\
- 		ret = -EINVAL;						\
- 		goto out;						\
-@@ -899,11 +899,15 @@ static ssize_t _pname##_show(struct device *dev,			\
- 	struct scsi_device *sdev = to_scsi_device(dev);			\
- 	struct ufs_hba *hba = shost_priv(sdev->host);			\
- 	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);			\
-+	int ret;							\
- 	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun,		\
- 				_duname##_DESC_PARAM##_puname))		\
- 		return -EINVAL;						\
--	return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
-+	scsi_autopm_get_device(sdev);					\
-+	ret = ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
- 		lun, _duname##_DESC_PARAM##_puname, buf, _size);	\
-+	scsi_autopm_put_device(sdev);					\
-+	return ret;							\
- }									\
- static DEVICE_ATTR_RO(_pname)
- 
-@@ -964,10 +968,10 @@ static ssize_t dyn_cap_needed_attribute_show(struct device *dev,
- 		goto out;
- 	}
- 
--	pm_runtime_get_sync(hba->dev);
-+	scsi_autopm_get_device(hba->sdev_ufs_device);
- 	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
- 		QUERY_ATTR_IDN_DYN_CAP_NEEDED, lun, 0, &value);
--	pm_runtime_put_sync(hba->dev);
-+	scsi_autopm_put_device(hba->sdev_ufs_device);
- 	if (ret) {
- 		ret = -EINVAL;
- 		goto out;
+In commit e90e236250e9 ("scsi: pm80xx: Increase timeout for pm80xx
+mpi_uninit_check") the wait time for the inbound doorbell was increased
+in the mpi_init_check() instead of the mpi_uninit_check().
+
+Note:
+SPC[/V]_DOORBELL_CLEAR_TIMEOUT defines could not be used in the first
+commit in this series because the values were decreased in
+commit d71023af4bec0 ("scsi: pm80xx: Do not busy wait in MPI init check").
+
+Igor Pylypiv (2):
+  scsi: pm80xx: Increase timeout for pm80xx mpi_uninit_check()
+  scsi: pm80xx: Remove busy wait from mpi_uninit_check()
+
+ drivers/scsi/pm8001/pm80xx_hwi.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.31.1.295.g9ea45b61b8-goog
 
