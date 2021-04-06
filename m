@@ -2,131 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12578C433B4
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 08:17:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF2BC433B4
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 09:03:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D18D4613C2
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 08:17:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40DAF613C2
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 09:03:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232355AbhDFIRZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Apr 2021 04:17:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45974 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232032AbhDFIRZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 04:17:25 -0400
-Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93A27C06174A
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Apr 2021 01:17:17 -0700 (PDT)
-Received: by mail-ej1-x632.google.com with SMTP id u21so20475732ejo.13
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Apr 2021 01:17:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=xe3AzWmGnx/z1TKnpdZ61665fXMzlDZOAaprwaVmFcs=;
-        b=fzPGV5Nko2inRgX0zUsHlxNhQE3/aR/j4jM4YRaQJEAG5Dh1+QpAw59NRnqJdbkBua
-         VdmeFzdcXG0HzHZBXjE356tuRZEyBTofK5CZ18j2H6mfHmgTJ9dSUleenB+Da/0fBM1g
-         YBizGz1NAj0nNOPqtUwWuTncDvNIZvBPiP0FkH92uOIk18b0Qh3CwOY5PrUchqkYB6z0
-         VVEYeeistNCv7D2gxI2xr7OhM5t+OhN/VIvjPb+Fp39HSVmRkoZb7qFg2OB2E+MxTOn3
-         dK/7m8e7E/DCmFY14tgip7PwkNw6tFuu+Aogp/hDXFqvqPDDdqSBLLTWjhdz3dImYWPu
-         0EMA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=xe3AzWmGnx/z1TKnpdZ61665fXMzlDZOAaprwaVmFcs=;
-        b=geTvvPjhAxc62Tkp73HEpyJCEUd8zvQc1uojrbZDxpJIzQuF3G6FIKYsj88+aeFRxu
-         hxgMOIB2o8t9m2pkcAhixFh2YLsqoXWTrSOvRADVj1ppojagpPD8S3p3POc0xVNMFX55
-         RxwRN7EM5lwlP2Su8QOQq/3OfRkNSnlpXCRmMM+L8mCT7NNc1aq2e1xC4oZHat7Eo9L3
-         FK8lR5x/8iUpoYKPjVoDR4Y2zF8uF8DI5y2z8v2c9QXSoeq5Nj9G9XD9P97tcLSgarrY
-         kULehsnKHL9uYlFqGsc073J4ffK1gJkD15/zzkNPeNNfXbcSWk5yJ4yAkCarZqi4AdRn
-         kAYA==
-X-Gm-Message-State: AOAM533tRuw9Jx9TUMeC509M8N1spsAxOBK4z2LHBdaHn3olJHnI2FJY
-        dJEi7n+j6XXw1BqtzEclc+rv8kRjfdq8rczefD7DVw==
-X-Google-Smtp-Source: ABdhPJzM2HMrpkpQaynvrx3o++wChaHZlmrLcFxgIV8Ppe8LCBRXpFIkDyrNJDz2ftpwtLsMD0IaByb/00UspVSDFlw=
-X-Received: by 2002:a17:906:d8a3:: with SMTP id qc3mr10407639ejb.353.1617697036323;
- Tue, 06 Apr 2021 01:17:16 -0700 (PDT)
+        id S240836AbhDFJDs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Apr 2021 05:03:48 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:15491 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240559AbhDFJDr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 05:03:47 -0400
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4FF1jN2wxyzrd4Z;
+        Tue,  6 Apr 2021 17:01:28 +0800 (CST)
+Received: from [10.174.179.174] (10.174.179.174) by
+ DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
+ 14.3.498.0; Tue, 6 Apr 2021 17:03:33 +0800
+Subject: Re: [RFC PATCH] scsi: megaraid_sas: set msix index for
+ NON_READ_WRITE_LDIO type cmd
+To:     <kashyap.desai@broadcom.com>, <sumit.saxena@broadcom.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <megaraidlinux.pdl@broadcom.com>, <linux-scsi@vger.kernel.org>
+References: <20210325084247.4136519-1-yuyufen@huawei.com>
+From:   Yufen Yu <yuyufen@huawei.com>
+Message-ID: <fe977858-91a3-51e3-f90e-d2ec878499df@huawei.com>
+Date:   Tue, 6 Apr 2021 17:03:33 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.1
 MIME-Version: 1.0
-References: <20210329183639.1674307-1-ipylypiv@google.com> <20210329183639.1674307-3-ipylypiv@google.com>
-In-Reply-To: <20210329183639.1674307-3-ipylypiv@google.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Tue, 6 Apr 2021 10:17:05 +0200
-Message-ID: <CAMGffEmTO0QPx1JECeGxj86y12nJz=HGxtLXe=N2kNU5aHjqhQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] scsi: pm80xx: Remove busy wait from mpi_uninit_check()
-To:     Igor Pylypiv <ipylypiv@google.com>
-Cc:     Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Vishakha Channapattan <vishakhavc@google.com>,
-        Akshat Jain <akshatzen@google.com>,
-        Jolly Shah <jollys@google.com>, Yu Zheng <yuuzheng@google.com>,
-        Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
-        Viswas G <Viswas.G@microchip.com>,
-        Deepak Ukey <deepak.ukey@microchip.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20210325084247.4136519-1-yuyufen@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.174]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 29, 2021 at 8:37 PM Igor Pylypiv <ipylypiv@google.com> wrote:
->
-> mpi_uninit_check() is not being called in an ATOMIC context.
-> The only caller of mpi_uninit_check() is pm80xx_chip_soft_rst().
->
-> Callers of pm80xx_chip_soft_rst():
->  - pm8001_ioctl_soft_reset()
->  - pm8001_pci_probe()
->  - pm8001_pci_remove()
->  - pm8001_pci_suspend()
->  - pm8001_pci_resume()
->
-> There was a similar fix for mpi_init_check() in commit d71023af4bec0
-> ("scsi: pm80xx: Do not busy wait in MPI init check").
->
-> Reviewed-by: Vishakha Channapattan <vishakhavc@google.com>
-> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
+gentle ping.
+Any suggestion are welcome.
+
+Thanks,
+Yufen
+
+
+
+On 2021/3/25 16:42, Yufen Yu wrote:
+> Before commit 132147d7f620 ("scsi: megaraid_sas: Add support for
+> High IOPS queues"), all interrupt of megaraid_sas is managed when
+> smp_affinity_enable for misx_enable. The mapping between vectors and
+> cpus for a 128 vectors likely:
+>      vector0 maps to cpu0
+>      vector1 maps to cpu1
+>      ...
+> If cpu0 is offline, vector0 cannot handle any io.
+> 
+> For now, we have not pointed msix index in megasas_build_ld_nonrw_fusion().
+> The default value of index is '0'. So, cmd like TEST_UNIT_READY will hung
+> forever after cpu0 offline. We can simplely reproduce by:
+> 
+>      echo 0 > /sys/devices/system/cpu/cpu0/online
+>      sg_turs /dev/sda # hung
+> 
+> After commit 132147d7f620, low_latency_index_start is set as 1 (not sure
+> for all scenario), then vector 0 is not managed. Thus, io issue to vector0
+> can be handled by other cpus after cpu0 offline.
+> 
+> Nevertheless, we may also conside to set msix index rather than default 0
+> in megasas_build_ld_nonrw_fusion().
+> 
+> Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 > ---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index a6f65666c98e..9fade2ed9396 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -1502,12 +1502,12 @@ static int mpi_uninit_check(struct pm8001_hba_info *pm8001_ha)
->
->         /* wait until Inbound DoorBell Clear Register toggled */
->         if (IS_SPCV_12G(pm8001_ha->pdev)) {
-> -               max_wait_count = (30 * 1000 * 1000) /* 30 sec */
-> +               max_wait_count = SPCV_DOORBELL_CLEAR_TIMEOUT;
->         } else {
-> -               max_wait_count = (15 * 1000 * 1000) /* 15 sec */
-> +               max_wait_count = SPC_DOORBELL_CLEAR_TIMEOUT;
->         }
->         do {
-> -               udelay(1);
-> +               msleep(FW_READY_INTERVAL);
->                 value = pm8001_cr32(pm8001_ha, 0, MSGU_IBDB_SET);
->                 value &= SPCv_MSGU_CFG_TABLE_RESET;
->         } while ((value != 0) && (--max_wait_count));
-> @@ -1519,9 +1519,9 @@ static int mpi_uninit_check(struct pm8001_hba_info *pm8001_ha)
->
->         /* check the MPI-State for termination in progress */
->         /* wait until Inbound DoorBell Clear Register toggled */
-> -       max_wait_count = 2 * 1000 * 1000;       /* 2 sec for spcv/ve */
-> +       max_wait_count = 100; /* 2 sec for spcv/ve */
->         do {
-> -               udelay(1);
-> +               msleep(FW_READY_INTERVAL);
->                 gst_len_mpistate =
->                         pm8001_mr32(pm8001_ha->general_stat_tbl_addr,
->                         GST_GSTLEN_MPIS_OFFSET);
-> --
-> 2.31.0.291.g576ba9dcdaf-goog
->
+>   drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 ++
+>   1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> index 38fc9467c625..ddc6176f12c4 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -3021,6 +3021,8 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+>   		io_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
+>   		io_request->DevHandle = devHandle;
+>   	}
+> +
+> +	megasas_get_msix_index(instance, scmd, cmd, 1);
+>   }
+>   
+>   /**
+> 
