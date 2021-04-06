@@ -2,203 +2,209 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2623C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 11:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85ED2C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 06:11:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 868DC613B7
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 11:52:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51289613AF
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 06:11:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343540AbhDFLxB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Apr 2021 07:53:01 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:16364 "EHLO
-        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343536AbhDFLw6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 07:52:58 -0400
-Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4FF5SY45BLz94Cq;
-        Tue,  6 Apr 2021 19:50:37 +0800 (CST)
-Received: from localhost.localdomain (10.69.192.58) by
- DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
- 14.3.498.0; Tue, 6 Apr 2021 19:52:38 +0800
-From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.orgc>,
-        <linuxarm@huawei.com>, Jianqin Xie <xiejianqin@hisilicon.com>,
-        Luo Jiaxing <luojiaxing@huawei.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH 4/6] scsi: hisi_sas: Directly snapshot registers when executing a reset
-Date:   Tue, 6 Apr 2021 19:48:29 +0800
-Message-ID: <1617709711-195853-5-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1617709711-195853-1-git-send-email-john.garry@huawei.com>
-References: <1617709711-195853-1-git-send-email-john.garry@huawei.com>
+        id S233913AbhDFGLe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Apr 2021 02:11:34 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:10666 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233837AbhDFGLd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 02:11:33 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1617689486; h=Message-ID: References: In-Reply-To: Subject:
+ To: From: Date: Content-Transfer-Encoding: Content-Type: MIME-Version:
+ Sender; bh=LFtlMeteySqkbg9VW89fzgUU8QYwhiAabX+uMoEasZE=; b=P8Kr2BupSCed3SNnztu9EljebZszNqi6o6XMsOSQIuSK5ToI8PCDPspb1C3CeIc94FO5GWqL
+ NalV0Odfeo0jtVZadeSXZziGuEwb7KIh5u3NAOkxoha6sJ4f2sAm/FRQNRJ0QPb56RrueXul
+ WTlv+Rgy1vCcXG6+yKGvSl6lFMw=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 606bfb889a9ff96d953862e4 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 06 Apr 2021 06:11:20
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 90874C43468; Tue,  6 Apr 2021 06:11:20 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6920CC433C6;
+        Tue,  6 Apr 2021 06:11:19 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 06 Apr 2021 14:11:19 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     undisclosed-recipients:;
+Subject: Re: [PATCH 1/2] scsi: ufs: Introduce hba performance monitor sysfs
+ nodes
+In-Reply-To: <1891546521.01617689102000.JavaMail.epsvc@epcpadp3>
+References: <e29c3fa0d5ecfd8eb386432008f24e8c@codeaurora.org>
+ <1617257704-1154-2-git-send-email-cang@codeaurora.org>
+ <1617257704-1154-1-git-send-email-cang@codeaurora.org>
+ <1891546521.01617683881598.JavaMail.epsvc@epcpadp4>
+ <CGME20210401061611epcas2p279c9303e0e0bf4e2bc5eb1f4ffd84c52@epcms2p6>
+ <1891546521.01617689102000.JavaMail.epsvc@epcpadp3>
+Message-ID: <9b0a9a7770e6dbbee9bba2a991dd6229@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jianqin Xie <xiejianqin@hisilicon.com>
+On 2021-04-06 13:58, Daejun Park wrote:
+> Hi Can Guo,
+>> 
+>> Hi Daejun,
+>> 
+>> On 2021-04-06 12:11, Daejun Park wrote:
+>>> Hi Can Guo,
+>>> 
+>>>> +static ssize_t monitor_enable_store(struct device *dev,
+>>>> +                                    struct device_attribute *attr,
+>>>> +                                    const char *buf, size_t count)
+>>>> +{
+>>>> +        struct ufs_hba *hba = dev_get_drvdata(dev);
+>>>> +        unsigned long value, flags;
+>>>> +
+>>>> +        if (kstrtoul(buf, 0, &value))
+>>>> +                return -EINVAL;
+>>>> +
+>>>> +        value = !!value;
+>>>> +        spin_lock_irqsave(hba->host->host_lock, flags);
+>>>> +        if (value == hba->monitor.enabled)
+>>>> +                goto out_unlock;
+>>>> +
+>>>> +        if (!value) {
+>>>> +                memset(&hba->monitor, 0, sizeof(hba->monitor));
+>>>> +        } else {
+>>>> +                hba->monitor.enabled = true;
+>>>> +                hba->monitor.enabled_ts = ktime_get();
+>>> 
+>>> How about setting lat_max to and lat_min to KTIME_MAX and 0?
+>> 
+>> lat_min is already 0. What is the benefit of setting lat_max to
+>> KTIME_MAX?
+>> 
+>>> I think lat_sum should be 0 at this point.
+>> 
+>> lat_sum is already 0 at this point, what is the problem?
+> 
+> Sorry. I misunderstood about resetting monitor values.
+> 
+>> 
+>>> 
+>>>> +        }
+>>>> +
+>>>> +out_unlock:
+>>>> +        spin_unlock_irqrestore(hba->host->host_lock, flags);
+>>>> +        return count;
+>>>> +}
+>>> 
+>>> 
+>>>> +static void ufshcd_update_monitor(struct ufs_hba *hba, struct
+>>>> ufshcd_lrb *lrbp)
+>>>> +{
+>>>> +        int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
+>>>> +
+>>>> +        if (dir >= 0 && hba->monitor.nr_queued[dir] > 0) {
+>>>> +                struct request *req = lrbp->cmd->request;
+>>>> +                struct ufs_hba_monitor *m = &hba->monitor;
+>>>> +                ktime_t now, inc, lat;
+>>>> +
+>>>> +                now = ktime_get();
+>>> 
+>>> How about using lrbp->compl_time_stamp instead of getting new value?
+>> 
+>> I am expecting "now" keeps increasing and use it to update
+>> m->busy_start_s,
+>> but if I use lrbp->compl_time_stamp to do that, below line ktime_sub()
+>> may
+>> give me an unexpected value as lrbp->compl_time_stamp may be smaller
+>> than
+>> m->busy_start_ts, because the actual requests are not completed by the
+>> device
+>> in the exact same ordering as the bits set in hba->outstanding_tasks,
+>> but driver
+>> is completing them from bit 0 to bit 31 in ascending order.
+> 
+> lrbp->compl_time_stamp is set just before calling 
+> ufshcd_update_monitor().
+> And I don't think it can be negative value, because 
+> ufshcd_send_command()
+> and __ufshcd_transfer_req_compl() are protected by host lock.
+> 
 
-The debugfs snapshot should be executed before the reset occurs to ensure
-that the register contents are saved properly.
+Yes, I replied u in another mail... I will use the compl_time_stamp in 
+next
+version. And later I will add alloc_time_stamp and release_time_stamp to 
+lrbp
+so that we can monitor the overall send/compl path, including hpb_prep() 
+and
+hpb_rsp().
 
-As such, it is incorrect to queue the debugfs dump when running a reset
-as the reset will occur prior to the snapshot work item is handler.
+>> 
+>>> 
+>>>> +                inc = ktime_sub(now, m->busy_start_ts[dir]);
+>>>> +                m->total_busy[dir] = ktime_add(m->total_busy[dir],
+>>>> inc);
+>>>> +                m->nr_sec_rw[dir] += blk_rq_sectors(req);
+>>>> +
+>>>> +                /* Update latencies */
+>>>> +                m->nr_req[dir]++;
+>>>> +                lat = ktime_sub(now, lrbp->issue_time_stamp);
+>>>> +                m->lat_sum[dir] += lat;
+>>>> +                if (m->lat_max[dir] < lat || !m->lat_max[dir])
+>>>> +                        m->lat_max[dir] = lat;
+>>>> +                if (m->lat_min[dir] > lat || !m->lat_min[dir])
+>>>> +                        m->lat_min[dir] = lat;
+>>> 
+>>> This if statement can be shorted, by setting lat_max / lat_min as
+>>> default value.
+>> 
+>> I don't quite get it, can you show me the code sample?
+> 
+> I think " || !m->lat_max[dir]" can be removed.
+> 
+>                 if (m->lat_max[dir] < lat)
+>                         m->lat_max[dir] = lat;
+>                 if (m->lat_min[dir] > lat)
+>                         m->lat_min[dir] = lat;
+> 
 
-Therefore, directly snapshot registers in the reset work handler.
+ From the beginning, lat_min is 0, without "!m->lat_min[dir]", m->lat_min
+will never be updated. Same for lat_max. Meanwhile, !m->lat_min/max will
+be hit only once in each round, which does not hurt.
 
-Signed-off-by: Jianqin Xie <xiejianqin@hisilicon.com>
-Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 28 ++++++++++++++++++--------
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 27 ++++++++++++++-----------
- 3 files changed, 36 insertions(+), 20 deletions(-)
+Thanks,
+Can Guo.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 4dd53bc2d946..cf879cc59e4c 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -346,6 +346,7 @@ struct hisi_sas_hw {
- 				u8 reg_index, u8 reg_count, u8 *write_data);
- 	void (*wait_cmds_complete_timeout)(struct hisi_hba *hisi_hba,
- 					   int delay_ms, int timeout_ms);
-+	void (*debugfs_snapshot_regs)(struct hisi_hba *hisi_hba);
- 	int complete_hdr_size;
- 	struct scsi_host_template *sht;
- };
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 971c45a1401c..4c90d91d47f4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1568,21 +1568,26 @@ void hisi_sas_controller_reset_done(struct hisi_hba *hisi_hba)
- }
- EXPORT_SYMBOL_GPL(hisi_sas_controller_reset_done);
- 
--static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
-+static int hisi_sas_controller_prereset(struct hisi_hba *hisi_hba)
- {
--	struct device *dev = hisi_hba->dev;
--	struct Scsi_Host *shost = hisi_hba->shost;
--	int rc;
--
--	if (hisi_sas_debugfs_enable && hisi_hba->debugfs_itct[0].itct)
--		queue_work(hisi_hba->wq, &hisi_hba->debugfs_work);
--
- 	if (!hisi_hba->hw->soft_reset)
- 		return -1;
- 
- 	if (test_and_set_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags))
- 		return -1;
- 
-+	if (hisi_sas_debugfs_enable && hisi_hba->debugfs_itct[0].itct)
-+		hisi_hba->hw->debugfs_snapshot_regs(hisi_hba);
-+
-+	return 0;
-+}
-+
-+static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
-+{
-+	struct device *dev = hisi_hba->dev;
-+	struct Scsi_Host *shost = hisi_hba->shost;
-+	int rc;
-+
- 	dev_info(dev, "controller resetting...\n");
- 	hisi_sas_controller_reset_prepare(hisi_hba);
- 
-@@ -2471,6 +2476,9 @@ void hisi_sas_rst_work_handler(struct work_struct *work)
- 	struct hisi_hba *hisi_hba =
- 		container_of(work, struct hisi_hba, rst_work);
- 
-+	if (hisi_sas_controller_prereset(hisi_hba))
-+		return;
-+
- 	hisi_sas_controller_reset(hisi_hba);
- }
- EXPORT_SYMBOL_GPL(hisi_sas_rst_work_handler);
-@@ -2480,8 +2488,12 @@ void hisi_sas_sync_rst_work_handler(struct work_struct *work)
- 	struct hisi_sas_rst *rst =
- 		container_of(work, struct hisi_sas_rst, work);
- 
-+	if (hisi_sas_controller_prereset(rst->hisi_hba))
-+		goto rst_complete;
-+
- 	if (!hisi_sas_controller_reset(rst->hisi_hba))
- 		rst->done = true;
-+rst_complete:
- 	complete(rst->completion);
- }
- EXPORT_SYMBOL_GPL(hisi_sas_sync_rst_work_handler);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index d7f8ba0c1680..0927b0b30b29 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -531,6 +531,7 @@ module_param(prot_mask, int, 0);
- MODULE_PARM_DESC(prot_mask, " host protection capabilities mask, def=0x0 ");
- 
- static void debugfs_work_handler_v3_hw(struct work_struct *work);
-+static void debugfs_snapshot_regs_v3_hw(struct hisi_hba *hisi_hba);
- 
- static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
- {
-@@ -3182,6 +3183,7 @@ static const struct hisi_sas_hw hisi_sas_v3_hw = {
- 	.get_events = phy_get_events_v3_hw,
- 	.write_gpio = write_gpio_v3_hw,
- 	.wait_cmds_complete_timeout = wait_cmds_complete_timeout_v3_hw,
-+	.debugfs_snapshot_regs = debugfs_snapshot_regs_v3_hw,
- };
- 
- static struct Scsi_Host *
-@@ -3666,6 +3668,19 @@ static void debugfs_create_files_v3_hw(struct hisi_hba *hisi_hba)
- 
- static void debugfs_snapshot_regs_v3_hw(struct hisi_hba *hisi_hba)
- {
-+	int debugfs_dump_index = hisi_hba->debugfs_dump_index;
-+	struct device *dev = hisi_hba->dev;
-+	u64 timestamp = local_clock();
-+
-+	if (debugfs_dump_index >= hisi_sas_debugfs_dump_count) {
-+		dev_warn(dev, "dump count exceeded!\n");
-+		return;
-+	}
-+
-+	do_div(timestamp, NSEC_PER_MSEC);
-+	hisi_hba->debugfs_timestamp[debugfs_dump_index] = timestamp;
-+	hisi_hba->debugfs_dump_index++;
-+
- 	debugfs_snapshot_prepare_v3_hw(hisi_hba);
- 
- 	debugfs_snapshot_global_reg_v3_hw(hisi_hba);
-@@ -4408,20 +4423,8 @@ static void debugfs_work_handler_v3_hw(struct work_struct *work)
- {
- 	struct hisi_hba *hisi_hba =
- 		container_of(work, struct hisi_hba, debugfs_work);
--	int debugfs_dump_index = hisi_hba->debugfs_dump_index;
--	struct device *dev = hisi_hba->dev;
--	u64 timestamp = local_clock();
--
--	if (debugfs_dump_index >= hisi_sas_debugfs_dump_count) {
--		dev_warn(dev, "dump count exceeded!\n");
--		return;
--	}
--
--	do_div(timestamp, NSEC_PER_MSEC);
--	hisi_hba->debugfs_timestamp[debugfs_dump_index] = timestamp;
- 
- 	debugfs_snapshot_regs_v3_hw(hisi_hba);
--	hisi_hba->debugfs_dump_index++;
- }
- 
- static void debugfs_release_v3_hw(struct hisi_hba *hisi_hba, int dump_index)
--- 
-2.26.2
-
+> Thanks,
+> Daejun
+> 
+>> 
+>> Thanks,
+>> Can Guo
+>> 
+>>> 
+>>>> +
+>>>> +                m->nr_queued[dir]--;
+>>>> +                /* Push forward the busy start of monitor */
+>>>> +                m->busy_start_ts[dir] = now;
+>>>> +        }
+>>>> +}
+>>> 
+>>> Thanks,
+>>> Daejun
