@@ -2,209 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85ED2C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 06:11:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2649C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 15:28:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51289613AF
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 06:11:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B12F661380
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 15:28:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233913AbhDFGLe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Apr 2021 02:11:34 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:10666 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233837AbhDFGLd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 02:11:33 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1617689486; h=Message-ID: References: In-Reply-To: Subject:
- To: From: Date: Content-Transfer-Encoding: Content-Type: MIME-Version:
- Sender; bh=LFtlMeteySqkbg9VW89fzgUU8QYwhiAabX+uMoEasZE=; b=P8Kr2BupSCed3SNnztu9EljebZszNqi6o6XMsOSQIuSK5ToI8PCDPspb1C3CeIc94FO5GWqL
- NalV0Odfeo0jtVZadeSXZziGuEwb7KIh5u3NAOkxoha6sJ4f2sAm/FRQNRJ0QPb56RrueXul
- WTlv+Rgy1vCcXG6+yKGvSl6lFMw=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 606bfb889a9ff96d953862e4 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 06 Apr 2021 06:11:20
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 90874C43468; Tue,  6 Apr 2021 06:11:20 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6920CC433C6;
-        Tue,  6 Apr 2021 06:11:19 +0000 (UTC)
+        id S233168AbhDFP26 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Apr 2021 11:28:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56484 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229648AbhDFP25 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 11:28:57 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A335FC061756
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Apr 2021 08:28:48 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id g15so10693766pfq.3
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Apr 2021 08:28:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=tF6CUcXpDbuAErZj+N46Yk25H9mtpHvG+8qfiMxKbKU=;
+        b=Bn2+6Kr/JILCfY9KCOAIzAHAOAGagzdl2B5myfm9+iNCnlqdBNKLt0Utw/vwFi2BOw
+         +Y/3JeiL3hPpByyQ6U+n158Az5HijEuoMx1kM/9D6tLX4IheCNv3ecUZuGqvqZYwZV4/
+         kOZawMX9OBQ3uj5m6tYiGG21KkIa4IKXFUuUzn+91NMLOtRW76pwvGGdqo+OiCYL8Lrb
+         VW37guDHBJBPpUYMqr9wl5IRGh4AHr7UTLAmD26OPUiYQhXAqkPkydC98zEKISO7wgnH
+         M8JBKFao74fizTutzYEHHQwbBMbGNlLglmLRkG7aANcbDOGcS8G3Q8Sz3DbfZsBl9pZy
+         enBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=tF6CUcXpDbuAErZj+N46Yk25H9mtpHvG+8qfiMxKbKU=;
+        b=IAWPlKPx+FAj0IFQbIpuZlGc9EarA6T4/UsBNftRP0YmjrnfPAy4KWTO1vPF7bMs6F
+         93Sr7gxDmoVdcpk1/JcUaFtpx0B3XSfX9MZZTMYEmi6l390L9XVHxAlrxhbXJRz1Scd1
+         u/zXr8pBy2cG28or8xe5pnMo8cIVzEI8uGyxA0hOP0dcCKIqE39rjdeo5JO9uYyOH/wF
+         zA05rI4d/RQvd0bsu7JzhGqmGwWFJsvQcVBJjPRFSyedSahiB/V8tK7yGv5P0B1dsl0w
+         z6veqD3Jd3cADULKxhi6hdbFxd5Xqbw4DFg+PLOEh98dGLxBe4Bl/jJEBUaTFQOME2Ig
+         4ubw==
+X-Gm-Message-State: AOAM531TclcBiG/a7YA3c01CMmT1b+u49gqzCY7OBjFWLUQ9k3jpnBjh
+        nTtrtsykljMPvgs0QMG/hMQ86891I96oNg==
+X-Google-Smtp-Source: ABdhPJx2qHg/FttuBAn2osLaKJ1OJTMxTAM4fMtZXL0k+4IEXtlKOhbPcpdi1h48369ylF8Q/VFQAw==
+X-Received: by 2002:a63:e63:: with SMTP id 35mr27016911pgo.27.1617722927995;
+        Tue, 06 Apr 2021 08:28:47 -0700 (PDT)
+Received: from [192.168.4.41] (cpe-72-132-29-68.dc.res.rr.com. [72.132.29.68])
+        by smtp.gmail.com with ESMTPSA id h7sm19254868pfo.45.2021.04.06.08.28.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 06 Apr 2021 08:28:47 -0700 (PDT)
+Subject: Re: start removing block bounce buffering support v3
+To:     Christoph Hellwig <hch@lst.de>,
+        Khalid Aziz <khalid@gonehiking.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hannes Reinecke <hare@suse.com>,
+        Ondrej Zary <linux@rainbow-software.org>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20210331073001.46776-1-hch@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <11664576-758d-7e8e-bf95-ff9c82cab927@kernel.dk>
+Date:   Tue, 6 Apr 2021 09:28:48 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+In-Reply-To: <20210331073001.46776-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-Date:   Tue, 06 Apr 2021 14:11:19 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     undisclosed-recipients:;
-Subject: Re: [PATCH 1/2] scsi: ufs: Introduce hba performance monitor sysfs
- nodes
-In-Reply-To: <1891546521.01617689102000.JavaMail.epsvc@epcpadp3>
-References: <e29c3fa0d5ecfd8eb386432008f24e8c@codeaurora.org>
- <1617257704-1154-2-git-send-email-cang@codeaurora.org>
- <1617257704-1154-1-git-send-email-cang@codeaurora.org>
- <1891546521.01617683881598.JavaMail.epsvc@epcpadp4>
- <CGME20210401061611epcas2p279c9303e0e0bf4e2bc5eb1f4ffd84c52@epcms2p6>
- <1891546521.01617689102000.JavaMail.epsvc@epcpadp3>
-Message-ID: <9b0a9a7770e6dbbee9bba2a991dd6229@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-04-06 13:58, Daejun Park wrote:
-> Hi Can Guo,
->> 
->> Hi Daejun,
->> 
->> On 2021-04-06 12:11, Daejun Park wrote:
->>> Hi Can Guo,
->>> 
->>>> +static ssize_t monitor_enable_store(struct device *dev,
->>>> +                                    struct device_attribute *attr,
->>>> +                                    const char *buf, size_t count)
->>>> +{
->>>> +        struct ufs_hba *hba = dev_get_drvdata(dev);
->>>> +        unsigned long value, flags;
->>>> +
->>>> +        if (kstrtoul(buf, 0, &value))
->>>> +                return -EINVAL;
->>>> +
->>>> +        value = !!value;
->>>> +        spin_lock_irqsave(hba->host->host_lock, flags);
->>>> +        if (value == hba->monitor.enabled)
->>>> +                goto out_unlock;
->>>> +
->>>> +        if (!value) {
->>>> +                memset(&hba->monitor, 0, sizeof(hba->monitor));
->>>> +        } else {
->>>> +                hba->monitor.enabled = true;
->>>> +                hba->monitor.enabled_ts = ktime_get();
->>> 
->>> How about setting lat_max to and lat_min to KTIME_MAX and 0?
->> 
->> lat_min is already 0. What is the benefit of setting lat_max to
->> KTIME_MAX?
->> 
->>> I think lat_sum should be 0 at this point.
->> 
->> lat_sum is already 0 at this point, what is the problem?
+On 3/31/21 1:29 AM, Christoph Hellwig wrote:
+> Hi all,
 > 
-> Sorry. I misunderstood about resetting monitor values.
+> this series starts to clean up and remove the impact of the legacy old
+> block layer bounce buffering code.
 > 
->> 
->>> 
->>>> +        }
->>>> +
->>>> +out_unlock:
->>>> +        spin_unlock_irqrestore(hba->host->host_lock, flags);
->>>> +        return count;
->>>> +}
->>> 
->>> 
->>>> +static void ufshcd_update_monitor(struct ufs_hba *hba, struct
->>>> ufshcd_lrb *lrbp)
->>>> +{
->>>> +        int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
->>>> +
->>>> +        if (dir >= 0 && hba->monitor.nr_queued[dir] > 0) {
->>>> +                struct request *req = lrbp->cmd->request;
->>>> +                struct ufs_hba_monitor *m = &hba->monitor;
->>>> +                ktime_t now, inc, lat;
->>>> +
->>>> +                now = ktime_get();
->>> 
->>> How about using lrbp->compl_time_stamp instead of getting new value?
->> 
->> I am expecting "now" keeps increasing and use it to update
->> m->busy_start_s,
->> but if I use lrbp->compl_time_stamp to do that, below line ktime_sub()
->> may
->> give me an unexpected value as lrbp->compl_time_stamp may be smaller
->> than
->> m->busy_start_ts, because the actual requests are not completed by the
->> device
->> in the exact same ordering as the bits set in hba->outstanding_tasks,
->> but driver
->> is completing them from bit 0 to bit 31 in ascending order.
+> First it removes support for ISA bouncing.  This was used by three SCSI
+> drivers.  One of them actually had an active user and developer 5 years
+> ago so I've converted it to use a local bounce buffer - Ondrej, can you
+> test the coversion?  The next one has been known broken for years, and
+> the third one looks like it has no users for the ISA support so they
+> are just dropped.
 > 
-> lrbp->compl_time_stamp is set just before calling 
-> ufshcd_update_monitor().
-> And I don't think it can be negative value, because 
-> ufshcd_send_command()
-> and __ufshcd_transfer_req_compl() are protected by host lock.
-> 
+> It then removes support for dealing with bounce buffering highmem pages
+> for passthrough requests as we can just use the copy instead of the map
+> path for them.  This will reduce efficiency for such setups on highmem
+> systems (e.g. usb-storage attached DVD drives), but then again that is
+> what you get for using a driver not using modern interfaces on a 32-bit
+> highmem system.  It does allow to streamline the common path pretty nicely.
 
-Yes, I replied u in another mail... I will use the compl_time_stamp in 
-next
-version. And later I will add alloc_time_stamp and release_time_stamp to 
-lrbp
-so that we can monitor the overall send/compl path, including hpb_prep() 
-and
-hpb_rsp().
+Applied, thanks.
 
->> 
->>> 
->>>> +                inc = ktime_sub(now, m->busy_start_ts[dir]);
->>>> +                m->total_busy[dir] = ktime_add(m->total_busy[dir],
->>>> inc);
->>>> +                m->nr_sec_rw[dir] += blk_rq_sectors(req);
->>>> +
->>>> +                /* Update latencies */
->>>> +                m->nr_req[dir]++;
->>>> +                lat = ktime_sub(now, lrbp->issue_time_stamp);
->>>> +                m->lat_sum[dir] += lat;
->>>> +                if (m->lat_max[dir] < lat || !m->lat_max[dir])
->>>> +                        m->lat_max[dir] = lat;
->>>> +                if (m->lat_min[dir] > lat || !m->lat_min[dir])
->>>> +                        m->lat_min[dir] = lat;
->>> 
->>> This if statement can be shorted, by setting lat_max / lat_min as
->>> default value.
->> 
->> I don't quite get it, can you show me the code sample?
-> 
-> I think " || !m->lat_max[dir]" can be removed.
-> 
->                 if (m->lat_max[dir] < lat)
->                         m->lat_max[dir] = lat;
->                 if (m->lat_min[dir] > lat)
->                         m->lat_min[dir] = lat;
-> 
+-- 
+Jens Axboe
 
- From the beginning, lat_min is 0, without "!m->lat_min[dir]", m->lat_min
-will never be updated. Same for lat_max. Meanwhile, !m->lat_min/max will
-be hit only once in each round, which does not hurt.
-
-Thanks,
-Can Guo.
-
-> Thanks,
-> Daejun
-> 
->> 
->> Thanks,
->> Can Guo
->> 
->>> 
->>>> +
->>>> +                m->nr_queued[dir]--;
->>>> +                /* Push forward the busy start of monitor */
->>>> +                m->busy_start_ts[dir] = now;
->>>> +        }
->>>> +}
->>> 
->>> Thanks,
->>> Daejun
