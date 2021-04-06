@@ -2,99 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF2BC433B4
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 09:03:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F0C0C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 10:18:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40DAF613C2
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 09:03:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 186A6613BD
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 10:18:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240836AbhDFJDs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Apr 2021 05:03:48 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:15491 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240559AbhDFJDr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 05:03:47 -0400
-Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4FF1jN2wxyzrd4Z;
-        Tue,  6 Apr 2021 17:01:28 +0800 (CST)
-Received: from [10.174.179.174] (10.174.179.174) by
- DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
- 14.3.498.0; Tue, 6 Apr 2021 17:03:33 +0800
-Subject: Re: [RFC PATCH] scsi: megaraid_sas: set msix index for
- NON_READ_WRITE_LDIO type cmd
-To:     <kashyap.desai@broadcom.com>, <sumit.saxena@broadcom.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <megaraidlinux.pdl@broadcom.com>, <linux-scsi@vger.kernel.org>
-References: <20210325084247.4136519-1-yuyufen@huawei.com>
-From:   Yufen Yu <yuyufen@huawei.com>
-Message-ID: <fe977858-91a3-51e3-f90e-d2ec878499df@huawei.com>
-Date:   Tue, 6 Apr 2021 17:03:33 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.1
+        id S236193AbhDFKSk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Apr 2021 06:18:40 -0400
+Received: from gateway22.websitewelcome.com ([192.185.46.229]:44444 "EHLO
+        gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235980AbhDFKSk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 06:18:40 -0400
+Received: from cm12.websitewelcome.com (cm12.websitewelcome.com [100.42.49.8])
+        by gateway22.websitewelcome.com (Postfix) with ESMTP id E03EE2996F
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Apr 2021 04:58:21 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id TiTVlbQae1cHeTiTVlw8CD; Tue, 06 Apr 2021 04:58:21 -0500
+X-Authority-Reason: nr=8
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=IzX4cfcD3Tvkceqwxmn15aHQjEVS0LM4NuODycgrcRc=; b=CfuDp3DThsr1ONZhKaEbg5gMUV
+        POcXAFzPlHfMbaky6nNSQoi5IhqTFz2EpvJphGf04kifcK/rAQmbv9tHGX+yIop4DExpqcvnRsIMh
+        ca4XAHWdeouVltU/t5rmvBpeqaxbuDP9q/zwoDZt1ro0vffGScxvMNUHpVLbUyb/9g96+cdK/46QR
+        o+za4txpmLA4k+SS8uLovSWV5QX5uKx21jbcEgRAhsi3X6sUzt9K8+WEECTAIMFTDMB6Uwvs7AwN1
+        bz0JtUp85sXn3Kn83F2H8BsOn7+6kED17a8RpIhX+9ccLFL6hXJmDGqR+TGsLMlIFqvxWWPsXdfc2
+        fYdpvQIw==;
+Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:43894 helo=[192.168.15.8])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.93)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1lTiTU-000uuI-Rb; Tue, 06 Apr 2021 04:58:21 -0500
+Subject: Re: [PATCH][next] scsi: mptlan: Replace one-element array with
+ flexible-array member
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
+References: <20210324233344.GA99059@embeddedor>
+ <161768454092.32082.2593948568576658600.b4-ty@oracle.com>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-ID: <b1354342-e9c9-5fea-ab50-e996fb790a5f@embeddedor.com>
+Date:   Tue, 6 Apr 2021 04:58:21 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
-In-Reply-To: <20210325084247.4136519-1-yuyufen@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <161768454092.32082.2593948568576658600.b4-ty@oracle.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.174]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.31.110
+X-Source-L: No
+X-Exim-ID: 1lTiTU-000uuI-Rb
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.8]) [187.162.31.110]:43894
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 6
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-gentle ping.
-Any suggestion are welcome.
+Hi Martin,
 
-Thanks,
-Yufen
+On 4/5/21 23:53, Martin K. Petersen wrote:
+> On Wed, 24 Mar 2021 18:33:44 -0500, Gustavo A. R. Silva wrote:
+> 
+>> There is a regular need in the kernel to provide a way to declare having
+>> a dynamically sized set of trailing elements in a structure. Kernel code
+>> should always use “flexible array members”[1] for these cases. The older
+>> style of one-element or zero-length arrays should no longer be used[2].
+>>
+>> Refactor the code according to the use of a flexible-array member in
+>> struct _SGE_TRANSACTION32 instead of one-element array.
+>>
+>> [...]
+> 
+> Applied to 5.13/scsi-queue, thanks!
+> 
+> [1/1] scsi: mptlan: Replace one-element array with flexible-array member
+>       https://git.kernel.org/mkp/scsi/c/4e2e619f3c9e
+> 
 
+Thanks for this.
 
+Could you apply this one, too:
+https://lore.kernel.org/lkml/20210304203822.GA102218@embeddedor/
 
-On 2021/3/25 16:42, Yufen Yu wrote:
-> Before commit 132147d7f620 ("scsi: megaraid_sas: Add support for
-> High IOPS queues"), all interrupt of megaraid_sas is managed when
-> smp_affinity_enable for misx_enable. The mapping between vectors and
-> cpus for a 128 vectors likely:
->      vector0 maps to cpu0
->      vector1 maps to cpu1
->      ...
-> If cpu0 is offline, vector0 cannot handle any io.
-> 
-> For now, we have not pointed msix index in megasas_build_ld_nonrw_fusion().
-> The default value of index is '0'. So, cmd like TEST_UNIT_READY will hung
-> forever after cpu0 offline. We can simplely reproduce by:
-> 
->      echo 0 > /sys/devices/system/cpu/cpu0/online
->      sg_turs /dev/sda # hung
-> 
-> After commit 132147d7f620, low_latency_index_start is set as 1 (not sure
-> for all scenario), then vector 0 is not managed. Thus, io issue to vector0
-> can be handled by other cpus after cpu0 offline.
-> 
-> Nevertheless, we may also conside to set msix index rather than default 0
-> in megasas_build_ld_nonrw_fusion().
-> 
-> Signed-off-by: Yufen Yu <yuyufen@huawei.com>
-> ---
->   drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 ++
->   1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> index 38fc9467c625..ddc6176f12c4 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -3021,6 +3021,8 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
->   		io_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
->   		io_request->DevHandle = devHandle;
->   	}
-> +
-> +	megasas_get_msix_index(instance, scmd, cmd, 1);
->   }
->   
->   /**
-> 
+This was my last reply to the thread:
+https://lore.kernel.org/lkml/d79bde59-16c5-e006-0e31-c33c17f0ce3d@embeddedor.com/
+
+Thanks!
+--
+Gustavo
