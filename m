@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A373C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 08:14:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12578C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 08:17:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 512E6613C0
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 08:14:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D18D4613C2
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 08:17:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233151AbhDFIOy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Apr 2021 04:14:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45428 "EHLO
+        id S232355AbhDFIRZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Apr 2021 04:17:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232131AbhDFIOx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 04:14:53 -0400
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED13BC06174A
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Apr 2021 01:14:45 -0700 (PDT)
-Received: by mail-ed1-x533.google.com with SMTP id r22so2938937edq.9
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Apr 2021 01:14:45 -0700 (PDT)
+        with ESMTP id S232032AbhDFIRZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 04:17:25 -0400
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93A27C06174A
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Apr 2021 01:17:17 -0700 (PDT)
+Received: by mail-ej1-x632.google.com with SMTP id u21so20475732ejo.13
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Apr 2021 01:17:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=/oodTGUtpjR9mn81/E+2ZbAmaXggnMVC/khZLuyk4Kc=;
-        b=eTyZ7t7dO6B0EVW+hTkH6qJwZe1ayiq2R10CRgldfWbqD+S0knb+eP+hBA8TIzMEde
-         J6HJofHWqw+F7MKopXMg+wpEAG0DuMwZO4f9vbwnGwH7ycDUmb+/lMTzQ7AV6/VYADLi
-         MsEswzJfJTwNHihMVcz0CgvDkyg+SrfdsKDFzKLB/YVue7auoam5QdhL2+xDzXtGiFk2
-         Ki8H5bMA1DhdxLufLhdadpy9zbkrzOC/I/pd0TEjoA1MViEcU0ZDY1zTdJ44h2p8cyZH
-         xdnQPunGNqwHNaT20vb5FZZxbbzZushJ3f56bPZlt9pfwigYbwX7DquS5y9PR0abQFJm
-         3vCQ==
+        bh=xe3AzWmGnx/z1TKnpdZ61665fXMzlDZOAaprwaVmFcs=;
+        b=fzPGV5Nko2inRgX0zUsHlxNhQE3/aR/j4jM4YRaQJEAG5Dh1+QpAw59NRnqJdbkBua
+         VdmeFzdcXG0HzHZBXjE356tuRZEyBTofK5CZ18j2H6mfHmgTJ9dSUleenB+Da/0fBM1g
+         YBizGz1NAj0nNOPqtUwWuTncDvNIZvBPiP0FkH92uOIk18b0Qh3CwOY5PrUchqkYB6z0
+         VVEYeeistNCv7D2gxI2xr7OhM5t+OhN/VIvjPb+Fp39HSVmRkoZb7qFg2OB2E+MxTOn3
+         dK/7m8e7E/DCmFY14tgip7PwkNw6tFuu+Aogp/hDXFqvqPDDdqSBLLTWjhdz3dImYWPu
+         0EMA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=/oodTGUtpjR9mn81/E+2ZbAmaXggnMVC/khZLuyk4Kc=;
-        b=l5hFsqz5ILorcWmPDZ8ZNFolwQP98rkE7EmkzZfxpApv8kEr//6/7m/YSpmR4LqDs5
-         zePgAcyH2EvLLGGhzuFo1nVZoZCU1o4RsQsD3EbfSj+Uqzz3EH71b9PA0wwFZ8fTJtJJ
-         xMJDJBoIyNnq4NSsLAg+bYLAIFOqD1ollSt6ViBcddmueIoPMCeLAQO6VRYBpNZZp//b
-         ZNvsopxWLy6+w8QrJZk6PjlfxxWP2K9ocPb1IIJCNxU3CjzDn23YjfRblv6CFP4YUKZr
-         s/VwqOdyUWoh5wTzDrX4d4jonZiPg/lSTtlU/y3P+KLId5g1OwgZ42r0gIGT+2kbYvnj
-         35vA==
-X-Gm-Message-State: AOAM532Vk530yD+7x1bqcLmo4sYFACY46uQyQHEWZ881CRPD1QoenXVB
-        +3CBeBvyFX8fXd4wcmsC/Oha8XYlUFulpxsYg/SUyA==
-X-Google-Smtp-Source: ABdhPJwWb6ukMrVR2vs5plsyX4cfpr/cZ7indMvlVZco1OtcF0JytdBcrIuJvUGDFOCAeZUF79WfIlQcxzktXvShe10=
-X-Received: by 2002:a05:6402:447:: with SMTP id p7mr36274594edw.89.1617696884700;
- Tue, 06 Apr 2021 01:14:44 -0700 (PDT)
+        bh=xe3AzWmGnx/z1TKnpdZ61665fXMzlDZOAaprwaVmFcs=;
+        b=geTvvPjhAxc62Tkp73HEpyJCEUd8zvQc1uojrbZDxpJIzQuF3G6FIKYsj88+aeFRxu
+         hxgMOIB2o8t9m2pkcAhixFh2YLsqoXWTrSOvRADVj1ppojagpPD8S3p3POc0xVNMFX55
+         RxwRN7EM5lwlP2Su8QOQq/3OfRkNSnlpXCRmMM+L8mCT7NNc1aq2e1xC4oZHat7Eo9L3
+         FK8lR5x/8iUpoYKPjVoDR4Y2zF8uF8DI5y2z8v2c9QXSoeq5Nj9G9XD9P97tcLSgarrY
+         kULehsnKHL9uYlFqGsc073J4ffK1gJkD15/zzkNPeNNfXbcSWk5yJ4yAkCarZqi4AdRn
+         kAYA==
+X-Gm-Message-State: AOAM533tRuw9Jx9TUMeC509M8N1spsAxOBK4z2LHBdaHn3olJHnI2FJY
+        dJEi7n+j6XXw1BqtzEclc+rv8kRjfdq8rczefD7DVw==
+X-Google-Smtp-Source: ABdhPJzM2HMrpkpQaynvrx3o++wChaHZlmrLcFxgIV8Ppe8LCBRXpFIkDyrNJDz2ftpwtLsMD0IaByb/00UspVSDFlw=
+X-Received: by 2002:a17:906:d8a3:: with SMTP id qc3mr10407639ejb.353.1617697036323;
+ Tue, 06 Apr 2021 01:17:16 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210329183639.1674307-1-ipylypiv@google.com> <20210329183639.1674307-2-ipylypiv@google.com>
-In-Reply-To: <20210329183639.1674307-2-ipylypiv@google.com>
+References: <20210329183639.1674307-1-ipylypiv@google.com> <20210329183639.1674307-3-ipylypiv@google.com>
+In-Reply-To: <20210329183639.1674307-3-ipylypiv@google.com>
 From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Tue, 6 Apr 2021 10:14:34 +0200
-Message-ID: <CAMGffEkBX65d2w5OZ3=FWj+HnZe1WOqRpWkiEQdn3LuWNasCiQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] scsi: pm80xx: Increase timeout for pm80xx mpi_uninit_check()
+Date:   Tue, 6 Apr 2021 10:17:05 +0200
+Message-ID: <CAMGffEmTO0QPx1JECeGxj86y12nJz=HGxtLXe=N2kNU5aHjqhQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] scsi: pm80xx: Remove busy wait from mpi_uninit_check()
 To:     Igor Pylypiv <ipylypiv@google.com>
 Cc:     Jack Wang <jinpu.wang@cloud.ionos.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -75,41 +75,58 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Mon, Mar 29, 2021 at 8:37 PM Igor Pylypiv <ipylypiv@google.com> wrote:
 >
-> The mpi_uninit_check() takes longer for inbound doorbell register to be
-> cleared. Increased the timeout substantially so that the driver does not
-> fail to load.
+> mpi_uninit_check() is not being called in an ATOMIC context.
+> The only caller of mpi_uninit_check() is pm80xx_chip_soft_rst().
 >
-> Previously, the inbound doorbell wait time was mistakenly increased in
-> the mpi_init_check() instead of the mpi_uninit_check(). It is okay to
-> leave the mpi_init_check() wait time as is as these are timeout values
-> and if there is a failure, waiting longer is not an issue.
+> Callers of pm80xx_chip_soft_rst():
+>  - pm8001_ioctl_soft_reset()
+>  - pm8001_pci_probe()
+>  - pm8001_pci_remove()
+>  - pm8001_pci_suspend()
+>  - pm8001_pci_resume()
 >
-> Fixes: e90e236250e9 ("scsi: pm80xx: Increase timeout for pm80xx
-> mpi_uninit_check")
+> There was a similar fix for mpi_init_check() in commit d71023af4bec0
+> ("scsi: pm80xx: Do not busy wait in MPI init check").
+>
 > Reviewed-by: Vishakha Channapattan <vishakhavc@google.com>
 > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-looks ok to me!
 Acked-by: Jack Wang <jinpu.wang@ionos.com>
 > ---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
 >
 > diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 84315560e8e1..a6f65666c98e 100644
+> index a6f65666c98e..9fade2ed9396 100644
 > --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 > +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -1502,9 +1502,9 @@ static int mpi_uninit_check(struct pm8001_hba_info *pm8001_ha)
+> @@ -1502,12 +1502,12 @@ static int mpi_uninit_check(struct pm8001_hba_info *pm8001_ha)
 >
 >         /* wait until Inbound DoorBell Clear Register toggled */
 >         if (IS_SPCV_12G(pm8001_ha->pdev)) {
-> -               max_wait_count = 4 * 1000 * 1000;/* 4 sec */
-> +               max_wait_count = (30 * 1000 * 1000) /* 30 sec */
+> -               max_wait_count = (30 * 1000 * 1000) /* 30 sec */
+> +               max_wait_count = SPCV_DOORBELL_CLEAR_TIMEOUT;
 >         } else {
-> -               max_wait_count = 2 * 1000 * 1000;/* 2 sec */
-> +               max_wait_count = (15 * 1000 * 1000) /* 15 sec */
+> -               max_wait_count = (15 * 1000 * 1000) /* 15 sec */
+> +               max_wait_count = SPC_DOORBELL_CLEAR_TIMEOUT;
 >         }
 >         do {
->                 udelay(1);
+> -               udelay(1);
+> +               msleep(FW_READY_INTERVAL);
+>                 value = pm8001_cr32(pm8001_ha, 0, MSGU_IBDB_SET);
+>                 value &= SPCv_MSGU_CFG_TABLE_RESET;
+>         } while ((value != 0) && (--max_wait_count));
+> @@ -1519,9 +1519,9 @@ static int mpi_uninit_check(struct pm8001_hba_info *pm8001_ha)
+>
+>         /* check the MPI-State for termination in progress */
+>         /* wait until Inbound DoorBell Clear Register toggled */
+> -       max_wait_count = 2 * 1000 * 1000;       /* 2 sec for spcv/ve */
+> +       max_wait_count = 100; /* 2 sec for spcv/ve */
+>         do {
+> -               udelay(1);
+> +               msleep(FW_READY_INTERVAL);
+>                 gst_len_mpistate =
+>                         pm8001_mr32(pm8001_ha->general_stat_tbl_addr,
+>                         GST_GSTLEN_MPIS_OFFSET);
 > --
 > 2.31.0.291.g576ba9dcdaf-goog
 >
