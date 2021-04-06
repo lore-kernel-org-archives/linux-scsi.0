@@ -2,175 +2,221 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB43C433B4
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 04:53:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4BBBC433ED
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 04:53:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7578613E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 04:53:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B1919613B8
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 04:53:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243613AbhDFExH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Apr 2021 00:53:07 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:52740 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242515AbhDFExG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 00:53:06 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1364oatC076370;
-        Tue, 6 Apr 2021 04:52:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : content-type :
- content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=eETOmGz2rRCw9BE5xtPMNQ0/xCsuKK1xXVq0cnwiA0Q=;
- b=uZ4ILxkOFxiAKsOsl5nsLmc95IdXBSkIDsyrb+fCPVhfq0n5yTD010wfvIA1KRRW92xN
- 1YUylK+YX7AF3URggT1WhTI9yFynrD2NSrrPQda5oaTJ0bbuQjTj599EMDW5yTU9mssF
- wrG0etEK1YzQVt2sDb3CoXhOMvOqx3rH8OGPMWT4obTBt2EftJ1OwpLPZNNdZxWnE43D
- FyXiZTB9ufwD0rrvtB5PlceUiuX9kwixz96CHxE97HhVy927gXr/3CqoVlFY1/VP28D/
- cxoieuP6m5vekXXZtBkWiw7KbyctrJvVFkjvm5mO/uncsTfm34ir8AwBv2L8pZUegYqM /g== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 37qfuxbbtf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 06 Apr 2021 04:52:44 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1364nrJx099499;
-        Tue, 6 Apr 2021 04:52:44 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2172.outbound.protection.outlook.com [104.47.55.172])
-        by userp3030.oracle.com with ESMTP id 37qa3hx8kx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 06 Apr 2021 04:52:43 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IBXYktLUH7p5JHmdFblT9I8FkpD6s66lKw2Bg0c7aPlVUpDBfNBZohjOeTEm1YLcmEymARXWWXsZrCMjFyhqF6+KTKO8ziP5WVhcb+fYBeBB7Fry0wV/1nD8c6lwKOFVtr3MyDfblrdzVD49zk9csBodS5qN5t1jO5xcdr4WbaOVSwlABg6laeJAYpC0/Xv70lUS9U09bmad1JS/gpjKxTVU5w1myfJhbePPQZDNw5sXN3D2Bq5LR6JOs89UpU1tmI6fxtN62wzEv+4D2OtsRiM+WywrAj5GOjDR+W/OlKGTo8raZaAkGpViEtXlsXchRzuQfvgXaS/srhzrp0h7pQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eETOmGz2rRCw9BE5xtPMNQ0/xCsuKK1xXVq0cnwiA0Q=;
- b=GQ1fLVIT7pRyn7F85DHAC5QQYbj1JBlp3ML7RA438+j6VHhryx4+0fDqrSxj+wBIOZArXMNZYcYppasviHuZxNnrzM1+/0rYy2nWPE5jakeIpWAH5qzeAYltuPbgEXkUrjGNFqT5/A1iLNebaLVjY8tDIOFAwZTn+J8K22trHFEsgi34mdzvLsiOHbHkJpgY5R1g0bq2Dp8SW8/DgpamzLgJA5aON/uvAO+lLsYKQ79IFYVOf8llE7qoMqkiGRdn6mZMuVbESQCNbSqY5+/CDUZl1s+xQmYJqgSnyIrjN4L2S32/MeAD3uaD12gavQNE6uL7/fw5B+nuk9aA7i1VZg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eETOmGz2rRCw9BE5xtPMNQ0/xCsuKK1xXVq0cnwiA0Q=;
- b=zhd2TVNSprZwWp4687P22mYj7nPTeZ1n7nPVPMa8i1SPy9QSOfeDNmVVXkxxarysIswJZG6hNXVHe2NWCWXxY+eO1Mk83EjxiWmfhgYz6m5nuMrAn8BqoWwuMbjn1iugRohkckH7lQeNCwERDVFONUAQ12FuDBFSUWNBzNfM+50=
-Authentication-Results: microchip.com.com; dkim=none (message not signed)
- header.d=none;microchip.com.com; dmarc=none action=none
- header.from=oracle.com;
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH0PR10MB4407.namprd10.prod.outlook.com (2603:10b6:510:31::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3999.27; Tue, 6 Apr
- 2021 04:52:42 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::dc39:c9fa:7365:8c8e]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::dc39:c9fa:7365:8c8e%5]) with mapi id 15.20.3999.032; Tue, 6 Apr 2021
- 04:52:42 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Viswas G <Viswas.G@microchip.com.com>, linux-scsi@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Viswas.G@microchip.com, Vasanthalakshmi.Tharmarajan@microchip.com,
-        Ash Izat <ash@ai0.uk>, Jinpu Wang <jinpu.wang@cloud.ionos.com>,
-        stable@vger.kernel.org
-Subject: Re: [PATCH 1/1] pm80xx: Fix chip initialization failure
-Date:   Tue,  6 Apr 2021 00:52:35 -0400
-Message-Id: <161768453466.32039.5842026607462396914.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210402054212.17834-1-Viswas.G@microchip.com.com>
-References: <20210402054212.17834-1-Viswas.G@microchip.com.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [138.3.201.9]
-X-ClientProxiedBy: SJ0PR13CA0058.namprd13.prod.outlook.com
- (2603:10b6:a03:2c2::33) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        id S243638AbhDFExk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Apr 2021 00:53:40 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:48050 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242526AbhDFExj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 00:53:39 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1617684812; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=szNNeiCS/kTAolvAUSHi359xelGhpdkFDg5SZbfmdC0=;
+ b=hkgKNvZP/iwjHyOAonZ6sVSSdqd6yW1y+is61YPlef6jJvdqxsOc4xzvWIR0LxT/v9uNzrgm
+ TBIfIctkv0m2OKSSXMrmfdaWnqxrZ6wHLhmDxbKSQqiVdb1yZZGL80/V3/f7DuM7I6t9vw1x
+ UGLxgkJFlfU+FAy0B9hq/GwFWSg=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
+ 606be94c03cfff3452a817aa (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 06 Apr 2021 04:53:32
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 6A1E3C433ED; Tue,  6 Apr 2021 04:53:31 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D918DC433CA;
+        Tue,  6 Apr 2021 04:53:29 +0000 (UTC)
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from ca-mkp.mkp.ca.oracle.com (138.3.201.9) by SJ0PR13CA0058.namprd13.prod.outlook.com (2603:10b6:a03:2c2::33) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.9 via Frontend Transport; Tue, 6 Apr 2021 04:52:40 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 46259c3f-b96c-4c26-2c02-08d8f8b7cf8e
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4407:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <PH0PR10MB440761C9727A1B17233073058E769@PH0PR10MB4407.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:3276;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 97WuF0qgMyDYOEqMdZ35rTDQRJfvjXlc2cQghRdsKOwgNOoJRGxg5OgWnFGpAjQtXCf+vMLDepOfCrbDeLM4B70WKWIhG71kyQ+QCjft7Cv/4pe55y3aeTZ68l4+/4yi/eB0aCYEAjmsnTTx6s5J6BSiEmRFckGMiovIO6BptBrekImr73oYp3CkcHFpUXlGvBKQbq2wPppeTS2b/B1wO82sk37JGxvY1ABzdFvkicWKqih3UdoiuFG5LJRzVRV/LfhLPWIpnK/f8byyAx1FB2gIfW+nbNdrLJRaEItpg1X+UlxogLyOnjITiOA2duo3JSQqOd726piBZOmkakhpkdb5+z2T6DmY0EBdJW4CCHdemDC/pO2fEYG6EE9AjLXtO4STGEHNsUMv8LEl1kYCCw7qq0XAK3EkOA1UJS0lBg3sUx3WhdC2vyR1oQyhhd+HUgBbOzsQ7dZzGpt628JRkm5ewsR5/0+SBSDxEqNz0BDqWO160qZXCFaaWkxkOn5yCcnnUrtzQqeR4RX0ETjd6l1Hyc8yTg03YjIqz3ftvkWPZ5qS/poD6sDqpDf83voHcGCfo21Ho42Jaz4Y8Fq4exYjSgcR6WV89vicb5H3olBBKHWtSIfz1iyGWjxgwj9UjNKhOXmyz0+gvGMCYFtC7XiijD9erFu9LI2Uv1x1VSobR7cXLVfAu0tzWadwKwL+6bUrb2LFPGwZmEETpIyDx9WY1WBuUfiiQ0xI1Yf5aXb1vdFpa5/oCm/dxewQiD2mMV3nIxIST8nWzPGLjrU/9Q==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(39860400002)(346002)(376002)(366004)(396003)(136003)(52116002)(8936002)(6486002)(7696005)(66946007)(66476007)(186003)(478600001)(86362001)(966005)(8676002)(4326008)(66556008)(956004)(2616005)(6666004)(26005)(16526019)(4744005)(36756003)(316002)(2906002)(38100700001)(103116003)(54906003)(5660300002)(83380400001)(38350700001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?QlR0OGN0ZXFOYzRoWnJURDVoTlVqamJVS3Q1NXFMVlp0K3hKTmtKMmdiQ0hZ?=
- =?utf-8?B?R0FsbldOQVhGQUJvdnlRQ3d2VC9FSjBIaWNSNURkQjlTZ2ZpSUdYRWJ3a3Jw?=
- =?utf-8?B?NnZkckVPMWpkUnp4TlZVaEZMYW5OQit1blZMbm14WWRjcHd3cUhpZ3lIRm9W?=
- =?utf-8?B?ZGdKWTFiUnZFeVczNDRvQkJBeDNESHVZbDBNZUdYRDRaK0lqTloySUxCRi92?=
- =?utf-8?B?L0orWUcvRkI4bTBOTUh1NUVYR3FtY1FBdzF0Y2FuN3NlakNCYTBTT0xkNFNB?=
- =?utf-8?B?Y0RHcmFxVlJzVFljaEdCUVU2ZHk4Nml5MnZ6WHcrd3RlV1VqbDVkczZURTAr?=
- =?utf-8?B?d0tVYk1KcDZkYWt2VzlBdHR3ZDZuM0s0c0RSSERXTFpMc25NbzU2K2JGZU91?=
- =?utf-8?B?ZHVCdHY2TWhQK2NiS2g4K29ZMkdDK3Z5czEwRnhDWVZkejlHREYwOVZtK3Rn?=
- =?utf-8?B?ZTRZZkNBTEVRTEU4UmNldzJmVUUzaFUvUExFcFRiU1lKeEUwV1c1ZktBTmJr?=
- =?utf-8?B?d3EvL3plRlhhWjlkS2l6M3lPRGIwZDRZZVBwSGhjbWdjUDUvalEwSGxHR3hj?=
- =?utf-8?B?UFB0TnRiKzJwNWs1TG9mNzAxRnhId3ptZjJhb1NFQThpaExuM3hVMjRibGZ5?=
- =?utf-8?B?aHgyUXVjc001cER2Tm95dFF1UGk0ZmNpWm0yaEswU08vdlhQNkJtazdSR3JB?=
- =?utf-8?B?UWhnMS9IWFhMakV3b3craHI1N1VSRFB1YXk4ODdJckg0TUx3eXIxcSt6dDh6?=
- =?utf-8?B?MGIwZDdmQXlWNVl1RkhCVzRCQkdWdGpVaElkdEt5Uk1SekxtalVRNmQwZzRC?=
- =?utf-8?B?RWJCY2NpTks5YzBhelZqbDBRK3hXZGtGaVl1b3RZempRNGx5dExOcnNTTzUr?=
- =?utf-8?B?Z1ZLbjFlRkJrMDExOS9tZmlTL3I3VmNubFdxOWltS2VhYmphUFJmbmJhSWZt?=
- =?utf-8?B?OGR1TWZuaGJDekRrSmtGZzhHdU5vaklLOWdheEhueDJVWWFiMVVXaVVkalIy?=
- =?utf-8?B?eTE0dXpNNTJ6M3ZncStxSkJpeXQwQ1dVa0pRWVo1RFdhMmRLcjJzclVCL2da?=
- =?utf-8?B?MUJEUkxOMWZDakF3Z3JKTisxcFMyZ1lSWXorY1BuOXdWOFhJRlZONlVVNUhK?=
- =?utf-8?B?RmIrYllmZ2t4ay80QTFpcHVYb1I0TlN3Wk5iMEcrM241YVpxZUhQMzI5bEpJ?=
- =?utf-8?B?Y0hUbDBuRENKUXA5TGd4S2pmZDlLdWs5R3JIVVUxMVg3L2xOMlFMOExIZGFP?=
- =?utf-8?B?ZlppNnpRRnp5WDdjZm5YWEUyUE5rV0doOFdpZWRUMXhLZU1wWHBIWVJ1UXB1?=
- =?utf-8?B?OFlTL1UrQUdqcWU2cHBrbGZXN2o1SGV0dzY2aWlJV1VteVBZSXhKVG9uY3Rm?=
- =?utf-8?B?bi95c2xGYWcraEVtdVN1T2J6ZjdUSTNTVXdaNnBmM3dXWWpFVEx1czlXYkcr?=
- =?utf-8?B?NVJIdHZ6T0pTVzlkTEYycUhxUlBjQ2lhbTRnYlBmR1U4MXBLR3ljU29zQTNJ?=
- =?utf-8?B?Y2owZktmZk93aHBINURMZUtRV3pray80dW55MWxvNnJIZzh5Y2lOenhiVGpV?=
- =?utf-8?B?N21SSXFPbHZJcm9OVmRqWS93Z0ltWnB5UE5SeFF5TWNpZExvYWxKR01OZUFm?=
- =?utf-8?B?bWlHSE5xRDNlSFhZb1ZZeWd6alR3WTlZbDNKSzIwK3BzV0NpY0MzcmwwUXJD?=
- =?utf-8?B?bmNYeFNIN2ZIUFNlSUd6OGxiVmRSblN1T1I0UG1sVU9ub2dISjRFWHhvLzZX?=
- =?utf-8?Q?xw4HElA6tYff/5C6ZtMzCiyvoQEPj8BtwO9TEnA?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 46259c3f-b96c-4c26-2c02-08d8f8b7cf8e
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Apr 2021 04:52:41.9990
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2NL9rDyjCnYHM1VAo2ZG+fMo+o4/vyeKh+KyVzhhrOxEfYVtPsdzyL8UdMctbeMwGGt5MiUSF1ERJLmyDLTBnZt4mTm7j8/lg7AcU0Gd0kc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4407
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9945 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
- malwarescore=0 mlxscore=0 spamscore=0 phishscore=0 adultscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2104030000 definitions=main-2104060030
-X-Proofpoint-GUID: xWFmrN5ugiezb4o6BxJ67tJuTqd1FUxN
-X-Proofpoint-ORIG-GUID: xWFmrN5ugiezb4o6BxJ67tJuTqd1FUxN
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9945 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1011 malwarescore=0
- suspectscore=0 impostorscore=0 mlxscore=0 priorityscore=1501
- mlxlogscore=999 bulkscore=0 spamscore=0 adultscore=0 phishscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2104030000 definitions=main-2104060030
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 06 Apr 2021 12:53:29 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Avri Altman <avri.altman@wdc.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        alim.akhtar@samsung.com, asutoshd@codeaurora.org,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <avi.shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>, stanley.chu@mediatek.com
+Subject: Re: [PATCH v7 06/11] scsi: ufshpb: Region inactivation in host mode
+In-Reply-To: <20210331073952.102162-7-avri.altman@wdc.com>
+References: <20210331073952.102162-1-avri.altman@wdc.com>
+ <20210331073952.102162-7-avri.altman@wdc.com>
+Message-ID: <e29e33769f23036f936a6b60c7430387@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2 Apr 2021 11:12:12 +0530, Viswas G wrote:
-
-> Inbound and outbound queues are not properly configured and
-> that leads to MPI configuration failure.
+On 2021-03-31 15:39, Avri Altman wrote:
+> In host mode, the host is expected to send HPB-WRITE-BUFFER with
+> buffer-id = 0x1 when it inactivates a region.
 > 
-> Fixes: 05c6c029a44d ("scsi: pm80xx: Increase number of supported queues")
+> Use the map-requests pool as there is no point in assigning a
+> designated cache for umap-requests.
 > 
-> Cc: stable@vger.kernel.org # 5.10+
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+> ---
+>  drivers/scsi/ufs/ufshpb.c | 35 +++++++++++++++++++++++++++++++----
+>  drivers/scsi/ufs/ufshpb.h |  1 +
+>  2 files changed, 32 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+> index aefb6dc160ee..fcc954f51bcf 100644
+> --- a/drivers/scsi/ufs/ufshpb.c
+> +++ b/drivers/scsi/ufs/ufshpb.c
+> @@ -914,6 +914,7 @@ static int ufshpb_execute_umap_req(struct ufshpb_lu 
+> *hpb,
+> 
+>  	blk_execute_rq_nowait(NULL, req, 1, ufshpb_umap_req_compl_fn);
+> 
+> +	hpb->stats.umap_req_cnt++;
+>  	return 0;
+>  }
+> 
+> @@ -1110,18 +1111,37 @@ static int ufshpb_issue_umap_req(struct 
+> ufshpb_lu *hpb,
+>  	return -EAGAIN;
+>  }
+> 
+> +static int ufshpb_issue_umap_single_req(struct ufshpb_lu *hpb,
+> +					struct ufshpb_region *rgn)
+> +{
+> +	return ufshpb_issue_umap_req(hpb, rgn);
+> +}
+> +
+>  static int ufshpb_issue_umap_all_req(struct ufshpb_lu *hpb)
+>  {
+>  	return ufshpb_issue_umap_req(hpb, NULL);
+>  }
+> 
+> -static void __ufshpb_evict_region(struct ufshpb_lu *hpb,
+> -				  struct ufshpb_region *rgn)
+> +static int __ufshpb_evict_region(struct ufshpb_lu *hpb,
+> +				 struct ufshpb_region *rgn)
+>  {
+>  	struct victim_select_info *lru_info;
+>  	struct ufshpb_subregion *srgn;
+>  	int srgn_idx;
+> 
+> +	lockdep_assert_held(&hpb->rgn_state_lock);
+> +
+> +	if (hpb->is_hcm) {
+> +		unsigned long flags;
+> +		int ret;
+> +
+> +		spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
 
-Applied to 5.12/scsi-fixes, thanks!
+Never seen a usage like this... Here flags is used without being 
+intialized.
+The flag is needed when spin_unlock_irqrestore -> 
+local_irq_restore(flags) to
+restore the DAIF register (in terms of ARM).
 
-[1/1] pm80xx: Fix chip initialization failure
-      https://git.kernel.org/mkp/scsi/c/65df7d1986a1
+Thanks,
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Can Guo.
+
+> +		ret = ufshpb_issue_umap_single_req(hpb, rgn);
+> +		spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+>  	lru_info = &hpb->lru_info;
+> 
+>  	dev_dbg(&hpb->sdev_ufs_lu->sdev_dev, "evict region %d\n", 
+> rgn->rgn_idx);
+> @@ -1130,6 +1150,8 @@ static void __ufshpb_evict_region(struct 
+> ufshpb_lu *hpb,
+> 
+>  	for_each_sub_region(rgn, srgn_idx, srgn)
+>  		ufshpb_purge_active_subregion(hpb, srgn);
+> +
+> +	return 0;
+>  }
+> 
+>  static int ufshpb_evict_region(struct ufshpb_lu *hpb, struct
+> ufshpb_region *rgn)
+> @@ -1151,7 +1173,7 @@ static int ufshpb_evict_region(struct ufshpb_lu
+> *hpb, struct ufshpb_region *rgn)
+>  			goto out;
+>  		}
+> 
+> -		__ufshpb_evict_region(hpb, rgn);
+> +		ret = __ufshpb_evict_region(hpb, rgn);
+>  	}
+>  out:
+>  	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> @@ -1285,7 +1307,9 @@ static int ufshpb_add_region(struct ufshpb_lu
+> *hpb, struct ufshpb_region *rgn)
+>  				"LRU full (%d), choose victim %d\n",
+>  				atomic_read(&lru_info->active_cnt),
+>  				victim_rgn->rgn_idx);
+> -			__ufshpb_evict_region(hpb, victim_rgn);
+> +			ret = __ufshpb_evict_region(hpb, victim_rgn);
+> +			if (ret)
+> +				goto out;
+>  		}
+> 
+>  		/*
+> @@ -1856,6 +1880,7 @@ ufshpb_sysfs_attr_show_func(rb_noti_cnt);
+>  ufshpb_sysfs_attr_show_func(rb_active_cnt);
+>  ufshpb_sysfs_attr_show_func(rb_inactive_cnt);
+>  ufshpb_sysfs_attr_show_func(map_req_cnt);
+> +ufshpb_sysfs_attr_show_func(umap_req_cnt);
+> 
+>  static struct attribute *hpb_dev_stat_attrs[] = {
+>  	&dev_attr_hit_cnt.attr,
+> @@ -1864,6 +1889,7 @@ static struct attribute *hpb_dev_stat_attrs[] = {
+>  	&dev_attr_rb_active_cnt.attr,
+>  	&dev_attr_rb_inactive_cnt.attr,
+>  	&dev_attr_map_req_cnt.attr,
+> +	&dev_attr_umap_req_cnt.attr,
+>  	NULL,
+>  };
+> 
+> @@ -1988,6 +2014,7 @@ static void ufshpb_stat_init(struct ufshpb_lu 
+> *hpb)
+>  	hpb->stats.rb_active_cnt = 0;
+>  	hpb->stats.rb_inactive_cnt = 0;
+>  	hpb->stats.map_req_cnt = 0;
+> +	hpb->stats.umap_req_cnt = 0;
+>  }
+> 
+>  static void ufshpb_param_init(struct ufshpb_lu *hpb)
+> diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+> index 87495e59fcf1..1ea58c17a4de 100644
+> --- a/drivers/scsi/ufs/ufshpb.h
+> +++ b/drivers/scsi/ufs/ufshpb.h
+> @@ -191,6 +191,7 @@ struct ufshpb_stats {
+>  	u64 rb_inactive_cnt;
+>  	u64 map_req_cnt;
+>  	u64 pre_req_cnt;
+> +	u64 umap_req_cnt;
+>  };
+> 
+>  struct ufshpb_lu {
