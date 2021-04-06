@@ -3,77 +3,110 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6732EC433B4
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 15:42:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0440EC433ED
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 16:56:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3AEC8613CB
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 15:42:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFD6F613D2
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 16:56:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345918AbhDFPmq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Apr 2021 11:42:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59628 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345903AbhDFPmn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 11:42:43 -0400
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 53BC4C06174A;
-        Tue,  6 Apr 2021 08:42:35 -0700 (PDT)
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 43EC592009D; Tue,  6 Apr 2021 17:42:33 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 3E08F92009B;
-        Tue,  6 Apr 2021 17:42:33 +0200 (CEST)
-Date:   Tue, 6 Apr 2021 17:42:33 +0200 (CEST)
-From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
-To:     Christoph Hellwig <hch@lst.de>
-cc:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Hannes Reinecke <hare@suse.com>,
-        Ondrej Zary <linux@rainbow-software.org>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/8] Buslogic: remove ISA support
-In-Reply-To: <20210406062750.GA6277@lst.de>
-Message-ID: <alpine.DEB.2.21.2104061722220.65251@angie.orcam.me.uk>
-References: <20210331073001.46776-1-hch@lst.de> <20210331073001.46776-3-hch@lst.de> <alpine.DEB.2.21.2104031805520.18977@angie.orcam.me.uk> <20210406062750.GA6277@lst.de>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        id S1346685AbhDFQ4r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Apr 2021 12:56:47 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2772 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244303AbhDFQ4q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 12:56:46 -0400
+Received: from fraeml744-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FFD2j4tTVz6824f;
+        Wed,  7 Apr 2021 00:47:09 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml744-chm.china.huawei.com (10.206.15.225) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 6 Apr 2021 18:56:37 +0200
+Received: from [10.210.166.136] (10.210.166.136) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 6 Apr 2021 17:56:35 +0100
+Subject: Re: [PATCH 1/6] iommu: Move IOVA power-of-2 roundup into allocator
+To:     Robin Murphy <robin.murphy@arm.com>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        "will@kernel.org" <will@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
+CC:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>
+References: <1616160348-29451-1-git-send-email-john.garry@huawei.com>
+ <1616160348-29451-2-git-send-email-john.garry@huawei.com>
+ <ee935a6d-a94c-313e-f0ed-e14cc6dac055@arm.com>
+ <73d459de-b5cc-e2f5-bcd7-2ee23c8d5075@huawei.com>
+ <afc2fc05-a799-cb14-debd-d36afed8f456@arm.com>
+ <08c0f4b9-8713-fa97-3986-3cfb0d6b820b@huawei.com>
+ <e4b9146a-ca32-50f5-4fe0-42aa0b66d2d6@arm.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <4914d134-5a63-f683-b14b-25ab71a57cd4@huawei.com>
+Date:   Tue, 6 Apr 2021 17:54:07 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <e4b9146a-ca32-50f5-4fe0-42aa0b66d2d6@arm.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.166.136]
+X-ClientProxiedBy: lhreml711-chm.china.huawei.com (10.201.108.62) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 6 Apr 2021, Christoph Hellwig wrote:
-
-> >  Last but not least I do hope you do not plan to retire ISA DMA bounce 
-> > buffering support for drivers/block/floppy.c, as there is hardly an 
-> > alternative available (I do have a single SCSI<->FDD interface built 
-> > around an Intel 8080 CPU, in the half-height 5.25" drive form factor, but 
-> > such devices are exceedingly rare, and then you need a suitable parallel 
-> > SCSI host too).
+>>>> So then we have the issue of how to dynamically increase this rcache
+>>>> threshold. The problem is that we may have many devices associated with
+>>>> the same domain. So, in theory, we can't assume that when we increase
+>>>> the threshold that some other device will try to fast free an IOVA 
+>>>> which
+>>>> was allocated prior to the increase and was not rounded up.
+>>>>
+>>>> I'm very open to better (or less bad) suggestions on how to do this ...
+>>> ...but yes, regardless of exactly where it happens, rounding up or not
+>>> is the problem for rcaches in general. I've said several times that my
+>>> preferred approach is to not change it that dynamically at all, but
+>>> instead treat it more like we treat the default domain type.
+>>>
+>>
+>> Can you remind me of that idea? I don't remember you mentioning using 
+>> default domain handling as a reference in any context.
 > 
-> The floppy driver already uses its own bounce buffering for addressing
-> limitations, and only the kernel bounce buffering to avoid getting
-> fed highmem patches.  Please take a look at this series to clean up the
-> latter:
-> 
-> https://lore.kernel.org/linux-block/20210406061755.811522-1-hch@lst.de/T/#u
 
- Great, thanks!
+Hi Robin,
 
-> >  Would it be feasible to convert it and any other drivers for ISA DMA 
-> > devices (like those support for which you propose to remove here) still 
-> > have users who could verify operation to the IOMMU framework?
-> 
-> I've converted the only once that still has signs of having users in
-> the last 10 or so years.
+> Sorry if the phrasing was unclear there - the allusion to default 
+> domains is new, it just occurred to me that what we do there is in fact 
+> fairly close to what I've suggested previously for this. In that case, 
+> we have a global policy set by the command line, which *can* be 
+> overridden per-domain via sysfs at runtime, provided the user is willing 
+> to tear the whole thing down. Using a similar approach here would give a 
+> fair degree of flexibility but still mean that changes never have to be 
+> made dynamically to a live domain.
 
- I infer the answer is "yes" then.  Of course it makes no sense to waste 
-time and speculatively convert code nobody has expressed interest in and 
-there's no immediate way to verify.
+So are you saying that we can handle it similar to how we now can handle 
+changing default domain for an IOMMU group via sysfs? If so, that just 
+is not practical here. Reason being that this particular DMA engine 
+provides the block device giving / mount point, so if we unbind the 
+driver, we lose / mount point.
 
-  Maciej
+And I am not sure if the end user would even know how to set such a 
+tunable. Or, in this case, why the end user would not want the optimized 
+range configured always.
+
+I'd still rather if the device driver could provide info which can be 
+used to configure this before or during probing.
+
+Cheers,
+John
