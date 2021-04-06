@@ -7,64 +7,67 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CC94C433B4
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 10:59:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E20EC433B4
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 11:52:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CC8361055
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 10:59:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D9676128A
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Apr 2021 11:52:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241641AbhDFK7c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Apr 2021 06:59:32 -0400
-Received: from mail-m17637.qiye.163.com ([59.111.176.37]:48898 "EHLO
-        mail-m17637.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234101AbhDFK7c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 06:59:32 -0400
-Received: from wanjb-virtual-machine.localdomain (unknown [36.152.145.182])
-        by mail-m17637.qiye.163.com (Hmail) with ESMTPA id A1B8F9803A3;
-        Tue,  6 Apr 2021 18:59:21 +0800 (CST)
-From:   Wan Jiabing <wanjiabing@vivo.com>
-To:     Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     kael_w@yeah.net, Wan Jiabing <wanjiabing@vivo.com>
-Subject: [PATCH] scsi: isci/phy.h: Remove unnecessary struct declaration
-Date:   Tue,  6 Apr 2021 18:59:13 +0800
-Message-Id: <20210406105913.676746-1-wanjiabing@vivo.com>
-X-Mailer: git-send-email 2.25.1
+        id S1343501AbhDFLwx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Apr 2021 07:52:53 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:15136 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233451AbhDFLww (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 07:52:52 -0400
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FF5Rp26tmzpVLQ;
+        Tue,  6 Apr 2021 19:49:58 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
+ 14.3.498.0; Tue, 6 Apr 2021 19:52:37 +0800
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.orgc>,
+        <linuxarm@huawei.com>, Luo Jiaxing <luojiaxing@huawei.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH 1/6] scsi: hisi_sas: Delete some unused callbacks
+Date:   Tue, 6 Apr 2021 19:48:26 +0800
+Message-ID: <1617709711-195853-2-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1617709711-195853-1-git-send-email-john.garry@huawei.com>
+References: <1617709711-195853-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgYFAkeWUFZS1VLWVdZKFlBSE83V1ktWUFJV1kPCR
-        oVCBIfWUFZGh0eQh0fH0hLT0hOVkpNSkxMS01MTUpDTUpVEwETFhoSFyQUDg9ZV1kWGg8SFR0UWU
-        FZT0tIVUpKS0hKQ1VLWQY+
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Kyo6Lyo4ED8ICi0ySQxRECMa
-        ORYKCxBVSlVKTUpMTEtNTE1JS0JOVTMWGhIXVQwaFRESGhkSFRw7DRINFFUYFBZFWVdZEgtZQVlI
-        TVVKTklVSk9OVUpDSVlXWQgBWUFKTUxINwY+
-X-HM-Tid: 0a78a6d63e33d992kuwsa1b8f9803a3
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-struct sci_phy_proto is defined at 142nd line.
-The declaration here is unnecessary. Remove it.
+From: Luo Jiaxing <luojiaxing@huawei.com>
 
-Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
+The debugfs code has been relocated to v3 hw driver, so delete unused
+struct hisi_sas_hw function pointers snapshot_{prepare, restore}.
+
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/isci/phy.h | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/isci/phy.h b/drivers/scsi/isci/phy.h
-index 45fecfa36a98..5aaf95b14b2e 100644
---- a/drivers/scsi/isci/phy.h
-+++ b/drivers/scsi/isci/phy.h
-@@ -447,7 +447,6 @@ void sci_phy_get_attached_sas_address(
- 	struct isci_phy *iphy,
- 	struct sci_sas_address *sas_address);
- 
--struct sci_phy_proto;
- void sci_phy_get_protocols(
- 	struct isci_phy *iphy,
- 	struct sci_phy_proto *protocols);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 2401a9575215..4dd53bc2d946 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -346,8 +346,6 @@ struct hisi_sas_hw {
+ 				u8 reg_index, u8 reg_count, u8 *write_data);
+ 	void (*wait_cmds_complete_timeout)(struct hisi_hba *hisi_hba,
+ 					   int delay_ms, int timeout_ms);
+-	void (*snapshot_prepare)(struct hisi_hba *hisi_hba);
+-	void (*snapshot_restore)(struct hisi_hba *hisi_hba);
+ 	int complete_hdr_size;
+ 	struct scsi_host_template *sht;
+ };
 -- 
-2.25.1
+2.26.2
 
