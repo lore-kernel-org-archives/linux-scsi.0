@@ -8,297 +8,372 @@ X-Spam-Status: No, score=-18.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88BA4C433B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0043C433ED
 	for <linux-scsi@archiver.kernel.org>; Wed,  7 Apr 2021 02:04:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60DD6613BD
+	by mail.kernel.org (Postfix) with ESMTP id A8251613BE
 	for <linux-scsi@archiver.kernel.org>; Wed,  7 Apr 2021 02:04:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243571AbhDGCEq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S243601AbhDGCEq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 6 Apr 2021 22:04:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53972 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229720AbhDGCEh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 22:04:37 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49C15C06174A
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Apr 2021 19:04:28 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id y32so8645489pga.11
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Apr 2021 19:04:28 -0700 (PDT)
+        with ESMTP id S1343771AbhDGCEm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2021 22:04:42 -0400
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43573C06175F
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Apr 2021 19:04:33 -0700 (PDT)
+Received: by mail-pg1-x530.google.com with SMTP id h25so11855637pgm.3
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Apr 2021 19:04:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=mT47om6HWHk/iwS9+8nQ4yyFt6rDyKg51TDhJyJOBR4=;
-        b=ZZD8tuS1sDjCClepfCCK6CoE4AsOMirkb3+qtJc7JsBO3GIj69TNqx8lGANewogkp0
-         yVwB/WdTIX/jepJdMKq9MnNtko6aQsCDXrLp/L/I3YkzG1wzlG1yTdZGe4nfDGcMjf5a
-         h1zstv+NxJgWVS02esp+To7knhHP9N9haNOaE=
+        bh=/a6OeDr5C4FX4JUfWDpoQ/DUKFdlYzhozXWgC+E1F7M=;
+        b=NoQsMz1ZY22zJdj7nOhJNk2fSmiOthB2ejetjulnHby0qbwSDdZGHNR+ykAfUax32Y
+         D2aU5T384/K+Br5rZbdzylYWjR0GBFm7eLPdJK4AN1yGycY6HkwEmy4W6qgGuLcpFZeX
+         JViFpfmGuZf9+BR9z3C3ZWdsPKALjjlIF+MRY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=mT47om6HWHk/iwS9+8nQ4yyFt6rDyKg51TDhJyJOBR4=;
-        b=WJzzpD5vDkBs1+6VLY/B8JbBwAZi3CrzcICZjqM3X0QEeGkmX7eouo82Af3D7eYOgR
-         p3cGhoc/dX0z7kcG6q+2oZH7SZ/n3WpzzCS7pPN6keBYPnjOpV1KWiviNi9Bn+gE5IZ4
-         RoxEfgpg+1YYhTv2oS3bIllQX9scxt2NKY5awmZdo3W/6UmnKI7E1sBJuZYZFv0qO/Y7
-         i27cdX71n96gaCTqf9QUyEqMZKegpcKZDoBeVN8D5EbRCyE5h41Cq8ZJcSs9OcZceHJt
-         jfwa1/Q/MSW9nUB2gngkwcBc7+IXYREiygK0B/q4bXlE3IeXQhoPzi8c8WfaL9c5lema
-         Kfcw==
-X-Gm-Message-State: AOAM530QwOaSSY0WTaYhuWp5sCLU/cbAmcyE10H96gjiOnUFPSPSTSzU
-        alCtLfla40g580gnczcpcWCX6crGWlz/IHfrethdORqhKI034IAjHuXQQN0/Abh4N/ibo+vLzms
-        9Fti2N8jnQIHoXPYJbCrbk6ujY9UuzhvyI0TuR8AG1VsuOq8htqVLYJGCBYzo+94liJqN8vZ1qj
-        Jf5Sq0Wg==
-X-Google-Smtp-Source: ABdhPJx7aamLv5+3243/MBqJl/7lA5JHL+SkD7EXWywA7l3tzb5SYtn6NWvFButIhkvxLMTJDSSpsw==
-X-Received: by 2002:a63:f247:: with SMTP id d7mr1016979pgk.112.1617761067332;
-        Tue, 06 Apr 2021 19:04:27 -0700 (PDT)
+        bh=/a6OeDr5C4FX4JUfWDpoQ/DUKFdlYzhozXWgC+E1F7M=;
+        b=E4AdMl8BizjIzDxcZJzJtCGUBXdg215vJMlUKvHwAjtp4psa4s1S2f8vPyc3VkmSFY
+         txicfzhFf5LHdILyyguzJZgBT3VqYt9PRhCnGaHZvRypASV6YBc9AXWV7hqNsercrJtN
+         LrMJ6Tmow586d2ECY1CtnmTKBvR1MH8HVbDV0TjOU4rBJ54M9i3962QTJm0uqi/3Hidm
+         KpcR26j+NXCJn+gRZCsk/35Zd4euowhPd594HC9A4LoqXCVcHOzc3XmgjlqeL1Q2B9l1
+         fVZJQe8EeI342a5YDJ1Il5TMMeGybBRNm9YN5v9GkGvDXmWemUP+bea8KTZ7TBYx7Td2
+         mqJQ==
+X-Gm-Message-State: AOAM530atev8HkhfRXDlRssWN7Hvm99RGYqSvvFN3nFhz6LezPCh8zXM
+        d5MKB2aPgBYPZtSjJ5EWLZgqRcyn/cLJf+786LJgH21MCu3sB7ulmcAC3fj8i1R98YIzmgoF08K
+        nKn5cG3pqyMPQMGN52TzfspXDihYBo2K+0bxGaE5n6ofJVtNHKxScPj0ERZORrR7lVuCdJ0cvM3
+        GzCBd0Vw==
+X-Google-Smtp-Source: ABdhPJzgLmPvsqi4InspxK5/7QPZRIzeCPVgt0QZH2JGNDwd3G2Ei32SRfucZPRVKj1K7c5K0evofw==
+X-Received: by 2002:a63:ff4d:: with SMTP id s13mr1043868pgk.310.1617761072406;
+        Tue, 06 Apr 2021 19:04:32 -0700 (PDT)
 Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id y9sm3435858pja.50.2021.04.06.19.04.25
+        by smtp.gmail.com with ESMTPSA id y9sm3435858pja.50.2021.04.06.19.04.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Apr 2021 19:04:26 -0700 (PDT)
+        Tue, 06 Apr 2021 19:04:31 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: [PATCH v2 05/24] mpi3mr: add support of internal watchdog thread
-Date:   Wed,  7 Apr 2021 07:34:32 +0530
-Message-Id: <20210407020451.924822-6-kashyap.desai@broadcom.com>
+Subject: [PATCH v2 07/24] mpi3mr: add support of event handling pcie devices part-2
+Date:   Wed,  7 Apr 2021 07:34:34 +0530
+Message-Id: <20210407020451.924822-8-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210407020451.924822-1-kashyap.desai@broadcom.com>
 References: <20210407020451.924822-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000c6eb1805bf585951"
+        boundary="00000000000013486b05bf585a1b"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000c6eb1805bf585951
+--00000000000013486b05bf585a1b
 
-Watchdog thread is driver's internal thread which does few things like
-detecting FW fault and reset the controller, Timestamp sync etc.
+Firmware can report various MPI Events.
+Support for certain Events (as listed below) are enabled in the driver
+and their processing in driver is covered in this patch.
+
+MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST
+MPI3_EVENT_PCIE_ENUMERATION
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Cc: sathya.prakash@broadcom.com
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  11 +++
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 125 ++++++++++++++++++++++++++++++++
- drivers/scsi/mpi3mr/mpi3mr_os.c |   3 +
- 3 files changed, 139 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |   2 +
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 202 ++++++++++++++++++++++++++++++++
+ 2 files changed, 204 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 00a1b63a6e16..7769ba16c9bc 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -478,6 +478,10 @@ struct scmd_priv {
-  * @sense_buf_q_dma: Sense buffer queue DMA address
-  * @sbq_lock: Sense buffer queue lock
-  * @sbq_host_index: Sense buffer queuehost index
-+ * @watchdog_work_q_name: Fault watchdog worker thread name
-+ * @watchdog_work_q: Fault watchdog worker thread
-+ * @watchdog_work: Fault watchdog work
-+ * @watchdog_lock: Fault watchdog lock
-  * @is_driver_loading: Is driver still loading
-  * @scan_started: Async scan started
-  * @scan_failed: Asycn scan failed
-@@ -491,6 +495,7 @@ struct scmd_priv {
-  * @chain_buf_lock: Chain buffer list lock
-  * @reset_in_progress: Reset in progress flag
-  * @unrecoverable: Controller unrecoverable flag
-+ * @diagsave_timeout: Diagnostic information save timeout
-  * @logging_level: Controller debug logging level
-  * @current_event: Firmware event currently in process
-  * @driver_info: Driver, Kernel, OS information to firmware
-@@ -572,6 +577,11 @@ struct mpi3mr_ioc {
- 	spinlock_t sbq_lock;
- 	u32 sbq_host_index;
- 
-+	char watchdog_work_q_name[20];
-+	struct workqueue_struct *watchdog_work_q;
-+	struct delayed_work watchdog_work;
-+	spinlock_t watchdog_lock;
-+
- 	u8 is_driver_loading;
- 	u8 scan_started;
- 	u16 scan_failed;
-@@ -589,6 +599,7 @@ struct mpi3mr_ioc {
- 	u8 reset_in_progress;
- 	u8 unrecoverable;
- 
-+	u16 diagsave_timeout;
- 	int logging_level;
- 
- 	struct mpi3mr_fwevt *current_event;
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index a87a3edde2e7..ef238091523b 100644
+index 668dd001b6b4..d9ac045428e8 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -1478,6 +1478,129 @@ int mpi3mr_op_request_post(struct mpi3mr_ioc *mrioc,
+@@ -2745,6 +2745,8 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST);
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DISCOVERY);
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR);
++	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST);
++	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_ENUMERATION);
+ 
+ 	retval = mpi3mr_issue_event_notification(mrioc);
+ 	if (retval) {
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 9b9230d1107a..40b46eadcd32 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -566,6 +566,40 @@ static int mpi3mr_report_tgtdev_to_host(struct mpi3mr_ioc *mrioc,
  	return retval;
  }
  
 +/**
-+ * mpi3mr_watchdog_work - watchdog thread to monitor faults
-+ * @work: work struct
++ * mpi3mr_update_sdev - Update SCSI device information
++ * @sdev: SCSI device reference
++ * @data: target device reference
 + *
-+ * Watch dog work periodically executed (1 second interval) to
-+ * monitor firmware fault and to issue periodic timer sync to
-+ * the firmware.
-+ *
-+ * Return: Nothing.
-+ */
-+static void mpi3mr_watchdog_work(struct work_struct *work)
-+{
-+	struct mpi3mr_ioc *mrioc =
-+	    container_of(work, struct mpi3mr_ioc, watchdog_work.work);
-+	unsigned long flags;
-+	enum mpi3mr_iocstate ioc_state;
-+	u32 fault, host_diagnostic;
-+
-+	/*Check for fault state every one second and issue Soft reset*/
-+	ioc_state = mpi3mr_get_iocstate(mrioc);
-+	if (ioc_state == MRIOC_STATE_FAULT) {
-+		fault = readl(&mrioc->sysif_regs->Fault) &
-+		    MPI3_SYSIF_FAULT_CODE_MASK;
-+		host_diagnostic = readl(&mrioc->sysif_regs->HostDiagnostic);
-+		if (host_diagnostic & MPI3_SYSIF_HOST_DIAG_SAVE_IN_PROGRESS) {
-+			if (!mrioc->diagsave_timeout) {
-+				mpi3mr_print_fault_info(mrioc);
-+				ioc_warn(mrioc, "Diag save in progress\n");
-+			}
-+			if ((mrioc->diagsave_timeout++) <=
-+			    MPI3_SYSIF_DIAG_SAVE_TIMEOUT)
-+				goto schedule_work;
-+		} else
-+			mpi3mr_print_fault_info(mrioc);
-+		mrioc->diagsave_timeout = 0;
-+
-+		if (fault == MPI3_SYSIF_FAULT_CODE_FACTORY_RESET) {
-+			ioc_info(mrioc,
-+			    "Factory Reset Fault occurred marking controller as unrecoverable"
-+			    );
-+			mrioc->unrecoverable = 1;
-+			goto out;
-+		}
-+
-+		if ((fault == MPI3_SYSIF_FAULT_CODE_DIAG_FAULT_RESET)
-+		    || (fault == MPI3_SYSIF_FAULT_CODE_SOFT_RESET_IN_PROGRESS)
-+		    || (mrioc->reset_in_progress))
-+			goto out;
-+		if (fault == MPI3_SYSIF_FAULT_CODE_CI_ACTIVATION_RESET)
-+			mpi3mr_soft_reset_handler(mrioc,
-+			    MPI3MR_RESET_FROM_CIACTIV_FAULT, 0);
-+		else
-+			mpi3mr_soft_reset_handler(mrioc,
-+			    MPI3MR_RESET_FROM_FAULT_WATCH, 0);
-+	}
-+
-+schedule_work:
-+	spin_lock_irqsave(&mrioc->watchdog_lock, flags);
-+	if (mrioc->watchdog_work_q)
-+		queue_delayed_work(mrioc->watchdog_work_q,
-+		    &mrioc->watchdog_work,
-+		    msecs_to_jiffies(MPI3MR_WATCHDOG_INTERVAL));
-+	spin_unlock_irqrestore(&mrioc->watchdog_lock, flags);
-+out:
-+	return;
-+}
-+
-+/**
-+ * mpi3mr_start_watchdog - Start watchdog
-+ * @mrioc: Adapter instance reference
-+ *
-+ * Create and start the watchdog thread to monitor controller
-+ * faults.
++ * This is an iterator function called for each SCSI device in a
++ * target to update the target specific information into each
++ * SCSI device.
 + *
 + * Return: Nothing.
 + */
-+void mpi3mr_start_watchdog(struct mpi3mr_ioc *mrioc)
++static void
++mpi3mr_update_sdev(struct scsi_device *sdev, void *data)
 +{
-+	if (mrioc->watchdog_work_q)
++	struct mpi3mr_tgt_dev *tgtdev;
++
++	tgtdev = (struct mpi3mr_tgt_dev *) data;
++	if (!tgtdev)
 +		return;
 +
-+	INIT_DELAYED_WORK(&mrioc->watchdog_work, mpi3mr_watchdog_work);
-+	snprintf(mrioc->watchdog_work_q_name,
-+	    sizeof(mrioc->watchdog_work_q_name), "watchdog_%s%d", mrioc->name,
-+	    mrioc->id);
-+	mrioc->watchdog_work_q =
-+	    create_singlethread_workqueue(mrioc->watchdog_work_q_name);
-+	if (!mrioc->watchdog_work_q) {
-+		ioc_err(mrioc, "%s: failed (line=%d)\n", __func__, __LINE__);
-+		return;
-+	}
++	switch (tgtdev->dev_type) {
++	case MPI3_DEVICE_DEVFORM_PCIE:
++		/*The block layer hw sector size = 512*/
++		blk_queue_max_hw_sectors(sdev->request_queue,
++		    tgtdev->dev_spec.pcie_inf.mdts / 512);
++		blk_queue_virt_boundary(sdev->request_queue,
++		    ((1 << tgtdev->dev_spec.pcie_inf.pgsz) - 1));
 +
-+	if (mrioc->watchdog_work_q)
-+		queue_delayed_work(mrioc->watchdog_work_q,
-+		    &mrioc->watchdog_work,
-+		    msecs_to_jiffies(MPI3MR_WATCHDOG_INTERVAL));
-+}
-+
-+/**
-+ * mpi3mr_stop_watchdog - Stop watchdog
-+ * @mrioc: Adapter instance reference
-+ *
-+ * Stop the watchdog thread created to monitor controller
-+ * faults.
-+ *
-+ * Return: Nothing.
-+ */
-+void mpi3mr_stop_watchdog(struct mpi3mr_ioc *mrioc)
-+{
-+	unsigned long flags;
-+	struct workqueue_struct *wq;
-+
-+	spin_lock_irqsave(&mrioc->watchdog_lock, flags);
-+	wq = mrioc->watchdog_work_q;
-+	mrioc->watchdog_work_q = NULL;
-+	spin_unlock_irqrestore(&mrioc->watchdog_lock, flags);
-+	if (wq) {
-+		if (!cancel_delayed_work_sync(&mrioc->watchdog_work))
-+			flush_workqueue(wq);
-+		destroy_workqueue(wq);
++		break;
++	default:
++		break;
 +	}
 +}
 +
- 
  /**
-  * mpi3mr_setup_admin_qpair - Setup admin queue pair
-@@ -2632,6 +2755,8 @@ void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc)
- {
- 	enum mpi3mr_iocstate ioc_state;
- 
-+	mpi3mr_stop_watchdog(mrioc);
+  * mpi3mr_rfresh_tgtdevs - Refresh target device exposure
+  * @mrioc: Adapter instance reference
+@@ -654,6 +688,33 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ 			tgtdev->is_hidden = 1;
+ 		break;
+ 	}
++	case MPI3_DEVICE_DEVFORM_PCIE:
++	{
++		Mpi3Device0PcieFormat_t *pcieinf =
++		    &dev_pg0->DeviceSpecific.PcieFormat;
++		u16 dev_info = le16_to_cpu(pcieinf->DeviceInfo);
 +
- 	mpi3mr_ioc_disable_intr(mrioc);
++		tgtdev->dev_spec.pcie_inf.capb =
++		    le32_to_cpu(pcieinf->Capabilities);
++		tgtdev->dev_spec.pcie_inf.mdts = MPI3MR_DEFAULT_MDTS;
++		/* 2^12 = 4096 */
++		tgtdev->dev_spec.pcie_inf.pgsz = 12;
++		if (dev_pg0->AccessStatus == MPI3_DEVICE0_ASTATUS_NO_ERRORS) {
++			tgtdev->dev_spec.pcie_inf.mdts =
++			    le32_to_cpu(pcieinf->MaximumDataTransferSize);
++			tgtdev->dev_spec.pcie_inf.pgsz = pcieinf->PageSize;
++			tgtdev->dev_spec.pcie_inf.reset_to =
++			    pcieinf->ControllerResetTO;
++			tgtdev->dev_spec.pcie_inf.abort_to =
++			    pcieinf->NVMeAbortTO;
++		}
++		if (tgtdev->dev_spec.pcie_inf.mdts > (1024 * 1024))
++			tgtdev->dev_spec.pcie_inf.mdts = (1024 * 1024);
++		if ((dev_info & MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_MASK) !=
++		    MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_NVME_DEVICE)
++			tgtdev->is_hidden = 1;
++		break;
++	}
+ 	case MPI3_DEVICE_DEVFORM_VD:
+ 	{
+ 		Mpi3Device0VdFormat_t *vdinf =
+@@ -765,6 +826,9 @@ static void mpi3mr_devinfochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 		mpi3mr_report_tgtdev_to_host(mrioc, perst_id);
+ 	if (tgtdev->is_hidden && tgtdev->host_exposed)
+ 		mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
++	if (!tgtdev->is_hidden && tgtdev->host_exposed && tgtdev->starget)
++		starget_for_each_device(tgtdev->starget, (void *) tgtdev,
++		    mpi3mr_update_sdev);
+ out:
+ 	if (tgtdev)
+ 		mpi3mr_tgtdev_put(tgtdev);
+@@ -818,6 +882,54 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 	}
+ }
  
- 	ioc_state = mpi3mr_get_iocstate(mrioc);
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 01be5f337826..7b0d52481929 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -570,6 +570,7 @@ static int mpi3mr_scan_finished(struct Scsi_Host *shost,
- 	if (mrioc->scan_started)
- 		return 0;
- 	ioc_info(mrioc, "%s :port enable: SUCCESS\n", __func__);
-+	mpi3mr_start_watchdog(mrioc);
- 	mrioc->is_driver_loading = 0;
- 
- 	return 1;
-@@ -856,9 +857,11 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	spin_lock_init(&mrioc->admin_req_lock);
- 	spin_lock_init(&mrioc->reply_free_queue_lock);
- 	spin_lock_init(&mrioc->sbq_lock);
-+	spin_lock_init(&mrioc->watchdog_lock);
- 	spin_lock_init(&mrioc->chain_buf_lock);
- 
- 	mpi3mr_init_drv_cmd(&mrioc->init_cmds, MPI3MR_HOSTTAG_INITCMDS);
++/**
++ * mpi3mr_pcietopochg_evt_bh - PCIeTopologyChange evt bottomhalf
++ * @mrioc: Adapter instance reference
++ * @fwevt: Firmware event reference
++ *
++ * Prints information about the PCIe topology change event and
++ * for "not responding" event code, removes the device from the
++ * upper layers.
++ *
++ * Return: Nothing.
++ */
++static void mpi3mr_pcietopochg_evt_bh(struct mpi3mr_ioc *mrioc,
++	struct mpi3mr_fwevt *fwevt)
++{
++	Mpi3EventDataPcieTopologyChangeList_t *event_data =
++	    (Mpi3EventDataPcieTopologyChangeList_t *)fwevt->event_data;
++	int i;
++	u16 handle;
++	u8 reason_code;
++	struct mpi3mr_tgt_dev *tgtdev = NULL;
 +
- 	if (pdev->revision)
- 		mrioc->enable_segqueue = true;
++	for (i = 0; i < event_data->NumEntries; i++) {
++		handle =
++		    le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
++		if (!handle)
++			continue;
++		tgtdev = mpi3mr_get_tgtdev_by_handle(mrioc, handle);
++		if (!tgtdev)
++			continue;
++
++		reason_code = event_data->PortEntry[i].PortStatus;
++
++		switch (reason_code) {
++		case MPI3_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
++			if (tgtdev->host_exposed)
++				mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
++			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
++			mpi3mr_tgtdev_put(tgtdev);
++			break;
++		default:
++			break;
++		}
++		if (tgtdev)
++			mpi3mr_tgtdev_put(tgtdev);
++	}
++}
++
++
+ /**
+  * mpi3mr_fwevt_bh - Firmware event bottomhalf handler
+  * @mrioc: Adapter instance reference
+@@ -865,6 +977,11 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 		mpi3mr_sastopochg_evt_bh(mrioc, fwevt);
+ 		break;
+ 	}
++	case MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
++	{
++		mpi3mr_pcietopochg_evt_bh(mrioc, fwevt);
++		break;
++	}
+ 	default:
+ 		break;
+ 	}
+@@ -1171,6 +1288,72 @@ static void mpi3mr_dev_rmhs_send_tm(struct mpi3mr_ioc *mrioc, u16 handle,
+ 	clear_bit(cmd_idx, mrioc->devrem_bitmap);
+ }
  
++/**
++ * mpi3mr_pcietopochg_evt_th - PCIETopologyChange evt tophalf
++ * @mrioc: Adapter instance reference
++ * @event_reply: Event data
++ *
++ * Checks for the reason code and based on that either block I/O
++ * to device, or unblock I/O to the device, or start the device
++ * removal handshake with reason as remove with the firmware for
++ * PCIe devices.
++ *
++ * Return: Nothing
++ */
++static void mpi3mr_pcietopochg_evt_th(struct mpi3mr_ioc *mrioc,
++	Mpi3EventNotificationReply_t *event_reply)
++{
++	Mpi3EventDataPcieTopologyChangeList_t *topo_evt =
++	    (Mpi3EventDataPcieTopologyChangeList_t *) event_reply->EventData;
++	int i;
++	u16 handle;
++	u8 reason_code;
++	struct mpi3mr_tgt_dev *tgtdev = NULL;
++	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data = NULL;
++
++	for (i = 0; i < topo_evt->NumEntries; i++) {
++		handle = le16_to_cpu(topo_evt->PortEntry[i].AttachedDevHandle);
++		if (!handle)
++			continue;
++		reason_code = topo_evt->PortEntry[i].PortStatus;
++		scsi_tgt_priv_data =  NULL;
++		tgtdev = mpi3mr_get_tgtdev_by_handle(mrioc, handle);
++		if (tgtdev && tgtdev->starget && tgtdev->starget->hostdata)
++			scsi_tgt_priv_data = (struct mpi3mr_stgt_priv_data *)
++			    tgtdev->starget->hostdata;
++		switch (reason_code) {
++		case MPI3_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
++			if (scsi_tgt_priv_data) {
++				scsi_tgt_priv_data->dev_removed = 1;
++				scsi_tgt_priv_data->dev_removedelay = 0;
++				atomic_set(&scsi_tgt_priv_data->block_io, 0);
++			}
++			mpi3mr_dev_rmhs_send_tm(mrioc, handle, NULL,
++			    MPI3_CTRL_OP_REMOVE_DEVICE);
++			break;
++		case MPI3_EVENT_PCIE_TOPO_PS_DELAY_NOT_RESPONDING:
++			if (scsi_tgt_priv_data) {
++				scsi_tgt_priv_data->dev_removedelay = 1;
++				atomic_inc(&scsi_tgt_priv_data->block_io);
++			}
++			break;
++		case MPI3_EVENT_PCIE_TOPO_PS_RESPONDING:
++			if (scsi_tgt_priv_data &&
++			    scsi_tgt_priv_data->dev_removedelay) {
++				scsi_tgt_priv_data->dev_removedelay = 0;
++				atomic_dec_if_positive
++				    (&scsi_tgt_priv_data->block_io);
++			}
++			break;
++		case MPI3_EVENT_PCIE_TOPO_PS_PORT_CHANGED:
++		default:
++			break;
++		}
++		if (tgtdev)
++			mpi3mr_tgtdev_put(tgtdev);
++	}
++}
++
+ /**
+  * mpi3mr_sastopochg_evt_th - SASTopologyChange evt tophalf
+  * @mrioc: Adapter instance reference
+@@ -1366,6 +1549,12 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 		mpi3mr_sastopochg_evt_th(mrioc, event_reply);
+ 		break;
+ 	}
++	case MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
++	{
++		process_evt_bh = 1;
++		mpi3mr_pcietopochg_evt_th(mrioc, event_reply);
++		break;
++	}
+ 	case MPI3_EVENT_DEVICE_INFO_CHANGED:
+ 	{
+ 		process_evt_bh = 1;
+@@ -1374,6 +1563,7 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
+ 	case MPI3_EVENT_SAS_DISCOVERY:
+ 	case MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR:
++	case MPI3_EVENT_PCIE_ENUMERATION:
+ 		break;
+ 	default:
+ 		ioc_info(mrioc, "%s :Event 0x%02x is not handled\n",
+@@ -1960,6 +2150,18 @@ static int mpi3mr_slave_configure(struct scsi_device *sdev)
+ 	if (!tgt_dev)
+ 		return retval;
+ 
++	switch (tgt_dev->dev_type) {
++	case MPI3_DEVICE_DEVFORM_PCIE:
++		/*The block layer hw sector size = 512*/
++		blk_queue_max_hw_sectors(sdev->request_queue,
++		    tgt_dev->dev_spec.pcie_inf.mdts / 512);
++		blk_queue_virt_boundary(sdev->request_queue,
++		    ((1 << tgt_dev->dev_spec.pcie_inf.pgsz) - 1));
++		break;
++	default:
++		break;
++	}
++
+ 	mpi3mr_tgtdev_put(tgt_dev);
+ 
+ 	return retval;
 -- 
 2.18.1
 
 
---000000000000c6eb1805bf585951
+--00000000000013486b05bf585a1b
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -369,13 +444,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIK4PaIfo2Hx6Xxq3/xgGHayuUd1i
-jGlivyYTzEFwkY2BMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDQwNzAyMDQyN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHM/OJ5pSjVxsPf2vgwf21a5USsg
++jaNswDl3eVcOeJoMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDQwNzAyMDQzMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQCiMLGVssiiKWyrM3QDwJ7eYDE0NvZJ1ZAixKvbdGusfzYU
-d4n9O3p2Wa/IwvI6zlYVi6MpnKCwyZluqzhQsAOwy9PbZsqE6T6NSOZV5hnujXhSkSf1mcl5+BgI
-wk15EPWBLVUxqT9H1eLfl36sCyFIWG1J4TJJt7SJNS2o09gLUvDiDmCGp9iQW10WFsbGYQGiyYLu
-wr3U5M6PT6v/jgB/gKb7n72ZxvwSQf2tG0Qj3/4D0aqHdb63zSH6kwB0ZY3e84Gf4QKqvpgduYNh
-BHbvNXdXUOszow1tELGS650+VJ4HjYuv7ChiXBv1cK3CtSwu578SAFiVRdvKakjBkqWR
---000000000000c6eb1805bf585951--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQBdycLofJgd3HesKRNcCcAcvmFuWBRr1iUc5NYnrNrhiroY
+3/NF2VBXOkflqEHIbM7KIPIESirhG5iTmzJCeoMepT/mRf+5UMEgKlpSbM94jgOTUgJ1/m3lYSWM
+pjchhUa/HEy1amrlTQKrWDNrucuZcK89YJl+pN5r5HnI4/bK4ROwZkP+LsJ9+Ozp5u6u9ymvay74
+mxTspUPBealI8sJdNNSZkDZsuwFyCWf/9hKtRASDi36p89yGgd5hye/5r/8bdbXC42yRhh/QecID
+GKReumhk0J70OwNk2bCheULiLcc3yOlsRLcye8uBxqeshY2dvFsmllViID+SnQqOB3ap
+--00000000000013486b05bf585a1b--
