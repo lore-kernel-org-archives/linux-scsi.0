@@ -2,120 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB7B9C433B4
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 03:48:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E61DCC43460
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 05:21:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4187611C1
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 03:48:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B1F436124C
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 05:21:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229644AbhDHDsP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Apr 2021 23:48:15 -0400
-Received: from mailout2.samsung.com ([203.254.224.25]:34706 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbhDHDsO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2021 23:48:14 -0400
-Received: from epcas3p1.samsung.com (unknown [182.195.41.19])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20210408034802epoutp028546ff4b915c8db8bcc0de33d117e8f7~zxVo7kXrK0078000780epoutp02T
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Apr 2021 03:48:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20210408034802epoutp028546ff4b915c8db8bcc0de33d117e8f7~zxVo7kXrK0078000780epoutp02T
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1617853682;
-        bh=9fGWhB+v9isEydrW5hTeP0L3q8QLyyS/uf5D/3S4w2s=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=WYa/F7WOwIriGIIZWQa7PLoAQSWZw/h/iNm2R0xyu3wInkNqbkvQ3UlBXzlI/BVep
-         bdBQorHvknQTpYrbYJHrtaSG3n7CzW7sQNSV+eSrZNCpY9m7IhYJXRx0GPv0e5oI4A
-         O3K6QnDDRwE8GJVdTAyFZIcqrLHoHRLTco2WCJv4=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas3p4.samsung.com (KnoxPortal) with ESMTP id
-        20210408034801epcas3p4bb2b24f6fb915bd6a0353feb079e95ac~zxVoMnzSu0757807578epcas3p4h;
-        Thu,  8 Apr 2021 03:48:01 +0000 (GMT)
-Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp4.localdomain
-        (Postfix) with ESMTP id 4FG6fn4jfMz4x9Pq; Thu,  8 Apr 2021 03:48:01 +0000
-        (GMT)
-Mime-Version: 1.0
-Subject: RE: [PATCH v16 1/2] scsi: ufs: Enable power management for wlun
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     "cang@codeaurora.org" <cang@codeaurora.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     Asutosh Das <asutoshd@codeaurora.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Bean Huo <beanhuo@micron.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Yue Hu <huyue2@yulong.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Dinghao Liu <dinghao.liu@zju.edu.cn>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Satya Tangirala <satyat@google.com>,
+        id S229718AbhDHFVb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Apr 2021 01:21:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44820 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229506AbhDHFVa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2021 01:21:30 -0400
+Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22E1CC061760
+        for <linux-scsi@vger.kernel.org>; Wed,  7 Apr 2021 22:21:20 -0700 (PDT)
+Received: by mail-ej1-x62f.google.com with SMTP id u21so809524ejo.13
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Apr 2021 22:21:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=nGWRQqNs4FsH45AetKkDEjtm5WFfnPk7zZ0gqFXvhh8=;
+        b=Uw0wyDlDkX20XvZ04T5dHZqo5VGShg0gXBPk8VWktFBqbuh8MEOldhu336XT0Jj8qe
+         erW3R8ZVjiVRhajwAiA8SXe+QHfkmsEskKtMV5Ic9ct0qKcfMb0IeGPhFJYoA9qG4PNE
+         sFn+c5OONjJuFXY4MEBgDV47slIgQAmqs+Zm/rOlq9/jl4eVtNaCBs5pdB44UiyFa/ur
+         48mdaV9f84mfoqmEh37U7uo9aLuBzCzGcoDWMs1H2rYV7dVFf9A7lD4Y1vMrSAc4fzfR
+         SOdpisPlDqANC9kxZPy69cDbpdlDm6FPgMVva5v2Rv4QpKGq8YzBBKotytK4HauPnjDf
+         bKtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=nGWRQqNs4FsH45AetKkDEjtm5WFfnPk7zZ0gqFXvhh8=;
+        b=CH3pyw8e7cJ+33lx6e9QVltJW5xEd958AgnEsQin9ieAsLoGlm+2KefzEqD/aE85RT
+         /QckWJddrJwKfgVyYMqWFeVSqKcn6Y2vBAKFacYvc6+cGBbPD/jM58ZZIsaLHGQdQnII
+         FjpKwSA5Ok7LqjaLrmWWHMuIsUVykGuBXn3yCUNuz3LGabKcCDS7qyVd72C+anwCBfOC
+         HkySSjCAe1lmNMqUhBbRqCU7ftKdS9LYdnkik/wyWr4NdviFIFskSTNmMccTd2xa3UiK
+         KHczT6UnxzybMeq3rED+nUglvpQUHJvvUpNFrTh/OcivXDvK38Zb9lKthu0apDzucRxi
+         f8xw==
+X-Gm-Message-State: AOAM530e/zWOEHWGUVvMrGSruNG5ygAvrpUe2aikkH63Glqtq3sGTtrh
+        kBNEl3bqiv8681KX/WMGb5tQY8uaP34ZUuFd7zTqTw==
+X-Google-Smtp-Source: ABdhPJwuJvePArsi0X3BVbiNySrXNJpCSX0975uBH+S9j2G7lCMCRLzU27dIjhNhw3Kxzuk9GAjVnHp7xGCcEBJ+Kfo=
+X-Received: by 2002:a17:906:8242:: with SMTP id f2mr7851357ejx.478.1617859277448;
+ Wed, 07 Apr 2021 22:21:17 -0700 (PDT)
+MIME-Version: 1.0
+References: <20210407135840.494747-1-colin.king@canonical.com> <yq1blaq9fyx.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1blaq9fyx.fsf@ca-mkp.ca.oracle.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Thu, 8 Apr 2021 07:21:06 +0200
+Message-ID: <CAMGffEmFxJduY71sGzXNMoQzq0PZT1dtELfviZf9CZdkRj=nNQ@mail.gmail.com>
+Subject: Re: [PATCH][next] scsi: pm80xx: Fix potential infinite loop
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Colin King <colin.king@canonical.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Viswas G <Viswas.G@microchip.com>,
+        Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org,
         open list <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <7be92c0bc3e5f07d5e17bd3b78c01496686ef31e.1617818557.git.asutoshd@codeaurora.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <2038148563.21617853681644.JavaMail.epsvc@epcpadp4>
-Date:   Thu, 08 Apr 2021 12:43:52 +0900
-X-CMS-MailID: 20210408034352epcms2p4187835e84c3282cb60e17258007ba145
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20210407180927epcas2p480eb9ff12823e1740e4188497c3a11ca
-References: <7be92c0bc3e5f07d5e17bd3b78c01496686ef31e.1617818557.git.asutoshd@codeaurora.org>
-        <cover.1617818557.git.asutoshd@codeaurora.org>
-        <CGME20210407180927epcas2p480eb9ff12823e1740e4188497c3a11ca@epcms2p4>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Asutosh Das,
-
->+static inline bool is_rpmb_wlun(struct scsi_device *sdev)
->+{
->+        return (sdev->lun == ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN));
->+}
->+
->+static inline bool is_device_wlun(struct scsi_device *sdev)
->+{
->+        return (sdev->lun ==
->+                ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN));
->+}
->+
-> static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
-> {
->         struct utp_transfer_cmd_desc *cmd_descp = hba->ucdl_base_addr;
->@@ -4099,11 +4113,11 @@ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
->         spin_unlock_irqrestore(hba->host->host_lock, flags);
-> 
->         if (update && !pm_runtime_suspended(hba->dev)) {
-
-Could it be changed hba->sdev_ufs_device->sdev_gendev instead of hba->dev?
-
-Thanks,
-Daejun
+On Wed, Apr 7, 2021 at 7:18 PM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>
+> Hi Colin!
+>
+> > The for-loop iterates with a u8 loop counter i and compares this with
+> > the loop upper limit of pm8001_ha->max_q_num which is a u32 type.
+> > There is a potential infinite loop if pm8001_ha->max_q_num is larger
+> > than the u8 loop counter. Fix this by making the loop counter the same
+> > type as pm8001_ha->max_q_num.
+>
+> No particular objections to the patch for future-proofing. However, as
+> far as I can tell max_q_num is capped at 64 (PM8001_MAX_MSIX_VEC).
+Exactly.
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
