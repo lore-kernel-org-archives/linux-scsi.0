@@ -2,94 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 110A6C43460
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 08:53:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62705C433B4
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 09:06:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D1FE461165
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 08:53:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 284686044F
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 09:06:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230424AbhDHIx5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Apr 2021 04:53:57 -0400
-Received: from mx2.suse.de ([195.135.220.15]:54202 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230376AbhDHIxz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 8 Apr 2021 04:53:55 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 4DEEEB1D5;
-        Thu,  8 Apr 2021 08:53:42 +0000 (UTC)
-Subject: Re: [PATCH v9 11/13] lpfc: vmid: Timeout implementation for vmid
-To:     Muneendra <muneendra.kumar@broadcom.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        tj@kernel.org, linux-nvme@lists.infradead.org
-Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
-        Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-References: <1617750397-26466-1-git-send-email-muneendra.kumar@broadcom.com>
- <1617750397-26466-12-git-send-email-muneendra.kumar@broadcom.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <c56363c9-ad39-fb94-6055-ea432683b57e@suse.de>
-Date:   Thu, 8 Apr 2021 10:38:57 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S229741AbhDHJHB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Apr 2021 05:07:01 -0400
+Received: from out4436.biz.mail.alibaba.com ([47.88.44.36]:43842 "EHLO
+        out4436.biz.mail.alibaba.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229600AbhDHJHA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2021 05:07:00 -0400
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R651e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04426;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0UUspZKb_1617872787;
+Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0UUspZKb_1617872787)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Thu, 08 Apr 2021 17:06:34 +0800
+From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     sathya.prakash@broadcom.com
+Cc:     sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Subject: [PATCH] scsi: message: fusion: Remove useless variable
+Date:   Thu,  8 Apr 2021 17:06:20 +0800
+Message-Id: <1617872780-126448-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-In-Reply-To: <1617750397-26466-12-git-send-email-muneendra.kumar@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/7/21 1:06 AM, Muneendra wrote:
-> From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-> 
-> This patch implements the timeout functionality for the vmid. After the
-> set time period of inactivity, the vmid is deregistered from the switch.
-> 
-> Signed-off-by: Gaurav Srivastava  <gaurav.srivastava@broadcom.com>
-> Signed-off-by: James Smart <jsmart2021@gmail.com>
-> 
-> ---
-> v9:
-> Modified code for use of hashtable
-> 
-> v8:
-> Fixed the uninitialized variable
-> 
-> v7:
-> No change
-> 
-> v6:
-> Added Forward declarations
-> 
-> v5:
-> No change
-> 
-> v4:
-> No change
-> 
-> v3:
-> No change
-> 
-> v2:
-> Ported the patch on top of 5.10/scsi-queue
-> ---
->   drivers/scsi/lpfc/lpfc_hbadisc.c | 104 +++++++++++++++++++++++++++++++
->   drivers/scsi/lpfc/lpfc_init.c    |  40 ++++++++++++
->   2 files changed, 144 insertions(+)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Fix the following gcc warning:
 
-Cheers,
+drivers/message/fusion/mptbase.c:3087:9: warning: variable ‘status’ set
+but not used [-Wunused-but-set-variable].
 
-Hannes
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+---
+ drivers/message/fusion/mptbase.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 549797d..f37ea06 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -3084,7 +3084,7 @@ static int mpt_remove_dead_ioc_func(void *arg)
+ 	int			 req_sz;
+ 	int			 reply_sz;
+ 	int			 sz;
+-	u32			 status, vv;
++	u32			 vv;
+ 	u8			 shiftFactor=1;
+ 
+ 	/* IOC *must* NOT be in RESET state! */
+@@ -3142,7 +3142,6 @@ static int mpt_remove_dead_ioc_func(void *arg)
+ 		facts->IOCExceptions = le16_to_cpu(facts->IOCExceptions);
+ 		facts->IOCStatus = le16_to_cpu(facts->IOCStatus);
+ 		facts->IOCLogInfo = le32_to_cpu(facts->IOCLogInfo);
+-		status = le16_to_cpu(facts->IOCStatus) & MPI_IOCSTATUS_MASK;
+ 		/* CHECKME! IOCStatus, IOCLogInfo */
+ 
+ 		facts->ReplyQueueDepth = le16_to_cpu(facts->ReplyQueueDepth);
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+1.8.3.1
+
