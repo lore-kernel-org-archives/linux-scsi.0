@@ -4,37 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C4C1C43461
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 01:46:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45AD5C433ED
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 01:46:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CA2C61165
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 01:46:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2363D61165
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 01:46:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231335AbhDHBrF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Apr 2021 21:47:05 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:45299 "EHLO smtp.infotech.no"
+        id S231301AbhDHBrH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Apr 2021 21:47:07 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:45308 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231267AbhDHBqp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Apr 2021 21:46:45 -0400
+        id S231325AbhDHBqs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 7 Apr 2021 21:46:48 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 2635020418D;
-        Thu,  8 Apr 2021 03:46:30 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id 835C120423B;
+        Thu,  8 Apr 2021 03:46:32 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id OqYEZGoSE8oI; Thu,  8 Apr 2021 03:46:28 +0200 (CEST)
+        with ESMTP id dXwI8km70PGV; Thu,  8 Apr 2021 03:46:29 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        by smtp.infotech.no (Postfix) with ESMTPA id 8E60C20418F;
-        Thu,  8 Apr 2021 03:46:23 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 9CA8F20429C;
+        Thu,  8 Apr 2021 03:46:24 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v17 43/45] sg: no_dxfer: move to/from kernel buffers
-Date:   Wed,  7 Apr 2021 21:45:29 -0400
-Message-Id: <20210408014531.248890-44-dgilbert@interlog.com>
+Subject: [PATCH v17 44/45] sg: add blk_poll support
+Date:   Wed,  7 Apr 2021 21:45:30 -0400
+Message-Id: <20210408014531.248890-45-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210408014531.248890-1-dgilbert@interlog.com>
 References: <20210408014531.248890-1-dgilbert@interlog.com>
@@ -44,95 +44,267 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When the NO_DXFER flag is use on a command/request, the data-in
-and data-out buffers (if present) should not be ignored. Add
-sg_rq_map_kern() function to handle this. Uses a single bio with
-multiple bvec_s usually each holding multiple pages, if necessary.
-The driver default element size is 32 KiB so if PAGE_SIZE is 4096
-then get_order()==3 .
+The support is added via the new SGV4_FLAG_HIPRI command flag which
+causes REQ_HIPRI to be set on the request. Before waiting on an
+inflight request, it is checked to see if it has SGV4_FLAG_HIPRI,
+and if so blk_poll() is called instead of the wait. In situations
+where only the file descriptor is known (e.g. sg_poll() and
+ioctl(SG_GET_NUM_WAITING)) all inflight requests associated with
+the file descriptor that have SGV4_FLAG_HIPRI set, have blk_poll()
+called on them.
+
+It is important to know blk_execute_rq_nowait() has finished before
+sending blk_poll() on that request. The SG_RS_INFLIGHT state is set
+just before blk_execute_rq_nowait() is called so a new bit setting
+SG_FRQ_ISSUED has been added that is set just after that calls
+returns.
+
+Note that the implementation of blk_poll() calls mq_poll() in the
+LLD associated with the request. Then for any request found to be
+ready, blk_poll() invokes the scsi_done() callback. When blk_poll()
+returns > 0 , sg_rq_end_io() may have been called on the given
+request. If so the given request will be in await_rcv state.
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 59 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 59 insertions(+)
+ drivers/scsi/sg.c      | 108 ++++++++++++++++++++++++++++++++++++++---
+ include/uapi/scsi/sg.h |   1 +
+ 2 files changed, 103 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 9205f126db82..0982cb031be9 100644
+index 0982cb031be9..19aafd8e23f1 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -2849,6 +2849,63 @@ exit_sg(void)
- 	idr_destroy(&sg_index_idr);
+@@ -116,12 +116,14 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
+ #define SG_FRQ_RECEIVING	7	/* guard against multiple receivers */
+ #define SG_FRQ_FOR_MMAP		8	/* request needs PAGE_SIZE elements */
+ #define SG_FRQ_COUNT_ACTIVE	9	/* sfp->submitted + waiting active */
++#define SG_FRQ_ISSUED		10	/* blk_execute_rq_nowait() finished */
+ 
+ /* Bit positions (flags) for sg_fd::ffd_bm bitmask follow */
+ #define SG_FFD_FORCE_PACKID	0	/* receive only given pack_id/tag */
+ #define SG_FFD_CMD_Q		1	/* clear: only 1 active req per fd */
+ #define SG_FFD_KEEP_ORPHAN	2	/* policy for this fd */
+-#define SG_FFD_Q_AT_TAIL	3	/* set: queue reqs at tail of blk q */
++#define SG_FFD_HIPRI_SEEN	3	/* could have HIPRI requests active */
++#define SG_FFD_Q_AT_TAIL	4	/* set: queue reqs at tail of blk q */
+ 
+ /* Bit positions (flags) for sg_device::fdev_bm bitmask follow */
+ #define SG_FDEV_EXCLUDE		0	/* have fd open with O_EXCL */
+@@ -210,6 +212,7 @@ struct sg_request {	/* active SCSI command or inactive request */
+ 	int sense_len;		/* actual sense buffer length (data-in) */
+ 	atomic_t rq_st;		/* request state, holds a enum sg_rq_state */
+ 	u8 cmd_opcode;		/* first byte of SCSI cdb */
++	blk_qc_t cookie;	/* ids 1 or more queues for blk_poll() */
+ 	u64 start_ns;		/* starting point of command duration calc */
+ 	unsigned long frq_bm[1];	/* see SG_FRQ_* defines above */
+ 	u8 *sense_bp;		/* mempool alloc-ed sense buffer, as needed */
+@@ -299,6 +302,9 @@ static struct sg_device *sg_get_dev(int min_dev);
+ static void sg_device_destroy(struct kref *kref);
+ static struct sg_request *sg_mk_srp_sgat(struct sg_fd *sfp, bool first,
+ 					 int db_len);
++static int sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count);
++static int sg_srp_q_blk_poll(struct sg_request *srp, struct request_queue *q,
++			     int loop_count);
+ #if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
+ static const char *sg_rq_st_str(enum sg_rq_state rq_st, bool long_str);
+ #endif
+@@ -1008,6 +1014,7 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
+ {
+ 	bool at_head, is_v4h, sync;
+ 	struct sg_device *sdp = sfp->parentdp;
++	struct request *rqq = READ_ONCE(srp->rqq);
+ 
+ 	is_v4h = test_bit(SG_FRQ_IS_V4I, srp->frq_bm);
+ 	sync = test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm);
+@@ -1031,7 +1038,12 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
+ 		atomic_inc(&sfp->submitted);
+ 		set_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm);
+ 	}
+-	blk_execute_rq_nowait(sdp->disk, READ_ONCE(srp->rqq), (int)at_head, sg_rq_end_io);
++	if (srp->rq_flags & SGV4_FLAG_HIPRI) {
++		rqq->cmd_flags |= REQ_HIPRI;
++		srp->cookie = request_to_qc_t(rqq->mq_hctx, rqq);
++	}
++	blk_execute_rq_nowait(sdp->disk, rqq, (int)at_head, sg_rq_end_io);
++	set_bit(SG_FRQ_ISSUED, srp->frq_bm);
  }
  
-+static struct bio *
-+sg_mk_kern_bio(int bvec_cnt)
+ /*
+@@ -1693,6 +1705,13 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
+ 
+ 	if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
+ 		goto skip_wait;		/* and skip _acquire() */
++	if (srp->rq_flags & SGV4_FLAG_HIPRI) {
++		/* call blk_poll(), spinning till found */
++		res = sg_srp_q_blk_poll(srp, sdp->device->request_queue, -1);
++		if (res != -ENODATA && unlikely(res < 0))
++			return res;
++		goto skip_wait;
++	}
+ 	SG_LOG(3, sfp, "%s: about to wait_event...()\n", __func__);
+ 	/* usually will be woken up by sg_rq_end_io() callback */
+ 	res = wait_event_interruptible(sfp->read_wait,
+@@ -2019,6 +2038,8 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 		SG_LOG(3, sfp, "%s:    SG_GET_PACK_ID=%d\n", __func__, val);
+ 		return put_user(val, ip);
+ 	case SG_GET_NUM_WAITING:
++		if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
++			sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready */
+ 		val = atomic_read(&sfp->waiting);
+ 		if (val)
+ 			return put_user(val, ip);
+@@ -2228,6 +2249,69 @@ sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ }
+ #endif
+ 
++/*
++ * If the sg_request object is not inflight, return -ENODATA. This function
++ * returns 1 if the given object was in inflight state and is in await_rcv
++ * state after blk_poll() returns 1 or more. If blk_poll() fails, then that
++ * (negative) value is returned. Otherwise returns 0. Note that blk_poll()
++ * may complete unrelated requests that share the same q and cookie.
++ */
++static int
++sg_srp_q_blk_poll(struct sg_request *srp, struct request_queue *q, int loop_count)
 +{
-+	struct bio *biop;
++	int k, n, num;
 +
-+	if (bvec_cnt > BIO_MAX_PAGES)
-+		return NULL;
-+	biop = bio_alloc(GFP_ATOMIC, bvec_cnt);
-+	if (!biop)
-+		return NULL;
-+	biop->bi_end_io = bio_put;
-+	return biop;
++	num = (loop_count < 1) ? 1 : loop_count;
++	for (k = 0; k < num; ++k) {
++		if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
++			return -ENODATA;
++		n = blk_poll(q, srp->cookie, loop_count < 0 /* spin if negative */);
++		if (n > 0)
++			return atomic_read(&srp->rq_st) == SG_RS_AWAIT_RCV;
++		if (n < 0)
++			return n;
++	}
++	return 0;
 +}
 +
 +/*
-+ * Setup to move data between kernel buffers managed by this driver and a SCSI device. Note that
-+ * there is no corresponding 'unmap' call as is required by blk_rq_map_user() . Uses a single
-+ * bio with an expanded appended bvec if necessary.
++ * Check all requests on this sfp that are both inflight and HIPRI. That check involves calling
++ * blk_poll(spin<-false) loop_count times. If loop_count is 0 then call blk_poll once.
++ * If loop_count is negative then call blk_poll(spin <- true)) once for each request.
++ * Returns number found (could be 0) or a negated errno value.
 + */
 +static int
-+sg_rq_map_kern(struct sg_request *srp, struct request_queue *q, struct request *rqq, int rw_ind)
++sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count)
 +{
-+	struct sg_scatter_hold *schp = &srp->sgat_h;
-+	struct bio *bio;
-+	int k, ln;
-+	int op_flags = 0;
-+	int num_sgat = schp->num_sgat;
-+	int dlen = schp->dlen;
-+	int pg_sz = 1 << (PAGE_SHIFT + schp->page_order);
-+	int num_segs = (1 << schp->page_order) * num_sgat;
 +	int res = 0;
++	int n;
++	unsigned long idx, iflags;
++	struct sg_request *srp;
++	struct scsi_device *sdev = sfp->parentdp->device;
++	struct request_queue *q = sdev ? sdev->request_queue : NULL;
++	struct xarray *xafp = &sfp->srp_arr;
 +
-+	SG_LOG(4, srp->parentfp, "%s: dlen=%d, pg_sz=%d\n", __func__, dlen, pg_sz);
-+	if (num_sgat <= 0)
-+		return 0;
-+	if (rw_ind == WRITE)
-+		op_flags = REQ_SYNC | REQ_IDLE;
-+	bio = sg_mk_kern_bio(num_sgat);
-+	if (!bio)
-+		return -ENOMEM;
-+	bio->bi_opf = req_op(rqq) | op_flags;
-+
-+	for (k = 0; k < num_sgat && dlen > 0; ++k, dlen -= ln) {
-+		ln = min_t(int, dlen, pg_sz);
-+		if (bio_add_pc_page(q, bio, schp->pages[k], ln, 0) < ln) {
-+			bio_put(bio);
-+			return -EINVAL;
++	if (!q)
++		return -EINVAL;
++	xa_lock_irqsave(xafp, iflags);
++	xa_for_each(xafp, idx, srp) {
++		if ((srp->rq_flags & SGV4_FLAG_HIPRI) &&
++		    atomic_read(&srp->rq_st) == SG_RS_INFLIGHT &&
++		    test_bit(SG_FRQ_ISSUED, srp->frq_bm)) {
++			xa_unlock_irqrestore(xafp, iflags);
++			n = sg_srp_q_blk_poll(srp, q, loop_count);
++			if (n == -ENODATA)
++				n = 0;
++			if (unlikely(n < 0))
++				return n;
++			xa_lock_irqsave(xafp, iflags);
++			res += n;
 +		}
 +	}
-+	res = blk_rq_append_bio(rqq, &bio);
-+	if (unlikely(res))
-+		bio_put(bio);
-+	else
-+		rqq->nr_phys_segments = num_segs;
++	xa_unlock_irqrestore(xafp, iflags);
 +	return res;
 +}
 +
- static inline void
- sg_set_map_data(const struct sg_scatter_hold *schp, bool up_valid,
- 		struct rq_map_data *mdp)
-@@ -3010,6 +3067,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 		if (IS_ENABLED(CONFIG_SCSI_PROC_FS) && res)
- 			SG_LOG(1, sfp, "%s: blk_rq_map_user() res=%d\n",
- 			       __func__, res);
-+	} else {	/* transfer data to/from kernel buffers */
-+		res = sg_rq_map_kern(srp, q, rqq, r0w);
+ /*
+  * Implements the poll(2) system call for this driver. Returns various EPOLL*
+  * flags OR-ed together.
+@@ -2239,6 +2323,8 @@ sg_poll(struct file *filp, poll_table * wait)
+ 	__poll_t p_res = 0;
+ 	struct sg_fd *sfp = filp->private_data;
+ 
++	if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
++		sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready to push up */
+ 	num = atomic_read(&sfp->waiting);
+ 	if (num < 1) {
+ 		poll_wait(filp, &sfp->read_wait, wait);
+@@ -2523,6 +2609,7 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
+ 		}
  	}
- fini:
- 	if (unlikely(res)) {		/* failure, free up resources */
+ 	xa_lock_irqsave(&sfp->srp_arr, iflags);
++	__set_bit(SG_FRQ_ISSUED, srp->frq_bm);
+ 	sg_rq_chg_state_force_ulck(srp, rqq_state);
+ 	WRITE_ONCE(srp->rqq, NULL);
+ 	if (test_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
+@@ -2548,7 +2635,8 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
+ 
+ 	if (likely(rqq_state == SG_RS_AWAIT_RCV)) {
+ 		/* Wake any sg_read()/ioctl(SG_IORECEIVE) awaiting this req */
+-		wake_up_interruptible(&sfp->read_wait);
++		if (!(srp->rq_flags & SGV4_FLAG_HIPRI))
++			wake_up_interruptible(&sfp->read_wait);
+ 		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
+ 		kref_put(&sfp->f_ref, sg_remove_sfp);
+ 	} else {        /* clean up orphaned request that aren't being kept */
+@@ -2991,6 +3079,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 	/* current sg_request protected by SG_RS_BUSY state */
+ 	scsi_rp = scsi_req(rqq);
+ 	WRITE_ONCE(srp->rqq, rqq);
++	if (rq_flags & SGV4_FLAG_HIPRI)
++		set_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
+ 
+ 	if (cwrp->cmd_len > BLK_MAX_CDB)
+ 		scsi_rp->cmd = long_cmdp;	/* transfer ownership */
+@@ -3100,7 +3190,10 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
+ 	SG_LOG(4, sfp, "%s: srp=0x%pK%s\n", __func__, srp,
+ 	       (srp->parentfp->rsv_srp == srp) ? " rsv" : "");
+ 	if (test_and_clear_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
+-		atomic_dec(&sfp->submitted);
++		bool now_zero = atomic_dec_and_test(&sfp->submitted);
++
++		if (now_zero)
++			clear_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
+ 		atomic_dec(&sfp->waiting);
+ 	}
+ 
+@@ -3297,6 +3390,8 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
+ 	struct sg_request *srp = NULL;
+ 	struct xarray *xafp = &sfp->srp_arr;
+ 
++	if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
++		sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready to push up */
+ 	if (num_waiting < 1) {
+ 		num_waiting = atomic_read_acquire(&sfp->waiting);
+ 		if (num_waiting < 1)
+@@ -4101,8 +4196,9 @@ sg_proc_debug_sreq(struct sg_request *srp, int to, char *obp, int len)
+ 	else if (dur < U32_MAX)	/* in-flight or busy (so ongoing) */
+ 		n += scnprintf(obp + n, len - n, " t_o/elap=%us/%ums",
+ 			       to / 1000, dur);
+-	n += scnprintf(obp + n, len - n, " sgat=%d op=0x%02x\n",
+-		       srp->sgat_h.num_sgat, srp->cmd_opcode);
++	cp = (srp->rq_flags & SGV4_FLAG_HIPRI) ? "hipri " : "";
++	n += scnprintf(obp + n, len - n, " sgat=%d %sop=0x%02x\n",
++		       srp->sgat_h.num_sgat, cp, srp->cmd_opcode);
+ 	return n;
+ }
+ 
+diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
+index 6162a5d5995c..11b58b279241 100644
+--- a/include/uapi/scsi/sg.h
++++ b/include/uapi/scsi/sg.h
+@@ -110,6 +110,7 @@ typedef struct sg_io_hdr {
+ #define SGV4_FLAG_Q_AT_TAIL SG_FLAG_Q_AT_TAIL
+ #define SGV4_FLAG_Q_AT_HEAD SG_FLAG_Q_AT_HEAD
+ #define SGV4_FLAG_IMMED 0x400 /* for polling with SG_IOR, ignored in SG_IOS */
++#define SGV4_FLAG_HIPRI 0x800 /* request will use blk_poll to complete */
+ 
+ /* Output (potentially OR-ed together) in v3::info or v4::info field */
+ #define SG_INFO_OK_MASK 0x1
 -- 
 2.25.1
 
