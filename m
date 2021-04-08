@@ -2,77 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62705C433B4
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 09:06:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FC1CC43460
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 09:37:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 284686044F
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 09:06:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E667761177
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 09:37:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229741AbhDHJHB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Apr 2021 05:07:01 -0400
-Received: from out4436.biz.mail.alibaba.com ([47.88.44.36]:43842 "EHLO
-        out4436.biz.mail.alibaba.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229600AbhDHJHA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2021 05:07:00 -0400
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R651e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04426;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0UUspZKb_1617872787;
-Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0UUspZKb_1617872787)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Thu, 08 Apr 2021 17:06:34 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     sathya.prakash@broadcom.com
-Cc:     sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Subject: [PATCH] scsi: message: fusion: Remove useless variable
-Date:   Thu,  8 Apr 2021 17:06:20 +0800
-Message-Id: <1617872780-126448-1-git-send-email-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S231255AbhDHJiA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Apr 2021 05:38:00 -0400
+Received: from mga03.intel.com ([134.134.136.65]:32279 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229640AbhDHJiA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 8 Apr 2021 05:38:00 -0400
+IronPort-SDR: PHOHjWaTwQxnYoNMfngO473e1wU5NJYAOYjE9cxopWxg+Wbxjiv/be5oKrour3Vsnkg2eLG8S8
+ w6lS3Z14qjNw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9947"; a="193543909"
+X-IronPort-AV: E=Sophos;i="5.82,206,1613462400"; 
+   d="scan'208";a="193543909"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Apr 2021 02:37:48 -0700
+IronPort-SDR: BFpXzI0RXUfZATcKxM7hFx64JBR7Vk2GquUS4EhpRUOdB/vQoJXx3E7ConT8Lwt/z83n9oxCQn
+ yC8CBijdMkrw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,206,1613462400"; 
+   d="scan'208";a="458753841"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
+  by orsmga001.jf.intel.com with ESMTP; 08 Apr 2021 02:37:42 -0700
+Subject: Re: [PATCH v16 1/2] scsi: ufs: Enable power management for wlun
+To:     Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Yue Hu <huyue2@yulong.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>
+References: <cover.1617818557.git.asutoshd@codeaurora.org>
+ <7be92c0bc3e5f07d5e17bd3b78c01496686ef31e.1617818557.git.asutoshd@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <d30c2dc2-6334-1515-b548-a898939ec9ee@intel.com>
+Date:   Thu, 8 Apr 2021 12:38:00 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <7be92c0bc3e5f07d5e17bd3b78c01496686ef31e.1617818557.git.asutoshd@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following gcc warning:
+On 7/04/21 9:08 pm, Asutosh Das wrote:
+> During runtime-suspend of ufs host, the scsi devices are
+> already suspended and so are the queues associated with them.
+> But the ufs host sends SSU (START_STOP_UNIT) to wlun
+> during its runtime-suspend.
+> During the process blk_queue_enter checks if the queue is not in
+> suspended state. If so, it waits for the queue to resume, and never
+> comes out of it.
+> The commit
+> (d55d15a33: scsi: block: Do not accept any requests while suspended)
+> adds the check if the queue is in suspended state in blk_queue_enter().
+> 
+> Call trace:
+>  __switch_to+0x174/0x2c4
+>  __schedule+0x478/0x764
+>  schedule+0x9c/0xe0
+>  blk_queue_enter+0x158/0x228
+>  blk_mq_alloc_request+0x40/0xa4
+>  blk_get_request+0x2c/0x70
+>  __scsi_execute+0x60/0x1c4
+>  ufshcd_set_dev_pwr_mode+0x124/0x1e4
+>  ufshcd_suspend+0x208/0x83c
+>  ufshcd_runtime_suspend+0x40/0x154
+>  ufshcd_pltfrm_runtime_suspend+0x14/0x20
+>  pm_generic_runtime_suspend+0x28/0x3c
+>  __rpm_callback+0x80/0x2a4
+>  rpm_suspend+0x308/0x614
+>  rpm_idle+0x158/0x228
+>  pm_runtime_work+0x84/0xac
+>  process_one_work+0x1f0/0x470
+>  worker_thread+0x26c/0x4c8
+>  kthread+0x13c/0x320
+>  ret_from_fork+0x10/0x18
+> 
+> Fix this by registering ufs device wlun as a scsi driver and
+> registering it for block runtime-pm. Also make this as a
+> supplier for all other luns. That way, this device wlun
+> suspends after all the consumers and resumes after
+> hba resumes.
+> 
+> Co-developed-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> ---
 
-drivers/message/fusion/mptbase.c:3087:9: warning: variable ‘status’ set
-but not used [-Wunused-but-set-variable].
+<SNIP>
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- drivers/message/fusion/mptbase.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+> +#ifdef CONFIG_PM_SLEEP
+> +static int ufshcd_wl_poweroff(struct device *dev)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 549797d..f37ea06 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -3084,7 +3084,7 @@ static int mpt_remove_dead_ioc_func(void *arg)
- 	int			 req_sz;
- 	int			 reply_sz;
- 	int			 sz;
--	u32			 status, vv;
-+	u32			 vv;
- 	u8			 shiftFactor=1;
- 
- 	/* IOC *must* NOT be in RESET state! */
-@@ -3142,7 +3142,6 @@ static int mpt_remove_dead_ioc_func(void *arg)
- 		facts->IOCExceptions = le16_to_cpu(facts->IOCExceptions);
- 		facts->IOCStatus = le16_to_cpu(facts->IOCStatus);
- 		facts->IOCLogInfo = le32_to_cpu(facts->IOCLogInfo);
--		status = le16_to_cpu(facts->IOCStatus) & MPI_IOCSTATUS_MASK;
- 		/* CHECKME! IOCStatus, IOCLogInfo */
- 
- 		facts->ReplyQueueDepth = le16_to_cpu(facts->ReplyQueueDepth);
--- 
-1.8.3.1
+Should be:
 
+	struct scsi_device *sdev = to_scsi_device(dev);
+	struct ufs_hba *hba = shost_priv(sdev->host);
+
+> +
+> +	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
+> +	return 0;
+> +}
+> +#endif
