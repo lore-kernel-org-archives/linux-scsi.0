@@ -2,347 +2,218 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F98CC433ED
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 16:28:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95141C433ED
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 16:35:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1AF706102A
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 16:28:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 675C4610D1
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 16:35:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232318AbhDHQ3F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Apr 2021 12:29:05 -0400
-Received: from mail-1.ca.inter.net ([208.85.220.69]:46414 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231893AbhDHQ3F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2021 12:29:05 -0400
-Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id 9ADD32EA28A;
-        Thu,  8 Apr 2021 12:28:52 -0400 (EDT)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
-        with ESMTP id b31tS7JD7MFm; Thu,  8 Apr 2021 12:09:58 -0400 (EDT)
-Received: from [192.168.48.23] (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 7B8E12EA1FC;
-        Thu,  8 Apr 2021 12:28:51 -0400 (EDT)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v17 44/45] sg: add blk_poll support
-To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-References: <20210408014531.248890-1-dgilbert@interlog.com>
- <20210408014531.248890-45-dgilbert@interlog.com>
- <de77707e-a4dc-78f8-43a3-48c90f2eec5a@suse.de>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <0e12db0f-b15c-c788-3207-b204a052bd04@interlog.com>
-Date:   Thu, 8 Apr 2021 12:28:51 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S232248AbhDHQfX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Apr 2021 12:35:23 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:51480 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231909AbhDHQfV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2021 12:35:21 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 138GU4we032678;
+        Thu, 8 Apr 2021 16:34:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ references : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=jyZTPAtyaU7LTn2BO6UIVOTYdNSWjyov6t1wDDV2mpA=;
+ b=0A+hUOt04xGutua7h3PMnG1E9HsnY9+3ZjkP4YX94WCn32mg0UoY/i97tz817PHbM8T2
+ 1MJYn+LE8Gq38OlfqMhmhNWQ7LFFqEGfC3DP+wk3x4pDEIEejXinb0LNI4OFMO6dZvdh
+ IoODvRJwS3FzUUikrg4EFRoyQWAGq6VqKgg0Kch1KaukkyKyM7RTdBKAL+SL7Min/9UE
+ TbIXmWX33FQ12Kt9e29pf/0NL01HEbByIIIPQEfiSQRKMuDn+wpFE1IeiWGtGuASieoS
+ K6Hn+PJgHBFaaNj3jM20JybLGFG3vGy8utLox39NpQL6dqJ+a/MZ2t/Mm6jlpcH2ILnP Bw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2130.oracle.com with ESMTP id 37rvaw6k34-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 08 Apr 2021 16:34:51 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 138GU3FB007237;
+        Thu, 8 Apr 2021 16:34:50 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2173.outbound.protection.outlook.com [104.47.57.173])
+        by userp3030.oracle.com with ESMTP id 37rvbfwg6t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 08 Apr 2021 16:34:50 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=eU6ZYl5Yc41EFbe6HWyK6fxA4Z5hiVbJro0kUPn/gWM+DPuIruS/YYnJg7cTLLa53VBAkrDU+j9/jhBAjUUEbGojjS+N6EaWPcP0J0C5B59fH7gE5CMSsqEW93jFYJAsjUFGjBzXC8C08lyxuuiF09JJEQVPabCUqoyipa21q3Ij9TvFceFVeWn3NW+J59y5dsb6xC+jJfySiBWiKTxiFCuxUNiYvi5p3AwsIDEJ4dB9FUTRYrBsNXuu/W3upKiLVO7t3UQG6W3YX3OMV38gEYlwWpxSZaydcud584p/HCzfx8Pg9D1GAvPqme/NOVOfZO1n5O4qQFrCM+HYrdYf3Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jyZTPAtyaU7LTn2BO6UIVOTYdNSWjyov6t1wDDV2mpA=;
+ b=kCxJ4ZFNiJsoU8xxK7ubH8ZWCPQPbt7SF1RnKMmK/Rbo3tdcAWDexdFK/8R1x8wUPgYC/U7JoNnpY0Ck3HqXgs41yUsHua78FlFkMKjI2HIS9Fn6/ZPPYs8lqiOkEaOzSWZBU88sHg8LGvsbtja5uqGXFQV9IyRuhzpXwK2K2i3d0NaqURlkcg0eZtlcodvFmtUG02XCwMzDAY81z6a0oVBIzha94X7trlhS4jsH6e8lnpMW/Jm7tak5TiMtbCmPbrrx9519yf7IrZRMxR4KbzJ0n98Rc7OX7i1T/hlBVi1yiTriWSPWCg/zmPaSI8HznYiMzQu6vvfE4TA+O+9jlg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jyZTPAtyaU7LTn2BO6UIVOTYdNSWjyov6t1wDDV2mpA=;
+ b=yIaIlqD8y8462cDcRcNQ0PE2BFF1qVEW/ZQ6Odr1fjYn1DldZG/aANvJ4hbhGDY3ylz/tVdMvP8979Pv5RoL5HixXKG+cEp9DKYn1iTJL8v8e02sXEpmtIMxZhR9/pijQnMdedVr24oPgXqu/io+UyTF5uWoAj44qLtC5EKgJmM=
+Authentication-Results: linux.ibm.com; dkim=none (message not signed)
+ header.d=none;linux.ibm.com; dmarc=none action=none header.from=oracle.com;
+Received: from BYAPR10MB3573.namprd10.prod.outlook.com (2603:10b6:a03:11e::32)
+ by BYAPR10MB3317.namprd10.prod.outlook.com (2603:10b6:a03:158::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3999.27; Thu, 8 Apr
+ 2021 16:34:48 +0000
+Received: from BYAPR10MB3573.namprd10.prod.outlook.com
+ ([fe80::50bb:7b66:35ee:4a4]) by BYAPR10MB3573.namprd10.prod.outlook.com
+ ([fe80::50bb:7b66:35ee:4a4%7]) with mapi id 15.20.4020.018; Thu, 8 Apr 2021
+ 16:34:48 +0000
+Subject: Re: [PATCH 00/40] iscsi lock and refcount fix ups
+From:   michael.christie@oracle.com
+To:     lduncan@suse.com, cleech@redhat.com, njavali@marvell.com,
+        mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
+        varun@chelsio.com, subbu.seetharaman@broadcom.com,
+        ketan.mukadam@broadcom.com, jitendra.bhivare@broadcom.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        jejb@linux.ibm.com
+References: <20210403232333.212927-1-michael.christie@oracle.com>
+Message-ID: <6dfcc71e-aaf4-2831-5e47-d069fe1b2814@oracle.com>
+Date:   Thu, 8 Apr 2021 11:34:44 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.9.0
+In-Reply-To: <20210403232333.212927-1-michael.christie@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [73.88.28.6]
+X-ClientProxiedBy: DM3PR14CA0133.namprd14.prod.outlook.com
+ (2603:10b6:0:53::17) To BYAPR10MB3573.namprd10.prod.outlook.com
+ (2603:10b6:a03:11e::32)
 MIME-Version: 1.0
-In-Reply-To: <de77707e-a4dc-78f8-43a3-48c90f2eec5a@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [20.15.0.5] (73.88.28.6) by DM3PR14CA0133.namprd14.prod.outlook.com (2603:10b6:0:53::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.17 via Frontend Transport; Thu, 8 Apr 2021 16:34:46 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: db41de90-45c7-471a-801c-08d8faac396c
+X-MS-TrafficTypeDiagnostic: BYAPR10MB3317:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BYAPR10MB331717D82A18C5B86317CFD7F1749@BYAPR10MB3317.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 16nRTtxnFLLYbxmLcA4YbUrxO4Y8Tm34owcfZlHxfeAInn9fMpoUgxOS0jsR681AUT2OLv+SFaJ/Hz7DDM9kOvop8H1Lujozad0gCbDqKKsfpTLT/roCWFsbWyT42dgtCsFjw2hQ93SWIGv8dFMI81AtegyqNoBy1Gm+0EuwkGlylyS0xUl3nADNnVWQF6J/DsJZwZuum8CKHFQi2zfD5vVebaeRk0msSjJEzTq49BoKjwvwz3f2Lca+8nz2PjtLESXgzz33fE5tqgbIr+MaUr0WZTJsOAZTEN95yCDuZ4FdCUx5aea970413w3jqnFezJeBIXU4YXrI6QLV6OuxO35GnI7z3l5jT+eAstTekT3KYQ/1oeILS3x6YHi8S8zBrUNY1QRq5imO8Wm2SC74+89ccb6gQjbUczNjmC2uEU1Syv+ePmyoqw/ORsiLms5gUT820bjg16wqrtL2YB6r3lOCxlTRDn6suNdV9RDSVcxCzFFXdgoDksJpHlGl569oHp5QrvzGXFVmzfCDe7GoiMJKMAq6R5sQmB2h1E3AIqZ5pHTru/BgPFVeJRA5PPSQK0ecP4M7WTUuf8l6zVuDsNtKZkbYRoykmhUGIfLZ6+kLg9nlP/u5VBIIzFOF1y9S2ChFJeSmDdwagrYPUS0HgaIEssJMLkhvTdMnuAhUuqBPW6LnUxKUo7C0BwM0Q/NstY1Iw9SdaJGEJqjmbQPAhLo1bONq01zCiC1gubjmoog=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB3573.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(39860400002)(366004)(136003)(396003)(346002)(376002)(9686003)(86362001)(66946007)(31696002)(83380400001)(186003)(956004)(26005)(38100700001)(6706004)(5660300002)(8936002)(316002)(16576012)(36756003)(8676002)(6486002)(921005)(2616005)(7416002)(53546011)(478600001)(31686004)(66476007)(16526019)(2906002)(66556008)(78286007)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?YkJpaTBhRTZ0WjZWdUtLdExYZVpjUHlRclpkOCsvUWxLV1pNM2xSU0FuUWVj?=
+ =?utf-8?B?eVp3TTlqS2tVMkFDMjVkeTVadlRFanJjaUQ2MUNOTCsvY1ZWNFB1MU5HUDNt?=
+ =?utf-8?B?WktHd01FcElWeUlITWJTdUJzWTNxck9JWEpKVi9UMmhRN1QwMWpDVUtMYVpu?=
+ =?utf-8?B?NnZxa0x0cTc0bW5wdm5zNk0yRTZKZ3JPc0NZOVFPTUlCTWt0S0VEbzlEMHJL?=
+ =?utf-8?B?bnVvVzQ4REtMVGFLSTNZZEZXSTlSODhMQWxoaXRrcE1BTEI3c3VpeVEzT2pt?=
+ =?utf-8?B?Y1pNWjVoc0V2N2c2WndrUDN2VktWWDQ3TFBOK2F4dXRrdjBDQ2RqcFllYVh2?=
+ =?utf-8?B?Vk1mYTkvaVo2TjN5SjRVUlo1SnBUSFBpY0xmdXd6TEp4YjhjK3JLV2w2YWJ4?=
+ =?utf-8?B?RFB1VzZQSkJUSDA0VU10L1hHeFo1M0ZzNUdqWkRMZWExekJRbGpKUlpVSUpR?=
+ =?utf-8?B?NitFZkxHdHpzMzJBV3hUcWJkQU9ZaHJUNGs3cGV5ZEJNRkRSa2poeHZqS0Zq?=
+ =?utf-8?B?S2dtS2EyOFlGMktOQ0lQbGN3OGxiZ0ZxNU9jRnoyR1dtcTZ0QTlNTTZWbGhO?=
+ =?utf-8?B?dGlkMVpRcS9zQXQrb3VRdGJ0d0xaaEhFeDhDRHQ5K0dRb0pZbmFRTDNHZmZM?=
+ =?utf-8?B?Z3VoQWJUNzBtMFQ0bFdNbk9YMjdOZzlqVThKL1g3eG5WTmJqR0J3M1c3NDUv?=
+ =?utf-8?B?eStMMTZ1RnEvbXcybVdiREJNN3lOY3hiU2xtUkkzOVM2OEcxSG0yZWFGZGQw?=
+ =?utf-8?B?OEFSK2FtdFVOaG1lWUdaNysvbmxsQnYwamh1Y216QzF5cWt2ZER1TkwyZDF2?=
+ =?utf-8?B?SFM0cHJOejgxOERKRU8rZTVtVkJINnlONEl1dGE0aEROZ2ZLejROYkl6SmNm?=
+ =?utf-8?B?bkx0ZEIrVlNTelJwUnlGS3QxYlVnVTgwRGZ5UEhKMjFiTEtTdGNUY20yMHVQ?=
+ =?utf-8?B?WG40dG8rM3VoTUpHcEJIakdTbG1YUFVoOTF2V2lSK3dMSW9QTWtaSmUvb1F6?=
+ =?utf-8?B?L1RUQ0o3K1MrU2pKZDdOR2hGMkN6U043dmNEcTZ3eU5uZTJJbEFmSEdLN0g5?=
+ =?utf-8?B?bkI3RWtvSEFaTEx2REJBOTZuOHRERU1YREZHU2VRaFgxNStWZ1JmbWRyL245?=
+ =?utf-8?B?eWI3dTFORmtmNTRaWXY5SG9DU25ERzBPdm8zNUFleW4xcmJYOU9mQjJLNzdu?=
+ =?utf-8?B?b3BxUnpNUUhVL1MzeHVNY0F1K0U5cXlhWWQ3NThqUnNHSUp3djNqWFFKeTEz?=
+ =?utf-8?B?RWpOT292WE56dk9lQjR3dGl1blpua0RIRG8rUGdQYWFNV1cxMUt5S0JmR012?=
+ =?utf-8?B?MUJGOFBNNDIxVWFkK2xmZ3hoZ2hHblFPeER4WExPa2toTnptMHIyWHV6K1NN?=
+ =?utf-8?B?dEVFbWcvKzhsaFdMQU9Bay9oRmVpdlF5azduMHlaSVRsaTR0dHN3SVBodU1q?=
+ =?utf-8?B?UytwZmZGQjlSYmYvanRldlBLMFBlTk5aNkJ2Vk8zMVI3d3VxQU80eWsyRnlu?=
+ =?utf-8?B?TE83MTNBYnlWcFVRVmh1M0NVR3pOK1FwSTZSUk5MRkkrRmtpdVVjcThoNnBC?=
+ =?utf-8?B?c0lDTW0xMGhzeSt1bEFuUEdUNFNLWG82cmJvZEVnVDJsd2E3di9NanpibUlV?=
+ =?utf-8?B?NFc5ZFozMUx5V21uY3g2dk1oeXVLM0lhWUtVLzhHaFF6VGZTeGV3NTZGbWpS?=
+ =?utf-8?B?NDBHWWVjZmE2VjZBcWc5N2pOcnp3dVJDSmo0U1pKdXN4cXdpUXl5SUFjbld1?=
+ =?utf-8?Q?JMbArUhghjjKkMAxO/VBEUzDMPwGJSCrk89kB++?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: db41de90-45c7-471a-801c-08d8faac396c
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB3573.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2021 16:34:47.9804
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ZZvta1YsH9Ypg9a+8zV/wsT2PkyTu3aL4yN9X0V6iKltOfXBw+tvg/74wdy4iv3d6eGRNdBuHDbPuMXnDK53HSmivFEVYmRfEfmmUx+1QWo=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3317
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9948 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
+ suspectscore=0 phishscore=0 malwarescore=0 mlxscore=0 spamscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104060000 definitions=main-2104080109
+X-Proofpoint-ORIG-GUID: 7yTrOCNZlq868-vhfNFpgyIcusYaUVcK
+X-Proofpoint-GUID: 7yTrOCNZlq868-vhfNFpgyIcusYaUVcK
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9948 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
+ suspectscore=0 phishscore=0 mlxlogscore=999 spamscore=0 malwarescore=0
+ mlxscore=0 bulkscore=0 impostorscore=0 adultscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
+ definitions=main-2104080109
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-04-08 4:14 a.m., Hannes Reinecke wrote:
-> On 4/8/21 3:45 AM, Douglas Gilbert wrote:
->> The support is added via the new SGV4_FLAG_HIPRI command flag which
->> causes REQ_HIPRI to be set on the request. Before waiting on an
->> inflight request, it is checked to see if it has SGV4_FLAG_HIPRI,
->> and if so blk_poll() is called instead of the wait. In situations
->> where only the file descriptor is known (e.g. sg_poll() and
->> ioctl(SG_GET_NUM_WAITING)) all inflight requests associated with
->> the file descriptor that have SGV4_FLAG_HIPRI set, have blk_poll()
->> called on them.
->>
->> It is important to know blk_execute_rq_nowait() has finished before
->> sending blk_poll() on that request. The SG_RS_INFLIGHT state is set
->> just before blk_execute_rq_nowait() is called so a new bit setting
->> SG_FRQ_ISSUED has been added that is set just after that calls
->> returns.
->>
->> Note that the implementation of blk_poll() calls mq_poll() in the
->> LLD associated with the request. Then for any request found to be
->> ready, blk_poll() invokes the scsi_done() callback. When blk_poll()
->> returns > 0 , sg_rq_end_io() may have been called on the given
->> request. If so the given request will be in await_rcv state.
->>
->> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
->> ---
->>   drivers/scsi/sg.c      | 108 ++++++++++++++++++++++++++++++++++++++---
->>   include/uapi/scsi/sg.h |   1 +
->>   2 files changed, 103 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
->> index 0982cb031be9..19aafd8e23f1 100644
->> --- a/drivers/scsi/sg.c
->> +++ b/drivers/scsi/sg.c
->> @@ -116,12 +116,14 @@ enum sg_rq_state {    /* N.B. sg_rq_state_arr assumes 
->> SG_RS_AWAIT_RCV==2 */
->>   #define SG_FRQ_RECEIVING    7    /* guard against multiple receivers */
->>   #define SG_FRQ_FOR_MMAP        8    /* request needs PAGE_SIZE elements */
->>   #define SG_FRQ_COUNT_ACTIVE    9    /* sfp->submitted + waiting active */
->> +#define SG_FRQ_ISSUED        10    /* blk_execute_rq_nowait() finished */
->>   /* Bit positions (flags) for sg_fd::ffd_bm bitmask follow */
->>   #define SG_FFD_FORCE_PACKID    0    /* receive only given pack_id/tag */
->>   #define SG_FFD_CMD_Q        1    /* clear: only 1 active req per fd */
->>   #define SG_FFD_KEEP_ORPHAN    2    /* policy for this fd */
->> -#define SG_FFD_Q_AT_TAIL    3    /* set: queue reqs at tail of blk q */
->> +#define SG_FFD_HIPRI_SEEN    3    /* could have HIPRI requests active */
->> +#define SG_FFD_Q_AT_TAIL    4    /* set: queue reqs at tail of blk q */
->>   /* Bit positions (flags) for sg_device::fdev_bm bitmask follow */
->>   #define SG_FDEV_EXCLUDE        0    /* have fd open with O_EXCL */
->> @@ -210,6 +212,7 @@ struct sg_request {    /* active SCSI command or inactive 
->> request */
->>       int sense_len;        /* actual sense buffer length (data-in) */
->>       atomic_t rq_st;        /* request state, holds a enum sg_rq_state */
->>       u8 cmd_opcode;        /* first byte of SCSI cdb */
->> +    blk_qc_t cookie;    /* ids 1 or more queues for blk_poll() */
->>       u64 start_ns;        /* starting point of command duration calc */
->>       unsigned long frq_bm[1];    /* see SG_FRQ_* defines above */
->>       u8 *sense_bp;        /* mempool alloc-ed sense buffer, as needed */
->> @@ -299,6 +302,9 @@ static struct sg_device *sg_get_dev(int min_dev);
->>   static void sg_device_destroy(struct kref *kref);
->>   static struct sg_request *sg_mk_srp_sgat(struct sg_fd *sfp, bool first,
->>                        int db_len);
->> +static int sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count);
->> +static int sg_srp_q_blk_poll(struct sg_request *srp, struct request_queue *q,
->> +                 int loop_count);
->>   #if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
->>   static const char *sg_rq_st_str(enum sg_rq_state rq_st, bool long_str);
->>   #endif
->> @@ -1008,6 +1014,7 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
->>   {
->>       bool at_head, is_v4h, sync;
->>       struct sg_device *sdp = sfp->parentdp;
->> +    struct request *rqq = READ_ONCE(srp->rqq);
->>       is_v4h = test_bit(SG_FRQ_IS_V4I, srp->frq_bm);
->>       sync = test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm);
->> @@ -1031,7 +1038,12 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
->>           atomic_inc(&sfp->submitted);
->>           set_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm);
->>       }
->> -    blk_execute_rq_nowait(sdp->disk, READ_ONCE(srp->rqq), (int)at_head, 
->> sg_rq_end_io);
->> +    if (srp->rq_flags & SGV4_FLAG_HIPRI) {
->> +        rqq->cmd_flags |= REQ_HIPRI;
->> +        srp->cookie = request_to_qc_t(rqq->mq_hctx, rqq);
->> +    }
->> +    blk_execute_rq_nowait(sdp->disk, rqq, (int)at_head, sg_rq_end_io);
->> +    set_bit(SG_FRQ_ISSUED, srp->frq_bm);
->>   }
->>   /*
->> @@ -1693,6 +1705,13 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, 
->> void __user *p,
->>       if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
->>           goto skip_wait;        /* and skip _acquire() */
->> +    if (srp->rq_flags & SGV4_FLAG_HIPRI) {
->> +        /* call blk_poll(), spinning till found */
->> +        res = sg_srp_q_blk_poll(srp, sdp->device->request_queue, -1);
->> +        if (res != -ENODATA && unlikely(res < 0))
->> +            return res;
->> +        goto skip_wait;
->> +    }
->>       SG_LOG(3, sfp, "%s: about to wait_event...()\n", __func__);
->>       /* usually will be woken up by sg_rq_end_io() callback */
->>       res = wait_event_interruptible(sfp->read_wait,
->> @@ -2019,6 +2038,8 @@ sg_ioctl_common(struct file *filp, struct sg_device 
->> *sdp, struct sg_fd *sfp,
->>           SG_LOG(3, sfp, "%s:    SG_GET_PACK_ID=%d\n", __func__, val);
->>           return put_user(val, ip);
->>       case SG_GET_NUM_WAITING:
->> +        if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
->> +            sg_sfp_blk_poll(sfp, 0);    /* LLD may have some ready */
->>           val = atomic_read(&sfp->waiting);
->>           if (val)
->>               return put_user(val, ip);
->> @@ -2228,6 +2249,69 @@ sg_compat_ioctl(struct file *filp, unsigned int cmd_in, 
->> unsigned long arg)
->>   }
->>   #endif
->> +/*
->> + * If the sg_request object is not inflight, return -ENODATA. This function
->> + * returns 1 if the given object was in inflight state and is in await_rcv
->> + * state after blk_poll() returns 1 or more. If blk_poll() fails, then that
->> + * (negative) value is returned. Otherwise returns 0. Note that blk_poll()
->> + * may complete unrelated requests that share the same q and cookie.
->> + */
->> +static int
->> +sg_srp_q_blk_poll(struct sg_request *srp, struct request_queue *q, int 
->> loop_count)
->> +{
->> +    int k, n, num;
->> +
->> +    num = (loop_count < 1) ? 1 : loop_count;
->> +    for (k = 0; k < num; ++k) {
->> +        if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
->> +            return -ENODATA;
->> +        n = blk_poll(q, srp->cookie, loop_count < 0 /* spin if negative */);
->> +        if (n > 0)
->> +            return atomic_read(&srp->rq_st) == SG_RS_AWAIT_RCV;
+Lee and Manish and others,
+
+Don't review this patchset.
+
+I'm hitting some issues with the code before my patchset. It will be easier
+to test/review if I fix them first.
+
+Lee, I'll send patches for the ep_disconnect/iscsi_conn_stop issue.
+
+Manish, I found some bugs in qedi that we might be hitting:
+
+- it shouldn't use iscsi_block_session in the tmf path
+- libiscsi and qedi can get out of sync in the tmf paths and cleanup the
+wrong cmds.
+
+
+On 4/3/21 6:22 PM, Mike Christie wrote:
+> The following patches apply over Linus's tree or Martin's staging branch.
+> They fix up the locking and refcount handling in the iscsi code so for
+> software iscsi we longer need a lock when going from queuecommand to the
+> xmit thread and no longer need a common iscsi level lock between the xmit
+> thread and completion paths.
 > 
-> That _technically_ is a race condition;
-> the first atomic_read() call might return a different value than the second one.
-> And this arguably is a mis-use of atomic _counters_, as here they are just used 
-> to store fixed values, not counters per se.
-> Why not use 'READ/WRITE_ONCE' ?
-
-Here is what I found in testing:
-
-         thread 1                     thread 2
-         [want sr1p compl.]          [want sr2p compl.]
-        ===============================================
-         sr1p INFLIGHT                sr2p INFLIGHT
-         blk_poll(cookie)
-             -> 1 (sr2p -> AWAIT)
-         sr1p not in AWAIT
-             so return 0
-                                      blk_poll(cookie)
-                                        ->1 (sr1p -> AWAIT)
-                                      sr2p is in AWAIT
-                                         so return 1
-          [called again]
-          sr1p not INFLIGHT
-             so returns -ENODATA
-
-Assuming the caller in thread 1 was sg_wait_event_srp() then
-an -ENODATA return is interpreted as found one (and a check is
-done for the AWAIT state and if not -EPROTO is returned to the
-user).
-
-So both threads have found their requests have been completed
-so all is well programmatically. But blk_poll(), which becomes
-mq_poll() to the LLD, found completions other than what the sg
-driver (or other ULD) was looking for since both requests were
-on the same (hardware) queue.
-
-Whenever blk_poll() returns > 0, I believe the question of a before
-and after race is moot. That is because blk_poll() has done a lot
-of work when it returns > 0 including the possibility of changing
-the state of the current request (in the current thread). It has:
-   - visited the LLD which has completed at least one outstanding
-     request on given q/cookie
-   - told the block layer it has completed 1 or more requests
-   - the block layer completion code:
-       - calls the scsi mid-level completion code
-          - calls the scsi ULD completion code
-
- From my testing without that recently added line:
-     return atomic_read(&srp->rq_st) == SG_RS_AWAIT_RCV;
-
-then test code with a single thread won't fail, two threads will seldom
-fail (by incorrectly believing its srp has completed just because
-blk_poll() completed _something_ in the window it was looking in).
-And the failure rate will increase with the number of threads
-running.
-
->> +        if (n < 0)
->> +            return n;
->> +    }
->> +    return 0;
->> +}
->> +
->> +/*
->> + * Check all requests on this sfp that are both inflight and HIPRI. That 
->> check involves calling
->> + * blk_poll(spin<-false) loop_count times. If loop_count is 0 then call 
->> blk_poll once.
->> + * If loop_count is negative then call blk_poll(spin <- true)) once for each 
->> request.
->> + * Returns number found (could be 0) or a negated errno value.
->> + */
->> +static int
->> +sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count)
->> +{
->> +    int res = 0;
->> +    int n;
->> +    unsigned long idx, iflags;
->> +    struct sg_request *srp;
->> +    struct scsi_device *sdev = sfp->parentdp->device;
->> +    struct request_queue *q = sdev ? sdev->request_queue : NULL;
->> +    struct xarray *xafp = &sfp->srp_arr;
->> +
->> +    if (!q)
->> +        return -EINVAL;
->> +    xa_lock_irqsave(xafp, iflags);
->> +    xa_for_each(xafp, idx, srp) {
->> +        if ((srp->rq_flags & SGV4_FLAG_HIPRI) &&
->> +            atomic_read(&srp->rq_st) == SG_RS_INFLIGHT &&
->> +            test_bit(SG_FRQ_ISSUED, srp->frq_bm)) {
->> +            xa_unlock_irqrestore(xafp, iflags);
->> +            n = sg_srp_q_blk_poll(srp, q, loop_count);
->> +            if (n == -ENODATA)
->> +                n = 0;
->> +            if (unlikely(n < 0))
->> +                return n;
->> +            xa_lock_irqsave(xafp, iflags);
->> +            res += n;
->> +        }
->> +    }
->> +    xa_unlock_irqrestore(xafp, iflags);
->> +    return res;
->> +}
->> +
->>   /*
->>    * Implements the poll(2) system call for this driver. Returns various EPOLL*
->>    * flags OR-ed together.
->> @@ -2239,6 +2323,8 @@ sg_poll(struct file *filp, poll_table * wait)
->>       __poll_t p_res = 0;
->>       struct sg_fd *sfp = filp->private_data;
->> +    if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
->> +        sg_sfp_blk_poll(sfp, 0);    /* LLD may have some ready to push up */
->>       num = atomic_read(&sfp->waiting);
->>       if (num < 1) {
->>           poll_wait(filp, &sfp->read_wait, wait);
->> @@ -2523,6 +2609,7 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
->>           }
->>       }
->>       xa_lock_irqsave(&sfp->srp_arr, iflags);
->> +    __set_bit(SG_FRQ_ISSUED, srp->frq_bm);
->>       sg_rq_chg_state_force_ulck(srp, rqq_state);
->>       WRITE_ONCE(srp->rqq, NULL);
->>       if (test_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
->> @@ -2548,7 +2635,8 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
->>       if (likely(rqq_state == SG_RS_AWAIT_RCV)) {
->>           /* Wake any sg_read()/ioctl(SG_IORECEIVE) awaiting this req */
->> -        wake_up_interruptible(&sfp->read_wait);
->> +        if (!(srp->rq_flags & SGV4_FLAG_HIPRI))
->> +            wake_up_interruptible(&sfp->read_wait);
->>           kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
->>           kref_put(&sfp->f_ref, sg_remove_sfp);
->>       } else {        /* clean up orphaned request that aren't being kept */
->> @@ -2991,6 +3079,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t 
->> *cwrp, int dxfer_dir)
->>       /* current sg_request protected by SG_RS_BUSY state */
->>       scsi_rp = scsi_req(rqq);
->>       WRITE_ONCE(srp->rqq, rqq);
->> +    if (rq_flags & SGV4_FLAG_HIPRI)
->> +        set_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
->>       if (cwrp->cmd_len > BLK_MAX_CDB)
->>           scsi_rp->cmd = long_cmdp;    /* transfer ownership */
->> @@ -3100,7 +3190,10 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
->>       SG_LOG(4, sfp, "%s: srp=0x%pK%s\n", __func__, srp,
->>              (srp->parentfp->rsv_srp == srp) ? " rsv" : "");
->>       if (test_and_clear_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
->> -        atomic_dec(&sfp->submitted);
->> +        bool now_zero = atomic_dec_and_test(&sfp->submitted);
->> +
->> +        if (now_zero)
->> +            clear_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
->>           atomic_dec(&sfp->waiting);
->>       }
+> For simple throughput workloads like
 > 
-> Why the 'now_zero' variable?
-> I guess it can be dropped ...
+> fio --filename=/dev/sdb --direct=1 --rw=randwrite --bs=256k \
+> --ioengine=libaio --iodepth=128 --numjobs=1 --time_based \
+> --group_reporting --name=throughput --runtime=120
+> 
+> I'm able to get throughput from 24 Gb/s to 28 where I then hit a
+> bottleneck on the target side.
+> 
+> IOPs might increase by around 10% in some cases with:
+> 
+> fio --filename=/dev/sdb --direct=1 --rw=randwrite --bs=4k \
+> --ioengine=libaio --iodepth=128 --numjobs=1 --time_based \
+> --group_reporting --name=throughput --runtime=120
+> 
+> I'm still debugging some target side issues.
+> 
+> A bigger advantage I'm seeing with the patches is that for setups where
+> you have software iscsi sharing CPUs with other subsystems like vhost
+> IOPs can increase by up to 20%.
+> 
+> Notes:
+> - I've tested iscsi_tcp, ib_iser, be2iscsi and qedi. I don't have cxgbi
+> or bnx2i hardware, but cxbgi changes were API only.
+> 
+> - Lee, the first 2 patches are new bug fixes. The first half are then
+> similar to what you saw before. I was not sure how far through them you
+> were. The second half was the part that removed the back lock and frwd
+> lock from iscsi_queuecommand are new.
+> 
+> 
+> 
+> 
 
-Yes it can.
-
-Doug Gilbert
