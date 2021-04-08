@@ -2,42 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D9B3C433ED
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 08:46:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B84C7C433ED
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 08:49:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 282F561166
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 08:46:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 803286113A
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 08:49:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229803AbhDHIqZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Apr 2021 04:46:25 -0400
-Received: from mx2.suse.de ([195.135.220.15]:43346 "EHLO mx2.suse.de"
+        id S229603AbhDHIuC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Apr 2021 04:50:02 -0400
+Received: from mx2.suse.de ([195.135.220.15]:49184 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229566AbhDHIqY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 8 Apr 2021 04:46:24 -0400
+        id S229588AbhDHIuC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 8 Apr 2021 04:50:02 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 7A075AE58;
-        Thu,  8 Apr 2021 08:46:12 +0000 (UTC)
-Subject: Re: [PATCH v9 13/13] lpfc: vmid: Introducing vmid in io path.
-To:     Muneendra <muneendra.kumar@broadcom.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        tj@kernel.org, linux-nvme@lists.infradead.org
-Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
-        Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-References: <1617750397-26466-1-git-send-email-muneendra.kumar@broadcom.com>
- <1617750397-26466-14-git-send-email-muneendra.kumar@broadcom.com>
+        by mx2.suse.de (Postfix) with ESMTP id 63157B0EA;
+        Thu,  8 Apr 2021 08:49:50 +0000 (UTC)
+Subject: Re: [PATCH v17 44/45] sg: add blk_poll support
+To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+References: <20210408014531.248890-1-dgilbert@interlog.com>
+ <20210408014531.248890-45-dgilbert@interlog.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <91b0c309-6908-8fd9-ac60-a8572500c3ed@suse.de>
-Date:   Thu, 8 Apr 2021 10:46:11 +0200
+Message-ID: <de77707e-a4dc-78f8-43a3-48c90f2eec5a@suse.de>
+Date:   Thu, 8 Apr 2021 10:14:09 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.7.0
 MIME-Version: 1.0
-In-Reply-To: <1617750397-26466-14-git-send-email-muneendra.kumar@broadcom.com>
+In-Reply-To: <20210408014531.248890-45-dgilbert@interlog.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -45,265 +42,281 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/7/21 1:06 AM, Muneendra wrote:
-> From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
+On 4/8/21 3:45 AM, Douglas Gilbert wrote:
+> The support is added via the new SGV4_FLAG_HIPRI command flag which
+> causes REQ_HIPRI to be set on the request. Before waiting on an
+> inflight request, it is checked to see if it has SGV4_FLAG_HIPRI,
+> and if so blk_poll() is called instead of the wait. In situations
+> where only the file descriptor is known (e.g. sg_poll() and
+> ioctl(SG_GET_NUM_WAITING)) all inflight requests associated with
+> the file descriptor that have SGV4_FLAG_HIPRI set, have blk_poll()
+> called on them.
 > 
-> The patch introduces the vmid in the io path. It checks if the vmid is
-> enabled and if io belongs to a vm or not and acts accordingly. Other
-> supporing APIs are also included in the patch.
-
-supporting (sp)
-
+> It is important to know blk_execute_rq_nowait() has finished before
+> sending blk_poll() on that request. The SG_RS_INFLIGHT state is set
+> just before blk_execute_rq_nowait() is called so a new bit setting
+> SG_FRQ_ISSUED has been added that is set just after that calls
+> returns.
 > 
-> Signed-off-by: Gaurav Srivastava  <gaurav.srivastava@broadcom.com>
-> Signed-off-by: James Smart <jsmart2021@gmail.com>
+> Note that the implementation of blk_poll() calls mq_poll() in the
+> LLD associated with the request. Then for any request found to be
+> ready, blk_poll() invokes the scsi_done() callback. When blk_poll()
+> returns > 0 , sg_rq_end_io() may have been called on the given
+> request. If so the given request will be in await_rcv state.
 > 
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
-> v9:
-> Added changes related to locking and new hashtable implementation
+>   drivers/scsi/sg.c      | 108 ++++++++++++++++++++++++++++++++++++++---
+>   include/uapi/scsi/sg.h |   1 +
+>   2 files changed, 103 insertions(+), 6 deletions(-)
 > 
-> v8:
-> Added proper error codes
-> updated logic while handling vmid
-> 
-> v7:
-> No change
-> 
-> v6:
-> No change
-> 
-> v5:
-> No change
-> 
-> v4:
-> No change
-> 
-> v3:
-> Replaced blkcg_get_app_identifier with blkcg_get_fc_appid
-> 
-> v2:
-> Ported the patch on top of 5.10/scsi-queue
-> Added a fix for issuing QFPA command which was not included in the
-> last submit
-> ---
->   drivers/scsi/lpfc/lpfc_scsi.c | 169 ++++++++++++++++++++++++++++++++++
->   1 file changed, 169 insertions(+)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-> index f81178464436..3267c5858238 100644
-> --- a/drivers/scsi/lpfc/lpfc_scsi.c
-> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-> @@ -5263,6 +5263,155 @@ static void lpfc_vmid_assign_cs_ctl(struct lpfc_vport *vport,
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 0982cb031be9..19aafd8e23f1 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -116,12 +116,14 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
+>   #define SG_FRQ_RECEIVING	7	/* guard against multiple receivers */
+>   #define SG_FRQ_FOR_MMAP		8	/* request needs PAGE_SIZE elements */
+>   #define SG_FRQ_COUNT_ACTIVE	9	/* sfp->submitted + waiting active */
+> +#define SG_FRQ_ISSUED		10	/* blk_execute_rq_nowait() finished */
+>   
+>   /* Bit positions (flags) for sg_fd::ffd_bm bitmask follow */
+>   #define SG_FFD_FORCE_PACKID	0	/* receive only given pack_id/tag */
+>   #define SG_FFD_CMD_Q		1	/* clear: only 1 active req per fd */
+>   #define SG_FFD_KEEP_ORPHAN	2	/* policy for this fd */
+> -#define SG_FFD_Q_AT_TAIL	3	/* set: queue reqs at tail of blk q */
+> +#define SG_FFD_HIPRI_SEEN	3	/* could have HIPRI requests active */
+> +#define SG_FFD_Q_AT_TAIL	4	/* set: queue reqs at tail of blk q */
+>   
+>   /* Bit positions (flags) for sg_device::fdev_bm bitmask follow */
+>   #define SG_FDEV_EXCLUDE		0	/* have fd open with O_EXCL */
+> @@ -210,6 +212,7 @@ struct sg_request {	/* active SCSI command or inactive request */
+>   	int sense_len;		/* actual sense buffer length (data-in) */
+>   	atomic_t rq_st;		/* request state, holds a enum sg_rq_state */
+>   	u8 cmd_opcode;		/* first byte of SCSI cdb */
+> +	blk_qc_t cookie;	/* ids 1 or more queues for blk_poll() */
+>   	u64 start_ns;		/* starting point of command duration calc */
+>   	unsigned long frq_bm[1];	/* see SG_FRQ_* defines above */
+>   	u8 *sense_bp;		/* mempool alloc-ed sense buffer, as needed */
+> @@ -299,6 +302,9 @@ static struct sg_device *sg_get_dev(int min_dev);
+>   static void sg_device_destroy(struct kref *kref);
+>   static struct sg_request *sg_mk_srp_sgat(struct sg_fd *sfp, bool first,
+>   					 int db_len);
+> +static int sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count);
+> +static int sg_srp_q_blk_poll(struct sg_request *srp, struct request_queue *q,
+> +			     int loop_count);
+>   #if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
+>   static const char *sg_rq_st_str(enum sg_rq_state rq_st, bool long_str);
+>   #endif
+> @@ -1008,6 +1014,7 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
+>   {
+>   	bool at_head, is_v4h, sync;
+>   	struct sg_device *sdp = sfp->parentdp;
+> +	struct request *rqq = READ_ONCE(srp->rqq);
+>   
+>   	is_v4h = test_bit(SG_FRQ_IS_V4I, srp->frq_bm);
+>   	sync = test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm);
+> @@ -1031,7 +1038,12 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
+>   		atomic_inc(&sfp->submitted);
+>   		set_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm);
 >   	}
+> -	blk_execute_rq_nowait(sdp->disk, READ_ONCE(srp->rqq), (int)at_head, sg_rq_end_io);
+> +	if (srp->rq_flags & SGV4_FLAG_HIPRI) {
+> +		rqq->cmd_flags |= REQ_HIPRI;
+> +		srp->cookie = request_to_qc_t(rqq->mq_hctx, rqq);
+> +	}
+> +	blk_execute_rq_nowait(sdp->disk, rqq, (int)at_head, sg_rq_end_io);
+> +	set_bit(SG_FRQ_ISSUED, srp->frq_bm);
 >   }
 >   
-> +/*
-> + * lpfc_vmid_get_appid- get the vmid associated with the uuid
-> + * @vport: The virtual port for which this call is being executed.
-> + * @uuid: uuid associated with the VE
-> + * @cmd: address of scsi cmmd descriptor
-> + * @tag: VMID tag
-> + * Returns status of the function
-> + */
-> +static int lpfc_vmid_get_appid(struct lpfc_vport *vport, char *uuid, struct
-> +			       scsi_cmnd * cmd, union lpfc_vmid_io_tag *tag)
-> +{
-> +	struct lpfc_vmid *vmp = NULL;
-> +	int hash, len, rc, i;
-> +	u8 pending = 0;
-> +
-> +	/* check if QFPA is complete */
-> +	if (lpfc_vmid_is_type_priority_tag(vport) && !(vport->vmid_flag &
-> +	      LPFC_VMID_QFPA_CMPL)) {
-> +		vport->work_port_events |= WORKER_CHECK_VMID_ISSUE_QFPA;
-> +		return -EAGAIN;
-> +	}
-> +
-> +	/* search if the uuid has already been mapped to the vmid */
-> +	len = strlen(uuid);
-> +	hash = lpfc_vmid_hash_fn(uuid, len);
-> +
-> +	/* search for the VMID in the table */
-> +	read_lock(&vport->vmid_lock);
-> +	vmp = lpfc_get_vmid_from_hastable(vport, hash, uuid);
-> +
-> +	/* if found, check if its already registered  */
-> +	if (vmp  && vmp->flag & LPFC_VMID_REGISTERED) {
-> +		read_unlock(&vport->vmid_lock);
-> +		lpfc_vmid_update_entry(vport, cmd, vmp, tag);
-> +		rc = 0;
-> +	} else if (vmp && (vmp->flag & LPFC_VMID_REQ_REGISTER ||
-> +			   vmp->flag & LPFC_VMID_DE_REGISTER)) {
-> +		/* else if register or dereg request has already been sent */
-> +		/* Hence vmid tag will not be added for this IO */
-> +		read_unlock(&vport->vmid_lock);
-> +		rc = -EBUSY;
-> +	} else {
-> +		/* The vmid was not found in the hashtable. At this point, */
-> +		/* drop the read lock first before proceeding further */
-> +		read_unlock(&vport->vmid_lock);
-> +		/* start the process to obtain one as per the */
-> +		/* type of the vmid indicated */
-> +		write_lock(&vport->vmid_lock);
-> +		vmp = lpfc_get_vmid_from_hastable(vport, hash, uuid);
-> +
-> +		/* while the read lock was released, in case the entry was */
-> +		/* added by other context or is in process of being added */
-> +		if (vmp && vmp->flag & LPFC_VMID_REGISTERED) {
-> +			lpfc_vmid_update_entry(vport, cmd, vmp, tag);
-> +			write_unlock(&vport->vmid_lock);
-> +			return 0;
-> +		} else if (vmp && vmp->flag & LPFC_VMID_REQ_REGISTER) {
-> +			write_unlock(&vport->vmid_lock);
-> +			return -EBUSY;
-> +		}
-> +
-> +		/* else search and allocate a free slot in the hash table */
-> +		if (vport->cur_vmid_cnt < vport->max_vmid) {
-> +			for (i = 0; i < vport->max_vmid; ++i) {
-> +				vmp = vport->vmid + i;
-> +				if (vmp->flag == LPFC_VMID_SLOT_FREE) {
-> +					vmp = vport->vmid + i;
-> +					break;
-> +				}
-> +			}
-> +		} else {
-> +			write_unlock(&vport->vmid_lock);
-> +			return -ENOMEM;
-> +		}
-> +
-> +		if (vmp && (vmp->flag == LPFC_VMID_SLOT_FREE)) {
-> +			/* Add the vmid and register  */
-> +			lpfc_put_vmid_in_hashtable(vport, hash, vmp);
-> +			vmp->vmid_len = len;
-> +			memcpy(vmp->host_vmid, uuid, vmp->vmid_len);
-> +			vmp->io_rd_cnt = 0;
-> +			vmp->io_wr_cnt = 0;
-> +			vmp->flag = LPFC_VMID_SLOT_USED;
-> +
-> +			vmp->delete_inactive =
-> +			    vport->vmid_inactivity_timeout ? 1 : 0;
-> +
-> +			/* if type priority tag, get next available vmid */
-> +			if (lpfc_vmid_is_type_priority_tag(vport))
-> +				lpfc_vmid_assign_cs_ctl(vport, vmp);
-> +
-> +			/* allocate the per cpu variable for holding */
-> +			/* the last access time stamp only if vmid is enabled */
-> +			if (!vmp->last_io_time)
-> +				vmp->last_io_time =
-> +				    __alloc_percpu(sizeof(u64),
-> +						   __alignof__(struct
-> +							       lpfc_vmid));
-> +
-> +			/* registration pending */
-> +			pending = 1;
-> +		} else {
-> +			rc = -ENOMEM;
-> +		}
-> +		write_unlock(&vport->vmid_lock);
-> +
-> +		/* complete transaction with switch */
-> +		if (pending) {
-> +			if (lpfc_vmid_is_type_priority_tag(vport))
-> +				rc = lpfc_vmid_uvem(vport, vmp, true);
-> +			else
-> +				rc = lpfc_vmid_cmd(vport,
-> +						   SLI_CTAS_RAPP_IDENT,
-> +						   vmp);
-> +			if (!rc) {
-> +				write_lock(&vport->vmid_lock);
-> +				vport->cur_vmid_cnt++;
-> +				vmp->flag |= LPFC_VMID_REQ_REGISTER;
-> +				write_unlock(&vport->vmid_lock);
-> +			}
-> +		}
-> +
-> +		/* finally, enable the idle timer once */
-> +		if (!(vport->phba->pport->vmid_flag & LPFC_VMID_TIMER_ENBLD)) {
-> +			mod_timer(&vport->phba->inactive_vmid_poll,
-> +				  jiffies +
-> +				  msecs_to_jiffies(1000 * LPFC_VMID_TIMER));
-> +			vport->phba->pport->vmid_flag |= LPFC_VMID_TIMER_ENBLD;
-> +		}
-> +	}
-> +	return rc;
-> +}
-> +
-> +/*
-> + * lpfc_is_command_vm_io - get the uuid from blk cgroup
-> + * @cmd:Pointer to scsi_cmnd data structure
-> + * Returns uuid if present if not null
-> + */
-> +static char *lpfc_is_command_vm_io(struct scsi_cmnd *cmd)
-> +{
-> +	char *uuid = NULL;
-> +
-> +	if (cmd->request) {
-> +		if (cmd->request->bio)
-> +			uuid = blkcg_get_fc_appid(cmd->request->bio);
-> +	}
-> +	return uuid;
-> +}
-> +
->   /**
->    * lpfc_queuecommand - scsi_host_template queuecommand entry point
->    * @shost: kernel scsi host pointer.
-> @@ -5288,6 +5437,7 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
->   	int err, idx;
->   #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
->   	uint64_t start = 0L;
-> +	u8 *uuid = NULL;
+>   /*
+> @@ -1693,6 +1705,13 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
 >   
->   	if (phba->ktime_on)
->   		start = ktime_get_ns();
-> @@ -5415,6 +5565,25 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
+>   	if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
+>   		goto skip_wait;		/* and skip _acquire() */
+> +	if (srp->rq_flags & SGV4_FLAG_HIPRI) {
+> +		/* call blk_poll(), spinning till found */
+> +		res = sg_srp_q_blk_poll(srp, sdp->device->request_queue, -1);
+> +		if (res != -ENODATA && unlikely(res < 0))
+> +			return res;
+> +		goto skip_wait;
+> +	}
+>   	SG_LOG(3, sfp, "%s: about to wait_event...()\n", __func__);
+>   	/* usually will be woken up by sg_rq_end_io() callback */
+>   	res = wait_event_interruptible(sfp->read_wait,
+> @@ -2019,6 +2038,8 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+>   		SG_LOG(3, sfp, "%s:    SG_GET_PACK_ID=%d\n", __func__, val);
+>   		return put_user(val, ip);
+>   	case SG_GET_NUM_WAITING:
+> +		if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
+> +			sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready */
+>   		val = atomic_read(&sfp->waiting);
+>   		if (val)
+>   			return put_user(val, ip);
+> @@ -2228,6 +2249,69 @@ sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+>   }
+>   #endif
+>   
+> +/*
+> + * If the sg_request object is not inflight, return -ENODATA. This function
+> + * returns 1 if the given object was in inflight state and is in await_rcv
+> + * state after blk_poll() returns 1 or more. If blk_poll() fails, then that
+> + * (negative) value is returned. Otherwise returns 0. Note that blk_poll()
+> + * may complete unrelated requests that share the same q and cookie.
+> + */
+> +static int
+> +sg_srp_q_blk_poll(struct sg_request *srp, struct request_queue *q, int loop_count)
+> +{
+> +	int k, n, num;
+> +
+> +	num = (loop_count < 1) ? 1 : loop_count;
+> +	for (k = 0; k < num; ++k) {
+> +		if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
+> +			return -ENODATA;
+> +		n = blk_poll(q, srp->cookie, loop_count < 0 /* spin if negative */);
+> +		if (n > 0)
+> +			return atomic_read(&srp->rq_st) == SG_RS_AWAIT_RCV;
+
+That _technically_ is a race condition;
+the first atomic_read() call might return a different value than the 
+second one.
+And this arguably is a mis-use of atomic _counters_, as here they are 
+just used to store fixed values, not counters per se.
+Why not use 'READ/WRITE_ONCE' ?
+
+> +		if (n < 0)
+> +			return n;
+> +	}
+> +	return 0;
+> +}
+> +
+> +/*
+> + * Check all requests on this sfp that are both inflight and HIPRI. That check involves calling
+> + * blk_poll(spin<-false) loop_count times. If loop_count is 0 then call blk_poll once.
+> + * If loop_count is negative then call blk_poll(spin <- true)) once for each request.
+> + * Returns number found (could be 0) or a negated errno value.
+> + */
+> +static int
+> +sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count)
+> +{
+> +	int res = 0;
+> +	int n;
+> +	unsigned long idx, iflags;
+> +	struct sg_request *srp;
+> +	struct scsi_device *sdev = sfp->parentdp->device;
+> +	struct request_queue *q = sdev ? sdev->request_queue : NULL;
+> +	struct xarray *xafp = &sfp->srp_arr;
+> +
+> +	if (!q)
+> +		return -EINVAL;
+> +	xa_lock_irqsave(xafp, iflags);
+> +	xa_for_each(xafp, idx, srp) {
+> +		if ((srp->rq_flags & SGV4_FLAG_HIPRI) &&
+> +		    atomic_read(&srp->rq_st) == SG_RS_INFLIGHT &&
+> +		    test_bit(SG_FRQ_ISSUED, srp->frq_bm)) {
+> +			xa_unlock_irqrestore(xafp, iflags);
+> +			n = sg_srp_q_blk_poll(srp, q, loop_count);
+> +			if (n == -ENODATA)
+> +				n = 0;
+> +			if (unlikely(n < 0))
+> +				return n;
+> +			xa_lock_irqsave(xafp, iflags);
+> +			res += n;
+> +		}
+> +	}
+> +	xa_unlock_irqrestore(xafp, iflags);
+> +	return res;
+> +}
+> +
+>   /*
+>    * Implements the poll(2) system call for this driver. Returns various EPOLL*
+>    * flags OR-ed together.
+> @@ -2239,6 +2323,8 @@ sg_poll(struct file *filp, poll_table * wait)
+>   	__poll_t p_res = 0;
+>   	struct sg_fd *sfp = filp->private_data;
+>   
+> +	if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
+> +		sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready to push up */
+>   	num = atomic_read(&sfp->waiting);
+>   	if (num < 1) {
+>   		poll_wait(filp, &sfp->read_wait, wait);
+> @@ -2523,6 +2609,7 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
+>   		}
+>   	}
+>   	xa_lock_irqsave(&sfp->srp_arr, iflags);
+> +	__set_bit(SG_FRQ_ISSUED, srp->frq_bm);
+>   	sg_rq_chg_state_force_ulck(srp, rqq_state);
+>   	WRITE_ONCE(srp->rqq, NULL);
+>   	if (test_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
+> @@ -2548,7 +2635,8 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
+>   
+>   	if (likely(rqq_state == SG_RS_AWAIT_RCV)) {
+>   		/* Wake any sg_read()/ioctl(SG_IORECEIVE) awaiting this req */
+> -		wake_up_interruptible(&sfp->read_wait);
+> +		if (!(srp->rq_flags & SGV4_FLAG_HIPRI))
+> +			wake_up_interruptible(&sfp->read_wait);
+>   		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
+>   		kref_put(&sfp->f_ref, sg_remove_sfp);
+>   	} else {        /* clean up orphaned request that aren't being kept */
+> @@ -2991,6 +3079,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+>   	/* current sg_request protected by SG_RS_BUSY state */
+>   	scsi_rp = scsi_req(rqq);
+>   	WRITE_ONCE(srp->rqq, rqq);
+> +	if (rq_flags & SGV4_FLAG_HIPRI)
+> +		set_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
+>   
+>   	if (cwrp->cmd_len > BLK_MAX_CDB)
+>   		scsi_rp->cmd = long_cmdp;	/* transfer ownership */
+> @@ -3100,7 +3190,10 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
+>   	SG_LOG(4, sfp, "%s: srp=0x%pK%s\n", __func__, srp,
+>   	       (srp->parentfp->rsv_srp == srp) ? " rsv" : "");
+>   	if (test_and_clear_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
+> -		atomic_dec(&sfp->submitted);
+> +		bool now_zero = atomic_dec_and_test(&sfp->submitted);
+> +
+> +		if (now_zero)
+> +			clear_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
+>   		atomic_dec(&sfp->waiting);
 >   	}
 >   
+
+Why the 'now_zero' variable?
+I guess it can be dropped ...
+
+> @@ -3297,6 +3390,8 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
+>   	struct sg_request *srp = NULL;
+>   	struct xarray *xafp = &sfp->srp_arr;
 >   
-> +	/* check the necessary and sufficient condition to support VMID */
-> +	if (lpfc_is_vmid_enabled(phba) &&
-> +	    (ndlp->vmid_support ||
-> +	     phba->pport->vmid_priority_tagging ==
-> +	     LPFC_VMID_PRIO_TAG_ALL_TARGETS)) {
-> +		/* is the IO generated by a VM, get the associated virtual */
-> +		/* entity id */
-> +		uuid = lpfc_is_command_vm_io(cmnd);
-> +
-> +		if (uuid) {
-> +			err = lpfc_vmid_get_appid(vport, uuid, cmnd,
-> +				(union lpfc_vmid_io_tag *)
-> +					&lpfc_cmd->cur_iocbq.vmid_tag);
-> +			if (!err)
-> +				lpfc_cmd->cur_iocbq.iocb_flag |= LPFC_IO_VMID;
-> +		}
-> +	}
-> +
-> +	atomic_inc(&ndlp->cmd_pending);
->   #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
->   	if (unlikely(phba->hdwqstat_on & LPFC_CHECK_SCSI_IO))
->   		this_cpu_inc(phba->sli4_hba.c_stat->xmt_io);
+> +	if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
+> +		sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready to push up */
+>   	if (num_waiting < 1) {
+>   		num_waiting = atomic_read_acquire(&sfp->waiting);
+>   		if (num_waiting < 1)
+> @@ -4101,8 +4196,9 @@ sg_proc_debug_sreq(struct sg_request *srp, int to, char *obp, int len)
+>   	else if (dur < U32_MAX)	/* in-flight or busy (so ongoing) */
+>   		n += scnprintf(obp + n, len - n, " t_o/elap=%us/%ums",
+>   			       to / 1000, dur);
+> -	n += scnprintf(obp + n, len - n, " sgat=%d op=0x%02x\n",
+> -		       srp->sgat_h.num_sgat, srp->cmd_opcode);
+> +	cp = (srp->rq_flags & SGV4_FLAG_HIPRI) ? "hipri " : "";
+> +	n += scnprintf(obp + n, len - n, " sgat=%d %sop=0x%02x\n",
+> +		       srp->sgat_h.num_sgat, cp, srp->cmd_opcode);
+>   	return n;
+>   }
+>   
+> diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
+> index 6162a5d5995c..11b58b279241 100644
+> --- a/include/uapi/scsi/sg.h
+> +++ b/include/uapi/scsi/sg.h
+> @@ -110,6 +110,7 @@ typedef struct sg_io_hdr {
+>   #define SGV4_FLAG_Q_AT_TAIL SG_FLAG_Q_AT_TAIL
+>   #define SGV4_FLAG_Q_AT_HEAD SG_FLAG_Q_AT_HEAD
+>   #define SGV4_FLAG_IMMED 0x400 /* for polling with SG_IOR, ignored in SG_IOS */
+> +#define SGV4_FLAG_HIPRI 0x800 /* request will use blk_poll to complete */
+>   
+>   /* Output (potentially OR-ed together) in v3::info or v4::info field */
+>   #define SG_INFO_OK_MASK 0x1
 > 
-And that's the bit which I don't particular like.
-
-Essentially we'll have to inject additional ELS commands _on each I/O_ 
-to get a valid VMID.
-Where there are _so_ many things which might get wrong, causing an I/O 
-stall.
-
-I would have vastly preferred if we could _avoid_ having to do 
-additional ELS commands for VMID registration in the I/O path
-(ie only allow for I/O with a valid VMID), and reject the I/O otherwise 
-until VMID registration is complete.
-
-IE return 'BUSY' (or even a command retry?) when no valid VMID for this 
-particular I/O is found, register the VMID (preferably in another 
-thread), and restart the queue once the VMID is registered.
-
-That way we have a clear separation, and the I/O path will always work 
-with valid VMIDs.
-
-Hmm?
 
 Cheers,
 
