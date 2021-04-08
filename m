@@ -2,172 +2,161 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EEE9C433B4
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 14:50:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6617C433B4
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 15:56:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5559761108
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 14:50:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92CB861151
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 15:56:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231876AbhDHOuh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Apr 2021 10:50:37 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:44258 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231370AbhDHOug (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2021 10:50:36 -0400
-IronPort-SDR: GgMrfmLwgujCJ/RSfZwT8mcmX1ywM9Ui+LDzjdNTDIX+0fR4HatxBZxaGpsIqpyEQ1ABZGbLko
- FZSrTJzeGY7ZYK6s+65jAMwD3qtYEhKsvfaNgj+WCnHNxZFo2eUXTT1ljsLlQuYTmpyU7eHOzj
- pyf5f8z6rqpJDqLW+VraLm8KPg2CKR4hRNfP+ZLAVTevoT8XHrYwKr031ChuJA5w3nsS5sIKqu
- jpk5EOTy/YQ1xClxQnVE3xk/kASCbRJXHJFCXIMVI9lfLzSIv3KhydM1629VzjtPYMPMDqPCgC
- JGA=
-X-IronPort-AV: E=Sophos;i="5.82,206,1613462400"; 
-   d="scan'208";a="47840389"
-Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
-  by labrats.qualcomm.com with ESMTP; 08 Apr 2021 07:50:25 -0700
-X-QCInternal: smtphost
-Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg05-sd.qualcomm.com with ESMTP; 08 Apr 2021 07:50:01 -0700
-Received: by stor-presley.qualcomm.com (Postfix, from userid 92687)
-        id 5D39420FA1; Thu,  8 Apr 2021 07:50:01 -0700 (PDT)
-From:   Asutosh Das <asutoshd@codeaurora.org>
-To:     cang@codeaurora.org, martin.petersen@oracle.com,
-        adrian.hunter@intel.com, linux-scsi@vger.kernel.org
-Cc:     Asutosh Das <asutoshd@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v17 2/2] ufs: sysfs: Resume the proper scsi device
-Date:   Thu,  8 Apr 2021 07:49:20 -0700
-Message-Id: <3f005b59d9d83c8a5cc7cb77b0c5b27c807d7430.1617893198.git.asutoshd@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1617893198.git.asutoshd@codeaurora.org>
-References: <cover.1617893198.git.asutoshd@codeaurora.org>
-In-Reply-To: <cover.1617893198.git.asutoshd@codeaurora.org>
-References: <cover.1617893198.git.asutoshd@codeaurora.org>
+        id S231866AbhDHP5I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Apr 2021 11:57:08 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:54935 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231712AbhDHP5H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2021 11:57:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1617897416;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=H0CzPEB2sWhRCA2R6HzN6pOgyEN8jebt+NeJC6nKy88=;
+        b=Xnvkt0ATM0lUxkgJuK2+dspSTuJzHbyVaQNTEULRVtA4wA2eeXssKRz6QBI2ItaQJh63t5
+        VjXLb3We1xl97buKBQ+Vy1wjudy0a3Z0vb9fClwYuetc1vuE9y8bimIICswh7+Z6ZzMEtF
+        RXuZyqNKp2zyl0hUBVH7QW34p+hN0uk=
+Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
+ [209.85.219.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-360-3cgb24KSOLCAzw5JjHN6yQ-1; Thu, 08 Apr 2021 11:56:54 -0400
+X-MC-Unique: 3cgb24KSOLCAzw5JjHN6yQ-1
+Received: by mail-qv1-f72.google.com with SMTP id p5so1409046qvr.4
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Apr 2021 08:56:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=H0CzPEB2sWhRCA2R6HzN6pOgyEN8jebt+NeJC6nKy88=;
+        b=XC7LIoJOjVIAnPJ0Ngt6oKETou9hYJ8G6NS/03zkLMv0xcaNm1r8AA2v8kdMlWMrrf
+         Acbt46lR2xGBYX1zm6wNnSattgUBqCaKH/EPESoArzgYN9TBOH+owrDe+e3NNFobNv9I
+         0OQoiBPJVwW73T5NjqRF6g3nSWkJttLSTqW+xciSfXCqk/kZE3Z/zp+Dd23DPGNdg4gt
+         jhvSSkVBQpapBmK5UvalGZzfL++r/yto+mWHZwdoTQMstja2KiY3wYHlIIhwh6YGUsZ4
+         IUQd2lM/dgLvM55IgzQMGxI0bwDNqjDrOzY8idIcRQUeUXeDC2CNpwqbYmRYQPi3XiJ0
+         3ZIQ==
+X-Gm-Message-State: AOAM533fiVZDkpUZtJ0e6Ismx/qHVaEXzHhaKts75QznNbMqzFexhJD0
+        KKT+Lrz3sProW0K6EyZhX1Oq9Hx5IF0qJZwIm4CN1SAmSoaSWZ1wA//JTCPn9vINjb8zBoevesJ
+        q31VtYo7T0i9Fu2AVuZ3afA==
+X-Received: by 2002:a37:a785:: with SMTP id q127mr8851436qke.425.1617897413982;
+        Thu, 08 Apr 2021 08:56:53 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwrJnI5wXesdPpOGCbJ8oMy7bjx9xiEj1V/Fd24KikeDzGrAdl31h+Qbq5RiUVjf5r3S5cNxA==
+X-Received: by 2002:a37:a785:: with SMTP id q127mr8851414qke.425.1617897413751;
+        Thu, 08 Apr 2021 08:56:53 -0700 (PDT)
+Received: from loberhel7laptop ([2600:6c64:4e7f:cee0:ccad:a4ca:9a69:d8bc])
+        by smtp.gmail.com with ESMTPSA id s6sm18870317qtn.15.2021.04.08.08.56.52
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 08 Apr 2021 08:56:53 -0700 (PDT)
+Message-ID: <3579fa05385e8f13b15b3e2ca184a33619dd627d.camel@redhat.com>
+Subject: Re: [PATCH] scsi_mod: Add a new parameter to scsi_mod to control
+ storage logging
+From:   Laurence Oberman <loberman@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+        hare@suse.de, emilne@redhat.com, martin.petersen@oracle.com,
+        jpittman@redhat.com, djeffery@redhat.com,
+        dgilbert <dgilbert@interlog.com>, axboe@fb.com, hch@lst.de
+Date:   Thu, 08 Apr 2021 11:56:52 -0400
+In-Reply-To: <3a8e9cfadbb646ed5a520d4972c1f450aae6b5d2.camel@redhat.com>
+References: <1617325783-20740-1-git-send-email-loberman@redhat.com>
+         <3ab37563-c620-395c-bd12-74376962728d@acm.org>
+         <3a8e9cfadbb646ed5a520d4972c1f450aae6b5d2.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-10.el7) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Resumes the actual scsi device the unit descriptor of which
-is being accessed instead of the hba alone.
+On Fri, 2021-04-02 at 08:37 -0400, Laurence Oberman wrote:
+> On Thu, 2021-04-01 at 18:33 -0700, Bart Van Assche wrote:
+> > On 4/1/21 6:09 PM, Laurence Oberman wrote:
+> > >  #define sd_printk(prefix, sdsk, fmt, a...)			
+> > > 	
+> > > \
+> > > -        (sdsk)->disk ?						
+> > > 	\
+> > > -	      sdev_prefix_printk(prefix, (sdsk)->device,		\
+> > > +	do {								
+> > > \
+> > > +		if (!storage_quiet_discovery)				
+> > > \
+> > > +		 (sdsk)->disk ?						
+> > > \
+> > > +			sdev_prefix_printk(prefix, (sdsk)->device,	\
+> > >  				 (sdsk)->disk->disk_name, fmt, ##a) :	
+> > > \
+> > > -	      sdev_printk(prefix, (sdsk)->device, fmt, ##a)
+> > > +			sdev_printk(prefix, (sdsk)->device, fmt, ##a);	
+> > > \
+> > > +	} while (0)
+> > 
+> > The indentation inside the above macro looks odd to me. I guess
+> > that
+> > you
+> > want to avoid deep indentation? Consider using if (...) break;
+> > instead
+> > to reduce the indentation level. Additionally, please change the
+> > ternary
+> > operator into an if-condition since the result of the ternary
+> > operator
+> > is not used. How about rewriting the above macro as follows?
+> > 
+> > do {
+> > 	if (storage_quiet_discovery)
+> > 		break;
+> > 	if ((sdk)->disk)
+> > 		[ ... ]
+> > 	else
+> > 		[ ... ]
+> > } while (0)
+> > 
+> > Thanks,
+> > 
+> > Bart.
+> > 
+> 
+> Hi Bart
+> Yes, Thanks I can try that option for the macro and clean it up.
+> I will wait a bit for others to review so I can attend to all changes
+> at once.
+> 
+> Note that the original version was indented like that too and has the
+> ternary.
+> 
+> See here:
+> #define sd_printk(prefix, sdsk, fmt,
+> a...)                              \
+>         (sdsk)->disk
+> ?                                                  \
+>               sdev_prefix_printk(prefix, (sdsk)-
+> > device,                \
+> 
+>                                  (sdsk)->disk->disk_name, fmt, ##a)
+> :   \
+>               sdev_printk(prefix, (sdsk)->device, fmt, ##a)
+> 
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
----
- drivers/scsi/ufs/ufs-sysfs.c | 30 +++++++++++++++++-------------
- 1 file changed, 17 insertions(+), 13 deletions(-)
+Hi Bart the original macro is the same so I think best not to change it
+other than the wrapper I added. What are your thoughts.
 
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index d7c3cff..fa57bac 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -245,9 +245,9 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
- 		goto out;
- 	}
- 
--	pm_runtime_get_sync(hba->dev);
-+	scsi_autopm_get_device(hba->sdev_ufs_device);
- 	res = ufshcd_wb_toggle(hba, wb_enable);
--	pm_runtime_put_sync(hba->dev);
-+	scsi_autopm_put_device(hba->sdev_ufs_device);
- out:
- 	up(&hba->host_sem);
- 	return res < 0 ? res : count;
-@@ -297,10 +297,10 @@ static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
- 		goto out;
- 	}
- 
--	pm_runtime_get_sync(hba->dev);
-+	scsi_autopm_get_device(hba->sdev_ufs_device);
- 	ret = ufshcd_read_desc_param(hba, desc_id, desc_index,
- 				param_offset, desc_buf, param_size);
--	pm_runtime_put_sync(hba->dev);
-+	scsi_autopm_put_device(hba->sdev_ufs_device);
- 	if (ret) {
- 		ret = -EINVAL;
- 		goto out;
-@@ -678,7 +678,7 @@ static ssize_t _name##_show(struct device *dev,				\
- 		up(&hba->host_sem);					\
- 		return -ENOMEM;						\
- 	}								\
--	pm_runtime_get_sync(hba->dev);					\
-+	scsi_autopm_get_device(hba->sdev_ufs_device);			\
- 	ret = ufshcd_query_descriptor_retry(hba,			\
- 		UPIU_QUERY_OPCODE_READ_DESC, QUERY_DESC_IDN_DEVICE,	\
- 		0, 0, desc_buf, &desc_len);				\
-@@ -695,7 +695,7 @@ static ssize_t _name##_show(struct device *dev,				\
- 		goto out;						\
- 	ret = sysfs_emit(buf, "%s\n", desc_buf);			\
- out:									\
--	pm_runtime_put_sync(hba->dev);					\
-+	scsi_autopm_put_device(hba->sdev_ufs_device);			\
- 	kfree(desc_buf);						\
- 	up(&hba->host_sem);						\
- 	return ret;							\
-@@ -744,10 +744,10 @@ static ssize_t _name##_show(struct device *dev,				\
- 	}								\
- 	if (ufshcd_is_wb_flags(QUERY_FLAG_IDN##_uname))			\
- 		index = ufshcd_wb_get_query_index(hba);			\
--	pm_runtime_get_sync(hba->dev);					\
-+	scsi_autopm_get_device(hba->sdev_ufs_device);			\
- 	ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,	\
- 		QUERY_FLAG_IDN##_uname, index, &flag);			\
--	pm_runtime_put_sync(hba->dev);					\
-+	scsi_autopm_put_device(hba->sdev_ufs_device);			\
- 	if (ret) {							\
- 		ret = -EINVAL;						\
- 		goto out;						\
-@@ -813,10 +813,10 @@ static ssize_t _name##_show(struct device *dev,				\
- 	}								\
- 	if (ufshcd_is_wb_attrs(QUERY_ATTR_IDN##_uname))			\
- 		index = ufshcd_wb_get_query_index(hba);			\
--	pm_runtime_get_sync(hba->dev);					\
-+	scsi_autopm_get_device(hba->sdev_ufs_device);			\
- 	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,	\
- 		QUERY_ATTR_IDN##_uname, index, 0, &value);		\
--	pm_runtime_put_sync(hba->dev);					\
-+	scsi_autopm_put_device(hba->sdev_ufs_device);			\
- 	if (ret) {							\
- 		ret = -EINVAL;						\
- 		goto out;						\
-@@ -899,11 +899,15 @@ static ssize_t _pname##_show(struct device *dev,			\
- 	struct scsi_device *sdev = to_scsi_device(dev);			\
- 	struct ufs_hba *hba = shost_priv(sdev->host);			\
- 	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);			\
-+	int ret;							\
- 	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun,		\
- 				_duname##_DESC_PARAM##_puname))		\
- 		return -EINVAL;						\
--	return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
-+	scsi_autopm_get_device(sdev);					\
-+	ret = ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
- 		lun, _duname##_DESC_PARAM##_puname, buf, _size);	\
-+	scsi_autopm_put_device(sdev);					\
-+	return ret;							\
- }									\
- static DEVICE_ATTR_RO(_pname)
- 
-@@ -964,10 +968,10 @@ static ssize_t dyn_cap_needed_attribute_show(struct device *dev,
- 		goto out;
- 	}
- 
--	pm_runtime_get_sync(hba->dev);
-+	scsi_autopm_get_device(hba->sdev_ufs_device);
- 	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
- 		QUERY_ATTR_IDN_DYN_CAP_NEEDED, lun, 0, &value);
--	pm_runtime_put_sync(hba->dev);
-+	scsi_autopm_put_device(hba->sdev_ufs_device);
- 	if (ret) {
- 		ret = -EINVAL;
- 		goto out;
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+Gentle ping for any other reviews:
+
+We are actively using this at some customers so it would be good to
+know if others upstream will NAK this or have any comments.
+
+Sincerely
+Laurence Oberman
+
 
