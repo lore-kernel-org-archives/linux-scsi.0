@@ -2,117 +2,179 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03E96C433B4
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 14:30:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 730FCC433ED
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 14:49:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C54F461104
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 14:30:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 440A761107
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Apr 2021 14:49:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231655AbhDHOaS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Apr 2021 10:30:18 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:31376 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231370AbhDHOaQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2021 10:30:16 -0400
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 138E3wPp063832;
-        Thu, 8 Apr 2021 10:29:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=to : cc : references :
- from : subject : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=MHvXxsqhv6eOfUAfIKzir7ZQLlHDE/uJaelSC5bSowM=;
- b=abtS/zfB0HHiS2OuWFqWrUiC9I4173edKnYBtFfiVgjPOMEWSRZaGxgx6jzPWyWqu0le
- FDGODeAnZpqMEH0t3o/yV2N9LDIqKOmhewFoYu7v9OOAe9RxXsoRoBYUjfa6DNDCvSew
- pzc73Z8GNz5q2fbNZBf0YZuT2BJ2sZFFGh4igTVKXRQ096GwWcqJ5MGpW66IE2173Dan
- Jg6lLfW4UUTDD2/TF56PFLQM/y9JnIprS4eZ1aQBIfHkA9eIT1MMTmNOVCvLT0T9V5L1
- jzP9RcJ0qN/pJfDEr0dcOisoq/3C7DXcF6Kt/l6eWEdCTQyaMZesb5FjfwJWtMrNiYlz UA== 
-Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 37rvmgkwjg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 08 Apr 2021 10:29:56 -0400
-Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
-        by ppma06fra.de.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 138EPWiE007173;
-        Thu, 8 Apr 2021 14:29:55 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma06fra.de.ibm.com with ESMTP id 37rvbw0w02-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 08 Apr 2021 14:29:54 +0000
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 138ETqGW31850868
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 8 Apr 2021 14:29:52 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A6B54AE04D;
-        Thu,  8 Apr 2021 14:29:52 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 13475AE045;
-        Thu,  8 Apr 2021 14:29:52 +0000 (GMT)
-Received: from linux-2.fritz.box (unknown [9.145.26.3])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Thu,  8 Apr 2021 14:29:52 +0000 (GMT)
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Song Liu <song@kernel.org>
-Cc:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Nitin Gupta <ngupta@vflare.org>,
-        Jan Hoeppner <hoeppner@linux.ibm.com>,
-        linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20210330161727.2297292-1-hch@lst.de>
- <20210330161727.2297292-11-hch@lst.de>
-From:   Stefan Haberland <sth@linux.ibm.com>
-Subject: Re: [PATCH 10/15] block: move bd_mutex to struct gendisk
-Message-ID: <46eb6a23-e2dc-952a-09be-78c017ef1f7f@linux.ibm.com>
-Date:   Thu, 8 Apr 2021 16:29:51 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
-MIME-Version: 1.0
-In-Reply-To: <20210330161727.2297292-11-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Content-Language: en-US
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: gsq-zXggMDMXGo00yhTtmqJQilb-2hOo
-X-Proofpoint-ORIG-GUID: gsq-zXggMDMXGo00yhTtmqJQilb-2hOo
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-04-08_03:2021-04-08,2021-04-08 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
- lowpriorityscore=0 spamscore=0 impostorscore=0 mlxscore=0 adultscore=0
- phishscore=0 priorityscore=1501 malwarescore=0 clxscore=1011
- mlxlogscore=999 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2104060000 definitions=main-2104080099
+        id S231655AbhDHOte (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Apr 2021 10:49:34 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:44218 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231370AbhDHOtd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2021 10:49:33 -0400
+IronPort-SDR: T4VoAZa5g9En8wWZE6GJwDXcYch+OWOrL0aVlauWATkaZLN0Ht3KwTmKNIZjKaMqswgtXscPN1
+ LkchsiUWCjvEElRYjhwx+u1CgC/iKVI2laWs3VGvGk60gsVFtNmx/nmCxLonkzZ5OFRpmg5MEU
+ tjx0FAkL2+wsXSwNu1rFj+ggNuq6dKnRNcDUyUGl0vH01Crr4C8DsWmjnKVhKgUmBMEnvJ1rlD
+ mc/LDEFE3Jt3V3+2ootmQwVAwA0wOvJEGK7Npoa5aEVKA8zZPAZoEJbVnRiusxwGTXer+QgNTe
+ B04=
+X-IronPort-AV: E=Sophos;i="5.82,206,1613462400"; 
+   d="scan'208";a="47840387"
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by labrats.qualcomm.com with ESMTP; 08 Apr 2021 07:49:23 -0700
+X-QCInternal: smtphost
+Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
+  by ironmsg01-sd.qualcomm.com with ESMTP; 08 Apr 2021 07:49:22 -0700
+Received: by stor-presley.qualcomm.com (Postfix, from userid 92687)
+        id 51A1520FA1; Thu,  8 Apr 2021 07:49:22 -0700 (PDT)
+From:   Asutosh Das <asutoshd@codeaurora.org>
+To:     cang@codeaurora.org, martin.petersen@oracle.com,
+        adrian.hunter@intel.com, linux-scsi@vger.kernel.org
+Cc:     Asutosh Das <asutoshd@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support),
+        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support)
+Subject: [PATCH v17 0/2] Enable power management for ufs wlun 
+Date:   Thu,  8 Apr 2021 07:49:18 -0700
+Message-Id: <cover.1617893198.git.asutoshd@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Am 30.03.21 um 18:17 schrieb Christoph Hellwig:
-> Replace the per-block device bd_mutex with a per-gendisk open_mutex,
-> thus simplifying locking wherever we deal with partitions.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  Documentation/filesystems/locking.rst |  2 +-
->  block/genhd.c                         |  3 ++-
->  block/partitions/core.c               | 22 +++++++---------
->  drivers/block/loop.c                  | 14 +++++-----
->  drivers/block/xen-blkfront.c          |  8 +++---
->  drivers/block/zram/zram_drv.c         | 18 ++++++-------
->  drivers/block/zram/zram_drv.h         |  2 +-
->  drivers/md/md.h                       |  6 ++---
->  drivers/s390/block/dasd_genhd.c       |  8 +++---
+This patch attempts to fix a deadlock in ufs while sending SSU.
+Recently, blk_queue_enter() added a check to not process requests if the
+queue is suspended. That leads to a resume of the associated device which
+is suspended. In ufs, that device is ufs device wlun and it's parent is
+ufs_hba. This resume tries to resume ufs device wlun which in turn tries
+to resume ufs_hba, which is already in the process of suspending, thus
+causing a deadlock.
 
-For dasd:
+This patch takes care of:
+* Suspending the ufs device lun only after all other luns are suspended
+* Sending SSU during ufs device wlun suspend
+* Clearing uac for rpmb and ufs device wlun
+* Not sending commands to the device during host suspend
 
-Acked-by: Stefan Haberland <sth@linux.ibm.com>
+v16 -> v17:
+- Addressed Adrian's & Daejun's comments
 
-Thanks,
-Stefan
+v15 -> v16:
+- Brought back the missing changes
+  * Added scsi_autopm_[get/put] to ufs_debugfs[get/put]_user_access()
+  * Fix ufshcd_wl_poweroff()
+
+v14 -> v15:
+- Rebased on 5.13/scsi-staging
+
+v13 -> v14:
+- Addressed Adrian's comments
+  * Rebased it on top of scsi-next
+  * Added scsi_autopm_[get/put] to ufs_debugfs[get/put]_user_access()
+  * Resume the device in ufshcd_remove()
+  * Unregister ufs_rpmb_wlun before ufs_dev_wlun
+  * hba->shutting_down moved to ufshcd_wl_shutdown()
+
+v12 -> v13:
+- Addressed Adrian's comments
+  * Paired pm_runtime_get_noresume() with pm_runtime_put()
+  * no rpm_autosuspend for ufs device wlun
+  * Moved runtime-pm init functionality to ufshcd_wl_probe()
+- Addressed Bart's comments
+  * Expanded abbrevs in commit message
+
+v11 -> v12:
+- Addressed Adrian's comments
+  * Fixed ahit for Mediatek driver
+  * Fixed error handling in ufshcd_core_init()
+  * Tested this patch and the issue is still seen.
+
+v10 -> v11:
+- Fixed supplier suspending before consumer race
+- Addressed Adrian's comments
+  * Added proper resume/suspend cb to ufshcd_auto_hibern8_update()
+  * Cosmetic changes to ufshcd-pci.c
+  * Cleaned up ufshcd_system_suspend()
+  * Added ufshcd_debugfs_eh_exit to ufshcd_core_init()
+
+v9 -> v10:
+- Addressed Adrian's comments
+  * Moved suspend/resume vops to __ufshcd_wl_[suspend/resume]()
+  * Added correct resume in ufs_bsg
+
+v8 -> v9:
+- Addressed Adrian's comments
+  * Moved link transition to __ufshcd_wl_[suspend/resume]()
+  * Fixed the other minor comments
+
+v7 -> v8:
+- Addressed Adrian's comments
+  * Removed separate autosuspend delay for ufs-device lun
+  * Fixed the ee handler getting scheduled during pm
+  * Always runtime resume in suspend_prepare()
+  * Added CONFIG_PM_SLEEP where needed
+  
+v6 -> v7:
+  * Resume the ufs device before shutting it down
+
+v5 -> v6:
+- Addressed Adrian's comments
+  * Added complete() cb
+  * Added suspend_prepare() and complete() to all drivers
+  * Moved suspend_prepare() and complete() to ufshcd
+  * .poweroff() uses ufhcd_wl_poweroff()
+  * Removed several forward declarations
+  * Moved scsi_register_driver() to ufshcd_core_init()
+
+v4 -> v5:
+- Addressed Adrian's comments
+  * Used the rpmb driver contributed by Adrian
+  * Runtime-resume the ufs device during suspend to honor spm-lvl
+  * Unregister the scsi_driver in ufshcd_remove()
+  * Currently shutdown() puts the ufs device to power-down mode
+    so, just removed ufshcd_pci_poweroff()
+  * Quiesce the scsi device during shutdown instead of remove
+
+v3 RFC -> v4:
+- Addressed Bart's comments
+  * Except that I didn't get any checkpatch failures
+- Addressed Avri's comments
+- Addressed Adrian's comments
+  * Added a check for deepsleep power mode
+  * Removed a couple of forward declarations
+  * Didn't separate the scsi drivers because in rpmb case it just sends uac
+    in resume and it seemed pretty neat to me.
+- Added sysfs changes to resume the devices before accessing
 
 
+Asutosh Das (2):
+  scsi: ufs: Enable power management for wlun
+  ufs: sysfs: Resume the proper scsi device
+
+ drivers/scsi/ufs/cdns-pltfrm.c     |   2 +
+ drivers/scsi/ufs/tc-dwc-g210-pci.c |   2 +
+ drivers/scsi/ufs/ufs-debugfs.c     |   6 +-
+ drivers/scsi/ufs/ufs-debugfs.h     |   2 +-
+ drivers/scsi/ufs/ufs-exynos.c      |   2 +
+ drivers/scsi/ufs/ufs-hisi.c        |   2 +
+ drivers/scsi/ufs/ufs-mediatek.c    |  12 +-
+ drivers/scsi/ufs/ufs-qcom.c        |   2 +
+ drivers/scsi/ufs/ufs-sysfs.c       |  30 +-
+ drivers/scsi/ufs/ufs_bsg.c         |   6 +-
+ drivers/scsi/ufs/ufshcd-pci.c      |  36 +--
+ drivers/scsi/ufs/ufshcd.c          | 642 ++++++++++++++++++++++++++-----------
+ drivers/scsi/ufs/ufshcd.h          |   6 +
+ include/trace/events/ufs.h         |  20 ++
+ 14 files changed, 526 insertions(+), 244 deletions(-)
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
