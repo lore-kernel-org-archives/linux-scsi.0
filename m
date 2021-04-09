@@ -2,118 +2,172 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B612FC43461
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Apr 2021 07:56:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAA7EC43461
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 772B5611AE
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Apr 2021 07:56:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC2216115B
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232435AbhDIH4Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Apr 2021 03:56:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54398 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232400AbhDIH4Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2021 03:56:24 -0400
-Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54D3DC061762
-        for <linux-scsi@vger.kernel.org>; Fri,  9 Apr 2021 00:56:12 -0700 (PDT)
-Received: by mail-pg1-x52f.google.com with SMTP id z16so3294167pga.1
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Apr 2021 00:56:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=/psdJdZhtQxPRqP2rSeIFW0LQiIDDkbIGdh0cvYadBU=;
-        b=L8z3g7hZW84h5nM/ti6IxvrqYNRpURr0QjluQ7kN299h4kGodN+i2ZqlpfZjmV2DcV
-         NJdHifRZQwCvGkuyszr116EZoWi70uHJWd65wtEWaWArXY1Rp4ZzN/9ZnXegyO3vKwFY
-         8NO2xJo3GGqSN9wCk+iD4DUDoM9a/YwA66QN74YGY2H1cW7vZrL5l7MdjKeR/QAsuZU2
-         Ucz/7XTFcdQzbM6d/fkAnUHCM65vVA1TvrS1EIy6gM9onyU/qKkNAl3l+WgxxEO0aPig
-         bhcP59/Ksf4qh7I609Y+3kN93l9mNb9wKPVKERjl2R9u6Ll9R8qVQKHkghUDQWZCnxm2
-         BPoA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=/psdJdZhtQxPRqP2rSeIFW0LQiIDDkbIGdh0cvYadBU=;
-        b=a1YbUQDos7YSvz3Ecpn1yLgoPirEX1Q1VAUX8kRlafiKmnrqOGVTFvv6Ga/1kEgpQ3
-         /EdEriQB0wyta30wLU5Pu28u+S3IT1AhKeYGco8gOwAhpGbAdoLcerp6tZCkZDn5/7T1
-         UhCIZrKn7qTJiegJdCi4Kayl24spZxijSLaKvYYZb1EVZIJtquCVTeFNCopgD135cCQT
-         Hx61do/nwtdzMEpZhTRngv443H8P2AyPpoeZDEQ3v556dqKhjwJejC4x3RJVLFjS7i6z
-         TyOMlTJ/t2TsAUqbJbRTHKsdOCdKQsXsapJ6hG6gv2+HKHFyep22r870XKYVWCxqCtrb
-         l+8Q==
-X-Gm-Message-State: AOAM5326EankjWG9vpCtDOVazs0WiwJum9/U726I9hvAoW4vEt968big
-        GHOaWrQNx3aatQ5OzdXqmqoi
-X-Google-Smtp-Source: ABdhPJw4y19qgIEed/3idRuicEXOdgw7PNQxmYE3f4snxddrL+3JBiwUbHv6mAxOeiF2tFwRzk92Iw==
-X-Received: by 2002:a63:5458:: with SMTP id e24mr11921129pgm.170.1617954971782;
-        Fri, 09 Apr 2021 00:56:11 -0700 (PDT)
-Received: from work ([103.77.37.131])
-        by smtp.gmail.com with ESMTPSA id k17sm1475219pfa.68.2021.04.09.00.56.08
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 09 Apr 2021 00:56:11 -0700 (PDT)
-Date:   Fri, 9 Apr 2021 13:26:07 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Ye Bin <yebin10@huawei.com>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        id S233902AbhDIKIH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Apr 2021 06:08:07 -0400
+Received: from mga14.intel.com ([192.55.52.115]:37432 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231772AbhDIKHO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Apr 2021 06:07:14 -0400
+IronPort-SDR: XKQmBepFoPcwpvuLMhnTJ+Tqc8Rlcg+FruzIMtKwTFCq/51CaQ/2VBSRT/8udronkXLn9tBZZe
+ 28qzDq5k9R2g==
+X-IronPort-AV: E=McAfee;i="6000,8403,9948"; a="193280158"
+X-IronPort-AV: E=Sophos;i="5.82,209,1613462400"; 
+   d="scan'208";a="193280158"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2021 03:07:00 -0700
+IronPort-SDR: fngypfKpYZec60v34J0j5vhTHsF3/7Uo7iJjIsS7rKNvfb6Yh+v5KoJuSeDTTX9l/o4zKDJ5RB
+ +o9IG4AzjJRA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,209,1613462400"; 
+   d="scan'208";a="459180029"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
+  by orsmga001.jf.intel.com with ESMTP; 09 Apr 2021 03:06:54 -0700
+Subject: Re: [PATCH v17 1/2] scsi: ufs: Enable power management for wlun
+To:     daejun7.park@samsung.com,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc:     Asutosh Das <asutoshd@codeaurora.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, Hulk Robot <hulkci@huawei.com>
-Subject: Re: [PATCH -next] scsi: ufs-qcom: Remove redundant dev_err call in
- ufs_qcom_init()
-Message-ID: <20210409075607.GF4376@work>
-References: <20210409075522.2111083-1-yebin10@huawei.com>
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Yue Hu <huyue2@yulong.com>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1b3d53dad245a7166f3f67a4c65f3a731e6600b3.1617893198.git.asutoshd@codeaurora.org>
+ <cover.1617893198.git.asutoshd@codeaurora.org>
+ <CGME20210408145007epcas2p1accfbd653b2e1318b2722c1f5661c1e0@epcms2p1>
+ <1891546521.01617937981650.JavaMail.epsvc@epcpadp4>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <32b2327f-a34f-03ac-a110-e683ae416fdc@intel.com>
+Date:   Fri, 9 Apr 2021 13:07:13 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210409075522.2111083-1-yebin10@huawei.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <1891546521.01617937981650.JavaMail.epsvc@epcpadp4>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Apr 09, 2021 at 03:55:22PM +0800, Ye Bin wrote:
-> There is a error message within devm_ioremap_resource
+On 9/04/21 5:27 am, Daejun Park wrote:
+> Hi Asutosh Das,
 > 
-> already, so remove the dev_err call to avoid redundant
+>> During runtime-suspend of ufs host, the scsi devices are
+>> already suspended and so are the queues associated with them.
+>> But the ufs host sends SSU (START_STOP_UNIT) to wlun
+>> during its runtime-suspend.
+>> During the process blk_queue_enter checks if the queue is not in
+>> suspended state. If so, it waits for the queue to resume, and never
+>> comes out of it.
+>> The commit
+>> (d55d15a33: scsi: block: Do not accept any requests while suspended)
+>> adds the check if the queue is in suspended state in blk_queue_enter().
+>>
+>> Call trace:
+>> __switch_to+0x174/0x2c4
+>> __schedule+0x478/0x764
+>> schedule+0x9c/0xe0
+>> blk_queue_enter+0x158/0x228
+>> blk_mq_alloc_request+0x40/0xa4
+>> blk_get_request+0x2c/0x70
+>> __scsi_execute+0x60/0x1c4
+>> ufshcd_set_dev_pwr_mode+0x124/0x1e4
+>> ufshcd_suspend+0x208/0x83c
+>> ufshcd_runtime_suspend+0x40/0x154
+>> ufshcd_pltfrm_runtime_suspend+0x14/0x20
+>> pm_generic_runtime_suspend+0x28/0x3c
+>> __rpm_callback+0x80/0x2a4
+>> rpm_suspend+0x308/0x614
+>> rpm_idle+0x158/0x228
+>> pm_runtime_work+0x84/0xac
+>> process_one_work+0x1f0/0x470
+>> worker_thread+0x26c/0x4c8
+>> kthread+0x13c/0x320
+>> ret_from_fork+0x10/0x18
+>>
+>> Fix this by registering ufs device wlun as a scsi driver and
+>> registering it for block runtime-pm. Also make this as a
+>> supplier for all other luns. That way, this device wlun
+>> suspends after all the consumers and resumes after
+>> hba resumes.
+>>
+>> Co-developed-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>> ---
+>> drivers/scsi/ufs/cdns-pltfrm.c     |   2 +
+>> drivers/scsi/ufs/tc-dwc-g210-pci.c |   2 +
+>> drivers/scsi/ufs/ufs-debugfs.c     |   6 +-
+>> drivers/scsi/ufs/ufs-debugfs.h     |   2 +-
+>> drivers/scsi/ufs/ufs-exynos.c      |   2 +
+>> drivers/scsi/ufs/ufs-hisi.c        |   2 +
+>> drivers/scsi/ufs/ufs-mediatek.c    |  12 +-
+>> drivers/scsi/ufs/ufs-qcom.c        |   2 +
+>> drivers/scsi/ufs/ufs_bsg.c         |   6 +-
+>> drivers/scsi/ufs/ufshcd-pci.c      |  36 +--
+>> drivers/scsi/ufs/ufshcd.c          | 642 ++++++++++++++++++++++++++-----------
+>> drivers/scsi/ufs/ufshcd.h          |   6 +
+>> include/trace/events/ufs.h         |  20 ++
+>> 13 files changed, 509 insertions(+), 231 deletions(-)
 > 
-> error message.
-> 
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: Ye Bin <yebin10@huawei.com>
+> In this patch, you changed pm_runtime_{get, put}_sync to scsi_autopm_{get, put}_device.
+> But, scsi_autopm_get_device() calls pm_runtime_put_sync() in case of error
+> of pm_runtime_get_sync(). So, pm_runtime_put_sync() can be called twice if
+> scsi_autopm_get_device has error.
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Also it might be tidy to make wrappers e.g.
 
-Thanks,
-Mani
+static inline int ufshcd_rpm_get_sync(struct ufs_hba *hba)
+{
+    return pm_runtime_get_sync(&hba->sdev_ufs_device->sdev_gendev);
+}
+   
+static inline int ufshcd_rpm_put(struct ufs_hba *hba)
+{
+    return pm_runtime_put(&hba->sdev_ufs_device->sdev_gendev);
+}
 
-> ---
->  drivers/scsi/ufs/ufs-qcom.c | 7 +------
->  1 file changed, 1 insertion(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 9b711d6aac54..2a3dd21da6a6 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -1071,13 +1071,8 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->  		if (res) {
->  			host->dev_ref_clk_ctrl_mmio =
->  					devm_ioremap_resource(dev, res);
-> -			if (IS_ERR(host->dev_ref_clk_ctrl_mmio)) {
-> -				dev_warn(dev,
-> -					"%s: could not map dev_ref_clk_ctrl_mmio, err %ld\n",
-> -					__func__,
-> -					PTR_ERR(host->dev_ref_clk_ctrl_mmio));
-> +			if (IS_ERR(host->dev_ref_clk_ctrl_mmio))
->  				host->dev_ref_clk_ctrl_mmio = NULL;
-> -			}
->  			host->dev_ref_clk_en_mask = BIT(5);
->  		}
->  	}
-> 
+static inline int ufshcd_rpm_put_sync(struct ufs_hba *hba)
+{
+    return pm_runtime_put_sync(&hba->sdev_ufs_device->sdev_gendev);
+} 
+
+And also consider matching: e.g.
+
+	pm_runtime_put(hba->dev)	to	ufshcd_rpm_put(hba)
+	pm_runtime_put_sync(hba->dev)	to	ufshcd_rpm_put_sync(hba)
+
+
+
