@@ -2,172 +2,142 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAA7EC43461
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 175BCC433ED
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Apr 2021 11:28:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC2216115B
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C60246115B
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Apr 2021 11:27:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233902AbhDIKIH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Apr 2021 06:08:07 -0400
-Received: from mga14.intel.com ([192.55.52.115]:37432 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231772AbhDIKHO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Apr 2021 06:07:14 -0400
-IronPort-SDR: XKQmBepFoPcwpvuLMhnTJ+Tqc8Rlcg+FruzIMtKwTFCq/51CaQ/2VBSRT/8udronkXLn9tBZZe
- 28qzDq5k9R2g==
-X-IronPort-AV: E=McAfee;i="6000,8403,9948"; a="193280158"
-X-IronPort-AV: E=Sophos;i="5.82,209,1613462400"; 
-   d="scan'208";a="193280158"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2021 03:07:00 -0700
-IronPort-SDR: fngypfKpYZec60v34J0j5vhTHsF3/7Uo7iJjIsS7rKNvfb6Yh+v5KoJuSeDTTX9l/o4zKDJ5RB
- +o9IG4AzjJRA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.82,209,1613462400"; 
-   d="scan'208";a="459180029"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
-  by orsmga001.jf.intel.com with ESMTP; 09 Apr 2021 03:06:54 -0700
-Subject: Re: [PATCH v17 1/2] scsi: ufs: Enable power management for wlun
-To:     daejun7.park@samsung.com,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc:     Asutosh Das <asutoshd@codeaurora.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Bean Huo <beanhuo@micron.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Yue Hu <huyue2@yulong.com>,
-        Dinghao Liu <dinghao.liu@zju.edu.cn>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1b3d53dad245a7166f3f67a4c65f3a731e6600b3.1617893198.git.asutoshd@codeaurora.org>
- <cover.1617893198.git.asutoshd@codeaurora.org>
- <CGME20210408145007epcas2p1accfbd653b2e1318b2722c1f5661c1e0@epcms2p1>
- <1891546521.01617937981650.JavaMail.epsvc@epcpadp4>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <32b2327f-a34f-03ac-a110-e683ae416fdc@intel.com>
-Date:   Fri, 9 Apr 2021 13:07:13 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        id S233536AbhDIL2M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Apr 2021 07:28:12 -0400
+Received: from mo4-p05-ob.smtp.rzone.de ([85.215.255.132]:13179 "EHLO
+        mo4-p05-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233362AbhDIL2L (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2021 07:28:11 -0400
+X-Greylist: delayed 719 seconds by postgrey-1.27 at vger.kernel.org; Fri, 09 Apr 2021 07:28:11 EDT
+ARC-Seal: i=1; a=rsa-sha256; t=1617966957; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=LMrmZPF1aNmZ3JIWvv+6OO+/WmBvBUGGw8/e5ykXMylsuPhSlzNg63TSEexg4zioOM
+    5wMoxr5OD462Jv6mgirdfrAr8BqznvchyIua9nSPA4HNnRo+f5lvAcgqBxWAujACuw88
+    tcmdpKWLTrhZspFSbXtmyzLHdq3wkibkv6NOD6R7TLLM9RmOTKytlGCeO5deK9Gc/oOp
+    KbNS84CpdyhoDHT+RkK49kLfP5gZT7IzcMPL8kL96XC01DGsiPgJk2rSRKtznWVqQ+bw
+    MIdlMhPDGHLegydRpAULe3UrvfkRRgUSRU8fR4ilVODR4iKSrqn3lvSx3SkcbUYTPkGu
+    593g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1617966957;
+    s=strato-dkim-0002; d=strato.com;
+    h=Message-ID:Subject:To:From:Date:Cc:Date:From:Subject:Sender;
+    bh=G0iBoAoerbL80Lk116UXYLdUYiopGcAZoZWiEH2Mj3E=;
+    b=iF12Q3YvaMuRg5io+uwAEtlDGThW/kAkPxCCz186+gIwBQvh9c7HACy9pJCx5gtqoJ
+    qd1wvR3JzG/rMn2Kgl4qhn8HXnu1Zm2lRHacE/yLBNbvCnVa8/CFd+6S7NyOMAqp2eVv
+    j3UeJNKfSsgqs9JsxfTljFmBPbM2Y+JegqB7kn9oLABkfDBS1PahYEPN0LZAXovCOSTE
+    iTtGOKznd+p0m7Fqu548uhklTnJ6cKQsmE7QGOoiHZzcrT8cgCW8WPraLuqF1hxYQNz5
+    YIwVqLOLbbt67HTENUxItsPBSz5BxGLEeRTi6WXW5cH7SbwrJExVvsSsQnc0mbDxK1NI
+    eNUw==
+ARC-Authentication-Results: i=1; strato.com;
+    dkim=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1617966957;
+    s=strato-dkim-0002; d=sicyon-risk.com;
+    h=Message-ID:Subject:To:From:Date:Cc:Date:From:Subject:Sender;
+    bh=G0iBoAoerbL80Lk116UXYLdUYiopGcAZoZWiEH2Mj3E=;
+    b=OT4VTvMoUCs2HHjhyzlkHzeGiRUvo2qTN+IlV0243W9KC3p0cPsIcpWGR99/RWWgB3
+    O1QJCxDbp/y4EEii5Jr+WqV9TblTKUZnUgKTRaOhpOzKp3o2GGd/1vVD+lgjRbebnH+4
+    1UmdS2o2CcN36isCdYj9geb6ye4+QKvyXO+8tVgaZkuG3QGwaxoNc5EoduY7MkGt2TtC
+    ui3+D23g2MGWrRHj2c0xT/FmuYL7c1dB2tNPzNXa3XVctVpJDKBM6iNRdBhhtv6cwZI6
+    bVzcwkGlRug/npOVJ/9wC32Rc0KGofpN0sNiH9sLTWk8anz5ScPRlJbjQcEg5XirXmrW
+    170g==
+Authentication-Results: strato.com;
+    dkim=none
+X-RZG-AUTH: ":O2kGeEG7b/pS1F6wSGa8hypi1jz+LakDa8GkBwDfiOkn+PVe8UaYb7dXkqfhKW2vc0Z1VGoMfmH3d/cMH6I="
+X-RZG-CLASS-ID: mo05
+Received: from mail.computerdu.de
+    by smtp.strato.com (RZmta 47.24.0 DYNA|AUTH)
+    with ESMTPSA id j05debx39BFv7uA
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+        (Client did not present a certificate)
+    for <linux-scsi@vger.kernel.org>;
+    Fri, 9 Apr 2021 13:15:57 +0200 (CEST)
+Received: from localhost (unknown [127.0.0.1])
+        by mail.computerdu.de (Postfix) with ESMTP id 6805D4C0958
+        for <linux-scsi@vger.kernel.org>; Fri,  9 Apr 2021 13:15:54 +0200 (CEST)
+Received: from mail.computerdu.de ([127.0.0.1])
+        by localhost (mail.computerdu.de [127.0.0.1]) (amavisd-new, port 10024)
+        with LMTP id SWSWHaK_4Jsg for <linux-scsi@vger.kernel.org>;
+        Fri,  9 Apr 2021 13:15:50 +0200 (CEST)
+Received: from taurus.nifty.lan (unknown [192.168.0.106])
+        by mail.computerdu.de (Postfix) with ESMTPSA id 4FF864C0957
+        for <linux-scsi@vger.kernel.org>; Fri,  9 Apr 2021 13:15:50 +0200 (CEST)
+Date:   Fri, 9 Apr 2021 13:15:51 +0200
+From:   Daniel Hiepler <d-linux@coderdu.de>
+To:     linux-scsi@vger.kernel.org
+Subject: aic7xxx seems broken
+Message-ID: <20210409131551.75114346@taurus.nifty.lan>
 MIME-Version: 1.0
-In-Reply-To: <1891546521.01617937981650.JavaMail.epsvc@epcpadp4>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/04/21 5:27 am, Daejun Park wrote:
-> Hi Asutosh Das,
-> 
->> During runtime-suspend of ufs host, the scsi devices are
->> already suspended and so are the queues associated with them.
->> But the ufs host sends SSU (START_STOP_UNIT) to wlun
->> during its runtime-suspend.
->> During the process blk_queue_enter checks if the queue is not in
->> suspended state. If so, it waits for the queue to resume, and never
->> comes out of it.
->> The commit
->> (d55d15a33: scsi: block: Do not accept any requests while suspended)
->> adds the check if the queue is in suspended state in blk_queue_enter().
->>
->> Call trace:
->> __switch_to+0x174/0x2c4
->> __schedule+0x478/0x764
->> schedule+0x9c/0xe0
->> blk_queue_enter+0x158/0x228
->> blk_mq_alloc_request+0x40/0xa4
->> blk_get_request+0x2c/0x70
->> __scsi_execute+0x60/0x1c4
->> ufshcd_set_dev_pwr_mode+0x124/0x1e4
->> ufshcd_suspend+0x208/0x83c
->> ufshcd_runtime_suspend+0x40/0x154
->> ufshcd_pltfrm_runtime_suspend+0x14/0x20
->> pm_generic_runtime_suspend+0x28/0x3c
->> __rpm_callback+0x80/0x2a4
->> rpm_suspend+0x308/0x614
->> rpm_idle+0x158/0x228
->> pm_runtime_work+0x84/0xac
->> process_one_work+0x1f0/0x470
->> worker_thread+0x26c/0x4c8
->> kthread+0x13c/0x320
->> ret_from_fork+0x10/0x18
->>
->> Fix this by registering ufs device wlun as a scsi driver and
->> registering it for block runtime-pm. Also make this as a
->> supplier for all other luns. That way, this device wlun
->> suspends after all the consumers and resumes after
->> hba resumes.
->>
->> Co-developed-by: Can Guo <cang@codeaurora.org>
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->> ---
->> drivers/scsi/ufs/cdns-pltfrm.c     |   2 +
->> drivers/scsi/ufs/tc-dwc-g210-pci.c |   2 +
->> drivers/scsi/ufs/ufs-debugfs.c     |   6 +-
->> drivers/scsi/ufs/ufs-debugfs.h     |   2 +-
->> drivers/scsi/ufs/ufs-exynos.c      |   2 +
->> drivers/scsi/ufs/ufs-hisi.c        |   2 +
->> drivers/scsi/ufs/ufs-mediatek.c    |  12 +-
->> drivers/scsi/ufs/ufs-qcom.c        |   2 +
->> drivers/scsi/ufs/ufs_bsg.c         |   6 +-
->> drivers/scsi/ufs/ufshcd-pci.c      |  36 +--
->> drivers/scsi/ufs/ufshcd.c          | 642 ++++++++++++++++++++++++++-----------
->> drivers/scsi/ufs/ufshcd.h          |   6 +
->> include/trace/events/ufs.h         |  20 ++
->> 13 files changed, 509 insertions(+), 231 deletions(-)
-> 
-> In this patch, you changed pm_runtime_{get, put}_sync to scsi_autopm_{get, put}_device.
-> But, scsi_autopm_get_device() calls pm_runtime_put_sync() in case of error
-> of pm_runtime_get_sync(). So, pm_runtime_put_sync() can be called twice if
-> scsi_autopm_get_device has error.
+Hi,
 
-Also it might be tidy to make wrappers e.g.
+i tried to get my old Adaptec AHA-2940W/2940UW controller working to read some
+old disks. This controller needs firmware compiled to work (i.e. it doesn't
+detect any disks without firmware compiled).
 
-static inline int ufshcd_rpm_get_sync(struct ufs_hba *hba)
-{
-    return pm_runtime_get_sync(&hba->sdev_ufs_device->sdev_gendev);
-}
-   
-static inline int ufshcd_rpm_put(struct ufs_hba *hba)
-{
-    return pm_runtime_put(&hba->sdev_ufs_device->sdev_gendev);
-}
+Compiling fails [1] (This is a kernel with gentoo patchset but I also tried with
+vanilla, without luck). I think it's related to this lkml post [2].
 
-static inline int ufshcd_rpm_put_sync(struct ufs_hba *hba)
-{
-    return pm_runtime_put_sync(&hba->sdev_ufs_device->sdev_gendev);
-} 
+I hope this is fixable and this is the right place to report. If I should
+report somewhere else, I'd appreciate if someone could point it out.
 
-And also consider matching: e.g.
 
-	pm_runtime_put(hba->dev)	to	ufshcd_rpm_put(hba)
-	pm_runtime_put_sync(hba->dev)	to	ufshcd_rpm_put_sync(hba)
+Best Regards
 
+
+[1]
+---------------------------------------------------
+make -C ./drivers/scsi/aic7xxx/aicasm OUTDIR=/mnt/hdd/usr/src/linux-5.11.11-gentoo/drivers/scsi/aic7xxx/aicasm/
+gcc -I/usr/include -I. -I/mnt/hdd/usr/src/linux-5.11.11-gentoo/drivers/scsi/aic7xxx/aicasm/ aicasm.c aicasm_symbol.c /mnt/hdd/usr/src/linux-5.11.11-gentoo/drivers/scsi/aic7xxx/
+aicasm//aicasm_gram.c /mnt/hdd/usr/src/linux-5.11.11-gentoo/drivers/scsi/aic7xxx/aicasm//aicasm_macro_gram.c /mnt/hdd/usr/src/linux-5.11.11-gentoo/drivers/scsi/aic7xxx/aicasm//
+aicasm_scan.c /mnt/hdd/usr/src/linux-5.11.11-gentoo/drivers/scsi/aic7xxx/aicasm//aicasm_macro_scan.c -o /mnt/hdd/usr/src/linux-5.11.11-gentoo/drivers/scsi/aic7xxx/aicasm//aicas
+m -ldb
+aicasm_symbol.c: In function 'aic_print_reg_dump_end':
+aicasm_symbol.c:393:13: warning: implicit declaration of function 'tolower' [-Wimplicit-function-declaration]
+  393 |   *letter = tolower(*letter);
+      |             ^~~~~~~
+aicasm_gram.tab.c:204:10: fatal error: aicasm_gram.tab.h: No such file or directory
+compilation terminated.
+aicasm_macro_gram.tab.c:167:10: fatal error: aicasm_macro_gram.tab.h: No such file or directory
+compilation terminated.
+aicasm_scan.l: In function 'yylex':
+aicasm_scan.l:417:6: warning: implicit declaration of function 'mm_switch_to_buffer'; did you mean 'yy_switch_to_buffer'? [-Wimplicit-function-declaration]
+  417 |      mm_switch_to_buffer(old_state);
+      |      ^~~~~~~~~~~~~~~~~~~
+      |      yy_switch_to_buffer
+aicasm_scan.l:418:6: warning: implicit declaration of function 'mmparse'; did you mean 'yyparse'? [-Wimplicit-function-declaration]
+  418 |      mmparse();
+      |      ^~~~~~~
+      |      yyparse
+aicasm_scan.l:421:6: warning: implicit declaration of function 'mm_delete_buffer'; did you mean 'yy_delete_buffer'? [-Wimplicit-function-declaration]
+  421 |      mm_delete_buffer(temp_state);
+      |      ^~~~~~~~~~~~~~~~
+      |      yy_delete_buffer
+make[4]: *** [Makefile:39: aicasm] Error 1
+make[3]: *** [drivers/scsi/aic7xxx/Makefile:87: drivers/scsi/aic7xxx/aicasm/aicasm] Error 2
+make[2]: *** [scripts/Makefile.build:496: drivers/scsi/aic7xxx] Error 2
+make[1]: *** [scripts/Makefile.build:496: drivers/scsi] Error 2
+make: *** [Makefile:1809: drivers] Error 2
+make: *** Waiting for unfinished jobs....
+---------------------------------------------------
+
+[2] https://lkml.org/lkml/2020/8/22/285
+
+
+-- 
+Daniel Hiepler
 
 
