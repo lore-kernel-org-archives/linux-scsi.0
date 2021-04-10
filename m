@@ -2,62 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57F9FC433ED
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 06:52:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03F13C433ED
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 08:57:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B35461184
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 06:52:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3F9B610CB
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 08:57:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234192AbhDJGwt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 10 Apr 2021 02:52:49 -0400
-Received: from verein.lst.de ([213.95.11.211]:42647 "EHLO verein.lst.de"
+        id S234296AbhDJI5S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Apr 2021 04:57:18 -0400
+Received: from mga09.intel.com ([134.134.136.24]:62656 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231933AbhDJGwt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 10 Apr 2021 02:52:49 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 77DB367373; Sat, 10 Apr 2021 08:52:31 +0200 (CEST)
-Date:   Sat, 10 Apr 2021 08:52:31 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Steffen Maier <maier@linux.ibm.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Khalid Aziz <khalid@gonehiking.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Hannes Reinecke <hare@suse.com>,
-        Ondrej Zary <linux@rainbow-software.org>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        linux-s390 <linux-s390@vger.kernel.org>
-Subject: Re: [PATCH 5/8] scsi: remove the unchecked_isa_dma flag
-Message-ID: <20210410065231.GA16173@lst.de>
-References: <20210331073001.46776-1-hch@lst.de> <20210331073001.46776-6-hch@lst.de> <2fa7fad0-2689-24c9-d356-50f98ca3535d@linux.ibm.com>
+        id S229591AbhDJI5R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 10 Apr 2021 04:57:17 -0400
+IronPort-SDR: kDlqONX5av6UGb9bkJlGDPYPQTq7f7eXowsLnx2+p6pBy7asJQmW+0D+E/Qpd1rTYfyegcm5zV
+ 6rp3GgbOW9Fw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9949"; a="194017797"
+X-IronPort-AV: E=Sophos;i="5.82,210,1613462400"; 
+   d="scan'208";a="194017797"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2021 01:57:02 -0700
+IronPort-SDR: UNAyZXiPJr5/1H27ai/RqICtqNQlQe19jgPWiHQfvM3tSHgjNkdgKG02aLFmOw4lAVw0BgSRZF
+ e+bzSof/vO/Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,210,1613462400"; 
+   d="scan'208";a="520554761"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
+  by fmsmga001.fm.intel.com with ESMTP; 10 Apr 2021 01:56:56 -0700
+Subject: Re: [PATCH v17 2/2] ufs: sysfs: Resume the proper scsi device
+To:     Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1617893198.git.asutoshd@codeaurora.org>
+ <3f005b59d9d83c8a5cc7cb77b0c5b27c807d7430.1617893198.git.asutoshd@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <6784a588-b9ff-ebc5-8b34-785f5d3b04c5@intel.com>
+Date:   Sat, 10 Apr 2021 11:57:15 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2fa7fad0-2689-24c9-d356-50f98ca3535d@linux.ibm.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <3f005b59d9d83c8a5cc7cb77b0c5b27c807d7430.1617893198.git.asutoshd@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Apr 09, 2021 at 05:46:09PM +0200, Steffen Maier wrote:
-> Is it OK to remove a long standing sysfs attribute?
-> Was there any deprecation phase?
->
-> I just noticed it in our CI reporting fails due to this change since at 
-> least linux-next 20210409. Suppose it came via 
-> https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/commit/?h=for-5.13/block&id=aaff5ebaa2694f283b7d07fdd55fb287ffc4f1e9
->
-> Wanted to ask before I adapt the test cases.
+On 8/04/21 5:49 pm, Asutosh Das wrote:
+> Resumes the actual scsi device the unit descriptor of which
+> is being accessed instead of the hba alone.
+> 
+> Reviewed-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufs-sysfs.c | 30 +++++++++++++++++-------------
+>  1 file changed, 17 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+> index d7c3cff..fa57bac 100644
+> --- a/drivers/scsi/ufs/ufs-sysfs.c
+> +++ b/drivers/scsi/ufs/ufs-sysfs.c
 
-What does your CI do with it?
+<SNIP>
 
-It would be kinda of sad to carry around this baggage, but if real
-userspace is broken by the chance we'll have to do it.  I'm just not
-entirely sure testcases qualify as real userspace yet.
+> @@ -899,11 +899,15 @@ static ssize_t _pname##_show(struct device *dev,			\
+>  	struct scsi_device *sdev = to_scsi_device(dev);			\
+>  	struct ufs_hba *hba = shost_priv(sdev->host);			\
+>  	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);			\
+> +	int ret;							\
+>  	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun,		\
+>  				_duname##_DESC_PARAM##_puname))		\
+>  		return -EINVAL;						\
+> -	return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
+> +	scsi_autopm_get_device(sdev);					\
+> +	ret = ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
+>  		lun, _duname##_DESC_PARAM##_puname, buf, _size);	\
+> +	scsi_autopm_put_device(sdev);					\
+> +	return ret;							\
+
+I am not sure why this change is needed.  It it is needed, please add
+a comment explaining.
+
