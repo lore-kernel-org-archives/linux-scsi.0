@@ -2,133 +2,62 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A93E1C43462
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 06:48:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57F9FC433ED
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 06:52:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82C946115A
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 06:48:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B35461184
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 06:52:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234565AbhDJGs0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 10 Apr 2021 02:48:26 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:16890 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234364AbhDJGsL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Apr 2021 02:48:11 -0400
-Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4FHQWJ6Fl2zkhsT;
-        Sat, 10 Apr 2021 14:46:04 +0800 (CST)
-Received: from huawei.com (10.69.192.56) by DGGEMS411-HUB.china.huawei.com
- (10.3.19.211) with Microsoft SMTP Server id 14.3.498.0; Sat, 10 Apr 2021
- 14:47:44 +0800
-From:   Luo Jiaxing <luojiaxing@huawei.com>
-To:     <kashyap.desai@broadcom.com>, <sumit.saxena@broadcom.com>,
-        <shivasharan.srikanteshwara@broadcom.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <megaraidlinux.pdl@broadcom.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <luojiaxing@huawei.com>
-Subject: [PATCH v1 2/8] scsi: megaraid_sas: use parentheses to enclose macros with complex values
-Date:   Sat, 10 Apr 2021 14:48:01 +0800
-Message-ID: <1618037287-460-3-git-send-email-luojiaxing@huawei.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1618037287-460-1-git-send-email-luojiaxing@huawei.com>
-References: <1618037287-460-1-git-send-email-luojiaxing@huawei.com>
+        id S234192AbhDJGwt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Apr 2021 02:52:49 -0400
+Received: from verein.lst.de ([213.95.11.211]:42647 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231933AbhDJGwt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 10 Apr 2021 02:52:49 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 77DB367373; Sat, 10 Apr 2021 08:52:31 +0200 (CEST)
+Date:   Sat, 10 Apr 2021 08:52:31 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Steffen Maier <maier@linux.ibm.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Khalid Aziz <khalid@gonehiking.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hannes Reinecke <hare@suse.com>,
+        Ondrej Zary <linux@rainbow-software.org>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>,
+        Benjamin Block <bblock@linux.ibm.com>,
+        linux-s390 <linux-s390@vger.kernel.org>
+Subject: Re: [PATCH 5/8] scsi: remove the unchecked_isa_dma flag
+Message-ID: <20210410065231.GA16173@lst.de>
+References: <20210331073001.46776-1-hch@lst.de> <20210331073001.46776-6-hch@lst.de> <2fa7fad0-2689-24c9-d356-50f98ca3535d@linux.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.56]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2fa7fad0-2689-24c9-d356-50f98ca3535d@linux.ibm.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-checkpatch.pl report several error below:
+On Fri, Apr 09, 2021 at 05:46:09PM +0200, Steffen Maier wrote:
+> Is it OK to remove a long standing sysfs attribute?
+> Was there any deprecation phase?
+>
+> I just noticed it in our CI reporting fails due to this change since at 
+> least linux-next 20210409. Suppose it came via 
+> https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/commit/?h=for-5.13/block&id=aaff5ebaa2694f283b7d07fdd55fb287ffc4f1e9
+>
+> Wanted to ask before I adapt the test cases.
 
-ERROR: Macros with complex values should be enclosed in parentheses
-+#define SCP2LUN(scp)                   (u32)(scp)->device->lun // to LUN
+What does your CI do with it?
 
-ERROR: Macros with complex values should be enclosed in parentheses
-+#define SCP2ADAPTER(scp)       (adapter_t *)SCSIHOST2ADAP(SCP2HOST(scp))
-
-So fix those by enclosed by parentheses.
-
-Signed-off-by: Jianqin Xie <xiejianqin@hisilicon.com>
-Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
----
- drivers/scsi/megaraid/mbox_defs.h    |  2 +-
- drivers/scsi/megaraid/mega_common.h  | 16 ++++++++--------
- drivers/scsi/megaraid/megaraid_sas.h |  6 +++---
- 3 files changed, 12 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/mbox_defs.h b/drivers/scsi/megaraid/mbox_defs.h
-index 5001624..3efbfdb 100644
---- a/drivers/scsi/megaraid/mbox_defs.h
-+++ b/drivers/scsi/megaraid/mbox_defs.h
-@@ -124,7 +124,7 @@
- #define FC_MAX_PHYSICAL_DEVICES		256
- #define MAX_MBOX_CHANNELS		5
- #define MAX_MBOX_TARGET			15
--#define MBOX_MAX_PHYSICAL_DRIVES	MAX_MBOX_CHANNELS*MAX_MBOX_TARGET
-+#define MBOX_MAX_PHYSICAL_DRIVES	(MAX_MBOX_CHANNELS * MAX_MBOX_TARGET)
- #define MAX_ROW_SIZE_40LD		32
- #define MAX_ROW_SIZE_8LD		8
- #define SPAN_DEPTH_8_SPANS		8
-diff --git a/drivers/scsi/megaraid/mega_common.h b/drivers/scsi/megaraid/mega_common.h
-index 2ad0aa2..2a0981b 100644
---- a/drivers/scsi/megaraid/mega_common.h
-+++ b/drivers/scsi/megaraid/mega_common.h
-@@ -196,22 +196,22 @@ typedef struct {
- 
- 
- // conversion from scsi command
--#define SCP2HOST(scp)			(scp)->device->host	// to host
--#define SCP2HOSTDATA(scp)		SCP2HOST(scp)->hostdata	// to soft state
--#define SCP2CHANNEL(scp)		(scp)->device->channel	// to channel
--#define SCP2TARGET(scp)			(scp)->device->id	// to target
--#define SCP2LUN(scp)			(u32)(scp)->device->lun	// to LUN
-+#define SCP2HOST(scp)			((scp)->device->host)	// to host
-+#define SCP2HOSTDATA(scp)		(SCP2HOST(scp)->hostdata)	// to soft state
-+#define SCP2CHANNEL(scp)		((scp)->device->channel)	// to channel
-+#define SCP2TARGET(scp)			((scp)->device->id)	// to target
-+#define SCP2LUN(scp)			((u32)(scp)->device->lun)	// to LUN
- 
- // generic macro to convert scsi command and host to controller's soft state
- #define SCSIHOST2ADAP(host)	(((caddr_t *)(host->hostdata))[0])
--#define SCP2ADAPTER(scp)	(adapter_t *)SCSIHOST2ADAP(SCP2HOST(scp))
-+#define SCP2ADAPTER(scp)	((adapter_t *)SCSIHOST2ADAP(SCP2HOST(scp)))
- 
- 
- #define MRAID_IS_LOGICAL(adp, scp)	\
--	(SCP2CHANNEL(scp) == (adp)->max_channel) ? 1 : 0
-+	((SCP2CHANNEL(scp) == (adp)->max_channel) ? 1 : 0)
- 
- #define MRAID_IS_LOGICAL_SDEV(adp, sdev)	\
--	(sdev->channel == (adp)->max_channel) ? 1 : 0
-+	((sdev->channel == (adp)->max_channel) ? 1 : 0)
- 
- /**
-  * MRAID_GET_DEVICE_MAP - device ids
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index b5a765b..b652a84 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -154,9 +154,9 @@
- #define MFI_INIT_CLEAR_HANDSHAKE		0x00000008
- #define MFI_INIT_HOTPLUG			0x00000010
- #define MFI_STOP_ADP				0x00000020
--#define MFI_RESET_FLAGS				MFI_INIT_READY| \
--						MFI_INIT_MFIMODE| \
--						MFI_INIT_ABORT
-+#define MFI_RESET_FLAGS				(MFI_INIT_READY | \
-+						MFI_INIT_MFIMODE | \
-+						MFI_INIT_ABORT)
- #define MFI_ADP_TRIGGER_SNAP_DUMP		0x00000100
- #define MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE    (0x01)
- 
--- 
-2.7.4
-
+It would be kinda of sad to carry around this baggage, but if real
+userspace is broken by the chance we'll have to do it.  I'm just not
+entirely sure testcases qualify as real userspace yet.
