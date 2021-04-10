@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4B1DC433ED
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 17:30:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5C78C43462
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 17:30:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D31C610A4
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 17:30:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0925611CA
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 17:30:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234920AbhDJRbD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 10 Apr 2021 13:31:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38970 "EHLO
+        id S234903AbhDJRbC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Apr 2021 13:31:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234889AbhDJRbC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Apr 2021 13:31:02 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD210C06138B
-        for <linux-scsi@vger.kernel.org>; Sat, 10 Apr 2021 10:30:47 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id z16so6184688pga.1
-        for <linux-scsi@vger.kernel.org>; Sat, 10 Apr 2021 10:30:47 -0700 (PDT)
+        with ESMTP id S234738AbhDJRbB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Apr 2021 13:31:01 -0400
+Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B561FC06138B
+        for <linux-scsi@vger.kernel.org>; Sat, 10 Apr 2021 10:30:46 -0700 (PDT)
+Received: by mail-pg1-x536.google.com with SMTP id p12so6169520pgj.10
+        for <linux-scsi@vger.kernel.org>; Sat, 10 Apr 2021 10:30:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=gP9wNUXc4kAE6L7aFb9sd9dN4PP4N6os4PyM3+THgY0=;
-        b=f+FQF125PLqDQWOVPkSfGMvcLOHADhuxHjzJMEyNbdhp944Fd9WtowwI8nmi/Wl7EX
-         EDb7FbyzTSWefdVZT7JQHGM/VLjepYWqEfxkT56O4yVbrBWyKtjl/3++OPzS5vD9ml9E
-         3RvQcr47yIyXaUw91EGZLr9Hae5Z65ZL1ljKAnsbXss690PxDPwxBesZ5/4Lo+Ecqs1a
-         kekVzDooI00K6Ob/gUMKf/JuUbLEiegNQGD25wFvHV0pS3DOy812p5AEFjXtrOKJWHuP
-         GlcfkpSxrgqUI0PmCB6MKNweIU12dJC3LIKMyd8QAENZj9feFqW/W4oBHSx0eQLs9sI+
-         Hqrg==
+        bh=k2/WQMErDOWTBOf8F7mdgEzBgEYn+fKIDvsxc5E+NPQ=;
+        b=fPHE1guorbYwUsg9RfqwCZSSm9ZGhRi7ogJ5XGTJr+GX7zDKwa4JDz0rGH23+RBXq9
+         Okazy+pe3LOHYF3ESRXrdx87AWrRFCdfLIuC1eYkPCUrWcVAFdeWOkTzpEZdJcEaN28F
+         feGSC9P1uqLHN/VLfUln8+Z/8nFAY6zRgcn+F/OYaylDNjv02ODvyA9yRO2Izf1NUXyX
+         Yfbt/aHpI1L+iH22OzrgJ26RC4M1NSapoeb+DvFRw+eBubq9Rke7IdR1NyTEyYVv4l4a
+         4m7R7g3D5n5ps1IaZvoizCCvI8HRDLFXRAIxm+Qdt/0kmL8oYpbH659iMVvvnsUTr+IW
+         8gBg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=gP9wNUXc4kAE6L7aFb9sd9dN4PP4N6os4PyM3+THgY0=;
-        b=WDJW4G8NDbyU6tCKYjm8Wv0bjvsxtgVxqMit1IGkpKDSQdAA6tLs6H9r/XZ6zrd9lD
-         vt+IDvJGYg+zNryqM7826M/XRrZrzQblu8NxCquCVgJBwa2OWI0wMabClfOo3YVQ0o/M
-         FvGeQDjLC8Mc6lOdEUDTgQpRHJ6VPkIajI5qlXvHkwI0hRSEvSlJvPdd9T3uoEJNQ9nf
-         WfxD2zGdml3JxpAue5Q5RMLQqNtq6UJnqgtMiMEGcnnP633r+CiJNusF9c0yn/0XGVVd
-         htHmVQfw+TDu2fiy5QHUB+xoJ4L0ismapz+KDrbkVFCLj3r0Gub4BqGo0GOm19Mac5va
-         SdPQ==
-X-Gm-Message-State: AOAM533atpBiG8ZoNCbJCrfKRl3Y7FPtf7dFvCVTGMHWD+/woobyZBUi
-        LYO4McQ6wlFX9s3P1S0FcqL/appikMg=
-X-Google-Smtp-Source: ABdhPJyTKpssMMXAJnLeSV+uJ29VL1E4VFrzG0JOIP3qz7n7h/AkrPriyU+0sT9fVx8WR2CB2FL0Yg==
-X-Received: by 2002:a62:168b:0:b029:20d:69a5:189 with SMTP id 133-20020a62168b0000b029020d69a50189mr17521696pfw.57.1618075847334;
-        Sat, 10 Apr 2021 10:30:47 -0700 (PDT)
+        bh=k2/WQMErDOWTBOf8F7mdgEzBgEYn+fKIDvsxc5E+NPQ=;
+        b=XTZID7v9hQqDgYdFSaE4K4R7bf4i/aCYxAdNC0gHsJSxWKm5NwX7UvjrvITyMj0x95
+         em3AOo2T5H21ayEgTGQUXsyBS4bA13yLHDXrrkXN+W4OtnMmgo62NUREwZLeAeJbPhJM
+         EPVBlMexsekdxx87MRwjnYo8Dk8BI/TQJVoja+2yF0cV9tbNpv1pGnwiKRDEKYU+cm5W
+         goybZ8oVcZoVhBrayAjOeLeEPoTL841VtIVsH6cllqh+UmeeD1iLhoWvHrbC/jE26DWn
+         LBK1KluN+3Xy8vG1NLQmN4zabe3Xql4AzqnbeHxwbYwMUpkR3EmDVY9/Yp0i/ykntV2I
+         TbfA==
+X-Gm-Message-State: AOAM531cp7qlqDAyBKdQAxOdP63y17Zm4FVLRe74yKx1z/Sz81J17SR2
+        y6lpDEk3x0yy727lxf1YC+DKijOVkrs=
+X-Google-Smtp-Source: ABdhPJxtwc40GZJupik0dAqP+AJA3nxYEjo3kORn5A50CwNO3cVD0c7ynbf2EbEjBI7OPguOh58ezA==
+X-Received: by 2002:aa7:962f:0:b029:247:b6c:52d5 with SMTP id r15-20020aa7962f0000b02902470b6c52d5mr7964308pfg.50.1618075846107;
+        Sat, 10 Apr 2021 10:30:46 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id x25sm5578861pfu.189.2021.04.10.10.30.46
+        by smtp.gmail.com with ESMTPSA id x25sm5578861pfu.189.2021.04.10.10.30.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 10 Apr 2021 10:30:47 -0700 (PDT)
+        Sat, 10 Apr 2021 10:30:45 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 05/16] lpfc: Fix lack of device removal on port swaps with PRLIs
-Date:   Sat, 10 Apr 2021 10:30:23 -0700
-Message-Id: <20210410173034.67618-6-jsmart2021@gmail.com>
+Subject: [PATCH 03/16] lpfc: Fix reference counting errors in lpfc_cmpl_els_rsp()
+Date:   Sat, 10 Apr 2021 10:30:21 -0700
+Message-Id: <20210410173034.67618-4-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210410173034.67618-1-jsmart2021@gmail.com>
 References: <20210410173034.67618-1-jsmart2021@gmail.com>
@@ -72,41 +72,109 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During target port-swap testing with link flips, the initiator could
-encounter PRLI errors.  If the target node disappears permanently, the
-ndlp is found stuck in UNUSED state with ref count of 1. The rmmod of
-the driver will hang waiting for this node to be freed.
+Call traces are being seen that result from a nodelist structure ref
+counting error. They are typically seen after transmission of an LS_RJT
+ELS response.
 
-While handling a link error in PRLI completion path, the code intends to
-skip triggering the discovery state machine. However this is causing the
-final reference release path to be skipped. This causes the node to be
-stuck with ref count of 1
+Aged code in lpfc_cmpl_els_rsp() calls lpfc_nlp_not_used() which, if the
+ndlp reference count is exactly 1, will decrement the reference count.
+Previously lpfc_nlp_put() was within lpfc_els_free_iocb, and the 'put'
+within the free would only be invoked if cmdiocb->context1 was not NULL.
+Since the nodelist structure reference count is decremented when exiting
+lpfc_cmpl_els_rsp() the lpfc_nlp_not_used() calls are no longer required.
+Calling them is causing the reference count issue.
 
-Fix by ensuring the code path triggers the device removal event on the
-node state machine.
+Fix by removing the lpfc_nlp_not_used() calls
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 50 +-----------------------------------
+ 1 file changed, 1 insertion(+), 49 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index e71b37608f60..8a8d949979c8 100644
+index a04546eca18f..67159b957344 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2233,9 +2233,7 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 				 irsp->un.ulpWord[4], ndlp->fc4_prli_sent);
+@@ -4444,10 +4444,7 @@ lpfc_mbx_cmpl_dflt_rpi(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+  * nlp_flag bitmap in the ndlp data structure, if the mbox command reference
+  * field in the command IOCB is not NULL, the referred mailbox command will
+  * be send out, and then invokes the lpfc_els_free_iocb() routine to release
+- * the IOCB. Under error conditions, such as when a LS_RJT is returned or a
+- * link down event occurred during the discovery, the lpfc_nlp_not_used()
+- * routine shall be invoked trying to release the ndlp if no other threads
+- * are currently referring it.
++ * the IOCB.
+  **/
+ static void
+ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+@@ -4494,15 +4491,6 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			}
+ 			mempool_free(mbox, phba->mbox_mem_pool);
+ 		}
+-		if (ndlp && (ndlp->nlp_flag & NLP_RM_DFLT_RPI))
+-			if (lpfc_nlp_not_used(ndlp)) {
+-				ndlp = NULL;
+-				/* Indicate the node has already released,
+-				 * should not reference to it from within
+-				 * the routine lpfc_els_free_iocb.
+-				 */
+-				cmdiocb->context1 = NULL;
+-			}
+ 		goto out;
+ 	}
  
- 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
--		if (lpfc_error_lost_link(irsp))
--			goto out;
--		else
-+		if (!lpfc_error_lost_link(irsp))
- 			lpfc_disc_state_machine(vport, ndlp, cmdiocb,
- 						NLP_EVT_CMPL_PRLI);
+@@ -4580,29 +4568,6 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				"Data: x%x x%x x%x\n",
+ 				ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_state,
+ 				ndlp->nlp_rpi);
+-
+-			if (lpfc_nlp_not_used(ndlp)) {
+-				ndlp = NULL;
+-				/* Indicate node has already been released,
+-				 * should not reference to it from within
+-				 * the routine lpfc_els_free_iocb.
+-				 */
+-				cmdiocb->context1 = NULL;
+-			}
+-		} else {
+-			/* Do not drop node for lpfc_els_abort'ed ELS cmds */
+-			if (!lpfc_error_lost_link(irsp) &&
+-			    ndlp->nlp_flag & NLP_ACC_REGLOGIN) {
+-				if (lpfc_nlp_not_used(ndlp)) {
+-					ndlp = NULL;
+-					/* Indicate node has already been
+-					 * released, should not reference
+-					 * to it from within the routine
+-					 * lpfc_els_free_iocb.
+-					 */
+-					cmdiocb->context1 = NULL;
+-				}
+-			}
+ 		}
+ 		mp = (struct lpfc_dmabuf *)mbox->ctx_buf;
+ 		if (mp) {
+@@ -4618,19 +4583,6 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			ndlp->nlp_flag &= ~NLP_ACC_REGLOGIN;
+ 		ndlp->nlp_flag &= ~NLP_RM_DFLT_RPI;
+ 		spin_unlock_irq(&ndlp->lock);
+-
+-		/* If the node is not being used by another discovery thread,
+-		 * and we are sending a reject, we are done with it.
+-		 * Release driver reference count here and free associated
+-		 * resources.
+-		 */
+-		if (ls_rjt)
+-			if (lpfc_nlp_not_used(ndlp))
+-				/* Indicate node has already been released,
+-				 * should not reference to it from within
+-				 * the routine lpfc_els_free_iocb.
+-				 */
+-				cmdiocb->context1 = NULL;
+ 	}
  
+ 	/* Release the originating I/O reference. */
 -- 
 2.26.2
 
