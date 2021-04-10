@@ -2,282 +2,474 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,HK_RANDOM_FROM,HK_RANDOM_REPLYTO,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0013C433ED
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 15:00:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8CC4C43460
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 15:27:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B8B87611C1
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 15:00:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2EC76113A
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Apr 2021 15:27:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234839AbhDJPAp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 10 Apr 2021 11:00:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35054 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234519AbhDJPAo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Apr 2021 11:00:44 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F16C1C06138A;
-        Sat, 10 Apr 2021 08:00:29 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id cu16so2353060pjb.4;
-        Sat, 10 Apr 2021 08:00:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=zhnKtqR6Z6LgPz4z9GU++tSCOvtmgE0vX5wLJFbuaPo=;
-        b=j6DGMIG/GK4rj54GGrmKeFsotjhFlLvbkdjPPcmWXzQbZE9v/iMjdiRE6vfvZdHGdw
-         9MgIQcPfo1dcQqW1XnY6V4RYreSAe6EQAc35Zu7JA+TsA73cp/xS5UnLmVKPrbnrMiVQ
-         2oyY+ht5GBCYSGqqmc/WOxnRHmRVBXikdgfufWsrYMrZDUI8mAlNvFvP3h+BeR1rpZ24
-         IyfonyuJoTrphCXrOopU/yEWY8mOiGeA1YU44t0f5KtKZlNrtC59wSvpQVJIA8UPQbd4
-         9NS8WY1kNhSeLO6vf6H9wriwogXFkjgMdnMJHLS74YwMwVUnqoRVsvcZ2MbNbR/msO4r
-         42wQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=zhnKtqR6Z6LgPz4z9GU++tSCOvtmgE0vX5wLJFbuaPo=;
-        b=TAxRBb+mOn0zd/KRDFiS8jeaPrjKDeOErMw6ABG3e2GDLJCmwTR2hWkUk6P27ZtHW8
-         ZUWMC5A4FuXWLX4EEk6/YPGIDkO6UltU0R+FlhuzvMEAoch26NMeKw2UX2y8bb6csgqr
-         V6ptvoNmQuTyZTF6mItUkDb9wlHpse5UncX1LwqecsXdneNsDrBQ7yRQKysY7rVgwNwo
-         RUoI3xvv/N2K4djjcdCMSyz42r78ekPdZdQxYh+KLVXh3Y9LnK8dXCX8yvOAyI2i5pKR
-         AHA8rcJO8GCkazmHctR41uqoo2tIMhL4/9nandSwpLMAVrUX4RaDK3xfXZFi3jVNIBpT
-         aCBg==
-X-Gm-Message-State: AOAM531EbbN/aKUX1aG2C2gfSv78UbjmH5J/vj4Q+VbqD4POteqOmZ78
-        XlH4CYUX2DFiKwSUvjsOCXcxz2uzJrY=
-X-Google-Smtp-Source: ABdhPJzouJhiDMhZavkC1JRfAyodKMrNqzsUpsQMpheISFXIEHaGUrYzepfd4S8pV2RnrD7GZPzhSw==
-X-Received: by 2002:a17:902:348:b029:e8:dea9:f026 with SMTP id 66-20020a1709020348b02900e8dea9f026mr18029354pld.19.1618066829373;
-        Sat, 10 Apr 2021 08:00:29 -0700 (PDT)
-Received: from [10.230.185.151] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id a81sm4917303pfa.165.2021.04.10.08.00.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 10 Apr 2021 08:00:28 -0700 (PDT)
-Subject: Re: [PATCH v9 13/13] lpfc: vmid: Introducing vmid in io path.
-To:     Hannes Reinecke <hare@suse.de>,
-        Muneendra <muneendra.kumar@broadcom.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        tj@kernel.org, linux-nvme@lists.infradead.org
-Cc:     emilne@redhat.com, mkumar@redhat.com,
-        Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-References: <1617750397-26466-1-git-send-email-muneendra.kumar@broadcom.com>
- <1617750397-26466-14-git-send-email-muneendra.kumar@broadcom.com>
- <91b0c309-6908-8fd9-ac60-a8572500c3ed@suse.de>
-From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <201c6604-8e9d-bfcb-f39e-be507f8b02d6@gmail.com>
-Date:   Sat, 10 Apr 2021 08:00:27 -0700
+        id S234883AbhDJP13 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Apr 2021 11:27:29 -0400
+Received: from mout.perfora.net ([74.208.4.194]:59099 "EHLO mout.perfora.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234768AbhDJP12 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 10 Apr 2021 11:27:28 -0400
+Received: from [192.168.0.156] ([108.168.115.113]) by mrelay.perfora.net
+ (mreueus003 [74.208.5.2]) with ESMTPSA (Nemesis) id 0MAP5I-1lPEyp2gVG-00BbQc
+ for <linux-scsi@vger.kernel.org>; Sat, 10 Apr 2021 17:27:13 +0200
+From:   TomK <tomkcpr@mdevsys.com>
+Subject: QLE2432 initiator fails to see any LUN's on one of servers while
+ using 5QLE2464 as a target.
+Reply-To: tomkcpr@mdevsys.com
+To:     linux-scsi@vger.kernel.org
+Message-ID: <912519f2-69f7-b31a-8c25-af6254e5d0d3@mdevsys.com>
+Date:   Sat, 10 Apr 2021 11:27:12 -0400
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+ Thunderbird/78.9.0
 MIME-Version: 1.0
-In-Reply-To: <91b0c309-6908-8fd9-ac60-a8572500c3ed@suse.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:CGAhHsJQrLmAGb3AtPL9Q/u+nvW4a14w8Z+LFnh0Rd0+FVQ0C2w
+ 39lOGlFLm8iBzpOyfZ7BbCgepafnhRr4f7N/lpaJCSCRHSB9Sub/dy8zdVOYUVvQ6/meWr6
+ R0gxgfUixt+Rq6WCuvCEd3Nyuow4lYTRm7KNY97pUh9YP1Vvap7nbHcOHMXn5SLWSjfwnCS
+ 3XoZg8DWGUc8owsqHUIyw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:o+Wpu58l3Jg=:DtIq74DCCyWIJBgB6FRc2x
+ FuCwFv8leKP8emCejWwTQHuYkPnjZ6ymYju5/63SIoS10ZJGB+IDBQAntNVsn2/YKKAD57uhv
+ 8A6WScShvjVvqXbAH25VZd4V1iJLq9iXHtQtqjEOr13vaL+yPolKUsybfaqKg8mhsA4rmV+wA
+ NyP23ASgQaNB0JFDXYpbgcSGZO0pBO5DkNJgABAVtwRyrQ0w6FHQLpkfaNJ0wBVfh7jvn+7eh
+ F0RSKLWOuDzT2K71gcK+M7Fid0qEK/jnva8N1wJUvt2EUn9zOhH3npo06Pa+PIbwKfXXPL+P4
+ 98QTC761OEeyeqpvFkvV6fs/C1bCQPLhfqtWUVNzZoyAJkfWeDuNfVg8yX326ZnmwmHkf4ZqJ
+ SR+Ky2AVDjy4wnBTdo/jrHvdqVlLspUBn+YDcSRIHdjA77KCetRfcTRhBIFT2lBGcFfOglRzv
+ 0/9Ju32NyaBnOl/7jMeZK1FqOXkRVfeSm8C5v3VxmtXOVxIfUbLy
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/8/2021 1:46 AM, Hannes Reinecke wrote:
-> On 4/7/21 1:06 AM, Muneendra wrote:
->> From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-...
->> +        /* while the read lock was released, in case the entry was */
->> +        /* added by other context or is in process of being added */
->> +        if (vmp && vmp->flag & LPFC_VMID_REGISTERED) {
->> +            lpfc_vmid_update_entry(vport, cmd, vmp, tag);
->> +            write_unlock(&vport->vmid_lock);
->> +            return 0;
->> +        } else if (vmp && vmp->flag & LPFC_VMID_REQ_REGISTER) {
->> +            write_unlock(&vport->vmid_lock);
->> +            return -EBUSY;
->> +        }
->> +
->> +        /* else search and allocate a free slot in the hash table */
->> +        if (vport->cur_vmid_cnt < vport->max_vmid) {
->> +            for (i = 0; i < vport->max_vmid; ++i) {
->> +                vmp = vport->vmid + i;
->> +                if (vmp->flag == LPFC_VMID_SLOT_FREE) {
->> +                    vmp = vport->vmid + i;
+Hey Everyone,
 
-delete this last line and adjust parens - really odd that it replicates 
-the assignment 2 lines earlier.
+In a basic SAN config using a few QLE2432 adapters connected to a target 
+using a QLE2464 adapter via a EMC Brocade 5000B switch, one of the 
+initiators fails to present a LUN after being online for sometime.  Over 
+a period of time, few months, the initiator on one of the hosts stops 
+showing available LUN's to the underlying VMware clients.
 
->> +                    break;
->> +                }
->> +            }
+All the other hosts are fine, except for this specific one.  Unless that 
+is, I reboot the target completely, affecting all the other working 
+hosts in the process.
 
-I would prefer that if the table is expended and no slots free, that 
--ENOMEM is returned here. Rather than falling down below and qualifying 
-by slot free, then by pending (set only if slot free).  I can't believe 
-there is a reason the idle timer has to be started if no slots free as 
-all the other fail cases don't bother with it.
+Digging a bit closer, I notice that the issue seems to strike an uncanny 
+similarity to the following one:
 
-This also helps indentation levels below.
+ht tps://www.spinics.net/lists/linux-scsi/msg136622.html
 
->> +        } else {
->> +            write_unlock(&vport->vmid_lock);
->> +            return -ENOMEM;
->> +        }
->> +
->> +        if (vmp && (vmp->flag == LPFC_VMID_SLOT_FREE)) {
->> +            /* Add the vmid and register  */
->> +            lpfc_put_vmid_in_hashtable(vport, hash, vmp);
->> +            vmp->vmid_len = len;
->> +            memcpy(vmp->host_vmid, uuid, vmp->vmid_len);
->> +            vmp->io_rd_cnt = 0;
->> +            vmp->io_wr_cnt = 0;
->> +            vmp->flag = LPFC_VMID_SLOT_USED;
->> +
->> +            vmp->delete_inactive =
->> +                vport->vmid_inactivity_timeout ? 1 : 0;
->> +
->> +            /* if type priority tag, get next available vmid */
->> +            if (lpfc_vmid_is_type_priority_tag(vport))
->> +                lpfc_vmid_assign_cs_ctl(vport, vmp);
->> +
->> +            /* allocate the per cpu variable for holding */
->> +            /* the last access time stamp only if vmid is enabled */
->> +            if (!vmp->last_io_time)
->> +                vmp->last_io_time =
->> +                    __alloc_percpu(sizeof(u64),
->> +                           __alignof__(struct
->> +                                   lpfc_vmid));
->> +
->> +            /* registration pending */
->> +            pending = 1;
->> +        } else {
->> +            rc = -ENOMEM;
->> +        }
->> +        write_unlock(&vport->vmid_lock);
->> +
->> +        /* complete transaction with switch */
->> +        if (pending) {
->> +            if (lpfc_vmid_is_type_priority_tag(vport))
->> +                rc = lpfc_vmid_uvem(vport, vmp, true);
->> +            else
->> +                rc = lpfc_vmid_cmd(vport,
->> +                           SLI_CTAS_RAPP_IDENT,
->> +                           vmp);
->> +            if (!rc) {
->> +                write_lock(&vport->vmid_lock);
->> +                vport->cur_vmid_cnt++;
->> +                vmp->flag |= LPFC_VMID_REQ_REGISTER;
->> +                write_unlock(&vport->vmid_lock);
->> +            }
->> +        }
->> +
->> +        /* finally, enable the idle timer once */
->> +        if (!(vport->phba->pport->vmid_flag & LPFC_VMID_TIMER_ENBLD)) {
->> +            mod_timer(&vport->phba->inactive_vmid_poll,
->> +                  jiffies +
->> +                  msecs_to_jiffies(1000 * LPFC_VMID_TIMER));
->> +            vport->phba->pport->vmid_flag |= LPFC_VMID_TIMER_ENBLD;
->> +        }
->> +    }
->> +    return rc;
->> +}
->> +
->> +/*
->> + * lpfc_is_command_vm_io - get the uuid from blk cgroup
->> + * @cmd:Pointer to scsi_cmnd data structure
->> + * Returns uuid if present if not null
->> + */
->> +static char *lpfc_is_command_vm_io(struct scsi_cmnd *cmd)
->> +{
->> +    char *uuid = NULL;
->> +
->> +    if (cmd->request) {
->> +        if (cmd->request->bio)
->> +            uuid = blkcg_get_fc_appid(cmd->request->bio);
->> +    }
->> +    return uuid;
->> +}
->> +
->>   /**
->>    * lpfc_queuecommand - scsi_host_template queuecommand entry point
->>    * @shost: kernel scsi host pointer.
->> @@ -5288,6 +5437,7 @@ lpfc_queuecommand(struct Scsi_Host *shost, 
->> struct scsi_cmnd *cmnd)
->>       int err, idx;
->>   #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
->>       uint64_t start = 0L;
->> +    u8 *uuid = NULL;
->>       if (phba->ktime_on)
->>           start = ktime_get_ns();
->> @@ -5415,6 +5565,25 @@ lpfc_queuecommand(struct Scsi_Host *shost, 
->> struct scsi_cmnd *cmnd)
->>       }
->> +    /* check the necessary and sufficient condition to support VMID */
->> +    if (lpfc_is_vmid_enabled(phba) &&
->> +        (ndlp->vmid_support ||
->> +         phba->pport->vmid_priority_tagging ==
->> +         LPFC_VMID_PRIO_TAG_ALL_TARGETS)) {
->> +        /* is the IO generated by a VM, get the associated virtual */
->> +        /* entity id */
->> +        uuid = lpfc_is_command_vm_io(cmnd);
->> +
->> +        if (uuid) {
->> +            err = lpfc_vmid_get_appid(vport, uuid, cmnd,
->> +                (union lpfc_vmid_io_tag *)
->> +                    &lpfc_cmd->cur_iocbq.vmid_tag);
->> +            if (!err)
->> +                lpfc_cmd->cur_iocbq.iocb_flag |= LPFC_IO_VMID;
->> +        }
->> +    }
->> +
->> +    atomic_inc(&ndlp->cmd_pending);
->>   #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
->>       if (unlikely(phba->hdwqstat_on & LPFC_CHECK_SCSI_IO))
->>           this_cpu_inc(phba->sli4_hba.c_stat->xmt_io);
->>
-> And that's the bit which I don't particular like.
-> 
-> Essentially we'll have to inject additional ELS commands _on each I/O_ 
-> to get a valid VMID.
-> Where there are _so_ many things which might get wrong, causing an I/O 
-> stall.
+However, I'm wondering why only one of the servers is affected and not 
+the others?  Seems it is a card issue with the first host (please see 
+image) however I'm not familiar with all the messages printed so can't 
+be sure of the reason nor link things as effectively. Neither of the two 
+ports of the HBA on Server 1 work, when in this disconnected state, 
+despite switching SFP's on the Brocade switch, switching cables etc. 
+That is, again, until I reboot the target entirely.
 
-I don't follow you - yes ELS's are injected when there isn't an entry 
-for the VM, but once there is, there isn't further ELS's. That is the 
-cost. as we don't know what uuid's I/O will be sent to before hand, so 
-it has to be siphoned off during the I/O flow.  I/O's can be sent 
-non-tagged while the ELS's are completing (and there aren't multiple 
-sets of ELS's as long as it's the same uuid), which is fine.
+Initiator:
+                  50:01:43:80:16:77:99:38; 50:01:43:80:16:77:99:3a;
+                  50:01:43:80:16:77:99:3b; 50:01:43:80:16:77:99:39
 
-so I disagree with "_on each I/O_".
+Target:
+		(see below)
 
-> I would have vastly preferred if we could _avoid_ having to do 
-> additional ELS commands for VMID registration in the I/O path
-> (ie only allow for I/O with a valid VMID), and reject the I/O otherwise 
-> until VMID registration is complete.
-> 
-> IE return 'BUSY' (or even a command retry?) when no valid VMID for this 
-> particular I/O is found, register the VMID (preferably in another 
-> thread), and restart the queue once the VMID is registered.
+This also started to happen a few months ago.  Everything was fine for a 
+few years before that.
 
-Why does it bother you with the I/O path ?  It's actually happening in 
-parallel with no real relation between the two.
 
-I seriously disagree with reject if no vmid tag. Why?  what do you gain 
-? This actually introduces more disruption than the parallel flow with 
-the ELSs.   Also, after link bounce, where all VMID's have to be done, 
-it adds a stall window after link up right when things are trying to 
-resume after rports rejoin. Why add the i/o rebouncing ? There no real 
-benefit. Issuing a few untagged I/O doesn't hurt.
+Log snippet:
 
-> 
-> That way we have a clear separation, and the I/O path will always work 
-> with valid VMIDs.
-> 
-> Hmm?
-> 
-> Cheers,
-> 
-> Hannes
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e818: 
+is_send_status=1, cmd->bufflen=73728, cmd->sg_cnt=0, 
+cmd->dma_data_direction=2 se_cmd[00000000cc1dc466] qp 0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:2: 
+qlt_free_cmd: se_cmd[00000000cc1dc466] ox_id 00e1
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:2: 
+qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0110
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e818: 
+is_send_status=1, cmd->bufflen=10240, cmd->sg_cnt=0, 
+cmd->dma_data_direction=2 se_cmd[00000000cc1dc466] qp 0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:2: 
+qlt_free_cmd: se_cmd[00000000cc1dc466] ox_id 0110
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:2: 
+qlt_24xx_atio_pkt_all_vps: qla_target(0): type d ox_id 0000
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e82e:2: 
+IMMED_NOTIFY ATIO
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f826:2: 
+qla_target(0): Port ID: 01:09:00 ELS opcode: 0x03 lid 7 
+50:01:43:80:16:77:99:3a
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f897:2: Linking 
+sess 00000000088a6dfa [0] wwn 50:01:43:80:16:77:99:3a with PLOGI ACK to 
+wwn 50:01:43:80:16:77:99:3a s_id 01:09:00, ref=1 pla 000000004bdf1d76 link 0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28f9:2: 
+qlt_handle_login 4772 50:01:43:80:16:77:99:3a  DS 8
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28f9:2: 
+qlt_handle_login 4803 50:01:43:80:16:77:99:3a post del sess
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e801:2: 
+Scheduling sess 00000000088a6dfa for deletion
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f826:2: 
+qla_target(0): Exit ELS opcode: 0x03 res 0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-290a:2: 
+qlt_unreg_sess sess 00000000088a6dfa for deletion 50:01:43:80:16:77:99:3a
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-287d:2: FCPort 
+50:01:43:80:16:77:99:3a state transitioned from ONLINE to LOST - 
+portid=010900.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28a3:2: Port 
+login retry 500143801677993a, lid 0x0007 retry cnt=45.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f884:2: 
+qlt_free_session_done: se_sess 000000001f2eac78 / sess 00000000088a6dfa 
+from port 50:01:43:80:16:77:99:3a loop_id 0x07 s_id 01:09:00 logout 1 
+keep 1 els_logo 0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f886:2: 
+qlt_free_session_done: waiting for sess 00000000088a6dfa logout
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2870:2: 
+Async-logout - hdl=172 loop-id=7 portid=010900 50:01:43:80:16:77:99:3a.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-5836:2: 
+Async-logout complete - 50:01:43:80:16:77:99:3a hdl=172 portid=010900 
+iop0=0.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f893:2: 
+qlt_logo_completion_handler: se_sess 000000001f2eac78 / sess 
+00000000088a6dfa from port 50:01:43:80:16:77:99:3a loop_id 0x07 s_id 
+01:09:00 LOGO failed: 0x0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:2: 
+qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 008a
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e818: 
+is_send_status=1, cmd->bufflen=4096, cmd->sg_cnt=0, 
+cmd->dma_data_direction=2 se_cmd[00000000cc1dc466] qp 0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:2: 
+qlt_free_cmd: se_cmd[00000000cc1dc466] ox_id 008a
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-680b:2: 
+isp_abort_needed=0 loop_resync_needed=0 fcport_update_needed=0 
+start_dpc=0 reset_marker_needed=0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-680c:2: 
+beacon_blink_needed=0 isp_unrecoverable=0 fcoe_ctx_reset_needed=0 
+vp_dpc_needed=0 relogin_needed=1.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-4801:2: DPC 
+handler waking up, dpc_flags=0x100.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-480d:2: Relogin 
+scheduled.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-4800:2: DPC 
+handler sleeping.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2908:2: 
+qla2x00_relogin 21:01:00:1b:32:a1:81:21 DS 0 LS 7
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2902:2: 
+qla24xx_handle_relogin_event 21:01:00:1b:32:a1:81:21 DS 0 LS 7 P 0 del 2 
+cnfl           (null) rscn 0|0 login 0|0 fl 3
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28d8:2: 
+qla24xx_fcport_handle_login 21:01:00:1b:32:a1:81:21 DS 0 LS 7 P 0 fl 3 
+confl           (null) rscn 0|0 login 0 retry 45 lid 4096 scan 2
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2908:2: 
+qla2x00_relogin 50:01:43:80:16:77:99:38 DS 3 LS 4
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2902:2: 
+qla24xx_handle_relogin_event 50:01:43:80:16:77:99:38 DS 3 LS 4 P 0 del 1 
+cnfl           (null) rscn 0|0 login 4|18 fl 1
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28d8:2: 
+qla24xx_fcport_handle_login 50:01:43:80:16:77:99:38 DS 3 LS 4 P 0 fl 1 
+confl           (null) rscn 0|0 login 18 retry 45 lid 4 scan 2
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2908:2: 
+qla2x00_relogin 50:01:43:80:16:77:99:3a DS 10 LS 3
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2902:2: 
+qla24xx_handle_relogin_event 50:01:43:80:16:77:99:3a DS 10 LS 3 P 0 del 
+1 cnfl           (null) rscn 0|0 login 8|9 fl 1
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-480e:2: Relogin end.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f887:2: 
+qlt_free_session_done: sess 00000000088a6dfa logout completed
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f89a:2: se_sess 
+          (null) / sess 00000000088a6dfa port 50:01:43:80:16:77:99:3a is 
+gone, releasing own PLOGI (ref=1)
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-5889:2: Sending 
+PLOGI ACK to wwn 50:01:43:80:16:77:99:3a s_id 01:09:00 loop_id 0x07 exch 
+0x11223c ox_id 0xae
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f801:2: 
+Unregistration of sess 00000000088a6dfa 50:01:43:80:16:77:99:3a finished 
+fcp_cnt 4
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28f4:2: 
+Async-nack 50:01:43:80:16:77:99:3a hndl 175 PLOGI
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28f2:2: Async 
+done-nack res 0 50:01:43:80:16:77:99:3a  type 16
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-5811:2: 
+Asynchronous PORT UPDATE ignored 0007/0004/0600.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f83d:2: 
+qla_target(0): Port update async event 0x8014 occurred: updating the 
+ports database (m[0]=8014, m[1]=7, m[2]=4, m[3]=600)
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f83e:2: Async MB 
+2: Got PLOGI Complete
 
--- james
+
+
+
+
+Thanks,
+
+
+
+
+Seems similar to this issue:
+ht tps://www.spinics.net/lists/linux-scsi/msg136470.html
+
+
+Log link:
+
+ht 
+tps://www.microdevsys.com/WordPressDownloads/qla2xxx-hba.log-recent.start.end.event.txt
+
+Infra Setup (image):
+
+ht tps://www.microdevsys.com/WordPressImages/brocade-san-issue.png
+
+
+
+Adapter details on the target.
+
+# QLogic Corp. ISP2432-based 4Gb Fibre Channel to PCI Express HBA ^C
+You have mail in /var/spool/mail/root
+
+
+
+[root@mbpc-pc 1]# lspci -vvv -s 03:00.0
+03:00.0 Fibre Channel: QLogic Corp. ISP2432-based 4Gb Fibre Channel to 
+PCI Express HBA (rev 03)
+          Subsystem: QLogic Corp. Device 0146
+          Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+          Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+          Latency: 0, Cache Line Size: 64 bytes
+          Interrupt: pin A routed to IRQ 18
+          Region 0: I/O ports at ee00 [size=256]
+          Region 1: Memory at fdffc000 (64-bit, non-prefetchable) [size=16K]
+          [virtual] Expansion ROM at fdf00000 [disabled] [size=256K]
+          Capabilities: [44] Power Management version 2
+                  Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                  Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+          Capabilities: [4c] Express (v1) Endpoint, MSI 00
+                  DevCap: MaxPayload 1024 bytes, PhantFunc 0, Latency 
+L0s <4us, L1 <1us
+                          ExtTag- AttnBtn+ AttnInd+ PwrInd+ RBE- FLReset-
+                  DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ 
+Unsupported+
+                          RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+                          MaxPayload 128 bytes, MaxReadReq 4096 bytes
+                  DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ 
+AuxPwr- TransPend-
+                  LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s, 
+Latency L0 <4us, L1 unlimited
+                          ClockPM- Surprise- LLActRep- BwNot-
+                  LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- 
+CommClk-
+                          ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                  LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- 
+SlotClk+ DLActive- BWMgmt- ABWMgmt-
+          Capabilities: [64] MSI: Enable- Count=1/16 Maskable- 64bit+
+                  Address: 0000000000000000  Data: 0000
+          Capabilities: [74] Vital Product Data
+                  Product Name: PCI-Express Quad Channel 4Gb Fibre 
+Channel HBA
+                  Read-only fields:
+                          [PN] Part number: QLE2464
+                          [SN] Serial number: GFC0840A74113
+                          [V0] Vendor specific: PW=15W
+                          [MN] Manufacture ID: 50 58 32 36 31 30 34 30 
+31 2d 31 31 20 20 41
+                          [V1] Vendor specific: 06.12
+                          [V3] Vendor specific: 08.01.02
+                          [V4] Vendor specific: 03.29
+                          [V5] Vendor specific: 03.23
+                          [YA] Asset tag:
+                          [RV] Reserved: checksum good, 0 byte(s) reserved
+                  End
+          Capabilities: [7c] MSI-X: Enable- Count=16 Masked-
+                  Vector table: BAR=1 offset=00002000
+                  PBA: BAR=1 offset=00003000
+          Capabilities: [100 v1] Advanced Error Reporting
+                  UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- 
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+                  UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- 
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                  UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- 
+UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                  CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
+NonFatalErr-
+                  CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
+NonFatalErr-
+                  AERCap: First Error Pointer: 14, GenCap+ CGenEn- 
+ChkCap+ ChkEn-
+          Capabilities: [138 v1] Power Budgeting <?>
+          Kernel driver in use: qla2xxx
+
+
+
+Target details:
+
+
+[root@mbpc-pc 1]# systool -c fc_host -v
+Class = "fc_host"
+
+    Class Device = "host0"
+    Class Device path = 
+"/sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/0000:02:00.0/0000:03:00.0/host0/fc_host/host0"
+      dev_loss_tmo        = "45"
+      fabric_name         = "0xffffffffffffffff"
+      issue_lip           = <store method only>
+      max_npiv_vports     = "127"
+      node_name           = "0x2002001b32c18121"
+      npiv_vports_inuse   = "0"
+      port_id             = "0x000000"
+      port_name           = "0x2102001b32c18121"
+      port_state          = "Linkdown"
+      port_type           = "Unknown"
+      speed               = "unknown"
+      supported_classes   = "Class 3"
+      supported_speeds    = "1 Gbit, 2 Gbit, 4 Gbit"
+      symbolic_name       = "QLE2464 FW:v8.06.02 DVR:v10.00.00.07-k-debug"
+      system_hostname     = ""
+      tgtid_bind_type     = "wwpn (World Wide Port Name)"
+      uevent              =
+      vport_create        = <store method only>
+      vport_delete        = <store method only>
+
+      Device = "host0"
+      Device path = 
+"/sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/0000:02:00.0/0000:03:00.0/host0"
+        fw_dump             =
+        issue_logo          = <store method only>
+        nvram               = "ISP "
+        optrom_ctl          = <store method only>
+        optrom              =
+        reset               = <store method only>
+        sfp                 = ""
+        uevent              = "DEVTYPE=scsi_host"
+        vpd                 = "▒."
+
+
+    Class Device = "host1"
+    Class Device path = 
+"/sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/0000:02:00.0/0000:03:00.1/host1/fc_host/host1"
+      dev_loss_tmo        = "45"
+      fabric_name         = "0xffffffffffffffff"
+      issue_lip           = <store method only>
+      max_npiv_vports     = "127"
+      node_name           = "0x2003001b32e18121"
+      npiv_vports_inuse   = "0"
+      port_id             = "0x000000"
+      port_name           = "0x2103001b32e18121"
+      port_state          = "Linkdown"
+      port_type           = "Unknown"
+      speed               = "unknown"
+      supported_classes   = "Class 3"
+      supported_speeds    = "1 Gbit, 2 Gbit, 4 Gbit"
+      symbolic_name       = "QLE2464 FW:v8.06.02 DVR:v10.00.00.07-k-debug"
+      system_hostname     = ""
+      tgtid_bind_type     = "wwpn (World Wide Port Name)"
+      uevent              =
+      vport_create        = <store method only>
+      vport_delete        = <store method only>
+
+      Device = "host1"
+      Device path = 
+"/sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/0000:02:00.0/0000:03:00.1/host1"
+        fw_dump             =
+        issue_logo          = <store method only>
+        nvram               = "ISP "
+        optrom_ctl          = <store method only>
+        optrom              =
+        reset               = <store method only>
+        sfp                 = ""
+        uevent              = "DEVTYPE=scsi_host"
+        vpd                 = "▒."
+
+
+    Class Device = "host2"
+    Class Device path = 
+"/sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/0000:02:01.0/0000:04:00.0/host2/fc_host/host2"
+      dev_loss_tmo        = "45"
+      fabric_name         = "0x100000051e903dab"
+      issue_lip           = <store method only>
+      max_npiv_vports     = "127"
+      node_name           = "0x2000001b32818121"
+      npiv_vports_inuse   = "0"
+      port_id             = "0x011300"
+      port_name           = "0x2100001b32818121"
+      port_state          = "Online"
+      port_type           = "NPort (fabric via point-to-point)"
+      speed               = "4 Gbit"
+      supported_classes   = "Class 3"
+      supported_speeds    = "1 Gbit, 2 Gbit, 4 Gbit"
+      symbolic_name       = "QLE2464 FW:v8.06.02 DVR:v10.00.00.07-k-debug"
+      system_hostname     = ""
+      tgtid_bind_type     = "wwpn (World Wide Port Name)"
+      uevent              =
+      vport_create        = <store method only>
+      vport_delete        = <store method only>
+
+      Device = "host2"
+      Device path = 
+"/sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/0000:02:01.0/0000:04:00.0/host2"
+        fw_dump             =
+        issue_logo          = <store method only>
+        nvram               = "ISP "
+        optrom_ctl          = <store method only>
+        optrom              =
+        reset               = <store method only>
+        sfp                 = ""
+        uevent              = "DEVTYPE=scsi_host"
+        vpd                 = "▒."
+
+
+    Class Device = "host3"
+    Class Device path = 
+"/sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/0000:02:01.0/0000:04:00.1/host3/fc_host/host3"
+      dev_loss_tmo        = "45"
+      fabric_name         = "0x100000051e903dab"
+      issue_lip           = <store method only>
+      max_npiv_vports     = "127"
+      node_name           = "0x2001001b32a18121"
+      npiv_vports_inuse   = "0"
+      port_id             = "0x011700"
+      port_name           = "0x2101001b32a18121"
+      port_state          = "Online"
+      port_type           = "NPort (fabric via point-to-point)"
+      speed               = "4 Gbit"
+      supported_classes   = "Class 3"
+      supported_speeds    = "1 Gbit, 2 Gbit, 4 Gbit"
+      symbolic_name       = "QLE2464 FW:v8.06.02 DVR:v10.00.00.07-k-debug"
+      system_hostname     = ""
+      tgtid_bind_type     = "wwpn (World Wide Port Name)"
+      uevent              =
+      vport_create        = <store method only>
+      vport_delete        = <store method only>
+
+      Device = "host3"
+      Device path = 
+"/sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/0000:02:01.0/0000:04:00.1/host3"
+        fw_dump             =
+        issue_logo          = <store method only>
+        nvram               = "ISP "
+        optrom_ctl          = <store method only>
+        optrom              =
+        reset               = <store method only>
+        sfp                 = ""
+        uevent              = "DEVTYPE=scsi_host"
+        vpd                 = "▒."
+
+
+[root@mbpc-pc 1]#
+
+
+
+
+-- 
+Thx,
+TK.
 
