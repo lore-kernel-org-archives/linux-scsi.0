@@ -2,380 +2,326 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCD77C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 10:36:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B61E8C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 12:04:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88CBE61249
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 10:36:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C1FE61289
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 12:04:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238227AbhDLKhH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Apr 2021 06:37:07 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18770 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237219AbhDLKhG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Apr 2021 06:37:06 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13CAUqal001696;
-        Mon, 12 Apr 2021 03:36:34 -0700
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-0016f401.pphosted.com with ESMTP id 37ubhqm3ws-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Apr 2021 03:36:34 -0700
-Received: from m0045851.ppops.net (m0045851.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 13CAVZjQ002439;
-        Mon, 12 Apr 2021 03:36:34 -0700
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2170.outbound.protection.outlook.com [104.47.58.170])
-        by mx0b-0016f401.pphosted.com with ESMTP id 37ubhqm3wr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Apr 2021 03:36:34 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WD2FkJjLYHdwkHaD+a3yq9vznSWXDf0tc1NdGG234zhublCeFMqklPWfyr+YvcZKEopKdzYSWPH/2GMEHtxUcr6THM1mTN2bfGf2rpPhz3mRz0mdLbbwjbeofbwt2sp+yvp4OPtj3dtqKP16xqR6OZ6WlcD9PAPwV1ZB1sYyQ6RGNHzCy4ku5o0+mL/KnGNZDQbaNczNdSVhBl7Q8+K9ALMXvmaMqKU1EbhHD1xNFhD9j3gw87tnkgqtmsizg75GQdzVmrf2crjNfhFxInd+fYVqSqHCIQo1P9QqIIVXCv6n5eRRWUn73a+RFBqwfVxQ386zJWI9qgFoZW9AxACJOQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RNWagqCDXwqfNTeYtViA8dacJRWy7K9kg9uV4LrB2YU=;
- b=h3LOUAQYBUKGZaYGeyN0XWBy5UffdYgZFr0QDpOufIj6SxQCE30iIS/wUqqwVM+DMrRQ4FINt3CAMAX9IqtUhw4/dhUnKMd7IBWHqDJiaLTbsTBSQJmhzi+fuVPYeCYnypcbylNNF5WWEEhMo+tAthsMVTJwxtqgY+0UG2oyUv5Fc1LvNGkLODLiRtxj2ZRnmUQkbXyFeqVWoeernVGQByesNJjJg7HpEk5CvHTU9LEQMS2gnK7RPBPq4WZ8ks6MT3nD88XHL5cpBWmEygDTv76jyQTrqEURqpjgs8PW3wt5oQ1os4EInipwM24yEDR0KRcR9AA7bg5Z5fK7o03gWQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
+        id S237718AbhDLME6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Apr 2021 08:04:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51076 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240812AbhDLMEx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Apr 2021 08:04:53 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14860C061574
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Apr 2021 05:04:35 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id b8-20020a17090a5508b029014d0fbe9b64so8685274pji.5
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Apr 2021 05:04:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RNWagqCDXwqfNTeYtViA8dacJRWy7K9kg9uV4LrB2YU=;
- b=OUXu5WD3ozqhYW3Ytb9eV6I1ERqaV6Qp0ckKki+khTlzMXXMBdXftjgrkW0HuVjI0EI8qGLf+YnjTcb64ogxl6bqS5hL/CrDCN6hBLI/yVkgJirrBD8tNDZgSUAelSMlxjnF7ztXK9V6glk3wzgp9NIHb+dwlQ2RovBYnbBii44=
-Received: from BYAPR18MB2998.namprd18.prod.outlook.com (2603:10b6:a03:136::14)
- by SJ0PR18MB4027.namprd18.prod.outlook.com (2603:10b6:a03:2ca::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.21; Mon, 12 Apr
- 2021 10:36:32 +0000
-Received: from BYAPR18MB2998.namprd18.prod.outlook.com
- ([fe80::8d7f:5a91:7edb:3621]) by BYAPR18MB2998.namprd18.prod.outlook.com
- ([fe80::8d7f:5a91:7edb:3621%4]) with mapi id 15.20.3999.037; Mon, 12 Apr 2021
- 10:36:32 +0000
-From:   Manish Rangankar <mrangankar@marvell.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        "lduncan@suse.com" <lduncan@suse.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        Santosh Vernekar <svernekar@marvell.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
-Subject: RE: [EXT] [PATCH 12/13] scsi: qedi: make sure tmf works are done
- before disconnect
-Thread-Topic: [EXT] [PATCH 12/13] scsi: qedi: make sure tmf works are done
- before disconnect
-Thread-Index: AQHXLjkIrgAsY4J6e0uOSVWARePGWKqwstdA
-Date:   Mon, 12 Apr 2021 10:36:32 +0000
-Message-ID: <BYAPR18MB29984C01E7203CD2A4EB289CD8709@BYAPR18MB2998.namprd18.prod.outlook.com>
-References: <20210410184016.21603-1-michael.christie@oracle.com>
- <20210410184016.21603-13-michael.christie@oracle.com>
-In-Reply-To: <20210410184016.21603-13-michael.christie@oracle.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: oracle.com; dkim=none (message not signed)
- header.d=none;oracle.com; dmarc=none action=none header.from=marvell.com;
-x-originating-ip: [34.98.205.117]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 04ceaa21-1a2e-447d-32ce-08d8fd9ed714
-x-ms-traffictypediagnostic: SJ0PR18MB4027:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SJ0PR18MB40276ABA87AAEA9991C7062FD8709@SJ0PR18MB4027.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: gQCy0w4Hpvf4MwOuR9QohGTkYQroO+vgo9ufxUNdY6cMi2wnTjs5Pu825UYSnee6vBsigjHOsk0nykHVAbUZrBqWASOkh5zcyHgBtFQeBWRn6fpV+Vsxa/vPQwqVDNWN0w842Smx3G2wNi1Ri7HB6elP2HteWSt+RKTGNZ9zPixo6bLJT5oGa1kSLvm9AD20dEX4RT7nNw/+74S8nUiX4AF7vuL7WFjPc1NJynATt0n6pFRFPpwSR3UjGVcSLZLu1TXpCHueu84g5GBUcvNYV5/OYWnY3ENFKQjUbB3L2oz4NJhtCslmvs7ALazeh90pg3ED2hmCD8K7nBJqmJgEQZkrNKDgpeEYVdleqDC40qAO8eW0TCODWN8qXZ3C2fY5S5xB7vy1kP5kHP9jScfHcjrzGcwoV5e2HSkhmAlJRDHRh+yVNGzX2zLWdNS1SVUto1msFVvKo8J0hXGy2OZ+r9NGFgJIpIRcpeT7lcoroLLf7/h8Z6MTTXcIWErlHHNH+5LjkbhQcfwupo2qxs9S0ZJYB28F34SNmwErgELasA+PearP3X8Nkcdfe0N+PyK5/+AAE8A7GCbNLyi+e8AmXuy5MLVm/7AM4nkPxWwvvto=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR18MB2998.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(376002)(396003)(346002)(136003)(366004)(66446008)(66556008)(64756008)(186003)(66476007)(66946007)(76116006)(7696005)(2906002)(26005)(110136005)(316002)(53546011)(8936002)(8676002)(52536014)(6506007)(38100700002)(478600001)(71200400001)(86362001)(5660300002)(83380400001)(55016002)(33656002)(9686003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?qTScFakx8D00so+pRXrAy4ILiHtiZScfSXsDKDr4E77ZMXkVbzOKLQ0c8nLd?=
- =?us-ascii?Q?RYHh0SimVpfTlcyguKbG5vXKQUtvLDnTOExDM2oeeu2HhbfiTiSml1GL05ja?=
- =?us-ascii?Q?As1nWhqADUDXkhoV1oHNWAc1mEEBNJGt1fnZGAsqYEn9qsJNEunCqvgNpmtR?=
- =?us-ascii?Q?d7ZaYN8qnm9rFpyF8kBaGZHtSh5HiwXTeW4vBDROGEOp8VxcLOwQgkHiLkMr?=
- =?us-ascii?Q?/muufRLdWhrkC4OtK33TK8w7VnP/YnsLXV0hVJFsMz+qWoKCHSMJ6nNEUZf1?=
- =?us-ascii?Q?cWLJeLmIQ7x2eq/5TUBNaWv1qu3pV6oPnmdulh+eXYGaSEI+heoAoo8NoE+z?=
- =?us-ascii?Q?bonYIF3+Y6c+b3pR2/gY0kGeQ/BpqHdbtw3Hw5P4cYmH7JcKvghsxZNCuKkU?=
- =?us-ascii?Q?TaPz+cq0t8w8TtKLDbEt6133F5uPhLCAZgOjpbj0SfzkEoDYiqAoOMRVAIVW?=
- =?us-ascii?Q?M3hjh+D9FklkAH8tUBC3BF+gzaKroH/rAjqkduSCaMAvfdzdk5yzzAcKBMSh?=
- =?us-ascii?Q?uBdbOSaA4nz0AHlKGI0KfWFcAuLKtujTqLbZeqZnummmg/o3D5tr6DLytI+P?=
- =?us-ascii?Q?xSiziug655FqrbqZaBixWrwRAwxKbvmYbmcTZ/OMLgzwZBUvkrsCU5C/fZMD?=
- =?us-ascii?Q?y0l0IqBp3cKOIYjzmsfUhSRAek2tVFZMOV95lgVAAe3UuaI+vP0PoDKjGvye?=
- =?us-ascii?Q?3OiLJ/UESz2BfHJXFNK7ZdS7nL9ESFEFwcbXEr8Vu7prem9hwJJd4n+VAbf0?=
- =?us-ascii?Q?TOeAwi+aVeF9vU+vLld5LKRvcet6W3finBNBNjH5lZSoYwZ4ylaPHd/n2SVf?=
- =?us-ascii?Q?0D5JXSLOmo5MqFhfDCkpMgDk+nLZDMlMNQPgJER/Q9vOKewkqKAb5U2nA/fo?=
- =?us-ascii?Q?WXMJaJ1Bkch4VtA7Ug4MGSH5sRumcKX10k+hO63hwsIw6LZ0BOVaY0NljDkA?=
- =?us-ascii?Q?t13iR5Jkh/kWryic2UY4pykkEzZrjzGVCssfP7/Xcx1qDjMRIiMuHklAnheN?=
- =?us-ascii?Q?GhIR57Pl/XbIsCR/EzohFQADPZWdqs8VSZhq+yEeY1d28fQFrhpgtK4agsyU?=
- =?us-ascii?Q?gF8X36vi+99JjYWtJHqyEbl7PBEL2o4s/hCk2jCsQgzDSRCD8muLZA6MWu/w?=
- =?us-ascii?Q?Tyx4qoIgcNTKSFCBQKQ+ivAgRZtcYle/t+EiLS4gPbRDorjb2F//Wh+ZcuKq?=
- =?us-ascii?Q?2VHUYGJ2/7u3+acKkYJcT5fCz8Elq/aKcWFrDZTbFQ66AcmEj/FcltcS1eQa?=
- =?us-ascii?Q?d1CnWT9JMeujog1rDGxi70+oafElIPLGE9PjNtVc5rgtHC/90Yo3O1shsOKv?=
- =?us-ascii?Q?RqeyMAbrOFJO9NVcTiyObdFm?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sStEFZXPbZqMGfM+TUbBpoeyAdNzle4ofdrOHJV1q3c=;
+        b=RNLw84rV30HTqYulIt9/n+fYb7/NGwouW3wjpEa4E06XwcR23hoRDRWb/rabvcydKl
+         6oqvJCldAD2GTS5eoNMglSksbLBadegwAj2KILl5xn/lpieeJoRS96jugXq2/NKe+aEU
+         E2rlOXObr4cNtKO4UTtdmlhwL9xR/F2StzJO0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=sStEFZXPbZqMGfM+TUbBpoeyAdNzle4ofdrOHJV1q3c=;
+        b=ah/2LzYjYg7Df5+OUc+OUt6OA6KNspbZgtBc5JBPYS4rgV49zF2GtpFFiXll+ukXBY
+         WqH1LWKoq6kHlpqoe4EZZmtXMJTNOqXdVKRVahcY9jjUCc6lTyQ01y7S4I0sTg3Icgat
+         3K6tDpqclQZ3mhxilt3ofCdaNtq/oCCHP+nUqdGquKWRHTqCnR4LHXvhbYw9XeTFNCFx
+         neXmtCrT8qv5BzImZywOxxKmYOJvjkLuIygjYP+M4lbvAU5KXBTWL99cFS7pGQb5ZiWC
+         u0x2ur1BJOMSELsJciiS3nFIQRaJSorPQKNBPTh8vdJf1B6OhzsBC0y07D/9iRqk+J64
+         n4/A==
+X-Gm-Message-State: AOAM531/e90JjsKoTHf7R+gzsJE9sYGdlpiz4WXpy4iq2toHBSKAq/3g
+        pEg+HIBOFrZB+VTDo6k0lmiwStOXj70JpmuzwOIdPA==
+X-Google-Smtp-Source: ABdhPJzqOK2buaHg5cnCujOEvKl/T+nvJvChJe8GGXe+gN+nfQnCZuknyDbXdQ/1avwvBB2uNcO4upEKUvzUr3h/Bfs=
+X-Received: by 2002:a17:902:8601:b029:e6:7b87:8add with SMTP id
+ f1-20020a1709028601b02900e67b878addmr26206710plo.3.1618229074400; Mon, 12 Apr
+ 2021 05:04:34 -0700 (PDT)
 MIME-Version: 1.0
-X-OriginatorOrg: marvell.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR18MB2998.namprd18.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 04ceaa21-1a2e-447d-32ce-08d8fd9ed714
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Apr 2021 10:36:32.6781
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 9LRdQWaZTuCi7kb1VS3Wvv3Lxzm9c0oMPfkr0wunTR3L9ioLbEhmly0xK+lkMfgDn5V+idZU1GMd6zSGvEDg2A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR18MB4027
-X-Proofpoint-ORIG-GUID: EKYQwRuDhd2JzfaoW7MzwzTrXKB0jRF-
-X-Proofpoint-GUID: EtEYFaY7rjIwPtJc_8IgN5vquTS1muXg
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-04-12_09:2021-04-12,2021-04-12 signatures=0
+References: <ce228d78-8651-d958-d1e5-2f82cbb8113d@qubes-os.org>
+ <c751b535d69b892fee0af8f43cfcce60@mail.gmail.com> <12383f2a-9f7b-ea95-ff52-785b91c1bac8@qubes-os.org>
+ <2ef99260-c5ee-f42d-c06e-e37b22ff443d@qubes-os.org>
+In-Reply-To: <2ef99260-c5ee-f42d-c06e-e37b22ff443d@qubes-os.org>
+From:   Sumit Saxena <sumit.saxena@broadcom.com>
+Date:   Mon, 12 Apr 2021 17:34:08 +0530
+Message-ID: <CAL2rwxo9rM+Tcc8_kQ2U9Kxp3mJfFFK0V7ACdrV_4cgZ1YnBVw@mail.gmail.com>
+Subject: Re: MegaRaid SAS 9341-8i issue
+To:     =?UTF-8?B?RnLDqWTDqXJpYyBQaWVycmV0?= 
+        <frederic.pierret@qubes-os.org>
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000002c380a05bfc55138"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Mike Christie <michael.christie@oracle.com>
-> Sent: Sunday, April 11, 2021 12:10 AM
-> To: lduncan@suse.com; martin.petersen@oracle.com; Manish Rangankar
-> <mrangankar@marvell.com>; Santosh Vernekar <svernekar@marvell.com>;
-> linux-scsi@vger.kernel.org; jejb@linux.ibm.com
-> Cc: Mike Christie <michael.christie@oracle.com>
-> Subject: [EXT] [PATCH 12/13] scsi: qedi: make sure tmf works are done bef=
-ore
-> disconnect
->=20
-> External Email
->=20
-> ----------------------------------------------------------------------
-> We need to make sure that abort and reset completion work has completed
-> before ep_disconnect returns. After ep_disconnect we can't manipulate cmd=
-s
-> because libiscsi will call conn_stop and take onwership.
->=20
-> We are trying to make sure abort work and reset completion work has
-> completed before we do the cmd clean up in ep_disconnect. The problem is
-> that:
->=20
-> 1. the work function sets the QEDI_CONN_FW_CLEANUP bit, so if the work wa=
-s
-> still pending we would not see the bit set. We need to do this before the=
- work is
-> queued.
->=20
-> 2. If we had multiple works queued then we could break from the loop in
-> qedi_ep_disconnect early because when abort work 1 completes it could cle=
-ar
-> QEDI_CONN_FW_CLEANUP. qedi_ep_disconnect could then see that before
-> work 2 has run.
->=20
-> 3. A tmf reset completion work could run after ep_disconnect starts clean=
-ing up
-> cmds via qedi_clearsq. ep_disconnect's call to qedi_clearsq
-> -> qedi_cleanup_all_io would might think it's done cleaning up cmds,
-> but the reset completion work could still be running. We then return from
-> ep_disconnect while still doing cleanup.
->=20
-> This replaces the bit with a counter and adds a bool to prevent new works=
- from
-> starting from the completion path once a ep_disconnect starts.
->=20
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> ---
->  drivers/scsi/qedi/qedi_fw.c    | 46 +++++++++++++++++++++-------------
->  drivers/scsi/qedi/qedi_iscsi.c | 23 +++++++++++------
-> drivers/scsi/qedi/qedi_iscsi.h |  4 +--
->  3 files changed, 47 insertions(+), 26 deletions(-)
->=20
-> diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c in=
-dex
-> 475cb7823cf1..13dd06915d74 100644
-> --- a/drivers/scsi/qedi/qedi_fw.c
-> +++ b/drivers/scsi/qedi/qedi_fw.c
-> @@ -156,7 +156,6 @@ static void qedi_tmf_resp_work(struct work_struct
-> *work)
->  	struct iscsi_tm_rsp *resp_hdr_ptr;
->  	int rval =3D 0;
->=20
-> -	set_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
->  	resp_hdr_ptr =3D  (struct iscsi_tm_rsp *)qedi_cmd->tmf_resp_buf;
->=20
->  	rval =3D qedi_cleanup_all_io(qedi, qedi_conn, qedi_cmd->task, true); @@
-> -169,7 +168,10 @@ static void qedi_tmf_resp_work(struct work_struct *work=
-)
->=20
->  exit_tmf_resp:
->  	kfree(resp_hdr_ptr);
-> -	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-> +
-> +	spin_lock(&qedi_conn->tmf_work_lock);
-> +	qedi_conn->fw_cleanup_works--;
-> +	spin_unlock(&qedi_conn->tmf_work_lock);
->  }
->=20
->  static void qedi_process_tmf_resp(struct qedi_ctx *qedi, @@ -225,16 +227=
-,25
-> @@ static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
->  	}
->  	spin_unlock(&qedi_conn->list_lock);
->=20
-> -	if (((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) =3D=3D
-> -	      ISCSI_TM_FUNC_LOGICAL_UNIT_RESET) ||
-> -	    ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) =3D=3D
-> -	      ISCSI_TM_FUNC_TARGET_WARM_RESET) ||
-> -	    ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) =3D=3D
-> -	      ISCSI_TM_FUNC_TARGET_COLD_RESET)) {
-> +	spin_lock(&qedi_conn->tmf_work_lock);
-> +	switch (tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) {
-> +	case ISCSI_TM_FUNC_LOGICAL_UNIT_RESET:
-> +	case ISCSI_TM_FUNC_TARGET_WARM_RESET:
-> +	case ISCSI_TM_FUNC_TARGET_COLD_RESET:
-> +		if (qedi_conn->ep_disconnect_starting) {
-> +			/* Session is down so ep_disconnect will clean up */
-> +			spin_unlock(&qedi_conn->tmf_work_lock);
-> +			goto unblock_sess;
-> +		}
-> +
-> +		qedi_conn->fw_cleanup_works++;
-> +		spin_unlock(&qedi_conn->tmf_work_lock);
-> +
->  		INIT_WORK(&qedi_cmd->tmf_work, qedi_tmf_resp_work);
->  		queue_work(qedi->tmf_thread, &qedi_cmd->tmf_work);
->  		goto unblock_sess;
->  	}
-> +	spin_unlock(&qedi_conn->tmf_work_lock);
->=20
->  	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr_ptr, NULL, 0);
->  	kfree(resp_hdr_ptr);
-> @@ -1361,7 +1372,6 @@ static void qedi_abort_work(struct work_struct
-> *work)
->=20
->  	mtask =3D qedi_cmd->task;
->  	tmf_hdr =3D (struct iscsi_tm *)mtask->hdr;
-> -	set_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
->=20
->  	spin_lock_bh(&conn->session->back_lock);
->  	ctask =3D iscsi_itt_to_ctask(conn, tmf_hdr->rtt); @@ -1427,11 +1437,7
-> @@ static void qedi_abort_work(struct work_struct *work)
->=20
->  	send_iscsi_tmf(qedi_conn, qedi_cmd->task, ctask);
->=20
-> -put_task:
-> -	iscsi_put_task(ctask);
-> -clear_cleanup:
-> -	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-> -	return;
-> +	goto put_task;
->=20
->  ldel_exit:
->  	spin_lock_bh(&qedi_conn->tmf_work_lock);
-> @@ -1449,10 +1455,12 @@ static void qedi_abort_work(struct work_struct
-> *work)
->  		qedi_conn->active_cmd_count--;
->  	}
->  	spin_unlock(&qedi_conn->list_lock);
-> -
-> +put_task:
->  	iscsi_put_task(ctask);
-> -
-> -	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-> +clear_cleanup:
-> +	spin_lock(&qedi_conn->tmf_work_lock);
-> +	qedi_conn->fw_cleanup_works--;
-> +	spin_unlock(&qedi_conn->tmf_work_lock);
->  }
->=20
->  static int send_iscsi_tmf(struct qedi_conn *qedi_conn, struct iscsi_task=
- *mtask,
-> @@ -1547,6 +1555,10 @@ int qedi_send_iscsi_tmf(struct qedi_conn
-> *qedi_conn, struct iscsi_task *mtask)
->=20
->  	switch (tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) {
->  	case ISCSI_TM_FUNC_ABORT_TASK:
-> +		spin_lock(&qedi_conn->tmf_work_lock);
-> +		qedi_conn->fw_cleanup_works++;
-> +		spin_unlock(&qedi_conn->tmf_work_lock);
-> +
->  		INIT_WORK(&qedi_cmd->tmf_work, qedi_abort_work);
->  		queue_work(qedi->tmf_thread, &qedi_cmd->tmf_work);
->  		break;
-> diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscs=
-i.c index
-> 536d6653ef8e..8bbdd45ff2a1 100644
-> --- a/drivers/scsi/qedi/qedi_iscsi.c
-> +++ b/drivers/scsi/qedi/qedi_iscsi.c
-> @@ -592,7 +592,11 @@ static int qedi_conn_start(struct iscsi_cls_conn
-> *cls_conn)
->  		goto start_err;
->  	}
->=20
-> -	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-> +	spin_lock(&qedi_conn->tmf_work_lock);
-> +	qedi_conn->fw_cleanup_works =3D 0;
-> +	qedi_conn->ep_disconnect_starting =3D false;
-> +	spin_unlock(&qedi_conn->tmf_work_lock);
-> +
->  	qedi_conn->abrt_conn =3D 0;
->=20
->  	rval =3D iscsi_conn_start(cls_conn);
-> @@ -1009,7 +1013,6 @@ static void qedi_ep_disconnect(struct iscsi_endpoin=
-t
-> *ep)
->  	int ret =3D 0;
->  	int wait_delay;
->  	int abrt_conn =3D 0;
-> -	int count =3D 10;
->=20
->  	wait_delay =3D 60 * HZ + DEF_MAX_RT_TIME;
->  	qedi_ep =3D ep->dd_data;
-> @@ -1027,13 +1030,19 @@ static void qedi_ep_disconnect(struct
-> iscsi_endpoint *ep)
->  		iscsi_suspend_queue(conn);
->  		abrt_conn =3D qedi_conn->abrt_conn;
->=20
-> -		while (count--)	{
-> -			if (!test_bit(QEDI_CONN_FW_CLEANUP,
-> -				      &qedi_conn->flags)) {
-> -				break;
-> -			}
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
-> +			  "cid=3D0x%x qedi_ep=3D%p waiting for %d tmfs\n",
-> +			  qedi_ep->iscsi_cid, qedi_ep,
-> +			  qedi_conn->fw_cleanup_works);
-> +
-> +		spin_lock(&qedi_conn->tmf_work_lock);
-> +		qedi_conn->ep_disconnect_starting =3D true;
-> +		while (qedi_conn->fw_cleanup_works > 0) {
-> +			spin_unlock(&qedi_conn->tmf_work_lock);
->  			msleep(1000);
-> +			spin_lock(&qedi_conn->tmf_work_lock);
->  		}
-> +		spin_unlock(&qedi_conn->tmf_work_lock);
->=20
->  		if (test_bit(QEDI_IN_RECOVERY, &qedi->flags)) {
->  			if (qedi_do_not_recover) {
-> diff --git a/drivers/scsi/qedi/qedi_iscsi.h b/drivers/scsi/qedi/qedi_iscs=
-i.h index
-> 68ef519f5480..758735209e15 100644
-> --- a/drivers/scsi/qedi/qedi_iscsi.h
-> +++ b/drivers/scsi/qedi/qedi_iscsi.h
-> @@ -169,8 +169,8 @@ struct qedi_conn {
->  	struct list_head tmf_work_list;
->  	wait_queue_head_t wait_queue;
->  	spinlock_t tmf_work_lock;	/* tmf work lock */
-> -	unsigned long flags;
-> -#define QEDI_CONN_FW_CLEANUP	1
-> +	bool ep_disconnect_starting;
-> +	int fw_cleanup_works;
->  };
->=20
->  struct qedi_cmd {
-> --
-> 2.25.1
+--0000000000002c380a05bfc55138
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, Apr 9, 2021 at 11:55 AM Fr=C3=A9d=C3=A9ric Pierret
+<frederic.pierret@qubes-os.org> wrote:
+>
+> Hi,
+>
+> Le 3/29/21 =C3=A0 11:02 AM, Fr=C3=A9d=C3=A9ric Pierret a =C3=A9crit :
+> > Hi,
+> > First of all, thank you very much for your answer.
+> >
+> > Le 3/29/21 =C3=A0 8:24 AM, Kashyap Desai a =C3=A9crit :
+> >> Hi -
+> >>
+> >> Can you send us full dmesg logs of each working and non-working case. =
+?
+> >
+> > I've attached you the working case of one of the two motherboard, refer=
+enced here as ASUS, and the nonworking case on the third motherboard, refer=
+enced here as ASROCK. In both cases, I've attached you the full dmesg of th=
+e same LiveUSB a Fedora 33 with also the full dmesg when I do a rmmod and m=
+odprobe of megaraid_sas.
+> >
+> >> On 3rd motherboard was it any working combination of kernel, driver an=
+d FW ?
+> >> OR it never worked on 3rd mother board ?
+> >
+> > Unfortunately, no combination has worked on the ASROCK (third motherboa=
+rd) (before or after firmware upgrade, multiple kernel versions (5.10.X and=
+ 5.11.Y), drivers)
+> >
+> >> Kashyap
+> >>
+> >>> -----Original Message-----
+> >>> From: Fr=C3=A9d=C3=A9ric Pierret [mailto:frederic.pierret@qubes-os.or=
+g]
+> >>> Sent: Sunday, March 28, 2021 10:26 PM
+> >>> To: kashyap.desai@broadcom.com; sumit.saxena@broadcom.com;
+> >>> shivasharan.srikanteshwara@broadcom.com; jejb@linux.ibm.com;
+> >>> martin.petersen@oracle.com
+> >>> Cc: megaraidlinux.pdl@broadcom.com; linux-scsi@vger.kernel.org
+> >>> Subject: MegaRaid SAS 9341-8i issue
+> >>>
+> >>> Hi,
+> >>>
+> >>> I'm having issue with a MegaRaid 9341-8i card which is properly worki=
+ng on
+> >>> two motherboards (kernel-5.10.25 and kernel-5.11.10) but not on a thi=
+rd
+> >>> for
+> >>> which I want it to work. I originally received this card with a firmw=
+are
+> >>> from
+> >>> 2018 and I've updated it to the latest from Broadcom website
+> >>> (24.21.0-0148)
+> >>> but in both cases, I've the same issue on the third motherboard:
+> >>>
+> >>> [   14.013135] megaraid_sas 0000:01:00.0: BAR:0x1  BAR's
+> >>> base_addr(phys):0x00000000fe800000  mapped virt_addr:0x(ptrval)
+> >>> [   14.013142] megaraid_sas 0000:01:00.0: FW now in Ready state
+> >>> [   14.013148] megaraid_sas 0000:01:00.0: 63 bit DMA mask and 32 bit
+> >>> consistent mask
+> >>> [   14.013933] megaraid_sas 0000:01:00.0: firmware supports msix     =
+   :
+> >>> (96)
+> >>> [   14.014439] megaraid_sas 0000:01:00.0: requested/available msix 5/=
+5
+> >>> [   14.014445] megaraid_sas 0000:01:00.0: current msix/online cpus   =
+   :
+> >>> (5/4)
+> >>> [   14.014447] megaraid_sas 0000:01:00.0: RDPQ mode     : (disabled)
+> >>> [   14.014453] megaraid_sas 0000:01:00.0: Current firmware supports
+> >>> maximum commands: 272        LDIO threshold: 237
+> >>> [   14.014631] megaraid_sas 0000:01:00.0: Configured max firmware
+> >>> commands: 271
+> >>> [   14.015377] megaraid_sas 0000:01:00.0: Performance mode :Latency
+> >>> [   14.015380] megaraid_sas 0000:01:00.0: FW supports sync cache     =
+   :
+> >>> Yes
+> >>> [   14.015388] megaraid_sas 0000:01:00.0: megasas_disable_intr_fusion=
+ is
+> >>> called outbound_intr_mask:0x40000009
+> >>> [   14.037098] megaraid_sas 0000:01:00.0: Init cmd return status FAIL=
+ED
+> >>> for
+> >>> SCSI host 2
+> >>> [   14.037762] megaraid_sas 0000:01:00.0: Failed from megasas_init_fw=
+ 6399
+> >>>
+> >>> Trying to rmmod then modprobe leads to something that looks like stuc=
+k
+> >>> state or such:
+> >>>
+> >>> [  570.269770] megaraid_sas 0000:01:00.0: BAR:0x1  BAR's
+> >>> base_addr(phys):0x00000000fe800000  mapped
+> >>> virt_addr:0x00000000f42ba0e1 [  570.269775] megaraid_sas 0000:01:00.0=
+:
+> >>> Waiting for FW to come to ready state [  570.269780] megaraid_sas
+> >>> 0000:01:00.0: FW in FAULT state, Fault code:0x10000 subcode:0x0
+> >>> func:megasas_transition_to_ready [  570.269782] megaraid_sas
+> >>> 0000:01:00.0: System Register set:
+> >>> (***)
+> >>> [  570.269908] megaraid_sas 0000:01:00.0: Failed to transition contro=
+ller
+> >>> to
+> >>> ready from megasas_init_fw!
+> >>> [  570.269919] megaraid_sas 0000:01:00.0: Failed from megasas_init_fw=
+ 639
+> >>>
+> >>> The motherboard which is not working is a recent one: Asrock X570D4U-=
+2L2T
+> >>> with a Ryzen 3900XT.
+> >>>
+> >>> I've read a lot of things on internet saying that might be CSM issues=
+ or
+> >>> such
+> >>> but no luck with that. On the two working motherboards, it works in
+> >>> legacy/UEFI only. I've also tested the card on a x16 or x8 slots, the=
+ same
+> >>> result. I've attempted to build megaraid driver provided from Broadco=
+m
+> >>> (07.716.01.00-2). Up to a slight adjustment in a log call using older
+> >>> attribute
+> >>> "host_busy", I'm hitting an unrelated issue due to KBUILD_CFLAGS recu=
+rsion
+> >>> in arch/x86/Makefile.
+> >>>
+> >>> After hours and hours of testing, I'm currently out of ideas. Does an=
+yone
+> >>> has
+> >>> an idea or could help me into adding useful debug info in the driver =
+or
+> >>> such?
+> >>>
+> >>> Thank very much in advance,
+> >>> Fr=C3=A9d=C3=A9ric
+> >
+> > Best regards,
+> > Fr=C3=A9d=C3=A9ric
+>
+> Is there something more I could provide and help into troubleshooting thi=
+s issue?
+First time driver load fails due to IOC INIT failure(writeq API is
+used to fire IOC INIT to firmware).
+We have seen writeq does not work on a few platforms.
+Please try if below change fixes your issue:
+
+diff --git a/megaraid_sas_fusion.c b/megaraid_sas_fusion.c
+index 432a0bb..24ef592 100644
+--- a/megaraid_sas_fusion.c
++++ b/megaraid_sas_fusion.c
+@@ -291,7 +293,8 @@ static void
+ megasas_write_64bit_req_desc(struct megasas_instance *instance,
+  union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc)
+ {
+-#if defined(writeq) && defined(CONFIG_64BIT)
++//#if defined(writeq) && defined(CONFIG_64BIT)
++#if 0
+  u64 req_data =3D (((u64)le32_to_cpu(req_desc->u.high) << 32) |
+  le32_to_cpu(req_desc->u.low));
+  writeq(req_data, &instance->reg_set->inbound_low_queue_port)
 
 Thanks,
-Reviewed-by: Manish Rangankar <mrangankar@marvell.com>
+Sumit
+>
+> Best regards,
+> Fr=C3=A9d=C3=A9ric
+>
 
+--0000000000002c380a05bfc55138
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+GmgWG68YahkDuVSTTt2beZdyMeDwq/KifJFo18EkhcL3e7rmDAh8SniUI/0o3HX6hrgdmUI1wSdz
+uIVL/m6Ok9mIl2U5kvguitOSC0bVaQPfNzlj+7PCKBECAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZc3VtaXQuc2F4ZW5hQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUNz+JSIXEXl2uQ4Utcnx7FnFi
+hhowDQYJKoZIhvcNAQELBQADggEBAL0HLbxgPSW4BFbbIMN3A/ifBg4Lzaph8ARJOnZpGQivo9jG
+kQOd95knQi9Lm95JlBAJZCqXXj7QS+dnE71tsFeHWcHNNxHrTSwn4Xi5EqaRjLC6g4IEPyZHWDrD
+zzJidgfwQvfZONkf4IXnnrIEFle+26/gPs2kOjCeLMo6XGkNC4HNla1ol1htToQaNN8974pCqwIC
+rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
+3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGYQEk28cv93KdNZT0aDo5tHCPXtfeb4
+YZOte4lLOmgGMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDQx
+MjEyMDQzNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQAqZ0/0k+sBJH1+t+x3KXYKAROY0jnWT92WQRDQEaLqLGtQSzOx
+s31+p+x/dJrpV5/i01uEHzygULlOHbXmvh7DgwXck/+HtTkwVv2VEhM2bFtVUxhxZ509OEFH7ByX
+9Azs/WbN1ufjNu8/IIDYvDm7nEA24N+Y216hgZMI0aI71vWGTFTlcZoZSH0X82q6n0tEs7tQae9R
+20dWPgaxgYa52m94i7p8ZnB9I0wKRp56fHVoLNFXS1RDS1svkH+dM3KaOMUbpdmwt6st8HtrWa7K
+3zvFbdtexAbH6onoepopBy8VISvtTjbVbN8Y9JBkkmtJwElIirCoXhVRzS68/DZq
+--0000000000002c380a05bfc55138--
