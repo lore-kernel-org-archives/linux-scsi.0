@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFC72C433B4
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:30:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A24C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:33:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B652361387
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:30:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEF8D6134F
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:33:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244652AbhDLQbI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Apr 2021 12:31:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57952 "EHLO mail.kernel.org"
+        id S244368AbhDLQdo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Apr 2021 12:33:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35638 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S244757AbhDLQ2b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Apr 2021 12:28:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B7A6B61386;
-        Mon, 12 Apr 2021 16:25:24 +0000 (UTC)
+        id S245061AbhDLQbj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 12 Apr 2021 12:31:39 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3461D613B7;
+        Mon, 12 Apr 2021 16:26:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618244725;
-        bh=w/7ZgrcLtUN+GLnCtcO4qAVoGY+iTarrLP44Ws6/1lM=;
+        s=k20201202; t=1618244768;
+        bh=D++A6pyCM7YDJYub65RsVkXgkMg6MnLq7EbMwGaR7WM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E1trD7lOu+ckHwPw0TYrKHwyJtKNpY+BD0OZugFiwnUK+l6e0f2Wzx29e2OJAy+ns
-         t+h59tlGD5bXKMzryUWD2nP/mSQVYiZTHuDe4SpONErgGSb3G2hVbs/oRCZGWc35iA
-         dI73SfXtEVP6eq3abSjtWA0LHBNPJxNuM9dj/COz2tBQkyqt/dKjTaYTUvad6wm/Lh
-         cVH1RGsgQAjqITmucM9Aas57Vrsi0MyzAExXM184+EriN+mi+pQxZWE4HaJwsfanaq
-         4J/ukRM4WmzIDRv3dF4zjM45P+nUiWVhH0DMkCoqJ2ukoV6GDQPruvETeM+iJIKukS
-         DhAVi/ms8aKIA==
+        b=C4A0jt5uTfmkj19K1BxVMz8/FOh+z7Bwtvf+7SZsLBS+F3LnIOVuKGN9yL8I4h5BX
+         xIG+X7yXrex9Wo27S2yZ0unzVb2hFTUoSHShmIZ+ZDjPSedkReLpwJ1upBpqYaKoBe
+         LS7jS4RDKF7QsHzLKlwx+25Zjk3apMzXsJsrXJQ29Tb0OZbJA9CGvv+zM0b7YJXdWV
+         cTL/sLxlE9rjl0WyoAramQagN7mJ+xXSiT0Q8e4y1gUHKoN1XRHw3tOAULhlb6NlNu
+         LVhQXOheqeuTtzS8FZ4ObQu67ERUQx4tbOjC/uLpCKTdqyqBHbkmVHwbZHxHqL7TO3
+         vW/17zokDXSxQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Martin Wilck <mwilck@suse.com>,
         Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 18/39] scsi: scsi_transport_srp: Don't block target in SRP_PORT_LOST state
-Date:   Mon, 12 Apr 2021 12:24:40 -0400
-Message-Id: <20210412162502.314854-18-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 12/28] scsi: scsi_transport_srp: Don't block target in SRP_PORT_LOST state
+Date:   Mon, 12 Apr 2021 12:25:37 -0400
+Message-Id: <20210412162553.315227-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210412162502.314854-1-sashal@kernel.org>
-References: <20210412162502.314854-1-sashal@kernel.org>
+In-Reply-To: <20210412162553.315227-1-sashal@kernel.org>
+References: <20210412162553.315227-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -83,10 +83,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index 8cd0a87764df..9fee851c23a5 100644
+index 2aaf1b710398..9ac89462a8e0 100644
 --- a/drivers/scsi/scsi_transport_srp.c
 +++ b/drivers/scsi/scsi_transport_srp.c
-@@ -541,7 +541,7 @@ int srp_reconnect_rport(struct srp_rport *rport)
+@@ -555,7 +555,7 @@ int srp_reconnect_rport(struct srp_rport *rport)
  	res = mutex_lock_interruptible(&rport->mutex);
  	if (res)
  		goto out;
