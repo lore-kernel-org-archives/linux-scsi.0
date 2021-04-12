@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DCD1C43462
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:23:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1F14C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:25:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDF766135B
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:23:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 944B261399
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:25:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243583AbhDLQYC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Apr 2021 12:24:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55698 "EHLO mail.kernel.org"
+        id S244525AbhDLQ0P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Apr 2021 12:26:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57688 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243484AbhDLQXr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Apr 2021 12:23:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6A9D96128E;
-        Mon, 12 Apr 2021 16:23:28 +0000 (UTC)
+        id S243966AbhDLQYs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 12 Apr 2021 12:24:48 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0C5216137E;
+        Mon, 12 Apr 2021 16:24:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618244609;
+        s=k20201202; t=1618244669;
         bh=66NdWp2CtQXh24sKJMkxOfxG01+moLWkPVs3IXI9yzM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ymxtkrp4sdiJDs8wXZDVj0FCJ8PijQm6GllI40hcBPIYDs8PPEOz3Hi1XgHWHnn3Z
-         cMHyj1uDtl0wnpVgt5lxoZrrvG8oBwS7A5/4oxL36yErsc1rShH+7qZ32APV9VWerb
-         sMELwrPHG6lev9+P4IlPBW+grdNcQw4KOUTqofjIPsGkmySMc0nu42GMM3D2wD8hae
-         s4l2xRga0n7m0M/MBcOd/gWoyFWhUftc0EuqwKdMVJRAyx8prTIqeKM1UROr11liJT
-         OmXadOkHBmNp3d0ZBaR/SDtv4F/GODDoNnoFGuDq1LdqG+hh5wIXolLs73ieLy4Dth
-         mzFH3YH2lXTHg==
+        b=AqY00+Veinz79JLmtR4CbAjLuGcTyxDH2Jg8NmFJ0/7q5eocgPwJcig/sYjlDhOXP
+         95xyqjlf8/VjehTAAI0eb946XpuIN9wAwGtXg9kDgPT9xnxQIAmPxbWHXpZUSLiGed
+         /LDTbTE/JPWYY9LpOXUx19bNrSxqhQy3LlgipJXTFhHeWUJfhYARgZbGsdqFCOvUO+
+         /8Ln4rEFx/DLox2KRj2ZI5qTfxq8dfWhsyhCFdmiT57MGClHkqbYHnkJSwlrkKBtvG
+         gaf2m0pyHEt9FbrbHxEZ5UYdN8jxg9MWhAfdVO74PVa47/e7zsnwXuM10hrNlnOl5A
+         KKjPamNfcNfww==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Martin Wilck <mwilck@suse.com>,
         Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 26/51] scsi: scsi_transport_srp: Don't block target in SRP_PORT_LOST state
-Date:   Mon, 12 Apr 2021 12:22:31 -0400
-Message-Id: <20210412162256.313524-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 22/46] scsi: scsi_transport_srp: Don't block target in SRP_PORT_LOST state
+Date:   Mon, 12 Apr 2021 12:23:37 -0400
+Message-Id: <20210412162401.314035-22-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210412162256.313524-1-sashal@kernel.org>
-References: <20210412162256.313524-1-sashal@kernel.org>
+In-Reply-To: <20210412162401.314035-1-sashal@kernel.org>
+References: <20210412162401.314035-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
