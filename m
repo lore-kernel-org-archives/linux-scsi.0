@@ -2,191 +2,179 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20165C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:41:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB4B5C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:57:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3CA161220
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:41:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F9B2611C9
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 16:57:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244115AbhDLQmL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Apr 2021 12:42:11 -0400
-Received: from mail-1.ca.inter.net ([208.85.220.69]:52192 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343871AbhDLQgU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Apr 2021 12:36:20 -0400
-Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id 277182EA14C;
-        Mon, 12 Apr 2021 12:36:01 -0400 (EDT)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
-        with ESMTP id 7+IC5J2S2mQf; Mon, 12 Apr 2021 12:16:51 -0400 (EDT)
-Received: from [192.168.48.23] (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id A76CF2EA12E;
-        Mon, 12 Apr 2021 12:35:59 -0400 (EDT)
-Reply-To: dgilbert@interlog.com
-Subject: Re: KMSAN: kernel-infoleak in sg_scsi_ioctl
-To:     Hao Sun <sunhao.th@gmail.com>, axboe@kernel.dk, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <CACkBjsYu87czSrJoW+NQ9Vykm1byQ5u-eOP=a1ze+PojCsidfA@mail.gmail.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <e70ba561-dd55-c38d-62a4-dd2e0603be10@interlog.com>
-Date:   Mon, 12 Apr 2021 12:35:59 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <CACkBjsYu87czSrJoW+NQ9Vykm1byQ5u-eOP=a1ze+PojCsidfA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
+        id S244825AbhDLQ5i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Apr 2021 12:57:38 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:47426 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1343883AbhDLQzS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Apr 2021 12:55:18 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13CGnfXn065200;
+        Mon, 12 Apr 2021 16:54:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=oyXPny42UprASYL3njDf+6l0OincNFvmkU1QKbsvWCk=;
+ b=jFHKrLNl5bFv3ZWcwivXmvTKbumLEHjyAu1isr+ABtj4XP7fYHxy+UoUiU+muC4fgNEO
+ AK2ioLBUe6DIZqI6vu68SWor7NV2XKq/zgC+iM0pYQmg8nLj1VydNRRcqlLOxtjQf0Wo
+ ynUomYLhVh2pjJYyBB6weCT4bwY35EmTi6n6EVuLqwFZlOm30XZ9/waDI6rd47PlAy98
+ IVqpAP14Rj2kvJwE5cjvZwzp71toSpWij7G9W7DWcRn1FRJxrpEJ5oWbBlPDwhuUCMJP
+ ycN07gkVmgGjHB2q5mrjMsgE4Li+MtxDO32fgku+5VjPZ44uud1Q2zZBCBo39zZlYscl uA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 37u4nnccnw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 12 Apr 2021 16:54:52 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13CGnc14014878;
+        Mon, 12 Apr 2021 16:54:51 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2171.outbound.protection.outlook.com [104.47.56.171])
+        by aserp3020.oracle.com with ESMTP id 37unwxkr82-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 12 Apr 2021 16:54:51 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=X2kZ1Nu6OuWbMguBEJXfj3kRf+x09wPLlQnrqN3KG9sInE9mfK6vXHIj7LTImZZbt38aKlQTygCA/tG6F9Jm6zlTLd2twkWaDUJ/J5UWHX4VMFpY3eKls4xicjnWACLkojYp1hFw3pLHV1PwSvkuYe6VYKE+gOIp3q3AOYnIjQMrOSBz7fiaBQ6sLlIJKCuuPwxxAYgQThvbxzg33SK/69kDphtDSzF5WkTrS9j+8vmxEa5yJ9devU/+SHFlbjcNWnlx1dX9b+HDqzrx1MODyl1p+uUhF9veuHoKt8vw/8fl0uk2jlKA3LX/nsp/98wpuNLo2HWdA7mZA/MLhnIcAg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=oyXPny42UprASYL3njDf+6l0OincNFvmkU1QKbsvWCk=;
+ b=Rzu+9kmToYu+LSZcvArMeiXAA2sM+/eREx+oFXLDDLffjv9fIpJ75lTK517hofLz2KGGR53aM7ZuX7R1zk/SZomhhhJRjytNYxyA+qzI1TJnnEhJ67MwbmcRCEoYDLI9UatvJZRYQGW4H9baMCKJSXErgTQnRaNIXzRS7vzmy4goptceNPx0ZapDTlsDUHQyyJCVa4YvIN5HcaxXiBSpUbz83v5fBeEHh+Gs9HoVfyXyEHOeGaiqUUsfJb4bY/Qw5d/nq1N0RP3i1dU0ENhrRhUIscKBLWbXSvL1d2imlUGpnujj5zIKTkrGUqBaFXs6uNIxYOdxSf41s1TUaZakBg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=oyXPny42UprASYL3njDf+6l0OincNFvmkU1QKbsvWCk=;
+ b=U9QzEkSAdG2pw67SxFw3W3ywIA1ScCUc01RoWiBMonqHpY/pbTe4FHfb8g+5Y9TPv15jFPNw30yfRCvIZgaLF8hLEPh8vb6ouwunTHO6gZvnFOhUTZa3a4OvCxrcCr2WUxTef895kF/2ouB1QdN+L+pKyT3T/nU2VZDNqKQmSd4=
+Authentication-Results: linux.ibm.com; dkim=none (message not signed)
+ header.d=none;linux.ibm.com; dmarc=none action=none header.from=oracle.com;
+Received: from BYAPR10MB3573.namprd10.prod.outlook.com (2603:10b6:a03:11e::32)
+ by SJ0PR10MB4622.namprd10.prod.outlook.com (2603:10b6:a03:2d6::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.21; Mon, 12 Apr
+ 2021 16:54:49 +0000
+Received: from BYAPR10MB3573.namprd10.prod.outlook.com
+ ([fe80::50bb:7b66:35ee:4a4]) by BYAPR10MB3573.namprd10.prod.outlook.com
+ ([fe80::50bb:7b66:35ee:4a4%7]) with mapi id 15.20.4020.022; Mon, 12 Apr 2021
+ 16:54:49 +0000
+Subject: Re: [RFC v2 5/7] scsi: iscsi: fix some of the bugs with Perform
+ connection failure entirely in kernel space
+To:     khazhy@google.com, lduncan@suse.com, martin.petersen@oracle.com,
+        rbharath@google.com, krisman@collabora.com,
+        linux-scsi@vger.kernel.org, jejb@linux.ibm.com
+References: <20210412005043.5121-1-michael.christie@oracle.com>
+ <20210412005043.5121-6-michael.christie@oracle.com>
+From:   Mike Christie <michael.christie@oracle.com>
+Message-ID: <95261a78-3ffa-ad8b-d76f-f9e609e11bf0@oracle.com>
+Date:   Mon, 12 Apr 2021 11:54:46 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
+In-Reply-To: <20210412005043.5121-6-michael.christie@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [73.88.28.6]
+X-ClientProxiedBy: DS7PR03CA0167.namprd03.prod.outlook.com
+ (2603:10b6:5:3b2::22) To BYAPR10MB3573.namprd10.prod.outlook.com
+ (2603:10b6:a03:11e::32)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [20.15.0.204] (73.88.28.6) by DS7PR03CA0167.namprd03.prod.outlook.com (2603:10b6:5:3b2::22) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.16 via Frontend Transport; Mon, 12 Apr 2021 16:54:48 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: a2ae3beb-091c-4c0d-4396-08d8fdd3aee6
+X-MS-TrafficTypeDiagnostic: SJ0PR10MB4622:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <SJ0PR10MB46220BFEA4B32D2415450F54F1709@SJ0PR10MB4622.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: p6k9f3B67mZsnPWmwRsVYm59KgTVqcX/pfHguppzZk3bH55PMvCqxEmbQBeWkFYZi2PB/DEEGoqdUegk433eBLdDbHp+qB7eAkVarRtGMfEqdAu7xTvdiirTxhflhjwoP2Iqld4QH47+5PeAIhR4Y3oYxp4FzOnFsET4sGKIcpaYTMsIhawBPz8D3tjQWu2G41SmagDTwbA1DyvE9gRDY55NhUElN5ME7FCH1hiOVHKpnzAX2V08d7zxJ0d2bH+OZ48RwbPGhZByJuuC5tYBa4dwW5QVwAfNlo7NUDdPqsKU4nFWCpoQZk+GnNGRu6pIfOa8Mu8JUQbHlwKl2LL1lAISVrvQAqqtU4YSIx84RopLUCAX+egPO1Tvz8c/rvHY4ykWktx6CZR43+7sIitdGR+D4e9eqtLvrGWkoy8GrqtbhgIkDalJALEMsfOxIdf5KJ8vi/iF0R8eetnw6iEvTXl+pjZ5Zd2XRL1t0+8mAEE+iFQpyGmCGGIO4bMO/GE+DJlUb4oxXhtSNL645lU3J5VqbcApHTIMKem9c8RALIdr2XerBN5BYcRkhxRvaz2F0Qit3fLngG2n1d0Ee6zz9jNye45qUnBG9hPGc9xkKKtvXrU6oiuNDZqlJm6IXbQ5K/G6r5Xozl+FJa3+3bYqNH4TjaaxVxOD5T1P9BTeC6DNZxKCtGupUEUly5ZvldxsOAFcAlQ0AWi9IcbLfAlq+A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB3573.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(376002)(366004)(39860400002)(136003)(346002)(4744005)(66556008)(66476007)(31686004)(83380400001)(6486002)(8936002)(86362001)(316002)(8676002)(36756003)(5660300002)(16576012)(6706004)(53546011)(186003)(16526019)(66946007)(2616005)(31696002)(2906002)(956004)(478600001)(38100700002)(26005)(78286007)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?VDVCSnNpSU9LNjFYbi8yL0x1REkvTUxNaEJCdU9XcTBtZ1lVcE9XQk9yeStH?=
+ =?utf-8?B?QVVjRHIwQ2h3WW11TEFtajJBRFczUU0xM25iSWkxWHhBREtmMWNhazZMODZn?=
+ =?utf-8?B?bHpwMjZXelRPZ0VWaTVJUmM0ZXBOaWxObEZ0UUxEdHJnQXI1YnNLTXUyRXNt?=
+ =?utf-8?B?UlN1U2YxTEdlZmpEUHRZUVJXTXR4NG5Ja3kxc2VRNDJTS2wxaDE2SlFXS2x4?=
+ =?utf-8?B?dXZqci9mUkJVVVRRdm5rd2xadGZ3eHJQWG9MTmtnVi96azVXdnZERlFMSDBE?=
+ =?utf-8?B?UExVS3FaYjZEMGtrVjVaUWtlWlJmYkpGMTcvN2xKcStRQUlvYXVnOGRTRnVl?=
+ =?utf-8?B?UEVzYnhRUnFpODFRYUp6NWNqNlRiNHpTczRsL0hmSzJPWFhnRE5XRFlVUUQ5?=
+ =?utf-8?B?WmhXQXJPd0lxUlZDTDdLSGdSRG9HRktjSnhlT1BkeHpCZ3JYLzdIV1NuQ3U0?=
+ =?utf-8?B?RUJmd0RMRHd3QTd1OFJvdTlUNHFPanQzVTFIYThRU0EzTDZPbU5WbUtMVFlT?=
+ =?utf-8?B?WEZVanJCRklLZ25udDVJVU9vZDZ5enJmUmYvbnZlSStDUlp5MzdMYTV0U2pn?=
+ =?utf-8?B?ZzQzcllaY3BoV0x0Yk9XYjFxNk9BT2g3NzVONjlWaTFLbkFtSUxUVC9YZjRN?=
+ =?utf-8?B?dk1uc21yWXN6S2RpOFhLL0FKS2lTeVdJQVZES2ZhWHljS3lTQ05OU2UwNjk4?=
+ =?utf-8?B?NzhHdlpQTStEZnI3YkRrb3ljSDFuNWZjSmRwVC9JTmRIN1c5NlJMaUFVS1gw?=
+ =?utf-8?B?ODE2ZEpmZ2hqdzZ1d3AybTlHWHk2RVYxNmtqZTg0cmxVaGplNStJbU9IV0FL?=
+ =?utf-8?B?alVINHI3VWtvVHVSYUIrQXJyaUpNYmJ0TjluaWhPVFpYQ21QQ3RVNytjUCtJ?=
+ =?utf-8?B?MFJtbmY4c1AyK1dpenlQcUFsaGxsYWZ3S1NmamFTN1JqeTg4d1RmWFNwdUhU?=
+ =?utf-8?B?SUVsSzBGWFNqOThnMlA4N3o1RXJVVHYzZ2RSM2xFTmJpeXVRM2JVdWF6M2ZQ?=
+ =?utf-8?B?SzJSRk0wQm4xb2lxQmJmS2ZVZWVmeGR2WjRqVG9KZ2hSSWdMajhUckFXWWdZ?=
+ =?utf-8?B?RjZIeG11UnFaczB3RVdsU3Y5SGxadVgxMkR1SVc3M2ZaWDhsNzB1WkNwL2Fa?=
+ =?utf-8?B?QTFtUElEaHdqTHB2YjEyenlHWHN3enV6bWRWbFhzMnlkMjdCWjlzSVRISjE5?=
+ =?utf-8?B?WUQ0RmV4NEdxRVdqWnlHRzRHcWpxZnh4TTJGY1liR1ovSkk1TmVyOWlRbjJ0?=
+ =?utf-8?B?OStyajRRYXYvYjROUHkxWWQ5WkNmZEpEUTdXR3o3dW9hY0Zyam9NeTdCaEdI?=
+ =?utf-8?B?TUVYOVRBV0dGa0lIZHVEbnFjVytsNDVmaVFML0w1VXNPS29pLzZzL01uZ0pR?=
+ =?utf-8?B?NFM2Z3RyTEdiSVBmbmFwa2dBbWIyNVhSY3ZLSFZHUDgrR0I4a0d5bjRPQU9r?=
+ =?utf-8?B?bEI0RWlEWUY4d0N1L0NKQThPRmU5b0lVM3NreUZuUjRzSzZoWit3ekl2YnhE?=
+ =?utf-8?B?ODl4KzBZMXJTK00xQTBxdCtIR3lmaUJJQW1qKzg3S1kzbVRFQksySmI4Q3BI?=
+ =?utf-8?B?SzZqOTNqYTQ3Z3BSN2IrSDZiYTlGbUx0UjhUa2JZSnBVdDZFeFVIbHcvQllW?=
+ =?utf-8?B?WXE1WElMTVRVSjk1TFl6aGNVc25NL24reWl4ZmtJQ2FXZ0Eydk50bDBneWR1?=
+ =?utf-8?B?cllFR0EwQ0cxeFFGbDdORXJ5c2xGS1NvVTQ1R3dpRDBGYmxNTzlOWklwTmU3?=
+ =?utf-8?Q?viH/ZBFPb5Uwq/QNwWhf0PJKHWq4sE8dVWDdGd6?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a2ae3beb-091c-4c0d-4396-08d8fdd3aee6
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB3573.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Apr 2021 16:54:48.9656
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: EprmKxY1GkA3i/2IvcU+3nUHywjldi/U/bppslETCgtWVh6/Lv2Zn6PZKtkwdqyUd+3hKtOic4RmvG+fky/bHPsPDVX2X5TY/w19V7pzg/0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB4622
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9952 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
+ mlxscore=0 malwarescore=0 adultscore=0 bulkscore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104060000 definitions=main-2104120108
+X-Proofpoint-ORIG-GUID: 3zBExb2MtlO9Es2Xn6Qe9qvKhV2unElG
+X-Proofpoint-GUID: 3zBExb2MtlO9Es2Xn6Qe9qvKhV2unElG
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9952 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
+ phishscore=0 suspectscore=0 mlxlogscore=999 priorityscore=1501
+ clxscore=1015 lowpriorityscore=0 spamscore=0 impostorscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104060000 definitions=main-2104120108
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
-See below.
+On 4/11/21 7:50 PM, Mike Christie wrote:
+> +			/*
+> +			 * For offload boot support where iscsid is restarted
+> +			 * during the pivot root stage, the ep will be instact
+> +			 * here when the new iscsid instance starts up and
+> +			 * reconnects.
+> +			 */
+> +			mutex_unlock(&conn->ep_mutex);
+> +			iscsi_if_ep_disconnect(transport, ep_handle);
+> +			mutex_lock(&conn->ep_mutex);
+Hey Khazhy,
 
-On 2021-04-12 9:02 a.m., Hao Sun wrote:
-> Hi
-> 
-> When using Healer(https://github.com/SunHao-0/healer/tree/dev) to fuzz
-> the Linux kernel, I found the following bug report.
-> 
-> commit:   4ebaab5fb428374552175aa39832abf5cedb916a
-> version:   linux 5.12
-> git tree:    kmsan
-> kernel config and full log can be found in the attached file.
-> 
-> =====================================================
-> BUG: KMSAN: kernel-infoleak in kmsan_copy_to_user+0x9c/0xb0
-> mm/kmsan/kmsan_hooks.c:249
-> CPU: 2 PID: 23939 Comm: executor Not tainted 5.12.0-rc6+ #1
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-> 1.13.0-1ubuntu1.1 04/01/2014
-> Call Trace:
->   __dump_stack lib/dump_stack.c:79 [inline]
->   dump_stack+0x1ff/0x275 lib/dump_stack.c:120
->   kmsan_report+0xfb/0x1e0 mm/kmsan/kmsan_report.c:118
->   kmsan_internal_check_memory+0x48c/0x520 mm/kmsan/kmsan.c:437
->   kmsan_copy_to_user+0x9c/0xb0 mm/kmsan/kmsan_hooks.c:249
->   instrument_copy_to_user ./include/linux/instrumented.h:121 [inline]
->   _copy_to_user+0x112/0x1d0 lib/usercopy.c:33
->   copy_to_user ./include/linux/uaccess.h:209 [inline]
->   sg_scsi_ioctl+0xfa9/0x1180 block/scsi_ioctl.c:507
->   sg_ioctl_common+0x2713/0x4930 drivers/scsi/sg.c:1108
->   sg_ioctl+0x166/0x2d0 drivers/scsi/sg.c:1162
->   vfs_ioctl fs/ioctl.c:48 [inline]
->   __do_sys_ioctl fs/ioctl.c:753 [inline]
->   __se_sys_ioctl+0x2c2/0x400 fs/ioctl.c:739
->   __x64_sys_ioctl+0x4a/0x70 fs/ioctl.c:739
->   do_syscall_64+0xa2/0x120 arch/x86/entry/common.c:48
->   entry_SYSCALL_64_after_hwframe+0x44/0xae
-> RIP: 0033:0x47338d
-> Code: 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 f3 0f 1e fa 48 89 f8 48
-> 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d
-> 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
-> RSP: 002b:00007fe31ab90c58 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-> RAX: ffffffffffffffda RBX: 000000000059c128 RCX: 000000000047338d
-> RDX: 0000000020000040 RSI: 0000000000000001 RDI: 0000000000000003
-> RBP: 00000000004e8e5d R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000000000 R11: 0000000000000246 R12: 000000000059c128
-> R13: 00007ffe2284af2f R14: 00007ffe2284b0d0 R15: 00007fe31ab90dc0
-> Uninit was stored to memory at:
->   kmsan_save_stack_with_flags mm/kmsan/kmsan.c:121 [inline]
->   kmsan_internal_chain_origin+0xad/0x130 mm/kmsan/kmsan.c:289
->   kmsan_memcpy_memmove_metadata+0x25b/0x290 mm/kmsan/kmsan.c:226
->   kmsan_memcpy_metadata+0xb/0x10 mm/kmsan/kmsan.c:246
->   __msan_memcpy+0x46/0x60 mm/kmsan/kmsan_instr.c:110
->   bio_copy_kern_endio_read+0x3ee/0x560 block/blk-map.c:443
->   bio_endio+0xa1a/0xcc0 block/bio.c:1453
->   req_bio_endio block/blk-core.c:265 [inline]
->   blk_update_request+0xd4f/0x2190 block/blk-core.c:1456
->   scsi_end_request+0x111/0xc50 drivers/scsi/scsi_lib.c:570
->   scsi_io_completion+0x276/0x2840 drivers/scsi/scsi_lib.c:970
->   scsi_finish_command+0x6fc/0x720 drivers/scsi/scsi.c:214
->   scsi_softirq_done+0x205/0xa40 drivers/scsi/scsi_lib.c:1450
->   blk_complete_reqs block/blk-mq.c:576 [inline]
->   blk_done_softirq+0x133/0x1e0 block/blk-mq.c:581
->   __do_softirq+0x271/0x782 kernel/softirq.c:345
-> 
-> Uninit was created at:
->   kmsan_save_stack_with_flags+0x3c/0x90
->   kmsan_alloc_page+0xc4/0x1b0
->   __alloc_pages_nodemask+0xdb0/0x54a0
->   alloc_pages_current+0x671/0x990
->   blk_rq_map_kern+0xb8e/0x1310
->   sg_scsi_ioctl+0xc94/0x1180
->   sg_ioctl_common+0x2713/0x4930
->   sg_ioctl+0x166/0x2d0
->   __se_sys_ioctl+0x2c2/0x400
->   __x64_sys_ioctl+0x4a/0x70
->   do_syscall_64+0xa2/0x120
->   entry_SYSCALL_64_after_hwframe+0x44/0xae
-> 
-> Byte 0 of 1 is uninitialized
->   Memory access of size 1 starts at ffff99e033fb9360
->   Data copied to user address 0000000020000048
-> 
-> The following system call sequence (Syzlang format) can reproduce the crash:
-> # {Threaded:false Collide:false Repeat:false RepeatTimes:0 Procs:1
-> Slowdown:1 Sandbox:none Fault:false FaultCall:-1 FaultNth:0 Leak:false
-> NetInjection:true NetDevices:true NetReset:false Cgroups:false
-> BinfmtMisc:true CloseFDs:true KCSAN:false DevlinkPCI:true USB:true
-> VhciInjection:true Wifi:true IEEE802154:true Sysctl:true
-> UseTmpDir:true HandleSegv:true Repro:false Trace:false}
-> 
-> r0 = syz_open_dev$sg(&(0x7f0000000000)='/dev/sg#\x00', 0x0, 0x20000094b402)
-> ioctl$SG_GET_LOW_DMA(r0, 0x227a, &(0x7f0000000040))
-> ioctl$SCSI_IOCTL_SEND_COMMAND(r0, 0x1, &(0x7f0000000040)={0x0, 0x1, 0x1})
+The above chunk should have just been a call to iscsi_ep_disconnect. If
+we drop the mutex then we could hit the issue where we race with a unbind
+again.
 
-Since the code opens a sg device node then the sg driver, which is a
-pass-through driver, is invoked. However instead of using sg's pass-through
-facilities, that call to ioctl(SCSI_IOCTL_SEND_COMMAND) is invoking the
-long deprecated SCSI mid-level pass-through. So if there is infoleak bug
-you should flag sg_scsi_ioctl() in block/scsi_ioctl.c. See the notes
-associated with that function which imply it can't be protected from
-certain types of abuse due to its interface design. That is why it is
-deprecated. Also the equivalent of root permissions are required
-to execute those functions.
-
-That code looks strange, ioctl(SG_GET_LOW_DMA) reads the
-host->unchecked_isa_dma value (now always 0 ??) into an int at
-0x7f0000000040. That same address is then used for the struct
-scsi_ioctl_command object passed to ioctl(SCSI_IOCTL_SEND_COMMAND).
-
-Looking at the data passed to SCSI_IOCTL_SEND_COMMAND in_len=0
-(data-out length in bytes), out_len=1 and, if 2 zero bytes follow
-what is shown, that is a (SCSI-2) REZERO UNIT command which returns
-no data. Now the BUG print-out seems to come from this line:
-     copy_to_user(sic->data, buffer, out_len);
-
-but buffer was kzalloc-ed and nothing was (should have been) DMA-ed
-into it. So where is the problem?
-
-Since the bio/block code isn't often asked to handle a block size
-of 1 byte, this addition may strengthen things:
-	if ((in_len % 512) != 0 || (out_len % 512) != 0)
-		return -EINVAL;
-
-Since bytes=max(in_len, out_len) then that can be simplified to:
-	if ((bytes % 512) != 0)
-		return -EINVAL;
-
-Doug Gilbert
-
-> Using syz-execprog can run this reproduction program directly:
->   ./syz-execprog -repeat 0 -procs 1 -slowdown 1 -enable tun -enable
-> netdev -enable binfmt-misc -enable close_fds -enable devlinkpci
-> -enable usb -enable vhci -enable wifi -enable ieee802154 -enable
-> sysctl repro.prog
-> 
-
+If you guys use offload boot let me know and I'll send a new patch to test.
+If not assume that in the final version this chunk will be fixed. Also
+"instact" above will be fixed.
