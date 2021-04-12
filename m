@@ -2,135 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C53CC433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 14:04:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E88EC433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 15:22:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CCCE36128B
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 14:04:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8A546128C
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 15:22:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242104AbhDLOE6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Apr 2021 10:04:58 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:17488 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S241422AbhDLOE5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Apr 2021 10:04:57 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13CE2mTi146236;
-        Mon, 12 Apr 2021 10:04:13 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pp1;
- bh=D+Pr044Sc37k2/xacVMJIRTA9aojRfwKHjljGaysKTM=;
- b=BOQHsE68Vk+Kk5ONmvB4O1ZN99VkPSjrYhm6HbryT/dnb/SEyRCSf5082pIXZDNLeVOZ
- xbzMQe8pnwCtXSvmv/MsD2e1GI2bNLS9Taf8hzk79MlVp+d45U0fwbs1XZQW0OH/IRIj
- BAUvxNVbyY2zAaos2y0JXILHa7kqpRoDjdOW3D2rO1p8b/Ae/Y+8nA/2kj4xmanLEX5d
- R0RM1kf7idRUlSa0BJ8Asqhgh5EVBN+ik0IRVJaVwHkk9fEuspFqWxyuESwfF1RS1Rla
- O9uyKFiiZXvgw2XuaQDSky5xaUwTIi776q1CFcQLn3hHGWHV6rBxKElrOe/uiuziVAxT fw== 
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 37vk4hauxa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Apr 2021 10:04:12 -0400
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 13CDwLND012027;
-        Mon, 12 Apr 2021 14:04:10 GMT
-Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
-        by ppma03ams.nl.ibm.com with ESMTP id 37u3n89vcw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Apr 2021 14:04:10 +0000
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 13CE48t646137724
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 12 Apr 2021 14:04:08 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 74890AE04D;
-        Mon, 12 Apr 2021 14:04:08 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id BCBE5AE059;
-        Mon, 12 Apr 2021 14:04:07 +0000 (GMT)
-Received: from li-c43276cc-23ad-11b2-a85c-bda00957cb67.ibm.com (unknown [9.171.61.4])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 12 Apr 2021 14:04:07 +0000 (GMT)
-Subject: Re: [PATCH 5/8] scsi: remove the unchecked_isa_dma flag
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Khalid Aziz <khalid@gonehiking.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Hannes Reinecke <hare@suse.com>,
-        Ondrej Zary <linux@rainbow-software.org>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        linux-s390 <linux-s390@vger.kernel.org>
-References: <20210331073001.46776-1-hch@lst.de>
- <20210331073001.46776-6-hch@lst.de>
- <2fa7fad0-2689-24c9-d356-50f98ca3535d@linux.ibm.com>
- <20210410065231.GA16173@lst.de>
-From:   Steffen Maier <maier@linux.ibm.com>
-Message-ID: <ad37abab-6a23-bd44-f2d7-47dde4a21ac3@linux.ibm.com>
-Date:   Mon, 12 Apr 2021 16:04:07 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.0
-In-Reply-To: <20210410065231.GA16173@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: xQM5eLtUSXFNfB5O3WkIogvWQMCctilV
-X-Proofpoint-GUID: xQM5eLtUSXFNfB5O3WkIogvWQMCctilV
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        id S242820AbhDLPWy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Apr 2021 11:22:54 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:37602 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S242823AbhDLPWw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 12 Apr 2021 11:22:52 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 5E7C941273;
+        Mon, 12 Apr 2021 15:22:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1618240948;
+         x=1620055349; bh=XSH74MCWUelVOrb+Sy4ySeqT/YeAOBnq8N/Bju/S4uU=; b=
+        VDowSuJMIZrIg/DVB5EG3qs/2MGNf/JaXNMQFeWChuSADV5+iYg9UdsHQUYwwvxT
+        pE98zDuYygSX2ntsYsJwHplSoZxmEgVBtbS3Uqsw2f6ziGbNOlKTsG+XSxxKG2i1
+        ppy1cVth6L+HKAVpiCIjkpUptJ7scRgtyFfaD6Sp4Hs=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id iHNA4UBkczTY; Mon, 12 Apr 2021 18:22:28 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 291784120E;
+        Mon, 12 Apr 2021 18:22:27 +0300 (MSK)
+Received: from localhost (172.17.204.212) by T-EXCH-03.corp.yadro.com
+ (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 12
+ Apr 2021 18:22:26 +0300
+Date:   Mon, 12 Apr 2021 18:22:26 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Daniel Wagner <dwagner@suse.de>
+CC:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+        <linux@yadro.com>, Daniel Wagner <daniel.wagner@suse.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>, <stable@vger.kernel.org>,
+        Aleksandr Volkov <a.y.volkov@yadro.com>,
+        Aleksandr Miloserdov <a.miloserdov@yadro.com>
+Subject: Re: [PATCH] Revert "scsi: qla2xxx: Limit interrupt vectors to number
+ of CPUs"
+Message-ID: <YHRlsuwSOxEnSWgx@SPB-NB-133.local>
+References: <20210409061759.42807-1-r.bolshakov@yadro.com>
+ <20210409073645.67e3r5kcsx2ltx32@beryllium.lan>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-04-12_10:2021-04-12,2021-04-12 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxscore=0
- lowpriorityscore=0 priorityscore=1501 spamscore=0 suspectscore=0
- bulkscore=0 mlxlogscore=999 impostorscore=0 phishscore=0 clxscore=1015
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2104060000 definitions=main-2104120096
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20210409073645.67e3r5kcsx2ltx32@beryllium.lan>
+X-Originating-IP: [172.17.204.212]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-03.corp.yadro.com (172.17.100.103)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/10/21 8:52 AM, Christoph Hellwig wrote:
-> On Fri, Apr 09, 2021 at 05:46:09PM +0200, Steffen Maier wrote:
->> Is it OK to remove a long standing sysfs attribute?
->> Was there any deprecation phase?
->>
->> I just noticed it in our CI reporting fails due to this change since at
->> least linux-next 20210409. Suppose it came via
->> https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/commit/?h=for-5.13/block&id=aaff5ebaa2694f283b7d07fdd55fb287ffc4f1e9
->>
->> Wanted to ask before I adapt the test cases.
+On Fri, Apr 09, 2021 at 09:36:45AM +0200, Daniel Wagner wrote:
+> On Fri, Apr 09, 2021 at 09:17:59AM +0300, Roman Bolshakov wrote:
+> >  drivers/scsi/qla2xxx/qla_isr.c | 6 ++----
+> >  1 file changed, 2 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+> > index 11d6e0db07fe..6641978dfecf 100644
+> > --- a/drivers/scsi/qla2xxx/qla_isr.c
+> > +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> > @@ -3998,12 +3998,10 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+> >  	if (USER_CTRL_IRQ(ha) || !ha->mqiobase) {
+> >  		/* user wants to control IRQ setting for target mode */
+> >  		ret = pci_alloc_irq_vectors(ha->pdev, min_vecs,
+> > -		    min((u16)ha->msix_count, (u16)num_online_cpus()),
+> > -		    PCI_IRQ_MSIX);
+> > +		    ha->msix_count, PCI_IRQ_MSIX);
+> >  	} else
+> >  		ret = pci_alloc_irq_vectors_affinity(ha->pdev, min_vecs,
+> > -		    min((u16)ha->msix_count, (u16)num_online_cpus()),
+> > -		    PCI_IRQ_MSIX | PCI_IRQ_AFFINITY,
+> > +		    ha->msix_count, PCI_IRQ_MSIX | PCI_IRQ_AFFINITY,
+> >  		    &desc);
 > 
-> What does your CI do with it?
+> 
+> Commit message a6dcfe08487e ("scsi: qla2xxx: Limit interrupt vectors to number of
+> CPUs") says
+> 
+>     Driver created too many QPairs(126) with 28xx adapter.  Limit to the number
+>     of CPUs to minimize wasted resources.
+> 
+> I think a simple revert is not taking the resource wasting into
+> account. Maybe the min vector calculation just needs a higher lower
+> bound. So something stupid like
+> 
+>   min(msix_cound, num_online_cpus() > 2? num_online_cpus() : 3)
+> 
+> ?
 
-We check almost all zfcp-related sysfs attributes for returning expected values 
-(depending on possible error inject state transitions as well as steady state).
-The Scsi_Host's unchecked_isa_dma is just checked to return '0'.
+Hi Daniel,
 
-> It would be kinda of sad to carry around this baggage, but if real
-> userspace is broken by the chance we'll have to do it.  I'm just not
-> entirely sure testcases qualify as real userspace yet.
+That would reduce number of Queue Pairs on small-core systems, e.g. 14
+HW queues are going to be available on 16-CPU system, even if the HBA
+has enough MSI-X vectors for 16 HW queues.
 
-I was more pondering whether sysfs is considered stable API.
+But... min((u16)ha->msix_count, (u16)num_online_cpus() + 3) might
+actually do the trick... I'll try that.
 
-I'm not aware of any issues with real userspace if unchecked_isa_dma is absent.
-Have adapted our test case to accept a missing unchecked_isa_dma sysfs attribute.
-
--- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
-
-Linux on IBM Z Development
-
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Matthias Hartmann
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+Thanks,
+Roman
