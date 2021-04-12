@@ -2,70 +2,37 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DAE2C43616
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 01:32:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A1EEC433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 03:03:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5510B61027
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 01:32:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C719361209
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Apr 2021 03:03:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236589AbhDLBce (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Apr 2021 21:32:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54248 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236563AbhDLBc1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Apr 2021 21:32:27 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F18CC061342
-        for <linux-scsi@vger.kernel.org>; Sun, 11 Apr 2021 18:32:10 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id a85so7716964pfa.0
-        for <linux-scsi@vger.kernel.org>; Sun, 11 Apr 2021 18:32:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=LHpg6cBX2RgWOwsKY5givgdByKnAhsGjFDq0W/sqBps=;
-        b=tVv/VR0nn94f8EE84osM2wjoIaL1YvJgm1NhgaTxyZe7ZjDY8D39UGn2kQoIzLc71/
-         05q4Oa68oTzj5NbV+KqxMXahO/q7qmkC86luges3qF00p2zL8+WLbxOfvV6cZvG1/HBI
-         voAtpzBNNRKFv09gySmgqiNlchDB8akv7/p4JExiLskjM8szukvI7mcFsUg3UqE2FkdH
-         P6xQ0u+PuJHdM8AdKB2pf3ZaYQtHVtAof/fQgQX9RHg2P5PIS9QOLs3ylqVqtwTYD38c
-         2g9cghu7SGn26NZdJbtWpHNO/iFBdHWxX8usJTS7naR3RgW7FQNk5Vi5bEDix9quH2ND
-         ic3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=LHpg6cBX2RgWOwsKY5givgdByKnAhsGjFDq0W/sqBps=;
-        b=EeExcATwEMFGmjrM3QDvocqZoX5NfjBJBR2NQqffQCeOUgUOWTMOpBEJCdus+lJ5Yg
-         HxYxOoTxbeB9nibEl9WFv246gjrOI26qaUj4c9dRd4CsqzC1MVkgfoFvHsWr7Mpy8QAR
-         Uc58wQfl32r4fP7wDN7/rltkDjNeKDP/mZf2k58FYiZFxJbvx7UjT/Iz/MFzYm1pyVWc
-         rmMGKnflfLrZs63M1hTLfOtRghAits4gCipPaaLeaSk+mjeOA5tqlIdARXDoSCPtcWEj
-         KWYdTtwAL5lGtYW/BEI7KPVFTGUSb/VxJmd6erOFnp1PR5qKb8tIpzCrTYn5QF6Hsb8Q
-         EHAw==
-X-Gm-Message-State: AOAM531+Yfmtksg13YTkBefEgfjLsXXYF1zhTeCY+GfZAl8OCmq4Jatl
-        EGHqYDb2/dqrDJPTm9yxOUtDFuxA8m4=
-X-Google-Smtp-Source: ABdhPJxQ96Zh6DqhYV7OIu5AKte7OeIETxEWRp7jO3XxHBm+0yxD6f9A3Yj1dgvs6GYU2XiKxR5g5w==
-X-Received: by 2002:a65:558c:: with SMTP id j12mr24404279pgs.271.1618191129832;
-        Sun, 11 Apr 2021 18:32:09 -0700 (PDT)
-Received: from localhost.localdomain (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
-        by smtp.gmail.com with ESMTPSA id i17sm8153163pfd.84.2021.04.11.18.32.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 11 Apr 2021 18:32:09 -0700 (PDT)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH v2 16/16] lpfc: Copyright updates for 12.8.0.9 patches
-Date:   Sun, 11 Apr 2021 18:31:27 -0700
-Message-Id: <20210412013127.2387-17-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20210412013127.2387-1-jsmart2021@gmail.com>
-References: <20210412013127.2387-1-jsmart2021@gmail.com>
+        id S236624AbhDLDDv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Apr 2021 23:03:51 -0400
+Received: from out30-133.freemail.mail.aliyun.com ([115.124.30.133]:59805 "EHLO
+        out30-133.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235857AbhDLDDv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 11 Apr 2021 23:03:51 -0400
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R191e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04420;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0UVCfw3p_1618196607;
+Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0UVCfw3p_1618196607)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Mon, 12 Apr 2021 11:03:32 +0800
+From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     aradford@gmail.com
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Subject: [PATCH] scsi: 3w-9xxx: remove useless variable
+Date:   Mon, 12 Apr 2021 11:03:24 +0800
+Message-Id: <1618196604-101870-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -73,70 +40,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update copyrights to 2021 for files modified in the 12.8.0.9 patch set.
+Fix the following gcc warning:
 
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+drivers/scsi/3w-9xxx.c:942:24: warning: variable ‘response_que_value’
+set but not used [-Wunused-but-set-variable].
+
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c  | 2 +-
- drivers/scsi/lpfc/lpfc_ct.c   | 2 +-
- drivers/scsi/lpfc/lpfc_hw4.h  | 2 +-
- drivers/scsi/lpfc/lpfc_mbox.c | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/3w-9xxx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index 32e562f27e8f..c2776b88d493 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017-2020 Broadcom. All Rights Reserved. The term *
-+ * Copyright (C) 2017-2021 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
-  * Copyright (C) 2009-2015 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index b9bccd8fc355..3bbefa225484 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017-2020 Broadcom. All Rights Reserved. The term *
-+ * Copyright (C) 2017-2021 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
-  * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index f5bc2c32a817..f77e71e6dbbd 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017-2020 Broadcom. All Rights Reserved. The term *
-+ * Copyright (C) 2017-2021 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.  *
-  * Copyright (C) 2009-2016 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
-index 72dd22ad5dcc..1b40a3bbd1cd 100644
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
-+ * Copyright (C) 2017-2021 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
-  * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index b96e82d..1856a99 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -939,13 +939,13 @@ static int twa_decode_bits(TW_Device_Extension *tw_dev, u32 status_reg_value)
+ /* This function will empty the response queue */
+ static int twa_empty_response_queue(TW_Device_Extension *tw_dev)
+ {
+-	u32 status_reg_value, response_que_value;
++	u32 status_reg_value;
+ 	int count = 0, retval = 1;
+ 
+ 	status_reg_value = readl(TW_STATUS_REG_ADDR(tw_dev));
+ 
+ 	while (((status_reg_value & TW_STATUS_RESPONSE_QUEUE_EMPTY) == 0) && (count < TW_MAX_RESPONSE_DRAIN)) {
+-		response_que_value = readl(TW_RESPONSE_QUEUE_REG_ADDR(tw_dev));
++		readl(TW_RESPONSE_QUEUE_REG_ADDR(tw_dev));
+ 		status_reg_value = readl(TW_STATUS_REG_ADDR(tw_dev));
+ 		count++;
+ 	}
 -- 
-2.26.2
+1.8.3.1
 
