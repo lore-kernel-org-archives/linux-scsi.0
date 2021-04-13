@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F454C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 18:19:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B52E4C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 18:57:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A2F1613C1
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 18:19:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E20D613CA
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 18:57:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243143AbhDMSTt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Apr 2021 14:19:49 -0400
-Received: from mail-pf1-f182.google.com ([209.85.210.182]:37814 "EHLO
-        mail-pf1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239297AbhDMSTr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Apr 2021 14:19:47 -0400
-Received: by mail-pf1-f182.google.com with SMTP id o123so11970998pfb.4
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Apr 2021 11:19:25 -0700 (PDT)
+        id S238639AbhDMS6A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Apr 2021 14:58:00 -0400
+Received: from mail-pf1-f177.google.com ([209.85.210.177]:43531 "EHLO
+        mail-pf1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233027AbhDMS56 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Apr 2021 14:57:58 -0400
+Received: by mail-pf1-f177.google.com with SMTP id p67so7088546pfp.10
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Apr 2021 11:57:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=LW9tWiii68EH1+kQJdr9oBqXxyQg9ZlTCFV5/qQ31Ds=;
-        b=af6JDdYkekcuP0jg1ybAGnO7MqJn6Djohk28Uqnu/onwPNoOV2JVO08PoZv4cgqgAL
-         hW5DKdoFg7vwizufobCLkxDPUucqHj6dqkpKG5DPdiLJY9TxNi/cSPB7jFpyFmueM4Bx
-         Y2vhy5GshAKxXT4yV/nCueldknC80aILJRjpjPzNHQsCEKEmxtYi8Vxrndb6uxoMCuHs
-         Fo0kHJ7gJ4ReVLrcXmCEMTaWaIpKLbmkRrde/paLl8OS+El+TLxlmtKahGsZdqYquJBi
-         X2ywX+Xe0WYmnrMU6MFjH9VCVxML8VIbFRPW+juL79qU+sGBZWG++5jiS5gX2Htc7hpk
-         ZLyQ==
-X-Gm-Message-State: AOAM530gOAdaBfFeaIOzGsbT9xX2OTL+IXcorzuHNKsVC/bmcNvVCToN
-        PF54sfYuG058WbUITfs+Hhs=
-X-Google-Smtp-Source: ABdhPJxkK+NOHemB1IRnkzYRwxyUzrKcYMxdifAO/Igyoffkw6eqms6zu4wQs6kQrr7iTWxQWubs4Q==
-X-Received: by 2002:a63:dd14:: with SMTP id t20mr33552251pgg.258.1618337964909;
-        Tue, 13 Apr 2021 11:19:24 -0700 (PDT)
+        bh=0VxOUenzVp4N4rwwvUaY+2KKym0SM+jy+42HAn5XKXY=;
+        b=OYWS0C1wURkNq1swh3xzXjQWs03XbHyXU/VxRCySdrFAaqZ2vNxvDn5FX8LMTDD6CT
+         gH8kwoT8bWvRJGAFPWomecrlF/Ppaa+8W91PiZh9Y1Uh/bP73MhgXSAewvYZkCzevjBu
+         2kQl4sUVIRQ0YrEJfe+d0bf9sit3EiUY+f7WMjEGGwuq8of29TnRsc0TzHd/h6Wnn/8Y
+         YB/ebhbVKNUgFrpwsbCfVV2pVMk7M0HkU5DmOOEGTfTyKFoPuADsl9oPOeiCPO//I8x1
+         U3jIN+7fHqf49Jn7oTQ0QMb2eJmmJAkjK/qn/E68i0EZl5uwrMxdvDJqso+1fhKXjRJo
+         gplQ==
+X-Gm-Message-State: AOAM533rWy7zedWhZvMHSBZ8qAdZNt+k/7fK4wyVEwL3+AgiuUVIRKx4
+        D1BcYQ50eq1CbNWiH/vu29E=
+X-Google-Smtp-Source: ABdhPJzH1jWsyreuX3iNpHEijsjJvWmxL8/rilZNZMqCj1WxcQxsB0ikWAXeaFsnm493OmkVuZukdg==
+X-Received: by 2002:a62:bd03:0:b029:21d:b680:db15 with SMTP id a3-20020a62bd030000b029021db680db15mr30472843pff.25.1618340258005;
+        Tue, 13 Apr 2021 11:57:38 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:345f:c70d:97e0:e2ef? ([2601:647:4000:d7:345f:c70d:97e0:e2ef])
-        by smtp.gmail.com with ESMTPSA id hi5sm2873823pjb.31.2021.04.13.11.19.23
+        by smtp.gmail.com with ESMTPSA id l25sm16112443pgu.72.2021.04.13.11.57.36
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 13 Apr 2021 11:19:24 -0700 (PDT)
-Subject: Re: [PATCH 19/20] target: Fix several format specifiers
-To:     Mike Christie <michael.christie@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+        Tue, 13 Apr 2021 11:57:37 -0700 (PDT)
+Subject: Re: [PATCH 09/20] iscsi: Suppress two clang format mismatch warnings
+To:     jejb@linux.ibm.com,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>
 References: <20210413170714.2119-1-bvanassche@acm.org>
- <20210413170714.2119-20-bvanassche@acm.org>
- <b75dff73-80c2-23ca-1a6a-09826b39d5b9@oracle.com>
+ <20210413170714.2119-10-bvanassche@acm.org>
+ <605ae0b2be96ccaf15dc515dd67b4f32b289ba92.camel@linux.vnet.ibm.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <1c546f50-f9b0-9284-daca-3e6fce178740@acm.org>
-Date:   Tue, 13 Apr 2021 11:19:23 -0700
+Message-ID: <e2577481-c340-17ae-30c5-326ac8a949f9@acm.org>
+Date:   Tue, 13 Apr 2021 11:57:35 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.9.0
 MIME-Version: 1.0
-In-Reply-To: <b75dff73-80c2-23ca-1a6a-09826b39d5b9@oracle.com>
+In-Reply-To: <605ae0b2be96ccaf15dc515dd67b4f32b289ba92.camel@linux.vnet.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -64,60 +64,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/13/21 10:47 AM, Mike Christie wrote:
-> On 4/13/21 12:07 PM, Bart Van Assche wrote:
->> Use format specifier '%u' to format the u32 and int data types instead of
->> '%hu'.
+On 4/13/21 10:59 AM, James Bottomley wrote:
+> On Tue, 2021-04-13 at 10:07 -0700, Bart Van Assche wrote:
+>> Suppress two instances of the following clang compiler warning:
 >>
->> Cc: Mike Christie <michael.christie@oracle.com>
+>> warning: format specifies type 'unsigned short'
+>>       but the argument has type 'int' [-Wformat]
+>>
+>> Cc: Lee Duncan <lduncan@suse.com>
+>> Cc: Chris Leech <cleech@redhat.com>
 >> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 >> ---
->>  drivers/target/target_core_configfs.c | 6 +++---
->>  drivers/target/target_core_pr.c       | 6 ++----
->>  2 files changed, 5 insertions(+), 7 deletions(-)
+>>  drivers/scsi/libiscsi.c | 5 +++--
+>>  1 file changed, 3 insertions(+), 2 deletions(-)
 >>
->> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
->> index 9cb1ca8421c8..01005a9e5128 100644
->> --- a/drivers/target/target_core_configfs.c
->> +++ b/drivers/target/target_core_configfs.c
->> @@ -2746,7 +2746,7 @@ static ssize_t target_tg_pt_gp_alua_access_state_store(struct config_item *item,
->>  
->>  	if (!tg_pt_gp->tg_pt_gp_valid_id) {
->>  		pr_err("Unable to do implicit ALUA on non valid"
->> -			" tg_pt_gp ID: %hu\n", tg_pt_gp->tg_pt_gp_valid_id);
->> +			" tg_pt_gp ID: %u\n", tg_pt_gp->tg_pt_gp_valid_id);
->>  		return -EINVAL;
->>  	}
->>  	if (!target_dev_configured(dev)) {
->> @@ -2798,7 +2798,7 @@ static ssize_t target_tg_pt_gp_alua_access_status_store(
->>  
->>  	if (!tg_pt_gp->tg_pt_gp_valid_id) {
->>  		pr_err("Unable to do set ALUA access status on non"
->> -			" valid tg_pt_gp ID: %hu\n",
->> +			" valid tg_pt_gp ID: %u\n",
->>  			tg_pt_gp->tg_pt_gp_valid_id);
->>  		return -EINVAL;
->>  	}
->> @@ -2853,7 +2853,7 @@ static ssize_t target_tg_pt_gp_alua_support_##_name##_store(		\
->>  									\
->>  	if (!t->tg_pt_gp_valid_id) {					\
->>  		pr_err("Unable to do set " #_name " ALUA state on non"	\
->> -		       " valid tg_pt_gp ID: %hu\n",			\
->> +		       " valid tg_pt_gp ID: %u\n",			\
+>> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+>> index 7ad11e42306d..0c3082d09712 100644
+>> --- a/drivers/scsi/libiscsi.c
+>> +++ b/drivers/scsi/libiscsi.c
+>> @@ -3587,10 +3587,11 @@ int iscsi_conn_get_addr_param(struct
+>> sockaddr_storage *addr,
+>>  	case ISCSI_PARAM_CONN_PORT:
+>>  	case ISCSI_PARAM_LOCAL_PORT:
+>>  		if (sin)
+>> -			len = sprintf(buf, "%hu\n", be16_to_cpu(sin-
+>>> sin_port));
+>> +			len = sprintf(buf, "%hu\n",
+>> +				      (u16)be16_to_cpu(sin->sin_port));
+>>  		else
+>>  			len = sprintf(buf, "%hu\n",
+>> -				      be16_to_cpu(sin6->sin6_port));
+>> +				      (u16)be16_to_cpu(sin6-
+>>
 > 
-> Did you just want to drop the tg_pt_gp_valid_id from the messages above?
-> Instead make the messages stop at non valid tg_pt_gp. Like for the first one:
+> This looks odd: the generic definition of be16_to_cpu on le is
 > 
-> Unable to do implicit ALUA on non valid tg_pt_gp ID.
+> #define __be16_to_cpu(x) __swab16((__force __u16)(__be16)(x))
 > 
-> It looks like we might have used to print the actual id. That's why we did
-> the hu and the message looks like we are printing the id "tg_pt_gp ID:".
-> We are now printing just 0 or 1 but it looks like an id value in the message.
+> and __swab16 is
+> 
+> #define __swab16(x) (__u16)__builtin_bswap16((__u16)(x))
+> 
+> So why doesn't clang see the existing __u16 as short?  This smells like
+> a problem in the compiler file.
 
-Right, printing tg_pt_gp_valid_id if we already know that it is zero is
-not very useful. I will remove tg_pt_gp_valid_id from the above pr_err()
-statements.
+Hi James,
+
+To me this also seems to be a compiler issue. I will drop this patch
+since I prefer not to insert casts if an expression already has the
+proper type.
+
+Thanks,
 
 Bart.
-
-
