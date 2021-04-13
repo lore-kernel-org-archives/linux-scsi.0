@@ -2,73 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B5F4C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 07:26:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7A27C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 07:35:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E3069613B2
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 07:26:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A781E613BB
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 07:35:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229838AbhDMH0Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Apr 2021 03:26:25 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:16906 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229641AbhDMH0Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Apr 2021 03:26:24 -0400
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4FKHCt69fJzlXP5;
-        Tue, 13 Apr 2021 15:24:10 +0800 (CST)
-Received: from [127.0.0.1] (10.174.179.202) by DGGEMS413-HUB.china.huawei.com
- (10.3.19.213) with Microsoft SMTP Server id 14.3.498.0; Tue, 13 Apr 2021
- 15:25:57 +0800
-Subject: Re: [PATCH 0/3] scsi: mptfusion: Clear the warnings indicating that
- the variable is not used
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "MPT-FusionLinux . pdl" <MPT-FusionLinux.pdl@broadcom.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-References: <20210408061851.3089-1-thunder.leizhen@huawei.com>
- <yq1blai7p1z.fsf@ca-mkp.ca.oracle.com>
-From:   "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
-Message-ID: <7b538451-4e1e-4f4b-36e5-ad496ab40598@huawei.com>
-Date:   Tue, 13 Apr 2021 15:25:56 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
+        id S240100AbhDMHf7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Apr 2021 03:35:59 -0400
+Received: from mx2.suse.de ([195.135.220.15]:44694 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231236AbhDMHf4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Apr 2021 03:35:56 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id A9683AC6E;
+        Tue, 13 Apr 2021 07:35:35 +0000 (UTC)
+Date:   Tue, 13 Apr 2021 09:35:35 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     Roman Bolshakov <r.bolshakov@yadro.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux@yadro.com,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Daniel Wagner <daniel.wagner@suse.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>, stable@vger.kernel.org,
+        Aleksandr Volkov <a.y.volkov@yadro.com>,
+        Aleksandr Miloserdov <a.miloserdov@yadro.com>
+Subject: Re: [PATCH] scsi: qla2xxx: Reserve extra IRQ vectors
+Message-ID: <20210413073535.2obrdtbl6lcdigxh@beryllium.lan>
+References: <20210412165740.39318-1-r.bolshakov@yadro.com>
 MIME-Version: 1.0
-In-Reply-To: <yq1blai7p1z.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.202]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210412165740.39318-1-r.bolshakov@yadro.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 2021/4/13 13:07, Martin K. Petersen wrote:
+On Mon, Apr 12, 2021 at 07:57:40PM +0300, Roman Bolshakov wrote:
+> Commit a6dcfe08487e ("scsi: qla2xxx: Limit interrupt vectors to number
+> of CPUs") lowers the number of allocated MSI-X vectors to the number of
+> CPUs.
 > 
-> Zhen,
+> That breaks vector allocation assumptions in qla83xx_iospace_config(),
+> qla24xx_enable_msix() and qla2x00_iospace_config(). Either of the
+> functions computes maximum number of qpairs as:
 > 
->> Zhen Lei (3):
->>   scsi: mptfusion: Remove unused local variable 'time_count'
->>   scsi: mptfusion: Remove unused local variable 'port'
->>   scsi: mptfusion: Fix error return code of mptctl_hp_hostinfo()
+>   ha->max_qpairs = ha->msix_count - 1 (MB interrupt) - 1 (default
+>                    response queue) - 1 (ATIO, in dual or pure target mode)
 > 
-> I applied patches 1+2. I hesitate making functional changes to such an
-> old driver.
-
-I think patch 3 does not change any functions. The current modification only
-ensures that error codes are correctly returned in the error branch. In the
-previous version, 0 is always returned.
-
+> max_qpairs is set to zero in case of two CPUs and initiator mode. The
+> number is then used to allocate ha->queue_pair_map inside
+> qla2x00_alloc_queues(). No allocation happens and ha->queue_pair_map is
+> left NULL but the driver thinks there are queue pairs available.
 > 
+> qla2xxx_queuecommand() tries to find a qpair in the map and crashes:
+> 
+>   if (ha->mqenable) {
+>           uint32_t tag;
+>           uint16_t hwq;
+>           struct qla_qpair *qpair = NULL;
+> 
+>           tag = blk_mq_unique_tag(cmd->request);
+>           hwq = blk_mq_unique_tag_to_hwq(tag);
+>           qpair = ha->queue_pair_map[hwq]; # <- HERE
+> 
+>           if (qpair)
+>                   return qla2xxx_mqueuecommand(host, cmd, qpair);
+>   }
+> 
+>   BUG: kernel NULL pointer dereference, address: 0000000000000000
+>   #PF: supervisor read access in kernel mode
+>   #PF: error_code(0x0000) - not-present page
+>   PGD 0 P4D 0
+>   Oops: 0000 [#1] SMP PTI
+>   CPU: 0 PID: 72 Comm: kworker/u4:3 Tainted: G        W         5.10.0-rc1+ #25
+>   Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.0.0-prebuilt.qemu-project.org 04/01/2014
+>   Workqueue: scsi_wq_7 fc_scsi_scan_rport [scsi_transport_fc]
+>   RIP: 0010:qla2xxx_queuecommand+0x16b/0x3f0 [qla2xxx]
+>   Call Trace:
+>    scsi_queue_rq+0x58c/0xa60
+>    blk_mq_dispatch_rq_list+0x2b7/0x6f0
+>    ? __sbitmap_get_word+0x2a/0x80
+>    __blk_mq_sched_dispatch_requests+0xb8/0x170
+>    blk_mq_sched_dispatch_requests+0x2b/0x50
+>    __blk_mq_run_hw_queue+0x49/0xb0
+>    __blk_mq_delay_run_hw_queue+0xfb/0x150
+>    blk_mq_sched_insert_request+0xbe/0x110
+>    blk_execute_rq+0x45/0x70
+>    __scsi_execute+0x10e/0x250
+>    scsi_probe_and_add_lun+0x228/0xda0
+>    __scsi_scan_target+0xf4/0x620
+>    ? __pm_runtime_resume+0x4f/0x70
+>    scsi_scan_target+0x100/0x110
+>    fc_scsi_scan_rport+0xa1/0xb0 [scsi_transport_fc]
+>    process_one_work+0x1ea/0x3b0
+>    worker_thread+0x28/0x3b0
+>    ? process_one_work+0x3b0/0x3b0
+>    kthread+0x112/0x130
+>    ? kthread_park+0x80/0x80
+>    ret_from_fork+0x22/0x30
+> 
+> The driver should allocate enough vectors to provide every CPU it's own HW
+> queue and still handle reserved (MB, RSP, ATIO) interrupts.
+> 
+> The change fixes the crash on dual core VM and prevents unbalanced QP
+> allocation where nr_hw_queues is two less than the number of CPUs.
+> 
+> Cc: Daniel Wagner <daniel.wagner@suse.com>
+> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Cc: Quinn Tran <qutran@marvell.com>
+> Cc: Nilesh Javali <njavali@marvell.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: stable@vger.kernel.org # 5.11+
+> Fixes: a6dcfe08487e ("scsi: qla2xxx: Limit interrupt vectors to number of CPUs")
+> Reported-by: Aleksandr Volkov <a.y.volkov@yadro.com>
+> Reported-by: Aleksandr Miloserdov <a.miloserdov@yadro.com>
+> Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 
+Make sense to limit the _max_ numbers of requested IRQs to
+num_online_cpus() + min_vecs.
+
+Reviewed-by: Daniel Wagner <dwagner@suse.de>
