@@ -2,132 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7A27C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 07:35:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE77C43460
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 14:04:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A781E613BB
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 07:35:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A017261353
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 14:04:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240100AbhDMHf7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Apr 2021 03:35:59 -0400
-Received: from mx2.suse.de ([195.135.220.15]:44694 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231236AbhDMHf4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Apr 2021 03:35:56 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id A9683AC6E;
-        Tue, 13 Apr 2021 07:35:35 +0000 (UTC)
-Date:   Tue, 13 Apr 2021 09:35:35 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Roman Bolshakov <r.bolshakov@yadro.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux@yadro.com,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Daniel Wagner <daniel.wagner@suse.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>, stable@vger.kernel.org,
-        Aleksandr Volkov <a.y.volkov@yadro.com>,
-        Aleksandr Miloserdov <a.miloserdov@yadro.com>
-Subject: Re: [PATCH] scsi: qla2xxx: Reserve extra IRQ vectors
-Message-ID: <20210413073535.2obrdtbl6lcdigxh@beryllium.lan>
-References: <20210412165740.39318-1-r.bolshakov@yadro.com>
+        id S241162AbhDMOFC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Apr 2021 10:05:02 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:15870 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231741AbhDMOE4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Apr 2021 10:04:56 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13DE3ETf001980;
+        Tue, 13 Apr 2021 10:04:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : content-transfer-encoding : mime-version; s=pp1;
+ bh=0TCW3Wq3rrOuY996NsEGn4PZRWFdDjYxricsSie+yX8=;
+ b=bbSc6yXy7iBXWM0Mf6eEOk8zocFFTv+a5tlCZ4E/j1eLtitfhr7u9IYAJkXQGbmOwh7Z
+ C1TqBUhfIv+5sSuGcxWhvfKOpz8820bjUxtBr2J6bo0lSVE9gODChWgTU4dXDUsoRTBv
+ eC5GL3X53ZsMjY+G8o0QU7mLEzCWp3ozqePoe8wpbe4v9mw2PjlJhirxr4KszfQoAVp9
+ o/Ae0X0sC3M6C/EJdAuTQ5dLtYH7pxF/oomDxS2qmoOlYxTt0gzAq13q72pctedHlVNX
+ iZItkDIm7f/ocXpjqY1k0SqIshlvIAqMt7xnTkEj9x0k42+KJZEBFZ81NIQxTHzHvVBV ig== 
+Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 37vjtuc8b0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 13 Apr 2021 10:04:18 -0400
+Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
+        by ppma02dal.us.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 13DDwCfG031110;
+        Tue, 13 Apr 2021 14:04:17 GMT
+Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
+        by ppma02dal.us.ibm.com with ESMTP id 37u3n9qfkh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 13 Apr 2021 14:04:16 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 13DE4FUb28115412
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 13 Apr 2021 14:04:15 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7CA8578060;
+        Tue, 13 Apr 2021 14:04:15 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 697ED7805E;
+        Tue, 13 Apr 2021 14:04:13 +0000 (GMT)
+Received: from jarvis.int.hansenpartnership.com (unknown [9.85.203.222])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Tue, 13 Apr 2021 14:04:13 +0000 (GMT)
+Message-ID: <94bff1bedd0dfa957822a6a303b48eca787f9a21.camel@linux.ibm.com>
+Subject: Re: [PATCH][next] scsi: aacraid: Replace one-element array with
+ flexible-array member
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kees Cook <keescook@chromium.org>
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Date:   Tue, 13 Apr 2021 07:04:11 -0700
+In-Reply-To: <aba7d5cb-79be-088d-d1f8-9309109e9afc@embeddedor.com>
+References: <20210304203822.GA102218@embeddedor>
+         <202104071216.5BEA350@keescook> <yq1h7ka7q68.fsf@ca-mkp.ca.oracle.com>
+         <aba7d5cb-79be-088d-d1f8-9309109e9afc@embeddedor.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: m4eW0zKaL4oCMKfm2lypRtMb5Z_eUbje
+X-Proofpoint-ORIG-GUID: m4eW0zKaL4oCMKfm2lypRtMb5Z_eUbje
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210412165740.39318-1-r.bolshakov@yadro.com>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-04-13_07:2021-04-13,2021-04-13 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 spamscore=0
+ priorityscore=1501 impostorscore=0 suspectscore=0 bulkscore=0 adultscore=0
+ mlxscore=0 mlxlogscore=853 clxscore=1011 phishscore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
+ definitions=main-2104130100
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Apr 12, 2021 at 07:57:40PM +0300, Roman Bolshakov wrote:
-> Commit a6dcfe08487e ("scsi: qla2xxx: Limit interrupt vectors to number
-> of CPUs") lowers the number of allocated MSI-X vectors to the number of
-> CPUs.
+On Tue, 2021-04-13 at 00:45 -0500, Gustavo A. R. Silva wrote:
+> Hi Martin,
 > 
-> That breaks vector allocation assumptions in qla83xx_iospace_config(),
-> qla24xx_enable_msix() and qla2x00_iospace_config(). Either of the
-> functions computes maximum number of qpairs as:
+> On 4/12/21 23:52, Martin K. Petersen wrote:
 > 
->   ha->max_qpairs = ha->msix_count - 1 (MB interrupt) - 1 (default
->                    response queue) - 1 (ATIO, in dual or pure target mode)
+> > Silencing analyzer warnings shouldn't be done at the expense of
+> > human
+> > readers. If it is imperative to switch to flex_array_size() to
+> > quiesce
+> > checker warnings, please add a comment in the code explaining that
+> > the
+> > size evaluates to nseg_new-1 sge_ieee1212 structs.
 > 
-> max_qpairs is set to zero in case of two CPUs and initiator mode. The
-> number is then used to allocate ha->queue_pair_map inside
-> qla2x00_alloc_queues(). No allocation happens and ha->queue_pair_map is
-> left NULL but the driver thinks there are queue pairs available.
-> 
-> qla2xxx_queuecommand() tries to find a qpair in the map and crashes:
-> 
->   if (ha->mqenable) {
->           uint32_t tag;
->           uint16_t hwq;
->           struct qla_qpair *qpair = NULL;
-> 
->           tag = blk_mq_unique_tag(cmd->request);
->           hwq = blk_mq_unique_tag_to_hwq(tag);
->           qpair = ha->queue_pair_map[hwq]; # <- HERE
-> 
->           if (qpair)
->                   return qla2xxx_mqueuecommand(host, cmd, qpair);
->   }
-> 
->   BUG: kernel NULL pointer dereference, address: 0000000000000000
->   #PF: supervisor read access in kernel mode
->   #PF: error_code(0x0000) - not-present page
->   PGD 0 P4D 0
->   Oops: 0000 [#1] SMP PTI
->   CPU: 0 PID: 72 Comm: kworker/u4:3 Tainted: G        W         5.10.0-rc1+ #25
->   Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.0.0-prebuilt.qemu-project.org 04/01/2014
->   Workqueue: scsi_wq_7 fc_scsi_scan_rport [scsi_transport_fc]
->   RIP: 0010:qla2xxx_queuecommand+0x16b/0x3f0 [qla2xxx]
->   Call Trace:
->    scsi_queue_rq+0x58c/0xa60
->    blk_mq_dispatch_rq_list+0x2b7/0x6f0
->    ? __sbitmap_get_word+0x2a/0x80
->    __blk_mq_sched_dispatch_requests+0xb8/0x170
->    blk_mq_sched_dispatch_requests+0x2b/0x50
->    __blk_mq_run_hw_queue+0x49/0xb0
->    __blk_mq_delay_run_hw_queue+0xfb/0x150
->    blk_mq_sched_insert_request+0xbe/0x110
->    blk_execute_rq+0x45/0x70
->    __scsi_execute+0x10e/0x250
->    scsi_probe_and_add_lun+0x228/0xda0
->    __scsi_scan_target+0xf4/0x620
->    ? __pm_runtime_resume+0x4f/0x70
->    scsi_scan_target+0x100/0x110
->    fc_scsi_scan_rport+0xa1/0xb0 [scsi_transport_fc]
->    process_one_work+0x1ea/0x3b0
->    worker_thread+0x28/0x3b0
->    ? process_one_work+0x3b0/0x3b0
->    kthread+0x112/0x130
->    ? kthread_park+0x80/0x80
->    ret_from_fork+0x22/0x30
-> 
-> The driver should allocate enough vectors to provide every CPU it's own HW
-> queue and still handle reserved (MB, RSP, ATIO) interrupts.
-> 
-> The change fixes the crash on dual core VM and prevents unbalanced QP
-> allocation where nr_hw_queues is two less than the number of CPUs.
-> 
-> Cc: Daniel Wagner <daniel.wagner@suse.com>
-> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
-> Cc: Quinn Tran <qutran@marvell.com>
-> Cc: Nilesh Javali <njavali@marvell.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: stable@vger.kernel.org # 5.11+
-> Fixes: a6dcfe08487e ("scsi: qla2xxx: Limit interrupt vectors to number of CPUs")
-> Reported-by: Aleksandr Volkov <a.y.volkov@yadro.com>
-> Reported-by: Aleksandr Miloserdov <a.miloserdov@yadro.com>
-> Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+> Done:
+> 	
+> https://lore.kernel.org/lkml/20210413054032.GA276102@embeddedor/
 
-Make sense to limit the _max_ numbers of requested IRQs to
-num_online_cpus() + min_vecs.
+I think the reason everyone gets confused is that they think the first
+argument should do something.  If flex_array_size had been defined
 
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
+#define flex_array_size(p, count)			\
+	array_size(count,				\
+		    sizeof(*(p)) + __must_be_array(p))
+
+Then we could have used
+
+flex_array_size(sge, nseg_new - 1)
+
+or
+
+flex_array_size(rio->sge, nseg_new - 1)
+
+and everyone would have understood either expression.  This would also
+have been useful, as the first example demonstrates, when we have a
+pointer rather than a flexible member ... although that means the macro
+likely needs a new name.
+
+However, perhaps just do
+
+array_size(nseg_new - 1, sizeof(*sge));
+
+And lose the comment?
+
+James
+
+
