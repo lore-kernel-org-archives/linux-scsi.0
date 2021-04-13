@@ -2,261 +2,283 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E48E2C43470
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 15:22:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A93B6C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 15:49:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C664C611CE
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 15:22:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82D37613B7
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 15:49:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346660AbhDMPXJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Apr 2021 11:23:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43056 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346644AbhDMPXD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Apr 2021 11:23:03 -0400
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2FC3C06138C;
-        Tue, 13 Apr 2021 08:22:43 -0700 (PDT)
-Received: by mail-pj1-x1032.google.com with SMTP id b8-20020a17090a5508b029014d0fbe9b64so10845135pji.5;
-        Tue, 13 Apr 2021 08:22:43 -0700 (PDT)
+        id S1346001AbhDMPtY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Apr 2021 11:49:24 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:57258 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345978AbhDMPtX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Apr 2021 11:49:23 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13DFj819040931;
+        Tue, 13 Apr 2021 15:48:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=KUul+6GVjVjvhEt8jSgdju2F01EbQV6AEBz5ceftj78=;
+ b=KPtsClm6pxn8HtXwvLUcopw++fYE/cLVepjwGOZS1k3W1b87KV3a9rZnbaRMFQsr/+J2
+ yS2Fkx6OgQbfNPCrtZ8vwCNVxUFBZT42xvvqBHjrS+QJh91C+VZEU18IFnPSLdo5lyBU
+ r1i3TbAC7+7O6gk0QLTX+PQ5o0aZUhECwXg3M7kzLCAjrIPiciPweAr2fBME0TzqExNJ
+ yugfXuiR5mP21lkzJ/udBju2nhFI/uK5qji+yM0Dwnqe32ldsjqbXhoqWpPNGg3NiiMr
+ hVvX3BCVR4vJO9GmTPi93cIRka+HIA56IZJ+RBrIn+hHG+8OI3hEbX9fQwJf5xwoQaw3 3g== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 37u4nnfj12-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 13 Apr 2021 15:48:59 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13DFjfeb003029;
+        Tue, 13 Apr 2021 15:48:58 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2171.outbound.protection.outlook.com [104.47.58.171])
+        by aserp3020.oracle.com with ESMTP id 37unwyxxsd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 13 Apr 2021 15:48:56 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=dz0qVcuw+xpSS5pc/ClOD9RT22D0byVNX80OJiE7LN+dgp+kr9LMqTlU1lmUcduHo4DQKMXH6QRPsQGokwCdtLMZGM9Fhjxxe3XL8YMALVr4PrLXSXrd8hE6+WIyeAFxuLwIfOjGWi8pYKtNN7wvSppUgXQ1w+Irf+df9L1TBxJq6EmePZKMYfmt/yHZ6CRvh3RwB1AMcHtu2pcWaVbYWNOY1N+PslQOenUyX1xspmDMJVZMBnZM32xCgqzSkicjWR3rb3bEixi5n98Q87O3M576Q/n0OF+wSM7utkUPrAThEOctToU6t+ogRZ5S6x0Ga74G/I5gmyHO8FvpBCyl2g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=KUul+6GVjVjvhEt8jSgdju2F01EbQV6AEBz5ceftj78=;
+ b=l6HWR6jEIWwAcK2ck1OUA8HZqGaqWih8lufMWm3zyMTiTb32so4f1xLLFSKFPXsuyMbY0HZT8EWOlocC9h1Tps8Tm6btRVd0pAVbO6b9qRkLhr4X27as/M/Yv6tKGdYKNnlMIx7Ng7zWkNRhhDPjn126W9VbYE054TDLh7yk1XL2a/SingDsc39/VGHXKKCkukwgRYfcAifZ1nD7aGbsVhNgw209sWxp32ZfoMNz4ZzbtG5R53lokP2VaQTqw/SWV3byctimH6RqaplGKwKvr2GdBlGyrOnYUNEoFTo2huECD2tMp9qbCm70V5mwkgYx1H7ICUfA7kGTo/P88Wj/Aw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=FJbcZ8KnexDAAQ5C4Sah9FWkqLY6Pv3HeJbolDJY4aA=;
-        b=dMKymLM++0iyOfy+Fp4BTgSzHasioUH85LfrzbqVkkt1W8hN5mKkO9e1HIi0eLdPGK
-         E+z9YgmO23xLpuKjoJX7uPOT+4E3B2nw/8TgTufp8DyEt+aSENiBpTch0+Tqo3N5XaOV
-         Kkwqv8zVVhwCOjc/ICWRKQYW3AiWgEN2aWxLXt1+sB+EVJWrz93l799+vfGKqx66+tYm
-         p2YWbnu+LW/E2rRb7pOX6jU4mN7mfIkUVZjcwcnxy6QH3l981mCdUj9BQPPMcANymZHc
-         uFjcGoD3Z6zuItwqHx7G4CQo8ET2GOO1ul0MjZefmw48IVJZLxxb3jGhKFo4nq6K9p1I
-         MiNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=FJbcZ8KnexDAAQ5C4Sah9FWkqLY6Pv3HeJbolDJY4aA=;
-        b=m5A3M1UbUWPCpDi5elp5ZJhHa01G5+bopYnZKf8QRL6kazYVZkTO0J+mXAUMA15FMG
-         4lYjEy996jLpHkg8UGlOesAk70TtvwLd3hFtuLcWAsyf5XcJvhC78OrWBrjEhYWKpUub
-         I1mgPW0tqFT2P4Z2Zbx9XxI2jIa7JSxScQv8xbqQXa1Ic2r+59/V+EXYXim07LcMPsBA
-         h//QwFnQOXVIuTwAVD0x8dzidL9IRS0d40MVa0rbgEnMzzZqUCYb58KLIF0owN7m/rEQ
-         4WnhlPAe/XBZMnzAdJbSx9we4SUMtrXqDU4dS6hix5zacHliYL/4vsGwBx3ULuSUuolT
-         Yy+g==
-X-Gm-Message-State: AOAM533SSpx1Ab5H5YDpWykiwFeWZ0bEeUH3X4y3PZCCosurLYrYM1RN
-        0yF1AIF8SQoyQM7PulV2I+0=
-X-Google-Smtp-Source: ABdhPJxl66RYFu0e/3f9oCwMOenf2D6GMo0g6okoYbE/9zsJbSRh6SgfCYirp8Z4+FO0NCisVH+C4w==
-X-Received: by 2002:a17:902:6544:b029:ea:f94e:9d4e with SMTP id d4-20020a1709026544b02900eaf94e9d4emr11495405pln.16.1618327363258;
-        Tue, 13 Apr 2021 08:22:43 -0700 (PDT)
-Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:36:5b29:fe1a:45c9:c61c])
-        by smtp.gmail.com with ESMTPSA id y3sm12882026pfg.145.2021.04.13.08.22.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Apr 2021 08:22:42 -0700 (PDT)
-From:   Tianyu Lan <ltykernel@gmail.com>
-To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, vkuznets@redhat.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com,
-        sunilmut@microsoft.com
-Subject: [RFC V2 PATCH 12/12] HV/Storvsc: Add Isolation VM support for storvsc driver
-Date:   Tue, 13 Apr 2021 11:22:17 -0400
-Message-Id: <20210413152217.3386288-13-ltykernel@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210413152217.3386288-1-ltykernel@gmail.com>
-References: <20210413152217.3386288-1-ltykernel@gmail.com>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=KUul+6GVjVjvhEt8jSgdju2F01EbQV6AEBz5ceftj78=;
+ b=Nxyd1nlc69uwVJDQIfXtxHR7Rd7HiWZZbqi3kQlNwWkxipfLbRv+uYKwOoI9UUWea0XT2slB030DnK5gOYsTAZLcTIPVsV2IWtFDM4mxgmuTQ3cyer8xtXFj8c6ZvRJuyi6Q+eHonS75d2jmMhPvZX2P080jg2MYtTbaGvVg6f0=
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
+ by SA2PR10MB4506.namprd10.prod.outlook.com (2603:10b6:806:111::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.22; Tue, 13 Apr
+ 2021 15:48:54 +0000
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::20c7:193:d737:7ab1]) by SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::20c7:193:d737:7ab1%4]) with mapi id 15.20.4020.022; Tue, 13 Apr 2021
+ 15:48:53 +0000
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+To:     Roman Bolshakov <r.bolshakov@yadro.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux@yadro.com" <linux@yadro.com>,
+        "GR-QLogic-Storage-Upstream@marvell.com" 
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        Daniel Wagner <daniel.wagner@suse.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        Aleksandr Volkov <a.y.volkov@yadro.com>,
+        Aleksandr Miloserdov <a.miloserdov@yadro.com>
+Subject: Re: [PATCH] scsi: qla2xxx: Reserve extra IRQ vectors
+Thread-Topic: [PATCH] scsi: qla2xxx: Reserve extra IRQ vectors
+Thread-Index: AQHXL71FMzbYmDbkQ0qMb6rerHOdBaqymYeA
+Date:   Tue, 13 Apr 2021 15:48:53 +0000
+Message-ID: <7188360D-8AE3-4F12-8058-225DA561B3EB@oracle.com>
+References: <20210412165740.39318-1-r.bolshakov@yadro.com>
+In-Reply-To: <20210412165740.39318-1-r.bolshakov@yadro.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3608.120.23.2.4)
+authentication-results: yadro.com; dkim=none (message not signed)
+ header.d=none;yadro.com; dmarc=none action=none header.from=oracle.com;
+x-originating-ip: [70.114.128.235]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 2d992705-e8a7-44a9-48c1-08d8fe93a416
+x-ms-traffictypediagnostic: SA2PR10MB4506:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <SA2PR10MB450652E2D2A6A30337F921A6E64F9@SA2PR10MB4506.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:8273;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: kpR8vXU0WgHGFg+lNelwa7T++qtPP7rX8QrcMYtJY00KVC3NcZY8f59YWK0wuanzUS7esnh9BUnRdkLGUEp6j+i3vHTLBXhcPOOo4lPmUEQbp+E08oS6wV5T6JZzzHWZe84MJ+851268S0WWJbjf/ifceyin5OzdyZjUErZN9YQVMzPd1SIdmQA3slcvHmJniKjKixNnaDE66xqBi3LmScaWxE0egQCVClJEddFtKkmhNj6SH7cLkCjCPs59SHrVsD5/i+mWn7bsYw9wnyimvVaaysPczimJyEXGEaCEaD6BAeufOIAQnzRCJhVDJIlMWFnDMhqohNfJ6c75VlI/2SK/n498DKA4KQczX5Hy+XEGTmumJXfACM9seIXaQxxFVpmujuMnRaAcSdmitiltOQ1l4fFemiMDXTslpOUm6QKc1/KesnPrLZrUNCJYjY/XoJZrga7LKzL2kgRBq0RegaibGl6fuLP0sghwKgUw7pAPD7eCB0IFxjpjLGAKOyGk+/GWhB5QG2sQe6ha7tErs1d9MLKwTMsj2SqSdRLt+Ug/4pzF3GovLOKb+7fb/hDwNIwvIiqzlD/gURGDPjiXlcl4kp53Sk5Hk+vonVwOu/cLFNi0Nl4Gls21Xx5s4TfdHdXIoxMsnrqG3bJqrwvJNkhFkJk45CKUxkHBTUIl59s=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(136003)(396003)(376002)(39860400002)(366004)(66946007)(6916009)(316002)(8676002)(6512007)(71200400001)(5660300002)(83380400001)(122000001)(2906002)(186003)(2616005)(38100700002)(4326008)(8936002)(66446008)(36756003)(86362001)(7416002)(26005)(54906003)(33656002)(66476007)(44832011)(6486002)(478600001)(64756008)(53546011)(66556008)(6506007)(76116006)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?S4lejgVDFWfl4SbZDUEXW2DHPgJhtodexwEr56O60IdjCyBE1KqpNHdM3K6I?=
+ =?us-ascii?Q?Tx3vqMMWXXPPdG2TLo4hL6H9Fc5M1FE/I8WiStvHGYoZCeFWExKj6kGvKEwQ?=
+ =?us-ascii?Q?ZyueUqcgMi96+1JXL4rmkWB/dY0qMLI3WQDBR89KIVRFUUrMjU2LHHZiSVEQ?=
+ =?us-ascii?Q?BJr/XLv+FWiIvkTMDM1hkI4S2cbJmQWtjhcsetAtTGInybAjSAmpdvU7HWYM?=
+ =?us-ascii?Q?i/tRA3ToCKFttMzpmiwPA3Vb0b1eeF9BVpH8mJb93VQ8wGU2EhtlqFrIUXVu?=
+ =?us-ascii?Q?9/yfuyfqUKhqj5bPYTBsfilAfxWBb+PDXvH1lL2xS30xe6P0zXM1NGODZvJp?=
+ =?us-ascii?Q?aiHP3moYzkRYB8QiFhAqPpBWRZ5PjSgqjcmDDTHjgXf051H+/PEa2/Jq4PaJ?=
+ =?us-ascii?Q?uGsHkwzLNqJELdmLxF43V9lCADo2ALTXPEpuJWb73vH+xFGQUoYbCe+1Yi0D?=
+ =?us-ascii?Q?CJyLi8KPBEWtkVW7FT2ssKqoJRlljNB8ukzgXaWMrqTFYYPqwyJ/DglHcuRM?=
+ =?us-ascii?Q?VdtaU2BkJmTAMDBVT9VkXbKbxSSU/wjVMn0E+7AwYkEmJ5PLwcEMuQX0sJaV?=
+ =?us-ascii?Q?31IuNJQ0ZqczYv/KgAPYzoUqisfsMfjIbD9cn/cPwOlj8LFhEKBYuV2e3WEs?=
+ =?us-ascii?Q?tCYfcn2M70oh0MoKfWH7c/QaWdkITxpd0JCTPH+zBF8RWAtQChVV7N9VC+R7?=
+ =?us-ascii?Q?z3nbNInZNUoc1byG3l0kU7w2my7oPAeWzzyN++6YCKqR7tN1lV6HGgeScZcM?=
+ =?us-ascii?Q?zJzDs5gv1nfAHFKQ+0FMf4ebqNnexpQsbceg7nrIUIUuEZR7zpqLGAMsEaii?=
+ =?us-ascii?Q?12UjWjud089KczjHGgu+GsXyMg50x6Um+JxaL3lGh1Tzn1HPg8U+99Q9hEgj?=
+ =?us-ascii?Q?EjgpsciKdz7zY5vOWV7HnDcrm+ZQfkWjAe0eOeSkmt1fC6EhtV95O2FRVOCk?=
+ =?us-ascii?Q?Z/NOIATGf1siQOkjP7k2B/ALfKhhCffcte0hexuJcbrD63Ddj1CAeYE1yGkT?=
+ =?us-ascii?Q?U8umOLo5wnhnF5th4vZoXiasBh7sHGbWsGFJcYk5vmPe46nyYRAjgLDq24OK?=
+ =?us-ascii?Q?MDQpSpomDbhpmIW62WQF3979ZuUxbKcZ2rIcrcSqpWxvsE2BWX+v+MFGKsNp?=
+ =?us-ascii?Q?4DgcmZ5bOe0m7t9ndfAVO0yPrIjqHjySaWOeHNpFS4qPr4pz3IHxLTEs38Tx?=
+ =?us-ascii?Q?kCdcb4EyK3aIfQi8acvkd6y0pVgxMMnveEBkoUqGl9t0kyGrs+yo6DYZqqR6?=
+ =?us-ascii?Q?Zc1PhYEE5qTvIdZeIVlx3IOVOwBy5F1KA9YPdf9gDCXYzoR41CCY3If6P6QN?=
+ =?us-ascii?Q?XNpLoDUKHNQNAmXvQ15k7pQW9n00eocnHDjZdFhZgIh7pA=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <6C6D46A6BC0B3849BB8EAD8F43B9C4E6@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2d992705-e8a7-44a9-48c1-08d8fe93a416
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Apr 2021 15:48:53.7787
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: FWJbFTJkoUfggnwYEWgq1lTol4XXrE3lHZiRkqhJh7Y4+CWAccrMSntbSPKcvQeqqoHIWdj5gunV6WEkyR9g9NcCBtYMHcn8RzhoT5f3KPg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4506
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9953 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
+ mlxscore=0 malwarescore=0 adultscore=0 bulkscore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104060000 definitions=main-2104130109
+X-Proofpoint-ORIG-GUID: RgAYuYvCytI-K3pjAvD1UaoZYKk9YegS
+X-Proofpoint-GUID: RgAYuYvCytI-K3pjAvD1UaoZYKk9YegS
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9953 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
+ phishscore=0 suspectscore=0 mlxlogscore=999 priorityscore=1501
+ clxscore=1011 lowpriorityscore=0 spamscore=0 impostorscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104060000 definitions=main-2104130109
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-In Isolation VM, all shared memory with host needs to mark visible
-to host via hvcall. vmbus_establish_gpadl() has already done it for
-netvsc rx/tx ring buffer. The page buffer used by vmbus_sendpacket_
-mpb_desc() still need to handle. Use DMA API to map/umap these
-memory during sending/receiving packet and Hyper-V DMA ops callback
-will use swiotlb fucntion to allocate bounce buffer and copy data
-from/to bounce buffer.
 
-Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 67 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 66 insertions(+), 1 deletion(-)
+> On Apr 12, 2021, at 11:57 AM, Roman Bolshakov <r.bolshakov@yadro.com> wro=
+te:
+>=20
+> Commit a6dcfe08487e ("scsi: qla2xxx: Limit interrupt vectors to number
+> of CPUs") lowers the number of allocated MSI-X vectors to the number of
+> CPUs.
+>=20
+> That breaks vector allocation assumptions in qla83xx_iospace_config(),
+> qla24xx_enable_msix() and qla2x00_iospace_config(). Either of the
+> functions computes maximum number of qpairs as:
+>=20
+>  ha->max_qpairs =3D ha->msix_count - 1 (MB interrupt) - 1 (default
+>                   response queue) - 1 (ATIO, in dual or pure target mode)
+>=20
+> max_qpairs is set to zero in case of two CPUs and initiator mode. The
+> number is then used to allocate ha->queue_pair_map inside
+> qla2x00_alloc_queues(). No allocation happens and ha->queue_pair_map is
+> left NULL but the driver thinks there are queue pairs available.
+>=20
+> qla2xxx_queuecommand() tries to find a qpair in the map and crashes:
+>=20
+>  if (ha->mqenable) {
+>          uint32_t tag;
+>          uint16_t hwq;
+>          struct qla_qpair *qpair =3D NULL;
+>=20
+>          tag =3D blk_mq_unique_tag(cmd->request);
+>          hwq =3D blk_mq_unique_tag_to_hwq(tag);
+>          qpair =3D ha->queue_pair_map[hwq]; # <- HERE
+>=20
+>          if (qpair)
+>                  return qla2xxx_mqueuecommand(host, cmd, qpair);
+>  }
+>=20
+>  BUG: kernel NULL pointer dereference, address: 0000000000000000
+>  #PF: supervisor read access in kernel mode
+>  #PF: error_code(0x0000) - not-present page
+>  PGD 0 P4D 0
+>  Oops: 0000 [#1] SMP PTI
+>  CPU: 0 PID: 72 Comm: kworker/u4:3 Tainted: G        W         5.10.0-rc1=
++ #25
+>  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.0.0-prebuilt.=
+qemu-project.org 04/01/2014
+>  Workqueue: scsi_wq_7 fc_scsi_scan_rport [scsi_transport_fc]
+>  RIP: 0010:qla2xxx_queuecommand+0x16b/0x3f0 [qla2xxx]
+>  Call Trace:
+>   scsi_queue_rq+0x58c/0xa60
+>   blk_mq_dispatch_rq_list+0x2b7/0x6f0
+>   ? __sbitmap_get_word+0x2a/0x80
+>   __blk_mq_sched_dispatch_requests+0xb8/0x170
+>   blk_mq_sched_dispatch_requests+0x2b/0x50
+>   __blk_mq_run_hw_queue+0x49/0xb0
+>   __blk_mq_delay_run_hw_queue+0xfb/0x150
+>   blk_mq_sched_insert_request+0xbe/0x110
+>   blk_execute_rq+0x45/0x70
+>   __scsi_execute+0x10e/0x250
+>   scsi_probe_and_add_lun+0x228/0xda0
+>   __scsi_scan_target+0xf4/0x620
+>   ? __pm_runtime_resume+0x4f/0x70
+>   scsi_scan_target+0x100/0x110
+>   fc_scsi_scan_rport+0xa1/0xb0 [scsi_transport_fc]
+>   process_one_work+0x1ea/0x3b0
+>   worker_thread+0x28/0x3b0
+>   ? process_one_work+0x3b0/0x3b0
+>   kthread+0x112/0x130
+>   ? kthread_park+0x80/0x80
+>   ret_from_fork+0x22/0x30
+>=20
+> The driver should allocate enough vectors to provide every CPU it's own H=
+W
+> queue and still handle reserved (MB, RSP, ATIO) interrupts.
+>=20
+> The change fixes the crash on dual core VM and prevents unbalanced QP
+> allocation where nr_hw_queues is two less than the number of CPUs.
+>=20
+> Cc: Daniel Wagner <daniel.wagner@suse.com>
+> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Cc: Quinn Tran <qutran@marvell.com>
+> Cc: Nilesh Javali <njavali@marvell.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: stable@vger.kernel.org # 5.11+
+> Fixes: a6dcfe08487e ("scsi: qla2xxx: Limit interrupt vectors to number of=
+ CPUs")
+> Reported-by: Aleksandr Volkov <a.y.volkov@yadro.com>
+> Reported-by: Aleksandr Miloserdov <a.miloserdov@yadro.com>
+> Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+> ---
+> drivers/scsi/qla2xxx/qla_isr.c | 4 ++--
+> 1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
+r.c
+> index 11d6e0db07fe..6e8f737a4af3 100644
+> --- a/drivers/scsi/qla2xxx/qla_isr.c
+> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> @@ -3998,11 +3998,11 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struc=
+t rsp_que *rsp)
+> 	if (USER_CTRL_IRQ(ha) || !ha->mqiobase) {
+> 		/* user wants to control IRQ setting for target mode */
+> 		ret =3D pci_alloc_irq_vectors(ha->pdev, min_vecs,
+> -		    min((u16)ha->msix_count, (u16)num_online_cpus()),
+> +		    min((u16)ha->msix_count, (u16)(num_online_cpus() + min_vecs)),
+> 		    PCI_IRQ_MSIX);
+> 	} else
+> 		ret =3D pci_alloc_irq_vectors_affinity(ha->pdev, min_vecs,
+> -		    min((u16)ha->msix_count, (u16)num_online_cpus()),
+> +		    min((u16)ha->msix_count, (u16)(num_online_cpus() + min_vecs)),
+> 		    PCI_IRQ_MSIX | PCI_IRQ_AFFINITY,
+> 		    &desc);
+>=20
+> --=20
+> 2.30.1
+>=20
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 2e4fa77445fd..d271578b1811 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -21,6 +21,8 @@
- #include <linux/device.h>
- #include <linux/hyperv.h>
- #include <linux/blkdev.h>
-+#include <linux/io.h>
-+#include <linux/dma-mapping.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
-@@ -414,6 +416,11 @@ static void storvsc_on_channel_callback(void *context);
- #define STORVSC_IDE_MAX_TARGETS				1
- #define STORVSC_IDE_MAX_CHANNELS			1
- 
-+struct dma_range {
-+	dma_addr_t dma;
-+	u32 mapping_size;
-+};
-+
- struct storvsc_cmd_request {
- 	struct scsi_cmnd *cmd;
- 
-@@ -427,6 +434,8 @@ struct storvsc_cmd_request {
- 	u32 payload_sz;
- 
- 	struct vstor_packet vstor_packet;
-+	u32 hvpg_count;
-+	struct dma_range *dma_range;
- };
- 
- 
-@@ -1236,6 +1245,7 @@ static void storvsc_on_channel_callback(void *context)
- 	const struct vmpacket_descriptor *desc;
- 	struct hv_device *device;
- 	struct storvsc_device *stor_device;
-+	int i;
- 
- 	if (channel->primary_channel != NULL)
- 		device = channel->primary_channel->device_obj;
-@@ -1249,6 +1259,8 @@ static void storvsc_on_channel_callback(void *context)
- 	foreach_vmbus_pkt(desc, channel) {
- 		void *packet = hv_pkt_data(desc);
- 		struct storvsc_cmd_request *request;
-+		enum dma_data_direction dir;
-+		u32 attrs;
- 		u64 cmd_rqst;
- 
- 		cmd_rqst = vmbus_request_addr(&channel->requestor,
-@@ -1261,6 +1273,22 @@ static void storvsc_on_channel_callback(void *context)
- 
- 		request = (struct storvsc_cmd_request *)(unsigned long)cmd_rqst;
- 
-+		if (request->vstor_packet.vm_srb.data_in == READ_TYPE)
-+			dir = DMA_FROM_DEVICE;
-+		 else
-+			dir = DMA_TO_DEVICE;
-+
-+		if (request->dma_range) {
-+			for (i = 0; i < request->hvpg_count; i++)
-+				dma_unmap_page_attrs(&device->device,
-+						request->dma_range[i].dma,
-+						request->dma_range[i].mapping_size,
-+						request->vstor_packet.vm_srb.data_in
-+						     == READ_TYPE ?
-+						DMA_FROM_DEVICE : DMA_TO_DEVICE, attrs);
-+			kfree(request->dma_range);
-+		}
-+
- 		if (request == &stor_device->init_request ||
- 		    request == &stor_device->reset_request) {
- 			memcpy(&request->vstor_packet, packet,
-@@ -1682,8 +1710,10 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	struct vmscsi_request *vm_srb;
- 	struct scatterlist *cur_sgl;
- 	struct vmbus_packet_mpb_array  *payload;
-+	enum dma_data_direction dir;
- 	u32 payload_sz;
- 	u32 length;
-+	u32 attrs;
- 
- 	if (vmstor_proto_version <= VMSTOR_PROTO_VERSION_WIN8) {
- 		/*
-@@ -1722,14 +1752,17 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	case DMA_TO_DEVICE:
- 		vm_srb->data_in = WRITE_TYPE;
- 		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_OUT;
-+		dir = DMA_TO_DEVICE;
- 		break;
- 	case DMA_FROM_DEVICE:
- 		vm_srb->data_in = READ_TYPE;
- 		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_IN;
-+		dir = DMA_FROM_DEVICE;
- 		break;
- 	case DMA_NONE:
- 		vm_srb->data_in = UNKNOWN_TYPE;
- 		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_NO_DATA_TRANSFER;
-+		dir = DMA_NONE;
- 		break;
- 	default:
- 		/*
-@@ -1786,6 +1819,12 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 		hvpgoff = sgl->offset >> HV_HYP_PAGE_SHIFT;
- 
- 		cur_sgl = sgl;
-+
-+		cmd_request->dma_range = kzalloc(sizeof(struct dma_range) * hvpg_count,
-+			      GFP_ATOMIC);
-+		if (!cmd_request->dma_range)
-+			return -ENOMEM;
-+
- 		for (i = 0; i < hvpg_count; i++) {
- 			/*
- 			 * 'i' is the index of hv pages in the payload and
-@@ -1805,6 +1844,8 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 			 */
- 			unsigned int hvpgoff_in_page =
- 				(i + hvpgoff) % NR_HV_HYP_PAGES_IN_PAGE;
-+			dma_addr_t dma;
-+			u32 size;
- 
- 			/*
- 			 * Two cases that we need to fetch a page:
-@@ -1817,8 +1858,28 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 				cur_sgl = sg_next(cur_sgl);
- 			}
- 
--			payload->range.pfn_array[i] = hvpfn + hvpgoff_in_page;
-+			size = min(HV_HYP_PAGE_SIZE - offset_in_hvpg, (unsigned long)length);
-+			dma = dma_map_page_attrs(&dev->device,
-+						 pfn_to_page(hvpfn),
-+						 offset_in_hvpg, size,
-+						 scmnd->sc_data_direction, attrs);
-+			if (dma_mapping_error(&dev->device, dma)) {
-+				pr_warn("dma map error.\n");
-+				ret = -ENOMEM;
-+				goto free_dma_range;
-+			}
-+
-+			if (offset_in_hvpg) {
-+				payload->range.offset = dma & ~HV_HYP_PAGE_MASK;
-+				offset_in_hvpg = 0;
-+			}
-+
-+			cmd_request->dma_range[i].dma = dma;
-+			cmd_request->dma_range[i].mapping_size = size;
-+			payload->range.pfn_array[i] = dma >> HV_HYP_PAGE_SHIFT;
-+			length -= size;
- 		}
-+		cmd_request->hvpg_count = hvpg_count;
- 	}
- 
- 	cmd_request->payload = payload;
-@@ -1836,6 +1897,10 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	}
- 
- 	return 0;
-+
-+free_dma_range:
-+	kfree(cmd_request->dma_range);
-+	return ret;
- }
- 
- static struct scsi_host_template scsi_driver = {
--- 
-2.25.1
+Change looks sensible.
+
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+
+--
+Himanshu Madhani	 Oracle Linux Engineering
 
