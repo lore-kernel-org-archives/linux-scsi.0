@@ -2,130 +2,182 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88CCBC433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 18:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 161FEC433ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 18:58:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 604D861131
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 18:21:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF36361132
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 18:58:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351181AbhDNSWK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Apr 2021 14:22:10 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2858 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232769AbhDNSWH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 14:22:07 -0400
-Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FL9f31KSYz689nN;
-        Thu, 15 Apr 2021 02:16:27 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Wed, 14 Apr 2021 20:21:44 +0200
-Received: from [10.47.25.158] (10.47.25.158) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 14 Apr
- 2021 19:21:43 +0100
-Subject: Re: [bug report] shared tags causes IO hang and performance drop
-To:     <dgilbert@interlog.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        "Ming Lei" <ming.lei@redhat.com>
-CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>
-References: <YHaez6iN2HHYxYOh@T590>
- <9a6145a5-e6ac-3d33-b52a-0823bfc3b864@huawei.com>
- <cb326d404c6e0785d03a7dfadc42832c@mail.gmail.com> <YHbOOfGNHwO4SMS7@T590>
- <b41586781cffea03c5fd6b0849e2b9e4@mail.gmail.com>
- <75ac498d-763c-e52b-a870-e3a91b930624@interlog.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <074f40aa-68c3-8580-bf36-bd4ea2aff0b9@huawei.com>
-Date:   Wed, 14 Apr 2021 19:19:08 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <75ac498d-763c-e52b-a870-e3a91b930624@interlog.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.47.25.158]
-X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        id S1349232AbhDNS6z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Apr 2021 14:58:55 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:7697 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233309AbhDNS6x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 14:58:53 -0400
+IronPort-SDR: qTpzh9gJaRVmfRvSlhcN6UWf1jpGhEVMQRhU9gLdMubLjfNRZzA0c0vwlMBZPF2KRDQVXx5p8P
+ 2FzzQFfjOgWPk0ot6Hz+QzU3Wjcp8oVsYztp4MsP3VVQm7qKWSb0SUbYrJi36hB3pzcVIf+1um
+ Z5K97gai6FoR8wJxwlgN9aZpQ8OXxwdjlxi3/fBXzBmxGo8ZRdgH6twXN7I7qXTFnqwBBdBIUn
+ 3hbkS1zM2aLt386d8GIBBc5PyMZFXmRxbIDa9NwgARe4gXbD3NlvfyA3ByU2eU8MiD8bbIbt+y
+ uks=
+X-IronPort-AV: E=Sophos;i="5.82,223,1613462400"; 
+   d="scan'208";a="29750616"
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by labrats.qualcomm.com with ESMTP; 14 Apr 2021 11:58:31 -0700
+X-QCInternal: smtphost
+Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 14 Apr 2021 11:58:30 -0700
+Received: by stor-presley.qualcomm.com (Postfix, from userid 92687)
+        id 6C9B62115D; Wed, 14 Apr 2021 11:58:30 -0700 (PDT)
+From:   Asutosh Das <asutoshd@codeaurora.org>
+To:     cang@codeaurora.org, martin.petersen@oracle.com,
+        adrian.hunter@intel.com, linux-scsi@vger.kernel.org
+Cc:     Asutosh Das <asutoshd@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support),
+        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support)
+Subject: [PATCH v18 0/2] Enable power management for ufs wlun 
+Date:   Wed, 14 Apr 2021 11:58:26 -0700
+Message-Id: <cover.1618426513.git.asutoshd@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/04/2021 18:03, Douglas Gilbert wrote:
-> On 2021-04-14 9:59 a.m., Kashyap Desai wrote:
->>>> I tried both - 5.12.0-rc1 and 5.11.0-rc2+ and there is a same
->> behavior.
->>>> Let me also check  megaraid_sas and see if anything generic or this is
->>>> a special case of scsi_debug.
->>>
->>> As I mentioned, it could be one generic issue wrt. SCHED_RESTART.
->>> shared tags might have to restart all hctx since all share same tags.
->>
->> Ming - I tried many combination on MR shared host tag driver but there is
->> no single instance of IO hang.
->> I will keep trying, but when I look at scsi_debug driver code I found
->> below odd settings in scsi_debug driver.
->> can_queue of adapter is set to 128 but queue_depth of sdev is set to 255.
->>
->> If I apply below patch, scsi_debug driver's hang is also resolved. 
->> Ideally
->> sdev->queue depth cannot exceed shost->can_queue.
->> Not sure why cmd_per_lun is 255 in scsi_debug driver which can easily
->> exceed can_queue.  I will simulate something similar in MR driver and see
->> how it behaves w.r.t IO hang issue.
->>
->> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
->> index 70165be10f00..dded762540ee 100644
->> --- a/drivers/scsi/scsi_debug.c
->> +++ b/drivers/scsi/scsi_debug.c
->> @@ -218,7 +218,7 @@ static const char *sdebug_version_date = "20200710";
->>    */
->>   #define SDEBUG_CANQUEUE_WORDS  3       /* a WORD is bits in a long */
->>   #define SDEBUG_CANQUEUE  (SDEBUG_CANQUEUE_WORDS * BITS_PER_LONG)
-> 
-> So SDEBUG_CANQUEUE is 3*64 = 192 and is a hard limit (it is used to
-> dimension an array). Should it be upped to 4, say? [That will slow things
-> down a bit if that is an issue.]
+This patch attempts to fix a deadlock in ufs while sending SSU.
+Recently, blk_queue_enter() added a check to not process requests if the
+queue is suspended. That leads to a resume of the associated device which
+is suspended. In ufs, that device is ufs device wlun and it's parent is
+ufs_hba. This resume tries to resume ufs device wlun which in turn tries
+to resume ufs_hba, which is already in the process of suspending, thus
+causing a deadlock.
 
-sdev_store_queue_depth() enforces that the sdev queue depth cannot 
-exceed can_queue.
+This patch takes care of:
+* Suspending the ufs device lun only after all other luns are suspended
+* Sending SSU during ufs device wlun suspend
+* Clearing uac for rpmb and ufs device wlun
+* Not sending commands to the device during host suspend
 
-I don't know why this is not also enforced in scsi_alloc_sdev(), or even 
-when registering the shost (for cmd_per_lun)
+v17 -> v18:
+- Addressed Adrian's comments
 
-> 
->> -#define DEF_CMD_PER_LUN  255
->> +#define DEF_CMD_PER_LUN  SDEBUG_CANQUEUE
->>
->>   /* UA - Unit Attention; SA - Service Action; SSU - Start Stop Unit */
->>   #define F_D_IN                 1       /* Data-in command (e.g. 
->> READ) */
->> @@ -7558,6 +7558,7 @@ static int sdebug_driver_probe(struct device *dev)
->>          sdbg_host = to_sdebug_host(dev);
->>
->>          sdebug_driver_template.can_queue = sdebug_max_queue;
->> +       sdebug_driver_template.cmd_per_lun = sdebug_max_queue;
-> 
-> I'll  push out a patch shortly.
-> 
-> Doug Gilbert
-> 
-> 
->>          if (!sdebug_clustering)
->>                  sdebug_driver_template.dma_boundary = PAGE_SIZE - 1;
->>>
->>>
->>> Thanks,
->>> Ming
-> 
-> .
+v16 -> v17:
+- Addressed Adrian's & Daejun's comments
+
+v15 -> v16:
+- Brought back the missing changes
+  * Added scsi_autopm_[get/put] to ufs_debugfs[get/put]_user_access()
+  * Fix ufshcd_wl_poweroff()
+
+v14 -> v15:
+- Rebased on 5.13/scsi-staging
+
+v13 -> v14:
+- Addressed Adrian's comments
+  * Rebased it on top of scsi-next
+  * Added scsi_autopm_[get/put] to ufs_debugfs[get/put]_user_access()
+  * Resume the device in ufshcd_remove()
+  * Unregister ufs_rpmb_wlun before ufs_dev_wlun
+  * hba->shutting_down moved to ufshcd_wl_shutdown()
+
+v12 -> v13:
+- Addressed Adrian's comments
+  * Paired pm_runtime_get_noresume() with pm_runtime_put()
+  * no rpm_autosuspend for ufs device wlun
+  * Moved runtime-pm init functionality to ufshcd_wl_probe()
+- Addressed Bart's comments
+  * Expanded abbrevs in commit message
+
+v11 -> v12:
+- Addressed Adrian's comments
+  * Fixed ahit for Mediatek driver
+  * Fixed error handling in ufshcd_core_init()
+  * Tested this patch and the issue is still seen.
+
+v10 -> v11:
+- Fixed supplier suspending before consumer race
+- Addressed Adrian's comments
+  * Added proper resume/suspend cb to ufshcd_auto_hibern8_update()
+  * Cosmetic changes to ufshcd-pci.c
+  * Cleaned up ufshcd_system_suspend()
+  * Added ufshcd_debugfs_eh_exit to ufshcd_core_init()
+
+v9 -> v10:
+- Addressed Adrian's comments
+  * Moved suspend/resume vops to __ufshcd_wl_[suspend/resume]()
+  * Added correct resume in ufs_bsg
+
+v8 -> v9:
+- Addressed Adrian's comments
+  * Moved link transition to __ufshcd_wl_[suspend/resume]()
+  * Fixed the other minor comments
+
+v7 -> v8:
+- Addressed Adrian's comments
+  * Removed separate autosuspend delay for ufs-device lun
+  * Fixed the ee handler getting scheduled during pm
+  * Always runtime resume in suspend_prepare()
+  * Added CONFIG_PM_SLEEP where needed
+  
+v6 -> v7:
+  * Resume the ufs device before shutting it down
+
+v5 -> v6:
+- Addressed Adrian's comments
+  * Added complete() cb
+  * Added suspend_prepare() and complete() to all drivers
+  * Moved suspend_prepare() and complete() to ufshcd
+  * .poweroff() uses ufhcd_wl_poweroff()
+  * Removed several forward declarations
+  * Moved scsi_register_driver() to ufshcd_core_init()
+
+v4 -> v5:
+- Addressed Adrian's comments
+  * Used the rpmb driver contributed by Adrian
+  * Runtime-resume the ufs device during suspend to honor spm-lvl
+  * Unregister the scsi_driver in ufshcd_remove()
+  * Currently shutdown() puts the ufs device to power-down mode
+    so, just removed ufshcd_pci_poweroff()
+  * Quiesce the scsi device during shutdown instead of remove
+
+v3 RFC -> v4:
+- Addressed Bart's comments
+  * Except that I didn't get any checkpatch failures
+- Addressed Avri's comments
+- Addressed Adrian's comments
+  * Added a check for deepsleep power mode
+  * Removed a couple of forward declarations
+  * Didn't separate the scsi drivers because in rpmb case it just sends uac
+    in resume and it seemed pretty neat to me.
+- Added sysfs changes to resume the devices before accessing
+
+
+Asutosh Das (2):
+  scsi: ufs: Enable power management for wlun
+  ufs: sysfs: Resume the proper scsi device
+
+ drivers/scsi/ufs/cdns-pltfrm.c     |   2 +
+ drivers/scsi/ufs/tc-dwc-g210-pci.c |   2 +
+ drivers/scsi/ufs/ufs-debugfs.c     |   6 +-
+ drivers/scsi/ufs/ufs-debugfs.h     |   2 +-
+ drivers/scsi/ufs/ufs-exynos.c      |   2 +
+ drivers/scsi/ufs/ufs-hisi.c        |   2 +
+ drivers/scsi/ufs/ufs-mediatek.c    |  12 +-
+ drivers/scsi/ufs/ufs-qcom.c        |   2 +
+ drivers/scsi/ufs/ufs-sysfs.c       |  24 +-
+ drivers/scsi/ufs/ufs_bsg.c         |   6 +-
+ drivers/scsi/ufs/ufshcd-pci.c      |  36 +-
+ drivers/scsi/ufs/ufshcd.c          | 692 +++++++++++++++++++++++++------------
+ drivers/scsi/ufs/ufshcd.h          |  21 ++
+ include/trace/events/ufs.h         |  20 ++
+ 14 files changed, 561 insertions(+), 268 deletions(-)
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
