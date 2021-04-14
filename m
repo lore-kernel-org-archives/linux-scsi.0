@@ -2,120 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B543EC433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 11:18:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D203C433B4
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 11:32:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96FC7613C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 11:18:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3697961154
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 11:32:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348858AbhDNLSk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Apr 2021 07:18:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48668 "EHLO
+        id S1350554AbhDNLdD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Apr 2021 07:33:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229886AbhDNLSi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 07:18:38 -0400
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 937CFC061574
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Apr 2021 04:18:17 -0700 (PDT)
-Received: by mail-pg1-x531.google.com with SMTP id j7so4750813pgi.3
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Apr 2021 04:18:17 -0700 (PDT)
+        with ESMTP id S1350557AbhDNLdB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 07:33:01 -0400
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C88EDC061574
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Apr 2021 04:32:40 -0700 (PDT)
+Received: by mail-pj1-x1029.google.com with SMTP id u11so6462574pjr.0
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Apr 2021 04:32:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=iw9q/dv7HPNYWTq/DAmkEOgixk2xOxdivnAFuONuBRo=;
-        b=R7weRYqKHZh/nBDkcKQ9PiyOsGl2aAMlJ9r+twlIf6yzKt35l8cwtPsQ5rLt5KeGDj
-         QOZiYuJU8VkLx3/FOEjaM/0cZz1cbZyWGg2dBVzkQuw3WeBTpFRaXJIC0zRUNolvk/po
-         2m24OgssErsfwUHkBQeTqUwKySt38TtQ8g2LA=
+        bh=abd9Ib3pKszbZKtiVG/zzKfpqa3DRQAEjJWBS/57Y74=;
+        b=MtklJqAw8VsuqD6a43pkpdkLyf2qBC8C9udDBtATU2U+L3EGhKmTPJ6zUJ6JhQ47PF
+         ImzQ50GgCKXxYdzES+JfQshvhK8mr5cmk6VAQWNz6tP924HQJdIMl5x7XzzlYN3grfUs
+         yFXpAoww6G/WvTR83ROmgVfMT+LoR2ohc50sw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=iw9q/dv7HPNYWTq/DAmkEOgixk2xOxdivnAFuONuBRo=;
-        b=fiGkDDzV4KJoofr71BOXsv0GFXB9XEEa6ngPESlWTOY6aLdkLk+W9ZPsGbybn/y3Cf
-         MKzXuJirORHoQEXjTpUnL6/eQhPv83ZMYpa5yLWdp+ZJ16Y5YFvpA5RzESo4/ujqNGcI
-         JsOBkero9MJ0pH2mJ/NdZtQlHyUXALrzE2yp9bwMsW/5uDuTi/UIT6et5pXTMi6B26D7
-         5K2lz+POoe5yJDu871EllFNVwNkMSzDbFZHFVLLO/E9d5VFwkG+4xyZ/XBuU6Zkj4hLd
-         YLX9rwRya1UFFwYnmlEZtcJzDsVGlQ/kfDGS1UiXQlV0yTXc6oMm3Yuq0Q5jflooQNZU
-         34tQ==
-X-Gm-Message-State: AOAM532mUwWZX78MPDCyFn0Dl5/Oev/A2kxG5gQQegIPSdV2mCy6ytLB
-        pgMjYbFrhd3gnZscER5/NOZc5cBkQjGXHuncTUTemw==
-X-Google-Smtp-Source: ABdhPJyzdBlT/YMep1jzV/+w+xJ+UMZI/3OV6CnhNiLfdm8IzJPKPwRUMJsOjomc8sPXJJmERqb2Qo04NijXPkDuiNw=
-X-Received: by 2002:a65:56cc:: with SMTP id w12mr36545675pgs.334.1618399096898;
- Wed, 14 Apr 2021 04:18:16 -0700 (PDT)
+        bh=abd9Ib3pKszbZKtiVG/zzKfpqa3DRQAEjJWBS/57Y74=;
+        b=tkYtiATp9EZZMeLAhvljJCdguozmmdCBUlMq1HsXhdXYpI+A4PYUX0oidaV7p74iP8
+         uHgvMLV8R9abvKa4Xf5kMAfjb8dJ32l3RilTXHECuOkCz1jFxuMpE7ZoqOthcjkfHXsH
+         Y9NY2K9NHtuOyeG1kjfXr0AzsrJzoYdI+OfJlO7c0KSQlt++GePZixDjr4A9sadNtlst
+         D8b6Zp3c9J3Bt4/7j0Fo8lZR13ACwUFnExJidwfgReeRYXKyKlqmeshYKbKY1FOPOD7t
+         ywaKTw+geIlv5aWD0SKpJqfW8mG0dWCbgcmRa1WakTJ9OZYIAmy9A3fl3VAN4vZ0+8ep
+         ys0g==
+X-Gm-Message-State: AOAM531Zmk8VW0f/NE5xVZdYJUIwRsCe6khAsgCqOIdxVCxMCCdmvx7N
+        c2Xvj/xgIjr8PXthAOoe2bWQ2kcsghwB5FT5fJUvGA==
+X-Google-Smtp-Source: ABdhPJx1/4n62GTXObcJgFW/l0kNu98yw7KgH/IE5uEetAHazMVX7QHimQa8bPi8dakaZfZzlS8cwAaEzMCRIUadMRI=
+X-Received: by 2002:a17:90b:3b8c:: with SMTP id pc12mr3188659pjb.208.1618399960224;
+ Wed, 14 Apr 2021 04:32:40 -0700 (PDT)
 MIME-Version: 1.0
-References: <ce228d78-8651-d958-d1e5-2f82cbb8113d@qubes-os.org>
- <c751b535d69b892fee0af8f43cfcce60@mail.gmail.com> <12383f2a-9f7b-ea95-ff52-785b91c1bac8@qubes-os.org>
- <2ef99260-c5ee-f42d-c06e-e37b22ff443d@qubes-os.org> <CAL2rwxo9rM+Tcc8_kQ2U9Kxp3mJfFFK0V7ACdrV_4cgZ1YnBVw@mail.gmail.com>
- <6eeb200a-7b72-380f-ead0-22e1ff8e93bd@qubes-os.org>
-In-Reply-To: <6eeb200a-7b72-380f-ead0-22e1ff8e93bd@qubes-os.org>
+References: <20210325084247.4136519-1-yuyufen@huawei.com> <fe977858-91a3-51e3-f90e-d2ec878499df@huawei.com>
+In-Reply-To: <fe977858-91a3-51e3-f90e-d2ec878499df@huawei.com>
 From:   Sumit Saxena <sumit.saxena@broadcom.com>
-Date:   Wed, 14 Apr 2021 16:47:50 +0530
-Message-ID: <CAL2rwxqepgoCZhSx6fYHUTcMv_NUJBX4+wW5S4ejKvKh7Vf=UA@mail.gmail.com>
-Subject: Re: MegaRaid SAS 9341-8i issue
-To:     =?UTF-8?B?RnLDqWTDqXJpYyBQaWVycmV0?= 
-        <frederic.pierret@qubes-os.org>
+Date:   Wed, 14 Apr 2021 17:02:14 +0530
+Message-ID: <CAL2rwxpETcUnzEvUbCft_0ZapAdS+DmJsBFxR7AFvN3LikYjyg@mail.gmail.com>
+Subject: Re: [RFC PATCH] scsi: megaraid_sas: set msix index for
+ NON_READ_WRITE_LDIO type cmd
+To:     Yufen Yu <yuyufen@huawei.com>
 Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>,
         Linux SCSI List <linux-scsi@vger.kernel.org>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000004d2be305bfece772"
+        boundary="000000000000c1bed705bfed1ae8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000004d2be305bfece772
+--000000000000c1bed705bfed1ae8
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Apr 14, 2021 at 4:08 PM Fr=C3=A9d=C3=A9ric Pierret
-<frederic.pierret@qubes-os.org> wrote:
-Hi Fr=C3=A9d=C3=A9ric,
+On Tue, Apr 6, 2021 at 2:33 PM Yufen Yu <yuyufen@huawei.com> wrote:
 >
+> gentle ping.
+> Any suggestion are welcome.
+>
+> Thanks,
+> Yufen
+>
+>
+>
+> On 2021/3/25 16:42, Yufen Yu wrote:
+> > Before commit 132147d7f620 ("scsi: megaraid_sas: Add support for
+> > High IOPS queues"), all interrupt of megaraid_sas is managed when
+> > smp_affinity_enable for misx_enable. The mapping between vectors and
+> > cpus for a 128 vectors likely:
+> >      vector0 maps to cpu0
+> >      vector1 maps to cpu1
+> >      ...
+> > If cpu0 is offline, vector0 cannot handle any io.
+> >
+> > For now, we have not pointed msix index in megasas_build_ld_nonrw_fusion().
+> > The default value of index is '0'. So, cmd like TEST_UNIT_READY will hung
+> > forever after cpu0 offline. We can simplely reproduce by:
+> >
+> >      echo 0 > /sys/devices/system/cpu/cpu0/online
+> >      sg_turs /dev/sda # hung
+> >
+> > After commit 132147d7f620, low_latency_index_start is set as 1 (not sure
+> > for all scenario), then vector 0 is not managed. Thus, io issue to vector0
+> > can be handled by other cpus after cpu0 offline.
+> >
+> > Nevertheless, we may also conside to set msix index rather than default 0
+> > in megasas_build_ld_nonrw_fusion().
 
->
-> Thank you for the patch. I've tested your patch on a 5.10.28 kernel but u=
-nfortunately it does not change the driver load behavior. I've attached the=
- dmesg. Don't pay attention to the "qubes" tag in kernel, I've just used th=
-e same spec for building the test kernel than we do in QubesOS but here it'=
-s a standard Fedora kernel config and build for this 5.10.28 + standard ker=
-nel source.
->
-> What I can tell is that the card is found at the BIOS POST (the controlle=
-r appears and proposes to go into controller).
->
-> Are you eventually aware a working 9341-8i on a motherboard X570 chipset?=
- Just thinking if that could be related or not. I've also tried once again =
-to change PCIe lanes but that's not >helping. I've also checked that the cu=
-rrent PCIe 4.0 supports PCIe 3.0 according to the manual (https://download.=
-asrock.com/Manual/X570D4U-2L2T.pdf). A last point, I've only filled the two=
- >NVMe ports with standard NVMe drives (Samsung 970 256G) and I'm not havin=
-g any other extension so I would not think it's related to lack of lanes or=
- such?
-I don't have any information on 9341-8i working on X570 chipset. dmesg
-says that IOC INIT command is being failed by megaraid firmware so
-need to check
-controller firmware logs. Please get in touch with the Broadcom support cha=
-nnel.
+This patch does not seem critical. We don't want to change the
+behavior at this point
+as this driver supports a lot of old controllers and we cannot risk
+breaking any of
+the supported controllers. Anyways MSI-x 0 is used for non- IO frames only so
+no performance gain too with this change.
+Hence, NACK for this patch.
+> >
+> > Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+> > ---
+> >   drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 ++
+> >   1 file changed, 2 insertions(+)
+> >
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > index 38fc9467c625..ddc6176f12c4 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > @@ -3021,6 +3021,8 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+> >               io_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
+> >               io_request->DevHandle = devHandle;
+> >       }
+> > +
+> > +     megasas_get_msix_index(instance, scmd, cmd, 1);
+> >   }
+> >
+> >   /**
+> >
 
-Thanks,
-Sumit
-
->
-> Best regards,
-> Fr=C3=A9d=C3=A9ric
->
-
---0000000000004d2be305bfece772
+--000000000000c1bed705bfed1ae8
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -186,13 +204,13 @@ rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
 3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIAbESljYaxH0oFqnnpcgvmrkFI+mWrFB
-a2W+acmHs6zoMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDQx
-NDExMTgxN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJgWpOzNZP1PSFkyKqptzQM3oUx5ka+3
+UFCCJVQtosltMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDQx
+NDExMzI0MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBhq/Al6UgesWC2+YclJSTkAhb7F8jFh7jvtoCzFyjSHYstiRE4
-iNzgSq3Qzt1EeP+Xma3/CI/PUxniFaxViovPF/4TidJvXQh+wrgWhbAJrbCV71rlFMT3k/GvyzQ2
-preMRx1AOPC/N9vlkCBL1wf3yDkmKQZbNQOMvCGljGu39ew5welfDsWpzJcGJRl3XKiEH+w+Kbv3
-wJtzRP+UGri9fs2DcN4N4AEQMz2DQ3EvX7pW57EcxpQk3u6bD3vN90TI6cmLcS6vqZ0TgtvKQ/4y
-JCHDVHd5wC91UbhlrnUqdvGcWCZtXmToEPEJv7S+jnAzTMzq6GYpSagIM5kndEzU
---0000000000004d2be305bfece772--
+ATANBgkqhkiG9w0BAQEFAASCAQDBd0HGZPlI1aNKX1PANi5xi6TG3uZ5aT98GQD16hiJCITLL6M3
+CRioVaGBMQMEDyuiqmfOoCO/XOe9+8bzMVlf2GQ3jfmUrhIA3ZRHy03xnj+jSaSB+gFw9tDD9mfl
+FFab8P/1Bex2N/NaoNlKoWpEQEbjceDBhg02db5I7N1OeJp3EvqqC5veGV7+67FQYDTKuyvrMvmV
+2KsERnGFeRHcwqLyI2EIMpXDMKklgRHwnH5mfdNfZI6f54BQNL2VRQya13fyHDaQUxSbYH5t1R9+
+EN6QvfPJbsSlRY7QBnUtjumW1kcUQaAkuSsV8slZKyvak6L1kGr8KEHxo1Kirf41
+--000000000000c1bed705bfed1ae8--
