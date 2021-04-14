@@ -2,269 +2,181 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75DBEC001E7
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 14:50:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E479DC433ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 14:58:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D6C86117A
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 14:50:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6A7C6120E
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 14:58:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352080AbhDNOvI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Apr 2021 10:51:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38918 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352003AbhDNOu5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 10:50:57 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7A99C061756;
-        Wed, 14 Apr 2021 07:50:35 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id d10so14564546pgf.12;
-        Wed, 14 Apr 2021 07:50:35 -0700 (PDT)
+        id S232354AbhDNO6q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Apr 2021 10:58:46 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:55470 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230247AbhDNO6p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 10:58:45 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13EEnmdg167638;
+        Wed, 14 Apr 2021 14:58:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=X2353f5lok1byBwrhMZ/CHjlqykQiVMj26jRxAOEJg0=;
+ b=IPoMTFWcWKPH3mcF7hsYbyFRMLzpv4xMtTxxnJVUg01Oct7Karwhn4zqepLSMoz4TeKn
+ d4dIC3uLveXBSfekoMmCIMDqobfnXTwQ3FDBkU6VYJXIN3oGq/+EtwSwrJA1yYcvwH5Y
+ prCqRm2ofCW3V7/iL00FsA/5yA1zFf/SB/QS/0mTrGbDnMAVG3VZtSr1m6jGZLvDhYmE
+ 5EDogCeHcWroEPDBzV+XNpYAv2xvVsA639Q3nTmX8V42q+pdnAR7EAsKsPXjXHR7+KNF
+ h4sDScJNvlQz30myXQ6mNHV7nxHGY2x82tPZYdC0caw6ORcwY9E//6/RzdZPMaWZWqUv PQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 37u1hbjuxr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 14 Apr 2021 14:58:15 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13EEoWYQ080495;
+        Wed, 14 Apr 2021 14:58:14 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2109.outbound.protection.outlook.com [104.47.70.109])
+        by aserp3030.oracle.com with ESMTP id 37unkr5qs2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 14 Apr 2021 14:58:14 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=GPwZ2lYNztw8LRn2k+qDsgPHRWLGLsZ8CNvV+b4NKisZEArG1lutVLedHZxC6X+9usTmBFjG3UD+WCfzT6H8/53lAFMIDskEZiaVoOWWqoMoVBI3HpbOM9PviVqFLb0jxB322RBa7LW/d7mGBI3iSV9IRrzYZ65h1PabqARgufYNaiETArBa34w6LkGLhDloMrTpGGv7RW/I25G9R4zeJs5yrv0BhVG0LilFL4HDIfaeZ87z+YQIFs/sf1ZDDERzYRW/CnqcCBnQWhAGvyhkLPevYAiZpq6qncybQnoKpphgKa1mzNMzKRo/wtysJYYzXfH3tQqJvR/UEJe8v0FeRQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=X2353f5lok1byBwrhMZ/CHjlqykQiVMj26jRxAOEJg0=;
+ b=BeZXzfKjNqOqJOSxp0DK6u5xlvg49c9kRCtl7KHo0J3O94zOOtMnpcx0BdSm9j2xid51zghECMvooNkMux9OX/Bsp0fa3P6q6wgvZDA194SwQLLsg2Gahr7mt6WQL5Y52MZ3MlgUzCqQ+pKvZQA+Jr6NO6dcU/XoVInJpFbyZu/Vgr5wIvvZA5Jrr9FDH/mekG9JzPC0tBtqRtxL3PRTMlSpr9rkS4AynmpGtV2TFAyA65Rl+P6gZNe5plQsc8O/GgQriofmvxasjqvLtI01HM6XR002zTZu7JnXAkamDuen9+IJVvqJZbF6/FPA2J9b47DGzJA0xiJCpS9yIo9SxA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=FJbcZ8KnexDAAQ5C4Sah9FWkqLY6Pv3HeJbolDJY4aA=;
-        b=pJqRunkA+uvhxmvikCt8JBi6ru5mMAHBSouNbpNF9rJ0/UZBeBZbNJBCihskZckNdz
-         VF19al63x7JcKIwSaI+KgRMKfSCSAY1Rw9bm3SeZTFumtAQ1F6F2t95WHbTa7fd9i7Tn
-         oYWyOXXwTN9+AehaDQOGu3IYPhNL0uJPAF/Y5xrfhILPXupgDCaiPCDkfxwVRVWqt8q+
-         v1FJRcKkKffDj4UMUcXDwJEin7yz4TBxBoW5ErGESAAdJKNwJ1ukgEYbn+s0z/MPExFU
-         EV7Gn16e8uqLMsjL1/Ua5qlsNxwABA+5vNnnX0j44xHWZEyyVt04dkbZk7p6QtVwr46f
-         qTdQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=FJbcZ8KnexDAAQ5C4Sah9FWkqLY6Pv3HeJbolDJY4aA=;
-        b=GvNpKmeYZCewxMj0gRCDXVdOYeh3MQ+MeNV8pKu3jhgw/kVZ8J2zvbxrBbvyksOm0S
-         3vOKTdwaaNX6Ik2Sg4yR2auW25wWkQplZqArGOtHuaCTL5+D/tZV9K9ZGBpLNZcWL90P
-         ymxJ6i7rczWFuvBk9gGbKNTBx5OuHEpSlFHU+C/hLqP122iLaMDoIyLxI6z+YlU2Zk7C
-         u19mOOuaSQqqzp0brUhBt2bviw7ZoMg2X4gaotqHDKrtrKA1fcCGeE8FjW9D4YPgTi7O
-         nym2F5zriPEz0mJC8ODj7X1sd4dl2yyc8/eivA+HembqYyUBNs7nzGTGMEakh0C0wLIY
-         3YkA==
-X-Gm-Message-State: AOAM533X0H9AFVC1D6IT0Dl2YDG0eK7eSMQCSeObnhKoiAIrecBnPlgF
-        VXjh1zdDMqm1xfd8bghS/j0=
-X-Google-Smtp-Source: ABdhPJxHAv83JdLDizjV20z7u62dRC/ZGAyfJ/XHZQUwINjnLav8NcwqNU6XQrZbUuAS+bM3Dz+Utw==
-X-Received: by 2002:a63:1646:: with SMTP id 6mr39049996pgw.321.1618411835543;
-        Wed, 14 Apr 2021 07:50:35 -0700 (PDT)
-Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:35:ebad:12c1:f579:e332])
-        by smtp.gmail.com with ESMTPSA id w67sm17732522pgb.87.2021.04.14.07.50.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Apr 2021 07:50:35 -0700 (PDT)
-From:   Tianyu Lan <ltykernel@gmail.com>
-To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, tglx@linutronix.de, mingo@redhat.com,
-        bp@alien8.de, x86@kernel.org, hpa@zytor.com, arnd@arndb.de,
-        akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-        konrad.wilk@oracle.com, hch@lst.de, m.szyprowski@samsung.com,
-        robin.murphy@arm.com, joro@8bytes.org, will@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, vkuznets@redhat.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com,
-        sunilmut@microsoft.com
-Subject: [Resend RFC PATCH V2 12/12] HV/Storvsc: Add Isolation VM support for storvsc driver
-Date:   Wed, 14 Apr 2021 10:49:45 -0400
-Message-Id: <20210414144945.3460554-13-ltykernel@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210414144945.3460554-1-ltykernel@gmail.com>
-References: <20210414144945.3460554-1-ltykernel@gmail.com>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=X2353f5lok1byBwrhMZ/CHjlqykQiVMj26jRxAOEJg0=;
+ b=wik1OlK8YrEig0b+W3aJaITNB7gdn/G+93Rsu6Pvp0+FWLQVzC7HEVp8JqfdXQnqhElHMVCr0QpVWIg1guzpSbR7cNRdNAA6ljviu4iP3ddSm5GBkXEXuj4CkJI0qvWV32oAHnwjrWXCt/60nznfXwE/Zlzb2SEjozmRpYMiPz8=
+Authentication-Results: lists.01.org; dkim=none (message not signed)
+ header.d=none;lists.01.org; dmarc=none action=none header.from=oracle.com;
+Received: from BYAPR10MB3573.namprd10.prod.outlook.com (2603:10b6:a03:11e::32)
+ by BY5PR10MB4241.namprd10.prod.outlook.com (2603:10b6:a03:208::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.18; Wed, 14 Apr
+ 2021 14:58:12 +0000
+Received: from BYAPR10MB3573.namprd10.prod.outlook.com
+ ([fe80::50bb:7b66:35ee:4a4]) by BYAPR10MB3573.namprd10.prod.outlook.com
+ ([fe80::50bb:7b66:35ee:4a4%7]) with mapi id 15.20.4042.016; Wed, 14 Apr 2021
+ 14:58:12 +0000
+Subject: Re: [PATCH 05/13] scsi: qedi: fix abort vs cmd re-use race
+To:     kernel test robot <lkp@intel.com>, lduncan@suse.com,
+        martin.petersen@oracle.com, mrangankar@marvell.com,
+        svernekar@marvell.com, linux-scsi@vger.kernel.org,
+        jejb@linux.ibm.com
+Cc:     kbuild-all@lists.01.org
+References: <20210413230648.5593-6-michael.christie@oracle.com>
+ <202104142040.TbqxTho2-lkp@intel.com>
+From:   Mike Christie <michael.christie@oracle.com>
+Message-ID: <80219786-9836-c09a-85d5-0d5f90522726@oracle.com>
+Date:   Wed, 14 Apr 2021 09:58:10 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
+In-Reply-To: <202104142040.TbqxTho2-lkp@intel.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [73.88.28.6]
+X-ClientProxiedBy: DM6PR03CA0085.namprd03.prod.outlook.com
+ (2603:10b6:5:333::18) To BYAPR10MB3573.namprd10.prod.outlook.com
+ (2603:10b6:a03:11e::32)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [20.15.0.204] (73.88.28.6) by DM6PR03CA0085.namprd03.prod.outlook.com (2603:10b6:5:333::18) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4042.16 via Frontend Transport; Wed, 14 Apr 2021 14:58:11 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 4fdabd5e-7a23-40d4-d8fb-08d8ff55b9a9
+X-MS-TrafficTypeDiagnostic: BY5PR10MB4241:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BY5PR10MB42415CE7688CD0362B8E2BF3F14E9@BY5PR10MB4241.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: YNzhzDsUmePTAPN0LqJ9x2vbwiAW4/gv1aHfR0jUMHzrZUPWVm8uQhnuUwpzHDH3enrxPA0WLjNG73dsomoptfRSTEVWKEIfBNXomt5NNX2ZwUr4B64GMdkRuXwwRCGfRnWsC2BJLcqqHBBSKESWgtNMF1no22+dmMRmmfzRJlUySIrI2tYSOJsSTMvLpols7LoYVUS9vAZYyBaXyRlu8Nd4PomUT/Sl9u7d2YUcPzSs1XtgP8Kf9enOnUA2cclqFpeCCrjqoYE+3rwJif4VLtqB1C/nRYe1bd4+4kryYAweIh3ICnb6TPLdme2JtWirTz/bLpyCVp6ATlVT2neuOndyNCxwk/rxfgC3D+PbvV3gCichGbYHHnaIkqF3M1pKi4kegiWD22PkQZmGvkDqLucJR00cMAPs1gyweIMdC5rKsBRskqiz0iE1OY7z01tG9XPrChQOAZLXj3OimvpqR8hVZhOM9TdZiocxgg1MLhJ0Ljn8aYYbUjREkAYtlof+TZedg+5lQpfpmiM06RcHUAlzEL3PNty3Fm9I4EaaOVpiyCEgVTnCrHpleSansDZlKMII3Oaaj8RHU9Y7l/BznXzYUQxMHOarrT6DxOAViEHvaXn0J+WH6WdV1gic69J4f4cCIR8IGuj2FcpQCqGgComMMrd0g9GgIi/TZFjqxNwUtvuTvR3PhP9AQrT1YfH/S7myfmIMl3YT5K2orz9DI3BKdh3UNURdBCacSithCY+tZEnpGtmf5R86oW3082lBtOrKtLrkFz/PQVq25r1VKvVzh2VebOx1lbhHzyTNheM=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB3573.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(376002)(366004)(346002)(396003)(39860400002)(8676002)(31696002)(966005)(956004)(6486002)(36756003)(2616005)(38100700002)(6706004)(83380400001)(86362001)(478600001)(2906002)(8936002)(186003)(316002)(16576012)(31686004)(53546011)(4326008)(66556008)(66476007)(16526019)(66946007)(26005)(5660300002)(78286007)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?Windows-1252?Q?s8sJYk5/G1+QpCmLSujoQ22ykWNbGudKXwv9nYOO2LTKIHTJtXk6g3zG?=
+ =?Windows-1252?Q?iMDTQq96n2SP9PPdWjT8aZ6kbmvWZ4JMQVWE8lyUOSClS+P/1Kiz6h0q?=
+ =?Windows-1252?Q?hKIvLgN/WAp61UowL8Baxhvt1TRK/ndT7vBLXHS08WnXJssIzvqM+478?=
+ =?Windows-1252?Q?rEtAHX9KZdw+ZRjulri1/cAnk58RS4dCm1g+64ESl2heXzy+vpZmIoFg?=
+ =?Windows-1252?Q?h9MhClxzQvKPezjrkY7qO0IfHBSkq9ILqBPShvAvL8M2yQJ6tnReqa2O?=
+ =?Windows-1252?Q?dJI91N9Nu214ATW/NgvHWDBJtSanJD4dwYBSyerN428KHvIaRueOA7n4?=
+ =?Windows-1252?Q?90/a8VZsAB8PnbZGHs8bcn3XAKAASRDZIrm60tp0eGxgiRiftPFAgWhQ?=
+ =?Windows-1252?Q?MdI0SMSWk3TUCc8cVHA9bWqGSNfgIhl3WM1JHZXE0BnsjeKtMAlkvfAq?=
+ =?Windows-1252?Q?xG47Q2nYDnC0DjCENIiarPlypZYiuvrlhMIgtVTyPBpRm/lFlUFkDJuB?=
+ =?Windows-1252?Q?gUWIGnqIgAgSWK4ZTp9bGTsqjWnWcHhaRtwbPIGhyxXpM1Rla9QgCCNW?=
+ =?Windows-1252?Q?c/7Oz8ZRNbsKz6uh+qTbZEK4tbHvVEzjV/vj7jHf08pfdRM76vbxDL5V?=
+ =?Windows-1252?Q?ZU+R1komSmkTiDhsK6PhtBr7Wb89s9VQwEJMEkK81l0s44SxwaDyHnCX?=
+ =?Windows-1252?Q?0lTuaTr+m6G08zlekQUhBu05IBYCiNdcDNCOEAW9Jfzx6JTgxBqqs8Jo?=
+ =?Windows-1252?Q?N+rDz4wW/pvK9Fg8maghZ0Y4SKXIKnuH8d05EQ3vdEGewtFUTtoebZpJ?=
+ =?Windows-1252?Q?hN/lbl75z0KVgrzD8p6bSejwwpEMEkr9K3m0NOm4qcLab3uOvfMafjfa?=
+ =?Windows-1252?Q?8102XFlbOOFy6y7KmO6aXqZ5JNDiFR+uRNgFzn8X+x+d/xLlwdHUYObW?=
+ =?Windows-1252?Q?1hPRnaa2UBZyB0vh2ArU8M7HcKnIxW8qNUqSEuB+KJtNEiasPtPYm+Zi?=
+ =?Windows-1252?Q?zDfaKOrp9CCx3aA6qfwya2Bpyw3OHa66y5vhlQ3LsHoziKUq3Dab8Eye?=
+ =?Windows-1252?Q?ieTKt9HaWd/TpHBe4xxs0Jo7NJABHEomgyHz6sCobl6tfgmXJ0pP+Dcq?=
+ =?Windows-1252?Q?o0SQ9fb07nYhWxkgeUL98u4n4afatfS8S9MUeNM5XPcZ8ueVjU3x9e+9?=
+ =?Windows-1252?Q?c9TAR1s8OarcL3i3lLdxkOU8RoSav+pb7W6hScJjVO5jKtn1lYOU5SZt?=
+ =?Windows-1252?Q?bPHHe8bSaizEyB0SJRWboywASMgtgWt69eq+z2vXuVDyLcb2gevFyh98?=
+ =?Windows-1252?Q?/NAsrSSIK950Hs2YeH9cWJ6K9cr7ZjZcz/mG6AmvNws1DGgKg0I3ga9d?=
+ =?Windows-1252?Q?A+7ijNutUXa7CbfBxYq2HDhNmv/CknLm7hh42jpYSOGOc/nB7EIvqwvQ?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4fdabd5e-7a23-40d4-d8fb-08d8ff55b9a9
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB3573.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Apr 2021 14:58:12.7243
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: J/UikC7FxPtnNlJHFHYh6FeTqBFfQuQJU0K+RyyF5ClVrN6veA9RBpu+lt9d2hCFzERhFnvMOmdt36vtjnNC7SHp1T+un6VfzIwxDT8n6PY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4241
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9954 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
+ adultscore=0 phishscore=0 malwarescore=0 mlxscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104060000 definitions=main-2104140102
+X-Proofpoint-GUID: 9kzl5UWdpOALVctup8MV2JDQW24ORqIu
+X-Proofpoint-ORIG-GUID: 9kzl5UWdpOALVctup8MV2JDQW24ORqIu
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9954 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
+ clxscore=1011 adultscore=0 mlxlogscore=999 impostorscore=0 malwarescore=0
+ lowpriorityscore=0 spamscore=0 phishscore=0 bulkscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
+ definitions=main-2104140102
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tianyu Lan <Tianyu.Lan@microsoft.com>
+On 4/14/21 7:19 AM, kernel test robot wrote:
+> Hi Mike,
+> 
+> Thank you for the patch! Perhaps something to improve:
+> 
+> [auto build test WARNING on mkp-scsi/for-next]
+> [also build test WARNING on scsi/for-next rdma/for-next v5.12-rc7 next-20210413]
+> [If your patch is applied to the wrong git tree, kindly drop us a note.
+> And when submitting patch, we suggest to use '--base' as documented in
+> https://urldefense.com/v3/__https://git-scm.com/docs/git-format-patch__;!!GqivPVa7Brio!OZEBNc0F9LSpphInzwL5oSUljGf2ZBn4C0J0SckH9hGW1t0C6b_iBOEFrpR9CJQaMAkU$ ]
+> 
+> url:    https://urldefense.com/v3/__https://github.com/0day-ci/linux/commits/Mike-Christie/scsi-libicsi-and-qedi-tmf-fixes/20210414-072516__;!!GqivPVa7Brio!OZEBNc0F9LSpphInzwL5oSUljGf2ZBn4C0J0SckH9hGW1t0C6b_iBOEFrpR9CG2g2-Ve$ 
+> base:   https://urldefense.com/v3/__https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git__;!!GqivPVa7Brio!OZEBNc0F9LSpphInzwL5oSUljGf2ZBn4C0J0SckH9hGW1t0C6b_iBOEFrpR9CGv0P6EJ$  for-next
+> config: x86_64-randconfig-m001-20210414 (attached as .config)
+> compiler: gcc-9 (Debian 9.3.0-22) 9.3.0
+> 
+> If you fix the issue, kindly add following tag as appropriate
+> Reported-by: kernel test robot <lkp@intel.com>
+> 
+> smatch warnings:
+> drivers/scsi/qedi/qedi_iscsi.c:1401 qedi_cleanup_task() warn: always true condition '(cmd->task_id != -1) => (0-u16max != (-1))'
+> 
 
-In Isolation VM, all shared memory with host needs to mark visible
-to host via hvcall. vmbus_establish_gpadl() has already done it for
-netvsc rx/tx ring buffer. The page buffer used by vmbus_sendpacket_
-mpb_desc() still need to handle. Use DMA API to map/umap these
-memory during sending/receiving packet and Hyper-V DMA ops callback
-will use swiotlb fucntion to allocate bounce buffer and copy data
-from/to bounce buffer.
+That and the qedi_task_xmit one were supposed to be U16_MAXs.
 
-Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 67 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 66 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 2e4fa77445fd..d271578b1811 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -21,6 +21,8 @@
- #include <linux/device.h>
- #include <linux/hyperv.h>
- #include <linux/blkdev.h>
-+#include <linux/io.h>
-+#include <linux/dma-mapping.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
-@@ -414,6 +416,11 @@ static void storvsc_on_channel_callback(void *context);
- #define STORVSC_IDE_MAX_TARGETS				1
- #define STORVSC_IDE_MAX_CHANNELS			1
- 
-+struct dma_range {
-+	dma_addr_t dma;
-+	u32 mapping_size;
-+};
-+
- struct storvsc_cmd_request {
- 	struct scsi_cmnd *cmd;
- 
-@@ -427,6 +434,8 @@ struct storvsc_cmd_request {
- 	u32 payload_sz;
- 
- 	struct vstor_packet vstor_packet;
-+	u32 hvpg_count;
-+	struct dma_range *dma_range;
- };
- 
- 
-@@ -1236,6 +1245,7 @@ static void storvsc_on_channel_callback(void *context)
- 	const struct vmpacket_descriptor *desc;
- 	struct hv_device *device;
- 	struct storvsc_device *stor_device;
-+	int i;
- 
- 	if (channel->primary_channel != NULL)
- 		device = channel->primary_channel->device_obj;
-@@ -1249,6 +1259,8 @@ static void storvsc_on_channel_callback(void *context)
- 	foreach_vmbus_pkt(desc, channel) {
- 		void *packet = hv_pkt_data(desc);
- 		struct storvsc_cmd_request *request;
-+		enum dma_data_direction dir;
-+		u32 attrs;
- 		u64 cmd_rqst;
- 
- 		cmd_rqst = vmbus_request_addr(&channel->requestor,
-@@ -1261,6 +1273,22 @@ static void storvsc_on_channel_callback(void *context)
- 
- 		request = (struct storvsc_cmd_request *)(unsigned long)cmd_rqst;
- 
-+		if (request->vstor_packet.vm_srb.data_in == READ_TYPE)
-+			dir = DMA_FROM_DEVICE;
-+		 else
-+			dir = DMA_TO_DEVICE;
-+
-+		if (request->dma_range) {
-+			for (i = 0; i < request->hvpg_count; i++)
-+				dma_unmap_page_attrs(&device->device,
-+						request->dma_range[i].dma,
-+						request->dma_range[i].mapping_size,
-+						request->vstor_packet.vm_srb.data_in
-+						     == READ_TYPE ?
-+						DMA_FROM_DEVICE : DMA_TO_DEVICE, attrs);
-+			kfree(request->dma_range);
-+		}
-+
- 		if (request == &stor_device->init_request ||
- 		    request == &stor_device->reset_request) {
- 			memcpy(&request->vstor_packet, packet,
-@@ -1682,8 +1710,10 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	struct vmscsi_request *vm_srb;
- 	struct scatterlist *cur_sgl;
- 	struct vmbus_packet_mpb_array  *payload;
-+	enum dma_data_direction dir;
- 	u32 payload_sz;
- 	u32 length;
-+	u32 attrs;
- 
- 	if (vmstor_proto_version <= VMSTOR_PROTO_VERSION_WIN8) {
- 		/*
-@@ -1722,14 +1752,17 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	case DMA_TO_DEVICE:
- 		vm_srb->data_in = WRITE_TYPE;
- 		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_OUT;
-+		dir = DMA_TO_DEVICE;
- 		break;
- 	case DMA_FROM_DEVICE:
- 		vm_srb->data_in = READ_TYPE;
- 		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_IN;
-+		dir = DMA_FROM_DEVICE;
- 		break;
- 	case DMA_NONE:
- 		vm_srb->data_in = UNKNOWN_TYPE;
- 		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_NO_DATA_TRANSFER;
-+		dir = DMA_NONE;
- 		break;
- 	default:
- 		/*
-@@ -1786,6 +1819,12 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 		hvpgoff = sgl->offset >> HV_HYP_PAGE_SHIFT;
- 
- 		cur_sgl = sgl;
-+
-+		cmd_request->dma_range = kzalloc(sizeof(struct dma_range) * hvpg_count,
-+			      GFP_ATOMIC);
-+		if (!cmd_request->dma_range)
-+			return -ENOMEM;
-+
- 		for (i = 0; i < hvpg_count; i++) {
- 			/*
- 			 * 'i' is the index of hv pages in the payload and
-@@ -1805,6 +1844,8 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 			 */
- 			unsigned int hvpgoff_in_page =
- 				(i + hvpgoff) % NR_HV_HYP_PAGES_IN_PAGE;
-+			dma_addr_t dma;
-+			u32 size;
- 
- 			/*
- 			 * Two cases that we need to fetch a page:
-@@ -1817,8 +1858,28 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 				cur_sgl = sg_next(cur_sgl);
- 			}
- 
--			payload->range.pfn_array[i] = hvpfn + hvpgoff_in_page;
-+			size = min(HV_HYP_PAGE_SIZE - offset_in_hvpg, (unsigned long)length);
-+			dma = dma_map_page_attrs(&dev->device,
-+						 pfn_to_page(hvpfn),
-+						 offset_in_hvpg, size,
-+						 scmnd->sc_data_direction, attrs);
-+			if (dma_mapping_error(&dev->device, dma)) {
-+				pr_warn("dma map error.\n");
-+				ret = -ENOMEM;
-+				goto free_dma_range;
-+			}
-+
-+			if (offset_in_hvpg) {
-+				payload->range.offset = dma & ~HV_HYP_PAGE_MASK;
-+				offset_in_hvpg = 0;
-+			}
-+
-+			cmd_request->dma_range[i].dma = dma;
-+			cmd_request->dma_range[i].mapping_size = size;
-+			payload->range.pfn_array[i] = dma >> HV_HYP_PAGE_SHIFT;
-+			length -= size;
- 		}
-+		cmd_request->hvpg_count = hvpg_count;
- 	}
- 
- 	cmd_request->payload = payload;
-@@ -1836,6 +1897,10 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	}
- 
- 	return 0;
-+
-+free_dma_range:
-+	kfree(cmd_request->dma_range);
-+	return ret;
- }
- 
- static struct scsi_host_template scsi_driver = {
--- 
-2.25.1
-
+Will resend.
