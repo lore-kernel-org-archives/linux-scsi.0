@@ -2,126 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8662FC433ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 12:09:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9708C43461
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 12:14:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 548A360200
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 12:09:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B2D26117A
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 12:14:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350683AbhDNMJ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Apr 2021 08:09:27 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2853 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350681AbhDNMJX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 08:09:23 -0400
-Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FL1Kh2DKwz688Lc;
-        Wed, 14 Apr 2021 20:01:44 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Wed, 14 Apr 2021 14:08:59 +0200
-Received: from [10.47.25.158] (10.47.25.158) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 14 Apr
- 2021 13:08:58 +0100
-Subject: Re: [bug report] shared tags causes IO hang and performance drop
-To:     Ming Lei <ming.lei@redhat.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>
-CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Douglas Gilbert" <dgilbert@interlog.com>
-References: <YHaez6iN2HHYxYOh@T590>
- <9a6145a5-e6ac-3d33-b52a-0823bfc3b864@huawei.com>
- <cb326d404c6e0785d03a7dfadc42832c@mail.gmail.com> <YHbOOfGNHwO4SMS7@T590>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <87ceccf2-287b-9bd1-899a-f15026c9e65b@huawei.com>
-Date:   Wed, 14 Apr 2021 13:06:25 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1350705AbhDNMPE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Apr 2021 08:15:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55748 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232338AbhDNMPD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Apr 2021 08:15:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4A25A6105A;
+        Wed, 14 Apr 2021 12:14:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1618402481;
+        bh=YiabDS3/jUfuh8TT2QSI1OG4Od9EmNsYJXGvHAlYiss=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=C/Os0pNE9eiJYt1g2Dkn9Oi2/8bW3yZ351I0lQY4rz1eKQl1MtdWuBm4d5EKSm1mq
+         NV5ZrDbVuJibAaXrXVeTQBFZzotHsKvWUwrvJ/KIPZGfqKOcsneymCZ/Si+Xievqiq
+         6InR65iZjGI7l9yyIX/IWZMmK+DVdQdW2yYhLcTcseP7ZddrEq9ts1GEzWsXIXUNP1
+         lOYCO1VvGhsOzoMZogbL3JQUQgoxNRLAbdpNKtU1m5vu2FFKQrm8Yx4PcDpX/d/iRg
+         fkbRPQsrTrpoZW2mRvNAEYa7YvGDNcL9ObUe4bOvp9eomG53N4HnPbPRsgN2bEJeIa
+         NYOMQpz3del6A==
+Date:   Wed, 14 Apr 2021 08:14:40 -0400
+From:   Sasha Levin <sashal@kernel.org>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Gulam Mohamed <gulam.mohamed@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH AUTOSEL 5.10 07/22] scsi: iscsi: Fix race condition
+ between login and sync thread
+Message-ID: <YHbcsA22Ag3o4QAZ@sashalap>
+References: <20210405160432.268374-1-sashal@kernel.org>
+ <20210405160432.268374-7-sashal@kernel.org>
+ <be0783c0-4ca8-d7fd-ce97-c24c2f1d8e84@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <YHbOOfGNHwO4SMS7@T590>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.25.158]
-X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <be0783c0-4ca8-d7fd-ce97-c24c2f1d8e84@oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/04/2021 12:12, Ming Lei wrote:
-> On Wed, Apr 14, 2021 at 04:12:22PM +0530, Kashyap Desai wrote:
->>> Hi Ming,
->>>
->>>> It is reported inside RH that CPU utilization is increased ~20% when
->>>> running simple FIO test inside VM which disk is built on image stored
->>>> on XFS/megaraid_sas.
->>>>
->>>> When I try to investigate by reproducing the issue via scsi_debug, I
->>>> found IO hang when running randread IO(8k, direct IO, libaio) on
->>>> scsi_debug disk created by the following command:
->>>>
->>>> 	modprobe scsi_debug host_max_queue=128
->>> submit_queues=$NR_CPUS
->>>> virtual_gb=256
->>>>
->>> So I can recreate this hang for using mq-deadline IO sched for scsi debug,
->>> in
->>> that fio does not exit. I'm using v5.12-rc7.
->> I can also recreate this issue using mq-deadline. Using <none>, there is no
->> IO hang issue.
->> Also if I run script to change scheduler periodically (none, mq-deadline),
->> sysfs entry hangs.
+On Tue, Apr 06, 2021 at 12:24:32PM -0500, Mike Christie wrote:
+>On 4/5/21 11:04 AM, Sasha Levin wrote:
+>> From: Gulam Mohamed <gulam.mohamed@oracle.com>
 >>
->> Here is call trace-
->> Call Trace:
->> [ 1229.879862]  __schedule+0x29d/0x7a0
->> [ 1229.879871]  schedule+0x3c/0xa0
->> [ 1229.879875]  blk_mq_freeze_queue_wait+0x62/0x90
->> [ 1229.879880]  ? finish_wait+0x80/0x80
->> [ 1229.879884]  elevator_switch+0x12/0x40
->> [ 1229.879888]  elv_iosched_store+0x79/0x120
->> [ 1229.879892]  ? kernfs_fop_write_iter+0xc7/0x1b0
->> [ 1229.879897]  queue_attr_store+0x42/0x70
->> [ 1229.879901]  kernfs_fop_write_iter+0x11f/0x1b0
->> [ 1229.879905]  new_sync_write+0x11f/0x1b0
->> [ 1229.879912]  vfs_write+0x184/0x250
->> [ 1229.879915]  ksys_write+0x59/0xd0
->> [ 1229.879917]  do_syscall_64+0x33/0x40
->> [ 1229.879922]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+>> [ Upstream commit 9e67600ed6b8565da4b85698ec659b5879a6c1c6 ]
 >>
+>> A kernel panic was observed due to a timing issue between the sync thread
+>> and the initiator processing a login response from the target. The session
+>> reopen can be invoked both from the session sync thread when iscsid
+>> restarts and from iscsid through the error handler. Before the initiator
+>> receives the response to a login, another reopen request can be sent from
+>> the error handler/sync session. When the initial login response is
+>> subsequently processed, the connection has been closed and the socket has
+>> been released.
 >>
->> I tried both - 5.12.0-rc1 and 5.11.0-rc2+ and there is a same behavior.
->> Let me also check  megaraid_sas and see if anything generic or this is a
->> special case of scsi_debug.
-> As I mentioned, it could be one generic issue wrt. SCHED_RESTART.
-> shared tags might have to restart all hctx since all share same tags.
+>> To fix this a new connection state, ISCSI_CONN_BOUND, is added:
+>>
+>>  - Set the connection state value to ISCSI_CONN_DOWN upon
+>>    iscsi_if_ep_disconnect() and iscsi_if_stop_conn()
+>>
+>>  - Set the connection state to the newly created value ISCSI_CONN_BOUND
+>>    after bind connection (transport->bind_conn())
+>>
+>>  - In iscsi_set_param(), return -ENOTCONN if the connection state is not
+>>    either ISCSI_CONN_BOUND or ISCSI_CONN_UP
+>>
+>> Link: https://urldefense.com/v3/__https://lore.kernel.org/r/20210325093248.284678-1-gulam.mohamed@oracle.com__;!!GqivPVa7Brio!Jiqrc6pu3EgrquzpG-KpNQkNebwKUgctkE0MN1MloQ2y5Y4OVOkKN0yCr2_W_CX2oRet$
+>> Reviewed-by: Mike Christie <michael.christie@oracle.com>
+>
+>
+>There was a mistake in my review of this patch. It will also require
+>this "[PATCH 1/1] scsi: iscsi: fix iscsi cls conn state":
+>
+>https://lore.kernel.org/linux-scsi/20210406171746.5016-1-michael.christie@oracle.com/T/#u
 
-I tested on hisi_sas v2 hw (which now sets host_tagset), and can 
-reproduce. Seems to be combination of mq-deadline and fio rw=randread 
-settings required to reproduce from limited experiments.
+As the fix isn't upstream yet, I'll drop 9e67600ed6b for now and
+re-queue it for the next round. Thanks!
 
-Incidentally, about the mq-deadline vs none IO scheduler on the same 
-host, I get this with 6x SAS SSD:
-
-rw=read
-		CPU util			IOPs
-mq-deadline	usr=26.80%, sys=52.78%		650K
-none		usr=22.99%, sys=74.10%		475K
-
-rw=randread
-		CPU util			IOPs
-mq-deadline	usr=21.72%, sys=44.18%,		423K
-none		usr=23.15%, sys=74.01%		450K
-
+-- 
 Thanks,
-John
-
+Sasha
