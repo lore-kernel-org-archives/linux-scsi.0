@@ -2,93 +2,75 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9708C43461
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 12:14:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4DFBC433ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 12:17:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B2D26117A
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 12:14:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADA2561107
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 12:17:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350705AbhDNMPE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Apr 2021 08:15:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55748 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232338AbhDNMPD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Apr 2021 08:15:03 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4A25A6105A;
-        Wed, 14 Apr 2021 12:14:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618402481;
-        bh=YiabDS3/jUfuh8TT2QSI1OG4Od9EmNsYJXGvHAlYiss=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=C/Os0pNE9eiJYt1g2Dkn9Oi2/8bW3yZ351I0lQY4rz1eKQl1MtdWuBm4d5EKSm1mq
-         NV5ZrDbVuJibAaXrXVeTQBFZzotHsKvWUwrvJ/KIPZGfqKOcsneymCZ/Si+Xievqiq
-         6InR65iZjGI7l9yyIX/IWZMmK+DVdQdW2yYhLcTcseP7ZddrEq9ts1GEzWsXIXUNP1
-         lOYCO1VvGhsOzoMZogbL3JQUQgoxNRLAbdpNKtU1m5vu2FFKQrm8Yx4PcDpX/d/iRg
-         fkbRPQsrTrpoZW2mRvNAEYa7YvGDNcL9ObUe4bOvp9eomG53N4HnPbPRsgN2bEJeIa
-         NYOMQpz3del6A==
-Date:   Wed, 14 Apr 2021 08:14:40 -0400
-From:   Sasha Levin <sashal@kernel.org>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Gulam Mohamed <gulam.mohamed@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH AUTOSEL 5.10 07/22] scsi: iscsi: Fix race condition
- between login and sync thread
-Message-ID: <YHbcsA22Ag3o4QAZ@sashalap>
-References: <20210405160432.268374-1-sashal@kernel.org>
- <20210405160432.268374-7-sashal@kernel.org>
- <be0783c0-4ca8-d7fd-ce97-c24c2f1d8e84@oracle.com>
+        id S1350737AbhDNMRz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Apr 2021 08:17:55 -0400
+Received: from mail-m17635.qiye.163.com ([59.111.176.35]:20660 "EHLO
+        mail-m17635.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231849AbhDNMRy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 08:17:54 -0400
+Received: from wanjb-virtual-machine.localdomain (unknown [36.152.145.182])
+        by mail-m17635.qiye.163.com (Hmail) with ESMTPA id B71FD40039D;
+        Wed, 14 Apr 2021 20:17:31 +0800 (CST)
+From:   Wan Jiabing <wanjiabing@vivo.com>
+To:     Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     kael_w@yeah.net, Wan Jiabing <wanjiabing@vivo.com>
+Subject: [PATCH] scsi: qla4xxx: Simplify judgement condition
+Date:   Wed, 14 Apr 2021 20:17:26 +0800
+Message-Id: <20210414121726.12503-1-wanjiabing@vivo.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <be0783c0-4ca8-d7fd-ce97-c24c2f1d8e84@oracle.com>
+Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgYFAkeWUFZS1VLWVdZKFlBSE83V1ktWUFJV1kPCR
+        oVCBIfWUFZGU0dSlZPGEtLQxhLTh0fGE5VEwETFhoSFyQUDg9ZV1kWGg8SFR0UWUFZT0tIVUpKS0
+        hKTFVLWQY+
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6K006OAw4OT8LChMRLxopSgIw
+        MAIwCxBVSlVKTUpDT0tJTU5JSUlOVTMWGhIXVQwaFRESGhkSFRw7DRINFFUYFBZFWVdZEgtZQVlI
+        TVVKTklVSk9OVUpDSVlXWQgBWUFJS01MNwY+
+X-HM-Tid: 0a78d050aefdd991kuwsb71fd40039d
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Apr 06, 2021 at 12:24:32PM -0500, Mike Christie wrote:
->On 4/5/21 11:04 AM, Sasha Levin wrote:
->> From: Gulam Mohamed <gulam.mohamed@oracle.com>
->>
->> [ Upstream commit 9e67600ed6b8565da4b85698ec659b5879a6c1c6 ]
->>
->> A kernel panic was observed due to a timing issue between the sync thread
->> and the initiator processing a login response from the target. The session
->> reopen can be invoked both from the session sync thread when iscsid
->> restarts and from iscsid through the error handler. Before the initiator
->> receives the response to a login, another reopen request can be sent from
->> the error handler/sync session. When the initial login response is
->> subsequently processed, the connection has been closed and the socket has
->> been released.
->>
->> To fix this a new connection state, ISCSI_CONN_BOUND, is added:
->>
->>  - Set the connection state value to ISCSI_CONN_DOWN upon
->>    iscsi_if_ep_disconnect() and iscsi_if_stop_conn()
->>
->>  - Set the connection state to the newly created value ISCSI_CONN_BOUND
->>    after bind connection (transport->bind_conn())
->>
->>  - In iscsi_set_param(), return -ENOTCONN if the connection state is not
->>    either ISCSI_CONN_BOUND or ISCSI_CONN_UP
->>
->> Link: https://urldefense.com/v3/__https://lore.kernel.org/r/20210325093248.284678-1-gulam.mohamed@oracle.com__;!!GqivPVa7Brio!Jiqrc6pu3EgrquzpG-KpNQkNebwKUgctkE0MN1MloQ2y5Y4OVOkKN0yCr2_W_CX2oRet$
->> Reviewed-by: Mike Christie <michael.christie@oracle.com>
->
->
->There was a mistake in my review of this patch. It will also require
->this "[PATCH 1/1] scsi: iscsi: fix iscsi cls conn state":
->
->https://lore.kernel.org/linux-scsi/20210406171746.5016-1-michael.christie@oracle.com/T/#u
+Fix the following coccicheck warning:
 
-As the fix isn't upstream yet, I'll drop 9e67600ed6b for now and
-re-queue it for the next round. Thanks!
+./drivers/scsi/qla4xxx/ql4_83xx.c:475:23-25: WARNING !A || A && B is
+equivalent to !A || B
 
+Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
+---
+ drivers/scsi/qla4xxx/ql4_83xx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
+index 5f56122f6664..db41d90a5b6e 100644
+--- a/drivers/scsi/qla4xxx/ql4_83xx.c
++++ b/drivers/scsi/qla4xxx/ql4_83xx.c
+@@ -472,8 +472,7 @@ int qla4_83xx_can_perform_reset(struct scsi_qla_host *ha)
+ 		} else if (device_map[i].device_type == ISCSI_CLASS) {
+ 			if (drv_active & (1 << device_map[i].func_num)) {
+ 				if (!iscsi_present ||
+-				    (iscsi_present &&
+-				     (iscsi_func_low > device_map[i].func_num)))
++				iscsi_func_low > device_map[i].func_num)
+ 					iscsi_func_low = device_map[i].func_num;
+ 
+ 				iscsi_present++;
 -- 
-Thanks,
-Sasha
+2.25.1
+
