@@ -4,39 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A73AC433ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 22:39:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0856DC433B4
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 22:39:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9ECD61019
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 22:39:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC54C611CC
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 22:39:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234811AbhDNWjg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Apr 2021 18:39:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56790 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234218AbhDNWjf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 18:39:35 -0400
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3252AC061574;
-        Wed, 14 Apr 2021 15:39:13 -0700 (PDT)
+        id S234980AbhDNWjq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Apr 2021 18:39:46 -0400
+Received: from angie.orcam.me.uk ([157.25.102.26]:38944 "EHLO
+        angie.orcam.me.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234702AbhDNWjm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 18:39:42 -0400
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 9449592009E; Thu, 15 Apr 2021 00:39:12 +0200 (CEST)
+        id EAE9892009E; Thu, 15 Apr 2021 00:39:17 +0200 (CEST)
 Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 90EC192009C;
-        Thu, 15 Apr 2021 00:39:12 +0200 (CEST)
-Date:   Thu, 15 Apr 2021 00:39:12 +0200 (CEST)
+        by angie.orcam.me.uk (Postfix) with ESMTP id E7F6892009C;
+        Thu, 15 Apr 2021 00:39:17 +0200 (CEST)
+Date:   Thu, 15 Apr 2021 00:39:17 +0200 (CEST)
 From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
 To:     Khalid Aziz <khalid@gonehiking.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 2/5] scsi: BusLogic: Avoid unbounded `vsprintf' use
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH 3/5] scsi: Provide for avoiding trailing allocation length
+ with VPD inquiries
 In-Reply-To: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk>
-Message-ID: <alpine.DEB.2.21.2104141521190.44318@angie.orcam.me.uk>
+Message-ID: <alpine.DEB.2.21.2104141541090.44318@angie.orcam.me.uk>
 References: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
@@ -45,28 +43,163 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Existing `blogic_msg' invocations do not appear to overrun its internal 
-buffer of a fixed length of 100, which would cause stack corruption, but 
-it's easy to miss with possible further updates and a fix is cheap in 
-performance terms, so limit the output produced into the buffer by using 
-`vsnprintf' rather than `vsprintf'.
+Allow SCSI hosts to request avoiding trailing allocation length with VPD 
+inquiries, and use the mechanism to work around an issue with at least 
+some BusLogic MultiMaster host bus adapters and observed with the BT-958 
+model specifically where issuing commands that return less data than 
+provided for causes fatal failures:
+
+scsi host0: BusLogic BT-958
+scsi 0:0:0:0: Direct-Access     IBM      DDYS-T18350M     SA5A PQ: 0 ANSI: 3
+scsi 0:0:1:0: Direct-Access     SEAGATE  ST336607LW       0006 PQ: 0 ANSI: 3
+scsi 0:0:5:0: Direct-Access     IOMEGA   ZIP 100          E.08 PQ: 0 ANSI: 2
+sd 0:0:1:0: [sdb] 71687372 512-byte logical blocks: (36.7 GB/34.2 GiB)
+sd 0:0:0:0: [sda] 35843670 512-byte logical blocks: (18.4 GB/17.1 GiB)
+sd 0:0:1:0: [sdb] Write Protect is off
+sd 0:0:5:0: [sdc] Attached SCSI removable disk
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+scsi0: *** BusLogic BT-958 Initialized Successfully ***
+scsi0: *** BusLogic BT-958 Initialized Successfully ***
+scsi0: *** BusLogic BT-958 Initialized Successfully ***
+scsi0: *** BusLogic BT-958 Initialized Successfully ***
+sd 0:0:0:0: Device offlined - not ready after error recovery
+sd 0:0:1:0: Device offlined - not ready after error recovery
+sd 0:0:0:0: scsi_vpd_inquiry(0): buf[64] => -5
+sd 0:0:1:0: scsi_vpd_inquiry(0): buf[64] => -5
+sd 0:0:0:0: [sda] Attached SCSI disk
+sd 0:0:1:0: [sdb] Attached SCSI disk
+VFS: Cannot open root device "802" or unknown-block(8,2): error -6
+
+(here and elsewhere reported with some instrumentation added so as to 
+show the causing requests and with irrelevant messages filtered out).
+
+As already observed back in 2003 and worked around in smartmontools at 
+least some versions of BusLogic firmware such as 5.07B are unable to 
+handle such commands, but it is possible to request enough data first 
+for the length of the data response to be determined and then reissue 
+the same command with the allocation length matching the response 
+expected.
+
+It is what this change does on a host-by-host basis, by providing a flag 
+for individual HBA drivers to enable this workaround, currently set by 
+the BusLogic driver, and then issuing these double calls as requested, 
+which then produce results as expected:
+
+sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 0:0:1:0: scsi_vpd_inquiry(0): buf[64] => 13
+sd 0:0:0:0: scsi_vpd_inquiry(0): buf[64] => 7
+ sdb: sdb1 sdb2
+sd 0:0:1:0: scsi_vpd_inquiry(0): buf[64] => 13
+sd 0:0:1:0: [sdb] Attached SCSI disk
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 sda10 >
+sd 0:0:0:0: scsi_vpd_inquiry(0): buf[64] => 7
+sd 0:0:0:0: [sda] Attached SCSI disk
+EXT4-fs (sda2): mounting ext2 file system using the ext4 subsystem
+EXT4-fs (sda2): mounted filesystem without journal. Opts: (null). Quota mode: disabled.
+VFS: Mounted root (ext2 filesystem) readonly on device 8:2.
+
+The minimum request size of 4 for the repeated call has been chosen to 
+match one required for a successful return from `scsi_vpd_inquiry'.
+
+Interestingly enough it has only started triggering with not so recent 
+commit af73623f5f10 ("[SCSI] sd: Reduce buffer size for vpd request") 
+that decreased the allocation length for the originating request from 
+512 down to 64.  Previously the request was rejected outright by the 
+respective targets as invalid and therefore did not trigger the issue 
+with MultiMaster firmware as that would only happen for a command that 
+succeeded but produced less data than provided for:
+
+scsi0: CCB #36 Target 0: Result 2 Host Adapter Status 00 Target Status 02
+scsi0: CDB    12 01 00 02 00 00
+scsi0: Sense  70 00 05 00 00 00 00 18 00 00 00 00 24 00 00 C0 00 03 00 [...]
+sd 0:0:0:0: scsi_vpd_inquiry(0): buf[512] => -5
+scsi0: CCB #37 Target 1: Result 2 Host Adapter Status 00 Target Status 02
+scsi0: CDB    12 01 00 02 00 00
+scsi0: Sense  70 00 05 00 00 00 00 0A 00 00 00 00 24 00 01 C9 00 03 00 [...]
+sd 0:0:1:0: scsi_vpd_inquiry(0): buf[512] => -5
+
+(here with the buffer size set back to 512, the `BusLogic=TraceErrors' 
+parameter and trailing sense data zeros trimmed for brevity).  Note the 
+sense key of 0x5 returned denoting an illegal request even for page 0.
 
 Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
+Fixes: 881a256d84e6 ("[SCSI] Add VPD helper")
+Cc: stable@vger.kernel.org # v2.6.30+
 ---
- drivers/scsi/BusLogic.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/BusLogic.c  |    1 +
+ drivers/scsi/scsi.c      |   24 +++++++++++++++++++++---
+ include/scsi/scsi_host.h |    3 +++
+ 3 files changed, 25 insertions(+), 3 deletions(-)
 
-linux-buslogic-vsnprintf.diff
+linux-buslogic-get-vpd-page-buffer.diff
 Index: linux-macro-ide/drivers/scsi/BusLogic.c
 ===================================================================
 --- linux-macro-ide.orig/drivers/scsi/BusLogic.c
 +++ linux-macro-ide/drivers/scsi/BusLogic.c
-@@ -3588,7 +3588,7 @@ static void blogic_msg(enum blogic_msgle
- 	int len = 0;
+@@ -2301,6 +2301,7 @@ static void __init blogic_inithoststruct
+ 	host->sg_tablesize = adapter->drvr_sglimit;
+ 	host->unchecked_isa_dma = adapter->need_bouncebuf;
+ 	host->cmd_per_lun = adapter->untag_qdepth;
++	host->no_trailing_allocation_length = true;
+ }
  
- 	va_start(args, adapter);
--	len = vsprintf(buf, fmt, args);
-+	len = vsnprintf(buf, sizeof(buf), fmt, args);
- 	va_end(args);
- 	if (msglevel == BLOGIC_ANNOUNCE_LEVEL) {
- 		static int msglines = 0;
+ /*
+Index: linux-macro-ide/drivers/scsi/scsi.c
+===================================================================
+--- linux-macro-ide.orig/drivers/scsi/scsi.c
++++ linux-macro-ide/drivers/scsi/scsi.c
+@@ -346,8 +346,19 @@ int scsi_get_vpd_page(struct scsi_device
+ 	if (sdev->skip_vpd_pages)
+ 		goto fail;
+ 
+-	/* Ask for all the pages supported by this device */
+-	result = scsi_vpd_inquiry(sdev, buf, 0, buf_len);
++	/*
++	 * Ask for all the pages supported by this device.  Determine the
++	 * actual data length first if so required by the host, e.g.
++	 * BusLogic BT-958.
++	 */
++	if (sdev->host->no_trailing_allocation_length) {
++		result = scsi_vpd_inquiry(sdev, buf, 0, min(4, buf_len));
++		if (result < 4)
++			goto fail;
++	} else {
++		result = buf_len;
++	}
++	result = scsi_vpd_inquiry(sdev, buf, 0, min(result, buf_len));
+ 	if (result < 4)
+ 		goto fail;
+ 
+@@ -366,7 +377,14 @@ int scsi_get_vpd_page(struct scsi_device
+ 	goto fail;
+ 
+  found:
+-	result = scsi_vpd_inquiry(sdev, buf, page, buf_len);
++	if (sdev->host->no_trailing_allocation_length) {
++		result = scsi_vpd_inquiry(sdev, buf, page, min(4, buf_len));
++		if (result < 4)
++			goto fail;
++	} else {
++		result = buf_len;
++	}
++	result = scsi_vpd_inquiry(sdev, buf, page, min(result, buf_len));
+ 	if (result < 0)
+ 		goto fail;
+ 
+Index: linux-macro-ide/include/scsi/scsi_host.h
+===================================================================
+--- linux-macro-ide.orig/include/scsi/scsi_host.h
++++ linux-macro-ide/include/scsi/scsi_host.h
+@@ -653,6 +653,9 @@ struct Scsi_Host {
+ 	/* The transport requires the LUN bits NOT to be stored in CDB[1] */
+ 	unsigned no_scsi2_lun_in_cdb:1;
+ 
++	/* Allocation length must not exceed actual data length. */
++	unsigned no_trailing_allocation_length:1;
++
+ 	/*
+ 	 * Optional work queue to be utilized by the transport
+ 	 */
