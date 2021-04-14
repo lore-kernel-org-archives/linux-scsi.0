@@ -7,133 +7,109 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D203C433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 11:32:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E5A1C433B4
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 11:47:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3697961154
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 11:32:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60CC2613BA
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 11:47:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350554AbhDNLdD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Apr 2021 07:33:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51832 "EHLO
+        id S234048AbhDNLrb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Apr 2021 07:47:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350557AbhDNLdB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 07:33:01 -0400
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C88EDC061574
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Apr 2021 04:32:40 -0700 (PDT)
-Received: by mail-pj1-x1029.google.com with SMTP id u11so6462574pjr.0
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Apr 2021 04:32:40 -0700 (PDT)
+        with ESMTP id S233829AbhDNLra (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 07:47:30 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE818C061756
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Apr 2021 04:47:09 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id m18so7736397plc.13
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Apr 2021 04:47:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=abd9Ib3pKszbZKtiVG/zzKfpqa3DRQAEjJWBS/57Y74=;
-        b=MtklJqAw8VsuqD6a43pkpdkLyf2qBC8C9udDBtATU2U+L3EGhKmTPJ6zUJ6JhQ47PF
-         ImzQ50GgCKXxYdzES+JfQshvhK8mr5cmk6VAQWNz6tP924HQJdIMl5x7XzzlYN3grfUs
-         yFXpAoww6G/WvTR83ROmgVfMT+LoR2ohc50sw=
+        bh=7IiKVYTPxNkMExQ4rOR5h4tC7feOBwoO3lDpEct0bCU=;
+        b=PfLhVztm9z3HWFYQkQkPvWqzth8D0WPMeTXmH6y5cZDaLA/sfvhff4jS7GbU2NfzaI
+         CKKg5w++C/esDTmFO4B36zTs62P6HPuzhnZl5bhEAWHGLpfTKxbAaOwVKt+ShEKnpdET
+         mogr5qoCT9rRgYl8R7ytOVS1ElaJmRPU1NaQc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=abd9Ib3pKszbZKtiVG/zzKfpqa3DRQAEjJWBS/57Y74=;
-        b=tkYtiATp9EZZMeLAhvljJCdguozmmdCBUlMq1HsXhdXYpI+A4PYUX0oidaV7p74iP8
-         uHgvMLV8R9abvKa4Xf5kMAfjb8dJ32l3RilTXHECuOkCz1jFxuMpE7ZoqOthcjkfHXsH
-         Y9NY2K9NHtuOyeG1kjfXr0AzsrJzoYdI+OfJlO7c0KSQlt++GePZixDjr4A9sadNtlst
-         D8b6Zp3c9J3Bt4/7j0Fo8lZR13ACwUFnExJidwfgReeRYXKyKlqmeshYKbKY1FOPOD7t
-         ywaKTw+geIlv5aWD0SKpJqfW8mG0dWCbgcmRa1WakTJ9OZYIAmy9A3fl3VAN4vZ0+8ep
-         ys0g==
-X-Gm-Message-State: AOAM531Zmk8VW0f/NE5xVZdYJUIwRsCe6khAsgCqOIdxVCxMCCdmvx7N
-        c2Xvj/xgIjr8PXthAOoe2bWQ2kcsghwB5FT5fJUvGA==
-X-Google-Smtp-Source: ABdhPJx1/4n62GTXObcJgFW/l0kNu98yw7KgH/IE5uEetAHazMVX7QHimQa8bPi8dakaZfZzlS8cwAaEzMCRIUadMRI=
-X-Received: by 2002:a17:90b:3b8c:: with SMTP id pc12mr3188659pjb.208.1618399960224;
- Wed, 14 Apr 2021 04:32:40 -0700 (PDT)
+        bh=7IiKVYTPxNkMExQ4rOR5h4tC7feOBwoO3lDpEct0bCU=;
+        b=qGqMstz0k1Edy6aoTDXiwAICv488fatAucD+ePSSKNkSGjq1AKQpnwjHu2sLBI0Kuv
+         2lMtHezZKh4NBqvNbzLuMZYd2+Odic/JvMsuERPope1+auaRDrI9LHaXfuIXGpXEsxEg
+         cNiWArl/ql32rS5qU86src7iICk0vaw/AA7iJ0J248O4xKxTcF5aqS8S0V2PCUTeckHP
+         APY3rLwkseHgSzikSknRYiUQ8sC4Sd9Nz0CW2t96yPg5VD+HxuN2sN/CAwqm5LTQemgP
+         wNdoON4RYoiUsRLqDeS3cIv/I4rKT14/DfQpgBLd3BQFg1LSdUXznYykgO5uMoxBxHtO
+         dOmA==
+X-Gm-Message-State: AOAM533QPW2r+IIkeYcGgAGVKmchZaEh1rBeaq89A7oAODNyW6lWU8PT
+        cErHDWg2xvz3/l1t/uNuvgJJjBT5k1tWKMtGBI7AsQ==
+X-Google-Smtp-Source: ABdhPJxW8IoCR6BzsDM2zF8Qy/ZrQogXAnxRIFLoahMm6T2xWPDsJSN0tgrwBbEDlHGaIuGkJdvF008i3VshEqdHl7w=
+X-Received: by 2002:a17:90b:3b8c:: with SMTP id pc12mr3252713pjb.208.1618400828960;
+ Wed, 14 Apr 2021 04:47:08 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210325084247.4136519-1-yuyufen@huawei.com> <fe977858-91a3-51e3-f90e-d2ec878499df@huawei.com>
-In-Reply-To: <fe977858-91a3-51e3-f90e-d2ec878499df@huawei.com>
+References: <20210329094532.4165147-1-liushixin2@huawei.com>
+In-Reply-To: <20210329094532.4165147-1-liushixin2@huawei.com>
 From:   Sumit Saxena <sumit.saxena@broadcom.com>
-Date:   Wed, 14 Apr 2021 17:02:14 +0530
-Message-ID: <CAL2rwxpETcUnzEvUbCft_0ZapAdS+DmJsBFxR7AFvN3LikYjyg@mail.gmail.com>
-Subject: Re: [RFC PATCH] scsi: megaraid_sas: set msix index for
- NON_READ_WRITE_LDIO type cmd
-To:     Yufen Yu <yuyufen@huawei.com>
+Date:   Wed, 14 Apr 2021 17:16:43 +0530
+Message-ID: <CAL2rwxoJTfLrD_a1sf+gkT1xdBrwOZj3seYq7W6=ETdb3MBJVw@mail.gmail.com>
+Subject: Re: [PATCH -next] scsi: megaraid_sas: Use DEFINE_SPINLOCK() for spinlock
+To:     Shixin Liu <liushixin2@huawei.com>
 Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000c1bed705bfed1ae8"
+        boundary="000000000000892b4605bfed4e92"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000c1bed705bfed1ae8
+--000000000000892b4605bfed4e92
 Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Apr 6, 2021 at 2:33 PM Yufen Yu <yuyufen@huawei.com> wrote:
+On Mon, Mar 29, 2021 at 2:45 PM Shixin Liu <liushixin2@huawei.com> wrote:
 >
-> gentle ping.
-> Any suggestion are welcome.
+> spinlock can be initialized automatically with DEFINE_SPINLOCK()
+> rather than explicitly calling spin_lock_init().
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 >
-> Thanks,
-> Yufen
+> Signed-off-by: Shixin Liu <liushixin2@huawei.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
 >
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index 4d4e9dbe5193..8ed347eebf07 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -213,7 +213,7 @@ static bool support_nvme_encapsulation;
+>  static bool support_pci_lane_margining;
 >
+>  /* define lock for aen poll */
+> -static spinlock_t poll_aen_lock;
+> +static DEFINE_SPINLOCK(poll_aen_lock);
 >
-> On 2021/3/25 16:42, Yufen Yu wrote:
-> > Before commit 132147d7f620 ("scsi: megaraid_sas: Add support for
-> > High IOPS queues"), all interrupt of megaraid_sas is managed when
-> > smp_affinity_enable for misx_enable. The mapping between vectors and
-> > cpus for a 128 vectors likely:
-> >      vector0 maps to cpu0
-> >      vector1 maps to cpu1
-> >      ...
-> > If cpu0 is offline, vector0 cannot handle any io.
-> >
-> > For now, we have not pointed msix index in megasas_build_ld_nonrw_fusion().
-> > The default value of index is '0'. So, cmd like TEST_UNIT_READY will hung
-> > forever after cpu0 offline. We can simplely reproduce by:
-> >
-> >      echo 0 > /sys/devices/system/cpu/cpu0/online
-> >      sg_turs /dev/sda # hung
-> >
-> > After commit 132147d7f620, low_latency_index_start is set as 1 (not sure
-> > for all scenario), then vector 0 is not managed. Thus, io issue to vector0
-> > can be handled by other cpus after cpu0 offline.
-> >
-> > Nevertheless, we may also conside to set msix index rather than default 0
-> > in megasas_build_ld_nonrw_fusion().
+>  extern struct dentry *megasas_debugfs_root;
+>  extern int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num);
+> @@ -8934,8 +8934,6 @@ static int __init megasas_init(void)
+>          */
+>         pr_info("megasas: %s\n", MEGASAS_VERSION);
+>
+> -       spin_lock_init(&poll_aen_lock);
+> -
+>         support_poll_for_event = 2;
+>         support_device_change = 1;
+>         support_nvme_encapsulation = true;
+> --
+> 2.25.1
+>
 
-This patch does not seem critical. We don't want to change the
-behavior at this point
-as this driver supports a lot of old controllers and we cannot risk
-breaking any of
-the supported controllers. Anyways MSI-x 0 is used for non- IO frames only so
-no performance gain too with this change.
-Hence, NACK for this patch.
-> >
-> > Signed-off-by: Yufen Yu <yuyufen@huawei.com>
-> > ---
-> >   drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 ++
-> >   1 file changed, 2 insertions(+)
-> >
-> > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > index 38fc9467c625..ddc6176f12c4 100644
-> > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > @@ -3021,6 +3021,8 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
-> >               io_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
-> >               io_request->DevHandle = devHandle;
-> >       }
-> > +
-> > +     megasas_get_msix_index(instance, scmd, cmd, 1);
-> >   }
-> >
-> >   /**
-> >
-
---000000000000c1bed705bfed1ae8
+--000000000000892b4605bfed4e92
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -204,13 +180,13 @@ rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
 3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJgWpOzNZP1PSFkyKqptzQM3oUx5ka+3
-UFCCJVQtosltMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDQx
-NDExMzI0MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIBrKq7zGKQ1r/bnJaat73yH9rHyBVehl
+6x7VzGlMpRYZMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDQx
+NDExNDcwOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQDBd0HGZPlI1aNKX1PANi5xi6TG3uZ5aT98GQD16hiJCITLL6M3
-CRioVaGBMQMEDyuiqmfOoCO/XOe9+8bzMVlf2GQ3jfmUrhIA3ZRHy03xnj+jSaSB+gFw9tDD9mfl
-FFab8P/1Bex2N/NaoNlKoWpEQEbjceDBhg02db5I7N1OeJp3EvqqC5veGV7+67FQYDTKuyvrMvmV
-2KsERnGFeRHcwqLyI2EIMpXDMKklgRHwnH5mfdNfZI6f54BQNL2VRQya13fyHDaQUxSbYH5t1R9+
-EN6QvfPJbsSlRY7QBnUtjumW1kcUQaAkuSsV8slZKyvak6L1kGr8KEHxo1Kirf41
---000000000000c1bed705bfed1ae8--
+ATANBgkqhkiG9w0BAQEFAASCAQCzEaVtiqig2sg16jbBf+l/WDUAK5cgpz9AwtEUIZS49crCoTYU
+xgOkWeVvC+vkVkP6lU208+9+Onp+QASa5+/de+bCug8xNedFsKcfFSrHl9Fq82Iq7t7OAzd1Bb3c
+9vIDwmd+3o0Vurqh6003MiXnHOKKIHQf2WhoiR4tR13I0/PNXpQwqj2Pa81NAcUjMpDR9pJ/SceR
+UEePdzI7YKu+FlxfJksxS2ujiYcXhnBqCTz1Os7BAYfoJ9tEpOPRyME9l3kJKUvkS9oXW490fTOz
+WREN43Ji0KKAM3siMPcVnJXeIQEnKJqrUrL1bdKEdQepb9Kefh2ozBoc7Ce6kvIC
+--000000000000892b4605bfed4e92--
