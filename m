@@ -2,150 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A9C7C433ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 17:10:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 804F2C433ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 17:47:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A6186105A
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 17:10:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FBC361179
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 17:47:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234230AbhDNRKt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Apr 2021 13:10:49 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:27972 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233961AbhDNRIu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Apr 2021 13:08:50 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13EH3FOn072290;
-        Wed, 14 Apr 2021 13:08:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : sender; s=pp1;
- bh=5nDI0qeM5SlSq2HThYNZ0x0eEt1bUIF+PotuEgqicyA=;
- b=Th8dJxEEcKWpY8BpDrP2ejYgjQ3aAo5N02IsdIBA7rwNqqxe1pIAgPG6MvnjH0WkkpV1
- XdjGP7+g5+mMaKDyWhcl7M+D1zaTAUxXf2f0o4qjhGuX+3b247DDbXoSbEM54IJ2MfCs
- km/tUeV+QF0pBN+xjjcWHfH9XdjkumPb1BXhlzsmyFBAf9AeZiwafn+wlCl0K/gMitB6
- 9l6Ml2mBKp/cw7Nl3n61nNIdt6m9vM8M1LIVXgrIa9NZXVc6PZvOuOPhRVtpBO3mVAGJ
- IIhkU9T9+vNUUj0BKBAGjF2krYs+jDhQ1K15aGH8mmG9qeQMk55sRVCQefia0XJ0GIZ9 rw== 
-Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 37x46u8j4r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 14 Apr 2021 13:08:20 -0400
-Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
-        by ppma01fra.de.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 13EH4MPs019328;
-        Wed, 14 Apr 2021 17:08:17 GMT
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-        by ppma01fra.de.ibm.com with ESMTP id 37u3n89u5a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 14 Apr 2021 17:08:17 +0000
-Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 13EH8DXN18285002
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 14 Apr 2021 17:08:13 GMT
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2CE7A681F0;
-        Wed, 14 Apr 2021 17:08:13 +0000 (GMT)
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 3EDC7681F6;
-        Wed, 14 Apr 2021 17:08:06 +0000 (GMT)
-Received: from t480-pf1aa2c2.fritz.box (unknown [9.145.18.252])
-        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Wed, 14 Apr 2021 17:08:06 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2.fritz.box with local (Exim 4.94)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1lWizk-002b31-EM; Wed, 14 Apr 2021 19:08:04 +0200
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Qinglang Miao <miaoqinglang@huawei.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Fedor Loshakov <loshakov@linux.ibm.com>,
-        Sumangala Bannur Subraya <bsuma@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
-Subject: [PATCH 5/6] scsi: zfcp: move the position of put_device
-Date:   Wed, 14 Apr 2021 19:08:03 +0200
-Message-Id: <0a568c7733ba0f1dde28b0c663b90270d44dd540.1618417667.git.bblock@linux.ibm.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <cover.1618417667.git.bblock@linux.ibm.com>
-References: <cover.1618417667.git.bblock@linux.ibm.com>
+        id S1347293AbhDNRr7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Apr 2021 13:47:59 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2857 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234304AbhDNRr5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 13:47:57 -0400
+Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FL8nJ6kwxz6898S;
+        Thu, 15 Apr 2021 01:37:40 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Wed, 14 Apr 2021 19:47:33 +0200
+Received: from [10.47.25.158] (10.47.25.158) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 14 Apr
+ 2021 18:47:32 +0100
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 1/6] iommu: Move IOVA power-of-2 roundup into allocator
+To:     Robin Murphy <robin.murphy@arm.com>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        "will@kernel.org" <will@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
+CC:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>
+References: <1616160348-29451-1-git-send-email-john.garry@huawei.com>
+ <1616160348-29451-2-git-send-email-john.garry@huawei.com>
+ <ee935a6d-a94c-313e-f0ed-e14cc6dac055@arm.com>
+ <73d459de-b5cc-e2f5-bcd7-2ee23c8d5075@huawei.com>
+ <afc2fc05-a799-cb14-debd-d36afed8f456@arm.com>
+ <08c0f4b9-8713-fa97-3986-3cfb0d6b820b@huawei.com>
+ <e4b9146a-ca32-50f5-4fe0-42aa0b66d2d6@arm.com>
+ <4914d134-5a63-f683-b14b-25ab71a57cd4@huawei.com>
+Message-ID: <8fce915b-18fa-2bfb-66d7-325cb7837894@huawei.com>
+Date:   Wed, 14 Apr 2021 18:44:58 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Organization: IBM Deutschland Research & Development GmbH, Vorsitz. AufsR. Gregor Pillen, Geschaeftsfuehrung Dirk Wittkopp, Sitz der Gesellschaft Boeblingen, Registergericht AmtsG Stuttgart, HRB 243294
-Content-Transfer-Encoding: 8bit
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: -Bs1JvDnJv30AJi62omzHOtk2aZZVyb7
-X-Proofpoint-ORIG-GUID: -Bs1JvDnJv30AJi62omzHOtk2aZZVyb7
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-04-14_10:2021-04-14,2021-04-14 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
- priorityscore=1501 malwarescore=0 lowpriorityscore=0 bulkscore=0
- adultscore=0 suspectscore=0 impostorscore=0 mlxscore=0 spamscore=0
- phishscore=0 mlxlogscore=999 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2104060000 definitions=main-2104140111
+In-Reply-To: <4914d134-5a63-f683-b14b-25ab71a57cd4@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.25.158]
+X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Qinglang Miao <miaoqinglang@huawei.com>
+On 06/04/2021 17:54, John Garry wrote:
 
-Have the `put_device()` call after `device_unregister()` in both
-`zfcp_unit_remove()` and `zfcp_sysfs_port_remove_store()` to make
-it more natural, for put_device() ought to be the last time we
-touch the object in both functions.
+Hi Robin,
 
-And add comments after put_device to make codes clearer.
+> 
+>> Sorry if the phrasing was unclear there - the allusion to default 
+>> domains is new, it just occurred to me that what we do there is in 
+>> fact fairly close to what I've suggested previously for this. In that 
+>> case, we have a global policy set by the command line, which *can* be 
+>> overridden per-domain via sysfs at runtime, provided the user is 
+>> willing to tear the whole thing down. Using a similar approach here 
+>> would give a fair degree of flexibility but still mean that changes 
+>> never have to be made dynamically to a live domain.
+> 
+> So are you saying that we can handle it similar to how we now can handle 
+> changing default domain for an IOMMU group via sysfs? If so, that just 
+> is not practical here. Reason being that this particular DMA engine 
+> provides the block device giving / mount point, so if we unbind the 
+> driver, we lose / mount point.
+> 
+> And I am not sure if the end user would even know how to set such a 
+> tunable. Or, in this case, why the end user would not want the optimized 
+> range configured always.
+> 
+> I'd still rather if the device driver could provide info which can be 
+> used to configure this before or during probing.
 
-Suggested-by: Steffen Maier <maier@linux.ibm.com>
-Suggested-by: Benjamin Block <bblock@linux.ibm.com>
-Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
-Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
----
- drivers/s390/scsi/zfcp_sysfs.c | 4 ++--
- drivers/s390/scsi/zfcp_unit.c  | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+As a new solution, how about do both of these:
+a. Add a per-IOMMU group sysfs file to set this tunable. Works same as 
+how we change the default domain, and has all the same 
+restrictions/steps. I think that this is what you are already suggesting.
+b. Provide a DMA mapping API to set this value, similar to this current 
+series. In the IOMMU backend for that API, we record a new range value 
+and return -EPROBE_DEFER when successful. In the reprobe we reset the 
+default domain for the devices' IOMMU group, with the IOVA domain rcache 
+range configured as previously requested. Again, allocating the new 
+default domain is similar to how we change default domain type today.
+This means that we don't play with a live domain. Downside is that we 
+need to defer the probe.
 
-diff --git a/drivers/s390/scsi/zfcp_sysfs.c b/drivers/s390/scsi/zfcp_sysfs.c
-index f76946dcbd59..544efd4c42f0 100644
---- a/drivers/s390/scsi/zfcp_sysfs.c
-+++ b/drivers/s390/scsi/zfcp_sysfs.c
-@@ -327,10 +327,10 @@ static ssize_t zfcp_sysfs_port_remove_store(struct device *dev,
- 	list_del(&port->list);
- 	write_unlock_irq(&adapter->port_list_lock);
- 
--	put_device(&port->dev);
--
- 	zfcp_erp_port_shutdown(port, 0, "syprs_1");
- 	device_unregister(&port->dev);
-+
-+	put_device(&port->dev); /* undo zfcp_get_port_by_wwpn() */
-  out:
- 	zfcp_ccw_adapter_put(adapter);
- 	return retval ? retval : (ssize_t) count;
-diff --git a/drivers/s390/scsi/zfcp_unit.c b/drivers/s390/scsi/zfcp_unit.c
-index e67bf7388cae..59333f0257a8 100644
---- a/drivers/s390/scsi/zfcp_unit.c
-+++ b/drivers/s390/scsi/zfcp_unit.c
-@@ -255,9 +255,9 @@ int zfcp_unit_remove(struct zfcp_port *port, u64 fcp_lun)
- 		scsi_device_put(sdev);
- 	}
- 
--	put_device(&unit->dev);
--
- 	device_unregister(&unit->dev);
- 
-+	put_device(&unit->dev); /* undo _zfcp_unit_find() */
-+
- 	return 0;
- }
--- 
-2.30.2
-
+Thanks,
+John
