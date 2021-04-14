@@ -2,357 +2,371 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2BC8C43461
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 23:07:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36AC3C433ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 02:11:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEF0B61242
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Apr 2021 23:07:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4C8061166
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 02:11:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348758AbhDMXHq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Apr 2021 19:07:46 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:49698 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348752AbhDMXHj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Apr 2021 19:07:39 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13DMjwAg130273;
-        Tue, 13 Apr 2021 23:07:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2020-01-29; bh=nC2/zbQ2sDMUrsZEo8x7eauZJWzwjzORF6HSCT3Dscc=;
- b=BafMFz76twZXNo+LYVF9BP7dHiWDTJI+N1j/qjVKEjr082Q/ZU97scPI5rrhChf9AlWo
- 65YKQF1RBSE2372D6FcT+3rHD5nf8nk6auAcWZV4BidPCbtq7ws0L0F+A5Z3SbjzzgQM
- ilFiiwWnN2Iu+Hss7GnFAeN8rw/lEjGPRSR/6SgEOXjUrpVxkB34zls1aPYRlVqlLVlK
- vVlzFtKgpBW0bNrntADkxcbdC7yqDDsbaBbV/XZkNRMzNM5+rxOF8IxzTJu8MAJ1ETA4
- 96akVTp51WmnKfrHqDWil3C1+sN0GWA0WekNtA9w7nJTm7Q55ysXrd3uA9Y6xoyOWPDw Cw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 37u3ymgn97-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 13 Apr 2021 23:07:12 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13DMiLav064242;
-        Tue, 13 Apr 2021 23:07:11 GMT
-Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2107.outbound.protection.outlook.com [104.47.70.107])
-        by userp3030.oracle.com with ESMTP id 37unxxgjba-3
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 13 Apr 2021 23:07:11 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IWnE68wWt/jqQfF+UDT6u/45W+HDoQm1IKFxR5MDZQDlD/vzRdYZsSpfrg2AVVn5Q5g00UnFeMNCoqYl6VOTOcQaHMxMzLG/4wUvNbsqiUk6dD6js1IKDHrRgJLn3hknUfruEk4di9yi4wHXlvFrYFMCz+CqKC3pfiTOJUHVxW37Yfc72pP7RtgmUqGQ+NNh6ytGnJ/l3YppaLS4Q8mq1xU5krKLkIGm0VOJcjYT4oLdlKWge6I4+ynbXGsik43HCYD4V/lOHFn5MQiCaYEJ2nXgZ1Qp6S2q9UeUBiaEj4Lgq1VODxCyCK1dBK8Omf0L0yMf6rRp/ljcqFHsnVNmTw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nC2/zbQ2sDMUrsZEo8x7eauZJWzwjzORF6HSCT3Dscc=;
- b=nG1SleuH6FCPoZGyrhEX2laMTJUVDgNA7/npgB9xDo3ivfGNy1lpfkFRbLl3ZoB+xs9CWpHDwsukahAXdhSYWjJmh3ETBy097syzQSKXjXpXIDsSdKg2R0xXAe4JaDsRufJrZsOtUIRvnMUc9TZJSi5Ey8ceeXSyBEHTN3/AjXN8GZ4fBHHoA5mI7qR5RL20RUwqETPpxm21VwU7Nin6LoOnwCmQJ48e1LUh6EMqU5m8mv6vJP5qf8aoljaYVQWz6BWVDVPGQCEQLlOeUnBpQJI2y4w0UeAFKx+4UU59SknARflg0Ck2gD83u5+wE6KxoekYPVjE5wDJKEypfGEYUA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nC2/zbQ2sDMUrsZEo8x7eauZJWzwjzORF6HSCT3Dscc=;
- b=TjHO3/H3HeqSxt+bpiPI3VWWZMFhmDG8BJdPjAcaPD1i5DDuLEmllGC1HkRTQ934N+0NM848vnXCyNans105Rx0MucAHy2pOo6xwuJISCTVTTk3zQAQJwv5pnHX+VSFxcL7oiNOk8UGxEj7PYR6eGfTBRqBlDQa0POziHeJMFko=
-Authentication-Results: suse.com; dkim=none (message not signed)
- header.d=none;suse.com; dmarc=none action=none header.from=oracle.com;
-Received: from BYAPR10MB3573.namprd10.prod.outlook.com (2603:10b6:a03:11e::32)
- by BYAPR10MB3653.namprd10.prod.outlook.com (2603:10b6:a03:11d::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3999.28; Tue, 13 Apr
- 2021 23:07:09 +0000
-Received: from BYAPR10MB3573.namprd10.prod.outlook.com
- ([fe80::50bb:7b66:35ee:4a4]) by BYAPR10MB3573.namprd10.prod.outlook.com
- ([fe80::50bb:7b66:35ee:4a4%7]) with mapi id 15.20.4020.022; Tue, 13 Apr 2021
- 23:07:09 +0000
-From:   Mike Christie <michael.christie@oracle.com>
-To:     lduncan@suse.com, martin.petersen@oracle.com,
-        mrangankar@marvell.com, svernekar@marvell.com,
-        linux-scsi@vger.kernel.org, jejb@linux.ibm.com
-Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 12/13] scsi: qedi: make sure tmf works are done before disconnect
-Date:   Tue, 13 Apr 2021 18:06:47 -0500
-Message-Id: <20210413230648.5593-13-michael.christie@oracle.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210413230648.5593-1-michael.christie@oracle.com>
-References: <20210413230648.5593-1-michael.christie@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [73.88.28.6]
-X-ClientProxiedBy: DS7PR03CA0212.namprd03.prod.outlook.com
- (2603:10b6:5:3ba::7) To BYAPR10MB3573.namprd10.prod.outlook.com
- (2603:10b6:a03:11e::32)
+        id S232700AbhDNCL5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Apr 2021 22:11:57 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:39362 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229769AbhDNCL4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Apr 2021 22:11:56 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id AFAF041373;
+        Wed, 14 Apr 2021 02:11:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1618366292;
+         x=1620180693; bh=sBoHdsx2yhlJUPKFliaRIve5fW5t1p8Hf12vJmv+hQw=; b=
+        VNCs1D0+8fIwR6jTJ2TEFTl2FI9IODuBPHTtOX14O4OdY6iVyTGLcVQTSUYsQliZ
+        N40BB6gDzyUNNXRcMUXgz2gF0GasBtuB0wt7CqF893sg1KjcBkbEg05VPrWfMne2
+        x+iQPDSjgXXLCiFB9ZvbX2OLwjC2Bx9rWx229UrJFWE=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id bymHcYUfmMcu; Wed, 14 Apr 2021 05:11:32 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 4A37541372;
+        Wed, 14 Apr 2021 05:11:32 +0300 (MSK)
+Received: from localhost (172.17.204.212) by T-EXCH-03.corp.yadro.com
+ (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Wed, 14
+ Apr 2021 05:11:32 +0300
+Date:   Wed, 14 Apr 2021 05:11:31 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     TomK <tomkcpr@mdevsys.com>
+CC:     <linux-scsi@vger.kernel.org>
+Subject: Re: QLE2432 initiator fails to see any LUN's on one of servers while
+ using 5QLE2464 as a target.
+Message-ID: <YHZPU5Q0N+isZAGB@SPB-NB-133.local>
+References: <912519f2-69f7-b31a-8c25-af6254e5d0d3@mdevsys.com>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (73.88.28.6) by DS7PR03CA0212.namprd03.prod.outlook.com (2603:10b6:5:3ba::7) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.17 via Frontend Transport; Tue, 13 Apr 2021 23:07:08 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 67224940-f587-41b6-7d44-08d8fed0dd5a
-X-MS-TrafficTypeDiagnostic: BYAPR10MB3653:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BYAPR10MB36536402EAA573D7169D0C07F14F9@BYAPR10MB3653.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: PXF5oqzUqPxKex2gs+NIsQfz1/ZqA93YeM4uIJHK/uf0gJf1QPLB66aX8SQGPtB8BntFNzucgQde8Rfj8efKOhMo+oy2ylt5FBXq0Z56x4PEuUQ7ka0QwD3/D5n0VS9VEP1XTZGDKnunn1ivRas68RPme9gk8zbLFgJI9ayPKBRTuVGoujb9ntrcNbgS/HfIFlf+kcEVAo4ydMOcFymXGOxn2ibLzYOETVP/7x/3oj+YvJBjNW4UvCet/MdZlQvOYd+oK/Z9sirMT2G/R7/X7xhsIWTgofWIaQ3o028G6D6yT3rGwinT4h95B2tS0dMvowuaHLK4wqkNiUuV5bdmDM4MFjOsYEo4pUAbV2HBZDi33UzOgu0kaj4of7KxlLEHmHSQT4RfPQNBSZmte3uVTmIEZeWpnl8+PhU/DExHNXE03kJ51Bjr/Cd1YTw5NdYED3GlZTt19tGXaqBuFnJh+VBJhKeq4rRafSs3Y9ikakCLR/8D3b8EpVk5mhrOULH49crxKPh6pKJKtzH+oygOa5Tp8VBQgQtpi1Rfj2IgAfw4/kCX2LaIPhC+zwTZAXz/sKGkZ7sHNOma4PqWmzHNKd/IfAX403iBchoC46TG6ybAGRAqYZRx1iGwFGpTAUZl9tcy1FFzqNFOA7EGpTI/l/dPNt5VFsK8UPJCM8avpi1tTjOlivxofcOPTMAcB/Q4
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB3573.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(366004)(346002)(39860400002)(136003)(396003)(83380400001)(16526019)(66556008)(186003)(26005)(6486002)(38100700002)(8936002)(36756003)(8676002)(316002)(38350700002)(66476007)(66946007)(4326008)(6512007)(5660300002)(478600001)(2616005)(1076003)(86362001)(956004)(52116002)(2906002)(6506007)(107886003)(69590400012)(6666004);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?NS2Te2HYFj5lR6E7HJIOfwNn8pARfrhjpNdTBjPoKrQ0x3cyMQo6MS+Y2+4p?=
- =?us-ascii?Q?//29u9efqMwp6jYpowYmUBad4sDkU0tZQa59AUAy4JIeA/HCvZYGCviguwmy?=
- =?us-ascii?Q?RZTRBTjjHza8NMXXnWS639J1HsMiQ9D1i8oWqr+GRuiKCzrQAR/cuKTVdMrr?=
- =?us-ascii?Q?+vGuFW3Rv2eWbrSLzKJSR/4T5q0gIvCX259pT/4z1POoY/BXOpX8FwxUHr/L?=
- =?us-ascii?Q?hG1O6FLfQAfWg6X2VmY7Gr04ms/fSk0qyMrfva2E7WDc3TWkOTDvbxM/HJGl?=
- =?us-ascii?Q?2kTMLHlJVWK5PbzxJzbi3S5lx0FJNekQ/IWjutbX1OYpRZvVqy7T7fH/FREf?=
- =?us-ascii?Q?OjhNtN+JRGuUNVhnh3ZV2gh85UrzP9CPKOdsiBVVmlg+YciRYBjn+a60L4Bc?=
- =?us-ascii?Q?twYmBm9HzCcTHzAWCbevwaJVMs7mk04FRSCFtc/RWhQuENxXY4FcqvAJEthP?=
- =?us-ascii?Q?F6GaH7rFswctd09AaLwyU9HC2bq9SkmqTD/6UbCOjv4ClgOzeGbT8k1uPBsA?=
- =?us-ascii?Q?wkZfRAZZ0IP2G1GEjtfcurXw1+y7Wuc81JqFWGQNuJUFps2O7XrdepRwgF2C?=
- =?us-ascii?Q?pg+5Xznov0VgTPl2NFcvUitiKrhyZiXelV/EKQ9TKCqiuhBX4j2dB4dWNVrb?=
- =?us-ascii?Q?Z0U6YU1sGkLy2E2yuSseDPcut/Cy/1WG58O2tqn5WecpXvqnk3gEmdMPHD4L?=
- =?us-ascii?Q?B1pbaf2vy/mhVn37sy4nJUBIm+N9Q0wn2vIHE1qzvM/CYgdtVSHiOyBG824d?=
- =?us-ascii?Q?Fr9jgSfbEz/NxYhmAaolqvJk7iAZgmKsaVG9+RcQ20zIJ/zJnS9HDqaDtnG5?=
- =?us-ascii?Q?u1jZtcVhietmGdr0oovhF0MllxIFxE4xQIAY5DGdFNhYWdTc7ww3Vl5q1mgI?=
- =?us-ascii?Q?3ff55gBRu+qfwBURrA2q4KH1yFaJLhLJ/Sou1q6UrqD1iwLhuXLRtUEkEOGU?=
- =?us-ascii?Q?WzF+rfvydlrVIgKpAEsIXPWOqbDgMfaxr9ufh26ewRx2rgzTb/DZdFP1vovv?=
- =?us-ascii?Q?m0AMFrxqpGlLFgGrrXI8ttScTjbJWs3FjPhwfbHj2RW8/JohNUXQA6g854+v?=
- =?us-ascii?Q?T1dPSNxYXIZgpHJn5HLJ0349Egg02s2TwkiGwQ++3NW0EnkxRSRvAL8d3Yyo?=
- =?us-ascii?Q?lHD58yDdji9rm05ynPFIXiHsVKDFKqyJkCMhfWJ5s1pI0BFIVriWVycmhhRw?=
- =?us-ascii?Q?V/oB+yjUDYFCc1PeV/GAS8L+i3Kg7ndvJFem/bfjJ5G/VdN0DTM5vBTQ1FDi?=
- =?us-ascii?Q?UI5SNSz5RRDfngcapsy0mW1RAsPVwoEzX/nXNleffeQUVmyei9sQsG91BYaK?=
- =?us-ascii?Q?S60bzGPrTOfZF6issSjW1s22?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 67224940-f587-41b6-7d44-08d8fed0dd5a
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB3573.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Apr 2021 23:07:09.4901
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: GDslOrShIQm8Qazr/VP6zNQhVv1AOWjYRPV6n/34UWTtCLP2zGcgN1Q5RTdh+Q/44PTPaAeBnZbVENvyoOJreFnmWErMMVKVTRSiceIGxYI=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3653
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9953 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 malwarescore=0
- spamscore=0 adultscore=0 phishscore=0 mlxlogscore=999 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
- definitions=main-2104130148
-X-Proofpoint-GUID: Wlncgm_f4XmzMDPqM7UR2xWRGnMCyuqf
-X-Proofpoint-ORIG-GUID: Wlncgm_f4XmzMDPqM7UR2xWRGnMCyuqf
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9953 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 spamscore=0
- impostorscore=0 priorityscore=1501 lowpriorityscore=0 adultscore=0
- bulkscore=0 phishscore=0 suspectscore=0 malwarescore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
- definitions=main-2104130148
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <912519f2-69f7-b31a-8c25-af6254e5d0d3@mdevsys.com>
+X-Originating-IP: [172.17.204.212]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-03.corp.yadro.com (172.17.100.103)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We need to make sure that abort and reset completion work has completed
-before ep_disconnect returns. After ep_disconnect we can't manipulate
-cmds because libiscsi will call conn_stop and take onwership.
+On Sat, Apr 10, 2021 at 11:27:12AM -0400, TomK wrote:
+> Hey Everyone,
+> 
+> In a basic SAN config using a few QLE2432 adapters connected to a target
+> using a QLE2464 adapter via a EMC Brocade 5000B switch, one of the
+> initiators fails to present a LUN after being online for sometime.  Over a
+> period of time, few months, the initiator on one of the hosts stops showing
+> available LUN's to the underlying VMware clients.
+> 
+> All the other hosts are fine, except for this specific one.  Unless that is,
+> I reboot the target completely, affecting all the other working hosts in the
+> process.
+> 
+> Digging a bit closer, I notice that the issue seems to strike an uncanny
+> similarity to the following one:
+> 
+> https://www.spinics.net/lists/linux-scsi/msg136622.html
 
-We are trying to make sure abort work and reset completion work has
-completed before we do the cmd clean up in ep_disconnect. The problem is
-that:
+Hi Tom,
 
-1. the work function sets the QEDI_CONN_FW_CLEANUP bit, so if the work
-was still pending we would not see the bit set. We need to do this before
-the work is queued.
+The discussion was related to P2P mode and that didn't work reliably
+back in 2019. Your case is different because of the fabric switch
+involved.
 
-2. If we had multiple works queued then we could break from the loop in
-qedi_ep_disconnect early because when abort work 1 completes it could
-clear QEDI_CONN_FW_CLEANUP. qedi_ep_disconnect could then see that before
-work 2 has run.
+You're running driver v10.00.00.07-k, included in Linux 4.18.  I guess
+that's Debian 9 (stretch) or Ubuntu 18.04 (Bionic).
 
-3. A tmf reset completion work could run after ep_disconnect starts
-cleaning up cmds via qedi_clearsq. ep_disconnect's call to qedi_clearsq
--> qedi_cleanup_all_io would might think it's done cleaning up cmds,
-but the reset completion work could still be running. We then return
-from ep_disconnect while still doing cleanup.
+What distribution are you running and what kernel version is installed
+on the target?
 
-This replaces the bit with a counter and adds a bool to prevent new
-works from starting from the completion path once a ep_disconnect starts.
+> 
+> However, I'm wondering why only one of the servers is affected and not the
+> others?  Seems it is a card issue with the first host (please see image)
+> however I'm not familiar with all the messages printed so can't be sure of
+> the reason nor link things as effectively. Neither of the two ports of the
+> HBA on Server 1 work, when in this disconnected state, despite switching
+> SFP's on the Brocade switch, switching cables etc. That is, again, until I
+> reboot the target entirely.
+> 
+> Initiator:
+>                  50:01:43:80:16:77:99:38; 50:01:43:80:16:77:99:3a;
+>                  50:01:43:80:16:77:99:3b; 50:01:43:80:16:77:99:39
+> 
+> Target:
+> 		(see below)
+> 
+> This also started to happen a few months ago.  Everything was fine for a few
+> years before that.
+> 
 
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
-Reviewed-by: Manish Rangankar <mrangankar@marvell.com>
----
- drivers/scsi/qedi/qedi_fw.c    | 46 +++++++++++++++++++++-------------
- drivers/scsi/qedi/qedi_iscsi.c | 23 +++++++++++------
- drivers/scsi/qedi/qedi_iscsi.h |  4 +--
- 3 files changed, 47 insertions(+), 26 deletions(-)
+I wonder if the kernel on the target was updated or may be ESXi itself
+was updated?
 
-diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-index 475cb7823cf1..13dd06915d74 100644
---- a/drivers/scsi/qedi/qedi_fw.c
-+++ b/drivers/scsi/qedi/qedi_fw.c
-@@ -156,7 +156,6 @@ static void qedi_tmf_resp_work(struct work_struct *work)
- 	struct iscsi_tm_rsp *resp_hdr_ptr;
- 	int rval = 0;
- 
--	set_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
- 	resp_hdr_ptr =  (struct iscsi_tm_rsp *)qedi_cmd->tmf_resp_buf;
- 
- 	rval = qedi_cleanup_all_io(qedi, qedi_conn, qedi_cmd->task, true);
-@@ -169,7 +168,10 @@ static void qedi_tmf_resp_work(struct work_struct *work)
- 
- exit_tmf_resp:
- 	kfree(resp_hdr_ptr);
--	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-+
-+	spin_lock(&qedi_conn->tmf_work_lock);
-+	qedi_conn->fw_cleanup_works--;
-+	spin_unlock(&qedi_conn->tmf_work_lock);
- }
- 
- static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
-@@ -225,16 +227,25 @@ static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
- 	}
- 	spin_unlock(&qedi_conn->list_lock);
- 
--	if (((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
--	      ISCSI_TM_FUNC_LOGICAL_UNIT_RESET) ||
--	    ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
--	      ISCSI_TM_FUNC_TARGET_WARM_RESET) ||
--	    ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
--	      ISCSI_TM_FUNC_TARGET_COLD_RESET)) {
-+	spin_lock(&qedi_conn->tmf_work_lock);
-+	switch (tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) {
-+	case ISCSI_TM_FUNC_LOGICAL_UNIT_RESET:
-+	case ISCSI_TM_FUNC_TARGET_WARM_RESET:
-+	case ISCSI_TM_FUNC_TARGET_COLD_RESET:
-+		if (qedi_conn->ep_disconnect_starting) {
-+			/* Session is down so ep_disconnect will clean up */
-+			spin_unlock(&qedi_conn->tmf_work_lock);
-+			goto unblock_sess;
-+		}
-+
-+		qedi_conn->fw_cleanup_works++;
-+		spin_unlock(&qedi_conn->tmf_work_lock);
-+
- 		INIT_WORK(&qedi_cmd->tmf_work, qedi_tmf_resp_work);
- 		queue_work(qedi->tmf_thread, &qedi_cmd->tmf_work);
- 		goto unblock_sess;
- 	}
-+	spin_unlock(&qedi_conn->tmf_work_lock);
- 
- 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr_ptr, NULL, 0);
- 	kfree(resp_hdr_ptr);
-@@ -1361,7 +1372,6 @@ static void qedi_abort_work(struct work_struct *work)
- 
- 	mtask = qedi_cmd->task;
- 	tmf_hdr = (struct iscsi_tm *)mtask->hdr;
--	set_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
- 
- 	spin_lock_bh(&conn->session->back_lock);
- 	ctask = iscsi_itt_to_ctask(conn, tmf_hdr->rtt);
-@@ -1427,11 +1437,7 @@ static void qedi_abort_work(struct work_struct *work)
- 
- 	send_iscsi_tmf(qedi_conn, qedi_cmd->task, ctask);
- 
--put_task:
--	iscsi_put_task(ctask);
--clear_cleanup:
--	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
--	return;
-+	goto put_task;
- 
- ldel_exit:
- 	spin_lock_bh(&qedi_conn->tmf_work_lock);
-@@ -1449,10 +1455,12 @@ static void qedi_abort_work(struct work_struct *work)
- 		qedi_conn->active_cmd_count--;
- 	}
- 	spin_unlock(&qedi_conn->list_lock);
--
-+put_task:
- 	iscsi_put_task(ctask);
--
--	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-+clear_cleanup:
-+	spin_lock(&qedi_conn->tmf_work_lock);
-+	qedi_conn->fw_cleanup_works--;
-+	spin_unlock(&qedi_conn->tmf_work_lock);
- }
- 
- static int send_iscsi_tmf(struct qedi_conn *qedi_conn, struct iscsi_task *mtask,
-@@ -1547,6 +1555,10 @@ int qedi_send_iscsi_tmf(struct qedi_conn *qedi_conn, struct iscsi_task *mtask)
- 
- 	switch (tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) {
- 	case ISCSI_TM_FUNC_ABORT_TASK:
-+		spin_lock(&qedi_conn->tmf_work_lock);
-+		qedi_conn->fw_cleanup_works++;
-+		spin_unlock(&qedi_conn->tmf_work_lock);
-+
- 		INIT_WORK(&qedi_cmd->tmf_work, qedi_abort_work);
- 		queue_work(qedi->tmf_thread, &qedi_cmd->tmf_work);
- 		break;
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 9a2d9a29fc01..17f1cbb376a4 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -592,7 +592,11 @@ static int qedi_conn_start(struct iscsi_cls_conn *cls_conn)
- 		goto start_err;
- 	}
- 
--	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-+	spin_lock(&qedi_conn->tmf_work_lock);
-+	qedi_conn->fw_cleanup_works = 0;
-+	qedi_conn->ep_disconnect_starting = false;
-+	spin_unlock(&qedi_conn->tmf_work_lock);
-+
- 	qedi_conn->abrt_conn = 0;
- 
- 	rval = iscsi_conn_start(cls_conn);
-@@ -1009,7 +1013,6 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
- 	int ret = 0;
- 	int wait_delay;
- 	int abrt_conn = 0;
--	int count = 10;
- 
- 	wait_delay = 60 * HZ + DEF_MAX_RT_TIME;
- 	qedi_ep = ep->dd_data;
-@@ -1027,13 +1030,19 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
- 		iscsi_ep_prep_disconnect(conn);
- 		abrt_conn = qedi_conn->abrt_conn;
- 
--		while (count--)	{
--			if (!test_bit(QEDI_CONN_FW_CLEANUP,
--				      &qedi_conn->flags)) {
--				break;
--			}
-+		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
-+			  "cid=0x%x qedi_ep=%p waiting for %d tmfs\n",
-+			  qedi_ep->iscsi_cid, qedi_ep,
-+			  qedi_conn->fw_cleanup_works);
-+
-+		spin_lock(&qedi_conn->tmf_work_lock);
-+		qedi_conn->ep_disconnect_starting = true;
-+		while (qedi_conn->fw_cleanup_works > 0) {
-+			spin_unlock(&qedi_conn->tmf_work_lock);
- 			msleep(1000);
-+			spin_lock(&qedi_conn->tmf_work_lock);
- 		}
-+		spin_unlock(&qedi_conn->tmf_work_lock);
- 
- 		if (test_bit(QEDI_IN_RECOVERY, &qedi->flags)) {
- 			if (qedi_do_not_recover) {
-diff --git a/drivers/scsi/qedi/qedi_iscsi.h b/drivers/scsi/qedi/qedi_iscsi.h
-index 68ef519f5480..758735209e15 100644
---- a/drivers/scsi/qedi/qedi_iscsi.h
-+++ b/drivers/scsi/qedi/qedi_iscsi.h
-@@ -169,8 +169,8 @@ struct qedi_conn {
- 	struct list_head tmf_work_list;
- 	wait_queue_head_t wait_queue;
- 	spinlock_t tmf_work_lock;	/* tmf work lock */
--	unsigned long flags;
--#define QEDI_CONN_FW_CLEANUP	1
-+	bool ep_disconnect_starting;
-+	int fw_cleanup_works;
- };
- 
- struct qedi_cmd {
--- 
-2.25.1
+The log below is helpful but not complete, it's not clear what happened
+early after the first link init. To collect full logs you might need to
+boot the kernel with qla2xxx.logging=0x7fffffff and then dump everything
+related a port of qla2xxx, (e.g. 0000:04.00.0):
 
+journalctl -k | grep 'qla2xxx \[0000:04:00.0\]'
+
+> 
+> Log snippet:
+> 
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e818:
+> is_send_status=1, cmd->bufflen=73728, cmd->sg_cnt=0,
+> cmd->dma_data_direction=2 se_cmd[00000000cc1dc466] qp 0
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:2: qlt_free_cmd:
+> se_cmd[00000000cc1dc466] ox_id 00e1
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:2:
+> qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0110
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e818:
+> is_send_status=1, cmd->bufflen=10240, cmd->sg_cnt=0,
+> cmd->dma_data_direction=2 se_cmd[00000000cc1dc466] qp 0
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:2: qlt_free_cmd:
+> se_cmd[00000000cc1dc466] ox_id 0110
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:2:
+> qlt_24xx_atio_pkt_all_vps: qla_target(0): type d ox_id 0000
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e82e:2: IMMED_NOTIFY
+> ATIO
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f826:2:
+> qla_target(0): Port ID: 01:09:00 ELS opcode: 0x03 lid 7
+> 50:01:43:80:16:77:99:3a
+
+
+Initiator port 3a performs PLOGI.
+
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f897:2: Linking sess
+> 00000000088a6dfa [0] wwn 50:01:43:80:16:77:99:3a with PLOGI ACK to wwn
+> 50:01:43:80:16:77:99:3a s_id 01:09:00, ref=1 pla 000000004bdf1d76 link 0
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28f9:2:
+> qlt_handle_login 4772 50:01:43:80:16:77:99:3a  DS 8
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28f9:2:
+> qlt_handle_login 4803 50:01:43:80:16:77:99:3a post del sess
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e801:2: Scheduling
+> sess 00000000088a6dfa for deletion
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f826:2:
+> qla_target(0): Exit ELS opcode: 0x03 res 0
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-290a:2:
+> qlt_unreg_sess sess 00000000088a6dfa for deletion 50:01:43:80:16:77:99:3a
+
+PLOGI replaces existing and session and it's scheduled for deletion and
+transitioned from ONLINE to LOST.
+
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-287d:2: FCPort
+> 50:01:43:80:16:77:99:3a state transitioned from ONLINE to LOST -
+> portid=010900.
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28a3:2: Port login
+> retry 500143801677993a, lid 0x0007 retry cnt=45.
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f884:2:
+> qlt_free_session_done: se_sess 000000001f2eac78 / sess 00000000088a6dfa from
+> port 50:01:43:80:16:77:99:3a loop_id 0x07 s_id 01:09:00 logout 1 keep 1
+> els_logo 0
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f886:2:
+> qlt_free_session_done: waiting for sess 00000000088a6dfa logout
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2870:2: Async-logout
+> - hdl=172 loop-id=7 portid=010900 50:01:43:80:16:77:99:3a.
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-5836:2: Async-logout
+> complete - 50:01:43:80:16:77:99:3a hdl=172 portid=010900 iop0=0.
+> Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f893:2:
+> qlt_logo_completion_handler: se_sess 000000001f2eac78 / sess
+> 00000000088a6dfa from port 50:01:43:80:16:77:99:3a loop_id 0x07 s_id
+> 01:09:00 LOGO failed: 0x0
+
+Then some interesting things happens:
+(https://www.microdevsys.com/WordPressDownloads/qla2xxx-hba.log-recent.start.end.event.txt):
+
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-680b:2: isp_abort_needed=0 loop_resync_needed=0 fcport_update_needed=0 start_dpc=0 reset_marker_needed=0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-680c:2: beacon_blink_needed=0 isp_unrecoverable=0 fcoe_ctx_reset_needed=0 vp_dpc_needed=0 relogin_needed=1.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-4801:2: DPC handler waking up, dpc_flags=0x100.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-480d:2: Relogin scheduled.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-4800:2: DPC handler sleeping.
+
+Target then tries to relogin into some ports.
+
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2908:2: qla2x00_relogin 21:01:00:1b:32:a1:81:21 DS 0 LS 7
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2902:2: qla24xx_handle_relogin_event 21:01:00:1b:32:a1:81:21 DS 0 LS 7 P 0 del 2 cnfl           (null) rscn 0|0 login 0|0 fl 3
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28d8:2: qla24xx_fcport_handle_login 21:01:00:1b:32:a1:81:21 DS 0 LS 7 P 0 fl 3 confl           (null) rscn 0|0 login 0 retry 45 lid 4096 scan 2
+
+This is a nitpick but it seems you have both target ports in the same
+zone: 21:01:00:1b:32:a1:81:21 and 21:00:00:1b:32:81:81:21. It's
+recommended to use pairs Single Initiator Port / Single Target Port zones.
+
+Typically there's not much sense to have zoning between pure target
+ports.
+
+Please see:
+ https://www.brighttalk.com/webcast/14967/355259
+ https://fibrechannel.org/wp-content/uploads/2019/06/FCIA-FC-Zoning-Basics-Final.pdf
+ https://fibrechannel.org/fibre-channel-zoning-fundamentals-and-fundamental-questions/
+
+[... log message related to port 38 ...]
+
+The target considers relogin into port 3a:
+
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2908:2: qla2x00_relogin 50:01:43:80:16:77:99:3a DS 10 LS 3
+
+DS = 10 means DSC_DELETE_PEND, LS 3 = DSC_LS_PLOGI_PEND
+
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2902:2: qla24xx_handle_relogin_event 50:01:43:80:16:77:99:3a DS 10 LS 3 P 0 del 1 cnfl           (null) rscn 0|0 login 8|9 fl 1
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-480e:2: Relogin end.
+
+But relogin from target side is skipped because the session is pending PLOGI:
+
+        if ((fcport->fw_login_state == DSC_LS_PLOGI_PEND) ||
+            (fcport->fw_login_state == DSC_LS_PRLI_PEND))
+                return;
+
+The session is then getting fully deleted:
+
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f887:2: qlt_free_session_done: sess 00000000088a6dfa logout completed
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f89a:2: se_sess           (null) / sess 00000000088a6dfa port 50:01:43:80:16:77:99:3a is gone, releasing own PLOGI (ref=1)
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-5889:2: Sending PLOGI ACK to wwn 50:01:43:80:16:77:99:3a s_id 01:09:00 loop_id 0x07 exch 0x11223c ox_id 0xae
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f801:2: Unregistration of sess 00000000088a6dfa 50:01:43:80:16:77:99:3a finished fcp_cnt 4
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28f4:2: Async-nack 50:01:43:80:16:77:99:3a hndl 175 PLOGI
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28f2:2: Async done-nack res 0 50:01:43:80:16:77:99:3a  type 16
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-5811:2: Asynchronous PORT UPDATE ignored 0007/0004/0600.
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f83d:2: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=7, m[2]=4, m[3]=600)
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f83e:2: Async MB 2: Got PLOGI Complete
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f83d:2: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=7, m[2]=4, m[3]=600)
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f83e:2: Async MB 2: Got PLOGI Complete
+
+New PLOGI from 3a is accepted.
+
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:2: qlt_24xx_atio_pkt_all_vps: qla_target(0): type d ox_id 5001
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e82e:2: IMMED_NOTIFY ATIO
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f826:2: qla_target(0): Port ID: 01:09:00 ELS opcode: 0x20 lid 7 50:01:43:80:16:77:99:3a
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f896:2: PRLI (loop_id 0x07) for existing sess 00000000088a6dfa (loop_id 0x07)
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28fb:2: qlt_24xx_handle_els 4986 50:01:43:80:16:77:99:3a post nack
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f826:2: qla_target(0): Exit ELS opcode: 0x20 res 0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f806:2: Adding sess 00000000088a6dfa se_sess 000000001f2eac78  to tgt 00000000be50a70a sess_count 6
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f84b:2: qla_target(0): session for wwn 50:01:43:80:16:77:99:3a (loop_id 7, s_id 1:9:0, confirmed completion not supported) added
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-d034:2: qla24xx_do_nack_work create sess success 00000000088a6dfa
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28f4:2: Async-nack 50:01:43:80:16:77:99:3a hndl 176 PRLI
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28f2:2: Async done-nack res 0 50:01:43:80:16:77:99:3a  type 17
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28f3:2: qla2x00_async_nack_sp_done 606 50:01:43:80:16:77:99:3a post upd_fcport fcp_cnt 5
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-28ef:2: qla2x00_update_fcport 50:01:43:80:16:77:99:3a
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-287d:2: FCPort 50:01:43:80:16:77:99:3a state transitioned from LOST to ONLINE - portid=010900.
+
+Initiator successfully performed PRLI, so FCP session from port 3a should
+be established... but then the session is not added to the target.
+The line provide a hint about what's going on:
+
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2100:2: qla_nvme_register_remote: Not registering target since Host NVME is not enabled
+
+The line is printed from:
+
+int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
+{
+[...]
+        if (!vha->flags.nvme_enabled) {
+                ql_log(ql_log_info, vha, 0x2100,
+                    "%s: Not registering target since Host NVME is not enabled\n",
+                    __func__);
+                return 0;
+        }
+[...]
+}
+
+And qla2x00_update_fcport() quits before the session is added to target:
+
+void
+qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
+{
+[...]
+        qla2x00_set_fcport_state(fcport, FCS_ONLINE);
+        qla2x00_iidma_fcport(vha, fcport);
+
+        if (fcport->fc4f_nvme) {
+                qla_nvme_register_remote(vha, fcport);
+                return;
+        }
+
+        qla24xx_update_fcport_fcp_prio(vha, fcport);
+
+	switch (vha->host->active_mode) {
+        case MODE_INITIATOR:
+                qla2x00_reg_remote_port(vha, fcport);
+                break;
+        case MODE_TARGET:
+                if (!vha->vha_tgt.qla_tgt->tgt_stop &&
+                        !vha->vha_tgt.qla_tgt->tgt_stopped)
+                        qlt_fc_port_added(vha, fcport);
+                break;
+        case MODE_DUAL:
+                qla2x00_reg_remote_port(vha, fcport);
+                if (!vha->vha_tgt.qla_tgt->tgt_stop &&
+                        !vha->vha_tgt.qla_tgt->tgt_stopped)
+                        qlt_fc_port_added(vha, fcport);
+                break;
+        default:
+                break;
+        }
+[...]
+}
+
+Initiator thinks the session is alive because PRLI was accepted but the
+session doesn't exist from the target perspective and all I/O from the
+initiator port is going to be discarded.
+
+I guess NVMe support introduced in e84067d743010 ("scsi: qla2xxx: Add
+FC-NVMe F/W initialization and transport registration") broke target in
+v4.18
+
+On the second target port of the same HBA (21:01:00:1b:32:a1:81:21) I
+can see that target is blindly rejecting PLOGI from port 3a:
+
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.1]-e872:3: qlt_24xx_atio_pkt_all_vps: qla_target(0): type d ox_id 0000
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.1]-e82e:3: IMMED_NOTIFY ATIO
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.1]-f826:3: qla_target(0): Port ID: 01:09:00 ELS opcode: 0x03 lid 7 50:01:43:80:16:77:99:3a
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.1]-e81c:3: Sending TERM ELS CTIO (ha=0000000000841139)
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.1]-f897:3: Linking sess 0000000050a6ebea [0] wwn 50:01:43:80:16:77:99:3a with PLOGI ACK to wwn 50:01:43:80:16:77:99:3a s_id 01:09:00, ref=2 pla 0000000091a7edfc link 0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.1]-28f9:3: qlt_handle_login 4772 50:01:43:80:16:77:99:3a  DS 3
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.1]-28f9:3: qlt_handle_login 4803 50:01:43:80:16:77:99:3a post del sess
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.1]-f826:3: qla_target(0): Exit ELS opcode: 0x03 res 0
+Mar 28 02:40:24 mbpc-pc kernel: qla2xxx [0000:04:00.1]-e862:3: qla_target(0): Unexpected NOTIFY_ACK received
+
+[...]
+
+Mar 28 02:40:45 mbpc-pc kernel: qla2xxx [0000:04:00.1]-e872:3: qlt_24xx_atio_pkt_all_vps: qla_target(0): type d ox_id 0000
+Mar 28 02:40:45 mbpc-pc kernel: qla2xxx [0000:04:00.1]-e82e:3: IMMED_NOTIFY ATIO
+Mar 28 02:40:45 mbpc-pc kernel: qla2xxx [0000:04:00.1]-f826:3: qla_target(0): Port ID: 01:09:00 ELS opcode: 0x03 lid 7 50:01:43:80:16:77:99:3a
+Mar 28 02:40:45 mbpc-pc kernel: qla2xxx [0000:04:00.1]-e81c:3: Sending TERM ELS CTIO (ha=0000000000841139)
+Mar 28 02:40:45 mbpc-pc kernel: qla2xxx [0000:04:00.1]-f897:3: Linking sess 0000000050a6ebea [0] wwn 50:01:43:80:16:77:99:3a with PLOGI ACK to wwn 50:01:43:80:16:77:99:3a s_id 01:09:00, ref=2 pla 0000000091a7edfc link 0
+Mar 28 02:40:45 mbpc-pc kernel: qla2xxx [0000:04:00.1]-28f9:3: qlt_handle_login 4772 50:01:43:80:16:77:99:3a  DS 3
+Mar 28 02:40:45 mbpc-pc kernel: qla2xxx [0000:04:00.1]-28f9:3: qlt_handle_login 4803 50:01:43:80:16:77:99:3a post del sess
+Mar 28 02:40:45 mbpc-pc kernel: qla2xxx [0000:04:00.1]-f826:3: qla_target(0): Exit ELS opcode: 0x03 res 0
+Mar 28 02:40:45 mbpc-pc kernel: qla2xxx [0000:04:00.1]-e862:3: qla_target(0): Unexpected NOTIFY_ACK received
+
+I couldn't find anything relevant in the provided logs about the port
+but I guess it might be because of session not added to the target.
+
+As a solution I recommend you to change kernel source on the target
+from:
+
+        if (fcport->fc4f_nvme) {
+                qla_nvme_register_remote(vha, fcport);
+                return;
+        }
+
+to:
+
+        if (vha->host->active_mode != MODE_TARGET && fcport->fc4f_nvme) {
+                qla_nvme_register_remote(vha, fcport);
+                return;
+        }
+
+
+Hope that helps,
+Roman
