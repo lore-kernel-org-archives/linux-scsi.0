@@ -7,33 +7,36 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCFB0C433ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 22:39:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A73AC433ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 22:39:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 982C161244
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 22:39:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9ECD61019
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Apr 2021 22:39:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234676AbhDNWjc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Apr 2021 18:39:32 -0400
-Received: from angie.orcam.me.uk ([157.25.102.26]:38926 "EHLO
-        angie.orcam.me.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234218AbhDNWja (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 18:39:30 -0400
+        id S234811AbhDNWjg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Apr 2021 18:39:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56790 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234218AbhDNWjf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Apr 2021 18:39:35 -0400
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3252AC061574;
+        Wed, 14 Apr 2021 15:39:13 -0700 (PDT)
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 3C7FC9200B3; Thu, 15 Apr 2021 00:39:07 +0200 (CEST)
+        id 9449592009E; Thu, 15 Apr 2021 00:39:12 +0200 (CEST)
 Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 39DE492009E;
-        Thu, 15 Apr 2021 00:39:07 +0200 (CEST)
-Date:   Thu, 15 Apr 2021 00:39:07 +0200 (CEST)
+        by angie.orcam.me.uk (Postfix) with ESMTP id 90EC192009C;
+        Thu, 15 Apr 2021 00:39:12 +0200 (CEST)
+Date:   Thu, 15 Apr 2021 00:39:12 +0200 (CEST)
 From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
 To:     Khalid Aziz <khalid@gonehiking.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH 1/5] scsi: BusLogic: Fix missing `pr_cont' use
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/5] scsi: BusLogic: Avoid unbounded `vsprintf' use
 In-Reply-To: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk>
-Message-ID: <alpine.DEB.2.21.2104141419040.44318@angie.orcam.me.uk>
+Message-ID: <alpine.DEB.2.21.2104141521190.44318@angie.orcam.me.uk>
 References: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
@@ -42,101 +45,28 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update BusLogic driver's messaging system to use `pr_cont' for 
-continuation lines, bringing messy output:
-
-pci 0000:00:13.0: PCI->APIC IRQ transform: INT A -> IRQ 17
-scsi: ***** BusLogic SCSI Driver Version 2.1.17 of 12 September 2013 *****
-scsi: Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>
-scsi0: Configuring BusLogic Model BT-958 PCI Wide Ultra SCSI Host Adapter
-scsi0:   Firmware Version: 5.07B, I/O Address: 0x7000, IRQ Channel: 17/Level
-scsi0:   PCI Bus: 0, Device: 19, Address:
-0xE0012000,
-Host Adapter SCSI ID: 7
-scsi0:   Parity Checking: Enabled, Extended Translation: Enabled
-scsi0:   Synchronous Negotiation: Ultra, Wide Negotiation: Enabled
-scsi0:   Disconnect/Reconnect: Enabled, Tagged Queuing: Enabled
-scsi0:   Scatter/Gather Limit: 128 of 8192 segments, Mailboxes: 211
-scsi0:   Driver Queue Depth: 211, Host Adapter Queue Depth: 192
-scsi0:   Tagged Queue Depth:
-Automatic
-, Untagged Queue Depth: 3
-scsi0:   SCSI Bus Termination: Both Enabled
-, SCAM: Disabled
-
-scsi0: *** BusLogic BT-958 Initialized Successfully ***
-scsi host0: BusLogic BT-958
-
-back to order:
-
-pci 0000:00:13.0: PCI->APIC IRQ transform: INT A -> IRQ 17
-scsi: ***** BusLogic SCSI Driver Version 2.1.17 of 12 September 2013 *****
-scsi: Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>
-scsi0: Configuring BusLogic Model BT-958 PCI Wide Ultra SCSI Host Adapter
-scsi0:   Firmware Version: 5.07B, I/O Address: 0x7000, IRQ Channel: 17/Level
-scsi0:   PCI Bus: 0, Device: 19, Address: 0xE0012000, Host Adapter SCSI ID: 7
-scsi0:   Parity Checking: Enabled, Extended Translation: Enabled
-scsi0:   Synchronous Negotiation: Ultra, Wide Negotiation: Enabled
-scsi0:   Disconnect/Reconnect: Enabled, Tagged Queuing: Enabled
-scsi0:   Scatter/Gather Limit: 128 of 8192 segments, Mailboxes: 211
-scsi0:   Driver Queue Depth: 211, Host Adapter Queue Depth: 192
-scsi0:   Tagged Queue Depth: Automatic, Untagged Queue Depth: 3
-scsi0:   SCSI Bus Termination: Both Enabled, SCAM: Disabled
-scsi0: *** BusLogic BT-958 Initialized Successfully ***
-scsi host0: BusLogic BT-958
-
-Also diagnostic output such as with the `BusLogic=TraceConfiguration' 
-parameter is affected and becomes vertical and therefore hard to read.  
-This has now been corrected, e.g.:
-
-pci 0000:00:13.0: PCI->APIC IRQ transform: INT A -> IRQ 17
-blogic_cmd(86) Status = 30:  4 ==>  4: FF 05 93 00
-blogic_cmd(95) Status = 28: (Modify I/O Address)
-blogic_cmd(91) Status = 30:  1 ==>  1: 01
-blogic_cmd(04) Status = 30:  4 ==>  4: 41 41 35 30
-blogic_cmd(8D) Status = 30: 14 ==> 14: 45 DC 00 20 00 00 00 00 00 40 30 37 42 1D
-scsi: ***** BusLogic SCSI Driver Version 2.1.17 of 12 September 2013 *****
-scsi: Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>
-blogic_cmd(04) Status = 30:  4 ==>  4: 41 41 35 30
-blogic_cmd(0B) Status = 30:  3 ==>  3: 00 08 07
-blogic_cmd(0D) Status = 30: 34 ==> 34: 03 01 07 04 00 00 00 00 00 00 00 00 00 00 00 00 FF 42 44 46 FF 00 00 00 00 00 00 00 00 00 FF 00 FF 00
-blogic_cmd(8D) Status = 30: 14 ==> 14: 45 DC 00 20 00 00 00 00 00 40 30 37 42 1D
-blogic_cmd(84) Status = 30:  1 ==>  1: 37
-blogic_cmd(8B) Status = 30:  5 ==>  5: 39 35 38 20 20
-blogic_cmd(85) Status = 30:  1 ==>  1: 42
-blogic_cmd(86) Status = 30:  4 ==>  4: FF 05 93 00
-blogic_cmd(91) Status = 30: 64 ==> 64: 41 46 3E 20 39 35 38 20 20 00 C4 00 04 01 07 2F 07 04 35 FF FF FF FF FF FF FF FF FF FF 01 00 FE FF 08 FF FF 00 00 00 00 00 00 00 01 00 01 00 00 FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 FC
-scsi0: Configuring BusLogic Model BT-958 PCI Wide Ultra SCSI Host Adapter
-
-etc.
+Existing `blogic_msg' invocations do not appear to overrun its internal 
+buffer of a fixed length of 100, which would cause stack corruption, but 
+it's easy to miss with possible further updates and a fix is cheap in 
+performance terms, so limit the output produced into the buffer by using 
+`vsnprintf' rather than `vsprintf'.
 
 Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
-Fixes: 4bcc595ccd80 ("printk: reinstate KERN_CONT for printing continuation lines")
-Cc: stable@vger.kernel.org # v4.9+
 ---
- drivers/scsi/BusLogic.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/BusLogic.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-linux-buslogic-pr-cont.diff
+linux-buslogic-vsnprintf.diff
 Index: linux-macro-ide/drivers/scsi/BusLogic.c
 ===================================================================
 --- linux-macro-ide.orig/drivers/scsi/BusLogic.c
 +++ linux-macro-ide/drivers/scsi/BusLogic.c
-@@ -3603,7 +3603,7 @@ static void blogic_msg(enum blogic_msgle
- 			if (buf[0] != '\n' || len > 1)
- 				printk("%sscsi%d: %s", blogic_msglevelmap[msglevel], adapter->host_no, buf);
- 		} else
--			printk("%s", buf);
-+			pr_cont("%s", buf);
- 	} else {
- 		if (begin) {
- 			if (adapter != NULL && adapter->adapter_initd)
-@@ -3611,7 +3611,7 @@ static void blogic_msg(enum blogic_msgle
- 			else
- 				printk("%s%s", blogic_msglevelmap[msglevel], buf);
- 		} else
--			printk("%s", buf);
-+			pr_cont("%s", buf);
- 	}
- 	begin = (buf[len - 1] == '\n');
- }
+@@ -3588,7 +3588,7 @@ static void blogic_msg(enum blogic_msgle
+ 	int len = 0;
+ 
+ 	va_start(args, adapter);
+-	len = vsprintf(buf, fmt, args);
++	len = vsnprintf(buf, sizeof(buf), fmt, args);
+ 	va_end(args);
+ 	if (msglevel == BLOGIC_ANNOUNCE_LEVEL) {
+ 		static int msglines = 0;
