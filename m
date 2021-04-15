@@ -2,125 +2,166 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 293A7C433ED
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 12:19:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 946D9C433B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 12:19:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFE8861222
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 12:19:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58A3761222
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 12:19:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232716AbhDOMTc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Apr 2021 08:19:32 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:42502 "EHLO
+        id S232735AbhDOMTe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Apr 2021 08:19:34 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:25464 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230202AbhDOMTc (ORCPT
+        by vger.kernel.org with ESMTP id S231391AbhDOMTd (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 15 Apr 2021 08:19:32 -0400
+        Thu, 15 Apr 2021 08:19:33 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
         s=mimecast20190719; t=1618489149;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=msL/27Cq/Mxz/erFTua/ChctcACbjdqbgpw34HcijJ4=;
-        b=OBZ0AxVAgBAvjI8GYOEmR2s54CVWzFNDBl2uU8Jnsem++SYOCBdJKp3y5R2kBnT5llnI6M
-        9+k60u4XOOB7s3lJ7rKj2QW7UZs43u1z3WaEBMJbrZETCvy1P2fJ9AJ2DaIK4GcJnGTVdS
-        WvZmcvG6BH7E9wB+AG7Ryz4B1URLtjY=
+        bh=+nSR8Fdn/QFee9fygyqORQIyEydWILjxfded0NRyhqc=;
+        b=PfNPbpePieqmUYVn09CS10W0kt0jWcqEs6gKKRjiAFric5yGfncdJxvCXaeUCShF2IaFJZ
+        HRf7oQ7ijMHywdxlA2GZTjoPEQoLV5PwRU8YTa0Yi/w8C1goCYExe/9hLLcfr2tDkPdwrZ
+        X4jOieWh5zwPrvzw96+keGkiN+eAqPk=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-271-JpNs0ACUN_efEKxVu5Gh2A-1; Thu, 15 Apr 2021 08:19:06 -0400
-X-MC-Unique: JpNs0ACUN_efEKxVu5Gh2A-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+ us-mta-586-6wCv39xSO6eqsS-E4o6z4g-1; Thu, 15 Apr 2021 08:19:07 -0400
+X-MC-Unique: 6wCv39xSO6eqsS-E4o6z4g-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A1FE6107ACC7;
-        Thu, 15 Apr 2021 12:19:05 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.40.193.5])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id EFF576267F;
-        Thu, 15 Apr 2021 12:19:04 +0000 (UTC)
-Subject: Re: [PATCH v2 15/24] mpi3mr: allow certain commands during pci-remove
- hook
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     sathya.prakash@broadcom.com
-References: <20210407020451.924822-1-kashyap.desai@broadcom.com>
- <20210407020451.924822-16-kashyap.desai@broadcom.com>
-From:   Tomas Henzl <thenzl@redhat.com>
-Message-ID: <e868770d-89dc-5797-5991-1365266bd648@redhat.com>
-Date:   Thu, 15 Apr 2021 14:19:04 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 40F2664149;
+        Thu, 15 Apr 2021 12:19:06 +0000 (UTC)
+Received: from T590 (ovpn-12-95.pek2.redhat.com [10.72.12.95])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3C38D60CC5;
+        Thu, 15 Apr 2021 12:19:01 +0000 (UTC)
+Date:   Thu, 15 Apr 2021 20:18:56 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [bug report] shared tags causes IO hang and performance drop
+Message-ID: <YHgvMAHqIq9f6pQn@T590>
+References: <YHaez6iN2HHYxYOh@T590>
+ <9a6145a5-e6ac-3d33-b52a-0823bfc3b864@huawei.com>
+ <cb326d404c6e0785d03a7dfadc42832c@mail.gmail.com>
+ <YHbOOfGNHwO4SMS7@T590>
+ <87ceccf2-287b-9bd1-899a-f15026c9e65b@huawei.com>
+ <YHe3M62agQET6o6O@T590>
+ <3e76ffc7-1d71-83b6-ef5b-3986e947e372@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20210407020451.924822-16-kashyap.desai@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3e76ffc7-1d71-83b6-ef5b-3986e947e372@huawei.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/7/21 4:04 AM, Kashyap Desai wrote:
-> This patch allows SSU and Sync Cache commands to be sent to the controller
-> instead of driver returning DID_NO_CONNECT during driver unload to flush
-> any cached data from the drive.
+On Thu, Apr 15, 2021 at 11:41:52AM +0100, John Garry wrote:
+> Hi Ming,
 > 
-> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Cc: sathya.prakash@broadcom.com
-> ---
->  drivers/scsi/mpi3mr/mpi3mr_os.c | 24 +++++++++++++++++++++++-
->  1 file changed, 23 insertions(+), 1 deletion(-)
+> I'll have a look.
 > 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> index a521e59efd28..558be8c75a88 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -2862,6 +2862,27 @@ static int mpi3mr_target_alloc(struct scsi_target *starget)
->  	return retval;
->  }
->  
-> +
-> +/**
-> + * mpi3mr_allow_scmd_to_fw - Command is allowed during shutdown
-> + * @scmd: SCSI Command reference
-> + *
-> + * Checks whether a CDB is allowed during shutdown or not.
-> + *
-> + * Return: TRUE for allowed commands, FALSE otherwise.
-> + */
-> +
-> +inline bool mpi3mr_allow_scmd_to_fw(struct scsi_cmnd *scmd)
-> +{
-> +	switch (scmd->cmnd[0]) {
-> +	case SYNCHRONIZE_CACHE:
-> +	case START_STOP:
-> +		return true;
-> +	default:
-> +		return false;
-> +	}
-> +}
-> +
->  /**
->   * mpi3mr_qcmd - I/O request despatcher
->   * @shost: SCSI Host reference
-> @@ -2897,7 +2918,8 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
->  		goto out;
->  	}
->  
-> -	if (mrioc->stop_drv_processing) {
-> +	if (mrioc->stop_drv_processing &&
-> +	    !(mpi3mr_allow_scmd_to_fw(scmd))) {
->  		scmd->result = DID_NO_CONNECT << 16;
->  		scmd->scsi_done(scmd);
->  		goto out;
-> 
-Looks good
+> BTW, are you intentionally using scsi_debug over null_blk? null_blk supports
+> shared sbitmap as well, and performance figures there are generally higher
+> than scsi_debug for similar fio settings.
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+I use both, but scsi_debug can cover scsi stack test.
+
+Thanks,
+Ming
+
+> 
+> Thanks,
+> john
+> 
+> EOM
+> 
+> 
+> > > 		IOPs
+> > > mq-deadline	usr=21.72%, sys=44.18%,		423K
+> > > none		usr=23.15%, sys=74.01%		450K
+> > Today I re-run the scsi_debug test on two server hardwares(32cores, dual
+> > numa nodes), and the CPU utilization issue can be reproduced, follow
+> > the test result:
+> > 
+> > 1) randread test on ibm-x3850x6[*] with deadline
+> > 
+> >                |IOPS    | FIO CPU util
+> > ------------------------------------------------
+> > hosttags      | 94k    | usr=1.13%, sys=14.75%
+> > ------------------------------------------------
+> > non hosttags  | 124k   | usr=1.12%, sys=10.65%,
+> > 
+> > 
+> > 2) randread test on ibm-x3850x6[*] with none
+> >                |IOPS    | FIO CPU util
+> > ------------------------------------------------
+> > hosttags      | 120k   | usr=0.89%, sys=6.55%
+> > ------------------------------------------------
+> > non hosttags  | 121k   | usr=1.07%, sys=7.35%
+> > ------------------------------------------------
+> > 
+> >   *:
+> >   	- that is the machine Yanhui reported VM cpu utilization increased by 20%
+> > 	- kernel: latest linus tree(v5.12-rc7, commit: 7f75285ca57)
+> > 	- also run same test on another 32cores machine, IOPS drop isn't
+> > 	  observed, but CPU utilization is increased obviously
+> > 
+> > 3) test script
+> > #/bin/bash
+> > 
+> > run_fio() {
+> > 	RTIME=$1
+> > 	JOBS=$2
+> > 	DEVS=$3
+> > 	BS=$4
+> > 
+> > 	QD=64
+> > 	BATCH=16
+> > 
+> > 	fio --bs=$BS --ioengine=libaio \
+> > 		--iodepth=$QD \
+> > 	    --iodepth_batch_submit=$BATCH \
+> > 		--iodepth_batch_complete_min=$BATCH \
+> > 		--filename=$DEVS \
+> > 		--direct=1 --runtime=$RTIME --numjobs=$JOBS --rw=randread \
+> > 		--name=test --group_reporting
+> > }
+> > 
+> > SCHED=$1
+> > 
+> > NRQS=`getconf _NPROCESSORS_ONLN`
+> > 
+> > rmmod scsi_debug
+> > modprobe scsi_debug host_max_queue=128 submit_queues=$NRQS virtual_gb=256
+> > sleep 2
+> > DEV=`lsscsi | grep scsi_debug | awk '{print $6}'`
+> > echo $SCHED >/sys/block/`basename $DEV`/queue/scheduler
+> > echo 128 >/sys/block/`basename $DEV`/device/queue_depth
+> > run_fio 20 16 $DEV 8K
+> > 
+> > 
+> > rmmod scsi_debug
+> > modprobe scsi_debug max_queue=128 submit_queues=1 virtual_gb=256
+> > sleep 2
+> > DEV=`lsscsi | grep scsi_debug | awk '{print $6}'`
+> > echo $SCHED >/sys/block/`basename $DEV`/queue/scheduler
+> > echo 128 >/sys/block/`basename $DEV`/device/queue_depth
+> > run_fio 20 16 $DEV 8k
+> 
+> 
+
+-- 
+Ming
 
