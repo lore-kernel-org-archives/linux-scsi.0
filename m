@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE84FC43470
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0543BC43461
 	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 22:08:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 85076610F7
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 22:08:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB0A2610FB
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 22:08:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236606AbhDOWJS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Apr 2021 18:09:18 -0400
-Received: from mail-pj1-f49.google.com ([209.85.216.49]:35782 "EHLO
-        mail-pj1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236569AbhDOWJR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Apr 2021 18:09:17 -0400
-Received: by mail-pj1-f49.google.com with SMTP id il9-20020a17090b1649b0290114bcb0d6c2so15227379pjb.0
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Apr 2021 15:08:53 -0700 (PDT)
+        id S236649AbhDOWJR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Apr 2021 18:09:17 -0400
+Received: from mail-pj1-f42.google.com ([209.85.216.42]:34611 "EHLO
+        mail-pj1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236589AbhDOWJP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Apr 2021 18:09:15 -0400
+Received: by mail-pj1-f42.google.com with SMTP id em21-20020a17090b0155b029014e204a81e6so5391672pjb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Apr 2021 15:08:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=YMKuvSuStmi+Y5MBD+/AJkPa4jmcUESw9esKkMO9iHU=;
-        b=lRiNefsJwfkuD5Iukdwq5Pyi7tnzbRkMxAGB5/oadpDbH16JEoBsxSfcrEwub8pHBa
-         deS9H6bPFq1yOb68V1KRyPnS3oWHlZuTD3sOFSoYOmB0zZTZzGreeML0UMVt8I/59cXn
-         azhKra95FE3AoqlhWyd+EZKr7kmASbmUuzrufYNHbO7QubUFgHbH5Ngxl1ps1sc873jg
-         Zdy4ShAf2Z2PkTk8xkfP4WJCacIyBlfBknBOjc9B3V13eJT1lYEJ68frOk+WSk9LkHGA
-         xMVHSX/r+okjdPtTTdssWKwBdyrreXF76HHtHLNyZZPdGzT4U64R73rOyDae2qAnOwAp
-         86ew==
-X-Gm-Message-State: AOAM532wYN2rNnv8Y3RaiV7bIg/o6i5EHyBPTArZSpmJGP3+bsnr1UIs
-        2i0MGQ6xhtZiWfUGkgqMt28=
-X-Google-Smtp-Source: ABdhPJxWdD9RjVlrKoUWvN1jQUIT3V2tNmDDDFiM40lx1Zn/ck6l08cAd6k6mJW/i+I59tMp6x88Aw==
-X-Received: by 2002:a17:90a:a589:: with SMTP id b9mr2265139pjq.80.1618524533270;
-        Thu, 15 Apr 2021 15:08:53 -0700 (PDT)
+        bh=Ao+1gjnM4zv5kQxaxG+NtayTZuJSXP+ga3mJvJUCkuU=;
+        b=cKNwO/i22thQco+gc3aSmmqPFuET/R4bCuMRMTEoTzxTT0fJPL9GDh+EBLBCTQFRIZ
+         lQ6IqbgihnFNeVosCwzue1GTVHTTZMM/1Hv2ZICiHSWXG2W7qb8PFXRctgq/jygMPtGP
+         cIloBwreOm5OLZ9OWKUSyX0eeOepb5EJtjvwXPsH/k8o1jm2YmhjoeDqqX6IhR5ZKG52
+         SmcHMmea57LZ0wsfV9iCWE8GbmjoJlh9CcDDiAqCIEqNoVY+o05X/uaRbyALDj3xFqgM
+         4MYNZfTqgm18Ole58UfuaiSrvjQzRV1IOFSdCTZbAbwyMrjV+Cs5n77Q9jYoRGbun7Oi
+         eOHQ==
+X-Gm-Message-State: AOAM532F2EfHNtICkrq3X0jK/IoJ9O+69syHPUxZ78lsvrlQUXcKc8dS
+        rz3CWQDbe3BQNUOCuLTuOP4=
+X-Google-Smtp-Source: ABdhPJzd6VTG7eqg8bXCFP1SLrHCVfklRBQ64U++r7XNB0Hmk9ur12A+7XHeIHPPQvlKrXIZOruJWA==
+X-Received: by 2002:a17:90a:5b11:: with SMTP id o17mr6436408pji.32.1618524531063;
+        Thu, 15 Apr 2021 15:08:51 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:f031:1d3a:7e95:2876])
-        by smtp.gmail.com with ESMTPSA id w4sm3311155pjk.55.2021.04.15.15.08.52
+        by smtp.gmail.com with ESMTPSA id w4sm3311155pjk.55.2021.04.15.15.08.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Apr 2021 15:08:52 -0700 (PDT)
+        Thu, 15 Apr 2021 15:08:50 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH v2 15/20] dc395x: Open-code status_byte(u8) calls
-Date:   Thu, 15 Apr 2021 15:08:21 -0700
-Message-Id: <20210415220826.29438-16-bvanassche@acm.org>
+        Don Brace <don.brace@microchip.com>
+Subject: [PATCH v2 13/20] smartpqi: Remove unused functions
+Date:   Thu, 15 Apr 2021 15:08:19 -0700
+Message-Id: <20210415220826.29438-14-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210415220826.29438-1-bvanassche@acm.org>
 References: <20210415220826.29438-1-bvanassche@acm.org>
@@ -59,30 +59,39 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The dc395x driver is one of the two drivers that passes an u8 argument
-to status_byte() instead of an s32 argument. Open-code status_byte() in
-preparation of changing SCSI status values into a structure.
+This was detected by building the kernel with clang and W=1.
 
-Cc: Hannes Reinecke <hare@suse.com>
+Cc: Don Brace <don.brace@microchip.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/dc395x.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 1e9ec4d8c605..be87d5a7583d 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -3258,10 +3258,10 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		/*
- 		 * target status..........................
- 		 */
--		if (status_byte(status) == CHECK_CONDITION) {
-+		if (status >> 1 == CHECK_CONDITION) {
- 			request_sense(acb, dcb, srb);
- 			return;
--		} else if (status_byte(status) == QUEUE_FULL) {
-+		} else if (status >> 1 == QUEUE_FULL) {
- 			tempcnt = (u8)list_size(&dcb->srb_going_list);
- 			dprintkl(KERN_INFO, "QUEUE_FULL for dev <%02i-%i> with %i cmnds\n",
- 			     dcb->target_id, dcb->target_lun, tempcnt);
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 3b0f281daa2b..80d5c00379ee 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -443,11 +443,6 @@ static inline void pqi_cancel_rescan_worker(struct pqi_ctrl_info *ctrl_info)
+ 	cancel_delayed_work_sync(&ctrl_info->rescan_work);
+ }
+ 
+-static inline void pqi_cancel_event_worker(struct pqi_ctrl_info *ctrl_info)
+-{
+-	cancel_work_sync(&ctrl_info->event_work);
+-}
+-
+ static inline u32 pqi_read_heartbeat_counter(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	if (!ctrl_info->heartbeat_counter)
+@@ -4828,11 +4823,6 @@ static inline int pqi_enable_events(struct pqi_ctrl_info *ctrl_info)
+ 	return pqi_configure_events(ctrl_info, true);
+ }
+ 
+-static inline int pqi_disable_events(struct pqi_ctrl_info *ctrl_info)
+-{
+-	return pqi_configure_events(ctrl_info, false);
+-}
+-
+ static void pqi_free_all_io_requests(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	unsigned int i;
