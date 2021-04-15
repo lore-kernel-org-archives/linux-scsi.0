@@ -2,276 +2,256 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF90C43470
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 22:10:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E21B6C43460
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 23:11:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56C77610FC
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 22:10:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2238610CD
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 23:11:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236613AbhDOWKv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Apr 2021 18:10:51 -0400
-Received: from mail-pl1-f180.google.com ([209.85.214.180]:39770 "EHLO
-        mail-pl1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236614AbhDOWJM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Apr 2021 18:09:12 -0400
-Received: by mail-pl1-f180.google.com with SMTP id u7so11069058plr.6
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Apr 2021 15:08:49 -0700 (PDT)
+        id S236159AbhDOXLv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Apr 2021 19:11:51 -0400
+Received: from mail-pf1-f176.google.com ([209.85.210.176]:45965 "EHLO
+        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234961AbhDOXLu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Apr 2021 19:11:50 -0400
+Received: by mail-pf1-f176.google.com with SMTP id i190so17081259pfc.12;
+        Thu, 15 Apr 2021 16:11:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=zH1LRW1VV4uLIOqSdoK6cThqjnNjGNHpFlDzcl/ziE8=;
-        b=PBQcI+FSjvNoZU0hrHo7dzoV0k5h5eatqHAPEgnpLUb33hjUCWZGHLe0dBTwuS0h0X
-         xnSYGSV014nIcfSQoqH6Fpg/JO8UFpAAn+LbY4UTDVtSOYCBm9Cnf8WlVRHoU7azqXin
-         urNIpgI76xs/kAOz3FjRvAruLG1lTMoo3B9x1Gn1Wrs6pil/+BYcbp/sBaVbPXoMdZn5
-         iTDADK14AKdy7708Iw8LRT9jEN1XldCc+CXXm87bbt8pj8mzQ/Kw+DAeuxANfyi6s20+
-         BIdSugM+tXs4j8+EAahqDoY4TKWznJMammRML/wmPkrrLQd1IcNIdwpHn1QZGkgEI780
-         ivZQ==
-X-Gm-Message-State: AOAM530o4e8VXXlUm/NFDTtDz7RhO5Opmm+IKPrK3WMFgdCjIUla8Kyh
-        /Eo/D8C/XiGAnKAdK/v8X26/aZARqJc=
-X-Google-Smtp-Source: ABdhPJyPNC2X8iYfYzLvB/NVJkxEaZSlvcckgfT+NKMk//kIuJBylHcprmhapeuMpCWGlY1S+o38EQ==
-X-Received: by 2002:a17:903:1c3:b029:e6:a15:751f with SMTP id e3-20020a17090301c3b02900e60a15751fmr6310059plh.44.1618524528752;
-        Thu, 15 Apr 2021 15:08:48 -0700 (PDT)
-Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:f031:1d3a:7e95:2876])
-        by smtp.gmail.com with ESMTPSA id w4sm3311155pjk.55.2021.04.15.15.08.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Apr 2021 15:08:48 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=rNjHSpqMp6OHOOifvMxrtpdA3iLbXLeekducnpNQE7w=;
+        b=MiSRwqvEqdl2VlZWjyVzbbS56nB2Q07WumuToSc0YC6/+CAqoucl2q6hG28HoV/X0u
+         HwYBrDp0C8IraA4Z/vkygnzGqGMNDiXH2e8piAJ+X74i9n86LZ4yG5+twIiL4twhSBOJ
+         sysNKprGW2kAJ/j+s9QbywkG3e4ulDCwVsQ9lmkQkL/hlC0WDwFvsj8e/oAaVtTiAkuk
+         /1cOmW9fHBXrOPYiwlRzlX5nftl8Q9Jt4vcalMoJTD2xpjnH7DoHWq2E7EqlxgXAkiGe
+         u5xNi+zcaOujswyBYebqTMe783EN9HuCRPueLsO8mGO8yT1D30Gc26nZSOBKh/UHQg78
+         4cAA==
+X-Gm-Message-State: AOAM530+q/hUfG/ZFbV/cGSiJ+hH7SdAnhteP3qTZQef4/jRHREnAUHU
+        C/plhRE9JjPLJRYptZqt7zI=
+X-Google-Smtp-Source: ABdhPJy84p+UP8x2TOnFbzVUyWQ0RVl+Q/N1HMNE6piAjW8rXbWFlCGcJH7JyP2QKJDL0IWfjfed+w==
+X-Received: by 2002:a63:7c59:: with SMTP id l25mr5632368pgn.224.1618528286855;
+        Thu, 15 Apr 2021 16:11:26 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:f031:1d3a:7e95:2876? ([2601:647:4000:d7:f031:1d3a:7e95:2876])
+        by smtp.gmail.com with ESMTPSA id z23sm3375309pjh.45.2021.04.15.16.11.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 15 Apr 2021 16:11:25 -0700 (PDT)
+Subject: Re: [PATCH v18 1/2] scsi: ufs: Enable power management for wlun
+To:     Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        martin.petersen@oracle.com, adrian.hunter@intel.com,
+        linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Yue Hu <huyue2@yulong.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>
+References: <cover.1618426513.git.asutoshd@codeaurora.org>
+ <d1a6af736730b9d79f977100286c5d9325546ac2.1618426513.git.asutoshd@codeaurora.org>
 From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@kernel.org>
-Subject: [PATCH v2 11/20] myrs: Remove unused functions
-Date:   Thu, 15 Apr 2021 15:08:17 -0700
-Message-Id: <20210415220826.29438-12-bvanassche@acm.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210415220826.29438-1-bvanassche@acm.org>
-References: <20210415220826.29438-1-bvanassche@acm.org>
+Message-ID: <f111e363-c709-fe3c-65da-450c9e9e3408@acm.org>
+Date:   Thu, 15 Apr 2021 16:11:23 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <d1a6af736730b9d79f977100286c5d9325546ac2.1618426513.git.asutoshd@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This was detected by building the kernel with clang and W=1.
+On 4/14/21 11:58 AM, Asutosh Das wrote:
+> [ ... ]
 
-Cc: Hannes Reinecke <hare@kernel.org>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/myrs.c | 99 ---------------------------------------------
- 1 file changed, 99 deletions(-)
+Patches sent to the SCSI mailing list should not have a "scsi: " prefix
+in the subject. That prefix is inserted before any SCSI patches go into
+Martin's tree.
 
-diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
-index d5ec1cdea0e1..3b68c68d1716 100644
---- a/drivers/scsi/myrs.c
-+++ b/drivers/scsi/myrs.c
-@@ -2410,13 +2410,6 @@ static inline void DAC960_GEM_ack_hw_mbox_status(void __iomem *base)
- 	writel(val, base + DAC960_GEM_IDB_CLEAR_OFFSET);
- }
- 
--static inline void DAC960_GEM_gen_intr(void __iomem *base)
--{
--	__le32 val = cpu_to_le32(DAC960_GEM_IDB_GEN_IRQ << 24);
--
--	writel(val, base + DAC960_GEM_IDB_READ_OFFSET);
--}
--
- static inline void DAC960_GEM_reset_ctrl(void __iomem *base)
- {
- 	__le32 val = cpu_to_le32(DAC960_GEM_IDB_CTRL_RESET << 24);
-@@ -2454,13 +2447,6 @@ static inline void DAC960_GEM_ack_hw_mbox_intr(void __iomem *base)
- 	writel(val, base + DAC960_GEM_ODB_CLEAR_OFFSET);
- }
- 
--static inline void DAC960_GEM_ack_mem_mbox_intr(void __iomem *base)
--{
--	__le32 val = cpu_to_le32(DAC960_GEM_ODB_MMBOX_ACK_IRQ << 24);
--
--	writel(val, base + DAC960_GEM_ODB_CLEAR_OFFSET);
--}
--
- static inline void DAC960_GEM_ack_intr(void __iomem *base)
- {
- 	__le32 val = cpu_to_le32((DAC960_GEM_ODB_HWMBOX_ACK_IRQ |
-@@ -2477,14 +2463,6 @@ static inline bool DAC960_GEM_hw_mbox_status_available(void __iomem *base)
- 	return (le32_to_cpu(val) >> 24) & DAC960_GEM_ODB_HWMBOX_STS_AVAIL;
- }
- 
--static inline bool DAC960_GEM_mem_mbox_status_available(void __iomem *base)
--{
--	__le32 val;
--
--	val = readl(base + DAC960_GEM_ODB_READ_OFFSET);
--	return (le32_to_cpu(val) >> 24) & DAC960_GEM_ODB_MMBOX_STS_AVAIL;
--}
--
- static inline void DAC960_GEM_enable_intr(void __iomem *base)
- {
- 	__le32 val = cpu_to_le32((DAC960_GEM_IRQMASK_HWMBOX_IRQ |
-@@ -2499,16 +2477,6 @@ static inline void DAC960_GEM_disable_intr(void __iomem *base)
- 	writel(val, base + DAC960_GEM_IRQMASK_READ_OFFSET);
- }
- 
--static inline bool DAC960_GEM_intr_enabled(void __iomem *base)
--{
--	__le32 val;
--
--	val = readl(base + DAC960_GEM_IRQMASK_READ_OFFSET);
--	return !((le32_to_cpu(val) >> 24) &
--		 (DAC960_GEM_IRQMASK_HWMBOX_IRQ |
--		  DAC960_GEM_IRQMASK_MMBOX_IRQ));
--}
--
- static inline void DAC960_GEM_write_cmd_mbox(union myrs_cmd_mbox *mem_mbox,
- 		union myrs_cmd_mbox *mbox)
- {
-@@ -2527,11 +2495,6 @@ static inline void DAC960_GEM_write_hw_mbox(void __iomem *base,
- 	dma_addr_writeql(cmd_mbox_addr, base + DAC960_GEM_CMDMBX_OFFSET);
- }
- 
--static inline unsigned short DAC960_GEM_read_cmd_ident(void __iomem *base)
--{
--	return readw(base + DAC960_GEM_CMDSTS_OFFSET);
--}
--
- static inline unsigned char DAC960_GEM_read_cmd_status(void __iomem *base)
- {
- 	return readw(base + DAC960_GEM_CMDSTS_OFFSET + 2);
-@@ -2676,11 +2639,6 @@ static inline void DAC960_BA_ack_hw_mbox_status(void __iomem *base)
- 	writeb(DAC960_BA_IDB_HWMBOX_ACK_STS, base + DAC960_BA_IDB_OFFSET);
- }
- 
--static inline void DAC960_BA_gen_intr(void __iomem *base)
--{
--	writeb(DAC960_BA_IDB_GEN_IRQ, base + DAC960_BA_IDB_OFFSET);
--}
--
- static inline void DAC960_BA_reset_ctrl(void __iomem *base)
- {
- 	writeb(DAC960_BA_IDB_CTRL_RESET, base + DAC960_BA_IDB_OFFSET);
-@@ -2712,11 +2670,6 @@ static inline void DAC960_BA_ack_hw_mbox_intr(void __iomem *base)
- 	writeb(DAC960_BA_ODB_HWMBOX_ACK_IRQ, base + DAC960_BA_ODB_OFFSET);
- }
- 
--static inline void DAC960_BA_ack_mem_mbox_intr(void __iomem *base)
--{
--	writeb(DAC960_BA_ODB_MMBOX_ACK_IRQ, base + DAC960_BA_ODB_OFFSET);
--}
--
- static inline void DAC960_BA_ack_intr(void __iomem *base)
- {
- 	writeb(DAC960_BA_ODB_HWMBOX_ACK_IRQ | DAC960_BA_ODB_MMBOX_ACK_IRQ,
-@@ -2731,14 +2684,6 @@ static inline bool DAC960_BA_hw_mbox_status_available(void __iomem *base)
- 	return val & DAC960_BA_ODB_HWMBOX_STS_AVAIL;
- }
- 
--static inline bool DAC960_BA_mem_mbox_status_available(void __iomem *base)
--{
--	u8 val;
--
--	val = readb(base + DAC960_BA_ODB_OFFSET);
--	return val & DAC960_BA_ODB_MMBOX_STS_AVAIL;
--}
--
- static inline void DAC960_BA_enable_intr(void __iomem *base)
- {
- 	writeb(~DAC960_BA_IRQMASK_DISABLE_IRQ, base + DAC960_BA_IRQMASK_OFFSET);
-@@ -2749,14 +2694,6 @@ static inline void DAC960_BA_disable_intr(void __iomem *base)
- 	writeb(0xFF, base + DAC960_BA_IRQMASK_OFFSET);
- }
- 
--static inline bool DAC960_BA_intr_enabled(void __iomem *base)
--{
--	u8 val;
--
--	val = readb(base + DAC960_BA_IRQMASK_OFFSET);
--	return !(val & DAC960_BA_IRQMASK_DISABLE_IRQ);
--}
--
- static inline void DAC960_BA_write_cmd_mbox(union myrs_cmd_mbox *mem_mbox,
- 		union myrs_cmd_mbox *mbox)
- {
-@@ -2776,11 +2713,6 @@ static inline void DAC960_BA_write_hw_mbox(void __iomem *base,
- 	dma_addr_writeql(cmd_mbox_addr, base + DAC960_BA_CMDMBX_OFFSET);
- }
- 
--static inline unsigned short DAC960_BA_read_cmd_ident(void __iomem *base)
--{
--	return readw(base + DAC960_BA_CMDSTS_OFFSET);
--}
--
- static inline unsigned char DAC960_BA_read_cmd_status(void __iomem *base)
- {
- 	return readw(base + DAC960_BA_CMDSTS_OFFSET + 2);
-@@ -2926,11 +2858,6 @@ static inline void DAC960_LP_ack_hw_mbox_status(void __iomem *base)
- 	writeb(DAC960_LP_IDB_HWMBOX_ACK_STS, base + DAC960_LP_IDB_OFFSET);
- }
- 
--static inline void DAC960_LP_gen_intr(void __iomem *base)
--{
--	writeb(DAC960_LP_IDB_GEN_IRQ, base + DAC960_LP_IDB_OFFSET);
--}
--
- static inline void DAC960_LP_reset_ctrl(void __iomem *base)
- {
- 	writeb(DAC960_LP_IDB_CTRL_RESET, base + DAC960_LP_IDB_OFFSET);
-@@ -2962,11 +2889,6 @@ static inline void DAC960_LP_ack_hw_mbox_intr(void __iomem *base)
- 	writeb(DAC960_LP_ODB_HWMBOX_ACK_IRQ, base + DAC960_LP_ODB_OFFSET);
- }
- 
--static inline void DAC960_LP_ack_mem_mbox_intr(void __iomem *base)
--{
--	writeb(DAC960_LP_ODB_MMBOX_ACK_IRQ, base + DAC960_LP_ODB_OFFSET);
--}
--
- static inline void DAC960_LP_ack_intr(void __iomem *base)
- {
- 	writeb(DAC960_LP_ODB_HWMBOX_ACK_IRQ | DAC960_LP_ODB_MMBOX_ACK_IRQ,
-@@ -2981,14 +2903,6 @@ static inline bool DAC960_LP_hw_mbox_status_available(void __iomem *base)
- 	return val & DAC960_LP_ODB_HWMBOX_STS_AVAIL;
- }
- 
--static inline bool DAC960_LP_mem_mbox_status_available(void __iomem *base)
--{
--	u8 val;
--
--	val = readb(base + DAC960_LP_ODB_OFFSET);
--	return val & DAC960_LP_ODB_MMBOX_STS_AVAIL;
--}
--
- static inline void DAC960_LP_enable_intr(void __iomem *base)
- {
- 	writeb(~DAC960_LP_IRQMASK_DISABLE_IRQ, base + DAC960_LP_IRQMASK_OFFSET);
-@@ -2999,14 +2913,6 @@ static inline void DAC960_LP_disable_intr(void __iomem *base)
- 	writeb(0xFF, base + DAC960_LP_IRQMASK_OFFSET);
- }
- 
--static inline bool DAC960_LP_intr_enabled(void __iomem *base)
--{
--	u8 val;
--
--	val = readb(base + DAC960_LP_IRQMASK_OFFSET);
--	return !(val & DAC960_LP_IRQMASK_DISABLE_IRQ);
--}
--
- static inline void DAC960_LP_write_cmd_mbox(union myrs_cmd_mbox *mem_mbox,
- 		union myrs_cmd_mbox *mbox)
- {
-@@ -3025,11 +2931,6 @@ static inline void DAC960_LP_write_hw_mbox(void __iomem *base,
- 	dma_addr_writeql(cmd_mbox_addr, base + DAC960_LP_CMDMBX_OFFSET);
- }
- 
--static inline unsigned short DAC960_LP_read_cmd_ident(void __iomem *base)
--{
--	return readw(base + DAC960_LP_CMDSTS_OFFSET);
--}
--
- static inline unsigned char DAC960_LP_read_cmd_status(void __iomem *base)
- {
- 	return readw(base + DAC960_LP_CMDSTS_OFFSET + 2);
+> diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.c
+> index 13d9204..b9105e4 100644
+> --- a/drivers/scsi/ufs/cdns-pltfrm.c
+> +++ b/drivers/scsi/ufs/cdns-pltfrm.c
+> @@ -323,6 +323,8 @@ static const struct dev_pm_ops cdns_ufs_dev_pm_ops = {
+>  	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
+>  	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
+>  	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
+> +	.prepare	 = ufshcd_suspend_prepare,
+> +	.complete	= ufshcd_resume_complete,
+>  };
+>  
+>  static struct platform_driver cdns_ufs_pltfrm_driver = {
+> diff --git a/drivers/scsi/ufs/tc-dwc-g210-pci.c b/drivers/scsi/ufs/tc-dwc-g210-pci.c
+> index 67a6a61..b01db12 100644
+> --- a/drivers/scsi/ufs/tc-dwc-g210-pci.c
+> +++ b/drivers/scsi/ufs/tc-dwc-g210-pci.c
+> @@ -148,6 +148,8 @@ static const struct dev_pm_ops tc_dwc_g210_pci_pm_ops = {
+>  	.runtime_suspend = tc_dwc_g210_pci_runtime_suspend,
+>  	.runtime_resume  = tc_dwc_g210_pci_runtime_resume,
+>  	.runtime_idle    = tc_dwc_g210_pci_runtime_idle,
+> +	.prepare	 = ufshcd_suspend_prepare,
+> +	.complete	= ufshcd_resume_complete,
+>  };
+
+[ ... ]
+
+> --- a/drivers/scsi/ufs/ufs-exynos.c
+> +++ b/drivers/scsi/ufs/ufs-exynos.c
+> @@ -1267,6 +1267,8 @@ static const struct dev_pm_ops exynos_ufs_pm_ops = {
+>  	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
+>  	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
+>  	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
+> +	.prepare	 = ufshcd_suspend_prepare,
+> +	.complete	= ufshcd_resume_complete,
+>  };
+>  
+>  static struct platform_driver exynos_ufs_pltform = {
+> diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+> index 0aa5813..d463b44 100644
+> --- a/drivers/scsi/ufs/ufs-hisi.c
+> +++ b/drivers/scsi/ufs/ufs-hisi.c
+> @@ -574,6 +574,8 @@ static const struct dev_pm_ops ufs_hisi_pm_ops = {
+>  	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
+>  	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
+>  	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
+> +	.prepare	 = ufshcd_suspend_prepare,
+> +	.complete	= ufshcd_resume_complete,
+>  };
+
+A minor comment about source code formatting: please make sure that the
+equality signs are aligned in struct dev_pm_ops definitions.
+
+> +static inline bool is_rpmb_wlun(struct scsi_device *sdev)
+> +{
+> +	return (sdev->lun == ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN));
+> +}
+> +
+> +static inline bool is_device_wlun(struct scsi_device *sdev)
+> +{
+> +	return (sdev->lun ==
+> +		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN));
+> +}
+
+The Linux kernel coding style requires not to surround expressions with
+parentheses in return statements.
+
+>  /**
+> + * ufshcd_setup_links - associate link b/w device wlun and other luns
+> + * @sdev: pointer to SCSI device
+> + * @hba: pointer to ufs hba
+> + */
+> +static void ufshcd_setup_links(struct ufs_hba *hba, struct scsi_device *sdev)
+> +{
+> +	struct device_link *link;
+> +
+> +	/*
+> +	 * device wlun is the supplier & rest of the luns are consumers
+> +	 * This ensures that device wlun suspends after all other luns.
+> +	 */
+> +	if (hba->sdev_ufs_device) {
+> +		link = device_link_add(&sdev->sdev_gendev,
+> +				       &hba->sdev_ufs_device->sdev_gendev,
+> +				       DL_FLAG_PM_RUNTIME|DL_FLAG_RPM_ACTIVE);
+> +		if (!link) {
+> +			dev_err(&sdev->sdev_gendev, "Failed establishing link - %s\n",
+> +				dev_name(&hba->sdev_ufs_device->sdev_gendev));
+> +			return;
+> +		}
+> +		hba->luns_avail--;
+> +		/* Ignore REPORT_LUN wlun probing */
+> +		if (hba->luns_avail == 1) {
+> +			ufshcd_rpm_put(hba);
+> +			return;
+> +		}
+> +	} else {
+> +		/* device wlun is probed */
+> +		hba->luns_avail--;
+> +	}
+> +}
+
+Please add a comment that explains that it is assumed that the WLUNs are
+scanned before the other LUNs.
+
+> @@ -4862,8 +4913,13 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+>  	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
+>  	if (hba->quirks & UFSHCD_QUIRK_ALIGN_SG_WITH_PAGE_SIZE)
+>  		blk_queue_update_dma_alignment(q, PAGE_SIZE - 1);
+> -
+> -	if (ufshcd_is_rpm_autosuspend_allowed(hba))
+> +	/*
+> +	 * Block runtime-pm until all consumers are added.
+> +	 * Refer ufshcd_setup_links().
+> +	 */
+> +	if (is_device_wlun(sdev))
+> +		pm_runtime_get_noresume(&sdev->sdev_gendev);
+> +	else if (ufshcd_is_rpm_autosuspend_allowed(hba))
+>  		sdev->rpm_autosuspend = 1;
+>  
+>  	ufshcd_crypto_setup_rq_keyslot_manager(hba, q);
+
+The following code is executed before ufshcd_async_scan() is called:
+
+	dev = hba->dev;
+	[ ... ]
+	/* Hold auto suspend until async scan completes */
+	pm_runtime_get_sync(dev);
+
+and the following code occurs in ufshcd_add_lus():
+
+	pm_runtime_put_sync(hba->dev);
+
+Isn't that sufficient to postpone enabling of runtime PM until LUN
+scanning has finished? Or in other words, is adding a
+pm_runtime_get_noresume() call in ufshcd_slave_configure() really necessary?
+
+> @@ -4979,15 +5035,9 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>  			 */
+>  			if (!hba->pm_op_in_progress &&
+>  			    !ufshcd_eh_in_progress(hba) &&
+> -			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr) &&
+> -			    schedule_work(&hba->eeh_work)) {
+> -				/*
+> -				 * Prevent suspend once eeh_work is scheduled
+> -				 * to avoid deadlock between ufshcd_suspend
+> -				 * and exception event handler.
+> -				 */
+> -				pm_runtime_get_noresume(hba->dev);
+> -			}
+> +			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
+> +				/* Flushed in suspend */
+> +				schedule_work(&hba->eeh_work);
+
+What makes it safe to leave out the above pm_runtime_get_noresume() call?
+
+Thanks,
+
+Bart.
