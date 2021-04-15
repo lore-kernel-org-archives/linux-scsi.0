@@ -5,105 +5,160 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A904AC433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 09:18:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD475C433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 09:21:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78B1761222
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 09:18:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8651A61107
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 09:21:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231143AbhDOJS2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Apr 2021 05:18:28 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2859 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230442AbhDOJS1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Apr 2021 05:18:27 -0400
-Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FLYXD44ZBz68BVc;
-        Thu, 15 Apr 2021 17:12:44 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Thu, 15 Apr 2021 11:18:02 +0200
-Received: from [10.47.83.117] (10.47.83.117) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Thu, 15 Apr
- 2021 10:18:02 +0100
-Subject: Re: [PATCH] scsi_debug: fix cmd_per_lun, set to max_queue
-To:     Douglas Gilbert <dgilbert@interlog.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <martin.petersen@oracle.com>, <jejb@linux.vnet.ibm.com>,
-        <kashyap.desai@broadcom.com>, <ming.lei@redhat.com>,
-        <axboe@kernel.dk>
-References: <20210415015031.607153-1-dgilbert@interlog.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <580349dc-0152-8f39-5f3c-be9115e3bf12@huawei.com>
-Date:   Thu, 15 Apr 2021 10:15:27 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S231771AbhDOJWE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Apr 2021 05:22:04 -0400
+Received: from mga17.intel.com ([192.55.52.151]:46474 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229820AbhDOJWD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 15 Apr 2021 05:22:03 -0400
+IronPort-SDR: oqLR66sH+cviQYuhlNe4FO0qLFlqha2OtGvRudzhYW0zocCubf34i+dyHRfIIcBams0KqNrQ8z
+ qyZ4v5Ro674Q==
+X-IronPort-AV: E=McAfee;i="6200,9189,9954"; a="174926946"
+X-IronPort-AV: E=Sophos;i="5.82,223,1613462400"; 
+   d="scan'208";a="174926946"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Apr 2021 02:21:40 -0700
+IronPort-SDR: YpGFh5zppOvLRwYDx84dLt90viOBgvXkM7UaUKbkrrtSVnAHS6Tki5xmNP9Nvb7tspJWCqMocc
+ g6LNY7Ja5e0w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,223,1613462400"; 
+   d="scan'208";a="382671581"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
+  by orsmga003.jf.intel.com with ESMTP; 15 Apr 2021 02:21:35 -0700
+Subject: Re: [PATCH v18 2/2] ufs: sysfs: Resume the proper scsi device
+To:     Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>, Yue Hu <huyue2@yulong.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1618426513.git.asutoshd@codeaurora.org>
+ <4745814f5fa37d49e969c2ffb1b4df401dbc98e7.1618426513.git.asutoshd@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <3e88725f-166d-114b-506d-17a41c2a5c72@intel.com>
+Date:   Thu, 15 Apr 2021 12:21:52 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-In-Reply-To: <20210415015031.607153-1-dgilbert@interlog.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <4745814f5fa37d49e969c2ffb1b4df401dbc98e7.1618426513.git.asutoshd@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.83.117]
-X-ClientProxiedBy: lhreml721-chm.china.huawei.com (10.201.108.72) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This looks ok.
+On 14/04/21 9:58 pm, Asutosh Das wrote:
+> Resumes the actual scsi device the unit descriptor of which
+> is being accessed instead of the hba alone.
+> 
+> Reviewed-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 
-Apart from this, I tested linux-next (without this patch) - which 
-includes Ming's changes to replace sdev-->device_busy with sbitmap - 
-and, as expected, it has the issue.
+Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
 
-So I think it is also worth having this to stop this happening elsewhere:
+> ---
+>  drivers/scsi/ufs/ufs-sysfs.c | 24 ++++++++++++------------
+>  1 file changed, 12 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+> index d7c3cff..4d9d4d8 100644
+> --- a/drivers/scsi/ufs/ufs-sysfs.c
+> +++ b/drivers/scsi/ufs/ufs-sysfs.c
+> @@ -245,9 +245,9 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
+>  		goto out;
+>  	}
+>  
+> -	pm_runtime_get_sync(hba->dev);
+> +	ufshcd_rpm_get_sync(hba);
+>  	res = ufshcd_wb_toggle(hba, wb_enable);
+> -	pm_runtime_put_sync(hba->dev);
+> +	ufshcd_rpm_put_sync(hba);
+>  out:
+>  	up(&hba->host_sem);
+>  	return res < 0 ? res : count;
+> @@ -297,10 +297,10 @@ static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
+>  		goto out;
+>  	}
+>  
+> -	pm_runtime_get_sync(hba->dev);
+> +	ufshcd_rpm_get_sync(hba);
+>  	ret = ufshcd_read_desc_param(hba, desc_id, desc_index,
+>  				param_offset, desc_buf, param_size);
+> -	pm_runtime_put_sync(hba->dev);
+> +	ufshcd_rpm_put_sync(hba);
+>  	if (ret) {
+>  		ret = -EINVAL;
+>  		goto out;
+> @@ -678,7 +678,7 @@ static ssize_t _name##_show(struct device *dev,				\
+>  		up(&hba->host_sem);					\
+>  		return -ENOMEM;						\
+>  	}								\
+> -	pm_runtime_get_sync(hba->dev);					\
+> +	ufshcd_rpm_get_sync(hba);					\
+>  	ret = ufshcd_query_descriptor_retry(hba,			\
+>  		UPIU_QUERY_OPCODE_READ_DESC, QUERY_DESC_IDN_DEVICE,	\
+>  		0, 0, desc_buf, &desc_len);				\
+> @@ -695,7 +695,7 @@ static ssize_t _name##_show(struct device *dev,				\
+>  		goto out;						\
+>  	ret = sysfs_emit(buf, "%s\n", desc_buf);			\
+>  out:									\
+> -	pm_runtime_put_sync(hba->dev);					\
+> +	ufshcd_rpm_put_sync(hba);					\
+>  	kfree(desc_buf);						\
+>  	up(&hba->host_sem);						\
+>  	return ret;							\
+> @@ -744,10 +744,10 @@ static ssize_t _name##_show(struct device *dev,				\
+>  	}								\
+>  	if (ufshcd_is_wb_flags(QUERY_FLAG_IDN##_uname))			\
+>  		index = ufshcd_wb_get_query_index(hba);			\
+> -	pm_runtime_get_sync(hba->dev);					\
+> +	ufshcd_rpm_get_sync(hba);					\
+>  	ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,	\
+>  		QUERY_FLAG_IDN##_uname, index, &flag);			\
+> -	pm_runtime_put_sync(hba->dev);					\
+> +	ufshcd_rpm_put_sync(hba);					\
+>  	if (ret) {							\
+>  		ret = -EINVAL;						\
+>  		goto out;						\
+> @@ -813,10 +813,10 @@ static ssize_t _name##_show(struct device *dev,				\
+>  	}								\
+>  	if (ufshcd_is_wb_attrs(QUERY_ATTR_IDN##_uname))			\
+>  		index = ufshcd_wb_get_query_index(hba);			\
+> -	pm_runtime_get_sync(hba->dev);					\
+> +	ufshcd_rpm_get_sync(hba);					\
+>  	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,	\
+>  		QUERY_ATTR_IDN##_uname, index, 0, &value);		\
+> -	pm_runtime_put_sync(hba->dev);					\
+> +	ufshcd_rpm_put_sync(hba);					\
+>  	if (ret) {							\
+>  		ret = -EINVAL;						\
+>  		goto out;						\
+> @@ -964,10 +964,10 @@ static ssize_t dyn_cap_needed_attribute_show(struct device *dev,
+>  		goto out;
+>  	}
+>  
+> -	pm_runtime_get_sync(hba->dev);
+> +	ufshcd_rpm_get_sync(hba);
+>  	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+>  		QUERY_ATTR_IDN_DYN_CAP_NEEDED, lun, 0, &value);
+> -	pm_runtime_put_sync(hba->dev);
+> +	ufshcd_rpm_put_sync(hba);
+>  	if (ret) {
+>  		ret = -EINVAL;
+>  		goto out;
+> 
 
------->8-------
-
-Subject: [PATCH] scsi: core: Cap initial sdev queue depth at Shost.can_queue
-
-Function sdev_store_queue_depth() enforces that the sdev queue depth 
-cannot exceed Shost.can_queue.
-
-However, the LLDD may still set cmd_per_lun > can_queue, which would 
-lead to an initial sdev queue depth greater than can_queue.
-
-Stop this happened by capping initial sdev queue depth at can_queue.
-
-<insert credits>
-Signed-off-by: John Garry <john.garry@huawei.com>
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 9af50e6f94c4..fec6c17ff37c 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -218,6 +218,7 @@ static struct scsi_device *scsi_alloc_sdev(struct 
-scsi_target *starget,
-  	struct scsi_device *sdev;
-  	int display_failure_msg = 1, ret;
-  	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	int depth;
-
-  	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
-  		       GFP_KERNEL);
-@@ -276,8 +277,13 @@ static struct scsi_device *scsi_alloc_sdev(struct 
-scsi_target *starget,
-  	WARN_ON_ONCE(!blk_get_queue(sdev->request_queue));
-  	sdev->request_queue->queuedata = sdev;
-
--	scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun ?
--					sdev->host->cmd_per_lun : 1);
-+	if (sdev->host->cmd_per_lun)
-+		depth = min_t(int, sdev->host->cmd_per_lun,
-+			      sdev->host->can_queue);
-+	else
-+		depth = 1;
-+
-+	scsi_change_queue_depth(sdev, depth);
-
-  	scsi_sysfs_device_initialize(sdev);
