@@ -8,167 +8,128 @@ X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 977D3C433ED
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 11:55:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA1E8C433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 11:57:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C84861153
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 11:55:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CF2D61153
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 11:57:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231531AbhDOLzf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Apr 2021 07:55:35 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:40258 "EHLO
+        id S231531AbhDOL5i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Apr 2021 07:57:38 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:45168 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230056AbhDOLze (ORCPT
+        by vger.kernel.org with ESMTP id S229943AbhDOL5i (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 15 Apr 2021 07:55:34 -0400
+        Thu, 15 Apr 2021 07:57:38 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618487711;
+        s=mimecast20190719; t=1618487835;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=apb5U7c5NOmuOWkHy+xtTykjKvRwafzTSbAc6qFqLVM=;
-        b=c240Y0mZAYMgg/1SEUgQ9EsbFllhejKwXUr9v5ycBSkNfTeoOIPR/33H1iwWkPW//E1Fui
-        a7EvJatr6tAD8wgxwutt3YGR141Ck51c0pgqsoJaq1TltAJ6ZPqvffRMTzhCEkTG7FCyiq
-        iyK4lCac8C8YYqLnq6Oo3ieDLhI8qmY=
+        bh=QJoQ7CfakCpNbcH/5U0SIlwSqYUUX7Ewj27+InQBbW4=;
+        b=APsFn8Z+DszR6/q1rEnQ+F9lQsiG/lCjH1xb91/msbNYmNe8CF301P1l6vAP3wM9hpgjsG
+        pfZx5ms/1z277L7Ianet6bSQ6Ndcf406zBC9oEiIT8ZJID5r4SpVdsAskJRMJujQmz3ZtJ
+        kCQGknWfTHqlCqo1mvZReWeBAt1ut8E=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-589-kqKfQ2OzO0CkFFmAn6YgIg-1; Thu, 15 Apr 2021 07:55:09 -0400
-X-MC-Unique: kqKfQ2OzO0CkFFmAn6YgIg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-449-_9lG8x1GMR-PsFopPVD6Fw-1; Thu, 15 Apr 2021 07:57:11 -0400
+X-MC-Unique: _9lG8x1GMR-PsFopPVD6Fw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BE0DF107ACE4;
-        Thu, 15 Apr 2021 11:55:08 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 57084C7409;
+        Thu, 15 Apr 2021 11:56:58 +0000 (UTC)
 Received: from localhost.localdomain (unknown [10.40.193.5])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 15A8E5C1B4;
-        Thu, 15 Apr 2021 11:55:07 +0000 (UTC)
-Subject: Re: [PATCH v2 11/24] mpi3mr: print ioc info for debugging
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A116C19D9F;
+        Thu, 15 Apr 2021 11:56:57 +0000 (UTC)
+Subject: Re: [PATCH v2 12/24] mpi3mr: add bios_param shost template hook
 To:     Kashyap Desai <kashyap.desai@broadcom.com>,
         linux-scsi@vger.kernel.org
 Cc:     sathya.prakash@broadcom.com
 References: <20210407020451.924822-1-kashyap.desai@broadcom.com>
- <20210407020451.924822-12-kashyap.desai@broadcom.com>
+ <20210407020451.924822-13-kashyap.desai@broadcom.com>
 From:   Tomas Henzl <thenzl@redhat.com>
-Message-ID: <7e449ff0-a66b-18a3-ba05-88e273a62a8f@redhat.com>
-Date:   Thu, 15 Apr 2021 13:55:07 +0200
+Message-ID: <5b6e21ae-8fad-ba96-2ff8-5d5430eaff3b@redhat.com>
+Date:   Thu, 15 Apr 2021 13:56:56 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.1
 MIME-Version: 1.0
-In-Reply-To: <20210407020451.924822-12-kashyap.desai@broadcom.com>
+In-Reply-To: <20210407020451.924822-13-kashyap.desai@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/7/21 4:04 AM, Kashyap Desai wrote:
 > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 > Cc: sathya.prakash@broadcom.com
 > ---
->  drivers/scsi/mpi3mr/mpi3mr_fw.c | 80 +++++++++++++++++++++++++++++++++
->  1 file changed, 80 insertions(+)
+>  drivers/scsi/mpi3mr/mpi3mr_os.c | 40 +++++++++++++++++++++++++++++++++
+>  1 file changed, 40 insertions(+)
 > 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> index d47031d05322..c3882fef2d2a 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> @@ -2550,6 +2550,85 @@ int mpi3mr_issue_port_enable(struct mpi3mr_ioc *mrioc, u8 async)
->  	return retval;
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> index dd9452de76f8..25539380968d 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> @@ -2075,6 +2075,45 @@ static int mpi3mr_build_sg_scmd(struct mpi3mr_ioc *mrioc,
+>  	return ret;
 >  }
 >  
-> +/* Protocol type to name mapper structure*/
-> +static const struct {
-> +	u8 protocol;
-> +	char *name;
-> +} mpi3mr_protocols[] = {
-> +	{ MPI3_IOCFACTS_PROTOCOL_SCSI_INITIATOR, "Initiator" },
-> +	{ MPI3_IOCFACTS_PROTOCOL_SCSI_TARGET, "Target" },
-> +	{ MPI3_IOCFACTS_PROTOCOL_NVME, "NVMe attachment" },
-> +};
-> +
-> +/* Capability to name mapper structure*/
-> +static const struct {
-> +	u32 capability;
-> +	char *name;
-> +} mpi3mr_capabilities[] = {
-> +	{ MPI3_IOCFACTS_CAPABILITY_RAID_CAPABLE, "RAID" },
-> +};
-> +
 > +/**
-> + * mpi3mr_print_ioc_info - Display controller information
-> + * @mrioc: Adapter instance reference
+> + * mpi3mr_bios_param - BIOS param callback
+> + * @sdev: SCSI device reference
+> + * @bdev: Block device reference
+> + * @capacity: Capacity in logical sectors
+> + * @params: Parameter array
 > + *
-> + * Display controller personalit, capability, supported
-> + * protocols etc.
+> + * Just the parameters with heads/secots/cylinders.
 > + *
-> + * Return: Nothing
+> + * Return: 0 always
 > + */
-> +static void
-> +mpi3mr_print_ioc_info(struct mpi3mr_ioc *mrioc)
+> +static int mpi3mr_bios_param(struct scsi_device *sdev,
+> +	struct block_device *bdev, sector_t capacity, int params[])
 > +{
-> +	int i = 0;
-> +	char personality[16];
-> +	char protocol[50] = {0};
-> +	char capabilities[100] = {0};
-> +	bool is_string_nonempty = false;
-> +	struct mpi3mr_compimg_ver *fwver = &mrioc->facts.fw_ver;
+> +	int heads;
+> +	int sectors;
+> +	sector_t cylinders;
+> +	ulong dummy;
 > +
-> +	switch (mrioc->facts.personality) {
-> +	case MPI3_IOCFACTS_FLAGS_PERSONALITY_EHBA:
-> +		strcpy(personality, "Enhanced HBA");
-> +		break;
-> +	case MPI3_IOCFACTS_FLAGS_PERSONALITY_RAID_DDR:
-> +		strcpy(personality, "RAID");
-> +		break;
-> +	default:
-> +		strcpy(personality, "Unknown");
-> +		break;
+> +	heads = 64;
+> +	sectors = 32;
+> +
+> +	dummy = heads * sectors;
+> +	cylinders = capacity;
+> +	sector_div(cylinders, dummy);
+> +
+> +	if ((ulong)capacity >= 0x200000) {
+> +		heads = 255;
+> +		sectors = 63;
+> +		dummy = heads * sectors;
+> +		cylinders = capacity;
+> +		sector_div(cylinders, dummy);
 > +	}
 > +
-> +	ioc_info(mrioc, "Running in %s Personality", personality);
-> +
-> +	ioc_info(mrioc, "FW Version(%d.%d.%d.%d.%d.%d)\n",
-> +	fwver->gen_major, fwver->gen_minor, fwver->ph_major,
-> +	    fwver->ph_minor, fwver->cust_id, fwver->build_num);
-> +
-> +	for (i = 0; i < ARRAY_SIZE(mpi3mr_protocols); i++) {
-> +		if (mrioc->facts.protocol_flags &
-> +		    mpi3mr_protocols[i].protocol) {
-> +			if (is_string_nonempty)
-> +				strcat(protocol, ",");
-> +			strcat(protocol, mpi3mr_protocols[i].name);
-> +			is_string_nonempty = true;
-> +		}
-> +	}
-> +
-> +	is_string_nonempty = false;
-> +	for (i = 0; i < ARRAY_SIZE(mpi3mr_capabilities); i++) {
-> +		if (mrioc->facts.protocol_flags &
-> +		    mpi3mr_capabilities[i].capability) {
-> +			if (is_string_nonempty)
-> +				strcat(capabilities, ",");
-> +			strcat(capabilities, mpi3mr_capabilities[i].name);
-> +			is_string_nonempty = true;
-> +		}
-> +	}
-> +
-> +	ioc_info(mrioc, "Protocol=(%s), Capabilities=(%s)\n",
-> +	    protocol, capabilities);
+> +	params[0] = heads;
+> +	params[1] = sectors;
+> +	params[2] = cylinders;
+> +	return 0;
 > +}
 >  
 >  /**
->   * mpi3mr_cleanup_resources - Free PCI resources
-> @@ -2808,6 +2887,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
->  		}
->  
->  	}
-> +	mpi3mr_print_ioc_info(mrioc);
->  
->  	retval = mpi3mr_alloc_reply_sense_bufs(mrioc);
->  	if (retval) {
+>   * mpi3mr_map_queues - Map queues callback handler
+> @@ -2508,6 +2547,7 @@ static struct scsi_host_template mpi3mr_driver_template = {
+>  	.slave_destroy			= mpi3mr_slave_destroy,
+>  	.scan_finished			= mpi3mr_scan_finished,
+>  	.scan_start			= mpi3mr_scan_start,
+> +	.bios_param			= mpi3mr_bios_param,
+>  	.map_queues			= mpi3mr_map_queues,
+>  	.no_write_same			= 1,
+>  	.can_queue			= 1,
 > 
 
 Looks good
