@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF99FC433ED
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 22:08:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DA96C43462
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 22:08:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C36C2610F7
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 22:08:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F6F0610FB
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 22:08:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235290AbhDOWJD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Apr 2021 18:09:03 -0400
-Received: from mail-pg1-f169.google.com ([209.85.215.169]:45858 "EHLO
-        mail-pg1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235139AbhDOWJB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Apr 2021 18:09:01 -0400
-Received: by mail-pg1-f169.google.com with SMTP id d10so17850582pgf.12
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Apr 2021 15:08:38 -0700 (PDT)
+        id S236532AbhDOWJF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Apr 2021 18:09:05 -0400
+Received: from mail-pj1-f53.google.com ([209.85.216.53]:51914 "EHLO
+        mail-pj1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235285AbhDOWJE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Apr 2021 18:09:04 -0400
+Received: by mail-pj1-f53.google.com with SMTP id lt13so4001746pjb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Apr 2021 15:08:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=cGnCPOgIA7Gkds8X6fZBW7kNO67PcbciQBssYoARmjw=;
-        b=O4S8+jfqkqRuK/3QNDw/lMlAFazasdHLyaHikgmIvM0xhj6fVFOZmhvUK3hLoEoJUP
-         7FKW4en6/NMu35wmdbpgU9m/55JRyeGn4tTSw0cY20xZ9c1dYj7YBEaYOF3qSU3JEmFy
-         vVE/CDhv9ICD26yIQ/oZIDXYAD0s81j+GtZuS5/3U2aWSpA+9yiS/YTsCJYkNiueNAFj
-         dyMBpq7stnJqyRo3Ze+xDh1vKh3BK6sPTmxsYfS72GwPOX+VF2z7HG2n7M2pp1kRtt6V
-         RZw+utb1WKSvX+fbdB02EKuKZ5iuNdTWtfqD/eJUMQfCBPshp7rYOfXQtcwj0zvTceEZ
-         ikxg==
-X-Gm-Message-State: AOAM531HDt2bthiBLTXJ0YJZBl0LVGJxqzCCESlXc0TuYzCCQGzVeBu+
-        8RKJVmDk3xiiJgfbOVXOrZg=
-X-Google-Smtp-Source: ABdhPJyk7AGNpSF45CXEmzs/VshVKOvg05kEOPjmByZq9Mx2Y61a5FCLaQJYvM/f6xJEMTLBS7qyZg==
-X-Received: by 2002:a63:745e:: with SMTP id e30mr5467956pgn.153.1618524518197;
-        Thu, 15 Apr 2021 15:08:38 -0700 (PDT)
+        bh=vpvIXFMO2/MgdDMwxCoeYsr1AYU+YR9iqCp/6zOQB3U=;
+        b=QBd8HEOLmVyganJpy4P9/160ffOxt2uSaTjn048NfqsBo91UhrzM0lFfA/wDp/ByZb
+         +UbtLM4ei6gTrWP5rfhLHk0kOOKtSjDjmGNwmk46GOOvxdE8WpBSGDKLM74QW0ruwv44
+         wn7RRCWBd9vf7ID+64xP+Fb9bmV/txreaH/GpD1NCUGlOfK57PGj+l06EQK9RQ5+HQWC
+         1O+3HRFSQrzzJQENS2Vcai8QNUgpCxzIT7dOQrExOh2oiXbgaTjaemZQCIJEv22NPh7c
+         n5+iMdf9MWyUiAzeLsPLIUO5XQPD3aP8TyhlM6OzRAx36DpMSLHVinbjvoBcrv5QiK9u
+         eqdA==
+X-Gm-Message-State: AOAM530X1qt44bq85oR1l82kQByb5ehRpOns0CoaOERshriD2EKvjmWX
+        PpsFGnAEXVpyu4TwzXzCJkw=
+X-Google-Smtp-Source: ABdhPJxxw80wy4iVzHgl03VY3rDTINPdPayiMP/i46YVir/0WrNHgzhImRHDaUMN7q4dd55eMn1nKw==
+X-Received: by 2002:a17:90b:715:: with SMTP id s21mr6151669pjz.183.1618524520506;
+        Thu, 15 Apr 2021 15:08:40 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:f031:1d3a:7e95:2876])
-        by smtp.gmail.com with ESMTPSA id w4sm3311155pjk.55.2021.04.15.15.08.37
+        by smtp.gmail.com with ESMTPSA id w4sm3311155pjk.55.2021.04.15.15.08.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Apr 2021 15:08:37 -0700 (PDT)
+        Thu, 15 Apr 2021 15:08:39 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
@@ -48,9 +48,9 @@ Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Hannes Reinecke <hare@suse.de>, Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH v2 02/20] Remove an incorrect comment
-Date:   Thu, 15 Apr 2021 15:08:08 -0700
-Message-Id: <20210415220826.29438-3-bvanassche@acm.org>
+Subject: [PATCH v2 04/20] Modify the scsi_send_eh_cmnd() return value for the SDEV_BLOCK case
+Date:   Thu, 15 Apr 2021 15:08:10 -0700
+Message-Id: <20210415220826.29438-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210415220826.29438-1-bvanassche@acm.org>
 References: <20210415220826.29438-1-bvanassche@acm.org>
@@ -60,8 +60,14 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_device.sdev_target is used in more code than the single_lun code,
-hence remove the comment next to the definition of the sdev_target member.
+The comment above scsi_send_eh_cmnd() says: "Returns SUCCESS or FAILED or
+NEEDS_RETRY". This patch makes all values returned by scsi_send_eh_cmnd()
+match the documentation of this function. This change does not affect the
+behavior of scsi_eh_tur() nor of scsi_eh_try_stu() nor of the
+scsi_request_sense() callers.
+
+See also commit bbe9fb0d04b9 ("scsi: Avoid that .queuecommand() gets called
+for a blocked SCSI device"; v5.3).
 
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Johannes Thumshirn <johannes.thumshirn@wdc.com>
@@ -69,19 +75,19 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Daniel Wagner <dwagner@suse.de>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- include/scsi/scsi_device.h | 2 +-
+ drivers/scsi/scsi_error.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 05c7c320ef32..ac6ab16abee7 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -146,7 +146,7 @@ struct scsi_device {
- 	struct scsi_vpd __rcu *vpd_pg80;
- 	struct scsi_vpd __rcu *vpd_pg89;
- 	unsigned char current_tag;	/* current tag */
--	struct scsi_target      *sdev_target;   /* used only for single_lun */
-+	struct scsi_target      *sdev_target;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index c0a3497fc474..28b287e9f50a 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1112,7 +1112,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 	if (sdev->sdev_state != SDEV_BLOCK)
+ 		rtn = shost->hostt->queuecommand(shost, scmd);
+ 	else
+-		rtn = SCSI_MLQUEUE_DEVICE_BUSY;
++		rtn = FAILED;
+ 	mutex_unlock(&sdev->state_mutex);
  
- 	blist_flags_t		sdev_bflags; /* black/white flags as also found in
- 				 * scsi_devinfo.[hc]. For now used only to
+ 	if (rtn) {
