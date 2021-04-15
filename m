@@ -7,80 +7,68 @@ X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F272AC433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 12:48:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B737C433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 12:50:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC96D613B1
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 12:48:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E21A461249
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Apr 2021 12:50:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232967AbhDOMsq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Apr 2021 08:48:46 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:34669 "EHLO
+        id S232332AbhDOMvJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Apr 2021 08:51:09 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:49547 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232935AbhDOMso (ORCPT
+        by vger.kernel.org with ESMTP id S232223AbhDOMvI (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 15 Apr 2021 08:48:44 -0400
+        Thu, 15 Apr 2021 08:51:08 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618490900;
+        s=mimecast20190719; t=1618491045;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=1LAQ6HtKDOO1L+xRyQZX4ppYDgriUkDm49dicoPjqa4=;
-        b=aUwMSIGNQ0iMWN2UIfw3IrTC8PUeVdwewcaOXVX+sPfzoEWyhyNivtdYnh3ZFhC1BGv2tK
-        67w4qRsKw5A4oY8bnK94FeA4KET5OFGK94htHxPJM+iUkL1r0V+cVD5PL7Rm+stJ0NmAfT
-        1vZupSk6IhlZH7Wrad5nMMPzbEXk/Bo=
+        bh=qHFfNEhqMxtYScmgjdaVRmQhSRg27nNMsoXSPLTiaLE=;
+        b=UyLRtPm+A0QlfTVX6/Gm47fW6PGdWN923griPxKBzlxdsqMRlJlPzoVceWZriMi/sLwvwA
+        v4EIksKEuqCj5lQJvI62oW4YymLFG8/siGcP2I3Y8xm9REDZlBGgDlbjE9IWiu+Bquw87s
+        /B3F/2qQtjFGvcysWav0OlJUSpC1dLQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-216-m3P9md99M4W8abc-qfD1LQ-1; Thu, 15 Apr 2021 08:48:19 -0400
-X-MC-Unique: m3P9md99M4W8abc-qfD1LQ-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-240-07QEiLX9NpOretFpS2hC5g-1; Thu, 15 Apr 2021 08:50:43 -0400
+X-MC-Unique: 07QEiLX9NpOretFpS2hC5g-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 30F4284BA41;
-        Thu, 15 Apr 2021 12:48:18 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A32B3107ACCA;
+        Thu, 15 Apr 2021 12:50:42 +0000 (UTC)
 Received: from localhost.localdomain (unknown [10.40.193.5])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 7BEEF10190A7;
-        Thu, 15 Apr 2021 12:48:17 +0000 (UTC)
-Subject: Re: [PATCH v2 22/24] mpi3mr: add support of DSN secure fw check
+        by smtp.corp.redhat.com (Postfix) with ESMTP id EF28B5C3F8;
+        Thu, 15 Apr 2021 12:50:41 +0000 (UTC)
+Subject: Re: [PATCH v2 23/24] mpi3mr: add eedp dif dix support
 To:     Kashyap Desai <kashyap.desai@broadcom.com>,
         linux-scsi@vger.kernel.org
 Cc:     sathya.prakash@broadcom.com
 References: <20210407020451.924822-1-kashyap.desai@broadcom.com>
- <20210407020451.924822-23-kashyap.desai@broadcom.com>
+ <20210407020451.924822-24-kashyap.desai@broadcom.com>
 From:   Tomas Henzl <thenzl@redhat.com>
-Message-ID: <30e25550-811c-cbbd-61da-c2243bbbf963@redhat.com>
-Date:   Thu, 15 Apr 2021 14:48:16 +0200
+Message-ID: <3875171d-1960-1209-986e-117d738de664@redhat.com>
+Date:   Thu, 15 Apr 2021 14:50:41 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.1
 MIME-Version: 1.0
-In-Reply-To: <20210407020451.924822-23-kashyap.desai@broadcom.com>
+In-Reply-To: <20210407020451.924822-24-kashyap.desai@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/7/21 4:04 AM, Kashyap Desai wrote:
-> Read PCI_EXT_CAP_ID_DSN to know security status.
-> 
-> Driver will throw an warning message when a non-secure type controller
-> is detected. Purpose of this interface is to avoid interacting with
-> any firmware which is not secured/signed by Broadcom.
-> Any tampering on Firmware component will be detected by hardware
-> and it will be communicated to the driver to avoid any further
-> interaction with that component.
-> 
 > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 > Reviewed-by: Hannes Reinecke <hare@suse.de>
 > Cc: sathya.prakash@broadcom.com
 
-
 Looks good
-
-
 
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
