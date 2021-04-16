@@ -2,78 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=no autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EC36C43460
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 15:16:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD329C433ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 15:18:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8128261026
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 15:16:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B55C61026
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 15:18:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343591AbhDPPQb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Apr 2021 11:16:31 -0400
-Received: from smtprelay0213.hostedemail.com ([216.40.44.213]:48228 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S244671AbhDPPOl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Apr 2021 11:14:41 -0400
-Received: from omf09.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay08.hostedemail.com (Postfix) with ESMTP id 1E7E7182CED5B;
-        Fri, 16 Apr 2021 15:12:05 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf09.hostedemail.com (Postfix) with ESMTPA id 9F81C1E04DB;
-        Fri, 16 Apr 2021 15:12:03 +0000 (UTC)
-Message-ID: <9e5a552b8b1f65af3eb4d2371a19c33d97f642d0.camel@perches.com>
-Subject: Re: [PATCH 1/5] scsi: BusLogic: Fix missing `pr_cont' use
-From:   Joe Perches <joe@perches.com>
-To:     "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc:     Khalid Aziz <khalid@gonehiking.org>,
+        id S1343534AbhDPPS5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Apr 2021 11:18:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54848 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1343523AbhDPPSr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Apr 2021 11:18:47 -0400
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DE3B6C06175F;
+        Fri, 16 Apr 2021 08:18:21 -0700 (PDT)
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id CDA9292009C; Fri, 16 Apr 2021 17:18:20 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id C92F592009B;
+        Fri, 16 Apr 2021 17:18:20 +0200 (CEST)
+Date:   Fri, 16 Apr 2021 17:18:20 +0200 (CEST)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     Nix <nix@esperi.org.uk>
+cc:     Khalid Aziz <khalid@gonehiking.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Date:   Fri, 16 Apr 2021 08:12:01 -0700
-In-Reply-To: <alpine.DEB.2.21.2104161627130.44318@angie.orcam.me.uk>
-References: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk>
-          <alpine.DEB.2.21.2104141419040.44318@angie.orcam.me.uk>
-          <787aae5540612555a8bf92de2083c8fa74e52ce9.camel@perches.com>
-          <alpine.DEB.2.21.2104161224300.44318@angie.orcam.me.uk>
-         <86c10671ff86f96004a6d6c3c08aed3e27d58d0a.camel@perches.com>
-         <alpine.DEB.2.21.2104161627130.44318@angie.orcam.me.uk>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.38.1-1 
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 5/5] scsi: Set allocation length to 255 for ATA Information
+ VPD page
+In-Reply-To: <878s5joh2d.fsf@esperi.org.uk>
+Message-ID: <alpine.DEB.2.21.2104161628540.44318@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk> <alpine.DEB.2.21.2104141306130.44318@angie.orcam.me.uk> <878s5joh2d.fsf@esperi.org.uk>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 9F81C1E04DB
-X-Stat-Signature: s9mxuosraujha4i8xyc6wiu14nyngk5u
-X-Rspamd-Server: rspamout01
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX18h5DhmD5kG2CH6aqwm9teq+oQ9Oz950oY=
-X-HE-Tag: 1618585923-648852
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2021-04-16 at 16:28 +0200, Maciej W. Rozycki wrote:
-> On Fri, 16 Apr 2021, Joe Perches wrote:
+On Thu, 15 Apr 2021, Nix wrote:
+
+> > Set the allocation length to 255 for the ATA Information VPD page 
+> > requested in the WRITE SAME handler, so as not to limit information 
+> > examined by `scsi_get_vpd_page' in the supported vital product data 
+> > pages unnecessarily.
+> >
+> > Originally it was thought that Areca hardware may have issues with a 
+> > valid allocation length supplied for a VPD inquiry, however older SCSI 
+> > standard revisions[1] consider 255 the maximum length allowed and what 
 > 
-> > > I'm not sure if that complex message 
-> > > routing via `blogic_msg' is worth having even, rather than calling 
-> > > `printk' or suitable variants directly.
-> > 
-> > It's to allow the message content to be added to the internal
-> > 	&adapter->msgbuf[adapter->msgbuflen]
-> > with strcpy for later use with blogic_show_info()/seq_write.
+> Aaaah. That explains a lot! (Not that I can remember what SCSI standard
+> rev that Areca firmware claimed to implement. I know I never updated the
+> firmware, so it's going to be something no newer than mid-2009 and
+> probably quite a bit older.)
+
+ From the original discussion I gather Areca sometimes acts as a 
+pass-through device to actual storage hardware, so it may well have been 
+decided for the firmware to take a conservative approach and interpret 
+the low order byte only.  A genuine bug cannot be ruled out either of 
+course, which I why I will appreciate your testing.
+
+> >  I can see you're still around.  Would you therefore please be so kind 
+> > as to verify this change with your Areca hardware if you still have it?
 > 
->  I know, but it's not clear to me if it's worth it (a potential buffer 
-> overrun there too, BTW).
+> It's been up in the loft for years, but I'll get it out this weekend and
+> give it a spin :) this'll let me make sure the disks still spin as well,
+> which matters for an in-case-of-lightning-strike disaster-recovery
+> backup box.
+> 
+> (I just hope this kernel boots on it at all. It's about three years
+> since I retired it... let's see!)
 
-It's seq_ output so it's nominally an ABI.
-But then again, I don't use this at all so I don't care much either.
+ FWIW if all else fails you can try this patch with the original kernel 
+you used with the box.  This piece of code hasn't changed, so until I 
+came up with the complete five-part solution proposed here I merely had 
+the original commit reverted as it is so as to allow forward progress.
 
-It's also odd/bad form that one output KERN_<level> does not match
-its blogic_<level> (blogic_info is emitted at KERN_NOTICE)
+ In any case, as per the cover letter, I have upgraded from 2.6.18, much 
+older, and this was the sole show-stopper for the machine, running SMP 
+even, so chances are 5.11+ will work with your system as well.  The 
+other plain 486/EISA/ATA box, similarly upgraded (now that I got its 
+faulty odd industrial PSU finally replaced) works just fine with vanilla 
+5.11.
 
+ OTOH versions ~3.15 through to ~4.5 I have tried while bisecting this 
+issue mostly failed to even start booting due to what looks like a 
+heisenbug to me (e.g. switching from XZ to gzip for compression would 
+make some, but not all versions/configurations boot occasionally), so 
+YMMV.
 
+ Overall we're not that bad with keeping stuff working, it's more new 
+use that causes troubles sometimes.
 
+> >  It looks to me like you were thinking in the right direction with: 
+> > <https://lore.kernel.org/linux-scsi/87vc3nuipg.fsf@spindle.srvr.nix/>. 
+> 
+> It's the sort of mistake I could see myself making: an easy mistake to
+> make when so many things in C require buffer size - 1 or you get a
+> disastrous security hole...
+
+ And here it's masking, except that with (256 - 1) rather than (512 - 1) 
+as you suggested.
+
+ Thank you for your input!
+
+  Maciej
