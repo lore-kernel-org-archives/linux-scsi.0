@@ -2,53 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91B15C433B4
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 08:32:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04BF6C433ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 08:36:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 752F06117A
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 08:32:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB3526117A
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 08:36:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240392AbhDPIcj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Apr 2021 04:32:39 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2870 "EHLO
+        id S238301AbhDPIgx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Apr 2021 04:36:53 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2871 "EHLO
         frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240382AbhDPIci (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Apr 2021 04:32:38 -0400
-Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FM8MV6lWKz68BFb;
-        Fri, 16 Apr 2021 16:22:14 +0800 (CST)
+        with ESMTP id S238711AbhDPIgu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Apr 2021 04:36:50 -0400
+Received: from fraeml703-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FM8WN5Hcxz689Vb;
+        Fri, 16 Apr 2021 16:29:04 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Fri, 16 Apr 2021 10:32:12 +0200
+ fraeml703-chm.china.huawei.com (10.206.15.52) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2106.2; Fri, 16 Apr 2021 10:36:23 +0200
 Received: from [10.47.83.179] (10.47.83.179) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Fri, 16 Apr
- 2021 09:32:11 +0100
-Subject: Re: [bug report] shared tags causes IO hang and performance drop
+ 2021 09:36:23 +0100
+Subject: Re: [PATCH] scsi_debug: fix cmd_per_lun, set to max_queue
 To:     Ming Lei <ming.lei@redhat.com>
-CC:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Douglas Gilbert <dgilbert@interlog.com>
-References: <YHaez6iN2HHYxYOh@T590>
- <9a6145a5-e6ac-3d33-b52a-0823bfc3b864@huawei.com>
- <cb326d404c6e0785d03a7dfadc42832c@mail.gmail.com> <YHbOOfGNHwO4SMS7@T590>
- <87ceccf2-287b-9bd1-899a-f15026c9e65b@huawei.com> <YHe3M62agQET6o6O@T590>
- <3e76ffc7-1d71-83b6-ef5b-3986e947e372@huawei.com> <YHgvMAHqIq9f6pQn@T590>
- <f66f9204-83ff-48d4-dbf4-4a5e1dc100b7@huawei.com> <YHjeUrCTbrSft18t@T590>
+CC:     Douglas Gilbert <dgilbert@interlog.com>,
+        <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <jejb@linux.vnet.ibm.com>, <kashyap.desai@broadcom.com>,
+        <axboe@kernel.dk>
+References: <20210415015031.607153-1-dgilbert@interlog.com>
+ <580349dc-0152-8f39-5f3c-be9115e3bf12@huawei.com> <YHjsXaVJJsQXwEPW@T590>
+ <bd33c000-905a-b881-06ea-eef51c77566e@huawei.com> <YHlKRDOmMRPMKl5x@T590>
 From:   John Garry <john.garry@huawei.com>
-Message-ID: <217e4cc1-c915-0e95-1d1c-4a11496080d6@huawei.com>
-Date:   Fri, 16 Apr 2021 09:29:37 +0100
+Message-ID: <71e8b42a-f368-2477-ac83-60a750f157f6@huawei.com>
+Date:   Fri, 16 Apr 2021 09:33:48 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <YHjeUrCTbrSft18t@T590>
+In-Reply-To: <YHlKRDOmMRPMKl5x@T590>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -60,28 +57,29 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 16/04/2021 01:46, Ming Lei wrote:
->> I can't seem to recreate your same issue. Are you mainline defconfig, or a
->> special disto config?
-> The config is rhel8 config.
-> 
+On 16/04/2021 09:26, Ming Lei wrote:
+>>> 'cmd_per_lun' should have been set as correct from the beginning instead
+>>> of capping it for changing queue depth:
+>>>
+>>> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+>>> index 697c09ef259b..0d9954eabbb8 100644
+>>> --- a/drivers/scsi/hosts.c
+>>> +++ b/drivers/scsi/hosts.c
+>>> @@ -414,7 +414,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+>>>    	shost->can_queue = sht->can_queue;
+>>>    	shost->sg_tablesize = sht->sg_tablesize;
+>>>    	shost->sg_prot_tablesize = sht->sg_prot_tablesize;
+>>> -	shost->cmd_per_lun = sht->cmd_per_lun;
+>>> +	shost->cmd_per_lun = min_t(int, sht->cmd_per_lun, shost->can_queue);
+>>>    	shost->no_write_same = sht->no_write_same;
+>>>    	shost->host_tagset = sht->host_tagset;
+>> My concern here is that it is a common pattern in LLDDs to overwrite the
+>> initial shost member values between scsi_host_alloc() and scsi_add_host().
+> OK, then can we move the fix into beginning of scsi_add_host()?
 
-Can you share that? Has anyone tested against mainline x86 config?
-
-> As I mentioned, with deadline, IOPS drop is observed on one hardware(ibm-x3850x6)
-> which is exactly the machine Yanhui reported the cpu utilization issue.
-> 
-> On another machine(HP DL380G10), still 32cores, dual numa nodes, IOPS drop can't be
-> observed, but cpu utilization difference is still obserable.
-> 
-> I use scsi_debug just because it is hard to run the virt workloads on
-> that machine. And the reported issue is on megaraid_sas, which is a scsi
-> device, so null_blk isn't good to simulate here because it can't cover
-> scsi stack.
-
-Understood. Apart from scsi_debug, the only thing I can readily compare 
-hosttags vs non-hosttags for scsi stack on is a megaraid_sas system with 
-1x SATA disk. Or hack with hisi_sas to support both.
+I suppose that would be ok, but we don't do much sanitizing shost values 
+at that point. Apart from failing can_queue == 0. I suppose failing 
+can_queue < cmd_per_lun could also be added.
 
 Thanks,
 John
