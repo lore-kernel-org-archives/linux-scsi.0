@@ -2,51 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B96CEC433ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 19:34:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3504DC433B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 19:36:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C904613B4
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 19:34:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2C2F613C1
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 19:36:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240255AbhDPTfN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Apr 2021 15:35:13 -0400
-Received: from mailout.easymail.ca ([64.68.200.34]:37716 "EHLO
+        id S240473AbhDPTgx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Apr 2021 15:36:53 -0400
+Received: from mailout.easymail.ca ([64.68.200.34]:39298 "EHLO
         mailout.easymail.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235029AbhDPTfM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Apr 2021 15:35:12 -0400
+        with ESMTP id S235029AbhDPTgw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Apr 2021 15:36:52 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by mailout.easymail.ca (Postfix) with ESMTP id BDED6C0DBE;
-        Fri, 16 Apr 2021 19:34:46 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at emo04-pco.easydns.vpn
+        by mailout.easymail.ca (Postfix) with ESMTP id 6BB5C9FF93;
+        Fri, 16 Apr 2021 19:36:26 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at emo05-pco.easydns.vpn
 Received: from mailout.easymail.ca ([127.0.0.1])
-        by localhost (emo04-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id I4-BX4Tq3JuR; Fri, 16 Apr 2021 19:34:46 +0000 (UTC)
+        by localhost (emo05-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id z-62OPgm7yLF; Fri, 16 Apr 2021 19:36:26 +0000 (UTC)
 Received: from mail.gonehiking.org (c-24-9-64-241.hsd1.co.comcast.net [24.9.64.241])
-        by mailout.easymail.ca (Postfix) with ESMTPA id 1B44BC270A;
-        Fri, 16 Apr 2021 19:34:37 +0000 (UTC)
+        by mailout.easymail.ca (Postfix) with ESMTPA id 7EE49A1459;
+        Fri, 16 Apr 2021 19:36:19 +0000 (UTC)
 Received: from [192.168.1.4] (internal [192.168.1.4])
-        by mail.gonehiking.org (Postfix) with ESMTP id C5BE23EE4F;
-        Fri, 16 Apr 2021 13:34:36 -0600 (MDT)
-Subject: Re: [PATCH 1/5] scsi: BusLogic: Fix missing `pr_cont' use
+        by mail.gonehiking.org (Postfix) with ESMTP id A77CE3EE4F;
+        Fri, 16 Apr 2021 13:36:18 -0600 (MDT)
+Subject: Re: [PATCH 0/5] Bring the BusLogic host bus adapter driver up to
+ Y2021
 To:     "Maciej W. Rozycki" <macro@orcam.me.uk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+        linux-kernel@vger.kernel.org
 References: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk>
- <alpine.DEB.2.21.2104141419040.44318@angie.orcam.me.uk>
 From:   Khalid Aziz <khalid@gonehiking.org>
-Message-ID: <98a2ab05-e566-41f3-74b4-8b54563f4ae3@gonehiking.org>
-Date:   Fri, 16 Apr 2021 13:34:36 -0600
+Message-ID: <a099f7f8-9601-fd1c-03a4-93587e7276e6@gonehiking.org>
+Date:   Fri, 16 Apr 2021 13:36:18 -0600
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.7.1
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.21.2104141419040.44318@angie.orcam.me.uk>
+In-Reply-To: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -54,107 +53,28 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/14/21 4:39 PM, Maciej W. Rozycki wrote:
-> Update BusLogic driver's messaging system to use `pr_cont' for 
-> continuation lines, bringing messy output:
+On 4/14/21 4:38 PM, Maciej W. Rozycki wrote:
+> Hi,
 > 
-> pci 0000:00:13.0: PCI->APIC IRQ transform: INT A -> IRQ 17
-> scsi: ***** BusLogic SCSI Driver Version 2.1.17 of 12 September 2013 *****
-> scsi: Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>
-> scsi0: Configuring BusLogic Model BT-958 PCI Wide Ultra SCSI Host Adapter
-> scsi0:   Firmware Version: 5.07B, I/O Address: 0x7000, IRQ Channel: 17/Level
-> scsi0:   PCI Bus: 0, Device: 19, Address:
-> 0xE0012000,
-> Host Adapter SCSI ID: 7
-> scsi0:   Parity Checking: Enabled, Extended Translation: Enabled
-> scsi0:   Synchronous Negotiation: Ultra, Wide Negotiation: Enabled
-> scsi0:   Disconnect/Reconnect: Enabled, Tagged Queuing: Enabled
-> scsi0:   Scatter/Gather Limit: 128 of 8192 segments, Mailboxes: 211
-> scsi0:   Driver Queue Depth: 211, Host Adapter Queue Depth: 192
-> scsi0:   Tagged Queue Depth:
-> Automatic
-> , Untagged Queue Depth: 3
-> scsi0:   SCSI Bus Termination: Both Enabled
-> , SCAM: Disabled
+>  First of all, does anyone have a copy of: "MultiMaster UltraSCSI Host 
+> Adapters for PCI Systems: Technical Reference Manual" (pub. 3002493-E)?  
+> It used to live in the "Mylex Manuals and Documentation Archives" section 
+> of the Mylex web site <http://www.mylex.com/pub/manuals/index.htm>, 
+> specifically at: <http://www.mylex.com/pub/manuals/mmultra.pdf>.
 > 
-> scsi0: *** BusLogic BT-958 Initialized Successfully ***
-> scsi host0: BusLogic BT-958
+>  Another useful document might be: "Wide SCSI Host Adapters for PCI and 
+> EISA Systems: Technical Reference Manual" (pub. 3000763-A), which used to 
+> live at: <http://www.mylex.com/pub/manuals/widescsi.pdf>, linked from the 
+> same place.
 > 
-> back to order:
-> 
-> pci 0000:00:13.0: PCI->APIC IRQ transform: INT A -> IRQ 17
-> scsi: ***** BusLogic SCSI Driver Version 2.1.17 of 12 September 2013 *****
-> scsi: Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>
-> scsi0: Configuring BusLogic Model BT-958 PCI Wide Ultra SCSI Host Adapter
-> scsi0:   Firmware Version: 5.07B, I/O Address: 0x7000, IRQ Channel: 17/Level
-> scsi0:   PCI Bus: 0, Device: 19, Address: 0xE0012000, Host Adapter SCSI ID: 7
-> scsi0:   Parity Checking: Enabled, Extended Translation: Enabled
-> scsi0:   Synchronous Negotiation: Ultra, Wide Negotiation: Enabled
-> scsi0:   Disconnect/Reconnect: Enabled, Tagged Queuing: Enabled
-> scsi0:   Scatter/Gather Limit: 128 of 8192 segments, Mailboxes: 211
-> scsi0:   Driver Queue Depth: 211, Host Adapter Queue Depth: 192
-> scsi0:   Tagged Queue Depth: Automatic, Untagged Queue Depth: 3
-> scsi0:   SCSI Bus Termination: Both Enabled, SCAM: Disabled
-> scsi0: *** BusLogic BT-958 Initialized Successfully ***
-> scsi host0: BusLogic BT-958
-> 
-> Also diagnostic output such as with the `BusLogic=TraceConfiguration' 
-> parameter is affected and becomes vertical and therefore hard to read.  
-> This has now been corrected, e.g.:
-> 
-> pci 0000:00:13.0: PCI->APIC IRQ transform: INT A -> IRQ 17
-> blogic_cmd(86) Status = 30:  4 ==>  4: FF 05 93 00
-> blogic_cmd(95) Status = 28: (Modify I/O Address)
-> blogic_cmd(91) Status = 30:  1 ==>  1: 01
-> blogic_cmd(04) Status = 30:  4 ==>  4: 41 41 35 30
-> blogic_cmd(8D) Status = 30: 14 ==> 14: 45 DC 00 20 00 00 00 00 00 40 30 37 42 1D
-> scsi: ***** BusLogic SCSI Driver Version 2.1.17 of 12 September 2013 *****
-> scsi: Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>
-> blogic_cmd(04) Status = 30:  4 ==>  4: 41 41 35 30
-> blogic_cmd(0B) Status = 30:  3 ==>  3: 00 08 07
-> blogic_cmd(0D) Status = 30: 34 ==> 34: 03 01 07 04 00 00 00 00 00 00 00 00 00 00 00 00 FF 42 44 46 FF 00 00 00 00 00 00 00 00 00 FF 00 FF 00
-> blogic_cmd(8D) Status = 30: 14 ==> 14: 45 DC 00 20 00 00 00 00 00 40 30 37 42 1D
-> blogic_cmd(84) Status = 30:  1 ==>  1: 37
-> blogic_cmd(8B) Status = 30:  5 ==>  5: 39 35 38 20 20
-> blogic_cmd(85) Status = 30:  1 ==>  1: 42
-> blogic_cmd(86) Status = 30:  4 ==>  4: FF 05 93 00
-> blogic_cmd(91) Status = 30: 64 ==> 64: 41 46 3E 20 39 35 38 20 20 00 C4 00 04 01 07 2F 07 04 35 FF FF FF FF FF FF FF FF FF FF 01 00 FE FF 08 FF FF 00 00 00 00 00 00 00 01 00 01 00 00 FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 FC
-> scsi0: Configuring BusLogic Model BT-958 PCI Wide Ultra SCSI Host Adapter
-> 
-> etc.
-> 
-> Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
-> Fixes: 4bcc595ccd80 ("printk: reinstate KERN_CONT for printing continuation lines")
-> Cc: stable@vger.kernel.org # v4.9+
-> ---
->  drivers/scsi/BusLogic.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> linux-buslogic-pr-cont.diff
-> Index: linux-macro-ide/drivers/scsi/BusLogic.c
-> ===================================================================
-> --- linux-macro-ide.orig/drivers/scsi/BusLogic.c
-> +++ linux-macro-ide/drivers/scsi/BusLogic.c
-> @@ -3603,7 +3603,7 @@ static void blogic_msg(enum blogic_msgle
->  			if (buf[0] != '\n' || len > 1)
->  				printk("%sscsi%d: %s", blogic_msglevelmap[msglevel], adapter->host_no, buf);
->  		} else
-> -			printk("%s", buf);
-> +			pr_cont("%s", buf);
->  	} else {
->  		if (begin) {
->  			if (adapter != NULL && adapter->adapter_initd)
-> @@ -3611,7 +3611,7 @@ static void blogic_msg(enum blogic_msgle
->  			else
->  				printk("%s%s", blogic_msglevelmap[msglevel], buf);
->  		} else
-> -			printk("%s", buf);
-> +			pr_cont("%s", buf);
->  	}
->  	begin = (buf[len - 1] == '\n');
->  }
-> 
+>  Sadly I didn't get to these resources while they were still there, and 
+> neither did archive.org, and now they not appear available from anywhere 
+> online.  I'm sure Leonard had this all, but, alas, he is long gone too.
 
-Looks good.
+These documents were all gone by the time I started working on this
+driver in 2013.
 
-Acked-by: Khalid Aziz <khalid@gonehiking.org>
+--
+Khalid
+
+
