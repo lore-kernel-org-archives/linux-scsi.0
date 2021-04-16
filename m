@@ -2,298 +2,222 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-23.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B1D9C43461
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 09:22:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB981C433B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 09:24:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E744261166
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 09:22:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AECCF6115B
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 09:24:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240026AbhDPJXO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Apr 2021 05:23:14 -0400
-Received: from mga17.intel.com ([192.55.52.151]:58379 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234312AbhDPJXN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Apr 2021 05:23:13 -0400
-IronPort-SDR: WJS2rHIfUiPN7+MZwZZVyM1jvMgSkm79nbKMpLwQWe0I6KQdjqtnYQjerC0zTcOq5DX7JOwJLp
- udv25I3wnf1A==
-X-IronPort-AV: E=McAfee;i="6200,9189,9955"; a="175122145"
-X-IronPort-AV: E=Sophos;i="5.82,226,1613462400"; 
-   d="scan'208";a="175122145"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2021 02:22:49 -0700
-IronPort-SDR: LTD0pPovf9LjGKkamh7GgF4XV/IKF+D+L90RasUrL15smP1ANlzLBKOzFST/j8Nljx+LMCUYWA
- hnVETrRrlDAQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.82,226,1613462400"; 
-   d="scan'208";a="461914819"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
-  by orsmga001.jf.intel.com with ESMTP; 16 Apr 2021 02:22:40 -0700
-Subject: Re: [PATCH v19 1/2] scsi: ufs: Enable power management for wlun
-To:     Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Bean Huo <beanhuo@micron.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Yue Hu <huyue2@yulong.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Dinghao Liu <dinghao.liu@zju.edu.cn>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-samsung-soc@vger.kernel.org>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>
-References: <cover.1618529652.git.asutoshd@codeaurora.org>
- <48ab92db5b0d3c11b8357f0faa99a4473465099d.1618529652.git.asutoshd@codeaurora.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <d28cb2d4-8f24-c2c4-e87e-bb51ac73af6e@intel.com>
-Date:   Fri, 16 Apr 2021 12:22:52 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        id S235124AbhDPJYe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Apr 2021 05:24:34 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:45242 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S231666AbhDPJYd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Apr 2021 05:24:33 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id B848041382;
+        Fri, 16 Apr 2021 09:24:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received; s=mta-01; t=1618565046; x=
+        1620379447; bh=3E/N8Yl7sMh4DIsxbIMnDUl+FD2WKryJLBm6JaJ5imY=; b=R
+        ma6pC7pViY8tHSbdC4rVfLxbT70fQ+DONTHSFYjLDLygrq5Ul7NAwO6NQRPvpobZ
+        2iY3we1SztVNo7Xi76ia5G5Sf0mmaocnsSyTWPs2filHAgqSP9fg0z/F47Yn/RmH
+        4dvRIBXcZuKQ0Z/IVatdVX3fTRpBfbEHLYObtIgtE8=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id ePuH44Am-GyD; Fri, 16 Apr 2021 12:24:06 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 0245341377;
+        Fri, 16 Apr 2021 12:24:05 +0300 (MSK)
+Received: from NB-591.corp.yadro.com (10.199.0.63) by T-EXCH-03.corp.yadro.com
+ (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 16
+ Apr 2021 12:24:05 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>
+CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [PATCH v2] target: core: remove from tmr_list at lun unlink
+Date:   Fri, 16 Apr 2021 12:21:46 +0300
+Message-ID: <20210416092146.3201-1-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <48ab92db5b0d3c11b8357f0faa99a4473465099d.1618529652.git.asutoshd@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.199.0.63]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-03.corp.yadro.com (172.17.100.103)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 16/04/21 2:36 am, Asutosh Das wrote:
-> During runtime-suspend of ufs host, the scsi devices are
-> already suspended and so are the queues associated with them.
-> But the ufs host sends SSU (START_STOP_UNIT) to wlun
-> during its runtime-suspend.
-> During the process blk_queue_enter checks if the queue is not in
-> suspended state. If so, it waits for the queue to resume, and never
-> comes out of it.
-> The commit
-> (d55d15a33: scsi: block: Do not accept any requests while suspended)
-> adds the check if the queue is in suspended state in blk_queue_enter().
-> 
-> Call trace:
->  __switch_to+0x174/0x2c4
->  __schedule+0x478/0x764
->  schedule+0x9c/0xe0
->  blk_queue_enter+0x158/0x228
->  blk_mq_alloc_request+0x40/0xa4
->  blk_get_request+0x2c/0x70
->  __scsi_execute+0x60/0x1c4
->  ufshcd_set_dev_pwr_mode+0x124/0x1e4
->  ufshcd_suspend+0x208/0x83c
->  ufshcd_runtime_suspend+0x40/0x154
->  ufshcd_pltfrm_runtime_suspend+0x14/0x20
->  pm_generic_runtime_suspend+0x28/0x3c
->  __rpm_callback+0x80/0x2a4
->  rpm_suspend+0x308/0x614
->  rpm_idle+0x158/0x228
->  pm_runtime_work+0x84/0xac
->  process_one_work+0x1f0/0x470
->  worker_thread+0x26c/0x4c8
->  kthread+0x13c/0x320
->  ret_from_fork+0x10/0x18
-> 
-> Fix this by registering ufs device wlun as a scsi driver and
-> registering it for block runtime-pm. Also make this as a
-> supplier for all other luns. That way, this device wlun
-> suspends after all the consumers and resumes after
-> hba resumes.
-> This also registers a new scsi driver for rpmb wlun.
-> This new driver is mostly used to clear rpmb uac.
-> With this design, the driver would always be runtime resumed
-> before system suspend.
+Currently TMF commands are removed from de_device.dev_tmf_list at
+the very end of se_cmd lifecycle. But se_lun unlinks from se_cmd
+up on a command status (response) is queued in transport layer.
+It means that LUN and backend device can be deleted meantime and at
+the moment of repsonse completion a panic is occured:
 
-I thought some more about that and I think we can still support
-allowing runtime suspend to work with system suspend, without
-too much difficulty. See ufshcd_suspend_prepare() below.
+target_tmr_work()
+	cmd->se_tfo->queue_tm_rsp(cmd); // send abort_rsp to a wire
+	transport_lun_remove_cmd(cmd) // unlink se_cmd from se_lun
+- // - // - // -
+<<<--- lun remove
+<<<--- core backend device remove
+- // - // - // -
+qlt_handle_abts_completion()
+  tfo->free_mcmd()
+    transport_generic_free_cmd()
+      target_put_sess_cmd()
+        core_tmr_release_req() {
+          if (dev) { // backend device, can not be null
+            spin_lock_irqsave(&dev->se_tmr_lock, flags); //<<<--- CRASH
 
-> 
-> Fixed smatch warnings:
-> Reported-by: kernel test robot <lkp@intel.com>
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> Co-developed-by: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-> ---
+Call Trace:
+NIP [c000000000e1683c] _raw_spin_lock_irqsave+0x2c/0xc0
+LR [c00800000e433338] core_tmr_release_req+0x40/0xa0 [target_core_mod]
+Call Trace:
+(unreliable)
+0x0
+target_put_sess_cmd+0x2a0/0x370 [target_core_mod]
+transport_generic_free_cmd+0x6c/0x1b0 [target_core_mod]
+tcm_qla2xxx_complete_mcmd+0x28/0x50 [tcm_qla2xxx]
+process_one_work+0x2c4/0x5c0
+worker_thread+0x88/0x690
 
-<SNIP>
+For FC protocol it is a race condition, but for iSCSI protocol it is
+easyly reproduced by manual sending iSCSI commands:
+- Send some SCSI sommand
+- Send Abort of that command over iSCSI
+- Remove LUN on target
+- Send next iSCSI command to acknowledge the Abort_Response
+- target panics
 
-> -static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
-> +static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  {
->  	int ret;
-> -	enum uic_link_state old_link_state;
-> +	enum uic_link_state old_link_state = hba->uic_link_state;
->  
-> -	hba->pm_op_in_progress = 1;
-> -	old_link_state = hba->uic_link_state;
-> -
-> -	ufshcd_hba_vreg_set_hpm(hba);
-> -	ret = ufshcd_vreg_set_hpm(hba);
-> -	if (ret)
-> -		goto out;
-> -
-> -	/* Make sure clocks are enabled before accessing controller */
-> -	ret = ufshcd_setup_clocks(hba, true);
-> -	if (ret)
-> -		goto disable_vreg;
-> -
-> -	/* enable the host irq as host controller would be active soon */
-> -	ufshcd_enable_irq(hba);
-> +	hba->pm_op_in_progress = true;
->  
->  	/*
->  	 * Call vendor specific resume callback. As these callbacks may access
-> @@ -8868,7 +8858,7 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  	 */
->  	ret = ufshcd_vops_resume(hba, pm_op);
->  	if (ret)
-> -		goto disable_irq_and_vops_clks;
-> +		goto out;
->  
->  	/* For DeepSleep, the only supported option is to have the link off */
->  	WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && !ufshcd_is_link_off(hba));
-> @@ -8916,42 +8906,219 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  	if (hba->ee_usr_mask)
->  		ufshcd_write_ee_control(hba);
->  
-> -	hba->clk_gating.is_suspended = false;
-> -
->  	if (ufshcd_is_clkscaling_supported(hba))
-> -		ufshcd_clk_scaling_suspend(hba, false);
-> -
-> -	/* Enable Auto-Hibernate if configured */
-> -	ufshcd_auto_hibern8_enable(hba);
-> +		ufshcd_resume_clkscaling(hba);
+There is no sense to keep the command in tmr_list until response
+completion, so move the removal from tmr_list from the response
+completion to the response queueing when lun is unlinked.
+Move the removal from state list too as it is a subject to the same
+race condition.
 
-This still doesn't look right. ufshcd_resume_clkscaling()
-doesn't update hba->clk_scaling.is_allowed whereas
-ufshcd_clk_scaling_suspend() does.
+Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 
->  
->  	if (hba->dev_info.b_rpm_dev_flush_capable) {
->  		hba->dev_info.b_rpm_dev_flush_capable = false;
->  		cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
->  	}
->  
-> -	ufshcd_clear_ua_wluns(hba);
-> -
-> -	/* Schedule clock gating in case of no access to UFS device yet */
-> -	ufshcd_release(hba);
-> -
-> +	/* Enable Auto-Hibernate if configured */
-> +	ufshcd_auto_hibern8_enable(hba);
->  	goto out;
->  
->  set_old_link_state:
->  	ufshcd_link_state_transition(hba, old_link_state, 0);
->  vendor_suspend:
->  	ufshcd_vops_suspend(hba, pm_op);
-> -disable_irq_and_vops_clks:
-> +out:
-> +	if (ret)
-> +		ufshcd_update_evt_hist(hba, UFS_EVT_WL_RES_ERR, (u32)ret);
-> +	hba->clk_gating.is_suspended = false;
-> +	ufshcd_release(hba);
-> +	hba->pm_op_in_progress = false;
-> +	return ret;
-> +}
+---
+v2:
+ fix cmd stuck in tmr list in error case in iscsi
+ move clearing cmd->se_lun to transport_lun_remove_cmd
 
-<SNIP>
+The issue exists from the very begining.
+I uploaded a scapy script that helps to reproduce the issue at
+https://gist.github.com/logost/cb93df41dd2432454324449b390403c4
+---
+ drivers/target/iscsi/iscsi_target.c    |  2 +-
+ drivers/target/target_core_tmr.c       |  9 --------
+ drivers/target/target_core_transport.c | 29 +++++++++++++++++++-------
+ 3 files changed, 23 insertions(+), 17 deletions(-)
 
-> +void ufshcd_resume_complete(struct device *dev)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	ufshcd_rpm_put(hba);
-> +}
-> +EXPORT_SYMBOL_GPL(ufshcd_resume_complete);
-> +
-> +int ufshcd_suspend_prepare(struct device *dev)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	/*
-> +	 * SCSI assumes that runtime-pm and system-pm for scsi drivers
-> +	 * are same. And it doesn't wake up the device for system-suspend
-> +	 * if it's runtime suspended. But ufs doesn't follow that.
-> +	 * The rpm-lvl and spm-lvl can be different in ufs.
-> +	 * Force it to honor system-suspend.
-> +	 * Refer ufshcd_resume_complete()
-> +	 */
-> +	ufshcd_rpm_get_sync(hba);
-> +
-> +	return 0;
-> +}
-
-I think we can support allowing runtime suspend to work with
-system suspend.  ufshcd_resume_complete() remains the same,
-and ufshcd_suspend_prepare() is like this:
-
-
-/*
- * SCSI assumes that runtime-pm and system-pm for scsi drivers are same, and it
- * doesn't wake up the device for system-suspend if it's runtime suspended.
- * However UFS doesn't follow that. The rpm-lvl and spm-lvl can be different in
- * UFS, so special care is needed.
- * Refer also ufshcd_resume_complete()
- */
-int ufshcd_suspend_prepare(struct device *dev)
-{
-	struct ufs_hba *hba = dev_get_drvdata(dev);
-	struct device *ufs_dev = &hba->sdev_ufs_device->sdev_gendev;
-	enum ufs_dev_pwr_mode spm_pwr_mode;
-	enum uic_link_state spm_link_state;
-	unsigned long flags;
-	bool rpm_state_ok;
-
-	/*
-	 * First prevent runtime suspend. Note this does not prevent runtime
-	 * resume e.g. pm_runtime_get_sync() will still do the right thing.
-	 */
-	pm_runtime_get_noresume(ufs_dev);
-
-	/* Now check if the rpm state is ok to use for spm */
-	spin_lock_irqsave(&ufs_dev->power.lock, flags);
-
-	spm_pwr_mode = ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl);
-	spm_link_state = ufs_get_pm_lvl_to_link_pwr_state(hba->spm_lvl);
-
-	rpm_state_ok = pm_runtime_suspended(ufs_dev) &&
-		       hba->curr_dev_pwr_mode == spm_pwr_mode &&
-		       hba->uic_link_state == spm_link_state &&
-		       !hba->dev_info.b_rpm_dev_flush_capable;
-
-	spin_unlock_irqrestore(&ufs_dev->power.lock, flags);
-
-	/* If is isn't, do a runtime resume */
-	if (!rpm_state_ok)
-		pm_runtime_resume(ufs_dev);
-
-	return 0;
-}
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index d0e7ed8f28cc..3311b031a812 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -2142,7 +2142,7 @@ iscsit_handle_task_mgt_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
+ 	 * TMR TASK_REASSIGN.
+ 	 */
+ 	iscsit_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
+-	target_put_sess_cmd(&cmd->se_cmd);
++	transport_generic_free_cmd(&cmd->se_cmd, false);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(iscsit_handle_task_mgt_cmd);
+diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+index 7347285471fa..323a173010c1 100644
+--- a/drivers/target/target_core_tmr.c
++++ b/drivers/target/target_core_tmr.c
+@@ -50,15 +50,6 @@ EXPORT_SYMBOL(core_tmr_alloc_req);
+ 
+ void core_tmr_release_req(struct se_tmr_req *tmr)
+ {
+-	struct se_device *dev = tmr->tmr_dev;
+-	unsigned long flags;
+-
+-	if (dev) {
+-		spin_lock_irqsave(&dev->se_tmr_lock, flags);
+-		list_del_init(&tmr->tmr_list);
+-		spin_unlock_irqrestore(&dev->se_tmr_lock, flags);
+-	}
+-
+ 	kfree(tmr);
+ }
+ 
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 5ecb9f18a53d..34b20c0646ab 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -667,6 +667,20 @@ static void target_remove_from_state_list(struct se_cmd *cmd)
+ 	spin_unlock_irqrestore(&dev->queues[cmd->cpuid].lock, flags);
+ }
+ 
++static void target_remove_from_tmr_list(struct se_cmd *cmd)
++{
++	struct se_device *dev = NULL;
++	unsigned long flags;
++
++	if (cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
++		dev = cmd->se_tmr_req->tmr_dev;
++
++	if (dev) {
++		spin_lock_irqsave(&dev->se_tmr_lock, flags);
++		list_del_init(&cmd->se_tmr_req->tmr_list);
++		spin_unlock_irqrestore(&dev->se_tmr_lock, flags);
++	}
++}
+ /*
+  * This function is called by the target core after the target core has
+  * finished processing a SCSI command or SCSI TMF. Both the regular command
+@@ -678,13 +692,6 @@ static int transport_cmd_check_stop_to_fabric(struct se_cmd *cmd)
+ {
+ 	unsigned long flags;
+ 
+-	target_remove_from_state_list(cmd);
+-
+-	/*
+-	 * Clear struct se_cmd->se_lun before the handoff to FE.
+-	 */
+-	cmd->se_lun = NULL;
+-
+ 	spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 	/*
+ 	 * Determine if frontend context caller is requesting the stopping of
+@@ -719,8 +726,16 @@ static void transport_lun_remove_cmd(struct se_cmd *cmd)
+ 	if (!lun)
+ 		return;
+ 
++	target_remove_from_state_list(cmd);
++	target_remove_from_tmr_list(cmd);
++
+ 	if (cmpxchg(&cmd->lun_ref_active, true, false))
+ 		percpu_ref_put(&lun->lun_ref);
++
++	/*
++	 * Clear struct se_cmd->se_lun before the handoff to FE.
++	 */
++	cmd->se_lun = NULL;
+ }
+ 
+ static void target_complete_failure_work(struct work_struct *work)
+-- 
+2.25.1
 
