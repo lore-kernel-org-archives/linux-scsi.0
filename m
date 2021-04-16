@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EDBEC43611
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC126C43616
 	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 08:40:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2121961184
+	by mail.kernel.org (Postfix) with ESMTP id D393C61166
 	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 08:40:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239934AbhDPIlO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Apr 2021 04:41:14 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:42030 "EHLO mta-01.yadro.com"
+        id S239944AbhDPIlQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Apr 2021 04:41:16 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:41996 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S238714AbhDPIlH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S239810AbhDPIlH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 16 Apr 2021 04:41:07 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 7751A41390;
-        Fri, 16 Apr 2021 08:40:39 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 4580C4138E;
+        Fri, 16 Apr 2021 08:40:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1618562438; x=1620376839; bh=uduGAqCQON2nAWKPqKV7WSGmbjJeL0w7EIG
-        R8RS2lwQ=; b=BLF2V5RXtuuZr79+JtmoOdRIJMqvEMn+WUvsr45+GqGtlPlgM10
-        YEFlYAQeqosJt8Xj8zpivHbo9fZEJImxQ0Sa6ody301p7YQTusCwq1GcY5cY8ELv
-        gBOucACfvtDKNl3tf5Vc/63/DznlhabvlEzTLd0DYKvloqXKHpUaPyn8=
+        1618562437; x=1620376838; bh=zZESbv+4UpXk0G5Dotj4UFxELuy0p+G4mzP
+        cSbWnPM4=; b=diDZw5zgO3HBhdgeYVnjNj+WGYhS2ZdI8JV6sdSzvzUWoApPHCy
+        6k9m7iPqdoNhAqXqOcO2ioFFT7sI+rInTrZuoS+pYFmU/eGbrhSye7zs+aEsQsOU
+        lqMw6C1p3yRKgKduJhtsrZTyZQfn+9okxQNuGzj/6z+bsJeK+ZHwUcrg=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id MozQ0UYx-rP8; Fri, 16 Apr 2021 11:40:38 +0300 (MSK)
+        with ESMTP id uUW7SbhnFVUV; Fri, 16 Apr 2021 11:40:37 +0300 (MSK)
 Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 66F4B41373;
-        Fri, 16 Apr 2021 11:40:37 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 3C12A4137A;
+        Fri, 16 Apr 2021 11:40:36 +0300 (MSK)
 Received: from NB-591.corp.yadro.com (10.199.0.63) by T-EXCH-03.corp.yadro.com
  (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 16
- Apr 2021 11:40:36 +0300
+ Apr 2021 11:40:35 +0300
 From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
 To:     Martin Petersen <martin.petersen@oracle.com>,
         <target-devel@vger.kernel.org>
@@ -55,9 +55,9 @@ CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
         Felipe Balbi <balbi@kernel.org>,
         Dmitry Bogdanov <d.bogdanov@yadro.com>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH v4 4/7] target: sbp: replace enable attr to ops.enable
-Date:   Fri, 16 Apr 2021 11:26:29 +0300
-Message-ID: <20210416082632.2000-5-d.bogdanov@yadro.com>
+Subject: [PATCH v4 2/7] target: iscsi: replace enable attr to ops.enable
+Date:   Fri, 16 Apr 2021 11:26:27 +0300
+Message-ID: <20210416082632.2000-3-d.bogdanov@yadro.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210416082632.2000-1-d.bogdanov@yadro.com>
 References: <20210416082632.2000-1-d.bogdanov@yadro.com>
@@ -72,87 +72,142 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Remove tpg/enable attribute.
-Add fabric ops enable_tpg implementation instead.
+Add fabric ops enable_tpg impalmentation instead.
 
 Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
- drivers/target/sbp/sbp_target.c | 30 +++++-------------------------
- 1 file changed, 5 insertions(+), 25 deletions(-)
+v3:
+ fix identation issue
+---
+ drivers/target/iscsi/iscsi_target_configfs.c | 91 +++++++-------------
+ 1 file changed, 32 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
-index 2a6165febd3b..72f7c00134d3 100644
---- a/drivers/target/sbp/sbp_target.c
-+++ b/drivers/target/sbp/sbp_target.c
-@@ -2128,32 +2128,13 @@ static ssize_t sbp_tpg_directory_id_store(struct config_item *item,
- 	return count;
- }
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index 0fa1d57b26fa..28b5acf83c80 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -1006,74 +1006,15 @@ static struct configfs_attribute *lio_target_tpg_param_attrs[] = {
  
--static ssize_t sbp_tpg_enable_show(struct config_item *item, char *page)
-+static int sbp_enable_tpg(struct se_portal_group *se_tpg, bool enable)
- {
+ /* Start items for lio_target_tpg_cit */
+ 
+-static ssize_t lio_target_tpg_enable_show(struct config_item *item, char *page)
+-{
 -	struct se_portal_group *se_tpg = to_tpg(item);
- 	struct sbp_tpg *tpg = container_of(se_tpg, struct sbp_tpg, se_tpg);
- 	struct sbp_tport *tport = tpg->tport;
--	return sprintf(page, "%d\n", tport->enable);
+-	struct iscsi_portal_group *tpg = container_of(se_tpg,
+-			struct iscsi_portal_group, tpg_se_tpg);
+-	ssize_t len;
+-
+-	spin_lock(&tpg->tpg_state_lock);
+-	len = sprintf(page, "%d\n",
+-			(tpg->tpg_state == TPG_STATE_ACTIVE) ? 1 : 0);
+-	spin_unlock(&tpg->tpg_state_lock);
+-
+-	return len;
 -}
 -
--static ssize_t sbp_tpg_enable_store(struct config_item *item,
+-static ssize_t lio_target_tpg_enable_store(struct config_item *item,
 -		const char *page, size_t count)
 -{
 -	struct se_portal_group *se_tpg = to_tpg(item);
--	struct sbp_tpg *tpg = container_of(se_tpg, struct sbp_tpg, se_tpg);
--	struct sbp_tport *tport = tpg->tport;
--	unsigned long val;
- 	int ret;
- 
--	if (kstrtoul(page, 0, &val) < 0)
+-	struct iscsi_portal_group *tpg = container_of(se_tpg,
+-			struct iscsi_portal_group, tpg_se_tpg);
+-	u32 op;
+-	int ret;
+-
+-	ret = kstrtou32(page, 0, &op);
+-	if (ret)
+-		return ret;
+-	if ((op != 1) && (op != 0)) {
+-		pr_err("Illegal value for tpg_enable: %u\n", op);
 -		return -EINVAL;
--	if ((val != 0) && (val != 1))
+-	}
+-
+-	ret = iscsit_get_tpg(tpg);
+-	if (ret < 0)
 -		return -EINVAL;
 -
--	if (tport->enable == val)
--		return count;
+-	if (op) {
+-		ret = iscsit_tpg_enable_portal_group(tpg);
+-		if (ret < 0)
+-			goto out;
+-	} else {
+-		/*
+-		 * iscsit_tpg_disable_portal_group() assumes force=1
+-		 */
+-		ret = iscsit_tpg_disable_portal_group(tpg, 1);
+-		if (ret < 0)
+-			goto out;
+-	}
 -
--	if (val) {
-+	if (enable) {
- 		if (sbp_count_se_tpg_luns(&tpg->se_tpg) == 0) {
- 			pr_err("Cannot enable a target with no LUNs!\n");
- 			return -EINVAL;
-@@ -2168,7 +2149,7 @@ static ssize_t sbp_tpg_enable_store(struct config_item *item,
- 		spin_unlock_bh(&se_tpg->session_lock);
- 	}
- 
--	tport->enable = val;
-+	tport->enable = enable;
- 
- 	ret = sbp_update_unit_directory(tport);
- 	if (ret < 0) {
-@@ -2176,15 +2157,13 @@ static ssize_t sbp_tpg_enable_store(struct config_item *item,
- 		return ret;
- 	}
- 
+-	iscsit_put_tpg(tpg);
 -	return count;
-+	return 0;
+-out:
+-	iscsit_put_tpg(tpg);
+-	return -EINVAL;
+-}
+-
+-
+ static ssize_t lio_target_tpg_dynamic_sessions_show(struct config_item *item,
+ 		char *page)
+ {
+ 	return target_show_dynamic_sessions(to_tpg(item), page);
  }
  
- CONFIGFS_ATTR(sbp_tpg_, directory_id);
--CONFIGFS_ATTR(sbp_tpg_, enable);
+-CONFIGFS_ATTR(lio_target_tpg_, enable);
+ CONFIGFS_ATTR_RO(lio_target_tpg_, dynamic_sessions);
  
- static struct configfs_attribute *sbp_tpg_base_attrs[] = {
- 	&sbp_tpg_attr_directory_id,
--	&sbp_tpg_attr_enable,
+ static struct configfs_attribute *lio_target_tpg_attrs[] = {
+-	&lio_target_tpg_attr_enable,
+ 	&lio_target_tpg_attr_dynamic_sessions,
  	NULL,
  };
+@@ -1130,6 +1071,37 @@ static struct se_portal_group *lio_target_tiqn_addtpg(struct se_wwn *wwn,
+ 	return NULL;
+ }
  
-@@ -2322,6 +2301,7 @@ static const struct target_core_fabric_ops sbp_ops = {
- 	.fabric_make_wwn		= sbp_make_tport,
- 	.fabric_drop_wwn		= sbp_drop_tport,
- 	.fabric_make_tpg		= sbp_make_tpg,
-+	.fabric_enable_tpg		= sbp_enable_tpg,
- 	.fabric_drop_tpg		= sbp_drop_tpg,
- 	.fabric_post_link		= sbp_post_link_lun,
- 	.fabric_pre_unlink		= sbp_pre_unlink_lun,
++static int lio_target_tiqn_enabletpg(struct se_portal_group *se_tpg,
++				     bool enable)
++{
++	struct iscsi_portal_group *tpg = container_of(se_tpg,
++			struct iscsi_portal_group, tpg_se_tpg);
++	int ret;
++
++	ret = iscsit_get_tpg(tpg);
++	if (ret < 0)
++		return -EINVAL;
++
++	if (enable) {
++		ret = iscsit_tpg_enable_portal_group(tpg);
++		if (ret < 0)
++			goto out;
++	} else {
++		/*
++		 * iscsit_tpg_disable_portal_group() assumes force=1
++		 */
++		ret = iscsit_tpg_disable_portal_group(tpg, 1);
++		if (ret < 0)
++			goto out;
++	}
++
++	iscsit_put_tpg(tpg);
++	return 0;
++out:
++	iscsit_put_tpg(tpg);
++	return -EINVAL;
++}
++
+ static void lio_target_tiqn_deltpg(struct se_portal_group *se_tpg)
+ {
+ 	struct iscsi_portal_group *tpg;
+@@ -1557,6 +1529,7 @@ const struct target_core_fabric_ops iscsi_ops = {
+ 	.fabric_drop_wwn		= lio_target_call_coredeltiqn,
+ 	.add_wwn_groups			= lio_target_add_wwn_groups,
+ 	.fabric_make_tpg		= lio_target_tiqn_addtpg,
++	.fabric_enable_tpg		= lio_target_tiqn_enabletpg,
+ 	.fabric_drop_tpg		= lio_target_tiqn_deltpg,
+ 	.fabric_make_np			= lio_target_call_addnptotpg,
+ 	.fabric_drop_np			= lio_target_call_delnpfromtpg,
 -- 
 2.25.1
 
