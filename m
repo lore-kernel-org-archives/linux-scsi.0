@@ -7,61 +7,62 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4C42C433B4
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 03:45:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27DE2C433B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 03:52:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5984660238
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 03:45:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8B0E610FB
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 03:52:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237181AbhDPDpX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Apr 2021 23:45:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42252 "EHLO
+        id S236214AbhDPDwa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Apr 2021 23:52:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234816AbhDPDpX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Apr 2021 23:45:23 -0400
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2828CC061574
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Apr 2021 20:44:59 -0700 (PDT)
-Received: by mail-pg1-x52e.google.com with SMTP id t22so18362194pgu.0
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Apr 2021 20:44:59 -0700 (PDT)
+        with ESMTP id S234662AbhDPDw3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Apr 2021 23:52:29 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABFEBC061756
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Apr 2021 20:52:05 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id o123so17478028pfb.4
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Apr 2021 20:52:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=areca-com-tw.20150623.gappssmtp.com; s=20150623;
         h=message-id:subject:from:to:date:mime-version
          :content-transfer-encoding;
-        bh=R0I5avFWdOq59pRrfqJjDzTxhHDm28I+KfqkPMk3PIw=;
-        b=0vMrPbNh3fxHn0RZ06cR3XrhTtGNqDOB5m6aOiwmhrpStSupH4b1OOj9SdPaHr54Sz
-         3AAQIm1jCGQZ/OaOC6Bu2foz6Vb0lvFhY8uni3scMhD9R0EuZABWQUoi5+fl9VFtMEWH
-         ib/vwIlEC7ILLSS2Yi0rMX2ShxTYxeH/g1qv3OtYNgSOWadDrwmVyAY8DGxoBkMIb3EE
-         srpVrPG0icrdLfME3QVZqyoRWpjjM3dVsOpZv/ZHAraGrKuf867khwoZcz7Tbld3Ou68
-         uOwJHupPIQRQ4LuFW42IRIXwFZWLrY830QpaMr2UacvBbT5orh5eIQA5ji2sPoJA0V60
-         KlYg==
+        bh=xa3dF3mWjOGHQTSXewzVQttORbJ1MeBGLJ4z7sU7nWs=;
+        b=H8Gy/Fb5XMHP3uA3YY/JTZVRZJQYbZ8rhPUUvF8++jKCop+8uh0i+e7VLFdLxkwUa9
+         1ELHfXzFoOl356/lx5OpqKHCK67oAaO8P76Ts2xFC/DBD99LxzeC+RHh48DL03S52nZV
+         1lr5RZ/YbDAUmbIWFCeJKyiUF0TzM+Y33miYkmT95PM8aNLbDSYP+hx/lSX0AjYkR0tE
+         o2fv7saWCVNRt8e2/5gTHEkHALFo/Pf+qVN164hrHFjdi3lIhDBo2eQaWjey01b4ifhh
+         eytK70rTOBKUgPZ7dcHcbyJEfWTp7sPvEAhMSNEOUMVL6h0gfZZwy61Cw71DUcSLRVfR
+         0Yfw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:message-id:subject:from:to:date:mime-version
          :content-transfer-encoding;
-        bh=R0I5avFWdOq59pRrfqJjDzTxhHDm28I+KfqkPMk3PIw=;
-        b=D+YhhlI19EjITdbkgFGiebwDBx9eCaZejQ3VzGOQtKnRzWTnx5vbydQE5EPL8F2Gm8
-         10JK7xaOTs6Da/MJTjJehVEppcMJ+0/Lz1t5K0Qo8QLfScsSuTJR2ralrchV/BwjX+S8
-         UZOcYA0vZ3u5Tp4zDDk9aT2JXmnUhNVfb+QB0D/HZFukinPPv441nLO3tJO6rLdlm56V
-         TULvaQ3s6S8eu4HckS5zI96aRTH/7oo/Mf0SGpxZklX/FqLvM2Y3lDqCQ3/Ong42NKNS
-         7vxhaxah15A7Y6m3taT8+yQTyVZvVFLr6Qv8OhGUfROt890FfOCTAf9YS6bmHH0JtArn
-         gfRA==
-X-Gm-Message-State: AOAM533AC9/0ooP9YxEdzcoKNNZbDz3zAoGd8BwWy5zhWppXEaUkYsZz
-        bT/f8p8q1HjUUuI3bmcUqRWiUQ==
-X-Google-Smtp-Source: ABdhPJwOJ0QxDEkeFtGnsbDEIiZcPEb396n2Ut8LCVG6Sidla1ptN4UEfin+GzAzF5mbT2+sdhw9lA==
-X-Received: by 2002:a65:45cf:: with SMTP id m15mr6242988pgr.7.1618544698630;
-        Thu, 15 Apr 2021 20:44:58 -0700 (PDT)
+        bh=xa3dF3mWjOGHQTSXewzVQttORbJ1MeBGLJ4z7sU7nWs=;
+        b=N9Kox4z5TzOl/uhAK0mfVNtDlBKDvK902Hepz8+k3nLpxbGhQQwHWYvkxMO6bYcwtr
+         s6yv3Ee3lYIhaua0qqaTEkS2N3eMLx35AA4NGHk9lAk7FE/GYQj4orCZ5fEJV0KcTtNd
+         xP3IUiFOW2m4pKL3UB00XjnJIJIjhyWyJguIS4HiZT6FzgSsu0AUfb9oZH6N5kJFQMYw
+         bou31C6yR5vSk1H/D60Cv2t/bE0R78GADeSYP77pgY9VeDXPWpSp5gxMzij1oy6GE28w
+         H08UBYTnTb5ljkExZp85xAzJ1XDJa+MDJWY7JV6oO+g3IiRRQlp87bXnj5zHoHYWYD46
+         v0eQ==
+X-Gm-Message-State: AOAM532OjiJwSfqwkAv8EFXYqOUq7REKTPUeZ/kX+HDcOLy7JRwXMP1O
+        yhsrNR/hLSnL/Bi8Jx++E+Gfnw==
+X-Google-Smtp-Source: ABdhPJxEEFy28l5SGUuxFlvC3roQ4r/ScQbK4MIl3JpYg3srilQ1v/nNZbfinScmy5WvTXNg7thMdw==
+X-Received: by 2002:a63:6ec5:: with SMTP id j188mr6133824pgc.394.1618545125170;
+        Thu, 15 Apr 2021 20:52:05 -0700 (PDT)
 Received: from centos78 (60-248-88-209.HINET-IP.hinet.net. [60.248.88.209])
-        by smtp.gmail.com with ESMTPSA id 14sm3320318pfl.1.2021.04.15.20.44.57
+        by smtp.gmail.com with ESMTPSA id g24sm3771557pgn.18.2021.04.15.20.52.03
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 15 Apr 2021 20:44:58 -0700 (PDT)
-Message-ID: <d2c97df3c817595c6faf582839316209022f70da.camel@areca.com.tw>
-Subject: [PATCH 1/2] scsi: arcmsr: fixed the wrong cdb payload report to IOP
+        Thu, 15 Apr 2021 20:52:04 -0700 (PDT)
+Message-ID: <3a7f39b4f8d3a3a2400556e6ce410810f0508829.camel@areca.com.tw>
+Subject: [PATH 2/2] scsi: arcmsr: update driver version to
+ v1.50.00.04-20210414
 From:   ching Huang <ching2048@areca.com.tw>
 To:     martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
         linux-scsi@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date:   Fri, 16 Apr 2021 11:44:57 +0800
+Date:   Fri, 16 Apr 2021 11:52:03 +0800
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-10.el7) 
 Mime-Version: 1.0
@@ -72,28 +73,22 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: ching Huang <ching2048@areca.com.tw>
 
-This patch fixed the wrong cdb payload report to IOP.
+Update driver version to v1.50.00.04-20210414.
 
 Signed-off-by: ching Huang <ching2048@areca.com.tw>
 ---
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 4b79661..930972c 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -1923,8 +1923,12 @@ static void arcmsr_post_ccb(struct AdapterControlBlock *acb, struct CommandContr
- 
- 		if (ccb->arc_cdb_size <= 0x300)
- 			arc_cdb_size = (ccb->arc_cdb_size - 1) >> 6 | 1;
--		else
--			arc_cdb_size = (((ccb->arc_cdb_size + 0xff) >> 8) + 2) << 1 | 1;
-+		else {
-+			arc_cdb_size = ((ccb->arc_cdb_size + 0xff) >> 8) + 2;
-+			if (arc_cdb_size > 0xF)
-+				arc_cdb_size = 0xF;
-+			arc_cdb_size = (arc_cdb_size << 1) | 1;
-+		}
- 		ccb_post_stamp = (ccb->smid | arc_cdb_size);
- 		writel(0, &pmu->inbound_queueport_high);
- 		writel(ccb_post_stamp, &pmu->inbound_queueport_low);
+diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
+index 0f6abd2..eb0ef73 100644
+--- a/drivers/scsi/arcmsr/arcmsr.h
++++ b/drivers/scsi/arcmsr/arcmsr.h
+@@ -49,7 +49,7 @@ struct device_attribute;
+ #define ARCMSR_MAX_OUTSTANDING_CMD	1024
+ #define ARCMSR_DEFAULT_OUTSTANDING_CMD	128
+ #define ARCMSR_MIN_OUTSTANDING_CMD	32
+-#define ARCMSR_DRIVER_VERSION		"v1.50.00.02-20200819"
++#define ARCMSR_DRIVER_VERSION		"v1.50.00.04-20210414"
+ #define ARCMSR_SCSI_INITIATOR_ID	255
+ #define ARCMSR_MAX_XFER_SECTORS		512
+ #define ARCMSR_MAX_XFER_SECTORS_B	4096
 
