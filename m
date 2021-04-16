@@ -5,161 +5,295 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ADE2C43461
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 09:15:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B1D9C43461
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 09:22:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0454A61166
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 09:15:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E744261166
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 09:22:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241621AbhDPJP3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Apr 2021 05:15:29 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2873 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241566AbhDPJP3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Apr 2021 05:15:29 -0400
-Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FM9QB67zsz689Bw;
-        Fri, 16 Apr 2021 17:09:38 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Fri, 16 Apr 2021 11:14:58 +0200
-Received: from [10.47.83.179] (10.47.83.179) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Fri, 16 Apr
- 2021 10:14:57 +0100
-Subject: Re: [PATCH] scsi_debug: fix cmd_per_lun, set to max_queue
-To:     Douglas Gilbert <dgilbert@interlog.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <martin.petersen@oracle.com>, <jejb@linux.vnet.ibm.com>,
-        <kashyap.desai@broadcom.com>, <ming.lei@redhat.com>,
-        <axboe@kernel.dk>
-References: <20210415015031.607153-1-dgilbert@interlog.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <408b1dce-3c6e-48dc-2f8b-23fe999ab3db@huawei.com>
-Date:   Fri, 16 Apr 2021 10:12:22 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S240026AbhDPJXO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Apr 2021 05:23:14 -0400
+Received: from mga17.intel.com ([192.55.52.151]:58379 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234312AbhDPJXN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Apr 2021 05:23:13 -0400
+IronPort-SDR: WJS2rHIfUiPN7+MZwZZVyM1jvMgSkm79nbKMpLwQWe0I6KQdjqtnYQjerC0zTcOq5DX7JOwJLp
+ udv25I3wnf1A==
+X-IronPort-AV: E=McAfee;i="6200,9189,9955"; a="175122145"
+X-IronPort-AV: E=Sophos;i="5.82,226,1613462400"; 
+   d="scan'208";a="175122145"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2021 02:22:49 -0700
+IronPort-SDR: LTD0pPovf9LjGKkamh7GgF4XV/IKF+D+L90RasUrL15smP1ANlzLBKOzFST/j8Nljx+LMCUYWA
+ hnVETrRrlDAQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,226,1613462400"; 
+   d="scan'208";a="461914819"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
+  by orsmga001.jf.intel.com with ESMTP; 16 Apr 2021 02:22:40 -0700
+Subject: Re: [PATCH v19 1/2] scsi: ufs: Enable power management for wlun
+To:     Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        Yue Hu <huyue2@yulong.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>
+References: <cover.1618529652.git.asutoshd@codeaurora.org>
+ <48ab92db5b0d3c11b8357f0faa99a4473465099d.1618529652.git.asutoshd@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <d28cb2d4-8f24-c2c4-e87e-bb51ac73af6e@intel.com>
+Date:   Fri, 16 Apr 2021 12:22:52 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-In-Reply-To: <20210415015031.607153-1-dgilbert@interlog.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <48ab92db5b0d3c11b8357f0faa99a4473465099d.1618529652.git.asutoshd@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.83.179]
-X-ClientProxiedBy: lhreml727-chm.china.huawei.com (10.201.108.78) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 15/04/2021 02:50, Douglas Gilbert wrote:
-> Make sure that the cmd_per_lun value placed in the host template
-> never exceeds the can_queue value. If the max_queue driver
-> parameter is not specified then both cmd_per_lun and can_queue are
-> set to CAN_QUEUE. CAN_QUEUE is a compile time constant and is used
-> to dimension an array to hold queued requests. If the max_queue
-> driver parameter is given it is must be less than or equal to
-> CAN_QUEUE and if so, the host template values are adjusted.
+On 16/04/21 2:36 am, Asutosh Das wrote:
+> During runtime-suspend of ufs host, the scsi devices are
+> already suspended and so are the queues associated with them.
+> But the ufs host sends SSU (START_STOP_UNIT) to wlun
+> during its runtime-suspend.
+> During the process blk_queue_enter checks if the queue is not in
+> suspended state. If so, it waits for the queue to resume, and never
+> comes out of it.
+> The commit
+> (d55d15a33: scsi: block: Do not accept any requests while suspended)
+> adds the check if the queue is in suspended state in blk_queue_enter().
 > 
-> Remove undocumented code that allowed queue_depth to exceed
-> CAN_QUEUE and cause stack full type errors. There is a documented
-> way to do that with every_nth and
->      echo 0x8000 > /sys/bus/pseudo/drivers/scsi_debug/opts
-> See: https://sg.danny.cz/sg/scsi_debug.html
+> Call trace:
+>  __switch_to+0x174/0x2c4
+>  __schedule+0x478/0x764
+>  schedule+0x9c/0xe0
+>  blk_queue_enter+0x158/0x228
+>  blk_mq_alloc_request+0x40/0xa4
+>  blk_get_request+0x2c/0x70
+>  __scsi_execute+0x60/0x1c4
+>  ufshcd_set_dev_pwr_mode+0x124/0x1e4
+>  ufshcd_suspend+0x208/0x83c
+>  ufshcd_runtime_suspend+0x40/0x154
+>  ufshcd_pltfrm_runtime_suspend+0x14/0x20
+>  pm_generic_runtime_suspend+0x28/0x3c
+>  __rpm_callback+0x80/0x2a4
+>  rpm_suspend+0x308/0x614
+>  rpm_idle+0x158/0x228
+>  pm_runtime_work+0x84/0xac
+>  process_one_work+0x1f0/0x470
+>  worker_thread+0x26c/0x4c8
+>  kthread+0x13c/0x320
+>  ret_from_fork+0x10/0x18
 > 
-> Tweak some formatting, and add a suggestion to the "trim
-> poll_queues" warning.
+> Fix this by registering ufs device wlun as a scsi driver and
+> registering it for block runtime-pm. Also make this as a
+> supplier for all other luns. That way, this device wlun
+> suspends after all the consumers and resumes after
+> hba resumes.
+> This also registers a new scsi driver for rpmb wlun.
+> This new driver is mostly used to clear rpmb uac.
+> With this design, the driver would always be runtime resumed
+> before system suspend.
+
+I thought some more about that and I think we can still support
+allowing runtime suspend to work with system suspend, without
+too much difficulty. See ufshcd_suspend_prepare() below.
+
 > 
-> Reported-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-
-Just one comment, below:
-Reviewed-by: John Garry <john.garry@hauwei.com>
-
-Thanks
-
+> Fixed smatch warnings:
+> Reported-by: kernel test robot <lkp@intel.com>
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> Co-developed-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 > ---
->   drivers/scsi/scsi_debug.c | 24 ++++++++++++++++--------
->   1 file changed, 16 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 70165be10f00..a5d1633b5bd8 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -218,7 +218,7 @@ static const char *sdebug_version_date = "20200710";
->    */
->   #define SDEBUG_CANQUEUE_WORDS  3	/* a WORD is bits in a long */
->   #define SDEBUG_CANQUEUE  (SDEBUG_CANQUEUE_WORDS * BITS_PER_LONG)
-> -#define DEF_CMD_PER_LUN  255
-> +#define DEF_CMD_PER_LUN  SDEBUG_CANQUEUE
->   
->   /* UA - Unit Attention; SA - Service Action; SSU - Start Stop Unit */
->   #define F_D_IN			1	/* Data-in command (e.g. READ) */
-> @@ -5695,8 +5695,8 @@ MODULE_PARM_DESC(lbpu, "enable LBP, support UNMAP command (def=0)");
->   MODULE_PARM_DESC(lbpws, "enable LBP, support WRITE SAME(16) with UNMAP bit (def=0)");
->   MODULE_PARM_DESC(lbpws10, "enable LBP, support WRITE SAME(10) with UNMAP bit (def=0)");
->   MODULE_PARM_DESC(lowest_aligned, "lowest aligned lba (def=0)");
-> -MODULE_PARM_DESC(max_luns, "number of LUNs per target to simulate(def=1)");
->   MODULE_PARM_DESC(lun_format, "LUN format: 0->peripheral (def); 1 --> flat address method");
-> +MODULE_PARM_DESC(max_luns, "number of LUNs per target to simulate(def=1)");
 
-Changes like this should really be in another patch.
+<SNIP>
 
->   MODULE_PARM_DESC(max_queue, "max number of queued commands (1 to max(def))");
->   MODULE_PARM_DESC(medium_error_count, "count of sectors to return follow on MEDIUM error");
->   MODULE_PARM_DESC(medium_error_start, "starting sector number to return MEDIUM error");
-> @@ -5710,7 +5710,7 @@ MODULE_PARM_DESC(opt_xferlen_exp, "optimal transfer length granularity exponent
->   MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err... (def=0)");
->   MODULE_PARM_DESC(per_host_store, "If set, next positive add_host will get new store (def=0)");
->   MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
-> -MODULE_PARM_DESC(poll_queues, "support for iouring iopoll queues (1 to max(submit_queues - 1)");
-> +MODULE_PARM_DESC(poll_queues, "support for iouring iopoll queues (1 to max(submit_queues - 1))");
->   MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
->   MODULE_PARM_DESC(random, "If set, uniformly randomize command duration between 0 and delay_in_ns");
->   MODULE_PARM_DESC(removable, "claim to have removable media (def=0)");
-> @@ -7165,12 +7165,15 @@ static int sdebug_change_qdepth(struct scsi_device *sdev, int qdepth)
->   	}
->   	num_in_q = atomic_read(&devip->num_in_q);
->   
-> +	if (qdepth > SDEBUG_CANQUEUE) {
-> +		qdepth = SDEBUG_CANQUEUE;
-> +		pr_warn("%s: requested qdepth [%d] exceeds canqueue [%d], trim\n", __func__,
-> +			qdepth, SDEBUG_CANQUEUE);
-> +	}
->   	if (qdepth < 1)
->   		qdepth = 1;
-> -	/* allow to exceed max host qc_arr elements for testing */
-> -	if (qdepth > SDEBUG_CANQUEUE + 10)
-> -		qdepth = SDEBUG_CANQUEUE + 10;
-> -	scsi_change_queue_depth(sdev, qdepth);
-> +	if (qdepth != sdev->queue_depth)
-> +		scsi_change_queue_depth(sdev, qdepth);
->   
->   	if (SDEBUG_OPT_Q_NOISE & sdebug_opts) {
->   		sdev_printk(KERN_INFO, sdev, "%s: qdepth=%d, num_in_q=%d\n",
-> @@ -7558,6 +7561,7 @@ static int sdebug_driver_probe(struct device *dev)
->   	sdbg_host = to_sdebug_host(dev);
->   
->   	sdebug_driver_template.can_queue = sdebug_max_queue;
-> +	sdebug_driver_template.cmd_per_lun = sdebug_max_queue;
->   	if (!sdebug_clustering)
->   		sdebug_driver_template.dma_boundary = PAGE_SIZE - 1;
->   
-> @@ -7593,7 +7597,11 @@ static int sdebug_driver_probe(struct device *dev)
->   	 * If condition not met, trim poll_queues to 1 (just for simplicity).
->   	 */
->   	if (poll_queues >= submit_queues) {
-> -		pr_warn("%s: trim poll_queues to 1\n", my_name);
-> +		if (submit_queues < 3)
-> +			pr_warn("%s: trim poll_queues to 1\n", my_name);
-> +		else
-> +			pr_warn("%s: trim poll_queues to 1. Perhaps try poll_queues=%d\n",
-> +				my_name, submit_queues - 1);
->   		poll_queues = 1;
->   	}
->   	if (poll_queues)
-> 
+> -static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+> +static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  {
+>  	int ret;
+> -	enum uic_link_state old_link_state;
+> +	enum uic_link_state old_link_state = hba->uic_link_state;
+>  
+> -	hba->pm_op_in_progress = 1;
+> -	old_link_state = hba->uic_link_state;
+> -
+> -	ufshcd_hba_vreg_set_hpm(hba);
+> -	ret = ufshcd_vreg_set_hpm(hba);
+> -	if (ret)
+> -		goto out;
+> -
+> -	/* Make sure clocks are enabled before accessing controller */
+> -	ret = ufshcd_setup_clocks(hba, true);
+> -	if (ret)
+> -		goto disable_vreg;
+> -
+> -	/* enable the host irq as host controller would be active soon */
+> -	ufshcd_enable_irq(hba);
+> +	hba->pm_op_in_progress = true;
+>  
+>  	/*
+>  	 * Call vendor specific resume callback. As these callbacks may access
+> @@ -8868,7 +8858,7 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  	 */
+>  	ret = ufshcd_vops_resume(hba, pm_op);
+>  	if (ret)
+> -		goto disable_irq_and_vops_clks;
+> +		goto out;
+>  
+>  	/* For DeepSleep, the only supported option is to have the link off */
+>  	WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && !ufshcd_is_link_off(hba));
+> @@ -8916,42 +8906,219 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  	if (hba->ee_usr_mask)
+>  		ufshcd_write_ee_control(hba);
+>  
+> -	hba->clk_gating.is_suspended = false;
+> -
+>  	if (ufshcd_is_clkscaling_supported(hba))
+> -		ufshcd_clk_scaling_suspend(hba, false);
+> -
+> -	/* Enable Auto-Hibernate if configured */
+> -	ufshcd_auto_hibern8_enable(hba);
+> +		ufshcd_resume_clkscaling(hba);
+
+This still doesn't look right. ufshcd_resume_clkscaling()
+doesn't update hba->clk_scaling.is_allowed whereas
+ufshcd_clk_scaling_suspend() does.
+
+>  
+>  	if (hba->dev_info.b_rpm_dev_flush_capable) {
+>  		hba->dev_info.b_rpm_dev_flush_capable = false;
+>  		cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
+>  	}
+>  
+> -	ufshcd_clear_ua_wluns(hba);
+> -
+> -	/* Schedule clock gating in case of no access to UFS device yet */
+> -	ufshcd_release(hba);
+> -
+> +	/* Enable Auto-Hibernate if configured */
+> +	ufshcd_auto_hibern8_enable(hba);
+>  	goto out;
+>  
+>  set_old_link_state:
+>  	ufshcd_link_state_transition(hba, old_link_state, 0);
+>  vendor_suspend:
+>  	ufshcd_vops_suspend(hba, pm_op);
+> -disable_irq_and_vops_clks:
+> +out:
+> +	if (ret)
+> +		ufshcd_update_evt_hist(hba, UFS_EVT_WL_RES_ERR, (u32)ret);
+> +	hba->clk_gating.is_suspended = false;
+> +	ufshcd_release(hba);
+> +	hba->pm_op_in_progress = false;
+> +	return ret;
+> +}
+
+<SNIP>
+
+> +void ufshcd_resume_complete(struct device *dev)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	ufshcd_rpm_put(hba);
+> +}
+> +EXPORT_SYMBOL_GPL(ufshcd_resume_complete);
+> +
+> +int ufshcd_suspend_prepare(struct device *dev)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	/*
+> +	 * SCSI assumes that runtime-pm and system-pm for scsi drivers
+> +	 * are same. And it doesn't wake up the device for system-suspend
+> +	 * if it's runtime suspended. But ufs doesn't follow that.
+> +	 * The rpm-lvl and spm-lvl can be different in ufs.
+> +	 * Force it to honor system-suspend.
+> +	 * Refer ufshcd_resume_complete()
+> +	 */
+> +	ufshcd_rpm_get_sync(hba);
+> +
+> +	return 0;
+> +}
+
+I think we can support allowing runtime suspend to work with
+system suspend.  ufshcd_resume_complete() remains the same,
+and ufshcd_suspend_prepare() is like this:
+
+
+/*
+ * SCSI assumes that runtime-pm and system-pm for scsi drivers are same, and it
+ * doesn't wake up the device for system-suspend if it's runtime suspended.
+ * However UFS doesn't follow that. The rpm-lvl and spm-lvl can be different in
+ * UFS, so special care is needed.
+ * Refer also ufshcd_resume_complete()
+ */
+int ufshcd_suspend_prepare(struct device *dev)
+{
+	struct ufs_hba *hba = dev_get_drvdata(dev);
+	struct device *ufs_dev = &hba->sdev_ufs_device->sdev_gendev;
+	enum ufs_dev_pwr_mode spm_pwr_mode;
+	enum uic_link_state spm_link_state;
+	unsigned long flags;
+	bool rpm_state_ok;
+
+	/*
+	 * First prevent runtime suspend. Note this does not prevent runtime
+	 * resume e.g. pm_runtime_get_sync() will still do the right thing.
+	 */
+	pm_runtime_get_noresume(ufs_dev);
+
+	/* Now check if the rpm state is ok to use for spm */
+	spin_lock_irqsave(&ufs_dev->power.lock, flags);
+
+	spm_pwr_mode = ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl);
+	spm_link_state = ufs_get_pm_lvl_to_link_pwr_state(hba->spm_lvl);
+
+	rpm_state_ok = pm_runtime_suspended(ufs_dev) &&
+		       hba->curr_dev_pwr_mode == spm_pwr_mode &&
+		       hba->uic_link_state == spm_link_state &&
+		       !hba->dev_info.b_rpm_dev_flush_capable;
+
+	spin_unlock_irqrestore(&ufs_dev->power.lock, flags);
+
+	/* If is isn't, do a runtime resume */
+	if (!rpm_state_ok)
+		pm_runtime_resume(ufs_dev);
+
+	return 0;
+}
 
