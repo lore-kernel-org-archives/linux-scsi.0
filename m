@@ -2,116 +2,61 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBBDAC433ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 14:20:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 830B7C433B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 14:28:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA9FF610FC
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 14:20:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E0A2610FC
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Apr 2021 14:28:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244639AbhDPOVU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Apr 2021 10:21:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56832 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S244572AbhDPOVS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Apr 2021 10:21:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 224B9610F7;
-        Fri, 16 Apr 2021 14:20:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618582853;
-        bh=Gh03nu1A4faVx9WK16Fm5FUCgtttHSKTiGQDwRd0pFI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ebDClTzgDAXny047rDzef+hjYktXjBqrsIU2q09TqVpyK17wAxQbfrBtXXYz15Khz
-         eVeebfHc4r6CNGovYMD/17o/kZCJyIy+ML1FSelX+WZTEq1I9IlB48sDTBG4NpzJMM
-         c3u2D7OYaegEyY/4vJ0o09IL2fwHH1XkQsy26Qa4m7XkPwcSWQJ/jynypCglmd8G+T
-         YubpHWITySRfi3zFnnpdi5YdAD6CTuQoJqmGYgMuGWAquJNSEAYkZlgkOtkN1yeOzr
-         Rcrp6JEbODua6SgBTV0RuYB3kM+9hy8iv7BO3O1zLz+550nIwVzKSeB9/nY99Z6HW4
-         2eZUwac88JimQ==
-Date:   Fri, 16 Apr 2021 10:20:52 -0400
-From:   Sasha Levin <sashal@kernel.org>
-To:     Anastasia Kovaleva <a.kovaleva@yadro.com>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
-        kernel-team@lists.ubuntu.com, linux@yadro.com
-Subject: Re: [PATCH for-5.4 0/2] scsi: qla2xxx: Fix P2P mode
-Message-ID: <YHmdRKaxSoKwbzZH@sashalap>
-References: <20210415195144.91903-1-a.kovaleva@yadro.com>
+        id S239641AbhDPO3V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Apr 2021 10:29:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43216 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241079AbhDPO3P (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Apr 2021 10:29:15 -0400
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 74F53C061574;
+        Fri, 16 Apr 2021 07:28:50 -0700 (PDT)
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id E038592009C; Fri, 16 Apr 2021 16:28:47 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id D923292009B;
+        Fri, 16 Apr 2021 16:28:47 +0200 (CEST)
+Date:   Fri, 16 Apr 2021 16:28:47 +0200 (CEST)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     Joe Perches <joe@perches.com>
+cc:     Khalid Aziz <khalid@gonehiking.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH 1/5] scsi: BusLogic: Fix missing `pr_cont' use
+In-Reply-To: <86c10671ff86f96004a6d6c3c08aed3e27d58d0a.camel@perches.com>
+Message-ID: <alpine.DEB.2.21.2104161627130.44318@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk>  <alpine.DEB.2.21.2104141419040.44318@angie.orcam.me.uk>  <787aae5540612555a8bf92de2083c8fa74e52ce9.camel@perches.com>  <alpine.DEB.2.21.2104161224300.44318@angie.orcam.me.uk>
+ <86c10671ff86f96004a6d6c3c08aed3e27d58d0a.camel@perches.com>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210415195144.91903-1-a.kovaleva@yadro.com>
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 15, 2021 at 10:51:42PM +0300, Anastasia Kovaleva wrote:
->Hi Greg and Sasha,
->
->QLogic FC adapters don’t work in P2P mode on the latest stable 5.4 (at least
->QLE2692, and QLE2694, QLE2742 are affected).
->
->We’ve tested and bisected from 5.4 up to 5.4.112 and figured out the
->following: 
->
->1. From 5.4 to 5.4.5 inclusively direct mode doesn’t work at all.
->
->   Stable commit a82545b62e07 ("scsi: qla2xxx: Change discovery state before
->   PLOGI") fixes the issue in 5.4.6
->
->2. From 5.4.6 to 5.4.68 inclusively direct mode works but FC link cannot be
->   recovered after issue_lip and all presented LUNs are lost
->
->   Not working issue_lip is an outcome of a82545b62e07 applied to stable
->   without the upstream commit 65e920093805 ("scsi: qla2xxx: Fix device connect
->   issues in P2P configuration.").
->
->3. From 5.4.69 up till now (5.4.112) direct mode doesn’t work again
->
->   The issue was introduced by stable commit 74924e407bf7 ("scsi: qla2xxx:
->   Retry PLOGI on FC-NVMe PRLI failure").
->
->   Upstream commit 84ed362ac40c ("scsi: qla2xxx: Dual FCP-NVMe target port
->   support") fixes the issue.
->
->So, in order to fix both P2P issues we need to apply upstream commits
->65e920093805 and 84ed362ac40c.
+On Fri, 16 Apr 2021, Joe Perches wrote:
 
-That's a great analysis, thank you.
+> > I'm not sure if that complex message 
+> > routing via `blogic_msg' is worth having even, rather than calling 
+> > `printk' or suitable variants directly.
+> 
+> It's to allow the message content to be added to the internal
+> 	&adapter->msgbuf[adapter->msgbuflen]
+> with strcpy for later use with blogic_show_info()/seq_write.
 
->However, stable commits 0b84591fdd5e ("scsi: qla2xxx: Fix stuck login session
->using prli_pend_timer") introduced in 5.4.19 and 74924e407bf7 ("scsi: qla2xxx:
->Retry PLOGI on FC-NVMe PRLI failure") in 5.4.69 were applied in the wrong
->order, upstream and chronological-wise with regards to required upstream fixes,
->and cherry-picking of the fixes is not possible without a merge conflict.
+ I know, but it's not clear to me if it's worth it (a potential buffer 
+overrun there too, BTW).
 
-Right, in particular: 74924e407bf7 ("scsi: qla2xxx: Retry PLOGI on
-FC-NVMe PRLI failure") was modified to work around missing 84ed362ac40c
-("scsi: qla2xxx: Dual FCP-NVMe target port support"), which is where the
-rest of the conflicts are coming from.
-
->The series provides merge conflict resolution and resolves both P2P discovery
->and issue_lip issue. It has been tested over Linux stable 5.4.112 and
->Ubuntu 20.04 kernel 5.4.0-71.79 (that's based off stable 5.4.101).
->
->Please apply at your earliest convenience to 5.4 stable.
-
-So instead of applying even more modified patches that'll create similar
-issue in the future, I backed up 0b84591fdd5e and 74924e407bf7, and
-applied the 4 commits you've pointed out in the "correct" order. I also
-grabbed 27258a577144 ("scsi: qla2xxx: Add a shadow variable to hold
-disc_state history of fcport") for completeness.
-
-Thanks for diagnosing this issue! Please let me know if something is
-still broken.
-
--- 
-Thanks,
-Sasha
+  Maciej
