@@ -2,162 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9104AC43470
-	for <linux-scsi@archiver.kernel.org>; Sat, 17 Apr 2021 02:33:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FBDAC433ED
+	for <linux-scsi@archiver.kernel.org>; Sat, 17 Apr 2021 06:35:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7634B6124B
-	for <linux-scsi@archiver.kernel.org>; Sat, 17 Apr 2021 02:33:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 489A9611AB
+	for <linux-scsi@archiver.kernel.org>; Sat, 17 Apr 2021 06:35:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235561AbhDQCd7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Apr 2021 22:33:59 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:17957 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235502AbhDQCd5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Apr 2021 22:33:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1618626812; x=1650162812;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=1bt8pdRaO5fUcGqSEgkOZzZgAvMQ4pvkgiTI/HOypSk=;
-  b=HE+6rLF3zUS3FAkqXJtiUoPTGDT4XOsThUwuo2Pd0tiDZGGMk/Sv91LY
-   sBzmgHDN/b9sns7Ld+C+nlPsvXnHhdZteQ6EvVJlrW04nJffK/WyGvk1D
-   sLWAfthg2fNWsHDTL2N4sjlOF64Hg/PfegRveoiXJElk0QlVflNxeLZQ/
-   TJWmwdLCdO2lgPyKxfe7XGbFFt0JklEO9ye483WcVcd4wuIeMtBYsyXjO
-   jkYKhVsWZnwyEpuJYekAqcg5lgEHOYCDVVYIy6WdajlsUkhgmHgP2ynoY
-   AMjdK1c/BkXkeb9FDvk2pBNpP+92q0loXmz7Fnj4LrqsWz2RYy4vc/Amm
-   Q==;
-IronPort-SDR: eQFqlBTv+6YqQHs8SD2OxFSGsCIeL22Vns0GZmM68nilCN4ee3LixawNMknP+mjsSPizpP1fxN
- XqqzfEgLwn2/X7iP+cL4bqjDZteJ6qlCPzcnCo0ysHG946TlCGkb9MnScf5ORXPce7W7RuFfZ6
- x5ClhlUiAILrqyDcIkfMFHC0d2NyjoIHo1bQPe9/Brmbsm+J3x4GkZVndDITtoDo5uZv3195ae
- oofvJsChf3ZrmcAmMpvewPADauSJXJxPptuQb3eUkl3gJX2mFLeCUI756hmDBcbzuwwB9Ovb1f
- s/A=
-X-IronPort-AV: E=Sophos;i="5.82,228,1613404800"; 
-   d="scan'208";a="165193277"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Apr 2021 10:33:31 +0800
-IronPort-SDR: EA0GwqVOc5QzZUO4660rt9CIAk4Rmg/yzraTuABX8mJl7FAFMM/sCgouVAoQOhniLP4gx8aCVm
- yaBvjbf0s6vLSgEyuDE1m5O4Cd+yR3Ak7LmhcE3sj9fH+8osHSDaf113VE4BwqauDJG8D9dR5k
- q3+sHxneEbPTmVpLgi2Z1qejtx1Nw6Hk+I0typO8DhqkMU0Qxy3we0DdHmgf3ImAZoMqNZ6AVC
- TO+Na131IKoD4T5Ubg+WEJQtDLdpAPGrIBAd60J5phM4mV83ej/pHftZaul3/TMQpry8Ko0gVX
- wsNPzu9MbL8fXVD+aBbm7hDY
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2021 19:12:45 -0700
-IronPort-SDR: ffwDuNJdgpDyZs+F+I7hb5tSfdWh7H3NQY/F8KVBqjx1K+WoPrmksYPHiqq3maw5NfYpqZctE9
- gWv+C7z7BiidjMOBh+0BeZRwHA5xPSD1s6Kg3GUZiliiyyBB0i0Uv2nQz0774FLe8UiAoCUSqt
- e+5ZqS22Z3zk1jmc+G8LVLkZJk8bruBBF+amRb69DmiJ5Lq6G3GvG7tTV6S+KC5sTAewBEgA84
- hAnkDYwYNQCOL+1UEM6V12/EMZYtLQG3IrKQoLYYc5WTTO5MKtF+ZIu3Pf8XRj1vqGFTTgE1HH
- LWc=
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 16 Apr 2021 19:33:31 -0700
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-nvme@lists.infradead.org, Christoph Hellwig <hch@lst.de>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-fsdevel@vger.kernel.org
-Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH v2 3/3] zonefs: fix synchronous write to sequential zone files
-Date:   Sat, 17 Apr 2021 11:33:23 +0900
-Message-Id: <20210417023323.852530-4-damien.lemoal@wdc.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210417023323.852530-1-damien.lemoal@wdc.com>
-References: <20210417023323.852530-1-damien.lemoal@wdc.com>
+        id S229989AbhDQGfd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 17 Apr 2021 02:35:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57764 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229854AbhDQGfd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Apr 2021 02:35:33 -0400
+Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F98CC061574;
+        Fri, 16 Apr 2021 23:35:07 -0700 (PDT)
+Received: by mail-lj1-x22c.google.com with SMTP id c1so25138578ljd.7;
+        Fri, 16 Apr 2021 23:35:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=p+TZ8j0+H5es+BHvK/OjBPld0E8cxCO9gniyDTsW9R8=;
+        b=hiVtECvw25e8t9YjzDtZabomrYjhXia1cP1fj+94F4tIdnlCdYIP45+DPRVcs55qDU
+         Xm8YdyHPD++PwpeQ8IMk5ZgtsoglSOyjXx0/mqVwTMaKctp0OCc4i2g8P5vy1jHiTT3A
+         F2CpgJXLc7hJhDMTIywL+D3bGRxeuBvutU9XFAJsKHGJw2Y18xLVpksmfoFtYIfmfr26
+         2e8aNF1cpHhj8khuxFYAVkmsYbV7PSgHvHYouR6qIdBZaBN14pHlM/SiwBMnP81/ZOzG
+         Vw/tp6Yo3yV87ZMjnccF6keD1Afl5MFL3Y0QY0DcnhNsYst9tJa+eyU2uf6/zjWJkUjq
+         UalQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=p+TZ8j0+H5es+BHvK/OjBPld0E8cxCO9gniyDTsW9R8=;
+        b=jRumZsREWANLsCwl5edLaYl5zJs226vuLSGZxYfsy96wTjqEsQGkDj4qINwbTUu0XN
+         DgED3iPwrp7pdzCuB1XkH8pXvlX73wuyrxdODARe1zIXESalMQYZQ0M/YtQrkIlEvtwL
+         1gjH63UR1xFdAF2eS3L0LRERBIKakkQcdR83tOSjRYIWwlQR7KjwYNUSSRjLMso/GJKb
+         pLKLKmB2Jly6EnHkLdCfXWHA2B/R5pa7xdlHIZMW5+vIW9Y4X1ZbmhSQMjbERCHJqd8j
+         YvM6pPHEoiKoOGfoGua/V6rpsXo3v8iJlizxcXqRG7OnvGBAemvqlVkt65o99myinFo8
+         UK1Q==
+X-Gm-Message-State: AOAM531jyH7x4+PuNsqc3S+H/P1k9VC2yQqG13BcF4Pd3FOUr9STwuno
+        cDdpBpD3/1BeoP5FNIxWV2h9MdrpVmUuBCKLZoz5+/GkQys=
+X-Google-Smtp-Source: ABdhPJzkNrQJ5fEYR93BzLNQHyKWYr9IDXgS8crzj/TovLA91Qqreqc2Th9w81FfmRITCNRPvKzwOtmzz/BcIO1Gm6s=
+X-Received: by 2002:a2e:90d2:: with SMTP id o18mr4652065ljg.391.1618641305499;
+ Fri, 16 Apr 2021 23:35:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <1618197759-128087-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+In-Reply-To: <1618197759-128087-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+From:   Julian Calaby <julian.calaby@gmail.com>
+Date:   Sat, 17 Apr 2021 16:34:54 +1000
+Message-ID: <CAGRGNgVucQWcGiUnWtsC=oRDXrWkQ13CFojOcM7xU+4TukUoOA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: a100u2w: remove useless variable
+To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Cc:     "James E. J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Synchronous writes to sequential zone files cannot use zone append
-operations if the underlying zoned device queue limit
-max_zone_append_sectors is 0, indicating that the device does not
-support this operation. In this case, fall back to using regular write
-operations.
+Hi Jiapeng,
 
-Fixes: 02ef12a663c7 ("zonefs: use REQ_OP_ZONE_APPEND for sync DIO")
-Cc: stable@vger.kernel.org
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- fs/zonefs/super.c  | 16 ++++++++++++----
- fs/zonefs/zonefs.h |  2 ++
- 2 files changed, 14 insertions(+), 4 deletions(-)
+On Mon, Apr 12, 2021 at 1:23 PM Jiapeng Chong
+<jiapeng.chong@linux.alibaba.com> wrote:
+>
+> Fix the following gcc warning:
+>
+> drivers/scsi/a100u2w.c:1092:8: warning: variable =E2=80=98bios_phys=E2=80=
+=99 set but not
+> used [-Wunused-but-set-variable].
+>
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+> ---
+>  drivers/scsi/a100u2w.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
+> index 66c5143..855a3fe 100644
+> --- a/drivers/scsi/a100u2w.c
+> +++ b/drivers/scsi/a100u2w.c
+> @@ -1089,7 +1089,6 @@ static int inia100_probe_one(struct pci_dev *pdev,
+>         int error =3D -ENODEV;
+>         u32 sz;
+>         unsigned long biosaddr;
+> -       char *bios_phys;
+>
+>         if (pci_enable_device(pdev))
+>                 goto out;
+> @@ -1141,7 +1140,7 @@ static int inia100_probe_one(struct pci_dev *pdev,
+>
+>         biosaddr =3D host->BIOScfg;
+>         biosaddr =3D (biosaddr << 4);
+> -       bios_phys =3D phys_to_virt(biosaddr);
+> +       phys_to_virt(biosaddr);
 
-diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
-index 049e36c69ed7..b97566b9dff7 100644
---- a/fs/zonefs/super.c
-+++ b/fs/zonefs/super.c
-@@ -689,14 +689,15 @@ static ssize_t zonefs_file_dio_append(struct kiocb *iocb, struct iov_iter *from)
- {
- 	struct inode *inode = file_inode(iocb->ki_filp);
- 	struct zonefs_inode_info *zi = ZONEFS_I(inode);
--	struct block_device *bdev = inode->i_sb->s_bdev;
--	unsigned int max;
-+	struct super_block *sb = inode->i_sb;
-+	struct zonefs_sb_info *sbi = ZONEFS_SB(sb);
-+	struct block_device *bdev = sb->s_bdev;
-+	sector_t max = sbi->s_max_zone_append_sectors;
- 	struct bio *bio;
- 	ssize_t size;
- 	int nr_pages;
- 	ssize_t ret;
- 
--	max = queue_max_zone_append_sectors(bdev_get_queue(bdev));
- 	max = ALIGN_DOWN(max << SECTOR_SHIFT, inode->i_sb->s_blocksize);
- 	iov_iter_truncate(from, max);
- 
-@@ -853,6 +854,8 @@ static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
- 
- 	/* Enforce sequential writes (append only) in sequential zones */
- 	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ) {
-+		struct zonefs_sb_info *sbi = ZONEFS_SB(sb);
-+
- 		mutex_lock(&zi->i_truncate_mutex);
- 		if (iocb->ki_pos != zi->i_wpoffset) {
- 			mutex_unlock(&zi->i_truncate_mutex);
-@@ -860,7 +863,7 @@ static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
- 			goto inode_unlock;
- 		}
- 		mutex_unlock(&zi->i_truncate_mutex);
--		append = sync;
-+		append = sync && sbi->s_max_zone_append_sectors;
- 	}
- 
- 	if (append)
-@@ -1683,6 +1686,11 @@ static int zonefs_fill_super(struct super_block *sb, void *data, int silent)
- 		sbi->s_mount_opts &= ~ZONEFS_MNTOPT_EXPLICIT_OPEN;
- 	}
- 
-+	sbi->s_max_zone_append_sectors =
-+		queue_max_zone_append_sectors(bdev_get_queue(sb->s_bdev));
-+	if (!sbi->s_max_zone_append_sectors)
-+		zonefs_info(sb, "Zone append is not supported: falling back to using regular writes\n");
-+
- 	ret = zonefs_read_super(sb);
- 	if (ret)
- 		return ret;
-diff --git a/fs/zonefs/zonefs.h b/fs/zonefs/zonefs.h
-index 51141907097c..2b8c3b1a32ea 100644
---- a/fs/zonefs/zonefs.h
-+++ b/fs/zonefs/zonefs.h
-@@ -185,6 +185,8 @@ struct zonefs_sb_info {
- 
- 	unsigned int		s_max_open_zones;
- 	atomic_t		s_open_zones;
-+
-+	sector_t		s_max_zone_append_sectors;
- };
- 
- static inline struct zonefs_sb_info *ZONEFS_SB(struct super_block *sb)
--- 
-2.30.2
+Does phys_to_virt() have side effects? If it doesn't, there's a lot
+more stuff that can get deleted here.
 
+Thanks,
+
+--=20
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
