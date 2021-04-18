@@ -2,105 +2,265 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE1D9C433ED
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Apr 2021 07:22:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9C6AC433B4
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Apr 2021 11:00:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8253D6120C
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Apr 2021 07:22:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3B6A61029
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Apr 2021 11:00:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229920AbhDRHWt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Apr 2021 03:22:49 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:26689 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229671AbhDRHWp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Apr 2021 03:22:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1618730537; x=1650266537;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=IgziuC7NqjHVuW+40lWSUPp9sVUBlCXbGfxYLFmYcZ4=;
-  b=Q6jBqubFkI2kOyc3TKt4ahQOVdGVtvboHaBCABi3t7Z6FQ4VhnCwqj/L
-   SW2YxTzqyR4OpKIlpWjdz9LlQa1ArzMjRWDsdU4bguj4BZkPYaRxHwiMB
-   TsV1dS3amjg+wY49TbJSQAXJketku4Fyi0LY+A4pu5jC302Y9MzglJhFR
-   RxLW8t+XzijGlfsx2EBSrkf5SBbQkf7W6BfE6YbqxARicO48NRHhDNSQ8
-   f4/RxiY6lADBPwFH3jYk+ZjV/O3qt/QUTh470CbJLXav31tnzzaK9MRjt
-   Audrqzspcp5Qjj5GXZlfUSeYAzg4zPb6C1PPS/RdXkudr/M3fb28TfLtn
-   g==;
-IronPort-SDR: iRTJHoZ/W4xLGUfSARfR7toyosmjvCXN8qw5J86d0D61YjI9adQ32TtxAohzqlWkN7oneINXEl
- niNxmMFIQ0mxgR4uQjT8Xb2nF+m8NBGwcmoh8e/DKKgXYEnZigO9R2BCvdiqyWbsL5oz1gKT4z
- qjkdv4Y+FADBK80vfArSS+ktdoUaUdsLMfjCxkwAUtwcxJ1OOA96f0ddD0OK8duQOo6tKj1ZjP
- qIKzuQEGCARkDampqtruYha1C5xf+uGL5351au4QYMUGf4sYy3+K7mZbmQRvo6B00csCPXDPxu
- hko=
-X-IronPort-AV: E=Sophos;i="5.82,231,1613404800"; 
-   d="scan'208";a="276267663"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Apr 2021 15:22:17 +0800
-IronPort-SDR: 4D0ZExdbv/LjFpmI0stICE3JUgslQ/jVgljbpgChdX4cMtVeBQ2ujIdzG/6zuPJcGxGe/mZ7xf
- 0l7VGtrQWikWiNHWHuTOQeojg1l1RiGJIsjf5qWJk0cm3WAmXYtvUAeMAfP+ILpqDvRpVhbqYG
- qGdJMwIlvsSOBJlCrX5bq1Hi7Q8eIL9xPyBpq5p1azSVeUyNE/XoI1YXIz04H5hDdd2KS7TlwY
- 4nhiTqV9R1QZKoqZ4SFvMYxMxuPr5k9ZOVHELBCmYMlKHEYIyjJZTBFB85r/GdemExICaQOYme
- GE1xXBF1p4f5rXXq5OM55Mpf
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2021 00:03:03 -0700
-IronPort-SDR: IRSLbvLKgH2VOlJ7Oci00Hk4NPrXuNy4SA3I1kaZ61OeLVz5cp6dTUa97qlvFdTASQ5DJpye96
- pshpfF2Fo3/dZT4FChnIskf7SEtW3iiRofp2T9osl5xA0xO8QfKtNCBlO9K36BCKOhVxXAlSVV
- 5Tg6zzg4rzyAiusdEhf6/e2yl+OfAli4y+eLjJt3jLxIucSuja/5XSyth9kP9K0I4nPZ6kpyD4
- LGnhod48ItgrWM6TykS1wZAy9af8av2utUAO/5e/M80MSWnOhMMDlDEOI+nEgCJE9yzDgw5rM/
- BF0=
-WDCIronportException: Internal
-Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
-  by uls-op-cesaip01.wdc.com with ESMTP; 18 Apr 2021 00:22:15 -0700
-From:   Avri Altman <avri.altman@wdc.com>
-To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        id S229910AbhDRLBN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Apr 2021 07:01:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56358 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229574AbhDRLBN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Apr 2021 07:01:13 -0400
+Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20B19C06174A;
+        Sun, 18 Apr 2021 04:00:45 -0700 (PDT)
+Received: by mail-wm1-x32c.google.com with SMTP id u5-20020a7bcb050000b029010e9316b9d5so16512704wmj.2;
+        Sun, 18 Apr 2021 04:00:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Nh9WJCxwR1DpCbcRT0OIzlvOZU7PRUVa+7r5RlG2MsQ=;
+        b=VcWDtBpzUKSDug98WkOeJ+gWpgOre9IgmFeJGH69PkPWQoZ1cYTlnLIbAm8rmvOJbv
+         JvD5f/8Yp/t1UV6i25S1X/jdAOnqz3cE1nKLzcJDvWoXNNw4+cwG1liXYg5/FaCnQRf+
+         o3Eny7pNCtEeAgXG9CgtyMVifh97leh+F7HCXOw0jFmjPFNIkrp/DslUJvPDwcMBEedZ
+         OZ+PlRR2dO7iqCM+bWMZa7jIhLPyZzRzQojFrgf2zW9JCj34m8tX1qXB0swVSYBlBu8/
+         Qxjg6mGG1KMIgVigwTO58/mR5EhImlWV9kR9X0IhWw16TcmPMTGbqwsekoyevqNakS2a
+         LyWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Nh9WJCxwR1DpCbcRT0OIzlvOZU7PRUVa+7r5RlG2MsQ=;
+        b=HCAuRVs3FJ1WNUW3MpfzVM7FlIpVw/dSFBSmLijhZ8jFv6rZzy9wm0/wtuNeN6ph67
+         8x9Hyv1rvlCvAzm6A5rxSwTlCzFXIyjXesZX7dZm4r92y6QMw2DXskd+DTUQU0Ge3iap
+         YIJsrktNMgaTGwMZW8x3+9rK70iK0NexAOQ1SJCsrTDU86RVs0Unlg2lNeeRdgZO8HcD
+         3BEHkpbHCLG3Q7+jR/i6sn0CTwzt32jQo6BUp19X2Ul4vnurTS0OUOCF2nNRqW9F9HdI
+         qjhbX4gCHPwD1IP4juudZN8iKuYVTqgPvi7T74jB/+wYBlduKz4tstaYW+txN8rGRtty
+         48AA==
+X-Gm-Message-State: AOAM5309NNbHYaNQbZXyUlrpVl5n0sQpsk4w9YCd/1j8stov8R17eKMl
+        8JCNO5bKgxL08GFP1rSHyW8=
+X-Google-Smtp-Source: ABdhPJwDb1mK9GvRUOVsC90xq1/W8QWaLyEOjFeDNS8s3ouCdV7pSaNtrQ4tWRJ6Lon+YvpSdJwNPg==
+X-Received: by 2002:a05:600c:243:: with SMTP id 3mr16444798wmj.58.1618743643841;
+        Sun, 18 Apr 2021 04:00:43 -0700 (PDT)
+Received: from [192.168.8.100] (37-48-40-152.nat.epc.tmcz.cz. [37.48.40.152])
+        by smtp.gmail.com with ESMTPSA id k11sm15374037wrx.88.2021.04.18.04.00.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 18 Apr 2021 04:00:43 -0700 (PDT)
+Subject: Re: [dm-devel] [PATCH v2 2/3] dm crypt: Fix zoned block device
+ support
+To:     Damien Le Moal <damien.lemoal@wdc.com>, dm-devel@redhat.com,
+        Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>, linux-nvme@lists.infradead.org,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Adrian Hunter <adrian.hunter@intel.com>
-Cc:     linux-kernel@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
-        Alex Lemberg <alex.lemberg@wdc.com>
-Subject: [PATCH] scsi: ufs: Check for bkops in runtime suspend
-Date:   Sun, 18 Apr 2021 10:21:50 +0300
-Message-Id: <20210418072150.3288-1-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
+        linux-fsdevel@vger.kernel.org
+Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        Ondrej Kozina <okozina@redhat.com>
+References: <20210417023323.852530-1-damien.lemoal@wdc.com>
+ <20210417023323.852530-3-damien.lemoal@wdc.com>
+From:   Milan Broz <gmazyland@gmail.com>
+Message-ID: <a073953a-703e-937b-6000-73ad67fffc39@gmail.com>
+Date:   Sun, 18 Apr 2021 13:00:39 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210417023323.852530-3-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The UFS driver allowed BKOPS and WB Flush operations to be completed on
-Runtime suspend. Adding the DeepSleep support, this is no longer true:
-the driver will ignore BKOPS and WB Flush states, and force a link state
-transition to UIC_LINK_OFF_STATE.
+On 17/04/2021 04:33, Damien Le Moal wrote:
+> Zone append BIOs (REQ_OP_ZONE_APPEND) always specify the start sector of
+> the zone to be written instead of the actual location sector to write.
+> The write location is determined by the device and returned to the host
+> upon completion of the operation. This interface, while simple and
+> efficient for writing into sequential zones of a zoned block device, is
+> incompatible with the use of sector values to calculate a cypher block
+> IV. All data written in a zone end up using the same IV values
+> corresponding to the first sectors of the zone, but read operation will
+> specify any sector within the zone, resulting in an IV mismatch between
+> encryption and decryption.
+> 
+> Using a single sector value (e.g. the zone start sector) for all read
+> and writes into a zone can solve this problem, but at the cost of
+> weakening the cypher chosen by the user.
 
-Do not ignore BKOPS and WB Flush on runtme suspend flow.
+Reusing IV breaks the basic principle in disk encryption that block (sector)
+must not be decrypted to correct plaintext if it is relocated.
+(IOW, you must not use the same IV with the same key for another sector location.)
 
-fixes: fe1d4c2ebcae (scsi: ufs: Add DeepSleep feature)
+Please note that dm-crypt allows being configured to use such insecure
+ciphers/IV to provide compatibility with older/foreign encryption systems only.
 
-Suggested-by: Alex Lemberg <alex.lemberg@wdc.com>
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/scsi/ufs/ufshcd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+That said, IV is not the only place in dm-crypt that depends
+on position (sector offset).
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 58d7f264c664..1a0cac670aba 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8755,7 +8755,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	 * In the case of DeepSleep, the device is expected to remain powered
- 	 * with the link off, so do not check for bkops.
- 	 */
--	check_for_bkops = !ufshcd_is_ufs_dev_deepsleep(hba);
-+	check_for_bkops = !ufshcd_is_ufs_dev_deepsleep(hba) ||
-+			  hba->dev_info.b_rpm_dev_flush_capable;
- 	ret = ufshcd_link_state_transition(hba, req_link_state, check_for_bkops);
- 	if (ret)
- 		goto set_dev_active;
--- 
-2.25.1
+Dm-crypt allows using AEAD (authenticated encryption).
+For now, it requires stacking over dm-integrity, but the idea was to use devices
+that can store per-sector metadata natively.
+
+In AEAD, offset (sector) is part of authenticated data (so decryption of relocated
+sector fails). For AEAD, we use random IV. So your patch is not complete.
+
+I think the proper solution would be to disable zone append for the dm-crypt
+target completely, just set a flag for the whole target.
+(Or somehow emulate that global sector offset).
+
+Please do not introduce such complexity as you tried in this patchset.
+I am sure this will backfire on us later.
+
+If you want to use encryption with zoned devices properly,
+it must be designed for it. FDE is not.
+
+In this case, probably btrfs fs encryption layer is the proper place that allows
+configuring different keys or tweak zones IV to allow block-based encryption.
+
+Allowing to stack over dm-crypt in the meantime is OK, but disable these
+incompatible zoning features completely, please.
+
+We often use online reencryption - which can switch arbitrary encryption
+parameters for active devices expecting sector offset is invariant.
+I am not sure if this can even work with zone append and provide expected security.
+
+Also, this brings the question if dm-integrity has the same issue...
+
+Thanks,
+Milan
+
+
+ Instead, to solve this
+> problem, explicitly disable support for zone append operations using
+> the zone_append_not_supported field of struct dm_target if the IV mode
+> used is sector-based, that is for all IVs modes except null and random.
+> 
+> The cypher flag CRYPT_IV_NO_SECTORS iis introduced to indicate that the
+> cypher does not use sector values. This flag is set in
+> crypt_ctr_ivmode() for the null and random IV modes and checked in
+> crypt_ctr() to set to true zone_append_not_supported if
+> CRYPT_IV_NO_SECTORS is not set for the chosen cypher.
+> 
+> Reported-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+> Fixes: 8e225f04d2dd ("dm crypt: Enable zoned block device support")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> ---
+>  drivers/md/dm-crypt.c | 49 +++++++++++++++++++++++++++++++++++--------
+>  1 file changed, 40 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+> index b0ab080f2567..6ef35bb29ce5 100644
+> --- a/drivers/md/dm-crypt.c
+> +++ b/drivers/md/dm-crypt.c
+> @@ -137,6 +137,7 @@ enum cipher_flags {
+>  	CRYPT_MODE_INTEGRITY_AEAD,	/* Use authenticated mode for cipher */
+>  	CRYPT_IV_LARGE_SECTORS,		/* Calculate IV from sector_size, not 512B sectors */
+>  	CRYPT_ENCRYPT_PREPROCESS,	/* Must preprocess data for encryption (elephant) */
+> +	CRYPT_IV_ZONE_APPEND,		/* IV mode supports zone append operations */
+>  };
+>  
+>  /*
+> @@ -2750,9 +2751,10 @@ static int crypt_ctr_ivmode(struct dm_target *ti, const char *ivmode)
+>  	}
+>  
+>  	/* Choose ivmode, see comments at iv code. */
+> -	if (ivmode == NULL)
+> +	if (ivmode == NULL) {
+>  		cc->iv_gen_ops = NULL;
+> -	else if (strcmp(ivmode, "plain") == 0)
+> +		set_bit(CRYPT_IV_ZONE_APPEND, &cc->cipher_flags);
+> +	} else if (strcmp(ivmode, "plain") == 0)
+>  		cc->iv_gen_ops = &crypt_iv_plain_ops;
+>  	else if (strcmp(ivmode, "plain64") == 0)
+>  		cc->iv_gen_ops = &crypt_iv_plain64_ops;
+> @@ -2762,9 +2764,10 @@ static int crypt_ctr_ivmode(struct dm_target *ti, const char *ivmode)
+>  		cc->iv_gen_ops = &crypt_iv_essiv_ops;
+>  	else if (strcmp(ivmode, "benbi") == 0)
+>  		cc->iv_gen_ops = &crypt_iv_benbi_ops;
+> -	else if (strcmp(ivmode, "null") == 0)
+> +	else if (strcmp(ivmode, "null") == 0) {
+>  		cc->iv_gen_ops = &crypt_iv_null_ops;
+> -	else if (strcmp(ivmode, "eboiv") == 0)
+> +		set_bit(CRYPT_IV_ZONE_APPEND, &cc->cipher_flags);
+> +	} else if (strcmp(ivmode, "eboiv") == 0)
+>  		cc->iv_gen_ops = &crypt_iv_eboiv_ops;
+>  	else if (strcmp(ivmode, "elephant") == 0) {
+>  		cc->iv_gen_ops = &crypt_iv_elephant_ops;
+> @@ -2791,6 +2794,7 @@ static int crypt_ctr_ivmode(struct dm_target *ti, const char *ivmode)
+>  		cc->key_extra_size = cc->iv_size + TCW_WHITENING_SIZE;
+>  	} else if (strcmp(ivmode, "random") == 0) {
+>  		cc->iv_gen_ops = &crypt_iv_random_ops;
+> +		set_bit(CRYPT_IV_ZONE_APPEND, &cc->cipher_flags);
+>  		/* Need storage space in integrity fields. */
+>  		cc->integrity_iv_size = cc->iv_size;
+>  	} else {
+> @@ -3281,14 +3285,32 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+>  	}
+>  	cc->start = tmpll;
+>  
+> -	/*
+> -	 * For zoned block devices, we need to preserve the issuer write
+> -	 * ordering. To do so, disable write workqueues and force inline
+> -	 * encryption completion.
+> -	 */
+>  	if (bdev_is_zoned(cc->dev->bdev)) {
+> +		/*
+> +		 * For zoned block devices, we need to preserve the issuer write
+> +		 * ordering. To do so, disable write workqueues and force inline
+> +		 * encryption completion.
+> +		 */
+>  		set_bit(DM_CRYPT_NO_WRITE_WORKQUEUE, &cc->flags);
+>  		set_bit(DM_CRYPT_WRITE_INLINE, &cc->flags);
+> +
+> +		/*
+> +		 * All zone append writes to a zone of a zoned block device will
+> +		 * have the same BIO sector (the start of the zone). When the
+> +		 * cypher IV mode uses sector values, all data targeting a
+> +		 * zone will be encrypted using the first sector numbers of the
+> +		 * zone. This will not result in write errors but will
+> +		 * cause most reads to fail as reads will use the sector values
+> +		 * for the actual data locations, resulting in IV mismatch.
+> +		 * To avoid this problem, allow zone append operations only when
+> +		 * the selected IV mode indicated that zone append operations
+> +		 * are supported, that is, IV modes that do not use sector
+> +		 * values (null and random IVs).
+> +		 */
+> +		if (!test_bit(CRYPT_IV_ZONE_APPEND, &cc->cipher_flags)) {
+> +			DMWARN("Zone append is not supported with the selected IV mode");
+> +			ti->zone_append_not_supported = true;
+> +		}
+>  	}
+>  
+>  	if (crypt_integrity_aead(cc) || cc->integrity_iv_size) {
+> @@ -3356,6 +3378,15 @@ static int crypt_map(struct dm_target *ti, struct bio *bio)
+>  	struct dm_crypt_io *io;
+>  	struct crypt_config *cc = ti->private;
+>  
+> +	/*
+> +	 * For zoned targets, we should not see any zone append operation if
+> +	 * the cypher IV mode selected does not support them. In the unlikely
+> +	 * case we do see one such operation, warn and fail the request.
+> +	 */
+> +	if (WARN_ON_ONCE(bio_op(bio) == REQ_OP_ZONE_APPEND &&
+> +			 !test_bit(CRYPT_IV_ZONE_APPEND, &cc->cipher_flags)))
+> +		return DM_MAPIO_KILL;
+> +
+>  	/*
+>  	 * If bio is REQ_PREFLUSH or REQ_OP_DISCARD, just bypass crypt queues.
+>  	 * - for REQ_PREFLUSH device-mapper core ensures that no IO is in-flight
+> 
 
