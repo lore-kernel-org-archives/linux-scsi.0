@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7003CC433ED
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Apr 2021 20:32:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F09FC433B4
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Apr 2021 20:33:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C387610A1
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Apr 2021 20:32:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3889560E0B
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Apr 2021 20:33:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232023AbhDRUdX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Apr 2021 16:33:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37586 "EHLO
+        id S232539AbhDRUde (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Apr 2021 16:33:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbhDRUdW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Apr 2021 16:33:22 -0400
+        with ESMTP id S229488AbhDRUde (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Apr 2021 16:33:34 -0400
 Received: from desiato.infradead.org (desiato.infradead.org [IPv6:2001:8b0:10b:1:d65d:64ff:fe57:4e05])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40149C06174A;
-        Sun, 18 Apr 2021 13:32:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50A3DC06174A;
+        Sun, 18 Apr 2021 13:33:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=desiato.20200630; h=Content-Transfer-Encoding:MIME-Version
         :Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
         Content-Description:In-Reply-To:References;
-        bh=lONnmRA8ho2fHGlmwzQJ1XUQfxnk2ahlExTFa3OFjPo=; b=FW9ycYln3cFqWB4120OwrMJtVd
-        8Khx7Y3gb/QMBV/VI/t/jC/6eL7tAKXZfZVpujv5FJFw4gQeGvxRHRXF6UniE6vTSAY1VMxGAjmYo
-        D2LBwl9yTF67OZcn2HSbJqmivetp+bmNdcGG6XFPCnttJ5pm8IjwgPfEUMS5/PEtnpPZFRhZj6I+G
-        eHycjpdE8TmYMBXbzzah7Qv/siYJeiA5kF0ZAoad/t+KCZ/ZfTbQnQH9kIwJk7TLSgWs1y4A+G84w
-        wwcny38JS6Ee35r+dLPdByJz5+ynbR2nna3g80Nzm90/8XRZ/AZxBSpXi9yFgcCALkBX+HWO249Cy
-        tjlqtN8w==;
+        bh=86+26EDq1IIqDwjAOGC1HpF5NsHqdehnLA1dXUrci+c=; b=hszlyaDImj5TrhpuTXPdzWjh4Y
+        XaNh3+0WR3hnb9L3zzjtKWFW7lOEmEHNhY3ea8Uycfig8r1KWutoX3uFJ8qpGmBevjuN+eohAlhsd
+        TdU7e5Cq62ufcsu+sgdh+0FbnI4+7Pf2pUWvp/lwKrLvw7UBDuGbPR8m8tSH0JgLNf2P+/gwKwm99
+        bz75i7IgQ0/DWT3fw0H9koAMLsp6G+3NRzpIowcZtAfJBgXAYY7EIA5aMlF8IJQ8qwG90y5mzLXgK
+        SAXQREP9krGkWoaSHmKxuPNSAmEFSUAuAoOu4opx6Opo2FvKHhi3objBFLk4eKfdRZKxn3O9I8Z/3
+        Jdo4fq5Q==;
 Received: from [2601:1c0:6280:3f0::df68] (helo=smtpauth.infradead.org)
         by desiato.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lYE66-008YAm-Oo; Sun, 18 Apr 2021 20:32:51 +0000
+        id 1lYE6J-008YC1-CD; Sun, 18 Apr 2021 20:33:03 +0000
 From:   Randy Dunlap <rdunlap@infradead.org>
 To:     linux-kernel@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
         Sathya Prakash <sathya.prakash@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH] scsi: mpt3sas: documentation cleanup
-Date:   Sun, 18 Apr 2021 13:32:46 -0700
-Message-Id: <20210418203246.782-1-rdunlap@infradead.org>
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: fusion: documentation cleanup
+Date:   Sun, 18 Apr 2021 13:32:59 -0700
+Message-Id: <20210418203259.835-1-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -57,406 +57,359 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fix kernel-doc warnings, spellos, and typos.
 
-drivers/scsi/mpt3sas/mpt3sas_base.c:5430: warning: Excess function parameter 'ct' description in '_base_allocate_pcie_sgl_pool'
-drivers/scsi/mpt3sas/mpt3sas_base.c:5493: warning: Excess function parameter 'ctr' description in '_base_allocate_chain_dma_pool'
-mpt3sas_base.c:1362: warning: missing initial short description on line:
- * _base_display_reply_info -
-mpt3sas_base.c:2151: warning: contents before sections
-mpt3sas_base.c:2314: warning: missing initial short description on line:
- * base_make_prp_nvme -
+../drivers/message/fusion/mptsas.c:432: warning: Function parameter or member 'sas_address' not described in 'mptsas_find_portinfo_by_sas_address'
+../drivers/message/fusion/mptsas.c:432: warning: Excess function parameter 'handle' description in 'mptsas_find_portinfo_by_sas_address'
+../drivers/message/fusion/mptsas.c:581: warning: Function parameter or member 'slot' not described in 'mptsas_add_device_component'
+../drivers/message/fusion/mptsas.c:581: warning: Function parameter or member 'enclosure_logical_id' not described in 'mptsas_add_device_component'
+../drivers/message/fusion/mptsas.c:678: warning: Function parameter or member 'starget' not described in 'mptsas_add_device_component_starget_ir'
+../drivers/message/fusion/mptsas.c:678: warning: Excess function parameter 'channel' description in 'mptsas_add_device_component_starget_ir'
+../drivers/message/fusion/mptsas.c:678: warning: Excess function parameter 'id' description in 'mptsas_add_device_component_starget_ir'
+../drivers/message/fusion/mptsas.c:990: warning: Function parameter or member 'ioc' not described in 'mptsas_find_vtarget'
+../drivers/message/fusion/mptsas.c:990: warning: Function parameter or member 'channel' not described in 'mptsas_find_vtarget'
+../drivers/message/fusion/mptsas.c:990: warning: Function parameter or member 'id' not described in 'mptsas_find_vtarget'
+../drivers/message/fusion/mptsas.c:990: warning: expecting prototype for csmisas_find_vtarget(). Prototype was for mptsas_find_vtarget() instead
+../drivers/message/fusion/mptsas.c:1064: warning: Function parameter or member 'ioc' not described in 'mptsas_target_reset'
+../drivers/message/fusion/mptsas.c:1064: warning: Function parameter or member 'channel' not described in 'mptsas_target_reset'
+../drivers/message/fusion/mptsas.c:1064: warning: Function parameter or member 'id' not described in 'mptsas_target_reset'
+../drivers/message/fusion/mptsas.c:1135: warning: Function parameter or member 'ioc' not described in 'mptsas_target_reset_queue'
+../drivers/message/fusion/mptsas.c:1135: warning: Function parameter or member 'sas_event_data' not described in 'mptsas_target_reset_queue'
+../drivers/message/fusion/mptsas.c:1217: warning: Function parameter or member 'mf' not described in 'mptsas_taskmgmt_complete'
+../drivers/message/fusion/mptsas.c:1217: warning: Function parameter or member 'mr' not described in 'mptsas_taskmgmt_complete'
+../drivers/message/fusion/mptsas.c:1311: warning: Function parameter or member 'ioc' not described in 'mptsas_ioc_reset'
+../drivers/message/fusion/mptsas.c:1311: warning: Function parameter or member 'reset_phase' not described in 'mptsas_ioc_reset'
+../drivers/message/fusion/mptsas.c:1311: warning: expecting prototype for mptscsih_ioc_reset(). Prototype was for mptsas_ioc_reset() instead
+../drivers/message/fusion/mptsas.c:1951: warning: expecting prototype for mptsas_mptsas_eh_timed_out(). Prototype was for mptsas_eh_timed_out() instead
+../drivers/message/fusion/mptsas.c:3623: warning: Function parameter or member 'fw_event' not described in 'mptsas_send_expander_event'
+../drivers/message/fusion/mptsas.c:3623: warning: Excess function parameter 'ioc' description in 'mptsas_send_expander_event'
+../drivers/message/fusion/mptsas.c:3623: warning: Excess function parameter 'expander_data' description in 'mptsas_send_expander_event'
+../drivers/message/fusion/mptsas.c:4010: warning: Excess function parameter 'sas_address' description in 'mptsas_scan_sas_topology'
+../drivers/message/fusion/mptsas.c:4783: warning: Function parameter or member 'issue_reset' not described in 'mptsas_issue_tm'
+../drivers/message/fusion/mptsas.c:4856: warning: Function parameter or member 'fw_event' not described in 'mptsas_broadcast_primitive_work'
+../drivers/message/fusion/mptsas.c:4856: warning: Excess function parameter 'work' description in 'mptsas_broadcast_primitive_work'
+
+mptsas.c:984: warning: missing initial short description on line:
+ * csmisas_find_vtarget
+mptsas.c:993: warning: expecting prototype for csmisas_find_vtarget(). Prototype
+ was for mptsas_find_vtarget() instead
+mptsas.c:1053: warning: missing initial short description on line:
+ * mptsas_target_reset
+mptsas.c:1057: warning: contents before sections
+mptsas.c:1125: warning: missing initial short description on line:
+ * mptsas_target_reset_queue
+mptsas.c:1131: warning: contents before sections
+mptsas.c:1308: warning: missing initial short description on line:
+ * mptsas_ioc_reset
 
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Sathya Prakash <sathya.prakash@broadcom.com>
 Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
 Cc: MPT-FusionLinux.pdl@broadcom.com
+Cc: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c |  101 ++++++++++++--------------
- 1 file changed, 50 insertions(+), 51 deletions(-)
+ drivers/message/fusion/mptsas.c |  119 +++++++++++++++---------------
+ 1 file changed, 63 insertions(+), 56 deletions(-)
 
---- linux-next-20210414.orig/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ linux-next-20210414/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -141,7 +141,7 @@ _base_clear_outstanding_commands(struct
-  * @mpi_request:mf request pointer.
-  * @sz:		size of buffer.
-  *
-- * @Returns - 1/0 Reset to be done or Not
-+ * Return: 1/0 Reset to be done or Not
-  */
- u8
- mpt3sas_base_check_cmd_timeout(struct MPT3SAS_ADAPTER *ioc,
-@@ -440,7 +440,7 @@ static void _clone_sg_entries(struct MPT
- 		return;
+--- linux-next-20210416.orig/drivers/message/fusion/mptsas.c
++++ linux-next-20210416/drivers/message/fusion/mptsas.c
+@@ -86,7 +86,7 @@ MODULE_PARM_DESC(mpt_pt_clear,
+ 		" Clear persistency table: enable=1  "
+ 		"(default=MPTSCSIH_PT_CLEAR=0)");
  
- 	/* From smid we can get scsi_cmd, once we have sg_scmd,
--	 * we just need to get sg_virt and sg_next to get virual
-+	 * we just need to get sg_virt and sg_next to get virtual
- 	 * address associated with sgel->Address.
- 	 */
- 
-@@ -600,7 +600,7 @@ static int mpt3sas_remove_dead_ioc_func(
-  * _base_sync_drv_fw_timestamp - Sync Drive-Fw TimeStamp.
-  * @ioc: Per Adapter Object
-  *
-- * Return nothing.
-+ * Return: nothing.
-  */
- static void _base_sync_drv_fw_timestamp(struct MPT3SAS_ADAPTER *ioc)
- {
-@@ -704,7 +704,7 @@ _base_fault_reset_work(struct work_struc
- 
- 		/*
- 		 * Call _scsih_flush_pending_cmds callback so that we flush all
--		 * pending commands back to OS. This call is required to aovid
-+		 * pending commands back to OS. This call is required to avoid
- 		 * deadlock at block layer. Dead IOC will fail to do diag reset,
- 		 * and this call is safe since dead ioc will never return any
- 		 * command back from HW.
-@@ -873,7 +873,7 @@ mpt3sas_base_fault_info(struct MPT3SAS_A
-  * @ioc: per adapter object
-  * @fault_code: fault code
-  *
-- * Return nothing.
-+ * Return: nothing.
-  */
- void
- mpt3sas_base_coredump_info(struct MPT3SAS_ADAPTER *ioc, u16 fault_code)
-@@ -887,7 +887,7 @@ mpt3sas_base_coredump_info(struct MPT3SA
-  * @ioc: per adapter object
-  * @caller: caller function name
-  *
-- * Returns 0 for success, non-zero for failure.
-+ * Return: 0 for success, non-zero for failure.
-  */
- int
- mpt3sas_base_wait_for_coredump_completion(struct MPT3SAS_ADAPTER *ioc,
-@@ -1359,11 +1359,11 @@ _base_sas_log_info(struct MPT3SAS_ADAPTE
+-/* scsi-mid layer global parmeter is max_report_luns, which is 511 */
++/* scsi-mid layer global parameter is max_report_luns, which is 511 */
+ #define MPTSAS_MAX_LUN (16895)
+ static int max_lun = MPTSAS_MAX_LUN;
+ module_param(max_lun, int, 0);
+@@ -420,12 +420,14 @@ mptsas_find_portinfo_by_handle(MPT_ADAPT
  }
  
  /**
-- * _base_display_reply_info -
-+ * _base_display_reply_info - handle reply descriptors depending on IOC Status
-  * @ioc: per adapter object
-  * @smid: system request message index
-  * @msix_index: MSIX table index supplied by the OS
-- * @reply: reply message frame(lower 32bit addr)
-+ * @reply: reply message frame (lower 32bit addr)
-  */
- static void
- _base_display_reply_info(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
-@@ -1804,7 +1804,7 @@ _base_interrupt(int irq, void *bus_id)
-  * @irqpoll: irq_poll object
-  * @budget: irq poll weight
+- *	mptsas_find_portinfo_by_sas_address -
++ *	mptsas_find_portinfo_by_sas_address - find and return portinfo for
++ *		this sas_address
+  *	@ioc: Pointer to MPT_ADAPTER structure
+- *	@handle:
++ *	@sas_address: expander sas address
   *
-- * returns number of reply descriptors processed
-+ * Return: number of reply descriptors processed
-  */
- static int
- _base_irqpoll(struct irq_poll *irqpoll, int budget)
-@@ -1826,7 +1826,7 @@ _base_irqpoll(struct irq_poll *irqpoll,
- 		enable_irq(reply_q->os_irq);
- 		/*
- 		 * Go for one more round of processing the
--		 * reply descriptor post queue incase if HBA
-+		 * reply descriptor post queue in case the HBA
- 		 * Firmware has posted some reply descriptors
- 		 * while reenabling the IRQ.
- 		 */
-@@ -1840,7 +1840,7 @@ _base_irqpoll(struct irq_poll *irqpoll,
-  * _base_init_irqpolls - initliaze IRQ polls
-  * @ioc: per adapter object
+- *	This function should be called with the sas_topology_mutex already held
++ *	This function should be called with the sas_topology_mutex already held.
   *
-- * returns nothing
-+ * Return: nothing
-  */
- static void
- _base_init_irqpolls(struct MPT3SAS_ADAPTER *ioc)
-@@ -1878,7 +1878,7 @@ _base_is_controller_msix_enabled(struct
-  * @ioc: per adapter object
-  * @poll: poll over reply descriptor pools incase interrupt for
-  *		timed-out SCSI command got delayed
-- * Context: non ISR conext
-+ * Context: non-ISR context
-  *
-  * Called when a Task Management request has completed.
-  */
-@@ -2104,7 +2104,16 @@ _base_build_sg(struct MPT3SAS_ADAPTER *i
++ * 	Return: %NULL if not found.
+  **/
+ static struct mptsas_portinfo *
+ mptsas_find_portinfo_by_sas_address(MPT_ADAPTER *ioc, u64 sas_address)
+@@ -567,12 +569,14 @@ starget)
+ }
  
  /**
-  * _base_build_nvme_prp - This function is called for NVMe end devices to build
-- * a native SGL (NVMe PRP). The native SGL is built starting in the first PRP
-+ *                        a native SGL (NVMe PRP).
-+ * @ioc: per adapter object
-+ * @smid: system request message index for getting asscociated SGL
-+ * @nvme_encap_request: the NVMe request msg frame pointer
-+ * @data_out_dma: physical address for WRITES
-+ * @data_out_sz: data xfer size for WRITES
-+ * @data_in_dma: physical address for READS
-+ * @data_in_sz: data xfer size for READS
-+ *
-+ * The native SGL is built starting in the first PRP
-  * entry of the NVMe message (PRP1).  If the data buffer is small enough to be
-  * described entirely using PRP1, then PRP2 is not used.  If needed, PRP2 is
-  * used to describe a larger data buffer.  If the data buffer is too large to
-@@ -2133,7 +2142,7 @@ _base_build_sg(struct MPT3SAS_ADAPTER *i
-  * Each 64-bit PRP entry comprises an address and an offset field.  The address
-  * always points at the beginning of a 4KB physical memory page, and the offset
-  * describes where within that 4KB page the memory segment begins.  Only the
-- * first element in a PRP list may contain a non-zero offest, implying that all
-+ * first element in a PRP list may contain a non-zero offset, implying that all
-  * memory segments following the first begin at the start of a 4KB page.
+- *	mptsas_add_device_component -
++ *	mptsas_add_device_component - adds a new device component to our lists
+  *	@ioc: Pointer to MPT_ADAPTER structure
+- *	@channel: fw mapped id's
+- *	@id:
+- *	@sas_address:
+- *	@device_info:
++ *	@channel: channel number
++ *	@id: Logical Target ID for reset (if appropriate)
++ *	@sas_address: expander sas address
++ *	@device_info: specific bits (flags) for devices
++ *	@slot: enclosure slot ID
++ *	@enclosure_logical_id: enclosure WWN
   *
-  * Each PRP element normally describes 4KB of physical memory, with exceptions
-@@ -2147,14 +2156,6 @@ _base_build_sg(struct MPT3SAS_ADAPTER *i
-  * Since PRP entries lack any indication of size, the overall data buffer length
-  * is used to determine where the end of the data memory buffer is located, and
-  * how many PRP entries are required to describe it.
+  **/
+ static void
+@@ -634,10 +638,10 @@ mptsas_add_device_component(MPT_ADAPTER
+ }
+ 
+ /**
+- *	mptsas_add_device_component_by_fw -
++ *	mptsas_add_device_component_by_fw - adds a new device component by FW ID
+  *	@ioc: Pointer to MPT_ADAPTER structure
+- *	@channel:  fw mapped id's
+- *	@id:
++ *	@channel: channel number
++ *	@id: Logical Target ID
+  *
+  **/
+ static void
+@@ -668,8 +672,7 @@ mptsas_add_device_component_by_fw(MPT_AD
+ /**
+  *	mptsas_add_device_component_starget_ir - Handle Integrated RAID, adding each individual device to list
+  *	@ioc: Pointer to MPT_ADAPTER structure
+- *	@channel: fw mapped id's
+- *	@id:
++ *	@starget: SCSI target for this SCSI device
+  *
+  **/
+ static void
+@@ -771,9 +774,9 @@ mptsas_add_device_component_starget_ir(M
+ }
+ 
+ /**
+- *	mptsas_add_device_component_starget -
++ *	mptsas_add_device_component_starget - adds a SCSI target device component
+  *	@ioc: Pointer to MPT_ADAPTER structure
+- *	@starget:
++ *	@starget: SCSI target for this SCSI device
+  *
+  **/
+ static void
+@@ -806,7 +809,7 @@ mptsas_add_device_component_starget(MPT_
+  *	mptsas_del_device_component_by_os - Once a device has been removed, we mark the entry in the list as being cached
+  *	@ioc: Pointer to MPT_ADAPTER structure
+  *	@channel: os mapped id's
+- *	@id:
++ *	@id: Logical Target ID
+  *
+  **/
+ static void
+@@ -978,11 +981,12 @@ mptsas_setup_wide_ports(MPT_ADAPTER *ioc
+ }
+ 
+ /**
+- * csmisas_find_vtarget
++ * mptsas_find_vtarget - find a virtual target device (FC LUN device or
++ * 				SCSI target device)
+  *
+- * @ioc
+- * @volume_id
+- * @volume_bus
++ * @ioc: Pointer to MPT_ADAPTER structure
++ * @channel: channel number
++ * @id: Logical Target ID
+  *
+  **/
+ static VirtTarget *
+@@ -1047,15 +1051,14 @@ mptsas_queue_rescan(MPT_ADAPTER *ioc)
+ 
+ 
+ /**
+- * mptsas_target_reset
 - *
-- * @ioc: per adapter object
-- * @smid: system request message index for getting asscociated SGL
-- * @nvme_encap_request: the NVMe request msg frame pointer
-- * @data_out_dma: physical address for WRITES
-- * @data_out_sz: data xfer size for WRITES
-- * @data_in_dma: physical address for READS
-- * @data_in_sz: data xfer size for READS
-  */
- static void
- _base_build_nvme_prp(struct MPT3SAS_ADAPTER *ioc, u16 smid,
-@@ -2311,8 +2312,8 @@ _base_build_nvme_prp(struct MPT3SAS_ADAP
+- * Issues TARGET_RESET to end device using handshaking method
++ * mptsas_target_reset - Issues TARGET_RESET to end device using
++ * 			 handshaking method
+  *
+- * @ioc
+- * @channel
+- * @id
++ * @ioc: Pointer to MPT_ADAPTER structure
++ * @channel: channel number
++ * @id: Logical Target ID for reset
+  *
+- * Returns (1) success
++ * Return: (1) success
+  *         (0) failure
+  *
+  **/
+@@ -1119,15 +1122,15 @@ mptsas_block_io_starget(struct scsi_targ
  }
  
  /**
-- * base_make_prp_nvme -
-- * Prepare PRPs(Physical Region Page)- SGLs specific to NVMe drives only
-+ * base_make_prp_nvme - Prepare PRPs (Physical Region Page) -
-+ * 			SGLs specific to NVMe drives only
+- * mptsas_target_reset_queue
++ * mptsas_target_reset_queue - queue a target reset
   *
-  * @ioc:		per adapter object
-  * @scmd:		SCSI command from the mid-layer
-@@ -3155,7 +3156,7 @@ fall_back:
-  *  - loaded driver with default max_msix_vectors module parameter and
-  *  - system booted in non kdump mode
+- * Receive request for TARGET_RESET after receiving an firmware
++ * @ioc: Pointer to MPT_ADAPTER structure
++ * @sas_event_data: SAS Device Status Change Event data
++ *
++ * Receive request for TARGET_RESET after receiving a firmware
+  * event NOT_RESPONDING_EVENT, then put command in link list
+  * and queue if task_queue already in use.
   *
-- * returns nothing.
-+ * Return: nothing.
-  */
+- * @ioc
+- * @sas_event_data
+- *
+  **/
  static void
- _base_check_and_enable_high_iops_queues(struct MPT3SAS_ADAPTER *ioc,
-@@ -3368,7 +3369,7 @@ _base_diag_reset(struct MPT3SAS_ADAPTER
-  *     and if it is in fault state then issue diag reset.
-  * @ioc: per adapter object
+ mptsas_target_reset_queue(MPT_ADAPTER *ioc,
+@@ -1207,9 +1210,11 @@ mptsas_schedule_target_reset(void *iocp)
+ /**
+  *	mptsas_taskmgmt_complete - complete SAS task management function
+  *	@ioc: Pointer to MPT_ADAPTER structure
++ *	@mf: MPT message frame
++ *	@mr: SCSI Task Management Reply structure ptr (may be %NULL)
   *
-- * Returns: 0 for success, non-zero for failure.
-+ * Return: 0 for success, non-zero for failure.
-  */
+  *	Completion for TARGET_RESET after NOT_RESPONDING_EVENT, enable work
+- *	queue to finish off removing device from upper layers. then send next
++ *	queue to finish off removing device from upper layers, then send next
+  *	TARGET_RESET in the queue.
+  **/
  static int
- _base_check_for_fault_and_issue_reset(struct MPT3SAS_ADAPTER *ioc)
-@@ -3633,7 +3634,7 @@ mpt3sas_base_get_reply_virt_addr(struct
-  * @ioc: per adapter object
-  * @scmd: scsi_cmnd object
-  *
-- * returns msix index of general reply queues,
-+ * Return: msix index of general reply queues,
-  * i.e. reply queue on which IO request's reply
-  * should be posted by the HBA firmware.
-  */
-@@ -3663,7 +3664,7 @@ _base_get_msix_index(struct MPT3SAS_ADAP
-  * @ioc: per adapter object
-  * @scmd: scsi_cmnd object
-  *
-- * Returns: msix index of high iops reply queues.
-+ * Return: msix index of high iops reply queues.
-  * i.e. high iops reply queue on which IO request's
-  * reply should be posted by the HBA firmware.
-  */
-@@ -3910,7 +3911,7 @@ _base_writeq(__u64 b, volatile void __io
-  * @ioc: per adapter object
-  * @smid: system request message index
-  *
-- * returns msix index.
-+ * Return: msix index.
-  */
- static u8
- _base_set_and_get_msix_index(struct MPT3SAS_ADAPTER *ioc, u16 smid)
-@@ -4005,7 +4006,7 @@ _base_put_smid_fast_path(struct MPT3SAS_
-  * _base_put_smid_hi_priority - send Task Management request to firmware
-  * @ioc: per adapter object
-  * @smid: system request message index
-- * @msix_task: msix_task will be same as msix of IO incase of task abort else 0.
-+ * @msix_task: msix_task will be same as msix of IO in case of task abort else 0
-  */
- static void
- _base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
-@@ -4109,7 +4110,7 @@ _base_put_smid_default(struct MPT3SAS_AD
-  * @smid: system request message index
-  * @handle: device handle, unused in this function, for function type match
-  *
-- * Return nothing.
-+ * Return: nothing.
-  */
- static void
- _base_put_smid_scsi_io_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
-@@ -4131,7 +4132,7 @@ _base_put_smid_scsi_io_atomic(struct MPT
-  * @ioc: per adapter object
-  * @smid: system request message index
-  * @handle: device handle, unused in this function, for function type match
-- * Return nothing
-+ * Return: nothing
-  */
- static void
- _base_put_smid_fast_path_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
-@@ -4152,9 +4153,9 @@ _base_put_smid_fast_path_atomic(struct M
-  * firmware using Atomic Request Descriptor
-  * @ioc: per adapter object
-  * @smid: system request message index
-- * @msix_task: msix_task will be same as msix of IO incase of task abort else 0
-+ * @msix_task: msix_task will be same as msix of IO in case of task abort else 0
-  *
-- * Return nothing.
-+ * Return: nothing.
-  */
- static void
- _base_put_smid_hi_priority_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
-@@ -4176,7 +4177,7 @@ _base_put_smid_hi_priority_atomic(struct
-  * @ioc: per adapter object
-  * @smid: system request message index
-  *
-- * Return nothing.
-+ * Return: nothing.
-  */
- static void
- _base_put_smid_default_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
-@@ -4547,7 +4548,7 @@ out:
+@@ -1300,10 +1305,10 @@ mptsas_taskmgmt_complete(MPT_ADAPTER *io
  }
  
  /**
-- * _base_display_ioc_capabilities - Disply IOC's capabilities.
-+ * _base_display_ioc_capabilities - Display IOC's capabilities.
-  * @ioc: per adapter object
-  */
- static void
-@@ -4750,7 +4751,7 @@ out:
-  *    according to performance mode.
-  * @ioc : per adapter object
+- * mptscsih_ioc_reset
++ * mptsas_ioc_reset - issue an IOC reset for this reset phase
   *
-- * Return nothing.
-+ * Return: nothing.
-  */
- static void
- _base_update_ioc_page1_inlinewith_perf_mode(struct MPT3SAS_ADAPTER *ioc)
-@@ -4815,7 +4816,7 @@ _base_update_ioc_page1_inlinewith_perf_m
-  *				persistent pages
-  * @ioc : per adapter object
+- * @ioc
+- * @reset_phase
++ * @ioc: Pointer to MPT_ADAPTER structure
++ * @reset_phase: id of phase of reset
   *
-- * Return nothing.
-+ * Return: nothing.
-  */
- static void
- _base_get_event_diag_triggers(struct MPT3SAS_ADAPTER *ioc)
-@@ -4866,7 +4867,7 @@ _base_get_event_diag_triggers(struct MPT
-  *				persistent pages
-  * @ioc : per adapter object
-  *
-- * Return nothing.
-+ * Return: nothing.
-  */
- static void
- _base_get_scsi_diag_triggers(struct MPT3SAS_ADAPTER *ioc)
-@@ -4917,7 +4918,7 @@ _base_get_scsi_diag_triggers(struct MPT3
-  *				persistent pages
-  * @ioc : per adapter object
-  *
-- * Return nothing.
-+ * Return: nothing.
-  */
- static void
- _base_get_mpi_diag_triggers(struct MPT3SAS_ADAPTER *ioc)
-@@ -4970,7 +4971,7 @@ _base_get_mpi_diag_triggers(struct MPT3S
-  *				persistent pages
-  * @ioc : per adapter object
-  *
-- * Return nothing.
-+ * Return: nothing.
-  */
- static void
- _base_get_master_diag_triggers(struct MPT3SAS_ADAPTER *ioc)
-@@ -5006,8 +5007,8 @@ _base_get_master_diag_triggers(struct MP
-  *					driver trigger pages or not
-  * @ioc : per adapter object
-  *
-- * Returns trigger flags mask if HBA FW supports driver trigger pages,
-- * otherwise returns EFAULT.
-+ * Return: trigger flags mask if HBA FW supports driver trigger pages,
-+ * otherwise returns %-EFAULT.
-  */
+  **/
  static int
- _base_check_for_trigger_pages_support(struct MPT3SAS_ADAPTER *ioc)
-@@ -5035,7 +5036,7 @@ _base_check_for_trigger_pages_support(st
-  *				persistent pages.
-  * @ioc : per adapter object
-  *
-- * Return nothing.
-+ * Return: nothing.
-  */
- static void
- _base_get_diag_triggers(struct MPT3SAS_ADAPTER *ioc)
-@@ -5088,11 +5089,11 @@ _base_get_diag_triggers(struct MPT3SAS_A
+@@ -1350,7 +1355,7 @@ mptsas_ioc_reset(MPT_ADAPTER *ioc, int r
+ 
  
  /**
-  * _base_update_diag_trigger_pages - Update the driver trigger pages after
-- *			online FW update, incase updated FW supports driver
-+ *			online FW update, in case updated FW supports driver
-  *			trigger pages.
-  * @ioc : per adapter object
-  *
-- * Return nothing.
-+ * Return: nothing.
-  */
- static void
- _base_update_diag_trigger_pages(struct MPT3SAS_ADAPTER *ioc)
-@@ -5421,7 +5422,6 @@ _base_reduce_hba_queue_depth(struct MPT3
-  *			for pcie sgl pools.
-  * @ioc: Adapter object
-  * @sz: DMA Pool size
-- * @ct: Chain tracker
-  * Return: 0 for success, non-zero for failure.
-  */
+- * enum device_state -
++ * enum device_state - TUR device state
+  * @DEVICE_RETRY: need to retry the TUR
+  * @DEVICE_ERROR: TUR return error, don't add device
+  * @DEVICE_READY: device can be added
+@@ -1941,7 +1946,7 @@ mptsas_qcmd(struct Scsi_Host *shost, str
+ }
  
-@@ -5485,7 +5485,6 @@ _base_allocate_pcie_sgl_pool(struct MPT3
-  *			for chain dma pool.
-  * @ioc: Adapter object
-  * @sz: DMA Pool size
-- * @ctr: Chain tracker
-  * Return: 0 for success, non-zero for failure.
+ /**
+- *	mptsas_mptsas_eh_timed_out - resets the scsi_cmnd timeout
++ *	mptsas_eh_timed_out - resets the scsi_cmnd timeout
+  *		if the device under question is currently in the
+  *		device removal delay.
+  *	@sc: scsi command that the midlayer is about to time out
+@@ -2839,14 +2844,15 @@ struct rep_manu_reply{
+ };
+ 
+ /**
+-  * mptsas_exp_repmanufacture_info -
++  * mptsas_exp_repmanufacture_info - sets expander manufacturer info
+   * @ioc: per adapter object
+   * @sas_address: expander sas address
+   * @edev: the sas_expander_device object
+   *
+-  * Fills in the sas_expander_device object when SMP port is created.
++  * For an edge expander or a fanout expander:
++  * fills in the sas_expander_device object when SMP port is created.
+   *
+-  * Returns 0 for success, non-zero for failure.
++  * Return: 0 for success, non-zero for failure.
+   */
+ static int
+ mptsas_exp_repmanufacture_info(MPT_ADAPTER *ioc,
+@@ -3284,7 +3290,7 @@ static int mptsas_probe_one_phy(struct d
+ 					rphy_to_expander_device(rphy));
+ 	}
+ 
+-	/* If the device exists,verify it wasn't previously flagged
++	/* If the device exists, verify it wasn't previously flagged
+ 	as a missing device.  If so, clear it */
+ 	vtarget = mptsas_find_vtarget(ioc,
+ 	    phy_info->attached.channel,
+@@ -3611,8 +3617,7 @@ static void mptsas_expander_delete(MPT_A
+ 
+ /**
+  * mptsas_send_expander_event - expanders events
+- * @ioc: Pointer to MPT_ADAPTER structure
+- * @expander_data: event data
++ * @fw_event: event data
+  *
+  *
+  * This function handles adding, removing, and refreshing
+@@ -3657,9 +3662,9 @@ mptsas_send_expander_event(struct fw_eve
+ 
+ 
+ /**
+- * mptsas_expander_add -
++ * mptsas_expander_add - adds a newly discovered expander
+  * @ioc: Pointer to MPT_ADAPTER structure
+- * @handle:
++ * @handle: device handle
+  *
+  */
+ static struct mptsas_portinfo *
+@@ -4000,9 +4005,9 @@ mptsas_probe_devices(MPT_ADAPTER *ioc)
+ }
+ 
+ /**
+- *	mptsas_scan_sas_topology -
++ *	mptsas_scan_sas_topology - scans new SAS topology
++ *	  (part of probe or rescan)
+  *	@ioc: Pointer to MPT_ADAPTER structure
+- *	@sas_address:
+  *
+  **/
+ static void
+@@ -4150,11 +4155,12 @@ mptsas_find_phyinfo_by_sas_address(MPT_A
+ }
+ 
+ /**
+- *	mptsas_find_phyinfo_by_phys_disk_num -
++ *	mptsas_find_phyinfo_by_phys_disk_num - find phyinfo for the
++ *	  specified @phys_disk_num
+  *	@ioc: Pointer to MPT_ADAPTER structure
+- *	@phys_disk_num:
+- *	@channel:
+- *	@id:
++ *	@phys_disk_num: (hot plug) physical disk number (for RAID support)
++ *	@channel: channel number
++ *	@id: Logical Target ID
+  *
+  **/
+ static struct mptsas_phyinfo *
+@@ -4773,8 +4779,9 @@ mptsas_send_raid_event(struct fw_event_w
+  *	@lun: Logical unit for reset (if appropriate)
+  *	@task_context: Context for the task to be aborted
+  *	@timeout: timeout for task management control
++ *	@issue_reset: set to 1 on return if reset is needed, else 0
+  *
+- *	return 0 on success and -1 on failure:
++ *	Return: 0 on success or -1 on failure.
+  *
   */
  static int
-@@ -6233,7 +6232,7 @@ _base_wait_on_iocstate(struct MPT3SAS_AD
-  * _base_dump_reg_set -	This function will print hexdump of register set.
-  * @ioc: per adapter object
-  *
-- * Returns nothing.
-+ * Return: nothing.
-  */
- static inline void
- _base_dump_reg_set(struct MPT3SAS_ADAPTER *ioc)
-@@ -6467,7 +6466,7 @@ _base_send_ioc_reset(struct MPT3SAS_ADAP
-  *
-  * Return: Waits up to timeout seconds for the IOC to
-  * become operational. Returns 0 if IOC is present
-- * and operational; otherwise returns -EFAULT.
-+ * and operational; otherwise returns %-EFAULT.
-  */
+@@ -4847,9 +4854,9 @@ mptsas_issue_tm(MPT_ADAPTER *ioc, u8 typ
  
- int
-@@ -7868,7 +7867,7 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPT
- 		/*
- 		 * In SAS3.0,
- 		 * SCSI_IO, SMP_PASSTHRU, SATA_PASSTHRU, Target Assist, and
--		 * Target Status - all require the IEEE formated scatter gather
-+		 * Target Status - all require the IEEE formatted scatter gather
- 		 * elements.
- 		 */
- 		ioc->build_sg_scmd = &_base_build_sg_scmd_ieee;
+ /**
+  *	mptsas_broadcast_primitive_work - Handle broadcast primitives
+- *	@work: work queue payload containing info describing the event
++ *	@fw_event: work queue payload containing info describing the event
+  *
+- *	this will be handled in workqueue context.
++ *	This will be handled in workqueue context.
+  */
+ static void
+ mptsas_broadcast_primitive_work(struct fw_event_work *fw_event)
