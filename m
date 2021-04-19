@@ -8,52 +8,52 @@ X-Spam-Status: No, score=-18.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 201E0C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:02:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 783D7C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:03:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01DF261246
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:02:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57EA061279
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:03:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238571AbhDSLDV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 07:03:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56340 "EHLO
+        id S237914AbhDSLD3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 07:03:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238580AbhDSLDU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 07:03:20 -0400
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E2DEC061761
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:02:50 -0700 (PDT)
-Received: by mail-pj1-x102b.google.com with SMTP id u14-20020a17090a1f0eb029014e38011b09so13468714pja.5
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:02:50 -0700 (PDT)
+        with ESMTP id S238386AbhDSLDX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 07:03:23 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED629C06174A
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:02:52 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id u7so15666352plr.6
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:02:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=b/MPQNaWOnT/aSgEzR/114WK+busu4Svr2vtHmTzkpU=;
-        b=EPhRtlONdkC42aVli+g3T33maKQUhaklVlytxh83wwnvEsjZlrLjoPNLSdq3R6mZZl
-         4CpXx7Zz+mrrzpZvkKUuY5qWYGgngAJepdqLn2sWlujvfon08EOGW4kLIgfscaO3357q
-         qTENC/uenXGYtT2i8WRoJDtPp16Y12zAN2XJw=
+        bh=Rke0zBsmAcW00gpo0Gp0ZiP2KzLaCxtYUvj6T7LBfME=;
+        b=AQ5++C4wfVm3nR985A5+9SuZNRawQzwLaEKdpyFCUYGQaSSld8OSLWsPJq/it6mBzq
+         TStmlZidlJhckzZKx1FXzW6EDhhnm3UAuliQuK2k7lVhoqKmKxHGmttWWeasVGTP1QcG
+         DdcHBNqp31d9RVLa7RuFltK6dv7wjBdRWtvP8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=b/MPQNaWOnT/aSgEzR/114WK+busu4Svr2vtHmTzkpU=;
-        b=uBMG4BunSz6eOp/cspEYf6d0hEpjzx6u5ZorPs/duy2t9CmjzheDoMFEFsEion+eK4
-         k8sV5nfaY+BdRdr99/wTWQQqcro9f4dPTvftNSBqXowIGtWpwrQKOE6kFOcOP5+lufH8
-         29BEoCpwuBw7gS8D/C6BE6xdDP0T7vRnPQVZ3Ymk5N3O2TjYSyP4wf2CAG61FVXHgP13
-         BhulmcY6ReezKIMLTVGAANtpJtt20J3Mdn9oi2ePI6bN1QRAz/w+9MU9kL4eGY9KvezW
-         w0juraauq/fRmrY8rgVRALTehMMQXPhkwu3GKzPK1O3ouUzufxWXPkBIddK1OYeYT/TV
-         Rosw==
-X-Gm-Message-State: AOAM5332v9kdXqbtCZrWusxBkyx5NXCxREWYV/l4tykjmy9dM/n5SAqf
-        xPfV90HQ6Mm5WD1S9Nbji4UOZP79Ibf4a48eeSEOzu6Yx7qIJcrGEg2PivmIHYeYDE05ctDYDVe
-        5OK7085ogCM/GEShSfFMeiawGJ415/YEYyrvRu227xKYpXTecPY8Ax8mALat4IQLEjQTPswFDhG
-        VwNVQugZ+8
-X-Google-Smtp-Source: ABdhPJwEp6rfPWHRTqC0aqdicug2CEPrByJoK+lxusnYiP7eZDfifagJmRW3dfFGiVOj41MlZXSmsw==
-X-Received: by 2002:a17:90a:4f41:: with SMTP id w1mr23106846pjl.231.1618830169155;
-        Mon, 19 Apr 2021 04:02:49 -0700 (PDT)
+        bh=Rke0zBsmAcW00gpo0Gp0ZiP2KzLaCxtYUvj6T7LBfME=;
+        b=JoN3PLHdykvgOgsVgciTFgawGuggDq3NE+d8okZc/KgqxoTC9JD7DuTS6IeparuNIy
+         nrctDwTG23hBD4dJCj9uB6sfsgG36zInmQgYtvPrHkoHsKpKAv2CjIpCFpylTmKoTHNU
+         LgEfu4twUpWXqn+xRIoebT22Og/YnZlLZujbUNWZydnmetm+5oqHfg2ZFKXh3VmOeBN2
+         6KzJB8PwPOJ1ENC6RpiaTz9aaKOvABHFINGOyCNDqVO5jzscpPpVZe/p4UGT0tyIXIWk
+         sKk1DOftSIKmYQ6KG7RPF0NZfeTOrbMCbl9SWEIDI68RQLhMlzRtJKnxmJtLGlDaCvZs
+         Xr4A==
+X-Gm-Message-State: AOAM530BLCeZocBInKcchXTAuRmqRG/JuMbUiqNjnxwAWv6byoKyGtse
+        W/Johyf0B810ZAs7sHyBRS5oXLaVThER/+bQd17talDbqVz6r7dUvfI4TQjZgrYFnneGuCknGlv
+        ha+VHEuk0FRDlrfjzH/MMZG0Xc2ZHbv3UXDuvJJNyIdpk3MtYrP1CNJayVzX7hqBOlrnj9ItvQO
+        Pt8WxNahyz
+X-Google-Smtp-Source: ABdhPJzZfWgoeKRfEXjA2XINmjpnPNHLPKxSD/UBhWxW8lKPk0CCrAtvhYa0GkQjUa7GUcwEbiQFWg==
+X-Received: by 2002:a17:90a:550f:: with SMTP id b15mr24445907pji.102.1618830172019;
+        Mon, 19 Apr 2021 04:02:52 -0700 (PDT)
 Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id k13sm11825736pfc.50.2021.04.19.04.02.46
+        by smtp.gmail.com with ESMTPSA id k13sm11825736pfc.50.2021.04.19.04.02.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 04:02:48 -0700 (PDT)
+        Mon, 19 Apr 2021 04:02:51 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -61,29 +61,24 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: [PATCH v3 17/24] mpi3mr: add support of threaded isr
-Date:   Mon, 19 Apr 2021 16:31:49 +0530
-Message-Id: <20210419110156.1786882-18-kashyap.desai@broadcom.com>
+Subject: [PATCH v3 18/24] mpi3mr: add complete support of soft reset
+Date:   Mon, 19 Apr 2021 16:31:50 +0530
+Message-Id: <20210419110156.1786882-19-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210419110156.1786882-1-kashyap.desai@broadcom.com>
 References: <20210419110156.1786882-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000379f5905c05145fb"
+        boundary="00000000000061b25f05c0514540"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000379f5905c05145fb
+--00000000000061b25f05c0514540
 
-Register driver for threaded interrupt.
-
-By default, driver will attempt io completion from interrupt context
-(primary handler). Since driver tracks per reply queue outstanding ios,
-it will schedule threaded ISR if there are any outstanding IOs expected
-on that particular reply queue. Threaded ISR (secondary handler) will loop
-for IO completion as long as there are outstanding IOs
-(speculative method using same per reply queue outstanding counter)
-or it has completed some X amount of commands (something like budget).
+Unlock the host diagnostic registers and write the specific
+reset type to that, wait for reset acknowledgment from the
+controller, if the reset is not successful retry for the
+predefined number of times
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
@@ -91,248 +86,312 @@ Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
 Cc: sathya.prakash@broadcom.com
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    | 12 +++++
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 79 +++++++++++++++++++++++++++++++--
- 2 files changed, 88 insertions(+), 3 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    |   3 +
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 245 +++++++++++++++++++++++++++++++-
+ 2 files changed, 246 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index e3ce54f877fa..3ac7b0f119bb 100644
+index 3ac7b0f119bb..ff3e68a6d0b5 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -144,6 +144,10 @@ extern struct list_head mrioc_list;
- /* Default target device queue depth */
- #define MPI3MR_DEFAULT_SDEV_QD	32
- 
-+/* Definitions for Threaded IRQ poll*/
-+#define MPI3MR_IRQ_POLL_SLEEP			2
-+#define MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT		8
-+
- /* SGE Flag definition */
- #define MPI3MR_SGEFLAGS_SYSTEM_SIMPLE_END_OF_LIST \
- 	(MPI3_SGE_FLAGS_ELEMENT_TYPE_SIMPLE | MPI3_SGE_FLAGS_DLAS_SYSTEM | \
-@@ -295,6 +299,9 @@ struct op_req_qinfo {
-  * @q_segment_list: Segment list base virtual address
-  * @q_segment_list_dma: Segment list base DMA address
-  * @ephase: Expected phased identifier for the reply queue
-+ * @pend_ios: Number of IOs pending in HW for this queue
-+ * @enable_irq_poll: Flag to indicate polling is enabled
-+ * @in_use: Queue is handled by poll/ISR
-  */
- struct op_reply_qinfo {
- 	u16 ci;
-@@ -306,6 +313,9 @@ struct op_reply_qinfo {
- 	void *q_segment_list;
- 	dma_addr_t q_segment_list_dma;
- 	u8 ephase;
-+	atomic_t pend_ios;
-+	bool enable_irq_poll;
-+	atomic_t in_use;
+@@ -189,6 +189,9 @@ enum mpi3mr_reset_reason {
+ 	MPI3MR_RESET_FROM_EVTACK_TIMEOUT = 19,
+ 	MPI3MR_RESET_FROM_CIACTVRST_TIMER = 20,
+ 	MPI3MR_RESET_FROM_GETPKGVER_TIMEOUT = 21,
++	MPI3MR_RESET_FROM_PELABORT_TIMEOUT = 22,
++	MPI3MR_RESET_FROM_SYSFS = 23,
++	MPI3MR_RESET_FROM_SYSFS_TIMEOUT = 24
  };
  
  /**
-@@ -557,6 +567,7 @@ struct scmd_priv {
-  * @shost: Scsi_Host pointer
-  * @id: Controller ID
-  * @cpu_count: Number of online CPUs
-+ * @irqpoll_sleep: usleep unit used in threaded isr irqpoll
-  * @name: Controller ASCII name
-  * @driver_name: Driver ASCII name
-  * @sysif_regs: System interface registers virtual address
-@@ -658,6 +669,7 @@ struct mpi3mr_ioc {
- 	u8 id;
- 	int cpu_count;
- 	bool enable_segqueue;
-+	u32 irqpoll_sleep;
- 
- 	char name[MPI3MR_NAME_LENGTH];
- 	char driver_name[MPI3MR_NAME_LENGTH];
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index c25e96f008d7..76e4c87c0426 100644
+index 76e4c87c0426..bb1d2c45e903 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -346,12 +346,16 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+@@ -643,6 +643,100 @@ static const char *mpi3mr_iocstate_name(enum mpi3mr_iocstate mrioc_state)
+ 	return name;
+ }
  
- 	reply_qidx = op_reply_q->qid - 1;
- 
-+	if (!atomic_add_unless(&op_reply_q->in_use, 1, 1))
-+		return 0;
++/* Reset reason to name mapper structure*/
++static const struct {
++	enum mpi3mr_reset_reason value;
++	char *name;
++} mpi3mr_reset_reason_codes[] = {
++	{ MPI3MR_RESET_FROM_BRINGUP, "timeout in bringup" },
++	{ MPI3MR_RESET_FROM_FAULT_WATCH, "fault" },
++	{ MPI3MR_RESET_FROM_IOCTL, "application invocation" },
++	{ MPI3MR_RESET_FROM_EH_HOS, "error handling" },
++	{ MPI3MR_RESET_FROM_TM_TIMEOUT, "TM timeout" },
++	{ MPI3MR_RESET_FROM_IOCTL_TIMEOUT, "IOCTL timeout" },
++	{ MPI3MR_RESET_FROM_MUR_FAILURE, "MUR failure" },
++	{ MPI3MR_RESET_FROM_CTLR_CLEANUP, "timeout in controller cleanup" },
++	{ MPI3MR_RESET_FROM_CIACTIV_FAULT, "component image activation fault" },
++	{ MPI3MR_RESET_FROM_PE_TIMEOUT, "port enable timeout" },
++	{ MPI3MR_RESET_FROM_TSU_TIMEOUT, "time stamp update timeout" },
++	{ MPI3MR_RESET_FROM_DELREQQ_TIMEOUT, "delete request queue timeout" },
++	{ MPI3MR_RESET_FROM_DELREPQ_TIMEOUT, "delete reply queue timeout" },
++	{
++		MPI3MR_RESET_FROM_CREATEREPQ_TIMEOUT,
++		"create request queue timeout"
++	},
++	{
++		MPI3MR_RESET_FROM_CREATEREQQ_TIMEOUT,
++		"create reply queue timeout"
++	},
++	{ MPI3MR_RESET_FROM_IOCFACTS_TIMEOUT, "IOC facts timeout" },
++	{ MPI3MR_RESET_FROM_IOCINIT_TIMEOUT, "IOC init timeout" },
++	{ MPI3MR_RESET_FROM_EVTNOTIFY_TIMEOUT, "event notify timeout" },
++	{ MPI3MR_RESET_FROM_EVTACK_TIMEOUT, "event acknowledgment timeout" },
++	{
++		MPI3MR_RESET_FROM_CIACTVRST_TIMER,
++		"component image activation timeout"
++	},
++	{
++		MPI3MR_RESET_FROM_GETPKGVER_TIMEOUT,
++		"get package version timeout"
++	},
++	{ MPI3MR_RESET_FROM_SYSFS, "sysfs invocation" },
++	{ MPI3MR_RESET_FROM_SYSFS_TIMEOUT, "sysfs TM timeout" },
++};
 +
- 	exp_phase = op_reply_q->ephase;
- 	reply_ci = op_reply_q->ci;
- 
- 	reply_desc = mpi3mr_get_reply_desc(op_reply_q, reply_ci);
- 	if ((le16_to_cpu(reply_desc->ReplyFlags) &
- 	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase) {
-+		atomic_dec(&op_reply_q->in_use);
- 		return 0;
- 	}
- 
-@@ -362,6 +366,7 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
- 		WRITE_ONCE(op_req_q->ci, le16_to_cpu(reply_desc->RequestQueueCI));
- 		mpi3mr_process_op_reply_desc(mrioc, reply_desc, &reply_dma,
- 		    reply_qidx);
-+		atomic_dec(&op_reply_q->pend_ios);
- 		if (reply_dma)
- 			mpi3mr_repost_reply_buf(mrioc, reply_dma);
- 		num_op_reply++;
-@@ -376,6 +381,14 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
- 		if ((le16_to_cpu(reply_desc->ReplyFlags) &
- 		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase)
- 			break;
-+		/*
-+		 * Exit completion loop to avoid CPU lockup
-+		 * Ensure remaining completion happens from threaded ISR.
-+		 */
-+		if (num_op_reply > mrioc->max_host_ios) {
-+			intr_info->op_reply_q->enable_irq_poll = true;
++/**
++ * mpi3mr_reset_rc_name - get reset reason code name
++ * @reason_code: reset reason code value
++ *
++ * Map reset reason to an NULL terminated ASCII string
++ *
++ * Return: Name corresponding to reset reason value or NULL.
++ */
++static const char *mpi3mr_reset_rc_name(enum mpi3mr_reset_reason reason_code)
++{
++	int i;
++	char *name = NULL;
++
++	for (i = 0; i < ARRAY_SIZE(mpi3mr_reset_reason_codes); i++) {
++		if (mpi3mr_reset_reason_codes[i].value == reason_code) {
++			name = mpi3mr_reset_reason_codes[i].name;
 +			break;
 +		}
++	}
++	return name;
++}
++
++/* Reset type to name mapper structure*/
++static const struct {
++	u16 reset_type;
++	char *name;
++} mpi3mr_reset_types[] = {
++	{ MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET, "soft" },
++	{ MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT, "diag fault" },
++};
++
++/**
++ * mpi3mr_reset_type_name - get reset type name
++ * @reset_type: reset type value
++ *
++ * Map reset type to an NULL terminated ASCII string
++ *
++ * Return: Name corresponding to reset type value or NULL.
++ */
++static const char *mpi3mr_reset_type_name(u16 reset_type)
++{
++	int i;
++	char *name = NULL;
++
++	for (i = 0; i < ARRAY_SIZE(mpi3mr_reset_types); i++) {
++		if (mpi3mr_reset_types[i].reset_type == reset_type) {
++			name = mpi3mr_reset_types[i].name;
++			break;
++		}
++	}
++	return name;
++}
  
- 	} while (1);
- 
-@@ -384,6 +397,7 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
- 	    &mrioc->sysif_regs->OperQueueIndexes[reply_qidx].ConsumerIndex);
- 	op_reply_q->ci = reply_ci;
- 	op_reply_q->ephase = exp_phase;
-+	atomic_dec(&op_reply_q->in_use);
- 
- 	return num_op_reply;
+ /**
+  * mpi3mr_print_fault_info - Display fault information
+@@ -806,6 +900,48 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
+ 	return -1;
  }
-@@ -393,7 +407,7 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
- 	struct mpi3mr_intr_info *intr_info = privdata;
- 	struct mpi3mr_ioc *mrioc;
- 	u16 midx;
--	u32 num_admin_replies = 0;
-+	u32 num_admin_replies = 0, num_op_reply = 0;
  
- 	if (!intr_info)
- 		return IRQ_NONE;
-@@ -407,8 +421,10 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
- 
- 	if (!midx)
- 		num_admin_replies = mpi3mr_process_admin_reply_q(mrioc);
-+	if (intr_info->op_reply_q)
-+		num_op_reply = mpi3mr_process_op_reply_q(mrioc, intr_info);
- 
--	if (num_admin_replies)
-+	if (num_admin_replies || num_op_reply)
- 		return IRQ_HANDLED;
- 	else
- 		return IRQ_NONE;
-@@ -417,15 +433,32 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
- static irqreturn_t mpi3mr_isr(int irq, void *privdata)
++/**
++ * mpi3mr_soft_reset_success - Check softreset is success or not
++ * @ioc_status: IOC status register value
++ * @ioc_config: IOC config register value
++ *
++ * Check whether the soft reset is successful or not based on
++ * IOC status and IOC config register values.
++ *
++ * Return: True when the soft reset is success, false otherwise.
++ */
++static inline bool
++mpi3mr_soft_reset_success(u32 ioc_status, u32 ioc_config)
++{
++	if (!((ioc_status & MPI3_SYSIF_IOC_STATUS_READY) ||
++	    (ioc_status & MPI3_SYSIF_IOC_STATUS_FAULT) ||
++	    (ioc_config & MPI3_SYSIF_IOC_CONFIG_ENABLE_IOC)))
++		return true;
++	return false;
++}
++
++/**
++ * mpi3mr_diagfault_success - Check diag fault is success or not
++ * @mrioc: Adapter reference
++ * @ioc_status: IOC status register value
++ *
++ * Check whether the controller hit diag reset fault code.
++ *
++ * Return: True when there is diag fault, false otherwise.
++ */
++static inline bool mpi3mr_diagfault_success(struct mpi3mr_ioc *mrioc,
++	u32 ioc_status)
++{
++	u32 fault;
++
++	if (!(ioc_status & MPI3_SYSIF_IOC_STATUS_FAULT))
++		return false;
++	fault = readl(&mrioc->sysif_regs->Fault) & MPI3_SYSIF_FAULT_CODE_MASK;
++	if (fault == MPI3_SYSIF_FAULT_CODE_DIAG_FAULT_RESET)
++		return true;
++	return false;
++}
++
+ /**
+  * mpi3mr_set_diagsave - Set diag save bit for snapdump
+  * @mrioc: Adapter reference
+@@ -830,14 +966,117 @@ static inline void mpi3mr_set_diagsave(struct mpi3mr_ioc *mrioc)
+  * @reset_type: Reset type
+  * @reset_reason: Reset reason code
+  *
+- * TBD
++ * Unlock the host diagnostic registers and write the specific
++ * reset type to that, wait for reset acknowledgment from the
++ * controller, if the reset is not successful retry for the
++ * predefined number of times.
+  *
+  * Return: 0 on success, non-zero on failure.
+  */
+ static int mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type,
+ 	u32 reset_reason)
  {
- 	struct mpi3mr_intr_info *intr_info = privdata;
-+	struct mpi3mr_ioc *mrioc;
-+	u16 midx;
- 	int ret;
- 
- 	if (!intr_info)
- 		return IRQ_NONE;
- 
-+	mrioc = intr_info->mrioc;
-+	midx = intr_info->msix_index;
- 	/* Call primary ISR routine */
- 	ret = mpi3mr_isr_primary(irq, privdata);
- 
--	return ret;
-+	/*
-+	 * If more IOs are expected, schedule IRQ polling thread.
-+	 * Otherwise exit from ISR.
-+	 */
-+	if (!intr_info->op_reply_q)
-+		return ret;
+-	return 0;
++	int retval = -1;
++	u8 unlock_retry_count, reset_retry_count = 0;
++	u32 host_diagnostic, timeout, ioc_status, ioc_config;
 +
-+	if (!intr_info->op_reply_q->enable_irq_poll ||
-+	    !atomic_read(&intr_info->op_reply_q->pend_ios))
-+		return ret;
++	pci_cfg_access_lock(mrioc->pdev);
++	if ((reset_type != MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET) &&
++	    (reset_type != MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT))
++		goto out;
++	if (mrioc->unrecoverable)
++		goto out;
++retry_reset:
++	unlock_retry_count = 0;
++	mpi3mr_clear_reset_history(mrioc);
++	do {
++		ioc_info(mrioc,
++		    "Write magic sequence to unlock host diag register (retry=%d)\n",
++		    ++unlock_retry_count);
++		if (unlock_retry_count >= MPI3MR_HOSTDIAG_UNLOCK_RETRY_COUNT) {
++			writel(reset_reason, &mrioc->sysif_regs->Scratchpad[0]);
++			mrioc->unrecoverable = 1;
++			goto out;
++		}
 +
-+	disable_irq_nosync(pci_irq_vector(mrioc->pdev, midx));
++		writel(MPI3_SYSIF_WRITE_SEQUENCE_KEY_VALUE_FLUSH,
++		    &mrioc->sysif_regs->WriteSequence);
++		writel(MPI3_SYSIF_WRITE_SEQUENCE_KEY_VALUE_1ST,
++		    &mrioc->sysif_regs->WriteSequence);
++		writel(MPI3_SYSIF_WRITE_SEQUENCE_KEY_VALUE_2ND,
++		    &mrioc->sysif_regs->WriteSequence);
++		writel(MPI3_SYSIF_WRITE_SEQUENCE_KEY_VALUE_3RD,
++		    &mrioc->sysif_regs->WriteSequence);
++		writel(MPI3_SYSIF_WRITE_SEQUENCE_KEY_VALUE_4TH,
++		    &mrioc->sysif_regs->WriteSequence);
++		writel(MPI3_SYSIF_WRITE_SEQUENCE_KEY_VALUE_5TH,
++		    &mrioc->sysif_regs->WriteSequence);
++		writel(MPI3_SYSIF_WRITE_SEQUENCE_KEY_VALUE_6TH,
++		    &mrioc->sysif_regs->WriteSequence);
++		usleep_range(1000, 1100);
++		host_diagnostic = readl(&mrioc->sysif_regs->HostDiagnostic);
++		ioc_info(mrioc,
++		    "wrote magic sequence: retry_count(%d), host_diagnostic(0x%08x)\n",
++		    unlock_retry_count, host_diagnostic);
++	} while (!(host_diagnostic & MPI3_SYSIF_HOST_DIAG_DIAG_WRITE_ENABLE));
 +
-+	return IRQ_WAKE_THREAD;
++	writel(reset_reason, &mrioc->sysif_regs->Scratchpad[0]);
++	ioc_info(mrioc, "%s reset due to %s(0x%x)\n",
++	    mpi3mr_reset_type_name(reset_type),
++	    mpi3mr_reset_rc_name(reset_reason), reset_reason);
++	writel(host_diagnostic | reset_type,
++	    &mrioc->sysif_regs->HostDiagnostic);
++	timeout = mrioc->ready_timeout * 10;
++	if (reset_type == MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET) {
++		do {
++			ioc_status = readl(&mrioc->sysif_regs->IOCStatus);
++			if (ioc_status &
++			    MPI3_SYSIF_IOC_STATUS_RESET_HISTORY) {
++				mpi3mr_clear_reset_history(mrioc);
++				ioc_config =
++				    readl(&mrioc->sysif_regs->IOCConfiguration);
++				if (mpi3mr_soft_reset_success(ioc_status,
++				    ioc_config)) {
++					retval = 0;
++					break;
++				}
++			}
++			msleep(100);
++		} while (--timeout);
++		writel(MPI3_SYSIF_WRITE_SEQUENCE_KEY_VALUE_2ND,
++		    &mrioc->sysif_regs->WriteSequence);
++	} else if (reset_type == MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT) {
++		do {
++			ioc_status = readl(&mrioc->sysif_regs->IOCStatus);
++			if (mpi3mr_diagfault_success(mrioc, ioc_status)) {
++				retval = 0;
++				break;
++			}
++			msleep(100);
++		} while (--timeout);
++		mpi3mr_clear_reset_history(mrioc);
++		writel(MPI3_SYSIF_WRITE_SEQUENCE_KEY_VALUE_2ND,
++		    &mrioc->sysif_regs->WriteSequence);
++	}
++	if (retval && ((++reset_retry_count) < MPI3MR_MAX_RESET_RETRY_COUNT)) {
++		ioc_status = readl(&mrioc->sysif_regs->IOCStatus);
++		ioc_config = readl(&mrioc->sysif_regs->IOCConfiguration);
++		ioc_info(mrioc,
++		    "Base IOC Sts/Config after reset try %d is (0x%x)/(0x%x)\n",
++		    reset_retry_count, ioc_status, ioc_config);
++		goto retry_reset;
++	}
++
++out:
++	pci_cfg_access_unlock(mrioc->pdev);
++	ioc_status = readl(&mrioc->sysif_regs->IOCStatus);
++	ioc_config = readl(&mrioc->sysif_regs->IOCConfiguration);
++
++	ioc_info(mrioc,
++	    "Base IOC Sts/Config after %s reset is (0x%x)/(0x%x)\n",
++	    (!retval)?"successful":"failed", ioc_status,
++	    ioc_config);
++	return retval;
  }
  
  /**
-@@ -440,6 +473,36 @@ static irqreturn_t mpi3mr_isr(int irq, void *privdata)
-  */
- static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
+@@ -3462,6 +3701,8 @@ int mpi3mr_diagfault_reset_handler(struct mpi3mr_ioc *mrioc,
  {
-+	struct mpi3mr_intr_info *intr_info = privdata;
-+	struct mpi3mr_ioc *mrioc;
-+	u16 midx;
-+	u32 num_op_reply = 0;
-+
-+	if (!intr_info || !intr_info->op_reply_q)
-+		return IRQ_NONE;
-+
-+	mrioc = intr_info->mrioc;
-+	midx = intr_info->msix_index;
-+
-+	/* Poll for pending IOs completions */
-+	do {
-+		if (!mrioc->intr_enabled)
-+			break;
-+
-+		if (!midx)
-+			mpi3mr_process_admin_reply_q(mrioc);
-+		if (intr_info->op_reply_q)
-+			num_op_reply +=
-+			    mpi3mr_process_op_reply_q(mrioc, intr_info);
-+
-+		usleep_range(mrioc->irqpoll_sleep, 10 * mrioc->irqpoll_sleep);
-+
-+	} while (atomic_read(&intr_info->op_reply_q->pend_ios) &&
-+	    (num_op_reply < mrioc->max_host_ios));
-+
-+	intr_info->op_reply_q->enable_irq_poll = false;
-+	enable_irq(pci_irq_vector(mrioc->pdev, midx));
-+
- 	return IRQ_HANDLED;
- }
+ 	int retval = 0;
  
-@@ -1155,6 +1218,9 @@ static int mpi3mr_create_op_reply_q(struct mpi3mr_ioc *mrioc, u16 qidx)
- 	op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD;
- 	op_reply_q->ci = 0;
- 	op_reply_q->ephase = 1;
-+	atomic_set(&op_reply_q->pend_ios, 0);
-+	atomic_set(&op_reply_q->in_use, 0);
-+	op_reply_q->enable_irq_poll = false;
++	ioc_info(mrioc, "Entry: reason code: %s\n",
++	    mpi3mr_reset_rc_name(reset_reason));
+ 	mrioc->reset_in_progress = 1;
  
- 	if (!op_reply_q->q_segments) {
- 		retval = mpi3mr_alloc_op_reply_q_segments(mrioc, qidx);
-@@ -1476,6 +1542,10 @@ int mpi3mr_op_request_post(struct mpi3mr_ioc *mrioc,
- 		pi = 0;
- 	op_req_q->pi = pi;
- 
-+	if (atomic_inc_return(&mrioc->op_reply_qinfo[reply_qidx].pend_ios)
-+	    > MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT)
-+		mrioc->op_reply_qinfo[reply_qidx].enable_irq_poll = true;
-+
- 	writel(op_req_q->pi,
- 	    &mrioc->sysif_regs->OperQueueIndexes[reply_qidx].ProducerIndex);
- 
-@@ -2804,6 +2874,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 	u32 ioc_status, ioc_config, i;
- 	Mpi3IOCFactsData_t facts_data;
- 
-+	mrioc->irqpoll_sleep = MPI3MR_IRQ_POLL_SLEEP;
- 	mrioc->change_count = 0;
- 	if (!re_init) {
- 		mrioc->cpu_count = num_online_cpus();
-@@ -3089,6 +3160,8 @@ static void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
- 		mrioc->op_reply_qinfo[i].ci = 0;
- 		mrioc->op_reply_qinfo[i].num_replies = 0;
- 		mrioc->op_reply_qinfo[i].ephase = 0;
-+		atomic_set(&mrioc->op_reply_qinfo[i].pend_ios, 0);
-+		atomic_set(&mrioc->op_reply_qinfo[i].in_use, 0);
- 		mpi3mr_memset_op_reply_q_buffers(mrioc, i);
- 
- 		mrioc->req_qinfo[i].ci = 0;
+ 	mpi3mr_ioc_disable_intr(mrioc);
 -- 
 2.18.1
 
 
---000000000000379f5905c05145fb
+--00000000000061b25f05c0514540
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -403,13 +462,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIO72v/LZQSeG+yhFeILc/4oElod5
-zTjt0RkpPjVZZz3LMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDQxOTExMDI0OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMB3ZH4N/BsvKiHr2gsRHo1RGS2p
+8FweUiTat468WY3EMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDQxOTExMDI1MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQBM60YWVbkSlOKTf2AaqXWQVX94yPvjISAGHZpJjJjnbms0
-GfTZVxlJ7d6KY0pox4jeR09+qYkJbDuiARTC16R63XFY9iEKp2m+bn+PfQHjNPENZQPL3QjcWoxo
-T6BXurXzmNhP1qken+l7APB/+iRJ/r5a8Vlc05Sa2OO7gvTEsvFvDV4+xu/WHk/lAK0G1zf3JFvz
-RCELLcCL8CpWi+tbzdkCEXpuSZXr8DrckoHfqUpDO4k4cirbK6YoRlfAn1LuP/FulxGcaWNBBNTw
-I48TTcnVdylbqdtIbcDMB/AIT5Ker/pujLHDKoygYOAHiEUfdMdwrOf2PpOU+p8sUwOo
---000000000000379f5905c05145fb--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQC+xe2+mHIZyjk3zywTYbTfhXFA7iqghEelxwwv1l5l3M7l
+Y3xfSuQHao/5Xh9soRUbPtL0cpibb8ElsHYp4TLohzHO0JZonagKwHRhP059ZTN5fLUSFWRNvSxv
+iqpnmLOhjs5+KE3XbPQjRlncyRnmXErnqoxmeUWeq6XPKuDkrC9r6Uaevx+YKYwHhZb9KQ8PMq2m
+VnCCh5YAvGg+UJL0+yn/egyQ4GZboAdayBByGQM3r303ZV6Oma89rf24OHSSeq0OYG7R28RJsuB3
+QsmOTpNA1b+POuXjlIgyJ3DUfyD0uTodzqN3x9Fc8KLKd7VyeG6oqxO5sTxOj7VZ7Tsq
+--00000000000061b25f05c0514540--
