@@ -2,63 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E71ACC43460
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 06:36:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CA0FC43461
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 06:45:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C1BC760FDB
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 06:36:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F5B861165
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 06:45:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237573AbhDSGhF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 02:37:05 -0400
-Received: from verein.lst.de ([213.95.11.211]:45287 "EHLO verein.lst.de"
+        id S233290AbhDSGqD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 02:46:03 -0400
+Received: from verein.lst.de ([213.95.11.211]:45308 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230002AbhDSGhE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Apr 2021 02:37:04 -0400
+        id S231433AbhDSGqB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Apr 2021 02:46:01 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 030166736F; Mon, 19 Apr 2021 08:36:31 +0200 (CEST)
-Date:   Mon, 19 Apr 2021 08:36:30 +0200
+        id 8535E6736F; Mon, 19 Apr 2021 08:45:29 +0200 (CEST)
+Date:   Mon, 19 Apr 2021 08:45:29 +0200
 From:   Christoph Hellwig <hch@lst.de>
-To:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc:     Tianyu Lan <ltykernel@gmail.com>, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
-        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, x86@kernel.org,
-        hpa@zytor.com, arnd@arndb.de, akpm@linux-foundation.org,
-        gregkh@linuxfoundation.org, hch@lst.de, m.szyprowski@samsung.com,
-        robin.murphy@arm.com, joro@8bytes.org, will@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, vkuznets@redhat.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com,
-        sunilmut@microsoft.com
-Subject: Re: [Resend RFC PATCH V2 07/12] HV/Vmbus: Initialize VMbus ring
- buffer for Isolation VM
-Message-ID: <20210419063630.GA18882@lst.de>
-References: <20210414144945.3460554-1-ltykernel@gmail.com> <20210414144945.3460554-8-ltykernel@gmail.com> <YHig78Xra5tEQhMD@dhcp-10-154-102-149.vpn.oracle.com>
+To:     Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-nvme@lists.infradead.org, Christoph Hellwig <hch@lst.de>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-fsdevel@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Subject: Re: [PATCH v2 3/3] zonefs: fix synchronous write to sequential
+ zone files
+Message-ID: <20210419064529.GA19041@lst.de>
+References: <20210417023323.852530-1-damien.lemoal@wdc.com> <20210417023323.852530-4-damien.lemoal@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YHig78Xra5tEQhMD@dhcp-10-154-102-149.vpn.oracle.com>
+In-Reply-To: <20210417023323.852530-4-damien.lemoal@wdc.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 15, 2021 at 04:24:15PM -0400, Konrad Rzeszutek Wilk wrote:
-> So you are exposing these two:
->  EXPORT_SYMBOL_GPL(get_vm_area);
->  EXPORT_SYMBOL_GPL(ioremap_page_range);
-> 
-> But if you used vmap wouldn't you get the same thing for free?
+On Sat, Apr 17, 2021 at 11:33:23AM +0900, Damien Le Moal wrote:
+> Synchronous writes to sequential zone files cannot use zone append
+> operations if the underlying zoned device queue limit
+> max_zone_append_sectors is 0, indicating that the device does not
+> support this operation. In this case, fall back to using regular write
+> operations.
 
-Yes, this needs to go into some vmap version, preferably reusing the
-existing code in kernel/dma/remap.c.
-
-Exporting get_vm_area is a complete dealbreaker and not going to happen.
-We worked hard on not exposing it to modules.
+Zone append is a mandatory feature of the zoned device API.
