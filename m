@@ -2,39 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F026DC43460
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 18:37:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43D63C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 21:54:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 536156127C
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 18:37:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24B4061363
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 21:54:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240991AbhDSShu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 14:37:50 -0400
-Received: from mga05.intel.com ([192.55.52.43]:8975 "EHLO mga05.intel.com"
+        id S232314AbhDSVyg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 17:54:36 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:49519 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233002AbhDSSht (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Apr 2021 14:37:49 -0400
-IronPort-SDR: 4W4bPLyASgMg3ho1a6daVwzrhtAe7RcSbWsHn/KGiKfyO81M2EQ6ifOhDlMWGG1yfvfq86qC0I
- GqbO8QCIR6qg==
-X-IronPort-AV: E=McAfee;i="6200,9189,9959"; a="280702532"
-X-IronPort-AV: E=Sophos;i="5.82,234,1613462400"; 
-   d="scan'208";a="280702532"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Apr 2021 11:37:18 -0700
-IronPort-SDR: mVnC+7o/ux30dgipxuCPMQsRxirpqDL70m7B/udEKgj4RQEgeyqfuV8cNyuXo9lVBQPOv0TWk1
- HU6sC2AH2gvQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.82,234,1613462400"; 
-   d="scan'208";a="420108005"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
-  by fmsmga008.fm.intel.com with ESMTP; 19 Apr 2021 11:37:12 -0700
+        id S231481AbhDSVye (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Apr 2021 17:54:34 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1618869244; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=Hq64TonC+NenCtnU0+rJhatIPlhtHcQUw02PEAk3v+U=; b=wkL4HW2L4VoyGhzFzhWcIlhgtQ5fw1VqQIBWUATW6JqEow47yh3Kw5GA8utnzUlIUL3gjA1C
+ Sptbi5ZEMkjcBIKlj/RwfGvUgxwpHL894rxcb+F8ztBJk8d0iu6PBzmtw/07rb07xRsf7QSH
+ O5HPXXuh/COjaeG9FnCoH5idCVs=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
+ 607dfbf3215b831afb1bb187 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 19 Apr 2021 21:53:55
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 5FEB9C43143; Mon, 19 Apr 2021 21:53:55 +0000 (UTC)
+Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 88C7EC433D3;
+        Mon, 19 Apr 2021 21:53:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 88C7EC433D3
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
 Subject: Re: [PATCH v20 1/2] scsi: ufs: Enable power management for wlun
-To:     Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+To:     Adrian Hunter <adrian.hunter@intel.com>, cang@codeaurora.org,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc:     linux-arm-msm@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
@@ -67,197 +79,67 @@ Cc:     linux-arm-msm@vger.kernel.org,
         <linux-mediatek@lists.infradead.org>
 References: <cover.1618600985.git.asutoshd@codeaurora.org>
  <d660b8d4e1fb192810abd09a8ff0ef4d9f6b96cd.1618600985.git.asutoshd@codeaurora.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <fdadd467-b613-d800-18c5-be064396fd10@intel.com>
-Date:   Mon, 19 Apr 2021 21:37:27 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+ <fdadd467-b613-d800-18c5-be064396fd10@intel.com>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <07e3ea07-e1c3-7b8c-e398-8b008f873e6d@codeaurora.org>
+Date:   Mon, 19 Apr 2021 14:53:50 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
 MIME-Version: 1.0
-In-Reply-To: <d660b8d4e1fb192810abd09a8ff0ef4d9f6b96cd.1618600985.git.asutoshd@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <fdadd467-b613-d800-18c5-be064396fd10@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 16/04/21 10:49 pm, Asutosh Das wrote:
-> During runtime-suspend of ufs host, the scsi devices are
-> already suspended and so are the queues associated with them.
-> But the ufs host sends SSU (START_STOP_UNIT) to wlun
-> during its runtime-suspend.
-> During the process blk_queue_enter checks if the queue is not in
-> suspended state. If so, it waits for the queue to resume, and never
-> comes out of it.
-> The commit
-> (d55d15a33: scsi: block: Do not accept any requests while suspended)
-> adds the check if the queue is in suspended state in blk_queue_enter().
+On 4/19/2021 11:37 AM, Adrian Hunter wrote:
+> On 16/04/21 10:49 pm, Asutosh Das wrote:
+>>
+>> Co-developed-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>> ---
 > 
-> Call trace:
->  __switch_to+0x174/0x2c4
->  __schedule+0x478/0x764
->  schedule+0x9c/0xe0
->  blk_queue_enter+0x158/0x228
->  blk_mq_alloc_request+0x40/0xa4
->  blk_get_request+0x2c/0x70
->  __scsi_execute+0x60/0x1c4
->  ufshcd_set_dev_pwr_mode+0x124/0x1e4
->  ufshcd_suspend+0x208/0x83c
->  ufshcd_runtime_suspend+0x40/0x154
->  ufshcd_pltfrm_runtime_suspend+0x14/0x20
->  pm_generic_runtime_suspend+0x28/0x3c
->  __rpm_callback+0x80/0x2a4
->  rpm_suspend+0x308/0x614
->  rpm_idle+0x158/0x228
->  pm_runtime_work+0x84/0xac
->  process_one_work+0x1f0/0x470
->  worker_thread+0x26c/0x4c8
->  kthread+0x13c/0x320
->  ret_from_fork+0x10/0x18
+> I came across 3 issues while testing.  See comments below.
 > 
-> Fix this by registering ufs device wlun as a scsi driver and
-> registering it for block runtime-pm. Also make this as a
-> supplier for all other luns. That way, this device wlun
-> suspends after all the consumers and resumes after
-> hba resumes. This also registers a new scsi driver for rpmb wlun.
-> This new driver is mostly used to clear rpmb uac.
+Hi Adrian
+Thanks for the comments.
+> <SNIP>
 > 
-> Fixed smatch warnings:
-> Reported-by: kernel test robot <lkp@intel.com>
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+>> @@ -5794,7 +5839,7 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+>>   	if (ufshcd_is_clkscaling_supported(hba))
+>>   		ufshcd_clk_scaling_suspend(hba, false);
+>>   	ufshcd_clear_ua_wluns(hba);
 > 
-> Co-developed-by: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-> ---
+> ufshcd_clear_ua_wluns() deadlocks trying to clear UFS_UPIU_RPMB_WLUN
+> if sdev_rpmb is suspended and sdev_ufs_device is suspending.
+> e.g. ufshcd_wl_suspend() is waiting on host_sem while ufshcd_err_handler()
+> is running, at which point sdev_rpmb has already suspended.
+> 
+Umm, I didn't understand this deadlock.
+When you say, sdev_rpmb is suspended, does it mean runtime_suspended?
+sdev_ufs_device is suspending - this can't be runtime_suspending, while 
+ufshcd_err_handling_unprepare is running.
 
-I came across 3 issues while testing.  See comments below.
+If you've a call-stack of this deadlock, please can you share it with 
+me. I'll also try to reproduce this.
 
-<SNIP>
+I'll address the other comments in the next version.
 
-> @@ -5753,12 +5797,13 @@ static void ufshcd_clk_scaling_suspend(struct ufs_hba *hba, bool suspend)
->  
->  static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
->  {
-> -	pm_runtime_get_sync(hba->dev);
-> -	if (pm_runtime_status_suspended(hba->dev) || hba->is_sys_suspended) {
-> +	ufshcd_rpm_get_sync(hba);
 
-hba->sdev_ufs_device could be NULL.
-Need to add a check for that in ufshcd_err_handling_should_stop()
+Thank you!
 
-> +	if (pm_runtime_status_suspended(&hba->sdev_ufs_device->sdev_gendev) ||
-> +	    hba->is_sys_suspended) {
->  		enum ufs_pm_op pm_op;
->  
->  		/*
-> -		 * Don't assume anything of pm_runtime_get_sync(), if
-> +		 * Don't assume anything of resume, if
->  		 * resume fails, irq and clocks can be OFF, and powers
->  		 * can be OFF or in LPM.
->  		 */
-> @@ -5794,7 +5839,7 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
->  	if (ufshcd_is_clkscaling_supported(hba))
->  		ufshcd_clk_scaling_suspend(hba, false);
->  	ufshcd_clear_ua_wluns(hba);
+>> -	pm_runtime_put(hba->dev);
+>> +	ufshcd_rpm_put(hba);
+>>   }
+> 
+> <SNIP>
+> 
+>> +void ufshcd_resume_complete(struct device *dev)
+>> +{
 
-ufshcd_clear_ua_wluns() deadlocks trying to clear UFS_UPIU_RPMB_WLUN
-if sdev_rpmb is suspended and sdev_ufs_device is suspending.
-e.g. ufshcd_wl_suspend() is waiting on host_sem while ufshcd_err_handler()
-is running, at which point sdev_rpmb has already suspended.
-
-> -	pm_runtime_put(hba->dev);
-> +	ufshcd_rpm_put(hba);
->  }
-
-<SNIP>
-
-> +void ufshcd_resume_complete(struct device *dev)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	ufshcd_rpm_put(hba);
-> +}
-> +EXPORT_SYMBOL_GPL(ufshcd_resume_complete);
-> +
-> +int ufshcd_suspend_prepare(struct device *dev)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +	struct device *ufs_dev = &hba->sdev_ufs_device->sdev_gendev;
-> +	enum ufs_dev_pwr_mode spm_pwr_mode;
-> +	enum uic_link_state spm_link_state;
-> +	unsigned long flags;
-> +	bool rpm_state_ok;
-> +
-> +	/*
-> +	 * SCSI assumes that runtime-pm and system-pm for scsi drivers
-> +	 * are same. And it doesn't wake up the device for system-suspend
-> +	 * if it's runtime suspended. But ufs doesn't follow that.
-> +	 * The rpm-lvl and spm-lvl can be different in ufs.
-> +	 * However, if the current_{pwr_mode, link_state} is same as the
-> +	 * desired_{pwr_mode, link_state}, there's no need to rpm resume
-> +	 * the device.
-> +	 * Refer ufshcd_resume_complete()
-> +	 */
-> +	pm_runtime_get_noresume(ufs_dev);
-> +
-> +	spin_lock_irqsave(&ufs_dev->power.lock, flags);
-> +
-> +	spm_pwr_mode = ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl);
-> +	spm_link_state = ufs_get_pm_lvl_to_link_pwr_state(hba->spm_lvl);
-> +
-> +	rpm_state_ok = pm_runtime_suspended(ufs_dev) &&
-> +		hba->curr_dev_pwr_mode == spm_pwr_mode &&
-> +		hba->uic_link_state == spm_link_state &&
-> +		!hba->dev_info.b_rpm_dev_flush_capable;
-> +
-> +	spin_unlock_irqrestore(&ufs_dev->power.lock, flags);
-> +
-> +	if (!rpm_state_ok) {
-> +		int ret = pm_runtime_resume(ufs_dev);
-> +
-> +		if (ret < 0 && ret != -EACCES) {
-> +			pm_runtime_put(ufs_dev);
-> +			return ret;
-> +		}
-> +	}
-> +	return 0;
-> +}
-
-Unfortunately this does not work because SCSI PM forcibly sets
-the sdevs to runtime active after system resume.  Really we should
-change SCSI PM to call the driver's .prepare / .complete then we could
-use direct complete, but let's leave that for now and go back to
-before, but allowing for errors and !hba->sdev_ufs_device. e.g.
-
-void ufshcd_resume_complete(struct device *dev)
-{
-	struct ufs_hba *hba = dev_get_drvdata(dev);
-
-	if (hba->complete_put) {
-		hba->complete_put = false;
-		ufshcd_rpm_put(hba);
-	}
-}
-EXPORT_SYMBOL_GPL(ufshcd_resume_complete);
-
-int ufshcd_suspend_prepare(struct device *dev)
-{
-	struct ufs_hba *hba = dev_get_drvdata(dev);
-	int ret;
-
-	if (!hba->sdev_ufs_device)
-		return 0;
-
-	ret = ufshcd_rpm_get_sync(hba);
-	if (ret < 0 && ret != -EACCES) {
-		ufshcd_rpm_put(hba);
-		return ret;
-	}
-	hba->complete_put = true;
-	return 0;
-}
-EXPORT_SYMBOL_GPL(ufshcd_suspend_prepare);
-
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
