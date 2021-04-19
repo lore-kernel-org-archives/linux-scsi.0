@@ -2,424 +2,155 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,
-	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED35AC433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:03:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC7FDC433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:43:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEA8B61279
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:03:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C032861221
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:43:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238636AbhDSLDy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 07:03:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56432 "EHLO
+        id S234546AbhDSLnf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 07:43:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238615AbhDSLDm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 07:03:42 -0400
-Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B413BC06174A
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:03:11 -0700 (PDT)
-Received: by mail-pg1-x536.google.com with SMTP id s22so2893871pgk.6
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:03:11 -0700 (PDT)
+        with ESMTP id S232867AbhDSLnf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 07:43:35 -0400
+Received: from mail-qt1-x843.google.com (mail-qt1-x843.google.com [IPv6:2607:f8b0:4864:20::843])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85FEFC06174A
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:43:05 -0700 (PDT)
+Received: by mail-qt1-x843.google.com with SMTP id d6so7483994qtx.13
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:43:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=bHAd3oBacbrmBLm20k3r2//p3Vu4GiJRJqPRSCI537U=;
-        b=UXCUo0OICo1GgKzxKDawZqeoR6z+nCn2dyKLoDUidQQbG7rMOkXBWXjErg2cPesiys
-         AwSrhNElbiDBzT//GMpD7JJom05nUUdOxCt+JtmP76pgaBSst/gY9+SortlzBUU0WV7W
-         eRbdBP6AO4AMw4GMKHhP2Dw1vtSmfmjiAsLNI=
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=C8UEYYP5OCUY0Q1KBB73kqP9D0Xew4WBhCIPzAICHfI=;
+        b=a/2G4tkmyd+wW7+13ub0qbMYIoTWnhhixpR48EuU1F9Vk7fBdNnRB2sf6ddvZOGP04
+         OM9urVTwu1GRoAaiUNbUTrMFO+YgO09JO2vpENnBeQyz7fl79Esfg3uMVT0QqRmnsxmV
+         lDzUTw4CetxC6wzaNUug+EfjsO8JXu4NL5AQE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=bHAd3oBacbrmBLm20k3r2//p3Vu4GiJRJqPRSCI537U=;
-        b=aT+K6ZO7lWVmYuGoGYLNK7/xWqCP/MzPo+McP1+b+FdvkEl0/RRPL+QOlOQl877gMN
-         stza99H2rUbK9WqOMf3PZQbbV84cKJDVg2zd8EAuEovNi2B/kdRNIgOErf4Wy1fSZTd0
-         lTcsKdAUoAIUhBX94AT89weIwtbgLIaFUMmAEau5LFrJUyYDStzMGTvB9fYdcVBwym2v
-         bFhtGO+oAsRzBwRBrtj0+sBeL7ggryJzw+DvDGms5okguOCx6J9GBB3Qt5crHh3n7uJ5
-         qJec2gv0MX4WKmacTKayy5gKDquU1AO2sR3Qz4WzEiVNUytLDpEOzLtOIdtDF7iMYLw4
-         aToQ==
-X-Gm-Message-State: AOAM5320eMcraTIPLB5RUw05+pRmm5wnULbVRTfH7VwVxzR5mwYdnARG
-        gkoKWZbnwjKxIWd+VNLAPc5fNTyy9PlQmT3Px5tHtFwNm47+YeS+H5T4dt2wAxQI4njNdL6v0ED
-        jeDwC+KFlYoM/kgMkmcYsZS/Q5J2jaGusUwyk8hnIi8BEqFbQDdaGqe03gE2JuOrQ9lFCOOnKIt
-        xdZ1X4SN8P
-X-Google-Smtp-Source: ABdhPJye+Esymo14Z2xwtGHNQ9n1CSkYLNGj2wYijLkcNEdUBaXei502gYKCHEcHsVQ+nVTZlIKJDA==
-X-Received: by 2002:a62:808b:0:b029:252:eddc:afb0 with SMTP id j133-20020a62808b0000b0290252eddcafb0mr19993691pfd.41.1618830190797;
-        Mon, 19 Apr 2021 04:03:10 -0700 (PDT)
-Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id k13sm11825736pfc.50.2021.04.19.04.03.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 04:03:09 -0700 (PDT)
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=C8UEYYP5OCUY0Q1KBB73kqP9D0Xew4WBhCIPzAICHfI=;
+        b=ncKoVAJQV+0KrpRKdiPiU21janwBkW5ODhe9hzs+p+8XzUB4eGMzV55SIuyCOzBisT
+         APUXEvpPqBhraffQA3/qS8EaJ6WA0mx6jFY/7UE505Kke99R26/k6iWwfHB0j36Iqo+1
+         buiiNvcXee5bjYW3WC89hqJMUhsTkzDcOywOKHAKvPlI56W/s7SKeJSaYEhu/N9JKGV/
+         KYe0Mz8VXoCrN36EZxDjcx30e7bzdZsJe2vfhBJm2MiadZGyTC7a26Cf3lIU3xZ2sWRS
+         aHpofGf4Qm4vfn13ZyVy+kM4yav+WnZ4ygoYEtlzlN6xyPl21wyThCsp4NR34tqMNHL8
+         OxYw==
+X-Gm-Message-State: AOAM532Bma7an1BT0NDcq8H3x9cL/E4NYdBs44AxDokok3n8nWld/+qH
+        dEogl6FjXvBa7nUS5InsK/EPmabO+K+1DR/aWemulA==
+X-Google-Smtp-Source: ABdhPJzXpvi5wibraqs75yA/TBNixXCHO+oVhuDHYC9qWh/b2Wgh9sbiUJg7Kw9LRHe4qs4mJcJjBbqqy4lGrRSD8f8=
+X-Received: by 2002:a05:622a:3c8:: with SMTP id k8mr11418317qtx.101.1618832584404;
+ Mon, 19 Apr 2021 04:43:04 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        steve.hagan@broadcom.com, peter.rivera@broadcom.com,
-        mpi3mr-linuxdrv.pdl@broadcom.com,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        sathya.prakash@broadcom.com
-Subject: [PATCH v3 24/24] mpi3mr: add event handling debug prints
-Date:   Mon, 19 Apr 2021 16:31:56 +0530
-Message-Id: <20210419110156.1786882-25-kashyap.desai@broadcom.com>
-X-Mailer: git-send-email 2.18.1
-In-Reply-To: <20210419110156.1786882-1-kashyap.desai@broadcom.com>
-References: <20210419110156.1786882-1-kashyap.desai@broadcom.com>
+References: <0dda71da-4119-2e40-b8e9-ab2b3ee8e96a@huawei.com>
+In-Reply-To: <0dda71da-4119-2e40-b8e9-ab2b3ee8e96a@huawei.com>
+MIME-Version: 1.0
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQJLbsjCl5KLwsbVPBXkLLulR0kL0qnTQ4gw
+Date:   Mon, 19 Apr 2021 17:13:01 +0530
+Message-ID: <f934ca65fa55345c360c944dd0fc2239@mail.gmail.com>
+Subject: RE: [bug report] scsi host hang when running fio
+To:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Hannes Reinecke <hare@suse.com>
+Cc:     chenxiang <chenxiang66@hisilicon.com>, luojiaxing@huawei.com
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000806d3c05c051467a"
+        boundary="0000000000002b2a8e05c051d595"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000806d3c05c051467a
+--0000000000002b2a8e05c051d595
+Content-Type: text/plain; charset="UTF-8"
 
-Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+> Hi guys,
+>
+> While investigating the performance issue reported by Ming [0], I am
+> seeing
+> this hang in certain scenarios:
+>
+> tivated0KB /s] [0/0/0 iops] [eta 1158048815d:13h:31m:49s] [ 740.499917]
+> rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:ops] [eta
+> 34722d:05h:17m:25s] [ 740.505994] rcu: Tasks blocked on level-1 rcu_node
+> (CPUs 0-15):
+> [ 740.511982] (detected by 64, t=5255 jiffies, g=6105, q=6697) [
+> 740.517703]
+> rcu: All QSes seen, last rcu_preempt kthread activity 0 (4295075897-
+> 4295075897), jiffies_till_next_fqs=1, root ->qsmask 0x1 [ 740.723625] BUG:
+> scheduling while atomic: swapper/64/0/0x00000008 [ 740.729692] Modules
+> linked in:
+> [ 740.732737] CPU: 64 PID: 0 Comm: swapper/64 Tainted: G W 5.12.0-rc7-
+> g7589ed97c1da-dirty #322 [ 740.742432] Hardware name: Huawei TaiShan
+> 2280 V2/BC82AMDC, BIOS
+> 2280-V2 CS V5.B133.01 03/25/2021
+> [ 740.751264] Call trace:
+> [ 740.753699] dump_backtrace+0x0/0x1b0
+> [ 740.757353] show_stack+0x18/0x68
+> [ 740.760654] dump_stack+0xd8/0x134
+> [ 740.764046] __schedule_bug+0x60/0x78
+> [ 740.767694] __schedule+0x620/0x6d8
+> [ 740.771168] schedule_idle+0x20/0x40
+> [ 740.774730] do_idle+0x19c/0x278
+> [ 740.777945] cpu_startup_entry+0x24/0x68 [ 740.781850]
+> secondary_start_kernel+0x178/0x188
+> [ 740.786362] 0x0
+> ^Cbs: 12 (f=12): [r(12)] [0.0% done] [1626MB/0KB/0KB /s] [416K/0/0 iops]
+> [eta
+> 34722d:05h:16m:28s]
+> fio: terminating on signal 2
+>
+> I thought it merited a separate thread.
+>
+> [ 740.723625] BUG: scheduling while atomic: swapper/64/0/0x00000008
+> Looks bad ...
+>
+> The scenario to create seems to be running fio with rw=randread and mq-
+> deadline IO scheduler. And heavily loading the system - running fio on a
+> subset of available CPUs seems to help (recreate).
+>
+> When it occurs, the system becomes totally unresponsive.
+>
+> It could be a LLDD bug, but I am doubtful.
+>
+> Has anyone else seen this or help try to recreate?
 
-Cc: sathya.prakash@broadcom.com
----
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 116 ++++++++++++++++++++++
- drivers/scsi/mpi3mr/mpi3mr_os.c | 164 ++++++++++++++++++++++++++++++++
- 2 files changed, 280 insertions(+)
+John - I have not seen such issue on megaraid_sas driver. Is this something
+to do with CPU lock up ?
+Can you try your test with "rq_affinity=2" ? megaraid_sas driver detect CPU
+lockup (flood of completion on single CPU) and it use irq_poll interface to
+avoid such loop.
+Since you mentioned you noticed issue with hisi_sas v2 without hostwide tag
+I can think of similar stuffs in this case.
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index ee20d63f6061..b8c3ae98e5f3 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -155,6 +155,121 @@ void mpi3mr_repost_sense_buf(struct mpi3mr_ioc *mrioc,
- 	spin_unlock(&mrioc->sbq_lock);
- }
- 
-+
-+static void mpi3mr_print_event_data(struct mpi3mr_ioc *mrioc,
-+	Mpi3EventNotificationReply_t *event_reply)
-+{
-+	char *desc = NULL;
-+	u16 event;
-+
-+	event = event_reply->Event;
-+
-+	switch (event) {
-+	case MPI3_EVENT_LOG_DATA:
-+		desc = "Log Data";
-+		break;
-+	case MPI3_EVENT_CHANGE:
-+		desc = "Event Change";
-+		break;
-+	case MPI3_EVENT_GPIO_INTERRUPT:
-+		desc = "GPIO Interrupt";
-+		break;
-+	case MPI3_EVENT_TEMP_THRESHOLD:
-+		desc = "Temperature Threshold";
-+		break;
-+	case MPI3_EVENT_CABLE_MGMT:
-+		desc = "Cable Management";
-+		break;
-+	case MPI3_EVENT_ENERGY_PACK_CHANGE:
-+		desc = "Energy Pack Change";
-+		break;
-+	case MPI3_EVENT_DEVICE_ADDED:
-+	{
-+		Mpi3DevicePage0_t *event_data =
-+		    (Mpi3DevicePage0_t *)event_reply->EventData;
-+		ioc_info(mrioc, "Device Added: Dev=0x%04x Form=0x%x\n",
-+		    event_data->DevHandle, event_data->DeviceForm);
-+		return;
-+	}
-+	case MPI3_EVENT_DEVICE_INFO_CHANGED:
-+	{
-+		Mpi3DevicePage0_t *event_data =
-+		    (Mpi3DevicePage0_t *)event_reply->EventData;
-+		ioc_info(mrioc, "Device Info Changed: Dev=0x%04x Form=0x%x\n",
-+		    event_data->DevHandle, event_data->DeviceForm);
-+		return;
-+	}
-+	case MPI3_EVENT_DEVICE_STATUS_CHANGE:
-+	{
-+		Mpi3EventDataDeviceStatusChange_t *event_data =
-+		    (Mpi3EventDataDeviceStatusChange_t *)event_reply->EventData;
-+		ioc_info(mrioc, "Device Status Change: Dev=0x%04x RC=0x%x\n",
-+		    event_data->DevHandle, event_data->ReasonCode);
-+		return;
-+	}
-+	case MPI3_EVENT_SAS_DISCOVERY:
-+	{
-+		Mpi3EventDataSasDiscovery_t *event_data =
-+		    (Mpi3EventDataSasDiscovery_t *)event_reply->EventData;
-+		ioc_info(mrioc, "SAS Discovery: (%s) status (0x%08x)\n",
-+		    (event_data->ReasonCode == MPI3_EVENT_SAS_DISC_RC_STARTED) ?
-+		    "start" : "stop",
-+		    le32_to_cpu(event_data->DiscoveryStatus));
-+		return;
-+	}
-+	case MPI3_EVENT_SAS_BROADCAST_PRIMITIVE:
-+		desc = "SAS Broadcast Primitive";
-+		break;
-+	case MPI3_EVENT_SAS_NOTIFY_PRIMITIVE:
-+		desc = "SAS Notify Primitive";
-+		break;
-+	case MPI3_EVENT_SAS_INIT_DEVICE_STATUS_CHANGE:
-+		desc = "SAS Init Device Status Change";
-+		break;
-+	case MPI3_EVENT_SAS_INIT_TABLE_OVERFLOW:
-+		desc = "SAS Init Table Overflow";
-+		break;
-+	case MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
-+		desc = "SAS Topology Change List";
-+		break;
-+	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
-+		desc = "Enclosure Device Status Change";
-+		break;
-+	case MPI3_EVENT_HARD_RESET_RECEIVED:
-+		desc = "Hard Reset Received";
-+		break;
-+	case MPI3_EVENT_SAS_PHY_COUNTER:
-+		desc = "SAS PHY Counter";
-+		break;
-+	case MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR:
-+		desc = "SAS Device Discovery Error";
-+		break;
-+	case MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
-+		desc = "PCIE Topology Change List";
-+		break;
-+	case MPI3_EVENT_PCIE_ENUMERATION:
-+	{
-+		Mpi3EventDataPcieEnumeration_t *event_data =
-+		    (Mpi3EventDataPcieEnumeration_t *)event_reply->EventData;
-+		ioc_info(mrioc, "PCIE Enumeration: (%s)",
-+		    (event_data->ReasonCode ==
-+		    MPI3_EVENT_PCIE_ENUM_RC_STARTED) ? "start" : "stop");
-+		if (event_data->EnumerationStatus)
-+			ioc_info(mrioc, "enumeration_status(0x%08x)\n",
-+			    le32_to_cpu(event_data->EnumerationStatus));
-+		return;
-+	}
-+	case MPI3_EVENT_PREPARE_FOR_RESET:
-+		desc = "Prepare For Reset";
-+		break;
-+	}
-+
-+	if (!desc)
-+		return;
-+
-+	ioc_info(mrioc, "%s\n", desc);
-+}
-+
- static void mpi3mr_handle_events(struct mpi3mr_ioc *mrioc,
- 	Mpi3DefaultReply_t *def_reply)
- {
-@@ -162,6 +277,7 @@ static void mpi3mr_handle_events(struct mpi3mr_ioc *mrioc,
- 	    (Mpi3EventNotificationReply_t *)def_reply;
- 
- 	mrioc->change_count = le16_to_cpu(event_reply->IOCChangeCount);
-+	mpi3mr_print_event_data(mrioc, event_reply);
- 	mpi3mr_os_handle_events(mrioc, event_reply);
- }
- 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 9a189fb32ab0..2cef7403f941 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -1005,6 +1005,85 @@ static void mpi3mr_devinfochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 
- }
- 
-+/**
-+ * mpi3mr_sastopochg_evt_debug - SASTopoChange details
-+ * @mrioc: Adapter instance reference
-+ * @event_data: SAS topology change list event data
-+ *
-+ * Prints information about the SAS topology change event.
-+ *
-+ * Return: Nothing.
-+ */
-+static void
-+mpi3mr_sastopochg_evt_debug(struct mpi3mr_ioc *mrioc,
-+	Mpi3EventDataSasTopologyChangeList_t *event_data)
-+{
-+	int i;
-+	u16 handle;
-+	u8 reason_code, phy_number;
-+	char *status_str = NULL;
-+	u8 link_rate, prev_link_rate;
-+
-+	switch (event_data->ExpStatus) {
-+	case MPI3_EVENT_SAS_TOPO_ES_NOT_RESPONDING:
-+		status_str = "remove";
-+		break;
-+	case MPI3_EVENT_SAS_TOPO_ES_RESPONDING:
-+		status_str =  "responding";
-+		break;
-+	case MPI3_EVENT_SAS_TOPO_ES_DELAY_NOT_RESPONDING:
-+		status_str = "remove delay";
-+		break;
-+	case MPI3_EVENT_SAS_TOPO_ES_NO_EXPANDER:
-+		status_str = "direct attached";
-+		break;
-+	default:
-+		status_str = "unknown status";
-+		break;
-+	}
-+	ioc_info(mrioc, "%s :sas topology change: (%s)\n",
-+	    __func__, status_str);
-+	ioc_info(mrioc,
-+	    "%s :\texpander_handle(0x%04x), enclosure_handle(0x%04x) start_phy(%02d), num_entries(%d)\n",
-+	    __func__, le16_to_cpu(event_data->ExpanderDevHandle),
-+	    le16_to_cpu(event_data->EnclosureHandle),
-+	    event_data->StartPhyNum, event_data->NumEntries);
-+	for (i = 0; i < event_data->NumEntries; i++) {
-+		handle = le16_to_cpu(event_data->PhyEntry[i].AttachedDevHandle);
-+		if (!handle)
-+			continue;
-+		phy_number = event_data->StartPhyNum + i;
-+		reason_code = event_data->PhyEntry[i].Status &
-+		    MPI3_EVENT_SAS_TOPO_PHY_RC_MASK;
-+		switch (reason_code) {
-+		case MPI3_EVENT_SAS_TOPO_PHY_RC_TARG_NOT_RESPONDING:
-+			status_str = "target remove";
-+			break;
-+		case MPI3_EVENT_SAS_TOPO_PHY_RC_DELAY_NOT_RESPONDING:
-+			status_str = "delay target remove";
-+			break;
-+		case MPI3_EVENT_SAS_TOPO_PHY_RC_PHY_CHANGED:
-+			status_str = "link status change";
-+			break;
-+		case MPI3_EVENT_SAS_TOPO_PHY_RC_NO_CHANGE:
-+			status_str = "link status no change";
-+			break;
-+		case MPI3_EVENT_SAS_TOPO_PHY_RC_RESPONDING:
-+			status_str = "target responding";
-+			break;
-+		default:
-+			status_str = "unknown";
-+			break;
-+		}
-+		link_rate = event_data->PhyEntry[i].LinkRate >> 4;
-+		prev_link_rate = event_data->PhyEntry[i].LinkRate & 0xF;
-+		ioc_info(mrioc,
-+		    "%s :\tphy(%02d), attached_handle(0x%04x): %s: link rate: new(0x%02x), old(0x%02x)\n",
-+		    __func__, phy_number, handle, status_str, link_rate,
-+		    prev_link_rate);
-+	}
-+}
-+
- /**
-  * mpi3mr_sastopochg_evt_bh - SASTopologyChange evt bottomhalf
-  * @mrioc: Adapter instance reference
-@@ -1026,6 +1105,8 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 	u8 reason_code;
- 	struct mpi3mr_tgt_dev *tgtdev = NULL;
- 
-+	mpi3mr_sastopochg_evt_debug(mrioc, event_data);
-+
- 	for (i = 0; i < event_data->NumEntries; i++) {
- 		handle = le16_to_cpu(event_data->PhyEntry[i].AttachedDevHandle);
- 		if (!handle)
-@@ -1052,6 +1133,87 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 	}
- }
- 
-+/**
-+ * mpi3mr_pcietopochg_evt_debug - PCIeTopoChange details
-+ * @mrioc: Adapter instance reference
-+ * @event_data: PCIe topology change list event data
-+ *
-+ * Prints information about the PCIe topology change event.
-+ *
-+ * Return: Nothing.
-+ */
-+static void
-+mpi3mr_pcietopochg_evt_debug(struct mpi3mr_ioc *mrioc,
-+	Mpi3EventDataPcieTopologyChangeList_t *event_data)
-+{
-+	int i;
-+	u16 handle;
-+	u16 reason_code;
-+	u8 port_number;
-+	char *status_str = NULL;
-+	u8 link_rate, prev_link_rate;
-+
-+	switch (event_data->SwitchStatus) {
-+	case MPI3_EVENT_PCIE_TOPO_SS_NOT_RESPONDING:
-+		status_str = "remove";
-+		break;
-+	case MPI3_EVENT_PCIE_TOPO_SS_RESPONDING:
-+		status_str =  "responding";
-+		break;
-+	case MPI3_EVENT_PCIE_TOPO_SS_DELAY_NOT_RESPONDING:
-+		status_str = "remove delay";
-+		break;
-+	case MPI3_EVENT_PCIE_TOPO_SS_NO_PCIE_SWITCH:
-+		status_str = "direct attached";
-+		break;
-+	default:
-+		status_str = "unknown status";
-+		break;
-+	}
-+	ioc_info(mrioc, "%s :pcie topology change: (%s)\n",
-+	    __func__, status_str);
-+	ioc_info(mrioc,
-+	    "%s :\tswitch_handle(0x%04x), enclosure_handle(0x%04x) start_port(%02d), num_entries(%d)\n",
-+	    __func__, le16_to_cpu(event_data->SwitchDevHandle),
-+	    le16_to_cpu(event_data->EnclosureHandle),
-+	    event_data->StartPortNum, event_data->NumEntries);
-+	for (i = 0; i < event_data->NumEntries; i++) {
-+		handle =
-+		    le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
-+		if (!handle)
-+			continue;
-+		port_number = event_data->StartPortNum + i;
-+		reason_code = event_data->PortEntry[i].PortStatus;
-+		switch (reason_code) {
-+		case MPI3_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
-+			status_str = "target remove";
-+			break;
-+		case MPI3_EVENT_PCIE_TOPO_PS_DELAY_NOT_RESPONDING:
-+			status_str = "delay target remove";
-+			break;
-+		case MPI3_EVENT_PCIE_TOPO_PS_PORT_CHANGED:
-+			status_str = "link status change";
-+			break;
-+		case MPI3_EVENT_PCIE_TOPO_PS_NO_CHANGE:
-+			status_str = "link status no change";
-+			break;
-+		case MPI3_EVENT_PCIE_TOPO_PS_RESPONDING:
-+			status_str = "target responding";
-+			break;
-+		default:
-+			status_str = "unknown";
-+			break;
-+		}
-+		link_rate = event_data->PortEntry[i].CurrentPortInfo &
-+		    MPI3_EVENT_PCIE_TOPO_PI_RATE_MASK;
-+		prev_link_rate = event_data->PortEntry[i].PreviousPortInfo &
-+		    MPI3_EVENT_PCIE_TOPO_PI_RATE_MASK;
-+		ioc_info(mrioc,
-+		    "%s :\tport(%02d), attached_handle(0x%04x): %s: link rate: new(0x%02x), old(0x%02x)\n",
-+		    __func__, port_number, handle, status_str, link_rate,
-+		    prev_link_rate);
-+	}
-+}
- /**
-  * mpi3mr_pcietopochg_evt_bh - PCIeTopologyChange evt bottomhalf
-  * @mrioc: Adapter instance reference
-@@ -1073,6 +1235,8 @@ static void mpi3mr_pcietopochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 	u8 reason_code;
- 	struct mpi3mr_tgt_dev *tgtdev = NULL;
- 
-+	mpi3mr_pcietopochg_evt_debug(mrioc, event_data);
-+
- 	for (i = 0; i < event_data->NumEntries; i++) {
- 		handle =
- 		    le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
--- 
-2.18.1
+How cpus to irq affinity settled in your case. ? Is it 1-1 mapping ?
 
+Kashyap
 
---000000000000806d3c05c051467a
+>
+> scsi debug or null_blk don't seem to load the system heavily enough to
+> recreate.
+>
+> I have seen it on 5.11 also. I see it on hisi_sas v2 and v3 hw drivers,
+> And I don't
+> think it's related to hostwide tags, as for hisi_sas v2 hw driver, I unset
+> that flag
+> and can still see it.
+>
+> Thanks,
+> John
+>
+> [0]
+> https://lore.kernel.org/linux-scsi/89ebc37c-21d6-c57e-4267-
+> cac49a3e5953@huawei.com/T/#t
+
+--0000000000002b2a8e05c051d595
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -490,13 +221,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHEoNZLNruWDksGBY4ok8CIMymGR
-TAILT8V75XfqFdmHMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDQxOTExMDMxMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIILknjHaE34fvKXTYKNrCuYu1E7O
+KRxr3KnW/BpwpZHyMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDQxOTExNDMwNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQB1N4QBB84FHZB2Bl6PFfxkd6SqnyYR01XtGTT9Q1jjN6I0
-utfFATyNPta1kjHYQXmH3vaDbOhlFf1g+dwzfV/rJFBBI9WhmOhm2xDq9nyGqFGGy/3dF+FGhCPz
-luDa5YStMbPMoIRNARPzLrVdPeMZwbRs1GHMmG9Ye4tHxhK439d/I7n6h5YB5g705pJgIup26INh
-+DvzfRRt3U0FKzvftJt2d7JAAVhJt7PNoHu64gIC4TqxYwCVSO+BXLpYjVx3ReWQIQHmbhgCh73c
-5eApXKUMdR1aDqGT5zPkhDcWbSnvsgRlRhUY1JtdjZvw4jHNiR/KmV6v9gjWAGo+WZYb
---000000000000806d3c05c051467a--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQC1hvj+SO1b2Jm3WyfeolDGEB9OsWvgg/OcjUKSiL94lwxG
+rAW6U/d5QonoKsZeO0wUbEw+JuiHCY0cGDgE2ReKARHi+3uge82czT9rBq14PMrQ11zaRMfog0kv
+AaCpkmF2w8Ov8lY+Uf98QP6bz21qswjpTlGWWs8JAa4/m1VaZXTuY2fIiDj9xGgY3VTlQvZMN279
+TZttqgm6T51ue7BooqEL92qOIpDVes7uK+RNFk6Ggeq/fHEkDkv0yypgABkndngqFhlmHBz2AmtG
++etHhY9+CnnsXQleJM8YO0ob+yA+ZdNbLzzVnxynigAwTYrFb/lBNJpA18KL31Fq7nxd
+--0000000000002b2a8e05c051d595--
