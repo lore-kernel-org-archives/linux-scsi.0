@@ -2,110 +2,148 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09C0BC43462
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 13:55:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC0C5C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 14:31:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C836261077
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 13:55:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 993DF61245
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 14:31:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240983AbhDSN4J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 09:56:09 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:57761 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S240772AbhDSNz5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Apr 2021 09:55:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618840527;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=WxdqbfoBJXaYxfD6rImyDUvIjZiF5Q3ecjdpEO3HnrU=;
-        b=ZCHwSLBVX90Q/e/qV9ttAFNtuYxFwbdNJVZhvxLbQYTItas5K5T5xOXJQhU1avUdU4RVl1
-        Vo94a5AnCpCMhwgr64VB7mCNWn00RlPzzxVjYi1vFtVH6O0xv4NFfWh4emctUvdzeE6R1X
-        ztRC4UAyjUAy2XdnBHrLyotupxr+JVI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-302-OjBtjruXOaaknhPs7HO74A-1; Mon, 19 Apr 2021 09:55:26 -0400
-X-MC-Unique: OjBtjruXOaaknhPs7HO74A-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C60D687A83C;
-        Mon, 19 Apr 2021 13:55:24 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2FB8E5D9CA;
-        Mon, 19 Apr 2021 13:55:18 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 13JDtH4F018187;
-        Mon, 19 Apr 2021 09:55:17 -0400
-Received: from localhost (mpatocka@localhost)
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 13JDtHQu018179;
-        Mon, 19 Apr 2021 09:55:17 -0400
-X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
-Date:   Mon, 19 Apr 2021 09:55:17 -0400 (EDT)
-From:   Mikulas Patocka <mpatocka@redhat.com>
-X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>
-cc:     "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        Christoph Hellwig <hch@lst.de>,
+        id S239891AbhDSOcN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 10:32:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46980 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232302AbhDSOcM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 10:32:12 -0400
+Received: from mail-wm1-x32b.google.com (mail-wm1-x32b.google.com [IPv6:2a00:1450:4864:20::32b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4889C06174A;
+        Mon, 19 Apr 2021 07:31:42 -0700 (PDT)
+Received: by mail-wm1-x32b.google.com with SMTP id f195-20020a1c1fcc0000b029012eb88126d7so8218984wmf.3;
+        Mon, 19 Apr 2021 07:31:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=BukaGkqzntQMa+c7UOYXuyLPXisdJBi9+eUzsglGXps=;
+        b=OrRBCi5shSKBHUKdpnUhHjKa/wnl9rM6aPVliawCymCmBIHfeW28CJJkuCH29sj7e4
+         S6hA7BjFCKqlbZhqzWZ/3my9d0OzMoF1ARfV63XALb0Oiuj0DbHg8EVXuTtrwX9rCnDo
+         2qFk+iJVROw76nztDAZ4p8DfbzxK9jONKc36l5dUTTPLVHwPa2c8vN+qR7dTIPVIeg6Q
+         1fBAU77gXDjcXvIGJxtku4y2/0+8B5GO7Q4KViZkk8N5PkmdstacMQKAm2b12ECO73e4
+         SR8aRxXRX0Wl8CgYCiiJ9NcAKwjbDzPvViZdsQZRSpSNHYwhU817Q3OAqm/MTsO8pR2P
+         dQfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=BukaGkqzntQMa+c7UOYXuyLPXisdJBi9+eUzsglGXps=;
+        b=doqr48ZoXNfa4oD7sbRZn78PkfxipKrXrVd+F2mViHKcBfFZ86mLaPeCvjkkoNeZPR
+         88pdcrV3ziI8LlAfAe44OJDVeHs4Aiv4aqBpKjH8Cr2chbujanQO6S9TkmpNjvWwkqrp
+         24jCZEsOxq+OuqPVI604QkIWoHVSkn7fuxi8mYScr2XyBpJ7PHbQgqsxBrqUjIBeThsB
+         3C6NueggQZM4fWmdA0CuZ0LC5npZypisBeLBPgMpkKXLowFvZv72EwLd7CBv7NyFA14V
+         U51JbFb4sjVLqy3BYM4kl8kkF0HihPbXwdOZdCk6pJDphBEEoAHSVjuCwZkz+DCYRD1a
+         VAiw==
+X-Gm-Message-State: AOAM5321Z/9ry0M5e0yKDOeFFZFgMX7HHVEDjCNJHbJbyeTsQFHQ1GKG
+        LMVcNZlOLH84jPTMxPdlR5k=
+X-Google-Smtp-Source: ABdhPJyXzJCtNjiK/RNOQVsENTX2/B34lzG8uvXlRcKqHCUuTavrzJjbLayUoY/kcz51nLnQH0BiPQ==
+X-Received: by 2002:a05:600c:4ed1:: with SMTP id g17mr21963702wmq.67.1618842701452;
+        Mon, 19 Apr 2021 07:31:41 -0700 (PDT)
+Received: from [192.168.2.27] (39.35.broadband4.iol.cz. [85.71.35.39])
+        by smtp.gmail.com with ESMTPSA id x17sm19334170wmi.46.2021.04.19.07.31.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 19 Apr 2021 07:31:40 -0700 (PDT)
+Subject: Re: [dm-devel] [PATCH v2 0/3] Fix dm-crypt zoned block device support
+To:     Mikulas Patocka <mpatocka@redhat.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>
+Cc:     Jens Axboe <axboe@kernel.dk>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Milan Broz <mbroz@redhat.com>
-Subject: Re: [dm-devel] [PATCH v2 0/3] Fix dm-crypt zoned block device
- support
-In-Reply-To: <BL0PR04MB65147D94E7E30C3E1063A282E7499@BL0PR04MB6514.namprd04.prod.outlook.com>
-Message-ID: <alpine.LRH.2.02.2104190951070.17565@file01.intranet.prod.int.rdu2.redhat.com>
-References: <20210417023323.852530-1-damien.lemoal@wdc.com> <alpine.LRH.2.02.2104190840310.9677@file01.intranet.prod.int.rdu2.redhat.com> <BL0PR04MB65147D94E7E30C3E1063A282E7499@BL0PR04MB6514.namprd04.prod.outlook.com>
-User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
+        Christoph Hellwig <hch@lst.de>
+References: <20210417023323.852530-1-damien.lemoal@wdc.com>
+ <alpine.LRH.2.02.2104190840310.9677@file01.intranet.prod.int.rdu2.redhat.com>
+ <BL0PR04MB65147D94E7E30C3E1063A282E7499@BL0PR04MB6514.namprd04.prod.outlook.com>
+ <alpine.LRH.2.02.2104190951070.17565@file01.intranet.prod.int.rdu2.redhat.com>
+From:   Milan Broz <gmazyland@gmail.com>
+Message-ID: <896ab66c-525a-749f-bf74-42299e028d77@gmail.com>
+Date:   Mon, 19 Apr 2021 16:31:39 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.0
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <alpine.LRH.2.02.2104190951070.17565@file01.intranet.prod.int.rdu2.redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On Mon, 19 Apr 2021, Damien Le Moal wrote:
-
-> > I would say that it is incompatible with all dm targets - even the linear 
-> > target is changing the sector number and so it may redirect the write 
-> > outside of the range specified in dm-table and cause corruption.
+On 19/04/2021 15:55, Mikulas Patocka wrote:
 > 
-> DM remapping of BIO sectors is zone compatible because target entries must be
-> zone aligned. In the case of zone append, the BIO sector always point to the
-> start sector of the target zone. DM sector remapping will remap that to another
-> zone start as all zones are the same size. No issue here. We extensively use
-> dm-linear for various test environment to reduce the size of the device tested
-> (to speed up tests). I am confident there are no problems there.
 > 
-> > Instead of complicating device mapper with imperfect support, I would just 
-> > disable REQ_OP_ZONE_APPEND on device mapper at all.
+> On Mon, 19 Apr 2021, Damien Le Moal wrote:
 > 
-> That was my initial approach, but for dm-crypt only since other targets that
-> support zoned devices are fine. However, this breaks zoned block device
-> requirement that zone append be supported so that users are presented with a
-> uniform interface for different devices. So while simple to do, disabling zone
-> append is far from ideal.
+>>> I would say that it is incompatible with all dm targets - even the linear 
+>>> target is changing the sector number and so it may redirect the write 
+>>> outside of the range specified in dm-table and cause corruption.
+>>
+>> DM remapping of BIO sectors is zone compatible because target entries must be
+>> zone aligned. In the case of zone append, the BIO sector always point to the
+>> start sector of the target zone. DM sector remapping will remap that to another
+>> zone start as all zones are the same size. No issue here. We extensively use
+>> dm-linear for various test environment to reduce the size of the device tested
+>> (to speed up tests). I am confident there are no problems there.
+>>
+>>> Instead of complicating device mapper with imperfect support, I would just 
+>>> disable REQ_OP_ZONE_APPEND on device mapper at all.
+>>
+>> That was my initial approach, but for dm-crypt only since other targets that
+>> support zoned devices are fine. However, this breaks zoned block device
+>> requirement that zone append be supported so that users are presented with a
+>> uniform interface for different devices. So while simple to do, disabling zone
+>> append is far from ideal.
+> 
+> So, we could enable it for the linear target and disable for all other 
+> targets?
+> 
+> I talked with Milan about it and he doesn't want to add more bloat to the 
+> crypt target. I agree with him.
 
-So, we could enable it for the linear target and disable for all other 
-targets?
+This is all fine even for dm-crypt IF the tweaking is unique for the sector position
+(it can be something just derived from the sector offset in principle).
 
-I talked with Milan about it and he doesn't want to add more bloat to the 
-crypt target. I agree with him.
+For FDE, we must never allow writing sectors to different positions with the same
+tweak (IV) and key - there are real attacks based on this issue.
 
-Mikulas
+So zones can do any recalculation and reshuffling it wants if sector tweak
+in dm-crypt is unique.
+(Another solution would be to use different keys for different areas, but that
+is not possible with dm-crypt or FDE in general, but fs encryption can do that.)
 
+If you want dm-crypt to support zones properly, there is a need for emulation
+of the real sector offset - because that is what IV expects now.
+
+And I think such emulation should be in DM core, not in dm-crypt itself, because other
+targets can need the same functionality (I guess that dm-integrity journal
+has a problem with that already, Mikulas will know more).
+
+For online reencryption we also use multiple targets in the table that dynamically moves
+(linear combined with dm-crypt), so dm-crypt must support all commands as
+dm-linear to make this work.
+
+I hope I understand the problem correctly; all I want is to so avoid patching
+the wrong place (dmcrypt crypto) because that problem will appear elsewhere later.
+Also for security it would be nice to not add exceptions to encryption
+code - it is always recipe for disaster.
+
+Milan
