@@ -2,73 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89BD6C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 16:01:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFD05C433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 16:10:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4FF7061285
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 16:01:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98ACA61369
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 16:10:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242031AbhDSQCW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 12:02:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38756 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242016AbhDSQCT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 12:02:19 -0400
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0C5EEC06174A;
-        Mon, 19 Apr 2021 09:01:49 -0700 (PDT)
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 469F992009D; Mon, 19 Apr 2021 18:01:47 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 435F492009C;
-        Mon, 19 Apr 2021 18:01:47 +0200 (CEST)
-Date:   Mon, 19 Apr 2021 18:01:47 +0200 (CEST)
-From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
-To:     Khalid Aziz <khalid@gonehiking.org>, Ondrej Zary <linux@zary.sk>
-cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/5] Bring the BusLogic host bus adapter driver up to
- Y2021
-In-Reply-To: <e3fe98a2-c480-e9bf-67b3-7f51b87975bd@gonehiking.org>
-Message-ID: <alpine.DEB.2.21.2104191747010.44318@angie.orcam.me.uk>
-References: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk> <a099f7f8-9601-fd1c-03a4-93587e7276e6@gonehiking.org> <alpine.DEB.2.21.2104162157360.44318@angie.orcam.me.uk> <202104182221.21533.linux@zary.sk>
- <e3fe98a2-c480-e9bf-67b3-7f51b87975bd@gonehiking.org>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        id S233163AbhDSQL1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 12:11:27 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:16481 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232960AbhDSQL1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 12:11:27 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4FPBZ900Z1zrdkk;
+        Tue, 20 Apr 2021 00:08:32 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
+ 14.3.498.0; Tue, 20 Apr 2021 00:10:43 +0800
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kashyap.desai@broadcom.com>, <ming.lei@redhat.com>,
+        <dgilbert@interlog.com>, John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: core: Cap initial sdev queue depth at shost.can_queue
+Date:   Tue, 20 Apr 2021 00:06:24 +0800
+Message-ID: <1618848384-204144-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 19 Apr 2021, Khalid Aziz wrote:
+Function sdev_store_queue_depth() enforces that the sdev queue depth cannot
+exceed shost.can_queue.
 
-> On 4/18/21 2:21 PM, Ondrej Zary wrote:
-> > 
-> > Found the 3000763 document here:
-> > https://doc.lagout.org/science/0_Computer Science/0_Computer History/old-hardware/buslogic/3000763_PCI_EISA_Wide_SCSI_Tech_Ref_Dec94.pdf
-> > 
-> > There's also 3002593 there:
-> > https://doc.lagout.org/science/0_Computer Science/0_Computer History/old-hardware/buslogic/
-> > 
-> 
-> Thanks!!!
+However, the LLDD may still set cmd_per_lun > can_queue, which leads to an
+initial sdev queue depth greater than can_queue.
 
- Ondrej: Thanks a lot indeed!  These documents seem to have the essential 
-interface details all covered, except for Fast-20 SCSI adapters, which I 
-guess are a minor modification from the software's point of view.
+Stop this happened by capping initial sdev queue depth at can_queue.
 
- Khalid: I have skimmed over these documents and I infer 24-bit addressing 
-can be verified with any MultiMaster adapter, including ones that do have 
-32-bit addressing implemented, by using the legacy Initialize Mailbox HBA 
-command.  That could be used to stop Christoph's recent changes for older 
-adapter support removal and replace them with proper fixes for whatever 
-has become broken.  Is that something you'd be willing as the driver's 
-maintainer to look into, or shall I?
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+Topic originally discussed at:
+https://lore.kernel.org/linux-scsi/85dec8eb-8eab-c7d6-b0fb-5622747c5499@interlog.com/T/#m5663d0cac657d843b93d0c9a2374f98fc04384b9
 
-  Maciej
+Last idea there was to error/warn in scsi_add_host() for cmd_per_lun >
+can_queue. However, such a shost driver could still configure the sdev
+queue depth to be sound value at .slave_configure callback, so now thinking
+the orig patch better.
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 9f1b7f3c650a..8de2f830bcdc 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -277,7 +277,11 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	WARN_ON_ONCE(!blk_get_queue(sdev->request_queue));
+ 	sdev->request_queue->queuedata = sdev;
+ 
+-	depth = sdev->host->cmd_per_lun ?: 1;
++	if (sdev->host->cmd_per_lun)
++		depth = min_t(unsigned int, sdev->host->cmd_per_lun,
++			      sdev->host->can_queue);
++	else
++		depth = 1;
+ 
+ 	/*
+ 	 * Use .can_queue as budget map's depth because we have to
+-- 
+2.26.2
+
