@@ -8,52 +8,52 @@ X-Spam-Status: No, score=-18.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3EF4C433B4
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:03:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9EE8C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:03:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7856A61246
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:03:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABD3A613AB
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 11:03:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238071AbhDSLDl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 07:03:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56402 "EHLO
+        id S238267AbhDSLDt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 07:03:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238580AbhDSLDf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 07:03:35 -0400
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA0E3C06174A
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:03:04 -0700 (PDT)
-Received: by mail-pj1-x1030.google.com with SMTP id e8-20020a17090a7288b029014e51f5a6baso13138138pjg.2
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:03:04 -0700 (PDT)
+        with ESMTP id S238135AbhDSLDi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 07:03:38 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0AF5C061760
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:03:07 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id b17so24006257pgh.7
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 04:03:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=h0+l23vsgfigLhdVmU1L4CywDGaqL8QE5B5iUKfHbb4=;
-        b=LZfxC9YJoBispuvQtHtJT7OyoI6sVvPNBLfLJ4lwl9aR45u2Wj6yoGwlwoyy5r+b6Z
-         4FkkEkTHljzhwdF4AK9dAx3VzdADnyoP2aYXdFpg4kE5+6jVUfAFxOllXRyNrUpg1oi/
-         j1cekUAyKd19w9XPv+H0LQ8pMblcyJWoqPRAo=
+        bh=ipwE957oFJA1alXNGU2HVhOT4Sn/jgwgMsF41Llt6to=;
+        b=DmS5VPZG+KlYcu5rHIkQldeGh7NIolnV4pdBpusg6ra/imFDRx2iYsBOvjJAHQhs6S
+         +yYo7EVcpT37WjCbefesZA5rbJp9OrfhmYrKLjVODTVp8sAPchyXK2ryPFQlBzAQXMiE
+         E0vMnisyTXIFo8csgYu1f3Dyc9hb/ONZfGmiM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=h0+l23vsgfigLhdVmU1L4CywDGaqL8QE5B5iUKfHbb4=;
-        b=EkYb1Z7yq3vPWQ9fnkOCgZGUnL84eVzwSCumcuDG+BCLsaXjYN/JYKqEmanuM73RCx
-         vrRvqi8mzlTdn1K/A3mzUz7WorwCNcfg4Vc4SdH6JcQNhCgBaved81l5iu3WK1amMO7k
-         bNzbtBTshAVJDihiOfaZjXmGdn58+zfLfstfV5an7PnKnkeTne65kzwj+VGYoGnWRLxn
-         FWRQZyJGy9as9D8oVxOBbG+s8a177tv0u0i1FQfTngVfEQOyiMcU1atwbptuUDRMheCY
-         4Pi0kSLEDv2yL3OqsnM4tR3g7kH4b722176l+0mSJqLJLweevt4MO4nclk65soR7cEWm
-         FQjQ==
-X-Gm-Message-State: AOAM530oxTktBlqUGVe5tCNJYkQMJ/T07xdGOe50qnNZs2AR5TE/wWoB
-        /Iwt4kL55wiOlkxMbJ4c+i3C+jP7Yg0PmIcEMXocRKyM/ojYdZ9L/WFn5m6Yfn1fR8RVB58NJLO
-        yMX35DrZ6kRjL2erqBnjY1ih3wDOaFBcp9dbfrkbRKUslQwGpblfGlPrPMWMpwSCyDpn6BMLycB
-        I1vaCXbWeT
-X-Google-Smtp-Source: ABdhPJwMsKJt2p84pC+1pfN3wcY3wGxphUBNGOw96PxmiPymz1t4wtTfuHQJUhVKwA+gl5a1EE6L3A==
-X-Received: by 2002:a17:902:8c94:b029:ec:9762:2e13 with SMTP id t20-20020a1709028c94b02900ec97622e13mr9092393plo.83.1618830183966;
-        Mon, 19 Apr 2021 04:03:03 -0700 (PDT)
+        bh=ipwE957oFJA1alXNGU2HVhOT4Sn/jgwgMsF41Llt6to=;
+        b=OIlQ/tvpkW1XFEavZlf/i+yWYInffMaEaw5IbxGqyWQPy+uIrin7E6z4HXwYjVsPYW
+         fpksHlftPVnnDCaMnOVwTjJ6u+9foqOdUCQPyPKcV2DJwb0dRmdBOAiV9VpRhrrqzoIV
+         dQN1jcn+EFO5b1WoWVb6FGop8dOML8QA8U6z14cu0iaQixoidgfys/95Ymp/VmCGgPE1
+         wScFT43YA6lMPZBC+zJYpQbnyxJjRmY8X+fd3wAk67F8ru8bMhfKKipSeMsuUxoNWPEt
+         SSlUCLb14Hnn6nAME1BuhMn1segDiGD42U3s4MQM1vHdH6eC5NtBQlruuAZWFQ2WLTcJ
+         bmew==
+X-Gm-Message-State: AOAM530x+t9WwI5O3+MajUbcQnFqwZHobiMmngIVCHJtLLox7Cus6HXS
+        55jXKQNhewV26V/WtYJpBQ+K+LMvwZFClbmRAirx0UcKJt1tLCKx1DIkbCL83ZHihmARisf8jgN
+        82Yd5eVP1RsmqQTrBw7+5GLs78+FkIrRigz3kmhbJSCh++3rdk8oWtaMHRN+NCoBnX4yTTBlOyg
+        ItvTXjGdi7
+X-Google-Smtp-Source: ABdhPJyN9zrExJymlHT2O8/jFJxaS4CgUl33qtaVTQ0vdgbSABHjjmzqNiLzGNP7SG2Ee1mDHs/vJw==
+X-Received: by 2002:a62:187:0:b029:241:fc67:d41f with SMTP id 129-20020a6201870000b0290241fc67d41fmr19269893pfb.55.1618830186884;
+        Mon, 19 Apr 2021 04:03:06 -0700 (PDT)
 Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id k13sm11825736pfc.50.2021.04.19.04.03.01
+        by smtp.gmail.com with ESMTPSA id k13sm11825736pfc.50.2021.04.19.04.03.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 04:03:03 -0700 (PDT)
+        Mon, 19 Apr 2021 04:03:06 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -61,28 +61,19 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: [PATCH v3 22/24] mpi3mr: add support of DSN secure fw check
-Date:   Mon, 19 Apr 2021 16:31:54 +0530
-Message-Id: <20210419110156.1786882-23-kashyap.desai@broadcom.com>
+Subject: [PATCH v3 23/24] mpi3mr: add eedp dif dix support
+Date:   Mon, 19 Apr 2021 16:31:55 +0530
+Message-Id: <20210419110156.1786882-24-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210419110156.1786882-1-kashyap.desai@broadcom.com>
 References: <20210419110156.1786882-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000001800f405c05146e4"
+        boundary="000000000000461d8d05c0514645"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000001800f405c05146e4
-
-Read PCI_EXT_CAP_ID_DSN to know security status.
-
-Driver will throw an warning message when a non-secure type controller
-is detected. Purpose of this interface is to avoid interacting with
-any firmware which is not secured/signed by Broadcom.
-Any tampering on Firmware component will be detected by hardware
-and it will be communicated to the driver to avoid any further
-interaction with that component.
+--000000000000461d8d05c0514645
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
@@ -90,147 +81,505 @@ Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
 Cc: sathya.prakash@broadcom.com
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  9 ++++
- drivers/scsi/mpi3mr/mpi3mr_os.c | 80 +++++++++++++++++++++++++++++++++
- 2 files changed, 89 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr.h    |   7 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |   7 +
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 303 +++++++++++++++++++++++++++++++-
+ 3 files changed, 311 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 505df0e7b852..db9cb11db3bf 100644
+index db9cb11db3bf..6e5d83f8685a 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -149,6 +149,15 @@ extern struct list_head mrioc_list;
- #define MPI3MR_IRQ_POLL_SLEEP			2
- #define MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT		8
+@@ -118,6 +118,7 @@ extern struct list_head mrioc_list;
+ #define MPI3MR_SENSEBUF_SZ	256
+ #define MPI3MR_SENSEBUF_FACTOR	3
+ #define MPI3MR_CHAINBUF_FACTOR	3
++#define MPI3MR_CHAINBUFDIX_FACTOR	2
  
-+/* Definitions for the controller security status*/
-+#define MPI3MR_CTLR_SECURITY_STATUS_MASK	0x0C
-+#define MPI3MR_CTLR_SECURE_DBG_STATUS_MASK	0x02
+ /* Invalid target device handle */
+ #define MPI3MR_INVALID_DEV_HANDLE	0xFFFF
+@@ -557,17 +558,21 @@ struct chain_element {
+  *
+  * @host_tag: Host tag specific to operational queue
+  * @in_lld_scope: Command in LLD scope or not
++ * @meta_sg_valid: DIX command with meta data SGL or not
+  * @scmd: SCSI Command pointer
+- * @req_q_idx: Operational request queue index
++ * @req_q_idx: Operational request queue undex
+  * @chain_idx: Chain frame index
++ * @meta_chain_idx: Chain frame index of meta data SGL
+  * @mpi3mr_scsiio_req: MPI SCSI IO request
+  */
+ struct scmd_priv {
+ 	u16 host_tag;
+ 	u8 in_lld_scope;
++	u8 meta_sg_valid;
+ 	struct scsi_cmnd *scmd;
+ 	u16 req_q_idx;
+ 	int chain_idx;
++	int meta_chain_idx;
+ 	u8 mpi3mr_scsiio_req[MPI3MR_ADMIN_REQ_FRAME_SZ];
+ };
+ 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 488fc3eac9dc..ee20d63f6061 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -9,6 +9,7 @@
+ 
+ #include "mpi3mr.h"
+ #include <linux/io-64-nonatomic-lo-hi.h>
++extern int prot_mask;
+ 
+ #if defined(writeq) && defined(CONFIG_64BIT)
+ static inline void mpi3mr_writeq(__u64 b, volatile void __iomem *addr)
+@@ -2767,6 +2768,12 @@ static int mpi3mr_alloc_chain_bufs(struct mpi3mr_ioc *mrioc)
+ 
+ 	num_chains = mrioc->max_host_ios/MPI3MR_CHAINBUF_FACTOR;
+ 
++	if (prot_mask & (SHOST_DIX_TYPE0_PROTECTION
++	    | SHOST_DIX_TYPE1_PROTECTION
++	    | SHOST_DIX_TYPE2_PROTECTION
++	    | SHOST_DIX_TYPE3_PROTECTION))
++		num_chains += (num_chains / MPI3MR_CHAINBUFDIX_FACTOR);
 +
-+#define MPI3MR_INVALID_DEVICE			0x00
-+#define MPI3MR_CONFIG_SECURE_DEVICE		0x04
-+#define MPI3MR_HARD_SECURE_DEVICE		0x08
-+#define MPI3MR_TAMPERED_DEVICE			0x0C
-+
- /* SGE Flag definition */
- #define MPI3MR_SGEFLAGS_SYSTEM_SIMPLE_END_OF_LIST \
- 	(MPI3_SGE_FLAGS_ELEMENT_TYPE_SIMPLE | MPI3_SGE_FLAGS_DLAS_SYSTEM | \
+ 	mrioc->chain_buf_count = num_chains;
+ 	sz = sizeof(struct chain_element) * num_chains;
+ 	mrioc->chain_sgl_list = kzalloc(sz, GFP_KERNEL);
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 05473b0f3c9e..836005ce6999 100644
+index 836005ce6999..9a189fb32ab0 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3206,6 +3206,75 @@ static inline void mpi3mr_init_drv_cmd(struct mpi3mr_drv_cmd *cmdptr,
- 	cmdptr->host_tag = host_tag;
+@@ -21,6 +21,13 @@ MODULE_LICENSE(MPI3MR_DRIVER_LICENSE);
+ MODULE_VERSION(MPI3MR_DRIVER_VERSION);
+ 
+ /* Module parameters*/
++int prot_mask = -1;
++module_param(prot_mask, int, 0);
++MODULE_PARM_DESC(prot_mask, "Host protection capabilities mask, def=0x07");
++
++int prot_guard_mask = 3;
++module_param(prot_guard_mask, int, 0);
++MODULE_PARM_DESC(prot_guard_mask, " Host protection guard mask, def=3");
+ int logging_level;
+ module_param(logging_level, int, 0);
+ MODULE_PARM_DESC(logging_level,
+@@ -59,7 +66,9 @@ static u16 mpi3mr_host_tag_for_scmd(struct mpi3mr_ioc *mrioc,
+ 	priv->scmd = scmd;
+ 	priv->in_lld_scope = 1;
+ 	priv->req_q_idx = hw_queue;
++	priv->meta_chain_idx = -1;
+ 	priv->chain_idx = -1;
++	priv->meta_sg_valid = 0;
+ 	return priv->host_tag;
+ }
+ 
+@@ -119,10 +128,15 @@ static void mpi3mr_clear_scmd_priv(struct mpi3mr_ioc *mrioc,
+ 	priv->req_q_idx = 0xFFFF;
+ 	priv->scmd = NULL;
+ 	priv->in_lld_scope = 0;
++	priv->meta_sg_valid = 0;
+ 	if (priv->chain_idx >= 0) {
+ 		clear_bit(priv->chain_idx, mrioc->chain_bitmap);
+ 		priv->chain_idx = -1;
+ 	}
++	if (priv->meta_chain_idx >= 0) {
++		clear_bit(priv->meta_chain_idx, mrioc->chain_bitmap);
++		priv->meta_chain_idx = -1;
++	}
+ }
+ 
+ static void mpi3mr_dev_rmhs_send_tm(struct mpi3mr_ioc *mrioc, u16 handle,
+@@ -390,6 +404,9 @@ static bool mpi3mr_flush_scmd(struct request *rq,
+ 		if (!priv->in_lld_scope)
+ 			goto out;
+ 
++		if (priv->meta_sg_valid)
++			dma_unmap_sg(&mrioc->pdev->dev, scsi_prot_sglist(scmd),
++			    scsi_prot_sg_count(scmd), scmd->sc_data_direction);
+ 		mpi3mr_clear_scmd_priv(mrioc, scmd);
+ 		scsi_dma_unmap(scmd);
+ 		scmd->result = DID_RESET << 16;
+@@ -792,6 +809,7 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ {
+ 	u16 flags = 0;
+ 	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data;
++	u8 prot_mask = 0;
+ 
+ 	tgtdev->perst_id = le16_to_cpu(dev_pg0->PersistentID);
+ 	tgtdev->dev_handle = le16_to_cpu(dev_pg0->DevHandle);
+@@ -856,6 +874,15 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ 		if ((dev_info & MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_MASK) !=
+ 		    MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_NVME_DEVICE)
+ 			tgtdev->is_hidden = 1;
++		if (mrioc->shost)
++			prot_mask = scsi_host_get_prot(mrioc->shost);
++		if (prot_mask & SHOST_DIX_TYPE0_PROTECTION) {
++			scsi_host_set_prot(mrioc->shost, prot_mask & 0x77);
++			ioc_info(mrioc,
++			    "%s : Disabling DIX0 prot capability\n", __func__);
++			ioc_info(mrioc,
++			    "because HBA does not support DIX0 operation on NVME drives\n");
++		}
+ 		break;
+ 	}
+ 	case MPI3_DEVICE_DEVFORM_VD:
+@@ -1769,6 +1796,195 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 
  }
  
 +/**
-+ * osintfc_mrioc_security_status -Check controller secure status
-+ * @pdev: PCI device instance
++ * mpi3mr_setup_eedp - Setup EEDP information in MPI3 SCSI IO
++ * @mrioc: Adapter instance reference
++ * @scmd: SCSI command reference
++ * @scsiio_req: MPI3 SCSI IO request
 + *
-+ * Read the Device Serial Number capability from PCI config
-+ * space and decide whether the controller is secure or not.
++ * Identifies the protection information flags from the SCSI
++ * command and set appropriate flags in the MPI3 SCSI IO
++ * request.
 + *
-+ * Return: 0 on success, non-zero on failure.
++ * Return: Nothing
 + */
-+static int
-+osintfc_mrioc_security_status(struct pci_dev *pdev)
++static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
++	struct scsi_cmnd *scmd, Mpi3SCSIIORequest_t *scsiio_req)
 +{
-+	u32 cap_data;
-+	int base;
-+	u32 ctlr_status;
-+	u32 debug_status;
-+	int retval = 0;
++	u16 eedp_flags = 0;
++	unsigned char prot_op = scsi_get_prot_op(scmd);
++	unsigned char prot_type = scsi_get_prot_type(scmd);
 +
-+	base = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DSN);
-+	if (!base) {
-+		dev_err(&pdev->dev,
-+		    "%s: PCI_EXT_CAP_ID_DSN is not supported\n", __func__);
-+		return -1;
-+	}
-+
-+	pci_read_config_dword(pdev, base + 4, &cap_data);
-+
-+	debug_status = cap_data & MPI3MR_CTLR_SECURE_DBG_STATUS_MASK;
-+	ctlr_status = cap_data & MPI3MR_CTLR_SECURITY_STATUS_MASK;
-+
-+	switch (ctlr_status) {
-+	case MPI3MR_INVALID_DEVICE:
-+		dev_err(&pdev->dev,
-+		    "%s: Non secure ctlr (Invalid) is detected: DID: 0x%x: SVID: 0x%x: SDID: 0x%x\n",
-+		    __func__, pdev->device, pdev->subsystem_vendor,
-+		    pdev->subsystem_device);
-+		retval = -1;
++	switch (prot_op) {
++	case SCSI_PROT_NORMAL:
++		return;
++	case SCSI_PROT_READ_STRIP:
++		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK_REMOVE;
 +		break;
-+	case MPI3MR_CONFIG_SECURE_DEVICE:
-+		if (!debug_status)
-+			dev_info(&pdev->dev,
-+			    "%s: Config secure ctlr is detected\n",
-+			    __func__);
++	case SCSI_PROT_WRITE_INSERT:
++		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_INSERT;
 +		break;
-+	case MPI3MR_HARD_SECURE_DEVICE:
++	case SCSI_PROT_READ_INSERT:
++		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_INSERT;
++		scsiio_req->MsgFlags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
 +		break;
-+	case MPI3MR_TAMPERED_DEVICE:
-+		dev_err(&pdev->dev,
-+		    "%s: Non secure ctlr (Tampered) is detected: DID: 0x%x: SVID: 0x%x: SDID: 0x%x\n",
-+		    __func__, pdev->device, pdev->subsystem_vendor,
-+		    pdev->subsystem_device);
-+		retval = -1;
++	case SCSI_PROT_WRITE_STRIP:
++		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK_REMOVE;
++		scsiio_req->MsgFlags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
++		break;
++	case SCSI_PROT_READ_PASS:
++		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK |
++		    MPI3_EEDPFLAGS_CHK_REF_TAG | MPI3_EEDPFLAGS_CHK_APP_TAG |
++		    MPI3_EEDPFLAGS_CHK_GUARD;
++		scsiio_req->MsgFlags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
++		break;
++	case SCSI_PROT_WRITE_PASS:
++		if (scsi_host_get_guard(scmd->device->host)
++		    & SHOST_DIX_GUARD_IP) {
++			eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK_REGEN |
++			    MPI3_EEDPFLAGS_CHK_APP_TAG |
++			    MPI3_EEDPFLAGS_CHK_GUARD |
++			    MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
++			scsiio_req->SGL[0].Eedp.ApplicationTagTranslationMask
++			    = 0xffff;
++		} else {
++			eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK |
++			    MPI3_EEDPFLAGS_CHK_REF_TAG |
++			    MPI3_EEDPFLAGS_CHK_APP_TAG |
++			    MPI3_EEDPFLAGS_CHK_GUARD;
++		}
++		scsiio_req->MsgFlags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
 +		break;
 +	default:
-+		retval = -1;
-+			break;
++		return;
 +	}
 +
-+	if (!retval && debug_status) {
-+		dev_err(&pdev->dev,
-+		    "%s: Non secure ctlr (Secure Dbg) is detected: DID: 0x%x: SVID: 0x%x: SDID: 0x%x\n",
-+		    __func__, pdev->device, pdev->subsystem_vendor,
-+		    pdev->subsystem_device);
-+		retval = -1;
++	if (scsi_host_get_guard(scmd->device->host) & SHOST_DIX_GUARD_IP)
++		eedp_flags |= MPI3_EEDPFLAGS_HOST_GUARD_IP_CHKSUM;
++
++	switch (prot_type) {
++	case SCSI_PROT_DIF_TYPE0:
++		eedp_flags |= MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
++		scsiio_req->CDB.EEDP32.PrimaryReferenceTag =
++		    cpu_to_be32(t10_pi_ref_tag(scmd->request));
++		break;
++	case SCSI_PROT_DIF_TYPE1:
++	case SCSI_PROT_DIF_TYPE2:
++		eedp_flags |= MPI3_EEDPFLAGS_INCR_PRI_REF_TAG |
++		    MPI3_EEDPFLAGS_ESC_MODE_APPTAG_DISABLE |
++		    MPI3_EEDPFLAGS_CHK_GUARD;
++		scsiio_req->CDB.EEDP32.PrimaryReferenceTag =
++		    cpu_to_be32(t10_pi_ref_tag(scmd->request));
++		break;
++	case SCSI_PROT_DIF_TYPE3:
++		eedp_flags |= MPI3_EEDPFLAGS_CHK_GUARD |
++		    MPI3_EEDPFLAGS_ESC_MODE_APPTAG_DISABLE;
++		break;
++
++	default:
++		scsiio_req->MsgFlags &= ~(MPI3_SCSIIO_MSGFLAGS_METASGL_VALID);
++		return;
 +	}
 +
-+	return retval;
++	switch (scmd->device->sector_size) {
++	case 512:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_512;
++		break;
++	case 520:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_520;
++		break;
++	case 4080:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_4080;
++		break;
++	case 4088:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_4088;
++		break;
++	case 4096:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_4096;
++		break;
++	case 4104:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_4104;
++		break;
++	case 4160:
++		scsiio_req->SGL[0].Eedp.UserDataSize = MPI3_EEDP_UDS_4160;
++		break;
++	default:
++		break;
++	}
++
++	scsiio_req->SGL[0].Eedp.EEDPFlags = cpu_to_le16(eedp_flags);
++	scsiio_req->SGL[0].Eedp.Flags = MPI3_SGE_FLAGS_ELEMENT_TYPE_EXTENDED;
++}
++
++
++
++/**
++ * mpi3mr_build_sense_buffer - Map sense information
++ * @desc: Sense type
++ * @buf: Sense buffer to populate
++ * @key: Sense key
++ * @asc: Additional sense code
++ * @ascq: Additional sense code qualifier
++ *
++ * Maps the given sense information into either descriptor or
++ * fixed format sense data.
++ *
++ * Return: Nothing
++ */
++static inline void mpi3mr_build_sense_buffer(int desc, u8 *buf, u8 key,
++	u8 asc, u8 ascq)
++{
++	if (desc) {
++		buf[0] = 0x72;	/* descriptor, current */
++		buf[1] = key;
++		buf[2] = asc;
++		buf[3] = ascq;
++		buf[7] = 0;
++	} else {
++		buf[0] = 0x70;	/* fixed, current */
++		buf[2] = key;
++		buf[7] = 0xa;
++		buf[12] = asc;
++		buf[13] = ascq;
++	}
++}
++
++/**
++ * mpi3mr_map_eedp_error - Map EEDP errors from IOC status
++ * @scmd: SCSI command reference
++ * @ioc_status: Status of MPI3 request
++ *
++ * Maps the EEDP error status of the SCSI IO request to sense
++ * data.
++ *
++ * Return: Nothing
++ */
++static void mpi3mr_map_eedp_error(struct scsi_cmnd *scmd,
++	u16 ioc_status)
++{
++	u8 ascq = 0;
++
++	switch (ioc_status) {
++	case MPI3_IOCSTATUS_EEDP_GUARD_ERROR:
++		ascq = 0x01;
++		break;
++	case MPI3_IOCSTATUS_EEDP_APP_TAG_ERROR:
++		ascq = 0x02;
++		break;
++	case MPI3_IOCSTATUS_EEDP_REF_TAG_ERROR:
++		ascq = 0x03;
++		break;
++	default:
++		ascq = 0x00;
++		break;
++	}
++
++	mpi3mr_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
++	    0x10, ascq);
++	scmd->result = DRIVER_SENSE << 24 | (DID_ABORT << 16) |
++	    SAM_STAT_CHECK_CONDITION;
 +}
 +
  /**
-  * mpi3mr_probe - PCI probe callback
-  * @pdev: PCI device instance
-@@ -3228,6 +3297,11 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	struct Scsi_Host *shost = NULL;
- 	int retval = 0, i;
+  * mpi3mr_process_op_reply_desc - reply descriptor handler
+  * @mrioc: Adapter instance reference
+@@ -1931,6 +2147,11 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
+ 		else if (scsi_state & MPI3_SCSI_STATE_TERMINATED)
+ 			scmd->result = DID_RESET << 16;
+ 		break;
++	case MPI3_IOCSTATUS_EEDP_GUARD_ERROR:
++	case MPI3_IOCSTATUS_EEDP_REF_TAG_ERROR:
++	case MPI3_IOCSTATUS_EEDP_APP_TAG_ERROR:
++		mpi3mr_map_eedp_error(scmd, ioc_status);
++		break;
+ 	case MPI3_IOCSTATUS_SCSI_PROTOCOL_ERROR:
+ 	case MPI3_IOCSTATUS_INVALID_FUNCTION:
+ 	case MPI3_IOCSTATUS_INVALID_SGL:
+@@ -1966,6 +2187,10 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
+ 		}
+ 	}
+ out_success:
++	if (priv->meta_sg_valid) {
++		dma_unmap_sg(&mrioc->pdev->dev, scsi_prot_sglist(scmd),
++		    scsi_prot_sg_count(scmd), scmd->sc_data_direction);
++	}
+ 	mpi3mr_clear_scmd_priv(mrioc, scmd);
+ 	scsi_dma_unmap(scmd);
+ 	scmd->scsi_done(scmd);
+@@ -2029,6 +2254,8 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 	u8 last_chain_sgl_flags;
+ 	struct chain_element *chain_req;
+ 	struct scmd_priv *priv = NULL;
++	u32 meta_sg = le32_to_cpu(scsiio_req->Flags) &
++	    MPI3_SCSIIO_FLAGS_DMAOPERATION_HOST_PI;
  
-+	if (osintfc_mrioc_security_status(pdev)) {
-+		warn_non_secure_ctlr = 1;
-+		return 1; /* For Invalid and Tampered device */
+ 	priv = scsi_cmd_priv(scmd);
+ 
+@@ -2039,15 +2266,27 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 	last_chain_sgl_flags = MPI3_SGE_FLAGS_ELEMENT_TYPE_LAST_CHAIN |
+ 	    MPI3_SGE_FLAGS_DLAS_SYSTEM;
+ 
+-	sg_local = &scsiio_req->SGL;
++	if (meta_sg)
++		sg_local = &scsiio_req->SGL[MPI3_SCSIIO_METASGL_INDEX];
++	else
++		sg_local = &scsiio_req->SGL;
+ 
+-	if (!scsiio_req->DataLength) {
++	if (!scsiio_req->DataLength && !meta_sg) {
+ 		mpi3mr_build_zero_len_sge(sg_local);
+ 		return 0;
+ 	}
+ 
+-	sg_scmd = scsi_sglist(scmd);
+-	sges_left = scsi_dma_map(scmd);
++	if (meta_sg) {
++		sg_scmd = scsi_prot_sglist(scmd);
++		sges_left = dma_map_sg(&mrioc->pdev->dev,
++		    scsi_prot_sglist(scmd),
++		    scsi_prot_sg_count(scmd),
++		    scmd->sc_data_direction);
++		priv->meta_sg_valid = 1; /* To unmap meta sg DMA */
++	} else {
++		sg_scmd = scsi_sglist(scmd);
++		sges_left = scsi_dma_map(scmd);
++	}
+ 
+ 	if (sges_left < 0) {
+ 		sdev_printk(KERN_ERR, scmd->device,
+@@ -2065,6 +2304,22 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 	sges_in_segment = (mrioc->facts.op_req_sz -
+ 	    offsetof(Mpi3SCSIIORequest_t, SGL))/sizeof(Mpi3SGESimple_t);
+ 
++	if (scsiio_req->SGL[0].Eedp.Flags ==
++	    MPI3_SGE_FLAGS_ELEMENT_TYPE_EXTENDED && !meta_sg) {
++		sg_local += sizeof(Mpi3SGEUnion_t);
++		sges_in_segment--;
++		/* Reserve 1st segment (scsiio_req->SGL[0]) for eedp */
 +	}
 +
- 	shost = scsi_host_alloc(&mpi3mr_driver_template,
- 	    sizeof(struct mpi3mr_ioc));
- 	if (!shost) {
-@@ -3344,6 +3418,9 @@ static void mpi3mr_remove(struct pci_dev *pdev)
- 	unsigned long flags;
- 	struct mpi3mr_tgt_dev *tgtdev, *tgtdev_next;
- 
-+	if (!shost)
-+		return;
++	if (scsiio_req->MsgFlags ==
++	    MPI3_SCSIIO_MSGFLAGS_METASGL_VALID && !meta_sg) {
++		sges_in_segment--;
++		/* Reserve last segment (scsiio_req->SGL[3]) for meta sg */
++	}
 +
- 	mrioc = shost_priv(shost);
- 	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
- 		ssleep(1);
-@@ -3464,6 +3541,9 @@ static int mpi3mr_resume(struct pci_dev *pdev)
- 	pci_power_t device_state = pdev->current_state;
- 	int r;
- 
-+	if (!shost)
-+		return 0;
++	if (meta_sg)
++		sges_in_segment = 1;
 +
- 	mrioc = shost_priv(shost);
+ 	if (sges_left <= sges_in_segment)
+ 		goto fill_in_last_segment;
  
- 	ioc_info(mrioc, "pdev=0x%p, slot=%s, previous operating state [D%d]\n",
+@@ -2082,7 +2337,10 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 	if (chain_idx < 0)
+ 		return -1;
+ 	chain_req = &mrioc->chain_sgl_list[chain_idx];
+-	priv->chain_idx = chain_idx;
++	if (meta_sg)
++		priv->meta_chain_idx = chain_idx;
++	else
++		priv->chain_idx = chain_idx;
+ 
+ 	chain = chain_req->addr;
+ 	chain_dma = chain_req->dma_addr;
+@@ -2132,6 +2390,13 @@ static int mpi3mr_build_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 	if (ret)
+ 		return ret;
+ 
++	if (scsiio_req->MsgFlags == MPI3_SCSIIO_MSGFLAGS_METASGL_VALID) {
++		/* There is a valid meta sg */
++		scsiio_req->Flags |=
++		    cpu_to_le32(MPI3_SCSIIO_FLAGS_DMAOPERATION_HOST_PI);
++		ret = mpi3mr_prepare_sg_scmd(mrioc, scmd, scsiio_req);
++	}
++
+ 	return ret;
+ }
+ 
+@@ -3130,6 +3395,8 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 	scsiio_req->Function = MPI3_FUNCTION_SCSI_IO;
+ 	scsiio_req->HostTag = cpu_to_le16(host_tag);
+ 
++	mpi3mr_setup_eedp(mrioc, scmd, scsiio_req);
++
+ 	memcpy(scsiio_req->CDB.CDB32, scmd->cmnd, scmd->cmd_len);
+ 	scsiio_req->DataLength = cpu_to_le32(scsi_bufflen(scmd));
+ 	scsiio_req->DevHandle = cpu_to_le16(dev_handle);
+@@ -3354,6 +3621,32 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	shost->max_channel = 1;
+ 	shost->max_id = 0xFFFFFFFF;
+ 
++	if (prot_mask >= 0)
++		scsi_host_set_prot(shost, prot_mask);
++	else {
++		prot_mask = SHOST_DIF_TYPE1_PROTECTION
++		    | SHOST_DIF_TYPE2_PROTECTION
++		    | SHOST_DIF_TYPE3_PROTECTION;
++		scsi_host_set_prot(shost, prot_mask);
++
++	}
++
++	ioc_info(mrioc,
++	    "%s :host protection capabilities enabled %s%s%s%s%s%s%s\n",
++	    __func__,
++	    (prot_mask & SHOST_DIF_TYPE1_PROTECTION) ? " DIF1" : "",
++	    (prot_mask & SHOST_DIF_TYPE2_PROTECTION) ? " DIF2" : "",
++	    (prot_mask & SHOST_DIF_TYPE3_PROTECTION) ? " DIF3" : "",
++	    (prot_mask & SHOST_DIX_TYPE0_PROTECTION) ? " DIX0" : "",
++	    (prot_mask & SHOST_DIX_TYPE1_PROTECTION) ? " DIX1" : "",
++	    (prot_mask & SHOST_DIX_TYPE2_PROTECTION) ? " DIX2" : "",
++	    (prot_mask & SHOST_DIX_TYPE3_PROTECTION) ? " DIX3" : "");
++
++	if (prot_guard_mask)
++		scsi_host_set_guard(shost, (prot_guard_mask & 3));
++	else
++		scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
++
+ 	snprintf(mrioc->fwevt_worker_name, sizeof(mrioc->fwevt_worker_name),
+ 	    "%s%d_fwevt_wrkr", mrioc->driver_name, mrioc->id);
+ 	mrioc->fwevt_worker_thread = alloc_ordered_workqueue(
 -- 
 2.18.1
 
 
---0000000000001800f405c05146e4
+--000000000000461d8d05c0514645
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -301,13 +650,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIBUKvSubyU4IoG3+jv9dn83CTCG5
-QWKSm3FO9uW29nZ/MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDQxOTExMDMwNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDrGH+79ehCr3dUhIVdJKDQsGdNf
+48rox5DMofajU9ytMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDQxOTExMDMwN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQByg14na0q8UpM8fhepKD7mQS5J6uldeNASe1rTtr2QKfe/
-el8t1YsBVCDVLKYbtCXkqfqGjPRysKlObLJp7May473DfOPTcOl9YD1AmDbBZ+yaMuPpj6tUzjME
-7iO5RYuwCAnKlhfhJgqDBZBYtGF/qVHwdlPnqmmDq3nxVuv+N8pCLK74NZJNIZvAe0a3j+ITCE4O
-582v5aWil14E39IbjTfD14wXYiXVc5N+/35IClxEY62OkOyTumJFr98aLmiK7bA+KxuTZnSGwu+9
-z8588mgku/SKZ/q7GGd15Nc/KBbmtAIIX2j6RACFIAtqfnXTUZrUotPdt6fi6xwSyU7l
---0000000000001800f405c05146e4--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQAHnJTNHX+acp7pPZe7bY4JnDyqjeRo+QArrR/eTZ4kHR7d
+n35D7i7ZVIPUfuRzpaPIyrD11mY8sy7IvPKS/UTJRDszh4mQov1HQwtywKUlr6LPsTmIWXDPsNFK
+8W8DxdhwaKAhKwDGy9Ev2jNbCH+UkJ/xPUIO+BsQIv+TYdKyNvXfKQeZ/4dgvdChXeXOPv/wU6ri
+0tUzVI1kbt5VyBxrF05L1YDQKJPVAT53oTDN8evY2aoNemSGsnhdIba9sPsvjI3tYUgfTOH+G1/7
+QdAiW5NC7DkSlhyue+OCEUGa+8dpJWvsWZriyt8xWRks9mTsy6h+Xu/C193bp/RcZADV
+--000000000000461d8d05c0514645--
