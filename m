@@ -2,68 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=BAYES_05,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F2B3C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 15:01:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C3F0C433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 15:06:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67A6E61285
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 15:01:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 482B26127C
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Apr 2021 15:06:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239868AbhDSPBd convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 11:01:33 -0400
-Received: from mail-2.au.de ([178.15.128.195]:44755 "EHLO mail-2.au.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239230AbhDSPBd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Apr 2021 11:01:33 -0400
-X-Greylist: delayed 901 seconds by postgrey-1.27 at vger.kernel.org; Mon, 19 Apr 2021 11:01:32 EDT
-Received: from svAUHSex2016.au.de (10.81.30.19) by svAUHSex2016-2.au.de
- (10.81.30.22) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Mon, 19 Apr
- 2021 16:46:00 +0200
-Received: from svAUHSex2016.au.de ([fe80::990a:9444:b310:e679]) by
- svAUHSex2016.au.de ([fe80::990a:9444:b310:e679%6]) with mapi id
- 15.01.2176.009; Mon, 19 Apr 2021 16:46:00 +0200
-From:   =?iso-8859-1?Q?Michael_Dr=FCing?= <michael.drueing@au.de>
-To:     "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-CC:     "'jinpu.wang@cloud.ionos.com'" <jinpu.wang@cloud.ionos.com>
-Subject: Linux pm8001 driver / PMC-Sierra PM8072 card
-Thread-Topic: Linux pm8001 driver / PMC-Sierra PM8072 card
-Thread-Index: Adc1Kq9AdIc2/kOpRX2OqV2qsTcimg==
-Date:   Mon, 19 Apr 2021 14:45:59 +0000
-Message-ID: <de4a733fe583543146bc89620a11d000dcd723ce@localhost>
-Accept-Language: de-DE, en-US
-Content-Language: de-DE
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.81.50.140]
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+        id S239042AbhDSPGu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 11:06:50 -0400
+Received: from mailout.easymail.ca ([64.68.200.34]:53830 "EHLO
+        mailout.easymail.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238693AbhDSPGu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 11:06:50 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by mailout.easymail.ca (Postfix) with ESMTP id C75B4C2899;
+        Mon, 19 Apr 2021 15:06:19 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at emo04-pco.easydns.vpn
+Received: from mailout.easymail.ca ([127.0.0.1])
+        by localhost (emo04-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id gFNAWWdJVtxJ; Mon, 19 Apr 2021 15:06:19 +0000 (UTC)
+Received: from mail.gonehiking.org (c-24-9-64-241.hsd1.co.comcast.net [24.9.64.241])
+        by mailout.easymail.ca (Postfix) with ESMTPA id 4C499C2968;
+        Mon, 19 Apr 2021 15:06:10 +0000 (UTC)
+Received: from [192.168.1.4] (internal [192.168.1.4])
+        by mail.gonehiking.org (Postfix) with ESMTP id 80A183EF41;
+        Mon, 19 Apr 2021 09:06:09 -0600 (MDT)
+Subject: Re: [PATCH 0/5] Bring the BusLogic host bus adapter driver up to
+ Y2021
+To:     Ondrej Zary <linux@zary.sk>,
+        "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk>
+ <a099f7f8-9601-fd1c-03a4-93587e7276e6@gonehiking.org>
+ <alpine.DEB.2.21.2104162157360.44318@angie.orcam.me.uk>
+ <202104182221.21533.linux@zary.sk>
+From:   Khalid Aziz <khalid@gonehiking.org>
+Message-ID: <e3fe98a2-c480-e9bf-67b3-7f51b87975bd@gonehiking.org>
+Date:   Mon, 19 Apr 2021 09:06:09 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
+In-Reply-To: <202104182221.21533.linux@zary.sk>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
+On 4/18/21 2:21 PM, Ondrej Zary wrote:
+> On Friday 16 April 2021 23:25:18 Maciej W. Rozycki wrote:
+>> On Fri, 16 Apr 2021, Khalid Aziz wrote:
+>>
+>>>>  Sadly I didn't get to these resources while they were still there, and 
+>>>> neither did archive.org, and now they not appear available from anywhere 
+>>>> online.  I'm sure Leonard had this all, but, alas, he is long gone too.
+>>>
+>>> These documents were all gone by the time I started working on this
+>>> driver in 2013.
+>>
+>>  According to my e-mail archives I got my BT-958 directly from Mylex brand 
+>> new as KT-958 back in early 1998 (the rest of the system is a bit older).  
+>> It wasn't up until 2003 when I was caught by the issue with the LOG SENSE 
+>> command that I got interested in the programming details of the adapter.  
+>>
+>>  At that time Mylex was in flux already, having been bought by LSI shortly 
+>> before.  Support advised me what was there at Leonard's www.dandelion.com 
+>> site was all that was available (I have a personal copy of the site) and 
+>> they would suggest to switch to their current products.  So it was too 
+>> late already ten years before you got at the driver.
+>>
+>>  I'll yet double-check the contents of the KT-958 kit which I have kept, 
+>> but if there was any technical documentation supplied there on a CD (which 
+>> I doubt), I would have surely discovered it earlier.  It's away along with 
+>> the server, remotely managed, ~160km/100mi from here, so it'll be some 
+>> time before I get at it though.
+>>
+>>  Still, maybe one of the SCSI old-timers has that stuff stashed somewhere.  
+>> I have plenty of technical documentation going back to early to mid 1990s 
+>> (some in the hard copy form), not necessarily readily available nowadays. 
+>> Sadly lots of such stuff goes offline or is completely lost to the mist of 
+>> time.
+>>
+>>   Maciej
+>>
+> 
+> Found the 3000763 document here:
+> https://doc.lagout.org/science/0_Computer Science/0_Computer History/old-hardware/buslogic/3000763_PCI_EISA_Wide_SCSI_Tech_Ref_Dec94.pdf
+> 
+> There's also 3002593 there:
+> https://doc.lagout.org/science/0_Computer Science/0_Computer History/old-hardware/buslogic/
+> 
 
-I have a PMC-Sierra 8072 card that the current pm80xx driver does not like. The card uses the PCI vendor ID of PMC-Sierra (11f8) combined with 8072 as device ID, while the pm80xx driver only seems to support the 8072 device when coupled with the ATTO vendor ID.
+Thanks!!!
 
-When I try to force the driver to detect the card (by sending "11f8 8072" to the new_id node in procfs), all I get is a panic in the module.
-
-I have one of these cards that I would be willing to ship to someone who volunteers to add support for it to the driver. Please contact me directly if interested.
-
-Best regards,
--Michael
-Advanced UniByte GmbH
-Hauptsitz Metzingen:    Paul-Lechler-Straße 8 | 72555 Metzingen
-        HRB 352782 | Amtsgericht Stuttgart | Geschäftsführer: Sandro Walker
-        Telefon: +49 7123 9542 - 0 | Fax: +49 7123 9542 - 3 - 100 | info@au.de<mailto:info@au.de> | www.au.de<http://www.au.de>
-Niederlassung Freiburg: Kronenstraße 34 | 79211 Denzlingen
-Niederlassung München:  Industriestraße 31 | 82194 Gröbenzell
-Niederlassung Leverkusen:       Platz der Innovationen | Marie-Curie-Straße 16 | 51377 Leverkusen
-Diese E-Mail ist nur für den Empfänger bestimmt und kann vertrauliche oder rechtlich geschützte Informationen enthalten,
-deren Kopieren, Weitergabe an Dritte oder sonstige Verwendung untersagt ist. Wenn Sie nicht der richtige Empfänger sind,
-unterrichten Sie uns bitte umgehend telefonisch oder per E-Mail und löschen Sie diese E-Mail. Vielen Dank!
+--
+Khalid
