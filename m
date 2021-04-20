@@ -7,52 +7,54 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60C0DC433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5343AC433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F53961363
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27F1C613AA
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233095AbhDTAJs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 20:09:48 -0400
-Received: from mail-pj1-f54.google.com ([209.85.216.54]:53866 "EHLO
-        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232912AbhDTAJk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:40 -0400
-Received: by mail-pj1-f54.google.com with SMTP id nk8so5702844pjb.3
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:10 -0700 (PDT)
+        id S233146AbhDTAJt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 20:09:49 -0400
+Received: from mail-pj1-f41.google.com ([209.85.216.41]:51854 "EHLO
+        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232960AbhDTAJm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:42 -0400
+Received: by mail-pj1-f41.google.com with SMTP id lt13so10009476pjb.1
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:12 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=IjD2HvDdVBMANt+Z2pBSPnhdQVFrSYM3KI2m6kX0dI8=;
-        b=iUMlgOgEzbOG4Ir+wMhq1PdcQltm1AtIzqlZlUgF6bg2GSaDIscUtEeGh0DfLX985P
-         HwuzITfnFGQm2B+p4QRXp8nwiWIh+DcSyYUb2S3nQa0Ml2glJr1+aXNvLKwI2K/YVvws
-         +tvRKK3U04xo/1ly3x5a4vtBzekjM28ARrK8f4Z6Bwswq3YJFKOjdTuXhkd523fRG28l
-         I+1Oa17X20FDP/2IEtJXhPdTFY4iP4eb6IYGI6rL3DElPKtQtUraHPGTpuAVy4kiRhk7
-         RwhknVwqkEXW/JjhNGgPD1gxzh5ZpLGEtETB7zHqjTOhJabnFRvr3Ve9IIARVeSsq9p6
-         yPEg==
-X-Gm-Message-State: AOAM532A170e0/a1VSFkCpN7lFbwcy+h6TuQrf9dfT1VyWxQbZOhgdal
-        BzmZ7G1/1toiignYp1EpRV0=
-X-Google-Smtp-Source: ABdhPJwd9L4SH8O5m31hB67o5ZdYOJk3TDO3rfqGlX3WjYCHQIW4zmKnfUu4aHnW+LHv+hmlrD4RHA==
-X-Received: by 2002:a17:90b:19ca:: with SMTP id nm10mr1801986pjb.175.1618877349715;
-        Mon, 19 Apr 2021 17:09:09 -0700 (PDT)
+        bh=y8BoWzVj3N4mDUGM68HE8h8bJse46BESIDJN3iIgoBk=;
+        b=WohhC//IT/8UBaH3r6moHzrGLtzm8Lw2cUQfeZiClgUHPYee2CT28O3Kdph3Qy6hmg
+         GgTWPnSQohpOnG7vVTklOFjvoJfiNH2ed/K/4p3uIHRm7EKoIRh4XZ8b571h9RGgm734
+         mFPC0pAJRNUJH7f9Is8T4XdJj6oFczZ62/PORmhlz0APb/tM2pY3PuJTVyqvgf2n3hwP
+         oKVkW9u5HeeMGrFjmFR6m754Ft2wG4GDg+hOzLa46RJfLNKWNCPZuVg/iYXbjsMOf2oM
+         gFjL6UbyQrhk3eAg5AqGOT0d/Kx7+PrWVjwhWcQDZSuozGeHyFvVCiBFbspHx9xHFxD2
+         +EHg==
+X-Gm-Message-State: AOAM53210T1oyrL1YuheFbtXrQF8yXUFRwkPQb4aDKlUvoftKeavNjHH
+        3DsToSe+iqhahSw7hzpuJRFV9Z4RQ90=
+X-Google-Smtp-Source: ABdhPJxdjI0tgMDUTdwjnzo+bru/gHMC+9IfGCfnMWuAY0L3Pi80czmivmKOyqEDp2Tfhd8js2b9hg==
+X-Received: by 2002:a17:90b:915:: with SMTP id bo21mr1766665pjb.118.1618877352030;
+        Mon, 19 Apr 2021 17:09:12 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.08
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 17:09:09 -0700 (PDT)
+        Mon, 19 Apr 2021 17:09:11 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 015/117] sd: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 17:07:03 -0700
-Message-Id: <20210420000845.25873-16-bvanassche@acm.org>
+        Bart Van Assche <bvanassche@acm.org>,
+        =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.f>
+Subject: [PATCH 017/117] st: Convert to the scsi_status union
+Date:   Mon, 19 Apr 2021 17:07:05 -0700
+Message-Id: <20210420000845.25873-18-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -61,459 +63,131 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 An explanation of the purpose of this patch is available in the patch
 "scsi: Introduce the scsi_status union".
 
+Cc: Kai Mäkisara <Kai.Makisara@kolumbus.f>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/sd.c     | 103 ++++++++++++++++++++++--------------------
- drivers/scsi/sd.h     |   3 +-
- drivers/scsi/sd_zbc.c |  14 +++---
- 3 files changed, 64 insertions(+), 56 deletions(-)
+ drivers/scsi/st.c | 23 ++++++++++++-----------
+ drivers/scsi/st.h |  5 +++--
+ 2 files changed, 15 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index cb3c37d1e009..8df2f25e4129 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1622,7 +1622,7 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 9ca536aae784..3deea1f7c8b9 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -360,13 +360,13 @@ static void st_analyze_sense(struct st_request *SRpnt, struct st_cmdstatus *s)
+ /* Convert the result to success code */
+ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
  {
- 	struct scsi_disk *sdkp = scsi_disk_get(disk);
- 	struct scsi_device *sdp;
--	int retval;
-+	union scsi_status retval;
- 	bool disk_changed;
+-	int result = SRpnt->result;
++	union scsi_status result = SRpnt->status;
+ 	u8 scode;
+ 	DEB(const char *stp;)
+ 	char *name = tape_name(STp);
+ 	struct st_cmdstatus *cmdstatp;
  
- 	if (!sdkp)
-@@ -1654,7 +1654,8 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
- 	if (scsi_block_when_processing_errors(sdp)) {
- 		struct scsi_sense_hdr sshdr = { 0, };
+-	if (!result)
++	if (!result.combined)
+ 		return 0;
  
--		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, sdkp->max_retries,
-+		retval.combined =
-+			scsi_test_unit_ready(sdp, SD_TIMEOUT, sdkp->max_retries,
- 					      &sshdr);
+ 	cmdstatp = &STp->buffer->cmdstat;
+@@ -380,7 +380,7 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
+ 	DEB(
+ 	if (debugging) {
+ 		st_printk(ST_DEB_MSG, STp,
+-			    "Error: %x, cmd: %x %x %x %x %x %x\n", result,
++			    "Error: %x, cmd: %x %x %x %x %x %x\n", result.combined,
+ 			    SRpnt->cmd[0], SRpnt->cmd[1], SRpnt->cmd[2],
+ 			    SRpnt->cmd[3], SRpnt->cmd[4], SRpnt->cmd[5]);
+ 		if (cmdstatp->have_sense)
+@@ -390,8 +390,9 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
+ 	if (!debugging) { /* Abnormal conditions for tape */
+ 		if (!cmdstatp->have_sense)
+ 			st_printk(KERN_WARNING, STp,
+-			       "Error %x (driver bt 0x%x, host bt 0x%x).\n",
+-			       result, driver_byte(result), host_byte(result));
++				"Error %x (driver bt 0x%x, host bt 0x%x).\n",
++				result.combined, driver_byte(result),
++				host_byte(result));
+ 		else if (cmdstatp->have_sense &&
+ 			 scode != NO_SENSE &&
+ 			 scode != RECOVERED_ERROR &&
+@@ -484,7 +485,7 @@ static void st_do_stats(struct scsi_tape *STp, struct request *req)
+ 		atomic64_add(ktime_to_ns(now), &STp->stats->tot_write_time);
+ 		atomic64_add(ktime_to_ns(now), &STp->stats->tot_io_time);
+ 		atomic64_inc(&STp->stats->write_cnt);
+-		if (scsi_req(req)->result) {
++		if (scsi_req(req)->status.combined) {
+ 			atomic64_add(atomic_read(&STp->stats->last_write_size)
+ 				- STp->buffer->cmdstat.residual,
+ 				&STp->stats->write_byte_cnt);
+@@ -498,7 +499,7 @@ static void st_do_stats(struct scsi_tape *STp, struct request *req)
+ 		atomic64_add(ktime_to_ns(now), &STp->stats->tot_read_time);
+ 		atomic64_add(ktime_to_ns(now), &STp->stats->tot_io_time);
+ 		atomic64_inc(&STp->stats->read_cnt);
+-		if (scsi_req(req)->result) {
++		if (scsi_req(req)->status.combined) {
+ 			atomic64_add(atomic_read(&STp->stats->last_read_size)
+ 				- STp->buffer->cmdstat.residual,
+ 				&STp->stats->read_byte_cnt);
+@@ -522,7 +523,7 @@ static void st_scsi_execute_end(struct request *req, blk_status_t status)
+ 	struct scsi_tape *STp = SRpnt->stp;
+ 	struct bio *tmp;
  
- 		/* failed to execute TUR, assume media not present */
-@@ -1689,7 +1690,8 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+-	STp->buffer->cmdstat.midlevel_result = SRpnt->result = rq->result;
++	STp->buffer->cmdstat.midlevel_status = SRpnt->status = rq->status;
+ 	STp->buffer->cmdstat.residual = rq->resid_len;
  
- static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
- {
--	int retries, res;
-+	int retries;
-+	union scsi_status res;
- 	struct scsi_device *sdp = sdkp->device;
- 	const int timeout = sdp->request_queue->rq_timeout
- 		* SD_FLUSH_TIMEOUT_MULTIPLIER;
-@@ -1710,13 +1712,13 @@ static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
- 		 * Leave the rest of the command zero to indicate
- 		 * flush everything.
- 		 */
--		res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, sshdr,
-+		res.combined = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, sshdr,
- 				timeout, sdkp->max_retries, 0, RQF_PM, NULL);
--		if (res == 0)
-+		if (res.combined == 0)
- 			break;
- 	}
+ 	st_do_stats(STp, req);
+@@ -718,7 +719,7 @@ static int write_behind_check(struct scsi_tape * STp)
+ 	DEB(if (debugging && retval)
+ 		    st_printk(ST_DEB_MSG, STp,
+ 				"Async write error %x, return value %d.\n",
+-				STbuffer->cmdstat.midlevel_result, retval);) /* end DEB */
++				STbuffer->cmdstat.midlevel_status.combined, retval);) /* end DEB */
  
--	if (res) {
-+	if (res.combined) {
- 		sd_print_result(sdkp, "Synchronize Cache(10) failed", res);
- 
- 		if (driver_byte(res) == DRIVER_SENSE)
-@@ -1809,7 +1811,7 @@ static int sd_pr_command(struct block_device *bdev, u8 sa,
- 	struct scsi_disk *sdkp = scsi_disk(bdev->bd_disk);
- 	struct scsi_device *sdev = sdkp->device;
- 	struct scsi_sense_hdr sshdr;
--	int result;
-+	union scsi_status result;
- 	u8 cmd[16] = { 0, };
- 	u8 data[24] = { 0, };
- 
-@@ -1822,16 +1824,18 @@ static int sd_pr_command(struct block_device *bdev, u8 sa,
- 	put_unaligned_be64(sa_key, &data[8]);
- 	data[20] = flags;
- 
--	result = scsi_execute_req(sdev, cmd, DMA_TO_DEVICE, &data, sizeof(data),
-+	result.combined =
-+		scsi_execute_req(sdev, cmd, DMA_TO_DEVICE, &data, sizeof(data),
- 			&sshdr, SD_TIMEOUT, sdkp->max_retries, NULL);
- 
- 	if (driver_byte(result) == DRIVER_SENSE &&
- 	    scsi_sense_valid(&sshdr)) {
--		sdev_printk(KERN_INFO, sdev, "PR command failed: %d\n", result);
-+		sdev_printk(KERN_INFO, sdev, "PR command failed: %d\n",
-+			    result.combined);
- 		scsi_print_sense_hdr(sdev, NULL, &sshdr);
- 	}
- 
--	return result;
-+	return result.combined;
+ 	return retval;
  }
+@@ -752,7 +753,7 @@ static int cross_eof(struct scsi_tape * STp, int forward)
+ 	st_release_request(SRpnt);
+ 	SRpnt = NULL;
  
- static int sd_pr_register(struct block_device *bdev, u64 old_key, u64 new_key,
-@@ -1931,7 +1935,7 @@ static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
- 
- 	if (!scsi_device_online(sdev) ||
- 	    !scsi_medium_access_command(scmd) ||
--	    host_byte(scmd->result) != DID_TIME_OUT ||
-+	    host_byte(scmd->status) != DID_TIME_OUT ||
- 	    eh_disp != SUCCESS)
- 		return eh_disp;
- 
-@@ -2017,8 +2021,8 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
-  **/
- static int sd_done(struct scsi_cmnd *SCpnt)
- {
--	int result = SCpnt->result;
--	unsigned int good_bytes = result ? 0 : scsi_bufflen(SCpnt);
-+	union scsi_status result = SCpnt->status;
-+	unsigned int good_bytes = result.combined ? 0 : scsi_bufflen(SCpnt);
- 	unsigned int sector_size = SCpnt->device->sector_size;
- 	unsigned int resid;
- 	struct scsi_sense_hdr sshdr;
-@@ -2036,7 +2040,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	case REQ_OP_ZONE_OPEN:
- 	case REQ_OP_ZONE_CLOSE:
- 	case REQ_OP_ZONE_FINISH:
--		if (!result) {
-+		if (!result.combined) {
- 			good_bytes = blk_rq_bytes(req);
- 			scsi_set_resid(SCpnt, 0);
- 		} else {
-@@ -2062,7 +2066,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+-	if ((STp->buffer)->cmdstat.midlevel_result != 0)
++	if ((STp->buffer)->cmdstat.midlevel_status.combined != 0)
+ 		st_printk(KERN_ERR, STp,
+ 			  "Stepping over filemark %s failed.\n",
+ 			  forward ? "forward" : "backward");
+@@ -1118,7 +1119,7 @@ static int check_tape(struct scsi_tape *STp, struct file *filp)
+ 			goto err_out;
  		}
- 	}
  
--	if (result) {
-+	if (result.combined) {
- 		sense_valid = scsi_command_normalize_sense(SCpnt, &sshdr);
- 		if (sense_valid)
- 			sense_deferred = scsi_sense_is_deferred(&sshdr);
-@@ -2086,7 +2090,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 		 * unknown amount of data was transferred so treat it as an
- 		 * error.
- 		 */
--		SCpnt->result = 0;
-+		SCpnt->status.combined = 0;
- 		memset(SCpnt->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
- 		break;
- 	case ABORTED_COMMAND:
-@@ -2141,7 +2145,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 	unsigned char cmd[10];
- 	unsigned long spintime_expire = 0;
- 	int retries, spintime;
--	unsigned int the_result;
-+	union scsi_status the_result;
- 	struct scsi_sense_hdr sshdr;
- 	int sense_valid = 0;
+-		if (!SRpnt->result && !STp->buffer->cmdstat.have_sense) {
++		if (!SRpnt->status.combined && !STp->buffer->cmdstat.have_sense) {
+ 			STp->max_block = ((STp->buffer)->b_data[1] << 16) |
+ 			    ((STp->buffer)->b_data[2] << 8) | (STp->buffer)->b_data[3];
+ 			STp->min_block = ((STp->buffer)->b_data[4] << 8) |
+diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
+index 95d2e7a7988d..2021a5a9f65b 100644
+--- a/drivers/scsi/st.h
++++ b/drivers/scsi/st.h
+@@ -7,10 +7,11 @@
+ #include <linux/mutex.h>
+ #include <linux/kref.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_status.h>
  
-@@ -2156,7 +2160,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 			cmd[0] = TEST_UNIT_READY;
- 			memset((void *) &cmd[1], 0, 9);
- 
--			the_result = scsi_execute_req(sdkp->device, cmd,
-+			the_result.combined = scsi_execute_req(sdkp->device, cmd,
- 						      DMA_NONE, NULL, 0,
- 						      &sshdr, SD_TIMEOUT,
- 						      sdkp->max_retries, NULL);
-@@ -2169,7 +2173,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 			if (media_not_present(sdkp, &sshdr))
- 				return;
- 
--			if (the_result)
-+			if (the_result.combined)
- 				sense_valid = scsi_sense_valid(&sshdr);
- 			retries++;
- 		} while (retries < 3 && 
-@@ -2303,7 +2307,7 @@ static int sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer
- 
- static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 			struct scsi_sense_hdr *sshdr, int sense_valid,
--			int the_result)
-+			union scsi_status the_result)
- {
- 	if (driver_byte(the_result) == DRIVER_SENSE)
- 		sd_print_sense_hdr(sdkp, sshdr);
-@@ -2339,7 +2343,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 	unsigned char cmd[16];
- 	struct scsi_sense_hdr sshdr;
- 	int sense_valid = 0;
--	int the_result;
-+	union scsi_status the_result;
- 	int retries = 3, reset_retries = READ_CAPACITY_RETRIES_ON_RESET;
- 	unsigned int alignment;
- 	unsigned long long lba;
-@@ -2355,14 +2359,14 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 		cmd[13] = RC16_LEN;
- 		memset(buffer, 0, RC16_LEN);
- 
--		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
-+		the_result.combined = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
- 					buffer, RC16_LEN, &sshdr,
- 					SD_TIMEOUT, sdkp->max_retries, NULL);
- 
- 		if (media_not_present(sdkp, &sshdr))
- 			return -ENODEV;
- 
--		if (the_result) {
-+		if (the_result.combined) {
- 			sense_valid = scsi_sense_valid(&sshdr);
- 			if (sense_valid &&
- 			    sshdr.sense_key == ILLEGAL_REQUEST &&
-@@ -2382,9 +2386,9 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 		}
- 		retries--;
- 
--	} while (the_result && retries);
-+	} while (the_result.combined && retries);
- 
--	if (the_result) {
-+	if (the_result.combined) {
- 		sd_print_result(sdkp, "Read Capacity(16) failed", the_result);
- 		read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
- 		return -EINVAL;
-@@ -2430,7 +2434,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 	unsigned char cmd[16];
- 	struct scsi_sense_hdr sshdr;
- 	int sense_valid = 0;
--	int the_result;
-+	union scsi_status the_result;
- 	int retries = 3, reset_retries = READ_CAPACITY_RETRIES_ON_RESET;
- 	sector_t lba;
- 	unsigned sector_size;
-@@ -2440,14 +2444,14 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 		memset(&cmd[1], 0, 9);
- 		memset(buffer, 0, 8);
- 
--		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
-+		the_result.combined = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
- 					buffer, 8, &sshdr,
- 					SD_TIMEOUT, sdkp->max_retries, NULL);
- 
- 		if (media_not_present(sdkp, &sshdr))
- 			return -ENODEV;
- 
--		if (the_result) {
-+		if (the_result.combined) {
- 			sense_valid = scsi_sense_valid(&sshdr);
- 			if (sense_valid &&
- 			    sshdr.sense_key == UNIT_ATTENTION &&
-@@ -2459,9 +2463,9 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 		}
- 		retries--;
- 
--	} while (the_result && retries);
-+	} while (the_result.combined && retries);
- 
--	if (the_result) {
-+	if (the_result.combined) {
- 		sd_print_result(sdkp, "Read Capacity(10) failed", the_result);
- 		read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
- 		return -EINVAL;
-@@ -2643,7 +2647,7 @@ sd_do_mode_sense(struct scsi_disk *sdkp, int dbd, int modepage,
- static void
- sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
- {
--	int res;
-+	union scsi_status res;
- 	struct scsi_device *sdp = sdkp->device;
- 	struct scsi_mode_data data;
- 	int old_wp = sdkp->write_prot;
-@@ -2655,14 +2659,14 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
- 	}
- 
- 	if (sdp->use_192_bytes_for_3f) {
--		res = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 192, &data, NULL);
-+		res.combined = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 192, &data, NULL);
- 	} else {
- 		/*
- 		 * First attempt: ask for all pages (0x3F), but only 4 bytes.
- 		 * We have to start carefully: some devices hang if we ask
- 		 * for more than is available.
- 		 */
--		res = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 4, &data, NULL);
-+		res.combined = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 4, &data, NULL);
- 
- 		/*
- 		 * Second attempt: ask for page 0 When only page 0 is
-@@ -2671,13 +2675,13 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
- 		 * CDB.
- 		 */
- 		if (!scsi_status_is_good(res))
--			res = sd_do_mode_sense(sdkp, 0, 0, buffer, 4, &data, NULL);
-+			res.combined = sd_do_mode_sense(sdkp, 0, 0, buffer, 4, &data, NULL);
- 
- 		/*
- 		 * Third attempt: ask 255 bytes, as we did earlier.
- 		 */
- 		if (!scsi_status_is_good(res))
--			res = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 255,
-+			res.combined = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 255,
- 					       &data, NULL);
- 	}
- 
-@@ -2702,7 +2706,8 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
- static void
- sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- {
--	int len = 0, res;
-+	int len = 0;
-+	union scsi_status res;
- 	struct scsi_device *sdp = sdkp->device;
- 
- 	int dbd;
-@@ -2739,7 +2744,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 	}
- 
- 	/* cautiously ask */
--	res = sd_do_mode_sense(sdkp, dbd, modepage, buffer, first_len,
-+	res.combined = sd_do_mode_sense(sdkp, dbd, modepage, buffer, first_len,
- 			&data, &sshdr);
- 
- 	if (!scsi_status_is_good(res))
-@@ -2771,7 +2776,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 
- 	/* Get the data */
- 	if (len > first_len)
--		res = sd_do_mode_sense(sdkp, dbd, modepage, buffer, len,
-+		res.combined = sd_do_mode_sense(sdkp, dbd, modepage, buffer, len,
- 				&data, &sshdr);
- 
- 	if (scsi_status_is_good(res)) {
-@@ -2878,7 +2883,8 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
-  */
- static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- {
--	int res, offset;
-+	union scsi_status res;
-+	int offset;
- 	struct scsi_device *sdp = sdkp->device;
- 	struct scsi_mode_data data;
- 	struct scsi_sense_hdr sshdr;
-@@ -2889,7 +2895,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- 	if (sdkp->protection_type == 0)
- 		return;
- 
--	res = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
-+	res.combined = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
- 			      sdkp->max_retries, &data, &sshdr);
- 
- 	if (!scsi_status_is_good(res) || !data.header_length ||
-@@ -3576,7 +3582,7 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- 	unsigned char cmd[6] = { START_STOP };	/* START_VALID */
- 	struct scsi_sense_hdr sshdr;
- 	struct scsi_device *sdp = sdkp->device;
--	int res;
-+	union scsi_status res;
- 
- 	if (start)
- 		cmd[4] |= 1;	/* START */
-@@ -3587,20 +3593,20 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- 	if (!scsi_device_online(sdp))
- 		return -ENODEV;
- 
--	res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
-+	res.combined = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
- 			SD_TIMEOUT, sdkp->max_retries, 0, RQF_PM, NULL);
--	if (res) {
-+	if (res.combined) {
- 		sd_print_result(sdkp, "Start/Stop Unit failed", res);
- 		if (driver_byte(res) == DRIVER_SENSE)
- 			sd_print_sense_hdr(sdkp, &sshdr);
- 		if (scsi_sense_valid(&sshdr) &&
- 			/* 0x3a is medium not present */
- 			sshdr.asc == 0x3a)
--			res = 0;
-+			res.combined = 0;
- 	}
- 
- 	/* SCSI error codes must not go to the generic layer */
--	if (res)
-+	if (res.combined)
- 		return -EIO;
- 
- 	return 0;
-@@ -3803,10 +3809,11 @@ void sd_print_sense_hdr(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
- 			     sdkp->disk ? sdkp->disk->disk_name : NULL, sshdr);
- }
- 
--void sd_print_result(const struct scsi_disk *sdkp, const char *msg, int result)
-+void sd_print_result(const struct scsi_disk *sdkp, const char *msg,
-+		     union scsi_status result)
- {
--	const char *hb_string = scsi_hostbyte_string(result);
--	const char *db_string = scsi_driverbyte_string(result);
-+	const char *hb_string = scsi_hostbyte_string(result.combined);
-+	const char *db_string = scsi_driverbyte_string(result.combined);
- 
- 	if (hb_string || db_string)
- 		sd_printk(KERN_INFO, sdkp,
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index e75dd3e85dc3..c699ff1117ba 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -237,6 +237,7 @@ static inline blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd,
- #endif /* CONFIG_BLK_DEV_ZONED */
- 
- void sd_print_sense_hdr(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr);
--void sd_print_result(const struct scsi_disk *sdkp, const char *msg, int result);
-+void sd_print_result(const struct scsi_disk *sdkp, const char *msg,
-+		     union scsi_status result);
- 
- #endif /* _SCSI_DISK_H */
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index e45d8d94574c..dc63bce96ec5 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -99,7 +99,7 @@ static int sd_zbc_do_report_zones(struct scsi_disk *sdkp, unsigned char *buf,
- 	struct scsi_sense_hdr sshdr;
- 	unsigned char cmd[16];
- 	unsigned int rep_len;
+ /* Descriptor for analyzed sense data */
+ struct st_cmdstatus {
+-	int midlevel_result;
++	union scsi_status midlevel_status;
+ 	struct scsi_sense_hdr sense_hdr;
+ 	int have_sense;
+ 	int residual;
+@@ -27,7 +28,7 @@ struct scsi_tape;
+ struct st_request {
+ 	unsigned char cmd[MAX_COMMAND_SIZE];
+ 	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
 -	int result;
-+	union scsi_status result;
- 
- 	memset(cmd, 0, 16);
- 	cmd[0] = ZBC_IN;
-@@ -109,10 +109,10 @@ static int sd_zbc_do_report_zones(struct scsi_disk *sdkp, unsigned char *buf,
- 	if (partial)
- 		cmd[14] = ZBC_REPORT_ZONE_PARTIAL;
- 
--	result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
-+	result.combined = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
- 				  buf, buflen, &sshdr,
- 				  timeout, SD_MAX_RETRIES, NULL);
--	if (result) {
-+	if (result.combined) {
- 		sd_printk(KERN_ERR, sdkp,
- 			  "REPORT ZONES start lba %llu failed\n", lba);
- 		sd_print_result(sdkp, "REPORT ZONES", result);
-@@ -442,7 +442,7 @@ static bool sd_zbc_need_zone_wp_update(struct request *rq)
- static unsigned int sd_zbc_zone_wp_update(struct scsi_cmnd *cmd,
- 					  unsigned int good_bytes)
- {
--	int result = cmd->result;
-+	const union scsi_status result = cmd->status;
- 	struct request *rq = cmd->request;
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 	unsigned int zno = blk_rq_zone_no(rq);
-@@ -457,7 +457,7 @@ static unsigned int sd_zbc_zone_wp_update(struct scsi_cmnd *cmd,
- 	 */
- 	spin_lock_irqsave(&sdkp->zones_wp_offset_lock, flags);
- 
--	if (result && op != REQ_OP_ZONE_RESET_ALL) {
-+	if (result.combined && op != REQ_OP_ZONE_RESET_ALL) {
- 		if (op == REQ_OP_ZONE_APPEND) {
- 			/* Force complete completion (no retry) */
- 			good_bytes = 0;
-@@ -516,11 +516,11 @@ static unsigned int sd_zbc_zone_wp_update(struct scsi_cmnd *cmd,
- unsigned int sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
- 		     struct scsi_sense_hdr *sshdr)
- {
--	int result = cmd->result;
-+	const union scsi_status result = cmd->status;
- 	struct request *rq = cmd->request;
- 
- 	if (op_is_zone_mgmt(req_op(rq)) &&
--	    result &&
-+	    result.combined &&
- 	    sshdr->sense_key == ILLEGAL_REQUEST &&
- 	    sshdr->asc == 0x24) {
- 		/*
++	union scsi_status status;
+ 	struct scsi_tape *stp;
+ 	struct completion *waiting;
+ 	struct bio *bio;
