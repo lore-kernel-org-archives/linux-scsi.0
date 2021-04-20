@@ -7,51 +7,48 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9890EC43462
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8CB8C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77ED3613AC
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC67C613AA
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233313AbhDTAKP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 20:10:15 -0400
-Received: from mail-pl1-f172.google.com ([209.85.214.172]:34574 "EHLO
-        mail-pl1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233342AbhDTAKB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:10:01 -0400
-Received: by mail-pl1-f172.google.com with SMTP id t22so18351349ply.1
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:30 -0700 (PDT)
+        id S233162AbhDTAKO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 20:10:14 -0400
+Received: from mail-pl1-f173.google.com ([209.85.214.173]:36848 "EHLO
+        mail-pl1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233313AbhDTAJ7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:59 -0400
+Received: by mail-pl1-f173.google.com with SMTP id g16so1821149plq.3
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:29 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=zy47bq6JIKF2ImCAQMRHizEVvEkDoTMsU3s+1ysuba4=;
-        b=l3p5fAex8a9I6exdJsvDGz9z+afEhFDGMBBKE1fXC/WON/usHONJJWetIEM5vx3Ft3
-         d71x7W4PaACtbFa/rxP2viQ46pwpHFHiF+g48c/TwHQOBKfIrw2FhUs+DvmHgJiaANwW
-         nWv0bDxaX14BgeCQm/cAiobobjTc+gNzM6Oq9AxJQ+zcZsvKY3MU87ZUauIGlYrFqC0Q
-         ig3TaO6DscQxP904uoMypOcfGYZvemLJVWWRPDYiWIpLJk2AJyjRwCyX5RB4xSXBq2KB
-         EOfEfAmezIRVso6j6lADiiIyl1qd5uiyns50VKNBK+kOm/nqx8lTsb+YlwwUonY3Pn/k
-         i/yg==
-X-Gm-Message-State: AOAM532fNDBb31lSPyVNVtk5cTbHwOV4IeiiHl1QyMskYhq3aXciHFri
-        M/QADtPO+YyrLnseME8uBjs=
-X-Google-Smtp-Source: ABdhPJwRzzKH7THpYrseAjax12HchJ+f7HU0084h7PO1Ij9u2NTbhvW/bh9MnSeVhIhIT2kvWOL9Pw==
-X-Received: by 2002:a17:902:ea0c:b029:eb:7b6:13ba with SMTP id s12-20020a170902ea0cb02900eb07b613bamr25547833plg.25.1618877370345;
-        Mon, 19 Apr 2021 17:09:30 -0700 (PDT)
-Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=Uct9dVj7soP7jCycwyDRbNVMWwDhX5fyZFVnfezsjlU=;
+        b=dpNaA+VYTpQkk7m6jnvabD033nmDu7827hEy1u7+IgcUxKJSRi6ONAFGdiOptshlwL
+         hnqfhKpT1Lgic/vYKUtTam9AQ/t+TQ1fCLtC5Eq2BOrM7vL2rpQZ6fZGNEKb6q6IC0hV
+         iXhwGQ6uMSs9LRPH/WijbWo9h5LgM8219ZBDdH3xgDBBRmyM89g4WUFLE2tU/5Rhs0Jy
+         qddGFXNrUdGklxaeJOtaLYMZWbJ+vhqi6DMdWe6qAAIRlyeZSVBWFEhdei8TtCwo/s2w
+         uA6kQ/y0TUkREhW4qi7kkcylM3JxLHSkN56pkmQnn5+L0OiocxsJ/3XvTPFOQCqrx+QD
+         Ighg==
+X-Gm-Message-State: AOAM530nk6xgHVT14Mogbm46k0qk/eef99FQ5saN07sSSsNFJoIUopCb
+        nFL1No9lquXP/x+MgBE9axWnbpLEHBZLww==
+X-Google-Smtp-Source: ABdhPJzfFoMNZB1xXW+mcsZaQlJfBAu+NGnQJnNPxKWaVG6eJECwMMlCEJWcoWNwrH2K9AiUnwQh3A==
+X-Received: by 2002:a17:903:304b:b029:eb:4cf:8321 with SMTP id u11-20020a170903304bb02900eb04cf8321mr25973336pla.40.1618877369158;
         Mon, 19 Apr 2021 17:09:29 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Apr 2021 17:09:28 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
-        Ketan Mukadam <ketan.mukadam@broadcom.com>,
-        Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH 033/117] be2iscsi: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 17:07:21 -0700
-Message-Id: <20210420000845.25873-34-bvanassche@acm.org>
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 032/117] atp870u: Convert to the scsi_status union
+Date:   Mon, 19 Apr 2021 17:07:20 -0700
+Message-Id: <20210420000845.25873-33-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -64,53 +61,65 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 An explanation of the purpose of this patch is available in the patch
 "scsi: Introduce the scsi_status union".
 
-Cc: Subbu Seetharaman <subbu.seetharaman@broadcom.com>
-Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>
-Cc: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/be2iscsi/be_main.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/atp870u.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 22cf7f4b8d8c..ba9ea9858bdf 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -1125,22 +1125,22 @@ be_complete_io(struct beiscsi_conn *beiscsi_conn,
+diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
+index 9d179cd15bb8..0fb5af026229 100644
+--- a/drivers/scsi/atp870u.c
++++ b/drivers/scsi/atp870u.c
+@@ -494,13 +494,13 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
+ 			   dev->last_cmd[c] = 0xff;
+ 			}
+ 			if (i == 0x16) {
+-				workreq->result = atp_readb_io(dev, c, 0x0f);
++				workreq->status.combined = atp_readb_io(dev, c, 0x0f);
+ 				if (((dev->r1f[c][target_id] & 0x10) != 0) && is885(dev)) {
+ 					printk(KERN_WARNING "AEC67162 CRC ERROR !\n");
+-					workreq->result = SAM_STAT_CHECK_CONDITION;
++					workreq->status.combined = SAM_STAT_CHECK_CONDITION;
+ 				}
+ 			} else
+-				workreq->result = SAM_STAT_CHECK_CONDITION;
++				workreq->status.combined = SAM_STAT_CHECK_CONDITION;
  
- 		return;
+ 			if (is885(dev)) {
+ 				j = atp_readb_base(dev, 0x29) | 0x01;
+@@ -630,7 +630,7 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
+ 	req_p->sense_buffer[0]=0;
+ 	scsi_set_resid(req_p, 0);
+ 	if (scmd_channel(req_p) > 1) {
+-		req_p->result = DID_BAD_TARGET << 16;
++		req_p->status.combined = DID_BAD_TARGET << 16;
+ 		done(req_p);
+ #ifdef ED_DBGP
+ 		printk("atp870u_queuecommand : req_p->device->channel > 1\n");
+@@ -649,7 +649,7 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
+ 	 */
+ 
+ 	if ((m & dev->active_id[c]) == 0) {
+-		req_p->result = DID_BAD_TARGET << 16;
++		req_p->status.combined = DID_BAD_TARGET << 16;
+ 		done(req_p);
+ 		return 0;
  	}
--	task->sc->result = (DID_OK << 16) | status;
-+	task->sc->status.combined = (DID_OK << 16) | status;
- 	if (rsp != ISCSI_STATUS_CMD_COMPLETED) {
--		task->sc->result = DID_ERROR << 16;
-+		task->sc->status.combined = DID_ERROR << 16;
- 		goto unmap;
+@@ -660,7 +660,7 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
+ #ifdef ED_DBGP
+ 		printk( "atp870u_queuecommand: done can't be NULL\n");
+ #endif
+-		req_p->result = 0;
++		req_p->status.combined = 0;
+ 		done(req_p);
+ 		return 0;
  	}
- 
- 	/* bidi not initially supported */
- 	if (flags & (ISCSI_FLAG_CMD_UNDERFLOW | ISCSI_FLAG_CMD_OVERFLOW)) {
- 		if (!status && (flags & ISCSI_FLAG_CMD_OVERFLOW))
--			task->sc->result = DID_ERROR << 16;
-+			task->sc->status.combined = DID_ERROR << 16;
- 
- 		if (flags & ISCSI_FLAG_CMD_UNDERFLOW) {
- 			scsi_set_resid(task->sc, resid);
- 			if (!status && (scsi_bufflen(task->sc) - resid <
- 			    task->sc->underflow))
--				task->sc->result = DID_ERROR << 16;
-+				task->sc->status.combined = DID_ERROR << 16;
- 		}
+@@ -684,7 +684,7 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
+ 		printk("atp870u_queuecommand : dev->quhd[c] == dev->quend[c]\n");
+ #endif
+ 		dev->quend[c]--;
+-		req_p->result = DID_BUS_BUSY << 16;
++		req_p->status.combined = DID_BUS_BUSY << 16;
+ 		done(req_p);
+ 		return 0;
  	}
- 
-@@ -4877,8 +4877,8 @@ static int beiscsi_bsg_request(struct bsg_job *job)
- 				    nonemb_cmd.va, (resp->response_length
- 				    + sizeof(*resp)));
- 		bsg_reply->reply_payload_rcv_len = resp->response_length;
--		bsg_reply->result = status;
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_reply->status.combined = status;
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			     bsg_reply->reply_payload_rcv_len);
- 		dma_free_coherent(&phba->ctrl.pdev->dev, nonemb_cmd.size,
- 				    nonemb_cmd.va, nonemb_cmd.dma);
