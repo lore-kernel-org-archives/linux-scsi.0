@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C7CEC43460
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:10:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57BDCC433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:10:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E552C613AF
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:10:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 362CD6109E
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:10:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233831AbhDTAKr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 20:10:47 -0400
-Received: from mail-pj1-f51.google.com ([209.85.216.51]:46851 "EHLO
-        mail-pj1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233841AbhDTAKc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:10:32 -0400
-Received: by mail-pj1-f51.google.com with SMTP id u14-20020a17090a1f0eb029014e38011b09so14625394pja.5
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:10:02 -0700 (PDT)
+        id S233876AbhDTAKu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 20:10:50 -0400
+Received: from mail-pl1-f174.google.com ([209.85.214.174]:42711 "EHLO
+        mail-pl1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233875AbhDTAKe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:10:34 -0400
+Received: by mail-pl1-f174.google.com with SMTP id v13so5082833ple.9
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:10:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=cA0kQQ+tio1hAj9Omb8s/5Nh2DlSJv4IBN6Z9UYWqV4=;
-        b=tGJxFKm+gjCi5sA/JL9IuYf30B3nK0RioTPakRrny1r1MZFRmVE0kQIut63wTqp9qe
-         Rt7E0zE9LYaQZ/OjT+l3NAWlvn3vTSdpgLbF5cksnaHEU3KE9Zivp3GFwIUjXC6kcXd1
-         2ggpu4tN5kolEzKGNE3/juJMS4wHb0ytBpOTwNhp55Bfz/d4e+j2xeMP0+0b0V5zGel6
-         8tQ+ykYiVvWon2/hCVTIwSc83TxOwPLDcfzg7bRrzLxiUrLsVcH4ZR7iV258tl6flBTQ
-         D9R0VXjjOjK/IzwzZdP6v49AyBAX6c7s42mZNKNt7RoDLFysjMZorntEM3mU9ZEyCdQn
-         SLLg==
-X-Gm-Message-State: AOAM532xMXxbt8bbEa3SGYu9BT3Q8oiaZRa+zZWvtPGmlm2qUmTJjkhz
-        HzLUlnLDpVUbReaN5Qp77NA=
-X-Google-Smtp-Source: ABdhPJz71/UH+W9CTwxSI7iwzAYgkrCnibR66e9BnBrS//B7GDYvxZsVKT3tr3AEzTHURpJr6fu/aw==
-X-Received: by 2002:a17:902:bd8b:b029:ec:7e58:a544 with SMTP id q11-20020a170902bd8bb02900ec7e58a544mr18397976pls.26.1618877402187;
-        Mon, 19 Apr 2021 17:10:02 -0700 (PDT)
+        bh=HTguomwyGGvp07rauCYYrFmDbqB59oC0wWZ5Au503FE=;
+        b=d7iwScbtypTT+g+2vgCZlhUJD6md7rcGt5+CLxYYBr6gYFWyKcAiCsUNRazffrz/WY
+         DsMrx/GgAKpRDnEAnBvp9AUR2n1PBX9GvDbesZxZTSA02kQnpvoPWaFqdGepSjew1BRw
+         C28Qb3sw2wI13gUGFrBKnMNuqbqrUJY41bQGz4uJxJ2EPfekIgWisv1FhIwm0VRJwmG6
+         N6sOM80tywhxqbU7brj5DjmSnz+I2tG6WTDs1jn9+13yJhQyAfYWOssmAP0QGu0OEtiQ
+         H5ET9gQPrSBuP+NpXMdP9Nvevoq+5PZxFBujUlsA4GD5hyp51SRAa5+07d5fKbFI3Gdd
+         029Q==
+X-Gm-Message-State: AOAM531+6PeCQt6WtO/F0EYyuayWBRnktCVthCJeXDchsMExMBQWbz7H
+        eF+V3fjIovOyZSEEu9hVPCU=
+X-Google-Smtp-Source: ABdhPJyIc10y1NVGnScnpE6HVBsNAOgDoB+zhe795Ea9hcHpA++atcfCLif9k+ptyCn+4dclug8kGg==
+X-Received: by 2002:a17:90b:19ca:: with SMTP id nm10mr1805603pjb.175.1618877403291;
+        Mon, 19 Apr 2021 17:10:03 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.10.01
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.10.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 17:10:01 -0700 (PDT)
+        Mon, 19 Apr 2021 17:10:02 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 061/117] ips: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 17:07:49 -0700
-Message-Id: <20210420000845.25873-62-bvanassche@acm.org>
+        Bart Van Assche <bvanassche@acm.org>,
+        Lee Duncan <lduncan@suse.com>
+Subject: [PATCH 062/117] iscsi: Convert to the scsi_status union
+Date:   Mon, 19 Apr 2021 17:07:50 -0700
+Message-Id: <20210420000845.25873-63-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -61,327 +62,207 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 An explanation of the purpose of this patch is available in the patch
 "scsi: Introduce the scsi_status union".
 
+Cc: Lee Duncan <lduncan@suse.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ips.c | 72 +++++++++++++++++++++++-----------------------
- 1 file changed, 36 insertions(+), 36 deletions(-)
+ drivers/scsi/libiscsi.c             | 46 ++++++++++++++---------------
+ drivers/scsi/scsi_transport_iscsi.c |  2 +-
+ 2 files changed, 24 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 1a3c534826ba..4be97e52bbd5 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -935,7 +935,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
- 			  ips_name, ha->host_num);
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 4b8c9b9cf927..6bd81501fa55 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -616,7 +616,7 @@ static void fail_scsi_task(struct iscsi_task *task, enum host_status err)
+ 		state = ISCSI_TASK_ABRT_TMF;
  
- 		while ((scb = ips_removeq_scb_head(&ha->scb_activelist))) {
--			scb->scsi_cmd->result = DID_ERROR << 16;
-+			scb->scsi_cmd->status.combined = DID_ERROR << 16;
- 			scb->scsi_cmd->scsi_done(scb->scsi_cmd);
- 			ips_freescb(ha, scb);
- 		}
-@@ -945,7 +945,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
- 			  ips_name, ha->host_num);
+ 	sc = task->sc;
+-	sc->result = err << 16;
++	sc->status.combined = err << 16;
+ 	scsi_set_resid(sc, scsi_bufflen(sc));
+ 	iscsi_complete_task(task, state);
+ 	spin_unlock_bh(&conn->session->back_lock);
+@@ -814,7 +814,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 	iscsi_update_cmdsn(session, (struct iscsi_nopin*)rhdr);
+ 	conn->exp_statsn = be32_to_cpu(rhdr->statsn) + 1;
  
- 		while ((scsi_cmd = ips_removeq_wait_head(&ha->scb_waitlist))) {
--			scsi_cmd->result = DID_ERROR;
-+			scsi_cmd->status.combined = DID_ERROR;
- 			scsi_cmd->scsi_done(scsi_cmd);
- 		}
+-	sc->result = (DID_OK << 16) | rhdr->cmd_status;
++	sc->status.combined = (DID_OK << 16) | rhdr->cmd_status;
  
-@@ -964,7 +964,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
- 			  ips_name, ha->host_num);
+ 	if (task->protected) {
+ 		sector_t sector;
+@@ -829,7 +829,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
  
- 		while ((scb = ips_removeq_scb_head(&ha->scb_activelist))) {
--			scb->scsi_cmd->result = DID_ERROR << 16;
-+			scb->scsi_cmd->status.combined = DID_ERROR << 16;
- 			scb->scsi_cmd->scsi_done(scb->scsi_cmd);
- 			ips_freescb(ha, scb);
- 		}
-@@ -974,7 +974,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
- 			  ips_name, ha->host_num);
- 
- 		while ((scsi_cmd = ips_removeq_wait_head(&ha->scb_waitlist))) {
--			scsi_cmd->result = DID_ERROR << 16;
-+			scsi_cmd->status.combined = DID_ERROR << 16;
- 			scsi_cmd->scsi_done(scsi_cmd);
- 		}
- 
-@@ -993,7 +993,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
- 	DEBUG_VAR(1, "(%s%d) Failing active commands", ips_name, ha->host_num);
- 
- 	while ((scb = ips_removeq_scb_head(&ha->scb_activelist))) {
--		scb->scsi_cmd->result = DID_RESET << 16;
-+		scb->scsi_cmd->status.combined = DID_RESET << 16;
- 		scb->scsi_cmd->scsi_done(scb->scsi_cmd);
- 		ips_freescb(ha, scb);
+ 		ascq = session->tt->check_protection(task, &sector);
+ 		if (ascq) {
+-			sc->result = DRIVER_SENSE << 24 |
++			sc->status.combined = DRIVER_SENSE << 24 |
+ 				     SAM_STAT_CHECK_CONDITION;
+ 			scsi_build_sense_buffer(1, sc->sense_buffer,
+ 						ILLEGAL_REQUEST, 0x10, ascq);
+@@ -841,7 +841,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
  	}
-@@ -1052,13 +1052,13 @@ static int ips_queue_lck(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *)
  
- 	if (ips_is_passthru(SC)) {
- 		if (ha->copp_waitlist.count == IPS_MAX_IOCTL_QUEUE) {
--			SC->result = DID_BUS_BUSY << 16;
-+			SC->status.combined = DID_BUS_BUSY << 16;
- 			done(SC);
- 
- 			return (0);
- 		}
- 	} else if (ha->scb_waitlist.count == IPS_MAX_QUEUE) {
--		SC->result = DID_BUS_BUSY << 16;
-+		SC->status.combined = DID_BUS_BUSY << 16;
- 		done(SC);
- 
- 		return (0);
-@@ -1075,7 +1075,7 @@ static int ips_queue_lck(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *)
- 	/* Check for command to initiator IDs */
- 	if ((scmd_channel(SC) > 0)
- 	    && (scmd_id(SC) == ha->ha_id[scmd_channel(SC)])) {
--		SC->result = DID_NO_CONNECT << 16;
-+		SC->status.combined = DID_NO_CONNECT << 16;
- 		done(SC);
- 
- 		return (0);
-@@ -1092,13 +1092,13 @@ static int ips_queue_lck(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *)
- 		if ((pt->CoppCP.cmd.reset.op_code == IPS_CMD_RESET_CHANNEL) &&
- 		    (pt->CoppCP.cmd.reset.adapter_flag == 1)) {
- 			if (ha->scb_activelist.count != 0) {
--				SC->result = DID_BUS_BUSY << 16;
-+				SC->status.combined = DID_BUS_BUSY << 16;
- 				done(SC);
- 				return (0);
- 			}
- 			ha->ioctl_reset = 1;	/* This reset request is from an IOCTL */
- 			__ips_eh_reset(SC);
--			SC->result = DID_OK << 16;
-+			SC->status.combined = DID_OK << 16;
- 			SC->scsi_done(SC);
- 			return (0);
- 		}
-@@ -1107,7 +1107,7 @@ static int ips_queue_lck(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *)
- 		scratch = kmalloc(sizeof (ips_copp_wait_item_t), GFP_ATOMIC);
- 
- 		if (!scratch) {
--			SC->result = DID_ERROR << 16;
-+			SC->status.combined = DID_ERROR << 16;
- 			done(SC);
- 
- 			return (0);
-@@ -1125,7 +1125,7 @@ static int ips_queue_lck(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *)
- 
- 	return (0);
- out_error:
--	SC->result = DID_ERROR << 16;
-+	SC->status.combined = DID_ERROR << 16;
- 	done(SC);
- 
- 	return (0);
-@@ -1610,7 +1610,7 @@ ips_make_passthru(ips_ha_t *ha, struct scsi_cmnd *SC, ips_scb_t *scb, int intr)
- 		       &ips_num_controllers, sizeof (int));
- 		ips_scmd_buf_write(SC, ha->ioctl_data,
- 				   sizeof (ips_passthru_t) + sizeof (int));
--		SC->result = DID_OK << 16;
-+		SC->status.combined = DID_OK << 16;
- 
- 		return (IPS_SUCCESS_IMM);
- 
-@@ -1667,7 +1667,7 @@ ips_flash_copperhead(ips_ha_t * ha, ips_passthru_t * pt, ips_scb_t * scb)
+ 	if (rhdr->response != ISCSI_STATUS_CMD_COMPLETED) {
+-		sc->result = DID_ERROR << 16;
++		sc->status.combined = DID_ERROR << 16;
+ 		goto out;
  	}
- 	pt->BasicStatus = 0x0B;
- 	pt->ExtendedStatus = 0;
--	scb->scsi_cmd->result = DID_OK << 16;
-+	scb->scsi_cmd->status.combined = DID_OK << 16;
- 	/* IF it's OK to Use the "CD BOOT" Flash Buffer, then you can     */
- 	/* avoid allocating a huge buffer per adapter ( which can fail ). */
- 	if (pt->CoppCP.cmd.flashfw.type == IPS_BIOS_IMAGE &&
-@@ -1869,7 +1869,7 @@ ips_flash_firmware(ips_ha_t * ha, ips_passthru_t * pt, ips_scb_t * scb)
- 	scb->cmd.flashfw.buffer_addr = cpu_to_le32(scb->data_busaddr);
- 	if (pt->TimeOut)
- 		scb->timeout = pt->TimeOut;
--	scb->scsi_cmd->result = DID_OK << 16;
-+	scb->scsi_cmd->status.combined = DID_OK << 16;
- 	return IPS_SUCCESS;
+ 
+@@ -853,7 +853,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			iscsi_conn_printk(KERN_ERR,  conn,
+ 					 "Got CHECK_CONDITION but invalid data "
+ 					 "buffer size of %d\n", datalen);
+-			sc->result = DID_BAD_TARGET << 16;
++			sc->status.combined = DID_BAD_TARGET << 16;
+ 			goto out;
+ 		}
+ 
+@@ -870,7 +870,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 
+ 	if (rhdr->flags & (ISCSI_FLAG_CMD_BIDI_UNDERFLOW |
+ 			   ISCSI_FLAG_CMD_BIDI_OVERFLOW)) {
+-		sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
++		sc->status.combined = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
+ 	}
+ 
+ 	if (rhdr->flags & (ISCSI_FLAG_CMD_UNDERFLOW |
+@@ -883,11 +883,11 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			/* write side for bidi or uni-io set_resid */
+ 			scsi_set_resid(sc, res_count);
+ 		else
+-			sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
++			sc->status.combined = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
+ 	}
+ out:
+ 	ISCSI_DBG_SESSION(session, "cmd rsp done [sc %p res %d itt 0x%x]\n",
+-			  sc, sc->result, task->itt);
++			  sc, sc->status.combined, task->itt);
+ 	conn->scsirsp_pdus_cnt++;
+ 	iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
  }
+@@ -912,7 +912,7 @@ iscsi_data_in_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		return;
  
-@@ -1971,7 +1971,7 @@ ips_usrcmd(ips_ha_t * ha, ips_passthru_t * pt, ips_scb_t * scb)
+ 	iscsi_update_cmdsn(conn->session, (struct iscsi_nopin *)hdr);
+-	sc->result = (DID_OK << 16) | rhdr->cmd_status;
++	sc->status.combined = (DID_OK << 16) | rhdr->cmd_status;
+ 	conn->exp_statsn = be32_to_cpu(rhdr->statsn) + 1;
+ 	if (rhdr->flags & (ISCSI_FLAG_DATA_UNDERFLOW |
+ 	                   ISCSI_FLAG_DATA_OVERFLOW)) {
+@@ -923,12 +923,12 @@ iscsi_data_in_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		     res_count <= sc->sdb.length))
+ 			scsi_set_resid(sc, res_count);
+ 		else
+-			sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
++			sc->status.combined = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
  	}
  
- 	/* assume success */
--	scb->scsi_cmd->result = DID_OK << 16;
-+	scb->scsi_cmd->status.combined = DID_OK << 16;
+ 	ISCSI_DBG_SESSION(conn->session, "data in with status done "
+ 			  "[sc %p res %d itt 0x%x]\n",
+-			  sc, sc->result, task->itt);
++			  sc, sc->status.combined, task->itt);
+ 	conn->scsirsp_pdus_cnt++;
+ 	iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+ }
+@@ -1678,7 +1678,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+ 	struct iscsi_conn *conn;
+ 	struct iscsi_task *task = NULL;
  
- 	/* success */
- 	return (1);
-@@ -2578,7 +2578,7 @@ ips_next(ips_ha_t * ha, int intr)
- 		switch (ret) {
- 		case IPS_FAILURE:
- 			if (scb->scsi_cmd) {
--				scb->scsi_cmd->result = DID_ERROR << 16;
-+				scb->scsi_cmd->status.combined = DID_ERROR << 16;
- 				scb->scsi_cmd->scsi_done(scb->scsi_cmd);
- 			}
+-	sc->result = 0;
++	sc->status.combined = 0;
+ 	sc->SCp.ptr = NULL;
  
-@@ -2586,7 +2586,7 @@ ips_next(ips_ha_t * ha, int intr)
- 			break;
- 		case IPS_SUCCESS_IMM:
- 			if (scb->scsi_cmd) {
--				scb->scsi_cmd->result = DID_OK << 16;
-+				scb->scsi_cmd->status.combined = DID_OK << 16;
- 				scb->scsi_cmd->scsi_done(scb->scsi_cmd);
- 			}
+ 	ihost = shost_priv(host);
+@@ -1689,7 +1689,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
  
-@@ -2611,7 +2611,7 @@ ips_next(ips_ha_t * ha, int intr)
- 		switch (ret) {
- 		case IPS_FAILURE:
- 			if (scb->scsi_cmd) {
--				scb->scsi_cmd->result = DID_ERROR << 16;
-+				scb->scsi_cmd->status.combined = DID_ERROR << 16;
- 			}
+ 	reason = iscsi_session_chkready(cls_session);
+ 	if (reason) {
+-		sc->result = reason;
++		sc->status.combined = reason;
+ 		goto fault;
+ 	}
  
- 			ips_freescb(ha, scb);
-@@ -2646,7 +2646,7 @@ ips_next(ips_ha_t * ha, int intr)
- 		if (intr == IPS_INTR_ON)
- 			spin_unlock(host->host_lock);	/* Unlock HA after command is taken off queue */
- 
--		SC->result = DID_OK;
-+		SC->status.combined = DID_OK;
- 		SC->host_scribble = NULL;
- 
- 		scb->target_id = SC->device->id;
-@@ -2711,7 +2711,7 @@ ips_next(ips_ha_t * ha, int intr)
- 			break;
- 		case IPS_FAILURE:
- 			if (scb->scsi_cmd) {
--				scb->scsi_cmd->result = DID_ERROR << 16;
-+				scb->scsi_cmd->status.combined = DID_ERROR << 16;
- 				scb->scsi_cmd->scsi_done(scb->scsi_cmd);
- 			}
- 
-@@ -3205,7 +3205,7 @@ ips_done(ips_ha_t * ha, ips_scb_t * scb)
- 			switch (ret) {
- 			case IPS_FAILURE:
- 				if (scb->scsi_cmd) {
--					scb->scsi_cmd->result = DID_ERROR << 16;
-+					scb->scsi_cmd->status.combined = DID_ERROR << 16;
- 					scb->scsi_cmd->scsi_done(scb->scsi_cmd);
- 				}
- 
-@@ -3213,7 +3213,7 @@ ips_done(ips_ha_t * ha, ips_scb_t * scb)
+@@ -1708,29 +1708,29 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+ 			 */
+ 			if (unlikely(system_state != SYSTEM_RUNNING)) {
+ 				reason = FAILURE_SESSION_FAILED;
+-				sc->result = DID_NO_CONNECT << 16;
++				sc->status.combined = DID_NO_CONNECT << 16;
  				break;
- 			case IPS_SUCCESS_IMM:
- 				if (scb->scsi_cmd) {
--					scb->scsi_cmd->result = DID_ERROR << 16;
-+					scb->scsi_cmd->status.combined = DID_ERROR << 16;
- 					scb->scsi_cmd->scsi_done(scb->scsi_cmd);
- 				}
- 
-@@ -3366,7 +3366,7 @@ ips_map_status(ips_ha_t * ha, ips_scb_t * scb, ips_stat_t * sp)
- 		}		/* end switch */
- 	}			/* end switch */
- 
--	scb->scsi_cmd->result = device_error | (errcode << 16);
-+	scb->scsi_cmd->status.combined = device_error | (errcode << 16);
- 
- 	return (1);
- }
-@@ -3484,11 +3484,11 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 		case ERASE:
- 		case WRITE_FILEMARKS:
- 		case SPACE:
--			scb->scsi_cmd->result = DID_ERROR << 16;
-+			scb->scsi_cmd->status.combined = DID_ERROR << 16;
- 			break;
- 
- 		case START_STOP:
--			scb->scsi_cmd->result = DID_OK << 16;
-+			scb->scsi_cmd->status.combined = DID_OK << 16;
- 			break;
- 
- 		case TEST_UNIT_READY:
-@@ -3499,7 +3499,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 				 * or we have a SCSI inquiry
- 				 */
- 				if (scb->scsi_cmd->cmnd[0] == TEST_UNIT_READY)
--					scb->scsi_cmd->result = DID_OK << 16;
-+					scb->scsi_cmd->status.combined = DID_OK << 16;
- 
- 				if (scb->scsi_cmd->cmnd[0] == INQUIRY) {
- 					IPS_SCSI_INQ_DATA inquiry;
-@@ -3531,7 +3531,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 							   &inquiry,
- 							   sizeof (inquiry));
- 
--					scb->scsi_cmd->result = DID_OK << 16;
-+					scb->scsi_cmd->status.combined = DID_OK << 16;
- 				}
- 			} else {
- 				scb->cmd.logical_info.op_code = IPS_CMD_GET_LD_INFO;
-@@ -3549,7 +3549,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 
- 		case REQUEST_SENSE:
- 			ips_reqsen(ha, scb);
--			scb->scsi_cmd->result = DID_OK << 16;
-+			scb->scsi_cmd->status.combined = DID_OK << 16;
- 			break;
- 
- 		case READ_6:
-@@ -3645,7 +3645,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 				 * we don't have to do anything
- 				 * so just return
- 				 */
--				scb->scsi_cmd->result = DID_OK << 16;
-+				scb->scsi_cmd->status.combined = DID_OK << 16;
- 			} else
- 				ret = IPS_SUCCESS;
- 
-@@ -3653,7 +3653,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 
- 		case RESERVE:
- 		case RELEASE:
--			scb->scsi_cmd->result = DID_OK << 16;
-+			scb->scsi_cmd->status.combined = DID_OK << 16;
- 			break;
- 
- 		case MODE_SENSE:
-@@ -3687,7 +3687,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 		case READ_DEFECT_DATA:
- 		case READ_BUFFER:
- 		case WRITE_BUFFER:
--			scb->scsi_cmd->result = DID_OK << 16;
-+			scb->scsi_cmd->status.combined = DID_OK << 16;
- 			break;
- 
- 		default:
-@@ -3703,7 +3703,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 			sp[13] = 0x00;	/* ASCQ                     */
- 
- 			device_error = 2;	/* Indicate Check Condition */
--			scb->scsi_cmd->result = device_error | (DID_OK << 16);
-+			scb->scsi_cmd->status.combined = device_error | (DID_OK << 16);
- 			break;
- 		}		/* end switch */
- 	}
-@@ -3717,7 +3717,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 		/* If we already know the Device is Not there, no need to attempt a Command   */
- 		/* This also protects an NT FailOver Controller from getting CDB's sent to it */
- 		if (ha->conf->dev[scb->bus - 1][scb->target_id].ucState == 0) {
--			scb->scsi_cmd->result = DID_NO_CONNECT << 16;
-+			scb->scsi_cmd->status.combined = DID_NO_CONNECT << 16;
- 			return (IPS_SUCCESS_IMM);
- 		}
- 
-@@ -3957,14 +3957,14 @@ ips_chkstatus(ips_ha_t * ha, IPS_STATUS * pstatus)
- 				errcode = DID_ERROR;
- 			}	/* end switch */
- 
--			scb->scsi_cmd->result = errcode << 16;
-+			scb->scsi_cmd->status.combined = errcode << 16;
- 		} else {	/* bus == 0 */
- 			/* restrict access to physical drives */
- 			if (scb->scsi_cmd->cmnd[0] == INQUIRY) {
- 			    ips_scmd_buf_read(scb->scsi_cmd,
-                                   &inquiryData, sizeof (inquiryData));
- 			    if ((inquiryData.DeviceType & 0x1f) == TYPE_DISK)
--			        scb->scsi_cmd->result = DID_TIME_OUT << 16;
-+			        scb->scsi_cmd->status.combined = DID_TIME_OUT << 16;
  			}
- 		}		/* else */
- 	} else {		/* recovered error / success */
+ 			fallthrough;
+ 		case ISCSI_STATE_IN_RECOVERY:
+ 			reason = FAILURE_SESSION_IN_RECOVERY;
+-			sc->result = DID_IMM_RETRY << 16;
++			sc->status.combined = DID_IMM_RETRY << 16;
+ 			break;
+ 		case ISCSI_STATE_LOGGING_OUT:
+ 			reason = FAILURE_SESSION_LOGGING_OUT;
+-			sc->result = DID_IMM_RETRY << 16;
++			sc->status.combined = DID_IMM_RETRY << 16;
+ 			break;
+ 		case ISCSI_STATE_RECOVERY_FAILED:
+ 			reason = FAILURE_SESSION_RECOVERY_TIMEOUT;
+-			sc->result = DID_TRANSPORT_FAILFAST << 16;
++			sc->status.combined = DID_TRANSPORT_FAILFAST << 16;
+ 			break;
+ 		case ISCSI_STATE_TERMINATE:
+ 			reason = FAILURE_SESSION_TERMINATE;
+-			sc->result = DID_NO_CONNECT << 16;
++			sc->status.combined = DID_NO_CONNECT << 16;
+ 			break;
+ 		default:
+ 			reason = FAILURE_SESSION_FREED;
+-			sc->result = DID_NO_CONNECT << 16;
++			sc->status.combined = DID_NO_CONNECT << 16;
+ 		}
+ 		goto fault;
+ 	}
+@@ -1738,13 +1738,13 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+ 	conn = session->leadconn;
+ 	if (!conn) {
+ 		reason = FAILURE_SESSION_FREED;
+-		sc->result = DID_NO_CONNECT << 16;
++		sc->status.combined = DID_NO_CONNECT << 16;
+ 		goto fault;
+ 	}
+ 
+ 	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
+ 		reason = FAILURE_SESSION_IN_RECOVERY;
+-		sc->result = DID_REQUEUE << 16;
++		sc->status.combined = DID_REQUEUE << 16;
+ 		goto fault;
+ 	}
+ 
+@@ -1766,7 +1766,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+ 				reason = FAILURE_OOM;
+ 				goto prepd_reject;
+ 			} else {
+-				sc->result = DID_ABORT << 16;
++				sc->status.combined = DID_ABORT << 16;
+ 				goto prepd_fault;
+ 			}
+ 		}
+@@ -2017,7 +2017,7 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
+ 		 * upper layer to deal with the result.
+ 		 */
+ 		if (unlikely(system_state != SYSTEM_RUNNING)) {
+-			sc->result = DID_NO_CONNECT << 16;
++			sc->status.combined = DID_NO_CONNECT << 16;
+ 			ISCSI_DBG_EH(session, "sc on shutdown, handled\n");
+ 			rc = BLK_EH_DONE;
+ 			goto done;
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 4f821118ea23..b34155d285be 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1534,7 +1534,7 @@ static int iscsi_bsg_host_dispatch(struct bsg_job *job)
+ 	/* return the errno failure code as the only status */
+ 	BUG_ON(job->reply_len < sizeof(uint32_t));
+ 	reply->reply_payload_rcv_len = 0;
+-	reply->result = ret;
++	reply->status.combined = ret;
+ 	job->reply_len = sizeof(uint32_t);
+ 	bsg_job_done(job, ret, 0);
+ 	return 0;
