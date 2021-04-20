@@ -2,74 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCBF5C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:28:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19912C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:48:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8376A6135F
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:28:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF971613D3
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:48:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233577AbhDTS3T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Apr 2021 14:29:19 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60670 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233556AbhDTS3I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Apr 2021 14:29:08 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 6C7CBB312;
-        Tue, 20 Apr 2021 18:28:30 +0000 (UTC)
-Date:   Tue, 20 Apr 2021 20:28:30 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Roman Bolshakov <r.bolshakov@yadro.com>
-Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
-        linux-nvme@lists.infradead.org, Hannes Reinecke <hare@suse.de>,
-        Nilesh Javali <njavali@marvell.com>,
-        Arun Easi <aeasi@marvell.com>,
-        James Smart <james.smart@broadcom.com>
-Subject: Re: [RFC] qla2xxx: Add dev_loss_tmo kernel module options
-Message-ID: <20210420182830.fbipix3l7hwlyfx3@beryllium.lan>
-References: <20210419100014.47144-1-dwagner@suse.de>
- <YH8QzgWiec8vka20@SPB-NB-133.local>
+        id S233638AbhDTStS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Apr 2021 14:49:18 -0400
+Received: from smtp11.smtpout.orange.fr ([80.12.242.133]:19130 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233092AbhDTStR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 14:49:17 -0400
+Received: from localhost.localdomain ([86.243.172.93])
+        by mwinf5d34 with ME
+        id v6oi2401121Fzsu036oiDl; Tue, 20 Apr 2021 20:48:44 +0200
+X-ME-Helo: localhost.localdomain
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Tue, 20 Apr 2021 20:48:44 +0200
+X-ME-IP: 86.243.172.93
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] scsi: bfa: Remove some unused variables
+Date:   Tue, 20 Apr 2021 20:48:41 +0200
+Message-Id: <d10ccee35e35bf33d651f2e0163034d7c451520b.1618944442.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YH8QzgWiec8vka20@SPB-NB-133.local>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Roman,
+'lp' is unused. It is just declared and memset'ed.
+It can be removed.
 
-On Tue, Apr 20, 2021 at 08:35:10PM +0300, Roman Bolshakov wrote:
-> + James S.
-> 
-> Daniel, WRT to your patch I don't think we should add one more approach
-> to set dev_loss_tmo via kernel module parameter as NVMe adopters are
-> going to be even more confused about the parameter. Just imagine
-> knowledge bases populated with all sorts of the workarounds, that apply
-> to kernel version x, y, z, etc :)
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/scsi/bfa/bfa_svc.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-Totally agree. I consider this patch just a hack and way to get the
-discussion going, hence the RFC :) Well, maybe we are going to add it
-downstream in our kernels until we have a better way for setting the
-dev_loss_tmo.
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 11c0c3e6f014..5387883d6604 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -369,13 +369,10 @@ bfa_plog_fchdr(struct bfa_plog_s *plog, enum bfa_plog_mid mid,
+ 			enum bfa_plog_eid event,
+ 			u16 misc, struct fchs_s *fchdr)
+ {
+-	struct bfa_plog_rec_s  lp;
+ 	u32	*tmp_int = (u32 *) fchdr;
+ 	u32	ints[BFA_PL_INT_LOG_SZ];
+ 
+ 	if (plog->plog_enabled) {
+-		memset(&lp, 0, sizeof(struct bfa_plog_rec_s));
+-
+ 		ints[0] = tmp_int[0];
+ 		ints[1] = tmp_int[1];
+ 		ints[2] = tmp_int[4];
+@@ -389,13 +386,10 @@ bfa_plog_fchdr_and_pl(struct bfa_plog_s *plog, enum bfa_plog_mid mid,
+ 		      enum bfa_plog_eid event, u16 misc, struct fchs_s *fchdr,
+ 		      u32 pld_w0)
+ {
+-	struct bfa_plog_rec_s  lp;
+ 	u32	*tmp_int = (u32 *) fchdr;
+ 	u32	ints[BFA_PL_INT_LOG_SZ];
+ 
+ 	if (plog->plog_enabled) {
+-		memset(&lp, 0, sizeof(struct bfa_plog_rec_s));
+-
+ 		ints[0] = tmp_int[0];
+ 		ints[1] = tmp_int[1];
+ 		ints[2] = tmp_int[4];
+-- 
+2.27.0
 
-As explained the debugfs interface is not working (okay, that's
-something which could be fixed) and it has the big problem that it is
-not under control by udevd. Not sure if we with some new udev rules the
-debugfs could automatically discovered or not.
-
-> What exists for FCP/SCSI is quite clear and reasonable. I don't know why
-> FC-NVMe rports should be way too different.
-
-The lpfc driver does expose the FCP/SCSI and the FC-NVMe rports nicely
-via the fc_remote_ports and this is what I would like to have from the
-qla2xxx driver as well. qla2xxx exposes the FCP/SCSI rports but not the
-FC-NVMe rports.
-
-Thanks,
-Daniel
