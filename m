@@ -2,54 +2,56 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B034C433ED
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C280C433B4
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:10:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBC30613AA
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:10:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 287716109E
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:10:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234042AbhDTAK5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 20:10:57 -0400
-Received: from mail-pl1-f177.google.com ([209.85.214.177]:43548 "EHLO
-        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233975AbhDTAKi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:10:38 -0400
-Received: by mail-pl1-f177.google.com with SMTP id u15so10124682plf.10
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:10:07 -0700 (PDT)
+        id S233975AbhDTAK6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 20:10:58 -0400
+Received: from mail-pj1-f50.google.com ([209.85.216.50]:39430 "EHLO
+        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234035AbhDTAKl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:10:41 -0400
+Received: by mail-pj1-f50.google.com with SMTP id ot17-20020a17090b3b51b0290109c9ac3c34so21335816pjb.4
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:10:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=0msCEhu9ZIztDcdafSO2QdXWUwmOBmuTseKPHJT+qWM=;
-        b=XYbiXfiXr+MaPR7s2U+up4OdariDUUDCGW2TW5tdBbkuWxzTzbPLprldjbwV/iQQ60
-         1KuWnph6IL+U2VlR/XxjEwTFp3IuXvItittVeBnZsyx5DQ6TofqmQOaD/qmdw41KckhE
-         KlKuHYxDwcZeSURp9/z1APg8Ver8SvXaJES3Nu7b5hcC63sitTEVAKxg1WdowlU5fJML
-         tTP62DKFRIhRvfZiT78ZjxIAnXUEkt77aZkRHEOfQaejRkQtE2+yNY7fHaN37GIWMK6+
-         YeALwLZK2cF0tfOyUODBWuoWCfyiYCNqoBf0KpCG+ih3DWSRgpYedMkwTq9w9pTVhAop
-         YJjg==
-X-Gm-Message-State: AOAM530+HubWOJV6yfsLV++Aj/A3bKWkuL9R1iLgljYOPcqyyyFzUhIR
-        v5s+FS285j1NoSiO9sNdang=
-X-Google-Smtp-Source: ABdhPJz2KaOYyBixLEFN+R1KSovVO99GBJi2VMXp3fYxtp4ZXImKufmasyDGubln4/Dvk+SUdbYahg==
-X-Received: by 2002:a17:902:ee8a:b029:eb:6d3:1431 with SMTP id a10-20020a170902ee8ab02900eb06d31431mr25962718pld.60.1618877406855;
-        Mon, 19 Apr 2021 17:10:06 -0700 (PDT)
+        bh=kmu8VMKnEMxkzvOSAE+iKu/OOFP5tIJOwUm3NVOfEkY=;
+        b=Zi355J3RSOoQpTdJVg20n+ygVyTcwo2vDQwRwW36GiuyNQcLv71ZDmhxBDQo+v/1Pq
+         qN/moSuQTEUiWnnUUVpnsHgWZmQyhDiUFi7R3VA9UVXfd0wf3pZ6yWkPGmeKXNJg+D9L
+         gd70I2qxIzGYXU118RHCf1Ad7CcHqKftEP0m9hMYuJbOgegXGXsjYIIpeW7s0rVLbzfp
+         EC91F8+YG8Gr7HqY29VMX8+8UP7CNd3lgs11yxjoMFJjg/t+QXpQdsK/H98Idc2KZhd0
+         E1jNJF/eVXEEoNu2VXkkkvQfyS65jNOPUEZR0db8ostYmf8gLnj2GfQFCobryBj8N4Bj
+         o1Ng==
+X-Gm-Message-State: AOAM530WzcVKcjXQV5aG9PFZTqoXj+/zD8AzpUAbwYS4Be8+qzWsNYe5
+        B5Rdj3n5R3BZqLOJZSUogFI=
+X-Google-Smtp-Source: ABdhPJxcAceMjJLDhNB+EpPZG6N/uNFLqD1UPL8HmdGjXMPITEsAAa8E8sTdllJnyhPTUFSgAtT/iQ==
+X-Received: by 2002:a17:902:c745:b029:eb:6fc0:39e7 with SMTP id q5-20020a170902c745b02900eb6fc039e7mr25486514plq.82.1618877409160;
+        Mon, 19 Apr 2021 17:10:09 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.10.05
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.10.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 17:10:06 -0700 (PDT)
+        Mon, 19 Apr 2021 17:10:08 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
-        James Smart <james.smart@broadcom.com>
-Subject: [PATCH 065/117] lpfc: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 17:07:53 -0700
-Message-Id: <20210420000845.25873-66-bvanassche@acm.org>
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 067/117] megaraid: Convert to the scsi_status union
+Date:   Mon, 19 Apr 2021 17:07:55 -0700
+Message-Id: <20210420000845.25873-68-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -62,666 +64,637 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 An explanation of the purpose of this patch is available in the patch
 "scsi: Introduce the scsi_status union".
 
-Cc: James Smart <james.smart@broadcom.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c  | 114 +++++++++++++++++-----------------
- drivers/scsi/lpfc/lpfc_scsi.c |  66 ++++++++++----------
- 2 files changed, 90 insertions(+), 90 deletions(-)
+ drivers/scsi/megaraid.c                     | 50 ++++++++---------
+ drivers/scsi/megaraid/megaraid_mbox.c       | 62 ++++++++++-----------
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 30 +++++-----
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 20 +++----
+ 4 files changed, 81 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index c2776b88d493..965fa8a1c344 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -373,8 +373,8 @@ lpfc_bsg_send_mgmt_cmd_cmp(struct lpfc_hba *phba,
- 	/* Complete the job if the job is still active */
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 80f546976c7e..49d072147242 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -585,7 +585,7 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cmd, int *busy)
  
- 	if (job) {
--		bsg_reply->result = rc;
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_reply->status.combined = rc;
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	}
- 	return;
-@@ -545,7 +545,7 @@ lpfc_bsg_send_mgmt_cmd(struct bsg_job *job)
- 	kfree(dd_data);
- no_dd_data:
- 	/* make error code available to userspace */
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	job->dd_data = NULL;
- 	return rc;
- }
-@@ -643,8 +643,8 @@ lpfc_bsg_rport_els_cmp(struct lpfc_hba *phba,
- 	/* Complete the job if the job is still active */
- 
- 	if (job) {
--		bsg_reply->result = rc;
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_reply->status.combined = rc;
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	}
- 	return;
-@@ -782,7 +782,7 @@ lpfc_bsg_rport_els(struct bsg_job *job)
- 
- no_dd_data:
- 	/* make error code available to userspace */
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	job->dd_data = NULL;
- 	return rc;
- }
-@@ -1113,11 +1113,11 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 			bsg_reply = job->reply;
- 			bsg_reply->reply_payload_rcv_len = size;
- 			/* make error code available to userspace */
--			bsg_reply->result = 0;
-+			bsg_reply->status.combined = 0;
- 			job->dd_data = NULL;
- 			/* complete the job back to userspace */
- 			spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
--			bsg_job_done(job, bsg_reply->result,
-+			bsg_job_done(job, bsg_reply->status.combined,
- 				       bsg_reply->reply_payload_rcv_len);
- 			spin_lock_irqsave(&phba->ct_ev_lock, flags);
+ 		/* have just LUN 0 for each target on virtual channels */
+ 		if (cmd->device->lun) {
+-			cmd->result = (DID_BAD_TARGET << 16);
++			cmd->status.combined = (DID_BAD_TARGET << 16);
+ 			cmd->scsi_done(cmd);
+ 			return NULL;
  		}
-@@ -1340,14 +1340,14 @@ lpfc_bsg_hba_get_event(struct bsg_job *job)
- 	lpfc_bsg_event_unref(evt);
- 	spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
- 	job->dd_data = NULL;
--	bsg_reply->result = 0;
--	bsg_job_done(job, bsg_reply->result,
-+	bsg_reply->status.combined = 0;
-+	bsg_job_done(job, bsg_reply->status.combined,
- 		       bsg_reply->reply_payload_rcv_len);
- 	return 0;
+@@ -604,7 +604,7 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cmd, int *busy)
+ 			max_ldrv_num += 0x80;
  
- job_error:
- 	job->dd_data = NULL;
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	return rc;
- }
- 
-@@ -1438,8 +1438,8 @@ lpfc_issue_ct_rsp_cmp(struct lpfc_hba *phba,
- 	/* Complete the job if the job is still active */
- 
- 	if (job) {
--		bsg_reply->result = rc;
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_reply->status.combined = rc;
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	}
- 	return;
-@@ -1670,7 +1670,7 @@ lpfc_bsg_send_mgmt_rsp(struct bsg_job *job)
- 	kfree(bmp);
- send_mgmt_rsp_exit:
- 	/* make error code available to userspace */
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	job->dd_data = NULL;
- 	return rc;
- }
-@@ -1878,10 +1878,10 @@ lpfc_sli3_bsg_diag_loopback_mode(struct lpfc_hba *phba, struct bsg_job *job)
- 
- job_error:
- 	/* make error code available to userspace */
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	/* complete the job back to userspace if no error */
- 	if (rc == 0)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	return rc;
- }
-@@ -2243,10 +2243,10 @@ lpfc_sli4_bsg_diag_loopback_mode(struct lpfc_hba *phba, struct bsg_job *job)
- 
- job_done:
- 	/* make error code available to userspace */
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	/* complete the job back to userspace if no error */
- 	if (rc == 0)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	return rc;
- }
-@@ -2358,10 +2358,10 @@ lpfc_sli4_bsg_diag_mode_end(struct bsg_job *job)
- 
- loopback_mode_end_exit:
- 	/* make return code available to userspace */
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	/* complete the job back to userspace if no error */
- 	if (rc == 0)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	return rc;
- }
-@@ -2507,10 +2507,10 @@ lpfc_sli4_bsg_link_diag_test(struct bsg_job *job)
- 	/* make error code available to userspace */
- 	if (rc1 && !rc)
- 		rc = rc1;
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	/* complete the job back to userspace if no error */
- 	if (rc == 0)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	return rc;
- }
-@@ -3369,11 +3369,11 @@ lpfc_bsg_diag_loopback_run(struct bsg_job *job)
- loopback_test_exit:
- 	kfree(dataout);
- 	/* make error code available to userspace */
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	job->dd_data = NULL;
- 	/* complete the job back to userspace if no error */
- 	if (rc == IOCB_SUCCESS)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	return rc;
- }
-@@ -3414,9 +3414,9 @@ lpfc_bsg_get_dfc_rev(struct bsg_job *job)
- 	event_reply->info.a_Major = MANAGEMENT_MAJOR_REV;
- 	event_reply->info.a_Minor = MANAGEMENT_MINOR_REV;
- job_error:
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	if (rc == 0)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	return rc;
- }
-@@ -3481,8 +3481,8 @@ lpfc_bsg_issue_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
- 	/* Complete the job if the job is still active */
- 
- 	if (job) {
--		bsg_reply->result = 0;
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_reply->status.combined = 0;
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	}
- 	return;
-@@ -3671,7 +3671,7 @@ lpfc_bsg_issue_mbox_ext_handle_job(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
- 					    pmb_buf, size);
- 
- 		/* result for successful */
--		bsg_reply->result = 0;
-+		bsg_reply->status.combined = 0;
- 
- 		lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
- 				"2937 SLI_CONFIG ext-buffer mailbox command "
-@@ -3732,7 +3732,7 @@ lpfc_bsg_issue_read_mbox_ext_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
- 	/* if the job is still active, call job done */
- 	if (job) {
- 		bsg_reply = job->reply;
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	}
- 	return;
-@@ -3770,7 +3770,7 @@ lpfc_bsg_issue_write_mbox_ext_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
- 	/* if the job is still active, call job done */
- 	if (job) {
- 		bsg_reply = job->reply;
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	}
- 
-@@ -4213,8 +4213,8 @@ lpfc_bsg_sli_cfg_write_cmd_ext(struct lpfc_hba *phba, struct bsg_job *job,
- 
- 	/* wait for additional external buffers */
- 
--	bsg_reply->result = 0;
--	bsg_job_done(job, bsg_reply->result,
-+	bsg_reply->status.combined = 0;
-+	bsg_job_done(job, bsg_reply->status.combined,
- 		       bsg_reply->reply_payload_rcv_len);
- 	return SLI_CONFIG_HANDLED;
- 
-@@ -4441,8 +4441,8 @@ lpfc_bsg_read_ebuf_get(struct lpfc_hba *phba, struct bsg_job *job)
- 		lpfc_bsg_mbox_ext_session_reset(phba);
- 	}
- 
--	bsg_reply->result = 0;
--	bsg_job_done(job, bsg_reply->result,
-+	bsg_reply->status.combined = 0;
-+	bsg_job_done(job, bsg_reply->status.combined,
- 		       bsg_reply->reply_payload_rcv_len);
- 
- 	return SLI_CONFIG_HANDLED;
-@@ -4560,8 +4560,8 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
- 	}
- 
- 	/* wait for additional external buffers */
--	bsg_reply->result = 0;
--	bsg_job_done(job, bsg_reply->result,
-+	bsg_reply->status.combined = 0;
-+	bsg_job_done(job, bsg_reply->status.combined,
- 		       bsg_reply->reply_payload_rcv_len);
- 	return SLI_CONFIG_HANDLED;
- 
-@@ -5030,16 +5030,16 @@ lpfc_bsg_mbox_cmd(struct bsg_job *job)
- 
- 	if (rc == 0) {
- 		/* job done */
--		bsg_reply->result = 0;
-+		bsg_reply->status.combined = 0;
- 		job->dd_data = NULL;
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	} else if (rc == 1)
- 		/* job submitted, will complete later*/
- 		rc = 0; /* return zero, no error */
- 	else {
- 		/* some error occurred */
--		bsg_reply->result = rc;
-+		bsg_reply->status.combined = rc;
- 		job->dd_data = NULL;
- 	}
- 
-@@ -5142,8 +5142,8 @@ lpfc_bsg_menlo_cmd_cmp(struct lpfc_hba *phba,
- 	/* Complete the job if active */
- 
- 	if (job) {
--		bsg_reply->result = rc;
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_reply->status.combined = rc;
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	}
- 
-@@ -5318,7 +5318,7 @@ lpfc_menlo_cmd(struct bsg_job *job)
- 	kfree(dd_data);
- no_dd_data:
- 	/* make error code available to userspace */
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	job->dd_data = NULL;
- 	return rc;
- }
-@@ -5358,9 +5358,9 @@ lpfc_forced_link_speed(struct bsg_job *job)
- 				   ? LPFC_FORCED_LINK_SPEED_SUPPORTED
- 				   : LPFC_FORCED_LINK_SPEED_NOT_SUPPORTED;
- job_error:
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	if (rc == 0)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			       bsg_reply->reply_payload_rcv_len);
- 	return rc;
- }
-@@ -5434,11 +5434,11 @@ lpfc_bsg_get_ras_config(struct bsg_job *job)
- 
- ras_job_error:
- 	/* make error code available to userspace */
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 
- 	/* complete the job back to userspace */
- 	if (!rc)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			     bsg_reply->reply_payload_rcv_len);
- 	return rc;
- }
-@@ -5520,11 +5520,11 @@ lpfc_bsg_set_ras_config(struct bsg_job *job)
- 	}
- ras_job_error:
- 	/* make error code available to userspace */
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 
- 	/* complete the job back to userspace */
- 	if (!rc)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			     bsg_reply->reply_payload_rcv_len);
- 
- 	return rc;
-@@ -5582,11 +5582,11 @@ lpfc_bsg_get_ras_lwpd(struct bsg_job *job)
- 
- ras_job_error:
- 	/* make error code available to userspace */
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 
- 	/* complete the job back to userspace */
- 	if (!rc)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			     bsg_reply->reply_payload_rcv_len);
- 
- 	return rc;
-@@ -5671,9 +5671,9 @@ lpfc_bsg_get_ras_fwlog(struct bsg_job *job)
- 	vfree(fwlog_buff);
- 
- ras_job_error:
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	if (!rc)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			     bsg_reply->reply_payload_rcv_len);
- 
- 	return rc;
-@@ -5743,9 +5743,9 @@ lpfc_get_trunk_info(struct bsg_job *job)
- 	event_reply->logical_speed =
- 				phba->sli4_hba.link_state.logical_speed / 1000;
- job_error:
--	bsg_reply->result = rc;
-+	bsg_reply->status.combined = rc;
- 	if (!rc)
--		bsg_job_done(job, bsg_reply->result,
-+		bsg_job_done(job, bsg_reply->status.combined,
- 			     bsg_reply->reply_payload_rcv_len);
- 	return rc;
- 
-@@ -5817,7 +5817,7 @@ lpfc_bsg_hst_vendor(struct bsg_job *job)
- 		rc = -EINVAL;
- 		bsg_reply->reply_payload_rcv_len = 0;
- 		/* make error code available to userspace */
--		bsg_reply->result = rc;
-+		bsg_reply->status.combined = rc;
- 		break;
- 	}
- 
-@@ -5851,7 +5851,7 @@ lpfc_bsg_request(struct bsg_job *job)
- 		rc = -EINVAL;
- 		bsg_reply->reply_payload_rcv_len = 0;
- 		/* make error code available to userspace */
--		bsg_reply->result = rc;
-+		bsg_reply->status.combined = rc;
- 		break;
- 	}
- 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 81455b53ef3e..cc356463956f 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -156,7 +156,7 @@ lpfc_update_stats(struct lpfc_vport *vport, struct lpfc_io_buf *lpfc_cmd)
- 
- 	if (!vport->stat_data_enabled ||
- 	    vport->stat_data_blocked ||
--	    (cmd->result))
-+	    (cmd->status.combined))
- 		return;
- 
- 	latency = jiffies_to_msecs((long)jiffies - (long)lpfc_cmd->start_time);
-@@ -2871,7 +2871,7 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
- 	if (err_type == BGS_GUARD_ERR_MASK) {
- 		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
- 					0x10, 0x1);
--		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
-+		cmd->status.combined = DRIVER_SENSE << 24 | DID_ABORT << 16 |
- 			      SAM_STAT_CHECK_CONDITION;
- 		phba->bg_guard_err_cnt++;
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
-@@ -2882,7 +2882,7 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
- 	} else if (err_type == BGS_REFTAG_ERR_MASK) {
- 		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
- 					0x10, 0x3);
--		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
-+		cmd->status.combined = DRIVER_SENSE << 24 | DID_ABORT << 16 |
- 			      SAM_STAT_CHECK_CONDITION;
- 
- 		phba->bg_reftag_err_cnt++;
-@@ -2894,7 +2894,7 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
- 	} else if (err_type == BGS_APPTAG_ERR_MASK) {
- 		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
- 					0x10, 0x2);
--		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
-+		cmd->status.combined = DRIVER_SENSE << 24 | DID_ABORT << 16 |
- 			      SAM_STAT_CHECK_CONDITION;
- 
- 		phba->bg_apptag_err_cnt++;
-@@ -2956,7 +2956,7 @@ lpfc_sli4_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
- 
- 		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
- 					0x10, 0x1);
--		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
-+		cmd->status.combined = DRIVER_SENSE << 24 | DID_ABORT << 16 |
- 			      SAM_STAT_CHECK_CONDITION;
- 		phba->bg_guard_err_cnt++;
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
-@@ -2972,7 +2972,7 @@ lpfc_sli4_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
- 
- 		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
- 					0x10, 0x3);
--		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
-+		cmd->status.combined = DRIVER_SENSE << 24 | DID_ABORT << 16 |
- 			      SAM_STAT_CHECK_CONDITION;
- 
- 		phba->bg_reftag_err_cnt++;
-@@ -2989,7 +2989,7 @@ lpfc_sli4_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
- 
- 		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
- 					0x10, 0x2);
--		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
-+		cmd->status.combined = DRIVER_SENSE << 24 | DID_ABORT << 16 |
- 			      SAM_STAT_CHECK_CONDITION;
- 
- 		phba->bg_apptag_err_cnt++;
-@@ -3074,7 +3074,7 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
- 	uint64_t failing_sector = 0;
- 
- 	if (lpfc_bgs_get_invalid_prof(bgstat)) {
--		cmd->result = DID_ERROR << 16;
-+		cmd->status.combined = DID_ERROR << 16;
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
- 				"9072 BLKGRD: Invalid BG Profile in cmd "
- 				"0x%x reftag 0x%x blk cnt 0x%x "
-@@ -3086,7 +3086,7 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
- 	}
- 
- 	if (lpfc_bgs_get_uninit_dif_block(bgstat)) {
--		cmd->result = DID_ERROR << 16;
-+		cmd->status.combined = DID_ERROR << 16;
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
- 				"9073 BLKGRD: Invalid BG PDIF Block in cmd "
- 				"0x%x reftag 0x%x blk cnt 0x%x "
-@@ -3102,7 +3102,7 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
- 
- 		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
- 				0x10, 0x1);
--		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
-+		cmd->status.combined = DRIVER_SENSE << 24 | DID_ABORT << 16 |
- 			      SAM_STAT_CHECK_CONDITION;
- 		phba->bg_guard_err_cnt++;
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
-@@ -3118,7 +3118,7 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
- 
- 		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
- 				0x10, 0x3);
--		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
-+		cmd->status.combined = DRIVER_SENSE << 24 | DID_ABORT << 16 |
- 			      SAM_STAT_CHECK_CONDITION;
- 
- 		phba->bg_reftag_err_cnt++;
-@@ -3135,7 +3135,7 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
- 
- 		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
- 				0x10, 0x2);
--		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
-+		cmd->status.combined = DRIVER_SENSE << 24 | DID_ABORT << 16 |
- 			      SAM_STAT_CHECK_CONDITION;
- 
- 		phba->bg_apptag_err_cnt++;
-@@ -3741,15 +3741,15 @@ lpfc_send_scsi_error_event(struct lpfc_hba *phba, struct lpfc_vport *vport,
- 		return;
- 
- 	/* If there is queuefull or busy condition send a scsi event */
--	if ((cmnd->result == SAM_STAT_TASK_SET_FULL) ||
--		(cmnd->result == SAM_STAT_BUSY)) {
-+	if ((cmnd->status.combined == SAM_STAT_TASK_SET_FULL) ||
-+		(cmnd->status.combined == SAM_STAT_BUSY)) {
- 		fast_path_evt = lpfc_alloc_fast_evt(phba);
- 		if (!fast_path_evt)
- 			return;
- 		fast_path_evt->un.scsi_evt.event_type =
- 			FC_REG_SCSI_EVENT;
- 		fast_path_evt->un.scsi_evt.subcategory =
--		(cmnd->result == SAM_STAT_TASK_SET_FULL) ?
-+		(cmnd->status.combined == SAM_STAT_TASK_SET_FULL) ?
- 		LPFC_EVENT_QFULL : LPFC_EVENT_DEVBSY;
- 		fast_path_evt->un.scsi_evt.lun = cmnd->device->lun;
- 		memcpy(&fast_path_evt->un.scsi_evt.wwpn,
-@@ -4015,7 +4015,7 @@ lpfc_handle_fcp_err(struct lpfc_vport *vport, struct lpfc_io_buf *lpfc_cmd,
- 	}
- 
-  out:
--	cmnd->result = host_status << 16 | scsi_status;
-+	cmnd->status.combined = host_status << 16 | scsi_status;
- 	lpfc_send_scsi_error_event(vport->phba, vport, lpfc_cmd, fcpi_parm);
- }
- 
-@@ -4161,7 +4161,7 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 
- 	switch (lpfc_cmd->status) {
- 	case IOSTAT_SUCCESS:
--		cmd->result = DID_OK << 16;
-+		cmd->status.combined = DID_OK << 16;
- 		break;
- 	case IOSTAT_FCP_RSP_ERROR:
- 		lpfc_handle_fcp_err(vport, lpfc_cmd,
-@@ -4170,7 +4170,7 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 		break;
- 	case IOSTAT_NPORT_BSY:
- 	case IOSTAT_FABRIC_BSY:
--		cmd->result = DID_TRANSPORT_DISRUPTED << 16;
-+		cmd->status.combined = DID_TRANSPORT_DISRUPTED << 16;
- 		fast_path_evt = lpfc_alloc_fast_evt(phba);
- 		if (!fast_path_evt)
- 			break;
-@@ -4230,14 +4230,14 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 		    lpfc_cmd->result == IOERR_ELXSEC_KEY_UNWRAP_COMPARE_ERROR ||
- 		    lpfc_cmd->result == IOERR_ELXSEC_CRYPTO_ERROR ||
- 		    lpfc_cmd->result == IOERR_ELXSEC_CRYPTO_COMPARE_ERROR) {
--			cmd->result = DID_NO_CONNECT << 16;
-+			cmd->status.combined = DID_NO_CONNECT << 16;
- 			break;
+ 		if(ldrv_num > max_ldrv_num ) {
+-			cmd->result = (DID_BAD_TARGET << 16);
++			cmd->status.combined = (DID_BAD_TARGET << 16);
+ 			cmd->scsi_done(cmd);
+ 			return NULL;
  		}
- 		if (lpfc_cmd->result == IOERR_INVALID_RPI ||
- 		    lpfc_cmd->result == IOERR_NO_RESOURCES ||
- 		    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
- 		    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
--			cmd->result = DID_REQUEUE << 16;
-+			cmd->status.combined = DID_REQUEUE << 16;
- 			break;
+@@ -616,7 +616,7 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cmd, int *busy)
+ 			 * Do not support lun >7 for physically accessed
+ 			 * devices
+ 			 */
+-			cmd->result = (DID_BAD_TARGET << 16);
++			cmd->status.combined = (DID_BAD_TARGET << 16);
+ 			cmd->scsi_done(cmd);
+ 			return NULL;
  		}
- 		if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
-@@ -4276,7 +4276,7 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 	default:
- 		if (lpfc_cmd->status >= IOSTAT_CNT)
- 			lpfc_cmd->status = IOSTAT_DEFAULT;
--		cmd->result = DID_ERROR << 16;
-+		cmd->status.combined = DID_ERROR << 16;
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
- 				 "9037 FCP Completion Error: xri %x "
- 				 "status x%x result x%x [x%x] "
-@@ -4286,14 +4286,14 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 				 wcqe->parameter,
- 				 wcqe->total_data_placed);
- 	}
--	if (cmd->result || lpfc_cmd->fcp_rsp->rspSnsLen) {
-+	if (cmd->status.combined || lpfc_cmd->fcp_rsp->rspSnsLen) {
- 		u32 *lp = (u32 *)cmd->sense_buffer;
+@@ -636,7 +636,7 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cmd, int *busy)
+ 			 * If no, return success always
+ 			 */
+ 			if( !adapter->has_cluster ) {
+-				cmd->result = (DID_OK << 16);
++				cmd->status.combined = (DID_OK << 16);
+ 				cmd->scsi_done(cmd);
+ 				return NULL;
+ 			}
+@@ -654,7 +654,7 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cmd, int *busy)
  
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
- 				 "9039 Iodone <%d/%llu> cmd x%px, error "
- 				 "x%x SNS x%x x%x Data: x%x x%x\n",
- 				 cmd->device->id, cmd->device->lun, cmd,
--				 cmd->result, *lp, *(lp + 3), cmd->retries,
-+				 cmd->status.combined, *lp, *(lp + 3), cmd->retries,
- 				 scsi_get_resid(cmd));
- 	}
+ 			return scb;
+ #else
+-			cmd->result = (DID_OK << 16);
++			cmd->status.combined = (DID_OK << 16);
+ 			cmd->scsi_done(cmd);
+ 			return NULL;
+ #endif
+@@ -669,7 +669,7 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cmd, int *busy)
+ 			memset(buf, 0, cmd->cmnd[4]);
+ 			kunmap_atomic(buf - sg->offset);
  
-@@ -4471,7 +4471,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
- 			break;
- 		case IOSTAT_NPORT_BSY:
- 		case IOSTAT_FABRIC_BSY:
--			cmd->result = DID_TRANSPORT_DISRUPTED << 16;
-+			cmd->status.combined = DID_TRANSPORT_DISRUPTED << 16;
- 			fast_path_evt = lpfc_alloc_fast_evt(phba);
- 			if (!fast_path_evt)
- 				break;
-@@ -4503,14 +4503,14 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
- 			    lpfc_cmd->result == IOERR_ELXSEC_KEY_UNWRAP_COMPARE_ERROR ||
- 			    lpfc_cmd->result == IOERR_ELXSEC_CRYPTO_ERROR ||
- 			    lpfc_cmd->result == IOERR_ELXSEC_CRYPTO_COMPARE_ERROR) {
--				cmd->result = DID_NO_CONNECT << 16;
-+				cmd->status.combined = DID_NO_CONNECT << 16;
- 				break;
+-			cmd->result = (DID_OK << 16);
++			cmd->status.combined = (DID_OK << 16);
+ 			cmd->scsi_done(cmd);
+ 			return NULL;
+ 		}
+@@ -865,7 +865,7 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cmd, int *busy)
+ 			 */
+ 			if( ! adapter->has_cluster ) {
+ 
+-				cmd->result = (DID_BAD_TARGET << 16);
++				cmd->status.combined = (DID_BAD_TARGET << 16);
+ 				cmd->scsi_done(cmd);
+ 				return NULL;
  			}
- 			if (lpfc_cmd->result == IOERR_INVALID_RPI ||
- 			    lpfc_cmd->result == IOERR_NO_RESOURCES ||
- 			    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
- 			    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
--				cmd->result = DID_REQUEUE << 16;
-+				cmd->status.combined = DID_REQUEUE << 16;
- 				break;
- 			}
- 			if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
-@@ -4544,24 +4544,24 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
- 			}
- 			fallthrough;
+@@ -888,7 +888,7 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cmd, int *busy)
+ #endif
+ 
  		default:
--			cmd->result = DID_ERROR << 16;
-+			cmd->status.combined = DID_ERROR << 16;
+-			cmd->result = (DID_BAD_TARGET << 16);
++			cmd->status.combined = (DID_BAD_TARGET << 16);
+ 			cmd->scsi_done(cmd);
+ 			return NULL;
+ 		}
+@@ -1472,7 +1472,7 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 					"aborted cmd [%x] complete\n",
+ 					scb->idx);
+ 
+-				scb->cmd->result = (DID_ABORT << 16);
++				scb->cmd->status.combined = (DID_ABORT << 16);
+ 
+ 				list_add_tail(SCSI_LIST(scb->cmd),
+ 						&adapter->completed_list);
+@@ -1491,7 +1491,7 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 					"reset cmd [%x] complete\n",
+ 					scb->idx);
+ 
+-				scb->cmd->result = (DID_RESET << 16);
++				scb->cmd->status.combined = (DID_RESET << 16);
+ 
+ 				list_add_tail(SCSI_LIST(scb->cmd),
+ 						&adapter->completed_list);
+@@ -1565,12 +1565,12 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 		}
+ 
+ 		/* clear result; otherwise, success returns corrupt value */
+-		cmd->result = 0;
++		cmd->status.combined = 0;
+ 
+ 		/* Convert MegaRAID status to Linux error code */
+ 		switch (status) {
+ 		case 0x00:	/* SUCCESS , i.e. SCSI_STATUS_GOOD */
+-			cmd->result |= (DID_OK << 16);
++			cmd->status.combined |= (DID_OK << 16);
+ 			break;
+ 
+ 		case 0x02:	/* ERROR_ABORTED, i.e.
+@@ -1583,9 +1583,9 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 				memcpy(cmd->sense_buffer, pthru->reqsensearea,
+ 						14);
+ 
+-				cmd->result = (DRIVER_SENSE << 24) |
++				cmd->status.combined = (DRIVER_SENSE << 24) |
+ 					(DID_OK << 16) |
+-					(CHECK_CONDITION << 1);
++					SAM_STAT_CHECK_CONDITION;
+ 			}
+ 			else {
+ 				if (mbox->m_out.cmd == MEGA_MBOXCMD_EXTPTHRU) {
+@@ -1593,20 +1593,20 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 					memcpy(cmd->sense_buffer,
+ 						epthru->reqsensearea, 14);
+ 
+-					cmd->result = (DRIVER_SENSE << 24) |
++					cmd->status.combined = (DRIVER_SENSE << 24) |
+ 						(DID_OK << 16) |
+-						(CHECK_CONDITION << 1);
++						SAM_STAT_CHECK_CONDITION;
+ 				} else {
+ 					cmd->sense_buffer[0] = 0x70;
+ 					cmd->sense_buffer[2] = ABORTED_COMMAND;
+-					cmd->result |= (CHECK_CONDITION << 1);
++					cmd->status.b.status = SAM_STAT_CHECK_CONDITION;
+ 				}
+ 			}
+ 			break;
+ 
+ 		case 0x08:	/* ERR_DEST_DRIVE_FAILED, i.e.
+ 				   SCSI_STATUS_BUSY */
+-			cmd->result |= (DID_BUS_BUSY << 16) | status;
++			cmd->status.combined |= (DID_BUS_BUSY << 16) | status;
+ 			break;
+ 
+ 		default:
+@@ -1616,8 +1616,8 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 			 * MEGA_RESERVATION_STATUS failed
+ 			 */
+ 			if( cmd->cmnd[0] == TEST_UNIT_READY ) {
+-				cmd->result |= (DID_ERROR << 16) |
+-					(RESERVATION_CONFLICT << 1);
++				cmd->status.combined |= (DID_ERROR << 16) |
++					SAM_STAT_RESERVATION_CONFLICT;
+ 			}
+ 			else
+ 			/*
+@@ -1628,12 +1628,12 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 				(cmd->cmnd[0] == RESERVE ||
+ 					 cmd->cmnd[0] == RELEASE) ) {
+ 
+-				cmd->result |= (DID_ERROR << 16) |
+-					(RESERVATION_CONFLICT << 1);
++				cmd->status.combined |= (DID_ERROR << 16) |
++					SAM_STAT_RESERVATION_CONFLICT;
+ 			}
+ 			else
+ #endif
+-				cmd->result |= (DID_BAD_TARGET << 16)|status;
++				cmd->status.combined |= (DID_BAD_TARGET << 16)|status;
+ 		}
+ 
+ 		mega_free_scb(adapter, scb);
+@@ -1983,10 +1983,10 @@ megaraid_abort_and_reset(adapter_t *adapter, struct scsi_cmnd *cmd, int aor)
+ 				mega_free_scb(adapter, scb);
+ 
+ 				if( aor == SCB_ABORT ) {
+-					cmd->result = (DID_ABORT << 16);
++					cmd->status.combined = (DID_ABORT << 16);
+ 				}
+ 				else {
+-					cmd->result = (DID_RESET << 16);
++					cmd->status.combined = (DID_RESET << 16);
+ 				}
+ 
+ 				list_add_tail(SCSI_LIST(cmd),
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index b1a2d3536add..b819365249ea 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -1442,7 +1442,7 @@ megaraid_queue_command_lck(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd
+ 
+ 	adapter		= SCP2ADAPTER(scp);
+ 	scp->scsi_done	= done;
+-	scp->result	= 0;
++	scp->status.combined = 0;
+ 
+ 	/*
+ 	 * Allocate and build a SCB request
+@@ -1510,12 +1510,12 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 			 * If no, return success always
+ 			 */
+ 			if (!adapter->ha) {
+-				scp->result = (DID_OK << 16);
++				scp->status.combined = (DID_OK << 16);
+ 				return NULL;
+ 			}
+ 
+ 			if (!(scb = megaraid_alloc_scb(adapter, scp))) {
+-				scp->result = (DID_ERROR << 16);
++				scp->status.combined = (DID_ERROR << 16);
+ 				*busy = 1;
+ 				return NULL;
+ 			}
+@@ -1552,7 +1552,7 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 						 __LINE__));
+ 			}
+ 		}
+-		scp->result = (DID_OK << 16);
++		scp->status.combined = (DID_OK << 16);
+ 		return NULL;
+ 
+ 		case INQUIRY:
+@@ -1577,7 +1577,7 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 				scp->sense_buffer[0] = 0x70;
+ 				scp->sense_buffer[2] = ILLEGAL_REQUEST;
+ 				scp->sense_buffer[12] = MEGA_INVALID_FIELD_IN_CDB;
+-				scp->result = CHECK_CONDITION << 1;
++				scp->status.combined = SAM_STAT_CHECK_CONDITION;
+ 				return NULL;
+ 			}
+ 
+@@ -1589,18 +1589,18 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 			 * requests for more than 40 logical drives
+ 			 */
+ 			if (SCP2LUN(scp)) {
+-				scp->result = (DID_BAD_TARGET << 16);
++				scp->status.combined = (DID_BAD_TARGET << 16);
+ 				return NULL;
+ 			}
+ 			if ((target % 0x80) >= MAX_LOGICAL_DRIVES_40LD) {
+-				scp->result = (DID_BAD_TARGET << 16);
++				scp->status.combined = (DID_BAD_TARGET << 16);
+ 				return NULL;
+ 			}
+ 
+ 
+ 			/* Allocate a SCB and initialize passthru */
+ 			if (!(scb = megaraid_alloc_scb(adapter, scp))) {
+-				scp->result = (DID_ERROR << 16);
++				scp->status.combined = (DID_ERROR << 16);
+ 				*busy = 1;
+ 				return NULL;
+ 			}
+@@ -1645,7 +1645,7 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 			 * Allocate a SCB and initialize mailbox
+ 			 */
+ 			if (!(scb = megaraid_alloc_scb(adapter, scp))) {
+-				scp->result = (DID_ERROR << 16);
++				scp->status.combined = (DID_ERROR << 16);
+ 				*busy = 1;
+ 				return NULL;
+ 			}
+@@ -1712,7 +1712,7 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 
+ 				megaraid_dealloc_scb(adapter, scb);
+ 
+-				scp->result = (DID_ERROR << 16);
++				scp->status.combined = (DID_ERROR << 16);
+ 				return NULL;
+ 			}
+ 
+@@ -1733,7 +1733,7 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 			 * Do we support clustering and is the support enabled
+ 			 */
+ 			if (!adapter->ha) {
+-				scp->result = (DID_BAD_TARGET << 16);
++				scp->status.combined = (DID_BAD_TARGET << 16);
+ 				return NULL;
+ 			}
+ 
+@@ -1741,7 +1741,7 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 			 * Allocate a SCB and initialize mailbox
+ 			 */
+ 			if (!(scb = megaraid_alloc_scb(adapter, scp))) {
+-				scp->result = (DID_ERROR << 16);
++				scp->status.combined = (DID_ERROR << 16);
+ 				*busy = 1;
+ 				return NULL;
+ 			}
+@@ -1759,7 +1759,7 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 			return scb;
+ 
+ 		default:
+-			scp->result = (DID_BAD_TARGET << 16);
++			scp->status.combined = (DID_BAD_TARGET << 16);
+ 			return NULL;
+ 		}
+ 	}
+@@ -1767,7 +1767,7 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 
+ 		// Do not allow access to target id > 15 or LUN > 7
+ 		if (target > 15 || SCP2LUN(scp) > 7) {
+-			scp->result = (DID_BAD_TARGET << 16);
++			scp->status.combined = (DID_BAD_TARGET << 16);
+ 			return NULL;
+ 		}
+ 
+@@ -1803,13 +1803,13 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 
+ 		// disable channel sweep if fast load option given
+ 		if (rdev->fast_load) {
+-			scp->result = (DID_BAD_TARGET << 16);
++			scp->status.combined = (DID_BAD_TARGET << 16);
+ 			return NULL;
+ 		}
+ 
+ 		// Allocate a SCB and initialize passthru
+ 		if (!(scb = megaraid_alloc_scb(adapter, scp))) {
+-			scp->result = (DID_ERROR << 16);
++			scp->status.combined = (DID_ERROR << 16);
+ 			*busy = 1;
+ 			return NULL;
+ 		}
+@@ -2289,7 +2289,7 @@ megaraid_mbox_dpc(unsigned long devp)
+ 
+ 		case 0x00:
+ 
+-			scp->result = (DID_OK << 16);
++			scp->status.combined = (DID_OK << 16);
+ 			break;
+ 
+ 		case 0x02:
+@@ -2301,8 +2301,8 @@ megaraid_mbox_dpc(unsigned long devp)
+ 				memcpy(scp->sense_buffer, pthru->reqsensearea,
+ 						14);
+ 
+-				scp->result = DRIVER_SENSE << 24 |
+-					DID_OK << 16 | CHECK_CONDITION << 1;
++				scp->status.combined = DRIVER_SENSE << 24 |
++					DID_OK << 16 | SAM_STAT_CHECK_CONDITION;
+ 			}
+ 			else {
+ 				if (mbox->cmd == MBOXCMD_EXTPTHRU) {
+@@ -2310,20 +2310,20 @@ megaraid_mbox_dpc(unsigned long devp)
+ 					memcpy(scp->sense_buffer,
+ 						epthru->reqsensearea, 14);
+ 
+-					scp->result = DRIVER_SENSE << 24 |
++					scp->status.combined = DRIVER_SENSE << 24 |
+ 						DID_OK << 16 |
+-						CHECK_CONDITION << 1;
++						SAM_STAT_CHECK_CONDITION;
+ 				} else {
+ 					scp->sense_buffer[0] = 0x70;
+ 					scp->sense_buffer[2] = ABORTED_COMMAND;
+-					scp->result = CHECK_CONDITION << 1;
++					scp->status.combined = SAM_STAT_CHECK_CONDITION;
+ 				}
+ 			}
+ 			break;
+ 
+ 		case 0x08:
+ 
+-			scp->result = DID_BUS_BUSY << 16 | status;
++			scp->status.combined = DID_BUS_BUSY << 16 | status;
+ 			break;
+ 
+ 		default:
+@@ -2333,8 +2333,8 @@ megaraid_mbox_dpc(unsigned long devp)
+ 			 * failed
+ 			 */
+ 			if (scp->cmnd[0] == TEST_UNIT_READY) {
+-				scp->result = DID_ERROR << 16 |
+-					RESERVATION_CONFLICT << 1;
++				scp->status.combined = DID_ERROR << 16 |
++					SAM_STAT_RESERVATION_CONFLICT;
+ 			}
+ 			else
+ 			/*
+@@ -2344,11 +2344,11 @@ megaraid_mbox_dpc(unsigned long devp)
+ 			if (status == 1 && (scp->cmnd[0] == RESERVE ||
+ 					 scp->cmnd[0] == RELEASE)) {
+ 
+-				scp->result = DID_ERROR << 16 |
+-					RESERVATION_CONFLICT << 1;
++				scp->status.combined = DID_ERROR << 16 |
++					SAM_STAT_RESERVATION_CONFLICT;
+ 			}
+ 			else {
+-				scp->result = DID_BAD_TARGET << 16 | status;
++				scp->status.combined = DID_BAD_TARGET << 16 | status;
+ 			}
+ 		}
+ 
+@@ -2423,7 +2423,7 @@ megaraid_abort_handler(struct scsi_cmnd *scp)
+ 			"megaraid: %d[%d:%d], abort from completed list\n",
+ 				scb->sno, scb->dev_channel, scb->dev_target));
+ 
+-			scp->result = (DID_ABORT << 16);
++			scp->status.combined = (DID_ABORT << 16);
+ 			scp->scsi_done(scp);
+ 
+ 			megaraid_dealloc_scb(adapter, scb);
+@@ -2453,7 +2453,7 @@ megaraid_abort_handler(struct scsi_cmnd *scp)
+ 				"megaraid abort: [%d:%d], driver owner\n",
+ 				scb->dev_channel, scb->dev_target));
+ 
+-			scp->result = (DID_ABORT << 16);
++			scp->status.combined = (DID_ABORT << 16);
+ 			scp->scsi_done(scp);
+ 
+ 			megaraid_dealloc_scb(adapter, scb);
+@@ -2573,7 +2573,7 @@ megaraid_reset_handler(struct scsi_cmnd *scp)
+ 				scb->sno, scb->dev_channel, scb->dev_target));
+ 			}
+ 
+-			scb->scp->result = (DID_RESET << 16);
++			scb->scp->status.combined = (DID_RESET << 16);
+ 			scb->scp->scsi_done(scb->scp);
+ 
+ 			megaraid_dealloc_scb(adapter, scb);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 4d4e9dbe5193..218c38b54be1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -1784,7 +1784,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	    scmd->device->host->hostdata;
+ 
+ 	if (instance->unload == 1) {
+-		scmd->result = DID_NO_CONNECT << 16;
++		scmd->status.combined = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
+ 		return 0;
+ 	}
+@@ -1799,21 +1799,21 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		    (DID_REQUEUE << 16)) {
+ 			return SCSI_MLQUEUE_HOST_BUSY;
+ 		} else {
+-			scmd->result = DID_NO_CONNECT << 16;
++			scmd->status.combined = DID_NO_CONNECT << 16;
+ 			scmd->scsi_done(scmd);
+ 			return 0;
+ 		}
+ 	}
+ 
+ 	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
+-		scmd->result = DID_NO_CONNECT << 16;
++		scmd->status.combined = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
+ 		return 0;
+ 	}
+ 
+ 	mr_device_priv_data = scmd->device->hostdata;
+ 	if (!mr_device_priv_data) {
+-		scmd->result = DID_NO_CONNECT << 16;
++		scmd->status.combined = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
+ 		return 0;
+ 	}
+@@ -1825,19 +1825,19 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 
+ 
+-	scmd->result = 0;
++	scmd->status.combined = 0;
+ 
+ 	if (MEGASAS_IS_LOGICAL(scmd->device) &&
+ 	    (scmd->device->id >= instance->fw_supported_vd_count ||
+ 		scmd->device->lun)) {
+-		scmd->result = DID_BAD_TARGET << 16;
++		scmd->status.combined = DID_BAD_TARGET << 16;
+ 		goto out_done;
+ 	}
+ 
+ 	if ((scmd->cmnd[0] == SYNCHRONIZE_CACHE) &&
+ 	    MEGASAS_IS_LOGICAL(scmd->device) &&
+ 	    (!instance->fw_sync_cache_support)) {
+-		scmd->result = DID_OK << 16;
++		scmd->status.combined = DID_OK << 16;
+ 		goto out_done;
+ 	}
+ 
+@@ -2744,7 +2744,7 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+ 						struct megasas_cmd, list);
+ 			list_del_init(&reset_cmd->list);
+ 			if (reset_cmd->scmd) {
+-				reset_cmd->scmd->result = DID_REQUEUE << 16;
++				reset_cmd->scmd->status.combined = DID_REQUEUE << 16;
+ 				dev_notice(&instance->pdev->dev, "%d:%p reset [%02x]\n",
+ 					reset_index, reset_cmd,
+ 					reset_cmd->scmd->cmnd[0]);
+@@ -3581,7 +3581,7 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
+ 	case MFI_CMD_LD_WRITE:
+ 
+ 		if (alt_status) {
+-			cmd->scmd->result = alt_status << 16;
++			cmd->scmd->status.combined = alt_status << 16;
+ 			exception = 1;
+ 		}
+ 
+@@ -3599,18 +3599,18 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
+ 		switch (hdr->cmd_status) {
+ 
+ 		case MFI_STAT_OK:
+-			cmd->scmd->result = DID_OK << 16;
++			cmd->scmd->status.combined = DID_OK << 16;
+ 			break;
+ 
+ 		case MFI_STAT_SCSI_IO_FAILED:
+ 		case MFI_STAT_LD_INIT_IN_PROGRESS:
+-			cmd->scmd->result =
++			cmd->scmd->status.combined =
+ 			    (DID_ERROR << 16) | hdr->scsi_status;
+ 			break;
+ 
+ 		case MFI_STAT_SCSI_DONE_WITH_ERROR:
+ 
+-			cmd->scmd->result = (DID_OK << 16) | hdr->scsi_status;
++			cmd->scmd->status.combined = (DID_OK << 16) | hdr->scsi_status;
+ 
+ 			if (hdr->scsi_status == SAM_STAT_CHECK_CONDITION) {
+ 				memset(cmd->scmd->sense_buffer, 0,
+@@ -3618,20 +3618,20 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
+ 				memcpy(cmd->scmd->sense_buffer, cmd->sense,
+ 				       hdr->sense_len);
+ 
+-				cmd->scmd->result |= DRIVER_SENSE << 24;
++				cmd->scmd->status.combined |= DRIVER_SENSE << 24;
+ 			}
+ 
+ 			break;
+ 
+ 		case MFI_STAT_LD_OFFLINE:
+ 		case MFI_STAT_DEVICE_NOT_FOUND:
+-			cmd->scmd->result = DID_BAD_TARGET << 16;
++			cmd->scmd->status.combined = DID_BAD_TARGET << 16;
+ 			break;
+ 
+ 		default:
+ 			dev_printk(KERN_DEBUG, &instance->pdev->dev, "MFI FW status %#x\n",
+ 			       hdr->cmd_status);
+-			cmd->scmd->result = DID_ERROR << 16;
++			cmd->scmd->status.combined = DID_ERROR << 16;
  			break;
  		}
  
- 		if (!pnode || (pnode->nlp_state != NLP_STE_MAPPED_NODE))
--			cmd->result = DID_TRANSPORT_DISRUPTED << 16 |
-+			cmd->status.combined = DID_TRANSPORT_DISRUPTED << 16 |
- 				      SAM_STAT_BUSY;
- 	} else
--		cmd->result = DID_OK << 16;
-+		cmd->status.combined = DID_OK << 16;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 2221175ae051..c70e7ce72123 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -2035,23 +2035,23 @@ map_cmd_status(struct fusion_context *fusion,
+ 	switch (status) {
  
--	if (cmd->result || lpfc_cmd->fcp_rsp->rspSnsLen) {
-+	if (cmd->status.combined || lpfc_cmd->fcp_rsp->rspSnsLen) {
- 		uint32_t *lp = (uint32_t *)cmd->sense_buffer;
+ 	case MFI_STAT_OK:
+-		scmd->result = DID_OK << 16;
++		scmd->status.combined = DID_OK << 16;
+ 		break;
  
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
- 				 "0710 Iodone <%d/%llu> cmd x%px, error "
- 				 "x%x SNS x%x x%x Data: x%x x%x\n",
- 				 cmd->device->id, cmd->device->lun, cmd,
--				 cmd->result, *lp, *(lp + 3), cmd->retries,
-+				 cmd->status.combined, *lp, *(lp + 3), cmd->retries,
- 				 scsi_get_resid(cmd));
- 	}
+ 	case MFI_STAT_SCSI_IO_FAILED:
+ 	case MFI_STAT_LD_INIT_IN_PROGRESS:
+-		scmd->result = (DID_ERROR << 16) | ext_status;
++		scmd->status.combined = (DID_ERROR << 16) | ext_status;
+ 		break;
  
-@@ -5179,7 +5179,7 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
+ 	case MFI_STAT_SCSI_DONE_WITH_ERROR:
  
- 	err = fc_remote_port_chkready(rport);
- 	if (err) {
--		cmnd->result = err;
-+		cmnd->status.combined = err;
- 		goto out_fail_command;
- 	}
- 	ndlp = rdata->pnode;
-@@ -5286,7 +5286,7 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- 
- 	if (unlikely(err)) {
- 		if (err == 2) {
--			cmnd->result = DID_ERROR << 16;
-+			cmnd->status.combined = DID_ERROR << 16;
- 			goto out_fail_command_release_buf;
+-		scmd->result = (DID_OK << 16) | ext_status;
++		scmd->status.combined = (DID_OK << 16) | ext_status;
+ 		if (ext_status == SAM_STAT_CHECK_CONDITION) {
+ 			memset(scmd->sense_buffer, 0,
+ 			       SCSI_SENSE_BUFFERSIZE);
+ 			memcpy(scmd->sense_buffer, sense,
+ 			       SCSI_SENSE_BUFFERSIZE);
+-			scmd->result |= DRIVER_SENSE << 24;
++			scmd->status.combined |= DRIVER_SENSE << 24;
  		}
- 		goto out_host_busy_free_buf;
+ 
+ 		/*
+@@ -2073,13 +2073,13 @@ map_cmd_status(struct fusion_context *fusion,
+ 
+ 	case MFI_STAT_LD_OFFLINE:
+ 	case MFI_STAT_DEVICE_NOT_FOUND:
+-		scmd->result = DID_BAD_TARGET << 16;
++		scmd->status.combined = DID_BAD_TARGET << 16;
+ 		break;
+ 	case MFI_STAT_CONFIG_SEQ_MISMATCH:
+-		scmd->result = DID_IMM_RETRY << 16;
++		scmd->status.combined = DID_IMM_RETRY << 16;
+ 		break;
+ 	default:
+-		scmd->result = DID_ERROR << 16;
++		scmd->status.combined = DID_ERROR << 16;
+ 		break;
+ 	}
+ }
+@@ -4699,7 +4699,7 @@ int megasas_task_abort_fusion(struct scsi_cmnd *scmd)
+ 	if (!mr_device_priv_data) {
+ 		sdev_printk(KERN_INFO, scmd->device, "device been deleted! "
+ 			"scmd(%p)\n", scmd);
+-		scmd->result = DID_NO_CONNECT << 16;
++		scmd->status.combined = DID_NO_CONNECT << 16;
+ 		ret = SUCCESS;
+ 		goto out;
+ 	}
+@@ -4780,7 +4780,7 @@ int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
+ 	if (!mr_device_priv_data) {
+ 		sdev_printk(KERN_INFO, scmd->device,
+ 			    "device been deleted! scmd: (0x%p)\n", scmd);
+-		scmd->result = DID_NO_CONNECT << 16;
++		scmd->status.combined = DID_NO_CONNECT << 16;
+ 		ret = SUCCESS;
+ 		goto out;
+ 	}
+@@ -4959,7 +4959,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 					MPI2_FUNCTION_SCSI_IO_REQUEST)
+ 					fpio_count++;
+ 
+-				scmd_local->result =
++				scmd_local->status.combined =
+ 					megasas_check_mpio_paths(instance,
+ 							scmd_local);
+ 				if (instance->ldio_threshold &&
