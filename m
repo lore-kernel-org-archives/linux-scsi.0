@@ -2,91 +2,147 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEFE2C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 16:44:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F804C43461
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 17:11:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC5F1613D4
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 16:44:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CC81613B2
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 17:11:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233223AbhDTQpQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Apr 2021 12:45:16 -0400
-Received: from mail-pl1-f169.google.com ([209.85.214.169]:45054 "EHLO
-        mail-pl1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232901AbhDTQpP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 12:45:15 -0400
-Received: by mail-pl1-f169.google.com with SMTP id y1so4331579plg.11
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Apr 2021 09:44:44 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=cgMzMaqgmsp3/nctA1zgx8mU48oyJid6bUjYcUqW50U=;
-        b=rhajTLEs3n8OOYWs6+roLWoQiXOS4DsTngVUC1SV20HUnFW/YxnDFKy5W9r+whOMST
-         3foUtIGSXl/qzKtp8DtZafjrB7S3qxBMtjUBnZmeL9taAmbFGSHYpkT0ySbHnXGeZq5H
-         wy5i6Xu84rpT5s5eixaYXGDg3U0+c2+Xqvts3Ne2ADAG97cQC3esWQcoWul8EBWr01iC
-         XajZdK/iO5S1/b+itIQJ/HuYaY8OTxL+hlO0myPmf+wlACNhBuK3/5YafA68kHgseI2T
-         Y3jWuAKWSIJ+eyoA5pi9jVds4R8/S6/PJ4jO6GSTx5XN/o+vxNjJhRLjL0/Uqumc51dY
-         nYcA==
-X-Gm-Message-State: AOAM5307T3T9Ui64FlUriXl16JN5/SD2ZZBMjCfcJjtkE6QcLKLxHDsL
-        s1+wGU5xd+ldszqU93jv4LI=
-X-Google-Smtp-Source: ABdhPJw8t7Uv7YWOPGxI/UTXN1LFCUx73H6HrzlW1UgleKrBAc70DklsPvlLlX3tECwx4/wnVcreLw==
-X-Received: by 2002:a17:902:8f8d:b029:ea:e059:84a6 with SMTP id z13-20020a1709028f8db02900eae05984a6mr30204610plo.35.1618937084029;
-        Tue, 20 Apr 2021 09:44:44 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:b389:6c06:5046:89e? ([2601:647:4000:d7:b389:6c06:5046:89e])
-        by smtp.gmail.com with ESMTPSA id x22sm3666963pgx.19.2021.04.20.09.44.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 20 Apr 2021 09:44:43 -0700 (PDT)
-Subject: Re: [PATCH 075/117] nfsd: Convert to the scsi_status union
-To:     Chuck Lever III <chuck.lever@oracle.com>
-Cc:     Martin Petersen <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Bruce Fields <bfields@fieldses.org>
+        id S233341AbhDTRM1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Apr 2021 13:12:27 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53886 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232913AbhDTRM0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Apr 2021 13:12:26 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 00A41AE5C;
+        Tue, 20 Apr 2021 17:11:54 +0000 (UTC)
+Subject: Re: [PATCH 000/117] Make better use of static type checking
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 References: <20210420000845.25873-1-bvanassche@acm.org>
- <20210420000845.25873-76-bvanassche@acm.org>
- <67BD8DEF-7C29-458A-9135-6602192594D4@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <8775e8c9-49cf-c3eb-0933-8029494f2ff8@acm.org>
-Date:   Tue, 20 Apr 2021 09:44:41 -0700
+ <7eaf77e8-ca4f-c0db-e94a-5fa3e16e3b51@suse.de>
+ <5c194446-e145-9d6d-3bc2-23254f0058b9@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <e230eb1f-172f-c18e-61dd-f9601e30d127@suse.de>
+Date:   Tue, 20 Apr 2021 19:11:53 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.1
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-In-Reply-To: <67BD8DEF-7C29-458A-9135-6602192594D4@oracle.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5c194446-e145-9d6d-3bc2-23254f0058b9@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/20/21 7:36 AM, Chuck Lever III wrote:
->> On Apr 19, 2021, at 8:08 PM, Bart Van Assche <bvanassche@acm.org> wrote:
->> An explanation of the purpose of this patch is available in the patch
->> "scsi: Introduce the scsi_status union".
->>
->> Cc: "J. Bruce Fields" <bfields@fieldses.org>
->> Cc: Chuck Lever <chuck.lever@oracle.com>
->> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+On 4/20/21 6:12 PM, Bart Van Assche wrote:
+> On 4/19/21 11:04 PM, Hannes Reinecke wrote:
+>> We should not try to preserve the split SCSI result value with its four
+>> distinct fields.
 > 
-> Hi Bart, I assume this is going into v5.13 via the SCSI tree?
-> Do you need an Acked-by: from the NFSD maintainers?
+> I don't think that we have the freedom to drop the four byte SCSI result
+> entirely since multiple user space APIs use that data structure. The
+> four-byte SCSI result value is embedded in the following user space API
+> data structures (there may be others):
+> * struct sg_io_v4, the SG_IO header includes the driver_status
+> (driver_byte()), transport_status (host_byte()) and device_status
+> (scsi_status & 0xff) (the message byte is not included).
+> * struct fc_bsg_reply.
+> * struct iscsi_bsg_reply.
+> * struct ufs_bsg_reply.
+> 
+Yes, I know. But that's the user-space API; there is nothing forcing us 
+to continue using it internally as long as we keep the userspace API intact.
 
-Hi Chuck,
+>> I'd rather have the message byte handling moved into the SCSI parallel
+>> drivers (where really it should've been in the first place).
+>> The driver byte can go entirely as the DRIVER_SENSE flag can be replaced
+>> with a check for valid sense code, DRIVER_TIMEOUT is pretty much
+>> identical to DID_TIMEOUT (with the semantic difference _who_ set the
+>> timeout), and DRIVER_ERROR can be folded back into the caller.
+>> All other values are unused, allowing us to drop driver error completely.
+>>
+>> With that we're only having two fields (host byte and status byte) left,
+>> which should be treated as two distinct values.
+>>
+>> As it so happens I do have a patchset for this; guess I'll be posting it
+>> to demonstrate the idea.
+> 
+> This patch series does not prevent the conversion described above.
+> Although I think that the changes described above would help, I have a
+> few concerns:
+> - Some drivers use the result member of struct scsi_cmnd for another
+> purpose than storing SCSI result values. See e.g. the CAM_* values
+> defined in drivers/scsi/aic7xxx/cam.h and the use of these values in
+> drivers/scsi/aic7xxx/aic79xx_osm.c. From the master branch:
+> 
+>          [ ... ]
+> 	cmd->scsi_done = scsi_done;
+> 	cmd->result = CAM_REQ_INPROG << 16;
+> 	rtn = ahd_linux_run_command(ahd, dev, cmd);
+>          [ ... ]
+> 
+>          [ ... ]
+> 	if ((cmd->result & (CAM_DEV_QFRZN << 16)) != 0) {
+> 		cmd->result &= ~(CAM_DEV_QFRZN << 16);
+> 		dev->qfrozen--;
+> 	}
+>          [ ... ]
+> 
+> Converting this driver could be challenging and may end up in rewriting
+> this driver.
 
-Thanks for having taken a look. In case you would not yet have found the
-"scsi: Introduce the scsi_status union" patch, it is available here:
-https://lore.kernel.org/linux-scsi/20210420000845.25873-12-bvanassche@acm.org/T/#u
+No, not really. I've got a patch for that; we should have separated the 
+CAM values from the SAM status values a long time ago.
 
-An Acked-by or Reviewed-by from an NFS expert would be great.
+> - The SCSI drivers that do something meaningful with the message byte
+> are parallel SCSI drivers. Parallel SCSI is a technology that was
+> popular 20-30 years ago but that is no longer popular today. Finding
+> test hardware may be a big challenge.
 
-The names in the Cc: list come from the following entry in the
-MAINTAINERS file: "KERNEL NFSD, SUNRPC, AND LOCKD SERVERS".
+Indeed, the _drivers_ do.
+But the SCSI midlayer does not; is just checks for a non-zero value here.
+So we can easily map a non-zero message byte to DID_ERROR before calling 
+->scsi_done(), allowing us to keep the message byte handling within the 
+SCSI parallel drivers.
 
-Bart.
+I got patches for that ...
+
+> - The parallel SCSI technology is no longer commercially relevant. It
+> may be challenging to motivate people (including yourself) to convert a
+> significant number of parallel SCSI drivers that each have a small user
+> base.
+> 
+... true, but then your patchset suffers from the same issue, no?
+
+> Although I appreciate it that you have shared this proposal and also
+> that you have proposed to lead this effort, I'm not convinced that this
+> proposal will be implemented soon. So I propose to proceed with this
+> patch series.
+> 
+I'm currently porting the patchset to 5.13/scsi-queue, and hope to have 
+it published soon.
+
+Don't get me wrong; I like your idea with introducing enums for stricter 
+type-checking in the SCSI stack.
+My point is simply that if we were converting the SCSI result (for 
+whatever reason) we should drop those bits which are pointless (like 
+DRIVER_SENSE), or never have been used at all (like DRIVER_HARD).
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
