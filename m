@@ -7,51 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 611A7C433B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C40B4C43460
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:11:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37C0861363
+	by mail.kernel.org (Postfix) with ESMTP id 937816109E
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:11:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232527AbhDTALt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S234322AbhDTALt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 19 Apr 2021 20:11:49 -0400
-Received: from mail-pf1-f172.google.com ([209.85.210.172]:44668 "EHLO
-        mail-pf1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233861AbhDTALF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:11:05 -0400
-Received: by mail-pf1-f172.google.com with SMTP id m11so24315857pfc.11
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:10:35 -0700 (PDT)
+Received: from mail-pl1-f169.google.com ([209.85.214.169]:36384 "EHLO
+        mail-pl1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234340AbhDTALG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:11:06 -0400
+Received: by mail-pl1-f169.google.com with SMTP id g16so1822396plq.3
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:10:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=1LXAzSLmNjGC9m9uQNzoTn9sJLc3zNJlqGYLagq+fOI=;
-        b=PD65K81SsCAvXoOf4RpDaZJZweVKanyMZRkUFJpng5GK4VC3BdGxZMqNYx/ld14Idu
-         RESZc3OQcg73RL+qwPXwM39fZerAzwe+t/dpnD4KMVjuY3XXVqSqmNLiVoxvtle2iNq9
-         aVWC5p7GqPXmzynA4jgtZo7NSn06ehriBMOjZxf9hJYyygRYMgyU0NhAeAslEhQlrg/7
-         EdBMxz77oKOquZS09ouwjuZ+tUc1FU7Pq0bxyECOuWZSrlaLIfa9cUImduDbOlPSq849
-         +YrQKHtkkSNP8iOLtwFLrO5P72hJZxoxjkUxfI/mO59Txu67pDjzuDDKLxDCKC5bRv3F
-         zi3Q==
-X-Gm-Message-State: AOAM531cDBxTVY5uD7kK57Jrq+Mb5jcjwg0H/Bg1ZQ+0L5O8i+gFO5eD
-        8lcRy9C7lOLTk4AXRBMK2j8=
-X-Google-Smtp-Source: ABdhPJxK/5+wN0pLOzi1CtU0rScJXG+ULq7QDYnG4k0hQGdcMHs08ljZ0UFVbhGzwbmZWE+uxkjWkA==
-X-Received: by 2002:a63:78cc:: with SMTP id t195mr13846003pgc.196.1618877434827;
-        Mon, 19 Apr 2021 17:10:34 -0700 (PDT)
+        bh=o9MOQF56pRR74SORwC9yfTAfR6HFmUWE31VmpD+WiHU=;
+        b=B3PBalh1JpXQb4sD0pslKgX7fcixgfASmErmFUduZ6jY6UIPN6cnSQlJlI6m4rWkPq
+         iImZ0ly9c5sl7S3Lmetvr5Ie8ExHb5O9juw1Uc1QQ64l0A84v6ERQXjqze360pJsOE4w
+         zb6vb+7OZIpqE1TEbn2lK5NQSOfPMqzg45yqLfpre2464QeHS6tIE4n9l3Jx5gKLdd1+
+         34yI0PvHX3LVQbQRSX01fu4swLKwR2ZCuVePgs7m+wtASdZMZCf4tW78bWNoeZ2KzvMe
+         lKQ6a2MZ0hcslGOG+D+O3GDxCCWO0u/EUNLoxWAdH3sLwHmLXOxKAw+fZZq6GyoMoEVB
+         6DsA==
+X-Gm-Message-State: AOAM533YoOL9AQ3e3/8lF2ysxrQ96bmA8mJoCnF0P6eZyBx3qHhH/5Xl
+        ZX8hRCwEb4y6DzATaBaVOPBni7qF4MB+lw==
+X-Google-Smtp-Source: ABdhPJzQq7etywuGvXkyQSwLJgPa9VIl0PuLAZZKFu+39U3Q8c4WcvDJLoMrUmkOsbXxPe8y5Kqr/g==
+X-Received: by 2002:a17:90b:1646:: with SMTP id il6mr1827267pjb.27.1618877435983;
+        Mon, 19 Apr 2021 17:10:35 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.10.33
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.10.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 17:10:34 -0700 (PDT)
+        Mon, 19 Apr 2021 17:10:35 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH 089/117] s390/zfcp: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 17:08:17 -0700
-Message-Id: <20210420000845.25873-90-bvanassche@acm.org>
+        Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH 090/117] scsi_debug: Convert to the scsi_status union
+Date:   Mon, 19 Apr 2021 17:08:18 -0700
+Message-Id: <20210420000845.25873-91-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -64,97 +62,62 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 An explanation of the purpose of this patch is available in the patch
 "scsi: Introduce the scsi_status union".
 
-Cc: Julian Wiedmann <jwi@linux.ibm.com>
-Cc: Benjamin Block <bblock@linux.ibm.com>
-Cc: Steffen Maier <maier@linux.ibm.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/s390/scsi/zfcp_dbf.c  | 2 +-
- drivers/s390/scsi/zfcp_dbf.h  | 2 +-
- drivers/s390/scsi/zfcp_fc.c   | 4 ++--
- drivers/s390/scsi/zfcp_fc.h   | 2 +-
- drivers/s390/scsi/zfcp_scsi.c | 6 +++---
- 5 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/scsi/scsi_debug.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
-index ca473b368905..6ea31ab9ccb0 100644
---- a/drivers/s390/scsi/zfcp_dbf.c
-+++ b/drivers/s390/scsi/zfcp_dbf.c
-@@ -643,7 +643,7 @@ void zfcp_dbf_scsi_common(char *tag, int level, struct scsi_device *sdev,
- 	memcpy(rec->tag, tag, ZFCP_DBF_TAG_LEN);
- 	rec->id = ZFCP_DBF_SCSI_CMND;
- 	if (sc) {
--		rec->scsi_result = sc->result;
-+		rec->scsi_result = sc->status.combined;
- 		rec->scsi_retries = sc->retries;
- 		rec->scsi_allowed = sc->allowed;
- 		rec->scsi_id = sc->device->id;
-diff --git a/drivers/s390/scsi/zfcp_dbf.h b/drivers/s390/scsi/zfcp_dbf.h
-index 4d1435c573bc..190ad0127db1 100644
---- a/drivers/s390/scsi/zfcp_dbf.h
-+++ b/drivers/s390/scsi/zfcp_dbf.h
-@@ -402,7 +402,7 @@ void _zfcp_dbf_scsi(char *tag, int level, struct scsi_cmnd *scmd,
- static inline
- void zfcp_dbf_scsi_result(struct scsi_cmnd *scmd, struct zfcp_fsf_req *req)
- {
--	if (scmd->result != 0)
-+	if (scmd->status.combined != 0)
- 		_zfcp_dbf_scsi("rsl_err", 3, scmd, req);
- 	else if (scmd->retries > 0)
- 		_zfcp_dbf_scsi("rsl_ret", 4, scmd, req);
-diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
-index d24cafe02708..d896c0be8102 100644
---- a/drivers/s390/scsi/zfcp_fc.c
-+++ b/drivers/s390/scsi/zfcp_fc.c
-@@ -951,8 +951,8 @@ static void zfcp_fc_ct_els_job_handler(void *data)
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 70165be10f00..819d872ee8ea 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -5458,24 +5458,24 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 		ns_from_boot = ktime_get_boottime_ns();
  
- 	jr->reply_payload_rcv_len = job->reply_payload.payload_len;
- 	jr->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
--	jr->result = zfcp_ct_els->status ? -EIO : 0;
--	bsg_job_done(job, jr->result, jr->reply_payload_rcv_len);
-+	jr->status.combined = zfcp_ct_els->status ? -EIO : 0;
-+	bsg_job_done(job, jr->status.combined, jr->reply_payload_rcv_len);
+ 	/* one of the resp_*() response functions is called here */
+-	cmnd->result = pfp ? pfp(cmnd, devip) : 0;
+-	if (cmnd->result & SDEG_RES_IMMED_MASK) {
+-		cmnd->result &= ~SDEG_RES_IMMED_MASK;
++	cmnd->status.combined = pfp ? pfp(cmnd, devip) : 0;
++	if (cmnd->status.combined & SDEG_RES_IMMED_MASK) {
++		cmnd->status.combined &= ~SDEG_RES_IMMED_MASK;
+ 		delta_jiff = ndelay = 0;
+ 	}
+-	if (cmnd->result == 0 && scsi_result != 0)
+-		cmnd->result = scsi_result;
+-	if (cmnd->result == 0 && unlikely(sdebug_opts & SDEBUG_OPT_TRANSPORT_ERR)) {
++	if (cmnd->status.combined == 0 && scsi_result != 0)
++		cmnd->status.combined = scsi_result;
++	if (cmnd->status.combined == 0 && unlikely(sdebug_opts & SDEBUG_OPT_TRANSPORT_ERR)) {
+ 		if (atomic_read(&sdeb_inject_pending)) {
+ 			mk_sense_buffer(cmnd, ABORTED_COMMAND, TRANSPORT_PROBLEM, ACK_NAK_TO);
+ 			atomic_set(&sdeb_inject_pending, 0);
+-			cmnd->result = check_condition_result;
++			cmnd->status.combined = check_condition_result;
+ 		}
+ 	}
+ 
+-	if (unlikely(sdebug_verbose && cmnd->result))
++	if (unlikely(sdebug_verbose && cmnd->status.combined))
+ 		sdev_printk(KERN_INFO, sdp, "%s: non-zero result=0x%x\n",
+-			    __func__, cmnd->result);
++			    __func__, cmnd->status.combined);
+ 
+ 	if (delta_jiff > 0 || ndelay > 0) {
+ 		ktime_t kt;
+@@ -5582,10 +5582,10 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 	return 0;
+ 
+ respond_in_thread:	/* call back to mid-layer using invocation thread */
+-	cmnd->result = pfp != NULL ? pfp(cmnd, devip) : 0;
+-	cmnd->result &= ~SDEG_RES_IMMED_MASK;
+-	if (cmnd->result == 0 && scsi_result != 0)
+-		cmnd->result = scsi_result;
++	cmnd->status.combined = pfp != NULL ? pfp(cmnd, devip) : 0;
++	cmnd->status.combined &= ~SDEG_RES_IMMED_MASK;
++	if (cmnd->status.combined == 0 && scsi_result != 0)
++		cmnd->status.combined = scsi_result;
+ 	cmnd->scsi_done(cmnd);
+ 	return 0;
  }
- 
- static struct zfcp_fc_wka_port *zfcp_fc_job_wka_port(struct bsg_job *job)
-diff --git a/drivers/s390/scsi/zfcp_fc.h b/drivers/s390/scsi/zfcp_fc.h
-index 8aaf409ce9cb..7f494cbaeab0 100644
---- a/drivers/s390/scsi/zfcp_fc.h
-+++ b/drivers/s390/scsi/zfcp_fc.h
-@@ -275,7 +275,7 @@ void zfcp_fc_eval_fcp_rsp(struct fcp_resp_with_ext *fcp_rsp,
- 	u32 sense_len, resid;
- 	u8 rsp_flags;
- 
--	scsi->result |= fcp_rsp->resp.fr_status;
-+	scsi->status.combined |= fcp_rsp->resp.fr_status;
- 
- 	rsp_flags = fcp_rsp->resp.fr_flags;
- 
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index d58bf79892f2..1d7bc73c3d31 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -71,12 +71,12 @@ int zfcp_scsi_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scpnt)
- 	int    status, scsi_result, ret;
- 
- 	/* reset the status for this request */
--	scpnt->result = 0;
-+	scpnt->status.combined = 0;
- 	scpnt->host_scribble = NULL;
- 
- 	scsi_result = fc_remote_port_chkready(rport);
- 	if (unlikely(scsi_result)) {
--		scpnt->result = scsi_result;
-+		scpnt->status.combined = scsi_result;
- 		zfcp_dbf_scsi_fail_send(scpnt);
- 		scpnt->scsi_done(scpnt);
- 		return 0;
-@@ -859,7 +859,7 @@ void zfcp_scsi_dif_sense_error(struct scsi_cmnd *scmd, int ascq)
- 	scsi_build_sense_buffer(1, scmd->sense_buffer,
- 				ILLEGAL_REQUEST, 0x10, ascq);
- 	set_driver_byte(scmd, DRIVER_SENSE);
--	scmd->result |= SAM_STAT_CHECK_CONDITION;
-+	scmd->status.combined |= SAM_STAT_CHECK_CONDITION;
- 	set_host_byte(scmd, DID_SOFT_ERROR);
- }
- 
