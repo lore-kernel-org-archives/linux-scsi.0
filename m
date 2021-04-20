@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19842C433ED
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E9BC433B4
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 02:14:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA14B613AB
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 02:14:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6380F61107
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 02:14:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233820AbhDTCPQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 22:15:16 -0400
-Received: from mail-pl1-f182.google.com ([209.85.214.182]:36508 "EHLO
-        mail-pl1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233766AbhDTCPI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 22:15:08 -0400
-Received: by mail-pl1-f182.google.com with SMTP id g16so1962601plq.3
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 19:14:37 -0700 (PDT)
+        id S233826AbhDTCPR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 22:15:17 -0400
+Received: from mail-pg1-f170.google.com ([209.85.215.170]:40902 "EHLO
+        mail-pg1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233803AbhDTCPJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 22:15:09 -0400
+Received: by mail-pg1-f170.google.com with SMTP id b17so25573234pgh.7
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 19:14:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=0j9B81elc6mROxqYj+Hz5lGCxgOsk7A//QRvAns885U=;
-        b=U6mVJiN3KfRPoX033IoaFAG2jUvVa8dfxATMdGNbIGxTfh6/6Feamwr18KHOdjZvvk
-         GAopsebY71iHTH/9JjLVkVYZb6+F26kfzm66Zf5I5fSeyW7dw0BS69BrxPbUWZvvzPFv
-         DWDRc6hswtR+WzyV5d9Df7hDc74y4BfWXu4CxCvSqfVXQnrL9U5BToH5qSWMKr9aOwSL
-         r0rKqGDM4yRIYdpTNtmT0vGt9HBdLeepTcLDFbWmvfGz6YA6xTEB8/DtfKDzh5Apg0FP
-         shOlqSlY8WzjQ5z6BKCqbUg1qkb7TrMuGAX/R9RPDy2RtLbxReh/kOFxTX0UIMDKpBix
-         JSJw==
-X-Gm-Message-State: AOAM5306vJ7WBRm90hfYN74I2g8lxENqo5w5n1viLUyw+7ipjk7vPuUt
-        HT7FWBadRwplYJmjGIIwcBc=
-X-Google-Smtp-Source: ABdhPJwN9Abafzdf32eD0Zx+j5VRBoQjG9Xk5pLkLk5bMU8VqVK7gF9XGQtGbrlF/DfTv5oN6lcqsw==
-X-Received: by 2002:a17:902:7203:b029:e6:a8b1:8d37 with SMTP id ba3-20020a1709027203b02900e6a8b18d37mr26010272plb.44.1618884877600;
-        Mon, 19 Apr 2021 19:14:37 -0700 (PDT)
+        bh=A1HgG7bhuOpMgMFQ3Em5ZD7GI6GUv5eNGkKBkv3gf/w=;
+        b=NvZioW1fRI/u0XPD+4pBnylWbnO0jm4pwvfzhb/A1cfT0NisEBA5q6yhQA4rl+6RMs
+         m35n4t/EdZOkhQ0rKWa5KcQPbUoDj34j7Bz+6O76STyuTMN+ykvpDisFsCzzJXQQbSkQ
+         azWP00qbGnuchZ0fydb2EV7ejq16G7lnG3xdzjOuv04ZXjdud4Y6V0ApSgJxhT0hxJpA
+         hT1HRdTfrSUWYrB1PjO2I0TU3hgBAgBpvNnP2NLH6Obyo3Hf2R+fwm8F13WViog+3+dM
+         2xy+Dz7zNXDnaKRI7jIHXFFAe6X0cl3NAO+Vs3CIGq1KJd5kmxIH/Z4383uclHVeh551
+         5PyQ==
+X-Gm-Message-State: AOAM5336exeV4h0g1JPNGJ43+BDY/0A8O3bvgPC1dSQjUqePWBpJblAs
+        lRNVJRLsktMEnOkFSMOH/q4=
+X-Google-Smtp-Source: ABdhPJxLbeUgKPZAeorpc/4YahLYPvAwiC5M9n1tF5bkAI9uarqtC/OoQ6Pn3+kkfbzFK1vE014Nmw==
+X-Received: by 2002:a63:1024:: with SMTP id f36mr14718615pgl.299.1618884878847;
+        Mon, 19 Apr 2021 19:14:38 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id mq2sm630984pjb.24.2021.04.19.19.14.36
+        by smtp.gmail.com with ESMTPSA id mq2sm630984pjb.24.2021.04.19.19.14.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 19:14:37 -0700 (PDT)
+        Mon, 19 Apr 2021 19:14:38 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
@@ -50,9 +50,9 @@ Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Ming Lei <ming.lei@redhat.com>,
         Hannes Reinecke <hare@suse.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH 114/117] Change the return type of scsi_test_unit_ready() into union scsi_status
-Date:   Mon, 19 Apr 2021 19:13:59 -0700
-Message-Id: <20210420021402.27678-24-bvanassche@acm.org>
+Subject: [PATCH 115/117] Change the return types of scsi_mode_sense() and sd_do_mode_sense()
+Date:   Mon, 19 Apr 2021 19:14:00 -0700
+Message-Id: <20210420021402.27678-25-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -62,7 +62,8 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Make it explicit that scsi_test_unit_ready() returns a SCSI status.
+Make it explicit that scsi_mode_sense() and sd_do_mode_sense() return a SCSI
+status.
 
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Ming Lei <ming.lei@redhat.com>
@@ -70,137 +71,161 @@ Cc: Hannes Reinecke <hare@suse.com>
 Cc: John Garry <john.garry@huawei.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 4 ++--
- drivers/scsi/scsi_ioctl.c                  | 2 +-
- drivers/scsi/scsi_lib.c                    | 4 ++--
- drivers/scsi/sd.c                          | 5 ++---
- drivers/scsi/sr.c                          | 6 +++---
- drivers/scsi/sr_ioctl.c                    | 3 ++-
- include/scsi/scsi_device.h                 | 4 ++--
- 7 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/scsi/scsi_lib.c           |  4 ++--
+ drivers/scsi/scsi_transport_sas.c |  4 ++--
+ drivers/scsi/sd.c                 | 18 +++++++++---------
+ drivers/scsi/sr.c                 |  2 +-
+ include/scsi/scsi_device.h        |  8 ++++----
+ 5 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 0de3096f9df7..476a875f6c06 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -490,14 +490,14 @@ static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
- static int alua_tur(struct scsi_device *sdev)
- {
- 	struct scsi_sense_hdr sense_hdr;
--	int retval;
-+	union scsi_status retval;
- 
- 	retval = scsi_test_unit_ready(sdev, ALUA_FAILOVER_TIMEOUT * HZ,
- 				      ALUA_FAILOVER_RETRIES, &sense_hdr);
- 	if (sense_hdr.sense_key == NOT_READY &&
- 	    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
- 		return SCSI_DH_RETRY;
--	else if (retval)
-+	else if (retval.combined)
- 		return SCSI_DH_IO;
- 	else
- 		return SCSI_DH_OK;
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index b9e2f5b03c83..8b3bab5b5cb8 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -237,7 +237,7 @@ static int scsi_ioctl_common(struct scsi_device *sdev, int cmd, void __user *arg
- 		return scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
- 	case SCSI_IOCTL_TEST_UNIT_READY:
- 		return scsi_test_unit_ready(sdev, IOCTL_NORMAL_TIMEOUT,
--					    NORMAL_RETRIES, &sense_hdr);
-+					NORMAL_RETRIES, &sense_hdr).combined;
- 	case SCSI_IOCTL_START_UNIT:
- 		scsi_cmd[0] = START_STOP;
- 		scsi_cmd[1] = 0;
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 23750d167c47..44925839ccee 100644
+index 44925839ccee..964462895cbb 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -2255,7 +2255,7 @@ EXPORT_SYMBOL(scsi_mode_sense);
-  *	Returns zero if unsuccessful or an error if TUR failed.  For
-  *	removable media, UNIT_ATTENTION sets ->changed flag.
-  **/
+@@ -2144,7 +2144,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
+  *	or 8 depending on whether a six or ten byte command was
+  *	issued) if successful.
+  */
 -int
 +union scsi_status
- scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries,
- 		     struct scsi_sense_hdr *sshdr)
- {
-@@ -2274,7 +2274,7 @@ scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries,
- 	} while (scsi_sense_valid(sshdr) &&
- 		 sshdr->sense_key == UNIT_ATTENTION && --retries);
+ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+ 		  unsigned char *buffer, int len, int timeout, int retries,
+ 		  struct scsi_mode_data *data, struct scsi_sense_hdr *sshdr)
+@@ -2241,7 +2241,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+ 		goto retry;
+ 	}
  
 -	return result.combined;
 +	return result;
  }
- EXPORT_SYMBOL(scsi_test_unit_ready);
+ EXPORT_SYMBOL(scsi_mode_sense);
  
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 2caa1393cf94..65caf3888f36 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1235,8 +1235,8 @@ int sas_read_port_mode_page(struct scsi_device *sdev)
+ 	if (!buffer)
+ 		return -ENOMEM;
+ 
+-	res.combined = scsi_mode_sense(sdev, 1, 0x19, buffer, BUF_SIZE, 30*HZ,
+-				       3, &mode_data, NULL);
++	res = scsi_mode_sense(sdev, 1, 0x19, buffer, BUF_SIZE, 30*HZ, 3,
++			      &mode_data, NULL);
+ 
+ 	error = -EINVAL;
+ 	if (!scsi_status_is_good(res))
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 1df895e0e619..14cf7841a0bf 100644
+index 14cf7841a0bf..2f423a332bc1 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -1654,9 +1654,8 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
- 	if (scsi_block_when_processing_errors(sdp)) {
- 		struct scsi_sense_hdr sshdr = { 0, };
+@@ -194,7 +194,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
+ 	}
  
--		retval.combined =
--			scsi_test_unit_ready(sdp, SD_TIMEOUT, sdkp->max_retries,
--					      &sshdr);
-+		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT,
-+					      sdkp->max_retries, &sshdr);
+ 	if (scsi_mode_sense(sdp, 0x08, 8, buffer, sizeof(buffer), SD_TIMEOUT,
+-			    sdkp->max_retries, &data, NULL))
++			    sdkp->max_retries, &data, NULL).combined)
+ 		return -EINVAL;
+ 	len = min_t(size_t, sizeof(buffer), data.length - data.header_length -
+ 		  data.block_descriptor_length);
+@@ -2628,7 +2628,7 @@ sd_print_capacity(struct scsi_disk *sdkp,
+ }
  
- 		/* failed to execute TUR, assume media not present */
- 		if (host_byte(retval)) {
+ /* called with buffer of length 512 */
+-static inline int
++static inline union scsi_status
+ sd_do_mode_sense(struct scsi_disk *sdkp, int dbd, int modepage,
+ 		 unsigned char *buffer, int len, struct scsi_mode_data *data,
+ 		 struct scsi_sense_hdr *sshdr)
+@@ -2657,14 +2657,14 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	}
+ 
+ 	if (sdp->use_192_bytes_for_3f) {
+-		res.combined = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 192, &data, NULL);
++		res = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 192, &data, NULL);
+ 	} else {
+ 		/*
+ 		 * First attempt: ask for all pages (0x3F), but only 4 bytes.
+ 		 * We have to start carefully: some devices hang if we ask
+ 		 * for more than is available.
+ 		 */
+-		res.combined = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 4, &data, NULL);
++		res = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 4, &data, NULL);
+ 
+ 		/*
+ 		 * Second attempt: ask for page 0 When only page 0 is
+@@ -2673,13 +2673,13 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
+ 		 * CDB.
+ 		 */
+ 		if (!scsi_status_is_good(res))
+-			res.combined = sd_do_mode_sense(sdkp, 0, 0, buffer, 4, &data, NULL);
++			res = sd_do_mode_sense(sdkp, 0, 0, buffer, 4, &data, NULL);
+ 
+ 		/*
+ 		 * Third attempt: ask 255 bytes, as we did earlier.
+ 		 */
+ 		if (!scsi_status_is_good(res))
+-			res.combined = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 255,
++			res = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 255,
+ 					       &data, NULL);
+ 	}
+ 
+@@ -2742,7 +2742,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	}
+ 
+ 	/* cautiously ask */
+-	res.combined = sd_do_mode_sense(sdkp, dbd, modepage, buffer, first_len,
++	res = sd_do_mode_sense(sdkp, dbd, modepage, buffer, first_len,
+ 			&data, &sshdr);
+ 
+ 	if (!scsi_status_is_good(res))
+@@ -2774,7 +2774,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 
+ 	/* Get the data */
+ 	if (len > first_len)
+-		res.combined = sd_do_mode_sense(sdkp, dbd, modepage, buffer, len,
++		res = sd_do_mode_sense(sdkp, dbd, modepage, buffer, len,
+ 				&data, &sshdr);
+ 
+ 	if (scsi_status_is_good(res)) {
+@@ -2893,7 +2893,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	if (sdkp->protection_type == 0)
+ 		return;
+ 
+-	res.combined = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
++	res = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
+ 			      sdkp->max_retries, &data, &sshdr);
+ 
+ 	if (!scsi_status_is_good(res) || !data.header_length ||
 diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index d745ff8a30e8..da78b402072f 100644
+index da78b402072f..2496ece3a33d 100644
 --- a/drivers/scsi/sr.c
 +++ b/drivers/scsi/sr.c
-@@ -273,8 +273,7 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
- do_tur:
- 	/* let's see whether the media is there with TUR */
- 	last_present = cd->media_present;
--	ret.combined = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES,
--					    &sshdr);
-+	ret = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+@@ -910,7 +910,7 @@ static void get_capabilities(struct scsi_cd *cd)
+ 	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
  
- 	/*
- 	 * Media is considered to be present if TUR succeeds or fails with
-@@ -508,7 +507,8 @@ static void sr_revalidate_disk(struct scsi_cd *cd)
- 	struct scsi_sense_hdr sshdr;
+ 	/* ask for mode page 0x2a */
+-	rc.combined = scsi_mode_sense(cd->device, 0, 0x2a, buffer, ms_len,
++	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, ms_len,
+ 			     SR_TIMEOUT, 3, &data, NULL);
  
- 	/* if the unit is not ready, nothing more to do */
--	if (scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr))
-+	if (scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr)
-+	    .combined)
- 		return;
- 	sr_cd_check(&cd->cdi);
- 	get_sectorsize(cd);
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index b13612f50d6d..798a22990dc7 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -292,7 +292,8 @@ int sr_drive_status(struct cdrom_device_info *cdi, int slot)
- 		/* we have no changer support */
- 		return -EINVAL;
- 	}
--	if (!scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr))
-+	if (!scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr)
-+	    .combined)
- 		return CDS_DISC_OK;
- 
- 	/* SK/ASC/ASCQ of 2/4/1 means "unit is becoming ready" */
+ 	if (!scsi_status_is_good(rc) || data.length > ms_len ||
 diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 27f3e5eb7c9a..3192610af5db 100644
+index 3192610af5db..de6f5f98d2eb 100644
 --- a/include/scsi/scsi_device.h
 +++ b/include/scsi/scsi_device.h
-@@ -411,8 +411,8 @@ extern int scsi_mode_select(struct scsi_device *sdev, int pf, int sp,
+@@ -402,10 +402,10 @@ extern int scsi_track_queue_full(struct scsi_device *, int);
+ 
+ extern int scsi_set_medium_removal(struct scsi_device *, char);
+ 
+-extern int scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+-			   unsigned char *buffer, int len, int timeout,
+-			   int retries, struct scsi_mode_data *data,
+-			   struct scsi_sense_hdr *);
++extern union scsi_status scsi_mode_sense(struct scsi_device *sdev, int dbd,
++			int modepage, unsigned char *buffer, int len,
++			int timeout, int retries, struct scsi_mode_data *data,
++			struct scsi_sense_hdr *);
+ extern int scsi_mode_select(struct scsi_device *sdev, int pf, int sp,
+ 			    int modepage, unsigned char *buffer, int len,
  			    int timeout, int retries,
- 			    struct scsi_mode_data *data,
- 			    struct scsi_sense_hdr *);
--extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
--				int retries, struct scsi_sense_hdr *sshdr);
-+extern union scsi_status scsi_test_unit_ready(struct scsi_device *sdev,
-+			int timeout, int retries, struct scsi_sense_hdr *sshdr);
- extern int scsi_get_vpd_page(struct scsi_device *, u8 page, unsigned char *buf,
- 			     int buf_len);
- extern int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
