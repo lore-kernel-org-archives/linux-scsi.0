@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CB11C433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3103C43462
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7DE3861363
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8882A61363
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232825AbhDTAJf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S232838AbhDTAJf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 19 Apr 2021 20:09:35 -0400
-Received: from mail-pl1-f178.google.com ([209.85.214.178]:38511 "EHLO
-        mail-pl1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232748AbhDTAJd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:33 -0400
-Received: by mail-pl1-f178.google.com with SMTP id o16so5066601plg.5
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:02 -0700 (PDT)
+Received: from mail-pj1-f44.google.com ([209.85.216.44]:44743 "EHLO
+        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231175AbhDTAJe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:34 -0400
+Received: by mail-pj1-f44.google.com with SMTP id m6-20020a17090a8586b02901507e1acf0fso3976123pjn.3
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=B4gF/dQpwBofV/33gfLeEn2T3KYG3wALfgy0HxrX7rc=;
-        b=WmvRkTK5niJ9K56XBBleEnleBdFXMQ42X7mp5e+XbTNXOmMMCWcSzOeU8jnFKtdq0h
-         ++bTlm7yjc4/4D6tsfyJc6hbIWjqu4HJqq8cJ+t662mQrciBO4n7M+da5Nbit14ty7zP
-         pRB0g0a84BsYOGvn2zlUiZy1D3fTz+dhmB/a9nLAtCGzlsSAgjHL0jV6UoIbVIHmiH4t
-         6rRUxkcKhhT/ZSqAm/UWiqjUujzgQC+Jd8OwMw7kFfvfgzRXa+t5Qg/ZwAeI/bKiiPrH
-         dFtu0+w4mn8SybwkYM8xlpydXLYPCU6WUmrSB4M4zA/U62O0lA+w/3S+63ANzIFW8xFC
-         DmtA==
-X-Gm-Message-State: AOAM533w+k/tkn/d+tFXWqW/vXap0TuG6rbY9ZNR3OHWmYWNbOPkxko3
-        h0cVXQHOarCo4/5YZ2sEDG4=
-X-Google-Smtp-Source: ABdhPJwPRbIvDixt1fAcOPUtu0WTNL1YINzgSTgsmWSAHV8lHiAVV2wjvhfVZ3bnMUREy+Jiz7Cxlg==
-X-Received: by 2002:a17:90a:540b:: with SMTP id z11mr1807906pjh.133.1618877342319;
-        Mon, 19 Apr 2021 17:09:02 -0700 (PDT)
+        bh=un+9zpjDZL4UdMPAScb+oLv9NoebEKwBopaM4XRVTFk=;
+        b=EEPdrH1+hQW4qvsBqMiginkj1YllDqVTqy/W7wMEDblJpGoy6vnSirqqwGxcms3O4q
+         5e89tZbFScmRtUWyVuB3Eu1oHfwGPGWYIY7voFMb7wvBU5AHxEKKui6ICjYU9urEfR31
+         FQyF9w5MSRJLhDrHhAOJx22NPIsXYltkJ7060bf7nEzxBiraVGPVffeQc0CQq4HNfkd2
+         Tci6oRPDMhhODLfFKijQNr7Zjf+EH4FIoe+SQf1CrXQ5ACVeZ48yjt71iB1r01fU3pyu
+         jWsOklisOcYcMUJtrVAqneTJmkb489+xsSp7JO4KNTi8vrjSHwNGQ14cx8ryLeBQqTjM
+         bl7A==
+X-Gm-Message-State: AOAM533HhwzhgT/Jm4kppKDEX8un9iftoXkARExaXpz/G5v6xI/gDCpY
+        traNH8nMeJOkMFjuLcE5mLU=
+X-Google-Smtp-Source: ABdhPJxmJcztXPjmjahy/nOqsVTyn+VivjLnHa5k2ej2OV01mSwyfKcL4toPffDk5IU970AM3yHeQQ==
+X-Received: by 2002:a17:90a:df10:: with SMTP id gp16mr1735217pjb.209.1618877343575;
+        Mon, 19 Apr 2021 17:09:03 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.01
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 17:09:01 -0700 (PDT)
+        Mon, 19 Apr 2021 17:09:02 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
-        Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 009/117] iscsi: Add a compile-time structure size check
-Date:   Mon, 19 Apr 2021 17:06:57 -0700
-Message-Id: <20210420000845.25873-10-bvanassche@acm.org>
+        Can Guo <cang@codeaurora.org>
+Subject: [PATCH 010/117] ufs: Add a compile-time structure size check
+Date:   Mon, 19 Apr 2021 17:06:58 -0700
+Message-Id: <20210420000845.25873-11-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -59,26 +59,25 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Before modifying the struct iscsi_bsg_reply definition, add a compile-time
+Before modifying the definition of struct ufs_bsg_reply, add a compile-time
 structure size check.
 
-Cc: Lee Duncan <lduncan@suse.com>
+Cc: Can Guo <cang@codeaurora.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index bebfb355abdf..4f821118ea23 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -4729,6 +4729,9 @@ static __init int iscsi_transport_init(void)
- 		.groups	= 1,
- 		.input	= iscsi_if_rx,
- 	};
-+
-+	BUILD_BUG_ON(offsetof(struct iscsi_bsg_reply, reply_data) != 8);
-+
- 	printk(KERN_INFO "Loading iSCSI transport class v%s.\n",
- 		ISCSI_TRANSPORT_VERSION);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 0625da7a42ee..fa596cf66c23 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -9455,6 +9455,8 @@ EXPORT_SYMBOL_GPL(ufshcd_init);
  
+ static int __init ufshcd_core_init(void)
+ {
++	BUILD_BUG_ON(offsetof(struct ufs_bsg_reply, upiu_rsp) != 8);
++
+ 	ufs_debugfs_init();
+ 	return 0;
+ }
