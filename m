@@ -7,54 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D281C433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E825BC43460
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A609613AA
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B34BE6109E
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231175AbhDTAJk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S232929AbhDTAJk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 19 Apr 2021 20:09:40 -0400
-Received: from mail-pj1-f44.google.com ([209.85.216.44]:33747 "EHLO
-        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232832AbhDTAJf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:35 -0400
-Received: by mail-pj1-f44.google.com with SMTP id kb13-20020a17090ae7cdb02901503d67f0beso397057pjb.0
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:05 -0700 (PDT)
+Received: from mail-pl1-f177.google.com ([209.85.214.177]:44822 "EHLO
+        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232885AbhDTAJh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:37 -0400
+Received: by mail-pl1-f177.google.com with SMTP id y1so3024414plg.11
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=79+a0zx2d10lGrNZLu+wNPOn483f4ZCAusJAz9pOTtA=;
-        b=Ik28RayT+qkKrqdA8ckgFqeCjiaalXxx8Rw0Gg7HuqvuUcVfm5lwcKy01jDrMri3jU
-         ZE/i5L+GDLaGbsiO4S5ji8PPCu8oWVdoeQTZKYcb8yOt9T4m/723ndamG1lHBW1RRjGw
-         a+HLZ1duhJOGflIlgcIH6odEBgGNJetm/U6bCOxlldTxJZEdO/Pf3JSx8a3taWQgYtYO
-         4jIbs25o0nwKuW6GRWFbgJrv1kE+YPVkWEnyuAWN9sd+skuREayRXwO9ARjO8ACH+YTD
-         PDavdTdWRHz4buDtYcGP9POhRJF8pYrcGTNxDjZhvl4NgaFA8EBrQDz5Lpafh51PYGLI
-         V6hQ==
-X-Gm-Message-State: AOAM5303cUUk+pDXHmY+/y5/Fa94pR7fUkqqyHxFfS8Al/5Flf+l/dWX
-        cW477FvByyBbpXrzfxxkauo=
-X-Google-Smtp-Source: ABdhPJxX03UBivf3aV/cQwU4iB/W/NcI0D8+iovDYBzR0Mj6fpWthWlBXoM57M/pt2bfedL7Vbi+KA==
-X-Received: by 2002:a17:90a:150e:: with SMTP id l14mr1824946pja.208.1618877344898;
-        Mon, 19 Apr 2021 17:09:04 -0700 (PDT)
+        bh=wkpKiiQ7QErhpRfwfIqYg+u3+hV/n0/tj7DxsSL3k/A=;
+        b=q8pzrqwQnAOmwx5NDMOhpd7KyXyhGiveIidyw7kEqOo4V0RdcliitkolGotJqj6ibH
+         TCEGlloF0fzj3X2XfgBWz+Fuynoe4s0ugDwYiIrac1UAOOCHLA8dyNJSJjiXgDVfvMsu
+         kiNFRU1aZGTeTN3pH1kX+Soxry4pshbNaWMHolYJ9vryFZmCg/OonvOYSBXlnKj5T33I
+         OrPxdsPFE+O0CNGd8+o1TjKGx4J6KUwNUJLHPu4ZKh84Z4BEDh1LUIpl2iu0esMnHTGC
+         jA0agECyEPSxRnDClZbs4nt99Mlb0ik1VUemHP/7HTWEblQ92sceRWUKIEKxds8CPOs4
+         jnOA==
+X-Gm-Message-State: AOAM533KVAWW40lZZleVKGnGTmpZV9mgpdeo0tXl4gYMNEluXcjPht8d
+        V4qKwiwCBK1Jp757K3snH8U=
+X-Google-Smtp-Source: ABdhPJxFhS7djgoLNJuWRXBS3/1yjqYU1r+8hKNyJbNGcIIBcgvY8issobWn2Hb6hvVe8cjWm2CSAQ==
+X-Received: by 2002:a17:90a:c984:: with SMTP id w4mr1777768pjt.110.1618877346160;
+        Mon, 19 Apr 2021 17:09:06 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.03
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 17:09:04 -0700 (PDT)
+        Mon, 19 Apr 2021 17:09:05 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
-        Ming Lei <ming.lei@redhat.com>,
-        Hannes Reinecke <hare@suse.com>,
-        John Garry <john.garry@huawei.com>,
-        Can Guo <cang@codeaurora.org>,
-        James Smart <james.smart@broadcom.com>,
-        Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 011/117] Introduce the scsi_status union
-Date:   Mon, 19 Apr 2021 17:06:59 -0700
-Message-Id: <20210420000845.25873-12-bvanassche@acm.org>
+        Jens Axboe <axboe@kernel.dk>
+Subject: [PATCH 012/117] block: Convert SCSI and bsg code to the scsi_status union
+Date:   Mon, 19 Apr 2021 17:07:00 -0700
+Message-Id: <20210420000845.25873-13-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -64,385 +59,126 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Introduce the scsi_status union, a data structure that will be used in the
-next patches to replace SCSI status codes represented as an integer. Define
-that data structure as follows:
+An explanation of the purpose of this patch is available in the patch
+"scsi: Introduce the scsi_status union".
 
-	union scsi_status {
-		int32_t combined;
-		struct {
-	#if defined(__BIG_ENDIAN)
-			enum driver_status driver;
-			enum host_status host;
-			enum msg_byte msg;
-			enum sam_status status;
-	#elif defined(__LITTLE_ENDIAN)
-			enum sam_status status;
-			enum msg_byte msg;
-			enum host_status host;
-			enum driver_status driver;
-	#else
-	#error Endianness?
-	#endif
-		} b;
-	};
-
-The 'combined' member makes it easy to convert existing SCSI code. The
-'status', 'msg', 'host' and 'driver' enable access of individual SCSI
-status fields in a type-safe fashion.
-
-Change 'int result;' into the following to enable converting one driver at
-a time:
-
-	union {
-		int result;
-		union scsi_status status;
-	};
-
-A later patch will remove the outer union and 'int result;'.
-
-Also to enable converting one driver at a time, make scsi_status_is_good(),
-status_byte(), msg_byte(), host_byte() and driver_byte() accept an int or
-union scsi_status as argument. A later patch will make this function and
-these macros accept the scsi_status union only.
-
+Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: John Garry <john.garry@huawei.com>
-Cc: Can Guo <cang@codeaurora.org>
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Lee Duncan <lduncan@suse.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi.c              |  9 +++++++++
- include/linux/bsg-lib.h          |  6 +++++-
- include/scsi/scsi.h              | 24 +++++++++++++++++++-----
- include/scsi/scsi_bsg_iscsi.h    |  6 +++++-
- include/scsi/scsi_cmnd.h         | 14 +++++++++-----
- include/scsi/scsi_eh.h           |  7 ++++++-
- include/scsi/scsi_request.h      |  6 +++++-
- include/scsi/scsi_status.h       | 29 +++++++++++++++++++++++++++++
- include/uapi/scsi/scsi_bsg_fc.h  | 10 ++++++++++
- include/uapi/scsi/scsi_bsg_ufs.h | 11 +++++++++++
- 10 files changed, 108 insertions(+), 14 deletions(-)
+ block/bsg-lib.c    | 16 ++++++++--------
+ block/bsg.c        |  6 +++---
+ block/scsi_ioctl.c | 14 +++++++-------
+ 3 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index e9e2f0e15ac8..4f71f2005be4 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -763,10 +763,19 @@ MODULE_LICENSE("GPL");
- module_param(scsi_logging_level, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(scsi_logging_level, "a bit mask of logging levels");
+diff --git a/block/bsg-lib.c b/block/bsg-lib.c
+index 330fede77271..35a01a264816 100644
+--- a/block/bsg-lib.c
++++ b/block/bsg-lib.c
+@@ -82,18 +82,18 @@ static int bsg_transport_complete_rq(struct request *rq, struct sg_io_v4 *hdr)
+ 	 * The assignments below don't make much sense, but are kept for
+ 	 * bug by bug backwards compatibility:
+ 	 */
+-	hdr->device_status = job->result & 0xff;
+-	hdr->transport_status = host_byte(job->result);
+-	hdr->driver_status = driver_byte(job->result);
++	hdr->device_status = job->status.b.status;
++	hdr->transport_status = host_byte(job->status);
++	hdr->driver_status = driver_byte(job->status);
+ 	hdr->info = 0;
+ 	if (hdr->device_status || hdr->transport_status || hdr->driver_status)
+ 		hdr->info |= SG_INFO_CHECK;
+ 	hdr->response_len = 0;
  
-+#define TEST_STATUS ((union scsi_status){.combined = 0x01020308})
-+
- static int __init init_scsi(void)
+-	if (job->result < 0) {
++	if (job->status.combined < 0) {
+ 		/* we're only returning the result field in the reply */
+ 		job->reply_len = sizeof(u32);
+-		ret = job->result;
++		ret = job->status.combined;
+ 	}
+ 
+ 	if (job->reply_len && hdr->response) {
+@@ -183,7 +183,7 @@ void bsg_job_done(struct bsg_job *job, int result,
  {
- 	int error;
+ 	struct request *rq = blk_mq_rq_from_pdu(job);
  
-+	BUILD_BUG_ON(sizeof(union scsi_status) != 4);
-+	BUILD_BUG_ON(TEST_STATUS.combined != 0x01020308);
-+	BUILD_BUG_ON(driver_byte(TEST_STATUS) != 1);
-+	BUILD_BUG_ON(host_byte(TEST_STATUS) != 2);
-+	BUILD_BUG_ON(msg_byte(TEST_STATUS) != 3);
-+	BUILD_BUG_ON(status_byte(TEST_STATUS) != 4);
-+
- 	error = scsi_init_procfs();
- 	if (error)
- 		goto cleanup_queue;
-diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
-index 960988d42f77..f934afc45760 100644
---- a/include/linux/bsg-lib.h
-+++ b/include/linux/bsg-lib.h
-@@ -11,6 +11,7 @@
+-	job->result = result;
++	job->status.combined = result;
+ 	job->reply_payload_rcv_len = reply_payload_rcv_len;
+ 	if (likely(!blk_should_fake_timeout(rq->q)))
+ 		blk_mq_complete_request(rq);
+@@ -247,7 +247,7 @@ static bool bsg_prepare_job(struct device *dev, struct request *req)
+ failjob_rls_rqst_payload:
+ 	kfree(job->request_payload.sg_list);
+ failjob_rls_job:
+-	job->result = -ENOMEM;
++	job->status.combined = -ENOMEM;
+ 	return false;
+ }
  
- #include <linux/blkdev.h>
- #include <scsi/scsi_request.h>
-+#include <scsi/scsi_status.h>
- 
- struct request;
- struct device;
-@@ -52,7 +53,10 @@ struct bsg_job {
- 	struct bsg_buffer request_payload;
- 	struct bsg_buffer reply_payload;
- 
--	int result;
-+	union {
-+		int		  result; /* do not use in new code */
-+		union scsi_status status;
-+	};
- 	unsigned int reply_payload_rcv_len;
- 
- 	/* BIDI support */
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index c9ccb6b45b76..18bb1fb2458f 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -39,7 +39,7 @@ enum scsi_timeouts {
-  * This returns true for known good conditions that may be treated as
-  * command completed normally
+@@ -257,7 +257,7 @@ static bool bsg_prepare_job(struct device *dev, struct request *req)
+  * @bd: queue data
+  *
+  * On error the create_bsg_job function should return a -Exyz error value
+- * that will be set to ->result.
++ * that will be set to ->status.
+  *
+  * Drivers/subsys should pass this to the queue init function.
   */
--static inline int scsi_status_is_good(int status)
-+static inline bool __scsi_status_is_good(int status)
- {
+diff --git a/block/bsg.c b/block/bsg.c
+index bd10922d5cbb..a03d43ed2bcc 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -94,9 +94,9 @@ static int bsg_scsi_complete_rq(struct request *rq, struct sg_io_v4 *hdr)
  	/*
- 	 * FIXME: bit0 is listed as reserved in SCSI-2, but is
-@@ -56,6 +56,20 @@ static inline int scsi_status_is_good(int status)
- 		(status == SAM_STAT_COMMAND_TERMINATED));
- }
- 
-+/*
-+ * If the 'status' argument has type int, unsigned int or union scsi_status,
-+ * return the combined SCSI status. If the 'status' argument has another type,
-+ * trigger a compiler error by passing a struct to a context where an integer
-+ * is expected.
-+ */
-+#define scsi_status_to_int(status)			\
-+	__builtin_choose_expr(sizeof(status) == 4,	\
-+			      *(int32_t *)&(status),	\
-+			      (union scsi_status){})
-+
-+#define scsi_status_is_good(status)				\
-+	__scsi_status_is_good(scsi_status_to_int(status))
-+
- 
- /*
-  * standard mode-select header prepended to all mode-select commands
-@@ -134,10 +148,10 @@ enum scsi_disposition {
-  *      driver_byte = set by mid-level.
-  */
- #define status_byte(result) ((enum sam_status_divided_by_two)	\
--			     (((result) >> 1) & 0x7f))
--#define msg_byte(result)    (((result) >> 8) & 0xff)
--#define host_byte(result)   (((result) >> 16) & 0xff)
--#define driver_byte(result) (((result) >> 24) & 0xff)
-+			     ((scsi_status_to_int((result)) >> 1) & 0x7f))
-+#define msg_byte(result)    ((scsi_status_to_int((result)) >> 8) & 0xff)
-+#define host_byte(result)   ((scsi_status_to_int((result)) >> 16) & 0xff)
-+#define driver_byte(result) ((scsi_status_to_int((result)) >> 24) & 0xff)
- 
- #define sense_class(sense)  (((sense) >> 4) & 0x7)
- #define sense_error(sense)  ((sense) & 0xf)
-diff --git a/include/scsi/scsi_bsg_iscsi.h b/include/scsi/scsi_bsg_iscsi.h
-index 6b8128005af8..d18e7e061927 100644
---- a/include/scsi/scsi_bsg_iscsi.h
-+++ b/include/scsi/scsi_bsg_iscsi.h
-@@ -13,6 +13,7 @@
-  */
- 
- #include <scsi/scsi.h>
-+#include <scsi/scsi_status.h>
- 
- /*
-  * iSCSI Transport SGIO v4 BSG Message Support
-@@ -82,7 +83,10 @@ struct iscsi_bsg_reply {
- 	 * msg and status fields. The per-msgcode reply structure
- 	 * will contain valid data.
+ 	 * fill in all the output members
  	 */
--	uint32_t result;
-+	union {
-+		uint32_t	  result; /* do not use in new code */
-+		union scsi_status status;
-+	};
- 
- 	/* If there was reply_payload, how much was recevied ? */
- 	uint32_t reply_payload_rcv_len;
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 202106e7c814..539be97b0a7d 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -140,7 +140,11 @@ struct scsi_cmnd {
- 					 * obtained by scsi_malloc is guaranteed
- 					 * to be at an address < 16Mb). */
- 
--	int result;		/* Status code from lower level driver */
-+	/* Status code from lower level driver */
-+	union {
-+		int		  result; /* do not use in new code. */
-+		union scsi_status status;
-+	};
- 	int flags;		/* Command flags */
- 	unsigned long state;	/* Command completion state */
- 
-@@ -317,23 +321,23 @@ static inline struct scsi_data_buffer *scsi_prot(struct scsi_cmnd *cmd)
- static inline void set_status_byte(struct scsi_cmnd *cmd,
- 				   enum sam_status status)
- {
--	cmd->result = (cmd->result & 0xffffff00) | status;
-+	cmd->status.b.status = status;
- }
- 
- static inline void set_msg_byte(struct scsi_cmnd *cmd, enum msg_byte status)
- {
--	cmd->result = (cmd->result & 0xffff00ff) | (status << 8);
-+	cmd->status.b.msg = status;
- }
- 
- static inline void set_host_byte(struct scsi_cmnd *cmd, enum host_status status)
- {
--	cmd->result = (cmd->result & 0xff00ffff) | (status << 16);
-+	cmd->status.b.host = status;
- }
- 
- static inline void set_driver_byte(struct scsi_cmnd *cmd,
- 				   enum driver_status status)
- {
--	cmd->result = (cmd->result & 0x00ffffff) | (status << 24);
-+	cmd->status.b.driver = status;
- }
- 
- static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 468094254b3c..dcd66bb9a1ba 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -6,6 +6,8 @@
- 
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_common.h>
-+#include <scsi/scsi_status.h>
-+
- struct scsi_device;
- struct Scsi_Host;
- 
-@@ -31,7 +33,10 @@ extern int scsi_ioctl_reset(struct scsi_device *, int __user *);
- 
- struct scsi_eh_save {
- 	/* saved state */
--	int result;
-+	union {
-+		int		  result; /* do not use in new code */
-+		union scsi_status status;
-+	};
- 	unsigned int resid_len;
- 	int eh_eflags;
- 	enum dma_data_direction data_direction;
-diff --git a/include/scsi/scsi_request.h b/include/scsi/scsi_request.h
-index b06f28c74908..83f5549cc74c 100644
---- a/include/scsi/scsi_request.h
-+++ b/include/scsi/scsi_request.h
-@@ -3,6 +3,7 @@
- #define _SCSI_SCSI_REQUEST_H
- 
- #include <linux/blk-mq.h>
-+#include <scsi/scsi_status.h>
- 
- #define BLK_MAX_CDB	16
- 
-@@ -10,7 +11,10 @@ struct scsi_request {
- 	unsigned char	__cmd[BLK_MAX_CDB];
- 	unsigned char	*cmd;
- 	unsigned short	cmd_len;
--	int		result;
-+	union {
-+		int		  result; /* do not use in new code */
-+		union scsi_status status;
-+	};
- 	unsigned int	sense_len;
- 	unsigned int	resid_len;	/* residual count */
- 	int		retries;
-diff --git a/include/scsi/scsi_status.h b/include/scsi/scsi_status.h
-index da2ba825f981..120f5a43d2ed 100644
---- a/include/scsi/scsi_status.h
-+++ b/include/scsi/scsi_status.h
-@@ -3,6 +3,7 @@
- 
- #include <linux/types.h>
- #include <linux/compiler_attributes.h>
-+#include <asm/byteorder.h>
- #include <scsi/scsi_proto.h>
- 
- /*
-@@ -88,4 +89,32 @@ enum driver_status {
- 	DRIVER_SENSE	= 0x08,
- } __packed;
- 
-+/**
-+ * SCSI status passed by LLDs to the midlayer.
-+ * @combined: One of the following:
-+ *	- A (driver, host, msg, status) quadruplet encoded as a 32-bit integer.
-+ *	- A negative Unix error code.
-+ *	- In the IDE code, a positive value that represents an error code, an
-+ *	  error counter or a bitfield.
-+ * @b: SCSI status code.
-+ */
-+union scsi_status {
-+	int32_t combined;
-+	struct {
-+#if defined(__BIG_ENDIAN)
-+		enum driver_status driver;
-+		enum host_status host;
-+		enum msg_byte msg;
-+		enum sam_status status;
-+#elif defined(__LITTLE_ENDIAN)
-+		enum sam_status status;
-+		enum msg_byte msg;
-+		enum host_status host;
-+		enum driver_status driver;
-+#else
-+#error Endianness?
-+#endif
-+	} b;
-+};
-+
- #endif /* _SCSI_SCSI_STATUS_H */
-diff --git a/include/uapi/scsi/scsi_bsg_fc.h b/include/uapi/scsi/scsi_bsg_fc.h
-index 3ae65e93235c..419db719fe8e 100644
---- a/include/uapi/scsi/scsi_bsg_fc.h
-+++ b/include/uapi/scsi/scsi_bsg_fc.h
-@@ -9,6 +9,9 @@
- #define SCSI_BSG_FC_H
- 
- #include <linux/types.h>
-+#ifdef __KERNEL__
-+#include <scsi/scsi_status.h>
-+#endif
- 
- /*
-  * This file intended to be included by both kernel and user space
-@@ -291,7 +294,14 @@ struct fc_bsg_reply {
- 	 *    msg and status fields. The per-msgcode reply structure
- 	 *    will contain valid data.
+-	hdr->device_status = sreq->result & 0xff;
+-	hdr->transport_status = host_byte(sreq->result);
+-	hdr->driver_status = driver_byte(sreq->result);
++	hdr->device_status = sreq->status.b.status;
++	hdr->transport_status = host_byte(sreq->status);
++	hdr->driver_status = driver_byte(sreq->status);
+ 	hdr->info = 0;
+ 	if (hdr->device_status || hdr->transport_status || hdr->driver_status)
+ 		hdr->info |= SG_INFO_CHECK;
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 6599bac0a78c..3a56dc979df2 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -252,11 +252,11 @@ static int blk_complete_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr,
+ 	/*
+ 	 * fill in all the output members
  	 */
-+#ifdef __KERNEL__
-+	union {
-+		__u32		  result; /* do not use in new kernel code */
-+		union scsi_status status;
-+	};
-+#else
- 	__u32 result;
-+#endif
+-	hdr->status = req->result & 0xff;
+-	hdr->masked_status = status_byte(req->result);
+-	hdr->msg_status = msg_byte(req->result);
+-	hdr->host_status = host_byte(req->result);
+-	hdr->driver_status = driver_byte(req->result);
++	hdr->status = req->status.b.status;
++	hdr->masked_status = status_byte(req->status);
++	hdr->msg_status = msg_byte(req->status);
++	hdr->host_status = host_byte(req->status);
++	hdr->driver_status = driver_byte(req->status);
+ 	hdr->info = 0;
+ 	if (hdr->masked_status || hdr->host_status || hdr->driver_status)
+ 		hdr->info |= SG_INFO_CHECK;
+@@ -495,7 +495,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
  
- 	/* If there was reply_payload, how much was recevied ? */
- 	__u32 reply_payload_rcv_len;
-diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
-index d55f2176dfd4..3dfe5a5a0842 100644
---- a/include/uapi/scsi/scsi_bsg_ufs.h
-+++ b/include/uapi/scsi/scsi_bsg_ufs.h
-@@ -9,6 +9,10 @@
- #define SCSI_BSG_UFS_H
+ 	blk_execute_rq(disk, rq, 0);
  
- #include <linux/types.h>
-+#ifdef __KERNEL__
-+#include <scsi/scsi_status.h>
-+#endif
-+
- /*
-  * This file intended to be included by both kernel and user space
-  */
-@@ -95,7 +99,14 @@ struct ufs_bsg_reply {
- 	 * msg and status fields. The per-msgcode reply structure
- 	 * will contain valid data.
- 	 */
-+#ifdef __KERNEL__
-+	union {
-+		__u32		  result; /* do not use in new kernel code */
-+		union scsi_status status;
-+	};
-+#else
- 	__u32 result;
-+#endif
+-	err = req->result & 0xff;	/* only 8 bit SCSI status */
++	err = req->status.b.status;	/* only 8 bit SCSI status */
+ 	if (err) {
+ 		if (req->sense_len && req->sense) {
+ 			bytes = (OMAX_SB_LEN > req->sense_len) ?
+@@ -533,7 +533,7 @@ static int __blk_send_generic(struct request_queue *q, struct gendisk *bd_disk,
+ 	scsi_req(rq)->cmd[4] = data;
+ 	scsi_req(rq)->cmd_len = 6;
+ 	blk_execute_rq(bd_disk, rq, 0);
+-	err = scsi_req(rq)->result ? -EIO : 0;
++	err = scsi_req(rq)->status.combined ? -EIO : 0;
+ 	blk_put_request(rq);
  
- 	/* If there was reply_payload, how much was received? */
- 	__u32 reply_payload_rcv_len;
+ 	return err;
