@@ -2,193 +2,295 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB94CC433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 06:54:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAF2DC433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 07:10:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F97F611C9
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 06:54:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7670613B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 07:10:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230139AbhDTGzP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Apr 2021 02:55:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35582 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229577AbhDTGzP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 02:55:15 -0400
-Received: from mail-ot1-x32b.google.com (mail-ot1-x32b.google.com [IPv6:2607:f8b0:4864:20::32b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85939C061763
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 23:54:44 -0700 (PDT)
-Received: by mail-ot1-x32b.google.com with SMTP id e89-20020a9d01e20000b0290294134181aeso9146569ote.5
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 23:54:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=PL9Uobv2PnqPS3gUR7yp+LxKoBTrfMeI5rwFBFiOYfo=;
-        b=C1VjOlvsJYeFqQJ++DsL0FEkQPfGhkd14EmUMHP1x+4P3BOcdw8R+Wq9jqq8lMa8j2
-         mCCpIxMT9rw+RvCSgQlvlwFjNbSFSHLIqziPfaFsbI+iTiW/2YZ6Hki0tg0aiPVc4222
-         jtfdIXCFbX5N0fI8w1OXcq2/IW8J8GdoM7WQo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=PL9Uobv2PnqPS3gUR7yp+LxKoBTrfMeI5rwFBFiOYfo=;
-        b=FyatQyGHHpGngPbVkc71t3mh8fhgU6ucI8IlbmBwvNFnL/AQcym5y+bGgIv6zEXxpO
-         1xaj62dOB+GPq1vOuUUQPWjEABh03FG/dwUE56EqWnxGYj7lrsjCSA5oModEH9ulxJmU
-         IRj6m9eoo8Tq6cVhSil00niWdvh91NcJ2C/GQYz3HX/EGrj5xq6G8i+ug8JCnzEpw/MD
-         mnJECpOn00bZ7IxPDHIlCANA7dum0KsvzC9p+2mPzFosfJbOVummwzYA27KjUf9xSP0Y
-         GBuqWR8V6iePhGAVaXrdicd4MjLoKA+xo0EMwNaVX68eSmgdga6nnQEq8/cO+6cVmuZT
-         3Gzg==
-X-Gm-Message-State: AOAM533I2r0+BAdMqYwfKisN6ktlGMd5xl4UQpfhac+qqaIZOmm8k2kK
-        60idJwWgpcDMxAXnjTLzQaZbwA8cZbPVJEb7IDsW7VxN2oapS3qRMEXQYN4m12T46voxT5sxm2C
-        Fxu9tX3j40aZ4mUHYiO91WzxY7dwq
-X-Google-Smtp-Source: ABdhPJzffU5MK6XgdUkwgE83tDHUAaRydIVZd6GweSiUJYe5F5ITzrhsGV/rIGJpiVbyAxqdCMgS7rKfEDp6/6wJoDU=
-X-Received: by 2002:a9d:10a:: with SMTP id 10mr17698564otu.188.1618901683694;
- Mon, 19 Apr 2021 23:54:43 -0700 (PDT)
-From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
-References: <1617750397-26466-1-git-send-email-muneendra.kumar@broadcom.com>
- <1617750397-26466-4-git-send-email-muneendra.kumar@broadcom.com> <YHxRK33kf7OSVlxf@chlorum.ategam.org>
-In-Reply-To: <YHxRK33kf7OSVlxf@chlorum.ategam.org>
-MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQKo184alF2k1C3jlp6LcDjP2IqjrgG1Dm2kAckLKYSo/bgnsA==
-Date:   Tue, 20 Apr 2021 12:24:41 +0530
-Message-ID: <a6497bd924795a5a9279b893b0d83baf@mail.gmail.com>
-Subject: RE: [PATCH v9 03/13] nvme: Added a newsysfs attribute appid_store
-To:     Benjamin Block <lkml@mageta.org>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        tj@kernel.org, linux-nvme@lists.infradead.org, hare@suse.de,
-        jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
-        Benjamin Block <bblock@linux.ibm.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000cf742205c061eb49"
+        id S230172AbhDTHKi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Apr 2021 03:10:38 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:61262 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230018AbhDTHKh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 03:10:37 -0400
+Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20210420071003epoutp028c1df0a87df6e6877b92d895158282fc~3f1c9JkCQ0858008580epoutp02J
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Apr 2021 07:10:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20210420071003epoutp028c1df0a87df6e6877b92d895158282fc~3f1c9JkCQ0858008580epoutp02J
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1618902603;
+        bh=2VjiXl8qVLshY87VkPvcxREY1e05LgoGnPle5Cr6e1s=;
+        h=Subject:Reply-To:From:To:CC:Date:References:From;
+        b=Y6Lxl6AeHXPatTU3/aIEAo7GfhG0xPbDG38urEoNmIajGRWDHxyRpVACHoXbS0rbj
+         r8JL0t8ZKNRQgEmOwBfCNwcZZRJ+5Gf0O8PgYuy40giDGJiKtLCn0oZjvqjoCP1Fcz
+         hpiyCZSomNR/blXbCDqo42rIDEfKWQgxyNoXw1CM=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas3p3.samsung.com (KnoxPortal) with ESMTP id
+        20210420071002epcas3p398412e49cf306f4b0f6b72bb512bb227~3f1cDt6Mp0697206972epcas3p3Z;
+        Tue, 20 Apr 2021 07:10:02 +0000 (GMT)
+Received: from epcpadp3 (unknown [182.195.40.17]) by epsnrtp4.localdomain
+        (Postfix) with ESMTP id 4FPZZL52Y6z4x9Q6; Tue, 20 Apr 2021 07:10:02 +0000
+        (GMT)
+Mime-Version: 1.0
+Subject: [PATCH v2] scsi: ufs: Add batched WB buffer flush
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Daejun Park <daejun7.park@samsung.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "mchehab+huawei@kernel.org" <mchehab+huawei@kernel.org>,
+        Keoseong Park <keosung.park@samsung.com>,
+        "lukas.bulwahn@gmail.com" <lukas.bulwahn@gmail.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
+        "jaegeuk@kernel.org" <jaegeuk@kernel.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        "satyat@google.com" <satyat@google.com>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Jieon Seol <jieon.seol@samsung.com>,
+        Jaemyung Lee <jaemyung.lee@samsung.com>,
+        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
+        JinHwan Park <jh.i.park@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <2038148563.21618902602689.JavaMail.epsvc@epcpadp3>
+Date:   Tue, 20 Apr 2021 15:42:46 +0900
+X-CMS-MailID: 20210420064246epcms2p75e98c1b415731d8d38db86f7397d7fc7
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20210420064246epcms2p75e98c1b415731d8d38db86f7397d7fc7
+References: <CGME20210420064246epcms2p75e98c1b415731d8d38db86f7397d7fc7@epcms2p7>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000cf742205c061eb49
-Content-Type: text/plain; charset="UTF-8"
+Currently, WriteBooster (WB) buffer is always flushed during hibern8. However,
+this is inefficient because data in the WB buffer can be invalid due to
+spatial locality of IO workload.
+If the WB buffer flush is flushed in a batched manner, the amount of data
+migration and power consumption can be reduced because the overwritten data
+of the WB buffer may be invalid due to spatial locality.
 
-Hi Benjamin,
+This patch supports batched flush of WB buffer. When batched flush is enabled,
+fWriteBoosterBufferFlushDuringHibernate is set only when
+b_rpm_dev_flush_capable is true during runtime suspend. When the device is
+resumed, fWriteBoosterBufferFlushDuringHibernate is cleared to stop flush
+during hibern8.
 
->> ---
->>  drivers/nvme/host/fc.c | 73
->> +++++++++++++++++++++++++++++++++++++++++-
->>  1 file changed, 72 insertions(+), 1 deletion(-)
+Changelog
+ Fix warning reported by kernel test robot.
 
->Hmm, I wonder why only NVMe-FC? Or is this just for the moment? We also
-have the FC transport class for SCSI; I assume this could feed the same
-IDs into the LLDs.
-At present it supports only for SCSI-FC .
-In future we are adding the support for NVMe-FC
-But to make it generic and avoid duplication we added this under
-/sys/class/fc .
+Co-developed-by: Keoseong Park <keosung.park@samsung.com>
+Signed-off-by: Keoseong Park <keosung.park@samsung.com>
+Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+---
+ Documentation/ABI/testing/sysfs-driver-ufs |  9 ++++
+ drivers/scsi/ufs/ufs-sysfs.c               | 50 ++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.c                  | 14 ++++--
+ drivers/scsi/ufs/ufshcd.h                  |  2 +
+ 4 files changed, 71 insertions(+), 4 deletions(-)
 
-Ewan was mentioning that at some point there is a plan  to decouple the FC
-transport
-somewhat so that there is a layer that represents the FC stuff regardless
-of the FC4 type
-(SCSI, NVMe). When we have this layer we can move the things accordingly.
-
-Regards,
-Muneendra.
-
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index d1bc23cb6a9d..b67b8449e840 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -1172,3 +1172,12 @@ Description:	This node is used to set or display whether UFS WriteBooster is
+ 		(if the platform supports UFSHCD_CAP_CLK_SCALING). For a
+ 		platform that doesn't support UFSHCD_CAP_CLK_SCALING, we can
+ 		disable/enable WriteBooster through this sysfs node.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/wb_batched_flush
++Date:		April 2021
++Contact:	Daejun Park <daejun7.park@samsung.com>
++Description:	This entry shows whether batch flushing of UFS WriteBooster
++		buffers is enabled. Writing 1 to this entry allows the device to flush
++		the WriteBooster buffer only when it needs to perform a buffer flush
++		during runtime suspend. Writing 0 to this entry allows the device to
++		flush the WriteBooster buffer during link hibernation.
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index d7c3cff9662f..943ac12e59c6 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -253,6 +253,54 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
+ 	return res < 0 ? res : count;
+ }
+ 
++
++static ssize_t wb_batched_flush_show(struct device *dev,
++				     struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%d\n", hba->vps->wb_batched_flush);
++}
++
++static ssize_t wb_batched_flush_store(struct device *dev,
++				      struct device_attribute *attr,
++				      const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	unsigned int wb_batched_flush;
++	ssize_t res;
++
++	if (!ufshcd_is_wb_allowed(hba)) {
++		dev_warn(dev, "To control WB through wb_batched_flush is not allowed!\n");
++		return -EOPNOTSUPP;
++	}
++
++	if (kstrtouint(buf, 0, &wb_batched_flush))
++		return -EINVAL;
++
++	if (wb_batched_flush != 0 && wb_batched_flush != 1)
++		return -EINVAL;
++
++	down(&hba->host_sem);
++	if (!ufshcd_is_user_access_allowed(hba)) {
++		res = -EBUSY;
++		goto out;
++	}
++
++	if (wb_batched_flush == hba->vps->wb_batched_flush)
++		goto out;
++
++	pm_runtime_get_sync(hba->dev);
++	res = ufshcd_wb_toggle_flush_during_h8(hba, !wb_batched_flush);
++	pm_runtime_put_sync(hba->dev);
++	if (!res)
++		hba->vps->wb_batched_flush = wb_batched_flush;
++
++out:
++	up(&hba->host_sem);
++	return res < 0 ? res : count;
++}
++
+ static DEVICE_ATTR_RW(rpm_lvl);
+ static DEVICE_ATTR_RO(rpm_target_dev_state);
+ static DEVICE_ATTR_RO(rpm_target_link_state);
+@@ -261,6 +309,7 @@ static DEVICE_ATTR_RO(spm_target_dev_state);
+ static DEVICE_ATTR_RO(spm_target_link_state);
+ static DEVICE_ATTR_RW(auto_hibern8);
+ static DEVICE_ATTR_RW(wb_on);
++static DEVICE_ATTR_RW(wb_batched_flush);
+ 
+ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_rpm_lvl.attr,
+@@ -271,6 +320,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_spm_target_link_state.attr,
+ 	&dev_attr_auto_hibern8.attr,
+ 	&dev_attr_wb_on.attr,
++	&dev_attr_wb_batched_flush.attr,
+ 	NULL
+ };
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 0625da7a42ee..e11dc578a17c 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -244,7 +244,6 @@ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg);
+ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+-static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
+ static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
+ static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
+ static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
+@@ -277,7 +276,8 @@ static inline void ufshcd_wb_config(struct ufs_hba *hba)
+ 
+ 	ufshcd_wb_toggle(hba, true);
+ 
+-	ufshcd_wb_toggle_flush_during_h8(hba, true);
++	ufshcd_wb_toggle_flush_during_h8(hba, !hba->vps->wb_batched_flush);
++
+ 	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
+ 		ufshcd_wb_toggle_flush(hba, true);
+ }
+@@ -5472,7 +5472,7 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
+ 	return ret;
+ }
+ 
+-static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
++int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
+ {
+ 	int ret;
+ 
+@@ -5481,10 +5481,12 @@ static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
+ 	if (ret) {
+ 		dev_err(hba->dev, "%s: WB-Buf Flush during H8 %s failed: %d\n",
+ 			__func__, set ? "enable" : "disable", ret);
+-		return;
++		return ret;
+ 	}
+ 	dev_dbg(hba->dev, "%s WB-Buf Flush during H8 %s\n",
+ 			__func__, set ? "enabled" : "disabled");
++
++	return ret;
+ }
+ 
+ static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
+@@ -8745,6 +8747,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 			ret = ufshcd_set_dev_pwr_mode(hba, req_dev_pwr_mode);
+ 			if (ret)
+ 				goto enable_gating;
++		} else if (hba->vps->wb_batched_flush) {
++			ufshcd_wb_toggle_flush_during_h8(hba, true);
+ 		}
+ 	}
+ 
+@@ -8925,6 +8929,8 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	ufshcd_auto_hibern8_enable(hba);
+ 
+ 	if (hba->dev_info.b_rpm_dev_flush_capable) {
++		if (hba->vps->wb_batched_flush)
++			ufshcd_wb_toggle_flush_during_h8(hba, false);
+ 		hba->dev_info.b_rpm_dev_flush_capable = false;
+ 		cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
+ 	}
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 5eb66a8debc7..049f3f08506c 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -643,6 +643,7 @@ struct ufs_hba_variant_params {
+ 	struct devfreq_simple_ondemand_data ondemand_data;
+ 	u16 hba_enable_delay_us;
+ 	u32 wb_flush_threshold;
++	bool wb_batched_flush;
+ };
+ 
+ /**
+@@ -1105,6 +1106,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+ 			     enum query_opcode desc_op);
+ 
+ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
++int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
+ 
+ /* Wrapper functions for safely calling variant operations */
+ static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
 -- 
-This electronic communication and the information and any files transmitted 
-with it, or attached to it, are confidential and are intended solely for 
-the use of the individual or entity to whom it is addressed and may contain 
-information that is confidential, legally privileged, protected by privacy 
-laws, or otherwise restricted from disclosure to anyone else. If you are 
-not the intended recipient or the person responsible for delivering the 
-e-mail to the intended recipient, you are hereby notified that any use, 
-copying, distributing, dissemination, forwarding, printing, or copying of 
-this e-mail is strictly prohibited. If you received this e-mail in error, 
-please return the e-mail to the sender, delete it from your computer, and 
-destroy any printed copy of it.
+2.25.1
 
---000000000000cf742205c061eb49
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
 
-MIIQeAYJKoZIhvcNAQcCoIIQaTCCEGUCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-gg3PMIIFDTCCA/WgAwIBAgIQeEqpED+lv77edQixNJMdADANBgkqhkiG9w0BAQsFADBMMSAwHgYD
-VQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMzETMBEGA1UEChMKR2xvYmFsU2lnbjETMBEGA1UE
-AxMKR2xvYmFsU2lnbjAeFw0yMDA5MTYwMDAwMDBaFw0yODA5MTYwMDAwMDBaMFsxCzAJBgNVBAYT
-AkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBS
-MyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
-vbCmXCcsbZ/a0fRIQMBxp4gJnnyeneFYpEtNydrZZ+GeKSMdHiDgXD1UnRSIudKo+moQ6YlCOu4t
-rVWO/EiXfYnK7zeop26ry1RpKtogB7/O115zultAz64ydQYLe+a1e/czkALg3sgTcOOcFZTXk38e
-aqsXsipoX1vsNurqPtnC27TWsA7pk4uKXscFjkeUE8JZu9BDKaswZygxBOPBQBwrA5+20Wxlk6k1
-e6EKaaNaNZUy30q3ArEf30ZDpXyfCtiXnupjSK8WU2cK4qsEtj09JS4+mhi0CTCrCnXAzum3tgcH
-cHRg0prcSzzEUDQWoFxyuqwiwhHu3sPQNmFOMwIDAQABo4IB2jCCAdYwDgYDVR0PAQH/BAQDAgGG
-MGAGA1UdJQRZMFcGCCsGAQUFBwMCBggrBgEFBQcDBAYKKwYBBAGCNxQCAgYKKwYBBAGCNwoDBAYJ
-KwYBBAGCNxUGBgorBgEEAYI3CgMMBggrBgEFBQcDBwYIKwYBBQUHAxEwEgYDVR0TAQH/BAgwBgEB
-/wIBADAdBgNVHQ4EFgQUljPR5lgXWzR1ioFWZNW+SN6hj88wHwYDVR0jBBgwFoAUj/BLf6guRSSu
-TVD6Y5qL3uLdG7wwegYIKwYBBQUHAQEEbjBsMC0GCCsGAQUFBzABhiFodHRwOi8vb2NzcC5nbG9i
-YWxzaWduLmNvbS9yb290cjMwOwYIKwYBBQUHMAKGL2h0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5j
-b20vY2FjZXJ0L3Jvb3QtcjMuY3J0MDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9jcmwuZ2xvYmFs
-c2lnbi5jb20vcm9vdC1yMy5jcmwwWgYDVR0gBFMwUTALBgkrBgEEAaAyASgwQgYKKwYBBAGgMgEo
-CjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAN
-BgkqhkiG9w0BAQsFAAOCAQEAdAXk/XCnDeAOd9nNEUvWPxblOQ/5o/q6OIeTYvoEvUUi2qHUOtbf
-jBGdTptFsXXe4RgjVF9b6DuizgYfy+cILmvi5hfk3Iq8MAZsgtW+A/otQsJvK2wRatLE61RbzkX8
-9/OXEZ1zT7t/q2RiJqzpvV8NChxIj+P7WTtepPm9AIj0Keue+gS2qvzAZAY34ZZeRHgA7g5O4TPJ
-/oTd+4rgiU++wLDlcZYd/slFkaT3xg4qWDepEMjT4T1qFOQIL+ijUArYS4owpPg9NISTKa1qqKWJ
-jFoyms0d0GwOniIIbBvhI2MJ7BSY9MYtWVT5jJO3tsVHwj4cp92CSFuGwunFMzCCA18wggJHoAMC
-AQICCwQAAAAAASFYUwiiMA0GCSqGSIb3DQEBCwUAMEwxIDAeBgNVBAsTF0dsb2JhbFNpZ24gUm9v
-dCBDQSAtIFIzMRMwEQYDVQQKEwpHbG9iYWxTaWduMRMwEQYDVQQDEwpHbG9iYWxTaWduMB4XDTA5
-MDMxODEwMDAwMFoXDTI5MDMxODEwMDAwMFowTDEgMB4GA1UECxMXR2xvYmFsU2lnbiBSb290IENB
-IC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMTCkdsb2JhbFNpZ24wggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMJXaQeQZ4Ihb1wIO2hMoonv0FdhHFrYhy/EYCQ8eyip0E
-XyTLLkvhYIJG4VKrDIFHcGzdZNHr9SyjD4I9DCuul9e2FIYQebs7E4B3jAjhSdJqYi8fXvqWaN+J
-J5U4nwbXPsnLJlkNc96wyOkmDoMVxu9bi9IEYMpJpij2aTv2y8gokeWdimFXN6x0FNx04Druci8u
-nPvQu7/1PQDhBjPogiuuU6Y6FnOM3UEOIDrAtKeh6bJPkC4yYOlXy7kEkmho5TgmYHWyn3f/kRTv
-riBJ/K1AFUjRAjFhGV64l++td7dkmnq/X8ET75ti+w1s4FRpFqkD2m7pg5NxdsZphYIXAgMBAAGj
-QjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSP8Et/qC5FJK5N
-UPpjmove4t0bvDANBgkqhkiG9w0BAQsFAAOCAQEAS0DbwFCq/sgM7/eWVEVJu5YACUGssxOGhigH
-M8pr5nS5ugAtrqQK0/Xx8Q+Kv3NnSoPHRHt44K9ubG8DKY4zOUXDjuS5V2yq/BKW7FPGLeQkbLmU
-Y/vcU2hnVj6DuM81IcPJaP7O2sJTqsyQiunwXUaMld16WCgaLx3ezQA3QY/tRG3XUyiXfvNnBB4V
-14qWtNPeTCekTBtzc3b0F5nCH3oO4y0IrQocLP88q1UOD5F+NuvDV0m+4S4tfGCLw0FREyOdzvcy
-a5QBqJnnLDMfOjsl0oZAzjsshnjJYS8Uuu7bVW/fhO4FCU29KNhyztNiUGUe65KXgzHZs7XKR1g/
-XzCCBVcwggQ/oAMCAQICDHE+9dgalq0zfRWBQDANBgkqhkiG9w0BAQsFADBbMQswCQYDVQQGEwJC
-RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMg
-UGVyc29uYWxTaWduIDIgQ0EgMjAyMDAeFw0yMTAyMjIwODMxMjlaFw0yMjA5MDUwODM1MjlaMIGW
-MQswCQYDVQQGEwJJTjESMBAGA1UECBMJS2FybmF0YWthMRIwEAYDVQQHEwlCYW5nYWxvcmUxFjAU
-BgNVBAoTDUJyb2FkY29tIEluYy4xGjAYBgNVBAMTEU11bmVlbmRyYSBLdW1hciBNMSswKQYJKoZI
-hvcNAQkBFhxtdW5lZW5kcmEua3VtYXJAYnJvYWRjb20uY29tMIIBIjANBgkqhkiG9w0BAQEFAAOC
-AQ8AMIIBCgKCAQEA2oRP8OxO2NYieH4Xx4Y8eNi7mMVy4G5hkvXCCZjonnBX4NjglxtpbckcFqMx
-eegLjY0Nkq4IL7dhAef5Ddh0xQpzp/hQEkuGJUCqrMSH57NS6lZ33/ez2C4N0axr/dcxtxe+JtCm
-K6hmmo1cEotLOgFnu7njR+VCvNdgsDzksd406ohAucjWgI50uKU+vpkmckEWa+gKwhDUz6xOUhkt
-6dyIRB5g0cWmkcO89O0W56d+wWwa7GeeTIJHMzJ0rco8nzcXkz/oeEmXSjZU3erpKBaLCQBkZud1
-iNM/8mFL1vZxCwUACcMw+a8FhrHJq29QwrBHqDJ1ocrJlDaZcn1UDQIDAQABo4IB3TCCAdkwDgYD
-VR0PAQH/BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3Vy
-ZS5nbG9iYWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEG
-CCsGAQUFBzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWdu
-MmNhMjAyMDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93
-d3cuZ2xvYmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6
-hjhodHRwOi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNy
-bDAnBgNVHREEIDAegRxtdW5lZW5kcmEua3VtYXJAYnJvYWRjb20uY29tMBMGA1UdJQQMMAoGCCsG
-AQUFBwMEMB8GA1UdIwQYMBaAFJYz0eZYF1s0dYqBVmTVvkjeoY/PMB0GA1UdDgQWBBTMJfPJzmVP
-1lwJptwb21ozx4G7wzANBgkqhkiG9w0BAQsFAAOCAQEAmz4/3oyLhfXMYVZWtDEKcP5Bk/6JAhfa
-9q4eZDy1W/1FSuRfEWMq7xi9T3DvxUQqJtpJ8bM6SU37fZAvvMdRF23qdKRy6gBZ9NkYOCP7Tr2u
-wNYznMfaHEGY/aa65EiywAsbVn1X7vKMKqSj3cmpEUO2I+FcRtPdyicqyU2E3856b5d+fMc01FRg
-pQQRz3kWlIpG/CJ2SiOg0gpkZIkUde0r4e6ipDi+xVSoBdOOJzirs8IkwOeJ4w9GPS9uOkB1bRvJ
-RU+Nz1h4p9eH2nsPAq7S5l6y/n3+g/olazbUoiEx8GRFqzoHLudsqmnzISDPoe+rczkpYreF/mEU
-Y6pL2DGCAm0wggJpAgEBMGswWzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
-c2ExMTAvBgNVBAMTKEdsb2JhbFNpZ24gR0NDIFIzIFBlcnNvbmFsU2lnbiAyIENBIDIwMjACDHE+
-9dgalq0zfRWBQDANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgj57SPQUESqqjvznt
-oXblcI1i8imKoUoXj3Ky6gfCYDIwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjEwNDIwMDY1NDQ0WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
-ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAHVlQVwX563QLP6GkcqCJNcMjhN8WPbcCBA7
-qioDiybGbZDfxmgdBPytGFtmqy1WtSzg50W3JKCp67fv29d3gbC8/oGtGf1bZY/b4AZbY4sFuoWr
-x8wjSxiQ6kQId0IrfF6RAHeH/3fx5Se4ErDSOBLJRKxrDy/f3Vlt9bYq+f6HaVyXmGXjXSaJRrvv
-IF1tl1vsBkZGqA9tUX8UInTfvJJgVRS2H3QfagTOXQ12Ktpca9bUyHSoQlRUlES0lF0haxkAz6zf
-KvTxiOPoOc/E0IicrxYiCUuWF5iOXlYFd3sFgw3eFYf25wtyiqFRPLYVzJA/QjShGR1KMVO9JFj0
-UK4=
---000000000000cf742205c061eb49--
