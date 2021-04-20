@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3E16C43461
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F6C7C433B4
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 02:14:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B12A6613AE
+	by mail.kernel.org (Postfix) with ESMTP id 1038061107
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 02:14:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233732AbhDTCPE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 22:15:04 -0400
-Received: from mail-pf1-f172.google.com ([209.85.210.172]:46980 "EHLO
-        mail-pf1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233635AbhDTCPC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 22:15:02 -0400
-Received: by mail-pf1-f172.google.com with SMTP id d124so24449805pfa.13
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 19:14:31 -0700 (PDT)
+        id S233729AbhDTCPD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 22:15:03 -0400
+Received: from mail-pf1-f176.google.com ([209.85.210.176]:43666 "EHLO
+        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233653AbhDTCPA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 22:15:00 -0400
+Received: by mail-pf1-f176.google.com with SMTP id p67so19540278pfp.10
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 19:14:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=vKRAGrmNrV6XNdcW0QOmOpXDH2DWQaSuG+Gc8BFTrTk=;
-        b=LaxG42UVzvUYaEL8I6fXyBswvD/pmASpzeZs4wQZUc93tgyOigK4EmfGA37qy0tbg/
-         dg1IskRaBfG+SAAUAVh/7oQtTnbEJjgy9vuJPJdkmaR2kya1zHTouN1yWU8IOPdnV0kP
-         bzjW8/ciOCe4YtkU79ZadnBhYFCdzDIG491Hqaz+XNXHEabFHHJ/ugl25YOWMYX8rO8v
-         KwLReUw8nVHbkkLVadOZkr54ocj49qRZKmRmt4SV6BUfyXK6LFkDqjaIPkAxm6emu+UM
-         76wXR2gCZfjcEU6C53veT6Csx2AYegEbfPj4s9Jgyb9whf41v5zPl2FeuueuxPjKZP02
-         o9Cg==
-X-Gm-Message-State: AOAM531NqUvDl48Ca9JyXYN20FO9utPDZvM2PKg+QQFmo/8v1eP7esb+
-        3C1ruUBz7PHUD0KsglMAS7E=
-X-Google-Smtp-Source: ABdhPJxIFH7JZGOug+jvxbsMmSIYUfukjPAMZs8HZLq104FW7mqwnw7RPRqTcFSzjeDDDqONNErH0Q==
-X-Received: by 2002:a63:ea06:: with SMTP id c6mr14780441pgi.401.1618884871321;
-        Mon, 19 Apr 2021 19:14:31 -0700 (PDT)
-Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id mq2sm630984pjb.24.2021.04.19.19.14.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=E8eY+3b1e1VB8Xgf2jPBHrqijd11LuHKYiSCjB5BH8Q=;
+        b=GBwu/2qyYFI1i22o7pIWHu5JKFT5znEKPk+S5lHdGRnws509vMCfqBWAgI8CnaTZpm
+         5+38Je+A9M9GqCdySOQhafQAk+3ipTWbMeUyaIeSIqO4qGJ/SvO270GIuhkR0ghqchdQ
+         DMdbbaRnrml1VeU+8Rivp3FqbnjuxHNLK+ohrZLIgrppzL+dewbDScDulnRujmRSONHL
+         FxuN1noQRYs8wTC8/gRkq15BgPQvI1RRBLHc18dNFvBz86obP5EduhvES3+PTeDO0Wec
+         HloOhHcl3H58LpKzJMMHB9JKteA2YG/n/+1KaE18zfh9NDAtAUFf5jseabwqlo2+2Ncu
+         FleQ==
+X-Gm-Message-State: AOAM532//r8NT4yO02kIaDdJy7QPR3UldVEf8sOiWDQq+AKYTSVoCgiv
+        sLg60X1vDX3kS29KRA8LyC4=
+X-Google-Smtp-Source: ABdhPJy04JLKc8lhi72vGOQO+quk7anQgV0+KK0ruBSqR+miMYrpnG4GZChsc0I8LDzKyTtGiM0UBA==
+X-Received: by 2002:a62:e40a:0:b029:263:e573:e1c9 with SMTP id r10-20020a62e40a0000b0290263e573e1c9mr616214pfh.74.1618884870189;
         Mon, 19 Apr 2021 19:14:30 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
+        by smtp.gmail.com with ESMTPSA id mq2sm630984pjb.24.2021.04.19.19.14.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Apr 2021 19:14:29 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
@@ -48,9 +48,9 @@ Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
         Don Brace <don.brace@microchip.com>,
         Juergen Gross <jgross@suse.com>
-Subject: [PATCH 109/117] xen-scsifront: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 19:13:54 -0700
-Message-Id: <20210420021402.27678-19-bvanassche@acm.org>
+Subject: [PATCH 108/117] xen-scsiback: Pass union status to the {status,msg,host,driver}_byte() macros
+Date:   Mon, 19 Apr 2021 19:13:53 -0700
+Message-Id: <20210420021402.27678-18-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -66,37 +66,42 @@ An explanation of the purpose of this patch is available in the patch
 Cc: Juergen Gross <jgross@suse.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/xen-scsifront.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/xen/xen-scsiback.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-index 259fc248d06c..3f5af399c68c 100644
---- a/drivers/scsi/xen-scsifront.c
-+++ b/drivers/scsi/xen-scsifront.c
-@@ -261,7 +261,7 @@ static void scsifront_cdb_cmd_done(struct vscsifrnt_info *info,
- 	scsifront_gnttab_done(info, shadow);
- 	scsifront_put_rqid(info, id);
+diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+index 55a4763da05e..835bb6d6a895 100644
+--- a/drivers/xen/xen-scsiback.c
++++ b/drivers/xen/xen-scsiback.c
+@@ -217,7 +217,7 @@ static unsigned long vaddr(struct vscsibk_pend *req, int seg)
+ 	return vaddr_page(req->pages[seg]);
+ }
  
--	sc->result = ring_rsp->rslt;
-+	sc->status.combined = ring_rsp->rslt;
- 	scsi_set_resid(sc, ring_rsp->residual_len);
+-static void scsiback_print_status(char *sense_buffer, int errors,
++static void scsiback_print_status(char *sense_buffer, union scsi_status errors,
+ 					struct vscsibk_pend *pending_req)
+ {
+ 	struct scsiback_tpg *tpg = pending_req->v2p->tpg;
+@@ -336,17 +336,18 @@ static void scsiback_cmd_done(struct vscsibk_pend *pending_req)
+ 	struct vscsibk_info *info = pending_req->info;
+ 	unsigned char *sense_buffer;
+ 	unsigned int resid;
+-	int errors;
++	union scsi_status errors;
  
- 	sense_len = min_t(uint8_t, VSCSIIF_SENSE_BUFFERSIZE,
-@@ -533,7 +533,7 @@ static int scsifront_queuecommand(struct Scsi_Host *shost,
- 	unsigned long flags;
- 	int err;
+ 	sense_buffer = pending_req->sense_buffer;
+ 	resid        = pending_req->se_cmd.residual_count;
+-	errors       = pending_req->result;
++	errors.combined = pending_req->result;
  
--	sc->result = 0;
-+	sc->status.combined = 0;
+-	if (errors && log_print_stat)
++	if (errors.combined && log_print_stat)
+ 		scsiback_print_status(sense_buffer, errors, pending_req);
  
- 	shadow->sc  = sc;
- 	shadow->act = VSCSIIF_ACT_SCSI_CDB;
-@@ -551,7 +551,7 @@ static int scsifront_queuecommand(struct Scsi_Host *shost,
- 		spin_unlock_irqrestore(shost->host_lock, flags);
- 		if (err == -ENOMEM)
- 			return SCSI_MLQUEUE_HOST_BUSY;
--		sc->result = DID_ERROR << 16;
-+		sc->status.combined = DID_ERROR << 16;
- 		sc->scsi_done(sc);
- 		return 0;
- 	}
+ 	scsiback_fast_flush_area(pending_req);
+-	scsiback_do_resp_with_sense(sense_buffer, errors, resid, pending_req);
++	scsiback_do_resp_with_sense(sense_buffer, errors.combined, resid,
++				    pending_req);
+ 	scsiback_put(info);
+ 	/*
+ 	 * Drop the extra KREF_ACK reference taken by target_submit_cmd_map_sgls()
