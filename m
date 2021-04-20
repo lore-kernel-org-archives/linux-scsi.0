@@ -2,86 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19912C433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:48:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 035EEC433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:59:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF971613D3
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:48:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7FCC613C9
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:59:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233638AbhDTStS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Apr 2021 14:49:18 -0400
-Received: from smtp11.smtpout.orange.fr ([80.12.242.133]:19130 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233092AbhDTStR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 14:49:17 -0400
-Received: from localhost.localdomain ([86.243.172.93])
-        by mwinf5d34 with ME
-        id v6oi2401121Fzsu036oiDl; Tue, 20 Apr 2021 20:48:44 +0200
-X-ME-Helo: localhost.localdomain
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Tue, 20 Apr 2021 20:48:44 +0200
-X-ME-IP: 86.243.172.93
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] scsi: bfa: Remove some unused variables
-Date:   Tue, 20 Apr 2021 20:48:41 +0200
-Message-Id: <d10ccee35e35bf33d651f2e0163034d7c451520b.1618944442.git.christophe.jaillet@wanadoo.fr>
+        id S233619AbhDTTA2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Apr 2021 15:00:28 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:52954 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S233541AbhDTTA1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Apr 2021 15:00:27 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 7CD0841399;
+        Tue, 20 Apr 2021 18:59:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received; s=mta-01; t=1618945193; x=
+        1620759594; bh=mBFonvNyfhwXdP0YxwKa9464TvbOOHPM9Cs3w/vkPaU=; b=Q
+        8h7vS+zKHh6pxxoHnzKdGkd30KrWEQSbGCqbpBcqT7VJ+8zK7f83aAJMH/A/n3XL
+        340FV7Yow/YjBFGEfQimki5dzkxvXREFpj8gOgDZQrU3CvfiQ63625EY7X4vELTr
+        M8PkZ132jLrS/QK9uBMDbFI/d9OFLDpKVJWuuuVte4=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id gZIlNBgBdjlF; Tue, 20 Apr 2021 21:59:53 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 816BE41318;
+        Tue, 20 Apr 2021 21:59:53 +0300 (MSK)
+Received: from yadro.com (10.199.0.227) by T-EXCH-03.corp.yadro.com
+ (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Tue, 20
+ Apr 2021 21:59:53 +0300
+From:   Sergey Samoylenko <s.samoylenko@yadro.com>
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        <target-devel@vger.kernel.org>
+CC:     David Disseldorp <ddiss@suse.de>, <linux-scsi@vger.kernel.org>,
+        <linux@yadro.com>, Sergey Samoylenko <s.samoylenko@yadro.com>
+Subject: [PATCH RESEND 0/2] scsi: target: user configurable IEEE Company ID
+Date:   Tue, 20 Apr 2021 21:59:18 +0300
+Message-ID: <20210420185920.42431-1-s.samoylenko@yadro.com>
 X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.199.0.227]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-03.corp.yadro.com (172.17.100.103)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-'lp' is unused. It is just declared and memset'ed.
-It can be removed.
+The series allows to change IEEE Company ID component
+of NAA LUN identifier returned on the SCSI INQUIRY VPD
+page (aka WWID). Company ID can be changed via the
+target/core/$backstore/$name/wwn/company_id ConfigFS path.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/scsi/bfa/bfa_svc.c | 6 ------
- 1 file changed, 6 deletions(-)
+Sergey Samoylenko (2):
+  scsi: target: core: Unify NAA identifer generation
+  scsi: target: core: Add IEEE Company ID attribute
 
-diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index 11c0c3e6f014..5387883d6604 100644
---- a/drivers/scsi/bfa/bfa_svc.c
-+++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -369,13 +369,10 @@ bfa_plog_fchdr(struct bfa_plog_s *plog, enum bfa_plog_mid mid,
- 			enum bfa_plog_eid event,
- 			u16 misc, struct fchs_s *fchdr)
- {
--	struct bfa_plog_rec_s  lp;
- 	u32	*tmp_int = (u32 *) fchdr;
- 	u32	ints[BFA_PL_INT_LOG_SZ];
- 
- 	if (plog->plog_enabled) {
--		memset(&lp, 0, sizeof(struct bfa_plog_rec_s));
--
- 		ints[0] = tmp_int[0];
- 		ints[1] = tmp_int[1];
- 		ints[2] = tmp_int[4];
-@@ -389,13 +386,10 @@ bfa_plog_fchdr_and_pl(struct bfa_plog_s *plog, enum bfa_plog_mid mid,
- 		      enum bfa_plog_eid event, u16 misc, struct fchs_s *fchdr,
- 		      u32 pld_w0)
- {
--	struct bfa_plog_rec_s  lp;
- 	u32	*tmp_int = (u32 *) fchdr;
- 	u32	ints[BFA_PL_INT_LOG_SZ];
- 
- 	if (plog->plog_enabled) {
--		memset(&lp, 0, sizeof(struct bfa_plog_rec_s));
--
- 		ints[0] = tmp_int[0];
- 		ints[1] = tmp_int[1];
- 		ints[2] = tmp_int[4];
+ drivers/target/target_core_configfs.c | 50 +++++++++++++++++++++++++++
+ drivers/target/target_core_device.c   |  5 +++
+ drivers/target/target_core_pr.h       |  2 +-
+ drivers/target/target_core_spc.c      | 47 ++++++++++++-------------
+ drivers/target/target_core_xcopy.c    | 17 ++-------
+ include/target/target_core_base.h     |  1 +
+ 6 files changed, 82 insertions(+), 40 deletions(-)
+
 -- 
 2.27.0
 
