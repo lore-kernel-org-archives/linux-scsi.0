@@ -7,53 +7,50 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABD14C433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 02:14:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B0F3C43460
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 02:14:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F50D61107
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 02:14:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CCA3613AE
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 02:14:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233438AbhDTCOv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S233331AbhDTCOv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 19 Apr 2021 22:14:51 -0400
-Received: from mail-pj1-f50.google.com ([209.85.216.50]:36583 "EHLO
-        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231693AbhDTCOp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 22:14:45 -0400
-Received: by mail-pj1-f50.google.com with SMTP id f2-20020a17090a4a82b02900c67bf8dc69so21499219pjh.1
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 19:14:14 -0700 (PDT)
+Received: from mail-pg1-f176.google.com ([209.85.215.176]:34795 "EHLO
+        mail-pg1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233487AbhDTCOq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 22:14:46 -0400
+Received: by mail-pg1-f176.google.com with SMTP id z16so25557300pga.1
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 19:14:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=1anv0wQUuXOURRkQt1L0vphtgMt7lXBytSr/6odvRMk=;
-        b=AsG9RAsKm4Q59BOFLscS0vvCgmmGEf5BVjmDxMvimVTGAhJqgsKTtUKsuRxYv7Bdc3
-         AQFLKIyG0T8x795idSgEh4Rkuq++4exZypROybgCv7/3E6at7cU++E7kMuq8En7rShCk
-         nizc+KFFxRChorXkQ0e3rrs/dCvoa2zcAlxg8nysWrBulVbtnFIfgeg2uL+H5DEV2kou
-         8OKeyEw0Rf6E3sV1ZYpNmbYcI+ruOmih9tng5Ey+0V49CsLJxSloEX+eTDNhihaq8vAN
-         J1PRfgxTBZqcq6uEWpU0lo98/oDEdxKLMfMxLDspOr7mw88kcDO8Fb2IWMDlyRZHWbuq
-         dVhw==
-X-Gm-Message-State: AOAM531sJTek85b/jq6RbCCWf0JBkPt6k18lcd+hVXNknUx4SKsJk9Ic
-        Aoa0v5PLMGvBePsacmk/hg8=
-X-Google-Smtp-Source: ABdhPJya13hFTTngzyLPij713mRoAL+zoIltX0yvB/T6MyDYrBf555NSI+y/nKEwFMVPr+FRxJLJtw==
-X-Received: by 2002:a17:90a:bd8c:: with SMTP id z12mr2313222pjr.83.1618884854237;
-        Mon, 19 Apr 2021 19:14:14 -0700 (PDT)
+        bh=im6qXSZkvjMJRs29RklLPWv4PSomjWzB0ZubKwq62JU=;
+        b=QKie+yyi/bIim/jL9zIVVGYnAMj/7HVYQawy2gSQMXKfw3eZVlHE5R2UL1GrC/SXJW
+         0ZXl+ssOV5rbRE3CWS3zyg3puioGokynk7Rh6MkdqP1/SWVxYtMEMliX/6H4U9HMXLo9
+         xnRWndoOOouq5XSo36pfn4ucsCJ6dbc03llQCImfadaDOhI/v75LNhGv/wYi8qY1BgHG
+         AdNlS4pxQwJxkMfHVqaXmFMXnDJ7j6Kj+/rSE2y80wzzqm7wfedDNJvkRmbRh1P/fjIP
+         ITui0VK0k44aL2vPS1F/UHHntY9E01NZaOFRijbAH6krWDvmQAXKuCBsqwD6YzXIoSkP
+         K8HQ==
+X-Gm-Message-State: AOAM533VOiHw0Mf5cguL0Wo/TjQNVADppaNaBN2XJ0YC0NRG9mLIMveu
+        eYDZZPhgYPNxsiJh+MsvcRY=
+X-Google-Smtp-Source: ABdhPJz0FV9GGrBxu51lHcg/6vIyFgq9OgCOi0PCVSbvgAe91LvM8cMbrX/WXOhmFHw9pF3YubPNJQ==
+X-Received: by 2002:aa7:91d1:0:b029:1fe:2a02:73b9 with SMTP id z17-20020aa791d10000b02901fe2a0273b9mr22672647pfa.2.1618884855425;
+        Mon, 19 Apr 2021 19:14:15 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id mq2sm630984pjb.24.2021.04.19.19.14.13
+        by smtp.gmail.com with ESMTPSA id mq2sm630984pjb.24.2021.04.19.19.14.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 19:14:13 -0700 (PDT)
+        Mon, 19 Apr 2021 19:14:14 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
         Don Brace <don.brace@microchip.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>
-Subject: [PATCH 095/117] storvsc: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 19:13:40 -0700
-Message-Id: <20210420021402.27678-5-bvanassche@acm.org>
+        Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH 096/117] sym53c8xx_2: Convert to the scsi_status union
+Date:   Mon, 19 Apr 2021 19:13:41 -0700
+Message-Id: <20210420021402.27678-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -66,37 +63,56 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 An explanation of the purpose of this patch is available in the patch
 "scsi: Introduce the scsi_status union".
 
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: Haiyang Zhang <haiyangz@microsoft.com>
-Cc: Stephen Hemminger <sthemmin@microsoft.com>
-Cc: Wei Liu <wei.liu@kernel.org>
+Cc: Matthew Wilcox <willy@infradead.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/storvsc_drv.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c | 2 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.h | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index e6718a74e5da..69918c924825 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1096,9 +1096,9 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request,
- 	vm_srb = &cmd_request->vstor_packet.vm_srb;
- 	data_transfer_length = vm_srb->data_transfer_length;
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index d9a045f9858c..a4976becbff5 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -235,7 +235,7 @@ void sym_set_cam_result_error(struct sym_hcb *np, struct sym_ccb *cp, int resid)
+ 		cam_status = sym_xerr_cam_status(DID_ERROR, cp->xerr_status);
+ 	}
+ 	scsi_set_resid(cmd, resid);
+-	cmd->result = (drv_status << 24) | (cam_status << 16) | scsi_status;
++	cmd->status.combined = (drv_status << 24) | (cam_status << 16) | scsi_status;
+ }
  
--	scmnd->result = vm_srb->scsi_status;
-+	scmnd->status.combined = vm_srb->scsi_status;
+ static int sym_scatter(struct sym_hcb *np, struct sym_ccb *cp, struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.h b/drivers/scsi/sym53c8xx_2/sym_glue.h
+index 7d5c9b988b5b..65468fe6db0d 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.h
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.h
+@@ -224,8 +224,8 @@ static inline struct sym_hcb * sym_get_hcb(struct Scsi_Host *host)
+ static inline void
+ sym_set_cam_status(struct scsi_cmnd *cmd, int status)
+ {
+-	cmd->result &= ~(0xff  << 16);
+-	cmd->result |= (status << 16);
++	cmd->status.combined &= ~(0xff  << 16);
++	cmd->status.combined |= (status << 16);
+ }
  
--	if (scmnd->result) {
-+	if (scmnd->status.combined) {
- 		if (scsi_normalize_sense(scmnd->sense_buffer,
- 				SCSI_SENSE_BUFFERSIZE, &sense_hdr) &&
- 		    !(sense_hdr.sense_key == NOT_READY &&
-@@ -1675,7 +1675,7 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
- 	 * this. So, don't send it.
- 	 */
- 	case SET_WINDOW:
--		scmnd->result = DID_ERROR << 16;
-+		scmnd->status.combined = DID_ERROR << 16;
- 		allowed = false;
- 		break;
- 	default:
+ /*
+@@ -234,7 +234,7 @@ sym_set_cam_status(struct scsi_cmnd *cmd, int status)
+ static inline int
+ sym_get_cam_status(struct scsi_cmnd *cmd)
+ {
+-	return host_byte(cmd->result);
++	return host_byte(cmd->status);
+ }
+ 
+ /*
+@@ -243,7 +243,7 @@ sym_get_cam_status(struct scsi_cmnd *cmd)
+ static inline void sym_set_cam_result_ok(struct sym_ccb *cp, struct scsi_cmnd *cmd, int resid)
+ {
+ 	scsi_set_resid(cmd, resid);
+-	cmd->result = (DID_OK << 16) | (cp->ssss_status & 0x7f);
++	cmd->status.combined = (DID_OK << 16) | (cp->ssss_status & 0x7f);
+ }
+ void sym_set_cam_result_error(struct sym_hcb *np, struct sym_ccb *cp, int resid);
+ 
