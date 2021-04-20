@@ -2,146 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97483C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 11:09:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54FA1C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 12:28:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5EF5D61354
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 11:09:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1716D60FE9
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 12:28:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231811AbhDTLKC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Apr 2021 07:10:02 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:16778 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231837AbhDTLKC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Apr 2021 07:10:02 -0400
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13KB3aO8104884;
-        Tue, 20 Apr 2021 07:09:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=ZhWvtftjOrH2GeCDWVLlc2mk4GkaRut3/FuTuUHI3Nc=;
- b=nWAJj74eFZDjS3CjkAO/VEFLcS7IihY+A2kNfHNRsPRJJQ+BcCaLyZmZ4EHYukD825qx
- xwa3jzWnUGtNAsjMQUOE9nS5rgjaFfvBmFaWF72/4NCXV3/f/97SryqtESBwAYU70uAU
- 6/xTOwicG/eEYcAZmV0QpLNgbCSSJJeot4DDptzvZscFoCsiihjv9vx4zEg0nbhOvgfC
- LTQW0nYGOVRFVli/spfjekerxnmtt5EkuxOnwkfi71rpHgitRD/D5n6g5D0uFblqrumq
- SwNnEA0IFupVVn2yoPsN4rT0LlA++VVcRoQ8RGHQ2J9Hg0WpmpWPz+lmBopFPWjagmxL 5w== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 381vu6244s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 20 Apr 2021 07:09:16 -0400
-Received: from m0098393.ppops.net (m0098393.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 13KB52oL112340;
-        Tue, 20 Apr 2021 07:09:15 -0400
-Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 381vu6241s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 20 Apr 2021 07:09:15 -0400
-Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 13KB7r62023998;
-        Tue, 20 Apr 2021 11:09:12 GMT
-Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
-        by ppma03fra.de.ibm.com with ESMTP id 37yqa88wk4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 20 Apr 2021 11:09:11 +0000
-Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
-        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 13KB8jHr37552580
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 20 Apr 2021 11:08:45 GMT
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id BEE3211C058;
-        Tue, 20 Apr 2021 11:09:08 +0000 (GMT)
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id AC20811C04A;
-        Tue, 20 Apr 2021 11:09:08 +0000 (GMT)
-Received: from t480-pf1aa2c2.fritz.box (unknown [9.145.82.95])
-        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Tue, 20 Apr 2021 11:09:08 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2.fritz.box with local (Exim 4.94)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1lYoFg-003KHD-4o; Tue, 20 Apr 2021 13:09:08 +0200
-Date:   Tue, 20 Apr 2021 13:09:08 +0200
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Muneendra Kumar M <muneendra.kumar@broadcom.com>
-Cc:     Benjamin Block <lkml@mageta.org>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, tj@kernel.org,
-        linux-nvme@lists.infradead.org, hare@suse.de, jsmart2021@gmail.com,
-        emilne@redhat.com, mkumar@redhat.com,
-        Steffen Maier <maier@linux.ibm.com>
-Subject: Re: [PATCH v9 03/13] nvme: Added a newsysfs attribute appid_store
-Message-ID: <YH62VB+SVfnG+GoI@t480-pf1aa2c2.linux.ibm.com>
-References: <1617750397-26466-1-git-send-email-muneendra.kumar@broadcom.com>
- <1617750397-26466-4-git-send-email-muneendra.kumar@broadcom.com>
- <YHxRK33kf7OSVlxf@chlorum.ategam.org>
- <a6497bd924795a5a9279b893b0d83baf@mail.gmail.com>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <a6497bd924795a5a9279b893b0d83baf@mail.gmail.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: zcptgf3ihHXFLAETO78_af4mW8pN6rea
-X-Proofpoint-GUID: 8hHrwkPl_tvoHfnwBMJtC7wYNo-cY0e1
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        id S232144AbhDTM33 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Apr 2021 08:29:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52886 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231393AbhDTM32 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 08:29:28 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97C87C06174A;
+        Tue, 20 Apr 2021 05:28:57 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id m11so25444874pfc.11;
+        Tue, 20 Apr 2021 05:28:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=yKSbPOSK7MpUKuWddMMeJqmMmatdqHxk/RMpzGE8ZVQ=;
+        b=CJ1GYO/PbUr8Dl7VB+8JFcRr35+7FKhK73AJKHxi8NmhzpW31fN8KuU49fNxuAKbr8
+         94W1Zhzmck5i3xPcMpZJt0qM5UzQXcDeWgIyFg8YTYruerZNSIJQWGBMk4qz8yIqRtVf
+         AEZ1gDO7/0D3MMvHUZSXYufNLkdj0Ru7VbKEB3VQG5KzDS+dK3tllkNycpoew1zK5DUk
+         BH34/TbJswk2rqbhNegVDo/T+GYOBrRr3Uf06EHLqLADpfWx/SF21X+oZozT/nZUNyX0
+         Eo3fKnHjKpZI/vrqKEk53FevVr2ZwcKRg5zW3ad8MQR22e2RNE+NKmEeHquwEoi0YQnE
+         MoSA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=yKSbPOSK7MpUKuWddMMeJqmMmatdqHxk/RMpzGE8ZVQ=;
+        b=BwuG7CpOcEq7hoF7aovjdVpiXXqABvtTm7cREkeMMeWdpNiVp9Q6dagRSW6VsxABvz
+         ReKwY3le4weW6HE89FsE4ATpY3pBk1w7Hx/XHdTd5ew91ZitA20ZEjKLPdjCJp4Al4me
+         OrLsqu5i1SH1LFoddHBStd/j/8JmTCtacmt7hNosLqp/ZrYreEJFd6L9xS4xU+M5npJw
+         RGq6wNkMionDtltEcs5RM6q6nmGJlm2+BDQ7AlDL/26bTn0puQBsA2mdsNryxI3IK4av
+         KUo1kTv7VGBgs+OSwUcidxXrfpl5QJBm6Hdq02Sm6hjTpFtrCHTIlPuKnKHZLAxgWxQh
+         q9OA==
+X-Gm-Message-State: AOAM532+ajUYYAhm1KF2nW5XOPShzUmZQ1CG+S9c/yPxcs8KJnu6P/bA
+        LDtj7UTUqS7rgM9P0JjTVFc=
+X-Google-Smtp-Source: ABdhPJy1BT3K9zG7Np8t0pJaeh8z/TOoCtWE9fxFAx34e3kEs3F8Ap1B9wc6gmUWQ4+a3bfNxPIC6Q==
+X-Received: by 2002:a62:7e53:0:b029:254:44f:23da with SMTP id z80-20020a627e530000b0290254044f23damr24909517pfc.38.1618921737102;
+        Tue, 20 Apr 2021 05:28:57 -0700 (PDT)
+Received: from localhost ([157.45.118.103])
+        by smtp.gmail.com with ESMTPSA id m15sm2541307pjz.36.2021.04.20.05.28.55
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 20 Apr 2021 05:28:56 -0700 (PDT)
+Date:   Tue, 20 Apr 2021 17:58:46 +0530
+From:   Shubhankar Kuranagatti <shubhankarvk@gmail.com>
+To:     martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] drivers: target: target_core_pr.c: Fix tabspace error
+Message-ID: <20210420122846.gjh6pmzz2w37tqc5@kewl-virtual-machine>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-04-20_02:2021-04-19,2021-04-20 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 suspectscore=0
- priorityscore=1501 mlxscore=0 phishscore=0 lowpriorityscore=0 adultscore=0
- mlxlogscore=999 spamscore=0 clxscore=1011 bulkscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
- definitions=main-2104200085
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: NeoMutt/20171215
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Apr 20, 2021 at 12:24:41PM +0530, Muneendra Kumar M wrote:
-> Hi Benjamin,
->=20
-> >> ---
-> >>  drivers/nvme/host/fc.c | 73
-> >> +++++++++++++++++++++++++++++++++++++++++-
-> >>  1 file changed, 72 insertions(+), 1 deletion(-)
->=20
-> > Hmm, I wonder why only NVMe-FC? Or is this just for the moment? We also
-> > have the FC transport class for SCSI; I assume this could feed the same
-> > IDs into the LLDs.
->
-> At present it supports only for SCSI-FC .
+Tabs have been used to replace spaces.
+This is done to maintain code uniformity.
 
-It does? By adding it to the implementation under `drivers/nvme/host/`?
-I am confused.
+Signed-off-by: Shubhankar Kuranagatti <shubhankarvk@gmail.com>
+---
+ drivers/target/target_core_pr.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-I see it adds the sysfs-attribute to `nvme_fc_attrs`, how would that be
-added to a FC Host that does not have a NVMe 'personality'? I was
-assuming this only ever appears under `/sys/class/fc` if the LLDD
-registers itself with the NVMe subsystem (presumably via
-`nvme_fc_register_localport()`).
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index d4cc43afe05b..6538b2be1634 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -539,18 +539,18 @@ static int core_scsi3_pr_seq_non_holder(struct se_cmd *cmd, u32 pr_reg_type,
+ 			return 0;
+ 		}
+        } else if (we && registered_nexus) {
+-               /*
+-                * Reads are allowed for Write Exclusive locks
+-                * from all registrants.
+-                */
+-               if (cmd->data_direction == DMA_FROM_DEVICE) {
+-                       pr_debug("Allowing READ CDB: 0x%02x for %s"
+-                               " reservation\n", cdb[0],
+-                               core_scsi3_pr_dump_type(pr_reg_type));
+-
+-                       return 0;
+-               }
+-	}
++		/*
++		 * Reads are allowed for Write Exclusive locks
++		 * from all registrants.
++		 */
++		if (cmd->data_direction == DMA_FROM_DEVICE) {
++			pr_debug("Allowing READ CDB: 0x%02x for %s"
++					" reservation\n", cdb[0],
++					core_scsi3_pr_dump_type(pr_reg_type));
++
++			return 0;
++		}
++		}
+ 	pr_debug("%s Conflict for %sregistered nexus %s CDB: 0x%2x"
+ 		" for %s reservation\n", transport_dump_cmd_direction(cmd),
+ 		(registered_nexus) ? "" : "un",
+-- 
+2.17.1
 
-zFCP, for example, does not do that, but we do implement the SCSI FC
-transport class in `drivers/scsi/scsi_transport_fc.c`.
-
-> In future we are adding the support for NVMe-FC
-> But to make it generic and avoid duplication we added this under
-> /sys/class/fc .
->=20
-> Ewan was mentioning that at some point there is a plan  to decouple
-> the FC transport somewhat so that there is a layer that represents the
-> FC stuff regardless of the FC4 type (SCSI, NVMe). When we have this
-> layer we can move the things accordingly.
->=20
-
---=20
-Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Sys=
-tems
-IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/pri=
-vacy
-Vorsitz. AufsR.: Gregor Pillen         /        Gesch=E4ftsf=FChrung: Dirk =
-Wittkopp
-Sitz der Gesellschaft: B=F6blingen / Registergericht: AmtsG Stuttgart, HRB =
-243294
