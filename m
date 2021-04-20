@@ -2,84 +2,211 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB6C1C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 17:19:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A656C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 17:27:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80581613B2
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 17:19:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BD2C61076
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 17:27:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233141AbhDTRUV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Apr 2021 13:20:21 -0400
-Received: from mail-1.ca.inter.net ([208.85.220.69]:33844 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231549AbhDTRUU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 13:20:20 -0400
-Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id AFB9D2EA2F4;
-        Tue, 20 Apr 2021 13:19:48 -0400 (EDT)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
-        with ESMTP id inmmXEXVDoIy; Tue, 20 Apr 2021 13:00:06 -0400 (EDT)
-Received: from [192.168.48.23] (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 40CF62EA06B;
-        Tue, 20 Apr 2021 13:19:47 -0400 (EDT)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH 000/117] Make better use of static type checking
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-References: <20210420000845.25873-1-bvanassche@acm.org>
- <7eaf77e8-ca4f-c0db-e94a-5fa3e16e3b51@suse.de>
- <5c194446-e145-9d6d-3bc2-23254f0058b9@acm.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <18b8e96a-ced3-8ce9-15d0-4705da54e83b@interlog.com>
-Date:   Tue, 20 Apr 2021 13:19:47 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S233141AbhDTR1w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Apr 2021 13:27:52 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:19492 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S231549AbhDTR1v (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Apr 2021 13:27:51 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13KH4p6D080198;
+        Tue, 20 Apr 2021 13:27:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=NY2KldLCtsHoNDxJgDC9hiC6/yo7XL1wPRpur5BsyfU=;
+ b=r8emIWpvPVSmXpVyroOzLLAi/TKM6LAHOAtdPFum7Jz/nK0wvNh2jwA1xFhsfgAfdrVN
+ dBSNOVExlNfCddJqL1a7Ej7w41rnwHIpJAIYBQ6+4SEgkH8XICCos5n+u7IcXB3iquTm
+ vjkd6Ub+fdoGBZQ8uQZWRNZi7K+h33nQP3nn7fgJKddD8QwxbQ1TqzGyMayJMmiMprtU
+ aZ9WAxjlQewbftx1+liHLFi0Jligz9HfKXaj+cmXQqz3JIQUgxKCVaL1tMJUTPMeoSK+
+ YypV79LIdv3nKh3JqZS061yZtSWjcSIxUf9qgvTb1hOG6EuirEgch9lP6kiCkDcEpjZs Ww== 
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 38217vms12-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 20 Apr 2021 13:27:06 -0400
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 13KHMMKB028037;
+        Tue, 20 Apr 2021 17:27:04 GMT
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+        by ppma03ams.nl.ibm.com with ESMTP id 37yqa8hums-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 20 Apr 2021 17:27:04 +0000
+Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 13KHR1hb21234066
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 20 Apr 2021 17:27:01 GMT
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B41464C05A;
+        Tue, 20 Apr 2021 17:27:01 +0000 (GMT)
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9E62A4C044;
+        Tue, 20 Apr 2021 17:27:01 +0000 (GMT)
+Received: from t480-pf1aa2c2.fritz.box (unknown [9.145.82.95])
+        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
+        Tue, 20 Apr 2021 17:27:01 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2.fritz.box with local (Exim 4.94)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1lYu9N-003Q9j-0p; Tue, 20 Apr 2021 19:27:01 +0200
+Date:   Tue, 20 Apr 2021 19:27:00 +0200
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Daniel Wagner <dwagner@suse.de>
+Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
+        linux-nvme@lists.infradead.org, Hannes Reinecke <hare@suse.de>,
+        Nilesh Javali <njavali@marvell.com>,
+        Arun Easi <aeasi@marvell.com>
+Subject: Re: [RFC] qla2xxx: Add dev_loss_tmo kernel module options
+Message-ID: <YH8O5AaapQRg6Msq@t480-pf1aa2c2.linux.ibm.com>
+References: <20210419100014.47144-1-dwagner@suse.de>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20210419100014.47144-1-dwagner@suse.de>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: hkkQMQDjyt4Ag5VEfOHXQXOSTQT7j56M
+X-Proofpoint-GUID: hkkQMQDjyt4Ag5VEfOHXQXOSTQT7j56M
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-In-Reply-To: <5c194446-e145-9d6d-3bc2-23254f0058b9@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-04-20_08:2021-04-20,2021-04-20 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 adultscore=0
+ suspectscore=0 impostorscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0
+ phishscore=0 priorityscore=1501 malwarescore=0 spamscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
+ definitions=main-2104200118
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-04-20 12:12 p.m., Bart Van Assche wrote:
-> On 4/19/21 11:04 PM, Hannes Reinecke wrote:
->> We should not try to preserve the split SCSI result value with its four
->> distinct fields.
+On Mon, Apr 19, 2021 at 12:00:14PM +0200, Daniel Wagner wrote:
+> Allow to set the default dev_loss_tmo value as kernel module option.
 > 
-> I don't think that we have the freedom to drop the four byte SCSI result
-> entirely since multiple user space APIs use that data structure. The
-> four-byte SCSI result value is embedded in the following user space API
-> data structures (there may be others):
-> * struct sg_io_v4, the SG_IO header includes the driver_status
-> (driver_byte()), transport_status (host_byte()) and device_status
-> (scsi_status & 0xff) (the message byte is not included).
+> Cc: Nilesh Javali <njavali@marvell.com>
+> Cc: Arun Easi <aeasi@marvell.com>
+> Signed-off-by: Daniel Wagner <dwagner@suse.de>
+> ---
+> Hi,
+> 
+> During array upgrade tests with NVMe/FC on systems equiped with QLogic
+> HBAs we faced the problem with the default setting of dev_loss_tmo.
+> 
+> When the default timeout hit after 60 seconds the file system went
+> into read only mode. The fix was to set the dev_loss_tmo to infinity
+> (note this patch can't handle this).
+> 
+> For lpfc devices we could use the sysfs interface under
+> fc_remote_ports which exposed the dev_loss_tmo for SCSI and NVMe
+> rports.
+> 
+> The QLogic only expose the rports via fc_remote_ports if SCSI is used.
+> There is the debugfs interface to set the dev_loss_tmo but this has
+> two issues. First, it's not watched by udevd hence no rules work. This
+> could be somehow worked around by setting it statically, but that is
+> really only an option for testing. Even if the debugfs interface is
+> used there is a bug in the code. In qla_nvme_register_remote() the
+> value 0 is assigned to dev_loss_tmo and the NVMe core will use it's
+> default value 60 (this code path is exercised if the rport droppes
+> twice).
+> 
+> Anyway, this patch is just to get the discussion going. Maybe the
+> driver could implement the fc_remote_port interface? Hannes was
+> pointing out it might make sense to think about an controller sysfs
+> API as there is already a host and the NVMe protocol is all about host
+> and controller.
+> 
+> Thanks,
+> Daniel
+> 
+>  drivers/scsi/qla2xxx/qla_attr.c | 4 ++--
+>  drivers/scsi/qla2xxx/qla_gbl.h  | 1 +
+>  drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
+>  drivers/scsi/qla2xxx/qla_os.c   | 5 +++++
+>  4 files changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+> index 3aa9869f6fae..0d2386ba65c0 100644
+> --- a/drivers/scsi/qla2xxx/qla_attr.c
+> +++ b/drivers/scsi/qla2xxx/qla_attr.c
+> @@ -3036,7 +3036,7 @@ qla24xx_vport_create(struct fc_vport *fc_vport, bool disable)
+>  	}
+>  
+>  	/* initialize attributes */
+> -	fc_host_dev_loss_tmo(vha->host) = ha->port_down_retry_count;
+> +	fc_host_dev_loss_tmo(vha->host) = ql2xdev_loss_tmo;
+>  	fc_host_node_name(vha->host) = wwn_to_u64(vha->node_name);
+>  	fc_host_port_name(vha->host) = wwn_to_u64(vha->port_name);
+>  	fc_host_supported_classes(vha->host) =
+> @@ -3260,7 +3260,7 @@ qla2x00_init_host_attr(scsi_qla_host_t *vha)
+>  	struct qla_hw_data *ha = vha->hw;
+>  	u32 speeds = FC_PORTSPEED_UNKNOWN;
+>  
+> -	fc_host_dev_loss_tmo(vha->host) = ha->port_down_retry_count;
+> +	fc_host_dev_loss_tmo(vha->host) = ql2xdev_loss_tmo;
+>  	fc_host_node_name(vha->host) = wwn_to_u64(vha->node_name);
+>  	fc_host_port_name(vha->host) = wwn_to_u64(vha->port_name);
+>  	fc_host_supported_classes(vha->host) = ha->base_qpair->enable_class_2 ?
+> diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+> index fae5cae6f0a8..0b9c24475711 100644
+> --- a/drivers/scsi/qla2xxx/qla_gbl.h
+> +++ b/drivers/scsi/qla2xxx/qla_gbl.h
+> @@ -178,6 +178,7 @@ extern int ql2xdifbundlinginternalbuffers;
+>  extern int ql2xfulldump_on_mpifail;
+>  extern int ql2xenforce_iocb_limit;
+>  extern int ql2xabts_wait_nvme;
+> +extern int ql2xdev_loss_tmo;
+>  
+>  extern int qla2x00_loop_reset(scsi_qla_host_t *);
+>  extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
+> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+> index 0cacb667a88b..cdc5b5075407 100644
+> --- a/drivers/scsi/qla2xxx/qla_nvme.c
+> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+> @@ -41,7 +41,7 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
+>  	req.port_name = wwn_to_u64(fcport->port_name);
+>  	req.node_name = wwn_to_u64(fcport->node_name);
+>  	req.port_role = 0;
+> -	req.dev_loss_tmo = 0;
+> +	req.dev_loss_tmo = ql2xdev_loss_tmo;
+>  
+>  	if (fcport->nvme_prli_service_param & NVME_PRLI_SP_INITIATOR)
+>  		req.port_role = FC_PORT_ROLE_NVME_INITIATOR;
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index d74c32f84ef5..c686522ff64e 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -338,6 +338,11 @@ static void qla2x00_free_device(scsi_qla_host_t *);
+>  static int qla2xxx_map_queues(struct Scsi_Host *shost);
+>  static void qla2x00_destroy_deferred_work(struct qla_hw_data *);
+>  
+> +int ql2xdev_loss_tmo = 60;
+> +module_param(ql2xdev_loss_tmo, int, 0444);
+> +MODULE_PARM_DESC(ql2xdev_loss_tmo,
+> +		"Time to wait for device to recover before reporting\n"
+> +		"an error. Default is 60 seconds\n");
 
-The sg_io_v4 interface was specifically designed to _decouple_ the
-user visible API from the kernel's 4-bytes-in-1-int representation.
-So there are 4 levels of error reporting supported:
-    1) from the kernel front-end: yield an errno
-    2) from the driver (LLD): set driver_status
-    3) from the transport: set transport status
-    4) from the device (target or LU): set device_status
+Wouldn't that be really really confusing, if you set essentially the
+same thing with two different knobs for one FC HBA? We already have
+a `dev_loss_tmo` kernel parameter - granted, only for scsi_transport_fc;
+but doesn't qla implement that as well?
 
-Those distinctions aren't that strict, there is some overlap (e.g.
-timeouts). The sg version 3 interface (struct sg_io_hdr) is similar
-but the names are less generic.
+I don't really have any horses in this race here, but that sounds
+strange.
 
-Can't remember if anyone every complained to me about not having
-access to the message byte from SPI.
 
-Doug Gilbert
+-- 
+Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
+IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
+Vorsitz. AufsR.: Gregor Pillen         /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
