@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7D8EC433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4865C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F6976109E
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B0F561363
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233020AbhDTAJz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 20:09:55 -0400
-Received: from mail-pj1-f42.google.com ([209.85.216.42]:40779 "EHLO
-        mail-pj1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233002AbhDTAJq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:46 -0400
-Received: by mail-pj1-f42.google.com with SMTP id g1-20020a17090adac1b0290150d07f9402so791163pjx.5
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:16 -0700 (PDT)
+        id S233310AbhDTAJ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 20:09:58 -0400
+Received: from mail-pg1-f178.google.com ([209.85.215.178]:34611 "EHLO
+        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233070AbhDTAJs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:48 -0400
+Received: by mail-pg1-f178.google.com with SMTP id z16so25383215pga.1
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:17 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=k9PGR7gcL0h9CQwt86u+nPPbbmNhrdNsOaEgLLiFlWI=;
-        b=mVfZSkm8YsVYnGFSI4fvllTyXhkGYa3DK470jhJmPmPG6GNJ8Tm6kpiyFFbn1tYIRk
-         5TzHUM65U8VgD+ofFTmT3LwkILKTN+ZdVz7NbvsYCbfIakKez/hWIijFCQh7d1+nPzEj
-         SNkrXX+EKw6a8qbfv4Su5rdZ8l9hgKckcQjot5eKmeYZR2BMjEHGSux1SP+xxlqOLwW7
-         zPUZEKmDRRpHOC4Zgoexsh/Guub9JVe0gqYHKaRXxTLCbtwyttjrUHsDzLc83P2LPUdn
-         2nKp6SNuYg7lB6/8rvaTaRyNa9PcmzstDJNuJmeKQn45+2FZMb8yvfp94kDQiOtVw1/d
-         NNag==
-X-Gm-Message-State: AOAM531maLzLAAz5GLbGtx8A8aO9HrQ3w3Ue0rq9gtn5HB8KiVewzjGe
-        ik4JFkzfs+Cuw3UPU5V+Hls=
-X-Google-Smtp-Source: ABdhPJzJZ48icVj8FfreV6TM2/Bj0Efv8YYfGgk3EuSF0RXp+k5IoU+83YCTwHURzlUbxDkshzkdbQ==
-X-Received: by 2002:a17:902:20a:b029:eb:873d:d73d with SMTP id 10-20020a170902020ab02900eb873dd73dmr23358584plc.54.1618877355627;
-        Mon, 19 Apr 2021 17:09:15 -0700 (PDT)
+        bh=I96TpSFi3/3/SDUwLYXwWuBb7tuzLr71QX4afzR/l2A=;
+        b=N2Q9B+7VLqjo0TswILxVI91ZlMRDnbEEbC+81nFoKWYJyp1xFfyTGVW6PflvyKOusb
+         lrIw4VvaVpgkLkolFK3Ou9jIyiwud8l/58IUTRz66w+jp/ZAc0EyZN7z3edgMx9z8gs2
+         TqJGX1YW2VReARjJ1xgB+h5hNegOV2Z/zOS53aFNHAdKjHQTkWew1COwSxp/0lov7VCQ
+         ArqlN5Y3n4aVATNllZjv+Zbj++kxq2kTXJjhtUqJSl4125klNnu6sF5/bfbnCIjtlIck
+         o3wlkuZba5EHAB3S//g7xAFaRqvyGDBIUfUH1rzLh/hghdV3ryhkK7E6Bj44dW3uREl6
+         ml7g==
+X-Gm-Message-State: AOAM533JoiBgDWRa1oaUsQgs33hMW3xiIER3fAHRTgDHsshyBk47MnuG
+        XzTZhy7fOZe6F6kumA8xOHs=
+X-Google-Smtp-Source: ABdhPJwJ0J3tR+FpyeDVDgiLRwRXaYtEK42mQ1uCImLdad4YeNrgyC8ExDfhpFk+6Edx6iyX49gXfw==
+X-Received: by 2002:a63:f258:: with SMTP id d24mr14115693pgk.174.1618877356771;
+        Mon, 19 Apr 2021 17:09:16 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.14
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 17:09:15 -0700 (PDT)
+        Mon, 19 Apr 2021 17:09:16 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 020/117] 53c700: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 17:07:08 -0700
-Message-Id: <20210420000845.25873-21-bvanassche@acm.org>
+        Bart Van Assche <bvanassche@acm.org>,
+        Khalid Aziz <khalid@gonehiking.org>
+Subject: [PATCH 021/117] BusLogic: Convert to the scsi_status union
+Date:   Mon, 19 Apr 2021 17:07:09 -0700
+Message-Id: <20210420000845.25873-22-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -61,30 +62,111 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 An explanation of the purpose of this patch is available in the patch
 "scsi: Introduce the scsi_status union".
 
+Cc: Khalid Aziz <khalid@gonehiking.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/53c700.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/BusLogic.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index ab42feab233f..dba27011eeee 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -634,7 +634,7 @@ NCR_700_scsi_done(struct NCR_700_Host_Parameters *hostdata,
- 		NCR_700_set_depth(SCp->device, NCR_700_get_depth(SCp->device) - 1);
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index 0ac3f713fc21..00a4beb53f49 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -2615,11 +2615,11 @@ static void blogic_qcompleted_ccb(struct blogic_ccb *ccb)
+   the Host Adapter Status and Target Device Status.
+ */
  
- 		SCp->host_scribble = NULL;
--		SCp->result = result;
-+		SCp->status.combined = result;
- 		SCp->scsi_done(SCp);
- 	} else {
- 		printk(KERN_ERR "53c700: SCSI DONE HAS NULL SCp\n");
-@@ -1571,7 +1571,7 @@ NCR_700_intr(int irq, void *dev_id)
- 				 * command again otherwise we'll
- 				 * deadlock on the
- 				 * hostdata->state_lock */
--				SCp->result = DID_RESET << 16;
-+				SCp->status.combined = DID_RESET << 16;
- 				SCp->scsi_done(SCp);
+-static int blogic_resultcode(struct blogic_adapter *adapter,
++static union scsi_status blogic_resultcode(struct blogic_adapter *adapter,
+ 		enum blogic_adapter_status adapter_status,
+ 		enum blogic_tgt_status tgt_status)
+ {
+-	int hoststatus;
++	enum host_status hoststatus;
+ 
+ 	switch (adapter_status) {
+ 	case BLOGIC_CMD_CMPLT_NORMAL:
+@@ -2664,7 +2664,8 @@ static int blogic_resultcode(struct blogic_adapter *adapter,
+ 		hoststatus = DID_ERROR;
+ 		break;
+ 	}
+-	return (hoststatus << 16) | tgt_status;
++	return (union scsi_status){
++		.b.host = hoststatus, .b.status = (enum sam_status)tgt_status};
+ }
+ 
+ 
+@@ -2775,7 +2776,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 				struct scsi_cmnd *nxt_cmd =
+ 					command->reset_chain;
+ 				command->reset_chain = NULL;
+-				command->result = DID_RESET << 16;
++				command->status.combined = DID_RESET << 16;
+ 				command->scsi_done(command);
+ 				command = nxt_cmd;
  			}
- 			mdelay(25);
+@@ -2792,7 +2793,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 					command = ccb->command;
+ 					blogic_dealloc_ccb(ccb, 1);
+ 					adapter->active_cmds[tgt_id]--;
+-					command->result = DID_RESET << 16;
++					command->status.combined = DID_RESET << 16;
+ 					command->scsi_done(command);
+ 				}
+ 			adapter->bdr_pend[tgt_id] = NULL;
+@@ -2813,16 +2814,16 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 				    .cmds_complete++;
+ 				adapter->tgt_flags[ccb->tgt_id]
+ 				    .cmd_good = true;
+-				command->result = DID_OK << 16;
++				command->status.combined = DID_OK << 16;
+ 				break;
+ 			case BLOGIC_CMD_ABORT_BY_HOST:
+ 				blogic_warn("CCB #%ld to Target %d Aborted\n",
+ 					adapter, ccb->serial, ccb->tgt_id);
+ 				blogic_inc_count(&adapter->tgt_stats[ccb->tgt_id].aborts_done);
+-				command->result = DID_ABORT << 16;
++				command->status.combined = DID_ABORT << 16;
+ 				break;
+ 			case BLOGIC_CMD_COMPLETE_ERROR:
+-				command->result = blogic_resultcode(adapter,
++				command->status = blogic_resultcode(adapter,
+ 					ccb->adapter_status, ccb->tgt_status);
+ 				if (ccb->adapter_status != BLOGIC_SELECT_TIMEOUT) {
+ 					adapter->tgt_stats[ccb->tgt_id]
+@@ -2830,7 +2831,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 					if (blogic_global_options.trace_err) {
+ 						int i;
+ 						blogic_notice("CCB #%ld Target %d: Result %X Host "
+-								"Adapter Status %02X Target Status %02X\n", adapter, ccb->serial, ccb->tgt_id, command->result, ccb->adapter_status, ccb->tgt_status);
++								"Adapter Status %02X Target Status %02X\n", adapter, ccb->serial, ccb->tgt_id, command->status.combined, ccb->adapter_status, ccb->tgt_status);
+ 						blogic_notice("CDB   ", adapter);
+ 						for (i = 0; i < ccb->cdblen; i++)
+ 							blogic_notice(" %02X", adapter, ccb->cdb[i]);
+@@ -3042,7 +3043,7 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+ 	   occurred.
+ 	 */
+ 	if (cdb[0] == REQUEST_SENSE && command->sense_buffer[0] != 0) {
+-		command->result = DID_OK << 16;
++		command->status.combined = DID_OK << 16;
+ 		comp_cb(command);
+ 		return 0;
+ 	}
+@@ -3060,7 +3061,7 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+ 		spin_lock_irq(adapter->scsi_host->host_lock);
+ 		ccb = blogic_alloc_ccb(adapter);
+ 		if (ccb == NULL) {
+-			command->result = DID_ERROR << 16;
++			command->status.combined = DID_ERROR << 16;
+ 			comp_cb(command);
+ 			return 0;
+ 		}
+@@ -3211,7 +3212,7 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+ 						ccb)) {
+ 				blogic_warn("Still unable to write Outgoing Mailbox - Host Adapter Dead?\n", adapter);
+ 				blogic_dealloc_ccb(ccb, 1);
+-				command->result = DID_ERROR << 16;
++				command->status.combined = DID_ERROR << 16;
+ 				command->scsi_done(command);
+ 			}
+ 		}
