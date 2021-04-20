@@ -6,59 +6,56 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 827A7C433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 15:01:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07637C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 15:02:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DDA76024A
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 15:01:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0D15610A1
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 15:02:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232927AbhDTPCB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Apr 2021 11:02:01 -0400
-Received: from mail-pj1-f43.google.com ([209.85.216.43]:34355 "EHLO
-        mail-pj1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232931AbhDTPB4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 11:01:56 -0400
-Received: by mail-pj1-f43.google.com with SMTP id em21-20020a17090b0155b029014e204a81e6so1437982pjb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Apr 2021 08:01:21 -0700 (PDT)
+        id S232889AbhDTPDU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Apr 2021 11:03:20 -0400
+Received: from mail-pf1-f178.google.com ([209.85.210.178]:34357 "EHLO
+        mail-pf1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232893AbhDTPDT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 11:03:19 -0400
+Received: by mail-pf1-f178.google.com with SMTP id 10so16855926pfl.1
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Apr 2021 08:02:48 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=EIzuzQ5jdi/C9LIu4Qthum4sgm9kcJXpktH/7AKqzGg=;
-        b=N8nBdKwcyyPSKKhNFHPRxmZsm19sq1SKPfHcA4zFDDZRKeLTukOWsJOKgw7Bw9p+YR
-         4TaNtxajTl56t2GawV/7KPS28G90E/0C/3e2vYbQX4H+KBISuzZIv1gFXiAX59Dk4n/z
-         nI9JGxPD7Mtr4fkR0amau5vhj+zM2FkTcLmiSjcsgdWJ+AVqPIntQZL2iHkc1Wx98ewe
-         rqikPP+UpISAZGJQptcPUxFdYUslH6lpD/IUqCSZ+mJQQdXlYowWpFzQ7dGZdqs+Xbxg
-         mZL7l10fAEgZsG/rn81Tk6sFO2YGuaATKB6imaepPBufbId2Tp8RT2w+xKrBmUpvZwvA
-         nu2g==
-X-Gm-Message-State: AOAM531AQTH3sVYfGp2tWMleIpOjuBTaBB7IUW4SA0nNY7vvAdENujkW
-        cc60qhHN65P1x/ZPNjhlsBU=
-X-Google-Smtp-Source: ABdhPJwWtpO+o9gynNF053LgCEAO3/W+BSXRsT3IAuWypSiin5YotpQAOmIVgk/OaKSjfq5Bu1ZXQg==
-X-Received: by 2002:a17:90a:f293:: with SMTP id fs19mr5629970pjb.207.1618930881144;
-        Tue, 20 Apr 2021 08:01:21 -0700 (PDT)
+        bh=IrB81cPouWH0vFXJOtiPB2Ixm0USDk7grAxY1sGrjHE=;
+        b=KR2ShhOyiCYrA/cAgFThSz5xJRG9zcaMrrIV4TP21qRYMeiauWXDQEQq9HGzyXMNA5
+         Y6fYW7jOCqJ7XAKYHWuY5XIpNi4bBU7g0v3d8JfyoYLiqLfsNI/FxltJl3/dkS7aZeyG
+         RMeaN84hJRDTqa6QkxWzSIbhGAEr2PVtbllfLgTTpyzzNoqYeyu6C+JMaqMaeTpxZyKw
+         wkjXNGS0fYqL3lb7TWFfX8bW3UkN1OP1IW6y/cmRyrSe9iefeGSuF0IoU2bmv0oPVaQN
+         W0wWuie7jQvS/MMWg9b/k0kp1i1+ChsKUtLXPogUhz2iU4As7aUgDLQAc1KSgxCxj6Vg
+         r0SQ==
+X-Gm-Message-State: AOAM533Y6wQ21ek5+NETQ3wYkWdiBGPdOX3Na0T543AODxQ2U4OD+ytI
+        0uRxUTk+5mOIbH9xT8vYYT8=
+X-Google-Smtp-Source: ABdhPJx3Mhji7cajYkfo6AI9TBIq5A+YUJPZo2f//+fIA/G0shPRaqFBWKLNkj6uWbLAfrR16jGwJw==
+X-Received: by 2002:a63:5814:: with SMTP id m20mr17576669pgb.82.1618930968225;
+        Tue, 20 Apr 2021 08:02:48 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:b389:6c06:5046:89e? ([2601:647:4000:d7:b389:6c06:5046:89e])
-        by smtp.gmail.com with ESMTPSA id k11sm2856854pjq.47.2021.04.20.08.01.20
+        by smtp.gmail.com with ESMTPSA id b25sm4806637pfd.7.2021.04.20.08.02.47
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 20 Apr 2021 08:01:20 -0700 (PDT)
-Subject: Re: [PATCH 027/117] advansys: Convert to the scsi_status union
-To:     Matthew Wilcox <willy@infradead.org>
+        Tue, 20 Apr 2021 08:02:47 -0700 (PDT)
+Subject: Re: [PATCH 093/117] staging: Convert to the scsi_status union
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.com>
+        Don Brace <don.brace@microchip.com>
 References: <20210420000845.25873-1-bvanassche@acm.org>
- <20210420000845.25873-28-bvanassche@acm.org>
- <20210420014917.GH2531743@casper.infradead.org>
- <eaa25d23-9d3a-0a0c-b87d-83d62ec5c46a@acm.org>
- <20210420032323.GJ2531743@casper.infradead.org>
+ <20210420021402.27678-3-bvanassche@acm.org> <YH6HKauLLpJdGqeU@kroah.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <20666bc6-b039-4a32-2d23-376cbe3987ff@acm.org>
-Date:   Tue, 20 Apr 2021 08:01:19 -0700
+Message-ID: <2800d64f-cb58-374b-5d22-321c754bd691@acm.org>
+Date:   Tue, 20 Apr 2021 08:02:46 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.9.1
 MIME-Version: 1.0
-In-Reply-To: <20210420032323.GJ2531743@casper.infradead.org>
+In-Reply-To: <YH6HKauLLpJdGqeU@kroah.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -66,20 +63,24 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/19/21 8:23 PM, Matthew Wilcox wrote:
-> ... I haven't taken a look.  I have no idea what this patch does,
-> and I can't provide feedback on the approach.  Because I haven't seen
-> the approach.  All I've seen is this patch, and the one to sym53c8xx.
-> Take a look at those patches in isolation -- would you be able to provide
-> any kind of sensible feedback?
+On 4/20/21 12:47 AM, Greg Kroah-Hartman wrote:
+> On Mon, Apr 19, 2021 at 07:13:38PM -0700, Bart Van Assche wrote:
+>> An explanation of the purpose of this patch is available in the patch
+>> "scsi: Introduce the scsi_status union".
+> 
+> Where is that at?
+> 
+> As a stand-alone-patch, this is not ok in a changelog text at all,
+> sorry, and I can not take this.
 
-Hi Matthew,
+Hi Greg,
 
-Please take a look at the description that is available at
+That is a reference to an earlier patch in this series. I plan to
+replace the above text with the more elaborate description when I repost
+this patch series. For the current version of this patch series, please
+take a look at
 https://lore.kernel.org/linux-scsi/20210420000845.25873-12-bvanassche@acm.org/T/#u
 
 Thanks,
 
 Bart.
-
-
