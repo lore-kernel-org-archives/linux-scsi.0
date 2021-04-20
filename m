@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B246C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BAB8C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 50961613AC
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 272E36109E
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233258AbhDTAKJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 20:10:09 -0400
-Received: from mail-pf1-f182.google.com ([209.85.210.182]:40632 "EHLO
-        mail-pf1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233253AbhDTAJy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:54 -0400
-Received: by mail-pf1-f182.google.com with SMTP id a12so24310466pfc.7
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:22 -0700 (PDT)
+        id S233580AbhDTAKL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 20:10:11 -0400
+Received: from mail-pl1-f175.google.com ([209.85.214.175]:41503 "EHLO
+        mail-pl1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233055AbhDTAJz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:55 -0400
+Received: by mail-pl1-f175.google.com with SMTP id e2so14366812plh.8
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:25 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=SsLXhOzfHBDNZCZ7nQTSILMlUeGYRY2L9BeG/9n7EB0=;
-        b=novhX6Uh9MoNBUPAXGS4zi84yvQZD4rd7NVLBUTjh6QMPzHA9pM3d51H1sF5wjkK6l
-         vXX7aIep7hFpcFuUk/UGQkKGrAE5vAAUWHbJ3VnXYPbUtFBnQJgyiGJW4SbeSbrTuPsT
-         eOgW1byI9tM+pQB/139i0aOZOSLeb9toS44ZJlNZNZqiEKO0W2piSSPKoQoRX0HpF/Qg
-         63RFZIAp0cktQ1OQSPLC6X8j4ZaoRDQ4Da15qwibXmw+8a8djDMEPcU5g30ZT/0S6/KA
-         uU1fk+BogFVvWYqoMVhz3ElTAjGx9Jao5CCprfn/7cerjpsD3sg52sH2qqCT7pAXs6+X
-         fjyA==
-X-Gm-Message-State: AOAM533yZhbDsR5xNzlXNBVIBhR5IfyQXs/CkESuQpqR5R+fjwizKMzC
-        kSrcQHN13Sdlo3BJvPLy8kI=
-X-Google-Smtp-Source: ABdhPJzflTSorFy+QVf49kfd1b7lJ7lx3nA0gLLTIb2CxbmFyzmYfaJUyHgnOv3qbREHmAh3KP8arQ==
-X-Received: by 2002:a63:c806:: with SMTP id z6mr13877527pgg.240.1618877362376;
-        Mon, 19 Apr 2021 17:09:22 -0700 (PDT)
+        bh=GUc8U2ftArdv73hIF2MA5A7z8Pvd/rAvL6Fang6y8uI=;
+        b=jgVCl27owyN2J20khNgXqGQiZM4gIcQZhMqoVw+rTrNGOtPV3VxBYRdOWGig6OSNwN
+         I/Kj2Y1QXGuANBHEMFv3wYIu/fJcp5ZlP7kJu1A37ol4dM6BSHfyWznSWOGcW5BRqmrm
+         rzXsErN7onhtQLubwUQ32ZDsH25STIBKlOI/2kWS/jOva5UUSoseNcwI7aVeapdlvKBd
+         anvTV2APeNXfuB49uBcQf4MKUyOxuH8YnPE2QXY7h3TWjVlgmXf79/xhcoNgPGWkvAsJ
+         v4kMcPRBhyWtIL6CM9tUu7rzaKO3Ib/w4gifEoRkqN9+yuVCHbFNF2WPTOWYPr0Wbup9
+         y16A==
+X-Gm-Message-State: AOAM5327qUzVitlUqyeT/Lc/nGWNJ0ceEtivIoq37QtwJwrK+t7Z/Adf
+        bI5WZ+l6MT0kQjPB766MkzFRKp3HuE/wZg==
+X-Google-Smtp-Source: ABdhPJyZLpCm6NMrO5bpr9RXO0+narMCWbrhn/F0FRC7CCzP651DhMLDHQaADucC2a10elhIDQjTdg==
+X-Received: by 2002:a17:90b:34b:: with SMTP id fh11mr1845435pjb.105.1618877364677;
+        Mon, 19 Apr 2021 17:09:24 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.21
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 17:09:21 -0700 (PDT)
+        Mon, 19 Apr 2021 17:09:24 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
-        Russell King <linux@armlinux.org.uk>
-Subject: [PATCH 026/117] acornscsi: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 17:07:14 -0700
-Message-Id: <20210420000845.25873-27-bvanassche@acm.org>
+        "Juergen E. Fischer" <fischer@norbit.de>
+Subject: [PATCH 028/117] aha*: Convert to the scsi_status union
+Date:   Mon, 19 Apr 2021 17:07:16 -0700
+Message-Id: <20210420000845.25873-29-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -62,107 +62,77 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 An explanation of the purpose of this patch is available in the patch
 "scsi: Introduce the scsi_status union".
 
-Cc: Russell King <linux@armlinux.org.uk>
+Cc: "Juergen E. Fischer" <fischer@norbit.de>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/arm/acornscsi.c | 29 +++++++++++++++--------------
- 1 file changed, 15 insertions(+), 14 deletions(-)
+ drivers/scsi/aha152x.c | 4 ++--
+ drivers/scsi/aha1542.c | 4 ++--
+ drivers/scsi/aha1740.c | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
-index 912828d1dcad..dd111ec4d7db 100644
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -168,7 +168,7 @@ unsigned int sdtr_period = SDTR_PERIOD;
- unsigned int sdtr_size   = SDTR_SIZE;
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index d8e19afa7a14..a1f5764d3577 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -1281,7 +1281,7 @@ static void done(struct Scsi_Host *shpnt, int error)
  
- static void acornscsi_done(AS_Host *host, struct scsi_cmnd **SCpntp,
--			   unsigned int result);
-+			   enum host_status result);
- static int acornscsi_reconnect_finish(AS_Host *host);
- static void acornscsi_dma_cleanup(AS_Host *host);
- static void acornscsi_abortcmd(AS_Host *host, unsigned char tag);
-@@ -773,14 +773,13 @@ intr_ret_t acornscsi_kick(AS_Host *host)
-     return INTR_PROCESSING;
- }    
+ 		DONE_SC = CURRENT_SC;
+ 		CURRENT_SC = NULL;
+-		DONE_SC->result = error;
++		DONE_SC->status.combined = error;
+ 	} else
+ 		printk(KERN_ERR "aha152x: done() called outside of command\n");
+ }
+@@ -2254,7 +2254,7 @@ static void rsti_run(struct Scsi_Host *shpnt)
+ 			kfree(ptr->host_scribble);
+ 			ptr->host_scribble=NULL;
  
--/*
-- * Function: void acornscsi_done(AS_Host *host, struct scsi_cmnd **SCpntp, unsigned int result)
-- * Purpose : complete processing for command
-- * Params  : host   - interface that completed
-- *	     result - driver byte of result
-+/**
-+ * acornscsi_done - complete processing for command
-+ * @host: interface that completed
-+ * @result: host status byte (DID_...)
-  */
- static void acornscsi_done(AS_Host *host, struct scsi_cmnd **SCpntp,
--			   unsigned int result)
-+			   enum host_status result)
- {
- 	struct scsi_cmnd *SCpnt = *SCpntp;
+-			ptr->result =  DID_RESET << 16;
++			ptr->status.combined = DID_RESET << 16;
+ 			ptr->scsi_done(ptr);
+ 		}
  
-@@ -794,7 +793,9 @@ static void acornscsi_done(AS_Host *host, struct scsi_cmnd **SCpntp,
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index 21aab9f5b117..4d4864120f30 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -398,7 +398,7 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
+ 		if (errstatus)
+ 			printk("aha1542_intr_handle: returning %6x\n", errstatus);
+ #endif
+-		tmp_cmd->result = errstatus;
++		tmp_cmd->status.combined = errstatus;
+ 		aha1542->int_cmds[mbo] = NULL;	/* This effectively frees up the mailbox slot, as
+ 						 * far as queuecommand is concerned
+ 						 */
+@@ -422,7 +422,7 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
  
- 	acornscsi_dma_cleanup(host);
- 
--	SCpnt->result = result << 16 | host->scsi.SCp.Message << 8 | host->scsi.SCp.Status;
-+	SCpnt->status = (union scsi_status){
-+		.b.host = result, .b.msg = host->scsi.SCp.Message,
-+		.b.status = host->scsi.SCp.Status};
- 
- 	/*
- 	 * In theory, this should not happen.  In practice, it seems to.
-@@ -833,7 +834,7 @@ static void acornscsi_done(AS_Host *host, struct scsi_cmnd **SCpntp,
- 			xfer_warn = 0;
- 
- 		if (xfer_warn) {
--		    switch (status_byte(SCpnt->result)) {
-+		    switch (status_byte(SCpnt->status)) {
- 		    case CHECK_CONDITION:
- 		    case COMMAND_TERMINATED:
- 		    case BUSY:
-@@ -844,7 +845,7 @@ static void acornscsi_done(AS_Host *host, struct scsi_cmnd **SCpntp,
- 		    default:
- 			scmd_printk(KERN_ERR, SCpnt,
- 				    "incomplete data transfer detected: "
--				    "result=%08X", SCpnt->result);
-+				    "result=%08X", SCpnt->status.combined);
- 			scsi_print_command(SCpnt);
- 			acornscsi_dumpdma(host, "done");
- 			acornscsi_dumplog(host, SCpnt->device->id);
-@@ -2470,7 +2471,7 @@ static int acornscsi_queuecmd_lck(struct scsi_cmnd *SCpnt,
-     if (acornscsi_cmdtype(SCpnt->cmnd[0]) == CMD_WRITE && (NO_WRITE & (1 << SCpnt->device->id))) {
- 	printk(KERN_CRIT "scsi%d.%c: WRITE attempted with NO_WRITE flag set\n",
- 	    host->host->host_no, '0' + SCpnt->device->id);
--	SCpnt->result = DID_NO_CONNECT << 16;
-+	SCpnt->status.combined = DID_NO_CONNECT << 16;
- 	done(SCpnt);
- 	return 0;
-     }
-@@ -2478,7 +2479,7 @@ static int acornscsi_queuecmd_lck(struct scsi_cmnd *SCpnt,
- 
-     SCpnt->scsi_done = done;
-     SCpnt->host_scribble = NULL;
--    SCpnt->result = 0;
-+    SCpnt->status.combined = 0;
-     SCpnt->tag = 0;
-     SCpnt->SCp.phase = (int)acornscsi_datadirection(SCpnt->cmnd[0]);
-     SCpnt->SCp.sent_command = 0;
-@@ -2492,7 +2493,7 @@ static int acornscsi_queuecmd_lck(struct scsi_cmnd *SCpnt,
- 	unsigned long flags;
- 
- 	if (!queue_add_cmd_ordered(&host->queues.issue, SCpnt)) {
--	    SCpnt->result = DID_ERROR << 16;
-+	    SCpnt->status.combined = DID_ERROR << 16;
- 	    done(SCpnt);
- 	    return 0;
+ 	if (*cmd->cmnd == REQUEST_SENSE) {
+ 		/* Don't do the command - we have the sense data already */
+-		cmd->result = 0;
++		cmd->status.combined = 0;
+ 		cmd->scsi_done(cmd);
+ 		return 0;
  	}
-@@ -2523,7 +2524,7 @@ static inline void acornscsi_reportstatus(struct scsi_cmnd **SCpntp1,
-     if (SCpnt) {
- 	*SCpntp1 = NULL;
+diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
+index 0dc831026e9e..a105599872e8 100644
+--- a/drivers/scsi/aha1740.c
++++ b/drivers/scsi/aha1740.c
+@@ -275,7 +275,7 @@ static irqreturn_t aha1740_intr_handle(int irq, void *dev_id)
+ 			DEB(if (errstatus)
+ 			    printk("aha1740_intr_handle: returning %6x\n",
+ 				   errstatus));
+-			SCtmp->result = errstatus;
++			SCtmp->status.combined = errstatus;
+ 			my_done = ecbptr->done;
+ 			memset(ecbptr,0,sizeof(struct ecb)); 
+ 			if ( my_done )
+@@ -326,7 +326,7 @@ static int aha1740_queuecommand_lck(struct scsi_cmnd * SCpnt,
+ 	DEB(int i);
  
--	SCpnt->result = result;
-+	SCpnt->status.combined = result;
- 	SCpnt->scsi_done(SCpnt);
-     }
- 
+ 	if(*cmd == REQUEST_SENSE) {
+-		SCpnt->result = 0;
++		SCpnt->status.combined = 0;
+ 		done(SCpnt); 
+ 		return 0;
+ 	}
