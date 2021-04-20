@@ -7,49 +7,51 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7001C43461
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E27AC433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB62D613AC
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22E2E6109E
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233339AbhDTAKY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 20:10:24 -0400
-Received: from mail-pf1-f177.google.com ([209.85.210.177]:45860 "EHLO
-        mail-pf1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233225AbhDTAKG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:10:06 -0400
-Received: by mail-pf1-f177.google.com with SMTP id i190so24304666pfc.12
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:36 -0700 (PDT)
+        id S230382AbhDTAKZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 20:10:25 -0400
+Received: from mail-pj1-f44.google.com ([209.85.216.44]:41956 "EHLO
+        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233570AbhDTAKK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:10:10 -0400
+Received: by mail-pj1-f44.google.com with SMTP id y22-20020a17090a8b16b0290150ae1a6d2bso2541592pjn.0
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Z1Ncj+1EIryFfyhLjR4di3b3vLJriXmefghLxNtAJXc=;
-        b=WnQTfoqJU8GJlDvRk/DivQiw4OqCDvBasg17Qnopr21OUNNUhPJQsPlGOgG5pVKwsl
-         N+/Q7pPsG6PA5xPjY3lromIJk9ZMljEpnpl/gRNzrdICvtpCcW7/KcRAolXQiSJPl+xK
-         cQmeRVlyPfXxHVjOpWAdsJE4nrPJEQFAGEBBkYkJ+S8plzpmLCOWANxuo5kvtTy3cav2
-         cioge+mnEbZT2ATKKAA4ERYDWZ5GL/6tFc4u4wtA/epImHRQDp7qdmHZa3HZfeC61tW1
-         1Gl6iD7T2eeZMbOTUAjDbFl4BpzivMOiW4xn8S70sUuE6q5mvkvvBnR9faE+nzWTdjfW
-         uBpw==
-X-Gm-Message-State: AOAM533K1oR3TDTvDtR75W/vdD760snQVdkCDxYlPl1opmE8MEEI+tAD
-        Bs9wp2vU9Juu/wozAnxJd3Y=
-X-Google-Smtp-Source: ABdhPJx+z6lfdDgj8230DDrDH6Hd+k8BT5NpB8Ty0DRKdnwCCJg4PeMLdk3wBBxuuSHRuLXqRV//xg==
-X-Received: by 2002:a63:d04b:: with SMTP id s11mr12627457pgi.92.1618877376274;
-        Mon, 19 Apr 2021 17:09:36 -0700 (PDT)
+        bh=d9FdBKQgIaEDCc3LsQu6uWep6uErvCjZ3+grnSx6rQQ=;
+        b=p9IE9WUHs7epBaIuSH7ofzobqd7xNYDtreWE3NF72QiZLY6y5KohXXdHBG8j2InyS4
+         vWil/r595c74muh2zkegMEDfeBOJTHTVGzRa4Uocpznq1OstVFxc7j5ld4jY+JrQIAVy
+         yKTrRjkBMPKsyFkUgEwYDWltwnY8Hza3+7oz9PSxc60+ued+lOwJyBlIrRNp6L6U9wU4
+         Na41FlcisU5PpU42mgfxpOH2eY8WqW1ezooaEOt4ZwTYgrAhML2gd63o47jk5vo2GYzC
+         a7Mu3zL/6S1ivIn6Vun8Hhk9Ch4I9t6h6nvZuJMiR/Fzs1aUvSMGGMk3zNcGcgYco5Mv
+         5xzg==
+X-Gm-Message-State: AOAM531mznJH7nQrNUdF93oJ5bjcowXwQ1U0+b+AvAHoT7moYeyJh2Hp
+        T1xiRLtqAL0p8KNXjpq01RU=
+X-Google-Smtp-Source: ABdhPJyS3XEXAW6Y8bo9W0R9Jm1rWxqd+3PoXLj+BI4ZzizcQF8bUrOAA3fhlPGqiuQxmw7pyudwJw==
+X-Received: by 2002:a17:902:dacd:b029:e5:cf71:3901 with SMTP id q13-20020a170902dacdb02900e5cf713901mr25021154plx.23.1618877378581;
+        Mon, 19 Apr 2021 17:09:38 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.35
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 17:09:35 -0700 (PDT)
+        Mon, 19 Apr 2021 17:09:38 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
-        Karen Xie <kxie@chelsio.com>
-Subject: [PATCH 038/117] csiostor: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 17:07:26 -0700
-Message-Id: <20210420000845.25873-39-bvanassche@acm.org>
+        Oliver Neukum <oliver@neukum.org>,
+        Ali Akcaagac <aliakc@web.de>,
+        Jamie Lenehan <lenehan@twibble.org>
+Subject: [PATCH 040/117] dc395x: Use the set_{host,msg,status}_byte() functions
+Date:   Mon, 19 Apr 2021 17:07:28 -0700
+Message-Id: <20210420000845.25873-41-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -59,80 +61,85 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-An explanation of the purpose of this patch is available in the patch
-"scsi: Introduce the scsi_status union".
+Use the set_{host,msg,status}_byte() functions instead of the
+SET_RES_*() macros. This patch does not change any functionality.
 
-Cc: Karen Xie <kxie@chelsio.com>
+Cc: Oliver Neukum <oliver@neukum.org>
+Cc: Ali Akcaagac <aliakc@web.de>
+Cc: Jamie Lenehan <lenehan@twibble.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/csiostor/csio_scsi.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ drivers/scsi/dc395x.c | 29 +++++++++--------------------
+ 1 file changed, 9 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 56b9ad0a1ca0..9ff02420cedc 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -1562,8 +1562,9 @@ csio_scsi_err_handler(struct csio_hw *hw, struct csio_ioreq *req)
- 	struct fcp_resp_with_ext *fcp_resp;
- 	struct fcp_resp_rsp_info *rsp_info;
- 	struct csio_dma_buf *dma_buf;
--	uint8_t flags, scsi_status = 0;
--	uint32_t host_status = DID_OK;
-+	uint8_t flags;
-+	enum sam_status scsi_status = SAM_STAT_GOOD;
-+	enum host_status host_status = DID_OK;
- 	uint32_t rsp_len = 0, sns_len = 0;
- 	struct csio_rnode *rn = (struct csio_rnode *)(cmnd->device->hostdata);
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index be87d5a7583d..6252352ddd96 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -160,22 +160,11 @@
+ #define DC395x_write16(acb,address,value)	outw((value), acb->io_port_base + (address))
+ #define DC395x_write32(acb,address,value)	outl((value), acb->io_port_base + (address))
  
-@@ -1719,7 +1720,8 @@ csio_scsi_err_handler(struct csio_hw *hw, struct csio_ioreq *req)
- 			host_status = csio_scsi_copy_to_sgl(hw, req);
- 	}
+-/* cmd->result */
+-#define RES_TARGET		0x000000FF	/* Target State */
+-#define RES_TARGET_LNX  STATUS_MASK	/* Only official ... */
+-#define RES_ENDMSG		0x0000FF00	/* End Message */
+ #define RES_DID			0x00FF0000	/* DID_ codes */
+-#define RES_DRV			0xFF000000	/* DRIVER_ codes */
  
--	cmnd->result = (((host_status) << 16) | scsi_status);
-+	cmnd->status = (union scsi_status){.b.host = host_status,
-+		.b.status = scsi_status};
- 	cmnd->scsi_done(cmnd);
+ #define MK_RES(drv,did,msg,tgt) ((int)(drv)<<24 | (int)(did)<<16 | (int)(msg)<<8 | (int)(tgt))
+ #define MK_RES_LNX(drv,did,msg,tgt) ((int)(drv)<<24 | (int)(did)<<16 | (int)(msg)<<8 | (int)(tgt)<<1)
  
- 	/* Wake up waiting threads */
-@@ -1747,7 +1749,7 @@ csio_scsi_cbfn(struct csio_hw *hw, struct csio_ioreq *req)
- 				host_status = csio_scsi_copy_to_sgl(hw, req);
+-#define SET_RES_TARGET(who,tgt) { who &= ~RES_TARGET; who |= (int)(tgt); }
+-#define SET_RES_TARGET_LNX(who,tgt) { who &= ~RES_TARGET_LNX; who |= (int)(tgt) << 1; }
+-#define SET_RES_MSG(who,msg) { who &= ~RES_ENDMSG; who |= (int)(msg) << 8; }
+-#define SET_RES_DID(who,did) { who &= ~RES_DID; who |= (int)(did) << 16; }
+-#define SET_RES_DRV(who,drv) { who &= ~RES_DRV; who |= (int)(drv) << 24; }
+-
+ #define TAG_NONE 255
+ 
+ /*
+@@ -3244,7 +3233,7 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 			cmd->result =
+ 			    MK_RES_LNX(DRIVER_SENSE, DID_OK,
+ 				       srb->end_message, CHECK_CONDITION);
+-		/*SET_RES_DID(cmd->result,DID_OK) */
++		/*set_host_byte(cmd,DID_OK) */
+ 		else
+ 			cmd->result =
+ 			    MK_RES_LNX(DRIVER_SENSE, DID_OK,
+@@ -3280,9 +3269,9 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 			cmd->result = DID_NO_CONNECT << 16;
+ 		} else {
+ 			srb->adapter_status = 0;
+-			SET_RES_DID(cmd->result, DID_ERROR);
+-			SET_RES_MSG(cmd->result, srb->end_message);
+-			SET_RES_TARGET(cmd->result, status);
++			set_host_byte(cmd, DID_ERROR);
++			set_msg_byte(cmd, srb->end_message);
++			set_status_byte(cmd, status);
+ 
  		}
+ 	} else {
+@@ -3292,16 +3281,16 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 		status = srb->adapter_status;
+ 		if (status & H_OVER_UNDER_RUN) {
+ 			srb->target_status = 0;
+-			SET_RES_DID(cmd->result, DID_OK);
+-			SET_RES_MSG(cmd->result, srb->end_message);
++			set_host_byte(cmd, DID_OK);
++			set_msg_byte(cmd, srb->end_message);
+ 		} else if (srb->status & PARITY_ERROR) {
+-			SET_RES_DID(cmd->result, DID_PARITY);
+-			SET_RES_MSG(cmd->result, srb->end_message);
++			set_host_byte(cmd, DID_PARITY);
++			set_msg_byte(cmd, srb->end_message);
+ 		} else {	/* No error */
  
--		cmnd->result = (((host_status) << 16) | scsi_status);
-+		cmnd->status.combined = (((host_status) << 16) | scsi_status);
- 		cmnd->scsi_done(cmnd);
- 		csio_scsi_cmnd(req) = NULL;
- 		CSIO_INC_STATS(csio_hw_to_scsim(hw), n_tot_success);
-@@ -1790,13 +1792,13 @@ csio_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmnd)
- 
- 	nr = fc_remote_port_chkready(rport);
- 	if (nr) {
--		cmnd->result = nr;
-+		cmnd->status.combined = nr;
- 		CSIO_INC_STATS(scsim, n_rn_nr_error);
- 		goto err_done;
+ 			srb->adapter_status = 0;
+ 			srb->target_status = 0;
+-			SET_RES_DID(cmd->result, DID_OK);
++			set_host_byte(cmd, DID_OK);
+ 		}
  	}
  
- 	if (unlikely(!csio_is_hw_ready(hw))) {
--		cmnd->result = (DID_REQUEUE << 16);
-+		cmnd->status.combined = (DID_REQUEUE << 16);
- 		CSIO_INC_STATS(scsim, n_hw_nr_error);
- 		goto err_done;
- 	}
-@@ -1978,14 +1980,14 @@ csio_eh_abort_handler(struct scsi_cmnd *cmnd)
- 		csio_scsi_cmnd(ioreq) = NULL;
- 		spin_unlock_irq(&hw->lock);
- 
--		cmnd->result = (DID_ERROR << 16);
-+		cmnd->status.combined = (DID_ERROR << 16);
- 		cmnd->scsi_done(cmnd);
- 
- 		return FAILED;
- 	}
- 
- 	/* FW successfully aborted the request */
--	if (host_byte(cmnd->result) == DID_REQUEUE) {
-+	if (host_byte(cmnd->status) == DID_REQUEUE) {
- 		csio_info(hw,
- 			"Aborted SCSI command to (%d:%llu) tag %u\n",
- 			cmnd->device->id, cmnd->device->lun,
