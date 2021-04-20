@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8500FC43460
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FE31C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:10:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66E1061363
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:10:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BE03613AC
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:10:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233956AbhDTAKh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 20:10:37 -0400
-Received: from mail-pg1-f175.google.com ([209.85.215.175]:43808 "EHLO
-        mail-pg1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233575AbhDTAK0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:10:26 -0400
-Received: by mail-pg1-f175.google.com with SMTP id p12so25395938pgj.10
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:56 -0700 (PDT)
+        id S233575AbhDTAKj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 20:10:39 -0400
+Received: from mail-pl1-f172.google.com ([209.85.214.172]:43537 "EHLO
+        mail-pl1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233487AbhDTAK1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:10:27 -0400
+Received: by mail-pl1-f172.google.com with SMTP id u15so10124472plf.10
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=94eMY003wY3A0g3MwwFOZTHfArdSd2dO2jkb4ShnpWI=;
-        b=EYsGWOVUpxkBbwadHb2TgNWGYbaW9QWbOkAm8HjCd/Q2q7O4WJr2RmehARAf+n3N7a
-         hz1EWGjHyWcrjb3FJqYE1X/CqaQfdVoSlzIIuecbxsabOi62PayRfK7ka3dhsJe87sZ6
-         14w9+K8u8c3jih3IZRqv4b1oT5uqDhumwPYS1IFxs86Rt045XEdD9410xTN9XFixUAyT
-         t0ix4GRH3f42MhmQKTSifNYl2cx9ub4iwVxli5xs5BdTd+Ff0QonvWd4W+RJpFduImhl
-         6n/OWLkfJGkLuNRjaFLuvDiciEgmWm08vymSOtabBGYC6T8vcocckeQ8C7dGDd5Vo2IW
-         HSZA==
-X-Gm-Message-State: AOAM531iv7BM6gyvkCrnSvldiCE9ZHsn5TCmenAx3p3JgkxVQ+WtQybH
-        O5SOKVh8JkZaOZWaWouJml8=
-X-Google-Smtp-Source: ABdhPJyeW1sUFgnLn/WtpK7vANiU7oKa8G0LLQu5TCxnOn4r7wsSsj+OrWoAE8OyOMM4MXSXt54BCQ==
-X-Received: by 2002:aa7:8e0d:0:b029:214:a511:d88b with SMTP id c13-20020aa78e0d0000b0290214a511d88bmr22115004pfr.2.1618877395601;
-        Mon, 19 Apr 2021 17:09:55 -0700 (PDT)
+        bh=Z+aNdpW2uze4xifO4gQZ24CQ8UBJ6cuN2qqQyw6LISg=;
+        b=fYrLNnNQbXhHwmQ+TwYPUYim781Z6FzobDBKObb1V5ck9m07J4zFwRFNU7NOOnl9i2
+         UHI8/3ar1eHOJf8YDh4cYc+B5QoTF8+052ww7HDrva/lIkXB9UWrfzqURCEjAH+AhopX
+         xu3wKiTf9oSdnu6IEl5lJ6bFxRGM959YhLEzVlosvVDylPMH+MGkHe0L1OluGk9Sska9
+         VO4RU02/+7et/5Iw5A34/uiWhfWH4QZv3/zOPdaW27+hvbWA3xehortsrJIVhgEEQzLz
+         RLzdn1xyss07Hm2zOMVUfXovemg9T14w2vS1aQCCtDaa2LzsK4QaH6+r6MGTfNQZZUH4
+         aOqw==
+X-Gm-Message-State: AOAM530GPt8Lt0+mIMhKuykX3PPedrzSfLauLvF0w7omq/aQDo/x+hQR
+        peA01dp5hl0JDa+ZIxBHbTw=
+X-Google-Smtp-Source: ABdhPJwzoYqEWhEqOeMgK3aQ1S2mCrJrh/usBJTQZpd6/dVWzv3nnn1JTxp52lVNi8eb0tygrT7L9A==
+X-Received: by 2002:a17:90a:150e:: with SMTP id l14mr1828484pja.208.1618877396689;
+        Mon, 19 Apr 2021 17:09:56 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.54
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 17:09:55 -0700 (PDT)
+        Mon, 19 Apr 2021 17:09:56 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
         Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH 055/117] ibmvfc: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 17:07:43 -0700
-Message-Id: <20210420000845.25873-56-bvanassche@acm.org>
+Subject: [PATCH 056/117] ibmvscsi: Convert to the scsi_status union
+Date:   Mon, 19 Apr 2021 17:07:44 -0700
+Message-Id: <20210420000845.25873-57-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
@@ -65,92 +65,75 @@ An explanation of the purpose of this patch is available in the patch
 Cc: Tyrel Datwyler <tyreld@linux.ibm.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 1d4bff0f561d..460568d77a21 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -1070,7 +1070,7 @@ static void ibmvfc_complete_purge(struct list_head *purge_list)
- static void ibmvfc_fail_request(struct ibmvfc_event *evt, int error_code)
- {
- 	if (evt->cmnd) {
--		evt->cmnd->result = (error_code << 16);
-+		evt->cmnd->status.combined = (error_code << 16);
- 		evt->done = ibmvfc_scsi_eh_done;
- 	} else
- 		evt->xfer_iu->mad_common.status = cpu_to_be16(IBMVFC_MAD_DRIVER_FAILED);
-@@ -1713,7 +1713,7 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index f33f56680c59..1a02dc411f0d 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -793,7 +793,7 @@ static void purge_requests(struct ibmvscsi_host_data *hostdata, int error_code)
  
- 		dev_err(vhost->dev, "Send error (rc=%d)\n", rc);
+ 		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
  		if (evt->cmnd) {
--			evt->cmnd->result = DID_ERROR << 16;
-+			evt->cmnd->status.combined = DID_ERROR << 16;
- 			evt->done = ibmvfc_scsi_eh_done;
- 		} else
- 			evt->xfer_iu->mad_common.status = cpu_to_be16(IBMVFC_MAD_CRQ_ERROR);
-@@ -1807,7 +1807,7 @@ static void ibmvfc_scsi_done(struct ibmvfc_event *evt)
- 			scsi_set_resid(cmnd, 0);
+-			evt->cmnd->result = (error_code << 16);
++			evt->cmnd->status.combined = (error_code << 16);
+ 			unmap_cmd_data(&evt->iu.srp.cmd, evt,
+ 				       evt->hostdata->dev);
+ 			if (evt->cmnd_done)
+@@ -976,7 +976,7 @@ static int ibmvscsi_send_srp_event(struct srp_event_struct *evt_struct,
+ 	unmap_cmd_data(&evt_struct->iu.srp.cmd, evt_struct, hostdata->dev);
  
- 		if (vfc_cmd->status) {
--			cmnd->result = ibmvfc_get_err_result(evt->vhost, vfc_cmd);
-+			cmnd->status.combined = ibmvfc_get_err_result(evt->vhost, vfc_cmd);
- 
- 			if (rsp->flags & FCP_RSP_LEN_VALID)
- 				rsp_len = be32_to_cpu(rsp->fcp_rsp_len);
-@@ -1819,15 +1819,15 @@ static void ibmvfc_scsi_done(struct ibmvfc_event *evt)
- 			    (be16_to_cpu(vfc_cmd->error) == IBMVFC_PLOGI_REQUIRED))
- 				ibmvfc_relogin(cmnd->device);
- 
--			if (!cmnd->result && (!scsi_get_resid(cmnd) || (rsp->flags & FCP_RESID_OVER)))
--				cmnd->result = (DID_ERROR << 16);
-+			if (!cmnd->status.combined && (!scsi_get_resid(cmnd) || (rsp->flags & FCP_RESID_OVER)))
-+				cmnd->status.combined = (DID_ERROR << 16);
- 
- 			ibmvfc_log_error(evt);
- 		}
- 
--		if (!cmnd->result &&
-+		if (!cmnd->status.combined &&
- 		    (scsi_bufflen(cmnd) - scsi_get_resid(cmnd) < cmnd->underflow))
--			cmnd->result = (DID_ERROR << 16);
-+			cmnd->status.combined = (DID_ERROR << 16);
- 
- 		scsi_dma_unmap(cmnd);
- 		cmnd->scsi_done(cmnd);
-@@ -1915,12 +1915,12 @@ static int ibmvfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- 
- 	if (unlikely((rc = fc_remote_port_chkready(rport))) ||
- 	    unlikely((rc = ibmvfc_host_chkready(vhost)))) {
--		cmnd->result = rc;
-+		cmnd->status.combined = rc;
- 		cmnd->scsi_done(cmnd);
- 		return 0;
+ 	if (evt_struct->cmnd != NULL) {
+-		evt_struct->cmnd->result = DID_ERROR << 16;
++		evt_struct->cmnd->status.combined = DID_ERROR << 16;
+ 		evt_struct->cmnd_done(evt_struct->cmnd);
+ 	} else if (evt_struct->done)
+ 		evt_struct->done(evt_struct);
+@@ -1004,8 +1004,8 @@ static void handle_cmd_rsp(struct srp_event_struct *evt_struct)
  	}
+ 	
+ 	if (cmnd) {
+-		cmnd->result |= rsp->status;
+-		if (((cmnd->result >> 1) & 0x1f) == CHECK_CONDITION)
++		cmnd->status.combined |= rsp->status;
++		if (((cmnd->status.combined >> 1) & 0x1f) == CHECK_CONDITION)
+ 			memcpy(cmnd->sense_buffer,
+ 			       rsp->data,
+ 			       be32_to_cpu(rsp->sense_data_len));
+@@ -1049,7 +1049,7 @@ static int ibmvscsi_queuecommand_lck(struct scsi_cmnd *cmnd,
+ 	u16 lun = lun_from_dev(cmnd->device);
+ 	u8 out_fmt, in_fmt;
  
 -	cmnd->result = (DID_OK << 16);
 +	cmnd->status.combined = (DID_OK << 16);
- 	if (vhost->using_channels) {
- 		scsi_channel = hwq % vhost->scsi_scrqs.active_queues;
- 		evt = ibmvfc_get_event(&vhost->scsi_scrqs.scrqs[scsi_channel]);
-@@ -1955,7 +1955,7 @@ static int ibmvfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- 		scmd_printk(KERN_ERR, cmnd,
- 			    "Failed to map DMA buffer for command. rc=%d\n", rc);
+ 	evt_struct = get_event_struct(&hostdata->pool);
+ 	if (!evt_struct)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -1608,7 +1608,7 @@ static int ibmvscsi_eh_abort_handler(struct scsi_cmnd *cmd)
+ 	sdev_printk(KERN_INFO, cmd->device, "successfully aborted task tag 0x%llx\n",
+ 		    tsk_mgmt->task_tag);
  
--	cmnd->result = DID_ERROR << 16;
-+	cmnd->status.combined = DID_ERROR << 16;
- 	cmnd->scsi_done(cmnd);
- 	return 0;
- }
-@@ -2235,8 +2235,8 @@ static int ibmvfc_bsg_request(struct bsg_job *job)
- 	spin_lock_irqsave(vhost->host->host_lock, flags);
- 	ibmvfc_free_event(evt);
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
--	bsg_reply->result = rc;
--	bsg_job_done(job, bsg_reply->result,
-+	bsg_reply->status.combined = rc;
-+	bsg_job_done(job, bsg_reply->status.combined,
- 		       bsg_reply->reply_payload_rcv_len);
- 	rc = 0;
- out:
+-	cmd->result = (DID_ABORT << 16);
++	cmd->status.combined = (DID_ABORT << 16);
+ 	list_del(&found_evt->list);
+ 	unmap_cmd_data(&found_evt->iu.srp.cmd, found_evt,
+ 		       found_evt->hostdata->dev);
+@@ -1713,7 +1713,7 @@ static int ibmvscsi_eh_device_reset_handler(struct scsi_cmnd *cmd)
+ 	list_for_each_entry_safe(tmp_evt, pos, &hostdata->sent, list) {
+ 		if ((tmp_evt->cmnd) && (tmp_evt->cmnd->device == cmd->device)) {
+ 			if (tmp_evt->cmnd)
+-				tmp_evt->cmnd->result = (DID_RESET << 16);
++				tmp_evt->cmnd->status.combined = (DID_RESET << 16);
+ 			list_del(&tmp_evt->list);
+ 			unmap_cmd_data(&tmp_evt->iu.srp.cmd, tmp_evt,
+ 				       tmp_evt->hostdata->dev);
+@@ -1842,7 +1842,7 @@ static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
+ 	del_timer(&evt_struct->timer);
+ 
+ 	if ((crq->status != VIOSRP_OK && crq->status != VIOSRP_OK2) && evt_struct->cmnd)
+-		evt_struct->cmnd->result = DID_ERROR << 16;
++		evt_struct->cmnd->status.combined = DID_ERROR << 16;
+ 	if (evt_struct->done)
+ 		evt_struct->done(evt_struct);
+ 	else
