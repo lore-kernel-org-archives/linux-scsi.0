@@ -2,72 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7615CC433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 03:24:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B00BDC43460
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 04:15:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 368E861360
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 03:24:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EB3A613AF
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 04:15:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234294AbhDTDYf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 23:24:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46610 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229744AbhDTDYd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 23:24:33 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22E67C06174A
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 20:24:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=B+N6hPvu1B1olNk3YRK1DudGjHRi6Zxy5mMbhLKsJ6U=; b=MKWPTMVilSCxz3kt29+EQPtZAS
-        OLmapswolgex8miyfLsciwW8WduaweIcEr0iWCbBT4q8cYF9xOwAtgZlZl+nsXitI5oBjF2Gn0k77
-        RUoEdoJNHS17AjlofVHUJyehlGAmveGlypVmjVlbWU6VCCw93qJXsAXGZs0ANuJMixCq/Gsls0USP
-        vhE/3Nd25chY9LO8QaH8Ckqi6hGhaS1yEnOJazJWhjIjCZMeCf9U8zuvHsyd5jpK4WMRzL4PS+BMB
-        L8LmLa3wJYXYHW6zypvCJKcmxKSl9MPei4Ecx8eiAtyCcS66EhEyAviihYeKBE/tvcBUT3N7x/JsI
-        psOnevAw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lYgyx-00Eepw-7y; Tue, 20 Apr 2021 03:23:28 +0000
-Date:   Tue, 20 Apr 2021 04:23:23 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 027/117] advansys: Convert to the scsi_status union
-Message-ID: <20210420032323.GJ2531743@casper.infradead.org>
-References: <20210420000845.25873-1-bvanassche@acm.org>
- <20210420000845.25873-28-bvanassche@acm.org>
- <20210420014917.GH2531743@casper.infradead.org>
- <eaa25d23-9d3a-0a0c-b87d-83d62ec5c46a@acm.org>
+        id S229616AbhDTEPy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Apr 2021 00:15:54 -0400
+Received: from mga07.intel.com ([134.134.136.100]:57516 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229594AbhDTEPw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Apr 2021 00:15:52 -0400
+IronPort-SDR: yKZ0xjNLquz34LfCYWwfZ788qQnTaafP5DdJy7QBveY6WfJX+pqQYB+0SftJ+0oYdwXp+d8iU5
+ hq2DrkL7raDg==
+X-IronPort-AV: E=McAfee;i="6200,9189,9959"; a="259396549"
+X-IronPort-AV: E=Sophos;i="5.82,236,1613462400"; 
+   d="scan'208";a="259396549"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Apr 2021 21:15:16 -0700
+IronPort-SDR: 6rAbk6FueexjTrFKkwcckZGJwZ+VFfmCi4dOdTEvAZsYOeRXNbxB+x28s3fHPtKOddNihST939
+ DqZQceaPM7zg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,236,1613462400"; 
+   d="scan'208";a="420249358"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
+  by fmsmga008.fm.intel.com with ESMTP; 19 Apr 2021 21:15:09 -0700
+Subject: Re: [PATCH v20 1/2] scsi: ufs: Enable power management for wlun
+To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        Yue Hu <huyue2@yulong.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-mediatek@lists.infradead.org>
+References: <cover.1618600985.git.asutoshd@codeaurora.org>
+ <d660b8d4e1fb192810abd09a8ff0ef4d9f6b96cd.1618600985.git.asutoshd@codeaurora.org>
+ <fdadd467-b613-d800-18c5-be064396fd10@intel.com>
+ <07e3ea07-e1c3-7b8c-e398-8b008f873e6d@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <90809796-1c32-3709-13d3-65e4d5c387cc@intel.com>
+Date:   Tue, 20 Apr 2021 07:15:24 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <eaa25d23-9d3a-0a0c-b87d-83d62ec5c46a@acm.org>
+In-Reply-To: <07e3ea07-e1c3-7b8c-e398-8b008f873e6d@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Apr 19, 2021 at 08:17:23PM -0700, Bart Van Assche wrote:
-> On 4/19/21 6:49 PM, Matthew Wilcox wrote:
-> > On Mon, Apr 19, 2021 at 05:07:15PM -0700, Bart Van Assche wrote:
-> >> An explanation of the purpose of this patch is available in the patch
-> >> "scsi: Introduce the scsi_status union".
-> > 
-> > That is not the correct way to write a changelog.
+On 20/04/21 12:53 am, Asutosh Das (asd) wrote:
+> On 4/19/2021 11:37 AM, Adrian Hunter wrote:
+>> On 16/04/21 10:49 pm, Asutosh Das wrote:
+>>>
+>>> Co-developed-by: Can Guo <cang@codeaurora.org>
+>>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>>> ---
+>>
+>> I came across 3 issues while testing.  See comments below.
+>>
+> Hi Adrian
+> Thanks for the comments.
+>> <SNIP>
+>>
+>>> @@ -5794,7 +5839,7 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+>>>       if (ufshcd_is_clkscaling_supported(hba))
+>>>           ufshcd_clk_scaling_suspend(hba, false);
+>>>       ufshcd_clear_ua_wluns(hba);
+>>
+>> ufshcd_clear_ua_wluns() deadlocks trying to clear UFS_UPIU_RPMB_WLUN
+>> if sdev_rpmb is suspended and sdev_ufs_device is suspending.
+>> e.g. ufshcd_wl_suspend() is waiting on host_sem while ufshcd_err_handler()
+>> is running, at which point sdev_rpmb has already suspended.
+>>
+> Umm, I didn't understand this deadlock.
+> When you say, sdev_rpmb is suspended, does it mean runtime_suspended?
+> sdev_ufs_device is suspending - this can't be runtime_suspending, while ufshcd_err_handling_unprepare is running.
 > 
-> Thanks for having taken a look. Once there is agreement about the
-> approach of this patch series I can write a script that replaces the
-> above text with the description it refers to.
+> If you've a call-stack of this deadlock, please can you share it with me. I'll also try to reproduce this.
 
-... I haven't taken a look.  I have no idea what this patch does,
-and I can't provide feedback on the approach.  Because I haven't seen
-the approach.  All I've seen is this patch, and the one to sym53c8xx.
-Take a look at those patches in isolation -- would you be able to provide
-any kind of sensible feedback?
+Yes it is system suspend. sdev_rpmb has suspended, sdev_ufs_device is waiting on host_sem.
+ufshcd_err_handler() holds host_sem. ufshcd_clear_ua_wlun(UFS_UPIU_RPMB_WLUN) gets stuck.
+I will get some call-stacks.
+
+> 
+> I'll address the other comments in the next version.
+> 
+> 
+> Thank you!
+> 
+>>> -    pm_runtime_put(hba->dev);
+>>> +    ufshcd_rpm_put(hba);
+>>>   }
+>>
+>> <SNIP>
+>>
+>>> +void ufshcd_resume_complete(struct device *dev)
+>>> +{
+> 
+
