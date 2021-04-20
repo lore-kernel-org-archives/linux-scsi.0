@@ -7,54 +7,52 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5343AC433B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E40A8C43461
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27F1C613AA
+	by mail.kernel.org (Postfix) with ESMTP id BBA8C6109E
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 00:09:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233146AbhDTAJt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Apr 2021 20:09:49 -0400
-Received: from mail-pj1-f41.google.com ([209.85.216.41]:51854 "EHLO
-        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232960AbhDTAJm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:42 -0400
-Received: by mail-pj1-f41.google.com with SMTP id lt13so10009476pjb.1
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:12 -0700 (PDT)
+        id S233175AbhDTAJu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Apr 2021 20:09:50 -0400
+Received: from mail-pl1-f178.google.com ([209.85.214.178]:47073 "EHLO
+        mail-pl1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232951AbhDTAJl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2021 20:09:41 -0400
+Received: by mail-pl1-f178.google.com with SMTP id s20so2838184plr.13
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Apr 2021 17:09:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=y8BoWzVj3N4mDUGM68HE8h8bJse46BESIDJN3iIgoBk=;
-        b=WohhC//IT/8UBaH3r6moHzrGLtzm8Lw2cUQfeZiClgUHPYee2CT28O3Kdph3Qy6hmg
-         GgTWPnSQohpOnG7vVTklOFjvoJfiNH2ed/K/4p3uIHRm7EKoIRh4XZ8b571h9RGgm734
-         mFPC0pAJRNUJH7f9Is8T4XdJj6oFczZ62/PORmhlz0APb/tM2pY3PuJTVyqvgf2n3hwP
-         oKVkW9u5HeeMGrFjmFR6m754Ft2wG4GDg+hOzLa46RJfLNKWNCPZuVg/iYXbjsMOf2oM
-         gFjL6UbyQrhk3eAg5AqGOT0d/Kx7+PrWVjwhWcQDZSuozGeHyFvVCiBFbspHx9xHFxD2
-         +EHg==
-X-Gm-Message-State: AOAM53210T1oyrL1YuheFbtXrQF8yXUFRwkPQb4aDKlUvoftKeavNjHH
-        3DsToSe+iqhahSw7hzpuJRFV9Z4RQ90=
-X-Google-Smtp-Source: ABdhPJxdjI0tgMDUTdwjnzo+bru/gHMC+9IfGCfnMWuAY0L3Pi80czmivmKOyqEDp2Tfhd8js2b9hg==
-X-Received: by 2002:a17:90b:915:: with SMTP id bo21mr1766665pjb.118.1618877352030;
-        Mon, 19 Apr 2021 17:09:12 -0700 (PDT)
+        bh=QuYinr+a0R07jgiJt9P0PtvtChRLZsRq1Pa20bE+hhM=;
+        b=sDCsCR8MLcv3nfMTvOBDYZaUSWTvi03B7eNOYjHaSY81Vc2eJUFCoqFWY5mBcaMMq7
+         ggQVajalAabBNNIojuJxLdfFEaIK/qapI43tdcaFWYxbJVd3xOkvh6/supxHxgmDDGnC
+         tY5NqcBmwluAXs0nGEJW9ws9wIQ5VSqIuaDtgVX3FiWAfr20THZPfin3Yptd9AyoOTc2
+         4h3Adccn3dEWGIscgFbvViPzQ3b9D5ZCOTUHGYwfpuNw028LuccXd2uTudxw5Kha5H0x
+         wZE+yqD0cQ8wWaBCbZVtejMJNxgU/qxCr0xXxunpdHAQs9cgAQxXK3+oiq8ol4QbLKmt
+         lN5g==
+X-Gm-Message-State: AOAM533XdaJ673oazraUH/+XQOugGe2FTEEbWKkuDUbQaypqHsKtw4wa
+        3mk9VUM/6YhWq+lKymvwmDs=
+X-Google-Smtp-Source: ABdhPJz1JpJZ8VllAzcUpei4bqeYidgyEJK2wTnK6YD6OTJGdDJUdqcjYylv6N6NYXHT5mjHiMDj+A==
+X-Received: by 2002:a17:902:7795:b029:ec:b1ca:de75 with SMTP id o21-20020a1709027795b02900ecb1cade75mr3466647pll.70.1618877350895;
+        Mon, 19 Apr 2021 17:09:10 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:3e77:56a4:910b:42a9])
-        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.11
+        by smtp.gmail.com with ESMTPSA id 33sm14006787pgq.21.2021.04.19.17.09.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Apr 2021 17:09:11 -0700 (PDT)
+        Mon, 19 Apr 2021 17:09:10 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.f>
-Subject: [PATCH 017/117] st: Convert to the scsi_status union
-Date:   Mon, 19 Apr 2021 17:07:05 -0700
-Message-Id: <20210420000845.25873-18-bvanassche@acm.org>
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 016/117] sr: Convert to the scsi_status union
+Date:   Mon, 19 Apr 2021 17:07:04 -0700
+Message-Id: <20210420000845.25873-17-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210420000845.25873-1-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -63,131 +61,93 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 An explanation of the purpose of this patch is available in the patch
 "scsi: Introduce the scsi_status union".
 
-Cc: Kai Mäkisara <Kai.Makisara@kolumbus.f>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/st.c | 23 ++++++++++++-----------
- drivers/scsi/st.h |  5 +++--
- 2 files changed, 15 insertions(+), 13 deletions(-)
+ drivers/scsi/sr.c       | 16 +++++++++-------
+ drivers/scsi/sr_ioctl.c |  5 +++--
+ 2 files changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 9ca536aae784..3deea1f7c8b9 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -360,13 +360,13 @@ static void st_analyze_sense(struct st_request *SRpnt, struct st_cmdstatus *s)
- /* Convert the result to success code */
- static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index e4633b84c556..a78e499d4836 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -237,7 +237,7 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 	bool last_present;
+ 	struct scsi_sense_hdr sshdr;
+ 	unsigned int events;
+-	int ret;
++	union scsi_status ret;
+ 
+ 	/* no changer support */
+ 	if (CDSL_CURRENT != slot)
+@@ -273,7 +273,8 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ do_tur:
+ 	/* let's see whether the media is there with TUR */
+ 	last_present = cd->media_present;
+-	ret = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
++	ret.combined = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES,
++					    &sshdr);
+ 
+ 	/*
+ 	 * Media is considered to be present if TUR succeeds or fails with
+@@ -321,15 +322,15 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+  */
+ static int sr_done(struct scsi_cmnd *SCpnt)
  {
--	int result = SRpnt->result;
-+	union scsi_status result = SRpnt->status;
- 	u8 scode;
- 	DEB(const char *stp;)
- 	char *name = tape_name(STp);
- 	struct st_cmdstatus *cmdstatp;
+-	int result = SCpnt->result;
++	const union scsi_status result = SCpnt->status;
+ 	int this_count = scsi_bufflen(SCpnt);
+-	int good_bytes = (result == 0 ? this_count : 0);
++	int good_bytes = result.combined == 0 ? this_count : 0;
+ 	int block_sectors = 0;
+ 	long error_sector;
+ 	struct scsi_cd *cd = scsi_cd(SCpnt->request->rq_disk);
  
--	if (!result)
-+	if (!result.combined)
- 		return 0;
+ #ifdef DEBUG
+-	scmd_printk(KERN_INFO, SCpnt, "done: %x\n", result);
++	scmd_printk(KERN_INFO, SCpnt, "done: %x\n", result.combined);
+ #endif
  
- 	cmdstatp = &STp->buffer->cmdstat;
-@@ -380,7 +380,7 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
- 	DEB(
- 	if (debugging) {
- 		st_printk(ST_DEB_MSG, STp,
--			    "Error: %x, cmd: %x %x %x %x %x %x\n", result,
-+			    "Error: %x, cmd: %x %x %x %x %x %x\n", result.combined,
- 			    SRpnt->cmd[0], SRpnt->cmd[1], SRpnt->cmd[2],
- 			    SRpnt->cmd[3], SRpnt->cmd[4], SRpnt->cmd[5]);
- 		if (cmdstatp->have_sense)
-@@ -390,8 +390,9 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
- 	if (!debugging) { /* Abnormal conditions for tape */
- 		if (!cmdstatp->have_sense)
- 			st_printk(KERN_WARNING, STp,
--			       "Error %x (driver bt 0x%x, host bt 0x%x).\n",
--			       result, driver_byte(result), host_byte(result));
-+				"Error %x (driver bt 0x%x, host bt 0x%x).\n",
-+				result.combined, driver_byte(result),
-+				host_byte(result));
- 		else if (cmdstatp->have_sense &&
- 			 scode != NO_SENSE &&
- 			 scode != RECOVERED_ERROR &&
-@@ -484,7 +485,7 @@ static void st_do_stats(struct scsi_tape *STp, struct request *req)
- 		atomic64_add(ktime_to_ns(now), &STp->stats->tot_write_time);
- 		atomic64_add(ktime_to_ns(now), &STp->stats->tot_io_time);
- 		atomic64_inc(&STp->stats->write_cnt);
--		if (scsi_req(req)->result) {
-+		if (scsi_req(req)->status.combined) {
- 			atomic64_add(atomic_read(&STp->stats->last_write_size)
- 				- STp->buffer->cmdstat.residual,
- 				&STp->stats->write_byte_cnt);
-@@ -498,7 +499,7 @@ static void st_do_stats(struct scsi_tape *STp, struct request *req)
- 		atomic64_add(ktime_to_ns(now), &STp->stats->tot_read_time);
- 		atomic64_add(ktime_to_ns(now), &STp->stats->tot_io_time);
- 		atomic64_inc(&STp->stats->read_cnt);
--		if (scsi_req(req)->result) {
-+		if (scsi_req(req)->status.combined) {
- 			atomic64_add(atomic_read(&STp->stats->last_read_size)
- 				- STp->buffer->cmdstat.residual,
- 				&STp->stats->read_byte_cnt);
-@@ -522,7 +523,7 @@ static void st_scsi_execute_end(struct request *req, blk_status_t status)
- 	struct scsi_tape *STp = SRpnt->stp;
- 	struct bio *tmp;
+ 	/*
+@@ -882,7 +883,8 @@ static void get_capabilities(struct scsi_cd *cd)
+ 	struct scsi_mode_data data;
+ 	struct scsi_sense_hdr sshdr;
+ 	unsigned int ms_len = 128;
+-	int rc, n;
++	union scsi_status rc;
++	int n;
  
--	STp->buffer->cmdstat.midlevel_result = SRpnt->result = rq->result;
-+	STp->buffer->cmdstat.midlevel_status = SRpnt->status = rq->status;
- 	STp->buffer->cmdstat.residual = rq->resid_len;
+ 	static const char *loadmech[] =
+ 	{
+@@ -908,7 +910,7 @@ static void get_capabilities(struct scsi_cd *cd)
+ 	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
  
- 	st_do_stats(STp, req);
-@@ -718,7 +719,7 @@ static int write_behind_check(struct scsi_tape * STp)
- 	DEB(if (debugging && retval)
- 		    st_printk(ST_DEB_MSG, STp,
- 				"Async write error %x, return value %d.\n",
--				STbuffer->cmdstat.midlevel_result, retval);) /* end DEB */
-+				STbuffer->cmdstat.midlevel_status.combined, retval);) /* end DEB */
+ 	/* ask for mode page 0x2a */
+-	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, ms_len,
++	rc.combined = scsi_mode_sense(cd->device, 0, 0x2a, buffer, ms_len,
+ 			     SR_TIMEOUT, 3, &data, NULL);
  
- 	return retval;
- }
-@@ -752,7 +753,7 @@ static int cross_eof(struct scsi_tape * STp, int forward)
- 	st_release_request(SRpnt);
- 	SRpnt = NULL;
+ 	if (!scsi_status_is_good(rc) || data.length > ms_len ||
+diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+index 5703f8400b73..11170d742e40 100644
+--- a/drivers/scsi/sr_ioctl.c
++++ b/drivers/scsi/sr_ioctl.c
+@@ -187,7 +187,8 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
+ {
+ 	struct scsi_device *SDev;
+ 	struct scsi_sense_hdr local_sshdr, *sshdr = &local_sshdr;
+-	int result, err = 0, retries = 0;
++	union scsi_status result;
++	int err = 0, retries = 0;
  
--	if ((STp->buffer)->cmdstat.midlevel_result != 0)
-+	if ((STp->buffer)->cmdstat.midlevel_status.combined != 0)
- 		st_printk(KERN_ERR, STp,
- 			  "Stepping over filemark %s failed.\n",
- 			  forward ? "forward" : "backward");
-@@ -1118,7 +1119,7 @@ static int check_tape(struct scsi_tape *STp, struct file *filp)
- 			goto err_out;
- 		}
+ 	SDev = cd->device;
  
--		if (!SRpnt->result && !STp->buffer->cmdstat.have_sense) {
-+		if (!SRpnt->status.combined && !STp->buffer->cmdstat.have_sense) {
- 			STp->max_block = ((STp->buffer)->b_data[1] << 16) |
- 			    ((STp->buffer)->b_data[2] << 8) | (STp->buffer)->b_data[3];
- 			STp->min_block = ((STp->buffer)->b_data[4] << 8) |
-diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index 95d2e7a7988d..2021a5a9f65b 100644
---- a/drivers/scsi/st.h
-+++ b/drivers/scsi/st.h
-@@ -7,10 +7,11 @@
- #include <linux/mutex.h>
- #include <linux/kref.h>
- #include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_status.h>
+@@ -200,7 +201,7 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
+ 		goto out;
+ 	}
  
- /* Descriptor for analyzed sense data */
- struct st_cmdstatus {
--	int midlevel_result;
-+	union scsi_status midlevel_status;
- 	struct scsi_sense_hdr sense_hdr;
- 	int have_sense;
- 	int residual;
-@@ -27,7 +28,7 @@ struct scsi_tape;
- struct st_request {
- 	unsigned char cmd[MAX_COMMAND_SIZE];
- 	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
--	int result;
-+	union scsi_status status;
- 	struct scsi_tape *stp;
- 	struct completion *waiting;
- 	struct bio *bio;
+-	result = scsi_execute(SDev, cgc->cmd, cgc->data_direction,
++	result.combined = scsi_execute(SDev, cgc->cmd, cgc->data_direction,
+ 			      cgc->buffer, cgc->buflen, NULL, sshdr,
+ 			      cgc->timeout, IOCTL_RETRIES, 0, 0, NULL);
+ 
