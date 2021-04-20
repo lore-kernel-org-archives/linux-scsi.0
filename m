@@ -2,40 +2,44 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C64CC433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:02:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EEBCC433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:02:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6830960200
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:02:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F73060200
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 18:02:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233592AbhDTSCp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Apr 2021 14:02:45 -0400
-Received: from angie.orcam.me.uk ([157.25.102.26]:39270 "EHLO
-        angie.orcam.me.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233572AbhDTSCk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 14:02:40 -0400
+        id S233608AbhDTSDK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Apr 2021 14:03:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42508 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233629AbhDTSC5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 14:02:57 -0400
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6983AC06138E;
+        Tue, 20 Apr 2021 11:02:25 -0700 (PDT)
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 161A29200BF; Tue, 20 Apr 2021 20:02:07 +0200 (CEST)
+        id C6FCC92009C; Tue, 20 Apr 2021 20:02:24 +0200 (CEST)
 Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 11AB69200BC;
-        Tue, 20 Apr 2021 20:02:07 +0200 (CEST)
-Date:   Tue, 20 Apr 2021 20:02:06 +0200 (CEST)
+        by angie.orcam.me.uk (Postfix) with ESMTP id BFB4692009B;
+        Tue, 20 Apr 2021 20:02:24 +0200 (CEST)
+Date:   Tue, 20 Apr 2021 20:02:24 +0200 (CEST)
 From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
-To:     Khalid Aziz <khalid@gonehiking.org>,
+To:     Khalid Aziz <khalid@gonehiking.org>
+cc:     Ondrej Zary <linux@zary.sk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-cc:     Nix <nix@esperi.org.uk>, Christoph Hellwig <hch@lst.de>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 5/5] scsi: Set allocation length to 255 for ATA Information
- VPD page
-In-Reply-To: <alpine.DEB.2.21.2104201934280.44318@angie.orcam.me.uk>
-Message-ID: <alpine.DEB.2.21.2104201952150.44318@angie.orcam.me.uk>
-References: <alpine.DEB.2.21.2104201934280.44318@angie.orcam.me.uk>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/5] Bring the BusLogic host bus adapter driver up to
+ Y2021
+In-Reply-To: <d7dc08a6-92be-e524-1f11-cd9f7326a0fd@gonehiking.org>
+Message-ID: <alpine.DEB.2.21.2104200456100.44318@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk> <a099f7f8-9601-fd1c-03a4-93587e7276e6@gonehiking.org> <alpine.DEB.2.21.2104162157360.44318@angie.orcam.me.uk> <202104182221.21533.linux@zary.sk> <e3fe98a2-c480-e9bf-67b3-7f51b87975bd@gonehiking.org>
+ <alpine.DEB.2.21.2104191747010.44318@angie.orcam.me.uk> <d7dc08a6-92be-e524-1f11-cd9f7326a0fd@gonehiking.org>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -43,55 +47,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Set the allocation length to 255 for the ATA Information VPD page 
-requested in the WRITE SAME handler, so as not to limit information 
-examined by `scsi_get_vpd_page' in the supported vital product data 
-pages unnecessarily.
+On Mon, 19 Apr 2021, Khalid Aziz wrote:
 
-Originally it was thought that Areca hardware may have issues with a 
-valid allocation length supplied for a VPD inquiry, however older SCSI 
-standard revisions[1] consider 255 the maximum length allowed and what 
-has later become the high order byte is considered reserved and must be 
-zero with the INQUIRY command.  Therefore it was unnecessary to reduce 
-the amount of data requested from 512 as far down as to 64, arbitrarily 
-chosen, and 255 would as well do.
+> >  Khalid: I have skimmed over these documents and I infer 24-bit addressing 
+> > can be verified with any MultiMaster adapter, including ones that do have 
+> > 32-bit addressing implemented, by using the legacy Initialize Mailbox HBA 
+> > command.  That could be used to stop Christoph's recent changes for older 
+> > adapter support removal and replace them with proper fixes for whatever 
+> > has become broken.  Is that something you'd be willing as the driver's 
+> > maintainer to look into, or shall I?
+> 
+> Do you mean use OpCode 01 (INITIALIZE MAILBOX) to set a 24-bit address
+> for mailbox in place of OpCode 81? Verifying the change would be a
+> challenge. Do you have an old adapter to test it with? If you do, go
+> ahead and make the changes. I will be happy to review. I have only a
+> BT-757 adapter.
 
-With commit b3ae8780b429 ("[SCSI] Add EVPD page 0x83 and 0x80 to sysfs") 
-we have since got the SCSI_VPD_PG_LEN macro, so use that instead.
+ Yes, but upon inspection it looks like our driver doesn't use that opcode 
+and relies solely on 32-bit Mode Initialize Mailbox (0x81) even with ISA 
+devices.  That makes sense as documentation indicates the firmware has 
+been designed to be unified so that the same binary microcontroller code 
+runs across all BusLogic MultiMaster devices.
 
-References:
+ Anyway given the unified API it should be straightforward to simulate an 
+older adapter with a newer one, except for host bus protocol differences.  
+So verifying the workaround for broken BT-445S adapters continues to work 
+once modernised is not going to be a problem as it can be unconditionally 
+activated in a debug environment.  That would verify correct DMA bounce 
+buffer operation under the new scheme.
 
-[1] "Information technology - Small Computer System Interface - 2",
-    WORKING DRAFT, X3T9.2, Project 375D, Revision 10L, 7-SEP-93, Section
-    8.2.5 "INQUIRY command", pp.104-108
+ Verifying actual ISA operations (third-party DMA, etc.) cannot be made 
+this way, but as I understand the issue there is merely with passing data 
+structures around and that may not require too much attention beyond 
+getting things syntactically correct, which I gather someone forgot to do 
+with a change made a while ago.  So that should be doable as well.
 
-Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
-Fixes: af73623f5f10 ("[SCSI] sd: Reduce buffer size for vpd request")
----
-No changes from v1.
----
- drivers/scsi/sd.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ NB as noted before I only have a BT-958 readily wired for operation.  I 
+don't expect I have any other BusLogic hardware, but I may yet have to 
+double-check a stash of hardware I have accumulated over the years.  But 
+that is overseas, so I won't be able to get at it before we're at least 
+somewhat closer to normality.  If all else fails I could possibly buy one.
 
-Index: linux-macro-ide/drivers/scsi/sd.c
-===================================================================
---- linux-macro-ide.orig/drivers/scsi/sd.c
-+++ linux-macro-ide/drivers/scsi/sd.c
-@@ -3076,16 +3076,13 @@ static void sd_read_write_same(struct sc
- 	}
- 
- 	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, INQUIRY) < 0) {
--		/* too large values might cause issues with arcmsr */
--		int vpd_buf_len = 64;
--
- 		sdev->no_report_opcodes = 1;
- 
- 		/* Disable WRITE SAME if REPORT SUPPORTED OPERATION
- 		 * CODES is unsupported and the device has an ATA
- 		 * Information VPD page (SAT).
- 		 */
--		if (!scsi_get_vpd_page(sdev, 0x89, buffer, vpd_buf_len))
-+		if (!scsi_get_vpd_page(sdev, 0x89, buffer, SCSI_VPD_PG_LEN))
- 			sdev->no_write_same = 1;
- 	}
- 
+ I have respun the series now as promised.  Does your BT-757 adapter avoid 
+the issue with trailing allocation somehow?
+
+  Maciej
