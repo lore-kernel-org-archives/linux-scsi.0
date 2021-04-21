@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF908C43460
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59EB2C433B4
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:50:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A080F61405
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:49:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E4FB61448
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:50:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244984AbhDURtl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Apr 2021 13:49:41 -0400
-Received: from mx2.suse.de ([195.135.220.15]:52412 "EHLO mx2.suse.de"
+        id S243365AbhDURur (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Apr 2021 13:50:47 -0400
+Received: from mx2.suse.de ([195.135.220.15]:52314 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S245102AbhDURtP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Apr 2021 13:49:15 -0400
+        id S245013AbhDURs7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Apr 2021 13:48:59 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 50082B309;
-        Wed, 21 Apr 2021 17:48:02 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 710AAAFEB;
+        Wed, 21 Apr 2021 17:48:01 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 42/42] scsi: kill message byte
-Date:   Wed, 21 Apr 2021 19:47:49 +0200
-Message-Id: <20210421174749.11221-43-hare@suse.de>
+Subject: [PATCH 08/42] scsi: do not use DRIVER_INVALID
+Date:   Wed, 21 Apr 2021 19:47:15 +0200
+Message-Id: <20210421174749.11221-9-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210421174749.11221-1-hare@suse.de>
 References: <20210421174749.11221-1-hare@suse.de>
@@ -41,82 +41,66 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove last vestigies of SCSI status message bytes.
+There is no point in returning DID_ABORT together with DRIVER_INVALID,
+as the caller couldn't care less where the abort originated.
+So drop the use of DRIVER_INVALID.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- Documentation/scsi/scsi_mid_low_api.rst |  6 ++---
- include/trace/events/scsi.h             | 33 +------------------------
- 2 files changed, 4 insertions(+), 35 deletions(-)
+ drivers/scsi/hptiop.c     | 2 +-
+ drivers/scsi/mvumi.c      | 4 ++--
+ drivers/scsi/vmw_pvscsi.c | 3 ---
+ 3 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/scsi/scsi_mid_low_api.rst b/Documentation/scsi/scsi_mid_low_api.rst
-index 2c87eaa36296..8728204e2b76 100644
---- a/Documentation/scsi/scsi_mid_low_api.rst
-+++ b/Documentation/scsi/scsi_mid_low_api.rst
-@@ -1176,9 +1176,9 @@ Members of interest:
-                    of 0 implies a successfully completed command (and all
-                    data (if any) has been transferred to or from the SCSI
-                    target device). 'result' is a 32 bit unsigned integer that
--                   can be viewed as 4 related bytes. The SCSI status value is
--                   in the LSB. See include/scsi/scsi.h status_byte(),
--                   msg_byte() and host_byte() macros and related constants.
-+                   can be viewed as 2 related bytes. The SCSI status value is
-+                   in the LSB. See include/scsi/scsi.h status_byte() and
-+                   host_byte() macros and related constants.
-     sense_buffer
- 		 - an array (maximum size: SCSI_SENSE_BUFFERSIZE bytes) that
-                    should be written when the SCSI status (LSB of 'result')
-diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
-index 428cca71c2ba..370ade0d4093 100644
---- a/include/trace/events/scsi.h
-+++ b/include/trace/events/scsi.h
-@@ -124,37 +124,6 @@
- 		scsi_hostbyte_name(DID_TRANSPORT_DISRUPTED),	\
- 		scsi_hostbyte_name(DID_TRANSPORT_FAILFAST))
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index db4c7a7ff4dd..61cda7b7624f 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -760,7 +760,7 @@ static void hptiop_finish_scsi_req(struct hptiop_hba *hba, u32 tag,
+ 		goto skip_resid;
  
--#define scsi_msgbyte_name(result)	{ result, #result }
--#define show_msgbyte_name(val)					\
--	__print_symbolic(val,					\
--		scsi_msgbyte_name(COMMAND_COMPLETE),		\
--		scsi_msgbyte_name(EXTENDED_MESSAGE),		\
--		scsi_msgbyte_name(SAVE_POINTERS),		\
--		scsi_msgbyte_name(RESTORE_POINTERS),		\
--		scsi_msgbyte_name(DISCONNECT),			\
--		scsi_msgbyte_name(INITIATOR_ERROR),		\
--		scsi_msgbyte_name(ABORT_TASK_SET),		\
--		scsi_msgbyte_name(MESSAGE_REJECT),		\
--		scsi_msgbyte_name(NOP),				\
--		scsi_msgbyte_name(MSG_PARITY_ERROR),		\
--		scsi_msgbyte_name(LINKED_CMD_COMPLETE),		\
--		scsi_msgbyte_name(LINKED_FLG_CMD_COMPLETE),	\
--		scsi_msgbyte_name(TARGET_RESET),		\
--		scsi_msgbyte_name(ABORT_TASK),			\
--		scsi_msgbyte_name(CLEAR_TASK_SET),		\
--		scsi_msgbyte_name(INITIATE_RECOVERY),		\
--		scsi_msgbyte_name(RELEASE_RECOVERY),		\
--		scsi_msgbyte_name(CLEAR_ACA),			\
--		scsi_msgbyte_name(LOGICAL_UNIT_RESET),		\
--		scsi_msgbyte_name(SIMPLE_QUEUE_TAG),		\
--		scsi_msgbyte_name(HEAD_OF_QUEUE_TAG),		\
--		scsi_msgbyte_name(ORDERED_QUEUE_TAG),		\
--		scsi_msgbyte_name(IGNORE_WIDE_RESIDUE),		\
--		scsi_msgbyte_name(ACA),				\
--		scsi_msgbyte_name(QAS_REQUEST),			\
--		scsi_msgbyte_name(BUS_DEVICE_RESET),		\
--		scsi_msgbyte_name(ABORT))
+ 	default:
+-		scp->result = DRIVER_INVALID << 24 | DID_ABORT << 16;
++		scp->result = DID_ABORT << 16;
+ 		break;
+ 	}
+ 
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index f61250545025..6bb03d7a254d 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -1320,7 +1320,7 @@ static void mvumi_complete_cmd(struct mvumi_hba *mhba, struct mvumi_cmd *cmd,
+ 		}
+ 		break;
+ 	default:
+-		scmd->result |= (DRIVER_INVALID << 24) | (DID_ABORT << 16);
++		scmd->result |= (DID_ABORT << 16);
+ 		break;
+ 	}
+ 
+@@ -2127,7 +2127,7 @@ static enum blk_eh_timer_return mvumi_timed_out(struct scsi_cmnd *scmd)
+ 	else
+ 		atomic_dec(&mhba->fw_outstanding);
+ 
+-	scmd->result = (DRIVER_INVALID << 24) | (DID_ABORT << 16);
++	scmd->result = (DID_ABORT << 16);
+ 	scmd->SCp.ptr = NULL;
+ 	if (scsi_bufflen(scmd)) {
+ 		dma_unmap_sg(&mhba->pdev->dev, scsi_sglist(scmd),
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index f0707eaad9f7..f57f8bc037d2 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -601,9 +601,6 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
+ 		case BTSTAT_LUNMISMATCH:
+ 		case BTSTAT_TAGREJECT:
+ 		case BTSTAT_BADMSG:
+-			cmd->result = (DRIVER_INVALID << 24);
+-			fallthrough;
 -
- #define scsi_statusbyte_name(result)	{ result, #result }
- #define show_statusbyte_name(val)				\
- 	__print_symbolic(val,					\
-@@ -316,7 +285,7 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
- 		  __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len),
- 		  "DRIVER_OK",
- 		  show_hostbyte_name(((__entry->result) >> 16) & 0xff),
--		  show_msgbyte_name(((__entry->result) >> 8) & 0xff),
-+		  "COMMAND_COMPLETE",
- 		  show_statusbyte_name(__entry->result & 0xff))
- );
- 
+ 		case BTSTAT_HAHARDWARE:
+ 		case BTSTAT_INVPHASE:
+ 		case BTSTAT_HATIMEOUT:
 -- 
 2.29.2
 
