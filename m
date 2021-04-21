@@ -2,26 +2,26 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D2E7C43460
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:50:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB49CC43470
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:50:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EEE4D61409
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:50:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B90C061405
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:50:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245008AbhDURu7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Apr 2021 13:50:59 -0400
-Received: from mx2.suse.de ([195.135.220.15]:52314 "EHLO mx2.suse.de"
+        id S245020AbhDURvA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Apr 2021 13:51:00 -0400
+Received: from mx2.suse.de ([195.135.220.15]:52388 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S245056AbhDURtM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Apr 2021 13:49:12 -0400
+        id S245070AbhDURtN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Apr 2021 13:49:13 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id B629CB1EE;
+        by mx2.suse.de (Postfix) with ESMTP id AE6D3B1DE;
         Wed, 21 Apr 2021 17:48:01 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,9 +29,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 18/42] dc395: use standard macros to set SCSI result
-Date:   Wed, 21 Apr 2021 19:47:25 +0200
-Message-Id: <20210421174749.11221-19-hare@suse.de>
+Subject: [PATCH 17/42] scsi: add translate_msg_byte()
+Date:   Wed, 21 Apr 2021 19:47:24 +0200
+Message-Id: <20210421174749.11221-18-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210421174749.11221-1-hare@suse.de>
 References: <20210421174749.11221-1-hare@suse.de>
@@ -41,208 +41,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use standard macros to set the SCSI result and drop the internal ones.
+Add helper to convert message byte into a host byte code.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/dc395x.c | 72 ++++++++++++++++---------------------------
- 1 file changed, 26 insertions(+), 46 deletions(-)
+ include/scsi/scsi_cmnd.h | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index a713fe605dda..122b64c14b0e 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -160,22 +160,6 @@
- #define DC395x_write16(acb,address,value)	outw((value), acb->io_port_base + (address))
- #define DC395x_write32(acb,address,value)	outl((value), acb->io_port_base + (address))
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 7089617911e1..a0458f0dba14 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -341,6 +341,23 @@ static inline bool scsi_result_is_good(struct scsi_cmnd *cmd)
+ 	return (cmd->result == 0);
+ }
  
--/* cmd->result */
--#define RES_TARGET		0x000000FF	/* Target State */
--#define RES_TARGET_LNX  STATUS_MASK	/* Only official ... */
--#define RES_ENDMSG		0x0000FF00	/* End Message */
--#define RES_DID			0x00FF0000	/* DID_ codes */
--#define RES_DRV			0xFF000000	/* DRIVER_ codes */
--
--#define MK_RES(drv,did,msg,tgt) ((int)(drv)<<24 | (int)(did)<<16 | (int)(msg)<<8 | (int)(tgt))
--#define MK_RES_LNX(drv,did,msg,tgt) ((int)(drv)<<24 | (int)(did)<<16 | (int)(msg)<<8 | (int)(tgt)<<1)
--
--#define SET_RES_TARGET(who,tgt) { who &= ~RES_TARGET; who |= (int)(tgt); }
--#define SET_RES_TARGET_LNX(who,tgt) { who &= ~RES_TARGET_LNX; who |= (int)(tgt) << 1; }
--#define SET_RES_MSG(who,msg) { who &= ~RES_ENDMSG; who |= (int)(msg) << 8; }
--#define SET_RES_DID(who,did) { who &= ~RES_DID; who |= (int)(did) << 16; }
--#define SET_RES_DRV(who,drv) { who &= ~RES_DRV; who |= (int)(drv) << 24; }
--
- #define TAG_NONE 255
- 
- /*
-@@ -986,7 +970,7 @@ static int dc395x_queue_command_lck(struct scsi_cmnd *cmd, void (*done)(struct s
- 		cmd, cmd->device->id, (u8)cmd->device->lun, cmd->cmnd[0]);
- 
- 	/* Assume BAD_TARGET; will be cleared later */
--	cmd->result = DID_BAD_TARGET << 16;
-+	set_host_byte(cmd, DID_BAD_TARGET);
- 
- 	/* ignore invalid targets */
- 	if (cmd->device->id >= acb->scsi_host->max_id ||
-@@ -1013,7 +997,8 @@ static int dc395x_queue_command_lck(struct scsi_cmnd *cmd, void (*done)(struct s
- 
- 	/* set callback and clear result in the command */
- 	cmd->scsi_done = done;
--	cmd->result = 0;
-+	set_host_byte(cmd, DID_OK);
-+	set_status_byte(cmd, SAM_STAT_GOOD);
- 
- 	srb = list_first_entry_or_null(&acb->srb_free_list,
- 			struct ScsiReqBlk, list);
-@@ -1250,7 +1235,7 @@ static int dc395x_eh_abort(struct scsi_cmnd *cmd)
- 		free_tag(dcb, srb);
- 		list_add_tail(&srb->list, &acb->srb_free_list);
- 		dprintkl(KERN_DEBUG, "eh_abort: Command was waiting\n");
--		cmd->result = DID_ABORT << 16;
++static inline void translate_msg_byte(struct scsi_cmnd *cmd, u8 msg)
++{
++	switch (msg) {
++	case COMMAND_COMPLETE:
++		break;
++	case ABORT_TASK_SET:
 +		set_host_byte(cmd, DID_ABORT);
- 		return SUCCESS;
- 	}
- 	srb = find_cmd(cmd, &dcb->srb_going_list);
-@@ -3178,6 +3163,8 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		   srb, scsi_sg_count(cmd), srb->sg_index, srb->sg_count,
- 		   scsi_sgtalbe(cmd));
- 	status = srb->target_status;
-+	set_host_byte(cmd, DID_OK);
-+	set_status_byte(cmd, SAM_STAT_GOOD);
- 	if (srb->flag & AUTO_REQSENSE) {
- 		dprintkdbg(DBG_0, "srb_done: AUTO_REQSENSE1\n");
- 		pci_unmap_srb_sense(acb, srb);
-@@ -3186,7 +3173,7 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		 */
- 		srb->flag &= ~AUTO_REQSENSE;
- 		srb->adapter_status = 0;
--		srb->target_status = CHECK_CONDITION << 1;
-+		srb->target_status = SAM_STAT_CHECK_CONDITION;
- 		if (debug_enabled(DBG_1)) {
- 			switch (cmd->sense_buffer[2] & 0x0f) {
- 			case NOT_READY:
-@@ -3233,15 +3220,14 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 					*((unsigned int *)(cmd->sense_buffer + 3)));
- 		}
- 
--		if (status == (CHECK_CONDITION << 1)) {
--			cmd->result = DID_BAD_TARGET << 16;
-+		if (status == SAM_STAT_CHECK_CONDITION) {
-+			set_host_byte(cmd, DID_BAD_TARGET);
- 			goto ckc_e;
- 		}
- 		dprintkdbg(DBG_0, "srb_done: AUTO_REQSENSE2\n");
- 
--		cmd->result =
--		    MK_RES(0, DID_OK,
--			   srb->end_message, SAM_STAT_CHECK_CONDITION);
-+		set_msg_byte(cmd, srb->end_message);
-+		set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
- 
- 		goto ckc_e;
- 	}
-@@ -3270,13 +3256,12 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		} else if (status == SCSI_STAT_SEL_TIMEOUT) {
- 			srb->adapter_status = H_SEL_TIMEOUT;
- 			srb->target_status = 0;
--			cmd->result = DID_NO_CONNECT << 16;
-+			set_host_byte(cmd, DID_NO_CONNECT);
- 		} else {
- 			srb->adapter_status = 0;
--			SET_RES_DID(cmd->result, DID_ERROR);
--			SET_RES_MSG(cmd->result, srb->end_message);
--			SET_RES_TARGET(cmd->result, status);
--
-+			set_host_byte(cmd, DID_ERROR);
-+			set_msg_byte(cmd, srb->end_message);
-+			set_status_byte(cmd, status);
- 		}
- 	} else {
- 		/*
-@@ -3285,16 +3270,14 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		status = srb->adapter_status;
- 		if (status & H_OVER_UNDER_RUN) {
- 			srb->target_status = 0;
--			SET_RES_DID(cmd->result, DID_OK);
--			SET_RES_MSG(cmd->result, srb->end_message);
-+			set_msg_byte(cmd, srb->end_message);
- 		} else if (srb->status & PARITY_ERROR) {
--			SET_RES_DID(cmd->result, DID_PARITY);
--			SET_RES_MSG(cmd->result, srb->end_message);
-+			set_host_byte(cmd, DID_PARITY);
-+			set_msg_byte(cmd, srb->end_message);
- 		} else {	/* No error */
- 
- 			srb->adapter_status = 0;
- 			srb->target_status = 0;
--			SET_RES_DID(cmd->result, DID_OK);
- 		}
- 	}
- 
-@@ -3315,15 +3298,15 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		base = scsi_kmap_atomic_sg(sg, scsi_sg_count(cmd), &offset, &len);
- 		ptr = (struct ScsiInqData *)(base + offset);
- 
--		if (!ckc_only && (cmd->result & RES_DID) == 0
-+		if (!ckc_only && get_host_byte(cmd) == DID_OK
- 		    && cmd->cmnd[2] == 0 && scsi_bufflen(cmd) >= 8
- 		    && dir != DMA_NONE && ptr && (ptr->Vers & 0x07) >= 2)
- 			dcb->inquiry7 = ptr->Flags;
- 
- 	/*if( srb->cmd->cmnd[0] == INQUIRY && */
- 	/*  (host_byte(cmd->result) == DID_OK || status_byte(cmd->result) & CHECK_CONDITION) ) */
--		if ((cmd->result == (DID_OK << 16) ||
--		     status_byte(cmd->result) == CHECK_CONDITION)) {
-+		if ((get_host_byte(cmd) == DID_OK) ||
-+		    (get_status_byte(cmd) == SAM_STAT_CHECK_CONDITION)) {
- 			if (!dcb->init_tcq_flag) {
- 				add_dev(acb, dcb, ptr);
- 				dcb->init_tcq_flag = 1;
-@@ -3350,7 +3333,7 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 	if (srb != acb->tmp_srb) {
- 		/* Add to free list */
- 		dprintkdbg(DBG_0, "srb_done: (0x%p) done result=0x%08x\n",
--			cmd, cmd->result);
-+			   cmd, scsi_get_compat_result(cmd));
- 		list_move_tail(&srb->list, &acb->srb_free_list);
- 	} else {
- 		dprintkl(KERN_ERR, "srb_done: ERROR! Completed cmd with tmp_srb\n");
-@@ -3374,16 +3357,14 @@ static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
- 		struct scsi_cmnd *p;
- 
- 		list_for_each_entry_safe(srb, tmp, &dcb->srb_going_list, list) {
--			int result;
--
- 			p = srb->cmd;
--			result = MK_RES(0, did_flag, 0, 0);
- 			printk("G:%p(%02i-%i) ", p,
- 			       p->device->id, (u8)p->device->lun);
- 			list_del(&srb->list);
- 			free_tag(dcb, srb);
- 			list_add_tail(&srb->list, &acb->srb_free_list);
--			p->result = result;
-+			set_host_byte(p, did_flag);
-+			set_status_byte(p, SAM_STAT_GOOD);
- 			pci_unmap_srb_sense(acb, srb);
- 			pci_unmap_srb(acb, srb);
- 			if (force) {
-@@ -3404,14 +3385,13 @@ static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
- 
- 		/* Waiting queue */
- 		list_for_each_entry_safe(srb, tmp, &dcb->srb_waiting_list, list) {
--			int result;
- 			p = srb->cmd;
- 
--			result = MK_RES(0, did_flag, 0, 0);
- 			printk("W:%p<%02i-%i>", p, p->device->id,
- 			       (u8)p->device->lun);
- 			list_move_tail(&srb->list, &acb->srb_free_list);
--			p->result = result;
-+			set_host_byte(p, did_flag);
-+			set_status_byte(p, SAM_STAT_GOOD);
- 			pci_unmap_srb_sense(acb, srb);
- 			pci_unmap_srb(acb, srb);
- 			if (force) {
++		break;
++	case TARGET_RESET:
++		set_host_byte(cmd, DID_RESET);
++		break;
++	default:
++		set_host_byte(cmd, DID_ERROR);
++		break;
++	}
++}
++
+ static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
+ {
+ 	unsigned int xfer_len = scmd->sdb.length;
 -- 
 2.29.2
 
