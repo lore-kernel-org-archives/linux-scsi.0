@@ -2,110 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6D90C433ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 07:57:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68EA5C433B4
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 08:02:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C59D61434
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 07:57:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 232EB61158
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 08:02:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237515AbhDUH5d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Apr 2021 03:57:33 -0400
-Received: from mx2.suse.de ([195.135.220.15]:47578 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237514AbhDUH5d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Apr 2021 03:57:33 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 88C5CAFE6;
-        Wed, 21 Apr 2021 07:56:59 +0000 (UTC)
-Date:   Wed, 21 Apr 2021 09:56:59 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Arun Easi <aeasi@marvell.com>
-Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
-        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
-        linux-nvme@lists.infradead.org, Hannes Reinecke <hare@suse.de>,
-        Nilesh Javali <njavali@marvell.com>,
-        James Smart <james.smart@broadcom.com>
-Subject: Re: [EXT] Re: [RFC] qla2xxx: Add dev_loss_tmo kernel module options
-Message-ID: <20210421075659.dwaz7gt6hyqlzpo4@beryllium.lan>
-References: <20210419100014.47144-1-dwagner@suse.de>
- <YH8QzgWiec8vka20@SPB-NB-133.local>
- <20210420182830.fbipix3l7hwlyfx3@beryllium.lan>
- <alpine.LRH.2.21.9999.2104201642290.24132@irv1user01.caveonetworks.com>
+        id S234162AbhDUIDM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Apr 2021 04:03:12 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:28809 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234152AbhDUICZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Apr 2021 04:02:25 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1618992112;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=1RkcM8XmR64QBQSFo7rPNVfwwQ1KW863sEHKTqb4UEE=;
+        b=ghlWx8/C1eggsS+/QkduQrOBpY9ZjFuhb9YnELSeFcBmYr5FTsck9yoMZwImKGLY17o0Y8
+        cwZVpFAbSpquRd8dxQGYAIuaVEno1dOTK7JRfIm3eoE+RhW+6bZT4YYV8NxQkUOmF92s71
+        yZc70QOk0KO8oqBDoHfKtMcQHwLwpxQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-491-gaLitj7NMT-aMCHm_88FNg-1; Wed, 21 Apr 2021 04:01:50 -0400
+X-MC-Unique: gaLitj7NMT-aMCHm_88FNg-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 007AC824FB8;
+        Wed, 21 Apr 2021 07:57:06 +0000 (UTC)
+Received: from localhost (ovpn-13-15.pek2.redhat.com [10.72.13.15])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C0AA560CDE;
+        Wed, 21 Apr 2021 07:57:01 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     Ming Lei <ming.lei@redhat.com>, Satish Kharat <satishkh@cisco.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        David Jeffery <djeffery@redhat.com>
+Subject: [PATCH 0/5] scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands
+Date:   Wed, 21 Apr 2021 15:55:38 +0800
+Message-Id: <20210421075543.1919826-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.21.9999.2104201642290.24132@irv1user01.caveonetworks.com>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Arun,
+Hello Guys,
 
-On Tue, Apr 20, 2021 at 05:25:52PM -0700, Arun Easi wrote:
-> On Tue, 20 Apr 2021, 11:28am, Daniel Wagner wrote:
-> > As explained the debugfs interface is not working (okay, that's
-> > something which could be fixed) and it has the big problem that it is
-> > not under control by udevd. Not sure if we with some new udev rules the
-> > debugfs could automatically discovered or not.
->
-> Curious, which udev script does this today for FC SCSI?
+fnic uses the following way to walk scsi commands in failure handling,
+which is obvious wrong, because caller of scsi_host_find_tag has to
+guarantee that the tag is active.
 
-I am currently figuring out the 'correct' settings for passing the
-various tests our partner does in their labs. That is no upstream udev
-rules for this (yet).
+        for (tag = 0; tag < fnic->fnic_max_tag_id; tag++) {
+				...
+                sc = scsi_host_find_tag(fnic->lport->host, tag);
+				...
+		}
 
-Anyway, the settings are
+Fix the issue by using blk_mq_tagset_busy_iter() to walk
+request/scsi_command.
 
-  ACTION!="add|change", GOTO="tmo_end"
-  # SCSI fc_remote_ports
-  KERNELS=="rport-?*", SUBSYSTEM=="fc_remote_ports", ATTR{fast_io_fail_tmo}="5", ATTR{dev_loss_tmo}="4294967295"
-  # nvme fabrics
-  KERNELS=="ctl", SUBSYSTEMS=="nvme-fabrics", ATTR{transport}=="fc", ATTR{fast_io_fail_tmo}="-1", ATTR{ctrl_loss_tmo}="-1"
-  LABEL="tmo_end"
+thanks,
+Ming
 
-and this works for lpfc but only half for qla2xxx.
 
-> In theory, the exsting fc nvmediscovery udev event has enough information
-> to find out the right qla2xxx debugfs node and set dev_loss_tmo.
+Ming Lei (5):
+  scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+    fnic_terminate_rport_io
+  scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+    fnic_clean_pending_aborts
+  scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+    fnic_cleanup_io
+  scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+    fnic_rport_exch_reset
+  scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+    fnic_is_abts_pending
 
-Ah, didn't know about nvmediscovery until very recentetly. I try to get
-it working with this approach (as this patch is not really a proper
-solution).
+ drivers/scsi/fnic/fnic_scsi.c | 933 ++++++++++++++++++----------------
+ 1 file changed, 493 insertions(+), 440 deletions(-)
 
-> > > What exists for FCP/SCSI is quite clear and reasonable. I don't know why
-> > > FC-NVMe rports should be way too different.
-> >
-> > The lpfc driver does expose the FCP/SCSI and the FC-NVMe rports nicely
-> > via the fc_remote_ports and this is what I would like to have from the
-> > qla2xxx driver as well. qla2xxx exposes the FCP/SCSI rports but not the
-> > FC-NVMe rports.
-> >
->
-> Given that FC NVME does not have sysfs hierarchy like FC SCSI, I see
-> utility in making FC-NVME ports available via fc_remote_ports. If, though,
-> a FC target port is dual protocol aware this would leave with only one
-> knob to control both.
+Cc: Satish Kharat <satishkh@cisco.com>
+Cc: Karan Tilak Kumar <kartilak@cisco.com>
+Cc: David Jeffery <djeffery@redhat.com>
 
-So far I haven't had the need to distinguish between the two protocols
-for the dev_loss_tmo setting. I think this is what Hannes was also
-trying to tell, it might make sense to introduce sysfs APIs per
-protocol.
+-- 
+2.29.2
 
-> I think, going with fc_remote_ports is better than introducing one more
-> way (like this patch) to set this.
-
-As I said this patch was really a RFC. I will experiment with
-nvmediscovery. Though, I think this is just a stopgap solution. Having
-two completely different ways to configure the same thing is sub optimal
-and it is asking for a lot of troubles with end customers. I am really
-hoping we could streamline the current APIs, so we have only one
-recommended way to configure the system independent of the driver
-involved.
-
-Thanks,
-Daniel
