@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EB32C433ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:50:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C61C433ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 059886141C
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:50:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EC8D6141C
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:50:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245043AbhDURvI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Apr 2021 13:51:08 -0400
-Received: from mx2.suse.de ([195.135.220.15]:52394 "EHLO mx2.suse.de"
+        id S245030AbhDURvJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Apr 2021 13:51:09 -0400
+Received: from mx2.suse.de ([195.135.220.15]:52400 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S245074AbhDURtN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S245073AbhDURtN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 21 Apr 2021 13:49:13 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id DE542B2E4;
+        by mx2.suse.de (Postfix) with ESMTP id ED868B2E5;
         Wed, 21 Apr 2021 17:48:01 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,9 +29,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 26/42] wd33c93: use standard macros to set SCSI result
-Date:   Wed, 21 Apr 2021 19:47:33 +0200
-Message-Id: <20210421174749.11221-27-hare@suse.de>
+Subject: [PATCH 28/42] mesh: use standard macros to set SCSI result
+Date:   Wed, 21 Apr 2021 19:47:35 +0200
+Message-Id: <20210421174749.11221-29-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210421174749.11221-1-hare@suse.de>
 References: <20210421174749.11221-1-hare@suse.de>
@@ -46,114 +46,48 @@ error.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/wd33c93.c | 45 +++++++++++++++++++++---------------------
- 1 file changed, 23 insertions(+), 22 deletions(-)
+ drivers/scsi/mesh.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
-index a23277bb870e..0a5bb238f001 100644
---- a/drivers/scsi/wd33c93.c
-+++ b/drivers/scsi/wd33c93.c
-@@ -381,7 +381,8 @@ wd33c93_queuecommand_lck(struct scsi_cmnd *cmd,
-  */
- 	cmd->host_scribble = NULL;
- 	cmd->scsi_done = done;
--	cmd->result = 0;
-+	set_host_byte(cmd, DID_OK);
-+	set_status_byte(cmd, SAM_STAT_GOOD);
- 
- /* We use the Scsi_Pointer structure that's included with each command
-  * as a scratchpad (as it's intended to be used!). The handy thing about
-@@ -853,7 +854,7 @@ wd33c93_intr(struct Scsi_Host *instance)
- 			hostdata->selecting = NULL;
- 		}
- 
--		cmd->result = DID_NO_CONNECT << 16;
-+		set_host_byte(cmd, DID_NO_CONNECT);
- 		hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
- 		hostdata->state = S_UNCONNECTED;
- 		cmd->scsi_done(cmd);
-@@ -1177,12 +1178,11 @@ wd33c93_intr(struct Scsi_Host *instance)
- 				cmd->SCp.Status = lun;
- 			if (cmd->cmnd[0] == REQUEST_SENSE
- 			    && cmd->SCp.Status != SAM_STAT_GOOD)
--				cmd->result =
--				    (cmd->
--				     result & 0x00ffff) | (DID_ERROR << 16);
--			else
--				cmd->result =
--				    cmd->SCp.Status | (cmd->SCp.Message << 8);
-+				set_host_byte(cmd, DID_ERROR);
-+			else {
-+				set_status_byte(cmd, cmd->SCp.Status);
-+				set_msg_byte(cmd, cmd->SCp.Message);
-+			}
- 			cmd->scsi_done(cmd);
- 
- /* We are no longer  connected to a target - check to see if
-@@ -1262,11 +1262,13 @@ wd33c93_intr(struct Scsi_Host *instance)
- 		    hostdata->connected = NULL;
- 		hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
- 		hostdata->state = S_UNCONNECTED;
--		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != SAM_STAT_GOOD)
--			cmd->result =
--			    (cmd->result & 0x00ffff) | (DID_ERROR << 16);
--		else
--			cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
-+		if (cmd->cmnd[0] == REQUEST_SENSE &&
-+		    cmd->SCp.Status != SAM_STAT_GOOD)
-+			set_host_byte(cmd, DID_ERROR);
-+		else {
-+			set_status_byte(cmd, cmd->SCp.Status);
+diff --git a/drivers/scsi/mesh.c b/drivers/scsi/mesh.c
+index 0a9f4e44ab2c..6052a47b03dc 100644
+--- a/drivers/scsi/mesh.c
++++ b/drivers/scsi/mesh.c
+@@ -595,12 +595,13 @@ static void mesh_done(struct mesh_state *ms, int start_next)
+ 	ms->current_req = NULL;
+ 	tp->current_req = NULL;
+ 	if (cmd) {
+-		cmd->result = (ms->stat << 16) | cmd->SCp.Status;
++		set_host_byte(cmd, ms->stat);
++		set_status_byte(cmd, cmd->SCp.Status);
+ 		if (ms->stat == DID_OK)
+-			cmd->result |= cmd->SCp.Message << 8;
 +			set_msg_byte(cmd, cmd->SCp.Message);
-+		}
- 		cmd->scsi_done(cmd);
- 
- /* We are no longer connected to a target - check to see if
-@@ -1297,12 +1299,11 @@ wd33c93_intr(struct Scsi_Host *instance)
- 			DB(DB_INTR, printk(":%d", cmd->SCp.Status))
- 			    if (cmd->cmnd[0] == REQUEST_SENSE
- 				&& cmd->SCp.Status != SAM_STAT_GOOD)
--				cmd->result =
--				    (cmd->
--				     result & 0x00ffff) | (DID_ERROR << 16);
--			else
--				cmd->result =
--				    cmd->SCp.Status | (cmd->SCp.Message << 8);
-+				    set_host_byte(cmd, DID_ERROR);
-+			    else {
-+				    set_status_byte(cmd, cmd->SCp.Status);
-+				    set_msg_byte(cmd, cmd->SCp.Message);
-+			    }
- 			cmd->scsi_done(cmd);
- 			break;
- 		case S_PRE_TMP_DISC:
-@@ -1593,7 +1594,7 @@ wd33c93_host_reset(struct scsi_cmnd * SCpnt)
- 	hostdata->outgoing_len = 0;
- 
- 	reset_wd33c93(instance);
--	SCpnt->result = DID_RESET << 16;
-+	set_host_byte(SCpnt, DID_RESET);
- 	enable_irq(instance->irq);
- 	spin_unlock_irq(instance->host_lock);
- 	return SUCCESS;
-@@ -1628,7 +1629,7 @@ wd33c93_abort(struct scsi_cmnd * cmd)
- 				hostdata->input_Q =
- 				    (struct scsi_cmnd *) cmd->host_scribble;
- 			cmd->host_scribble = NULL;
--			cmd->result = DID_ABORT << 16;
-+			set_host_byte(cmd, DID_ABORT);
- 			printk
- 			    ("scsi%d: Abort - removing command from input_Q. ",
- 			     instance->host_no);
-@@ -1702,7 +1703,7 @@ wd33c93_abort(struct scsi_cmnd * cmd)
- 		hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
- 		hostdata->connected = NULL;
- 		hostdata->state = S_UNCONNECTED;
--		cmd->result = DID_ABORT << 16;
-+		set_host_byte(cmd, DID_ABORT);
- 
- /*      sti();*/
- 		wd33c93_execute(instance);
+ 		if (DEBUG_TARGET(cmd)) {
+ 			printk(KERN_DEBUG "mesh_done: result = %x, data_ptr=%d, buflen=%d\n",
+-			       cmd->result, ms->data_ptr, scsi_bufflen(cmd));
++			       scsi_get_compat_result(cmd), ms->data_ptr, scsi_bufflen(cmd));
+ #if 0
+ 			/* needs to use sg? */
+ 			if ((cmd->cmnd[0] == 0 || cmd->cmnd[0] == 0x12 || cmd->cmnd[0] == 3)
+@@ -993,7 +994,7 @@ static void handle_reset(struct mesh_state *ms)
+ 	for (tgt = 0; tgt < 8; ++tgt) {
+ 		tp = &ms->tgts[tgt];
+ 		if ((cmd = tp->current_req) != NULL) {
+-			cmd->result = DID_RESET << 16;
++			set_host_byte(cmd, DID_RESET);
+ 			tp->current_req = NULL;
+ 			mesh_completed(ms, cmd);
+ 		}
+@@ -1003,7 +1004,7 @@ static void handle_reset(struct mesh_state *ms)
+ 	ms->current_req = NULL;
+ 	while ((cmd = ms->request_q) != NULL) {
+ 		ms->request_q = (struct scsi_cmnd *) cmd->host_scribble;
+-		cmd->result = DID_RESET << 16;
++		set_host_byte(cmd, DID_RESET);
+ 		mesh_completed(ms, cmd);
+ 	}
+ 	ms->phase = idle;
 -- 
 2.29.2
 
