@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38E5AC433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 23:41:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFE72C433B4
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 23:41:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CB0161424
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 23:41:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93B9761422
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 23:41:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243719AbhDUXmN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Apr 2021 19:42:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38552 "EHLO
+        id S243995AbhDUXmc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Apr 2021 19:42:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241090AbhDUXmL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Apr 2021 19:42:11 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14BF2C06174A
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Apr 2021 16:41:36 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id s22so10380134pgk.6
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Apr 2021 16:41:36 -0700 (PDT)
+        with ESMTP id S232353AbhDUXmc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Apr 2021 19:42:32 -0400
+Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DDD2C06174A
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Apr 2021 16:41:57 -0700 (PDT)
+Received: by mail-pg1-x536.google.com with SMTP id p2so16029260pgh.4
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Apr 2021 16:41:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=9H8mWYELIfc22cLBpOSV4sg2KNZvxtwdAqOPBPp2FV4=;
-        b=pc7F3I3eFSjdDTXssEYNQgAkRgF7KhXZVqR+nTV16ATP7kj3BauP/wOoIiwzs7NPQ4
-         r6e0dITn/G9VP/6GhKvjAlqhYiWDFFPQGJZMs62A9d1HvgYXy4zb9okhGrtM52wG09Fn
-         9nTyGuOf1L1IGAn+TyxJucx7WjlD03mZgUXjFXaxQv/X4g9Xk0F+TEQ0hML4H7fpqHGz
-         7m/NzFwPRi2463Zf2B45RpB2Zrf6Iev9TwZGd3vcnTLkgRXFjKbHnKAu1vfKOkig80Wx
-         7OEmY9xtj/9RoNfc8tH3YHyH+egocb3m5lMHphkOv+IPrXSqQ/pI5Z4BKV5UBA02E5jB
-         jy5g==
+        bh=V+cK+tmbkrwMWy930r++3trt/yTD2rco9Ay/P39OCPo=;
+        b=Mapc9uL7DpRJuJfnzKuxYiGz7whkXukCFmf3IMzPczuQDG+wh1cz5FqO7/NlcST90p
+         Ge1eLlpQbMAl5aHsISO4DBEeYKykHY9WZZ5c69XltaTYDWYrAhXy9cHg5C3FFGXFjmPI
+         nCqYBYKYNSJhYhGaiq11daIfFKagQgTtQdY5J6sZ1CF8Tlt1j3GGHoDMK5z+zs0fRuZY
+         cXhadvAUF9SsHnq1sHm2QRMWxyJ0djQauXRQ9/1+A+3pR/oOUWBvTuoZkKbrtjd5nZbp
+         eUd3SfkCH/YgqNo/7xw2G+HRtDZGwClAJb0mjFiO7OVtntlqvAm2ZTCiDiKTiiWCbFQ8
+         yH9g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=9H8mWYELIfc22cLBpOSV4sg2KNZvxtwdAqOPBPp2FV4=;
-        b=FdKJLN5JwGhM8zOnECu73JUdHA6gky4ZmrWmj3Xo2JXxW3CwA/rHv4eaMnR2a4i588
-         tolZnfGpzuDDszsVx/+ll4p4FCdaRNKBnGpPjnhv5DhUCo4KzY/wsNj3OBEJEiL72+q2
-         lyYw1uNqV8qAhgRjjH7hVyh8721a4V5FI+wvmC6e4igMxv/0L7whSaAxJa6cNGrDyWaX
-         TU9Xo2WWTEWEat38maahPrKrwJXgGv6L6hdh5jxCmfnrv65QlnBNV6dTv1DipRGSQG4G
-         8zrJkYh9VsillMQN2EfZ2adBMP50wujJG/co7CzrV0vEHwh35tUMvTULyfzxJWsQfgsL
-         B+OA==
-X-Gm-Message-State: AOAM533G+Nvo3PV4nz+qT/mPb4K05wzDv5g4q7L6JhkZOfCpSoimPLTk
-        G0bPzLrWa/by+DoUL5o1qQWNdfbZAPM=
-X-Google-Smtp-Source: ABdhPJw9waWgL32o/E0gy3xKsBwbtm1VyxeDmA3ZOnXK2ig9CWeLXzATtG/S5ItmGBoHcTbkNLPjqw==
-X-Received: by 2002:a17:90b:380c:: with SMTP id mq12mr13922049pjb.109.1619048495575;
-        Wed, 21 Apr 2021 16:41:35 -0700 (PDT)
+        bh=V+cK+tmbkrwMWy930r++3trt/yTD2rco9Ay/P39OCPo=;
+        b=OMf5EEFONW6ulvRqClZYIR0PCCoyTmUSkeuiheG0a4rDMLwdMSRW9WFbeIgs9wj6Kp
+         +a7OdgruozoxUQKfOHmEFFkPSQ7JidlpbZ1W2nLO74DPx3NyhyBaKJKKKWIIQGx91F1v
+         ms5mlGXhG21x/Qfj6/4+GMubRze2G5vBzDWAiXOjG0ZQ6mC0gQNIEy9JXO8YPWYzkmbp
+         ysVdWP52TsKfU2ezC7kxLnGnx8s/QP70Rdw77UnrSce7PXO/ygkGypf1N3mZIOJ+EFLl
+         JWO+Smc+GrDk208q7MezWZeIP4THGxtkua47pxpp+N8RSGihCd63lwzGtaJ7wTzC7pV+
+         wm9w==
+X-Gm-Message-State: AOAM5331g22FdujnMheO4yJxSZVYv1G0UjVCPqzS5Oftk7QJxyzXmTY8
+        AKJNJbiXSGk+8Exq3PsT2pFCbs2YMhM=
+X-Google-Smtp-Source: ABdhPJycQLSYjS8puel/NWb+m34olc7+64YnK9p4sa1RRCut+vvmNRzLYagLS2rjPuUt3WriB9DugA==
+X-Received: by 2002:a63:5c19:: with SMTP id q25mr623780pgb.402.1619048516586;
+        Wed, 21 Apr 2021 16:41:56 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id t11sm393961pji.54.2021.04.21.16.41.35
+        by smtp.gmail.com with ESMTPSA id o15sm3318348pjk.48.2021.04.21.16.41.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Apr 2021 16:41:35 -0700 (PDT)
+        Wed, 21 Apr 2021 16:41:56 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH] lpfc: Fix dma virtual address ptr assignment in bsg
-Date:   Wed, 21 Apr 2021 16:41:31 -0700
-Message-Id: <20210421234131.101842-1-jsmart2021@gmail.com>
+Subject: [PATCH] lpfc: Fix bad memory access during VPD DUMP mailbox command
+Date:   Wed, 21 Apr 2021 16:41:52 -0700
+Message-Id: <20210421234152.101906-1-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -70,93 +70,121 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-lpfc_bsg_ct_unsol_event routine acts assigns a ct_request to the
-wrong structure address, resulting in a bad address that results
-in bsg related timeouts.
+The dump command for reading a region passes a requested read length
+specified in words (4byte units). The response overwrites the same
+field with the actual number of bytes read.
 
-Correct the ct_request assignment to use the kernel virtual buffer
-address (not the control structure address).
+The mailbox handler for DUMP which reads VPD data (region 23) is
+treating the response field as if it were still a word_cnt, thus
+multiplying it by 4 to set the read's "length". Given the read value
+was calculated based on the size of the read buffer, the longer
+response length runs off the end of the buffer.
+
+Fix by reworking the code to use the response field as a byte count.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 
 Notes:
-   ECD submit header:
+	ECD submit header:
 
-                ****************************************
+	*******************
 
-    COMMIT-TITLE: Fix loopback test failure on saturn
-    COMMIT: r64560
-    COMMIT-BZ: 225555
-    COMMIT-QC:
+	COMMIT-TITLE: Back out svn rev 73205 - causing KASAN error
+	COMMIT: 78630
+	COMMIT-BZ: 244614
+	COMMIT-QC:
 
-r64560 | vg888570 | 2019-04-26 09:12:33 -0700 (Fri, 26 Apr 2019) | 51 lines
+  r78630 | jinfante | 2021-04-05 12:40:48 -0700 (Mon, 05 Apr 2021) | 25 lines
 
-Fix loopback test failure on saturn
-Bugs: 225555
+  Back out svn rev 73205 - causing KASAN error
 
-Reviewers: jinfante pely rkennedy hpaidakul
+  Bugs: 244614
 
-Symptoms:
-The loopback tests started failing on saturn cards
+  Reviewers: rkennedy pely
 
-Cause:
-The lpfc_bsg_ct_unsol_event() is broken during
-E2E code changes. This routine acted on a wrong ct_request
-pointer causing the ct_evt_waiters to timeout.
+  Symptoms:
+  KASAN detected issues
+  page dumped because: kasan: bad access detected
 
-Fix:
-Assign a correct virtual addr for ct_request, so that
-the driver wakes up the matching waiter of the event.
+  Cause:
+  svn rev 73205
 
-Notes:
+  Fix:
+  dump mbox takes word count as input, byte count as output.
 
-Unit Testing:
-Tested on Saturn and G5 presented on the system
+  Notes:
 
-Saturn:
-hbacmd loopback 10:00:00:00:c9:cd:ce:50 1 20 1
+  Unit Testing:
+  Added log message on VPD dump to verify output
 
-Test to be run: Internal Loopback
-Test runs with default test pattern
+  System Testing:
 
-Loopback test status:
-Test pending. Polling for results....
-Test running....
-Loopback Test Succeeded; cycles complete = 20; time to execute = 858 ms
-
-G5:
- hbacmd loopback 10:00:00:90:fa:73:93:9c 1 10 1
-
-Test to be run: Internal Loopback
-Test runs with default test pattern
-
-Loopback test status:
-Test pending. Polling for results....
-Test running.............
-Loopback Test Succeeded; cycles complete = 10; time to execute = 5230 ms
-
-System Testing:
-
-Review_ID: http://cmengapps1.lvn.broadcom.net/r/29471/
+  Review_ID: https://cmengapps1.lvn.broadcom.net/r/34471/
 ---
- drivers/scsi/lpfc/lpfc_bsg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_init.c | 12 ++++++------
+ drivers/scsi/lpfc/lpfc_sli.c  | 15 ++++++++-------
+ 2 files changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index c2776b88d493..38cfe1bc6a4d 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -934,7 +934,7 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	INIT_LIST_HEAD(&head);
- 	list_add_tail(&head, &piocbq->list);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 1e4c792bb660..5f018d02bf56 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -254,13 +254,13 @@ lpfc_config_port_prep(struct lpfc_hba *phba)
+ 		if (mb->un.varDmp.word_cnt == 0)
+ 			break;
  
--	ct_req = (struct lpfc_sli_ct_request *)bdeBuf1;
-+	ct_req = (struct lpfc_sli_ct_request *)bdeBuf1->virt;
- 	evt_req_id = ct_req->FsType;
- 	cmd = ct_req->CommandResponse.bits.CmdRsp;
+-		i =  mb->un.varDmp.word_cnt * sizeof(uint32_t);
+-		if (offset + i >  DMP_VPD_SIZE)
+-			i =  DMP_VPD_SIZE - offset;
++		if (mb->un.varDmp.word_cnt > DMP_VPD_SIZE - offset)
++			mb->un.varDmp.word_cnt = DMP_VPD_SIZE - offset;
+ 		lpfc_sli_pcimem_bcopy(((uint8_t *)mb) + DMP_RSP_OFFSET,
+-				      lpfc_vpd_data  + offset, i);
+-		offset += i;
+-	} while (offset < DMP_VPD_SIZE);
++				      lpfc_vpd_data + offset,
++				      mb->un.varDmp.word_cnt);
++		offset += mb->un.varDmp.word_cnt;
++	} while (mb->un.varDmp.word_cnt && offset < DMP_VPD_SIZE);
  
+ 	lpfc_parse_vpd(phba, lpfc_vpd_data, offset);
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 579ac75dfe79..573c8599d71c 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -19777,7 +19777,7 @@ lpfc_sli_get_config_region23(struct lpfc_hba *phba, char *rgn23_data)
+ 	LPFC_MBOXQ_t *pmb = NULL;
+ 	MAILBOX_t *mb;
+ 	uint32_t offset = 0;
+-	int i, rc;
++	int rc;
+ 
+ 	if (!rgn23_data)
+ 		return 0;
+@@ -19808,13 +19808,14 @@ lpfc_sli_get_config_region23(struct lpfc_hba *phba, char *rgn23_data)
+ 		if (mb->un.varDmp.word_cnt == 0)
+ 			break;
+ 
+-		i =  mb->un.varDmp.word_cnt * sizeof(uint32_t);
+-		if (offset + i >  DMP_RGN23_SIZE)
+-			i =  DMP_RGN23_SIZE - offset;
++		if (mb->un.varDmp.word_cnt > DMP_RGN23_SIZE - offset)
++			mb->un.varDmp.word_cnt = DMP_RGN23_SIZE - offset;
++
+ 		lpfc_sli_pcimem_bcopy(((uint8_t *)mb) + DMP_RSP_OFFSET,
+-				      rgn23_data  + offset, i);
+-		offset += i;
+-	} while (offset < DMP_RGN23_SIZE);
++				       rgn23_data + offset,
++				       mb->un.varDmp.word_cnt);
++		offset += mb->un.varDmp.word_cnt;
++	} while (mb->un.varDmp.word_cnt && offset < DMP_RGN23_SIZE);
+ 
+ 	mempool_free(pmb, phba->mbox_mem_pool);
+ 	return offset;
 -- 
 2.26.2
 
