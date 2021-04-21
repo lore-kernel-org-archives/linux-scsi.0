@@ -2,82 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5049C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 21:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66580C433B4
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 00:26:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 61FD6613EE
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Apr 2021 21:10:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27F656141D
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 00:26:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233898AbhDTVK7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Apr 2021 17:10:59 -0400
-Received: from mail-pg1-f173.google.com ([209.85.215.173]:43522 "EHLO
-        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233682AbhDTVK7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 17:10:59 -0400
-Received: by mail-pg1-f173.google.com with SMTP id p12so27629389pgj.10
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Apr 2021 14:10:26 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=jiSU/kkOvSI9M9FVYeuPh3iWzvduQ+2BiyrvAfBMpQ8=;
-        b=h7sTnOQ8JxNGr2hWTPtc5hXRo+p05m9pmDjSWHoTMX6bPULUmgTkviLgNU1C5lRHTL
-         qBrdUett40/yiGsGvKEjITVwxbf9KIZwpfehbQGmCOmGljGM6jL0uqi65+o+qwT1z+oh
-         XOM+gNq8/COKOdjV8CgPsp7JUlk8sUAf2pfOhTUnVP/exvGp3W8+4gUbGRexo3b55sTp
-         Qq/8yeQSLYqx5xyhcERlVM0nhiAzjXwpOBV0pLqm+W5DbT5OzY+OfhgTSKU16sL/FMlF
-         JFrodHO1DiO0AKn+4wCGWe5BVSN654EjVlCF9yQ3YR0Dwm49+OBzwBx3t2iQRMvGVbfd
-         Df4Q==
-X-Gm-Message-State: AOAM531LzVoUHRW24D1JctpC8LMDogmlC2KjcyxWY++5DMmePv7dBtQf
-        Pxi/PV4wIAUzA4YGASmT4uC6IujGK9YY4A==
-X-Google-Smtp-Source: ABdhPJzCZWxnwLkq9wYdYKamW/VsskOVZUnEjzJoD7yDpqOUiMXk02bf+kAuGeKWAAHcNT8dnW1+zQ==
-X-Received: by 2002:a05:6a00:174a:b029:25d:642e:8201 with SMTP id j10-20020a056a00174ab029025d642e8201mr15664449pfc.59.1618953025575;
-        Tue, 20 Apr 2021 14:10:25 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:6cb:4566:9005:c2af? ([2601:647:4000:d7:6cb:4566:9005:c2af])
-        by smtp.gmail.com with ESMTPSA id d20sm15679675pfn.166.2021.04.20.14.10.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 20 Apr 2021 14:10:24 -0700 (PDT)
-Subject: Re: [PATCH 000/117] Make better use of static type checking
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-References: <20210420000845.25873-1-bvanassche@acm.org>
- <7eaf77e8-ca4f-c0db-e94a-5fa3e16e3b51@suse.de>
- <5c194446-e145-9d6d-3bc2-23254f0058b9@acm.org>
- <e230eb1f-172f-c18e-61dd-f9601e30d127@suse.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <8533bbb7-1c93-f2ce-2cf2-9f216aecfbae@acm.org>
-Date:   Tue, 20 Apr 2021 14:10:23 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.1
+        id S234442AbhDUA0i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Apr 2021 20:26:38 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:1308 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S233807AbhDUA0h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Apr 2021 20:26:37 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13L0FJH9030887;
+        Tue, 20 Apr 2021 17:25:55 -0700
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 3828xv036f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Tue, 20 Apr 2021 17:25:55 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 20 Apr
+ 2021 17:25:54 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 20 Apr 2021 17:25:54 -0700
+Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
+        by maili.marvell.com (Postfix) with ESMTP id 129433F703F;
+        Tue, 20 Apr 2021 17:25:54 -0700 (PDT)
+Received: from localhost (aeasi@localhost)
+        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 13L0Pq71031473;
+        Tue, 20 Apr 2021 17:25:53 -0700
+X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
+Date:   Tue, 20 Apr 2021 17:25:52 -0700
+From:   Arun Easi <aeasi@marvell.com>
+X-X-Sender: aeasi@irv1user01.caveonetworks.com
+To:     Daniel Wagner <dwagner@suse.de>
+CC:     Roman Bolshakov <r.bolshakov@yadro.com>,
+        <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        <linux-nvme@lists.infradead.org>, Hannes Reinecke <hare@suse.de>,
+        Nilesh Javali <njavali@marvell.com>,
+        "James Smart" <james.smart@broadcom.com>
+Subject: Re: [EXT] Re: [RFC] qla2xxx: Add dev_loss_tmo kernel module
+ options
+In-Reply-To: <20210420182830.fbipix3l7hwlyfx3@beryllium.lan>
+Message-ID: <alpine.LRH.2.21.9999.2104201642290.24132@irv1user01.caveonetworks.com>
+References: <20210419100014.47144-1-dwagner@suse.de>
+ <YH8QzgWiec8vka20@SPB-NB-133.local>
+ <20210420182830.fbipix3l7hwlyfx3@beryllium.lan>
+User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
 MIME-Version: 1.0
-In-Reply-To: <e230eb1f-172f-c18e-61dd-f9601e30d127@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="US-ASCII"
+X-Proofpoint-GUID: V9XXs5SRMPbv1PKldr62adnaO7Jz7EI6
+X-Proofpoint-ORIG-GUID: V9XXs5SRMPbv1PKldr62adnaO7Jz7EI6
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-04-20_11:2021-04-20,2021-04-20 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/20/21 10:11 AM, Hannes Reinecke wrote:
-> On 4/20/21 6:12 PM, Bart Van Assche wrote:
->> - The parallel SCSI technology is no longer commercially relevant. It
->> may be challenging to motivate people (including yourself) to convert a
->> significant number of parallel SCSI drivers that each have a small user
->> base.
->
-> ... true, but then your patchset suffers from the same issue, no?
+Hi Daniel,
 
-My patch series should not change the behavior of any SCSI LLD.
-Additionally, most changes have been generated with the help of
-Coccinelle. I think the risk of such changes is lower than modifying
-SCSI LLDs such that the message byte is handled inside the LLD.
+On Tue, 20 Apr 2021, 11:28am, Daniel Wagner wrote:
 
-Thanks,
+> ----------------------------------------------------------------------
+> Hi Roman,
+> 
+> On Tue, Apr 20, 2021 at 08:35:10PM +0300, Roman Bolshakov wrote:
+> > + James S.
+> > 
+> > Daniel, WRT to your patch I don't think we should add one more approach
+> > to set dev_loss_tmo via kernel module parameter as NVMe adopters are
+> > going to be even more confused about the parameter. Just imagine
+> > knowledge bases populated with all sorts of the workarounds, that apply
+> > to kernel version x, y, z, etc :)
+> 
+> Totally agree. I consider this patch just a hack and way to get the
+> discussion going, hence the RFC :) Well, maybe we are going to add it
+> downstream in our kernels until we have a better way for setting the
+> dev_loss_tmo.
+> 
+> As explained the debugfs interface is not working (okay, that's
+> something which could be fixed) and it has the big problem that it is
+> not under control by udevd. Not sure if we with some new udev rules the
+> debugfs could automatically discovered or not.
 
-Bart.
+Curious, which udev script does this today for FC SCSI?
+
+In theory, the exsting fc nvmediscovery udev event has enough information 
+to find out the right qla2xxx debugfs node and set dev_loss_tmo.
+
+> 
+> > What exists for FCP/SCSI is quite clear and reasonable. I don't know why
+> > FC-NVMe rports should be way too different.
+> 
+> The lpfc driver does expose the FCP/SCSI and the FC-NVMe rports nicely
+> via the fc_remote_ports and this is what I would like to have from the
+> qla2xxx driver as well. qla2xxx exposes the FCP/SCSI rports but not the
+> FC-NVMe rports.
+> 
+
+Given that FC NVME does not have sysfs hierarchy like FC SCSI, I see 
+utility in making FC-NVME ports available via fc_remote_ports. If, though, 
+a FC target port is dual protocol aware this would leave with only one 
+knob to control both.
+
+I think, going with fc_remote_ports is better than introducing one more 
+way (like this patch) to set this.
+
+Regards,
+-Arun
