@@ -7,32 +7,31 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63E9BC43462
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:48:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF53FC433ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:48:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C3976140D
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:48:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A78F861405
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 17:48:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244971AbhDURtR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S244940AbhDURtR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 21 Apr 2021 13:49:17 -0400
-Received: from mx2.suse.de ([195.135.220.15]:52322 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52312 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S245018AbhDURtA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S245015AbhDURtA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 21 Apr 2021 13:49:00 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 795B5B154;
+        by mx2.suse.de (Postfix) with ESMTP id 72F78B035;
         Wed, 21 Apr 2021 17:48:01 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Bart van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 12/42] scsi: Drop the now obsolete driver_byte definitions
-Date:   Wed, 21 Apr 2021 19:47:19 +0200
-Message-Id: <20210421174749.11221-13-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 06/42] scsi: introduce scsi_build_sense()
+Date:   Wed, 21 Apr 2021 19:47:13 +0200
+Message-Id: <20210421174749.11221-7-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210421174749.11221-1-hare@suse.de>
 References: <20210421174749.11221-1-hare@suse.de>
@@ -42,325 +41,677 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.com>
-
-The driver_byte field in the result is now unused, so we can drop
-the definitions.
+Introduce scsi_build_sense() as a wrapper around
+scsi_build_sense_buffer() to format the buffer and set
+the correct SCSI status.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- Documentation/scsi/scsi_mid_low_api.rst |  3 +--
- block/bsg-lib.c                         |  2 +-
- block/bsg.c                             |  2 +-
- block/scsi_ioctl.c                      |  2 +-
- drivers/scsi/constants.c                | 15 ---------------
- drivers/scsi/scsi_logging.c             | 10 ++--------
- drivers/scsi/sd.c                       |  9 ++++-----
- drivers/scsi/sr.c                       |  2 +-
- drivers/scsi/sr_ioctl.c                 |  2 +-
- drivers/scsi/st.c                       |  4 ++--
- drivers/xen/xen-scsiback.c              |  4 ++--
- include/scsi/scsi.h                     | 16 ----------------
- include/scsi/scsi_cmnd.h                |  4 ----
- include/scsi/sg.h                       |  2 ++
- include/trace/events/scsi.h             | 15 +--------------
- 15 files changed, 19 insertions(+), 73 deletions(-)
+ drivers/ata/libata-scsi.c             |  7 +--
+ drivers/s390/scsi/zfcp_scsi.c         |  5 +--
+ drivers/scsi/3w-xxxx.c                |  2 +-
+ drivers/scsi/libiscsi.c               |  5 +--
+ drivers/scsi/lpfc/lpfc_scsi.c         | 54 ++++++++--------------
+ drivers/scsi/megaraid.c               |  8 ++--
+ drivers/scsi/megaraid/megaraid_mbox.c | 14 +++---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c  | 14 ++----
+ drivers/scsi/mvumi.c                  |  5 +--
+ drivers/scsi/myrb.c                   | 64 +++++++--------------------
+ drivers/scsi/myrs.c                   |  9 +---
+ drivers/scsi/ps3rom.c                 |  7 +--
+ drivers/scsi/qla2xxx/qla_isr.c        | 15 ++-----
+ drivers/scsi/scsi_debug.c             | 11 ++---
+ drivers/scsi/scsi_lib.c               | 18 ++++++++
+ drivers/scsi/smartpqi/smartpqi_init.c |  3 +-
+ drivers/scsi/stex.c                   |  5 +--
+ include/scsi/scsi_cmnd.h              |  3 ++
+ 18 files changed, 85 insertions(+), 164 deletions(-)
 
-diff --git a/Documentation/scsi/scsi_mid_low_api.rst b/Documentation/scsi/scsi_mid_low_api.rst
-index 5bc17d012b25..2c87eaa36296 100644
---- a/Documentation/scsi/scsi_mid_low_api.rst
-+++ b/Documentation/scsi/scsi_mid_low_api.rst
-@@ -1178,8 +1178,7 @@ Members of interest:
-                    target device). 'result' is a 32 bit unsigned integer that
-                    can be viewed as 4 related bytes. The SCSI status value is
-                    in the LSB. See include/scsi/scsi.h status_byte(),
--                   msg_byte(), host_byte() and driver_byte() macros and
--                   related constants.
-+                   msg_byte() and host_byte() macros and related constants.
-     sense_buffer
- 		 - an array (maximum size: SCSI_SENSE_BUFFERSIZE bytes) that
-                    should be written when the SCSI status (LSB of 'result')
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-index 330fede77271..cf1811261722 100644
---- a/block/bsg-lib.c
-+++ b/block/bsg-lib.c
-@@ -84,7 +84,7 @@ static int bsg_transport_complete_rq(struct request *rq, struct sg_io_v4 *hdr)
- 	 */
- 	hdr->device_status = job->result & 0xff;
- 	hdr->transport_status = host_byte(job->result);
--	hdr->driver_status = driver_byte(job->result);
-+	hdr->driver_status = 0;
- 	hdr->info = 0;
- 	if (hdr->device_status || hdr->transport_status || hdr->driver_status)
- 		hdr->info |= SG_INFO_CHECK;
-diff --git a/block/bsg.c b/block/bsg.c
-index bd10922d5cbb..dadc72052a14 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -96,7 +96,7 @@ static int bsg_scsi_complete_rq(struct request *rq, struct sg_io_v4 *hdr)
- 	 */
- 	hdr->device_status = sreq->result & 0xff;
- 	hdr->transport_status = host_byte(sreq->result);
--	hdr->driver_status = driver_byte(sreq->result);
-+	hdr->driver_status = 0;
- 	hdr->info = 0;
- 	if (hdr->device_status || hdr->transport_status || hdr->driver_status)
- 		hdr->info |= SG_INFO_CHECK;
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 99d58786e0d5..ab2579467316 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -256,7 +256,7 @@ static int blk_complete_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr,
- 	hdr->masked_status = status_byte(req->result);
- 	hdr->msg_status = msg_byte(req->result);
- 	hdr->host_status = host_byte(req->result);
--	hdr->driver_status = driver_byte(req->result);
-+	hdr->driver_status = 0;
- 	hdr->info = 0;
- 	if (hdr->masked_status || hdr->host_status || hdr->driver_status)
- 		hdr->info |= SG_INFO_CHECK;
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 84d73f57292b..41bcfed08260 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -406,10 +406,6 @@ static const char * const hostbyte_table[]={
- "DID_TRANSPORT_DISRUPTED", "DID_TRANSPORT_FAILFAST", "DID_TARGET_FAILURE",
- "DID_NEXUS_FAILURE", "DID_ALLOC_FAILURE", "DID_MEDIUM_ERROR" };
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index c5129b9e3afd..10d0ef9e969d 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -196,9 +196,7 @@ void ata_scsi_set_sense(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 	if (!cmd)
+ 		return;
  
--static const char * const driverbyte_table[]={
--"DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA", "DRIVER_ERROR",
--"DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD", "DRIVER_SENSE"};
+-	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
 -
- const char *scsi_hostbyte_string(int result)
- {
- 	const char *hb_string = NULL;
-@@ -421,17 +417,6 @@ const char *scsi_hostbyte_string(int result)
+-	scsi_build_sense_buffer(d_sense, cmd->sense_buffer, sk, asc, ascq);
++	scsi_build_sense(cmd, d_sense, sk, asc, ascq);
  }
- EXPORT_SYMBOL(scsi_hostbyte_string);
  
--const char *scsi_driverbyte_string(int result)
--{
--	const char *db_string = NULL;
--	int db = driver_byte(result);
--
--	if (db < ARRAY_SIZE(driverbyte_table))
--		db_string = driverbyte_table[db];
--	return db_string;
--}
--EXPORT_SYMBOL(scsi_driverbyte_string);
--
- #define scsi_mlreturn_name(result)	{ result, #result }
- static const struct value_name_pair scsi_mlreturn_arr[] = {
- 	scsi_mlreturn_name(NEEDS_RETRY),
-diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-index 8ea44c6595ef..2317717935e9 100644
---- a/drivers/scsi/scsi_logging.c
-+++ b/drivers/scsi/scsi_logging.c
-@@ -385,7 +385,6 @@ void scsi_print_result(const struct scsi_cmnd *cmd, const char *msg,
- 	size_t off, logbuf_len;
- 	const char *mlret_string = scsi_mlreturn_string(disposition);
- 	const char *hb_string = scsi_hostbyte_string(cmd->result);
--	const char *db_string = scsi_driverbyte_string(cmd->result);
- 	unsigned long cmd_age = (jiffies - cmd->jiffies_at_alloc) / HZ;
- 
- 	logbuf = scsi_log_reserve_buffer(&logbuf_len);
-@@ -426,13 +425,8 @@ void scsi_print_result(const struct scsi_cmnd *cmd, const char *msg,
- 	if (WARN_ON(off >= logbuf_len))
- 		goto out_printk;
- 
--	if (db_string)
--		off += scnprintf(logbuf + off, logbuf_len - off,
--				 "driverbyte=%s ", db_string);
--	else
--		off += scnprintf(logbuf + off, logbuf_len - off,
--				 "driverbyte=0x%02x ",
--				 driver_byte(cmd->result));
-+	off += scnprintf(logbuf + off, logbuf_len - off,
-+			 "driverbyte=DRIVER_OK ");
- 
- 	off += scnprintf(logbuf + off, logbuf_len - off,
- 			 "cmd_age=%lus", cmd_age);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 7537c2873efd..681b6b237347 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3811,15 +3811,14 @@ void sd_print_sense_hdr(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
- void sd_print_result(const struct scsi_disk *sdkp, const char *msg, int result)
- {
- 	const char *hb_string = scsi_hostbyte_string(result);
--	const char *db_string = scsi_driverbyte_string(result);
- 
--	if (hb_string || db_string)
-+	if (hb_string)
- 		sd_printk(KERN_INFO, sdkp,
- 			  "%s: Result: hostbyte=%s driverbyte=%s\n", msg,
- 			  hb_string ? hb_string : "invalid",
--			  db_string ? db_string : "invalid");
-+			  "DRIVER_OK");
- 	else
- 		sd_printk(KERN_INFO, sdkp,
--			  "%s: Result: hostbyte=0x%02x driverbyte=0x%02x\n",
--			  msg, host_byte(result), driver_byte(result));
-+			  "%s: Result: hostbyte=0x%02x driverbyte=%s\n",
-+			  msg, host_byte(result), "DRIVER_OK");
- }
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 9b2ccf0c9a8c..e9cb874f6891 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -338,7 +338,7 @@ static int sr_done(struct scsi_cmnd *SCpnt)
- 	 * care is taken to avoid unnecessary additional work such as
- 	 * memcpy's that could be avoided.
- 	 */
--	if (driver_byte(result) != 0 &&		/* An error occurred */
-+	if (status_byte(result) == SAM_STAT_CHECK_CONDITION &&
- 	    (SCpnt->sense_buffer[0] & 0x7f) == 0x70) { /* Sense current */
- 		switch (SCpnt->sense_buffer[2]) {
- 		case MEDIUM_ERROR:
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index a78f2138d784..74348ead5b11 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -209,7 +209,7 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
- 		err = result;
- 		goto out;
+ void ata_scsi_set_sense_information(struct ata_device *dev,
+@@ -882,8 +880,7 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
+ 		 * ATA PASS-THROUGH INFORMATION AVAILABLE
+ 		 * Always in descriptor format sense.
+ 		 */
+-		scsi_build_sense_buffer(1, cmd->sense_buffer,
+-					RECOVERED_ERROR, 0, 0x1D);
++		scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
  	}
--	if (driver_byte(result) != 0) {
-+	if (status_byte(result) == SAM_STAT_CHECK_CONDITION) {
- 		switch (sshdr->sense_key) {
- 		case UNIT_ATTENTION:
- 			SDev->changed = 1;
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 23be6447e576..8ab12d07de31 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -390,8 +390,8 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
- 	if (!debugging) { /* Abnormal conditions for tape */
- 		if (!cmdstatp->have_sense)
- 			st_printk(KERN_WARNING, STp,
--			       "Error %x (driver bt 0x%x, host bt 0x%x).\n",
--			       result, driver_byte(result), host_byte(result));
-+			       "Error %x (driver bt 0, host bt 0x%x).\n",
-+			       result, host_byte(result));
- 		else if (cmdstatp->have_sense &&
- 			 scode != NO_SENSE &&
- 			 scode != RECOVERED_ERROR &&
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index f274e078312e..8efeddd96367 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -222,10 +222,10 @@ static void scsiback_print_status(char *sense_buffer, int errors,
- {
- 	struct scsiback_tpg *tpg = pending_req->v2p->tpg;
  
--	pr_err("[%s:%d] cmnd[0]=%02x -> st=%02x msg=%02x host=%02x drv=%02x\n",
-+	pr_err("[%s:%d] cmnd[0]=%02x -> st=%02x msg=%02x host=%02x\n",
- 	       tpg->tport->tport_name, pending_req->v2p->lun,
- 	       pending_req->cmnd[0], status_byte(errors), msg_byte(errors),
--	       host_byte(errors), driver_byte(errors));
-+	       host_byte(errors));
+ 	if ((cmd->sense_buffer[0] & 0x7f) >= 0x72) {
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index d58bf79892f2..9da9b2b2a580 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -856,10 +856,7 @@ void zfcp_scsi_set_prot(struct zfcp_adapter *adapter)
+  */
+ void zfcp_scsi_dif_sense_error(struct scsi_cmnd *scmd, int ascq)
+ {
+-	scsi_build_sense_buffer(1, scmd->sense_buffer,
+-				ILLEGAL_REQUEST, 0x10, ascq);
+-	set_driver_byte(scmd, DRIVER_SENSE);
+-	scmd->result |= SAM_STAT_CHECK_CONDITION;
++	scsi_build_sense(scmd, 1, ILLEGAL_REQUEST, 0x10, ascq);
+ 	set_host_byte(scmd, DID_SOFT_ERROR);
  }
  
- static void scsiback_fast_flush_area(struct vscsibk_pend *req)
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index d0a24e55ad63..5ed1c256ea94 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -166,20 +166,6 @@ static inline int scsi_is_wlun(u64 lun)
- #define DID_TRANSPORT_MARGINAL 0x14 /* Transport marginal errors */
- #define DRIVER_OK       0x00	/* Driver status                           */
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index a7292883b72b..7a0b4a44395d 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -1977,7 +1977,7 @@ static int tw_scsi_queue_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_c
+ 		printk(KERN_NOTICE "3w-xxxx: scsi%d: Unknown scsi opcode: 0x%x\n", tw_dev->host->host_no, *command);
+ 		tw_dev->state[request_id] = TW_S_COMPLETED;
+ 		tw_state_request_finish(tw_dev, request_id);
+-		scsi_build_sense_buffer(1, SCpnt->sense_buffer, ILLEGAL_REQUEST, 0x20, 0);
++		scsi_build_sense(SCpnt, 1, ILLEGAL_REQUEST, 0x20, 0);
+ 		done(SCpnt);
+ 		retval = 0;
+ 	}
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 7ad11e42306d..3a485ad0204e 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -829,10 +829,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
  
--/*
-- *  These indicate the error that occurred, and what is available.
-- */
--
--#define DRIVER_BUSY         0x01
--#define DRIVER_SOFT         0x02
--#define DRIVER_MEDIA        0x03
--#define DRIVER_ERROR        0x04
--
--#define DRIVER_INVALID      0x05
--#define DRIVER_TIMEOUT      0x06
--#define DRIVER_HARD         0x07
--#define DRIVER_SENSE	    0x08
--
- /*
-  * Internal return values.
-  */
-@@ -211,12 +197,10 @@ enum scsi_disposition {
-  *      status byte = set from target device
-  *      msg_byte    = return status from host adapter itself.
-  *      host_byte   = set by low-level driver to indicate status.
-- *      driver_byte = set by mid-level.
-  */
- #define status_byte(result) (((result) >> 1) & 0x7f)
- #define msg_byte(result)    (((result) >> 8) & 0xff)
- #define host_byte(result)   (((result) >> 16) & 0xff)
--#define driver_byte(result) (((result) >> 24) & 0xff)
+ 		ascq = session->tt->check_protection(task, &sector);
+ 		if (ascq) {
+-			sc->result = DRIVER_SENSE << 24 |
+-				     SAM_STAT_CHECK_CONDITION;
+-			scsi_build_sense_buffer(1, sc->sense_buffer,
+-						ILLEGAL_REQUEST, 0x10, ascq);
++			scsi_build_sense(sc, 1, ILLEGAL_REQUEST, 0x10, ascq);
+ 			scsi_set_sense_information(sc->sense_buffer,
+ 						   SCSI_SENSE_BUFFERSIZE,
+ 						   sector);
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index eefbb9b22798..c478f1b45006 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -2869,10 +2869,8 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 	}
+ out:
+ 	if (err_type == BGS_GUARD_ERR_MASK) {
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-					0x10, 0x1);
+-		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
+-			      SAM_STAT_CHECK_CONDITION;
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x1);
++		set_host_byte(cmd, DID_ABORT);
+ 		phba->bg_guard_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+ 				"9069 BLKGRD: reftag %x grd_tag err %x != %x\n",
+@@ -2880,10 +2878,8 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 				sum, guard_tag);
  
- #define sense_class(sense)  (((sense) >> 4) & 0x7)
- #define sense_error(sense)  ((sense) & 0xf)
+ 	} else if (err_type == BGS_REFTAG_ERR_MASK) {
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-					0x10, 0x3);
+-		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
+-			      SAM_STAT_CHECK_CONDITION;
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x3);
++		set_host_byte(cmd, DID_ABORT);
+ 
+ 		phba->bg_reftag_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+@@ -2892,10 +2888,8 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 				ref_tag, start_ref_tag);
+ 
+ 	} else if (err_type == BGS_APPTAG_ERR_MASK) {
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-					0x10, 0x2);
+-		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
+-			      SAM_STAT_CHECK_CONDITION;
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x2);
++		set_host_byte(cmd, DID_ABORT);
+ 
+ 		phba->bg_apptag_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+@@ -2954,10 +2948,8 @@ lpfc_sli4_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 	if (lpfc_bgs_get_guard_err(bgstat)) {
+ 		ret = 1;
+ 
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-					0x10, 0x1);
+-		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
+-			      SAM_STAT_CHECK_CONDITION;
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x1);
++		set_host_byte(cmd, DID_ABORT);
+ 		phba->bg_guard_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+ 				"9059 BLKGRD: Guard Tag error in cmd"
+@@ -2970,10 +2962,8 @@ lpfc_sli4_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 	if (lpfc_bgs_get_reftag_err(bgstat)) {
+ 		ret = 1;
+ 
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-					0x10, 0x3);
+-		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
+-			      SAM_STAT_CHECK_CONDITION;
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x3);
++		set_host_byte(cmd, DID_ABORT);
+ 
+ 		phba->bg_reftag_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+@@ -2987,10 +2977,8 @@ lpfc_sli4_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 	if (lpfc_bgs_get_apptag_err(bgstat)) {
+ 		ret = 1;
+ 
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-					0x10, 0x2);
+-		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
+-			      SAM_STAT_CHECK_CONDITION;
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x2);
++		set_host_byte(cmd, DID_ABORT);
+ 
+ 		phba->bg_apptag_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+@@ -3100,10 +3088,8 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 	if (lpfc_bgs_get_guard_err(bgstat)) {
+ 		ret = 1;
+ 
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-				0x10, 0x1);
+-		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
+-			      SAM_STAT_CHECK_CONDITION;
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x1);
++		set_host_byte(cmd, DID_ABORT);
+ 		phba->bg_guard_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+ 				"9055 BLKGRD: Guard Tag error in cmd "
+@@ -3116,10 +3102,8 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 	if (lpfc_bgs_get_reftag_err(bgstat)) {
+ 		ret = 1;
+ 
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-				0x10, 0x3);
+-		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
+-			      SAM_STAT_CHECK_CONDITION;
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x3);
++		set_host_byte(cmd, DID_ABORT);
+ 
+ 		phba->bg_reftag_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+@@ -3133,10 +3117,8 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 	if (lpfc_bgs_get_apptag_err(bgstat)) {
+ 		ret = 1;
+ 
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-				0x10, 0x2);
+-		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
+-			      SAM_STAT_CHECK_CONDITION;
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x2);
++		set_host_byte(cmd, DID_ABORT);
+ 
+ 		phba->bg_apptag_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 80f546976c7e..ae3f32f89381 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -1596,11 +1596,9 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 					cmd->result = (DRIVER_SENSE << 24) |
+ 						(DID_OK << 16) |
+ 						(CHECK_CONDITION << 1);
+-				} else {
+-					cmd->sense_buffer[0] = 0x70;
+-					cmd->sense_buffer[2] = ABORTED_COMMAND;
+-					cmd->result |= (CHECK_CONDITION << 1);
+-				}
++				} else
++					scsi_build_sense(cmd, 0,
++							 ABORTED_COMMAND, 0, 0);
+ 			}
+ 			break;
+ 
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index b1a2d3536add..6a5b844a8499 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -1574,10 +1574,8 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 			}
+ 
+ 			if (scp->cmnd[1] & MEGA_SCSI_INQ_EVPD) {
+-				scp->sense_buffer[0] = 0x70;
+-				scp->sense_buffer[2] = ILLEGAL_REQUEST;
+-				scp->sense_buffer[12] = MEGA_INVALID_FIELD_IN_CDB;
+-				scp->result = CHECK_CONDITION << 1;
++				scsi_build_sense(scp, 0, ILLEGAL_REQUEST,
++						 MEGA_INVALID_FIELD_IN_CDB, 0);
+ 				return NULL;
+ 			}
+ 
+@@ -2313,11 +2311,9 @@ megaraid_mbox_dpc(unsigned long devp)
+ 					scp->result = DRIVER_SENSE << 24 |
+ 						DID_OK << 16 |
+ 						CHECK_CONDITION << 1;
+-				} else {
+-					scp->sense_buffer[0] = 0x70;
+-					scp->sense_buffer[2] = ABORTED_COMMAND;
+-					scp->result = CHECK_CONDITION << 1;
+-				}
++				} else
++					scsi_build_sense(scp, 0,
++							 ABORTED_COMMAND, 0, 0);
+ 			}
+ 			break;
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index d00aca3c77ce..fbfbf40a3f66 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -5077,10 +5077,8 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
+ 		ascq = 0x00;
+ 		break;
+ 	}
+-	scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST, 0x10,
+-	    ascq);
+-	scmd->result = DRIVER_SENSE << 24 | (DID_ABORT << 16) |
+-	    SAM_STAT_CHECK_CONDITION;
++	scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x10, ascq);
++	set_host_byte(scmd, DID_ABORT);
+ }
+ 
+ /**
+@@ -5837,12 +5835,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 		else if (!xfer_cnt && scmd->cmnd[0] == REPORT_LUNS) {
+ 			mpi_reply->SCSIState = MPI2_SCSI_STATE_AUTOSENSE_VALID;
+ 			mpi_reply->SCSIStatus = SAM_STAT_CHECK_CONDITION;
+-			scmd->result = (DRIVER_SENSE << 24) |
+-			    SAM_STAT_CHECK_CONDITION;
+-			scmd->sense_buffer[0] = 0x70;
+-			scmd->sense_buffer[2] = ILLEGAL_REQUEST;
+-			scmd->sense_buffer[12] = 0x20;
+-			scmd->sense_buffer[13] = 0;
++			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST,
++					 0x20, 0);
+ 		}
+ 		break;
+ 
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index 9d5743627604..94f706eeb561 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -2068,10 +2068,7 @@ static unsigned char mvumi_build_frame(struct mvumi_hba *mhba,
+ 	return 0;
+ 
+ error:
+-	scmd->result = (DID_OK << 16) | (DRIVER_SENSE << 24) |
+-		SAM_STAT_CHECK_CONDITION;
+-	scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST, 0x24,
+-									0);
++	scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
+ 	return -1;
+ }
+ 
+diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+index d9c82e211ae7..542ed88ef90d 100644
+--- a/drivers/scsi/myrb.c
++++ b/drivers/scsi/myrb.c
+@@ -1397,8 +1397,7 @@ myrb_mode_sense(struct myrb_hba *cb, struct scsi_cmnd *scmd,
+ static void myrb_request_sense(struct myrb_hba *cb,
+ 		struct scsi_cmnd *scmd)
+ {
+-	scsi_build_sense_buffer(0, scmd->sense_buffer,
+-				NO_SENSE, 0, 0);
++	scsi_build_sense(scmd, 0, NO_SENSE, 0, 0);
+ 	scsi_sg_copy_from_buffer(scmd, scmd->sense_buffer,
+ 				 SCSI_SENSE_BUFFERSIZE);
+ }
+@@ -1447,10 +1446,7 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+ 	case INQUIRY:
+ 		if (scmd->cmnd[1] & 1) {
+ 			/* Illegal request, invalid field in CDB */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						ILLEGAL_REQUEST, 0x24, 0);
+-			scmd->result = (DRIVER_SENSE << 24) |
+-				SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
+ 		} else {
+ 			myrb_inquiry(cb, scmd);
+ 			scmd->result = (DID_OK << 16);
+@@ -1465,10 +1461,7 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+ 		if ((scmd->cmnd[2] & 0x3F) != 0x3F &&
+ 		    (scmd->cmnd[2] & 0x3F) != 0x08) {
+ 			/* Illegal request, invalid field in CDB */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						ILLEGAL_REQUEST, 0x24, 0);
+-			scmd->result = (DRIVER_SENSE << 24) |
+-				SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
+ 		} else {
+ 			myrb_mode_sense(cb, scmd, ldev_info);
+ 			scmd->result = (DID_OK << 16);
+@@ -1479,20 +1472,14 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+ 		if ((scmd->cmnd[1] & 1) ||
+ 		    (scmd->cmnd[8] & 1)) {
+ 			/* Illegal request, invalid field in CDB */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						ILLEGAL_REQUEST, 0x24, 0);
+-			scmd->result = (DRIVER_SENSE << 24) |
+-				SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
+ 			scmd->scsi_done(scmd);
+ 			return 0;
+ 		}
+ 		lba = get_unaligned_be32(&scmd->cmnd[2]);
+ 		if (lba) {
+ 			/* Illegal request, invalid field in CDB */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						ILLEGAL_REQUEST, 0x24, 0);
+-			scmd->result = (DRIVER_SENSE << 24) |
+-				SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
+ 			scmd->scsi_done(scmd);
+ 			return 0;
+ 		}
+@@ -1506,10 +1493,7 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+ 	case SEND_DIAGNOSTIC:
+ 		if (scmd->cmnd[1] != 0x04) {
+ 			/* Illegal request, invalid field in CDB */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						ILLEGAL_REQUEST, 0x24, 0);
+-			scmd->result = (DRIVER_SENSE << 24) |
+-				SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
+ 		} else {
+ 			/* Assume good status */
+ 			scmd->result = (DID_OK << 16);
+@@ -1519,10 +1503,7 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+ 	case READ_6:
+ 		if (ldev_info->state == MYRB_DEVICE_WO) {
+ 			/* Data protect, attempt to read invalid data */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						DATA_PROTECT, 0x21, 0x06);
+-			scmd->result = (DRIVER_SENSE << 24) |
+-				SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense(scmd, 0, DATA_PROTECT, 0x21, 0x06);
+ 			scmd->scsi_done(scmd);
+ 			return 0;
+ 		}
+@@ -1536,10 +1517,7 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+ 	case READ_10:
+ 		if (ldev_info->state == MYRB_DEVICE_WO) {
+ 			/* Data protect, attempt to read invalid data */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						DATA_PROTECT, 0x21, 0x06);
+-			scmd->result = (DRIVER_SENSE << 24) |
+-				SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense(scmd, 0, DATA_PROTECT, 0x21, 0x06);
+ 			scmd->scsi_done(scmd);
+ 			return 0;
+ 		}
+@@ -1553,10 +1531,7 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+ 	case READ_12:
+ 		if (ldev_info->state == MYRB_DEVICE_WO) {
+ 			/* Data protect, attempt to read invalid data */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						DATA_PROTECT, 0x21, 0x06);
+-			scmd->result = (DRIVER_SENSE << 24) |
+-				SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense(scmd, 0, DATA_PROTECT, 0x21, 0x06);
+ 			scmd->scsi_done(scmd);
+ 			return 0;
+ 		}
+@@ -1569,9 +1544,7 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+ 		break;
+ 	default:
+ 		/* Illegal request, invalid opcode */
+-		scsi_build_sense_buffer(0, scmd->sense_buffer,
+-					ILLEGAL_REQUEST, 0x20, 0);
+-		scmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
++		scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x20, 0);
+ 		scmd->scsi_done(scmd);
+ 		return 0;
+ 	}
+@@ -2352,25 +2325,19 @@ static void myrb_handle_scsi(struct myrb_hba *cb, struct myrb_cmdblk *cmd_blk,
+ 			"Bad Data Encountered\n");
+ 		if (scmd->sc_data_direction == DMA_FROM_DEVICE)
+ 			/* Unrecovered read error */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						MEDIUM_ERROR, 0x11, 0);
++			scsi_build_sense(scmd, 0, MEDIUM_ERROR, 0x11, 0);
+ 		else
+ 			/* Write error */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						MEDIUM_ERROR, 0x0C, 0);
+-		scmd->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense(scmd, 0, MEDIUM_ERROR, 0x0C, 0);
+ 		break;
+ 	case MYRB_STATUS_IRRECOVERABLE_DATA_ERROR:
+ 		scmd_printk(KERN_ERR, scmd, "Irrecoverable Data Error\n");
+ 		if (scmd->sc_data_direction == DMA_FROM_DEVICE)
+ 			/* Unrecovered read error, auto-reallocation failed */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						MEDIUM_ERROR, 0x11, 0x04);
++			scsi_build_sense(scmd, 0, MEDIUM_ERROR, 0x11, 0x04);
+ 		else
+ 			/* Write error, auto-reallocation failed */
+-			scsi_build_sense_buffer(0, scmd->sense_buffer,
+-						MEDIUM_ERROR, 0x0C, 0x02);
+-		scmd->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense(scmd, 0, MEDIUM_ERROR, 0x0C, 0x02);
+ 		break;
+ 	case MYRB_STATUS_LDRV_NONEXISTENT_OR_OFFLINE:
+ 		dev_dbg(&scmd->device->sdev_gendev,
+@@ -2381,8 +2348,7 @@ static void myrb_handle_scsi(struct myrb_hba *cb, struct myrb_cmdblk *cmd_blk,
+ 		dev_dbg(&scmd->device->sdev_gendev,
+ 			    "Attempt to Access Beyond End of Logical Drive");
+ 		/* Logical block address out of range */
+-		scsi_build_sense_buffer(0, scmd->sense_buffer,
+-					NOT_READY, 0x21, 0);
++		scsi_build_sense(scmd, 0, NOT_READY, 0x21, 0);
+ 		break;
+ 	case MYRB_STATUS_DEVICE_NONRESPONSIVE:
+ 		dev_dbg(&scmd->device->sdev_gendev, "Device nonresponsive\n");
+diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
+index 3b68c68d1716..26326af23dbc 100644
+--- a/drivers/scsi/myrs.c
++++ b/drivers/scsi/myrs.c
+@@ -1600,9 +1600,7 @@ static int myrs_queuecommand(struct Scsi_Host *shost,
+ 
+ 	switch (scmd->cmnd[0]) {
+ 	case REPORT_LUNS:
+-		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
+-					0x20, 0x0);
+-		scmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
++		scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x20, 0x0);
+ 		scmd->scsi_done(scmd);
+ 		return 0;
+ 	case MODE_SENSE:
+@@ -1612,10 +1610,7 @@ static int myrs_queuecommand(struct Scsi_Host *shost,
+ 			if ((scmd->cmnd[2] & 0x3F) != 0x3F &&
+ 			    (scmd->cmnd[2] & 0x3F) != 0x08) {
+ 				/* Illegal request, invalid field in CDB */
+-				scsi_build_sense_buffer(0, scmd->sense_buffer,
+-					ILLEGAL_REQUEST, 0x24, 0);
+-				scmd->result = (DRIVER_SENSE << 24) |
+-					SAM_STAT_CHECK_CONDITION;
++				scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
+ 			} else {
+ 				myrs_mode_sense(cs, scmd, ldev_info);
+ 				scmd->result = (DID_OK << 16);
+diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+index ccb5771f1cb7..0f4b99d92f12 100644
+--- a/drivers/scsi/ps3rom.c
++++ b/drivers/scsi/ps3rom.c
+@@ -234,10 +234,8 @@ static int ps3rom_queuecommand_lck(struct scsi_cmnd *cmd,
+ 	}
+ 
+ 	if (res) {
+-		memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
++		scsi_build_sense(cmd, 0, ILLEGAL_REQUEST, 0, 0);
+ 		cmd->result = res;
+-		cmd->sense_buffer[0] = 0x70;
+-		cmd->sense_buffer[2] = ILLEGAL_REQUEST;
+ 		priv->curr_cmd = NULL;
+ 		cmd->scsi_done(cmd);
+ 	}
+@@ -319,8 +317,7 @@ static irqreturn_t ps3rom_interrupt(int irq, void *data)
+ 		goto done;
+ 	}
+ 
+-	scsi_build_sense_buffer(0, cmd->sense_buffer, sense_key, asc, ascq);
+-	cmd->result = SAM_STAT_CHECK_CONDITION;
++	scsi_build_sense(cmd, 0, sense_key, asc, ascq);
+ 
+ done:
+ 	priv->curr_cmd = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 6e8f737a4af3..19fe2c1659d0 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2694,31 +2694,22 @@ qla2x00_handle_dif_error(srb_t *sp, struct sts_entry_24xx *sts24)
+ 
+ 	/* check guard */
+ 	if (e_guard != a_guard) {
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-		    0x10, 0x1);
+-		set_driver_byte(cmd, DRIVER_SENSE);
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x1);
+ 		set_host_byte(cmd, DID_ABORT);
+-		cmd->result |= SAM_STAT_CHECK_CONDITION;
+ 		return 1;
+ 	}
+ 
+ 	/* check ref tag */
+ 	if (e_ref_tag != a_ref_tag) {
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-		    0x10, 0x3);
+-		set_driver_byte(cmd, DRIVER_SENSE);
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x3);
+ 		set_host_byte(cmd, DID_ABORT);
+-		cmd->result |= SAM_STAT_CHECK_CONDITION;
+ 		return 1;
+ 	}
+ 
+ 	/* check appl tag */
+ 	if (e_app_tag != a_app_tag) {
+-		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
+-		    0x10, 0x2);
+-		set_driver_byte(cmd, DRIVER_SENSE);
++		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x2);
+ 		set_host_byte(cmd, DID_ABORT);
+-		cmd->result |= SAM_STAT_CHECK_CONDITION;
+ 		return 1;
+ 	}
+ 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 70165be10f00..f7e72d21749a 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -931,7 +931,7 @@ static void mk_sense_invalid_fld(struct scsi_cmnd *scp,
+ 	}
+ 	asc = c_d ? INVALID_FIELD_IN_CDB : INVALID_FIELD_IN_PARAM_LIST;
+ 	memset(sbuff, 0, SCSI_SENSE_BUFFERSIZE);
+-	scsi_build_sense_buffer(sdebug_dsense, sbuff, ILLEGAL_REQUEST, asc, 0);
++	scsi_build_sense(scp, sdebug_dsense, ILLEGAL_REQUEST, asc, 0);
+ 	memset(sks, 0, sizeof(sks));
+ 	sks[0] = 0x80;
+ 	if (c_d)
+@@ -957,17 +957,14 @@ static void mk_sense_invalid_fld(struct scsi_cmnd *scp,
+ 
+ static void mk_sense_buffer(struct scsi_cmnd *scp, int key, int asc, int asq)
+ {
+-	unsigned char *sbuff;
+-
+-	sbuff = scp->sense_buffer;
+-	if (!sbuff) {
++	if (!scp->sense_buffer) {
+ 		sdev_printk(KERN_ERR, scp->device,
+ 			    "%s: sense_buffer is NULL\n", __func__);
+ 		return;
+ 	}
+-	memset(sbuff, 0, SCSI_SENSE_BUFFERSIZE);
++	memset(scp->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 
+-	scsi_build_sense_buffer(sdebug_dsense, sbuff, key, asc, asq);
++	scsi_build_sense(scp, sdebug_dsense, key, asc, asq);
+ 
+ 	if (sdebug_verbose)
+ 		sdev_printk(KERN_INFO, scp->device,
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 2d9b533ef1ec..d72f15f6c225 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -3265,3 +3265,21 @@ int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
+ 	return group_id;
+ }
+ EXPORT_SYMBOL(scsi_vpd_tpg_id);
++
++/**
++ * scsi_build_sense - build sense data for a command
++ * @scmd:	scsi command for which the sense should be formatted
++ * @desc:	Sense format (non-zero == descriptor format,
++ *              0 == fixed format)
++ * @key:	Sense key
++ * @asc:	Additional sense code
++ * @ascq:	Additional sense code qualifier
++ *
++ **/
++void scsi_build_sense(struct scsi_cmnd *scmd, int desc, u8 key, u8 asc, u8 ascq)
++{
++	scsi_build_sense_buffer(desc, scmd->sense_buffer, key, asc, ascq);
++	scmd->result = (DRIVER_SENSE << 24) | (DID_OK << 16) |
++		SAM_STAT_CHECK_CONDITION;
++}
++EXPORT_SYMBOL_GPL(scsi_build_sense);
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 25c0409e98df..a112d9c3c548 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -3088,8 +3088,7 @@ static void pqi_process_aio_io_error(struct pqi_io_request *io_request)
+ 	}
+ 
+ 	if (device_offline && sense_data_length == 0)
+-		scsi_build_sense_buffer(0, scmd->sense_buffer, HARDWARE_ERROR,
+-			0x3e, 0x1);
++		scsi_build_sense(scmd, 0, HARDWARE_ERROR, 0x3e, 0x1);
+ 
+ 	scmd->result = scsi_status;
+ 	set_host_byte(scmd, host_byte);
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 12471208c7a8..3af2a2d3bfa2 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -398,11 +398,8 @@ static struct status_msg *stex_get_status(struct st_hba *hba)
+ static void stex_invalid_field(struct scsi_cmnd *cmd,
+ 			       void (*done)(struct scsi_cmnd *))
+ {
+-	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
+-
+ 	/* "Invalid field in cdb" */
+-	scsi_build_sense_buffer(0, cmd->sense_buffer, ILLEGAL_REQUEST, 0x24,
+-				0x0);
++	scsi_build_sense(cmd, 0, ILLEGAL_REQUEST, 0x24, 0x0);
+ 	done(cmd);
+ }
+ 
 diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index b3eaf4b74b72..a1eb7732aa1b 100644
+index 83f7e520be48..b3eaf4b74b72 100644
 --- a/include/scsi/scsi_cmnd.h
 +++ b/include/scsi/scsi_cmnd.h
-@@ -326,10 +326,6 @@ static inline void set_host_byte(struct scsi_cmnd *cmd, char status)
- 	cmd->result = (cmd->result & 0xff00ffff) | (status << 16);
+@@ -342,4 +342,7 @@ static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
+ 	return xfer_len;
  }
  
--static inline void set_driver_byte(struct scsi_cmnd *cmd, char status)
--{
--	cmd->result = (cmd->result & 0x00ffffff) | (status << 24);
--}
- 
- static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
- {
-diff --git a/include/scsi/sg.h b/include/scsi/sg.h
-index a90703cf15f4..350470298aef 100644
---- a/include/scsi/sg.h
-+++ b/include/scsi/sg.h
-@@ -133,6 +133,8 @@ struct compat_sg_io_hdr {
- 
- /* Obsolete DRIVER_SENSE setting */
- #define DRIVER_SENSE 0x08
-+/* Obsolete driver_byte() declaration */
-+#define driver_byte(result) (((result) >> 24) & 0xff)
- 
- typedef struct sg_scsi_id { /* used by SG_GET_SCSI_ID ioctl() */
-     int host_no;        /* as in "scsi<n>" where 'n' is one of 0, 1, 2 etc */
-diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
-index f624969a4f14..428cca71c2ba 100644
---- a/include/trace/events/scsi.h
-+++ b/include/trace/events/scsi.h
-@@ -124,19 +124,6 @@
- 		scsi_hostbyte_name(DID_TRANSPORT_DISRUPTED),	\
- 		scsi_hostbyte_name(DID_TRANSPORT_FAILFAST))
- 
--#define scsi_driverbyte_name(result)	{ result, #result }
--#define show_driverbyte_name(val)				\
--	__print_symbolic(val,					\
--		scsi_driverbyte_name(DRIVER_OK),		\
--		scsi_driverbyte_name(DRIVER_BUSY),		\
--		scsi_driverbyte_name(DRIVER_SOFT),		\
--		scsi_driverbyte_name(DRIVER_MEDIA),		\
--		scsi_driverbyte_name(DRIVER_ERROR),		\
--		scsi_driverbyte_name(DRIVER_INVALID),		\
--		scsi_driverbyte_name(DRIVER_TIMEOUT),		\
--		scsi_driverbyte_name(DRIVER_HARD),		\
--		scsi_driverbyte_name(DRIVER_SENSE))
--
- #define scsi_msgbyte_name(result)	{ result, #result }
- #define show_msgbyte_name(val)					\
- 	__print_symbolic(val,					\
-@@ -327,7 +314,7 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
- 		  show_opcode_name(__entry->opcode),
- 		  __parse_cdb(__get_dynamic_array(cmnd), __entry->cmd_len),
- 		  __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len),
--		  show_driverbyte_name(((__entry->result) >> 24) & 0xff),
-+		  "DRIVER_OK",
- 		  show_hostbyte_name(((__entry->result) >> 16) & 0xff),
- 		  show_msgbyte_name(((__entry->result) >> 8) & 0xff),
- 		  show_statusbyte_name(__entry->result & 0xff))
++extern void scsi_build_sense(struct scsi_cmnd *scmd, int desc,
++			     u8 key, u8 asc, u8 ascq);
++
+ #endif /* _SCSI_SCSI_CMND_H */
 -- 
 2.29.2
 
