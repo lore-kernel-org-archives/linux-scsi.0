@@ -2,294 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C6ADC433ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 00:58:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B05EC433B4
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 01:40:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF77161409
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 00:58:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E24C46140D
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 01:40:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234578AbhDUA6j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Apr 2021 20:58:39 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:62858 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234539AbhDUA6g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Apr 2021 20:58:36 -0400
-Received: from epcas3p2.samsung.com (unknown [182.195.41.20])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210421005802epoutp04c4cfab42157b7c7efaca46ec38c6dda6~3uZ7aD1cM2311123111epoutp04S
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Apr 2021 00:58:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210421005802epoutp04c4cfab42157b7c7efaca46ec38c6dda6~3uZ7aD1cM2311123111epoutp04S
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1618966683;
-        bh=ugM7hUPe8lTGq2rF80TL2iUX0vbLFUIXjbQ0j/VKwpk=;
-        h=Subject:Reply-To:From:To:CC:Date:References:From;
-        b=Orr83rW00argI+RRmzI5pzMiAHxxF+EfbTyUEji8BH0+R7hW+kXIygE6W7Wou9kZ8
-         3F6BkWYhbSyMVQVuqIdZxpmW/rE4ibW4HJ4QQc0fvzjvu6fG74bj1+qoJYud086UpR
-         5bejS8SeGrrCXFZwY7GL6/nPgblFb45/WCrtM33w=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas3p2.samsung.com (KnoxPortal) with ESMTP id
-        20210421005802epcas3p24952de7164d1f6eaf8946e915723f2b9~3uZ6v1mlW1206812068epcas3p2X;
-        Wed, 21 Apr 2021 00:58:02 +0000 (GMT)
-Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp2.localdomain
-        (Postfix) with ESMTP id 4FQ2Gf1Ys2z4x9QL; Wed, 21 Apr 2021 00:58:02 +0000
-        (GMT)
-Mime-Version: 1.0
-Subject: [PATCH v3] scsi: ufs: Add batched WB buffer flush
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Daejun Park <daejun7.park@samsung.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "mchehab+huawei@kernel.org" <mchehab+huawei@kernel.org>,
-        Keoseong Park <keosung.park@samsung.com>,
-        "lukas.bulwahn@gmail.com" <lukas.bulwahn@gmail.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
-        "jaegeuk@kernel.org" <jaegeuk@kernel.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        "satyat@google.com" <satyat@google.com>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Jieon Seol <jieon.seol@samsung.com>,
-        Jaemyung Lee <jaemyung.lee@samsung.com>,
-        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
-        JinHwan Park <jh.i.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1891546521.01618966682184.JavaMail.epsvc@epcpadp4>
-Date:   Wed, 21 Apr 2021 09:38:15 +0900
-X-CMS-MailID: 20210421003815epcms2p7acd6c25a95fdecdfa854964436212cd0
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20210421003815epcms2p7acd6c25a95fdecdfa854964436212cd0
-References: <CGME20210421003815epcms2p7acd6c25a95fdecdfa854964436212cd0@epcms2p7>
+        id S234375AbhDUBlM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Apr 2021 21:41:12 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38422 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231475AbhDUBlL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Apr 2021 21:41:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1618969238;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=sNULbDnpSimOTQAcT2jSWY/VMJYJG/d2KtMhkgEm6JM=;
+        b=aXEfl1McLsDfGDiYfIExLQO2gVwaLZG8KdSBokx/r2CgNErdc/NY4NJDlx4cj3cfzplZRt
+        iK+jXhdqwnDePB58tu+Tui18Ypf5d2ba7jG0VcjkqMjXbSYaKLNZ5xEv8bKKIfPfNsAQLP
+        1NOa798AeLQ6+gBB6dJViKZeegVp1Ds=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-68-iUMw-Wd2MQum5w5VhMgEdg-1; Tue, 20 Apr 2021 21:40:35 -0400
+X-MC-Unique: iUMw-Wd2MQum5w5VhMgEdg-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C57BE835B4C;
+        Wed, 21 Apr 2021 01:40:33 +0000 (UTC)
+Received: from T590 (ovpn-13-15.pek2.redhat.com [10.72.13.15])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 394E910016F4;
+        Wed, 21 Apr 2021 01:40:25 +0000 (UTC)
+Date:   Wed, 21 Apr 2021 09:40:25 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Douglas Gilbert <dgilbert@interlog.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        John Garry <john.garry@huawei.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>
+Subject: Re: [bug report] shared tags causes IO hang and performance drop
+Message-ID: <YH+CicpLh8Ay1XYC@T590>
+References: <f66f9204-83ff-48d4-dbf4-4a5e1dc100b7@huawei.com>
+ <YHjeUrCTbrSft18t@T590>
+ <217e4cc1-c915-0e95-1d1c-4a11496080d6@huawei.com>
+ <YHlNS3RqsYDMA3jQ@T590>
+ <89ebc37c-21d6-c57e-4267-cac49a3e5953@huawei.com>
+ <ccdaee0e-3824-927c-8647-e8f44c1557dc@interlog.com>
+ <f9b143ac-c5df-eedc-13da-8e0c2399abb4@acm.org>
+ <993c3ae5-a7e2-aa6d-a6f3-147f06e9d015@interlog.com>
+ <CAFj5m9LPe=TdJgz2iJ7U6UT4=x-5aE=YbRgOQ80RHfpp62GQQQ@mail.gmail.com>
+ <acb407c9-c9ab-4783-e526-e5d34876e57b@interlog.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <acb407c9-c9ab-4783-e526-e5d34876e57b@interlog.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Currently, WriteBooster (WB) buffer is always flushed during hibern8. However,
-this is inefficient because data in the WB buffer can be invalid due to
-spatial locality of IO workload.
-If the WB buffer flush is flushed in a batched manner, the amount of data
-migration and power consumption can be reduced because the overwritten data
-of the WB buffer may be invalid due to spatial locality.
+On Tue, Apr 20, 2021 at 04:22:53PM -0400, Douglas Gilbert wrote:
+> On 2021-04-20 2:52 a.m., Ming Lei wrote:
+> > On Tue, Apr 20, 2021 at 12:54 PM Douglas Gilbert <dgilbert@interlog.com> wrote:
+> > > 
+> > > On 2021-04-19 11:22 p.m., Bart Van Assche wrote:
+> > > > On 4/19/21 8:06 PM, Douglas Gilbert wrote:
+> > > > > I have always suspected under extreme pressure the block layer (or scsi
+> > > > > mid-level) does strange things, like an IO hang, attempts to prove that
+> > > > > usually lead back to my own code :-). But I have one example recently
+> > > > > where upwards of 10 commands had been submitted (blk_execute_rq_nowait())
+> > > > > and the following one stalled (all on the same thread). Seconds later
+> > > > > those 10 commands reported DID_TIME_OUT, the stalled thread awoke, and
+> > > > > my dd variant went to its conclusion (reporting 10 errors). Following
+> > > > > copies showed no ill effects.
+> > > > > 
+> > > > > My weapons of choice are sg_dd, actually sgh_dd and sg_mrq_dd. Those last
+> > > > > two monitor for stalls during the copy. Each submitted READ and WRITE
+> > > > > command gets its pack_id from an incrementing atomic and a management
+> > > > > thread in those copies checks every 300 milliseconds that that atomic
+> > > > > value is greater than the previous check. If not, dump the state of the
+> > > > > sg driver. The stalled request was in busy state with a timeout of 1
+> > > > > nanosecond which indicated that blk_execute_rq_nowait() had not been
+> > > > > called. So the chief suspect would be blk_get_request() followed by
+> > > > > the bio setup calls IMO.
+> > > > > 
+> > > > > So it certainly looked like an IO hang, not a locking, resource nor
+> > > > > corruption issue IMO. That was with a branch off MKP's
+> > > > > 5.13/scsi-staging branch taken a few weeks back. So basically
+> > > > > lk 5.12.0-rc1 .
+> > > > 
+> > > > Hi Doug,
+> > > > 
+> > > > If it would be possible to develop a script that reproduces this hang and
+> > > > if that script can be shared I will help with root-causing and fixing this
+> > > > hang.
+> > > 
+> > > Possible, but not very practical:
+> > >      1) apply supplied 83 patches to sg driver
+> > >      2) apply pending patch to scsi_debug driver
+> > >      3) find a stable kernel platform (perhaps not lk 5.12.0-rc1)
+> > >      4) run supplied scripts for three weeks
+> > >      5) dig through the output and maybe find one case (there were lots
+> > >         of EAGAINs from blk_get_request() but they are expected when
+> > >         thrashing the storage layers)
+> > 
+> > Or collecting the debugfs log after IO hang is triggered in your test:
+> > 
+> > (cd /sys/kernel/debug/block/$SDEV && find . -type f -exec grep -aH . {} \;)
+> > 
+> > $SDEV is the disk on which IO hang is observed.
+> 
+> Thanks. I'll try adding that to my IO hang trigger code.
+> 
+> My patches on the sg driver add debugfs support so these produce
+> the same output:
+>     cat /proc/scsi/sg/debug
+>     cat /sys/kernel/debug/scsi_generic/snapshot
+> 
+> There is also a /sys/kernel/debug/scsi_generic/snapped file whose
+> contents reflect the driver's state when ioctl(<sg_fd>, SG_DEBUG, &one)
+> was last called.
+> 
+> When I test, the root file system is usually on a NVMe SSD so the
+> state of all SCSI disks present should be dumped as they are part
+> of my test. Also I find the netconsole module extremely useful and
+> have an old laptop on my network running:
+>    socat udp-recv:6665 - > socat.txt
+> 
+> picking up the UDP packets from netconsole on port 6665. Not quite as
+> good as monitoring a hardware serial console, but less fiddly. And
+> most modern laptops don't have access to a serial console so
+> netconsole is the only option.
 
-This patch supports batched flush of WB buffer. When batched flush is enabled,
-fWriteBoosterBufferFlushDuringHibernate is set only when
-b_rpm_dev_flush_capable is true during runtime suspend. When the device is
-resumed, fWriteBoosterBufferFlushDuringHibernate is cleared to stop flush
-during hibern8.
+Yeah, years ago netconsole does help me much when serial console isn't
+available, especially ssh doesn't work at that time, such as kernel
+panic.
 
-Changelog
-  - Add reported-by tag by kernel test robot.
-  - Fix warning reported by kernel test robot.
+> 
+> Another observation: upper level issues seem to impact the submission
+> side of request handling (e.g. the IO hang I was trying to describe)
+> while error injection I can do (e.g. using the scsi_debug driver)
+> impacts the completion side (obviously). Are there any tools to inject
+> errors into the block layer submission code?
 
-Reported-by: kernel test robot <lkp@intel.com>
-Co-developed-by: Keoseong Park <keosung.park@samsung.com>
-Signed-off-by: Keoseong Park <keosung.park@samsung.com>
-Signed-off-by: Daejun Park <daejun7.park@samsung.com>
----
- Documentation/ABI/testing/sysfs-driver-ufs |  9 +++++
- drivers/scsi/ufs/ufs-sysfs.c               | 47 ++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.c                  | 14 +++++--
- drivers/scsi/ufs/ufshcd.h                  |  2 +
- 4 files changed, 68 insertions(+), 4 deletions(-)
+block layer supports fault injection in submission side, see
+should_fail_bio() which is called from submit_bio_checks().
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index d1bc23cb6a9d..b67b8449e840 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1172,3 +1172,12 @@ Description:	This node is used to set or display whether UFS WriteBooster is
- 		(if the platform supports UFSHCD_CAP_CLK_SCALING). For a
- 		platform that doesn't support UFSHCD_CAP_CLK_SCALING, we can
- 		disable/enable WriteBooster through this sysfs node.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/wb_batched_flush
-+Date:		April 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows whether batch flushing of UFS WriteBooster
-+		buffers is enabled. Writing 1 to this entry allows the device to flush
-+		the WriteBooster buffer only when it needs to perform a buffer flush
-+		during runtime suspend. Writing 0 to this entry allows the device to
-+		flush the WriteBooster buffer during link hibernation.
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index d7c3cff9662f..b8fbe8676275 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -253,6 +253,51 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
- 	return res < 0 ? res : count;
- }
- 
-+
-+static ssize_t wb_batched_flush_show(struct device *dev,
-+				     struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%d\n", hba->vps->wb_batched_flush);
-+}
-+
-+static ssize_t wb_batched_flush_store(struct device *dev,
-+				      struct device_attribute *attr,
-+				      const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	unsigned int wb_batched_flush;
-+	ssize_t res = 0;
-+
-+	if (!ufshcd_is_wb_allowed(hba)) {
-+		dev_warn(dev, "To control WB through wb_batched_flush is not allowed!\n");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	if (kstrtouint(buf, 0, &wb_batched_flush))
-+		return -EINVAL;
-+
-+	if (wb_batched_flush != 0 && wb_batched_flush != 1)
-+		return -EINVAL;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		res = -EBUSY;
-+		goto out;
-+	}
-+
-+	pm_runtime_get_sync(hba->dev);
-+	res = ufshcd_wb_toggle_flush_during_h8(hba, !wb_batched_flush);
-+	pm_runtime_put_sync(hba->dev);
-+	if (!res)
-+		hba->vps->wb_batched_flush = wb_batched_flush;
-+
-+out:
-+	up(&hba->host_sem);
-+	return res < 0 ? res : count;
-+}
-+
- static DEVICE_ATTR_RW(rpm_lvl);
- static DEVICE_ATTR_RO(rpm_target_dev_state);
- static DEVICE_ATTR_RO(rpm_target_link_state);
-@@ -261,6 +306,7 @@ static DEVICE_ATTR_RO(spm_target_dev_state);
- static DEVICE_ATTR_RO(spm_target_link_state);
- static DEVICE_ATTR_RW(auto_hibern8);
- static DEVICE_ATTR_RW(wb_on);
-+static DEVICE_ATTR_RW(wb_batched_flush);
- 
- static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_rpm_lvl.attr,
-@@ -271,6 +317,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_spm_target_link_state.attr,
- 	&dev_attr_auto_hibern8.attr,
- 	&dev_attr_wb_on.attr,
-+	&dev_attr_wb_batched_flush.attr,
- 	NULL
- };
- 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0625da7a42ee..e11dc578a17c 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -244,7 +244,6 @@ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg);
- static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
--static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
- static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
- static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
- static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
-@@ -277,7 +276,8 @@ static inline void ufshcd_wb_config(struct ufs_hba *hba)
- 
- 	ufshcd_wb_toggle(hba, true);
- 
--	ufshcd_wb_toggle_flush_during_h8(hba, true);
-+	ufshcd_wb_toggle_flush_during_h8(hba, !hba->vps->wb_batched_flush);
-+
- 	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
- 		ufshcd_wb_toggle_flush(hba, true);
- }
-@@ -5472,7 +5472,7 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
- 	return ret;
- }
- 
--static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
-+int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
- {
- 	int ret;
- 
-@@ -5481,10 +5481,12 @@ static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
- 	if (ret) {
- 		dev_err(hba->dev, "%s: WB-Buf Flush during H8 %s failed: %d\n",
- 			__func__, set ? "enable" : "disable", ret);
--		return;
-+		return ret;
- 	}
- 	dev_dbg(hba->dev, "%s WB-Buf Flush during H8 %s\n",
- 			__func__, set ? "enabled" : "disabled");
-+
-+	return ret;
- }
- 
- static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
-@@ -8745,6 +8747,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 			ret = ufshcd_set_dev_pwr_mode(hba, req_dev_pwr_mode);
- 			if (ret)
- 				goto enable_gating;
-+		} else if (hba->vps->wb_batched_flush) {
-+			ufshcd_wb_toggle_flush_during_h8(hba, true);
- 		}
- 	}
- 
-@@ -8925,6 +8929,8 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	ufshcd_auto_hibern8_enable(hba);
- 
- 	if (hba->dev_info.b_rpm_dev_flush_capable) {
-+		if (hba->vps->wb_batched_flush)
-+			ufshcd_wb_toggle_flush_during_h8(hba, false);
- 		hba->dev_info.b_rpm_dev_flush_capable = false;
- 		cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
- 	}
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 5eb66a8debc7..049f3f08506c 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -643,6 +643,7 @@ struct ufs_hba_variant_params {
- 	struct devfreq_simple_ondemand_data ondemand_data;
- 	u16 hba_enable_delay_us;
- 	u32 wb_flush_threshold;
-+	bool wb_batched_flush;
- };
- 
- /**
-@@ -1105,6 +1106,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 			     enum query_opcode desc_op);
- 
- int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
-+int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
- 
- /* Wrapper functions for safely calling variant operations */
- static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
--- 
-2.25.1
 
+thanks, 
+Ming
 
