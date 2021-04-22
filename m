@@ -2,244 +2,183 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72ABDC433ED
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 09:07:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54901C433B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 09:29:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29374613F0
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 09:07:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1BA7B61059
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 09:29:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235535AbhDVJH5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Apr 2021 05:07:57 -0400
-Received: from de-smtp-delivery-102.mimecast.com ([62.140.7.102]:41680 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232896AbhDVJH4 (ORCPT
+        id S234773AbhDVJ3o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Apr 2021 05:29:44 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:59528 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230285AbhDVJ3o (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Apr 2021 05:07:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1619082441;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=lP/ePDIZ/c1UU2NPh1NwRRgrhjDOT6nHCngmtJnq9M0=;
-        b=H7xIUvd8Yj1tBF9LWfnwoEBf+g7o+q7UTG04nJD1FYO9DfresZxjK12rfLrHIMigcUtboe
-        rBb+FEP5IMCIY1Fpd5DHFSvmBCPK/kk3JrdBwnyz7Ju7a/sd4Nm9dmN/x08yChqqziNJz0
-        ak2WN3LQEYde5UACyiuCaRX+ZMrYvUI=
-Received: from EUR04-HE1-obe.outbound.protection.outlook.com
- (mail-he1eur04lp2052.outbound.protection.outlook.com [104.47.13.52]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- de-mta-30-BsZYUbIvPCWRy6AnzARlkQ-1; Thu, 22 Apr 2021 11:07:20 +0200
-X-MC-Unique: BsZYUbIvPCWRy6AnzARlkQ-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=msFLEfQ12EqrNIdK9Hj9Wb9jkqt5ZI9kCp+LvXmI+BiOBPOfwmwrTNgVXeYU3hlg7+6LyHrdI7w4DzKSLIPylV71cFcbc856khaHaMFXbxqGqo2Pheu0CfZMIzXbO1QVUmOTJuwE3vsCCyHZxaoxStO2FmvVo2JqsZKbzzFitrTHQ27lS28cKNvP3aNRz7xsRMIuqpjYQlQgEP5L+/f3QIIjxLw/ah25nezoxyAAn4oOumJYt1X3klt25LfYHCRjqN238kKYN9/91PFebq3IfRpWdagOtioel1oaoUSY68zyP9yIGmNbacvMVQeoTC6I6LNIbkj5sqxeJ9RH/uqhIg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lP/ePDIZ/c1UU2NPh1NwRRgrhjDOT6nHCngmtJnq9M0=;
- b=D72VK0ayeOke0vZb7ZbKjnnHngbjTNoYUX1Zbp6EZ+YJoSKiBqMecsM+XfE4hqIeUw+anPNZ9UzSBKIsJDTa6Kt5vI7iZZDvgjGLiTnxiQgnY9+2VNNPra1IdG75BJYpShjcVjWkaxZYxlAjJp/GMcR6Yw6F/JdqEXGt1tuVgl2Dj7rBN6FSct3KG2f8Qkbyeuvy3/CS9JPwJIKdV4Bt0yaSVF1O4mzXNYIpdvDSkSs/3AN3uTsmPyGfKeHtuv4KLhC5nOqxKUUq/QCe1owIFt4WTcJ9Y4Sd7it142aPBJT+dZPIQZp00IGdCbeeO191Lfd3b+nE5JHUAMCfx+N6uw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Received: from DB8PR04MB6555.eurprd04.prod.outlook.com (2603:10a6:10:103::20)
- by DBBPR04MB6153.eurprd04.prod.outlook.com (2603:10a6:10:d2::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.21; Thu, 22 Apr
- 2021 09:07:16 +0000
-Received: from DB8PR04MB6555.eurprd04.prod.outlook.com
- ([fe80::cc21:35e2:da7c:1490]) by DB8PR04MB6555.eurprd04.prod.outlook.com
- ([fe80::cc21:35e2:da7c:1490%7]) with mapi id 15.20.4042.024; Thu, 22 Apr 2021
- 09:07:15 +0000
-From:   Martin Wilck <martin.wilck@suse.com>
-To:     "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     Hannes Reinecke <hare@suse.com>, "hch@lst.de" <hch@lst.de>,
-        "dgilbert@interlog.com" <dgilbert@interlog.com>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>,
-        "systemd-devel@lists.freedesktop.org" 
-        <systemd-devel@lists.freedesktop.org>,
-        "bmarzins@redhat.com" <bmarzins@redhat.com>
-Subject: Re: RFC: one more time: SCSI device identification
-Thread-Topic: RFC: one more time: SCSI device identification
-Thread-Index: AQHXJIIevKqEvjcbJUy9Ai14uQzKmaqm92EcgBDwGwCACBMFD4AAakAA
-Date:   Thu, 22 Apr 2021 09:07:15 +0000
-Message-ID: <685c40341d2ddef2fe5a54dd656d10104b0c1bfa.camel@suse.com>
-References: <c524ce68d9a9582732db8350f8a1def461a1a847.camel@suse.com>
-         <yq135w4cam3.fsf@ca-mkp.ca.oracle.com>
-         <06489ea37311fe7bf73b27a41b5209ee4cca85fe.camel@suse.com>
-         <yq1pmynt6f6.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1pmynt6f6.fsf@ca-mkp.ca.oracle.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.38.4 
-authentication-results: oracle.com; dkim=none (message not signed)
- header.d=none;oracle.com; dmarc=none action=none header.from=suse.com;
-x-originating-ip: [2.202.118.173]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 9da11e97-b9ac-4bf5-3843-08d9056e064b
-x-ms-traffictypediagnostic: DBBPR04MB6153:
-x-ld-processed: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba,ExtFwd
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DBBPR04MB6153FDBBFC0F29868AA55548FC469@DBBPR04MB6153.eurprd04.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: qHfcgIIxtxzkZheR0puwFjfzXWJbgeiJ+nqBexHvce/Vo1rORzXq0y5eXnZQcSsp+9JtbPEFi2y4L965cmAEU/1f44q1ZmzsEkM2oFDmRUCACA9kvbm2/iuNvuHdobBXFEh80mnBuIaClVm4RYV0j0zHWoOHO/g6mUIYtmKbnxHbZYpvxQ2oB4nuUgu9Gw7W/gozwelc46AGXm+eDlfXxMWs9FUl9zSm1rV7dHbDaC5YMgxtoAqqNZgwxrwCxDgaE56uuqT4CFqh0Q5xN+nHy7x+2jl9J08QmI6YhXJPMyf/U/mYhlj2KyLhlFz3Mn/P75/cXH2cnXTfM5+RS+oRhXEwG0E9TH0SQu4gr0wAAu+qq7DaC6KrKxfLmGNACi7YBSiErzXZnWgtdSrTRidD6o9DA8OIJEscnmm1AV2oYjNdBnOIMZ18hZ/Hok56b72+Z6lyyDhcoJ4jIjgiHmxb9MkQzfnySCjgb0jQ5uLWENuiiobtSTg9aA5Qo4VDbefobR92P8z7kwi8HJqsksGFJUhB5H1MTBj9obbeUW8GFZPRr14WgSBO4AlSpRRJYWp1Xrb8o9yeOdQuLqUCe/FqK3ymORaabBW4skv7j8+869NRP+0DfsxTrl1dPOab/vwY3j87Adz0xeSvnoJ2NSWMNNBC6iTpbOvx01CvRDpy3kv13DR+yP8DexN12wvuwca4
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DB8PR04MB6555.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(136003)(376002)(346002)(39860400002)(366004)(4326008)(8936002)(186003)(5660300002)(6916009)(66446008)(66556008)(66946007)(64756008)(66476007)(122000001)(71200400001)(38100700002)(2906002)(6512007)(316002)(2616005)(54906003)(6506007)(66574015)(26005)(478600001)(36756003)(6486002)(86362001)(44832011)(76116006)(8676002)(83380400001)(91956017);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?iso-8859-15?Q?KS15n3OpZf90lpdta7qsy0biVVIYFuL+nraZd90GEQpRfqKNd/pAdk7GL?=
- =?iso-8859-15?Q?BRcns6S9R4xAp1Efj9iPOJhwqQcYgT3yCFR5R/Sm5IQlmUhrx2ZZV2mS/?=
- =?iso-8859-15?Q?Xy4wvXkBP0CBBbQ4eF3ddNkaIixbCLaSHiqBgFEDpRC9+3W1sNKuNq9Y8?=
- =?iso-8859-15?Q?chfB7E5nJDsD0qKyv4pr8tKrrLYgATYNOjdtrXl6ewQe1AczPtMyKup3c?=
- =?iso-8859-15?Q?zpW0UxaQY7jUeuGsj2vbiK3ovawMTK3qq2nmAlu25SOki4Q19rXgeZwBh?=
- =?iso-8859-15?Q?rFqjOC6HY3p5+A+1GMSVYd+yAceYWyEe+/AZzpTM5ciqZpevpAzItXtnx?=
- =?iso-8859-15?Q?rJXFsiV8bldcXhbMVS9Zzq10/PMSHAl/1zJUDUSIWKDwig7nmYJ87IBx3?=
- =?iso-8859-15?Q?fOXYP3Ufk3AIfS5ab/jwGMBqYFJ+cwMeGim08sU+0vLvkZwpYffnpxiAC?=
- =?iso-8859-15?Q?D/OWJ56bibJBaw/atvdK4NAJDbXfNmGFLxsclAw9B7Oj9ivm9y3mkYw29?=
- =?iso-8859-15?Q?vRBaXu3KE98wpxiXv47olcvIJAWJKIZawUf//Q+RUoUj1c+HxqRghmjZK?=
- =?iso-8859-15?Q?oei/flBW6S8O7yAoDAb4k8I5UcT8FYYliRRhuff7VKYCNp9RO2VHVv9Ul?=
- =?iso-8859-15?Q?qm5ElbLnyALPNHga9oi9WOZVZBtg23S56bG/sdpSobMEy7pHeVT0UN4LS?=
- =?iso-8859-15?Q?YqKicjBN3lnU4FXrssezEiP7S4ElMTqFc5U9e0141JFbOFlUD9gU0ptt8?=
- =?iso-8859-15?Q?A9kFjAY/jJWnDghkQnI2UyGwRX5jIRtvjFniGW60laVTwjTNchr7gp+G8?=
- =?iso-8859-15?Q?KhWsMu56ePiHtbDCDnzhOAZ7WQeutvtWTYXUx/JLdI7e8cRvA09+fnUSt?=
- =?iso-8859-15?Q?vsHUOZdSad9QV8yzNi2qZ25C5Tl6p4PQBdybCQR/4ZucjE6kYTgPBXmzE?=
- =?iso-8859-15?Q?YzB9Rein0KBbv2LkHrGFuFTDz2kPUcE9DWW16rtelDegUogKl5vrsK8u4?=
- =?iso-8859-15?Q?iCbvS5qQN0XiaqeVBgcAr3enrmUYa1ZfLJnlBIckGlgr26WJR0Gceiawc?=
- =?iso-8859-15?Q?akmduxjLFT8l/RFPJyCJoZqlkFmALLIMma3M+wwp0DKRcrylBNDus1Uhr?=
- =?iso-8859-15?Q?WbsVRj5s8iFxdnuN3081jR/38eGiof5sGHedBJ9WXlvSW6nrAhWUdNgNx?=
- =?iso-8859-15?Q?KwKlo/Z3AV+pRXx7P512QKpRgCu+jPJ6dKBv9dDzu2K5Y8F8oraLY6B7R?=
- =?iso-8859-15?Q?ed+0OcbLhkh1Fz0z7vLVgqrBLKS6meACWO0R2ptovCEYaz4ksZbSZ+yCz?=
- =?iso-8859-15?Q?NNnKRFLAQrxvwrCQB8IkMGg/HIcxSrzQQvc7e1hxDDkqWEKpqFK0luqT6?=
- =?iso-8859-15?Q?mEn0rWgVXlP4OsZnxDt3ivGUFnKxYevNm?=
-Content-Type: text/plain; charset="iso-8859-15"
-Content-ID: <AACB99A3887C604A845A8FA4329A4B20@eurprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        Thu, 22 Apr 2021 05:29:44 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13M94TWx003221;
+        Thu, 22 Apr 2021 05:28:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=1JbWzdjefGN7j20B212xQP5JZi21xzHeI+2btflqab4=;
+ b=WFkq3n9APitCPuva54jPcTYCmnePWaaMVJgYzRQrmHEh1G27IjHWWLtVKeOql14RXnJC
+ Qr6DU4xdA5D8mpnSS1HuLRNw+BdyGyeh/CLMjrTd+FZiNqCQzsbzfXJAsWGA+nhT4Jx9
+ 1IvTFngZo+IT+0P5yyVZh2pUS7wydrzwpKnHQLZcSWAWB3R8QKzoczX/71B7wdUOQ2Ec
+ Zon6ND/3l/61/eaoJ/wTHzP9lqoMuwRF1P1uXZgnQNPsVyhea+oGKhTZdnoxUF2Hwkf3
+ c8Owd5gvUTaEwCe+IusFZtIqnM2XnYg0xP8Wik0lezM4UZDJDUgSMoNZKvrSV6ahhnvz Sg== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3835xxh2wh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 22 Apr 2021 05:28:58 -0400
+Received: from m0098417.ppops.net (m0098417.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 13M9QbHL094162;
+        Thu, 22 Apr 2021 05:28:57 -0400
+Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3835xxh2vs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 22 Apr 2021 05:28:57 -0400
+Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
+        by ppma06fra.de.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 13M9SSSN002294;
+        Thu, 22 Apr 2021 09:28:55 GMT
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
+        by ppma06fra.de.ibm.com with ESMTP id 37ypxh9hgp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 22 Apr 2021 09:28:55 +0000
+Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 13M9Sq6o33751446
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 22 Apr 2021 09:28:52 GMT
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 630EEAE04D;
+        Thu, 22 Apr 2021 09:28:52 +0000 (GMT)
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 4F99CAE045;
+        Thu, 22 Apr 2021 09:28:52 +0000 (GMT)
+Received: from t480-pf1aa2c2.fritz.box (unknown [9.145.88.229])
+        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
+        Thu, 22 Apr 2021 09:28:52 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2.fritz.box with local (Exim 4.94)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1lZVdj-003dTV-Nv; Thu, 22 Apr 2021 11:28:51 +0200
+Date:   Thu, 22 Apr 2021 11:28:51 +0200
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     Muneendra <muneendra.kumar@broadcom.com>, hare@suse.de,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        tj@kernel.org, linux-nvme@lists.infradead.org, emilne@redhat.com,
+        mkumar@redhat.com,
+        Gaurav Srivastava <gaurav.srivastava@broadcom.com>,
+        Steffen Maier <maier@linux.ibm.com>
+Subject: Re: [PATCH v9 07/13] lpfc: vmid: Implements ELS commands for appid
+ patch
+Message-ID: <YIFB03mLWw+kwNmS@t480-pf1aa2c2.linux.ibm.com>
+References: <1617750397-26466-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1617750397-26466-8-git-send-email-muneendra.kumar@broadcom.com>
+ <YH7LPd8c4PZa1qFC@t480-pf1aa2c2.linux.ibm.com>
+ <d9d57857-83f5-9ff7-a427-0817d37f5f84@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <d9d57857-83f5-9ff7-a427-0817d37f5f84@gmail.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: dd4WCXQNUVMu7dc2I3PMVWH1kjJ0BYpp
+X-Proofpoint-ORIG-GUID: vGnu596I2-D4GZlAZJx2yQqbIsamp9_O
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DB8PR04MB6555.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9da11e97-b9ac-4bf5-3843-08d9056e064b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Apr 2021 09:07:15.8680
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 5bB/yiIkWddIne4G4cWQNG5KExSgIzmnnSdNksgDO98vNS7wPLxk7tjSSh8GEwaPDkDpUJpP2ufEw2DKYA4u9A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR04MB6153
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-04-22_01:2021-04-21,2021-04-21 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0 mlxscore=0
+ bulkscore=0 clxscore=1015 suspectscore=0 impostorscore=0 adultscore=0
+ phishscore=0 spamscore=0 mlxlogscore=999 malwarescore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
+ definitions=main-2104220076
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2021-04-21 at 22:46 -0400, Martin K. Petersen wrote:
->=20
-> Martin,
->=20
-> > Hm, it sounds intriguing, but it has issues in its own right. For
-> > years to come, user space will have to probe whether these attribute
-> > exist, and fall back to the current ones ("wwid", "vpd_pg83")
-> > otherwise. So user space can't be simplified any time soon. Speaking
-> > for an important user space consumer of WWIDs (multipathd), I doubt
-> > that this would improve matters for us. We'd be happy if the kernel
-> > could just pick the "best" designator for us. But I understand that
-> > the kernel can't guarantee a good choice (user space can't either).
->=20
-> But user space can be adapted at runtime to pick one designator over
-> the
-> other (ha!).
+On Wed, Apr 21, 2021 at 03:55:15PM -0700, James Smart wrote:
+> On 4/20/2021 5:38 AM, Benjamin Block wrote:
+> ...
+> > > +	len = *((u32 *)(pcmd + 4));
+> > > +	len = be32_to_cpu(len);
+> > > +	memcpy(vport->qfpa_res, pcmd, len + 8);
+> > > +	len = len / LPFC_PRIORITY_RANGE_DESC_SIZE;
+> > > +
+> > > +	desc = (struct priority_range_desc *)(pcmd + 8);
+> > > +	vmid_range = vport->vmid_priority.vmid_range;
+> > > +	if (!vmid_range) {
+> > > +		vmid_range = kcalloc(MAX_PRIORITY_DESC, sizeof(*vmid_range),
+> > > +				     GFP_KERNEL);
+> > > +		if (!vmid_range) {
+> > > +			kfree(vport->qfpa_res);
+> > > +			goto out;
+> > > +		}
+> > > +		vport->vmid_priority.vmid_range = vmid_range;
+> > > +	}
+> > > +	vport->vmid_priority.num_descriptors = len;
+> > > +
+> > > +	for (i = 0; i < len; i++, vmid_range++, desc++) {
+> > > +		lpfc_printf_vlog(vport, KERN_DEBUG, LOG_ELS,
+> > > +				 "6539 vmid values low=%d, high=%d, qos=%d, "
+> > > +				 "local ve id=%d\n", desc->lo_range,
+> > > +				 desc->hi_range, desc->qos_priority,
+> > > +				 desc->local_ve_id);
+> > > +
+> > > +		vmid_range->low = desc->lo_range << 1;
+> > > +		if (desc->local_ve_id == QFPA_ODD_ONLY)
+> > > +			vmid_range->low++;
+> > > +		if (desc->qos_priority)
+> > > +			vport->vmid_flag |= LPFC_VMID_QOS_ENABLED;
+> > > +		vmid_range->qos = desc->qos_priority;
+> > 
+> > I'm curios, if the FC-switch signals it supports QoS for a range here, how
+> > exactly interacts this with the VM IDs that you seem to allocate
+> > dynamically during runtime for cgroups that request specific App IDs?
+> > You don't seem to use `LPFC_VMID_QOS_ENABLED` anywhere else in the
+> > series. >
+> > Would different cgroups get different QoS classes/guarantees depending
+> > on the selected VM ID (higher VM ID gets better QoS class, or something
+> > like that?)? Would the tagged traffic be handled differently than the
+> > ordinary traffic in the fabric?
+> 
+> The simple answer is there is no interaction w/ the cgroup on priority.
+> And no- we really don't look or use it.  The ranges don't really have hard
+> priority values. The way it works is that all values within a range is
+> equal; a value in the first range is "higher priority" than a value in the
+> second range; and a value in the second range is higher than those in the
+> third range, and so on. 
 
-And that's exactly the problem. Effectively, all user space relies on
-udev today, because that's where this "adaptation" is taking place. It
-happens
+Ah. That's interesting. I thought it is like that, but wasn't sure from
+the spec. Thanks for clarifying.
 
- 1) either in systemd's scsi_id built-in=A0
-   (https://github.com/systemd/systemd/blob/7feb1dd6544d1bf373dbe13dd33cf56=
-3ed16f891/src/udev/scsi_id/scsi_serial.c#L37)
- 2) or in the udev rules coming with sg3_utils=A0
-   (https://github.com/hreinecke/sg3_utils/blob/master/scripts/55-scsi-sg3_=
-id.rules)
+> Doesn't really matter whether the range was marked
+> Best Effort or H/M/L. There's no real "weight".
+> 
+> What you see is the driver simply recording the different ranges so that it
+> knows what to allocate from later on. The driver creates a flat bitmap of
+> all possible values (max of 255) from all ranges - then will allocate values
+> on a first bit set basis.  I know at one point we were going to only
+> auto-assign if there was 1 range, and if multiple range was going to defer a
+> mgmt authority to tell us which range, but this obviously doesn't do that.
 
-1) is just as opaque and un-"adaptable" as the kernel, and the logic is
-suboptimal. 2) is of course "adaptable", but that's a problem in
-practice, if udev fails to provide a WWID. multipath-tools go through
-various twists for this case to figure out "fallback" WWIDs, guessing
-whether that "fallback" matches what udev would have returned if it had
-worked.
+I was worrying a bit whether this would create some hard to debug
+problems in the wild, when QoS essentially depends on the order in which
+Applications/Containers are started and get IDs assigned accordingly -
+assuming there is multiple priority ranges.
 
-That's the gist of it - the general frustration about udev among some
-of its heaviest users (talk to the LVM2 maintainers).
+> Also... although this is coded to support the full breadth of what the
+> standard allows, it may well be the switch only implements 1 range in
+> practice.
+> 
 
-I suppose 99.9% of users never bother with customizing the udev rules.
-IOW, these users might as well just use a kernel-provided value. But
-the remaining 0.1% causes headaches for user-space applications, which
-can't make solid assumptions about the rules. Thus, in a way, the
-flexibility of the rules does more harm than it helps.
-
-> We could do that in the kernel too, of course, but I'm afraid what
-> the
-> resulting BLIST changes would end up looking like over time.
-
-That's something we want to avoid, sure.
-
-But we can actually combine both approaches. If "wwid" yields a good
-value most of the time (which is true IMO), we could make user space
-rely on it by default, and make it possible to set an udev property
-(e.g. ENV{ID_LEGACY}=3D"1") to tell udev rules to determine WWID
-differently. User-space apps like multipath could check the ID_LEGACY
-property to determine whether or not reading the "wwid" attribute would
-be consistent with udev. That would simplify matters a lot for us (Ben,
-do you agree?), without the need of adding endless BLIST entries.
-
-
-> I am also very concerned about changing what the kernel currently
-> exports in a given variable like "wwid". A seemingly innocuous change
-> to
-> the reported value could lead to a system no longer booting after
-> updating the kernel.
-
-AFAICT, no major distribution uses "wwid" for this purpose (yet). I
-just recently realized that the kernel's ALUA code refers to it. (*)
-
-In a recent discussion with Hannes, the idea came up that the priority
-of "SCSI name string" designators should actually depend on their
-subtype. "naa." name strings should map to the respective NAA
-descriptors, and "eui.", likewise (only "iqn." descriptors have no
-binary counterpart; we thought they should rather be put below NAA,
-prio-wise).
-
-I wonder if you'd agree with a change made that way for "wwid". I
-suppose you don't. I'd then propose to add a new attribute following
-this logic. It could simply be an additional attribute with a different
-name. Or this new attribute could be a property of the block device
-rather than the SCSI device, like NVMe does it
-(/sys/block/nvme0n2/wwid).
-
-I don't like the idea of having separate sysfs attributes for
-designators of different types, that's impractical for user space.
-
-> But taking a step back: Other than "it's not what userland currently
-> does", what specifically is the problem with designator_prio()? We've
-> picked the priority list once and for all. If we promise never to
-> change
-> it, what is the issue?
-
-If the prioritization in kernel and user space was the same, we could
-migrate away from udev more easily without risking boot failure.
-
-Thanks,
-Martin
-
-(*) which is an argument for using "wwid" in user space too - just to
-be consitent with the kernel's internal logic.
-
---=20
-Dr. Martin Wilck <mwilck@suse.com>, Tel.=A0+49 (0)911 74053 2107
-SUSE Software Solutions Germany GmbH
-HRB 36809, AG N=FCrnberg GF: Felix Imend=F6rffer
-
-
+-- 
+Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
+IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
+Vorsitz. AufsR.: Gregor Pillen         /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
