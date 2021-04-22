@@ -2,44 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E3DAC433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 06:33:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4E8AC433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 06:34:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B0916144D
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 06:33:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 997EF6144D
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 06:34:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229547AbhDVGdl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Apr 2021 02:33:41 -0400
-Received: from mx2.suse.de ([195.135.220.15]:44192 "EHLO mx2.suse.de"
+        id S234877AbhDVGf3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Apr 2021 02:35:29 -0400
+Received: from mx2.suse.de ([195.135.220.15]:45198 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230232AbhDVGdk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Apr 2021 02:33:40 -0400
+        id S229655AbhDVGf3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Apr 2021 02:35:29 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id AF5E7B008;
-        Thu, 22 Apr 2021 06:33:05 +0000 (UTC)
-Subject: Re: [PATCH 13/42] scsi: add get_{status,host}_byte() accessor
- function
+        by mx2.suse.de (Postfix) with ESMTP id 1FB6BAEA8;
+        Thu, 22 Apr 2021 06:34:54 +0000 (UTC)
+Subject: Re: [PATCH 14/42] scsi: add scsi_result_is_good()
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org
 References: <20210421174749.11221-1-hare@suse.de>
- <20210421174749.11221-14-hare@suse.de>
- <857b0e4a-06e5-b240-1075-466b607faaf5@acm.org>
+ <20210421174749.11221-15-hare@suse.de>
+ <b510135a-3dca-e6e4-bdbb-f1ff3817cc29@acm.org>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <f450715b-3d3f-16c5-8966-4a283afbc3d5@suse.de>
-Date:   Thu, 22 Apr 2021 08:33:04 +0200
+Message-ID: <5fbf3fc1-88d8-62f0-aa5c-57fdb277d9d7@suse.de>
+Date:   Thu, 22 Apr 2021 08:34:53 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.0
 MIME-Version: 1.0
-In-Reply-To: <857b0e4a-06e5-b240-1075-466b607faaf5@acm.org>
+In-Reply-To: <b510135a-3dca-e6e4-bdbb-f1ff3817cc29@acm.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -47,33 +45,21 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/21/21 11:09 PM, Bart Van Assche wrote:
+On 4/21/21 11:10 PM, Bart Van Assche wrote:
 > On 4/21/21 10:47 AM, Hannes Reinecke wrote:
->> Add accessor functions for the host and status byte.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>   include/scsi/scsi_cmnd.h | 10 ++++++++++
->>   1 file changed, 10 insertions(+)
->>
->> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
->> index a1eb7732aa1b..0ac18a7d8ac6 100644
->> --- a/include/scsi/scsi_cmnd.h
->> +++ b/include/scsi/scsi_cmnd.h
->> @@ -316,6 +316,11 @@ static inline void set_status_byte(struct 
->> scsi_cmnd *cmd, char status)
->>       cmd->result = (cmd->result & 0xffffff00) | status;
->>   }
->> +static inline unsigned char get_status_byte(struct scsi_cmnd *cmd)
+>> +static inline bool scsi_result_is_good(struct scsi_cmnd *cmd)
 >> +{
->> +    return cmd->result & 0xff;
+>> +    return (cmd->result == 0);
 >> +}
 > 
-> So in addition to the status_byte() macro, get_status_byte() is 
-> introduced? That seems like a potential source of confusion to me.
+> Do we really need an inline function to compare an integer with zero? 
+> How about open-coding this comparison in the callers of this function?
 > 
-The idea is to kill 'status_byte' (and the linux-specific status codes) 
-entirely, which then would resolve this ambiguity.
+My approach is to avoid direct access to the 'result' field, as the 
+definition of which is about to change.
+
+But as this is not part of _this_ patchset I'll drop this patch for the 
+next round.
 
 Cheers,
 
