@@ -4,125 +4,114 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38DC5C433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 00:08:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 307E5C433B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 01:38:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 163C76143B
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 00:08:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03B09613B0
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 01:38:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234941AbhDVAJX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Apr 2021 20:09:23 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:48081 "EHLO
+        id S230259AbhDVBjQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Apr 2021 21:39:16 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20560 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234761AbhDVAJW (ORCPT
+        by vger.kernel.org with ESMTP id S229740AbhDVBjP (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Apr 2021 20:09:22 -0400
+        Wed, 21 Apr 2021 21:39:15 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619050128;
+        s=mimecast20190719; t=1619055521;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=yjg174e5EN9j3TApAageESsYofMFE60MIHu2Wl6fLm4=;
-        b=OBl6mEBeSyVylQU0lhny2FOD3nOmWJgJEl7r1ik67wGEgge1yuXjr834hPPhizw8AkOPyf
-        86bCk1s2jlFN/K51NouOFuZnMmGad7E5cr35cLHxbvXlHLCFHjxJDwV4wJ1KssSsudpkU7
-        nHPv9tWF3cyYF9tBdvkH+3+oXc9U00g=
+        bh=bEXcWA7CNS2of+lIN30Rut/7LwiTIzDb1MLofL6cq6w=;
+        b=cHNxLia2HDZgTMCzKwA9Xcn2KK71ssXAht5tXHg03u8gBCtL4eYeZmPVkGhI9P6XHOTd04
+        j3LJ0/DtktdBNQj3ZBY6ly/gz9hMwhzAUtnjtGtLIZVT01AYZLVmmCGd0+lE/eH6K8pPgN
+        jjOYh51srUc/aNQivrFDi3Z/GrPMDAs=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-536-J3_c2BfKNxqjfWJ5Rzh6dw-1; Wed, 21 Apr 2021 20:08:46 -0400
-X-MC-Unique: J3_c2BfKNxqjfWJ5Rzh6dw-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+ us-mta-349-T20pXHdsNfimRRw2vN1tDQ-1; Wed, 21 Apr 2021 21:38:39 -0400
+X-MC-Unique: T20pXHdsNfimRRw2vN1tDQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C6364801A82;
-        Thu, 22 Apr 2021 00:08:45 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4B43987A826;
+        Thu, 22 Apr 2021 01:38:38 +0000 (UTC)
 Received: from T590 (ovpn-12-89.pek2.redhat.com [10.72.12.89])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DFFCB5D9F2;
-        Thu, 22 Apr 2021 00:08:40 +0000 (UTC)
-Date:   Thu, 22 Apr 2021 08:08:41 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1E7CB62693;
+        Thu, 22 Apr 2021 01:38:29 +0000 (UTC)
+Date:   Thu, 22 Apr 2021 09:38:28 +0800
 From:   Ming Lei <ming.lei@redhat.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Satish Kharat <satishkh@cisco.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        David Jeffery <djeffery@redhat.com>
-Subject: Re: [PATCH 0/5] scsi: fnic: use blk_mq_tagset_busy_iter() to walk
- scsi commands
-Message-ID: <YIC+ieKIKovpwptY@T590>
-References: <20210421075543.1919826-1-ming.lei@redhat.com>
- <d251c21e-dd3e-979a-1c90-1f94b042e83c@suse.de>
+To:     John Garry <john.garry@huawei.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kashyap.desai@broadcom.com, dgilbert@interlog.com
+Subject: Re: [PATCH] scsi: core: Cap initial sdev queue depth at
+ shost.can_queue
+Message-ID: <YIDTlD2Mq+U36Oqz@T590>
+References: <1618848384-204144-1-git-send-email-john.garry@huawei.com>
+ <YH4aIECa/J/1uS5S@T590>
+ <bba5f248-523d-0def-1a3e-bafeb2b7633f@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d251c21e-dd3e-979a-1c90-1f94b042e83c@suse.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <bba5f248-523d-0def-1a3e-bafeb2b7633f@huawei.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Apr 21, 2021 at 10:14:56PM +0200, Hannes Reinecke wrote:
-> On 4/21/21 9:55 AM, Ming Lei wrote:
-> > Hello Guys,
+On Tue, Apr 20, 2021 at 09:14:12AM +0100, John Garry wrote:
+> On 20/04/2021 01:02, Ming Lei wrote:
+> > On Tue, Apr 20, 2021 at 12:06:24AM +0800, John Garry wrote:
+> > > Function sdev_store_queue_depth() enforces that the sdev queue depth cannot
+> > > exceed shost.can_queue.
+> > > 
+> > > However, the LLDD may still set cmd_per_lun > can_queue, which leads to an
+> > > initial sdev queue depth greater than can_queue.
+> > > 
+> > > Stop this happened by capping initial sdev queue depth at can_queue.
+> > > 
+> > > Signed-off-by: John Garry <john.garry@huawei.com>
+> > > ---
+> > > Topic originally discussed at:
+> > > https://lore.kernel.org/linux-scsi/85dec8eb-8eab-c7d6-b0fb-5622747c5499@interlog.com/T/#m5663d0cac657d843b93d0c9a2374f98fc04384b9
+> > > 
+> > > Last idea there was to error/warn in scsi_add_host() for cmd_per_lun >
 > > 
-> > fnic uses the following way to walk scsi commands in failure handling,
-> > which is obvious wrong, because caller of scsi_host_find_tag has to
-> > guarantee that the tag is active.
-> > 
-> >          for (tag = 0; tag < fnic->fnic_max_tag_id; tag++) {
-> > 				...
-> >                  sc = scsi_host_find_tag(fnic->lport->host, tag);
-> > 				...
-> > 		}
-> > 
-> > Fix the issue by using blk_mq_tagset_busy_iter() to walk
-> > request/scsi_command.
-> > 
-> > thanks,
-> > Ming
-> > 
-> > 
-> > Ming Lei (5):
-> >    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
-> >      fnic_terminate_rport_io
-> >    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
-> >      fnic_clean_pending_aborts
-> >    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
-> >      fnic_cleanup_io
-> >    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
-> >      fnic_rport_exch_reset
-> >    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
-> >      fnic_is_abts_pending
-> > 
-> >   drivers/scsi/fnic/fnic_scsi.c | 933 ++++++++++++++++++----------------
-> >   1 file changed, 493 insertions(+), 440 deletions(-)
-> > 
-> > Cc: Satish Kharat <satishkh@cisco.com>
-> > Cc: Karan Tilak Kumar <kartilak@cisco.com>
-> > Cc: David Jeffery <djeffery@redhat.com>
-> > 
-> Well, this is actually not that easy for fnic.
-> Problem is the reset hack hch put in some time ago (cf
-> fnic_host_start_tag()), which will cause any TMF to use a tag which is _not_
-> visible to the busy iter.
-
-'git grep -n fnic_host_start_tag ./' shows nothing.
-
-> That will cause the iter to miss any TMF, with unpredictable results if a
-> TMF is running at the same time than, say, a link bounce.
-
-Wrt. linus tree or next tree, I don't see any issue wrt. your concern.
-
 > 
-> I have folded this as part of my patchset for reserved commands in SCSI;
-> that way fnic can use 'normal' tags for TMFs, which are then visible to the
-> busy iter and life's good.
+> Hi Ming,
+> 
+> > No, that isn't my suggestion.
+> 
+> Right, it was what I mentioned.
+> 
+> > 
+> > > can_queue. However, such a shost driver could still configure the sdev
+> > > queue depth to be sound value at .slave_configure callback, so now thinking
+> > > the orig patch better.
+> > 
+> > As I mentioned last time, why can't we fix ->cmd_per_lun in
+> > scsi_add_host() using .can_queue?
+> > 
+> 
+> I would rather not change the values which are provided from the driver. I
+> would rather take the original values and try to use them in a sane way.
+> 
+> I have not seen other places where driver shost config values are modified
+> by the core code.
 
-No, this fix is one bug fix, which can't depend on your reserved
-command in SCSI, and they need to be backported to stable tree too.
+Wrt. .cmd_per_lun, I think it is safe to modify it into one correct
+depth because almost all drivers are just producer of .cmd_per_lun. And
+except for debug purpose, there are only three consumers of .cmd_per_lun
+in scsi, and all are for scsi_change_queue_depth():
+
+	process_message()
+	scsi_alloc_sdev()
+	virtscsi_change_queue_depth()
 
 
-Thanks, 
+Thanks,
 Ming
 
