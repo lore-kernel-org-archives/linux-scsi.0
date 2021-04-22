@@ -2,153 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB68DC433ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 23:45:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38DC5C433B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 00:08:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBD41613DC
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Apr 2021 23:45:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 163C76143B
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 00:08:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243880AbhDUXpv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Apr 2021 19:45:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39368 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237429AbhDUXpu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Apr 2021 19:45:50 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DAB6C06174A
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Apr 2021 16:45:15 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id y62so6578916pfg.4
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Apr 2021 16:45:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=i1CZgnScmKH+RViEX9RX8GQYmbcXFPCJDMmkicsZUZs=;
-        b=CpyFn0ig5llmzULpmiw04tf6HUkdd4Isc21e7FSK/QG/NcU0nhZhvgR52fkwvwCEXG
-         FriWTwh3oUqZGtQi097VowJjnwF9gops78hbcg0L0NlB1fOrIXDGl7lXixsAg69stARX
-         1PRzjVBR6y+EGUvgavD2jm5thC/opZHS1+ax6W1PZcSt3h9o7Oc6Zqf6BdEA+qlWaENT
-         aaU8LoDklxx+dxCJic8kg8EnfJitwnxCyW4td3CCEDjW4M7krXrRMMShdg8/8gAdkR00
-         oMGxxC3rWPFJJUH0MYNLOqs4f9BXP0GD01J17QcXUw04z5io0n224aoQtVMRwfntaHNk
-         NYYg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=i1CZgnScmKH+RViEX9RX8GQYmbcXFPCJDMmkicsZUZs=;
-        b=rVE/9ga1MVm8mjTeDx/xYfI8UAvtvaToxDYGTwi0bfbB8Scuv5tdVJywRRsMEI+vpu
-         c7lv5LDcubeYAc0DoytjnNAxSzfUPmc216g0KQ3lUjp/rwgRww/z7ihBGMQlBFv70sGI
-         FM3QXW/1CNG5Gb9DRxBId6p47KR+yF9+Qn/k9gSi0hNd12Hjl0g97BhhT2ZToVE9UbHz
-         CfcX380p5xXz5EqpWwyWVgb5LXnIjVjsd6N+5+fkHqFx5+t9AhbP6otNjltDrWUh/eRZ
-         zusOBk1PPZrPUunyyrR8gwc/U9aKrOQg7z/tyUwr/u2/pG8bBlWv8ub8jrru69KG1mH7
-         RBQA==
-X-Gm-Message-State: AOAM533YEu6lakAYQsier94qX7dxEObOFHVNfdxHGr6sh+d4Ao0b20Mi
-        IeB6h1m18tsciEFFWyuMmB7G8y7Y8iM=
-X-Google-Smtp-Source: ABdhPJxDYdkSeeuGAAJnTpTheR5UR0ErclZ9q9FWLg8qkiLNTFOk1JISkwJP8WQvABfbi1001T+M+A==
-X-Received: by 2002:aa7:800a:0:b029:250:c8c5:64b3 with SMTP id j10-20020aa7800a0000b0290250c8c564b3mr427864pfi.23.1619048714998;
-        Wed, 21 Apr 2021 16:45:14 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id c11sm379687pgk.83.2021.04.21.16.45.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Apr 2021 16:45:14 -0700 (PDT)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH][REPOST] lpfc: Fix bad memory access during VPD DUMP mailbox command
-Date:   Wed, 21 Apr 2021 16:45:11 -0700
-Message-Id: <20210421234511.102206-1-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.26.2
+        id S234941AbhDVAJX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Apr 2021 20:09:23 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:48081 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234761AbhDVAJW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Apr 2021 20:09:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1619050128;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=yjg174e5EN9j3TApAageESsYofMFE60MIHu2Wl6fLm4=;
+        b=OBl6mEBeSyVylQU0lhny2FOD3nOmWJgJEl7r1ik67wGEgge1yuXjr834hPPhizw8AkOPyf
+        86bCk1s2jlFN/K51NouOFuZnMmGad7E5cr35cLHxbvXlHLCFHjxJDwV4wJ1KssSsudpkU7
+        nHPv9tWF3cyYF9tBdvkH+3+oXc9U00g=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-536-J3_c2BfKNxqjfWJ5Rzh6dw-1; Wed, 21 Apr 2021 20:08:46 -0400
+X-MC-Unique: J3_c2BfKNxqjfWJ5Rzh6dw-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C6364801A82;
+        Thu, 22 Apr 2021 00:08:45 +0000 (UTC)
+Received: from T590 (ovpn-12-89.pek2.redhat.com [10.72.12.89])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id DFFCB5D9F2;
+        Thu, 22 Apr 2021 00:08:40 +0000 (UTC)
+Date:   Thu, 22 Apr 2021 08:08:41 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Satish Kharat <satishkh@cisco.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        David Jeffery <djeffery@redhat.com>
+Subject: Re: [PATCH 0/5] scsi: fnic: use blk_mq_tagset_busy_iter() to walk
+ scsi commands
+Message-ID: <YIC+ieKIKovpwptY@T590>
+References: <20210421075543.1919826-1-ming.lei@redhat.com>
+ <d251c21e-dd3e-979a-1c90-1f94b042e83c@suse.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d251c21e-dd3e-979a-1c90-1f94b042e83c@suse.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The dump command for reading a region passes a requested read length
-specified in words (4byte units). The response overwrites the same
-field with the actual number of bytes read.
+On Wed, Apr 21, 2021 at 10:14:56PM +0200, Hannes Reinecke wrote:
+> On 4/21/21 9:55 AM, Ming Lei wrote:
+> > Hello Guys,
+> > 
+> > fnic uses the following way to walk scsi commands in failure handling,
+> > which is obvious wrong, because caller of scsi_host_find_tag has to
+> > guarantee that the tag is active.
+> > 
+> >          for (tag = 0; tag < fnic->fnic_max_tag_id; tag++) {
+> > 				...
+> >                  sc = scsi_host_find_tag(fnic->lport->host, tag);
+> > 				...
+> > 		}
+> > 
+> > Fix the issue by using blk_mq_tagset_busy_iter() to walk
+> > request/scsi_command.
+> > 
+> > thanks,
+> > Ming
+> > 
+> > 
+> > Ming Lei (5):
+> >    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+> >      fnic_terminate_rport_io
+> >    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+> >      fnic_clean_pending_aborts
+> >    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+> >      fnic_cleanup_io
+> >    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+> >      fnic_rport_exch_reset
+> >    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+> >      fnic_is_abts_pending
+> > 
+> >   drivers/scsi/fnic/fnic_scsi.c | 933 ++++++++++++++++++----------------
+> >   1 file changed, 493 insertions(+), 440 deletions(-)
+> > 
+> > Cc: Satish Kharat <satishkh@cisco.com>
+> > Cc: Karan Tilak Kumar <kartilak@cisco.com>
+> > Cc: David Jeffery <djeffery@redhat.com>
+> > 
+> Well, this is actually not that easy for fnic.
+> Problem is the reset hack hch put in some time ago (cf
+> fnic_host_start_tag()), which will cause any TMF to use a tag which is _not_
+> visible to the busy iter.
 
-The mailbox handler for DUMP which reads VPD data (region 23) is
-treating the response field as if it were still a word_cnt, thus
-multiplying it by 4 to set the read's "length". Given the read value
-was calculated based on the size of the read buffer, the longer
-response length runs off the end of the buffer.
+'git grep -n fnic_host_start_tag ./' shows nothing.
 
-Fix by reworking the code to use the response field as a byte count.
+> That will cause the iter to miss any TMF, with unpredictable results if a
+> TMF is running at the same time than, say, a link bounce.
 
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Wrt. linus tree or next tree, I don't see any issue wrt. your concern.
 
----
- drivers/scsi/lpfc/lpfc_init.c | 12 ++++++------
- drivers/scsi/lpfc/lpfc_sli.c  | 15 ++++++++-------
- 2 files changed, 14 insertions(+), 13 deletions(-)
+> 
+> I have folded this as part of my patchset for reserved commands in SCSI;
+> that way fnic can use 'normal' tags for TMFs, which are then visible to the
+> busy iter and life's good.
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 1e4c792bb660..5f018d02bf56 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -254,13 +254,13 @@ lpfc_config_port_prep(struct lpfc_hba *phba)
- 		if (mb->un.varDmp.word_cnt == 0)
- 			break;
- 
--		i =  mb->un.varDmp.word_cnt * sizeof(uint32_t);
--		if (offset + i >  DMP_VPD_SIZE)
--			i =  DMP_VPD_SIZE - offset;
-+		if (mb->un.varDmp.word_cnt > DMP_VPD_SIZE - offset)
-+			mb->un.varDmp.word_cnt = DMP_VPD_SIZE - offset;
- 		lpfc_sli_pcimem_bcopy(((uint8_t *)mb) + DMP_RSP_OFFSET,
--				      lpfc_vpd_data  + offset, i);
--		offset += i;
--	} while (offset < DMP_VPD_SIZE);
-+				      lpfc_vpd_data + offset,
-+				      mb->un.varDmp.word_cnt);
-+		offset += mb->un.varDmp.word_cnt;
-+	} while (mb->un.varDmp.word_cnt && offset < DMP_VPD_SIZE);
- 
- 	lpfc_parse_vpd(phba, lpfc_vpd_data, offset);
- 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 579ac75dfe79..573c8599d71c 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -19777,7 +19777,7 @@ lpfc_sli_get_config_region23(struct lpfc_hba *phba, char *rgn23_data)
- 	LPFC_MBOXQ_t *pmb = NULL;
- 	MAILBOX_t *mb;
- 	uint32_t offset = 0;
--	int i, rc;
-+	int rc;
- 
- 	if (!rgn23_data)
- 		return 0;
-@@ -19808,13 +19808,14 @@ lpfc_sli_get_config_region23(struct lpfc_hba *phba, char *rgn23_data)
- 		if (mb->un.varDmp.word_cnt == 0)
- 			break;
- 
--		i =  mb->un.varDmp.word_cnt * sizeof(uint32_t);
--		if (offset + i >  DMP_RGN23_SIZE)
--			i =  DMP_RGN23_SIZE - offset;
-+		if (mb->un.varDmp.word_cnt > DMP_RGN23_SIZE - offset)
-+			mb->un.varDmp.word_cnt = DMP_RGN23_SIZE - offset;
-+
- 		lpfc_sli_pcimem_bcopy(((uint8_t *)mb) + DMP_RSP_OFFSET,
--				      rgn23_data  + offset, i);
--		offset += i;
--	} while (offset < DMP_RGN23_SIZE);
-+				       rgn23_data + offset,
-+				       mb->un.varDmp.word_cnt);
-+		offset += mb->un.varDmp.word_cnt;
-+	} while (mb->un.varDmp.word_cnt && offset < DMP_RGN23_SIZE);
- 
- 	mempool_free(pmb, phba->mbox_mem_pool);
- 	return offset;
--- 
-2.26.2
+No, this fix is one bug fix, which can't depend on your reserved
+command in SCSI, and they need to be backported to stable tree too.
+
+
+Thanks, 
+Ming
 
