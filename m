@@ -6,84 +6,80 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BA5FC433ED
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 16:29:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B879AC433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 16:38:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B84F6121E
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 16:29:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E32461421
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 16:38:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237472AbhDVQ3c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Apr 2021 12:29:32 -0400
-Received: from mail-pg1-f182.google.com ([209.85.215.182]:34686 "EHLO
-        mail-pg1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236668AbhDVQ3Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Apr 2021 12:29:25 -0400
-Received: by mail-pg1-f182.google.com with SMTP id z16so33200128pga.1
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Apr 2021 09:28:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=0bW43a0s5kpbhnLFAW5m2OBcRVt4S8rVa0av4kVhF8Y=;
-        b=Em09Ke5c1AjY4r0ZozLKtmuNDOp57IKwq8IoVH8e2rOh64nyZc0MfhvrZX1EBA2Sa2
-         gjz8FhTXrbkugsIeC9HxnMTK7ZsCkYpyJ5mb/KVv/Dxp5njGmPr1boHmieD5MSDohh4A
-         w2xuGTXjLE8S+HxzIxeg/oNlv0vjptdq0XSvzY6ki2rfXApIi5Vae7HH6EU1uTBTXqNt
-         gJPahwn9tytDpBOzFbXBHt9BFHy1sVaDNe9blL3RzfpdFx/psudo2zmkDtqpU3SQ1asT
-         D3KuF/wUeKDStAkF7QxJKdBjh3AZHPhyQjD2sJnbVg9KRIR75mRMt1HZxUiel3Nu7jTz
-         zmNw==
-X-Gm-Message-State: AOAM533dFYdrHjAXVTuCPeQdU6XSmLwV7jU7VKBloxglvI0Ry8G6CPrp
-        uV03kaAsmxEXD0l+VLwBY5P2DXfIBY0=
-X-Google-Smtp-Source: ABdhPJxsfx3IULqZTLHsIhLw5MoYxvEQh9YKhKvRufnZErYGmNG/CwGXvowrAVsl9G66P73UBS8zLQ==
-X-Received: by 2002:a05:6a00:1a0d:b029:25f:7141:cb0 with SMTP id g13-20020a056a001a0db029025f71410cb0mr4198786pfv.44.1619108929267;
-        Thu, 22 Apr 2021 09:28:49 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:ca3e:c761:2ef0:61cd? ([2601:647:4000:d7:ca3e:c761:2ef0:61cd])
-        by smtp.gmail.com with ESMTPSA id y193sm2722877pfc.72.2021.04.22.09.28.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 22 Apr 2021 09:28:48 -0700 (PDT)
-Subject: Re: [RFC PATCH 00/42] SCSI result cleanup, part 2
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-References: <20210421174749.11221-1-hare@suse.de>
- <d1f52383-8435-276c-b69a-39edca853ee2@acm.org>
- <6e79ed8c-f8bc-8f59-f1e1-82a9d734bcb4@suse.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <2a8fcc5f-d28d-6720-32d0-5efc68a2bd82@acm.org>
-Date:   Thu, 22 Apr 2021 09:28:47 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.1
+        id S236287AbhDVQjH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Apr 2021 12:39:07 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2910 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232670AbhDVQjF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Apr 2021 12:39:05 -0400
+Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FR2sR6GNxz6wj95;
+        Fri, 23 Apr 2021 00:28:11 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Thu, 22 Apr 2021 18:38:29 +0200
+Received: from [10.47.95.78] (10.47.95.78) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Thu, 22 Apr
+ 2021 17:38:28 +0100
+Subject: Re: [PATCH] scsi: core: Cap initial sdev queue depth at
+ shost.can_queue
+To:     Ming Lei <ming.lei@redhat.com>
+CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kashyap.desai@broadcom.com>, <dgilbert@interlog.com>
+References: <1618848384-204144-1-git-send-email-john.garry@huawei.com>
+ <YH4aIECa/J/1uS5S@T590> <bba5f248-523d-0def-1a3e-bafeb2b7633f@huawei.com>
+ <YIDTlD2Mq+U36Oqz@T590>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <186be6c5-dbcd-d1fb-67c5-72b5a761568a@huawei.com>
+Date:   Thu, 22 Apr 2021 17:35:42 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <6e79ed8c-f8bc-8f59-f1e1-82a9d734bcb4@suse.de>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <YIDTlD2Mq+U36Oqz@T590>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.95.78]
+X-ClientProxiedBy: lhreml748-chm.china.huawei.com (10.201.108.198) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/22/21 1:49 AM, Hannes Reinecke wrote:
-> So the midlayer can be reduced to handling just the host byte and the
-> status byte. Whether this is by means of a union or something else
-> doesn't really matter; this patchset doesn't prevent any of this from
-> happening.
+On 22/04/2021 02:38, Ming Lei wrote:
+>> I would rather not change the values which are provided from the driver. I
+>> would rather take the original values and try to use them in a sane way.
+>>
+>> I have not seen other places where driver shost config values are modified
+>> by the core code.
 
-Something that is important to mention is that struct scsi_request is
-not only used by the SCSI code but also by the IDE code. Changing the
-'result' member of struct scsi_request also affects the IDE code.
+Hi Ming,
 
-These are the SCSI and block layer calls in the IDE code that I am aware
-of and that assume that a struct scsi_request immediately follows struct
-request:
-* scsi_req_init().
-* scsi_cmd_blk_ioctl().
+> Wrt. .cmd_per_lun, I think it is safe to modify it into one correct
+> depth because almost all drivers are just producer of .cmd_per_lun. And
+> except for debug purpose, there are only three consumers of .cmd_per_lun
+> in scsi, and all are for scsi_change_queue_depth():
+> 
+> 	process_message()
+> 	scsi_alloc_sdev()
+> 	virtscsi_change_queue_depth()
 
-I have not yet tried to evaluate how much work it would take to split
-the code in block/scsi_ioctl.c such that it supports different layouts
-for the data that follows struct request for IDE and SCSI.
+sg_ioctl_common() also looks to read it, but I can't imagine we could 
+break that interface with either suggested change.
+
+So I still prefer not to modify shost.cmd_per_lun, but if you feel 
+strongly enough then I can look to make that change.
 
 Thanks,
+John
 
-Bart.
