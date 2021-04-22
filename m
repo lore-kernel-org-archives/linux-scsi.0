@@ -2,89 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4681EC433ED
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 23:19:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B28CC433B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 23:29:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16ADA610A2
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 23:19:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFFE860FF1
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Apr 2021 23:29:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236896AbhDVXUI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Apr 2021 19:20:08 -0400
-Received: from angie.orcam.me.uk ([157.25.102.26]:39572 "EHLO
-        angie.orcam.me.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236763AbhDVXUH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Apr 2021 19:20:07 -0400
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 53A9E92009C; Fri, 23 Apr 2021 01:19:30 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 4D33D92009B;
-        Fri, 23 Apr 2021 01:19:30 +0200 (CEST)
-Date:   Fri, 23 Apr 2021 01:19:30 +0200 (CEST)
-From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
-To:     Khalid Aziz <khalid@gonehiking.org>
-cc:     Ondrej Zary <linux@zary.sk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/5] Bring the BusLogic host bus adapter driver up to
- Y2021
-In-Reply-To: <0a4d979b-e3f8-959d-fb9a-3a0fcea42141@gonehiking.org>
-Message-ID: <alpine.DEB.2.21.2104230057380.44318@angie.orcam.me.uk>
-References: <alpine.DEB.2.21.2104141244520.44318@angie.orcam.me.uk> <a099f7f8-9601-fd1c-03a4-93587e7276e6@gonehiking.org> <alpine.DEB.2.21.2104162157360.44318@angie.orcam.me.uk> <202104182221.21533.linux@zary.sk> <e3fe98a2-c480-e9bf-67b3-7f51b87975bd@gonehiking.org>
- <alpine.DEB.2.21.2104191747010.44318@angie.orcam.me.uk> <d7dc08a6-92be-e524-1f11-cd9f7326a0fd@gonehiking.org> <alpine.DEB.2.21.2104200456100.44318@angie.orcam.me.uk> <b23c0a0e-d95b-b941-1cc2-1a8bcf44401a@gonehiking.org> <alpine.DEB.2.21.2104221808170.44318@angie.orcam.me.uk>
- <0a4d979b-e3f8-959d-fb9a-3a0fcea42141@gonehiking.org>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        id S239876AbhDVX3t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Apr 2021 19:29:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42662 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239773AbhDVX3t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Apr 2021 19:29:49 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BCD0C061574;
+        Thu, 22 Apr 2021 16:29:12 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id y22-20020a17090a8b16b0290150ae1a6d2bso270206pjn.0;
+        Thu, 22 Apr 2021 16:29:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=4TtuWRmxd6c7tO7/d2Lj8r80VpNylQlJV6QO2aOBW0E=;
+        b=Ls6iOdIHabkazicNCeXQk+1LCdwk/s34fk1+ormyK5yAjiHdDoGMjuEvUzbtaiDxZR
+         ojYPu50Ip9tkQjZoD2wwm/mEpYivWZjEv5FYASMuTCCvk6egMXV9eX888lP5wVt3aBeS
+         PRQQrSorYTX5bcZaTkyQjG/SwlF9k6mbpHZ1p8muLXPYkjdZtJTwkZw38YBLXimNjbQE
+         DCTONXGJ9xKwosXy6+6oRHJpDHeAEtFbco84Ix99ZsSfAS54J4L4hVBnyVJyqgnNcm63
+         Q6T2AISvr9Bz+W5kq+vXeLaDtFlrcRON3bhX6n87XxU8sRrjhvpuw7uUv7rsHezncbJB
+         c0Hw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=4TtuWRmxd6c7tO7/d2Lj8r80VpNylQlJV6QO2aOBW0E=;
+        b=h+eyIOPatHOTdMaIx+w9f09+Uyx3TQCv0dl6j9ujHvUoBLodldpOhVBo6yAEXXMfqL
+         Vc0FoS7f6I6NaQs46QkE+yLQh6C2jXSNM+SyNUKHAy3nXRx0Nlo6Vc1q0CyfCX0tz/Ka
+         1bECgCn1h5FBpgIetyu9OMT9ocOg+AfVMEBNBq3VYl6Ek/mmPbQcAm5XIYH83hxkY380
+         D0u94T26IQRV++NtG38vmHWzHqu7lPZPbX3GkYEoAFwTUPrpQA4fqYYPEagea1NzSuhF
+         HvGgCgH8m5KbfLCoalXEyVW+u0af3AUFkh0HZwQb8jiTKCmDF4+Sa1Vkn9wvcU2b2W6e
+         Hv9Q==
+X-Gm-Message-State: AOAM533g4Bd8Ucl+Ii/SuK2AHjetjeBGY8c5F/3HO0RCTFF5t9KarXud
+        7G87pnEJfF6/6IieX43Fov4=
+X-Google-Smtp-Source: ABdhPJxwPM6t5pY9h03M0se/Wvu4DzAp47uOVtizRJfg5yRIzdI7rmVoAl+6rtTyYGcjGctLUxqHHg==
+X-Received: by 2002:a17:90b:a0d:: with SMTP id gg13mr1256054pjb.124.1619134152150;
+        Thu, 22 Apr 2021 16:29:12 -0700 (PDT)
+Received: from [10.230.185.151] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 25sm3357917pgx.72.2021.04.22.16.29.11
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 22 Apr 2021 16:29:11 -0700 (PDT)
+Subject: Re: [PATCH v9 03/13] nvme: Added a newsysfs attribute appid_store
+To:     Benjamin Block <bblock@linux.ibm.com>,
+        Muneendra Kumar M <muneendra.kumar@broadcom.com>
+Cc:     Benjamin Block <lkml@mageta.org>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, tj@kernel.org,
+        linux-nvme@lists.infradead.org, hare@suse.de, emilne@redhat.com,
+        mkumar@redhat.com, Steffen Maier <maier@linux.ibm.com>
+References: <1617750397-26466-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1617750397-26466-4-git-send-email-muneendra.kumar@broadcom.com>
+ <YHxRK33kf7OSVlxf@chlorum.ategam.org>
+ <a6497bd924795a5a9279b893b0d83baf@mail.gmail.com>
+ <YH62VB+SVfnG+GoI@t480-pf1aa2c2.linux.ibm.com>
+From:   James Smart <jsmart2021@gmail.com>
+Message-ID: <2eec720b-401a-32b4-80e6-900e136939b3@gmail.com>
+Date:   Thu, 22 Apr 2021 16:29:10 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <YH62VB+SVfnG+GoI@t480-pf1aa2c2.linux.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 22 Apr 2021, Khalid Aziz wrote:
-
-> >>>  Verifying actual ISA operations (third-party DMA, etc.) cannot be made 
-> >>> this way, but as I understand the issue there is merely with passing data 
-> >>> structures around and that may not require too much attention beyond 
-> >>> getting things syntactically correct, which I gather someone forgot to do 
-> >>> with a change made a while ago.  So that should be doable as well.
-> >>
-> >> In theory this sounds reasonable, but without being able to test with a
-> >> real hardware I would be concerned about making this change.
-> > 
-> >  Sometimes you have little choice really and that would be less disruptive 
-> > than dropping support altogether.  Even if there's a small issue somewhere 
-> > it's easier to fix by a competent developer who actually gets the hands on 
-> > a piece of hardware than bringing back old code that has been removed and 
-> > consequently not updated according to internal API evolution, etc.
+On 4/20/2021 4:09 AM, Benjamin Block wrote:
+> On Tue, Apr 20, 2021 at 12:24:41PM +0530, Muneendra Kumar M wrote:
+>> Hi Benjamin,
+>>
+>>>> ---
+>>>>   drivers/nvme/host/fc.c | 73
+>>>> +++++++++++++++++++++++++++++++++++++++++-
+>>>>   1 file changed, 72 insertions(+), 1 deletion(-)
+>>
+>>> Hmm, I wonder why only NVMe-FC? Or is this just for the moment? We also
+>>> have the FC transport class for SCSI; I assume this could feed the same
+>>> IDs into the LLDs.
+>>
+>> At present it supports only for SCSI-FC .
 > 
-> We are talking about removing support for BT-445S with firmware version
-> older than 3.37.
+> It does? By adding it to the implementation under `drivers/nvme/host/`?
+> I am confused.
 
- Umm, no.  As still quoted above I referred to ISA devices, such as the 
-BT-545C.  ISA only has 24 address lines so no firmware change can make 
-these devices address memory beyond 16MiB (whether as a bus master or with 
-the aid of an 8237 DMA controller).
+Yeah, this is a little odd.
 
-> That is a very specific case. To continue support for
-> this very specific case, we have to add new code to use local bounce
-> buffer and we have no hardware to verify this new code. This will be new
-> code whether we add it now or later after we find someone even has this
-> very old card with old firmware. I would prefer to remove support for
-> now and add new code to add support for firmware version older than 3.37
-> back only if there is a need later. For now anyone who is using a
-> BT-445S and has updated firmware on their card will not see a change.
+This history is: we know we need to merge the scsi fc transport and the 
+nvme fc transport as the two independent things are creating 
+difficulties and duplications (devloss is an example). But it's a bit of 
+work to change this as it will move where the objects are in the 
+topology tree.
 
- As long as ISA support has been retained the BT-445S can just reuse the 
-logic.
+As we tried to figure out how to do the interaction with cgroups, we 
+wanted to support SCSI and nvme. If you look at how this new attribute 
+sets the vmid, it's somewhat generic - it just sets the fc appid field 
+on a cgrp id.  There's really nothing that says the cgrp is on a block 
+device that is scsi or is nvme.  It should work on devices regardless of 
+their underlying protocol type. Which then left the question - where to 
+place such an attribute.
 
- I'm not strongly attached to ISA support though, and we continue 
-supporting other SCSI HBAs for ISA.  But we do that even though they 
-require a dedicated driver while with the unified MultiMaster architecture 
-it would seem support for another host bus should be low-hanging fruit.
+Given this is an "fc service" and as we knew the transport will be 
+merged eventually we picked to put it under /sys/class/fc point which is 
+where we expect to root the common transport. This class point happens 
+to be owned/created by the nvme fc host code for requesting nve-fc 
+rediscovery events. It is odd that it creates a requirement to load the 
+nvme-fc transport in order to set values for scsi fc devices, but we 
+deemed it acceptable.  Guess we need to get going on that merged 
+transport...
 
-  Maciej
+-- james
+
+
