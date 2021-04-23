@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27AC6C43462
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:40:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1419C43460
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:40:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 071DD61445
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:40:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD3B061461
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:40:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242329AbhDWLlL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Apr 2021 07:41:11 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46930 "EHLO mx2.suse.de"
+        id S242378AbhDWLlK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Apr 2021 07:41:10 -0400
+Received: from mx2.suse.de ([195.135.220.15]:47476 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242328AbhDWLkw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Apr 2021 07:40:52 -0400
+        id S242306AbhDWLks (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Apr 2021 07:40:48 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id EA49AB200;
+        by mx2.suse.de (Postfix) with ESMTP id CD94CB1FB;
         Fri, 23 Apr 2021 11:39:55 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,9 +29,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 38/39] target: use standard SAM status types
-Date:   Fri, 23 Apr 2021 13:39:43 +0200
-Message-Id: <20210423113944.42672-39-hare@suse.de>
+Subject: [PATCH 33/39] FlashPoint: Use standard SCSI definitions
+Date:   Fri, 23 Apr 2021 13:39:38 +0200
+Message-Id: <20210423113944.42672-34-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210423113944.42672-1-hare@suse.de>
 References: <20210423113944.42672-1-hare@suse.de>
@@ -41,245 +41,503 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-target_complete_cmd() and friends requires a SAM status type,
-so passing GOOD here is actually wrong.
+No point in having the driver providing its own definitions.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/target/target_core_alua.c   |  6 +++---
- drivers/target/target_core_iblock.c |  2 +-
- drivers/target/target_core_pr.c     |  8 ++++----
- drivers/target/target_core_pscsi.c  |  2 +-
- drivers/target/target_core_sbc.c    | 10 +++++-----
- drivers/target/target_core_spc.c    | 14 +++++++-------
- drivers/target/target_core_xcopy.c  |  2 +-
- 7 files changed, 22 insertions(+), 22 deletions(-)
+ drivers/scsi/FlashPoint.c | 165 ++++++++++++++++----------------------
+ 1 file changed, 69 insertions(+), 96 deletions(-)
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 5517c7dd5144..3bb921345bce 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -123,7 +123,7 @@ target_emulate_report_referrals(struct se_cmd *cmd)
+diff --git a/drivers/scsi/FlashPoint.c b/drivers/scsi/FlashPoint.c
+index 0464e37c806a..ee9e4028c0f3 100644
+--- a/drivers/scsi/FlashPoint.c
++++ b/drivers/scsi/FlashPoint.c
+@@ -304,40 +304,12 @@ typedef struct SCCBscam_info {
  
- 	transport_kunmap_data_sg(cmd);
+ } SCCBSCAM_INFO;
  
--	target_complete_cmd(cmd, GOOD);
-+	target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return 0;
- }
+-#define  SCSI_REQUEST_SENSE      0x03
+-#define  SCSI_READ               0x08
+-#define  SCSI_WRITE              0x0A
+-#define  SCSI_START_STOP_UNIT    0x1B
+-#define  SCSI_READ_EXTENDED      0x28
+-#define  SCSI_WRITE_EXTENDED     0x2A
+-#define  SCSI_WRITE_AND_VERIFY   0x2E
+-
+-#define  SSGOOD                  0x00
+-#define  SSCHECK                 0x02
+-#define  SSQ_FULL                0x28
+-
+-#define  SMCMD_COMP              0x00
+-#define  SMEXT                   0x01
+-#define  SMSAVE_DATA_PTR         0x02
+-#define  SMREST_DATA_PTR         0x03
+-#define  SMDISC                  0x04
+-#define  SMABORT                 0x06
+-#define  SMREJECT                0x07
+-#define  SMNO_OP                 0x08
+-#define  SMPARITY                0x09
+-#define  SMDEV_RESET             0x0C
+-#define	SMABORT_TAG					0x0D
+-#define	SMINIT_RECOVERY			0x0F
+-#define	SMREL_RECOVERY				0x10
  
-@@ -255,7 +255,7 @@ target_emulate_report_target_port_groups(struct se_cmd *cmd)
+ #define  SMIDENT                 0x80
+ #define  DISC_PRIV               0x40
+ 
+-#define  SMSYNC                  0x01
+-#define  SMWDTR                  0x03
+ #define  SM8BIT                  0x00
+ #define  SM16BIT                 0x01
+-#define  SMIGNORWR               0x23	/* Ignore Wide Residue */
+ 
+ #define  SIX_BYTE_CMD            0x06
+ #define  TWELVE_BYTE_CMD         0x0C
+@@ -1660,7 +1632,7 @@ static int FlashPoint_AbortCCB(void *pCurrCard, struct sccb *p_Sccb)
+ 						p_Sccb->Sccb_scsistat =
+ 						    ABORT_ST;
+ 						p_Sccb->Sccb_scsimsg =
+-						    SMABORT_TAG;
++						    ABORT_TASK;
+ 
+ 						if (((struct sccb_card *)
+ 						     pCurrCard)->currentSCCB ==
+@@ -1812,7 +1784,7 @@ static int FlashPoint_HandleInterrupt(void *pcard)
+ 				FPT_phaseChkFifo(ioport, thisCard);
+ 
+ 			if (RD_HARPOON(ioport + hp_gp_reg_1) ==
+-					SMSAVE_DATA_PTR) {
++					SAVE_POINTERS) {
+ 
+ 				WR_HARPOON(ioport + hp_gp_reg_1, 0x00);
+ 				currSCCB->Sccb_XferState |= F_NO_DATA_YET;
+@@ -1865,7 +1837,7 @@ static int FlashPoint_HandleInterrupt(void *pcard)
+ 					FPT_phaseChkFifo(ioport, thisCard);
+ 
+ 				if (RD_HARPOON(ioport + hp_gp_reg_1) ==
+-				    SMSAVE_DATA_PTR) {
++				    SAVE_POINTERS) {
+ 					WR_HARPOON(ioport + hp_gp_reg_1, 0x00);
+ 					currSCCB->Sccb_XferState |=
+ 					    F_NO_DATA_YET;
+@@ -2258,7 +2230,7 @@ static unsigned char FPT_sfm(u32 port, struct sccb *pCurrSCCB)
+ 		WR_HARPOON(port + hp_fiforead, 0);
+ 		WR_HARPOON(port + hp_fifowrite, 0);
+ 		if (pCurrSCCB != NULL) {
+-			pCurrSCCB->Sccb_scsimsg = SMPARITY;
++			pCurrSCCB->Sccb_scsimsg = MSG_PARITY_ERROR;
+ 		}
+ 		message = 0x00;
+ 		do {
+@@ -2411,7 +2383,7 @@ static void FPT_ssel(u32 port, unsigned char p_card)
+ 
+ 		WRW_HARPOON((port + ID_MSG_STRT + 2), BRH_OP + ALWAYS + NP);
+ 
+-		currSCCB->Sccb_scsimsg = SMDEV_RESET;
++		currSCCB->Sccb_scsimsg = TARGET_RESET;
+ 
+ 		WR_HARPOON(port + hp_autostart_3, (SELECT + SELCHK_STRT));
+ 		auto_loaded = 1;
+@@ -2758,9 +2730,9 @@ static void FPT_sres(u32 port, unsigned char p_card,
+ 		if (message == 0) {
+ 			msgRetryCount++;
+ 			if (msgRetryCount == 1) {
+-				FPT_SendMsg(port, SMPARITY);
++				FPT_SendMsg(port, MSG_PARITY_ERROR);
+ 			} else {
+-				FPT_SendMsg(port, SMDEV_RESET);
++				FPT_SendMsg(port, TARGET_RESET);
+ 
+ 				FPT_sssyncv(port, our_target, NARROW_SCSI,
+ 					    currTar_Info);
+@@ -2860,8 +2832,8 @@ static void FPT_SendMsg(u32 port, unsigned char message)
+ 
+ 		WR_HARPOON(port + hp_portctrl_0, 0x00);
+ 
+-		if ((message == SMABORT) || (message == SMDEV_RESET) ||
+-		    (message == SMABORT_TAG)) {
++		if ((message == ABORT_TASK_SET) || (message == TARGET_RESET) ||
++		    (message == ABORT_TASK)) {
+ 			while (!
+ 			       (RDW_HARPOON((port + hp_intstat)) &
+ 				(BUS_FREE | PHASE))) {
+@@ -2893,7 +2865,7 @@ static void FPT_sdecm(unsigned char message, u32 port, unsigned char p_card)
+ 
+ 	currTar_Info = &FPT_sccbMgrTbl[p_card][currSCCB->TargID];
+ 
+-	if (message == SMREST_DATA_PTR) {
++	if (message == RESTORE_POINTERS) {
+ 		if (!(currSCCB->Sccb_XferState & F_NO_DATA_YET)) {
+ 			currSCCB->Sccb_ATC = currSCCB->Sccb_savedATC;
+ 
+@@ -2905,7 +2877,7 @@ static void FPT_sdecm(unsigned char message, u32 port, unsigned char p_card)
+ 			   (AUTO_IMMED + DISCONNECT_START));
  	}
- 	transport_kunmap_data_sg(cmd);
  
--	target_complete_cmd_with_length(cmd, GOOD, rd_len + 4);
-+	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, rd_len + 4);
- 	return 0;
- }
+-	else if (message == SMCMD_COMP) {
++	else if (message == COMMAND_COMPLETE) {
  
-@@ -424,7 +424,7 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
- out:
- 	transport_kunmap_data_sg(cmd);
- 	if (!rc)
--		target_complete_cmd(cmd, GOOD);
-+		target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return rc;
- }
+ 		if (currSCCB->Sccb_scsistat == SELECT_Q_ST) {
+ 			currTar_Info->TarStatus &=
+@@ -2917,15 +2889,16 @@ static void FPT_sdecm(unsigned char message, u32 port, unsigned char p_card)
  
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index d6fdd1c61f90..deb2b8b64d20 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -474,7 +474,7 @@ iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
- 	if (ret)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
--	target_complete_cmd(cmd, GOOD);
-+	target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return 0;
- }
- 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 6fd5fec95539..4b94b085625b 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -234,7 +234,7 @@ target_scsi2_reservation_release(struct se_cmd *cmd)
- out_unlock:
- 	spin_unlock(&dev->dev_reservation_lock);
- out:
--	target_complete_cmd(cmd, GOOD);
-+	target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return 0;
- }
- 
-@@ -297,7 +297,7 @@ target_scsi2_reservation_reserve(struct se_cmd *cmd)
- 	spin_unlock(&dev->dev_reservation_lock);
- out:
- 	if (!ret)
--		target_complete_cmd(cmd, GOOD);
-+		target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return ret;
- }
- 
-@@ -3676,7 +3676,7 @@ target_scsi3_emulate_pr_out(struct se_cmd *cmd)
  	}
  
- 	if (!ret)
--		target_complete_cmd(cmd, GOOD);
-+		target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return ret;
- }
+-	else if ((message == SMNO_OP) || (message >= SMIDENT)
+-		 || (message == SMINIT_RECOVERY) || (message == SMREL_RECOVERY)) {
++	else if ((message == NOP) || (message >= IDENTIFY_BASE) ||
++		 (message == INITIATE_RECOVERY) ||
++		 (message == RELEASE_RECOVERY)) {
  
-@@ -4073,7 +4073,7 @@ target_scsi3_emulate_pr_in(struct se_cmd *cmd)
+ 		ACCEPT_MSG(port);
+ 		WR_HARPOON(port + hp_autostart_1,
+ 			   (AUTO_IMMED + DISCONNECT_START));
  	}
  
- 	if (!ret)
--		target_complete_cmd(cmd, GOOD);
-+		target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return ret;
- }
+-	else if (message == SMREJECT) {
++	else if (message == MESSAGE_REJECT) {
  
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index dac44caf77a3..7e5e4ab3c126 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -1044,7 +1044,7 @@ static void pscsi_req_done(struct request *req, blk_status_t status)
- 	struct se_cmd *cmd = req->end_io_data;
- 	struct pscsi_plugin_task *pt = cmd->priv;
- 	int result = scsi_req(req)->result;
--	u8 scsi_status = status_byte(result) << 1;
-+	u8 scsi_status = (result & 0xff);
- 
- 	if (scsi_status != SAM_STAT_GOOD) {
- 		pr_debug("PSCSI Status Byte exception at cmd: %p CDB:"
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 7b07e557dc8d..b32f4ee88e79 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -67,7 +67,7 @@ sbc_emulate_readcapacity(struct se_cmd *cmd)
- 		transport_kunmap_data_sg(cmd);
+ 		if ((currSCCB->Sccb_scsistat == SELECT_SN_ST) ||
+ 		    (currSCCB->Sccb_scsistat == SELECT_WN_ST) ||
+@@ -3026,19 +2999,19 @@ static void FPT_sdecm(unsigned char message, u32 port, unsigned char p_card)
+ 		}
  	}
  
--	target_complete_cmd_with_length(cmd, GOOD, 8);
-+	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, 8);
- 	return 0;
- }
+-	else if (message == SMEXT) {
++	else if (message == EXTENDED_MESSAGE) {
  
-@@ -130,7 +130,7 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
- 		transport_kunmap_data_sg(cmd);
+ 		ACCEPT_MSG(port);
+ 		FPT_shandem(port, p_card, currSCCB);
  	}
  
--	target_complete_cmd_with_length(cmd, GOOD, 32);
-+	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, 32);
- 	return 0;
- }
+-	else if (message == SMIGNORWR) {
++	else if (message == IGNORE_WIDE_RESIDUE) {
  
-@@ -202,14 +202,14 @@ sbc_execute_write_same_unmap(struct se_cmd *cmd)
- 			return ret;
+ 		ACCEPT_MSG(port);	/* ACK the RESIDUE MSG */
+ 
+ 		message = FPT_sfm(port, currSCCB);
+ 
+-		if (currSCCB->Sccb_scsimsg != SMPARITY)
++		if (currSCCB->Sccb_scsimsg != MSG_PARITY_ERROR)
+ 			ACCEPT_MSG(port);
+ 		WR_HARPOON(port + hp_autostart_1,
+ 			   (AUTO_IMMED + DISCONNECT_START));
+@@ -3047,7 +3020,7 @@ static void FPT_sdecm(unsigned char message, u32 port, unsigned char p_card)
+ 	else {
+ 
+ 		currSCCB->HostStatus = SCCB_PHASE_SEQUENCE_FAIL;
+-		currSCCB->Sccb_scsimsg = SMREJECT;
++		currSCCB->Sccb_scsimsg = MESSAGE_REJECT;
+ 
+ 		ACCEPT_MSG_ATN(port);
+ 		WR_HARPOON(port + hp_autostart_1,
+@@ -3073,7 +3046,7 @@ static void FPT_shandem(u32 port, unsigned char p_card, struct sccb *pCurrSCCB)
+ 		message = FPT_sfm(port, pCurrSCCB);
+ 		if (message) {
+ 
+-			if (message == SMSYNC) {
++			if (message == EXTENDED_SDTR) {
+ 
+ 				if (length == 0x03) {
+ 
+@@ -3081,10 +3054,10 @@ static void FPT_shandem(u32 port, unsigned char p_card, struct sccb *pCurrSCCB)
+ 					FPT_stsyncn(port, p_card);
+ 				} else {
+ 
+-					pCurrSCCB->Sccb_scsimsg = SMREJECT;
++					pCurrSCCB->Sccb_scsimsg = MESSAGE_REJECT;
+ 					ACCEPT_MSG_ATN(port);
+ 				}
+-			} else if (message == SMWDTR) {
++			} else if (message == EXTENDED_WDTR) {
+ 
+ 				if (length == 0x02) {
+ 
+@@ -3092,7 +3065,7 @@ static void FPT_shandem(u32 port, unsigned char p_card, struct sccb *pCurrSCCB)
+ 					FPT_stwidn(port, p_card);
+ 				} else {
+ 
+-					pCurrSCCB->Sccb_scsimsg = SMREJECT;
++					pCurrSCCB->Sccb_scsimsg = MESSAGE_REJECT;
+ 					ACCEPT_MSG_ATN(port);
+ 
+ 					WR_HARPOON(port + hp_autostart_1,
+@@ -3101,20 +3074,20 @@ static void FPT_shandem(u32 port, unsigned char p_card, struct sccb *pCurrSCCB)
+ 				}
+ 			} else {
+ 
+-				pCurrSCCB->Sccb_scsimsg = SMREJECT;
++				pCurrSCCB->Sccb_scsimsg = MESSAGE_REJECT;
+ 				ACCEPT_MSG_ATN(port);
+ 
+ 				WR_HARPOON(port + hp_autostart_1,
+ 					   (AUTO_IMMED + DISCONNECT_START));
+ 			}
+ 		} else {
+-			if (pCurrSCCB->Sccb_scsimsg != SMPARITY)
++			if (pCurrSCCB->Sccb_scsimsg != MSG_PARITY_ERROR)
+ 				ACCEPT_MSG(port);
+ 			WR_HARPOON(port + hp_autostart_1,
+ 				   (AUTO_IMMED + DISCONNECT_START));
+ 		}
+ 	} else {
+-		if (pCurrSCCB->Sccb_scsimsg == SMPARITY)
++		if (pCurrSCCB->Sccb_scsimsg == MSG_PARITY_ERROR)
+ 			WR_HARPOON(port + hp_autostart_1,
+ 				   (AUTO_IMMED + DISCONNECT_START));
  	}
+@@ -3148,10 +3121,10 @@ static unsigned char FPT_sisyncn(u32 port, unsigned char p_card,
+ 		WRW_HARPOON((port + ID_MSG_STRT + 2), BRH_OP + ALWAYS + CMDPZ);
  
--	target_complete_cmd(cmd, GOOD);
-+	target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return 0;
- }
+ 		WRW_HARPOON((port + SYNC_MSGS + 0),
+-			    (MPM_OP + AMSG_OUT + SMEXT));
++			    (MPM_OP + AMSG_OUT + EXTENDED_MESSAGE));
+ 		WRW_HARPOON((port + SYNC_MSGS + 2), (MPM_OP + AMSG_OUT + 0x03));
+ 		WRW_HARPOON((port + SYNC_MSGS + 4),
+-			    (MPM_OP + AMSG_OUT + SMSYNC));
++			    (MPM_OP + AMSG_OUT + EXTENDED_SDTR));
  
- static sense_reason_t
- sbc_emulate_noop(struct se_cmd *cmd)
+ 		if ((currTar_Info->TarEEValue & EE_SYNC_MASK) == EE_SYNC_20MB)
+ 
+@@ -3221,7 +3194,7 @@ static void FPT_stsyncn(u32 port, unsigned char p_card)
+ 
+ 	sync_msg = FPT_sfm(port, currSCCB);
+ 
+-	if ((sync_msg == 0x00) && (currSCCB->Sccb_scsimsg == SMPARITY)) {
++	if ((sync_msg == 0x00) && (currSCCB->Sccb_scsimsg == MSG_PARITY_ERROR)) {
+ 		WR_HARPOON(port + hp_autostart_1,
+ 			   (AUTO_IMMED + DISCONNECT_START));
+ 		return;
+@@ -3231,7 +3204,7 @@ static void FPT_stsyncn(u32 port, unsigned char p_card)
+ 
+ 	offset = FPT_sfm(port, currSCCB);
+ 
+-	if ((offset == 0x00) && (currSCCB->Sccb_scsimsg == SMPARITY)) {
++	if ((offset == 0x00) && (currSCCB->Sccb_scsimsg == MSG_PARITY_ERROR)) {
+ 		WR_HARPOON(port + hp_autostart_1,
+ 			   (AUTO_IMMED + DISCONNECT_START));
+ 		return;
+@@ -3343,9 +3316,11 @@ static void FPT_sisyncr(u32 port, unsigned char sync_pulse,
+ 			unsigned char offset)
  {
--	target_complete_cmd(cmd, GOOD);
-+	target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return 0;
- }
+ 	ARAM_ACCESS(port);
+-	WRW_HARPOON((port + SYNC_MSGS + 0), (MPM_OP + AMSG_OUT + SMEXT));
++	WRW_HARPOON((port + SYNC_MSGS + 0),
++		    (MPM_OP + AMSG_OUT + EXTENDED_MESSAGE));
+ 	WRW_HARPOON((port + SYNC_MSGS + 2), (MPM_OP + AMSG_OUT + 0x03));
+-	WRW_HARPOON((port + SYNC_MSGS + 4), (MPM_OP + AMSG_OUT + SMSYNC));
++	WRW_HARPOON((port + SYNC_MSGS + 4),
++		    (MPM_OP + AMSG_OUT + EXTENDED_SDTR));
+ 	WRW_HARPOON((port + SYNC_MSGS + 6), (MPM_OP + AMSG_OUT + sync_pulse));
+ 	WRW_HARPOON((port + SYNC_MSGS + 8), (RAT_OP));
+ 	WRW_HARPOON((port + SYNC_MSGS + 10), (MPM_OP + AMSG_OUT + offset));
+@@ -3388,10 +3363,10 @@ static unsigned char FPT_siwidn(u32 port, unsigned char p_card)
+ 		WRW_HARPOON((port + ID_MSG_STRT + 2), BRH_OP + ALWAYS + CMDPZ);
  
-@@ -1245,7 +1245,7 @@ sbc_execute_unmap(struct se_cmd *cmd)
- err:
- 	transport_kunmap_data_sg(cmd);
- 	if (!ret)
--		target_complete_cmd(cmd, GOOD);
-+		target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return ret;
- }
+ 		WRW_HARPOON((port + SYNC_MSGS + 0),
+-			    (MPM_OP + AMSG_OUT + SMEXT));
++			    (MPM_OP + AMSG_OUT + EXTENDED_MESSAGE));
+ 		WRW_HARPOON((port + SYNC_MSGS + 2), (MPM_OP + AMSG_OUT + 0x02));
+ 		WRW_HARPOON((port + SYNC_MSGS + 4),
+-			    (MPM_OP + AMSG_OUT + SMWDTR));
++			    (MPM_OP + AMSG_OUT + EXTENDED_WDTR));
+ 		WRW_HARPOON((port + SYNC_MSGS + 6), (RAT_OP));
+ 		WRW_HARPOON((port + SYNC_MSGS + 8),
+ 			    (MPM_OP + AMSG_OUT + SM16BIT));
+@@ -3436,7 +3411,7 @@ static void FPT_stwidn(u32 port, unsigned char p_card)
  
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index 70a661801cb9..0756a690ea84 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -750,7 +750,7 @@ spc_emulate_inquiry(struct se_cmd *cmd)
- 	kfree(buf);
+ 	width = FPT_sfm(port, currSCCB);
  
- 	if (!ret)
--		target_complete_cmd_with_length(cmd, GOOD, len);
-+		target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, len);
- 	return ret;
- }
- 
-@@ -1104,7 +1104,7 @@ static sense_reason_t spc_emulate_modesense(struct se_cmd *cmd)
- 		transport_kunmap_data_sg(cmd);
- 	}
- 
--	target_complete_cmd_with_length(cmd, GOOD, length);
-+	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, length);
- 	return 0;
- }
- 
-@@ -1122,7 +1122,7 @@ static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
- 	int i;
- 
- 	if (!cmd->data_length) {
--		target_complete_cmd(cmd, GOOD);
-+		target_complete_cmd(cmd, SAM_STAT_GOOD);
- 		return 0;
- 	}
- 
-@@ -1165,7 +1165,7 @@ static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
- 	transport_kunmap_data_sg(cmd);
- 
- 	if (!ret)
--		target_complete_cmd(cmd, GOOD);
-+		target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return ret;
- }
- 
-@@ -1198,7 +1198,7 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
- 	memcpy(rbuf, buf, min_t(u32, sizeof(buf), cmd->data_length));
- 	transport_kunmap_data_sg(cmd);
- 
--	target_complete_cmd(cmd, GOOD);
-+	target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return 0;
- }
- 
-@@ -1265,7 +1265,7 @@ sense_reason_t spc_emulate_report_luns(struct se_cmd *cmd)
- 		transport_kunmap_data_sg(cmd);
- 	}
- 
--	target_complete_cmd_with_length(cmd, GOOD, 8 + lun_count * 8);
-+	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, 8 + lun_count * 8);
- 	return 0;
- }
- EXPORT_SYMBOL(spc_emulate_report_luns);
-@@ -1273,7 +1273,7 @@ EXPORT_SYMBOL(spc_emulate_report_luns);
- static sense_reason_t
- spc_emulate_testunitready(struct se_cmd *cmd)
+-	if ((width == 0x00) && (currSCCB->Sccb_scsimsg == SMPARITY)) {
++	if ((width == 0x00) && (currSCCB->Sccb_scsimsg == MSG_PARITY_ERROR)) {
+ 		WR_HARPOON(port + hp_autostart_1,
+ 			   (AUTO_IMMED + DISCONNECT_START));
+ 		return;
+@@ -3499,9 +3474,11 @@ static void FPT_stwidn(u32 port, unsigned char p_card)
+ static void FPT_siwidr(u32 port, unsigned char width)
  {
--	target_complete_cmd(cmd, GOOD);
-+	target_complete_cmd(cmd, SAM_STAT_GOOD);
- 	return 0;
+ 	ARAM_ACCESS(port);
+-	WRW_HARPOON((port + SYNC_MSGS + 0), (MPM_OP + AMSG_OUT + SMEXT));
++	WRW_HARPOON((port + SYNC_MSGS + 0),
++		    (MPM_OP + AMSG_OUT + EXTENDED_MESSAGE));
+ 	WRW_HARPOON((port + SYNC_MSGS + 2), (MPM_OP + AMSG_OUT + 0x02));
+-	WRW_HARPOON((port + SYNC_MSGS + 4), (MPM_OP + AMSG_OUT + SMWDTR));
++	WRW_HARPOON((port + SYNC_MSGS + 4),
++		    (MPM_OP + AMSG_OUT + EXTENDED_WDTR));
+ 	WRW_HARPOON((port + SYNC_MSGS + 6), (RAT_OP));
+ 	WRW_HARPOON((port + SYNC_MSGS + 8), (MPM_OP + AMSG_OUT + width));
+ 	WRW_HARPOON((port + SYNC_MSGS + 10), (BRH_OP + ALWAYS + NP));
+@@ -3682,7 +3659,7 @@ static void FPT_ssenss(struct sccb_card *pCurrCard)
+ 	}
+ 
+ 	currSCCB->CdbLength = SIX_BYTE_CMD;
+-	currSCCB->Cdb[0] = SCSI_REQUEST_SENSE;
++	currSCCB->Cdb[0] = REQUEST_SENSE;
+ 	currSCCB->Cdb[1] = currSCCB->Cdb[1] & (unsigned char)0xE0;	/*Keep LUN. */
+ 	currSCCB->Cdb[2] = 0x00;
+ 	currSCCB->Cdb[3] = 0x00;
+@@ -3939,13 +3916,9 @@ static void FPT_sinits(struct sccb *p_sccb, unsigned char p_card)
+ */
+ 	if ((currTar_Info->TarStatus & TAR_ALLOW_DISC) ||
+ 	    (currTar_Info->TarStatus & TAG_Q_TRYING)) {
+-		p_sccb->Sccb_idmsg =
+-		    (unsigned char)(SMIDENT | DISC_PRIV) | p_sccb->Lun;
+-	}
+-
+-	else {
+-
+-		p_sccb->Sccb_idmsg = (unsigned char)SMIDENT | p_sccb->Lun;
++		p_sccb->Sccb_idmsg = IDENTIFY(true, p_sccb->Lun);
++	} else {
++		p_sccb->Sccb_idmsg = IDENTIFY(false, p_sccb->Lun);
+ 	}
+ 
+ 	p_sccb->HostStatus = 0x00;
+@@ -3962,7 +3935,7 @@ static void FPT_sinits(struct sccb *p_sccb, unsigned char p_card)
+  */
+ 	p_sccb->Sccb_scsistat = BUS_FREE_ST;
+ 	p_sccb->SccbStatus = SCCB_IN_PROCESS;
+-	p_sccb->Sccb_scsimsg = SMNO_OP;
++	p_sccb->Sccb_scsimsg = NOP;
+ 
  }
  
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index d31ed071cb08..44d76c304701 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -1011,7 +1011,7 @@ static sense_reason_t target_rcr_operating_parameters(struct se_cmd *se_cmd)
- 	put_unaligned_be32(42, &p[0]);
+@@ -4167,7 +4140,7 @@ static void FPT_phaseMsgOut(u32 port, unsigned char p_card)
+ 		message = currSCCB->Sccb_scsimsg;
+ 		scsiID = currSCCB->TargID;
  
- 	transport_kunmap_data_sg(se_cmd);
--	target_complete_cmd(se_cmd, GOOD);
-+	target_complete_cmd(se_cmd, SAM_STAT_GOOD);
+-		if (message == SMDEV_RESET) {
++		if (message == TARGET_RESET) {
  
- 	return TCM_NO_SENSE;
- }
+ 			currTar_Info = &FPT_sccbMgrTbl[p_card][scsiID];
+ 			currTar_Info->TarSyncCtrl = 0;
+@@ -4203,7 +4176,7 @@ static void FPT_phaseMsgOut(u32 port, unsigned char p_card)
+ 
+ 		else if (currSCCB->Sccb_scsistat < COMMAND_ST) {
+ 
+-			if (message == SMNO_OP) {
++			if (message == NOP) {
+ 				currSCCB->Sccb_MGRFlags |= F_DEV_SELECTED;
+ 
+ 				FPT_ssel(port, p_card);
+@@ -4211,13 +4184,13 @@ static void FPT_phaseMsgOut(u32 port, unsigned char p_card)
+ 			}
+ 		} else {
+ 
+-			if (message == SMABORT)
++			if (message == ABORT_TASK_SET)
+ 
+ 				FPT_queueFlushSccb(p_card, SCCB_COMPLETE);
+ 		}
+ 
+ 	} else {
+-		message = SMABORT;
++		message = ABORT_TASK_SET;
+ 	}
+ 
+ 	WRW_HARPOON((port + hp_intstat), (BUS_FREE | PHASE | XFER_CNT_0));
+@@ -4232,8 +4205,8 @@ static void FPT_phaseMsgOut(u32 port, unsigned char p_card)
+ 
+ 	WR_HARPOON(port + hp_portctrl_0, 0x00);
+ 
+-	if ((message == SMABORT) || (message == SMDEV_RESET) ||
+-	    (message == SMABORT_TAG)) {
++	if ((message == ABORT_TASK_SET) || (message == TARGET_RESET) ||
++	    (message == ABORT_TASK)) {
+ 
+ 		while (!(RDW_HARPOON((port + hp_intstat)) & (BUS_FREE | PHASE))) {
+ 		}
+@@ -4275,8 +4248,8 @@ static void FPT_phaseMsgOut(u32 port, unsigned char p_card)
+ 
+ 	else {
+ 
+-		if (message == SMPARITY) {
+-			currSCCB->Sccb_scsimsg = SMNO_OP;
++		if (message == MSG_PARITY_ERROR) {
++			currSCCB->Sccb_scsimsg = NOP;
+ 			WR_HARPOON(port + hp_autostart_1,
+ 				   (AUTO_IMMED + DISCONNECT_START));
+ 		} else {
+@@ -4306,7 +4279,7 @@ static void FPT_phaseMsgIn(u32 port, unsigned char p_card)
+ 	}
+ 
+ 	message = RD_HARPOON(port + hp_scsidata_0);
+-	if ((message == SMDISC) || (message == SMSAVE_DATA_PTR)) {
++	if ((message == DISCONNECT) || (message == SAVE_POINTERS)) {
+ 
+ 		WR_HARPOON(port + hp_autostart_1,
+ 			   (AUTO_IMMED + END_DATA_START));
+@@ -4321,7 +4294,7 @@ static void FPT_phaseMsgIn(u32 port, unsigned char p_card)
+ 			FPT_sdecm(message, port, p_card);
+ 
+ 		} else {
+-			if (currSCCB->Sccb_scsimsg != SMPARITY)
++			if (currSCCB->Sccb_scsimsg != MSG_PARITY_ERROR)
+ 				ACCEPT_MSG(port);
+ 			WR_HARPOON(port + hp_autostart_1,
+ 				   (AUTO_IMMED + DISCONNECT_START));
+@@ -4351,7 +4324,7 @@ static void FPT_phaseIllegal(u32 port, unsigned char p_card)
+ 
+ 		currSCCB->HostStatus = SCCB_PHASE_SEQUENCE_FAIL;
+ 		currSCCB->Sccb_scsistat = ABORT_ST;
+-		currSCCB->Sccb_scsimsg = SMABORT;
++		currSCCB->Sccb_scsimsg = ABORT_TASK_SET;
+ 	}
+ 
+ 	ACCEPT_MSG_ATN(port);
+@@ -4650,9 +4623,9 @@ static void FPT_autoCmdCmplt(u32 p_port, unsigned char p_card)
+ 
+ 	FPT_sccbMgrTbl[p_card][currSCCB->TargID].TarLUN_CA = 0;
+ 
+-	if (status_byte != SSGOOD) {
++	if (status_byte != SAM_STAT_GOOD) {
+ 
+-		if (status_byte == SSQ_FULL) {
++		if (status_byte == SAM_STAT_TASK_SET_FULL) {
+ 
+ 			if (((FPT_BL_Card[p_card].globalFlags & F_CONLUN_IO) &&
+ 			     ((FPT_sccbMgrTbl[p_card][currSCCB->TargID].
+@@ -4784,7 +4757,7 @@ static void FPT_autoCmdCmplt(u32 p_port, unsigned char p_card)
+ 
+ 		}
+ 
+-		if (status_byte == SSCHECK) {
++		if (status_byte == SAM_STAT_CHECK_CONDITION) {
+ 			if (FPT_BL_Card[p_card].globalFlags & F_DO_RENEGO) {
+ 				if (FPT_sccbMgrTbl[p_card][currSCCB->TargID].
+ 				    TarEEValue & EE_SYNC_MASK) {
+@@ -4806,7 +4779,7 @@ static void FPT_autoCmdCmplt(u32 p_port, unsigned char p_card)
+ 			currSCCB->SccbStatus = SCCB_ERROR;
+ 			currSCCB->TargetStatus = status_byte;
+ 
+-			if (status_byte == SSCHECK) {
++			if (status_byte == SAM_STAT_CHECK_CONDITION) {
+ 
+ 				FPT_sccbMgrTbl[p_card][currSCCB->TargID].
+ 				    TarLUN_CA = 1;
+@@ -6868,14 +6841,14 @@ static void FPT_queueCmdComplete(struct sccb_card *pCurrCard,
+ 		if ((p_sccb->
+ 		     ControlByte & (SCCB_DATA_XFER_OUT | SCCB_DATA_XFER_IN))
+ 		    && (p_sccb->HostStatus == SCCB_COMPLETE)
+-		    && (p_sccb->TargetStatus != SSCHECK))
+-
+-			if ((SCSIcmd == SCSI_READ) ||
+-			    (SCSIcmd == SCSI_WRITE) ||
+-			    (SCSIcmd == SCSI_READ_EXTENDED) ||
+-			    (SCSIcmd == SCSI_WRITE_EXTENDED) ||
+-			    (SCSIcmd == SCSI_WRITE_AND_VERIFY) ||
+-			    (SCSIcmd == SCSI_START_STOP_UNIT) ||
++		    && (p_sccb->TargetStatus != SAM_STAT_CHECK_CONDITION))
++
++			if ((SCSIcmd == READ_6) ||
++			    (SCSIcmd == WRITE_6) ||
++			    (SCSIcmd == READ_10) ||
++			    (SCSIcmd == WRITE_10) ||
++			    (SCSIcmd == WRITE_VERIFY) ||
++			    (SCSIcmd == START_STOP) ||
+ 			    (pCurrCard->globalFlags & F_NO_FILTER)
+ 			    )
+ 				p_sccb->HostStatus = SCCB_DATA_UNDER_RUN;
 -- 
 2.29.2
 
