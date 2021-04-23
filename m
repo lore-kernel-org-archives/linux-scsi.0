@@ -2,218 +2,361 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 241B1C43462
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 837F5C43461
 	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:39:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4B8D61409
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:39:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EA0361139
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:39:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242154AbhDWLkd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Apr 2021 07:40:33 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46688 "EHLO mx2.suse.de"
+        id S242182AbhDWLke (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Apr 2021 07:40:34 -0400
+Received: from mx2.suse.de ([195.135.220.15]:46730 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230072AbhDWLkc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S231472AbhDWLkc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 23 Apr 2021 07:40:32 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id E7130B11D;
-        Fri, 23 Apr 2021 11:39:54 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 181F0B166;
+        Fri, 23 Apr 2021 11:39:55 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>,
         Hannes Reinecke <hare@suse.de>
-Subject: [RFC PATCHv2 00/39] SCSI result cleanup, part 2
-Date:   Fri, 23 Apr 2021 13:39:05 +0200
-Message-Id: <20210423113944.42672-1-hare@suse.de>
+Subject: [PATCH 05/39] scsi: stop using DRIVER_ERROR
+Date:   Fri, 23 Apr 2021 13:39:10 +0200
+Message-Id: <20210423113944.42672-6-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210423113944.42672-1-hare@suse.de>
+References: <20210423113944.42672-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
+Return the actual error code in __scsi_execute() (which, according
+to the documentation, should have happened anyway).
+And audit all callers to cope with negative return values from
+__scsi_execute() and friends.
 
-here is now my alternative approach on how the SCSI result could be
-cleaned up. It's based on the observation that two fields (namely
-driver_byte and message_byte) are essentially unused.
-The driver byte really is an unloved thing, with very few drivers
-using it, and not really consistent, either.
-It's only DRIVER_SENSE which has a meaning for userspace, and that
-just indicates if a sense code is present; as such it can easily
-inferred by looking at the sense code itself.
-The message byte is a different story, as it's being used internally
-by some SCSI parallel drivers. But even here, in the end the message
-byte is only ever relevant for SCSI EH, and that just checks if
-any message byte is set apart from COMMAND_COMPLETE.
-And we have the SCp.Message field, which can be used to hold the
-message values for drivers which had been using the message byte
-in the SCSI result. If we do that the message byte itself becomes
-irrelevant and can be dropped, too.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/libata-scsi.c         |  8 ++++++++
+ drivers/scsi/ch.c                 |  3 ++-
+ drivers/scsi/cxlflash/superpipe.c |  2 +-
+ drivers/scsi/scsi.c               |  2 ++
+ drivers/scsi/scsi_ioctl.c         |  4 +++-
+ drivers/scsi/scsi_lib.c           | 15 +++++++++------
+ drivers/scsi/scsi_scan.c          |  4 ++--
+ drivers/scsi/scsi_transport_spi.c |  2 +-
+ drivers/scsi/sd.c                 | 15 +++++++++------
+ drivers/scsi/sd_zbc.c             |  2 +-
+ drivers/scsi/sr_ioctl.c           |  4 ++++
+ drivers/scsi/ufs/ufshcd.c         |  2 +-
+ drivers/scsi/virtio_scsi.c        |  2 +-
+ include/scsi/scsi.h               |  3 +++
+ 14 files changed, 47 insertions(+), 21 deletions(-)
 
-So with this approach we can stop using the driver_byte and the
-message_byte values in the SCSI result, which means we only
-have two values (host byte and status byte) left to deal with.
-
-My plan here is move every driver to use accessors for the
-remaining bytes in the SCSI result, and with that move the
-SCSI result over into two separate values.
-
-A patchset implementing this can be found at:
-
-git://git.kernel.org/pub/scm/linux/kernel/hare/scsi-devel.git
-scsi-result-rework
-
-This patchset is the first part of that, and is intentionally posted
-as an RFC as it directly competes with Barts patchset.
-
-As it has been noted that there is a confusion between
-'status_byte()' (which returns the linux status code) and
-'get_status_byte()' (which returns the SAM status code) I've
-added another patch to rip out the linux-specific SCSI
-status code; they have been obsoleted years ago and it's
-time for them to go.
-
-As usual, comments and reviews are welcome.
-
-Changes to v1:
-- Drop patches not relevant to this series
-- Include reviews from Bart and Doug Gilbert
-- Add patch to remove status_byte()
-
-Hannes Reinecke (39):
-  st: return error code in st_scsi_execute()
-  scsi_ioctl: return error code when blk_rq_map_kern() fails
-  scsi_dh_alua: do not interpret DRIVER_ERROR
-  scsi: Fixup calling convention for scsi_mode_sense()
-  scsi: stop using DRIVER_ERROR
-  scsi: introduce scsi_build_sense()
-  scsi: introduce scsi_status_is_check_condition()
-  scsi: Kill DRIVER_SENSE
-  scsi: do not use DRIVER_INVALID
-  scsi_error: use DID_TIME_OUT instead of DRIVER_TIMEOUT
-  xen-scsiback: use DID_ERROR instead of DRIVER_ERROR
-  xen-scsifront: compability status handling
-  scsi: Drop the now obsolete driver_byte definitions
-  NCR5380: Fold SCSI message ABORT onto DID_ABORT
-  scsi: add get_{status,host}_byte() accessor function
-  scsi: add translate_msg_byte()
-  dc395: use standard macros to set SCSI result
-  dc395: translate message bytes
-  qlogicfas408: make ql_pcmd() a void function
-  qlogicfas408: whitespace cleanup
-  qlogicfas408: translate message to host byte status
-  nsp32: whitespace cleanup
-  nsp32: do not set message byte
-  wd33c93: translate message byte to host byte
-  mesh: translate message to host byte status
-  acornscsi: remove acornscsi_reportstatus()
-  acornscsi: translate message byte to host byte
-  aha152x: modify done() to use separate status bytes
-  aha152x: do not set message byte when calling scsi_done()
-  advansys: do not set message byte in SCSI status
-  fas216: translate message to host byte status
-  fas216: Use get_status_byte() to avoid using linux-specific status
-    codes
-  FlashPoint: Use standard SCSI definitions
-  fdomain: drop last argument to fdomain_finish_cmd()
-  fdomain: translate message to host byte status
-  scsi: drop message byte helper
-  scsi: kill message byte
-  target: use standard SAM status types
-  scsi: drop obsolete linux-specific SCSI status codes
-
- Documentation/scsi/scsi_mid_low_api.rst     |   7 +-
- block/bsg-lib.c                             |   2 +-
- block/bsg.c                                 |   4 +-
- block/scsi_ioctl.c                          |  13 +-
- drivers/ata/libata-scsi.c                   |  30 +-
- drivers/infiniband/ulp/srp/ib_srp.c         |   2 +-
- drivers/s390/scsi/zfcp_scsi.c               |   5 +-
- drivers/scsi/3w-9xxx.c                      |   2 +-
- drivers/scsi/3w-xxxx.c                      |   6 +-
- drivers/scsi/53c700.c                       |   6 +-
- drivers/scsi/FlashPoint.c                   | 165 ++++----
- drivers/scsi/NCR5380.c                      |  10 +-
- drivers/scsi/advansys.c                     |   4 -
- drivers/scsi/aha152x.c                      |  33 +-
- drivers/scsi/aic7xxx/aic79xx_osm.c          |  19 +-
- drivers/scsi/aic7xxx/aic7xxx_osm.c          |   1 -
- drivers/scsi/arcmsr/arcmsr_hba.c            |   5 +-
- drivers/scsi/arm/acornscsi.c                |  46 +--
- drivers/scsi/arm/fas216.c                   |  15 +-
- drivers/scsi/ch.c                           |   5 +-
- drivers/scsi/constants.c                    |  15 -
- drivers/scsi/cxlflash/superpipe.c           |   3 +-
- drivers/scsi/dc395x.c                       |  80 ++--
- drivers/scsi/device_handler/scsi_dh_alua.c  |   4 -
- drivers/scsi/esas2r/esas2r_main.c           |   2 +-
- drivers/scsi/esp_scsi.c                     |   4 +-
- drivers/scsi/fdomain.c                      |  22 +-
- drivers/scsi/hptiop.c                       |   2 +-
- drivers/scsi/ibmvscsi/ibmvscsi.c            |   2 +-
- drivers/scsi/libiscsi.c                     |   5 +-
- drivers/scsi/lpfc/lpfc_scsi.c               |  54 +--
- drivers/scsi/megaraid.c                     |  20 +-
- drivers/scsi/megaraid/megaraid_mbox.c       |  25 +-
- drivers/scsi/megaraid/megaraid_sas_base.c   |   2 -
- drivers/scsi/megaraid/megaraid_sas_fusion.c |   1 -
- drivers/scsi/mesh.c                         |   9 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c        |  14 +-
- drivers/scsi/mvumi.c                        |  10 +-
- drivers/scsi/myrb.c                         |  64 +--
- drivers/scsi/myrs.c                         |   9 +-
- drivers/scsi/nsp32.c                        | 419 +++++++++++---------
- drivers/scsi/ps3rom.c                       |   7 +-
- drivers/scsi/qla2xxx/qla_isr.c              |  15 +-
- drivers/scsi/qlogicfas408.c                 | 137 ++++---
- drivers/scsi/scsi.c                         |  11 +-
- drivers/scsi/scsi_debug.c                   |  15 +-
- drivers/scsi/scsi_error.c                   |  70 ++--
- drivers/scsi/scsi_ioctl.c                   |   7 +-
- drivers/scsi/scsi_lib.c                     |  59 ++-
- drivers/scsi/scsi_logging.c                 |  10 +-
- drivers/scsi/scsi_scan.c                    |   6 +-
- drivers/scsi/scsi_transport_sas.c           |   9 +-
- drivers/scsi/scsi_transport_spi.c           |   2 +-
- drivers/scsi/sd.c                           |  63 +--
- drivers/scsi/sd_zbc.c                       |   3 +-
- drivers/scsi/sg.c                           |  11 +-
- drivers/scsi/smartpqi/smartpqi_init.c       |   3 +-
- drivers/scsi/sr.c                           |   4 +-
- drivers/scsi/sr_ioctl.c                     |   6 +-
- drivers/scsi/st.c                           |   8 +-
- drivers/scsi/stex.c                         |   9 +-
- drivers/scsi/sym53c8xx_2/sym_glue.c         |   6 +-
- drivers/scsi/ufs/ufshcd.c                   |   2 +-
- drivers/scsi/virtio_scsi.c                  |   5 +-
- drivers/scsi/vmw_pvscsi.c                   |   6 -
- drivers/scsi/wd33c93.c                      |  46 ++-
- drivers/scsi/xen-scsifront.c                |   8 +-
- drivers/target/loopback/tcm_loop.c          |   1 -
- drivers/target/target_core_alua.c           |   6 +-
- drivers/target/target_core_iblock.c         |   2 +-
- drivers/target/target_core_pr.c             |   8 +-
- drivers/target/target_core_pscsi.c          |   2 +-
- drivers/target/target_core_sbc.c            |  10 +-
- drivers/target/target_core_spc.c            |  14 +-
- drivers/target/target_core_xcopy.c          |   2 +-
- drivers/usb/storage/cypress_atacb.c         |   4 +-
- drivers/xen/xen-scsiback.c                  |  17 +-
- include/scsi/scsi.h                         |  37 +-
- include/scsi/scsi_cmnd.h                    |  29 +-
- include/scsi/scsi_proto.h                   |  22 +-
- include/scsi/sg.h                           |  24 ++
- include/trace/events/scsi.h                 |  48 +--
- 82 files changed, 859 insertions(+), 1041 deletions(-)
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 48b8934970f3..c5129b9e3afd 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -409,6 +409,10 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 	cmd_result = scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, argsize,
+ 				  sensebuf, &sshdr, (10*HZ), 5, 0, 0, NULL);
+ 
++	if (cmd_result < 0) {
++		rc = cmd_result;
++		goto error;
++	}
+ 	if (driver_byte(cmd_result) == DRIVER_SENSE) {/* sense data available */
+ 		u8 *desc = sensebuf + 8;
+ 		cmd_result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
+@@ -490,6 +494,10 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 	cmd_result = scsi_execute(scsidev, scsi_cmd, DMA_NONE, NULL, 0,
+ 				sensebuf, &sshdr, (10*HZ), 5, 0, 0, NULL);
+ 
++	if (cmd_result < 0) {
++		rc = cmd_result;
++		goto error;
++	}
+ 	if (driver_byte(cmd_result) == DRIVER_SENSE) {/* sense data available */
+ 		u8 *desc = sensebuf + 8;
+ 		cmd_result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index cb74ab1ae5a4..0e7d1214c3d8 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -198,7 +198,8 @@ ch_do_scsi(scsi_changer *ch, unsigned char *cmd, int cmd_len,
+ 	result = scsi_execute_req(ch->device, cmd, direction, buffer,
+ 				  buflength, &sshdr, timeout * HZ,
+ 				  MAX_RETRIES, NULL);
+-
++	if (result < 0)
++		return result;
+ 	if (driver_byte(result) == DRIVER_SENSE) {
+ 		if (debug)
+ 			scsi_print_sense_hdr(ch->device, ch->name, &sshdr);
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index ee11ec340654..caa7c5fd233d 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -369,7 +369,7 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
+ 		goto out;
+ 	}
+ 
+-	if (driver_byte(result) == DRIVER_SENSE) {
++	if (result > 0 && driver_byte(result) == DRIVER_SENSE) {
+ 		result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
+ 		if (result & SAM_STAT_CHECK_CONDITION) {
+ 			switch (sshdr.sense_key) {
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index e9e2f0e15ac8..99dc6ec0b6e5 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -508,6 +508,8 @@ int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
+ 	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer, len,
+ 				  &sshdr, 30 * HZ, 3, NULL);
+ 
++	if (result < 0)
++		return result;
+ 	if (result && scsi_sense_valid(&sshdr) &&
+ 	    sshdr.sense_key == ILLEGAL_REQUEST &&
+ 	    (sshdr.asc == 0x20 || sshdr.asc == 0x24) && sshdr.ascq == 0x00)
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index 14872c9dc78c..d34e1b41dc71 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -101,6 +101,8 @@ static int ioctl_internal_command(struct scsi_device *sdev, char *cmd,
+ 	SCSI_LOG_IOCTL(2, sdev_printk(KERN_INFO, sdev,
+ 				      "Ioctl returned  0x%x\n", result));
+ 
++	if (result < 0)
++		goto out;
+ 	if (driver_byte(result) == DRIVER_SENSE &&
+ 	    scsi_sense_valid(&sshdr)) {
+ 		switch (sshdr.sense_key) {
+@@ -133,7 +135,7 @@ static int ioctl_internal_command(struct scsi_device *sdev, char *cmd,
+ 			break;
+ 		}
+ 	}
+-
++out:
+ 	SCSI_LOG_IOCTL(2, sdev_printk(KERN_INFO, sdev,
+ 				      "IOCTL Releasing command\n"));
+ 	return result;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c532f9390ae3..2d9b533ef1ec 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -245,20 +245,23 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ {
+ 	struct request *req;
+ 	struct scsi_request *rq;
+-	int ret = DRIVER_ERROR << 24;
++	int ret;
+ 
+ 	req = blk_get_request(sdev->request_queue,
+ 			data_direction == DMA_TO_DEVICE ?
+ 			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN,
+ 			rq_flags & RQF_PM ? BLK_MQ_REQ_PM : 0);
+ 	if (IS_ERR(req))
+-		return ret;
+-	rq = scsi_req(req);
++		return PTR_ERR(req);
+ 
+-	if (bufflen &&	blk_rq_map_kern(sdev->request_queue, req,
+-					buffer, bufflen, GFP_NOIO))
+-		goto out;
++	rq = scsi_req(req);
+ 
++	if (bufflen) {
++		ret = blk_rq_map_kern(sdev->request_queue, req,
++				      buffer, bufflen, GFP_NOIO);
++		if (ret)
++			goto out;
++	}
+ 	rq->cmd_len = COMMAND_SIZE(cmd[0]);
+ 	memcpy(rq->cmd, cmd, rq->cmd_len);
+ 	rq->retries = retries;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 9f1b7f3c650a..493f17bf26f2 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -616,7 +616,7 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 				"scsi scan: INQUIRY %s with code 0x%x\n",
+ 				result ? "failed" : "successful", result));
+ 
+-		if (result) {
++		if (result > 0) {
+ 			/*
+ 			 * not-ready to ready transition [asc/ascq=0x28/0x0]
+ 			 * or power-on, reset [asc/ascq=0x29/0x0], continue.
+@@ -631,7 +631,7 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 				    (sshdr.ascq == 0))
+ 					continue;
+ 			}
+-		} else {
++		} else if (result == 0) {
+ 			/*
+ 			 * if nothing was transferred, we try
+ 			 * again. It's a workaround for some USB
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index c37dd15d16d2..a9bb7ae2fafd 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -127,7 +127,7 @@ static int spi_execute(struct scsi_device *sdev, const void *cmd,
+ 				      REQ_FAILFAST_TRANSPORT |
+ 				      REQ_FAILFAST_DRIVER,
+ 				      RQF_PM, NULL);
+-		if (driver_byte(result) != DRIVER_SENSE ||
++		if (result < 0 || driver_byte(result) != DRIVER_SENSE ||
+ 		    sshdr->sense_key != UNIT_ATTENTION)
+ 			break;
+ 	}
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 2ef2954375f4..5733fbee2bae 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1658,7 +1658,7 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+ 					      &sshdr);
+ 
+ 		/* failed to execute TUR, assume media not present */
+-		if (host_byte(retval)) {
++		if (retval < 0 || host_byte(retval)) {
+ 			set_media_not_present(sdkp);
+ 			goto out;
+ 		}
+@@ -1719,6 +1719,9 @@ static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
+ 	if (res) {
+ 		sd_print_result(sdkp, "Synchronize Cache(10) failed", res);
+ 
++		if (res < 0)
++			return res;
++
+ 		if (driver_byte(res) == DRIVER_SENSE)
+ 			sd_print_sense_hdr(sdkp, sshdr);
+ 
+@@ -1825,7 +1828,7 @@ static int sd_pr_command(struct block_device *bdev, u8 sa,
+ 	result = scsi_execute_req(sdev, cmd, DMA_TO_DEVICE, &data, sizeof(data),
+ 			&sshdr, SD_TIMEOUT, sdkp->max_retries, NULL);
+ 
+-	if (driver_byte(result) == DRIVER_SENSE &&
++	if (result > 0 && driver_byte(result) == DRIVER_SENSE &&
+ 	    scsi_sense_valid(&sshdr)) {
+ 		sdev_printk(KERN_INFO, sdev, "PR command failed: %d\n", result);
+ 		scsi_print_sense_hdr(sdev, NULL, &sshdr);
+@@ -2177,7 +2180,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ 			  ((driver_byte(the_result) == DRIVER_SENSE) &&
+ 			  sense_valid && sshdr.sense_key == UNIT_ATTENTION)));
+ 
+-		if (driver_byte(the_result) != DRIVER_SENSE) {
++		if (the_result < 0 || driver_byte(the_result) != DRIVER_SENSE) {
+ 			/* no sense, TUR either succeeded or failed
+ 			 * with a status error */
+ 			if(!spintime && !scsi_status_is_good(the_result)) {
+@@ -2362,7 +2365,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 		if (media_not_present(sdkp, &sshdr))
+ 			return -ENODEV;
+ 
+-		if (the_result) {
++		if (the_result > 0) {
+ 			sense_valid = scsi_sense_valid(&sshdr);
+ 			if (sense_valid &&
+ 			    sshdr.sense_key == ILLEGAL_REQUEST &&
+@@ -2447,7 +2450,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 		if (media_not_present(sdkp, &sshdr))
+ 			return -ENODEV;
+ 
+-		if (the_result) {
++		if (the_result > 0) {
+ 			sense_valid = scsi_sense_valid(&sshdr);
+ 			if (sense_valid &&
+ 			    sshdr.sense_key == UNIT_ATTENTION &&
+@@ -3591,7 +3594,7 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ 			SD_TIMEOUT, sdkp->max_retries, 0, RQF_PM, NULL);
+ 	if (res) {
+ 		sd_print_result(sdkp, "Start/Stop Unit failed", res);
+-		if (driver_byte(res) == DRIVER_SENSE)
++		if (res > 0 && driver_byte(res) == DRIVER_SENSE)
+ 			sd_print_sense_hdr(sdkp, &sshdr);
+ 		if (scsi_sense_valid(&sshdr) &&
+ 			/* 0x3a is medium not present */
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index e45d8d94574c..d4a79fdcfffe 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -116,7 +116,7 @@ static int sd_zbc_do_report_zones(struct scsi_disk *sdkp, unsigned char *buf,
+ 		sd_printk(KERN_ERR, sdkp,
+ 			  "REPORT ZONES start lba %llu failed\n", lba);
+ 		sd_print_result(sdkp, "REPORT ZONES", result);
+-		if (driver_byte(result) == DRIVER_SENSE &&
++		if (result > 0 && driver_byte(result) == DRIVER_SENSE &&
+ 		    scsi_sense_valid(&sshdr))
+ 			sd_print_sense_hdr(sdkp, &sshdr);
+ 		return -EIO;
+diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+index 5703f8400b73..a78f2138d784 100644
+--- a/drivers/scsi/sr_ioctl.c
++++ b/drivers/scsi/sr_ioctl.c
+@@ -205,6 +205,10 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
+ 			      cgc->timeout, IOCTL_RETRIES, 0, 0, NULL);
+ 
+ 	/* Minimal error checking.  Ignore cases we know about, and report the rest. */
++	if (result < 0) {
++		err = result;
++		goto out;
++	}
+ 	if (driver_byte(result) != 0) {
+ 		switch (sshdr->sense_key) {
+ 		case UNIT_ATTENTION:
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 0625da7a42ee..f743434073ac 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8487,7 +8487,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 		sdev_printk(KERN_WARNING, sdp,
+ 			    "START_STOP failed for power mode: %d, result %x\n",
+ 			    pwr_mode, ret);
+-		if (driver_byte(ret) == DRIVER_SENSE)
++		if (ret > 0 && driver_byte(ret) == DRIVER_SENSE)
+ 			scsi_print_sense_hdr(sdp, NULL, &sshdr);
+ 	}
+ 
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index b9c86a7e3b97..1678b6f14af9 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -355,7 +355,7 @@ static void virtscsi_rescan_hotunplug(struct virtio_scsi *vscsi)
+ 		if (result == 0 && inq_result[0] >> 5) {
+ 			/* PQ indicates the LUN is not attached */
+ 			scsi_remove_device(sdev);
+-		} else if (host_byte(result) == DID_BAD_TARGET) {
++		} else if (result > 0 && host_byte(result) == DID_BAD_TARGET) {
+ 			/*
+ 			 * If all LUNs of a virtio-scsi device are unplugged
+ 			 * it will respond with BAD TARGET on any INQUIRY
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 246ced401683..d0a24e55ad63 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -40,6 +40,9 @@ enum scsi_timeouts {
+  */
+ static inline int scsi_status_is_good(int status)
+ {
++	if (status < 0)
++		return false;
++
+ 	/*
+ 	 * FIXME: bit0 is listed as reserved in SCSI-2, but is
+ 	 * significant in SCSI-3.  For now, we follow the SCSI-2
 -- 
 2.29.2
 
