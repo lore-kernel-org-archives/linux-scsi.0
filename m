@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A6C9C433ED
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1C2BC43460
 	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:39:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6778761409
+	by mail.kernel.org (Postfix) with ESMTP id B780961409
 	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:39:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234417AbhDWLkc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Apr 2021 07:40:32 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46652 "EHLO mx2.suse.de"
+        id S242153AbhDWLkd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Apr 2021 07:40:33 -0400
+Received: from mx2.suse.de ([195.135.220.15]:46718 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229890AbhDWLkc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S231394AbhDWLkc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 23 Apr 2021 07:40:32 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id E7615B122;
+        by mx2.suse.de (Postfix) with ESMTP id F0A70B15B;
         Fri, 23 Apr 2021 11:39:54 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,9 +29,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 01/39] st: return error code in st_scsi_execute()
-Date:   Fri, 23 Apr 2021 13:39:06 +0200
-Message-Id: <20210423113944.42672-2-hare@suse.de>
+Subject: [PATCH 03/39] scsi_dh_alua: do not interpret DRIVER_ERROR
+Date:   Fri, 23 Apr 2021 13:39:08 +0200
+Message-Id: <20210423113944.42672-4-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210423113944.42672-1-hare@suse.de>
 References: <20210423113944.42672-1-hare@suse.de>
@@ -41,37 +41,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The callers to st_scsi_execute already check for negative
-return values, so we can drop the use of DRIVER_ERROR and
-return the actual error code.
+Remove the special handling for DRIVER_ERROR; if there is an error
+we should just fail the command and don't try anything clever.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/st.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 9ca536aae784..23be6447e576 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -551,7 +551,7 @@ static int st_scsi_execute(struct st_request *SRpnt, const unsigned char *cmd,
- 			data_direction == DMA_TO_DEVICE ?
- 			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
- 	if (IS_ERR(req))
--		return DRIVER_ERROR << 24;
-+		return PTR_ERR(req);
- 	rq = scsi_req(req);
- 	req->rq_flags |= RQF_QUIET;
- 
-@@ -562,7 +562,7 @@ static int st_scsi_execute(struct st_request *SRpnt, const unsigned char *cmd,
- 				      GFP_KERNEL);
- 		if (err) {
- 			blk_put_request(req);
--			return DRIVER_ERROR << 24;
-+			return err;
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index efa8c0381476..d76c3dccb8cc 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -567,8 +567,6 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 				    "%s: rtpg failed, result %d\n",
+ 				    ALUA_DH_NAME, retval);
+ 			kfree(buff);
+-			if (driver_byte(retval) == DRIVER_ERROR)
+-				return SCSI_DH_DEV_TEMP_BUSY;
+ 			return SCSI_DH_IO;
  		}
- 	}
  
+@@ -795,8 +793,6 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 			sdev_printk(KERN_INFO, sdev,
+ 				    "%s: stpg failed, result %d",
+ 				    ALUA_DH_NAME, retval);
+-			if (driver_byte(retval) == DRIVER_ERROR)
+-				return SCSI_DH_DEV_TEMP_BUSY;
+ 		} else {
+ 			sdev_printk(KERN_INFO, sdev, "%s: stpg failed\n",
+ 				    ALUA_DH_NAME);
 -- 
 2.29.2
 
