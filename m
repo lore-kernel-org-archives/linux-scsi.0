@@ -2,112 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D5A1C433ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 13:14:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB351C433B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 13:18:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22BEC613C8
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 13:14:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78424613C8
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 13:18:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231272AbhDWNOw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Apr 2021 09:14:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53658 "EHLO
+        id S242721AbhDWNTR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Apr 2021 09:19:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229479AbhDWNOv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Apr 2021 09:14:51 -0400
-Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43BB9C061574
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Apr 2021 06:14:14 -0700 (PDT)
-Received: by mail-qk1-x72c.google.com with SMTP id z2so12506364qkb.9
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Apr 2021 06:14:14 -0700 (PDT)
+        with ESMTP id S242705AbhDWNTQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Apr 2021 09:19:16 -0400
+Received: from mail-qk1-x734.google.com (mail-qk1-x734.google.com [IPv6:2607:f8b0:4864:20::734])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D926C061574
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Apr 2021 06:18:40 -0700 (PDT)
+Received: by mail-qk1-x734.google.com with SMTP id s5so40731001qkj.5
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Apr 2021 06:18:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:references:in-reply-to:mime-version:thread-index:date
          :message-id:subject:to:cc;
-        bh=RAKTbFcB0STqBVPtml+CS+K9KE+Mx4J7Hma6jsHgHmg=;
-        b=IBTqir5Ln1yaEDEKbjkLteXl8elah2kVrKgR3Vl9YyQ+taft0ZuEOgG/ZHXpOrASSJ
-         4vhNmatxtDO7n5UqNQZ1QaDkj5zSznDCS/ZRtptVVbf5nseuv2RIwWoNQ8wFDK434Fab
-         zmRBe7n2FGshICU7kx4/T5tCq7DK/HsSMkp0k=
+        bh=Lk83xZh8GA3uGvgx1qBUG3iAvz60Ni5WAuZFgpl+i28=;
+        b=GNlV00sXdbVtNfMvTrm02DU1spKFmAcOUIKPynqlHb3LTGta62G8TsHAOhOhTbcQpT
+         0PGQGdo5Gbs/kLInx++Enxn/n42NNjEX0M9s9uUBTRoVgbv4BGNCa4iNUFTcbET2VPFW
+         lWpAOZN71i40U175ZP33A05PRQOsyR9qBmpi8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:references:in-reply-to:mime-version
          :thread-index:date:message-id:subject:to:cc;
-        bh=RAKTbFcB0STqBVPtml+CS+K9KE+Mx4J7Hma6jsHgHmg=;
-        b=EYZFybLK7w72aTiGbPYgCBcKyye0jZhu+EYsedrVD4fr5jwLlvdxEVCb6qL9uU6gAR
-         QQJtDE8gSd0JUFwef85Lsx5kUxJl5RMz5IcE13kS+y1DxoIWjMbhpOQDzsri/75Gjbhl
-         srtTNzbQzarJXztrwelMtDWHbPjMnqYWhZz/66MpNTliz1YKupMcJOyP+pG392Ywm9yY
-         a8Poy3PjREGE9XCQfkz+XlsyrL9YXKhwAFDfYf5dxH9DzO7E/t9R7HsXl7LOWJxiL6gm
-         tgI5NMT8zY6s7CIwnZWzr5XnyEJ6tf1mnT16cOkD7xdM9NMVRuVl59KtD1xrTtqW7XLT
-         uJ7Q==
-X-Gm-Message-State: AOAM5337nUK/L98P/YJKTOzdKtyRmVD7MZPV8FRx8Xv/6W1krn7Yjvhn
-        63qmACa8WEwJVPlw3VtJ0RoEbrm3yEMCoCwrpZjIxchD/OE=
-X-Google-Smtp-Source: ABdhPJzPZd27PA3aoY7/lDb2I9H8+kGACEtrbtt6TUkJr8nVC4qD75dHgvYICQd5ZnwQvYC9wWh8/svJYd3Z5RChZdY=
-X-Received: by 2002:a37:45d8:: with SMTP id s207mr4035476qka.72.1619183652972;
- Fri, 23 Apr 2021 06:14:12 -0700 (PDT)
+        bh=Lk83xZh8GA3uGvgx1qBUG3iAvz60Ni5WAuZFgpl+i28=;
+        b=cz6CpjEOMYNSkxNkQoPcSlH2Dn1/y0PwoTrrp9LEkkmn95zWguOQqzRv+pa6bXmN5w
+         wO/4y9HVa+cDDhLZ3cL0H0T14vLQjwVZaoqXaIYsrfMV71jWQa1mwnB02GiYJv1A/HPH
+         2+yHavEPEkTyCk91P1L1GANAN0Tf7dvJjG9XGxjgUijMgjP8OsroBGe2LsEftJUNDXL/
+         BZyK3yLZhu0r2ohbKENs3rjBnklBg6d6S/ksNdkmqPQiMuecwbQxjej3N1r3Y/147i6l
+         xFVrkFqZnYjjgHQC0JseV+K5928lX/IM28VOn7Xui5SijrwqEd/35FH9CSvQ+6b1Kk/8
+         Pglw==
+X-Gm-Message-State: AOAM532NGeDtAxKSAOiF6D8tXU5jocuqSvMq+Fh1I5IN06Bgx69Zyf+F
+        k5k94o6Qw8oxUdY7i7NrSgXMgM1YNxEQ45bxY084WHsZYrU=
+X-Google-Smtp-Source: ABdhPJznEtg3vT+FDIgpvgdinTFrO3viX0fElH9/L//wwJWxIVmR7pXbgEk8xd8kb0RSMs0b6B/9N6Nhc1gbbvtg5qo=
+X-Received: by 2002:a05:620a:21d9:: with SMTP id h25mr3997200qka.70.1619183919127;
+ Fri, 23 Apr 2021 06:18:39 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <20210419110156.1786882-1-kashyap.desai@broadcom.com>
- <20210419110156.1786882-2-kashyap.desai@broadcom.com> <923309f0-d5a1-2a89-1fdf-71c71f672cdf@suse.de>
-In-Reply-To: <923309f0-d5a1-2a89-1fdf-71c71f672cdf@suse.de>
+References: <20210407020451.924822-1-kashyap.desai@broadcom.com>
+ <20210407020451.924822-2-kashyap.desai@broadcom.com> <32dd1ee9-4172-50b9-493c-181ae66da11c@acm.org>
+ <39cd58b5a03db494176f2f1df1ef365c@mail.gmail.com> <ce374ec3-754f-e36d-f844-088ac17535b0@acm.org>
+ <15a1b800b7b3f2ab52e189700b07f412@mail.gmail.com> <20210420063325.GA3528859@infradead.org>
+In-Reply-To: <20210420063325.GA3528859@infradead.org>
 MIME-Version: 1.0
 X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQIA/XT3c415OaY1ygHMgGHDvdQMAADBHZcbAgQuS5GqWF7q0A==
-Date:   Fri, 23 Apr 2021 18:44:09 +0530
-Message-ID: <7b68453233b165024f35c09b90bbb25d@mail.gmail.com>
-Subject: RE: [PATCH v3 01/24] mpi3mr: add mpi30 Rev-R headers and Kconfig
-To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        Steve Hagan <steve.hagan@broadcom.com>,
-        Peter Rivera <peter.rivera@broadcom.com>,
-        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        bvanassche@acm.org, thenzl@redhat.com
+Thread-Index: AQJcVwghM9OVj4HmzOm4xelj9Cqw9wIWPpHGAoWLddkBRCM/PAESKQrQAiAYSokCDbeBQqle1+pw
+Date:   Fri, 23 Apr 2021 18:48:36 +0530
+Message-ID: <a2370b16625dc1d06e1dabdd3732122b@mail.gmail.com>
+Subject: RE: [PATCH v2 01/24] mpi3mr: add mpi30 Rev-R headers and Kconfig
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000007f0d3905c0a392ca"
+        boundary="00000000000058a1b205c0a3a2d1"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000007f0d3905c0a392ca
+--00000000000058a1b205c0a3a2d1
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-> > +#ifndef MPI30_TYPE_H
-> > +#define MPI30_TYPE_H     1
-> > +
-> > +#define MPI3_POINTER    *
-> > +
-> > +typedef u8 U8;
-> > +typedef __le16 U16;
-> > +typedef __le32 U32;
-> > +typedef __le64 U64 __aligned(4);
-> > +
-> > +#endif  /* MPI30_TYPE_H */
+> On Mon, Apr 19, 2021 at 03:50:50PM +0530, Kashyap Desai wrote:
+> > Hi Bart - This is possible to modify, but I have to forward this
+> > feedback to group who owns the MPI header within a Broadcom.
+> > It will be difficult to accommodate requested to change in this
+series.
 > >
-> I still think that these typedefs should be dropped, but okay...
+> > I have marked your feedback as TBD for upcoming driver update (not in
+> > current patch set). In V3, this is not accommodated.  Hope this is OK
+> > with you.
+>
+> Please stop this crap.  There is absolute no reason at all ofr this
+mess.
+>
+> Please just write a normal driver with a hand-generated header.  That
+requires
+> less work than all the arguing here and means people can immediately
+jump
+> in and actually understand the driver, unlike the current train wreck.
+And
+> looking at mpt2sas/mpt3sas is is pretty clear that the comon header
+scheme
+> does not work at all.
 
-Hannes-  I had internal discussion within a Broadcom and explain the
-outstanding concerns from this patch series.
-Primary concern is MPI3 header coding standard. I am working to resolve all
-of them and I will be sending V4 soon.
+Hi Christoph, I am working on converting/freshly written mpi3 header which
+will be very much linux coding standard. I will accommodate the same in my
+next post instead of delaying it.
 
 Kashyap
 
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke                Kernel Storage Architect
-> hare@suse.de                              +49 911 74053 688
-> SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> HRB 36809 (AG N=C3=BCrnberg), Gesch=C3=A4ftsf=C3=BChrer: Felix Imend=C3=
-=B6rffer
-
---0000000000007f0d3905c0a392ca
+--00000000000058a1b205c0a3a2d1
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -178,13 +172,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIHQveCjHGssjH2T1ZA0r5wv5G+X
-nhWw/Jh9japjlPkUMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDQyMzEzMTQxM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGKPr9VieXp/KC9a1jC+6/QApm+e
+3fYxQVyyF26Ix3+tMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDQyMzEzMTgzOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQAVlrqa5hqHvMVUFDyFgcCsQSuPofFYhDxmrIAwinEjoZEE
-Fbe6s5VIpaHLLGNW11EJuXv2tmMLZABuvO/bTCpiDVZMhVB0xBvfAfALjE061a6nzsSQ+S9/pMWs
-4Fo5nSiM1B1N9ZuNVVJQPU934AiHdR4wQTBhD08/bNSBWb8ljKr1p6TI2cbQ2NuoFMP+mUBcedZU
-Oxwt2nfn2JVKNwQo8JQwPPI9Ptr0yDb64THTuyrwZYAGkXXyjtizlNuOLx2Bldacvj+Qcf1kCsFo
-BOmP/v6dwJ+yAuOPrmXQWT+p52Gtnkx2NZUsPOKqcM/d4Qw5Tvin59HavXoO/0zbi+lv
---0000000000007f0d3905c0a392ca--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQC9jaxeinUTvP/wgAyvgFZwAnCshBe4JXin5HaljvGe+8mZ
+AU709pquYtbmsRIb8+d4oE6hTcOT1N6R68pq5JmcOput2n2AkcKpD0G3t2CI4BOTGXNKAa+DQOyz
+BsnQd5wBxWj+rFYPqOsljkAQRENyMPwnO0VmrOLthv3uPG+jW1AL2L0ARhOHguGcdmHgOQHvC1M/
+VRrgff0SDgp6pfAqwIZHlehaueYKkYD9iuZHxvFwLte8irW8nvOO9crxbnNHGBbhia8erQuxjvTd
+7N0HLYxJRz6i3SN/AHo0Mn5JhexsHI/+/W5UuYRESfYnkye8D/mXvJeCkNwe3zzCgwe4
+--00000000000058a1b205c0a3a2d1--
