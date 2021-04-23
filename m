@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48626C433ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:40:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EBC8C433B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:40:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1FB0A6115B
+	by mail.kernel.org (Postfix) with ESMTP id F30A661139
 	for <linux-scsi@archiver.kernel.org>; Fri, 23 Apr 2021 11:40:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242262AbhDWLkj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Apr 2021 07:40:39 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46934 "EHLO mx2.suse.de"
+        id S242273AbhDWLkl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Apr 2021 07:40:41 -0400
+Received: from mx2.suse.de ([195.135.220.15]:46930 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236856AbhDWLkd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S236815AbhDWLkd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 23 Apr 2021 07:40:33 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 39B46B1AB;
+        by mx2.suse.de (Postfix) with ESMTP id 33475B197;
         Fri, 23 Apr 2021 11:39:55 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,9 +29,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/39] scsi: do not use DRIVER_INVALID
-Date:   Fri, 23 Apr 2021 13:39:14 +0200
-Message-Id: <20210423113944.42672-10-hare@suse.de>
+Subject: [PATCH 10/39] scsi_error: use DID_TIME_OUT instead of DRIVER_TIMEOUT
+Date:   Fri, 23 Apr 2021 13:39:15 +0200
+Message-Id: <20210423113944.42672-11-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210423113944.42672-1-hare@suse.de>
 References: <20210423113944.42672-1-hare@suse.de>
@@ -41,66 +41,31 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no point in returning DID_ABORT together with DRIVER_INVALID,
-as the caller couldn't care less where the abort originated.
-So drop the use of DRIVER_INVALID.
+Set DID_TIME_OUT instead of DRIVER_TIMEOUT when a command
+is finally marked as failed after error recovery.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/hptiop.c     | 2 +-
- drivers/scsi/mvumi.c      | 4 ++--
- drivers/scsi/vmw_pvscsi.c | 3 ---
- 3 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/scsi/scsi_error.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index db4c7a7ff4dd..61cda7b7624f 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -760,7 +760,7 @@ static void hptiop_finish_scsi_req(struct hptiop_hba *hba, u32 tag,
- 		goto skip_resid;
- 
- 	default:
--		scp->result = DRIVER_INVALID << 24 | DID_ABORT << 16;
-+		scp->result = DID_ABORT << 16;
- 		break;
- 	}
- 
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index f61250545025..6bb03d7a254d 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -1320,7 +1320,7 @@ static void mvumi_complete_cmd(struct mvumi_hba *mhba, struct mvumi_cmd *cmd,
- 		}
- 		break;
- 	default:
--		scmd->result |= (DRIVER_INVALID << 24) | (DID_ABORT << 16);
-+		scmd->result |= (DID_ABORT << 16);
- 		break;
- 	}
- 
-@@ -2127,7 +2127,7 @@ static enum blk_eh_timer_return mvumi_timed_out(struct scsi_cmnd *scmd)
- 	else
- 		atomic_dec(&mhba->fw_outstanding);
- 
--	scmd->result = (DRIVER_INVALID << 24) | (DID_ABORT << 16);
-+	scmd->result = (DID_ABORT << 16);
- 	scmd->SCp.ptr = NULL;
- 	if (scsi_bufflen(scmd)) {
- 		dma_unmap_sg(&mhba->pdev->dev, scsi_sglist(scmd),
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index f0707eaad9f7..f57f8bc037d2 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -601,9 +601,6 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
- 		case BTSTAT_LUNMISMATCH:
- 		case BTSTAT_TAGREJECT:
- 		case BTSTAT_BADMSG:
--			cmd->result = (DRIVER_INVALID << 24);
--			fallthrough;
--
- 		case BTSTAT_HAHARDWARE:
- 		case BTSTAT_INVPHASE:
- 		case BTSTAT_HATIMEOUT:
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 0967021cc06e..689ee628eff9 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2137,10 +2137,10 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
+ 			/*
+ 			 * If just we got sense for the device (called
+ 			 * scsi_eh_get_sense), scmd->result is already
+-			 * set, do not set DRIVER_TIMEOUT.
++			 * set, do not set DID_TIME_OUT.
+ 			 */
+ 			if (!scmd->result)
+-				scmd->result |= (DRIVER_TIMEOUT << 24);
++				scmd->result |= (DID_TIME_OUT << 16);
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+ 				scmd_printk(KERN_INFO, scmd,
+ 					     "%s: flush finish cmd\n",
 -- 
 2.29.2
 
