@@ -2,80 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F40ACC43461
-	for <linux-scsi@archiver.kernel.org>; Sun, 25 Apr 2021 12:20:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 857DAC433ED
+	for <linux-scsi@archiver.kernel.org>; Sun, 25 Apr 2021 16:17:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA218613A9
-	for <linux-scsi@archiver.kernel.org>; Sun, 25 Apr 2021 12:20:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5EF3361363
+	for <linux-scsi@archiver.kernel.org>; Sun, 25 Apr 2021 16:17:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230140AbhDYMU7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 25 Apr 2021 08:20:59 -0400
-Received: from mga06.intel.com ([134.134.136.31]:63546 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229837AbhDYMU5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 25 Apr 2021 08:20:57 -0400
-IronPort-SDR: hXMMJBpyXQYbj/nwX+ke0zvw8TQmmHfjvc2iHvABgg/+6NJTt8CDJPHxh1qbMWufkDJpXE7z/Y
- QgMYZ5VcQduA==
-X-IronPort-AV: E=McAfee;i="6200,9189,9964"; a="257536042"
-X-IronPort-AV: E=Sophos;i="5.82,250,1613462400"; 
-   d="scan'208";a="257536042"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Apr 2021 05:20:15 -0700
-IronPort-SDR: GxK5WXx/z622EJjt1X62nNHOczMp0htXHT9ESudgp9qLN//i2ptdHbhzT+AjYbgA8YexELGMTf
- p+sz0c6acvZw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.82,250,1613462400"; 
-   d="scan'208";a="422296359"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
-  by fmsmga008.fm.intel.com with ESMTP; 25 Apr 2021 05:20:06 -0700
-Subject: Re: [PATCH v21 1/2] scsi: ufs: Enable power management for wlun
-To:     Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Bean Huo <beanhuo@micron.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Yue Hu <huyue2@yulong.com>,
-        Bart van Assche <bvanassche@acm.org>,
-        Dinghao Liu <dinghao.liu@zju.edu.cn>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-samsung-soc@vger.kernel.org>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>
-References: <cover.1619223249.git.asutoshd@codeaurora.org>
- <4662c462e79e3e7f541f54f88f8993f421026d83.1619223249.git.asutoshd@codeaurora.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <9e0655c3-42cf-d090-8aa5-2cb644b2e93c@intel.com>
-Date:   Sun, 25 Apr 2021 15:20:19 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        id S230459AbhDYQRq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 25 Apr 2021 12:17:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36826 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230288AbhDYQRq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Apr 2021 12:17:46 -0400
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E12DEC061574
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Apr 2021 09:17:04 -0700 (PDT)
+Received: by mail-pg1-x52d.google.com with SMTP id f29so1391176pgm.8
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Apr 2021 09:17:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=/CgjknHmTbeCE3qHm1ZKMHULGEo8L8qg3hm7ZUKCAB8=;
+        b=CwkD7LZ2gjDf1jUOl+BTcW8S5J2jaGTZTB/NU5HDfpmvSA+mwTH01PgAnQRHkJyfGY
+         et4vXfuSk+XeNiGfUpVM80X/eBBEiO4vUrab27Ti1zVGHx6N1wkAjtj2KbBPiGLxD+8C
+         BiiDvh5kONzRdMm4MD+d2QsJamO0otPwX8nE4Qa8i4fJAbbvcItLjCup/b8XvtvnxZj5
+         fyg6yvX7ww0tIPTROJuJqFS5lcLlubrY+j1eSdbm5tyfflY0qgLbYB3NNrfx/+N2sow7
+         KTF5axmykWytJj61DzPAd5qeYwFnT3vubO1+GTXi8z30yGI8oid4bzT8QfDKOptVEBNW
+         mOJw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=/CgjknHmTbeCE3qHm1ZKMHULGEo8L8qg3hm7ZUKCAB8=;
+        b=UAuVJ3JjsotRRw3vp8/zWmc/OTwJDA2D+s3gnVI9HJkV6UYCZdwHHtQ6KENiskzks2
+         GaMRqh17KMh0JTLYY7S8Zpwpa7+M8REqWBoxusbxjQtO/aQ+Y2hkwXFlO2Jo1ipNsum2
+         /iIJUsPWo6RMT5XFnvWbjgd6M7ias5q2NI0r+d2SAkUgYY5HNdh24ANB5g7Jr6xAjBiv
+         3ZWKQxnh61aouELOu3r1NkKzWac2VeP3iMMhlRdqcUvcNU/tV5Vo6PLzhNZmBySvRP7Y
+         mYlm1P8lr/BmuPJNZ+QRdlVlKV9pW4rUEKrDknva6CjaxDZbvm1cRw/TVkEx2Mq5xyVO
+         0P8g==
+X-Gm-Message-State: AOAM5322OFWUusQVrY2DwKUCcbfCBgncwXnvgvaNinqc8k+ub1/DFXpy
+        vmcbYtaIiUh72ImYnr08nF1xWA==
+X-Google-Smtp-Source: ABdhPJwXiKeutKRiBmXDFfYFHWo7CYfXl/YngWn0hLcnMONUYMfSiRTFl3d0IAvP+SBSTFR29TusYw==
+X-Received: by 2002:a62:5c6:0:b029:24d:e97f:1b1d with SMTP id 189-20020a6205c60000b029024de97f1b1dmr13801534pff.40.1619367424423;
+        Sun, 25 Apr 2021 09:17:04 -0700 (PDT)
+Received: from [192.168.1.134] ([66.219.217.173])
+        by smtp.gmail.com with ESMTPSA id q26sm9585477pfg.146.2021.04.25.09.17.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 25 Apr 2021 09:17:03 -0700 (PDT)
+Subject: Re: [PATCH 0/8] blk-mq: fix request UAF related with iterating over
+ tagset requests
+To:     Ming Lei <ming.lei@redhat.com>, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Khazhy Kumykov <khazhy@google.com>,
+        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>,
+        David Jeffery <djeffery@redhat.com>
+References: <20210425085753.2617424-1-ming.lei@redhat.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <77cbc472-279e-5c9a-3428-b1a485b3f1b7@kernel.dk>
+Date:   Sun, 25 Apr 2021 10:17:04 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <4662c462e79e3e7f541f54f88f8993f421026d83.1619223249.git.asutoshd@codeaurora.org>
+In-Reply-To: <20210425085753.2617424-1-ming.lei@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -83,57 +83,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 24/04/21 3:20 am, Asutosh Das wrote:
-> During runtime-suspend of ufs host, the scsi devices are
-> already suspended and so are the queues associated with them.
-> But the ufs host sends SSU (START_STOP_UNIT) to wlun
-> during its runtime-suspend.
-> During the process blk_queue_enter checks if the queue is not in
-> suspended state. If so, it waits for the queue to resume, and never
-> comes out of it.
-> The commit
-> (d55d15a33: scsi: block: Do not accept any requests while suspended)
-> adds the check if the queue is in suspended state in blk_queue_enter().
+On 4/25/21 2:57 AM, Ming Lei wrote:
+> Hi Guys,
 > 
-> Call trace:
->  __switch_to+0x174/0x2c4
->  __schedule+0x478/0x764
->  schedule+0x9c/0xe0
->  blk_queue_enter+0x158/0x228
->  blk_mq_alloc_request+0x40/0xa4
->  blk_get_request+0x2c/0x70
->  __scsi_execute+0x60/0x1c4
->  ufshcd_set_dev_pwr_mode+0x124/0x1e4
->  ufshcd_suspend+0x208/0x83c
->  ufshcd_runtime_suspend+0x40/0x154
->  ufshcd_pltfrm_runtime_suspend+0x14/0x20
->  pm_generic_runtime_suspend+0x28/0x3c
->  __rpm_callback+0x80/0x2a4
->  rpm_suspend+0x308/0x614
->  rpm_idle+0x158/0x228
->  pm_runtime_work+0x84/0xac
->  process_one_work+0x1f0/0x470
->  worker_thread+0x26c/0x4c8
->  kthread+0x13c/0x320
->  ret_from_fork+0x10/0x18
+> Revert 4 patches from Bart which try to fix request UAF issue related
+> with iterating over tagset wide requests, because:
 > 
-> Fix this by registering ufs device wlun as a scsi driver and
-> registering it for block runtime-pm. Also make this as a
-> supplier for all other luns. That way, this device wlun
-> suspends after all the consumers and resumes after
-> hba resumes. This also registers a new scsi driver for rpmb wlun.
-> This new driver is mostly used to clear rpmb uac.
+> 1) request UAF caused by normal completion vs. async completion during
+> iterating can't be covered[1]
 > 
-> Fixed smatch warnings:
-> Reported-by: kernel test robot <lkp@intel.com>
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 2) clearing ->rqs[] is added in fast path, which causes performance loss
+> by 1% according to Bart's test
 > 
-> Co-developed-by: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> 3) Bart's approach is too complicated, and some changes aren't needed,
+> such as adding two versions of tagset iteration
+> 
+> This patchset fixes the request UAF issue by one simpler approach,
+> without any change in fast path.
+> 
+> 1) always complete request synchronously when the completing is run
+> via blk_mq_tagset_busy_iter(), done in 1st two patches
+> 
+> 2) grab request's ref before calling ->fn in blk_mq_tagset_busy_iter,
+> and release it after calling ->fn, so ->fn won't be called for one
+> request if its queue is frozen, done in 3rd patch
+> 
+> 3) clearing any stale request referred in ->rqs[] before freeing the
+> request pool, one per-tags spinlock is added for protecting
+> grabbing request ref vs. clearing ->rqs[tag], so UAF by refcount_inc_not_zero
+> in bt_tags_iter() is avoided, done in 4th patch.
 
-Note we don't use regulators, clocks, clock scaling or gating.
-Although those things do look OK.
-Notwithstanding that:
+I'm going to pull the UAF series for now so we don't need to do a series
+of reverts if we deem this a better approach. I'll take a further look
+at it tomorrow.
 
-Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
+-- 
+Jens Axboe
+
