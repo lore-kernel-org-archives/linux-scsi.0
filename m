@@ -2,48 +2,44 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 790D6C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 08:46:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4D10C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 09:08:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 345AB6112F
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 08:46:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B30C6023C
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 09:08:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232103AbhDZIqr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Apr 2021 04:46:47 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60924 "EHLO mx2.suse.de"
+        id S232492AbhDZJIp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Apr 2021 05:08:45 -0400
+Received: from mx2.suse.de ([195.135.220.15]:57604 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232068AbhDZIqq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Apr 2021 04:46:46 -0400
+        id S232078AbhDZJIo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Apr 2021 05:08:44 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 1AE0EAEAA;
-        Mon, 26 Apr 2021 08:45:59 +0000 (UTC)
-To:     dgilbert@interlog.com, Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
+        by mx2.suse.de (Postfix) with ESMTP id 81220B183;
+        Mon, 26 Apr 2021 09:07:57 +0000 (UTC)
+To:     Finn Thain <fthain@telegraphics.com.au>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-References: <20210421174749.11221-1-hare@suse.de>
- <20210421174749.11221-15-hare@suse.de>
- <b510135a-3dca-e6e4-bdbb-f1ff3817cc29@acm.org>
- <51b16b13-d4e3-f0e4-718e-357d04ed958f@interlog.com>
- <d74a6a9a-6187-8847-7364-0bf7999b3379@suse.de>
- <db827915-84e0-1aea-7b30-a01a22059817@interlog.com>
- <62237423-f4f9-a426-43b5-3ff56a5dca1a@acm.org>
- <b00aab9c-9cb9-06a9-94b9-57e164777b26@interlog.com>
+        linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>
+References: <20210423113944.42672-1-hare@suse.de>
+ <20210423113944.42672-25-hare@suse.de>
+ <496782e-7377-ac6b-874-213f4e520b6@nippy.intranet>
 From:   Hannes Reinecke <hare@suse.de>
 Organization: SUSE Linux GmbH
-Subject: Re: [PATCH 14/42] scsi: add scsi_result_is_good()
-Message-ID: <fe2012c8-3421-dbef-9d79-78eabdcc870d@suse.de>
-Date:   Mon, 26 Apr 2021 10:45:51 +0200
+Subject: Re: [PATCH 24/39] wd33c93: translate message byte to host byte
+Message-ID: <46bf6a5b-966c-f379-059f-3fafce82692a@suse.de>
+Date:   Mon, 26 Apr 2021 11:07:55 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.9.1
 MIME-Version: 1.0
-In-Reply-To: <b00aab9c-9cb9-06a9-94b9-57e164777b26@interlog.com>
+In-Reply-To: <496782e-7377-ac6b-874-213f4e520b6@nippy.intranet>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -51,69 +47,95 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/22/21 7:33 PM, Douglas Gilbert wrote:
-> On 2021-04-22 12:52 p.m., Bart Van Assche wrote:
->> On 4/22/21 8:56 AM, Douglas Gilbert wrote:
->>> In driver manuals Seagate often list the PRE-FETCH command as
->>> optional. As
->>> in: pay us some extra money and we will put it in. That suggests to
->>> me some
->>> big OEM likes PRE-FETCH. Where I found it supported in WDC manuals, they
->>> didn't support the IMMED bit which sort of defeats the purpose of it
->>> IMO.
+On 4/24/21 11:20 AM, Finn Thain wrote:
+> On Fri, 23 Apr 2021, Hannes Reinecke wrote:
+> 
+>> Instead of setting the message byte translate it to the appropriate
+>> host byte. As error recovery would return DID_ERROR for any non-zero
+>> message byte the translation doesn't change the error handling.
 >>
->> Since the sd driver does not submit the PRE-FETCH command, how about
->> moving support for CONDITION MET into the sg code and treating CONDITION
->> MET as an error inside the sd, sr and st drivers? I think that would
->> allow to simplify scsi_status_is_good(). The current definition of that
->> function is as follows:
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/scsi/wd33c93.c | 46 ++++++++++++++++++++++++------------------
+>>  1 file changed, 26 insertions(+), 20 deletions(-)
 >>
->> static inline int scsi_status_is_good(int status)
->> {
->>     /*
->>      * FIXME: bit0 is listed as reserved in SCSI-2, but is
->>      * significant in SCSI-3.  For now, we follow the SCSI-2
->>      * behaviour and ignore reserved bits.
->>      */
->>     status &= 0xfe;
->>     return ((status == SAM_STAT_GOOD) ||
->>         (status == SAM_STAT_CONDITION_MET) ||
->>         /* Next two "intermediate" statuses are obsolete in*/
->>         /* SAM-4 */
->>         (status == SAM_STAT_INTERMEDIATE) ||
->>         (status == SAM_STAT_INTERMEDIATE_CONDITION_MET) ||
->>         /* FIXME: this is obsolete in SAM-3 */
->>         (status == SAM_STAT_COMMAND_TERMINATED));
->> }
+>> diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+>> index a23277bb870e..187b363db00e 100644
+>> --- a/drivers/scsi/wd33c93.c
+>> +++ b/drivers/scsi/wd33c93.c
+>> @@ -1176,13 +1176,14 @@ wd33c93_intr(struct Scsi_Host *instance)
+>>  			if (cmd->SCp.Status == ILLEGAL_STATUS_BYTE)
+>>  				cmd->SCp.Status = lun;
+>>  			if (cmd->cmnd[0] == REQUEST_SENSE
+>> -			    && cmd->SCp.Status != SAM_STAT_GOOD)
+>> -				cmd->result =
+>> -				    (cmd->
+>> -				     result & 0x00ffff) | (DID_ERROR << 16);
+>> -			else
+>> -				cmd->result =
+>> -				    cmd->SCp.Status | (cmd->SCp.Message << 8);
+>> +			    && cmd->SCp.Status != SAM_STAT_GOOD) {
+>> +				set_host_byte(cmd, DID_ERROR);
+>> +				set_status_byte(cmd, SAM_STAT_GOOD);
+>> +			} else {
+>> +				set_host_byte(cmd, DID_OK);
+>> +				translate_msg_byte(cmd, cmd->SCp.Message);
+>> +				set_status_byte(cmd, cmd->SCp.Status);
+>> +			}
+>>  			cmd->scsi_done(cmd);
+>>  
+>>  /* We are no longer  connected to a target - check to see if
+>> @@ -1262,11 +1263,15 @@ wd33c93_intr(struct Scsi_Host *instance)
+>>  		    hostdata->connected = NULL;
+>>  		hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
+>>  		hostdata->state = S_UNCONNECTED;
+>> -		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != SAM_STAT_GOOD)
+>> -			cmd->result =
+>> -			    (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+>> -		else
+>> -			cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
+>> +		if (cmd->cmnd[0] == REQUEST_SENSE &&
+>> +		    cmd->SCp.Status != SAM_STAT_GOOD) {
+>> +			set_host_byte(cmd, DID_ERROR);
+>> +			set_status_byte(cmd, SAM_STAT_GOOD);
+>> +		} else {
+>> +			set_host_byte(cmd, DID_OK);
+>> +			translate_msg_byte(cmd, cmd->SCp.Message);
+>> +			set_status_byte(cmd, cmd->SCp.Status);
+>> +		}
+>>  		cmd->scsi_done(cmd);
+>>  
+>>  /* We are no longer connected to a target - check to see if
+>> @@ -1295,14 +1300,15 @@ wd33c93_intr(struct Scsi_Host *instance)
+>>  			hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
+>>  			hostdata->state = S_UNCONNECTED;
+>>  			DB(DB_INTR, printk(":%d", cmd->SCp.Status))
+>> -			    if (cmd->cmnd[0] == REQUEST_SENSE
+>> -				&& cmd->SCp.Status != SAM_STAT_GOOD)
+>> -				cmd->result =
+>> -				    (cmd->
+>> -				     result & 0x00ffff) | (DID_ERROR << 16);
+>> -			else
+>> -				cmd->result =
+>> -				    cmd->SCp.Status | (cmd->SCp.Message << 8);
+>> +			if (cmd->cmnd[0] == REQUEST_SENSE
+>> +			    && cmd->SCp.Status != SAM_STAT_GOOD) {
+>> +				set_host_byte(cmd, DID_ERROR);
+>> +				set_status_byte(cmd, SAM_STAT_GOOD);
+>> +			} else {
+>> +				set_host_byte(cmd, DID_OK);
+>> +				translate_msg_byte(cmd, cmd->SCp.Message);
+>> +				set_status_byte(cmd, cmd->SCp.Status);
+>> +			}
+>>  			cmd->scsi_done(cmd);
+>>  			break;
+>>  		case S_PRE_TMP_DISC:
+>>
 > 
-> The whole stack needs to treat SAM_STAT_CONDITION_MET as a non-error.
-> However the complex multi-layer return values are represented,
-> reducing them to a comparison with zero, spread all over the
-> stack just seems bad software engineering. IMO a predicate function
-> (i.e. returning bool) is needed.
+> I think these three hunks all have the same mistake, which would force 
+> SAM_STAT_GOOD.
 > 
-> I would argue that in the right circumstances, the sd driver should
-> indeed by using PRE-FETCH. It would need help from the upper layers.
-> It is essentially "read-ahead" in the case where the next LBA
-> does not follow the last read LBA. A smarter read-ahead ...
-> 
-Might, but again not something we should attempt in this patchset.
-
-Using PRE-FETCH might be worthwhile for larger I/O, which we could
-easily prepend with a PRE-FETCH command for the entire range.
-But then error handling for PRE-FETCH is decidedly tricky, and we might
-end up incurring quite some regressions just because we didn't get the
-error handling right in the first go.
-
-Worth a shot, but please in another patchset.
-
-The other use-case for using PRE-FETCH after cryptographic erase
-definitely is required, but as that's triggered by userspace I would
-expect userspace to do it properly, too.
-
-The only valid use-case I see would be for issuing PRE-FETCH after
-UNMAP, but that would need to be plugged into the 'discard' machinery,
-which is already fragile as hell; I'd rather not attempt that one.
+Which mistake was that again?
 
 Cheers,
 
