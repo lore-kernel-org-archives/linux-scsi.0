@@ -7,92 +7,107 @@ X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83F0FC433B4
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 00:56:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1400FC433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 01:19:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5AB2661041
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 00:56:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5C0A61077
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 01:19:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231533AbhDZA4m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 25 Apr 2021 20:56:42 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:47309 "EHLO
+        id S231583AbhDZBUg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 25 Apr 2021 21:20:36 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:36619 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231247AbhDZA4l (ORCPT
+        by vger.kernel.org with ESMTP id S231403AbhDZBUg (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 25 Apr 2021 20:56:41 -0400
+        Sun, 25 Apr 2021 21:20:36 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619398560;
+        s=mimecast20190719; t=1619399995;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=aKYRSeiLkiR/jaBtGKeDPIosa1m/L6grwM4dRV82BUA=;
-        b=WLa+5K8TvqxguU9G7bJqZUFWnX/ogX61NTT28HsCab9Z7ATW7E3Rm4M7ETQamqBQzjr/eb
-        RcMRod959PN33IYKtpjQZhhMc1OFokMjRAa0BgW9MFvdWf/65StryU7yLncj1ysYmM485A
-        zY435wHi2ViFYuLmi0jG18KFd3LvAu8=
+        bh=0vq31kXoXdJ37A0m+hl8ciNYW3IbDYlul0jI6X5aa5o=;
+        b=FSaSdG+cNhyiabrTE9yFSBVIerMl7otinvrW011WVwIhx/g8vVb1/Jfso+1fYxFSGHUm0c
+        3GAIpe5Jqp4zDSJto4LYRCm9mW9MNVnjuJhYsYYnZA7XOZkpeFlyltTNYcD+VxYfzFvTNX
+        RJtikHSafI5YD6uNosTsBbogGIXShow=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-602-D0Omu1eBOUaJRLP-aapJBg-1; Sun, 25 Apr 2021 20:55:59 -0400
-X-MC-Unique: D0Omu1eBOUaJRLP-aapJBg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-357-C_6IIY35NuqtfY0jnz3Pbg-1; Sun, 25 Apr 2021 21:19:51 -0400
+X-MC-Unique: C_6IIY35NuqtfY0jnz3Pbg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 875651898296;
-        Mon, 26 Apr 2021 00:55:57 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 46E18343A6;
+        Mon, 26 Apr 2021 01:19:49 +0000 (UTC)
 Received: from T590 (ovpn-12-48.pek2.redhat.com [10.72.12.48])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id ECA725C1CF;
-        Mon, 26 Apr 2021 00:55:48 +0000 (UTC)
-Date:   Mon, 26 Apr 2021 08:55:54 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 44B4819D7D;
+        Mon, 26 Apr 2021 01:19:39 +0000 (UTC)
+Date:   Mon, 26 Apr 2021 09:19:45 +0800
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Daniel Wagner <dwagner@suse.de>,
-        Khazhismel Kumykov <khazhy@google.com>,
-        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+Cc:     linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Khazhy Kumykov <khazhy@google.com>,
+        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
         Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v7 3/5] blk-mq: Fix races between iterating over requests
- and freeing requests
-Message-ID: <YIYPmvkRSVaiBhC8@T590>
-References: <20210421000235.2028-1-bvanassche@acm.org>
- <20210421000235.2028-4-bvanassche@acm.org>
- <YIDqa6YkNoD5OiKN@T590>
- <b717ffc0-a434-738f-9c63-32901bd164b2@acm.org>
- <YIEiElb9wxReV/oL@T590>
- <32a121b7-2444-ac19-420d-4961f2a18129@acm.org>
- <YIJEg9DLWoOJ06Kc@T590>
- <28607d75-042f-7a6a-f5d0-2ee03754917e@acm.org>
- <YISzLal7Ur7jyuiy@T590>
- <037f5a58-545c-5265-c2a2-d2e8b92168c6@acm.org>
+        John Garry <john.garry@huawei.com>,
+        David Jeffery <djeffery@redhat.com>
+Subject: Re: [PATCH 0/8] blk-mq: fix request UAF related with iterating over
+ tagset requests
+Message-ID: <YIYVMQmAZgKL2qdP@T590>
+References: <20210425085753.2617424-1-ming.lei@redhat.com>
+ <YIU2BhuYZAAgonN0@T590>
+ <5c1ef3ec-dd6a-4992-586b-6e67bcd1a678@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <037f5a58-545c-5265-c2a2-d2e8b92168c6@acm.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <5c1ef3ec-dd6a-4992-586b-6e67bcd1a678@acm.org>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Apr 25, 2021 at 02:01:11PM -0700, Bart Van Assche wrote:
-> On 4/24/21 5:09 PM, Ming Lei wrote:
-> > However, blk_mq_wait_for_tag_iter() still may return before
-> > blk_mq_wait_for_tag_iter() is done because blk_mq_wait_for_tag_iter()
-> > supposes all request reference is just done inside bt_tags_iter(),
-> > especially .iter_rwsem and read rcu lock is added in bt_tags_iter().
+On Sun, Apr 25, 2021 at 01:53:16PM -0700, Bart Van Assche wrote:
+> On 4/25/21 2:27 AM, Ming Lei wrote:
+> > On Sun, Apr 25, 2021 at 04:57:45PM +0800, Ming Lei wrote:
+> >> Revert 4 patches from Bart which try to fix request UAF issue related
+> >> with iterating over tagset wide requests, because:
 > 
-> The comment above blk_mq_wait_for_tag_iter() needs to be updated but I
-> believe that the code is fine. Waiting for bt_tags_iter() to finish
-> should be sufficient to fix the UAF. What matters is that the pointer
-> read by rcu_dereference(tags->rqs[bitnr]) remains valid until the
-> callback function has finished. I think that is guaranteed by the
-> current implementation.
+> Where were you during the four weeks that my patch series was out for
+> review? I haven't seen any feedback from you on my patch series.
 
-It depends if 'rq' will be passed to another new context from ->fn(),
-since 'rq' still can be USEed in the new context after ->fn() returns.
+To be honest, it is just two days ago I have to take a close look
+at your patchset because we may have to backport your patches for
+addressing one RH report with high priority.
+
+David is in CC list, and Laurence/David is looking the report too.
+
+> 
+> >> 1) request UAF caused by normal completion vs. async completion during
+> >> iterating can't be covered[1]
+> 
+> I do not agree with the above. Patches 5/8 and 6/8 from this series can
+> be applied without reverting any of my patches.
+
+The thing is that 5 ~ 8 can fix the issue in a simpler way without
+adding extra cost in fast path, and the idea is easier to be proved.
+
+BTW, as a downstream kernel developer, I really hope all fix are simple and
+easy to backport. More importantly, I do prefer to approaches in patch which
+can be proved/verified easily, so further regression can be avoided.
+
+> 
+> > 4) synchronize_rcu() is added before shutting down one request queue,
+> > which may slow down reboot/poweroff very much on big systems with lots of
+> > HBAs in which lots of LUNs are attached.
+> 
+> The synchronize_rcu() can be removed by using a semaphore
+> (<linux/semaphore.h>) instead of an RCU reader lock inside bt_tags_iter().
+
+I am not sure you can, because some iteration is done in atomic context.
 
 
-thanks,
+Thanks,
 Ming
 
