@@ -7,57 +7,56 @@ X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
 	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C046C43461
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 03:42:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8215C433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 03:43:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6324161139
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 03:42:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CF8361152
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 03:43:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231550AbhDZDnT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 25 Apr 2021 23:43:19 -0400
-Received: from mail-pg1-f169.google.com ([209.85.215.169]:35379 "EHLO
-        mail-pg1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231330AbhDZDnI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Apr 2021 23:43:08 -0400
-Received: by mail-pg1-f169.google.com with SMTP id q10so39176641pgj.2
-        for <linux-scsi@vger.kernel.org>; Sun, 25 Apr 2021 20:42:28 -0700 (PDT)
+        id S231650AbhDZDn4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 25 Apr 2021 23:43:56 -0400
+Received: from mail-pl1-f181.google.com ([209.85.214.181]:40590 "EHLO
+        mail-pl1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231330AbhDZDnv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Apr 2021 23:43:51 -0400
+Received: by mail-pl1-f181.google.com with SMTP id 20so24240095pll.7
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Apr 2021 20:43:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=QsAwYO0XZmkYLjnjtWr++SjnbodNg/aUhtcsFdopSdk=;
-        b=Awz9cJkFfLOx9xgovD7CHNSLhLiD617rOILhJX9sVyA5IVEj5ym1L++p37X+6Nsk3U
-         gTgt5LkvfAUqCd/lC2KGF5GfxDGJxHo9IDNF3pW7rnQQdOCeIACtjnt/G80IgX2sP/0j
-         DgBsQB2Nh5YxqI/UBBWVFrE0cMZB9+5QsSjwWrQ356hlfAgjmIqx6+ek4jAORuyU0PxV
-         VnHvUMQn3GFynWR7E6YG8//9o5iOIC2iNkr8kVWvxzFVRjWbiUCegV6e4P0XNDyz3OZQ
-         +vlfiJOEwt+8h6rJOSSLliqtnukjSzvrOpDzcVuUjAxrEwzcczuMSHWhC5OTM8O6i1Gv
-         NklQ==
-X-Gm-Message-State: AOAM533wHP8zj9HPn/lcvDQA6sne2sbkUdW1ZOqYWVULU0x1yKaK5V+j
-        sLbW3zRjrbRex4wtHz/eJBwsKe3/l4084w==
-X-Google-Smtp-Source: ABdhPJybgM8SPWvPaqKC96bAo356PR0EJ11wvZ+ufZFHpTDTpL0WbrZIzEm91GsKJAYyUc0W7w46Cg==
-X-Received: by 2002:a63:190b:: with SMTP id z11mr14729845pgl.314.1619408547423;
-        Sun, 25 Apr 2021 20:42:27 -0700 (PDT)
+        bh=Vy1pw4yZbQkexK14op6GaVAXmJBPOBJOdZNxnNeOwaA=;
+        b=ZKTl7wmFej2tb7739601g5HBW+oK8JkDG7yiS4W/cTuMGH5OQ7PNHqeT1ymvQfUqLK
+         VJHfVWr2LpFRx/ejCBnxc07I7zifbgjgVb2XDfkaUu4c56VhvwSZ92QQAfsLmMuDubFV
+         ECSxJvK5VLljnJHClF9P11n0KPQb1tLmyD6FoTemLASjsPXNhEN0Hs0/MnMjvAHrP9kF
+         YCY7vPVwioA33YzPSD7nSLPB4BqCzJ7hKnrs6N4dlmm+eaxuFFwDalWqYkj3Bff6LRMf
+         mVtGytg/RKrLMAMPGuaBDGbpOgoDQi2xY0mOg8HsKUCX6OCbqaEINlrXzgG18kXejRK6
+         HUmw==
+X-Gm-Message-State: AOAM530mIimBybQHnLIdDz9OcdEHtYccZlj3Y+WKv33tpTlwW9nrYx5g
+        9sOubehM55pwj8QUeVbKqnrAxKG9T6yFbg==
+X-Google-Smtp-Source: ABdhPJw27Gi4UJDf7IetF7hZpuOtkoiBw1n7cIkjyvtrWC/AHhq7T0CBBfHE0Cy5f/KnZmbCbJZWig==
+X-Received: by 2002:a17:90a:7d02:: with SMTP id g2mr19844673pjl.153.1619408588645;
+        Sun, 25 Apr 2021 20:43:08 -0700 (PDT)
 Received: from [192.168.3.219] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id w134sm10416375pfd.173.2021.04.25.20.42.26
+        by smtp.gmail.com with ESMTPSA id l3sm13020152pju.44.2021.04.25.20.43.07
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 25 Apr 2021 20:42:26 -0700 (PDT)
-Subject: Re: [PATCH 10/39] scsi_error: use DID_TIME_OUT instead of
- DRIVER_TIMEOUT
+        Sun, 25 Apr 2021 20:43:08 -0700 (PDT)
+Subject: Re: [PATCH 11/39] xen-scsiback: use DID_ERROR instead of DRIVER_ERROR
 To:     Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org
 References: <20210423113944.42672-1-hare@suse.de>
- <20210423113944.42672-11-hare@suse.de>
+ <20210423113944.42672-12-hare@suse.de>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <4b084082-f50d-c930-ee8d-e02e2cbef4e5@acm.org>
-Date:   Sun, 25 Apr 2021 20:42:25 -0700
+Message-ID: <b39235d7-dbfe-acc8-1a85-503ba4097dda@acm.org>
+Date:   Sun, 25 Apr 2021 20:43:06 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.9.1
 MIME-Version: 1.0
-In-Reply-To: <20210423113944.42672-11-hare@suse.de>
+In-Reply-To: <20210423113944.42672-12-hare@suse.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -66,7 +65,9 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/23/21 4:39 AM, Hannes Reinecke wrote:
-> Set DID_TIME_OUT instead of DRIVER_TIMEOUT when a command
-> is finally marked as failed after error recovery.
+> DRIVER_ERROR was supposed to signal an error generated by the driver,
+> which xen-scsiback arguably isn't. Also the driver bytes don't have
+> a detailed error recovery, so we should rather return DID_ERROR
+> instead of DRIVER_ERROR.
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
