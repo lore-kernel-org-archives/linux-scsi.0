@@ -2,117 +2,317 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97619C433B4
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 16:03:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DA77C433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 16:05:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B5506024A
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 16:03:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2023D610FA
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 16:05:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234300AbhDZQEf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Apr 2021 12:04:35 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:34717 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234251AbhDZQEe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Apr 2021 12:04:34 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619453032;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=JzDKZKjxJCfayrRJp1UGQCJlquU6MbrGl23upYnQwMg=;
-        b=Ai3pcZDLjSuS4gESny/WkBnCk0xofHXJO627Y5haUJIrSg/az9SF5GzpLOJ/gZ4cPmLAQO
-        U4rI88vzaJ+1Fyeo4L1LqSsTW6IcbZqZafb8SDmOCQhmYoJnXgX+PLpHKKLmh5Y3FjEUzw
-        +i6GkJ4QS6F/JkCXq7JyPPuXl14LdLU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-239-JL5yiRUHN7-WeOHb2dH42w-1; Mon, 26 Apr 2021 12:03:49 -0400
-X-MC-Unique: JL5yiRUHN7-WeOHb2dH42w-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 853AA107ACCA;
-        Mon, 26 Apr 2021 16:03:47 +0000 (UTC)
-Received: from T590 (ovpn-12-94.pek2.redhat.com [10.72.12.94])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id AFCCE5C1CF;
-        Mon, 26 Apr 2021 16:03:37 +0000 (UTC)
-Date:   Tue, 27 Apr 2021 00:03:43 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        Hannes Reinecke <hare@suse.com>
-Subject: Re: [bug report] shared tags causes IO hang and performance drop
-Message-ID: <YIbkX2G0+dp3PV+u@T590>
-References: <YHaez6iN2HHYxYOh@T590>
- <9a6145a5-e6ac-3d33-b52a-0823bfc3b864@huawei.com>
- <cb326d404c6e0785d03a7dfadc42832c@mail.gmail.com>
- <YHbOOfGNHwO4SMS7@T590>
- <87ceccf2-287b-9bd1-899a-f15026c9e65b@huawei.com>
- <YHe3M62agQET6o6O@T590>
- <0c85fe52-ebc7-68b3-2dbe-dfad5d604346@huawei.com>
- <c1d5abaa-c460-55f8-5351-16f09d6aa81f@huawei.com>
- <YIbS1dgSYrsAeGvZ@T590>
- <55743a51-4d6f-f481-cebf-e2af9c657911@huawei.com>
+        id S234198AbhDZQFp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Apr 2021 12:05:45 -0400
+Received: from mx2.suse.de ([195.135.220.15]:44108 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233919AbhDZQFo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Apr 2021 12:05:44 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 19757ABD0;
+        Mon, 26 Apr 2021 16:05:02 +0000 (UTC)
+Subject: Re: [PATCH v3 06/24] mpi3mr: add support of event handling part-1
+To:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        linux-scsi@vger.kernel.org
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        steve.hagan@broadcom.com, peter.rivera@broadcom.com,
+        mpi3mr-linuxdrv.pdl@broadcom.com, sathya.prakash@broadcom.com
+References: <20210419110156.1786882-1-kashyap.desai@broadcom.com>
+ <20210419110156.1786882-7-kashyap.desai@broadcom.com>
+From:   Hannes Reinecke <hare@suse.de>
+Organization: SUSE Linux GmbH
+Message-ID: <1f03c0a0-e9a9-3782-3948-4a11ecb43826@suse.de>
+Date:   Mon, 26 Apr 2021 18:05:01 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <55743a51-4d6f-f481-cebf-e2af9c657911@huawei.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <20210419110156.1786882-7-kashyap.desai@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Apr 26, 2021 at 04:52:28PM +0100, John Garry wrote:
-> On 26/04/2021 15:48, Ming Lei wrote:
-> > >       --0.56%--sbitmap_get
-> > > 
-> > > I don't see this for hostwide tags - this may be because we have multiple
-> > > hctx, and the IO sched tags are per hctx, so less chance of exhaustion. But
-> > > this is not from hostwide tags specifically, but for multiple HW queues in
-> > > general. As I understood, sched tags were meant to be per request queue,
-> > > right? I am reading this correctly?
-> > sched tags is still per-hctx.
-> > 
-> > I just found that you didn't change sched tags into per-request-queue
-> > shared tags. Then for hostwide tags, each hctx still has its own
-> > standalone sched tags and request pool, that is one big difference with
-> > non hostwide tags.
+On 4/19/21 1:01 PM, Kashyap Desai wrote:
+> Firmware can report various MPI Events.
+> Support for certain Events (as listed below) are enabled in the driver
+> and their processing in driver is covered in this patch.
 > 
-> For both hostwide and non-hostwide tags, we have standalone sched tags and
-> request pool per hctx when q->nr_hw_queues > 1.
-
-driver tags is shared for hostwide tags.
-
+> MPI3_EVENT_DEVICE_ADDED
+> MPI3_EVENT_DEVICE_INFO_CHANGED
+> MPI3_EVENT_DEVICE_STATUS_CHANGE
+> MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE
+> MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST
+> MPI3_EVENT_SAS_DISCOVERY
+> MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR
 > 
-> > That is why you observe that scheduler tag exhaustion
-> > is easy to trigger in case of non-hostwide tags.
-> > 
-> > I'd suggest to add one per-request-queue sched tags, and make all hctxs
-> > sharing it, just like what you did for driver tag.
-> > 
+> Key support in this patch is device add/removal.
 > 
-> That sounds reasonable.
+> Fix some compilation warning reported by kernel test robot.
 > 
-> But I don't see how this is related to hostwide tags specifically, but
-> rather just having q->nr_hw_queues > 1, which NVMe PCI and some other SCSI
-> MQ HBAs have (without using hostwide tags).
+> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> Reported-by: kernel test robot <lkp@intel.com>
+> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+> 
+> Cc: sathya.prakash@broadcom.com
+> ---
+>  drivers/scsi/mpi3mr/mpi/mpi30_api.h  |    2 +
+>  drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h | 2721 ++++++++++++++++++++++++++
+>  drivers/scsi/mpi3mr/mpi/mpi30_sas.h  |   46 +
+>  drivers/scsi/mpi3mr/mpi3mr.h         |  202 ++
+>  drivers/scsi/mpi3mr/mpi3mr_fw.c      |  195 +-
+>  drivers/scsi/mpi3mr/mpi3mr_os.c      | 1454 +++++++++++++-
+>  6 files changed, 4618 insertions(+), 2 deletions(-)
+>  create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
+>  create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_sas.h
+> 
+[ .. ]
+> @@ -612,7 +1942,25 @@ static void mpi3mr_target_destroy(struct scsi_target *starget)
+>   */
+>  static int mpi3mr_slave_configure(struct scsi_device *sdev)
+>  {
+> +	struct scsi_target *starget;
+> +	struct Scsi_Host *shost;
+> +	struct mpi3mr_ioc *mrioc;
+> +	struct mpi3mr_tgt_dev *tgt_dev;
+> +	unsigned long flags;
+>  	int retval = 0;
+> +
+> +	starget = scsi_target(sdev);
+> +	shost = dev_to_shost(&starget->dev);
+> +	mrioc = shost_priv(shost);
+> +
+> +	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
+> +	tgt_dev = __mpi3mr_get_tgtdev_by_perst_id(mrioc, starget->id);
+> +	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
+> +	if (!tgt_dev)
+> +		return retval;
+> +
 
-Before hostwide tags, the whole scheduler queue depth should be 256.
-After hostwide tags, the whole scheduler queue depth becomes 256 *
-nr_hw_queues. But the driver tag queue depth is _not_ changed.
+Return '0' on unknown SCSI devices? Really?
 
-More requests come and are tried to dispatch to LLD and can't succeed
-because of limited driver tag depth, and CPU utilization could be increased.
+> +	mpi3mr_tgtdev_put(tgt_dev);
+> +
+>  	return retval;
+>  }
+>  
+> @@ -626,7 +1974,37 @@ static int mpi3mr_slave_configure(struct scsi_device *sdev)
+>   */
+>  static int mpi3mr_slave_alloc(struct scsi_device *sdev)
+>  {
+> +	struct Scsi_Host *shost;
+> +	struct mpi3mr_ioc *mrioc;
+> +	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data;
+> +	struct mpi3mr_tgt_dev *tgt_dev;
+> +	struct mpi3mr_sdev_priv_data *scsi_dev_priv_data;
+> +	unsigned long flags;
+> +	struct scsi_target *starget;
+>  	int retval = 0;
+> +
+> +	starget = scsi_target(sdev);
+> +	shost = dev_to_shost(&starget->dev);
+> +	mrioc = shost_priv(shost);
+> +	scsi_tgt_priv_data = starget->hostdata;
+> +
+> +	scsi_dev_priv_data = kzalloc(sizeof(*scsi_dev_priv_data), GFP_KERNEL);
+> +	if (!scsi_dev_priv_data)
+> +		return -ENOMEM;
+> +
+> +	scsi_dev_priv_data->lun_id = sdev->lun;
+> +	scsi_dev_priv_data->tgt_priv_data = scsi_tgt_priv_data;
+> +	sdev->hostdata = scsi_dev_priv_data;
+> +
+> +	scsi_tgt_priv_data->num_luns++;
+> +
+> +	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
+> +	tgt_dev = __mpi3mr_get_tgtdev_by_perst_id(mrioc, starget->id);
+> +	if (tgt_dev && (tgt_dev->starget == NULL))
+> +		tgt_dev->starget = starget;
+> +	if (tgt_dev)
+> +		mpi3mr_tgtdev_put(tgt_dev);
+> +	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
+>  	return retval;
+>  }
+>  
+Same here. I would have expected -ENXIO to be returned fi the tgt_dev is
+not found.
+And you can fold the two 'if' clauses into one eg like:
 
-Thanks,
-Ming
+if (tgt_dev) {
+  if (tgt_dev->starget == NULL)
+    tgt_dev = starget;
+  mpi3mr_tgtdev_put(tgt_dev);
+  retval = 0;
+}
 
+> @@ -640,7 +2018,33 @@ static int mpi3mr_slave_alloc(struct scsi_device *sdev)
+>   */
+>  static int mpi3mr_target_alloc(struct scsi_target *starget)
+>  {
+> +	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
+> +	struct mpi3mr_ioc *mrioc = shost_priv(shost);
+> +	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data;
+> +	struct mpi3mr_tgt_dev *tgt_dev;
+> +	unsigned long flags;
+>  	int retval = -ENODEV;
+> +
+> +	scsi_tgt_priv_data = kzalloc(sizeof(*scsi_tgt_priv_data), GFP_KERNEL);
+> +	if (!scsi_tgt_priv_data)
+> +		return -ENOMEM;
+> +
+> +	starget->hostdata = scsi_tgt_priv_data;
+> +	scsi_tgt_priv_data->starget = starget;
+> +	scsi_tgt_priv_data->dev_handle = MPI3MR_INVALID_DEV_HANDLE;
+> +
+> +	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
+> +	tgt_dev = __mpi3mr_get_tgtdev_by_perst_id(mrioc, starget->id);
+> +	if (tgt_dev && !tgt_dev->is_hidden) {
+> +		scsi_tgt_priv_data->dev_handle = tgt_dev->dev_handle;
+> +		scsi_tgt_priv_data->perst_id = tgt_dev->perst_id;
+> +		scsi_tgt_priv_data->dev_type = tgt_dev->dev_type;
+> +		scsi_tgt_priv_data->tgt_dev = tgt_dev;
+> +		tgt_dev->starget = starget;
+> +		atomic_set(&scsi_tgt_priv_data->block_io, 0);
+> +		retval = 0;
+> +	}
+> +	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
+>  	return retval;
+>  }
+>  
+Ah, here is the correct value set.
+(But wasn't it ENXIO which should've been returned for unknown targets?)
+
+> @@ -836,7 +2240,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  {
+>  	struct mpi3mr_ioc *mrioc = NULL;
+>  	struct Scsi_Host *shost = NULL;
+> -	int retval = 0;
+> +	int retval = 0, i;
+>  
+>  	shost = scsi_host_alloc(&mpi3mr_driver_template,
+>  	    sizeof(struct mpi3mr_ioc));
+> @@ -857,11 +2261,21 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	spin_lock_init(&mrioc->admin_req_lock);
+>  	spin_lock_init(&mrioc->reply_free_queue_lock);
+>  	spin_lock_init(&mrioc->sbq_lock);
+> +	spin_lock_init(&mrioc->fwevt_lock);
+> +	spin_lock_init(&mrioc->tgtdev_lock);
+>  	spin_lock_init(&mrioc->watchdog_lock);
+>  	spin_lock_init(&mrioc->chain_buf_lock);
+>  
+> +	INIT_LIST_HEAD(&mrioc->fwevt_list);
+> +	INIT_LIST_HEAD(&mrioc->tgtdev_list);
+> +	INIT_LIST_HEAD(&mrioc->delayed_rmhs_list);
+> +
+>  	mpi3mr_init_drv_cmd(&mrioc->init_cmds, MPI3MR_HOSTTAG_INITCMDS);
+>  
+> +	for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++)
+> +		mpi3mr_init_drv_cmd(&mrioc->dev_rmhs_cmds[i],
+> +		    MPI3MR_HOSTTAG_DEVRMCMD_MIN + i);
+> +
+>  	if (pdev->revision)
+>  		mrioc->enable_segqueue = true;
+>  
+> @@ -877,6 +2291,17 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	shost->max_channel = 1;
+>  	shost->max_id = 0xFFFFFFFF;
+>  
+> +	snprintf(mrioc->fwevt_worker_name, sizeof(mrioc->fwevt_worker_name),
+> +	    "%s%d_fwevt_wrkr", mrioc->driver_name, mrioc->id);
+> +	mrioc->fwevt_worker_thread = alloc_ordered_workqueue(
+> +	    mrioc->fwevt_worker_name, WQ_MEM_RECLAIM);
+> +	if (!mrioc->fwevt_worker_thread) {
+> +		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+> +		    __FILE__, __LINE__, __func__);
+> +		retval = -ENODEV;
+> +		goto out_fwevtthread_failed;
+> +	}
+> +
+>  	mrioc->is_driver_loading = 1;
+>  	if (mpi3mr_init_ioc(mrioc)) {
+>  		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+> @@ -903,6 +2328,8 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  addhost_failed:
+>  	mpi3mr_cleanup_ioc(mrioc);
+>  out_iocinit_failed:
+> +	destroy_workqueue(mrioc->fwevt_worker_thread);
+> +out_fwevtthread_failed:
+>  	spin_lock(&mrioc_list_lock);
+>  	list_del(&mrioc->list);
+>  	spin_unlock(&mrioc_list_lock);
+> @@ -924,14 +2351,30 @@ static void mpi3mr_remove(struct pci_dev *pdev)
+>  {
+>  	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+>  	struct mpi3mr_ioc *mrioc;
+> +	struct workqueue_struct	*wq;
+> +	unsigned long flags;
+> +	struct mpi3mr_tgt_dev *tgtdev, *tgtdev_next;
+>  
+>  	mrioc = shost_priv(shost);
+>  	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
+>  		ssleep(1);
+>  
+>  	mrioc->stop_drv_processing = 1;
+> +	mpi3mr_cleanup_fwevt_list(mrioc);
+> +	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+> +	wq = mrioc->fwevt_worker_thread;
+> +	mrioc->fwevt_worker_thread = NULL;
+> +	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+> +	if (wq)
+> +		destroy_workqueue(wq);
+>  
+>  	scsi_remove_host(shost);
+> +	list_for_each_entry_safe(tgtdev, tgtdev_next, &mrioc->tgtdev_list,
+> +	    list) {
+> +		mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
+> +		mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
+> +		mpi3mr_tgtdev_put(tgtdev);
+> +	}
+>  
+>  	mpi3mr_cleanup_ioc(mrioc);
+>  
+> @@ -955,6 +2398,8 @@ static void mpi3mr_shutdown(struct pci_dev *pdev)
+>  {
+>  	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+>  	struct mpi3mr_ioc *mrioc;
+> +	struct workqueue_struct	*wq;
+> +	unsigned long flags;
+>  
+>  	if (!shost)
+>  		return;
+> @@ -963,6 +2408,13 @@ static void mpi3mr_shutdown(struct pci_dev *pdev)
+>  	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
+>  		ssleep(1);
+>  	mrioc->stop_drv_processing = 1;
+> +	mpi3mr_cleanup_fwevt_list(mrioc);
+> +	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+> +	wq = mrioc->fwevt_worker_thread;
+> +	mrioc->fwevt_worker_thread = NULL;
+> +	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+> +	if (wq)
+> +		destroy_workqueue(wq);
+>  
+>  	mpi3mr_cleanup_ioc(mrioc);
+>  
+> 
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		        Kernel Storage Architect
+hare@suse.de			               +49 911 74053 688
+SUSE Software Solutions Germany GmbH, 90409 Nürnberg
+GF: F. Imendörffer, HRB 36809 (AG Nürnberg)
