@@ -2,103 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39F64C433B4
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 06:25:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B32C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 06:58:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 05FA36113D
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 06:25:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8634061158
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 06:58:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229554AbhDZGZu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Apr 2021 02:25:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:42390 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229510AbhDZGZu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Apr 2021 02:25:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619418309;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=KsQ9Ev+W/YY1U8469HseTNaWg7XademXCNuYNtvXPuw=;
-        b=cUJ4Brqwv7ERtkt1Ml4rpQa7MzUnp75f42nnHXhbkouguXJDhoXWN1MN/8QwjpLlMQFZ6Z
-        f2iEVbulZ0lvLPdki2GsVvAObR7jIQ6taspdqsgEzTL4y8TxX4sCWn/SijUgE2LBoNcBKz
-        RxbUVgSQs2xex8KbcpHHOwx+ALFfq04=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-34-PJJy0g5NOIi2DY46aq2myQ-1; Mon, 26 Apr 2021 02:25:05 -0400
-X-MC-Unique: PJJy0g5NOIi2DY46aq2myQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BC367107ACC7;
-        Mon, 26 Apr 2021 06:25:03 +0000 (UTC)
-Received: from T590 (ovpn-13-194.pek2.redhat.com [10.72.13.194])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3973461F38;
-        Mon, 26 Apr 2021 06:24:51 +0000 (UTC)
-Date:   Mon, 26 Apr 2021 14:24:56 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Khazhy Kumykov <khazhy@google.com>,
-        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>,
-        David Jeffery <djeffery@redhat.com>
-Subject: Re: [PATCH 6/8] block: drivers: complete request locally from
- blk_mq_tagset_busy_iter
-Message-ID: <YIZcuMkLV1+DKhLZ@T590>
-References: <20210425085753.2617424-1-ming.lei@redhat.com>
- <20210425085753.2617424-7-ming.lei@redhat.com>
- <bcdfc3a0-f5fa-dc06-8067-4349a133e531@acm.org>
+        id S231939AbhDZG7b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Apr 2021 02:59:31 -0400
+Received: from mx2.suse.de ([195.135.220.15]:34648 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231879AbhDZG7b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Apr 2021 02:59:31 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id DFC91AAC2;
+        Mon, 26 Apr 2021 06:58:49 +0000 (UTC)
+Subject: Re: [PATCH 07/39] scsi: introduce scsi_status_is_check_condition()
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+References: <20210423113944.42672-1-hare@suse.de>
+ <20210423113944.42672-8-hare@suse.de>
+ <9be002bc-f306-d56c-a8e0-5ed9663d81cb@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Organization: SUSE Linux GmbH
+Message-ID: <f1f64606-8ba2-8a26-a057-d639e6faf79c@suse.de>
+Date:   Mon, 26 Apr 2021 08:58:43 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bcdfc3a0-f5fa-dc06-8067-4349a133e531@acm.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <9be002bc-f306-d56c-a8e0-5ed9663d81cb@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Apr 25, 2021 at 08:02:10PM -0700, Bart Van Assche wrote:
-> On 4/25/21 1:57 AM, Ming Lei wrote:
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > index c289991ffaed..7cbaee282b6d 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -1568,7 +1568,11 @@ static void scsi_mq_done(struct scsi_cmnd *cmd)
-> >  	if (unlikely(test_and_set_bit(SCMD_STATE_COMPLETE, &cmd->state)))
-> >  		return;
-> >  	trace_scsi_dispatch_cmd_done(cmd);
-> > -	blk_mq_complete_request(cmd->request);
-> > +
-> > +	if (unlikely(host_byte(cmd->result) != DID_OK))
-> > +		blk_mq_complete_request_locally(cmd->request);
-> > +	else
-> > +		blk_mq_complete_request(cmd->request);
-> >  }
+On 4/26/21 5:34 AM, Bart Van Assche wrote:
+> On 4/23/21 4:39 AM, Hannes Reinecke wrote:
+>> Add a helper function scsi_status_is_check_condtion() to
+>                                              ^^^^^^^^ typo
+>> encapsulate the frequent checks for SAM_STAT_CHECK_CONDITION.
 > 
-> This change is so tricky that it deserves a comment.
+> [ ... ]
 > 
-> An even better approach would be *not* to export
-> blk_mq_complete_request_locally() from the block layer to block drivers
-> and instead modify the block layer such that it completes a request on
-> the same CPU if request completion happens from inside the context of a
-> tag iteration function. That would save driver writers the trouble of
-> learning yet another block layer API.
+>> +/** scsi_status_is_check_condition - check the status return.
+>> + *
+>> + * @status: the status passed up from the driver (including host and
+>> + *          driver components)
+>> + *
+>> + * This returns true if the status code is SAM_STAT_CHECK_CONDITION.
+>> + */
+> 
+> Shouldn't the function name and the description appear on the second
+> line of the kernel-doc header?
+> 
+Yeah, you're right. I used copy&paste from the function above, looked
+kinda fishy even then ...
 
-Yeah, that is possible, and one request flag(eg. RQF_ITERATED) can be added.
-The flag is set before calling ->fn(), and evaluated in
-blk_mq_complete_request_remote().
+Will be fixing it up.
 
-Thanks,
-Ming
+>> +static inline int scsi_status_is_check_condition(int status)
+>> +{
+>> +	if (status < 0)
+>> +		return false;
+>> +	status &= 0xfe;
+>> +	return (status == SAM_STAT_CHECK_CONDITION);
+>> +}
+> 
+> No parentheses around the expression in a return statement please.
+> 
+Will be fixing it up.
 
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		        Kernel Storage Architect
+hare@suse.de			               +49 911 74053 688
+SUSE Software Solutions Germany GmbH, 90409 Nürnberg
+GF: F. Imendörffer, HRB 36809 (AG Nürnberg)
