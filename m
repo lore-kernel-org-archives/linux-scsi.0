@@ -6,101 +6,107 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEF7BC43460
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 16:29:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3AD7C433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 17:05:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B1DA611CE
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 16:29:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B8BE613AA
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 17:05:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234414AbhDZQak (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Apr 2021 12:30:40 -0400
-Received: from mail-pg1-f179.google.com ([209.85.215.179]:41978 "EHLO
-        mail-pg1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234333AbhDZQaj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Apr 2021 12:30:39 -0400
-Received: by mail-pg1-f179.google.com with SMTP id f29so3278409pgm.8;
-        Mon, 26 Apr 2021 09:29:58 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=FRpv1P7l6v7ose3AJjfVKi2W+FlDkpRj5ZEW8pezQfY=;
-        b=QW6l8QPc/aTRRJkMflqb7pNerHG64JWhRMqyVqYvcJrUVZgoiAnPwE6t7HWWSEIHos
-         eUnQxjAnnrvuczuuhvE+Smqe5W1DofsONt/AHiziEQ7hYwIaEk4xLpmEX7bls65s6rCp
-         ae3n8tGHLRTVIQuHAALzPkVqLJ1Vberj/qCq0xJIBxtr3uCmmBcX5iOHAhxpIb9oteR8
-         w9mC0F4H9cCZCLRHWV3MRNNTrin8P8FPcu22bhFeauSRgiXcWtrQ0DGv5/sVjUYGQQkH
-         5PxOAkraaB/Ce1wZ1/DHk0PCKhxwCgSdeCmz9gtgYQ+MZdo+Wpe5/txAO50vIbKeVlnB
-         qLBQ==
-X-Gm-Message-State: AOAM532N0BCPY9ij8svTBpwej6+xffVkyfukkHYCzocRSZbjwhesTrVe
-        3UTCWxxNvzj3KI5t4Dg0aoAk0BaXDk6YLg==
-X-Google-Smtp-Source: ABdhPJyev+n50Sl7ge7QGwoi0EZWXv7dGiSbPpSdLW+WKUXjUfXO1ivrv0MYfqlz35LzmmJ7OALDoQ==
-X-Received: by 2002:a62:2cce:0:b029:21d:97da:833e with SMTP id s197-20020a622cce0000b029021d97da833emr18170081pfs.40.1619454597208;
-        Mon, 26 Apr 2021 09:29:57 -0700 (PDT)
-Received: from [192.168.3.219] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id f10sm15871804pju.27.2021.04.26.09.29.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 26 Apr 2021 09:29:56 -0700 (PDT)
-Subject: Re: [PATCH v7 3/5] blk-mq: Fix races between iterating over requests
- and freeing requests
+        id S234796AbhDZRGa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Apr 2021 13:06:30 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2917 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235532AbhDZRGN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Apr 2021 13:06:13 -0400
+Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FTWGW57Nnz680L7;
+        Tue, 27 Apr 2021 00:54:59 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Mon, 26 Apr 2021 19:05:29 +0200
+Received: from [10.47.94.234] (10.47.94.234) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Mon, 26 Apr
+ 2021 18:05:28 +0100
+Subject: Re: [bug report] shared tags causes IO hang and performance drop
 To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Daniel Wagner <dwagner@suse.de>,
-        Khazhismel Kumykov <khazhy@google.com>,
-        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org
-References: <20210421000235.2028-1-bvanassche@acm.org>
- <20210421000235.2028-4-bvanassche@acm.org> <YIDqa6YkNoD5OiKN@T590>
- <b717ffc0-a434-738f-9c63-32901bd164b2@acm.org> <YIEiElb9wxReV/oL@T590>
- <32a121b7-2444-ac19-420d-4961f2a18129@acm.org> <YIJEg9DLWoOJ06Kc@T590>
- <28607d75-042f-7a6a-f5d0-2ee03754917e@acm.org> <YISzLal7Ur7jyuiy@T590>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <d1d3c068-4446-145b-34c6-12fa1f30d4da@acm.org>
-Date:   Mon, 26 Apr 2021 09:29:54 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+CC:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        Hannes Reinecke <hare@suse.com>
+References: <YHaez6iN2HHYxYOh@T590>
+ <9a6145a5-e6ac-3d33-b52a-0823bfc3b864@huawei.com>
+ <cb326d404c6e0785d03a7dfadc42832c@mail.gmail.com> <YHbOOfGNHwO4SMS7@T590>
+ <87ceccf2-287b-9bd1-899a-f15026c9e65b@huawei.com> <YHe3M62agQET6o6O@T590>
+ <0c85fe52-ebc7-68b3-2dbe-dfad5d604346@huawei.com>
+ <c1d5abaa-c460-55f8-5351-16f09d6aa81f@huawei.com> <YIbS1dgSYrsAeGvZ@T590>
+ <55743a51-4d6f-f481-cebf-e2af9c657911@huawei.com> <YIbkX2G0+dp3PV+u@T590>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <9ad15067-ba7b-a335-ae71-8c4328856b91@huawei.com>
+Date:   Mon, 26 Apr 2021 18:02:31 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <YISzLal7Ur7jyuiy@T590>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <YIbkX2G0+dp3PV+u@T590>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.94.234]
+X-ClientProxiedBy: lhreml745-chm.china.huawei.com (10.201.108.195) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/24/21 5:09 PM, Ming Lei wrote:
-> Terminating all pending commands can't avoid the issue wrt. request UAF,
-> so far blk_mq_tagset_wait_completed_request() is used for making sure
-> that all pending requests are really aborted.
+On 26/04/2021 17:03, Ming Lei wrote:
+>> For both hostwide and non-hostwide tags, we have standalone sched tags and
+>> request pool per hctx when q->nr_hw_queues > 1.
+> driver tags is shared for hostwide tags.
 > 
-> However, blk_mq_wait_for_tag_iter() still may return before
-> blk_mq_wait_for_tag_iter() is done because blk_mq_wait_for_tag_iter()
-> supposes all request reference is just done inside bt_tags_iter(),
-> especially .iter_rwsem and read rcu lock is added in bt_tags_iter().
+>>> That is why you observe that scheduler tag exhaustion
+>>> is easy to trigger in case of non-hostwide tags.
+>>>
+>>> I'd suggest to add one per-request-queue sched tags, and make all hctxs
+>>> sharing it, just like what you did for driver tag.
+>>>
+>> That sounds reasonable.
+>>
+>> But I don't see how this is related to hostwide tags specifically, but
+>> rather just having q->nr_hw_queues > 1, which NVMe PCI and some other SCSI
+>> MQ HBAs have (without using hostwide tags).
+> Before hostwide tags, the whole scheduler queue depth should be 256.
+> After hostwide tags, the whole scheduler queue depth becomes 256 *
+> nr_hw_queues. But the driver tag queue depth is_not_  changed.
 
-Hi Ming,
+Fine.
 
-I think that we agree that completing a request from inside a tag
-iteration callback function may cause the request completion to happen
-after tag iteration has finished. This can happen because
-blk_mq_complete_request() may redirect completion processing to another
-CPU via an IPI.
+> 
+> More requests come and are tried to dispatch to LLD and can't succeed
+> because of limited driver tag depth, and CPU utilization could be increased.
 
-But can this mechanism trigger a use-after-free by itself? If request
-completion is redirected to another CPU, the request is still considered
-pending and request queue freezing won't complete. Request queue
-freezing will only succeed after __blk_mq_free_request() has been called
-because it is __blk_mq_free_request() that calls blk_queue_exit().
+Right, maybe this is a problem.
 
-In other words, do we really need the new
-blk_mq_complete_request_locally() function?
+I quickly added some debug, and see that 
+__blk_mq_get_driver_tag()->__sbitmap_queue_get() fails ~7% for hostwide 
+tags and 3% for non-hostwide tags.
 
-Did I perhaps miss something?
+Having it fail at all for non-hostwide tags seems a bit dubious... 
+here's the code for deciding the rq sched tag depth:
+
+q->nr_requests = 2 * min(q->tags_set->queue_depth [128], BLK_DEV_MAX_RQ 
+[128])
+
+So we get 256 for our test scenario, which is appreciably bigger than 
+q->tags_set->queue_depth, so the failures make sense.
+
+Anyway, I'll look at adding code for a per-request queue sched tags to 
+see if it helps. But I would plan to continue to use a per hctx sched 
+request pool.
 
 Thanks,
+John
 
-Bart.
