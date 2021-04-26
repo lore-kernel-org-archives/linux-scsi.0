@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D80A4C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 03:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6C4DC43460
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 03:49:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B54A460FEE
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 03:49:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8EF461152
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 03:49:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231704AbhDZDts (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 25 Apr 2021 23:49:48 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:13025 "EHLO
+        id S231794AbhDZDtv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 25 Apr 2021 23:49:51 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:5837 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231431AbhDZDts (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Apr 2021 23:49:48 -0400
-IronPort-SDR: 3e3uV39P0B8HuKxQCSPezPO2rW/XS/iSizVim7xlB2F+4LbJVvunMpB6XkM5lgBk4Vg7UVxDMY
- 5NnoBC62JvjCHCsmjNzpva4v8dNUcEypQDc4wl+TfyBY/lh3F8atEpdxg5+UMsiZKbmy6Qz9A0
- q2eKLXWCrk+avwhTxW87ccviV3TJqHAfVN6kZ9FqAkyw1b4+xtJykb+nXtpe3ICBUk+LLwt5P0
- p2UecaTkGYjuztZxWUNVGrbLTW1O/Im0ONhwNExL79+b//OlNwdY0p7v2UrOKt1daENXLzwP4d
- NLc=
+        with ESMTP id S231768AbhDZDtv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Apr 2021 23:49:51 -0400
+IronPort-SDR: 8HxJbIwCH5tOuGTh8QNxHXSsu6ez7b5G4tX3+h5H3KJhaYYiIwFWgigf/vUWy8D04vXTZKmwOk
+ zCzXP8zGSkDd/NgBOtRO364rckk2ngqvQ1SCPZeJVHO2k25F6nmtqzBRMNGOFXKWBh7IDyOd8J
+ NaZIzfLP74otDpll3Z7OS4KxYeuop9ozX4SxsxUNhneMHZ+Eo0S2sJr0E55wVUQo6t4vCCiNKb
+ 9HO0Te9MYTpmzaZo72bGkFN/6CmQo9ZxZJsyUKKRNp4/kcs/s7zmynKkzZlJtPEb9WTrshYnSN
+ Luw=
 X-IronPort-AV: E=Sophos;i="5.82,251,1613462400"; 
-   d="scan'208";a="29759516"
-Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
-  by labrats.qualcomm.com with ESMTP; 25 Apr 2021 20:49:06 -0700
+   d="scan'208";a="47849242"
+Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
+  by labrats.qualcomm.com with ESMTP; 25 Apr 2021 20:49:10 -0700
 X-QCInternal: smtphost
 Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg01-sd.qualcomm.com with ESMTP; 25 Apr 2021 20:49:05 -0700
+  by ironmsg02-sd.qualcomm.com with ESMTP; 25 Apr 2021 20:49:09 -0700
 Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id E64492121E; Sun, 25 Apr 2021 20:49:05 -0700 (PDT)
+        id 933442121E; Sun, 25 Apr 2021 20:49:09 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, ziqichen@codeaurora.org,
         nguyenb@codeaurora.org, hongwus@codeaurora.org,
@@ -46,9 +46,9 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Bean Huo <beanhuo@micron.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 1/3] scsi: ufs: Do not put UFS power into LPM if link is broken
-Date:   Sun, 25 Apr 2021 20:48:38 -0700
-Message-Id: <1619408921-30426-2-git-send-email-cang@codeaurora.org>
+Subject: [PATCH v2 2/3] scsi: ufs: Cancel rpm_dev_flush_recheck_work during system suspend
+Date:   Sun, 25 Apr 2021 20:48:39 -0700
+Message-Id: <1619408921-30426-3-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1619408921-30426-1-git-send-email-cang@codeaurora.org>
 References: <1619408921-30426-1-git-send-email-cang@codeaurora.org>
@@ -56,37 +56,30 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During resume, if link is broken due to AH8 failure, make sure
-ufshcd_resume() do not put UFS power back into LPM.
+During ufs system suspend, leaving rpm_dev_flush_recheck_work running or
+pending is risky, because concurrency may happen btw system suspend/resume
+and runtime resume routine. Fix it by cancelling rpm_dev_flush_recheck_work
+synchronously during system suspend.
 
-Fixes: 4db7a23605973 ("scsi: ufs: Fix concurrency of error handler and other error recovery paths")
+Fixes: 51dd905bd2f61 ("scsi: ufs: Fix WriteBooster flush during runtime suspend")
 Signed-off-by: Can Guo <cang@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 6da1da8..28501bb 100644
+index 28501bb..a2f9c8e 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8660,7 +8660,7 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
- 	} else if (!ufshcd_is_ufs_dev_active(hba)) {
- 		ufshcd_toggle_vreg(hba->dev, hba->vreg_info.vcc, false);
- 		vcc_off = true;
--		if (!ufshcd_is_link_active(hba)) {
-+		if (ufshcd_is_link_hibern8(hba) || ufshcd_is_link_off(hba)) {
- 			ufshcd_config_vreg_lpm(hba, hba->vreg_info.vccq);
- 			ufshcd_config_vreg_lpm(hba, hba->vreg_info.vccq2);
- 		}
-@@ -8682,7 +8682,7 @@ static int ufshcd_vreg_set_hpm(struct ufs_hba *hba)
- 	    !hba->dev_info.is_lu_power_on_wp) {
- 		ret = ufshcd_setup_vreg(hba, true);
- 	} else if (!ufshcd_is_ufs_dev_active(hba)) {
--		if (!ret && !ufshcd_is_link_active(hba)) {
-+		if (!ufshcd_is_link_active(hba)) {
- 			ret = ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq);
- 			if (ret)
- 				goto vcc_disable;
+@@ -9044,6 +9044,8 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+ 	if (!hba->is_powered)
+ 		return 0;
+ 
++	cancel_delayed_work_sync(&hba->rpm_dev_flush_recheck_work);
++
+ 	if ((ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl) ==
+ 	     hba->curr_dev_pwr_mode) &&
+ 	    (ufs_get_pm_lvl_to_link_pwr_state(hba->spm_lvl) ==
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
