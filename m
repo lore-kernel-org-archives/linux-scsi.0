@@ -7,39 +7,46 @@ X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAC8FC433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 15:22:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7193FC433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 15:22:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5DC5601FC
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 15:22:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37C4C6135B
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 15:22:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234024AbhDZPW5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Apr 2021 11:22:57 -0400
-Received: from verein.lst.de ([213.95.11.211]:41754 "EHLO verein.lst.de"
+        id S234052AbhDZPXU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Apr 2021 11:23:20 -0400
+Received: from verein.lst.de ([213.95.11.211]:41762 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233829AbhDZPW5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Apr 2021 11:22:57 -0400
+        id S233978AbhDZPXT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Apr 2021 11:23:19 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 1FDFE68C4E; Mon, 26 Apr 2021 17:22:14 +0200 (CEST)
-Date:   Mon, 26 Apr 2021 17:22:13 +0200
+        id 7962868C4E; Mon, 26 Apr 2021 17:22:36 +0200 (CEST)
+Date:   Mon, 26 Apr 2021 17:22:36 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 11/39] xen-scsiback: use DID_ERROR instead of
- DRIVER_ERROR
-Message-ID: <20210426152213.GD25615@lst.de>
-References: <20210423113944.42672-1-hare@suse.de> <20210423113944.42672-12-hare@suse.de>
+        linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH 13/39] scsi: Drop the now obsolete driver_byte
+ definitions
+Message-ID: <20210426152236.GE25615@lst.de>
+References: <20210423113944.42672-1-hare@suse.de> <20210423113944.42672-14-hare@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210423113944.42672-12-hare@suse.de>
+In-Reply-To: <20210423113944.42672-14-hare@suse.de>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
+
+On Fri, Apr 23, 2021 at 01:39:18PM +0200, Hannes Reinecke wrote:
+> From: Hannes Reinecke <hare@suse.com>
+> 
+> The driver_byte field in the result is now unused, so we can drop
+> the definitions.
 
 Looks good,
 
