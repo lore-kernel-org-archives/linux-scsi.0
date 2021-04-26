@@ -2,124 +2,128 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 912A0C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 07:06:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1FAAC43461
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 07:30:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6806961131
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 07:06:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FEB6611CA
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 07:30:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232089AbhDZHGz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Apr 2021 03:06:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60640 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232018AbhDZHGy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Apr 2021 03:06:54 -0400
-Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEDE9C061763
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Apr 2021 00:06:11 -0700 (PDT)
-Received: by mail-wr1-x431.google.com with SMTP id n2so1416164wrm.0
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Apr 2021 00:06:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=5RuHvbrZHVloxRo7eENq0ZIryQnDTJP0ete42G83Dm0=;
-        b=rIb8+v2FAdA/HfhwuFQ6R8dphR1T0XKcem+hDmiyp8QJyiWsUG/VegWao1LxxolHOc
-         ctEIXLn6mFraIjAcGx8exbmzWC852dgXWwKnm3td7C06aBOHnlsNlS160CFJsN2ch7Vj
-         HWWjhQbqWx0x6IG9wItFTZ7CFHUw87oc7fyqNSc+/s7ZHgo7JuV9fKzCZn674JYEsCX6
-         +JY2w1OdFXrf2gQXf6S9eNPX7nVE/EMMHAlAlr+3OXLCHkZjMdIqHV0Zr7RTiOc+GI+a
-         gWafVirCtDjutoLU7lw5+fWllx0HFwPneUNauWgJcEPM4s8PQEDUE5Fz8Ws+QQ5hE5Rh
-         LJag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=5RuHvbrZHVloxRo7eENq0ZIryQnDTJP0ete42G83Dm0=;
-        b=WPUUnrWKMaB8mlw9AC/3auO5hzMoJ/PpAsI/HbP8zOAL9l4FA6AJt8YEtHWLxEs3lG
-         xqDQjYINvpUNsMq3nJ45IQo2gfKCHMJycrKymgSA8bLnLkbja3roVHkKsCYCUIHnJEFr
-         9+YxlD9yG15kenTGHWrEwKozPIGesBbOsHkgDnXJiEypdMOIqRgQiA2OtitHLHJPjPI+
-         INat0eS+UUinDj7arMjUnkcvFIqpnTZXbaNSvBJp0/6jOgO841PF0RmKbM9rb4altnAY
-         U797zYoCDH5UqPa/L8RGEzMWH2vMrZsNlkc97qThVtiSWdRiSGPHcHUgPUd+Bc7s5miq
-         3FMA==
-X-Gm-Message-State: AOAM530oxBOF8AlVRKYmwr9tAQ+0bL9LitPWek6X9Hw/30yLdZ+VbYkK
-        L2kf2ty1PA9aygj+ndoVMG4q2g==
-X-Google-Smtp-Source: ABdhPJxQA11AMLyg/X551pHlVu8f4n+OUBOFc1FV8/qEkPz+6JKC49mgf31rgbpUC8pVKrxLOFj9Lw==
-X-Received: by 2002:a5d:4402:: with SMTP id z2mr20396301wrq.179.1619420770263;
-        Mon, 26 Apr 2021 00:06:10 -0700 (PDT)
-Received: from dell ([91.110.221.215])
-        by smtp.gmail.com with ESMTPSA id 200sm16751584wmb.1.2021.04.26.00.06.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Apr 2021 00:06:09 -0700 (PDT)
-Date:   Mon, 26 Apr 2021 08:06:07 +0100
-From:   Lee Jones <lee.jones@linaro.org>
-To:     Shawn Guo <shawn.guo@linaro.org>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Stuart Hayes <stuart.w.hayes@gmail.com>,
-        Ohad Ben-Cohen <ohad@wizery.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Timur Tabi <timur@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>, dmaengine@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-remoteproc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
-        alsa-devel@alsa-project.org
-Subject: Re: [PATCH] firmware: replace HOTPLUG with UEVENT in FW_ACTION
- defines
-Message-ID: <20210426070607.GG6446@dell>
-References: <20210425020024.28057-1-shawn.guo@linaro.org>
+        id S232174AbhDZHbf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Apr 2021 03:31:35 -0400
+Received: from mx2.suse.de ([195.135.220.15]:51118 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232158AbhDZHbe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Apr 2021 03:31:34 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 3D5ECB00D;
+        Mon, 26 Apr 2021 07:30:52 +0000 (UTC)
+Subject: Re: [PATCH 0/5] scsi: fnic: use blk_mq_tagset_busy_iter() to walk
+ scsi commands
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Satish Kharat <satishkh@cisco.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        David Jeffery <djeffery@redhat.com>
+References: <20210421075543.1919826-1-ming.lei@redhat.com>
+ <d251c21e-dd3e-979a-1c90-1f94b042e83c@suse.de> <YIC+ieKIKovpwptY@T590>
+ <YIGFfScR3ZBluX01@T590>
+From:   Hannes Reinecke <hare@suse.de>
+Organization: SUSE Linux GmbH
+Message-ID: <0e4449f0-db4f-6127-a548-c2c841dca49e@suse.de>
+Date:   Mon, 26 Apr 2021 09:30:45 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
 MIME-Version: 1.0
+In-Reply-To: <YIGFfScR3ZBluX01@T590>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210425020024.28057-1-shawn.guo@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 25 Apr 2021, Shawn Guo wrote:
-
-> With commit 312c004d36ce ("[PATCH] driver core: replace "hotplug" by
-> "uevent"") already in the tree over a decade, update the name of
-> FW_ACTION defines to follow semantics, and reflect what the defines are
-> really meant for, i.e. whether or not generate user space event.
+On 4/22/21 4:17 PM, Ming Lei wrote:
+> On Thu, Apr 22, 2021 at 08:08:41AM +0800, Ming Lei wrote:
+>> On Wed, Apr 21, 2021 at 10:14:56PM +0200, Hannes Reinecke wrote:
+>>> On 4/21/21 9:55 AM, Ming Lei wrote:
+>>>> Hello Guys,
+>>>>
+>>>> fnic uses the following way to walk scsi commands in failure handling,
+>>>> which is obvious wrong, because caller of scsi_host_find_tag has to
+>>>> guarantee that the tag is active.
+>>>>
+>>>>          for (tag = 0; tag < fnic->fnic_max_tag_id; tag++) {
+>>>> 				...
+>>>>                  sc = scsi_host_find_tag(fnic->lport->host, tag);
+>>>> 				...
+>>>> 		}
+>>>>
+>>>> Fix the issue by using blk_mq_tagset_busy_iter() to walk
+>>>> request/scsi_command.
+>>>>
+>>>> thanks,
+>>>> Ming
+>>>>
+>>>>
+>>>> Ming Lei (5):
+>>>>    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+>>>>      fnic_terminate_rport_io
+>>>>    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+>>>>      fnic_clean_pending_aborts
+>>>>    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+>>>>      fnic_cleanup_io
+>>>>    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+>>>>      fnic_rport_exch_reset
+>>>>    scsi: fnic: use blk_mq_tagset_busy_iter() to walk scsi commands in
+>>>>      fnic_is_abts_pending
+>>>>
+>>>>   drivers/scsi/fnic/fnic_scsi.c | 933 ++++++++++++++++++----------------
+>>>>   1 file changed, 493 insertions(+), 440 deletions(-)
+>>>>
+>>>> Cc: Satish Kharat <satishkh@cisco.com>
+>>>> Cc: Karan Tilak Kumar <kartilak@cisco.com>
+>>>> Cc: David Jeffery <djeffery@redhat.com>
+>>>>
+>>> Well, this is actually not that easy for fnic.
+>>> Problem is the reset hack hch put in some time ago (cf
+>>> fnic_host_start_tag()), which will cause any TMF to use a tag which is _not_
+>>> visible to the busy iter.
+>>
+>> 'git grep -n fnic_host_start_tag ./' shows nothing.
+>>
+>>> That will cause the iter to miss any TMF, with unpredictable results if a
+>>> TMF is running at the same time than, say, a link bounce.
+>>
+>> Wrt. linus tree or next tree, I don't see any issue wrt. your concern.
+>>
+>>>
+>>> I have folded this as part of my patchset for reserved commands in SCSI;
+>>> that way fnic can use 'normal' tags for TMFs, which are then visible to the
+>>> busy iter and life's good.
+>>
+>> No, this fix is one bug fix, which can't depend on your reserved
+>> command in SCSI, and they need to be backported to stable tree too.
 > 
-> Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-> ---
->  drivers/dma/imx-sdma.c                      |  2 +-
->  drivers/media/platform/exynos4-is/fimc-is.c |  2 +-
+> Hi Hannes,
+> 
+> We have customers report on this issue, could you please let us know
+> if you will post out one bug-fix only version?
+> 
+And so have we, and indeed we have the same bug reports.
+So I'll be splitting off those patches and send it as a stand-alone
+patchset.
 
->  drivers/mfd/iqs62x.c                        |  2 +-
+Cheers,
 
-Acked-by: Lee Jones <lee.jones@linaro.org>
-
->  drivers/misc/lattice-ecp3-config.c          |  2 +-
->  drivers/net/wireless/ti/wlcore/main.c       |  2 +-
->  drivers/platform/x86/dell/dell_rbu.c        |  2 +-
->  drivers/remoteproc/remoteproc_core.c        |  2 +-
->  drivers/scsi/lpfc/lpfc_init.c               |  2 +-
->  drivers/tty/serial/ucc_uart.c               |  2 +-
->  include/linux/firmware.h                    |  4 ++--
->  lib/test_firmware.c                         | 10 +++++-----
->  sound/soc/codecs/wm8958-dsp2.c              |  6 +++---
->  12 files changed, 19 insertions(+), 19 deletions(-)
-
+Hannes
 -- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+Dr. Hannes Reinecke		        Kernel Storage Architect
+hare@suse.de			               +49 911 74053 688
+SUSE Software Solutions Germany GmbH, 90409 Nürnberg
+GF: F. Imendörffer, HRB 36809 (AG Nürnberg)
