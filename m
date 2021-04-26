@@ -7,41 +7,43 @@ X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74D51C433B4
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 15:25:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C455FC433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 15:25:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3130461396
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 15:25:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9313A6135D
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Apr 2021 15:25:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234085AbhDZPZq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Apr 2021 11:25:46 -0400
-Received: from verein.lst.de ([213.95.11.211]:41786 "EHLO verein.lst.de"
+        id S234030AbhDZP0H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Apr 2021 11:26:07 -0400
+Received: from verein.lst.de ([213.95.11.211]:41792 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233573AbhDZPZp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Apr 2021 11:25:45 -0400
+        id S233919AbhDZP0G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Apr 2021 11:26:06 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 53AC168C4E; Mon, 26 Apr 2021 17:25:02 +0200 (CEST)
-Date:   Mon, 26 Apr 2021 17:25:01 +0200
+        id D880668C7B; Mon, 26 Apr 2021 17:25:23 +0200 (CEST)
+Date:   Mon, 26 Apr 2021 17:25:22 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 17/39] dc395: use standard macros to set SCSI result
-Message-ID: <20210426152501.GI25615@lst.de>
-References: <20210423113944.42672-1-hare@suse.de> <20210423113944.42672-18-hare@suse.de>
+Subject: Re: [PATCH 18/39] dc395: translate message bytes
+Message-ID: <20210426152522.GJ25615@lst.de>
+References: <20210423113944.42672-1-hare@suse.de> <20210423113944.42672-19-hare@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210423113944.42672-18-hare@suse.de>
+In-Reply-To: <20210423113944.42672-19-hare@suse.de>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Apr 23, 2021 at 01:39:22PM +0200, Hannes Reinecke wrote:
-> Use standard macros to set the SCSI result and drop the internal ones.
+On Fri, Apr 23, 2021 at 01:39:23PM +0200, Hannes Reinecke wrote:
+> Drop message byte setting if the host byte is already set, and
+> translate message bytes into the related host bytes when evaluating
+> an overrun or underrun.
 
 Looks good,
 
