@@ -2,118 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E376CC433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 22:36:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C08D2C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 23:59:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0BD0610FC
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 22:36:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8ED1E613A9
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 23:59:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236015AbhD0Wgo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Apr 2021 18:36:44 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:29082 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235382AbhD0Wgo (ORCPT
+        id S237104AbhD1AAD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Apr 2021 20:00:03 -0400
+Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:57323 "EHLO
+        wout1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230368AbhD1AAD (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Apr 2021 18:36:44 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13RMVCPd027582;
-        Tue, 27 Apr 2021 15:35:50 -0700
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 386tcrr6es-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Tue, 27 Apr 2021 15:35:50 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 27 Apr
- 2021 15:35:48 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 27 Apr 2021 15:35:48 -0700
-Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
-        by maili.marvell.com (Postfix) with ESMTP id 678803F7040;
-        Tue, 27 Apr 2021 15:35:48 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 13RMZlGh010696;
-        Tue, 27 Apr 2021 15:35:47 -0700
-X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
-Date:   Tue, 27 Apr 2021 15:35:47 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@irv1user01.caveonetworks.com
-To:     Daniel Wagner <dwagner@suse.de>
-CC:     Roman Bolshakov <r.bolshakov@yadro.com>,
-        <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        <linux-nvme@lists.infradead.org>, Hannes Reinecke <hare@suse.de>,
-        Nilesh Javali <njavali@marvell.com>,
-        "James Smart" <james.smart@broadcom.com>
-Subject: Re: [EXT] Re: [RFC] qla2xxx: Add dev_loss_tmo kernel module
- options
-In-Reply-To: <20210427095131.zf6c4siewnrhv7qd@beryllium.lan>
-Message-ID: <alpine.LRH.2.21.9999.2104271531440.24132@irv1user01.caveonetworks.com>
-References: <20210419100014.47144-1-dwagner@suse.de>
- <YH8QzgWiec8vka20@SPB-NB-133.local>
- <20210420182830.fbipix3l7hwlyfx3@beryllium.lan>
- <alpine.LRH.2.21.9999.2104201642290.24132@irv1user01.caveonetworks.com>
- <20210421075659.dwaz7gt6hyqlzpo4@beryllium.lan>
- <20210427095131.zf6c4siewnrhv7qd@beryllium.lan>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+        Tue, 27 Apr 2021 20:00:03 -0400
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailout.west.internal (Postfix) with ESMTP id 96598FBC;
+        Tue, 27 Apr 2021 19:59:18 -0400 (EDT)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute4.internal (MEProxy); Tue, 27 Apr 2021 19:59:19 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sholland.org; h=
+        from:to:cc:subject:date:message-id:mime-version
+        :content-transfer-encoding; s=fm2; bh=7PlEZIPtWb8lX8kqZl8nkTHj6R
+        v/c5CDk9SJykONV3o=; b=VfYCtGvkbmsX3y1ZzaEmBj/hWm5LeDnUDTj5CeFVDk
+        jFEkxc3SJ/vzZdH0iMKIVcRAnfeEs3CuovHWFNZur0UF0v1VCq3ssHldkmpTsS1J
+        XC/XnYCJJZEi0aoub7HtIpJvAMTL/hweBof22mRUfzVt+gdo06LD8nIPaXJUd/ro
+        AMAeTKYY7PyvPVTW3jRHz0ZfI59MsBNK++coob06i2WE8CUeeR/TjEZmOTOxeJFR
+        wn23F1JMK0hbqZ/mrXD/M423pnzx6Zf8+zI2Gvi1frGwVwv/Y7x/vSn3+ScuWmc4
+        HgPm/ZZYoLB2iJ7tqsb5lDmi/r2MPXlhvcC36XjsWarg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:date:from
+        :message-id:mime-version:subject:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=7PlEZIPtWb8lX8kqZ
+        l8nkTHj6Rv/c5CDk9SJykONV3o=; b=qqvtMh6nsj50nzdXGfqD3fVx+Htv9u46k
+        GwNMbWpaaCiyBhDVucpwBZmitdUYh/oz4IgqjaAuKEyhzOnJMQUtMZojnAq5L8i8
+        gfFNJKc9thZuYN9iSJmEKn/3+tZTCYMdm3GB+5bpXf0WCEf6Us88+UQg2VdUnWda
+        8b19+7JcH2/4xXbxYPUbQ1zcniPbtGNnpVw2KRliNoiGLrRRBFTzvsooRyd5oZFN
+        RKG39xF9nRP2OTOsmsOdc1oaZBIbMoyjnPWzz/e2VzZhMVj/bnLb98AmVD/sy6Nb
+        pw61S5c7GS14/f5cyDxgupTn7FXVy3IQetmov0qnssB8ygFK/QlGQ==
+X-ME-Sender: <xms:VaWIYHH1-jeruQ5GXuSdAuGxMl3xHnvAvMGtV21_WhOdeFaLBfUg7w>
+    <xme:VaWIYEUjgNhEsNfcT1phDrNKmOb8tUyNXa3ioBhUvnlyE6QQPj5jC0sPabqNJXKhk
+    OD-l971P-cgpCbsEA>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduledrvddvuddgvdejucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhephffvufffkffoggfgsedtkeertdertddtnecuhfhrohhmpefurghmuhgvlhcu
+    jfholhhlrghnugcuoehsrghmuhgvlhesshhhohhllhgrnhgurdhorhhgqeenucggtffrrg
+    htthgvrhhnpeeiteekhfehuddugfeltddufeejjeefgeevheekueffhffhjeekheeiffdt
+    vedtveenucfkphepjedtrddufeehrddugeekrdduhedunecuvehluhhsthgvrhfuihiivg
+    eptdenucfrrghrrghmpehmrghilhhfrhhomhepshgrmhhuvghlsehshhholhhlrghnugdr
+    ohhrgh
+X-ME-Proxy: <xmx:VaWIYJJaO58Aze0aM263LgZsomfJwYC9CjUpQbJmEmjzk15kEqsQXA>
+    <xmx:VaWIYFEoIH_ikPZzcwa_tZ1u2VjZk0DySzTjvJPWb-McrFcwGkqbfg>
+    <xmx:VaWIYNW02amKquTY7_pa3l9SPSlmOyRxzuVtb7q4UfJs05hXHk95Ag>
+    <xmx:VqWIYLf4OPlCizNYcB1LnvW-1Ac9RoLTp7z9MU8FVVGyP2AX4j5U6g>
+Received: from titanium.stl.sholland.net (70-135-148-151.lightspeed.stlsmo.sbcglobal.net [70.135.148.151])
+        by mail.messagingengine.com (Postfix) with ESMTPA;
+        Tue, 27 Apr 2021 19:59:16 -0400 (EDT)
+From:   Samuel Holland <samuel@sholland.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Adam Radford <aradford@gmail.com>, linux-scsi@vger.kernel.org
+Cc:     Arnd Bergmann <arnd@arndb.de>, Joe Perches <joe@perches.com>,
+        linux-kernel@vger.kernel.org, Samuel Holland <samuel@sholland.org>
+Subject: [PATCH v5 0/3] 3w-9xxx: Endianness fixes
+Date:   Tue, 27 Apr 2021 18:59:12 -0500
+Message-Id: <20210427235915.39211-1-samuel@sholland.org>
+X-Mailer: git-send-email 2.26.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-X-Proofpoint-GUID: LUWLFQulvNyKwWs_EhlnyiiH9jAd-9vm
-X-Proofpoint-ORIG-GUID: LUWLFQulvNyKwWs_EhlnyiiH9jAd-9vm
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-04-27_12:2021-04-27,2021-04-27 signatures=0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 27 Apr 2021, 2:51am, Daniel Wagner wrote:
+This series fixes the 3w-9xxx driver in a big-endian configuration.
 
-> On Wed, Apr 21, 2021 at 09:56:59AM +0200, Daniel Wagner wrote:
-> > Ah, didn't know about nvmediscovery until very recentetly. I try to get
-> > it working with this approach (as this patch is not really a proper
-> > solution).
-> 
-> Finally found some time to play with this. FTR, the nvmediscovery
-> carries following information:
-> 
->   UDEV  [65238.364677] change   /devices/virtual/fc/fc_udev_device (fc)
->   ACTION=change
->   DEVPATH=/devices/virtual/fc/fc_udev_device
->   FC_EVENT=nvmediscovery
->   NVMEFC_HOST_TRADDR=nn-0x20000024ff7fa448:pn-0x21000024ff7fa448
->   NVMEFC_TRADDR=nn-0x200200a09890f5bf:pn-0x203800a09890f5bf
->   SEQNUM=12357
->   SUBSYSTEM=fc
->   USEC_INITIALIZED=65238333374
-> 
-> The udev rule I came up is:
-> 
->   ACTION=="change", SUBSYSTEM=="fc", ENV{FC_EVENT}=="nvmediscovery", \
->       ENV{NVMEFC_TRADDR}=="*", \
->       RUN+="/usr/local/sbin/qla2xxx_dev_loss_tmo.sh $env{NVMEFC_TRADDR} 4294967295"
-> 
-> and the script is:
-> 
->   #!/bin/sh
-> 
->   TRADDR=$1
->   TMO=$2
-> 
->   id=$(echo $TRADDR | sed -n "s/.*pn-0x\([0-9a-f]\+\)/\1/p")
->   find /sys/kernel/debug/qla2xxx -name pn-$id -exec /bin/sh -c "echo $TMO > {}/dev_loss_tmo" \;
-> 
-> I am sure this can be done in a more elegant way. Anyway, I am testing
-> this right now, the first 30 minutes look good...
-> 
+I received no comments on v4, but it no longer applies cleanly.
 
-Looks ok to me. Just keep in mind that, with this you'd be setting all 
-instances of pn-XXX (multiple initiator ports seeing the same target 
-scenario). It looks like this is what you want, but thought I'd point that 
-out.
+Changes from v4 to v5:
+  - Rebased on v5.12
+Changes from v3 to v4:
+  - Changed order of parameters to dma_alloc_coherent()
+Changes from v2 to v3:
+  - Add additional patches reducing the use of structure packing
+Changes from v1 to v2:
+  - Include missed header changes
+  - Use local variable instead of byte swapping multiple times
 
-Regards,
--Arun
+Samuel Holland (3):
+  scsi: 3w-9xxx: Use flexible array members to avoid struct padding
+  scsi: 3w-9xxx: Reduce scope of structure packing
+  scsi: 3w-9xxx: Fix endianness issues in command packets
+
+ drivers/scsi/3w-9xxx.c |  72 ++++++++++++-------------
+ drivers/scsi/3w-9xxx.h | 119 +++++++++++++++++++++--------------------
+ 2 files changed, 96 insertions(+), 95 deletions(-)
+
+-- 
+2.26.3
+
