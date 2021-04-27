@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58D60C433B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECD69C433ED
 	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CC006113D
+	by mail.kernel.org (Postfix) with ESMTP id B454E600D4
 	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235225AbhD0IcL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S235227AbhD0IcL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 27 Apr 2021 04:32:11 -0400
-Received: from mx2.suse.de ([195.135.220.15]:49410 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49588 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235166AbhD0Ib5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S235169AbhD0Ib5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 27 Apr 2021 04:31:57 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 60DACB0D0;
+        by mx2.suse.de (Postfix) with ESMTP id 7D3D2B121;
         Tue, 27 Apr 2021 08:31:06 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,9 +29,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 16/40] scsi: add get_{status,host}_byte() accessor function
-Date:   Tue, 27 Apr 2021 10:30:22 +0200
-Message-Id: <20210427083046.31620-17-hare@suse.de>
+Subject: [PATCH 24/40] nsp32: do not set message byte
+Date:   Tue, 27 Apr 2021 10:30:30 +0200
+Message-Id: <20210427083046.31620-25-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210427083046.31620-1-hare@suse.de>
 References: <20210427083046.31620-1-hare@suse.de>
@@ -41,43 +41,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add accessor functions for the host and status byte.
+The message byte always devolves to COMMAND_COMPLETE, so there
+is no point in setting it.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/scsi/scsi_cmnd.h | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/nsp32.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index a1eb7732aa1b..2c7b4102aa14 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -316,6 +316,11 @@ static inline void set_status_byte(struct scsi_cmnd *cmd, char status)
- 	cmd->result = (cmd->result & 0xffffff00) | status;
- }
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index 6d29908017f0..56009eb248a7 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -948,7 +948,6 @@ static int nsp32_queuecommand_lck(struct scsi_cmnd *SCpnt,
+ 	SCpnt->scsi_done     = done;
+ 	data->CurrentSC      = SCpnt;
+ 	SCpnt->SCp.Status    = SAM_STAT_CHECK_CONDITION;
+-	SCpnt->SCp.Message   = 0;
+ 	scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
  
-+static inline u8 get_status_byte(struct scsi_cmnd *cmd)
-+{
-+	return cmd->result & 0xff;
-+}
-+
- static inline void set_msg_byte(struct scsi_cmnd *cmd, char status)
- {
- 	cmd->result = (cmd->result & 0xffff00ff) | (status << 8);
-@@ -326,6 +331,11 @@ static inline void set_host_byte(struct scsi_cmnd *cmd, char status)
- 	cmd->result = (cmd->result & 0xff00ffff) | (status << 16);
- }
+ 	SCpnt->SCp.ptr		    = (char *)scsi_sglist(SCpnt);
+@@ -1690,12 +1689,10 @@ static int nsp32_busfree_occur(struct scsi_cmnd *SCpnt, unsigned short execph)
+ 		nsp32_dbg(NSP32_DEBUG_BUSFREE, "command complete");
  
-+static inline u8 get_host_byte(struct scsi_cmnd *cmd)
-+{
-+	return (cmd->result >> 16) & 0xff;
-+}
-+
+ 		SCpnt->SCp.Status  = nsp32_read1(base, SCSI_CSB_IN);
+-		SCpnt->SCp.Message = 0;
+ 		nsp32_dbg(NSP32_DEBUG_BUSFREE,
+ 			  "normal end stat=0x%x resid=0x%x\n",
+ 			  SCpnt->SCp.Status, scsi_get_resid(SCpnt));
+ 		SCpnt->result = (DID_OK << 16) |
+-			(SCpnt->SCp.Message << 8) |
+ 			(SCpnt->SCp.Status << 0);
+ 		nsp32_scsi_done(SCpnt);
+ 		/* All operation is done */
+@@ -1703,7 +1700,6 @@ static int nsp32_busfree_occur(struct scsi_cmnd *SCpnt, unsigned short execph)
+ 	} else if (execph & MSGIN_04_VALID) {
+ 		/* MsgIn 04: Disconnect */
+ 		SCpnt->SCp.Status  = nsp32_read1(base, SCSI_CSB_IN);
+-		SCpnt->SCp.Message = 4;
  
- static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
- {
+ 		nsp32_dbg(NSP32_DEBUG_BUSFREE, "disconnect");
+ 		return TRUE;
+@@ -1712,7 +1708,7 @@ static int nsp32_busfree_occur(struct scsi_cmnd *SCpnt, unsigned short execph)
+ 		nsp32_msg(KERN_WARNING, "unexpected bus free occurred");
+ 
+ 		/* DID_ERROR? */
+-		//SCpnt->result   = (DID_OK << 16) | (SCpnt->SCp.Message << 8) | (SCpnt->SCp.Status << 0);
++		//SCpnt->result   = (DID_OK << 16) | (SCpnt->SCp.Status << 0);
+ 		SCpnt->result = DID_ERROR << 16;
+ 		nsp32_scsi_done(SCpnt);
+ 		return TRUE;
 -- 
 2.29.2
 
