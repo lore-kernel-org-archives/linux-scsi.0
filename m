@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FFEBC43460
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AB55C43461
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63530611F2
+	by mail.kernel.org (Postfix) with ESMTP id DD84E60234
 	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235201AbhD0IcC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Apr 2021 04:32:02 -0400
-Received: from mx2.suse.de ([195.135.220.15]:49418 "EHLO mx2.suse.de"
+        id S235209AbhD0IcD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Apr 2021 04:32:03 -0400
+Received: from mx2.suse.de ([195.135.220.15]:49442 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235121AbhD0Ibv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S235140AbhD0Ibv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 27 Apr 2021 04:31:51 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 45B91B01E;
+        by mx2.suse.de (Postfix) with ESMTP id 4E4A0B024;
         Tue, 27 Apr 2021 08:31:06 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,9 +29,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 08/40] scsi: introduce scsi_status_is_check_condition()
-Date:   Tue, 27 Apr 2021 10:30:14 +0200
-Message-Id: <20210427083046.31620-9-hare@suse.de>
+Subject: [PATCH 13/40] xen-scsifront: compability status handling
+Date:   Tue, 27 Apr 2021 10:30:19 +0200
+Message-Id: <20210427083046.31620-14-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210427083046.31620-1-hare@suse.de>
 References: <20210427083046.31620-1-hare@suse.de>
@@ -41,106 +41,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a helper function scsi_status_is_check_condition() to
-encapsulate the frequent checks for SAM_STAT_CHECK_CONDITION.
+The Xen guest might run against arbitrary backends, so the driver
+might receive a status with driver_byte set. Map these errors
+to DID_ERROR to be consistent with recent changes.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/ibmvscsi/ibmvscsi.c |  2 +-
- drivers/scsi/scsi.c              |  2 +-
- drivers/scsi/scsi_error.c        |  4 ++--
- drivers/scsi/scsi_lib.c          |  2 +-
- include/scsi/scsi.h              | 15 +++++++++++++++
- 5 files changed, 20 insertions(+), 5 deletions(-)
+ drivers/scsi/xen-scsifront.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index f33f56680c59..9e229a1a4965 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -1005,7 +1005,7 @@ static void handle_cmd_rsp(struct srp_event_struct *evt_struct)
- 	
- 	if (cmnd) {
- 		cmnd->result |= rsp->status;
--		if (((cmnd->result >> 1) & 0x1f) == CHECK_CONDITION)
-+		if (scsi_status_is_check_condition(cmnd->result))
- 			memcpy(cmnd->sense_buffer,
- 			       rsp->data,
- 			       be32_to_cpu(rsp->sense_data_len));
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 99dc6ec0b6e5..1ce46e6e6483 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -144,7 +144,7 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
- 		    (level > 1)) {
- 			scsi_print_result(cmd, "Done", disposition);
- 			scsi_print_command(cmd);
--			if (status_byte(cmd->result) == CHECK_CONDITION)
-+			if (scsi_status_is_check_condition(cmd->result))
- 				scsi_print_sense(cmd);
- 			if (level > 3)
- 				scmd_printk(KERN_INFO, cmd,
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index d8fafe77dbbe..0967021cc06e 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1258,7 +1258,7 @@ int scsi_eh_get_sense(struct list_head *work_q,
- 					     current->comm));
- 			break;
- 		}
--		if (status_byte(scmd->result) != CHECK_CONDITION)
-+		if (!scsi_status_is_check_condition(scmd->result))
- 			/*
- 			 * don't request sense if there's no check condition
- 			 * status because the error we're processing isn't one
-@@ -1774,7 +1774,7 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
- 		return (scmd->request->cmd_flags & REQ_FAILFAST_DRIVER);
- 	}
+diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+index 259fc248d06c..ec9d399fbbd8 100644
+--- a/drivers/scsi/xen-scsifront.c
++++ b/drivers/scsi/xen-scsifront.c
+@@ -251,6 +251,7 @@ static void scsifront_cdb_cmd_done(struct vscsifrnt_info *info,
+ 	struct scsi_cmnd *sc;
+ 	uint32_t id;
+ 	uint8_t sense_len;
++	int result;
  
--	if (status_byte(scmd->result) != CHECK_CONDITION)
-+	if (!scsi_status_is_check_condition(scmd->result))
- 		return 0;
+ 	id = ring_rsp->rqid;
+ 	shadow = info->shadow[id];
+@@ -261,7 +262,12 @@ static void scsifront_cdb_cmd_done(struct vscsifrnt_info *info,
+ 	scsifront_gnttab_done(info, shadow);
+ 	scsifront_put_rqid(info, id);
  
- check_type:
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ea5e34e305e3..c3f965cf4d0a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2206,7 +2206,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 					goto retry;
- 				}
- 			}
--			if ((status_byte(result) == CHECK_CONDITION) &&
-+			if (scsi_status_is_check_condition(result) &&
- 			    sshdr->sense_key == UNIT_ATTENTION &&
- 			    retry_count) {
- 				retry_count--;
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index d0a24e55ad63..2c2d59251ef1 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -58,6 +58,21 @@ static inline int scsi_status_is_good(int status)
- 		(status == SAM_STAT_COMMAND_TERMINATED));
- }
+-	sc->result = ring_rsp->rslt;
++	result = ring_rsp->rslt;
++	if (result >> 24)
++		set_host_byte(sc, DID_ERROR);
++	else
++		set_host_byte(sc, host_byte(result));
++	set_status_byte(sc, result & 0xff);
+ 	scsi_set_resid(sc, ring_rsp->residual_len);
  
-+/**
-+ * scsi_status_is_check_condition - check the status return.
-+ *
-+ * @status: the status passed up from the driver (including host and
-+ *          driver components)
-+ *
-+ * This returns true if the status code is SAM_STAT_CHECK_CONDITION.
-+ */
-+static inline int scsi_status_is_check_condition(int status)
-+{
-+	if (status < 0)
-+		return false;
-+	status &= 0xfe;
-+	return status == SAM_STAT_CHECK_CONDITION;
-+}
- 
- /*
-  * standard mode-select header prepended to all mode-select commands
+ 	sense_len = min_t(uint8_t, VSCSIIF_SENSE_BUFFERSIZE,
 -- 
 2.29.2
 
