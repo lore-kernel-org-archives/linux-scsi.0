@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53DF4C43461
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24D43C43460
 	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 24A59600EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1382606A5
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235235AbhD0IcP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S235233AbhD0IcP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 27 Apr 2021 04:32:15 -0400
-Received: from mx2.suse.de ([195.135.220.15]:49680 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49416 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235180AbhD0IcB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S235179AbhD0IcB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 27 Apr 2021 04:32:01 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 7D40BB122;
+        by mx2.suse.de (Postfix) with ESMTP id 827E2B124;
         Tue, 27 Apr 2021 08:31:06 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,9 +29,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 19/40] dc395: translate message bytes
-Date:   Tue, 27 Apr 2021 10:30:25 +0200
-Message-Id: <20210427083046.31620-20-hare@suse.de>
+Subject: [PATCH 22/40] qlogicfas408: translate message to host byte status
+Date:   Tue, 27 Apr 2021 10:30:28 +0200
+Message-Id: <20210427083046.31620-23-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210427083046.31620-1-hare@suse.de>
 References: <20210427083046.31620-1-hare@suse.de>
@@ -41,48 +41,29 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Drop message byte setting if the host byte is already set, and
-translate message bytes into the related host bytes when evaluating
-an overrun or underrun.
+Instead of setting the message byte translate it to the appropriate
+host byte. As error recovery would return DID_ERROR for any non-zero
+message byte the translation doesn't change the error handling.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/dc395x.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/scsi/qlogicfas408.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 598448ece8d0..24c7cefb0b78 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -3226,7 +3226,6 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		}
- 		dprintkdbg(DBG_0, "srb_done: AUTO_REQSENSE2\n");
+diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
+index 86de400ca81a..34546cb99ccd 100644
+--- a/drivers/scsi/qlogicfas408.c
++++ b/drivers/scsi/qlogicfas408.c
+@@ -409,7 +409,8 @@ static void ql_pcmd(struct scsi_cmnd *cmd)
+ 	}
  
--		set_msg_byte(cmd, srb->end_message);
- 		set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
- 
- 		goto ckc_e;
-@@ -3260,7 +3259,6 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		} else {
- 			srb->adapter_status = 0;
- 			set_host_byte(cmd, DID_ERROR);
--			set_msg_byte(cmd, srb->end_message);
- 			set_status_byte(cmd, status);
- 		}
- 	} else {
-@@ -3270,10 +3268,9 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		status = srb->adapter_status;
- 		if (status & H_OVER_UNDER_RUN) {
- 			srb->target_status = 0;
--			set_msg_byte(cmd, srb->end_message);
-+			scsi_msg_to_host_byte(cmd, srb->end_message);
- 		} else if (srb->status & PARITY_ERROR) {
- 			set_host_byte(cmd, DID_PARITY);
--			set_msg_byte(cmd, srb->end_message);
- 		} else {	/* No error */
- 
- 			srb->adapter_status = 0;
+ 	set_host_byte(cmd, result);
+-	set_msg_byte(cmd, message);
++	if (result == DID_OK && message != COMMAND_COMPLETE)
++		scsi_msg_to_host_byte(cmd, message);
+ 	set_status_byte(cmd, status);
+ 	return;
+ }
 -- 
 2.29.2
 
