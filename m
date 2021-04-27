@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39375C43462
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 21:58:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BEA5C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 21:58:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1464A613B0
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 21:58:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AE94613F1
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 21:58:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239352AbhD0V6v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Apr 2021 17:58:51 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:38792 "EHLO smtp.infotech.no"
+        id S237136AbhD0V6y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Apr 2021 17:58:54 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:38796 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239286AbhD0V6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S239296AbhD0V6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 27 Apr 2021 17:58:48 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 5E062204269;
+        by smtp.infotech.no (Postfix) with ESMTP id BEAA2204277;
         Tue, 27 Apr 2021 23:58:03 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id v3azeMLtnJPL; Tue, 27 Apr 2021 23:58:01 +0200 (CEST)
+        with ESMTP id XF10OkMreH2g; Tue, 27 Apr 2021 23:58:02 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        by smtp.infotech.no (Postfix) with ESMTPA id 89B6E204272;
-        Tue, 27 Apr 2021 23:57:54 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 9B1A920426F;
+        Tue, 27 Apr 2021 23:57:55 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v18 15/83] sg: rework sg_vma_fault
-Date:   Tue, 27 Apr 2021 17:56:25 -0400
-Message-Id: <20210427215733.417746-17-dgilbert@interlog.com>
+Subject: [PATCH v18 16/83] sg: rework sg_mmap
+Date:   Tue, 27 Apr 2021 17:56:26 -0400
+Message-Id: <20210427215733.417746-18-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210427215733.417746-1-dgilbert@interlog.com>
 References: <20210427215733.417746-1-dgilbert@interlog.com>
@@ -44,77 +44,68 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Simple refactoring of the sg_vma_fault() function.
+Simple rework of the sg_mmap() function.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 33 +++++++++++++++++++++++----------
- 1 file changed, 23 insertions(+), 10 deletions(-)
+ drivers/scsi/sg.c | 25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index fde02484c54a..72fdb76f409d 100644
+index 72fdb76f409d..c3c458bf36da 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -1428,14 +1428,16 @@ sg_fasync(int fd, struct file *filp, int mode)
- 	return fasync_helper(fd, filp, mode, &sfp->async_qp);
- }
+@@ -1488,14 +1488,15 @@ static const struct vm_operations_struct sg_mmap_vm_ops = {
+ 	.fault = sg_vma_fault,
+ };
  
-+/* Note: the error return: VM_FAULT_SIGBUS causes a "bus error" */
- static vm_fault_t
- sg_vma_fault(struct vm_fault *vmf)
++/* Entry point for mmap(2) system call */
+ static int
+ sg_mmap(struct file *filp, struct vm_area_struct *vma)
  {
--	struct vm_area_struct *vma = vmf->vma;
 -	struct sg_fd *sfp;
-+	int k, length;
- 	unsigned long offset, len, sa;
-+	struct vm_area_struct *vma = vmf->vma;
- 	struct sg_scatter_hold *rsv_schp;
--	int k, length;
-+	struct sg_device *sdp;
+-	unsigned long req_sz, len, sa;
+-	struct sg_scatter_hold *rsv_schp;
+ 	int k, length;
+ 	int ret = 0;
++	unsigned long req_sz, len, sa;
++	struct sg_scatter_hold *rsv_schp;
 +	struct sg_fd *sfp;
- 	const char *nbp = "==NULL, bad";
  
- 	if (!vma) {
-@@ -1447,20 +1449,31 @@ sg_vma_fault(struct vm_fault *vmf)
- 		pr_warn("%s: sfp%s\n", __func__, nbp);
- 		goto out_err;
+ 	if (!filp || !vma)
+ 		return -ENXIO;
+@@ -1508,19 +1509,23 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	SG_LOG(3, sfp, "%s: vm_start=%p, len=%d\n", __func__,
+ 	       (void *)vma->vm_start, (int)req_sz);
+ 	if (vma->vm_pgoff)
+-		return -EINVAL;	/* want no offset */
+-	rsv_schp = &sfp->reserve;
++		return -EINVAL; /* only an offset of 0 accepted */
++	/* Check reserve request is inactive and has large enough buffer */
+ 	mutex_lock(&sfp->f_mutex);
+-	if (req_sz > rsv_schp->buflen) {
+-		ret = -ENOMEM;	/* cannot map more than reserved buffer */
++	if (sfp->res_in_use) {
++		ret = -EBUSY;
++		goto out;
++	}
++	rsv_schp = &sfp->reserve;
++	if (req_sz > (unsigned long)rsv_schp->buflen) {
++		ret = -ENOMEM;
+ 		goto out;
  	}
-+	sdp = sfp->parentdp;
-+	if (sdp && unlikely(SG_IS_DETACHING(sdp))) {
-+		SG_LOG(1, sfp, "%s: device detaching\n", __func__);
-+		goto out_err;
-+	}
- 	rsv_schp = &sfp->reserve;
- 	offset = vmf->pgoff << PAGE_SHIFT;
--	if (offset >= rsv_schp->buflen)
--		return VM_FAULT_SIGBUS;
-+	if (offset >= (unsigned int)rsv_schp->buflen) {
-+		SG_LOG(1, sfp, "%s: offset[%lu] >= rsv.buflen\n", __func__,
-+		       offset);
-+		goto out_err;
-+	}
+-
  	sa = vma->vm_start;
- 	SG_LOG(3, sfp, "%s: vm_start=0x%lx, off=%lu\n", __func__, sa, offset);
  	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
 -	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; k++) {
 +	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; ++k) {
  		len = vma->vm_end - sa;
 -		len = (len < length) ? len : length;
-+		len = min_t(int, len, (int)length);
- 		if (offset < len) {
--			struct page *page = nth_page(rsv_schp->pages[k],
--						     offset >> PAGE_SHIFT);
--			get_page(page);	/* increment page count */
-+			struct page *page;
-+			struct page *pp;
-+
-+			pp = rsv_schp->pages[k];
-+			page = nth_page(pp, offset >> PAGE_SHIFT);
-+			get_page(page); /* increment page count */
- 			vmf->page = page;
- 			return 0; /* success */
- 		}
++		len = min_t(unsigned long, len, (unsigned long)length);
+ 		sa += len;
+ 	}
+ 
 -- 
 2.25.1
 
