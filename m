@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E25BC433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 21:59:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCF10C43470
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 21:59:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0230A613C5
+	by mail.kernel.org (Postfix) with ESMTP id A31D9613C5
 	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 21:59:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239437AbhD0WAl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Apr 2021 18:00:41 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:38991 "EHLO smtp.infotech.no"
+        id S239352AbhD0WAk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Apr 2021 18:00:40 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:38838 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239164AbhD0WAK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Apr 2021 18:00:10 -0400
+        id S239195AbhD0WAJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 27 Apr 2021 18:00:09 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id E7DA52042A1;
-        Tue, 27 Apr 2021 23:59:25 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id E6C90204190;
+        Tue, 27 Apr 2021 23:59:23 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id LP00tpAA1Qsz; Tue, 27 Apr 2021 23:59:23 +0200 (CEST)
+        with ESMTP id JYXfPOEMaXae; Tue, 27 Apr 2021 23:59:22 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        by smtp.infotech.no (Postfix) with ESMTPA id AEE4220429C;
-        Tue, 27 Apr 2021 23:59:22 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 11CBF2041BD;
+        Tue, 27 Apr 2021 23:59:20 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v18 70/83] sg: make use of struct sg_mrq_hold
-Date:   Tue, 27 Apr 2021 17:57:20 -0400
-Message-Id: <20210427215733.417746-72-dgilbert@interlog.com>
+Subject: [PATCH v18 69/83] sg: add dlen to sg_comm_wr_t
+Date:   Tue, 27 Apr 2021 17:57:19 -0400
+Message-Id: <20210427215733.417746-71-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210427215733.417746-1-dgilbert@interlog.com>
 References: <20210427215733.417746-1-dgilbert@interlog.com>
@@ -44,213 +44,337 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Not enough use was being made of the mrq parameters holding structure.
-By using this more, significant reductions are made in the number of
-passed parameters in the functions processing mrq requests.
-
-Rename sg_sgv4_out_zero() to sg_v4h_partial_zero() and add a comment
-above the function about what it does.
+The data transfer length was being recalculated and passed as
+a function argument. It is tidier to place it in struct
+sg_comm_wr_t with other similar parameters.
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 61 ++++++++++++++++++++++-------------------------
- 1 file changed, 29 insertions(+), 32 deletions(-)
+ drivers/scsi/sg.c | 84 ++++++++++++++++++++++-------------------------
+ 1 file changed, 39 insertions(+), 45 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index ef3b42814b9a..bdb9b3dbf970 100644
+index 1f6aae3909c7..ef3b42814b9a 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -957,12 +957,12 @@ sg_submit_v3(struct sg_fd *sfp, struct sg_io_hdr *hp, bool sync,
- 	return 0;
- }
- 
--static void
--sg_sgv4_out_zero(struct sg_io_v4 *h4p)
-+/* Clear from and including driver_status to end of sg_io_v4 object */
-+static inline void
-+sg_v4h_partial_zero(struct sg_io_v4 *h4p)
- {
--	const int off = offsetof(struct sg_io_v4, driver_status);
-+	static const int off = offsetof(struct sg_io_v4, driver_status);
- 
--	/* clear from and including driver_status to end of object */
- 	memset((u8 *)h4p + off, 0, SZ_SG_IO_V4 - off);
- }
- 
-@@ -973,11 +973,13 @@ sg_sgv4_out_zero(struct sg_io_v4 *h4p)
-  * secondary error value (s_res) is placed in the cop->spare_out field.
-  */
- static int
--sg_mrq_arr_flush(struct sg_io_v4 *cop, struct sg_io_v4 *a_hds, u32 tot_reqs,
--		 int s_res)
-+sg_mrq_arr_flush(struct sg_mrq_hold *mhp)
- {
--	u32 sz = min(tot_reqs * SZ_SG_IO_V4, cop->din_xfer_len);
-+	int s_res = mhp->s_res;
-+	struct sg_io_v4 *cop = mhp->cwrp->h4p;
- 	void __user *p = uptr64(cop->din_xferp);
-+	struct sg_io_v4 *a_hds = mhp->a_hds;
-+	u32 sz = min(mhp->tot_reqs * SZ_SG_IO_V4, cop->din_xfer_len);
- 
- 	if (unlikely(s_res))
- 		cop->spare_out = -s_res;
-@@ -991,11 +993,13 @@ sg_mrq_arr_flush(struct sg_io_v4 *cop, struct sg_io_v4 *a_hds, u32 tot_reqs,
- }
- 
- static int
--sg_mrq_1complet(struct sg_io_v4 *cop, struct sg_io_v4 *a_hds,
--		struct sg_fd *do_on_sfp, int tot_reqs, struct sg_request *srp)
-+sg_mrq_1complet(struct sg_mrq_hold *mhp, struct sg_fd *do_on_sfp,
-+		struct sg_request *srp)
- {
- 	int s_res, indx;
-+	int tot_reqs = mhp->tot_reqs;
- 	struct sg_io_v4 *hp;
-+	struct sg_io_v4 *a_hds = mhp->a_hds;
- 
- 	if (unlikely(!srp))
- 		return -EPROTO;
-@@ -1015,7 +1019,7 @@ sg_mrq_1complet(struct sg_io_v4 *cop, struct sg_io_v4 *a_hds,
- 		return s_res;
- 	hp->info |= SG_INFO_MRQ_FINI;
- 	if (do_on_sfp->async_qp && (hp->flags & SGV4_FLAG_SIGNAL)) {
--		s_res = sg_mrq_arr_flush(cop, a_hds, tot_reqs, s_res);
-+		s_res = sg_mrq_arr_flush(mhp);
- 		if (unlikely(s_res))	/* can only be -EFAULT */
- 			return s_res;
- 		kill_fasync(&do_on_sfp->async_qp, SIGPOLL, POLL_IN);
-@@ -1040,13 +1044,13 @@ sg_wait_mrq_event(struct sg_fd *sfp, struct sg_request **srpp)
-  * Increments cop->info for each successful completion.
-  */
- static int
--sg_mrq_complets(struct sg_io_v4 *cop, struct sg_io_v4 *a_hds,
--		struct sg_fd *sfp, struct sg_fd *sec_sfp, int tot_reqs,
--		int mreqs, int sec_reqs)
-+sg_mrq_complets(struct sg_mrq_hold *mhp, struct sg_fd *sfp,
-+		struct sg_fd *sec_sfp, int mreqs, int sec_reqs)
+@@ -321,6 +321,7 @@ struct sg_comm_wr_t {  /* arguments to sg_common_write() */
+ 	int timeout;
+ 	int cmd_len;
+ 	int rsv_idx;		/* wanted rsv_arr index, def: -1 (anyone) */
++	int dlen;		/* dout or din length in bytes */
+ 	int wr_offset;		/* non-zero if v4 and DOUT_OFFSET set */
+ 	unsigned long frq_bm[1];	/* see SG_FRQ_* defines above */
+ 	union {		/* selector is frq_bm.SG_FRQ_IS_V4I */
+@@ -375,7 +376,7 @@ static struct sg_request *sg_find_srp_by_id(struct sg_fd *sfp, int id,
+ 					    bool is_tag);
+ static bool sg_mrq_get_ready_srp(struct sg_fd *sfp, struct sg_request **srpp);
+ static struct sg_request *sg_setup_req(struct sg_comm_wr_t *cwrp,
+-				       enum sg_shr_var sh_var, int dxfr_len);
++				       enum sg_shr_var sh_var);
+ static void sg_deact_request(struct sg_fd *sfp, struct sg_request *srp);
+ static struct sg_device *sg_get_dev(int min_dev);
+ static void sg_device_destroy(struct kref *kref);
+@@ -870,6 +871,7 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
+ 	}
+ 	sg_comm_wr_init(&cwr);
+ 	cwr.h3p = h3p;
++	cwr.dlen = h3p->dxfer_len;
+ 	cwr.timeout = sfp->timeout;
+ 	cwr.cmd_len = cmd_size;
+ 	cwr.sfp = sfp;
+@@ -942,6 +944,7 @@ sg_submit_v3(struct sg_fd *sfp, struct sg_io_hdr *hp, bool sync,
+ 	sg_comm_wr_init(&cwr);
+ 	__assign_bit(SG_FRQ_SYNC_INVOC, cwr.frq_bm, (int)sync);
+ 	cwr.h3p = hp;
++	cwr.dlen = hp->dxfer_len;
+ 	cwr.timeout = min_t(unsigned long, ul_timeout, INT_MAX);
+ 	cwr.cmd_len = hp->cmd_len;
+ 	cwr.sfp = sfp;
+@@ -1280,6 +1283,7 @@ sg_mrq_submit(struct sg_fd *rq_sfp, struct sg_mrq_hold *mhp, int pos_hdr,
+ 		     (int)mhp->blocking);
+ 	__set_bit(SG_FRQ_IS_V4I, r_cwrp->frq_bm);
+ 	r_cwrp->h4p = hp;
++	r_cwrp->dlen = hp->din_xfer_len ? hp->din_xfer_len : hp->dout_xfer_len;
+ 	r_cwrp->timeout = min_t(unsigned long, ul_timeout, INT_MAX);
+ 	if (hp->flags & SGV4_FLAG_DOUT_OFFSET)
+ 		r_cwrp->wr_offset = hp->spare_in;
+@@ -1806,11 +1810,14 @@ sg_submit_v4(struct sg_fd *sfp, void __user *p, struct sg_io_v4 *h4p,
+ 	     bool sync, struct sg_request **o_srp)
  {
  	int res = 0;
- 	int rres;
++	int dlen;
+ 	unsigned long ul_timeout;
  	struct sg_request *srp;
-+	struct sg_io_v4 *cop = mhp->cwrp->h4p;
+ 	struct sg_comm_wr_t cwr;
  
- 	SG_LOG(3, sfp, "%s: mreqs=%d, sec_reqs=%d\n", __func__, mreqs,
- 	       sec_reqs);
-@@ -1059,7 +1063,7 @@ sg_mrq_complets(struct sg_io_v4 *cop, struct sg_io_v4 *a_hds,
- 				break;
- 			}
- 			--mreqs;
--			res = sg_mrq_1complet(cop, a_hds, sfp, tot_reqs, srp);
-+			res = sg_mrq_1complet(mhp, sfp, srp);
- 			if (unlikely(res))
- 				return res;
- 			++cop->info;
-@@ -1074,8 +1078,7 @@ sg_mrq_complets(struct sg_io_v4 *cop, struct sg_io_v4 *a_hds,
- 				break;
- 			}
- 			--sec_reqs;
--			rres = sg_mrq_1complet(cop, a_hds, sec_sfp, tot_reqs,
--					       srp);
-+			rres = sg_mrq_1complet(mhp, sec_sfp, srp);
- 			if (unlikely(rres))
- 				return rres;
- 			++cop->info;
-@@ -1092,8 +1095,7 @@ sg_mrq_complets(struct sg_io_v4 *cop, struct sg_io_v4 *a_hds,
- 				mreqs = 0;
- 			} else {
- 				--mreqs;
--				res = sg_mrq_1complet(cop, a_hds, sfp,
--						      tot_reqs, srp);
-+				res = sg_mrq_1complet(mhp, sfp, srp);
- 				if (unlikely(res))
- 					return res;
- 				++cop->info;
-@@ -1109,8 +1111,7 @@ sg_mrq_complets(struct sg_io_v4 *cop, struct sg_io_v4 *a_hds,
- 				sec_reqs = 0;
- 			} else {
- 				--sec_reqs;
--				res = sg_mrq_1complet(cop, a_hds, sec_sfp,
--						      tot_reqs, srp);
-+				res = sg_mrq_1complet(mhp, sec_sfp, srp);
- 				if (unlikely(res))
- 					return res;
- 				++cop->info;
-@@ -1141,7 +1142,7 @@ sg_mrq_sanity(struct sg_device *sdp, struct sg_io_v4 *cop,
- 	/* Pre-check each request for anomalies, plus some preparation */
- 	for (k = 0, hp = a_hds; k < tot_reqs; ++k, ++hp) {
- 		flags = hp->flags;
--		sg_sgv4_out_zero(hp);
-+		sg_v4h_partial_zero(hp);
- 		if (unlikely(hp->guard != 'Q' || hp->protocol != 0 ||
- 			     hp->subprotocol != 0)) {
- 			SG_LOG(1, sfp, "%s: req index %u: %s or protocol\n",
-@@ -1357,8 +1358,7 @@ sg_process_most_mrq(struct sg_fd *fp, struct sg_fd *o_sfp,
- 			break;	/* cop->driver_status <-- 0 in this case */
- 		}
- 		if (rq_sfp->async_qp && (hp->flags & SGV4_FLAG_SIGNAL)) {
--			res = sg_mrq_arr_flush(cop, mhp->a_hds, mhp->tot_reqs,
--					       mhp->s_res);
-+			res = sg_mrq_arr_flush(mhp);
- 			if (unlikely(res))
- 				break;
- 			kill_fasync(&rq_sfp->async_qp, SIGPOLL, POLL_IN);
-@@ -1374,8 +1374,7 @@ sg_process_most_mrq(struct sg_fd *fp, struct sg_fd *o_sfp,
- 	if (mhp->immed)
- 		return res;
- 	if (likely(res == 0 && (this_fp_sent + other_fp_sent) > 0)) {
--		mhp->s_res = sg_mrq_complets(cop, mhp->a_hds, fp, o_sfp,
--					     mhp->tot_reqs, this_fp_sent,
-+		mhp->s_res = sg_mrq_complets(mhp, fp, o_sfp, this_fp_sent,
- 					     other_fp_sent);
- 		if (unlikely(mhp->s_res == -EFAULT ||
- 			     mhp->s_res == -ERESTARTSYS))
-@@ -1510,8 +1509,7 @@ sg_process_svb_mrq(struct sg_fd *fp, struct sg_fd *o_sfp,
- 					break;
- 				}
- 				--other_fp_sent;
--				res = sg_mrq_1complet(cop, a_hds, o_sfp,
--						      mhp->tot_reqs, srp);
-+				res = sg_mrq_1complet(mhp, o_sfp, srp);
- 				if (unlikely(res))
- 					return res;
- 				++cop->info;
-@@ -1527,8 +1525,7 @@ sg_process_svb_mrq(struct sg_fd *fp, struct sg_fd *o_sfp,
- 					break;
- 				}
- 				--this_fp_sent;
--				res = sg_mrq_1complet(cop, a_hds, fp,
--						      mhp->tot_reqs, srp);
-+				res = sg_mrq_1complet(mhp, fp, srp);
- 				if (unlikely(res))
- 					return res;
- 				++cop->info;
-@@ -1715,7 +1712,7 @@ sg_do_multi_req(struct sg_comm_wr_t *cwrp, bool blocking)
- 		mhp->immed = true;
- 	SG_LOG(3, fp, "%s: %s, tot_reqs=%u, id_of_mrq=%d\n", __func__,
- 	       mrq_name, tot_reqs, mhp->id_of_mrq);
--	sg_sgv4_out_zero(cop);
-+	sg_v4h_partial_zero(cop);
- 
- 	if (unlikely(tot_reqs > U16_MAX)) {
- 		return -ERANGE;
-@@ -1799,7 +1796,7 @@ sg_do_multi_req(struct sg_comm_wr_t *cwrp, bool blocking)
+ 	sg_comm_wr_init(&cwr);
++	dlen = h4p->din_xfer_len ? h4p->din_xfer_len : h4p->dout_xfer_len;
++	cwr.dlen = dlen;
+ 	if (h4p->flags & SGV4_FLAG_MULTIPLE_REQS) {
+ 		/* want v4 async or sync with guard, din and dout and flags */
+ 		if (!h4p->dout_xferp || h4p->din_iovec_count ||
+@@ -1832,13 +1839,7 @@ sg_submit_v4(struct sg_fd *sfp, void __user *p, struct sg_io_v4 *h4p,
+ 		return 0;
  	}
- fini:
- 	if (likely(res == 0) && !mhp->immed)
--		res = sg_mrq_arr_flush(cop, a_hds, tot_reqs, mhp->s_res);
-+		res = sg_mrq_arr_flush(mhp);
- 	kfree(cdb_ap);
- 	kfree(a_hds);
- 	return res;
-@@ -2712,7 +2709,7 @@ sg_mrq_ioreceive(struct sg_fd *sfp, struct sg_io_v4 *cop, void __user *p,
- 	if (unlikely(!rsp_v4_arr))
- 		return -ENOMEM;
+ 	if (h4p->flags & SG_FLAG_MMAP_IO) {
+-		int len = 0;
+-
+-		if (h4p->din_xferp)
+-			len = h4p->din_xfer_len;
+-		else if (h4p->dout_xferp)
+-			len = h4p->dout_xfer_len;
+-		res = sg_chk_mmap(sfp, h4p->flags, len);
++		res = sg_chk_mmap(sfp, h4p->flags, dlen);
+ 		if (unlikely(res))
+ 			return res;
+ 	}
+@@ -2312,7 +2313,8 @@ static struct sg_request *
+ sg_common_write(struct sg_comm_wr_t *cwrp)
+ {
+ 	int res = 0;
+-	int dxfr_len, dir;
++	int dlen = cwrp->dlen;
++	int dir;
+ 	int pack_id = SG_PACK_ID_WILDCARD;
+ 	u32 rq_flags;
+ 	enum sg_shr_var sh_var;
+@@ -2325,31 +2327,26 @@ sg_common_write(struct sg_comm_wr_t *cwrp)
+ 	if (likely(test_bit(SG_FRQ_IS_V4I, cwrp->frq_bm))) {
+ 		h4p = cwrp->h4p;
+ 		hi_p = NULL;
+-		dxfr_len = 0;
+ 		dir = SG_DXFER_NONE;
+ 		rq_flags = h4p->flags;
+ 		pack_id = h4p->request_extra;
+-		if (unlikely(h4p->din_xfer_len && h4p->dout_xfer_len)) {
++		if (unlikely(h4p->din_xfer_len && h4p->dout_xfer_len))
+ 			return ERR_PTR(-EOPNOTSUPP);
+-		} else if (h4p->din_xfer_len) {
+-			dxfr_len = h4p->din_xfer_len;
++		else if (h4p->din_xfer_len)
+ 			dir = SG_DXFER_FROM_DEV;
+-		} else if (h4p->dout_xfer_len) {
+-			dxfr_len = h4p->dout_xfer_len;
++		else if (h4p->dout_xfer_len)
+ 			dir = SG_DXFER_TO_DEV;
+-		}
+ 	} else {			/* sg v3 interface so hi_p valid */
+ 		h4p = NULL;
+ 		hi_p = cwrp->h3p;
+ 		dir = hi_p->dxfer_direction;
+-		dxfr_len = hi_p->dxfer_len;
+ 		rq_flags = hi_p->flags;
+ 		pack_id = hi_p->pack_id;
+ 	}
+ 	if (unlikely(rq_flags & SGV4_FLAG_MULTIPLE_REQS))
+ 		return ERR_PTR(-ERANGE);  /* only control object sets this */
+ 	if (sg_fd_is_shared(fp)) {
+-		res = sg_share_chk_flags(fp, rq_flags, dxfr_len, dir, &sh_var);
++		res = sg_share_chk_flags(fp, rq_flags, dlen, dir, &sh_var);
+ 		if (unlikely(res < 0))
+ 			return ERR_PTR(res);
+ 	} else {
+@@ -2357,10 +2354,10 @@ sg_common_write(struct sg_comm_wr_t *cwrp)
+ 		if (unlikely(rq_flags & SGV4_FLAG_SHARE))
+ 			return ERR_PTR(-ENOMSG);    /* no file share found */
+ 	}
+-	if (unlikely(dxfr_len >= SZ_256M))
++	if (unlikely(dlen >= SZ_256M))
+ 		return ERR_PTR(-EINVAL);
  
--	sg_sgv4_out_zero(cop);
-+	sg_v4h_partial_zero(cop);
- 	cop->din_resid = n;
- 	res = sg_mrq_iorec_complets(sfp, non_block, n, rsp_v4_arr);
- 	if (unlikely(res < 0))
+-	srp = sg_setup_req(cwrp, sh_var, dxfr_len);
++	srp = sg_setup_req(cwrp, sh_var);
+ 	if (IS_ERR(srp))
+ 		return srp;
+ 	srp->rq_flags = rq_flags;
+@@ -2376,7 +2373,7 @@ sg_common_write(struct sg_comm_wr_t *cwrp)
+ 		srp->s_hdr4.mrq_ind = 0;
+ 		if (dir == SG_DXFER_TO_DEV) {
+ 			srp->s_hdr4.wr_offset = cwrp->wr_offset;
+-			srp->s_hdr4.wr_len = dxfr_len;
++			srp->s_hdr4.wr_len = dlen;
+ 		}
+ 	} else {	/* v3 interface active */
+ 		memcpy(&srp->s_hdr3, hi_p, sizeof(srp->s_hdr3));
+@@ -5867,7 +5864,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ {
+ 	bool no_dxfer, us_xfer;
+ 	int res = 0;
+-	int dxfer_len = 0;
++	int dlen = cwrp->dlen;
+ 	int r0w = READ;
+ 	u32 rq_flags = srp->rq_flags;
+ 	unsigned int iov_count = 0;
+@@ -5898,11 +5895,9 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 		if (dxfer_dir == SG_DXFER_TO_DEV) {
+ 			r0w = WRITE;
+ 			up = uptr64(h4p->dout_xferp);
+-			dxfer_len = (int)h4p->dout_xfer_len;
+ 			iov_count = h4p->dout_iovec_count;
+ 		} else if (dxfer_dir == SG_DXFER_FROM_DEV) {
+ 			up = uptr64(h4p->din_xferp);
+-			dxfer_len = (int)h4p->din_xfer_len;
+ 			iov_count = h4p->din_iovec_count;
+ 		} else {
+ 			up = NULL;
+@@ -5911,12 +5906,11 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 		struct sg_slice_hdr3 *sh3p = &srp->s_hdr3;
+ 
+ 		up = sh3p->dxferp;
+-		dxfer_len = (int)sh3p->dxfer_len;
+ 		iov_count = sh3p->iovec_count;
+ 		r0w = dxfer_dir == SG_DXFER_TO_DEV ? WRITE : READ;
+ 	}
+-	SG_LOG(4, sfp, "%s: dxfer_len=%d%s\n", __func__, dxfer_len,
+-	       (dxfer_len ? (r0w ? ", data-OUT" : ", data-IN") : ""));
++	SG_LOG(4, sfp, "%s: dlen=%d%s\n", __func__, dlen,
++	       (dlen ? (r0w ? ", data-OUT" : ", data-IN") : ""));
+ 	q = sdp->device->request_queue;
+ 
+ 	/*
+@@ -5954,7 +5948,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 		goto fini;
+ 	scsi_rp->cmd_len = cwrp->cmd_len;
+ 	srp->cmd_opcode = scsi_rp->cmd[0];
+-	no_dxfer = dxfer_len <= 0 || dxfer_dir == SG_DXFER_NONE;
++	no_dxfer = dlen <= 0 || dxfer_dir == SG_DXFER_NONE;
+ 	us_xfer = !(rq_flags & (SG_FLAG_NO_DXFER | SG_FLAG_MMAP_IO));
+ 	__assign_bit(SG_FRQ_US_XFER, srp->frq_bm, !no_dxfer && us_xfer);
+ 	rqq->end_io_data = srp;
+@@ -5966,7 +5960,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 		goto fini;	/* path of reqs with no din nor dout */
+ 	} else if (unlikely(rq_flags & SG_FLAG_DIRECT_IO) && iov_count == 0 &&
+ 		   !sdp->device->host->unchecked_isa_dma &&
+-		   blk_rq_aligned(q, (unsigned long)up, dxfer_len)) {
++		   blk_rq_aligned(q, (unsigned long)up, dlen)) {
+ 		srp->rq_info |= SG_INFO_DIRECT_IO;
+ 		md = NULL;
+ 		if (IS_ENABLED(CONFIG_SCSI_PROC_FS))
+@@ -5982,11 +5976,10 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 			struct sg_request *r_srp = sfp->rsv_arr[0];
+ 
+ 			reserve0 = (r_srp == srp);
+-			if (unlikely(!reserve0 ||
+-				     dxfer_len > req_schp->buflen))
++			if (unlikely(!reserve0 || dlen > req_schp->buflen))
+ 				res = reserve0 ? -ENOMEM : -EBUSY;
+ 		} else if (req_schp->buflen == 0) {
+-			int up_sz = max_t(int, dxfer_len, sfp->sgat_elem_sz);
++			int up_sz = max_t(int, dlen, sfp->sgat_elem_sz);
+ 
+ 			res = sg_mk_sgat(srp, sfp, up_sz);
+ 		}
+@@ -6008,7 +6001,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 		if (unlikely(res < 0))
+ 			goto fini;
+ 
+-		iov_iter_truncate(&i, dxfer_len);
++		iov_iter_truncate(&i, dlen);
+ 		if (unlikely(!iov_iter_count(&i))) {
+ 			kfree(iov);
+ 			res = -EINVAL;
+@@ -6021,7 +6014,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 		if (IS_ENABLED(CONFIG_SCSI_PROC_FS))
+ 			cp = "iov_count > 0";
+ 	} else if (us_xfer) { /* setup for transfer data to/from user space */
+-		res = blk_rq_map_user(q, rqq, md, up, dxfer_len, GFP_ATOMIC);
++		res = blk_rq_map_user(q, rqq, md, up, dlen, GFP_ATOMIC);
+ #if IS_ENABLED(SG_LOG_ACTIVE)
+ 		if (unlikely(res))
+ 			SG_LOG(1, sfp, "%s: blk_rq_map_user() res=%d\n",
+@@ -6595,7 +6588,7 @@ sg_setup_req_ws_helper(struct sg_comm_wr_t *cwrp)
+  * side's reserve request can only be used in a request share.
+  */
+ static struct sg_request *
+-sg_setup_req(struct sg_comm_wr_t *cwrp, enum sg_shr_var sh_var, int dxfr_len)
++sg_setup_req(struct sg_comm_wr_t *cwrp, enum sg_shr_var sh_var)
+ {
+ 	bool allow_rsv = true;		/* see note above */
+ 	bool mk_new_srp = true;
+@@ -6608,6 +6601,7 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, enum sg_shr_var sh_var, int dxfr_len)
+ 	bool is_rsv;
+ 	int ra_idx = 0;
+ 	int l_used_idx;
++	int dlen = cwrp->dlen;
+ 	u32 sum_dlen;
+ 	unsigned long idx, s_idx, end_idx, iflags;
+ 	enum sg_rq_state sr_st;
+@@ -6654,15 +6648,15 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, enum sg_shr_var sh_var, int dxfr_len)
+ 			goto err_out;
+ 		}
+ 		/* write-side dlen may be <= read-side's dlen */
+-		if (unlikely(dxfr_len + cwrp->wr_offset >
++		if (unlikely(dlen + cwrp->wr_offset >
+ 			     rs_rsv_srp->sgatp->dlen)) {
+ 			SG_LOG(1, fp, "%s: bad, write-side dlen [%d] > read-side's\n",
+-			       __func__, dxfr_len);
++			       __func__, dlen);
+ 			r_srp = ERR_PTR(-E2BIG);
+ 			goto err_out;
+ 		}
+ 		ws_rq = true;
+-		dxfr_len = 0;	/* any srp for write-side will do, pick smallest */
++		dlen = 0;	/* any srp for write-side will do, pick smallest */
+ 		break;
+ 	case SG_SHR_RS_NOT_SRQ:
+ 		allow_rsv = false;
+@@ -6677,7 +6671,7 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, enum sg_shr_var sh_var, int dxfr_len)
+ 		mk_new_srp = true;
+ 	} else if (atomic_read(&fp->inactives) <= 0) {
+ 		mk_new_srp = true;
+-	} else if (likely(!try_harder) && dxfr_len < SG_DEF_SECTOR_SZ) {
++	} else if (likely(!try_harder) && dlen < SG_DEF_SECTOR_SZ) {
+ 		struct sg_request *low_srp = NULL;
+ 
+ 		l_used_idx = READ_ONCE(fp->low_used_idx);
+@@ -6728,7 +6722,7 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, enum sg_shr_var sh_var, int dxfr_len)
+ 			for (r_srp = xa_find(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE);
+ 			     r_srp;
+ 			     r_srp = xa_find_after(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE)) {
+-				if (dxfr_len <= r_srp->sgat_h.buflen) {
++				if (r_srp->sgat_h.buflen >= dlen) {
+ 					if (sg_rq_chg_state(r_srp, SG_RQ_INACTIVE, SG_RQ_BUSY))
+ 						continue;
+ 					atomic_dec(&fp->inactives);
+@@ -6749,7 +6743,7 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, enum sg_shr_var sh_var, int dxfr_len)
+ 			for (r_srp = xa_find(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE);
+ 			     r_srp;
+ 			     r_srp = xa_find_after(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE)) {
+-				if (dxfr_len <= r_srp->sgat_h.buflen &&
++				if (r_srp->sgat_h.buflen >= dlen &&
+ 				    !test_bit(SG_FRQ_RESERVED, r_srp->frq_bm)) {
+ 					if (sg_rq_chg_state(r_srp, SG_RQ_INACTIVE, SG_RQ_BUSY))
+ 						continue;
+@@ -6789,7 +6783,7 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, enum sg_shr_var sh_var, int dxfr_len)
+ 			       __func__);
+ 			goto err_out;
+ 		} else if (fp->tot_fd_thresh > 0) {
+-			sum_dlen = atomic_read(&fp->sum_fd_dlens) + dxfr_len;
++			sum_dlen = atomic_read(&fp->sum_fd_dlens) + dlen;
+ 			if (unlikely(sum_dlen > (u32)fp->tot_fd_thresh)) {
+ 				r_srp = ERR_PTR(-E2BIG);
+ 				SG_LOG(2, fp, "%s: sum_of_dlen(%u) > %s\n",
+@@ -6810,9 +6804,9 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, enum sg_shr_var sh_var, int dxfr_len)
+ 		}
+ 		if (IS_ERR(r_srp))	/* NULL is _not_ an ERR here */
+ 			goto err_out;
+-		r_srp = sg_mk_srp_sgat(fp, no_reqs, dxfr_len);
++		r_srp = sg_mk_srp_sgat(fp, no_reqs, dlen);
+ 		if (IS_ERR(r_srp)) {
+-			if (!try_harder && dxfr_len < SG_DEF_SECTOR_SZ &&
++			if (!try_harder && dlen < SG_DEF_SECTOR_SZ &&
+ 			    some_inactive) {
+ 				try_harder = true;
+ 				goto start_again;
+@@ -6852,7 +6846,7 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, enum sg_shr_var sh_var, int dxfr_len)
+ 		set_bit(SG_FRQ_IS_V4I, r_srp->frq_bm);
+ 	if (test_bit(SG_FRQ_SYNC_INVOC, cwrp->frq_bm))
+ 		set_bit(SG_FRQ_SYNC_INVOC, r_srp->frq_bm);
+-	r_srp->sgatp->dlen = dxfr_len;/* must be <= r_srp->sgat_h.buflen */
++	r_srp->sgatp->dlen = dlen;	/* must be <= r_srp->sgat_h.buflen */
+ 	r_srp->sh_var = sh_var;
+ 	r_srp->cmd_opcode = 0xff;  /* set invalid opcode (VS), 0x0 is TUR */
+ 	/* If setup stalls (e.g. blk_get_request()) debug shows 'elap=1 ns' */
 -- 
 2.25.1
 
