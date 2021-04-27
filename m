@@ -2,82 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 261DEC433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 09:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52B07C43460
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 09:53:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEFC4613B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 09:51:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 154B2613C3
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 09:53:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235311AbhD0JwR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Apr 2021 05:52:17 -0400
-Received: from mx2.suse.de ([195.135.220.15]:56534 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235048AbhD0JwQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Apr 2021 05:52:16 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 73FC6B13E;
-        Tue, 27 Apr 2021 09:51:31 +0000 (UTC)
-Date:   Tue, 27 Apr 2021 11:51:31 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Arun Easi <aeasi@marvell.com>
-Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
-        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
-        linux-nvme@lists.infradead.org, Hannes Reinecke <hare@suse.de>,
-        Nilesh Javali <njavali@marvell.com>,
-        James Smart <james.smart@broadcom.com>
-Subject: Re: [EXT] Re: [RFC] qla2xxx: Add dev_loss_tmo kernel module options
-Message-ID: <20210427095131.zf6c4siewnrhv7qd@beryllium.lan>
-References: <20210419100014.47144-1-dwagner@suse.de>
- <YH8QzgWiec8vka20@SPB-NB-133.local>
- <20210420182830.fbipix3l7hwlyfx3@beryllium.lan>
- <alpine.LRH.2.21.9999.2104201642290.24132@irv1user01.caveonetworks.com>
- <20210421075659.dwaz7gt6hyqlzpo4@beryllium.lan>
+        id S235435AbhD0JyB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Apr 2021 05:54:01 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:52899 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235303AbhD0Jxs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 27 Apr 2021 05:53:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1619517184;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=m5+c/+BZ4gIa5hUEWa4KddJnHEAW8qm6OVHAdVDDGUE=;
+        b=GYRVd48Ab2JZ4M1NCc7XTlpOEXhrrmsavMFKo1DLVa2Iar164lfRmZu1qosE5LXb64SxPd
+        VU1WBkuITr8dw2ws028Ue0Vx+fEvGc6h4Df8MYNVZOIKBEplc0XKuM8Xg+HAgHHsozXEC2
+        kc6u2e2RxTHVKHGY3a/PhzGNLNnB5xY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-552-CX21mRDHPRC0STOasSqEuQ-1; Tue, 27 Apr 2021 05:52:59 -0400
+X-MC-Unique: CX21mRDHPRC0STOasSqEuQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9ABEE501E0;
+        Tue, 27 Apr 2021 09:52:58 +0000 (UTC)
+Received: from T590 (ovpn-13-248.pek2.redhat.com [10.72.13.248])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1D33F19704;
+        Tue, 27 Apr 2021 09:52:50 +0000 (UTC)
+Date:   Tue, 27 Apr 2021 17:52:58 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        Hannes Reinecke <hare@suse.com>
+Subject: Re: [bug report] shared tags causes IO hang and performance drop
+Message-ID: <YIfe+mpcV17XsHuL@T590>
+References: <0c85fe52-ebc7-68b3-2dbe-dfad5d604346@huawei.com>
+ <c1d5abaa-c460-55f8-5351-16f09d6aa81f@huawei.com>
+ <YIbS1dgSYrsAeGvZ@T590>
+ <55743a51-4d6f-f481-cebf-e2af9c657911@huawei.com>
+ <YIbkX2G0+dp3PV+u@T590>
+ <9ad15067-ba7b-a335-ae71-8c4328856b91@huawei.com>
+ <YIdTyyVE5azlYwtO@T590>
+ <ab83eec4-20f1-ad74-7f43-52a4a87a8aa9@huawei.com>
+ <YIfVVRheF9ZWjzbh@T590>
+ <cb81d990-e5a6-49b1-5d96-8079a80c73f5@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210421075659.dwaz7gt6hyqlzpo4@beryllium.lan>
+In-Reply-To: <cb81d990-e5a6-49b1-5d96-8079a80c73f5@huawei.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Apr 21, 2021 at 09:56:59AM +0200, Daniel Wagner wrote:
-> Ah, didn't know about nvmediscovery until very recentetly. I try to get
-> it working with this approach (as this patch is not really a proper
-> solution).
+On Tue, Apr 27, 2021 at 10:37:39AM +0100, John Garry wrote:
+> On 27/04/2021 10:11, Ming Lei wrote:
+> > On Tue, Apr 27, 2021 at 08:52:53AM +0100, John Garry wrote:
+> > > On 27/04/2021 00:59, Ming Lei wrote:
+> > > > > Anyway, I'll look at adding code for a per-request queue sched tags to see
+> > > > > if it helps. But I would plan to continue to use a per hctx sched request
+> > > > > pool.
+> > > > Why not switch to per hctx sched request pool?
+> > > I don't understand. The current code uses a per-hctx sched request pool, and
+> > > I said that I don't plan to change that.
+> > I forget why you didn't do that, because for hostwide tags, request
+> > is always 1:1 for either sched tags(real io sched) or driver tags(none).
+> > 
+> > Maybe you want to keep request local to hctx, but never see related
+> > performance data for supporting the point, sbitmap queue allocator has
+> > been intelligent enough to allocate tag freed from native cpu.
+> > 
+> > Then you just waste lots of memory, I remember that scsi request payload
+> > is a bit big.
+> 
+> It's true that we waste much memory for regular static requests for when
+> using hostwide tags today.
+> 
+> One problem in trying to use a single set of "hostwide" static requests is
+> that we call blk_mq_init_request(..., hctx_idx, ...) ->
+> set->ops->init_request(.., hctx_idx, ...) for each static rq, and this would
+> not work for a single set of "hostwide" requests.
+> 
+> And I see a similar problem for a "request queue-wide" sched static
+> requests.
+> 
+> Maybe we can improve this in future.
 
-Finally found some time to play with this. FTR, the nvmediscovery
-carries following information:
+OK, fair enough.
 
-  UDEV  [65238.364677] change   /devices/virtual/fc/fc_udev_device (fc)
-  ACTION=change
-  DEVPATH=/devices/virtual/fc/fc_udev_device
-  FC_EVENT=nvmediscovery
-  NVMEFC_HOST_TRADDR=nn-0x20000024ff7fa448:pn-0x21000024ff7fa448
-  NVMEFC_TRADDR=nn-0x200200a09890f5bf:pn-0x203800a09890f5bf
-  SEQNUM=12357
-  SUBSYSTEM=fc
-  USEC_INITIALIZED=65238333374
+> 
+> BTW, for the performance issue which Yanhui witnessed with megaraid sas, do
+> you think it may because of the IO sched tags issue of total sched tag depth
+> growing vs driver tags?
 
-The udev rule I came up is:
+I think it is highly possible. Will you work a patch to convert to
+per-request-queue sched tag?
 
-  ACTION=="change", SUBSYSTEM=="fc", ENV{FC_EVENT}=="nvmediscovery", \
-      ENV{NVMEFC_TRADDR}=="*", \
-      RUN+="/usr/local/sbin/qla2xxx_dev_loss_tmo.sh $env{NVMEFC_TRADDR} 4294967295"
+> Are there lots of LUNs? I can imagine that megaraid
+> sas has much larger can_queue than scsi_debug :)
 
-and the script is:
+No, there are just two LUNs, the 1st LUN is one commodity SSD(queue
+depth is 32) and the performance issue is reported on this LUN, another is one
+HDD(queue depth is 256) which is root disk, but the megaraid host tag depth is
+228, another weird setting. But the issue still can be reproduced after we set
+2nd LUN's depth as 64 for avoiding driver tag contention.
 
-  #!/bin/sh
 
-  TRADDR=$1
-  TMO=$2
 
-  id=$(echo $TRADDR | sed -n "s/.*pn-0x\([0-9a-f]\+\)/\1/p")
-  find /sys/kernel/debug/qla2xxx -name pn-$id -exec /bin/sh -c "echo $TMO > {}/dev_loss_tmo" \;
+Thanks,
+Ming
 
-I am sure this can be done in a more elegant way. Anyway, I am testing
-this right now, the first 30 minutes look good...
