@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16CBBC433B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDD8CC43460
 	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 21:59:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB614613C5
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 21:59:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD8CE613B0
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 21:59:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239455AbhD0WAc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Apr 2021 18:00:32 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:38843 "EHLO smtp.infotech.no"
+        id S239524AbhD0WAd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Apr 2021 18:00:33 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:38909 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239343AbhD0V7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Apr 2021 17:59:51 -0400
+        id S239446AbhD0V7w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 27 Apr 2021 17:59:52 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 5F320204199;
-        Tue, 27 Apr 2021 23:59:06 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id D2086204196;
+        Tue, 27 Apr 2021 23:59:07 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 1a-apQQs3JNO; Tue, 27 Apr 2021 23:59:04 +0200 (CEST)
+        with ESMTP id VSNDZ7htTjSz; Tue, 27 Apr 2021 23:59:05 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        by smtp.infotech.no (Postfix) with ESMTPA id E74EA204295;
-        Tue, 27 Apr 2021 23:59:02 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 8F1BC2041AC;
+        Tue, 27 Apr 2021 23:59:04 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v18 58/83] sg: tweak sg_find_sfp_by_fd()
-Date:   Tue, 27 Apr 2021 17:57:08 -0400
-Message-Id: <20210427215733.417746-60-dgilbert@interlog.com>
+Subject: [PATCH v18 59/83] sg: add snap_dev flag and snapped in debugfs
+Date:   Tue, 27 Apr 2021 17:57:09 -0400
+Message-Id: <20210427215733.417746-61-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210427215733.417746-1-dgilbert@interlog.com>
 References: <20210427215733.417746-1-dgilbert@interlog.com>
@@ -44,289 +44,210 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The sg_find_sfp_by_fd() function is called every time a file share
-is established. If request sharing is being used to copy to two
-or more destinations, there will be many calls to this function
-to swap between those destination, so its performance may become
-important. Simplify the "search" by drilling into the given
-fd's 'struct file' as, if all is well, the wanted sfp is in
-filp->private_data.
+Add SG_CTL_FLAGM_SNAP_DEV flag to ioctl(SG_SET_GET_EXTENDED)
+to allow a snapshot of the current device's data structures
+to be sent to /sys/kernel/debug/scsi_generic/snapped
+programmatically. The format of the output is similar to what
+is seen in: 'cat /sys/kernel/debug/scsi_generic/snapshot' .
+Each "snap_dev" is prefixed by a "UTC time: <timestamp>". The
+timestamp has microsecond resolution. Each "snap_dev" is
+appended to the single internal buffer which is reset to
+position zero after that buffer becomes half full.
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 193 +++++++++++++++-------------------------------
- 1 file changed, 62 insertions(+), 131 deletions(-)
+ drivers/scsi/sg.c      | 107 +++++++++++++++++++++++++++++++++++++++++
+ include/uapi/scsi/sg.h |   3 +-
+ 2 files changed, 109 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 02435d2ef555..7f62cd9bffe0 100644
+index 7f62cd9bffe0..045aa96addac 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -457,9 +457,8 @@ sg_wait_open_event(struct sg_device *sdp, bool o_excl)
- 		while (atomic_read(&sdp->open_cnt) > 0) {
- 			mutex_unlock(&sdp->open_rel_lock);
- 			res = wait_event_interruptible
--					(sdp->open_wait,
--					 (SG_IS_DETACHING(sdp) ||
--					  atomic_read(&sdp->open_cnt) == 0));
-+				(sdp->open_wait,
-+				 (SG_IS_DETACHING(sdp) || atomic_read(&sdp->open_cnt) == 0));
- 			mutex_lock(&sdp->open_rel_lock);
+@@ -194,6 +194,9 @@ static struct class_interface sg_interface = {
+ 	.remove_dev     = sg_remove_device,
+ };
  
- 			if (res) /* -ERESTARTSYS */
-@@ -471,9 +470,7 @@ sg_wait_open_event(struct sg_device *sdp, bool o_excl)
- 		while (SG_HAVE_EXCLUDE(sdp)) {
- 			mutex_unlock(&sdp->open_rel_lock);
- 			res = wait_event_interruptible
--					(sdp->open_wait,
--					 (SG_IS_DETACHING(sdp) ||
--					  !SG_HAVE_EXCLUDE(sdp)));
-+				(sdp->open_wait, (SG_IS_DETACHING(sdp) || !SG_HAVE_EXCLUDE(sdp)));
- 			mutex_lock(&sdp->open_rel_lock);
++static DEFINE_MUTEX(snapped_mutex);
++static char *snapped_buf;
++
+ /* Subset of sg_io_hdr found in <scsi/sg.h>, has only [i] and [i->o] fields */
+ struct sg_slice_hdr3 {
+ 	int interface_id;
+@@ -363,6 +366,11 @@ static int sg_srp_q_blk_poll(struct sg_request *srp, struct request_queue *q,
+ static const char *sg_rq_st_str(enum sg_rq_state rq_st, bool long_str);
+ static const char *sg_shr_str(enum sg_shr_var sh_var, bool long_str);
+ #endif
++#if IS_ENABLED(SG_PROC_OR_DEBUG_FS)
++static int sg_proc_debug_sdev(struct sg_device *sdp, char *obp, int len,
++			      int *fd_counterp, bool reduced);
++static void sg_take_snap(struct sg_fd *sfp, bool clear_first);
++#endif
  
- 			if (res) /* -ERESTARTSYS */
-@@ -2589,7 +2586,7 @@ sg_unshare_rs_fd(struct sg_fd *rs_sfp, bool lck)
- 	__xa_clear_mark(xadp, rs_sfp->idx, SG_XA_FD_RS_SHARE);
- 	if (lck)
- 		xa_unlock_irqrestore(xadp, iflags);
--	kref_put(&rs_sfp->f_ref, sg_remove_sfp);/* get: sg_find_sfp_helper() */
-+	kref_put(&rs_sfp->f_ref, sg_remove_sfp);/* get: sg_find_sfp_by_fd() */
+ #define SG_WRITE_COUNT_LIMIT (32 * 1024 * 1024)
+ 
+@@ -390,6 +398,7 @@ static const char *sg_shr_str(enum sg_shr_var sh_var, bool long_str);
+  */
+ 
+ #define SG_PROC_DEBUG_SZ 8192
++#define SG_SNAP_BUFF_SZ (SG_PROC_DEBUG_SZ * 8)
+ 
+ #if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
+ #define SG_LOG_BUFF_SZ 48
+@@ -3574,6 +3583,62 @@ sg_any_persistent_orphans(struct sg_fd *sfp)
+ 	return false;
  }
  
- static void
-@@ -2606,7 +2603,7 @@ sg_unshare_ws_fd(struct sg_fd *ws_sfp, bool lck)
- 	/* SG_XA_FD_RS_SHARE mark should be already clear */
- 	if (lck)
- 		xa_unlock_irqrestore(xadp, iflags);
--	kref_put(&ws_sfp->f_ref, sg_remove_sfp);/* get: sg_find_sfp_helper() */
-+	kref_put(&ws_sfp->f_ref, sg_remove_sfp);/* get: sg_find_sfp_by_fd() */
- }
- 
- /*
-@@ -3249,144 +3246,67 @@ sg_ctl_abort(struct sg_device *sdp, struct sg_fd *sfp, void __user *p)
- 	return res;
- }
- 
--static int
--sg_idr_max_id(int id, void *p, void *data)
--		__must_hold(&sg_index_lock)
--{
--	int *k = data;
--
--	if (*k < id)
--		*k = id;
--	return 0;
--}
--
--static int
--sg_find_sfp_helper(struct sg_fd *from_sfp, struct sg_fd *pair_sfp,
--		   bool from_rd_side, int search_fd)
-+/*
-+ * Check if search_for is a "char" device fd whose MAJOR is this driver.
-+ * If so filp->private_data must be the sfp we are looking for. Do further
-+ * checks (e.g. not already in a file share). If all is well set up cross
-+ * references and adjust xarray marks. Returns a sfp or negative errno
-+ * twisted by ERR_PTR().
-+ */
-+static struct sg_fd *
-+sg_find_sfp_by_fd(const struct file *search_for, struct sg_fd *from_sfp,
-+		  bool is_reshare)
- 		__must_hold(&from_sfp->f_mutex)
- {
--	bool same_sdp;
- 	int res = 0;
- 	unsigned long iflags;
-+	struct sg_fd *sfp;
- 	struct sg_device *from_sdp = from_sfp->parentdp;
--	struct sg_device *pair_sdp = pair_sfp->parentdp;
-+	struct sg_device *sdp;
- 
--	if (unlikely(!mutex_trylock(&pair_sfp->f_mutex)))
--		return -EPROBE_DEFER;	/* use to suggest re-invocation */
--	if (unlikely(sg_fd_is_shared(pair_sfp)))
-+	SG_LOG(6, from_sfp, "%s: enter,  from_sfp=%pK search_for=%pK\n",
-+	       __func__, from_sfp, search_for);
-+	if (!(S_ISCHR(search_for->f_inode->i_mode) &&
-+	      MAJOR(search_for->f_inode->i_rdev) == SCSI_GENERIC_MAJOR))
-+		return ERR_PTR(-EBADF);
-+	sfp = search_for->private_data;
-+	if (!sfp)
-+		return ERR_PTR(-ENXIO);
-+	sdp = sfp->parentdp;
++/* Ignore append if size already over half of available buffer */
++static void
++sg_take_snap(struct sg_fd *sfp, bool dont_append)
++{
++	u32 hour, minute, second;
++	u64 n;
++	struct sg_device *sdp = sfp->parentdp;
++	struct timespec64 ts64;
++	char b[64];
++
 +	if (!sdp)
-+		return ERR_PTR(-ENXIO);
-+	if (unlikely(!mutex_trylock(&sfp->f_mutex)))
-+		return ERR_PTR(-EPROBE_DEFER);	/* suggest re-invocation */
-+	if (unlikely(sg_fd_is_shared(sfp)))
- 		res = -EADDRNOTAVAIL;
--	else if (unlikely(SG_HAVE_EXCLUDE(pair_sdp)))
-+	else if (unlikely(SG_HAVE_EXCLUDE(sdp)))
- 		res = -EPERM;
- 	if (res) {
--		mutex_unlock(&pair_sfp->f_mutex);
--		return res;
-+		mutex_unlock(&sfp->f_mutex);
-+		return ERR_PTR(res);
- 	}
--	same_sdp = (from_sdp == pair_sdp);
++		return;
++	ktime_get_real_ts64(&ts64);
++	/* prefer local time but sys_tz.tz_minuteswest is always 0 */
++	n = ts64.tv_sec;
++	second = (u32)do_div(n, 60);
++	minute = (u32)do_div(n, 60);
++	hour = (u32)do_div(n, 24);	/* hour within a UTC day */
++	snprintf(b, sizeof(b), "UTC time: %.2u:%.2u:%.2u:%.6u [tid=%d]",
++		 hour, minute, second, (u32)ts64.tv_nsec / 1000,
++		 (current ? current->pid : -1));
++	mutex_lock(&snapped_mutex);
++	if (!snapped_buf) {
++		snapped_buf = kzalloc(SG_SNAP_BUFF_SZ,
++				      GFP_KERNEL | __GFP_NOWARN);
++		if (!snapped_buf)
++			goto fini;
++	} else if (dont_append) {
++		memset(snapped_buf, 0, SG_SNAP_BUFF_SZ);
++	}
++#if IS_ENABLED(SG_PROC_OR_DEBUG_FS)
++	if (true) {	/* for some declarations */
++		int n, prevlen, bp_len;
++		char *bp;
 +
- 	xa_lock_irqsave(&from_sdp->sfp_arr, iflags);
--	rcu_assign_pointer(from_sfp->share_sfp, pair_sfp);
-+	rcu_assign_pointer(from_sfp->share_sfp, sfp);
- 	__xa_clear_mark(&from_sdp->sfp_arr, from_sfp->idx, SG_XA_FD_UNSHARED);
--	kref_get(&from_sfp->f_ref);	/* so unshare done before release */
--	if (from_rd_side)
-+	if (is_reshare)	/* reshare case: no kref_get() on read-side */
- 		__xa_set_mark(&from_sdp->sfp_arr, from_sfp->idx,
- 			      SG_XA_FD_RS_SHARE);
--
--	if (!same_sdp) {
-+	else
-+		kref_get(&from_sfp->f_ref);/* so unshare done before release */
-+	if (from_sdp != sdp) {
- 		xa_unlock_irqrestore(&from_sdp->sfp_arr, iflags);
--		xa_lock_irqsave(&pair_sdp->sfp_arr, iflags);
--	}
--
--	mutex_unlock(&pair_sfp->f_mutex);
--	rcu_assign_pointer(pair_sfp->share_sfp, from_sfp);
--	__xa_clear_mark(&pair_sdp->sfp_arr, pair_sfp->idx, SG_XA_FD_UNSHARED);
--	if (!from_rd_side)
--		__xa_set_mark(&pair_sdp->sfp_arr, pair_sfp->idx,
--			      SG_XA_FD_RS_SHARE);
--	kref_get(&pair_sfp->f_ref);	/* keep symmetry */
--	xa_unlock_irqrestore(&pair_sdp->sfp_arr, iflags);
--	return 0;
--}
--
--/*
-- * Scans sg driver object tree looking for search_for. Returns valid pointer
-- * if found; returns negated errno twisted by ERR_PTR(); or return NULL if
-- * not found (and no error).
-- */
--static struct sg_fd *
--sg_find_sfp_by_fd(const struct file *search_for, int search_fd,
--		  struct sg_fd *from_sfp, bool from_is_rd_side)
--		__must_hold(&from_sfp->f_mutex)
--{
--	bool found = false;
--	int k, num_d;
--	int res = 0;
--	unsigned long iflags, idx;
--	struct sg_fd *sfp;
--	struct sg_device *sdp;
--
--	num_d = -1;
--	SG_LOG(6, from_sfp, "%s: enter,  from_sfp=%pK search_for=%pK\n",
--	       __func__, from_sfp, search_for);
--	read_lock_irqsave(&sg_index_lock, iflags);
--	idr_for_each(&sg_index_idr, sg_idr_max_id, &num_d);
--	++num_d;
--	for (k = 0; k < num_d; ++k) {
--		sdp = idr_find(&sg_index_idr, k);
--		if (unlikely(!sdp) || SG_IS_DETACHING(sdp))
--			continue;
--		xa_for_each_marked(&sdp->sfp_arr, idx, sfp,
--				   SG_XA_FD_UNSHARED) {
--			if (sfp == from_sfp)
--				continue;
--			if (test_bit(SG_FFD_RELEASE, sfp->ffd_bm))
--				continue;
--			if (search_for != sfp->filp)
--				continue;       /* not this one */
--			res = sg_find_sfp_helper(from_sfp, sfp,
--						 from_is_rd_side, search_fd);
--			if (likely(res == 0)) {
--				found = true;
--				break;
--			}
--		}       /* end of loop of all fd_s in current device */
--		if (res || found)
--			break;
--	}       /* end of loop of all sg devices */
--	read_unlock_irqrestore(&sg_index_lock, iflags);
--	if (found) {	/* mark both fds as part of share */
--		struct sg_device *from_sdp = from_sfp->parentdp;
--
- 		xa_lock_irqsave(&sdp->sfp_arr, iflags);
--		__xa_clear_mark(&sdp->sfp_arr, sfp->idx, SG_XA_FD_UNSHARED);
--		xa_unlock_irqrestore(&sdp->sfp_arr, iflags);
--		xa_lock_irqsave(&from_sdp->sfp_arr, iflags);
--		__xa_clear_mark(&from_sfp->parentdp->sfp_arr, from_sfp->idx,
--				SG_XA_FD_UNSHARED);
--		xa_unlock_irqrestore(&from_sdp->sfp_arr, iflags);
--	} else if (res == 0) {	/* fine tune error response */
--		num_d = -1;
--		read_lock_irqsave(&sg_index_lock, iflags);
--		idr_for_each(&sg_index_idr, sg_idr_max_id, &num_d);
--		++num_d;
--		for (k = 0; k < num_d; ++k) {
--			sdp = idr_find(&sg_index_idr, k);
--			if (unlikely(!sdp) || SG_IS_DETACHING(sdp))
--				continue;
--			xa_for_each(&sdp->sfp_arr, idx, sfp) {
--				if (!sg_fd_is_shared(sfp))
--					continue;
--				if (search_for == sfp->filp) {
--					res = -EADDRNOTAVAIL;  /* already */
--					break;
--				}
--			}
--			if (res)
--				break;
--		}
--		read_unlock_irqrestore(&sg_index_lock, iflags);
- 	}
--	if (unlikely(res < 0))
--		return ERR_PTR(res);
--	return found ? sfp : NULL;
-+	mutex_unlock(&sfp->f_mutex);
-+	rcu_assign_pointer(sfp->share_sfp, from_sfp);
-+	__xa_clear_mark(&sdp->sfp_arr, sfp->idx, SG_XA_FD_UNSHARED);
-+	if (!is_reshare)
-+		__xa_set_mark(&sdp->sfp_arr, sfp->idx, SG_XA_FD_RS_SHARE);
-+	kref_get(&sfp->f_ref);		/* undone: sg_unshare_*_fd() */
-+	xa_unlock_irqrestore(&sdp->sfp_arr, iflags);
++		prevlen = strlen(snapped_buf);
++		if (prevlen > SG_SNAP_BUFF_SZ / 2)
++			prevlen = 0;
++		bp_len = SG_SNAP_BUFF_SZ - prevlen;
++		bp = snapped_buf + prevlen;
++		n = scnprintf(bp, bp_len, "%s\n", b);
++		bp += n;
++		bp_len -= n;
++		if (bp_len < 2)
++			goto fini;
++		n = sg_proc_debug_sdev(sdp, bp, bp_len, NULL, false);
++		if (n >= bp_len - 1) {
++			if (bp[bp_len - 2] != '\n')
++				bp[bp_len - 2] = '\n';
++		}
++	}
++#endif
++fini:
++	mutex_unlock(&snapped_mutex);
++}
 +
-+	return sfp;
- }
- 
  /*
-@@ -3423,7 +3343,7 @@ sg_fd_share(struct sg_fd *ws_sfp, int m_fd)
- 	SG_LOG(6, ws_sfp, "%s: read-side fd okay, scan for filp=0x%pK\n",
- 	       __func__, filp);
- again:
--	rs_sfp = sg_find_sfp_by_fd(filp, m_fd, ws_sfp, false);
-+	rs_sfp = sg_find_sfp_by_fd(filp, ws_sfp, false);
- 	if (IS_ERR(rs_sfp)) {
- 		res = PTR_ERR(rs_sfp);
- 		if (res == -EPROBE_DEFER) {
-@@ -3494,7 +3414,7 @@ sg_fd_reshare(struct sg_fd *rs_sfp, int new_ws_fd)
- 	       filp);
- 	sg_unshare_ws_fd(ws_sfp, false);
- again:
--	ws_sfp = sg_find_sfp_by_fd(filp, new_ws_fd, rs_sfp, true);
-+	ws_sfp = sg_find_sfp_by_fd(filp, rs_sfp, true);
- 	if (IS_ERR(ws_sfp)) {
- 		res = PTR_ERR(ws_sfp);
- 		if (res == -EPROBE_DEFER) {
-@@ -6406,6 +6326,17 @@ struct sg_proc_deviter {
- 	int fd_index;
+  * Processing of ioctl(SG_SET_GET_EXTENDED(SG_SEIM_CTL_FLAGS)) which is a set
+  * of boolean flags. Access abbreviations: [rw], read-write; [ro], read-only;
+@@ -3728,6 +3793,20 @@ sg_extended_bool_flags(struct sg_fd *sfp, struct sg_extended_info *seip)
+ 		else
+ 			c_flgs_val_out &= ~SG_CTL_FLAGM_EXCL_WAITQ;
+ 	}
++	/* SNAP_DEV boolean, [rbw] */
++	if (c_flgs_rm & SG_CTL_FLAGM_SNAP_DEV) {
++		mutex_lock(&snapped_mutex);
++		flg = (snapped_buf && strlen(snapped_buf) > 0);
++		mutex_unlock(&snapped_mutex);
++	}
++	if (c_flgs_wm & SG_CTL_FLAGM_SNAP_DEV)
++		sg_take_snap(sfp, !!(c_flgs_val_in & SG_CTL_FLAGM_SNAP_DEV));
++	if (c_flgs_rm & SG_CTL_FLAGM_SNAP_DEV) {
++		if (flg)
++			c_flgs_val_out |= SG_CTL_FLAGM_SNAP_DEV;
++		else
++			c_flgs_val_out &= ~SG_CTL_FLAGM_SNAP_DEV;
++	}
+ 
+ 	if (c_flgs_val_in != c_flgs_val_out)
+ 		seip->ctl_flags = c_flgs_val_out;
+@@ -4977,6 +5056,7 @@ exit_sg(void)
+ 	sg_dfs_exit();
+ 	if (IS_ENABLED(CONFIG_SCSI_PROC_FS))
+ 		remove_proc_subtree("scsi/sg", NULL);
++	kfree(snapped_buf);
+ 	scsi_unregister_interface(&sg_interface);
+ 	mempool_destroy(sg_sense_pool);
+ 	kmem_cache_destroy(sg_sense_cache);
+@@ -6599,6 +6679,10 @@ sg_proc_debug_fd(struct sg_fd *fp, char *obp, int len, unsigned long idx,
+ 	k = 0;
+ 	xa_lock_irqsave(&fp->srp_arr, iflags);
+ 	xa_for_each(&fp->srp_arr, idx, srp) {
++		if (srp->rq_idx != (unsigned long)idx)
++			n += scnprintf(obp + n, len - n,
++				       ">>> xa_index=%lu, rq_idx=%d, bad\n",
++				       idx, srp->rq_idx);
+ 		if (xa_get_mark(&fp->srp_arr, idx, SG_XA_RQ_INACTIVE))
+ 			continue;
+ 		n += sg_proc_debug_sreq(srp, fp->timeout, t_in_ns, obp + n,
+@@ -6858,6 +6942,28 @@ struct sg_dfs_attr {
+ 	const struct seq_operations *seq_ops;
  };
  
 +static int
-+sg_idr_max_id(int id, void *p, void *data)
-+		__must_hold(&sg_index_lock)
++sg_dfs_snapped_show(void *data, struct seq_file *m)
 +{
-+	int *k = data;
-+
-+	if (*k < id)
-+		*k = id;
++	mutex_lock(&snapped_mutex);
++	if (snapped_buf && snapped_buf[0])
++		seq_puts(m, snapped_buf);
++	mutex_unlock(&snapped_mutex);
 +	return 0;
 +}
 +
++static ssize_t
++sg_dfs_snapped_write(void *data, const char __user *buf, size_t count,
++		     loff_t *ppos)
++{
++	/* Any write clears snapped buffer */
++	mutex_lock(&snapped_mutex);
++	kfree(snapped_buf);
++	snapped_buf = NULL;
++	mutex_unlock(&snapped_mutex);
++	return count;
++}
++
  static int
- sg_last_dev(void)
+ sg_dfs_snapshot_devs_show(void *data, struct seq_file *m)
  {
+@@ -7019,6 +7125,7 @@ static const struct seq_operations sg_snapshot_summ_seq_ops = {
+ };
+ 
+ static const struct sg_dfs_attr sg_dfs_attrs[] = {
++	{"snapped", 0600, sg_dfs_snapped_show, sg_dfs_snapped_write},
+ 	{"snapshot", 0400, .seq_ops = &sg_snapshot_seq_ops},
+ 	{"snapshot_devs", 0600, sg_dfs_snapshot_devs_show,
+ 	 sg_dfs_snapshot_devs_write},
+diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
+index 8b3fe773dfd5..bf947ebe06dd 100644
+--- a/include/uapi/scsi/sg.h
++++ b/include/uapi/scsi/sg.h
+@@ -211,7 +211,8 @@ typedef struct sg_req_info {	/* used by SG_GET_REQUEST_TABLE ioctl() */
+ #define SG_CTL_FLAGM_NO_DURATION 0x400	/* don't calc command duration */
+ #define SG_CTL_FLAGM_MORE_ASYNC	0x800	/* yield EAGAIN in more cases */
+ #define SG_CTL_FLAGM_EXCL_WAITQ 0x1000	/* only 1 wake up per response */
+-#define SG_CTL_FLAGM_ALL_BITS	0x1fff	/* should be OR of previous items */
++#define SG_CTL_FLAGM_SNAP_DEV	0x2000	/* output to debugfs::snapped */
++#define SG_CTL_FLAGM_ALL_BITS	0x3fff	/* should be OR of previous items */
+ 
+ /* Write one of the following values to sg_extended_info::read_value, get... */
+ #define SG_SEIRV_INT_MASK	0x0	/* get SG_SEIM_ALL_BITS */
 -- 
 2.25.1
 
