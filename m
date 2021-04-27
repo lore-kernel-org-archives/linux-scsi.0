@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13EC6C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30D46C43460
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED651600EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01A7B600EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 08:31:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235239AbhD0Ic3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S235257AbhD0Ic3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 27 Apr 2021 04:32:29 -0400
-Received: from mx2.suse.de ([195.135.220.15]:49452 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50090 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235215AbhD0IcG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S235218AbhD0IcG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 27 Apr 2021 04:32:06 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id D5ACFB16B;
+        by mx2.suse.de (Postfix) with ESMTP id DC804B16D;
         Tue, 27 Apr 2021 08:31:06 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,9 +29,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 37/40] scsi: drop message byte helper
-Date:   Tue, 27 Apr 2021 10:30:43 +0200
-Message-Id: <20210427083046.31620-38-hare@suse.de>
+Subject: [PATCH 39/40] target: use standard SAM status types
+Date:   Tue, 27 Apr 2021 10:30:45 +0200
+Message-Id: <20210427083046.31620-40-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210427083046.31620-1-hare@suse.de>
 References: <20210427083046.31620-1-hare@suse.de>
@@ -41,142 +41,246 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The message byte is now unused, so we can drop the helper to set
-the message byte and the check for message bytes during error recovery.
+target_complete_cmd() and friends requires a SAM status type,
+so passing GOOD here is actually wrong.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/scsi_ioctl.c         |  2 +-
- drivers/scsi/scsi_error.c  | 18 ++----------------
- drivers/scsi/sg.c          |  2 +-
- drivers/xen/xen-scsiback.c |  2 +-
- include/scsi/scsi.h        |  3 +--
- include/scsi/scsi_cmnd.h   |  5 -----
- 6 files changed, 6 insertions(+), 26 deletions(-)
+ drivers/target/target_core_alua.c   |  6 +++---
+ drivers/target/target_core_iblock.c |  2 +-
+ drivers/target/target_core_pr.c     |  8 ++++----
+ drivers/target/target_core_pscsi.c  |  2 +-
+ drivers/target/target_core_sbc.c    | 10 +++++-----
+ drivers/target/target_core_spc.c    | 14 +++++++-------
+ drivers/target/target_core_xcopy.c  |  2 +-
+ 7 files changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 4dd61e36ee29..d3089951afe6 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -254,7 +254,7 @@ static int blk_complete_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr,
- 	 */
- 	hdr->status = req->result & 0xff;
- 	hdr->masked_status = status_byte(req->result);
--	hdr->msg_status = msg_byte(req->result);
-+	hdr->msg_status = COMMAND_COMPLETE;
- 	hdr->host_status = host_byte(req->result);
- 	hdr->driver_status = 0;
- 	if (scsi_status_is_check_condition(hdr->status))
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 689ee628eff9..3e6e456816fc 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -741,12 +741,6 @@ static enum scsi_disposition scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 	if (host_byte(scmd->result) != DID_OK)
- 		return FAILED;
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index 5517c7dd5144..3bb921345bce 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -123,7 +123,7 @@ target_emulate_report_referrals(struct se_cmd *cmd)
  
--	/*
--	 * next, check the message byte.
--	 */
--	if (msg_byte(scmd->result) != COMMAND_COMPLETE)
--		return FAILED;
--
- 	/*
- 	 * now, check the status byte to see if this indicates
- 	 * anything special.
-@@ -1766,8 +1760,7 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
- 	case DID_PARITY:
- 		return (scmd->request->cmd_flags & REQ_FAILFAST_DEV);
- 	case DID_ERROR:
--		if (msg_byte(scmd->result) == COMMAND_COMPLETE &&
--		    status_byte(scmd->result) == RESERVATION_CONFLICT)
-+		if (status_byte(scmd->result) == RESERVATION_CONFLICT)
- 			return 0;
- 		fallthrough;
- 	case DID_SOFT_ERROR:
-@@ -1883,8 +1876,7 @@ enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		 */
- 		return SUCCESS;
- 	case DID_ERROR:
--		if (msg_byte(scmd->result) == COMMAND_COMPLETE &&
--		    status_byte(scmd->result) == RESERVATION_CONFLICT)
-+		if (status_byte(scmd->result) == RESERVATION_CONFLICT)
- 			/*
- 			 * execute reservation conflict processing code
- 			 * lower down
-@@ -1912,12 +1904,6 @@ enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		return FAILED;
+ 	transport_kunmap_data_sg(cmd);
+ 
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+@@ -255,7 +255,7 @@ target_emulate_report_target_port_groups(struct se_cmd *cmd)
+ 	}
+ 	transport_kunmap_data_sg(cmd);
+ 
+-	target_complete_cmd_with_length(cmd, GOOD, rd_len + 4);
++	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, rd_len + 4);
+ 	return 0;
+ }
+ 
+@@ -424,7 +424,7 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
+ out:
+ 	transport_kunmap_data_sg(cmd);
+ 	if (!rc)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index d6fdd1c61f90..deb2b8b64d20 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -474,7 +474,7 @@ iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
+ 	if (ret)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 6fd5fec95539..4b94b085625b 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -234,7 +234,7 @@ target_scsi2_reservation_release(struct se_cmd *cmd)
+ out_unlock:
+ 	spin_unlock(&dev->dev_reservation_lock);
+ out:
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+@@ -297,7 +297,7 @@ target_scsi2_reservation_reserve(struct se_cmd *cmd)
+ 	spin_unlock(&dev->dev_reservation_lock);
+ out:
+ 	if (!ret)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return ret;
+ }
+ 
+@@ -3676,7 +3676,7 @@ target_scsi3_emulate_pr_out(struct se_cmd *cmd)
  	}
  
--	/*
--	 * next, check the message byte.
--	 */
--	if (msg_byte(scmd->result) != COMMAND_COMPLETE)
--		return FAILED;
--
- 	/*
- 	 * check the status byte to see if this indicates anything special.
- 	 */
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 6b7d5f03fb2b..065d9e682f06 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1376,7 +1376,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 
- 		srp->header.status = 0xff & result;
- 		srp->header.masked_status = status_byte(result);
--		srp->header.msg_status = msg_byte(result);
-+		srp->header.msg_status = COMMAND_COMPLETE;
- 		srp->header.host_status = host_byte(result);
- 		srp->header.driver_status = driver_byte(result);
- 		if ((sdp->sgdebug > 0) &&
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index a6bb2600a2d7..bea22f71c782 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -224,7 +224,7 @@ static void scsiback_print_status(char *sense_buffer, int errors,
- 
- 	pr_err("[%s:%d] cmnd[0]=%02x -> st=%02x msg=%02x host=%02x\n",
- 	       tpg->tport->tport_name, pending_req->v2p->lun,
--	       pending_req->cmnd[0], status_byte(errors), msg_byte(errors),
-+	       pending_req->cmnd[0], status_byte(errors), COMMAND_COMPLETE,
- 	       host_byte(errors));
+ 	if (!ret)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return ret;
  }
  
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 59c5e729f40c..8fe0c628d20b 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -210,11 +210,10 @@ enum scsi_disposition {
-  *  These are set by:
-  *
-  *      status byte = set from target device
-- *      msg_byte    = return status from host adapter itself.
-+ *      msg_byte    (unused)
-  *      host_byte   = set by low-level driver to indicate status.
-  */
- #define status_byte(result) (((result) >> 1) & 0x7f)
--#define msg_byte(result)    (((result) >> 8) & 0xff)
- #define host_byte(result)   (((result) >> 16) & 0xff)
+@@ -4073,7 +4073,7 @@ target_scsi3_emulate_pr_in(struct se_cmd *cmd)
+ 	}
  
- #define sense_class(sense)  (((sense) >> 4) & 0x7)
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 69055c2044ff..598b98e4702d 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -321,11 +321,6 @@ static inline u8 get_status_byte(struct scsi_cmnd *cmd)
- 	return cmd->result & 0xff;
+ 	if (!ret)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return ret;
  }
  
--static inline void set_msg_byte(struct scsi_cmnd *cmd, char status)
--{
--	cmd->result = (cmd->result & 0xffff00ff) | (status << 8);
--}
--
- static inline void set_host_byte(struct scsi_cmnd *cmd, char status)
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index dac44caf77a3..d468343bd095 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -1044,7 +1044,7 @@ static void pscsi_req_done(struct request *req, blk_status_t status)
+ 	struct se_cmd *cmd = req->end_io_data;
+ 	struct pscsi_plugin_task *pt = cmd->priv;
+ 	int result = scsi_req(req)->result;
+-	u8 scsi_status = status_byte(result) << 1;
++	u8 scsi_status = result & 0xff;
+ 
+ 	if (scsi_status != SAM_STAT_GOOD) {
+ 		pr_debug("PSCSI Status Byte exception at cmd: %p CDB:"
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 7b07e557dc8d..b32f4ee88e79 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -67,7 +67,7 @@ sbc_emulate_readcapacity(struct se_cmd *cmd)
+ 		transport_kunmap_data_sg(cmd);
+ 	}
+ 
+-	target_complete_cmd_with_length(cmd, GOOD, 8);
++	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, 8);
+ 	return 0;
+ }
+ 
+@@ -130,7 +130,7 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+ 		transport_kunmap_data_sg(cmd);
+ 	}
+ 
+-	target_complete_cmd_with_length(cmd, GOOD, 32);
++	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, 32);
+ 	return 0;
+ }
+ 
+@@ -202,14 +202,14 @@ sbc_execute_write_same_unmap(struct se_cmd *cmd)
+ 			return ret;
+ 	}
+ 
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+ static sense_reason_t
+ sbc_emulate_noop(struct se_cmd *cmd)
  {
- 	cmd->result = (cmd->result & 0xff00ffff) | (status << 16);
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+@@ -1245,7 +1245,7 @@ sbc_execute_unmap(struct se_cmd *cmd)
+ err:
+ 	transport_kunmap_data_sg(cmd);
+ 	if (!ret)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index 70a661801cb9..0756a690ea84 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -750,7 +750,7 @@ spc_emulate_inquiry(struct se_cmd *cmd)
+ 	kfree(buf);
+ 
+ 	if (!ret)
+-		target_complete_cmd_with_length(cmd, GOOD, len);
++		target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, len);
+ 	return ret;
+ }
+ 
+@@ -1104,7 +1104,7 @@ static sense_reason_t spc_emulate_modesense(struct se_cmd *cmd)
+ 		transport_kunmap_data_sg(cmd);
+ 	}
+ 
+-	target_complete_cmd_with_length(cmd, GOOD, length);
++	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, length);
+ 	return 0;
+ }
+ 
+@@ -1122,7 +1122,7 @@ static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
+ 	int i;
+ 
+ 	if (!cmd->data_length) {
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 		return 0;
+ 	}
+ 
+@@ -1165,7 +1165,7 @@ static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
+ 	transport_kunmap_data_sg(cmd);
+ 
+ 	if (!ret)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return ret;
+ }
+ 
+@@ -1198,7 +1198,7 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
+ 	memcpy(rbuf, buf, min_t(u32, sizeof(buf), cmd->data_length));
+ 	transport_kunmap_data_sg(cmd);
+ 
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+@@ -1265,7 +1265,7 @@ sense_reason_t spc_emulate_report_luns(struct se_cmd *cmd)
+ 		transport_kunmap_data_sg(cmd);
+ 	}
+ 
+-	target_complete_cmd_with_length(cmd, GOOD, 8 + lun_count * 8);
++	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, 8 + lun_count * 8);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(spc_emulate_report_luns);
+@@ -1273,7 +1273,7 @@ EXPORT_SYMBOL(spc_emulate_report_luns);
+ static sense_reason_t
+ spc_emulate_testunitready(struct se_cmd *cmd)
+ {
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+index d31ed071cb08..44d76c304701 100644
+--- a/drivers/target/target_core_xcopy.c
++++ b/drivers/target/target_core_xcopy.c
+@@ -1011,7 +1011,7 @@ static sense_reason_t target_rcr_operating_parameters(struct se_cmd *se_cmd)
+ 	put_unaligned_be32(42, &p[0]);
+ 
+ 	transport_kunmap_data_sg(se_cmd);
+-	target_complete_cmd(se_cmd, GOOD);
++	target_complete_cmd(se_cmd, SAM_STAT_GOOD);
+ 
+ 	return TCM_NO_SENSE;
+ }
 -- 
 2.29.2
 
