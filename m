@@ -2,149 +2,142 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F74CC433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 16:45:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA965C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 16:56:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E01AA61077
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 16:45:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C72AE613B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 16:56:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237865AbhD0Qpq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Apr 2021 12:45:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56910 "EHLO
+        id S236652AbhD0Q5O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Apr 2021 12:57:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236397AbhD0Qpm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Apr 2021 12:45:42 -0400
-Received: from mail-qt1-x831.google.com (mail-qt1-x831.google.com [IPv6:2607:f8b0:4864:20::831])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EF4BC061574
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Apr 2021 09:44:59 -0700 (PDT)
-Received: by mail-qt1-x831.google.com with SMTP id l1so4800817qtr.12
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Apr 2021 09:44:59 -0700 (PDT)
+        with ESMTP id S236647AbhD0Q5M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Apr 2021 12:57:12 -0400
+Received: from mail-qt1-x82b.google.com (mail-qt1-x82b.google.com [IPv6:2607:f8b0:4864:20::82b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A090C061574
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Apr 2021 09:56:29 -0700 (PDT)
+Received: by mail-qt1-x82b.google.com with SMTP id 1so44641253qtb.0
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Apr 2021 09:56:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:references:in-reply-to:mime-version:thread-index:date
          :message-id:subject:to:cc;
-        bh=VCJBsbPrxgLKA2utXwpx9Yl+4Y3SZCaExPIHIQptJxI=;
-        b=J6qxo6d7MhEYjq5DpF/Vk33Gwv5pOjPsB6/EcpEsDvsIvCJY+sB7pwxWp4Iz1kwa3K
-         nGwJLPppwqN921+W4KhSc4MmVSdlCT6pv3svrHXsVyMghjqfgFNeAnb3nsuUrpje4gpN
-         3wwjzl4tAY0LgHAzTgBtxZHBxYQcPVdFaPFcI=
+        bh=lg/T59gjtgNpw39k/tmbsI+5bKJzVFYsLpBEL32cQaQ=;
+        b=FOWtyYa9FZ+QKrtl71cPlh2q4LzSEO5Q933ES//YEX3Ttm0RzwR8Z/UZB+4HBfbkZz
+         brAbPpC2qjMBcPjlPXkzMpkTti0Qf5kqTK6pa3auHP5ijCsaMNvX5K5pMz2tSOy4cncv
+         ZSuo4h0DYXOmholFHs5CXFQt4YhQsgZl9zRfA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:references:in-reply-to:mime-version
          :thread-index:date:message-id:subject:to:cc;
-        bh=VCJBsbPrxgLKA2utXwpx9Yl+4Y3SZCaExPIHIQptJxI=;
-        b=cvJtyRsGnB6ccreicsR6ufQcrPm2w9JbK7IEmTqYBQTloGdYGkXh4nJR6ahLdO6oWQ
-         Vh/6HDqOQeyGY2okInxo3LXRtQbM/DCXvlDl1AXLEnAj52fbHxjuoC/WwmBgHdMQDf9+
-         OVHrl0utPmJ0+v1QBmHlqPEU9mJeJdHs1qCg7yzhMlgi+DDKFezgNjjiEUBWWcyRfvEj
-         2YR3qeoMAKzqc+Uc1/yJ4ZtEx3p8Ushk8uyya2HIlUh1fG5cp/pVCwbAevXLZvt7P3fA
-         RJrkCbHqrh+OvD3gdvynXR45E25gibkCJOMIJJhNJRlbNcQ7Go7emtA1H+xPXauqZuF2
-         aQ3g==
-X-Gm-Message-State: AOAM531MCxmEivq2T/SQuBfGdyceIqiHewIGHWZo6jI+8F9XtP1dncEa
-        oG5rtHSiiTQCCaZRjOzKSxQphU2XnSJaOui+BJcLSrC9/eg=
-X-Google-Smtp-Source: ABdhPJzXLfQJuSVFU2ZEOvQsSu5C1/CrKRdhD8Yd3HgE2CyTuSAmymTMSEkmcHkDpSGJcym/jrfPDxt0NP1AtobR0uU=
-X-Received: by 2002:ac8:5d88:: with SMTP id d8mr22828383qtx.387.1619541898057;
- Tue, 27 Apr 2021 09:44:58 -0700 (PDT)
+        bh=lg/T59gjtgNpw39k/tmbsI+5bKJzVFYsLpBEL32cQaQ=;
+        b=G35tMqlR/Fx+J0+sFTx94IY4HnU+MZ4bJxTUIA/Zu1muUWJH0tziZ6wcMaAC9foTOu
+         SvtRJX5q+HNyLunvByNawtVYJ6wRWD+Wx59FXQbTvVP1u2pmCug60Sbc9ufrnJ/ChZda
+         GkzGTuLN2Eq5Ztb1/4eOYYJ3ATnWmMZ4Rw/yQW4wVT1AjTVVDIsbzyN7uMycI9QqnPZs
+         lFEKMjCVx4VBvq0cMNwtfG+x5oLZm/LFpWEWcHraB9v9hWCH/Yv9BJ7KyyZsNteG9/pP
+         qFt+2+1ofC2oUGdpydFI5NQzpNyaqy+F1b/01KRn36TLTrBlQX1JvfNBSIcu/sefA4Ho
+         lB7w==
+X-Gm-Message-State: AOAM531gTorSP2N3oj5O8OJaLZOtjYFbryxnPLpjP5oCriZXFhHiQDSh
+        bIqd28tKJxPZ5bCiiEiYsqCe7VqUzYDGb5gXTIyVy3+fXC4=
+X-Google-Smtp-Source: ABdhPJwHbfMyRnaP8DrWt2D62XOxHsM7GV2j6mbK+Fwr3ldTL6FBZXQ1gPh2wnQuNMqjl+sGE+RGSQzHcUngrkRnca4=
+X-Received: by 2002:ac8:5d88:: with SMTP id d8mr22876213qtx.387.1619542588433;
+ Tue, 27 Apr 2021 09:56:28 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 References: <20210419110156.1786882-1-kashyap.desai@broadcom.com>
- <20210419110156.1786882-5-kashyap.desai@broadcom.com> <128bcfe2-cd96-f90d-690e-8f2d075279e6@suse.de>
-In-Reply-To: <128bcfe2-cd96-f90d-690e-8f2d075279e6@suse.de>
+ <20210419110156.1786882-14-kashyap.desai@broadcom.com> <01ed7a60-127d-a88b-716e-a8b1e2974620@suse.de>
+In-Reply-To: <01ed7a60-127d-a88b-716e-a8b1e2974620@suse.de>
 MIME-Version: 1.0
 X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQIA/XT3c415OaY1ygHMgGHDvdQMAADYtaXKAltenCSqW2pZgA==
-Date:   Tue, 27 Apr 2021 22:14:55 +0530
-Message-ID: <112865784f146b4a12eca750e017547b@mail.gmail.com>
-Subject: RE: [PATCH v3 04/24] mpi3mr: add support of queue command processing
+Thread-Index: AQIA/XT3c415OaY1ygHMgGHDvdQMAAG064kLAZ49FFmqWnbTUA==
+Date:   Tue, 27 Apr 2021 22:26:26 +0530
+Message-ID: <32c85acf5ebef9e63fd136b03690b0d3@mail.gmail.com>
+Subject: RE: [PATCH v3 13/24] mpi3mr: implement scsi error handler hooks
 To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         Steve Hagan <steve.hagan@broadcom.com>,
         Peter Rivera <peter.rivera@broadcom.com>,
         mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        thenzl@redhat.com
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000008f2e8e05c0f6fb5e"
+        boundary="000000000000b4030d05c0f724c2"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000008f2e8e05c0f6fb5e
+--000000000000b4030d05c0f724c2
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
 > > +/**
-> > + * mpi3mr_scmd_from_host_tag - Get SCSI command from host tag
+> > + * mpi3mr_print_response_code - print TM response as a string
 > > + * @mrioc: Adapter instance reference
-> > + * @host_tag: Host tag
-> > + * @qidx: Operational queue index
+> > + * @resp_code: TM response code
 > > + *
-> > + * Identify the block tag from the host tag and queue index and
-> > + * retrieve associated scsi command using scsi_host_find_tag().
+> > + * Print TM response code as a readable string.
 > > + *
-> > + * Return: SCSI command reference or NULL.
+> > + * Return: Nothing.
 > > + */
-> > +static struct scsi_cmnd *mpi3mr_scmd_from_host_tag(
-> > +	struct mpi3mr_ioc *mrioc, u16 host_tag, u16 qidx) {
-> > +	struct scsi_cmnd *scmd =3D NULL;
-> > +	struct scmd_priv *priv =3D NULL;
-> > +	u32 unique_tag =3D host_tag - 1;
+> > +static void mpi3mr_print_response_code(struct mpi3mr_ioc *mrioc, u8
+> > +resp_code) {
+> > +	char *desc;
 > > +
-> > +	if (WARN_ON(host_tag > mrioc->max_host_ios))
-> > +		goto out;
-> > +
-> > +	unique_tag |=3D (qidx << BLK_MQ_UNIQUE_TAG_BITS);
-> > +
-> > +	scmd =3D scsi_host_find_tag(mrioc->shost, unique_tag);
-> > +	if (scmd) {
-> > +		priv =3D scsi_cmd_priv(scmd);
-> > +		if (!priv->in_lld_scope)
-> > +			scmd =3D NULL;
+> > +	switch (resp_code) {
+> > +	case MPI3MR_RSP_TM_COMPLETE:
+> > +		desc =3D "task management request completed";
+> > +		break;
+> > +	case MPI3MR_RSP_INVALID_FRAME:
+> > +		desc =3D "invalid frame";
+> > +		break;
+> > +	case MPI3MR_RSP_TM_NOT_SUPPORTED:
+> > +		desc =3D "task management request not supported";
+> > +		break;
+> > +	case MPI3MR_RSP_TM_FAILED:
+> > +		desc =3D "task management request failed";
+> > +		break;
+> > +	case MPI3MR_RSP_TM_SUCCEEDED:
+> > +		desc =3D "task management request succeeded";
+> > +		break;
+> > +	case MPI3MR_RSP_TM_INVALID_LUN:
+> > +		desc =3D "invalid lun";
+> > +		break;
+> > +	case MPI3MR_RSP_TM_OVERLAPPED_TAG:
+> > +		desc =3D "overlapped tag attempted";
+> > +		break;
+> > +	case MPI3MR_RSP_IO_QUEUED_ON_IOC:
+> > +		desc =3D "task queued, however not sent to target";
+> > +		break;
+> > +	default:
+> > +		desc =3D "unknown";
+> > +		break;
 > > +	}
 >
-> That, I guess, is wrong.
->
-> And 'real' unique tag (ie encoding the hwq num and the tag) only makes
-> sense
-> if you have _separate_ tag pools per queue.
-> As your HBA supports only a single tag space _per HBA_ that would mean
-> that
-> you would have to _split_ that pool between hardware queues.
+> You could use a mapping structure here instead of the switch, right?
 
 Hannes -
 
-In current series, We have separate_ tag pools per queue.  There are two
-stuffs in this driver/hw which is not matching with multiqueue support of
-NVMe native.
-1. Memory usage is too high and because of that we have segmented queue
-support.
-We are detecting queue full per operation queue which is unlikely event but
-we wanted to keep it for some time. We will revisit this part once h/w
-product goes under aggressive testing.
-2. Whatever can_queue value H/W expose is not something per Operation queue=
-,
-but our h/w also do not break even though there are more than can_queue
-command outstanding.
-Actual outstanding per operation queue and controller wide in this h/w is
-not very defined value, but it is too large (much higher higher than
-can_queue) and we have considered this area to handle later.
-
-> Which I don't think you do, as this would lead to a very imbalanced tag
-> usage
-> and ultimately a tag starvation on large systems.
-> Hence each per-HWQ bitmap will cover the _full_ tag space, and the only
-> way
-> to make that work is to use shared hosttags.
-
-In my initial study, I have noticed shared host tag is also giving similar
-performance so we have plan to use shared host tag in future.
-Doing this - We are strictly following can_queue level throttling in SML an=
+I agree. Noted your feedback.
+We have used mapping structure for "mpi3mr_reset_reason" can do similar
+thing here as well. If I can accommodate relevant changes in this series I
+will update the change log.
+I have to change MPI header files (as requested by Christopher and Bart) an=
 d
-no matter how much max h/w really support.
+that is major rework for this patch series.
+I want to avoid any logical changes in V4 post so that I can easily review
+diff between V3 and V4.
 
 Kashyap
 
+>
+> Otherwise:
+>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 >
 > Cheers,
 >
@@ -155,7 +148,7 @@ Kashyap
 > SUSE Software Solutions Germany GmbH, 90409 N=C3=BCrnberg
 > GF: F. Imend=C3=B6rffer, HRB 36809 (AG N=C3=BCrnberg)
 
---0000000000008f2e8e05c0f6fb5e
+--000000000000b4030d05c0f724c2
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -226,13 +219,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFJDnShCypDydmMmoxQLPIfSp0z3
-5MXqtdIDzzZymmz+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDQyNzE2NDQ1OFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJk3YpptjjrbQvqavdMqFpG66Lz9
+7GC7Plq4yQ1lMNPtMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDQyNzE2NTYyOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQCWm8MIYtC74b/lY9VkNr4jstr1FXH4KcspEjilzcpch1d/
-xdHlRhBnOlTPjHsTork/HgExZPHWCSX+aVEktfjlQf54bQx52u14KR9HSv7xuzHLa6S65HK/mffe
-yYEteFjy0SZu5Bfe3eBJMkA4pYJiEMYBvGIACNIy0KbHLb2XdbM1wJAsHODhSy7tK7BAu1olklgd
-D5JGfzvF+lQud5JK5IPiffx0NjLcaXdS5wwtx8ckZ2vwVnpa/ccXrR0hVBtWgQCaklJWLCtFrQFg
-Xeg7xHUaTPZ3VXiGwlMza6nZCKAaWXQFWGxRJToqEqomA6QjQuAr8JOCr/Ta5Gil0lSA
---0000000000008f2e8e05c0f6fb5e--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQAeOUYbdi+w5q794OIpRoRHu46H1bOEzU8P3073sVfFpb4R
+u78mNTkNy5LpbufA3GAqYwDXDF6DozUCkQfaaoUMx1QbtuqRN6BaWmM/gNGOqL7azRLyiyaUJsql
+K6SMo101GcY02lHZDL0mAkI6W/45TdfYSiE9uE8hKfKsHDYhL3EruVFgT+5IdU5HiR7ZIgCqOtBB
+Bc3uXwbg4zpxqRunVwBi8mfXr+bdJeA3nyD1HT7t6KNB1OZcDWSzioxxIoVcEHiIO35xOhC7NBav
+PREKShaxJTQemgtOcH7GdCVDqOjoN2p08KDg4dj3UW/zHNudIx7xB9jyJYHUmy4A5O/d
+--000000000000b4030d05c0f724c2--
