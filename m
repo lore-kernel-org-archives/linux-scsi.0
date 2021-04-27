@@ -2,158 +2,245 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.4 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29362C433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 00:37:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78626C43460
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 05:35:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2FDD61402
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 00:37:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 508ED61426
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 05:35:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236224AbhD1AiB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Apr 2021 20:38:01 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:15138 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230460AbhD1Ah7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Apr 2021 20:37:59 -0400
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210428003713epoutp04c0c8273e1e5691c45555a20ab6bf0036~53ov5iTds1432214322epoutp047
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Apr 2021 00:37:13 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210428003713epoutp04c0c8273e1e5691c45555a20ab6bf0036~53ov5iTds1432214322epoutp047
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1619570233;
-        bh=MyzbAvy2TEp0LhpPA5JdGl6Gnb8RzdSt8fE8YmMeFh0=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=iOwyY8d/uIJTI6hdjweUCDhBU0nlNaJ8cjPsxe9L7JFa8yFFxJA9gatxJfjevEdAg
-         fAE0QWJEs6pGgqy8l+g2ynWEORlD+buSuQbv69/sMcMOGmks8PqCij/O8A3cepdkBN
-         jb3yUE4eM77ha2wUXBXKdRWOCpNs15J0h0NP/b+Y=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20210428003712epcas2p329b19bde528f1ec0ed8ae4fbb4313dce~53ou4AsRF3033430334epcas2p3X;
-        Wed, 28 Apr 2021 00:37:12 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.40.183]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4FVKTK6tPzz4x9Q1; Wed, 28 Apr
-        2021 00:37:09 +0000 (GMT)
-X-AuditID: b6c32a46-e17ff700000025de-1e-6088ae350fc1
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        6C.7A.09694.53EA8806; Wed, 28 Apr 2021 09:37:09 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE: RE: [PATCH v32 4/4] scsi: ufs: Add HPB 2.0 support
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        JinHwan Park <jh.i.park@samsung.com>,
-        Javier Gonzalez <javier.gonz@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        Jaemyung Lee <jaemyung.lee@samsung.com>,
-        Jieon Seol <jieon.seol@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <BL0PR04MB6564B4E309188E320AB258E6FC479@BL0PR04MB6564.namprd04.prod.outlook.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20210428003709epcms2p2e183e74e64b388d5feb5dd45396393dc@epcms2p2>
-Date:   Wed, 28 Apr 2021 09:37:09 +0900
-X-CMS-MailID: 20210428003709epcms2p2e183e74e64b388d5feb5dd45396393dc
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrOJsWRmVeSWpSXmKPExsWy7bCmqa7puo4EgzPNZhYP5m1js9jbdoLd
-        4uXPq2wW0z78ZLb4tH4Zq8XLQ5oWuw4eZLNY9SDconnxejaLOWcbmCx6+7eyWWw+uIHZ4vGd
-        z+wWi25sY7Lo/9fOYrHts6DF8ZPvGC0u75rDZtF9fQebxfLj/5gslm69yWjROX0Ni4OYx+Ur
-        3h6X+3qZPHbOusvuMWHRAUaP/XPXsHu0nNzP4vHx6S0Wj74tqxg9Pm+S82g/0M0UwBWVY5OR
-        mpiSWqSQmpecn5KZl26r5B0c7xxvamZgqGtoaWGupJCXmJtqq+TiE6DrlpkD9KaSQlliTilQ
-        KCCxuFhJ386mKL+0JFUhI7+4xFYptSAlp8DQsECvODG3uDQvXS85P9fK0MDAyBSoMiEnY0nn
-        E+aCTu6KuVv2sjYwfmHvYuTkkBAwkXj69gxbFyMXh5DADkaJxqUPgRwODl4BQYm/O4RBTGEB
-        e4kTC8xAyoUElCTWX5wF1iosoCdx6+EaRhCbTUBHYvqJ++wgY0QEfjNLXHw7jRXEYRY4zyyx
-        50Y7I8QyXokZ7U9ZIGxpie3Lt4LFOQViJT7PeAUV15D4sayXGcIWlbi5+i07jP3+2HyoOSIS
-        rffOQtUISjz4uRsqLilxbPcHJgi7XmLrnV+MIEdICPQwShzeeYsVIqEvca1jI9gyXgFfie7e
-        BjCbRUBV4vbjiewgH0sIuEjs+1gIEmYWkJfY/nYOM0iYWUBTYv0ufYgKZYkjt1hgvmrY+Jsd
-        nc0swCfRcfgvXHzHvCdQl6lJrPu5nmkCo/IsREDPQrJrFsKuBYzMqxjFUguKc9NTi40KjJDj
-        dhMjOMVrue1gnPL2g94hRiYOxkOMEhzMSiK8bLtaE4R4UxIrq1KL8uOLSnNSiw8xmgI9OZFZ
-        SjQ5H5hl8kriDU2NzMwMLE0tTM2MLJTEeX+m1iUICaQnlqRmp6YWpBbB9DFxcEo1MG3UcOB6
-        fqTxyi+LrUqPHu6wu/a+Y1OL4VJxu6UPzh8qUDtmk3zDc0lw7LlDStxGH3fv9qk4f39TnYj5
-        ipM8T148i1g6+UBywc1JKc2Ls5/9XmygmP41pSTjOseWzuCntau8eoOc+1/WB2orKC8NOOe1
-        g99GVMejsXrnTLaNDuwueyYXfDxx6NLGBFYFFtGgDtVZjrc0F5pqRNSrWi+w0pOOPCu+YrtT
-        p5VE1sruNYxXLFeFc8utMTt/kPcb541TgdPe9p4JfNgd+JfT5NATz5VJmf84Z5dvnScwuSFT
-        Za5yfMfqWIMn51PcnlysOvX8esa5yfysIhyaWfOVWr/7PWvz7frAd7jqZ0TluQW72pVYijMS
-        DbWYi4oTAaDebnJ6BAAA
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210331011526epcms2p37684869a9781d1eb45bfcbfe9babd217
-References: <BL0PR04MB6564B4E309188E320AB258E6FC479@BL0PR04MB6564.namprd04.prod.outlook.com>
-        <20210331011526epcms2p37684869a9781d1eb45bfcbfe9babd217@epcms2p3>
-        <20210331011839epcms2p45d3d059fcd9e85a548014a79c3f388bc@epcms2p4>
-        <CGME20210331011526epcms2p37684869a9781d1eb45bfcbfe9babd217@epcms2p2>
+        id S235712AbhD1FgU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Apr 2021 01:36:20 -0400
+Received: from saphodev.broadcom.com ([192.19.11.229]:58622 "EHLO
+        relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229437AbhD1FgT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Apr 2021 01:36:19 -0400
+X-Greylist: delayed 503 seconds by postgrey-1.27 at vger.kernel.org; Wed, 28 Apr 2021 01:36:18 EDT
+Received: from localhost.localdomain (unknown [10.157.2.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay.smtp-ext.broadcom.com (Postfix) with ESMTPS id 45660E927D;
+        Tue, 27 Apr 2021 22:27:14 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 45660E927D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1619587636;
+        bh=BsV9KqIXrVGA5Fhq+mKNOzUnqup1sAIVRln0rFmCyn4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=X0wqO6FDds38IBvcf/feJBu0LnJcfX1JOaQLHcGn4QpP4FTx/N1dAkN3wbwwaemOr
+         B2oMg9GqSjD48zzybTTRpAaVynGyvvPAD+NQyXN9gdmNocwtpA60UEwjXeBnXQitDA
+         dTmpFgqEhXwgCJQl0xfyLReiVUVz8FdkNB9awWRs=
+From:   Muneendra <muneendra.kumar@broadcom.com>
+To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        tj@kernel.org, linux-nvme@lists.infradead.org, hare@suse.de
+Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
+        Muneendra <muneendra.kumar@broadcom.com>
+Subject: [PATCH v10 02/13] blkcg: Added a app identifier support for blkcg
+Date:   Wed, 28 Apr 2021 04:04:46 +0530
+Message-Id: <1619562897-14062-3-git-send-email-muneendra.kumar@broadcom.com>
+X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1619562897-14062-1-git-send-email-muneendra.kumar@broadcom.com>
+References: <1619562897-14062-1-git-send-email-muneendra.kumar@broadcom.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Avri,
+This Patch added a unique application identifier i.e
+fc_app_id  member in blkcg which allows identification of traffic
+sources at an individual cgroup based Applications
+(ex:virtual machine (VM))level in both host and
+fabric infrastructure.
 
->> @@ -1653,6 +2148,7 @@ void ufshpb_destroy_lu(struct ufs_hba *hba, struct
->> scsi_device *sdev)
->> 
->>         ufshpb_cancel_jobs(hpb);
->> 
->> +       ufshpb_pre_req_mempool_destroy(hpb);
->>         ufshpb_destroy_region_tbl(hpb);
->> 
->>         kmem_cache_destroy(hpb->map_req_cache);
->> @@ -1692,6 +2188,7 @@ static void ufshpb_hpb_lu_prepared(struct ufs_hba
->> *hba)
->>                         ufshpb_set_state(hpb, HPB_PRESENT);
->>                         if ((hpb->lu_pinned_end - hpb->lu_pinned_start) > 0)
->>                                 queue_work(ufshpb_wq, &hpb->map_work);
->> +                       ufshpb_issue_umap_all_req(hpb);
->>                 } else {
->>                         dev_err(hba->dev, "destroy HPB lu %d\n", hpb->lun);
->>                         ufshpb_destroy_lu(hba, sdev);
->Here in lu_prepare, ufshpb_remove can be called without destroy_lu,
->and while there are jobs running.
+Added a new function blkcg_get_fc_appid to
+grab the app identifier associated with a bio.
 
-If init_success is false, ufshpb_destroy_lu and ufshpb_remove are called.
-If init_success is true, ufshpb_destroy_lu and ufshpb_remove are not called
-in this function.
+Added a new function blkcg_set_fc_appid to
+set the app identifier in a blkcgrp associated with cgroup id
 
-So I think it is not problem.
+Added a new config BLK_CGROUP_FC_APPID and moved the changes
+under this config
 
-Thanks,
-Daejun
+Merged the patch 16 of previous version in which we
+added a new config FC_APPID to select BLK_CGROUP_FC_APPID which Enable
+support to track FC io Traffic.
 
->How about calling destroy_lu as part of ufshpb_remove?
->Calling it again when __scsi_remove_device, hostdata is already null so it won't matter.
-> 
->Again, only after we know where all this is going to.
-> 
->Thanks,
->Avri
-> 
-> 
->  
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
+
+---
+v10:
+No change
+
+v9:
+Merged patch16 of previosu version to this patch
+where we are using Kconfig settings
+
+v8:
+No change
+
+v7:
+Modified the Kconfig file
+
+v6:
+Modified the Kconfig file as per standard specified
+in Documentation/process/coding-style.rst
+
+v5:
+Renamed the arguments appropriatley
+Renamed APPID_LEN  to FC_APPID_LEN
+Moved the input validation at the begining of the function
+Modified the comments
+
+v4:
+No change
+
+v3:
+Renamed the functions and app_id to more specific
+
+Addressed the reference leaks in blkcg_set_app_identifier
+
+Added a new config BLK_CGROUP_FC_APPID and moved the changes
+under this config
+
+Added blkcg_get_fc_appid,blkcg_set_fc_appid as inline functions
+
+v2:
+renamed app_identifier to app_id
+removed the  sysfs interface blkio.app_identifie under
+---
+ block/Kconfig              |  9 ++++++
+ drivers/scsi/Kconfig       | 13 +++++++++
+ include/linux/blk-cgroup.h | 56 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 78 insertions(+)
+
+diff --git a/block/Kconfig b/block/Kconfig
+index a2297edfdde8..03886d105301 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -144,6 +144,15 @@ config BLK_CGROUP_IOLATENCY
+ 
+ 	Note, this is an experimental interface and could be changed someday.
+ 
++config BLK_CGROUP_FC_APPID
++	bool "Enable support to track FC I/O Traffic across cgroup applications"
++	depends on BLK_CGROUP=y
++	help
++	  Enabling this option enables the support to track FC I/O traffic across
++	  cgroup applications. It enables the Fabric and the storage targets to
++	  identify, monitor, and handle FC traffic based on VM tags by inserting
++	  application specific identification into the FC frame.
++
+ config BLK_CGROUP_IOCOST
+ 	bool "Enable support for cost model based cgroup IO controller"
+ 	depends on BLK_CGROUP=y
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 06b87c7f6bab..20aa1536a3ba 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -235,6 +235,19 @@ config SCSI_FC_ATTRS
+ 	  each attached FiberChannel device to sysfs, say Y.
+ 	  Otherwise, say N.
+ 
++config FC_APPID
++	bool "Enable support to track FC I/O Traffic"
++	depends on BLOCK && BLK_CGROUP
++	depends on SCSI
++	select BLK_CGROUP_FC_APPID
++	default y
++	help
++	  If you say Y here, it enables the support to track
++	  FC I/O traffic over fabric. It enables the Fabric and the
++	  storage targets to identify, monitor, and handle FC traffic
++	  based on VM tags by inserting application specific
++	  identification into the FC frame.
++
+ config SCSI_ISCSI_ATTRS
+ 	tristate "iSCSI Transport Attributes"
+ 	depends on SCSI && NET
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index b9f3c246c3c9..9204f8f8a932 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -30,6 +30,8 @@
+ 
+ /* Max limits for throttle policy */
+ #define THROTL_IOPS_MAX		UINT_MAX
++#define FC_APPID_LEN              129
++
+ 
+ #ifdef CONFIG_BLK_CGROUP
+ 
+@@ -55,6 +57,9 @@ struct blkcg {
+ 	struct blkcg_policy_data	*cpd[BLKCG_MAX_POLS];
+ 
+ 	struct list_head		all_blkcgs_node;
++#ifdef CONFIG_BLK_CGROUP_FC_APPID
++	char                            fc_app_id[FC_APPID_LEN];
++#endif
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	struct list_head		cgwb_list;
+ #endif
+@@ -660,4 +665,55 @@ static inline void blk_cgroup_bio_start(struct bio *bio) { }
+ 
+ #endif	/* CONFIG_BLOCK */
+ #endif	/* CONFIG_BLK_CGROUP */
++
++#ifdef CONFIG_BLK_CGROUP_FC_APPID
++/*
++ * Sets the fc_app_id field associted to blkcg
++ * @app_id: application identifier
++ * @cgrp_id: cgroup id
++ * @app_id_len: size of application identifier
++ */
++static inline int blkcg_set_fc_appid(char *app_id, u64 cgrp_id, size_t app_id_len)
++{
++	struct cgroup *cgrp;
++	struct cgroup_subsys_state *css;
++	struct blkcg *blkcg;
++	int ret  = 0;
++
++	if (app_id_len > FC_APPID_LEN)
++		return -EINVAL;
++
++	cgrp = cgroup_get_from_id(cgrp_id);
++	if (!cgrp)
++		return -ENOENT;
++	css = cgroup_get_e_css(cgrp, &io_cgrp_subsys);
++	if (!css) {
++		ret = -ENOENT;
++		goto out_cgrp_put;
++	}
++	blkcg = css_to_blkcg(css);
++	strlcpy(blkcg->fc_app_id, app_id, app_id_len);
++	css_put(css);
++out_cgrp_put:
++	cgroup_put(cgrp);
++	return ret;
++}
++
++/**
++ * blkcg_get_fc_appid - get the fc app identifier associated with a bio
++ * @bio: target bio
++ *
++ * On success it returns the fc_app_id on failure it returns NULL
++ */
++static inline char *blkcg_get_fc_appid(struct bio *bio)
++{
++	if (bio && bio->bi_blkg &&
++		(bio->bi_blkg->blkcg->fc_app_id[0] != '\0'))
++		return bio->bi_blkg->blkcg->fc_app_id;
++	return NULL;
++}
++#else
++static inline int blkcg_set_fc_appid(char *buf, u64 id, size_t len) { return -EINVAL; }
++static inline char *blkcg_get_fc_appid(struct bio *bio) { return NULL; }
++#endif /*CONFIG_BLK_CGROUP_FC_APPID*/
+ #endif	/* _BLK_CGROUP_H */
+-- 
+2.26.2
+
