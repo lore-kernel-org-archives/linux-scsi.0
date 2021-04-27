@@ -2,94 +2,172 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9355C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 05:09:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 179ECC433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 06:11:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB58E613BE
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 05:09:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D164D61165
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 06:11:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229578AbhD0FK2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Apr 2021 01:10:28 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:51902 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229490AbhD0FK1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Apr 2021 01:10:27 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13R51QAx016592;
-        Mon, 26 Apr 2021 22:09:42 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=pfpt0220;
- bh=TUxOhcWJxDtRcDztgFpGAN123HyuwZWq64GDmoY0rVU=;
- b=eE68v9uSWD5Xpi11gUMialIb+ce0fF+Pspb0J4oNX/ROQXdbkVb+NdfBG/89H0vyt+g/
- pFjYSwllSAEqF/itv+/hOWr23a0z29pVdek4TSctWhy6vnlrDpnkkyMApTw8N1OV22C/
- cOTNE9gvsoUwD7Ft83HqCCfVA6irtfrMTIRBRIV5mxC3sdMmjxvJLt5YEQV5s1n9Cr2C
- icpyH/WUye2jnBYXIzpZ/OkKD4+gnH6pdxk9VFl/PGTVUODRMcF6FbPORqvG5AFA+fBr
- /7KLOzvNqKIqMiZd1uxsJdVSrBxW27in/3vJXOgPtH5L8V2UV3Yi0J5c2hy0VyCDPVEC sg== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 385tvvk3fb-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 26 Apr 2021 22:09:42 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 26 Apr
- 2021 22:09:41 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 26 Apr 2021 22:09:41 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 34A3A3F7041;
-        Mon, 26 Apr 2021 22:09:41 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 13R59db1007305;
-        Mon, 26 Apr 2021 22:09:39 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 13R59cK4007304;
-        Mon, 26 Apr 2021 22:09:38 -0700
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>, <loberman@redhat.com>
-Subject: [PATCH 1/1] qla2xxx: Add marginal path support
-Date:   Mon, 26 Apr 2021 22:09:14 -0700
-Message-ID: <20210427050914.7270-1-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
+        id S229977AbhD0GLs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Apr 2021 02:11:48 -0400
+Received: from mx2.suse.de ([195.135.220.15]:52044 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229578AbhD0GLr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 27 Apr 2021 02:11:47 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 05ED5AE89;
+        Tue, 27 Apr 2021 06:11:04 +0000 (UTC)
+Subject: Re: [PATCH 24/39] wd33c93: translate message byte to host byte
+To:     Finn Thain <fthain@fastmail.com.au>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>
+References: <20210423113944.42672-1-hare@suse.de>
+ <20210423113944.42672-25-hare@suse.de>
+ <496782e-7377-ac6b-874-213f4e520b6@nippy.intranet>
+ <46bf6a5b-966c-f379-059f-3fafce82692a@suse.de>
+ <3d527f20-fc8a-9ade-7c6-58d7d2e86d22@nippy.intranet>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <86d03daf-a95d-b845-0ff4-4269eccd0be7@suse.de>
+Date:   Tue, 27 Apr 2021 08:11:03 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-GUID: ADoaFjviaQNv4PhAre-ech8uy5RJzI3S
-X-Proofpoint-ORIG-GUID: ADoaFjviaQNv4PhAre-ech8uy5RJzI3S
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-04-27_01:2021-04-26,2021-04-27 signatures=0
+In-Reply-To: <3d527f20-fc8a-9ade-7c6-58d7d2e86d22@nippy.intranet>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bikash Hazarika <bhazarika@marvell.com>
+On 4/27/21 6:39 AM, Finn Thain wrote:
+> On Mon, 26 Apr 2021, Hannes Reinecke wrote:
+> 
+>> On 4/24/21 11:20 AM, Finn Thain wrote:
+>>> On Fri, 23 Apr 2021, Hannes Reinecke wrote:
+>>>
+>>>> Instead of setting the message byte translate it to the appropriate
+>>>> host byte. As error recovery would return DID_ERROR for any non-zero
+>>>> message byte the translation doesn't change the error handling.
+>>>>
+>>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>>> ---
+>>>>   drivers/scsi/wd33c93.c | 46 ++++++++++++++++++++++++------------------
+>>>>   1 file changed, 26 insertions(+), 20 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+>>>> index a23277bb870e..187b363db00e 100644
+>>>> --- a/drivers/scsi/wd33c93.c
+>>>> +++ b/drivers/scsi/wd33c93.c
+>>>> @@ -1176,13 +1176,14 @@ wd33c93_intr(struct Scsi_Host *instance)
+>>>>   			if (cmd->SCp.Status == ILLEGAL_STATUS_BYTE)
+>>>>   				cmd->SCp.Status = lun;
+>>>>   			if (cmd->cmnd[0] == REQUEST_SENSE
+>>>> -			    && cmd->SCp.Status != SAM_STAT_GOOD)
+>>>> -				cmd->result =
+>>>> -				    (cmd->
+>>>> -				     result & 0x00ffff) | (DID_ERROR << 16);
+>>>> -			else
+>>>> -				cmd->result =
+>>>> -				    cmd->SCp.Status | (cmd->SCp.Message << 8);
+>>>> +			    && cmd->SCp.Status != SAM_STAT_GOOD) {
+>>>> +				set_host_byte(cmd, DID_ERROR);
+>>>> +				set_status_byte(cmd, SAM_STAT_GOOD);
+>>>> +			} else {
+>>>> +				set_host_byte(cmd, DID_OK);
+>>>> +				translate_msg_byte(cmd, cmd->SCp.Message);
+>>>> +				set_status_byte(cmd, cmd->SCp.Status);
+>>>> +			}
+>>>>   			cmd->scsi_done(cmd);
+>>>>   
+>>>>   /* We are no longer  connected to a target - check to see if
+>>>> @@ -1262,11 +1263,15 @@ wd33c93_intr(struct Scsi_Host *instance)
+>>>>   		    hostdata->connected = NULL;
+>>>>   		hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
+>>>>   		hostdata->state = S_UNCONNECTED;
+>>>> -		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != SAM_STAT_GOOD)
+>>>> -			cmd->result =
+>>>> -			    (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+>>>> -		else
+>>>> -			cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
+>>>> +		if (cmd->cmnd[0] == REQUEST_SENSE &&
+>>>> +		    cmd->SCp.Status != SAM_STAT_GOOD) {
+>>>> +			set_host_byte(cmd, DID_ERROR);
+>>>> +			set_status_byte(cmd, SAM_STAT_GOOD);
+>>>> +		} else {
+>>>> +			set_host_byte(cmd, DID_OK);
+>>>> +			translate_msg_byte(cmd, cmd->SCp.Message);
+>>>> +			set_status_byte(cmd, cmd->SCp.Status);
+>>>> +		}
+>>>>   		cmd->scsi_done(cmd);
+>>>>   
+>>>>   /* We are no longer connected to a target - check to see if
+>>>> @@ -1295,14 +1300,15 @@ wd33c93_intr(struct Scsi_Host *instance)
+>>>>   			hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
+>>>>   			hostdata->state = S_UNCONNECTED;
+>>>>   			DB(DB_INTR, printk(":%d", cmd->SCp.Status))
+>>>> -			    if (cmd->cmnd[0] == REQUEST_SENSE
+>>>> -				&& cmd->SCp.Status != SAM_STAT_GOOD)
+>>>> -				cmd->result =
+>>>> -				    (cmd->
+>>>> -				     result & 0x00ffff) | (DID_ERROR << 16);
+>>>> -			else
+>>>> -				cmd->result =
+>>>> -				    cmd->SCp.Status | (cmd->SCp.Message << 8);
+>>>> +			if (cmd->cmnd[0] == REQUEST_SENSE
+>>>> +			    && cmd->SCp.Status != SAM_STAT_GOOD) {
+>>>> +				set_host_byte(cmd, DID_ERROR);
+>>>> +				set_status_byte(cmd, SAM_STAT_GOOD);
+>>>> +			} else {
+>>>> +				set_host_byte(cmd, DID_OK);
+>>>> +				translate_msg_byte(cmd, cmd->SCp.Message);
+>>>> +				set_status_byte(cmd, cmd->SCp.Status);
+>>>> +			}
+>>>>   			cmd->scsi_done(cmd);
+>>>>   			break;
+>>>>   		case S_PRE_TMP_DISC:
+>>>>
+>>>
+>>> I think these three hunks all have the same mistake, which would force
+>>> SAM_STAT_GOOD.
+>>>
+>> Which mistake was that again?
+>>
+> 
+> I noticed that the old code,
+> 	cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+> preserves the status byte whereas the new code clobbers it. This was not
+> mentioned in the commit log.
+> 
+> Now that I've looked a bit deeper and failed to find any
+> scsi_eh_prep_cmnd()/scsi_eh_restore_cmnd() that would complicate the
+> cmd->cmnd[0] == REQUEST_SENSE comparison, I now think clobbering the
+> status byte is harmless (though redundant).
+> 
+> So please disregard my objection. Sorry for the noise.
+> 
+Ah. Right. Guess we are both right, then.
 
-Added support for eh_should_retry_cmd callback in qla2xxx host template.
+Yes, you are right in your objection that my code clobbers the status 
+byte in the DID_ERROR case.
+But that would be irrelevant as SCSI EH will disregard the status code 
+anyway if the host byte is set.
+But in either case, I'll be fixup up the patch to not clobber the status 
+code here.
 
-Signed-off-by: Bikash Hazarika <bhazarika@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_os.c | 1 +
- 1 file changed, 1 insertion(+)
+Cheers,
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d74c32f84ef5..4eab564ea6a0 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -7707,6 +7707,7 @@ struct scsi_host_template qla2xxx_driver_template = {
- 
- 	.eh_timed_out		= fc_eh_timed_out,
- 	.eh_abort_handler	= qla2xxx_eh_abort,
-+	.eh_should_retry_cmd	= fc_eh_should_retry_cmd,
- 	.eh_device_reset_handler = qla2xxx_eh_device_reset,
- 	.eh_target_reset_handler = qla2xxx_eh_target_reset,
- 	.eh_bus_reset_handler	= qla2xxx_eh_bus_reset,
+Hannes
 -- 
-2.19.0.rc0
-
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
