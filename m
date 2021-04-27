@@ -2,172 +2,152 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 179ECC433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 06:11:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F829C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 07:02:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D164D61165
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 06:11:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0613861076
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Apr 2021 07:02:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229977AbhD0GLs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Apr 2021 02:11:48 -0400
-Received: from mx2.suse.de ([195.135.220.15]:52044 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229578AbhD0GLr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Apr 2021 02:11:47 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 05ED5AE89;
-        Tue, 27 Apr 2021 06:11:04 +0000 (UTC)
-Subject: Re: [PATCH 24/39] wd33c93: translate message byte to host byte
-To:     Finn Thain <fthain@fastmail.com.au>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>
-References: <20210423113944.42672-1-hare@suse.de>
- <20210423113944.42672-25-hare@suse.de>
- <496782e-7377-ac6b-874-213f4e520b6@nippy.intranet>
- <46bf6a5b-966c-f379-059f-3fafce82692a@suse.de>
- <3d527f20-fc8a-9ade-7c6-58d7d2e86d22@nippy.intranet>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <86d03daf-a95d-b845-0ff4-4269eccd0be7@suse.de>
-Date:   Tue, 27 Apr 2021 08:11:03 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
-MIME-Version: 1.0
-In-Reply-To: <3d527f20-fc8a-9ade-7c6-58d7d2e86d22@nippy.intranet>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S231475AbhD0HC7 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Apr 2021 03:02:59 -0400
+Received: from mx3.uni-regensburg.de ([194.94.157.148]:46896 "EHLO
+        mx3.uni-regensburg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229547AbhD0HC6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Apr 2021 03:02:58 -0400
+Received: from mx3.uni-regensburg.de (localhost [127.0.0.1])
+        by localhost (Postfix) with SMTP id 4F22B6000062
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Apr 2021 09:02:14 +0200 (CEST)
+Received: from gwsmtp.uni-regensburg.de (gwsmtp1.uni-regensburg.de [132.199.5.51])
+        by mx3.uni-regensburg.de (Postfix) with ESMTP id 2B481600005E
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Apr 2021 09:02:13 +0200 (CEST)
+Received: from uni-regensburg-smtp1-MTA by gwsmtp.uni-regensburg.de
+        with Novell_GroupWise; Tue, 27 Apr 2021 09:02:12 +0200
+Message-Id: <6087B6F2020000A100040C47@gwsmtp.uni-regensburg.de>
+X-Mailer: Novell GroupWise Internet Agent 18.3.1 
+Date:   Tue, 27 Apr 2021 09:02:10 +0200
+From:   "Ulrich Windl" <Ulrich.Windl@rz.uni-regensburg.de>
+To:     <erwin@erwinvanlonden.net>, <martin.petersen@oracle.com>,
+        <martin.wilck@suse.com>
+Cc:     <dgilbert@interlog.com>, <jejb@linux.vnet.ibm.com>,
+        "systemd-devel@lists.freedesktop.org" 
+        <systemd-devel@lists.freedesktop.org>, <hch@lst.de>,
+        <dm-devel@redhat.com>, <hare@suse.com>,
+        <linux-scsi@vger.kernel.org>
+Subject: Antw: [EXT] Re: [dm-devel] RFC: one more time: SCSI device
+ identification
+References: <c524ce68d9a9582732db8350f8a1def461a1a847.camel@suse.com>
+ <yq135w4cam3.fsf@ca-mkp.ca.oracle.com>
+ <06489ea37311fe7bf73b27a41b5209ee4cca85fe.camel@suse.com>
+ <yq1pmynt6f6.fsf@ca-mkp.ca.oracle.com>
+ <685c40341d2ddef2fe5a54dd656d10104b0c1bfa.camel@suse.com>
+ <yq1im4dre94.fsf@ca-mkp.ca.oracle.com>
+ <e3184501cbf23ab0ae94d664725e72b693c64ba9.camel@suse.com>
+ <6086A0B2020000A100040BBE@gwsmtp.uni-regensburg.de>
+ <59dc346de26997a6b8e3ae3d86d84ada60b3d26b.camel@suse.com>
+ <b5f288fb43bc79e0206794a901aef5b1761813de.camel@erwinvanlonden.net>
+In-Reply-To: <b5f288fb43bc79e0206794a901aef5b1761813de.camel@erwinvanlonden.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/27/21 6:39 AM, Finn Thain wrote:
-> On Mon, 26 Apr 2021, Hannes Reinecke wrote:
-> 
->> On 4/24/21 11:20 AM, Finn Thain wrote:
->>> On Fri, 23 Apr 2021, Hannes Reinecke wrote:
->>>
->>>> Instead of setting the message byte translate it to the appropriate
->>>> host byte. As error recovery would return DID_ERROR for any non-zero
->>>> message byte the translation doesn't change the error handling.
->>>>
->>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
->>>> ---
->>>>   drivers/scsi/wd33c93.c | 46 ++++++++++++++++++++++++------------------
->>>>   1 file changed, 26 insertions(+), 20 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
->>>> index a23277bb870e..187b363db00e 100644
->>>> --- a/drivers/scsi/wd33c93.c
->>>> +++ b/drivers/scsi/wd33c93.c
->>>> @@ -1176,13 +1176,14 @@ wd33c93_intr(struct Scsi_Host *instance)
->>>>   			if (cmd->SCp.Status == ILLEGAL_STATUS_BYTE)
->>>>   				cmd->SCp.Status = lun;
->>>>   			if (cmd->cmnd[0] == REQUEST_SENSE
->>>> -			    && cmd->SCp.Status != SAM_STAT_GOOD)
->>>> -				cmd->result =
->>>> -				    (cmd->
->>>> -				     result & 0x00ffff) | (DID_ERROR << 16);
->>>> -			else
->>>> -				cmd->result =
->>>> -				    cmd->SCp.Status | (cmd->SCp.Message << 8);
->>>> +			    && cmd->SCp.Status != SAM_STAT_GOOD) {
->>>> +				set_host_byte(cmd, DID_ERROR);
->>>> +				set_status_byte(cmd, SAM_STAT_GOOD);
->>>> +			} else {
->>>> +				set_host_byte(cmd, DID_OK);
->>>> +				translate_msg_byte(cmd, cmd->SCp.Message);
->>>> +				set_status_byte(cmd, cmd->SCp.Status);
->>>> +			}
->>>>   			cmd->scsi_done(cmd);
->>>>   
->>>>   /* We are no longer  connected to a target - check to see if
->>>> @@ -1262,11 +1263,15 @@ wd33c93_intr(struct Scsi_Host *instance)
->>>>   		    hostdata->connected = NULL;
->>>>   		hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
->>>>   		hostdata->state = S_UNCONNECTED;
->>>> -		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != SAM_STAT_GOOD)
->>>> -			cmd->result =
->>>> -			    (cmd->result & 0x00ffff) | (DID_ERROR << 16);
->>>> -		else
->>>> -			cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
->>>> +		if (cmd->cmnd[0] == REQUEST_SENSE &&
->>>> +		    cmd->SCp.Status != SAM_STAT_GOOD) {
->>>> +			set_host_byte(cmd, DID_ERROR);
->>>> +			set_status_byte(cmd, SAM_STAT_GOOD);
->>>> +		} else {
->>>> +			set_host_byte(cmd, DID_OK);
->>>> +			translate_msg_byte(cmd, cmd->SCp.Message);
->>>> +			set_status_byte(cmd, cmd->SCp.Status);
->>>> +		}
->>>>   		cmd->scsi_done(cmd);
->>>>   
->>>>   /* We are no longer connected to a target - check to see if
->>>> @@ -1295,14 +1300,15 @@ wd33c93_intr(struct Scsi_Host *instance)
->>>>   			hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
->>>>   			hostdata->state = S_UNCONNECTED;
->>>>   			DB(DB_INTR, printk(":%d", cmd->SCp.Status))
->>>> -			    if (cmd->cmnd[0] == REQUEST_SENSE
->>>> -				&& cmd->SCp.Status != SAM_STAT_GOOD)
->>>> -				cmd->result =
->>>> -				    (cmd->
->>>> -				     result & 0x00ffff) | (DID_ERROR << 16);
->>>> -			else
->>>> -				cmd->result =
->>>> -				    cmd->SCp.Status | (cmd->SCp.Message << 8);
->>>> +			if (cmd->cmnd[0] == REQUEST_SENSE
->>>> +			    && cmd->SCp.Status != SAM_STAT_GOOD) {
->>>> +				set_host_byte(cmd, DID_ERROR);
->>>> +				set_status_byte(cmd, SAM_STAT_GOOD);
->>>> +			} else {
->>>> +				set_host_byte(cmd, DID_OK);
->>>> +				translate_msg_byte(cmd, cmd->SCp.Message);
->>>> +				set_status_byte(cmd, cmd->SCp.Status);
->>>> +			}
->>>>   			cmd->scsi_done(cmd);
->>>>   			break;
->>>>   		case S_PRE_TMP_DISC:
->>>>
->>>
->>> I think these three hunks all have the same mistake, which would force
->>> SAM_STAT_GOOD.
->>>
->> Which mistake was that again?
->>
-> 
-> I noticed that the old code,
-> 	cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
-> preserves the status byte whereas the new code clobbers it. This was not
-> mentioned in the commit log.
-> 
-> Now that I've looked a bit deeper and failed to find any
-> scsi_eh_prep_cmnd()/scsi_eh_restore_cmnd() that would complicate the
-> cmd->cmnd[0] == REQUEST_SENSE comparison, I now think clobbering the
-> status byte is harmless (though redundant).
-> 
-> So please disregard my objection. Sorry for the noise.
-> 
-Ah. Right. Guess we are both right, then.
+>>> Erwin van Londen <erwin@erwinvanlonden.net> schrieb am 27.04.2021 um 05:48 in
+Nachricht
+<b5f288fb43bc79e0206794a901aef5b1761813de.camel@erwinvanlonden.net>:
 
-Yes, you are right in your objection that my code clobbers the status 
-byte in the DID_ERROR case.
-But that would be irrelevant as SCSI EH will disregard the status code 
-anyway if the host byte is set.
-But in either case, I'll be fixup up the patch to not clobber the status 
-code here.
+> 
+> On Mon, 2021-04-26 at 13:16 +0000, Martin Wilck wrote:
+>> On Mon, 2021-04-26 at 13:14 +0200, Ulrich Windl wrote:
+>> > > > 
+>> > > 
+>> > > While we're at it, I'd like to mention another issue: WWID
+>> > > changes.
+>> > > 
+>> > > This is a big problem for multipathd. The gist is that the device
+>> > > identification attributes in sysfs only change after rescanning
+>> > > the
+>> > > device. Thus if a user changes LUN assignments on a storage
+>> > > system,
+>> > > it can happen that a direct INQUIRY returns a different WWID as
+>> > > in
+>> > > sysfs, which is fatal. If we plan to rely more on sysfs for
+>> > > device
+>> > > identification in the future, the problem gets worse. 
+>> > 
+>> > I think many devices rely on the fact that they are identified by
+>> > Vendor/model/serial_nr, because in most professional SAN storage
+>> > systems you
+>> > can pre-set the serial number to a custom value; so if you want a
+>> > new
+>> > disk
+>> > (maybe a snapshot) to be compatible with the old one, just assign
+>> > the
+>> > same
+>> > serial number. I guess that's the idea behind.
+>> 
+>> What you are saying sounds dangerous to me. If a snapshot has the
+>> same
+>> WWID as the device it's a snapshot of, it must not be exposed to any
+>> host(s) at the same time with its origin, otherwise the host may
+>> happily combine it with the origin into one multipath map, and data
+>> corruption will almost certainly result. 
+>> 
+>> My argument is about how the host is supposed to deal with a WWID
+>> change if it happens. Here, "WWID change" means that a given H:C:T:L
+>> suddenly exposes different device designators than it used to, while
+>> this device is in use by a host. Here, too, data corruption is
+>> imminent, and can happen in a blink of an eye. To avoid this, several
+>> things are needed:
+>> 
+>>  1) the host needs to get notified about the change (likely by an UA
+>> of
+>> some sort)
+>>  2) the kernel needs to react to the notification immediately, e.g.
+>> by
+>> blocking IO to the device,
+>>  3) userspace tooling such as udev or multipathd need to figure out
+>> how
+>> to  how to deal with the situation cleanly, and eventually unblock
+>> it.
+>> 
+>> Wrt 1), we can only hope that it's the case. But 2) and 3) need work,
+>> afaics.
+>> 
+> In my view the WWID should never change. If a snapshot is created it
+> should either obtain a new WWID. An example out of a Hitachi array is
+> 
+> Device Identification VPD page:
+> Addressed logical unit:
+> designator type: T10 vendor identification, code set: ASCII
+> vendor id: HITACHI 
+> vendor specific: 50403B050709
+> designator type: NAA, code set: Binary
+> 0x60060e80123b050050403b0500000709
+> 
+> The majority of the naa wwid is tied to the storage subsystem and
+> identifies the vendor oui, model, serial etc. The last 4 in this
+> example indicate the LDEV ID (Sorry mainframe heritage here..). When a
+> snapshot is taken these 4 will change as a new LDEV ID is assigned to
+> the snapshot. This sort of behaviour should be consistent across all
+> storage vendors imho.
 
-Cheers,
+It's getting off-topic, but in automatic desaster recovery scenarios one might want that the "new disk" (maybe a snapshot of the original disk before it got corrupted) looks like the "old disk", so that the OS can boot without needing any adjustments.
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Regards,
+Ulrich
+
+> 
+>> Martin
+>> 
+
+
+
+
