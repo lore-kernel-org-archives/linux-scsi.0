@@ -7,71 +7,71 @@ X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C04FC433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 06:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36823C433B4
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 06:34:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00C51613C8
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 06:30:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1C6C613C8
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 06:34:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235087AbhD1GbS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Apr 2021 02:31:18 -0400
-Received: from de-smtp-delivery-102.mimecast.com ([62.140.7.102]:30832 "EHLO
+        id S232207AbhD1Gfa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Apr 2021 02:35:30 -0400
+Received: from de-smtp-delivery-102.mimecast.com ([194.104.109.102]:33357 "EHLO
         de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230490AbhD1GbR (ORCPT
+        by vger.kernel.org with ESMTP id S229643AbhD1Gf3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Apr 2021 02:31:17 -0400
+        Wed, 28 Apr 2021 02:35:29 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1619591432;
+        t=1619591684;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=MQfORFJWaz096+arte2FN/QM4Fdy9yn/P17UDMSol3s=;
-        b=nNLaATBtk25AX8TCmLCHOuQD2jlRD0e3YlSLnQa2UZldrpqz+sRN1ZpnhVBf7yXFe2KEDk
-        f6kc+f2VYVGR9AOq8u4BsE5BmMnSM/fFzpRdfbL9JzZvTdSW6ccQU1UH21kenGYAbbhlYc
-        Nrk4YoPSTwzRcWpx/BdND4ScWjCaLac=
-Received: from EUR05-VI1-obe.outbound.protection.outlook.com
- (mail-vi1eur05lp2171.outbound.protection.outlook.com [104.47.17.171])
- (Using TLS) by relay.mimecast.com with ESMTP id
- de-mta-24-G3TWNJWXOXigH9w-Zxg-lA-2; Wed, 28 Apr 2021 08:30:30 +0200
-X-MC-Unique: G3TWNJWXOXigH9w-Zxg-lA-2
+        bh=RfqDsENR0IsvXNx8N9GZQptwRsXKZ8RNf6MwOJq5pCQ=;
+        b=h/W17a2SGnEj1c3qLvBPv2ANJt01uQDI0rFm3LiIbRjyyYerlkfYEMZdgjbVXE7xvRwadK
+        1V+wAKbTjBGQAnsNRtUCSarJe1NER71qR8c5CBlKK4QVQJRGeHKFzGFSA8mXGuLaZ/rR/a
+        dWz2+EQis6WE15cp3h1Xaf/raVNf45s=
+Received: from EUR04-DB3-obe.outbound.protection.outlook.com
+ (mail-db3eur04lp2052.outbound.protection.outlook.com [104.47.12.52]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ de-mta-23-0JglE9r4ONyhIgXGgYEieQ-1; Wed, 28 Apr 2021 08:34:43 +0200
+X-MC-Unique: 0JglE9r4ONyhIgXGgYEieQ-1
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LElJ9eaU41Rzio2t96NmRlpKueYo3UzkMWfQL5ZF4rfklV6ERGscZHwAus3qW/1G4hdJtggxC5fh0lXtn2Twg+vuXtLrMrm9F+BSZYC4lgxOCIFqyiSQP9G4D4yZx47S/y5XzUUSnODS7CxThk3n7KTarsD4g35V/qtg1ZA1+ZMhwP5H9CgMt5p7nlxBzca21/3iR0tEDM3lA3JOCfcYegMLhw8SQAxTjRdno/Br5tkoBTcPZFnfqEFzD2gRf+NYynvr741AwoBG8hCQMbi6YG9kRKt5Jhro73mve9zU+crSlsEo6sVJniX8Y9noDJqQFOa00tmAEKBovd8odeP9pw==
+ b=lT0hsNZYM/i9N1Ks3Ztbx8s8JMgkvkAxA7uJJXdTRMbJGE2Qc55PEorxBDKRWK1SngonD37f33KOtpDiXsYUgSCiVZPCpHCqMiyYxgRb2293/u0PPObW84J62cTAHwz5ok+6X6AcjCMytX66otR6Vk5CsbnxPG3kTO6ji8vpwKLsC3GVg4UktRJKKFKTsOWiMjR6gSDFxnwotyKo9kF/2ZrAmYNDybepD+DIIvSmzvC1xui9WymXbBL/JXzDZLvg3VW7ZouKBxERLMil3hP8e3HlX/KVbtr6BEuvmhsc07sKX0m827+i8INYR7cjRyWjjZjx/8avnlsffuLivmvx0g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MQfORFJWaz096+arte2FN/QM4Fdy9yn/P17UDMSol3s=;
- b=LaYekdOBb2vpyfJKYdCIWVXSDFmzw/h0VYfhlEgzKGPKXTWhNzPXNyBm29Ra0UJ7pRJKVB/fdJun6WakiXcZJXdMrx+CUZAIy+0OpR2NW6v8SN22+/hshSZPev89to6r2G5inHuME4/nQ0PPVN6AmYGdRP17cVcM/8V2kAEamjv5zuRZyQtvHQEDZ/ZbKutZZ9fcrmzpxAysRBH/GSI2WhfnrPCKrK7H2T4Ft2abu9NuTW15w6UMxIrIS6jY0MqWgetxujZIOJVSVOaH9AjVeKtJSv/wWlYjrrRiYohSElGTW2CgJvqRxcdjDrTCA4w7qpI8ukpS0EQ//wJCSsVH1A==
+ bh=RfqDsENR0IsvXNx8N9GZQptwRsXKZ8RNf6MwOJq5pCQ=;
+ b=KnqI+6OoyjpIIwxjTJ0pXuuGB6aL5HR//2Ium84mHZDqJHCoXfMwtw3HJKQ+FKhknrtS2KIUG9qjd12V/tPL5KJRbazhUetCpxhzkQ/kVmSEe3yLx3LDXmTz+j1tsuoVv21Mn78aLDJFWXpjgszBeoKLeU5JvRPMndpveaYWnwQDHIJibgjEGLiJkWLaUFeUrNa3sqD1fWDb9Wio8JKy0A8Kqojh3xkWQwLIbehSrmzFyyAHUh7RKlzLI+IJiKhuKyQGMsSPPHwlWS+SFzCyJX6defwzRW1A+613E9syAVoUifb7w5MIs7WThNh4VsvTOtYQ7Nk7sOFfh598y+HDIg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
  dkim=pass header.d=suse.com; arc=none
 Received: from DB8PR04MB6555.eurprd04.prod.outlook.com (2603:10a6:10:103::20)
- by DB9PR04MB8348.eurprd04.prod.outlook.com (2603:10a6:10:25c::7) with
+ by DB6PR0402MB2918.eurprd04.prod.outlook.com (2603:10a6:4:9a::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.23; Wed, 28 Apr
- 2021 06:30:28 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.25; Wed, 28 Apr
+ 2021 06:34:41 +0000
 Received: from DB8PR04MB6555.eurprd04.prod.outlook.com
  ([fe80::cc21:35e2:da7c:1490]) by DB8PR04MB6555.eurprd04.prod.outlook.com
  ([fe80::cc21:35e2:da7c:1490%7]) with mapi id 15.20.4065.027; Wed, 28 Apr 2021
- 06:30:28 +0000
+ 06:34:41 +0000
 From:   Martin Wilck <martin.wilck@suse.com>
-To:     "emilne@redhat.com" <emilne@redhat.com>,
+To:     "erwin@erwinvanlonden.net" <erwin@erwinvanlonden.net>,
+        "hare@suse.de" <hare@suse.de>,
         "Ulrich.Windl@rz.uni-regensburg.de" 
         <Ulrich.Windl@rz.uni-regensburg.de>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     Hannes Reinecke <hare@suse.com>, "hch@lst.de" <hch@lst.de>,
+CC:     "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "dgilbert@interlog.com" <dgilbert@interlog.com>,
         "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>,
         "systemd-devel@lists.freedesktop.org" 
         <systemd-devel@lists.freedesktop.org>,
-        "bmarzins@redhat.com" <bmarzins@redhat.com>
-Subject: Re: [systemd-devel] RFC: one more time: SCSI device identification
-Thread-Topic: [systemd-devel] RFC: one more time: SCSI device identification
-Thread-Index: AQHXOp5vFUyf6ZqRIUKuQYht/xcQrqrIzsGAgAAFOwCAAAJAgIAApHuA
-Date:   Wed, 28 Apr 2021 06:30:28 +0000
-Message-ID: <9248c6df5484a0f5fe4247a1867945ed3902341b.camel@suse.com>
+        Hannes Reinecke <hare@suse.com>, "hch@lst.de" <hch@lst.de>
+Subject: Re: [dm-devel] RFC: one more time: SCSI device identification
+Thread-Topic: [dm-devel] RFC: one more time: SCSI device identification
+Thread-Index: AQHXOp5vFUyf6ZqRIUKuQYht/xcQrqrHuyoAgABJRgCAAALZgIABF3SAgABdJwA=
+Date:   Wed, 28 Apr 2021 06:34:41 +0000
+Message-ID: <643e5f7eb3e2d48517a3288c07af001b30e22075.camel@suse.com>
 References: <c524ce68d9a9582732db8350f8a1def461a1a847.camel@suse.com>
          <yq135w4cam3.fsf@ca-mkp.ca.oracle.com>
          <06489ea37311fe7bf73b27a41b5209ee4cca85fe.camel@suse.com>
@@ -81,119 +81,153 @@ References: <c524ce68d9a9582732db8350f8a1def461a1a847.camel@suse.com>
          <e3184501cbf23ab0ae94d664725e72b693c64ba9.camel@suse.com>
          <6086A0B2020000A100040BBE@gwsmtp.uni-regensburg.de>
          <59dc346de26997a6b8e3ae3d86d84ada60b3d26b.camel@suse.com>
-         <65f66a5e03081dd3b470fa9aeff9a77dbc41743c.camel@redhat.com>
-         <488ef3e7fa0cca4f0a0cb2e9307ddaa08385d3f7.camel@suse.com>
-         <c8ede601244e1710dbf320c33c0f7853e249bbee.camel@redhat.com>
-In-Reply-To: <c8ede601244e1710dbf320c33c0f7853e249bbee.camel@redhat.com>
+         <b5f288fb43bc79e0206794a901aef5b1761813de.camel@erwinvanlonden.net>
+         <15e1a6a493f55051eab844bab2a107f783dc27ee.camel@suse.com>
+         <2a6903e4-ff2b-67d5-e772-6971db8448fb@suse.de>
+         <ff5b30ca02ecfad00097ad5f8b84d053514fb61c.camel@erwinvanlonden.net>
+In-Reply-To: <ff5b30ca02ecfad00097ad5f8b84d053514fb61c.camel@erwinvanlonden.net>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 user-agent: Evolution 3.38.4 
-authentication-results: redhat.com; dkim=none (message not signed)
- header.d=none;redhat.com; dmarc=none action=none header.from=suse.com;
+authentication-results: erwinvanlonden.net; dkim=none (message not signed)
+ header.d=none;erwinvanlonden.net; dmarc=none action=none
+ header.from=suse.com;
 x-originating-ip: [2.202.118.173]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: f52cb152-7805-4fb9-6fb2-08d90a0f1d68
-x-ms-traffictypediagnostic: DB9PR04MB8348:
+x-ms-office365-filtering-correlation-id: e10ded24-c0cf-40b9-d4a8-08d90a0fb446
+x-ms-traffictypediagnostic: DB6PR0402MB2918:
 x-ld-processed: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba,ExtFwd
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DB9PR04MB8348E07A8A4F2A098EE6CF4CFC409@DB9PR04MB8348.eurprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <DB6PR0402MB29182E363482E4F5F807FB08FC409@DB6PR0402MB2918.eurprd04.prod.outlook.com>
 x-ms-oob-tlc-oobclassifiers: OLM:10000;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: Op9rcHLWcEDT3JWIQ6h2V/iQ5RFNmYebVdBGQtnybZmhvh7D3M3g5ChumTj2cUA8dNKFXgxj8CnZ1rh6Qv5YCWvIA0rQ1ysCEUnVO4cSgAZDdEgxB1ec/A8jk644OiRy7+04QYMXLcPufqsF9dCMYOrox7g4XviDUE3UXxOh06sVEN7s/OeV4bhvH4AKQ0/hAdoSJi8akG6Wn8gUKGRT0CijAZxWqecz3wtYmbtnmYuBjRQkGWhII0siuzVaAn8+BhJzaFINhAS+qT1Lj4v3wgpieESzmilPCX2cuZybaX6EyFCJut36p3vN+oDVPY9OZn0sdy++DnAsO6pGTNkaMYVtLM70XbU4DuKWU8/VxEBFZwmM3O5iy/xwX8IniW1YPSiKdBz/SpK1OhBviORlNCNLk67oVT3deQ65YROI5YS7vcEbISmF6n2roTUyimMqTHVUf9X0tmjG2uax41BHVOLdU2AILrBJgSE2gtbwUCohfMqvyBDg/eEj4vR8lgSmcfmmUohOx2d7gV0yFha73pZAzu7N/922o0QmLLMeyfTCstNm9dceFAn66BSrl5BsDuTiyTKr2wkczIOfGkLHdGwTM5tqWM6SJqG+zyr5rW8Y4yKJeduDHcM11zCmyw0lOPyc+VospNTO2xHqhQ5bL/3RXfnej09biFm+SZCCZlw=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DB8PR04MB6555.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(39860400002)(376002)(396003)(346002)(136003)(186003)(2616005)(8936002)(66574015)(966005)(26005)(110136005)(38100700002)(86362001)(71200400001)(7416002)(122000001)(478600001)(54906003)(83380400001)(316002)(44832011)(6512007)(76116006)(66946007)(6486002)(91956017)(2906002)(66556008)(4326008)(8676002)(64756008)(66446008)(66476007)(6506007)(5660300002)(36756003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?iso-8859-15?Q?Nps4zF67FxLDsCtPmMzSBKeVv9u0K2r+KYvg5tJa/lyX6WmgJhdWCy30M?=
- =?iso-8859-15?Q?wUmytiCyLp9hHS5dTOOTAmzqnJQQIiFGxSuIv6hqDfCrLgVy9GpqnvxoJ?=
- =?iso-8859-15?Q?QkHqpbHhIZ7jk2oWGw042llcahc4Foy+ci4RtxP9Y5RuiEoyrjHTYdUPF?=
- =?iso-8859-15?Q?SR3nmY8mfvBm4ioriLkvG8/AclK8AWK+SWU72Qw7k0KsoZWmVmgsw5AUS?=
- =?iso-8859-15?Q?HeBcQAso3Uv9ZnToVFujhaRV5cCcurPi8qAHJA+YKGI7UAZws++gaR4DV?=
- =?iso-8859-15?Q?aH5uq9jEnKVKA3QuZSredekrypL2DGe+z2NFwkv2e+OexQ4wViwhweNIN?=
- =?iso-8859-15?Q?/CzweA4ZyvBRXij31kMrWd/gRS8Lt2vMYYkV61K+oTf4jWfIzjxEwYlKe?=
- =?iso-8859-15?Q?9LdY1flldytCmgLXRzwyr8OUbQ9JBF3A7LYHZQiJQR1bp1rTd+oEpraav?=
- =?iso-8859-15?Q?+ptSYTtbqLJt9s+NvbjZW403w6C0O+SSTQPwVsBzu48vtafkbrrYXkmAa?=
- =?iso-8859-15?Q?vCxCU5YRX9G9+6+nXEXlN2w4UMOj61BqjYeDeF//bNZKDdzGMbPhjj75u?=
- =?iso-8859-15?Q?jCAGsLJkStFoqf/SVJxAnOSMO98vHaxCQ13NWZJyTVuVg/aa42untPRBo?=
- =?iso-8859-15?Q?qAsEBs8OaNpThQXthf43ma36iw/cPbTFLtjP4Eo8KIQ9MBhfs+XV0xR/e?=
- =?iso-8859-15?Q?Xh9Y4BN3PgbJHZrm4QHrs+4HTVwcTtzcolYvgyKZfkWPfFBglGMDDtEAw?=
- =?iso-8859-15?Q?0on0WdMcDgmfT7H7gqNEvhozixFaduH+9UWtYNKqA3q9PKnUgPPDWke1s?=
- =?iso-8859-15?Q?KIAZPw/SVfl2d+2gGeiZtIMP4HYCv/JYy3uTyuiecxa6SykbZfhrHdo1v?=
- =?iso-8859-15?Q?hcjxEfRDJHx0rAHecEOOQ5eu8tYzWLY1kgsrTq28BXwMKdeHEO9AneXRu?=
- =?iso-8859-15?Q?HZtDG7pDlaovDoy4+SF5yLLLvshlghN+8UJ6d57tEbZOugUDfUS16ctU3?=
- =?iso-8859-15?Q?GKgilNqKAQJF0s4dWQaome82+KE4QrDcKHrv/EH/kSkYNM/R4E0pr8fnb?=
- =?iso-8859-15?Q?emfoLl4hnwirUEjhMujPoU5dSnQXmt4q1jY+/VNu7HQ8bUdysvjE6h4nH?=
- =?iso-8859-15?Q?IY5YbaHXNcspp534QvkfswaJCvyZJWUUBldUBrUvP1bCTn8jryUlPlbSI?=
- =?iso-8859-15?Q?UfbUVJvGaFz5I374DaVouqXj98IbrNwwmdKkgKhTzboc7g8Ut5lIrwIQP?=
- =?iso-8859-15?Q?Ys2C6DCRnWjDSPtZr7ZvuiBQ8F47DVw42f6Dnii0qxhqp3Ix1Az1DrTCX?=
- =?iso-8859-15?Q?xpkPpz+G8D1IXdLpeDFWSW90CRKtB06dHTN/Y/QRgK+ox7Cw4+Ek+spcW?=
- =?iso-8859-15?Q?vn+55WDd9U2VohP1Kh4VlwrfzFpyuP1S7?=
+x-microsoft-antispam-message-info: jRXvY6tGTIq61rJLeZbpTD5q0GvYP3qR4isIAssXxUWkUZFOppynf1gMuZs0IwWNPSOte+1RMuex7QuxTiXUl9IWX0ScXFeS06gIBXxxdOI4uFKWr/tzVQxUbNXlVxSpFHWkxjI3CYISJJJ5h9WfK+sNFtMCSF5DtE0SYx2TS3QLNwcx3smGmDYlirxP+5W/NvCFNQi67AFEJ7wCzkD41OaFO8j/yRtIqMvzjjZ7Eyk+JmDKz02F/HFh5iaNfauuAprbJY9ZRVwL9m8ZzD7ukpBNQBkZXT3e1dii1smkHehbkB4aG3jo/CoLfH73QEJvMYRu5C+FpfFlftKeNf0cppQ7o6kGhLruwAdXIjfKE6ioh6RfB0nk3kY+GFoAAIxK352nz49PB++OKRu+pfQn9TvrpLzU+65C70Wm9n5lb2E217J3H66GRA6pdmuRp9b3K/VTg+ai5bJcKTAOdd8k9v9Pl+PWLQQknIAvn6zw+8I97mAq73oVdM+cN1qUdCfviaF85r+1ODno/Vfn3faqY0qKl5dHIdFjEHtO1JZJnghsnADobZeICHkVot3iT/Mxapzt16BIbFg5S02/EWkDBcv0rbHtT2YX2zAUMKKLW8c=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DB8PR04MB6555.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(136003)(346002)(376002)(366004)(39860400002)(44832011)(6506007)(91956017)(86362001)(26005)(76116006)(8676002)(2906002)(478600001)(66556008)(2616005)(5660300002)(6486002)(122000001)(186003)(64756008)(83380400001)(66446008)(38100700002)(8936002)(36756003)(66574015)(6512007)(66946007)(4326008)(7416002)(110136005)(71200400001)(54906003)(66476007)(316002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: =?iso-8859-15?Q?HmrwsJfIX2PGjpKLl0DnA33rjQNVMUPRMOHEk8DJZygXSCE75z4rdFIVM?=
+ =?iso-8859-15?Q?rp3znzNBey55SiOyDOXFlhtm/weFo4L3BtwAPiyqtrR3heNtYjLiC9EeG?=
+ =?iso-8859-15?Q?MltA6niEH8dfUbx5vxH34VTtfnXCZjWs6egKs4Y2WlJnJ9K5SNDtoKm4z?=
+ =?iso-8859-15?Q?hxGi8u5sWB04WfVnlspjumyX+wWbvMARezQMyjSvESG4nCZqCX01Y3ZBo?=
+ =?iso-8859-15?Q?mrRenOit4NsLBqteA0QQCsZit6MxaabO3iLZKNK4ts68al4oymv6DOUU/?=
+ =?iso-8859-15?Q?09s/UQdril0xcyg9MS4OE1aueCzVPjZx6Mlgs//gdjyBTme6JqL29Otl1?=
+ =?iso-8859-15?Q?HjVK2lUbemP+cyAOPoZ+g2iPCS9ZiMCFKEg+LLKXUm3QBb+ne50Qzlyir?=
+ =?iso-8859-15?Q?W+RPunhO6iihwcEbtAqIBjGXYlzDKXpxxbuieWHMCBZ06IaSGS94aLiGA?=
+ =?iso-8859-15?Q?F2rtQXnBZZbyNOyZn041ER7DJzIg0HcSvDPNf7v2bI9eNw47rzGkY0Z4i?=
+ =?iso-8859-15?Q?vYYBkO8x+CV9N9bNjWr6qiJtXCphFad6HdkyBt+Hqj6FSGOUaFbKiZK8r?=
+ =?iso-8859-15?Q?Emxyk4GnurJZ9Ef2NNdXGf0k+NhJr0dPuwH/5tf+1yScs8KngsYIHrVWM?=
+ =?iso-8859-15?Q?ScZYo1Ff5TZbqYxn7oP6We9DbPSq0pBtJBQ0YFOdo2cK69NaJa37beco7?=
+ =?iso-8859-15?Q?Zmx7cMoSMH4N7QiryR3Yaw/9m+V/QILuavaS23GRk2vy1LMhs0hFy329G?=
+ =?iso-8859-15?Q?VU876667w2k9HW0m4lDfNpYv19RCcU2NbC4a+Or923wx0bkCtVrt+M7OQ?=
+ =?iso-8859-15?Q?eUBJEEj4DHgnLlqyOxLjZfXvKEYo1UG0/Hxesaz66hqtBHUvSK/J7Rj1W?=
+ =?iso-8859-15?Q?pTydqGr5ktZAeR8vjVOAdR4uMYCwnKmu4MnpQlKmvNRq5GjfGUS9T6oaV?=
+ =?iso-8859-15?Q?YhmhpkJdh9yu9u1S5xwyTlHcetlTFaJQcNVt+N3qYM1CEivbb0eZMCIkN?=
+ =?iso-8859-15?Q?l8laRHWqCWmseemjsQ0u22/spNmKdvYJWUTFnzEC1NhgrMcOyCVMMf1nh?=
+ =?iso-8859-15?Q?5g2nwnRZ6/GnP3qoWxN9koVbEzRixs3Qg3BMf2WEMIyJ9l+fYolVHf428?=
+ =?iso-8859-15?Q?I5GZ6af8PEMKTdrgKJLuTHD7SIHqxm0se4sI9g+Q97nmKsyb2XkZyE1mf?=
+ =?iso-8859-15?Q?Nrys4+QQfi6euyJBS141OrsMs5Qxa+m4qe2kfZcWYJCoXVW4u6xSIf5fJ?=
+ =?iso-8859-15?Q?gUdv/g0rB9GaW1QmFHk3lRy09QPZrujyjj1/1v2v+PMnx2lYnJsX+zeWP?=
+ =?iso-8859-15?Q?OTmwi9v9FaiA9sv3DW5Afij8rvPDYG27u6CodXitYR/lUx6bjCpxj8l/f?=
+ =?iso-8859-15?Q?jmf6BXLSJYDIqt3sSUpDf+APnKID3EBKn?=
 Content-Type: text/plain; charset="iso-8859-15"
-Content-ID: <15183A7E88461647B8575C548998E707@eurprd04.prod.outlook.com>
+Content-ID: <DBACD37E038FFC46B694A487E602089B@eurprd04.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: suse.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: DB8PR04MB6555.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f52cb152-7805-4fb9-6fb2-08d90a0f1d68
-X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Apr 2021 06:30:28.2987
+X-MS-Exchange-CrossTenant-Network-Message-Id: e10ded24-c0cf-40b9-d4a8-08d90a0fb446
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Apr 2021 06:34:41.4184
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: jUoArR0OkPuMUuIfVKUVtr/dzI1lG4RtTm5FYh5cWMWQZWuBkahzKCEpsHRtixuYGOd0rU0dZhNo/cxCY/oh/A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB8348
+X-MS-Exchange-CrossTenant-userprincipalname: IAiGi7vpj5cs3LjaAFsRZZBcbc+dLgvBpswnu3tr6mN9GYXkECzNx6ebBTsF2CsgL3XX3kz5Ly2J/fUDh+tvcQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB6PR0402MB2918
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2021-04-27 at 16:41 -0400, Ewan D. Milne wrote:
-> On Tue, 2021-04-27 at 20:33 +0000, Martin Wilck wrote:
-> > On Tue, 2021-04-27 at 16:14 -0400, Ewan D. Milne wrote:
-> > >=20
-> > > There's no way to do that, in principle.=A0 Because there could be
-> > > other I/Os in flight.=A0 You might (somehow) avoid retrying an I/O
-> > > that got a UA until you figured out if something changed, but other
-> > > I/Os can already have been sent to the target, or issued before you
-> > > get to look at the status.
-> >=20
-> > Right. But in practice, a WWID change will hardly happen under full
-> > IO
-> > load. The storage side will probably have to block IO while this
-> > happens, at least for a short time period. So blocking and quiescing
-> > the queue upon an UA might still work, most of the time. Even if we
-> > were too late already, the sooner we stop the queue, the better.
-> >=20
-> > The current algorithm in multipath-tools needs to detect a path going
-> > down and being reinstated. The time interval during which a WWID
-> > change
-> > will go unnoticed is one or more path checker intervals, typically on
-> > the order of 5-30 seconds. If we could decrease this interval to a
-> > sub-
-> > second or even millisecond range by blocking the queue in the kernel
-> > quickly, we'd have made a big step forward.
+On Wed, 2021-04-28 at 11:01 +1000, Erwin van Londen wrote:
 >=20
-> Yes, and in many situations this may help.=A0 But in the general case
-> we can't protect against a storage array misconfiguration,
-> where something like this can happen.=A0 So I worry about people
-> believing the host software will protect them against a mistake,
-> when we can't really do that.
+> The way out of this is to chuck the array in the bin. As I mentioned
+> in one of my other emails when a scenario happens as you described
+> above and the array does not inform the initiator it goes against the
+> SAM-5 standard.
+>=20
+> That standard shows:
+> 5.14 Unit attention conditions
+> 5.14.1 Unit attention conditions that are not coalesced
+> Each logical unit shall establish a unit attention condition whenever
+> one of the following events occurs:
+> 	a) a power on (see 6.3.1), hard reset (see 6.3.2), logical
+> unit reset (see 6.3.3), I_T nexus loss (see 6.3.4), or power loss
+> expected (see 6.3.5) occurs;
+> 	b) commands received on this I_T nexus have been cleared by
+> a command or a task management function associated with another I_T
+> nexus and the TAS bit was set to zero in the Control mode page
+> associated with this I_T nexus (see 5.6);
+> 	c) the portion of the logical unit inventory that consists
+> of administrative logical units and hierarchical logical units has
+> been changed (see 4.6.18.1); or
+> 	d) any other event requiring the attention of the SCSI
+> initiator device.
+>=20
+> Especially the I_T nexus loss under a is an important trigger.
+>=20
+> ---
+> 6.3.4 I_T nexus loss
+> An I_T nexus loss is a SCSI device condition resulting from:
+>=20
+> =A0a) a hard reset condition (see 6.3.2);
+> =A0b) an I_T nexus loss event (e.g., logout) indicated by a Nexus Loss
+> event notification (see 6.4);
+> =A0c) indication that an I_T NEXUS RESET task management request (see
+> 7.6) has been processed; or
+> =A0d) an indication that a REMOVE I_T NEXUS command (see SPC-4) has
+> been processed.
+> An I_T nexus loss event is an indication from the SCSI transport
+> protocol to the SAL that an I_T nexus no
+> longer exists. SCSI transport protocols may define I_T nexus loss
+> events.
+>=20
+> Each SCSI transport protocol standard that defines I_T nexus loss
+> events should specify when those events
+> result in the delivery of a Nexus Loss event notification to the SAL.
+>=20
+> The I_T nexus loss condition applies to both SCSI initiator devices
+> and SCSI target devices.
+>=20
+> If a SCSI target port detects an I_T nexus loss, then a Nexus Loss
+> event notification shall be delivered to
+> each logical unit to which the I_T nexus has access.
+>=20
+> In response to an I_T nexus loss condition a logical unit shall take
+> the following actions:
+> a) abort all commands received on the I_T nexus as described in 5.6;
+> b) abort all background third-party copy operations (see SPC-4) that
+> are using the I_T nexus;
+> c) terminate all task management functions received on the I_T nexus;
+> d) clear all ACA conditions (see 5.9.5) associated with the I_T
+> nexus;
+> e) establish a unit attention condition for the SCSI initiator port
+> associated with the I_T nexus (see 5.14
+> and 6.2); and
+> f) perform any additional functions required by the applicable
+> command standards.
+> ---
+>=20
+> This does also mean that any underlying transport protocol issues
+> like on FC or TCP for iSCSI will very often trigger aborted commands
+> or UA's as well which will be picked up by the kernel/respected
+> drivers.
 
-I agree. I expressed a similar notion in the following thread about
-multipathd's WWID change detection capabilities in the face of really
-bad mistakes on the administrator's (or storage array's, FTM)  part:
-https://listman.redhat.com/archives/dm-devel/2021-February/msg00248.html
-But others stressed that nonetheless we should try our best to
-avoid=A0customer data corruption (which I agree with, too),=A0and thus we
-settled on the current algorithm, which suited the needs at least of
-the affected user(s) in that specific case.
-
-Personally I think that the current "5-30s" time period for WWID change
-detection in multipathd is unsafe both theoretically and practially,
-and may lure users into a false feeling of safety. Therefore I'd
-strongly welcome a kernel-side solution that might still not be safe
-theoretically, but cover most practical problem scenarios much better
-than we currently do.
+Thanks a lot. I'm not quite certain which of these paragraphs would
+apply to the situation I had in mind (administrator remapping an
+existing LUN on a storage array to a different volume). That scenario
+wouldn't necessarily involve transport-level errors, or an I_T nexus
+loss. 5.14.1 c) or d) might apply, is that what you meant?
 
 Regards
 Martin
