@@ -7,36 +7,37 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BFD8C433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 09:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F04BEC433B4
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 09:31:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22E58611BE
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 09:29:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6C20601FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Apr 2021 09:31:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238001AbhD1JaY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Apr 2021 05:30:24 -0400
-Received: from mx2.suse.de ([195.135.220.15]:50940 "EHLO mx2.suse.de"
+        id S230525AbhD1Jcb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Apr 2021 05:32:31 -0400
+Received: from mx2.suse.de ([195.135.220.15]:52638 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237745AbhD1JaY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Apr 2021 05:30:24 -0400
+        id S230113AbhD1Jcb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Apr 2021 05:32:31 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 456FCB000;
-        Wed, 28 Apr 2021 09:29:39 +0000 (UTC)
-Subject: Re: [PATCH v8 28/31] elx: efct: xport and hardware teardown routines
+        by mx2.suse.de (Postfix) with ESMTP id 30CE9AF9A;
+        Wed, 28 Apr 2021 09:31:46 +0000 (UTC)
+Subject: Re: [PATCH v8 29/31] elx: efct: scsi_transport_fc host interface
+ support
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     Ram Vegesna <ram.vegesna@broadcom.com>,
         Daniel Wagner <dwagner@suse.de>
 References: <20210423233455.27243-1-jsmart2021@gmail.com>
- <20210423233455.27243-29-jsmart2021@gmail.com>
+ <20210423233455.27243-30-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
 Organization: SUSE Linux GmbH
-Message-ID: <b6f7ec4c-c44a-6f2d-304b-8d8b5755215f@suse.de>
-Date:   Wed, 28 Apr 2021 11:29:38 +0200
+Message-ID: <f2021d6c-4a96-5568-b66b-a5af0039afff@suse.de>
+Date:   Wed, 28 Apr 2021 11:31:45 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.9.1
 MIME-Version: 1.0
-In-Reply-To: <20210423233455.27243-29-jsmart2021@gmail.com>
+In-Reply-To: <20210423233455.27243-30-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -48,7 +49,7 @@ On 4/24/21 1:34 AM, James Smart wrote:
 > This patch continues the efct driver population.
 > 
 > This patch adds driver definitions for:
-> Routines to detach xport and hardware objects.
+> Integration with the scsi_fc_transport host interfaces
 > 
 > Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
@@ -57,12 +58,12 @@ On 4/24/21 1:34 AM, James Smart wrote:
 > 
 > ---
 > v8:
-> Remove waiting for flushing pending commands in reset and teardown path
+> Remove unused stubs.
+> Add 64G and 128G to host speed reporting.
+> Use link speed to detect the port state.
 > ---
->  drivers/scsi/elx/efct/efct_hw.c    | 252 ++++++++++++++++++++++++++++
->  drivers/scsi/elx/efct/efct_hw.h    |  27 +++
->  drivers/scsi/elx/efct/efct_xport.c | 261 +++++++++++++++++++++++++++++
->  3 files changed, 540 insertions(+)
+>  drivers/scsi/elx/efct/efct_xport.c | 466 ++++++++++++++++++++++++++++-
+>  1 file changed, 450 insertions(+), 16 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
