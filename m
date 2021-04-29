@@ -2,94 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8383AC433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Apr 2021 14:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7E46C433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Apr 2021 15:52:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39A9361445
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Apr 2021 14:34:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A34A061409
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Apr 2021 15:52:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237315AbhD2OfY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Apr 2021 10:35:24 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:60585 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234862AbhD2OfX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Apr 2021 10:35:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619706875;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=heDsRu5oD1OaUAfnSUi3+LrKS0XIxJbkgCIieGYoAbg=;
-        b=MVbjf9guktWykaAJOAzJdD0AuxzhgolIDFY2/TMr7nzD9lR06op22j39yC51wXPW/WTR4x
-        XlWlqucR6AE5T24DK2USLJVFXzdsKuPfaOM7YnZYXo1+E5HwHAkwvBzy5u1TYmLKDJ9EV5
-        qSfSZS5C28CQi7h5/Vnk1uwHyRFvs/M=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-372-yiZCL_17PW6blJdg-itMRA-1; Thu, 29 Apr 2021 10:34:32 -0400
-X-MC-Unique: yiZCL_17PW6blJdg-itMRA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S233770AbhD2Pwv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Apr 2021 11:52:51 -0400
+Received: from mail-1.ca.inter.net ([208.85.220.69]:53050 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233132AbhD2Pwt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Apr 2021 11:52:49 -0400
+Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 6F8B02EA7CB;
+        Thu, 29 Apr 2021 11:52:02 -0400 (EDT)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
+        with ESMTP id VwPC7MtKpP8J; Thu, 29 Apr 2021 11:31:44 -0400 (EDT)
+Received: from [192.168.48.23] (host-45-58-219-4.dyn.295.ca [45.58.219.4])
+        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8AEC310060D6;
-        Thu, 29 Apr 2021 14:34:30 +0000 (UTC)
-Received: from T590 (ovpn-12-74.pek2.redhat.com [10.72.12.74])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 784225D768;
-        Thu, 29 Apr 2021 14:34:17 +0000 (UTC)
-Date:   Thu, 29 Apr 2021 22:34:27 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Hannes Reinecke <hare@suse.de>
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 95C712EA7C7;
+        Thu, 29 Apr 2021 11:52:01 -0400 (EDT)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH 40/40] scsi: drop obsolete linux-specific SCSI status
+ codes
+To:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
+        Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 3/3] fnic: check for started requests in
- fnic_wq_copy_cleanup_handler()
-Message-ID: <YIrD87Ekh3xBqE6u@T590>
-References: <20210429122517.39659-1-hare@suse.de>
- <20210429122517.39659-4-hare@suse.de>
+References: <20210427083046.31620-1-hare@suse.de>
+ <20210427083046.31620-41-hare@suse.de> <20210429064837.GA2882@lst.de>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <7dce03b0-0964-68c3-0c2f-b70449b1a98f@interlog.com>
+Date:   Thu, 29 Apr 2021 11:52:01 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210429122517.39659-4-hare@suse.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20210429064837.GA2882@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 29, 2021 at 02:25:17PM +0200, Hannes Reinecke wrote:
-> fnic_wq_copy_cleanup_handler() is using scsi_host_find_tag() to
-> map id to a scsi command. However, as per discussion on the mailinglist
-> scsi_host_find_tag() might return a non-started request, so we need
-> to check the returned command with blk_mq_request_started() to avoid
-> the function tripping over a non-initialized command.
+On 2021-04-29 2:48 a.m., Christoph Hellwig wrote:
+> On Tue, Apr 27, 2021 at 10:30:46AM +0200, Hannes Reinecke wrote:
+>> +/*
+>> + *  Original linux SCSI Status codes. They are shifted 1 bit right
+>> + *  from those found in the SCSI standards.
+>> + */
+>> +
+>> +#define GOOD                 0x00
+>> +#define CHECK_CONDITION      0x01
+>> +#define CONDITION_GOOD       0x02
+>> +#define BUSY                 0x04
+>> +#define INTERMEDIATE_GOOD    0x08
+>> +#define INTERMEDIATE_C_GOOD  0x0a
+>> +#define RESERVATION_CONFLICT 0x0c
+>> +#define COMMAND_TERMINATED   0x11
+>> +#define QUEUE_FULL           0x14
+>> +#define ACA_ACTIVE           0x18
+>> +#define TASK_ABORTED         0x20
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/fnic/fnic_scsi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-> index 762cc8bd2653..b9fd3d87416b 100644
-> --- a/drivers/scsi/fnic/fnic_scsi.c
-> +++ b/drivers/scsi/fnic/fnic_scsi.c
-> @@ -1466,7 +1466,7 @@ void fnic_wq_copy_cleanup_handler(struct vnic_wq_copy *wq,
->  		return;
->  
->  	sc = scsi_host_find_tag(fnic->lport->host, id);
-> -	if (!sc)
-> +	if (!sc || !blk_mq_request_started(sc->request))
->  		return;
+> I don't think there is any need to keep defining them, is there?
 
-scsi_host_find_tag() has covered blk_mq_request_started check already, so
-this patch isn't necessary.
+If you don't mind breaking existing, user space facing APIs, then
+yes, they can be dropped ...
+
+Banishing them to the sg header is correct IMO. Which is exactly
+what this patch does.
+
+One thought, they could be wrapped with:
+
+#ifndef __KERNEL__
+...
+#endif
+
+and repeated in a new header: scsi/sg_priv.h
+Then the sg driver and any other files that need those old defines
+could include sg_priv.h . The result would be parts of the kernel
+not being polluted with commonly use names like GOOD and BUSY.
 
 
-Thanks,
-Ming
+Anyway:
 
+Reviewed-by: Douglas Gilbert <dgilbert@interlog.com>
