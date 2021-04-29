@@ -2,98 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7E46C433ED
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Apr 2021 15:52:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 750BCC433B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Apr 2021 17:28:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A34A061409
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Apr 2021 15:52:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3167561456
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Apr 2021 17:28:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233770AbhD2Pwv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Apr 2021 11:52:51 -0400
-Received: from mail-1.ca.inter.net ([208.85.220.69]:53050 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233132AbhD2Pwt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Apr 2021 11:52:49 -0400
-Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id 6F8B02EA7CB;
-        Thu, 29 Apr 2021 11:52:02 -0400 (EDT)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
-        with ESMTP id VwPC7MtKpP8J; Thu, 29 Apr 2021 11:31:44 -0400 (EDT)
-Received: from [192.168.48.23] (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 95C712EA7C7;
-        Thu, 29 Apr 2021 11:52:01 -0400 (EDT)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH 40/40] scsi: drop obsolete linux-specific SCSI status
- codes
-To:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
+        id S233695AbhD2R3o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Apr 2021 13:29:44 -0400
+Received: from mx2.suse.de ([195.135.220.15]:47760 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232991AbhD2R3n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Apr 2021 13:29:43 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 685F0B01E;
+        Thu, 29 Apr 2021 17:28:55 +0000 (UTC)
+Subject: Re: [PATCH 3/3] fnic: check for started requests in
+ fnic_wq_copy_cleanup_handler()
+To:     Ming Lei <ming.lei@redhat.com>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org
-References: <20210427083046.31620-1-hare@suse.de>
- <20210427083046.31620-41-hare@suse.de> <20210429064837.GA2882@lst.de>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <7dce03b0-0964-68c3-0c2f-b70449b1a98f@interlog.com>
-Date:   Thu, 29 Apr 2021 11:52:01 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+References: <20210429122517.39659-1-hare@suse.de>
+ <20210429122517.39659-4-hare@suse.de> <YIrD87Ekh3xBqE6u@T590>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <8c971d37-e1ae-246f-9b9a-8170c76276b1@suse.de>
+Date:   Thu, 29 Apr 2021 19:28:54 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-In-Reply-To: <20210429064837.GA2882@lst.de>
+In-Reply-To: <YIrD87Ekh3xBqE6u@T590>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-04-29 2:48 a.m., Christoph Hellwig wrote:
-> On Tue, Apr 27, 2021 at 10:30:46AM +0200, Hannes Reinecke wrote:
->> +/*
->> + *  Original linux SCSI Status codes. They are shifted 1 bit right
->> + *  from those found in the SCSI standards.
->> + */
->> +
->> +#define GOOD                 0x00
->> +#define CHECK_CONDITION      0x01
->> +#define CONDITION_GOOD       0x02
->> +#define BUSY                 0x04
->> +#define INTERMEDIATE_GOOD    0x08
->> +#define INTERMEDIATE_C_GOOD  0x0a
->> +#define RESERVATION_CONFLICT 0x0c
->> +#define COMMAND_TERMINATED   0x11
->> +#define QUEUE_FULL           0x14
->> +#define ACA_ACTIVE           0x18
->> +#define TASK_ABORTED         0x20
+On 4/29/21 4:34 PM, Ming Lei wrote:
+> On Thu, Apr 29, 2021 at 02:25:17PM +0200, Hannes Reinecke wrote:
+>> fnic_wq_copy_cleanup_handler() is using scsi_host_find_tag() to
+>> map id to a scsi command. However, as per discussion on the mailinglist
+>> scsi_host_find_tag() might return a non-started request, so we need
+>> to check the returned command with blk_mq_request_started() to avoid
+>> the function tripping over a non-initialized command.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>   drivers/scsi/fnic/fnic_scsi.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+>> index 762cc8bd2653..b9fd3d87416b 100644
+>> --- a/drivers/scsi/fnic/fnic_scsi.c
+>> +++ b/drivers/scsi/fnic/fnic_scsi.c
+>> @@ -1466,7 +1466,7 @@ void fnic_wq_copy_cleanup_handler(struct vnic_wq_copy *wq,
+>>   		return;
+>>   
+>>   	sc = scsi_host_find_tag(fnic->lport->host, id);
+>> -	if (!sc)
+>> +	if (!sc || !blk_mq_request_started(sc->request))
+>>   		return;
 > 
-> I don't think there is any need to keep defining them, is there?
+> scsi_host_find_tag() has covered blk_mq_request_started check already, so
+> this patch isn't necessary.
+> 
+Right. So drop it, then.
 
-If you don't mind breaking existing, user space facing APIs, then
-yes, they can be dropped ...
+Cheers,
 
-Banishing them to the sg header is correct IMO. Which is exactly
-what this patch does.
-
-One thought, they could be wrapped with:
-
-#ifndef __KERNEL__
-...
-#endif
-
-and repeated in a new header: scsi/sg_priv.h
-Then the sg driver and any other files that need those old defines
-could include sg_priv.h . The result would be parts of the kernel
-not being polluted with commonly use names like GOOD and BUSY.
-
-
-Anyway:
-
-Reviewed-by: Douglas Gilbert <dgilbert@interlog.com>
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
