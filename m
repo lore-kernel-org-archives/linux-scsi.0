@@ -4,114 +4,119 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC72C433ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Apr 2021 02:23:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C3B3C433ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Apr 2021 06:10:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B84CC6143A
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Apr 2021 02:23:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13E3A61424
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Apr 2021 06:10:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229901AbhD3CXx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Apr 2021 22:23:53 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:56391 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229577AbhD3CXw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Apr 2021 22:23:52 -0400
-Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210430022302epoutp04d77d6754b03e5a6e915ca3c9ea05713d~6gXtI0B1B0818208182epoutp04M
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Apr 2021 02:23:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210430022302epoutp04d77d6754b03e5a6e915ca3c9ea05713d~6gXtI0B1B0818208182epoutp04M
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1619749382;
-        bh=j4LWkwldRLUrGOZFZYtV8wATCeynPe4551DILqQur/4=;
-        h=Subject:Reply-To:From:To:CC:Date:References:From;
-        b=KzV8x6qFK4eOk27ftngGS/MxvDWRnyXmeDdNSJEWoMbJ9dv2kOCWbfSwna+xohPve
-         IG3tXir8u+FdmBdug2ZnmGlAOr4lcIzDcYmqu3CYX6zAIbxv3155xi3cMsPFQZEDol
-         uGKYHcsaJZ0S2WqaPzZhAiIsazIy4wFTdtgg7pug=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas3p4.samsung.com (KnoxPortal) with ESMTP id
-        20210430022301epcas3p40a37b8920e942d2440983ff5a8aad732~6gXsi7Amt2702827028epcas3p4H;
-        Fri, 30 Apr 2021 02:23:01 +0000 (GMT)
-Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp4.localdomain
-        (Postfix) with ESMTP id 4FWbkY5Z1rz4x9Pv; Fri, 30 Apr 2021 02:23:01 +0000
-        (GMT)
-Mime-Version: 1.0
-Subject: [PATCH] scsi: ufs: remove redundant initialization of variable
-Reply-To: keosung.park@samsung.com
-Sender: Keoseong Park <keosung.park@samsung.com>
-From:   Keoseong Park <keosung.park@samsung.com>
-To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "jaegeuk@kernel.org" <jaegeuk@kernel.org>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     Daejun Park <daejun7.park@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <2038148563.21619749381770.JavaMail.epsvc@epcpadp4>
-Date:   Fri, 30 Apr 2021 11:14:19 +0900
-X-CMS-MailID: 20210430021419epcms2p402717e968615d301ba18341d28a828ee
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20210430021419epcms2p402717e968615d301ba18341d28a828ee
-References: <CGME20210430021419epcms2p402717e968615d301ba18341d28a828ee@epcms2p4>
+        id S230310AbhD3GLM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Apr 2021 02:11:12 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:43574 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229508AbhD3GLL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 30 Apr 2021 02:11:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1619763023;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=+MeMwkE7faAYt7QfkoF+64IJYL1JYmvBd4FMvXc0p6Q=;
+        b=aV+QP22a/v7w8PWI+WzAuIqqnL7fKcp81LA7FvltrqJiizvoRPJGjP9V6P8H1AGecNvR4L
+        yNO4xaTHAsGYllPfeE8+06oFDZVPLwp2nRO79CEfIAts0I0li8Ujv/jZu1VYBs4ez0g/Eh
+        lcuYPwByByhf8Hg48Now/u/6LPqYIzA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-100-mwubSvcqO52dpIoojDeaEw-1; Fri, 30 Apr 2021 02:10:21 -0400
+X-MC-Unique: mwubSvcqO52dpIoojDeaEw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 27D9D8042C7;
+        Fri, 30 Apr 2021 06:10:20 +0000 (UTC)
+Received: from T590 (ovpn-12-77.pek2.redhat.com [10.72.12.77])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 95D971037E85;
+        Fri, 30 Apr 2021 06:10:10 +0000 (UTC)
+Date:   Fri, 30 Apr 2021 14:10:21 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/3] fnic: kill 'exclude_id' argument to fnic_cleanup_io()
+Message-ID: <YIufTZGQiic01M71@T590>
+References: <20210429122517.39659-1-hare@suse.de>
+ <20210429122517.39659-2-hare@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210429122517.39659-2-hare@suse.de>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The variable d_lu_wb_buf_alloc may be repeatedly initialized to 0 in a for-loop.
-If the variable is set to a value other than 0, it exits the for-loop, so there is no need to reset it to 0.
+On Thu, Apr 29, 2021 at 02:25:15PM +0200, Hannes Reinecke wrote:
+> 'exclude_id' is always SCSI_NO_TAG, which will never be reached
+> when traversing the list of tags.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/fnic/fnic_scsi.c | 9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+> index e619a82f921b..f41d1b1c2e39 100644
+> --- a/drivers/scsi/fnic/fnic_scsi.c
+> +++ b/drivers/scsi/fnic/fnic_scsi.c
+> @@ -102,7 +102,7 @@ static const char *fnic_fcpio_status_to_str(unsigned int status)
+>  	return fcpio_status_str[status];
+>  }
+>  
+> -static void fnic_cleanup_io(struct fnic *fnic, int exclude_id);
+> +static void fnic_cleanup_io(struct fnic *fnic);
+>  
+>  static inline spinlock_t *fnic_io_lock_hash(struct fnic *fnic,
+>  					    struct scsi_cmnd *sc)
+> @@ -638,7 +638,7 @@ static int fnic_fcpio_fw_reset_cmpl_handler(struct fnic *fnic,
+>  	atomic64_inc(&reset_stats->fw_reset_completions);
+>  
+>  	/* Clean up all outstanding io requests */
+> -	fnic_cleanup_io(fnic, SCSI_NO_TAG);
+> +	fnic_cleanup_io(fnic);
+>  
+>  	atomic64_set(&fnic->fnic_stats.fw_stats.active_fw_reqs, 0);
+>  	atomic64_set(&fnic->fnic_stats.io_stats.active_ios, 0);
+> @@ -1361,7 +1361,7 @@ int fnic_wq_copy_cmpl_handler(struct fnic *fnic, int copy_work_to_do)
+>  	return wq_work_done;
+>  }
+>  
+> -static void fnic_cleanup_io(struct fnic *fnic, int exclude_id)
+> +static void fnic_cleanup_io(struct fnic *fnic)
+>  {
+>  	int i;
+>  	struct fnic_io_req *io_req;
+> @@ -1372,9 +1372,6 @@ static void fnic_cleanup_io(struct fnic *fnic, int exclude_id)
+>  	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
+>  
+>  	for (i = 0; i < fnic->fnic_max_tag_id; i++) {
+> -		if (i == exclude_id)
+> -			continue;
+> -
+>  		io_lock = fnic_io_lock_tag(fnic, i);
+>  		spin_lock_irqsave(io_lock, flags);
+>  		sc = scsi_host_find_tag(fnic->lport->host, i);
+> -- 
+> 2.29.2
+> 
 
-Since lun and d_lu_wb_buf_alloc are just being used in a else statement inside a local scope, move the declaration of the variables to that scope.
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
 
-Signed-off-by: Keoseong Park <keosung.park@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0625da7a42ee..77cc473961a2 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7277,8 +7277,6 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
- static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
- {
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
--	u8 lun;
--	u32 d_lu_wb_buf_alloc;
- 	u32 ext_ufs_feature;
- 
- 	if (!ufshcd_is_wb_allowed(hba))
-@@ -7318,8 +7316,10 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
- 				   DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS))
- 			goto wb_disabled;
- 	} else {
-+		u8 lun;
-+		u32 d_lu_wb_buf_alloc = 0;
-+
- 		for (lun = 0; lun < UFS_UPIU_MAX_WB_LUN_ID; lun++) {
--			d_lu_wb_buf_alloc = 0;
- 			ufshcd_read_unit_desc_param(hba,
- 					lun,
- 					UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS,
 -- 
-2.17.1
+Ming
+
