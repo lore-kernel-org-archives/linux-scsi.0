@@ -5,46 +5,44 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71073C43460
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:47:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C5D6C4363F
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 383C461283
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:47:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 662E761165
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232859AbhECQsn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 May 2021 12:48:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53004 "EHLO mail.kernel.org"
+        id S232871AbhECQvF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 May 2021 12:51:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60882 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232967AbhECQqo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 3 May 2021 12:46:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B3A87616ED;
-        Mon,  3 May 2021 16:39:31 +0000 (UTC)
+        id S233346AbhECQrr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 3 May 2021 12:47:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BC19B613F5;
+        Mon,  3 May 2021 16:39:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620059972;
-        bh=P1406Jpr8eiCFe4E8OCTMSlIbNSDkAouqN75tcgzYgc=;
+        s=k20201202; t=1620059991;
+        bh=t9f/7bHCVTgR+AuzpestGI9KgiTNtjS/ARaBFz0PumU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Pb47A5zF8qSEzv8PMihtRI+1kqs6V8HI3qTQP/JeJFgzz8tK2au6Bt5l5GA90g01W
-         6MeUWUQwX+Ptnt/edVUgMsAXmDqA9heymYbp8KSzoxDhrr11LsXobo8rzfBMaFWpn1
-         y+2+p6F2DMcI4AXWlo8J0hdihJTOa9CoJbHjesnceSAqhHVPtI7Z4Tq8Eh5cD5wU8G
-         xXqlFYyEX82vMhhNvQNKsl7fnx8KrnyvmWkf923Q3OaoBUNzc5WjFIveXIrWvvhFnl
-         j6ISyxLY0H21ZDDRUc+2sCtK/Ce5W5R0qjGADcFUvTks/InCfp14VEZ6dpfG8QrqSp
-         j0veMCgkLnbIA==
+        b=HCoddLkcw4FPmRb1o7DWP6Nb7wYoSV6yNEVz6mInNjt+Us8fKb2obhHUbl0yPfcA3
+         GW8MpoZMWNvl3cOEiPLVXkNTCXRvakkkztF6WboTVAdt39NpvC38ozJ/9viDJTxZPh
+         RS3ssSwAov6DQyn7Bl1UjRrnWbBr5V79235wxdf02aKO+PY6aAbBSwFjLChZWvpoVO
+         cgfx+3NU1pCJn2M/86nmtPhB+Dvvxk6PU9YlzPpLsbJejjHIXuzeHptPUU1Hpgid7w
+         Eq+zd/3uXk9CAd+PvZiLJu7xSmXAVBXd8PqQyHXwXRBr8fxEWT8oGexMjQKb/4bd0O
+         3HkBAl6kw/yjA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 041/100] scsi: qla2xxx: Fix use after free in bsg
-Date:   Mon,  3 May 2021 12:37:30 -0400
-Message-Id: <20210503163829.2852775-41-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 06/57] scsi: lpfc: Fix pt2pt connection does not recover after LOGO
+Date:   Mon,  3 May 2021 12:38:50 -0400
+Message-Id: <20210503163941.2853291-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210503163829.2852775-1-sashal@kernel.org>
-References: <20210503163829.2852775-1-sashal@kernel.org>
+In-Reply-To: <20210503163941.2853291-1-sashal@kernel.org>
+References: <20210503163941.2853291-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,59 +51,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 2ce35c0821afc2acd5ee1c3f60d149f8b2520ce8 ]
+[ Upstream commit bd4f5100424d17d4e560d6653902ef8e49b2fc1f ]
 
-On bsg command completion, bsg_job_done() was called while qla driver
-continued to access the bsg_job buffer. bsg_job_done() would free up
-resources that ended up being reused by other task while the driver
-continued to access the buffers. As a result, driver was reading garbage
-data.
+On a pt2pt setup, between 2 initiators, if one side issues a a LOGO, there
+is no relogin attempt. The FC specs are grey in this area on which port
+(higher wwn or not) is to re-login.
 
-localhost kernel: BUG: KASAN: use-after-free in sg_next+0x64/0x80
-localhost kernel: Read of size 8 at addr ffff8883228a3330 by task swapper/26/0
-localhost kernel:
-localhost kernel: CPU: 26 PID: 0 Comm: swapper/26 Kdump:
-loaded Tainted: G          OE    --------- -  - 4.18.0-193.el8.x86_64+debug #1
-localhost kernel: Hardware name: HP ProLiant DL360
-Gen9/ProLiant DL360 Gen9, BIOS P89 08/12/2016
-localhost kernel: Call Trace:
-localhost kernel: <IRQ>
-localhost kernel: dump_stack+0x9a/0xf0
-localhost kernel: print_address_description.cold.3+0x9/0x23b
-localhost kernel: kasan_report.cold.4+0x65/0x95
-localhost kernel: debug_dma_unmap_sg.part.12+0x10d/0x2d0
-localhost kernel: qla2x00_bsg_sp_free+0xaf6/0x1010 [qla2xxx]
+As there is no spec guidance, unconditionally re-PLOGI after the logout to
+ensure a login is re-established.
 
-Link: https://lore.kernel.org/r/20210329085229.4367-6-njavali@marvell.com
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Link: https://lore.kernel.org/r/20210301171821.3427-8-jsmart2021@gmail.com
+Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 23b604832a54..7fa085969a63 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -24,10 +24,11 @@ void qla2x00_bsg_job_done(srb_t *sp, int res)
- 	struct bsg_job *bsg_job = sp->u.bsg_job;
- 	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
- 
-+	sp->free(sp);
-+
- 	bsg_reply->result = res;
- 	bsg_job_done(bsg_job, bsg_reply->result,
- 		       bsg_reply->reply_payload_rcv_len);
--	sp->free(sp);
- }
- 
- void qla2x00_bsg_sp_free(srb_t *sp)
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 418d62e94554..ea31711b1aeb 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -888,9 +888,14 @@ lpfc_rcv_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		}
+ 	} else if ((!(ndlp->nlp_type & NLP_FABRIC) &&
+ 		((ndlp->nlp_type & NLP_FCP_TARGET) ||
+-		!(ndlp->nlp_type & NLP_FCP_INITIATOR))) ||
++		(ndlp->nlp_type & NLP_NVME_TARGET) ||
++		(vport->fc_flag & FC_PT2PT))) ||
+ 		(ndlp->nlp_state == NLP_STE_ADISC_ISSUE)) {
+-		/* Only try to re-login if this is NOT a Fabric Node */
++		/* Only try to re-login if this is NOT a Fabric Node
++		 * AND the remote NPORT is a FCP/NVME Target or we
++		 * are in pt2pt mode. NLP_STE_ADISC_ISSUE is a special
++		 * case for LOGO as a response to ADISC behavior.
++		 */
+ 		mod_timer(&ndlp->nlp_delayfunc,
+ 			  jiffies + msecs_to_jiffies(1000 * 1));
+ 		spin_lock_irq(shost->host_lock);
 -- 
 2.30.2
 
