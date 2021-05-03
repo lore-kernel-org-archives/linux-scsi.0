@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C5D6C4363F
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B873C433ED
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 662E761165
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2043960FD7
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232871AbhECQvF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 May 2021 12:51:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60882 "EHLO mail.kernel.org"
+        id S232915AbhECQvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 May 2021 12:51:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60880 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233346AbhECQrr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S232740AbhECQrr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 3 May 2021 12:47:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BC19B613F5;
-        Mon,  3 May 2021 16:39:50 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5E518613BB;
+        Mon,  3 May 2021 16:39:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620059991;
-        bh=t9f/7bHCVTgR+AuzpestGI9KgiTNtjS/ARaBFz0PumU=;
+        s=k20201202; t=1620059990;
+        bh=q/2oukRTFOFWSFMQUgsHi6++FUsD3ZZUSPntQvGqV4M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HCoddLkcw4FPmRb1o7DWP6Nb7wYoSV6yNEVz6mInNjt+Us8fKb2obhHUbl0yPfcA3
-         GW8MpoZMWNvl3cOEiPLVXkNTCXRvakkkztF6WboTVAdt39NpvC38ozJ/9viDJTxZPh
-         RS3ssSwAov6DQyn7Bl1UjRrnWbBr5V79235wxdf02aKO+PY6aAbBSwFjLChZWvpoVO
-         cgfx+3NU1pCJn2M/86nmtPhB+Dvvxk6PU9YlzPpLsbJejjHIXuzeHptPUU1Hpgid7w
-         Eq+zd/3uXk9CAd+PvZiLJu7xSmXAVBXd8PqQyHXwXRBr8fxEWT8oGexMjQKb/4bd0O
-         3HkBAl6kw/yjA==
+        b=J42oZ7ChCCz2FWiFbsgxXqhJtwB38nicm0FocmCDvkAZL0Wv5XsxItCWXV70MUduz
+         IVbcSdxLby/MjDTsDSIKtvZfTISGLXlq4UeGNQvg9S3NUebNvXLPnPRTqc5/CBAC77
+         kRgiaQylSriqVXPYh+2R8DsdO7/UxYewXrOXlpbT6zA3GrZ2PAlZ5vv69VcpczoV6J
+         nZjSmx4/rbhDx5ojcfc4NA6L+GzbE4mowHhicoYSZOqMLRDXRcVqCgtQu1ZDMZdtnX
+         8owYN6JmbNlJCRsiNwe6O1He7UDghGLjN07ejUggrfzfimh5sQNfFqae5hZ26ky7+h
+         6iKmDgpj3wPDA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 06/57] scsi: lpfc: Fix pt2pt connection does not recover after LOGO
-Date:   Mon,  3 May 2021 12:38:50 -0400
-Message-Id: <20210503163941.2853291-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 05/57] scsi: lpfc: Fix incorrect dbde assignment when building target abts wqe
+Date:   Mon,  3 May 2021 12:38:49 -0400
+Message-Id: <20210503163941.2853291-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210503163941.2853291-1-sashal@kernel.org>
 References: <20210503163941.2853291-1-sashal@kernel.org>
@@ -53,46 +53,36 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit bd4f5100424d17d4e560d6653902ef8e49b2fc1f ]
+[ Upstream commit 9302154c07bff4e7f7f43c506a1ac84540303d06 ]
 
-On a pt2pt setup, between 2 initiators, if one side issues a a LOGO, there
-is no relogin attempt. The FC specs are grey in this area on which port
-(higher wwn or not) is to re-login.
+The wqe_dbde field indicates whether a Data BDE is present in Words 0:2 and
+should therefore should be clear in the abts request wqe. By setting the
+bit we can be misleading fw into error cases.
 
-As there is no spec guidance, unconditionally re-PLOGI after the logout to
-ensure a login is re-established.
+Clear the wqe_dbde field.
 
-Link: https://lore.kernel.org/r/20210301171821.3427-8-jsmart2021@gmail.com
+Link: https://lore.kernel.org/r/20210301171821.3427-2-jsmart2021@gmail.com
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvmet.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 418d62e94554..ea31711b1aeb 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -888,9 +888,14 @@ lpfc_rcv_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		}
- 	} else if ((!(ndlp->nlp_type & NLP_FABRIC) &&
- 		((ndlp->nlp_type & NLP_FCP_TARGET) ||
--		!(ndlp->nlp_type & NLP_FCP_INITIATOR))) ||
-+		(ndlp->nlp_type & NLP_NVME_TARGET) ||
-+		(vport->fc_flag & FC_PT2PT))) ||
- 		(ndlp->nlp_state == NLP_STE_ADISC_ISSUE)) {
--		/* Only try to re-login if this is NOT a Fabric Node */
-+		/* Only try to re-login if this is NOT a Fabric Node
-+		 * AND the remote NPORT is a FCP/NVME Target or we
-+		 * are in pt2pt mode. NLP_STE_ADISC_ISSUE is a special
-+		 * case for LOGO as a response to ADISC behavior.
-+		 */
- 		mod_timer(&ndlp->nlp_delayfunc,
- 			  jiffies + msecs_to_jiffies(1000 * 1));
- 		spin_lock_irq(shost->host_lock);
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index f14394ab0e03..ce2e2b58fa7e 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -3204,7 +3204,6 @@ lpfc_nvmet_unsol_issue_abort(struct lpfc_hba *phba,
+ 	bf_set(wqe_rcvoxid, &wqe_abts->xmit_sequence.wqe_com, xri);
+ 
+ 	/* Word 10 */
+-	bf_set(wqe_dbde, &wqe_abts->xmit_sequence.wqe_com, 1);
+ 	bf_set(wqe_iod, &wqe_abts->xmit_sequence.wqe_com, LPFC_WQE_IOD_WRITE);
+ 	bf_set(wqe_lenloc, &wqe_abts->xmit_sequence.wqe_com,
+ 	       LPFC_WQE_LENLOC_WORD12);
 -- 
 2.30.2
 
