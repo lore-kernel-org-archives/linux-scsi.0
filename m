@@ -7,40 +7,39 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE52AC433ED
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEF4BC433B4
 	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:58:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF6F8610A5
+	by mail.kernel.org (Postfix) with ESMTP id A340261059
 	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:58:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232021AbhECQ6z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 May 2021 12:58:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43266 "EHLO mail.kernel.org"
+        id S233314AbhECQ6x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 May 2021 12:58:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43040 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235083AbhECQzr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 3 May 2021 12:55:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A0DF06142D;
-        Mon,  3 May 2021 16:42:50 +0000 (UTC)
+        id S235080AbhECQzq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 3 May 2021 12:55:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8650061948;
+        Mon,  3 May 2021 16:42:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620060171;
-        bh=XxWpKtmGXBh+wCjhl/xB/tR0SEd/k8HwnNtlnQ5hRtM=;
+        s=k20201202; t=1620060168;
+        bh=l8yuecNHOrleM1sXka6sDMR2nkAdygJgohEMeZhx4BY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WLjJN3QxijDYQaW4tCIQmuaU6TUuST1l4QbDcO5/4ffWTXj8sbnseXD9NqfPrV4Xh
-         lf/2amVz2U3ycqXkTOojkxhGRwgEY3ACoUTA4QBrNeZI01szCnNmMsrOs8lu+biyvR
-         8XSjqGQdFf3MYHt887IW28lyRHm5mB+bO/AQCa31va5T/rtRPc2IFmFXGIpipDGcxt
-         w+1waR9UX47bKdCK23PjC9Z4YbrRmW15e3/R7N+3nuI4f/2dRNGixNfw4jidNa26h9
-         2zWRQUNXsx1YKUZqQeFGbiF9a8YMCC8lxuw8lJDji49WhvRkA4whmKZICYxe9U637g
-         Cnb4+4tnbfhCw==
+        b=ei1BWXgi6n256GXBJfgvvLgWDTVyYs5KVmHnpkbkDwGJ4m8/uGJU37JouXQ2HXyQV
+         pw4mNGnWs9mVcpSkMt3lbrYzaSKWtUkdXOwBhTFLWDEZU4wi0pHpr3FQILKfa9fpVU
+         eHC1xeq1Km45nTlod+4UBIWESr6LCxGudaEglRHGmSWt9ygByXm8CUWNAhIXJfPRvP
+         TWzR/pKvBjpxhJbmTe/0f2SEOuUeU05h/2sXG0Ah99/nhIChyix7WQos2Y9nDXiGww
+         4dNfUwQBuV1lHlURDnHKNrAjpRHmcPzIUFb0b2pxROqzD1q/Jd8eUd3u5a0tpTSsN5
+         iPEe83rYmQb8A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 4.14 31/31] scsi: libfc: Fix a format specifier
-Date:   Mon,  3 May 2021 12:42:04 -0400
-Message-Id: <20210503164204.2854178-31-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 29/31] scsi: lpfc: Fix crash when a REG_RPI mailbox fails triggering a LOGO response
+Date:   Mon,  3 May 2021 12:42:02 -0400
+Message-Id: <20210503164204.2854178-29-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210503164204.2854178-1-sashal@kernel.org>
 References: <20210503164204.2854178-1-sashal@kernel.org>
@@ -52,43 +51,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 90d6697810f06aceea9de71ad836a8c7669789cd ]
+[ Upstream commit fffd18ec6579c2d9c72b212169259062fe747888 ]
 
-Since the 'mfs' member has been declared as 'u32' in include/scsi/libfc.h,
-use the %u format specifier instead of %hu. This patch fixes the following
-clang compiler warning:
+Fix a crash caused by a double put on the node when the driver completed an
+ACC for an unsolicted abort on the same node.  The second put was executed
+by lpfc_nlp_not_used() and is wrong because the completion routine executes
+the nlp_put when the iocbq was released.  Additionally, the driver is
+issuing a LOGO then immediately calls lpfc_nlp_set_state to put the node
+into NPR.  This call does nothing.
 
-warning: format specifies type
-      'unsigned short' but the argument has type 'u32' (aka 'unsigned int')
-      [-Wformat]
-                             "lport->mfs:%hu\n", mfs, lport->mfs);
-                                         ~~~          ^~~~~~~~~~
-                                         %u
+Remove the lpfc_nlp_not_used call and additional set_state in the
+completion routine.  Remove the lpfc_nlp_set_state post issue_logo.  Isn't
+necessary.
 
-Link: https://lore.kernel.org/r/20210415220826.29438-8-bvanassche@acm.org
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Link: https://lore.kernel.org/r/20210412013127.2387-3-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_lport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 2 --
+ drivers/scsi/lpfc/lpfc_sli.c       | 1 -
+ 2 files changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index ca7967e390f1..5c0aa2c5fd55 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -1754,7 +1754,7 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 40c6d6eacea9..da6685700b04 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -1707,8 +1707,6 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
+ 		ndlp->nlp_last_elscmd = ELS_CMD_PLOGI;
  
- 	if (mfs < FC_SP_MIN_MAX_PAYLOAD || mfs > FC_SP_MAX_MAX_PAYLOAD) {
- 		FC_LPORT_DBG(lport, "FLOGI bad mfs:%hu response, "
--			     "lport->mfs:%hu\n", mfs, lport->mfs);
-+			     "lport->mfs:%u\n", mfs, lport->mfs);
- 		fc_lport_error(lport, fp);
- 		goto out;
+ 		lpfc_issue_els_logo(vport, ndlp, 0);
+-		ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
+-		lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
+ 		return ndlp->nlp_state;
  	}
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 45445dafc80c..27578816d852 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -16637,7 +16637,6 @@ lpfc_sli4_seq_abort_rsp_cmpl(struct lpfc_hba *phba,
+ 	if (cmd_iocbq) {
+ 		ndlp = (struct lpfc_nodelist *)cmd_iocbq->context1;
+ 		lpfc_nlp_put(ndlp);
+-		lpfc_nlp_not_used(ndlp);
+ 		lpfc_sli_release_iocbq(phba, cmd_iocbq);
+ 	}
+ 
 -- 
 2.30.2
 
