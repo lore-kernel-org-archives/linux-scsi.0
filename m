@@ -5,44 +5,44 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52F05C43461
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 17:00:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B49BCC19774
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 17:00:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1758261176
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 17:00:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99E20601FC
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 17:00:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234773AbhECQ7S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 May 2021 12:59:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43310 "EHLO mail.kernel.org"
+        id S231743AbhECRBQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 May 2021 13:01:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43040 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235307AbhECQ4K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 3 May 2021 12:56:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D6D7E61978;
-        Mon,  3 May 2021 16:43:25 +0000 (UTC)
+        id S233524AbhECQ5O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 3 May 2021 12:57:14 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 88CDE61574;
+        Mon,  3 May 2021 16:43:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620060206;
-        bh=IjhAkWEP1ZpF8POhkS0PDujjqG9kq38FL0A5mIfP19k=;
+        s=k20201202; t=1620060232;
+        bh=NnusT3g1kupXty5Ig/F4DpzN53olHto/uUZKxUFA9OU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qSXkE4GeYHTmwXM2qrjmuj/zSwGR9NkIQdgi1/7kjc4yo3n1NyvbeKZRBErLaWMh+
-         SNKe2ZEpvPQ5X3BqpEuoHjudRnNfWcJtxM6TmLYXOmGBPkQA57nY64Q70uFbndRHZ8
-         YS8BCr/+wrdGxuP9mTz3OUfguaG9RuU0pzL5UekIzYo9mMIB8bEqj765HNQmLIhfsT
-         oOpMiAK4XCGi6TmcxUdncEusAr+ozl7g6G/QOccpqsNDoEyCCTSyrlZlqhBbX7EInI
-         j/gqExb4s7MnY8Pj7DRmCRIZO1TSBUKBP4+sV/YKcHvBtVPNFTkkj5ch4Y63QR/6fz
-         v/zlAyUmpeUug==
+        b=Tocfsla5GT95ESjQXHebL5IJ6T5/NBcml0jogii0Wu1D3l6Pdm9J1iJxLAxKxgBt5
+         YrXTWKdFlxzQHCdrOD3TKK5nAG6/oa5HzTsOeIPvCVUoxK3K8Xq3pQA/TB2GbYu5EP
+         aRZx3GKMQinnq9v7uDVpG2z2BnmccCfr2xo6VYP/0T1DC47IUtwan9o4U7AZ3Xvbrr
+         lLEQVWn81i/qqKbE51Zn+rCdgrzo+k58n9iNsOYQojFxsQBm7CyhHPjsBq4SeATyvw
+         0tXkiTOdD/1B8G9cxihMGbHasznyeeoksUyOhmc53T41X+RJpG95t+O7tssT2tEVg7
+         t/NYKbrtsJeig==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 23/24] scsi: lpfc: Fix crash when a REG_RPI mailbox fails triggering a LOGO response
-Date:   Mon,  3 May 2021 12:42:51 -0400
-Message-Id: <20210503164252.2854487-23-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 15/16] scsi: lpfc: Fix crash when a REG_RPI mailbox fails triggering a LOGO response
+Date:   Mon,  3 May 2021 12:43:28 -0400
+Message-Id: <20210503164329.2854739-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210503164252.2854487-1-sashal@kernel.org>
-References: <20210503164252.2854487-1-sashal@kernel.org>
+In-Reply-To: <20210503164329.2854739-1-sashal@kernel.org>
+References: <20210503164329.2854739-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -78,10 +78,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 3 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index fefef2884d59..30b5f65b29d1 100644
+index 6aa0698925da..1a44102b43c3 100644
 --- a/drivers/scsi/lpfc/lpfc_nportdisc.c
 +++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -1606,8 +1606,6 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
+@@ -1604,8 +1604,6 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
  		ndlp->nlp_last_elscmd = ELS_CMD_PLOGI;
  
  		lpfc_issue_els_logo(vport, ndlp, 0);
@@ -91,10 +91,10 @@ index fefef2884d59..30b5f65b29d1 100644
  	}
  
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 08c76c361e8d..0e7915ecb85a 100644
+index 97c0d79a2601..9055a8fce3d4 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -15252,7 +15252,6 @@ lpfc_sli4_seq_abort_rsp_cmpl(struct lpfc_hba *phba,
+@@ -15049,7 +15049,6 @@ lpfc_sli4_seq_abort_rsp_cmpl(struct lpfc_hba *phba,
  	if (cmd_iocbq) {
  		ndlp = (struct lpfc_nodelist *)cmd_iocbq->context1;
  		lpfc_nlp_put(ndlp);
