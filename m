@@ -7,39 +7,40 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67016C433B4
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:58:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE52AC433ED
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:58:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29C38611AD
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:58:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF6F8610A5
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:58:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233084AbhECQ6v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 May 2021 12:58:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43314 "EHLO mail.kernel.org"
+        id S232021AbhECQ6z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 May 2021 12:58:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43266 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234820AbhECQzC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 3 May 2021 12:55:02 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2AD5761954;
-        Mon,  3 May 2021 16:42:28 +0000 (UTC)
+        id S235083AbhECQzr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 3 May 2021 12:55:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A0DF06142D;
+        Mon,  3 May 2021 16:42:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620060149;
-        bh=3Qtkq3OoeZGNQEuCvvaZiKOFn4jy2VcAcLXyZRnIjZo=;
+        s=k20201202; t=1620060171;
+        bh=XxWpKtmGXBh+wCjhl/xB/tR0SEd/k8HwnNtlnQ5hRtM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ha3Ii+ea2iuYytPb975ku0cfHp7ezWDyP1yv862q17WMJ4whzXggoVmv0juvNZY3/
-         MTchUGezl6Y0Mri8wqn1L0A0k/d74Q/OmNRfQXU2B//e9Z1XiqDhKop9CSsDOax3Ud
-         0MDdUcW1ri6jbo/0g5x7lB72DM7Cnas5cjATj7E1DK+7AniniDozk3m13Knqkptxsc
-         x+E27uGvuATTNN3clpt7lCZDYjVMDK2c9H/Cj7dkAJ6PbJCJtJXuTSFkpOCDBQ9VJH
-         J6yMStKtS04hH+CCbtLkD8IAYTzyMx8xYtBPSqa1mvYQx8G2LLl7qQW1Y3d3bstwiz
-         g0CsWyhIHuGwg==
+        b=WLjJN3QxijDYQaW4tCIQmuaU6TUuST1l4QbDcO5/4ffWTXj8sbnseXD9NqfPrV4Xh
+         lf/2amVz2U3ycqXkTOojkxhGRwgEY3ACoUTA4QBrNeZI01szCnNmMsrOs8lu+biyvR
+         8XSjqGQdFf3MYHt887IW28lyRHm5mB+bO/AQCa31va5T/rtRPc2IFmFXGIpipDGcxt
+         w+1waR9UX47bKdCK23PjC9Z4YbrRmW15e3/R7N+3nuI4f/2dRNGixNfw4jidNa26h9
+         2zWRQUNXsx1YKUZqQeFGbiF9a8YMCC8lxuw8lJDji49WhvRkA4whmKZICYxe9U637g
+         Cnb4+4tnbfhCw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Ewan D. Milne" <emilne@redhat.com>,
+Cc:     Bart Van Assche <bvanassche@acm.org>,
         Hannes Reinecke <hare@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 16/31] scsi: scsi_dh_alua: Remove check for ASC 24h in alua_rtpg()
-Date:   Mon,  3 May 2021 12:41:49 -0400
-Message-Id: <20210503164204.2854178-16-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        clang-built-linux@googlegroups.com
+Subject: [PATCH AUTOSEL 4.14 31/31] scsi: libfc: Fix a format specifier
+Date:   Mon,  3 May 2021 12:42:04 -0400
+Message-Id: <20210503164204.2854178-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210503164204.2854178-1-sashal@kernel.org>
 References: <20210503164204.2854178-1-sashal@kernel.org>
@@ -51,40 +52,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: "Ewan D. Milne" <emilne@redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit bc3f2b42b70eb1b8576e753e7d0e117bbb674496 ]
+[ Upstream commit 90d6697810f06aceea9de71ad836a8c7669789cd ]
 
-Some arrays return ILLEGAL_REQUEST with ASC 00h if they don't support the
-RTPG extended header so remove the check for INVALID FIELD IN CDB.
+Since the 'mfs' member has been declared as 'u32' in include/scsi/libfc.h,
+use the %u format specifier instead of %hu. This patch fixes the following
+clang compiler warning:
 
-Link: https://lore.kernel.org/r/20210331201154.20348-1-emilne@redhat.com
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+warning: format specifies type
+      'unsigned short' but the argument has type 'u32' (aka 'unsigned int')
+      [-Wformat]
+                             "lport->mfs:%hu\n", mfs, lport->mfs);
+                                         ~~~          ^~~~~~~~~~
+                                         %u
+
+Link: https://lore.kernel.org/r/20210415220826.29438-8-bvanassche@acm.org
+Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_lport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index ba68454109ba..2cf5579a9ad9 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -560,10 +560,11 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		 * even though it shouldn't according to T10.
- 		 * The retry without rtpg_ext_hdr_req set
- 		 * handles this.
-+		 * Note:  some arrays return a sense key of ILLEGAL_REQUEST
-+		 * with ASC 00h if they don't support the extended header.
- 		 */
- 		if (!(pg->flags & ALUA_RTPG_EXT_HDR_UNSUPP) &&
--		    sense_hdr.sense_key == ILLEGAL_REQUEST &&
--		    sense_hdr.asc == 0x24 && sense_hdr.ascq == 0) {
-+		    sense_hdr.sense_key == ILLEGAL_REQUEST) {
- 			pg->flags |= ALUA_RTPG_EXT_HDR_UNSUPP;
- 			goto retry;
- 		}
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index ca7967e390f1..5c0aa2c5fd55 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1754,7 +1754,7 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	if (mfs < FC_SP_MIN_MAX_PAYLOAD || mfs > FC_SP_MAX_MAX_PAYLOAD) {
+ 		FC_LPORT_DBG(lport, "FLOGI bad mfs:%hu response, "
+-			     "lport->mfs:%hu\n", mfs, lport->mfs);
++			     "lport->mfs:%u\n", mfs, lport->mfs);
+ 		fc_lport_error(lport, fp);
+ 		goto out;
+ 	}
 -- 
 2.30.2
 
