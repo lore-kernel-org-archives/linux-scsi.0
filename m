@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30892C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 15:03:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D7F3C43460
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 15:03:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01F78611C9
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 15:03:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF8466135F
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 15:03:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230181AbhECPEs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 May 2021 11:04:48 -0400
-Received: from mx2.suse.de ([195.135.220.15]:40894 "EHLO mx2.suse.de"
+        id S230213AbhECPEt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 May 2021 11:04:49 -0400
+Received: from mx2.suse.de ([195.135.220.15]:40902 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230185AbhECPEk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S230188AbhECPEk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 3 May 2021 11:04:40 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id A0124B1C4;
+        by mx2.suse.de (Postfix) with ESMTP id A0703B1C8;
         Mon,  3 May 2021 15:03:44 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 06/18] scsi: Use dummy inquiry data for the host device
-Date:   Mon,  3 May 2021 17:03:21 +0200
-Message-Id: <20210503150333.130310-7-hare@suse.de>
+        Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Subject: [PATCH 15/18] aacraid: move scsi_add_host()
+Date:   Mon,  3 May 2021 17:03:30 +0200
+Message-Id: <20210503150333.130310-16-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210503150333.130310-1-hare@suse.de>
 References: <20210503150333.130310-1-hare@suse.de>
@@ -41,86 +41,98 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Attach the dummy inquiry data to the scsi host device and use it
-to check if any given device is a scsi host device.
+Move the call to scsi_add_host() so that the Scsi_Host structure
+is initialized before any I/O is sent.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/scsi_scan.c  | 17 +++++++++++++++--
- drivers/scsi/scsi_sysfs.c |  3 ++-
- include/scsi/scsi_host.h  |  7 ++++---
- 3 files changed, 21 insertions(+), 6 deletions(-)
+ drivers/scsi/aacraid/linit.c | 31 +++++++++++++++----------------
+ 1 file changed, 15 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index a50abba41ac1..55fa7f7317a2 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1940,9 +1940,11 @@ struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
- 		goto out;
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 3168915adaa7..e5d89b309c3a 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1639,6 +1639,9 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	shost->irq = pdev->irq;
+ 	shost->unique_id = unique_id;
+ 	shost->max_cmd_len = 16;
++	shost->max_id = MAXIMUM_NUM_CONTAINERS;
++	shost->max_lun = AAC_MAX_LUN;
++	shost->sg_tablesize = HBA_MAX_SG_SEPARATE;
  
- 	sdev = scsi_alloc_sdev(starget, 0, NULL);
--	if (sdev)
-+	if (sdev) {
- 		sdev->borken = 0;
--	else
-+		sdev->inquiry = (unsigned char *)scsi_null_inquiry;
-+		sdev->inquiry_len = sizeof(scsi_null_inquiry);
-+	} else
- 		scsi_target_reap(starget);
- 	put_device(&starget->dev);
+ 	if (aac_cfg_major == AAC_CHARDEV_NEEDS_REINIT)
+ 		aac_init_char();
+@@ -1677,7 +1680,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	aac->base_size = AAC_MIN_FOOTPRINT_SIZE;
+ 	if ((*aac_drivers[index].init)(aac)) {
+ 		error = -ENODEV;
+-		goto out_unmap;
++		goto out_free_fibs;
+ 	}
+ 
+ 	if (aac->sync_mode) {
+@@ -1703,9 +1706,15 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		printk(KERN_ERR "aacraid: Unable to create command thread.\n");
+ 		error = PTR_ERR(aac->thread);
+ 		aac->thread = NULL;
+-		goto out_deinit;
++		goto out_unmap;
+ 	}
+ 
++	pci_set_drvdata(pdev, shost);
++
++	error = scsi_add_host(shost, &pdev->dev);
++	if (error)
++		goto out_deinit;
++
+ 	aac->maximum_num_channels = aac_drivers[index].channels;
+ 	error = aac_get_adapter_info(aac);
+ 	if (error < 0)
+@@ -1764,18 +1773,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (!aac->sa_firmware && aac_drivers[index].quirks & AAC_QUIRK_SRC)
+ 		aac_intr_normal(aac, 0, 2, 0, NULL);
+ 
+-	/*
+-	 * dmb - we may need to move the setting of these parms somewhere else once
+-	 * we get a fib that can report the actual numbers
+-	 */
+-	shost->max_lun = AAC_MAX_LUN;
+-
+-	pci_set_drvdata(pdev, shost);
+-
+-	error = scsi_add_host(shost, &pdev->dev);
+-	if (error)
+-		goto out_deinit;
+-
+ 	aac_scan_host(aac);
+ 
+ 	pci_enable_pcie_error_reporting(pdev);
+@@ -1792,10 +1789,12 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 				  aac->comm_addr, aac->comm_phys);
+ 	kfree(aac->queues);
+ 	aac_adapter_ioremap(aac, 0);
+-	kfree(aac->fibs);
+ 	kfree(aac->fsa_dev);
++ out_free_fibs:
++	kfree(aac->fibs);
+  out_free_host:
+ 	scsi_host_put(shost);
++	pci_set_drvdata(pdev, NULL);
+  out_disable_pdev:
+ 	pci_disable_device(pdev);
   out:
-@@ -1967,3 +1969,14 @@ void scsi_free_host_dev(struct scsi_device *sdev)
- }
- EXPORT_SYMBOL(scsi_free_host_dev);
+@@ -1903,9 +1902,9 @@ static void aac_remove_one(struct pci_dev *pdev)
+ 	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
  
-+/**
-+ * scsi_device_is_host_dev - Check if a scsi device is a host device
-+ * @sdev: SCSI device to test
-+ *
-+ * Returns: true if @sdev is a host device, false otherwise
-+ */
-+bool scsi_device_is_host_dev(struct scsi_device *sdev)
-+{
-+	return ((const unsigned char *)sdev->inquiry == scsi_null_inquiry);
-+}
-+EXPORT_SYMBOL_GPL(scsi_device_is_host_dev);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 6d2a28294092..d5260d1b7b38 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -498,7 +498,8 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 		kfree_rcu(vpd_pg80, rcu);
- 	if (vpd_pg89)
- 		kfree_rcu(vpd_pg89, rcu);
--	kfree(sdev->inquiry);
-+	if (!scsi_device_is_host_dev(sdev))
-+		kfree(sdev->inquiry);
- 	kfree(sdev);
+ 	aac_cancel_rescan_worker(aac);
+-	scsi_remove_host(shost);
  
- 	if (parent)
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 3f3ebfdedeb2..f492e9034a62 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -804,14 +804,15 @@ void scsi_host_busy_iter(struct Scsi_Host *,
- struct class_container;
- 
- /*
-- * These two functions are used to allocate and free a pseudo device
-- * which will connect to the host adapter itself rather than any
-- * physical device.  You must deallocate when you are done with the
-+ * These three functions are used to allocate, free, and test for
-+ * a pseudo device which will connect to the host adapter itself rather
-+ * than any physical device.  You must deallocate when you are done with the
-  * thing.  This physical pseudo-device isn't real and won't be available
-  * from any high-level drivers.
-  */
- extern void scsi_free_host_dev(struct scsi_device *);
- extern struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
-+bool scsi_device_is_host_dev(struct scsi_device *);
- 
- /*
-  * DIF defines the exchange of protection information between
+ 	__aac_shutdown(aac);
++	scsi_remove_host(shost);
+ 	aac_fib_map_free(aac);
+ 	dma_free_coherent(&aac->pdev->dev, aac->comm_size, aac->comm_addr,
+ 			  aac->comm_phys);
 -- 
 2.29.2
 
