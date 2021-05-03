@@ -7,42 +7,41 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A88DC4360C
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E4DCC433B4
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4681F60FD7
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F7EA61165
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232540AbhECQvM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 May 2021 12:51:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60880 "EHLO mail.kernel.org"
+        id S233244AbhECQvN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 May 2021 12:51:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32774 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233791AbhECQt3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 3 May 2021 12:49:29 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D72D46186A;
-        Mon,  3 May 2021 16:40:18 +0000 (UTC)
+        id S233816AbhECQta (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 3 May 2021 12:49:30 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7EEE661490;
+        Mon,  3 May 2021 16:40:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620060020;
-        bh=VtMMlTKEpzi3wzRMRuuMeFN/bWje5cm33io5PqzJTNA=;
+        s=k20201202; t=1620060023;
+        bh=V6IcefS3Qw2+t7XZ7CSQUKs6/0wm+jf+MuAfSO+MeqY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JzXL6FvAjZt4UmiQ+voQModiFv+R2ZxPXpIJzdRYvEikdmXutP6N4rUKqYx/wTVWZ
-         yGjAcjgDfbd2UyKYN7XC74aJKQ2RYVtFCraFr1O96UfzGhWR72nBjLA8bGS1bnBTJP
-         hCyxzr08bXaLJuxJXD3Rlqffj3gbOTW0JoBHC0nu3EOKvJByCorriA6eCfSXWf3cnv
-         ZlGy8oMASv7JwFa0ewVnHvWtvviM4DBoOcnb5RUhcuZhdxSIxROkysz2Eu+ajKZk7P
-         f+ROE7+xIm+CTCgQ+9B6a5RXGg7zBsuRv2tGQNTr0HqQ019gDCxlVR/Qii/+0lgsLI
-         aFv7n1vKGQH8g==
+        b=rFtDQu39CpY4O9HWuhwjrHUAQ/Osop/LbuYJ315h5X9hkiNGGbwjnpqQlreLACcBp
+         mhjA/ZmZJtdpt7+Lu419poihFE9Lni4DH1VModhrt6W6biBPa/vzHyQJ3mDE7oD9VC
+         LYWu6nMOn2DxDIANRj0dSVfTSGsz10QyDjhrKmfJLkfsxJZ0ldAUkEVQST/uAqfRQP
+         df8o1IThU1AFTIx/EMDIQG87AfP7W6QbdCNr5CYjGL/K2kTlaYGqIf/QYqVVdX5R6i
+         sjWIA+mz0Vj3LcUL92OEKxC0lbhtY7gFnt7yc+v9YwJhXlgip2Gft6nXZEspPryEOU
+         zEkC3xpm4RcXA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Quinn Tran <qutran@marvell.com>,
-        Mike Christie <michael.christie@oracle.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Daniel Wagner <dwagner@suse.de>, Lee Duncan <lduncan@suse.com>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 25/57] scsi: qla2xxx: Always check the return value of qla24xx_get_isp_stats()
-Date:   Mon,  3 May 2021 12:39:09 -0400
-Message-Id: <20210503163941.2853291-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 27/57] scsi: qla2xxx: Fix use after free in bsg
+Date:   Mon,  3 May 2021 12:39:11 -0400
+Message-Id: <20210503163941.2853291-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210503163941.2853291-1-sashal@kernel.org>
 References: <20210503163941.2853291-1-sashal@kernel.org>
@@ -54,57 +53,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit a2b2cc660822cae08c351c7f6b452bfd1330a4f7 ]
+[ Upstream commit 2ce35c0821afc2acd5ee1c3f60d149f8b2520ce8 ]
 
-This patch fixes the following Coverity warning:
+On bsg command completion, bsg_job_done() was called while qla driver
+continued to access the bsg_job buffer. bsg_job_done() would free up
+resources that ended up being reused by other task while the driver
+continued to access the buffers. As a result, driver was reading garbage
+data.
 
-    CID 361199 (#1 of 1): Unchecked return value (CHECKED_RETURN)
-    3. check_return: Calling qla24xx_get_isp_stats without checking return
-    value (as is done elsewhere 4 out of 5 times).
+localhost kernel: BUG: KASAN: use-after-free in sg_next+0x64/0x80
+localhost kernel: Read of size 8 at addr ffff8883228a3330 by task swapper/26/0
+localhost kernel:
+localhost kernel: CPU: 26 PID: 0 Comm: swapper/26 Kdump:
+loaded Tainted: G          OE    --------- -  - 4.18.0-193.el8.x86_64+debug #1
+localhost kernel: Hardware name: HP ProLiant DL360
+Gen9/ProLiant DL360 Gen9, BIOS P89 08/12/2016
+localhost kernel: Call Trace:
+localhost kernel: <IRQ>
+localhost kernel: dump_stack+0x9a/0xf0
+localhost kernel: print_address_description.cold.3+0x9/0x23b
+localhost kernel: kasan_report.cold.4+0x65/0x95
+localhost kernel: debug_dma_unmap_sg.part.12+0x10d/0x2d0
+localhost kernel: qla2x00_bsg_sp_free+0xaf6/0x1010 [qla2xxx]
 
-Link: https://lore.kernel.org/r/20210320232359.941-7-bvanassche@acm.org
-Cc: Quinn Tran <qutran@marvell.com>
-Cc: Mike Christie <michael.christie@oracle.com>
-Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
-Cc: Daniel Wagner <dwagner@suse.de>
-Cc: Lee Duncan <lduncan@suse.com>
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
+Link: https://lore.kernel.org/r/20210329085229.4367-6-njavali@marvell.com
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_attr.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_bsg.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index bed7e8637217..580d30cd5c35 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -2691,6 +2691,8 @@ qla2x00_reset_host_stats(struct Scsi_Host *shost)
- 	vha->qla_stats.jiffies_at_last_reset = get_jiffies_64();
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index cbaf178fc979..ce55121910e8 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -17,10 +17,11 @@ void qla2x00_bsg_job_done(srb_t *sp, int res)
+ 	struct bsg_job *bsg_job = sp->u.bsg_job;
+ 	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
  
- 	if (IS_FWI2_CAPABLE(ha)) {
-+		int rval;
++	sp->free(sp);
 +
- 		stats = dma_alloc_coherent(&ha->pdev->dev,
- 		    sizeof(*stats), &stats_dma, GFP_KERNEL);
- 		if (!stats) {
-@@ -2700,7 +2702,11 @@ qla2x00_reset_host_stats(struct Scsi_Host *shost)
- 		}
+ 	bsg_reply->result = res;
+ 	bsg_job_done(bsg_job, bsg_reply->result,
+ 		       bsg_reply->reply_payload_rcv_len);
+-	sp->free(sp);
+ }
  
- 		/* reset firmware statistics */
--		qla24xx_get_isp_stats(base_vha, stats, stats_dma, BIT_0);
-+		rval = qla24xx_get_isp_stats(base_vha, stats, stats_dma, BIT_0);
-+		if (rval != QLA_SUCCESS)
-+			ql_log(ql_log_warn, vha, 0x70de,
-+			       "Resetting ISP statistics failed: rval = %d\n",
-+			       rval);
- 
- 		dma_free_coherent(&ha->pdev->dev, sizeof(*stats),
- 		    stats, stats_dma);
+ void qla2x00_bsg_sp_free(srb_t *sp)
 -- 
 2.30.2
 
