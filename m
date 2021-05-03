@@ -7,44 +7,42 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5479CC43462
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:44:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1286DC433B4
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:45:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 284D4613B4
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:44:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D99BF613EC
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:45:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231769AbhECQpn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 May 2021 12:45:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50736 "EHLO mail.kernel.org"
+        id S232383AbhECQp5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 May 2021 12:45:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50588 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232776AbhECQmn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 3 May 2021 12:42:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 50DB96140E;
-        Mon,  3 May 2021 16:38:19 +0000 (UTC)
+        id S233044AbhECQo3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 3 May 2021 12:44:29 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E098161582;
+        Mon,  3 May 2021 16:38:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620059900;
-        bh=P1406Jpr8eiCFe4E8OCTMSlIbNSDkAouqN75tcgzYgc=;
+        s=k20201202; t=1620059926;
+        bh=fRP3g17GIT7FXpO3sRJycJ0l79WL4vpifiTY6o4F18w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=L3cvNiAayN55QNRw6tVSff1399d1XZdqU9+5N2gL4Xqo//BVS/zgLR02OfmT8vK7Q
-         RKFiO4/MtygUExSi5HQ62J4350zMyswXnBrdEQZ0pCoWR/FovRFvGSyIKsOtikPomw
-         z6O6f0pvqWSa+wJ+pAe97ANEN31ZYLifKWeObf/qY3Ynhqy3jy+QV6ZHeFIxLR3jTT
-         uG2xhHu37sL9rrK23IohIc0/FzvhOOPXD8Fkt3ihrHD8MOlmh2zY+64eFCN8i5qin3
-         Xz4+2yXnGpjLXPDH7aE9DrHWTbMyzaVhgudpoZKUtOBPWr9fR8skfxDhIxDsP2r8IO
-         Ntu5kppmjmG/w==
+        b=AGvxFk6B45QtndLoT9tFAlWbHdkaU1BTFkhfm/p7mRMi12gLe23sBXoo29XDUHEi0
+         0A7fjuAWqBiONCqiSAkit4uZhdS7hHx9BrNfHBHf6MXYFg9mqCiwfxH0ipoFcawsBe
+         MOc8JMnN0AzfrL589/EpzdrKoqivpeZemfjyiAzjPNi3tc+KHrwR5zB1hJBpj8vKuc
+         qiwo235tJ3Cm7wkEpBqcx2UnKwKmwd3OYi5hF921v7/VncEUTa+zEZgrSFyCAShmw8
+         TuXmGQvFbXAHkwO0lFYc6vhwGEBStv1jehsZvXHPqz8eXOgE/Uz0Ly/BxixfxOYYFT
+         GQ3Q3bNqAybaQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 052/115] scsi: qla2xxx: Fix use after free in bsg
-Date:   Mon,  3 May 2021 12:35:56 -0400
-Message-Id: <20210503163700.2852194-52-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 011/100] scsi: lpfc: Fix incorrect dbde assignment when building target abts wqe
+Date:   Mon,  3 May 2021 12:37:00 -0400
+Message-Id: <20210503163829.2852775-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210503163700.2852194-1-sashal@kernel.org>
-References: <20210503163700.2852194-1-sashal@kernel.org>
+In-Reply-To: <20210503163829.2852775-1-sashal@kernel.org>
+References: <20210503163829.2852775-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,59 +51,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 2ce35c0821afc2acd5ee1c3f60d149f8b2520ce8 ]
+[ Upstream commit 9302154c07bff4e7f7f43c506a1ac84540303d06 ]
 
-On bsg command completion, bsg_job_done() was called while qla driver
-continued to access the bsg_job buffer. bsg_job_done() would free up
-resources that ended up being reused by other task while the driver
-continued to access the buffers. As a result, driver was reading garbage
-data.
+The wqe_dbde field indicates whether a Data BDE is present in Words 0:2 and
+should therefore should be clear in the abts request wqe. By setting the
+bit we can be misleading fw into error cases.
 
-localhost kernel: BUG: KASAN: use-after-free in sg_next+0x64/0x80
-localhost kernel: Read of size 8 at addr ffff8883228a3330 by task swapper/26/0
-localhost kernel:
-localhost kernel: CPU: 26 PID: 0 Comm: swapper/26 Kdump:
-loaded Tainted: G          OE    --------- -  - 4.18.0-193.el8.x86_64+debug #1
-localhost kernel: Hardware name: HP ProLiant DL360
-Gen9/ProLiant DL360 Gen9, BIOS P89 08/12/2016
-localhost kernel: Call Trace:
-localhost kernel: <IRQ>
-localhost kernel: dump_stack+0x9a/0xf0
-localhost kernel: print_address_description.cold.3+0x9/0x23b
-localhost kernel: kasan_report.cold.4+0x65/0x95
-localhost kernel: debug_dma_unmap_sg.part.12+0x10d/0x2d0
-localhost kernel: qla2x00_bsg_sp_free+0xaf6/0x1010 [qla2xxx]
+Clear the wqe_dbde field.
 
-Link: https://lore.kernel.org/r/20210329085229.4367-6-njavali@marvell.com
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Link: https://lore.kernel.org/r/20210301171821.3427-2-jsmart2021@gmail.com
+Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_nvmet.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 23b604832a54..7fa085969a63 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -24,10 +24,11 @@ void qla2x00_bsg_job_done(srb_t *sp, int res)
- 	struct bsg_job *bsg_job = sp->u.bsg_job;
- 	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index d4ade7cdb93a..deab8931ab48 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -3300,7 +3300,6 @@ lpfc_nvmet_unsol_issue_abort(struct lpfc_hba *phba,
+ 	bf_set(wqe_rcvoxid, &wqe_abts->xmit_sequence.wqe_com, xri);
  
-+	sp->free(sp);
-+
- 	bsg_reply->result = res;
- 	bsg_job_done(bsg_job, bsg_reply->result,
- 		       bsg_reply->reply_payload_rcv_len);
--	sp->free(sp);
- }
- 
- void qla2x00_bsg_sp_free(srb_t *sp)
+ 	/* Word 10 */
+-	bf_set(wqe_dbde, &wqe_abts->xmit_sequence.wqe_com, 1);
+ 	bf_set(wqe_iod, &wqe_abts->xmit_sequence.wqe_com, LPFC_WQE_IOD_WRITE);
+ 	bf_set(wqe_lenloc, &wqe_abts->xmit_sequence.wqe_com,
+ 	       LPFC_WQE_LENLOC_WORD12);
 -- 
 2.30.2
 
