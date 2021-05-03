@@ -7,41 +7,43 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E4DCC433B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFA61C43462
 	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F7EA61165
+	by mail.kernel.org (Postfix) with ESMTP id 7EE5461476
 	for <linux-scsi@archiver.kernel.org>; Mon,  3 May 2021 16:50:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233244AbhECQvN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 May 2021 12:51:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:32774 "EHLO mail.kernel.org"
+        id S233276AbhECQvO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 May 2021 12:51:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32912 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233816AbhECQta (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 3 May 2021 12:49:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7EEE661490;
-        Mon,  3 May 2021 16:40:22 +0000 (UTC)
+        id S233876AbhECQte (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 3 May 2021 12:49:34 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0446961879;
+        Mon,  3 May 2021 16:40:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620060023;
-        bh=V6IcefS3Qw2+t7XZ7CSQUKs6/0wm+jf+MuAfSO+MeqY=;
+        s=k20201202; t=1620060028;
+        bh=nInd9rGEAUTmqG3sBpalSUoJQWZY9+wmfLSK5N3OnBM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rFtDQu39CpY4O9HWuhwjrHUAQ/Osop/LbuYJ315h5X9hkiNGGbwjnpqQlreLACcBp
-         mhjA/ZmZJtdpt7+Lu419poihFE9Lni4DH1VModhrt6W6biBPa/vzHyQJ3mDE7oD9VC
-         LYWu6nMOn2DxDIANRj0dSVfTSGsz10QyDjhrKmfJLkfsxJZ0ldAUkEVQST/uAqfRQP
-         df8o1IThU1AFTIx/EMDIQG87AfP7W6QbdCNr5CYjGL/K2kTlaYGqIf/QYqVVdX5R6i
-         sjWIA+mz0Vj3LcUL92OEKxC0lbhtY7gFnt7yc+v9YwJhXlgip2Gft6nXZEspPryEOU
-         zEkC3xpm4RcXA==
+        b=psIy35NJQRserY32JwWyIt1Q1VLOb5YP4STlVFUNAxH81LkJv37N+CEt6GRAVu+Ap
+         irdZVLbA3Fww0KeIZ1lWQDO+DF6YrEpx5BFzJu8U/frkZp0WKdPPKWIcXYZay4auAI
+         6UkCJkKjcEBVHpfVUyTVNWJK8J87DUTHEwLw+aoykGMFysaFFxVES49whtAhclQz5v
+         NAj1EMnlqqBiMAwzll4hwq2FYT/wLGdLMs+BjRlb5nVTestE5yLuJDEDxWaS9nDgEZ
+         xvf+oGSKSX7vkUTajRcz3zAiAMNdxyVXkENXp6ek0zpM5/S6zPZxLoKyJtSN2RQs8U
+         RECc96nikBhMQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
+Cc:     Murthy Bhat <Murthy.Bhat@microchip.com>,
+        Scott Teel <scott.teel@microchip.com>,
+        Scott Benesh <scott.benesh@microchip.com>,
+        Kevin Barnett <kevin.barnett@microchip.com>,
+        Don Brace <don.brace@microchip.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 27/57] scsi: qla2xxx: Fix use after free in bsg
-Date:   Mon,  3 May 2021 12:39:11 -0400
-Message-Id: <20210503163941.2853291-27-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, storagedev@microchip.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 30/57] scsi: smartpqi: Correct request leakage during reset operations
+Date:   Mon,  3 May 2021 12:39:14 -0400
+Message-Id: <20210503163941.2853291-30-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210503163941.2853291-1-sashal@kernel.org>
 References: <20210503163941.2853291-1-sashal@kernel.org>
@@ -53,59 +55,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+From: Murthy Bhat <Murthy.Bhat@microchip.com>
 
-[ Upstream commit 2ce35c0821afc2acd5ee1c3f60d149f8b2520ce8 ]
+[ Upstream commit b622a601a13ae5974c5b0aeecb990c224b8db0d9 ]
 
-On bsg command completion, bsg_job_done() was called while qla driver
-continued to access the bsg_job buffer. bsg_job_done() would free up
-resources that ended up being reused by other task while the driver
-continued to access the buffers. As a result, driver was reading garbage
-data.
+While failing queued I/Os in TMF path, there was a request leak and hence
+stale entries in request pool with ref count being non-zero. In shutdown
+path we have a BUG_ON to catch stuck I/O either in firmware or in the
+driver. The stale requests caused a system crash. The I/O request pool
+leakage also lead to a significant performance drop.
 
-localhost kernel: BUG: KASAN: use-after-free in sg_next+0x64/0x80
-localhost kernel: Read of size 8 at addr ffff8883228a3330 by task swapper/26/0
-localhost kernel:
-localhost kernel: CPU: 26 PID: 0 Comm: swapper/26 Kdump:
-loaded Tainted: G          OE    --------- -  - 4.18.0-193.el8.x86_64+debug #1
-localhost kernel: Hardware name: HP ProLiant DL360
-Gen9/ProLiant DL360 Gen9, BIOS P89 08/12/2016
-localhost kernel: Call Trace:
-localhost kernel: <IRQ>
-localhost kernel: dump_stack+0x9a/0xf0
-localhost kernel: print_address_description.cold.3+0x9/0x23b
-localhost kernel: kasan_report.cold.4+0x65/0x95
-localhost kernel: debug_dma_unmap_sg.part.12+0x10d/0x2d0
-localhost kernel: qla2x00_bsg_sp_free+0xaf6/0x1010 [qla2xxx]
-
-Link: https://lore.kernel.org/r/20210329085229.4367-6-njavali@marvell.com
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Link: https://lore.kernel.org/r/161549370379.25025.12793264112620796062.stgit@brunhilda
+Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+Signed-off-by: Murthy Bhat <Murthy.Bhat@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index cbaf178fc979..ce55121910e8 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -17,10 +17,11 @@ void qla2x00_bsg_job_done(srb_t *sp, int res)
- 	struct bsg_job *bsg_job = sp->u.bsg_job;
- 	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 093ed5d1eef2..3480a0a66771 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -5513,6 +5513,8 @@ static void pqi_fail_io_queued_for_device(struct pqi_ctrl_info *ctrl_info,
  
-+	sp->free(sp);
-+
- 	bsg_reply->result = res;
- 	bsg_job_done(bsg_job, bsg_reply->result,
- 		       bsg_reply->reply_payload_rcv_len);
--	sp->free(sp);
- }
+ 				list_del(&io_request->request_list_entry);
+ 				set_host_byte(scmd, DID_RESET);
++				pqi_free_io_request(io_request);
++				scsi_dma_unmap(scmd);
+ 				pqi_scsi_done(scmd);
+ 			}
  
- void qla2x00_bsg_sp_free(srb_t *sp)
+@@ -5549,6 +5551,8 @@ static void pqi_fail_io_queued_for_all_devices(struct pqi_ctrl_info *ctrl_info)
+ 
+ 				list_del(&io_request->request_list_entry);
+ 				set_host_byte(scmd, DID_RESET);
++				pqi_free_io_request(io_request);
++				scsi_dma_unmap(scmd);
+ 				pqi_scsi_done(scmd);
+ 			}
+ 
 -- 
 2.30.2
 
