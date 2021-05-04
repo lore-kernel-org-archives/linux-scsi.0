@@ -6,36 +6,41 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B6C3C433B4
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 May 2021 13:10:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3838C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 May 2021 13:12:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 281FD611AE
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 May 2021 13:10:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67823613C4
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 May 2021 13:12:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230482AbhEDNLh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 May 2021 09:11:37 -0400
-Received: from mx2.suse.de ([195.135.220.15]:50254 "EHLO mx2.suse.de"
+        id S230413AbhEDNNG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 May 2021 09:13:06 -0400
+Received: from mx2.suse.de ([195.135.220.15]:51136 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230414AbhEDNLg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 4 May 2021 09:11:36 -0400
+        id S230373AbhEDNNG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 4 May 2021 09:13:06 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 0FDD2AE00;
-        Tue,  4 May 2021 13:10:41 +0000 (UTC)
-Subject: Re: [PATCH 07/18] scsi: revamp host device handling
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        by mx2.suse.de (Postfix) with ESMTP id 9EAE7B1D7;
+        Tue,  4 May 2021 13:12:10 +0000 (UTC)
+Subject: Re: [PATCH 10/18] scsi: implement reserved command handling
+To:     John Garry <john.garry@huawei.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org
+        linux-scsi@vger.kernel.org
 References: <20210503150333.130310-1-hare@suse.de>
- <20210503150333.130310-8-hare@suse.de> <20210504095920.GE25986@lst.de>
+ <20210503150333.130310-11-hare@suse.de>
+ <3e41e5ea-6313-9718-c07d-20f8b203efd2@acm.org>
+ <1db7fc49-17a9-1c8d-9d94-9a1b3694f392@suse.de>
+ <7a9ceb36-32dc-4fcc-49a2-f4c2ca2286c3@huawei.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <55918d68-7385-0153-0bd9-d822d3ce4c21@suse.de>
-Date:   Tue, 4 May 2021 15:10:40 +0200
+Message-ID: <e2d2b5f7-6f8d-241e-5a38-44cbcd7fc772@suse.de>
+Date:   Tue, 4 May 2021 15:12:10 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.9.1
 MIME-Version: 1.0
-In-Reply-To: <20210504095920.GE25986@lst.de>
+In-Reply-To: <7a9ceb36-32dc-4fcc-49a2-f4c2ca2286c3@huawei.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -43,33 +48,30 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/4/21 11:59 AM, Christoph Hellwig wrote:
-> So right now scsi_get_host_dev/scsi_free_host_dev is entirely unused.
+On 5/4/21 12:55 PM, John Garry wrote:
+> On 04/05/2021 07:17, Hannes Reinecke wrote:
+>> On 5/4/21 5:20 AM, Bart Van Assche wrote:
+>>> On 5/3/21 8:03 AM, Hannes Reinecke wrote:
+>>>> These commands are set aside before allocating the block-mq tag bitmap,
+>>>> so they'll never show up as busy in the tag map.
+>>>
+>>> That doesn't sound correct to me. Should the above perhaps be changed
+>>> into "blk_mq_start_request() is never called for internal commands so
+>>> they'll never show up as busy in the tag map"?
+>>>
+>> Yes, will do.
 > 
-> І'd rather just kill them off rather than giving them a new life and
-> hacking all over the core code for them.
+> So why don't these - or shouldn't these - turn up in the busy tag map?
 > 
-> What do you need the scsi_device for instead of just having a
-> request_queue for comands to the controller?  If we need a scsi_device
-> can we somehow make sure it doesn't hit the scanning and sysfs code
-> from a much higher level?
+> One of the motivations to use these block requests for internal commands 
+> is that we can take advantage of the block layer handling for CPU 
+> hotplug for MQ hosts, i.e. if blk-mq can't see these are inflight, then 
+> they would be missed in blk_mq_hctx_notify_offline() -> 
+> blk_mq_hctx_has_requests(), right? And who knows what else...
 > 
-That is what I did in v2, and got the response:
-
- > That was just a question on why virtio uses the per-device tags, which
- > didn't look like it made any sense.  What I'm worried about here is
- > mixing up the concept of reserved tags in the tagset, and queues to
- > use them.  Note that we already have the scsi_get_host_dev to allocate
- > a scsi_device and thus a request_queue for the host itself.  That
- > seems like the better interface to use a tag for a host wide command
- > vs introducing a parallel path.
-
-(To be found at 
-https://lore.kernel.org/linux-scsi/20200311062228.GA13522@infradead.org/ 
-if you are curious.)
-
-So do you retract on that statement?
-Or did I misinterpret something there?
+Oh, but of course it's possible to call 'start' on these requests to 
+have them counted in the busy map.
+I just didn't see the need for it until now, that's all.
 
 Cheers,
 
