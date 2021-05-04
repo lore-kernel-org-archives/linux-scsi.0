@@ -6,62 +6,46 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C679FC433ED
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 May 2021 09:55:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8320CC433B4
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 May 2021 10:00:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92A09613B4
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 May 2021 09:55:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 476CC611AE
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 May 2021 10:00:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230033AbhEDJ4s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 May 2021 05:56:48 -0400
-Received: from verein.lst.de ([213.95.11.211]:38793 "EHLO verein.lst.de"
+        id S230132AbhEDKB1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 May 2021 06:01:27 -0400
+Received: from verein.lst.de ([213.95.11.211]:38803 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229953AbhEDJ4s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 4 May 2021 05:56:48 -0400
+        id S230033AbhEDKAT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 4 May 2021 06:00:19 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 8937168AFE; Tue,  4 May 2021 11:55:51 +0200 (CEST)
-Date:   Tue, 4 May 2021 11:55:51 +0200
+        id 1320A68AFE; Tue,  4 May 2021 11:59:20 +0200 (CEST)
+Date:   Tue, 4 May 2021 11:59:20 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 05/18] scsi: use real inquiry data when initialising
- devices
-Message-ID: <20210504095551.GD25986@lst.de>
-References: <20210503150333.130310-1-hare@suse.de> <20210503150333.130310-6-hare@suse.de>
+Subject: Re: [PATCH 07/18] scsi: revamp host device handling
+Message-ID: <20210504095920.GE25986@lst.de>
+References: <20210503150333.130310-1-hare@suse.de> <20210503150333.130310-8-hare@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210503150333.130310-6-hare@suse.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210503150333.130310-8-hare@suse.de>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 03, 2021 at 05:03:20PM +0200, Hannes Reinecke wrote:
-> Use dummy inquiry data when initialising devices and not just
-> some 'nullnullnull' string.
+So right now scsi_get_host_dev/scsi_free_host_dev is entirely unused.
 
-Why?
+І'd rather just kill them off rather than giving them a new life and
+hacking all over the core code for them.
 
-> +/*
-> + * Dummy inquiry for virtual LUNs:
-> + *
-> + * standard INQUIRY: [qualifier indicates no connected LU]
-> + *  PQual=1  Device_type=31  RMB=0  LU_CONG=0  version=0x05  [SPC-3]
-> + *  [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=2
-> + *  SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  [BQue=0]
-> + *  EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
-> + *  [RelAdr=0]  WBus16=0  Sync=0  [Linked=0]  [TranDis=0]  CmdQue=0
-> + *    length=36 (0x24)   Peripheral device type: no physical device on this lu
-> + * Vendor identification: LINUX
-> + * Product identification: VIRTUALLUN
-> + * Product revision level: 1.0
-> + */
-
-You don't juse set this up for virtual Luns, but as a default for all
-scsi_devices before calling inquirty.  I'd much helper with a helper
-to fill out fake inquiry data rather than having seemingly valid data
-for all devices before inquirty is called or if it fails.
+What do you need the scsi_device for instead of just having a
+request_queue for comands to the controller?  If we need a scsi_device
+can we somehow make sure it doesn't hit the scanning and sysfs code
+from a much higher level?
