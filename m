@@ -2,175 +2,178 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BFB3C433B4
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 May 2021 12:00:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC85DC433ED
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 May 2021 15:57:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32EDB6112F
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 May 2021 12:00:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 936106115C
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 May 2021 15:57:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232199AbhEEMBf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 May 2021 08:01:35 -0400
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:50367 "EHLO
-        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231678AbhEEMBe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 May 2021 08:01:34 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1620216038; x=1651752038;
-  h=from:to:cc:subject:date:message-id:mime-version;
-  bh=o//i9qrqbW2h/C1D6QFZ1ZmtHwKDnE1/uVsFOvmc3IU=;
-  b=VHaJZCy0p3usLGP6u2T688Wh0Sm4wtfZ1WC2vARN9Xp+H6Fj+w4lriMy
-   rLU+P80W2lEo9L8PQ0yKk/jPLhBlUuecOhkkDeTgIJmuSmAjOgugojZ+e
-   /6qKe6BEiSaWY1LeFGNfimVt2siim6ByI6anve2qfvDSswKoOGYoKSYaO
-   bGFLFxK1rbdkMKR/fHHNfAK1z8pg1pZRL3p5iZE5c/1kYUgmsY8k2QW3Z
-   mA+dBpJPchCevRtnS/zkXZKGucyc+Sk93QdfYu0c2CcZatuGBvNp1LlVt
-   KH3Ghzjup5E0s/RM1h0DQSf0cW00hmleus2+ds2AY/sPl7Mg1mmTj6Hfe
-   A==;
-IronPort-SDR: 6FcKfQSergi4ucUsLEYydEne+MAyio0XpJ3itm5Q5g9W0icFlKKzEyD+PGY9OJNlZtYA9ULFhV
- pXSuioHTrDiXr3bzdkdqGkhCTxaL1CALLychxqvV3/y/WOsePR8NA5IFBVAlsDKze8kvFnnRfd
- 243PZiQgele7kbPeaA8+5MiaWo4ZH2s2ZtRGmcbdpcW52Z+gpQZjY+TvQRP4FwdLbPPUQLLbQx
- PWx3QUQ+YdJOGOE+qtMIql440DcqoFHO8ea2XwYIFTixVizkU+NqCRAFFTfS8csb0ryqwjp55N
- 6dI=
-X-IronPort-AV: E=Sophos;i="5.82,274,1613458800"; 
-   d="scan'208";a="119019705"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 05 May 2021 05:00:38 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.87.72) by
- chn-vm-ex02.mchp-main.com (10.10.87.72) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 5 May 2021 05:00:36 -0700
-Received: from localhost (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
- Transport; Wed, 5 May 2021 05:00:36 -0700
-From:   <ajish.koshy@microchip.com>
-To:     <linux-scsi@vger.kernel.org>
-CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Viswas.G@microchip.com>, <Ruksar.devadi@microchip.com>,
-        <Ashokkumar.N@microchip.com>,
-        Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH 1/1] pm80xx: fix drive missing during rmmod & insmod in loop.
-Date:   Wed, 5 May 2021 17:31:03 +0530
-Message-ID: <20210505120103.24497-1-ajish.koshy@microchip.com>
-X-Mailer: git-send-email 2.17.1
+        id S233679AbhEEP6n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 May 2021 11:58:43 -0400
+Received: from mail-1.ca.inter.net ([208.85.220.69]:47746 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233620AbhEEP6m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 May 2021 11:58:42 -0400
+Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 3A7232EA017;
+        Wed,  5 May 2021 11:57:45 -0400 (EDT)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
+        with ESMTP id rRR8G1gfxFSG; Wed,  5 May 2021 11:37:03 -0400 (EDT)
+Received: from [192.168.48.23] (host-45-58-219-4.dyn.295.ca [45.58.219.4])
+        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 9912F2EA012;
+        Wed,  5 May 2021 11:57:44 -0400 (EDT)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [Bug 212337] scsi_debug: race at module load and module unload
+To:     bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+References: <bug-212337-11613@https.bugzilla.kernel.org/>
+ <bug-212337-11613-HvylxRWG7p@https.bugzilla.kernel.org/>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <54282a25-37a9-ce8e-9cfe-028248e9932d@interlog.com>
+Date:   Wed, 5 May 2021 11:57:44 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <bug-212337-11613-HvylxRWG7p@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ajish Koshy <ajish.koshy@microchip.com>
+On 2021-05-04 5:18 p.m., bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=212337
+> 
+> Luis Chamberlain (mcgrof@kernel.org) changed:
+> 
+>             What    |Removed                     |Added
+> ----------------------------------------------------------------------------
+>               Status|RESOLVED                    |REOPENED
+>           Resolution|WILL_NOT_FIX                |---
+> 
+> --- Comment #13 from Luis Chamberlain (mcgrof@kernel.org) ---
+> (In reply to d gilbert from comment #12)
+>> On 2021-03-22 12:23 p.m., bugzilla-daemon@bugzilla.kernel.org wrote:
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=212337
+>>>
+>>> --- Comment #9 from Luis Chamberlain (mcgrof@kernel.org) ---
+>>> (In reply to d gilbert from comment #8)
+>>>
+>>>>>> The scsi_debug module option that is already in place is:
+>>>>>>       tur_ms_to_ready: TEST UNIT READY millisecs before initial good
+>> status
+>>>>>> (def=0)
+>>>>
+>>>> You asked how it works, try:
+>>>>        modprobe scsi_debug tur_ms_to_ready=20000
+>>>>
+>>>
+>>> That does not resolve the rmmod race against insmod:
+>>>
+>>> scsi host2: scsi_debug: version 0190 [20200710]
+>>> [   42.213400]   dev_size_mb=8, opts=0x0, submit_queues=1, statistics=0
+>>> [   42.217527] scsi 2:0:0:0: Direct-Access     Linux    scsi_debug
+>> 0190
+>>> PQ: 0 ANSI: 7
+>>> [   42.223346] scsi 2:0:0:0: Attached scsi generic sg0 type 0
+>>> [   42.282195] scsi host2: scsi_debug: version 0190 [20200710]
+>>> [   42.282195]   dev_size_mb=8, opts=0x0, submit_queues=1, statistics=0
+>>> [   42.288169] scsi 2:0:0:0: Direct-Access     Linux    scsi_debug
+>> 0190
+>>> PQ: 0 ANSI: 7
+>>> [   42.292122] sd 2:0:0:0: Attached scsi generic sg0 type 0
+>>> [   42.292244] sd 2:0:0:0: Power-on or device reset occurred
+>>> [   42.302288] sd 2:0:0:0: [sda] Spinning up disk...
+>>>
+>>> Then we wait...
+>>>
+>>> [   44.308213] ...................ready
+>>> [   62.748919] sd 2:0:0:0: [sda] 16384 512-byte logical blocks: (8.39
+>> MB/8.00
+>>> MiB)
+>>> [   62.754265] sd 2:0:0:0: [sda] Write Protect is off
+>>> [   62.763253] sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled,
+>>> supports DPO and FUA
+>>> [   62.776965] sd 2:0:0:0: [sda] Optimal transfer size 524288 bytes
+>>> [   62.883817] sd 2:0:0:0: [sda] Attached SCSI disk
+>>>
+>>> And then rmmod still fails.
+>>>
+>>
+>> Just to explain a bit more about tur_ms_to_ready, that does not effect SCSI
+>> commands like REPORT LUNS, INQUIRY and REQUEST SENSE, but does slow down all
+>> "media access" commands including TEST UNIT READY (TUR) and READ CAPACITY. So
+>> if you watch what is happening with 'lsscsi -s' the device (LUN) will appear
+>> almost immediately but its size will be "-" due to the fact that READ
+>> CAPACITY (or TUR before it) is waiting for tur_ms_to_ready to elapse. After
+>> that the size (for disks) will be shown by 'lsscsi -s'.
+>>
+>>
+>> When you say 'rmmod still fails' do you mean it refuses to remove the module
+>> because the device is busy?
+> 
+> Yes. The refcnt must be 1 for rmmod to work. If it is not it will fail.
+> 
+>> If is busy, where is the race?. What precisely
+>> would you like to happen? What does a real SCSI HBA do?
+> 
+> That's the thing, the trace on comment #1 does not exactly show who to blame,
+> but there seems to be only two possibilities: systemd and multipath. Regardless
+> what is clearer is that once the device is exposed we *cannot* block userspace
+> from poking at the device. The best we can do, is udevadm settle, however that
+> still does not guarantee userspace things like multipath won't try to poke.
+> 
+>> Is there any way that a driver can detect that rmmod has been called and
+>> rejected?
+> 
+> Yes! try_module_get() would fail if rmmod was kicked off.
 
-Most of the time when driver is loaded after rmmod, during drive
-discovery few drives are not showing up in lsscsi command. Here
-sata drives are directly attached to the controller connected phys.
-During device discovery, following identify command (qc timeout
-(cmd 0xec)) is getting timedout during revalidation. This will trigger
-abort from host side and controller successfully aborts the command
-and returns success. Post this successful abort response ATA library
-decides to mark the disk as NODEV.
+I have tried this:
+     if (!try_module_get(THIS_MODULE)) {
+          pr_warn("%s: probable rmmod, stop adding\n", __func__);
+          break;
+     }
+     module_put(THIS_MODULE);
+     ....
 
-To overcome this, inside pm8001_scan_start() after phy_start() call, added
-get start response and wait for few milliseconds to trigger next phy start.
-This few millisecond delay will give sufficient time for the controller
-state machine to accept next phy start.
+placed inside the loop that adds each host inside scsi_debug_init() and
+I can never get try_modules_get() to fail. There is a 'rmmod scsi_debug'
+bash script sending a rmmod every 0.3 seconds. To slow scsi_debug down
+there is a 0.5 second delay on each media access command. The overall
+modprobe takes over 10 seconds but scsi_debug_init() is only about 0.8
+seconds of that. The rest of the time is udev and friends piling on,
+sending SCSI commands to the newly appearing devices. And whenever the
+driver is processing commands then rmmod is going to get EBUSY which is
+exactly what is observed.
 
-Signed-off-by: Ajish Koshy <ajish.koshy@microchip.com>
-Signed-off-by: Viswas G <viswas.g@microchip.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c  | 10 ++++++----
- drivers/scsi/pm8001/pm8001_init.c |  2 +-
- drivers/scsi/pm8001/pm8001_sas.c  |  7 ++++++-
- drivers/scsi/pm8001/pm80xx_hwi.c  | 12 ++++++------
- 4 files changed, 19 insertions(+), 12 deletions(-)
+The kernel try_module_get() documentation is underwhelming. Is there some
+kind of synchronization between this call and rmmod? Does a failed rmmod
+leave a persistent flag that a following try_module_get() will notice and
+return false? If so, what if the user changes their mind? If not, how is
+this meant to be useful?
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index ecd06d2d7e81..71aa6af08340 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3765,11 +3765,13 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	case HW_EVENT_PHY_START_STATUS:
- 		pm8001_dbg(pm8001_ha, MSG, "HW_EVENT_PHY_START_STATUS status = %x\n",
- 			   status);
--		if (status == 0) {
-+		if (status == 0)
- 			phy->phy_state = 1;
--			if (pm8001_ha->flags == PM8001F_RUN_TIME &&
--					phy->enable_completion != NULL)
--				complete(phy->enable_completion);
-+
-+		if (pm8001_ha->flags == PM8001F_RUN_TIME &&
-+				phy->enable_completion != NULL) {
-+			complete(phy->enable_completion);
-+			phy->enable_completion = NULL;
- 		}
- 		break;
- 	case HW_EVENT_SAS_PHY_UP:
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 390c33df0357..af09bd282cb9 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -1151,8 +1151,8 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
- 		goto err_out_shost;
- 	}
- 	list_add_tail(&pm8001_ha->list, &hba_list);
--	scsi_scan_host(pm8001_ha->shost);
- 	pm8001_ha->flags = PM8001F_RUN_TIME;
-+	scsi_scan_host(pm8001_ha->shost);
- 	return 0;
- 
- err_out_shost:
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index d28af413b93a..335cf37e6cb9 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -264,12 +264,17 @@ void pm8001_scan_start(struct Scsi_Host *shost)
- 	int i;
- 	struct pm8001_hba_info *pm8001_ha;
- 	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-+	DECLARE_COMPLETION_ONSTACK(completion);
- 	pm8001_ha = sha->lldd_ha;
- 	/* SAS_RE_INITIALIZATION not available in SPCv/ve */
- 	if (pm8001_ha->chip_id == chip_8001)
- 		PM8001_CHIP_DISP->sas_re_init_req(pm8001_ha);
--	for (i = 0; i < pm8001_ha->chip->n_phy; ++i)
-+	for (i = 0; i < pm8001_ha->chip->n_phy; ++i) {
-+		pm8001_ha->phy[i].enable_completion = &completion;
- 		PM8001_CHIP_DISP->phy_start_req(pm8001_ha, i);
-+		wait_for_completion(&completion);
-+		msleep(300);
-+	}
- }
- 
- int pm8001_scan_finished(struct Scsi_Host *shost, unsigned long time)
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 4e980830f9f5..700530e969ac 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3487,13 +3487,13 @@ static int mpi_phy_start_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	pm8001_dbg(pm8001_ha, INIT,
- 		   "phy start resp status:0x%x, phyid:0x%x\n",
- 		   status, phy_id);
--	if (status == 0) {
-+	if (status == 0)
- 		phy->phy_state = PHY_LINK_DOWN;
--		if (pm8001_ha->flags == PM8001F_RUN_TIME &&
--				phy->enable_completion != NULL) {
--			complete(phy->enable_completion);
--			phy->enable_completion = NULL;
--		}
-+
-+	if (pm8001_ha->flags == PM8001F_RUN_TIME &&
-+			phy->enable_completion != NULL) {
-+		complete(phy->enable_completion);
-+		phy->enable_completion = NULL;
- 	}
- 	return 0;
- 
--- 
-2.17.1
+>> If not, we could add  a "shutdown" writable attribute in
+>> /sys/bus/pseudo/drivers/scsi_debug/ . Then if a large number of pseudo
+>> devices is being built due to the modprobe invocation, the driver can go
+>> into reverse by checking that attribute before it adds another host
+>> (target or LUN?). After shutdown, the driver is still active, just with
+>> no hosts, and thus no LUNs. A more accurate name would be rm_all_hosts .
+> 
+> This may work actually, and so new users who would want to avoid this race
+> would have to issue this call prior to rmmod. That would remove the possibility
+> of a race. Let me know if you have a patch I can test. Putting this as
+> re-opened.
+
+This will depend on how quickly sysfs visibility appears (i.e.
+/sys/bus/pseudo/drivers/scsi_debug/* ) after modprobe is started.
+
+Doug Gilbert
 
