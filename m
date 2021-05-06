@@ -2,96 +2,75 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C91E7C433ED
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 May 2021 17:49:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0004DC433B4
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 May 2021 18:38:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88A316121F
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 May 2021 17:49:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAF376121F
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 May 2021 18:38:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236316AbhEFRur (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 May 2021 13:50:47 -0400
-Received: from mail-wr1-f47.google.com ([209.85.221.47]:42923 "EHLO
-        mail-wr1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236042AbhEFRuq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 May 2021 13:50:46 -0400
-Received: by mail-wr1-f47.google.com with SMTP id l2so6514715wrm.9;
-        Thu, 06 May 2021 10:49:47 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=jZ25V5gFIEZP6ukMOMeThXYzSrrigmzcHYTAxDcrK/U=;
-        b=I1EK5mDmaGnPJvraVOO4uFF9dQq9tIL8q4OVfm0aAaFGRa4tmDA6HnVwZlUAYdWy/6
-         WcL7+2luZAQrYOCOsABrqJUYRZcwg720obSCly2ENPdJ8rsFT9cCOR3yYiXJ7EF2xN5R
-         jrlJqOLFK3Eo7D9lymwXWX+HnXrXZaf6GmpiY0jpQb4cl8OCEnKcxCglCyXSBaH+4p8h
-         +NMYwfM6m+fc3FFFN9E4VhXmk9sC2zXfpx9ez1QUcbTbMHYjayrYJcbfTqNkKwQqLKtQ
-         WSozBJQuXnxkkAmGnzPl0pQrT9dxG8Z+8q/n5JY4JNQpHjPfN/sj8Jl3NFRKYgHsmvuV
-         s4Lw==
-X-Gm-Message-State: AOAM531qzRlFDwlYmSAlqmQutJaWOz8hbn8UR6ika7rt5Aaqih3oNd31
-        Hh2giWhFGgBfzqJeubiAAus=
-X-Google-Smtp-Source: ABdhPJzBkXQU5DP6oTLnvIh+SGwU7/JXq8VhmyBRi8o090ybLqDZ2Blt2FLC/CgcT/I/qdZgf9IDcQ==
-X-Received: by 2002:adf:d0cd:: with SMTP id z13mr6883154wrh.373.1620323387206;
-        Thu, 06 May 2021 10:49:47 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id u2sm5530127wmm.5.2021.05.06.10.49.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 May 2021 10:49:46 -0700 (PDT)
-Date:   Thu, 6 May 2021 17:49:45 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
-Cc:     linux-kernel@vger.kernel.org, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-hyperv@vger.kernel.org,
-        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
-        mikelley@microsoft.com, Andres Beltran <lkmlabelt@gmail.com>
-Subject: Re: [PATCH hyperv-next] Drivers: hv: vmbus: Copy packets sent by
- Hyper-V out of the ring buffer
-Message-ID: <20210506174945.5vp72zn44uu7xkd5@liuwe-devbox-debian-v2>
-References: <20210408161439.341988-1-parri.andrea@gmail.com>
+        id S235618AbhEFSjj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 May 2021 14:39:39 -0400
+Received: from smtp03.smtpout.orange.fr ([80.12.242.125]:48462 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234819AbhEFSji (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 May 2021 14:39:38 -0400
+Received: from localhost.localdomain ([86.243.172.93])
+        by mwinf5d05 with ME
+        id 1WeN2500821Fzsu03WeNP0; Thu, 06 May 2021 20:38:38 +0200
+X-ME-Helo: localhost.localdomain
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Thu, 06 May 2021 20:38:38 +0200
+X-ME-IP: 86.243.172.93
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     kartilak@cisco.com, sebaddel@cisco.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, JBottomley@Odin.com, hare@suse.de,
+        nmusini@cisco.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] scsi: snic: Fix an error message
+Date:   Thu,  6 May 2021 20:38:20 +0200
+Message-Id: <3b9d5d767e09d03a07bede293a6ba32e3735cd1a.1620326191.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210408161439.341988-1-parri.andrea@gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 08, 2021 at 06:14:39PM +0200, Andrea Parri (Microsoft) wrote:
-> From: Andres Beltran <lkmlabelt@gmail.com>
-> 
-> Pointers to ring-buffer packets sent by Hyper-V are used within the
-> guest VM. Hyper-V can send packets with erroneous values or modify
-> packet fields after they are processed by the guest. To defend
-> against these scenarios, return a copy of the incoming VMBus packet
-> after validating its length and offset fields in hv_pkt_iter_first().
-> In this way, the packet can no longer be modified by the host.
-> 
-> Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
-> Co-developed-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> ---
->  drivers/hv/channel.c              |  9 ++--
->  drivers/hv/hv_fcopy.c             |  1 +
->  drivers/hv/hv_kvp.c               |  1 +
->  drivers/hv/hyperv_vmbus.h         |  2 +-
->  drivers/hv/ring_buffer.c          | 82 ++++++++++++++++++++++++++-----
->  drivers/net/hyperv/hyperv_net.h   |  7 +++
->  drivers/net/hyperv/netvsc.c       |  2 +
->  drivers/net/hyperv/rndis_filter.c |  2 +
->  drivers/scsi/storvsc_drv.c        | 10 ++++
->  include/linux/hyperv.h            | 48 +++++++++++++++---
->  net/vmw_vsock/hyperv_transport.c  |  4 +-
->  11 files changed, 143 insertions(+), 25 deletions(-)
+'ret' is known to be 0 here.
+No error code is available, so just remove it from the error message.
 
-In theory this patch needs acks from network and scsi maintainers, but
-the changes are so small and specific to Hyper-V drivers. In the
-interest of making progress, I will be picking up this patch shortly
-unless I hear objections.
+While at it, change the word "Queuing" into "Init" which looks more
+appropriate.
 
+Fixes: c8806b6c9e82 ("snic: driver for Cisco SCSI HBA")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/scsi/snic/snic_ctl.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Wei.
+diff --git a/drivers/scsi/snic/snic_ctl.c b/drivers/scsi/snic/snic_ctl.c
+index 4cd86115cfb2..703f229862fc 100644
+--- a/drivers/scsi/snic/snic_ctl.c
++++ b/drivers/scsi/snic/snic_ctl.c
+@@ -114,10 +114,7 @@ snic_queue_exch_ver_req(struct snic *snic)
+ 
+ 	rqi = snic_req_init(snic, 0);
+ 	if (!rqi) {
+-		SNIC_HOST_ERR(snic->shost,
+-			      "Queuing Exch Ver Req failed, err = %d\n",
+-			      ret);
+-
++		SNIC_HOST_ERR(snic->shost, "Init Exch Ver Req failed\n");
+ 		ret = -ENOMEM;
+ 		goto error;
+ 	}
+-- 
+2.30.2
+
