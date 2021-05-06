@@ -7,86 +7,93 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 169DBC433B4
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 May 2021 23:57:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71B91C433B4
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 May 2021 23:58:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DAABD610D2
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 May 2021 23:57:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3902B610FB
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 May 2021 23:58:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233179AbhEFX6B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 May 2021 19:58:01 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:38323 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233079AbhEFX6B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 6 May 2021 19:58:01 -0400
+        id S233184AbhEFX7L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 May 2021 19:59:11 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:36919 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233079AbhEFX7I (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 May 2021 19:59:08 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1620345422; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1620345489; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=3MIsE8W6AgzWdnlTbJuC6GCNBcSH43iE9ewFWxtWhB0=;
- b=Q2vjxGxzB2e425o2U9UekpibIfCM5n4YZxtriAlmtus9JL7zJoZxcmwJQEOb6PqnmaIREVia
- 98zJojnaiB+VuxSOJYwb9SidwtOTr/NfN09WHtHTZZmGrFjcSE+pn1oKF/66xnNWZ7vbd32e
- SvVt8rFhdurgCk5EWW45TiaMqQM=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ MIME-Version: Sender; bh=5U9aNzCjdnh9VR/MceKDiACztq/+idznaGHSdPZ1p0w=;
+ b=xRz66cf1ugD2oLEaV5fgkwVZVSwa0tZEFd5YDrZ8U94jDXbajVSwaXq3jGtu6IqX8/st+aMw
+ MWRolSXjXZKUXrfGSzyrcGCsqEatxOt/j2c7UQYSIyVuF1x/EDdmDtMFC+v9LBeJ7zwubWXQ
+ zI0iVm9tTZdzae7eepsRpDQUaSg=
+X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 60948247e0e9c9a6b6ba5be7 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 06 May 2021 23:56:55
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 6094826c9a9ff96d959b8904 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 06 May 2021 23:57:32
  GMT
 Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 6706AC43147; Thu,  6 May 2021 23:56:55 +0000 (UTC)
+        id D8563C43145; Thu,  6 May 2021 23:57:32 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 179C1C4338A;
-        Thu,  6 May 2021 23:56:54 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B0F63C433D3;
+        Thu,  6 May 2021 23:57:31 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Fri, 07 May 2021 07:56:54 +0800
+Date:   Fri, 07 May 2021 07:57:31 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 010/117] ufs: Add a compile-time structure size check
-In-Reply-To: <20210420000845.25873-11-bvanassche@acm.org>
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Don Brace <don.brace@microchip.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Subject: Re: [PATCH 098/117] ufs: Remove an unused structure member
+In-Reply-To: <20210420021402.27678-8-bvanassche@acm.org>
 References: <20210420000845.25873-1-bvanassche@acm.org>
- <20210420000845.25873-11-bvanassche@acm.org>
-Message-ID: <e421820b472ef5223bc22685c249ec77@codeaurora.org>
+ <20210420021402.27678-8-bvanassche@acm.org>
+Message-ID: <8617407697e19417849d1c6e86134fe1@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-04-20 08:06, Bart Van Assche wrote:
-> Before modifying the definition of struct ufs_bsg_reply, add a 
-> compile-time
-> structure size check.
+On 2021-04-20 10:13, Bart Van Assche wrote:
+> The 'scsi_status' member is present since the introduction of the UFS
+> driver but has never been used. Hence remove it.
 > 
 > Cc: Can Guo <cang@codeaurora.org>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Cc: Bean Huo <beanhuo@micron.com>
+> Cc: Alim Akhtar <alim.akhtar@samsung.com>
+> Cc: Asutosh Das <asutoshd@codeaurora.org>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/scsi/ufs/ufshcd.h | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 0625da7a42ee..fa596cf66c23 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -9455,6 +9455,8 @@ EXPORT_SYMBOL_GPL(ufshcd_init);
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 5eb66a8debc7..20ad78083246 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -211,7 +211,6 @@ struct ufshcd_lrb {
+>  	struct scsi_cmnd *cmd;
+>  	u8 *sense_buffer;
+>  	unsigned int sense_bufflen;
+> -	int scsi_status;
 > 
->  static int __init ufshcd_core_init(void)
->  {
-> +	BUILD_BUG_ON(offsetof(struct ufs_bsg_reply, upiu_rsp) != 8);
-> +
->  	ufs_debugfs_init();
->  	return 0;
->  }
+>  	int command_type;
+>  	int task_tag;
 
 Reviewed-by: Can Guo <cang@codeaurora.org>
