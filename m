@@ -2,7024 +2,1378 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B133AC433B4
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 May 2021 13:25:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63164C433B4
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 May 2021 15:12:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A34E61443
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 May 2021 13:25:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 040FF6141B
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 May 2021 15:12:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237248AbhEGN0g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 May 2021 09:26:36 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45122 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230499AbhEGN0f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 May 2021 09:26:35 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 147DJqnZ030573
-        for <linux-scsi@vger.kernel.org>; Fri, 7 May 2021 06:25:35 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=pfpt0220;
- bh=PfTw3n5kp9X3muiIssJQbVO+y8GdOeFnUEOlb8Ohwf0=;
- b=DM3PCivapXvyBpcub3aI4JUYXmM2kS4P2Lk5IryoCAeJ/boAk1yxbcW8JtmM/+C9EJOq
- +qoDVLR9usgVqlcOQbnWuasv2+4l/tyo7V23YBwB2TYmjsCZHjYg3ILdYhypDqguKoU4
- 7nOQkI16Gkx86MJwZ6QFVuQOSog79nGNm9QfGdJjMU+vtwRmyqBtmzc2hWtRZti4YT06
- EiEoKFdqGhc7PLhn1Kd46EiT4sJu5kApIEVWU2t8X1lS5gKfLb3KAv/rW4+nswajdO+G
- DAw1dhr9QfHPhB5Q6vAMU7vJrLS8/V6Qljiz2XWSd2Ncyk8rgFIjBAFOE08OcY11fFp0 WA== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 38csptjb9p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 07 May 2021 06:25:33 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 7 May
- 2021 06:25:30 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 7 May 2021 06:25:30 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 3FC805B6942;
-        Fri,  7 May 2021 06:25:30 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 147DPU9P014135;
-        Fri, 7 May 2021 06:25:30 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 147DPTbl014134;
-        Fri, 7 May 2021 06:25:29 -0700
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 1/1] qla2xxx: Add EDIF support
-Date:   Fri, 7 May 2021 06:25:05 -0700
-Message-ID: <20210507132505.14100-1-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
+        id S234043AbhEGPNu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 May 2021 11:13:50 -0400
+Received: from mga18.intel.com ([134.134.136.126]:50133 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230118AbhEGPNt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 7 May 2021 11:13:49 -0400
+IronPort-SDR: uRXG5b72NaxwVPgWh+DhNG+MnABPrwbjMHIeFAHaX48qqOg/W1LBa9kDmDqjcvym00+JyxEuA3
+ UztGhPsoBdbQ==
+X-IronPort-AV: E=McAfee;i="6200,9189,9977"; a="186203179"
+X-IronPort-AV: E=Sophos;i="5.82,281,1613462400"; 
+   d="gz'50?scan'50,208,50";a="186203179"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 May 2021 08:12:49 -0700
+IronPort-SDR: cR6LmiocV7ROcfJ6eCbgcIshoxr7wSMnXXYLNep88zLllM2UkyucreTuFzgnOxfcIobmSZcufp
+ 0KCqJ/B2jhjA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,281,1613462400"; 
+   d="gz'50?scan'50,208,50";a="453109873"
+Received: from lkp-server01.sh.intel.com (HELO a48ff7ddd223) ([10.239.97.150])
+  by fmsmga004.fm.intel.com with ESMTP; 07 May 2021 08:12:46 -0700
+Received: from kbuild by a48ff7ddd223 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1lf29m-000BFu-2t; Fri, 07 May 2021 15:12:46 +0000
+Date:   Fri, 7 May 2021 23:12:32 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
+Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
+        GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH 1/1] qla2xxx: Add EDIF support
+Message-ID: <202105072332.wzQTWwDg-lkp@intel.com>
+References: <20210507132505.14100-1-njavali@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: gKFdi1amVcOqgl6oT-6m_t2a8JHQwcD_
-X-Proofpoint-GUID: gKFdi1amVcOqgl6oT-6m_t2a8JHQwcD_
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-05-07_04:2021-05-06,2021-05-07 signatures=0
+Content-Type: multipart/mixed; boundary="ew6BAiZeqk4r7MaW"
+Content-Disposition: inline
+In-Reply-To: <20210507132505.14100-1-njavali@marvell.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
 
-Add Encryption for Data In Flight (EDIF) support. This feature allows
-data of 2 end points to be encrypted. A user application is required
-to play the role of authentication for both sides. On completion of
-authentication, user app shall provide a set of Tx/Rx keys and spi's
-for HW to program into the session.
+--ew6BAiZeqk4r7MaW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-modprobe qla2xxx ql2xsecenable=1
+Hi Nilesh,
 
-Signed-off-by: Larry Wisneski <Larry.Wisneski@marvell.com>
-Signed-off-by: Duane Grigsby <duane.grigsby@marvell.com>
-Signed-off-by: Rick Hicksted Jr <rhicksted@marvell.com>
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Thank you for the patch! Perhaps something to improve:
+
+[auto build test WARNING on scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next next-20210507]
+[cannot apply to v5.12]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
+
+url:    https://github.com/0day-ci/linux/commits/Nilesh-Javali/qla2xxx-Add-EDIF-support/20210507-212636
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+config: xtensa-allyesconfig (attached as .config)
+compiler: xtensa-linux-gcc (GCC) 9.3.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/0day-ci/linux/commit/123765e7c3f96d59ba2239401abb1a3ed3adf910
+        git remote add linux-review https://github.com/0day-ci/linux
+        git fetch --no-tags linux-review Nilesh-Javali/qla2xxx-Add-EDIF-support/20210507-212636
+        git checkout 123765e7c3f96d59ba2239401abb1a3ed3adf910
+        # save the attached .config to linux build tree
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-9.3.0 make.cross W=1 ARCH=xtensa 
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+   drivers/scsi/qla2xxx/qla_edif.c: In function 'ql_print_bsg_sglist':
+>> drivers/scsi/qla2xxx/qla_edif.c:2288:24: warning: format '%llx' expects argument of type 'long long unsigned int', but argument 6 has type 'dma_addr_t' {aka 'unsigned int'} [-Wformat=]
+    2288 |       "%x: dma(adr=%#llx len=%#x) off=%#x len=%#x\n",
+         |                    ~~~~^
+         |                        |
+         |                        long long unsigned int
+         |                    %#x
+
+
+vim +2288 drivers/scsi/qla2xxx/qla_edif.c
+
+  2275	
+  2276	void
+  2277	ql_print_bsg_sglist(uint level, scsi_qla_host_t *vha, uint id, char *str,
+  2278			struct bsg_buffer *p)
+  2279	{
+  2280		struct scatterlist *sg;
+  2281		uint i;
+  2282	
+  2283		ql_dbg(level, vha, id,
+  2284		    "%s->(sg_cnt=%#x payload_len=%#x):\n",
+  2285		    str, p->sg_cnt, p->payload_len);
+  2286		for_each_sg(p->sg_list, sg, p->sg_cnt, i) {
+  2287			ql_dbg(level, vha, id,
+> 2288			    "%x: dma(adr=%#llx len=%#x) off=%#x len=%#x\n",
+  2289			    i, sg_dma_address(sg), sg_dma_len(sg), sg->offset,
+  2290			    sg->length);
+  2291		}
+  2292	}
+  2293	
+
 ---
- drivers/scsi/qla2xxx/Makefile       |    3 +-
- drivers/scsi/qla2xxx/qla_attr.c     |    6 +-
- drivers/scsi/qla2xxx/qla_bsg.c      |   95 +-
- drivers/scsi/qla2xxx/qla_bsg.h      |    3 +
- drivers/scsi/qla2xxx/qla_dbg.h      |    1 +
- drivers/scsi/qla2xxx/qla_def.h      |  250 +-
- drivers/scsi/qla2xxx/qla_edif.c     | 3638 +++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_edif.h     |  160 ++
- drivers/scsi/qla2xxx/qla_edif_bsg.h |  225 ++
- drivers/scsi/qla2xxx/qla_fw.h       |   15 +-
- drivers/scsi/qla2xxx/qla_gbl.h      |   64 +-
- drivers/scsi/qla2xxx/qla_gs.c       |    4 +
- drivers/scsi/qla2xxx/qla_init.c     |  183 +-
- drivers/scsi/qla2xxx/qla_iocb.c     |   85 +-
- drivers/scsi/qla2xxx/qla_isr.c      |  313 ++-
- drivers/scsi/qla2xxx/qla_mbx.c      |   45 +-
- drivers/scsi/qla2xxx/qla_mid.c      |    7 +-
- drivers/scsi/qla2xxx/qla_nvme.c     |    4 +
- drivers/scsi/qla2xxx/qla_os.c       |  123 +-
- drivers/scsi/qla2xxx/qla_target.c   |  170 +-
- drivers/scsi/qla2xxx/qla_target.h   |   22 +-
- 21 files changed, 5254 insertions(+), 162 deletions(-)
- create mode 100644 drivers/scsi/qla2xxx/qla_edif.c
- create mode 100644 drivers/scsi/qla2xxx/qla_edif.h
- create mode 100644 drivers/scsi/qla2xxx/qla_edif_bsg.h
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
 
-diff --git a/drivers/scsi/qla2xxx/Makefile b/drivers/scsi/qla2xxx/Makefile
-index 17d5bc1cc56b..cbc1303e761e 100644
---- a/drivers/scsi/qla2xxx/Makefile
-+++ b/drivers/scsi/qla2xxx/Makefile
-@@ -1,7 +1,8 @@
- # SPDX-License-Identifier: GPL-2.0
- qla2xxx-y := qla_os.o qla_init.o qla_mbx.o qla_iocb.o qla_isr.o qla_gs.o \
- 		qla_dbg.o qla_sup.o qla_attr.o qla_mid.o qla_dfs.o qla_bsg.o \
--		qla_nx.o qla_mr.o qla_nx2.o qla_target.o qla_tmpl.o qla_nvme.o
-+		qla_nx.o qla_mr.o qla_nx2.o qla_target.o qla_tmpl.o qla_nvme.o \
-+		qla_edif.o
- 
- obj-$(CONFIG_SCSI_QLA_FC) += qla2xxx.o
- obj-$(CONFIG_TCM_QLA2XXX) += tcm_qla2xxx.o
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 3aa9869f6fae..2b88bac3a68c 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -2435,6 +2435,7 @@ static DEVICE_ATTR(port_speed, 0644, qla2x00_port_speed_show,
-     qla2x00_port_speed_store);
- static DEVICE_ATTR(port_no, 0444, qla2x00_port_no_show, NULL);
- static DEVICE_ATTR(fw_attr, 0444, qla2x00_fw_attr_show, NULL);
-+static DEVICE_ATTR_RO(edif_doorbell);
- 
- 
- struct device_attribute *qla2x00_host_attrs[] = {
-@@ -2480,6 +2481,7 @@ struct device_attribute *qla2x00_host_attrs[] = {
- 	&dev_attr_port_no,
- 	&dev_attr_fw_attr,
- 	&dev_attr_dport_diagnostics,
-+	&dev_attr_edif_doorbell,
- 	NULL, /* reserve for qlini_mode */
- 	NULL, /* reserve for ql2xiniexchg */
- 	NULL, /* reserve for ql2xexchoffld */
-@@ -3104,9 +3106,11 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
- 
- 
- 	qla24xx_disable_vp(vha);
--	qla2x00_wait_for_sess_deletion(vha);
- 
- 	qla_nvme_delete(vha);
-+	qla_enode_stop(vha);
-+	qla_edb_stop(vha);
-+
- 	vha->flags.delete_progress = 1;
- 
- 	qlt_remove_target(ha, vha);
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index d42b2ad84049..a885e48607f1 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -27,6 +27,10 @@ void qla2x00_bsg_job_done(srb_t *sp, int res)
- 
- 	sp->free(sp);
- 
-+	ql_dbg(ql_dbg_user, sp->vha, 0x7009,
-+	    "%s: sp hdl %x, result=%x bsg ptr %p\n",
-+	    __func__, sp->handle, res, bsg_job);
-+
- 	bsg_reply->result = res;
- 	bsg_job_done(bsg_job, bsg_reply->result,
- 		       bsg_reply->reply_payload_rcv_len);
-@@ -53,11 +57,19 @@ void qla2x00_bsg_sp_free(srb_t *sp)
- 			    bsg_job->reply_payload.sg_list,
- 			    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
- 	} else {
--		dma_unmap_sg(&ha->pdev->dev, bsg_job->request_payload.sg_list,
--		    bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
- 
--		dma_unmap_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
--		    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-+		if (sp->remap.remapped) {
-+			dma_pool_free(ha->purex_dma_pool, sp->remap.rsp.buf,
-+			    sp->remap.rsp.dma);
-+			dma_pool_free(ha->purex_dma_pool, sp->remap.req.buf,
-+			    sp->remap.req.dma);
-+		} else {
-+			dma_unmap_sg(&ha->pdev->dev, bsg_job->request_payload.sg_list,
-+				bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
-+
-+			dma_unmap_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
-+				bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-+		}
- 	}
- 
- 	if (sp->type == SRB_CT_CMD ||
-@@ -266,6 +278,7 @@ qla2x00_process_els(struct bsg_job *bsg_job)
- 	int req_sg_cnt, rsp_sg_cnt;
- 	int rval =  (DID_ERROR << 16);
- 	uint16_t nextlid = 0;
-+	uint32_t els_cmd = 0;
- 
- 	if (bsg_request->msgcode == FC_BSG_RPT_ELS) {
- 		rport = fc_bsg_to_rport(bsg_job);
-@@ -279,6 +292,9 @@ qla2x00_process_els(struct bsg_job *bsg_job)
- 		vha = shost_priv(host);
- 		ha = vha->hw;
- 		type = "FC_BSG_HST_ELS_NOLOGIN";
-+		els_cmd = bsg_request->rqst_data.h_els.command_code;
-+		if (els_cmd == ELS_AUTH_ELS)
-+			return qla_edif_process_els(vha, bsg_job);
- 	}
- 
- 	if (!vha->flags.online) {
-@@ -297,7 +313,7 @@ qla2x00_process_els(struct bsg_job *bsg_job)
- 
- 	/*  Multiple SG's are not supported for ELS requests */
- 	if (bsg_job->request_payload.sg_cnt > 1 ||
--		bsg_job->reply_payload.sg_cnt > 1) {
-+	    bsg_job->reply_payload.sg_cnt > 1) {
- 		ql_dbg(ql_dbg_user, vha, 0x7002,
- 		    "Multiple SG's are not supported for ELS requests, "
- 		    "request_sg_cnt=%x reply_sg_cnt=%x.\n",
-@@ -356,7 +372,7 @@ qla2x00_process_els(struct bsg_job *bsg_job)
- 
- 	rsp_sg_cnt = dma_map_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
- 		bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
--        if (!rsp_sg_cnt) {
-+	if (!rsp_sg_cnt) {
- 		dma_unmap_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
- 		    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
- 		rval = -ENOMEM;
-@@ -373,7 +389,6 @@ qla2x00_process_els(struct bsg_job *bsg_job)
- 		rval = -EAGAIN;
- 		goto done_unmap_sg;
- 	}
--
- 	/* Alloc SRB structure */
- 	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
- 	if (!sp) {
-@@ -2768,10 +2783,13 @@ qla2x00_manage_host_port(struct bsg_job *bsg_job)
- }
- 
- static int
--qla2x00_process_vendor_specific(struct bsg_job *bsg_job)
-+qla2x00_process_vendor_specific(struct scsi_qla_host *vha, struct bsg_job *bsg_job)
- {
- 	struct fc_bsg_request *bsg_request = bsg_job->request;
- 
-+	ql_dbg(ql_dbg_edif, vha, 0x911b, "%s FC_BSG_HST_VENDOR cmd[0]=0x%x\n",
-+	    __func__, bsg_request->rqst_data.h_vendor.vendor_cmd[0]);
-+
- 	switch (bsg_request->rqst_data.h_vendor.vendor_cmd[0]) {
- 	case QL_VND_LOOPBACK:
- 		return qla2x00_process_loopback(bsg_job);
-@@ -2840,6 +2858,9 @@ qla2x00_process_vendor_specific(struct bsg_job *bsg_job)
- 	case QL_VND_DPORT_DIAGNOSTICS:
- 		return qla2x00_do_dport_diagnostics(bsg_job);
- 
-+	case QL_VND_EDIF_MGMT:
-+		return qla_edif_app_mgmt(bsg_job);
-+
- 	case QL_VND_SS_GET_FLASH_IMAGE_STATUS:
- 		return qla2x00_get_flash_image_status(bsg_job);
- 
-@@ -2897,12 +2918,19 @@ qla24xx_bsg_request(struct bsg_job *bsg_job)
- 		ql_dbg(ql_dbg_user, vha, 0x709f,
- 		    "BSG: ISP abort active/needed -- cmd=%d.\n",
- 		    bsg_request->msgcode);
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
- 		return -EBUSY;
- 	}
- 
-+	if (test_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags)) {
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		return -EIO;
-+	}
-+
- skip_chip_chk:
--	ql_dbg(ql_dbg_user, vha, 0x7000,
--	    "Entered %s msgcode=0x%x.\n", __func__, bsg_request->msgcode);
-+	ql_dbg(ql_dbg_user + ql_dbg_verbose, vha, 0x7000,
-+	    "Entered %s msgcode=0x%x. bsg ptr %px\n",
-+	    __func__, bsg_request->msgcode, bsg_job);
- 
- 	switch (bsg_request->msgcode) {
- 	case FC_BSG_RPT_ELS:
-@@ -2913,7 +2941,7 @@ qla24xx_bsg_request(struct bsg_job *bsg_job)
- 		ret = qla2x00_process_ct(bsg_job);
- 		break;
- 	case FC_BSG_HST_VENDOR:
--		ret = qla2x00_process_vendor_specific(bsg_job);
-+		ret = qla2x00_process_vendor_specific(vha, bsg_job);
- 		break;
- 	case FC_BSG_HST_ADD_RPORT:
- 	case FC_BSG_HST_DEL_RPORT:
-@@ -2922,6 +2950,10 @@ qla24xx_bsg_request(struct bsg_job *bsg_job)
- 		ql_log(ql_log_warn, vha, 0x705a, "Unsupported BSG request.\n");
- 		break;
- 	}
-+
-+	ql_dbg(ql_dbg_user + ql_dbg_verbose, vha, 0x7000,
-+	    "%s done with return %x\n", __func__, ret);
-+
- 	return ret;
- }
- 
-@@ -2936,6 +2968,8 @@ qla24xx_bsg_timeout(struct bsg_job *bsg_job)
- 	unsigned long flags;
- 	struct req_que *req;
- 
-+	ql_log(ql_log_info, vha, 0x708b, "%s CMD timeout. bsg ptr %p.\n",
-+	    __func__, bsg_job);
- 	/* find the bsg job from the active list of commands */
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	for (que = 0; que < ha->max_req_queues; que++) {
-@@ -2945,27 +2979,26 @@ qla24xx_bsg_timeout(struct bsg_job *bsg_job)
- 
- 		for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
- 			sp = req->outstanding_cmds[cnt];
--			if (sp) {
--				if (((sp->type == SRB_CT_CMD) ||
--					(sp->type == SRB_ELS_CMD_HST) ||
--					(sp->type == SRB_FXIOCB_BCMD))
--					&& (sp->u.bsg_job == bsg_job)) {
--					req->outstanding_cmds[cnt] = NULL;
--					spin_unlock_irqrestore(&ha->hardware_lock, flags);
--					if (ha->isp_ops->abort_command(sp)) {
--						ql_log(ql_log_warn, vha, 0x7089,
--						    "mbx abort_command "
--						    "failed.\n");
--						bsg_reply->result = -EIO;
--					} else {
--						ql_dbg(ql_dbg_user, vha, 0x708a,
--						    "mbx abort_command "
--						    "success.\n");
--						bsg_reply->result = 0;
--					}
--					spin_lock_irqsave(&ha->hardware_lock, flags);
--					goto done;
-+			if (sp &&
-+			    (sp->type == SRB_CT_CMD ||
-+			     sp->type == SRB_ELS_CMD_HST ||
-+			     sp->type == SRB_ELS_CMD_HST_NOLOGIN ||
-+			     sp->type == SRB_FXIOCB_BCMD) &&
-+			    sp->u.bsg_job == bsg_job) {
-+				req->outstanding_cmds[cnt] = NULL;
-+				spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+				if (ha->isp_ops->abort_command(sp)) {
-+					ql_log(ql_log_warn, vha, 0x7089,
-+					    "mbx abort_command failed.\n");
-+					bsg_reply->result = -EIO;
-+				} else {
-+					ql_dbg(ql_dbg_user, vha, 0x708a,
-+					    "mbx abort_command success.\n");
-+					bsg_reply->result = 0;
- 				}
-+				spin_lock_irqsave(&ha->hardware_lock, flags);
-+				goto done;
-+
- 			}
- 		}
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/qla_bsg.h
-index 0274e99e4a12..dd793cf8bc1e 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.h
-+++ b/drivers/scsi/qla2xxx/qla_bsg.h
-@@ -31,6 +31,7 @@
- #define QL_VND_DPORT_DIAGNOSTICS	0x19
- #define QL_VND_GET_PRIV_STATS_EX	0x1A
- #define QL_VND_SS_GET_FLASH_IMAGE_STATUS	0x1E
-+#define QL_VND_EDIF_MGMT                0X1F
- #define QL_VND_MANAGE_HOST_STATS	0x23
- #define QL_VND_GET_HOST_STATS		0x24
- #define QL_VND_GET_TGT_STATS		0x25
-@@ -294,4 +295,6 @@ struct qla_active_regions {
- 	uint8_t reserved[32];
- } __packed;
- 
-+#include "qla_edif_bsg.h"
-+
- #endif
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
-index 9eb708e5e22e..f1f6c740bdcd 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.h
-+++ b/drivers/scsi/qla2xxx/qla_dbg.h
-@@ -367,6 +367,7 @@ ql_log_qp(uint32_t, struct qla_qpair *, int32_t, const char *fmt, ...);
- #define ql_dbg_tgt_mgt	0x00002000 /* Target mode management */
- #define ql_dbg_tgt_tmr	0x00001000 /* Target mode task management */
- #define ql_dbg_tgt_dif  0x00000800 /* Target mode dif */
-+#define ql_dbg_edif	0x00000400 /* edif and purex debug */
- 
- extern int qla27xx_dump_mpi_ram(struct qla_hw_data *, uint32_t, uint32_t *,
- 	uint32_t, void **);
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index def4d99f80e9..6edb8c83980b 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -33,6 +33,7 @@
- #include <scsi/scsi_transport_fc.h>
- #include <scsi/scsi_bsg_fc.h>
- 
-+#include <uapi/scsi/fc/fc_fs.h>
- #include <uapi/scsi/fc/fc_els.h>
- 
- /* Big endian Fibre Channel S_ID (source ID) or D_ID (destination ID). */
-@@ -49,11 +50,45 @@ typedef struct {
- 	uint8_t domain;
- } le_id_t;
- 
-+/*
-+ * 24 bit port ID type definition.
-+ */
-+typedef union {
-+	uint32_t b24 : 24;
-+	struct {
-+#ifdef __BIG_ENDIAN
-+		uint8_t domain;
-+		uint8_t area;
-+		uint8_t al_pa;
-+#elif defined(__LITTLE_ENDIAN)
-+		uint8_t al_pa;
-+		uint8_t area;
-+		uint8_t domain;
-+#else
-+#error "__BIG_ENDIAN or __LITTLE_ENDIAN must be defined!"
-+#endif
-+		uint8_t rsvd_1;
-+	} b;
-+} port_id_t;
-+#define INVALID_PORT_ID	0xFFFFFF
-+
- #include "qla_bsg.h"
- #include "qla_dsd.h"
- #include "qla_nx.h"
- #include "qla_nx2.h"
- #include "qla_nvme.h"
-+
-+struct auth_els_header {
-+	uint8_t         els_code;
-+	uint8_t         els_flags;
-+	uint8_t         message_code;
-+	uint8_t         protocol_version;
-+#define AUTH_ELS_PROTOCOL_VERSION   2
-+	uint32_t        message_length;
-+	uint32_t        transaction_identifier;
-+	uint8_t         payload[0];                 /* payload for cmd */
-+} __packed;
-+
- #define QLA2XXX_DRIVER_NAME	"qla2xxx"
- #define QLA2XXX_APIDEV		"ql2xapidev"
- #define QLA2XXX_MANUFACTURER	"QLogic Corporation"
-@@ -319,6 +354,13 @@ struct name_list_extended {
- 	u32			size;
- 	u8			sent;
- };
-+
-+struct els_reject {
-+	struct fc_els_ls_rjt *c;
-+	dma_addr_t  cdma;
-+	u16 size;
-+};
-+
- /*
-  * Timeout timer counts in seconds
-  */
-@@ -345,6 +387,8 @@ struct name_list_extended {
- #define FW_MAX_EXCHANGES_CNT (32 * 1024)
- #define REDUCE_EXCHANGES_CNT  (8 * 1024)
- 
-+#define SET_DID_STATUS(stat_var, status) (stat_var = status << 16)
-+
- struct req_que;
- struct qla_tgt_sess;
- 
-@@ -370,33 +414,13 @@ struct srb_cmd {
- #define SRB_CRC_CTX_DSD_VALID		BIT_5	/* DIF: dsd_list valid */
- #define SRB_WAKEUP_ON_COMP		BIT_6
- #define SRB_DIF_BUNDL_DMA_VALID		BIT_7   /* DIF: DMA list valid */
-+#define SRB_EDIF_CLEANUP_DELETE		BIT_9
- 
- /* To identify if a srb is of T10-CRC type. @sp => srb_t pointer */
- #define IS_PROT_IO(sp)	(sp->flags & SRB_CRC_CTX_DSD_VALID)
--
--/*
-- * 24 bit port ID type definition.
-- */
--typedef union {
--	uint32_t b24 : 24;
--
--	struct {
--#ifdef __BIG_ENDIAN
--		uint8_t domain;
--		uint8_t area;
--		uint8_t al_pa;
--#elif defined(__LITTLE_ENDIAN)
--		uint8_t al_pa;
--		uint8_t area;
--		uint8_t domain;
--#else
--#error "__BIG_ENDIAN or __LITTLE_ENDIAN must be defined!"
--#endif
--		uint8_t rsvd_1;
--	} b;
--} port_id_t;
--#define INVALID_PORT_ID	0xFFFFFF
- #define ISP_REG16_DISCONNECT 0xFFFF
-+/* This sp is an internal delete */
-+#define IS_EDIF_CLEANUP_DELETE(sp) (sp->flags & SRB_EDIF_CLEANUP_DELETE)
- 
- static inline le_id_t be_id_to_le(be_id_t id)
- {
-@@ -483,6 +507,7 @@ struct srb_iocb {
- #define SRB_LOGIN_SKIP_PRLI	BIT_2
- #define SRB_LOGIN_NVME_PRLI	BIT_3
- #define SRB_LOGIN_PRLI_ONLY	BIT_4
-+#define SRB_LOGIN_FCSP		BIT_5
- 			uint16_t data[2];
- 			u32 iop[2];
- 		} logio;
-@@ -587,6 +612,10 @@ struct srb_iocb {
- 			u16 cmd;
- 			u16 vp_index;
- 		} ctrlvp;
-+		struct {
-+			struct edif_sa_ctl	*sa_ctl;
-+			struct qla_sa_update_frame sa_frame;
-+		} sa_update;
- 	} u;
- 
- 	struct timer_list timer;
-@@ -617,6 +646,21 @@ struct srb_iocb {
- #define SRB_PRLI_CMD	21
- #define SRB_CTRL_VP	22
- #define SRB_PRLO_CMD	23
-+#define SRB_SA_UPDATE	25
-+#define SRB_ELS_CMD_HST_NOLOGIN 26
-+#define SRB_SA_REPLACE	27
-+
-+struct qla_els_pt_arg {
-+	u8 els_opcode;
-+	u8 vp_idx;
-+	__le16 nport_handle;
-+	u16 control_flags;
-+	__le32 rx_xchg_address;
-+	port_id_t did;
-+	u32 tx_len, tx_byte_count, rx_len, rx_byte_count;
-+	dma_addr_t tx_addr, rx_addr;
-+
-+};
- 
- enum {
- 	TYPE_SRB,
-@@ -630,6 +674,13 @@ struct iocb_resource {
- 	u16 iocb_cnt;
- };
- 
-+struct bsg_cmd {
-+	struct bsg_job *bsg_job;
-+	union {
-+		struct qla_els_pt_arg els_arg;
-+	} u;
-+};
-+
- typedef struct srb {
- 	/*
- 	 * Do not move cmd_type field, it needs to
-@@ -662,7 +713,21 @@ typedef struct srb {
- 		struct srb_iocb iocb_cmd;
- 		struct bsg_job *bsg_job;
- 		struct srb_cmd scmd;
-+		struct bsg_cmd bsg_cmd;
- 	} u;
-+	struct {
-+		bool remapped;
-+		struct {
-+			dma_addr_t dma;
-+			void *buf;
-+			uint len;
-+		} req;
-+		struct {
-+			dma_addr_t dma;
-+			void *buf;
-+			uint len;
-+		} rsp;
-+	} remap;
- 	/*
- 	 * Report completion status @res and call sp_put(@sp). @res is
- 	 * an NVMe status code, a SCSI result (e.g. DID_OK << 16) or a
-@@ -2294,6 +2359,7 @@ struct imm_ntfy_from_isp {
- 			__le16	nport_handle;
- 			uint16_t reserved_2;
- 			__le16	flags;
-+#define NOTIFY24XX_FLAGS_FCSP		BIT_5
- #define NOTIFY24XX_FLAGS_GLOBAL_TPRLO   BIT_1
- #define NOTIFY24XX_FLAGS_PUREX_IOCB     BIT_0
- 			__le16	srr_rx_id;
-@@ -2424,6 +2490,7 @@ enum discovery_state {
- 	DSC_LOGIN_COMPLETE,
- 	DSC_ADISC,
- 	DSC_DELETE_PEND,
-+	DSC_LOGIN_AUTH_PEND,
- };
- 
- enum login_state {	/* FW control Target side */
-@@ -2467,6 +2534,8 @@ typedef struct fc_port {
- 	unsigned int n2n_flag:1;
- 	unsigned int explicit_logout:1;
- 	unsigned int prli_pend_timer:1;
-+	unsigned int explicit_prlo:1;
-+
- 	uint8_t nvme_flag;
- 
- 	uint8_t node_name[WWN_SIZE];
-@@ -2510,6 +2579,7 @@ typedef struct fc_port {
- 	uint16_t tgt_id;
- 	uint16_t old_tgt_id;
- 	uint16_t sec_since_registration;
-+	uint16_t prlo_rc;
- 
- 	uint8_t fcp_prio;
- 
-@@ -2563,6 +2633,62 @@ typedef struct fc_port {
- 	u64 tgt_short_link_down_cnt;
- 	u64 tgt_link_down_time;
- 	u64 dev_loss_tmo;
-+#define	TTYPE_PRLI	1
-+#define	TTYPE_KSHRED	2
-+
-+// edif timer types
-+#define	EDIF_TICK	1	// timer tick incremental value (seconds)
-+#define	EDIF_PRLI_TO	120	// default for prli timeout (seconds)
-+#define	EDIF_KSHRED_TO	30	// default for old key shred (seconds)
-+#define	EDIF_TO_MIN	25
-+#define	EDIF_MAX_SA_SLOTS	2	/* Number of SA slots */
-+	/*
-+	 * EDIF parameters for encryption.
-+	 */
-+	struct {
-+		uint16_t	enable:1;	// device is edif enabled/req'd
-+		uint16_t	new_sa:1;	// new/updated sa needed
-+		uint16_t	db_sent:1;	// app notified new sa needed
-+		uint16_t	rekey_nocnt:1;	// no byte or time limit
-+		uint16_t	rekey_mode:1;	// 1-time based, 0-bytes based
-+		uint16_t	app_stop:2;
-+#define APP_STOPPED  0
-+#define APP_STOPPING 1
-+		uint16_t	app_started:1;
-+		uint16_t	secured_login:1;
-+		uint16_t	aes_gmac:1;
-+		uint16_t	app_sess_online:1;
-+		uint16_t	rekey_cnt;	// num of times rekeyed
-+		uint32_t	login_gen;	// saved count
-+		uint32_t	rscn_gen;	// saved rscn cnt
-+		uint32_t	prli_to;	// timeout for prli to complete
-+		int64_t		reload_value;	// time or bytes; 0=unlimited
-+		int64_t		rekey;		// amt left before rekey needed
-+		struct timer_list timer;	// prli and shred timer
-+		uint8_t		auth_state;	/* cureent auth state */
-+		uint8_t		tx_sa_set;
-+		uint8_t		rx_sa_set;
-+		uint8_t		tx_sa_pending;
-+		uint8_t		rx_sa_pending;
-+		uint8_t		reserved[3];
-+		uint32_t	tx_rekey_cnt;
-+		uint32_t	rx_rekey_cnt;
-+		uint32_t	tx_sa_selold;	/* Select older SA */
-+		uint32_t	rx_sa_selold;
-+		uint32_t	stall_io;	/* Stall I/O on this port */
-+
-+		// delayed rx delete data structure list
-+		uint64_t	tx_bytes;
-+		uint64_t	rx_bytes;
-+		uint8_t		non_secured_login;
-+		struct list_head edif_indx_list;
-+		spinlock_t  indx_list_lock;  // protects the edif index list
-+
-+		struct list_head tx_sa_list;
-+		struct list_head rx_sa_list;
-+		spinlock_t	sa_list_lock;       /* protects list */
-+	} edif;
-+
- } fc_port_t;
- 
- enum {
-@@ -2604,7 +2730,8 @@ static const char * const port_dstate_str[] = {
- 	"UPD_FCPORT",
- 	"LOGIN_COMPLETE",
- 	"ADISC",
--	"DELETE_PEND"
-+	"DELETE_PEND",
-+	"LOGIN_AUTH_PEND",
- };
- 
- /*
-@@ -2616,6 +2743,8 @@ static const char * const port_dstate_str[] = {
- #define FCF_ASYNC_SENT		BIT_3
- #define FCF_CONF_COMP_SUPPORTED BIT_4
- #define FCF_ASYNC_ACTIVE	BIT_5
-+#define FCF_FCSP_DEVICE		BIT_6
-+#define FCF_EDIF_DELETE		BIT_7
- 
- /* No loop ID flag. */
- #define FC_NO_LOOP_ID		0x1000
-@@ -3386,6 +3515,7 @@ enum qla_work_type {
- 	QLA_EVT_SP_RETRY,
- 	QLA_EVT_IIDMA,
- 	QLA_EVT_ELS_PLOGI,
-+	QLA_EVT_SA_REPLACE,
- };
- 
- 
-@@ -3444,6 +3574,11 @@ struct qla_work_evt {
- 			u8 fc4_type;
- 			srb_t *sp;
- 		} gpnft;
-+		struct {
-+			struct edif_sa_ctl	*sa_ctl;
-+			fc_port_t *fcport;
-+			uint16_t nport_handle;
-+		} sa_update;
- 	 } u;
- };
- 
-@@ -3563,6 +3698,8 @@ struct rsp_que {
- 	srb_t *status_srb; /* status continuation entry */
- 	struct qla_qpair *qpair;
- 
-+	port_id_t pur_sid;
-+	int	pur_entcnt;
- 	dma_addr_t  dma_fx00;
- 	response_t *ring_fx00;
- 	uint16_t  length_fx00;
-@@ -3843,7 +3980,9 @@ struct qlt_hw_data {
- 	int num_act_qpairs;
- #define DEFAULT_NAQP 2
- 	spinlock_t atio_lock ____cacheline_aligned;
--	struct btree_head32 host_map;
-+	dma_addr_t fast_dig_dma;
-+	char       *fast_dig_ptr;
-+	char       *fast_sw_sha;
- };
- 
- #define MAX_QFULL_CMDS_ALLOC	8192
-@@ -3933,6 +4072,7 @@ struct qla_hw_data {
- 		uint32_t	scm_supported_f:1;
- 				/* Enabled in Driver */
- 		uint32_t	scm_enabled:1;
-+		uint32_t	edif_enabled:1;
- 		uint32_t	max_req_queue_warned:1;
- 		uint32_t	plogi_template_valid:1;
- 		uint32_t	port_isolated:1;
-@@ -4616,7 +4756,22 @@ struct qla_hw_data {
- 
- 	struct qla_hw_data_stat stat;
- 	pci_error_state_t pci_error_state;
-+	unsigned short plogi_commfeat;
-+	struct dma_pool *purex_dma_pool;
-+	struct btree_head32 host_map;
-+
-+	#define EDIF_NUM_SA_INDEX	512
-+	#define EDIF_TX_SA_INDEX_BASE	EDIF_NUM_SA_INDEX
-+	void *edif_rx_sa_id_map;
-+	void *edif_tx_sa_id_map;
-+	spinlock_t sadb_fp_lock;
-+
-+	struct list_head sadb_tx_index_list;
-+	struct list_head sadb_rx_index_list;
-+	spinlock_t sadb_lock;	/* protects list */
-+	struct els_reject elsrej;
- };
-+#define RX_ELS_SIZE (roundup(sizeof(struct enode) + ELS_MAX_PAYLOAD, SMP_CACHE_BYTES))
- 
- struct active_regions {
- 	uint8_t global;
-@@ -4626,6 +4781,7 @@ struct active_regions {
- 		uint8_t npiv_config_0_1;
- 		uint8_t npiv_config_2_3;
- 	} aux;
-+	unsigned short plogi_commfeat;
- };
- 
- #define FW_ABILITY_MAX_SPEED_MASK	0xFUL
-@@ -4656,6 +4812,8 @@ struct purex_item {
- 	} iocb;
- };
- 
-+#include "qla_edif.h"
-+
- #define SCM_FLAG_RDF_REJECT		0x00
- #define SCM_FLAG_RDF_COMPLETED		0x01
- 
-@@ -4743,6 +4901,7 @@ typedef struct scsi_qla_host {
- #define SET_ZIO_THRESHOLD_NEEDED 32
- #define ISP_ABORT_TO_ROM	33
- #define VPORT_DELETE		34
-+#define EDIF_TICK_NEEDED	36
- 
- #define PROCESS_PUREX_IOCB	63
- 
-@@ -4776,6 +4935,8 @@ typedef struct scsi_qla_host {
- 	uint8_t         loop_down_abort_time;    /* port down timer */
- 	atomic_t        loop_down_timer;         /* loop down timer */
- 	uint8_t         link_down_timeout;       /* link down timeout */
-+	uint16_t	edif_prli_timeout;
-+	uint16_t	edif_kshred_timeout;
- 
- 	uint32_t        timer_active;
- 	struct timer_list        timer;
-@@ -4884,6 +5045,8 @@ typedef struct scsi_qla_host {
- 	u64 reset_cmd_err_cnt;
- 	u64 link_down_time;
- 	u64 short_link_down_cnt;
-+	struct edif_dbell e_dbell;
-+	struct pur_core pur_cinfo;
- } scsi_qla_host_t;
- 
- struct qla27xx_image_status {
-@@ -5084,6 +5247,43 @@ enum nexus_wait_type {
- 	WAIT_LUN,
- };
- 
-+#define INVALID_EDIF_SA_INDEX	0xffff
-+#define RX_DELETE_NO_EDIF_SA_INDEX	0xfffe
-+
-+#define QLA_SKIP_HANDLE QLA_TGT_SKIP_HANDLE
-+
-+/* edif hash element */
-+struct edif_list_entry {
-+	uint16_t handle;			/* nport_handle */
-+	uint32_t update_sa_index;
-+	uint32_t delete_sa_index;
-+	uint32_t count;				/* counter for filtering sa_index */
-+#define EDIF_ENTRY_FLAGS_CLEANUP	0x01	/* this index is being cleaned up */
-+	uint32_t flags;				/* used by sadb cleanup code */
-+	fc_port_t *fcport;			/* needed by rx delay timer function */
-+	struct timer_list timer;		/* rx delay timer */
-+	struct list_head next;
-+};
-+
-+#define EDIF_TX_INDX_BASE 512
-+#define EDIF_RX_INDX_BASE 0
-+#define EDIF_RX_DELETE_FILTER_COUNT 3	/* delay queuing rx delete until this many */
-+
-+/* entry in the sa_index free pool */
-+
-+struct sa_index_pair {
-+	uint16_t sa_index;
-+	uint32_t spi;
-+};
-+
-+/* edif sa_index data structure */
-+struct edif_sa_index_entry {
-+	struct sa_index_pair sa_pair[2];
-+	fc_port_t *fcport;
-+	uint16_t handle;
-+	struct list_head next;
-+};
-+
- /* Refer to SNIA SFF 8247 */
- struct sff_8247_a0 {
- 	u8 txid;	/* transceiver id */
-diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
-new file mode 100644
-index 000000000000..52eada5521fa
---- /dev/null
-+++ b/drivers/scsi/qla2xxx/qla_edif.c
-@@ -0,0 +1,3638 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Marvell Fibre Channel HBA Driver
-+ * Copyright (c)  2021     Marvell
-+ */
-+#include "qla_def.h"
-+#include "qla_edif.h"
-+
-+#include <linux/kthread.h>
-+#include <linux/vmalloc.h>
-+#include <linux/delay.h>
-+#include <scsi/scsi_tcq.h>
-+
-+static struct edif_sa_index_entry *qla_edif_sadb_find_sa_index_entry(uint16_t nport_handle,
-+		struct list_head *sa_list);
-+static uint16_t qla_edif_sadb_get_sa_index(fc_port_t *fcport,
-+		struct qla_sa_update_frame *sa_frame);
-+static int qla_edif_sadb_delete_sa_index(fc_port_t *fcport, uint16_t nport_handle,
-+		uint16_t sa_index);
-+static int qla_pur_get_pending(scsi_qla_host_t *, fc_port_t *, struct bsg_job *);
-+
-+struct edb_node {
-+	struct  list_head	list;
-+	uint32_t		ntype;
-+	uint32_t		lstate;
-+	union {
-+		port_id_t	plogi_did;
-+		uint32_t	async;
-+		port_id_t	els_sid;
-+		struct edif_sa_update_aen	sa_aen;
-+	} u;
-+};
-+
-+static struct els_sub_cmd {
-+	uint16_t cmd;
-+	const char *str;
-+} sc_str[] = {
-+	{SEND_ELS, "send ELS"},
-+	{SEND_ELS_REPLY, "send ELS Reply"},
-+	{PULL_ELS, "retrieve ELS"},
-+};
-+
-+const char *sc_to_str(uint16_t cmd)
-+{
-+	int i;
-+	struct els_sub_cmd *e;
-+
-+	for (i = 0; i < ARRAY_SIZE(sc_str); i++) {
-+		e = sc_str + i;
-+		if (cmd == e->cmd)
-+			return e->str;
-+	}
-+	return "unknown";
-+}
-+
-+/* find an edif list entry for an nport_handle */
-+struct edif_list_entry *qla_edif_list_find_sa_index(fc_port_t *fcport,
-+		uint16_t handle)
-+{
-+	struct edif_list_entry *entry;
-+	struct edif_list_entry *tentry;
-+	struct list_head *indx_list = &fcport->edif.edif_indx_list;
-+
-+	list_for_each_entry_safe(entry, tentry, indx_list, next) {
-+		if (entry->handle == handle)
-+			return entry;
-+	}
-+	return NULL;
-+}
-+
-+/* timeout called when no traffic and delayed rx sa_index delete */
-+static void qla2x00_sa_replace_iocb_timeout(struct timer_list *t)
-+{
-+	struct edif_list_entry *edif_entry = from_timer(edif_entry, t, timer);
-+	fc_port_t *fcport = edif_entry->fcport;
-+
-+	struct scsi_qla_host *vha = fcport->vha;
-+	struct  edif_sa_ctl *sa_ctl;
-+	uint16_t nport_handle;
-+	unsigned long flags = 0;
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x3069,
-+	    "%s:  nport_handle 0x%x,  SA REPL Delay Timeout, %8phC portid=%06x\n",
-+	    __func__, edif_entry->handle, fcport->port_name, fcport->d_id.b24);
-+
-+	/*
-+	 * if delete_sa_index is valid then no one has serviced this
-+	 * delayed delete
-+	 */
-+	spin_lock_irqsave(&fcport->edif.indx_list_lock, flags);
-+
-+	/*
-+	 * delete_sa_index is invalidated when we find the new sa_index in
-+	 * the incoming data stream.  If it is not invalidated then we are
-+	 * still looking for the new sa_index because there is no I/O and we
-+	 * need to just force the rx delete and move on.  Otherwise
-+	 * we could get another rekey which will result in an error 66.
-+	 */
-+	if (edif_entry->delete_sa_index != INVALID_EDIF_SA_INDEX) {
-+		uint16_t delete_sa_index = edif_entry->delete_sa_index;
-+
-+		edif_entry->delete_sa_index = INVALID_EDIF_SA_INDEX;
-+		nport_handle = edif_entry->handle;
-+		spin_unlock_irqrestore(&fcport->edif.indx_list_lock, flags);
-+
-+		sa_ctl = qla_edif_find_sa_ctl_by_index(fcport,
-+		    delete_sa_index, 0);
-+
-+		if (sa_ctl) {
-+			ql_dbg(ql_dbg_edif, vha, 0x3063,
-+	"%s: POST SA DELETE TIMEOUT  sa_ctl: %p, delete index %d, update index: %d, lid: 0x%x\n",
-+			    __func__, sa_ctl, delete_sa_index,
-+			    edif_entry->update_sa_index, nport_handle);
-+
-+			sa_ctl->flags = EDIF_SA_CTL_FLG_DEL;
-+			set_bit(EDIF_SA_CTL_REPL, &sa_ctl->state);
-+			qla_post_sa_replace_work(fcport->vha, fcport,
-+			    nport_handle, sa_ctl);
-+
-+		} else {
-+			ql_dbg(ql_dbg_edif, vha, 0x3063,
-+	"%s: POST SA DELETE TIMEOUT  sa_ctl not found for delete_sa_index: %d\n",
-+			    __func__, edif_entry->delete_sa_index);
-+		}
-+	} else {
-+		spin_unlock_irqrestore(&fcport->edif.indx_list_lock, flags);
-+	}
-+}
-+
-+/*
-+ * create a new list entry for this nport handle and
-+ * add an sa_update index to the list - called for sa_update
-+ */
-+static int qla_edif_list_add_sa_update_index(fc_port_t *fcport,
-+		uint16_t sa_index, uint16_t handle)
-+{
-+	struct edif_list_entry *entry;
-+	unsigned long flags = 0;
-+
-+	/* if the entry exists, then just update the sa_index */
-+	entry = qla_edif_list_find_sa_index(fcport, handle);
-+	if (entry) {
-+		entry->update_sa_index = sa_index;
-+		entry->count = 0;
-+		return 0;
-+	}
-+
-+	/*
-+	 * This is the normal path - there should be no existing entry
-+	 * when update is called.  The exception is at startup
-+	 * when update is called for the first two sa_indexes
-+	 * followed by a delete of the first sa_index
-+	 */
-+	entry = kzalloc((sizeof(struct edif_list_entry)), GFP_ATOMIC);
-+	if (!entry)
-+		return -1;
-+
-+	INIT_LIST_HEAD(&entry->next);
-+	entry->handle = handle;
-+	entry->update_sa_index = sa_index;
-+	entry->delete_sa_index = INVALID_EDIF_SA_INDEX;
-+	entry->count = 0;
-+	entry->flags = 0;
-+	timer_setup(&entry->timer, qla2x00_sa_replace_iocb_timeout, 0);
-+	spin_lock_irqsave(&fcport->edif.indx_list_lock, flags);
-+	list_add_tail(&entry->next, &fcport->edif.edif_indx_list);
-+	spin_unlock_irqrestore(&fcport->edif.indx_list_lock, flags);
-+	return 0;
-+}
-+
-+/* remove an entry from the list */
-+static void qla_edif_list_delete_sa_index(fc_port_t *fcport, struct edif_list_entry *entry)
-+{
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&fcport->edif.indx_list_lock, flags);
-+	list_del(&entry->next);
-+	spin_unlock_irqrestore(&fcport->edif.indx_list_lock, flags);
-+}
-+
-+int qla_post_sa_replace_work(struct scsi_qla_host *vha,
-+	 fc_port_t *fcport, uint16_t nport_handle, struct edif_sa_ctl *sa_ctl)
-+{
-+	struct qla_work_evt *e;
-+
-+	e = qla2x00_alloc_work(vha, QLA_EVT_SA_REPLACE);
-+	if (!e)
-+		return QLA_FUNCTION_FAILED;
-+
-+	e->u.sa_update.fcport = fcport;
-+	e->u.sa_update.sa_ctl = sa_ctl;
-+	e->u.sa_update.nport_handle = nport_handle;
-+	fcport->flags |= FCF_ASYNC_ACTIVE;
-+	return qla2x00_post_work(vha, e);
-+}
-+
-+static void
-+qla_edif_sa_ctl_init(scsi_qla_host_t *vha, struct fc_port  *fcport)
-+{
-+	ql_dbg(ql_dbg_edif, vha, 0x2058,
-+		"Init SA_CTL List for fcport - nn %8phN pn %8phN portid=%02x%02x%02x.\n",
-+		fcport->node_name, fcport->port_name,
-+		fcport->d_id.b.domain, fcport->d_id.b.area,
-+		fcport->d_id.b.al_pa);
-+
-+	fcport->edif.tx_rekey_cnt = 0;
-+	fcport->edif.rx_rekey_cnt = 0;
-+
-+	fcport->edif.tx_bytes = 0;
-+	fcport->edif.rx_bytes = 0;
-+}
-+
-+static int qla_bsg_check(scsi_qla_host_t *vha, struct bsg_job *bsg_job,
-+fc_port_t *fcport)
-+{
-+	struct extra_auth_els *p;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct qla_bsg_auth_els_request *req =
-+	    (struct qla_bsg_auth_els_request *)bsg_job->request;
-+
-+	if (!vha->hw->flags.edif_enabled) {
-+		/* edif support not enabled */
-+		ql_dbg(ql_dbg_edif, vha, 0x9105,
-+		    "%s edif not enabled\n", __func__);
-+		goto done;
-+	}
-+	if (vha->e_dbell.db_flags != EDB_ACTIVE) {
-+		/* doorbell list not enabled */
-+		ql_dbg(ql_dbg_edif, vha, 0x09102,
-+		    "%s doorbell not enabled\n", __func__);
-+		goto done;
-+	}
-+
-+	p = &req->e;
-+
-+	/* Get response */
-+	if (p->sub_cmd == PULL_ELS) {
-+		struct qla_bsg_auth_els_reply *rpl =
-+			(struct qla_bsg_auth_els_reply *)bsg_job->reply;
-+
-+		qla_pur_get_pending(vha, fcport, bsg_job);
-+
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+			"%s %s %8phN sid=%x. xchg %x, nb=%xh bsg ptr %p\n",
-+			__func__, sc_to_str(p->sub_cmd), fcport->port_name,
-+			fcport->d_id.b24, rpl->rx_xchg_address,
-+			rpl->r.reply_payload_rcv_len, bsg_job);
-+
-+		goto done;
-+	}
-+	return 0;
-+
-+done:
-+
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+			bsg_reply->reply_payload_rcv_len);
-+	return -EIO;
-+}
-+
-+fc_port_t *
-+qla2x00_find_fcport_by_pid(scsi_qla_host_t *vha, port_id_t *id)
-+{
-+	fc_port_t *f, *tf;
-+
-+	f = NULL;
-+	list_for_each_entry_safe(f, tf, &vha->vp_fcports, list) {
-+		if ((f->flags & FCF_FCSP_DEVICE)) {
-+			ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x2058,
-+	"Found secure fcport - nn %8phN pn %8phN portid=%02x%02x%02x, 0x%x, 0x%x.\n",
-+			    f->node_name, f->port_name,
-+			    f->d_id.b.domain, f->d_id.b.area,
-+			    f->d_id.b.al_pa, f->d_id.b24, id->b24);
-+			if (f->d_id.b24 == id->b24)
-+				return f;
-+		}
-+	}
-+	return NULL;
-+}
-+
-+int qla2x00_check_rdp_test(uint32_t cmd, uint32_t port)
-+{
-+	if (cmd == ELS_RDP && port == 0xFEFFFF)
-+		return 1;
-+	else
-+		return 0;
-+}
-+
-+static int
-+qla_edif_app_check(scsi_qla_host_t *vha, struct app_id appid)
-+{
-+	int rval = 0;	/* assume failure */
-+
-+	/* check that the app is allow/known to the driver */
-+
-+	/* TODO: edif: implement key/cert check for permitted apps... */
-+
-+	if (appid.app_vid == 0x73730001) {
-+		rval = 1;
-+		ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x911d, "%s app id ok\n", __func__);
-+	} else {
-+		ql_dbg(ql_dbg_edif, vha, 0x911d, "%s app id not ok (%x)",
-+		    __func__, appid.app_vid);
-+	}
-+
-+	return rval;
-+}
-+
-+/*
-+ * reset the session to auth wait.
-+ */
-+static void qla_edif_reset_auth_wait(struct fc_port *fcport, int state,
-+		int waitonly)
-+{
-+	int cnt, max_cnt = 200;
-+	bool traced = false;
-+
-+	fcport->keep_nport_handle = 1;
-+
-+	if (!waitonly) {
-+		qla2x00_set_fcport_disc_state(fcport, state);
-+		qlt_schedule_sess_for_deletion(fcport);
-+	} else {
-+		qla2x00_set_fcport_disc_state(fcport, state);
-+	}
-+
-+	ql_dbg(ql_dbg_edif, fcport->vha, 0xf086,
-+		"%s: waiting for session, max_cnt=%u\n",
-+		__func__, max_cnt);
-+
-+	cnt = 0;
-+
-+	if (waitonly) {
-+		/* Marker wait min 10 msecs. */
-+		msleep(50);
-+		cnt += 50;
-+	}
-+	while (1) {
-+		if (!traced) {
-+			ql_dbg(ql_dbg_edif, fcport->vha, 0xf086,
-+			"%s: session sleep.\n",
-+			__func__);
-+			traced = true;
-+		}
-+		msleep(20);
-+		cnt++;
-+		if (waitonly && (fcport->disc_state == state ||
-+			fcport->disc_state == DSC_LOGIN_COMPLETE))
-+			break;
-+		if (fcport->disc_state == DSC_LOGIN_AUTH_PEND)
-+			break;
-+		if (cnt > max_cnt)
-+			break;
-+	}
-+
-+	if (!waitonly) {
-+		ql_dbg(ql_dbg_edif, fcport->vha, 0xf086,
-+	"%s: waited for session - %8phC, loopid=%x portid=%06x fcport=%p state=%u, cnt=%u\n",
-+		    __func__, fcport->port_name, fcport->loop_id,
-+		    fcport->d_id.b24, fcport, fcport->disc_state, cnt);
-+	} else {
-+		ql_dbg(ql_dbg_edif, fcport->vha, 0xf086,
-+	"%s: waited ONLY for session - %8phC, loopid=%x portid=%06x fcport=%p state=%u, cnt=%u\n",
-+		    __func__, fcport->port_name, fcport->loop_id,
-+		    fcport->d_id.b24, fcport, fcport->disc_state, cnt);
-+	}
-+}
-+
-+static void
-+qla_edif_free_sa_ctl(fc_port_t *fcport, struct edif_sa_ctl *sa_ctl,
-+	int index)
-+{
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&fcport->edif.sa_list_lock, flags);
-+	list_del(&sa_ctl->next);
-+	spin_unlock_irqrestore(&fcport->edif.sa_list_lock, flags);
-+	if (index >= 512)
-+		fcport->edif.tx_rekey_cnt--;
-+	else
-+		fcport->edif.rx_rekey_cnt--;
-+	kfree(sa_ctl);
-+}
-+
-+/* return an index to the freepool */
-+static void qla_edif_add_sa_index_to_freepool(fc_port_t *fcport, int dir,
-+		uint16_t sa_index)
-+{
-+	void *sa_id_map;
-+	struct scsi_qla_host *vha = fcport->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	unsigned long flags = 0;
-+	u16 lsa_index = sa_index;
-+
-+	ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x3063,
-+	    "%s: entry\n", __func__);
-+
-+	if (dir) {
-+		sa_id_map = ha->edif_tx_sa_id_map;
-+		lsa_index -= EDIF_TX_SA_INDEX_BASE;
-+	} else {
-+		sa_id_map = ha->edif_rx_sa_id_map;
-+	}
-+
-+	spin_lock_irqsave(&ha->sadb_fp_lock, flags);
-+	clear_bit(lsa_index, sa_id_map);
-+	spin_unlock_irqrestore(&ha->sadb_fp_lock, flags);
-+	ql_dbg(ql_dbg_edif, vha, 0x3063,
-+	    "%s: index %d added to free pool\n", __func__, sa_index);
-+}
-+
-+static void __qla2x00_release_all_sadb(struct scsi_qla_host *vha,
-+	struct fc_port *fcport, struct edif_sa_index_entry *entry,
-+	int pdir)
-+{
-+	struct edif_list_entry *edif_entry;
-+	struct  edif_sa_ctl *sa_ctl;
-+	int i, dir;
-+	int key_cnt = 0;
-+
-+	for (i = 0; i < 2; i++) {
-+		if (entry->sa_pair[i].sa_index == INVALID_EDIF_SA_INDEX)
-+			continue;
-+
-+		if (fcport->loop_id != entry->handle) {
-+			ql_dbg(ql_dbg_edif, vha, 0x3063,
-+	"%s: ** WARNING %d** entry handle: 0x%x, fcport nport_handle: 0x%x, sa_index: %d\n",
-+				__func__, i, entry->handle,
-+				fcport->loop_id,
-+				entry->sa_pair[i].sa_index);
-+		}
-+
-+		/* release the sa_ctl */
-+		sa_ctl = qla_edif_find_sa_ctl_by_index(fcport,
-+				entry->sa_pair[i].sa_index, pdir);
-+		if (sa_ctl &&
-+		    qla_edif_find_sa_ctl_by_index(fcport, sa_ctl->index, pdir)) {
-+			ql_dbg(ql_dbg_edif, vha, 0x3063,
-+					"%s: freeing sa_ctl for index %d\n",
-+					__func__, sa_ctl->index);
-+			qla_edif_free_sa_ctl(fcport, sa_ctl, sa_ctl->index);
-+		} else {
-+			ql_dbg(ql_dbg_edif, vha, 0x3063,
-+				"%s: sa_ctl NOT freed, sa_ctl: %p\n",
-+				__func__, sa_ctl);
-+		}
-+
-+		/* Release the index */
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+			"%s: freeing sa_index %d, nph: 0x%x\n",
-+			__func__, entry->sa_pair[i].sa_index, entry->handle);
-+
-+		dir = (entry->sa_pair[i].sa_index <
-+			EDIF_TX_SA_INDEX_BASE) ? 0 : 1;
-+		qla_edif_add_sa_index_to_freepool(fcport, dir,
-+			entry->sa_pair[i].sa_index);
-+
-+		/* Delete timer on RX */
-+		if (pdir != SAU_FLG_TX) {
-+			edif_entry =
-+				qla_edif_list_find_sa_index(fcport, entry->handle);
-+			if (edif_entry) {
-+				ql_dbg(ql_dbg_edif, vha, 0x5033,
-+	"%s: removing edif_entry %p, update_sa_index: 0x%x, delete_sa_index: 0x%x\n",
-+					__func__, edif_entry, edif_entry->update_sa_index,
-+					edif_entry->delete_sa_index);
-+				qla_edif_list_delete_sa_index(fcport, edif_entry);
-+				/*
-+				 * valid delete_sa_index indicates there is a rx
-+				 * delayed delete queued
-+				 */
-+				if (edif_entry->delete_sa_index !=
-+						INVALID_EDIF_SA_INDEX) {
-+					del_timer(&edif_entry->timer);
-+
-+					/* build and send the aen */
-+					fcport->edif.rx_sa_set = 1;
-+					fcport->edif.rx_sa_pending = 0;
-+					qla_edb_eventcreate(vha,
-+							VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
-+							QL_VND_SA_STAT_SUCCESS,
-+							QL_VND_RX_SA_KEY, fcport);
-+				}
-+				ql_dbg(ql_dbg_edif, vha, 0x5033,
-+	"%s: releasing edif_entry %p, update_sa_index: 0x%x, delete_sa_index: 0x%x\n",
-+					__func__, edif_entry,
-+					edif_entry->update_sa_index,
-+					edif_entry->delete_sa_index);
-+
-+				kfree(edif_entry);
-+			}
-+		}
-+		key_cnt++;
-+	}
-+	ql_dbg(ql_dbg_edif, vha, 0x3063,
-+	    "%s: %d %s keys released\n",
-+	    __func__, key_cnt, pdir ? "tx" : "rx");
-+}
-+
-+/* find an release all outstanding sadb sa_indicies */
-+void qla2x00_release_all_sadb(struct scsi_qla_host *vha, struct fc_port *fcport)
-+{
-+	struct edif_sa_index_entry *entry, *tmp;
-+	struct qla_hw_data *ha = vha->hw;
-+	unsigned long flags;
-+
-+	ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x3063,
-+	    "%s: Starting...\n", __func__);
-+
-+	spin_lock_irqsave(&ha->sadb_lock, flags);
-+
-+	list_for_each_entry_safe(entry, tmp, &ha->sadb_rx_index_list, next) {
-+		if (entry->fcport == fcport) {
-+			list_del(&entry->next);
-+			spin_unlock_irqrestore(&ha->sadb_lock, flags);
-+			__qla2x00_release_all_sadb(vha, fcport, entry, 0);
-+			kfree(entry);
-+			spin_lock_irqsave(&ha->sadb_lock, flags);
-+			break;
-+		}
-+	}
-+
-+	list_for_each_entry_safe(entry, tmp, &ha->sadb_tx_index_list, next) {
-+		if (entry->fcport == fcport) {
-+			list_del(&entry->next);
-+			spin_unlock_irqrestore(&ha->sadb_lock, flags);
-+
-+			__qla2x00_release_all_sadb(vha, fcport, entry, SAU_FLG_TX);
-+
-+			kfree(entry);
-+			spin_lock_irqsave(&ha->sadb_lock, flags);
-+			break;
-+		}
-+	}
-+	spin_unlock_irqrestore(&ha->sadb_lock, flags);
-+}
-+
-+/*
-+ * event that the app has started. Clear and start doorbell
-+ */
-+static int
-+qla_edif_app_start(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
-+{
-+	int32_t			rval = 0;
-+	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
-+	struct app_start	appstart;
-+	struct app_start_reply	appreply;
-+	struct fc_port  *fcport, *tf;
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x911d, "%s app start\n", __func__);
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, &appstart,
-+	    sizeof(struct app_start));
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x911d, "%s app_vid=%x app_start_flags %x\n",
-+	     __func__, appstart.app_info.app_vid, appstart.app_start_flags);
-+
-+	vha->edif_prli_timeout = (appstart.prli_to > EDIF_TO_MIN ?
-+	    appstart.prli_to : EDIF_PRLI_TO);
-+	vha->edif_kshred_timeout = (appstart.key_shred > EDIF_TO_MIN ?
-+	    appstart.key_shred : EDIF_KSHRED_TO);
-+	ql_dbg(ql_dbg_edif, vha, 0x911e,
-+	    "%s: PRLI Timeout %d, KSHRED Timeout %d\n",
-+	    __func__, vha->edif_prli_timeout, vha->edif_kshred_timeout);
-+
-+	if (vha->e_dbell.db_flags != EDB_ACTIVE) {
-+		/* mark doorbell as active since an app is now present */
-+		vha->e_dbell.db_flags = EDB_ACTIVE;
-+	} else {
-+		ql_dbg(ql_dbg_edif, vha, 0x911e, "%s doorbell already active\n",
-+		     __func__);
-+	}
-+
-+	list_for_each_entry_safe(fcport, tf, &vha->vp_fcports, list) {
-+		if ((fcport->flags & FCF_FCSP_DEVICE)) {
-+			ql_dbg(ql_dbg_edif, vha, 0xf084,
-+			    "%s: sess %p %8phC lid %#04x s_id %06x logout %d\n",
-+			    __func__, fcport, fcport->port_name,
-+			    fcport->loop_id, fcport->d_id.b24,
-+			    fcport->logout_on_delete);
-+
-+			ql_dbg(ql_dbg_edif, vha, 0xf084,
-+			    "keep %d els_logo %d disc state %d auth state %d stop state %d\n",
-+			    fcport->keep_nport_handle,
-+			    fcport->send_els_logo, fcport->disc_state,
-+			    fcport->edif.auth_state, fcport->edif.app_stop);
-+
-+			if (atomic_read(&vha->loop_state) == LOOP_DOWN)
-+				break;
-+
-+			if (!fcport->edif.secured_login)
-+				continue;
-+
-+			fcport->edif.app_started = 1;
-+			if (fcport->edif.app_stop ||
-+			    (fcport->disc_state != DSC_LOGIN_COMPLETE &&
-+			     fcport->disc_state != DSC_LOGIN_PEND &&
-+			     fcport->disc_state != DSC_DELETED)) {
-+				/* no activity */
-+				fcport->edif.app_stop = 0;
-+
-+				ql_dbg(ql_dbg_edif, vha, 0x911e,
-+				    "%s wwpn %8phC calling qla_edif_reset_auth_wait\n",
-+				    __func__, fcport->port_name);
-+				fcport->edif.app_sess_online = 1;
-+				qla_edif_reset_auth_wait(fcport, DSC_LOGIN_PEND, 0);
-+			}
-+			qla_edif_sa_ctl_init(vha, fcport);
-+		}
-+	}
-+
-+	if (vha->pur_cinfo.enode_flags != ENODE_ACTIVE) {
-+		/* mark as active since an app is now present */
-+		vha->pur_cinfo.enode_flags = ENODE_ACTIVE;
-+	} else {
-+		ql_dbg(ql_dbg_edif, vha, 0x911f, "%s enode already active\n",
-+		     __func__);
-+	}
-+
-+	appreply.host_support_edif = vha->hw->flags.edif_enabled;
-+	appreply.edif_enode_active = vha->pur_cinfo.enode_flags;
-+	appreply.edif_edb_active = vha->e_dbell.db_flags;
-+
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply) +
-+	    sizeof(struct app_start_reply);
-+
-+	SET_DID_STATUS(bsg_reply->result, DID_OK);
-+
-+	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+	    bsg_job->reply_payload.sg_cnt, &appreply,
-+	    sizeof(struct app_start_reply));
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x911d,
-+	    "%s app start completed with 0x%x\n",
-+	    __func__, rval);
-+
-+	return rval;
-+}
-+
-+/*
-+ * notification from the app that the app is stopping.
-+ * actions:	stop and doorbell
-+ *		stop and clear enode
-+ */
-+static int
-+qla_edif_app_stop(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
-+{
-+	int32_t                 rval = 0;
-+	struct app_stop         appstop;
-+	struct fc_bsg_reply     *bsg_reply = bsg_job->reply;
-+	struct fc_port  *fcport, *tf;
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, &appstop,
-+	    sizeof(struct app_stop));
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x911d, "%s Stopping APP: app_vid=%x\n",
-+	    __func__, appstop.app_info.app_vid);
-+
-+	/* Call db stop and enode stop functions */
-+
-+	/* if we leave this running short waits are operational < 16 secs */
-+	qla_enode_stop(vha);        /* stop enode */
-+	qla_edb_stop(vha);          /* stop db */
-+
-+	list_for_each_entry_safe(fcport, tf, &vha->vp_fcports, list) {
-+		if (fcport->edif.non_secured_login)
-+			continue;
-+
-+		if (fcport->flags & FCF_FCSP_DEVICE) {
-+			ql_dbg(ql_dbg_edif, vha, 0xf084,
-+	"%s: sess %p from port %8phC lid %#04x s_id %06x logout %d keep %d els_logo %d\n",
-+			    __func__, fcport,
-+			    fcport->port_name, fcport->loop_id,
-+			    fcport->d_id.b24, fcport->logout_on_delete,
-+			    fcport->keep_nport_handle, fcport->send_els_logo);
-+
-+			if (atomic_read(&vha->loop_state) == LOOP_DOWN)
-+				break;
-+
-+			fcport->edif.app_stop = APP_STOPPING;
-+			ql_dbg(ql_dbg_edif, vha, 0x911e,
-+				"%s wwpn %8phC calling qla_edif_reset_auth_wait\n",
-+				__func__, fcport->port_name);
-+
-+			fcport->send_els_logo = 1;
-+			qlt_schedule_sess_for_deletion(fcport);
-+
-+			/* qla_edif_flush_sa_ctl_lists(fcport); */
-+			fcport->edif.app_started = 0;
-+		}
-+	}
-+
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	SET_DID_STATUS(bsg_reply->result, DID_OK);
-+
-+	/* no return interface to app - it assumes we cleaned up ok */
-+
-+	return rval;
-+}
-+
-+static int
-+qla_edif_app_chk_sa_update(scsi_qla_host_t *vha, fc_port_t *fcport,
-+		struct app_plogi_reply *appplogireply)
-+{
-+	int	ret = 0;
-+
-+	fcport->edif.db_sent = 0;
-+	if (!(fcport->edif.rx_sa_set && fcport->edif.tx_sa_set)) {
-+		ql_dbg(ql_dbg_edif, vha, 0x911e,
-+		    "%s: wwpn %8phC Both SA indexes has not been SET TX %d, RX %d.\n",
-+		    __func__, fcport->port_name, fcport->edif.tx_sa_set,
-+		    fcport->edif.rx_sa_set);
-+		appplogireply->prli_status = 0;
-+		ret = 1;
-+	} else  {
-+		ql_dbg(ql_dbg_edif, vha, 0x911e,
-+		    "%s wwpn %8phC Both SA(s) updated.\n", __func__,
-+		    fcport->port_name);
-+		fcport->edif.rx_sa_set = fcport->edif.tx_sa_set = 0;
-+		fcport->edif.rx_sa_pending = fcport->edif.tx_sa_pending = 0;
-+		appplogireply->prli_status = 1;
-+	}
-+	return ret;
-+}
-+
-+/*
-+ * event that the app has approved plogi to complete (e.g., finish
-+ * up with prli
-+ */
-+static int
-+qla_edif_app_authok(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
-+{
-+	int32_t			rval = 0;
-+	struct auth_complete_cmd appplogiok;
-+	struct app_plogi_reply	appplogireply = {0};
-+	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
-+	fc_port_t		*fcport = NULL;
-+	port_id_t		portid = {0};
-+	/* port_id_t		portid = {0x10100}; */
-+	/* int i; */
-+
-+	/* ql_dbg(ql_dbg_edif, vha, 0x911d, "%s app auth ok\n", __func__); */
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, &appplogiok,
-+	    sizeof(struct auth_complete_cmd));
-+
-+	switch (appplogiok.type) {
-+	case PL_TYPE_WWPN:
-+		fcport = qla2x00_find_fcport_by_wwpn(vha,
-+		    appplogiok.u.wwpn, 0);
-+		if (!fcport)
-+			ql_dbg(ql_dbg_edif, vha, 0x911d,
-+			    "%s wwpn lookup failed: %8phC\n",
-+			    __func__, appplogiok.u.wwpn);
-+		break;
-+	case PL_TYPE_DID:
-+		fcport = qla2x00_find_fcport_by_pid(vha, &appplogiok.u.d_id);
-+		if (!fcport)
-+			ql_dbg(ql_dbg_edif, vha, 0x911d,
-+			    "%s d_id lookup failed: %x\n", __func__,
-+			    portid.b24);
-+		break;
-+	default:
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+		    "%s undefined type: %x\n", __func__,
-+		    appplogiok.type);
-+		break;
-+	}
-+
-+	if (!fcport) {
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		goto errstate_exit;
-+	}
-+
-+	/* TODO: edif: Kill prli timer... */
-+
-+	/*
-+	 * if port is online then this is a REKEY operation
-+	 * Only do sa update checking
-+	 */
-+	if (atomic_read(&fcport->state) == FCS_ONLINE) {
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+		    "%s Skipping PRLI complete based on rekey\n", __func__);
-+		appplogireply.prli_status = 1;
-+		SET_DID_STATUS(bsg_reply->result, DID_OK);
-+		qla_edif_app_chk_sa_update(vha, fcport, &appplogireply);
-+		goto errstate_exit;
-+	}
-+
-+	/* make sure in AUTH_PENDING or else reject */
-+	if (fcport->disc_state != DSC_LOGIN_AUTH_PEND) {
-+		ql_dbg(ql_dbg_edif, vha, 0x911e,
-+		    "%s wwpn %8phC is not in auth pending state (%x)\n",
-+		    __func__, fcport->port_name, fcport->disc_state);
-+		/* SET_DID_STATUS(bsg_reply->result, DID_ERROR); */
-+		/* App can't fix us - initaitor will retry */
-+		SET_DID_STATUS(bsg_reply->result, DID_OK);
-+		appplogireply.prli_status = 0;
-+		goto errstate_exit;
-+	}
-+
-+	SET_DID_STATUS(bsg_reply->result, DID_OK);
-+	appplogireply.prli_status = 1;
-+	fcport->edif.db_sent = 0;
-+	if (!(fcport->edif.rx_sa_set && fcport->edif.tx_sa_set)) {
-+		ql_dbg(ql_dbg_edif, vha, 0x911e,
-+		    "%s: wwpn %8phC Both SA indexes has not been SET TX %d, RX %d.\n",
-+		    __func__, fcport->port_name, fcport->edif.tx_sa_set,
-+		    fcport->edif.rx_sa_set);
-+		SET_DID_STATUS(bsg_reply->result, DID_OK);
-+		appplogireply.prli_status = 0;
-+		goto errstate_exit;
-+
-+	} else {
-+		ql_dbg(ql_dbg_edif, vha, 0x911e,
-+		    "%s wwpn %8phC Both SA(s) updated.\n", __func__,
-+		    fcport->port_name);
-+		fcport->edif.rx_sa_set = fcport->edif.tx_sa_set = 0;
-+		fcport->edif.rx_sa_pending = fcport->edif.tx_sa_pending = 0;
-+	}
-+	/* qla_edif_app_chk_sa_update(vha, fcport, &appplogireply); */
-+	/*
-+	 * TODO: edif: check this - discovery state changed by prli work?
-+	 * TODO: Can't call this for target mode
-+	 */
-+	if (qla_ini_mode_enabled(vha)) {
-+		ql_dbg(ql_dbg_edif, vha, 0x911e,
-+		    "%s AUTH complete - RESUME with prli for wwpn %8phC\n",
-+		    __func__, fcport->port_name);
-+		qla_edif_reset_auth_wait(fcport, DSC_LOGIN_PEND, 1);
-+		/* qla2x00_set_fcport_disc_state(fcport, DSC_LOGIN_PEND); */
-+		qla24xx_post_prli_work(vha, fcport);
-+	}
-+
-+errstate_exit:
-+
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+	    bsg_job->reply_payload.sg_cnt, &appplogireply,
-+	    sizeof(struct app_plogi_reply));
-+
-+	return rval;
-+}
-+
-+/*
-+ * event that the app has failed the plogi. logout the device (tbd)
-+ */
-+static int
-+qla_edif_app_authfail(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
-+{
-+	int32_t			rval = 0;
-+	struct auth_complete_cmd appplogifail;
-+	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
-+	fc_port_t		*fcport = NULL;
-+	port_id_t		portid = {0};
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x911d, "%s app auth fail\n", __func__);
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, &appplogifail,
-+	    sizeof(struct auth_complete_cmd));
-+
-+	/*
-+	 * TODO: edif: app has failed this plogi. Inform driver to
-+	 * take any action (if any).
-+	 */
-+	switch (appplogifail.type) {
-+	case PL_TYPE_WWPN:
-+		fcport = qla2x00_find_fcport_by_wwpn(vha,
-+		    appplogifail.u.wwpn, 0);
-+		SET_DID_STATUS(bsg_reply->result, DID_OK);
-+		break;
-+	case PL_TYPE_DID:
-+		fcport = qla2x00_find_fcport_by_pid(vha, &appplogifail.u.d_id);
-+		if (!fcport)
-+			ql_dbg(ql_dbg_edif, vha, 0x911d,
-+			    "%s d_id lookup failed: %x\n", __func__,
-+			    portid.b24);
-+		SET_DID_STATUS(bsg_reply->result, DID_OK);
-+		break;
-+	default:
-+		ql_dbg(ql_dbg_edif, vha, 0x911e,
-+		    "%s undefined type: %x\n", __func__,
-+		    appplogifail.type);
-+		bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		rval = -1;
-+		break;
-+	}
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x911d,
-+	    "%s fcport is 0x%p\n", __func__, fcport);
-+
-+	if (fcport) {
-+		/* set/reset edif values and flags */
-+		ql_dbg(ql_dbg_edif, vha, 0x911e,
-+		    "%s reset the auth process - %8phC, loopid=%x portid=%06x.\n",
-+		    __func__, fcport->port_name, fcport->loop_id,
-+		    fcport->d_id.b24);
-+
-+		if (qla_ini_mode_enabled(fcport->vha)) {
-+			fcport->send_els_logo = 1;
-+			qla_edif_reset_auth_wait(fcport, DSC_LOGIN_PEND, 0);
-+		}
-+	}
-+
-+	return rval;
-+}
-+
-+/*
-+ * event that the app has sent down new rekey trigger parameters
-+ */
-+static int
-+qla_edif_app_rekey(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
-+{
-+	int32_t			rval = 0;
-+	struct app_rekey_cfg	app_recfg;
-+	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
-+	struct fc_port		*fcport = NULL, *tf;
-+	port_id_t		did;
-+
-+	SET_DID_STATUS(bsg_reply->result, DID_OK);
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x911d, "%s app rekey config\n", __func__);
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, &app_recfg,
-+	    sizeof(struct app_rekey_cfg));
-+
-+	did = app_recfg.d_id;
-+
-+	list_for_each_entry_safe(fcport, tf, &vha->vp_fcports, list) {
-+		if (fcport->edif.enable) {
-+			/* this device has edif support */
-+			if (did.b24 == 0 ||
-+			    did.b24 == fcport->d_id.b24) {
-+				if (app_recfg.rekey_mode == RECFG_TIME) {
-+					fcport->edif.rekey_mode = 1;
-+					fcport->edif.reload_value =
-+					    fcport->edif.rekey =
-+					    app_recfg.rky_units.time;
-+				} else if (app_recfg.rekey_mode == RECFG_BYTES) {
-+					fcport->edif.rekey_mode = 0;
-+					fcport->edif.reload_value =
-+					    fcport->edif.rekey =
-+					    app_recfg.rky_units.bytes;
-+				} else {
-+					/* invalid rekey mode passed */
-+					ql_dbg(ql_dbg_edif, vha, 0x911d,
-+					    "%s invalid rekey passed (%x)\n",
-+					     __func__, app_recfg.rekey_mode);
-+					SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+					break;
-+				}
-+
-+				/*
-+				 * dpc to check and generate db event to app
-+				 * if (app_recfg.force == 1)
-+				 */
-+				/* fcport->edif.new_sa = 1; */
-+
-+				if (did.b24 != 0)
-+					break;
-+			}
-+		}
-+	}
-+
-+	return rval;
-+}
-+
-+/*
-+ * event that the app needs fc port info (either all or individual d_id)
-+ */
-+static int
-+qla_edif_app_getfcinfo(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
-+{
-+	int32_t			rval = 0;
-+	int32_t			num_cnt = 1;
-+	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
-+	struct app_pinfo_req	app_req;
-+	struct app_pinfo_reply	*app_reply;
-+	port_id_t		tdid;
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x911d, "%s app get fcinfo\n", __func__);
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, &app_req,
-+	    sizeof(struct app_pinfo_req));
-+
-+	num_cnt =  app_req.num_ports;	/* num of ports alloc'd by app */
-+
-+	app_reply = kzalloc((sizeof(struct app_pinfo_reply) +
-+	    sizeof(struct app_pinfo) * num_cnt), GFP_KERNEL);
-+	if (!app_reply) {
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		rval = -1;
-+	} else {
-+		struct fc_port	*fcport = NULL, *tf;
-+		uint32_t	pcnt = 0;
-+
-+		list_for_each_entry_safe(fcport, tf, &vha->vp_fcports, list) {
-+			if (!(fcport->flags & FCF_FCSP_DEVICE))
-+				continue;
-+
-+			tdid = app_req.remote_pid;
-+
-+			ql_dbg(ql_dbg_edif, vha, 0x2058,
-+			    "APP request entry - portid=%02x%02x%02x.\n",
-+			    tdid.b.domain, tdid.b.area, tdid.b.al_pa);
-+
-+			/* Ran out of space */
-+			if (pcnt > app_req.num_ports)
-+				break;
-+
-+			if (tdid.b24 != 0 && tdid.b24 != fcport->d_id.b24)
-+				continue;
-+
-+			/* we are interested in this one */
-+
-+			app_reply->ports[pcnt].rekey_mode =
-+				fcport->edif.rekey_mode;
-+			app_reply->ports[pcnt].rekey_count =
-+				fcport->edif.rekey_cnt;
-+			app_reply->ports[pcnt].rekey_config_value =
-+				fcport->edif.reload_value;
-+			app_reply->ports[pcnt].rekey_consumed_value =
-+				fcport->edif.rekey;
-+
-+			app_reply->ports[pcnt].remote_type =
-+				VND_CMD_RTYPE_UNKNOWN;
-+			if (fcport->port_type & (FCT_NVME_TARGET | FCT_TARGET))
-+				app_reply->ports[pcnt].remote_type |=
-+					VND_CMD_RTYPE_TARGET;
-+			if (fcport->port_type & (FCT_NVME_INITIATOR | FCT_INITIATOR))
-+				app_reply->ports[pcnt].remote_type |=
-+					VND_CMD_RTYPE_INITIATOR;
-+
-+			app_reply->ports[pcnt].remote_pid = fcport->d_id;
-+
-+			ql_dbg(ql_dbg_edif, vha, 0x2058,
-+	"Found FC_SP fcport - nn %8phN pn %8phN pcnt %d portid=%02x%02x%02x.\n",
-+			    fcport->node_name, fcport->port_name, pcnt,
-+			    fcport->d_id.b.domain, fcport->d_id.b.area,
-+			    fcport->d_id.b.al_pa);
-+
-+			switch (fcport->edif.auth_state) {
-+			case VND_CMD_AUTH_STATE_ELS_RCVD:
-+				if (fcport->disc_state == DSC_LOGIN_AUTH_PEND) {
-+					fcport->edif.auth_state = VND_CMD_AUTH_STATE_NEEDED;
-+					app_reply->ports[pcnt].auth_state =
-+						VND_CMD_AUTH_STATE_NEEDED;
-+				} else {
-+					app_reply->ports[pcnt].auth_state =
-+						VND_CMD_AUTH_STATE_ELS_RCVD;
-+				}
-+				break;
-+			default:
-+				app_reply->ports[pcnt].auth_state = fcport->edif.auth_state;
-+				break;
-+			}
-+
-+			memcpy(app_reply->ports[pcnt].remote_wwpn,
-+			    fcport->port_name, 8);
-+
-+			app_reply->ports[pcnt].remote_state =
-+				(atomic_read(&fcport->state) ==
-+				    FCS_ONLINE ? 1 : 0);
-+
-+			pcnt++;
-+
-+			if (tdid.b24 != 0)
-+				break;  /* found the one req'd */
-+		}
-+		app_reply->port_count = pcnt;
-+		SET_DID_STATUS(bsg_reply->result, DID_OK);
-+	}
-+
-+	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+	    bsg_job->reply_payload.sg_cnt, app_reply,
-+	    sizeof(struct app_pinfo_reply) + sizeof(struct app_pinfo) * num_cnt);
-+
-+	kfree(app_reply);
-+
-+	return rval;
-+}
-+
-+/*
-+ * return edif stats (TBD) to app
-+ */
-+static int32_t
-+qla_edif_app_getstats(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
-+{
-+	int32_t			rval = 0;
-+	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
-+	uint32_t ret_size, size;
-+
-+	struct app_sinfo_req	app_req;
-+	struct app_stats_reply	*app_reply;
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, &app_req,
-+	    sizeof(struct app_sinfo_req));
-+	if (app_req.num_ports == 0) {
-+		ql_dbg(ql_dbg_async, vha, 0x911d,
-+		   "%s app did not indicate number of ports to return\n",
-+		    __func__);
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		rval = -1;
-+	}
-+
-+	size = sizeof(struct app_stats_reply) +
-+	    (sizeof(struct app_sinfo) * app_req.num_ports);
-+
-+	if (size > bsg_job->reply_payload.payload_len)
-+		ret_size = bsg_job->reply_payload.payload_len;
-+	else
-+		ret_size = size;
-+
-+	app_reply = kzalloc(size, GFP_KERNEL);
-+	if (!app_reply) {
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		rval = -1;
-+	} else {
-+		struct fc_port	*fcport = NULL, *tf;
-+		uint32_t	pcnt = 0;
-+
-+		list_for_each_entry_safe(fcport, tf, &vha->vp_fcports, list) {
-+			if (fcport->edif.enable) {
-+				if (pcnt > app_req.num_ports)
-+					break;
-+
-+				app_reply->elem[pcnt].rekey_mode =
-+				    fcport->edif.rekey_mode ? RECFG_TIME : RECFG_BYTES;
-+				app_reply->elem[pcnt].rekey_count =
-+				    fcport->edif.rekey_cnt;
-+				app_reply->elem[pcnt].tx_bytes =
-+				    fcport->edif.tx_bytes;
-+				app_reply->elem[pcnt].rx_bytes =
-+				    fcport->edif.rx_bytes;
-+
-+				memcpy(app_reply->elem[pcnt].remote_wwpn,
-+				    fcport->port_name, 8);
-+
-+				pcnt++;
-+			}
-+		}
-+		app_reply->elem_count = pcnt;
-+		SET_DID_STATUS(bsg_reply->result, DID_OK);
-+	}
-+
-+	bsg_reply->reply_payload_rcv_len =
-+	    sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+	       bsg_job->reply_payload.sg_cnt, app_reply, ret_size);
-+
-+	kfree(app_reply);
-+
-+	return rval;
-+}
-+
-+int32_t
-+qla_edif_app_mgmt(struct bsg_job *bsg_job)
-+{
-+	struct fc_bsg_request	*bsg_request = bsg_job->request;
-+	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
-+	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
-+	scsi_qla_host_t		*vha = shost_priv(host);
-+	struct app_id		appcheck;
-+	bool done = true;
-+	int32_t         rval = 0;
-+	uint32_t	vnd_sc = bsg_request->rqst_data.h_vendor.vendor_cmd[1];
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x911d, "%s vnd subcmd=%x\n",
-+	    __func__, vnd_sc);
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, &appcheck,
-+	    sizeof(struct app_id));
-+
-+	if (!vha->hw->flags.edif_enabled ||
-+		test_bit(VPORT_DELETE, &vha->dpc_flags)) {
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+		    "%s edif not enabled or vp delete. bsg ptr done %p\n",
-+		    __func__, bsg_job);
-+
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		goto done;
-+	}
-+
-+	if (qla_edif_app_check(vha, appcheck) == 0) {
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+		    "%s app checked failed.\n",
-+		    __func__);
-+
-+		bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		goto done;
-+	}
-+
-+	switch (vnd_sc) {
-+	case QL_VND_SC_SA_UPDATE:
-+		done = false;
-+		rval = qla24xx_sadb_update(bsg_job);
-+		break;
-+	case QL_VND_SC_APP_START:
-+		rval = qla_edif_app_start(vha, bsg_job);
-+		break;
-+	case QL_VND_SC_APP_STOP:
-+		rval = qla_edif_app_stop(vha, bsg_job);
-+		break;
-+	case QL_VND_SC_AUTH_OK:
-+		rval = qla_edif_app_authok(vha, bsg_job);
-+		break;
-+	case QL_VND_SC_AUTH_FAIL:
-+		rval = qla_edif_app_authfail(vha, bsg_job);
-+		break;
-+	case QL_VND_SC_REKEY_CONFIG:
-+		rval = qla_edif_app_rekey(vha, bsg_job);
-+		break;
-+	case QL_VND_SC_GET_FCINFO:
-+		rval = qla_edif_app_getfcinfo(vha, bsg_job);
-+		break;
-+	case QL_VND_SC_GET_STATS:
-+		rval = qla_edif_app_getstats(vha, bsg_job);
-+		break;
-+	default:
-+		ql_dbg(ql_dbg_edif, vha, 0x911d, "%s unknown cmd=%x\n",
-+		    __func__,
-+		    bsg_request->rqst_data.h_vendor.vendor_cmd[1]);
-+		rval = EXT_STATUS_INVALID_PARAM;
-+		bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		break;
-+	}
-+
-+done:
-+	if (done) {
-+		ql_dbg(ql_dbg_user, vha, 0x7009,
-+		    "%s: %d  bsg ptr done %p\n", __func__, __LINE__, bsg_job);
-+		bsg_job_done(bsg_job, bsg_reply->result,
-+		    bsg_reply->reply_payload_rcv_len);
-+	}
-+
-+	return rval;
-+}
-+
-+static struct edif_sa_ctl *
-+qla_edif_add_sa_ctl(fc_port_t *fcport, struct qla_sa_update_frame *sa_frame,
-+	int dir)
-+{
-+	struct	edif_sa_ctl *sa_ctl;
-+	struct qla_sa_update_frame *sap;
-+	int	index = sa_frame->fast_sa_index;
-+	unsigned long flags = 0;
-+
-+	sa_ctl = kzalloc(sizeof(*sa_ctl), GFP_KERNEL);
-+	if (!sa_ctl) {
-+		/* couldn't get space */
-+		ql_dbg(ql_dbg_edif, fcport->vha, 0x9100,
-+		    "unable to allocate SA CTL\n");
-+		return NULL;
-+	}
-+
-+	/*
-+	 * need to allocate sa_index here and save it
-+	 * in both sa_ctl->index and sa_frame->fast_sa_index;
-+	 * If alloc fails then delete sa_ctl and return NULL
-+	 */
-+	INIT_LIST_HEAD(&sa_ctl->next);
-+	sap = &sa_ctl->sa_frame;
-+	*sap = *sa_frame;
-+	sa_ctl->index = index;
-+	sa_ctl->fcport = fcport;
-+	sa_ctl->flags = 0;
-+	sa_ctl->state = 0L;
-+	ql_dbg(ql_dbg_edif, fcport->vha, 0x9100,
-+	    "%s: Added sa_ctl %p, index %d, state 0x%lx\n",
-+	    __func__, sa_ctl, sa_ctl->index, sa_ctl->state);
-+	spin_lock_irqsave(&fcport->edif.sa_list_lock, flags);
-+	if (dir == SAU_FLG_TX)
-+		list_add_tail(&sa_ctl->next, &fcport->edif.tx_sa_list);
-+	else
-+		list_add_tail(&sa_ctl->next, &fcport->edif.rx_sa_list);
-+	spin_unlock_irqrestore(&fcport->edif.sa_list_lock, flags);
-+	return sa_ctl;
-+}
-+
-+void
-+qla_edif_flush_sa_ctl_lists(fc_port_t *fcport)
-+{
-+	struct edif_sa_ctl *sa_ctl, *tsa_ctl;
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&fcport->edif.sa_list_lock, flags);
-+
-+	list_for_each_entry_safe(sa_ctl, tsa_ctl, &fcport->edif.tx_sa_list,
-+	    next) {
-+		list_del(&sa_ctl->next);
-+		kfree(sa_ctl);
-+	}
-+
-+	list_for_each_entry_safe(sa_ctl, tsa_ctl, &fcport->edif.rx_sa_list,
-+	    next) {
-+		list_del(&sa_ctl->next);
-+		kfree(sa_ctl);
-+	}
-+
-+	spin_unlock_irqrestore(&fcport->edif.sa_list_lock, flags);
-+}
-+
-+struct edif_sa_ctl *
-+qla_edif_find_sa_ctl_by_index(fc_port_t *fcport, int index, int dir)
-+{
-+	struct edif_sa_ctl *sa_ctl, *tsa_ctl;
-+	struct list_head *sa_list;
-+
-+	if (dir == SAU_FLG_TX)
-+		sa_list = &fcport->edif.tx_sa_list;
-+	else
-+		sa_list = &fcport->edif.rx_sa_list;
-+	list_for_each_entry_safe(sa_ctl, tsa_ctl, sa_list, next) {
-+		if (test_bit(EDIF_SA_CTL_USED, &sa_ctl->state) &&
-+		    sa_ctl->index == index)
-+			return sa_ctl;
-+	}
-+	return NULL;
-+}
-+
-+/* add the sa to the correct list */
-+static int
-+qla24xx_check_sadb_avail_slot(struct bsg_job *bsg_job, fc_port_t *fcport,
-+	struct qla_sa_update_frame *sa_frame)
-+{
-+	struct edif_sa_ctl *sa_ctl = NULL;
-+	int dir;
-+	uint16_t sa_index;
-+
-+	dir = (sa_frame->flags & SAU_FLG_TX);
-+
-+	/* map the spi to an sa_index */
-+	sa_index = qla_edif_sadb_get_sa_index(fcport, sa_frame);
-+	if (sa_index == RX_DELETE_NO_EDIF_SA_INDEX) {
-+		/* process rx delete */
-+		ql_dbg(ql_dbg_edif, fcport->vha, 0x3063,
-+		    "%s: rx delete for lid 0x%x, spi 0x%x, no entry found\n",
-+		    __func__, fcport->loop_id, sa_frame->spi);
-+
-+		/* build and send the aen */
-+		fcport->edif.rx_sa_set = 1;
-+		fcport->edif.rx_sa_pending = 0;
-+		qla_edb_eventcreate(fcport->vha,
-+		    VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
-+		    QL_VND_SA_STAT_SUCCESS,
-+		    QL_VND_RX_SA_KEY, fcport);
-+
-+		/* force a return of good bsg status; */
-+		return RX_DELETE_NO_EDIF_SA_INDEX;
-+	} else if (sa_index == INVALID_EDIF_SA_INDEX) {
-+		ql_dbg(ql_dbg_edif, fcport->vha, 0x9100,
-+		    "%s: Failed to get sa_index for spi 0x%x, dir: %d\n",
-+		    __func__, sa_frame->spi, dir);
-+		return INVALID_EDIF_SA_INDEX;
-+	}
-+
-+	ql_dbg(ql_dbg_edif, fcport->vha, 0x9100,
-+	    "%s: index %d allocated to spi 0x%x, dir: %d, nport_handle: 0x%x\n",
-+	    __func__, sa_index, sa_frame->spi, dir, fcport->loop_id);
-+
-+	/* This is a local copy of sa_frame. */
-+	sa_frame->fast_sa_index = sa_index;
-+	/* create the sa_ctl */
-+	sa_ctl = qla_edif_add_sa_ctl(fcport, sa_frame, dir);
-+	if (!sa_ctl) {
-+		ql_dbg(ql_dbg_edif, fcport->vha, 0x9100,
-+		    "%s: Failed to add sa_ctl for spi 0x%x, dir: %d, sa_index: %d\n",
-+		    __func__, sa_frame->spi, dir, sa_index);
-+		return -1;
-+	}
-+
-+	set_bit(EDIF_SA_CTL_USED, &sa_ctl->state);
-+
-+	if (dir == SAU_FLG_TX)
-+		fcport->edif.tx_rekey_cnt++;
-+	else
-+		fcport->edif.rx_rekey_cnt++;
-+
-+	ql_dbg(ql_dbg_edif, fcport->vha, 0x9100,
-+	    "%s: Found sa_ctl %p, index %d, state 0x%lx, tx_cnt %d, rx_cnt %d, nport_handle: 0x%x\n",
-+	    __func__, sa_ctl, sa_ctl->index, sa_ctl->state,
-+	    fcport->edif.tx_rekey_cnt,
-+	    fcport->edif.rx_rekey_cnt, fcport->loop_id);
-+	return 0;
-+}
-+
-+#define QLA_SA_UPDATE_FLAGS_RX_KEY      0x0
-+#define QLA_SA_UPDATE_FLAGS_TX_KEY      0x2
-+
-+int
-+qla24xx_sadb_update(struct bsg_job *bsg_job)
-+{
-+	struct	fc_bsg_reply	*bsg_reply = bsg_job->reply;
-+	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
-+	scsi_qla_host_t *vha = shost_priv(host);
-+	fc_port_t		*fcport = NULL;
-+	srb_t			*sp = NULL;
-+	struct edif_list_entry *edif_entry = NULL;
-+	int			found = 0;
-+	int			rval = 0;
-+	int result = 0;
-+	struct qla_sa_update_frame sa_frame;
-+	struct srb_iocb *iocb_cmd;
-+
-+	ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x911d,
-+	    "%s entered, vha: 0x%p\n", __func__, vha);
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, &sa_frame,
-+	    sizeof(struct qla_sa_update_frame));
-+
-+	/* Check if host is online */
-+	if (!vha->flags.online) {
-+		ql_log(ql_log_warn, vha, 0x70a1, "Host is not online\n");
-+		rval = -EIO;
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		goto done;
-+	}
-+
-+	if (vha->e_dbell.db_flags != EDB_ACTIVE) {
-+		ql_log(ql_log_warn, vha, 0x70a1, "App not started\n");
-+		rval = -EIO;
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		goto done;
-+	}
-+
-+	fcport = qla2x00_find_fcport_by_pid(vha, &sa_frame.port_id);
-+	if (fcport) {
-+		found = 1;
-+		if (sa_frame.flags == QLA_SA_UPDATE_FLAGS_TX_KEY)
-+			fcport->edif.tx_bytes = 0;
-+		if (sa_frame.flags == QLA_SA_UPDATE_FLAGS_RX_KEY)
-+			fcport->edif.rx_bytes = 0;
-+	}
-+
-+	if (!found) {
-+		ql_dbg(ql_dbg_edif, vha, 0x70a3, "Failed to find port= %06x\n",
-+		    sa_frame.port_id.b24);
-+		rval = -EINVAL;
-+		SET_DID_STATUS(bsg_reply->result, DID_TARGET_FAILURE);
-+		goto done;
-+	}
-+
-+	/* make sure the nport_handle is valid */
-+	if (fcport->loop_id == FC_NO_LOOP_ID) {
-+		ql_dbg(ql_dbg_edif, vha, 0x70e1,
-+		    "%s: %8phNn lid=FC_NO_LOOP_ID, spi: 0x%x, DS %d, returning NO_CONNECT\n",
-+		    __func__, fcport->port_name, sa_frame.spi,
-+		    fcport->disc_state);
-+		rval = -EINVAL;
-+		SET_DID_STATUS(bsg_reply->result, DID_NO_CONNECT);
-+		goto done;
-+	}
-+
-+	/* allocate and queue an sa_ctl */
-+	result = qla24xx_check_sadb_avail_slot(bsg_job, fcport, &sa_frame);
-+
-+	/* failure of bsg */
-+	if (result == INVALID_EDIF_SA_INDEX) {
-+		ql_dbg(ql_dbg_edif, vha, 0x70e1,
-+		    "%s: %8phNn, skipping update.\n",
-+		    __func__, fcport->port_name);
-+		rval = -EINVAL;
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		goto done;
-+
-+	/* rx delete failure */
-+	} else if (result == RX_DELETE_NO_EDIF_SA_INDEX) {
-+		ql_dbg(ql_dbg_edif, vha, 0x70e1,
-+		    "%s: %8phNn, skipping rx delete.\n",
-+		    __func__, fcport->port_name);
-+		SET_DID_STATUS(bsg_reply->result, DID_OK);
-+		goto done;
-+	}
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x70e1,
-+	    "%s: %8phNn, sa_index in sa_frame: %d flags %xh\n",
-+	    __func__, fcport->port_name, sa_frame.fast_sa_index,
-+	    sa_frame.flags);
-+
-+	/* looking for rx index and delete */
-+	if (((sa_frame.flags & SAU_FLG_TX) == 0) &&
-+	    (sa_frame.flags & SAU_FLG_INV)) {
-+		uint16_t nport_handle = fcport->loop_id;
-+		uint16_t sa_index = sa_frame.fast_sa_index;
-+
-+		/*
-+		 * make sure we have an existing rx key, otherwise just process
-+		 * this as a straight delete just like TX
-+		 * This is NOT a normal case, it indicates an error recovery or key cleanup
-+		 * by the ipsec code above us.
-+		 */
-+		edif_entry = qla_edif_list_find_sa_index(fcport, fcport->loop_id);
-+		if (!edif_entry) {
-+			ql_dbg(ql_dbg_edif, vha, 0x911d,
-+	"%s: WARNING: no active sa_index for nport_handle 0x%x, forcing delete for sa_index 0x%x\n",
-+			    __func__, fcport->loop_id, sa_index);
-+			goto force_rx_delete;
-+		}
-+
-+		/*
-+		 * if we have a forced delete for rx, remove the sa_index from the edif list
-+		 * and proceed with normal delete.  The rx delay timer should not be running
-+		 */
-+		if ((sa_frame.flags & SAU_FLG_FORCE_DELETE) == SAU_FLG_FORCE_DELETE) {
-+			qla_edif_list_delete_sa_index(fcport, edif_entry);
-+			ql_dbg(ql_dbg_edif, vha, 0x911d,
-+	"%s: FORCE DELETE flag found for nport_handle 0x%x, sa_index 0x%x, forcing DELETE\n",
-+			    __func__, fcport->loop_id, sa_index);
-+			kfree(edif_entry);
-+			goto force_rx_delete;
-+		}
-+
-+		/*
-+		 * delayed rx delete
-+		 *
-+		 * if delete_sa_index is not invalid then there is already
-+		 * a delayed index in progress, return bsg bad status
-+		 */
-+		if (edif_entry->delete_sa_index != INVALID_EDIF_SA_INDEX) {
-+			struct edif_sa_ctl *sa_ctl;
-+
-+			ql_dbg(ql_dbg_edif, vha, 0x911d,
-+			    "%s: delete for lid 0x%x, delete_sa_index %d is pending\n",
-+			    __func__, edif_entry->handle,
-+			    edif_entry->delete_sa_index);
-+
-+			/* free up the sa_ctl that was allocated with the sa_index */
-+			sa_ctl = qla_edif_find_sa_ctl_by_index(fcport, sa_index,
-+			    (sa_frame.flags & SAU_FLG_TX));
-+			if (sa_ctl) {
-+				ql_dbg(ql_dbg_edif, vha, 0x3063,
-+				    "%s: freeing sa_ctl for index %d\n",
-+				    __func__, sa_ctl->index);
-+				qla_edif_free_sa_ctl(fcport, sa_ctl, sa_ctl->index);
-+			}
-+
-+			/* release the sa_index */
-+			ql_dbg(ql_dbg_edif, vha, 0x3063,
-+			    "%s: freeing sa_index %d, nph: 0x%x\n",
-+			    __func__, sa_index, nport_handle);
-+			qla_edif_sadb_delete_sa_index(fcport, nport_handle, sa_index);
-+
-+			rval = -EINVAL;
-+			SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+			goto done;
-+		}
-+
-+		/* clean up edif flags/state */
-+		fcport->edif.new_sa = 0;
-+		fcport->edif.db_sent = 0;
-+		fcport->edif.rekey = fcport->edif.reload_value;
-+		fcport->edif.rekey_cnt++;
-+
-+		/* configure and start the rx delay timer */
-+		edif_entry->fcport = fcport;
-+		edif_entry->timer.expires = jiffies + RX_DELAY_DELETE_TIMEOUT * HZ;
-+
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+	"%s: adding timer, entry: %p, delete sa_index %d, lid 0x%x to edif_list\n",
-+		    __func__, edif_entry, sa_index, nport_handle);
-+
-+		/*
-+		 * Start the timer when we queue the delayed rx delete.
-+		 * This is an activity timer that goes off if we have not
-+		 * received packets with the new sa_index
-+		 */
-+		add_timer(&edif_entry->timer);
-+
-+		/*
-+		 * sa_delete for rx key with an active rx key including this one
-+		 * add the delete rx sa index to the hash so we can look for it
-+		 * in the rsp queue.  Do this after making any changes to the
-+		 * edif_entry as part of the rx delete.
-+		 */
-+
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+		    "%s: delete sa_index %d, lid 0x%x to edif_list. bsg done ptr %p\n",
-+		    __func__, sa_index, nport_handle, bsg_job);
-+
-+		edif_entry->delete_sa_index = sa_index;
-+
-+		bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+		bsg_reply->result = DID_OK << 16;
-+
-+		goto done;
-+
-+	/*
-+	 * rx index and update
-+	 * add the index to the list and continue with normal update
-+	 */
-+	} else if (((sa_frame.flags & SAU_FLG_TX) == 0) &&
-+	    ((sa_frame.flags & SAU_FLG_INV) == 0)) {
-+		/* sa_update for rx key */
-+		uint32_t nport_handle = fcport->loop_id;
-+		uint16_t sa_index = sa_frame.fast_sa_index;
-+		int result;
-+
-+		/*
-+		 * add the update rx sa index to the hash so we can look for it
-+		 * in the rsp queue and continue normally
-+		 */
-+
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+		    "%s:  adding update sa_index %d, lid 0x%x to edif_list\n",
-+		    __func__, sa_index, nport_handle);
-+
-+		result = qla_edif_list_add_sa_update_index(fcport, sa_index,
-+		    nport_handle);
-+		if (result) {
-+			ql_dbg(ql_dbg_edif, vha, 0x911d,
-+	"%s: SA_UPDATE failed to add new sa index %d to list for lid 0x%x\n",
-+			    __func__, sa_index, nport_handle);
-+		}
-+	}
-+	if (sa_frame.flags & SAU_FLG_GMAC_MODE)
-+		fcport->edif.aes_gmac = 1;
-+	else
-+		fcport->edif.aes_gmac = 0;
-+
-+force_rx_delete:
-+	/*
-+	 * sa_update for both rx and tx keys, sa_delete for tx key
-+	 * immediately process the request
-+	 */
-+	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
-+	if (!sp) {
-+		rval = -ENOMEM;
-+		SET_DID_STATUS(bsg_reply->result, DID_IMM_RETRY);
-+		goto done;
-+	}
-+
-+	sp->type = SRB_SA_UPDATE;
-+	sp->name = "bsg_sa_update";
-+	sp->u.bsg_job = bsg_job;
-+	/* sp->free = qla2x00_bsg_sp_free; */
-+	sp->free = qla2x00_rel_sp;
-+	sp->done = qla2x00_bsg_job_done;
-+	iocb_cmd = &sp->u.iocb_cmd;
-+	iocb_cmd->u.sa_update.sa_frame  = sa_frame;
-+
-+	rval = qla2x00_start_sp(sp);
-+	if (rval != QLA_SUCCESS) {
-+		ql_log(ql_dbg_edif, vha, 0x70e3,
-+		    "qla2x00_start_sp failed=%d.\n", rval);
-+
-+		qla2x00_rel_sp(sp);
-+		rval = -EIO;
-+		SET_DID_STATUS(bsg_reply->result, DID_IMM_RETRY);
-+		goto done;
-+	}
-+
-+	/* clean up edif flags/state */
-+	fcport->edif.new_sa = 0;			/* NOT USED ??? */
-+	fcport->edif.db_sent = 0;			/* NOT USED ??? */
-+	fcport->edif.rekey = fcport->edif.reload_value;
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x911d,
-+	    "%s:  %s sent, hdl=%x, portid=%06x.\n",
-+	    __func__, sp->name, sp->handle, fcport->d_id.b24);
-+
-+	fcport->edif.rekey_cnt++;
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	SET_DID_STATUS(bsg_reply->result, DID_OK);
-+
-+	return 0;
-+
-+/*
-+ * send back error status
-+ */
-+done:
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	ql_dbg(ql_dbg_edif, vha, 0x911d,
-+	    "%s:status: FAIL, result: 0x%x, bsg ptr done %p\n",
-+	    __func__, bsg_reply->result, bsg_job);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+	    bsg_reply->reply_payload_rcv_len);
-+	return 0;
-+}
-+
-+static void
-+qla_enode_free(scsi_qla_host_t *vha, struct enode *node)
-+{
-+	/*
-+	 * releases the space held by this enode entry
-+	 * this function does _not_ free the enode itself
-+	 * NB: the pur node entry passed should not be on any list
-+	 */
-+
-+	if (!node) {
-+		ql_dbg(ql_dbg_edif, vha, 0x09122,
-+		    "%s error - no valid node passed\n", __func__);
-+		return;
-+	}
-+
-+	node->dinfo.lstate = LSTATE_DEST;
-+	node->ntype = N_UNDEF;
-+	kfree(node);
-+}
-+
-+/*
-+ * function to initialize enode structs & lock
-+ * NB: should only be called when driver attaching
-+ */
-+void
-+qla_enode_init(scsi_qla_host_t *vha)
-+{
-+	struct	qla_hw_data *ha = vha->hw;
-+	char	name[32];
-+
-+	if (vha->pur_cinfo.enode_flags == ENODE_ACTIVE) {
-+		/* list still active - error */
-+		ql_dbg(ql_dbg_edif, vha, 0x09102, "%s enode still active\n",
-+		    __func__);
-+		return;
-+	}
-+
-+	/* initialize lock which protects pur_core & init list */
-+	spin_lock_init(&vha->pur_cinfo.pur_lock);
-+	INIT_LIST_HEAD(&vha->pur_cinfo.head);
-+
-+	snprintf(name, sizeof(name), "%s_%d_purex", QLA2XXX_DRIVER_NAME,
-+	    ha->pdev->device);
-+}
-+
-+/*
-+ * function to stop and clear and enode data
-+ * called when app notified it is stopping
-+ */
-+
-+void
-+qla_enode_stop(scsi_qla_host_t *vha)
-+{
-+	unsigned long flags;
-+	struct enode *node, *q;
-+
-+	if (vha->pur_cinfo.enode_flags != ENODE_ACTIVE) {
-+		/* doorbell list not enabled */
-+		ql_dbg(ql_dbg_edif, vha, 0x09102,
-+		    "%s enode not active\n", __func__);
-+		return;
-+	}
-+
-+	/* grab lock so list doesn't move */
-+	spin_lock_irqsave(&vha->pur_cinfo.pur_lock, flags);
-+
-+	vha->pur_cinfo.enode_flags &= ~ENODE_ACTIVE; /* mark it not active */
-+
-+	/* hopefully this is a null list at this point */
-+	list_for_each_entry_safe(node, q, &vha->pur_cinfo.head, list) {
-+		ql_dbg(ql_dbg_edif, vha, 0x910f,
-+		    "%s freeing enode type=%x, cnt=%x\n", __func__, node->ntype,
-+		    node->dinfo.nodecnt);
-+		list_del_init(&node->list);
-+		spin_unlock_irqrestore(&vha->pur_cinfo.pur_lock, flags);
-+		qla_enode_free(vha, node);
-+		spin_lock_irqsave(&vha->pur_cinfo.pur_lock, flags);
-+	}
-+	spin_unlock_irqrestore(&vha->pur_cinfo.pur_lock, flags);
-+}
-+
-+/*
-+ *  allocate enode struct and populate buffer
-+ *  returns: enode pointer with buffers
-+ *           NULL on error
-+ */
-+static struct enode *
-+qla_enode_alloc(scsi_qla_host_t *vha, uint32_t ntype)
-+{
-+	struct enode		*node;
-+	struct purexevent	*purex;
-+
-+	node = kzalloc(RX_ELS_SIZE, GFP_ATOMIC);
-+	if (!node)
-+		return NULL;
-+
-+	purex = &node->u.purexinfo;
-+	purex->msgp = (u8 *)(node + 1);
-+	purex->msgp_len = ELS_MAX_PAYLOAD;
-+
-+	node->dinfo.lstate = LSTATE_OFF;
-+
-+	node->ntype = ntype;
-+	INIT_LIST_HEAD(&node->list);
-+	return node;
-+}
-+
-+/* adds a already alllocated enode to the linked list */
-+static bool
-+qla_enode_add(scsi_qla_host_t *vha, struct enode *ptr)
-+{
-+	unsigned long flags;
-+
-+	ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x9109,
-+	    "%s add enode for type=%x, cnt=%x\n",
-+	    __func__, ptr->ntype, ptr->dinfo.nodecnt);
-+
-+	spin_lock_irqsave(&vha->pur_cinfo.pur_lock, flags);
-+	ptr->dinfo.lstate = LSTATE_ON;
-+	list_add_tail(&ptr->list, &vha->pur_cinfo.head);
-+	spin_unlock_irqrestore(&vha->pur_cinfo.pur_lock, flags);
-+
-+	return true;
-+}
-+
-+static struct enode *
-+qla_enode_find(scsi_qla_host_t *vha, uint32_t ntype, uint32_t p1, uint32_t p2)
-+{
-+	struct enode			*node_rtn = NULL;
-+	struct enode			*list_node = NULL;
-+	unsigned long		flags;
-+	struct list_head	*pos, *q;
-+
-+	uint32_t		sid;
-+	uint32_t		rw_flag;
-+
-+	struct purexevent		*purex;
-+
-+	/* secure the list from moving under us */
-+	spin_lock_irqsave(&vha->pur_cinfo.pur_lock, flags);
-+
-+	list_for_each_safe(pos, q, &vha->pur_cinfo.head) {
-+		list_node = list_entry(pos, struct enode, list);
-+
-+		/* node type determines what p1 and p2 are */
-+
-+			purex = &list_node->u.purexinfo;
-+			sid = p1;
-+			rw_flag = p2;
-+
-+			if (purex->pur_info.pur_sid.b24 == sid) {
-+				if (purex->pur_info.pur_pend == 1 &&
-+				    rw_flag == PUR_GET) {
-+					/*
-+					 * if the receive is in progress
-+					 * and its a read/get then can't
-+					 * transfer yet
-+					 */
-+					ql_dbg(ql_dbg_edif, vha, 0x9106,
-+					    "%s purex xfer in progress for sid=%x\n",
-+					    __func__, sid);
-+				} else {
-+					/* found it and its complete */
-+					node_rtn = list_node;
-+				}
-+			}
-+
-+		if (node_rtn) {
-+			/*
-+			 * found node that we're looking for so take it
-+			 * off the list and return it to the caller
-+			 */
-+			list_del(pos);
-+			list_node->dinfo.lstate = LSTATE_OFF;
-+			break;
-+		}
-+	}
-+
-+	spin_unlock_irqrestore(&vha->pur_cinfo.pur_lock, flags);
-+
-+	return node_rtn;
-+}
-+
-+/*
-+ * Return number of bytes of purex payload pending for consumption
-+ */
-+static int
-+qla_pur_get_pending(scsi_qla_host_t *vha, fc_port_t *fcport, struct bsg_job *bsg_job)
-+{
-+	struct enode		*ptr;
-+	struct purexevent	*purex;
-+	struct qla_bsg_auth_els_reply *rpl =
-+	    (struct qla_bsg_auth_els_reply *)bsg_job->reply;
-+
-+	bsg_job->reply_len = sizeof(*rpl);
-+
-+	ptr = qla_enode_find(vha, N_PUREX, fcport->d_id.b24, PUR_GET);
-+	if (!ptr) {
-+		ql_dbg(ql_dbg_edif, vha, 0x9111,
-+		    "%s no enode data found for %8phN sid=%06x\n",
-+		    __func__, fcport->port_name, fcport->d_id.b24);
-+		SET_DID_STATUS(rpl->r.result, DID_IMM_RETRY);
-+		return -EIO;
-+	}
-+
-+	/*
-+	 * enode is now off the linked list and is ours to deal with
-+	 */
-+	purex = &ptr->u.purexinfo;
-+
-+	/* Copy info back to caller */
-+	rpl->rx_xchg_address = purex->pur_info.pur_rx_xchg_address;
-+
-+	SET_DID_STATUS(rpl->r.result, DID_OK);
-+	rpl->r.reply_payload_rcv_len =
-+	    sg_pcopy_from_buffer(bsg_job->reply_payload.sg_list,
-+		bsg_job->reply_payload.sg_cnt, purex->msgp,
-+		purex->pur_info.pur_bytes_rcvd, 0);
-+
-+	/* data copy / passback completed - destroy enode */
-+	qla_enode_free(vha, ptr);
-+
-+	return 0;
-+}
-+
-+/* it is assume qpair lock is held */
-+static int
-+qla_els_reject_iocb(scsi_qla_host_t *vha, struct qla_qpair *qp,
-+	struct qla_els_pt_arg *a)
-+{
-+	struct els_entry_24xx *els_iocb;
-+
-+	els_iocb = __qla2x00_alloc_iocbs(qp, NULL);
-+	if (!els_iocb) {
-+		ql_log(ql_log_warn, vha, 0x700c,
-+		    "qla2x00_alloc_iocbs failed.\n");
-+		return QLA_FUNCTION_FAILED;
-+	}
-+
-+	qla_els_pt_iocb(vha, els_iocb, a);
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x0183,
-+	    "Sending ELS reject...\n");
-+	ql_dump_buffer(ql_dbg_edif + ql_dbg_verbose, vha, 0x0185,
-+	    vha->hw->elsrej.c, sizeof(*vha->hw->elsrej.c));
-+	/* -- */
-+	wmb();
-+	qla2x00_start_iocbs(vha, qp->req);
-+	return 0;
-+}
-+
-+void
-+qla_edb_init(scsi_qla_host_t *vha)
-+{
-+	if (vha->e_dbell.db_flags == EDB_ACTIVE) {
-+		/* list already init'd - error */
-+		ql_dbg(ql_dbg_edif, vha, 0x09102,
-+		    "edif db already initialized, cannot reinit\n");
-+		return;
-+	}
-+
-+	/* initialize lock which protects doorbell & init list */
-+	spin_lock_init(&vha->e_dbell.db_lock);
-+	INIT_LIST_HEAD(&vha->e_dbell.head);
-+
-+	/* create and initialize doorbell */
-+	init_completion(&vha->e_dbell.dbell);
-+}
-+
-+static void
-+qla_edb_node_free(scsi_qla_host_t *vha, struct edb_node *node)
-+{
-+	/*
-+	 * releases the space held by this edb node entry
-+	 * this function does _not_ free the edb node itself
-+	 * NB: the edb node entry passed should not be on any list
-+	 *
-+	 * currently for doorbell there's no additional cleanup
-+	 * needed, but here as a placeholder for furture use.
-+	 */
-+
-+	if (!node) {
-+		ql_dbg(ql_dbg_edif, vha, 0x09122,
-+		    "%s error - no valid node passed\n", __func__);
-+		return;
-+	}
-+
-+	node->lstate = LSTATE_DEST;
-+	node->ntype = N_UNDEF;
-+}
-+
-+/* function called when app is stopping */
-+
-+void
-+qla_edb_stop(scsi_qla_host_t *vha)
-+{
-+	unsigned long flags;
-+	struct edb_node *node, *q;
-+
-+	if (vha->e_dbell.db_flags != EDB_ACTIVE) {
-+		/* doorbell list not enabled */
-+		ql_dbg(ql_dbg_edif, vha, 0x09102,
-+		    "%s doorbell not enabled\n", __func__);
-+		return;
-+	}
-+
-+	/* grab lock so list doesn't move */
-+	spin_lock_irqsave(&vha->e_dbell.db_lock, flags);
-+
-+	vha->e_dbell.db_flags &= ~EDB_ACTIVE; /* mark it not active */
-+	/* hopefully this is a null list at this point */
-+	list_for_each_entry_safe(node, q, &vha->e_dbell.head, list) {
-+		ql_dbg(ql_dbg_edif, vha, 0x910f,
-+		    "%s freeing edb_node type=%x\n",
-+		    __func__, node->ntype);
-+		qla_edb_node_free(vha, node);
-+		list_del(&node->list);
-+
-+		spin_unlock_irqrestore(&vha->e_dbell.db_lock, flags);
-+		kfree(node);
-+		spin_lock_irqsave(&vha->e_dbell.db_lock, flags);
-+	}
-+	spin_unlock_irqrestore(&vha->e_dbell.db_lock, flags);
-+
-+	/* wake up doorbell waiters - they'll be dismissed with error code */
-+	complete_all(&vha->e_dbell.dbell);
-+}
-+
-+static struct edb_node *
-+qla_edb_node_alloc(scsi_qla_host_t *vha, uint32_t ntype)
-+{
-+	struct edb_node	*node;
-+
-+	node = kzalloc(sizeof(*node), GFP_ATOMIC);
-+	if (!node) {
-+		/* couldn't get space */
-+		ql_dbg(ql_dbg_edif, vha, 0x9100,
-+		    "edb node unable to be allocated\n");
-+		return NULL;
-+	}
-+
-+	node->lstate = LSTATE_OFF;
-+	node->ntype = ntype;
-+	INIT_LIST_HEAD(&node->list);
-+	return node;
-+}
-+
-+/* adds a already alllocated enode to the linked list */
-+static bool
-+qla_edb_node_add(scsi_qla_host_t *vha, struct edb_node *ptr)
-+{
-+	unsigned long		flags;
-+
-+	if (ptr->lstate != LSTATE_OFF) {
-+		ql_dbg(ql_dbg_edif, vha, 0x911a,
-+		    "%s error edb node(%p) state=%x\n",
-+		    __func__, ptr, ptr->lstate);
-+		return false;
-+	}
-+
-+	if (vha->e_dbell.db_flags != EDB_ACTIVE) {
-+		/* doorbell list not enabled */
-+		ql_dbg(ql_dbg_edif, vha, 0x09102,
-+		    "%s doorbell not enabled\n", __func__);
-+		return false;
-+	}
-+
-+	spin_lock_irqsave(&vha->e_dbell.db_lock, flags);
-+	ptr->lstate = LSTATE_ON;
-+	list_add_tail(&ptr->list, &vha->e_dbell.head);
-+	spin_unlock_irqrestore(&vha->e_dbell.db_lock, flags);
-+
-+	/* ring doorbell for waiters */
-+	complete(&vha->e_dbell.dbell);
-+
-+	return true;
-+}
-+
-+/* adds event to doorbell list */
-+void
-+qla_edb_eventcreate(scsi_qla_host_t *vha, uint32_t dbtype,
-+	uint32_t data, uint32_t data2, fc_port_t	*sfcport)
-+{
-+	struct edb_node	*edbnode;
-+	fc_port_t *fcport = sfcport;
-+	port_id_t id;
-+
-+	if (!vha->hw->flags.edif_enabled) {
-+		/* edif not enabled */
-+		return;
-+	}
-+
-+	if (vha->e_dbell.db_flags != EDB_ACTIVE) {
-+		if (fcport)
-+			fcport->edif.auth_state = dbtype;
-+		/* doorbell list not enabled */
-+		ql_dbg(ql_dbg_edif, vha, 0x09102,
-+		    "%s doorbell not enabled (type=%d\n", __func__, dbtype);
-+		return;
-+	}
-+
-+	edbnode = qla_edb_node_alloc(vha, dbtype);
-+	if (!edbnode) {
-+		ql_dbg(ql_dbg_edif, vha, 0x09102,
-+		    "%s unable to alloc db node\n", __func__);
-+		return;
-+	}
-+
-+	if (!fcport) {
-+		id.b.domain = (data >> 16) & 0xff;
-+		id.b.area = (data >> 8) & 0xff;
-+		id.b.al_pa = data & 0xff;
-+		ql_dbg(ql_dbg_edif, vha, 0x09222,
-+		    "%s: Arrived s_id: %06x\n", __func__,
-+		    id.b24);
-+		fcport = qla2x00_find_fcport_by_pid(vha, &id);
-+		if (!fcport) {
-+			ql_dbg(ql_dbg_edif, vha, 0x09102,
-+			    "%s can't find fcport for sid= 0x%x - ignoring\n",
-+			__func__, id.b24);
-+			kfree(edbnode);
-+			return;
-+		}
-+	}
-+
-+	/* populate the edb node */
-+	switch (dbtype) {
-+	case VND_CMD_AUTH_STATE_NEEDED:
-+	case VND_CMD_AUTH_STATE_SESSION_SHUTDOWN:
-+		edbnode->u.plogi_did.b24 = fcport->d_id.b24;
-+		break;
-+	case VND_CMD_AUTH_STATE_ELS_RCVD:
-+		edbnode->u.els_sid.b24 = fcport->d_id.b24;
-+		break;
-+	case VND_CMD_AUTH_STATE_SAUPDATE_COMPL:
-+		edbnode->u.sa_aen.port_id = fcport->d_id;
-+		edbnode->u.sa_aen.status =  data;
-+		edbnode->u.sa_aen.key_type =  data2;
-+		break;
-+	default:
-+		ql_dbg(ql_dbg_edif, vha, 0x09102,
-+			"%s unknown type: %x\n", __func__, dbtype);
-+		qla_edb_node_free(vha, edbnode);
-+		kfree(edbnode);
-+		edbnode = NULL;
-+		break;
-+	}
-+
-+	if (edbnode && (!qla_edb_node_add(vha, edbnode))) {
-+		ql_dbg(ql_dbg_edif, vha, 0x09102,
-+		    "%s unable to add dbnode\n", __func__);
-+		qla_edb_node_free(vha, edbnode);
-+		kfree(edbnode);
-+		return;
-+	}
-+	if (edbnode && fcport)
-+		fcport->edif.auth_state = dbtype;
-+	ql_dbg(ql_dbg_edif, vha, 0x09102,
-+	    "%s Doorbell produced : type=%d %p\n", __func__, dbtype, edbnode);
-+}
-+
-+static struct edb_node *
-+qla_edb_getnext(scsi_qla_host_t *vha)
-+{
-+	unsigned long	flags;
-+	struct edb_node	*edbnode = NULL;
-+
-+	spin_lock_irqsave(&vha->e_dbell.db_lock, flags);
-+
-+	/* db nodes are fifo - no qualifications done */
-+	if (!list_empty(&vha->e_dbell.head)) {
-+		edbnode = list_first_entry(&vha->e_dbell.head,
-+		    struct edb_node, list);
-+		list_del(&edbnode->list);
-+		edbnode->lstate = LSTATE_OFF;
-+	}
-+
-+	spin_unlock_irqrestore(&vha->e_dbell.db_lock, flags);
-+
-+	return edbnode;
-+}
-+
-+/*
-+ * dec timer for edif enabled devices which are time based.
-+ * check all edif enabled devices for rekey notification
-+ */
-+void
-+qla_edif_timer_check(scsi_qla_host_t *vha)
-+{
-+	struct fc_port	*fcport, *tf;
-+
-+	list_for_each_entry_safe(fcport, tf, &vha->vp_fcports, list) {
-+		if (fcport->edif.enable &&
-+		    fcport->disc_state == DSC_LOGIN_AUTH_PEND) {
-+			fcport->edif.prli_to -= EDIF_TICK;
-+			if (fcport->edif.prli_to == 0) {
-+				ql_dbg(ql_dbg_edif, vha, 0x09222,
-+					"%s login timeout for d_id: %06x / wwpn:%8phC\n",
-+					__func__, fcport->d_id.b24,
-+					fcport->port_name);
-+
-+				/* timeout waiting for app - cleanup */
-+				/* qlt_schedule_sess_for_deletion(fcport); */
-+			}
-+		}
-+	}
-+}
-+
-+/*
-+ * app uses separate thread to read this. It'll wait until the doorbell
-+ * is rung by the driver or the max wait time has expired
-+ */
-+ssize_t
-+edif_doorbell_show(struct device *dev, struct device_attribute *attr,
-+		char *buf)
-+{
-+	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
-+	struct edb_node	*dbnode = NULL;
-+	struct edif_app_dbell *ap = (struct edif_app_dbell *)buf;
-+	uint32_t dat_siz, buf_size, sz;
-+
-+	sz = 256; /* app currently hardcode to 256. */
-+
-+	/* stop new threads from waiting if we're not init'd */
-+	if (vha->e_dbell.db_flags != EDB_ACTIVE) {
-+		ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x09122,
-+		    "%s error - edif db not enabled\n", __func__);
-+		return 0;
-+	}
-+
-+	if (!vha->hw->flags.edif_enabled) {
-+		/* edif not enabled */
-+		ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x09122,
-+		    "%s error - edif not enabled\n", __func__);
-+		return -1;
-+	}
-+
-+	buf_size = 0;
-+	while ((sz - buf_size) >= sizeof(struct edb_node)) {
-+		/* remove the next item from the doorbell list */
-+		dat_siz = 0;
-+		dbnode = qla_edb_getnext(vha);
-+		if (dbnode) {
-+			ap->event_code = dbnode->ntype;
-+			switch (dbnode->ntype) {
-+			case VND_CMD_AUTH_STATE_SESSION_SHUTDOWN:
-+			case VND_CMD_AUTH_STATE_NEEDED:
-+				ap->port_id = dbnode->u.plogi_did;
-+				dat_siz += sizeof(ap->port_id);
-+				break;
-+			case VND_CMD_AUTH_STATE_ELS_RCVD:
-+				ap->port_id = dbnode->u.els_sid;
-+				dat_siz += sizeof(ap->port_id);
-+				break;
-+			case VND_CMD_AUTH_STATE_SAUPDATE_COMPL:
-+				ap->port_id = dbnode->u.sa_aen.port_id;
-+				memcpy(ap->event_data, &dbnode->u,
-+						sizeof(struct edif_sa_update_aen));
-+				dat_siz += sizeof(struct edif_sa_update_aen);
-+				break;
-+			default:
-+				/* unknown node type, rtn unknown ntype */
-+				ap->event_code = VND_CMD_AUTH_STATE_UNDEF;
-+				memcpy(ap->event_data, &dbnode->ntype, 4);
-+				dat_siz += 4;
-+				break;
-+			}
-+
-+			ql_dbg(ql_dbg_edif, vha, 0x09102,
-+				"%s Doorbell consumed : type=%d %p\n",
-+				__func__, dbnode->ntype, dbnode);
-+			/* we're done with the db node, so free it up */
-+			qla_edb_node_free(vha, dbnode);
-+			kfree(dbnode);
-+		} else {
-+			break;
-+		}
-+
-+		ap->event_data_size = dat_siz;
-+		/* 8bytes = ap->event_code + ap->event_data_size */
-+		buf_size += dat_siz + 8;
-+		ap = (struct edif_app_dbell *)(buf + buf_size);
-+	}
-+	return buf_size;
-+}
-+
-+void
-+ql_print_bsg_sglist(uint level, scsi_qla_host_t *vha, uint id, char *str,
-+		struct bsg_buffer *p)
-+{
-+	struct scatterlist *sg;
-+	uint i;
-+
-+	ql_dbg(level, vha, id,
-+	    "%s->(sg_cnt=%#x payload_len=%#x):\n",
-+	    str, p->sg_cnt, p->payload_len);
-+	for_each_sg(p->sg_list, sg, p->sg_cnt, i) {
-+		ql_dbg(level, vha, id,
-+		    "%x: dma(adr=%#llx len=%#x) off=%#x len=%#x\n",
-+		    i, sg_dma_address(sg), sg_dma_len(sg), sg->offset,
-+		    sg->length);
-+	}
-+}
-+
-+static void qla_noop_sp_done(srb_t *sp, int res)
-+{
-+	sp->free(sp);
-+}
-+
-+/*
-+ * Called from work queue
-+ * build and send the sa_update iocb to delete an rx sa_index
-+ */
-+int
-+qla24xx_issue_sa_replace_iocb(scsi_qla_host_t *vha, struct qla_work_evt *e)
-+{
-+	srb_t *sp;
-+	fc_port_t	*fcport = NULL;
-+	struct srb_iocb *iocb_cmd = NULL;
-+	int rval = QLA_SUCCESS;
-+	struct	edif_sa_ctl *sa_ctl = e->u.sa_update.sa_ctl;
-+	uint16_t nport_handle = e->u.sa_update.nport_handle;
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x70e6,
-+	    "%s: starting,  sa_ctl: %p\n", __func__, sa_ctl);
-+
-+	if (!sa_ctl) {
-+		ql_dbg(ql_dbg_edif, vha, 0x70e6,
-+		    "sa_ctl allocation failed\n");
-+		return -ENOMEM;
-+	}
-+
-+	fcport = sa_ctl->fcport;
-+
-+	/* Alloc SRB structure */
-+	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
-+	if (!sp) {
-+		ql_dbg(ql_dbg_edif, vha, 0x70e6,
-+		 "SRB allocation failed\n");
-+		return -ENOMEM;
-+	}
-+
-+	fcport->flags |= FCF_ASYNC_SENT;
-+	iocb_cmd = &sp->u.iocb_cmd;
-+	iocb_cmd->u.sa_update.sa_ctl = sa_ctl;
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x3073,
-+	    "Enter: SA REPL portid=%06x, sa_ctl %p, index %x, nport_handle: 0x%x\n",
-+	    fcport->d_id.b24, sa_ctl, sa_ctl->index, nport_handle);
-+	/*
-+	 * if this is a sadb cleanup delete, mark it so the isr can
-+	 * take the correct action
-+	 */
-+	if (sa_ctl->flags & EDIF_SA_CTL_FLG_CLEANUP_DEL) {
-+		/* mark this srb as a cleanup delete */
-+		sp->flags |= SRB_EDIF_CLEANUP_DELETE;
-+		ql_dbg(ql_dbg_edif, vha, 0x70e6,
-+		    "%s: sp 0x%p flagged as cleanup delete\n", __func__, sp);
-+	}
-+
-+	sp->type = SRB_SA_REPLACE;
-+	sp->name = "SA_REPLACE";
-+	sp->fcport = fcport;
-+	sp->free = qla2x00_rel_sp;
-+	sp->done = qla_noop_sp_done;
-+
-+	rval = qla2x00_start_sp(sp);
-+
-+	if (rval != QLA_SUCCESS)
-+		rval = QLA_FUNCTION_FAILED;
-+
-+	return rval;
-+}
-+
-+void qla24xx_sa_update_iocb(srb_t *sp, struct sa_update_28xx *sa_update_iocb)
-+{
-+	int	itr = 0;
-+	struct	scsi_qla_host		*vha = sp->vha;
-+	struct	qla_sa_update_frame	*sa_frame =
-+		&sp->u.iocb_cmd.u.sa_update.sa_frame;
-+	u8 flags = 0;
-+
-+	switch (sa_frame->flags & (SAU_FLG_INV | SAU_FLG_TX)) {
-+	case 0:
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+		    "%s: EDIF SA UPDATE RX IOCB  vha: 0x%p  index: %d\n",
-+		    __func__, vha, sa_frame->fast_sa_index);
-+		break;
-+	case 1:
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+		    "%s: EDIF SA DELETE RX IOCB  vha: 0x%p  index: %d\n",
-+		    __func__, vha, sa_frame->fast_sa_index);
-+		flags |= SA_FLAG_INVALIDATE;
-+		break;
-+	case 2:
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+		    "%s: EDIF SA UPDATE TX IOCB  vha: 0x%p  index: %d\n",
-+		    __func__, vha, sa_frame->fast_sa_index);
-+		flags |= SA_FLAG_TX;
-+		break;
-+	case 3:
-+		ql_dbg(ql_dbg_edif, vha, 0x911d,
-+		    "%s: EDIF SA DELETE TX IOCB  vha: 0x%p  index: %d\n",
-+		    __func__, vha, sa_frame->fast_sa_index);
-+		flags |= SA_FLAG_TX | SA_FLAG_INVALIDATE;
-+		break;
-+	}
-+
-+	sa_update_iocb->entry_type = SA_UPDATE_IOCB_TYPE;
-+	sa_update_iocb->entry_count = 1;
-+	sa_update_iocb->sys_define = 0;
-+	sa_update_iocb->entry_status = 0;
-+	sa_update_iocb->handle = sp->handle;
-+	sa_update_iocb->u.nport_handle = cpu_to_le16(sp->fcport->loop_id);
-+	sa_update_iocb->vp_index = sp->fcport->vha->vp_idx;
-+	sa_update_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
-+	sa_update_iocb->port_id[1] = sp->fcport->d_id.b.area;
-+	sa_update_iocb->port_id[2] = sp->fcport->d_id.b.domain;
-+
-+	sa_update_iocb->flags = flags;
-+	sa_update_iocb->salt = cpu_to_le32(sa_frame->salt);
-+	sa_update_iocb->spi = cpu_to_le32(sa_frame->spi);
-+	sa_update_iocb->sa_index = cpu_to_le16(sa_frame->fast_sa_index);
-+
-+	sa_update_iocb->sa_control |= SA_CNTL_ENC_FCSP;
-+	if (sp->fcport->edif.aes_gmac)
-+		sa_update_iocb->sa_control |= SA_CNTL_AES_GMAC;
-+
-+	if (sa_frame->flags & SAU_FLG_KEY256) {
-+		sa_update_iocb->sa_control |= SA_CNTL_KEY256;
-+		for (itr = 0; itr < 32; itr++)
-+			sa_update_iocb->sa_key[itr] = sa_frame->sa_key[itr];
-+
-+		ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x921f, "%s 256 sa key=%32phN\n",
-+		    __func__, sa_update_iocb->sa_key);
-+	} else {
-+		sa_update_iocb->sa_control |= SA_CNTL_KEY128;
-+		for (itr = 0; itr < 16; itr++)
-+			sa_update_iocb->sa_key[itr] = sa_frame->sa_key[itr];
-+
-+		ql_dbg(ql_dbg_edif +  ql_dbg_verbose, vha, 0x921f, "%s 128 sa key=%16phN\n",
-+		    __func__, sa_update_iocb->sa_key);
-+	}
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x921d,
-+"%s SAU Port ID = %02x:%02x:%02x, flags=%xh, index=%u, ctl=%xh, SPI 0x%x user flags 0x%x hdl=%x gmac %d\n",
-+	    __func__, sa_update_iocb->port_id[2],
-+	    sa_update_iocb->port_id[1], sa_update_iocb->port_id[0],
-+	    sa_update_iocb->flags, sa_update_iocb->sa_index,
-+	    sa_update_iocb->sa_control, sa_update_iocb->spi,
-+	    sa_frame->flags, sp->handle, sp->fcport->edif.aes_gmac);
-+
-+	if (sa_frame->flags & SAU_FLG_TX)
-+		sp->fcport->edif.tx_sa_pending = 1;
-+	else
-+		sp->fcport->edif.rx_sa_pending = 1;
-+
-+	sp->fcport->vha->qla_stats.control_requests++;
-+}
-+
-+void
-+qla24xx_sa_replace_iocb(srb_t *sp, struct sa_update_28xx *sa_update_iocb)
-+{
-+	struct	scsi_qla_host		*vha = sp->vha;
-+	struct srb_iocb *srb_iocb = &sp->u.iocb_cmd;
-+	struct	edif_sa_ctl		*sa_ctl = srb_iocb->u.sa_update.sa_ctl;
-+	uint16_t nport_handle = sp->fcport->loop_id;
-+
-+	sa_update_iocb->entry_type = SA_UPDATE_IOCB_TYPE;
-+	sa_update_iocb->entry_count = 1;
-+	sa_update_iocb->sys_define = 0;
-+	sa_update_iocb->entry_status = 0;
-+	sa_update_iocb->handle = sp->handle;
-+
-+	sa_update_iocb->u.nport_handle = cpu_to_le16(nport_handle);
-+
-+	sa_update_iocb->vp_index = sp->fcport->vha->vp_idx;
-+	sa_update_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
-+	sa_update_iocb->port_id[1] = sp->fcport->d_id.b.area;
-+	sa_update_iocb->port_id[2] = sp->fcport->d_id.b.domain;
-+
-+	/* Invalidate the index. salt, spi, control & key are ignore */
-+	sa_update_iocb->flags = SA_FLAG_INVALIDATE;
-+	sa_update_iocb->salt = 0;
-+	sa_update_iocb->spi = 0;
-+	sa_update_iocb->sa_index = cpu_to_le16(sa_ctl->index);
-+	sa_update_iocb->sa_control = 0;
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x921d,
-+	    "%s SAU DELETE RX Port ID = %02x:%02x:%02x, lid %d flags=%xh, index=%u, hdl=%x\n",
-+	    __func__, sa_update_iocb->port_id[2],
-+	    sa_update_iocb->port_id[1], sa_update_iocb->port_id[0],
-+	    nport_handle, sa_update_iocb->flags, sa_update_iocb->sa_index,
-+	    sp->handle);
-+
-+	sp->fcport->vha->qla_stats.control_requests++;
-+}
-+
-+void qla24xx_auth_els(scsi_qla_host_t *vha, void **pkt, struct rsp_que **rsp)
-+{
-+	struct purex_entry_24xx *p = *pkt;
-+	struct enode		*ptr;
-+	int		sid;
-+	u16 totlen;
-+	struct purexevent	*purex;
-+	struct scsi_qla_host *host = NULL;
-+	int rc;
-+	struct fc_port *fcport;
-+	struct qla_els_pt_arg a;
-+	be_id_t beid;
-+
-+	memset(&a, 0, sizeof(a));
-+
-+	a.els_opcode = ELS_AUTH_ELS;
-+	a.nport_handle = p->nport_handle;
-+	a.rx_xchg_address = p->rx_xchg_addr;
-+	a.did.b.domain = p->s_id[2];
-+	a.did.b.area   = p->s_id[1];
-+	a.did.b.al_pa  = p->s_id[0];
-+	a.tx_byte_count = a.tx_len = sizeof(struct fc_els_ls_rjt);
-+	a.tx_addr = vha->hw->elsrej.cdma;
-+	a.vp_idx = vha->vp_idx;
-+	a.control_flags = EPD_ELS_RJT;
-+
-+	sid = p->s_id[0] | (p->s_id[1] << 8) | (p->s_id[2] << 16);
-+	/*
-+	 * ql_dbg(ql_dbg_edif, vha, 0x09108,
-+	 *	  "%s rec'vd sid=0x%x\n", __func__, sid);
-+	 */
-+
-+	totlen = (le16_to_cpu(p->frame_size) & 0x0fff) - PURX_ELS_HEADER_SIZE;
-+	if (le16_to_cpu(p->status_flags) & 0x8000) {
-+		totlen = le16_to_cpu(p->trunc_frame_size);
-+		qla_els_reject_iocb(vha, (*rsp)->qpair, &a);
-+		__qla_consume_iocb(vha, pkt, rsp);
-+		return;
-+	}
-+
-+	if (totlen > MAX_PAYLOAD) {
-+		ql_dbg(ql_dbg_edif, vha, 0x0910d,
-+		    "%s WARNING: verbose ELS frame received (totlen=%x)\n",
-+		    __func__, totlen);
-+		qla_els_reject_iocb(vha, (*rsp)->qpair, &a);
-+		__qla_consume_iocb(vha, pkt, rsp);
-+		return;
-+	}
-+
-+	if (!vha->hw->flags.edif_enabled) {
-+		/* edif support not enabled */
-+		ql_dbg(ql_dbg_edif, vha, 0x910e, "%s edif not enabled\n",
-+		    __func__);
-+		qla_els_reject_iocb(vha, (*rsp)->qpair, &a);
-+		__qla_consume_iocb(vha, pkt, rsp);
-+		return;
-+	}
-+
-+	ptr = qla_enode_alloc(vha, N_PUREX);
-+	if (!ptr) {
-+		ql_dbg(ql_dbg_edif, vha, 0x09109,
-+		    "WARNING: enode allloc failed for sid=%x\n",
-+		    sid);
-+		qla_els_reject_iocb(vha, (*rsp)->qpair, &a);
-+		__qla_consume_iocb(vha, pkt, rsp);
-+		return;
-+	}
-+
-+	purex = &ptr->u.purexinfo;
-+	purex->pur_info.pur_sid = a.did;
-+	purex->pur_info.pur_pend = 0;
-+	purex->pur_info.pur_bytes_rcvd = totlen;
-+	purex->pur_info.pur_rx_xchg_address = le32_to_cpu(p->rx_xchg_addr);
-+	purex->pur_info.pur_nphdl = le16_to_cpu(p->nport_handle);
-+	purex->pur_info.pur_did.b.domain =  p->d_id[2];
-+	purex->pur_info.pur_did.b.area =  p->d_id[1];
-+	purex->pur_info.pur_did.b.al_pa =  p->d_id[0];
-+	purex->pur_info.vp_idx = p->vp_idx;
-+
-+	rc = __qla_copy_purex_to_buffer(vha, pkt, rsp, purex->msgp,
-+		purex->msgp_len);
-+	if (rc) {
-+		qla_els_reject_iocb(vha, (*rsp)->qpair, &a);
-+		qla_enode_free(vha, ptr);
-+		return;
-+	}
-+	/*
-+	 * ql_dump_buffer(ql_dbg_edif, vha, 0x70e0,
-+	 *   purex->msgp, purex->pur_info.pur_bytes_rcvd);
-+	 */
-+	beid.al_pa = purex->pur_info.pur_did.b.al_pa;
-+	beid.area   = purex->pur_info.pur_did.b.area;
-+	beid.domain = purex->pur_info.pur_did.b.domain;
-+	host = qla_find_host_by_d_id(vha, beid);
-+	if (!host) {
-+		ql_log(ql_log_fatal, vha, 0x508b,
-+		    "%s Drop ELS due to unable to find host %06x\n",
-+		    __func__, purex->pur_info.pur_did.b24);
-+
-+		qla_els_reject_iocb(vha, (*rsp)->qpair, &a);
-+		qla_enode_free(vha, ptr);
-+		return;
-+	}
-+
-+	fcport = qla2x00_find_fcport_by_pid(host, &purex->pur_info.pur_sid);
-+
-+	if (host->e_dbell.db_flags != EDB_ACTIVE ||
-+	    (fcport && fcport->loop_id == FC_NO_LOOP_ID)) {
-+		ql_dbg(ql_dbg_edif, host, 0x0910c, "%s e_dbell.db_flags =%x %06x\n",
-+		    __func__, host->e_dbell.db_flags,
-+		    fcport ? fcport->d_id.b24 : 0);
-+
-+		qla_els_reject_iocb(host, (*rsp)->qpair, &a);
-+		qla_enode_free(host, ptr);
-+		return;
-+	}
-+
-+	/* add the local enode to the list */
-+	qla_enode_add(host, ptr);
-+
-+	ql_dbg(ql_dbg_edif, host, 0x0910c,
-+	    "%s COMPLETE purex->pur_info.pur_bytes_rcvd =%xh s:%06x -> d:%06x xchg=%xh\n",
-+	    __func__, purex->pur_info.pur_bytes_rcvd,
-+	    purex->pur_info.pur_sid.b24,
-+	    purex->pur_info.pur_did.b24, p->rx_xchg_addr);
-+
-+	qla_edb_eventcreate(host, VND_CMD_AUTH_STATE_ELS_RCVD, sid, 0, NULL);
-+}
-+
-+static uint16_t  qla_edif_get_sa_index_from_freepool(fc_port_t *fcport, int dir)
-+{
-+	struct scsi_qla_host *vha = fcport->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	void *sa_id_map;
-+	unsigned long flags = 0;
-+	u16 sa_index;
-+
-+	ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x3063,
-+	    "%s: entry\n", __func__);
-+
-+	if (dir)
-+		sa_id_map = ha->edif_tx_sa_id_map;
-+	else
-+		sa_id_map = ha->edif_rx_sa_id_map;
-+
-+	spin_lock_irqsave(&ha->sadb_fp_lock, flags);
-+	sa_index = find_first_zero_bit(sa_id_map, EDIF_NUM_SA_INDEX);
-+	if (sa_index >=  EDIF_NUM_SA_INDEX) {
-+		spin_unlock_irqrestore(&ha->sadb_fp_lock, flags);
-+		return INVALID_EDIF_SA_INDEX;
-+	}
-+	set_bit(sa_index, sa_id_map);
-+	spin_unlock_irqrestore(&ha->sadb_fp_lock, flags);
-+
-+	if (dir)
-+		sa_index += EDIF_TX_SA_INDEX_BASE;
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x3063,
-+	    "%s: index retrieved from free pool %d\n", __func__, sa_index);
-+
-+	return sa_index;
-+}
-+
-+/* find an sadb entry for an nport_handle */
-+static struct edif_sa_index_entry *
-+qla_edif_sadb_find_sa_index_entry(uint16_t nport_handle,
-+		struct list_head *sa_list)
-+{
-+	struct edif_sa_index_entry *entry;
-+	struct edif_sa_index_entry *tentry;
-+	struct list_head *indx_list = sa_list;
-+
-+	list_for_each_entry_safe(entry, tentry, indx_list, next) {
-+		if (entry->handle == nport_handle)
-+			return entry;
-+	}
-+	return NULL;
-+}
-+
-+/* remove an sa_index from the nport_handle and return it to the free pool */
-+static int qla_edif_sadb_delete_sa_index(fc_port_t *fcport, uint16_t nport_handle,
-+		uint16_t sa_index)
-+{
-+	struct edif_sa_index_entry *entry;
-+	struct list_head *sa_list;
-+	int dir = (sa_index < EDIF_TX_SA_INDEX_BASE) ? 0 : 1;
-+	int slot = 0;
-+	int free_slot_count = 0;
-+	scsi_qla_host_t *vha = fcport->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	unsigned long flags = 0;
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x3063,
-+	    "%s: entry\n", __func__);
-+
-+	if (dir)
-+		sa_list = &ha->sadb_tx_index_list;
-+	else
-+		sa_list = &ha->sadb_rx_index_list;
-+
-+	entry = qla_edif_sadb_find_sa_index_entry(nport_handle, sa_list);
-+	if (!entry) {
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "%s: no entry found for nport_handle 0x%x\n",
-+		    __func__, nport_handle);
-+		return -1;
-+	}
-+
-+	spin_lock_irqsave(&ha->sadb_lock, flags);
-+	for (slot = 0; slot < 2; slot++) {
-+		if (entry->sa_pair[slot].sa_index == sa_index) {
-+			entry->sa_pair[slot].sa_index = INVALID_EDIF_SA_INDEX;
-+			entry->sa_pair[slot].spi = 0;
-+			free_slot_count++;
-+			qla_edif_add_sa_index_to_freepool(fcport, dir, sa_index);
-+		} else if (entry->sa_pair[slot].sa_index == INVALID_EDIF_SA_INDEX) {
-+			free_slot_count++;
-+		}
-+	}
-+
-+	if (free_slot_count == 2) {
-+		list_del(&entry->next);
-+		kfree(entry);
-+	}
-+	spin_unlock_irqrestore(&ha->sadb_lock, flags);
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x3063,
-+	    "%s: sa_index %d removed, free_slot_count: %d\n",
-+	    __func__, sa_index, free_slot_count);
-+
-+	return 0;
-+}
-+
-+void
-+qla28xx_sa_update_iocb_entry(scsi_qla_host_t *v, struct req_que *req,
-+		struct sa_update_28xx *pkt)
-+{
-+	const char *func = "SA_UPDATE_RESPONSE_IOCB";
-+	srb_t *sp;
-+	struct edif_sa_ctl *sa_ctl;
-+	int old_sa_deleted = 1;
-+	uint16_t nport_handle;
-+	struct scsi_qla_host *vha;
-+
-+	sp = qla2x00_get_sp_from_handle(v, func, req, pkt);
-+
-+	if (!sp) {
-+		ql_dbg(ql_dbg_edif, v, 0x3063,
-+			"%s: no sp found for pkt\n", __func__);
-+		return;
-+	}
-+	/* use sp->vha due to npiv */
-+	vha = sp->vha;
-+
-+	switch (pkt->flags & (SA_FLAG_INVALIDATE | SA_FLAG_TX)) {
-+	case 0:
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "%s: EDIF SA UPDATE RX IOCB  vha: 0x%p  index: %d\n",
-+		    __func__, vha, pkt->sa_index);
-+		break;
-+	case 1:
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "%s: EDIF SA DELETE RX IOCB  vha: 0x%p  index: %d\n",
-+		    __func__, vha, pkt->sa_index);
-+		break;
-+	case 2:
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "%s: EDIF SA UPDATE TX IOCB  vha: 0x%p  index: %d\n",
-+		    __func__, vha, pkt->sa_index);
-+		break;
-+	case 3:
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "%s: EDIF SA DELETE TX IOCB  vha: 0x%p  index: %d\n",
-+		    __func__, vha, pkt->sa_index);
-+		break;
-+	}
-+
-+	/*
-+	 * dig the nport handle out of the iocb, fcport->loop_id can not be trusted
-+	 * to be correct during cleanup sa_update iocbs.
-+	 */
-+	nport_handle = sp->fcport->loop_id;
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x3063,
-+"%s: %8phN comp status=%x old_sa_info=%x new_sa_info=%x lid %d, index=0x%x pkt_flags %xh hdl=%x\n",
-+	    __func__, sp->fcport->port_name,
-+	    pkt->u.comp_sts, pkt->old_sa_info, pkt->new_sa_info, nport_handle,
-+	    pkt->sa_index, pkt->flags, sp->handle);
-+
-+	/* if rx delete, remove the timer */
-+	if ((pkt->flags & (SA_FLAG_INVALIDATE | SA_FLAG_TX)) ==  SA_FLAG_INVALIDATE) {
-+		struct edif_list_entry *edif_entry;
-+
-+		sp->fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
-+
-+		edif_entry = qla_edif_list_find_sa_index(sp->fcport, nport_handle);
-+		if (edif_entry) {
-+			ql_dbg(ql_dbg_edif, vha, 0x5033,
-+			    "%s: removing edif_entry %p, new sa_index: 0x%x\n",
-+			    __func__, edif_entry, pkt->sa_index);
-+			qla_edif_list_delete_sa_index(sp->fcport, edif_entry);
-+			del_timer(&edif_entry->timer);
-+
-+			ql_dbg(ql_dbg_edif, vha, 0x5033,
-+			    "%s: releasing edif_entry %p, new sa_index: 0x%x\n",
-+			    __func__, edif_entry, pkt->sa_index);
-+
-+			kfree(edif_entry);
-+		}
-+	}
-+
-+	/*
-+	 * if this is a delete for either tx or rx, make sure it succeeded.
-+	 * The new_sa_info field should be 0xffff on success
-+	 */
-+	if (pkt->flags & SA_FLAG_INVALIDATE)
-+		old_sa_deleted = (le16_to_cpu(pkt->new_sa_info) == 0xffff) ? 1 : 0;
-+
-+	/* Process update and delete the same way */
-+
-+	/* If this is an sadb cleanup delete, bypass sending events to IPSEC */
-+	if (sp->flags & SRB_EDIF_CLEANUP_DELETE) {
-+		sp->fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "%s: nph 0x%x, sa_index %d removed from fw\n",
-+		    __func__, sp->fcport->loop_id, pkt->sa_index);
-+
-+	} else if ((pkt->entry_status == 0) && (pkt->u.comp_sts == 0) &&
-+	    old_sa_deleted) {
-+		/*
-+		 * Note: Wa are only keeping track of latest SA,
-+		 * so we know when we can start enableing encryption per I/O.
-+		 * If all SA's get deleted, let FW reject the IOCB.
-+
-+		 * TODO: edif: don't set enabled here I think
-+		 * TODO: edif: prli complete is where it should be set
-+		 */
-+		ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x3063,
-+			"SA(%x)updated for s_id %02x%02x%02x\n",
-+			pkt->new_sa_info,
-+			pkt->port_id[2], pkt->port_id[1], pkt->port_id[0]);
-+		sp->fcport->edif.enable = 1;
-+		if (pkt->flags & SA_FLAG_TX) {
-+			sp->fcport->edif.tx_sa_set = 1;
-+			sp->fcport->edif.tx_sa_pending = 0;
-+			qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
-+				QL_VND_SA_STAT_SUCCESS,
-+				QL_VND_TX_SA_KEY, sp->fcport);
-+		} else {
-+			sp->fcport->edif.rx_sa_set = 1;
-+			sp->fcport->edif.rx_sa_pending = 0;
-+			qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
-+				QL_VND_SA_STAT_SUCCESS,
-+				QL_VND_RX_SA_KEY, sp->fcport);
-+		}
-+	} else {
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "%s: %8phN SA update FAILED: sa_index: %d, new_sa_info %d, %02x%02x%02x -- dumping\n",
-+		    __func__, sp->fcport->port_name,
-+		    pkt->sa_index, pkt->new_sa_info, pkt->port_id[2],
-+		    pkt->port_id[1], pkt->port_id[0]);
-+
-+		if (pkt->flags & SA_FLAG_TX)
-+			qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
-+				(le16_to_cpu(pkt->u.comp_sts) << 16) | QL_VND_SA_STAT_FAILED,
-+				QL_VND_TX_SA_KEY, sp->fcport);
-+		else
-+			qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
-+				(le16_to_cpu(pkt->u.comp_sts) << 16) | QL_VND_SA_STAT_FAILED,
-+				QL_VND_RX_SA_KEY, sp->fcport);
-+	}
-+
-+	/* for delete, release sa_ctl, sa_index */
-+	if (pkt->flags & SA_FLAG_INVALIDATE) {
-+		/* release the sa_ctl */
-+		sa_ctl = qla_edif_find_sa_ctl_by_index(sp->fcport,
-+		    le16_to_cpu(pkt->sa_index), (pkt->flags & SA_FLAG_TX));
-+		if (sa_ctl &&
-+		    qla_edif_find_sa_ctl_by_index(sp->fcport, sa_ctl->index,
-+			(pkt->flags & SA_FLAG_TX)) != NULL) {
-+			ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x3063,
-+			    "%s: freeing sa_ctl for index %d\n",
-+			    __func__, sa_ctl->index);
-+			qla_edif_free_sa_ctl(sp->fcport, sa_ctl, sa_ctl->index);
-+		} else {
-+			ql_dbg(ql_dbg_edif, vha, 0x3063,
-+			    "%s: sa_ctl NOT freed, sa_ctl: %p\n",
-+			    __func__, sa_ctl);
-+		}
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "%s: freeing sa_index %d, nph: 0x%x\n",
-+		    __func__, le16_to_cpu(pkt->sa_index), nport_handle);
-+		qla_edif_sadb_delete_sa_index(sp->fcport, nport_handle,
-+		    le16_to_cpu(pkt->sa_index));
-+	/*
-+	 * check for a failed sa_update and remove
-+	 * the sadb entry.
-+	 */
-+	} else if (pkt->u.comp_sts) {
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "%s: freeing sa_index %d, nph: 0x%x\n",
-+		    __func__, pkt->sa_index, nport_handle);
-+		qla_edif_sadb_delete_sa_index(sp->fcport, nport_handle,
-+		    le16_to_cpu(pkt->sa_index));
-+	}
-+
-+	sp->done(sp, 0);
-+}
-+
-+/*
-+ * qla28xx_start_scsi_edif() - Send a SCSI type 6 command ot the ISP
-+ * @sp: command to send to the ISP
-+ * req/rsp queue to use for this request
-+ * lock to protect submission
-+ *
-+ * Returns non-zero if a failure occurred, else zero.
-+ */
-+int
-+qla28xx_start_scsi_edif(srb_t *sp)
-+{
-+	int             nseg;
-+	unsigned long   flags;
-+	struct scsi_cmnd *cmd;
-+	uint32_t        *clr_ptr;
-+	uint32_t        index, i;
-+	uint32_t        handle;
-+	uint16_t        cnt;
-+	int16_t        req_cnt;
-+	uint16_t        tot_dsds;
-+	__be32 *fcp_dl;
-+	uint8_t additional_cdb_len;
-+	struct ct6_dsd *ctx;
-+	struct scsi_qla_host *vha = sp->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct cmd_type_6 *cmd_pkt;
-+	struct dsd64	*cur_dsd;
-+	uint8_t		avail_dsds = 0;
-+	struct scatterlist *sg;
-+	struct req_que *req = sp->qpair->req;
-+	spinlock_t *lock = sp->qpair->qp_lock_ptr;
-+
-+	/* Setup device pointers. */
-+	cmd = GET_CMD_SP(sp);
-+
-+	/* So we know we haven't pci_map'ed anything yet */
-+	tot_dsds = 0;
-+
-+	/* Send marker if required */
-+	if (vha->marker_needed != 0) {
-+		if (qla2x00_marker(vha, sp->qpair, 0, 0, MK_SYNC_ALL) !=
-+			QLA_SUCCESS) {
-+			ql_log(ql_log_warn, vha, 0x300c,
-+			    "qla2x00_marker failed for cmd=%p.\n", cmd);
-+			return QLA_FUNCTION_FAILED;
-+		}
-+		vha->marker_needed = 0;
-+	}
-+
-+	/* Acquire ring specific lock */
-+	spin_lock_irqsave(lock, flags);
-+
-+	/* Check for room in outstanding command list. */
-+	handle = req->current_outstanding_cmd;
-+	for (index = 1; index < req->num_outstanding_cmds; index++) {
-+		handle++;
-+		if (handle == req->num_outstanding_cmds)
-+			handle = 1;
-+		if (!req->outstanding_cmds[handle])
-+			break;
-+	}
-+	if (index == req->num_outstanding_cmds)
-+		goto queuing_error;
-+
-+	/* Map the sg table so we have an accurate count of sg entries needed */
-+	if (scsi_sg_count(cmd)) {
-+		nseg = dma_map_sg(&ha->pdev->dev, scsi_sglist(cmd),
-+		    scsi_sg_count(cmd), cmd->sc_data_direction);
-+		if (unlikely(!nseg))
-+			goto queuing_error;
-+	} else {
-+		nseg = 0;
-+	}
-+
-+	tot_dsds = nseg;
-+	req_cnt = qla24xx_calc_iocbs(vha, tot_dsds);
-+	if (req->cnt < (req_cnt + 2)) {
-+		cnt = IS_SHADOW_REG_CAPABLE(ha) ? *req->out_ptr :
-+		    rd_reg_dword(req->req_q_out);
-+		if (req->ring_index < cnt)
-+			req->cnt = cnt - req->ring_index;
-+		else
-+			req->cnt = req->length -
-+			    (req->ring_index - cnt);
-+		if (req->cnt < (req_cnt + 2))
-+			goto queuing_error;
-+	}
-+
-+	ctx = sp->u.scmd.ct6_ctx =
-+	    mempool_alloc(ha->ctx_mempool, GFP_ATOMIC);
-+	if (!ctx) {
-+		ql_log(ql_log_fatal, vha, 0x3010,
-+		    "Failed to allocate ctx for cmd=%p.\n", cmd);
-+		goto queuing_error;
-+	}
-+
-+	memset(ctx, 0, sizeof(struct ct6_dsd));
-+	ctx->fcp_cmnd = dma_pool_zalloc(ha->fcp_cmnd_dma_pool,
-+	    GFP_ATOMIC, &ctx->fcp_cmnd_dma);
-+	if (!ctx->fcp_cmnd) {
-+		ql_log(ql_log_fatal, vha, 0x3011,
-+		    "Failed to allocate fcp_cmnd for cmd=%p.\n", cmd);
-+		goto queuing_error;
-+	}
-+
-+	/* Initialize the DSD list and dma handle */
-+	INIT_LIST_HEAD(&ctx->dsd_list);
-+	ctx->dsd_use_cnt = 0;
-+
-+	if (cmd->cmd_len > 16) {
-+		additional_cdb_len = cmd->cmd_len - 16;
-+		if ((cmd->cmd_len % 4) != 0) {
-+			/*
-+			 * SCSI command bigger than 16 bytes must be
-+			 * multiple of 4
-+			 */
-+			ql_log(ql_log_warn, vha, 0x3012,
-+			    "scsi cmd len %d not multiple of 4 for cmd=%p.\n",
-+			    cmd->cmd_len, cmd);
-+			goto queuing_error_fcp_cmnd;
-+		}
-+		ctx->fcp_cmnd_len = 12 + cmd->cmd_len + 4;
-+	} else {
-+		additional_cdb_len = 0;
-+		ctx->fcp_cmnd_len = 12 + 16 + 4;
-+	}
-+
-+	cmd_pkt = (struct cmd_type_6 *)req->ring_ptr;
-+	cmd_pkt->handle = make_handle(req->id, handle);
-+
-+	/*
-+	 * Zero out remaining portion of packet.
-+	 * tagged queuing modifier -- default is TSK_SIMPLE (0).
-+	 */
-+	clr_ptr = (uint32_t *)cmd_pkt + 2;
-+	memset(clr_ptr, 0, REQUEST_ENTRY_SIZE - 8);
-+	cmd_pkt->dseg_count = cpu_to_le16(tot_dsds);
-+
-+	/* No data transfer */
-+	if (!scsi_bufflen(cmd) || cmd->sc_data_direction == DMA_NONE) {
-+		cmd_pkt->byte_count = cpu_to_le32(0);
-+		goto no_dsds;
-+	}
-+
-+	/* Set transfer direction */
-+	if (cmd->sc_data_direction == DMA_TO_DEVICE) {
-+		cmd_pkt->control_flags = cpu_to_le16(CF_WRITE_DATA);
-+		vha->qla_stats.output_bytes += scsi_bufflen(cmd);
-+		vha->qla_stats.output_requests++;
-+		sp->fcport->edif.tx_bytes += scsi_bufflen(cmd);
-+	} else if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
-+		cmd_pkt->control_flags = cpu_to_le16(CF_READ_DATA);
-+		vha->qla_stats.input_bytes += scsi_bufflen(cmd);
-+		vha->qla_stats.input_requests++;
-+		sp->fcport->edif.rx_bytes += scsi_bufflen(cmd);
-+	}
-+
-+	cmd_pkt->control_flags |= cpu_to_le16(CF_EN_EDIF);
-+	cmd_pkt->control_flags &= ~(cpu_to_le16(CF_NEW_SA));
-+
-+	/* One DSD is available in the Command Type 6 IOCB */
-+	avail_dsds = 1;
-+	cur_dsd = &cmd_pkt->fcp_dsd;
-+
-+	/* Load data segments */
-+	scsi_for_each_sg(cmd, sg, tot_dsds, i) {
-+		dma_addr_t      sle_dma;
-+		cont_a64_entry_t *cont_pkt;
-+
-+		/* Allocate additional continuation packets? */
-+		if (avail_dsds == 0) {
-+			/*
-+			 * Five DSDs are available in the Continuation
-+			 * Type 1 IOCB.
-+			 */
-+			cont_pkt = qla2x00_prep_cont_type1_iocb(vha, req);
-+			cur_dsd = cont_pkt->dsd;
-+			avail_dsds = 5;
-+		}
-+
-+		sle_dma = sg_dma_address(sg);
-+		put_unaligned_le64(sle_dma, &cur_dsd->address);
-+		cur_dsd->length = cpu_to_le32(sg_dma_len(sg));
-+		cur_dsd++;
-+		avail_dsds--;
-+	}
-+
-+no_dsds:
-+	/* Set NPORT-ID and LUN number*/
-+	cmd_pkt->nport_handle = cpu_to_le16(sp->fcport->loop_id);
-+	cmd_pkt->port_id[0] = sp->fcport->d_id.b.al_pa;
-+	cmd_pkt->port_id[1] = sp->fcport->d_id.b.area;
-+	cmd_pkt->port_id[2] = sp->fcport->d_id.b.domain;
-+	cmd_pkt->vp_index = sp->vha->vp_idx;
-+
-+	cmd_pkt->entry_type = COMMAND_TYPE_6;
-+
-+	/* Set total data segment count. */
-+	cmd_pkt->entry_count = (uint8_t)req_cnt;
-+
-+	int_to_scsilun(cmd->device->lun, &cmd_pkt->lun);
-+	host_to_fcp_swap((uint8_t *)&cmd_pkt->lun, sizeof(cmd_pkt->lun));
-+
-+	/* build FCP_CMND IU */
-+	int_to_scsilun(cmd->device->lun, &ctx->fcp_cmnd->lun);
-+	ctx->fcp_cmnd->additional_cdb_len = additional_cdb_len;
-+
-+	if (cmd->sc_data_direction == DMA_TO_DEVICE)
-+		ctx->fcp_cmnd->additional_cdb_len |= 1;
-+	else if (cmd->sc_data_direction == DMA_FROM_DEVICE)
-+		ctx->fcp_cmnd->additional_cdb_len |= 2;
-+
-+	/* Populate the FCP_PRIO. */
-+	if (ha->flags.fcp_prio_enabled)
-+		ctx->fcp_cmnd->task_attribute |=
-+		    sp->fcport->fcp_prio << 3;
-+
-+	memcpy(ctx->fcp_cmnd->cdb, cmd->cmnd, cmd->cmd_len);
-+
-+	fcp_dl = (__be32 *)(ctx->fcp_cmnd->cdb + 16 +
-+	    additional_cdb_len);
-+	*fcp_dl = htonl((uint32_t)scsi_bufflen(cmd));
-+
-+	cmd_pkt->fcp_cmnd_dseg_len = cpu_to_le16(ctx->fcp_cmnd_len);
-+	put_unaligned_le64(ctx->fcp_cmnd_dma, &cmd_pkt->fcp_cmnd_dseg_address);
-+
-+	sp->flags |= SRB_FCP_CMND_DMA_VALID;
-+	cmd_pkt->byte_count = cpu_to_le32((uint32_t)scsi_bufflen(cmd));
-+	/* Set total data segment count. */
-+	cmd_pkt->entry_count = (uint8_t)req_cnt;
-+	cmd_pkt->entry_status = 0;
-+
-+	/* Build command packet. */
-+	req->current_outstanding_cmd = handle;
-+	req->outstanding_cmds[handle] = sp;
-+	sp->handle = handle;
-+	cmd->host_scribble = (unsigned char *)(unsigned long)handle;
-+	req->cnt -= req_cnt;
-+
-+	/* Adjust ring index. */
-+	wmb();
-+	req->ring_index++;
-+	if (req->ring_index == req->length) {
-+		req->ring_index = 0;
-+		req->ring_ptr = req->ring;
-+	} else {
-+		req->ring_ptr++;
-+	}
-+
-+	/* Set chip new ring index. */
-+	wrt_reg_dword(req->req_q_in, req->ring_index);
-+
-+	spin_unlock_irqrestore(lock, flags);
-+	return QLA_SUCCESS;
-+
-+queuing_error_fcp_cmnd:
-+	dma_pool_free(ha->fcp_cmnd_dma_pool, ctx->fcp_cmnd, ctx->fcp_cmnd_dma);
-+queuing_error:
-+	if (tot_dsds)
-+		scsi_dma_unmap(cmd);
-+
-+	if (sp->u.scmd.ct6_ctx) {
-+		mempool_free(sp->u.scmd.ct6_ctx, ha->ctx_mempool);
-+		sp->u.scmd.ct6_ctx = NULL;
-+	}
-+	spin_unlock_irqrestore(lock, flags);
-+
-+	return QLA_FUNCTION_FAILED;
-+}
-+
-+/**********************************************
-+ * edif update/delete sa_index list functions *
-+ **********************************************/
-+
-+/* clear the edif_indx_list for this port */
-+void qla_edif_list_del(fc_port_t *fcport)
-+{
-+	struct edif_list_entry *indx_lst;
-+	struct edif_list_entry *tindx_lst;
-+	struct list_head *indx_list = &fcport->edif.edif_indx_list;
-+	unsigned long flags = 0;
-+
-+	list_for_each_entry_safe(indx_lst, tindx_lst, indx_list, next) {
-+		spin_lock_irqsave(&fcport->edif.indx_list_lock, flags);
-+		list_del(&indx_lst->next);
-+		spin_unlock_irqrestore(&fcport->edif.indx_list_lock, flags);
-+		kfree(indx_lst);
-+	}
-+}
-+
-+/******************
-+ * SADB functions *
-+ ******************/
-+
-+/* allocate/retrieve an sa_index for a given spi */
-+static uint16_t qla_edif_sadb_get_sa_index(fc_port_t *fcport,
-+		struct qla_sa_update_frame *sa_frame)
-+{
-+	struct edif_sa_index_entry *entry;
-+	struct list_head *sa_list;
-+	uint16_t sa_index;
-+	int dir = sa_frame->flags & SAU_FLG_TX;
-+	int slot = 0;
-+	int free_slot = -1;
-+	scsi_qla_host_t *vha = fcport->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	unsigned long flags = 0;
-+	uint16_t nport_handle = fcport->loop_id;
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x3063,
-+	    "%s: entry  fc_port: %p, nport_handle: 0x%x\n",
-+	    __func__, fcport, nport_handle);
-+
-+	if (dir)
-+		sa_list = &ha->sadb_tx_index_list;
-+	else
-+		sa_list = &ha->sadb_rx_index_list;
-+
-+	entry = qla_edif_sadb_find_sa_index_entry(nport_handle, sa_list);
-+	if (!entry) {
-+		if ((sa_frame->flags & (SAU_FLG_TX | SAU_FLG_INV)) == SAU_FLG_INV) {
-+			ql_dbg(ql_dbg_edif, vha, 0x3063,
-+			    "%s: rx delete request with no entry\n", __func__);
-+			return RX_DELETE_NO_EDIF_SA_INDEX;
-+		}
-+
-+		/* if there is no entry for this nport, add one */
-+		entry = kzalloc((sizeof(struct edif_sa_index_entry)), GFP_ATOMIC);
-+		if (!entry)
-+			return INVALID_EDIF_SA_INDEX;
-+
-+		sa_index = qla_edif_get_sa_index_from_freepool(fcport, dir);
-+		if (sa_index == INVALID_EDIF_SA_INDEX) {
-+			kfree(entry);
-+			return INVALID_EDIF_SA_INDEX;
-+		}
-+
-+		INIT_LIST_HEAD(&entry->next);
-+		entry->handle = nport_handle;
-+		entry->fcport = fcport;
-+		entry->sa_pair[0].spi = sa_frame->spi;
-+		entry->sa_pair[0].sa_index = sa_index;
-+		entry->sa_pair[1].spi = 0;
-+		entry->sa_pair[1].sa_index = INVALID_EDIF_SA_INDEX;
-+		spin_lock_irqsave(&ha->sadb_lock, flags);
-+		list_add_tail(&entry->next, sa_list);
-+		spin_unlock_irqrestore(&ha->sadb_lock, flags);
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+"%s: Created new sadb entry for nport_handle 0x%x, spi 0x%x, returning sa_index %d\n",
-+		    __func__, nport_handle, sa_frame->spi, sa_index);
-+		return sa_index;
-+	} else {
-+		spin_lock_irqsave(&ha->sadb_lock, flags);
-+
-+		/* see if we already have an entry for this spi */
-+		for (slot = 0; slot < 2; slot++) {
-+			if (entry->sa_pair[slot].sa_index == INVALID_EDIF_SA_INDEX) {
-+				free_slot = slot;
-+			} else {
-+				if (entry->sa_pair[slot].spi == sa_frame->spi) {
-+					spin_unlock_irqrestore(&ha->sadb_lock, flags);
-+					ql_dbg(ql_dbg_edif, vha, 0x3063,
-+"%s: sadb slot %d entry for lid 0x%x, spi 0x%x found, sa_index %d\n",
-+					    __func__, slot, entry->handle,
-+					    sa_frame->spi, entry->sa_pair[slot].sa_index);
-+					return entry->sa_pair[slot].sa_index;
-+				}
-+			}
-+		}
-+		spin_unlock_irqrestore(&ha->sadb_lock, flags);
-+
-+		/* both slots are used */
-+		if (free_slot == -1) {
-+			ql_dbg(ql_dbg_edif, vha, 0x3063,
-+			    "%s: WARNING: No free slots in sadb for nport_handle 0x%x, spi: 0x%x\n",
-+			    __func__, entry->handle, sa_frame->spi);
-+			ql_dbg(ql_dbg_edif, vha, 0x3063,
-+			    "%s:   Slot 0  spi: 0x%x  sa_index: %d\n",
-+			    __func__, entry->sa_pair[0].spi,
-+			    entry->sa_pair[0].sa_index);
-+			ql_dbg(ql_dbg_edif, vha, 0x3063,
-+			    "%s:   Slot 1  spi: 0x%x  sa_index: %d\n",
-+			    __func__, entry->sa_pair[1].spi,
-+			    entry->sa_pair[1].sa_index);
-+
-+			return INVALID_EDIF_SA_INDEX;
-+		}
-+
-+		/* there is at least one free slot, use it */
-+		sa_index = qla_edif_get_sa_index_from_freepool(fcport, dir);
-+		if (sa_index == INVALID_EDIF_SA_INDEX) {
-+			ql_dbg(ql_dbg_edif, fcport->vha, 0x3063,
-+			    "%s: empty freepool!!\n", __func__);
-+			return INVALID_EDIF_SA_INDEX;
-+		}
-+
-+		spin_lock_irqsave(&ha->sadb_lock, flags);
-+		entry->sa_pair[free_slot].spi = sa_frame->spi;
-+		entry->sa_pair[free_slot].sa_index = sa_index;
-+		spin_unlock_irqrestore(&ha->sadb_lock, flags);
-+		ql_dbg(ql_dbg_edif, fcport->vha, 0x3063,
-+"%s: sadb slot %d entry for nport_handle 0x%x, spi 0x%x added, returning sa_index %d\n",
-+		    __func__, free_slot, entry->handle, sa_frame->spi,
-+		    sa_index);
-+
-+		return sa_index;
-+	}
-+}
-+
-+/* release any sadb entries -- only done at teardown */
-+void qla_edif_sadb_release(struct qla_hw_data *ha)
-+{
-+	struct list_head *pos;
-+	struct list_head *tmp;
-+	struct edif_sa_index_entry *entry;
-+
-+	list_for_each_safe(pos, tmp, &ha->sadb_rx_index_list) {
-+		entry = list_entry(pos, struct edif_sa_index_entry, next);
-+		list_del(&entry->next);
-+		kfree(entry);
-+	}
-+
-+	list_for_each_safe(pos, tmp, &ha->sadb_tx_index_list) {
-+		entry = list_entry(pos, struct edif_sa_index_entry, next);
-+		list_del(&entry->next);
-+		kfree(entry);
-+	}
-+}
-+
-+/**************************
-+ * sadb freepool functions
-+ **************************/
-+
-+/* build the rx and tx sa_index free pools -- only done at fcport init */
-+int qla_edif_sadb_build_free_pool(struct qla_hw_data *ha)
-+{
-+	ha->edif_tx_sa_id_map =
-+	    kcalloc(BITS_TO_LONGS(EDIF_NUM_SA_INDEX), sizeof(long), GFP_KERNEL);
-+
-+	if (!ha->edif_tx_sa_id_map) {
-+		ql_log_pci(ql_log_fatal, ha->pdev, 0x0009,
-+		    "Unable to allocate memory for sadb tx.\n");
-+		return -ENOMEM;
-+	}
-+
-+	ha->edif_rx_sa_id_map =
-+	    kcalloc(BITS_TO_LONGS(EDIF_NUM_SA_INDEX), sizeof(long), GFP_KERNEL);
-+	if (!ha->edif_rx_sa_id_map) {
-+		kfree(ha->edif_tx_sa_id_map);
-+		ha->edif_tx_sa_id_map = NULL;
-+		ql_log_pci(ql_log_fatal, ha->pdev, 0x0009,
-+		    "Unable to allocate memory for sadb rx.\n");
-+		return -ENOMEM;
-+	}
-+	return 0;
-+}
-+
-+/* release the free pool - only done during fcport teardown */
-+void qla_edif_sadb_release_free_pool(struct qla_hw_data *ha)
-+{
-+	kfree(ha->edif_tx_sa_id_map);
-+	ha->edif_tx_sa_id_map = NULL;
-+	kfree(ha->edif_rx_sa_id_map);
-+	ha->edif_rx_sa_id_map = NULL;
-+}
-+
-+static void __chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha,
-+		fc_port_t *fcport, uint32_t handle, uint16_t sa_index)
-+{
-+	struct edif_list_entry *edif_entry;
-+	struct edif_sa_ctl *sa_ctl;
-+	uint16_t delete_sa_index = INVALID_EDIF_SA_INDEX;
-+	unsigned long flags = 0;
-+	uint16_t nport_handle = fcport->loop_id;
-+	uint16_t cached_nport_handle;
-+
-+	spin_lock_irqsave(&fcport->edif.indx_list_lock, flags);
-+	edif_entry = qla_edif_list_find_sa_index(fcport, nport_handle);
-+	if (!edif_entry) {
-+		spin_unlock_irqrestore(&fcport->edif.indx_list_lock, flags);
-+		return;		/* no pending delete for this handle */
-+	}
-+
-+	/*
-+	 * check for no pending delete for this index or iocb does not
-+	 * match rx sa_index
-+	 */
-+	if (edif_entry->delete_sa_index == INVALID_EDIF_SA_INDEX ||
-+	    edif_entry->update_sa_index != sa_index) {
-+		spin_unlock_irqrestore(&fcport->edif.indx_list_lock, flags);
-+		return;
-+	}
-+
-+	/*
-+	 * wait until we have seen at least EDIF_DELAY_COUNT transfers before
-+	 * queueing RX delete
-+	 */
-+	if (edif_entry->count++ < EDIF_RX_DELETE_FILTER_COUNT) {
-+		spin_unlock_irqrestore(&fcport->edif.indx_list_lock, flags);
-+		return;
-+	}
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x5033,
-+"%s: invalidating delete_sa_index,  update_sa_index: 0x%x sa_index: 0x%x, delete_sa_index: 0x%x\n",
-+	    __func__, edif_entry->update_sa_index, sa_index,
-+	    edif_entry->delete_sa_index);
-+
-+	delete_sa_index = edif_entry->delete_sa_index;
-+	edif_entry->delete_sa_index = INVALID_EDIF_SA_INDEX;
-+	cached_nport_handle = edif_entry->handle;
-+	spin_unlock_irqrestore(&fcport->edif.indx_list_lock, flags);
-+
-+	/* sanity check on the nport handle */
-+	if (nport_handle != cached_nport_handle) {
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+"%s: POST SA DELETE nport_handle mismatch: lid: 0x%x, edif_entry nph: 0x%x\n",
-+		    __func__, nport_handle, cached_nport_handle);
-+	}
-+
-+	/* find the sa_ctl for the delete and schedule the delete */
-+	sa_ctl = qla_edif_find_sa_ctl_by_index(fcport, delete_sa_index, 0);
-+	if (sa_ctl) {
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "%s: POST SA DELETE sa_ctl: %p, index recvd %d\n",
-+		    __func__, sa_ctl, sa_index);
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "delete index %d, update index: %d, nport handle: 0x%x, handle: 0x%x\n",
-+		    delete_sa_index,
-+		    edif_entry->update_sa_index, nport_handle, handle);
-+
-+		sa_ctl->flags = EDIF_SA_CTL_FLG_DEL;
-+		set_bit(EDIF_SA_CTL_REPL, &sa_ctl->state);
-+		qla_post_sa_replace_work(fcport->vha, fcport,
-+		    nport_handle, sa_ctl);
-+	} else {
-+		ql_dbg(ql_dbg_edif, vha, 0x3063,
-+		    "%s: POST SA DELETE sa_ctl not found for delete_sa_index: %d\n",
-+		    __func__, delete_sa_index);
-+	}
-+}
-+
-+void qla_chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha,
-+		srb_t *sp, struct sts_entry_24xx *sts24)
-+{
-+	fc_port_t *fcport = sp->fcport;
-+	/* sa_index used by this iocb */
-+	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
-+	uint32_t handle;
-+
-+	handle = (uint32_t)LSW(sts24->handle);
-+
-+	/* find out if this status iosb is for a scsi read */
-+	if (cmd->sc_data_direction != DMA_FROM_DEVICE)
-+		return;
-+
-+	return __chk_edif_rx_sa_delete_pending(vha, fcport, handle,
-+	   le16_to_cpu(sts24->edif_sa_index));
-+}
-+
-+void qlt_chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha, fc_port_t *fcport,
-+		struct ctio7_from_24xx *pkt)
-+{
-+	__chk_edif_rx_sa_delete_pending(vha, fcport,
-+	    pkt->handle, le16_to_cpu(pkt->edif_sa_index));
-+}
-+
-+void qla_parse_auth_els_ctl(struct srb *sp)
-+{
-+	struct qla_els_pt_arg *a = &sp->u.bsg_cmd.u.els_arg;
-+	struct bsg_job *bsg_job = sp->u.bsg_cmd.bsg_job;
-+	struct fc_bsg_request *request = bsg_job->request;
-+	struct qla_bsg_auth_els_request *p =
-+	    (struct qla_bsg_auth_els_request *)bsg_job->request;
-+
-+	a->tx_len = a->tx_byte_count = sp->remap.req.len;
-+	a->tx_addr = sp->remap.req.dma;
-+	a->rx_len = a->rx_byte_count = sp->remap.rsp.len;
-+	a->rx_addr = sp->remap.rsp.dma;
-+
-+	if (p->e.sub_cmd == SEND_ELS_REPLY) {
-+		a->control_flags = p->e.extra_control_flags << 13;
-+		a->rx_xchg_address = cpu_to_le32(p->e.extra_rx_xchg_address);
-+		if (p->e.extra_control_flags == BSG_CTL_FLAG_LS_ACC)
-+			a->els_opcode = ELS_LS_ACC;
-+		else if (p->e.extra_control_flags == BSG_CTL_FLAG_LS_RJT)
-+			a->els_opcode = ELS_LS_RJT;
-+	}
-+	a->did = sp->fcport->d_id;
-+	a->els_opcode =  request->rqst_data.h_els.command_code;
-+	a->nport_handle = cpu_to_le16(sp->fcport->loop_id);
-+	a->vp_idx = sp->vha->vp_idx;
-+}
-+
-+int qla_edif_process_els(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
-+{
-+	struct fc_bsg_request *bsg_request = bsg_job->request;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+	fc_port_t *fcport = NULL;
-+	struct qla_hw_data *ha = vha->hw;
-+	srb_t *sp;
-+	int rval =  (DID_ERROR << 16);
-+	port_id_t d_id;
-+	struct qla_bsg_auth_els_request *p =
-+	    (struct qla_bsg_auth_els_request *)bsg_job->request;
-+
-+	d_id.b.al_pa = bsg_request->rqst_data.h_els.port_id[2];
-+	d_id.b.area = bsg_request->rqst_data.h_els.port_id[1];
-+	d_id.b.domain = bsg_request->rqst_data.h_els.port_id[0];
-+
-+	/* find matching d_id in fcport list */
-+	fcport = qla2x00_find_fcport_by_pid(vha, &d_id);
-+	if (!fcport) {
-+		ql_dbg(ql_dbg_edif, vha, 0x911a,
-+		    "%s fcport not find online portid=%06x.\n",
-+		    __func__, d_id.b24);
-+		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		return -EIO;
-+	}
-+
-+	if (qla_bsg_check(vha, bsg_job, fcport))
-+		return 0;
-+
-+	if (fcport->loop_id == FC_NO_LOOP_ID) {
-+		ql_dbg(ql_dbg_edif, vha, 0x910d,
-+		    "%s ELS code %x, no loop id.\n", __func__,
-+		    bsg_request->rqst_data.r_els.els_code);
-+		SET_DID_STATUS(bsg_reply->result, DID_BAD_TARGET);
-+		return -ENXIO;
-+	}
-+
-+	if (!vha->flags.online) {
-+		ql_log(ql_log_warn, vha, 0x7005, "Host not online.\n");
-+		SET_DID_STATUS(bsg_reply->result, DID_BAD_TARGET);
-+		rval = -EIO;
-+		goto done;
-+	}
-+
-+	/* pass through is supported only for ISP 4Gb or higher */
-+	if (!IS_FWI2_CAPABLE(ha)) {
-+		ql_dbg(ql_dbg_user, vha, 0x7001,
-+		    "ELS passthru not supported for ISP23xx based adapters.\n");
-+		SET_DID_STATUS(bsg_reply->result, DID_BAD_TARGET);
-+		rval = -EPERM;
-+		goto done;
-+	}
-+
-+	/* Alloc SRB structure */
-+	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
-+	if (!sp) {
-+		ql_dbg(ql_dbg_user, vha, 0x7004,
-+		    "Failed get sp pid=%06x\n", fcport->d_id.b24);
-+		rval = -ENOMEM;
-+		SET_DID_STATUS(bsg_reply->result, DID_IMM_RETRY);
-+		goto done;
-+	}
-+
-+	sp->remap.req.len = bsg_job->request_payload.payload_len;
-+	sp->remap.req.buf = dma_pool_alloc(ha->purex_dma_pool,
-+	    GFP_KERNEL, &sp->remap.req.dma);
-+	if (!sp->remap.req.buf) {
-+		ql_dbg(ql_dbg_user, vha, 0x7005,
-+		    "Failed allocate request dma len=%x\n",
-+		    bsg_job->request_payload.payload_len);
-+		rval = -ENOMEM;
-+		SET_DID_STATUS(bsg_reply->result, DID_IMM_RETRY);
-+		goto done_free_sp;
-+	}
-+
-+	sp->remap.rsp.len = bsg_job->reply_payload.payload_len;
-+	sp->remap.rsp.buf = dma_pool_alloc(ha->purex_dma_pool,
-+	    GFP_KERNEL, &sp->remap.rsp.dma);
-+	if (!sp->remap.rsp.buf) {
-+		ql_dbg(ql_dbg_user, vha, 0x7006,
-+		    "Failed allocate response dma len=%x\n",
-+		    bsg_job->reply_payload.payload_len);
-+		rval = -ENOMEM;
-+		SET_DID_STATUS(bsg_reply->result, DID_IMM_RETRY);
-+		goto done_free_remap_req;
-+	}
-+	/*
-+	 * ql_print_bsg_sglist(ql_dbg_user, vha, 0x7008,
-+	 *     "SG bsg->request", &bsg_job->request_payload);
-+	 */
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, sp->remap.req.buf,
-+	    sp->remap.req.len);
-+	sp->remap.remapped = true;
-+	/*
-+	 * ql_dump_buffer(ql_dbg_edif, vha, 0x70e0,
-+	 * sp->remap.req.buf, bsg_job->request_payload.payload_len);
-+	 */
-+
-+	sp->type = SRB_ELS_CMD_HST_NOLOGIN;
-+	sp->name = "SPCN_BSG_HST_NOLOGIN";
-+	sp->u.bsg_cmd.bsg_job = bsg_job;
-+	qla_parse_auth_els_ctl(sp);
-+
-+	sp->free = qla2x00_bsg_sp_free;
-+	sp->done = qla2x00_bsg_job_done;
-+
-+	rval = qla2x00_start_sp(sp);
-+
-+	ql_dbg(ql_dbg_edif, vha, 0x700a,
-+	    "%s %s %8phN xchg %x ctlflag %x hdl %x reqlen %xh bsg ptr %p\n",
-+	    __func__, sc_to_str(p->e.sub_cmd), fcport->port_name,
-+	    p->e.extra_rx_xchg_address, p->e.extra_control_flags,
-+	    sp->handle, sp->remap.req.len, bsg_job);
-+
-+	if (rval != QLA_SUCCESS) {
-+		ql_log(ql_log_warn, vha, 0x700e,
-+		    "qla2x00_start_sp failed = %d\n", rval);
-+		SET_DID_STATUS(bsg_reply->result, DID_IMM_RETRY);
-+		rval = -EIO;
-+		goto done_free_remap_rsp;
-+	}
-+	return rval;
-+
-+done_free_remap_rsp:
-+	dma_pool_free(ha->purex_dma_pool, sp->remap.rsp.buf,
-+	    sp->remap.rsp.dma);
-+done_free_remap_req:
-+	dma_pool_free(ha->purex_dma_pool, sp->remap.req.buf,
-+	    sp->remap.req.dma);
-+done_free_sp:
-+	qla2x00_rel_sp(sp);
-+
-+done:
-+	return rval;
-+}
-+
-+void qla_edif_sess_down(struct scsi_qla_host *vha, struct fc_port *sess)
-+{
-+	if (sess->edif.app_sess_online && vha->e_dbell.db_flags & EDB_ACTIVE) {
-+		ql_dbg(ql_dbg_disc, vha, 0xf09c,
-+			"%s: sess %8phN send port_offline event\n",
-+			__func__, sess->port_name);
-+		sess->edif.app_sess_online = 0;
-+		qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_SESSION_SHUTDOWN,
-+		    sess->d_id.b24, 0, sess);
-+		qla2x00_post_aen_work(vha, FCH_EVT_PORT_OFFLINE, sess->d_id.b24);
-+	}
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_edif.h b/drivers/scsi/qla2xxx/qla_edif.h
-new file mode 100644
-index 000000000000..e753d026ff48
---- /dev/null
-+++ b/drivers/scsi/qla2xxx/qla_edif.h
-@@ -0,0 +1,160 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * Marvell Fibre Channel HBA Driver
-+ * Copyright (c)  2021    Marvell
-+ */
-+#ifndef __QLA_EDIF_H
-+#define __QLA_EDIF_H
-+
-+struct qla_scsi_host;
-+
-+#define EDIF_MAX_INDEX	2048
-+struct edif_sa_ctl {
-+	struct list_head next;
-+	uint16_t	del_index;
-+	uint16_t	index;
-+	uint16_t	slot;
-+	uint16_t	flags;
-+#define	EDIF_SA_CTL_FLG_REPL		BIT_0
-+#define	EDIF_SA_CTL_FLG_DEL		BIT_1
-+#define EDIF_SA_CTL_FLG_CLEANUP_DEL BIT_4
-+	// Invalidate Index bit and mirrors QLA_SA_UPDATE_FLAGS_DELETE
-+	unsigned long   state;
-+#define EDIF_SA_CTL_USED	1	/* Active Sa update  */
-+#define EDIF_SA_CTL_PEND	2	/* Waiting for slot */
-+#define EDIF_SA_CTL_REPL	3	/* Active Replace and Delete */
-+#define EDIF_SA_CTL_DEL		4	/* Delete Pending */
-+	struct fc_port	*fcport;
-+	struct bsg_job *bsg_job;
-+	struct qla_sa_update_frame sa_frame;
-+};
-+
-+enum enode_flags_t {
-+	ENODE_ACTIVE = 0x1,	// means that app has started
-+};
-+
-+struct pur_core {
-+	enum enode_flags_t	enode_flags;
-+	spinlock_t		pur_lock;       /* protects list */
-+	struct  list_head	head;
-+};
-+
-+enum db_flags_t {
-+	EDB_ACTIVE = 0x1,
-+};
-+
-+struct edif_dbell {
-+	enum db_flags_t		db_flags;
-+	spinlock_t		db_lock;	/* protects list */
-+	struct  list_head	head;
-+	struct	completion	dbell;		/* doorbell ring */
-+};
-+
-+#define IS_FAST_CAPABLE(ha)     ((IS_QLA27XX(ha) || IS_QLA28XX(ha)) && \
-+		((ha)->fw_attributes_ext[0] & BIT_5))
-+
-+#define SA_UPDATE_IOCB_TYPE            0x71    /* Security Association Update IOCB entry */
-+struct sa_update_28xx {
-+	uint8_t entry_type;             /* Entry type. */
-+	uint8_t entry_count;            /* Entry count. */
-+	uint8_t sys_define;             /* System Defined. */
-+	uint8_t entry_status;           /* Entry Status. */
-+
-+	uint32_t handle;                /* IOCB System handle. */
-+
-+	union {
-+		__le16 nport_handle;  /* in: N_PORT handle. */
-+		__le16 comp_sts;              /* out: completion status */
-+#define CS_PORT_EDIF_SUPP_NOT_RDY 0x64
-+#define CS_PORT_EDIF_INV_REQ      0x66
-+	} u;
-+	uint8_t vp_index;
-+	uint8_t reserved_1;
-+	uint8_t port_id[3];
-+	uint8_t flags;
-+#define SA_FLAG_INVALIDATE BIT_0
-+#define SA_FLAG_TX	   BIT_1 // 1=tx, 0=rx
-+
-+	uint8_t sa_key[32];     /* 256 bit key */
-+	__le32 salt;
-+	__le32 spi;
-+	uint8_t sa_control;
-+#define SA_CNTL_ENC_FCSP        (1 << 3)
-+#define SA_CNTL_ENC_OPD         (2 << 3)
-+#define SA_CNTL_ENC_MSK         (3 << 3)  // mask bits 4,3
-+#define SA_CNTL_AES_GMAC	(1 << 2)
-+#define SA_CNTL_KEY256          (2 << 0)
-+#define SA_CNTL_KEY128          0
-+
-+	uint8_t reserved_2;
-+	__le16 sa_index;   // reserve: bit 11-15
-+	__le16 old_sa_info;
-+	__le16 new_sa_info;
-+};
-+
-+#define        NUM_ENTRIES     256
-+#define        MAX_PAYLOAD     1024
-+#define        PUR_GET         1
-+#define        PUR_WRITE       2
-+
-+#define	LSTATE_OFF	1	// node not on list
-+#define	LSTATE_ON	2	// node on list
-+#define	LSTATE_DEST	3	// node destoyed
-+
-+struct dinfo {
-+	int		nodecnt;	// create seq count
-+	int		lstate;		// node's list state
-+};
-+
-+struct pur_ninfo {
-+	unsigned int	pur_pend:1;
-+	port_id_t       pur_sid;
-+	port_id_t	pur_did;
-+	uint8_t		vp_idx;
-+	short           pur_bytes_rcvd;
-+	unsigned short  pur_nphdl;
-+	unsigned int    pur_rx_xchg_address;
-+};
-+
-+struct fclistevent {
-+	uint32_t	fclistnum;	// # of fclist info entries
-+	uint8_t		fclistinfo[64];	// TODO: get info & change to struct
-+};
-+
-+struct asyncevent {
-+	uint32_t	nasync;		// async event number
-+	uint8_t		asyncinfo[64];	// TODO: get info & change to struct
-+};
-+
-+struct plogievent {
-+	uint32_t	plogi_did;	// d_id of tgt to fionish plogi
-+	uint8_t		plogiinfo[64];	// TODO: get info & change to struct
-+};
-+
-+struct purexevent {
-+	struct  pur_ninfo	pur_info;
-+	unsigned char		*msgp;
-+	u32			msgp_len;
-+};
-+
-+#define	N_UNDEF		0	// node not used/defined
-+#define	N_PUREX		1	// purex info
-+#define	N_FCPORT	2	// fcport list info
-+#define	N_ASYNC		3	// async event info
-+#define	N_AUTH		4	// plogi auth info
-+
-+struct enode {
-+	struct list_head	list;
-+	struct dinfo		dinfo;
-+	uint32_t		ntype;
-+	union {
-+		struct purexevent	purexinfo;
-+		struct fclistevent	fclistinfo;
-+		struct asyncevent	asyncinfo;
-+		struct plogievent	plogiinfo;
-+
-+	} u;
-+};
-+
-+#define EDIF_STOP(_sess) (_sess->edif.enable && _sess->edif.app_stop)
-+#endif	/* __QLA_EDIF_H */
-diff --git a/drivers/scsi/qla2xxx/qla_edif_bsg.h b/drivers/scsi/qla2xxx/qla_edif_bsg.h
-new file mode 100644
-index 000000000000..9c05b78253e7
---- /dev/null
-+++ b/drivers/scsi/qla2xxx/qla_edif_bsg.h
-@@ -0,0 +1,225 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * Marvell Fibre Channel HBA Driver
-+ * Copyright (C)  2018-	    Marvell
-+ *
-+ */
-+#ifndef __QLA_EDIF_BSG_H
-+#define __QLA_EDIF_BSG_H
-+
-+/* BSG Vendor specific commands */
-+#define	ELS_MAX_PAYLOAD		1024
-+#ifndef	WWN_SIZE
-+#define WWN_SIZE		8       /* Size of WWPN, WWN & WWNN */
-+#endif
-+#define	VND_CMD_APP_RESERVED_SIZE	32
-+
-+enum auth_els_sub_cmd {
-+	SEND_ELS = 0,
-+	SEND_ELS_REPLY,
-+	PULL_ELS,
-+};
-+
-+struct extra_auth_els {
-+	enum auth_els_sub_cmd sub_cmd;
-+	uint32_t        extra_rx_xchg_address; // FC_ELS_ACC | FC_ELS_RJT
-+	uint8_t         extra_control_flags;
-+#define BSG_CTL_FLAG_INIT       0
-+#define BSG_CTL_FLAG_LS_ACC     1
-+#define BSG_CTL_FLAG_LS_RJT     2
-+#define BSG_CTL_FLAG_TRM        3
-+	uint8_t         extra_rsvd[3];
-+} __packed;
-+
-+struct qla_bsg_auth_els_request {
-+	struct fc_bsg_request r;
-+	struct extra_auth_els e;
-+};
-+
-+struct qla_bsg_auth_els_reply {
-+	struct fc_bsg_reply r;
-+	uint32_t rx_xchg_address;
-+};
-+
-+struct app_id {
-+	int		app_vid;
-+	uint8_t		app_key[32];
-+} __packed;
-+
-+struct app_start_reply {
-+	uint32_t	host_support_edif;	// 0=disable, 1=enable
-+	uint32_t	edif_enode_active;	// 0=disable, 1=enable
-+	uint32_t	edif_edb_active;	// 0=disable, 1=enable
-+	uint32_t	reserved[VND_CMD_APP_RESERVED_SIZE];
-+} __packed;
-+
-+struct app_start {
-+	struct app_id	app_info;
-+	uint32_t	prli_to;	// timer plogi/prli to complete
-+	uint32_t	key_shred;	// timer before shredding old keys
-+	uint8_t         app_start_flags;
-+	uint8_t         reserved[VND_CMD_APP_RESERVED_SIZE - 1];
-+} __packed;
-+
-+struct app_stop {
-+	struct app_id	app_info;
-+	char		buf[16];
-+} __packed;
-+
-+struct app_plogi_reply {
-+	uint32_t	prli_status;  // 0=failed, 1=succeeded
-+	uint8_t		reserved[VND_CMD_APP_RESERVED_SIZE];
-+} __packed;
-+
-+#define	RECFG_TIME	1
-+#define	RECFG_BYTES	2
-+
-+struct app_rekey_cfg {
-+	struct app_id app_info;
-+	uint8_t	 rekey_mode;	// 1=time based (in sec), 2: bytes based
-+	port_id_t d_id;		// 000 = all entries; anything else
-+				//    specifies a specific d_id
-+	uint8_t	 force;		// 0=no force to change config if
-+				//    existing rekey mode changed,
-+				// 1=force to re auth and change
-+				//    existing rekey mode if different
-+	union {
-+		int64_t bytes;	// # of bytes before rekey, 0=no limit
-+		int64_t time;	// # of seconds before rekey, 0=no time limit
-+	} rky_units;
-+
-+	uint8_t		reserved[VND_CMD_APP_RESERVED_SIZE];
-+} __packed;
-+
-+struct app_pinfo_req {
-+	struct app_id app_info;
-+	uint8_t	 num_ports;	// space allocated for app_pinfo_reply_t.ports[]
-+	port_id_t remote_pid;
-+	uint8_t	 reserved[VND_CMD_APP_RESERVED_SIZE];
-+} __packed;
-+
-+struct app_pinfo {
-+	port_id_t remote_pid;   // contains device d_id
-+	uint8_t	remote_wwpn[WWN_SIZE];
-+	uint8_t	remote_type;	// contains TGT or INIT
-+#define	VND_CMD_RTYPE_UNKNOWN		0
-+#define	VND_CMD_RTYPE_TARGET		1
-+#define	VND_CMD_RTYPE_INITIATOR		2
-+	uint8_t	remote_state;	// 0=bad, 1=good
-+	uint8_t	auth_state;	// 0=auth N/A (unsecured fcport),
-+				// 1=auth req'd
-+				// 2=auth done
-+	uint8_t	rekey_mode;	// 1=time based, 2=bytes based
-+	int64_t	rekey_count;	// # of times device rekeyed
-+	int64_t	rekey_config_value;     // orig rekey value (MB or sec)
-+					// (0 for no limit)
-+	int64_t	rekey_consumed_value;   // remaining MB/time,0=no limit
-+
-+	uint8_t	reserved[VND_CMD_APP_RESERVED_SIZE];
-+} __packed;
-+
-+/* AUTH States */
-+#define	VND_CMD_AUTH_STATE_UNDEF	0
-+#define	VND_CMD_AUTH_STATE_SESSION_SHUTDOWN	1
-+#define	VND_CMD_AUTH_STATE_NEEDED	2
-+#define	VND_CMD_AUTH_STATE_ELS_RCVD	3
-+#define	VND_CMD_AUTH_STATE_SAUPDATE_COMPL 4
-+
-+struct app_pinfo_reply {
-+	uint8_t		port_count;	// possible value => 0 to 255
-+	uint8_t		reserved[VND_CMD_APP_RESERVED_SIZE];
-+	struct app_pinfo ports[0];	// variable - specified by app_pinfo_req num_ports
-+} __packed;
-+
-+struct app_sinfo_req {
-+	struct app_id	app_info;
-+	uint8_t		num_ports;	// app space alloc for elem[]
-+	uint8_t		reserved[VND_CMD_APP_RESERVED_SIZE];
-+} __packed;
-+
-+// temp data - actual data TBD
-+struct app_sinfo {
-+	uint8_t	remote_wwpn[WWN_SIZE];
-+	int64_t	rekey_count;	// # of times device rekeyed
-+	uint8_t	rekey_mode;	// 1=time based (in sec), 2: bytes based
-+	int64_t	tx_bytes;	// orig rekey value
-+	int64_t	rx_bytes;	// amount left
-+} __packed;
-+
-+struct app_stats_reply {
-+	uint8_t		elem_count;	// possible value => 0 to 255
-+	struct app_sinfo elem[0];	// specified by app_sinfo_t elem_count
-+} __packed;
-+
-+struct qla_sa_update_frame {
-+	struct app_id	app_info;
-+	uint16_t	flags;
-+#define SAU_FLG_INV		0x01	// delete key
-+#define SAU_FLG_TX		0x02	// 1=tx, 0 = rx
-+#define SAU_FLG_FORCE_DELETE	0x08	// force RX sa_index delete
-+#define SAU_FLG_GMAC_MODE	0x20	// GMAC mode is cleartext for the IO (i.e. NULL encryption)
-+#define SAU_FLG_KEY128          0x40
-+#define SAU_FLG_KEY256          0x80
-+	uint16_t        fast_sa_index:10,
-+			reserved:6;
-+	uint32_t	salt;
-+	uint32_t	spi;
-+	uint8_t		sa_key[32];
-+	uint8_t		node_name[WWN_SIZE];
-+	uint8_t		port_name[WWN_SIZE];
-+	port_id_t	port_id;
-+} __packed;
-+
-+// used for edif mgmt bsg interface
-+#define	QL_VND_SC_UNDEF		0
-+#define	QL_VND_SC_SA_UPDATE	1	// sa key info
-+#define	QL_VND_SC_APP_START	2	// app started event
-+#define	QL_VND_SC_APP_STOP	3	// app stopped event
-+#define	QL_VND_SC_AUTH_OK	4	// plogi auth'd ok
-+#define	QL_VND_SC_AUTH_FAIL	5	// plogi auth bad
-+#define	QL_VND_SC_REKEY_CONFIG	6	// auth rekey set parms (time/data)
-+#define	QL_VND_SC_GET_FCINFO	7	// get port info
-+#define	QL_VND_SC_GET_STATS	8	// get edif stats
-+
-+/* Application interface data structure for rtn data */
-+#define	EXT_DEF_EVENT_DATA_SIZE	64
-+struct edif_app_dbell {
-+	uint32_t	event_code;
-+	uint32_t	event_data_size;
-+	union  {
-+		port_id_t	port_id;
-+		uint8_t		event_data[EXT_DEF_EVENT_DATA_SIZE];
-+	};
-+} __packed;
-+
-+struct edif_sa_update_aen {
-+	port_id_t port_id;
-+	uint32_t key_type;	/* Tx (1) or RX (2) */
-+	uint32_t status;	/* 0 succes,  1 failed, 2 timeout , 3 error */
-+	uint8_t		reserved[16];
-+} __packed;
-+
-+#define	QL_VND_SA_STAT_SUCCESS	0
-+#define	QL_VND_SA_STAT_FAILED	1
-+#define	QL_VND_SA_STAT_TIMEOUT	2
-+#define	QL_VND_SA_STAT_ERROR	3
-+
-+#define	QL_VND_RX_SA_KEY	1
-+#define	QL_VND_TX_SA_KEY	2
-+
-+/* App defines for plogi auth'd ok and plogi auth bad requests */
-+struct auth_complete_cmd {
-+	struct app_id app_info;
-+#define PL_TYPE_WWPN    1
-+#define PL_TYPE_DID     2
-+	uint32_t    type;
-+	union {
-+		uint8_t  wwpn[WWN_SIZE];
-+		port_id_t d_id;
-+	} u;
-+	uint32_t reserved[VND_CMD_APP_RESERVED_SIZE];
-+} __packed;
-+
-+#define RX_DELAY_DELETE_TIMEOUT 20			// 30 second timeout
-+
-+#endif	/* QLA_EDIF_BSG_H */
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index 49df418030e4..71e5c00011f0 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -82,10 +82,11 @@ struct port_database_24xx {
- 	uint8_t port_name[WWN_SIZE];
- 	uint8_t node_name[WWN_SIZE];
- 
--	uint8_t reserved_3[4];
-+	uint8_t reserved_3[2];
-+	uint16_t nvme_first_burst_size;
- 	uint16_t prli_nvme_svc_param_word_0;	/* Bits 15-0 of word 0 */
- 	uint16_t prli_nvme_svc_param_word_3;	/* Bits 15-0 of word 3 */
--	uint16_t nvme_first_burst_size;
-+	uint8_t secure_login;
- 	uint8_t reserved_4[14];
- };
- 
-@@ -489,6 +490,9 @@ struct cmd_type_6 {
- 	struct scsi_lun lun;		/* FCP LUN (BE). */
- 
- 	__le16	control_flags;		/* Control flags. */
-+#define CF_NEW_SA			BIT_12
-+#define CF_EN_EDIF			BIT_9
-+#define CF_ADDITIONAL_PARAM_BLK		BIT_8
- #define CF_DIF_SEG_DESCR_ENABLE		BIT_3
- #define CF_DATA_SEG_DESCR_ENABLE	BIT_2
- #define CF_READ_DATA			BIT_1
-@@ -611,6 +615,7 @@ struct sts_entry_24xx {
- 	union {
- 		__le16 reserved_1;
- 		__le16	nvme_rsp_pyld_len;
-+		__le16 edif_sa_index;	 /* edif sa_index used for initiator read data */
- 	};
- 
- 	__le16	state_flags;		/* State flags. */
-@@ -896,6 +901,7 @@ struct logio_entry_24xx {
- #define LCF_FCP2_OVERRIDE	BIT_9	/* Set/Reset word 3 of PRLI. */
- #define LCF_CLASS_2		BIT_8	/* Enable class 2 during PLOGI. */
- #define LCF_FREE_NPORT		BIT_7	/* Release NPORT handle after LOGO. */
-+#define LCF_COMMON_FEAT		BIT_7	/* PLOGI - Set Common Features Field */
- #define LCF_EXPL_LOGO		BIT_6	/* Perform an explicit LOGO. */
- #define LCF_NVME_PRLI		BIT_6   /* Perform NVME FC4 PRLI */
- #define LCF_SKIP_PRLI		BIT_5	/* Skip PRLI after PLOGI. */
-@@ -920,6 +926,8 @@ struct logio_entry_24xx {
- 	uint8_t rsp_size;		/* Response size in 32bit words. */
- 
- 	__le32	io_parameter[11];	/* General I/O parameters. */
-+#define LIO_COMM_FEAT_FCSP	BIT_21
-+#define LIO_COMM_FEAT_CIO	BIT_31
- #define LSC_SCODE_NOLINK	0x01
- #define LSC_SCODE_NOIOCB	0x02
- #define LSC_SCODE_NOXCB		0x03
-@@ -938,6 +946,9 @@ struct logio_entry_24xx {
- #define LSC_SCODE_NOFLOGI_ACC	0x1F
- };
- 
-+#define PRLO_TYPE_CODE_EXT 0x10
-+#define PRLO_CMD_LEN 20
-+
- #define TSK_MGMT_IOCB_TYPE	0x14
- struct tsk_mgmt_entry {
- 	uint8_t entry_type;		/* Entry type. */
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index fae5cae6f0a8..5f34454de593 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -12,6 +12,7 @@
-  * Global Function Prototypes in qla_init.c source file.
-  */
- extern int qla2x00_initialize_adapter(scsi_qla_host_t *);
-+extern int qla24xx_post_prli_work(struct scsi_qla_host *vha, fc_port_t *fcport);
- 
- extern int qla2100_pci_config(struct scsi_qla_host *);
- extern int qla2300_pci_config(struct scsi_qla_host *);
-@@ -130,6 +131,24 @@ void qla24xx_free_purex_item(struct purex_item *item);
- extern bool qla24xx_risc_firmware_invalid(uint32_t *);
- void qla_init_iocb_limit(scsi_qla_host_t *);
- 
-+struct edif_list_entry;
-+
-+struct edif_list_entry *qla_edif_list_find_sa_index(fc_port_t *fcport, uint16_t handle);
-+void qla_edif_list_del(fc_port_t *fcport);
-+int edif_sadb_delete_sa_index(fc_port_t *fcport, uint16_t nport_handle, uint16_t sa_index);
-+void qla_edif_sadb_release(struct qla_hw_data *ha);
-+int qla_edif_sadb_build_free_pool(struct qla_hw_data *ha);
-+void qla_edif_sadb_release_free_pool(struct qla_hw_data *ha);
-+void qla_chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha,
-+		srb_t *sp, struct sts_entry_24xx *sts24);
-+void qlt_chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha, fc_port_t *fcport,
-+		struct ctio7_from_24xx *ctio);
-+
-+void qla2x00_release_all_sadb(struct scsi_qla_host *vha, struct fc_port *fcport);
-+int qla_edif_process_els(scsi_qla_host_t *vha, struct bsg_job *bsgjob);
-+void qla_edif_sess_down(struct scsi_qla_host *vha, struct fc_port *sess);
-+const char *sc_to_str(uint16_t cmd);
-+
- 
- /*
-  * Global Data in qla_os.c source file.
-@@ -176,6 +195,7 @@ extern int qla2xuseresexchforels;
- extern int ql2xexlogins;
- extern int ql2xdifbundlinginternalbuffers;
- extern int ql2xfulldump_on_mpifail;
-+extern int ql2xsecenable;
- extern int ql2xenforce_iocb_limit;
- extern int ql2xabts_wait_nvme;
- 
-@@ -238,6 +258,8 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha,
- 			       struct purex_item *pkt);
- void qla_pci_set_eeh_busy(struct scsi_qla_host *);
- void qla_schedule_eeh_work(struct scsi_qla_host *);
-+struct edif_sa_ctl *qla_edif_find_sa_ctl_by_index(fc_port_t *fcport,
-+						  int index, int dir);
- 
- /*
-  * Global Functions in qla_mid.c source file.
-@@ -282,7 +304,10 @@ extern int  qla2x00_vp_abort_isp(scsi_qla_host_t *);
- /*
-  * Global Function Prototypes in qla_iocb.c source file.
-  */
--
-+void qla_els_pt_iocb(struct scsi_qla_host *vha,
-+	struct els_entry_24xx *pkt, struct qla_els_pt_arg *a);
-+cont_a64_entry_t *qla2x00_prep_cont_type1_iocb(scsi_qla_host_t *vha,
-+		struct req_que *que);
- extern uint16_t qla2x00_calc_iocbs_32(uint16_t);
- extern uint16_t qla2x00_calc_iocbs_64(uint16_t);
- extern void qla2x00_build_scsi_iocbs_32(srb_t *, cmd_entry_t *, uint16_t);
-@@ -312,6 +337,8 @@ extern int qla24xx_walk_and_build_prot_sglist(struct qla_hw_data *, srb_t *,
- 	struct dsd64 *, uint16_t, struct qla_tgt_cmd *);
- extern int qla24xx_get_one_block_sg(uint32_t, struct qla2_sgx *, uint32_t *);
- extern int qla24xx_configure_prot_mode(srb_t *, uint16_t *);
-+extern int qla24xx_issue_sa_replace_iocb(scsi_qla_host_t *vha,
-+	struct qla_work_evt *e);
- 
- /*
-  * Global Function Prototypes in qla_mbx.c source file.
-@@ -579,6 +606,9 @@ qla2xxx_msix_rsp_q_hs(int irq, void *dev_id);
- fc_port_t *qla2x00_find_fcport_by_loopid(scsi_qla_host_t *, uint16_t);
- fc_port_t *qla2x00_find_fcport_by_wwpn(scsi_qla_host_t *, u8 *, u8);
- fc_port_t *qla2x00_find_fcport_by_nportid(scsi_qla_host_t *, port_id_t *, u8);
-+void qla24xx_queue_purex_item(scsi_qla_host_t *vha, struct purex_item *pkt,
-+	void (*process_item)(struct scsi_qla_host *, struct purex_item *));
-+void __qla_consume_iocb(struct scsi_qla_host *vha, void **pkt, struct rsp_que **rsp);
- 
- /*
-  * Global Function Prototypes in qla_sup.c source file.
-@@ -641,6 +671,8 @@ extern int qla2xxx_get_vpd_field(scsi_qla_host_t *, char *, char *, size_t);
- 
- extern void qla2xxx_flash_npiv_conf(scsi_qla_host_t *);
- extern int qla24xx_read_fcp_prio_cfg(scsi_qla_host_t *);
-+int __qla_copy_purex_to_buffer(struct scsi_qla_host *vha, void **pkt,
-+	struct rsp_que **rsp, u8 *buf, u32 buf_len);
- 
- /*
-  * Global Function Prototypes in qla_dbg.c source file.
-@@ -882,6 +914,9 @@ extern int qla2x00_issue_iocb_timeout(scsi_qla_host_t *, void *,
- 	dma_addr_t, size_t, uint32_t);
- extern int qla2x00_get_idma_speed(scsi_qla_host_t *, uint16_t,
- 	uint16_t *, uint16_t *);
-+extern int qla24xx_sadb_update(struct bsg_job *bsg_job);
-+extern int qla_post_sa_replace_work(struct scsi_qla_host *vha,
-+	 fc_port_t *fcport, uint16_t nport_handle, struct edif_sa_ctl *sa_ctl);
- 
- /* 83xx related functions */
- void qla83xx_fw_dump(scsi_qla_host_t *vha);
-@@ -926,6 +961,7 @@ extern int qla_set_exchoffld_mem_cfg(scsi_qla_host_t *);
- extern void qlt_handle_abts_recv(struct scsi_qla_host *, struct rsp_que *,
- 	response_t *);
- 
-+struct scsi_qla_host *qla_find_host_by_d_id(struct scsi_qla_host *vha, be_id_t d_id);
- int qla24xx_async_notify_ack(scsi_qla_host_t *, fc_port_t *,
- 	struct imm_ntfy_from_isp *, int);
- void qla24xx_do_nack_work(struct scsi_qla_host *, struct qla_work_evt *);
-@@ -938,7 +974,7 @@ extern struct fc_port *qlt_find_sess_invalidate_other(scsi_qla_host_t *,
- void qla24xx_delete_sess_fn(struct work_struct *);
- void qlt_unknown_atio_work_fn(struct work_struct *);
- void qlt_update_host_map(struct scsi_qla_host *, port_id_t);
--void qlt_remove_target_resources(struct qla_hw_data *);
-+void qla_remove_hostmap(struct qla_hw_data *ha);
- void qlt_clr_qp_table(struct scsi_qla_host *vha);
- void qlt_set_mode(struct scsi_qla_host *);
- int qla2x00_set_data_rate(scsi_qla_host_t *vha, uint16_t mode);
-@@ -953,6 +989,30 @@ extern void qla_nvme_abort_process_comp_status
- 
- /* nvme.c */
- void qla_nvme_unregister_remote_port(struct fc_port *fcport);
-+
-+/* qla_edif.c */
-+fc_port_t *qla2x00_find_fcport_by_pid(scsi_qla_host_t *vha, port_id_t *id);
-+void qla_edb_eventcreate(scsi_qla_host_t *vha, uint32_t dbtype, uint32_t data, uint32_t data2,
-+		fc_port_t *fcport);
-+void qla_edb_stop(scsi_qla_host_t *vha);
-+ssize_t edif_doorbell_show(struct device *dev, struct device_attribute *attr, char *buf);
-+void ql_print_bsg_sglist(uint level, scsi_qla_host_t *vha, uint id, char *str,
-+		struct bsg_buffer *p);
-+int32_t qla_edif_app_mgmt(struct bsg_job *bsg_job);
-+int qla2x00_check_rdp_test(uint32_t cmd, uint32_t port);
-+void qla_enode_init(scsi_qla_host_t *vha);
-+void qla_enode_stop(scsi_qla_host_t *vha);
-+void qla_edif_flush_sa_ctl_lists(fc_port_t *fcport);
-+void qla_edb_init(scsi_qla_host_t *vha);
-+void qla_edif_timer_check(scsi_qla_host_t *vha);
-+int qla28xx_start_scsi_edif(srb_t *sp);
-+void qla24xx_sa_update_iocb(srb_t *sp, struct sa_update_28xx *sa_update_iocb);
-+void qla24xx_sa_replace_iocb(srb_t *sp, struct sa_update_28xx *sa_update_iocb);
-+void qla24xx_auth_els(scsi_qla_host_t *vha, void **pkt, struct rsp_que **rsp);
-+void qla28xx_sa_update_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
-+		struct sa_update_28xx *pkt);
-+void qla_parse_auth_els_ctl(struct srb *sp);
-+
- void qla_handle_els_plogi_done(scsi_qla_host_t *vha, struct event_arg *ea);
- 
- #define QLA2XX_HW_ERROR			BIT_0
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 5b6e04a91a18..99fb330053ae 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -2826,6 +2826,10 @@ void qla24xx_handle_gpsc_event(scsi_qla_host_t *vha, struct event_arg *ea)
- 	if (fcport->disc_state == DSC_DELETE_PEND)
- 		return;
- 
-+	/* We will figure-out what happen after AUTH completes */
-+	if (fcport->disc_state == DSC_LOGIN_AUTH_PEND)
-+		return;
-+
- 	if (ea->sp->gen2 != fcport->login_gen) {
- 		/* target side must have changed it. */
- 		ql_dbg(ql_dbg_disc, vha, 0x20d3,
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 0de250570e39..d26f8f723ff6 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -34,7 +34,6 @@ static int qla2x00_restart_isp(scsi_qla_host_t *);
- static struct qla_chip_state_84xx *qla84xx_get_chip(struct scsi_qla_host *);
- static int qla84xx_init_chip(scsi_qla_host_t *);
- static int qla25xx_init_queues(struct qla_hw_data *);
--static int qla24xx_post_prli_work(struct scsi_qla_host*, fc_port_t *);
- static void qla24xx_handle_gpdb_event(scsi_qla_host_t *vha,
- 				      struct event_arg *ea);
- static void qla24xx_handle_prli_done_event(struct scsi_qla_host *,
-@@ -343,8 +342,25 @@ qla2x00_async_login(struct scsi_qla_host *vha, fc_port_t *fcport,
- 	qla2x00_init_timer(sp, qla2x00_get_async_timeout(vha) + 2);
- 
- 	sp->done = qla2x00_async_login_sp_done;
--	if (N2N_TOPO(fcport->vha->hw) && fcport_is_bigger(fcport))
-+	if (N2N_TOPO(fcport->vha->hw) && fcport_is_bigger(fcport)) {
- 		lio->u.logio.flags |= SRB_LOGIN_PRLI_ONLY;
-+	} else {
-+		if (vha->hw->flags.edif_enabled) {
-+			if (fcport->edif.non_secured_login == 0) {
-+				lio->u.logio.flags |=
-+					(SRB_LOGIN_FCSP | SRB_LOGIN_SKIP_PRLI);
-+				ql_dbg(ql_dbg_disc, vha, 0x2072,
-+	"Async-login: w/ FCSP %8phC hdl=%x, loopid=%x portid=%06x\n",
-+				    fcport->port_name, sp->handle,
-+				    fcport->loop_id,
-+				    fcport->d_id.b24);
-+			}
-+		} else {
-+			lio->u.logio.flags |= SRB_LOGIN_COND_PLOGI;
-+		}
-+	}
-+	if (fcport->edif.enable)
-+		fcport->edif.prli_to = EDIF_PRLI_TO;    // prli wait
- 	else
- 		lio->u.logio.flags |= SRB_LOGIN_COND_PLOGI;
- 
-@@ -378,7 +394,7 @@ static void qla2x00_async_logout_sp_done(srb_t *sp, int res)
- {
- 	sp->fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
- 	sp->fcport->login_gen++;
--	qlt_logo_completion_handler(sp->fcport, res);
-+	qlt_logo_completion_handler(sp->fcport, sp->u.iocb_cmd.u.logio.data[0]);
- 	sp->free(sp);
- }
- 
-@@ -404,10 +420,10 @@ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
- 	sp->done = qla2x00_async_logout_sp_done;
- 
- 	ql_dbg(ql_dbg_disc, vha, 0x2070,
--	    "Async-logout - hdl=%x loop-id=%x portid=%02x%02x%02x %8phC.\n",
-+	    "Async-logout - hdl=%x loop-id=%x portid=%02x%02x%02x %8phC explicit %d.\n",
- 	    sp->handle, fcport->loop_id, fcport->d_id.b.domain,
- 		fcport->d_id.b.area, fcport->d_id.b.al_pa,
--		fcport->port_name);
-+		fcport->port_name, fcport->explicit_logout);
- 
- 	rval = qla2x00_start_sp(sp);
- 	if (rval != QLA_SUCCESS)
-@@ -429,6 +445,7 @@ qla2x00_async_prlo_done(struct scsi_qla_host *vha, fc_port_t *fcport,
- 	/* Don't re-login in target mode */
- 	if (!fcport->tgt_session)
- 		qla2x00_mark_device_lost(vha, fcport, 1);
-+	fcport->prlo_rc = data[0];
- 	qlt_logo_completion_handler(fcport, data[0]);
- }
- 
-@@ -466,9 +483,9 @@ qla2x00_async_prlo(struct scsi_qla_host *vha, fc_port_t *fcport)
- 	sp->done = qla2x00_async_prlo_sp_done;
- 
- 	ql_dbg(ql_dbg_disc, vha, 0x2070,
--	    "Async-prlo - hdl=%x loop-id=%x portid=%02x%02x%02x.\n",
-+	    "Async-prlo - hdl=%x loop-id=%x portid=%02x%02x%02x explicit %d.\n",
- 	    sp->handle, fcport->loop_id, fcport->d_id.b.domain,
--	    fcport->d_id.b.area, fcport->d_id.b.al_pa);
-+	    fcport->d_id.b.area, fcport->d_id.b.al_pa, fcport->explicit_prlo);
- 
- 	rval = qla2x00_start_sp(sp);
- 	if (rval != QLA_SUCCESS)
-@@ -479,7 +496,6 @@ qla2x00_async_prlo(struct scsi_qla_host *vha, fc_port_t *fcport)
- done_free_sp:
- 	sp->free(sp);
- done:
--	fcport->flags &= ~FCF_ASYNC_ACTIVE;
- 	return rval;
- }
- 
-@@ -656,7 +672,7 @@ static int qla2x00_find_new_loop_id(scsi_qla_host_t *vha, fc_port_t *dev)
- 	spin_unlock_irqrestore(&ha->vport_slock, flags);
- 
- 	if (rval == QLA_SUCCESS)
--		ql_dbg(ql_dbg_disc, dev->vha, 0x2086,
-+		ql_dbg(ql_dbg_disc + ql_dbg_verbose, dev->vha, 0x2086,
- 		       "Assigning new loopid=%x, portid=%x.\n",
- 		       dev->loop_id, dev->d_id.b24);
- 	else
-@@ -692,11 +708,11 @@ static void qla24xx_handle_gnl_done_event(scsi_qla_host_t *vha,
- 
- 	fcport = ea->fcport;
- 	ql_dbg(ql_dbg_disc, vha, 0xffff,
--	    "%s %8phC DS %d LS rc %d %d login %d|%d rscn %d|%d lid %d\n",
-+	    "%s %8phC DS %d LS rc %d %d login %d|%d rscn %d|%d lid %d edif %d\n",
- 	    __func__, fcport->port_name, fcport->disc_state,
- 	    fcport->fw_login_state, ea->rc,
- 	    fcport->login_gen, fcport->last_login_gen,
--	    fcport->rscn_gen, fcport->last_rscn_gen, vha->loop_id);
-+	    fcport->rscn_gen, fcport->last_rscn_gen, vha->loop_id, fcport->edif.enable);
- 
- 	if (fcport->disc_state == DSC_DELETE_PEND)
- 		return;
-@@ -822,6 +838,13 @@ static void qla24xx_handle_gnl_done_event(scsi_qla_host_t *vha,
- 				qla2x00_post_async_adisc_work(vha, fcport,
- 				    data);
- 				break;
-+			case DSC_LS_PLOGI_COMP:
-+				if (vha->hw->flags.edif_enabled) {
-+					/* check to see if he support Secure */
-+					qla24xx_post_gpdb_work(vha, fcport, 0);
-+					break;
-+				}
-+				fallthrough;
- 			case DSC_LS_PORT_UNAVAIL:
- 			default:
- 				if (fcport->loop_id == FC_NO_LOOP_ID) {
-@@ -1191,7 +1214,7 @@ static void qla24xx_async_gpdb_sp_done(srb_t *sp, int res)
- 	sp->free(sp);
- }
- 
--static int qla24xx_post_prli_work(struct scsi_qla_host *vha, fc_port_t *fcport)
-+int qla24xx_post_prli_work(struct scsi_qla_host *vha, fc_port_t *fcport)
- {
- 	struct qla_work_evt *e;
- 
-@@ -1397,6 +1420,12 @@ void __qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
- 	ea->fcport->deleted = 0;
- 	ea->fcport->logout_on_delete = 1;
- 
-+	ql_dbg(ql_dbg_disc, vha, 0x20dc,
-+	    "%s:  %8phC login_succ %x , loop_id=%x, portid=%02x%02x%02x.\n",
-+	    __func__, ea->fcport->port_name, ea->fcport->login_succ,
-+	    ea->fcport->loop_id, ea->fcport->d_id.b.domain,
-+	    ea->fcport->d_id.b.area, ea->fcport->d_id.b.al_pa);
-+
- 	if (!ea->fcport->login_succ && !IS_SW_RESV_ADDR(ea->fcport->d_id)) {
- 		vha->fcport_count++;
- 		ea->fcport->login_succ = 1;
-@@ -1418,6 +1447,62 @@ void __qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
- 	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
- }
- 
-+static int	qla_chk_secure_login(scsi_qla_host_t	*vha, fc_port_t *fcport,
-+	struct port_database_24xx *pd)
-+{
-+	int rc = 0;
-+
-+	if (pd->secure_login) {
-+		ql_dbg(ql_dbg_disc, vha, 0x104d,
-+		    "Secure Login established on %8phC\n",
-+		    fcport->port_name);
-+		fcport->edif.secured_login = 1;
-+		fcport->edif.non_secured_login = 0;
-+		fcport->flags |= FCF_FCSP_DEVICE;
-+	} else {
-+		ql_dbg(ql_dbg_disc, vha, 0x104d,
-+		    "non-Secure Login %8phC",
-+		    fcport->port_name);
-+		fcport->edif.secured_login = 0;
-+		fcport->edif.non_secured_login = 1;
-+	}
-+	if (vha->hw->flags.edif_enabled) {
-+		if (fcport->flags & FCF_FCSP_DEVICE) {
-+			qla2x00_set_fcport_disc_state(fcport, DSC_LOGIN_AUTH_PEND);
-+			/* Start edif prli timer & ring doorbell for app */
-+			fcport->edif.rx_sa_set = 0;
-+			fcport->edif.tx_sa_set = 0;
-+			fcport->edif.rx_sa_pending = 0;
-+			fcport->edif.tx_sa_pending = 0;
-+			fcport->edif.rx_sa_selold = 1;
-+			fcport->edif.tx_sa_selold = 1;
-+
-+			qla2x00_post_aen_work(vha, FCH_EVT_PORT_ONLINE,
-+			    fcport->d_id.b24);
-+
-+			if (vha->e_dbell.db_flags ==  EDB_ACTIVE) {
-+				ql_dbg(ql_dbg_disc, vha, 0x20ef,
-+				    "%s %d %8phC EDIF: post DB_AUTH: AUTH needed\n",
-+				    __func__, __LINE__, fcport->port_name);
-+				fcport->edif.app_started = 1;
-+				fcport->edif.app_sess_online = 1;
-+
-+				qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_NEEDED,
-+				    fcport->d_id.b24, 0, fcport);
-+			}
-+
-+			rc = 1;
-+		} else {
-+			ql_dbg(ql_dbg_disc, vha, 0x2117,
-+			    "%s %d %8phC post prli\n",
-+			    __func__, __LINE__, fcport->port_name);
-+			qla24xx_post_prli_work(vha, fcport);
-+			rc = 1;
-+		}
-+	}
-+	return rc;
-+}
-+
- static
- void qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
- {
-@@ -1460,8 +1545,11 @@ void qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
- 	case PDS_PRLI_COMPLETE:
- 		__qla24xx_parse_gpdb(vha, fcport, pd);
- 		break;
--	case PDS_PLOGI_PENDING:
- 	case PDS_PLOGI_COMPLETE:
-+		if (qla_chk_secure_login(vha, fcport, pd))
-+			return;
-+		fallthrough;
-+	case PDS_PLOGI_PENDING:
- 	case PDS_PRLI_PENDING:
- 	case PDS_PRLI2_PENDING:
- 		/* Set discovery state back to GNL to Relogin attempt */
-@@ -2053,26 +2141,38 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
- 		 * force a relogin attempt via implicit LOGO, PLOGI, and PRLI
- 		 * requests.
- 		 */
--		if (NVME_TARGET(vha->hw, ea->fcport)) {
--			ql_dbg(ql_dbg_disc, vha, 0x2117,
--				"%s %d %8phC post prli\n",
--				__func__, __LINE__, ea->fcport->port_name);
--			qla24xx_post_prli_work(vha, ea->fcport);
--		} else {
--			ql_dbg(ql_dbg_disc, vha, 0x20ea,
--			    "%s %d %8phC LoopID 0x%x in use with %06x. post gpdb\n",
--			    __func__, __LINE__, ea->fcport->port_name,
--			    ea->fcport->loop_id, ea->fcport->d_id.b24);
--
-+		if (vha->hw->flags.edif_enabled) {
- 			set_bit(ea->fcport->loop_id, vha->hw->loop_id_map);
- 			spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
- 			ea->fcport->chip_reset = vha->hw->base_qpair->chip_reset;
- 			ea->fcport->logout_on_delete = 1;
- 			ea->fcport->send_els_logo = 0;
--			ea->fcport->fw_login_state = DSC_LS_PRLI_COMP;
-+			ea->fcport->fw_login_state = DSC_LS_PLOGI_COMP;
- 			spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
- 
- 			qla24xx_post_gpdb_work(vha, ea->fcport, 0);
-+		} else {
-+			if (NVME_TARGET(vha->hw, fcport)) {
-+				ql_dbg(ql_dbg_disc, vha, 0x2117,
-+				    "%s %d %8phC post prli\n",
-+				    __func__, __LINE__, fcport->port_name);
-+				qla24xx_post_prli_work(vha, fcport);
-+			} else {
-+				ql_dbg(ql_dbg_disc, vha, 0x20ea,
-+				    "%s %d %8phC LoopID 0x%x in use with %06x. post gpdb\n",
-+				    __func__, __LINE__, fcport->port_name,
-+				    fcport->loop_id, fcport->d_id.b24);
-+
-+				set_bit(fcport->loop_id, vha->hw->loop_id_map);
-+				spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
-+				fcport->chip_reset = vha->hw->base_qpair->chip_reset;
-+				fcport->logout_on_delete = 1;
-+				fcport->send_els_logo = 0;
-+				fcport->fw_login_state = DSC_LS_PRLI_COMP;
-+				spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
-+
-+				qla24xx_post_gpdb_work(vha, fcport, 0);
-+			}
- 		}
- 		break;
- 	case MBS_COMMAND_ERROR:
-@@ -3877,7 +3977,8 @@ qla2x00_setup_chip(scsi_qla_host_t *vha)
- 		}
- 
- 		/* Enable PUREX PASSTHRU */
--		if (ql2xrdpenable || ha->flags.scm_supported_f)
-+		if (ql2xrdpenable || ha->flags.scm_supported_f ||
-+		    ha->flags.edif_enabled)
- 			qla25xx_set_els_cmds_supported(vha);
- 	} else
- 		goto failed;
-@@ -4062,7 +4163,7 @@ qla24xx_update_fw_options(scsi_qla_host_t *vha)
- 	}
- 
- 	/* Move PUREX, ABTS RX & RIDA to ATIOQ */
--	if (ql2xmvasynctoatio &&
-+	if (ql2xmvasynctoatio && !ha->flags.edif_enabled &&
- 	    (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha))) {
- 		if (qla_tgt_mode_enabled(vha) ||
- 		    qla_dual_mode_enabled(vha))
-@@ -4090,7 +4191,8 @@ qla24xx_update_fw_options(scsi_qla_host_t *vha)
- 			ha->fw_options[2] &= ~BIT_8;
- 	}
- 
--	if (ql2xrdpenable || ha->flags.scm_supported_f)
-+	if (ql2xrdpenable || ha->flags.scm_supported_f ||
-+	    ha->flags.edif_enabled)
- 		ha->fw_options[1] |= ADD_FO1_ENABLE_PUREX_IOCB;
- 
- 	/* Enable Async 8130/8131 events -- transceiver insertion/removal */
-@@ -5073,6 +5175,17 @@ qla2x00_alloc_fcport(scsi_qla_host_t *vha, gfp_t flags)
- 	INIT_LIST_HEAD(&fcport->sess_cmd_list);
- 	spin_lock_init(&fcport->sess_cmd_lock);
- 
-+	spin_lock_init(&fcport->edif.sa_list_lock);
-+	INIT_LIST_HEAD(&fcport->edif.tx_sa_list);
-+	INIT_LIST_HEAD(&fcport->edif.rx_sa_list);
-+
-+	if (vha->e_dbell.db_flags == EDB_ACTIVE)
-+		fcport->edif.app_started = 1;
-+
-+	// edif rx delete data structure
-+	spin_lock_init(&fcport->edif.indx_list_lock);
-+	INIT_LIST_HEAD(&fcport->edif.edif_indx_list);
-+
- 	return fcport;
- }
- 
-@@ -5086,8 +5199,13 @@ qla2x00_free_fcport(fc_port_t *fcport)
- 
- 		fcport->ct_desc.ct_sns = NULL;
- 	}
-+
-+	qla_edif_flush_sa_ctl_lists(fcport);
- 	list_del(&fcport->list);
- 	qla2x00_clear_loop_id(fcport);
-+
-+	qla_edif_list_del(fcport);
-+
- 	kfree(fcport);
- }
- 
-@@ -5206,6 +5324,12 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 			    "LOOP READY.\n");
- 			ha->flags.fw_init_done = 1;
- 
-+			if (vha->hw->flags.edif_enabled &&
-+			    vha->e_dbell.db_flags != EDB_ACTIVE) {
-+				/* wake up authentication app to get ready */
-+				qla2x00_post_aen_work(vha, FCH_EVT_PORT_ONLINE, 0);
-+			}
-+
- 			/*
- 			 * Process any ATIO queue entries that came in
- 			 * while we weren't online.
-@@ -5225,7 +5349,8 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 		    "%s *** FAILED ***.\n", __func__);
- 	} else {
- 		ql_dbg(ql_dbg_disc, vha, 0x206b,
--		    "%s: exiting normally.\n", __func__);
-+		    "%s: exiting normally. local port wwpn %8phN id %06x)\n",
-+		    __func__, vha->port_name, vha->d_id.b24);
- 	}
- 
- 	/* Restore state if a resync event occurred during processing */
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 38b5bdde2405..75ec1e22179a 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -118,7 +118,7 @@ qla2x00_prep_cont_type0_iocb(struct scsi_qla_host *vha)
-  *
-  * Returns a pointer to the continuation type 1 IOCB packet.
-  */
--static inline cont_a64_entry_t *
-+cont_a64_entry_t *
- qla2x00_prep_cont_type1_iocb(scsi_qla_host_t *vha, struct req_que *req)
- {
- 	cont_a64_entry_t *cont_pkt;
-@@ -1605,6 +1605,9 @@ qla24xx_start_scsi(srb_t *sp)
- 	struct scsi_qla_host *vha = sp->vha;
- 	struct qla_hw_data *ha = vha->hw;
- 
-+	if (sp->fcport->edif.enable)
-+		return qla28xx_start_scsi_edif(sp);
-+
- 	/* Setup device pointers. */
- 	req = vha->req;
- 	rsp = req->rsp;
-@@ -1961,6 +1964,9 @@ qla2xxx_start_scsi_mq(srb_t *sp)
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_qpair *qpair = sp->qpair;
- 
-+	if (sp->fcport->edif.enable)
-+		return qla28xx_start_scsi_edif(sp);
-+
- 	/* Acquire qpair specific lock */
- 	spin_lock_irqsave(&qpair->qp_lock, flags);
- 
-@@ -2462,6 +2468,12 @@ qla24xx_login_iocb(srb_t *sp, struct logio_entry_24xx *logio)
- 			logio->control_flags |= cpu_to_le16(LCF_COND_PLOGI);
- 		if (lio->u.logio.flags & SRB_LOGIN_SKIP_PRLI)
- 			logio->control_flags |= cpu_to_le16(LCF_SKIP_PRLI);
-+		if (lio->u.logio.flags & SRB_LOGIN_FCSP) {
-+			logio->control_flags |=
-+			    cpu_to_le16(LCF_COMMON_FEAT | LCF_SKIP_PRLI);
-+			logio->io_parameter[0] =
-+			    cpu_to_le32(LIO_COMM_FEAT_FCSP | LIO_COMM_FEAT_CIO);
-+		}
- 	}
- 	logio->nport_handle = cpu_to_le16(sp->fcport->loop_id);
- 	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
-@@ -2802,7 +2814,7 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
- 		    (uint8_t *)els_iocb,
- 		    sizeof(*els_iocb));
- 	} else {
--		els_iocb->control_flags = cpu_to_le16(1 << 13);
-+		//els_iocb->control_flags = cpu_to_le16(1 << 13);
- 		els_iocb->tx_byte_count =
- 			cpu_to_le32(sizeof(struct els_logo_payload));
- 		put_unaligned_le64(elsio->u.els_logo.els_logo_pyld_dma,
-@@ -3102,6 +3114,44 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
- 	return rval;
- }
- 
-+/* it is assume qpair lock is held */
-+void qla_els_pt_iocb(struct scsi_qla_host *vha,
-+	struct els_entry_24xx *els_iocb,
-+	struct qla_els_pt_arg *a)
-+{
-+	els_iocb->entry_type = ELS_IOCB_TYPE;
-+	els_iocb->entry_count = 1;
-+	els_iocb->sys_define = 0;
-+	els_iocb->entry_status = 0;
-+	els_iocb->handle = QLA_SKIP_HANDLE;
-+	els_iocb->nport_handle = a->nport_handle;
-+	// no need for endiance conversion.
-+	els_iocb->rx_xchg_address = a->rx_xchg_address;
-+	els_iocb->tx_dsd_count = cpu_to_le16(1);
-+	els_iocb->vp_index = a->vp_idx;
-+	els_iocb->sof_type = EST_SOFI3;
-+	els_iocb->rx_dsd_count = cpu_to_le16(0);
-+	els_iocb->opcode = a->els_opcode;
-+
-+	els_iocb->d_id[0] = a->did.b.al_pa;
-+	els_iocb->d_id[1] = a->did.b.area;
-+	els_iocb->d_id[2] = a->did.b.domain;
-+	/* For SID the byte order is different than DID */
-+	els_iocb->s_id[1] = vha->d_id.b.al_pa;
-+	els_iocb->s_id[2] = vha->d_id.b.area;
-+	els_iocb->s_id[0] = vha->d_id.b.domain;
-+
-+	els_iocb->control_flags = cpu_to_le16(a->control_flags);
-+
-+	els_iocb->tx_byte_count = cpu_to_le32(a->tx_byte_count);
-+	els_iocb->tx_len = cpu_to_le32(a->tx_len);
-+	put_unaligned_le64(a->tx_addr, &els_iocb->tx_address);
-+
-+	els_iocb->rx_byte_count = cpu_to_le32(a->rx_byte_count);
-+	els_iocb->rx_len = cpu_to_le32(a->rx_len);
-+	put_unaligned_le64(a->rx_addr, &els_iocb->rx_address);
-+}
-+
- static void
- qla24xx_els_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
- {
-@@ -3696,6 +3746,16 @@ static void qla2x00_send_notify_ack_iocb(srb_t *sp,
- 	nack->u.isp24.srr_reject_code = 0;
- 	nack->u.isp24.srr_reject_code_expl = 0;
- 	nack->u.isp24.vp_index = ntfy->u.isp24.vp_index;
-+
-+	if (ntfy->u.isp24.status_subcode == ELS_PLOGI &&
-+	    (le16_to_cpu(ntfy->u.isp24.flags) & NOTIFY24XX_FLAGS_FCSP) &&
-+	    sp->vha->hw->flags.edif_enabled) {
-+		ql_dbg(ql_dbg_disc, sp->vha, 0x3074,
-+		    "%s PLOGI NACK sent with FC SECURITY bit, hdl=%x, loopid=%x, to pid %06x\n",
-+		    sp->name, sp->handle, sp->fcport->loop_id,
-+		    sp->fcport->d_id.b24);
-+		nack->u.isp24.flags |= cpu_to_le16(NOTIFY_ACK_FLAGS_FCSP);
-+	}
- }
- 
- /*
-@@ -3750,9 +3810,14 @@ static void
- qla24xx_prlo_iocb(srb_t *sp, struct logio_entry_24xx *logio)
- {
- 	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
--	logio->control_flags =
--	    cpu_to_le16(LCF_COMMAND_PRLO|LCF_IMPL_PRLO);
--
-+	if (sp->fcport->explicit_prlo) {
-+		logio->control_flags = cpu_to_le16(LCF_COMMAND_PRLO);
-+		logio->io_parameter[0] = cpu_to_le32(ELS_PRLO << 24|
-+		    PRLO_TYPE_CODE_EXT << 16 | PRLO_CMD_LEN);
-+	} else {
-+		logio->control_flags =
-+		   cpu_to_le16(LCF_COMMAND_PRLO|LCF_IMPL_PRLO);
-+	}
- 	logio->nport_handle = cpu_to_le16(sp->fcport->loop_id);
- 	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
- 	logio->port_id[1] = sp->fcport->d_id.b.area;
-@@ -3800,6 +3865,10 @@ qla2x00_start_sp(srb_t *sp)
- 	case SRB_ELS_CMD_HST:
- 		qla24xx_els_iocb(sp, pkt);
- 		break;
-+	case SRB_ELS_CMD_HST_NOLOGIN:
-+		qla_els_pt_iocb(sp->vha, pkt,  &sp->u.bsg_cmd.u.els_arg);
-+		((struct els_entry_24xx *)pkt)->handle = sp->handle;
-+		break;
- 	case SRB_CT_CMD:
- 		IS_FWI2_CAPABLE(ha) ?
- 		    qla24xx_ct_iocb(sp, pkt) :
-@@ -3847,6 +3916,12 @@ qla2x00_start_sp(srb_t *sp)
- 	case SRB_PRLO_CMD:
- 		qla24xx_prlo_iocb(sp, pkt);
- 		break;
-+	case SRB_SA_UPDATE:
-+		qla24xx_sa_update_iocb(sp, pkt);
-+		break;
-+	case SRB_SA_REPLACE:
-+		qla24xx_sa_replace_iocb(sp, pkt);
-+		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 6e8f737a4af3..b78da7657629 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -169,6 +169,128 @@ qla24xx_process_abts(struct scsi_qla_host *vha, struct purex_item *pkt)
- 	dma_free_coherent(&ha->pdev->dev, sizeof(*rsp_els), rsp_els, dma);
- }
- 
-+/* it is assumed pkt is the head iocb, not the continuation iocb */
-+void __qla_consume_iocb(struct scsi_qla_host *vha,
-+	void **pkt, struct rsp_que **rsp)
-+{
-+	struct rsp_que *rsp_q = *rsp;
-+	response_t *new_pkt;
-+	uint16_t entry_count_remaining;
-+	struct purex_entry_24xx *purex = *pkt;
-+
-+	entry_count_remaining = purex->entry_count;
-+	while (entry_count_remaining > 0) {
-+		new_pkt = rsp_q->ring_ptr;
-+		*pkt = new_pkt;
-+
-+		rsp_q->ring_index++;
-+		if (rsp_q->ring_index == rsp_q->length) {
-+			rsp_q->ring_index = 0;
-+			rsp_q->ring_ptr = rsp_q->ring;
-+		} else {
-+			rsp_q->ring_ptr++;
-+		}
-+
-+		new_pkt->signature = RESPONSE_PROCESSED;
-+		// flush signature
-+		wmb();
-+		--entry_count_remaining;
-+	}
-+}
-+
-+int __qla_copy_purex_to_buffer(struct scsi_qla_host *vha,
-+	void **pkt, struct rsp_que **rsp, u8 *buf, u32 buf_len)
-+{
-+	struct purex_entry_24xx *purex = *pkt;
-+	struct rsp_que *rsp_q = *rsp;
-+	sts_cont_entry_t *new_pkt;
-+	uint16_t no_bytes = 0, total_bytes = 0, pending_bytes = 0;
-+	uint16_t buffer_copy_offset = 0;
-+	uint16_t entry_count_remaining;
-+	u16 tpad;
-+
-+	entry_count_remaining = purex->entry_count;
-+	total_bytes = (le16_to_cpu(purex->frame_size) & 0x0FFF)
-+		- PURX_ELS_HEADER_SIZE;
-+
-+	/* end of payload may not end in 4bytes boundary.  Need to
-+	 * round up / pad for room to swap, before saving data
-+	 */
-+	tpad = roundup(total_bytes, 4);
-+
-+	if (buf_len < tpad) {
-+		ql_dbg(ql_dbg_async, vha, 0x5084,
-+		    "%s buffer is too small %d < %d\n",
-+		    __func__, buf_len, tpad);
-+		__qla_consume_iocb(vha, pkt, rsp);
-+		return -EIO;
-+	}
-+
-+	pending_bytes = total_bytes = tpad;
-+	no_bytes = (pending_bytes > sizeof(purex->els_frame_payload))  ?
-+	sizeof(purex->els_frame_payload) : pending_bytes;
-+
-+	memcpy(buf, &purex->els_frame_payload[0], no_bytes);
-+	buffer_copy_offset += no_bytes;
-+	pending_bytes -= no_bytes;
-+	--entry_count_remaining;
-+
-+	((response_t *)purex)->signature = RESPONSE_PROCESSED;
-+	// flush signature
-+	wmb();
-+
-+	do {
-+		while ((total_bytes > 0) && (entry_count_remaining > 0)) {
-+			new_pkt = (sts_cont_entry_t *)rsp_q->ring_ptr;
-+			*pkt = new_pkt;
-+
-+			if (new_pkt->entry_type != STATUS_CONT_TYPE) {
-+				ql_log(ql_log_warn, vha, 0x507a,
-+				    "Unexpected IOCB type, partial data 0x%x\n",
-+				    buffer_copy_offset);
-+				break;
-+			}
-+
-+			rsp_q->ring_index++;
-+			if (rsp_q->ring_index == rsp_q->length) {
-+				rsp_q->ring_index = 0;
-+				rsp_q->ring_ptr = rsp_q->ring;
-+			} else {
-+				rsp_q->ring_ptr++;
-+			}
-+			no_bytes = (pending_bytes > sizeof(new_pkt->data)) ?
-+			    sizeof(new_pkt->data) : pending_bytes;
-+			if ((buffer_copy_offset + no_bytes) <= total_bytes) {
-+				memcpy((buf + buffer_copy_offset), new_pkt->data,
-+				    no_bytes);
-+				buffer_copy_offset += no_bytes;
-+				pending_bytes -= no_bytes;
-+				--entry_count_remaining;
-+			} else {
-+				ql_log(ql_log_warn, vha, 0x5044,
-+				    "Attempt to copy more that we got, optimizing..%x\n",
-+				    buffer_copy_offset);
-+				memcpy((buf + buffer_copy_offset), new_pkt->data,
-+				    total_bytes - buffer_copy_offset);
-+			}
-+
-+			((response_t *)new_pkt)->signature = RESPONSE_PROCESSED;
-+			// flush signature
-+			wmb();
-+		}
-+
-+		if (pending_bytes != 0 || entry_count_remaining != 0) {
-+			ql_log(ql_log_fatal, vha, 0x508b,
-+			    "Dropping partial Data, underrun bytes = 0x%x, entry cnts 0x%x\n",
-+			    total_bytes, entry_count_remaining);
-+			return -EIO;
-+		}
-+	} while (entry_count_remaining > 0);
-+
-+	be32_to_cpu_array((u32 *)buf, (__be32 *)buf, total_bytes >> 2);
-+	return 0;
-+}
-+
- /**
-  * qla2100_intr_handler() - Process interrupts for the ISP2100 and ISP2200.
-  * @irq: interrupt number
-@@ -815,7 +937,7 @@ qla24xx_alloc_purex_item(scsi_qla_host_t *vha, uint16_t size)
- 	return item;
- }
- 
--static void
-+void
- qla24xx_queue_purex_item(scsi_qla_host_t *vha, struct purex_item *pkt,
- 			 void (*process_item)(struct scsi_qla_host *vha,
- 					      struct purex_item *pkt))
-@@ -1192,6 +1314,11 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
- 		ha->current_topology = 0;
- 		vha->link_down_time = 0;
- 
-+		// TODO: edif: Disable global SAs
-+		// TODO: edif: index's were moved (?) - invalidate new indexes
-+		// vha->hw->fast_tx_sa_index = INVALID_SAIDX;
-+		// vha->hw->fast_rx_sa_index = INVALID_SAIDX;
-+
- 		mbx = (IS_QLA81XX(ha) || IS_QLA8031(ha))
- 			? rd_reg_word(&reg24->mailbox4) : 0;
- 		mbx = (IS_P3P_TYPE(ha)) ? rd_reg_word(&reg82->mailbox_out[4])
-@@ -1330,6 +1457,13 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
- 		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
- 		break;
- 
-+// TODO: edif: index's were moved - invalidate new indexes
-+// TODO: edif: Is this case still valid?
-+//	case MBA_FAST_LOGIN:		/* Port database update */
-+//		// Disable global SAs
-+//		vha->hw->fast_tx_sa_index = INVALID_SAIDX;
-+//		vha->hw->fast_rx_sa_index = INVALID_SAIDX;
-+//		mb[2] &= 0xFF;
- 	case MBA_PORT_UPDATE:		/* Port database update */
- 		/*
- 		 * Handle only global and vn-port update events
-@@ -1727,6 +1861,9 @@ qla2x00_get_sp_from_handle(scsi_qla_host_t *vha, const char *func,
- 	srb_t *sp;
- 	uint16_t index;
- 
-+	if (pkt->handle == QLA_SKIP_HANDLE)
-+		return NULL;
-+
- 	index = LSW(pkt->handle);
- 	if (index >= req->num_outstanding_cmds) {
- 		ql_log(ql_log_warn, vha, 0x5031,
-@@ -1971,7 +2108,7 @@ qla2x00_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- }
- 
- static void
--qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
-+qla24xx_els_ct_entry(scsi_qla_host_t *v, struct req_que *req,
-     struct sts_entry_24xx *pkt, int iocb_type)
- {
- 	struct els_sts_entry_24xx *ese = (struct els_sts_entry_24xx *)pkt;
-@@ -1982,18 +2119,62 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 	struct fc_bsg_reply *bsg_reply;
- 	uint16_t comp_status;
- 	uint32_t fw_status[3];
--	int res;
-+	int res, logit = 1;
- 	struct srb_iocb *els;
-+	uint n;
-+	scsi_qla_host_t *vha;
-+	struct els_sts_entry_24xx *e = (struct els_sts_entry_24xx *)pkt;
- 
--	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
-+	sp = qla2x00_get_sp_from_handle(v, func, req, pkt);
- 	if (!sp)
- 		return;
-+	bsg_job = sp->u.bsg_job;
-+	vha = sp->vha;
- 
- 	type = NULL;
-+
-+	comp_status = fw_status[0] = le16_to_cpu(pkt->comp_status);
-+	fw_status[1] = le32_to_cpu(((struct els_sts_entry_24xx *)pkt)->error_subcode_1);
-+	fw_status[2] = le32_to_cpu(((struct els_sts_entry_24xx *)pkt)->error_subcode_2);
-+
- 	switch (sp->type) {
- 	case SRB_ELS_CMD_RPT:
- 	case SRB_ELS_CMD_HST:
-+		type = "rpt hst";
-+		break;
-+	case SRB_ELS_CMD_HST_NOLOGIN:
- 		type = "els";
-+		{
-+			struct els_entry_24xx *els = (void *)pkt;
-+			struct qla_bsg_auth_els_request *p =
-+				(struct qla_bsg_auth_els_request *)bsg_job->request;
-+
-+			ql_dbg(ql_dbg_user, vha, 0x700f,
-+			     "%s %s. portid=%02x%02x%02x status %x xchg %x bsg ptr %p\n",
-+			     __func__, sc_to_str(p->e.sub_cmd),
-+			     e->d_id[2], e->d_id[1], e->d_id[0],
-+			     comp_status, p->e.extra_rx_xchg_address, bsg_job);
-+
-+			if (!(le16_to_cpu(els->control_flags) & ECF_PAYLOAD_DESCR_MASK)) {
-+				if (sp->remap.remapped) {
-+					n = sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+						bsg_job->reply_payload.sg_cnt,
-+						sp->remap.rsp.buf,
-+						sp->remap.rsp.len);
-+					ql_dbg(ql_dbg_user + ql_dbg_verbose, vha, 0x700e,
-+					   "%s: SG copied %x of %x\n",
-+					   __func__, n, sp->remap.rsp.len);
-+					ql_print_bsg_sglist(ql_dbg_user + ql_dbg_verbose,
-+						vha, 0x700f,
-+						"SG bsg->reply",
-+						&bsg_job->reply_payload);
-+				} else {
-+					ql_dbg(ql_dbg_user, vha, 0x700f,
-+					   "%s: NOT REMAPPED (error)...!!!\n",
-+					   __func__);
-+				}
-+			}
-+		}
- 		break;
- 	case SRB_CT_CMD:
- 		type = "ct pass-through";
-@@ -2023,10 +2204,6 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 		return;
- 	}
- 
--	comp_status = fw_status[0] = le16_to_cpu(pkt->comp_status);
--	fw_status[1] = le32_to_cpu(ese->error_subcode_1);
--	fw_status[2] = le32_to_cpu(ese->error_subcode_2);
--
- 	if (iocb_type == ELS_IOCB_TYPE) {
- 		els = &sp->u.iocb_cmd;
- 		els->u.els_plogi.fw_status[0] = cpu_to_le32(fw_status[0]);
-@@ -2040,15 +2217,52 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 				res =  DID_OK << 16;
- 				els->u.els_plogi.len = cpu_to_le16(le32_to_cpu(
- 					ese->total_byte_count));
-+
-+				if (sp->remap.remapped &&
-+				    ((u8 *)sp->remap.rsp.buf)[0] == ELS_LS_ACC) {
-+					ql_dbg(ql_dbg_user, vha, 0x503f,
-+					    "%s IOCB Done LS_ACC %02x%02x%02x -> %02x%02x%02x",
-+					    __func__, e->s_id[0], e->s_id[2], e->s_id[1],
-+					    e->d_id[2], e->d_id[1], e->d_id[0]);
-+					logit = 0;
-+				}
-+
-+			} else if (comp_status == CS_PORT_LOGGED_OUT) {
-+				els->u.els_plogi.len = 0;
-+				res = DID_IMM_RETRY << 16;
- 			} else {
- 				els->u.els_plogi.len = 0;
- 				res = DID_ERROR << 16;
- 			}
-+
-+			if (logit) {
-+				if (sp->remap.remapped &&
-+				    ((u8 *)sp->remap.rsp.buf)[0] == ELS_LS_RJT) {
-+					ql_dbg(ql_dbg_user, vha, 0x503f,
-+					    "%s IOCB Done LS_RJT hdl=%x comp_status=0x%x\n",
-+					    type, sp->handle, comp_status);
-+
-+					ql_dbg(ql_dbg_user, vha, 0x503f,
-+					    "subcode 1=0x%x subcode 2=0x%x bytes=0x%x %02x%02x%02x -> %02x%02x%02x\n",
-+					    fw_status[1], fw_status[2],
-+					    le32_to_cpu(((struct els_sts_entry_24xx *)
-+						pkt)->total_byte_count),
-+					    e->s_id[0], e->s_id[2], e->s_id[1],
-+					    e->d_id[2], e->d_id[1], e->d_id[0]);
-+				} else {
-+					ql_log(ql_log_info, vha, 0x503f,
-+					    "%s IOCB Done hdl=%x comp_status=0x%x\n",
-+					    type, sp->handle, comp_status);
-+					ql_log(ql_log_info, vha, 0x503f,
-+					    "subcode 1=0x%x subcode 2=0x%x bytes=0x%x %02x%02x%02x -> %02x%02x%02x\n",
-+					    fw_status[1], fw_status[2],
-+					    le32_to_cpu(((struct els_sts_entry_24xx *)
-+						pkt)->total_byte_count),
-+					    e->s_id[0], e->s_id[2], e->s_id[1],
-+					    e->d_id[2], e->d_id[1], e->d_id[0]);
-+				}
-+			} //logit
- 		}
--		ql_dbg(ql_dbg_disc, vha, 0x503f,
--		    "ELS IOCB Done -%s hdl=%x comp_status=0x%x error subcode 1=0x%x error subcode 2=0x%x total_byte=0x%x\n",
--		    type, sp->handle, comp_status, fw_status[1], fw_status[2],
--		    le32_to_cpu(ese->total_byte_count));
- 		goto els_ct_done;
- 	}
- 
-@@ -2153,6 +2367,10 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
- 		if (sp->type != SRB_LOGIN_CMD)
- 			goto logio_done;
- 
-+		lio->u.logio.iop[1] = le32_to_cpu(logio->io_parameter[5]); // common features
-+		if (le32_to_cpu(logio->io_parameter[5]) & LIO_COMM_FEAT_FCSP)
-+			fcport->flags |= FCF_FCSP_DEVICE;
-+
- 		iop[0] = le32_to_cpu(logio->io_parameter[0]);
- 		if (iop[0] & BIT_4) {
- 			fcport->port_type = FCT_TARGET;
-@@ -2977,6 +3195,8 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
- 	}
- 
- 	/* Fast path completion. */
-+	qla_chk_edif_rx_sa_delete_pending(vha, sp, sts24);
-+
- 	if (comp_status == CS_COMPLETE && scsi_status == 0) {
- 		qla2x00_process_completed_request(vha, req, handle);
- 
-@@ -3338,7 +3558,8 @@ qla2x00_error_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, sts_entry_t *pkt)
- 	struct req_que *req = NULL;
- 	int res = DID_ERROR << 16;
- 
--	ql_dbg(ql_dbg_async, vha, 0x502a,
-+	// ql_dbg(ql_dbg_async, vha, 0x502a,
-+	ql_log(ql_log_warn, vha, 0x3014,
- 	    "iocb type %xh with error status %xh, handle %xh, rspq id %d\n",
- 	    pkt->entry_type, pkt->entry_status, pkt->handle, rsp->id);
- 
-@@ -3371,6 +3592,9 @@ qla2x00_error_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, sts_entry_t *pkt)
- 		}
- 		break;
- 
-+	case SA_UPDATE_IOCB_TYPE:
-+		return 1;	// let sa_update_iocb_entry cleanup everything
-+
- 	case ABTS_RESP_24XX:
- 	case CTIO_TYPE7:
- 	case CTIO_CRC2:
-@@ -3457,6 +3681,55 @@ void qla24xx_nvme_ls4_iocb(struct scsi_qla_host *vha,
- 	sp->done(sp, comp_status);
- }
- 
-+/* check for all continuation iocbs are available. */
-+static int qla_chk_cont_iocb_avail(struct scsi_qla_host *vha,
-+	struct rsp_que *rsp, response_t *pkt)
-+{
-+	int start_pkt_ring_index, end_pkt_ring_index, n_ring_index;
-+	response_t *end_pkt;
-+	int rc = 0;
-+	u32 rsp_q_in;
-+
-+	if (pkt->entry_count == 1)
-+		return rc;
-+
-+	/* ring_index was pre-increment. set it back to current pkt */
-+	if (rsp->ring_index == 0)
-+		start_pkt_ring_index = rsp->length - 1;
-+	else
-+		start_pkt_ring_index = rsp->ring_index - 1;
-+
-+	if ((start_pkt_ring_index + pkt->entry_count) >= rsp->length)
-+		end_pkt_ring_index = start_pkt_ring_index + pkt->entry_count -
-+			rsp->length - 1;
-+	else
-+		end_pkt_ring_index = start_pkt_ring_index + pkt->entry_count - 1;
-+
-+	end_pkt = rsp->ring + end_pkt_ring_index;
-+
-+	//  next pkt = end_pkt + 1
-+	n_ring_index = end_pkt_ring_index + 1;
-+	if (n_ring_index >= rsp->length)
-+		n_ring_index = 0;
-+
-+	rsp_q_in = rsp->qpair->use_shadow_reg ? *rsp->in_ptr :
-+		rd_reg_dword(rsp->rsp_q_in);
-+
-+	/* rsp_q_in is either wrapped or pointing beyond endpkt */
-+	if ((rsp_q_in < start_pkt_ring_index && rsp_q_in < n_ring_index) ||
-+			rsp_q_in >= n_ring_index)
-+		// all IOCBs arrived.
-+		rc = 0;
-+	else
-+		rc = -EIO;
-+
-+	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x5091,
-+		"%s - ring %p pkt %p end pkt %p entry count %#x rsp_q_in %d rc %d\n",
-+		__func__, rsp->ring, pkt, end_pkt, pkt->entry_count,
-+		rsp_q_in, rc);
-+	return rc;
-+}
-+
- /**
-  * qla24xx_process_response_queue() - Process response queue entries.
-  * @vha: SCSI driver HA context
-@@ -3597,12 +3870,26 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 						 qla27xx_process_purex_fpin);
- 				break;
- 
-+			case ELS_AUTH_ELS:
-+				if (qla_chk_cont_iocb_avail(vha, rsp, (response_t *)pkt)) {
-+					ql_dbg(ql_dbg_init, vha, 0x5091,
-+					    "Defer processing ELS opcode %#x...\n",
-+					    purex_entry->els_frame_payload[3]);
-+					return;
-+				}
-+				qla24xx_auth_els(vha, (void **)&pkt, &rsp);
-+				break;
- 			default:
- 				ql_log(ql_log_warn, vha, 0x509c,
- 				       "Discarding ELS Request opcode 0x%x\n",
- 				       purex_entry->els_frame_payload[3]);
- 			}
- 			break;
-+		case SA_UPDATE_IOCB_TYPE:
-+			qla28xx_sa_update_iocb_entry(vha, rsp->req,
-+				(struct sa_update_28xx *)pkt);
-+			break;
-+
- 		default:
- 			/* Type Not Supported. */
- 			ql_dbg(ql_dbg_async, vha, 0x5042,
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 0bcd8afdc0ff..08d35d1aff1c 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -61,6 +61,7 @@ static struct rom_cmd {
- 	{ MBC_SET_RNID_PARAMS },
- 	{ MBC_GET_RNID_PARAMS },
- 	{ MBC_GET_SET_ZIO_THRESHOLD },
-+	{ MBC_GET_RNID_PARAMS },
- };
- 
- static int is_rom_cmd(uint16_t cmd)
-@@ -739,7 +740,7 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
- 			mcp->mb[11] |= EXE_FW_FORCE_SEMAPHORE;
- 
- 		mcp->out_mb |= MBX_4 | MBX_3 | MBX_2 | MBX_1 | MBX_11;
--		mcp->in_mb |= MBX_3 | MBX_2 | MBX_1;
-+		mcp->in_mb |= MBX_5|MBX_3|MBX_2|MBX_1;
- 	} else {
- 		mcp->mb[1] = LSW(risc_addr);
- 		mcp->out_mb |= MBX_1;
-@@ -795,6 +796,12 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
- 		}
- 	}
- 
-+	if (IS_QLA28XX(ha) && (mcp->mb[5] & BIT_10) && ql2xsecenable) {
-+		ha->flags.edif_enabled = 1;
-+		ql_log(ql_log_info + ql_dbg_edif, vha, 0xffff,
-+		    "%s: edif is enabled\n", __func__);
-+	}
-+
- done:
- 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1028,
- 	    "Done %s.\n", __func__);
-@@ -2768,9 +2775,14 @@ qla24xx_fabric_logout(scsi_qla_host_t *vha, uint16_t loop_id, uint8_t domain,
- 	lg->entry_count = 1;
- 	lg->handle = make_handle(req->id, lg->handle);
- 	lg->nport_handle = cpu_to_le16(loop_id);
--	lg->control_flags =
--	    cpu_to_le16(LCF_COMMAND_LOGO|LCF_IMPL_LOGO|
--		LCF_FREE_NPORT);
-+	if (!ha->flags.edif_enabled) {
-+		lg->control_flags =
-+		    cpu_to_le16(LCF_COMMAND_LOGO|LCF_IMPL_LOGO|
-+			LCF_FREE_NPORT);
-+	} else {
-+		lg->control_flags =
-+		    cpu_to_le16(LCF_COMMAND_LOGO|LCF_IMPL_LOGO);
-+	}
- 	lg->port_id[0] = al_pa;
- 	lg->port_id[1] = area;
- 	lg->port_id[2] = domain;
-@@ -4946,7 +4958,7 @@ qla24xx_get_port_login_templ(scsi_qla_host_t *vha, dma_addr_t buf_dma,
- 	return rval;
- }
- 
--#define PUREX_CMD_COUNT	2
-+#define PUREX_CMD_COUNT	4
- int
- qla25xx_set_els_cmds_supported(scsi_qla_host_t *vha)
- {
-@@ -4954,6 +4966,7 @@ qla25xx_set_els_cmds_supported(scsi_qla_host_t *vha)
- 	mbx_cmd_t mc;
- 	mbx_cmd_t *mcp = &mc;
- 	uint8_t *els_cmd_map;
-+	uint8_t active_cnt = 0;
- 	dma_addr_t els_cmd_map_dma;
- 	uint8_t cmd_opcode[PUREX_CMD_COUNT];
- 	uint8_t i, index, purex_bit;
-@@ -4975,10 +4988,20 @@ qla25xx_set_els_cmds_supported(scsi_qla_host_t *vha)
- 	}
- 
- 	/* List of Purex ELS */
--	cmd_opcode[0] = ELS_FPIN;
--	cmd_opcode[1] = ELS_RDP;
-+	if (ql2xrdpenable) {
-+		cmd_opcode[active_cnt] = ELS_RDP;
-+		active_cnt++;
-+	}
-+	if (ha->flags.scm_supported_f) {
-+		cmd_opcode[active_cnt] = ELS_FPIN;
-+		active_cnt++;
-+	}
-+	if (ha->flags.edif_enabled) {
-+		cmd_opcode[active_cnt] = ELS_AUTH_ELS;
-+		active_cnt++;
-+	}
- 
--	for (i = 0; i < PUREX_CMD_COUNT; i++) {
-+	for (i = 0; i < active_cnt; i++) {
- 		index = cmd_opcode[i] / 8;
- 		purex_bit = cmd_opcode[i] % 8;
- 		els_cmd_map[index] |= 1 << purex_bit;
-@@ -6588,6 +6611,12 @@ int __qla24xx_parse_gpdb(struct scsi_qla_host *vha, fc_port_t *fcport,
- 	fcport->d_id.b.al_pa = pd->port_id[2];
- 	fcport->d_id.b.rsvd_1 = 0;
- 
-+	ql_dbg(ql_dbg_disc, vha, 0x2062,
-+	     "%8phC SVC Param w3 %02x%02x",
-+	     fcport->port_name,
-+	     pd->prli_svc_param_word_3[1],
-+	     pd->prli_svc_param_word_3[0]);
-+
- 	if (NVME_TARGET(vha->hw, fcport)) {
- 		fcport->port_type = FCT_NVME;
- 		if ((pd->prli_svc_param_word_3[0] & BIT_5) == 0)
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index c7caf322f445..432fbba47922 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -158,6 +158,10 @@ qla24xx_disable_vp(scsi_qla_host_t *vha)
- 	int ret = QLA_SUCCESS;
- 	fc_port_t *fcport;
- 
-+	if (vha->hw->flags.edif_enabled)
-+		// delete sessions and flush sa_indexes
-+		qla2x00_wait_for_sess_deletion(vha);
-+
- 	if (vha->hw->flags.fw_started)
- 		ret = qla24xx_control_vp(vha, VCE_COMMAND_DISABLE_VPS_LOGO_ALL);
- 
-@@ -166,7 +170,8 @@ qla24xx_disable_vp(scsi_qla_host_t *vha)
- 	list_for_each_entry(fcport, &vha->vp_fcports, list)
- 		fcport->logout_on_delete = 0;
- 
--	qla2x00_mark_all_devices_lost(vha);
-+	if (!vha->hw->flags.edif_enabled)
-+		qla2x00_wait_for_sess_deletion(vha);
- 
- 	/* Remove port id from vp target map */
- 	spin_lock_irqsave(&vha->hw->hardware_lock, flags);
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 0cacb667a88b..bec3df3d9ace 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -463,6 +463,10 @@ static inline int qla2x00_start_nvme_mq(srb_t *sp)
- 	} else if (fd->io_dir == 0) {
- 		cmd_pkt->control_flags = 0;
- 	}
-+	if (sp->fcport->edif.enable && fd->io_dir != 0) {
-+		cmd_pkt->control_flags |= cpu_to_le16(CF_EN_EDIF);
-+		cmd_pkt->control_flags &= ~(cpu_to_le16(CF_NEW_SA));
-+	}
- 	/* Set BIT_13 of control flags for Async event */
- 	if (vha->flags.nvme2_enabled &&
- 	    cmd->sqe.common.opcode == nvme_admin_async_event) {
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 4eab564ea6a0..07a109ee3814 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -53,6 +53,11 @@ static struct kmem_cache *ctx_cachep;
-  */
- uint ql_errlev = 0x8001;
- 
-+int ql2xsecenable;
-+module_param(ql2xsecenable, int, S_IRUGO);
-+MODULE_PARM_DESC(ql2xsecenable,
-+	"Enable/disable security. 0(Default) - Security disabled. 1 - Security enabled.");
-+
- static int ql2xenableclass2;
- module_param(ql2xenableclass2, int, S_IRUGO|S_IRUSR);
- MODULE_PARM_DESC(ql2xenableclass2,
-@@ -1119,13 +1124,28 @@ static inline int test_fcport_count(scsi_qla_host_t *vha)
- {
- 	struct qla_hw_data *ha = vha->hw;
- 	unsigned long flags;
--	int res;
-+	int res; // 0 = sleep, x=wake
- 
- 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 	ql_dbg(ql_dbg_init, vha, 0x00ec,
- 	    "tgt %p, fcport_count=%d\n",
- 	    vha, vha->fcport_count);
- 	res = (vha->fcport_count == 0);
-+	if  (res) {
-+		struct fc_port *fcport;
-+
-+		list_for_each_entry(fcport, &vha->vp_fcports, list) {
-+			if (fcport->deleted != QLA_SESS_DELETED) {
-+				/* session(s) may not be fully logged in
-+				 * (ie fcport_count=0), but session
-+				 * deletion thread(s) may be inflight.
-+				 */
-+
-+				res = 0;
-+				break;
-+			}
-+		}
-+	}
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- 
- 	return res;
-@@ -2835,6 +2855,20 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	spin_lock_init(&ha->tgt.sess_lock);
- 	spin_lock_init(&ha->tgt.atio_lock);
- 
-+	// edif sadb
-+	spin_lock_init(&ha->sadb_lock);
-+	INIT_LIST_HEAD(&ha->sadb_tx_index_list);
-+	INIT_LIST_HEAD(&ha->sadb_rx_index_list);
-+
-+	// edif sa_index free pool
-+	spin_lock_init(&ha->sadb_fp_lock);
-+
-+	// build the sadb sa_index free pool
-+	if (qla_edif_sadb_build_free_pool(ha)) {
-+		kfree(ha);
-+		goto  disable_device;
-+	}
-+
- 	atomic_set(&ha->nvme_active_aen_cnt, 0);
- 
- 	/* Clear our data area */
-@@ -3460,6 +3494,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return 0;
- 
- probe_failed:
-+	qla_enode_stop(base_vha);
-+	qla_edb_stop(base_vha);
- 	if (base_vha->gnl.l) {
- 		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
- 				base_vha->gnl.l, base_vha->gnl.ldma);
-@@ -3762,6 +3798,8 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 		base_vha->gnl.size, base_vha->gnl.l, base_vha->gnl.ldma);
- 
- 	base_vha->gnl.l = NULL;
-+	qla_enode_stop(base_vha);
-+	qla_edb_stop(base_vha);
- 
- 	vfree(base_vha->scan.l);
- 
-@@ -3795,7 +3833,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 	qla2x00_free_sysfs_attr(base_vha, true);
- 
- 	fc_remove_host(base_vha->host);
--	qlt_remove_target_resources(ha);
- 
- 	scsi_remove_host(base_vha->host);
- 
-@@ -3867,6 +3904,9 @@ qla2x00_free_device(scsi_qla_host_t *vha)
- 
- 	qla82xx_md_free(vha);
- 
-+	qla_edif_sadb_release_free_pool(ha);
-+	qla_edif_sadb_release(ha);
-+
- 	qla2x00_free_queues(ha);
- }
- 
-@@ -3918,7 +3958,10 @@ void qla2x00_mark_device_lost(scsi_qla_host_t *vha, fc_port_t *fcport,
- 	    vha->vp_idx == fcport->vha->vp_idx) {
- 		qla2x00_set_fcport_state(fcport, FCS_DEVICE_LOST);
- 		qla2x00_schedule_rport_del(vha, fcport);
-+
- 	}
-+
-+	qla_edif_sess_down(vha, fcport);
- 	/*
- 	 * We may need to retry the login, so don't change the state of the
- 	 * port but do the retries.
-@@ -3972,15 +4015,20 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 	struct req_que **req, struct rsp_que **rsp)
- {
- 	char	name[16];
-+	int rc;
- 
- 	ha->init_cb = dma_alloc_coherent(&ha->pdev->dev, ha->init_cb_size,
- 		&ha->init_cb_dma, GFP_KERNEL);
- 	if (!ha->init_cb)
- 		goto fail;
- 
--	if (qlt_mem_alloc(ha) < 0)
-+	rc = btree_init32(&ha->host_map);
-+	if (rc)
- 		goto fail_free_init_cb;
- 
-+	if (qlt_mem_alloc(ha) < 0)
-+		goto fail_free_btree;
-+
- 	ha->gid_list = dma_alloc_coherent(&ha->pdev->dev,
- 		qla2x00_gid_list_size(ha), &ha->gid_list_dma, GFP_KERNEL);
- 	if (!ha->gid_list)
-@@ -3990,7 +4038,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 	if (!ha->srb_mempool)
- 		goto fail_free_gid_list;
- 
--	if (IS_P3P_TYPE(ha)) {
-+	if (IS_P3P_TYPE(ha) || IS_QLA27XX(ha) || (ql2xsecenable & IS_QLA28XX(ha))) {
- 		/* Allocate cache for CT6 Ctx. */
- 		if (!ctx_cachep) {
- 			ctx_cachep = kmem_cache_create("qla2xxx_ctx",
-@@ -4024,7 +4072,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 	    "init_cb=%p gid_list=%p, srb_mempool=%p s_dma_pool=%p.\n",
- 	    ha->init_cb, ha->gid_list, ha->srb_mempool, ha->s_dma_pool);
- 
--	if (IS_P3P_TYPE(ha) || ql2xenabledif) {
-+	if (IS_P3P_TYPE(ha) || ql2xenabledif || (IS_QLA28XX(ha) & ql2xsecenable)) {
- 		ha->dl_dma_pool = dma_pool_create(name, &ha->pdev->dev,
- 			DSD_LIST_DMA_POOL_SIZE, 8, 0);
- 		if (!ha->dl_dma_pool) {
-@@ -4264,8 +4312,37 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 		goto fail_flt_buffer;
- 	}
- 
-+	/* allocate the purex dma pool */
-+	// TODO: check alignment value of 8 --> sb 8k?
-+	ha->purex_dma_pool = dma_pool_create(name, &ha->pdev->dev,
-+	    MAX_PAYLOAD, 8, 0);
-+
-+	if (!ha->purex_dma_pool) {
-+		ql_dbg_pci(ql_dbg_init, ha->pdev, 0x011b,
-+		    "Unable to allocate purex_dma_pool.\n");
-+		goto fail_flt;
-+	}
-+
-+	ha->elsrej.size = sizeof(struct fc_els_ls_rjt) + 16;
-+	ha->elsrej.c = dma_alloc_coherent(&ha->pdev->dev,
-+	    ha->elsrej.size, &ha->elsrej.cdma, GFP_KERNEL);
-+
-+	if (!ha->elsrej.c) {
-+		ql_dbg_pci(ql_dbg_init, ha->pdev, 0xffff,
-+		    "Alloc failed for els reject cmd.\n");
-+		goto fail_elsrej;
-+	}
-+	ha->elsrej.c->er_cmd = ELS_LS_RJT;
-+	ha->elsrej.c->er_reason = ELS_RJT_BUSY;
-+	ha->elsrej.c->er_explan = ELS_EXPL_UNAB_DATA;
- 	return 0;
- 
-+fail_elsrej:
-+	dma_pool_destroy(ha->purex_dma_pool);
-+fail_flt:
-+	dma_free_coherent(&ha->pdev->dev, SFP_DEV_SIZE,
-+	    ha->flt, ha->flt_dma);
-+
- fail_flt_buffer:
- 	dma_free_coherent(&ha->pdev->dev, SFP_DEV_SIZE,
- 	    ha->sfp_data, ha->sfp_data_dma);
-@@ -4356,6 +4433,8 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 	ha->gid_list_dma = 0;
- fail_free_tgt_mem:
- 	qlt_mem_free(ha);
-+fail_free_btree:
-+	btree_destroy32(&ha->host_map);
- fail_free_init_cb:
- 	dma_free_coherent(&ha->pdev->dev, ha->init_cb_size, ha->init_cb,
- 	ha->init_cb_dma);
-@@ -4772,10 +4851,21 @@ qla2x00_mem_free(struct qla_hw_data *ha)
- 	ha->dif_bundl_pool = NULL;
- 
- 	qlt_mem_free(ha);
-+	qla_remove_hostmap(ha);
- 
- 	if (ha->init_cb)
- 		dma_free_coherent(&ha->pdev->dev, ha->init_cb_size,
- 			ha->init_cb, ha->init_cb_dma);
-+
-+	dma_pool_destroy(ha->purex_dma_pool);
-+	ha->purex_dma_pool = NULL;
-+
-+	if (ha->elsrej.c) {
-+		dma_free_coherent(&ha->pdev->dev, ha->elsrej.size,
-+		    ha->elsrej.c, ha->elsrej.cdma);
-+		ha->elsrej.c = NULL;
-+	}
-+
- 	ha->init_cb = NULL;
- 	ha->init_cb_dma = 0;
- 
-@@ -4837,6 +4927,9 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
- 	spin_lock_init(&vha->cmd_list_lock);
- 	init_waitqueue_head(&vha->fcport_waitQ);
- 	init_waitqueue_head(&vha->vref_waitq);
-+	qla_enode_init(vha);
-+	qla_edb_init(vha);
-+
- 
- 	vha->gnl.size = sizeof(struct get_name_list_extended) *
- 			(ha->max_loop_id + 1);
-@@ -5327,6 +5420,9 @@ qla2x00_do_work(struct scsi_qla_host *vha)
- 			qla24xx_els_dcmd2_iocb(vha, ELS_DCMD_PLOGI,
- 			    e->u.fcport.fcport, false);
- 			break;
-+		case QLA_EVT_SA_REPLACE:
-+			qla24xx_issue_sa_replace_iocb(vha, e);
-+			break;
- 		}
- 
- 		if (rc == EAGAIN) {
-@@ -5376,6 +5472,7 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
- 		if (atomic_read(&fcport->state) != FCS_ONLINE &&
- 		    fcport->login_retry) {
- 			if (fcport->scan_state != QLA_FCPORT_FOUND ||
-+			    fcport->disc_state == DSC_LOGIN_AUTH_PEND ||
- 			    fcport->disc_state == DSC_LOGIN_COMPLETE)
- 				continue;
- 
-@@ -6960,6 +7057,9 @@ qla2x00_do_dpc(void *data)
- 				       threshold);
- 			}
- 		}
-+		if (test_and_clear_bit(EDIF_TICK_NEEDED,
-+		    &base_vha->dpc_flags))
-+			qla_edif_timer_check(base_vha);
- 
- 		if (!IS_QLAFX00(ha))
- 			qla2x00_do_dpc_all_vps(base_vha);
-@@ -7168,6 +7268,12 @@ qla2x00_timer(struct timer_list *t)
- 		}
- 	}
- 
-+	/* check if edif running */
-+	if (vha->hw->flags.edif_enabled) {
-+		set_bit(EDIF_TICK_NEEDED, &vha->dpc_flags);
-+		start_dpc++;
-+	}
-+
- 	/* Process any deferred work. */
- 	if (!list_empty(&vha->work_list)) {
- 		unsigned long flags;
-@@ -7220,15 +7326,14 @@ qla2x00_timer(struct timer_list *t)
- 	    test_bit(FCOE_CTX_RESET_NEEDED, &vha->dpc_flags) ||
- 	    test_bit(VP_DPC_NEEDED, &vha->dpc_flags) ||
- 	    test_bit(RELOGIN_NEEDED, &vha->dpc_flags) ||
-+	    test_bit(EDIF_TICK_NEEDED, &vha->dpc_flags) ||
- 	    test_bit(PROCESS_PUREX_IOCB, &vha->dpc_flags))) {
- 		ql_dbg(ql_dbg_timer, vha, 0x600b,
--		    "isp_abort_needed=%d loop_resync_needed=%d "
--		    "fcport_update_needed=%d start_dpc=%d "
--		    "reset_marker_needed=%d",
-+"isp_abort_needed=%d loop_resync_needed=%d fcport_update_needed=%d start_dpc=%d edif=%d reset_marker_needed=%d",
- 		    test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags),
- 		    test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags),
- 		    test_bit(FCPORT_UPDATE_NEEDED, &vha->dpc_flags),
--		    start_dpc,
-+		    start_dpc, test_bit(EDIF_TICK_NEEDED, &vha->dpc_flags),
- 		    test_bit(RESET_MARKER_NEEDED, &vha->dpc_flags));
- 		ql_dbg(ql_dbg_timer, vha, 0x600c,
- 		    "beacon_blink_needed=%d isp_unrecoverable=%d "
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index b2008fb1dd38..0a8e05fde695 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -184,8 +184,7 @@ static inline int qlt_issue_marker(struct scsi_qla_host *vha, int vha_locked)
- 	return QLA_SUCCESS;
- }
- 
--static inline
--struct scsi_qla_host *qlt_find_host_by_d_id(struct scsi_qla_host *vha,
-+struct scsi_qla_host *qla_find_host_by_d_id(struct scsi_qla_host *vha,
- 					    be_id_t d_id)
- {
- 	struct scsi_qla_host *host;
-@@ -198,11 +197,13 @@ struct scsi_qla_host *qlt_find_host_by_d_id(struct scsi_qla_host *vha,
- 
- 	key = be_to_port_id(d_id).b24;
- 
--	host = btree_lookup32(&vha->hw->tgt.host_map, key);
-+	host = btree_lookup32(&vha->hw->host_map, key);
- 	if (!host)
- 		ql_dbg(ql_dbg_tgt_mgt + ql_dbg_verbose, vha, 0xf005,
- 		    "Unable to find host %06x\n", key);
- 
-+	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf005,
-+	    "find host %06x host %p\n", key, host);
- 	return host;
- }
- 
-@@ -299,7 +300,7 @@ static void qlt_try_to_dequeue_unknown_atios(struct scsi_qla_host *vha,
- 			goto abort;
- 		}
- 
--		host = qlt_find_host_by_d_id(vha, u->atio.u.isp24.fcp_hdr.d_id);
-+		host = qla_find_host_by_d_id(vha, u->atio.u.isp24.fcp_hdr.d_id);
- 		if (host != NULL) {
- 			ql_dbg(ql_dbg_async + ql_dbg_verbose, vha, 0x502f,
- 			    "Requeuing unknown ATIO_TYPE7 %p\n", u);
-@@ -348,7 +349,7 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
- 	switch (atio->u.raw.entry_type) {
- 	case ATIO_TYPE7:
- 	{
--		struct scsi_qla_host *host = qlt_find_host_by_d_id(vha,
-+		struct scsi_qla_host *host = qla_find_host_by_d_id(vha,
- 		    atio->u.isp24.fcp_hdr.d_id);
- 		if (unlikely(NULL == host)) {
- 			ql_dbg(ql_dbg_tgt, vha, 0xe03e,
-@@ -577,6 +578,18 @@ static void qla2x00_async_nack_sp_done(srb_t *sp, int res)
- 		sp->fcport->logout_on_delete = 1;
- 		sp->fcport->plogi_nack_done_deadline = jiffies + HZ;
- 		sp->fcport->send_els_logo = 0;
-+
-+		if (sp->fcport->flags & FCF_FCSP_DEVICE) {
-+			ql_dbg(ql_dbg_edif, vha, 0x20ef,
-+			    "%s %8phC edif: PLOGI- AUTH WAIT\n", __func__,
-+			    sp->fcport->port_name);
-+			qla2x00_set_fcport_disc_state(sp->fcport,
-+			    DSC_LOGIN_AUTH_PEND);
-+			qla2x00_post_aen_work(vha, FCH_EVT_PORT_ONLINE,
-+			    sp->fcport->d_id.b24);
-+			qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_NEEDED, sp->fcport->d_id.b24,
-+			    0, sp->fcport);
-+		}
- 		break;
- 
- 	case SRB_NACK_PRLI:
-@@ -624,6 +637,10 @@ int qla24xx_async_notify_ack(scsi_qla_host_t *vha, fc_port_t *fcport,
- 	case SRB_NACK_PLOGI:
- 		fcport->fw_login_state = DSC_LS_PLOGI_PEND;
- 		c = "PLOGI";
-+		if (vha->hw->flags.edif_enabled &&
-+		    (le16_to_cpu(ntfy->u.isp24.flags) & NOTIFY24XX_FLAGS_FCSP)) {
-+			fcport->flags |= FCF_FCSP_DEVICE;
-+		}
- 		break;
- 	case SRB_NACK_PRLI:
- 		fcport->fw_login_state = DSC_LS_PRLI_PEND;
-@@ -693,7 +710,12 @@ void qla24xx_do_nack_work(struct scsi_qla_host *vha, struct qla_work_evt *e)
- void qla24xx_delete_sess_fn(struct work_struct *work)
- {
- 	fc_port_t *fcport = container_of(work, struct fc_port, del_work);
--	struct qla_hw_data *ha = fcport->vha->hw;
-+	struct qla_hw_data *ha = NULL;
-+
-+	if (!fcport || !fcport->vha || !fcport->vha->hw)
-+		return;
-+
-+	ha = fcport->vha->hw;
- 
- 	if (fcport->se_sess) {
- 		ha->tgt.tgt_ops->shutdown_sess(fcport);
-@@ -965,6 +987,19 @@ void qlt_free_session_done(struct work_struct *work)
- 		sess->send_els_logo);
- 
- 	if (!IS_SW_RESV_ADDR(sess->d_id)) {
-+		if (ha->flags.edif_enabled &&
-+		    (!own || own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
-+			if (!ha->flags.host_shutting_down) {
-+				ql_dbg(ql_dbg_edif, vha, 0x911e,
-+					"%s wwpn %8phC calling qla2x00_release_all_sadb\n",
-+					__func__, sess->port_name);
-+				qla2x00_release_all_sadb(vha, sess);
-+			} else {
-+				ql_dbg(ql_dbg_edif, vha, 0x911e,
-+					"%s bypassing release_all_sadb\n",
-+					__func__);
-+			}
-+		}
- 		qla2x00_mark_device_lost(vha, sess, 0);
- 
- 		if (sess->send_els_logo) {
-@@ -972,8 +1007,11 @@ void qlt_free_session_done(struct work_struct *work)
- 
- 			logo.id = sess->d_id;
- 			logo.cmd_count = 0;
--			if (!own)
-+			INIT_LIST_HEAD(&logo.list);
-+			if (!own) {
- 				qlt_send_first_logo(vha, &logo);
-+				msleep(100);
-+			}
- 			sess->send_els_logo = 0;
- 		}
- 
-@@ -982,6 +1020,7 @@ void qlt_free_session_done(struct work_struct *work)
- 
- 			if (!own ||
- 			     (own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
-+				sess->logout_completed = 0;
- 				rc = qla2x00_post_async_logout_work(vha, sess,
- 				    NULL);
- 				if (rc != QLA_SUCCESS)
-@@ -992,6 +1031,13 @@ void qlt_free_session_done(struct work_struct *work)
- 					logout_started = true;
- 			} else if (own && (own->iocb.u.isp24.status_subcode ==
- 				ELS_PRLI) && ha->flags.rida_fmt2) {
-+				sess->prlo_rc = MBS_COMMAND_COMPLETE;
-+
-+				ql_dbg(ql_dbg_disc, vha, 0xf084,
-+	"%s: se_sess %p / sess %p from port %8phC loop_id %#04x  Schedule PRLO",
-+				    __func__, sess->se_sess, sess,
-+				    sess->port_name, sess->loop_id);
-+
- 				rc = qla2x00_post_async_prlo_work(vha, sess,
- 				    NULL);
- 				if (rc != QLA_SUCCESS)
-@@ -1111,7 +1157,7 @@ void qlt_free_session_done(struct work_struct *work)
- 		}
- 	}
- 
--	sess->explicit_logout = 0;
-+	sess->explicit_logout = sess->explicit_prlo =  0;
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- 	sess->free_pending = 0;
- 
-@@ -1718,6 +1764,12 @@ static void qlt_send_notify_ack(struct qla_qpair *qpair,
- 	nack->u.isp24.srr_reject_code_expl = srr_explan;
- 	nack->u.isp24.vp_index = ntfy->u.isp24.vp_index;
- 
-+	// TODO qualify this with EDIF enable
-+	if (ntfy->u.isp24.status_subcode == ELS_PLOGI &&
-+	    (le16_to_cpu(ntfy->u.isp24.flags) & NOTIFY24XX_FLAGS_FCSP)) {
-+		nack->u.isp24.flags |= cpu_to_le16(NOTIFY_ACK_FLAGS_FCSP);
-+	}
-+
- 	ql_dbg(ql_dbg_tgt, vha, 0xe005,
- 	    "qla_target(%d): Sending 24xx Notify Ack %d\n",
- 	    vha->vp_idx, nack->u.isp24.status);
-@@ -2569,6 +2621,14 @@ static int qlt_24xx_build_ctio_pkt(struct qla_qpair *qpair,
- 	struct ctio7_to_24xx *pkt;
- 	struct atio_from_isp *atio = &prm->cmd->atio;
- 	uint16_t temp;
-+	uint32_t byte_count = 0;
-+	struct qla_tgt_cmd      *cmd = prm->cmd;
-+
-+	byte_count = cmd->bufflen;
-+	if (cmd->dma_data_direction == DMA_TO_DEVICE)
-+		prm->cmd->sess->edif.rx_bytes += byte_count;
-+	if (cmd->dma_data_direction == DMA_FROM_DEVICE)
-+		prm->cmd->sess->edif.tx_bytes += byte_count;
- 
- 	pkt = (struct ctio7_to_24xx *)qpair->req->ring_ptr;
- 	prm->pkt = pkt;
-@@ -2601,6 +2661,11 @@ static int qlt_24xx_build_ctio_pkt(struct qla_qpair *qpair,
- 	pkt->u.status0.ox_id = cpu_to_le16(temp);
- 	pkt->u.status0.relative_offset = cpu_to_le32(prm->cmd->offset);
- 
-+	if (prm->cmd->edif) {
-+		pkt->u.status0.edif_flags |= EF_EN_EDIF;
-+		pkt->u.status0.edif_flags &= ~CF_NEW_SA;
-+	}
-+
- 	return 0;
- }
- 
-@@ -3022,6 +3087,9 @@ qlt_build_ctio_crc2_pkt(struct qla_qpair *qpair, struct qla_tgt_prm *prm)
- 	uint16_t t16;
- 	scsi_qla_host_t *vha = cmd->vha;
- 
-+	// TODO need to address this for edif.  FW is only
-+	// supporting ctio crc4.
-+
- 	ha = vha->hw;
- 
- 	pkt = (struct ctio_crc2_to_fw *)qpair->req->ring_ptr;
-@@ -3291,8 +3359,8 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 			if (xmit_type & QLA_TGT_XMIT_STATUS) {
- 				pkt->u.status0.scsi_status =
- 				    cpu_to_le16(prm.rq_result);
--				pkt->u.status0.residual =
--				    cpu_to_le32(prm.residual);
-+				//pkt->u.status0.residual =
-+				//    cpu_to_le32(prm.residual);
- 				pkt->u.status0.flags |= cpu_to_le16(
- 				    CTIO7_FLAGS_SEND_STATUS);
- 				if (qlt_need_explicit_conf(cmd, 0)) {
-@@ -3939,6 +4007,12 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha,
- 	if (cmd == NULL)
- 		return;
- 
-+	if ((le16_to_cpu(((struct ctio7_from_24xx *)ctio)->flags) & CTIO7_FLAGS_DATA_OUT) &&
-+	    cmd->sess) {
-+		qlt_chk_edif_rx_sa_delete_pending(vha, cmd->sess,
-+		    (struct ctio7_from_24xx *)ctio);
-+	}
-+
- 	se_cmd = &cmd->se_cmd;
- 	cmd->cmd_sent_to_fw = 0;
- 
-@@ -4009,6 +4083,16 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha,
- 			qlt_handle_dif_error(qpair, cmd, ctio);
- 			return;
- 		}
-+
-+		case CTIO_FAST_AUTH_ERR:
-+		case CTIO_FAST_INCOMP_PAD_LEN:
-+		case CTIO_FAST_INVALID_REQ:
-+		case CTIO_FAST_SPI_ERR:
-+			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf05b,
-+	"qla_target(%d): CTIO with EDIF error status 0x%x received (state %x, se_cmd %p\n",
-+			    vha->vp_idx, status, cmd->state, se_cmd);
-+			break;
-+
- 		default:
- 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf05b,
- 			    "qla_target(%d): CTIO with error status 0x%x received (state %x, se_cmd %p\n",
-@@ -4310,6 +4394,7 @@ static struct qla_tgt_cmd *qlt_get_tag(scsi_qla_host_t *vha,
- 	qlt_assign_qpair(vha, cmd);
- 	cmd->reset_count = vha->hw->base_qpair->chip_reset;
- 	cmd->vp_idx = vha->vp_idx;
-+	cmd->edif = sess->edif.enable;
- 
- 	return cmd;
- }
-@@ -4725,6 +4810,15 @@ static int qlt_handle_login(struct scsi_qla_host *vha,
- 		goto out;
- 	}
- 
-+	if (vha->hw->flags.edif_enabled &&
-+	    vha->e_dbell.db_flags != EDB_ACTIVE) {
-+		ql_dbg(ql_dbg_disc, vha, 0xffff,
-+			"%s %d Term INOT due to app not available lid=%d, NportID %06X ",
-+			__func__, __LINE__, loop_id, port_id.b24);
-+		qlt_send_term_imm_notif(vha, iocb, 1);
-+		goto out;
-+	}
-+
- 	pla = qlt_plogi_ack_find_add(vha, &port_id, iocb);
- 	if (!pla) {
- 		ql_dbg(ql_dbg_disc + ql_dbg_verbose, vha, 0xffff,
-@@ -4744,7 +4838,7 @@ static int qlt_handle_login(struct scsi_qla_host *vha,
- 	if (!sess) {
- 		pla->ref_count++;
- 		ql_dbg(ql_dbg_disc, vha, 0xffff,
--		    "%s %d %8phC post new sess\n",
-+		    "%s %d %8phC post new sess 1\n",
- 		    __func__, __LINE__, iocb->u.isp24.port_name);
- 		if (iocb->u.isp24.status_subcode == ELS_PLOGI)
- 			qla24xx_post_newsess_work(vha, &port_id,
-@@ -4790,6 +4884,16 @@ static int qlt_handle_login(struct scsi_qla_host *vha,
- 	qlt_plogi_ack_link(vha, pla, sess, QLT_PLOGI_LINK_SAME_WWN);
- 	sess->d_id = port_id;
- 	sess->login_gen++;
-+	sess->loop_id = loop_id;
-+
-+	if (iocb->u.isp24.status_subcode == ELS_PLOGI) {
-+		ql_dbg(ql_dbg_disc, vha, 0xffff,
-+		    "%s %8phC - send port online\n",
-+		    __func__, sess->port_name);
-+
-+		qla2x00_post_aen_work(vha, FCH_EVT_PORT_ONLINE,
-+		    sess->d_id.b24);
-+	}
- 
- 	if (iocb->u.isp24.status_subcode == ELS_PRLI) {
- 		sess->fw_login_state = DSC_LS_PRLI_PEND;
-@@ -4807,9 +4911,11 @@ static int qlt_handle_login(struct scsi_qla_host *vha,
- 		else
- 			sess->port_type = FCT_TARGET;
- 
--	} else
-+	} else {
- 		sess->fw_login_state = DSC_LS_PLOGI_PEND;
--
-+		/* TODO: Enable fcport here */
-+		// if (vha->flags.edif_enabled)
-+	}
- 
- 	ql_dbg(ql_dbg_disc, vha, 0x20f9,
- 	    "%s %d %8phC  DS %d\n",
-@@ -5953,6 +6059,10 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
- 	case MBA_LIP_OCCURRED:
- 	case MBA_LOOP_DOWN:
- 	case MBA_LIP_RESET:
-+		// Disable global SAs
-+		// TODO: moved - still need to do?
-+		//vha->hw->fast_tx_sa_index = INVALID_SAIDX;
-+		//vha->hw->fast_rx_sa_index = INVALID_SAIDX;
- 	case MBA_RSCN_UPDATE:
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03c,
- 		    "qla_target(%d): Async event %#x occurred "
-@@ -6443,15 +6553,15 @@ int qlt_remove_target(struct qla_hw_data *ha, struct scsi_qla_host *vha)
- 	return 0;
- }
- 
--void qlt_remove_target_resources(struct qla_hw_data *ha)
-+void qla_remove_hostmap(struct qla_hw_data *ha)
- {
- 	struct scsi_qla_host *node;
- 	u32 key = 0;
- 
--	btree_for_each_safe32(&ha->tgt.host_map, key, node)
--		btree_remove32(&ha->tgt.host_map, key);
-+	btree_for_each_safe32(&ha->host_map, key, node)
-+		btree_remove32(&ha->host_map, key);
- 
--	btree_destroy32(&ha->tgt.host_map);
-+	btree_destroy32(&ha->host_map);
- }
- 
- static void qlt_lport_dump(struct scsi_qla_host *vha, u64 wwpn,
-@@ -7079,8 +7189,7 @@ qlt_modify_vp_config(struct scsi_qla_host *vha,
- void
- qlt_probe_one_stage1(struct scsi_qla_host *base_vha, struct qla_hw_data *ha)
- {
--	int rc;
--
-+	mutex_init(&base_vha->vha_tgt.tgt_mutex);
- 	if (!QLA_TGT_MODE_ENABLED())
- 		return;
- 
-@@ -7093,7 +7202,6 @@ qlt_probe_one_stage1(struct scsi_qla_host *base_vha, struct qla_hw_data *ha)
- 		ISP_ATIO_Q_OUT(base_vha) = &ha->iobase->isp24.atio_q_out;
- 	}
- 
--	mutex_init(&base_vha->vha_tgt.tgt_mutex);
- 	mutex_init(&base_vha->vha_tgt.tgt_host_action_mutex);
- 
- 	INIT_LIST_HEAD(&base_vha->unknown_atio_list);
-@@ -7102,11 +7210,6 @@ qlt_probe_one_stage1(struct scsi_qla_host *base_vha, struct qla_hw_data *ha)
- 
- 	qlt_clear_mode(base_vha);
- 
--	rc = btree_init32(&ha->tgt.host_map);
--	if (rc)
--		ql_log(ql_log_info, base_vha, 0xd03d,
--		    "Unable to initialize ha->host_map btree\n");
--
- 	qlt_update_vp_map(base_vha, SET_VP_IDX);
- }
- 
-@@ -7227,21 +7330,20 @@ qlt_update_vp_map(struct scsi_qla_host *vha, int cmd)
- 	u32 key;
- 	int rc;
- 
--	if (!QLA_TGT_MODE_ENABLED())
--		return;
--
- 	key = vha->d_id.b24;
- 
- 	switch (cmd) {
- 	case SET_VP_IDX:
-+		if (!QLA_TGT_MODE_ENABLED())
-+			return;
- 		vha->hw->tgt.tgt_vp_map[vha->vp_idx].vha = vha;
- 		break;
- 	case SET_AL_PA:
--		slot = btree_lookup32(&vha->hw->tgt.host_map, key);
-+		slot = btree_lookup32(&vha->hw->host_map, key);
- 		if (!slot) {
- 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf018,
- 			    "Save vha in host_map %p %06x\n", vha, key);
--			rc = btree_insert32(&vha->hw->tgt.host_map,
-+			rc = btree_insert32(&vha->hw->host_map,
- 				key, vha, GFP_ATOMIC);
- 			if (rc)
- 				ql_log(ql_log_info, vha, 0xd03e,
-@@ -7251,17 +7353,19 @@ qlt_update_vp_map(struct scsi_qla_host *vha, int cmd)
- 		}
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf019,
- 		    "replace existing vha in host_map %p %06x\n", vha, key);
--		btree_update32(&vha->hw->tgt.host_map, key, vha);
-+		btree_update32(&vha->hw->host_map, key, vha);
- 		break;
- 	case RESET_VP_IDX:
-+		if (!QLA_TGT_MODE_ENABLED())
-+			return;
- 		vha->hw->tgt.tgt_vp_map[vha->vp_idx].vha = NULL;
- 		break;
- 	case RESET_AL_PA:
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf01a,
- 		   "clear vha in host_map %p %06x\n", vha, key);
--		slot = btree_lookup32(&vha->hw->tgt.host_map, key);
-+		slot = btree_lookup32(&vha->hw->host_map, key);
- 		if (slot)
--			btree_remove32(&vha->hw->tgt.host_map, key);
-+			btree_remove32(&vha->hw->host_map, key);
- 		vha->d_id.b24 = 0;
- 		break;
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 01620f3eab39..d015c7c5a718 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -176,6 +176,7 @@ struct nack_to_isp {
- 	uint8_t  reserved[2];
- 	__le16	ox_id;
- } __packed;
-+#define NOTIFY_ACK_FLAGS_FCSP		BIT_5
- #define NOTIFY_ACK_FLAGS_TERMINATE	BIT_3
- #define NOTIFY_ACK_SRR_FLAGS_ACCEPT	0
- #define NOTIFY_ACK_SRR_FLAGS_REJECT	1
-@@ -238,6 +239,10 @@ struct ctio_to_2xxx {
- #define CTIO_PORT_LOGGED_OUT		0x29
- #define CTIO_PORT_CONF_CHANGED		0x2A
- #define CTIO_SRR_RECEIVED		0x45
-+#define CTIO_FAST_AUTH_ERR		0x63
-+#define CTIO_FAST_INCOMP_PAD_LEN	0x65
-+#define CTIO_FAST_INVALID_REQ		0x66
-+#define CTIO_FAST_SPI_ERR		0x67
- #endif
- 
- #ifndef CTIO_RET_TYPE
-@@ -408,7 +413,16 @@ struct ctio7_to_24xx {
- 		struct {
- 			__le16	reserved1;
- 			__le16 flags;
--			__le32	residual;
-+			union {
-+				__le32	residual;
-+				struct {
-+					uint8_t rsvd1;
-+					uint8_t edif_flags;
-+#define EF_EN_EDIF	BIT_0
-+#define EF_NEW_SA	BIT_1
-+					uint16_t rsvd2;
-+				};
-+			};
- 			__le16 ox_id;
- 			__le16	scsi_status;
- 			__le32	relative_offset;
-@@ -446,7 +460,7 @@ struct ctio7_from_24xx {
- 	uint8_t  vp_index;
- 	uint8_t  reserved1[5];
- 	__le32	exchange_address;
--	__le16	reserved2;
-+	__le16	edif_sa_index;
- 	__le16	flags;
- 	__le32	residual;
- 	__le16	ox_id;
-@@ -875,6 +889,7 @@ struct qla_tgt_cmd {
- 	unsigned int term_exchg:1;
- 	unsigned int cmd_sent_to_fw:1;
- 	unsigned int cmd_in_wq:1;
-+	unsigned int edif:1;
- 
- 	/*
- 	 * This variable may be set from outside the LIO and I/O completion
-@@ -991,6 +1006,9 @@ struct qla_tgt_prm {
- #define QLA_TGT_XMIT_STATUS		2
- #define QLA_TGT_XMIT_ALL		(QLA_TGT_XMIT_STATUS|QLA_TGT_XMIT_DATA)
- 
-+#define PRLO_ACK_NEEDED(_sess) \
-+	(_sess->logo_ack_needed && \
-+	 ((struct imm_ntfy_from_isp *)_sess->iocb)->u.isp24.status_subcode == ELS_PRLO)
- 
- extern struct qla_tgt_data qla_target;
- 
--- 
-2.19.0.rc0
+--ew6BAiZeqk4r7MaW
+Content-Type: application/gzip
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
+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
+
+--ew6BAiZeqk4r7MaW--
