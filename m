@@ -7,50 +7,51 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4204C433B4
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 May 2021 21:43:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 559F0C433ED
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 May 2021 21:43:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99669613C9
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 May 2021 21:43:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35B7F613C5
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 May 2021 21:43:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229876AbhEIVoX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S229925AbhEIVoX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sun, 9 May 2021 17:44:23 -0400
-Received: from mail-pg1-f180.google.com ([209.85.215.180]:47055 "EHLO
-        mail-pg1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229815AbhEIVoU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 May 2021 17:44:20 -0400
-Received: by mail-pg1-f180.google.com with SMTP id m124so11863229pgm.13
-        for <linux-scsi@vger.kernel.org>; Sun, 09 May 2021 14:43:16 -0700 (PDT)
+Received: from mail-pg1-f179.google.com ([209.85.215.179]:36555 "EHLO
+        mail-pg1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229662AbhEIVoW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 May 2021 17:44:22 -0400
+Received: by mail-pg1-f179.google.com with SMTP id c21so11904418pgg.3
+        for <linux-scsi@vger.kernel.org>; Sun, 09 May 2021 14:43:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=BMjPvho0aXfcqdw6F9RPLM21ijwP7wFLH3CxLZw+RoI=;
-        b=jFolYTCN2dkmtwdAFIL45tioijF58YEWCUy29WtfHjltMTGNNzpdI/+ZIiy8C3BzEo
-         dZvV0sjEq+7N4fihCZzC3kvP8zge0HfKASoTzIz6fSDrB+sYRAanf5/Zjq8UHKOTmKHU
-         apQmcR8qpkb3tahCD6prhRw3X198Nm34hcgj/27enb3D0+WtuN/xaqE5O9aBfFueRVhU
-         pTpewaJlVC+i37+QxeOuCn/9HTj9WbZ1jn41WTWD1/P7ut3yXup2pbv1Dj3gd/JCsjIy
-         2ZNKkSRh+ngn3g6d6T3dXLcGcZ6Tt7/k4ph6N0dBvwSI2k2PfdQOKfck0TvB6B0rl85y
-         Lb2g==
-X-Gm-Message-State: AOAM533VlsgR8TK8EpYGpKhIc7R1Vw0ijbn1ctBUkGJcfCX/TDFxWnQ3
-        iIqbXVWWuxVcmL/u0YnEe4RVdEcRi5g=
-X-Google-Smtp-Source: ABdhPJwt8TPOswxh037ga2uUqIuKzk6+n1ak87c6Odva/S25cPv7enHICcINhX2n12kYtsy0wBrVcw==
-X-Received: by 2002:a63:d710:: with SMTP id d16mr21910642pgg.214.1620596596415;
-        Sun, 09 May 2021 14:43:16 -0700 (PDT)
+        bh=nSv5X4y9sOkTjDLwOr2XKXeP6Cfhir7BXtEsp9sc/Hc=;
+        b=FMU33u5XSK2CogrcYirrUS00vgUyaWGWctfGdt7UTzSq95ZiRLBAL+McRVmUdTQtKx
+         XzSl7kFaeZRA7BNamiY4g2qLgg7du63XYn700IxgTX60fAW5a50cySvsclCz7duehy2M
+         U9WjxpmulTcZX2W3xhJ3W6yMRZOtzAjSsb8fLsI+YL5Bt5nnTBwA2sPL6yPrMbTvLUUY
+         ADL4I5Hbwt6NOfiG+Dv8jtg7TvN58NFrNnvlP5hWv7ejm8YfZWqbYx9/7yzlbemJkZWa
+         GCNrhHxVgPIZn53dTuNg+rBdqc5zl2KdhjvI5FMjpgrNi/wJnV9FHJnYSBOzv5WCLMDM
+         u3ZQ==
+X-Gm-Message-State: AOAM532oSuY0+1ubx4O1si0GJC0KCgGNoDzTrBen21KT85djoTL0FMA/
+        PqULDA53vSMEYSvp16XVU0M=
+X-Google-Smtp-Source: ABdhPJxN1cVG/omkovcQXjSFIE6uAkzVmWWRYD7fR0K6VLCT1yp+9a5TtY2s31WjBa8uOh6rYZ6WZQ==
+X-Received: by 2002:aa7:8d5a:0:b029:227:7b07:7d8b with SMTP id s26-20020aa78d5a0000b02902277b077d8bmr21346530pfe.26.1620596597838;
+        Sun, 09 May 2021 14:43:17 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:1f3e:222f:39bb:cb2e])
-        by smtp.gmail.com with ESMTPSA id t4sm9712567pfq.165.2021.05.09.14.43.15
+        by smtp.gmail.com with ESMTPSA id t4sm9712567pfq.165.2021.05.09.14.43.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 09 May 2021 14:43:15 -0700 (PDT)
+        Sun, 09 May 2021 14:43:17 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Hannes Reinecke <hare@suse.com>,
         Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 1/7] Introduce scsi_get_pos()
-Date:   Sun,  9 May 2021 14:43:01 -0700
-Message-Id: <20210509214307.4610-2-bvanassche@acm.org>
+        Bart Van Assche <bvanassche@acm.org>,
+        Sagi Grimberg <sagi@grimberg.me>
+Subject: [PATCH 2/7] iser: Use scsi_get_pos() instead of scsi_get_lba()
+Date:   Sun,  9 May 2021 14:43:02 -0700
+Message-Id: <20210509214307.4610-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210509214307.4610-1-bvanassche@acm.org>
 References: <20210509214307.4610-1-bvanassche@acm.org>
@@ -60,28 +61,25 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since scsi_get_lba() returns a sector_t value instead of the LBA, the name
-of that function is confusing. Introduce an identical function
-scsi_get_pos(). A later patch will remove scsi_get_lba().
+Use scsi_get_pos() instead of scsi_get_lba() since the name of the latter
+is confusing. This patch does not change any functionality.
 
+Cc: Sagi Grimberg <sagi@grimberg.me>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- include/scsi/scsi_cmnd.h | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/infiniband/ulp/iser/iser_verbs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index adb8df40b942..8147b1c0f265 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -290,6 +290,11 @@ static inline sector_t scsi_get_lba(struct scsi_cmnd *scmd)
- 	return blk_rq_pos(scmd->request);
- }
+diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
+index 136f6c4492e0..c33e113eeee5 100644
+--- a/drivers/infiniband/ulp/iser/iser_verbs.c
++++ b/drivers/infiniband/ulp/iser/iser_verbs.c
+@@ -949,7 +949,7 @@ u8 iser_check_task_pi_status(struct iscsi_iser_task *iser_task,
+ 			sector_t sector_off = mr_status.sig_err.sig_err_offset;
  
-+static inline sector_t scsi_get_pos(struct scsi_cmnd *scmd)
-+{
-+	return blk_rq_pos(scmd->request);
-+}
-+
- static inline unsigned int scsi_prot_interval(struct scsi_cmnd *scmd)
- {
- 	return scmd->device->sector_size;
+ 			sector_div(sector_off, sector_size + 8);
+-			*sector = scsi_get_lba(iser_task->sc) + sector_off;
++			*sector = scsi_get_pos(iser_task->sc) + sector_off;
+ 
+ 			iser_err("PI error found type %d at sector %llx "
+ 			       "expected %x vs actual %x\n",
