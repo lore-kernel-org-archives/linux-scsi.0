@@ -4,27 +4,27 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83FF9C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 May 2021 14:25:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9A6AC433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 May 2021 14:25:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 640A7611BF
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 May 2021 14:25:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F7EA6143C
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 May 2021 14:25:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232976AbhEJO0s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 May 2021 10:26:48 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:2678 "EHLO
+        id S233719AbhEJO0v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 May 2021 10:26:51 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:2676 "EHLO
         szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235417AbhEJOXq (ORCPT
+        with ESMTP id S235354AbhEJOXq (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 May 2021 10:23:46 -0400
 Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Ff39B55RDz1BKvf;
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Ff39B4WTgz1BKvs;
         Mon, 10 May 2021 22:19:58 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
- 14.3.498.0; Mon, 10 May 2021 22:22:28 +0800
+ 14.3.498.0; Mon, 10 May 2021 22:22:26 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <joro@8bytes.org>, <will@kernel.org>, <robin.murphy@arm.com>,
         <hch@lst.de>, <m.szyprowski@samsung.com>
@@ -32,9 +32,9 @@ CC:     <iommu@lists.linux-foundation.org>, <baolu.lu@linux.intel.com>,
         <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <linuxarm@huawei.com>, <sai.praneeth.prakhya@intel.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 13/15] dma-mapping: Add dma_set_max_opt_size()
-Date:   Mon, 10 May 2021 22:17:27 +0800
-Message-ID: <1620656249-68890-14-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 07/15] iommu: Add iommu_realloc_dev_group()
+Date:   Mon, 10 May 2021 22:17:21 +0800
+Message-ID: <1620656249-68890-8-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1620656249-68890-1-git-send-email-john.garry@huawei.com>
 References: <1620656249-68890-1-git-send-email-john.garry@huawei.com>
@@ -46,80 +46,61 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a function to allow the max size which we want to optimise DMA mappings
-for.
+Add a function to re-alloc IOMMU group default domain.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- include/linux/dma-map-ops.h |  1 +
- include/linux/dma-mapping.h |  8 ++++++++
- kernel/dma/mapping.c        | 11 +++++++++++
- 3 files changed, 20 insertions(+)
+ drivers/iommu/iommu.c | 12 ++++++++++++
+ include/linux/iommu.h |  6 ++++++
+ 2 files changed, 18 insertions(+)
 
-diff --git a/include/linux/dma-map-ops.h b/include/linux/dma-map-ops.h
-index 0d53a96a3d64..7f9857da87d8 100644
---- a/include/linux/dma-map-ops.h
-+++ b/include/linux/dma-map-ops.h
-@@ -69,6 +69,7 @@ struct dma_map_ops {
- 	u64 (*get_required_mask)(struct device *dev);
- 	size_t (*max_mapping_size)(struct device *dev);
- 	unsigned long (*get_merge_boundary)(struct device *dev);
-+	int (*set_max_opt_size)(struct device *dev, size_t size);
- };
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index f7253a973ab9..bdb9aa47dfca 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -3191,6 +3191,18 @@ static int iommu_change_dev_def_domain(struct iommu_group *group,
+ 	return ret;
+ }
  
- #ifdef CONFIG_DMA_OPS
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index 183e7103a66d..41681db93580 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -153,6 +153,7 @@ void *dma_vmap_noncontiguous(struct device *dev, size_t size,
- void dma_vunmap_noncontiguous(struct device *dev, void *vaddr);
- int dma_mmap_noncontiguous(struct device *dev, struct vm_area_struct *vma,
- 		size_t size, struct sg_table *sgt);
-+int dma_set_max_opt_size(struct device *dev, size_t size);
- #else /* CONFIG_HAS_DMA */
- static inline dma_addr_t dma_map_page_attrs(struct device *dev,
- 		struct page *page, size_t offset, size_t size,
-@@ -266,6 +267,7 @@ static inline unsigned long dma_get_merge_boundary(struct device *dev)
++int iommu_realloc_dev_group(struct device *dev)
++{
++	struct iommu_group *group;
++	int ret;
++
++	group = iommu_group_get(dev);
++	ret = iommu_change_dev_def_domain(group, dev, 0, true);
++	iommu_group_put(group);
++
++	return ret;
++}
++
+ /*
+  * Changing the default domain or any other IOMMU group attribute through sysfs
+  * requires the users to unbind the drivers from the devices in the IOMMU group.
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index e26abda94792..6e187746af0f 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -482,6 +482,7 @@ bool iommu_get_dma_strict(struct iommu_domain *domain);
+ 
+ extern int report_iommu_fault(struct iommu_domain *domain, struct device *dev,
+ 			      unsigned long iova, int flags);
++extern int iommu_realloc_dev_group(struct device *dev);
+ 
+ static inline void iommu_flush_iotlb_all(struct iommu_domain *domain)
  {
+@@ -699,6 +700,11 @@ static inline size_t iommu_map_sg_atomic(struct iommu_domain *domain,
  	return 0;
  }
-+
- static inline struct sg_table *dma_alloc_noncontiguous(struct device *dev,
- 		size_t size, enum dma_data_direction dir, gfp_t gfp,
- 		unsigned long attrs)
-@@ -289,6 +291,12 @@ static inline int dma_mmap_noncontiguous(struct device *dev,
- {
- 	return -EINVAL;
- }
-+
-+static inline int dma_set_max_opt_size(struct device *dev, size_t size)
-+{
-+	return -EINVAL;
-+}
-+
- #endif /* CONFIG_HAS_DMA */
  
- struct page *dma_alloc_pages(struct device *dev, size_t size,
-diff --git a/kernel/dma/mapping.c b/kernel/dma/mapping.c
-index 2b06a809d0b9..1e4820b08f7e 100644
---- a/kernel/dma/mapping.c
-+++ b/kernel/dma/mapping.c
-@@ -736,3 +736,14 @@ unsigned long dma_get_merge_boundary(struct device *dev)
- 	return ops->get_merge_boundary(dev);
- }
- EXPORT_SYMBOL_GPL(dma_get_merge_boundary);
-+
-+int dma_set_max_opt_size(struct device *dev, size_t size)
++static inline int iommu_realloc_dev_group(struct device *dev)
 +{
-+	const struct dma_map_ops *ops = get_dma_ops(dev);
-+
-+	if (!ops || !ops->set_max_opt_size)
-+		return 0;
-+
-+	return ops->set_max_opt_size(dev, size);
++	return -ENODEV;
 +}
-+EXPORT_SYMBOL_GPL(dma_set_max_opt_size);
++
+ static inline void iommu_flush_iotlb_all(struct iommu_domain *domain)
+ {
+ }
 -- 
 2.26.2
 
