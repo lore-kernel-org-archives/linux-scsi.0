@@ -4,27 +4,27 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9B04C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 May 2021 14:27:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A71CFC433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 May 2021 14:27:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 864566145F
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 May 2021 14:27:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C8C16143C
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 May 2021 14:27:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231623AbhEJO2I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 May 2021 10:28:08 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:2681 "EHLO
+        id S237520AbhEJO2N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 May 2021 10:28:13 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:2759 "EHLO
         szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238914AbhEJOZs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 May 2021 10:25:48 -0400
+        with ESMTP id S238904AbhEJOZr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 May 2021 10:25:47 -0400
 Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Ff39B5yJgz1BKwN;
-        Mon, 10 May 2021 22:19:58 +0800 (CST)
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Ff38H3gGRzqTrb;
+        Mon, 10 May 2021 22:19:11 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
- 14.3.498.0; Mon, 10 May 2021 22:22:28 +0800
+ 14.3.498.0; Mon, 10 May 2021 22:22:24 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <joro@8bytes.org>, <will@kernel.org>, <robin.murphy@arm.com>,
         <hch@lst.de>, <m.szyprowski@samsung.com>
@@ -32,9 +32,9 @@ CC:     <iommu@lists.linux-foundation.org>, <baolu.lu@linux.intel.com>,
         <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <linuxarm@huawei.com>, <sai.praneeth.prakhya@intel.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 14/15] dma-iommu: Add iommu_dma_set_opt_size()
-Date:   Mon, 10 May 2021 22:17:28 +0800
-Message-ID: <1620656249-68890-15-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 01/15] iommu: Reactor iommu_group_store_type()
+Date:   Mon, 10 May 2021 22:17:15 +0800
+Message-ID: <1620656249-68890-2-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1620656249-68890-1-git-send-email-john.garry@huawei.com>
 References: <1620656249-68890-1-git-send-email-john.garry@huawei.com>
@@ -46,38 +46,159 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add iommu_dma_set_opt_size(), which is a frontend for
-iommu_set_dev_dma_opt_size().
+Function iommu_group_store_type() supports changing the default domain of
+an IOMMU group.
+
+Many conditions need to be satisfied and steps taken for this action to be
+successful.
+
+Satisfying these conditions and steps will be required for setting other
+IOMMU group attributes, so factor into a common part and a part specific
+to update the IOMMU group attribute.
+
+No functional change intended.
+
+Some code comments are tidied up also.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/iommu/dma-iommu.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/iommu/iommu.c | 73 +++++++++++++++++++++++++++----------------
+ 1 file changed, 46 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-index 1d58c7a2d85d..fd62afe7c7d0 100644
---- a/drivers/iommu/dma-iommu.c
-+++ b/drivers/iommu/dma-iommu.c
-@@ -490,6 +490,11 @@ static dma_addr_t iommu_dma_alloc_iova(struct iommu_domain *domain,
- 	return (dma_addr_t)iova << shift;
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 808ab70d5df5..4d12b607918c 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -3169,20 +3169,23 @@ static int iommu_change_dev_def_domain(struct iommu_group *group,
  }
  
-+static int iommu_dma_set_opt_size(struct device *dev, size_t size)
+ /*
+- * Changing the default domain through sysfs requires the users to ubind the
+- * drivers from the devices in the iommu group. Return failure if this doesn't
+- * meet.
++ * Changing the default domain or any other IOMMU group attribute through sysfs
++ * requires the users to unbind the drivers from the devices in the IOMMU group.
++ * Return failure if this precondition is not met.
+  *
+  * We need to consider the race between this and the device release path.
+  * device_lock(dev) is used here to guarantee that the device release path
+  * will not be entered at the same time.
+  */
+-static ssize_t iommu_group_store_type(struct iommu_group *group,
+-				      const char *buf, size_t count)
++static ssize_t iommu_group_store_common(struct iommu_group *group,
++					const char *buf, size_t count,
++					int (*cb)(const char *buf,
++						  struct iommu_group *group,
++						  struct device *dev))
+ {
+ 	struct group_device *grp_dev;
+ 	struct device *dev;
+-	int ret, req_type;
++	int ret;
+ 
+ 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+ 		return -EACCES;
+@@ -3190,25 +3193,16 @@ static ssize_t iommu_group_store_type(struct iommu_group *group,
+ 	if (WARN_ON(!group))
+ 		return -EINVAL;
+ 
+-	if (sysfs_streq(buf, "identity"))
+-		req_type = IOMMU_DOMAIN_IDENTITY;
+-	else if (sysfs_streq(buf, "DMA"))
+-		req_type = IOMMU_DOMAIN_DMA;
+-	else if (sysfs_streq(buf, "auto"))
+-		req_type = 0;
+-	else
+-		return -EINVAL;
+-
+ 	/*
+ 	 * Lock/Unlock the group mutex here before device lock to
+-	 * 1. Make sure that the iommu group has only one device (this is a
++	 * 1. Make sure that the IOMMU group has only one device (this is a
+ 	 *    prerequisite for step 2)
+ 	 * 2. Get struct *dev which is needed to lock device
+ 	 */
+ 	mutex_lock(&group->mutex);
+ 	if (iommu_group_device_count(group) != 1) {
+ 		mutex_unlock(&group->mutex);
+-		pr_err_ratelimited("Cannot change default domain: Group has more than one device\n");
++		pr_err_ratelimited("Cannot change IOMMU group default domain attribute: Group has more than one device\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -3220,16 +3214,16 @@ static ssize_t iommu_group_store_type(struct iommu_group *group,
+ 	/*
+ 	 * Don't hold the group mutex because taking group mutex first and then
+ 	 * the device lock could potentially cause a deadlock as below. Assume
+-	 * two threads T1 and T2. T1 is trying to change default domain of an
+-	 * iommu group and T2 is trying to hot unplug a device or release [1] VF
+-	 * of a PCIe device which is in the same iommu group. T1 takes group
+-	 * mutex and before it could take device lock assume T2 has taken device
+-	 * lock and is yet to take group mutex. Now, both the threads will be
+-	 * waiting for the other thread to release lock. Below, lock order was
+-	 * suggested.
++	 * two threads, T1 and T2. T1 is trying to change default domain
++	 * attribute of an IOMMU group and T2 is trying to hot unplug a device
++	 * or release [1] VF of a PCIe device which is in the same IOMMU group.
++	 * T1 takes the group mutex and before it could take device lock T2 may
++	 * have taken device lock and is yet to take group mutex. Now, both the
++	 * threads will be waiting for the other thread to release lock. Below,
++	 * lock order was suggested.
+ 	 * device_lock(dev);
+ 	 *	mutex_lock(&group->mutex);
+-	 *		iommu_change_dev_def_domain();
++	 *		cb->iommu_change_dev_def_domain(); [example cb]
+ 	 *	mutex_unlock(&group->mutex);
+ 	 * device_unlock(dev);
+ 	 *
+@@ -3243,7 +3237,7 @@ static ssize_t iommu_group_store_type(struct iommu_group *group,
+ 	 */
+ 	mutex_unlock(&group->mutex);
+ 
+-	/* Check if the device in the group still has a driver bound to it */
++	/* Check if the only device in the group still has a driver bound */
+ 	device_lock(dev);
+ 	if (device_is_bound(dev)) {
+ 		pr_err_ratelimited("Device is still bound to driver\n");
+@@ -3251,7 +3245,7 @@ static ssize_t iommu_group_store_type(struct iommu_group *group,
+ 		goto out;
+ 	}
+ 
+-	ret = iommu_change_dev_def_domain(group, dev, req_type);
++	ret = (cb)(buf, group, dev);
+ 	ret = ret ?: count;
+ 
+ out:
+@@ -3260,3 +3254,28 @@ static ssize_t iommu_group_store_type(struct iommu_group *group,
+ 
+ 	return ret;
+ }
++
++static int iommu_group_store_type_cb(const char *buf,
++				     struct iommu_group *group,
++				     struct device *dev)
 +{
-+	return iommu_set_dev_dma_opt_size(dev, size);
++	int type;
++
++	if (sysfs_streq(buf, "identity"))
++		type = IOMMU_DOMAIN_IDENTITY;
++	else if (sysfs_streq(buf, "DMA"))
++		type = IOMMU_DOMAIN_DMA;
++	else if (sysfs_streq(buf, "auto"))
++		type = 0;
++	else
++		return -EINVAL;
++
++	return iommu_change_dev_def_domain(group, dev, type);
 +}
 +
- static void iommu_dma_free_iova(struct iommu_dma_cookie *cookie,
- 		dma_addr_t iova, size_t size, struct page *freelist)
- {
-@@ -1340,6 +1345,7 @@ static const struct dma_map_ops iommu_dma_ops = {
- 	.map_resource		= iommu_dma_map_resource,
- 	.unmap_resource		= iommu_dma_unmap_resource,
- 	.get_merge_boundary	= iommu_dma_get_merge_boundary,
-+	.set_max_opt_size	= iommu_dma_set_opt_size,
- };
- 
- /*
++static ssize_t iommu_group_store_type(struct iommu_group *group,
++				      const char *buf, size_t count)
++{
++	return iommu_group_store_common(group, buf, count,
++					iommu_group_store_type_cb);
++}
 -- 
 2.26.2
 
