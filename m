@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,
-	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11F2FC433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:52:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20966C43460
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:52:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE9F761376
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:52:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE563617C9
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:52:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230367AbhEKTxp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 May 2021 15:53:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37842 "EHLO
+        id S229932AbhEKTxq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 May 2021 15:53:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232294AbhEKTx3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 15:53:29 -0400
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BDE8C061574
-        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:52:20 -0700 (PDT)
-Received: by mail-pj1-x102c.google.com with SMTP id fa21-20020a17090af0d5b0290157eb6b590fso1990613pjb.5
-        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:52:20 -0700 (PDT)
+        with ESMTP id S232310AbhEKTxa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 15:53:30 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6160AC06174A
+        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:52:23 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id fa21-20020a17090af0d5b0290157eb6b590fso1990687pjb.5
+        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:52:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=RQAOyNdxJw3D7Nd6OE0voede6GsJ+p4t79R4kzHEXM8=;
-        b=drJFdCdcv+GPbEGI7y22lYMisZBFcpzrdqSDftIB6vecRoa9xRCtdT0052Ip0uTU0Y
-         elBZLEMlYPaiGKW+qyd0sqiS0Z0BTHYtqkCGqV3VQtolnAOkSQkuXM1PV43MtrWCqi7X
-         UPH4McIWomBiM/AcSmFh1MzsOuciAv4dbcUas=
+        bh=BbSIMqq7E6tnwYpg/waZbTSiFFplWPf5mtmT8K/DCwA=;
+        b=AGK173UfMVS5Cyabx/DwHW0apy/SVVfkrU/SWVrefZVdDoqCEqMtIDBbVpdxdQUijQ
+         U6G9Zc6vW2KP1+ezyFKX9fDp8SNwiQrgg6GJRHSgEeo8dwK9Y7W+93dSLJJP7TgTa6HU
+         yJ/cz36CEEP9u5B7c3fZzQe3vXcNWLsoF3fyc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=RQAOyNdxJw3D7Nd6OE0voede6GsJ+p4t79R4kzHEXM8=;
-        b=bNSZJG8ZtvVl7wXmOgYFFhDrKlkXBdOeL8Dn8kiAnE4U6RcAUV+HrxV/MQUtg1OEgy
-         XnfvorHwKx33ixgMNtao77/zqUsUEGqkKlc7Q6x+DYnFgQudwv6awHz42hqqN+oOXj3N
-         aHx3YwsmjGSnFKAostGHNBH9CeyptyL82m7wwsyrq2YcWBNKW6atY0u8fg0vZpX5ggy7
-         BagC+xasJCSLeB98v98i4xi+KmP6b/L3aLscNXye9n+5ACQVMtlEMFVx+eX7oNSP6nY5
-         jIHDKCUvmLu6sXhvfVFkD8h/U1+1XcxJwqoOrpiKgkliGJjd28gD3ZjspSCVK62j9rnt
-         dHbg==
-X-Gm-Message-State: AOAM533PpTCq2fB7U+M6Bxl6A8L7w/br8lyP2+KAsGaeGcPqzIeqodsm
-        NB3wKv9FJcPoiFHWesB3fKT1aB6XjiTEH6r0ZMmnIEYxLcr9EcBIVpxXMjPqBdGSoDGcdYEuzVg
-        H4uiQm1zkV3V5XJfp6LCOTvudw9guXBozB0o97TyA8gXPQylRc4Dif+2u3yBeC19xYd/IRj8hOE
-        cz/BnA/w==
-X-Google-Smtp-Source: ABdhPJzKg4CQf8JajhWhSdeucuKj4JcWRkx7Ft3i0t5HdaTw0iLaRo0Y6r5QaJAIOintGjNvE1DWkQ==
-X-Received: by 2002:a17:903:31c9:b029:ed:6f56:9d1e with SMTP id v9-20020a17090331c9b02900ed6f569d1emr30935148ple.46.1620762739309;
-        Tue, 11 May 2021 12:52:19 -0700 (PDT)
+        bh=BbSIMqq7E6tnwYpg/waZbTSiFFplWPf5mtmT8K/DCwA=;
+        b=athwV/HLq+1WXcnU4iWnmquXizCEy6P7w/FSretFdWgYhI0FgDPqL95TPjhb29abDf
+         1PQAMqwDwQ5S2ATmNegTKuFzlAsm5HHhcMP7pceLfFXE0X6sFvDNBqugure5Vl/RwvVL
+         16JfetcTRe0YeSI7s+mNhaOlWsEklcxOJL/8aXzJcJdS1kdsvnqNl1Oa98sgyLBybtVp
+         jA0lF5AIdZQKIO17xgfptGt8Eekrh4XRss/Yf3qIT49X/uLY/EkIbZhWuhrJHIhmCVee
+         MZFFmBUNfEp2iIjifQ4JRNBn5WH8ZfDTtWrhyEGGIHdY69M/EhIBOYRQbEfgUIWAKYyt
+         hkyQ==
+X-Gm-Message-State: AOAM530uFzvcXj3Roa9NMZJicLK0e50Cbhwsgzuz03bsP+SIkxq9Ka//
+        MLMBlMe1yJ1pnx8fuQrzzAEAIA+Qv0K8ZYWUJ+6TFf+PpTFQdmZYwZBnHK59BANT660uSqI8Tl2
+        CAOFxTVg8IwNG6DuM/pSX4Oa0hE3cQmDkIFDgDYDn5qqVVcaSpTE28WfEm9JZEr3KaKPV1EBzRT
+        PIRObkeQ==
+X-Google-Smtp-Source: ABdhPJxMzrglW2AAI6J6PGhEmGpUXACtEZxSb9vZrRlcVrbFiaxrHh/eXFodjvzPzFHyik+Wuy3UWw==
+X-Received: by 2002:a17:902:8ecc:b029:ef:6471:dc08 with SMTP id x12-20020a1709028eccb02900ef6471dc08mr4013896plo.5.1620762742265;
+        Tue, 11 May 2021 12:52:22 -0700 (PDT)
 Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b3sm6317581pfv.61.2021.05.11.12.52.16
+        by smtp.gmail.com with ESMTPSA id b3sm6317581pfv.61.2021.05.11.12.52.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 May 2021 12:52:18 -0700 (PDT)
+        Tue, 11 May 2021 12:52:21 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -61,19 +61,19 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: [PATCH v4 23/24] mpi3mr: add eedp dif dix support
-Date:   Wed, 12 May 2021 01:24:22 +0530
-Message-Id: <20210511195423.2134562-24-kashyap.desai@broadcom.com>
+Subject: [PATCH v4 24/24] mpi3mr: add event handling debug prints
+Date:   Wed, 12 May 2021 01:24:23 +0530
+Message-Id: <20210511195423.2134562-25-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210511195423.2134562-1-kashyap.desai@broadcom.com>
 References: <20210511195423.2134562-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000005edb1505c2133b2b"
+        boundary="0000000000008d594005c2133bc3"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000005edb1505c2133b2b
+--0000000000008d594005c2133bc3
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
@@ -82,502 +82,353 @@ Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
 Cc: sathya.prakash@broadcom.com
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |   5 +
- drivers/scsi/mpi3mr/mpi3mr_fw.c |   7 +
- drivers/scsi/mpi3mr/mpi3mr_os.c | 301 +++++++++++++++++++++++++++++++-
- 3 files changed, 308 insertions(+), 5 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 115 ++++++++++++++++++++++
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 166 +++++++++++++++++++++++++++++++-
+ 2 files changed, 280 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 35defe6e095c..ed5830c88f34 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -118,6 +118,7 @@ extern struct list_head mrioc_list;
- #define MPI3MR_SENSEBUF_SZ	256
- #define MPI3MR_SENSEBUF_FACTOR	3
- #define MPI3MR_CHAINBUF_FACTOR	3
-+#define MPI3MR_CHAINBUFDIX_FACTOR	2
- 
- /* Invalid target device handle */
- #define MPI3MR_INVALID_DEV_HANDLE	0xFFFF
-@@ -557,17 +558,21 @@ struct chain_element {
-  *
-  * @host_tag: Host tag specific to operational queue
-  * @in_lld_scope: Command in LLD scope or not
-+ * @meta_sg_valid: DIX command with meta data SGL or not
-  * @scmd: SCSI Command pointer
-  * @req_q_idx: Operational request queue index
-  * @chain_idx: Chain frame index
-+ * @meta_chain_idx: Chain frame index of meta data SGL
-  * @mpi3mr_scsiio_req: MPI SCSI IO request
-  */
- struct scmd_priv {
- 	u16 host_tag;
- 	u8 in_lld_scope;
-+	u8 meta_sg_valid;
- 	struct scsi_cmnd *scmd;
- 	u16 req_q_idx;
- 	int chain_idx;
-+	int meta_chain_idx;
- 	u8 mpi3mr_scsiio_req[MPI3MR_ADMIN_REQ_FRAME_SZ];
- };
- 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 34372dc4eb3f..93d9ed155a91 100644
+index 93d9ed155a91..d808d578c641 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -9,6 +9,7 @@
+@@ -154,6 +154,120 @@ void mpi3mr_repost_sense_buf(struct mpi3mr_ioc *mrioc,
+ 	spin_unlock(&mrioc->sbq_lock);
+ }
  
- #include "mpi3mr.h"
- #include <linux/io-64-nonatomic-lo-hi.h>
-+extern int prot_mask;
- 
- #if defined(writeq) && defined(CONFIG_64BIT)
- static inline void mpi3mr_writeq(__u64 b, volatile void __iomem *addr)
-@@ -2749,6 +2750,12 @@ static int mpi3mr_alloc_chain_bufs(struct mpi3mr_ioc *mrioc)
- 
- 	num_chains = mrioc->max_host_ios / MPI3MR_CHAINBUF_FACTOR;
- 
-+	if (prot_mask & (SHOST_DIX_TYPE0_PROTECTION
-+	    | SHOST_DIX_TYPE1_PROTECTION
-+	    | SHOST_DIX_TYPE2_PROTECTION
-+	    | SHOST_DIX_TYPE3_PROTECTION))
-+		num_chains += (num_chains / MPI3MR_CHAINBUFDIX_FACTOR);
++static void mpi3mr_print_event_data(struct mpi3mr_ioc *mrioc,
++	struct _mpi3_event_notification_reply *event_reply)
++{
++	char *desc = NULL;
++	u16 event;
 +
- 	mrioc->chain_buf_count = num_chains;
- 	sz = sizeof(struct chain_element) * num_chains;
- 	mrioc->chain_sgl_list = kzalloc(sz, GFP_KERNEL);
++	event = event_reply->event;
++
++	switch (event) {
++	case MPI3_EVENT_LOG_DATA:
++		desc = "Log Data";
++		break;
++	case MPI3_EVENT_CHANGE:
++		desc = "Event Change";
++		break;
++	case MPI3_EVENT_GPIO_INTERRUPT:
++		desc = "GPIO Interrupt";
++		break;
++	case MPI3_EVENT_TEMP_THRESHOLD:
++		desc = "Temperature Threshold";
++		break;
++	case MPI3_EVENT_CABLE_MGMT:
++		desc = "Cable Management";
++		break;
++	case MPI3_EVENT_ENERGY_PACK_CHANGE:
++		desc = "Energy Pack Change";
++		break;
++	case MPI3_EVENT_DEVICE_ADDED:
++	{
++		struct _mpi3_device_page0 *event_data =
++		    (struct _mpi3_device_page0 *)event_reply->event_data;
++		ioc_info(mrioc, "Device Added: dev=0x%04x Form=0x%x\n",
++		    event_data->dev_handle, event_data->device_form);
++		return;
++	}
++	case MPI3_EVENT_DEVICE_INFO_CHANGED:
++	{
++		struct _mpi3_device_page0 *event_data =
++		    (struct _mpi3_device_page0 *)event_reply->event_data;
++		ioc_info(mrioc, "Device Info Changed: dev=0x%04x Form=0x%x\n",
++		    event_data->dev_handle, event_data->device_form);
++		return;
++	}
++	case MPI3_EVENT_DEVICE_STATUS_CHANGE:
++	{
++		struct _mpi3_event_data_device_status_change *event_data =
++		    (struct _mpi3_event_data_device_status_change *)event_reply->event_data;
++		ioc_info(mrioc, "Device status Change: dev=0x%04x RC=0x%x\n",
++		    event_data->dev_handle, event_data->reason_code);
++		return;
++	}
++	case MPI3_EVENT_SAS_DISCOVERY:
++	{
++		struct _mpi3_event_data_sas_discovery *event_data =
++		    (struct _mpi3_event_data_sas_discovery *)event_reply->event_data;
++		ioc_info(mrioc, "SAS Discovery: (%s) status (0x%08x)\n",
++		    (event_data->reason_code == MPI3_EVENT_SAS_DISC_RC_STARTED) ?
++		    "start" : "stop",
++		    le32_to_cpu(event_data->discovery_status));
++		return;
++	}
++	case MPI3_EVENT_SAS_BROADCAST_PRIMITIVE:
++		desc = "SAS Broadcast Primitive";
++		break;
++	case MPI3_EVENT_SAS_NOTIFY_PRIMITIVE:
++		desc = "SAS Notify Primitive";
++		break;
++	case MPI3_EVENT_SAS_INIT_DEVICE_STATUS_CHANGE:
++		desc = "SAS Init Device Status Change";
++		break;
++	case MPI3_EVENT_SAS_INIT_TABLE_OVERFLOW:
++		desc = "SAS Init Table Overflow";
++		break;
++	case MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
++		desc = "SAS Topology Change List";
++		break;
++	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
++		desc = "Enclosure Device Status Change";
++		break;
++	case MPI3_EVENT_HARD_RESET_RECEIVED:
++		desc = "Hard Reset Received";
++		break;
++	case MPI3_EVENT_SAS_PHY_COUNTER:
++		desc = "SAS PHY Counter";
++		break;
++	case MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR:
++		desc = "SAS Device Discovery Error";
++		break;
++	case MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
++		desc = "PCIE Topology Change List";
++		break;
++	case MPI3_EVENT_PCIE_ENUMERATION:
++	{
++		struct _mpi3_event_data_pcie_enumeration *event_data =
++		    (struct _mpi3_event_data_pcie_enumeration *)event_reply->event_data;
++		ioc_info(mrioc, "PCIE Enumeration: (%s)",
++		    (event_data->reason_code ==
++		    MPI3_EVENT_PCIE_ENUM_RC_STARTED) ? "start" : "stop");
++		if (event_data->enumeration_status)
++			ioc_info(mrioc, "enumeration_status(0x%08x)\n",
++			    le32_to_cpu(event_data->enumeration_status));
++		return;
++	}
++	case MPI3_EVENT_PREPARE_FOR_RESET:
++		desc = "Prepare For Reset";
++		break;
++	}
++
++	if (!desc)
++		return;
++
++	ioc_info(mrioc, "%s\n", desc);
++}
++
+ static void mpi3mr_handle_events(struct mpi3mr_ioc *mrioc,
+ 	struct _mpi3_default_reply *def_reply)
+ {
+@@ -161,6 +275,7 @@ static void mpi3mr_handle_events(struct mpi3mr_ioc *mrioc,
+ 	    (struct _mpi3_event_notification_reply *)def_reply;
+ 
+ 	mrioc->change_count = le16_to_cpu(event_reply->ioc_change_count);
++	mpi3mr_print_event_data(mrioc, event_reply);
+ 	mpi3mr_os_handle_events(mrioc, event_reply);
+ }
+ 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 7dbc4ae4a4f0..ba7ce324ed87 100644
+index ba7ce324ed87..a50863d4ab90 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -21,6 +21,13 @@ MODULE_LICENSE(MPI3MR_DRIVER_LICENSE);
- MODULE_VERSION(MPI3MR_DRIVER_VERSION);
- 
- /* Module parameters*/
-+int prot_mask = -1;
-+module_param(prot_mask, int, 0);
-+MODULE_PARM_DESC(prot_mask, "Host protection capabilities mask, def=0x07");
-+
-+int prot_guard_mask = 3;
-+module_param(prot_guard_mask, int, 0);
-+MODULE_PARM_DESC(prot_guard_mask, " Host protection guard mask, def=3");
- int logging_level;
- module_param(logging_level, int, 0);
- MODULE_PARM_DESC(logging_level,
-@@ -59,7 +66,9 @@ static u16 mpi3mr_host_tag_for_scmd(struct mpi3mr_ioc *mrioc,
- 	priv->scmd = scmd;
- 	priv->in_lld_scope = 1;
- 	priv->req_q_idx = hw_queue;
-+	priv->meta_chain_idx = -1;
- 	priv->chain_idx = -1;
-+	priv->meta_sg_valid = 0;
- 	return priv->host_tag;
- }
- 
-@@ -119,10 +128,15 @@ static void mpi3mr_clear_scmd_priv(struct mpi3mr_ioc *mrioc,
- 	priv->req_q_idx = 0xFFFF;
- 	priv->scmd = NULL;
- 	priv->in_lld_scope = 0;
-+	priv->meta_sg_valid = 0;
- 	if (priv->chain_idx >= 0) {
- 		clear_bit(priv->chain_idx, mrioc->chain_bitmap);
- 		priv->chain_idx = -1;
- 	}
-+	if (priv->meta_chain_idx >= 0) {
-+		clear_bit(priv->meta_chain_idx, mrioc->chain_bitmap);
-+		priv->meta_chain_idx = -1;
-+	}
- }
- 
- static void mpi3mr_dev_rmhs_send_tm(struct mpi3mr_ioc *mrioc, u16 handle,
-@@ -388,6 +402,9 @@ static bool mpi3mr_flush_scmd(struct request *rq,
- 		if (!priv->in_lld_scope)
- 			goto out;
- 
-+		if (priv->meta_sg_valid)
-+			dma_unmap_sg(&mrioc->pdev->dev, scsi_prot_sglist(scmd),
-+			    scsi_prot_sg_count(scmd), scmd->sc_data_direction);
- 		mpi3mr_clear_scmd_priv(mrioc, scmd);
- 		scsi_dma_unmap(scmd);
- 		scmd->result = DID_RESET << 16;
-@@ -785,6 +802,7 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
- {
- 	u16 flags = 0;
- 	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data;
-+	u8 prot_mask = 0;
- 
- 	tgtdev->perst_id = le16_to_cpu(dev_pg0->persistent_id);
- 	tgtdev->dev_handle = le16_to_cpu(dev_pg0->dev_handle);
-@@ -849,6 +867,15 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
- 		if ((dev_info & MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_MASK) !=
- 		    MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_NVME_DEVICE)
- 			tgtdev->is_hidden = 1;
-+		if (mrioc->shost)
-+			prot_mask = scsi_host_get_prot(mrioc->shost);
-+		if (prot_mask & SHOST_DIX_TYPE0_PROTECTION) {
-+			scsi_host_set_prot(mrioc->shost, prot_mask & 0x77);
-+			ioc_info(mrioc,
-+			    "%s : Disabling DIX0 prot capability\n", __func__);
-+			ioc_info(mrioc,
-+			    "because HBA does not support DIX0 operation on NVME drives\n");
-+		}
- 		break;
- 	}
- 	case MPI3_DEVICE_DEVFORM_VD:
-@@ -1752,6 +1779,194 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
- 	}
+@@ -995,6 +995,85 @@ static void mpi3mr_devinfochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 		mpi3mr_tgtdev_put(tgtdev);
  }
  
 +/**
-+ * mpi3mr_setup_eedp - Setup EEDP information in MPI3 SCSI IO
++ * mpi3mr_sastopochg_evt_debug - SASTopoChange details
 + * @mrioc: Adapter instance reference
-+ * @scmd: SCSI command reference
-+ * @scsiio_req: MPI3 SCSI IO request
++ * @event_data: SAS topology change list event data
 + *
-+ * Identifies the protection information flags from the SCSI
-+ * command and set appropriate flags in the MPI3 SCSI IO
-+ * request.
++ * Prints information about the SAS topology change event.
 + *
-+ * Return: Nothing
++ * Return: Nothing.
 + */
-+static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
-+	struct scsi_cmnd *scmd, struct _mpi3_scsi_io_request *scsiio_req)
++static void
++mpi3mr_sastopochg_evt_debug(struct mpi3mr_ioc *mrioc,
++	struct _mpi3_event_data_sas_topology_change_list *event_data)
 +{
-+	u16 eedp_flags = 0;
-+	unsigned char prot_op = scsi_get_prot_op(scmd);
-+	unsigned char prot_type = scsi_get_prot_type(scmd);
++	int i;
++	u16 handle;
++	u8 reason_code, phy_number;
++	char *status_str = NULL;
++	u8 link_rate, prev_link_rate;
 +
-+	switch (prot_op) {
-+	case SCSI_PROT_NORMAL:
-+		return;
-+	case SCSI_PROT_READ_STRIP:
-+		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK_REMOVE;
++	switch (event_data->exp_status) {
++	case MPI3_EVENT_SAS_TOPO_ES_NOT_RESPONDING:
++		status_str = "remove";
 +		break;
-+	case SCSI_PROT_WRITE_INSERT:
-+		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_INSERT;
++	case MPI3_EVENT_SAS_TOPO_ES_RESPONDING:
++		status_str =  "responding";
 +		break;
-+	case SCSI_PROT_READ_INSERT:
-+		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_INSERT;
-+		scsiio_req->msg_flags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
++	case MPI3_EVENT_SAS_TOPO_ES_DELAY_NOT_RESPONDING:
++		status_str = "remove delay";
 +		break;
-+	case SCSI_PROT_WRITE_STRIP:
-+		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK_REMOVE;
-+		scsiio_req->msg_flags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
++	case MPI3_EVENT_SAS_TOPO_ES_NO_EXPANDER:
++		status_str = "direct attached";
 +		break;
-+	case SCSI_PROT_READ_PASS:
-+		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK |
-+		    MPI3_EEDPFLAGS_CHK_REF_TAG | MPI3_EEDPFLAGS_CHK_APP_TAG |
-+		    MPI3_EEDPFLAGS_CHK_GUARD;
-+		scsiio_req->msg_flags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
++	default:
++		status_str = "unknown status";
 +		break;
-+	case SCSI_PROT_WRITE_PASS:
-+		if (scsi_host_get_guard(scmd->device->host)
-+		    & SHOST_DIX_GUARD_IP) {
-+			eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK_REGEN |
-+			    MPI3_EEDPFLAGS_CHK_APP_TAG |
-+			    MPI3_EEDPFLAGS_CHK_GUARD |
-+			    MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
-+			scsiio_req->sgl[0].eedp.application_tag_translation_mask =
-+			    0xffff;
-+		} else {
-+			eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK |
-+			    MPI3_EEDPFLAGS_CHK_REF_TAG |
-+			    MPI3_EEDPFLAGS_CHK_APP_TAG |
-+			    MPI3_EEDPFLAGS_CHK_GUARD;
++	}
++	ioc_info(mrioc, "%s :sas topology change: (%s)\n",
++	    __func__, status_str);
++	ioc_info(mrioc,
++	    "%s :\texpander_handle(0x%04x), enclosure_handle(0x%04x) start_phy(%02d), num_entries(%d)\n",
++	    __func__, le16_to_cpu(event_data->expander_dev_handle),
++	    le16_to_cpu(event_data->enclosure_handle),
++	    event_data->start_phy_num, event_data->num_entries);
++	for (i = 0; i < event_data->num_entries; i++) {
++		handle = le16_to_cpu(event_data->phy_entry[i].attached_dev_handle);
++		if (!handle)
++			continue;
++		phy_number = event_data->start_phy_num + i;
++		reason_code = event_data->phy_entry[i].status &
++		    MPI3_EVENT_SAS_TOPO_PHY_RC_MASK;
++		switch (reason_code) {
++		case MPI3_EVENT_SAS_TOPO_PHY_RC_TARG_NOT_RESPONDING:
++			status_str = "target remove";
++			break;
++		case MPI3_EVENT_SAS_TOPO_PHY_RC_DELAY_NOT_RESPONDING:
++			status_str = "delay target remove";
++			break;
++		case MPI3_EVENT_SAS_TOPO_PHY_RC_PHY_CHANGED:
++			status_str = "link status change";
++			break;
++		case MPI3_EVENT_SAS_TOPO_PHY_RC_NO_CHANGE:
++			status_str = "link status no change";
++			break;
++		case MPI3_EVENT_SAS_TOPO_PHY_RC_RESPONDING:
++			status_str = "target responding";
++			break;
++		default:
++			status_str = "unknown";
++			break;
 +		}
-+		scsiio_req->msg_flags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
-+		break;
-+	default:
-+		return;
++		link_rate = event_data->phy_entry[i].link_rate >> 4;
++		prev_link_rate = event_data->phy_entry[i].link_rate & 0xF;
++		ioc_info(mrioc,
++		    "%s :\tphy(%02d), attached_handle(0x%04x): %s: link rate: new(0x%02x), old(0x%02x)\n",
++		    __func__, phy_number, handle, status_str, link_rate,
++		    prev_link_rate);
 +	}
-+
-+	if (scsi_host_get_guard(scmd->device->host) & SHOST_DIX_GUARD_IP)
-+		eedp_flags |= MPI3_EEDPFLAGS_HOST_GUARD_IP_CHKSUM;
-+
-+	switch (prot_type) {
-+	case SCSI_PROT_DIF_TYPE0:
-+		eedp_flags |= MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
-+		scsiio_req->cdb.eedp32.primary_reference_tag =
-+		    cpu_to_be32(t10_pi_ref_tag(scmd->request));
-+		break;
-+	case SCSI_PROT_DIF_TYPE1:
-+	case SCSI_PROT_DIF_TYPE2:
-+		eedp_flags |= MPI3_EEDPFLAGS_INCR_PRI_REF_TAG |
-+		    MPI3_EEDPFLAGS_ESC_MODE_APPTAG_DISABLE |
-+		    MPI3_EEDPFLAGS_CHK_GUARD;
-+		scsiio_req->cdb.eedp32.primary_reference_tag =
-+		    cpu_to_be32(t10_pi_ref_tag(scmd->request));
-+		break;
-+	case SCSI_PROT_DIF_TYPE3:
-+		eedp_flags |= MPI3_EEDPFLAGS_CHK_GUARD |
-+		    MPI3_EEDPFLAGS_ESC_MODE_APPTAG_DISABLE;
-+		break;
-+
-+	default:
-+		scsiio_req->msg_flags &= ~(MPI3_SCSIIO_MSGFLAGS_METASGL_VALID);
-+		return;
-+	}
-+
-+	switch (scmd->device->sector_size) {
-+	case 512:
-+		scsiio_req->sgl[0].eedp.user_data_size = MPI3_EEDP_UDS_512;
-+		break;
-+	case 520:
-+		scsiio_req->sgl[0].eedp.user_data_size = MPI3_EEDP_UDS_520;
-+		break;
-+	case 4080:
-+		scsiio_req->sgl[0].eedp.user_data_size = MPI3_EEDP_UDS_4080;
-+		break;
-+	case 4088:
-+		scsiio_req->sgl[0].eedp.user_data_size = MPI3_EEDP_UDS_4088;
-+		break;
-+	case 4096:
-+		scsiio_req->sgl[0].eedp.user_data_size = MPI3_EEDP_UDS_4096;
-+		break;
-+	case 4104:
-+		scsiio_req->sgl[0].eedp.user_data_size = MPI3_EEDP_UDS_4104;
-+		break;
-+	case 4160:
-+		scsiio_req->sgl[0].eedp.user_data_size = MPI3_EEDP_UDS_4160;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	scsiio_req->sgl[0].eedp.eedp_flags = cpu_to_le16(eedp_flags);
-+	scsiio_req->sgl[0].eedp.flags = MPI3_SGE_FLAGS_ELEMENT_TYPE_EXTENDED;
-+}
-+
-+
-+/**
-+ * mpi3mr_build_sense_buffer - Map sense information
-+ * @desc: Sense type
-+ * @buf: Sense buffer to populate
-+ * @key: Sense key
-+ * @asc: Additional sense code
-+ * @ascq: Additional sense code qualifier
-+ *
-+ * Maps the given sense information into either descriptor or
-+ * fixed format sense data.
-+ *
-+ * Return: Nothing
-+ */
-+static inline void mpi3mr_build_sense_buffer(int desc, u8 *buf, u8 key,
-+	u8 asc, u8 ascq)
-+{
-+	if (desc) {
-+		buf[0] = 0x72;	/* descriptor, current */
-+		buf[1] = key;
-+		buf[2] = asc;
-+		buf[3] = ascq;
-+		buf[7] = 0;
-+	} else {
-+		buf[0] = 0x70;	/* fixed, current */
-+		buf[2] = key;
-+		buf[7] = 0xa;
-+		buf[12] = asc;
-+		buf[13] = ascq;
-+	}
-+}
-+
-+/**
-+ * mpi3mr_map_eedp_error - Map EEDP errors from IOC status
-+ * @scmd: SCSI command reference
-+ * @ioc_status: status of MPI3 request
-+ *
-+ * Maps the EEDP error status of the SCSI IO request to sense
-+ * data.
-+ *
-+ * Return: Nothing
-+ */
-+static void mpi3mr_map_eedp_error(struct scsi_cmnd *scmd,
-+	u16 ioc_status)
-+{
-+	u8 ascq = 0;
-+
-+	switch (ioc_status) {
-+	case MPI3_IOCSTATUS_EEDP_GUARD_ERROR:
-+		ascq = 0x01;
-+		break;
-+	case MPI3_IOCSTATUS_EEDP_APP_TAG_ERROR:
-+		ascq = 0x02;
-+		break;
-+	case MPI3_IOCSTATUS_EEDP_REF_TAG_ERROR:
-+		ascq = 0x03;
-+		break;
-+	default:
-+		ascq = 0x00;
-+		break;
-+	}
-+
-+	mpi3mr_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
-+	    0x10, ascq);
-+	scmd->result = DRIVER_SENSE << 24 | (DID_ABORT << 16) |
-+	    SAM_STAT_CHECK_CONDITION;
 +}
 +
  /**
-  * mpi3mr_process_op_reply_desc - reply descriptor handler
+  * mpi3mr_sastopochg_evt_bh - SASTopologyChange evt bottomhalf
   * @mrioc: Adapter instance reference
-@@ -1914,6 +2129,11 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
- 		else if (scsi_state & MPI3_SCSI_STATE_TERMINATED)
- 			scmd->result = DID_RESET << 16;
- 		break;
-+	case MPI3_IOCSTATUS_EEDP_GUARD_ERROR:
-+	case MPI3_IOCSTATUS_EEDP_REF_TAG_ERROR:
-+	case MPI3_IOCSTATUS_EEDP_APP_TAG_ERROR:
-+		mpi3mr_map_eedp_error(scmd, ioc_status);
-+		break;
- 	case MPI3_IOCSTATUS_SCSI_PROTOCOL_ERROR:
- 	case MPI3_IOCSTATUS_INVALID_FUNCTION:
- 	case MPI3_IOCSTATUS_INVALID_SGL:
-@@ -1949,6 +2169,10 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
- 		}
+@@ -1016,6 +1095,8 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 	u8 reason_code;
+ 	struct mpi3mr_tgt_dev *tgtdev = NULL;
+ 
++	mpi3mr_sastopochg_evt_debug(mrioc, event_data);
++
+ 	for (i = 0; i < event_data->num_entries; i++) {
+ 		handle = le16_to_cpu(event_data->phy_entry[i].attached_dev_handle);
+ 		if (!handle)
+@@ -1042,6 +1123,88 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
  	}
- out_success:
-+	if (priv->meta_sg_valid) {
-+		dma_unmap_sg(&mrioc->pdev->dev, scsi_prot_sglist(scmd),
-+		    scsi_prot_sg_count(scmd), scmd->sc_data_direction);
-+	}
- 	mpi3mr_clear_scmd_priv(mrioc, scmd);
- 	scsi_dma_unmap(scmd);
- 	scmd->scsi_done(scmd);
-@@ -2012,6 +2236,8 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
- 	u8 last_chain_sgl_flags;
- 	struct chain_element *chain_req;
- 	struct scmd_priv *priv = NULL;
-+	u32 meta_sg = le32_to_cpu(scsiio_req->flags) &
-+	    MPI3_SCSIIO_FLAGS_DMAOPERATION_HOST_PI;
- 
- 	priv = scsi_cmd_priv(scmd);
- 
-@@ -2022,15 +2248,27 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
- 	last_chain_sgl_flags = MPI3_SGE_FLAGS_ELEMENT_TYPE_LAST_CHAIN |
- 	    MPI3_SGE_FLAGS_DLAS_SYSTEM;
- 
--	sg_local = &scsiio_req->sgl;
-+	if (meta_sg)
-+		sg_local = &scsiio_req->sgl[MPI3_SCSIIO_METASGL_INDEX];
-+	else
-+		sg_local = &scsiio_req->sgl;
- 
--	if (!scsiio_req->data_length) {
-+	if (!scsiio_req->data_length && !meta_sg) {
- 		mpi3mr_build_zero_len_sge(sg_local);
- 		return 0;
- 	}
- 
--	sg_scmd = scsi_sglist(scmd);
--	sges_left = scsi_dma_map(scmd);
-+	if (meta_sg) {
-+		sg_scmd = scsi_prot_sglist(scmd);
-+		sges_left = dma_map_sg(&mrioc->pdev->dev,
-+		    scsi_prot_sglist(scmd),
-+		    scsi_prot_sg_count(scmd),
-+		    scmd->sc_data_direction);
-+		priv->meta_sg_valid = 1; /* To unmap meta sg DMA */
-+	} else {
-+		sg_scmd = scsi_sglist(scmd);
-+		sges_left = scsi_dma_map(scmd);
-+	}
- 
- 	if (sges_left < 0) {
- 		sdev_printk(KERN_ERR, scmd->device,
-@@ -2048,6 +2286,22 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
- 	sges_in_segment = (mrioc->facts.op_req_sz -
- 	    offsetof(struct _mpi3_scsi_io_request, sgl)) / sizeof(struct _mpi3_sge_common);
- 
-+	if (scsiio_req->sgl[0].eedp.flags ==
-+	    MPI3_SGE_FLAGS_ELEMENT_TYPE_EXTENDED && !meta_sg) {
-+		sg_local += sizeof(struct _mpi3_sge_common);
-+		sges_in_segment--;
-+		/* Reserve 1st segment (scsiio_req->sgl[0]) for eedp */
-+	}
-+
-+	if (scsiio_req->msg_flags ==
-+	    MPI3_SCSIIO_MSGFLAGS_METASGL_VALID && !meta_sg) {
-+		sges_in_segment--;
-+		/* Reserve last segment (scsiio_req->sgl[3]) for meta sg */
-+	}
-+
-+	if (meta_sg)
-+		sges_in_segment = 1;
-+
- 	if (sges_left <= sges_in_segment)
- 		goto fill_in_last_segment;
- 
-@@ -2065,7 +2319,10 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
- 	if (chain_idx < 0)
- 		return -1;
- 	chain_req = &mrioc->chain_sgl_list[chain_idx];
--	priv->chain_idx = chain_idx;
-+	if (meta_sg)
-+		priv->meta_chain_idx = chain_idx;
-+	else
-+		priv->chain_idx = chain_idx;
- 
- 	chain = chain_req->addr;
- 	chain_dma = chain_req->dma_addr;
-@@ -2115,6 +2372,13 @@ static int mpi3mr_build_sg_scmd(struct mpi3mr_ioc *mrioc,
- 	if (ret)
- 		return ret;
- 
-+	if (scsiio_req->msg_flags == MPI3_SCSIIO_MSGFLAGS_METASGL_VALID) {
-+		/* There is a valid meta sg */
-+		scsiio_req->flags |=
-+		    cpu_to_le32(MPI3_SCSIIO_FLAGS_DMAOPERATION_HOST_PI);
-+		ret = mpi3mr_prepare_sg_scmd(mrioc, scmd, scsiio_req);
-+	}
-+
- 	return ret;
  }
  
-@@ -3122,6 +3386,8 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
- 	scsiio_req->function = MPI3_FUNCTION_SCSI_IO;
- 	scsiio_req->host_tag = cpu_to_le16(host_tag);
- 
-+	mpi3mr_setup_eedp(mrioc, scmd, scsiio_req);
++/**
++ * mpi3mr_pcietopochg_evt_debug - PCIeTopoChange details
++ * @mrioc: Adapter instance reference
++ * @event_data: PCIe topology change list event data
++ *
++ * Prints information about the PCIe topology change event.
++ *
++ * Return: Nothing.
++ */
++static void
++mpi3mr_pcietopochg_evt_debug(struct mpi3mr_ioc *mrioc,
++	struct _mpi3_event_data_pcie_topology_change_list *event_data)
++{
++	int i;
++	u16 handle;
++	u16 reason_code;
++	u8 port_number;
++	char *status_str = NULL;
++	u8 link_rate, prev_link_rate;
 +
- 	memcpy(scsiio_req->cdb.cdb32, scmd->cmnd, scmd->cmd_len);
- 	scsiio_req->data_length = cpu_to_le32(scsi_bufflen(scmd));
- 	scsiio_req->dev_handle = cpu_to_le16(dev_handle);
-@@ -3345,6 +3611,31 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	shost->max_channel = 1;
- 	shost->max_id = 0xFFFFFFFF;
- 
-+	if (prot_mask >= 0)
-+		scsi_host_set_prot(shost, prot_mask);
-+	else {
-+		prot_mask = SHOST_DIF_TYPE1_PROTECTION
-+		    | SHOST_DIF_TYPE2_PROTECTION
-+		    | SHOST_DIF_TYPE3_PROTECTION;
-+		scsi_host_set_prot(shost, prot_mask);
++	switch (event_data->switch_status) {
++	case MPI3_EVENT_PCIE_TOPO_SS_NOT_RESPONDING:
++		status_str = "remove";
++		break;
++	case MPI3_EVENT_PCIE_TOPO_SS_RESPONDING:
++		status_str =  "responding";
++		break;
++	case MPI3_EVENT_PCIE_TOPO_SS_DELAY_NOT_RESPONDING:
++		status_str = "remove delay";
++		break;
++	case MPI3_EVENT_PCIE_TOPO_SS_NO_PCIE_SWITCH:
++		status_str = "direct attached";
++		break;
++	default:
++		status_str = "unknown status";
++		break;
 +	}
-+
++	ioc_info(mrioc, "%s :pcie topology change: (%s)\n",
++	    __func__, status_str);
 +	ioc_info(mrioc,
-+	    "%s :host protection capabilities enabled %s%s%s%s%s%s%s\n",
-+	    __func__,
-+	    (prot_mask & SHOST_DIF_TYPE1_PROTECTION) ? " DIF1" : "",
-+	    (prot_mask & SHOST_DIF_TYPE2_PROTECTION) ? " DIF2" : "",
-+	    (prot_mask & SHOST_DIF_TYPE3_PROTECTION) ? " DIF3" : "",
-+	    (prot_mask & SHOST_DIX_TYPE0_PROTECTION) ? " DIX0" : "",
-+	    (prot_mask & SHOST_DIX_TYPE1_PROTECTION) ? " DIX1" : "",
-+	    (prot_mask & SHOST_DIX_TYPE2_PROTECTION) ? " DIX2" : "",
-+	    (prot_mask & SHOST_DIX_TYPE3_PROTECTION) ? " DIX3" : "");
++	    "%s :\tswitch_handle(0x%04x), enclosure_handle(0x%04x) start_port(%02d), num_entries(%d)\n",
++	    __func__, le16_to_cpu(event_data->switch_dev_handle),
++	    le16_to_cpu(event_data->enclosure_handle),
++	    event_data->start_port_num, event_data->num_entries);
++	for (i = 0; i < event_data->num_entries; i++) {
++		handle =
++		    le16_to_cpu(event_data->port_entry[i].attached_dev_handle);
++		if (!handle)
++			continue;
++		port_number = event_data->start_port_num + i;
++		reason_code = event_data->port_entry[i].port_status;
++		switch (reason_code) {
++		case MPI3_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
++			status_str = "target remove";
++			break;
++		case MPI3_EVENT_PCIE_TOPO_PS_DELAY_NOT_RESPONDING:
++			status_str = "delay target remove";
++			break;
++		case MPI3_EVENT_PCIE_TOPO_PS_PORT_CHANGED:
++			status_str = "link status change";
++			break;
++		case MPI3_EVENT_PCIE_TOPO_PS_NO_CHANGE:
++			status_str = "link status no change";
++			break;
++		case MPI3_EVENT_PCIE_TOPO_PS_RESPONDING:
++			status_str = "target responding";
++			break;
++		default:
++			status_str = "unknown";
++			break;
++		}
++		link_rate = event_data->port_entry[i].current_port_info &
++		    MPI3_EVENT_PCIE_TOPO_PI_RATE_MASK;
++		prev_link_rate = event_data->port_entry[i].previous_port_info &
++		    MPI3_EVENT_PCIE_TOPO_PI_RATE_MASK;
++		ioc_info(mrioc,
++		    "%s :\tport(%02d), attached_handle(0x%04x): %s: link rate: new(0x%02x), old(0x%02x)\n",
++		    __func__, port_number, handle, status_str, link_rate,
++		    prev_link_rate);
++	}
++}
 +
-+	if (prot_guard_mask)
-+		scsi_host_set_guard(shost, (prot_guard_mask & 3));
-+	else
-+		scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
+ /**
+  * mpi3mr_pcietopochg_evt_bh - PCIeTopologyChange evt bottomhalf
+  * @mrioc: Adapter instance reference
+@@ -1063,6 +1226,8 @@ static void mpi3mr_pcietopochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 	u8 reason_code;
+ 	struct mpi3mr_tgt_dev *tgtdev = NULL;
+ 
++	mpi3mr_pcietopochg_evt_debug(mrioc, event_data);
 +
- 	snprintf(mrioc->fwevt_worker_name, sizeof(mrioc->fwevt_worker_name),
- 	    "%s%d_fwevt_wrkr", mrioc->driver_name, mrioc->id);
- 	mrioc->fwevt_worker_thread = alloc_ordered_workqueue(
+ 	for (i = 0; i < event_data->num_entries; i++) {
+ 		handle =
+ 		    le16_to_cpu(event_data->port_entry[i].attached_dev_handle);
+@@ -1899,7 +2064,6 @@ static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
+ 	scsiio_req->sgl[0].eedp.flags = MPI3_SGE_FLAGS_ELEMENT_TYPE_EXTENDED;
+ }
+ 
+-
+ /**
+  * mpi3mr_build_sense_buffer - Map sense information
+  * @desc: Sense type
 -- 
 2.18.1
 
 
---0000000000005edb1505c2133b2b
+--0000000000008d594005c2133bc3
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -648,13 +499,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIO7GjN/Vd1XTogRsd+QzjEtSbFIz
-SiHkzKCSWL7CNRujMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDUxMTE5NTIxOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIAr7i9NfQQOk6ETZx2Y8/pzdARqb
+fFVCrcMHu8tBAbO1MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDUxMTE5NTIyMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQBWkJ++3p2+zxX7MbKehSHYigqIhnRcJPur2KVbTEMVPlQs
-d7PwjiIvw9CXQmu44Zir3SeOHICMZWW9IffMLKYTC/r3qPlamKvH8o/aAow/6ujcs96Yt8mWUr7X
-4ZkqJgMG+8z7fMtRWoUAIsWzu7s31V7CgpQhs0hBxv7U0QQzhXIFh/S5Ll9o19D3ptRoWjcWEHfK
-wJHkDL3uVJV95LxBMjxo0UEigUdv10WVOg046BBcH2L8asSA5uOb7WXt+tM3A8Esdok6xM+fmKSh
-0/xANWfz3ENzhnhehME+3aIvncO/femiSPyooDXnUruksFMmUUQUp+OXw/YMfzwSQhBA
---0000000000005edb1505c2133b2b--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQCiR+zSSXMYB5E/rsyNQ/+aoRdBFL93+gYec9kLZQ+0S3a6
+qX+aXOGhUuece64Ar1fzChVns1d9R0zWKJjymqzX0GllP5OgtRac0uVCnLnXSe2m0wn/buTVjFsh
+q835Z0zHeGF4tmyO3d5WnooKwbNqpf1ynDoR5t0arbmDoLOSwcoOiL6++wSObAzVk5fhVlsZCmnG
+gCyRTnE8wXr1FVXXsfe1xUdXL8nEHowTiRUeJz3QOyje3uYF0u55GfnFyM37qEqjEB7dWaGUDDT4
+4aG5Nnv/QWWdqUSQ/SJLZ2Smbaxo4J+tIIpyld6E2Zui1i0x1iIcN4cCLxbxI9vAW4bU
+--0000000000008d594005c2133bc3--
