@@ -2,349 +2,411 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B28A5C43460
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 16:14:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF536C433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 16:20:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77E3C613C3
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 16:14:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82AE26054E
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 16:20:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231177AbhEKQPv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 May 2021 12:15:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44614 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231299AbhEKQPv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 12:15:51 -0400
-Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0855C061574;
-        Tue, 11 May 2021 09:14:44 -0700 (PDT)
-Received: by mail-ej1-x636.google.com with SMTP id u21so30542782ejo.13;
-        Tue, 11 May 2021 09:14:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=acD6l7Clo6pyBaUt7sS01WEekU1Bglzidk/ngX6QxGI=;
-        b=M5QR0SKcbDMD255xd1CxCn86RgwAYlnO5J+KB6vgjY8jWpGPxfYtCNzl73yqoDgBq8
-         XjK/qg1ru6lUph6w4UAvR+9lDAH1dkzOkMrx8zA0Vs5zoaQAYM6WEutIGQu1AJqrG03s
-         J9/jdqR4QbVQsruyDbA48qMOOUO2nK8BN9iQTaGTLwnuCUmb9Nrewi7kLvqqyE/L45PJ
-         6p2JNnWW/2pbcVo3PrNhrH9KAbLpgdDYKfWZeZECfFHVkkp0hy0M6YK+A3/oDxEXNXse
-         htRWodD5ACRbsj4wTNWKAe0QlFNIFSa9PUFzmKkViq6IpAtDQUqh88GAHuXJoffMbCay
-         AMnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=acD6l7Clo6pyBaUt7sS01WEekU1Bglzidk/ngX6QxGI=;
-        b=hU9ykC7yMgNiYObuUCINU9lsxF59i2ruALoWEzwK4sQj/BI3ajfhLle9l0UXh2mCA/
-         RfWQsCNFRSJepn0JyE88lAIBBq8WX80tZ58No/7xGicP/evVS2nJBuNZcBAowP6VJ2E0
-         VkltwKUb69wI6L8MJMgn/MrsuJ/JexIFC58FAJv2Oi42EFPpnm2xKmJriLCZl3g5Ec3K
-         3HrMvxbvKKhc7lW/fuVug9Tyz+t3/wFh9+WLqqCFu51OGyB9/dVhDgMjmttyxVSAVDwn
-         WHSk/tcLoqYpWETIMAIDwyc5qB+PsZMz8gFe5c/iMhK9jeJIVBLqwolzGl7eONIFt92f
-         FVgw==
-X-Gm-Message-State: AOAM533keKC9mePSircCWWxgWng0heeeyXRj9UiWU47H60stVLZ6QHpt
-        XCQ+umBJEaN4iaxtruDrGRDX1hJLEXM=
-X-Google-Smtp-Source: ABdhPJxkMMIABwkYU19noMhgAki5RaDriqpsnuCX36OwaftuMgcPCHpkLjv9nYcN7nXzhaVN5rBy4g==
-X-Received: by 2002:a17:906:4d11:: with SMTP id r17mr32521246eju.217.1620749683247;
-        Tue, 11 May 2021 09:14:43 -0700 (PDT)
-Received: from localhost (ipbcc11466.dynamic.kabel-deutschland.de. [188.193.20.102])
-        by smtp.gmail.com with ESMTPSA id hz15sm3380578ejc.57.2021.05.11.09.14.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 11 May 2021 09:14:42 -0700 (PDT)
-From:   Bodo Stroesser <bostroesser@gmail.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Bodo Stroesser <bostroesser@gmail.com>
-Subject: [PATCH] scsi: target: tcmu: Add new feature KEEP_BUF
-Date:   Tue, 11 May 2021 18:14:24 +0200
-Message-Id: <20210511161424.7247-1-bostroesser@gmail.com>
-X-Mailer: git-send-email 2.12.3
+        id S231334AbhEKQV1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 May 2021 12:21:27 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:2705 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230401AbhEKQV0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 12:21:26 -0400
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FfjkQ5f7hz1BLM9;
+        Wed, 12 May 2021 00:17:34 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ DGGEMS408-HUB.china.huawei.com (10.3.19.208) with Microsoft SMTP Server id
+ 14.3.498.0; Wed, 12 May 2021 00:20:06 +0800
+From:   John Garry <john.garry@huawei.com>
+To:     <axboe@kernel.dk>
+CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <ming.lei@redhat.com>,
+        <kashyap.desai@broadcom.com>, <chenxiang66@hisilicon.com>,
+        <yama@redhat.com>, <dgilbert@interlog.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH v2] blk-mq: Use request queue-wide tags for tagset-wide sbitmap
+Date:   Wed, 12 May 2021 00:15:43 +0800
+Message-ID: <1620749743-36000-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When running command pipelining for WRITE direction commands,
-(e.g. tape device write) userspace sends cmd completion to cmd
-ring before processing write data. In that case userspace has to
-copy data before sending completion, because cmd completion also
-implicitly releases the data buffer in data area.
+The tags used for an IO scheduler are currently per hctx.
 
-The new feature KEEP_BUF allows userspace to optionally keep the
-buffer after completion by setting new bit TCMU_UFLAG_KEEP_BUF in
-tcmu_cmd_entry_hdr->uflags. In that case buffer has to be released
-explicitly by writing the cmd_id to new action item free_kept_buf.
+As such, when q->nr_hw_queues grows, so does the request queue total IO
+scheduler tag depth.
 
-All kept buffers are released during reset_ring and if userspace
-closes uio device (tcmu_release).
+This may cause problems for SCSI MQ HBAs whose total driver depth is
+fixed.
 
-Signed-off-by: Bodo Stroesser <bostroesser@gmail.com>
+Ming and Yanhui report higher CPU usage and lower throughput in scenarios
+where the fixed total driver tag depth is appreciably lower than the total
+scheduler tag depth:
+https://lore.kernel.org/linux-block/440dfcfc-1a2c-bd98-1161-cec4d78c6dfc@huawei.com/T/#mc0d6d4f95275a2743d1c8c3e4dc9ff6c9aa3a76b
+
+In that scenario, since the scheduler tag is got first, much contention
+is introduced since a driver tag may not be available after we have got
+the sched tag.
+
+Improve this scenario by introducing request queue-wide tags for when
+a tagset-wide sbitmap is used. The static sched requests are still
+allocated per hctx, as requests are initialised per hctx, as in
+blk_mq_init_request(..., hctx_idx, ...) ->
+set->ops->init_request(.., hctx_idx, ...).
+
+For simplicity of resizing the request queue sbitmap when updating the
+request queue depth, just init at the max possible size, so we don't need
+to deal with the possibly with swapping out a new sbitmap for old if
+we need to grow.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/target/target_core_user.c     | 145 +++++++++++++++++++++++++++++++---
- include/uapi/linux/target_core_user.h |   2 +
- 2 files changed, 137 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 198d25ae482a..98fc2d19bb20 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -191,6 +191,7 @@ struct tcmu_cmd {
- 	unsigned long deadline;
- 
- #define TCMU_CMD_BIT_EXPIRED 0
-+#define TCMU_CMD_BIT_KEEP_BUF 1
- 	unsigned long flags;
- };
- 
-@@ -1313,11 +1314,13 @@ tcmu_tmr_notify(struct se_device *se_dev, enum tcm_tmreq_table tmf,
- 	mutex_unlock(&udev->cmdr_lock);
- }
- 
--static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *entry)
-+static bool tcmu_handle_completion(struct tcmu_cmd *cmd,
-+				   struct tcmu_cmd_entry *entry, bool keep_buf)
+Please retest, thanks! For some reason I could not recreate the original
+issue, but I am using qemu...
+
+Changes since v1:
+- Embed sbitmaps in request_queue struct
+- Relocate IO sched functions to blk-mq-sched.c
+- Fix error path code
+
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index 42a365b1b9c0..9a012e0818cb 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -507,11 +507,9 @@ static void blk_mq_sched_free_tags(struct blk_mq_tag_set *set,
+ 				   struct blk_mq_hw_ctx *hctx,
+ 				   unsigned int hctx_idx)
  {
- 	struct se_cmd *se_cmd = cmd->se_cmd;
- 	struct tcmu_dev *udev = cmd->tcmu_dev;
- 	bool read_len_valid = false;
-+	bool ret = true;
- 	uint32_t read_len;
- 
- 	/*
-@@ -1328,6 +1331,13 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
- 		WARN_ON_ONCE(se_cmd);
- 		goto out;
+-	unsigned int flags = set->flags & ~BLK_MQ_F_TAG_HCTX_SHARED;
+-
+ 	if (hctx->sched_tags) {
+ 		blk_mq_free_rqs(set, hctx->sched_tags, hctx_idx);
+-		blk_mq_free_rq_map(hctx->sched_tags, flags);
++		blk_mq_free_rq_map(hctx->sched_tags, set->flags);
+ 		hctx->sched_tags = NULL;
  	}
-+	if (test_bit(TCMU_CMD_BIT_KEEP_BUF, &cmd->flags)) {
-+		pr_err("cmd_id %u already completed with KEEP_BUF, ring is broken\n",
-+		       entry->hdr.cmd_id);
-+		set_bit(TCMU_DEV_BIT_BROKEN, &udev->flags);
-+		ret = false;
-+		goto out;
-+	}
- 
- 	list_del_init(&cmd->queue_entry);
- 
-@@ -1377,8 +1387,22 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
- 		target_complete_cmd(cmd->se_cmd, entry->rsp.scsi_status);
- 
- out:
--	tcmu_cmd_free_data(cmd, cmd->dbi_cnt);
--	tcmu_free_cmd(cmd);
-+	if (!keep_buf) {
-+		tcmu_cmd_free_data(cmd, cmd->dbi_cnt);
-+		tcmu_free_cmd(cmd);
-+	} else {
-+		/*
-+		 * Keep this command after completion, since userspace still
-+		 * needs the data buffer. Mark it with TCMU_CMD_BIT_KEEP_BUF
-+		 * and reset potential TCMU_CMD_BIT_EXPIRED, so we don't accept
-+		 * a second completion later.
-+		 * Userspace can free the buffer later by writing the cmd_id
-+		 * to new action attribute free_kept_buf.
-+		 */
-+		clear_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags);
-+		set_bit(TCMU_CMD_BIT_KEEP_BUF, &cmd->flags);
-+	}
-+	return ret;
  }
- 
- static int tcmu_run_tmr_queue(struct tcmu_dev *udev)
-@@ -1430,6 +1454,7 @@ static bool tcmu_handle_completions(struct tcmu_dev *udev)
- 	while (udev->cmdr_last_cleaned != READ_ONCE(mb->cmd_tail)) {
- 
- 		struct tcmu_cmd_entry *entry = udev->cmdr + udev->cmdr_last_cleaned;
-+		bool keep_buf;
- 
- 		/*
- 		 * Flush max. up to end of cmd ring since current entry might
-@@ -1451,7 +1476,11 @@ static bool tcmu_handle_completions(struct tcmu_dev *udev)
- 		}
- 		WARN_ON(tcmu_hdr_get_op(entry->hdr.len_op) != TCMU_OP_CMD);
- 
--		cmd = xa_erase(&udev->commands, entry->hdr.cmd_id);
-+		keep_buf = !!(entry->hdr.uflags & TCMU_UFLAG_KEEP_BUF);
-+		if (keep_buf)
-+			cmd = xa_load(&udev->commands, entry->hdr.cmd_id);
-+		else
-+			cmd = xa_erase(&udev->commands, entry->hdr.cmd_id);
- 		if (!cmd) {
- 			pr_err("cmd_id %u not found, ring is broken\n",
- 			       entry->hdr.cmd_id);
-@@ -1459,7 +1488,8 @@ static bool tcmu_handle_completions(struct tcmu_dev *udev)
- 			return false;
- 		}
- 
--		tcmu_handle_completion(cmd, entry);
-+		if (!tcmu_handle_completion(cmd, entry, keep_buf))
-+			break;
- 
- 		UPDATE_HEAD(udev->cmdr_last_cleaned,
- 			    tcmu_hdr_get_len(entry->hdr.len_op),
-@@ -1901,6 +1931,38 @@ static int tcmu_open(struct uio_info *info, struct inode *inode)
- static int tcmu_release(struct uio_info *info, struct inode *inode)
+@@ -521,12 +519,10 @@ static int blk_mq_sched_alloc_tags(struct request_queue *q,
+ 				   unsigned int hctx_idx)
  {
- 	struct tcmu_dev *udev = container_of(info, struct tcmu_dev, uio_info);
-+	struct tcmu_cmd *cmd;
-+	unsigned long i;
-+	bool freed = false;
-+
-+	mutex_lock(&udev->cmdr_lock);
-+
-+	xa_for_each(&udev->commands, i, cmd) {
-+		/* Cmds with KEEP_BUF set are no longer on the ring, but
-+		 * userspace still holds the data buffer. If userspace closes
-+		 * we implicitly free these cmds and buffers, since after new
-+		 * open the (new ?) userspace cannot find the cmd in the ring
-+		 * and thus never will release the buffer by writing cmd_id to
-+		 * free_kept_buf action attribute.
-+		 */
-+		if (!test_bit(TCMU_CMD_BIT_KEEP_BUF, &cmd->flags))
-+			continue;
-+		pr_debug("removing KEEP_BUF cmd %u on dev %s from ring\n",
-+			 cmd->cmd_id, udev->name);
-+		freed = true;
-+
-+		xa_erase(&udev->commands, i);
-+		tcmu_cmd_free_data(cmd, cmd->dbi_cnt);
-+		tcmu_free_cmd(cmd);
-+	}
-+	/*
-+	 * We only freed data space, not ring space. Therefore we dont call
-+	 * run_tmr_queue, but call run_qfull_queue if tmr_list is empty.
-+	 */
-+	if (freed && list_empty(&udev->tmr_queue))
-+		run_qfull_queue(udev, false);
-+
-+	mutex_unlock(&udev->cmdr_lock);
+ 	struct blk_mq_tag_set *set = q->tag_set;
+-	/* Clear HCTX_SHARED so tags are init'ed */
+-	unsigned int flags = set->flags & ~BLK_MQ_F_TAG_HCTX_SHARED;
+ 	int ret;
  
- 	clear_bit(TCMU_DEV_BIT_OPEN, &udev->flags);
+ 	hctx->sched_tags = blk_mq_alloc_rq_map(set, hctx_idx, q->nr_requests,
+-					       set->reserved_tags, flags);
++					       set->reserved_tags, set->flags);
+ 	if (!hctx->sched_tags)
+ 		return -ENOMEM;
  
-@@ -2145,7 +2207,8 @@ static int tcmu_configure_device(struct se_device *dev)
- 	mb->version = TCMU_MAILBOX_VERSION;
- 	mb->flags = TCMU_MAILBOX_FLAG_CAP_OOOC |
- 		    TCMU_MAILBOX_FLAG_CAP_READ_LEN |
--		    TCMU_MAILBOX_FLAG_CAP_TMR;
-+		    TCMU_MAILBOX_FLAG_CAP_TMR |
-+		    TCMU_MAILBOX_FLAG_CAP_KEEP_BUF;
- 	mb->cmdr_off = CMDR_OFF;
- 	mb->cmdr_size = udev->cmdr_size;
+@@ -544,16 +540,40 @@ static void blk_mq_sched_tags_teardown(struct request_queue *q)
+ 	int i;
  
-@@ -2277,12 +2340,16 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
- 	mutex_lock(&udev->cmdr_lock);
- 
- 	xa_for_each(&udev->commands, i, cmd) {
--		pr_debug("removing cmd %u on dev %s from ring (is expired %d)\n",
--			  cmd->cmd_id, udev->name,
--			  test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags));
-+		pr_debug("removing cmd %u on dev %s from ring %s\n",
-+			 cmd->cmd_id, udev->name,
-+			 test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags) ?
-+			 "(is expired)" :
-+			 (test_bit(TCMU_CMD_BIT_KEEP_BUF, &cmd->flags) ?
-+			 "(is keep buffer)" : ""));
- 
- 		xa_erase(&udev->commands, i);
--		if (!test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
-+		if (!test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags) &&
-+		    !test_bit(TCMU_CMD_BIT_KEEP_BUF, &cmd->flags)) {
- 			WARN_ON(!cmd->se_cmd);
- 			list_del_init(&cmd->queue_entry);
- 			cmd->se_cmd->priv = NULL;
-@@ -2931,6 +2998,63 @@ static ssize_t tcmu_reset_ring_store(struct config_item *item, const char *page,
+ 	queue_for_each_hw_ctx(q, hctx, i) {
+-		/* Clear HCTX_SHARED so tags are freed */
+-		unsigned int flags = hctx->flags & ~BLK_MQ_F_TAG_HCTX_SHARED;
+-
+ 		if (hctx->sched_tags) {
+-			blk_mq_free_rq_map(hctx->sched_tags, flags);
++			blk_mq_free_rq_map(hctx->sched_tags, hctx->flags);
+ 			hctx->sched_tags = NULL;
+ 		}
+ 	}
  }
- CONFIGFS_ATTR_WO(tcmu_, reset_ring);
  
-+static ssize_t tcmu_free_kept_buf_store(struct config_item *item, const char *page,
-+				     size_t count)
++static int blk_mq_init_sched_shared_sbitmap(struct request_queue *queue)
 +{
-+	struct se_device *se_dev = container_of(to_config_group(item),
-+						struct se_device,
-+						dev_action_group);
-+	struct tcmu_dev *udev = TCMU_DEV(se_dev);
-+	struct tcmu_cmd *cmd;
-+	u16 cmd_id;
++	struct blk_mq_tag_set *set = queue->tag_set;
 +	int ret;
 +
-+	if (!target_dev_configured(&udev->se_dev)) {
-+		pr_err("Device is not configured.\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = kstrtou16(page, 0, &cmd_id);
-+	if (ret < 0)
++	/*
++	 * Set initial depth at max so that we don't need to reallocate for
++	 * updating nr_requests.
++	 */
++	ret = blk_mq_init_bitmaps(&queue->sched_bitmap_tags,
++				  &queue->sched_breserved_tags,
++				  set, MAX_SCHED_RQ, set->reserved_tags);
++	if (ret)
 +		return ret;
 +
-+	mutex_lock(&udev->cmdr_lock);
++	sbitmap_queue_resize(&queue->sched_bitmap_tags,
++			     queue->nr_requests - set->reserved_tags);
 +
-+	{
-+		XA_STATE(xas, &udev->commands, cmd_id);
++	return 0;
++}
 +
-+		cmd = xas_load(&xas);
-+		if (!cmd) {
-+			pr_err("free_kept_buf: cmd_id %d not found\n", cmd_id);
-+			count = -EINVAL;
-+			goto out_unlock;
-+		}
-+		if (!test_bit(TCMU_CMD_BIT_KEEP_BUF, &cmd->flags)) {
-+			pr_err("free_kept_buf: cmd_id %d was not completed with KEEP_BUF\n",
-+			       cmd_id);
-+			count = -EINVAL;
-+			goto out_unlock;
-+		}
-+		xas_lock(&xas);
-+		xas_store(&xas, NULL);
-+		xas_unlock(&xas);
++static void blk_mq_exit_sched_shared_sbitmap(struct request_queue *queue)
++{
++	sbitmap_queue_free(&queue->sched_bitmap_tags);
++	sbitmap_queue_free(&queue->sched_breserved_tags);
++}
++
+ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+ {
+ 	struct blk_mq_hw_ctx *hctx;
+@@ -578,12 +598,25 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+ 	queue_for_each_hw_ctx(q, hctx, i) {
+ 		ret = blk_mq_sched_alloc_tags(q, hctx, i);
+ 		if (ret)
+-			goto err;
++			goto err_free_tags;
 +	}
 +
-+	tcmu_cmd_free_data(cmd, cmd->dbi_cnt);
-+	tcmu_free_cmd(cmd);
-+	/*
-+	 * We only freed data space, not ring space. Therefore we dont call
-+	 * run_tmr_queue, but call run_qfull_queue if tmr_list is empty.
-+	 */
-+	if (list_empty(&udev->tmr_queue))
-+		run_qfull_queue(udev, false);
++	if (blk_mq_is_sbitmap_shared(q->tag_set->flags)) {
++		ret = blk_mq_init_sched_shared_sbitmap(q);
++		if (ret)
++			goto err_free_tags;
 +
-+out_unlock:
-+	mutex_unlock(&udev->cmdr_lock);
-+	return count;
++		queue_for_each_hw_ctx(q, hctx, i) {
++			hctx->sched_tags->bitmap_tags =
++						&q->sched_bitmap_tags;
++			hctx->sched_tags->breserved_tags =
++						&q->sched_breserved_tags;
++		}
+ 	}
+ 
+ 	ret = e->ops.init_sched(q, e);
+ 	if (ret)
+-		goto err;
++		goto err_free_sbitmap;
+ 
+ 	blk_mq_debugfs_register_sched(q);
+ 
+@@ -603,7 +636,10 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+ 
+ 	return 0;
+ 
+-err:
++err_free_sbitmap:
++	if (blk_mq_is_sbitmap_shared(q->tag_set->flags))
++		blk_mq_exit_sched_shared_sbitmap(q);
++err_free_tags:
+ 	blk_mq_sched_free_requests(q);
+ 	blk_mq_sched_tags_teardown(q);
+ 	q->elevator = NULL;
+@@ -641,5 +677,7 @@ void blk_mq_exit_sched(struct request_queue *q, struct elevator_queue *e)
+ 	if (e->type->ops.exit_sched)
+ 		e->type->ops.exit_sched(e);
+ 	blk_mq_sched_tags_teardown(q);
++	if (blk_mq_is_sbitmap_shared(q->tag_set->flags))
++		blk_mq_exit_sched_shared_sbitmap(q);
+ 	q->elevator = NULL;
+ }
+diff --git a/block/blk-mq-sched.h b/block/blk-mq-sched.h
+index 5b18ab915c65..aff037cfd8e7 100644
+--- a/block/blk-mq-sched.h
++++ b/block/blk-mq-sched.h
+@@ -5,6 +5,8 @@
+ #include "blk-mq.h"
+ #include "blk-mq-tag.h"
+ 
++#define MAX_SCHED_RQ (16 * BLKDEV_MAX_RQ)
++
+ void blk_mq_sched_assign_ioc(struct request *rq);
+ 
+ bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index 2a37731e8244..e3ab8631be22 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -13,6 +13,7 @@
+ #include <linux/delay.h>
+ #include "blk.h"
+ #include "blk-mq.h"
++#include "blk-mq-sched.h"
+ #include "blk-mq-tag.h"
+ 
+ /*
+@@ -466,19 +467,39 @@ static int blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
+ 	return -ENOMEM;
+ }
+ 
+-int blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *set, unsigned int flags)
++int blk_mq_init_bitmaps(struct sbitmap_queue *bitmap_tags,
++			struct sbitmap_queue *breserved_tags,
++			struct blk_mq_tag_set *set,
++			unsigned int queue_depth, unsigned int reserved)
+ {
+-	unsigned int depth = set->queue_depth - set->reserved_tags;
++	unsigned int depth = queue_depth - reserved;
+ 	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags);
+ 	bool round_robin = alloc_policy == BLK_TAG_ALLOC_RR;
+-	int i, node = set->numa_node;
+ 
+-	if (bt_alloc(&set->__bitmap_tags, depth, round_robin, node))
++	if (bt_alloc(bitmap_tags, depth, round_robin, set->numa_node))
+ 		return -ENOMEM;
+-	if (bt_alloc(&set->__breserved_tags, set->reserved_tags,
+-		     round_robin, node))
++	if (bt_alloc(breserved_tags, set->reserved_tags,
++		     round_robin, set->numa_node))
+ 		goto free_bitmap_tags;
+ 
++	return 0;
++
++free_bitmap_tags:
++	sbitmap_queue_free(bitmap_tags);
++	return -ENOMEM;
 +}
-+CONFIGFS_ATTR_WO(tcmu_, free_kept_buf);
 +
- static struct configfs_attribute *tcmu_attrib_attrs[] = {
- 	&tcmu_attr_cmd_time_out,
- 	&tcmu_attr_qfull_time_out,
-@@ -2949,6 +3073,7 @@ static struct configfs_attribute **tcmu_attrs;
- static struct configfs_attribute *tcmu_action_attrs[] = {
- 	&tcmu_attr_block_dev,
- 	&tcmu_attr_reset_ring,
-+	&tcmu_attr_free_kept_buf,
- 	NULL,
- };
++int blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *set)
++{
++	int i, ret;
++
++	ret = blk_mq_init_bitmaps(&set->__bitmap_tags,
++				    &set->__breserved_tags,
++				    set, set->queue_depth,
++				    set->reserved_tags);
++	if (ret)
++		return ret;
++
+ 	for (i = 0; i < set->nr_hw_queues; i++) {
+ 		struct blk_mq_tags *tags = set->tags[i];
  
-diff --git a/include/uapi/linux/target_core_user.h b/include/uapi/linux/target_core_user.h
-index 95b1597f16ae..27ace512babd 100644
---- a/include/uapi/linux/target_core_user.h
-+++ b/include/uapi/linux/target_core_user.h
-@@ -46,6 +46,7 @@
- #define TCMU_MAILBOX_FLAG_CAP_OOOC (1 << 0) /* Out-of-order completions */
- #define TCMU_MAILBOX_FLAG_CAP_READ_LEN (1 << 1) /* Read data length */
- #define TCMU_MAILBOX_FLAG_CAP_TMR (1 << 2) /* TMR notifications */
-+#define TCMU_MAILBOX_FLAG_CAP_KEEP_BUF (1<<3) /* Keep buf after cmd completion */
+@@ -487,9 +508,6 @@ int blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *set, unsigned int flags)
+ 	}
  
- struct tcmu_mailbox {
- 	__u16 version;
-@@ -75,6 +76,7 @@ struct tcmu_cmd_entry_hdr {
- 	__u8 kflags;
- #define TCMU_UFLAG_UNKNOWN_OP 0x1
- #define TCMU_UFLAG_READ_LEN   0x2
-+#define TCMU_UFLAG_KEEP_BUF   0x4
- 	__u8 uflags;
+ 	return 0;
+-free_bitmap_tags:
+-	sbitmap_queue_free(&set->__bitmap_tags);
+-	return -ENOMEM;
+ }
  
- } __packed;
+ void blk_mq_exit_shared_sbitmap(struct blk_mq_tag_set *set)
+@@ -551,8 +569,6 @@ int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
+ 	 */
+ 	if (tdepth > tags->nr_tags) {
+ 		struct blk_mq_tag_set *set = hctx->queue->tag_set;
+-		/* Only sched tags can grow, so clear HCTX_SHARED flag  */
+-		unsigned int flags = set->flags & ~BLK_MQ_F_TAG_HCTX_SHARED;
+ 		struct blk_mq_tags *new;
+ 		bool ret;
+ 
+@@ -563,21 +579,21 @@ int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
+ 		 * We need some sort of upper limit, set it high enough that
+ 		 * no valid use cases should require more.
+ 		 */
+-		if (tdepth > 16 * BLKDEV_MAX_RQ)
++		if (tdepth > MAX_SCHED_RQ)
+ 			return -EINVAL;
+ 
+ 		new = blk_mq_alloc_rq_map(set, hctx->queue_num, tdepth,
+-				tags->nr_reserved_tags, flags);
++				tags->nr_reserved_tags, set->flags);
+ 		if (!new)
+ 			return -ENOMEM;
+ 		ret = blk_mq_alloc_rqs(set, new, hctx->queue_num, tdepth);
+ 		if (ret) {
+-			blk_mq_free_rq_map(new, flags);
++			blk_mq_free_rq_map(new, set->flags);
+ 			return -ENOMEM;
+ 		}
+ 
+ 		blk_mq_free_rqs(set, *tagsptr, hctx->queue_num);
+-		blk_mq_free_rq_map(*tagsptr, flags);
++		blk_mq_free_rq_map(*tagsptr, set->flags);
+ 		*tagsptr = new;
+ 	} else {
+ 		/*
+diff --git a/block/blk-mq-tag.h b/block/blk-mq-tag.h
+index 7d3e6b333a4a..6be5124f6657 100644
+--- a/block/blk-mq-tag.h
++++ b/block/blk-mq-tag.h
+@@ -26,11 +26,13 @@ extern struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
+ 					unsigned int reserved_tags,
+ 					int node, unsigned int flags);
+ extern void blk_mq_free_tags(struct blk_mq_tags *tags, unsigned int flags);
+-
+-extern int blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *set,
+-				      unsigned int flags);
++extern int blk_mq_init_bitmaps(struct sbitmap_queue *bitmap_tags,
++				 struct sbitmap_queue *breserved_tags,
++				 struct blk_mq_tag_set *set,
++				 unsigned int queue_depth,
++				 unsigned int reserved);
++extern int blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *set);
+ extern void blk_mq_exit_shared_sbitmap(struct blk_mq_tag_set *set);
+-
+ extern unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data);
+ extern void blk_mq_put_tag(struct blk_mq_tags *tags, struct blk_mq_ctx *ctx,
+ 			   unsigned int tag);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 466676bc2f0b..8b5ecc801d3f 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -3488,7 +3488,7 @@ int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
+ 	if (blk_mq_is_sbitmap_shared(set->flags)) {
+ 		atomic_set(&set->active_queues_shared_sbitmap, 0);
+ 
+-		if (blk_mq_init_shared_sbitmap(set, set->flags)) {
++		if (blk_mq_init_shared_sbitmap(set)) {
+ 			ret = -ENOMEM;
+ 			goto out_free_mq_rq_maps;
+ 		}
+@@ -3564,15 +3564,24 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
+ 		} else {
+ 			ret = blk_mq_tag_update_depth(hctx, &hctx->sched_tags,
+ 							nr, true);
++			if (blk_mq_is_sbitmap_shared(set->flags)) {
++				hctx->sched_tags->bitmap_tags =
++					&q->sched_bitmap_tags;
++				hctx->sched_tags->breserved_tags =
++					&q->sched_breserved_tags;
++			}
+ 		}
+ 		if (ret)
+ 			break;
+ 		if (q->elevator && q->elevator->type->ops.depth_updated)
+ 			q->elevator->type->ops.depth_updated(hctx);
+ 	}
+-
+-	if (!ret)
++	if (!ret) {
+ 		q->nr_requests = nr;
++		if (q->elevator && blk_mq_is_sbitmap_shared(set->flags))
++			sbitmap_queue_resize(&q->sched_bitmap_tags,
++					     nr - set->reserved_tags);
++	}
+ 
+ 	blk_mq_unquiesce_queue(q);
+ 	blk_mq_unfreeze_queue(q);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 1255823b2bc0..4092c2a38f10 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -25,6 +25,7 @@
+ #include <linux/scatterlist.h>
+ #include <linux/blkzoned.h>
+ #include <linux/pm.h>
++#include <linux/sbitmap.h>
+ 
+ struct module;
+ struct scsi_ioctl_command;
+@@ -493,6 +494,9 @@ struct request_queue {
+ 
+ 	atomic_t		nr_active_requests_shared_sbitmap;
+ 
++	struct sbitmap_queue	sched_bitmap_tags;
++	struct sbitmap_queue	sched_breserved_tags;
++
+ 	struct list_head	icq_list;
+ #ifdef CONFIG_BLK_CGROUP
+ 	DECLARE_BITMAP		(blkcg_pols, BLKCG_MAX_POLS);
 -- 
-2.12.3
+2.26.2
 
