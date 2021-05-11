@@ -2,510 +2,318 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,
-	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20966C43460
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:52:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A2DC433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 21:15:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE563617C9
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:52:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80D87613C1
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 21:15:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229932AbhEKTxq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 May 2021 15:53:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37912 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232310AbhEKTxa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 15:53:30 -0400
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6160AC06174A
-        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:52:23 -0700 (PDT)
-Received: by mail-pj1-x1030.google.com with SMTP id fa21-20020a17090af0d5b0290157eb6b590fso1990687pjb.5
-        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:52:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=BbSIMqq7E6tnwYpg/waZbTSiFFplWPf5mtmT8K/DCwA=;
-        b=AGK173UfMVS5Cyabx/DwHW0apy/SVVfkrU/SWVrefZVdDoqCEqMtIDBbVpdxdQUijQ
-         U6G9Zc6vW2KP1+ezyFKX9fDp8SNwiQrgg6GJRHSgEeo8dwK9Y7W+93dSLJJP7TgTa6HU
-         yJ/cz36CEEP9u5B7c3fZzQe3vXcNWLsoF3fyc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=BbSIMqq7E6tnwYpg/waZbTSiFFplWPf5mtmT8K/DCwA=;
-        b=athwV/HLq+1WXcnU4iWnmquXizCEy6P7w/FSretFdWgYhI0FgDPqL95TPjhb29abDf
-         1PQAMqwDwQ5S2ATmNegTKuFzlAsm5HHhcMP7pceLfFXE0X6sFvDNBqugure5Vl/RwvVL
-         16JfetcTRe0YeSI7s+mNhaOlWsEklcxOJL/8aXzJcJdS1kdsvnqNl1Oa98sgyLBybtVp
-         jA0lF5AIdZQKIO17xgfptGt8Eekrh4XRss/Yf3qIT49X/uLY/EkIbZhWuhrJHIhmCVee
-         MZFFmBUNfEp2iIjifQ4JRNBn5WH8ZfDTtWrhyEGGIHdY69M/EhIBOYRQbEfgUIWAKYyt
-         hkyQ==
-X-Gm-Message-State: AOAM530uFzvcXj3Roa9NMZJicLK0e50Cbhwsgzuz03bsP+SIkxq9Ka//
-        MLMBlMe1yJ1pnx8fuQrzzAEAIA+Qv0K8ZYWUJ+6TFf+PpTFQdmZYwZBnHK59BANT660uSqI8Tl2
-        CAOFxTVg8IwNG6DuM/pSX4Oa0hE3cQmDkIFDgDYDn5qqVVcaSpTE28WfEm9JZEr3KaKPV1EBzRT
-        PIRObkeQ==
-X-Google-Smtp-Source: ABdhPJxMzrglW2AAI6J6PGhEmGpUXACtEZxSb9vZrRlcVrbFiaxrHh/eXFodjvzPzFHyik+Wuy3UWw==
-X-Received: by 2002:a17:902:8ecc:b029:ef:6471:dc08 with SMTP id x12-20020a1709028eccb02900ef6471dc08mr4013896plo.5.1620762742265;
-        Tue, 11 May 2021 12:52:22 -0700 (PDT)
-Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b3sm6317581pfv.61.2021.05.11.12.52.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 May 2021 12:52:21 -0700 (PDT)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        steve.hagan@broadcom.com, peter.rivera@broadcom.com,
-        mpi3mr-linuxdrv.pdl@broadcom.com,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        sathya.prakash@broadcom.com
-Subject: [PATCH v4 24/24] mpi3mr: add event handling debug prints
-Date:   Wed, 12 May 2021 01:24:23 +0530
-Message-Id: <20210511195423.2134562-25-kashyap.desai@broadcom.com>
-X-Mailer: git-send-email 2.18.1
-In-Reply-To: <20210511195423.2134562-1-kashyap.desai@broadcom.com>
-References: <20210511195423.2134562-1-kashyap.desai@broadcom.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000008d594005c2133bc3"
+        id S229917AbhEKVQ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 May 2021 17:16:58 -0400
+Received: from mail-bn8nam12on2048.outbound.protection.outlook.com ([40.107.237.48]:15299
+        "EHLO NAM12-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229714AbhEKVQ6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 11 May 2021 17:16:58 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=OMtFpeAESOnOlZ/R27lwiilVx1ZoYoeQ2EhdUegzIXX1eMq5J8/iKkmZL73ILk3d75bAUj3LS/XPjiMGJ8R0Nj1pyLbRsDt7mD6c44ADH0peV/iLiKSXf/FDCYYIfdRX3FWGFCbK9spjN2Uv8Jz7NaDUd6nwTX45NUH4I9dWs9pp+7bUUpR0ioY7VH0tjl/1upghEbPif3MIi730PV8yqUIE60XWE5/V31tMImLgF9dKMGE6YzJWEDoaBkhxBtTnNGRWs/WnOlY5KzLvprduIPgeZZj18qXT8Ddt7T3eiTpvz8Hj4a2+PhcgB9LEH8emLGskqYXMHDokMFtWJgCzsQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nbji2ahW2Xv6BeBd5BI/N36yUR6vhGBLeFmDHfFdhF4=;
+ b=XENyy6g6F2bpm7Iy9zrsTI20oPE51/gBGJJDIqy5OdbodNBzFDp7tgWGRqds6GuZ0siyAGgzoAEZ5UGofra2wqiF9UoPhnJtNrJqaC7vOHAvXjEd7H2C/VbKguTkK55o1kShPKThQyXhixAgzsk96J9Vd+JAfXNlCTfu9cr+bSr9uIc8g42odsJsQWXCmMJP3CBxv3DpdoOx83dQ4bkuLL7fZZHt6GZEF2pVVYCABSj3zw1WT/GM6wQTR2S/55hqT7vp1R4jk4DPRApHFqSDVUrWHDMMwd2PVQzBEy7j+XcJuoOfUtEhyqu0WpJQFDYzPBmJfmD0hOFegExxlQes3Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=netapp.com; dmarc=pass action=none header.from=netapp.com;
+ dkim=pass header.d=netapp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=netapp.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nbji2ahW2Xv6BeBd5BI/N36yUR6vhGBLeFmDHfFdhF4=;
+ b=vOaYADRtKEe45z2cBcODN+Lefj3Cde1qxJEVLR01RENt9xdhEQxNbaRGcWwnMmbfgcPw9Vib15ggDi+xXZrwZoGB85YS5s++iIzCiR+jePS2j2Llj/ea7Na4I1pogNkxgGwDDOqgD63jK6NJlhF5ZGdRT9xJ41rA4rFdyx/wUKKFEYelpQzGG3+o8ptPP9B7ewPEv1mrYV9z2ayHIKR6m8ESlTNa0r70XpFUMxQpBM4wSz7oA/k9BNzityinoF4A7RldQmfF9UzK92fPo/PM7FsohpC1kuVXp0ZGrB1Q13YiTF3g2tCMJxybzD7K8ckVJpln11GAZ4ysd5Aeomz6kg==
+Received: from DM5PR0601MB3624.namprd06.prod.outlook.com (2603:10b6:4:7f::28)
+ by DM5PR06MB2665.namprd06.prod.outlook.com (2603:10b6:3:45::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4108.25; Tue, 11 May
+ 2021 21:15:49 +0000
+Received: from DM5PR0601MB3624.namprd06.prod.outlook.com
+ ([fe80::150d:3a72:7776:a72]) by DM5PR0601MB3624.namprd06.prod.outlook.com
+ ([fe80::150d:3a72:7776:a72%7]) with mapi id 15.20.4108.031; Tue, 11 May 2021
+ 21:15:49 +0000
+From:   "Knight, Frederick" <Frederick.Knight@netapp.com>
+To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>
+CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
+        "msnitzer@redhat.com" <msnitzer@redhat.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "roland@purestorage.com" <roland@purestorage.com>,
+        "mpatocka@redhat.com" <mpatocka@redhat.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "kbusch@kernel.org" <kbusch@kernel.org>,
+        "rwheeler@redhat.com" <rwheeler@redhat.com>,
+        "hch@lst.de" <hch@lst.de>, "zach.brown@ni.com" <zach.brown@ni.com>,
+        "osandov@fb.com" <osandov@fb.com>
+Subject: RE: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+Thread-Topic: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+Thread-Index: AQHXRfrE+mT6pvaiwEOWn89Dsv4XaKrex6mw
+Date:   Tue, 11 May 2021 21:15:48 +0000
+Message-ID: <DM5PR0601MB3624FF16F91F5F03BB5F0CC1F1539@DM5PR0601MB3624.namprd06.prod.outlook.com>
+References: <BYAPR04MB49652C4B75E38F3716F3C06386539@BYAPR04MB4965.namprd04.prod.outlook.com>
+In-Reply-To: <BYAPR04MB49652C4B75E38F3716F3C06386539@BYAPR04MB4965.namprd04.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: wdc.com; dkim=none (message not signed)
+ header.d=none;wdc.com; dmarc=none action=none header.from=netapp.com;
+x-originating-ip: [73.61.33.227]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 1e90c35d-dfcd-4091-7017-08d914c1f33e
+x-ms-traffictypediagnostic: DM5PR06MB2665:
+x-ld-processed: 4b0911a0-929b-4715-944b-c03745165b3a,ExtAddr
+x-microsoft-antispam-prvs: <DM5PR06MB2665D136FF4DB8581C83C384F1539@DM5PR06MB2665.namprd06.prod.outlook.com>
+x-ms-exchange-transport-forked: True
+x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: eLFCiPFHbn/JENKd+JURno7KX1xiyHyrJ0XqHJeOw2I6JakYPiztMRsdq5ftL3rkoe/S9H20lLZ0o3tRbM/ImhvedAum8WOM10smW5Nw2oLWjPJ0OkopiNgq94Y8qfj17jLGa44s6rJbAKb1y+ZkJctPBfMlGazw1dctwZgQzp+xYV5xO8Hvq6C4xCLjsf3Rtw325FsRwvzBhzb6rD9PTMTAJlS6KlMzwjdPRqlxQRV5wZGc3hTSXM8Xh9y3nwHOELYN4fKr4ZPNXBDraAdAXAHaGdgcQoF5WAkLT6GASOXA5JzaGF4J+ClelcGGHc0mojf2pJEzmra7toLVEln4a0TxjN72soZXeDTzPWDr25g5plekwempZ0WeN5gL/GLGnQLnRcuAxG6LzYF365MgHiNMUmqz6JGYpU4erkmJlXkXHBtaW0e0aTfxbf7B6/aNqWa4s2SrNrE4un2IC1uC6cITTGROtYgJI6+jPTuC+qk6SSLeSsD39fp4rUCMBkenyQN6N1YVbMwX9GO2LNzTsO/RasE5yyOIBK6Ujx8lR0FULS45QJKpxvTd9R3EU1UmoFYoD6PsSEGtDMtJxbALu8aH1rLbG1HYAN341seoF4pqqrp+nls6JEEn9YJH04Yy8UE0eMy8LdeOfGnL+9LNrdoybP+ULXcbxoHd/L2CZECE5VE6MYVEGAa3QDbTpPzoZq6QmHOznAMeD5L2QBppaHAYK/DxDdrDTYdp6r4oIiEVzgL367+cSRGXCSk8hb7KBLNkCsVkxyrnwUWwU31eNw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR0601MB3624.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(39860400002)(376002)(396003)(136003)(346002)(76116006)(66556008)(66446008)(64756008)(4326008)(53546011)(26005)(186003)(6506007)(66946007)(71200400001)(9686003)(7696005)(5660300002)(966005)(83380400001)(55016002)(33656002)(2906002)(8936002)(122000001)(110136005)(52536014)(38100700002)(316002)(86362001)(8676002)(66476007)(54906003)(7416002)(478600001)(15398625002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?zF/rIesUgD0FxYYP7bNVctWDpi8RivEA2VP4y9al5Z0QKnX9BjkI2Xa2NGAE?=
+ =?us-ascii?Q?RnasfhuLO6Th5+3BLLce1M1YDar9MFnzDcbsNl1Yp+V6G3w/TZKHfjwl2Wh/?=
+ =?us-ascii?Q?mBpiQq4SmiGeKOjSVIq+6MyWPXELWr5Vse51f+3T4ghf48hVtcUJ7CxUKncr?=
+ =?us-ascii?Q?LktY6IjX4OINh9uZLtAmeJ1KbCkSk+Riiu+WM+n3sB7NAzU0ZK02/5ATOpXc?=
+ =?us-ascii?Q?2LPtIzKrq4jvW3R586N1mi6oD7oSmoR+2HQvxv7yGQAg6yrJqCZHiv1DVn43?=
+ =?us-ascii?Q?oGYUXgLzReyz43bWU8J5fx0ir3aPc5nGhVpjaI19RZAEMbDdWqE6/n4woWu6?=
+ =?us-ascii?Q?Kwe/kHXjRjR5l3vdTGi09NdbfQbZIG92wztZusXrV0bdybVUUUbROn5sx2Q/?=
+ =?us-ascii?Q?ppMK8btGyCnw4p3mNijrdSHTwXmbsmz1YAWcoECuHeyiGnBv1V30pdSwb1q3?=
+ =?us-ascii?Q?LY0wHERTs1fQ5GkyxlyctlZ8ZAqIrBmUXzgqauTVHzxFMS8V+Vtr2budLuGV?=
+ =?us-ascii?Q?l7H1MMJQV5CWpWdUFkfzm/0k3H25mfuCx5e6B0ZB00LreipLzwPnA2r4uxZa?=
+ =?us-ascii?Q?2YXlnVbtxJM4gPO3Gm9ZJ+AnaKG62MPR75j7apL7tbjgk3Fa+5+dear1EYk3?=
+ =?us-ascii?Q?WhbVwkm98dcvDv/OzUSzmlBr0KLprTbV+SfF4KCJ90O310PwJmVuE0sQozCS?=
+ =?us-ascii?Q?TzBOl9P4SvqoCHxlgy+AUWBDp5+sFGuPls21gpxXWGpMPsodwWM0P26oUc3h?=
+ =?us-ascii?Q?ThiW5pFla/7ppvQzDfPUB8KeyDX/BFZftQrIXOiStB0z3lHhqbMtxJc8ZF2X?=
+ =?us-ascii?Q?Do7pDlYq/bMl6n8AMOqpc72FNU7kVHns0HcqeeFiBwKCkDu50MSAC6FplZoE?=
+ =?us-ascii?Q?S/trfYw3ZpYNWdPLH0kLQB8uaBLx2AxSgUofgMjdSfiBhJwUG3/lGohqxXaB?=
+ =?us-ascii?Q?AvrFKPzJVJki+3nZt3Dy4y9nCB8fMaLPZAkpieyc3vvjDbFAb5hulqnuZ4AN?=
+ =?us-ascii?Q?eIDdnx4RHFVgTqkcvgtFJIKwDe3LrFun+ci4mNv33BIeRI95iCaF8szFVI1N?=
+ =?us-ascii?Q?GdN5YJY+EB/aisvPZMVBqFcQ7wBn8B2j9+oXG56HgkxMXn1E5OmJ1Z7fEv7L?=
+ =?us-ascii?Q?KtyZbUyrm7rw7vFpYkMroqY/pfDDjIU0wT/lH6K10XmjQzxC+UE/p1TaIJBu?=
+ =?us-ascii?Q?++v6BtfgwfrNne/ezqhZom0C2GdsdLrtnzGJ+yV4viNz2nHooHPDkWuaKuDL?=
+ =?us-ascii?Q?sH9blHm4DxfDvi8ePHPpctMiRMsqSOMiSmbkeGbDlIOFxqbJqcvUeaxeOvNn?=
+ =?us-ascii?Q?6ad7vxO/QwAe2HQ2Uo99jSQ2?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: netapp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR0601MB3624.namprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1e90c35d-dfcd-4091-7017-08d914c1f33e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 May 2021 21:15:49.0205
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4b0911a0-929b-4715-944b-c03745165b3a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Cp8buXOjdiul5izwUJFs4ZhZTV3vhDSZyzBhK+bmPjEVwMIFopYyfJyMB+m6poxPASDln6xleCg/hEa9tvRM2Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR06MB2665
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000008d594005c2133bc3
+I'd love to participate in this discussion.
 
-Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+You mention the 2 different models (single command vs. multi-command).  Jus=
+t as a reminder, there are specific reasons for those 2 different models.
 
-Cc: sathya.prakash@broadcom.com
----
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 115 ++++++++++++++++++++++
- drivers/scsi/mpi3mr/mpi3mr_os.c | 166 +++++++++++++++++++++++++++++++-
- 2 files changed, 280 insertions(+), 1 deletion(-)
+Some applications know both the source and the destination, so can use the =
+single command model (the application is aware it is doing a copy).  But, t=
+here is a group of applications that do NOT know both pieces of information=
+ at the same time, in the same thread, in the same context (the application=
+ is NOT aware it is doing a copy - the application thinks it is doing reads=
+ and writes).
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 93d9ed155a91..d808d578c641 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -154,6 +154,120 @@ void mpi3mr_repost_sense_buf(struct mpi3mr_ioc *mrioc,
- 	spin_unlock(&mrioc->sbq_lock);
- }
- 
-+static void mpi3mr_print_event_data(struct mpi3mr_ioc *mrioc,
-+	struct _mpi3_event_notification_reply *event_reply)
-+{
-+	char *desc = NULL;
-+	u16 event;
-+
-+	event = event_reply->event;
-+
-+	switch (event) {
-+	case MPI3_EVENT_LOG_DATA:
-+		desc = "Log Data";
-+		break;
-+	case MPI3_EVENT_CHANGE:
-+		desc = "Event Change";
-+		break;
-+	case MPI3_EVENT_GPIO_INTERRUPT:
-+		desc = "GPIO Interrupt";
-+		break;
-+	case MPI3_EVENT_TEMP_THRESHOLD:
-+		desc = "Temperature Threshold";
-+		break;
-+	case MPI3_EVENT_CABLE_MGMT:
-+		desc = "Cable Management";
-+		break;
-+	case MPI3_EVENT_ENERGY_PACK_CHANGE:
-+		desc = "Energy Pack Change";
-+		break;
-+	case MPI3_EVENT_DEVICE_ADDED:
-+	{
-+		struct _mpi3_device_page0 *event_data =
-+		    (struct _mpi3_device_page0 *)event_reply->event_data;
-+		ioc_info(mrioc, "Device Added: dev=0x%04x Form=0x%x\n",
-+		    event_data->dev_handle, event_data->device_form);
-+		return;
-+	}
-+	case MPI3_EVENT_DEVICE_INFO_CHANGED:
-+	{
-+		struct _mpi3_device_page0 *event_data =
-+		    (struct _mpi3_device_page0 *)event_reply->event_data;
-+		ioc_info(mrioc, "Device Info Changed: dev=0x%04x Form=0x%x\n",
-+		    event_data->dev_handle, event_data->device_form);
-+		return;
-+	}
-+	case MPI3_EVENT_DEVICE_STATUS_CHANGE:
-+	{
-+		struct _mpi3_event_data_device_status_change *event_data =
-+		    (struct _mpi3_event_data_device_status_change *)event_reply->event_data;
-+		ioc_info(mrioc, "Device status Change: dev=0x%04x RC=0x%x\n",
-+		    event_data->dev_handle, event_data->reason_code);
-+		return;
-+	}
-+	case MPI3_EVENT_SAS_DISCOVERY:
-+	{
-+		struct _mpi3_event_data_sas_discovery *event_data =
-+		    (struct _mpi3_event_data_sas_discovery *)event_reply->event_data;
-+		ioc_info(mrioc, "SAS Discovery: (%s) status (0x%08x)\n",
-+		    (event_data->reason_code == MPI3_EVENT_SAS_DISC_RC_STARTED) ?
-+		    "start" : "stop",
-+		    le32_to_cpu(event_data->discovery_status));
-+		return;
-+	}
-+	case MPI3_EVENT_SAS_BROADCAST_PRIMITIVE:
-+		desc = "SAS Broadcast Primitive";
-+		break;
-+	case MPI3_EVENT_SAS_NOTIFY_PRIMITIVE:
-+		desc = "SAS Notify Primitive";
-+		break;
-+	case MPI3_EVENT_SAS_INIT_DEVICE_STATUS_CHANGE:
-+		desc = "SAS Init Device Status Change";
-+		break;
-+	case MPI3_EVENT_SAS_INIT_TABLE_OVERFLOW:
-+		desc = "SAS Init Table Overflow";
-+		break;
-+	case MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
-+		desc = "SAS Topology Change List";
-+		break;
-+	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
-+		desc = "Enclosure Device Status Change";
-+		break;
-+	case MPI3_EVENT_HARD_RESET_RECEIVED:
-+		desc = "Hard Reset Received";
-+		break;
-+	case MPI3_EVENT_SAS_PHY_COUNTER:
-+		desc = "SAS PHY Counter";
-+		break;
-+	case MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR:
-+		desc = "SAS Device Discovery Error";
-+		break;
-+	case MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
-+		desc = "PCIE Topology Change List";
-+		break;
-+	case MPI3_EVENT_PCIE_ENUMERATION:
-+	{
-+		struct _mpi3_event_data_pcie_enumeration *event_data =
-+		    (struct _mpi3_event_data_pcie_enumeration *)event_reply->event_data;
-+		ioc_info(mrioc, "PCIE Enumeration: (%s)",
-+		    (event_data->reason_code ==
-+		    MPI3_EVENT_PCIE_ENUM_RC_STARTED) ? "start" : "stop");
-+		if (event_data->enumeration_status)
-+			ioc_info(mrioc, "enumeration_status(0x%08x)\n",
-+			    le32_to_cpu(event_data->enumeration_status));
-+		return;
-+	}
-+	case MPI3_EVENT_PREPARE_FOR_RESET:
-+		desc = "Prepare For Reset";
-+		break;
-+	}
-+
-+	if (!desc)
-+		return;
-+
-+	ioc_info(mrioc, "%s\n", desc);
-+}
-+
- static void mpi3mr_handle_events(struct mpi3mr_ioc *mrioc,
- 	struct _mpi3_default_reply *def_reply)
- {
-@@ -161,6 +275,7 @@ static void mpi3mr_handle_events(struct mpi3mr_ioc *mrioc,
- 	    (struct _mpi3_event_notification_reply *)def_reply;
- 
- 	mrioc->change_count = le16_to_cpu(event_reply->ioc_change_count);
-+	mpi3mr_print_event_data(mrioc, event_reply);
- 	mpi3mr_os_handle_events(mrioc, event_reply);
- }
- 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index ba7ce324ed87..a50863d4ab90 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -995,6 +995,85 @@ static void mpi3mr_devinfochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 		mpi3mr_tgtdev_put(tgtdev);
- }
- 
-+/**
-+ * mpi3mr_sastopochg_evt_debug - SASTopoChange details
-+ * @mrioc: Adapter instance reference
-+ * @event_data: SAS topology change list event data
-+ *
-+ * Prints information about the SAS topology change event.
-+ *
-+ * Return: Nothing.
-+ */
-+static void
-+mpi3mr_sastopochg_evt_debug(struct mpi3mr_ioc *mrioc,
-+	struct _mpi3_event_data_sas_topology_change_list *event_data)
-+{
-+	int i;
-+	u16 handle;
-+	u8 reason_code, phy_number;
-+	char *status_str = NULL;
-+	u8 link_rate, prev_link_rate;
-+
-+	switch (event_data->exp_status) {
-+	case MPI3_EVENT_SAS_TOPO_ES_NOT_RESPONDING:
-+		status_str = "remove";
-+		break;
-+	case MPI3_EVENT_SAS_TOPO_ES_RESPONDING:
-+		status_str =  "responding";
-+		break;
-+	case MPI3_EVENT_SAS_TOPO_ES_DELAY_NOT_RESPONDING:
-+		status_str = "remove delay";
-+		break;
-+	case MPI3_EVENT_SAS_TOPO_ES_NO_EXPANDER:
-+		status_str = "direct attached";
-+		break;
-+	default:
-+		status_str = "unknown status";
-+		break;
-+	}
-+	ioc_info(mrioc, "%s :sas topology change: (%s)\n",
-+	    __func__, status_str);
-+	ioc_info(mrioc,
-+	    "%s :\texpander_handle(0x%04x), enclosure_handle(0x%04x) start_phy(%02d), num_entries(%d)\n",
-+	    __func__, le16_to_cpu(event_data->expander_dev_handle),
-+	    le16_to_cpu(event_data->enclosure_handle),
-+	    event_data->start_phy_num, event_data->num_entries);
-+	for (i = 0; i < event_data->num_entries; i++) {
-+		handle = le16_to_cpu(event_data->phy_entry[i].attached_dev_handle);
-+		if (!handle)
-+			continue;
-+		phy_number = event_data->start_phy_num + i;
-+		reason_code = event_data->phy_entry[i].status &
-+		    MPI3_EVENT_SAS_TOPO_PHY_RC_MASK;
-+		switch (reason_code) {
-+		case MPI3_EVENT_SAS_TOPO_PHY_RC_TARG_NOT_RESPONDING:
-+			status_str = "target remove";
-+			break;
-+		case MPI3_EVENT_SAS_TOPO_PHY_RC_DELAY_NOT_RESPONDING:
-+			status_str = "delay target remove";
-+			break;
-+		case MPI3_EVENT_SAS_TOPO_PHY_RC_PHY_CHANGED:
-+			status_str = "link status change";
-+			break;
-+		case MPI3_EVENT_SAS_TOPO_PHY_RC_NO_CHANGE:
-+			status_str = "link status no change";
-+			break;
-+		case MPI3_EVENT_SAS_TOPO_PHY_RC_RESPONDING:
-+			status_str = "target responding";
-+			break;
-+		default:
-+			status_str = "unknown";
-+			break;
-+		}
-+		link_rate = event_data->phy_entry[i].link_rate >> 4;
-+		prev_link_rate = event_data->phy_entry[i].link_rate & 0xF;
-+		ioc_info(mrioc,
-+		    "%s :\tphy(%02d), attached_handle(0x%04x): %s: link rate: new(0x%02x), old(0x%02x)\n",
-+		    __func__, phy_number, handle, status_str, link_rate,
-+		    prev_link_rate);
-+	}
-+}
-+
- /**
-  * mpi3mr_sastopochg_evt_bh - SASTopologyChange evt bottomhalf
-  * @mrioc: Adapter instance reference
-@@ -1016,6 +1095,8 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 	u8 reason_code;
- 	struct mpi3mr_tgt_dev *tgtdev = NULL;
- 
-+	mpi3mr_sastopochg_evt_debug(mrioc, event_data);
-+
- 	for (i = 0; i < event_data->num_entries; i++) {
- 		handle = le16_to_cpu(event_data->phy_entry[i].attached_dev_handle);
- 		if (!handle)
-@@ -1042,6 +1123,88 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 	}
- }
- 
-+/**
-+ * mpi3mr_pcietopochg_evt_debug - PCIeTopoChange details
-+ * @mrioc: Adapter instance reference
-+ * @event_data: PCIe topology change list event data
-+ *
-+ * Prints information about the PCIe topology change event.
-+ *
-+ * Return: Nothing.
-+ */
-+static void
-+mpi3mr_pcietopochg_evt_debug(struct mpi3mr_ioc *mrioc,
-+	struct _mpi3_event_data_pcie_topology_change_list *event_data)
-+{
-+	int i;
-+	u16 handle;
-+	u16 reason_code;
-+	u8 port_number;
-+	char *status_str = NULL;
-+	u8 link_rate, prev_link_rate;
-+
-+	switch (event_data->switch_status) {
-+	case MPI3_EVENT_PCIE_TOPO_SS_NOT_RESPONDING:
-+		status_str = "remove";
-+		break;
-+	case MPI3_EVENT_PCIE_TOPO_SS_RESPONDING:
-+		status_str =  "responding";
-+		break;
-+	case MPI3_EVENT_PCIE_TOPO_SS_DELAY_NOT_RESPONDING:
-+		status_str = "remove delay";
-+		break;
-+	case MPI3_EVENT_PCIE_TOPO_SS_NO_PCIE_SWITCH:
-+		status_str = "direct attached";
-+		break;
-+	default:
-+		status_str = "unknown status";
-+		break;
-+	}
-+	ioc_info(mrioc, "%s :pcie topology change: (%s)\n",
-+	    __func__, status_str);
-+	ioc_info(mrioc,
-+	    "%s :\tswitch_handle(0x%04x), enclosure_handle(0x%04x) start_port(%02d), num_entries(%d)\n",
-+	    __func__, le16_to_cpu(event_data->switch_dev_handle),
-+	    le16_to_cpu(event_data->enclosure_handle),
-+	    event_data->start_port_num, event_data->num_entries);
-+	for (i = 0; i < event_data->num_entries; i++) {
-+		handle =
-+		    le16_to_cpu(event_data->port_entry[i].attached_dev_handle);
-+		if (!handle)
-+			continue;
-+		port_number = event_data->start_port_num + i;
-+		reason_code = event_data->port_entry[i].port_status;
-+		switch (reason_code) {
-+		case MPI3_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
-+			status_str = "target remove";
-+			break;
-+		case MPI3_EVENT_PCIE_TOPO_PS_DELAY_NOT_RESPONDING:
-+			status_str = "delay target remove";
-+			break;
-+		case MPI3_EVENT_PCIE_TOPO_PS_PORT_CHANGED:
-+			status_str = "link status change";
-+			break;
-+		case MPI3_EVENT_PCIE_TOPO_PS_NO_CHANGE:
-+			status_str = "link status no change";
-+			break;
-+		case MPI3_EVENT_PCIE_TOPO_PS_RESPONDING:
-+			status_str = "target responding";
-+			break;
-+		default:
-+			status_str = "unknown";
-+			break;
-+		}
-+		link_rate = event_data->port_entry[i].current_port_info &
-+		    MPI3_EVENT_PCIE_TOPO_PI_RATE_MASK;
-+		prev_link_rate = event_data->port_entry[i].previous_port_info &
-+		    MPI3_EVENT_PCIE_TOPO_PI_RATE_MASK;
-+		ioc_info(mrioc,
-+		    "%s :\tport(%02d), attached_handle(0x%04x): %s: link rate: new(0x%02x), old(0x%02x)\n",
-+		    __func__, port_number, handle, status_str, link_rate,
-+		    prev_link_rate);
-+	}
-+}
-+
- /**
-  * mpi3mr_pcietopochg_evt_bh - PCIeTopologyChange evt bottomhalf
-  * @mrioc: Adapter instance reference
-@@ -1063,6 +1226,8 @@ static void mpi3mr_pcietopochg_evt_bh(struct mpi3mr_ioc *mrioc,
- 	u8 reason_code;
- 	struct mpi3mr_tgt_dev *tgtdev = NULL;
- 
-+	mpi3mr_pcietopochg_evt_debug(mrioc, event_data);
-+
- 	for (i = 0; i < event_data->num_entries; i++) {
- 		handle =
- 		    le16_to_cpu(event_data->port_entry[i].attached_dev_handle);
-@@ -1899,7 +2064,6 @@ static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
- 	scsiio_req->sgl[0].eedp.flags = MPI3_SGE_FLAGS_ELEMENT_TYPE_EXTENDED;
- }
- 
--
- /**
-  * mpi3mr_build_sense_buffer - Map sense information
-  * @desc: Sense type
--- 
-2.18.1
+That is why there are 2 different models - because the application engineer=
+s didn't want to change their application.  So, the author of the CP applic=
+ation (the shell copy command) wanted to use the existing READ / WRITE mode=
+l (2 commands).  Just replace the READ with "get the data ready" and replac=
+e the WRITE with "use the data you got ready".  It was easier for that appl=
+ication to use the existing model, rather than totally redesigning the appl=
+ication.
+
+But, other application engineers had a code base that already knew a copy w=
+as happening, and their code already knew both the source and destination i=
+n the same code path. A BACKUP application is one that generally fits into =
+this camp.  So, it was easier for that application to replace that function=
+ with a single copy request.  Another application was a VM mastering/replic=
+ating application that could spin up new VM images very quickly - the sourc=
+e and destination are known to be able to use a single request.
+
+When this offload journey began, both interfaces were needed and used.  But=
+ yes, it did bifurcate the space, creating 2 camps of engineers - each with=
+ their favorite method (based on the application where they planned to use =
+it).  Each camp of engineers often sees no reason that the other camp can't=
+ just switch to do it the way they do - if they'd only see the light.  But,=
+ originally, there were 2 different sets of requirements that each drove a =
+specific design of a copy offload model.
+
+Even NVMe has recently joined the copy offload camp with a new COPY command=
+ (single namespace, multiple source ranges, single destination range - work=
+s well for defrag, and other use cases). I'm confident its capabilities wil=
+l grow over time.
+
+SO, I think this will be a great discussion to have!!!
+
+	Fred Knight
 
 
---0000000000008d594005c2133bc3
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
 
-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
-P3lSxcw4Cg90iKHqfpwLnGNc9AGXHMxUCukpnAHRlivljilKHMx1ymb180BLmtF+ZLm6KrFLQWzB
-4KeiUOMtKM13wJrQubqTeZgB1XA+89jeLYlxagVsMyksdwIDAQABo4IB2zCCAdcwDgYDVR0PAQH/
-BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9i
-YWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUF
-BzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
-MDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xv
-YmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
-Oi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAlBgNV
-HREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAf
-BgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUkTOZp9jXE3yPj4ieKeDT
-OiNyCtswDQYJKoZIhvcNAQELBQADggEBABG1KCh7cLjStywh4S37nKE1eE8KPyAxDzQCkhxYLBVj
-gnnhaLmEOayEucPAsM1hCRAm/vR3RQ27lMXBGveCHaq9RZkzTjGSbzr8adOGK3CluPrasNf5StX3
-GSk4HwCapA39BDUrhnc/qG5vHwLrgA1jwAvSy8e/vn4F4h+KPrPoFNd1OnCafedbuiEXTqTkn5Rk
-vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
-MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
-MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
-VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIAr7i9NfQQOk6ETZx2Y8/pzdARqb
-fFVCrcMHu8tBAbO1MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDUxMTE5NTIyMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
-CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQCiR+zSSXMYB5E/rsyNQ/+aoRdBFL93+gYec9kLZQ+0S3a6
-qX+aXOGhUuece64Ar1fzChVns1d9R0zWKJjymqzX0GllP5OgtRac0uVCnLnXSe2m0wn/buTVjFsh
-q835Z0zHeGF4tmyO3d5WnooKwbNqpf1ynDoR5t0arbmDoLOSwcoOiL6++wSObAzVk5fhVlsZCmnG
-gCyRTnE8wXr1FVXXsfe1xUdXL8nEHowTiRUeJz3QOyje3uYF0u55GfnFyM37qEqjEB7dWaGUDDT4
-4aG5Nnv/QWWdqUSQ/SJLZ2Smbaxo4J+tIIpyld6E2Zui1i0x1iIcN4cCLxbxI9vAW4bU
---0000000000008d594005c2133bc3--
+-----Original Message-----
+From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>=20
+Sent: Monday, May 10, 2021 8:16 PM
+To: linux-block@vger.kernel.org; linux-scsi@vger.kernel.org; linux-nvme@lis=
+ts.infradead.org; dm-devel@redhat.com; lsf-pc@lists.linux-foundation.org
+Cc: axboe@kernel.dk; msnitzer@redhat.com; bvanassche@acm.org; martin.peters=
+en@oracle.com; roland@purestorage.com; mpatocka@redhat.com; Hannes Reinecke=
+ <hare@suse.de>; kbusch@kernel.org; rwheeler@redhat.com; hch@lst.de; Knight=
+, Frederick <Frederick.Knight@netapp.com>; zach.brown@ni.com; osandov@fb.co=
+m
+Subject: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+
+NetApp Security WARNING: This is an external email. Do not click links or o=
+pen attachments unless you recognize the sender and know the content is saf=
+e.
+
+
+
+
+Hi,
+
+* Background :-
+-----------------------------------------------------------------------
+
+Copy offload is a feature that allows file-systems or storage devices to be=
+ instructed to copy files/logical blocks without requiring involvement of t=
+he local CPU.
+
+With reference to the RISC-V summit keynote [1] single threaded performance=
+ is limiting due to Denard scaling and multi-threaded performance is slowin=
+g down due Moore's law limitations. With the rise of SNIA Computation Techn=
+ical Storage Working Group (TWG) [2], offloading computations to the device=
+ or over the fabrics is becoming popular as there are several solutions ava=
+ilable [2]. One of the common operation which is popular in the kernel and =
+is not merged yet is Copy offload over the fabrics or on to the device.
+
+* Problem :-
+-----------------------------------------------------------------------
+
+The original work which is done by Martin is present here [3]. The latest w=
+ork which is posted by Mikulas [4] is not merged yet. These two approaches =
+are totally different from each other. Several storage vendors discourage m=
+ixing copy offload requests with regular READ/WRITE I/O. Also, the fact tha=
+t the operation fails if a copy request ever needs to be split as it traver=
+ses the stack it has the unfortunate side-effect of preventing copy offload=
+ from working in pretty much every common deployment configuration out ther=
+e.
+
+* Current state of the work :-
+-----------------------------------------------------------------------
+
+With [3] being hard to handle arbitrary DM/MD stacking without splitting th=
+e command in two, one for copying IN and one for copying OUT. Which is then=
+ demonstrated by the [4] why [3] it is not a suitable candidate. Also, with=
+ [4] there is an unresolved problem with the two-command approach about how=
+ to handle changes to the DM layout between an IN and OUT operations.
+
+* Why Linux Kernel Storage System needs Copy Offload support now ?
+-----------------------------------------------------------------------
+
+With the rise of the SNIA Computational Storage TWG and solutions [2], exis=
+ting SCSI XCopy support in the protocol, recent advancement in the Linux Ke=
+rnel File System for Zoned devices (Zonefs [5]), Peer to Peer DMA support i=
+n the Linux Kernel mainly for NVMe devices [7] and eventually NVMe Devices =
+and subsystem (NVMe PCIe/NVMeOF) will benefit from Copy offload operation.
+
+With this background we have significant number of use-cases which are stro=
+ng candidates waiting for outstanding Linux Kernel Block Layer Copy Offload=
+ support, so that Linux Kernel Storage subsystem can to address previously =
+mentioned problems [1] and allow efficient offloading of the data related o=
+perations. (Such as move/copy etc.)
+
+For reference following is the list of the use-cases/candidates waiting for=
+ Copy Offload support :-
+
+1. SCSI-attached storage arrays.
+2. Stacking drivers supporting XCopy DM/MD.
+3. Computational Storage solutions.
+7. File systems :- Local, NFS and Zonefs.
+4. Block devices :- Distributed, local, and Zoned devices.
+5. Peer to Peer DMA support solutions.
+6. Potentially NVMe subsystem both NVMe PCIe and NVMeOF.
+
+* What we will discuss in the proposed session ?
+-----------------------------------------------------------------------
+
+I'd like to propose a session to go over this topic to understand :-
+
+1. What are the blockers for Copy Offload implementation ?
+2. Discussion about having a file system interface.
+3. Discussion about having right system call for user-space.
+4. What is the right way to move this work forward ?
+5. How can we help to contribute and move this work forward ?
+
+* Required Participants :-
+-----------------------------------------------------------------------
+
+I'd like to invite file system, block layer, and device drivers developers =
+to:-
+
+1. Share their opinion on the topic.
+2. Share their experience and any other issues with [4].
+3. Uncover additional details that are missing from this proposal.
+
+Required attendees :-
+
+Martin K. Petersen
+Jens Axboe
+Christoph Hellwig
+Bart Van Assche
+Zach Brown
+Roland Dreier
+Ric Wheeler
+Trond Myklebust
+Mike Snitzer
+Keith Busch
+Sagi Grimberg
+Hannes Reinecke
+Frederick Knight
+Mikulas Patocka
+Keith Busch
+
+Regards,
+Chaitanya
+
+[1]https://content.riscv.org/wp-content/uploads/2018/12/A-New-Golden-Age-fo=
+r-Computer-Architecture-History-Challenges-and-Opportunities-David-Patterso=
+n-.pdf
+[2] https://www.snia.org/computational
+https://www.napatech.com/support/resources/solution-descriptions/napatech-s=
+martnic-solution-for-hardware-offload/
+      https://www.eideticom.com/products.html
+https://www.xilinx.com/applications/data-center/computational-storage.html
+[3] git://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux.git xcopy [4] h=
+ttps://www.spinics.net/lists/linux-block/msg00599.html
+[5] https://lwn.net/Articles/793585/
+[6] https://nvmexpress.org/new-nvmetm-specification-defines-zoned-
+namespaces-zns-as-go-to-industry-technology/
+[7] https://github.com/sbates130272/linux-p2pmem
+[8] https://kernel.dk/io_uring.pdf
+
