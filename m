@@ -2,80 +2,203 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23272C433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 09:36:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 070FCC433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 10:42:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D1CE561001
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 09:36:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC5C5615FF
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 10:42:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231294AbhEKJhg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 May 2021 05:37:36 -0400
-Received: from mail-wr1-f48.google.com ([209.85.221.48]:43620 "EHLO
-        mail-wr1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231224AbhEKJh2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 05:37:28 -0400
-Received: by mail-wr1-f48.google.com with SMTP id s8so19430824wrw.10;
-        Tue, 11 May 2021 02:36:21 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=lKvDqLFt4pSvW/UjUfuGxRK9wnc82UFlNv4lfSox3SQ=;
-        b=TuyL4C/k18fwrHfpsEM15BqzMjJ0K5QlHBgddl7GgePT54vrlRCE2nCbfrp28DynJR
-         HemxwqOyXkaHDiXWD6vtKozmUPiKKVitfk5QTnI7HbGG8/ZamX9hBETmnocFfRYsiees
-         OQYm22RW55dKFChV4bhJQNQtx+uojImviXyFei47WYhRph0xULgJswc/Jt+Noag+PCTO
-         H3+eu0796nKRCz9bTv3QhZpFB8SBfOoX3HHH0WdP0+a/RMQn8KxXilqARFq5jXhv6No8
-         NCFFBbwIj5lTnBYisaTXhXWLfjObEnkY6agLOBnlwYX+rtBaCgGjt/MCSOhhWRhCtdEG
-         LfeA==
-X-Gm-Message-State: AOAM532DLtNOevsO8HRlaDCnKVllYRCRJRpKVDhe4Over0VqWhnF9aiG
-        FQIIppJKVloRUhs4UC7yvjo=
-X-Google-Smtp-Source: ABdhPJzoPFT2EMMBDiIncbIHfUAbvXVf3ZD01iti4VHoAS+8gLGYEXHj0HcWmLvh5qXK2Pv0JB5KYg==
-X-Received: by 2002:a5d:400f:: with SMTP id n15mr32595880wrp.274.1620725780762;
-        Tue, 11 May 2021 02:36:20 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id e17sm1256536wme.9.2021.05.11.02.36.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 May 2021 02:36:20 -0700 (PDT)
-Date:   Tue, 11 May 2021 09:36:18 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
-        linux-kernel@vger.kernel.org, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
-        linux-hyperv@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, mikelley@microsoft.com
-Subject: Re: [PATCH v2] scsi: storvsc: Use blk_mq_unique_tag() to generate
- requestIDs
-Message-ID: <20210511093618.fqcbno4iuvhnl66g@liuwe-devbox-debian-v2>
-References: <20210510210841.370472-1-parri.andrea@gmail.com>
- <yq1k0o6ez1h.fsf@ca-mkp.ca.oracle.com>
+        id S230320AbhEKKnx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 May 2021 06:43:53 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:2441 "EHLO
+        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229892AbhEKKnw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 06:43:52 -0400
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4FfZF00hhlzCqw5;
+        Tue, 11 May 2021 18:40:04 +0800 (CST)
+Received: from [127.0.0.1] (10.40.193.166) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.498.0; Tue, 11 May 2021
+ 18:42:36 +0800
+Subject: Question about device link//Re: Qestion about device link
+To:     <rafael.j.wysocki@intel.com>
+References: <3c88cf35-6725-1bfa-9e1e-8e9d69147e3b@hisilicon.com>
+CC:     John Garry <john.garry@huawei.com>, <linuxarm@huawei.com>,
+        <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        <saravanak@google.com>, <gregkh@linuxfoundation.org>
+From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
+Message-ID: <2e69efb9-a563-251f-2161-5546324a9587@hisilicon.com>
+Date:   Tue, 11 May 2021 18:42:36 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq1k0o6ez1h.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <3c88cf35-6725-1bfa-9e1e-8e9d69147e3b@hisilicon.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.40.193.166]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 10, 2021 at 11:22:25PM -0400, Martin K. Petersen wrote:
-> 
-> Andrea,
-> 
-> > Use blk_mq_unique_tag() to generate requestIDs for StorVSC, avoiding
-> > all issues with allocating enough entries in the VMbus requestor.
-> 
-> Dropped v1 from the SCSI staging tree. OK with this change going through
-> hv if that is easier.
-> 
-> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Re-edit the non-aligned flowchart and add CC to Greg-KH and Saravanna.
 
-Thanks Martin.
 
-> 
-> -- 
-> Martin K. Petersen	Oracle Linux Engineering
+在 2021/5/11 11:59, chenxiang (M) 写道:
+> Hi Rafael and other guys,
+>
+> I am trying to add a device link between scsi_host->shost_gendev and 
+> hisi_hba->dev to support runtime PM for hisi_hba driver
+>
+> (as it supports runtime PM for scsi host in some scenarios such as 
+> error handler etc, we can avoid to do them again if adding a
+>
+> device link between scsi_host->shost_gendev and hisi_hba->dev) as 
+> follows (hisi_sas driver is under directory drivers/scsi/hisi_sas):
+>
+> device_link_add(&shost->shost_gendev, hisi_hba->dev, 
+> DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE)
+>
+> We have a full test on it, and it works well except when rmmod the 
+> driver, some call trace occurs as follows:
+>
+> [root@localhost ~]# rmmod hisi_sas_v3_hw
+> [  105.377944] BUG: scheduling while atomic: kworker/113:1/811/0x00000201
+> [  105.384469] Modules linked in: bluetooth rfkill ib_isert 
+> iscsi_target_mod ib_ipoib ib_umad iptable_filter vfio_iommu_type1 
+> vfio_pci vfio_virqfd vfio rpcrdma ib_is                         er 
+> libiscsi scsi_transport_iscsi crct10dif_ce sbsa_gwdt hns_roce_hw_v2 
+> hisi_sec2 hisi_hpre hisi_zip hisi_qm uacce spi_hisi_sfc_v3xx 
+> hisi_trng_v2 rng_core hisi_uncore                         _hha_pmu 
+> hisi_uncore_ddrc_pmu hisi_uncore_l3c_pmu spi_dw_mmio hisi_uncore_pmu 
+> hns3 hclge hnae3 hisi_sas_v3_hw(-) hisi_sas_main libsas
+> [  105.424841] CPU: 113 PID: 811 Comm: kworker/113:1 Kdump: loaded 
+> Tainted: G        W         5.12.0-rc1+ #1
+> [  105.434454] Hardware name: Huawei TaiShan 2280 V2/BC82AMDC, BIOS 
+> 2280-V2 CS V5.B143.01 04/22/2021
+> [  105.443287] Workqueue: rcu_gp srcu_invoke_callbacks
+> [  105.448154] Call trace:
+> [  105.450593]  dump_backtrace+0x0/0x1a4
+> [  105.454245]  show_stack+0x24/0x40
+> [  105.457548]  dump_stack+0xc8/0x104
+> [  105.460939]  __schedule_bug+0x68/0x80
+> [  105.464590]  __schedule+0x73c/0x77c
+> [  105.465700] BUG: scheduling while atomic: kworker/96:1/791/0x00000201
+> [  105.468066]  schedule+0x7c/0x110
+> [  105.468068]  schedule_timeout+0x194/0x1d4
+> [  105.474490] Modules linked in:
+> [  105.477692]  wait_for_completion+0x8c/0x12c
+> [  105.477695]  rcu_barrier+0x1e0/0x2fc
+> [  105.477697]  scsi_host_dev_release+0x50/0xf0
+> [  105.477701]  device_release+0x40/0xa0
+> [  105.477704]  kobject_put+0xac/0x100
+> [  105.477707]  __device_link_free_srcu+0x50/0x74
+> [  105.477709]  srcu_invoke_callbacks+0x108/0x1a4
+> [  105.484743]  process_one_work+0x1dc/0x48c
+> [  105.492468]  worker_thread+0x7c/0x464
+> [  105.492471]  kthread+0x168/0x16c
+> [  105.492473]  ret_from_fork+0x10/0x18
+> ...
+>
+> After analyse the process, we find that it will 
+> device_del(&shost->gendev) in function scsi_remove_host() and then
+>
+> put_device(&shost->shost_gendev) in function scsi_host_put() when 
+> removing the driver, if there is a link between shost and hisi_hba->dev,
+>
+> it will try to delete the link in device_del(), and also will 
+> call_srcu(__device_link_free_srcu) to put_device() link->consumer and 
+> supplier.
+>
+> But if put device() for shost_gendev in device_link_free() is later 
+> than in scsi_host_put(), it will call scsi_host_dev_release() in
+>
+> srcu_invoke_callbacks() while it is atomic and there are scheduling in 
+> scsi_host_dev_release(),
+>
+> so it reports the BUG "scheduling while atomic:...".
+>
+> thread 1                                                   thread2
+> hisi_sas_v3_remove
+>     ...
+>     sas_remove_host()
+>         ...
+>         scsi_remove_host()
+>             ...
+>             device_del(&shost->shost_gendev)
+>                 ...
+>                 device_link_purge()
+>                     __device_link_del()
+>                         device_unregister(&link->link_dev)
+>                             devlink_dev_release
+> call_srcu(__device_link_free_srcu)    -----------> 
+> srcu_invoke_callbacks  (atomic)
+>         __device_link_free_srcu
+>     ...
+>     scsi_host_put()
+>         put_device(&shost->shost_gendev) (ref = 1)
+>                 device_link_free()
+>                               put_device(link->consumer) 
+> //shost->gendev ref = 0
+>                                           ...
+>                                           scsi_host_dev_release
+>                                                       ...
+> rcu_barrier
+> kthread_stop()
+
+Re-edit the non-aligned flowchart
+     thread 1 thread 2
+     hisi_sas_v3_remove()
+             ...
+             sas_remove_host()
+                     ...
+                     device_del(&shost->shost_gendev)
+                             ...
+                             device_link_purge()
+                                     __device_link_del()
+device_unregister(&link->link_dev)
+devlink_dev_release
+call_srcu(__device_link_free_srcu)    -----------> 
+srcu_invoke_callbacks  (atomic)
+             __device_link_free_srcu()
+             ...
+             scsi_host_put()
+                     put_device(&shost->shost_gendev) (ref = 1)
+                         device_link_free()
+                                     put_device(link->consumer) 
+//shost->gendev ref = 0
+                                                 ...
+scsi_host_dev_release()
+                                                             ...
+rcu_barrier()
+kthread_stop()
+
+>
+>
+> We can check kref of shost->shost_gendev to make sure scsi_host_put() 
+> to release scsi host device in LLDD driver to avoid the issue,
+>
+> but it seems be a common issue:  function __device_link_free_srcu 
+> calls put_device() for consumer and supplier,
+>
+> but if it's ref =0 at that time and there are scheduling or sleep in 
+> dev_release, it may have the issue.
+>
+> Do you have any idea about the issue?
+>
+>
+> Best regards,
+>
+> Xiang Chen
+>
+>
+>
+> .
+>
+
+
