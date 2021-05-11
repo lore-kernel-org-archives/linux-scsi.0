@@ -2,259 +2,266 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,MIME_HEADER_CTYPE_ONLY,
+	MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E248C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:43:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E997C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:51:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D051B616ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:43:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42B2861288
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:51:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232098AbhEKTo7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 May 2021 15:44:59 -0400
-Received: from mail-ot1-f52.google.com ([209.85.210.52]:41937 "EHLO
-        mail-ot1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231944AbhEKTo7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 15:44:59 -0400
-Received: by mail-ot1-f52.google.com with SMTP id 36-20020a9d0ba70000b02902e0a0a8fe36so12214012oth.8;
-        Tue, 11 May 2021 12:43:52 -0700 (PDT)
+        id S231944AbhEKTwQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 May 2021 15:52:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37572 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230408AbhEKTwP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 15:52:15 -0400
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B49BC061574
+        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:51:08 -0700 (PDT)
+Received: by mail-pf1-x432.google.com with SMTP id c17so16862374pfn.6
+        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:51:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=QqM3YJrBS5JMhdZB1NkOh7Fy+4NNQfGvwNXDMfYPFvo=;
+        b=gWtAGK3A2eA8lP4W2wZXuyzkT0D7T4kuva9aFWcGHMruihyYa5OUe2YtrU7eZA0CAg
+         herZiRwK5P39d1N3aj4jUbFA6R7U3BAINpummDNMQqHFgpD/+7OV1TN86P6l70OIJreR
+         339YoNtRw80Q+SIPlWgITCFkSdMmfg+9LWuac=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=DPdrS3g+68DpKgcVAIujbx2tcmLMhvF/2XxS2mNpU0Q=;
-        b=LUHfknqdAzZ7Gd9JG9lv94cK7ZpgGC973Rid+1wo6TJ1FW5Qa1sN3tUzo7avgdV/pN
-         0eIsGL+QvW6D/re7r+pYGVUSKbEjbXmzHuIxxpXPZxPP5LhWduD8a0uaBnY7JoW4ZJ8Q
-         2Q7uN+eQKz/j2OYni86gvrlkWjpTNA+hKgxqu/IeM+fy4Sdltxq85YmvLHfabWW4Q6SQ
-         rhpQV25rr/Bo4Zlo2HuT2HD2uOIC1Ac8AfissT4aPZa/sFZghubbWe8vqmEXh1h2ABZ3
-         h5Y4ux2UzZcIMsaT/sg2+gWfadFNBd9xlLQxQW9fFZPRCjdOwVLxWP3+yRNdQ0bZW06A
-         Pu4A==
-X-Gm-Message-State: AOAM530W6nRulNn83VwS54yUC0zUf7Ns6XH9V6AVJAFVBtvTj1C/o8Me
-        1I/vtdYUdfXE04nl6YhN8CIHwztHSStt6lnhhcw=
-X-Google-Smtp-Source: ABdhPJwni9lLPtuoei3i/UmiWj7BQ884In5rpM4cCIcL6qihyQEsC9Y7RS1YRtry4qQUTDAt0GZ3B8jm62C7SZLoiNE=
-X-Received: by 2002:a05:6830:55b:: with SMTP id l27mr27258063otb.260.1620762232138;
- Tue, 11 May 2021 12:43:52 -0700 (PDT)
-MIME-Version: 1.0
-References: <3c88cf35-6725-1bfa-9e1e-8e9d69147e3b@hisilicon.com>
- <d16058fc-9876-f6a3-d5e8-ff06b5193f2c@intel.com> <2149723.iZASKD2KPV@kreacher>
- <CAGETcx-tRh45ZJzmbGvHay1htnjeE-EZc3CG9P3=qFfi75owHA@mail.gmail.com>
-In-Reply-To: <CAGETcx-tRh45ZJzmbGvHay1htnjeE-EZc3CG9P3=qFfi75owHA@mail.gmail.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 11 May 2021 21:43:40 +0200
-Message-ID: <CAJZ5v0iBV2n0yuvhYEzLPTZFuq-O1SpdK_BmLgXz7qrcNKe-gg@mail.gmail.com>
-Subject: Re: Qestion about device link
-To:     Saravana Kannan <saravanak@google.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "chenxiang (M)" <chenxiang66@hisilicon.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        John Garry <john.garry@huawei.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=QqM3YJrBS5JMhdZB1NkOh7Fy+4NNQfGvwNXDMfYPFvo=;
+        b=DUAjm2s0xD5ZtTvGqb/DE40H/vAGc/rO6jcnu5LWaZ26ClD2NsR7i8xQJhiZW6jjzL
+         Aq7VUGbncuL9dJJH5GUEgQJhD036p9stbhnbiJpzjoN+JS1hythrkw8zgzyrvCBgpofa
+         d9DTs9L7vKEzkY7Us5cBHMME6hnwzjaONpnoT1sCR4gFycAvhHoaFrSn1NseS3AFL5w1
+         PUfYyl+7zXskVbEhPpj66EY9R9ybVaTktbaMJd2KzCJ9BLnoHxRu9g7vz8xCb+2QdEzR
+         qbySySyR+U2KnbLyv8htDhE6xxM9ByojACGhWePgIRYtgolOxHSTLju+ae151JoWZUUU
+         +t/g==
+X-Gm-Message-State: AOAM530o69+qx7tffPmVDDUeqVufx6buP+4NdVSMHLwE3XfqurBjE1Dw
+        7DPwRu6b2Aq0U7letY2kQoPGf43zbhkam38fT0ttXLWr/aC79TfhuVRorxcj7Sa4ip3jXHz1Hxg
+        1LRIl10J3C/R9ZWDz/PlD80+iWsob6ijf9ijT+x01iXzrg7FpGYbfro0Qu1ab5P/G5no8cKLhlK
+        dkVD1sOg==
+X-Google-Smtp-Source: ABdhPJzpmJUSCTGV1WU4pIdnUJCugqnrYY2u9mXjm6SGYpGDpLSNLg2BnDfT3IaaOKZrZripUib/ig==
+X-Received: by 2002:a63:d30e:: with SMTP id b14mr17316518pgg.237.1620762667523;
+        Tue, 11 May 2021 12:51:07 -0700 (PDT)
+Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id b3sm6317581pfv.61.2021.05.11.12.51.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 May 2021 12:51:06 -0700 (PDT)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        steve.hagan@broadcom.com, peter.rivera@broadcom.com,
+        mpi3mr-linuxdrv.pdl@broadcom.com,
+        Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: [PATCH v4 00/24] Introducing mpi3mr driver
+Date:   Wed, 12 May 2021 01:23:59 +0530
+Message-Id: <20210511195423.2134562-1-kashyap.desai@broadcom.com>
+X-Mailer: git-send-email 2.18.1
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="00000000000018a48405c21337c7"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, May 11, 2021 at 9:24 PM Saravana Kannan <saravanak@google.com> wrote:
->
-> On Tue, May 11, 2021 at 12:16 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >
-> > On Tuesday, May 11, 2021 4:39:31 PM CEST Rafael J. Wysocki wrote:
-> > > On 5/11/2021 5:59 AM, chenxiang (M) wrote:
-> > > > Hi Rafael and other guys,
-> > > >
-> > > > I am trying to add a device link between scsi_host->shost_gendev and
-> > > > hisi_hba->dev to support runtime PM for hisi_hba driver
-> > > >
-> > > > (as it supports runtime PM for scsi host in some scenarios such as
-> > > > error handler etc, we can avoid to do them again if adding a
-> > > >
-> > > > device link between scsi_host->shost_gendev and hisi_hba->dev) as
-> > > > follows (hisi_sas driver is under directory drivers/scsi/hisi_sas):
-> > > >
-> > > > device_link_add(&shost->shost_gendev, hisi_hba->dev,
-> > > > DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE)
-> > > >
-> > > > We have a full test on it, and it works well except when rmmod the
-> > > > driver, some call trace occurs as follows:
-> > > >
-> > > > [root@localhost ~]# rmmod hisi_sas_v3_hw
-> > > > [  105.377944] BUG: scheduling while atomic: kworker/113:1/811/0x00000201
-> > > > [  105.384469] Modules linked in: bluetooth rfkill ib_isert
-> > > > iscsi_target_mod ib_ipoib ib_umad iptable_filter vfio_iommu_type1
-> > > > vfio_pci vfio_virqfd vfio rpcrdma ib_is                         er
-> > > > libiscsi scsi_transport_iscsi crct10dif_ce sbsa_gwdt hns_roce_hw_v2
-> > > > hisi_sec2 hisi_hpre hisi_zip hisi_qm uacce spi_hisi_sfc_v3xx
-> > > > hisi_trng_v2 rng_core hisi_uncore                         _hha_pmu
-> > > > hisi_uncore_ddrc_pmu hisi_uncore_l3c_pmu spi_dw_mmio hisi_uncore_pmu
-> > > > hns3 hclge hnae3 hisi_sas_v3_hw(-) hisi_sas_main libsas
-> > > > [  105.424841] CPU: 113 PID: 811 Comm: kworker/113:1 Kdump: loaded
-> > > > Tainted: G        W         5.12.0-rc1+ #1
-> > > > [  105.434454] Hardware name: Huawei TaiShan 2280 V2/BC82AMDC, BIOS
-> > > > 2280-V2 CS V5.B143.01 04/22/2021
-> > > > [  105.443287] Workqueue: rcu_gp srcu_invoke_callbacks
-> > > > [  105.448154] Call trace:
-> > > > [  105.450593]  dump_backtrace+0x0/0x1a4
-> > > > [  105.454245]  show_stack+0x24/0x40
-> > > > [  105.457548]  dump_stack+0xc8/0x104
-> > > > [  105.460939]  __schedule_bug+0x68/0x80
-> > > > [  105.464590]  __schedule+0x73c/0x77c
-> > > > [  105.465700] BUG: scheduling while atomic: kworker/96:1/791/0x00000201
-> > > > [  105.468066]  schedule+0x7c/0x110
-> > > > [  105.468068]  schedule_timeout+0x194/0x1d4
-> > > > [  105.474490] Modules linked in:
-> > > > [  105.477692]  wait_for_completion+0x8c/0x12c
-> > > > [  105.477695]  rcu_barrier+0x1e0/0x2fc
-> > > > [  105.477697]  scsi_host_dev_release+0x50/0xf0
-> > > > [  105.477701]  device_release+0x40/0xa0
-> > > > [  105.477704]  kobject_put+0xac/0x100
-> > > > [  105.477707]  __device_link_free_srcu+0x50/0x74
-> > > > [  105.477709]  srcu_invoke_callbacks+0x108/0x1a4
-> > > > [  105.484743]  process_one_work+0x1dc/0x48c
-> > > > [  105.492468]  worker_thread+0x7c/0x464
-> > > > [  105.492471]  kthread+0x168/0x16c
-> > > > [  105.492473]  ret_from_fork+0x10/0x18
-> > > > ...
-> > > >
-> > > > After analyse the process, we find that it will
-> > > > device_del(&shost->gendev) in function scsi_remove_host() and then
-> > > >
-> > > > put_device(&shost->shost_gendev) in function scsi_host_put() when
-> > > > removing the driver, if there is a link between shost and hisi_hba->dev,
-> > > >
-> > > > it will try to delete the link in device_del(), and also will
-> > > > call_srcu(__device_link_free_srcu) to put_device() link->consumer and
-> > > > supplier.
-> > > >
-> > > > But if put device() for shost_gendev in device_link_free() is later
-> > > > than in scsi_host_put(), it will call scsi_host_dev_release() in
-> > > >
-> > > > srcu_invoke_callbacks() while it is atomic and there are scheduling in
-> > > > scsi_host_dev_release(),
-> > > >
-> > > > so it reports the BUG "scheduling while atomic:...".
-> > > >
-> > > > thread 1                                                   thread2
-> > > > hisi_sas_v3_remove
-> > > >     ...
-> > > >     sas_remove_host()
-> > > >         ...
-> > > >         scsi_remove_host()
-> > > >             ...
-> > > >             device_del(&shost->shost_gendev)
-> > > >                 ...
-> > > >                 device_link_purge()
-> > > >                     __device_link_del()
-> > > >                         device_unregister(&link->link_dev)
-> > > >                             devlink_dev_release
-> > > > call_srcu(__device_link_free_srcu)    ----------->
-> > > > srcu_invoke_callbacks  (atomic)
-> > > >         __device_link_free_srcu
-> > > >     ...
-> > > >     scsi_host_put()
-> > > >         put_device(&shost->shost_gendev) (ref = 1)
-> > > >                 device_link_free()
-> > > >                               put_device(link->consumer)
-> > > > //shost->gendev ref = 0
-> > > >                                           ...
-> > > >                                           scsi_host_dev_release
-> > > >                                                       ...
-> > > > rcu_barrier
-> > > > kthread_stop()
-> > > >
-> > > >
-> > > > We can check kref of shost->shost_gendev to make sure scsi_host_put()
-> > > > to release scsi host device in LLDD driver to avoid the issue,
-> > > >
-> > > > but it seems be a common issue:  function __device_link_free_srcu
-> > > > calls put_device() for consumer and supplier,
-> > > >
-> > > > but if it's ref =0 at that time and there are scheduling or sleep in
-> > > > dev_release, it may have the issue.
-> > > >
-> > > > Do you have any idea about the issue?
-> > > >
-> > > Yes, this is a general issue.
-> > >
-> > > If I'm not mistaken, it can be addressed by further deferring the
-> > > device_link_free() invocation through a workqueue.
-> > >
-> > > Let me cut a patch doing this.
-> >
-> > Please test the patch below and let me know if it works for you.
-> >
-> > ---
-> >  drivers/base/core.c    |   18 ++++++++++++++++--
-> >  include/linux/device.h |    5 ++++-
-> >  2 files changed, 20 insertions(+), 3 deletions(-)
-> >
-> > Index: linux-pm/drivers/base/core.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/base/core.c
-> > +++ linux-pm/drivers/base/core.c
-> > @@ -455,16 +455,30 @@ static void device_link_free(struct devi
-> >  }
-> >
-> >  #ifdef CONFIG_SRCU
-> > +static void __device_link_free_fn(struct work_struct *work)
-> > +{
-> > +       device_link_free(container_of(work, struct device_link, srcu.work));
-> > +}
-> > +
-> >  static void __device_link_free_srcu(struct rcu_head *rhead)
-> >  {
-> > -       device_link_free(container_of(rhead, struct device_link, rcu_head));
-> > +       struct device_link *link = container_of(rhead, struct device_link,
-> > +                                               srcu.rhead);
-> > +       struct work_struct *work = &link->srcu.work;
-> > +
-> > +       /*
-> > +        * Because device_link_free() may sleep in some cases, schedule the
-> > +        * execution of it instead of invoking it directly.
-> > +        */
-> > +       INIT_WORK(work, __device_link_free_fn);
-> > +       schedule_work(work);
-> >  }
-> >
-> >  static void devlink_dev_release(struct device *dev)
-> >  {
-> >         struct device_link *link = to_devlink(dev);
-> >
-> > -       call_srcu(&device_links_srcu, &link->rcu_head, __device_link_free_srcu);
-> > +       call_srcu(&device_links_srcu, &link->srcu.rhead, __device_link_free_srcu);
-> >  }
-> >  #else
-> >  static void devlink_dev_release(struct device *dev)
-> > Index: linux-pm/include/linux/device.h
-> > ===================================================================
-> > --- linux-pm.orig/include/linux/device.h
-> > +++ linux-pm/include/linux/device.h
-> > @@ -584,7 +584,10 @@ struct device_link {
-> >         refcount_t rpm_active;
-> >         struct kref kref;
-> >  #ifdef CONFIG_SRCU
-> > -       struct rcu_head rcu_head;
-> > +       union {
-> > +               struct rcu_head rhead;
-> > +               struct work_struct work;
-> > +       } srcu;
->
-> I'll do the actual review on a more final patch? I see you are trying
-> to save space, but is this worth the readability reduction?
+--00000000000018a48405c21337c7
 
-Well, is this so much less readable?
+v3->v4
+- Addressed comments from Christoph Hellwig and Bart Van Assche to make
+  MPI headers compliant with Linux kernel coding guidelines.
+- Added Reviewed-by tag from Hannes and Himanshu to appropriate patches.
+- Use correct return type in scsi error handler (Patch #6) - comment
+  provided by Hannes.
+- Fix array overflow while printing ioc info(Patch #11) -
+  comment provided by Hannes.
+- Remove redundant kfree of dev_rmhs_cmds (Patch #13) -
+  comment provided by Tomas.
+- Replaced few strcpy with strncpy to avoid string overflow.
+- Updated Copyright.
 
-Anyway, because we have a whole struct device in there now, the size
-difference probably doesn't matter.
+v2->v3
+ - further removed unused pointer typedef from mpi30_type.h
+ - Add Tomas Henzl's reviewed-tag to appropriate patches
+ - Fix added which is Reported-by kernel test robot <lkp@intel.com>
+ - Removed .eh_abort_handler suggested by Hannes.
 
-Also it is not particularly useful to do the entire unregistration
-under the device links write lock, so the device_unregister() in
-__device_link_del() could be delegated to a workqueue and run from
-there, so the whole call_rcu() dance could be avoided.
+v1->v2
+ - removed undefined entries from mpi30_type.h
+ - removed DRV_CMD_CALLBACK typedef
+ - Use IRQF_SHARED  instead of IRQF_ONESHOT
+ - Use READ_ONCE, WRITE_ONCE while accessing operational request
+   queue consumer index 
+ - removed in_interrup()
+ - remove pr_cont.
+ - move some code from error handling to device handling patch.
+ - used direct values instead of macro MPI3_SECTOR_SIZE_XYZ
+ - Add Hannes's reviewed-tag to appropriate patches
+ - Add Reported-by kernel test robot <lkp@intel.com> to appropriate
+   patches.
 
-Which would be a better fix IMO, but let's see if this one works.
+
+This patch series covers logical patches of the new device driver for the
+MPI3MR high performance storage I/O & RAID controllers (Avenger series).
+The mpi3mr has true multiple h/w queue interfacing like nvme.
+
+See more info -
+https://www.spinics.net/lists/linux-scsi/msg147868.html
+
+The controllers managed by the mpi3mr driver are capable of reaching a
+very high performance numbers compared to existing controller due to the
+new hardware architectures. This Driver is tested with the internal
+versions of the MPI3MR I/O & RAID controllers.
+
+Patches are logical split mainly for better code review. Full patch set is
+required for functional stability of this new driver.
+
+You can find the source at - 
+https://github.com/kadesai16/mpi3mr
+
+Kashyap Desai (24):
+  mpi3mr: add mpi30 Rev-R headers and Kconfig
+  mpi3mr: base driver code
+  mpi3mr: create operational request and reply queue pair
+  mpi3mr: add support of queue command processing
+  mpi3mr: add support of internal watchdog thread
+  mpi3mr: add support of event handling part-1
+  mpi3mr: add support of event handling pcie devices part-2
+  mpi3mr: add support of event handling part-3
+  mpi3mr: add support for recovering controller
+  mpi3mr: add support of timestamp sync with firmware
+  mpi3mr: print ioc info for debugging
+  mpi3mr: add bios_param shost template hook
+  mpi3mr: implement scsi error handler hooks
+  mpi3mr: add change queue depth support
+  mpi3mr: allow certain commands during pci-remove hook
+  mpi3mr: hardware workaround for UNMAP commands to nvme drives
+  mpi3mr: add support of threaded isr
+  mpi3mr: add complete support of soft reset
+  mpi3mr: print pending host ios for debug
+  mpi3mr: wait for pending IO completions upon detection of VD IO
+    timeout
+  mpi3mr: add support of PM suspend and resume
+  mpi3mr: add support of DSN secure fw check
+  mpi3mr: add eedp dif dix support
+  mpi3mr: add event handling debug prints
+
+ drivers/scsi/Kconfig                      |    1 +
+ drivers/scsi/Makefile                     |    1 +
+ drivers/scsi/mpi3mr/Kconfig               |    7 +
+ drivers/scsi/mpi3mr/Makefile              |    4 +
+ drivers/scsi/mpi3mr/mpi/mpi30_api.h       |   20 +
+ drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 1884 ++++++++++
+ drivers/scsi/mpi3mr/mpi/mpi30_image.h     |  220 ++
+ drivers/scsi/mpi3mr/mpi/mpi30_init.h      |  163 +
+ drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       | 1009 +++++
+ drivers/scsi/mpi3mr/mpi/mpi30_sas.h       |   37 +
+ drivers/scsi/mpi3mr/mpi/mpi30_transport.h |  486 +++
+ drivers/scsi/mpi3mr/mpi3mr.h              |  895 +++++
+ drivers/scsi/mpi3mr/mpi3mr_debug.h        |   60 +
+ drivers/scsi/mpi3mr/mpi3mr_fw.c           | 3960 ++++++++++++++++++++
+ drivers/scsi/mpi3mr/mpi3mr_os.c           | 4063 +++++++++++++++++++++
+ 15 files changed, 12810 insertions(+)
+ create mode 100644 drivers/scsi/mpi3mr/Kconfig
+ create mode 100644 drivers/scsi/mpi3mr/Makefile
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_api.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_image.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_init.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_sas.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_transport.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr_debug.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr_fw.c
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr_os.c
+
+-- 
+2.18.1
+
+
+--00000000000018a48405c21337c7
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+P3lSxcw4Cg90iKHqfpwLnGNc9AGXHMxUCukpnAHRlivljilKHMx1ymb180BLmtF+ZLm6KrFLQWzB
+4KeiUOMtKM13wJrQubqTeZgB1XA+89jeLYlxagVsMyksdwIDAQABo4IB2zCCAdcwDgYDVR0PAQH/
+BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9i
+YWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUF
+BzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xv
+YmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
+Oi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAlBgNV
+HREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAf
+BgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUkTOZp9jXE3yPj4ieKeDT
+OiNyCtswDQYJKoZIhvcNAQELBQADggEBABG1KCh7cLjStywh4S37nKE1eE8KPyAxDzQCkhxYLBVj
+gnnhaLmEOayEucPAsM1hCRAm/vR3RQ27lMXBGveCHaq9RZkzTjGSbzr8adOGK3CluPrasNf5StX3
+GSk4HwCapA39BDUrhnc/qG5vHwLrgA1jwAvSy8e/vn4F4h+KPrPoFNd1OnCafedbuiEXTqTkn5Rk
+vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
+MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
+MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
+VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEvAcIhSsm09x/WSnT4Ft/HLzQ+H
+hPV2gCM1qzAgqQrTMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDUxMTE5NTEwOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
+AwQCATANBgkqhkiG9w0BAQEFAASCAQAjMLMl6Ak4A3K5YFQmw9O1dJBu67F4kGsRcqAVz3dVZO3i
+Ptlap3ZMvnQ7jMWc6fVe59OVjqoQd1PV7DKB2e/2RMbsfquCwTm5e9IBCVhbkh9HcfiJcxKZEnq+
+ef7DSUf2iPet8UBmoOax5y6p9mXlZQCY8yQQwyN+NXyAXRoMrB8XBOvlJExJjN8HUG099/n8HlgI
+Yjen9tRWHW/J2UXM3DhO0/MxC/z/qVHBKnHLC9xlv0RZ6R1zuAoDn9x4D0Gs7bIo2VY5zcwHzu05
+dWJRsuDirOeNBLvla7DYu49tbmHW4eMsAPqEQq+G9+kfIVD+5w5PaQPWPVmVlLvS8tiY
+--00000000000018a48405c21337c7--
