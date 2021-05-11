@@ -2,84 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83B05C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 07:34:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23272C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 09:36:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 580D161360
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 07:34:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1CE561001
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 09:36:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229924AbhEKHfJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 May 2021 03:35:09 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3058 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229637AbhEKHfH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 03:35:07 -0400
-Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FfTzP62sVz6rnLt;
-        Tue, 11 May 2021 15:28:01 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Tue, 11 May 2021 09:33:58 +0200
-Received: from [10.47.85.216] (10.47.85.216) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Tue, 11 May
- 2021 08:33:58 +0100
-Subject: Re: [PATCH] blk-mq: Use request queue-wide tags for tagset-wide
- sbitmap
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     <axboe@kernel.dk>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <kashyap.desai@broadcom.com>, <chenxiang66@hisilicon.com>,
-        <yama@redhat.com>, Douglas Gilbert <dgilbert@interlog.com>
-References: <1620037333-2495-1-git-send-email-john.garry@huawei.com>
- <YJnVasOcaVU+4+Au@T590>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <afa41d8d-d006-5c4f-d604-047ac737fd90@huawei.com>
-Date:   Tue, 11 May 2021 08:33:18 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S231294AbhEKJhg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 May 2021 05:37:36 -0400
+Received: from mail-wr1-f48.google.com ([209.85.221.48]:43620 "EHLO
+        mail-wr1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231224AbhEKJh2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 05:37:28 -0400
+Received: by mail-wr1-f48.google.com with SMTP id s8so19430824wrw.10;
+        Tue, 11 May 2021 02:36:21 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=lKvDqLFt4pSvW/UjUfuGxRK9wnc82UFlNv4lfSox3SQ=;
+        b=TuyL4C/k18fwrHfpsEM15BqzMjJ0K5QlHBgddl7GgePT54vrlRCE2nCbfrp28DynJR
+         HemxwqOyXkaHDiXWD6vtKozmUPiKKVitfk5QTnI7HbGG8/ZamX9hBETmnocFfRYsiees
+         OQYm22RW55dKFChV4bhJQNQtx+uojImviXyFei47WYhRph0xULgJswc/Jt+Noag+PCTO
+         H3+eu0796nKRCz9bTv3QhZpFB8SBfOoX3HHH0WdP0+a/RMQn8KxXilqARFq5jXhv6No8
+         NCFFBbwIj5lTnBYisaTXhXWLfjObEnkY6agLOBnlwYX+rtBaCgGjt/MCSOhhWRhCtdEG
+         LfeA==
+X-Gm-Message-State: AOAM532DLtNOevsO8HRlaDCnKVllYRCRJRpKVDhe4Over0VqWhnF9aiG
+        FQIIppJKVloRUhs4UC7yvjo=
+X-Google-Smtp-Source: ABdhPJzoPFT2EMMBDiIncbIHfUAbvXVf3ZD01iti4VHoAS+8gLGYEXHj0HcWmLvh5qXK2Pv0JB5KYg==
+X-Received: by 2002:a5d:400f:: with SMTP id n15mr32595880wrp.274.1620725780762;
+        Tue, 11 May 2021 02:36:20 -0700 (PDT)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id e17sm1256536wme.9.2021.05.11.02.36.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 May 2021 02:36:20 -0700 (PDT)
+Date:   Tue, 11 May 2021 09:36:18 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
+        linux-kernel@vger.kernel.org, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
+        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
+        linux-hyperv@vger.kernel.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, mikelley@microsoft.com
+Subject: Re: [PATCH v2] scsi: storvsc: Use blk_mq_unique_tag() to generate
+ requestIDs
+Message-ID: <20210511093618.fqcbno4iuvhnl66g@liuwe-devbox-debian-v2>
+References: <20210510210841.370472-1-parri.andrea@gmail.com>
+ <yq1k0o6ez1h.fsf@ca-mkp.ca.oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <YJnVasOcaVU+4+Au@T590>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.85.216]
-X-ClientProxiedBy: lhreml740-chm.china.huawei.com (10.201.108.190) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq1k0o6ez1h.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/05/2021 01:52, Ming Lei wrote:
->> fixed.
->>
->> Ming and Yanhui report higher CPU usage and lower throughput in scenarios
->> where the fixed total driver tag depth is appreciably lower than the total
->> scheduler tag depth:
->> https://lore.kernel.org/linux-block/440dfcfc-1a2c-bd98-1161-cec4d78c6dfc@huawei.com/T/#mc0d6d4f95275a2743d1c8c3e4dc9ff6c9aa3a76b
->>
-> No difference any more wrt. fio running on scsi_debug with this patch in
-> Yanhui's test machine:
+On Mon, May 10, 2021 at 11:22:25PM -0400, Martin K. Petersen wrote:
 > 
-> 	modprobe scsi_debug host_max_queue=128 submit_queues=32 virtual_gb=256 delay=1
-> vs.
-> 	modprobe scsi_debug max_queue=128 submit_queues=1 virtual_gb=256 delay=1
+> Andrea,
 > 
-> Without this patch, the latter's result is 30% higher than the former's.
+> > Use blk_mq_unique_tag() to generate requestIDs for StorVSC, avoiding
+> > all issues with allocating enough entries in the VMbus requestor.
 > 
+> Dropped v1 from the SCSI staging tree. OK with this change going through
+> hv if that is easier.
+> 
+> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-ok, good. I'll post a v2 with comments addressed.
+Thanks Martin.
 
-> note: scsi_debug's queue depth needs to be updated to 128 for avoiding io hang,
-> which is another scsi issue.
 > 
-I was just carrying Doug's patch to test.
-
-Thanks,
-John
+> -- 
+> Martin K. Petersen	Oracle Linux Engineering
