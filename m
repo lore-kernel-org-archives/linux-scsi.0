@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D64CC433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 18:34:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 165DCC433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 18:35:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D8F26186A
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 18:34:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D96A76188B
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 18:35:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231956AbhEKSfk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 May 2021 14:35:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48480 "EHLO
+        id S232096AbhEKSgV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 May 2021 14:36:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232010AbhEKSfh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 14:35:37 -0400
-Received: from mail-qk1-x729.google.com (mail-qk1-x729.google.com [IPv6:2607:f8b0:4864:20::729])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 982BBC061574
-        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 11:34:30 -0700 (PDT)
-Received: by mail-qk1-x729.google.com with SMTP id a22so19188952qkl.10
-        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 11:34:30 -0700 (PDT)
+        with ESMTP id S231858AbhEKSgU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 14:36:20 -0400
+Received: from mail-qk1-x732.google.com (mail-qk1-x732.google.com [IPv6:2607:f8b0:4864:20::732])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 781B5C061574
+        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 11:35:13 -0700 (PDT)
+Received: by mail-qk1-x732.google.com with SMTP id a2so19742753qkh.11
+        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 11:35:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:references:in-reply-to:mime-version:thread-index:date
          :message-id:subject:to:cc;
-        bh=YOp546iaaGGrbX+57Vc8semal5Vq9YQWjrdBBMovIM0=;
-        b=ApfUAtZ+JNl8tgW5eIePTpY+b6F/Oi6yicbSYKe3cB87pUIuRCANW1rLPO76KeOQe4
-         y21RVvys6NeF8oiWX8HzDjHEgFPDDELxKPBTxVt9hW7s1sHetSMIpKIQV95kU4STpn4p
-         YE4HT53cPSfNrK0O+B9gVadGhEbiwbRVe08Co=
+        bh=9sYkfV41XK4DYHYx8XL5n7fwXwYB77q+201F27M3QC8=;
+        b=Isz5YMdkm6YxiSDPyU0YrExUVruAPH3ddZXmPeWSfTrBts3QZsvAErZEDHUwQwRsBF
+         GfrB+TiIbOncRvZ0SIXx75FAm8TZzdQPC0pywmKnjIu67GxmyLDzhdixWlWsrHOF8u3N
+         X7RRSnqdJySXR6MuRpRgr94ShGM9CQphXcSUM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:references:in-reply-to:mime-version
          :thread-index:date:message-id:subject:to:cc;
-        bh=YOp546iaaGGrbX+57Vc8semal5Vq9YQWjrdBBMovIM0=;
-        b=P0cTd8Vu13XHyI9s/NB4+xR5beIU8X3hrMXUdeLv5LXzC48/Oj2OJ159rgRRxaM/hv
-         PX5XloGVqMyBZGTS+2p7tKSz8vrXxebPHV44RWvA/fhA4VOx49bgPLNdsf0hOJYGUYIX
-         aSu2GYziviEWXDsDjJHEKpw/OZD7tTgxtTF4ni0FowXP0QiCRyDP5n8mkY4lSvMjpxcq
-         TQwRNEpzLacr2pDvPlsHrrtf1MDFgRrVuameX1Tu8nglUJ/a0QrHEKSYBW3N+CmPvRdn
-         /Ly0CNpJkdJqavigwtxqQ1gFaTgea6tqdOio9HMtlNeQwwWqC8zzBfovGabhQIa5BVnX
-         8N/g==
-X-Gm-Message-State: AOAM5309MrPxqJoemf45nJuaF6fgtb4k9DZ+lWqX+y4vjuTlmi7fAMzp
-        lug1VTNTPd+QeURgkBGziHsxoZtScUgaR+4X9JVPZg==
-X-Google-Smtp-Source: ABdhPJyDETi/Iev4KOu75YwSyCVtdVpJTI73eN5UvvEKmI1NYvk2UmJYTdZWueyIF3HRJbWvg0yIFNCuNL4LD9z1AyQ=
-X-Received: by 2002:a37:aa0b:: with SMTP id t11mr29228847qke.70.1620758069474;
- Tue, 11 May 2021 11:34:29 -0700 (PDT)
+        bh=9sYkfV41XK4DYHYx8XL5n7fwXwYB77q+201F27M3QC8=;
+        b=QNfcKl9JiHYokSNy2dlFSCRGNU4lw7+/3LI/pfLy7JVS4D8WxqxNI9tSLn87h14xbF
+         W8fhAZ7KCTkUGirK73MIff6TgeG0iJPpLh9HmRYgDZmJa7WrH9+EjXOmuUP4CLcY72US
+         XAhMDlKoVEfJPOFloEpJ/f6DMw7DIxxq6bYXcUNj5WWaOl87Dn5hFYLHlSvBJ/GFPyGP
+         ceR2hthxkPV/c6CtOco2V3ZtAFXyJ6A/7wwI8V3XLqSs0vbMlVvWj/YxP87ijgj9iipe
+         oEgLlrfohbDgG1qeP/FvhNJ+YgOJVFmjD8gYqM6yU6YSfm12HoLTeFNycmwM65e5PA1E
+         EcoA==
+X-Gm-Message-State: AOAM530ZmA4FzEaIkjvi1nPISb64o/R8Di9occQnJlIN6wQ3MRLK9r4I
+        EjX8N3fKLm1rhGfStwjZ5OCPjSH7PTR7tvcdMAquPA==
+X-Google-Smtp-Source: ABdhPJyFXWTMYhM7hpuYPvwITtc7L2JP8YOK1C1prigCu6jJt9G+kxgYTEdaPZ0Ih4N23wiz091cn8YnkZUy79+A9os=
+X-Received: by 2002:a05:620a:158c:: with SMTP id d12mr27023576qkk.127.1620758112556;
+ Tue, 11 May 2021 11:35:12 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 References: <20210419110156.1786882-1-kashyap.desai@broadcom.com>
- <20210419110156.1786882-7-kashyap.desai@broadcom.com> <1f03c0a0-e9a9-3782-3948-4a11ecb43826@suse.de>
-In-Reply-To: <1f03c0a0-e9a9-3782-3948-4a11ecb43826@suse.de>
+ <20210419110156.1786882-12-kashyap.desai@broadcom.com> <eef056dd-6666-a899-4e0f-a1d52563f430@suse.de>
+In-Reply-To: <eef056dd-6666-a899-4e0f-a1d52563f430@suse.de>
 MIME-Version: 1.0
 X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQIA/XT3c415OaY1ygHMgGHDvdQMAAMBhIPAAlcXNaGqYGfzIA==
-Date:   Wed, 12 May 2021 00:04:27 +0530
-Message-ID: <93f2f5fefa6b16d7dc9bf8298b9eeb8f@mail.gmail.com>
-Subject: RE: [PATCH v3 06/24] mpi3mr: add support of event handling part-1
+Thread-Index: AQIA/XT3c415OaY1ygHMgGHDvdQMAAGVdBxzAtQ3gNuqZ+BRIA==
+Date:   Wed, 12 May 2021 00:05:10 +0530
+Message-ID: <cd9c675b6c2d07278405d074f313884b@mail.gmail.com>
+Subject: RE: [PATCH v3 11/24] mpi3mr: print ioc info for debugging
 To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         Steve Hagan <steve.hagan@broadcom.com>,
@@ -65,262 +65,74 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
         Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000083ef505c21225fc"
+        boundary="00000000000096b14b05c212273e"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000083ef505c21225fc
+--00000000000096b14b05c212273e
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-> > @@ -612,7 +1942,25 @@ static void mpi3mr_target_destroy(struct
-> scsi_target *starget)
-> >   */
-> >  static int mpi3mr_slave_configure(struct scsi_device *sdev)  {
-> > +	struct scsi_target *starget;
-> > +	struct Scsi_Host *shost;
-> > +	struct mpi3mr_ioc *mrioc;
-> > +	struct mpi3mr_tgt_dev *tgt_dev;
-> > +	unsigned long flags;
-> >  	int retval =3D 0;
 > > +
-> > +	starget =3D scsi_target(sdev);
-> > +	shost =3D dev_to_shost(&starget->dev);
-> > +	mrioc =3D shost_priv(shost);
-> > +
-> > +	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-> > +	tgt_dev =3D __mpi3mr_get_tgtdev_by_perst_id(mrioc, starget->id);
-> > +	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-> > +	if (!tgt_dev)
-> > +		return retval;
-> > +
+> > +	for (i =3D 0; i < ARRAY_SIZE(mpi3mr_protocols); i++) {
+> > +		if (mrioc->facts.protocol_flags &
+> > +		    mpi3mr_protocols[i].protocol) {
+> > +			if (is_string_nonempty)
+> > +				strcat(protocol, ",");
+> > +			strcat(protocol, mpi3mr_protocols[i].name);
+> > +			is_string_nonempty =3D true;
 >
-> Return '0' on unknown SCSI devices? Really?
+> Please check for string overflows here.
 
-Hannes  - I will fix this in V4. I am planning to send V4 today. Please
-review.
->
-> > +	mpi3mr_tgtdev_put(tgt_dev);
-> > +
-> >  	return retval;
-> >  }
-> >
-> > @@ -626,7 +1974,37 @@ static int mpi3mr_slave_configure(struct
-> scsi_device *sdev)
-> >   */
-> >  static int mpi3mr_slave_alloc(struct scsi_device *sdev)  {
-> > +	struct Scsi_Host *shost;
-> > +	struct mpi3mr_ioc *mrioc;
-> > +	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data;
-> > +	struct mpi3mr_tgt_dev *tgt_dev;
-> > +	struct mpi3mr_sdev_priv_data *scsi_dev_priv_data;
-> > +	unsigned long flags;
-> > +	struct scsi_target *starget;
-> >  	int retval =3D 0;
-> > +
-> > +	starget =3D scsi_target(sdev);
-> > +	shost =3D dev_to_shost(&starget->dev);
-> > +	mrioc =3D shost_priv(shost);
-> > +	scsi_tgt_priv_data =3D starget->hostdata;
-> > +
-> > +	scsi_dev_priv_data =3D kzalloc(sizeof(*scsi_dev_priv_data),
-> GFP_KERNEL);
-> > +	if (!scsi_dev_priv_data)
-> > +		return -ENOMEM;
-> > +
-> > +	scsi_dev_priv_data->lun_id =3D sdev->lun;
-> > +	scsi_dev_priv_data->tgt_priv_data =3D scsi_tgt_priv_data;
-> > +	sdev->hostdata =3D scsi_dev_priv_data;
-> > +
-> > +	scsi_tgt_priv_data->num_luns++;
-> > +
-> > +	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-> > +	tgt_dev =3D __mpi3mr_get_tgtdev_by_perst_id(mrioc, starget->id);
-> > +	if (tgt_dev && (tgt_dev->starget =3D=3D NULL))
-> > +		tgt_dev->starget =3D starget;
-> > +	if (tgt_dev)
-> > +		mpi3mr_tgtdev_put(tgt_dev);
-> > +	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-> >  	return retval;
-> >  }
-> >
-> Same here. I would have expected -ENXIO to be returned fi the tgt_dev is
-> not
-> found.
-> And you can fold the two 'if' clauses into one eg like:
-
-This is fixed in  in V4.
+Hannes - This is fixed in V4. Please review V4. Planning to post V4 today.
 
 >
-> if (tgt_dev) {
->   if (tgt_dev->starget =3D=3D NULL)
->     tgt_dev =3D starget;
->   mpi3mr_tgtdev_put(tgt_dev);
->   retval =3D 0;
-> }
->
-> > @@ -640,7 +2018,33 @@ static int mpi3mr_slave_alloc(struct scsi_device
-> *sdev)
-> >   */
-> >  static int mpi3mr_target_alloc(struct scsi_target *starget)  {
-> > +	struct Scsi_Host *shost =3D dev_to_shost(&starget->dev);
-> > +	struct mpi3mr_ioc *mrioc =3D shost_priv(shost);
-> > +	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data;
-> > +	struct mpi3mr_tgt_dev *tgt_dev;
-> > +	unsigned long flags;
-> >  	int retval =3D -ENODEV;
-> > +
-> > +	scsi_tgt_priv_data =3D kzalloc(sizeof(*scsi_tgt_priv_data),
-> GFP_KERNEL);
-> > +	if (!scsi_tgt_priv_data)
-> > +		return -ENOMEM;
-> > +
-> > +	starget->hostdata =3D scsi_tgt_priv_data;
-> > +	scsi_tgt_priv_data->starget =3D starget;
-> > +	scsi_tgt_priv_data->dev_handle =3D MPI3MR_INVALID_DEV_HANDLE;
-> > +
-> > +	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-> > +	tgt_dev =3D __mpi3mr_get_tgtdev_by_perst_id(mrioc, starget->id);
-> > +	if (tgt_dev && !tgt_dev->is_hidden) {
-> > +		scsi_tgt_priv_data->dev_handle =3D tgt_dev->dev_handle;
-> > +		scsi_tgt_priv_data->perst_id =3D tgt_dev->perst_id;
-> > +		scsi_tgt_priv_data->dev_type =3D tgt_dev->dev_type;
-> > +		scsi_tgt_priv_data->tgt_dev =3D tgt_dev;
-> > +		tgt_dev->starget =3D starget;
-> > +		atomic_set(&scsi_tgt_priv_data->block_io, 0);
-> > +		retval =3D 0;
-> > +	}
-> > +	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-> >  	return retval;
-> >  }
-> >
-> Ah, here is the correct value set.
-> (But wasn't it ENXIO which should've been returned for unknown targets?)
-
-This is fixed in V4.
-
->
-> > @@ -836,7 +2240,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct
-> > pci_device_id *id)  {
-> >  	struct mpi3mr_ioc *mrioc =3D NULL;
-> >  	struct Scsi_Host *shost =3D NULL;
-> > -	int retval =3D 0;
-> > +	int retval =3D 0, i;
-> >
-> >  	shost =3D scsi_host_alloc(&mpi3mr_driver_template,
-> >  	    sizeof(struct mpi3mr_ioc));
-> > @@ -857,11 +2261,21 @@ mpi3mr_probe(struct pci_dev *pdev, const
-> struct pci_device_id *id)
-> >  	spin_lock_init(&mrioc->admin_req_lock);
-> >  	spin_lock_init(&mrioc->reply_free_queue_lock);
-> >  	spin_lock_init(&mrioc->sbq_lock);
-> > +	spin_lock_init(&mrioc->fwevt_lock);
-> > +	spin_lock_init(&mrioc->tgtdev_lock);
-> >  	spin_lock_init(&mrioc->watchdog_lock);
-> >  	spin_lock_init(&mrioc->chain_buf_lock);
-> >
-> > +	INIT_LIST_HEAD(&mrioc->fwevt_list);
-> > +	INIT_LIST_HEAD(&mrioc->tgtdev_list);
-> > +	INIT_LIST_HEAD(&mrioc->delayed_rmhs_list);
-> > +
-> >  	mpi3mr_init_drv_cmd(&mrioc->init_cmds,
-> MPI3MR_HOSTTAG_INITCMDS);
-> >
-> > +	for (i =3D 0; i < MPI3MR_NUM_DEVRMCMD; i++)
-> > +		mpi3mr_init_drv_cmd(&mrioc->dev_rmhs_cmds[i],
-> > +		    MPI3MR_HOSTTAG_DEVRMCMD_MIN + i);
-> > +
-> >  	if (pdev->revision)
-> >  		mrioc->enable_segqueue =3D true;
-> >
-> > @@ -877,6 +2291,17 @@ mpi3mr_probe(struct pci_dev *pdev, const struct
-> pci_device_id *id)
-> >  	shost->max_channel =3D 1;
-> >  	shost->max_id =3D 0xFFFFFFFF;
-> >
-> > +	snprintf(mrioc->fwevt_worker_name, sizeof(mrioc-
-> >fwevt_worker_name),
-> > +	    "%s%d_fwevt_wrkr", mrioc->driver_name, mrioc->id);
-> > +	mrioc->fwevt_worker_thread =3D alloc_ordered_workqueue(
-> > +	    mrioc->fwevt_worker_name, WQ_MEM_RECLAIM);
-> > +	if (!mrioc->fwevt_worker_thread) {
-> > +		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
-> > +		    __FILE__, __LINE__, __func__);
-> > +		retval =3D -ENODEV;
-> > +		goto out_fwevtthread_failed;
+> > +		}
 > > +	}
 > > +
-> >  	mrioc->is_driver_loading =3D 1;
-> >  	if (mpi3mr_init_ioc(mrioc)) {
-> >  		ioc_err(mrioc, "failure at %s:%d/%s()!\n", @@ -903,6 +2328,8
-> @@
-> > mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> >  addhost_failed:
-> >  	mpi3mr_cleanup_ioc(mrioc);
-> >  out_iocinit_failed:
-> > +	destroy_workqueue(mrioc->fwevt_worker_thread);
-> > +out_fwevtthread_failed:
-> >  	spin_lock(&mrioc_list_lock);
-> >  	list_del(&mrioc->list);
-> >  	spin_unlock(&mrioc_list_lock);
-> > @@ -924,14 +2351,30 @@ static void mpi3mr_remove(struct pci_dev
-> *pdev)
-> > {
-> >  	struct Scsi_Host *shost =3D pci_get_drvdata(pdev);
-> >  	struct mpi3mr_ioc *mrioc;
-> > +	struct workqueue_struct	*wq;
-> > +	unsigned long flags;
-> > +	struct mpi3mr_tgt_dev *tgtdev, *tgtdev_next;
-> >
-> >  	mrioc =3D shost_priv(shost);
-> >  	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
-> >  		ssleep(1);
-> >
-> >  	mrioc->stop_drv_processing =3D 1;
-> > +	mpi3mr_cleanup_fwevt_list(mrioc);
-> > +	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
-> > +	wq =3D mrioc->fwevt_worker_thread;
-> > +	mrioc->fwevt_worker_thread =3D NULL;
-> > +	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
-> > +	if (wq)
-> > +		destroy_workqueue(wq);
-> >
-> >  	scsi_remove_host(shost);
-> > +	list_for_each_entry_safe(tgtdev, tgtdev_next, &mrioc->tgtdev_list,
-> > +	    list) {
-> > +		mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
-> > +		mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
-> > +		mpi3mr_tgtdev_put(tgtdev);
+> > +	is_string_nonempty =3D false;
+> > +	for (i =3D 0; i < ARRAY_SIZE(mpi3mr_capabilities); i++) {
+> > +		if (mrioc->facts.protocol_flags &
+> > +		    mpi3mr_capabilities[i].capability) {
+> > +			if (is_string_nonempty)
+> > +				strcat(capabilities, ",");
+> > +			strcat(capabilities, mpi3mr_capabilities[i].name);
+> > +			is_string_nonempty =3D true;
+>
+> Same here.
+>
+> > +		}
 > > +	}
+> > +
+> > +	ioc_info(mrioc, "Protocol=3D(%s), Capabilities=3D(%s)\n",
+> > +	    protocol, capabilities);
+> > +}
 > >
-> >  	mpi3mr_cleanup_ioc(mrioc);
+> >  /**
+> >   * mpi3mr_cleanup_resources - Free PCI resources @@ -2808,6 +2887,7
+> > @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+> >  		}
 > >
-> > @@ -955,6 +2398,8 @@ static void mpi3mr_shutdown(struct pci_dev
-> *pdev)
-> > {
-> >  	struct Scsi_Host *shost =3D pci_get_drvdata(pdev);
-> >  	struct mpi3mr_ioc *mrioc;
-> > +	struct workqueue_struct	*wq;
-> > +	unsigned long flags;
+> >  	}
+> > +	mpi3mr_print_ioc_info(mrioc);
 > >
-> >  	if (!shost)
-> >  		return;
-> > @@ -963,6 +2408,13 @@ static void mpi3mr_shutdown(struct pci_dev
-> *pdev)
-> >  	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
-> >  		ssleep(1);
-> >  	mrioc->stop_drv_processing =3D 1;
-> > +	mpi3mr_cleanup_fwevt_list(mrioc);
-> > +	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
-> > +	wq =3D mrioc->fwevt_worker_thread;
-> > +	mrioc->fwevt_worker_thread =3D NULL;
-> > +	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
-> > +	if (wq)
-> > +		destroy_workqueue(wq);
-> >
-> >  	mpi3mr_cleanup_ioc(mrioc);
-> >
+> >  	retval =3D mpi3mr_alloc_reply_sense_bufs(mrioc);
+> >  	if (retval) {
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > b/drivers/scsi/mpi3mr/mpi3mr_os.c index d82581ec73e1..39928e2997ba
+> > 100644
+> > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > @@ -339,6 +339,7 @@ void mpi3mr_invalidate_devhandles(struct
+> mpi3mr_ioc *mrioc)
+> >   * mpi3mr_flush_scmd - Flush individual SCSI command
+> >   * @rq: Block request
+> >   * @data: Adapter instance reference
+> > + * @reserved: N/A. Currently not used
+> >   *
+> >   * Return the SCSI command to the upper layers if it is in LLD
+> >   * scope.
 > >
 > Cheers,
 >
@@ -331,7 +143,7 @@ This is fixed in V4.
 > SUSE Software Solutions Germany GmbH, 90409 N=C3=BCrnberg
 > GF: F. Imend=C3=B6rffer, HRB 36809 (AG N=C3=BCrnberg)
 
---000000000000083ef505c21225fc
+--00000000000096b14b05c212273e
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -402,13 +214,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOi8qfkEvBPKKFqqpI6gX1glIkqd
-Mds2jRpSlBTJC6ulMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDUxMTE4MzQzMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEIT6Gu4ILm3LIMKNlSs0iCwA94Z
+8DqGQqg+NuE+oy3EMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDUxMTE4MzUxMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQBqvT4yH4ykKyJTq6YxVGsdSoDE4XVJvK3NeVapNZGg/n6d
-lwpbDNUgAjX0tHaVq9N7FT+LKG28CbGi4MM2ZjLWXwbdLWSfUh+0Rwy9GDK3Xq5WUgLi2BN7BONb
-+tNlMd+6mi8pYzT4TZioTIkciqtnlpQ4C/omUL5respamehWgK1Z0xhZ+OhPryg7SsnGeJInLRNW
-GmUZBpz0FvgociJX2QX4ez/uJL+kj135m6iLfJXHjKfCpJuWCHAlxXM6oHGBd5X2zw9WHFBmxVOf
-cqf5bYzaOBIhsF1tCdxyxgI67P8D6IedzkVfEgWU8k0+JduMtb99eNvqlY8w9N5qh655
---000000000000083ef505c21225fc--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQAaouYhI096xi7S68aZkGdST3yHK631kFWD8qSLdiutwEol
+ljPJ+VZfrW7E3YuRWVvlQeq0hi8gKue+cF7TFvVgM90nR9sv6KFcgQe2AT2LABKrW37+VrjckHKB
+IwUpOv/9soPnTgdgNEWzEEeYPJH97B2MZ5T51dksw9D36ehCL7glKW4ERGdNhc4FHIUapjLktOtv
+MPDI8SSbc/BQnCuKu55jb4wLd9+CjadsQyOYp8LhQtHTDKltUBMnSwdmGZy3LPm6wA3izvEf21yg
+qc9b4cDH0OJ/Pr3ItyX7umR784HDvqE9k8WuASmj5jAf4e/cThzSqKobnbmza4EaU4CL
+--00000000000096b14b05c212273e--
