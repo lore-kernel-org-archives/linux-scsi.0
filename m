@@ -8,52 +8,52 @@ X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A1E1C433ED
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B772C433B4
 	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:52:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DAE206121E
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:52:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5EA73617ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 19:52:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232008AbhEKTxY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S231454AbhEKTxY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 11 May 2021 15:53:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37814 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232156AbhEKTxH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 15:53:07 -0400
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62958C061761
-        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:52:00 -0700 (PDT)
-Received: by mail-pg1-x533.google.com with SMTP id u25so5939899pgl.9
-        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:52:00 -0700 (PDT)
+        with ESMTP id S232289AbhEKTxJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2021 15:53:09 -0400
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 385E1C061574
+        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:52:03 -0700 (PDT)
+Received: by mail-pf1-x42d.google.com with SMTP id x188so16844752pfd.7
+        for <linux-scsi@vger.kernel.org>; Tue, 11 May 2021 12:52:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=RFVa92Y1TEv5qhfWkrAdI8qfWSEHudEUS4IdxQ/IngQ=;
-        b=QvX/9lvzNmEVOG1y6BC+HYeDf4GqN3N8TRCrwwI0Mkf2h8RS2t0PIbuvUyBvUV3bt9
-         zO8WvyZYoHT9TyXVCCPHam7YIlTd9WrKd17V+y5UCGGv3Gi8wXvMaaGQB1bcOmM3b9V4
-         F0/gDQgEdFq4ik+Cm3aVdtzec3XdFRjJbv160=
+        bh=U7PH5QZZio6cXKg2kpuvjXMf1RrT1AI+g7XmVRHXCg4=;
+        b=LqI8uAXoXPDTfTNAzFMc2KoN8XL6yyWOmDaji74l7rjv6Tizz2Obc3aAlPqvGjsFss
+         oOOuIl9VGcJrUqF0LPdVI3xQp6dedUjSFGNKBUDqXOdTtmRUP+l1/O6einQ2U+K3fBNx
+         OP/z+oeN2t3Fk6jtWHTUgQs9piXMh1eVQH1mU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=RFVa92Y1TEv5qhfWkrAdI8qfWSEHudEUS4IdxQ/IngQ=;
-        b=nkhUiZCXV9WVYkkGwvKBElYXm7v4ItW8rAOgX96Rcn51/Nh73krq7XgQsPfv5LF11/
-         8EbBIvfNh48KW8x7svSXaAiOu6UTDJzJ3NaPtPk0j2nhWRgj17nhW9LS1UCr6nG5WjxW
-         6qIrypv7P0WX3xqta8EnhBdqgd0MzZekzIGTftoq6N7mmE49ywNr8PQGdMkTDPrOvo/z
-         chGhrtESBpfpcYACyVQUpzlAU3PwnY5Makx4+UCdSancXfJEzALnhxMVA6wYn5zAe2SQ
-         oNACzj2KNePtAIs3IbWGhoac3UwkzUrYTMqmr+2hrRtNoBihYBhbIYxKoRmgCbD8MQGo
-         Aknw==
-X-Gm-Message-State: AOAM533h5c0y2MjIrCIa0Aftmy+cz8VvuhNSUUWCslsBfXscKHRI13e/
-        tFpFHbm2ccWaJPgntemtS8epAjNc890nLKAMZI+nR72pGhZTAW0AJK0uFBRj4JwjUhZCZcl+SlL
-        0dPx0DzzxdPSkEzWiZ8wN6RulYC1q9vdwaGF40DOoMvruJIExKOR0ypvulyYVza12hnzLx7IeCp
-        o/7SGaYg==
-X-Google-Smtp-Source: ABdhPJzX+d5DCvoYMnUFI0frYWAI4i+IdFNJLeewuupoUuV6rLi+Wq6jlqINhB543AAc3sHbcL9AWw==
-X-Received: by 2002:aa7:9395:0:b029:2b4:6011:9ec2 with SMTP id t21-20020aa793950000b02902b460119ec2mr18423747pfe.16.1620762719412;
-        Tue, 11 May 2021 12:51:59 -0700 (PDT)
+        bh=U7PH5QZZio6cXKg2kpuvjXMf1RrT1AI+g7XmVRHXCg4=;
+        b=MdIqpj7Yfak/ix0x4R9MD6fmxLybP3/ExtLEoM2TrzaDcJ+3h+IWYwunzA6PwOXR5M
+         QurUdpCQCw6WOKSK94ZfiSq4lMN8qzlsX8Kkkbz+obUjHHa02UtPC4npgCVNUbsrB+Wh
+         +8TFm1IAuezo+kCGr6CDXMIsoEjuSt1O1mSgtS4mvqJzgqDkvJeraRnWrW/ugm0QL5GU
+         EZKyQ5Q5GDYlUIkKpXoV40LJcxs53Lwp8oYLSUQXScgBP4GZpISvaJ3ZZXrlTmkn1HQb
+         1+k5V9dPcI2ZoGf1wtW0C7xwuvBTpYRXJ1/lAdpo4KQLKhgbuG0owveNUghjVhJ0g4Xy
+         IgNQ==
+X-Gm-Message-State: AOAM533QjinO0MOMvwzCZ6vMw9bN6QD8IWZSUoRnzU5jcMKP/9VV9gWk
+        R/M2vK/1so1hTtU1fOQ19UibUCsa2TF2yw0Gzc/oyWxRd+6/OZhdCoIIK8/Xc3ZN73in/kXxo84
+        8HoQu7Trnsx3h0SdsOTOpnx4Fn4W1KTOJFfqAPzZZPGVhKWNLk66PwdSKq3XjvCabcrxkz2YYQq
+        VgrNXVdg==
+X-Google-Smtp-Source: ABdhPJyexmvHPmHNvgIKNUS6JnbqbGvO0JUfxFuwaFlgYIHWvj/YPCTGplUTXyz29M7Nh7Sym2+/FA==
+X-Received: by 2002:a63:2143:: with SMTP id s3mr32881202pgm.429.1620762722308;
+        Tue, 11 May 2021 12:52:02 -0700 (PDT)
 Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b3sm6317581pfv.61.2021.05.11.12.51.56
+        by smtp.gmail.com with ESMTPSA id b3sm6317581pfv.61.2021.05.11.12.51.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 May 2021 12:51:58 -0700 (PDT)
+        Tue, 11 May 2021 12:52:01 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -61,23 +61,29 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: [PATCH v4 16/24] mpi3mr: hardware workaround for UNMAP commands to nvme drives
-Date:   Wed, 12 May 2021 01:24:15 +0530
-Message-Id: <20210511195423.2134562-17-kashyap.desai@broadcom.com>
+Subject: [PATCH v4 17/24] mpi3mr: add support of threaded isr
+Date:   Wed, 12 May 2021 01:24:16 +0530
+Message-Id: <20210511195423.2134562-18-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210511195423.2134562-1-kashyap.desai@broadcom.com>
 References: <20210511195423.2134562-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000002ed2e805c2133a80"
+        boundary="0000000000005aea0105c2133a1a"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000002ed2e805c2133a80
+--0000000000005aea0105c2133a1a
 
-The controller hardware can not handle certain unmap commands for NVMe
-drives, this patch adds support in the driver to check those commands and
-handle as appropriate.
+Register driver for threaded interrupt.
+
+By default, driver will attempt io completion from interrupt context
+(primary handler). Since driver tracks per reply queue outstanding ios,
+it will schedule threaded ISR if there are any outstanding IOs expected
+on that particular reply queue. Threaded ISR (secondary handler) will loop
+for IO completion as long as there are outstanding IOs
+(speculative method using same per reply queue outstanding counter)
+or it has completed some X amount of commands (something like budget).
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
@@ -86,132 +92,248 @@ Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
 Cc: sathya.prakash@broadcom.com
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 100 ++++++++++++++++++++++++++++++++
- 1 file changed, 100 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr.h    | 12 +++++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 79 +++++++++++++++++++++++++++++++--
+ 2 files changed, 88 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 992a0e4d37d1..ad3390e02034 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2776,6 +2776,101 @@ static int mpi3mr_target_alloc(struct scsi_target *starget)
- 	return retval;
- }
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 960943452a7a..9f16e80af06f 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -144,6 +144,10 @@ extern struct list_head mrioc_list;
+ /* Default target device queue depth */
+ #define MPI3MR_DEFAULT_SDEV_QD	32
  
-+/**
-+ * mpi3mr_check_return_unmap - Whether an unmap is allowed
-+ * @mrioc: Adapter instance reference
-+ * @scmd: SCSI Command reference
-+ *
-+ * The controller hardware cannot handle certain unmap commands
-+ * for NVMe drives, this routine checks those and return true
-+ * and completes the SCSI command with proper status and sense
-+ * data.
-+ *
-+ * Return: TRUE for not  allowed unmap, FALSE otherwise.
-+ */
-+static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
-+	struct scsi_cmnd *scmd)
-+{
-+	unsigned char *buf;
-+	u16 param_len, desc_len;
++/* Definitions for Threaded IRQ poll*/
++#define MPI3MR_IRQ_POLL_SLEEP			2
++#define MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT		8
 +
-+	param_len = get_unaligned_be16(scmd->cmnd + 7);
-+
-+	if (!param_len) {
-+		ioc_warn(mrioc,
-+		    "%s: cdb received with zero parameter length\n",
-+		    __func__);
-+		scsi_print_command(scmd);
-+		scmd->result = DID_OK << 16;
-+		scmd->scsi_done(scmd);
-+		return true;
-+	}
-+
-+	if (param_len < 24) {
-+		ioc_warn(mrioc,
-+		    "%s: cdb received with invalid param_len: %d\n",
-+		    __func__, param_len);
-+		scsi_print_command(scmd);
-+		scmd->result = (DRIVER_SENSE << 24) |
-+		    SAM_STAT_CHECK_CONDITION;
-+		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
-+		    0x1A, 0);
-+		scmd->scsi_done(scmd);
-+		return true;
-+	}
-+	if (param_len != scsi_bufflen(scmd)) {
-+		ioc_warn(mrioc,
-+		    "%s: cdb received with param_len: %d bufflen: %d\n",
-+		    __func__, param_len, scsi_bufflen(scmd));
-+		scsi_print_command(scmd);
-+		scmd->result = (DRIVER_SENSE << 24) |
-+		    SAM_STAT_CHECK_CONDITION;
-+		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
-+		    0x1A, 0);
-+		scmd->scsi_done(scmd);
-+		return true;
-+	}
-+	buf = kzalloc(scsi_bufflen(scmd), GFP_ATOMIC);
-+	if (!buf) {
-+		scsi_print_command(scmd);
-+		scmd->result = (DRIVER_SENSE << 24) |
-+		    SAM_STAT_CHECK_CONDITION;
-+		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
-+		    0x55, 0x03);
-+		scmd->scsi_done(scmd);
-+		return true;
-+	}
-+	scsi_sg_copy_to_buffer(scmd, buf, scsi_bufflen(scmd));
-+	desc_len = get_unaligned_be16(&buf[2]);
-+
-+	if (desc_len < 16) {
-+		ioc_warn(mrioc,
-+		    "%s: Invalid descriptor length in param list: %d\n",
-+		    __func__, desc_len);
-+		scsi_print_command(scmd);
-+		scmd->result = (DRIVER_SENSE << 24) |
-+		    SAM_STAT_CHECK_CONDITION;
-+		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
-+		    0x26, 0);
-+		scmd->scsi_done(scmd);
-+		kfree(buf);
-+		return true;
-+	}
-+
-+	if (param_len > (desc_len + 8)) {
-+		scsi_print_command(scmd);
-+		ioc_warn(mrioc,
-+		    "%s: Truncating param_len(%d) to desc_len+8(%d)\n",
-+		    __func__, param_len, (desc_len + 8));
-+		param_len = desc_len + 8;
-+		put_unaligned_be16(param_len, scmd->cmnd + 7);
-+		scsi_print_command(scmd);
-+	}
-+
-+	kfree(buf);
-+	return false;
-+}
-+
+ /* SGE Flag definition */
+ #define MPI3MR_SGEFLAGS_SYSTEM_SIMPLE_END_OF_LIST \
+ 	(MPI3_SGE_FLAGS_ELEMENT_TYPE_SIMPLE | MPI3_SGE_FLAGS_DLAS_SYSTEM | \
+@@ -295,6 +299,9 @@ struct op_req_qinfo {
+  * @q_segment_list: Segment list base virtual address
+  * @q_segment_list_dma: Segment list base DMA address
+  * @ephase: Expected phased identifier for the reply queue
++ * @pend_ios: Number of IOs pending in HW for this queue
++ * @enable_irq_poll: Flag to indicate polling is enabled
++ * @in_use: Queue is handled by poll/ISR
+  */
+ struct op_reply_qinfo {
+ 	u16 ci;
+@@ -306,6 +313,9 @@ struct op_reply_qinfo {
+ 	void *q_segment_list;
+ 	dma_addr_t q_segment_list_dma;
+ 	u8 ephase;
++	atomic_t pend_ios;
++	bool enable_irq_poll;
++	atomic_t in_use;
+ };
+ 
  /**
-  * mpi3mr_allow_scmd_to_fw - Command is allowed during shutdown
-  * @scmd: SCSI Command reference
-@@ -2867,6 +2962,11 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
- 		goto out;
+@@ -557,6 +567,7 @@ struct scmd_priv {
+  * @shost: Scsi_Host pointer
+  * @id: Controller ID
+  * @cpu_count: Number of online CPUs
++ * @irqpoll_sleep: usleep unit used in threaded isr irqpoll
+  * @name: Controller ASCII name
+  * @driver_name: Driver ASCII name
+  * @sysif_regs: System interface registers virtual address
+@@ -658,6 +669,7 @@ struct mpi3mr_ioc {
+ 	u8 id;
+ 	int cpu_count;
+ 	bool enable_segqueue;
++	u32 irqpoll_sleep;
+ 
+ 	char name[MPI3MR_NAME_LENGTH];
+ 	char driver_name[MPI3MR_NAME_LENGTH];
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index b733a008f81e..176e8a2c658d 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -345,12 +345,16 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+ 
+ 	reply_qidx = op_reply_q->qid - 1;
+ 
++	if (!atomic_add_unless(&op_reply_q->in_use, 1, 1))
++		return 0;
++
+ 	exp_phase = op_reply_q->ephase;
+ 	reply_ci = op_reply_q->ci;
+ 
+ 	reply_desc = mpi3mr_get_reply_desc(op_reply_q, reply_ci);
+ 	if ((le16_to_cpu(reply_desc->reply_flags) &
+ 	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase) {
++		atomic_dec(&op_reply_q->in_use);
+ 		return 0;
  	}
  
-+	if ((scmd->cmnd[0] == UNMAP) &&
-+	    (stgt_priv_data->dev_type == MPI3_DEVICE_DEVFORM_PCIE) &&
-+	    mpi3mr_check_return_unmap(mrioc, scmd))
-+		goto out;
+@@ -361,6 +365,7 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+ 		WRITE_ONCE(op_req_q->ci, le16_to_cpu(reply_desc->request_queue_ci));
+ 		mpi3mr_process_op_reply_desc(mrioc, reply_desc, &reply_dma,
+ 		    reply_qidx);
++		atomic_dec(&op_reply_q->pend_ios);
+ 		if (reply_dma)
+ 			mpi3mr_repost_reply_buf(mrioc, reply_dma);
+ 		num_op_reply++;
+@@ -375,6 +380,14 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+ 		if ((le16_to_cpu(reply_desc->reply_flags) &
+ 		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase)
+ 			break;
++		/*
++		 * Exit completion loop to avoid CPU lockup
++		 * Ensure remaining completion happens from threaded ISR.
++		 */
++		if (num_op_reply > mrioc->max_host_ios) {
++			intr_info->op_reply_q->enable_irq_poll = true;
++			break;
++		}
+ 
+ 	} while (1);
+ 
+@@ -383,6 +396,7 @@ static int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+ 	op_reply_q->ci = reply_ci;
+ 	op_reply_q->ephase = exp_phase;
+ 
++	atomic_dec(&op_reply_q->in_use);
+ 	return num_op_reply;
+ }
+ 
+@@ -391,7 +405,7 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
+ 	struct mpi3mr_intr_info *intr_info = privdata;
+ 	struct mpi3mr_ioc *mrioc;
+ 	u16 midx;
+-	u32 num_admin_replies = 0;
++	u32 num_admin_replies = 0, num_op_reply = 0;
+ 
+ 	if (!intr_info)
+ 		return IRQ_NONE;
+@@ -405,8 +419,10 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
+ 
+ 	if (!midx)
+ 		num_admin_replies = mpi3mr_process_admin_reply_q(mrioc);
++	if (intr_info->op_reply_q)
++		num_op_reply = mpi3mr_process_op_reply_q(mrioc, intr_info);
+ 
+-	if (num_admin_replies)
++	if (num_admin_replies || num_op_reply)
+ 		return IRQ_HANDLED;
+ 	else
+ 		return IRQ_NONE;
+@@ -415,15 +431,32 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
+ static irqreturn_t mpi3mr_isr(int irq, void *privdata)
+ {
+ 	struct mpi3mr_intr_info *intr_info = privdata;
++	struct mpi3mr_ioc *mrioc;
++	u16 midx;
+ 	int ret;
+ 
+ 	if (!intr_info)
+ 		return IRQ_NONE;
+ 
++	mrioc = intr_info->mrioc;
++	midx = intr_info->msix_index;
+ 	/* Call primary ISR routine */
+ 	ret = mpi3mr_isr_primary(irq, privdata);
+ 
+-	return ret;
++	/*
++	 * If more IOs are expected, schedule IRQ polling thread.
++	 * Otherwise exit from ISR.
++	 */
++	if (!intr_info->op_reply_q)
++		return ret;
 +
- 	host_tag = mpi3mr_host_tag_for_scmd(mrioc, scmd);
- 	if (host_tag == MPI3MR_HOSTTAG_INVALID) {
- 		scmd->result = DID_ERROR << 16;
++	if (!intr_info->op_reply_q->enable_irq_poll ||
++	    !atomic_read(&intr_info->op_reply_q->pend_ios))
++		return ret;
++
++	disable_irq_nosync(pci_irq_vector(mrioc->pdev, midx));
++
++	return IRQ_WAKE_THREAD;
+ }
+ 
+ /**
+@@ -438,6 +471,36 @@ static irqreturn_t mpi3mr_isr(int irq, void *privdata)
+  */
+ static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
+ {
++	struct mpi3mr_intr_info *intr_info = privdata;
++	struct mpi3mr_ioc *mrioc;
++	u16 midx;
++	u32 num_op_reply = 0;
++
++	if (!intr_info || !intr_info->op_reply_q)
++		return IRQ_NONE;
++
++	mrioc = intr_info->mrioc;
++	midx = intr_info->msix_index;
++
++	/* Poll for pending IOs completions */
++	do {
++		if (!mrioc->intr_enabled)
++			break;
++
++		if (!midx)
++			mpi3mr_process_admin_reply_q(mrioc);
++		if (intr_info->op_reply_q)
++			num_op_reply +=
++			    mpi3mr_process_op_reply_q(mrioc, intr_info);
++
++		usleep_range(mrioc->irqpoll_sleep, 10 * mrioc->irqpoll_sleep);
++
++	} while (atomic_read(&intr_info->op_reply_q->pend_ios) &&
++	    (num_op_reply < mrioc->max_host_ios));
++
++	intr_info->op_reply_q->enable_irq_poll = false;
++	enable_irq(pci_irq_vector(mrioc->pdev, midx));
++
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -1147,6 +1210,9 @@ static int mpi3mr_create_op_reply_q(struct mpi3mr_ioc *mrioc, u16 qidx)
+ 	op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD;
+ 	op_reply_q->ci = 0;
+ 	op_reply_q->ephase = 1;
++	atomic_set(&op_reply_q->pend_ios, 0);
++	atomic_set(&op_reply_q->in_use, 0);
++	op_reply_q->enable_irq_poll = false;
+ 
+ 	if (!op_reply_q->q_segments) {
+ 		retval = mpi3mr_alloc_op_reply_q_segments(mrioc, qidx);
+@@ -1465,6 +1531,10 @@ int mpi3mr_op_request_post(struct mpi3mr_ioc *mrioc,
+ 		pi = 0;
+ 	op_req_q->pi = pi;
+ 
++	if (atomic_inc_return(&mrioc->op_reply_qinfo[reply_qidx].pend_ios)
++	    > MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT)
++		mrioc->op_reply_qinfo[reply_qidx].enable_irq_poll = true;
++
+ 	writel(op_req_q->pi,
+ 	    &mrioc->sysif_regs->oper_queue_indexes[reply_qidx].producer_index);
+ 
+@@ -2795,6 +2865,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+ 	u32 ioc_status, ioc_config, i;
+ 	struct _mpi3_ioc_facts_data facts_data;
+ 
++	mrioc->irqpoll_sleep = MPI3MR_IRQ_POLL_SLEEP;
+ 	mrioc->change_count = 0;
+ 	if (!re_init) {
+ 		mrioc->cpu_count = num_online_cpus();
+@@ -3081,6 +3152,8 @@ static void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
+ 		mrioc->op_reply_qinfo[i].ci = 0;
+ 		mrioc->op_reply_qinfo[i].num_replies = 0;
+ 		mrioc->op_reply_qinfo[i].ephase = 0;
++		atomic_set(&mrioc->op_reply_qinfo[i].pend_ios, 0);
++		atomic_set(&mrioc->op_reply_qinfo[i].in_use, 0);
+ 		mpi3mr_memset_op_reply_q_buffers(mrioc, i);
+ 
+ 		mrioc->req_qinfo[i].ci = 0;
 -- 
 2.18.1
 
 
---0000000000002ed2e805c2133a80
+--0000000000005aea0105c2133a1a
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -282,13 +404,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKrr5ssRYAcXgwHJiP7p1288fL65
-somkhm+y3YVL3k+HMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDUxMTE5NTE1OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFjag/cgBs2qEu+DtJNVkQeVv7ag
+lQ1KCooB0J3OkMw7MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDUxMTE5NTIwMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQAXyV5SyehHnY3Hpz/lZnDum0rKIb2bT9FmvCVnBgHdRyIH
-QQvSTj6uA7YHrUNAjyv4XmAcqpVxU+EJomkZkfDrL3SBKv9of7CVbn1+bb3lE6fwggGNNgux2EPS
-GkpXxMJveaXYXpOcSR8ScCUG7OReDIoEwGWScDRCgi6n/k6ksnQB8lFOSXc2E+aWMpGOA4j5sHti
-1g9Hqg484quTnxGGHrvYw5Gww+lWghTz+dgVmV9nN77B1LUQGr/hq4Q+QMeIKN1zAoYwd1Zhx37S
-EKgPWFO36NZppy5lu1jUmytKPDUoTYTKfVTUQt6Vt/xT+y7ahfojTucdrRrC9AW+lsKQ
---0000000000002ed2e805c2133a80--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQCD4pviWAS9pRSaC5lccoA+uR3luquQVm5VeLuF7N1b2+//
+taIIUOOLci9pCN9v1AW+fMrfsVI/8Tiz2ykx7EvvKJeWIRyYDZLxBWCQ3HtU7HfXMKbgfQZs4uNc
+Q0t9z6DWnG7jD/1QbBBGem3btF8qf1SZh7S22i+7g4op6Mm5Pt+6zNR5TwntcTqezftbWq0WzMk5
+Y7cjin64Nl29toiS6wgt2SkcTSnz6T0kiOT1mLAWdUq7aLxQ+IKAe+eJlfn9lMdekiATT2kogGt+
+NQPR/xCSvwhP7a3mvQM9Yoo6qq8Ifg1kxA5qeKL4dKdNYCK5fBUhNWlKLepYs9RQ+V29
+--0000000000005aea0105c2133a1a--
