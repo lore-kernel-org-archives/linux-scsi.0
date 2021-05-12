@@ -2,318 +2,293 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A2DC433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 21:15:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2759C43461
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 01:58:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80D87613C1
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 May 2021 21:15:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0EDB616E9
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 01:58:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229917AbhEKVQ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 May 2021 17:16:58 -0400
-Received: from mail-bn8nam12on2048.outbound.protection.outlook.com ([40.107.237.48]:15299
-        "EHLO NAM12-BN8-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229714AbhEKVQ6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 May 2021 17:16:58 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OMtFpeAESOnOlZ/R27lwiilVx1ZoYoeQ2EhdUegzIXX1eMq5J8/iKkmZL73ILk3d75bAUj3LS/XPjiMGJ8R0Nj1pyLbRsDt7mD6c44ADH0peV/iLiKSXf/FDCYYIfdRX3FWGFCbK9spjN2Uv8Jz7NaDUd6nwTX45NUH4I9dWs9pp+7bUUpR0ioY7VH0tjl/1upghEbPif3MIi730PV8yqUIE60XWE5/V31tMImLgF9dKMGE6YzJWEDoaBkhxBtTnNGRWs/WnOlY5KzLvprduIPgeZZj18qXT8Ddt7T3eiTpvz8Hj4a2+PhcgB9LEH8emLGskqYXMHDokMFtWJgCzsQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nbji2ahW2Xv6BeBd5BI/N36yUR6vhGBLeFmDHfFdhF4=;
- b=XENyy6g6F2bpm7Iy9zrsTI20oPE51/gBGJJDIqy5OdbodNBzFDp7tgWGRqds6GuZ0siyAGgzoAEZ5UGofra2wqiF9UoPhnJtNrJqaC7vOHAvXjEd7H2C/VbKguTkK55o1kShPKThQyXhixAgzsk96J9Vd+JAfXNlCTfu9cr+bSr9uIc8g42odsJsQWXCmMJP3CBxv3DpdoOx83dQ4bkuLL7fZZHt6GZEF2pVVYCABSj3zw1WT/GM6wQTR2S/55hqT7vp1R4jk4DPRApHFqSDVUrWHDMMwd2PVQzBEy7j+XcJuoOfUtEhyqu0WpJQFDYzPBmJfmD0hOFegExxlQes3Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=netapp.com; dmarc=pass action=none header.from=netapp.com;
- dkim=pass header.d=netapp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=netapp.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nbji2ahW2Xv6BeBd5BI/N36yUR6vhGBLeFmDHfFdhF4=;
- b=vOaYADRtKEe45z2cBcODN+Lefj3Cde1qxJEVLR01RENt9xdhEQxNbaRGcWwnMmbfgcPw9Vib15ggDi+xXZrwZoGB85YS5s++iIzCiR+jePS2j2Llj/ea7Na4I1pogNkxgGwDDOqgD63jK6NJlhF5ZGdRT9xJ41rA4rFdyx/wUKKFEYelpQzGG3+o8ptPP9B7ewPEv1mrYV9z2ayHIKR6m8ESlTNa0r70XpFUMxQpBM4wSz7oA/k9BNzityinoF4A7RldQmfF9UzK92fPo/PM7FsohpC1kuVXp0ZGrB1Q13YiTF3g2tCMJxybzD7K8ckVJpln11GAZ4ysd5Aeomz6kg==
-Received: from DM5PR0601MB3624.namprd06.prod.outlook.com (2603:10b6:4:7f::28)
- by DM5PR06MB2665.namprd06.prod.outlook.com (2603:10b6:3:45::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4108.25; Tue, 11 May
- 2021 21:15:49 +0000
-Received: from DM5PR0601MB3624.namprd06.prod.outlook.com
- ([fe80::150d:3a72:7776:a72]) by DM5PR0601MB3624.namprd06.prod.outlook.com
- ([fe80::150d:3a72:7776:a72%7]) with mapi id 15.20.4108.031; Tue, 11 May 2021
- 21:15:49 +0000
-From:   "Knight, Frederick" <Frederick.Knight@netapp.com>
-To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>
-CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
-        "msnitzer@redhat.com" <msnitzer@redhat.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "roland@purestorage.com" <roland@purestorage.com>,
-        "mpatocka@redhat.com" <mpatocka@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "kbusch@kernel.org" <kbusch@kernel.org>,
-        "rwheeler@redhat.com" <rwheeler@redhat.com>,
-        "hch@lst.de" <hch@lst.de>, "zach.brown@ni.com" <zach.brown@ni.com>,
-        "osandov@fb.com" <osandov@fb.com>
-Subject: RE: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
-Thread-Topic: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
-Thread-Index: AQHXRfrE+mT6pvaiwEOWn89Dsv4XaKrex6mw
-Date:   Tue, 11 May 2021 21:15:48 +0000
-Message-ID: <DM5PR0601MB3624FF16F91F5F03BB5F0CC1F1539@DM5PR0601MB3624.namprd06.prod.outlook.com>
-References: <BYAPR04MB49652C4B75E38F3716F3C06386539@BYAPR04MB4965.namprd04.prod.outlook.com>
-In-Reply-To: <BYAPR04MB49652C4B75E38F3716F3C06386539@BYAPR04MB4965.namprd04.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: wdc.com; dkim=none (message not signed)
- header.d=none;wdc.com; dmarc=none action=none header.from=netapp.com;
-x-originating-ip: [73.61.33.227]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 1e90c35d-dfcd-4091-7017-08d914c1f33e
-x-ms-traffictypediagnostic: DM5PR06MB2665:
-x-ld-processed: 4b0911a0-929b-4715-944b-c03745165b3a,ExtAddr
-x-microsoft-antispam-prvs: <DM5PR06MB2665D136FF4DB8581C83C384F1539@DM5PR06MB2665.namprd06.prod.outlook.com>
-x-ms-exchange-transport-forked: True
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: eLFCiPFHbn/JENKd+JURno7KX1xiyHyrJ0XqHJeOw2I6JakYPiztMRsdq5ftL3rkoe/S9H20lLZ0o3tRbM/ImhvedAum8WOM10smW5Nw2oLWjPJ0OkopiNgq94Y8qfj17jLGa44s6rJbAKb1y+ZkJctPBfMlGazw1dctwZgQzp+xYV5xO8Hvq6C4xCLjsf3Rtw325FsRwvzBhzb6rD9PTMTAJlS6KlMzwjdPRqlxQRV5wZGc3hTSXM8Xh9y3nwHOELYN4fKr4ZPNXBDraAdAXAHaGdgcQoF5WAkLT6GASOXA5JzaGF4J+ClelcGGHc0mojf2pJEzmra7toLVEln4a0TxjN72soZXeDTzPWDr25g5plekwempZ0WeN5gL/GLGnQLnRcuAxG6LzYF365MgHiNMUmqz6JGYpU4erkmJlXkXHBtaW0e0aTfxbf7B6/aNqWa4s2SrNrE4un2IC1uC6cITTGROtYgJI6+jPTuC+qk6SSLeSsD39fp4rUCMBkenyQN6N1YVbMwX9GO2LNzTsO/RasE5yyOIBK6Ujx8lR0FULS45QJKpxvTd9R3EU1UmoFYoD6PsSEGtDMtJxbALu8aH1rLbG1HYAN341seoF4pqqrp+nls6JEEn9YJH04Yy8UE0eMy8LdeOfGnL+9LNrdoybP+ULXcbxoHd/L2CZECE5VE6MYVEGAa3QDbTpPzoZq6QmHOznAMeD5L2QBppaHAYK/DxDdrDTYdp6r4oIiEVzgL367+cSRGXCSk8hb7KBLNkCsVkxyrnwUWwU31eNw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR0601MB3624.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(39860400002)(376002)(396003)(136003)(346002)(76116006)(66556008)(66446008)(64756008)(4326008)(53546011)(26005)(186003)(6506007)(66946007)(71200400001)(9686003)(7696005)(5660300002)(966005)(83380400001)(55016002)(33656002)(2906002)(8936002)(122000001)(110136005)(52536014)(38100700002)(316002)(86362001)(8676002)(66476007)(54906003)(7416002)(478600001)(15398625002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?zF/rIesUgD0FxYYP7bNVctWDpi8RivEA2VP4y9al5Z0QKnX9BjkI2Xa2NGAE?=
- =?us-ascii?Q?RnasfhuLO6Th5+3BLLce1M1YDar9MFnzDcbsNl1Yp+V6G3w/TZKHfjwl2Wh/?=
- =?us-ascii?Q?mBpiQq4SmiGeKOjSVIq+6MyWPXELWr5Vse51f+3T4ghf48hVtcUJ7CxUKncr?=
- =?us-ascii?Q?LktY6IjX4OINh9uZLtAmeJ1KbCkSk+Riiu+WM+n3sB7NAzU0ZK02/5ATOpXc?=
- =?us-ascii?Q?2LPtIzKrq4jvW3R586N1mi6oD7oSmoR+2HQvxv7yGQAg6yrJqCZHiv1DVn43?=
- =?us-ascii?Q?oGYUXgLzReyz43bWU8J5fx0ir3aPc5nGhVpjaI19RZAEMbDdWqE6/n4woWu6?=
- =?us-ascii?Q?Kwe/kHXjRjR5l3vdTGi09NdbfQbZIG92wztZusXrV0bdybVUUUbROn5sx2Q/?=
- =?us-ascii?Q?ppMK8btGyCnw4p3mNijrdSHTwXmbsmz1YAWcoECuHeyiGnBv1V30pdSwb1q3?=
- =?us-ascii?Q?LY0wHERTs1fQ5GkyxlyctlZ8ZAqIrBmUXzgqauTVHzxFMS8V+Vtr2budLuGV?=
- =?us-ascii?Q?l7H1MMJQV5CWpWdUFkfzm/0k3H25mfuCx5e6B0ZB00LreipLzwPnA2r4uxZa?=
- =?us-ascii?Q?2YXlnVbtxJM4gPO3Gm9ZJ+AnaKG62MPR75j7apL7tbjgk3Fa+5+dear1EYk3?=
- =?us-ascii?Q?WhbVwkm98dcvDv/OzUSzmlBr0KLprTbV+SfF4KCJ90O310PwJmVuE0sQozCS?=
- =?us-ascii?Q?TzBOl9P4SvqoCHxlgy+AUWBDp5+sFGuPls21gpxXWGpMPsodwWM0P26oUc3h?=
- =?us-ascii?Q?ThiW5pFla/7ppvQzDfPUB8KeyDX/BFZftQrIXOiStB0z3lHhqbMtxJc8ZF2X?=
- =?us-ascii?Q?Do7pDlYq/bMl6n8AMOqpc72FNU7kVHns0HcqeeFiBwKCkDu50MSAC6FplZoE?=
- =?us-ascii?Q?S/trfYw3ZpYNWdPLH0kLQB8uaBLx2AxSgUofgMjdSfiBhJwUG3/lGohqxXaB?=
- =?us-ascii?Q?AvrFKPzJVJki+3nZt3Dy4y9nCB8fMaLPZAkpieyc3vvjDbFAb5hulqnuZ4AN?=
- =?us-ascii?Q?eIDdnx4RHFVgTqkcvgtFJIKwDe3LrFun+ci4mNv33BIeRI95iCaF8szFVI1N?=
- =?us-ascii?Q?GdN5YJY+EB/aisvPZMVBqFcQ7wBn8B2j9+oXG56HgkxMXn1E5OmJ1Z7fEv7L?=
- =?us-ascii?Q?KtyZbUyrm7rw7vFpYkMroqY/pfDDjIU0wT/lH6K10XmjQzxC+UE/p1TaIJBu?=
- =?us-ascii?Q?++v6BtfgwfrNne/ezqhZom0C2GdsdLrtnzGJ+yV4viNz2nHooHPDkWuaKuDL?=
- =?us-ascii?Q?sH9blHm4DxfDvi8ePHPpctMiRMsqSOMiSmbkeGbDlIOFxqbJqcvUeaxeOvNn?=
- =?us-ascii?Q?6ad7vxO/QwAe2HQ2Uo99jSQ2?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S230160AbhELB7a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 May 2021 21:59:30 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:36249 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230137AbhELB72 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 11 May 2021 21:59:28 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1620784700;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=IrSN/q1U2oWQiHJSxXKdOTlolgWacceb6n0DE2pKfEE=;
+        b=TPfwJHYEzCK/Nwtvzb5cPRJwTIbf12k+OxmuuRy4mpAviol3pOXlvVVsmxlK+TKSSgZMuO
+        3HJNKUTlA9z1pqIXj/YKuSlpSA8F6fb9KRFK0RRfUp9urxNAmn7wCLsb+0EYYT7GJlcBhH
+        zY+a1dN5SehsUje35ywELrqZl29Rxew=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-521-7ZPIN5GwNgGi24_gTeHvtQ-1; Tue, 11 May 2021 21:58:16 -0400
+X-MC-Unique: 7ZPIN5GwNgGi24_gTeHvtQ-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CE27D803620;
+        Wed, 12 May 2021 01:58:14 +0000 (UTC)
+Received: from T590 (ovpn-12-110.pek2.redhat.com [10.72.12.110])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 19F032C617;
+        Wed, 12 May 2021 01:58:06 +0000 (UTC)
+Date:   Wed, 12 May 2021 09:58:01 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kashyap.desai@broadcom.com, chenxiang66@hisilicon.com,
+        yama@redhat.com, dgilbert@interlog.com
+Subject: Re: [PATCH v2] blk-mq: Use request queue-wide tags for tagset-wide
+ sbitmap
+Message-ID: <YJs2KWMCn2kpyryT@T590>
+References: <1620749743-36000-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-X-OriginatorOrg: netapp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR0601MB3624.namprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1e90c35d-dfcd-4091-7017-08d914c1f33e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 May 2021 21:15:49.0205
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4b0911a0-929b-4715-944b-c03745165b3a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Cp8buXOjdiul5izwUJFs4ZhZTV3vhDSZyzBhK+bmPjEVwMIFopYyfJyMB+m6poxPASDln6xleCg/hEa9tvRM2Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR06MB2665
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1620749743-36000-1-git-send-email-john.garry@huawei.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-I'd love to participate in this discussion.
+On Wed, May 12, 2021 at 12:15:43AM +0800, John Garry wrote:
+> The tags used for an IO scheduler are currently per hctx.
+> 
+> As such, when q->nr_hw_queues grows, so does the request queue total IO
+> scheduler tag depth.
+> 
+> This may cause problems for SCSI MQ HBAs whose total driver depth is
+> fixed.
+> 
+> Ming and Yanhui report higher CPU usage and lower throughput in scenarios
+> where the fixed total driver tag depth is appreciably lower than the total
+> scheduler tag depth:
+> https://lore.kernel.org/linux-block/440dfcfc-1a2c-bd98-1161-cec4d78c6dfc@huawei.com/T/#mc0d6d4f95275a2743d1c8c3e4dc9ff6c9aa3a76b
+> 
+> In that scenario, since the scheduler tag is got first, much contention
+> is introduced since a driver tag may not be available after we have got
+> the sched tag.
+> 
+> Improve this scenario by introducing request queue-wide tags for when
+> a tagset-wide sbitmap is used. The static sched requests are still
+> allocated per hctx, as requests are initialised per hctx, as in
+> blk_mq_init_request(..., hctx_idx, ...) ->
+> set->ops->init_request(.., hctx_idx, ...).
+> 
+> For simplicity of resizing the request queue sbitmap when updating the
+> request queue depth, just init at the max possible size, so we don't need
+> to deal with the possibly with swapping out a new sbitmap for old if
+> we need to grow.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+> 
+> Please retest, thanks! For some reason I could not recreate the original
+> issue, but I am using qemu...
+> 
+> Changes since v1:
+> - Embed sbitmaps in request_queue struct
+> - Relocate IO sched functions to blk-mq-sched.c
+> - Fix error path code
+> 
+> diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+> index 42a365b1b9c0..9a012e0818cb 100644
+> --- a/block/blk-mq-sched.c
+> +++ b/block/blk-mq-sched.c
+> @@ -507,11 +507,9 @@ static void blk_mq_sched_free_tags(struct blk_mq_tag_set *set,
+>  				   struct blk_mq_hw_ctx *hctx,
+>  				   unsigned int hctx_idx)
+>  {
+> -	unsigned int flags = set->flags & ~BLK_MQ_F_TAG_HCTX_SHARED;
+> -
+>  	if (hctx->sched_tags) {
+>  		blk_mq_free_rqs(set, hctx->sched_tags, hctx_idx);
+> -		blk_mq_free_rq_map(hctx->sched_tags, flags);
+> +		blk_mq_free_rq_map(hctx->sched_tags, set->flags);
+>  		hctx->sched_tags = NULL;
+>  	}
+>  }
+> @@ -521,12 +519,10 @@ static int blk_mq_sched_alloc_tags(struct request_queue *q,
+>  				   unsigned int hctx_idx)
+>  {
+>  	struct blk_mq_tag_set *set = q->tag_set;
+> -	/* Clear HCTX_SHARED so tags are init'ed */
+> -	unsigned int flags = set->flags & ~BLK_MQ_F_TAG_HCTX_SHARED;
+>  	int ret;
+>  
+>  	hctx->sched_tags = blk_mq_alloc_rq_map(set, hctx_idx, q->nr_requests,
+> -					       set->reserved_tags, flags);
+> +					       set->reserved_tags, set->flags);
+>  	if (!hctx->sched_tags)
+>  		return -ENOMEM;
+>  
+> @@ -544,16 +540,40 @@ static void blk_mq_sched_tags_teardown(struct request_queue *q)
+>  	int i;
+>  
+>  	queue_for_each_hw_ctx(q, hctx, i) {
+> -		/* Clear HCTX_SHARED so tags are freed */
+> -		unsigned int flags = hctx->flags & ~BLK_MQ_F_TAG_HCTX_SHARED;
+> -
+>  		if (hctx->sched_tags) {
+> -			blk_mq_free_rq_map(hctx->sched_tags, flags);
+> +			blk_mq_free_rq_map(hctx->sched_tags, hctx->flags);
+>  			hctx->sched_tags = NULL;
+>  		}
+>  	}
+>  }
+>  
+> +static int blk_mq_init_sched_shared_sbitmap(struct request_queue *queue)
+> +{
+> +	struct blk_mq_tag_set *set = queue->tag_set;
+> +	int ret;
+> +
+> +	/*
+> +	 * Set initial depth at max so that we don't need to reallocate for
+> +	 * updating nr_requests.
+> +	 */
+> +	ret = blk_mq_init_bitmaps(&queue->sched_bitmap_tags,
+> +				  &queue->sched_breserved_tags,
+> +				  set, MAX_SCHED_RQ, set->reserved_tags);
+> +	if (ret)
+> +		return ret;
+> +
+> +	sbitmap_queue_resize(&queue->sched_bitmap_tags,
+> +			     queue->nr_requests - set->reserved_tags);
+> +
+> +	return 0;
+> +}
+> +
+> +static void blk_mq_exit_sched_shared_sbitmap(struct request_queue *queue)
+> +{
+> +	sbitmap_queue_free(&queue->sched_bitmap_tags);
+> +	sbitmap_queue_free(&queue->sched_breserved_tags);
+> +}
+> +
+>  int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+>  {
+>  	struct blk_mq_hw_ctx *hctx;
+> @@ -578,12 +598,25 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+>  	queue_for_each_hw_ctx(q, hctx, i) {
+>  		ret = blk_mq_sched_alloc_tags(q, hctx, i);
+>  		if (ret)
+> -			goto err;
+> +			goto err_free_tags;
+> +	}
+> +
+> +	if (blk_mq_is_sbitmap_shared(q->tag_set->flags)) {
+> +		ret = blk_mq_init_sched_shared_sbitmap(q);
+> +		if (ret)
+> +			goto err_free_tags;
+> +
+> +		queue_for_each_hw_ctx(q, hctx, i) {
+> +			hctx->sched_tags->bitmap_tags =
+> +						&q->sched_bitmap_tags;
+> +			hctx->sched_tags->breserved_tags =
+> +						&q->sched_breserved_tags;
+> +		}
 
-You mention the 2 different models (single command vs. multi-command).  Jus=
-t as a reminder, there are specific reasons for those 2 different models.
+The above assignment can be folded into blk_mq_init_sched_shared_sbitmap().
 
-Some applications know both the source and the destination, so can use the =
-single command model (the application is aware it is doing a copy).  But, t=
-here is a group of applications that do NOT know both pieces of information=
- at the same time, in the same thread, in the same context (the application=
- is NOT aware it is doing a copy - the application thinks it is doing reads=
- and writes).
+>  	}
+>  
+>  	ret = e->ops.init_sched(q, e);
+>  	if (ret)
+> -		goto err;
+> +		goto err_free_sbitmap;
+>  
+>  	blk_mq_debugfs_register_sched(q);
+>  
+> @@ -603,7 +636,10 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+>  
+>  	return 0;
+>  
+> -err:
+> +err_free_sbitmap:
+> +	if (blk_mq_is_sbitmap_shared(q->tag_set->flags))
+> +		blk_mq_exit_sched_shared_sbitmap(q);
+> +err_free_tags:
+>  	blk_mq_sched_free_requests(q);
+>  	blk_mq_sched_tags_teardown(q);
+>  	q->elevator = NULL;
+> @@ -641,5 +677,7 @@ void blk_mq_exit_sched(struct request_queue *q, struct elevator_queue *e)
+>  	if (e->type->ops.exit_sched)
+>  		e->type->ops.exit_sched(e);
+>  	blk_mq_sched_tags_teardown(q);
+> +	if (blk_mq_is_sbitmap_shared(q->tag_set->flags))
+> +		blk_mq_exit_sched_shared_sbitmap(q);
 
-That is why there are 2 different models - because the application engineer=
-s didn't want to change their application.  So, the author of the CP applic=
-ation (the shell copy command) wanted to use the existing READ / WRITE mode=
-l (2 commands).  Just replace the READ with "get the data ready" and replac=
-e the WRITE with "use the data you got ready".  It was easier for that appl=
-ication to use the existing model, rather than totally redesigning the appl=
-ication.
+The above two lines can be moved to blk_mq_sched_tags_teardown().
 
-But, other application engineers had a code base that already knew a copy w=
-as happening, and their code already knew both the source and destination i=
-n the same code path. A BACKUP application is one that generally fits into =
-this camp.  So, it was easier for that application to replace that function=
- with a single copy request.  Another application was a VM mastering/replic=
-ating application that could spin up new VM images very quickly - the sourc=
-e and destination are known to be able to use a single request.
+>  	q->elevator = NULL;
+>  }
+> diff --git a/block/blk-mq-sched.h b/block/blk-mq-sched.h
+> index 5b18ab915c65..aff037cfd8e7 100644
+> --- a/block/blk-mq-sched.h
+> +++ b/block/blk-mq-sched.h
+> @@ -5,6 +5,8 @@
+>  #include "blk-mq.h"
+>  #include "blk-mq-tag.h"
+>  
+> +#define MAX_SCHED_RQ (16 * BLKDEV_MAX_RQ)
+> +
+>  void blk_mq_sched_assign_ioc(struct request *rq);
+>  
+>  bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
+> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+> index 2a37731e8244..e3ab8631be22 100644
+> --- a/block/blk-mq-tag.c
+> +++ b/block/blk-mq-tag.c
+> @@ -13,6 +13,7 @@
+>  #include <linux/delay.h>
+>  #include "blk.h"
+>  #include "blk-mq.h"
+> +#include "blk-mq-sched.h"
+>  #include "blk-mq-tag.h"
+>  
+>  /*
+> @@ -466,19 +467,39 @@ static int blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
+>  	return -ENOMEM;
+>  }
+>  
+> -int blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *set, unsigned int flags)
+> +int blk_mq_init_bitmaps(struct sbitmap_queue *bitmap_tags,
+> +			struct sbitmap_queue *breserved_tags,
+> +			struct blk_mq_tag_set *set,
 
-When this offload journey began, both interfaces were needed and used.  But=
- yes, it did bifurcate the space, creating 2 camps of engineers - each with=
- their favorite method (based on the application where they planned to use =
-it).  Each camp of engineers often sees no reason that the other camp can't=
- just switch to do it the way they do - if they'd only see the light.  But,=
- originally, there were 2 different sets of requirements that each drove a =
-specific design of a copy offload model.
+The 'set' parameter can be killed, meantime pass 'node' & 'alloc_policy',
+just like blk_mq_init_bitmap_tags()'s type, then blk_mq_init_bitmaps()
+can be re-used by blk_mq_init_bitmap_tags() for avoiding to duplicate
+bitmap allocation code.
 
-Even NVMe has recently joined the copy offload camp with a new COPY command=
- (single namespace, multiple source ranges, single destination range - work=
-s well for defrag, and other use cases). I'm confident its capabilities wil=
-l grow over time.
+> +			unsigned int queue_depth, unsigned int reserved)
 
-SO, I think this will be a great discussion to have!!!
+>  {
+> -	unsigned int depth = set->queue_depth - set->reserved_tags;
+> +	unsigned int depth = queue_depth - reserved;
+>  	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags);
+>  	bool round_robin = alloc_policy == BLK_TAG_ALLOC_RR;
+> -	int i, node = set->numa_node;
+>  
+> -	if (bt_alloc(&set->__bitmap_tags, depth, round_robin, node))
+> +	if (bt_alloc(bitmap_tags, depth, round_robin, set->numa_node))
+>  		return -ENOMEM;
+> -	if (bt_alloc(&set->__breserved_tags, set->reserved_tags,
+> -		     round_robin, node))
+> +	if (bt_alloc(breserved_tags, set->reserved_tags,
 
-	Fred Knight
-
-
-
------Original Message-----
-From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>=20
-Sent: Monday, May 10, 2021 8:16 PM
-To: linux-block@vger.kernel.org; linux-scsi@vger.kernel.org; linux-nvme@lis=
-ts.infradead.org; dm-devel@redhat.com; lsf-pc@lists.linux-foundation.org
-Cc: axboe@kernel.dk; msnitzer@redhat.com; bvanassche@acm.org; martin.peters=
-en@oracle.com; roland@purestorage.com; mpatocka@redhat.com; Hannes Reinecke=
- <hare@suse.de>; kbusch@kernel.org; rwheeler@redhat.com; hch@lst.de; Knight=
-, Frederick <Frederick.Knight@netapp.com>; zach.brown@ni.com; osandov@fb.co=
-m
-Subject: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
-
-NetApp Security WARNING: This is an external email. Do not click links or o=
-pen attachments unless you recognize the sender and know the content is saf=
-e.
+s/set->reserved_tags/reserved/
 
 
-
-
-Hi,
-
-* Background :-
------------------------------------------------------------------------
-
-Copy offload is a feature that allows file-systems or storage devices to be=
- instructed to copy files/logical blocks without requiring involvement of t=
-he local CPU.
-
-With reference to the RISC-V summit keynote [1] single threaded performance=
- is limiting due to Denard scaling and multi-threaded performance is slowin=
-g down due Moore's law limitations. With the rise of SNIA Computation Techn=
-ical Storage Working Group (TWG) [2], offloading computations to the device=
- or over the fabrics is becoming popular as there are several solutions ava=
-ilable [2]. One of the common operation which is popular in the kernel and =
-is not merged yet is Copy offload over the fabrics or on to the device.
-
-* Problem :-
------------------------------------------------------------------------
-
-The original work which is done by Martin is present here [3]. The latest w=
-ork which is posted by Mikulas [4] is not merged yet. These two approaches =
-are totally different from each other. Several storage vendors discourage m=
-ixing copy offload requests with regular READ/WRITE I/O. Also, the fact tha=
-t the operation fails if a copy request ever needs to be split as it traver=
-ses the stack it has the unfortunate side-effect of preventing copy offload=
- from working in pretty much every common deployment configuration out ther=
-e.
-
-* Current state of the work :-
------------------------------------------------------------------------
-
-With [3] being hard to handle arbitrary DM/MD stacking without splitting th=
-e command in two, one for copying IN and one for copying OUT. Which is then=
- demonstrated by the [4] why [3] it is not a suitable candidate. Also, with=
- [4] there is an unresolved problem with the two-command approach about how=
- to handle changes to the DM layout between an IN and OUT operations.
-
-* Why Linux Kernel Storage System needs Copy Offload support now ?
------------------------------------------------------------------------
-
-With the rise of the SNIA Computational Storage TWG and solutions [2], exis=
-ting SCSI XCopy support in the protocol, recent advancement in the Linux Ke=
-rnel File System for Zoned devices (Zonefs [5]), Peer to Peer DMA support i=
-n the Linux Kernel mainly for NVMe devices [7] and eventually NVMe Devices =
-and subsystem (NVMe PCIe/NVMeOF) will benefit from Copy offload operation.
-
-With this background we have significant number of use-cases which are stro=
-ng candidates waiting for outstanding Linux Kernel Block Layer Copy Offload=
- support, so that Linux Kernel Storage subsystem can to address previously =
-mentioned problems [1] and allow efficient offloading of the data related o=
-perations. (Such as move/copy etc.)
-
-For reference following is the list of the use-cases/candidates waiting for=
- Copy Offload support :-
-
-1. SCSI-attached storage arrays.
-2. Stacking drivers supporting XCopy DM/MD.
-3. Computational Storage solutions.
-7. File systems :- Local, NFS and Zonefs.
-4. Block devices :- Distributed, local, and Zoned devices.
-5. Peer to Peer DMA support solutions.
-6. Potentially NVMe subsystem both NVMe PCIe and NVMeOF.
-
-* What we will discuss in the proposed session ?
------------------------------------------------------------------------
-
-I'd like to propose a session to go over this topic to understand :-
-
-1. What are the blockers for Copy Offload implementation ?
-2. Discussion about having a file system interface.
-3. Discussion about having right system call for user-space.
-4. What is the right way to move this work forward ?
-5. How can we help to contribute and move this work forward ?
-
-* Required Participants :-
------------------------------------------------------------------------
-
-I'd like to invite file system, block layer, and device drivers developers =
-to:-
-
-1. Share their opinion on the topic.
-2. Share their experience and any other issues with [4].
-3. Uncover additional details that are missing from this proposal.
-
-Required attendees :-
-
-Martin K. Petersen
-Jens Axboe
-Christoph Hellwig
-Bart Van Assche
-Zach Brown
-Roland Dreier
-Ric Wheeler
-Trond Myklebust
-Mike Snitzer
-Keith Busch
-Sagi Grimberg
-Hannes Reinecke
-Frederick Knight
-Mikulas Patocka
-Keith Busch
-
-Regards,
-Chaitanya
-
-[1]https://content.riscv.org/wp-content/uploads/2018/12/A-New-Golden-Age-fo=
-r-Computer-Architecture-History-Challenges-and-Opportunities-David-Patterso=
-n-.pdf
-[2] https://www.snia.org/computational
-https://www.napatech.com/support/resources/solution-descriptions/napatech-s=
-martnic-solution-for-hardware-offload/
-      https://www.eideticom.com/products.html
-https://www.xilinx.com/applications/data-center/computational-storage.html
-[3] git://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux.git xcopy [4] h=
-ttps://www.spinics.net/lists/linux-block/msg00599.html
-[5] https://lwn.net/Articles/793585/
-[6] https://nvmexpress.org/new-nvmetm-specification-defines-zoned-
-namespaces-zns-as-go-to-industry-technology/
-[7] https://github.com/sbates130272/linux-p2pmem
-[8] https://kernel.dk/io_uring.pdf
+Thanks, 
+Ming
 
