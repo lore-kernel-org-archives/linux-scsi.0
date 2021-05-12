@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58BA8C2B9FC
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71F84C41515
 	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2227B613C8
+	by mail.kernel.org (Postfix) with ESMTP id 59AE061418
 	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234447AbhELTL3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 May 2021 15:11:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51842 "EHLO mail.kernel.org"
+        id S235782AbhELTLc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 May 2021 15:11:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53208 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1352661AbhELSDz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 May 2021 14:03:55 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0F1A16143C;
-        Wed, 12 May 2021 18:02:45 +0000 (UTC)
+        id S240953AbhELSEz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 May 2021 14:04:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A9DD361447;
+        Wed, 12 May 2021 18:03:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620842566;
-        bh=stKEiz1pJEGAUkugfYllcGw7HzoeVRAPD8RvjUxFabg=;
+        s=k20201202; t=1620842626;
+        bh=o2jXKpuhkJIfer2K8SU3B+OWR3J5Y6ya9LXAL2VJYtQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VWE7VdbUxV52xWLypzAwE9hzFEPoY8DdAEv4Gjn52BRyvVIvNIabaqPLq8tHZeUXd
-         +py7LkC4Xf3B5bSh7UzcxhVzJvgHhvE1wd9Rk366bq7MUClDWEES1ftFlJUjRuSxOS
-         AC8yyIeW/F9AHxPgutkq6FHU33JLPFqxCMY+pG/zohm9Oo6e2iMQ/Br2AqtDIW0ngz
-         vXmEBa4OrKUmJYpuV+3H1YazWB0mv8clV9GpNQFpcuZDkgJfOpWM5AOZTsN22QzXTR
-         sUJ2T4b76weppBM5IDrqwVetUgzX76vtzIqpqrj6p7pwwohNAz9i++ioett1+OiN74
-         F1JaeUbs4pMuQ==
+        b=Cxy4fbSeRT3/HPUW8W8QbhbmE5gcct6WgcPsC5q2C9OAtSIVHitwiz+QxSNdOEJl2
+         eFbkr+mBxu4tMic+jYSJCACKunnSug6C5x2DtNSjCn6BE2cNPpV0tFCLSD5OjJjxrb
+         V2uK69TVOD6o5sC04VEjtTFdE7ibYGsqN5HzI0fMEtWopTVKz6saulhDk6JDr6xHcF
+         fkTwGSrXY+44on7pUswnSA8KfysfVf9EeBNPcQPutoc77cEI58LsgnGHRQePe3iQC5
+         ld+wakiSHFgNlJRnZOqldzFlcttuDwbUpwVgiRy1LrSbs2YnYbKpXN3KPYxjOwKDbz
+         UvG6WeZ9R4dqA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bodo Stroesser <bostroesser@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 24/35] scsi: target: tcmu: Return from tcmu_handle_completions() if cmd_id not found
-Date:   Wed, 12 May 2021 14:01:54 -0400
-Message-Id: <20210512180206.664536-24-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 23/34] scsi: target: tcmu: Return from tcmu_handle_completions() if cmd_id not found
+Date:   Wed, 12 May 2021 14:02:54 -0400
+Message-Id: <20210512180306.664925-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210512180206.664536-1-sashal@kernel.org>
-References: <20210512180206.664536-1-sashal@kernel.org>
+In-Reply-To: <20210512180306.664925-1-sashal@kernel.org>
+References: <20210512180306.664925-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -73,10 +73,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index a5991df23581..430d30960966 100644
+index 7d5814a95e1e..c6950f157b99 100644
 --- a/drivers/target/target_core_user.c
 +++ b/drivers/target/target_core_user.c
-@@ -1377,7 +1377,7 @@ static int tcmu_run_tmr_queue(struct tcmu_dev *udev)
+@@ -1391,7 +1391,7 @@ static int tcmu_run_tmr_queue(struct tcmu_dev *udev)
  	return 1;
  }
  
@@ -85,7 +85,7 @@ index a5991df23581..430d30960966 100644
  {
  	struct tcmu_mailbox *mb;
  	struct tcmu_cmd *cmd;
-@@ -1420,7 +1420,7 @@ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
+@@ -1434,7 +1434,7 @@ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
  			pr_err("cmd_id %u not found, ring is broken\n",
  			       entry->hdr.cmd_id);
  			set_bit(TCMU_DEV_BIT_BROKEN, &udev->flags);
