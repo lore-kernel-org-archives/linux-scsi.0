@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3AFBC43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58BA8C2B9FC
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C05BE613C0
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2227B613C8
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232837AbhELTLU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 May 2021 15:11:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50702 "EHLO mail.kernel.org"
+        id S234447AbhELTL3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 May 2021 15:11:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51842 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1352237AbhELSCv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 May 2021 14:02:51 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1A7BF610F7;
-        Wed, 12 May 2021 18:01:41 +0000 (UTC)
+        id S1352661AbhELSDz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 May 2021 14:03:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0F1A16143C;
+        Wed, 12 May 2021 18:02:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620842503;
-        bh=H43xm+WMtNrfk1LdR8lVNuVsxTgEYIhPWq3vTxV73Jk=;
+        s=k20201202; t=1620842566;
+        bh=stKEiz1pJEGAUkugfYllcGw7HzoeVRAPD8RvjUxFabg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qNoLwXSNF8Vfay2dNT6Y3+cATDMwTOCN7TSBOudtRZEYw3Pf51updA07DGiqAjVVg
-         yZTI6h16EairRGIBjZfdxgeET9+BJF5eI0jrhYp1i5gwZ059iXBoMwKNuqi/Td08eZ
-         ZHgxdyR2BvPEsWN+ZhWB3TW1K2TOFH519W3aMz08ai/2X2QxcwAZRHG3cGFc/aJRkr
-         EseTqonQtA159cXnkGxEQsQHP0hDT0DkSyYoNS/veW6Luw81h2vMAGXNXT9srTXsAD
-         aXPhJSh5uSW0TUEifKjUm5lWGC3RiS2SA6M7LJqM5yrlWZQrC4nITpqaUWCIj6EIoj
-         GlNK+eUSkZKTQ==
+        b=VWE7VdbUxV52xWLypzAwE9hzFEPoY8DdAEv4Gjn52BRyvVIvNIabaqPLq8tHZeUXd
+         +py7LkC4Xf3B5bSh7UzcxhVzJvgHhvE1wd9Rk366bq7MUClDWEES1ftFlJUjRuSxOS
+         AC8yyIeW/F9AHxPgutkq6FHU33JLPFqxCMY+pG/zohm9Oo6e2iMQ/Br2AqtDIW0ngz
+         vXmEBa4OrKUmJYpuV+3H1YazWB0mv8clV9GpNQFpcuZDkgJfOpWM5AOZTsN22QzXTR
+         sUJ2T4b76weppBM5IDrqwVetUgzX76vtzIqpqrj6p7pwwohNAz9i++ioett1+OiN74
+         F1JaeUbs4pMuQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bodo Stroesser <bostroesser@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 26/37] scsi: target: tcmu: Return from tcmu_handle_completions() if cmd_id not found
-Date:   Wed, 12 May 2021 14:00:53 -0400
-Message-Id: <20210512180104.664121-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.11 24/35] scsi: target: tcmu: Return from tcmu_handle_completions() if cmd_id not found
+Date:   Wed, 12 May 2021 14:01:54 -0400
+Message-Id: <20210512180206.664536-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210512180104.664121-1-sashal@kernel.org>
-References: <20210512180104.664121-1-sashal@kernel.org>
+In-Reply-To: <20210512180206.664536-1-sashal@kernel.org>
+References: <20210512180206.664536-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -73,7 +73,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index bf73cd5f4b04..6809c970be03 100644
+index a5991df23581..430d30960966 100644
 --- a/drivers/target/target_core_user.c
 +++ b/drivers/target/target_core_user.c
 @@ -1377,7 +1377,7 @@ static int tcmu_run_tmr_queue(struct tcmu_dev *udev)
