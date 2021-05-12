@@ -2,138 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 401C0C43616
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:10:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8C6AC43461
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D98961352
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:10:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 993C6613C8
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235963AbhELTES (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 May 2021 15:04:18 -0400
-Received: from foss.arm.com ([217.140.110.172]:45770 "EHLO foss.arm.com"
+        id S238644AbhELTLT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 May 2021 15:11:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50596 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239282AbhELRaw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 May 2021 13:30:52 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 3F2BB31B;
-        Wed, 12 May 2021 10:29:40 -0700 (PDT)
-Received: from [192.168.1.123] (unknown [172.31.20.19])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 37C463F719;
-        Wed, 12 May 2021 10:29:35 -0700 (PDT)
-Subject: Re: [Resend RFC PATCH V2 10/12] HV/IOMMU: Add Hyper-V dma ops support
-To:     Tianyu Lan <ltykernel@gmail.com>, Christoph Hellwig <hch@lst.de>,
-        konrad.wilk@oracle.com
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, tglx@linutronix.de, mingo@redhat.com,
-        bp@alien8.de, x86@kernel.org, hpa@zytor.com, arnd@arndb.de,
-        akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-        m.szyprowski@samsung.com, joro@8bytes.org, will@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, vkuznets@redhat.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com,
-        sunilmut@microsoft.com
-References: <20210414144945.3460554-1-ltykernel@gmail.com>
- <20210414144945.3460554-11-ltykernel@gmail.com>
- <20210414154729.GD32045@lst.de>
- <a316af73-2c96-f307-6285-593597e05123@gmail.com>
-From:   Robin Murphy <robin.murphy@arm.com>
-Message-ID: <4793ae97-5e29-4a45-d2b6-61c151322065@arm.com>
-Date:   Wed, 12 May 2021 18:29:29 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        id S1352180AbhELSCp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 May 2021 14:02:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4B09C61419;
+        Wed, 12 May 2021 18:01:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620842497;
+        bh=nZ3xs04dmmmhOapml98ay2ckOl1UtqKduBUT1KkBBwE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Icu80mYEZ9aRZVSO2bIqSWRpX8f1DTXHWNw7WG2DAdHOZb3/DzWANufgPSGMLjTjh
+         +0ytMkelw6YKt2CaxozPUf9jeXVrOWS8PXr/2FG9CS+/bygR7Rkm4foVl+pufeDgUN
+         X6b7KjFA+ajBSeShoWNf1m2wCylk3p3OkYD4R+137+5bTa6YnXOnoAQOZ5dKuEVszU
+         w8KhSsbFdjZ7kupctKLoqjMkxqT1nYoJGU/eC/bmhUxEfJSTvEQivwoJyNe7KoYAk+
+         e1ZsoC/RZuxrs8ti4hWtRn/OjRIAEGBOuNiyiQroRSQEjwpsjU3S+sEmSVeDkzcyBn
+         5/uV5zlufmBMA==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.12 22/37] scsi: lpfc: Fix illegal memory access on Abort IOCBs
+Date:   Wed, 12 May 2021 14:00:49 -0400
+Message-Id: <20210512180104.664121-22-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210512180104.664121-1-sashal@kernel.org>
+References: <20210512180104.664121-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <a316af73-2c96-f307-6285-593597e05123@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-05-12 17:01, Tianyu Lan wrote:
-> Hi Christoph and Konrad:
->       Current Swiotlb bounce buffer uses a pool for all devices. There
-> is a high overhead to get or free bounce buffer during performance test.
-> Swiotlb code now use a global spin lock to protect bounce buffer data.
-> Several device queues try to acquire the spin lock and this introduce
-> additional overhead.
-> 
-> For performance and security perspective, each devices should have a
-> separate swiotlb bounce buffer pool and so this part needs to rework.
-> I want to check this is right way to resolve performance issues with 
-> swiotlb bounce buffer. If you have some other suggestions,welcome.
+From: James Smart <jsmart2021@gmail.com>
 
-We're already well on the way to factoring out SWIOTLB to allow for just 
-this sort of more flexible usage like per-device bounce pools - see here:
+[ Upstream commit e1364711359f3ced054bda9920477c8bf93b74c5 ]
 
-https://lore.kernel.org/linux-iommu/20210510095026.3477496-1-tientzu@chromium.org/T/#t
+In devloss timer handler and in backend calls to terminate remote port I/O,
+there is logic to walk through all active IOCBs and validate them to
+potentially trigger an abort request. This logic is causing illegal memory
+accesses which leads to a crash. Abort IOCBs, which may be on the list, do
+not have an associated lpfc_io_buf struct. The driver is trying to map an
+lpfc_io_buf struct on the IOCB and which results in a bogus address thus
+the issue.
 
-FWIW this looks to have an awful lot in common with what's going to be 
-needed for Android's protected KVM and Arm's Confidential Compute 
-Architecture, so we'll all be better off by doing it right. I'm getting 
-the feeling that set_memory_decrypted() wants to grow into a more 
-general abstraction that can return an alias at a different GPA if 
-necessary.
+Fix by skipping over ABORT IOCBs (CLOSE IOCBs are ABORTS that don't send
+ABTS) in the IOCB scan logic.
 
-Robin.
+Link: https://lore.kernel.org/r/20210421234433.102079-1-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-> 
-> Thanks.
-> 
-> On 4/14/2021 11:47 PM, Christoph Hellwig wrote:
->>> +static dma_addr_t hyperv_map_page(struct device *dev, struct page 
->>> *page,
->>> +                  unsigned long offset, size_t size,
->>> +                  enum dma_data_direction dir,
->>> +                  unsigned long attrs)
->>> +{
->>> +    phys_addr_t map, phys = (page_to_pfn(page) << PAGE_SHIFT) + offset;
->>> +
->>> +    if (!hv_is_isolation_supported())
->>> +        return phys;
->>> +
->>> +    map = swiotlb_tbl_map_single(dev, phys, size, HV_HYP_PAGE_SIZE, 
->>> dir,
->>> +                     attrs);
->>> +    if (map == (phys_addr_t)DMA_MAPPING_ERROR)
->>> +        return DMA_MAPPING_ERROR;
->>> +
->>> +    return map;
->>> +}
->>
->> This largerly duplicates what dma-direct + swiotlb does.  Please use
->> force_dma_unencrypted to force bounce buffering and just use the generic
->> code.
->>
->>> +    if (hv_isolation_type_snp()) {
->>> +        ret = hv_set_mem_host_visibility(
->>> +                phys_to_virt(hyperv_io_tlb_start),
->>> +                hyperv_io_tlb_size,
->>> +                VMBUS_PAGE_VISIBLE_READ_WRITE);
->>> +        if (ret)
->>> +            panic("%s: Fail to mark Hyper-v swiotlb buffer visible 
->>> to host. err=%d\n",
->>> +                  __func__, ret);
->>> +
->>> +        hyperv_io_tlb_remap = ioremap_cache(hyperv_io_tlb_start
->>> +                        + ms_hyperv.shared_gpa_boundary,
->>> +                            hyperv_io_tlb_size);
->>> +        if (!hyperv_io_tlb_remap)
->>> +            panic("%s: Fail to remap io tlb.\n", __func__);
->>> +
->>> +        memset(hyperv_io_tlb_remap, 0x00, hyperv_io_tlb_size);
->>> +        swiotlb_set_bounce_remap(hyperv_io_tlb_remap);
->>
->> And this really needs to go into a common hook where we currently just
->> call set_memory_decrypted so that all the different schemes for these
->> trusted VMs (we have about half a dozen now) can share code rather than
->> reinventing it.
->>
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index fa1a714a78f0..cefaf0ec69ca 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -11811,13 +11811,20 @@ lpfc_sli_validate_fcp_iocb(struct lpfc_iocbq *iocbq, struct lpfc_vport *vport,
+ 			   lpfc_ctx_cmd ctx_cmd)
+ {
+ 	struct lpfc_io_buf *lpfc_cmd;
++	IOCB_t *icmd = NULL;
+ 	int rc = 1;
+ 
+ 	if (!iocbq || iocbq->vport != vport)
+ 		return rc;
+ 
+-	if (!(iocbq->iocb_flag &  LPFC_IO_FCP) ||
+-	    !(iocbq->iocb_flag & LPFC_IO_ON_TXCMPLQ))
++	if (!(iocbq->iocb_flag & LPFC_IO_FCP) ||
++	    !(iocbq->iocb_flag & LPFC_IO_ON_TXCMPLQ) ||
++	      iocbq->iocb_flag & LPFC_DRIVER_ABORTED)
++		return rc;
++
++	icmd = &iocbq->iocb;
++	if (icmd->ulpCommand == CMD_ABORT_XRI_CN ||
++	    icmd->ulpCommand == CMD_CLOSE_XRI_CN)
+ 		return rc;
+ 
+ 	lpfc_cmd = container_of(iocbq, struct lpfc_io_buf, cur_iocbq);
+-- 
+2.30.2
+
