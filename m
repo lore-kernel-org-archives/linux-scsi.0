@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8C6AC43461
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C030C2B9FD
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 993C6613C8
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0332661428
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 19:12:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238644AbhELTLT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 May 2021 15:11:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50596 "EHLO mail.kernel.org"
+        id S233201AbhELTLX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 May 2021 15:11:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51750 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1352180AbhELSCp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 May 2021 14:02:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4B09C61419;
-        Wed, 12 May 2021 18:01:36 +0000 (UTC)
+        id S1352633AbhELSDs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 May 2021 14:03:48 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8546461412;
+        Wed, 12 May 2021 18:02:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620842497;
-        bh=nZ3xs04dmmmhOapml98ay2ckOl1UtqKduBUT1KkBBwE=;
+        s=k20201202; t=1620842560;
+        bh=DWZvEHP6qbEXHk7l4QYr89Wvb9SZxcLnj8grohUGhsI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Icu80mYEZ9aRZVSO2bIqSWRpX8f1DTXHWNw7WG2DAdHOZb3/DzWANufgPSGMLjTjh
-         +0ytMkelw6YKt2CaxozPUf9jeXVrOWS8PXr/2FG9CS+/bygR7Rkm4foVl+pufeDgUN
-         X6b7KjFA+ajBSeShoWNf1m2wCylk3p3OkYD4R+137+5bTa6YnXOnoAQOZ5dKuEVszU
-         w8KhSsbFdjZ7kupctKLoqjMkxqT1nYoJGU/eC/bmhUxEfJSTvEQivwoJyNe7KoYAk+
-         e1ZsoC/RZuxrs8ti4hWtRn/OjRIAEGBOuNiyiQroRSQEjwpsjU3S+sEmSVeDkzcyBn
-         5/uV5zlufmBMA==
+        b=D0ke/kmyDlleZn9g3wF7srdXWo17kyTZUUo9333Rek/MHWpxf+Bpvy8ZZVLaE9SWg
+         oG8FM4hFN5B7+yE19f5Svq9PFEqiW8AObnWjcjVIgRtfXHFKVBZNJ40ZCzHj8qfeb5
+         ZcuzilLyJSuNE+gyevMDzuqSGyUPg7fbvfmiqMS1FkJNYa4MBgZXo/q9T0/c5VkNtL
+         Yqi8r1fOTTvNGXBVSs/xkFpW60q7kTjPGWBvwt15kWILeafuA70jkvb8F/biDTpBM/
+         stK57Gxy7nd2yH9T88rX2g4Y4L/JomLvweCM5B03wnZ2iuFNYPqze2nALXU8o0mUxz
+         vrlOK1/nVZ2Dw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 22/37] scsi: lpfc: Fix illegal memory access on Abort IOCBs
-Date:   Wed, 12 May 2021 14:00:49 -0400
-Message-Id: <20210512180104.664121-22-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.11 20/35] scsi: lpfc: Fix illegal memory access on Abort IOCBs
+Date:   Wed, 12 May 2021 14:01:50 -0400
+Message-Id: <20210512180206.664536-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210512180104.664121-1-sashal@kernel.org>
-References: <20210512180104.664121-1-sashal@kernel.org>
+In-Reply-To: <20210512180206.664536-1-sashal@kernel.org>
+References: <20210512180206.664536-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -77,17 +77,17 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index fa1a714a78f0..cefaf0ec69ca 100644
+index 95caad764fb7..bc5b5fb0b967 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -11811,13 +11811,20 @@ lpfc_sli_validate_fcp_iocb(struct lpfc_iocbq *iocbq, struct lpfc_vport *vport,
+@@ -11803,13 +11803,20 @@ lpfc_sli_validate_fcp_iocb(struct lpfc_iocbq *iocbq, struct lpfc_vport *vport,
  			   lpfc_ctx_cmd ctx_cmd)
  {
  	struct lpfc_io_buf *lpfc_cmd;
 +	IOCB_t *icmd = NULL;
  	int rc = 1;
  
- 	if (!iocbq || iocbq->vport != vport)
+ 	if (iocbq->vport != vport)
  		return rc;
  
 -	if (!(iocbq->iocb_flag &  LPFC_IO_FCP) ||
