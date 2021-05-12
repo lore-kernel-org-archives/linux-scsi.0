@@ -2,119 +2,216 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B6F9C433ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 14:07:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33904C433ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 14:12:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E83161412
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 14:07:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ECAB961411
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 14:12:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230505AbhELOIi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 May 2021 10:08:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57314 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230292AbhELOIh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2021 10:08:37 -0400
-Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C815C061574;
-        Wed, 12 May 2021 07:07:28 -0700 (PDT)
-Received: by mail-ed1-x52b.google.com with SMTP id f1so5007124edt.4;
-        Wed, 12 May 2021 07:07:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=xkX4RuB/NiZK6BTfiPwydeiPPCc7ucc6NYoKB5Y8RXM=;
-        b=PFKqRkTY6twIzciHACYubY4QrEg28sGdBPnGiecpz1n+teGjKcqzzk33KBBQ58Ulx5
-         4u7YhDF4pQiFa/4kjw8pyo9D2aMGeJEslgzm2lc64CWTrZzLdLChJOqDgjVAGoEeuh3z
-         JghvZKDo/kyaJFCRiK8j8cuRRInpmqvGwwK1n2rn9XZpyOYthCawCp/Pnd1RRpaJnxNV
-         L2u2VQXQe5jEpWHtQsLny3vlYT7xiwJbS2lAYeVWx0XoncS2g0TBmLSQsYIXSiBls0D6
-         WkDqyHoidE6TWVCGI2DcD6pipPJ4wsZTfXUF1fiOEZ36ZjfsnTnG/C+1eIiQOAl/i7j+
-         KtOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=xkX4RuB/NiZK6BTfiPwydeiPPCc7ucc6NYoKB5Y8RXM=;
-        b=NWnFTTmEn4yOEijJNNYOi1HZPQ2gQ9hLwSR+Y3JtKiXLtj4b12C3UXLabkhbSTq3jH
-         HT6P2PRK+Y4bKvmwNniv5XRR809G6JOQoNG5aw7lMR6us3d0YVoRIrYlhAyRK6jj3EKT
-         74DmbqySyog4mJkoRfO9ZQDpSsDrnWhipajvv95IlReo+/8zrVB9Ew/S7M0H3QCuJtmz
-         RPTfZEDGEvknYc+hRmSm4/EOOAUQTHIE8epJtTOeA8pksBcZdyCucGh3VbzOVC3P+5qu
-         29/G/No4EK2KB9A3uZN+6tbUKem2BBvMZ7mdYgb/ASIoJ+76JdHcibzN/9iqQ8nEHPIq
-         LXXA==
-X-Gm-Message-State: AOAM532jveVqfd2ekOazcQ5HihU99o9u9PLL7dU/+Vkay3+Lf1homJYZ
-        qq8uFYP5Sh575qWqDTjUoaoWqgn3T6Y=
-X-Google-Smtp-Source: ABdhPJwWzIAXg0sj+A3tzXLdDkzzC/S90ihYT040VwrgaLGcisWN1cidbJP5+CAHQFdiH8qyGGwBVQ==
-X-Received: by 2002:a05:6402:3546:: with SMTP id f6mr43825548edd.267.1620828447459;
-        Wed, 12 May 2021 07:07:27 -0700 (PDT)
-Received: from localhost (ipbcc11466.dynamic.kabel-deutschland.de. [188.193.20.102])
-        by smtp.gmail.com with ESMTPSA id t9sm18710289edf.70.2021.05.12.07.07.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 12 May 2021 07:07:27 -0700 (PDT)
-From:   Bodo Stroesser <bostroesser@gmail.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Bodo Stroesser <bostroesser@gmail.com>
-Subject: [PATCH] scsi: target: tcmu: Rename TCM_DEV_BIT_PLUGGED to TCMU_DEV_BIT_PLUGGED
-Date:   Wed, 12 May 2021 16:06:54 +0200
-Message-Id: <20210512140654.31249-1-bostroesser@gmail.com>
-X-Mailer: git-send-email 2.12.3
+        id S230292AbhELOOE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 May 2021 10:14:04 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3067 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230196AbhELOOC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2021 10:14:02 -0400
+Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FgGkT5k4Cz6wj4N;
+        Wed, 12 May 2021 22:04:33 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Wed, 12 May 2021 16:12:46 +0200
+Received: from [10.47.85.216] (10.47.85.216) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Wed, 12 May
+ 2021 15:12:45 +0100
+Subject: Re: [PATCH v2] blk-mq: Use request queue-wide tags for tagset-wide
+ sbitmap
+To:     Ming Lei <ming.lei@redhat.com>
+CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>,
+        "chenxiang (M)" <chenxiang66@hisilicon.com>,
+        "yama@redhat.com" <yama@redhat.com>,
+        "dgilbert@interlog.com" <dgilbert@interlog.com>
+References: <1620749743-36000-1-git-send-email-john.garry@huawei.com>
+ <YJs2KWMCn2kpyryT@T590>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <06b5ab3f-467a-44eb-c997-5a85508dbcda@huawei.com>
+Date:   Wed, 12 May 2021 15:12:01 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <YJs2KWMCn2kpyryT@T590>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.85.216]
+X-ClientProxiedBy: lhreml740-chm.china.huawei.com (10.201.108.190) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The bit definition TCM_DEV_BIT_PLUGGED should correctly be named
-TCMU_DEV_BIT_PLUGGED, since all other bits in the same bitfield
-have prefix TCMU_
 
-Signed-off-by: Bodo Stroesser <bostroesser@gmail.com>
----
- drivers/target/target_core_user.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+>>   
+>> +static int blk_mq_init_sched_shared_sbitmap(struct request_queue *queue)
+>> +{
+>> +	struct blk_mq_tag_set *set = queue->tag_set;
+>> +	int ret;
+>> +
+>> +	/*
+>> +	 * Set initial depth at max so that we don't need to reallocate for
+>> +	 * updating nr_requests.
+>> +	 */
+>> +	ret = blk_mq_init_bitmaps(&queue->sched_bitmap_tags,
+>> +				  &queue->sched_breserved_tags,
+>> +				  set, MAX_SCHED_RQ, set->reserved_tags);
+>> +	if (ret)
+>> +		return ret;
+>> +
+>> +	sbitmap_queue_resize(&queue->sched_bitmap_tags,
+>> +			     queue->nr_requests - set->reserved_tags);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static void blk_mq_exit_sched_shared_sbitmap(struct request_queue *queue)
+>> +{
+>> +	sbitmap_queue_free(&queue->sched_bitmap_tags);
+>> +	sbitmap_queue_free(&queue->sched_breserved_tags);
+>> +}
+>> +
+>>   int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+>>   {
+>>   	struct blk_mq_hw_ctx *hctx;
+>> @@ -578,12 +598,25 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+>>   	queue_for_each_hw_ctx(q, hctx, i) {
+>>   		ret = blk_mq_sched_alloc_tags(q, hctx, i);
+>>   		if (ret)
+>> -			goto err;
+>> +			goto err_free_tags;
+>> +	}
+>> +
+>> +	if (blk_mq_is_sbitmap_shared(q->tag_set->flags)) {
+>> +		ret = blk_mq_init_sched_shared_sbitmap(q);
+>> +		if (ret)
+>> +			goto err_free_tags;
+>> +
+>> +		queue_for_each_hw_ctx(q, hctx, i) {
+>> +			hctx->sched_tags->bitmap_tags =
+>> +						&q->sched_bitmap_tags;
+>> +			hctx->sched_tags->breserved_tags =
+>> +						&q->sched_breserved_tags;
+>> +		}
+> The above assignment can be folded into blk_mq_init_sched_shared_sbitmap().
+> 
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index bb3b997849e5..18a4742569cd 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -121,7 +121,7 @@ struct tcmu_dev {
- #define TCMU_DEV_BIT_BROKEN 1
- #define TCMU_DEV_BIT_BLOCKED 2
- #define TCMU_DEV_BIT_TMR_NOTIFY 3
--#define TCM_DEV_BIT_PLUGGED 4
-+#define TCMU_DEV_BIT_PLUGGED 4
- 	unsigned long flags;
- 
- 	struct uio_info uio_info;
-@@ -981,7 +981,7 @@ static void tcmu_unplug_device(struct se_dev_plug *se_plug)
- 	struct se_device *se_dev = se_plug->se_dev;
- 	struct tcmu_dev *udev = TCMU_DEV(se_dev);
- 
--	clear_bit(TCM_DEV_BIT_PLUGGED, &udev->flags);
-+	clear_bit(TCMU_DEV_BIT_PLUGGED, &udev->flags);
- 	uio_event_notify(&udev->uio_info);
- }
- 
-@@ -989,7 +989,7 @@ static struct se_dev_plug *tcmu_plug_device(struct se_device *se_dev)
- {
- 	struct tcmu_dev *udev = TCMU_DEV(se_dev);
- 
--	if (!test_and_set_bit(TCM_DEV_BIT_PLUGGED, &udev->flags))
-+	if (!test_and_set_bit(TCMU_DEV_BIT_PLUGGED, &udev->flags))
- 		return &udev->se_plug;
- 
- 	return NULL;
-@@ -1123,7 +1123,7 @@ static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
- 
- 	list_add_tail(&tcmu_cmd->queue_entry, &udev->inflight_queue);
- 
--	if (!test_bit(TCM_DEV_BIT_PLUGGED, &udev->flags))
-+	if (!test_bit(TCMU_DEV_BIT_PLUGGED, &udev->flags))
- 		uio_event_notify(&udev->uio_info);
- 
- 	return 0;
--- 
-2.12.3
+ok
+
+>>   	}
+>>   
+>>   	ret = e->ops.init_sched(q, e);
+>>   	if (ret)
+>> -		goto err;
+>> +		goto err_free_sbitmap;
+>>   
+>>   	blk_mq_debugfs_register_sched(q);
+>>   
+>> @@ -603,7 +636,10 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+>>   
+>>   	return 0;
+>>   
+>> -err:
+>> +err_free_sbitmap:
+>> +	if (blk_mq_is_sbitmap_shared(q->tag_set->flags))
+>> +		blk_mq_exit_sched_shared_sbitmap(q);
+>> +err_free_tags:
+>>   	blk_mq_sched_free_requests(q);
+>>   	blk_mq_sched_tags_teardown(q);
+>>   	q->elevator = NULL;
+>> @@ -641,5 +677,7 @@ void blk_mq_exit_sched(struct request_queue *q, struct elevator_queue *e)
+>>   	if (e->type->ops.exit_sched)
+>>   		e->type->ops.exit_sched(e);
+>>   	blk_mq_sched_tags_teardown(q);
+>> +	if (blk_mq_is_sbitmap_shared(q->tag_set->flags))
+>> +		blk_mq_exit_sched_shared_sbitmap(q);
+> The above two lines can be moved to blk_mq_sched_tags_teardown().
+
+blk_mq_sched_tags_teardown() is also used in blk_mq_init_sched() to undo 
+the blk_mq_sched_alloc_tags() calls; however, in that same function we 
+call blk_mq_sched_alloc_tags() and blk_mq_init_sched_shared_sbitmap() 
+separately, so can't combine into a single teardown function.
+
+> 
+>>   	q->elevator = NULL;
+>>   }
+>> diff --git a/block/blk-mq-sched.h b/block/blk-mq-sched.h
+>> index 5b18ab915c65..aff037cfd8e7 100644
+>> --- a/block/blk-mq-sched.h
+>> +++ b/block/blk-mq-sched.h
+>> @@ -5,6 +5,8 @@
+>>   #include "blk-mq.h"
+>>   #include "blk-mq-tag.h"
+>>   
+>> +#define MAX_SCHED_RQ (16 * BLKDEV_MAX_RQ)
+>> +
+>>   void blk_mq_sched_assign_ioc(struct request *rq);
+>>   
+>>   bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
+>> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+>> index 2a37731e8244..e3ab8631be22 100644
+>> --- a/block/blk-mq-tag.c
+>> +++ b/block/blk-mq-tag.c
+>> @@ -13,6 +13,7 @@
+>>   #include <linux/delay.h>
+>>   #include "blk.h"
+>>   #include "blk-mq.h"
+>> +#include "blk-mq-sched.h"
+>>   #include "blk-mq-tag.h"
+>>   
+>>   /*
+>> @@ -466,19 +467,39 @@ static int blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
+>>   	return -ENOMEM;
+>>   }
+>>   
+>> -int blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *set, unsigned int flags)
+>> +int blk_mq_init_bitmaps(struct sbitmap_queue *bitmap_tags,
+>> +			struct sbitmap_queue *breserved_tags,
+>> +			struct blk_mq_tag_set *set,
+> The 'set' parameter can be killed, meantime pass 'node' & 'alloc_policy',
+> just like blk_mq_init_bitmap_tags()'s type, then blk_mq_init_bitmaps()
+> can be re-used by blk_mq_init_bitmap_tags() for avoiding to duplicate
+> bitmap allocation code.
+
+I was thinking that we could consolidate here, so let me check this.
+
+> 
+>> +			unsigned int queue_depth, unsigned int reserved)
+>>   {
+>> -	unsigned int depth = set->queue_depth - set->reserved_tags;
+>> +	unsigned int depth = queue_depth - reserved;
+>>   	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags);
+>>   	bool round_robin = alloc_policy == BLK_TAG_ALLOC_RR;
+>> -	int i, node = set->numa_node;
+>>   
+>> -	if (bt_alloc(&set->__bitmap_tags, depth, round_robin, node))
+>> +	if (bt_alloc(bitmap_tags, depth, round_robin, set->numa_node))
+>>   		return -ENOMEM;
+>> -	if (bt_alloc(&set->__breserved_tags, set->reserved_tags,
+>> -		     round_robin, node))
+>> +	if (bt_alloc(breserved_tags, set->reserved_tags,
+> s/set->reserved_tags/reserved/
+
+ok
+
+Thanks!
 
