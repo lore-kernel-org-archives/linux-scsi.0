@@ -2,193 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5473CC433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 04:49:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86815C433B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 05:42:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D9C561428
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 04:49:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AD5F6142E
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 05:42:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230293AbhEMEu7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 May 2021 00:50:59 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:52709 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230112AbhEMEuz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 May 2021 00:50:55 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1620881386; x=1652417386;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=mC3J6xd6F8cqz5s5oZlWzt8NB8NAGiGsrSq3jPZA06U=;
-  b=Eg9Eht95xTB1lANDG93kUrq4TWhqMfVMmMjjyolp8ju6PjpnTmvAUia6
-   3ydfWHeRdl1SG/c/sx8RG5KPXKoJ4OKtDC5AOwDWyaCOAaoxzG3+o4Ayj
-   Vvnlv2XUzl/A9Gn4XtX317FzA5epGC8k506eL2jRyaFDX+x7NZiDzkySH
-   0NgI3GdzrBZdEAAfb7tLD/tz6LJIHUXaLNZTF5R5rrPQYNR8+gG7rFVQN
-   /EoaJ8U7TDLZQluo3awzYkCpio5FfalZcGbwnx1OW4WXswiYJT2DsKcri
-   ay5uYjbIaTpC9ZfH1FBDr238kvb0GCgOQJtHP/E/rgYK3s0ha1sse07TN
-   A==;
-IronPort-SDR: KzqAkQHgagRAbdXF8tCOYD+sR0aR2yjNEO4BpdyKMjqXLEHYAA9htKXoKN4e6m0O970suEEKsX
- 5mhYV0oMCdy59zR69jTjNbQoDDg9v4YXTfSqJS2D3IE/pZqrSH7XiuwwB/nU/BPSZUmAJWfSm7
- c/xPMvPeaGX+O8U6f4dFLTYr1E6KaY6CbCFbWHVncRCLQ3tv7D7XAFCXGpYA4CmnBiN4Jo1PJ8
- LtDYNsCUbYahFDvP+CdZmtZ6Vo0ZC6KU81CHcIKQCF7cEWfFulh9e7/dxUL1rYNhX5T20+YtoC
- 0pc=
-X-IronPort-AV: E=Sophos;i="5.82,296,1613404800"; 
-   d="scan'208";a="172572688"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 13 May 2021 12:49:46 +0800
-IronPort-SDR: GBJ2N8TQ+TJVONctDMeKnafct2QqkVMz3qghPZcyGarQ4weNy6XCXYQN1UDGXPNLAuMeQmkOBU
- T45iE/U2MDnfLCfRBEN1VBKF8d+yc5ezHsc8EsZyZcm83XGBMDA31Gk5brSwx611CasZwiHovf
- 1IpVuE1yxudLTFZZmGUBog8Zd1exI3Mr2LkHp2jVlCscEMjtxLFWoituztAoWXsyxJ6lF5JgR2
- ObRdPWugNYhLh/fAwnX2Ir/xklIH/R+I5NSpAy1X1rl0+cU3dMMvx5IpPNmkwWmz0fE2ANcl6a
- uYr8XqR9YMaDFn81ZBsNDunt
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2021 21:29:42 -0700
-IronPort-SDR: naeMKPTxYUXGuSqSi6ZpuhTitUoXPauOLGHqQnPa1kABtY5XBloBOmXDvY2HkV+WZae2y7xRXa
- wQGF9rD9eH1uil0aDxth08OOMVqJ3+NkySrlcGBrIfZUtWfJ3hl3jMJuXiap7mCX9Zx2mHXlVw
- QfUmCk4mznmw3g4Nja41pGL7OdqTcGUWCJqtsWp3uNfXcAhdWi+ALopFKNUmj17L5kxyTr0WuQ
- w9KZcuolzQnPFPdYjZ2Cs9HOGMiKg687CkFE26fPIKEFRrenu6TWI/mlrZVijCG7UQ3f8j8XLs
- vRs=
-WDCIronportException: Internal
-Received: from shindev.dhcp.fujisawa.hgst.com (HELO shindev.fujisawa.hgst.com) ([10.149.52.173])
-  by uls-op-cesaip02.wdc.com with ESMTP; 12 May 2021 21:49:45 -0700
-From:   Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        Mike Christie <michael.christie@oracle.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH] scsi: target: Avoid smp_processor_id() in preemptible code
-Date:   Thu, 13 May 2021 13:49:44 +0900
-Message-Id: <20210513044944.1572404-1-shinichiro.kawasaki@wdc.com>
-X-Mailer: git-send-email 2.30.2
+        id S230328AbhEMFnq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 May 2021 01:43:46 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:62890 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229935AbhEMFnp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 May 2021 01:43:45 -0400
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 14D5YRIT180842;
+        Thu, 13 May 2021 01:42:23 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=dYJ4dXD7+POi3t+VvYZavix0lfLsjBa4p7VEQcNI5Qs=;
+ b=Iwj0fl5LdlkF+FfGHj9clkXBzKeR7D6c9aHfDxUdz2lhK/KcI3CFYPPKyf1I/G68y9fj
+ p0iOz03HKMDWSdCNWirCMTcjLAmlxzdTvAcrEghDegXJD66a1EqIJSZ38D3DyXvfD6hd
+ nXP9OrhbKM2D3vc9WYcrPVLngnQFJJ33F276J7Lrv9Cgi7TqSh+xJX3jbnBtV3x44IbT
+ GQ4jotoVQw6I0T715jCC0wFZ8H3yGPPGibxI6h7bvBgpEY6IV4FWeQUTXzc0fgM3anY8
+ 3DJQAm4NOkcx7TPHVYdWBQi1cQ62beTt920EmC0ohuekqfBIE6u2JvtT6hQElSyWQim8 qg== 
+Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 38gwymr8cm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 13 May 2021 01:42:22 -0400
+Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
+        by ppma01dal.us.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 14D5awMt017547;
+        Thu, 13 May 2021 05:42:22 GMT
+Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
+        by ppma01dal.us.ibm.com with ESMTP id 38dj9a3d6k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 13 May 2021 05:42:22 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 14D5gKCU61211166
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 13 May 2021 05:42:21 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id D8E887805C;
+        Thu, 13 May 2021 05:42:20 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 1099D78060;
+        Thu, 13 May 2021 05:42:18 +0000 (GMT)
+Received: from jarvis.int.hansenpartnership.com (unknown [9.80.208.94])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Thu, 13 May 2021 05:42:18 +0000 (GMT)
+Message-ID: <e7f37452622d4203f7246747b858f94a5e53b664.camel@linux.ibm.com>
+Subject: Re: [PATCH v2 0/7] Rename scsi_get_lba() into scsi_get_pos()
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, Bean Huo <beanhuo@micron.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Can Guo <cang@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Date:   Wed, 12 May 2021 22:42:17 -0700
+In-Reply-To: <DM6PR04MB708186DD35EB12B26BC9CE60E7519@DM6PR04MB7081.namprd04.prod.outlook.com>
+References: <20210512200849.9002-1-bvanassche@acm.org>
+         <96a253f8776a7736b480bdf190840440ffb4e53c.camel@linux.vnet.ibm.com>
+         <b27a3c7d-1c10-faaa-4c33-273a463faa80@acm.org>
+         <5967066117ed90e6f72bee006ee7e66722a5d1b3.camel@linux.ibm.com>
+         <8d72e969-44e9-5453-70fc-c9cb0779634d@acm.org>
+         <0c2d87fde65e40f34914e7555d3971f7b2c8f28b.camel@linux.ibm.com>
+         <DM6PR04MB708186DD35EB12B26BC9CE60E7519@DM6PR04MB7081.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: BcQejXxKJm6_2cTkx8R1cJD3UUelnVRN
+X-Proofpoint-ORIG-GUID: BcQejXxKJm6_2cTkx8R1cJD3UUelnVRN
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-05-13_03:2021-05-12,2021-05-13 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ impostorscore=0 mlxscore=0 mlxlogscore=999 lowpriorityscore=0 spamscore=0
+ suspectscore=0 clxscore=1011 bulkscore=0 adultscore=0 malwarescore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104190000 definitions=main-2105130041
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The BUG message "BUG: using smp_processor_id() in preemptible [00000000]
-code" was observed for TCMU devices with kernel config DEBUG_PREEMPT.
+On Thu, 2021-05-13 at 02:18 +0000, Damien Le Moal wrote:
+> On 2021/05/13 9:14, James Bottomley wrote:
+> > On Wed, 2021-05-12 at 17:00 -0700, Bart Van Assche wrote:
+> > > On 5/12/21 4:23 PM, James Bottomley wrote:
+> > > > No, we support physical sector sizes up to 4k.  The logical
+> > > > block size internal to the kernel and the block layer is always
+> > > > 512.  I can see the utility in using consistent naming to the
+> > > > block layer, but I can't see that logical block address is
+> > > > confusing ... especially now manufacturers seem all to have
+> > > > aligned on 512 for the logical block size even when it's
+> > > > usually 4k physical.
+> > > 
+> > > Are we talking about the same? Just below the code that I
+> > > included in my previous email there is the following line:
+> > > 
+> > > 	blk_queue_logical_block_size(sdp->request_queue, sector_size);
+> > > 
+> > > where sector_size is the logical block size reported by the READ 
+> > > CAPACITY command and has a value between 512 and 4096.
+> > 
+> > That was for devices from before the industry standardised, which
+> > are getting harder and harder to find (In fact I'm thinking of
+> > making a NFT out of my last 4k logical/physical disk).  But it
+> > didn't alter the fact that the kernel internal block size is 512.
+> 
+> struct bio and struct request use 512B sector_t unit addressing. So
+> does the entire block layer, file systems device mapper etc. SAll
+> users of block devices use this unit. Yes, that is fixed to 512B,
+> regardless of the characteristics of the target device. But to avoid
+> confusion, we never refer to this as the "logical block size" or
+> "block size". We use the term "sector" and reserve the term "block"
+> for the device layer.
 
-The message was observed when blktests block/005 was run on TCMU devices
-with fileio backend or user:zbc backend [1]. The commit 1130b499b4a7
-("scsi: target: tcm_loop: Use LIO wq cmd submission helper") triggered
-the symptom. The commit modified work queue to handle commands and
-changed 'current->nr_cpu_allowed' at smp_processor_id() call.
+Doing a git grep -iw lba in block will refute this.  I think the
+partition code still uses it because it's what most standards still
+say.
 
-The message was also observed at system shutdown when TCMU devices were
-not cleaned up [2]. The function smp_processor_id() was called in SCSI
-host work queue for abort handling, and triggered the BUG message. This
-symptom was observed regardless of the commit 1130b499b4a7 ("scsi:
-target: tcm_loop: Use LIO wq cmd submission helper").
+> The logical block size (the unit used for command addressing) may or
+> may not be 512B (it may or may not be equal to the block layer sector
+> size). These days, most HDDs are 512e, that is, 512B logical block
+> size and 4K physical block size. Lots of SSDs are still 512/512.
+> 4K/4K HDDs and SSDs are gaining ground and spreading.
+> 
+> I agree with Bart's cleanup patches. They correct a non-standard use
+> of the term LBA to refer to a value using the block layer sector
+> unit.  Bart suggested scsi_get_pos() as the new function name to
+> solve the confusion. I think that using scsi_get_sector() as a name
+> would be even clearer about the unit of the values being handled.
 
-To avoid the BUG message at smp_processor_id(), use get_cpu() and
-put_cpu() instead which disable preemption.
+To be clear, I think that using _pos everywhere is at least consistent,
+even if I think it's not very logical, so I'm happy on that basis.  I'm
+just not happy with the attempt to characterise LBA as confusing since
+it's been the terminology forever and still permeates at least the
+partition code in block and predates the logical/physical addition to
+the SCSI standards.  Just say that for consistency we'd like to use
+_pos everywhere ... or if you want to use _sector, that's OK, but then
+update block as well.
 
-[1]
+Historically, logical meant our internal sector size, i.e. 512 and
+physical meant whatever the device returned until the SCSI committee
+suddenly wanted their own versions of logical and physical to cover for
+the 4k block size fiasco.
 
-[   56.468103] run blktests block/005 at 2021-05-12 14:16:38
-[   57.369473] check_preemption_disabled: 85 callbacks suppressed
-[   57.369480] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1511
-[   57.369506] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1510
-[   57.369512] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1506
-[   57.369552] caller is __target_init_cmd+0x157/0x170 [target_core_mod]
-[   57.369606] CPU: 4 PID: 1506 Comm: fio Not tainted 5.13.0-rc1+ #34
-[   57.369613] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 1302 03/15/2018
-[   57.369617] Call Trace:
-[   57.369621] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1507
-[   57.369628]  dump_stack+0x6d/0x89
-[   57.369642]  check_preemption_disabled+0xc8/0xd0
-[   57.369628] caller is __target_init_cmd+0x157/0x170 [target_core_mod]
-[   57.369655]  __target_init_cmd+0x157/0x170 [target_core_mod]
-[   57.369695]  target_init_cmd+0x76/0x90 [target_core_mod]
-[   57.369732]  tcm_loop_queuecommand+0x109/0x210 [tcm_loop]
-[   57.369744]  scsi_queue_rq+0x38e/0xc40
-[   57.369761]  __blk_mq_try_issue_directly+0x109/0x1c0
-[   57.369779]  blk_mq_try_issue_directly+0x43/0x90
-[   57.369790]  blk_mq_submit_bio+0x4e5/0x5d0
-[   57.369812]  submit_bio_noacct+0x46e/0x4e0
-[   57.369830]  __blkdev_direct_IO_simple+0x1a3/0x2d0
-[   57.369859]  ? set_init_blocksize.isra.0+0x60/0x60
-[   57.369880]  generic_file_read_iter+0x89/0x160
-[   57.369898]  blkdev_read_iter+0x44/0x60
-[   57.369906]  new_sync_read+0x102/0x170
-[   57.369929]  vfs_read+0xd4/0x160
-[   57.369941]  __x64_sys_pread64+0x6e/0xa0
-[   57.369946]  ? lockdep_hardirqs_on+0x79/0x100
-[   57.369958]  do_syscall_64+0x3a/0x70
-[   57.369965]  entry_SYSCALL_64_after_hwframe+0x44/0xae
-[   57.369973] RIP: 0033:0x7f7ed4c1399f
-[   57.369979] Code: 08 89 3c 24 48 89 4c 24 18 e8 7d f3 ff ff 4c 8b 54 24 18 48 8b 54 24 10 41 89 c0 48 8b 74 24 08 8b 3c 24 b8 11 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 31 44 89 c7 48 89 04 24 e8 cd f3 ff ff 48 8b
-[   57.369983] RSP: 002b:00007ffd7918c580 EFLAGS: 00000293 ORIG_RAX: 0000000000000011
-[   57.369990] RAX: ffffffffffffffda RBX: 00000000015b4540 RCX: 00007f7ed4c1399f
-[   57.369993] RDX: 0000000000001000 RSI: 00000000015de000 RDI: 0000000000000009
-[   57.369996] RBP: 00000000015b4540 R08: 0000000000000000 R09: 0000000000000001
-[   57.369999] R10: 0000000000e5c000 R11: 0000000000000293 R12: 00007f7eb5269a70
-[   57.370002] R13: 0000000000000000 R14: 0000000000001000 R15: 00000000015b4568
-[   57.370031] CPU: 7 PID: 1507 Comm: fio Not tainted 5.13.0-rc1+ #34
-[   57.370036] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 1302 03/15/2018
-[   57.370039] Call Trace:
-[   57.370045]  dump_stack+0x6d/0x89
-[   57.370056]  check_preemption_disabled+0xc8/0xd0
-[   57.370068]  __target_init_cmd+0x157/0x170 [target_core_mod]
-[   57.370121]  target_init_cmd+0x76/0x90 [target_core_mod]
-[   57.370178]  tcm_loop_queuecommand+0x109/0x210 [tcm_loop]
-[   57.370197]  scsi_queue_rq+0x38e/0xc40
-[   57.370224]  __blk_mq_try_issue_directly+0x109/0x1c0
-...
+James
 
-[2]
 
-[  117.458597] BUG: using smp_processor_id() in preemptible [00000000] code: kworker/u16:8
-[  117.467279] caller is __target_init_cmd+0x157/0x170 [target_core_mod]
-[  117.473893] CPU: 1 PID: 418 Comm: kworker/u16:6 Not tainted 5.13.0-rc1+ #34
-[  117.481150] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 8
-[  117.481153] Workqueue: scsi_tmf_7 scmd_eh_abort_handler
-[  117.481156] Call Trace:
-[  117.481158]  dump_stack+0x6d/0x89
-[  117.481162]  check_preemption_disabled+0xc8/0xd0
-[  117.512575]  target_submit_tmr+0x41/0x150 [target_core_mod]
-[  117.519705]  tcm_loop_issue_tmr+0xa7/0x100 [tcm_loop]
-[  117.524913]  tcm_loop_abort_task+0x43/0x60 [tcm_loop]
-[  117.530137]  scmd_eh_abort_handler+0x7b/0x230
-[  117.534681]  process_one_work+0x268/0x580
-[  117.538862]  worker_thread+0x55/0x3b0
-[  117.542652]  ? process_one_work+0x580/0x580
-[  117.548351]  kthread+0x143/0x160
-[  117.551675]  ? kthread_create_worker_on_cpu+0x40/0x40
-[  117.556873]  ret_from_fork+0x1f/0x30
-
-Fixes: 1526d9f10c61 ("scsi: target: Make state_list per CPU")
-Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: stable@vger.kernel.org # v5.11+
----
- drivers/target/target_core_transport.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 8fbfe75c5744..9ed5d234acd8 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1415,8 +1415,10 @@ void __target_init_cmd(
- 	cmd->sense_buffer = sense_buffer;
- 	cmd->orig_fe_lun = unpacked_lun;
- 
--	if (!(cmd->se_cmd_flags & SCF_USE_CPUID))
--		cmd->cpuid = smp_processor_id();
-+	if (!(cmd->se_cmd_flags & SCF_USE_CPUID)) {
-+		cmd->cpuid = get_cpu();
-+		put_cpu();
-+	}
- 
- 	cmd->state_active = false;
- }
--- 
-2.30.2
 
