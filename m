@@ -2,115 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1128C43460
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 23:32:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BBB9C433B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 00:02:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 93ED6613C0
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 May 2021 23:32:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2886E61405
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 00:02:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347098AbhELXdx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 May 2021 19:33:53 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:2030 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236480AbhELXYb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 May 2021 19:24:31 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 14CNIWtc030569;
-        Wed, 12 May 2021 19:23:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=zwbYixYUXT8/7XAkgJ3HWr5gpF5ALyKjA88iCuFqMwc=;
- b=A/y+WSkcBMI1pyQWac0d6XAsstQFw614JKNj8eM4al5x5mwwmiitkMOOn19qyNg4dtD0
- HlrJLx931iIhk4DccFu8tieXRY9GhA+E5crvzhgcaeBPFw4wUUTOHB1pehiB6UhXpfrp
- Bx6thxoPkPmSByZFOSBMjW99zrn8qm1gRBS04Voz4hL4QpgHLFqbTvZw7HgE87/oFkme
- RF+pRVIGh32N07tJ7nTpq/XbxYATVuR+PPVj5eUlCQKkGNFhP/U8eXtcUyl0phUggKca
- YcAAcazIEyRYCxcN/qUh36EMIE4pHace99eeRStMd0vi/wnpThAdDG4ddQkmiCfrNTGa hA== 
-Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 38grk102pe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 12 May 2021 19:23:06 -0400
-Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
-        by ppma04dal.us.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 14CNMFEP021504;
-        Wed, 12 May 2021 23:23:05 GMT
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-        by ppma04dal.us.ibm.com with ESMTP id 38dj9a1383-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 12 May 2021 23:23:05 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 14CNN4TV10092872
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 12 May 2021 23:23:04 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 5CE5978060;
-        Wed, 12 May 2021 23:23:04 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B1F657805F;
-        Wed, 12 May 2021 23:23:02 +0000 (GMT)
-Received: from jarvis.int.hansenpartnership.com (unknown [9.80.227.209])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Wed, 12 May 2021 23:23:02 +0000 (GMT)
-Message-ID: <5967066117ed90e6f72bee006ee7e66722a5d1b3.camel@linux.ibm.com>
+        id S233444AbhEMAD7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 May 2021 20:03:59 -0400
+Received: from mail-pl1-f173.google.com ([209.85.214.173]:40913 "EHLO
+        mail-pl1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1352722AbhEMABq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2021 20:01:46 -0400
+Received: by mail-pl1-f173.google.com with SMTP id n3so1277352plf.7
+        for <linux-scsi@vger.kernel.org>; Wed, 12 May 2021 17:00:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=RZwS5wo/OU2SfD1LoDJRAA51hmhKPQ7ORt1sDee9a5Y=;
+        b=U/UDBdtE+59ALtW9iAPtndbF5rGwkDKwJzCNlSSh0d0q8yCMMzhD0LjvMSOZGjtDUk
+         EClSBxjnz08cDVyh+Uqyk/UzwCIhIB+PHXpfpurePRo8+WZy2eAVysSnUGCsI8bPNx+K
+         4kVqjmUdrQjf+OsSqYebpIhor1iDKV7ywG2/UgtwoH+GRVlUXQgY+gdU1cbyBdNKz840
+         1+v8lNjd3sho8c8T7lcNS5fpusUaMQn0Gu5Hd1saHRq2t3FxXHUusOGjmXeiHl9nBL1d
+         8KOspb4ONjCf+nBOv92LcFQcIjrGxGARnlM97tvPVTyarF9QUib9FLlEeaWO5PfVKCqN
+         eh7w==
+X-Gm-Message-State: AOAM532oFGsNh6/wIQKNtbGvdR78FSuuw5OoMLxYyy76M9kyiw6Ilboy
+        9q4w8H1DNVwla7vP665TZpUWTs2lgCzvUA==
+X-Google-Smtp-Source: ABdhPJwo16hoCU2NW2vPjNXFUT0zeURe/87vvaLLBIQgX1WbBobcYq0lFEhMtNVcmEAuaoGXpiz6GQ==
+X-Received: by 2002:a17:902:6bca:b029:ee:b72c:5585 with SMTP id m10-20020a1709026bcab02900eeb72c5585mr36666458plt.46.1620864037032;
+        Wed, 12 May 2021 17:00:37 -0700 (PDT)
+Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id g16sm5327939pju.17.2021.05.12.17.00.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 12 May 2021 17:00:36 -0700 (PDT)
 Subject: Re: [PATCH v2 0/7] Rename scsi_get_lba() into scsi_get_pos()
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Bart Van Assche <bvanassche@acm.org>,
+To:     jejb@linux.ibm.com,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, Bean Huo <beanhuo@micron.com>,
         Avri Altman <avri.altman@wdc.com>,
         Asutosh Das <asutoshd@codeaurora.org>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org
-Date:   Wed, 12 May 2021 16:23:01 -0700
-In-Reply-To: <b27a3c7d-1c10-faaa-4c33-273a463faa80@acm.org>
 References: <20210512200849.9002-1-bvanassche@acm.org>
-         <96a253f8776a7736b480bdf190840440ffb4e53c.camel@linux.vnet.ibm.com>
-         <b27a3c7d-1c10-faaa-4c33-273a463faa80@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+ <96a253f8776a7736b480bdf190840440ffb4e53c.camel@linux.vnet.ibm.com>
+ <b27a3c7d-1c10-faaa-4c33-273a463faa80@acm.org>
+ <5967066117ed90e6f72bee006ee7e66722a5d1b3.camel@linux.ibm.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <8d72e969-44e9-5453-70fc-c9cb0779634d@acm.org>
+Date:   Wed, 12 May 2021 17:00:33 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
 MIME-Version: 1.0
+In-Reply-To: <5967066117ed90e6f72bee006ee7e66722a5d1b3.camel@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: gfFJYPFQeJwhQiBJ2riGl7kaOV-z5pSR
-X-Proofpoint-GUID: gfFJYPFQeJwhQiBJ2riGl7kaOV-z5pSR
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-05-12_13:2021-05-12,2021-05-12 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- spamscore=0 suspectscore=0 malwarescore=0 clxscore=1011 phishscore=0
- priorityscore=1501 mlxscore=0 mlxlogscore=657 impostorscore=0 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2104190000 definitions=main-2105120150
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2021-05-12 at 15:20 -0700, Bart Van Assche wrote:
-> On 5/12/21 3:10 PM, James Bottomley wrote:
-> > On Wed, 2021-05-12 at 13:08 -0700, Bart Van Assche wrote:
-> > > This patch series renames scsi_get_lba() into scsi_get_pos(). The
-> > > name of scsi_get_lba() is confusing since it does not return an
-> > > LBA but instead the start offset divided by 512.
-> > 
-> > OK, I'll bite: given the logical block size for all drives is 512
-> > why is logical block address not the start offset in bytes divided
-> > by 512?
-> 
-> My understanding is that LBA = logical block address = (start offset
-> in  bytes) / (logical block size) and also that the Linux kernel
-> supports  logical block sizes between 512 bytes and 4 KiB.
+On 5/12/21 4:23 PM, James Bottomley wrote:
+> No, we support physical sector sizes up to 4k.  The logical block size
+> internal to the kernel and the block layer is always 512.  I can see
+> the utility in using consistent naming to the block layer, but I can't
+> see that logical block address is confusing ... especially now
+> manufacturers seem all to have aligned on 512 for the logical block
+> size even when it's usually 4k physical.
 
-No, we support physical sector sizes up to 4k.  The logical block size
-internal to the kernel and the block layer is always 512.  I can see
-the utility in using consistent naming to the block layer, but I can't
-see that logical block address is confusing ... especially now
-manufacturers seem all to have aligned on 512 for the logical block
-size even when it's usually 4k physical.
+Are we talking about the same? Just below the code that I included in my 
+previous email there is the following line:
 
-James
+	blk_queue_logical_block_size(sdp->request_queue, sector_size);
 
+where sector_size is the logical block size reported by the READ 
+CAPACITY command and has a value between 512 and 4096.
 
+At least the LIO code supports reporting logical block sizes larger than 
+512 bytes. From drivers/target/target_core_sbc.c:
+
+	put_unaligned_be32(dev->dev_attrib.block_size, &buf[8]);
+
+block_size is configurable through configfs. From block_size_store():
+
+	if (val != 512 && val != 1024 && val != 2048 && val != 4096) {
+		pr_err("dev[%p]: Illegal value for block_device: %u"
+		    " for SE device, must be 512, 1024, 2048 or 4096\n",
+		    da->da_dev, val);
+		return -EINVAL;
+	}
+
+Bart.
