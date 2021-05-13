@@ -2,226 +2,196 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 726DCC433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 06:11:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A10BC433B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 06:45:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3604C61287
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 06:11:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B23061422
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 06:45:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231256AbhEMGMP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 May 2021 02:12:15 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:27007 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231232AbhEMGML (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 May 2021 02:12:11 -0400
+        id S231411AbhEMGqw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 May 2021 02:46:52 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:15054 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230063AbhEMGqv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 May 2021 02:46:51 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1620886262; x=1652422262;
+  t=1620888342; x=1652424342;
   h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=H/5aaXKs1rqkHdAMd+mtYbf+7jLlIes5/VTKqJ5yGo4=;
-  b=d0wlMqNeQbis31WMaeDi3K2qTbWVuFDPTFZ/KlUjOz0VjzBBU+d1983c
-   Z0Tr/V4YKgw66EurRlR9gAn0Ev7IZBenb10I+ni40UBKt5YAd0O0BiKOw
-   PnnyaBKuqkE2HtptFTzZfZLtWm3/bZBeX6PQb/uGiwlrYCi0DCzXtqckW
-   VqWjeiWZkbbNZcBhH/HFg6P/+oZEpnCJuKnMMAAqxX4ipdC4fXQf15xDm
-   yNRePNnUvdCAAREPLeP68N85hptF/X/RPW86VLz/bld9qxhmrXcEdm3s6
-   Hw8GT4gKpIpfRXwvDpzHFA3fd7g9aeCutjXtCIvbaqWupHryoPk9DbiSe
-   g==;
-IronPort-SDR: Hy87sfDWInPPbBGf1efm+CTWAy+R9RPvYSh464KFKJwxylAgTmWNITJyjcQ9o/73SDqQF/du0E
- TKvDx2nNrdtzPdLYSFaGoIROwiuY2ZCvhpxEg0kwaoXJ0UCoBH7toEDSVxCjE6uidWh5YFaEBk
- aKYpbr1pzpXOjNfhbvT8i0+yLJkpC39MxWnznqahdkmyCqHFDn3TQVK27z635OSJX6jo2xA1Ck
- J4RDkdlpZQlglxrvP9v7G7wrchkEx7MvDZzUfcRtCDwnH2akIi/3c5vqkuJimKSU+HdXNZesIX
- Ra8=
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=CU9FN4kJqYuOxqEZ01+it9PU+UOkG0nCuWXILXQbNrA=;
+  b=HWkrcSo1mWyrTYFH+IDq/RfRn/5IVIOuSZW1uJ4QdRhzpJwf9iVDwwlp
+   uX3jFRz5QU16hT9RbAAoOLa8Fq9v7zW2N9JV5wUKs/BB+pVDOOefR1s5i
+   OyZR4x7ZefuoULtCCfMcE5UIO040yqm9AwoNLJ3jFHn+uEW7T7hp7j8/H
+   OIPjkElQ95l+dYVBf4caQZRxh1KPZN1jptAmizefy77zqY0NjObtMz0cu
+   fEsXtNPIfC7Vr86IQzFHPyt6FrNW8G7jukHijuTmcRveWgMZLQgaPypK7
+   YE32H9l/ttLq5DnoFy4yv1sVrq5251UUWiR/3q1xxvXYu4HddwMjiy3WM
+   w==;
+IronPort-SDR: BenIwCQeFCLlSBu/MMtBkw0Jv2nvXJbw/02Rw8XmEEiBL7yBGNpbNl3ULKLHOxObx40xjEq5yc
+ gL2QnmcwizcI2h/ZJGUKDI3IdrcOWQeLhrvQd5ph9tgT0orokOYFW9Eauo8uRiSUKNuHPuFk0K
+ zShQct/Kj3gHkLfvuPkye2MGB5tETaaXHJZyTikgRaxETfKE9ita26HRx6vh+cHyxSpC9MErZY
+ L+t3YL8HyTQsOa+DAS/3U6abXQ4Fssjpd263edaLZbEiZhmGMOUfT8Jep97n1nT3xcXzmi3DcO
+ pOw=
 X-IronPort-AV: E=Sophos;i="5.82,296,1613404800"; 
-   d="scan'208";a="167326336"
-Received: from mail-dm6nam11lp2175.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.175])
-  by ob1.hgst.iphmx.com with ESMTP; 13 May 2021 14:11:00 +0800
+   d="scan'208";a="168566453"
+Received: from mail-bn7nam10lp2106.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.106])
+  by ob1.hgst.iphmx.com with ESMTP; 13 May 2021 14:45:40 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=DCby8hQGeQYRU9DYJ8eJ3Z6jXVSVMjl0hsEIL3nShBd08b395l5cKR3eD1fvOLFd87vMtOoqMJCCtBfYYppk1hQ1c1SVF6plvs/D2I9cfznNbYqYkBGTbN6U+eQoolJK0IX2n9F0G7UJvH+3hBL8HddXNkcxYvf+Iy1bKyuKPiqgCL28zVdgD+sKreAgWL2LAfHW1nABwYhhUTZChpD8BOL7WtBLiG6VpX/bezp87TSaH7zWbJrvuAWyjt6yd50WnzybD7t5SZgWbV5+MPKO/F1SUdvXx6iIy7KRJDTLd36pakXaeGQAQDbJ53Mo9YB7SNtCc6Wz829hZB655cOlCg==
+ b=F44186RQV+z1Gp631JisTNNlO8fz5Pma+Qz8m2T56eeVDsZUUQOCxzX/7bOiL6Q0vbVlXNN1SHU/okZsUkTHW+vM5LqM3QhdUHB+U+iNcCzOIdw8qIgu6j5UBqJ6X8KTyT5Ur4yYSyj2Wmmtuq2dd50GF/qn+BaTFp/A0bzMKh0VjnH7crfzpnf3VkbOJTrPBq0v5S89CbOYs+/PDoMd5a2iI6zfRok2R4zWJ4oeBhujjsoGda7nbfqo8ZXHA8fJMNgqYWIU5KbD76u8HT5nXCgGHviqa3xWu67QqV5NsZWLr2Bk8cJSCUc/VjI64hptitjfgJAXfYJD1v/d4F47BA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9JuSl8yl6zKH0Fp+4/eV7FLAY6WjCKCKBuv6RucAtMI=;
- b=fDYeR6tD6pizNzlcGMZCkqgWVID6s4WVPOhBddbar24WcO6d1nHbyoxDUbAjAmVsdtlZRuTrt1sKjtRJp48QaqT9kfRGqZSoR7Pv8BTcz/65XRVbGvAXng7za4NWU1Lpgz7KMr9ywBFDbTUCYHzAyQm+Q0ZyQnDkqy+ku4LFwl8gcWsLRtsMyijxfmaSrG4h2TIRrw4yqU83YAH+AFJqdKEDSBOOXIuv9NCH1U5DiVpFFrirTLy5w0CQGAj475Tcp74uFhu2yhubnXpDMiplERQze5CRJ6K+RyuK2SK3qtQ//+5firN2kjGaeEVHF19on0bxw2tlqe3Zcw2JBWPEZw==
+ bh=6+ry27EoqTNFsee6FNEEbvb4/3hNHS3VXiJYAVmUh2w=;
+ b=cbx6uOXlavDtP0xYIP2T3jeEFlGYkdx/7muQueU9/095ySKBS39/5lP8Z1x2DB7uRKUnBLCAPg7qRJmbGdaSfT8mTgyUo5hLvcm3sUwW+Y8A9HB4Mi3ocFxSlH9sKmkACSglYr2W9ebUuPnm7G2n00ExRh8SXd0W4SME0zwgXU+HeG3F7oNrDEVTBfKfqAmbYuH7dK3GhthIJW9rvnhq3P8Z4aYZ3r55gLSqkICk7H3XZvko4dW3Dt12yXtF967fMy8wE+JuM2jzXquP0l6Xb78OR4NqY6YbewBKWPDN0/5mDHLzSi5djO5NTiacKwVUOHP2CogRVPrztXu0BhyKWw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9JuSl8yl6zKH0Fp+4/eV7FLAY6WjCKCKBuv6RucAtMI=;
- b=O5HJdtpCQKRvzdyWrS5XhndeIcyJhgEEFXjzTBKYO2mYrsok2fW41sKlOyhvewbhfKTfIr1D2a+7/g0D2ljaEg+6JYfomKUwKPe2XtLSN2CROIueWTqk+0f2QgRISVSbVUw3qEILFT4HMzLrAqsTxQTA3DooorLFfPS15MZkvQk=
-Received: from DM6PR04MB7081.namprd04.prod.outlook.com (2603:10b6:5:244::21)
- by DM6PR04MB5242.namprd04.prod.outlook.com (2603:10b6:5:104::31) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4129.26; Thu, 13 May
- 2021 06:10:58 +0000
-Received: from DM6PR04MB7081.namprd04.prod.outlook.com
- ([fe80::64f9:51d2:1e04:f806]) by DM6PR04MB7081.namprd04.prod.outlook.com
- ([fe80::64f9:51d2:1e04:f806%9]) with mapi id 15.20.4129.026; Thu, 13 May 2021
- 06:10:58 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     Jaegeuk Kim <jaegeuk@kernel.org>, Bean Huo <beanhuo@micron.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Can Guo <cang@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH v2 0/7] Rename scsi_get_lba() into scsi_get_pos()
-Thread-Topic: [PATCH v2 0/7] Rename scsi_get_lba() into scsi_get_pos()
-Thread-Index: AQHXR3kgi8EHa43bd0iJGbipmimK0w==
-Date:   Thu, 13 May 2021 06:10:58 +0000
-Message-ID: <DM6PR04MB708144BAEC4BE9C5EB052866E7519@DM6PR04MB7081.namprd04.prod.outlook.com>
-References: <20210512200849.9002-1-bvanassche@acm.org>
- <96a253f8776a7736b480bdf190840440ffb4e53c.camel@linux.vnet.ibm.com>
- <b27a3c7d-1c10-faaa-4c33-273a463faa80@acm.org>
- <5967066117ed90e6f72bee006ee7e66722a5d1b3.camel@linux.ibm.com>
- <8d72e969-44e9-5453-70fc-c9cb0779634d@acm.org>
- <0c2d87fde65e40f34914e7555d3971f7b2c8f28b.camel@linux.ibm.com>
- <DM6PR04MB708186DD35EB12B26BC9CE60E7519@DM6PR04MB7081.namprd04.prod.outlook.com>
- <e7f37452622d4203f7246747b858f94a5e53b664.camel@linux.ibm.com>
+ bh=6+ry27EoqTNFsee6FNEEbvb4/3hNHS3VXiJYAVmUh2w=;
+ b=epox0nHDVLrTKZRe7fZ4FMmmIPdVOnpvHF6kdvkiiqU7pDgeXDBL736mP8wuoIK61Ej2CLePiSzkdNPXjxzVqeBww1gABwA1AASrvNioFOgORWq7+e1uq5JmUxBvsUOjyIOPOZ0Dvuo2mPPDTkKkubvp1+A12YA+lBk3axoWGPw=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (20.179.166.71) by
+ DM6PR04MB3897.namprd04.prod.outlook.com (20.176.86.154) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4108.24; Thu, 13 May 2021 06:45:39 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::ed2d:4ccc:f42b:9966]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::ed2d:4ccc:f42b:9966%7]) with mapi id 15.20.4108.031; Thu, 13 May 2021
+ 06:45:39 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
+CC:     "wsd_upstream@mediatek.com" <wsd_upstream@mediatek.com>,
+        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+        "alice.chao@mediatek.com" <alice.chao@mediatek.com>,
+        "cc.chou@mediatek.com" <cc.chou@mediatek.com>,
+        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
+        "jiajie.hao@mediatek.com" <jiajie.hao@mediatek.com>
+Subject: RE: [PATCH v4] scsi: ufs-mediatek: fix ufs power down specs violation
+Thread-Topic: [PATCH v4] scsi: ufs-mediatek: fix ufs power down specs
+ violation
+Thread-Index: AQHXRxX/qO2IQ7o8EEGQnGwyYbUniKrg9p3A
+Date:   Thu, 13 May 2021 06:45:38 +0000
+Message-ID: <DM6PR04MB6575083B2B58587AC14B6F9FFC519@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <1620813706-25331-1-git-send-email-peter.wang@mediatek.com>
+In-Reply-To: <1620813706-25331-1-git-send-email-peter.wang@mediatek.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: linux.ibm.com; dkim=none (message not signed)
- header.d=none;linux.ibm.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2400:2411:43c0:6000:dbc:763e:6fbc:5b5c]
+authentication-results: mediatek.com; dkim=none (message not signed)
+ header.d=none;mediatek.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 3f6b7cfe-9e90-429b-59e7-08d915d5e02d
-x-ms-traffictypediagnostic: DM6PR04MB5242:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM6PR04MB524284B9AF0AFFEC3773A9B9E7519@DM6PR04MB5242.namprd04.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: 461b15df-2a4e-4358-fbfe-08d915dab86e
+x-ms-traffictypediagnostic: DM6PR04MB3897:
+x-microsoft-antispam-prvs: <DM6PR04MB389745B9106822E8839B9D8FFC519@DM6PR04MB3897.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-ms-oob-tlc-oobclassifiers: OLM:115;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: pgY35T2CiImGQurSy02VcSxUfspArYhxX7LFFHuPuzy8HFFxcM/Vs9RL9U5k/Iwd+GBetma/mrnNTLCuc6v5y5MstgZZ37E7okYavabrkbjWWlgxYUCQ16ZiROdXcat8k4iUw/PraSWEtTQJFHwDpsw1Bheo/6fRb0AVKGE2N0kZQRpXcQnYss6l93f3MrGciOg1o3P4y6sByP2mAy5z8ui1UshKOHUuWxkw5aoFfFg7kXUBFhlXXFX1HPbXhhVippUpCgMtj79xYUGhoNXu291nEFxk26RBlMSN6VJ1J0h5AbTyktArcIbpyCGPz1S/FqUqeHJziNTPQ5dDomZjSWE3tdwDMyC8mQoQhivmRwmQ5xLDiZ1oeqnSluAKDlK0Xwp8zPJRCm9Tme39f34XhH2/5Rpbuk21r0gDZ+k7ds6kZrZxzpiLQkMgBWFNKm1qqLg+U6HJMi0GpYzVlENd8F0f/qcG57DIznyyCyycYM5vwyNd7rz9HA2tYNcJhAZR6bh/L+1KDyN/tYUvQhnaSoUYEQDBY/Tv+w/nrxfsR2IoIiEbZljgZX4uc7+PcQAnC7OslXWAyNY9y6ZQpxs7r7ck1/NKBJgJOTevoSsiMeo=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB7081.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(376002)(396003)(39860400002)(366004)(136003)(5660300002)(76116006)(33656002)(66946007)(91956017)(53546011)(316002)(52536014)(2906002)(7696005)(110136005)(186003)(8936002)(122000001)(6506007)(83380400001)(9686003)(71200400001)(478600001)(66476007)(8676002)(66446008)(64756008)(38100700002)(55016002)(4326008)(66556008)(86362001)(54906003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?ufWp+0MhfScR+3qHK3pNtIevyg9756qBQ5bAL7/1iwnyL3p5xqzvl3LqRjEf?=
- =?us-ascii?Q?731Q5mmiShPeLVxVyNbLCMKcICkjgn6u5EsPWdUWYQFtROyRPbaDUYfmHAWp?=
- =?us-ascii?Q?s0d9d4/xo4Y6VjjvUsk1FZWT9egBBIQ2jQWduw5/y4yqmdd9WK6C2LZJIHbS?=
- =?us-ascii?Q?WQUtJPNZgN8++QuOThanTQ9sIWnvetR73cdC9fqLFqxUErf8Wltlwcc8Gedp?=
- =?us-ascii?Q?KbXXWRmdItjdwz+4/OL3dM0l2NWAs6xTpCqzNOpsQUe0y1eWHX9ZxBLidsDw?=
- =?us-ascii?Q?QoDxeg0LmADATmhmCKNidocy2V28XjPcQ+goFMkBDFdE2NXOpMv+W2zhMNVB?=
- =?us-ascii?Q?fr6WdvEt8sNbVkPbQljuqs3p7bBmy+PjsKwCQJ9CdsMbsltj5DTxHSd7tnuw?=
- =?us-ascii?Q?wtj6F/XgXPtt4A+KeCHhRkmKTkJ5+CG9hJldTn9BSDBfiUREx/LBmSCOK0WE?=
- =?us-ascii?Q?vu0TKjck2eOotsU3zHh7bxNTd+i4ZUkZN8GMTLEeqHMoetbLbfNizXHkfafJ?=
- =?us-ascii?Q?fJinxT6ChsXhB+EDoLZHoyOy9QQqvJtqFhVs2oASODzgTjX7tzmTz5LMcL/j?=
- =?us-ascii?Q?3cRDqpmfEiJrphAsnQVyyUGhCb7nm9TI43wBTpiiZlIO4b1PQsbFGcA41u7Z?=
- =?us-ascii?Q?oCqusAIfpv1TECpmimPDUwkr8l6w7QZWVq/6HakPetKcvA52oOtxHedeIr0+?=
- =?us-ascii?Q?RgDw5KoUO15vJ2NAj749nC1yGcmGQKEHaYRB55Vsiqd9oblOJHKXGqOwLCFZ?=
- =?us-ascii?Q?D4Dl54N8JgA+42Lvr4fZeprJXRS4ZVwnK3tSppFDiEgPZRcqrrtcWE1vf95V?=
- =?us-ascii?Q?jmhA1HZZFivaBAUxQlGZTTRK6fyAP140IyCXsd+CqT38Jc93T1OhLmPJSvIn?=
- =?us-ascii?Q?3hN98quOs0vs1+GDmzzHDsAUUb/r/IGSntnyl8fSGje2LArfe/7aSeUlRV4H?=
- =?us-ascii?Q?9SYUlTFuXweYbtggOA14S0JDxtXTG0/rXNi7cJRcH8ZygF7RbcT9HckUNK5H?=
- =?us-ascii?Q?tfu+vWBOa69fx9NVOazuPLFo5TXS173XpK7FD5TT3A0ysP6iHnYe6Zq02brp?=
- =?us-ascii?Q?+y8ZEF5qxZYzldHECW6I/uMUHGeRTsT51iakuO9638NrpTrPwbNqbQ5il3NI?=
- =?us-ascii?Q?7MZ4jDz2uj8oUoDghhYTyRc2TNPUcRz9CxAZvL6DK/Eb4m4Or4EiPUfmc4XF?=
- =?us-ascii?Q?G3Ctp/fYCABdMzw7EPg94BCOwAYT38XW0NGMzZt3bVXtBB1d1pW25LN6HwAX?=
- =?us-ascii?Q?DVAjRnLhSvt9tT3bgotFTaLuUa6Hvld+HTtzHPf57WlErU1y7wi22KRLE3qu?=
- =?us-ascii?Q?SWOuB6VUEebjlmk560AYn/F9mAjCvs+lNjpiXKhbwiJOl/16ZNiBidrw7K46?=
- =?us-ascii?Q?xQamP6PglUfbK7ncBL+3tcPwrGRQ3XekTiBMpeBrXDDXGLGaVA=3D=3D?=
+x-microsoft-antispam-message-info: lDb+2sxWxIJOFAx92ubVN0bCmv3YAGNIaOIVDlzBApA7iSzOwF7vLRAyqYfBe4xObEqwWLPGnqB0+wrC9p2Y5qgHRj+3mSxbQVhJROIqUXKmxLYkigGy6PpzvtRt+l0olvvVgGPTV6jsN3iDjk8NMy3ZctZwD0HFnNxBc5qousiu0yfTgmuI7vszAK1mH3EAkDdAqLwQFPaWldAMyKFGR+VIQH9rKxL3EYwGZa4HBU1oYzK4BIfzeJHODTB9Xs6hV2soaVhkOY5EN/gkBgN9diwc2kwz6LCyCnI446uh9CKvRf8LfMCCkRr7ca5JABTSiKi3msEshbP4Om1+rhGyo7BlivOL7QZzUEv7kFYigZd5Vi1U77HMm9GpI78hm/3I0lnlIdh/5bVRd2+v02e3XhSmg31HiuJUmlcngFYDyPCw52ap7zuys8QKU2vXcUSUBBtAY7ag1s8UNzON/1UgyLM9VSYsOpRG2/R0vKLqZaoD/DJegtLSR4Wks0pITrTX148zIRZ+3ZDYFHaHlA24mhmlv/NOWd6bkxvEYycBH4GPmYAocJbS28SHQ3MqyMdXT4B42OXiNAz7ku5Tgvzb057KoyQt2DUzj90sLzLZz1E=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(366004)(396003)(376002)(136003)(39860400002)(316002)(6506007)(7416002)(186003)(110136005)(54906003)(5660300002)(4326008)(2906002)(83380400001)(26005)(71200400001)(38100700002)(55016002)(66946007)(9686003)(478600001)(66556008)(8676002)(66476007)(76116006)(64756008)(66446008)(52536014)(122000001)(8936002)(86362001)(33656002)(7696005);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?u2CcR7CsD/xlT7X3skJfpcED6DmgqTrjsyC2PoYi4hrqxWGGWWaPy0WQErmq?=
+ =?us-ascii?Q?h4sdWyu30tkuQpZiQA/QhwgYLDpjdv6Fe+Je/Cjq89giD5mJFvjxnPJJTlAa?=
+ =?us-ascii?Q?RBoCxYPTmQJaEVnkDEqBThFmrs74mXqqd2aIYWFZDMQtxU+9YuNq/Eu9GDHu?=
+ =?us-ascii?Q?2VYNT9sTBy1VXmhd7i7RkjkFGDT461h0VU2GUsS0O5GdNgDwZuX3JffckjI9?=
+ =?us-ascii?Q?GKcEwAxoHlymlCoWaDF8SOyCqfbUlva0M46XoP+s10rp3U+g2TH/ow6/EuhF?=
+ =?us-ascii?Q?MSp33odDzuDWejqlttx9BUiMBHotrlBHFhrSye/BxWOk6eYSpsNhNU8HHbnJ?=
+ =?us-ascii?Q?yqMW8uzQczbDefJIq6skrt5aLdPuFuGCUeOoxy1GtN9t8g3RFojYQT1IBQnW?=
+ =?us-ascii?Q?yuSzqX/s2I4z/zKfuoPEZ3Mf08DG5Ij4jboNeWbBBghr9i9VcmXVibUh8PR2?=
+ =?us-ascii?Q?QUu/7Oku592PN6Vmafp33zgBmsHMZJnMbbGDN9ylbukKSTwzIFL+QPcUad9s?=
+ =?us-ascii?Q?ZDOgajrQO80pUpSRQWCBfPOJUphRuhMBkwjO8NPQtDcG4DquY6/EAJ4WKiZx?=
+ =?us-ascii?Q?NGMY4DGNGTGjFkuLjY6pZn5M+sUTgcy9O24DOZ1urw4PQMg0FPjQS5HoP77P?=
+ =?us-ascii?Q?lVGfvdSvZWmvR/gvS9apOBQMrfeMKv1APPH/7yeO47pI7rDCEkeRy7bKvzhe?=
+ =?us-ascii?Q?1zaJ00dhGXxChWtESztAg3YaTibjMjxMbAKtv7GkZnX+uzB/HYZDqo1+9IuX?=
+ =?us-ascii?Q?zo7lNyzjOlYc2e0gTiKpiEedx08S+6At4NuAavwpV2Joc56BqfqI1WbSgDeN?=
+ =?us-ascii?Q?FqzgzrYHfIT0NZzIn/fR+DXVD1zU3udo3c9FeN5LR4BnUAytkIU4TJPBkjGh?=
+ =?us-ascii?Q?fO6e3x0cNSJJhvr93MzjJ+lAZoL6ZnxZ7nul7M/K+T/CLpOJrs3+5+MY1jVS?=
+ =?us-ascii?Q?a8VITPPbvkBJSv09nvXdt2FpIKjuJjuH5WOKfYBJhrFhsH5HMtuAb2nIR85x?=
+ =?us-ascii?Q?tLJC08zu5aXwu3LRVSZpeS41jgl3Qq6HJ031deKm9wE+1IivXt3ceeT78bZN?=
+ =?us-ascii?Q?MZ5DVjc1oI5fEoQIqcix9zqBp1p/B8blj/j0IblJCu8kntqhZGp8Cf1UHYV/?=
+ =?us-ascii?Q?gtAdf3OIzkw4SKx+rEqHPYOYjGIdj5EFfQ8mSqme12awOjq81FQF9Qe2OdJx?=
+ =?us-ascii?Q?0zMG/HabQA+/XPP/4ocWrvlTVRF8PlwbejxtpG0lzA7VHAdSXZxapfuVUExW?=
+ =?us-ascii?Q?HHWI4S/M1VarwJmgZN6H8aemjSE8yQ6B61JMZqMdzde6Fs9qc8JSZfAcRJ0g?=
+ =?us-ascii?Q?wwyNtAm0JyXqXQND0Ih6d1ie?=
+x-ms-exchange-transport-forked: True
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB7081.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3f6b7cfe-9e90-429b-59e7-08d915d5e02d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 May 2021 06:10:58.1572
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 461b15df-2a4e-4358-fbfe-08d915dab86e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 May 2021 06:45:38.9581
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Qxs4y7XPgWKLXI2tL0fzBBOGNWssEk5ka+SjFMbYZ6dIW/sx2BN/mUdofo8WQrb+qQocnzcDwZHp1aQltNIYtA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB5242
+X-MS-Exchange-CrossTenant-userprincipalname: U08SbY8OXOjy7PCAO9kJmVN6BkFkG/51nuXxfHSW1SwV0a+WcVmH+v5cERvSUJ6QY0pJzZA9qyjpLhcozV8ePQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB3897
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/05/13 14:42, James Bottomley wrote:=0A=
-> On Thu, 2021-05-13 at 02:18 +0000, Damien Le Moal wrote:=0A=
->> On 2021/05/13 9:14, James Bottomley wrote:=0A=
->>> On Wed, 2021-05-12 at 17:00 -0700, Bart Van Assche wrote:=0A=
->>>> On 5/12/21 4:23 PM, James Bottomley wrote:=0A=
->>>>> No, we support physical sector sizes up to 4k.  The logical=0A=
->>>>> block size internal to the kernel and the block layer is always=0A=
->>>>> 512.  I can see the utility in using consistent naming to the=0A=
->>>>> block layer, but I can't see that logical block address is=0A=
->>>>> confusing ... especially now manufacturers seem all to have=0A=
->>>>> aligned on 512 for the logical block size even when it's=0A=
->>>>> usually 4k physical.=0A=
->>>>=0A=
->>>> Are we talking about the same? Just below the code that I=0A=
->>>> included in my previous email there is the following line:=0A=
->>>>=0A=
->>>> 	blk_queue_logical_block_size(sdp->request_queue, sector_size);=0A=
->>>>=0A=
->>>> where sector_size is the logical block size reported by the READ =0A=
->>>> CAPACITY command and has a value between 512 and 4096.=0A=
->>>=0A=
->>> That was for devices from before the industry standardised, which=0A=
->>> are getting harder and harder to find (In fact I'm thinking of=0A=
->>> making a NFT out of my last 4k logical/physical disk).  But it=0A=
->>> didn't alter the fact that the kernel internal block size is 512.=0A=
->>=0A=
->> struct bio and struct request use 512B sector_t unit addressing. So=0A=
->> does the entire block layer, file systems device mapper etc. SAll=0A=
->> users of block devices use this unit. Yes, that is fixed to 512B,=0A=
->> regardless of the characteristics of the target device. But to avoid=0A=
->> confusion, we never refer to this as the "logical block size" or=0A=
->> "block size". We use the term "sector" and reserve the term "block"=0A=
->> for the device layer.=0A=
-> =0A=
-> Doing a git grep -iw lba in block will refute this.  I think the=0A=
-> partition code still uses it because it's what most standards still=0A=
-> say.=0A=
-> =0A=
->> The logical block size (the unit used for command addressing) may or=0A=
->> may not be 512B (it may or may not be equal to the block layer sector=0A=
->> size). These days, most HDDs are 512e, that is, 512B logical block=0A=
->> size and 4K physical block size. Lots of SSDs are still 512/512.=0A=
->> 4K/4K HDDs and SSDs are gaining ground and spreading.=0A=
->>=0A=
->> I agree with Bart's cleanup patches. They correct a non-standard use=0A=
->> of the term LBA to refer to a value using the block layer sector=0A=
->> unit.  Bart suggested scsi_get_pos() as the new function name to=0A=
->> solve the confusion. I think that using scsi_get_sector() as a name=0A=
->> would be even clearer about the unit of the values being handled.=0A=
-> =0A=
-> To be clear, I think that using _pos everywhere is at least consistent,=
-=0A=
-> even if I think it's not very logical, so I'm happy on that basis.  I'm=
-=0A=
-> just not happy with the attempt to characterise LBA as confusing since=0A=
-> it's been the terminology forever and still permeates at least the=0A=
-> partition code in block and predates the logical/physical addition to=0A=
-> the SCSI standards.  Just say that for consistency we'd like to use=0A=
-> _pos everywhere ... or if you want to use _sector, that's OK, but then=0A=
-> update block as well.=0A=
-=0A=
-Very good point. The block layer (despite its name), should refer to "secto=
-r"=0A=
-and not to logical blocks to be consistent. That said, the partition table =
-code=0A=
-is probably an exception since the values in there really are LBAs and not =
-512B=0A=
-block layer sectors. The code though should make it clear which unit is bei=
-ng=0A=
-used. Will have a look to see if some cleanup is needed.=0A=
-=0A=
-Thanks !=0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+> From: Peter Wang <peter.wang@mediatek.com>
+>=20
+> As per specs, e.g, JESD220E chapter 7.2, while powering off
+> the ufs device, RST_N signal should be between VSS(Ground)
+> and VCCQ/VCCQ2. The power down sequence after fixing as below:
+>=20
+> Power down:
+> 1. Assert RST_N low
+> 2. Turn-off VCC
+> 3. Turn-off VCCQ/VCCQ2
+>=20
+> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+> ---
+>  drivers/scsi/ufs/ufs-mediatek.c |    4 ++++
+>  1 file changed, 4 insertions(+)
+>=20
+> diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-media=
+tek.c
+> index c55202b..47b4066 100644
+> --- a/drivers/scsi/ufs/ufs-mediatek.c
+> +++ b/drivers/scsi/ufs/ufs-mediatek.c
+> @@ -922,6 +922,7 @@ static void ufs_mtk_vreg_set_lpm(struct ufs_hba
+> *hba, bool lpm)
+>  static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  {
+>         int err;
+> +       struct arm_smccc_res res;
+>=20
+>         if (ufshcd_is_link_hibern8(hba)) {
+>                 err =3D ufs_mtk_link_set_lpm(hba);
+> @@ -941,6 +942,9 @@ static int ufs_mtk_suspend(struct ufs_hba *hba,
+> enum ufs_pm_op pm_op)
+>                         goto fail;
+>         }
+>=20
+> +       if (ufshcd_is_link_off(hba))
+> +               ufs_mtk_device_reset_ctrl(0, res);
+According to your commit log, you should call reset just before=20
+ufs_mtk_vreg_set_lpm, or turn phy off, whichever turn off vcc -=20
+Few lines above.
+
+Thanks,
+Avri
+
+> +
+>         return 0;
+>  fail:
+>         /*
+> --
+> 1.7.9.5
+
