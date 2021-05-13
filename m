@@ -2,169 +2,269 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,MIME_HEADER_CTYPE_ONLY,
+	MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4185EC433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 08:15:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05953C433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 08:32:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 109FF61355
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 08:15:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6AF9613D6
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 08:32:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231804AbhEMIQs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 May 2021 04:16:48 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:25865 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231852AbhEMIQj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 May 2021 04:16:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1620893739; x=1652429739;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=DGPJ93kDIHLhjWucP3+G8UtO0PUw2gKYkg8J3hFNsDQ=;
-  b=BTzKvVdjLvHp6WIIq/6jdtK5Rak1Dn6KwpMhLIoPQA2DF6lD6+5d+7/R
-   2bJr8trqDwcG0VmDY6fStN0y0e8QYa1iBVvy6sF7NvzN6ZQoFWEIwf5RQ
-   eFjMl0vWyuJ+VX82wX70frFw3rXsASbaSUTrkkmMw64LOyBMM1zz08CGW
-   yXt1kLeeuK5DNZrlb6n6Xp/7GIdnys26yHjiLbzEebb1OhrjHU7HCsnyB
-   pbD6B6xuYRzbgbt++JfM2r5BZI15jGEukgqgcEkSdy4akVfOT9Vd1EIrP
-   MZ+sa+XkqQaJ17m8n2BacTAQLbrC+sN+E7Wx/W3RHIu7jE/cvu/8ToXuw
-   g==;
-IronPort-SDR: nlvDVqacBmoT1t0FMTmNtgsNl8JFSydZZH/fJScXk+NhoF28dhkFuMJddYApo5Y5Qyl83hNkcD
- gjEvZyM0JcSPMiQ3CgMy2+gydPwbx9SM9bBLfnuR4YZEVmvxzY5RRCEz2+iA5IHRhXsEPjyIXd
- 2P1Xj7pcjLwWEdZP3SjoLX07A0undY+yLLabdyV8aviO5Vp5+NxMWZ7i+vNIcV3lS8yO/ZReyJ
- G+xJXymQFgaItZW+tuMkKC1t+TSTIx43XcqE7y2ytn5+QJAjgEt3bWOngw1OFYvVZrJ36iv1Bu
- aso=
-X-IronPort-AV: E=Sophos;i="5.82,296,1613404800"; 
-   d="scan'208";a="271989316"
-Received: from mail-bn8nam08lp2043.outbound.protection.outlook.com (HELO NAM04-BN8-obe.outbound.protection.outlook.com) ([104.47.74.43])
-  by ob1.hgst.iphmx.com with ESMTP; 13 May 2021 16:15:36 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XzAUwpyMJiTTo42Qr7rhyl6mjoSyJzCuosYPc5UUuxTz6pdGdAULREDsxaSnt5C1lEtA1Du8b2BcwoFU4pwaduubTC80wrGyGkdHmDRm6K43NF6zDlJllqZzymdPVeTrjHWxlZl6OuH3CdhSpNTqLHjXBER9Dj58nJCo2+mFRSodZulUjhL/dcpQvr9kvq03ZxSDsDKhAs1pjJsFctcjcm2fJQCdLCUCl25ULJSNG4AM+Cyxjq5QSpv6nTijG0BU2YL+xfeTZjWcz5LY3a+rvYjAOfdW6R//iFkXgzeFrANj6dw33mW+N0VS60QdD51vY791INkRps+Hztm7UZDeCA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DGPJ93kDIHLhjWucP3+G8UtO0PUw2gKYkg8J3hFNsDQ=;
- b=UzVoNXiibZ1CXunWvjXGmnK6Z6ZTOL+9OyUoYFR7TDv3EMwmP61VkvTTSZND5lTNND/gkE6VuwPC2+uQhrjg18RHyBDztt22J/hhSUTkvQGFvE29b9i+LYkXpLFQkrak66kw57uRoMJc+yQqaBPWh+GaDD8ZfFmm4C9wtctMqW0yYCHdfL5O4QVPCaKkIo1oZPng/BUVxTGwJx7ALgoQggAOV3A6xmCidsvwsv66Bnr2E8e9WkmnRkFsoyKbNZDQmx41eq+anYpSvFJJEMnXmRA961S/JektdgktlmWhbi/1jUpZzs9xfxyypHc6thIZL+K11X78t7XS1IabV3mFvg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S231958AbhEMIdq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 May 2021 04:33:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48184 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231803AbhEMIdm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 May 2021 04:33:42 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11A3CC06174A
+        for <linux-scsi@vger.kernel.org>; Thu, 13 May 2021 01:32:33 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id l19so58441plk.11
+        for <linux-scsi@vger.kernel.org>; Thu, 13 May 2021 01:32:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DGPJ93kDIHLhjWucP3+G8UtO0PUw2gKYkg8J3hFNsDQ=;
- b=u63tL8eVl7YloqWsOlVVXtU0dq6iTEDLs3RxTHSyMyH/rbOasg5f6f08PpDTRIOcDtcIJugmMKtwL9aJ9nmWoVNgWVLQsGPsNDexH9XXS0Fwel9hACnsKI223epPb7CXCqEzDvT7gbsB59wlrfMUnkykC2xOic+oAI8HXuKGiPM=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM5PR04MB0973.namprd04.prod.outlook.com (2603:10b6:4:41::33) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4129.26; Thu, 13 May 2021 08:15:27 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::ed2d:4ccc:f42b:9966]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::ed2d:4ccc:f42b:9966%7]) with mapi id 15.20.4108.031; Thu, 13 May 2021
- 08:15:27 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Peter Wang <peter.wang@mediatek.com>
-CC:     "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "wsd_upstream@mediatek.com" <wsd_upstream@mediatek.com>,
-        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
-        "alice.chao@mediatek.com" <alice.chao@mediatek.com>,
-        "cc.chou@mediatek.com" <cc.chou@mediatek.com>,
-        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
-        "jiajie.hao@mediatek.com" <jiajie.hao@mediatek.com>
-Subject: RE: [PATCH v4] scsi: ufs-mediatek: fix ufs power down specs violation
-Thread-Topic: [PATCH v4] scsi: ufs-mediatek: fix ufs power down specs
- violation
-Thread-Index: AQHXRxX/qO2IQ7o8EEGQnGwyYbUniKrg9p3AgAAW0ACAAAPdMA==
-Date:   Thu, 13 May 2021 08:15:26 +0000
-Message-ID: <DM6PR04MB65755B434F899F5F05E8F957FC519@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <1620813706-25331-1-git-send-email-peter.wang@mediatek.com>
-         <DM6PR04MB6575083B2B58587AC14B6F9FFC519@DM6PR04MB6575.namprd04.prod.outlook.com>
- <1620892726.21658.3.camel@mtkswgap22>
-In-Reply-To: <1620892726.21658.3.camel@mtkswgap22>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: mediatek.com; dkim=none (message not signed)
- header.d=none;mediatek.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 2f0ecfcf-db61-4a7f-190a-08d915e743f0
-x-ms-traffictypediagnostic: DM5PR04MB0973:
-x-microsoft-antispam-prvs: <DM5PR04MB09730B4F69D86D7F5C4C86FCFC519@DM5PR04MB0973.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:324;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: +MJ3xgDcsi2pOt923ZSG5dEpDvclu/AP+Erv4vtCee11WBtWmN3CH1BoOlT56opyOj56KNj/UjqX5kpMAoqig7Tz3z/PnpXCm7TnIZUp2DqXFNFH1xQ3EKHOTdmbchfKkvCo1aA34uKnQN5jK8Ax1rvAZQobtILo10Zdfmzd65nQlTnq6JkOEKbfinBjb2mfHApVIdjtMBMXfzO96WaQLaGJIlo6rLRtRHCoPESdGDktAjvm6OwOdlP7NDFZbrLs0TTr/YxFS/ZdYgLMj/FQEkOvUbeaPDZoXM5XfsjB3zfzLgjYy70M8PnJQ1pIG3JJvwep5BXGyszM/elrfgn6b3YTfdxKVRZdEiZXSboUg+K5kcOU1ea5s3PFZXQvFNbDwXfoJxOYgQJMbpNjEr7Usz+IwA6xjP6CL9LRD8p4G09PuEjcZeiRtfznC6p3gN5uK4nYfKYt/oQekLxaj8GzOaEAPhjLgNz+ODoV9CxN4zWJdHc43mDpU7DloAz8RWK6C1AjjJQMr9Xw+YUOiiT1F50HKvn2A9RSPfMdqPGndAcFYyvkBOETee6RRdUiJ1SWDBnIwSZ83qc4ibyNJRGLxdkvHuWOL6Sf89rIjW25DAk=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(376002)(346002)(396003)(136003)(39860400002)(71200400001)(7696005)(86362001)(54906003)(6506007)(26005)(66946007)(66476007)(122000001)(4744005)(6916009)(9686003)(4326008)(55016002)(478600001)(33656002)(8936002)(8676002)(52536014)(5660300002)(66446008)(64756008)(2906002)(7416002)(66556008)(316002)(186003)(76116006)(38100700002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?utf-8?B?ZHhLWFB2a0NmR2Q3cVVQYjNTcG5yU1NUUkI2REdORzNsVk9aL3dqbXpzODZD?=
- =?utf-8?B?VTFxaEx4VnQ0Kzc5R1FYd0ppV1k2NE9pb0twWkxaOEd1MVB4NUxIaDRwUGFz?=
- =?utf-8?B?bEk2UFI4ekdtM0J2UkcwS3NMdXNrcEdTS2hNNVU0dFlsNlgxVmNvTC9qZHJL?=
- =?utf-8?B?SDE3TlJBdTFHc3A5QVgyVWRzdGhMdDZpNlAyWXZFOVFVTjF0YW5vNDVYOTR6?=
- =?utf-8?B?cGFJYk9oTG1rSFF6enNadG9MU0YyRWQ5dnY4RU5GVlF0YjlNdXZkSmt0SFRS?=
- =?utf-8?B?YnJ5bERHeUxsbEdqMmZNZDZBL3RsYmsrelY5ZmtQS0krOTRmeTg0c1daZFAr?=
- =?utf-8?B?YnNxeHhoN0xnZ3l4OGloaThlUmRuejE4RWlQUjBrNXZqbWdMOHdvWHRoTG1P?=
- =?utf-8?B?bENmZ1hiV0hqa3dDK1RLVzIrZDluNkFvU2pkRW5BZUJ5R1dOeFpLTzc5dFNt?=
- =?utf-8?B?OXlyZUVZdnBwdjBvaFRqWkJGUnlFM2xmYktxazJNU1Z1aUU3Z0N3a0NXZERx?=
- =?utf-8?B?RjZmMGtRdGlFVGFMaFpRVXU4YUlhWHNUK0NZbDlMYWhkYmlwdEYyYlBiNXRP?=
- =?utf-8?B?aHRLMFhHRU1SOTN4cXpLeGRHdCs5eVV5T04ybkpDV0hOY2ZGbTRWQkE3MVF1?=
- =?utf-8?B?Mk41eitQVXlqOGdsRkJWTFh3ZEQ5OThsQWppUkdkOE5ZeDdyeWl6eFNxelQx?=
- =?utf-8?B?aDhUNkMxRjVoY2F6ZEM4WkhVUy9kUW1rTFA3elFUbml3dW9SWXNRQndORnZB?=
- =?utf-8?B?VVR5cW9NNDIwYkNnM1hMeEIxbDYzdGNsMi9SY2U1c0JydlhQbmJ6MmJBcERV?=
- =?utf-8?B?S3V0bmZWa0VnTkZ2bGVPMFRRaVMyM3RMSGFmZDQ4QzlLTzVxRlhxSFVNVkR1?=
- =?utf-8?B?MW9ILzdxWG5qL3dpcUN5cTMvM3dWSXd0eEhJOWhiUkpEWVZJdG8zT0JIUUNW?=
- =?utf-8?B?bm1MSHp4bURJK3kzQXJRM1IwR2lCUm12cyt1RTZCck1LS1VyMTBGc203SnI2?=
- =?utf-8?B?czRhd3ZYV1FZSzNWTFVWdGhKdlNhNFJ2Z0ZWalZqRThmQjU1YUdnc1JsUEd4?=
- =?utf-8?B?OVFvcWF2MjV2eDY2UlprbzRDZ3BTV0FzdjZlY3QveWozZytWNHBqMDc5ZlVN?=
- =?utf-8?B?bXNJL2IxVmNFMjljd3R4bTRIczVvVHp4QThCMlFueFlHeDRlT2lIZytyTEFH?=
- =?utf-8?B?NEw5UncyUjcyN1JGcXUvUUNta0ozK3NMQTFMTm9yM1RwYnhDSmM4NWl0WUls?=
- =?utf-8?B?eUhCZWlValMzY0k0eXlNVk8rVEpWb0NlaG9mNUdpUkt6YUgrUlBWeDBaWTUr?=
- =?utf-8?B?b1dnQnUxOEZMSE95YlZiejJ5UWZPbXNGeDR4OUg3TkJObU55ZmJORW5POFFm?=
- =?utf-8?B?cVFWalZEelVIQ1JybEk2ZVBJcTcrT0ZpSmhTQkYwVXMrSGttREN0b0grZGhl?=
- =?utf-8?B?Z2s5dXFRYjc4R0ZxSDc2NmtUcC9MRUc2ZjFxbU1EUkE4NGhZVXUzU1FDOGtN?=
- =?utf-8?B?ZnZrTCtGOGFLTkZzOFEwaVBva3hNTUZkdWdVT3dNekJ0R3dQSXh3bENESTlF?=
- =?utf-8?B?U3U1WG5NSDB5SUVxb1FibEZ1MWdwb29BSDFnSFEzenJ1TGIvR2RJOUZHRWpy?=
- =?utf-8?B?MlFZSXBoUUoxZ2NJWlFXSG0vOXA5cENIZDhRRG5MMEMxWXJhNTBUYXJ6U2Vr?=
- =?utf-8?B?dWtDWkg1WER0K0kwVS9UUUt0L2pSTEhPcDBIeGNSKzJGajd1YWRzc3p6K0JQ?=
- =?utf-8?Q?D6jQMzYM1mj+caPRVg/NCvhcwEaNpQLbAYTtuwC?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2f0ecfcf-db61-4a7f-190a-08d915e743f0
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 May 2021 08:15:26.9609
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: N5z7+EGAofwMAhXYbkcDqAScmdQ2vjXXlWoMDepTK8YDERlYd/maopDf6DhxWxcSuQ5+r2Vf57hp/cbJxj2pjA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR04MB0973
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=x25ubhn1FD5JJqpcLjd8dBl5b2LIZif/aTynIG6SPtk=;
+        b=L3cOzvhVR2fUI8RSk/82udJ4ZxgOLkq+2udGPcDyYoLpZhXSuH+RvxtHDhNjmfy9wP
+         MVQhQ9CrtF/yh+wR58yuOJJRDcicFTHdpJZhbYEHK37UPVOZwMjzMX2UvnF2XKcOQaMG
+         fzkBpZ5+1Ue3orQ9pt4BsgFKzf9K+KmHOO/ps=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=x25ubhn1FD5JJqpcLjd8dBl5b2LIZif/aTynIG6SPtk=;
+        b=eofM34ZbEKPmJnUXt4EFBeyMFsgWce9ZC3c/dKCq9eJt1g4JM4VrCg+2miE6yVYT2y
+         TgcpcjL+3cBXAfZ7rpomx9+LZlDFZlWWRIUER7ChUeahMqVGMgybWlEE2mDhk5xEJRWT
+         oSn6MestIAEZjDsgLad3PVfRZ0XY/ZktRusbxGf+V6TPp5708hN4B9U2Oc5urSt3QeNb
+         zFKTK9Cz18CrIIvps4Ntp415Ai+6KZNPQy/LwWCkGiK69lCIZCRjVl9E/Z59/E2ub1mU
+         voXf6yolM53COx+JlIK6yP2eFvcrbX+WzQq41qorwI2NJ0a8KhMpLIh4i5wQNLwkmfrA
+         c9uQ==
+X-Gm-Message-State: AOAM531kBI2jYrE1TeK0eJ6ZkH2aqCQ24E0V99Wv2pZctNd7RwXS9yvQ
+        cP3Hw5poub9bKOxK72C3BpEE84HFfmTEHnFUL2kNyJyyNCtO7fg/nWTrrgP9H/Q1HmaCx4ibLLy
+        qW6yatN80J8aFNrVjWlfB3fAz+pnGkuTvF/ELVkE5J54l3+/DbjLK0HvXYTBA61onrZf+KyCdAN
+        QDKzaXuQ==
+X-Google-Smtp-Source: ABdhPJx0qguhW9X2tFn6XMhUJk47qp28Sai5zREer6MS3B3zC6ELhTRNIFbqPzXoV3sdJKe1s5992A==
+X-Received: by 2002:a17:902:c214:b029:ee:de19:9ae4 with SMTP id 20-20020a170902c214b02900eede199ae4mr38307885pll.57.1620894751741;
+        Thu, 13 May 2021 01:32:31 -0700 (PDT)
+Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id i123sm1632468pfc.53.2021.05.13.01.32.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 May 2021 01:32:30 -0700 (PDT)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        steve.hagan@broadcom.com, peter.rivera@broadcom.com,
+        mpi3mr-linuxdrv.pdl@broadcom.com,
+        Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: [PATCH v5 00/24] Introducing mpi3mr driver
+Date:   Thu, 13 May 2021 14:05:44 +0530
+Message-Id: <20210513083608.2243297-1-kashyap.desai@broadcom.com>
+X-Mailer: git-send-email 2.18.1
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000edab1705c231f782"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiA+ID4gKyAgICAgICBpZiAodWZzaGNkX2lzX2xpbmtfb2ZmKGhiYSkpDQo+ID4gPiArICAgICAg
-ICAgICAgICAgdWZzX210a19kZXZpY2VfcmVzZXRfY3RybCgwLCByZXMpOw0KPiA+IEFjY29yZGlu
-ZyB0byB5b3VyIGNvbW1pdCBsb2csIHlvdSBzaG91bGQgY2FsbCByZXNldCBqdXN0IGJlZm9yZQ0K
-PiA+IHVmc19tdGtfdnJlZ19zZXRfbHBtLCBvciB0dXJuIHBoeSBvZmYsIHdoaWNoZXZlciB0dXJu
-IG9mZiB2Y2MgLQ0KPiA+IEZldyBsaW5lcyBhYm92ZS4NCj4gPg0KPiA+IFRoYW5rcywNCj4gPiBB
-dnJpDQo+IA0KPiB1ZnNfbXRrX3ZyZWdfc2V0X2xwbSBvbmx5IHNldCB2Y2NxMiBwb3dlciBtb2Rl
-IHRvIGxwbSwgZG9zZSd0IHRydW4gb2ZmDQo+IHZjY3EyLkFuZCB0dXJuIHBoeSBvZmYgaXMgYWxz
-byB0dXJuIG9mZiB2Y2MsIGRvc2UndCB0dXJuIG9mZiB2Y2NxMi4NCj4gUlNUX04ga2VlcCBoaWdo
-IGlzIG5vIHByb2JsZW0gd2hlbiB3ZSB0cnVuIG9mZiB2Y2MgYW5kIHZjY3EyIGtlZXAgb24uDQo+
-IEJ1dCBSU1RfTiB3aWxsIGdvdCBwcm9ibGVtIGlmIHdlIHRydW4gb2ZmIHZjY3EyLg0KPiAoUlNU
-X04gc2lnbmFsIHNob3VsZCBiZSBiZXR3ZWVuIFZTUyhHcm91bmQpIGFuZCBWQ0NRL1ZDQ1EyKQ0K
-PiBIZXJlIHNldCBSU1RfTiB0byBsb3cgaXMgYWZ0ZXIgc2h1dCBkb3duIHBtIHNldCBsaW5rIG9m
-ZiwgYW5kIGJlZm9yZQ0KPiBzaHV0ZG93biBwbSB0dXJuIG9mZiB2Y2NxMi4NCk9LLiBUaGFua3Mg
-Zm9yIGNsYXJpZnlpbmcgdGhpcy4NCg0KVGhhbmtzLA0KQXZyaQ0KDQo+IA0KPiBUaGFua3MNCj4g
-UGV0ZXINCj4gDQo+ID4NCj4gPiA+ICsNCj4gPiA+ICAgICAgICAgcmV0dXJuIDA7DQo+ID4gPiAg
-ZmFpbDoNCj4gPiA+ICAgICAgICAgLyoNCj4gPiA+IC0tDQo+ID4gPiAxLjcuOS41DQo+ID4NCg0K
+--000000000000edab1705c231f782
+
+v4->v5:
+- Fix error reported by kernel test robot <lkp@intel.com> in Patch #6.
+
+v3->v4
+- Addressed comments from Christoph Hellwig and Bart Van Assche to make
+  MPI headers compliant with Linux kernel coding guidelines.
+- Added Reviewed-by tag from Hannes and Himanshu to appropriate patches.
+- Use correct return type in scsi error handler (Patch #6) - comment
+  provided by Hannes.
+- Fix array overflow while printing ioc info(Patch #11) -
+  comment provided by Hannes.
+- Remove redundant kfree of dev_rmhs_cmds (Patch #13) -
+  comment provided by Tomas.
+- Replaced few strcpy with strncpy to avoid string overflow.
+- Updated Copyright.
+
+v2->v3
+ - further removed unused pointer typedef from mpi30_type.h
+ - Add Tomas Henzl's reviewed-tag to appropriate patches
+ - Fix added which is Reported-by kernel test robot <lkp@intel.com>
+ - Removed .eh_abort_handler suggested by Hannes.
+
+v1->v2
+ - removed undefined entries from mpi30_type.h
+ - removed DRV_CMD_CALLBACK typedef
+ - Use IRQF_SHARED  instead of IRQF_ONESHOT
+ - Use READ_ONCE, WRITE_ONCE while accessing operational request
+   queue consumer index 
+ - removed in_interrup()
+ - remove pr_cont.
+ - move some code from error handling to device handling patch.
+ - used direct values instead of macro MPI3_SECTOR_SIZE_XYZ
+ - Add Hannes's reviewed-tag to appropriate patches
+ - Add Reported-by kernel test robot <lkp@intel.com> to appropriate
+   patches.
+
+
+This patch series covers logical patches of the new device driver for the
+MPI3MR high performance storage I/O & RAID controllers (Avenger series).
+The mpi3mr has true multiple h/w queue interfacing like nvme.
+
+See more info -
+https://www.spinics.net/lists/linux-scsi/msg147868.html
+
+The controllers managed by the mpi3mr driver are capable of reaching a
+very high performance numbers compared to existing controller due to the
+new hardware architectures. This Driver is tested with the internal
+versions of the MPI3MR I/O & RAID controllers.
+
+Patches are logical split mainly for better code review. Full patch set is
+required for functional stability of this new driver.
+
+You can find the source at - 
+https://github.com/kadesai16/mpi3mr
+
+Kashyap Desai (24):
+  mpi3mr: add mpi30 Rev-R headers and Kconfig
+  mpi3mr: base driver code
+  mpi3mr: create operational request and reply queue pair
+  mpi3mr: add support of queue command processing
+  mpi3mr: add support of internal watchdog thread
+  mpi3mr: add support of event handling part-1
+  mpi3mr: add support of event handling pcie devices part-2
+  mpi3mr: add support of event handling part-3
+  mpi3mr: add support for recovering controller
+  mpi3mr: add support of timestamp sync with firmware
+  mpi3mr: print ioc info for debugging
+  mpi3mr: add bios_param shost template hook
+  mpi3mr: implement scsi error handler hooks
+  mpi3mr: add change queue depth support
+  mpi3mr: allow certain commands during pci-remove hook
+  mpi3mr: hardware workaround for UNMAP commands to nvme drives
+  mpi3mr: add support of threaded isr
+  mpi3mr: add complete support of soft reset
+  mpi3mr: print pending host ios for debug
+  mpi3mr: wait for pending IO completions upon detection of VD IO
+    timeout
+  mpi3mr: add support of PM suspend and resume
+  mpi3mr: add support of DSN secure fw check
+  mpi3mr: add eedp dif dix support
+  mpi3mr: add event handling debug prints
+
+ drivers/scsi/Kconfig                      |    1 +
+ drivers/scsi/Makefile                     |    1 +
+ drivers/scsi/mpi3mr/Kconfig               |    7 +
+ drivers/scsi/mpi3mr/Makefile              |    4 +
+ drivers/scsi/mpi3mr/mpi/mpi30_api.h       |   20 +
+ drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 1884 ++++++++++
+ drivers/scsi/mpi3mr/mpi/mpi30_image.h     |  220 ++
+ drivers/scsi/mpi3mr/mpi/mpi30_init.h      |  163 +
+ drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       | 1009 +++++
+ drivers/scsi/mpi3mr/mpi/mpi30_sas.h       |   37 +
+ drivers/scsi/mpi3mr/mpi/mpi30_transport.h |  486 +++
+ drivers/scsi/mpi3mr/mpi3mr.h              |  895 +++++
+ drivers/scsi/mpi3mr/mpi3mr_debug.h        |   60 +
+ drivers/scsi/mpi3mr/mpi3mr_fw.c           | 3956 ++++++++++++++++++++
+ drivers/scsi/mpi3mr/mpi3mr_os.c           | 4063 +++++++++++++++++++++
+ 15 files changed, 12806 insertions(+)
+ create mode 100644 drivers/scsi/mpi3mr/Kconfig
+ create mode 100644 drivers/scsi/mpi3mr/Makefile
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_api.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_image.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_init.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_sas.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_transport.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr_debug.h
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr_fw.c
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr_os.c
+
+-- 
+2.18.1
+
+
+--000000000000edab1705c231f782
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+P3lSxcw4Cg90iKHqfpwLnGNc9AGXHMxUCukpnAHRlivljilKHMx1ymb180BLmtF+ZLm6KrFLQWzB
+4KeiUOMtKM13wJrQubqTeZgB1XA+89jeLYlxagVsMyksdwIDAQABo4IB2zCCAdcwDgYDVR0PAQH/
+BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9i
+YWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUF
+BzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xv
+YmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
+Oi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAlBgNV
+HREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAf
+BgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUkTOZp9jXE3yPj4ieKeDT
+OiNyCtswDQYJKoZIhvcNAQELBQADggEBABG1KCh7cLjStywh4S37nKE1eE8KPyAxDzQCkhxYLBVj
+gnnhaLmEOayEucPAsM1hCRAm/vR3RQ27lMXBGveCHaq9RZkzTjGSbzr8adOGK3CluPrasNf5StX3
+GSk4HwCapA39BDUrhnc/qG5vHwLrgA1jwAvSy8e/vn4F4h+KPrPoFNd1OnCafedbuiEXTqTkn5Rk
+vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
+MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
+MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
+VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIysHRGUMtJGbT8CIjniz4Y5ehAb
+LPjAZPRdoHjCI04YMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDUxMzA4MzIzMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
+AwQCATANBgkqhkiG9w0BAQEFAASCAQAuwuENAC5ce2CtC2LU7Q7lAe2ixZW3qkjv4WWvbHxavI8U
+tczaUlQFfyMvbxSnaPjb9rduKACWeXPR7qRZX5LgjatwYFmTfQSNRyTcdkqvj7N3bqSCd9Fy9nLb
+pSlCb6pz6aEK8WI+Q0Vp5cK3TD14RKgJujXZL/lxSQL96g525O3tz5eIcJgBlMmNOYO2cvqmIvLN
+ucL0O2H0bRHzZp9Xf3Gy1olgzK2qiOiuKPzpZuaiHOT3xX7N4maJC6j3QKC5Tf24ZihDhE6Gke9V
+dedf8SOPjKCrPAPudpwj3FJi45uIjDXc1MxZUqBJSyUa0MqndIvFiOgYw3pEl2S0dY+p
+--000000000000edab1705c231f782--
