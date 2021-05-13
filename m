@@ -2,318 +2,288 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC9DAC43460
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 12:14:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B998AC433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 13:53:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5A9861287
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 12:14:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77D3E613CB
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 13:53:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233766AbhEMMPw convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 May 2021 08:15:52 -0400
-Received: from mail-oi1-f172.google.com ([209.85.167.172]:38569 "EHLO
-        mail-oi1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231695AbhEMMPY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 May 2021 08:15:24 -0400
-Received: by mail-oi1-f172.google.com with SMTP id z3so23906086oib.5;
-        Thu, 13 May 2021 05:14:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=oOheMdP06lbk6PH6ouSDQAu641Bt26U4eryxHdqKkwI=;
-        b=eNHq9h0hG0ZK9CG/TDDXhlQEqDBvFOa9IJOUYloEUka29cyp1hqVVv6FL9nmYfh/ZZ
-         Kky3QJEXz1vqGSUIHCAoozwZCvf+IyK2BMDEERPj2ymgn3bnFvcJKybt8WdJ0qidFVWR
-         SM9ZIlrjWwRTWqRaBMEHV5oK/ygBT5N3o97m4nXwyqwC3SK4UCV/pHwa+jVl/eI4QCVb
-         QTxMPIoskbKhEdvHrNmf5qvWHgA1BAM4HC9eLXMnrIzJxyQli4SUdVw5F5ZvvZbhd6Yg
-         Wk7Wm9pTyedaULlLg7Ky2FD94FQtbleO9K1710aflYO2KeHbz9zJrQ26e2O4N6Ilmh5t
-         ulaA==
-X-Gm-Message-State: AOAM532jSqsx5acOCUace8GJhQy8E6FQNFh1Jo+7Xy5BBR6Mj0TBSOqa
-        142d+hZ7WG+hjIObSltbJo+/PgV+5KQCAenQb0U=
-X-Google-Smtp-Source: ABdhPJxyMcOmoHWyMGTE7GSmhokIQFSARhAhM6o9hTNUe4CuK7eQddbAzn1L0Ls9SRTQILpf6RGSaHFUmJd+puaaN5s=
-X-Received: by 2002:a05:6808:90d:: with SMTP id w13mr15376922oih.71.1620908054342;
- Thu, 13 May 2021 05:14:14 -0700 (PDT)
+        id S234162AbhEMNyj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 May 2021 09:54:39 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:35564 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234125AbhEMNyK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 May 2021 09:54:10 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14DDoEwq025115;
+        Thu, 13 May 2021 13:52:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=6D6KjdYWin8CccphBpLkLpAg6dVQ2yCiI/qHK3f/ETE=;
+ b=BlYklCbIE8GO9SvcwcD48ted+J9beYBlw2dkX3qq1h6l6ZotAZg6/IKNHqJVuZMC4mo5
+ zQsj9sxhCIYaSJggdaHVRlpMKl4o60Y8dE0m8jrFkra2SsNQn0Czbm7qYQfRpvuloFxA
+ 2s04qsB25/f3ribG0GFSLjVwuB2JUSUOe+Vkfib/TMSN2VMgd5PSJQWILMup5PcX5Acu
+ GzYGnU8EMirKQVCLUX52Mef9sP5O2jnVi4ZIq8+ewA/uAKP5/d8dyDNkbA2L0OkQ+MxM
+ JqqyjmjO7RGZLPPavy2tLJxtl8D9YUcbo5ZXV38MXN6jC2fvIFT9QGBp9H6wclfhhxep rA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 38gpnd9qxs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 13 May 2021 13:52:58 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14DDonda070308;
+        Thu, 13 May 2021 13:52:57 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2177.outbound.protection.outlook.com [104.47.57.177])
+        by aserp3020.oracle.com with ESMTP id 38gppb723w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 13 May 2021 13:52:57 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=XqfLMJr4y8tZlTPlpy4Xy/AJ9YaCWgIlYcVRmbDDGK0BsziwUI0aI4ATNBAiKavxz8azCi6xnqak8goZnR8X3NvssaV8q52VwbjkdtGp0uyHhPvmd5q1G4xf686vS7oMc/mi/2maLvXDKkkQE5GsOvJxrBITSOywoEW39o+9JmuGLzVjWfYLAjVMz0ZwZCNf9eQJ1MYZ7u1MCXQsQAUsaX2c3XpjOLN55SVlGGZ3XU0WGciy+cnInxrhRdspT8KBal809mgnG8dpbA8Md/m4nagkjk8+uFgFtLPkQAF8i+077C0QBQ6QiozMtkjlSnaIE+Rz5Bf/S42pBWEL/vAwRA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6D6KjdYWin8CccphBpLkLpAg6dVQ2yCiI/qHK3f/ETE=;
+ b=Z+0Gt8Yd0M9Fuowl0WkEiIJ1HXNV+0zdMv/gmq4dEsZmmWQxqo4pZJFSCaLbOBddfLY7AlfeMI0ik1czptli8AIxqM/WyrsWzvpoEQ/ycO/1pwZGy1qZjjDmI+lTBSHHj7kGZ85B5CngbgnaPk1BZJMkDAcHJHwxtcaDWA/fUK+COwdyMpyDZYJl1tMMRArpwQXdgezRbw1Lut2pk3crAiFYy+2Towsj3wxDudzIp6Sps7T3HzrbjZH02kYBwbCEChjTXDjNo9pAFPYgy3nqkxwaFhLykDvlonmoei4FbAbgl45kAYbALtrR8nqnpFSGQK/0O+jMrKeLGZLm32anqw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6D6KjdYWin8CccphBpLkLpAg6dVQ2yCiI/qHK3f/ETE=;
+ b=t0iGLIkJuCPQuWoPUE0zYM+8qR99WQ+/VKtBbNqfTOLzm+MuYrkYEsr+7QDrs75n77uIOrGo6lNRAbm1tcSfpKhl8gL65Mk7Q2R2Metb34WhJS00UuTBvfX/2VD0Jx1jB9ZJfbR4x6D+b1y0m5/GnR3/qNz6rJQUCuRFuMtzwQg=
+Authentication-Results: wdc.com; dkim=none (message not signed)
+ header.d=none;wdc.com; dmarc=none action=none header.from=oracle.com;
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
+ by SA2PR10MB4682.namprd10.prod.outlook.com (2603:10b6:806:110::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4129.26; Thu, 13 May
+ 2021 13:52:55 +0000
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::168:1a9:228:46f3]) by SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::168:1a9:228:46f3%6]) with mapi id 15.20.4129.025; Thu, 13 May 2021
+ 13:52:55 +0000
+Subject: Re: [PATCH] scsi: target: Avoid smp_processor_id() in preemptible
+ code
+To:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        Mike Christie <michael.christie@oracle.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>
+References: <20210513044944.1572404-1-shinichiro.kawasaki@wdc.com>
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+Organization: Oracle
+Message-ID: <d3b4500b-f61a-bf89-f2c0-2b1239c57755@oracle.com>
+Date:   Thu, 13 May 2021 08:52:53 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.10.1
+In-Reply-To: <20210513044944.1572404-1-shinichiro.kawasaki@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [70.114.128.235]
+X-ClientProxiedBy: SN6PR2101CA0030.namprd21.prod.outlook.com
+ (2603:10b6:805:106::40) To SN6PR10MB2943.namprd10.prod.outlook.com
+ (2603:10b6:805:d4::19)
 MIME-Version: 1.0
-References: <3c88cf35-6725-1bfa-9e1e-8e9d69147e3b@hisilicon.com>
- <2149723.iZASKD2KPV@kreacher> <1c1cd889-7e6f-79f7-2650-cd181abc56b2@hisilicon.com>
- <11764789.O9o76ZdvQC@kreacher> <0de9b48f-0d62-9413-943f-cd130bae8335@hisilicon.com>
-In-Reply-To: <0de9b48f-0d62-9413-943f-cd130bae8335@hisilicon.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Thu, 13 May 2021 14:14:02 +0200
-Message-ID: <CAJZ5v0gK-Z5a++70nsqEuDBMpXoGZJg52j_0-ps+cp+mHWzfxA@mail.gmail.com>
-Subject: Re: Qestion about device link
-To:     "chenxiang (M)" <chenxiang66@hisilicon.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        John Garry <john.garry@huawei.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Saravana Kannan <saravanak@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.1.12] (70.114.128.235) by SN6PR2101CA0030.namprd21.prod.outlook.com (2603:10b6:805:106::40) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4150.3 via Frontend Transport; Thu, 13 May 2021 13:52:54 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 8fcd0ba6-d281-4d52-eb55-08d91616688c
+X-MS-TrafficTypeDiagnostic: SA2PR10MB4682:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <SA2PR10MB46821C844B5898E7C14C8B49E6519@SA2PR10MB4682.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: qtbunh3UbsQlOt+PvwXkGSEJQEXKbPr2QipI3H1wIqjBHLStPIjPsJQHMFjFzqmTaT54KymVUhZhwBMRsm2k1BGvdvC72dgWDNsdMbez0oQaMpdCSfxWl3FnU8TIlV/uHmsl09fWqhg0pa4UdcgzKH52qJJndEOkVv2d8IMzUwLWwlflOTfVyUexUIo/fHGlg8e9UxzlX66bENAlZaS+9cp3A1yUdY+YxZAaE28kimfaeP3mbSvl7NHY+UKbfTKAS0DVxmhfu297jKwE3XB9hQwWQ2fK9eWjbnEvtk2VnxEhWNhaEDHYpCcJUDX294NRvc9vnggQRCN/nZ4fzlKjIUhwIEDIq/HYjNdG3Dcl+pihrSbTTG9qRuNQ45b4koXOQE6rCgMSjSjG2mDOMMqmOCaEck6RJQFjhc8cGItrU/6WduFbf2yiJyThI5haKEHv2GOAvCmvPvIb7kUStTWB4eajROjOzF7Vj67MIc6WeV1o8NmOKbBTBX0Qf21ihWN9iuDbN24xZHKVjbk/S34FNpRVmmjVj31mDd9Vxkhux1dRg0W7wuhCYb0ceScK618h5w07QI3j4IZKUqV3KN62gNJVGWw+vntsu0z421GP/mTyIl5nVby2k+uSGpoDFWuWBtAkf+roHbvNRtVDMFSaJK/4mga0ClrNivu41a7AE0Q+3X1cCL05oniHoyRoP/gs
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(39860400002)(376002)(136003)(396003)(366004)(346002)(478600001)(66476007)(8676002)(36916002)(36756003)(83380400001)(6486002)(8936002)(86362001)(66556008)(54906003)(4326008)(16576012)(38100700002)(956004)(6636002)(5660300002)(2906002)(26005)(53546011)(66946007)(31696002)(44832011)(16526019)(316002)(110136005)(186003)(31686004)(2616005)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?cnpyazBlYjh3N01jK0JaTkkxQm85c3EvSWNvSmpCdG1YY0RRWlEwQ2kwNzVO?=
+ =?utf-8?B?QndoT200cXhTTmsyN0doaWhjNTVQVW9RYnpLZ1JmbUVOL09LNzJUSVkrOVZv?=
+ =?utf-8?B?V2lCcU00V05pTUJ4STRudnIwYlhIeFJOOTBnZkRaUE5ScGczZFJSU0hrLzB3?=
+ =?utf-8?B?UXUrek5XdGtwdkxvV2lmR283YXA5amdJY1RhVmsyRlQ3cUJyYWVva0NVdWZl?=
+ =?utf-8?B?bVgyek0yLzdVa1Npa1UzRmxqNU5zcDRTeDBUZ3FjK1A4UmEzd1JUMTY0d3Fa?=
+ =?utf-8?B?bmlZejlNRFJKdDdRaklwYlcrc204dWhuTTFBZGt4UVN3VTZrNUhoTTkyUm53?=
+ =?utf-8?B?WTUxNTFWOUhoaTJJb0ZycXBkK1lZWHljYXNpUVFLbGxrRm4vdS8vWTFGSVB3?=
+ =?utf-8?B?aW8vaHdIZU5HcEVydmZuV1k4K0NiVXdGQ1J4ZjBhbEQxaUl6emxkNklnZElp?=
+ =?utf-8?B?K0lpTGF0TVVWKzdaS0RxbmVvQmdUN0srVnM1eGlVaVA0dFVkN2UwVHBnaUxz?=
+ =?utf-8?B?WFNBdkxjWjJJN2Vvck45NWt5VXhOK2RHeXFxRFBaamNKS0IxelZTNDltUUZT?=
+ =?utf-8?B?MnJZUkI1eEdXU040d25WZkErbGR0QWxMOERxY1dzdTlLMTlGZFQrSVRuaG5O?=
+ =?utf-8?B?TmJxSDRuYmpMaDNGYk4zS0xoT0plcm9CS3ozNVlxQnQ2dURBOVZINEEwUUN2?=
+ =?utf-8?B?bkpaYWtnMzZ6U1Y5Q1JVNWhUZEFVcjN5N21KREwreklvZFdqRHdvYTBjR1Mw?=
+ =?utf-8?B?OVpGcVFkcTRFWXVNL3ZmMTdacTBHbFdYVGwzOU53WTE1N09XUGNoYVRqbThv?=
+ =?utf-8?B?MTVwSHRyVTVEY2hjUTlxNExLbFMzYUIvbUo3M1NLRUd6OFFEUVg5MXVQR0p3?=
+ =?utf-8?B?bStCOHo4ZitXQm9BRkxhOE44SVp6WWFTTmJSYTJzK1R4azU2NnpEd2dmQVM1?=
+ =?utf-8?B?NG1obkM1OEhua2NvczZURDlIMDBIeUFYTWduTkdhVzR6emFKTXdnSHpsdDhN?=
+ =?utf-8?B?blQ0US8rSGNTR3BmdWgySWEwZnRMcUh4bzlMbXZGYTI3bko5MmVQaWRMM2h6?=
+ =?utf-8?B?NnlGc2lRMHl6L3J5S1NmQmRoc1p0cC9WSlFtbnB1dFg2T05JRG9Ld1BLUHRu?=
+ =?utf-8?B?a3ZDK1FPT0gzaXFCZFpOWUp3cFR6MzVlekhiNW9IOFMvY0tzVTJEdGF1dTZy?=
+ =?utf-8?B?TUFyNG9Wdjl5Ry9JMm9TN2FNR3EyMzFQVC9TdGxESUoxajIwWUlnZmNiUmds?=
+ =?utf-8?B?bGhRbDF1cGVOYXJ5bzhscEllMVFOZ09mRTVjZmFZc3BaTE9WZThhSnhWUi9B?=
+ =?utf-8?B?eHFQTEtqMnZjSGhzRi94bmFuc2o2U0RyeER5VFpHQ0F3VUw1N0VQdVB4K3p5?=
+ =?utf-8?B?UEVSVGpPMExRbjAyOFdzeFFjTDFmajhtL3BLRFRpbjBJTTg0Z200aS91UUJX?=
+ =?utf-8?B?ajBJcHdxUVRaV1UycWhMZEpvTitRckMydGs5Ujd5c0owSWw4ZkJKWkxtMGVu?=
+ =?utf-8?B?Qlk4SEJHYWI3SStqTlpoMk5aUlBLOGRrTW5aZGRMZHhVaENOZHpiVForeG11?=
+ =?utf-8?B?VnlTck85Qm5odzFzZWc3M1NKT3ZTUm1SSHFZZjVxZXF5NjVvRXkxb3JRcmNC?=
+ =?utf-8?B?UmJBdzBEUk0zdDNoc3hzMUQ3WmdkVHo5dUUwQkl4RVJqODRTSGNvdmEvYmFk?=
+ =?utf-8?B?MGhSWjhONTRmUS9lZFhocE81MGc4NFJ3OTdVeFBMRWJPZWtMdzI5SGJWZlNK?=
+ =?utf-8?Q?E47m9Wk/AUZf4tPWquhKXj8NsWWS1j+OZYhoUEg?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8fcd0ba6-d281-4d52-eb55-08d91616688c
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 May 2021 13:52:54.9842
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Gxyyfcz34HUz1qy4tis9iyotFwiUkso9HLuNE3y4kftWH5h6k+bazKDC6kP7TPfsgjxavIZ8rIo2fEC9jECMNiirOI7501yIvhG6tAdMtaA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4682
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9982 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 suspectscore=0
+ malwarescore=0 mlxlogscore=999 spamscore=0 adultscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
+ definitions=main-2105130103
+X-Proofpoint-ORIG-GUID: pDnjrYeCmk-aZ3Jl2G6HhtUvcgQNE3D2
+X-Proofpoint-GUID: pDnjrYeCmk-aZ3Jl2G6HhtUvcgQNE3D2
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9982 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 phishscore=0
+ priorityscore=1501 suspectscore=0 spamscore=0 lowpriorityscore=0
+ adultscore=0 clxscore=1011 mlxscore=0 bulkscore=0 mlxlogscore=999
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104190000 definitions=main-2105130103
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, May 13, 2021 at 5:00 AM chenxiang (M) <chenxiang66@hisilicon.com> wrote:
->
-> Hi Rafael,
->
->
-> 在 2021/5/12 22:04, Rafael J. Wysocki 写道:
-> > On Wednesday, May 12, 2021 5:24:53 AM CEST chenxiang (M) wrote:
-> >> Hi Rafael,
-> >>
-> >>
-> >> 在 2021/5/12 3:16, Rafael J. Wysocki 写道:
-> >>> On Tuesday, May 11, 2021 4:39:31 PM CEST Rafael J. Wysocki wrote:
-> >>>> On 5/11/2021 5:59 AM, chenxiang (M) wrote:
-> >>>>> Hi Rafael and other guys,
-> >>>>>
-> >>>>> I am trying to add a device link between scsi_host->shost_gendev and
-> >>>>> hisi_hba->dev to support runtime PM for hisi_hba driver
-> >>>>>
-> >>>>> (as it supports runtime PM for scsi host in some scenarios such as
-> >>>>> error handler etc, we can avoid to do them again if adding a
-> >>>>>
-> >>>>> device link between scsi_host->shost_gendev and hisi_hba->dev) as
-> >>>>> follows (hisi_sas driver is under directory drivers/scsi/hisi_sas):
-> >>>>>
-> >>>>> device_link_add(&shost->shost_gendev, hisi_hba->dev,
-> >>>>> DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE)
-> >>>>>
-> >>>>> We have a full test on it, and it works well except when rmmod the
-> >>>>> driver, some call trace occurs as follows:
-> >>>>>
-> >>>>> [root@localhost ~]# rmmod hisi_sas_v3_hw
-> >>>>> [  105.377944] BUG: scheduling while atomic: kworker/113:1/811/0x00000201
-> >>>>> [  105.384469] Modules linked in: bluetooth rfkill ib_isert
-> >>>>> iscsi_target_mod ib_ipoib ib_umad iptable_filter vfio_iommu_type1
-> >>>>> vfio_pci vfio_virqfd vfio rpcrdma ib_is                         er
-> >>>>> libiscsi scsi_transport_iscsi crct10dif_ce sbsa_gwdt hns_roce_hw_v2
-> >>>>> hisi_sec2 hisi_hpre hisi_zip hisi_qm uacce spi_hisi_sfc_v3xx
-> >>>>> hisi_trng_v2 rng_core hisi_uncore                         _hha_pmu
-> >>>>> hisi_uncore_ddrc_pmu hisi_uncore_l3c_pmu spi_dw_mmio hisi_uncore_pmu
-> >>>>> hns3 hclge hnae3 hisi_sas_v3_hw(-) hisi_sas_main libsas
-> >>>>> [  105.424841] CPU: 113 PID: 811 Comm: kworker/113:1 Kdump: loaded
-> >>>>> Tainted: G        W         5.12.0-rc1+ #1
-> >>>>> [  105.434454] Hardware name: Huawei TaiShan 2280 V2/BC82AMDC, BIOS
-> >>>>> 2280-V2 CS V5.B143.01 04/22/2021
-> >>>>> [  105.443287] Workqueue: rcu_gp srcu_invoke_callbacks
-> >>>>> [  105.448154] Call trace:
-> >>>>> [  105.450593]  dump_backtrace+0x0/0x1a4
-> >>>>> [  105.454245]  show_stack+0x24/0x40
-> >>>>> [  105.457548]  dump_stack+0xc8/0x104
-> >>>>> [  105.460939]  __schedule_bug+0x68/0x80
-> >>>>> [  105.464590]  __schedule+0x73c/0x77c
-> >>>>> [  105.465700] BUG: scheduling while atomic: kworker/96:1/791/0x00000201
-> >>>>> [  105.468066]  schedule+0x7c/0x110
-> >>>>> [  105.468068]  schedule_timeout+0x194/0x1d4
-> >>>>> [  105.474490] Modules linked in:
-> >>>>> [  105.477692]  wait_for_completion+0x8c/0x12c
-> >>>>> [  105.477695]  rcu_barrier+0x1e0/0x2fc
-> >>>>> [  105.477697]  scsi_host_dev_release+0x50/0xf0
-> >>>>> [  105.477701]  device_release+0x40/0xa0
-> >>>>> [  105.477704]  kobject_put+0xac/0x100
-> >>>>> [  105.477707]  __device_link_free_srcu+0x50/0x74
-> >>>>> [  105.477709]  srcu_invoke_callbacks+0x108/0x1a4
-> >>>>> [  105.484743]  process_one_work+0x1dc/0x48c
-> >>>>> [  105.492468]  worker_thread+0x7c/0x464
-> >>>>> [  105.492471]  kthread+0x168/0x16c
-> >>>>> [  105.492473]  ret_from_fork+0x10/0x18
-> >>>>> ...
-> >>>>>
-> >>>>> After analyse the process, we find that it will
-> >>>>> device_del(&shost->gendev) in function scsi_remove_host() and then
-> >>>>>
-> >>>>> put_device(&shost->shost_gendev) in function scsi_host_put() when
-> >>>>> removing the driver, if there is a link between shost and hisi_hba->dev,
-> >>>>>
-> >>>>> it will try to delete the link in device_del(), and also will
-> >>>>> call_srcu(__device_link_free_srcu) to put_device() link->consumer and
-> >>>>> supplier.
-> >>>>>
-> >>>>> But if put device() for shost_gendev in device_link_free() is later
-> >>>>> than in scsi_host_put(), it will call scsi_host_dev_release() in
-> >>>>>
-> >>>>> srcu_invoke_callbacks() while it is atomic and there are scheduling in
-> >>>>> scsi_host_dev_release(),
-> >>>>>
-> >>>>> so it reports the BUG "scheduling while atomic:...".
-> >>>>>
-> >>>>> thread 1                                                   thread2
-> >>>>> hisi_sas_v3_remove
-> >>>>>       ...
-> >>>>>       sas_remove_host()
-> >>>>>           ...
-> >>>>>           scsi_remove_host()
-> >>>>>               ...
-> >>>>>               device_del(&shost->shost_gendev)
-> >>>>>                   ...
-> >>>>>                   device_link_purge()
-> >>>>>                       __device_link_del()
-> >>>>>                           device_unregister(&link->link_dev)
-> >>>>>                               devlink_dev_release
-> >>>>> call_srcu(__device_link_free_srcu)    ----------->
-> >>>>> srcu_invoke_callbacks  (atomic)
-> >>>>>           __device_link_free_srcu
-> >>>>>       ...
-> >>>>>       scsi_host_put()
-> >>>>>           put_device(&shost->shost_gendev) (ref = 1)
-> >>>>>                   device_link_free()
-> >>>>>                                 put_device(link->consumer)
-> >>>>> //shost->gendev ref = 0
-> >>>>>                                             ...
-> >>>>>                                             scsi_host_dev_release
-> >>>>>                                                         ...
-> >>>>> rcu_barrier
-> >>>>> kthread_stop()
-> >>>>>
-> >>>>>
-> >>>>> We can check kref of shost->shost_gendev to make sure scsi_host_put()
-> >>>>> to release scsi host device in LLDD driver to avoid the issue,
-> >>>>>
-> >>>>> but it seems be a common issue:  function __device_link_free_srcu
-> >>>>> calls put_device() for consumer and supplier,
-> >>>>>
-> >>>>> but if it's ref =0 at that time and there are scheduling or sleep in
-> >>>>> dev_release, it may have the issue.
-> >>>>>
-> >>>>> Do you have any idea about the issue?
-> >>>>>
-> >>>> Yes, this is a general issue.
-> >>>>
-> >>>> If I'm not mistaken, it can be addressed by further deferring the
-> >>>> device_link_free() invocation through a workqueue.
-> >>>>
-> >>>> Let me cut a patch doing this.
-> >>> Please test the patch below and let me know if it works for you.
-> >> I have a test on the patch, and it solves my issue.
-> > Great, thanks!
-> >
-> > Please also test the patch appended below (it uses a slightly different approach).
->
-> I have a test on this change, and it also solves my issue.
+On 5/12/21 11:49 PM, Shin'ichiro Kawasaki wrote:
+> The BUG message "BUG: using smp_processor_id() in preemptible [00000000]
+> code" was observed for TCMU devices with kernel config DEBUG_PREEMPT.
+> 
+> The message was observed when blktests block/005 was run on TCMU devices
+> with fileio backend or user:zbc backend [1]. The commit 1130b499b4a7
+> ("scsi: target: tcm_loop: Use LIO wq cmd submission helper") triggered
+> the symptom. The commit modified work queue to handle commands and
+> changed 'current->nr_cpu_allowed' at smp_processor_id() call.
+> 
+> The message was also observed at system shutdown when TCMU devices were
+> not cleaned up [2]. The function smp_processor_id() was called in SCSI
+> host work queue for abort handling, and triggered the BUG message. This
+> symptom was observed regardless of the commit 1130b499b4a7 ("scsi:
+> target: tcm_loop: Use LIO wq cmd submission helper").
+> 
+> To avoid the BUG message at smp_processor_id(), use get_cpu() and
+> put_cpu() instead which disable preemption.
+> 
+> [1]
+> 
+> [   56.468103] run blktests block/005 at 2021-05-12 14:16:38
+> [   57.369473] check_preemption_disabled: 85 callbacks suppressed
+> [   57.369480] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1511
+> [   57.369506] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1510
+> [   57.369512] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1506
+> [   57.369552] caller is __target_init_cmd+0x157/0x170 [target_core_mod]
+> [   57.369606] CPU: 4 PID: 1506 Comm: fio Not tainted 5.13.0-rc1+ #34
+> [   57.369613] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 1302 03/15/2018
+> [   57.369617] Call Trace:
+> [   57.369621] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1507
+> [   57.369628]  dump_stack+0x6d/0x89
+> [   57.369642]  check_preemption_disabled+0xc8/0xd0
+> [   57.369628] caller is __target_init_cmd+0x157/0x170 [target_core_mod]
+> [   57.369655]  __target_init_cmd+0x157/0x170 [target_core_mod]
+> [   57.369695]  target_init_cmd+0x76/0x90 [target_core_mod]
+> [   57.369732]  tcm_loop_queuecommand+0x109/0x210 [tcm_loop]
+> [   57.369744]  scsi_queue_rq+0x38e/0xc40
+> [   57.369761]  __blk_mq_try_issue_directly+0x109/0x1c0
+> [   57.369779]  blk_mq_try_issue_directly+0x43/0x90
+> [   57.369790]  blk_mq_submit_bio+0x4e5/0x5d0
+> [   57.369812]  submit_bio_noacct+0x46e/0x4e0
+> [   57.369830]  __blkdev_direct_IO_simple+0x1a3/0x2d0
+> [   57.369859]  ? set_init_blocksize.isra.0+0x60/0x60
+> [   57.369880]  generic_file_read_iter+0x89/0x160
+> [   57.369898]  blkdev_read_iter+0x44/0x60
+> [   57.369906]  new_sync_read+0x102/0x170
+> [   57.369929]  vfs_read+0xd4/0x160
+> [   57.369941]  __x64_sys_pread64+0x6e/0xa0
+> [   57.369946]  ? lockdep_hardirqs_on+0x79/0x100
+> [   57.369958]  do_syscall_64+0x3a/0x70
+> [   57.369965]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> [   57.369973] RIP: 0033:0x7f7ed4c1399f
+> [   57.369979] Code: 08 89 3c 24 48 89 4c 24 18 e8 7d f3 ff ff 4c 8b 54 24 18 48 8b 54 24 10 41 89 c0 48 8b 74 24 08 8b 3c 24 b8 11 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 31 44 89 c7 48 89 04 24 e8 cd f3 ff ff 48 8b
+> [   57.369983] RSP: 002b:00007ffd7918c580 EFLAGS: 00000293 ORIG_RAX: 0000000000000011
+> [   57.369990] RAX: ffffffffffffffda RBX: 00000000015b4540 RCX: 00007f7ed4c1399f
+> [   57.369993] RDX: 0000000000001000 RSI: 00000000015de000 RDI: 0000000000000009
+> [   57.369996] RBP: 00000000015b4540 R08: 0000000000000000 R09: 0000000000000001
+> [   57.369999] R10: 0000000000e5c000 R11: 0000000000000293 R12: 00007f7eb5269a70
+> [   57.370002] R13: 0000000000000000 R14: 0000000000001000 R15: 00000000015b4568
+> [   57.370031] CPU: 7 PID: 1507 Comm: fio Not tainted 5.13.0-rc1+ #34
+> [   57.370036] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 1302 03/15/2018
+> [   57.370039] Call Trace:
+> [   57.370045]  dump_stack+0x6d/0x89
+> [   57.370056]  check_preemption_disabled+0xc8/0xd0
+> [   57.370068]  __target_init_cmd+0x157/0x170 [target_core_mod]
+> [   57.370121]  target_init_cmd+0x76/0x90 [target_core_mod]
+> [   57.370178]  tcm_loop_queuecommand+0x109/0x210 [tcm_loop]
+> [   57.370197]  scsi_queue_rq+0x38e/0xc40
+> [   57.370224]  __blk_mq_try_issue_directly+0x109/0x1c0
+> ...
+> 
+> [2]
+> 
+> [  117.458597] BUG: using smp_processor_id() in preemptible [00000000] code: kworker/u16:8
+> [  117.467279] caller is __target_init_cmd+0x157/0x170 [target_core_mod]
+> [  117.473893] CPU: 1 PID: 418 Comm: kworker/u16:6 Not tainted 5.13.0-rc1+ #34
+> [  117.481150] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 8
+> [  117.481153] Workqueue: scsi_tmf_7 scmd_eh_abort_handler
+> [  117.481156] Call Trace:
+> [  117.481158]  dump_stack+0x6d/0x89
+> [  117.481162]  check_preemption_disabled+0xc8/0xd0
+> [  117.512575]  target_submit_tmr+0x41/0x150 [target_core_mod]
+> [  117.519705]  tcm_loop_issue_tmr+0xa7/0x100 [tcm_loop]
+> [  117.524913]  tcm_loop_abort_task+0x43/0x60 [tcm_loop]
+> [  117.530137]  scmd_eh_abort_handler+0x7b/0x230
+> [  117.534681]  process_one_work+0x268/0x580
+> [  117.538862]  worker_thread+0x55/0x3b0
+> [  117.542652]  ? process_one_work+0x580/0x580
+> [  117.548351]  kthread+0x143/0x160
+> [  117.551675]  ? kthread_create_worker_on_cpu+0x40/0x40
+> [  117.556873]  ret_from_fork+0x1f/0x30
+> 
+> Fixes: 1526d9f10c61 ("scsi: target: Make state_list per CPU")
+> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+> Cc: stable@vger.kernel.org # v5.11+
+> ---
+>   drivers/target/target_core_transport.c | 6 ++++--
+>   1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 8fbfe75c5744..9ed5d234acd8 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -1415,8 +1415,10 @@ void __target_init_cmd(
+>   	cmd->sense_buffer = sense_buffer;
+>   	cmd->orig_fe_lun = unpacked_lun;
+>   
+> -	if (!(cmd->se_cmd_flags & SCF_USE_CPUID))
+> -		cmd->cpuid = smp_processor_id();
+> +	if (!(cmd->se_cmd_flags & SCF_USE_CPUID)) {
+> +		cmd->cpuid = get_cpu();
+> +		put_cpu();
+> +	}
+>   
+>   	cmd->state_active = false;
+>   }
+> 
 
-Awesome, thanks!
+Looks Good.
 
-> >
-> > ---
-> >   drivers/base/core.c    |   37 +++++++++++++++++++++++--------------
-> >   include/linux/device.h |    6 ++----
-> >   2 files changed, 25 insertions(+), 18 deletions(-)
-> >
-> > Index: linux-pm/drivers/base/core.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/base/core.c
-> > +++ linux-pm/drivers/base/core.c
-> > @@ -193,6 +193,11 @@ int device_links_read_lock_held(void)
-> >   {
-> >       return srcu_read_lock_held(&device_links_srcu);
-> >   }
-> > +
-> > +void device_link_synchronize_removal(void)
-> > +{
-> > +     synchronize_srcu(&device_links_srcu);
-> > +}
-> >   #else /* !CONFIG_SRCU */
-> >   static DECLARE_RWSEM(device_links_lock);
-> >
-> > @@ -223,6 +228,10 @@ int device_links_read_lock_held(void)
-> >       return lockdep_is_held(&device_links_lock);
-> >   }
-> >   #endif
-> > +
-> > +static inline void device_link_synchronize_removal(void)
-> > +{
-> > +}
-> >   #endif /* !CONFIG_SRCU */
-> >
-> >   static bool device_is_ancestor(struct device *dev, struct device *target)
-> > @@ -444,8 +453,13 @@ static struct attribute *devlink_attrs[]
-> >   };
-> >   ATTRIBUTE_GROUPS(devlink);
-> >
-> > -static void device_link_free(struct device_link *link)
-> > +static void device_link_release_fn(struct work_struct *work)
-> >   {
-> > +     struct device_link *link = container_of(work, struct device_link, rm_work);
-> > +
-> > +     /* Ensure that all references to the link object have been dropped. */
-> > +     device_link_synchronize_removal();
-> > +
-> >       while (refcount_dec_not_one(&link->rpm_active))
-> >               pm_runtime_put(link->supplier);
-> >
-> > @@ -454,24 +468,19 @@ static void device_link_free(struct devi
-> >       kfree(link);
-> >   }
-> >
-> > -#ifdef CONFIG_SRCU
-> > -static void __device_link_free_srcu(struct rcu_head *rhead)
-> > -{
-> > -     device_link_free(container_of(rhead, struct device_link, rcu_head));
-> > -}
-> > -
-> >   static void devlink_dev_release(struct device *dev)
-> >   {
-> >       struct device_link *link = to_devlink(dev);
-> >
-> > -     call_srcu(&device_links_srcu, &link->rcu_head, __device_link_free_srcu);
-> > -}
-> > -#else
-> > -static void devlink_dev_release(struct device *dev)
-> > -{
-> > -     device_link_free(to_devlink(dev));
-> > +     INIT_WORK(&link->rm_work, device_link_release_fn);
-> > +     /*
-> > +      * It may take a while to complete this work because of the SRCU
-> > +      * synchronization in device_link_release_fn() and if the consumer or
-> > +      * supplier devices get deleted when it runs, so put it into the "long"
-> > +      * workqueue.
-> > +      */
-> > +     queue_work(system_long_wq, &link->rm_work);
-> >   }
-> > -#endif
-> >
-> >   static struct class devlink_class = {
-> >       .name = "devlink",
-> > Index: linux-pm/include/linux/device.h
-> > ===================================================================
-> > --- linux-pm.orig/include/linux/device.h
-> > +++ linux-pm/include/linux/device.h
-> > @@ -570,7 +570,7 @@ struct device {
-> >    * @flags: Link flags.
-> >    * @rpm_active: Whether or not the consumer device is runtime-PM-active.
-> >    * @kref: Count repeated addition of the same link.
-> > - * @rcu_head: An RCU head to use for deferred execution of SRCU callbacks.
-> > + * @rm_work: Work structure used for removing the link.
-> >    * @supplier_preactivated: Supplier has been made active before consumer probe.
-> >    */
-> >   struct device_link {
-> > @@ -583,9 +583,7 @@ struct device_link {
-> >       u32 flags;
-> >       refcount_t rpm_active;
-> >       struct kref kref;
-> > -#ifdef CONFIG_SRCU
-> > -     struct rcu_head rcu_head;
-> > -#endif
-> > +     struct work_struct rm_work;
-> >       bool supplier_preactivated; /* Owned by consumer probe. */
-> >   };
-> >
-> >
-> >
-> >
-> >
-> > .
-> >
->
->
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+
+-- 
+Himanshu Madhani                               Oracle Linux Engineering
