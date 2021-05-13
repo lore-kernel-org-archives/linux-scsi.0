@@ -8,147 +8,573 @@ X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DAB9C433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 08:34:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 115A9C43460
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 08:34:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA2D661287
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 08:34:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5F2C613E6
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 08:34:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232049AbhEMIfN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 May 2021 04:35:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48366 "EHLO
+        id S232053AbhEMIfO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 May 2021 04:35:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232006AbhEMIe0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 May 2021 04:34:26 -0400
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34F2EC061760
-        for <linux-scsi@vger.kernel.org>; Thu, 13 May 2021 01:33:16 -0700 (PDT)
-Received: by mail-pg1-x534.google.com with SMTP id t193so8130812pgb.4
-        for <linux-scsi@vger.kernel.org>; Thu, 13 May 2021 01:33:16 -0700 (PDT)
+        with ESMTP id S232010AbhEMIeb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 May 2021 04:34:31 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 218D1C061761
+        for <linux-scsi@vger.kernel.org>; Thu, 13 May 2021 01:33:21 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id i13so21182112pfu.2
+        for <linux-scsi@vger.kernel.org>; Thu, 13 May 2021 01:33:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=bDpNvAeSHB1kTHHIo5oZa5asGVBrPbrJBsu5vjFpZms=;
-        b=H4qw8tn1Ui1dElJcvKb/7q3f9JD7nWrur0mxiWy+7O3Fuv21uII3LoTrslRFpd8I86
-         3+9lLvi3lD8HcrZpScYgizLckVad4m6c/YuyJwlRVCk7PlQVYLaGmcPbV5wLKppjNh+0
-         fDCPBfOhx++4j/XERAos4+xiA7dVexsTgKoOo=
+        bh=s2v7PKP7z0jD5Qiu8bQehnBDuwh8Uyt7Wf3V60A+oAE=;
+        b=M1HKH/uz3NxYWmPBoscqPFK5y1ZPfAoB9E+QymPZHLF+NUft4lvPbUo2HBR4Cw0YS7
+         iSutz7mnEPxcL1OtU0OLq3J/Rzx+pQPcUDpvjLiY340l/fkVH94l6d9MKwdPvoLiKqHu
+         RS7A8my8POuxYNLgY1v9uuidL9IXf22KuNCaE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=bDpNvAeSHB1kTHHIo5oZa5asGVBrPbrJBsu5vjFpZms=;
-        b=F5XU3AWn+LEN4f2MbeQkkb+1si6RgrCOkc5zlPvl0g9oTbAKRnS1Aok/pOZfkN5bx4
-         tLsXwPjtvVWaX7TXP8JZD4TXVh5coPtU2OkbPo+waT2AIvT+fQNH2TyILd+ujsVBlgnC
-         VDEhRZsrxhdq69/CpW3Z1Zw9IScrvpecu2MeGutiKWNxiDosmUUYPF+xUwJOa3nf29H6
-         4iok1hyOcdVJznTrI8/EgQZJoBX00yIQtFV8/8A6+VWbzNiTqvB6Oyl06APprhl1uiHP
-         X414d9EGHo8+yZqwsF1R9WF0Hopo98InL+l8H/brEpInRxV5PnIyE/WhD0R+kkMR/KQw
-         2WLg==
-X-Gm-Message-State: AOAM530IuCtRMt8iLBh8Jlff+S3w8dEM0dfUvbwN3dWhRyer2wtZjnY7
-        GKU9t7P6K8760zMWFFQlIweTrYEsaRtLQefxvd4uaXUS6or6K3uY/MC7aBEb4AGfQKA196BCdDi
-        dYVJwIWm20GL5zmBtcJJUxeC+v6AlAonMC4Z7z8d5rDm/9bCEuo4oRABPPTHuud7h7FN9v0yq3Z
-        C0jpLwrQ==
-X-Google-Smtp-Source: ABdhPJwaOiBjUnDTlkDEoILinIG0Svolb5W5WIJCfmEGjGe72g5ygL306acky66lPAOrYjE95tCewQ==
-X-Received: by 2002:a63:5218:: with SMTP id g24mr35958851pgb.309.1620894794141;
-        Thu, 13 May 2021 01:33:14 -0700 (PDT)
+        bh=s2v7PKP7z0jD5Qiu8bQehnBDuwh8Uyt7Wf3V60A+oAE=;
+        b=H97482dc504mRkr44cjWbnB+TDvTsYOsTJcy+oZfutjhL4CjhLKBp1Te/q+Z+kjepA
+         h12/bI1rYDJGieQ3xQNQqON4cK5Zkog2Xb0uhcqDx/IcoIv+/aYCb+QhiUkDRh3+my4n
+         2aYR8ra5rfNo8hcK9hkDp9987mx1W/padEPLtRA+WESRn3zGLfgrdNzX1EF/EBli51Ec
+         9hyosbJ2oSw8Dw/W+vs4XLQcKrFi3XzfwA0tlvdli/7B79qSxkR+KbTMlN8pZbf4UOli
+         w3x9r79ln/j1RImkk6l+6+z9hBGlPQxhbjqAD3MSpcgxJOoJA+XgKgpCa7A6XCDS5jcR
+         IKMw==
+X-Gm-Message-State: AOAM531yMBQpnGHKtJlwnPwf7SJLfBJem3YXecnzDgqfc1ucFlU4hbJi
+        ofyQt4/lGVAC9lWeTHByuZ8UL+jt7fFmlmIepRK7czk33Hr499u0rhoh8KNO/zfMK1IoP2OPJ21
+        qnoh/0Z6Lp3ib4w5mT9QBooJTnS41bhIQ5fHtuNMv5UOLI9l44YljdZJetvmdxf/gfox7afg52M
+        HdDJ1SuA==
+X-Google-Smtp-Source: ABdhPJzvmcMIRGVseIiBHfBnrcq1YSrpgmdF2eXb8Z8RcuZUsuMxqI9cK92S6iS0frLFoH5rHc+1ug==
+X-Received: by 2002:a17:90a:f40f:: with SMTP id ch15mr43882130pjb.113.1620894799391;
+        Thu, 13 May 2021 01:33:19 -0700 (PDT)
 Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id i123sm1632468pfc.53.2021.05.13.01.33.11
+        by smtp.gmail.com with ESMTPSA id i123sm1632468pfc.53.2021.05.13.01.33.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 May 2021 01:33:13 -0700 (PDT)
+        Thu, 13 May 2021 01:33:17 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         steve.hagan@broadcom.com, peter.rivera@broadcom.com,
         mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
-        sathya.prakash@broadcom.com
-Subject: [PATCH v5 12/24] mpi3mr: add bios_param shost template hook
-Date:   Thu, 13 May 2021 14:05:56 +0530
-Message-Id: <20210513083608.2243297-13-kashyap.desai@broadcom.com>
+        sathya.prakash@broadcom.com, hare@suse.de, thenzl@redhat.com
+Subject: [PATCH v5 13/24] mpi3mr: implement scsi error handler hooks
+Date:   Thu, 13 May 2021 14:05:57 +0530
+Message-Id: <20210513083608.2243297-14-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210513083608.2243297-1-kashyap.desai@broadcom.com>
 References: <20210513083608.2243297-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000082f04305c231fa43"
+        boundary="000000000000c4891b05c231fae3"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000082f04305c231fa43
+--000000000000c4891b05c231fae3
 
+SCSI EH hook is added.
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
 Cc: sathya.prakash@broadcom.com
+Cc: hare@suse.de
+Cc: thenzl@redhat.com
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 41 +++++++++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr.h    |   3 +
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |  35 ++++
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 347 ++++++++++++++++++++++++++++++++
+ 3 files changed, 385 insertions(+)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 89d75d522b30..d6aab3b04eff 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -97,6 +97,7 @@ extern struct list_head mrioc_list;
+ /* command/controller interaction timeout definitions in seconds */
+ #define MPI3MR_INTADMCMD_TIMEOUT		10
+ #define MPI3MR_PORTENABLE_TIMEOUT		300
++#define MPI3MR_ABORTTM_TIMEOUT			30
+ #define MPI3MR_RESETTM_TIMEOUT			30
+ #define MPI3MR_RESET_HOST_IOWAIT_TIMEOUT	5
+ #define MPI3MR_TSUPDATE_INTERVAL		900
+@@ -626,6 +627,7 @@ struct scmd_priv {
+  * @chain_bitmap_sz: Chain buffer allocator bitmap size
+  * @chain_bitmap: Chain buffer allocator bitmap
+  * @chain_buf_lock: Chain buffer list lock
++ * @host_tm_cmds: Command tracker for task management commands
+  * @dev_rmhs_cmds: Command tracker for device removal commands
+  * @devrem_bitmap_sz: Device removal bitmap size
+  * @devrem_bitmap: Device removal bitmap
+@@ -748,6 +750,7 @@ struct mpi3mr_ioc {
+ 	void *chain_bitmap;
+ 	spinlock_t chain_buf_lock;
+ 
++	struct mpi3mr_drv_cmd host_tm_cmds;
+ 	struct mpi3mr_drv_cmd dev_rmhs_cmds[MPI3MR_NUM_DEVRMCMD];
+ 	u16 devrem_bitmap_sz;
+ 	void *devrem_bitmap;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 023b9f6f374b..b733a008f81e 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -172,6 +172,8 @@ mpi3mr_get_drv_cmd(struct mpi3mr_ioc *mrioc, u16 host_tag,
+ 	switch (host_tag) {
+ 	case MPI3MR_HOSTTAG_INITCMDS:
+ 		return &mrioc->init_cmds;
++	case MPI3MR_HOSTTAG_BLK_TMS:
++		return &mrioc->host_tm_cmds;
+ 	case MPI3MR_HOSTTAG_INVALID:
+ 		if (def_reply && def_reply->function ==
+ 		    MPI3_FUNCTION_EVENT_NOTIFICATION)
+@@ -2033,6 +2035,26 @@ static int mpi3mr_alloc_reply_sense_bufs(struct mpi3mr_ioc *mrioc)
+ 			goto out_failed;
+ 	}
+ 
++	mrioc->host_tm_cmds.reply = kzalloc(mrioc->facts.reply_sz, GFP_KERNEL);
++	if (!mrioc->host_tm_cmds.reply)
++		goto out_failed;
++
++	mrioc->dev_handle_bitmap_sz = mrioc->facts.max_devhandle / 8;
++	if (mrioc->facts.max_devhandle % 8)
++		mrioc->dev_handle_bitmap_sz++;
++	mrioc->removepend_bitmap = kzalloc(mrioc->dev_handle_bitmap_sz,
++	    GFP_KERNEL);
++	if (!mrioc->removepend_bitmap)
++		goto out_failed;
++
++	mrioc->devrem_bitmap_sz = MPI3MR_NUM_DEVRMCMD / 8;
++	if (MPI3MR_NUM_DEVRMCMD % 8)
++		mrioc->devrem_bitmap_sz++;
++	mrioc->devrem_bitmap = kzalloc(mrioc->devrem_bitmap_sz,
++	    GFP_KERNEL);
++	if (!mrioc->devrem_bitmap)
++		goto out_failed;
++
+ 	mrioc->num_reply_bufs = mrioc->facts.max_reqs + MPI3MR_NUM_EVT_REPLIES;
+ 	mrioc->reply_free_qsz = mrioc->num_reply_bufs + 1;
+ 	mrioc->num_sense_bufs = mrioc->facts.max_reqs / MPI3MR_SENSEBUF_FACTOR;
+@@ -3046,6 +3068,8 @@ static void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
+ 	memset(mrioc->admin_reply_base, 0, mrioc->admin_reply_q_sz);
+ 
+ 	memset(mrioc->init_cmds.reply, 0, sizeof(*mrioc->init_cmds.reply));
++	memset(mrioc->host_tm_cmds.reply, 0,
++	    sizeof(*mrioc->host_tm_cmds.reply));
+ 	for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++)
+ 		memset(mrioc->dev_rmhs_cmds[i].reply, 0,
+ 		    sizeof(*mrioc->dev_rmhs_cmds[i].reply));
+@@ -3139,6 +3163,15 @@ static void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
+ 	kfree(mrioc->init_cmds.reply);
+ 	mrioc->init_cmds.reply = NULL;
+ 
++	kfree(mrioc->host_tm_cmds.reply);
++	mrioc->host_tm_cmds.reply = NULL;
++
++	kfree(mrioc->removepend_bitmap);
++	mrioc->removepend_bitmap = NULL;
++
++	kfree(mrioc->devrem_bitmap);
++	mrioc->devrem_bitmap = NULL;
++
+ 	kfree(mrioc->chain_bitmap);
+ 	mrioc->chain_bitmap = NULL;
+ 
+@@ -3317,6 +3350,8 @@ static void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc)
+ 
+ 	cmdptr = &mrioc->init_cmds;
+ 	mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
++	cmdptr = &mrioc->host_tm_cmds;
++	mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
+ 
+ 	for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++) {
+ 		cmdptr = &mrioc->dev_rmhs_cmds[i];
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index d7b6f9417aa8..d3ace6cdd3fd 100644
+index d3ace6cdd3fd..d3eedc2ac410 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2059,6 +2059,46 @@ static int mpi3mr_build_sg_scmd(struct mpi3mr_ioc *mrioc,
+@@ -2059,6 +2059,212 @@ static int mpi3mr_build_sg_scmd(struct mpi3mr_ioc *mrioc,
  	return ret;
  }
  
 +/**
-+ * mpi3mr_bios_param - BIOS param callback
-+ * @sdev: SCSI device reference
-+ * @bdev: Block device reference
-+ * @capacity: Capacity in logical sectors
-+ * @params: Parameter array
++ * mpi3mr_print_response_code - print TM response as a string
++ * @mrioc: Adapter instance reference
++ * @resp_code: TM response code
 + *
-+ * Just the parameters with heads/secots/cylinders.
++ * Print TM response code as a readable string.
 + *
-+ * Return: 0 always
++ * Return: Nothing.
 + */
-+static int mpi3mr_bios_param(struct scsi_device *sdev,
-+	struct block_device *bdev, sector_t capacity, int params[])
++static void mpi3mr_print_response_code(struct mpi3mr_ioc *mrioc, u8 resp_code)
 +{
-+	int heads;
-+	int sectors;
-+	sector_t cylinders;
-+	ulong dummy;
++	char *desc;
 +
-+	heads = 64;
-+	sectors = 32;
++	switch (resp_code) {
++	case MPI3MR_RSP_TM_COMPLETE:
++		desc = "task management request completed";
++		break;
++	case MPI3MR_RSP_INVALID_FRAME:
++		desc = "invalid frame";
++		break;
++	case MPI3MR_RSP_TM_NOT_SUPPORTED:
++		desc = "task management request not supported";
++		break;
++	case MPI3MR_RSP_TM_FAILED:
++		desc = "task management request failed";
++		break;
++	case MPI3MR_RSP_TM_SUCCEEDED:
++		desc = "task management request succeeded";
++		break;
++	case MPI3MR_RSP_TM_INVALID_LUN:
++		desc = "invalid lun";
++		break;
++	case MPI3MR_RSP_TM_OVERLAPPED_TAG:
++		desc = "overlapped tag attempted";
++		break;
++	case MPI3MR_RSP_IO_QUEUED_ON_IOC:
++		desc = "task queued, however not sent to target";
++		break;
++	default:
++		desc = "unknown";
++		break;
++	}
++	ioc_info(mrioc, "%s :response_code(0x%01x): %s\n", __func__,
++	    resp_code, desc);
++}
 +
-+	dummy = heads * sectors;
-+	cylinders = capacity;
-+	sector_div(cylinders, dummy);
++/**
++ * mpi3mr_issue_tm - Issue Task Management request
++ * @mrioc: Adapter instance reference
++ * @tm_type: Task Management type
++ * @handle: Device handle
++ * @lun: lun ID
++ * @htag: Host tag of the TM request
++ * @drv_cmd: Internal command tracker
++ * @resp_code: Response code place holder
++ * @cmd_priv: SCSI command private data
++ *
++ * Issues a Task Management Request to the controller for a
++ * specified target, lun and command and wait for its completion
++ * and check TM response. Recover the TM if it timed out by
++ * issuing controller reset.
++ *
++ * Return: 0 on success, non-zero on errors
++ */
++static int mpi3mr_issue_tm(struct mpi3mr_ioc *mrioc, u8 tm_type,
++	u16 handle, uint lun, u16 htag, ulong timeout,
++	struct mpi3mr_drv_cmd *drv_cmd,
++	u8 *resp_code, struct scmd_priv *cmd_priv)
++{
++	struct _mpi3_scsi_task_mgmt_request tm_req;
++	struct _mpi3_scsi_task_mgmt_reply *tm_reply = NULL;
++	int retval = 0;
++	struct mpi3mr_tgt_dev *tgtdev = NULL;
++	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data = NULL;
++	struct op_req_qinfo *op_req_q = NULL;
 +
-+	if ((ulong)capacity >= 0x200000) {
-+		heads = 255;
-+		sectors = 63;
-+		dummy = heads * sectors;
-+		cylinders = capacity;
-+		sector_div(cylinders, dummy);
++	ioc_info(mrioc, "%s :Issue TM: TM type (0x%x) for devhandle 0x%04x\n",
++	     __func__, tm_type, handle);
++	if (mrioc->unrecoverable) {
++		retval = -1;
++		ioc_err(mrioc, "%s :Issue TM: Unrecoverable controller\n",
++		    __func__);
++		goto out;
 +	}
 +
-+	params[0] = heads;
-+	params[1] = sectors;
-+	params[2] = cylinders;
-+	return 0;
++	memset(&tm_req, 0, sizeof(tm_req));
++	mutex_lock(&drv_cmd->mutex);
++	if (drv_cmd->state & MPI3MR_CMD_PENDING) {
++		retval = -1;
++		ioc_err(mrioc, "%s :Issue TM: Command is in use\n", __func__);
++		mutex_unlock(&drv_cmd->mutex);
++		goto out;
++	}
++	if (mrioc->reset_in_progress) {
++		retval = -1;
++		ioc_err(mrioc, "%s :Issue TM: Reset in progress\n", __func__);
++		mutex_unlock(&drv_cmd->mutex);
++		goto out;
++	}
++
++	drv_cmd->state = MPI3MR_CMD_PENDING;
++	drv_cmd->is_waiting = 1;
++	drv_cmd->callback = NULL;
++	tm_req.dev_handle = cpu_to_le16(handle);
++	tm_req.task_type = tm_type;
++	tm_req.host_tag = cpu_to_le16(htag);
++
++	int_to_scsilun(lun, (struct scsi_lun *)tm_req.lun);
++	tm_req.function = MPI3_FUNCTION_SCSI_TASK_MGMT;
++
++	tgtdev = mpi3mr_get_tgtdev_by_handle(mrioc, handle);
++	if (tgtdev && tgtdev->starget && tgtdev->starget->hostdata) {
++		scsi_tgt_priv_data = (struct mpi3mr_stgt_priv_data *)
++		    tgtdev->starget->hostdata;
++		atomic_inc(&scsi_tgt_priv_data->block_io);
++	}
++	if (cmd_priv) {
++		op_req_q = &mrioc->req_qinfo[cmd_priv->req_q_idx];
++		tm_req.task_host_tag = cpu_to_le16(cmd_priv->host_tag);
++		tm_req.task_request_queue_id = cpu_to_le16(op_req_q->qid);
++	}
++	if (tgtdev && (tgtdev->dev_type == MPI3_DEVICE_DEVFORM_PCIE)) {
++		if (cmd_priv && tgtdev->dev_spec.pcie_inf.abort_to)
++			timeout = tgtdev->dev_spec.pcie_inf.abort_to;
++		else if (!cmd_priv && tgtdev->dev_spec.pcie_inf.reset_to)
++			timeout = tgtdev->dev_spec.pcie_inf.reset_to;
++	}
++
++	init_completion(&drv_cmd->done);
++	retval = mpi3mr_admin_request_post(mrioc, &tm_req, sizeof(tm_req), 1);
++	if (retval) {
++		ioc_err(mrioc, "%s :Issue TM: Admin Post failed\n", __func__);
++		goto out_unlock;
++	}
++	wait_for_completion_timeout(&drv_cmd->done, (timeout * HZ));
++
++	if (!(drv_cmd->state & MPI3MR_CMD_COMPLETE)) {
++		ioc_err(mrioc, "%s :Issue TM: command timed out\n", __func__);
++		drv_cmd->is_waiting = 0;
++		retval = -1;
++		mpi3mr_soft_reset_handler(mrioc,
++		    MPI3MR_RESET_FROM_TM_TIMEOUT, 1);
++		goto out_unlock;
++	}
++
++	if (drv_cmd->state & MPI3MR_CMD_REPLY_VALID)
++		tm_reply = (struct _mpi3_scsi_task_mgmt_reply *)drv_cmd->reply;
++
++	if (drv_cmd->ioc_status != MPI3_IOCSTATUS_SUCCESS) {
++		ioc_err(mrioc,
++		    "%s :Issue TM: handle(0x%04x) Failed ioc_status(0x%04x) Loginfo(0x%08x)\n",
++		    __func__, handle, drv_cmd->ioc_status,
++		    drv_cmd->ioc_loginfo);
++		retval = -1;
++		goto out_unlock;
++	}
++
++	if (!tm_reply) {
++		ioc_err(mrioc, "%s :Issue TM: No TM Reply message\n", __func__);
++		retval = -1;
++		goto out_unlock;
++	}
++
++	*resp_code = le32_to_cpu(tm_reply->response_data) &
++	    MPI3MR_RI_MASK_RESPCODE;
++	switch (*resp_code) {
++	case MPI3MR_RSP_TM_SUCCEEDED:
++	case MPI3MR_RSP_TM_COMPLETE:
++		break;
++	case MPI3MR_RSP_IO_QUEUED_ON_IOC:
++		if (tm_type != MPI3_SCSITASKMGMT_TASKTYPE_QUERY_TASK)
++			retval = -1;
++		break;
++	default:
++		retval = -1;
++		break;
++	}
++
++	ioc_info(mrioc,
++	    "%s :Issue TM: Completed TM type (0x%x) handle(0x%04x) ",
++	    __func__, tm_type, handle);
++	ioc_info(mrioc,
++	    "with ioc_status(0x%04x), loginfo(0x%08x), term_count(0x%08x)\n",
++	    drv_cmd->ioc_status, drv_cmd->ioc_loginfo,
++	    le32_to_cpu(tm_reply->termination_count));
++	mpi3mr_print_response_code(mrioc, *resp_code);
++
++out_unlock:
++	drv_cmd->state = MPI3MR_CMD_NOTUSED;
++	mutex_unlock(&drv_cmd->mutex);
++	if (scsi_tgt_priv_data)
++		atomic_dec_if_positive(&scsi_tgt_priv_data->block_io);
++	if (tgtdev)
++		mpi3mr_tgtdev_put(tgtdev);
++	if (!retval) {
++		/*
++		 * Flush all IRQ handlers by calling synchronize_irq().
++		 * mpi3mr_ioc_disable_intr() takes care of it.
++		 */
++		mpi3mr_ioc_disable_intr(mrioc);
++		mpi3mr_ioc_enable_intr(mrioc);
++	}
++out:
++	return retval;
 +}
 +
  /**
-  * mpi3mr_map_queues - Map queues callback handler
+  * mpi3mr_bios_param - BIOS param callback
+  * @sdev: SCSI device reference
+@@ -2116,6 +2322,143 @@ static int mpi3mr_map_queues(struct Scsi_Host *shost)
+ 	    mrioc->pdev, mrioc->op_reply_q_offset);
+ }
+ 
++/**
++ * mpi3mr_eh_host_reset - Host reset error handling callback
++ * @scmd: SCSI command reference
++ *
++ * Issue controller reset if the scmd is for a Physical Device,
++ * if the scmd is for RAID volume, then wait for
++ * MPI3MR_RAID_ERRREC_RESET_TIMEOUT and checke whether any
++ * pending I/Os prior to issuing reset to the controller.
++ *
++ * Return: SUCCESS of successful reset else FAILED
++ */
++static int mpi3mr_eh_host_reset(struct scsi_cmnd *scmd)
++{
++	struct mpi3mr_ioc *mrioc = shost_priv(scmd->device->host);
++	int retval = FAILED, ret;
++
++	ret = mpi3mr_soft_reset_handler(mrioc,
++	    MPI3MR_RESET_FROM_EH_HOS, 1);
++	if (ret)
++		goto out;
++
++	retval = SUCCESS;
++out:
++	sdev_printk(KERN_INFO, scmd->device,
++	    "Host reset is %s for scmd(%p)\n",
++	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
++
++	return retval;
++}
++
++/**
++ * mpi3mr_eh_target_reset - Target reset error handling callback
++ * @scmd: SCSI command reference
++ *
++ * Issue Target reset Task Management and verify the scmd is
++ * terminated successfully and return status accordingly.
++ *
++ * Return: SUCCESS of successful termination of the scmd else
++ *         FAILED
++ */
++static int mpi3mr_eh_target_reset(struct scsi_cmnd *scmd)
++{
++	struct mpi3mr_ioc *mrioc = shost_priv(scmd->device->host);
++	struct mpi3mr_stgt_priv_data *stgt_priv_data;
++	struct mpi3mr_sdev_priv_data *sdev_priv_data;
++	u16 dev_handle;
++	u8 resp_code = 0;
++	int retval = FAILED, ret = 0;
++
++	sdev_printk(KERN_INFO, scmd->device,
++	    "Attempting Target Reset! scmd(%p)\n", scmd);
++	scsi_print_command(scmd);
++
++	sdev_priv_data = scmd->device->hostdata;
++	if (!sdev_priv_data || !sdev_priv_data->tgt_priv_data) {
++		sdev_printk(KERN_INFO, scmd->device,
++		    "SCSI device is not available\n");
++		retval = SUCCESS;
++		goto out;
++	}
++
++	stgt_priv_data = sdev_priv_data->tgt_priv_data;
++	dev_handle = stgt_priv_data->dev_handle;
++	sdev_printk(KERN_INFO, scmd->device,
++	    "Target Reset is issued to handle(0x%04x)\n",
++	    dev_handle);
++
++	ret = mpi3mr_issue_tm(mrioc,
++	    MPI3_SCSITASKMGMT_TASKTYPE_TARGET_RESET, dev_handle,
++	    sdev_priv_data->lun_id, MPI3MR_HOSTTAG_BLK_TMS,
++	    MPI3MR_RESETTM_TIMEOUT, &mrioc->host_tm_cmds, &resp_code, NULL);
++
++	if (ret)
++		goto out;
++
++	retval = SUCCESS;
++out:
++	sdev_printk(KERN_INFO, scmd->device,
++	    "Target reset is %s for scmd(%p)\n",
++	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
++
++	return retval;
++}
++
++/**
++ * mpi3mr_eh_dev_reset- Device reset error handling callback
++ * @scmd: SCSI command reference
++ *
++ * Issue lun reset Task Management and verify the scmd is
++ * terminated successfully and return status accordingly.
++ *
++ * Return: SUCCESS of successful termination of the scmd else
++ *         FAILED
++ */
++static int mpi3mr_eh_dev_reset(struct scsi_cmnd *scmd)
++{
++	struct mpi3mr_ioc *mrioc = shost_priv(scmd->device->host);
++	struct mpi3mr_stgt_priv_data *stgt_priv_data;
++	struct mpi3mr_sdev_priv_data *sdev_priv_data;
++	u16 dev_handle;
++	u8 resp_code = 0;
++	int retval = FAILED, ret = 0;
++
++	sdev_printk(KERN_INFO, scmd->device,
++	    "Attempting Device(lun) Reset! scmd(%p)\n", scmd);
++	scsi_print_command(scmd);
++
++	sdev_priv_data = scmd->device->hostdata;
++	if (!sdev_priv_data || !sdev_priv_data->tgt_priv_data) {
++		sdev_printk(KERN_INFO, scmd->device,
++		    "SCSI device is not available\n");
++		retval = SUCCESS;
++		goto out;
++	}
++
++	stgt_priv_data = sdev_priv_data->tgt_priv_data;
++	dev_handle = stgt_priv_data->dev_handle;
++	sdev_printk(KERN_INFO, scmd->device,
++	    "Device(lun) Reset is issued to handle(0x%04x)\n", dev_handle);
++
++	ret = mpi3mr_issue_tm(mrioc,
++	    MPI3_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, dev_handle,
++	    sdev_priv_data->lun_id, MPI3MR_HOSTTAG_BLK_TMS,
++	    MPI3MR_RESETTM_TIMEOUT, &mrioc->host_tm_cmds, &resp_code, NULL);
++
++	if (ret)
++		goto out;
++
++	retval = SUCCESS;
++out:
++	sdev_printk(KERN_INFO, scmd->device,
++	    "Device(lun) reset is %s for scmd(%p)\n",
++	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
++
++	return retval;
++}
++
+ /**
+  * mpi3mr_scan_start - Scan start callback handler
   * @shost: SCSI host reference
-@@ -2502,6 +2542,7 @@ static struct scsi_host_template mpi3mr_driver_template = {
+@@ -2542,6 +2885,9 @@ static struct scsi_host_template mpi3mr_driver_template = {
  	.slave_destroy			= mpi3mr_slave_destroy,
  	.scan_finished			= mpi3mr_scan_finished,
  	.scan_start			= mpi3mr_scan_start,
-+	.bios_param			= mpi3mr_bios_param,
++	.eh_device_reset_handler	= mpi3mr_eh_dev_reset,
++	.eh_target_reset_handler	= mpi3mr_eh_target_reset,
++	.eh_host_reset_handler		= mpi3mr_eh_host_reset,
+ 	.bios_param			= mpi3mr_bios_param,
  	.map_queues			= mpi3mr_map_queues,
  	.no_write_same			= 1,
- 	.can_queue			= 1,
+@@ -2628,6 +2974,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	mutex_init(&mrioc->reset_mutex);
+ 	mpi3mr_init_drv_cmd(&mrioc->init_cmds, MPI3MR_HOSTTAG_INITCMDS);
++	mpi3mr_init_drv_cmd(&mrioc->host_tm_cmds, MPI3MR_HOSTTAG_BLK_TMS);
+ 
+ 	for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++)
+ 		mpi3mr_init_drv_cmd(&mrioc->dev_rmhs_cmds[i],
 -- 
 2.18.1
 
 
---00000000000082f04305c231fa43
+--000000000000c4891b05c231fae3
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -219,13 +645,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHYDvoBbp3xbDBCakwEibjF97pgf
-kfhp0xis4PqZmiM3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDUxMzA4MzMxNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKZSNaG5hZBcIQomV2kItG7ochEx
+UQCdOXGNaUSe1L8qMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDUxMzA4MzMxOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQAvTfeMYt+0TUGnRkcrkaBkvaFz3OAMvnSNeD+Vhqn/B9zl
-f6C4eqbQPbUkagHChS2M8e0VHHsoo6asLYVASvWt8W4hzWntMecWvYbwWBQbESJdIfE/wr4mVoFG
-nV+5qw1IsC1rfNfvDp1xOU8x87INaOZaUFF0K1SKmU8y3cAPPP45THDFF4VMzcfW0tz2UGS+o8ud
-3awEpkTfi2vwAQCb2G9gSijJ3xsegWuRMvZ+BchgN4+QptEsKRjb2DCaIopO5THwVNgtFsP8XVml
-h0//w9DizQJeFJDB/R3shyki7ImldcqSCRhy95roQGyI8YgCrZ/UuwJP2p2G5EsQV9M3
---00000000000082f04305c231fa43--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQC2eG+qPp1aQtl53UCmAOyjzRyc/GVEvxDrPZuEP2SP+nk+
+tJQwj7h9HAH6ekINU97fq+ZrDKsLv5pkt168c1qBtcvrJSZcWCSCpg8kUgA2CDi+HSfODTiuuhD9
+pfycziHWGXC81LhZbk0wlkcxkNxVzcgaOm7xxts9r5f7Cj9Pd2Kwef8I/J4rWma47ytClktg7Hq8
+XoupF7PxIEzlZtUlBhM9a51dWh8jeZM+gReYNFj5Zg3pOlKBJhsPJ7YcQSsTpmtrJgpTxpCIL9F3
+76Fhptls4VQ15xVIEaqsH9tRx3n2wVvIc79CEccHdSF5K/WNYc0jdKDaWQof3fh0MKAY
+--000000000000c4891b05c231fae3--
