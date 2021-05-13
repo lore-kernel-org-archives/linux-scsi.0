@@ -6,113 +6,127 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 019D7C433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 00:14:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00359C433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 01:15:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C90B4613DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 00:14:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7EA461405
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 May 2021 01:15:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232585AbhEMAPh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 May 2021 20:15:37 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:5310 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S230361AbhEMAN1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 May 2021 20:13:27 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 14D02j24192221;
-        Wed, 12 May 2021 20:11:58 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=4Dq8nU7HG2xtMn8ExcBDbZV483UgBmvRMJuLieu7cgk=;
- b=Zn2dyXfj3Sy2JYAeWMPhJP/Y8OkP24X52pYWUYtYsNtghH/MtMQU65YIC+aImvDmpNjr
- YHtO3SeNXrCnc9Ik4WwHH05riujrsSW5fFhbmzdAdo9EEoHdp6wm0KC7vPGeioKhjT6W
- Mpic+OKtxayOy/U0zJg6Ug12Cp6UH69+g0pF+AwFq6Gv3l9JhrJODo78Z5Chh4Z1pKQ9
- lMmphJnU6CLkE/q+BdvlVpC+IiyhHphrkjNAhF5artHHAEBvRDqLKXhFCiTf6A7isDLI
- Q8pffXVtPWtRPJttI2ken8GXAQcqqOAs8LUN7Ld3F87s+nk3EKCvWCXjWnFQAvXjQrNM 8Q== 
-Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 38gpvnbc75-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 12 May 2021 20:11:58 -0400
-Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
-        by ppma03dal.us.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 14D04Ser002238;
-        Thu, 13 May 2021 00:11:57 GMT
-Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
-        by ppma03dal.us.ibm.com with ESMTP id 38dj99scnf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 13 May 2021 00:11:57 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 14D0BuTt61538928
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 13 May 2021 00:11:56 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 77CE678060;
-        Thu, 13 May 2021 00:11:56 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id CB24D7805C;
-        Thu, 13 May 2021 00:11:54 +0000 (GMT)
-Received: from jarvis.int.hansenpartnership.com (unknown [9.80.227.209])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Thu, 13 May 2021 00:11:54 +0000 (GMT)
-Message-ID: <0c2d87fde65e40f34914e7555d3971f7b2c8f28b.camel@linux.ibm.com>
-Subject: Re: [PATCH v2 0/7] Rename scsi_get_lba() into scsi_get_pos()
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org
-Date:   Wed, 12 May 2021 17:11:53 -0700
-In-Reply-To: <8d72e969-44e9-5453-70fc-c9cb0779634d@acm.org>
-References: <20210512200849.9002-1-bvanassche@acm.org>
-         <96a253f8776a7736b480bdf190840440ffb4e53c.camel@linux.vnet.ibm.com>
-         <b27a3c7d-1c10-faaa-4c33-273a463faa80@acm.org>
-         <5967066117ed90e6f72bee006ee7e66722a5d1b3.camel@linux.ibm.com>
-         <8d72e969-44e9-5453-70fc-c9cb0779634d@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        id S234256AbhEMBQ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 May 2021 21:16:26 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:32363 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233250AbhEMBQ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 May 2021 21:16:26 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1620868517; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=0HUdi3RVnrIz9MP5yZUO5pEKm9r054S5adp5gghHIuo=;
+ b=KBmCIzAwDg9HglTybJF8/EEX1eblk1+gTaNJp3N+XvfHQbLN8xHY0cXKDkIcEuuG+8hNeJvy
+ 85PXpjyH5ozY1FARUoQBdXTdQVRq2GOF/3GMl1LGCh6lg/EmG4EZaa0PLV+I3ify+3Qkt1kv
+ cYJyp5g10l4CBhxxYVO4XTno4BU=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 609c7da1938a1a6b8f70dd92 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 13 May 2021 01:15:13
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 24EDCC359F4; Thu, 13 May 2021 01:15:12 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0EE32C35960;
+        Thu, 13 May 2021 01:15:09 +0000 (UTC)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: IeiK5Q386sei8vEdg_q64ZAxEtY3MI1v
-X-Proofpoint-GUID: IeiK5Q386sei8vEdg_q64ZAxEtY3MI1v
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-05-12_13:2021-05-12,2021-05-12 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
- lowpriorityscore=0 phishscore=0 clxscore=1015 impostorscore=0
- priorityscore=1501 mlxscore=0 adultscore=0 mlxlogscore=999 spamscore=0
- bulkscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2104190000 definitions=main-2105120157
+Date:   Thu, 13 May 2021 09:15:09 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Bean Huo <huobean@gmail.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 1/2] scsi: ufs: Introduce hba performance monitor sysfs
+ nodes
+In-Reply-To: <cb32c4e786ac73681b80b8af556543f08f076687.camel@gmail.com>
+References: <1619058521-35307-1-git-send-email-cang@codeaurora.org>
+ <1619058521-35307-2-git-send-email-cang@codeaurora.org>
+ <cb32c4e786ac73681b80b8af556543f08f076687.camel@gmail.com>
+Message-ID: <638d9eb678db15e95317c16f2313ea19@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2021-05-12 at 17:00 -0700, Bart Van Assche wrote:
-> On 5/12/21 4:23 PM, James Bottomley wrote:
-> > No, we support physical sector sizes up to 4k.  The logical block
-> > size internal to the kernel and the block layer is always 512.  I
-> > can see the utility in using consistent naming to the block layer,
-> > but I can't see that logical block address is confusing ...
-> > especially now manufacturers seem all to have aligned on 512 for
-> > the logical block size even when it's usually 4k physical.
+On 2021-05-13 04:21, Bean Huo wrote:
+> On Wed, 2021-04-21 at 19:28 -0700, Can Guo wrote:
+>> +
+>> 
+>> +static DEVICE_ATTR_RW(monitor_enable);
+>> 
+>> +static DEVICE_ATTR_RW(monitor_chunk_size);
+>> 
+>> +static DEVICE_ATTR_RO(read_total_sectors);
+>> 
+>> +static DEVICE_ATTR_RO(read_total_busy);
+>> 
+>> +static DEVICE_ATTR_RO(read_nr_requests);
+>> 
+>> +static DEVICE_ATTR_RO(read_req_latency_avg);
+>> 
+>> +static DEVICE_ATTR_RO(read_req_latency_max);
+>> 
+>> +static DEVICE_ATTR_RO(read_req_latency_min);
+>> 
+>> +static DEVICE_ATTR_RO(read_req_latency_sum);
+>> 
+>> +static DEVICE_ATTR_RO(write_total_sectors);
+>> 
+>> +static DEVICE_ATTR_RO(write_total_busy);
+>> 
+>> +static DEVICE_ATTR_RO(write_nr_requests);
+>> 
+>> +static DEVICE_ATTR_RO(write_req_latency_avg);
+>> 
+>> +static DEVICE_ATTR_RO(write_req_latency_max);
+>> 
+>> +static DEVICE_ATTR_RO(write_req_latency_min);
+>> 
+>> +static DEVICE_ATTR_RO(write_req_latency_sum);
 > 
-> Are we talking about the same? Just below the code that I included in
-> my previous email there is the following line:
+> Can,
 > 
-> 	blk_queue_logical_block_size(sdp->request_queue, sector_size);
+> I like this series of patches, which can help me monitor UFS
+> performance online. I have a suggestion,  how do you think that we add
+> this to ufs-debugfs. Then we don't need to poll each parameter one by
+> one, just one interface.
 > 
-> where sector_size is the logical block size reported by the READ 
-> CAPACITY command and has a value between 512 and 4096.
+> Bean
 
-That was for devices from before the industry standardised, which are
-getting harder and harder to find (In fact I'm thinking of making a NFT
-out of my last 4k logical/physical disk).  But it didn't alter the fact
-that the kernel internal block size is 512.
+Hi Bean,
 
-James
+Thanks for your suggestion, put it into debugfs is also an option.
+But on Android, debugfs is not mounted by default (the requirement
+from Google). So it is convenient to have it in sysfs, and one can
+use below cmd (as I listed in the cover letter) to poll all parameters
+at once : "grep ^ /dev/null *".
 
-
+Thanks,
+Can Guo.
