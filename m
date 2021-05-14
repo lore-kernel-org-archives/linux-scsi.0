@@ -5,62 +5,62 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09DBCC433ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 10:07:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D26CC433ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 11:18:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2602613F1
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 10:07:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C05361355
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 11:18:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233000AbhENKIk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 May 2021 06:08:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49888 "EHLO
+        id S230023AbhENLUD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 May 2021 07:20:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232431AbhENKIj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 06:08:39 -0400
-Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0057EC061574;
-        Fri, 14 May 2021 03:07:27 -0700 (PDT)
-Received: by mail-ed1-x535.google.com with SMTP id v5so23002226edc.8;
-        Fri, 14 May 2021 03:07:27 -0700 (PDT)
+        with ESMTP id S229445AbhENLUC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 07:20:02 -0400
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72912C061574;
+        Fri, 14 May 2021 04:18:51 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id n25so34303649edr.5;
+        Fri, 14 May 2021 04:18:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id;
-        bh=/xBRD5Ltw6FbrPtMvS06EVuBRdJtGy7tbVPlC//Z93E=;
-        b=mYZslC4eF3Q5NRGZO4U61c/c/jR9l48kwSh9S2Bga5N3C/QaZXCUiPBgi2Tc5MkaML
-         Jk0bXsMTa3vOtD3DxMnLlOAKp5/xECdQlcQDUj2XZbo3UNL4m4XwDl6zqMMIHx3cI6gC
-         GKeA7A++T8XqNaAzD/OnNKCBTwE8wQDtVKzjxbCCyAluCSioz0uREMjc/I/NmZ7pmi0n
-         mnASi1hC+sUInWo85WqNy/XIBn3bwbuOdeaA3IkEoY5h81QmLascexF4VdERA/ZXB8Sr
-         z4NX0hX9QuyIywnnV6WAShQKJdVPkwIqLiliZAui4cnWfA8IgJ/8IHcfdiGlPfxiSJ9I
-         LxAw==
+        bh=NAmvbClEY+mrStLUW/u8Ax+hJj9P6K93jHMPCPzSQiY=;
+        b=HKLbKcnZkXjPpZjGQVHRP5QTP/Yh5Cir45Yfgyc72ZxJGzEg4nDHuZUrlUJg79CXuM
+         /VvnT2+/PSliUzKqDAjUtydNNGeb1HjpjIhWyBsRXMSZPDLD2RCoYUevobWGdUOJ/jbb
+         zAny4CSlUMCogD1w6GLGxb+IO3mbKdDlB+7n4Ka5Xb0Nl7xlohKy0fucCbGkVxo9/YGr
+         PTzox9goQhwkykwNCNzVMR8oMN+3w/bew/Jj4SVImzhs3gbBh+ekvwAcXAVnY9D2iLOY
+         wcVzw63nGYFS6MPQZl8ZW2tnQhKNpnRl4rdE5H8MBt5H6AluGF/CA3jkEFwYUWDx7zRG
+         75mw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=/xBRD5Ltw6FbrPtMvS06EVuBRdJtGy7tbVPlC//Z93E=;
-        b=kxQialBDnFeqAHUsykg5M3wy6fa+3PxidCWw9U2yWai986TUUndiluyK2tH8vwzdEA
-         fA2aehOcgS/vI8eNNVZKYtpL38CVjAUpxVPoHUVBOTSaB5ZtbiQx1BxWGsS+yi/AiwaX
-         Bf8rHmX0WubEI28cAMaFSyxpssku1d2YIFy2iMZvZ2XuiGz5zobshKWeJaigpqSzQtsx
-         4qmfUaoHSHiFrAg7HuN+QBe8L3aRHERNF89UsuSxEa3Aqs3aOErCqwTz8ck8mu8OPkOZ
-         VWHGhaQuKN/7lPqY3hub1CmWQZbj35P/MPAIR6vNqVLmHj5DGQ71jP7vdd+Y9o4Hv1lj
-         uHeQ==
-X-Gm-Message-State: AOAM531Z1DIT2Ss8kIqblm5arocSpZUfUrULuF+TIhI12zxwjoMbnYF2
-        XN0r4ta/RShEpqphI94rWMYgMLsDm6k=
-X-Google-Smtp-Source: ABdhPJz8DbsPCywPy+t1ne94WS/8HYM1gwrtlJXTxKmk8kVS2C5wclc0zF0Rm78kiVLtpOt7QRfuRA==
-X-Received: by 2002:aa7:d9ca:: with SMTP id v10mr56172716eds.272.1620986846755;
-        Fri, 14 May 2021 03:07:26 -0700 (PDT)
+        bh=NAmvbClEY+mrStLUW/u8Ax+hJj9P6K93jHMPCPzSQiY=;
+        b=TlMXH4eY01664wXiZfZkrBE/dQ6E9tYftFdJfkpRaJ8UTV37ayA3Z7ro8EpZ3ef2og
+         CeIz32KiSilFK7O+n9J79TZ6+UECBKzcZtB++9vUrzfRa6Y8RB1VI7CZxAP3sjTv63X6
+         kN/Gc+8ht9ySPvO5SKky6GCeNmRIKIjBzdKwUCZoOeGsj4UrKAipVytWtZ6Z40wGBt5B
+         IajMtQ78pQdhkxXlhmuf2FuBnzvW7OvB/dwcL5WHCEFWSKRScMWYkjZ69dzzhQLdf+IV
+         jJ6+W/u1KUerENl1WpJNPBjtllPVBoMSBGVUuBmTOazDicbsNI95V1RMGpiBfBQd2nRN
+         Ygnw==
+X-Gm-Message-State: AOAM532XZPYKR8o5a6UaG+EQ4GvHmfzCIuaxXBnR/g+Gl0xG+kjRctoc
+        4JtXx+ksK1R/Z7ezvz/E3bCFgpiiwDc=
+X-Google-Smtp-Source: ABdhPJxIdni7v2RNLJSK4SpshN7gu8XtYIaezZ5r32e/aQIfKw7BYtfBibGHJWgvjVAjiAXZErT+Qg==
+X-Received: by 2002:a50:ff0a:: with SMTP id a10mr10110986edu.273.1620991130150;
+        Fri, 14 May 2021 04:18:50 -0700 (PDT)
 Received: from localhost (ipbcc11466.dynamic.kabel-deutschland.de. [188.193.20.102])
-        by smtp.gmail.com with ESMTPSA id e12sm3310620ejk.99.2021.05.14.03.07.25
+        by smtp.gmail.com with ESMTPSA id v18sm3219601ejg.63.2021.05.14.04.18.49
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 14 May 2021 03:07:26 -0700 (PDT)
+        Fri, 14 May 2021 04:18:49 -0700 (PDT)
 From:   Bodo Stroesser <bostroesser@gmail.com>
 To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Bodo Stroesser <bostroesser@gmail.com>
-Subject: [PATCH v3] scsi: target: tcmu: Add new feature KEEP_BUF
-Date:   Fri, 14 May 2021 12:07:15 +0200
-Message-Id: <20210514100715.19230-1-bostroesser@gmail.com>
+Subject: [PATCH v4] scsi: target: tcmu: Add new feature KEEP_BUF
+Date:   Fri, 14 May 2021 13:18:40 +0200
+Message-Id: <20210514111840.26297-1-bostroesser@gmail.com>
 X-Mailer: git-send-email 2.12.3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -83,6 +83,9 @@ closes uio device (tcmu_release).
 Signed-off-by: Bodo Stroesser <bostroesser@gmail.com>
 ---
 
+v4: Fix wrong condition in tcmu_free_kept_buf_store, which was
+    introduced in v3.
+
 v3: Changed xarray lock handling in tcmu_free_kept_buf_store to
     avoid RCU lock warnings.
     
@@ -97,7 +100,7 @@ v2: During tcmu_dev_kref_release not only kill timed out commands,
  2 files changed, 141 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index ee391c62f6e1..be180f7b2ca1 100644
+index ee391c62f6e1..eb469c1c27c5 100644
 --- a/drivers/target/target_core_user.c
 +++ b/drivers/target/target_core_user.c
 @@ -191,6 +191,7 @@ struct tcmu_cmd {
@@ -304,7 +307,7 @@ index ee391c62f6e1..be180f7b2ca1 100644
 +
 +		xas_lock(&xas);
 +		cmd = xas_load(&xas);
-+		if (!cmd || !test_bit(TCMU_CMD_BIT_KEEP_BUF, &cmd->flags)) {
++		if (!cmd) {
 +			pr_err("free_kept_buf: cmd_id %d not found\n", cmd_id);
 +			count = -EINVAL;
 +			xas_unlock(&xas);
