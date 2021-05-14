@@ -2,90 +2,164 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3441C433B4
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 03:56:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39DB4C433B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 04:05:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84A2A61442
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 03:56:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0843F613F7
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 04:05:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232003AbhEND5G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 May 2021 23:57:06 -0400
-Received: from mail-pf1-f169.google.com ([209.85.210.169]:38748 "EHLO
-        mail-pf1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231829AbhEND5F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 May 2021 23:57:05 -0400
-Received: by mail-pf1-f169.google.com with SMTP id k19so23768293pfu.5;
-        Thu, 13 May 2021 20:55:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=xjo3J9XFTcJBV0LLmSCwLfORzUW5E0W1YVzABtBpe3Y=;
-        b=PCuKm8i04jic+raOYCV4OTk0n6oyZM6Leq5JSo+9g1BAbVzL8ft6e1lq67TWWmQVks
-         hx2IFy4JD8TrRbMxDNudJD3sEPVCJmxIzrFGTRajeu9U71gGFHVIXtMonAbwRBLBmMUt
-         23R8rbmVpldaFiDOXx9O8sB1C2WM3916n7dqbU5foRTIdnEK8gPNVTjdctQRhlNsEj+g
-         csypXcuiwHJisyyzZIfsuWaLYNfNX2ORlzm/eLGHH4pcP6YshT52b86CW3nLWa9mi5mE
-         d4An1sHiWz/zBmWgycLHmpzk51+5WJPIrSfXCKlxlpyxcturShKs1jV6EYM8RXoYymve
-         kMlw==
-X-Gm-Message-State: AOAM5305aa+ANu/+pHaVGIDTwgiMinEjUv5HcCiX9Kt3eNxDv+n5HOJo
-        MFqiJDsv7GlnRcN/0V0AEjK2bOC8KVnt+A==
-X-Google-Smtp-Source: ABdhPJw7GVhggzrLzqyjpOx7PGZZSEGlIu9TUDJEkDT20k8ap9LrerkFoTytDVfCFlUZhSD2gs1u6g==
-X-Received: by 2002:aa7:9907:0:b029:28e:ab99:2a75 with SMTP id z7-20020aa799070000b029028eab992a75mr42407346pff.36.1620964553900;
-        Thu, 13 May 2021 20:55:53 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:53a7:2faa:e07b:6134? ([2601:647:4000:d7:53a7:2faa:e07b:6134])
-        by smtp.gmail.com with ESMTPSA id y17sm3080180pfr.119.2021.05.13.20.55.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 13 May 2021 20:55:53 -0700 (PDT)
-Subject: Re: [PATCH v1 5/6] scsi: ufs: Let host_sem cover the entire system
- suspend/resume
-To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, hongwus@codeaurora.org,
-        ziqichen@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1620885319-15151-1-git-send-email-cang@codeaurora.org>
- <1620885319-15151-7-git-send-email-cang@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <b59e0cd4-d560-6724-3f30-a5232dd41a8f@acm.org>
-Date:   Thu, 13 May 2021 20:55:50 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+        id S231829AbhENEGR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 May 2021 00:06:17 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:34691 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231450AbhENEGR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 May 2021 00:06:17 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1620965105; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=8NG76LQLM0Yx2f48F8sSdJda+rtwgNBLW7z7c+Yl6Fo=;
+ b=nx3bYuZQRLKV9TAl18Ds6j7AxtKsXxO7xREtKNvoNhplTM60pjakQXfu+56cOYsqhAnzG9cb
+ sAKRQyyJCO54cKuAdEn85dSe6bj/nGBvmT311baKPX2mVHOKNQO1C8E2JqUBZGJrXjCOqRVx
+ WaFnvmC3PpA/OV1M+7gTCGoy9eA=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 609df6ded951beb69ed6e043 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 14 May 2021 04:04:46
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 2DBC6C43460; Fri, 14 May 2021 04:04:45 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AC296C433D3;
+        Fri, 14 May 2021 04:04:43 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <1620885319-15151-7-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date:   Fri, 14 May 2021 12:04:43 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Adrian Hunter <adrian.hunter@intel.com>
+Subject: Re: [PATCH] ufs: Increase the usable queue depth
+In-Reply-To: <20210513164912.5683-1-bvanassche@acm.org>
+References: <20210513164912.5683-1-bvanassche@acm.org>
+Message-ID: <c8932f54e6e95797c2969a16d07fd926@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/12/21 10:55 PM, Can Guo wrote:
-> UFS error handling now is doing more than just re-probing, but also sending
-> scsi cmds, e.g., for clearing UACs, and recovering runtime PM error, which
-> may change runtime status of scsi devices. To protect system suspend/resume
-> from being disturbed by error handling, move the host_sem from wl pm ops
-> to ufshcd_suspend_prepare() and ufshcd_resume_complete().
+Hi Bart,
 
-In ufshcd.h I found the following:
+On 2021-05-14 00:49, Bart Van Assche wrote:
+> With the current implementation of the UFS driver active_queues is 1
+> instead of 0 if all UFS request queues are idle. That causes
+> hctx_may_queue() to divide the queue depth by 2 when queueing a request
+> and hence reduces the usable queue depth.
 
- * @host_sem: semaphore used to serialize concurrent contexts
+This is interesting. When all UFS queues are idle, in hctx_may_queue(),
+active_queues reads 1 (users == 1, depth == 32), where is it divided by 
+2?
 
-That's the wrong way to use a synchronization object. A synchronization
-object must protect data instead of code. Does host_sem perhaps need to
-be split into multiple synchronization objects?
+static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
+                                   struct sbitmap_queue *bt)
+{
+         unsigned int depth, users;
+
+....
+                 users = atomic_read(&hctx->tags->active_queues);
+         }
+
+         if (!users)
+                 return true;
+
+         /*
+          * Allow at least some tags
+          */
+         depth = max((bt->sb.depth + users - 1) / users, 4U);
+         return __blk_mq_active_requests(hctx) < depth;
+}
 
 Thanks,
+Can Guo.
 
-Bart.
+> 
+> The shared tag set code in the block layer keeps track of the number of
+> active request queues. blk_mq_tag_busy() is called before a request is
+> queued onto a hwq and blk_mq_tag_idle() is called some time after the 
+> hwq
+> became idle. blk_mq_tag_idle() is called from inside 
+> blk_mq_timeout_work().
+> Hence, blk_mq_tag_idle() is only called if a timer is associated with 
+> each
+> request that is submitted to a request queue that shares a tag set with
+> another request queue. Hence this patch that adds a 
+> blk_mq_start_request()
+> call in ufshcd_exec_dev_cmd(). This patch doubles the queue depth on my
+> test setup from 16 to 32.
+> 
+> In addition to increasing the usable queue depth, also fix the
+> documentation of the 'timeout' parameter in the header above
+> ufshcd_exec_dev_cmd().
+> 
+> Cc: Can Guo <cang@codeaurora.org>
+> Cc: Alim Akhtar <alim.akhtar@samsung.com>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Cc: Stanley Chu <stanley.chu@mediatek.com>
+> Cc: Bean Huo <beanhuo@micron.com>
+> Cc: Adrian Hunter <adrian.hunter@intel.com>
+> Fixes: 7252a3603015 ("scsi: ufs: Avoid busy-waiting by eliminating tag
+> conflicts")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index c96e36aab989..e669243354da 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -2838,7 +2838,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba 
+> *hba,
+>   * ufshcd_exec_dev_cmd - API for sending device management requests
+>   * @hba: UFS hba
+>   * @cmd_type: specifies the type (NOP, Query...)
+> - * @timeout: time in seconds
+> + * @timeout: timeout in milliseconds
+>   *
+>   * NOTE: Since there is only one available tag for device management 
+> commands,
+>   * it is expected you hold the hba->dev_cmd.lock mutex.
+> @@ -2868,6 +2868,9 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba 
+> *hba,
+>  	}
+>  	tag = req->tag;
+>  	WARN_ON_ONCE(!ufshcd_valid_tag(hba, tag));
+> +	/* Set the timeout such that the SCSI error handler is not activated. 
+> */
+> +	req->timeout = msecs_to_jiffies(2 * timeout);
+> +	blk_mq_start_request(req);
+> 
+>  	init_completion(&wait);
+>  	lrbp = &hba->lrb[tag];
