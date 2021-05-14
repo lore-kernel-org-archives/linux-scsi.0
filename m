@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33BE5C433B4
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 19:56:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5529DC43461
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 19:56:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1694361574
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 19:56:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26F6A61574
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 19:56:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233038AbhENT5j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 May 2021 15:57:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41146 "EHLO
+        id S233013AbhENT5k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 May 2021 15:57:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233039AbhENT5X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 15:57:23 -0400
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B795EC061760
-        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 12:56:11 -0700 (PDT)
-Received: by mail-pg1-x52e.google.com with SMTP id t193so103606pgb.4
-        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 12:56:11 -0700 (PDT)
+        with ESMTP id S233057AbhENT5Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 15:57:25 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5A43C061761
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 12:56:12 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id x188so495648pfd.7
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 12:56:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=UkDFp+qpXr8e/IPH+q/GA6xWp1P5OWM8HM7pN5Go3M4=;
-        b=TCqi0Kw2ss084LFoQ2kakcgpaK+GfX8YTvinq9YkxEHMM4B3ZV+4VRSmLxTABWcdzP
-         S8YmdYusvErElU7rrluoMOJkZHcPLRaw/UHD3R3SSHiT02UvC57jzZZ3KnKwRPT5uP8K
-         mTvcVYA+mtcLQv20z2TdrA0xSeqf52WAU1GKdxKE02xxou+C66LPi05HhsGpGiUY5kk6
-         FKKkI/BtS3n4pytiF6MxnNAnTLWpCSD8EtQ34KT1lMpRU2qMnS6boKyLaNTDf2OAlrj8
-         NX3EMymn8JQnajo3gQ7r9uPbMLra8gyEBKzLyHEU/OQBCP4XHwSVDTx7VO5D9AklSXUD
-         /Q6w==
+        bh=QLG8DymrIbaQHUikE5drW8MgQcYyu7Jws7+5YH8KuPo=;
+        b=uzt5njepWKOjFat99E0tdT562poni6srMSn/7v9yhWcm+13nHdLxJ6lSElr9bwv/kg
+         seFRPTU2bq50Z7Qj9wfQEvpw/iRdlV/QJeQ46c7KMo2f/o+oLHiJBNi5tIruz33IIa2L
+         UxvcOZsQy2UM6Ohl++qLZoiz178NoetucxnSWQFmXkdyZ0pvr6V9QANcT2EVtcA28Mma
+         C8N0Uq4VOuEfycAsZIA7VoJBRl71Uuh3M773j6Z15scIvywbpB68py/xckA5IGSfMRJl
+         k5qpTkOvTKuF+es8XtchmXqu4wOGNn1pzQJbS2wisVVsAfI/J5qc/xPEA1nEm48Kndhs
+         oF1Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=UkDFp+qpXr8e/IPH+q/GA6xWp1P5OWM8HM7pN5Go3M4=;
-        b=F3EfAWdujI8gfUYuCI5MLtUfD+ZTiyVdUM+tD86CcGPJkJg+Vzk80nzuRcn78qEOCF
-         n9mp0t9umN1Rhpz8Oc/XgxNj/lziAHhsQhyyEUngoG54kddruch1iJXP+cyJOIeb584U
-         ZetaFJe0NEhQEpbsPAKgSIt3KTZHIZBDmcOQCQ3pq17WgkLyxQYcRAKK+glBYQzQHuWt
-         H+InnSDTXT3wfrmwFFfoiXYoa5FrG2eyR6sU2YMAxqNDg3dnGzOGcQxZtow5im0Yv4Uu
-         t/GeTDikqONJP2ATrKRaYRJZ/pAnFHP6MGNPo5gWDmgIBh9QdQ48z1gyKjx3uh3uhIua
-         HLUw==
-X-Gm-Message-State: AOAM5304oceSCwcg2x5qUUXUpj33479+tes0MYXvOtT6sxKtRUdL4+P+
-        B/XtzbVEMCuTeoUPa6g3FTJdos4Nb+Q=
-X-Google-Smtp-Source: ABdhPJzAfasuJDyjwd0VHJveNE51tBxcq/AqLIi3A2I7K6ppoEw+Qsp2oVIcSk5UNtpt4Ns6zb4kWg==
-X-Received: by 2002:aa7:9885:0:b029:28e:9f7f:f23 with SMTP id r5-20020aa798850000b029028e9f7f0f23mr48473687pfl.75.1621022170969;
-        Fri, 14 May 2021 12:56:10 -0700 (PDT)
+        bh=QLG8DymrIbaQHUikE5drW8MgQcYyu7Jws7+5YH8KuPo=;
+        b=CL034FQX9r1DkeXYq85jARKYipqWTPvA0a+AIGyBXU+BMvXimYRrrIoWZFm7YQWvu8
+         MNjt1RyFNeHkc2HuNGNJVasBWvhoGYSjg74x92jo/mc0GQ0baTxVhDgUERRdoaYz6gqt
+         MCeDPW8Q6zqbYnwI5F4d3d9jIvVqf9abhqXz3ZgKpm8KIBeCHuaYr4dU9djOjvIuso++
+         XTUMxQW5sj0YgOLV+MQQ4ilo+faBnHuq3T73msyTm79AK9Qpi5hlVBYL0bmt/W9nRhex
+         sHGmHd5Bcq4WnsXWL16x8CiNfapVYjouwUuYggmRrawBoolryn2ldZ8Wd2+HkPxaYpEl
+         SCbw==
+X-Gm-Message-State: AOAM53113etV1uHzCNnQKMtXKD//u0BzmnXStg9Ylcj3gnj2YnqQv3i5
+        xqxe8Oq19jHJpFWJc87+bx2GQGT8oWg=
+X-Google-Smtp-Source: ABdhPJzEhcIzBTkcrXQR0v7vu9mEIYloDuEI4259etCtT10JdNbaRqexla1e71SWxLSSLDZE7rYoZQ==
+X-Received: by 2002:a62:ea05:0:b029:27a:6fc6:af83 with SMTP id t5-20020a62ea050000b029027a6fc6af83mr46659947pfh.24.1621022171965;
+        Fri, 14 May 2021 12:56:11 -0700 (PDT)
 Received: from localhost.localdomain (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
-        by smtp.gmail.com with ESMTPSA id v15sm4961850pgc.57.2021.05.14.12.56.10
+        by smtp.gmail.com with ESMTPSA id v15sm4961850pgc.57.2021.05.14.12.56.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 12:56:10 -0700 (PDT)
+        Fri, 14 May 2021 12:56:11 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 09/11] lpfc: Add a option to enable interlocked ABTS before job completion
-Date:   Fri, 14 May 2021 12:55:57 -0700
-Message-Id: <20210514195559.119853-10-jsmart2021@gmail.com>
+Subject: [PATCH 10/11] lpfc: Reregister FPIN types if receive ELS_RDF from fabric controller
+Date:   Fri, 14 May 2021 12:55:58 -0700
+Message-Id: <20210514195559.119853-11-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210514195559.119853-1-jsmart2021@gmail.com>
 References: <20210514195559.119853-1-jsmart2021@gmail.com>
@@ -72,212 +72,141 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Default behavior for the driver, when aborting an io, is to terminate
-the io with the adapter. The adapter will initiate an ABTS to
-terminate the exchange on the link and mark the exchange is terminated
-so that no further use of the sgl or any traffic for the exchange is
-worked on. Completion on the Abort is then posted to the driver, which
-as the io is terminated can complete the I/O to the OS. This completion
-may occur prior to the ABTS handshake completing on the wire. The ABTS
-handshake can take a long time to complete with timeouts and retries
-reaching 60+ seconds. Note: if retries fail, LOGO occurs.
+FC-LS-5 specifies that a received RDF implies a possible change to
+fabric supported diagnostic functions. Endpoints are to re-perform the
+RDF exchange with the fabric to enable possible new features or adapt
+to changes in values.
 
-Some devices want to ensure that the ABTS handshake fully completes
-(this device has fully ack'd it) before the I/O completion is posted
-back to the OS, where a failed i/o may be retried via a different path.
-
-To support this behavior, an option was added to the driver to change
-I/O completion from the Abort cmd completion to the Exchange termination
-(aka ABTS) completion.
+This patch adds the logic to RDF receive to re-perform the RDF exchange
+with the switch.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc.h      |  1 +
- drivers/scsi/lpfc/lpfc_attr.c | 11 +++++++++
- drivers/scsi/lpfc/lpfc_mbox.c |  3 ++-
- drivers/scsi/lpfc/lpfc_scsi.c | 45 ++++++++++++++++++++++++++++++-----
- 4 files changed, 53 insertions(+), 7 deletions(-)
+ drivers/scsi/lpfc/lpfc.h     |  1 +
+ drivers/scsi/lpfc/lpfc_els.c | 75 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 76 insertions(+)
 
 diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index f8de0d10620b..487780ede17e 100644
+index 487780ede17e..eb4472951cc6 100644
 --- a/drivers/scsi/lpfc/lpfc.h
 +++ b/drivers/scsi/lpfc/lpfc.h
-@@ -915,6 +915,7 @@ struct lpfc_hba {
- 	uint32_t cfg_request_firmware_upgrade;
- 	uint32_t cfg_suppress_link_up;
- 	uint32_t cfg_rrq_xri_bitmap_sz;
-+	u32      cfg_fcp_wait_abts_rsp;
- 	uint32_t cfg_delay_discovery;
- 	uint32_t cfg_sli_mode;
- #define LPFC_INITIALIZE_LINK              0	/* do normal init_link mbox */
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 0975a8b252a0..c5e96cb904c8 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3448,6 +3448,15 @@ LPFC_ATTR_R(enable_npiv, 1, 0, 1,
- LPFC_ATTR_R(fcf_failover_policy, 1, 1, 2,
- 	"FCF Fast failover=1 Priority failover=2");
- 
-+/*
-+ * lpfc_fcp_wait_abts_rsp: Modifies criteria for reporting completion of
-+ * aborted IO.
-+ * The range is [0,1]. Default value is 0
-+ *      0, IO completes after ABTS issued (default).
-+ *      1, IO completes after receipt of ABTS response or timeout.
-+ */
-+LPFC_ATTR_R(fcp_wait_abts_rsp, 0, 0, 1, "Wait for FCP ABTS completion");
-+
- /*
- # lpfc_enable_rrq: Track XRI/OXID reuse after IO failures
- #	0x0 = disabled, XRI/OXID use not tracked.
-@@ -6205,6 +6214,7 @@ struct device_attribute *lpfc_hba_attrs[] = {
- 	&dev_attr_lpfc_enable_npiv,
- 	&dev_attr_lpfc_fcf_failover_policy,
- 	&dev_attr_lpfc_enable_rrq,
-+	&dev_attr_lpfc_fcp_wait_abts_rsp,
- 	&dev_attr_nport_evt_cnt,
- 	&dev_attr_board_mode,
- 	&dev_attr_max_vpi,
-@@ -7332,6 +7342,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
- 	lpfc_enable_npiv_init(phba, lpfc_enable_npiv);
- 	lpfc_fcf_failover_policy_init(phba, lpfc_fcf_failover_policy);
- 	lpfc_enable_rrq_init(phba, lpfc_enable_rrq);
-+	lpfc_fcp_wait_abts_rsp_init(phba, lpfc_fcp_wait_abts_rsp);
- 	lpfc_fdmi_on_init(phba, lpfc_fdmi_on);
- 	lpfc_enable_SmartSAN_init(phba, lpfc_enable_SmartSAN);
- 	lpfc_use_msi_init(phba, lpfc_use_msi);
-diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
-index 1b40a3bbd1cd..eab991739e37 100644
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -522,7 +522,8 @@ lpfc_init_link(struct lpfc_hba * phba,
- 	}
- 
- 	/* Enable asynchronous ABTS responses from firmware */
--	mb->un.varInitLnk.link_flags |= FLAGS_IMED_ABORT;
-+	if (phba->sli_rev == LPFC_SLI_REV3 && !phba->cfg_fcp_wait_abts_rsp)
-+		mb->un.varInitLnk.link_flags |= FLAGS_IMED_ABORT;
- 
- 	/* NEW_FEATURE
- 	 * Setting up the link speed
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index eefbb9b22798..b8bb012abb33 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -518,6 +518,7 @@ lpfc_sli4_io_xri_aborted(struct lpfc_hba *phba,
- 	struct lpfc_nodelist *ndlp;
- 	int rrq_empty = 0;
- 	struct lpfc_sli_ring *pring = phba->sli4_hba.els_wq->pring;
-+	struct scsi_cmnd *cmd;
- 
- 	if (!(phba->cfg_enable_fc4_type & LPFC_ENABLE_FCP))
- 		return;
-@@ -553,6 +554,31 @@ lpfc_sli4_io_xri_aborted(struct lpfc_hba *phba,
- 					psb->cur_iocbq.sli4_lxritag, rxid, 1);
- 				lpfc_sli4_abts_err_handler(phba, ndlp, axri);
- 			}
-+
-+			if (phba->cfg_fcp_wait_abts_rsp) {
-+				spin_lock_irqsave(&psb->buf_lock, iflag);
-+				cmd = psb->pCmd;
-+				psb->pCmd = NULL;
-+				spin_unlock_irqrestore(&psb->buf_lock, iflag);
-+
-+				/* The sdev is not guaranteed to be valid post
-+				 * scsi_done upcall.
-+				 */
-+				if (cmd)
-+					cmd->scsi_done(cmd);
-+
-+				/*
-+				 * We expect there is an abort thread waiting
-+				 * for command completion wake up the thread.
-+				 */
-+				spin_lock_irqsave(&psb->buf_lock, iflag);
-+				psb->cur_iocbq.iocb_flag &=
-+					~LPFC_DRIVER_ABORTED;
-+				if (psb->waitq)
-+					wake_up(psb->waitq);
-+				spin_unlock_irqrestore(&psb->buf_lock, iflag);
-+			}
-+
- 			lpfc_release_scsi_buf_s4(phba, psb);
- 			if (rrq_empty)
- 				lpfc_worker_wake_up(phba);
-@@ -780,7 +806,8 @@ lpfc_release_scsi_buf_s4(struct lpfc_hba *phba, struct lpfc_io_buf *psb)
- 	qp = psb->hdwq;
- 	if (psb->flags & LPFC_SBUF_XBUSY) {
- 		spin_lock_irqsave(&qp->abts_io_buf_list_lock, iflag);
--		psb->pCmd = NULL;
-+		if (!phba->cfg_fcp_wait_abts_rsp)
-+			psb->pCmd = NULL;
- 		list_add_tail(&psb->list, &qp->lpfc_abts_io_buf_list);
- 		qp->abts_scsi_io_bufs++;
- 		spin_unlock_irqrestore(&qp->abts_io_buf_list_lock, iflag);
-@@ -4045,6 +4072,7 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 	u32 logit = LOG_FCP;
- 	u32 status, idx;
- 	unsigned long iflags = 0;
-+	u8 wait_xb_clr = 0;
- 
- 	/* Sanity check on return of outstanding command */
- 	if (!lpfc_cmd) {
-@@ -4096,8 +4124,11 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 	lpfc_cmd->result = (wcqe->parameter & IOERR_PARAM_MASK);
- 
- 	lpfc_cmd->flags &= ~LPFC_SBUF_XBUSY;
--	if (bf_get(lpfc_wcqe_c_xb, wcqe))
-+	if (bf_get(lpfc_wcqe_c_xb, wcqe)) {
- 		lpfc_cmd->flags |= LPFC_SBUF_XBUSY;
-+		if (phba->cfg_fcp_wait_abts_rsp)
-+			wait_xb_clr = 1;
-+	}
- 
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	if (lpfc_cmd->prot_data_type) {
-@@ -4329,6 +4360,8 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 		lpfc_io_ktime(phba, lpfc_cmd);
- 	}
- #endif
-+	if (wait_xb_clr)
-+		goto out;
- 	lpfc_cmd->pCmd = NULL;
- 	spin_unlock(&lpfc_cmd->buf_lock);
- 
-@@ -4343,8 +4376,8 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 	lpfc_cmd->cur_iocbq.iocb_flag &= ~LPFC_DRIVER_ABORTED;
- 	if (lpfc_cmd->waitq)
- 		wake_up(lpfc_cmd->waitq);
-+out:
- 	spin_unlock(&lpfc_cmd->buf_lock);
--
- 	lpfc_release_scsi_buf(phba, lpfc_cmd);
+@@ -266,6 +266,7 @@ struct lpfc_stats {
+ 	uint32_t elsRcvECHO;
+ 	uint32_t elsRcvLCB;
+ 	uint32_t elsRcvRDP;
++	uint32_t elsRcvRDF;
+ 	uint32_t elsXmitFLOGI;
+ 	uint32_t elsXmitFDISC;
+ 	uint32_t elsXmitPLOGI;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 690827888edf..be9c92d97d63 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -3670,6 +3670,43 @@ lpfc_issue_els_rdf(struct lpfc_vport *vport, uint8_t retry)
+ 	return 0;
  }
  
-@@ -4398,11 +4431,10 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
- 
- 	lpfc_cmd->result = (pIocbOut->iocb.un.ulpWord[4] & IOERR_PARAM_MASK);
- 	lpfc_cmd->status = pIocbOut->iocb.ulpStatus;
--	/* pick up SLI4 exhange busy status from HBA */
-+	/* pick up SLI4 exchange busy status from HBA */
-+	lpfc_cmd->flags &= ~LPFC_SBUF_XBUSY;
- 	if (pIocbOut->iocb_flag & LPFC_EXCHANGE_BUSY)
- 		lpfc_cmd->flags |= LPFC_SBUF_XBUSY;
--	else
--		lpfc_cmd->flags &= ~LPFC_SBUF_XBUSY;
- 
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	if (lpfc_cmd->prot_data_type) {
-@@ -4601,6 +4633,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
- 		lpfc_io_ktime(phba, lpfc_cmd);
- 	}
- #endif
++ /**
++  * lpfc_els_rcv_rdf - Receive RDF ELS request from the fabric.
++  * @vport: pointer to a host virtual N_Port data structure.
++  * @cmdiocb: pointer to lpfc command iocb data structure.
++  * @ndlp: pointer to a node-list data structure.
++  *
++  * A received RDF implies a possible change to fabric supported diagnostic
++  * functions.  This routine sends LS_ACC and then has the Nx_Port issue a new
++  * RDF request to reregister for supported diagnostic functions.
++  *
++  * Return code
++  *   0 - Success
++  *   -EIO - Failed to process received RDF
++  **/
++static int
++lpfc_els_rcv_rdf(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
++		 struct lpfc_nodelist *ndlp)
++{
++	/* Send LS_ACC */
++	if (lpfc_els_rsp_acc(vport, ELS_CMD_RDF, cmdiocb, ndlp, NULL)) {
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++				 "1623 Failed to RDF_ACC from x%x for x%x\n",
++				 ndlp->nlp_DID, vport->fc_myDID);
++		return -EIO;
++	}
 +
- 	/* The sdev is not guaranteed to be valid post scsi_done upcall. */
- 	cmd->scsi_done(cmd);
++	/* Issue new RDF for reregistering */
++	if (lpfc_issue_els_rdf(vport, 0)) {
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++				 "2623 Failed to re register RDF for x%x\n",
++				 vport->fc_myDID);
++		return -EIO;
++	}
++
++	return 0;
++}
++
+ /**
+  * lpfc_cancel_retry_delay_tmo - Cancel the timer with delayed iocb-cmd retry
+  * @vport: pointer to a host virtual N_Port data structure.
+@@ -4803,6 +4840,7 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
+ 	uint16_t cmdsize;
+ 	int rc;
+ 	ELS_PKT *els_pkt_ptr;
++	struct fc_els_rdf_resp *rdf_resp;
  
+ 	oldcmd = &oldiocb->iocb;
+ 
+@@ -4914,6 +4952,29 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
+ 			"Issue ACC PRLO:  did:x%x flg:x%x",
+ 			ndlp->nlp_DID, ndlp->nlp_flag, 0);
+ 		break;
++	case ELS_CMD_RDF:
++		cmdsize = sizeof(*rdf_resp);
++		elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry,
++					     ndlp, ndlp->nlp_DID, ELS_CMD_ACC);
++		if (!elsiocb)
++			return 1;
++
++		icmd = &elsiocb->iocb;
++		icmd->ulpContext = oldcmd->ulpContext;	/* Xri / rx_id */
++		icmd->unsli3.rcvsli3.ox_id = oldcmd->unsli3.rcvsli3.ox_id;
++		pcmd = (((struct lpfc_dmabuf *)elsiocb->context2)->virt);
++		rdf_resp = (struct fc_els_rdf_resp *)pcmd;
++		memset(rdf_resp, 0, sizeof(*rdf_resp));
++		rdf_resp->acc_hdr.la_cmd = ELS_LS_ACC;
++
++		/* FC-LS-5 specifies desc_list_len shall be set to 12 */
++		rdf_resp->desc_list_len = cpu_to_be32(12);
++
++		/* FC-LS-5 specifies LS REQ Information descriptor */
++		rdf_resp->lsri.desc_tag = cpu_to_be32(1);
++		rdf_resp->lsri.desc_len = cpu_to_be32(sizeof(u32));
++		rdf_resp->lsri.rqst_w0.cmd = ELS_RDF;
++		break;
+ 	default:
+ 		return 1;
+ 	}
+@@ -9027,6 +9088,20 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 
+ 		/* There are no replies, so no rjt codes */
+ 		break;
++	case ELS_CMD_RDF:
++		phba->fc_stat.elsRcvRDF++;
++		/* Accept RDF only from fabric controller */
++		if (did != Fabric_Cntl_DID) {
++			lpfc_printf_vlog(vport, KERN_WARNING, LOG_ELS,
++					 "1115 Received RDF from invalid DID "
++					 "x%x\n", did);
++			rjt_err = LSRJT_PROTOCOL_ERR;
++			rjt_exp = LSEXP_NOTHING_MORE;
++			goto lsrjt;
++		}
++
++		lpfc_els_rcv_rdf(vport, elsiocb, ndlp);
++		break;
+ 	default:
+ 		lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_UNSOL,
+ 			"RCV ELS cmd:     cmd:x%x did:x%x/ste:x%x",
 -- 
 2.26.2
 
