@@ -4,52 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2EB4C433B4
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:36:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA8A3C433B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:36:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C924961442
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:36:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FBF261442
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:36:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233625AbhENVhT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 May 2021 17:37:19 -0400
-Received: from mail-pg1-f174.google.com ([209.85.215.174]:39904 "EHLO
-        mail-pg1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233491AbhENVhI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:37:08 -0400
-Received: by mail-pg1-f174.google.com with SMTP id s22so254882pgk.6
-        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:35:57 -0700 (PDT)
+        id S231756AbhENVhV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 May 2021 17:37:21 -0400
+Received: from mail-pg1-f170.google.com ([209.85.215.170]:45016 "EHLO
+        mail-pg1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233551AbhENVhK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:37:10 -0400
+Received: by mail-pg1-f170.google.com with SMTP id y32so237685pga.11
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:35:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=2DWgJ7rrYJ2TaqSweWO5hb7eNOrBJhRnfEehynKbfH4=;
-        b=e47nVQlDFObUeJr8IFd1YqNmeue6rG006jNhRJtpxgrKD2Nk3kUW9fKPFlb/ZP8e1G
-         bcnuU3ca2a6LIzjK0aY+utDRkxevtHGDF5igUsw7GDcaAhUSQJjJLv/LOYHXKCGwAoiA
-         pHujGGjT80ukXHdQmVgxU1dlAu+zinrD/pPAwftI4S2jX67uRKDB9o8NRVW+GAZrz90w
-         b61hCObxn7NfUH0x1066pU6hx+KhO5ZoFydTlAWcEQcX9m9clOuODlb1CWsyaOBvaSM4
-         w+Wo7Y4/7GhK1Rj8k2blI5e4FCcCLOV2FoQjN1wZMkS2LgZGsDjLqdc4t+NlVbxDBHaU
-         FiOA==
-X-Gm-Message-State: AOAM533SvKZQQPL0yha/fSnZteJZKCUU8VPDBWstQniXy+O0IocN9UFq
-        YxvAahFxuC+lqIeyehcGyrE=
-X-Google-Smtp-Source: ABdhPJwY3OwdVRfMhlOwCrOIkGAeleuClujpBr1bkdZUYt8ija9yMxzjpfyYSb493vj4DnErgJZRlg==
-X-Received: by 2002:a65:550e:: with SMTP id f14mr20907385pgr.160.1621028156616;
-        Fri, 14 May 2021 14:35:56 -0700 (PDT)
+        bh=yIIFvRIv7OLSpsGdeLExpFVQyXxiBLPv0iUfrznOEYQ=;
+        b=FwVbwGQdpHbFTPFQDajBa5lOB732/Wthr0Tt8osDxCTFPJdtOKjs3F5ZeAY8UZwmkI
+         PKBsuVK6pUEqX11/qgbSEUQpJEzFg/8tvzKBsjpkGkW74wnImhd+FkTo4mKLGQEAvfXc
+         C/iuHck9BX7Rwg3PZYSbDqmDLLQaNwnTw7pVo8ZnwX2/urFFS+3iZs8puaHCO+I+K2ie
+         al5D0uBPADAHfA7z0KhVpM8LHFLurWFQOWmIHTSclPV90h1auen3a8Vd637PU8HcwzZs
+         rxunAJOrnkwJTk7roYlhL3ElQ9t0IuLCCCp+KFXczAkEL9OhhvXf2xYJVddeFStGvxUz
+         zYuw==
+X-Gm-Message-State: AOAM531d+U22iOE6e99Kk7ahQsnwcT8yEjn96nDhE4TdbbXAg00GAAn3
+        w5DyqfBRyZc/bcrDd3jy40A=
+X-Google-Smtp-Source: ABdhPJxV6M+YX7GZfoqB2ftcoB17pHbbVF9YFYvUh5t28vRGYmPtF9zsJojSX9nq+o35rIABXJmMLw==
+X-Received: by 2002:a63:2542:: with SMTP id l63mr50456290pgl.128.1621028158416;
+        Fri, 14 May 2021 14:35:58 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:e40c:c579:7cd8:c046])
-        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.35.55
+        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.35.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 14:35:56 -0700 (PDT)
+        Fri, 14 May 2021 14:35:57 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Hannes Reinecke <hare@suse.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 14/50] advansys: Use blk_req() instead of scsi_cmnd.request
-Date:   Fri, 14 May 2021 14:33:20 -0700
-Message-Id: <20210514213356.5264-66-bvanassche@acm.org>
+Subject: [PATCH 15/50] bnx2i: Use blk_req() instead of scsi_cmnd.request
+Date:   Fri, 14 May 2021 14:33:21 -0700
+Message-Id: <20210514213356.5264-67-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210514213356.5264-1-bvanassche@acm.org>
 References: <20210514213356.5264-1-bvanassche@acm.org>
@@ -64,28 +65,19 @@ patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/advansys.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_hwi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 800052f10699..e9ec10c466f3 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -7427,7 +7427,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 	 * Set the srb_tag to the command tag + 1, as
- 	 * srb_tag '0' is used internally by the chip.
- 	 */
--	srb_tag = scp->request->tag + 1;
-+	srb_tag = blk_req(scp)->tag + 1;
- 	asc_scsi_q->q2.srb_tag = srb_tag;
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 43e8a1dafec0..70e9a8e6329d 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -1918,7 +1918,7 @@ static int bnx2i_queue_scsi_cmd_resp(struct iscsi_session *session,
  
- 	/*
-@@ -7641,7 +7641,7 @@ static int
- adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 	      adv_req_t **adv_reqpp)
- {
--	u32 srb_tag = scp->request->tag;
-+	u32 srb_tag = blk_req(scp)->tag;
- 	adv_req_t *reqp;
- 	ADV_SCSI_REQ_Q *scsiqp;
- 	int ret;
+ 	spin_unlock(&session->back_lock);
+ 
+-	p = &per_cpu(bnx2i_percpu, blk_mq_rq_cpu(sc->request));
++	p = &per_cpu(bnx2i_percpu, blk_mq_rq_cpu(blk_req(sc)));
+ 	spin_lock(&p->p_work_lock);
+ 	if (unlikely(!p->iothread)) {
+ 		rc = -EINVAL;
