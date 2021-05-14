@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EBC8C433B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ADDEC433ED
 	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:36:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0296B6143F
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:36:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E0636143F
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:36:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233465AbhENVhZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S233614AbhENVhZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 14 May 2021 17:37:25 -0400
-Received: from mail-pf1-f180.google.com ([209.85.210.180]:42890 "EHLO
-        mail-pf1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233595AbhENVhO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:37:14 -0400
-Received: by mail-pf1-f180.google.com with SMTP id h127so643205pfe.9
-        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:36:02 -0700 (PDT)
+Received: from mail-pj1-f50.google.com ([209.85.216.50]:44778 "EHLO
+        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233603AbhENVhP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:37:15 -0400
+Received: by mail-pj1-f50.google.com with SMTP id lj11-20020a17090b344bb029015bc3073608so465752pjb.3
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:36:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=42ckW6LU8oo00tgEtvvvObYtPpqzKDgelcuguXzF2mk=;
-        b=VnqV1CrcYu+tyzKhd6K55D9yEVQOCCSLl4LJS6IAkipMEMsS9bwcNkQ1dy2rfbimP7
-         +5VGslPJQ+tb0mmepd9h/UN4/zU2ZbiJ2Ir7ORAI7Y0cvJKcQSgGsKUMg4+IgA85PkjA
-         Sa8hkVoAynBvp+SSwDrjSxo2ENJ3Tyo2Fd1WRKI38Mje7tNdngBX8Ri32usS/uOU026l
-         MQggwWqTqhuNLuGo9edn5cBsGwj9RDl6vVr65KackarqYYWOSjAID58SzTOktzarBMgQ
-         eppt0FY9xLJydMDkeYVLZUQHzy1qYz8N2TVNpkN2M9er3ADZIF/344TA6eJrcuxCxnjR
-         Ld8w==
-X-Gm-Message-State: AOAM531F8lACngmvolgLtv5M2IYSS9U1oW1k5Vm+vRM7CmOugYYB96/u
-        Z/P5ZgYghmGTv4XMTVZTBhVkbTUtruK/ZA==
-X-Google-Smtp-Source: ABdhPJxE0EV0Z8PUZTxCENHWt/rseFaAqD0JRfsIAhMnk3syLVMjXdV6QDig/iL0EbzmNqFARbBIIg==
-X-Received: by 2002:a63:231a:: with SMTP id j26mr8148261pgj.77.1621028161580;
-        Fri, 14 May 2021 14:36:01 -0700 (PDT)
+        bh=y6UYooSiQef4zit3Gqi6nc76HmL0lSxvqul04f7IY2Q=;
+        b=GrZDmo/nQCEnzqOJ56R5Fi/BzLTzWjdOBncE6nWRTZBqvQ1mo9R+I8sBMnv7KwDINW
+         BnbAfwLml0/jHq8uSl+z2gH++6yYf4Joi/IuU/vZ0Vth5WGVezsf0QX6iyJ6Ec9QkKMi
+         3BiC3y5V+N4Bo85/2WkbdD6WLPD9Ap9WdvLznDrkZtEeMEihXZT/Z+NkMJZtsr4dpNAq
+         HAqmi/gR1TwqNK5mzGbi1oWzy0xEJUCdKJdNkOGf0lxAvP2lHAK1iTDOpMd0Nz/EM9K7
+         Bm6sZuuvusKuUXN5Z2hwkU2cW1XG9MM6RYTcAoyVT6NdcqUX75ivSPlVgBGT4y1bvMJt
+         oDRQ==
+X-Gm-Message-State: AOAM531yvi1cowi6WsUUTzcjqr1Lu8/I9Zlch7ZI5wi8tOFobCAJyw3W
+        8bBZBqAig0PSxJJojQYmg3Y=
+X-Google-Smtp-Source: ABdhPJwTkehg4g+PlejQdV+1BVqCnUo6OytEOrRk+i2zF9hwHFtCJa3F5LlaRByozO+liH31Nz37yw==
+X-Received: by 2002:a17:90a:c297:: with SMTP id f23mr54210078pjt.197.1621028163141;
+        Fri, 14 May 2021 14:36:03 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:e40c:c579:7cd8:c046])
-        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.36.00
+        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.36.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 14:36:01 -0700 (PDT)
+        Fri, 14 May 2021 14:36:02 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Subject: [PATCH 16/50] csiostor: Use blk_req() instead of scsi_cmnd.request
-Date:   Fri, 14 May 2021 14:33:22 -0700
-Message-Id: <20210514213356.5264-68-bvanassche@acm.org>
+        "Manoj N. Kumar" <manoj@linux.ibm.com>,
+        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
+        Uma Krishnan <ukrishn@linux.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH 17/50] cxlflash: Use blk_req() instead of scsi_cmnd.request
+Date:   Fri, 14 May 2021 14:33:23 -0700
+Message-Id: <20210514213356.5264-69-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210514213356.5264-1-bvanassche@acm.org>
 References: <20210514213356.5264-1-bvanassche@acm.org>
@@ -64,35 +65,19 @@ patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/csiostor/csio_scsi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/cxlflash/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 56b9ad0a1ca0..234e0baec091 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -1786,7 +1786,7 @@ csio_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmnd)
- 	struct csio_scsi_qset *sqset;
- 	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
- 
--	sqset = &hw->sqset[ln->portid][blk_mq_rq_cpu(cmnd->request)];
-+	sqset = &hw->sqset[ln->portid][blk_mq_rq_cpu(blk_req(cmnd))];
- 
- 	nr = fc_remote_port_chkready(rport);
- 	if (nr) {
-@@ -1989,13 +1989,13 @@ csio_eh_abort_handler(struct scsi_cmnd *cmnd)
- 		csio_info(hw,
- 			"Aborted SCSI command to (%d:%llu) tag %u\n",
- 			cmnd->device->id, cmnd->device->lun,
--			cmnd->request->tag);
-+			blk_req(cmnd)->tag);
- 		return SUCCESS;
- 	} else {
- 		csio_info(hw,
- 			"Failed to abort SCSI command, (%d:%llu) tag %u\n",
- 			cmnd->device->id, cmnd->device->lun,
--			cmnd->request->tag);
-+			blk_req(cmnd)->tag);
- 		return FAILED;
- 	}
- }
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index 222593bc2afe..c3f5df2f3509 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -433,7 +433,7 @@ static u32 cmd_to_target_hwq(struct Scsi_Host *host, struct scsi_cmnd *scp,
+ 		hwq = afu->hwq_rr_count++ % afu->num_hwqs;
+ 		break;
+ 	case HWQ_MODE_TAG:
+-		tag = blk_mq_unique_tag(scp->request);
++		tag = blk_mq_unique_tag(blk_req(scp));
+ 		hwq = blk_mq_unique_tag_to_hwq(tag);
+ 		break;
+ 	case HWQ_MODE_CPU:
