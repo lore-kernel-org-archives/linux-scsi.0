@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B66FC433ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22B86C433B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D7426143F
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0702D6143F
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233293AbhENVgW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 May 2021 17:36:22 -0400
-Received: from mail-pg1-f169.google.com ([209.85.215.169]:33535 "EHLO
-        mail-pg1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233317AbhENVgT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:36:19 -0400
-Received: by mail-pg1-f169.google.com with SMTP id i5so289716pgm.0
-        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:35:07 -0700 (PDT)
+        id S233267AbhENVgX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 May 2021 17:36:23 -0400
+Received: from mail-pf1-f169.google.com ([209.85.210.169]:42828 "EHLO
+        mail-pf1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233288AbhENVgW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:36:22 -0400
+Received: by mail-pf1-f169.google.com with SMTP id h127so642000pfe.9
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:35:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=dzMV4G/EBdC4YA4YLk20EfAVOl39gvVVvCFY9AvGB4Y=;
-        b=b9UkQbw+dq3CC0K0wCiUW8crn8wbu9vQAyKsjJt8kOC1GM9Jc1h9bgD7y18y1MxfQi
-         4uln8Pv9spwEmb/RKm1rgHR4Hom8eN/gkDXjakHKoykNZj+/rScYFp52UmAVOMilhmmQ
-         eFPGVDTSVL6Cs6ScOfwbKfS6gu4LhJuJTLsGPeAWwpLSYrWnx1c0UxdatXK2Li4tg3cG
-         KDDi1TtwyyvafaTWtBUrwCGjzZW2l8uyS9yeSFbTLPfZrRwt3DUcteIxjagynHv7S+ki
-         8He1/3/u1M/YuUVkxufwNoc5ILJKKHN+0bOX8BsElD51WNo8DlgabChu+xiY1Z9eu7XQ
-         Lz8A==
-X-Gm-Message-State: AOAM531s5rkzEiOpUqLAHlBfALV51h3LJOTkMxPvko3zloTykSn5ZDqD
-        kQKGwoi35gKdS3mbUJ1m+sQ=
-X-Google-Smtp-Source: ABdhPJw3rBiixwBHl46TV0HXu0IKxMztx8Q0ef9b5r+uWAKaDESG4gPBPNqj94uXwrU4Wv+TbRHyfw==
-X-Received: by 2002:a65:60cc:: with SMTP id r12mr8137469pgv.164.1621028107490;
-        Fri, 14 May 2021 14:35:07 -0700 (PDT)
+        bh=TlBSfGOkRDloBNFq8/A2UkRZK3YjZI1/M4VMfWPNoUw=;
+        b=dWCBQTzi/WtWyi2Znnc+jggEhLSwKlyzdtVzDPvs44XcxRwrTfTXHnRi0nXcDprCqf
+         hUChReBTY5odXek72Myj1cLcglq27aOePq9aslMVkTOPwq7bBbF9dB9EZYslgy8V/cu8
+         BQgYje0CElE7jBCed6XymI95ov+TZFS3Bri8MEfYeLK3IkpUrhXyKGn8dioFZsxg14Dx
+         gpe1ztGNdWe+2y+lcKnN00OShqaEEl3wi+Z7vW/4rRf2FeWA3eQN08Nh2AjECcm9Ovjj
+         inZq8WXEbl3ePSeLfnVgkEj5GEnAMBHk59ZsjhgNwoANchAKhx2XXl6R8gQMhkecxgqJ
+         fxag==
+X-Gm-Message-State: AOAM530PNMAIM2k8ksd3kYjz12yfVttlQJqYQtd5zTVlX/ZcjP0K48ya
+        C9UIJh86S/SmTX8vNRy8QqKV92xLpLXVzg==
+X-Google-Smtp-Source: ABdhPJzdkJ4Zar06owU9U2d2BqmXsVUx5jgjQ7lTYebuFrzoaksdIA4VWJ+xl0YgoebWQpuy8OQShQ==
+X-Received: by 2002:a65:48c5:: with SMTP id o5mr49252113pgs.101.1621028109381;
+        Fri, 14 May 2021 14:35:09 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:e40c:c579:7cd8:c046])
-        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.35.06
+        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.35.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 14:35:06 -0700 (PDT)
+        Fri, 14 May 2021 14:35:08 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 36/50] qla2xxx: Use blk_req() instead of scsi_cmnd.request
-Date:   Fri, 14 May 2021 14:32:51 -0700
-Message-Id: <20210514213356.5264-37-bvanassche@acm.org>
+Subject: [PATCH 37/50] qla4xxx: Use blk_req() instead of scsi_cmnd.request
+Date:   Fri, 14 May 2021 14:32:52 -0700
+Message-Id: <20210514213356.5264-38-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210514213356.5264-1-bvanassche@acm.org>
 References: <20210514213356.5264-1-bvanassche@acm.org>
@@ -64,28 +65,42 @@ patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla4xxx/ql4_iocb.c | 2 +-
+ drivers/scsi/qla4xxx/ql4_os.c   | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 4eab564ea6a0..454857fd25d6 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -849,7 +849,7 @@ qla2xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		uint16_t hwq;
- 		struct qla_qpair *qpair = NULL;
+diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
+index cbd1e6ffcd67..eac4b201360b 100644
+--- a/drivers/scsi/qla4xxx/ql4_iocb.c
++++ b/drivers/scsi/qla4xxx/ql4_iocb.c
+@@ -288,7 +288,7 @@ int qla4xxx_send_command_to_isp(struct scsi_qla_host *ha, struct srb * srb)
+ 	/* Acquire hardware specific lock */
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
  
--		tag = blk_mq_unique_tag(cmd->request);
-+		tag = blk_mq_unique_tag(blk_req(cmd));
- 		hwq = blk_mq_unique_tag_to_hwq(tag);
- 		qpair = ha->queue_pair_map[hwq];
+-	index = (uint32_t)cmd->request->tag;
++	index = blk_req(cmd)->tag;
  
-@@ -1742,7 +1742,7 @@ static void qla2x00_abort_srb(struct qla_qpair *qp, srb_t *sp, const int res,
- 		}
+ 	/*
+ 	 * Check to see if adapter is online before placing request on
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index ad3afe30f617..8429ac66305d 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -9282,7 +9282,7 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ 	DEBUG2(printk(KERN_INFO
+ 		      "scsi%ld: DEVICE_RESET cmd=%p jiffies = 0x%lx, to=%x,"
+ 		      "dpc_flags=%lx, status=%x allowed=%d\n", ha->host_no,
+-		      cmd, jiffies, cmd->request->timeout / HZ,
++		      cmd, jiffies, blk_req(cmd)->timeout / HZ,
+ 		      ha->dpc_flags, cmd->result, cmd->allowed));
  
- 		spin_lock_irqsave(qp->qp_lock_ptr, *flags);
--		if (ret_cmd && blk_mq_request_started(cmd->request))
-+		if (ret_cmd && blk_mq_request_started(blk_req(cmd)))
- 			sp->done(sp, res);
- 	} else {
- 		sp->done(sp, res);
+ 	rval = qla4xxx_isp_check_reg(ha);
+@@ -9349,7 +9349,7 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
+ 	DEBUG2(printk(KERN_INFO
+ 		      "scsi%ld: TARGET_DEVICE_RESET cmd=%p jiffies = 0x%lx, "
+ 		      "to=%x,dpc_flags=%lx, status=%x allowed=%d\n",
+-		      ha->host_no, cmd, jiffies, cmd->request->timeout / HZ,
++		      ha->host_no, cmd, jiffies, blk_req(cmd)->timeout / HZ,
+ 		      ha->dpc_flags, cmd->result, cmd->allowed));
+ 
+ 	rval = qla4xxx_isp_check_reg(ha);
