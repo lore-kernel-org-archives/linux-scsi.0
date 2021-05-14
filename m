@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F39BC433ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:34:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2519C433ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:34:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 083D761446
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:34:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8745613C5
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:34:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233092AbhENVfw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 May 2021 17:35:52 -0400
-Received: from mail-pf1-f169.google.com ([209.85.210.169]:33582 "EHLO
-        mail-pf1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233077AbhENVfv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:35:51 -0400
-Received: by mail-pf1-f169.google.com with SMTP id h16so690315pfk.0
-        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:34:39 -0700 (PDT)
+        id S233077AbhENVfz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 May 2021 17:35:55 -0400
+Received: from mail-pg1-f175.google.com ([209.85.215.175]:43752 "EHLO
+        mail-pg1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233101AbhENVfx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:35:53 -0400
+Received: by mail-pg1-f175.google.com with SMTP id k15so239296pgb.10
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:34:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=CNhwrprZYmWxuMGbVuPnCv7S9U3K7+lKJs/YESFzhnc=;
-        b=eVq5ClMhScKpBTk3zr+V7jl783KDT+YKt6ysZ5itanR57eVWUgis7izZEViCgxUe7o
-         KbuhRQDMcPmLLBB9Ocw7P6kT2swFitAt3gk3c+2Y2QEXo6wMj0gnpXizAyUhL3RHl7yt
-         Kfl821eLvBQtagZPUija6NvdLOZGP8j94Ef2pM09LFE50XCyQzd+dph8QgTeUl1Mrec/
-         GoZ8SxytfuheOIdrmgMUqD6YlCbP3PASJlYqyQNHYiKSo3IaxfwxmVupqYpIqGU45a5t
-         20BQRj920hOyamTPAf6h8XoaXUVa6qjbxGI0qeAz5Y1MD/t9vRRz6WDc5g+/KYwCyrDz
-         2NMQ==
-X-Gm-Message-State: AOAM533qokKO6AgHxVv72gRk5pR6jB3yiCXDpa5swCbuW6xSDf56Miui
-        j2XUuWZBb6jbMt/68I5AR9A=
-X-Google-Smtp-Source: ABdhPJzbJ+VZVQETXhgyL5TH71vq0tMxkv3S2chOjoUct5gimllPBUs+GWfQHLsKuMATV3t/ikZMLA==
-X-Received: by 2002:a63:1e64:: with SMTP id p36mr1189382pgm.105.1621028079249;
-        Fri, 14 May 2021 14:34:39 -0700 (PDT)
+        bh=6CTnkeKhcotq5OMfqrz/2VKArxZCP+Flz3k3xUHSvnE=;
+        b=BRTaSjUDeTxRLSG6oRErSYRRSJ+A0nZAmBQKqhmDRFXOQtiFRRmWfmkE6zHxG2vkkU
+         x4PL2zzGXEHtnj0ZN0fxtD/fh3TierHu2qRm+9sLok7RjKj3nM2Ztop+nJvrMJIufx5Y
+         AiJoE/9QwSy5hUsV9RIu3BvLIdKKK8nMGQbCqbycx4XNpliyepqvWzMWe8dWmA9lvRK+
+         WHsjvjO7FtW21TUFNlxhoMFtrpfl/PdgNXNA1eVfd/c6s41nQLQnXmNgODnlvm1NskPz
+         0D3Nr9mejXYoLJaKevpn66lShgX6ESbOvr9NCE/GBcNeCEFnI/OGiIT9C7WBXw780bfh
+         X3QA==
+X-Gm-Message-State: AOAM5319g6X64ZhIiG8scg38aBAXMfhKvAgEY9Dnd25Z7fGWAEaMZRmP
+        qXURGHJBUNiepS8a2xK2GlI=
+X-Google-Smtp-Source: ABdhPJx80quJ3b87xUeyczLFwU4RPILHMZMlRXsjXMkV41/b/fHDVvRLZ1AdxayZzW5RXD831ZUbmw==
+X-Received: by 2002:a63:ba5b:: with SMTP id l27mr49480016pgu.343.1621028080734;
+        Fri, 14 May 2021 14:34:40 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:e40c:c579:7cd8:c046])
-        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.34.38
+        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.34.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 14:34:38 -0700 (PDT)
+        Fri, 14 May 2021 14:34:40 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        John Garry <john.garry@huawei.com>,
+        Don Brace <don.brace@microchip.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 20/50] hisi_sas: Use blk_req() instead of scsi_cmnd.request
-Date:   Fri, 14 May 2021 14:32:35 -0700
-Message-Id: <20210514213356.5264-21-bvanassche@acm.org>
+Subject: [PATCH 21/50] hpsa: Use blk_req() instead of scsi_cmnd.request
+Date:   Fri, 14 May 2021 14:32:36 -0700
+Message-Id: <20210514213356.5264-22-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210514213356.5264-1-bvanassche@acm.org>
 References: <20210514213356.5264-1-bvanassche@acm.org>
@@ -63,42 +63,37 @@ patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 4 ++--
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/hpsa.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 5a204074099c..9a93a3374d65 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -185,7 +185,7 @@ static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
- 	void *bitmap = hisi_hba->slot_index_tags;
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index f135a10f582b..9fcbe9a84de6 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -5686,7 +5686,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 	/* Get the ptr to our adapter structure out of cmd->host. */
+ 	h = sdev_to_hba(cmd->device);
  
- 	if (scsi_cmnd)
--		return scsi_cmnd->request->tag;
-+		return blk_req(scsi_cmnd)->tag;
+-	BUG_ON(cmd->request->tag < 0);
++	BUG_ON(blk_req(cmd)->tag < 0);
  
- 	spin_lock(&hisi_hba->lock);
- 	index = find_next_zero_bit(bitmap, hisi_hba->slot_index_count,
-@@ -449,7 +449,7 @@ static int hisi_sas_task_prep(struct sas_task *task,
- 		unsigned int dq_index;
- 		u32 blk_tag;
- 
--		blk_tag = blk_mq_unique_tag(scmd->request);
-+		blk_tag = blk_mq_unique_tag(blk_req(scmd));
- 		dq_index = blk_mq_unique_tag_to_hwq(blk_tag);
- 		*dq_pointer = dq = &hisi_hba->dq[dq_index];
- 	} else {
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 499c770d405c..ed02eecd606d 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1153,7 +1153,7 @@ static void fill_prot_v3_hw(struct scsi_cmnd *scsi_cmnd,
+ 	dev = cmd->device->hostdata;
+ 	if (!dev) {
+@@ -5729,7 +5729,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 	 *       and is therefore a brand-new command.
+ 	 */
+ 	if (likely(cmd->retries == 0 &&
+-			!blk_rq_is_passthrough(cmd->request) &&
++			!blk_rq_is_passthrough(blk_req(cmd)) &&
+ 			h->acciopath_status)) {
+ 		/* Submit with the retry_pending flag unset. */
+ 		rc = hpsa_ioaccel_submit(h, c, cmd, false);
+@@ -5894,7 +5894,7 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
+  */
+ static int hpsa_get_cmd_index(struct scsi_cmnd *scmd)
  {
- 	unsigned char prot_op = scsi_get_prot_op(scsi_cmnd);
- 	unsigned int interval = scsi_prot_interval(scsi_cmnd);
--	u32 lbrt_chk_val = t10_pi_ref_tag(scsi_cmnd->request);
-+	u32 lbrt_chk_val = t10_pi_ref_tag(blk_req(scsi_cmnd));
+-	int idx = scmd->request->tag;
++	int idx = blk_req(scmd)->tag;
  
- 	switch (prot_op) {
- 	case SCSI_PROT_READ_INSERT:
+ 	if (idx < 0)
+ 		return idx;
