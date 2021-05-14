@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43A19C43462
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:34:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AB6BC43460
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:34:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F4D66143F
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:34:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5755561446
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:34:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232880AbhENVf3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 May 2021 17:35:29 -0400
-Received: from mail-pj1-f51.google.com ([209.85.216.51]:33728 "EHLO
-        mail-pj1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232976AbhENVf2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:35:28 -0400
-Received: by mail-pj1-f51.google.com with SMTP id b13-20020a17090a8c8db029015cd97baea9so1961590pjo.0
-        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:34:16 -0700 (PDT)
+        id S232971AbhENVf2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 May 2021 17:35:28 -0400
+Received: from mail-pl1-f170.google.com ([209.85.214.170]:38544 "EHLO
+        mail-pl1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232994AbhENVfY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:35:24 -0400
+Received: by mail-pl1-f170.google.com with SMTP id 69so102626plc.5
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:34:13 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=bZYJ8fHp38zbqAQJSrWOFxcvcx3rN2CDAD1oYFPEzbY=;
-        b=rIJdCAUUNTVIz1FiAJCjuSuRjoGj+AiR7Auz57tRTnohPchATooyAu6j9vui1LWJsa
-         nKF70jDa6WYnsEagMTNezDzU2gbZVlI+8/lC7XFgkriZvJ8vKR4JCqcGFt5MUimRl5dG
-         EMwSuoEbIk6xP+Y9XBxkRqihvDBijJNnjrvZTS2917Tz0t6zIV0InpVa3VrrWHsp10LZ
-         CkQuVUI+ai8Um+I5dQv5R46gMd9+Pu5HKRBwJBHvmx3lCs31TIB/i7/EzP9jgt6Hdywc
-         VEv4fPWaNQR9I9U4ARMehHxmW9paPk0gGieQSrWUDYVIENhzHbLm6s3ERqEbvqD4MKlr
-         1VBw==
-X-Gm-Message-State: AOAM530jQOp9sl31qgcUHcs5V+Kl2+Uhi97O/StVJNULjHrA1fQXp1gP
-        qGiBK4xmYjCXbdJnKM+tD9E=
-X-Google-Smtp-Source: ABdhPJyITGfRh5w2FjlelyZHzanO7Rr3jdhcl5E7YrCtkwIE71Gr36Csf8za8DglDTy47p2w+NfurQ==
-X-Received: by 2002:a17:902:6504:b029:ee:d332:4bd6 with SMTP id b4-20020a1709026504b02900eed3324bd6mr47844251plk.37.1621028055831;
-        Fri, 14 May 2021 14:34:15 -0700 (PDT)
+        bh=hjjWgcGg3lNUdfmXQnaHe/oiHj8x1ZBHAFqCm8zQryA=;
+        b=uSbIllRYp+9WZ65vyfK/XH4ouSiPevrkRnxAoPtFm+voWb0kMf4Mza9bOYEz+vM8rq
+         auy7mo+KPAW19ZBLSwMF78GsQivMjTK48265mcUkNqSggO8vXM0NIzX6qPlfppI3EObw
+         vVSFSBWVZhGjOVcUBJlxF6pIBzuEZXIHhYUzKN1P4qXxptk7wcjcRNk8ReaFbbD0wPoK
+         n7BO18u2uuiW/KgxtzMt1sMG+FZf6BCFnxuVl1k2D3r2ycbZ6As7rIBwO8C+dXg/dhNb
+         CXgAct8xvUhjmx9/9D3lZiOGvwkTm/j7OWaV8UuoARTB0WGNS2mZSwYdLlrh/OBA7+hq
+         TARw==
+X-Gm-Message-State: AOAM530hRAfcC1DKCBp+aLkWOQEEbHtjozo+7V6WqRpWg1Pew3s84Tqr
+        zKO4d1X7xuLNtzaq+qdRuhs=
+X-Google-Smtp-Source: ABdhPJzVKT1CknTzkG+0GuoOnKGalaimpbk5cg6yt+Oak824QFd5HDP5A4Gb3QMB5fX7rYcO3RPhdA==
+X-Received: by 2002:a17:90a:e7c2:: with SMTP id kb2mr4752659pjb.193.1621028052735;
+        Fri, 14 May 2021 14:34:12 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:e40c:c579:7cd8:c046])
-        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.34.14
+        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.34.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 14:34:15 -0700 (PDT)
+        Fri, 14 May 2021 14:34:12 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        Ming Lei <ming.lei@redhat.com>,
+        Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 06/50] scsi_transport_spi: Use blk_req() instead of scsi_cmnd.request
-Date:   Fri, 14 May 2021 14:32:21 -0700
-Message-Id: <20210514213356.5264-7-bvanassche@acm.org>
+Subject: [PATCH 04/50] sr: Use blk_req() instead of scsi_cmnd.request
+Date:   Fri, 14 May 2021 14:32:19 -0700
+Message-Id: <20210514213356.5264-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210514213356.5264-1-bvanassche@acm.org>
 References: <20210514213356.5264-1-bvanassche@acm.org>
@@ -67,19 +67,48 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_transport_spi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/sr.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index c37dd15d16d2..e75c7c184a01 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -1230,7 +1230,7 @@ int spi_populate_tag_msg(unsigned char *msg, struct scsi_cmnd *cmd)
- {
-         if (cmd->flags & SCMD_TAGGED) {
- 		*msg++ = SIMPLE_QUEUE_TAG;
--        	*msg++ = cmd->request->tag;
-+        	*msg++ = blk_req(cmd)->tag;
-         	return 2;
- 	}
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index e4633b84c556..5a23f4ca8698 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -326,7 +326,7 @@ static int sr_done(struct scsi_cmnd *SCpnt)
+ 	int good_bytes = (result == 0 ? this_count : 0);
+ 	int block_sectors = 0;
+ 	long error_sector;
+-	struct scsi_cd *cd = scsi_cd(SCpnt->request->rq_disk);
++	struct scsi_cd *cd = scsi_cd(blk_req(SCpnt)->rq_disk);
  
+ #ifdef DEBUG
+ 	scmd_printk(KERN_INFO, SCpnt, "done: %x\n", result);
+@@ -348,16 +348,16 @@ static int sr_done(struct scsi_cmnd *SCpnt)
+ 				break;
+ 			error_sector =
+ 				get_unaligned_be32(&SCpnt->sense_buffer[3]);
+-			if (SCpnt->request->bio != NULL)
++			if (blk_req(SCpnt)->bio != NULL)
+ 				block_sectors =
+-					bio_sectors(SCpnt->request->bio);
++					bio_sectors(blk_req(SCpnt)->bio);
+ 			if (block_sectors < 4)
+ 				block_sectors = 4;
+ 			if (cd->device->sector_size == 2048)
+ 				error_sector <<= 2;
+ 			error_sector &= ~(block_sectors - 1);
+ 			good_bytes = (error_sector -
+-				      blk_rq_pos(SCpnt->request)) << 9;
++				      blk_rq_pos(blk_req(SCpnt))) << 9;
+ 			if (good_bytes < 0 || good_bytes >= this_count)
+ 				good_bytes = 0;
+ 			/*
+@@ -389,7 +389,7 @@ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt)
+ {
+ 	int block = 0, this_count, s_size;
+ 	struct scsi_cd *cd;
+-	struct request *rq = SCpnt->request;
++	struct request *rq = blk_req(SCpnt);
+ 	blk_status_t ret;
+ 
+ 	ret = scsi_alloc_sgtables(SCpnt);
