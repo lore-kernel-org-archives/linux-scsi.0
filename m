@@ -3,115 +3,110 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81A49C43462
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 17:49:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84138C433B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 19:56:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6037861457
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 17:49:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 560FD61492
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 19:56:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235247AbhENRuW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 May 2021 13:50:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40882 "EHLO
+        id S232849AbhENT5R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 May 2021 15:57:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235236AbhENRuW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 13:50:22 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86DE8C061574;
-        Fri, 14 May 2021 10:49:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:To:From:Date:Sender:Reply-To:Cc:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=2pAe91SWzc/6riCJTnq7kqxW30iWZ5ZzX7m8q/+xTL0=; b=pxBgiq2xmX4brOJjhFnslcv0it
-        MmKEA6uhuUypxWEc3UG6F1Wp650xb/5yQzn09Tqc9aJ4pnsXBpgk2zl5T/eiWto8mOykLDJ1lbnf1
-        6ZyM7o7qGX3h6fHDf5e2mcVTXr2BCpli8AJsT2vKKgaWdmw6EAZbo4LtKmdz5VmuJAeyJ/kdfOuj7
-        4b9SOEQPkp96VlcfvuqnozuLOQ3koM0kxl6BiARLyqvR/gq2ISejZm3FjS6N027kuaqQdSfAQSV72
-        y2x/473TwS/oB+ykEC+G0nCJblIVfUMF9LU+lz/5Gn+n9u0pXX+cUIhlqb5WhazNmPjaYln0v3z4b
-        eyqkiIBA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lhbvG-00AaXL-9i; Fri, 14 May 2021 17:48:31 +0000
-Date:   Fri, 14 May 2021 18:48:26 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     lsf-pc@lists.linux-foundation.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org
-Subject: Re: [LSF/MM/BPF TOPIC] Memory folios
-Message-ID: <YJ636tQhuc9X7ZzR@casper.infradead.org>
-References: <YJlzwcADaxO/JHRE@casper.infradead.org>
+        with ESMTP id S232838AbhENT5Q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 15:57:16 -0400
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C9ABC061574
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 12:56:05 -0700 (PDT)
+Received: by mail-pj1-x1036.google.com with SMTP id b13-20020a17090a8c8db029015cd97baea9so1850188pjo.0
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 12:56:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=x17MGnHaA+1zNXG7Y19zjRXci+zQMFbaS8YTmXUq+pY=;
+        b=U72e7SlNUiwJxSRs7MjXDtMiwfKoDX5gCM4X3Nb8Kt/cMz3QJHNMdPum3U6isq+Mf+
+         fDJ5Ox0Uajw0q2rs+fplLRfdz9uqL+pL7xMx7gGwaDf//3PktJS+we7omFoMAh2rZKkq
+         QZJSIyGBeJWjlle5XntLqtJr4EQHMqqRuEFI7hZ7CVm0Lb74W4UNw4kVHETjLSRpI62m
+         ARTRSsCBXLISL4//p5XIdoNuCv21qgSbauhczb4FD8kO8o5ZA7iLSxjCk1AdiZt+K/o7
+         hYutu8wfcyiP903TdMTYltJvKkQhgejAtYWm1Cz7RZVoJX020acha4KXwBP7Q+c+URLa
+         5OIw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=x17MGnHaA+1zNXG7Y19zjRXci+zQMFbaS8YTmXUq+pY=;
+        b=dSbMipnCtujSPicYYIGvh4KLmwQeGw+byA3dt1+NPpTAJxHdPE0IXXSy7m6c3GunhN
+         yFfyqEGVZb+iHYE47YfhGz6O7fWi/HnTKVWl+NKoHsJ5+8fom6djLAR6rlKBirFKc5KB
+         sIrO1veWxwTG2gP+aV41MgMgNArJmelmxStpI/8X4QPEwJBkNhmLh1Ci4XTn/CjqUm/R
+         +HgX5RqNPMV+Z3RQFxFNZr2Fl6T5XfBMj8RTHa2mNNWlZ1IrWPFZoVmHDFpfCeqvxzHc
+         gbwiZkHiQPUFFXqayTaDJMzvuY3/LmxluBVo3HSQ//uLt48u1TnujBMNjZwrjCIrfmE1
+         zd3w==
+X-Gm-Message-State: AOAM5326tPk01WysesiWw0rZFIadz2B+4RCe7GKyR8MUh71TVFobmYOw
+        LMfRkdbQBsyaHdr6QIvfzCfym1b40nI=
+X-Google-Smtp-Source: ABdhPJwskEABO/6KGOOx4Dp4D/Jce1rY8pG99Cf+CwRZ5tk6H8EbtBbOx2SI4UaEgsKdI/Y67fpP0Q==
+X-Received: by 2002:a17:90b:604:: with SMTP id gb4mr13032311pjb.178.1621022164681;
+        Fri, 14 May 2021 12:56:04 -0700 (PDT)
+Received: from localhost.localdomain (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
+        by smtp.gmail.com with ESMTPSA id v15sm4961850pgc.57.2021.05.14.12.56.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 May 2021 12:56:04 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>
+Subject: [PATCH 00/11] lpfc: Update lpfc to revision 12.8.0.10
+Date:   Fri, 14 May 2021 12:55:48 -0700
+Message-Id: <20210514195559.119853-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YJlzwcADaxO/JHRE@casper.infradead.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 10, 2021 at 06:56:17PM +0100, Matthew Wilcox wrote:
-> I don't know exactly how much will be left to discuss about supporting
-> larger memory allocation units in the page cache by December.  In my
-> ideal world, all the patches I've submitted so far are accepted, I
-> persuade every filesystem maintainer to convert their own filesystem
-> and struct page is nothing but a bad memory by December.  In reality,
-> I'm just not that persuasive.
-> 
-> So, probably some kind of discussion will be worthwhile about
-> converting the remaining filesystems to use folios, when it's worth
-> having filesystems opt-in to multi-page folios, what we can do about
-> buffer-head based filesystems, and so on.
-> 
-> Hopefully we aren't still discussing whether folios are a good idea
-> or not by then.
+Update lpfc to revision 12.8.0.10
 
-I got an email from Hannes today asking about memory folios as they
-pertain to the block layer, and I thought this would be a good chance
-to talk about them.  If you're not familiar with the term "folio",
-https://lore.kernel.org/lkml/20210505150628.111735-10-willy@infradead.org/
-is not a bad introduction.
+This patch set contains fixes, a new abort behavior, and an RDF
+enhancment.
 
-Thanks to the work done by Ming Lei in 2017, the block layer already
-supports multipage bvecs, so to a first order of approximation, I don't
-need anything from the block layer on down through the various storage
-layers.  Which is why I haven't been talking to anyone in storage!
+The patches were cut against Martin's 5.14/scsi-queue tree
 
-It might change (slightly) the contents of bios.  For example,
-bvec[n]->bv_offset might now be larger than PAGE_SIZE.  Drivers should
-handle this OK, but probably haven't been audited to make sure they do.
-Mostly, it's simply that drivers will now see fewer, larger, segments
-in their bios.  Once a filesystem supports multipage folios, we will
-allocate order-N pages as part of readahead (and sufficiently large
-writes).  Dirtiness is tracked on a per-folio basis (not per page),
-so folios take trips around the LRU as a single unit and finally make
-it to being written back as a single unit.
 
-Drivers still need to cope with sub-folio-sized reads and writes.
-O_DIRECT still exists and (eg) doing a sub-page, block-aligned write
-will not necessarily cause readaround to happen.  Filesystems may read
-and write their own metadata at whatever granularity and alignment they
-see fit.  But the vast majority of pagecache I/O will be folio-sized
-and folio-aligned.
+James Smart (11):
+  lpfc: Fix unreleased RPIs when NPIV ports are created
+  lpfc: Fix non-optimized ERSP handling
+  lpfc: Fix "Unexpected timeout" error in direct attach topology
+  lpfc: Add ndlp kref accounting for resume rpi path
+  lpfc: Fix Node recovery when driver is handling simultaneous PLOGIs
+  lpfc: Fix node handling for Fabric Controller and Domain Controller
+  lpfc: Ignore GID-FT response that may be received after a link flip
+  lpfc: Fix crash when lpfc_sli4_hba_setup fails to initialize the SGLs
+  lpfc: Add a option to enable interlocked ABTS before job completion
+  lpfc: Reregister FPIN types if receive ELS_RDF from fabric controller
+  lpfc: Update lpfc version to 12.8.0.10
 
-I do have two small patches which make it easier for the one
-filesystem that I've converted so far (iomap/xfs) to add folios to bios
-and get folios back out of bios:
+ drivers/scsi/lpfc/lpfc.h           |   2 +
+ drivers/scsi/lpfc/lpfc_attr.c      |  11 ++
+ drivers/scsi/lpfc/lpfc_crtn.h      |   1 +
+ drivers/scsi/lpfc/lpfc_ct.c        |  43 ++++-
+ drivers/scsi/lpfc/lpfc_debugfs.c   |  11 +-
+ drivers/scsi/lpfc/lpfc_disc.h      |   1 +
+ drivers/scsi/lpfc/lpfc_els.c       | 299 +++++++++++++++++++++++++++--
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  81 +++++++-
+ drivers/scsi/lpfc/lpfc_init.c      |   7 -
+ drivers/scsi/lpfc/lpfc_mbox.c      |   3 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  40 +++-
+ drivers/scsi/lpfc/lpfc_nvme.c      |  14 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      |  45 ++++-
+ drivers/scsi/lpfc/lpfc_sli.c       |  39 +++-
+ drivers/scsi/lpfc/lpfc_sli.h       |   3 +-
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ 16 files changed, 529 insertions(+), 73 deletions(-)
 
-https://lore.kernel.org/lkml/20210505150628.111735-72-willy@infradead.org/
-https://lore.kernel.org/lkml/20210505150628.111735-73-willy@infradead.org/
+-- 
+2.26.2
 
-as well as a third patch that estimates how large a bio to allocate,
-given the current folio that it's working on:
-https://git.infradead.org/users/willy/pagecache.git/commitdiff/89541b126a59dc7319ad618767e2d880fcadd6c2
-
-It would be possible to make other changes in future.  For example, if
-we decide it'd be better, we could change bvecs from being (page, offset,
-length) to (folio, offset, length).  I don't know that it's worth doing;
-it would need to be evaluated on its merits.  Personally, I'd rather
-see us move to a (phys_addr, length) pair, but I'm a little busy at the
-moment.
-
-Hannes has some fun ideas about using the folio work to support larger
-sector sizes, and I think they're doable.
