@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAF70C43460
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96E55C43603
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D464161440
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D07161440
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233475AbhENVgy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 May 2021 17:36:54 -0400
-Received: from mail-pj1-f46.google.com ([209.85.216.46]:51838 "EHLO
-        mail-pj1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230095AbhENVgs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:36:48 -0400
-Received: by mail-pj1-f46.google.com with SMTP id k5so536025pjj.1
-        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:35:36 -0700 (PDT)
+        id S233419AbhENVgt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 May 2021 17:36:49 -0400
+Received: from mail-pg1-f173.google.com ([209.85.215.173]:41490 "EHLO
+        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233411AbhENVgm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:36:42 -0400
+Received: by mail-pg1-f173.google.com with SMTP id t30so247567pgl.8
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:35:29 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=/UIWHmvdwtfrOIscDc0heussLtIDhZOhV+XOUIj5B2c=;
-        b=e2x7K43ivGNu0S4zu6vrPLuFNT0POIo2nMgtwR23d/YClrB99lJcu+IaDHN8ST50wm
-         9qQtsF4ODsRGW7b8iPXFDhs6Lzjgz5wVAKD55ahF/WbXVefjG018VZqOFCnhxPghS7+R
-         TJz47NVfwz05IU7cfu9ztDV8Lv3GPT0OBWMGPZE2scXI8CKGh8UULr0wYmXQpo+CSOtJ
-         mZ4PPrAVwKwuzqp9ePvEygAv3b7TmysExQpiTMm2QGkBPvwkio+xc1yp1KZcrI7lcIBa
-         VrzTRB+tM+qDD9nhjLR/QTVqP+2YN8Oxd3n8sKt1TOWk0JOZXxNuVOFaLTqqztBg+nfg
-         NyPw==
-X-Gm-Message-State: AOAM530gtd9wUT/ss4EMIMTmd6M59kGmneDV94fHh+hN+CGK5mJl2VJQ
-        CxvsMHXRnasYHNKHeqp8x0s=
-X-Google-Smtp-Source: ABdhPJxJggpocHYxNY0N1nfwJF2nmX5ntuq9RT1Y9jnJxsEn79U3UN8Bp5c9znNMb9RvCiHxXFYzkQ==
-X-Received: by 2002:a17:902:8f93:b029:f0:ad44:35ee with SMTP id z19-20020a1709028f93b02900f0ad4435eemr2930062plo.43.1621028135712;
-        Fri, 14 May 2021 14:35:35 -0700 (PDT)
+        bh=vJiWrRK/gssXKJ/acngQthRIJI+9PzFLnYjOWh9yIdY=;
+        b=QSmmZLBgJiOyT8nc4UxyQWI1ufWpT6zldSshT3NhDbgow7fRTr2eWU4AAlKAim2CSc
+         jrkV20wxS47v3oClpczn2AoasAyLN0Z6eZwkdG0yl+BBGojK9OwPFsGxEJuA7aZkTRF+
+         3TY7C0idVKONBY9PMfAfauYsInpd9b1Ig+UQZA/FkfxW/9esugF56qb/D05vQetl4Em0
+         bQjF65yYmuLqoHiIrzzj7mn2bprbnWBBfe9f2HWVQcAmxotdqPLLlocIKJZC4eKtMNa4
+         d6+7Pr9xn9SryXCeB/THR8pmHtHz56URQpVdZyJq7CF0hDyFPXEjbKRcJ473tnfZVLOD
+         RITQ==
+X-Gm-Message-State: AOAM532c2c1id57Ch+RETORwLR/Yth1jZiLNA4iQ42S+QpFObvxpUnwh
+        tUn/mYZG7yZYMuAxj5X5xjI=
+X-Google-Smtp-Source: ABdhPJxfggWRDhpaSXfGtZS9SHjd8vNoFB2Vt1lbpMv7PrOc2ce2d8U+p/oMENLiYq7K2pGZm9AHYg==
+X-Received: by 2002:a63:b211:: with SMTP id x17mr41249114pge.106.1621028129543;
+        Fri, 14 May 2021 14:35:29 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:e40c:c579:7cd8:c046])
-        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.35.34
+        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.35.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 14:35:35 -0700 (PDT)
+        Fri, 14 May 2021 14:35:29 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 01/50] core: Introduce the blk_req() function
-Date:   Fri, 14 May 2021 14:33:07 -0700
-Message-Id: <20210514213356.5264-53-bvanassche@acm.org>
+        Mike Christie <michael.christie@oracle.com>,
+        Bodo Stroesser <bostroesser@gmail.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>
+Subject: [PATCH 48/50] tcm_loop: Use blk_req() instead of scsi_cmnd.request
+Date:   Fri, 14 May 2021 14:33:03 -0700
+Message-Id: <20210514213356.5264-49-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210514213356.5264-1-bvanassche@acm.org>
 References: <20210514213356.5264-1-bvanassche@acm.org>
@@ -59,38 +59,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The 'request' member of struct scsi_cmnd is superfluous. The struct
-request and struct scsi_cmnd data structures are adjacent and hence the
-request pointer can be derived easily from a scsi_cmnd pointer. Introduce
-a helper function that performs that conversion in a type-safe way. This
-patch is the first step towards removing the request member from struct
-scsi_cmnd. Making that change has the following advantages:
-- This is a performance optimization since adding an offset to a pointer
-  takes less time than dereferencing a pointer.
-- struct scsi_cmnd becomes smaller.
+Prepare for removal of the request pointer by using blk_req() instead. This
+patch does not change any functionality.
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- include/scsi/scsi_cmnd.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/target/loopback/tcm_loop.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index fed024f4c02a..f5825be7ee76 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -146,6 +146,12 @@ struct scsi_cmnd {
- 	unsigned int extra_len;	/* length of alignment and padding */
- };
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 2687fd7d45db..19c4f21d4d10 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -183,7 +183,7 @@ static int tcm_loop_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *sc)
  
-+/* Variant of blk_mq_rq_from_pdu() that verifies the type of its argument. */
-+static inline struct request *blk_req(struct scsi_cmnd *scmd)
-+{
-+	return blk_mq_rq_from_pdu(scmd);
-+}
-+
- /*
-  * Return the driver private allocation behind the command.
-  * Only works if cmd_size is set in the host template.
+ 	memset(tl_cmd, 0, sizeof(*tl_cmd));
+ 	tl_cmd->sc = sc;
+-	tl_cmd->sc_cmd_tag = sc->request->tag;
++	tl_cmd->sc_cmd_tag = blk_req(sc)->tag;
+ 
+ 	tcm_loop_target_queue_cmd(tl_cmd);
+ 	return 0;
+@@ -249,7 +249,7 @@ static int tcm_loop_abort_task(struct scsi_cmnd *sc)
+ 	tl_hba = *(struct tcm_loop_hba **)shost_priv(sc->device->host);
+ 	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
+ 	ret = tcm_loop_issue_tmr(tl_tpg, sc->device->lun,
+-				 sc->request->tag, TMR_ABORT_TASK);
++				 blk_req(sc)->tag, TMR_ABORT_TASK);
+ 	return (ret == TMR_FUNCTION_COMPLETE) ? SUCCESS : FAILED;
+ }
+ 
