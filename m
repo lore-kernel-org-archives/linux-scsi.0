@@ -7,48 +7,51 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5979C433B4
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1804C43460
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A141613C5
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9949561440
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:35:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233644AbhENVhJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 May 2021 17:37:09 -0400
-Received: from mail-pf1-f172.google.com ([209.85.210.172]:41949 "EHLO
-        mail-pf1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233505AbhENVhC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:37:02 -0400
-Received: by mail-pf1-f172.google.com with SMTP id v191so643580pfc.8
-        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:35:49 -0700 (PDT)
+        id S233552AbhENVhK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 May 2021 17:37:10 -0400
+Received: from mail-pl1-f173.google.com ([209.85.214.173]:42542 "EHLO
+        mail-pl1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233551AbhENVhD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:37:03 -0400
+Received: by mail-pl1-f173.google.com with SMTP id v13so94816ple.9
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:35:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=/xwVNWxEkfoxLUwXj2D3n0bcSpzVFbgjluocNlb2IDo=;
-        b=PZR7FMXm95SFB0GhBDt2Pneq7ozo4KaDNfX9/1xEjXZcWDzz2xefMqW2m9REVdS+71
-         h3bQugP3//l4mp8lsdCi0goXbYdib5SC7KpP0vgJkG/+NNm1yll06rBHqPijJQupK8Sm
-         IFvVeZj6U4+D2t1tYyoC2hGtrMP9dD2lnM3NHxS4tlog+UKH25arEO3gyjWT7agygKNy
-         VHFph8LTU2Oock9IPw8oOrm1cmp0oeiMMvYlJIJzX3Ufs5n+irjPLKUruMivGnvxA0qW
-         JhR3YbFbxgWF1KzSJ3v/IgweM6YslYBjoMd7NOmDAvpSR1gxS7jCObVEE2XV955/st8H
-         KuWw==
-X-Gm-Message-State: AOAM532/JR+znx4b84eravHse5I6xCDC01qc75yKmEHNnGpaTBKMghz1
-        s6PZ5Np2lYNvIe3ABbUkrdc=
-X-Google-Smtp-Source: ABdhPJwhBT00tX1pSv9tz1K0vtGbKz4L7K2uasq0RKPodXMj74J7w0Dc6zGehEYgYJINxaS32MxR6g==
-X-Received: by 2002:a63:b243:: with SMTP id t3mr39945159pgo.253.1621028149168;
-        Fri, 14 May 2021 14:35:49 -0700 (PDT)
+        bh=geElLRMks0iQAYLilw8v93f07YLDAo8etaoW0tK14Ig=;
+        b=jKee2BMg7hxT1hAI0fSWTNrV4QdP5is7i1+/UElOwWMAxDVRtxJIG2jtOIQcwwm0sl
+         PzXtZ6fSfSKquy8n4A1hUlKuyP6nJXZbxHfN2TRPm1Y+0wfSySOvYrDXvZ6bcq6FL5br
+         OQD8RTOSH/QeOsXnbHZSigYXYXeRgqYwkYG3FDydOWAnB6c6yZe3ssSLa8PtceF3O06Q
+         hXjFqWL1DPOCcwmJoyGYK6/LIeh70+KTxPLCYtzqqkltBYMNSbfNqZs4rGHqSY9mlTqP
+         8U7U/Nk0+2SXOD5JvTrSNmGtcAYJS92vA/r9/cFz0YwYOuJ2+mAgjx+bC0wRftvPul4o
+         fBqw==
+X-Gm-Message-State: AOAM533q74Ixs8A4XWz7DMJpX2UiGBY8NFxXsDRvGt1KB9pC0aR9NSdn
+        VaHSqouO02RJA8mJWpHqRdw=
+X-Google-Smtp-Source: ABdhPJzFGK6L5DtscySZYHpJ3zaikvOyau4UcJpEm3GTqZLevrsORGYKKkgLGAUEvdPT1iXJ00qAWA==
+X-Received: by 2002:a17:903:2287:b029:ef:671e:c943 with SMTP id b7-20020a1709032287b02900ef671ec943mr19840684plh.35.1621028150739;
+        Fri, 14 May 2021 14:35:50 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:e40c:c579:7cd8:c046])
-        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.35.47
+        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.35.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 14:35:48 -0700 (PDT)
+        Fri, 14 May 2021 14:35:50 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH 09/50] rdma/srp: Use blk_req() instead of scsi_cmnd.request
-Date:   Fri, 14 May 2021 14:33:15 -0700
-Message-Id: <20210514213356.5264-61-bvanassche@acm.org>
+        Steffen Maier <maier@linux.ibm.com>,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>
+Subject: [PATCH 10/50] zfcp: Use blk_req() instead of scsi_cmnd.request
+Date:   Fri, 14 May 2021 14:33:16 -0700
+Message-Id: <20210514213356.5264-62-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210514213356.5264-1-bvanassche@acm.org>
 References: <20210514213356.5264-1-bvanassche@acm.org>
@@ -63,30 +66,19 @@ patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 31f8aa2c40ed..0575f5f3ae53 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -2182,8 +2182,8 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 	if (unlikely(scmnd->result))
- 		goto err;
+diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
+index 2e4804ef2fb9..ac9223a7677d 100644
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -2377,7 +2377,7 @@ static void zfcp_fsf_req_trace(struct zfcp_fsf_req *req, struct scsi_cmnd *scsi)
+ 		}
+ 	}
  
--	WARN_ON_ONCE(scmnd->request->tag < 0);
--	tag = blk_mq_unique_tag(scmnd->request);
-+	WARN_ON_ONCE(blk_req(scmnd)->tag < 0);
-+	tag = blk_mq_unique_tag(blk_req(scmnd));
- 	ch = &target->ch[blk_mq_unique_tag_to_hwq(tag)];
- 	idx = blk_mq_unique_tag_to_tag(tag);
- 	WARN_ONCE(idx >= target->req_ring_size, "%s: tag %#x: idx %d >= %d\n",
-@@ -2814,7 +2814,7 @@ static int srp_abort(struct scsi_cmnd *scmnd)
+-	blk_add_driver_data(scsi->request, &blktrc, sizeof(blktrc));
++	blk_add_driver_data(blk_req(scsi), &blktrc, sizeof(blktrc));
+ }
  
- 	if (!req)
- 		return SUCCESS;
--	tag = blk_mq_unique_tag(scmnd->request);
-+	tag = blk_mq_unique_tag(blk_req(scmnd));
- 	ch_idx = blk_mq_unique_tag_to_hwq(tag);
- 	if (WARN_ON_ONCE(ch_idx >= target->ch_count))
- 		return SUCCESS;
+ /**
