@@ -4,51 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F8DAC43460
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:36:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A21BBC433B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:36:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4503B61442
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:36:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 809066143F
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 May 2021 21:36:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233505AbhENVhi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 May 2021 17:37:38 -0400
-Received: from mail-pg1-f177.google.com ([209.85.215.177]:42991 "EHLO
-        mail-pg1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233546AbhENVhW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:37:22 -0400
-Received: by mail-pg1-f177.google.com with SMTP id z4so246949pgb.9
-        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:36:09 -0700 (PDT)
+        id S233551AbhENVhj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 May 2021 17:37:39 -0400
+Received: from mail-pg1-f172.google.com ([209.85.215.172]:34386 "EHLO
+        mail-pg1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233591AbhENVhX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2021 17:37:23 -0400
+Received: by mail-pg1-f172.google.com with SMTP id l70so268802pga.1
+        for <linux-scsi@vger.kernel.org>; Fri, 14 May 2021 14:36:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=6CTnkeKhcotq5OMfqrz/2VKArxZCP+Flz3k3xUHSvnE=;
-        b=gG9ScN4pbLx25Sj3Pg0vXJeTIxBMCodODacCKFGrKqPaPuD7nzYNf2vfdssi+s/J2s
-         OPGoBlQAL9uzwUdbVuSHrBS8VA99jvJ0ObiPFc4BsE08hNAvQsoksswaq0SCp6q6mxzx
-         Sl8sN9LVLBu5koS2wwgovsZmshpYgCL3xK/s9xM7879spYw/cBQYWqBTrL4mxfV4BGxK
-         yjza596qKNrX7CU9IaAiRFkpDhGnuFaiQ3WLSWC++e8FjjF9SESUQ/wsaPcfkSSU3cPW
-         9vzIl8SfgxrMYf9M+TXkS0qhAKB0ki4iq/ysIg5ax0uk773ie5FYD7lGWouRHdpU+644
-         S3OQ==
-X-Gm-Message-State: AOAM530aISnuvqHbr4jViom0RUAhVAe7YkQ16pixgygieygxQQPbfrR+
-        UMjYgb5gOCh8Q4H4hTaaSFU=
-X-Google-Smtp-Source: ABdhPJw+idgBn2zg76dStLKrgdiGVGgqFOkBdaNqUM4ESnnmfeXuSc150IVk2fDOUisdgHz+CIC7fg==
-X-Received: by 2002:a63:5249:: with SMTP id s9mr48640206pgl.192.1621028169149;
-        Fri, 14 May 2021 14:36:09 -0700 (PDT)
+        bh=aBpDebaAugL9JvWwPHRHrVAjzLTctYjhzrp2WXlm6a4=;
+        b=PyhPvzMxNwnuHRx7cdW2xewokgZgqoxKATQf2AY/i3IS/gyzSyiFwb6Sr+Ycn3mMVy
+         NQutUooSq8OCLksOKGnH4cCmqYy4aPM6xaAuIr/6XRXj+yGN1C81pQ/9OzYrRYs5IL21
+         7p1rNaFim20HlFVvZ8aFvb3RLABq5gz5DWPsBfy90DA2hJMZ+v9jVz/LNoxI59cxBZtW
+         YyG3CLA08YwboisZlHJDCh3gFzqrh0MvVDQxPBq67GrhWwxwjTtMhzXSYIm9S5e9mSEl
+         r+hTi4VTztFipP+HeNfjieap5HRfrhuJdnx8FSa1lQXp5oleVtjVLeueoLTALZE6EdmA
+         neSg==
+X-Gm-Message-State: AOAM530IZ4bOCrnNmouhBDuEf8xt0SQV4eFgVIWSBaEi5MJMF7Q8A00W
+        jSR0aV0+4174aKbQ3XDEaDg=
+X-Google-Smtp-Source: ABdhPJxC/kUcoc4/H1dgBLFzLF51YIZEi/sNh1aWzxM9LMBNSMcvQtMD0D9C/j+m/XjDvQtI0FOD6g==
+X-Received: by 2002:a63:b211:: with SMTP id x17mr41251582pge.106.1621028170662;
+        Fri, 14 May 2021 14:36:10 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:e40c:c579:7cd8:c046])
-        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.36.07
+        by smtp.gmail.com with ESMTPSA id js6sm9307262pjb.0.2021.05.14.14.36.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 14:36:08 -0700 (PDT)
+        Fri, 14 May 2021 14:36:10 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Don Brace <don.brace@microchip.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 21/50] hpsa: Use blk_req() instead of scsi_cmnd.request
-Date:   Fri, 14 May 2021 14:33:27 -0700
-Message-Id: <20210514213356.5264-73-bvanassche@acm.org>
+Subject: [PATCH 22/50] ibmvfc: Use blk_req() instead of scsi_cmnd.request
+Date:   Fri, 14 May 2021 14:33:28 -0700
+Message-Id: <20210514213356.5264-74-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210514213356.5264-1-bvanassche@acm.org>
 References: <20210514213356.5264-1-bvanassche@acm.org>
@@ -63,37 +64,19 @@ patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/hpsa.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index f135a10f582b..9fcbe9a84de6 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -5686,7 +5686,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 	/* Get the ptr to our adapter structure out of cmd->host. */
- 	h = sdev_to_hba(cmd->device);
- 
--	BUG_ON(cmd->request->tag < 0);
-+	BUG_ON(blk_req(cmd)->tag < 0);
- 
- 	dev = cmd->device->hostdata;
- 	if (!dev) {
-@@ -5729,7 +5729,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 	 *       and is therefore a brand-new command.
- 	 */
- 	if (likely(cmd->retries == 0 &&
--			!blk_rq_is_passthrough(cmd->request) &&
-+			!blk_rq_is_passthrough(blk_req(cmd)) &&
- 			h->acciopath_status)) {
- 		/* Submit with the retry_pending flag unset. */
- 		rc = hpsa_ioaccel_submit(h, c, cmd, false);
-@@ -5894,7 +5894,7 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
-  */
- static int hpsa_get_cmd_index(struct scsi_cmnd *scmd)
- {
--	int idx = scmd->request->tag;
-+	int idx = blk_req(scmd)->tag;
- 
- 	if (idx < 0)
- 		return idx;
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 6540d48eb0e8..e8b4f72f9161 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -1908,7 +1908,7 @@ static int ibmvfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
+ 	struct ibmvfc_cmd *vfc_cmd;
+ 	struct ibmvfc_fcp_cmd_iu *iu;
+ 	struct ibmvfc_event *evt;
+-	u32 tag_and_hwq = blk_mq_unique_tag(cmnd->request);
++	u32 tag_and_hwq = blk_mq_unique_tag(blk_req(cmnd));
+ 	u16 hwq = blk_mq_unique_tag_to_hwq(tag_and_hwq);
+ 	u16 scsi_channel;
+ 	int rc;
