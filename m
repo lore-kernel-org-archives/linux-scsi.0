@@ -7,64 +7,65 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BB59C433B4
-	for <linux-scsi@archiver.kernel.org>; Sat, 15 May 2021 06:50:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCA67C433ED
+	for <linux-scsi@archiver.kernel.org>; Sat, 15 May 2021 07:03:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEF1761406
-	for <linux-scsi@archiver.kernel.org>; Sat, 15 May 2021 06:50:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 939F161406
+	for <linux-scsi@archiver.kernel.org>; Sat, 15 May 2021 07:03:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232318AbhEOGvX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 15 May 2021 02:51:23 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:41655 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231481AbhEOGvV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 15 May 2021 02:51:21 -0400
+        id S232475AbhEOHEc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 15 May 2021 03:04:32 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:48265 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232364AbhEOHEa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 15 May 2021 03:04:30 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1621061409; x=1652597409;
+  t=1621062197; x=1652598197;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=G115ED+d704BCp60dpowxTlv7ZZmS8X6WASF0DZ+X+w=;
-  b=YsYVTfIcTtiOIpfbbntozd0jvs8taNkEF/08zNX9VAgUepg8o/7gS0nX
-   1kk+vIS8WtdB728tkQcPkYChbmLUXGao695KkU07gt+1afjnHl1YgQ7L4
-   3OFVRGX6EaSYAeOWeobEReNsQdPkKvQ6eFHk0ZLKT5j2k+D26xWZFaOdx
-   Qqkm6N4wwsND/ytTwkM88TsOcjLvIJ3GWrOJppBy0i8fn1f0QCVb7Z69z
-   fsdByBxFx5PMU6fY1iChbkGLukUH58Fw6kZJQ3hjPAzUqPIra50Y6Lu5Z
-   YEZwr3kU8CjBmvc2TkVOiAnHO+22EcZwn2Y2qFLZi5MTmPxTYVi8XABXT
+  bh=o1BDg3UlUi3bM44V8Lx4/mpqUh8l7G2fY2mDJNajSfU=;
+  b=pACWsouoizd8NZFmEzXv54KNxULYx1Y8dNyLCBcqOZW/K8KeqSOglPto
+   1q1nivLZ8PMPMQQzHmeuqpRwCjzXn3bmAb/scmFj25yHfihESIBZcbp43
+   vxlaM9AC5raKmuJ+lZc7NzvL2u964j/NYY0WHktAjMJ8cSqy5s49Ay7/B
+   om3Zlo173exjhsEFCsUZcki1JcOO2mI3/zLa6F8hqBQ6Ry5Ccc305c9/P
+   gNs0qeQezsv5KNYOhJCTt/5GpKH+KeypdotezNuxGd+vKYJSnOYKucxp7
+   7B5rYmAPq4MO1t+1IKEr9+zHCjCR7wSoCkXUOXg6m5jBF18vlIcVZf6Ih
    Q==;
-IronPort-SDR: j82kRRuHZocKQYiPZneYYGoOIPVoETukJbPWkOtHI+ywP2RDrEBfJZXs96Lr6RplGa3RZAdtvL
- x76siOOI0bAyx3Nv4ctPMHGQr5GmWJqylS1N6Q4Wbnj7vz8TkdOuuHiE1IzwvSAXWwQtlKk8lb
- CNV6+/+pvlOKE5PGuLDf3CJ39kpH0CfvGYHSwwMMZsnxK5PhSj9TnlRVDyQaVRHl9W/TcmwHZ5
- JlS9o0yJEqnxY2c0eQgeJ9a+NEzpW2Ey7T9qzwCCQS0s45kZn4lp0fjZNgepiVC+A5wEOrqpMC
- 6Go=
+IronPort-SDR: sjjmfsEp+Q4Tp2pfD5VY6bABIsxKJs6EyxmqTnJXYl7yLv2OJA9cIV9VOft6eIGMKc1s5XguzR
+ WG7Em81UonY7GFdadoxmrolc2hg5SWIfVKc/Gir35HVJlEMq1RM3uw2Ct4BQofiaWQahIVQSer
+ UYKgDDcigGf+vgHdauR5C0LJQKdi5RhyTFi4C8XeQT+EGgGliNimfYYW3sr5nBX1GTdNfokTL7
+ qv6/F7SEfV2KC98M8yJgbXAciOAvWImoGMgwmsq9Kjh+/4OBQjauvNtz1f21k6ehckUHX1SGt7
+ 41c=
 X-IronPort-AV: E=Sophos;i="5.82,301,1613404800"; 
-   d="scan'208";a="279484628"
+   d="scan'208";a="172885467"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 15 May 2021 14:50:08 +0800
-IronPort-SDR: XnEkvGVv4xIp5jPPI48vx8mo3ijo9UwOaUNq2cjXJAiIHTa2Acc4QSMd2hYcATcmzljybkSo6u
- PWpqK3Q7NpG+b/gMLTlEd0B/+yHNR9mS3m/dz8wCSnYdsN+KbKsundh9HgaOuBxhMv3hMFIOEk
- oplk4OB6qts6gbBWIT75Qz0pT1ODq6A7L2iDp3qokzZBLHc1u1gFbk6K8zywM7KYsZ2FrTbFzA
- nOr+6UbyuDF/hopYk+YW85OT8FIst6/VfeouZ35fOp8d4J3Nd61ezn83SRfFFjrVtpmKcFQL1I
- P5+cunt/mH4mxvJQLMx5RvlN
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2021 23:28:38 -0700
-IronPort-SDR: yKprFtRKzOTKk5xIU9MBwSL51m3n5/vqAlZOeL9e67Y85hmhn03MMj4Q56NRwlMHxHOjtiHunw
- oLYAbG1tFmnEDfcwJU/DGYkl+D3p2uahjgdIStloEgYOmdrifw5Fb6stRR7FlBe+plrtbw389q
- VI94IfLyU/XZpiI0n3nJFbPq+G9/9DyS+8CZ89T/RhnTCwYd5klNMUQZ83PbLG9hBYKjqtkl0r
- ZcafSD9JmM8rbTTQ6RrDldYu52UmKAFX5vGlZCsSniW2t+swxHAlpA0DKb34zRHs3cva+28oJx
- 7nk=
+  by ob1.hgst.iphmx.com with ESMTP; 15 May 2021 15:03:16 +0800
+IronPort-SDR: NzYlguiKAj8FLvvuu1lwbYz2+vZhC9Sgp/DPx0LB53lho6FbIC9WVj/QFh216CU2Oiyfdb1jBC
+ 92138TgCN6ahGXb1+VwOaIlgVtHYvQ9xJ40W3SoQIUidw4fxvJWsJDJSY/kNQdXXz4BcstAcw8
+ eBtS8MsrOzFF8TnQjbZYmVMuzcScvGISCaqhgJQI1dW1GswXjboidDrVte99zEE59FHjGTfNWn
+ 24J1aZEAbGXkHt9f3f27UbQfAGkq/hekqpPwBEPUN6OoHxIXJ2G56d1z91S6kKmjPrco5EWe5W
+ rtFqOURpxxokGm0Xep+nL+t3
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2021 23:41:47 -0700
+IronPort-SDR: R8LwjMmSoapnWd+zmviEjEAIa+5+OA9adprh7zY+pZulkv9OsqajELIXRk2OJydJwIwgDUlkgC
+ OSZUOGcIKAcvg5WMTPgGWKTDbhqeD3ikjoHkoQoMv0MXC+ofmErYjLxp5jYVALu+Im102ztqMT
+ j3RkXuySZj5wIVT38jK5uLQ5WglRWkoU94DyTP0SNE9OebcJG6wUJ841j8cg1XUSRJeheoWxSq
+ 4uQK4eIGewj376VN2LzEUzUEVJVUpbbkzCYKsL4FAza6IY1gh/CCKC2FyXXA9GWM6xahF0Yuou
+ KnU=
 WDCIronportException: Internal
 Received: from shindev.dhcp.fujisawa.hgst.com (HELO shindev.fujisawa.hgst.com) ([10.149.52.173])
-  by uls-op-cesaip01.wdc.com with ESMTP; 14 May 2021 23:50:08 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 15 May 2021 00:03:16 -0700
 From:   Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        Bodo Stroesser <bostroesser@gmail.com>
+        Mike Christie <michael.christie@oracle.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
         Damien Le Moal <Damien.LeMoal@wdc.com>,
         Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH v2] scsi: target: tcmu: Fix xarray RCU warning
-Date:   Sat, 15 May 2021 15:50:06 +0900
-Message-Id: <20210515065006.210238-1-shinichiro.kawasaki@wdc.com>
+Subject: [PATCH v2] scsi: target: Avoid smp_processor_id() in preemptible code
+Date:   Sat, 15 May 2021 16:03:15 +0900
+Message-Id: <20210515070315.215801-1-shinichiro.kawasaki@wdc.com>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -72,96 +73,122 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit f5ce815f34bc ("scsi: target: tcmu: Support DATA_BLOCK_SIZE = N *
-PAGE_SIZE") introduced xas_next() calls to iterate xarray elements.
-These calls triggered the WARNING "suspicious RCU usage" at tcmu device
-set up [1]. In the call stack of xas_next(), xas_load() was called.
-According to its comment, this function requires "the xa_lock or the RCU
-lock".
+The BUG message "BUG: using smp_processor_id() in preemptible [00000000]
+code" was observed for TCMU devices with kernel config DEBUG_PREEMPT.
 
-To avoid the warning, guard xas_next() calls. For the small loop of
-xas_next(), guard with the RCU lock. For the large loop of xas_next(),
-guard with the xa_lock using xas_lock().
+The message was observed when blktests block/005 was run on TCMU devices
+with fileio backend or user:zbc backend [1]. The commit 1130b499b4a7
+("scsi: target: tcm_loop: Use LIO wq cmd submission helper") triggered
+the symptom. The commit modified work queue to handle commands and
+changed 'current->nr_cpu_allowed' at smp_processor_id() call.
+
+The message was also observed at system shutdown when TCMU devices were
+not cleaned up [2]. The function smp_processor_id() was called in SCSI
+host work queue for abort handling, and triggered the BUG message. This
+symptom was observed regardless of the commit 1130b499b4a7 ("scsi:
+target: tcm_loop: Use LIO wq cmd submission helper").
+
+To avoid the preemptible code check at smp_processor_id(), get CPU ID
+with raw_smp_processor_id() instead. The CPU ID is used for performance
+improvement then thread move to other CPU will not affect the code.
 
 [1]
 
-[ 1899.867091] =============================
-[ 1899.871199] WARNING: suspicious RCU usage
-[ 1899.875310] 5.13.0-rc1+ #41 Not tainted
-[ 1899.879222] -----------------------------
-[ 1899.883299] include/linux/xarray.h:1182 suspicious rcu_dereference_check() usage!
-[ 1899.890940] other info that might help us debug this:
-[ 1899.899082] rcu_scheduler_active = 2, debug_locks = 1
-[ 1899.905719] 3 locks held by kworker/0:1/1368:
-[ 1899.910161]  #0: ffffa1f8c8b98738 ((wq_completion)target_submission){+.+.}-{0:0}, at: process_one_work+0x1ee/0x580
-[ 1899.920732]  #1: ffffbd7040cd7e78 ((work_completion)(&q->sq.work)){+.+.}-{0:0}, at: process_one_work+0x1ee/0x580
-[ 1899.931146]  #2: ffffa1f8d1c99768 (&udev->cmdr_lock){+.+.}-{3:3}, at: tcmu_queue_cmd+0xea/0x160 [target_core_user]
-[ 1899.941678] stack backtrace:
-[ 1899.946093] CPU: 0 PID: 1368 Comm: kworker/0:1 Not tainted 5.13.0-rc1+ #41
-[ 1899.953070] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 1302 03/15/2018
-[ 1899.962459] Workqueue: target_submission target_queued_submit_work [target_core_mod]
-[ 1899.970337] Call Trace:
-[ 1899.972839]  dump_stack+0x6d/0x89
-[ 1899.976222]  xas_descend+0x10e/0x120
-[ 1899.979875]  xas_load+0x39/0x50
-[ 1899.983077]  tcmu_get_empty_blocks+0x115/0x1c0 [target_core_user]
-[ 1899.989318]  queue_cmd_ring+0x1da/0x630 [target_core_user]
-[ 1899.994897]  ? rcu_read_lock_sched_held+0x3f/0x70
-[ 1899.999695]  ? trace_kmalloc+0xa6/0xd0
-[ 1900.003501]  ? __kmalloc+0x205/0x380
-[ 1900.007167]  tcmu_queue_cmd+0x12f/0x160 [target_core_user]
-[ 1900.012746]  __target_execute_cmd+0x23/0xa0 [target_core_mod]
-[ 1900.018589]  transport_generic_new_cmd+0x1f3/0x370 [target_core_mod]
-[ 1900.025046]  transport_handle_cdb_direct+0x34/0x50 [target_core_mod]
-[ 1900.031517]  target_queued_submit_work+0x43/0xe0 [target_core_mod]
-[ 1900.037837]  process_one_work+0x268/0x580
-[ 1900.041952]  ? process_one_work+0x580/0x580
-[ 1900.046195]  worker_thread+0x55/0x3b0
-[ 1900.049921]  ? process_one_work+0x580/0x580
-[ 1900.054192]  kthread+0x143/0x160
-[ 1900.057499]  ? kthread_create_worker_on_cpu+0x40/0x40
-[ 1900.062661]  ret_from_fork+0x1f/0x30
+[   56.468103] run blktests block/005 at 2021-05-12 14:16:38
+[   57.369473] check_preemption_disabled: 85 callbacks suppressed
+[   57.369480] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1511
+[   57.369506] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1510
+[   57.369512] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1506
+[   57.369552] caller is __target_init_cmd+0x157/0x170 [target_core_mod]
+[   57.369606] CPU: 4 PID: 1506 Comm: fio Not tainted 5.13.0-rc1+ #34
+[   57.369613] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 1302 03/15/2018
+[   57.369617] Call Trace:
+[   57.369621] BUG: using smp_processor_id() in preemptible [00000000] code: fio/1507
+[   57.369628]  dump_stack+0x6d/0x89
+[   57.369642]  check_preemption_disabled+0xc8/0xd0
+[   57.369628] caller is __target_init_cmd+0x157/0x170 [target_core_mod]
+[   57.369655]  __target_init_cmd+0x157/0x170 [target_core_mod]
+[   57.369695]  target_init_cmd+0x76/0x90 [target_core_mod]
+[   57.369732]  tcm_loop_queuecommand+0x109/0x210 [tcm_loop]
+[   57.369744]  scsi_queue_rq+0x38e/0xc40
+[   57.369761]  __blk_mq_try_issue_directly+0x109/0x1c0
+[   57.369779]  blk_mq_try_issue_directly+0x43/0x90
+[   57.369790]  blk_mq_submit_bio+0x4e5/0x5d0
+[   57.369812]  submit_bio_noacct+0x46e/0x4e0
+[   57.369830]  __blkdev_direct_IO_simple+0x1a3/0x2d0
+[   57.369859]  ? set_init_blocksize.isra.0+0x60/0x60
+[   57.369880]  generic_file_read_iter+0x89/0x160
+[   57.369898]  blkdev_read_iter+0x44/0x60
+[   57.369906]  new_sync_read+0x102/0x170
+[   57.369929]  vfs_read+0xd4/0x160
+[   57.369941]  __x64_sys_pread64+0x6e/0xa0
+[   57.369946]  ? lockdep_hardirqs_on+0x79/0x100
+[   57.369958]  do_syscall_64+0x3a/0x70
+[   57.369965]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[   57.369973] RIP: 0033:0x7f7ed4c1399f
+[   57.369979] Code: 08 89 3c 24 48 89 4c 24 18 e8 7d f3 ff ff 4c 8b 54 24 18 48 8b 54 24 10 41 89 c0 48 8b 74 24 08 8b 3c 24 b8 11 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 31 44 89 c7 48 89 04 24 e8 cd f3 ff ff 48 8b
+[   57.369983] RSP: 002b:00007ffd7918c580 EFLAGS: 00000293 ORIG_RAX: 0000000000000011
+[   57.369990] RAX: ffffffffffffffda RBX: 00000000015b4540 RCX: 00007f7ed4c1399f
+[   57.369993] RDX: 0000000000001000 RSI: 00000000015de000 RDI: 0000000000000009
+[   57.369996] RBP: 00000000015b4540 R08: 0000000000000000 R09: 0000000000000001
+[   57.369999] R10: 0000000000e5c000 R11: 0000000000000293 R12: 00007f7eb5269a70
+[   57.370002] R13: 0000000000000000 R14: 0000000000001000 R15: 00000000015b4568
+[   57.370031] CPU: 7 PID: 1507 Comm: fio Not tainted 5.13.0-rc1+ #34
+[   57.370036] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 1302 03/15/2018
+[   57.370039] Call Trace:
+[   57.370045]  dump_stack+0x6d/0x89
+[   57.370056]  check_preemption_disabled+0xc8/0xd0
+[   57.370068]  __target_init_cmd+0x157/0x170 [target_core_mod]
+[   57.370121]  target_init_cmd+0x76/0x90 [target_core_mod]
+[   57.370178]  tcm_loop_queuecommand+0x109/0x210 [tcm_loop]
+[   57.370197]  scsi_queue_rq+0x38e/0xc40
+[   57.370224]  __blk_mq_try_issue_directly+0x109/0x1c0
+...
 
-Fixes: f5ce815f34bc ("scsi: target: tcmu: Support DATA_BLOCK_SIZE = N * PAGE_SIZE")
+[2]
+
+[  117.458597] BUG: using smp_processor_id() in preemptible [00000000] code: kworker/u16:8
+[  117.467279] caller is __target_init_cmd+0x157/0x170 [target_core_mod]
+[  117.473893] CPU: 1 PID: 418 Comm: kworker/u16:6 Not tainted 5.13.0-rc1+ #34
+[  117.481150] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 8
+[  117.481153] Workqueue: scsi_tmf_7 scmd_eh_abort_handler
+[  117.481156] Call Trace:
+[  117.481158]  dump_stack+0x6d/0x89
+[  117.481162]  check_preemption_disabled+0xc8/0xd0
+[  117.512575]  target_submit_tmr+0x41/0x150 [target_core_mod]
+[  117.519705]  tcm_loop_issue_tmr+0xa7/0x100 [tcm_loop]
+[  117.524913]  tcm_loop_abort_task+0x43/0x60 [tcm_loop]
+[  117.530137]  scmd_eh_abort_handler+0x7b/0x230
+[  117.534681]  process_one_work+0x268/0x580
+[  117.538862]  worker_thread+0x55/0x3b0
+[  117.542652]  ? process_one_work+0x580/0x580
+[  117.548351]  kthread+0x143/0x160
+[  117.551675]  ? kthread_create_worker_on_cpu+0x40/0x40
+[  117.556873]  ret_from_fork+0x1f/0x30
+
+Fixes: 1526d9f10c61 ("scsi: target: Make state_list per CPU")
 Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: stable@vger.kernel.org # v5.11+
 ---
 Changes from v1:
-* Used xas_(un)lock() instead of rcu_read_(un)lock() for the large loop
+* Used raw_smp_processor_id() instead of get_cpu() and put_cpu()
 
- drivers/target/target_core_user.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/target/target_core_transport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 198d25ae482a..834bd3910de8 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -516,8 +516,10 @@ static inline int tcmu_get_empty_block(struct tcmu_dev *udev,
- 	dpi = dbi * udev->data_pages_per_blk;
- 	/* Count the number of already allocated pages */
- 	xas_set(&xas, dpi);
-+	rcu_read_lock();
- 	for (cnt = 0; xas_next(&xas) && cnt < page_cnt;)
- 		cnt++;
-+	rcu_read_unlock();
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 8fbfe75c5744..05d7ffd59df6 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1416,7 +1416,7 @@ void __target_init_cmd(
+ 	cmd->orig_fe_lun = unpacked_lun;
  
- 	for (i = cnt; i < page_cnt; i++) {
- 		/* try to get new page from the mm */
-@@ -727,6 +729,7 @@ static inline void tcmu_copy_data(struct tcmu_dev *udev,
- 			page_cnt = udev->data_pages_per_blk;
+ 	if (!(cmd->se_cmd_flags & SCF_USE_CPUID))
+-		cmd->cpuid = smp_processor_id();
++		cmd->cpuid = raw_smp_processor_id();
  
- 		xas_set(&xas, dbi * udev->data_pages_per_blk);
-+		xas_lock(&xas);
- 		for (page_inx = 0; page_inx < page_cnt && data_len; page_inx++) {
- 			page = xas_next(&xas);
- 
-@@ -763,6 +766,7 @@ static inline void tcmu_copy_data(struct tcmu_dev *udev,
- 			if (direction == TCMU_SG_TO_DATA_AREA)
- 				flush_dcache_page(page);
- 		}
-+		xas_unlock(&xas);
- 	}
+ 	cmd->state_active = false;
  }
- 
 -- 
 2.31.1
 
