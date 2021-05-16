@@ -2,427 +2,181 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48253C433ED
-	for <linux-scsi@archiver.kernel.org>; Sun, 16 May 2021 13:22:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ED53C433B4
+	for <linux-scsi@archiver.kernel.org>; Sun, 16 May 2021 16:17:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 250736115C
-	for <linux-scsi@archiver.kernel.org>; Sun, 16 May 2021 13:22:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57E6960FDB
+	for <linux-scsi@archiver.kernel.org>; Sun, 16 May 2021 16:17:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233721AbhEPNXm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 16 May 2021 09:23:42 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:39080 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233728AbhEPNXl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 16 May 2021 09:23:41 -0400
-Received: from mail-ed1-f70.google.com ([209.85.208.70])
-        by youngberry.canonical.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.93)
-        (envelope-from <juerg.haefliger@canonical.com>)
-        id 1liGiv-0001G4-Uw
-        for linux-scsi@vger.kernel.org; Sun, 16 May 2021 13:22:26 +0000
-Received: by mail-ed1-f70.google.com with SMTP id d4-20020aa7ce040000b029038d1d0524d0so1557295edv.3
-        for <linux-scsi@vger.kernel.org>; Sun, 16 May 2021 06:22:25 -0700 (PDT)
+        id S229937AbhEPQTI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 16 May 2021 12:19:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55552 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229506AbhEPQTI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 16 May 2021 12:19:08 -0400
+Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30165C061573;
+        Sun, 16 May 2021 09:17:52 -0700 (PDT)
+Received: by mail-ej1-x634.google.com with SMTP id k10so5603589ejj.8;
+        Sun, 16 May 2021 09:17:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=fUZoBFjO/vsp3cDiO+TNP6HxbVjdq2qyqXhhcYkxauo=;
+        b=ACQtT8g9/CGzltUjQWC4yGPj0K4b7qM0gOSaqu+g1o0Bvz3jo+GwkXS2pcg6pYuBBI
+         73qNqSgPK+0lZuYouKtmi1JsZ3A+awoIdyVbXMnF4sbVM1uhfT4L9v0BsUrY4xT8wyqS
+         gMrU+rGZY1JF95MCX4UsNk8W55d8gyxp2uyBVmIwWiqTEVCHPZwDNjArki44dY6poTMu
+         pY7AJt6aUGLH0KX/6QoMpjOu+VqBGz98FevR2WkGZR9UCmrUORCJqyomCanpca0+ErrL
+         HN3gCAOJYaCmofpdnriLXrVvpmbyeIIps0UZE6QwAp7KHyYVAE+W9/6fm5mbXdSkUG6u
+         G3sg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=TUZHq1LlIrTbAZVDobXbN76FSlqGTNui2ct6NU02wJo=;
-        b=BnmaMiC7TIDdIZV5aT6XEN5fTQBfgDoUrQCsnrIhC3urcGjJrxbOZT1wPolYBt+R6k
-         Njpd7VEilJa0ZgqnN67pPex6x/ZOIEWE+U6uG97weTMB7lvRsBcuU/BrA/N0CxA5nOPC
-         sDKM8D7erLp9+XcOGP+lUtWFQT72dOpnySt8LrKwKpwrS7LxA3aLOSPf7YRGd4F/G/8N
-         Z/ze8wkTbic6IU7HqCtx0LQ7q/heD9HzsDBF4/r5QA4pQOnWlzeuaWp//7bnPs3sM+Pr
-         36Xp11qgTQffF4zYT3vVLRM3RUu6IkPk3u9Vb5NPhCChDl7MGiqBDpefBy3XAI/sPsPc
-         dAcg==
-X-Gm-Message-State: AOAM533qYOfLjzQEBCLH7XBYV36o0m+qieJxX+TDcn889NT2kdwbAlzm
-        6Grpbtw8fwjo0lSeAs7XDUEIUf2lf5c1V2S150gZsrL/4qmWNFhTwV8bQ5y/wLAG/12OGXDTKKW
-        ZTU8yo9iosMjvi+ZEssveBL7D4BlzKKI1gyzUpSs=
-X-Received: by 2002:a17:906:b2c1:: with SMTP id cf1mr47188619ejb.544.1621171345442;
-        Sun, 16 May 2021 06:22:25 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwemSH08vKN86fYRji/0gf7FGjjmYQFhv1Tge7BtiRE3+6x/Y5AKDM4p5D+miAtvUmM3VDZVQ==
-X-Received: by 2002:a17:906:b2c1:: with SMTP id cf1mr47188589ejb.544.1621171345102;
-        Sun, 16 May 2021 06:22:25 -0700 (PDT)
-Received: from gollum.fritz.box ([194.191.244.86])
-        by smtp.gmail.com with ESMTPSA id n15sm7126596eje.118.2021.05.16.06.22.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 16 May 2021 06:22:24 -0700 (PDT)
-From:   Juerg Haefliger <juerg.haefliger@canonical.com>
-X-Google-Original-From: Juerg Haefliger <juergh@canonical.com>
-To:     aaro.koskinen@iki.fi, tony@atomide.com, linux@prisktech.co.nz,
-        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, gregkh@linuxfoundation.org,
-        lee.jones@linaro.org, daniel.thompson@linaro.org,
-        jingoohan1@gmail.com, mst@redhat.com, jasowang@redhat.com,
-        zbr@ioremap.net, pablo@netfilter.org, kadlec@netfilter.org,
-        fw@strlen.de, horms@verge.net.au, ja@ssi.bg,
-        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-crypto@vger.kernel.org, linux-usb@vger.kernel.org,
-        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, lvs-devel@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        Juerg Haefliger <juergh@canonical.com>
-Subject: [PATCH] treewide: Remove leading spaces in Kconfig files
-Date:   Sun, 16 May 2021 15:22:09 +0200
-Message-Id: <20210516132209.59229-1-juergh@canonical.com>
-X-Mailer: git-send-email 2.27.0
+        bh=fUZoBFjO/vsp3cDiO+TNP6HxbVjdq2qyqXhhcYkxauo=;
+        b=aTzxUCe7BRt1KLS2FvvUXT5fStNu9W7+x3vageXVgT7EWY6QFccQstULAEsHW5Id+s
+         uas6/5l16wSXxUL5uXEImtLmCPrREtcGCnZswy/EXMAn4KDu3PRSQavmFW4DPBJMTQ3v
+         cp+E76qTVHBATVPN6NwN7yAVWRp44TH0bq4mAlRb9xx96AnTGtmsDGh+gLMieprO1EMV
+         90lxE9FX/9H6w7fTz4UHn4gm9IP7lAYRnAZFtX9gqaqIp1JedEs1hwtx2RPKbMedYhaf
+         hHmx/qQRIEUE2RcN54MaoruRN3lgfJ9tKA2UYC9RaV6kLNLE/JaH2XAhpo40IlyHUeIv
+         PJQA==
+X-Gm-Message-State: AOAM5336sS3G+0XUWbhzlSLKvLtBFFyaPtniSEunM8mJehkNHHH7pN0q
+        uWc22lrtL0VpTplLw9sfGvpGdMbXsDI=
+X-Google-Smtp-Source: ABdhPJyf/yjyVvzKXfqAE0ii0+bNrnCevQLq7kHv90igLqLgCzdaY1+0Fq86nNW+PVS5UqqqGycajg==
+X-Received: by 2002:a17:906:7f8a:: with SMTP id f10mr6525167ejr.12.1621181870749;
+        Sun, 16 May 2021 09:17:50 -0700 (PDT)
+Received: from [192.168.178.40] (ipbcc11466.dynamic.kabel-deutschland.de. [188.193.20.102])
+        by smtp.gmail.com with ESMTPSA id y19sm9124870edc.73.2021.05.16.09.17.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 16 May 2021 09:17:50 -0700 (PDT)
+Subject: Re: [PATCH v2] scsi: target: tcmu: Fix xarray RCU warning
+To:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>
+References: <20210515065006.210238-1-shinichiro.kawasaki@wdc.com>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+Message-ID: <c736b783-9965-2bd9-e38b-b5188b34872e@gmail.com>
+Date:   Sun, 16 May 2021 18:17:49 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210515065006.210238-1-shinichiro.kawasaki@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There are a few occurences of leading spaces before tabs in a couple of
-Kconfig files. Remove them by running the following command:
+On 15.05.21 08:50, Shin'ichiro Kawasaki wrote:
+> Commit f5ce815f34bc ("scsi: target: tcmu: Support DATA_BLOCK_SIZE = N *
+> PAGE_SIZE") introduced xas_next() calls to iterate xarray elements.
+> These calls triggered the WARNING "suspicious RCU usage" at tcmu device
+> set up [1]. In the call stack of xas_next(), xas_load() was called.
+> According to its comment, this function requires "the xa_lock or the RCU
+> lock".
+> 
+> To avoid the warning, guard xas_next() calls. For the small loop of
+> xas_next(), guard with the RCU lock. For the large loop of xas_next(),
+> guard with the xa_lock using xas_lock().
+> 
+> [1]
+> 
+> [ 1899.867091] =============================
+> [ 1899.871199] WARNING: suspicious RCU usage
+> [ 1899.875310] 5.13.0-rc1+ #41 Not tainted
+> [ 1899.879222] -----------------------------
+> [ 1899.883299] include/linux/xarray.h:1182 suspicious rcu_dereference_check() usage!
+> [ 1899.890940] other info that might help us debug this:
+> [ 1899.899082] rcu_scheduler_active = 2, debug_locks = 1
+> [ 1899.905719] 3 locks held by kworker/0:1/1368:
+> [ 1899.910161]  #0: ffffa1f8c8b98738 ((wq_completion)target_submission){+.+.}-{0:0}, at: process_one_work+0x1ee/0x580
+> [ 1899.920732]  #1: ffffbd7040cd7e78 ((work_completion)(&q->sq.work)){+.+.}-{0:0}, at: process_one_work+0x1ee/0x580
+> [ 1899.931146]  #2: ffffa1f8d1c99768 (&udev->cmdr_lock){+.+.}-{3:3}, at: tcmu_queue_cmd+0xea/0x160 [target_core_user]
+> [ 1899.941678] stack backtrace:
+> [ 1899.946093] CPU: 0 PID: 1368 Comm: kworker/0:1 Not tainted 5.13.0-rc1+ #41
+> [ 1899.953070] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 1302 03/15/2018
+> [ 1899.962459] Workqueue: target_submission target_queued_submit_work [target_core_mod]
+> [ 1899.970337] Call Trace:
+> [ 1899.972839]  dump_stack+0x6d/0x89
+> [ 1899.976222]  xas_descend+0x10e/0x120
+> [ 1899.979875]  xas_load+0x39/0x50
+> [ 1899.983077]  tcmu_get_empty_blocks+0x115/0x1c0 [target_core_user]
+> [ 1899.989318]  queue_cmd_ring+0x1da/0x630 [target_core_user]
+> [ 1899.994897]  ? rcu_read_lock_sched_held+0x3f/0x70
+> [ 1899.999695]  ? trace_kmalloc+0xa6/0xd0
+> [ 1900.003501]  ? __kmalloc+0x205/0x380
+> [ 1900.007167]  tcmu_queue_cmd+0x12f/0x160 [target_core_user]
+> [ 1900.012746]  __target_execute_cmd+0x23/0xa0 [target_core_mod]
+> [ 1900.018589]  transport_generic_new_cmd+0x1f3/0x370 [target_core_mod]
+> [ 1900.025046]  transport_handle_cdb_direct+0x34/0x50 [target_core_mod]
+> [ 1900.031517]  target_queued_submit_work+0x43/0xe0 [target_core_mod]
+> [ 1900.037837]  process_one_work+0x268/0x580
+> [ 1900.041952]  ? process_one_work+0x580/0x580
+> [ 1900.046195]  worker_thread+0x55/0x3b0
+> [ 1900.049921]  ? process_one_work+0x580/0x580
+> [ 1900.054192]  kthread+0x143/0x160
+> [ 1900.057499]  ? kthread_create_worker_on_cpu+0x40/0x40
+> [ 1900.062661]  ret_from_fork+0x1f/0x30
+> 
+> Fixes: f5ce815f34bc ("scsi: target: tcmu: Support DATA_BLOCK_SIZE = N * PAGE_SIZE")
+> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+> ---
+> Changes from v1:
+> * Used xas_(un)lock() instead of rcu_read_(un)lock() for the large loop
+> 
+>   drivers/target/target_core_user.c | 4 ++++
+>   1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 198d25ae482a..834bd3910de8 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -516,8 +516,10 @@ static inline int tcmu_get_empty_block(struct tcmu_dev *udev,
+>   	dpi = dbi * udev->data_pages_per_blk;
+>   	/* Count the number of already allocated pages */
+>   	xas_set(&xas, dpi);
+> +	rcu_read_lock();
+>   	for (cnt = 0; xas_next(&xas) && cnt < page_cnt;)
+>   		cnt++;
+> +	rcu_read_unlock();
+>   
+>   	for (i = cnt; i < page_cnt; i++) {
+>   		/* try to get new page from the mm */
+> @@ -727,6 +729,7 @@ static inline void tcmu_copy_data(struct tcmu_dev *udev,
+>   			page_cnt = udev->data_pages_per_blk;
+>   
+>   		xas_set(&xas, dbi * udev->data_pages_per_blk);
+> +		xas_lock(&xas);
+>   		for (page_inx = 0; page_inx < page_cnt && data_len; page_inx++) {
+>   			page = xas_next(&xas);
+>   
+> @@ -763,6 +766,7 @@ static inline void tcmu_copy_data(struct tcmu_dev *udev,
+>   			if (direction == TCMU_SG_TO_DATA_AREA)
+>   				flush_dcache_page(page);
+>   		}
+> +		xas_unlock(&xas);
+>   	}
+>   }
+>   
+> 
 
-  $ find . -name 'Kconfig*' | xargs sed -r -i 's/^[ ]+\t/\t/'
+Thank you for v2 patch.
 
-Signed-off-by: Juerg Haefliger <juergh@canonical.com>
----
- arch/arm/mach-omap1/Kconfig     | 12 ++++++------
- arch/arm/mach-vt8500/Kconfig    |  6 +++---
- arch/arm/mm/Kconfig             | 10 +++++-----
- drivers/char/hw_random/Kconfig  |  8 ++++----
- drivers/net/usb/Kconfig         | 10 +++++-----
- drivers/net/wan/Kconfig         |  4 ++--
- drivers/scsi/Kconfig            |  2 +-
- drivers/uio/Kconfig             |  2 +-
- drivers/video/backlight/Kconfig | 10 +++++-----
- drivers/virtio/Kconfig          |  2 +-
- drivers/w1/masters/Kconfig      |  6 +++---
- fs/proc/Kconfig                 |  4 ++--
- init/Kconfig                    |  2 +-
- net/netfilter/Kconfig           |  2 +-
- net/netfilter/ipvs/Kconfig      |  2 +-
- 15 files changed, 41 insertions(+), 41 deletions(-)
+May I ask you to put xas_lock before the big outer "while" loop and the
+xas_unlock behind it? Since we hold the cmdr_lock mutex when calling
+tcmu_copy_data, it doesn't harm to hold xas lock for duration of entire
+data copy. So let's take the lock once before starting the loop and
+release it after data copy is done. That saves some cpu cycles if
+data consists of multiple data blocks.
 
-diff --git a/arch/arm/mach-omap1/Kconfig b/arch/arm/mach-omap1/Kconfig
-index 9536b8f3c07d..208c700c2455 100644
---- a/arch/arm/mach-omap1/Kconfig
-+++ b/arch/arm/mach-omap1/Kconfig
-@@ -65,14 +65,14 @@ config MACH_OMAP_INNOVATOR
- config MACH_OMAP_H2
- 	bool "TI H2 Support"
- 	depends on ARCH_OMAP16XX
--    	help
-+	help
- 	  TI OMAP 1610/1611B H2 board support. Say Y here if you have such
- 	  a board.
- 
- config MACH_OMAP_H3
- 	bool "TI H3 Support"
- 	depends on ARCH_OMAP16XX
--    	help
-+	help
- 	  TI OMAP 1710 H3 board support. Say Y here if you have such
- 	  a board.
- 
-@@ -85,14 +85,14 @@ config MACH_HERALD
- config MACH_OMAP_OSK
- 	bool "TI OSK Support"
- 	depends on ARCH_OMAP16XX
--    	help
-+	help
- 	  TI OMAP 5912 OSK (OMAP Starter Kit) board support. Say Y here
-           if you have such a board.
- 
- config OMAP_OSK_MISTRAL
- 	bool "Mistral QVGA board Support"
- 	depends on MACH_OMAP_OSK
--    	help
-+	help
- 	  The OSK supports an optional add-on board with a Quarter-VGA
- 	  touchscreen, PDA-ish buttons, a resume button, bicolor LED,
- 	  and camera connector.  Say Y here if you have this board.
-@@ -100,14 +100,14 @@ config OMAP_OSK_MISTRAL
- config MACH_OMAP_PERSEUS2
- 	bool "TI Perseus2"
- 	depends on ARCH_OMAP730
--    	help
-+	help
- 	  Support for TI OMAP 730 Perseus2 board. Say Y here if you have such
- 	  a board.
- 
- config MACH_OMAP_FSAMPLE
- 	bool "TI F-Sample"
- 	depends on ARCH_OMAP730
--    	help
-+	help
- 	  Support for TI OMAP 850 F-Sample board. Say Y here if you have such
- 	  a board.
- 
-diff --git a/arch/arm/mach-vt8500/Kconfig b/arch/arm/mach-vt8500/Kconfig
-index d01cdd9ad9c7..408e405ae568 100644
---- a/arch/arm/mach-vt8500/Kconfig
-+++ b/arch/arm/mach-vt8500/Kconfig
-@@ -9,9 +9,9 @@ config ARCH_VT8500
- 
- config ARCH_WM8505
- 	bool "VIA/Wondermedia 85xx and WM8650"
-- 	depends on ARCH_MULTI_V5
-- 	select ARCH_VT8500
-- 	select CPU_ARM926T
-+	depends on ARCH_MULTI_V5
-+	select ARCH_VT8500
-+	select CPU_ARM926T
- 
- config ARCH_WM8750
- 	bool "WonderMedia WM8750"
-diff --git a/arch/arm/mm/Kconfig b/arch/arm/mm/Kconfig
-index 35f43d0aa056..7a4a04bafa92 100644
---- a/arch/arm/mm/Kconfig
-+++ b/arch/arm/mm/Kconfig
-@@ -123,13 +123,13 @@ config CPU_ARM925T
- 	select CPU_PABRT_LEGACY
- 	select CPU_THUMB_CAPABLE
- 	select CPU_TLB_V4WBI if MMU
-- 	help
-- 	  The ARM925T is a mix between the ARM920T and ARM926T, but with
-+	help
-+	  The ARM925T is a mix between the ARM920T and ARM926T, but with
- 	  different instruction and data caches. It is used in TI's OMAP
-- 	  device family.
-+	  device family.
- 
-- 	  Say Y if you want support for the ARM925T processor.
-- 	  Otherwise, say N.
-+	  Say Y if you want support for the ARM925T processor.
-+	  Otherwise, say N.
- 
- # ARM926T
- config CPU_ARM926T
-diff --git a/drivers/char/hw_random/Kconfig b/drivers/char/hw_random/Kconfig
-index 1fe006f3f12f..0e1e97680f08 100644
---- a/drivers/char/hw_random/Kconfig
-+++ b/drivers/char/hw_random/Kconfig
-@@ -168,14 +168,14 @@ config HW_RANDOM_OMAP
- 	depends on ARCH_OMAP16XX || ARCH_OMAP2PLUS || ARCH_MVEBU
- 	default HW_RANDOM
- 	help
-- 	  This driver provides kernel-side support for the Random Number
-+	  This driver provides kernel-side support for the Random Number
- 	  Generator hardware found on OMAP16xx, OMAP2/3/4/5, AM33xx/AM43xx
- 	  multimedia processors, and Marvell Armada 7k/8k SoCs.
- 
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called omap-rng.
- 
-- 	  If unsure, say Y.
-+	  If unsure, say Y.
- 
- config HW_RANDOM_OMAP3_ROM
- 	tristate "OMAP3 ROM Random Number Generator support"
-@@ -485,13 +485,13 @@ config HW_RANDOM_NPCM
- 	depends on ARCH_NPCM || COMPILE_TEST
- 	default HW_RANDOM
- 	help
-- 	  This driver provides support for the Random Number
-+	  This driver provides support for the Random Number
- 	  Generator hardware available in Nuvoton NPCM SoCs.
- 
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called npcm-rng.
- 
-- 	  If unsure, say Y.
-+	  If unsure, say Y.
- 
- config HW_RANDOM_KEYSTONE
- 	depends on ARCH_KEYSTONE || COMPILE_TEST
-diff --git a/drivers/net/usb/Kconfig b/drivers/net/usb/Kconfig
-index fbbe78643631..179308782888 100644
---- a/drivers/net/usb/Kconfig
-+++ b/drivers/net/usb/Kconfig
-@@ -169,7 +169,7 @@ config USB_NET_AX8817X
- 	  This option adds support for ASIX AX88xxx based USB 2.0
- 	  10/100 Ethernet adapters.
- 
-- 	  This driver should work with at least the following devices:
-+	  This driver should work with at least the following devices:
- 	    * Aten UC210T
- 	    * ASIX AX88172
- 	    * Billionton Systems, USB2AR
-@@ -220,13 +220,13 @@ config USB_NET_CDCETHER
- 	  CDC Ethernet is an implementation option for DOCSIS cable modems
- 	  that support USB connectivity, used for non-Microsoft USB hosts.
- 	  The Linux-USB CDC Ethernet Gadget driver is an open implementation.
-- 	  This driver should work with at least the following devices:
-+	  This driver should work with at least the following devices:
- 
- 	    * Dell Wireless 5530 HSPA
-- 	    * Ericsson PipeRider (all variants)
-+	    * Ericsson PipeRider (all variants)
- 	    * Ericsson Mobile Broadband Module (all variants)
-- 	    * Motorola (DM100 and SB4100)
-- 	    * Broadcom Cable Modem (reference design)
-+	    * Motorola (DM100 and SB4100)
-+	    * Broadcom Cable Modem (reference design)
- 	    * Toshiba (PCX1100U and F3507g/F3607gw)
- 	    * ...
- 
-diff --git a/drivers/net/wan/Kconfig b/drivers/net/wan/Kconfig
-index 83c9481995dd..473df2505c8e 100644
---- a/drivers/net/wan/Kconfig
-+++ b/drivers/net/wan/Kconfig
-@@ -49,7 +49,7 @@ config COSA
- 	  network device.
- 
- 	  You will need user-space utilities COSA or SRP boards for downloading
-- 	  the firmware to the cards and to set them up. Look at the
-+	  the firmware to the cards and to set them up. Look at the
- 	  <http://www.fi.muni.cz/~kas/cosa/> for more information. You can also
- 	  read the comment at the top of the <file:drivers/net/wan/cosa.c> for
- 	  details about the cards and the driver itself.
-@@ -108,7 +108,7 @@ config HDLC
- 	  Generic HDLC driver currently supports raw HDLC, Cisco HDLC, Frame
- 	  Relay, synchronous Point-to-Point Protocol (PPP) and X.25.
- 
-- 	  To compile this driver as a module, choose M here: the
-+	  To compile this driver as a module, choose M here: the
- 	  module will be called hdlc.
- 
- 	  If unsure, say N.
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 3d114be5b662..c5612896cdb9 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -311,7 +311,7 @@ source "drivers/scsi/cxlflash/Kconfig"
- config SGIWD93_SCSI
- 	tristate "SGI WD93C93 SCSI Driver"
- 	depends on SGI_HAS_WD93 && SCSI
--  	help
-+	help
- 	  If you have a Western Digital WD93 SCSI controller on
- 	  an SGI MIPS system, say Y.  Otherwise, say N.
- 
-diff --git a/drivers/uio/Kconfig b/drivers/uio/Kconfig
-index 5531f3afeb21..2e16c5338e5b 100644
---- a/drivers/uio/Kconfig
-+++ b/drivers/uio/Kconfig
-@@ -18,7 +18,7 @@ config UIO_CIF
- 	depends on PCI
- 	help
- 	  Driver for Hilscher CIF DeviceNet and Profibus cards.  This
--  	  driver requires a userspace component called cif that handles
-+	  driver requires a userspace component called cif that handles
- 	  all of the heavy lifting and can be found at:
- 	        <http://www.osadl.org/projects/downloads/UIO/user/>
- 
-diff --git a/drivers/video/backlight/Kconfig b/drivers/video/backlight/Kconfig
-index d83c87b902c1..a967974f6cd6 100644
---- a/drivers/video/backlight/Kconfig
-+++ b/drivers/video/backlight/Kconfig
-@@ -129,11 +129,11 @@ config LCD_HX8357
- 	  driver.
- 
-   config LCD_OTM3225A
--  	tristate "ORISE Technology OTM3225A support"
--  	depends on SPI
--  	help
--  	  If you have a panel based on the OTM3225A controller
--  	  chip then say y to include a driver for it.
-+	tristate "ORISE Technology OTM3225A support"
-+	depends on SPI
-+	help
-+	  If you have a panel based on the OTM3225A controller
-+	  chip then say y to include a driver for it.
- 
- endif # LCD_CLASS_DEVICE
- 
-diff --git a/drivers/virtio/Kconfig b/drivers/virtio/Kconfig
-index ce1b3f6ec325..3b3644d60d11 100644
---- a/drivers/virtio/Kconfig
-+++ b/drivers/virtio/Kconfig
-@@ -128,7 +128,7 @@ config VIRTIO_MMIO
- 	 This drivers provides support for memory mapped virtio
- 	 platform device driver.
- 
-- 	 If unsure, say N.
-+	 If unsure, say N.
- 
- config VIRTIO_MMIO_CMDLINE_DEVICES
- 	bool "Memory mapped virtio devices parameter parsing"
-diff --git a/drivers/w1/masters/Kconfig b/drivers/w1/masters/Kconfig
-index 24b9a8e05f64..32e993ea6f96 100644
---- a/drivers/w1/masters/Kconfig
-+++ b/drivers/w1/masters/Kconfig
-@@ -17,12 +17,12 @@ config W1_MASTER_MATROX
- 
- config W1_MASTER_DS2490
- 	tristate "DS2490 USB <-> W1 transport layer for 1-wire"
--  	depends on USB
--  	help
-+	depends on USB
-+	help
- 	  Say Y here if you want to have a driver for DS2490 based USB <-> W1 bridges,
- 	  for example DS9490*.
- 
--  	  This support is also available as a module.  If so, the module
-+	  This support is also available as a module.  If so, the module
- 	  will be called ds2490.
- 
- config W1_MASTER_DS2482
-diff --git a/fs/proc/Kconfig b/fs/proc/Kconfig
-index c930001056f9..e8410a99a0ca 100644
---- a/fs/proc/Kconfig
-+++ b/fs/proc/Kconfig
-@@ -81,10 +81,10 @@ config PROC_SYSCTL
- 	  limited in memory.
- 
- config PROC_PAGE_MONITOR
-- 	default y
-+	default y
- 	depends on PROC_FS && MMU
- 	bool "Enable /proc page monitoring" if EXPERT
-- 	help
-+	help
- 	  Various /proc files exist to monitor process memory utilization:
- 	  /proc/pid/smaps, /proc/pid/clear_refs, /proc/pid/pagemap,
- 	  /proc/kpagecount, and /proc/kpageflags. Disabling these
-diff --git a/init/Kconfig b/init/Kconfig
-index 1ea12c64e4c9..9f1cde503739 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -2149,7 +2149,7 @@ config MODULE_SRCVERSION_ALL
- 	help
- 	  Modules which contain a MODULE_VERSION get an extra "srcversion"
- 	  field inserted into their modinfo section, which contains a
--    	  sum of the source files which made it.  This helps maintainers
-+	  sum of the source files which made it.  This helps maintainers
- 	  see exactly which source was used to build a module (since
- 	  others sometimes change the module source without updating
- 	  the version).  With this option, such a "srcversion" field
-diff --git a/net/netfilter/Kconfig b/net/netfilter/Kconfig
-index 56a2531a3402..172d74560632 100644
---- a/net/netfilter/Kconfig
-+++ b/net/netfilter/Kconfig
-@@ -816,7 +816,7 @@ config NETFILTER_XT_TARGET_CLASSIFY
- 	  the priority of a packet. Some qdiscs can use this value for
- 	  classification, among these are:
- 
--  	  atm, cbq, dsmark, pfifo_fast, htb, prio
-+	  atm, cbq, dsmark, pfifo_fast, htb, prio
- 
- 	  To compile it as a module, choose M here.  If unsure, say N.
- 
-diff --git a/net/netfilter/ipvs/Kconfig b/net/netfilter/ipvs/Kconfig
-index d61886874940..271da8447b29 100644
---- a/net/netfilter/ipvs/Kconfig
-+++ b/net/netfilter/ipvs/Kconfig
-@@ -318,7 +318,7 @@ config IP_VS_MH_TAB_INDEX
- comment 'IPVS application helper'
- 
- config	IP_VS_FTP
--  	tristate "FTP protocol helper"
-+	tristate "FTP protocol helper"
- 	depends on IP_VS_PROTO_TCP && NF_CONNTRACK && NF_NAT && \
- 		NF_CONNTRACK_FTP
- 	select IP_VS_NFCT
--- 
-2.27.0
-
+-Bodo
