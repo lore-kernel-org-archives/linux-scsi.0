@@ -2,231 +2,427 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98DE4C433ED
-	for <linux-scsi@archiver.kernel.org>; Sun, 16 May 2021 04:32:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48253C433ED
+	for <linux-scsi@archiver.kernel.org>; Sun, 16 May 2021 13:22:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A34461176
-	for <linux-scsi@archiver.kernel.org>; Sun, 16 May 2021 04:32:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 250736115C
+	for <linux-scsi@archiver.kernel.org>; Sun, 16 May 2021 13:22:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232697AbhEPEd6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 16 May 2021 00:33:58 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:48693 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229465AbhEPEd6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 16 May 2021 00:33:58 -0400
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210516043241epoutp04dd6c067f606561f39822cf6bd75e8079~-cdeZn7N63101831018epoutp04Q
-        for <linux-scsi@vger.kernel.org>; Sun, 16 May 2021 04:32:41 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210516043241epoutp04dd6c067f606561f39822cf6bd75e8079~-cdeZn7N63101831018epoutp04Q
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1621139561;
-        bh=FAjJzd44BeUzcZRUIxAzaieXYiY2hmbKzJ7Lc4FwNQ0=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=p1HJe9fkbjxkoX4QZkZVs1u2UzBzDVc7chNc0vMmFxRhSgaq3zCSU17d4mvd8G1ZJ
-         L6JqALAxUph/tXi2s44VW2HW8Tm+TZAprIAGijs3gclWFFz6Rzmckryksn82W954wm
-         /xDo5tbo2lE2x6xMDuGivnDh3sVzObtMtUzk8BZM=
-Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-        20210516043240epcas5p3df8422b4edc6713ab606a6b578c78d38~-cddJg0fK0981509815epcas5p3N;
-        Sun, 16 May 2021 04:32:40 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
-        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        F9.C2.09697.860A0A06; Sun, 16 May 2021 13:32:40 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-        20210516021235epcas5p4dbc584f819d019b8bac0ac7174fcf599~-ajJ0Y7cF0564905649epcas5p4e;
-        Sun, 16 May 2021 02:12:35 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20210516021235epsmtrp26c54f4305a4f2938e0d8712265329f47~-ajJzn6X11092410924epsmtrp2d;
-        Sun, 16 May 2021 02:12:35 +0000 (GMT)
-X-AuditID: b6c32a4a-639ff700000025e1-b3-60a0a068e532
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        E7.9E.08163.39F70A06; Sun, 16 May 2021 11:12:35 +0900 (KST)
-Received: from alimakhtar02 (unknown [107.122.12.5]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20210516021234epsmtip1a53b3109b8a64ddb67a055e9e4156d75~-ajIxp1EU2243522435epsmtip1C;
-        Sun, 16 May 2021 02:12:34 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Bart Van Assche'" <bvanassche@acm.org>,
-        "'Martin K . Petersen'" <martin.petersen@oracle.com>,
-        "'James E . J . Bottomley'" <jejb@linux.vnet.ibm.com>
-Cc:     <linux-scsi@vger.kernel.org>, "'Christoph Hellwig'" <hch@lst.de>,
-        "'Kiwoong Kim'" <kwmad.kim@samsung.com>
-In-Reply-To: <20210509213817.4348-1-bvanassche@acm.org>
-Subject: RE: [PATCH] ufs-exynos: Move definitions from .h to .c
-Date:   Sun, 16 May 2021 07:42:33 +0530
-Message-ID: <21f801d749f8$efd9e2b0$cf8da810$@samsung.com>
+        id S233721AbhEPNXm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 16 May 2021 09:23:42 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:39080 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233728AbhEPNXl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 16 May 2021 09:23:41 -0400
+Received: from mail-ed1-f70.google.com ([209.85.208.70])
+        by youngberry.canonical.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.93)
+        (envelope-from <juerg.haefliger@canonical.com>)
+        id 1liGiv-0001G4-Uw
+        for linux-scsi@vger.kernel.org; Sun, 16 May 2021 13:22:26 +0000
+Received: by mail-ed1-f70.google.com with SMTP id d4-20020aa7ce040000b029038d1d0524d0so1557295edv.3
+        for <linux-scsi@vger.kernel.org>; Sun, 16 May 2021 06:22:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=TUZHq1LlIrTbAZVDobXbN76FSlqGTNui2ct6NU02wJo=;
+        b=BnmaMiC7TIDdIZV5aT6XEN5fTQBfgDoUrQCsnrIhC3urcGjJrxbOZT1wPolYBt+R6k
+         Njpd7VEilJa0ZgqnN67pPex6x/ZOIEWE+U6uG97weTMB7lvRsBcuU/BrA/N0CxA5nOPC
+         sDKM8D7erLp9+XcOGP+lUtWFQT72dOpnySt8LrKwKpwrS7LxA3aLOSPf7YRGd4F/G/8N
+         Z/ze8wkTbic6IU7HqCtx0LQ7q/heD9HzsDBF4/r5QA4pQOnWlzeuaWp//7bnPs3sM+Pr
+         36Xp11qgTQffF4zYT3vVLRM3RUu6IkPk3u9Vb5NPhCChDl7MGiqBDpefBy3XAI/sPsPc
+         dAcg==
+X-Gm-Message-State: AOAM533qYOfLjzQEBCLH7XBYV36o0m+qieJxX+TDcn889NT2kdwbAlzm
+        6Grpbtw8fwjo0lSeAs7XDUEIUf2lf5c1V2S150gZsrL/4qmWNFhTwV8bQ5y/wLAG/12OGXDTKKW
+        ZTU8yo9iosMjvi+ZEssveBL7D4BlzKKI1gyzUpSs=
+X-Received: by 2002:a17:906:b2c1:: with SMTP id cf1mr47188619ejb.544.1621171345442;
+        Sun, 16 May 2021 06:22:25 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwemSH08vKN86fYRji/0gf7FGjjmYQFhv1Tge7BtiRE3+6x/Y5AKDM4p5D+miAtvUmM3VDZVQ==
+X-Received: by 2002:a17:906:b2c1:: with SMTP id cf1mr47188589ejb.544.1621171345102;
+        Sun, 16 May 2021 06:22:25 -0700 (PDT)
+Received: from gollum.fritz.box ([194.191.244.86])
+        by smtp.gmail.com with ESMTPSA id n15sm7126596eje.118.2021.05.16.06.22.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 16 May 2021 06:22:24 -0700 (PDT)
+From:   Juerg Haefliger <juerg.haefliger@canonical.com>
+X-Google-Original-From: Juerg Haefliger <juergh@canonical.com>
+To:     aaro.koskinen@iki.fi, tony@atomide.com, linux@prisktech.co.nz,
+        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, gregkh@linuxfoundation.org,
+        lee.jones@linaro.org, daniel.thompson@linaro.org,
+        jingoohan1@gmail.com, mst@redhat.com, jasowang@redhat.com,
+        zbr@ioremap.net, pablo@netfilter.org, kadlec@netfilter.org,
+        fw@strlen.de, horms@verge.net.au, ja@ssi.bg,
+        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-crypto@vger.kernel.org, linux-usb@vger.kernel.org,
+        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, lvs-devel@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org,
+        Juerg Haefliger <juergh@canonical.com>
+Subject: [PATCH] treewide: Remove leading spaces in Kconfig files
+Date:   Sun, 16 May 2021 15:22:09 +0200
+Message-Id: <20210516132209.59229-1-juergh@canonical.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQKku+Hkh5bAtCxFxzJe2BZbjRzc+gE7NfH+qUCfSUA=
-Content-Language: en-in
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprDKsWRmVeSWpSXmKPExsWy7bCmpm7GggUJBl8O8FtM+/CT2WLl6qNM
-        Fqsm5lnc3HKUxaL7+g42i+XH/zE5sHlcvuLt8eDQZhaP3Tcb2Dw+Pr3F4tG3ZRWjx+dNcgFs
-        UVw2Kak5mWWpRfp2CVwZ7x4eZi3Yp1bx6/N+1gbGK/JdjJwcEgImEq3vZrN1MXJxCAnsZpRY
-        PeE9E4TziVHi0sV7jBDOZ0aJbdPuADkcYC1bD5lAxHcxSixfMgeq/SWjxOPd3Uwgc9kEdCV2
-        LG4DS4gIzAWqetnCCpJgFsiX2Pn1KCOIzSlgLrHk312wBmEBe4lXG9eC2SwCqhJ/T89lA9nG
-        K2ApsaPBHCTMKyAocXLmExaIMfIS29/OYYb4QUHi59NlYONFBKwkvl8+xQ5RIy5x9GcPM8gN
-        EgIzOSQ+LdsI9YGLxP6GSIheYYlXx7ewQ9hSEp/f7WWDKMmW6NllDBGukVg67xgLhG0vceDK
-        HBaQEmYBTYn1u/QhwrISU0+tY4LYyifR+/sJE0ScV2LHPBhbVaL53VWoMdISE7u7WScwKs1C
-        8tgsJI/NQvLALIRtCxhZVjFKphYU56anFpsWGOWllusVJ+YWl+al6yXn525iBCcgLa8djA8f
-        fNA7xMjEwXiIUYKDWUmE91PY/AQh3pTEyqrUovz4otKc1OJDjNIcLErivCseTk4QEkhPLEnN
-        Tk0tSC2CyTJxcEo1MClM3iF1Rc1ivc6OvBi1101eG3R22WtFeSsFP97i9d+paaMnX2TJc2Y+
-        9xMPOXICbnut2vw689RvjeQDWf7z1/tfUW9UP8a5neW0StESPf1Kj4S9DFLsE///fHg6Yumd
-        vZfss13WvuNgWsJl+uu10uOmfzcU/rWxRbD6T63uqwzeYNx9cnPrw4660CS1tk8u1t0+JSEf
-        T52aFb1nQs3dv13PVeYUK97iaJjWwLCi/XdusnnNVsmUVfbOiz/9ONIgMz14o4jyzmV/9k2c
-        0cDhZH8k+OnvYpUfGdsWHUv6zR/B+oy350vqo/UCzJe5baS2MZRd/z3xNq9SRJZq2cyJd03m
-        XFj/ZdJuucvv1y/eJ6rEUpyRaKjFXFScCACXWyh3rwMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrPLMWRmVeSWpSXmKPExsWy7bCSnO7k+gUJBs3XNCymffjJbLFy9VEm
-        i1UT8yxubjnKYtF9fQebxfLj/5gc2DwuX/H2eHBoM4vH7psNbB4fn95i8ejbsorR4/MmuQC2
-        KC6blNSczLLUIn27BK6Mdw8PsxbsU6v49Xk/awPjFfkuRg4OCQETia2HTLoYuTiEBHYwSlzY
-        u4ipi5ETKC4tcX3jBHYIW1hi5b/n7BBFzxklLq6dyAKSYBPQldixuI0NJCEiMJdRYtWc92Ad
-        zAKFEmu+bITq6GCUmNV5lREkwSlgLrHk312wFcIC9hKvNq4Fs1kEVCX+np7LBnISr4ClxI4G
-        c5Awr4CgxMmZT1hAwswCehJtGxkhxstLbH87hxniOAWJn0+XsYLYIgJWEt8vn4I6QVzi6M8e
-        5gmMwrOQTJqFMGkWkkmzkHQsYGRZxSiZWlCcm55bbFhglJdarlecmFtcmpeul5yfu4kRHEda
-        WjsY96z6oHeIkYmD8RCjBAezkgjvp7D5CUK8KYmVValF+fFFpTmpxYcYpTlYlMR5L3SdjBcS
-        SE8sSc1OTS1ILYLJMnFwSjUw7c2bL/pDylp7+toFR+4prnlz47HWqsc5Ytyn3j18PkvDRK8i
-        OHMtX9STxVzc+1Ymuj/dWLFswUOhFtdQ/jjNjSYMJoU6ZvsPxm0U2Papa53H3JYJ07yL9P31
-        Vp5a4rSNy1K691vXQzb3g+/MJvNNaO3d5lfLb6+6mOGkVoWv6r6XC4/l5iz53B1iec/4e+yW
-        H5pqbkz81utNIjW0rkw63Wll9yQopeKye5bQbZunqZ8Wsew5Yivyb+OewssMcY6uM48pLmjP
-        unNyo4lcQPndaoHjLmaze/OPMXFr6ll/Wtducon76uOv/j9+zD3sNmmWD/Mu+wwnz52tk5gZ
-        tCM5FV5zrD6WcfGY44bE22/DlFiKMxINtZiLihMBiwlzaRIDAAA=
-X-CMS-MailID: 20210516021235epcas5p4dbc584f819d019b8bac0ac7174fcf599
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20210509213827epcas5p173b48dab49036c8d85eadfc8bda9efd8
-References: <CGME20210509213827epcas5p173b48dab49036c8d85eadfc8bda9efd8@epcas5p1.samsung.com>
-        <20210509213817.4348-1-bvanassche@acm.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+There are a few occurences of leading spaces before tabs in a couple of
+Kconfig files. Remove them by running the following command:
 
-> -----Original Message-----
-> From: Bart Van Assche <bvanassche@acm.org>
-> Sent: 10 May 2021 03:08
-> To: Martin K . Petersen <martin.petersen@oracle.com>; James E . J .
-> Bottomley <jejb@linux.vnet.ibm.com>
-> Cc: linux-scsi@vger.kernel.org; Christoph Hellwig <hch@lst.de>; Bart Van
-> Assche <bvanassche@acm.org>; Alim Akhtar <alim.akhtar@samsung.com>;
-> Kiwoong Kim <kwmad.kim@samsung.com>
-> Subject: [PATCH] ufs-exynos: Move definitions from .h to .c
-> 
-> In the Linux kernel definitions of data structures should occur in .c
-files.
-> Hence move the exynos7_uic_attr definition from a .h into a .c file.
-> Additionally, declare exynos_ufs_drvs static. This patch fixes the
-following
-> two sparse warnings:
-> 
-> drivers/scsi/ufs/ufs-exynos.h:248:28: warning: symbol 'exynos_ufs_drvs'
-> was not declared. Should it be static?
-> drivers/scsi/ufs/ufs-exynos.h:250:28: warning: symbol 'exynos7_uic_attr'
-> was not declared. Should it be static?
-> 
-> Cc: Alim Akhtar <alim.akhtar@samsung.com>
-> Cc: Kiwoong Kim <kwmad.kim@samsung.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
-Just for the subject tag consistency, can add subsystem name , scsi: ufs:
-<driver_name> 
-Rest looks good.
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+  $ find . -name 'Kconfig*' | xargs sed -r -i 's/^[ ]+\t/\t/'
 
->  drivers/scsi/ufs/ufs-exynos.c | 27 ++++++++++++++++++++++++++-
-> drivers/scsi/ufs/ufs-exynos.h | 26 --------------------------
->  2 files changed, 26 insertions(+), 27 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
-> index 70647eacf195..4c38689ecdd2 100644
-> --- a/drivers/scsi/ufs/ufs-exynos.c
-> +++ b/drivers/scsi/ufs/ufs-exynos.c
-> @@ -107,6 +107,7 @@ enum {
-> 
->  #define CNTR_DIV_VAL 40
-> 
-> +static struct exynos_ufs_drv_data exynos_ufs_drvs;
->  static void exynos_ufs_auto_ctrl_hcc(struct exynos_ufs *ufs, bool en);
-> static void exynos_ufs_ctrl_clkstop(struct exynos_ufs *ufs, bool en);
-> 
-> @@ -1231,8 +1232,32 @@ static int exynos_ufs_remove(struct
-> platform_device *pdev)
->  	return 0;
->  }
-> 
-> -struct exynos_ufs_drv_data exynos_ufs_drvs = {
-> +static struct exynos_ufs_uic_attr exynos7_uic_attr = {
-> +	.tx_trailingclks		= 0x10,
-> +	.tx_dif_p_nsec			= 3000000,	/* unit: ns */
-> +	.tx_dif_n_nsec			= 1000000,	/* unit: ns */
-> +	.tx_high_z_cnt_nsec		= 20000,	/* unit: ns */
-> +	.tx_base_unit_nsec		= 100000,	/* unit: ns */
-> +	.tx_gran_unit_nsec		= 4000,		/* unit: ns */
-> +	.tx_sleep_cnt			= 1000,		/* unit: ns */
-> +	.tx_min_activatetime		= 0xa,
-> +	.rx_filler_enable		= 0x2,
-> +	.rx_dif_p_nsec			= 1000000,	/* unit: ns */
-> +	.rx_hibern8_wait_nsec		= 4000000,	/* unit: ns */
-> +	.rx_base_unit_nsec		= 100000,	/* unit: ns */
-> +	.rx_gran_unit_nsec		= 4000,		/* unit: ns */
-> +	.rx_sleep_cnt			= 1280,		/* unit: ns */
-> +	.rx_stall_cnt			= 320,		/* unit: ns */
-> +	.rx_hs_g1_sync_len_cap		= SYNC_LEN_COARSE(0xf),
-> +	.rx_hs_g2_sync_len_cap		= SYNC_LEN_COARSE(0xf),
-> +	.rx_hs_g3_sync_len_cap		= SYNC_LEN_COARSE(0xf),
-> +	.rx_hs_g1_prep_sync_len_cap	= PREP_LEN(0xf),
-> +	.rx_hs_g2_prep_sync_len_cap	= PREP_LEN(0xf),
-> +	.rx_hs_g3_prep_sync_len_cap	= PREP_LEN(0xf),
-> +	.pa_dbg_option_suite		= 0x30103,
-> +};
-> 
-> +static struct exynos_ufs_drv_data exynos_ufs_drvs = {
->  	.compatible		= "samsung,exynos7-ufs",
->  	.uic_attr		= &exynos7_uic_attr,
->  	.quirks			= UFSHCD_QUIRK_PRDT_BYTE_GRAN |
-> diff --git a/drivers/scsi/ufs/ufs-exynos.h b/drivers/scsi/ufs/ufs-exynos.h
-> index 06ee565f7eb0..67505fe32ebf 100644
-> --- a/drivers/scsi/ufs/ufs-exynos.h
-> +++ b/drivers/scsi/ufs/ufs-exynos.h
-> @@ -245,30 +245,4 @@ static inline void
-> exynos_ufs_disable_dbg_mode(struct ufs_hba *hba)
->  	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_DBG_MODE), FALSE);  }
-> 
-> -struct exynos_ufs_drv_data exynos_ufs_drvs;
-> -
-> -struct exynos_ufs_uic_attr exynos7_uic_attr = {
-> -	.tx_trailingclks		= 0x10,
-> -	.tx_dif_p_nsec			= 3000000,	/* unit: ns */
-> -	.tx_dif_n_nsec			= 1000000,	/* unit: ns */
-> -	.tx_high_z_cnt_nsec		= 20000,	/* unit: ns */
-> -	.tx_base_unit_nsec		= 100000,	/* unit: ns */
-> -	.tx_gran_unit_nsec		= 4000,		/* unit: ns */
-> -	.tx_sleep_cnt			= 1000,		/* unit: ns */
-> -	.tx_min_activatetime		= 0xa,
-> -	.rx_filler_enable		= 0x2,
-> -	.rx_dif_p_nsec			= 1000000,	/* unit: ns */
-> -	.rx_hibern8_wait_nsec		= 4000000,	/* unit: ns */
-> -	.rx_base_unit_nsec		= 100000,	/* unit: ns */
-> -	.rx_gran_unit_nsec		= 4000,		/* unit: ns */
-> -	.rx_sleep_cnt			= 1280,		/* unit: ns */
-> -	.rx_stall_cnt			= 320,		/* unit: ns */
-> -	.rx_hs_g1_sync_len_cap		= SYNC_LEN_COARSE(0xf),
-> -	.rx_hs_g2_sync_len_cap		= SYNC_LEN_COARSE(0xf),
-> -	.rx_hs_g3_sync_len_cap		= SYNC_LEN_COARSE(0xf),
-> -	.rx_hs_g1_prep_sync_len_cap	= PREP_LEN(0xf),
-> -	.rx_hs_g2_prep_sync_len_cap	= PREP_LEN(0xf),
-> -	.rx_hs_g3_prep_sync_len_cap	= PREP_LEN(0xf),
-> -	.pa_dbg_option_suite		= 0x30103,
-> -};
->  #endif /* _UFS_EXYNOS_H_ */
+Signed-off-by: Juerg Haefliger <juergh@canonical.com>
+---
+ arch/arm/mach-omap1/Kconfig     | 12 ++++++------
+ arch/arm/mach-vt8500/Kconfig    |  6 +++---
+ arch/arm/mm/Kconfig             | 10 +++++-----
+ drivers/char/hw_random/Kconfig  |  8 ++++----
+ drivers/net/usb/Kconfig         | 10 +++++-----
+ drivers/net/wan/Kconfig         |  4 ++--
+ drivers/scsi/Kconfig            |  2 +-
+ drivers/uio/Kconfig             |  2 +-
+ drivers/video/backlight/Kconfig | 10 +++++-----
+ drivers/virtio/Kconfig          |  2 +-
+ drivers/w1/masters/Kconfig      |  6 +++---
+ fs/proc/Kconfig                 |  4 ++--
+ init/Kconfig                    |  2 +-
+ net/netfilter/Kconfig           |  2 +-
+ net/netfilter/ipvs/Kconfig      |  2 +-
+ 15 files changed, 41 insertions(+), 41 deletions(-)
+
+diff --git a/arch/arm/mach-omap1/Kconfig b/arch/arm/mach-omap1/Kconfig
+index 9536b8f3c07d..208c700c2455 100644
+--- a/arch/arm/mach-omap1/Kconfig
++++ b/arch/arm/mach-omap1/Kconfig
+@@ -65,14 +65,14 @@ config MACH_OMAP_INNOVATOR
+ config MACH_OMAP_H2
+ 	bool "TI H2 Support"
+ 	depends on ARCH_OMAP16XX
+-    	help
++	help
+ 	  TI OMAP 1610/1611B H2 board support. Say Y here if you have such
+ 	  a board.
+ 
+ config MACH_OMAP_H3
+ 	bool "TI H3 Support"
+ 	depends on ARCH_OMAP16XX
+-    	help
++	help
+ 	  TI OMAP 1710 H3 board support. Say Y here if you have such
+ 	  a board.
+ 
+@@ -85,14 +85,14 @@ config MACH_HERALD
+ config MACH_OMAP_OSK
+ 	bool "TI OSK Support"
+ 	depends on ARCH_OMAP16XX
+-    	help
++	help
+ 	  TI OMAP 5912 OSK (OMAP Starter Kit) board support. Say Y here
+           if you have such a board.
+ 
+ config OMAP_OSK_MISTRAL
+ 	bool "Mistral QVGA board Support"
+ 	depends on MACH_OMAP_OSK
+-    	help
++	help
+ 	  The OSK supports an optional add-on board with a Quarter-VGA
+ 	  touchscreen, PDA-ish buttons, a resume button, bicolor LED,
+ 	  and camera connector.  Say Y here if you have this board.
+@@ -100,14 +100,14 @@ config OMAP_OSK_MISTRAL
+ config MACH_OMAP_PERSEUS2
+ 	bool "TI Perseus2"
+ 	depends on ARCH_OMAP730
+-    	help
++	help
+ 	  Support for TI OMAP 730 Perseus2 board. Say Y here if you have such
+ 	  a board.
+ 
+ config MACH_OMAP_FSAMPLE
+ 	bool "TI F-Sample"
+ 	depends on ARCH_OMAP730
+-    	help
++	help
+ 	  Support for TI OMAP 850 F-Sample board. Say Y here if you have such
+ 	  a board.
+ 
+diff --git a/arch/arm/mach-vt8500/Kconfig b/arch/arm/mach-vt8500/Kconfig
+index d01cdd9ad9c7..408e405ae568 100644
+--- a/arch/arm/mach-vt8500/Kconfig
++++ b/arch/arm/mach-vt8500/Kconfig
+@@ -9,9 +9,9 @@ config ARCH_VT8500
+ 
+ config ARCH_WM8505
+ 	bool "VIA/Wondermedia 85xx and WM8650"
+- 	depends on ARCH_MULTI_V5
+- 	select ARCH_VT8500
+- 	select CPU_ARM926T
++	depends on ARCH_MULTI_V5
++	select ARCH_VT8500
++	select CPU_ARM926T
+ 
+ config ARCH_WM8750
+ 	bool "WonderMedia WM8750"
+diff --git a/arch/arm/mm/Kconfig b/arch/arm/mm/Kconfig
+index 35f43d0aa056..7a4a04bafa92 100644
+--- a/arch/arm/mm/Kconfig
++++ b/arch/arm/mm/Kconfig
+@@ -123,13 +123,13 @@ config CPU_ARM925T
+ 	select CPU_PABRT_LEGACY
+ 	select CPU_THUMB_CAPABLE
+ 	select CPU_TLB_V4WBI if MMU
+- 	help
+- 	  The ARM925T is a mix between the ARM920T and ARM926T, but with
++	help
++	  The ARM925T is a mix between the ARM920T and ARM926T, but with
+ 	  different instruction and data caches. It is used in TI's OMAP
+- 	  device family.
++	  device family.
+ 
+- 	  Say Y if you want support for the ARM925T processor.
+- 	  Otherwise, say N.
++	  Say Y if you want support for the ARM925T processor.
++	  Otherwise, say N.
+ 
+ # ARM926T
+ config CPU_ARM926T
+diff --git a/drivers/char/hw_random/Kconfig b/drivers/char/hw_random/Kconfig
+index 1fe006f3f12f..0e1e97680f08 100644
+--- a/drivers/char/hw_random/Kconfig
++++ b/drivers/char/hw_random/Kconfig
+@@ -168,14 +168,14 @@ config HW_RANDOM_OMAP
+ 	depends on ARCH_OMAP16XX || ARCH_OMAP2PLUS || ARCH_MVEBU
+ 	default HW_RANDOM
+ 	help
+- 	  This driver provides kernel-side support for the Random Number
++	  This driver provides kernel-side support for the Random Number
+ 	  Generator hardware found on OMAP16xx, OMAP2/3/4/5, AM33xx/AM43xx
+ 	  multimedia processors, and Marvell Armada 7k/8k SoCs.
+ 
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called omap-rng.
+ 
+- 	  If unsure, say Y.
++	  If unsure, say Y.
+ 
+ config HW_RANDOM_OMAP3_ROM
+ 	tristate "OMAP3 ROM Random Number Generator support"
+@@ -485,13 +485,13 @@ config HW_RANDOM_NPCM
+ 	depends on ARCH_NPCM || COMPILE_TEST
+ 	default HW_RANDOM
+ 	help
+- 	  This driver provides support for the Random Number
++	  This driver provides support for the Random Number
+ 	  Generator hardware available in Nuvoton NPCM SoCs.
+ 
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called npcm-rng.
+ 
+- 	  If unsure, say Y.
++	  If unsure, say Y.
+ 
+ config HW_RANDOM_KEYSTONE
+ 	depends on ARCH_KEYSTONE || COMPILE_TEST
+diff --git a/drivers/net/usb/Kconfig b/drivers/net/usb/Kconfig
+index fbbe78643631..179308782888 100644
+--- a/drivers/net/usb/Kconfig
++++ b/drivers/net/usb/Kconfig
+@@ -169,7 +169,7 @@ config USB_NET_AX8817X
+ 	  This option adds support for ASIX AX88xxx based USB 2.0
+ 	  10/100 Ethernet adapters.
+ 
+- 	  This driver should work with at least the following devices:
++	  This driver should work with at least the following devices:
+ 	    * Aten UC210T
+ 	    * ASIX AX88172
+ 	    * Billionton Systems, USB2AR
+@@ -220,13 +220,13 @@ config USB_NET_CDCETHER
+ 	  CDC Ethernet is an implementation option for DOCSIS cable modems
+ 	  that support USB connectivity, used for non-Microsoft USB hosts.
+ 	  The Linux-USB CDC Ethernet Gadget driver is an open implementation.
+- 	  This driver should work with at least the following devices:
++	  This driver should work with at least the following devices:
+ 
+ 	    * Dell Wireless 5530 HSPA
+- 	    * Ericsson PipeRider (all variants)
++	    * Ericsson PipeRider (all variants)
+ 	    * Ericsson Mobile Broadband Module (all variants)
+- 	    * Motorola (DM100 and SB4100)
+- 	    * Broadcom Cable Modem (reference design)
++	    * Motorola (DM100 and SB4100)
++	    * Broadcom Cable Modem (reference design)
+ 	    * Toshiba (PCX1100U and F3507g/F3607gw)
+ 	    * ...
+ 
+diff --git a/drivers/net/wan/Kconfig b/drivers/net/wan/Kconfig
+index 83c9481995dd..473df2505c8e 100644
+--- a/drivers/net/wan/Kconfig
++++ b/drivers/net/wan/Kconfig
+@@ -49,7 +49,7 @@ config COSA
+ 	  network device.
+ 
+ 	  You will need user-space utilities COSA or SRP boards for downloading
+- 	  the firmware to the cards and to set them up. Look at the
++	  the firmware to the cards and to set them up. Look at the
+ 	  <http://www.fi.muni.cz/~kas/cosa/> for more information. You can also
+ 	  read the comment at the top of the <file:drivers/net/wan/cosa.c> for
+ 	  details about the cards and the driver itself.
+@@ -108,7 +108,7 @@ config HDLC
+ 	  Generic HDLC driver currently supports raw HDLC, Cisco HDLC, Frame
+ 	  Relay, synchronous Point-to-Point Protocol (PPP) and X.25.
+ 
+- 	  To compile this driver as a module, choose M here: the
++	  To compile this driver as a module, choose M here: the
+ 	  module will be called hdlc.
+ 
+ 	  If unsure, say N.
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 3d114be5b662..c5612896cdb9 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -311,7 +311,7 @@ source "drivers/scsi/cxlflash/Kconfig"
+ config SGIWD93_SCSI
+ 	tristate "SGI WD93C93 SCSI Driver"
+ 	depends on SGI_HAS_WD93 && SCSI
+-  	help
++	help
+ 	  If you have a Western Digital WD93 SCSI controller on
+ 	  an SGI MIPS system, say Y.  Otherwise, say N.
+ 
+diff --git a/drivers/uio/Kconfig b/drivers/uio/Kconfig
+index 5531f3afeb21..2e16c5338e5b 100644
+--- a/drivers/uio/Kconfig
++++ b/drivers/uio/Kconfig
+@@ -18,7 +18,7 @@ config UIO_CIF
+ 	depends on PCI
+ 	help
+ 	  Driver for Hilscher CIF DeviceNet and Profibus cards.  This
+-  	  driver requires a userspace component called cif that handles
++	  driver requires a userspace component called cif that handles
+ 	  all of the heavy lifting and can be found at:
+ 	        <http://www.osadl.org/projects/downloads/UIO/user/>
+ 
+diff --git a/drivers/video/backlight/Kconfig b/drivers/video/backlight/Kconfig
+index d83c87b902c1..a967974f6cd6 100644
+--- a/drivers/video/backlight/Kconfig
++++ b/drivers/video/backlight/Kconfig
+@@ -129,11 +129,11 @@ config LCD_HX8357
+ 	  driver.
+ 
+   config LCD_OTM3225A
+-  	tristate "ORISE Technology OTM3225A support"
+-  	depends on SPI
+-  	help
+-  	  If you have a panel based on the OTM3225A controller
+-  	  chip then say y to include a driver for it.
++	tristate "ORISE Technology OTM3225A support"
++	depends on SPI
++	help
++	  If you have a panel based on the OTM3225A controller
++	  chip then say y to include a driver for it.
+ 
+ endif # LCD_CLASS_DEVICE
+ 
+diff --git a/drivers/virtio/Kconfig b/drivers/virtio/Kconfig
+index ce1b3f6ec325..3b3644d60d11 100644
+--- a/drivers/virtio/Kconfig
++++ b/drivers/virtio/Kconfig
+@@ -128,7 +128,7 @@ config VIRTIO_MMIO
+ 	 This drivers provides support for memory mapped virtio
+ 	 platform device driver.
+ 
+- 	 If unsure, say N.
++	 If unsure, say N.
+ 
+ config VIRTIO_MMIO_CMDLINE_DEVICES
+ 	bool "Memory mapped virtio devices parameter parsing"
+diff --git a/drivers/w1/masters/Kconfig b/drivers/w1/masters/Kconfig
+index 24b9a8e05f64..32e993ea6f96 100644
+--- a/drivers/w1/masters/Kconfig
++++ b/drivers/w1/masters/Kconfig
+@@ -17,12 +17,12 @@ config W1_MASTER_MATROX
+ 
+ config W1_MASTER_DS2490
+ 	tristate "DS2490 USB <-> W1 transport layer for 1-wire"
+-  	depends on USB
+-  	help
++	depends on USB
++	help
+ 	  Say Y here if you want to have a driver for DS2490 based USB <-> W1 bridges,
+ 	  for example DS9490*.
+ 
+-  	  This support is also available as a module.  If so, the module
++	  This support is also available as a module.  If so, the module
+ 	  will be called ds2490.
+ 
+ config W1_MASTER_DS2482
+diff --git a/fs/proc/Kconfig b/fs/proc/Kconfig
+index c930001056f9..e8410a99a0ca 100644
+--- a/fs/proc/Kconfig
++++ b/fs/proc/Kconfig
+@@ -81,10 +81,10 @@ config PROC_SYSCTL
+ 	  limited in memory.
+ 
+ config PROC_PAGE_MONITOR
+- 	default y
++	default y
+ 	depends on PROC_FS && MMU
+ 	bool "Enable /proc page monitoring" if EXPERT
+- 	help
++	help
+ 	  Various /proc files exist to monitor process memory utilization:
+ 	  /proc/pid/smaps, /proc/pid/clear_refs, /proc/pid/pagemap,
+ 	  /proc/kpagecount, and /proc/kpageflags. Disabling these
+diff --git a/init/Kconfig b/init/Kconfig
+index 1ea12c64e4c9..9f1cde503739 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -2149,7 +2149,7 @@ config MODULE_SRCVERSION_ALL
+ 	help
+ 	  Modules which contain a MODULE_VERSION get an extra "srcversion"
+ 	  field inserted into their modinfo section, which contains a
+-    	  sum of the source files which made it.  This helps maintainers
++	  sum of the source files which made it.  This helps maintainers
+ 	  see exactly which source was used to build a module (since
+ 	  others sometimes change the module source without updating
+ 	  the version).  With this option, such a "srcversion" field
+diff --git a/net/netfilter/Kconfig b/net/netfilter/Kconfig
+index 56a2531a3402..172d74560632 100644
+--- a/net/netfilter/Kconfig
++++ b/net/netfilter/Kconfig
+@@ -816,7 +816,7 @@ config NETFILTER_XT_TARGET_CLASSIFY
+ 	  the priority of a packet. Some qdiscs can use this value for
+ 	  classification, among these are:
+ 
+-  	  atm, cbq, dsmark, pfifo_fast, htb, prio
++	  atm, cbq, dsmark, pfifo_fast, htb, prio
+ 
+ 	  To compile it as a module, choose M here.  If unsure, say N.
+ 
+diff --git a/net/netfilter/ipvs/Kconfig b/net/netfilter/ipvs/Kconfig
+index d61886874940..271da8447b29 100644
+--- a/net/netfilter/ipvs/Kconfig
++++ b/net/netfilter/ipvs/Kconfig
+@@ -318,7 +318,7 @@ config IP_VS_MH_TAB_INDEX
+ comment 'IPVS application helper'
+ 
+ config	IP_VS_FTP
+-  	tristate "FTP protocol helper"
++	tristate "FTP protocol helper"
+ 	depends on IP_VS_PROTO_TCP && NF_CONNTRACK && NF_NAT && \
+ 		NF_CONNTRACK_FTP
+ 	select IP_VS_NFCT
+-- 
+2.27.0
 
