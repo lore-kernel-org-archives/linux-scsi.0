@@ -2,260 +2,362 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B775C433B4
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 10:18:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA0E7C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 10:39:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E148961184
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 10:18:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE6BC611CA
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 10:39:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236332AbhEQKTi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 May 2021 06:19:38 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:5615 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236285AbhEQKTh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2021 06:19:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1621246700; x=1652782700;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=5XSlhais9lWLZ/neaZGlTkDerpEtGfIPRw74hBKtU9Y=;
-  b=HdPb819jSUeSh3iUHs05kLIhsUjXNRCLtp+klYCv4Ryc7RwFH207XnOs
-   HdrQS7MVnnZDtF3D3b/Jlmi2cqsF7rY1DFFhWHp3s5rL8hmB9MzKPMX4T
-   pwNm+7KYSDdebqrirgf2vkymg+gK0AA6bMIQEaAvQQs6Bz7RRAOowarVg
-   /bKw/fyEmViDIHwQKdHjPZEviNwEbVF1GrhKAJCoW0WU21EuqVZ26qJtf
-   JEmCOHRBv5HTo0WPAR+dv9cTNck0M4jM4K3POQ9ycp3LsmHGAQiKbOtLO
-   2TZOZWo9/jJqsLvVoxDraTVdufjxIWbs30ZlVu9bkkep1xRyXVEOBiKXJ
-   Q==;
-IronPort-SDR: Sn/P/3ebpMU3t3Xbr/DLMpZlkxyyySchnKgokux7YZ4nERETx9CpbImzdsqNhGYxxFvdT5raRa
- W8qvF+NFmjDfUrJAvQZbbyBRiK+ZbU0UqIGstTBaYgK83518KPwaEN4xjTktUiKcMOhfLKA7xw
- 2atXAFSzV4JEVRjB9WU8PS68gqij/hUvrKfkJkPZEVrMs6s2XbpfIDf2L9XIN3rrWfvqA1Qlg7
- FH6Ixbrj3wYlO0/W5lWa+dJtbqKSCwBPoSM7n0lYRsbjnukWXRRacqPzunBQok3IquSzFlWQdc
- XnI=
-X-IronPort-AV: E=Sophos;i="5.82,307,1613404800"; 
-   d="scan'208";a="173049289"
-Received: from mail-mw2nam10lp2108.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.108])
-  by ob1.hgst.iphmx.com with ESMTP; 17 May 2021 18:18:20 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=U6mJE04d5QYZG7j7pqFOwPphTvNQu3qnmVbS9+Ja3hGqHF23XrOYCNzG5sbcF3u9TGIb9iA/goRRbAFH7rTpjuma3hGra1xw1E7TxC1WMASmX4sVKglX2A0/Zkg19qiePrGyr3trpP0fZX+lBxdvxHKs8ge/C5W/+7JD3Yatr6dsvG9KwHgFv00kDNM2u2PD5ZGfssr1lEK6lRA5rE3pk/NAf6FynGDj8To6BaNQ7dSxWj/Hlqez0cVWbyVe1XqP2MKxg+EkovKkD+RWrdsaDfVHtNCplKPfO6J/eqTJbrUVjn/4rIV0Qf5F+ed1Hj9lch3x+iyF2yl6hFyfyKNZ/w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TPRlxd8nWfbh8my74TxKJgmhLcp0fDjdmqyn+KTFyjY=;
- b=eaYfPpowQ/uWFEcDrWap7XuyRehGa4XBaIVT5ndiyp4MK0O+NACy671P0tKmIjlxIMDyCDRwDUxRnxpTCdzx4RfgnjSguZcob3UBz82BcRaAXVlEuxdtgbbEYwzbWZwoxNdCbo/zee7z1mYtomNYGNOa7tL4KZ18ER7yqaKm+8QTguiErq3UuuIn5UEzBZ2MjDiRGKHmNc+yVqnoEp+ZVqNO+ORBZJUzYwHh+LrNHZjTRvGlDmuFJJQIwS0fv2A1jbUxqiIojP4ie7LaTxcY8oW35gSsIyoDiNfxzRR0LJSk3F4HgxYL/Ms2uLWrzN3arJou34ozNtRvNGSrbzjDXA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TPRlxd8nWfbh8my74TxKJgmhLcp0fDjdmqyn+KTFyjY=;
- b=FlOVBQWBEkTir6zNydfA0uD7LoFHGc022tJMmEutR7dtAGugBGJTp3LOtHTUZ1hoY4k7OlIrQdKkrHEz3LQgmSaLLVqFBnySMfj+G/0FHD1rKX5paK8xxmH2dHpHaZbIJj3CQcLf7hIPQ0ajmVRHX0PnBRZtxhsNkNSWR+G6/Hg=
-Received: from SJ0PR04MB7184.namprd04.prod.outlook.com (2603:10b6:a03:291::7)
- by BY5PR04MB6820.namprd04.prod.outlook.com (2603:10b6:a03:223::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4129.25; Mon, 17 May
- 2021 10:18:19 +0000
-Received: from SJ0PR04MB7184.namprd04.prod.outlook.com
- ([fe80::304c:d92b:8501:93cd]) by SJ0PR04MB7184.namprd04.prod.outlook.com
- ([fe80::304c:d92b:8501:93cd%5]) with mapi id 15.20.4129.031; Mon, 17 May 2021
- 10:18:19 +0000
-From:   Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To:     Bodo Stroesser <bostroesser@gmail.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [PATCH v2] scsi: target: tcmu: Fix xarray RCU warning
-Thread-Topic: [PATCH v2] scsi: target: tcmu: Fix xarray RCU warning
-Thread-Index: AQHXSVaRzzAuyMxoz0ii8PHkjH8HQKrmS1mAgAEt4gA=
-Date:   Mon, 17 May 2021 10:18:19 +0000
-Message-ID: <20210517101818.7sxuceu2sxnsplc6@shindev.dhcp.fujisawa.hgst.com>
-References: <20210515065006.210238-1-shinichiro.kawasaki@wdc.com>
- <c736b783-9965-2bd9-e38b-b5188b34872e@gmail.com>
-In-Reply-To: <c736b783-9965-2bd9-e38b-b5188b34872e@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [129.253.182.60]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 60ba1d43-0f76-4b59-d5be-08d9191d180d
-x-ms-traffictypediagnostic: BY5PR04MB6820:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BY5PR04MB682075ED3BAA79A5C4A5D2CCED2D9@BY5PR04MB6820.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:6790;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: TengYoRh3YGR2Fh7FPWCOmUzYdSyHe04rfSW7C8eoBqYDrnHQuvhacxcuV2DSzIvLV9mNxWBS4sEP3iX8ljgWkmdqTXv4GsnAkWVf3JgbqUkdCZjZ1F3Rv3ThHFceEMu0jRU3e0FNtyH90aj+YQidxxDPriPnfjnrtd9nSXHGIVcWpb6F8s+TNE5nKReHylUShIzWcoxt5Na/8GULkU/O/dr8Gf6mrpowSaRXznWzdCroQzwXmdoNSmRoniE5ymv7eSMQYnfbOARPWSO5cYKZylYcrFTBXYq7fvZlIgqXZ/pvwxDBdRxPpKsBGyxF/35AmA4lNnueAytNisjSsz0ki5K+3r2yRPoFR1HsyL8AjNy9RmByJzg8z61fjnOOrjoZiCsVjCVHklO8ACPuma+Ckrps0tLBzxYkUV4HiM+O+boZXpK8ZHmy+SHSyHY7+Ls3blCdfIuilgNbDeLXiOU2+po59Z+MO+dOnSg7VqZAiiPKkkqoywxZuEeTJtv7Bp2bi59LgMyqv9awchsm2/y7mopj7UnpSt6209yE2Va/JzE88D6n68heDdxfEXQOtM3vdHlRFSTI8jcZjaOcwdHXpC6EKmeSjwaNy1lDLsGrpw=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR04MB7184.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(136003)(39860400002)(346002)(376002)(366004)(6512007)(71200400001)(9686003)(2906002)(1076003)(26005)(83380400001)(44832011)(5660300002)(4326008)(66446008)(6506007)(64756008)(53546011)(54906003)(122000001)(316002)(38100700002)(186003)(8936002)(91956017)(76116006)(8676002)(66946007)(478600001)(66556008)(6916009)(66476007)(6486002)(86362001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?K0MR3s3iTcyFvn3hFMLrspEjJLmbSxt18rFFnKT6NqrQb/mCvucWpIhxo3+G?=
- =?us-ascii?Q?sUYbEVKhtNLLKvlv98A4JCLApiVnLtQJj6/13KtFKyVDGQoCUX5MF7eBbYdT?=
- =?us-ascii?Q?ghz2gJ0IGRmB5qhq7MSn2A6XOr3OCdCRZYMa6NlGAPnO7oy1aHJI5hCxZGfn?=
- =?us-ascii?Q?odeyAUN5rqJqwhFEYHbiiolLq6ciw5JRQn4EkXeAm0+gz4vOYzLB9XPjPii/?=
- =?us-ascii?Q?bRPo/xnxL7JlM7rH6fuvLz63H3HUepILfQMJdcksqha8Cq/u7kOIq2FU5u7K?=
- =?us-ascii?Q?g3ckn/sOUnCZf4Jq8mHymniQkb4Qe+j8TjZp6hfqMOx/2ehY9YGbpHTezKCb?=
- =?us-ascii?Q?E682Tu8iNrT8RVqXKLTAhubh3HU70W32spli50a/x/7nEUzv30p+I7t/twbx?=
- =?us-ascii?Q?+PMdzse8Z1I2mq+ZTykVTGZQkxPhxUIOg/uwfSxKMpIDNEK/wHr5Gcfz3fW6?=
- =?us-ascii?Q?yst3fHnHZbJiFayE6qgllAbJ1BdMY1kh5Bk1OPFZplDEm0Pd+yt1kqrorMAt?=
- =?us-ascii?Q?ol7EpQZ0RWbXMYNBNI+dMP3h9gdgQebIbZotcyrim2SolznnupRLRdKG+lbh?=
- =?us-ascii?Q?HVn+UCe9BbXtK4xRoCRo5vL2FvruY4nXh7D6oVX1BPahQmCHvsKSFzjg1Sgw?=
- =?us-ascii?Q?5XllbXXrZXQeIEZCf+qY5+Yv9YCZU0bZgt59Y6PZkUWvURJBWEraBtq2e3Uh?=
- =?us-ascii?Q?jf0KpknBS1sFN1Q+q92DL7TzWPYlBWVmyC90F3owdgG/IIVLa92IwCyvBYae?=
- =?us-ascii?Q?wqmjMdtDy/g7yZvzajsr2M/Fe0YAHk2C6U8MUWUZHwqVootMTKcebsx67Dhk?=
- =?us-ascii?Q?vWZgMecUnEjjPICS68waM0E4vTpnWnKczS/cKYfOdGWgq+nbKHvLqej8cDV/?=
- =?us-ascii?Q?uXF4Es9ICyK1n38dqP3lz5Hw44pMlhDSMFmPWgApj+k3kx08MTBUkBb9aWTD?=
- =?us-ascii?Q?Y5cbYcAvAqO5pt3Cp5Q9b1xkFnDqB7u7ZZMpRiZ7iXtR1dKSHwDXv4qAmqbd?=
- =?us-ascii?Q?P8mkgToUy+CJ/I6aXDUpboUDLoAaCkzqBuE1joQva1d5JFg3GoAt4GVhY0rI?=
- =?us-ascii?Q?Cp5DW+3nWFvGz96Uae3x03DUNp4uSPZKNofPQeYYP67R6seYqpE20tJUwdHJ?=
- =?us-ascii?Q?YUPuAP+sDMUV9mNr6tasm7j2RsD+0a5sA7ohnAk/f3/TF3aoaUH9euhImPUv?=
- =?us-ascii?Q?FoMVL3hpwoMSP/Izyjm3cPeysz7kes5DqMxGL0S6jFS4uoWU3u8r4V9iabsW?=
- =?us-ascii?Q?aeHSFquC1821xxidDe0BRxNt6eAA0BioG7PJxqe/gZiAVHyUuWJkCSHv3b8S?=
- =?us-ascii?Q?p9E0CyI7UlvvZhZbqgAyGv1aVGhwLSW9laO2Rz7xKJIAsg=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <AC533DCCBCEF234FA1EBB6C319801AEE@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        id S236358AbhEQKkq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 May 2021 06:40:46 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:3781 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236451AbhEQKko (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2021 06:40:44 -0400
+Received: from dggems706-chm.china.huawei.com (unknown [172.30.72.59])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FkFsS2psKzmg6x;
+        Mon, 17 May 2021 18:35:56 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ dggems706-chm.china.huawei.com (10.3.19.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Mon, 17 May 2021 18:39:23 +0800
+Received: from [10.47.83.99] (10.47.83.99) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Mon, 17 May
+ 2021 11:39:21 +0100
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 2/3] Introduce enums for the SAM, message, host and driver
+ status codes
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>,
+        "Hannes Reinecke" <hare@suse.com>
+References: <20210514232308.7826-1-bvanassche@acm.org>
+ <20210514232308.7826-3-bvanassche@acm.org>
+Message-ID: <178da9e9-7946-e0e1-1ab7-593fa94c17c9@huawei.com>
+Date:   Mon, 17 May 2021 11:38:23 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SJ0PR04MB7184.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 60ba1d43-0f76-4b59-d5be-08d9191d180d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 May 2021 10:18:19.6517
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: kmclX0l57T9zTQGrjPwHhsLdJuyTfphqDEnAoxvDHF4H4434mRn6uju1gwYAlPx1XQ0spjAFxUbnxpnFQ0uTeOheOmprvQGWTq5VUQhIKRE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR04MB6820
+In-Reply-To: <20210514232308.7826-3-bvanassche@acm.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.83.99]
+X-ClientProxiedBy: lhreml716-chm.china.huawei.com (10.201.108.67) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On May 16, 2021 / 18:17, Bodo Stroesser wrote:
-> On 15.05.21 08:50, Shin'ichiro Kawasaki wrote:
-> > Commit f5ce815f34bc ("scsi: target: tcmu: Support DATA_BLOCK_SIZE =3D N=
- *
-> > PAGE_SIZE") introduced xas_next() calls to iterate xarray elements.
-> > These calls triggered the WARNING "suspicious RCU usage" at tcmu device
-> > set up [1]. In the call stack of xas_next(), xas_load() was called.
-> > According to its comment, this function requires "the xa_lock or the RC=
-U
-> > lock".
-> >=20
-> > To avoid the warning, guard xas_next() calls. For the small loop of
-> > xas_next(), guard with the RCU lock. For the large loop of xas_next(),
-> > guard with the xa_lock using xas_lock().
-> >=20
-> > [1]
-> >=20
-> > [ 1899.867091] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > [ 1899.871199] WARNING: suspicious RCU usage
-> > [ 1899.875310] 5.13.0-rc1+ #41 Not tainted
-> > [ 1899.879222] -----------------------------
-> > [ 1899.883299] include/linux/xarray.h:1182 suspicious rcu_dereference_c=
-heck() usage!
-> > [ 1899.890940] other info that might help us debug this:
-> > [ 1899.899082] rcu_scheduler_active =3D 2, debug_locks =3D 1
-> > [ 1899.905719] 3 locks held by kworker/0:1/1368:
-> > [ 1899.910161]  #0: ffffa1f8c8b98738 ((wq_completion)target_submission)=
-{+.+.}-{0:0}, at: process_one_work+0x1ee/0x580
-> > [ 1899.920732]  #1: ffffbd7040cd7e78 ((work_completion)(&q->sq.work)){+=
-.+.}-{0:0}, at: process_one_work+0x1ee/0x580
-> > [ 1899.931146]  #2: ffffa1f8d1c99768 (&udev->cmdr_lock){+.+.}-{3:3}, at=
-: tcmu_queue_cmd+0xea/0x160 [target_core_user]
-> > [ 1899.941678] stack backtrace:
-> > [ 1899.946093] CPU: 0 PID: 1368 Comm: kworker/0:1 Not tainted 5.13.0-rc=
-1+ #41
-> > [ 1899.953070] Hardware name: System manufacturer System Product Name/P=
-RIME Z270-A, BIOS 1302 03/15/2018
-> > [ 1899.962459] Workqueue: target_submission target_queued_submit_work [=
-target_core_mod]
-> > [ 1899.970337] Call Trace:
-> > [ 1899.972839]  dump_stack+0x6d/0x89
-> > [ 1899.976222]  xas_descend+0x10e/0x120
-> > [ 1899.979875]  xas_load+0x39/0x50
-> > [ 1899.983077]  tcmu_get_empty_blocks+0x115/0x1c0 [target_core_user]
-> > [ 1899.989318]  queue_cmd_ring+0x1da/0x630 [target_core_user]
-> > [ 1899.994897]  ? rcu_read_lock_sched_held+0x3f/0x70
-> > [ 1899.999695]  ? trace_kmalloc+0xa6/0xd0
-> > [ 1900.003501]  ? __kmalloc+0x205/0x380
-> > [ 1900.007167]  tcmu_queue_cmd+0x12f/0x160 [target_core_user]
-> > [ 1900.012746]  __target_execute_cmd+0x23/0xa0 [target_core_mod]
-> > [ 1900.018589]  transport_generic_new_cmd+0x1f3/0x370 [target_core_mod]
-> > [ 1900.025046]  transport_handle_cdb_direct+0x34/0x50 [target_core_mod]
-> > [ 1900.031517]  target_queued_submit_work+0x43/0xe0 [target_core_mod]
-> > [ 1900.037837]  process_one_work+0x268/0x580
-> > [ 1900.041952]  ? process_one_work+0x580/0x580
-> > [ 1900.046195]  worker_thread+0x55/0x3b0
-> > [ 1900.049921]  ? process_one_work+0x580/0x580
-> > [ 1900.054192]  kthread+0x143/0x160
-> > [ 1900.057499]  ? kthread_create_worker_on_cpu+0x40/0x40
-> > [ 1900.062661]  ret_from_fork+0x1f/0x30
-> >=20
-> > Fixes: f5ce815f34bc ("scsi: target: tcmu: Support DATA_BLOCK_SIZE =3D N=
- * PAGE_SIZE")
-> > Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-> > ---
-> > Changes from v1:
-> > * Used xas_(un)lock() instead of rcu_read_(un)lock() for the large loop
-> >=20
-> >   drivers/target/target_core_user.c | 4 ++++
-> >   1 file changed, 4 insertions(+)
-> >=20
-> > diff --git a/drivers/target/target_core_user.c b/drivers/target/target_=
-core_user.c
-> > index 198d25ae482a..834bd3910de8 100644
-> > --- a/drivers/target/target_core_user.c
-> > +++ b/drivers/target/target_core_user.c
-> > @@ -516,8 +516,10 @@ static inline int tcmu_get_empty_block(struct tcmu=
-_dev *udev,
-> >   	dpi =3D dbi * udev->data_pages_per_blk;
-> >   	/* Count the number of already allocated pages */
-> >   	xas_set(&xas, dpi);
-> > +	rcu_read_lock();
-> >   	for (cnt =3D 0; xas_next(&xas) && cnt < page_cnt;)
-> >   		cnt++;
-> > +	rcu_read_unlock();
-> >   	for (i =3D cnt; i < page_cnt; i++) {
-> >   		/* try to get new page from the mm */
-> > @@ -727,6 +729,7 @@ static inline void tcmu_copy_data(struct tcmu_dev *=
-udev,
-> >   			page_cnt =3D udev->data_pages_per_blk;
-> >   		xas_set(&xas, dbi * udev->data_pages_per_blk);
-> > +		xas_lock(&xas);
-> >   		for (page_inx =3D 0; page_inx < page_cnt && data_len; page_inx++) {
-> >   			page =3D xas_next(&xas);
-> > @@ -763,6 +766,7 @@ static inline void tcmu_copy_data(struct tcmu_dev *=
-udev,
-> >   			if (direction =3D=3D TCMU_SG_TO_DATA_AREA)
-> >   				flush_dcache_page(page);
-> >   		}
-> > +		xas_unlock(&xas);
-> >   	}
-> >   }
-> >=20
->=20
-> Thank you for v2 patch.
->=20
-> May I ask you to put xas_lock before the big outer "while" loop and the
-> xas_unlock behind it? Since we hold the cmdr_lock mutex when calling
-> tcmu_copy_data, it doesn't harm to hold xas lock for duration of entire
-> data copy. So let's take the lock once before starting the loop and
-> release it after data copy is done. That saves some cpu cycles if
-> data consists of multiple data blocks.
+On 15/05/2021 00:23, Bart Van Assche wrote:
+> Make it possible for the compiler to verify whether SAM, message, host
+> and driver status codes are used correctly.
+> 
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: John Garry <john.garry@huawei.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Okay, less lock/unlock sounds better. Will send v3.
+Hi Bart,
 
---=20
-Best Regards,
-Shin'ichiro Kawasaki=
+> ---
+>   drivers/scsi/constants.c           |  4 +-
+>   drivers/target/target_core_pscsi.c |  2 +-
+>   include/scsi/scsi.h                | 81 +--------------------------
+>   include/scsi/scsi_proto.h          | 24 ++++----
+>   include/scsi/scsi_status.h         | 89 ++++++++++++++++++++++++++++++
+>   5 files changed, 107 insertions(+), 93 deletions(-)
+>   create mode 100644 include/scsi/scsi_status.h
+> 
+> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+> index 84d73f57292b..d8774998ec6d 100644
+> --- a/drivers/scsi/constants.c
+> +++ b/drivers/scsi/constants.c
+> @@ -413,7 +413,7 @@ static const char * const driverbyte_table[]={
+>   const char *scsi_hostbyte_string(int result)
+>   {
+>   	const char *hb_string = NULL;
+> -	int hb = host_byte(result);
+> +	enum host_status hb = host_byte(result);
+>   
+nit: I figure that this code had been consciously written to use 
+reverse-Christmas tree style, so maybe we can maintain it
+
+>   	if (hb < ARRAY_SIZE(hostbyte_table))
+>   		hb_string = hostbyte_table[hb];
+> @@ -424,7 +424,7 @@ EXPORT_SYMBOL(scsi_hostbyte_string);
+>   const char *scsi_driverbyte_string(int result)
+>   {
+>   	const char *db_string = NULL;
+> -	int db = driver_byte(result);
+> +	enum driver_status db = driver_byte(result); >>   	if (db < ARRAY_SIZE(driverbyte_table))
+>   		db_string = driverbyte_table[db];
+> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+> index f2a11414366d..6e08673dc583 100644
+> --- a/drivers/target/target_core_pscsi.c
+> +++ b/drivers/target/target_core_pscsi.c
+> @@ -1044,7 +1044,7 @@ static void pscsi_req_done(struct request *req, blk_status_t status)
+>   	struct se_cmd *cmd = req->end_io_data;
+>   	struct pscsi_plugin_task *pt = cmd->priv;
+>   	int result = scsi_req(req)->result;
+> -	u8 scsi_status = status_byte(result) << 1;
+> +	enum sam_status scsi_status = status_byte(result) << 1;
+
+Is someone going to be fixing up drivers elsewhere to use these enums?
+
+>   
+>   	if (scsi_status != SAM_STAT_GOOD) {
+>   		pr_debug("PSCSI Status Byte exception at cmd: %p CDB:"
+> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+> index 7f392405991b..268fe1730d6b 100644
+> --- a/include/scsi/scsi.h
+> +++ b/include/scsi/scsi.h
+> @@ -11,6 +11,7 @@
+>   #include <linux/kernel.h>
+>   #include <scsi/scsi_common.h>
+>   #include <scsi/scsi_proto.h>
+> +#include <scsi/scsi_status.h>
+>   
+>   struct scsi_cmnd;
+>   
+> @@ -64,92 +65,14 @@ static inline int scsi_is_wlun(u64 lun)
+>   
+>   
+>   /*
+> - *  MESSAGE CODES
+> + * Extended message codes.
+>    */
+> -
+> -#define COMMAND_COMPLETE    0x00
+> -#define EXTENDED_MESSAGE    0x01
+>   #define     EXTENDED_MODIFY_DATA_POINTER    0x00
+>   #define     EXTENDED_SDTR                   0x01
+>   #define     EXTENDED_EXTENDED_IDENTIFY      0x02    /* SCSI-I only */
+>   #define     EXTENDED_WDTR                   0x03
+>   #define     EXTENDED_PPR                    0x04
+>   #define     EXTENDED_MODIFY_BIDI_DATA_PTR   0x05
+> -#define SAVE_POINTERS       0x02
+> -#define RESTORE_POINTERS    0x03
+> -#define DISCONNECT          0x04
+> -#define INITIATOR_ERROR     0x05
+> -#define ABORT_TASK_SET      0x06
+> -#define MESSAGE_REJECT      0x07
+> -#define NOP                 0x08
+> -#define MSG_PARITY_ERROR    0x09
+> -#define LINKED_CMD_COMPLETE 0x0a
+> -#define LINKED_FLG_CMD_COMPLETE 0x0b
+> -#define TARGET_RESET        0x0c
+> -#define ABORT_TASK          0x0d
+> -#define CLEAR_TASK_SET      0x0e
+> -#define INITIATE_RECOVERY   0x0f            /* SCSI-II only */
+> -#define RELEASE_RECOVERY    0x10            /* SCSI-II only */
+> -#define TERMINATE_IO_PROC   0x11            /* SCSI-II only */
+> -#define CLEAR_ACA           0x16
+> -#define LOGICAL_UNIT_RESET  0x17
+> -#define SIMPLE_QUEUE_TAG    0x20
+> -#define HEAD_OF_QUEUE_TAG   0x21
+> -#define ORDERED_QUEUE_TAG   0x22
+> -#define IGNORE_WIDE_RESIDUE 0x23
+> -#define ACA                 0x24
+> -#define QAS_REQUEST         0x55
+> -
+> -/* Old SCSI2 names, don't use in new code */
+> -#define BUS_DEVICE_RESET    TARGET_RESET
+> -#define ABORT               ABORT_TASK_SET
+> -
+> -/*
+> - * Host byte codes
+> - */
+> -
+> -#define DID_OK          0x00	/* NO error                                */
+> -#define DID_NO_CONNECT  0x01	/* Couldn't connect before timeout period  */
+> -#define DID_BUS_BUSY    0x02	/* BUS stayed busy through time out period */
+> -#define DID_TIME_OUT    0x03	/* TIMED OUT for other reason              */
+> -#define DID_BAD_TARGET  0x04	/* BAD target.                             */
+> -#define DID_ABORT       0x05	/* Told to abort for some other reason     */
+> -#define DID_PARITY      0x06	/* Parity error                            */
+> -#define DID_ERROR       0x07	/* Internal error                          */
+> -#define DID_RESET       0x08	/* Reset by somebody.                      */
+> -#define DID_BAD_INTR    0x09	/* Got an interrupt we weren't expecting.  */
+> -#define DID_PASSTHROUGH 0x0a	/* Force command past mid-layer            */
+> -#define DID_SOFT_ERROR  0x0b	/* The low level driver just wish a retry  */
+> -#define DID_IMM_RETRY   0x0c	/* Retry without decrementing retry count  */
+> -#define DID_REQUEUE	0x0d	/* Requeue command (no immediate retry) also
+> -				 * without decrementing the retry count	   */
+> -#define DID_TRANSPORT_DISRUPTED 0x0e /* Transport error disrupted execution
+> -				      * and the driver blocked the port to
+> -				      * recover the link. Transport class will
+> -				      * retry or fail IO */
+> -#define DID_TRANSPORT_FAILFAST	0x0f /* Transport class fastfailed the io */
+> -#define DID_TARGET_FAILURE 0x10 /* Permanent target failure, do not retry on
+> -				 * other paths */
+> -#define DID_NEXUS_FAILURE 0x11  /* Permanent nexus failure, retry on other
+> -				 * paths might yield different results */
+> -#define DID_ALLOC_FAILURE 0x12  /* Space allocation on the device failed */
+> -#define DID_MEDIUM_ERROR  0x13  /* Medium error */
+> -#define DID_TRANSPORT_MARGINAL 0x14 /* Transport marginal errors */
+> -#define DRIVER_OK       0x00	/* Driver status                           */
+> -
+> -/*
+> - *  These indicate the error that occurred, and what is available.
+> - */
+> -
+> -#define DRIVER_BUSY         0x01
+> -#define DRIVER_SOFT         0x02
+> -#define DRIVER_MEDIA        0x03
+> -#define DRIVER_ERROR        0x04
+> -
+> -#define DRIVER_INVALID      0x05
+> -#define DRIVER_TIMEOUT      0x06
+> -#define DRIVER_HARD         0x07
+> -#define DRIVER_SENSE	    0x08
+>   
+>   /*
+>    * Internal return values.
+> diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+> index c36860111932..80684bd2d7c2 100644
+> --- a/include/scsi/scsi_proto.h
+> +++ b/include/scsi/scsi_proto.h
+> @@ -190,17 +190,19 @@ struct scsi_varlen_cdb_hdr {
+>    *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
+>    *  T10/1561-D Revision 4 Draft dated 7th November 2002.
+>    */
+> -#define SAM_STAT_GOOD            0x00
+> -#define SAM_STAT_CHECK_CONDITION 0x02
+> -#define SAM_STAT_CONDITION_MET   0x04
+> -#define SAM_STAT_BUSY            0x08
+> -#define SAM_STAT_INTERMEDIATE    0x10
+> -#define SAM_STAT_INTERMEDIATE_CONDITION_MET 0x14
+> -#define SAM_STAT_RESERVATION_CONFLICT 0x18
+> -#define SAM_STAT_COMMAND_TERMINATED 0x22	/* obsolete in SAM-3 */
+> -#define SAM_STAT_TASK_SET_FULL   0x28
+> -#define SAM_STAT_ACA_ACTIVE      0x30
+> -#define SAM_STAT_TASK_ABORTED    0x40
+> +enum sam_status {
+> +	SAM_STAT_GOOD				= 0x00,
+> +	SAM_STAT_CHECK_CONDITION		= 0x02,
+> +	SAM_STAT_CONDITION_MET			= 0x04,
+> +	SAM_STAT_BUSY				= 0x08,
+> +	SAM_STAT_INTERMEDIATE			= 0x10,
+> +	SAM_STAT_INTERMEDIATE_CONDITION_MET	= 0x14,
+> +	SAM_STAT_RESERVATION_CONFLICT		= 0x18,
+> +	SAM_STAT_COMMAND_TERMINATED		= 0x22,	/* obsolete in SAM-3 */
+> +	SAM_STAT_TASK_SET_FULL			= 0x28,
+> +	SAM_STAT_ACA_ACTIVE			= 0x30,
+> +	SAM_STAT_TASK_ABORTED			= 0x40,
+> +};
+>   
+>   /*
+>    *  Status codes. These are deprecated as they are shifted 1 bit right
+> diff --git a/include/scsi/scsi_status.h b/include/scsi/scsi_status.h
+> new file mode 100644
+> index 000000000000..919f2c4c23ab
+> --- /dev/null
+> +++ b/include/scsi/scsi_status.h
+> @@ -0,0 +1,89 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +
+> +#ifndef _SCSI_SCSI_STATUS_H
+> +#define _SCSI_SCSI_STATUS_H
+> +
+> +#include <linux/types.h>
+> +#include <scsi/scsi_proto.h>
+> +
+> +/* Message codes. */
+> +enum msg_byte {
+> +	COMMAND_COMPLETE	= 0x00,
+> +	EXTENDED_MESSAGE	= 0x01,
+> +	SAVE_POINTERS		= 0x02,
+> +	RESTORE_POINTERS	= 0x03,
+> +	DISCONNECT		= 0x04,
+> +	INITIATOR_ERROR		= 0x05,
+> +	ABORT_TASK_SET		= 0x06,
+> +	MESSAGE_REJECT		= 0x07,
+> +	NOP			= 0x08,
+> +	MSG_PARITY_ERROR	= 0x09,
+> +	LINKED_CMD_COMPLETE	= 0x0a,
+> +	LINKED_FLG_CMD_COMPLETE	= 0x0b,
+> +	TARGET_RESET		= 0x0c,
+> +	ABORT_TASK		= 0x0d,
+> +	CLEAR_TASK_SET		= 0x0e,
+> +	INITIATE_RECOVERY	= 0x0f,            /* SCSI-II only */
+> +	RELEASE_RECOVERY	= 0x10,            /* SCSI-II only */
+> +	TERMINATE_IO_PROC	= 0x11,            /* SCSI-II only */
+> +	CLEAR_ACA		= 0x16,
+> +	LOGICAL_UNIT_RESET	= 0x17,
+> +	SIMPLE_QUEUE_TAG	= 0x20,
+> +	HEAD_OF_QUEUE_TAG	= 0x21,
+> +	ORDERED_QUEUE_TAG	= 0x22,
+> +	IGNORE_WIDE_RESIDUE	= 0x23,
+> +	ACA			= 0x24,
+> +	QAS_REQUEST		= 0x55,
+> +
+> +	/* Old SCSI2 names, don't use in new code */
+> +	BUS_DEVICE_RESET	= TARGET_RESET,
+> +	ABORT			= ABORT_TASK_SET,
+> +};
+> +
+> +/* Host byte codes. */
+> +enum host_status {
+
+Just wondered is it intentional that we don't prefix "scsi_" to the enum 
+name? Would it be because none of the symbols, below, don't?
+
+> +	DID_OK		= 0x00,	/* NO error                                */
+> +	DID_NO_CONNECT	= 0x01,	/* Couldn't connect before timeout period  */
+> +	DID_BUS_BUSY	= 0x02,	/* BUS stayed busy through time out period */
+> +	DID_TIME_OUT	= 0x03,	/* TIMED OUT for other reason              */
+> +	DID_BAD_TARGET	= 0x04,	/* BAD target.                             */
+> +	DID_ABORT	= 0x05,	/* Told to abort for some other reason     */
+> +	DID_PARITY	= 0x06,	/* Parity error                            */
+> +	DID_ERROR	= 0x07,	/* Internal error                          */
+> +	DID_RESET	= 0x08,	/* Reset by somebody.                      */
+> +	DID_BAD_INTR	= 0x09,	/* Got an interrupt we weren't expecting.  */
+> +	DID_PASSTHROUGH	= 0x0a,	/* Force command past mid-layer            */
+> +	DID_SOFT_ERROR	= 0x0b,	/* The low level driver just wish a retry  */
+> +	DID_IMM_RETRY	= 0x0c,	/* Retry without decrementing retry count  */
+> +	DID_REQUEUE	= 0x0d,	/* Requeue command (no immediate retry) also
+> +				 * without decrementing the retry count	   */
+> +	DID_TRANSPORT_DISRUPTED = 0x0e, /* Transport error disrupted execution
+> +					 * and the driver blocked the port to
+> +					 * recover the link. Transport class will
+> +					 * retry or fail IO */
+> +	DID_TRANSPORT_FAILFAST = 0x0f, /* Transport class fastfailed the io */
+> +	DID_TARGET_FAILURE = 0x10, /* Permanent target failure, do not retry on
+> +				    * other paths */
+> +	DID_NEXUS_FAILURE = 0x11,  /* Permanent nexus failure, retry on other
+> +				    * paths might yield different results */
+> +	DID_ALLOC_FAILURE = 0x12,  /* Space allocation on the device failed */
+> +	DID_MEDIUM_ERROR = 0x13,  /* Medium error */
+> +	DID_TRANSPORT_MARGINAL = 0x14, /* Transport marginal errors */
+> +};
+> +
+> +/* Driver byte codes. */
+> +enum driver_status {
+> +	DRIVER_OK	= 0x00,
+> +
+> +	DRIVER_BUSY	= 0x01,
+> +	DRIVER_SOFT	= 0x02,
+> +	DRIVER_MEDIA	= 0x03,
+> +	DRIVER_ERROR	= 0x04,
+> +
+> +	DRIVER_INVALID	= 0x05,
+> +	DRIVER_TIMEOUT	= 0x06,
+> +	DRIVER_HARD	= 0x07,
+> +	DRIVER_SENSE	= 0x08,
+> +};
+> +
+> +#endif /* _SCSI_SCSI_STATUS_H */
+> .
+> 
+
+
+Thanks,
+John
+
