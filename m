@@ -7,105 +7,104 @@ X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BEB1C43618
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 15:14:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6169FC433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 15:47:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60306610CB
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 15:14:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46F7361057
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 15:47:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242576AbhEQPPr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 May 2021 11:15:47 -0400
-Received: from mail-pg1-f173.google.com ([209.85.215.173]:39536 "EHLO
-        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243318AbhEQPNb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2021 11:13:31 -0400
-Received: by mail-pg1-f173.google.com with SMTP id v14so2116509pgi.6
-        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2021 08:12:13 -0700 (PDT)
+        id S245537AbhEQPss (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 May 2021 11:48:48 -0400
+Received: from mail-pj1-f54.google.com ([209.85.216.54]:36455 "EHLO
+        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239307AbhEQPqj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2021 11:46:39 -0400
+Received: by mail-pj1-f54.google.com with SMTP id n6-20020a17090ac686b029015d2f7aeea8so4799565pjt.1
+        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2021 08:45:23 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=Z8ACqzs3Ue5yJXJEc5rV7VXbVOU5xBFKsKrhGuoomFw=;
-        b=BNmcFCFDJqTERsJR1bucu5/jj/yCfDmzgyP81pMTzMPLuSyyXUaj6wpe2oTULRCH12
-         mNhy8TrODc0BGEAQiQByxFifehF+vw++3ln9xnZOsO1Mco0W8+gTRdXOgkcPbH/yljID
-         F/NasS/pClvC92fs5CXDs/gWtkBR2kvJ7yJH034o/JWJxo8m8uK10ZklMwrYigt2x2pS
-         9uE6qVrpmg4ylooF081g1j5yPRp4AVJcuJECfRquLqXjctG3sSBqUz0FUYJ5xpNW5oWX
-         4X+Us4GoXZCmfXUlezvxiYii7jaeU2k1Zdh6nMjG8p5Eq0+FWrA7aO2jcMxd9tUiE2N7
-         3/qQ==
-X-Gm-Message-State: AOAM531NIG1fxLKGw2a2ZMU7Nc2m0H40Nbek7O3hy5P3eq1kiBj7BvXn
-        Qe6rs91hpMaJhj4prf8fMShkhRjCOW4=
-X-Google-Smtp-Source: ABdhPJyTKTVGG1Q8BlRRucHaXMWRI0P3LeSkddOzUVgeWxt3CxVhIzd2cSBTzF8KN7yY3lekc5iUgA==
-X-Received: by 2002:aa7:828f:0:b029:200:6e27:8c8f with SMTP id s15-20020aa7828f0000b02902006e278c8fmr57754pfm.44.1621264332526;
-        Mon, 17 May 2021 08:12:12 -0700 (PDT)
+        bh=qTK//d31aZhvSYQqXCvfzzoZBJ2U6MgUWRnpl0nFbOQ=;
+        b=kzMLYUpQ45Mg0j9SrUJJZOKDUnQYi/YlnyWTUgrQjhd6T8DNAFOv89+bXSy4AiLVeT
+         SGHnkCuM3RjjprX9fdAhrcNi4EqBUrPZmDeVkGO9EGf98Q4ZRGz6YKLT2Z4wEY+i4LS3
+         +sNY8baIelQhZ473r5JQ/f0ZcHAYoyyVVWBE3s2CsYH/Xddd/Z+M9t2QtrS9aaaLWgGH
+         LbVDxrrqM3ilrlHqf0VEpiDDQoyUjqYPIyotlQjLb67nuBt6sysxJ3TVPQkj+Wk9uWEg
+         IUIz9SewYlz9SZIGPkiaf93t9Acl0woGZ81kZWluuUJ2keXsMCsgfmuw5K0yprz0ii7i
+         0qIA==
+X-Gm-Message-State: AOAM531txEUadDIIBZdtvGp6h/TMw4KKHw8pbk9oac0xO6Lm1C8d0ork
+        Ktk6PgaZte+A2qn5cHY/PtCfP+YPb5s=
+X-Google-Smtp-Source: ABdhPJxNoRI0YMmGeCfYFvv43n3jxkOHuqPQsRSjGViTPj4m0J6EmD3hvIh1M1i7CM6nCwD3TSDYMw==
+X-Received: by 2002:a17:902:a40e:b029:e9:7253:8198 with SMTP id p14-20020a170902a40eb02900e972538198mr465062plq.82.1621266323129;
+        Mon, 17 May 2021 08:45:23 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:8224:c0d6:d9dd:57b3? ([2601:647:4000:d7:8224:c0d6:d9dd:57b3])
-        by smtp.gmail.com with ESMTPSA id i9sm18045990pjh.9.2021.05.17.08.12.11
+        by smtp.gmail.com with ESMTPSA id f18sm11015466pjh.55.2021.05.17.08.45.21
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 17 May 2021 08:12:11 -0700 (PDT)
-Subject: Re: [PATCH 2/3] Introduce enums for the SAM, message, host and driver
- status codes
-To:     John Garry <john.garry@huawei.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.com>
+        Mon, 17 May 2021 08:45:22 -0700 (PDT)
+Subject: Re: [PATCH 1/3] libsas: Introduce more SAM status code aliases in
+ enum exec_status
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
+        John Garry <john.garry@huawei.com>,
+        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        Jason Yan <yanaijie@huawei.com>
 References: <20210514232308.7826-1-bvanassche@acm.org>
- <20210514232308.7826-3-bvanassche@acm.org>
- <178da9e9-7946-e0e1-1ab7-593fa94c17c9@huawei.com>
+ <20210514232308.7826-2-bvanassche@acm.org> <20210515064407.GB26545@lst.de>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <91b3f885-dbda-c6c7-ccfe-36349afa65a3@acm.org>
-Date:   Mon, 17 May 2021 08:12:10 -0700
+Message-ID: <10ff7ccc-fb76-d5a7-708e-6bfa0f2d4ace@acm.org>
+Date:   Mon, 17 May 2021 08:45:21 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <178da9e9-7946-e0e1-1ab7-593fa94c17c9@huawei.com>
+In-Reply-To: <20210515064407.GB26545@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/17/21 3:38 AM, John Garry wrote:
-> On 15/05/2021 00:23, Bart Van Assche wrote:
->> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
->> index 84d73f57292b..d8774998ec6d 100644
->> --- a/drivers/scsi/constants.c
->> +++ b/drivers/scsi/constants.c
->> @@ -413,7 +413,7 @@ static const char * const driverbyte_table[]={
->>   const char *scsi_hostbyte_string(int result)
->>   {
->>       const char *hb_string = NULL;
->> -    int hb = host_byte(result);
->> +    enum host_status hb = host_byte(result);
->>   
-> nit: I figure that this code had been consciously written to use
-> reverse-Christmas tree style, so maybe we can maintain it
-
-Ah, that's something I was not aware of. I will fix this.
-
->> --- a/drivers/target/target_core_pscsi.c
->> +++ b/drivers/target/target_core_pscsi.c
->> @@ -1044,7 +1044,7 @@ static void pscsi_req_done(struct request *req,
->> blk_status_t status)
->>       struct se_cmd *cmd = req->end_io_data;
->>       struct pscsi_plugin_task *pt = cmd->priv;
->>       int result = scsi_req(req)->result;
->> -    u8 scsi_status = status_byte(result) << 1;
->> +    enum sam_status scsi_status = status_byte(result) << 1;
+On 5/14/21 11:44 PM, Christoph Hellwig wrote:
+>> index 9271d7a49b90..9b17f7c8c314 100644
+>> --- a/include/scsi/libsas.h
+>> +++ b/include/scsi/libsas.h
+>> @@ -477,6 +477,9 @@ enum exec_status {
+>>  	/* The SAM_STAT_.. codes fit in the lower 6 bits, alias some of
+>>  	 * them here to silence 'case value not in enumerated type' warnings
+>>  	 */
+>> +	__SAM_STAT_GOOD = SAM_STAT_GOOD,
+>> +	__SAM_STAT_BUSY = SAM_STAT_BUSY,
+>> +	__SAM_STAT_TASK_ABORTED = SAM_STAT_TASK_ABORTED,
+>>  	__SAM_STAT_CHECK_CONDITION = SAM_STAT_CHECK_CONDITION,
 > 
-> Is someone going to be fixing up drivers elsewhere to use these enums?
-
-I plan to repost the patch series that fixes up the SCSI LLDs after this
-patch series has been accepted.
-
->> +/* Host byte codes. */
->> +enum host_status {
+> I don't think the (existing) naming and comment are very helpful here.
 > 
-> Just wondered is it intentional that we don't prefix "scsi_" to the enum
-> name? Would it be because none of the symbols, below, don't?
+> I'd so a s/__SAM_/SAS_SAM_/
 
-I will add the prefix "scsi_" to these enumeration type names.
+Hi Christoph,
 
-Thanks,
+How about changing __SAM_STAT_ into SAS_STAT_ to keep the prefix short?
+
+> and replace the comment with something like:
+> 
+> 	/*
+> 	 * The first 6 bytes are used to return the SAM_STAT_* codes.  To avoid
+> 	 * 'case value not in enumerated type' compiler warnings every value
+> 	 * returned through the exec_status enum will need an alias with
+> 	 * the SAS_ prefix here.
+> 	 */
+> 	SAS_SAM_STAT_GOOD = SAM_STAT_GOOD,
+> 	SAS_SAM_STAT_BUSY = SAM_STAT_BUSY,
+> 	...
+
+There is another issue with that comment: 7 bits are required to
+represent status code 40h - TASK ABORTED. Anyway, thanks for having
+taken a look. I will update the comment.
 
 Bart.
+
+
+
