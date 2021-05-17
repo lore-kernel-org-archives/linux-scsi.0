@@ -2,259 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD67AC433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 16:36:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80D12C433B4
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 16:42:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86E2C611BD
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 16:36:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61CE861059
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 16:42:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245476AbhEQQh4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 May 2021 12:37:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40362 "EHLO
+        id S243031AbhEQQnm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 May 2021 12:43:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41808 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245214AbhEQQht (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2021 12:37:49 -0400
-Received: from mail-qk1-x72f.google.com (mail-qk1-x72f.google.com [IPv6:2607:f8b0:4864:20::72f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59E3AC0816F6
-        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2021 08:37:54 -0700 (PDT)
-Received: by mail-qk1-x72f.google.com with SMTP id 76so6105848qkn.13
-        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2021 08:37:54 -0700 (PDT)
+        with ESMTP id S242652AbhEQQnM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2021 12:43:12 -0400
+Received: from mail-qt1-x82e.google.com (mail-qt1-x82e.google.com [IPv6:2607:f8b0:4864:20::82e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44ABBC0ADEEE
+        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2021 08:52:27 -0700 (PDT)
+Received: by mail-qt1-x82e.google.com with SMTP id c10so5157102qtx.10
+        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2021 08:52:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:references:in-reply-to:mime-version:thread-index:date
          :message-id:subject:to:cc;
-        bh=Cgp2QAooSaPUksPUQXpJeJh/ngbrxXbU9xvOzjmFSuI=;
-        b=BV7AiCv1t/GQ+Thlcr3EiM06T0gw9iH6WWEZy8YDDw0vQ5+dySDW2bGMZzVu2TQ4kw
-         zUUd1QYkSxXn+sRPnzaVnTzbLHRwTHGUDPqYZNiApBilAHxDFh10WrYIQO3QSM2kxXPf
-         uyd8XsQGF5mv5NRiGnQiJG6SaYhB1YCifSFOA=
+        bh=d7V5E/UhV744CcQUfk+QrdArFoF8TFSVSHzDIMiqkSU=;
+        b=V2UmDjHIaZXHfzioSTrHHvbtPIGmI33VTnzT/O3BdU5dNaUNjMX0+5dDNUyhvqT39A
+         Sx+DexwURLac92NTzxvu4GcLnuwdPJD2hqijJwRF4sREhSY3lW9FjNBHQhAAscS1h63T
+         xa0DS8Hc62u6oxRnpLOYp21X3WkFpfkc0VeTM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:references:in-reply-to:mime-version
          :thread-index:date:message-id:subject:to:cc;
-        bh=Cgp2QAooSaPUksPUQXpJeJh/ngbrxXbU9xvOzjmFSuI=;
-        b=UBlYGhnebnWUt6WecHFVAJnKY0jTbXN8xuBuVqChM8KppHlOdDUl8V66gGkDZBXZsc
-         vtWL565f9gNB6PVNXeo1tP7fkh/575d36XtOk0xts81VpGJqcm7PJhT/dz4C2u5PYuSx
-         RpwCgaEMh4pyzusBxYLs8jHcw9Mt5npBJ46L3VfAQBg850y+zBqQfmMcqgG6AkvuKW4u
-         chReR+dVZ3L3keYdITc4nmy6I7fkH5ZZ6bsLYFkK/tWSppA+rAeN6LEzylQgdzxR13me
-         dZZE0jGtl5OWgAPa4iYeXGa6d4daS+089xc2srziTnpOIiIAJ9EWOtPWeBUlGSaaTvJH
-         LWXA==
-X-Gm-Message-State: AOAM530UENf1h6qWXSxSBdQowqbVHK8eTZOetn+6QcJ5mz3qchusO/1J
-        cs7AuSv2m5vxxi/X+yYAR4rvCi0UwwMGBiDloJZ1Iw==
-X-Google-Smtp-Source: ABdhPJzqc/h6trF7QZbv9g9Tcz4dVtZjQCutUQSQKd+G0HVkS3KACFfjHI+1ykEhkIrgUEDynBUCkh2E6hha1eo02Wg=
-X-Received: by 2002:a37:aa0b:: with SMTP id t11mr483967qke.70.1621265872456;
- Mon, 17 May 2021 08:37:52 -0700 (PDT)
+        bh=d7V5E/UhV744CcQUfk+QrdArFoF8TFSVSHzDIMiqkSU=;
+        b=KVw9kdRdLdRo2PnUQZz1PDxyv/tpjW8lS70d0S4EXZ6gRzzUKdE+4Z+MrbF2gjGfI5
+         og+Vyglq6NcSTMlwAgmhFsKlwbDP/ef8UVpu9GZ1MtjDz6kBGMNj2fCI6CUVGyH4qCQO
+         /dS7gGlnnU7uT1svSSHEO0kM4v8tlj3o/V+LTOoS7lh+SKd+KPViCAaqIUv8QxH0oGk1
+         SkVHTkPTki81lDm0KLOVAjQROtg2ojM8zwKY7kYIKvBNy1+U2nVnAaduqV1yR3N7+1on
+         w7UPrqzVpUPBLPgt58pmgTwEQZSjVzI9JZ6lYqjg884ZowxrNwZMJ6n6bNT6uoLrTiQU
+         P32g==
+X-Gm-Message-State: AOAM533YSPbYYHsOZPjK25uVp13B6B7m6miJQymbVtSuhJSi9ufFBdC3
+        3TFMevs99SIN62vZXBR84FSrKIBWX4Ik8d8iXzGxeKfaIZI=
+X-Google-Smtp-Source: ABdhPJwComPeydN5fEJ8ldiAoIcAjHSaKgE/oTHSAA9rxiM56wufpW4Zt4cEGTOdk55KJkMk3BJoTcNwZXczIKjSRoo=
+X-Received: by 2002:a05:622a:13d2:: with SMTP id p18mr122818qtk.387.1621266746405;
+ Mon, 17 May 2021 08:52:26 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 References: <20210513083608.2243297-1-kashyap.desai@broadcom.com>
- <20210513083608.2243297-5-kashyap.desai@broadcom.com> <07cd627d-b661-a4a9-0929-00a594b0e8d0@suse.de>
-In-Reply-To: <07cd627d-b661-a4a9-0929-00a594b0e8d0@suse.de>
+ <20210513083608.2243297-2-kashyap.desai@broadcom.com> <AB59CAB3-B513-4D76-A523-344E909D1E9A@oracle.com>
+In-Reply-To: <AB59CAB3-B513-4D76-A523-344E909D1E9A@oracle.com>
 MIME-Version: 1.0
 X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQDmoXnWqw/wahd+DgUMU/8U4h6NGAGiCgV6AWUt59GssOMCsA==
-Date:   Mon, 17 May 2021 21:07:50 +0530
-Message-ID: <5f74d8f861417c8a34b90030d4c19f80@mail.gmail.com>
-Subject: RE: [PATCH v5 04/24] mpi3mr: add support of queue command processing
-To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+Thread-Index: AQDmoXnWqw/wahd+DgUMU/8U4h6NGAHkpu4aAXvkd0Gsrh8h8A==
+Date:   Mon, 17 May 2021 21:22:24 +0530
+Message-ID: <23ad5cc71d026d7a605aa6774971654a@mail.gmail.com>
+Subject: RE: [PATCH v5 01/24] mpi3mr: add mpi30 Rev-R headers and Kconfig
+To:     Bart Van Assche <bvanassche@acm.org>, hch@infradead.org
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
         Steve Hagan <steve.hagan@broadcom.com>,
         Peter Rivera <peter.rivera@broadcom.com>,
         mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        thenzl@redhat.com, Hannes Reinecke <hare@suse.de>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000006fd9a505c2886094"
+        boundary="00000000000086482c05c288945a"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000006fd9a505c2886094
+--00000000000086482c05c288945a
 Content-Type: text/plain; charset="UTF-8"
 
-> > +		if (reply_dma)
-> > +			mpi3mr_repost_reply_buf(mrioc, reply_dma);
-> > +		num_op_reply++;
-> > +
-> > +		if (++reply_ci == op_reply_q->num_replies) {
-> > +			reply_ci = 0;
-> > +			exp_phase ^= 1;
-> > +		}
-> > +
-> > +		reply_desc = mpi3mr_get_reply_desc(op_reply_q, reply_ci);
-> > +
-> > +		if ((le16_to_cpu(reply_desc->reply_flags) &
-> > +		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) !=
-> exp_phase)
-> > +			break;
-> > +
-> > +	} while (1);
-> > +
->
-> Is this loop bounded by something?
-> The way it looks like we might end up having to process at lot of replies,
-> causing a bogus hangcheck trigger.
-> Have you check for that condition?
-
-
-Hi Hannes -
-
-You are correct. There can be a bogus CPU lockup issue here.  We could have
-use irq_poll interface as we used in mpt3sas, megaraid_sas driver.
-Since we have used hybrid threaded ISR in mpi3mr driver, we have covered
-this scenario using threaded ISR. See patch #0017. We have below check to
-handle CPU lockup -
-
-if (num_op_reply > mrioc->max_host_ios) {
-                intr_info->op_reply_q->enable_irq_poll = true;
-                 break;
-}
-
->
-> > +	writel(reply_ci,
-> > +	    &mrioc->sysif_regs-
-> >oper_queue_indexes[reply_qidx].consumer_index);
-> > +	op_reply_q->ci = reply_ci;
-> > +	op_reply_q->ephase = exp_phase;
-> > +
-> > +	return num_op_reply;
-> > +}
-> > +
-> >  static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)  {
-> >  	struct mpi3mr_intr_info *intr_info = privdata; @@ -1302,6 +1395,74
-> > @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
-> >  	return retval;
-> >  }
+> > On May 13, 2021, at 3:35 AM, Kashyap Desai
+> <kashyap.desai@broadcom.com> wrote:
 > >
-> > +/**
-> > + * mpi3mr_op_request_post - Post request to operational queue
-> > + * @mrioc: Adapter reference
-> > + * @op_req_q: Operational request queue info
-> > + * @req: MPI3 request
-> > + *
-> > + * Post the MPI3 request into operational request queue and
-> > + * inform the controller, if the queue is full return
-> > + * appropriate error.
-> > + *
-> > + * Return: 0 on success, non-zero on failure.
-> > + */
-> > +int mpi3mr_op_request_post(struct mpi3mr_ioc *mrioc,
-> > +	struct op_req_qinfo *op_req_q, u8 *req) {
-> > +	u16 pi = 0, max_entries, reply_qidx = 0, midx;
-> > +	int retval = 0;
-> > +	unsigned long flags;
-> > +	u8 *req_entry;
-> > +	void *segment_base_addr;
-> > +	u16 req_sz = mrioc->facts.op_req_sz;
-> > +	struct segments *segments = op_req_q->q_segments;
-> > +
-> > +	reply_qidx = op_req_q->reply_qid - 1;
-> > +
-> > +	if (mrioc->unrecoverable)
-> > +		return -EFAULT;
-> > +
-> > +	spin_lock_irqsave(&op_req_q->q_lock, flags);
-> > +	pi = op_req_q->pi;
-> > +	max_entries = op_req_q->num_requests;
-> > +
-> > +	if (mpi3mr_check_req_qfull(op_req_q)) {
-> > +		midx = REPLY_QUEUE_IDX_TO_MSIX_IDX(
-> > +		    reply_qidx, mrioc->op_reply_q_offset);
-> > +		mpi3mr_process_op_reply_q(mrioc, &mrioc-
-> >intr_info[midx]);
-> > +
-> > +		if (mpi3mr_check_req_qfull(op_req_q)) {
-> > +			retval = -EAGAIN;
-> > +			goto out;
-> > +		}
-> > +	}
-> > +
-> > +	if (mrioc->reset_in_progress) {
-> > +		ioc_err(mrioc, "OpReqQ submit reset in progress\n");
-> > +		retval = -EAGAIN;
-> > +		goto out;
-> > +	}
-> > +
->
-> Have you considered a different error code here?
-> reset in progress and queue full are two different scenarios; especially
-> the
-> latter might warrant some further action like decreasing the queue depth,
-> which is getting hard if you have the same error ...
+> > This adds the Kconfig and mpi30 headers.
+> >
+> > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> >
+> > Cc: sathya.prakash@broadcom.com
+> > Cc: bvanassche@acm.org
+> > Cc: thenzl@redhat.com
+> > Cc: hare@suse.de
+> > Cc: himanshu.madhani@oracle.com
+> > Cc: hch@infradead.org
 
-There is really no difference if we  use different error code, because
-caller of mpi3mr_op_request_post checks zero or non-zero.
-I got your point that we should have some better error code (if possible) in
-case of controller is in reset.
-I am thinking of  using scsi_block_requests/scsi_unblock_requests pair in
-controller reset path. We want stable first out of mpi3mr and also such
-changes require additional testing, I will accommodate changes in this area
-in next series.
-Is it OK with you ?
+Noted reviewed-by tag from Hannes, Tomas and Himanshu. Thanks.
 
-> > +	switch (ioc_status) {
-> > +	case MPI3_IOCSTATUS_BUSY:
-> > +	case MPI3_IOCSTATUS_INSUFFICIENT_RESOURCES:
-> > +		scmd->result = SAM_STAT_BUSY;
-> > +		break;
-> > +	case MPI3_IOCSTATUS_SCSI_DEVICE_NOT_THERE:
-> > +		scmd->result = DID_NO_CONNECT << 16;
-> > +		break;
-> > +	case MPI3_IOCSTATUS_SCSI_IOC_TERMINATED:
-> > +		scmd->result = DID_SOFT_ERROR << 16;
-> > +		break;
-> > +	case MPI3_IOCSTATUS_SCSI_TASK_TERMINATED:
-> > +	case MPI3_IOCSTATUS_SCSI_EXT_TERMINATED:
-> > +		scmd->result = DID_RESET << 16;
-> > +		break;
-> > +	case MPI3_IOCSTATUS_SCSI_RESIDUAL_MISMATCH:
-> > +		if ((xfer_count == 0) || (scmd->underflow > xfer_count))
-> > +			scmd->result = DID_SOFT_ERROR << 16;
-> > +		else
-> > +			scmd->result = (DID_OK << 16) | scsi_status;
-> > +		break;
-> > +	case MPI3_IOCSTATUS_SCSI_DATA_UNDERRUN:
-> > +		scmd->result = (DID_OK << 16) | scsi_status;
-> > +		if (sense_state == MPI3_SCSI_STATE_SENSE_VALID)
-> > +			break;
-> > +		if (xfer_count < scmd->underflow) {
-> > +			if (scsi_status == SAM_STAT_BUSY)
-> > +				scmd->result = SAM_STAT_BUSY;
-> > +			else
-> > +				scmd->result = DID_SOFT_ERROR << 16;
-> > +		} else if ((scsi_state & (MPI3_SCSI_STATE_NO_SCSI_STATUS))
-> ||
-> > +		    (sense_state !=
-> MPI3_SCSI_STATE_SENSE_NOT_AVAILABLE))
-> > +			scmd->result = DID_SOFT_ERROR << 16;
-> > +		else if (scsi_state & MPI3_SCSI_STATE_TERMINATED)
-> > +			scmd->result = DID_RESET << 16;
-> > +		else if (!xfer_count && scmd->cmnd[0] == REPORT_LUNS) {
-> > +			scsi_status = SAM_STAT_CHECK_CONDITION;
-> > +			scmd->result = (DRIVER_SENSE << 24) |
-> > +			    SAM_STAT_CHECK_CONDITION;
-> > +			scmd->sense_buffer[0] = 0x70;
-> > +			scmd->sense_buffer[2] = ILLEGAL_REQUEST;
-> > +			scmd->sense_buffer[12] = 0x20;
-> > +			scmd->sense_buffer[13] = 0;
-> > +		}
->
-> Huh? A separate error handling just for REPORT LUNS?
-> Did you mess up your firmware?
-> And if you know REPORT LUNS is not supported, by bother sending it to the
-> firmware and not completing it straightaway in queuecommand()?
+Hi Bart, Christoph -
 
-This special case handling ported from past solution we used in mpt3sas. I
-am not sure but it was due to mix of FW and Kernel behavior.
-Some older kernel had lots of prints if we do not have above special
-handling in driver.  We will remove above check from mpi3mr driver and based
-on any actual issue, we can add fix in future.
-I will handle it in V6 submission.
+In V5  submission, I have addressed your feedback. Now, MPI headers are
+compliant with Linux kernel coding guidelines.
+Hannes, Tomas and Himanshu reviewed and they are OK with V5 changes. Can
+you provide your feedback.  ?
+
 
 Kashyap
 
---0000000000006fd9a505c2886094
+--00000000000086482c05c288945a
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -325,13 +174,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJILVdWNa6MVNBhsjFnvVC1biq2J
-Gk9JcZqKRsDknj2NMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDUxNzE1Mzc1MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEzL0K6ArE0ZqaE+AJFpSuXCLr3p
+HWgU7KZ1Sy+ljNmxMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDUxNzE1NTIyNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQAkKigJJfRw9PLeP79j+iqJNmkXl8bnDWNpEk807gzCbIpM
-LL/B4On0ZhKa9IqVgFV6/GkYjVbuXgObTcOhjlW+yKr/j37WRwFIVIANt7uBXnO/0RqUlyl3Mu9X
-dmIiO/Vr6j6yPEr7PfmHdoeN6BRlokzEVbDKJOAPjdogigfNCWmRKVui+SK/hUL/qanL9q2EGaUg
-OPfggku4TBv5WtXhsih5ggJxsMX1bOyQq3826n2/pbxMlAZZRakVrBgctlKVjlkNtrsWbam1LUDh
-uVU4fU6k61zj/nWzJCRTw+3OY3N/6lYaixlZ1Dwb3k/pVAKqcFZjJLEu4jM3173jonAm
---0000000000006fd9a505c2886094--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQC8Hfs+kNnIKa3M63oxGl4HZmIXKYcp3BjFNauRAD05TLB1
+B57Nf7Neir15nWexhfa/br7LOi2IkP9amsAuYIynuOZ1GHkON7/eeGYsfSxCJU6u89TupZ8RfMzd
+AhDbFdabqMjB2HbzbZjDijbW/P3iRE4J+wruJCJ/9nSQmyNUOkypDU0DC6L/pVfdByJYjQrqatf4
+6BYY2A6mwfut6v1JEZq0KzRenc+pA+S+DIxhhQ60xckB1bsSZiFrRqyOAsJlqxH8fNkgLodY7H3U
+OjmasxkHrXlpElyQXvh2C1btGJmHS+RaG7XPSjx+/FRpS3hOmTEl3JaGnl2aXiun6PZM
+--00000000000086482c05c288945a--
