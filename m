@@ -4,90 +4,172 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA6F8C433B4
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 09:59:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F200AC43461
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 10:00:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD28E61029
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 09:59:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5C4D610CB
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 10:00:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236246AbhEQKAb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 May 2021 06:00:31 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:34587 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236274AbhEQJ7z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2021 05:59:55 -0400
-Received: from mail-ej1-f72.google.com ([209.85.218.72])
-        by youngberry.canonical.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.93)
-        (envelope-from <juerg.haefliger@canonical.com>)
-        id 1lia1G-0002Sb-TW
-        for linux-scsi@vger.kernel.org; Mon, 17 May 2021 09:58:38 +0000
-Received: by mail-ej1-f72.google.com with SMTP id y12-20020a170906558cb02903d65e5767ebso543550ejp.0
-        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2021 02:58:38 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=SBjcovMcJ4H/KV7YFF8hsif22PyqV7UihiYg3q7oL80=;
-        b=pgkW3uH2PgRq2EAWytecnZLuN3ca5vuxVEs36ZiAS4gT8+yoQvMD0pleH6x6Hn0Xyw
-         5MSD0ayAh9diKCS37pFg2H6aSG1D+y09GRpEkmXh6h07+ew30nlYEuiaXpBR7Dk5FGjF
-         imMTowD3KNpbmi9iBwtLJZu6xtKPiX2lHmlBMw7MndyGDcP5OFzJ/ViollUvWhOAHpr/
-         VYd/6YcZx7NGOjufaYZfefAHzbtdrbh1CviJ8xxeIv/WXkTUiRyTb6V8sYATcZY7hJ08
-         2sgZDSb6zgbehDnbNuEZCKDu3rm6iIhskoI8pZEqpGBWFcAx6W2rngk3cs7Rof+zJak6
-         77IA==
-X-Gm-Message-State: AOAM533nWn0Bit3LPvEnvj+FczdG+1Z8QPMQJQZsObuK4x5PBJBdsW0j
-        oLmS5HBlBTFj5Trmzj9CmK+gH+YSzZx2fDu/YtbGqBNpBdNe8pQaQyBBTBhWDb6ja4oMFwuWGI9
-        Wt/0teNfeTPtvF7QwokgnS49MYrQMjG+Oy1FEPk0=
-X-Received: by 2002:a05:6402:19a7:: with SMTP id o7mr31417022edz.22.1621245517941;
-        Mon, 17 May 2021 02:58:37 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyjVbKinq9KaD/Ql0BY02wWm1LkfUNxBYm6cyHlXXoI2sY6X6qpn5L7XW1kPA7eTqkRs9uxQg==
-X-Received: by 2002:a05:6402:19a7:: with SMTP id o7mr31416982edz.22.1621245517486;
-        Mon, 17 May 2021 02:58:37 -0700 (PDT)
-Received: from gollum.fritz.box ([194.191.244.86])
-        by smtp.gmail.com with ESMTPSA id i8sm8803648ejj.68.2021.05.17.02.58.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 May 2021 02:58:37 -0700 (PDT)
-From:   Juerg Haefliger <juerg.haefliger@canonical.com>
-X-Google-Original-From: Juerg Haefliger <juergh@canonical.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, juergh@canonical.com
-Subject: [PATCH] scsi: Remove leading spaces in Kconfig
-Date:   Mon, 17 May 2021 11:58:35 +0200
-Message-Id: <20210517095835.81733-1-juergh@canonical.com>
-X-Mailer: git-send-email 2.27.0
+        id S236114AbhEQKBm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 May 2021 06:01:42 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2996 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236457AbhEQKBL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2021 06:01:11 -0400
+Received: from dggems704-chm.china.huawei.com (unknown [172.30.72.60])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4FkDzs2wvwzQpQ0;
+        Mon, 17 May 2021 17:56:25 +0800 (CST)
+Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
+ dggems704-chm.china.huawei.com (10.3.19.181) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Mon, 17 May 2021 17:59:53 +0800
+Received: from thunder-town.china.huawei.com (10.174.177.72) by
+ dggpemm500006.china.huawei.com (7.185.36.236) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Mon, 17 May 2021 17:59:52 +0800
+From:   Zhen Lei <thunder.leizhen@huawei.com>
+To:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        open-iscsi <open-iscsi@googlegroups.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+CC:     Zhen Lei <thunder.leizhen@huawei.com>
+Subject: [PATCH 1/1] scsi: Fix spelling mistakes in header files
+Date:   Mon, 17 May 2021 17:59:45 +0800
+Message-ID: <20210517095945.7363-1-thunder.leizhen@huawei.com>
+X-Mailer: git-send-email 2.26.0.windows.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.174.177.72]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500006.china.huawei.com (7.185.36.236)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove leading spaces before tabs in Kconfig file(s) by running the
-following command:
+Fix some spelling mistakes in comments:
+pathes ==> paths
+Resouce ==> Resource
+retreived ==> retrieved
+keep-alives ==> keep-alive
+recevied ==> received
+busses ==> buses
+interruped ==> interrupted
 
-  $ find drivers/scsi -name 'Kconfig*' | xargs sed -r -i 's/^[ ]+\t/\t/'
-
-Signed-off-by: Juerg Haefliger <juergh@canonical.com>
+Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
 ---
- drivers/scsi/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/scsi/iscsi_proto.h    | 2 +-
+ include/scsi/libfc.h          | 6 +++---
+ include/scsi/libfcoe.h        | 2 +-
+ include/scsi/scsi_bsg_iscsi.h | 2 +-
+ include/scsi/scsi_host.h      | 2 +-
+ include/scsi/sg.h             | 2 +-
+ 6 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 3d114be5b662..c5612896cdb9 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -311,7 +311,7 @@ source "drivers/scsi/cxlflash/Kconfig"
- config SGIWD93_SCSI
- 	tristate "SGI WD93C93 SCSI Driver"
- 	depends on SGI_HAS_WD93 && SCSI
--  	help
-+	help
- 	  If you have a Western Digital WD93 SCSI controller on
- 	  an SGI MIPS system, say Y.  Otherwise, say N.
+diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
+index b71b5c4f418c..7b192d88f186 100644
+--- a/include/scsi/iscsi_proto.h
++++ b/include/scsi/iscsi_proto.h
+@@ -52,7 +52,7 @@ static inline int iscsi_sna_gte(u32 n1, u32 n2)
+ }
  
+ /*
+- * useful common(control and data pathes) macro
++ * useful common(control and data paths) macro
+  */
+ #define ntoh24(p) (((p)[0] << 16) | ((p)[1] << 8) | ((p)[2]))
+ #define hton24(p, v) { \
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index 9b87e1a1c646..eeb8d689ff6b 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -399,7 +399,7 @@ struct fc_seq {
+  * @sid:          Source FCID
+  * @did:          Destination FCID
+  * @esb_stat:     ESB exchange status
+- * @r_a_tov:      Resouce allocation time out value (in msecs)
++ * @r_a_tov:      Resource allocation time out value (in msecs)
+  * @seq_id:       The next sequence ID to use
+  * @encaps:       encapsulation information for lower-level driver
+  * @f_ctl:        F_CTL flags for the sequence
+@@ -668,7 +668,7 @@ enum fc_lport_event {
+  * @wwnn:                  World Wide Node Name
+  * @service_params:        Common service parameters
+  * @e_d_tov:               Error detection timeout value
+- * @r_a_tov:               Resouce allocation timeout value
++ * @r_a_tov:               Resource allocation timeout value
+  * @rnid_gen:              RNID information
+  * @sg_supp:               Indicates if scatter gather is supported
+  * @seq_offload:           Indicates if sequence offload is supported
+@@ -841,7 +841,7 @@ static inline void fc_lport_free_stats(struct fc_lport *lport)
+ 
+ /**
+  * lport_priv() - Return the private data from a local port
+- * @lport: The local port whose private data is to be retreived
++ * @lport: The local port whose private data is to be retrieved
+  */
+ static inline void *lport_priv(const struct fc_lport *lport)
+ {
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index fac8e89aed81..089aa1f201ac 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -87,7 +87,7 @@ enum fip_mode {
+  * @port_ka_time:  time of next port keep-alive.
+  * @ctlr_ka_time:  time of next controller keep-alive.
+  * @timer:	   timer struct used for all delayed events.
+- * @timer_work:	   &work_struct for doing keep-alives and resets.
++ * @timer_work:	   &work_struct for doing keep-alive and resets.
+  * @recv_work:	   &work_struct for receiving FIP frames.
+  * @fip_recv_list: list of received FIP frames.
+  * @flogi_req:	   clone of FLOGI request sent
+diff --git a/include/scsi/scsi_bsg_iscsi.h b/include/scsi/scsi_bsg_iscsi.h
+index 6b8128005af8..9b1f0f424a79 100644
+--- a/include/scsi/scsi_bsg_iscsi.h
++++ b/include/scsi/scsi_bsg_iscsi.h
+@@ -84,7 +84,7 @@ struct iscsi_bsg_reply {
+ 	 */
+ 	uint32_t result;
+ 
+-	/* If there was reply_payload, how much was recevied ? */
++	/* If there was reply_payload, how much was received ? */
+ 	uint32_t reply_payload_rcv_len;
+ 
+ 	union {
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index d0bf88d77f02..9448225a9904 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -582,7 +582,7 @@ struct Scsi_Host {
+ 
+ 	/*
+ 	 * These three parameters can be used to allow for wide scsi,
+-	 * and for host adapters that support multiple busses
++	 * and for host adapters that support multiple buses
+ 	 * The last two should be set to 1 more than the actual max id
+ 	 * or lun (e.g. 8 for SCSI parallel systems).
+ 	 */
+diff --git a/include/scsi/sg.h b/include/scsi/sg.h
+index 7327e12f3373..e1a42c2409cc 100644
+--- a/include/scsi/sg.h
++++ b/include/scsi/sg.h
+@@ -145,7 +145,7 @@ typedef struct sg_scsi_id { /* used by SG_GET_SCSI_ID ioctl() */
+ 
+ typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
+     char req_state;     /* 0 -> not used, 1 -> written, 2 -> ready to read */
+-    char orphan;        /* 0 -> normal request, 1 -> from interruped SG_IO */
++    char orphan;        /* 0 -> normal request, 1 -> from interrupted SG_IO */
+     char sg_io_owned;   /* 0 -> complete with read(), 1 -> owned by SG_IO */
+     char problem;       /* 0 -> no problem detected, 1 -> error to report */
+     int pack_id;        /* pack_id associated with request */
 -- 
-2.27.0
+2.25.1
+
 
