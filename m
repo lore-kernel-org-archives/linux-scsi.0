@@ -2,108 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2919C433B4
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 03:22:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26BC3C43462
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 05:46:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73CCF610A1
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 03:22:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03D316024A
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 05:46:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232853AbhEQDXs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 16 May 2021 23:23:48 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:39647 "EHLO m43-7.mailgun.net"
+        id S234534AbhEQFsH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 May 2021 01:48:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54670 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231744AbhEQDXr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 16 May 2021 23:23:47 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1621221751; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=BnqGq1pzoqqb3qyX2lCRDxOTjJMep8szFP0fRb15D7M=;
- b=tAPikW7xB0qPhZ5hxMOBprwlniXtIQM/lHH5es+YHrYJz2/j4PPm4FtdA2mQXWGnW2VWZmne
- xeLzktebolzHHxupZ5XGyZRiC7YVfvj1OAcuylzgYlLfqazP//S0RM+jt6rzMtDR9PU7W8tH
- QtEYBUT8XkpUbrPFAg7hdwCoBlU=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
- 60a1e1745f788b52a59218c3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 17 May 2021 03:22:28
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 98CB5C43217; Mon, 17 May 2021 03:22:28 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 04DEAC433F1;
-        Mon, 17 May 2021 03:22:27 +0000 (UTC)
+        id S234462AbhEQFry (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 17 May 2021 01:47:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 21CCF6108D;
+        Mon, 17 May 2021 05:46:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1621230378;
+        bh=UssYIYbkL3qu2UXuoT41PmlhMhpzovvV5hj4VqQqw6c=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Vna6C9/eXr0rr9wnsxamGgP6HY53+rapHkKqAnJK3sSoY631+u0j3cZ/Xjleivf8U
+         lDAxln7hHa19MzfzYmHSkNzIK1K5pI/K/AyFyyommMzJ/FNr5UiqNJi1b78GTzBNCc
+         OvydG874aqfpppXC7D0nP3i8lBieHyXygMg/IfKE=
+Date:   Mon, 17 May 2021 07:46:12 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Juerg Haefliger <juerg.haefliger@canonical.com>
+Cc:     aaro.koskinen@iki.fi, tony@atomide.com, linux@prisktech.co.nz,
+        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, lee.jones@linaro.org,
+        daniel.thompson@linaro.org, jingoohan1@gmail.com, mst@redhat.com,
+        jasowang@redhat.com, zbr@ioremap.net, pablo@netfilter.org,
+        kadlec@netfilter.org, fw@strlen.de, horms@verge.net.au, ja@ssi.bg,
+        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-crypto@vger.kernel.org, linux-usb@vger.kernel.org,
+        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, lvs-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Juerg Haefliger <juergh@canonical.com>
+Subject: Re: [PATCH] treewide: Remove leading spaces in Kconfig files
+Message-ID: <YKIDJIfuufBrTQ4f@kroah.com>
+References: <20210516132209.59229-1-juergh@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 17 May 2021 11:22:27 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 5/6] scsi: ufs: Let host_sem cover the entire system
- suspend/resume
-In-Reply-To: <b59e0cd4-d560-6724-3f30-a5232dd41a8f@acm.org>
-References: <1620885319-15151-1-git-send-email-cang@codeaurora.org>
- <1620885319-15151-7-git-send-email-cang@codeaurora.org>
- <b59e0cd4-d560-6724-3f30-a5232dd41a8f@acm.org>
-Message-ID: <98a7135ef1ce34e23e84817cf6167e1a@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210516132209.59229-1-juergh@canonical.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
-
-On 2021-05-14 11:55, Bart Van Assche wrote:
-> On 5/12/21 10:55 PM, Can Guo wrote:
->> UFS error handling now is doing more than just re-probing, but also 
->> sending
->> scsi cmds, e.g., for clearing UACs, and recovering runtime PM error, 
->> which
->> may change runtime status of scsi devices. To protect system 
->> suspend/resume
->> from being disturbed by error handling, move the host_sem from wl pm 
->> ops
->> to ufshcd_suspend_prepare() and ufshcd_resume_complete().
+On Sun, May 16, 2021 at 03:22:09PM +0200, Juerg Haefliger wrote:
+> There are a few occurences of leading spaces before tabs in a couple of
+> Kconfig files. Remove them by running the following command:
 > 
-> In ufshcd.h I found the following:
+>   $ find . -name 'Kconfig*' | xargs sed -r -i 's/^[ ]+\t/\t/'
 > 
->  * @host_sem: semaphore used to serialize concurrent contexts
-> 
-> That's the wrong way to use a synchronization object. A synchronization
-> object must protect data instead of code. Does host_sem perhaps need to
-> be split into multiple synchronization objects?
+> Signed-off-by: Juerg Haefliger <juergh@canonical.com>
+> ---
+>  arch/arm/mach-omap1/Kconfig     | 12 ++++++------
+>  arch/arm/mach-vt8500/Kconfig    |  6 +++---
+>  arch/arm/mm/Kconfig             | 10 +++++-----
+>  drivers/char/hw_random/Kconfig  |  8 ++++----
+>  drivers/net/usb/Kconfig         | 10 +++++-----
+>  drivers/net/wan/Kconfig         |  4 ++--
+>  drivers/scsi/Kconfig            |  2 +-
+>  drivers/uio/Kconfig             |  2 +-
+>  drivers/video/backlight/Kconfig | 10 +++++-----
+>  drivers/virtio/Kconfig          |  2 +-
+>  drivers/w1/masters/Kconfig      |  6 +++---
+>  fs/proc/Kconfig                 |  4 ++--
+>  init/Kconfig                    |  2 +-
+>  net/netfilter/Kconfig           |  2 +-
+>  net/netfilter/ipvs/Kconfig      |  2 +-
+>  15 files changed, 41 insertions(+), 41 deletions(-)
 
-Thanks for the comments. These contexts are changing critical data and
-registers, so the sem is used to protect data actually, just like the
-scaling_lock protecting scaling and cmd transations.
+Please break this up into one patch per subsystem and resend to the
+proper maintainers that way.
 
-Thanks,
+thanks,
 
-Can Guo.
-
-> 
-> Thanks,
-> 
-> Bart.
+greg k-h
