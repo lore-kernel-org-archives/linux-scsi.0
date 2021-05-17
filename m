@@ -2,170 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0494FC43462
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 08:29:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2FD2C43461
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 09:40:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA89161289
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 08:29:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93AB5611CC
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 May 2021 09:40:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235558AbhEQIag (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 May 2021 04:30:36 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:60530 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235546AbhEQIaf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2021 04:30:35 -0400
-Received: from mail-ej1-f72.google.com ([209.85.218.72])
-        by youngberry.canonical.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.93)
-        (envelope-from <juerg.haefliger@canonical.com>)
-        id 1liYco-0004Qp-Fp
-        for linux-scsi@vger.kernel.org; Mon, 17 May 2021 08:29:18 +0000
-Received: by mail-ej1-f72.google.com with SMTP id eb10-20020a170907280ab02903d65bd14481so465658ejc.21
-        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2021 01:29:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:date:to:cc:subject:message-id:in-reply-to
-         :references:organization:mime-version;
-        bh=T/k1Hfbl0QWX7BgUNKlB2kMgvZHjTQfbPANeoy85SUc=;
-        b=B1X1qq4ILjElcRvUREjQSJd8LmWNxF9xn28vLn3ZcazrOLAa5O6lywI6VEKM8ncABp
-         DC8tFU8mZsNQE3CKxuDTaOYjbVQldPBMqcj/o+og9J1ErEFInM7h4GIy8WO2aEedjHHt
-         3bULP2x5hw8YSUNuD+UYQUKHn+TrkR/5V4vhB2NvyeS9hymx6RiSTmYmtlwWn9gk2JdU
-         GtvmPkWo0ocCAFQNT9VK7oXQwpwB/7QNQtC4+V3RHXYjKvGdeV50YWl5hhU2THEJ67NY
-         yOYNk9fhGm7LLMmUO3T4SXYbgOZDKqQ/4y14pdXOYENC+4lI0uwpugAs2RHpt/oKq7kt
-         A7Rw==
-X-Gm-Message-State: AOAM530qo/ne4q0FUrlQa25Z0tdw3VhR5yAGmv9PP1hAniD8iGoO4+hU
-        LpW/NXIom+iuuPh6fErdcLdfqTkmpYjPLKzSHfGMLTCth9eG142TY2t3JOWIdBjUm8e5yvIaM8h
-        BTmj/7zhI3LyLiJESJt2Y7JvKpsX+ZqVOc2UfSM0=
-X-Received: by 2002:a05:6402:12d3:: with SMTP id k19mr69882821edx.52.1621240158131;
-        Mon, 17 May 2021 01:29:18 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwzfvlH5EzvwOwvjZrfGS/mgdWYRGeWBuLqXSaxf59eSojt+fwGp2Tv4PXBiEmsWL6Vcbb4nQ==
-X-Received: by 2002:a05:6402:12d3:: with SMTP id k19mr69882802edx.52.1621240157962;
-        Mon, 17 May 2021 01:29:17 -0700 (PDT)
-Received: from gollum ([194.191.244.86])
-        by smtp.gmail.com with ESMTPSA id ho32sm8220626ejc.82.2021.05.17.01.29.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 May 2021 01:29:17 -0700 (PDT)
-From:   Juerg Haefliger <juerg.haefliger@canonical.com>
-X-Google-Original-From: Juerg Haefliger <juergh@canonical.com>
-Date:   Mon, 17 May 2021 10:29:15 +0200
-To:     Greg KH <gregkh@linuxfoundation.org>
-Cc:     Juerg Haefliger <juerg.haefliger@canonical.com>,
-        aaro.koskinen@iki.fi, tony@atomide.com, linux@prisktech.co.nz,
-        David Miller <davem@davemloft.net>, kuba@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        Lee Jones <lee.jones@linaro.org>,
-        Daniel Thompson <daniel.thompson@linaro.org>,
-        jingoohan1@gmail.com, mst@redhat.com, jasowang@redhat.com,
-        zbr@ioremap.net, pablo@netfilter.org, kadlec@netfilter.org,
-        fw@strlen.de, horms@verge.net.au, ja@ssi.bg,
-        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-crypto@vger.kernel.org, linux-usb@vger.kernel.org,
-        netdev <netdev@vger.kernel.org>, linux-scsi@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, lvs-devel@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] treewide: Remove leading spaces in Kconfig files
-Message-ID: <20210517102915.072b8665@gollum>
-In-Reply-To: <YKImotylLR7D4mQW@kroah.com>
-References: <20210516132209.59229-1-juergh@canonical.com>
-        <YKIDJIfuufBrTQ4f@kroah.com>
-        <CAB2i3ZgszsUVDuK2fkUXtD72tPSgrycnDawM4VAuGGPJiA9+cA@mail.gmail.com>
-        <YKImotylLR7D4mQW@kroah.com>
-Organization: Canonical Ltd
-X-Mailer: Claws Mail 3.17.7 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        id S236070AbhEQJlg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 May 2021 05:41:36 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:55296 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S235911AbhEQJlf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2021 05:41:35 -0400
+X-UUID: 5c00150027c94e02bfb9a20166af0631-20210517
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=SwmJAU6PHX2QVvfHtgJD3Qr9dI/zcQK933lin5zqpPY=;
+        b=mZVKfoBu58fBrfRSpQJGtAcTwZxPCGhOYWtLhesJb4gd6sO1ApgUO+DBQ3wkJkRTrhOwG/ywlkEnBnBEQF+IUV3eSUm/YjsJwhvovJ7jymIsMDlko+2xyRfa5dFXc0yw/DN8gPE4BcINTI7ebIe3zsVNIvhE2/LCVK5E0nUlFtU=;
+X-UUID: 5c00150027c94e02bfb9a20166af0631-20210517
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 258853058; Mon, 17 May 2021 17:40:16 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by mtkexhb01.mediatek.inc
+ (172.21.101.102) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 17 May
+ 2021 17:40:15 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 17 May 2021 17:40:15 +0800
+Message-ID: <1621244415.21674.8.camel@mtkswgap22>
+Subject: Re: [PATCH v34 1/4] scsi: ufs: Introduce HPB feature
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <daejun7.park@samsung.com>
+CC:     "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Jaemyung Lee <jaemyung.lee@samsung.com>,
+        Jieon Seol <jieon.seol@samsung.com>
+Date:   Mon, 17 May 2021 17:40:15 +0800
+In-Reply-To: <20210428232340epcms2p4b8b34353e93495895b76f062207a6697@epcms2p4>
+References: <20210428232257epcms2p8602b29d63529fca8a06010a21157d5cb@epcms2p8>
+         <CGME20210428232257epcms2p8602b29d63529fca8a06010a21157d5cb@epcms2p4>
+         <20210428232340epcms2p4b8b34353e93495895b76f062207a6697@epcms2p4>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/D7AKy83dA=gk+i5Iqn9=k5c";
- protocol="application/pgp-signature"; micalg=pgp-sha512
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---Sig_/D7AKy83dA=gk+i5Iqn9=k5c
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+SGkgRGFlanVuLA0KDQpTb3JyeSBJIGxvc3QgdGhlIGNvdmVyIGxldHRlciBzbyBJIHJlcGxpZWQg
+dGhpcyBtYWlsIGluc3RlYWQuDQoNCkZvciB0aGlzIHNlcmllcywNCg0KUmV2aWV3ZWQtYnk6IFN0
+YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQpUZXN0ZWQtYnk6IFN0YW5sZXkg
+Q2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQoNCg0KT24gVGh1LCAyMDIxLTA0LTI5IGF0
+IDA4OjIzICswOTAwLCBEYWVqdW4gUGFyayB3cm90ZToNCj4gVGhpcyBpcyBhIHBhdGNoIGZvciB0
+aGUgSFBCIGluaXRpYWxpemF0aW9uIGFuZCBhZGRzIEhQQiBmdW5jdGlvbiBjYWxscyB0bw0KPiBV
+RlMgY29yZSBkcml2ZXIuDQo+IA0KPiBOQU5EIGZsYXNoLWJhc2VkIHN0b3JhZ2UgZGV2aWNlcywg
+aW5jbHVkaW5nIFVGUywgaGF2ZSBtZWNoYW5pc21zIHRvDQo+IHRyYW5zbGF0ZSBsb2dpY2FsIGFk
+ZHJlc3NlcyBvZiBJTyByZXF1ZXN0cyB0byB0aGUgY29ycmVzcG9uZGluZyBwaHlzaWNhbA0KPiBh
+ZGRyZXNzZXMgb2YgdGhlIGZsYXNoIHN0b3JhZ2UuDQo+IEluIFVGUywgTG9naWNhbC1hZGRyZXNz
+LXRvLVBoeXNpY2FsLWFkZHJlc3MgKEwyUCkgbWFwIGRhdGEsIHdoaWNoIGlzDQo+IHJlcXVpcmVk
+IHRvIGlkZW50aWZ5IHRoZSBwaHlzaWNhbCBhZGRyZXNzIGZvciB0aGUgcmVxdWVzdGVkIElPcywg
+Y2FuIG9ubHkNCj4gYmUgcGFydGlhbGx5IHN0b3JlZCBpbiBTUkFNIGZyb20gTkFORCBmbGFzaC4g
+RHVlIHRvIHRoaXMgcGFydGlhbCBsb2FkaW5nLA0KPiBhY2Nlc3NpbmcgdGhlIGZsYXNoIGFkZHJl
+c3MgYXJlYSB3aGVyZSB0aGUgTDJQIGluZm9ybWF0aW9uIGZvciB0aGF0IGFkZHJlc3MNCj4gaXMg
+bm90IGxvYWRlZCBpbiB0aGUgU1JBTSBjYW4gcmVzdWx0IGluIHNlcmlvdXMgcGVyZm9ybWFuY2Ug
+ZGVncmFkYXRpb24uDQo+IA0KPiBUaGUgYmFzaWMgY29uY2VwdCBvZiBIUEIgaXMgdG8gY2FjaGUg
+TDJQIG1hcHBpbmcgZW50cmllcyBpbiBob3N0IHN5c3RlbQ0KPiBtZW1vcnkgc28gdGhhdCBib3Ro
+IHBoeXNpY2FsIGJsb2NrIGFkZHJlc3MgKFBCQSkgYW5kIGxvZ2ljYWwgYmxvY2sgYWRkcmVzcw0K
+PiAoTEJBKSBjYW4gYmUgZGVsaXZlcmVkIGluIEhQQiByZWFkIGNvbW1hbmQuDQo+IFRoZSBIUEIg
+UkVBRCBjb21tYW5kIGFsbG93cyB0byByZWFkIGRhdGEgZmFzdGVyIHRoYW4gYSByZWFkIGNvbW1h
+bmQgaW4gVUZTDQo+IHNpbmNlIGl0IHByb3ZpZGVzIHRoZSBwaHlzaWNhbCBhZGRyZXNzIChIUEIg
+RW50cnkpIG9mIHRoZSBkZXNpcmVkIGxvZ2ljYWwNCj4gYmxvY2sgaW4gYWRkaXRpb24gdG8gaXRz
+IGxvZ2ljYWwgYWRkcmVzcy4gVGhlIFVGUyBkZXZpY2UgY2FuIGFjY2VzcyB0aGUNCj4gcGh5c2lj
+YWwgYmxvY2sgaW4gTkFORCBkaXJlY3RseSB3aXRob3V0IHNlYXJjaGluZyBhbmQgdXBsb2FkaW5n
+IEwyUCBtYXBwaW5nDQo+IHRhYmxlLiBUaGlzIGltcHJvdmVzIHJlYWQgcGVyZm9ybWFuY2UgYmVj
+YXVzZSB0aGUgTkFORCByZWFkIG9wZXJhdGlvbiBmb3INCj4gdXBsb2FkaW5nIEwyUCBtYXBwaW5n
+IHRhYmxlIGlzIHJlbW92ZWQuDQo+IA0KPiBJbiBIUEIgaW5pdGlhbGl6YXRpb24sIHRoZSBob3N0
+IGNoZWNrcyBpZiB0aGUgVUZTIGRldmljZSBzdXBwb3J0cyBIUEINCj4gZmVhdHVyZSBhbmQgcmV0
+cmlldmVzIHJlbGF0ZWQgZGV2aWNlIGNhcGFiaWxpdGllcy4gVGhlbiwgc29tZSBIUEINCj4gcGFy
+YW1ldGVycyBhcmUgY29uZmlndXJlZCBpbiB0aGUgZGV2aWNlLg0KPiANCj4gV2UgbWVhc3VyZWQg
+dGhlIHRvdGFsIHN0YXJ0LXVwIHRpbWUgb2YgcG9wdWxhciBhcHBsaWNhdGlvbnMgYW5kIG9ic2Vy
+dmVkDQo+IHRoZSBkaWZmZXJlbmNlIGJ5IGVuYWJsaW5nIHRoZSBIUEIuDQo+IFBvcHVsYXIgYXBw
+bGljYXRpb25zIGFyZSAxMiBnYW1lIGFwcHMgYW5kIDI0IG5vbi1nYW1lIGFwcHMuIEVhY2ggdGFy
+Z2V0DQo+IGFwcGxpY2F0aW9ucyB3ZXJlIGxhdW5jaGVkIGluIG9yZGVyLiBUaGUgY3ljbGUgY29u
+c2lzdHMgb2YgcnVubmluZyAzNg0KPiBhcHBsaWNhdGlvbnMgaW4gc2VxdWVuY2UuIFdlIHJlcGVh
+dGVkIHRoZSBjeWNsZSBmb3Igb2JzZXJ2aW5nIHBlcmZvcm1hbmNlDQo+IGltcHJvdmVtZW50IGJ5
+IEwyUCBtYXBwaW5nIGNhY2hlIGhpdCBpbiBIUEIuDQo+IA0KPiBUaGUgRm9sbG93aW5nIGlzIGV4
+cGVyaW1lbnQgZW52aXJvbm1lbnQ6DQo+ICAtIGtlcm5lbCB2ZXJzaW9uOiA0LjQuMA0KPiAgLSBS
+QU06IDhHQg0KPiAgLSBVRlMgMi4xICg2NEdCKQ0KPiANCj4gUmVzdWx0Og0KPiArLS0tLS0tLSst
+LS0tLS0tLS0tKy0tLS0tLS0tLS0rLS0tLS0tLSsNCj4gfCBjeWNsZSB8IGJhc2VsaW5lIHwgd2l0
+aCBIUEIgfCBkaWZmICB8DQo+ICstLS0tLS0tKy0tLS0tLS0tLS0rLS0tLS0tLS0tLSstLS0tLS0t
+Kw0KPiB8IDEgICAgIHwgMjcyLjQgICAgfCAyNjQuOSAgICB8IC03LjUgIHwNCj4gfCAyICAgICB8
+IDI1MC40ICAgIHwgMjQ4LjIgICAgfCAtMi4yICB8DQo+IHwgMyAgICAgfCAyMjYuMiAgICB8IDIx
+NS42ICAgIHwgLTEwLjYgfA0KPiB8IDQgICAgIHwgMjMwLjYgICAgfCAyMTQuOCAgICB8IC0xNS44
+IHwNCj4gfCA1ICAgICB8IDIzMi4wICAgIHwgMjE4LjEgICAgfCAtMTMuOSB8DQo+IHwgNiAgICAg
+fCAyMzEuOSAgICB8IDIxMi42ICAgIHwgLTE5LjMgfA0KPiArLS0tLS0tLSstLS0tLS0tLS0tKy0t
+LS0tLS0tLS0rLS0tLS0tLSsNCj4gDQo+IFdlIGFsc28gbWVhc3VyZWQgSFBCIHBlcmZvcm1hbmNl
+IHVzaW5nIGlvem9uZS4NCj4gSGVyZSBpcyBteSBpb3pvbmUgc2NyaXB0Og0KPiBpb3pvbmUgLXIg
+NGsgLStuIC1pMiAtZWNJIC10IDE2IC1sIDE2IC11IDE2DQo+IC1zICRJT19SQU5HRS8xNiAtRiBt
+bnQvdG1wXzEgbW50L3RtcF8yIG1udC90bXBfMyBtbnQvdG1wXzQgbW50L3RtcF81DQo+IG1udC90
+bXBfNiBtbnQvdG1wXzcgbW50L3RtcF84IG1udC90bXBfOSBtbnQvdG1wXzEwIG1udC90bXBfMTEg
+bW50L3RtcF8xMg0KPiBtbnQvdG1wXzEzIG1udC90bXBfMTQgbW50L3RtcF8xNSBtbnQvdG1wXzE2
+DQo+IA0KPiBSZXN1bHQ6DQo+ICstLS0tLS0tLS0tKy0tLS0tLS0tKy0tLS0tLS0tLSsNCj4gfCBJ
+TyByYW5nZSB8IEhQQiBvbiB8IEhQQiBvZmYgfA0KPiArLS0tLS0tLS0tLSstLS0tLS0tLSstLS0t
+LS0tLS0rDQo+IHwgICAxIEdCICAgfCAyOTQuOCAgfCAzMDAuODcgIHwNCj4gfCAgIDQgR0IgICB8
+IDI5My41MSB8IDE3OS4zNSAgfA0KPiB8ICAgOCBHQiAgIHwgMjk0Ljg1IHwgMTYyLjUyICB8DQo+
+IHwgIDE2IEdCICAgfCAyOTMuNDUgfCAxNTYuMjYgIHwNCj4gfCAgMzIgR0IgICB8IDI3Ny40ICB8
+IDE1My4yNSAgfA0KPiArLS0tLS0tLS0tLSstLS0tLS0tLSstLS0tLS0tLS0rDQoNCg==
 
-On Mon, 17 May 2021 10:17:38 +0200
-Greg KH <gregkh@linuxfoundation.org> wrote:
-
-> On Mon, May 17, 2021 at 10:07:43AM +0200, Juerg Haefliger wrote:
-> > On Mon, May 17, 2021 at 7:46 AM Greg KH <gregkh@linuxfoundation.org> wr=
-ote: =20
-> > >
-> > > On Sun, May 16, 2021 at 03:22:09PM +0200, Juerg Haefliger wrote: =20
-> > > > There are a few occurences of leading spaces before tabs in a coupl=
-e of
-> > > > Kconfig files. Remove them by running the following command:
-> > > >
-> > > >   $ find . -name 'Kconfig*' | xargs sed -r -i 's/^[ ]+\t/\t/'
-> > > >
-> > > > Signed-off-by: Juerg Haefliger <juergh@canonical.com>
-> > > > ---
-> > > >  arch/arm/mach-omap1/Kconfig     | 12 ++++++------
-> > > >  arch/arm/mach-vt8500/Kconfig    |  6 +++---
-> > > >  arch/arm/mm/Kconfig             | 10 +++++-----
-> > > >  drivers/char/hw_random/Kconfig  |  8 ++++----
-> > > >  drivers/net/usb/Kconfig         | 10 +++++-----
-> > > >  drivers/net/wan/Kconfig         |  4 ++--
-> > > >  drivers/scsi/Kconfig            |  2 +-
-> > > >  drivers/uio/Kconfig             |  2 +-
-> > > >  drivers/video/backlight/Kconfig | 10 +++++-----
-> > > >  drivers/virtio/Kconfig          |  2 +-
-> > > >  drivers/w1/masters/Kconfig      |  6 +++---
-> > > >  fs/proc/Kconfig                 |  4 ++--
-> > > >  init/Kconfig                    |  2 +-
-> > > >  net/netfilter/Kconfig           |  2 +-
-> > > >  net/netfilter/ipvs/Kconfig      |  2 +-
-> > > >  15 files changed, 41 insertions(+), 41 deletions(-) =20
-> > >
-> > > Please break this up into one patch per subsystem and resend to the
-> > > proper maintainers that way. =20
-> >=20
-> > Hmm... How is my patch different from other treewide Kconfig cleanup
-> > patches like:
-> > a7f7f6248d97 ("treewide: replace '---help---' in Kconfig files with 'he=
-lp'")
-> > 8636a1f9677d ("treewide: surround Kconfig file paths with double quotes=
-")
-> > 83fc61a563cb ("treewide: Fix typos in Kconfig")
-> > 769a12a9c760 ("treewide: Kconfig: fix wording / spelling")
-> > f54619f28fb6 ("treewide: Fix typos in Kconfig") =20
->=20
-> Ok, I'll just ignore this and not try to suggest a way for you to get
-> your change accepted...
-
-No worries. I can make the change, was just wondering...
-
-...Juerg
-=20
-> greg k-h
-
-
---Sig_/D7AKy83dA=gk+i5Iqn9=k5c
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEhZfU96IuprviLdeLD9OLCQumQrcFAmCiKVsACgkQD9OLCQum
-QrePLw//Ykimz2jPT7e6QtcgGI7q3Z9YELDFMiqk+ujC4vzVJBFi+WZekZa+tti2
-7T5x1ci+i2mPSr/sNSIuKfQcvBH7SBdcckdjSdD55wGKV7GWUMNDkJR1x7aW5Pzo
-eEhHCY0hTkEq76S1wegRvD2HxXpsW4aH6rZjB/uNo9V/lRaJJNuouXrxs1zI/6zr
-UtYRTLVqVCsTxv0C+XF/C0T+gdbhYaU/68B/+zUSLVo83JQBo9rXrPfNmRWGo5hO
-SnFkkcfMuosZZ9RQqmpdR1y4D+1x7OrROghRJT8gy9LBF5c/0yTimblVifcoNXi0
-fUZmNRzYvteApmm8m0SBbOEE3mHiKDVIJ7MHDdjtPweaNNJrH+CkXztENtzb+AJr
-h6hlvQklXSI2/h+PaCLMPGxUnYDj5xhXVWwmiIy/0Hk466jeuPz4od5EQSe607ZB
-dw8oX5/MCHtJhdsgSUB3BHiwWPD7zBuUouHOBGsyFJBsCFcU5MIiQVFe2fiNRbkA
-nlmkOuBT2+LKK+2AU/nQ1IGkcP1b8a3Az8g6+ywxyjMHv1+7FafEMrFgJUGIeXNl
-z80JfoWhqqI4UcRltEhJE44NfdVqDqHMomAwI2qHuSSZAWLKEjIPQkFtDlWDAlB4
-d2q4e+YbdD1XE5/fFDYMOvZk31+d9GLtO0SQeZyuQo8r3MAkpR0=
-=CrpS
------END PGP SIGNATURE-----
-
---Sig_/D7AKy83dA=gk+i5Iqn9=k5c--
